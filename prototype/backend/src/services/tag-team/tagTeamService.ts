@@ -140,60 +140,91 @@ export async function createTeam(
   activeRobotId: number,
   reserveRobotId: number
 ): Promise<TeamCreationResult> {
-  // Validate the team
-  const validation = await validateTeam(activeRobotId, reserveRobotId);
-
-  if (!validation.isValid) {
-    return {
-      success: false,
-      errors: validation.errors,
-    };
-  }
-
-  // Verify stable ownership
-  const activeRobot = await prisma.robot.findUnique({
-    where: { id: activeRobotId },
-  });
-
-  if (!activeRobot || activeRobot.userId !== stableId) {
-    return {
-      success: false,
-      errors: ['You do not own these robots'],
-    };
-  }
-
-  // Create the team
+  // Wrap validation + creation in a transaction to prevent concurrent
+  // requests from both passing the "robot not already in a team" check
   try {
-    // Requirement 6.7, 6.8: Assign to appropriate instance (max 50 teams per instance)
-    const tagTeamLeagueId = await assignTagTeamLeagueInstance('bronze');
+    const team = await prisma.$transaction(async (tx) => {
+      // --- Inline validation inside transaction ---
+      const errors: string[] = [];
 
-    const team = await prisma.tagTeam.create({
-      data: {
-        stableId,
-        activeRobotId,
-        reserveRobotId,
-        tagTeamLeague: 'bronze',
-        tagTeamLeagueId,
-        tagTeamLeaguePoints: 0,
-        cyclesInTagTeamLeague: 0,
-        totalTagTeamWins: 0,
-        totalTagTeamLosses: 0,
-        totalTagTeamDraws: 0,
-      },
+      const [activeRobot, reserveRobot] = await Promise.all([
+        tx.robot.findUnique({ where: { id: activeRobotId } }),
+        tx.robot.findUnique({ where: { id: reserveRobotId } }),
+      ]);
+
+      if (!activeRobot) errors.push('Active robot not found');
+      if (!reserveRobot) errors.push('Reserve robot not found');
+      if (errors.length > 0) throw new TagTeamError(TagTeamErrorCode.INVALID_TEAM_COMPOSITION, errors.join('; '), 400);
+
+      if (activeRobot!.userId !== stableId || reserveRobot!.userId !== stableId) {
+        throw new TagTeamError(TagTeamErrorCode.INVALID_TEAM_COMPOSITION, 'You do not own these robots', 403);
+      }
+
+      if (activeRobot!.userId !== reserveRobot!.userId) {
+        throw new TagTeamError(TagTeamErrorCode.INVALID_TEAM_COMPOSITION, 'Robots must be from the same stable', 400);
+      }
+
+      const activeReadiness = checkBattleReadiness(activeRobot!);
+      if (!activeReadiness.isReady) {
+        throw new TagTeamError(TagTeamErrorCode.INVALID_TEAM_COMPOSITION, `Active robot not ready: ${activeReadiness.reasons.join(', ')}`, 400);
+      }
+
+      const reserveReadiness = checkBattleReadiness(reserveRobot!);
+      if (!reserveReadiness.isReady) {
+        throw new TagTeamError(TagTeamErrorCode.INVALID_TEAM_COMPOSITION, `Reserve robot not ready: ${reserveReadiness.reasons.join(', ')}`, 400);
+      }
+
+      // Check if either robot is already in ANY team (inside transaction)
+      const activeRobotInTeam = await tx.tagTeam.findFirst({
+        where: { OR: [{ activeRobotId }, { reserveRobotId: activeRobotId }] },
+      });
+      if (activeRobotInTeam) {
+        throw new TagTeamError(TagTeamErrorCode.INVALID_TEAM_COMPOSITION, `${activeRobot!.name} is already in another tag team`, 400);
+      }
+
+      const reserveRobotInTeam = await tx.tagTeam.findFirst({
+        where: { OR: [{ activeRobotId: reserveRobotId }, { reserveRobotId }] },
+      });
+      if (reserveRobotInTeam) {
+        throw new TagTeamError(TagTeamErrorCode.INVALID_TEAM_COMPOSITION, `${reserveRobot!.name} is already in another tag team`, 400);
+      }
+
+      // Check roster limit
+      const [totalRobots, existingTeams] = await Promise.all([
+        tx.robot.count({ where: { userId: stableId } }),
+        tx.tagTeam.count({ where: { stableId } }),
+      ]);
+      const maxTeams = Math.floor(totalRobots / 2);
+      if (existingTeams >= maxTeams) {
+        throw new TagTeamError(TagTeamErrorCode.INVALID_TEAM_COMPOSITION, `Maximum number of teams reached (${maxTeams} teams for ${totalRobots} robots)`, 400);
+      }
+
+      const tagTeamLeagueId = await assignTagTeamLeagueInstance('bronze');
+
+      return tx.tagTeam.create({
+        data: {
+          stableId,
+          activeRobotId,
+          reserveRobotId,
+          tagTeamLeague: 'bronze',
+          tagTeamLeagueId,
+          tagTeamLeaguePoints: 0,
+          cyclesInTagTeamLeague: 0,
+          totalTagTeamWins: 0,
+          totalTagTeamLosses: 0,
+          totalTagTeamDraws: 0,
+        },
+      });
     });
 
-    logger.info(`[TagTeam] Created team ${team.id} for stable ${stableId} in instance ${tagTeamLeagueId}`);
-
-    return {
-      success: true,
-      team,
-    };
+    logger.info(`[TagTeam] Created team ${team.id} for stable ${stableId}`);
+    return { success: true, team };
   } catch (error) {
+    if (error instanceof TagTeamError) {
+      return { success: false, errors: [error.message] };
+    }
     logger.error('[TagTeam] Error creating team:', error);
-    return {
-      success: false,
-      errors: ['Failed to create team'],
-    };
+    return { success: false, errors: ['Failed to create team'] };
   }
 }
 
