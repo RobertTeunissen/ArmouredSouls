@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth';
 import userRoutes from './routes/user';
@@ -33,6 +34,9 @@ const config = loadEnvConfig();
 const app = express();
 
 app.set('trust proxy', 1);
+
+// Security headers — mitigates XSS, clickjacking, MIME sniffing, and more
+app.use(helmet());
 
 app.use(cors({
   origin: config.corsOrigins.includes('*')
