@@ -1,16 +1,24 @@
 import express, { Request, Response } from 'express';
+import { z } from 'zod';
 import { getInstancesForTier, LeagueTier, LEAGUE_TIERS } from '../services/league/leagueInstanceService';
 import prisma from '../lib/prisma';
 import logger from '../config/logger';
 import { LeagueError, LeagueErrorCode } from '../errors';
+import { validateRequest } from '../middleware/schemaValidator';
 
 const router = express.Router();
+
+// --- Zod schemas for league routes ---
+
+const leagueTierParamsSchema = z.object({
+  tier: z.string().min(1).max(30),
+});
 
 /**
  * GET /api/leagues/:tier/standings
  * Get league standings for a specific tier and instance
  */
-router.get('/:tier/standings', async (req: Request, res: Response) => {
+router.get('/:tier/standings', validateRequest({ params: leagueTierParamsSchema }), async (req: Request, res: Response) => {
   try {
     const tier = req.params.tier as LeagueTier;
     const instance = req.query.instance as string | undefined;
@@ -106,7 +114,7 @@ router.get('/:tier/standings', async (req: Request, res: Response) => {
  * GET /api/leagues/:tier/instances
  * Get all instances for a tier
  */
-router.get('/:tier/instances', async (req: Request, res: Response) => {
+router.get('/:tier/instances', validateRequest({ params: leagueTierParamsSchema }), async (req: Request, res: Response) => {
   try {
     const tier = req.params.tier as LeagueTier;
 

@@ -1,4 +1,5 @@
 import express, { Request, Response } from 'express';
+import { z } from 'zod';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 import { executeScheduledBattles } from '../services/league/leagueBattleOrchestrator';
 import { executeScheduledKothBattles } from '../services/koth/kothBattleOrchestrator';
@@ -26,9 +27,19 @@ import { advanceWinnersToNextRound } from '../services/tournament/tournamentServ
 import { EventLogger } from '../services/common/eventLogger';
 import { getSchedulerState } from '../services/cycle/cycleScheduler';
 import { AppError, BattleError, BattleErrorCode } from '../errors';
+import { validateRequest } from '../middleware/schemaValidator';
+import { positiveIntParam } from '../utils/securityValidation';
+import { securityMonitor } from '../services/security/securityMonitor';
+import { SecuritySeverity } from '../services/security/securityLogger';
 
 const router = express.Router();
 const eventLogger = new EventLogger();
+
+// --- Zod schemas for admin routes ---
+
+const battleIdParamsSchema = z.object({
+  id: positiveIntParam,
+});
 
 // Mount tournament routes
 router.use('/tournaments', tournamentRoutes);
@@ -1978,7 +1989,7 @@ router.get('/battles', authenticateToken, requireAdmin, async (req: Request, res
  * Get detailed battle information including full combat log.
  * Detects tag team battles via TagTeamMatch and returns team data when present.
  */
-router.get('/battles/:id', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+router.get('/battles/:id', authenticateToken, requireAdmin, validateRequest({ params: battleIdParamsSchema }), async (req: Request, res: Response) => {
   try {
     const battleId = parseInt(String(req.params.id));
 
@@ -2899,6 +2910,31 @@ router.post('/koth/trigger', authenticateToken, requireAdmin, async (_req: Reque
       message: error instanceof Error ? error.message : String(error),
     });
   }
+});
+
+/**
+ * GET /api/admin/security/events
+ * Query recent security events with optional filters.
+ * Query params: severity, eventType, userId, since (ISO date), limit (default 50, max 200)
+ */
+router.get('/security/events', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+  const events = securityMonitor.getRecentEvents({
+    severity: req.query.severity as SecuritySeverity | undefined,
+    eventType: req.query.eventType as string | undefined,
+    userId: req.query.userId ? parseInt(req.query.userId as string) : undefined,
+    since: req.query.since ? new Date(req.query.since as string) : undefined,
+    limit: Math.min(parseInt(req.query.limit as string) || 50, 200),
+  });
+  res.json({ events, total: events.length });
+});
+
+/**
+ * GET /api/admin/security/summary
+ * Get a high-level overview: event counts by severity, active alerts, flagged users.
+ */
+router.get('/security/summary', authenticateToken, requireAdmin, async (_req: Request, res: Response) => {
+  const summary = securityMonitor.getSummary();
+  res.json(summary);
 });
 
 export default router;

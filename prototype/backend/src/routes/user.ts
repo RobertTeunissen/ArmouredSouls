@@ -1,12 +1,28 @@
 import express, { Response } from 'express';
 import bcrypt from 'bcrypt';
+import { z } from 'zod';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { validateStableName, isStableNameUnique, validatePassword } from '../utils/validation';
 import prisma from '../lib/prisma';
 import { AuthError, AuthErrorCode } from '../errors/authErrors';
 import { AppError } from '../errors/AppError';
+import { validateRequest } from '../middleware/schemaValidator';
+import { stableName as stableNameSchema } from '../utils/securityValidation';
+import { generateToken } from '../services/auth/jwtService';
 
 const router = express.Router();
+
+// --- Zod schemas for user routes ---
+
+const profileUpdateBodySchema = z.object({
+  stableName: stableNameSchema.optional(),
+  profileVisibility: z.enum(['public', 'private']).optional(),
+  notificationsBattle: z.boolean().optional(),
+  notificationsLeague: z.boolean().optional(),
+  themePreference: z.enum(['dark', 'light', 'auto']).optional(),
+  currentPassword: z.string().min(1).max(128).optional(),
+  newPassword: z.string().min(8).max(128).optional(),
+});
 
 // Get current user profile
 router.get('/profile', authenticateToken, async (req: AuthRequest, res: Response) => {
@@ -251,7 +267,7 @@ router.get('/stats', authenticateToken, async (req: AuthRequest, res: Response) 
 });
 
 // Update user profile
-router.put('/profile', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.put('/profile', authenticateToken, validateRequest({ body: profileUpdateBodySchema }), async (req: AuthRequest, res: Response) => {
   const userId = req.user!.userId;
   const {
     stableName,
@@ -350,7 +366,11 @@ router.put('/profile', authenticateToken, async (req: AuthRequest, res: Response
   if (notificationsBattle !== undefined) updateData.notificationsBattle = notificationsBattle;
   if (notificationsLeague !== undefined) updateData.notificationsLeague = notificationsLeague;
   if (themePreference !== undefined) updateData.themePreference = themePreference;
-  if (hashedPassword !== undefined) updateData.passwordHash = hashedPassword;
+  if (hashedPassword !== undefined) {
+    updateData.passwordHash = hashedPassword;
+    // Increment tokenVersion to invalidate all existing JWTs on password change
+    updateData.tokenVersion = { increment: 1 };
+  }
 
   // Check if there are any updates
   if (Object.keys(updateData).length === 0) {
@@ -374,14 +394,25 @@ router.put('/profile', authenticateToken, async (req: AuthRequest, res: Response
       notificationsBattle: true,
       notificationsLeague: true,
       themePreference: true,
+      tokenVersion: true,
     },
   });
 
   // Handle null stableName - return username as fallback
-  const response = {
+  const response: Record<string, unknown> = {
     ...updatedUser,
     stableName: updatedUser.stableName || updatedUser.username,
   };
+
+  // Issue a new token with the updated tokenVersion when password was changed
+  if (hashedPassword !== undefined) {
+    response.token = generateToken({
+      id: String(updatedUser.id),
+      username: updatedUser.username,
+      role: updatedUser.role,
+      tokenVersion: updatedUser.tokenVersion,
+    });
+  }
 
   res.json(response);
 });

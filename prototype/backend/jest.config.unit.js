@@ -39,6 +39,16 @@ const unitTestFiles = [
   'rangeBands\\.test\\.ts',
   'weaponEquipValidation\\.test\\.ts',
   'dependency-upgrade-invariants\\.property\\.test\\.ts',
+  'securityValidation\\.property\\.test\\.ts',
+  'schemaValidator\\.property\\.test\\.ts',
+  'tokenVersion\\.property\\.test\\.ts',
+  'jwtExpiration\\.property\\.test\\.ts',
+  'ownership\\.property\\.test\\.ts',
+  'robotSanitization\\.property\\.test\\.ts',
+  'securityMonitor\\.property\\.test\\.ts',
+  'securityHeaders\\.property\\.test\\.ts',
+  'errorHandler\\.property\\.test\\.ts',
+  'currencyConstraint\\.property\\.test\\.ts',
 ];
 
 module.exports = {

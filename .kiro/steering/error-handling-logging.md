@@ -524,3 +524,66 @@ class CircuitBreaker {
 - [ ] Alert thresholds defined
 - [ ] Error recovery strategies implemented
 - [ ] Debug logging disabled in production
+
+## Security Logging Channel
+
+### Overview
+
+A dedicated security logger writes structured JSON events to `logs/security.log`, separate from the main application log. This keeps security events on an independent channel for audit and alerting purposes.
+
+The security logger is implemented in `src/services/security/securityLogger.ts` and used by the `SecurityMonitor` singleton (`src/services/security/securityMonitor.ts`).
+
+### SecurityEvent Format
+
+All security events conform to this interface:
+
+```typescript
+interface SecurityEvent {
+  severity: 'info' | 'warning' | 'critical';
+  eventType: string;        // e.g., 'rapid_spending', 'authorization_failure', 'validation_failure'
+  userId?: number;
+  sourceIp?: string;
+  endpoint?: string;
+  details: Record<string, unknown>;
+  timestamp: string;        // ISO 8601
+}
+```
+
+### Severity Levels
+
+| Severity | When Used |
+|----------|-----------|
+| `info` | Normal security-relevant events (spending tracked, validation failure, robot creation) |
+| `warning` | Anomalous patterns detected (race condition attempts, automated creation, rate limit escalation, authorization failures) |
+| `critical` | Potential active exploit (rapid spending >3M credits in 5 minutes) |
+
+### Event Types
+
+| Event Type | Severity | Trigger |
+|------------|----------|---------|
+| `spending` | info | Any credit-spending operation |
+| `rapid_spending` | critical | Cumulative spending >3M in 5-minute window |
+| `conflict` | info | HTTP 409 conflict response |
+| `race_condition_attempt` | warning | >10 conflicts in 1 minute for same user |
+| `authorization_failure` | warning | HTTP 403 ownership check failure |
+| `validation_failure` | info | Schema validation rejection |
+| `robot_creation` | info | Robot created |
+| `automated_robot_creation` | warning | >3 robots created in 10 minutes |
+| `rate_limit_violation` | info | Rate limit hit |
+| `rate_limit_escalation` | warning | >5 rate limit hits in 1 hour |
+
+### Transport Configuration
+
+The security logger uses a dedicated Winston file transport:
+
+```typescript
+const securityTransport = new winston.transports.File({
+  filename: 'logs/security.log',
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.json(),
+  ),
+});
+```
+
+Security events are not written to the main application log or database. The `logs/security.log` file is the single source of truth for security audit trails. The `SecurityMonitor` also keeps the last 500 events in memory for the admin dashboard (`GET /api/admin/security/events`).

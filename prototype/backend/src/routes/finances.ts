@@ -1,4 +1,5 @@
 import express, { Response } from 'express';
+import { z } from 'zod';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import prisma from '../lib/prisma';
 import {
@@ -13,8 +14,16 @@ import {
 } from '../utils/economyCalculations';
 import { AuthError, AuthErrorCode } from '../errors/authErrors';
 import { EconomyError, EconomyErrorCode } from '../errors/economyErrors';
+import { validateRequest } from '../middleware/schemaValidator';
 
 const router = express.Router();
+
+// --- Zod schemas for finances routes ---
+
+const roiCalculatorBodySchema = z.object({
+  facilityType: z.string().min(1).max(50),
+  targetLevel: z.coerce.number().int().positive(),
+});
 
 /**
  * GET /api/finances/daily
@@ -326,7 +335,7 @@ router.get('/per-robot', authenticateToken, async (req: AuthRequest, res: Respon
  * POST /api/finances/roi-calculator
  * Calculate ROI for facility upgrade
  */
-router.post('/roi-calculator', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.post('/roi-calculator', authenticateToken, validateRequest({ body: roiCalculatorBodySchema }), async (req: AuthRequest, res: Response) => {
     const userId = req.user!.userId;
     const { facilityType, targetLevel } = req.body;
 

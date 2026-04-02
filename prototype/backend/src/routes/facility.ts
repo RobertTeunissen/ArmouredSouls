@@ -1,4 +1,5 @@
 import express, { Response } from 'express';
+import { z } from 'zod';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { FACILITY_TYPES, getFacilityUpgradeCost, getFacilityConfig } from '../config/facilities';
 import prisma from '../lib/prisma';
@@ -8,8 +9,19 @@ import { trackSpending } from '../services/economy/spendingTracker';
 import logger from '../config/logger';
 import { AuthError, AuthErrorCode } from '../errors/authErrors';
 import { EconomyError, EconomyErrorCode } from '../errors/economyErrors';
+import { validateRequest } from '../middleware/schemaValidator';
+// Ownership helpers available for future use — facility routes use userId_facilityType
+// compound key which inherently verifies ownership
+import { verifyFacilityOwnership } from '../middleware/ownership';
+import { securityMonitor } from '../services/security/securityMonitor';
 
 const router = express.Router();
+
+// --- Zod schemas for facility routes ---
+
+const upgradeBodySchema = z.object({
+  facilityType: z.string().min(1).max(50),
+});
 
 // Get all facility types and user's current levels
 router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
@@ -129,7 +141,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
 });
 
 // Upgrade a facility
-router.post('/upgrade', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.post('/upgrade', authenticateToken, validateRequest({ body: upgradeBodySchema }), async (req: AuthRequest, res: Response) => {
     const userId = req.user!.userId;
     const { facilityType } = req.body;
 
@@ -299,6 +311,9 @@ router.post('/upgrade', authenticateToken, async (req: AuthRequest, res: Respons
 
       // Track spending for onboarding budget comparison
       await trackSpending(userId, 'facilities', upgradeCost);
+
+      // Security monitoring: track spending
+      securityMonitor.trackSpending(userId, upgradeCost);
     } catch (logError) {
       logger.error('Failed to log facility transaction event:', logError);
       // Don't fail the request if logging fails

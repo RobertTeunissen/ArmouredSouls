@@ -166,6 +166,9 @@ Example with details:
 | Code | HTTP Status | Description |
 |------|-------------|-------------|
 | `INTERNAL_ERROR` | 500 | Unexpected internal server error |
+| `VALIDATION_ERROR` | 400 | Request failed schema validation — response includes `details.fields` array with per-field violations |
+| `FORBIDDEN` | 403 | Authenticated user does not have permission to access or modify the requested resource |
+| `RATE_LIMIT_EXCEEDED` | 429 | Too many requests — response includes `retryAfter` (seconds) indicating when the client may retry |
 
 ## Error Handling Architecture
 
@@ -185,6 +188,48 @@ The centralized `errorHandler` middleware in `src/middleware/errorHandler.ts` ha
 1. `AppError` instances → Returns `{ error, code, details? }` with the error's status code
 2. Prisma errors → Maps to appropriate HTTP status and code
 3. Unknown errors → Returns 500 with `INTERNAL_ERROR` code
+
+## Security Error Code Examples
+
+### VALIDATION_ERROR (400)
+
+Returned when request data fails Zod schema validation. The `details.fields` array lists all violations:
+
+```json
+{
+  "error": "Invalid request body",
+  "code": "VALIDATION_ERROR",
+  "details": {
+    "fields": [
+      { "field": "name", "message": "Contains disallowed characters" },
+      { "field": "weaponId", "message": "Expected number, received string" }
+    ]
+  }
+}
+```
+
+### FORBIDDEN (403)
+
+Returned when an authenticated user attempts to access or modify a resource they don't own. The message is intentionally generic to prevent resource enumeration:
+
+```json
+{
+  "error": "Access denied",
+  "code": "FORBIDDEN"
+}
+```
+
+### RATE_LIMIT_EXCEEDED (429)
+
+Returned when a client exceeds the rate limit. The response includes a `Retry-After` HTTP header and a `retryAfter` field in the body:
+
+```json
+{
+  "error": "Too many requests",
+  "code": "RATE_LIMIT_EXCEEDED",
+  "retryAfter": 60
+}
+```
 
 ## Frontend Usage
 

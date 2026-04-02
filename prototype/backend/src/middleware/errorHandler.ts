@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { AppError } from '../errors/AppError';
 import logger from '../config/logger';
+import { securityMonitor } from '../services/security/securityMonitor';
+import type { AuthRequest } from './auth';
 
 /**
  * Mapping of Prisma error codes to HTTP status codes and machine-readable error codes.
@@ -51,6 +53,15 @@ export function errorHandler(err: Error, req: Request, res: Response, _next: Nex
     if (mapping) {
       // Log full Prisma message for debugging, but return generic message to client
       logger.warn('Prisma error', { prismaCode, mapped: mapping.code, prismaMessage: err.message, method: req.method, path: req.originalUrl });
+
+      // Track 409 conflicts for race-condition exploit detection (Req 7.2)
+      if (mapping.statusCode === 409) {
+        const authReq = req as AuthRequest;
+        if (authReq.user?.userId) {
+          securityMonitor.trackConflict(authReq.user.userId);
+        }
+      }
+
       res.status(mapping.statusCode).json({ error: mapping.code.replace(/_/g, ' ').toLowerCase(), code: mapping.code });
       return;
     }

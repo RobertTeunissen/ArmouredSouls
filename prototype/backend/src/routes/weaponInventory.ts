@@ -1,4 +1,5 @@
 import express, { Response } from 'express';
+import { z } from 'zod';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { calculateStorageCapacity, getStorageStatus } from '../utils/storageCalculations';
 import prisma from '../lib/prisma';
@@ -7,6 +8,24 @@ import { eventLogger } from '../services/common/eventLogger';
 import { trackSpending } from '../services/economy/spendingTracker';
 import logger from '../config/logger';
 import { AppError, EconomyError, EconomyErrorCode, AuthError, AuthErrorCode } from '../errors';
+import { validateRequest } from '../middleware/schemaValidator';
+import { positiveIntParam } from '../utils/securityValidation';
+// Ownership helpers available for future use — existing routes already verify ownership
+// via findFirst({ where: { id, userId } }) which is equivalent
+import { verifyWeaponOwnership } from '../middleware/ownership';
+import { securityMonitor } from '../services/security/securityMonitor';
+
+const router = express.Router();
+
+// --- Zod schemas for weapon inventory routes ---
+
+const purchaseBodySchema = z.object({
+  weaponId: z.coerce.number().int().positive(),
+});
+
+const inventoryIdParamsSchema = z.object({
+  id: positiveIntParam,
+});
 
 // Discount helpers (local until shared/utils/discounts is available)
 const calculateWeaponWorkshopDiscount = (level: number): number => {
@@ -16,8 +35,6 @@ const calculateWeaponWorkshopDiscount = (level: number): number => {
 const applyDiscount = (cost: number, discountPercent: number): number => {
   return Math.floor(cost * (1 - discountPercent / 100));
 };
-
-const router = express.Router();
 
 // Get user's weapon inventory
 router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
@@ -52,7 +69,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
 });
 
 // Purchase a weapon into inventory
-router.post('/purchase', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.post('/purchase', authenticateToken, validateRequest({ body: purchaseBodySchema }), async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
     const { weaponId } = req.body;
@@ -196,6 +213,9 @@ router.post('/purchase', authenticateToken, async (req: AuthRequest, res: Respon
 
       // Track spending for onboarding budget comparison
       await trackSpending(userId, 'weapons', finalCost);
+
+      // Security monitoring: track spending
+      securityMonitor.trackSpending(userId, finalCost);
     } catch (logError) {
       logger.error('Failed to log weapon purchase event:', logError);
       // Don't fail the request if logging fails
@@ -213,7 +233,7 @@ router.post('/purchase', authenticateToken, async (req: AuthRequest, res: Respon
 });
 
 // Get available robots for a weapon (robots that can equip this weapon)
-router.get('/:id/available', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get('/:id/available', authenticateToken, validateRequest({ params: inventoryIdParamsSchema }), async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
     const inventoryId = parseInt(String(req.params.id));
@@ -222,15 +242,13 @@ router.get('/:id/available', authenticateToken, async (req: AuthRequest, res: Re
       throw new AppError('INVALID_INVENTORY_ID', 'Invalid weapon inventory ID', 400);
     }
 
-    // Verify weapon inventory belongs to user
-    const weaponInv = await prisma.weaponInventory.findFirst({
-      where: {
-        id: inventoryId,
-        userId,
-      },
-      include: {
-        weapon: true,
-      },
+    // Verify weapon inventory ownership — returns generic 403 on mismatch or not-found
+    await verifyWeaponOwnership(prisma, inventoryId, userId);
+
+    // Get weapon details for the verified inventory item
+    const weaponInv = await prisma.weaponInventory.findUnique({
+      where: { id: inventoryId },
+      include: { weapon: true },
     });
 
     if (!weaponInv) {

@@ -1,11 +1,20 @@
 import express, { Response } from 'express';
+import { z } from 'zod';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { getActiveTournaments, computeSeedings } from '../services/tournament/tournamentService';
 import prisma from '../lib/prisma';
 import logger from '../config/logger';
 import { AppError, TournamentError, TournamentErrorCode } from '../errors';
+import { validateRequest } from '../middleware/schemaValidator';
+import { positiveIntParam } from '../utils/securityValidation';
 
 const router = express.Router();
+
+// --- Zod schemas for tournament routes ---
+
+const tournamentIdParamsSchema = z.object({
+  id: positiveIntParam,
+});
 
 /**
  * GET /api/tournaments
@@ -56,7 +65,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
  * GET /api/tournaments/:id
  * Get tournament details with all matches and seedings (public access for all authenticated users)
  */
-router.get('/:id', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get('/:id', authenticateToken, validateRequest({ params: tournamentIdParamsSchema }), async (req: AuthRequest, res: Response) => {
   try {
     const tournamentId = parseInt(String(req.params.id));
 

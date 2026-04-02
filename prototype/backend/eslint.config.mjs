@@ -1,6 +1,7 @@
 import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import globals from 'globals';
+import security from 'eslint-plugin-security';
 
 export default tseslint.config(
   { ignores: ['dist/', 'node_modules/', '*.js'] },
@@ -8,6 +9,9 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
   {
     files: ['**/*.ts'],
+    plugins: {
+      security,
+    },
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: 'module',
@@ -26,6 +30,18 @@ export default tseslint.config(
         varsIgnorePattern: '^_',
       }],
       'no-console': 'off',
+
+      // Security rules — flag common vulnerability patterns (Req 8.5)
+      'security/detect-eval-with-expression': 'error',
+      'security/detect-non-literal-require': 'warn',
+      'security/detect-possible-timing-attacks': 'warn',
+      'security/detect-no-csrf-before-method-override': 'error',
+      'security/detect-non-literal-regexp': 'warn',
+      'security/detect-unsafe-regex': 'warn',
+      'security/detect-buffer-noassert': 'error',
+      'security/detect-child-process': 'warn',
+      'security/detect-new-buffer': 'error',
+      'security/detect-pseudoRandomBytes': 'warn',
     },
   },
 );

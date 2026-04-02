@@ -1,6 +1,7 @@
 {$DOMAIN:localhost} {
-	# SSL termination with automatic Let's Encrypt
-	# (Caddy handles certificate provisioning automatically)
+	# SSL termination with automatic Let's Encrypt (Req 10.6)
+	# Caddy enforces HTTPS by default — HTTP requests are redirected to HTTPS.
+	# TLS 1.2+ is the minimum supported version (Caddy does not support TLS 1.0/1.1).
 
 	# Security headers
 	header {
