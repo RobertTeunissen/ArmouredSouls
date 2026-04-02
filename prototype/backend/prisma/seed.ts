@@ -843,18 +843,15 @@ export async function upsertWeapon(data: Record<string, unknown>) {
  * Note: stableName is only set on CREATE, not on UPDATE, to avoid unique constraint violations.
  */
 export async function upsertUser(data: { username: string; passwordHash: string; role?: string; currency?: number; prestige?: number; hasCompletedOnboarding?: boolean; stableName?: string }) {
-  return prisma.user.upsert({
-    where: { username: data.username },
-    update: {
-      passwordHash: data.passwordHash,
-      role: data.role || 'user',
-      currency: data.currency ?? 0,
-      prestige: data.prestige ?? 0,
-      hasCompletedOnboarding: data.hasCompletedOnboarding ?? false,
-      // Don't update stableName - it's unique and the user may already have one
-    },
-    create: data,
-  });
+  const existing = await prisma.user.findUnique({ where: { username: data.username } });
+
+  // If the user already exists, leave them untouched — don't reset their
+  // currency, prestige, or any other state that has changed since the last seed.
+  if (existing) {
+    return existing;
+  }
+
+  return prisma.user.create({ data });
 }
 
 /**
@@ -878,21 +875,11 @@ export async function upsertRobot(data: Record<string, unknown>) {
   const name = data.name as string;
   const existing = await prisma.robot.findFirst({ where: { userId, name } });
 
+  // If the robot already exists, leave it completely untouched.
+  // The seed script should only create missing robots, never overwrite
+  // state that the league cycle or players have changed since the last seed.
   if (existing) {
-    // On update, clear stale weapon references if the inventory record no longer exists
-    if (data.mainWeaponId) {
-      const mainInv = await prisma.weaponInventory.findUnique({ where: { id: data.mainWeaponId as number } });
-      if (!mainInv) {
-        data.mainWeaponId = null;
-      }
-    }
-    if (data.offhandWeaponId) {
-      const offInv = await prisma.weaponInventory.findUnique({ where: { id: data.offhandWeaponId as number } });
-      if (!offInv) {
-        data.offhandWeaponId = null;
-      }
-    }
-    return prisma.robot.update({ where: { id: existing.id }, data });
+    return existing;
   }
 
   // Verify mainWeaponId exists before creating
