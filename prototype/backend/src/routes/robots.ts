@@ -684,7 +684,7 @@ router.delete('/:id/unequip-main-weapon', authenticateToken, async (req: AuthReq
   }
 
   // Update robot and recalculate stats
-  const updatedRobot = await prisma.robot.update({
+  const unequippedRobot = await prisma.robot.update({
     where: { id: robotId },
     data: { mainWeaponId: null },
     include: {
@@ -694,17 +694,17 @@ router.delete('/:id/unequip-main-weapon', authenticateToken, async (req: AuthReq
   });
 
   // Recalculate max HP and Shield
-  const maxHP = calculateMaxHP(updatedRobot);
-  const maxShield = calculateMaxShield(updatedRobot);
+  const newMaxHP = calculateMaxHP(unequippedRobot);
+  const newMaxShield = calculateMaxShield(unequippedRobot);
 
   // Update HP and Shield
   const finalRobot = await prisma.robot.update({
     where: { id: robotId },
     data: {
-      maxHP,
-      maxShield,
-      currentHP: Math.min(updatedRobot.currentHP, maxHP),
-      currentShield: Math.min(updatedRobot.currentShield, maxShield),
+      maxHP: newMaxHP,
+      maxShield: newMaxShield,
+      currentHP: Math.min(unequippedRobot.currentHP, newMaxHP),
+      currentShield: Math.min(unequippedRobot.currentShield, newMaxShield),
     },
     include: {
       mainWeapon: { include: { weapon: true } },
@@ -717,6 +717,7 @@ router.delete('/:id/unequip-main-weapon', authenticateToken, async (req: AuthReq
     message: 'Main weapon unequipped successfully',
   });
 });
+
 
 // Unequip offhand weapon
 router.delete('/:id/unequip-offhand-weapon', authenticateToken, async (req: AuthRequest, res: Response) => {
@@ -745,7 +746,7 @@ router.delete('/:id/unequip-offhand-weapon', authenticateToken, async (req: Auth
   }
 
   // Update robot and recalculate stats
-  const updatedRobot = await prisma.robot.update({
+  const unequippedRobot = await prisma.robot.update({
     where: { id: robotId },
     data: { offhandWeaponId: null },
     include: {
@@ -755,17 +756,17 @@ router.delete('/:id/unequip-offhand-weapon', authenticateToken, async (req: Auth
   });
 
   // Recalculate max HP and Shield
-  const maxHP = calculateMaxHP(updatedRobot);
-  const maxShield = calculateMaxShield(updatedRobot);
+  const newMaxHP = calculateMaxHP(unequippedRobot);
+  const newMaxShield = calculateMaxShield(unequippedRobot);
 
   // Update HP and Shield
   const finalRobot = await prisma.robot.update({
     where: { id: robotId },
     data: {
-      maxHP,
-      maxShield,
-      currentHP: Math.min(updatedRobot.currentHP, maxHP),
-      currentShield: Math.min(updatedRobot.currentShield, maxShield),
+      maxHP: newMaxHP,
+      maxShield: newMaxShield,
+      currentHP: Math.min(unequippedRobot.currentHP, newMaxHP),
+      currentShield: Math.min(unequippedRobot.currentShield, newMaxShield),
     },
     include: {
       mainWeapon: { include: { weapon: true } },
@@ -830,7 +831,7 @@ router.put('/:id/loadout-type', authenticateToken, async (req: AuthRequest, res:
   }
 
   // Update loadout type and recalculate stats
-  const updatedRobot = await prisma.robot.update({
+  const loadoutRobot = await prisma.robot.update({
     where: { id: robotId },
     data: { loadoutType },
     include: {
@@ -840,17 +841,17 @@ router.put('/:id/loadout-type', authenticateToken, async (req: AuthRequest, res:
   });
 
   // Recalculate max HP and Shield with new loadout bonuses
-  const maxHP = calculateMaxHP(updatedRobot);
-  const maxShield = calculateMaxShield(updatedRobot);
+  const newMaxHP = calculateMaxHP(loadoutRobot);
+  const newMaxShield = calculateMaxShield(loadoutRobot);
 
   // Update HP and Shield
   const finalRobot = await prisma.robot.update({
     where: { id: robotId },
     data: {
-      maxHP,
-      maxShield,
-      currentHP: Math.min(updatedRobot.currentHP, maxHP),
-      currentShield: Math.min(updatedRobot.currentShield, maxShield),
+      maxHP: newMaxHP,
+      maxShield: newMaxShield,
+      currentHP: Math.min(loadoutRobot.currentHP, newMaxHP),
+      currentShield: Math.min(loadoutRobot.currentShield, newMaxShield),
     },
     include: {
       mainWeapon: { include: { weapon: true } },
@@ -897,7 +898,7 @@ router.patch('/:id/stance', authenticateToken, async (req: AuthRequest, res: Res
   }
 
   // Update stance
-  const updatedRobot = await prisma.robot.update({
+  const stanceRobot = await prisma.robot.update({
     where: { id: robotId },
     data: { stance: normalizedStance },
     include: {
@@ -907,7 +908,7 @@ router.patch('/:id/stance', authenticateToken, async (req: AuthRequest, res: Res
   });
 
   res.json({
-    ...updatedRobot,
+    ...stanceRobot,
     message: `Stance updated to ${normalizedStance}`,
   });
 });
@@ -945,7 +946,7 @@ router.patch('/:id/yield-threshold', authenticateToken, async (req: AuthRequest,
   }
 
   // Update yield threshold
-  const updatedRobot = await prisma.robot.update({
+  const thresholdRobot = await prisma.robot.update({
     where: { id: robotId },
     data: { yieldThreshold: threshold },
     include: {
@@ -955,7 +956,7 @@ router.patch('/:id/yield-threshold', authenticateToken, async (req: AuthRequest,
   });
 
   res.json({
-    ...updatedRobot,
+    ...thresholdRobot,
     message: `Yield threshold updated to ${threshold}%`,
   });
 });
@@ -1783,7 +1784,7 @@ router.put('/:id/appearance', authenticateToken, async (req: AuthRequest, res: R
   logger.info('Updating robot with imageUrl...');
   
   // Update appearance
-  const updatedRobot = await prisma.robot.update({
+  const appearanceRobot = await prisma.robot.update({
     where: { id: robotId },
     data: {
       imageUrl,
@@ -1806,7 +1807,7 @@ router.put('/:id/appearance', authenticateToken, async (req: AuthRequest, res: R
 
   res.json({
     success: true,
-    robot: updatedRobot,
+    robot: appearanceRobot,
     message: 'Robot image updated successfully',
   });
 });
