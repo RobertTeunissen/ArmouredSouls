@@ -3,6 +3,7 @@ import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { canEquipToSlot, validateOffhandEquipment, isSlotAvailable, validateNoDuplicateEquip } from '../utils/weaponValidation';
 import { calculateMaxHP, calculateMaxShield } from '../utils/robotCalculations';
 import prisma from '../lib/prisma';
+import { lockUserForSpending } from '../lib/creditGuard';
 import { eventLogger } from '../services/common/eventLogger';
 import { trackSpending } from '../services/economy/spendingTracker';
 import { getConfig } from '../config/env';
@@ -150,13 +151,25 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
     throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Robot name is required', 400);
   }
 
-  if (name.length < 1 || name.length > 50) {
+  const trimmedName = name.trim();
+
+  if (trimmedName.length < 1 || trimmedName.length > 50) {
     throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Robot name must be between 1 and 50 characters', 400);
+  }
+
+  // Restrict to safe characters — prevents stored XSS via robot names rendered across the UI
+  const safeNamePattern = /^[a-zA-Z0-9 _\-'.!]+$/;
+  if (!safeNamePattern.test(trimmedName)) {
+    throw new RobotError(
+      RobotErrorCode.INVALID_ROBOT_ATTRIBUTES,
+      'Robot name can only contain letters, numbers, spaces, hyphens, underscores, apostrophes, periods, and exclamation marks',
+      400
+    );
   }
 
   // Check if a robot with this name already exists (globally unique)
   const existingRobot = await prisma.robot.findFirst({
-    where: { name },
+    where: { name: trimmedName },
   });
 
   if (existingRobot) {
@@ -199,25 +212,21 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
     );
   }
 
-  // Create robot in a transaction
+  // Create robot in a transaction with row-level locking
   const result = await prisma.$transaction(async (tx) => {
-    // Re-read user inside transaction to prevent race conditions (stale balance exploit)
-    const freshUser = await tx.user.findUnique({
-      where: { id: userId },
-      include: {
-        facilities: {
-          where: { facilityType: 'roster_expansion' },
-        },
-      },
-    });
+    // Acquire exclusive row lock — blocks concurrent purchases for this user
+    const lockedUser = await lockUserForSpending(tx, userId);
 
-    if (!freshUser || freshUser.currency < ROBOT_CREATION_COST) {
+    if (lockedUser.currency < ROBOT_CREATION_COST) {
       throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Insufficient credits', 400);
     }
 
     // Re-verify roster limit inside transaction
     const freshRobotCount = await tx.robot.count({ where: { userId } });
-    const freshRosterLevel = freshUser.facilities[0]?.level || 0;
+    const freshRosterFacility = await tx.facility.findFirst({
+      where: { userId, facilityType: 'roster_expansion' },
+    });
+    const freshRosterLevel = freshRosterFacility?.level || 0;
     const freshMaxRobots = freshRosterLevel + 1;
     if (freshRobotCount >= freshMaxRobots) {
       throw new RobotError(
@@ -227,7 +236,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
       );
     }
 
-    // Atomic currency decrement to prevent double-spend
+    // Atomic currency decrement — safe because row is locked
     const updatedUser = await tx.user.update({
       where: { id: userId },
       data: { currency: { decrement: ROBOT_CREATION_COST } },
@@ -249,7 +258,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
     const robot = await tx.robot.create({
       data: {
         userId,
-        name,
+        name: trimmedName,
         currentHP: maxHP,
         maxHP: maxHP,
         currentShield: maxShield,
@@ -1121,13 +1130,25 @@ router.post('/repair-all', authenticateToken, async (req: AuthRequest, res: Resp
   const costAfterRepairBay = Math.floor(totalBaseCost * (1 - discount / 100));
   const finalCost = Math.floor(costAfterRepairBay * MANUAL_REPAIR_DISCOUNT);
 
-  // Manual repairs are always allowed, even with negative balance.
-  // This is the ONLY transaction permitted when a player has negative credits,
-  // incentivizing active play during financial hardship.
+  // Manual repairs require sufficient credits (negative balance NOT allowed).
+  // Only automatic cycle repairs may push balance negative.
+  // Note: finalCost can be 0 if all robots are at full HP after discount
 
-  // Perform repairs in a transaction
+  // Perform repairs in a transaction with row-level locking
   const result = await prisma.$transaction(async (tx) => {
-    // Atomic currency decrement to prevent double-spend on concurrent requests
+    // Acquire exclusive row lock — prevents concurrent repair double-spend
+    const lockedUser = await lockUserForSpending(tx, userId);
+
+    if (lockedUser.currency < finalCost) {
+      throw new RobotError(
+        RobotErrorCode.INVALID_ROBOT_ATTRIBUTES,
+        'Insufficient credits for manual repair',
+        400,
+        { required: finalCost, available: lockedUser.currency }
+      );
+    }
+
+    // Atomic currency decrement — safe because row is locked
     const updatedUser = await tx.user.update({
       where: { id: userId },
       data: { currency: { decrement: finalCost } },
@@ -2085,25 +2106,20 @@ router.post('/:id/upgrades', authenticateToken, async (req: AuthRequest, res: Re
     );
   }
 
-  // Perform all upgrades in a single atomic transaction
+  // Perform all upgrades in a single atomic transaction with row-level locking
   const result = await prisma.$transaction(async (tx) => {
-    // Re-read user inside transaction to prevent race conditions (stale balance exploit)
-    const freshUser = await tx.user.findUnique({
-      where: { id: userId },
-      include: {
-        facilities: {
-          where: {
-            facilityType: {
-              in: ['training_facility', 'combat_training_academy', 'defense_training_academy', 'mobility_training_academy', 'ai_training_academy']
-            }
-          },
+    // Acquire exclusive row lock — blocks concurrent purchases for this user
+    const lockedUser = await lockUserForSpending(tx, userId);
+
+    // Read facilities inside the locked transaction
+    const freshFacilities = await tx.facility.findMany({
+      where: {
+        userId,
+        facilityType: {
+          in: ['training_facility', 'combat_training_academy', 'defense_training_academy', 'mobility_training_academy', 'ai_training_academy']
         },
       },
     });
-
-    if (!freshUser) {
-      throw new RobotError(RobotErrorCode.ROBOT_NOT_FOUND, 'User not found', 404);
-    }
 
     // Re-read robot inside transaction to prevent concurrent upgrade race
     const freshRobot = await tx.robot.findFirst({
@@ -2115,12 +2131,12 @@ router.post('/:id/upgrades', authenticateToken, async (req: AuthRequest, res: Re
     }
 
     // Re-verify facility levels inside transaction
-    const freshTrainingLevel = freshUser.facilities.find(f => f.facilityType === 'training_facility')?.level || 0;
+    const freshTrainingLevel = freshFacilities.find(f => f.facilityType === 'training_facility')?.level || 0;
     const freshAcademyLevels = {
-      combat_training_academy: freshUser.facilities.find(f => f.facilityType === 'combat_training_academy')?.level || 0,
-      defense_training_academy: freshUser.facilities.find(f => f.facilityType === 'defense_training_academy')?.level || 0,
-      mobility_training_academy: freshUser.facilities.find(f => f.facilityType === 'mobility_training_academy')?.level || 0,
-      ai_training_academy: freshUser.facilities.find(f => f.facilityType === 'ai_training_academy')?.level || 0,
+      combat_training_academy: freshFacilities.find(f => f.facilityType === 'combat_training_academy')?.level || 0,
+      defense_training_academy: freshFacilities.find(f => f.facilityType === 'defense_training_academy')?.level || 0,
+      mobility_training_academy: freshFacilities.find(f => f.facilityType === 'mobility_training_academy')?.level || 0,
+      ai_training_academy: freshFacilities.find(f => f.facilityType === 'ai_training_academy')?.level || 0,
     };
 
     // Recalculate cost and validate with fresh data
@@ -2181,16 +2197,16 @@ router.post('/:id/upgrades', authenticateToken, async (req: AuthRequest, res: Re
       });
     }
 
-    if (freshUser.currency < freshTotalCost) {
+    if (lockedUser.currency < freshTotalCost) {
       throw new RobotError(
         RobotErrorCode.INVALID_ROBOT_ATTRIBUTES,
         'Insufficient credits',
         400,
-        { required: freshTotalCost, current: freshUser.currency }
+        { required: freshTotalCost, current: lockedUser.currency }
       );
     }
 
-    // Atomic currency decrement to prevent double-spend
+    // Atomic currency decrement — safe because row is locked
     const updatedUser = await tx.user.update({
       where: { id: userId },
       data: { currency: { decrement: freshTotalCost } },

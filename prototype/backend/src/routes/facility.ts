@@ -2,6 +2,7 @@ import express, { Response } from 'express';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { FACILITY_TYPES, getFacilityUpgradeCost, getFacilityConfig } from '../config/facilities';
 import prisma from '../lib/prisma';
+import { lockUserForSpending } from '../lib/creditGuard';
 import { eventLogger } from '../services/common/eventLogger';
 import { trackSpending } from '../services/economy/spendingTracker';
 import logger from '../config/logger';
@@ -209,19 +210,17 @@ router.post('/upgrade', authenticateToken, async (req: AuthRequest, res: Respons
       );
     }
 
-    // Perform upgrade in a transaction with atomic currency check
+    // Perform upgrade in a transaction with row-level locking
     const result = await prisma.$transaction(async (tx) => {
-      // Re-read user inside transaction to prevent race conditions
-      const freshUser = await tx.user.findUnique({
-        where: { id: userId },
-      });
+      // Acquire exclusive row lock — blocks concurrent purchases for this user
+      const lockedUser = await lockUserForSpending(tx, userId);
 
-      if (!freshUser || freshUser.currency < upgradeCost) {
+      if (lockedUser.currency < upgradeCost) {
         throw new EconomyError(
           EconomyErrorCode.INSUFFICIENT_CREDITS,
           'Insufficient credits',
           400,
-          { required: upgradeCost, current: freshUser?.currency ?? 0 }
+          { required: upgradeCost, current: lockedUser.currency }
         );
       }
 
@@ -247,7 +246,7 @@ router.post('/upgrade', authenticateToken, async (req: AuthRequest, res: Respons
         );
       }
 
-      // Atomic currency decrement
+      // Atomic currency decrement — safe because row is locked
       const updatedUser = await tx.user.update({
         where: { id: userId },
         data: { currency: { decrement: upgradeCost } },
