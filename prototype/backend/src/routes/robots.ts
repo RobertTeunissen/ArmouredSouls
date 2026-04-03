@@ -50,7 +50,10 @@ const appearanceBodySchema = z.object({
 });
 
 const upgradesBodySchema = z.object({
-  upgrades: z.record(z.string(), z.number().int().positive()),
+  upgrades: z.record(z.string(), z.object({
+    currentLevel: z.number().int().nonnegative(),
+    plannedLevel: z.number().int().positive(),
+  })),
 });
 
 const ROBOT_CREATION_COST = 500000;
