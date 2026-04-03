@@ -150,9 +150,7 @@ jobs:
       - name: Run frontend unit tests
         working-directory: ./prototype/frontend
         timeout-minutes: 15
-        env:
-          NODE_OPTIONS: '--max-old-space-size=3072'
-        run: npx vitest --run --reporter=verbose --maxWorkers=2
+        run: npx vitest --run --reporter=verbose
 
       # Note: E2E tests (Playwright) are skipped in CI because they require
       # a running backend with a seeded database. Run locally before pushing:
