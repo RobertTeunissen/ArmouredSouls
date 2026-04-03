@@ -10,11 +10,6 @@ export default defineConfig({
     setupFiles: ['./src/setupTests.ts'],
     include: ['src/**/*.{test,spec}.{js,ts,jsx,tsx}'],
     testTimeout: 30000,
-    pool: 'forks',
-    forks: {
-      maxForks: process.env.CI ? 1 : undefined,
-      execArgv: process.env.CI ? ['--max-old-space-size=1024'] : [],
-    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
