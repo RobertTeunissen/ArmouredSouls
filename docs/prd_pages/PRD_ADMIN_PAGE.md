@@ -470,7 +470,7 @@ npm run test:ui
 - Node.js with Express
 - Prisma ORM for database access
 - JWT authentication
-- Role-based authorization (requireAdmin middleware)
+- Role-based authorization (requireAdmin middleware — unauthorized attempts logged to SecurityMonitor)
 
 ### Key Design Decisions
 

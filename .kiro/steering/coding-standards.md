@@ -146,7 +146,7 @@ inclusion: always
 - **Hash passwords** - bcrypt with salt rounds 10-12
 - **Secure JWT tokens** - Strong secrets, short expiration
 - **HTTPS only** - Enforce in production (Caddy handles this)
-- **Rate limiting** - Protect auth endpoints (30 req/min)
+- **Rate limiting** - Protect auth endpoints (10 req/15min login, 300 req/min general, 60 req/min per-user economic, 3 req/hr account reset)
 - **CORS configuration** - Whitelist specific origins only
 
 ### Authentication & Authorization
@@ -201,6 +201,17 @@ See `docs/guides/SECURITY.md` for comprehensive security strategy covering:
 - Re-read all mutable state (facility levels, roster counts, attribute levels) after acquiring the lock
 - For multi-row serialization (team creation), use `pg_advisory_xact_lock` instead
 - See `docs/guides/SECURITY.md` → Security Playbook → Transaction Integrity Pattern for the full pattern
+
+### Rate Limiting for Destructive Endpoints
+- Heavy or destructive operations (account reset, bulk deletes) must have dedicated per-user rate limiters beyond the general API limiter
+- Use `express-rate-limit` with `keyGenerator` based on `authReq.user.userId` to prevent abuse from authenticated sessions
+- Track violations via `securityMonitor.trackRateLimitViolation()` so they appear in the admin Security dashboard
+- Example: account reset is limited to 3 req/hr per user (see `src/routes/onboarding.ts`)
+
+### Admin Endpoint Authorization Logging
+- The `requireAdmin` middleware logs all unauthorized access attempts via `securityMonitor.logAuthorizationFailure()`
+- These appear as `authorization_failure` events with resource type `admin_endpoint` in the Security dashboard
+- Never reveal which admin endpoints exist in error messages — use the generic "Admin access required" response
 
 ### ESLint Security Rules (`eslint-plugin-security`)
 - The backend ESLint config includes `eslint-plugin-security` with rules that flag `eval()`, dynamic `require()`, timing attacks, unsafe regex, and deprecated Buffer usage

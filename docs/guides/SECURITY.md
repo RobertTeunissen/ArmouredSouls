@@ -111,11 +111,13 @@ Security considerations are built into the architecture from the start, not adde
 ## API Security
 
 ### Rate Limiting
-- Global rate limit: 1000 requests/hour per IP
-- Authenticated user: 5000 requests/hour
-- Login attempts: 5 per 15 minutes
-- Registration: 3 per hour per IP
-- Sensitive operations: Stricter limits
+- General API: 300 requests/minute per IP
+- Login: 10 requests per 15 minutes per IP
+- Registration: 30 requests per minute per IP
+- Economic endpoints (weapons, facilities, robots): 60 requests/minute per authenticated user
+- Account reset: 3 requests/hour per authenticated user
+- Rate limit violations tracked by `SecurityMonitor` and visible in the admin Security dashboard
+- Repeated violations (>5 in 1 hour on economic endpoints) trigger a `rate_limit_escalation` security event
 
 ### Input Validation
 - Schema validation for all inputs
@@ -522,6 +524,22 @@ const querySchema = z.object({
 **Exploit**: Sensitive credentials (DB password, JWT secret) exposed in git history.
 
 **Prevention**: `.env` is in `.gitignore`. Pre-commit hooks should verify sensitive files are ignored. See `docs/guides/SECURITY_ADVISORY.md` for credential rotation steps.
+
+### 11. Account Reset DDOS
+
+**Exploit**: Spamming `POST /api/onboarding/reset-account` to overload the database. Each reset runs multiple `deleteMany` operations in a transaction plus eligibility checks — a heavy operation that can be triggered from both the onboarding flow and the profile page.
+
+**Detection**: `SecurityMonitor.trackRateLimitViolation()` logs repeated 429 responses on the reset endpoint.
+
+**Prevention**: Dedicated `resetLimiter` middleware on both `/api/onboarding/reset-account` and `/api/onboarding/reset-eligibility` — 3 requests per hour per authenticated user, keyed by `userId`.
+
+### 12. Unauthorized Admin API Access
+
+**Exploit**: Non-admin users probing admin endpoints to discover internal system state or trigger admin-only operations.
+
+**Detection**: `requireAdmin` middleware logs all 403 rejections via `securityMonitor.logAuthorizationFailure()` with resource type `admin_endpoint`. These appear as `authorization_failure` events in the admin Security dashboard.
+
+**Prevention**: All admin routes are protected by `authenticateToken` + `requireAdmin`. The generic "Admin access required" error message does not reveal which endpoints exist.
 
 ---
 
