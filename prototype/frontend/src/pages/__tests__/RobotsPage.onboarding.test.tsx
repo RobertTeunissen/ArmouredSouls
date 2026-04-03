@@ -78,6 +78,20 @@ vi.mock('../../components/ConfirmationModal', () => ({
   default: () => null,
 }));
 
+// Mock Zustand robot store
+const mockFetchRobots = vi.fn();
+const mockStoreState = {
+  robots: [] as any[],
+  loading: false,
+  error: null as string | null,
+  fetchRobots: mockFetchRobots,
+  clear: vi.fn(),
+};
+vi.mock('../../stores', () => ({
+  useRobotStore: (selector?: (state: any) => any) =>
+    selector ? selector(mockStoreState) : mockStoreState,
+}));
+
 const mockRobots = [
   {
     id: 1,
@@ -189,6 +203,11 @@ const mockFacilities = [
 ];
 
 function setupMocks(robots = mockRobots, facilities = mockFacilities) {
+  // Populate the Zustand store mock with robots
+  mockStoreState.robots = robots;
+  mockStoreState.loading = false;
+  mockStoreState.error = null;
+
   vi.mocked(apiClient.get).mockImplementation((url: string) => {
     if (url.includes('/api/robots')) {
       return Promise.resolve({ data: robots });
