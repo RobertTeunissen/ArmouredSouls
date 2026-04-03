@@ -301,6 +301,7 @@ export interface SecurityEvent {
   severity: 'info' | 'warning' | 'critical';
   eventType: string;
   userId?: number;
+  stableName?: string;
   sourceIp?: string;
   endpoint?: string;
   details: Record<string, unknown>;

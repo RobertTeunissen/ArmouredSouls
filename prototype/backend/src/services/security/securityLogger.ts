@@ -21,6 +21,7 @@ export interface SecurityEvent {
   severity: SecuritySeverity;
   eventType: string;
   userId?: number;
+  stableName?: string;
   sourceIp?: string;
   endpoint?: string;
   details: Record<string, unknown>;

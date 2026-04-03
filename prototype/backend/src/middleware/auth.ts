@@ -40,11 +40,16 @@ export const authenticateToken = async (
   try {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { tokenVersion: true },
+      select: { tokenVersion: true, stableName: true },
     });
 
     if (!user || user.tokenVersion !== tokenVersion) {
       return res.status(401).json({ error: 'Invalid or expired token' });
+    }
+
+    // Cache stable name for security event enrichment (no extra DB call)
+    if (user.stableName) {
+      securityMonitor.setStableName(userId, user.stableName);
     }
   } catch {
     return res.status(401).json({ error: 'Invalid or expired token' });
@@ -68,7 +73,10 @@ export const requireAdmin = (
   }
 
   if (req.user.role !== 'admin') {
-    securityMonitor.logAuthorizationFailure(req.user.userId, 'admin_endpoint', 0);
+    securityMonitor.logAuthorizationFailure(req.user.userId, 'admin_endpoint', 0, {
+      sourceIp: req.ip || undefined,
+      endpoint: req.originalUrl,
+    });
     return res.status(403).json({ error: 'Admin access required' });
   }
 
