@@ -295,3 +295,28 @@ export interface RepairLogResponse {
     hasMore: boolean;
   };
 }
+
+/** Security event from the admin security monitoring API */
+export interface SecurityEvent {
+  severity: 'info' | 'warning' | 'critical';
+  eventType: string;
+  userId?: number;
+  sourceIp?: string;
+  endpoint?: string;
+  details: Record<string, unknown>;
+  timestamp: string;
+}
+
+/** Response shape for GET /api/admin/security/summary */
+export interface SecuritySummary {
+  totalEvents: number;
+  bySeverity: Record<'info' | 'warning' | 'critical', number>;
+  activeAlerts: number;
+  flaggedUserIds: number[];
+}
+
+/** Response shape for GET /api/admin/security/events */
+export interface SecurityEventsResponse {
+  events: SecurityEvent[];
+  total: number;
+}

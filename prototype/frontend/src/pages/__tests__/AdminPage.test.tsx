@@ -38,6 +38,8 @@ vi.mock('../../components/admin', () => ({
   RobotStatsTab: () => <div data-testid="stats-tab-content">Robot Stats</div>,
   BankruptcyMonitorTab: () => <div data-testid="bankruptcy-monitor-tab-content">Bankruptcy Monitor</div>,
   RecentUsersTab: () => <div data-testid="recent-users-tab-content">Recent Users</div>,
+  RepairLogTab: () => <div data-testid="repair-log-tab-content">Repair Log</div>,
+  SecurityTab: () => <div data-testid="security-tab-content">Security</div>,
 }));
 
 vi.mock('../../components/TournamentManagement', () => ({
@@ -53,6 +55,7 @@ const TAB_LABELS = [
   '💰 Bankruptcy Monitor',
   '👥 Recent Users',
   '🔧 Repair Log',
+  '🛡️ Security',
 ];
 
 function renderAdminPage() {
@@ -73,7 +76,7 @@ describe('AdminPage shell', () => {
   it('should render all 7 tab buttons', () => {
     renderAdminPage();
     const tabs = screen.getAllByRole('tab');
-    expect(tabs).toHaveLength(8);
+    expect(tabs).toHaveLength(9);
     for (const label of TAB_LABELS) {
       expect(screen.getByRole('tab', { name: label })).toBeInTheDocument();
     }

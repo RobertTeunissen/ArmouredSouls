@@ -18,13 +18,14 @@ import {
   BankruptcyMonitorTab,
   RecentUsersTab,
   RepairLogTab,
+  SecurityTab,
 } from '../components/admin';
 import type { SessionLogEntry, SystemStats } from '../components/admin/types';
 import apiClient from '../utils/apiClient';
 
-type TabType = 'dashboard' | 'cycles' | 'tournaments' | 'battles' | 'stats' | 'bankruptcy-monitor' | 'recent-users' | 'repair-log';
+type TabType = 'dashboard' | 'cycles' | 'tournaments' | 'battles' | 'stats' | 'bankruptcy-monitor' | 'recent-users' | 'repair-log' | 'security';
 
-const VALID_TABS: TabType[] = ['dashboard', 'cycles', 'tournaments', 'battles', 'stats', 'bankruptcy-monitor', 'recent-users', 'repair-log'];
+const VALID_TABS: TabType[] = ['dashboard', 'cycles', 'tournaments', 'battles', 'stats', 'bankruptcy-monitor', 'recent-users', 'repair-log', 'security'];
 
 const TAB_LABELS: Record<TabType, string> = {
   dashboard: '📊 Dashboard',
@@ -35,6 +36,7 @@ const TAB_LABELS: Record<TabType, string> = {
   'bankruptcy-monitor': '💰 Bankruptcy Monitor',
   'recent-users': '👥 Recent Users',
   'repair-log': '🔧 Repair Log',
+  'security': '🛡️ Security',
 };
 
 function isValidTab(value: string): value is TabType {
@@ -200,6 +202,11 @@ function AdminPage() {
         {activeTab === 'repair-log' && (
           <div role="tabpanel" id="repair-log-panel" aria-labelledby="repair-log-tab">
             <RepairLogTab />
+          </div>
+        )}
+        {activeTab === 'security' && (
+          <div role="tabpanel" id="security-panel" aria-labelledby="security-tab">
+            <SecurityTab />
           </div>
         )}
       </div>

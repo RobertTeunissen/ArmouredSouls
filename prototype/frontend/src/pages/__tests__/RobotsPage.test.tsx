@@ -67,6 +67,21 @@ vi.mock('../../components/ConfirmationModal', () => ({
     ) : null,
 }));
 
+// Mock Zustand robot store — RobotsPage reads from useRobotStore with selectors
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockStoreState: Record<string, any> = {
+  robots: [],
+  loading: false,
+  error: null,
+  fetchRobots: vi.fn(),
+  clear: vi.fn(),
+};
+vi.mock('../../stores', () => ({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  useRobotStore: (selector?: (state: any) => any) =>
+    selector ? selector(mockStoreState) : mockStoreState,
+}));
+
 const mockRobots = [
   {
     id: 1,
@@ -138,6 +153,11 @@ const mockFacilities = [
 
 // Helper to set up apiClient mocks with custom robot/facility data
 function setupMocks(robots = mockRobots, facilities = mockFacilities) {
+  // Populate the Zustand store mock with robots
+  mockStoreState.robots = robots;
+  mockStoreState.loading = false;
+  mockStoreState.error = null;
+
   mockedApiClient.get.mockImplementation((url: string) => {
     if (url.includes('/api/robots')) {
       return Promise.resolve({ data: robots });
@@ -166,6 +186,8 @@ describe('RobotsPage', () => {
 
   describe('Loading State', () => {
     it('should display loading message initially', () => {
+      mockStoreState.loading = true;
+      mockStoreState.robots = [];
       renderWithRouter(<RobotsPage />);
       expect(screen.getByText('Loading robots...')).toBeInTheDocument();
     });
@@ -219,28 +241,21 @@ describe('RobotsPage', () => {
 
   describe('Error State', () => {
     it('should display error message when API fails', async () => {
-      mockedApiClient.get.mockRejectedValue(new Error('Server error'));
+      mockStoreState.error = 'Failed to load robots';
+      mockStoreState.robots = [];
 
       renderWithRouter(<RobotsPage />);
-      
-      await waitFor(() => {
-        expect(screen.getByText('Failed to load robots')).toBeInTheDocument();
-      });
+
+      expect(screen.getByText('Failed to load robots')).toBeInTheDocument();
     });
 
     it('should display error message on 401 error', async () => {
-      // The api helper converts errors to ApiError, so the component sees an ApiError
-      // The 401 handling happens in the apiClient interceptor, not in the component
-      mockedApiClient.get.mockRejectedValue({
-        response: { status: 401, data: { error: 'Unauthorized' } },
-      });
+      mockStoreState.error = 'Failed to load robots';
+      mockStoreState.robots = [];
 
       renderWithRouter(<RobotsPage />);
-      
-      await waitFor(() => {
-        // The component displays an error message when API fails
-        expect(screen.getByText('Failed to load robots')).toBeInTheDocument();
-      });
+
+      expect(screen.getByText('Failed to load robots')).toBeInTheDocument();
     });
   });
 
@@ -307,13 +322,10 @@ describe('RobotsPage', () => {
   });
 
   describe('API Calls', () => {
-    it('should fetch robots via apiClient', async () => {
+    it('should call fetchRobots from the store on mount', async () => {
       renderWithRouter(<RobotsPage />);
-      
-      await waitFor(() => {
-        // The api helper passes { params: undefined } as the second argument
-        expect(mockedApiClient.get).toHaveBeenCalledWith('/api/robots', { params: undefined });
-      });
+
+      expect(mockStoreState.fetchRobots).toHaveBeenCalled();
     });
 
     it('should fetch facilities via apiClient', async () => {

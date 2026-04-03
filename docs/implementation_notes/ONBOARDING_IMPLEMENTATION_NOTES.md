@@ -108,7 +108,7 @@ The backend still uses steps 1-9. The frontend maps them to 5 display steps:
 Step components use direct `apiClient` calls for step advancement and purchases instead of the OnboardingContext's `advanceStep`/`setStep` methods. This is because the context's `runAction` helper catches errors without re-throwing, making it impossible for calling code to detect failures.
 
 ### Account Reset for "Previous"
-The "Previous" button on steps 2 and 3 triggers a full account reset (`POST /api/onboarding/reset-account`) rather than trying to undo individual purchases. This is safe during early onboarding since the user hasn't participated in any battles yet.
+The "Previous" button on steps 2 and 3 triggers a full account reset (`POST /api/onboarding/reset-account`) rather than trying to undo individual purchases. This is safe during early onboarding since the user hasn't participated in any battles yet. The endpoint is rate-limited to 3 requests per hour per user to prevent abuse.
 
 ### BudgetTracker Refresh
 The BudgetTracker re-fetches credits from `/api/user/profile` whenever `tutorialState.currentStep` changes, ensuring it reflects purchases made during step transitions.

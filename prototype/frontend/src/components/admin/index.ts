@@ -10,5 +10,6 @@ export { RobotStatsTab } from './RobotStatsTab';
 export { BankruptcyMonitorTab } from './BankruptcyMonitorTab';
 export { RecentUsersTab } from './RecentUsersTab';
 export { RepairLogTab } from './RepairLogTab';
+export { SecurityTab } from './SecurityTab';
 
 export * from './types';

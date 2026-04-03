@@ -8,6 +8,7 @@
  * @see {@link ../services/resetService} for account reset logic
  */
 import express, { Response } from 'express';
+import rateLimit from 'express-rate-limit';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import {
   getTutorialState,
@@ -25,8 +26,36 @@ import {
 } from '../services/common/resetService';
 import onboardingAnalyticsRouter from './onboardingAnalytics';
 import logger from '../config/logger';
+import { securityMonitor } from '../services/security/securityMonitor';
 
 const router = express.Router();
+
+/**
+ * Strict rate limiter for account reset endpoints.
+ * 3 requests per hour per authenticated user — resets are heavy DB operations.
+ */
+const resetLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 3,
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: false,
+  keyGenerator: (req) => {
+    const authReq = req as AuthRequest;
+    return `reset:${authReq.user?.userId?.toString() || req.ip || 'unknown'}`;
+  },
+  handler: (req, res) => {
+    const authReq = req as AuthRequest;
+    if (authReq.user?.userId) {
+      securityMonitor.trackRateLimitViolation(authReq.user.userId, req.originalUrl);
+    }
+    res.status(429).json({
+      error: 'Too many reset attempts. Try again later.',
+      code: 'RATE_LIMIT_EXCEEDED',
+      retryAfter: 3600,
+    });
+  },
+});
 
 /**
  * Shared error handler for onboarding routes.
@@ -314,7 +343,7 @@ router.post('/skip', authenticateToken, async (req: AuthRequest, res: Response) 
  *
  * Requirements: 14.1-14.15
  */
-router.post('/reset-account', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.post('/reset-account', authenticateToken, resetLimiter, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
     const { confirmation, reason } = req.body;
@@ -378,7 +407,7 @@ router.post('/reset-account', authenticateToken, async (req: AuthRequest, res: R
  *
  * Requirements: 14.4-14.8
  */
-router.get('/reset-eligibility', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get('/reset-eligibility', authenticateToken, resetLimiter, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
 

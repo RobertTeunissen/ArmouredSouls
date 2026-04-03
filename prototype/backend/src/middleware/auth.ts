@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { getConfig } from '../config/env';
 import prisma from '../lib/prisma';
+import { securityMonitor } from '../services/security/securityMonitor';
 
 export interface AuthRequest extends Request {
   user?: {
@@ -67,6 +68,7 @@ export const requireAdmin = (
   }
 
   if (req.user.role !== 'admin') {
+    securityMonitor.logAuthorizationFailure(req.user.userId, 'admin_endpoint', 0);
     return res.status(403).json({ error: 'Admin access required' });
   }
 
