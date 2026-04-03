@@ -4,7 +4,7 @@
 **Document Type**: Product Requirements Document (PRD)  
 **Version**: 3.0  
 **Date**: February 10, 2026  
-**Status**: ✅ IMPLEMENTED - Decomposed admin portal with 7-tab interface
+**Status**: ✅ IMPLEMENTED - Decomposed admin portal with 9-tab interface
 
 ---
 
@@ -16,6 +16,8 @@
 - v2.0 - **MAJOR UPDATE**: Consolidated all admin_page documentation, verified implementation status, updated with actual features
 - v2.1 - Added comprehensive frontend test suite (41 tests) for AdminPage and BattleDetailsModal components
 - v3.0 - **MAJOR OVERHAUL**: Decomposed monolithic AdminPage into thin shell + 6 tab components. Consolidated to 7 tabs (Dashboard, Cycle Controls, Tournaments, Battle Logs, Robot Stats, Bankruptcy Monitor, Recent Users). Integrated System Health into Dashboard as collapsible section. Promoted Bankruptcy Monitor to dedicated tab. Added tag team battle support in Battle Logs and BattleDetailsModal. Removed broken onboarding analytics link. Rewrote test suite as per-component tests.
+- v3.1 - Added Repair Log tab (8th tab) for viewing manual and automatic repair events with cost breakdowns.
+- v3.2 - Added Security tab (9th tab) consuming backend security monitoring APIs from spec 11. Displays security event summary with severity counts, flagged users, filterable events table with expandable detail rows.
 
 ---
 
@@ -213,7 +215,31 @@ The Admin Page has been fully implemented with the following features:
 - Issue detection for problematic accounts
 - Cycle range control for filtering user activity
 
-#### 10. **Battle Details Modal** ✅ COMPLETE
+#### 10. **Security Tab** ✅ COMPLETE
+- **Component**: `SecurityTab.tsx` in `components/admin/`
+- Consumes the backend security monitoring APIs added in spec 11 (Security Audit Guardrails)
+- **Data Sources**: `GET /api/admin/security/summary`, `GET /api/admin/security/events`
+- **Summary Panel**:
+  - Total events in buffer, severity counts (info/warning/critical), active alerts count
+  - Color-coded severity cards: info (blue), warning (amber), critical (red)
+  - Flagged user ID badges — clickable to filter events by that user
+  - Refresh button to re-fetch both summary and events
+- **Filter Bar**:
+  - Severity dropdown (All / Info / Warning / Critical)
+  - Event type dropdown (populated from distinct event types in current data)
+  - User ID text input (numeric only, applied on Enter/blur)
+  - Clear Filters button to reset all filters
+- **Events Table**:
+  - Columns: Timestamp (relative with absolute on hover), Severity (color-coded badge), Event Type, User ID, Source IP, Endpoint
+  - Newest events first (reverse chronological)
+  - Clickable rows expand inline detail section showing event `details` as formatted key-value pairs
+  - Zero-state: "No security events recorded" with info icon when no events exist
+- **Error Handling**:
+  - Loading indicator while fetching
+  - Error message with Retry button on API failure
+  - Graceful fallback to zero-state on unexpected response shapes
+
+#### 11. **Battle Details Modal** ✅ COMPLETE
 - **1v1 Battle Summary** (unchanged):
   - Side-by-side robot cards with all key metrics
   - Final HP, shields, damage dealt
@@ -324,6 +350,16 @@ All admin endpoints are implemented and operational:
   - User list rendering with onboarding status badges
   - Cycle range control
 
+- ✅ **SecurityTab Tests** (`src/components/admin/__tests__/SecurityTab.test.tsx`)
+  - Loading state while fetching security data
+  - Summary panel rendering with severity counts and active alerts
+  - Events table rendering with severity badges, event types, timestamps
+  - Zero-state rendering when no events recorded
+  - Severity filter triggers re-fetch with query parameter
+  - Flagged user badge click sets user ID filter
+  - Error state with Retry button
+  - Event row expansion showing detail key-value pairs
+
 - ✅ **BattleDetailsModal Tests** (`src/components/admin/__tests__/BattleDetailsModal.test.tsx`)
   - 1v1 rendering: robot1 vs robot2 side-by-side, attribute comparison, combat log, formula breakdowns
   - 2v2 tag team rendering: team layout with active + reserve robots per side
@@ -397,6 +433,7 @@ npm run test:ui
   - `RobotStatsTab.tsx` — Attribute selector, statistical analysis, outlier detection, win rate correlation, league comparison, top/bottom performers
   - `BankruptcyMonitorTab.tsx` — Dedicated at-risk users view, always renders (zero-state when no users at risk)
   - `RecentUsersTab.tsx` — Recent real users list with per-user onboarding status, robot details, issue detection
+  - `SecurityTab.tsx` — Security monitoring dashboard with summary panel, filterable events table, flagged users
 - `prototype/frontend/src/components/BattleDetailsModal.tsx` (~500 lines)
   - Battle analysis modal supporting both 1v1 and 2v2 tag team layouts
   - Attribute comparison
@@ -694,11 +731,15 @@ AdminPage (Thin Shell — tab navigation, URL hash/localStorage persistence)
 │   ├── BankruptcyMonitorTab (components/admin/BankruptcyMonitorTab.tsx)
 │   │   ├── At-Risk Users List (when totalAtRisk > 0)
 │   │   └── Zero-State Confirmation (when totalAtRisk === 0)
-│   └── RecentUsersTab (components/admin/RecentUsersTab.tsx)
-│       ├── Recent Real Users List
-│       ├── Per-User Onboarding Status
-│       ├── Robot Details
-│       └── Issue Detection
+│   ├── RecentUsersTab (components/admin/RecentUsersTab.tsx)
+│   │   ├── Recent Real Users List
+│   │   ├── Per-User Onboarding Status
+│   │   ├── Robot Details
+│   │   └── Issue Detection
+│   └── SecurityTab (components/admin/SecurityTab.tsx)
+│       ├── Summary Panel (severity counts, active alerts, flagged users)
+│       ├── Filter Bar (severity, event type, user ID)
+│       └── Events Table (expandable rows with detail view)
 └── BattleDetailsModal (Overlay)
     ├── 1v1 Layout (robot1 vs robot2)
     │   ├── Battle Summary
@@ -751,6 +792,10 @@ GET  /api/admin/stats/robots             // Robot statistics
 
 // Bankruptcy Monitoring
 GET  /api/admin/users/at-risk            // At-risk users for bankruptcy monitor
+
+// Security Monitoring
+GET  /api/admin/security/summary         // Security event summary (severity counts, flagged users)
+GET  /api/admin/security/events          // Recent security events (filterable by severity, eventType, userId, since, limit)
 
 // System Health (integrated into Dashboard)
 GET  /api/analytics/performance          // Cycle performance metrics
