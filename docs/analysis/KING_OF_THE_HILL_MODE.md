@@ -126,7 +126,14 @@ Resolved during implementation (March 18, 2026). These answer the "Open Question
 - 2nd: 17,500 credits, 5 fame, 8 prestige
 - 3rd: 10,000 credits, 3 fame, 3 prestige
 - 4th-6th: 5,000 credits, 0 fame, 0 prestige
-- Zone dominance bonus: +25% all rewards if >75% of score came from uncontested time
+
+**Winner fame performance multiplier** (1st place only):
+- HP ≥ 100%: 2.0× fame (Perfect Victory) → 16 fame
+- HP > 80%: 1.5× fame (Dominating) → 12 fame
+- HP < 20%: 1.25× fame (Comeback) → 10 fame
+- Otherwise: 1.0× fame → 8 fame
+
+**Zone dominance bonus**: +25% to credits, fame, and prestige when >75% of the robot's zone score came from uncontested zone control (vs kill bonuses). Applies to all placements, not just the winner.
 - No ELO changes. No league points. Streaming revenue awarded to all participants.
 
 ### Format
@@ -135,3 +142,81 @@ Resolved during implementation (March 18, 2026). These answer the "Open Question
 - Fixed: 30-point threshold, 150s time limit
 - Rotating: 45-point threshold, 210s time limit, zone moves every 30s
 - Anti-passive penalties for robots that avoid the zone too long
+
+---
+
+## Balance Update — April 3, 2026
+
+### Linearized Attribute Scaling
+
+All attribute-based thresholds in KoTH have been replaced with linear scaling. Every point of investment now provides a measurable improvement.
+
+#### Threat Analysis
+- **Target priority scaling**: `0.3 + (TA / 50) × 0.7` — fully linear from 0.314 (TA=1) to 1.0 (TA=50). Previously flat 0.5 for TA < 10.
+- **Zone pull bias**: Floor raised from 30% to 40%. Formula: `((TA - 1) / 49) × 0.6 + 0.4`, range [0.40, 1.0].
+- **Combat pull multipliers**: Raised from 0.25/0.45 to 0.35/0.55 (attacked/nearby).
+- **Avoidance positioning**: Now `TA / 50`, always active (was gated at TA > 15).
+- **Flank approach**: Now `TA / 50` blended, always active (was gated at TA > 20).
+
+#### Combat Algorithms
+- **Movement deviation**: Linear `30 - (CA/50) × 25` degrees. CA=1 gets 29.5°, CA=50 gets 5°. Previously hard tiers at CA < 15 (±30°), CA 15–30 (±15°), CA > 30 (calculated).
+- **Movement prediction**: Linear weight `(CA - 1) / 49`, always active. Previously gated at CA ≥ 20.
+- **Wait-and-enter (KoTH)**: Linear blend `CA / 50` between rushing in and waiting. Previously hard-gated at CA > 25.
+
+### Score-Aware Target Priority
+
+Robots now factor opponent scores into target selection. Each opponent receives a score threat bonus:
+
+```
+scoreRatio = opponentScore / scoreThreshold
+scoreThreatBonus = scoreRatio × 3.0 × threatAnalysisScale(TA)
+```
+
+This means:
+- High-scoring opponents become higher priority targets
+- High-TA robots pivot to the score leader earlier
+- Low-TA robots are slower to recognize the threat but eventually do as scores climb
+- The bonus is per-opponent, so two robots fighting for 1st and 2nd naturally draw attention from different attackers based on their TA
+
+### Score-Aware Movement Pull
+
+Movement intent now includes a pull toward the current target proportional to their score:
+
+```
+scorePull = (targetScore / scoreThreshold) × 0.4 × biasStrength(TA)
+```
+
+This reinforces the target priority by pulling robots toward high-scoring opponents.
+
+### Passive Penalty Zone Pull
+
+After 20 seconds outside the zone, robots receive an increasing movement bias back toward the zone:
+
+```
+passivePull = min(0.5, (timeOutside - 20) / 40)
+```
+
+This gives robots a behavioral nudge back toward the zone, complementing the existing damage/accuracy penalties.
+
+### Passive Penalties Wired Into Combat
+
+The KoTH passive penalty system (damage reduction + accuracy penalty for staying outside the zone) is now applied during attack resolution:
+- **Damage reduction**: Applied as `(1 - damageReduction)` multiplier on final damage
+- **Accuracy penalty**: Applied as subtraction from hit chance (converted to percentage)
+
+Previously these penalties were tracked but never consumed by the combat simulator.
+
+### Out-of-Range Message Improvement
+
+Melee robots that can't reach their target now show one "can't reach" message per out-of-range streak. Subsequent out-of-range events are suppressed until the robot successfully attempts an attack (hit or miss), then the suppression resets.
+
+### Counter-Attack Kill Attribution Fix
+
+Previously, kill attribution used `currentTarget` to find the killer — checking which alive robot was targeting the dead robot. This failed for counter-attack kills because the counter-attacker's `currentTarget` points at a different robot (the one they're hunting), not the robot they just killed via counter.
+
+The fix scans recent combat events backwards to find the last robot that dealt damage to the dead robot. This correctly attributes kills from:
+- Regular attacks (attacker's `currentTarget` matches victim)
+- Counter-attacks (defender countered and killed the original attacker)
+- Any other damage source
+
+Falls back to the `currentTarget` heuristic if no matching event is found.

@@ -1665,9 +1665,9 @@ describe('Property 11: Zone movement bias scales with threatAnalysis', () => {
     );
   });
 
-  // ── Test 2: Bias at ta=1 produces ~30% blend toward zone center ──
+  // ── Test 2: Bias at ta=1 produces ~40% blend toward zone center ──
 
-  it('at ta=1, target position is lerp(baseTarget, zoneCenter, 0.3)', () => {
+  it('at ta=1, target position is lerp(baseTarget, zoneCenter, 0.4)', () => {
     fc.assert(
       fc.property(
         // Random base target positions (away from zone)
@@ -1682,10 +1682,10 @@ describe('Property 11: Zone movement bias scales with threatAnalysis', () => {
 
           const result = modifier.modify(baseIntent, robot, arena, gameState);
 
-          // At ta=1: biasStrength = ((1-1)/49)*0.7 + 0.3 = 0.3
-          // lerp(base, (0,0), 0.3) = base + ((0,0) - base) * 0.3 = base * 0.7
-          const expectedX = baseX + (0 - baseX) * 0.3;
-          const expectedY = baseY + (0 - baseY) * 0.3;
+          // At ta=1: biasStrength = ((1-1)/49)*0.6 + 0.4 = 0.4
+          // lerp(base, (0,0), 0.4) = base + ((0,0) - base) * 0.4 = base * 0.6
+          const expectedX = baseX + (0 - baseX) * 0.4;
+          const expectedY = baseY + (0 - baseY) * 0.4;
 
           expect(result.targetPosition.x).toBeCloseTo(expectedX, 4);
           expect(result.targetPosition.y).toBeCloseTo(expectedY, 4);
@@ -1697,22 +1697,21 @@ describe('Property 11: Zone movement bias scales with threatAnalysis', () => {
 });
 
 
-// ─── Property 12: Wait-and-enter tactic activates for high combatAlgorithms ─
+// ─── Property 12: Wait-and-enter tactic scales linearly with combatAlgorithms ─
 
 /**
  * **Validates: Requirements 6.4**
  *
- * Property 12: For any robot with combatAlgorithms > 25 when the zone is
- * contested by two or more other robots, the movement modifier must set
- * the robot's target position to 2 grid units outside the zone edge
- * (zoneRadius + 2 from center), on the line from zone center toward the
- * robot's current position.
+ * Property 12: For any robot when the zone is contested by two or more
+ * other robots, the movement modifier blends between zone center and
+ * the wait position based on CA/50. Higher CA → more patience.
  *
  * Wait position formula:
  *   direction = normalize(robotPosition - zoneCenter)
  *   waitPosition = zoneCenter + direction * (zoneRadius + 2)
+ *   blendedPosition = lerp(zoneCenter, waitPosition, CA/50)
  */
-describe('Property 12: Wait-and-enter tactic activates for high combatAlgorithms', () => {
+describe('Property 12: Wait-and-enter tactic scales linearly with combatAlgorithms', () => {
   const modifier = new KothMovementIntentModifier();
 
   const arena: ArenaConfig = {
@@ -1755,57 +1754,48 @@ describe('Property 12: Wait-and-enter tactic activates for high combatAlgorithms
     };
   }
 
-  // ── Test 1: Wait-and-enter activates when combatAlgorithms > 25 and zone contested by 2+ ──
+  // ── Test 1: Higher CA produces target farther from zone center (more patient) ──
 
-  it('target is at distance zoneRadius+2 from zone center when combatAlgorithms > 25 and zone contested', () => {
+  it('higher CA produces target farther from zone center when zone contested by 2+', () => {
     fc.assert(
       fc.property(
-        // combatAlgorithms > 25
-        fc.integer({ min: 26, max: 100 }),
+        // Two distinct CA values above the 0.1 waitWeight threshold (CA > 5)
+        fc.integer({ min: 6, max: 49 }),
+        fc.integer({ min: 7, max: 50 }),
         // Robot position outside zone — angle in radians and distance > 5
         fc.double({ min: 0, max: 2 * Math.PI, noNaN: true, noDefaultInfinity: true }),
-        fc.double({ min: 6, max: 20, noNaN: true, noDefaultInfinity: true }),
-        (ca, angle, dist) => {
-          // Robot outside zone at random angle and distance
+        fc.double({ min: 8, max: 20, noNaN: true, noDefaultInfinity: true }),
+        (ca1, ca2, angle, dist) => {
+          fc.pre(ca1 < ca2);
+
           const robotX = Math.cos(angle) * dist;
           const robotY = Math.sin(angle) * dist;
-
-          // Ensure robot is actually outside zone (dist > 5)
           fc.pre(Math.sqrt(robotX * robotX + robotY * robotY) > 5);
 
-          const robot = makeWaitRobot(1, robotX, robotY, ca);
+          const robot1 = makeWaitRobot(1, robotX, robotY, ca1);
+          const robot2 = makeWaitRobot(1, robotX, robotY, ca2);
 
-          // Two opponents inside zone (contested)
           const opp1 = makeWaitRobot(2, 1, 0, 15);
           const opp2 = makeWaitRobot(3, -1, 0, 15);
 
           const baseIntent = makeWaitIntent(0, 0);
-          const gameState = makeWaitGameState([robot, opp1, opp2]);
+          const gameState1 = makeWaitGameState([robot1, opp1, opp2]);
+          const gameState2 = makeWaitGameState([robot2, opp1, opp2]);
 
-          const result = modifier.modify(baseIntent, robot, arena, gameState);
+          const result1 = modifier.modify(baseIntent, robot1, arena, gameState1);
+          const result2 = modifier.modify(baseIntent, robot2, arena, gameState2);
 
-          // Wait position should be at distance zoneRadius + 2 = 7 from zone center
-          const resultDist = Math.sqrt(
-            result.targetPosition.x * result.targetPosition.x +
-            result.targetPosition.y * result.targetPosition.y,
+          const dist1 = Math.sqrt(
+            result1.targetPosition.x * result1.targetPosition.x +
+            result1.targetPosition.y * result1.targetPosition.y,
           );
-          expect(resultDist).toBeCloseTo(7, 1);
-
-          // Wait position should be on the line from zone center toward robot
-          // i.e., direction of wait position should match direction of robot position
-          const robotMag = Math.sqrt(robotX * robotX + robotY * robotY);
-          const robotDirX = robotX / robotMag;
-          const robotDirY = robotY / robotMag;
-
-          const resultMag = Math.sqrt(
-            result.targetPosition.x * result.targetPosition.x +
-            result.targetPosition.y * result.targetPosition.y,
+          const dist2 = Math.sqrt(
+            result2.targetPosition.x * result2.targetPosition.x +
+            result2.targetPosition.y * result2.targetPosition.y,
           );
-          const resultDirX = result.targetPosition.x / resultMag;
-          const resultDirY = result.targetPosition.y / resultMag;
 
-          expect(resultDirX).toBeCloseTo(robotDirX, 4);
-          expect(resultDirY).toBeCloseTo(robotDirY, 4);
+          // Higher CA → more patience → farther from zone center
+          expect(dist2).toBeGreaterThanOrEqual(dist1 - 1e-9);
         },
       ),
       { numRuns: 100 },
@@ -1814,11 +1804,11 @@ describe('Property 12: Wait-and-enter tactic activates for high combatAlgorithms
 
   // ── Test 2: Wait-and-enter does NOT activate when combatAlgorithms <= 25 ──
 
-  it('does not produce wait-and-enter position when combatAlgorithms <= 25', () => {
+  it('does not produce wait-and-enter position when CA is very low', () => {
     fc.assert(
       fc.property(
-        // combatAlgorithms <= 25
-        fc.integer({ min: 1, max: 25 }),
+        // combatAlgorithms <= 5 (waitWeight = CA/50 ≤ 0.1, below threshold)
+        fc.integer({ min: 1, max: 5 }),
         // Robot position outside zone
         fc.double({ min: 0, max: 2 * Math.PI, noNaN: true, noDefaultInfinity: true }),
         fc.double({ min: 8, max: 20, noNaN: true, noDefaultInfinity: true }),
@@ -1839,25 +1829,15 @@ describe('Property 12: Wait-and-enter tactic activates for high combatAlgorithms
 
           const result = modifier.modify(baseIntent, robot, arena, gameState);
 
-          // Should NOT be the wait-and-enter position (distance 7 from center)
-          // With ca <= 25, Rule 3 doesn't trigger. Rule 4 (zone bias) or Rule 5 applies.
-          const resultDist = Math.sqrt(
-            result.targetPosition.x * result.targetPosition.x +
-            result.targetPosition.y * result.targetPosition.y,
-          );
-
-          // The result should NOT be exactly at distance 7 on the robot's direction line.
-          // With ca <= 25, the modifier falls through to Rule 4 (zone bias) since
-          // opponents are inside zone (>6 units from robot), producing a blended position.
-          // We verify the target is NOT the wait position by checking it differs from
-          // the expected wait position.
+          // With CA ≤ 5, waitWeight ≤ 0.1, so the wait-and-enter rule doesn't trigger.
+          // The result should fall through to the zone pull rules instead.
           const robotMag = Math.sqrt(robotX * robotX + robotY * robotY);
           const waitX = (robotX / robotMag) * 7;
           const waitY = (robotY / robotMag) * 7;
 
           const isWaitPosition =
-            Math.abs(result.targetPosition.x - waitX) < 0.01 &&
-            Math.abs(result.targetPosition.y - waitY) < 0.01;
+            Math.abs(result.targetPosition.x - waitX) < 0.5 &&
+            Math.abs(result.targetPosition.y - waitY) < 0.5;
 
           expect(isWaitPosition).toBe(false);
         },

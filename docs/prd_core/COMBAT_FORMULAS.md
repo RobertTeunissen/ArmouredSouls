@@ -329,9 +329,12 @@ Targeting Bonus = (Robot Targeting Systems + Weapon Bonus) / 2
 Stance Bonus = 5% if offensive stance, else 0%
 Evasion Penalty = Defender Evasion Thrusters / 3
 Gyro Penalty = Defender Gyro Stabilizers / 5
+Adaptation Bonus = from Adaptive AI system (see adaptationTracker.ts)
+Pressure Mod = from Logic Cores pressure system (see pressureSystem.ts)
+Passive Penalty = KoTH passive accuracy penalty (15% after 60s outside zone)
 Random Variance = Random(-10, 10)
 
-Hit Chance = Clamp(Base + Targeting + Stance - Evasion - Gyro + Variance, 10%, 95%)
+Hit Chance = Clamp(Base + Targeting + Stance - Evasion - Gyro + Adapt + Pressure + Algo - Passive + Variance, 10%, 95%)
 ```
 
 ### Display Format
@@ -343,6 +346,7 @@ Hit: 70 base + 4.0 targeting + 0 stance - 1.7 evasion - 1.0 gyro + -7.9 variance
 - Offhand attacks have significantly reduced base hit chance (50% vs 70%)
 - Random variance adds unpredictability to each attack
 - Final hit chance is clamped between 10% and 95%
+- KoTH passive accuracy penalty applies when a robot stays outside the zone for 60+ seconds
 
 ## Critical Hit Calculation
 

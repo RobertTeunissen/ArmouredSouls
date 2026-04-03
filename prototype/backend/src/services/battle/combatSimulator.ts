@@ -24,6 +24,9 @@ import {
   GameModeState,
 } from '../arena/types';
 
+/** Type alias for GameModeState used in spatial context */
+type SpatialGameModeState = GameModeState;
+
 /**
  * Combat Simulator - Implements time-based combat formulas from ROBOT_ATTRIBUTES.md
  * Enhanced with 2D spatial arena mechanics.
@@ -213,7 +216,7 @@ export function calculateHitChance(
   attacker: RobotWithWeapons,
   defender: RobotWithWeapons,
   attackerHand: 'main' | 'offhand' = 'main',
-  spatialBonuses?: { adaptationHitBonus: number; pressureAccuracyMod: number; combatAlgorithmScore: number }
+  spatialBonuses?: { adaptationHitBonus: number; pressureAccuracyMod: number; combatAlgorithmScore: number; passiveAccuracyPenalty?: number }
 ): { hitChance: number; breakdown: FormulaBreakdown } {
   const baseHitChance = attackerHand === 'offhand' ? 50 : 70;
   const effectiveTargeting = getEffectiveAttribute(attacker, attacker.targetingSystems, attackerHand, 'targetingSystemsBonus');
@@ -225,23 +228,25 @@ export function calculateHitChance(
   let adaptBonus = 0;
   let pressureMod = 0;
   let algoBonus = 0;
+  let passivePenalty = 0;
   if (spatialBonuses) {
     adaptBonus = spatialBonuses.adaptationHitBonus;
     pressureMod = spatialBonuses.pressureAccuracyMod;
+    passivePenalty = spatialBonuses.passiveAccuracyPenalty ?? 0;
     // Combat algorithm hit bonus: score > 0.5 grants 1-5% (Req 5.5)
     if (spatialBonuses.combatAlgorithmScore > 0.5) {
       algoBonus = (spatialBonuses.combatAlgorithmScore - 0.5) * 10; // 0-5%
     }
   }
 
-  const calculated = baseHitChance + targetingBonus + stanceBonus - evasionPenalty - gyroPenalty + adaptBonus + pressureMod + algoBonus;
+  const calculated = baseHitChance + targetingBonus + stanceBonus - evasionPenalty - gyroPenalty + adaptBonus + pressureMod + algoBonus - passivePenalty;
   const randomVariance = random(-10, 10);
   const final = clamp(calculated + randomVariance, 10, 95);
 
   return {
     hitChance: final,
     breakdown: {
-      calculation: `${baseHitChance} base + ${targetingBonus.toFixed(1)} targeting + ${stanceBonus} stance - ${evasionPenalty.toFixed(1)} evasion - ${gyroPenalty.toFixed(1)} gyro${adaptBonus ? ` + ${adaptBonus.toFixed(1)} adapt` : ''}${pressureMod ? ` + ${pressureMod.toFixed(1)} pressure` : ''}${algoBonus ? ` + ${algoBonus.toFixed(1)} algo` : ''} + ${randomVariance.toFixed(1)} variance = ${final.toFixed(1)}%`,
+      calculation: `${baseHitChance} base + ${targetingBonus.toFixed(1)} targeting + ${stanceBonus} stance - ${evasionPenalty.toFixed(1)} evasion - ${gyroPenalty.toFixed(1)} gyro${adaptBonus ? ` + ${adaptBonus.toFixed(1)} adapt` : ''}${pressureMod ? ` + ${pressureMod.toFixed(1)} pressure` : ''}${algoBonus ? ` + ${algoBonus.toFixed(1)} algo` : ''}${passivePenalty ? ` - ${passivePenalty.toFixed(1)} passive` : ''} + ${randomVariance.toFixed(1)} variance = ${final.toFixed(1)}%`,
       components: {
         base: baseHitChance,
         targeting: targetingBonus,
@@ -251,6 +256,7 @@ export function calculateHitChance(
         adaptation: adaptBonus,
         pressure: pressureMod,
         algorithmBonus: algoBonus,
+        passivePenalty: -passivePenalty,
         variance: randomVariance,
       },
       result: final,
@@ -660,6 +666,8 @@ function performAttack(
     positionSnapshot: { positions: Record<string, Position>; facingDirections: Record<string, number> };
     isBackstab: boolean;
     attackAngle: number;
+    passiveAccuracyPenalty?: number;
+    passiveDamageReduction?: number;
   }
 ): void {
   const weaponInfo = getWeaponInfo(attackerState.robot, hand);
@@ -712,7 +720,7 @@ function performAttack(
   // Hit calculation with spatial bonuses
   const { hitChance, breakdown: hitBreakdown } = calculateHitChance(
     attackerState.robot, defenderState.robot, hand,
-    { adaptationHitBonus: spatialContext.adaptationHit, pressureAccuracyMod: spatialContext.pressureAccuracy, combatAlgorithmScore: spatialContext.combatAlgorithmScore }
+    { adaptationHitBonus: spatialContext.adaptationHit, pressureAccuracyMod: spatialContext.pressureAccuracy, combatAlgorithmScore: spatialContext.combatAlgorithmScore, passiveAccuracyPenalty: spatialContext.passiveAccuracyPenalty ?? 0 }
   );
   const hitRoll = random(0, 100);
   const hit = hitRoll < hitChance;
@@ -735,8 +743,11 @@ function performAttack(
         syncVolleyBonus: spatialContext.syncVolleyBonus,
       }
     );
+    // Apply KoTH passive damage reduction (stays outside zone too long)
+    const passiveDmgReduction = spatialContext.passiveDamageReduction ?? 0;
+    const effectiveBaseDamage = baseDamage * (1 - passiveDmgReduction);
     const { hpDamage, shieldDamage, breakdown: applyBreakdown } = applyDamage(
-      baseDamage, attackerState.robot, defenderState.robot, defenderState, isCritical, hand,
+      effectiveBaseDamage, attackerState.robot, defenderState.robot, defenderState, isCritical, hand,
       spatialContext.formationDefenseBonus
     );
 
@@ -1068,6 +1079,7 @@ function buildSpatialContext(
   currentTime: number,
   arena: ArenaConfig,
   allStates: SpatialRobotCombatState[],
+  gameModeState?: SpatialGameModeState,
 ): {
   distance: number;
   rangeBand: RangeBand;
@@ -1084,6 +1096,8 @@ function buildSpatialContext(
   positionSnapshot: { positions: Record<string, Position>; facingDirections: Record<string, number> };
   isBackstab: boolean;
   attackAngle: number;
+  passiveAccuracyPenalty: number;
+  passiveDamageReduction: number;
 } {
   const dist = euclideanDistance(attacker.position, defender.position);
   const rangeBand = classifyRangeBand(dist);
@@ -1116,6 +1130,18 @@ function buildSpatialContext(
   const syncBonus = checkSyncVolley(attacker, currentTime);
   const formationBonus = getFormationDefenseBonus(defender, arena);
 
+  // KoTH passive penalties (damage reduction + accuracy penalty for staying outside zone)
+  let passiveAccuracyPenalty = 0;
+  let passiveDamageReduction = 0;
+  if (gameModeState?.customData?.scoreState) {
+    const scoreState = gameModeState.customData.scoreState as { passivePenalties?: Record<number, { damageReduction: number; accuracyPenalty: number }> };
+    const penalties = scoreState.passivePenalties?.[attacker.robot.id];
+    if (penalties) {
+      passiveAccuracyPenalty = (penalties.accuracyPenalty ?? 0) * 100; // convert 0.15 → 15%
+      passiveDamageReduction = penalties.damageReduction ?? 0; // already 0-0.30
+    }
+  }
+
   return {
     distance: dist,
     rangeBand,
@@ -1132,6 +1158,8 @@ function buildSpatialContext(
     positionSnapshot: buildPositionSnapshot(...allStates),
     isBackstab: backstabResult.isBackstab,
     attackAngle: backstabResult.angle,
+    passiveAccuracyPenalty,
+    passiveDamageReduction,
   };
 }
 
@@ -1236,6 +1264,9 @@ export function simulateBattleMulti(
 
   // Range band tracking per robot (for transition events)
   const lastRangeBandToTarget: Map<number, RangeBand> = new Map();
+
+  // Out-of-range message suppression: show once per streak, suppress until robot attacks
+  const outOfRangeSuppressed: Set<number> = new Set();
 
   // === 3. Battle start event ===
   const participantSummary = states.map(s => {
@@ -1467,7 +1498,7 @@ export function simulateBattleMulti(
         }
 
         if (!weaponLike || canAttack(weaponLike, dist) || forceAttack) {
-          const ctx = buildSpatialContext(state, target, 'main', currentTime, arena, states);
+          const ctx = buildSpatialContext(state, target, 'main', currentTime, arena, states, gameModeState);
           performAttack(
             state, target, state.robot.name, target.robot.name,
             currentTime, 'main', events, ctx,
@@ -1475,22 +1506,28 @@ export function simulateBattleMulti(
           state.lastAttackTime = currentTime;
           state.patienceTimer = 0;
           didAttack = true;
+          // Reset out-of-range suppression — robot successfully attempted an attack
+          outOfRangeSuppressed.delete(state.teamIndex);
         } else {
-          events.push({
-            timestamp: Number(currentTime.toFixed(1)),
-            type: 'out_of_range',
-            attacker: state.robot.name,
-            defender: target.robot.name,
-            weapon: weaponLike.name,
-            message: `🚫 ${state.robot.name}'s ${weaponLike.name} can't reach ${target.robot.name} at ${dist.toFixed(1)} units (need ≤2)`,
-            robot1HP: states[0]?.currentHP ?? 0,
-            robot2HP: states[1]?.currentHP ?? 0,
-            robot1Shield: states[0]?.currentShield ?? 0,
-            robot2Shield: states[1]?.currentShield ?? 0,
-            ...buildPositionSnapshot(...states),
-            distance: dist,
-            rangeBand: classifyRangeBand(dist),
-          });
+          // Out-of-range: show one message per streak, suppress until robot attacks
+          if (!outOfRangeSuppressed.has(state.teamIndex)) {
+            outOfRangeSuppressed.add(state.teamIndex);
+            events.push({
+              timestamp: Number(currentTime.toFixed(1)),
+              type: 'out_of_range',
+              attacker: state.robot.name,
+              defender: target.robot.name,
+              weapon: weaponLike.name,
+              message: `🚫 ${state.robot.name}'s ${weaponLike.name} can't reach ${target.robot.name} at ${dist.toFixed(1)} units (need ≤2)`,
+              robot1HP: states[0]?.currentHP ?? 0,
+              robot2HP: states[1]?.currentHP ?? 0,
+              robot1Shield: states[0]?.currentShield ?? 0,
+              robot2Shield: states[1]?.currentShield ?? 0,
+              ...buildPositionSnapshot(...states),
+              distance: dist,
+              rangeBand: classifyRangeBand(dist),
+            });
+          }
         }
       }
 
@@ -1522,7 +1559,7 @@ export function simulateBattleMulti(
         }
 
         if (canAttack(offWeaponLike, offDist) || state.patienceTimer >= patienceLimit) {
-          const ctx = buildSpatialContext(state, offTarget, 'offhand', currentTime, arena, states);
+          const ctx = buildSpatialContext(state, offTarget, 'offhand', currentTime, arena, states, gameModeState);
           performAttack(
             state, offTarget, state.robot.name, offTarget.robot.name,
             currentTime, 'offhand', events, ctx,

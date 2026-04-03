@@ -1471,8 +1471,8 @@ describe('KothMovementIntentModifier', () => {
     });
   });
 
-  describe('Rule 3: combatAlgorithms > 25 + zone contested by 2+ → wait-and-enter (Req 6.4)', () => {
-    it('should hold position 2 units outside zone edge when combatAlgorithms > 25 and zone contested', () => {
+  describe('Rule 2: linear wait-and-enter based on CA (Req 6.4)', () => {
+    it('should blend between zone center and wait position based on CA', () => {
       // Robot outside zone with high combatAlgorithms
       const robot = makeMovementRobot(1, 15, 0, { combatAlgorithms: 30 });
       // Two opponents inside zone (contested)
@@ -1484,11 +1484,10 @@ describe('KothMovementIntentModifier', () => {
 
       const result = modifier.modify(baseIntent, robot, arena, gameState);
 
-      // Wait position should be on the line from zone center toward robot,
-      // at distance zoneRadius + 2 = 7 from center
-      // Robot is at (15,0), zone center at (0,0), direction is (1,0)
-      // Wait position = (0,0) + (1,0) * 7 = (7, 0)
-      expect(result.targetPosition.x).toBeCloseTo(7, 1);
+      // Wait position is at zoneRadius + 2 = 7 from center along (1,0) = (7, 0)
+      // waitWeight = CA/50 = 30/50 = 0.6
+      // lerp(zoneCenter, waitPos, 0.6) = lerp((0,0), (7,0), 0.6) = (4.2, 0)
+      expect(result.targetPosition.x).toBeCloseTo(4.2, 1);
       expect(result.targetPosition.y).toBeCloseTo(0, 1);
     });
   });
@@ -1510,7 +1509,7 @@ describe('KothMovementIntentModifier', () => {
       expect(result.targetPosition.x).toBeGreaterThan(0);
     });
 
-    it('should apply ~30% bias at ta=1', () => {
+    it('should apply ~40% bias at ta=1', () => {
       const robot = makeMovementRobot(1, 15, 0, { threatAnalysis: 1 });
       const farOpponent = makeMovementRobot(2, 15, 10);
 
@@ -1519,9 +1518,9 @@ describe('KothMovementIntentModifier', () => {
 
       const result = modifier.modify(baseIntent, robot, arena, gameState);
 
-      // At ta=1: biasStrength = ((1-1)/49)*0.7 + 0.3 = 0.3
-      // lerp(20, 0, 0.3) = 20 + (0-20)*0.3 = 20 - 6 = 14
-      expect(result.targetPosition.x).toBeCloseTo(14, 1);
+      // At ta=1: biasStrength = ((1-1)/49)*0.6 + 0.4 = 0.4
+      // lerp(20, 0, 0.4) = 20 + (0-20)*0.4 = 20 - 8 = 12
+      expect(result.targetPosition.x).toBeCloseTo(12, 1);
     });
 
     it('should apply ~100% bias at ta=50', () => {
@@ -1533,7 +1532,7 @@ describe('KothMovementIntentModifier', () => {
 
       const result = modifier.modify(baseIntent, robot, arena, gameState);
 
-      // At ta=50: biasStrength = ((50-1)/49)*0.7 + 0.3 = 1.0
+      // At ta=50: biasStrength = ((50-1)/49)*0.6 + 0.4 = 1.0
       // lerp(20, 0, 1.0) = 0
       expect(result.targetPosition.x).toBeCloseTo(0, 1);
       expect(result.targetPosition.y).toBeCloseTo(0, 1);

@@ -53,9 +53,9 @@ const PATIENCE_SCORE_FACTOR = 5;
 /** Minimum team separation in grid units */
 const MIN_TEAM_SEPARATION = 1;
 
-/** Random deviation by strategy tier (degrees) */
-const DEVIATION_RANDOM_BIAS = 30;
-const DEVIATION_DIRECT_PATH = 15;
+/** Maximum random deviation (degrees) at CA=1; linearly decreases to 5° at CA=50 */
+const DEVIATION_MAX = 30;
+const DEVIATION_MIN = 5;
 
 /** Prediction look-ahead time in seconds */
 const PREDICTION_LOOK_AHEAD = 1.5;
@@ -306,81 +306,72 @@ export function calculateMovementIntent(
 
   let strategy: MovementIntent['strategy'];
 
+  // Linear deviation: 30° at CA=1, 5° at CA=50 (every point of CA tightens pathing)
+  const ca = state.robot.combatAlgorithms ? Number(state.robot.combatAlgorithms) : 1;
+  const deviation = deterministicDeviation(
+    state.position,
+    state.patienceTimer,
+    DEVIATION_MAX - ((ca - 1) / 49) * (DEVIATION_MAX - DEVIATION_MIN),
+  );
+
+  // Strategy label for logging (derived from score, no behavioral gates)
   if (score < 0.3) {
-    // Random bias strategy (Req 5.2, 10.8)
     strategy = 'random_bias';
-    const deviation = deterministicDeviation(
-      state.position,
-      state.patienceTimer,
-      DEVIATION_RANDOM_BIAS,
-    );
-    const dir: Vector2D = {
-      x: targetPos.x - state.position.x,
-      y: targetPos.y - state.position.y,
-    };
-    const rotated = rotateVector(dir, deviation);
-    targetPos = {
-      x: state.position.x + rotated.x,
-      y: state.position.y + rotated.y,
-    };
   } else if (score <= 0.6) {
-    // Direct path strategy (Req 5.2, 10.8)
     strategy = 'direct_path';
-    const deviation = deterministicDeviation(
-      state.position,
-      state.patienceTimer,
-      DEVIATION_DIRECT_PATH,
-    );
-    const dir: Vector2D = {
-      x: targetPos.x - state.position.x,
-      y: targetPos.y - state.position.y,
-    };
-    const rotated = rotateVector(dir, deviation);
-    targetPos = {
-      x: state.position.x + rotated.x,
-      y: state.position.y + rotated.y,
-    };
   } else {
-    // Calculated path strategy (Req 5.2)
     strategy = 'calculated_path';
+  }
 
-    // Movement prediction (Req 5.3)
-    if (score >= 0.4) {
-      const predictionWeight = (score - 0.4) / 0.6;
-      const predictedPos: Position = {
-        x: target.position.x + target.velocity.x * PREDICTION_LOOK_AHEAD,
-        y: target.position.y + target.velocity.y * PREDICTION_LOOK_AHEAD,
-      };
-      const optimalFromPredicted = calculateOptimalRangePosition(
-        state.position,
-        predictedPos,
-        preferredRange,
-      );
-      targetPos = lerp(targetPos, optimalFromPredicted, predictionWeight);
-    }
+  // Apply deviation to movement direction
+  const dir: Vector2D = {
+    x: targetPos.x - state.position.x,
+    y: targetPos.y - state.position.y,
+  };
+  const rotated = rotateVector(dir, deviation);
+  targetPos = {
+    x: state.position.x + rotated.x,
+    y: state.position.y + rotated.y,
+  };
 
-    // Threat-aware positioning (Req 6.3)
-    if (ta > 15) {
-      const avoidanceWeight = (ta - 15) / 35;
-      targetPos = applyAvoidanceBias(
+  // Movement prediction — linear weight from 0 at CA=1 to 1.0 at CA=50
+  const predictionWeight = (ca - 1) / 49;
+  if (predictionWeight > 0) {
+    const predictedPos: Position = {
+      x: target.position.x + target.velocity.x * PREDICTION_LOOK_AHEAD,
+      y: target.position.y + target.velocity.y * PREDICTION_LOOK_AHEAD,
+    };
+    const optimalFromPredicted = calculateOptimalRangePosition(
+      state.position,
+      predictedPos,
+      preferredRange,
+    );
+    targetPos = lerp(targetPos, optimalFromPredicted, predictionWeight);
+  }
+
+  // Threat-aware avoidance — linear weight: ta/50 (always active, weak at low TA)
+  const avoidanceWeight = ta / 50;
+  if (avoidanceWeight > 0.01) {
+    targetPos = applyAvoidanceBias(
+      targetPos,
+      state.position,
+      target.position,
+      avoidanceWeight,
+    );
+  }
+
+  // Flank approach — linear weight: ta/50, requires speed advantage
+  const flankWeight = ta / 50;
+  if (flankWeight > 0.01) {
+    const robotSpeed = state.effectiveMovementSpeed;
+    const targetSpeed = target.effectiveMovementSpeed;
+    if (robotSpeed > targetSpeed) {
+      const flankPos = biasTowardFlank(
         targetPos,
-        state.position,
         target.position,
-        avoidanceWeight,
+        target.facingDirection,
       );
-    }
-
-    // Flank approach bias (Req 10.9)
-    if (ta > 20) {
-      const robotSpeed = state.effectiveMovementSpeed;
-      const targetSpeed = target.effectiveMovementSpeed;
-      if (robotSpeed > targetSpeed) {
-        targetPos = biasTowardFlank(
-          targetPos,
-          target.position,
-          target.facingDirection,
-        );
-      }
+      targetPos = lerp(targetPos, flankPos, flankWeight);
     }
   }
 
