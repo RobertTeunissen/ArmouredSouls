@@ -1180,11 +1180,11 @@ export class KothTargetPriorityStrategy implements TargetPriorityStrategy {
       }
 
       // Score-aware targeting: per-opponent score threat bonus
-      // Higher-scoring opponents become higher priority, scaled by TA
+      // Higher-scoring opponents become higher priority before TA scaling is applied below
       if (scoreState && scoreThreshold > 0) {
         const oppScore = scoreState.zoneScores[opp.robot.id] ?? 0;
         const scoreRatio = oppScore / scoreThreshold;
-        const scoreThreatBonus = scoreRatio * 3.0 * taScale;
+        const scoreThreatBonus = scoreRatio * 3.0;
         weight += scoreThreatBonus;
       }
 
@@ -1203,7 +1203,7 @@ export class KothTargetPriorityStrategy implements TargetPriorityStrategy {
 
   /**
    * Calculate threatAnalysis scaling factor.
-   * Fully linear: 0.3 at ta=1, 1.0 at ta=50. Every point matters.
+   * Fully linear: 0.314 at ta=1, 1.0 at ta=50. Every point matters.
    */
   private _threatAnalysisScale(ta: number): number {
     return 0.3 + (ta / 50) * 0.7;

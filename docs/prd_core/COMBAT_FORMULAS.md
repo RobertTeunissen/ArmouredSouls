@@ -331,6 +331,7 @@ Evasion Penalty = Defender Evasion Thrusters / 3
 Gyro Penalty = Defender Gyro Stabilizers / 5
 Adaptation Bonus = from Adaptive AI system (see adaptationTracker.ts)
 Pressure Mod = from Logic Cores pressure system (see pressureSystem.ts)
+Algo Bonus = Combat Algorithm hit bonus: (combatAlgorithmScore - 0.5) × 10 when score > 0.5, else 0 (0–5%)
 Passive Penalty = KoTH passive accuracy penalty (15% after 60s outside zone)
 Random Variance = Random(-10, 10)
 

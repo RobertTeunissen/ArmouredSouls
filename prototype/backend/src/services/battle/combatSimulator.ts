@@ -1567,6 +1567,8 @@ export function simulateBattleMulti(
           state.lastOffhandAttackTime = currentTime;
           state.patienceTimer = 0;
           didAttack = true;
+          // Reset out-of-range suppression — robot successfully attempted an attack
+          outOfRangeSuppressed.delete(state.teamIndex);
         }
       }
 

@@ -159,7 +159,7 @@ All attribute-based thresholds in KoTH have been replaced with linear scaling. E
 - **Flank approach**: Now `TA / 50` blended, always active (was gated at TA > 20).
 
 #### Combat Algorithms
-- **Movement deviation**: Linear `30 - (CA/50) × 25` degrees. CA=1 gets 29.5°, CA=50 gets 5°. Previously hard tiers at CA < 15 (±30°), CA 15–30 (±15°), CA > 30 (calculated).
+- **Movement deviation**: Linear `30 - ((CA - 1) / 49) × 25` degrees. CA=1 gets 30°, CA=50 gets 5°. Previously hard tiers at CA < 15 (±30°), CA 15–30 (±15°), CA > 30 (calculated).
 - **Movement prediction**: Linear weight `(CA - 1) / 49`, always active. Previously gated at CA ≥ 20.
 - **Wait-and-enter (KoTH)**: Linear blend `CA / 50` between rushing in and waiting. Previously hard-gated at CA > 25.
 
