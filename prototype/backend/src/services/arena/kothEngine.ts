@@ -1145,6 +1145,10 @@ export class KothTargetPriorityStrategy implements TargetPriorityStrategy {
     const ta = Number(robot.robot.threatAnalysis ?? 1);
     const taScale = this._threatAnalysisScale(ta);
 
+    // Resolve score state for score-aware targeting
+    const scoreState = gameState?.customData?.scoreState as KothScoreState | undefined;
+    const scoreThreshold = this._resolveScoreThreshold(gameState);
+
     // Calculate weighted priority for each alive opponent
     const weighted = alive.map((opp) => {
       const oppDist = euclideanDistance(opp.position, zoneState.center);
@@ -1167,20 +1171,24 @@ export class KothTargetPriorityStrategy implements TargetPriorityStrategy {
 
       // Situational modifiers
       if (robotIsUncontested && oppApproaching && !oppInZone) {
-        // Inside zone uncontested: prioritize approachers (Req 5.3)
         weight = Math.max(weight, 2.5);
       } else if (robotIsContested && oppInZone) {
-        // Inside zone contested: prioritize lowest HP contester (Req 5.4)
-        // Use inverse HP as a bonus so lower HP = higher weight
         const hpRatio = opp.currentHP / opp.maxHP;
         weight += (1.0 - hpRatio) * 2.0;
       } else if (!robotInZone && oppApproaching && !oppInZone) {
-        // Outside zone: 1.5× for approaching opponents (Req 5.5)
         weight *= 1.5;
       }
 
+      // Score-aware targeting: per-opponent score threat bonus
+      // Higher-scoring opponents become higher priority before TA scaling is applied below
+      if (scoreState && scoreThreshold > 0) {
+        const oppScore = scoreState.zoneScores[opp.robot.id] ?? 0;
+        const scoreRatio = oppScore / scoreThreshold;
+        const scoreThreatBonus = scoreRatio * 3.0;
+        weight += scoreThreatBonus;
+      }
+
       // Apply threatAnalysis scaling (Req 5.6)
-      // Scale the zone-aware portion: blend between base (1.0) and full weight
       const zoneBonus = weight - 1.0;
       const scaledWeight = 1.0 + zoneBonus * taScale;
 
@@ -1195,12 +1203,10 @@ export class KothTargetPriorityStrategy implements TargetPriorityStrategy {
 
   /**
    * Calculate threatAnalysis scaling factor.
-   * ta < 10 → 0.5, ta 10–30 → linear 0.5–1.0, ta > 30 → 1.0
+   * Fully linear: 0.314 at ta=1, 1.0 at ta=50. Every point matters.
    */
   private _threatAnalysisScale(ta: number): number {
-    if (ta < 10) return 0.5;
-    if (ta > 30) return 1.0;
-    return 0.5 + ((ta - 10) / 20) * 0.5;
+    return 0.3 + (ta / 50) * 0.7;
   }
 
   /**
@@ -1251,6 +1257,15 @@ export class KothTargetPriorityStrategy implements TargetPriorityStrategy {
     }
 
     return null;
+  }
+
+  /**
+   * Resolve the score threshold from gameState config.
+   * Falls back to the default (30) if not available.
+   */
+  private _resolveScoreThreshold(gameState?: GameModeState): number {
+    const config = gameState?.customData?.kothConfig as KothMatchConfig | undefined;
+    return config?.scoreThreshold ?? KOTH_MATCH_DEFAULTS.scoreThreshold;
   }
 }
 
@@ -1329,21 +1344,54 @@ export class KothMovementIntentModifier implements MovementIntentModifier {
       };
     }
 
-    // Rule 2: combatAlgorithms > 25 + zone contested by 2+ others → wait-and-enter (Req 6.4)
-    const combatAlgorithms = Number(robot.robot.combatAlgorithms ?? 0);
-    if (combatAlgorithms > 25 && !robotInZone && zoneOccupants.length >= 2) {
+    // Rule 2: Wait-and-enter — linear blend based on CA (Req 6.4)
+    // At low CA robots mostly rush in, at high CA they mostly wait
+    const combatAlgorithms = Number(robot.robot.combatAlgorithms ?? 1);
+    const waitWeight = combatAlgorithms / 50;
+    if (!robotInZone && zoneOccupants.length >= 2 && waitWeight > 0.1) {
       const waitPos = this._calculateWaitPosition(robot.position, zoneState);
+      const blended = lerp(zoneState.center, waitPos, waitWeight);
       return {
         ...baseIntent,
-        targetPosition: waitPos,
+        targetPosition: blended,
       };
+    }
+
+    const ta = Number(robot.robot.threatAnalysis ?? 1);
+    const biasStrength = this._calculateBiasStrength(ta);
+
+    // Compute base zone pull target — blend zone center with score-aware pull
+    let pullTarget = { x: zoneState.center.x, y: zoneState.center.y };
+
+    // Score-aware movement pull: pull toward current target proportional to their score
+    if (scoreState) {
+      const scoreThreshold = this._resolveScoreThreshold(gameState);
+      const currentTargetId = robot.currentTarget;
+      if (currentTargetId !== null && scoreThreshold > 0) {
+        const targetRobot = allRobots.find(r => r.teamIndex === currentTargetId);
+        if (targetRobot) {
+          const targetScore = scoreState.zoneScores[targetRobot.robot.id] ?? 0;
+          const scorePull = (targetScore / scoreThreshold) * 0.4 * biasStrength;
+          if (scorePull > 0.01) {
+            pullTarget = lerp(pullTarget, targetRobot.position, scorePull);
+          }
+        }
+      }
+    }
+
+    // Passive timer zone pull: after 20s outside zone, increasing pull back
+    if (scoreState) {
+      const robotId = robot.robot.id;
+      const passiveTimer = scoreState.passiveTimers[robotId] ?? 0;
+      if (passiveTimer > KOTH_PASSIVE_PENALTIES.warningThreshold) {
+        const passivePull = Math.min(0.5, (passiveTimer - KOTH_PASSIVE_PENALTIES.warningThreshold) / 40);
+        pullTarget = lerp(pullTarget, zoneState.center, passivePull);
+      }
     }
 
     // Rule 3: No opponent within 6 units → strong zone pull (Req 6.2)
     if (closestOpponentDist > 6) {
-      const ta = Number(robot.robot.threatAnalysis ?? 1);
-      const biasStrength = this._calculateBiasStrength(ta);
-      const blended = lerp(baseIntent.targetPosition, zoneState.center, biasStrength);
+      const blended = lerp(baseIntent.targetPosition, pullTarget, biasStrength);
       return {
         ...baseIntent,
         targetPosition: blended,
@@ -1351,12 +1399,9 @@ export class KothMovementIntentModifier implements MovementIntentModifier {
     }
 
     // Rule 4: Opponent within 4 units and actively attacking → mild zone pull
-    // Even during close combat, robots should drift toward the zone.
-    // Attacking opponents get a weaker pull so they don't disengage.
     if (hasAttackingOpponentWithin4) {
-      const ta = Number(robot.robot.threatAnalysis ?? 1);
-      const mildBias = this._calculateBiasStrength(ta) * 0.25; // 25% of normal pull
-      const blended = lerp(baseIntent.targetPosition, zoneState.center, mildBias);
+      const mildBias = biasStrength * 0.35; // 35% of normal pull (was 25%)
+      const blended = lerp(baseIntent.targetPosition, pullTarget, mildBias);
       return {
         ...baseIntent,
         targetPosition: blended,
@@ -1364,10 +1409,8 @@ export class KothMovementIntentModifier implements MovementIntentModifier {
     }
 
     // Rule 5: Opponents within 6 units but not attacking → moderate zone pull
-    // Robots should fight their way toward the zone, not just stand and trade blows.
-    const ta = Number(robot.robot.threatAnalysis ?? 1);
-    const moderateBias = this._calculateBiasStrength(ta) * 0.45; // 45% of normal pull
-    const blended = lerp(baseIntent.targetPosition, zoneState.center, moderateBias);
+    const moderateBias = biasStrength * 0.55; // 55% of normal pull (was 45%)
+    const blended = lerp(baseIntent.targetPosition, pullTarget, moderateBias);
     return {
       ...baseIntent,
       targetPosition: blended,
@@ -1376,11 +1419,11 @@ export class KothMovementIntentModifier implements MovementIntentModifier {
 
   /**
    * Calculate bias strength from threatAnalysis.
-   * ta=1 → 30%, ta=50 → 100%, linear interpolation, clamped [0.3, 1.0].
+   * ta=1 → 40%, ta=50 → 100%, linear interpolation, clamped [0.4, 1.0].
    */
   private _calculateBiasStrength(ta: number): number {
-    const raw = ((ta - 1) / 49) * 0.7 + 0.3;
-    return Math.max(0.3, Math.min(1.0, raw));
+    const raw = ((ta - 1) / 49) * 0.6 + 0.4;
+    return Math.max(0.4, Math.min(1.0, raw));
   }
 
   /**
@@ -1421,6 +1464,14 @@ export class KothMovementIntentModifier implements MovementIntentModifier {
     return opponents.filter(
       (opp) => euclideanDistance(opp.position, zone.center) <= zone.radius,
     );
+  }
+
+  /**
+   * Resolve the score threshold from gameState config.
+   */
+  private _resolveScoreThreshold(gameState?: GameModeState): number {
+    const config = gameState?.customData?.kothConfig as KothMatchConfig | undefined;
+    return config?.scoreThreshold ?? KOTH_MATCH_DEFAULTS.scoreThreshold;
   }
 
   /**
@@ -1506,6 +1557,7 @@ export function buildKothInitialState(
     zoneScores,
     customData: {
       scoreState,
+      kothConfig: config,
       zoneState: {
         center: { x: 0, y: 0 },
         radius: zoneRadius,
@@ -1582,10 +1634,31 @@ export function buildKothTickHook(
         if (!deadState) continue;
 
         if (deadState.currentHP <= 0) {
-          // Find killer: the robot whose last attack target was this robot
-          // Use the robot that dealt the most damage as a heuristic
-          const killer = aliveRobots.find(s => s.currentTarget === deadState.teamIndex);
-          const killerId = killer?.robot.id ?? 0;
+          // Find killer by scanning recent events for the last damage dealt to this robot.
+          // This correctly handles counter-attack kills where the defender (counter-attacker)
+          // killed the original attacker — in that case currentTarget won't point at the victim.
+          const deadName = deadState.robot.name;
+          let killerId = 0;
+
+          // Strategy 1: Scan events backwards for the most recent damaging hit on this robot
+          for (let i = events.length - 1; i >= 0; i--) {
+            const evt = events[i];
+            if (evt.defender === deadName && evt.hit && evt.damage && evt.damage > 0 && evt.attacker) {
+              // Found the last robot that dealt damage to the dead robot
+              const killerState = states.find(s => s.robot.name === evt.attacker);
+              if (killerState) {
+                killerId = killerState.robot.id;
+                break;
+              }
+            }
+          }
+
+          // Strategy 2: Fallback to currentTarget heuristic if no event found
+          if (killerId === 0) {
+            const killer = aliveRobots.find(s => s.currentTarget === deadState.teamIndex);
+            killerId = killer?.robot.id ?? 0;
+          }
+
           const destroyEvents = handleRobotDestruction(scoreState, killerId, prevId, zoneState);
           for (const e of destroyEvents) {
             e.timestamp = currentTime;

@@ -27,6 +27,9 @@ describe('Property 18: HP & Shield Bar Color Consistency (Property-Based Test)',
           const currentHP = Math.max(1, Math.floor((percent / 100) * maxHP));
           const currentShield = Math.max(1, Math.floor((percent / 100) * maxShield));
 
+          // Compute actual percentages as the component sees them (after floor rounding)
+          const actualHPPercent = (currentHP / maxHP) * 100;
+
           const robot = createRobot(currentHP, maxHP, currentShield, maxShield);
           render(
             <BattleConfigTab robot={robot} onRobotUpdate={mockOnRobotUpdate}
@@ -45,9 +48,9 @@ describe('Property 18: HP & Shield Bar Color Consistency (Property-Based Test)',
           const shieldColor = shieldBar.style.backgroundColor;
           expect(hpColor).toBe(shieldColor);
 
-          if (percent >= 70) {
+          if (actualHPPercent >= 70) {
             expect(isColor(hpColor, GREEN)).toBe(true);
-          } else if (percent >= 30) {
+          } else if (actualHPPercent >= 30) {
             expect(isColor(hpColor, AMBER)).toBe(true);
           } else {
             expect(isColor(hpColor, RED)).toBe(true);
