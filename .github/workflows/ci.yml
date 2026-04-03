@@ -152,7 +152,7 @@ jobs:
         timeout-minutes: 15
         env:
           NODE_OPTIONS: '--max-old-space-size=1536'
-        run: npx vitest --run --reporter=verbose --pool=forks --poolOptions.forks.maxForks=2
+        run: npx vitest --run --reporter=verbose
 
       # Note: E2E tests (Playwright) are skipped in CI because they require
       # a running backend with a seeded database. Run locally before pushing:
