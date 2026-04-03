@@ -309,7 +309,9 @@ function EventRow({ event, expanded, onToggle }: { event: SecurityEvent; expande
           </span>
         </td>
         <td className="py-2 px-3 font-mono text-xs">{event.eventType}</td>
-        <td className="py-2 px-3">{event.userId ?? '—'}</td>
+        <td className="py-2 px-3">{event.userId != null ? (
+          <span>{event.userId}{event.stableName ? <span className="text-secondary ml-1">({event.stableName})</span> : ''}</span>
+        ) : '—'}</td>
         <td className="py-2 px-3 font-mono text-xs">{event.sourceIp ?? '—'}</td>
         <td className="py-2 px-3 font-mono text-xs truncate max-w-[200px]">{event.endpoint ?? '—'}</td>
       </tr>

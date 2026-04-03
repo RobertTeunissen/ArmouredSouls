@@ -38,7 +38,21 @@ class SecurityMonitor {
   /** Circular buffer of recent security events for admin API access */
   private recentEvents: SecurityEvent[] = [];
 
+  /** Cache of userId → stableName for enriching events without DB calls on every event */
+  private stableNameCache = new Map<number, string>();
+
   // ── helpers ──────────────────────────────────────────────────────────
+
+  /** Set the stable name for a user (called by middleware/routes that have user context). */
+  setStableName(userId: number, stableName: string): void {
+    this.stableNameCache.set(userId, stableName);
+  }
+
+  /** Get cached stable name for a user, if available. */
+  private getStableName(userId?: number): string | undefined {
+    if (userId === undefined) return undefined;
+    return this.stableNameCache.get(userId);
+  }
 
   /** Prune timestamps older than `windowMs` from an array, mutating in place. */
   private pruneWindow(timestamps: number[], windowMs: number, now: number): void {
@@ -50,6 +64,11 @@ class SecurityMonitor {
 
   /** Push an event into the circular buffer and write to the security log. */
   private recordEvent(event: SecurityEvent): void {
+    // Auto-enrich with stableName if available and not already set
+    if (event.userId !== undefined && !event.stableName) {
+      event.stableName = this.getStableName(event.userId);
+    }
+
     if (this.recentEvents.length >= MAX_RECENT_EVENTS) {
       this.recentEvents.shift();
     }
@@ -71,7 +90,7 @@ class SecurityMonitor {
    * Track a spending event for rapid-spending detection (Req 7.1).
    * If cumulative spending exceeds 3M in a 5-minute window, emit a critical alert.
    */
-  trackSpending(userId: number, amount: number): void {
+  trackSpending(userId: number, amount: number, context?: { sourceIp?: string; endpoint?: string }): void {
     const now = Date.now();
     if (!this.spendingWindows.has(userId)) {
       this.spendingWindows.set(userId, []);
@@ -93,6 +112,8 @@ class SecurityMonitor {
       severity: SecuritySeverity.INFO,
       eventType: 'spending',
       userId,
+      sourceIp: context?.sourceIp,
+      endpoint: context?.endpoint,
       details: { amount, windowTotal: total },
       timestamp: new Date(now).toISOString(),
     });
@@ -102,6 +123,8 @@ class SecurityMonitor {
         severity: SecuritySeverity.CRITICAL,
         eventType: 'rapid_spending',
         userId,
+        sourceIp: context?.sourceIp,
+        endpoint: context?.endpoint,
         details: {
           totalAmount: total,
           windowMs: RAPID_SPENDING_WINDOW_MS,
@@ -116,7 +139,7 @@ class SecurityMonitor {
    * Track a 409 conflict response for race-condition exploit detection (Req 7.2).
    * If >10 conflicts in 1 minute, emit a warning alert.
    */
-  trackConflict(userId: number): void {
+  trackConflict(userId: number, context?: { sourceIp?: string; endpoint?: string }): void {
     const now = Date.now();
     if (!this.conflictWindows.has(userId)) {
       this.conflictWindows.set(userId, []);
@@ -129,6 +152,8 @@ class SecurityMonitor {
       severity: SecuritySeverity.INFO,
       eventType: 'conflict',
       userId,
+      sourceIp: context?.sourceIp,
+      endpoint: context?.endpoint,
       details: { windowCount: timestamps.length },
       timestamp: new Date(now).toISOString(),
     });
@@ -138,6 +163,8 @@ class SecurityMonitor {
         severity: SecuritySeverity.WARNING,
         eventType: 'race_condition_attempt',
         userId,
+        sourceIp: context?.sourceIp,
+        endpoint: context?.endpoint,
         details: {
           conflictCount: timestamps.length,
           windowMs: CONFLICT_WINDOW_MS,
@@ -150,11 +177,13 @@ class SecurityMonitor {
   /**
    * Log a failed authorization attempt (Req 7.3).
    */
-  logAuthorizationFailure(userId: number, resourceType: string, resourceId: number): void {
+  logAuthorizationFailure(userId: number, resourceType: string, resourceId: number, context?: { sourceIp?: string; endpoint?: string }): void {
     this.recordEvent({
       severity: SecuritySeverity.WARNING,
       eventType: 'authorization_failure',
       userId,
+      sourceIp: context?.sourceIp,
+      endpoint: context?.endpoint,
       details: { resourceType, resourceId },
       timestamp: new Date().toISOString(),
     });
@@ -178,7 +207,7 @@ class SecurityMonitor {
    * Track robot creation for automation detection (Req 7.5).
    * If >3 creations in 10 minutes, emit a warning alert.
    */
-  trackRobotCreation(userId: number): void {
+  trackRobotCreation(userId: number, context?: { sourceIp?: string; endpoint?: string }): void {
     const now = Date.now();
     if (!this.robotCreationWindows.has(userId)) {
       this.robotCreationWindows.set(userId, []);
@@ -191,6 +220,8 @@ class SecurityMonitor {
       severity: SecuritySeverity.INFO,
       eventType: 'robot_creation',
       userId,
+      sourceIp: context?.sourceIp,
+      endpoint: context?.endpoint,
       details: { windowCount: timestamps.length },
       timestamp: new Date(now).toISOString(),
     });
@@ -200,6 +231,8 @@ class SecurityMonitor {
         severity: SecuritySeverity.WARNING,
         eventType: 'automated_robot_creation',
         userId,
+        sourceIp: context?.sourceIp,
+        endpoint: context?.endpoint,
         details: {
           creationCount: timestamps.length,
           windowMs: ROBOT_CREATION_WINDOW_MS,
@@ -330,6 +363,7 @@ class SecurityMonitor {
     this.conflictWindows.clear();
     this.robotCreationWindows.clear();
     this.rateLimitViolations.clear();
+    this.stableNameCache.clear();
     this.recentEvents = [];
   }
 }

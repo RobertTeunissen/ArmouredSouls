@@ -58,7 +58,10 @@ export function errorHandler(err: Error, req: Request, res: Response, _next: Nex
       if (mapping.statusCode === 409) {
         const authReq = req as AuthRequest;
         if (authReq.user?.userId) {
-          securityMonitor.trackConflict(authReq.user.userId);
+          securityMonitor.trackConflict(authReq.user.userId, {
+            sourceIp: req.ip || undefined,
+            endpoint: req.originalUrl,
+          });
         }
       }
 

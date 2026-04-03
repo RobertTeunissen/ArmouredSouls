@@ -356,8 +356,8 @@ router.post('/', authenticateToken, validateRequest({ body: createRobotBodySchem
     await trackSpending(userId, 'robots', ROBOT_CREATION_COST);
 
     // Security monitoring: track robot creation and spending
-    securityMonitor.trackRobotCreation(userId);
-    securityMonitor.trackSpending(userId, ROBOT_CREATION_COST);
+    securityMonitor.trackRobotCreation(userId, { sourceIp: req.ip || undefined, endpoint: req.originalUrl });
+    securityMonitor.trackSpending(userId, ROBOT_CREATION_COST, { sourceIp: req.ip || undefined, endpoint: req.originalUrl });
   } catch (logError) {
     logger.error('Failed to log robot creation event:', logError);
     // Don't fail the request if logging fails
@@ -2313,7 +2313,7 @@ router.post('/:id/upgrades', authenticateToken, validateRequest({ params: robotI
     await trackSpending(userId, 'attributes', totalCost);
 
     // Security monitoring: track spending
-    securityMonitor.trackSpending(userId, totalCost);
+    securityMonitor.trackSpending(userId, totalCost, { sourceIp: req.ip || undefined, endpoint: req.originalUrl });
 
     // Log each attribute upgrade
     for (const op of upgradeOperations) {

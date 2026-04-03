@@ -313,7 +313,7 @@ router.post('/upgrade', authenticateToken, validateRequest({ body: upgradeBodySc
       await trackSpending(userId, 'facilities', upgradeCost);
 
       // Security monitoring: track spending
-      securityMonitor.trackSpending(userId, upgradeCost);
+      securityMonitor.trackSpending(userId, upgradeCost, { sourceIp: req.ip || undefined, endpoint: req.originalUrl });
     } catch (logError) {
       logger.error('Failed to log facility transaction event:', logError);
       // Don't fail the request if logging fails

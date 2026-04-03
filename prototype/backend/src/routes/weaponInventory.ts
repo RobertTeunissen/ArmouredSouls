@@ -215,7 +215,7 @@ router.post('/purchase', authenticateToken, validateRequest({ body: purchaseBody
       await trackSpending(userId, 'weapons', finalCost);
 
       // Security monitoring: track spending
-      securityMonitor.trackSpending(userId, finalCost);
+      securityMonitor.trackSpending(userId, finalCost, { sourceIp: req.ip || undefined, endpoint: req.originalUrl });
     } catch (logError) {
       logger.error('Failed to log weapon purchase event:', logError);
       // Don't fail the request if logging fails
