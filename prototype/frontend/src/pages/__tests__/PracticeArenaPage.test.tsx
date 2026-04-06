@@ -6,13 +6,11 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, fireEvent, within } from '@testing-library/react';
+import { screen, waitFor, fireEvent, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { BrowserRouter } from 'react-router-dom';
-import PracticeArenaPage from '../PracticeArenaPage';
 
 // ---------------------------------------------------------------------------
-// Mocks
+// Mocks — must be declared before any import that triggers module resolution
 // ---------------------------------------------------------------------------
 
 vi.mock('../../utils/apiClient', () => ({
@@ -25,18 +23,7 @@ vi.mock('../../utils/apiClient', () => ({
   },
 }));
 
-import apiClient from '../../utils/apiClient';
-const mockedApi = vi.mocked(apiClient);
-
-const mockUser = {
-  id: 1,
-  username: 'testplayer',
-  email: 'test@example.com',
-  role: 'player',
-  currency: 500_000,
-  prestige: 100,
-  stableName: 'Test Stable',
-};
+import { mockUser } from './practice-arena/test-data';
 
 vi.mock('../../contexts/AuthContext', () => ({
   useAuth: () => ({
@@ -77,224 +64,17 @@ vi.mock('../../components/BattlePlaybackViewer/BattlePlaybackViewer', () => ({
 }));
 
 // ---------------------------------------------------------------------------
-// Test data
+// Helpers (imported after mocks are declared)
 // ---------------------------------------------------------------------------
 
-const mockRobots = [
-  {
-    id: 1,
-    name: 'Iron Fist',
-    elo: 1500,
-    currentHP: 80,
-    maxHP: 100,
-    currentShield: 50,
-    maxShield: 50,
-    loadoutType: 'single',
-    stance: 'balanced',
-    yieldThreshold: 20,
-    mainWeaponId: 1,
-    offhandWeaponId: null,
-    imageUrl: null,
-    combatPower: 10,
-    targetingSystems: 8,
-    criticalSystems: 5,
-    penetration: 7,
-    weaponControl: 6,
-    attackSpeed: 9,
-    armorPlating: 8,
-    shieldCapacity: 5,
-    evasionThrusters: 4,
-    damageDampeners: 3,
-    counterProtocols: 6,
-    hullIntegrity: 7,
-    servoMotors: 5,
-    gyroStabilizers: 4,
-    hydraulicSystems: 6,
-    powerCore: 8,
-    combatAlgorithms: 7,
-    threatAnalysis: 5,
-    adaptiveAI: 6,
-    logicCores: 4,
-    syncProtocols: 3,
-    supportSystems: 2,
-    formationTactics: 3,
-  },
-  {
-    id: 2,
-    name: 'Steel Thunder',
-    elo: 1400,
-    currentHP: 100,
-    maxHP: 100,
-    currentShield: 30,
-    maxShield: 50,
-    loadoutType: 'weapon_shield',
-    stance: 'defensive',
-    yieldThreshold: 15,
-    mainWeaponId: 2,
-    offhandWeaponId: 3,
-    imageUrl: null,
-    combatPower: 5,
-    targetingSystems: 5,
-    criticalSystems: 5,
-    penetration: 5,
-    weaponControl: 5,
-    attackSpeed: 5,
-    armorPlating: 5,
-    shieldCapacity: 5,
-    evasionThrusters: 5,
-    damageDampeners: 5,
-    counterProtocols: 5,
-    hullIntegrity: 5,
-    servoMotors: 5,
-    gyroStabilizers: 5,
-    hydraulicSystems: 5,
-    powerCore: 5,
-    combatAlgorithms: 5,
-    threatAnalysis: 5,
-    adaptiveAI: 5,
-    logicCores: 5,
-    syncProtocols: 5,
-    supportSystems: 5,
-    formationTactics: 5,
-  },
-];
-
-const mockSparringPartners = [
-  {
-    botTier: 'WimpBot',
-    description: 'Weak opponent with level 1 attributes',
-    attributeLevel: 1,
-    priceTier: { min: 0, max: 99999 },
-    loadoutOptions: ['single', 'weapon_shield', 'two_handed', 'dual_wield'],
-    rangeBandOptions: ['melee', 'short', 'mid', 'long'],
-    stanceOptions: ['offensive', 'defensive', 'balanced'],
-  },
-  {
-    botTier: 'AverageBot',
-    description: 'Average opponent with level 5 attributes',
-    attributeLevel: 5,
-    priceTier: { min: 100000, max: 250000 },
-    loadoutOptions: ['single', 'weapon_shield', 'two_handed', 'dual_wield'],
-    rangeBandOptions: ['melee', 'short', 'mid', 'long'],
-    stanceOptions: ['offensive', 'defensive', 'balanced'],
-  },
-  {
-    botTier: 'ExpertBot',
-    description: 'Expert opponent with level 10 attributes',
-    attributeLevel: 10,
-    priceTier: { min: 250000, max: 400000 },
-    loadoutOptions: ['single', 'weapon_shield', 'two_handed', 'dual_wield'],
-    rangeBandOptions: ['melee', 'short', 'mid', 'long'],
-    stanceOptions: ['offensive', 'defensive', 'balanced'],
-  },
-  {
-    botTier: 'UltimateBot',
-    description: 'Ultimate opponent with level 15 attributes',
-    attributeLevel: 15,
-    priceTier: { min: 400000, max: Infinity },
-    loadoutOptions: ['single', 'weapon_shield', 'two_handed', 'dual_wield'],
-    rangeBandOptions: ['melee', 'short', 'mid', 'long'],
-    stanceOptions: ['offensive', 'defensive', 'balanced'],
-  },
-];
-
-
-function makeBattleResult(overrides: Record<string, unknown> = {}) {
-  return {
-    combatResult: {
-      winnerId: 1,
-      robot1FinalHP: 60,
-      robot2FinalHP: 0,
-      robot1FinalShield: 10,
-      robot2FinalShield: 0,
-      robot1Damage: 40,
-      robot2Damage: 100,
-      robot1DamageDealt: 100,
-      robot2DamageDealt: 40,
-      durationSeconds: 45,
-      isDraw: false,
-      events: [],
-      ...((overrides.combatResult as object) || {}),
-    },
-    battleLog: [],
-    robot1Info: { name: 'Iron Fist', maxHP: 100, maxShield: 50 },
-    robot2Info: { name: 'AverageBot Sparring Partner', maxHP: 300, maxShield: 200 },
-    ...overrides,
-  };
-}
-
-function makeBatchResult(count = 5) {
-  const results = Array.from({ length: count }, (_, i) =>
-    makeBattleResult({
-      combatResult: {
-        winnerId: i % 2 === 0 ? 1 : 2,
-        robot1FinalHP: i % 2 === 0 ? 60 : 0,
-        robot2FinalHP: i % 2 === 0 ? 0 : 80,
-        robot1FinalShield: 0,
-        robot2FinalShield: 0,
-        robot1Damage: 40,
-        robot2Damage: 100,
-        robot1DamageDealt: 100,
-        robot2DamageDealt: 40,
-        durationSeconds: 30 + i * 5,
-        isDraw: false,
-        events: [],
-      },
-    }),
-  );
-  return {
-    results,
-    aggregate: {
-      totalBattles: count,
-      robot1Wins: 3,
-      robot2Wins: 2,
-      draws: 0,
-      avgDurationSeconds: 40,
-      avgRobot1DamageDealt: 100,
-      avgRobot2DamageDealt: 40,
-    },
-  };
-}
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function setupApiMocks() {
-  mockedApi.get.mockImplementation((url: string) => {
-    if (url.includes('/api/robots')) {
-      return Promise.resolve({ data: mockRobots });
-    }
-    if (url.includes('/api/practice-arena/sparring-partners')) {
-      return Promise.resolve({ data: { sparringPartners: mockSparringPartners } });
-    }
-    if (url.includes('/api/facilities')) {
-      return Promise.resolve({ data: [] });
-    }
-    return Promise.reject(new Error(`Unknown URL: ${url}`));
-  });
-}
-
-function renderPage() {
-  return render(
-    <BrowserRouter>
-      <PracticeArenaPage />
-    </BrowserRouter>,
-  );
-}
-
-/** Select a robot by clicking its name button in the image grid */
-async function selectRobotByName(name: string) {
-  await waitFor(() => {
-    expect(screen.getAllByText(name).length).toBeGreaterThan(0);
-  });
-  // The robot name appears as a <p> inside a <button>. Click the button.
-  const buttons = screen.getAllByRole('button');
-  const robotButton = buttons.find(btn => btn.textContent?.includes(name) && btn.querySelector('[data-testid]'));
-  if (robotButton) {
-    fireEvent.click(robotButton);
-  }
-}
+import {
+  mockedApi,
+  makeBattleResult,
+  makeBatchResult,
+  setupApiMocks,
+  renderPage,
+  selectRobotByName,
+} from './practice-arena/test-helpers';
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -313,7 +93,6 @@ describe('PracticeArenaPage', () => {
     renderPage();
 
     await waitFor(() => {
-      // Slot 1 is forceOwned — no toggle. Only slot 2 has the toggle.
       const deployButtons = screen.getAllByText('Deploy Robot');
       const simulateButtons = screen.getAllByText('Simulate Opponent');
       expect(deployButtons).toHaveLength(1);
@@ -325,7 +104,6 @@ describe('PracticeArenaPage', () => {
     renderPage();
 
     await waitFor(() => {
-      // Robot names appear as text in the image grid buttons
       expect(screen.getAllByText('Iron Fist').length).toBeGreaterThan(0);
       expect(screen.getAllByText('Steel Thunder').length).toBeGreaterThan(0);
     });
@@ -335,7 +113,6 @@ describe('PracticeArenaPage', () => {
     renderPage();
 
     await waitFor(() => {
-      // Slot 2 defaults to sparring mode — shows bot tier names (not in-universe names)
       expect(screen.getByText('WimpBot')).toBeInTheDocument();
       expect(screen.getByText('AverageBot')).toBeInTheDocument();
       expect(screen.getByText('ExpertBot')).toBeInTheDocument();
@@ -350,10 +127,8 @@ describe('PracticeArenaPage', () => {
       expect(screen.getByText('ExpertBot')).toBeInTheDocument();
     });
 
-    // Click on ExpertBot
     fireEvent.click(screen.getByText('ExpertBot'));
 
-    // Should show the config controls (loadout, range band, stance, yield)
     expect(screen.getByText('Loadout Type')).toBeInTheDocument();
     expect(screen.getByText('Range Band')).toBeInTheDocument();
     expect(screen.getByText('Stance')).toBeInTheDocument();
@@ -365,7 +140,6 @@ describe('PracticeArenaPage', () => {
     renderPage();
 
     await waitFor(() => {
-      // Slot 1 is "owned" mode with no robot selected by default
       const runButton = screen.getByText('⚡ Run Simulation');
       expect(runButton).toBeDisabled();
     });
@@ -401,10 +175,8 @@ describe('PracticeArenaPage', () => {
       expect(screen.getAllByText('Iron Fist').length).toBeGreaterThan(0);
     });
 
-    // Select a robot in slot 1 by clicking its image grid button
     await selectRobotByName('Iron Fist');
 
-    // Set batch count to 5
     const selects = screen.getAllByRole('combobox');
     const batchSelect = selects.find(s => {
       const options = within(s).queryAllByRole('option');
@@ -414,15 +186,12 @@ describe('PracticeArenaPage', () => {
       fireEvent.change(batchSelect, { target: { value: '5' } });
     }
 
-    // Mock the API to return batch result
     mockedApi.post.mockResolvedValueOnce({ data: makeBatchResult(5) });
 
-    // Click Run Simulation
     const runButton = screen.getByText('⚡ Run Simulation');
     fireEvent.click(runButton);
 
     await waitFor(() => {
-      // BatchSummary shows Wins/Losses/Draws labels
       expect(screen.getByText('Wins')).toBeInTheDocument();
       expect(screen.getByText('Losses')).toBeInTheDocument();
       expect(screen.getByText('Draws')).toBeInTheDocument();
@@ -438,10 +207,8 @@ describe('PracticeArenaPage', () => {
       expect(screen.getAllByText('Iron Fist').length).toBeGreaterThan(0);
     });
 
-    // Select a robot by clicking its image grid button
     await selectRobotByName('Iron Fist');
 
-    // Make API hang to observe loading state
     let resolvePost: (value: unknown) => void;
     mockedApi.post.mockReturnValueOnce(
       new Promise((resolve) => { resolvePost = resolve; }),
@@ -454,7 +221,6 @@ describe('PracticeArenaPage', () => {
       expect(screen.getByText('Running combat simulation...')).toBeInTheDocument();
     });
 
-    // Resolve to clean up
     resolvePost!({ data: makeBattleResult() });
   });
 
@@ -467,7 +233,6 @@ describe('PracticeArenaPage', () => {
       expect(screen.getAllByText('Iron Fist').length).toBeGreaterThan(0);
     });
 
-    // Select a robot by clicking its image grid button
     await selectRobotByName('Iron Fist');
 
     mockedApi.post.mockResolvedValueOnce({ data: makeBattleResult() });
@@ -477,9 +242,7 @@ describe('PracticeArenaPage', () => {
 
     await waitFor(() => {
       expect(screen.getByText('SIMULATION')).toBeInTheDocument();
-      // SimulationResultBanner shows "🏆 Iron Fist WINS"
       expect(screen.getByText(/🏆 Iron Fist WINS/)).toBeInTheDocument();
-      // "Battle Playback" header instead of "Simulation Report"
       expect(screen.getByText('Battle Playback')).toBeInTheDocument();
     });
   });
@@ -493,10 +256,8 @@ describe('PracticeArenaPage', () => {
       expect(screen.getAllByText('Iron Fist').length).toBeGreaterThan(0);
     });
 
-    // Select a robot
     await selectRobotByName('Iron Fist');
 
-    // Mock 503 response
     mockedApi.post.mockRejectedValueOnce({
       response: {
         status: 503,
@@ -521,10 +282,8 @@ describe('PracticeArenaPage', () => {
       expect(screen.getAllByText('Iron Fist').length).toBeGreaterThan(0);
     });
 
-    // Select a robot
     await selectRobotByName('Iron Fist');
 
-    // Mock 429 response
     mockedApi.post.mockRejectedValueOnce({
       response: {
         status: 429,
@@ -549,21 +308,17 @@ describe('PracticeArenaPage', () => {
       expect(screen.getAllByText('Iron Fist').length).toBeGreaterThan(0);
     });
 
-    // Select a robot in slot 1
     await selectRobotByName('Iron Fist');
 
-    // Expand What-If panel
     await waitFor(() => {
       const whatIfButton = screen.getByText(/What-If Configuration/);
       fireEvent.click(whatIfButton);
     });
 
-    // Should show the simulation-only notice
     await waitFor(() => {
       expect(screen.getByText(/Simulation only — your robot is not modified/)).toBeInTheDocument();
     });
 
-    // Should show category headers with +/- buttons
     expect(screen.getByText('Combat Systems')).toBeInTheDocument();
     expect(screen.getByText('Defensive Systems')).toBeInTheDocument();
   });
@@ -577,7 +332,6 @@ describe('PracticeArenaPage', () => {
       expect(screen.getAllByText('Iron Fist').length).toBeGreaterThan(0);
     });
 
-    // Select a robot
     await selectRobotByName('Iron Fist');
 
     mockedApi.post.mockResolvedValueOnce({ data: makeBattleResult() });
@@ -589,7 +343,6 @@ describe('PracticeArenaPage', () => {
       expect(screen.getByText('SIMULATION')).toBeInTheDocument();
     });
 
-    // Click Re-Run
     mockedApi.post.mockResolvedValueOnce({ data: makeBattleResult() });
     const reRunButton = screen.getByText(/Re-Run Simulation/);
     fireEvent.click(reRunButton);
@@ -684,7 +437,6 @@ describe('PracticeArenaPage', () => {
       expect(screen.getAllByText('Iron Fist').length).toBeGreaterThan(0);
     });
 
-    // Select a robot
     await selectRobotByName('Iron Fist');
 
     mockedApi.post.mockResolvedValueOnce({ data: makeBattleResult() });
@@ -693,9 +445,7 @@ describe('PracticeArenaPage', () => {
     fireEvent.click(runButton);
 
     await waitFor(() => {
-      // SimulationResultBanner shows winner
       expect(screen.getByText(/🏆 Iron Fist WINS/)).toBeInTheDocument();
-      // Duration shown in the banner
       expect(screen.getByText(/Duration: 45s/)).toBeInTheDocument();
     });
   });
@@ -710,12 +460,10 @@ describe('PracticeArenaPage', () => {
 
     await waitFor(() => {
       expect(screen.getByText(/Combat Simulation Lab/)).toBeInTheDocument();
-      // Slot 2 has the toggle — only 1 "Deploy Robot" button
       const deployButtons = screen.getAllByText('Deploy Robot');
       expect(deployButtons).toHaveLength(1);
     });
 
-    // Restore
     Object.defineProperty(window, 'innerWidth', { writable: true, configurable: true, value: 1024 });
   });
 });
