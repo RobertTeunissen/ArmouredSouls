@@ -62,6 +62,12 @@ vi.mock('../../components/Navigation', () => ({
   default: () => <div data-testid="navigation">Navigation</div>,
 }));
 
+vi.mock('../../components/RobotImage', () => ({
+  default: ({ robotName }: { robotName: string }) => (
+    <div data-testid={`robot-image-${robotName}`}>{robotName}</div>
+  ),
+}));
+
 vi.mock('../../components/BattlePlaybackViewer/BattlePlaybackViewer', () => ({
   BattlePlaybackViewer: (props: Record<string, unknown>) => (
     <div data-testid="battle-playback-viewer">
@@ -88,6 +94,7 @@ const mockRobots = [
     yieldThreshold: 20,
     mainWeaponId: 1,
     offhandWeaponId: null,
+    imageUrl: null,
     combatPower: 10,
     targetingSystems: 8,
     criticalSystems: 5,
@@ -125,6 +132,7 @@ const mockRobots = [
     yieldThreshold: 15,
     mainWeaponId: 2,
     offhandWeaponId: 3,
+    imageUrl: null,
     combatPower: 5,
     targetingSystems: 5,
     criticalSystems: 5,
@@ -260,6 +268,9 @@ function setupApiMocks() {
     if (url.includes('/api/practice-arena/sparring-partners')) {
       return Promise.resolve({ data: { sparringPartners: mockSparringPartners } });
     }
+    if (url.includes('/api/facilities')) {
+      return Promise.resolve({ data: [] });
+    }
     return Promise.reject(new Error(`Unknown URL: ${url}`));
   });
 }
@@ -272,6 +283,19 @@ function renderPage() {
   );
 }
 
+/** Select a robot by clicking its name button in the image grid */
+async function selectRobotByName(name: string) {
+  await waitFor(() => {
+    expect(screen.getAllByText(name).length).toBeGreaterThan(0);
+  });
+  // The robot name appears as a <p> inside a <button>. Click the button.
+  const buttons = screen.getAllByRole('button');
+  const robotButton = buttons.find(btn => btn.textContent?.includes(name) && btn.querySelector('[data-testid]'));
+  if (robotButton) {
+    fireEvent.click(robotButton);
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -279,42 +303,43 @@ function renderPage() {
 describe('PracticeArenaPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Ensure localStorage.getItem returns null by default (not undefined after clearAllMocks)
     (localStorage.getItem as ReturnType<typeof vi.fn>).mockReturnValue(null);
     setupApiMocks();
   });
 
   // ---- Layout & Slot Panels ----
 
-  it('renders two battle slot panels with "Deploy Robot" / "Simulate Opponent" toggles', async () => {
+  it('renders slot 2 with "Deploy Robot" / "Simulate Opponent" toggle (slot 1 is forced owned)', async () => {
     renderPage();
 
     await waitFor(() => {
+      // Slot 1 is forceOwned — no toggle. Only slot 2 has the toggle.
       const deployButtons = screen.getAllByText('Deploy Robot');
       const simulateButtons = screen.getAllByText('Simulate Opponent');
-      expect(deployButtons).toHaveLength(2);
-      expect(simulateButtons).toHaveLength(2);
+      expect(deployButtons).toHaveLength(1);
+      expect(simulateButtons).toHaveLength(1);
     });
   });
 
-  it('"Deploy Robot" mode shows robot dropdown populated from API', async () => {
+  it('"Deploy Robot" mode shows robot image grid populated from API', async () => {
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getByText('Iron Fist')).toBeInTheDocument();
-      expect(screen.getByText('Steel Thunder')).toBeInTheDocument();
+      // Robot names appear as text in the image grid buttons
+      expect(screen.getAllByText('Iron Fist').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('Steel Thunder').length).toBeGreaterThan(0);
     });
   });
 
-  it('"Simulate Opponent" mode shows bot tier buttons with in-universe names', async () => {
+  it('"Simulate Opponent" mode shows bot tier buttons with tier names', async () => {
     renderPage();
 
     await waitFor(() => {
-      // Slot 2 defaults to sparring mode
-      expect(screen.getByText('Scrapyard Drone')).toBeInTheDocument();
-      expect(screen.getByText('Standard Combatant')).toBeInTheDocument();
-      expect(screen.getByText('Elite Sparring Unit')).toBeInTheDocument();
-      expect(screen.getByText('Apex Prototype')).toBeInTheDocument();
+      // Slot 2 defaults to sparring mode — shows bot tier names (not in-universe names)
+      expect(screen.getByText('WimpBot')).toBeInTheDocument();
+      expect(screen.getByText('AverageBot')).toBeInTheDocument();
+      expect(screen.getByText('ExpertBot')).toBeInTheDocument();
+      expect(screen.getByText('UltimateBot')).toBeInTheDocument();
     });
   });
 
@@ -322,11 +347,11 @@ describe('PracticeArenaPage', () => {
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getByText('Scrapyard Drone')).toBeInTheDocument();
+      expect(screen.getByText('ExpertBot')).toBeInTheDocument();
     });
 
-    // Click on Elite Sparring Unit
-    fireEvent.click(screen.getByText('Elite Sparring Unit'));
+    // Click on ExpertBot
+    fireEvent.click(screen.getByText('ExpertBot'));
 
     // Should show the config controls (loadout, range band, stance, yield)
     expect(screen.getByText('Loadout Type')).toBeInTheDocument();
@@ -355,12 +380,10 @@ describe('PracticeArenaPage', () => {
       expect(screen.getByText('Simulation runs:')).toBeInTheDocument();
     });
 
-    // The label is not associated via htmlFor, so find the select via the parent container
     const label = screen.getByText('Simulation runs:');
     const batchSelect = label.closest('.flex')?.querySelector('select');
     expect(batchSelect).toBeTruthy();
 
-    // Check options 1-10 exist
     if (batchSelect) {
       const options = within(batchSelect as HTMLElement).getAllByRole('option');
       expect(options).toHaveLength(10);
@@ -371,24 +394,18 @@ describe('PracticeArenaPage', () => {
 
   // ---- Batch Result ----
 
-  it('batch result displays "Simulation Analysis" with aggregate stats', async () => {
+  it('batch result displays BatchSummary with Wins/Losses/Draws grid', async () => {
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getByText('Iron Fist')).toBeInTheDocument();
+      expect(screen.getAllByText('Iron Fist').length).toBeGreaterThan(0);
     });
 
-    // Select a robot in slot 1
-    const selects = screen.getAllByRole('combobox');
-    const robotSelect = selects.find(s => {
-      const options = within(s).queryAllByRole('option');
-      return options.some(o => o.textContent === 'Iron Fist');
-    });
-    if (robotSelect) {
-      fireEvent.change(robotSelect, { target: { value: '1' } });
-    }
+    // Select a robot in slot 1 by clicking its image grid button
+    await selectRobotByName('Iron Fist');
 
     // Set batch count to 5
+    const selects = screen.getAllByRole('combobox');
     const batchSelect = selects.find(s => {
       const options = within(s).queryAllByRole('option');
       return options.some(o => o.textContent === '5');
@@ -405,7 +422,10 @@ describe('PracticeArenaPage', () => {
     fireEvent.click(runButton);
 
     await waitFor(() => {
-      expect(screen.getByText(/Simulation Analysis/)).toBeInTheDocument();
+      // BatchSummary shows Wins/Losses/Draws labels
+      expect(screen.getByText('Wins')).toBeInTheDocument();
+      expect(screen.getByText('Losses')).toBeInTheDocument();
+      expect(screen.getByText('Draws')).toBeInTheDocument();
     });
   });
 
@@ -415,18 +435,11 @@ describe('PracticeArenaPage', () => {
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getByText('Iron Fist')).toBeInTheDocument();
+      expect(screen.getAllByText('Iron Fist').length).toBeGreaterThan(0);
     });
 
-    // Select a robot
-    const selects = screen.getAllByRole('combobox');
-    const robotSelect = selects.find(s => {
-      const options = within(s).queryAllByRole('option');
-      return options.some(o => o.textContent === 'Iron Fist');
-    });
-    if (robotSelect) {
-      fireEvent.change(robotSelect, { target: { value: '1' } });
-    }
+    // Select a robot by clicking its image grid button
+    await selectRobotByName('Iron Fist');
 
     // Make API hang to observe loading state
     let resolvePost: (value: unknown) => void;
@@ -447,22 +460,15 @@ describe('PracticeArenaPage', () => {
 
   // ---- Battle Result ----
 
-  it('battle result renders with "SIMULATION" badge and "Simulation Report" header', async () => {
+  it('battle result renders with "SIMULATION" badge and SimulationResultBanner', async () => {
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getByText('Iron Fist')).toBeInTheDocument();
+      expect(screen.getAllByText('Iron Fist').length).toBeGreaterThan(0);
     });
 
-    // Select a robot
-    const selects = screen.getAllByRole('combobox');
-    const robotSelect = selects.find(s => {
-      const options = within(s).queryAllByRole('option');
-      return options.some(o => o.textContent === 'Iron Fist');
-    });
-    if (robotSelect) {
-      fireEvent.change(robotSelect, { target: { value: '1' } });
-    }
+    // Select a robot by clicking its image grid button
+    await selectRobotByName('Iron Fist');
 
     mockedApi.post.mockResolvedValueOnce({ data: makeBattleResult() });
 
@@ -471,7 +477,10 @@ describe('PracticeArenaPage', () => {
 
     await waitFor(() => {
       expect(screen.getByText('SIMULATION')).toBeInTheDocument();
-      expect(screen.getByText(/Simulation Report/)).toBeInTheDocument();
+      // SimulationResultBanner shows "🏆 Iron Fist WINS"
+      expect(screen.getByText(/🏆 Iron Fist WINS/)).toBeInTheDocument();
+      // "Battle Playback" header instead of "Simulation Report"
+      expect(screen.getByText('Battle Playback')).toBeInTheDocument();
     });
   });
 
@@ -481,18 +490,11 @@ describe('PracticeArenaPage', () => {
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getByText('Iron Fist')).toBeInTheDocument();
+      expect(screen.getAllByText('Iron Fist').length).toBeGreaterThan(0);
     });
 
     // Select a robot
-    const selects = screen.getAllByRole('combobox');
-    const robotSelect = selects.find(s => {
-      const options = within(s).queryAllByRole('option');
-      return options.some(o => o.textContent === 'Iron Fist');
-    });
-    if (robotSelect) {
-      fireEvent.change(robotSelect, { target: { value: '1' } });
-    }
+    await selectRobotByName('Iron Fist');
 
     // Mock 503 response
     mockedApi.post.mockRejectedValueOnce({
@@ -516,24 +518,17 @@ describe('PracticeArenaPage', () => {
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getByText('Iron Fist')).toBeInTheDocument();
+      expect(screen.getAllByText('Iron Fist').length).toBeGreaterThan(0);
     });
 
     // Select a robot
-    const selects = screen.getAllByRole('combobox');
-    const robotSelect = selects.find(s => {
-      const options = within(s).queryAllByRole('option');
-      return options.some(o => o.textContent === 'Iron Fist');
-    });
-    if (robotSelect) {
-      fireEvent.change(robotSelect, { target: { value: '1' } });
-    }
+    await selectRobotByName('Iron Fist');
 
     // Mock 429 response
     mockedApi.post.mockRejectedValueOnce({
       response: {
         status: 429,
-        data: { error: 'Rate limit exceeded', retryAfter: '5 minutes' },
+        data: { error: 'Rate limit exceeded', retryAfter: 300, remaining: 0 },
       },
     });
 
@@ -541,28 +536,21 @@ describe('PracticeArenaPage', () => {
     fireEvent.click(runButton);
 
     await waitFor(() => {
-      expect(screen.getByText(/Rate limit exceeded/)).toBeInTheDocument();
+      expect(screen.getByText(/Rate limit reached/)).toBeInTheDocument();
     });
   });
 
   // ---- What-If Overrides ----
 
-  it('What-If overrides show visual differentiation and upgrade cost', async () => {
+  it('What-If overrides show simulation-only notice and category +/- buttons', async () => {
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getByText('Iron Fist')).toBeInTheDocument();
+      expect(screen.getAllByText('Iron Fist').length).toBeGreaterThan(0);
     });
 
     // Select a robot in slot 1
-    const selects = screen.getAllByRole('combobox');
-    const robotSelect = selects.find(s => {
-      const options = within(s).queryAllByRole('option');
-      return options.some(o => o.textContent === 'Iron Fist');
-    });
-    if (robotSelect) {
-      fireEvent.change(robotSelect, { target: { value: '1' } });
-    }
+    await selectRobotByName('Iron Fist');
 
     // Expand What-If panel
     await waitFor(() => {
@@ -570,10 +558,14 @@ describe('PracticeArenaPage', () => {
       fireEvent.click(whatIfButton);
     });
 
-    // Should show the notice about simulation parameters
+    // Should show the simulation-only notice
     await waitFor(() => {
-      expect(screen.getByText(/Simulation parameters only/)).toBeInTheDocument();
+      expect(screen.getByText(/Simulation only — your robot is not modified/)).toBeInTheDocument();
     });
+
+    // Should show category headers with +/- buttons
+    expect(screen.getByText('Combat Systems')).toBeInTheDocument();
+    expect(screen.getByText('Defensive Systems')).toBeInTheDocument();
   });
 
   // ---- Re-Run Button ----
@@ -582,18 +574,11 @@ describe('PracticeArenaPage', () => {
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getByText('Iron Fist')).toBeInTheDocument();
+      expect(screen.getAllByText('Iron Fist').length).toBeGreaterThan(0);
     });
 
     // Select a robot
-    const selects = screen.getAllByRole('combobox');
-    const robotSelect = selects.find(s => {
-      const options = within(s).queryAllByRole('option');
-      return options.some(o => o.textContent === 'Iron Fist');
-    });
-    if (robotSelect) {
-      fireEvent.change(robotSelect, { target: { value: '1' } });
-    }
+    await selectRobotByName('Iron Fist');
 
     mockedApi.post.mockResolvedValueOnce({ data: makeBattleResult() });
 
@@ -617,7 +602,6 @@ describe('PracticeArenaPage', () => {
   // ---- History ----
 
   it('result history shows previous results from localStorage', async () => {
-    // Pre-populate localStorage with a history entry
     const historyEntry = {
       timestamp: new Date().toISOString(),
       combatResult: {
@@ -693,22 +677,15 @@ describe('PracticeArenaPage', () => {
 
   // ---- Battle Report Stats ----
 
-  it('battle report shows summary stats (winner, duration, damage, HP/shield)', async () => {
+  it('battle report shows SimulationResultBanner with winner and duration', async () => {
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getByText('Iron Fist')).toBeInTheDocument();
+      expect(screen.getAllByText('Iron Fist').length).toBeGreaterThan(0);
     });
 
     // Select a robot
-    const selects = screen.getAllByRole('combobox');
-    const robotSelect = selects.find(s => {
-      const options = within(s).queryAllByRole('option');
-      return options.some(o => o.textContent === 'Iron Fist');
-    });
-    if (robotSelect) {
-      fireEvent.change(robotSelect, { target: { value: '1' } });
-    }
+    await selectRobotByName('Iron Fist');
 
     mockedApi.post.mockResolvedValueOnce({ data: makeBattleResult() });
 
@@ -716,28 +693,26 @@ describe('PracticeArenaPage', () => {
     fireEvent.click(runButton);
 
     await waitFor(() => {
-      // Check for duration
-      expect(screen.getByText('45s')).toBeInTheDocument();
-      // Check for VICTORY (winner exists)
-      expect(screen.getByText('VICTORY')).toBeInTheDocument();
+      // SimulationResultBanner shows winner
+      expect(screen.getByText(/🏆 Iron Fist WINS/)).toBeInTheDocument();
+      // Duration shown in the banner
+      expect(screen.getByText(/Duration: 45s/)).toBeInTheDocument();
     });
   });
 
   // ---- Responsive Layout ----
 
   it('responsive layout renders on mobile viewport', async () => {
-    // Simulate mobile viewport via matchMedia
     Object.defineProperty(window, 'innerWidth', { writable: true, configurable: true, value: 375 });
     window.dispatchEvent(new Event('resize'));
 
     renderPage();
 
     await waitFor(() => {
-      // Page should still render the header
       expect(screen.getByText(/Combat Simulation Lab/)).toBeInTheDocument();
-      // Both slot panels should be present
+      // Slot 2 has the toggle — only 1 "Deploy Robot" button
       const deployButtons = screen.getAllByText('Deploy Robot');
-      expect(deployButtons.length).toBeGreaterThanOrEqual(1);
+      expect(deployButtons).toHaveLength(1);
     });
 
     // Restore
