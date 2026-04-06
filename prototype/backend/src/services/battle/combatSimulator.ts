@@ -1607,11 +1607,13 @@ export function simulateBattleMulti(
     }
 
     // ── PHASE 6: STATE CHECKS ──
-    // Step 1: Process destructions first (HP <= 0)
+    // Step 1: Process destructions first (HP <= 0), track which robots died this tick
+    const destroyedThisTick = new Set<number>();
     for (const state of states) {
       if (!state.isAlive) continue;
       if (state.currentHP <= 0) {
         state.isAlive = false;
+        destroyedThisTick.add(state.teamIndex);
         events.push({
           timestamp: Number(currentTime.toFixed(1)),
           type: 'destroyed',
@@ -1625,11 +1627,10 @@ export function simulateBattleMulti(
       }
     }
 
-    // Step 2: Only process yields if no robot was destroyed this tick.
+    // Step 2: Only process yields if no robot was destroyed THIS tick.
     // When a robot is destroyed, the surviving robot wins — they shouldn't
     // also yield on the same tick just because they're below threshold.
-    const anyDestroyedThisTick = states.some(s => !s.isAlive && s.currentHP <= 0);
-    if (!anyDestroyedThisTick) {
+    if (destroyedThisTick.size === 0) {
       for (const state of states) {
         if (!state.isAlive) continue;
         if (shouldYield(state)) {

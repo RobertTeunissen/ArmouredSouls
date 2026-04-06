@@ -10,14 +10,14 @@
 // Mocks — must be declared before imports
 // ---------------------------------------------------------------------------
 
-const mockPrismaCreate = jest.fn();
+const mockPrismaUpsert = jest.fn();
 const mockPrismaFindMany = jest.fn();
 
 jest.mock('../../src/lib/prisma', () => ({
   __esModule: true,
   default: {
     practiceArenaDailyStats: {
-      create: mockPrismaCreate,
+      upsert: mockPrismaUpsert,
       findMany: mockPrismaFindMany,
     },
   },
@@ -123,7 +123,7 @@ describe('PracticeArenaMetrics', () => {
   // =========================================================================
   describe('flushAndReset', () => {
     it('should persist daily counters to practice_arena_daily_stats table including playerIds as JSON array', async () => {
-      mockPrismaCreate.mockResolvedValue({});
+      mockPrismaUpsert.mockResolvedValue({});
 
       metrics.recordBattle(10);
       metrics.recordBattle(20);
@@ -132,20 +132,18 @@ describe('PracticeArenaMetrics', () => {
 
       await metrics.flushAndReset();
 
-      expect(mockPrismaCreate).toHaveBeenCalledTimes(1);
-      const createCall = mockPrismaCreate.mock.calls[0][0];
-      expect(createCall.data.totalBattles).toBe(3); // 3 battles total (duplicates count)
-      expect(createCall.data.uniquePlayers).toBe(2);
-      expect(createCall.data.rateLimitHits).toBe(1);
-      // playerIds should be an array of user IDs
-      expect(createCall.data.playerIds).toEqual(expect.arrayContaining([10, 20]));
-      expect(createCall.data.playerIds).toHaveLength(2);
-      // date should be set to today at midnight UTC
-      expect(createCall.data.date).toBeInstanceOf(Date);
+      expect(mockPrismaUpsert).toHaveBeenCalledTimes(1);
+      const upsertCall = mockPrismaUpsert.mock.calls[0][0];
+      expect(upsertCall.create.totalBattles).toBe(3);
+      expect(upsertCall.create.uniquePlayers).toBe(2);
+      expect(upsertCall.create.rateLimitHits).toBe(1);
+      expect(upsertCall.create.playerIds).toEqual(expect.arrayContaining([10, 20]));
+      expect(upsertCall.create.playerIds).toHaveLength(2);
+      expect(upsertCall.where.date).toBeInstanceOf(Date);
     });
 
     it('should zero daily counters but preserve totalBattlesSinceStart', async () => {
-      mockPrismaCreate.mockResolvedValue({});
+      mockPrismaUpsert.mockResolvedValue({});
 
       metrics.recordBattle(1);
       metrics.recordBattle(2);

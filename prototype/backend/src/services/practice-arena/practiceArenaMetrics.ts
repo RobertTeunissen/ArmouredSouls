@@ -86,8 +86,15 @@ export class PracticeArenaMetrics {
 
     const playerIds = Array.from(this.stats.uniquePlayersToday);
 
-    await (prisma as any).practiceArenaDailyStats.create({
-      data: {
+    await (prisma as any).practiceArenaDailyStats.upsert({
+      where: { date: today },
+      update: {
+        totalBattles: { increment: this.stats.battlesToday },
+        uniquePlayers: this.stats.uniquePlayersToday.size,
+        rateLimitHits: { increment: this.stats.rateLimitHitsToday },
+        playerIds: playerIds,
+      },
+      create: {
         date: today,
         totalBattles: this.stats.battlesToday,
         uniquePlayers: this.stats.uniquePlayersToday.size,

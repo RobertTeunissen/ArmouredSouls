@@ -46,7 +46,7 @@ const mockPrisma = {
     create: jest.fn(),
   },
   practiceArenaDailyStats: {
-    create: jest.fn(),
+    upsert: jest.fn(),
   },
 };
 
@@ -538,7 +538,7 @@ describe('Practice Arena Property Tests', () => {
           ),
           fc.integer({ min: 0, max: 10 }),
           async (battles, rateLimitHits) => {
-            mockPrisma.practiceArenaDailyStats.create.mockResolvedValue({});
+            mockPrisma.practiceArenaDailyStats.upsert.mockResolvedValue({});
 
             const metrics = new PracticeArenaMetrics();
 

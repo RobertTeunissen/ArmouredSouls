@@ -168,7 +168,7 @@ function practiceRateLimiter(req: express.Request, res: Response, next: NextFunc
 }
 
 // Clean up expired entries periodically (every 5 minutes)
-setInterval(() => {
+const cleanupInterval = setInterval(() => {
   const now = Date.now();
   for (const [userId, entry] of battleCounts) {
     if ((now - entry.windowStart) > RATE_LIMIT_WINDOW_MS) {
@@ -176,6 +176,7 @@ setInterval(() => {
     }
   }
 }, 5 * 60 * 1000);
+cleanupInterval.unref(); // Don't prevent process exit in tests
 
 // ---------------------------------------------------------------------------
 // POST /battle
@@ -185,8 +186,8 @@ router.post(
   '/battle',
   authenticateToken,
   rejectDuringCycleExecution,
-  practiceRateLimiter,
   validateRequest({ body: practiceBattleRequestSchema }),
+  practiceRateLimiter,
   async (req: AuthRequest, res: Response) => {
     const userId = req.user!.userId;
     const { robot1, robot2, count } = req.body;

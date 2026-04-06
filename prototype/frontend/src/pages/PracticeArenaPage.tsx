@@ -819,7 +819,6 @@ function BatchSummary({
 }) {
   const { aggregate } = batch;
   const robot1Name = batch.results[0]?.robot1Info.name || 'Robot 1';
-  const robot2Name = batch.results[0]?.robot2Info.name || 'Robot 2';
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
 
   // Determine win counts from player's perspective
@@ -1167,20 +1166,22 @@ function PracticeArenaPage() {
 
         // Store each result in history (up to cap)
         batch.results.forEach((r) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const cr = r.combatResult as any;
           addResult({
             timestamp: new Date().toISOString(),
             combatResult: {
-              winnerId: r.combatResult.winnerId,
-              robot1FinalHP: r.combatResult.robot1FinalHP,
-              robot2FinalHP: r.combatResult.robot2FinalHP,
-              robot1FinalShield: r.combatResult.robot1FinalShield ?? 0,
-              robot2FinalShield: r.combatResult.robot2FinalShield ?? 0,
-              robot1Damage: r.combatResult.robot1Damage ?? 0,
-              robot2Damage: r.combatResult.robot2Damage ?? 0,
-              robot1DamageDealt: r.combatResult.robot1DamageDealt ?? 0,
-              robot2DamageDealt: r.combatResult.robot2DamageDealt ?? 0,
-              durationSeconds: r.combatResult.durationSeconds,
-              isDraw: r.combatResult.isDraw,
+              winnerId: cr.winnerId,
+              robot1FinalHP: cr.robot1FinalHP,
+              robot2FinalHP: cr.robot2FinalHP,
+              robot1FinalShield: cr.robot1FinalShield ?? 0,
+              robot2FinalShield: cr.robot2FinalShield ?? 0,
+              robot1Damage: cr.robot1Damage ?? 0,
+              robot2Damage: cr.robot2Damage ?? 0,
+              robot1DamageDealt: cr.robot1DamageDealt ?? 0,
+              robot2DamageDealt: cr.robot2DamageDealt ?? 0,
+              durationSeconds: cr.durationSeconds,
+              isDraw: cr.isDraw,
             },
             robot1: r.robot1Info,
             robot2: r.robot2Info,
@@ -1191,20 +1192,22 @@ function PracticeArenaPage() {
         const single = (data.results ? data.results[0] : data) as PracticeBattleResult;
         setBattleResult(single);
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const cr = single.combatResult as any;
         addResult({
           timestamp: new Date().toISOString(),
           combatResult: {
-            winnerId: single.combatResult.winnerId,
-            robot1FinalHP: single.combatResult.robot1FinalHP,
-            robot2FinalHP: single.combatResult.robot2FinalHP,
-            robot1FinalShield: single.combatResult.robot1FinalShield ?? 0,
-            robot2FinalShield: single.combatResult.robot2FinalShield ?? 0,
-            robot1Damage: single.combatResult.robot1Damage ?? 0,
-            robot2Damage: single.combatResult.robot2Damage ?? 0,
-            robot1DamageDealt: single.combatResult.robot1DamageDealt ?? 0,
-            robot2DamageDealt: single.combatResult.robot2DamageDealt ?? 0,
-            durationSeconds: single.combatResult.durationSeconds,
-            isDraw: single.combatResult.isDraw,
+            winnerId: cr.winnerId,
+            robot1FinalHP: cr.robot1FinalHP,
+            robot2FinalHP: cr.robot2FinalHP,
+            robot1FinalShield: cr.robot1FinalShield ?? 0,
+            robot2FinalShield: cr.robot2FinalShield ?? 0,
+            robot1Damage: cr.robot1Damage ?? 0,
+            robot2Damage: cr.robot2Damage ?? 0,
+            robot1DamageDealt: cr.robot1DamageDealt ?? 0,
+            robot2DamageDealt: cr.robot2DamageDealt ?? 0,
+            durationSeconds: cr.durationSeconds,
+            isDraw: cr.isDraw,
           },
           robot1: single.robot1Info,
           robot2: single.robot2Info,
