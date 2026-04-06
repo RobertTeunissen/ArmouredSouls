@@ -27,6 +27,7 @@ import CycleSummaryPage from './pages/CycleSummaryPage';
 import OnboardingPage from './pages/OnboardingPage';
 import OnboardingAnalyticsPage from './pages/OnboardingAnalyticsPage';
 import GuidePage from './pages/GuidePage';
+import PracticeArenaPage from './pages/PracticeArenaPage';
 // import SystemHealthPage from './pages/SystemHealthPage';
 
 function App() {
@@ -104,6 +105,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <BattleDetailPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/practice-arena"
+            element={
+              <ProtectedRoute>
+                <PracticeArenaPage />
               </ProtectedRoute>
             }
           />

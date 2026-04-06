@@ -675,3 +675,16 @@ model ScheduledKothMatchParticipant {
   @@index([robotId])
   @@map("scheduled_koth_match_participants")
 }
+
+// Practice Arena daily stats - one row per day, flushed from in-memory counters during settlement
+model PracticeArenaDailyStats {
+  id            Int      @id @default(autoincrement())
+  date          DateTime @unique @db.Date
+  totalBattles  Int      @default(0)
+  uniquePlayers Int      @default(0)
+  rateLimitHits Int      @default(0)
+  playerIds     Json     @default("[]")
+  createdAt     DateTime @default(now())
+
+  @@map("practice_arena_daily_stats")
+}

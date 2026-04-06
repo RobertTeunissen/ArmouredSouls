@@ -87,6 +87,11 @@ The Admin Page has been fully implemented with the following features:
 - All statistics displayed in responsive grid layout
 - Tooltips provide context for each metric
 - Color-coded sections for easy visual parsing
+- **Practice Arena Section** ✅ NEW:
+  - Fetches from `GET /api/admin/practice-arena/stats`
+  - Displays current stats: battles today, unique players today, rate limit hits today, total battles since server start
+  - Displays historical trend: daily usage from the `history` array (last 7-30 days)
+  - Follows existing stat section pattern (grid layout, color-coded)
 - **System Health Section** ✅ INTEGRATED (collapsible `<details>` section):
   - Absorbed from the former standalone System Health tab
   - Fetches from `/api/analytics/performance`, `/api/analytics/integrity`, `/api/analytics/logs/summary`
@@ -704,6 +709,7 @@ AdminPage (Thin Shell — tab navigation, URL hash/localStorage persistence)
 ├── Tab Navigation (7 tabs)
 │   ├── DashboardTab (components/admin/DashboardTab.tsx)
 │   │   ├── System Statistics Grid (auto-loaded)
+│   │   ├── Practice Arena Metrics (battles today, unique players, rate limit hits, total since start, historical trend)
 │   │   └── System Health (collapsible <details> section)
 │   │       ├── Cycle Performance Metrics
 │   │       ├── Data Integrity Status
@@ -796,6 +802,9 @@ GET  /api/admin/users/at-risk            // At-risk users for bankruptcy monitor
 // Security Monitoring
 GET  /api/admin/security/summary         // Security event summary (severity counts, flagged users)
 GET  /api/admin/security/events          // Recent security events (filterable by severity, eventType, userId, since, limit)
+
+// Practice Arena Metrics
+GET  /api/admin/practice-arena/stats     // Practice arena usage stats (battles today, unique players, rate limit hits, historical trend)
 
 // System Health (integrated into Dashboard)
 GET  /api/analytics/performance          // Cycle performance metrics

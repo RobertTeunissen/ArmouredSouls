@@ -17,6 +17,7 @@ import { rebalanceTagTeamLeagues } from '../tag-team/tagTeamLeagueRebalancingSer
 import { runTagTeamMatchmaking } from '../tag-team/tagTeamMatchmakingService';
 import { runKothMatchmaking } from '../koth/kothMatchmakingService';
 import prisma from '../../lib/prisma';
+import { practiceArenaMetrics } from '../practice-arena/practiceArenaMetrics';
 import { EventLogger } from '../common/eventLogger';
 import { JobContext } from '../notifications/integration';
 import { buildSuccessMessage, buildErrorMessage, getActiveIntegrations, dispatchNotification } from '../notifications/notification-service';
@@ -423,8 +424,17 @@ async function executeSettlement(): Promise<JobContext> {
     logger.error(`Daily Settlement: Failed to create analytics snapshot — ${snapshotError instanceof Error ? snapshotError.message : String(snapshotError)}`);
   }
 
-  // Step 6: Auto-generate users if needed
-  logger.info('Daily Settlement: Step 6 — Auto-generating users');
+  // Step 6: Flush practice arena daily stats
+  logger.info('Settlement: Flushing practice arena daily stats');
+  try {
+    await practiceArenaMetrics.flushAndReset();
+    logger.info('Settlement: Flushed practice arena daily stats');
+  } catch (practiceArenaError) {
+    logger.error(`Settlement: Failed to flush practice arena daily stats — ${practiceArenaError instanceof Error ? practiceArenaError.message : String(practiceArenaError)}`);
+  }
+
+  // Step 7: Auto-generate users if needed
+  logger.info('Daily Settlement: Step 7 — Auto-generating users');
   try {
     const { generateBattleReadyUsers } = await import('../../utils/userGeneration');
     const userGenSummary = await generateBattleReadyUsers(currentCycleNumber);

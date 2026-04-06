@@ -1,0 +1,11 @@
+{
+  "_description": "Vulnerability allowlist for npm audit. Each entry documents a known vulnerability that has been reviewed and accepted with justification.",
+  "allowlist": [],
+  "_entrySchema": {
+    "id": "GHSA advisory ID (e.g., GHSA-xxxx-xxxx-xxxx)",
+    "package": "Affected npm package name",
+    "justification": "Why this vulnerability is accepted (e.g., dev-only dependency, not reachable in production)",
+    "reviewDate": "ISO date when the vulnerability was last reviewed (YYYY-MM-DD)",
+    "nextReviewDate": "ISO date when the vulnerability should be re-evaluated (YYYY-MM-DD)"
+  }
+}

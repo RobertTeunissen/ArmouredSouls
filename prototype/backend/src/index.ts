@@ -20,6 +20,7 @@ import analyticsRoutes from './routes/analytics';
 import onboardingRoutes from './routes/onboarding';
 import guideRoutes from './routes/guide';
 import kothRoutes from './routes/koth';
+import practiceArenaRouter from './routes/practiceArena';
 import { loadEnvConfig } from './config/env';
 import { initScheduler } from './services/cycle/cycleScheduler';
 import { createGeneralLimiter, createAuthLimiter, createLoginLimiter } from './middleware/rateLimiter';
@@ -124,6 +125,7 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/onboarding', onboardingRoutes);
 app.use('/api/guide', guideRoutes);
 app.use('/api/koth', kothRoutes);
+app.use('/api/practice-arena', practiceArenaRouter);
 
 // Error handling middleware
 app.use(errorHandler);

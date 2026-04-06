@@ -31,6 +31,7 @@ import { validateRequest } from '../middleware/schemaValidator';
 import { positiveIntParam } from '../utils/securityValidation';
 import { securityMonitor } from '../services/security/securityMonitor';
 import { SecuritySeverity } from '../services/security/securityLogger';
+import { practiceArenaMetrics } from '../services/practice-arena/practiceArenaMetrics';
 
 const router = express.Router();
 const eventLogger = new EventLogger();
@@ -2910,6 +2911,17 @@ router.post('/koth/trigger', authenticateToken, requireAdmin, async (_req: Reque
       message: error instanceof Error ? error.message : String(error),
     });
   }
+});
+
+/**
+ * GET /api/admin/practice-arena/stats
+ * Returns current in-memory practice arena metrics and historical daily stats.
+ */
+router.get('/practice-arena/stats', authenticateToken, requireAdmin, async (_req: Request, res: Response) => {
+  res.json({
+    current: practiceArenaMetrics.getStats(),
+    history: await practiceArenaMetrics.getHistory(),
+  });
 });
 
 /**
