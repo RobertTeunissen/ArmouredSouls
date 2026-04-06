@@ -38,6 +38,7 @@ const implementedPages = new Set([
   '/cycle-summary',
   '/system-health',
   '/guide',
+  '/practice-arena',
 ]);
 
 const allPages = {
@@ -56,9 +57,10 @@ const allPages = {
       { path: '/league-standings', label: 'League Standings' },
       { path: '/koth-standings', label: 'King of the Hill Standings' },
       { path: '/tag-teams/standings', label: 'Tag Team Standings' },
-      { path: '/practice', label: 'Practice Arena' },
       { path: '/tournaments', label: 'Tournament Hub' },
       { path: '/events', label: 'Events Calendar' },
+      { path: '---', label: '' },
+      { path: '/practice-arena', label: '🧪 Combat Simulator' },
     ]
   },
   stable: {
@@ -203,6 +205,9 @@ function DropdownMenu({ label, items, isActive, checkActive }: DropdownMenuProps
       {isOpen && (
         <div className="absolute top-full left-0 mt-0 w-56 bg-surface-elevated border border-white/10 rounded-md shadow-xl z-50 py-2">
           {items.map(item => {
+            if (item.path === '---') {
+              return <hr key="divider" className="my-1 border-white/10" />;
+            }
             const disabled = !isPageImplemented(item.path);
             const active = checkActive(item.path);
             
@@ -576,18 +581,23 @@ function Navigation() {
                     ⚔️ Battle & Competition
                   </h3>
                   <nav className="space-y-1">
-                    {allPages.battle.items.map(item => (
-                      <DrawerMenuItem
-                        key={item.path}
-                        label={item.label}
-                        onClick={() => {
-                          navigate(item.path);
-                          setDrawerOpen(false);
-                        }}
-                        isActive={isActive(item.path)}
-                        disabled={!implementedPages.has(item.path)}
-                      />
-                    ))}
+                    {allPages.battle.items.map(item => {
+                      if (item.path === '---') {
+                        return <hr key="divider" className="my-2 mx-4 border-white/10" />;
+                      }
+                      return (
+                        <DrawerMenuItem
+                          key={item.path}
+                          label={item.label}
+                          onClick={() => {
+                            navigate(item.path);
+                            setDrawerOpen(false);
+                          }}
+                          isActive={isActive(item.path)}
+                          disabled={!implementedPages.has(item.path)}
+                        />
+                      );
+                    })}
                   </nav>
                 </div>
 

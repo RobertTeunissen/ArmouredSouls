@@ -116,6 +116,7 @@ Security considerations are built into the architecture from the start, not adde
 - Registration: 30 requests per minute per IP
 - Economic endpoints (weapons, facilities, robots): 60 requests/minute per authenticated user
 - Account reset: 3 requests/hour per authenticated user
+- Practice Arena: 30 battles per 15 minutes per authenticated user, keyed by `userId`. Each individual battle in a batch counts toward the limit. Violations tracked by `practiceArenaMetrics.recordRateLimitHit()` and `securityMonitor.trackRateLimitViolation()`. Batch requests that would exceed the limit are rejected entirely before executing any battles.
 - Rate limit violations tracked by `SecurityMonitor` and visible in the admin Security dashboard
 - Repeated violations (>5 in 1 hour on economic endpoints) trigger a `rate_limit_escalation` security event
 

@@ -70,6 +70,15 @@ export function DashboardTab({ stats, loading }: DashboardTabProps) {
   const [healthError, setHealthError] = useState<string | null>(null);
   const [healthOpen, setHealthOpen] = useState(false);
 
+  /* ---------- Practice Arena local state ---------- */
+  const [practiceArenaOpen, setPracticeArenaOpen] = useState(false);
+  const [practiceArenaStats, setPracticeArenaStats] = useState<{
+    current: { totalBattlesSinceStart: number; battlesToday: number; rateLimitHitsToday: number; uniquePlayersToday: number };
+    history: Array<{ date: string; totalBattles: number; uniquePlayers: number; rateLimitHits: number }>;
+  } | null>(null);
+  const [practiceArenaLoading, setPracticeArenaLoading] = useState(false);
+  const [practiceArenaError, setPracticeArenaError] = useState<string | null>(null);
+
   /* ---------- System Health data fetching ---------- */
   const fetchSystemHealth = useCallback(async () => {
     try {
@@ -126,6 +135,28 @@ export function DashboardTab({ stats, loading }: DashboardTabProps) {
       fetchSystemHealth();
     }
   }, [healthOpen, fetchSystemHealth]);
+
+  /* ---------- Practice Arena data fetching ---------- */
+  const fetchPracticeArenaStats = useCallback(async () => {
+    try {
+      setPracticeArenaLoading(true);
+      setPracticeArenaError(null);
+      const response = await apiClient.get('/api/admin/practice-arena/stats');
+      setPracticeArenaStats(response.data);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      setPracticeArenaError(`Failed to load practice arena stats: ${msg}`);
+    } finally {
+      setPracticeArenaLoading(false);
+    }
+  }, []);
+
+  // Fetch practice arena data when the details section is opened
+  useEffect(() => {
+    if (practiceArenaOpen) {
+      fetchPracticeArenaStats();
+    }
+  }, [practiceArenaOpen, fetchPracticeArenaStats]);
 
   const handleCycleRangeChange = (start: number, end: number): void => {
     if (start > 0 && end >= start) {
@@ -324,6 +355,96 @@ export function DashboardTab({ stats, loading }: DashboardTabProps) {
           </div>
         </div>
       )}
+
+      {/* Practice Arena Metrics — collapsible section */}
+      <details
+        data-testid="practice-arena-section"
+        open={practiceArenaOpen}
+        onToggle={(e) => setPracticeArenaOpen((e.target as HTMLDetailsElement).open)}
+      >
+        <summary className="bg-surface rounded-lg p-4 cursor-pointer font-semibold text-lg hover:bg-surface-elevated transition-colors list-none flex items-center gap-2">
+          <span className="text-sm">{practiceArenaOpen ? '▼' : '▶'}</span>
+          ⚡ Practice Arena
+        </summary>
+
+        <div className="bg-surface rounded-b-lg p-6 space-y-6 border-t border-white/10">
+          {practiceArenaLoading && (
+            <div className="text-center py-4 text-secondary">Loading practice arena stats...</div>
+          )}
+
+          {practiceArenaError && (
+            <div className="bg-red-900 border border-red-700 text-red-200 px-4 py-3 rounded">
+              Error: {practiceArenaError}
+            </div>
+          )}
+
+          {!practiceArenaLoading && practiceArenaStats && (
+            <>
+              {/* Current Stats */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Current Stats</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-cyan-900 p-4 rounded">
+                    <div className="text-2xl font-bold text-cyan-400">
+                      {practiceArenaStats.current.battlesToday}
+                    </div>
+                    <div className="text-sm text-secondary">Battles Today</div>
+                  </div>
+                  <div className="bg-indigo-900 p-4 rounded">
+                    <div className="text-2xl font-bold text-indigo-400">
+                      {practiceArenaStats.current.uniquePlayersToday}
+                    </div>
+                    <div className="text-sm text-secondary">Unique Players Today</div>
+                  </div>
+                  <div className={`p-4 rounded ${practiceArenaStats.current.rateLimitHitsToday > 0 ? 'bg-red-900' : 'bg-green-900'}`}>
+                    <div className={`text-2xl font-bold ${practiceArenaStats.current.rateLimitHitsToday > 0 ? 'text-error' : 'text-success'}`}>
+                      {practiceArenaStats.current.rateLimitHitsToday}
+                    </div>
+                    <div className="text-sm text-secondary">Rate Limit Hits Today</div>
+                  </div>
+                  <div className="bg-purple-900 p-4 rounded">
+                    <div className="text-2xl font-bold text-purple-400">
+                      {practiceArenaStats.current.totalBattlesSinceStart.toLocaleString()}
+                    </div>
+                    <div className="text-sm text-secondary">Total Since Start</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Historical Trend */}
+              {practiceArenaStats.history.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-3">Daily Usage Trend</h3>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-white/10">
+                          <th className="text-left py-2 px-3 text-secondary">Date</th>
+                          <th className="text-right py-2 px-3 text-secondary">Battles</th>
+                          <th className="text-right py-2 px-3 text-secondary">Players</th>
+                          <th className="text-right py-2 px-3 text-secondary">Rate Limits</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {practiceArenaStats.history.slice(0, 30).map((row) => (
+                          <tr key={row.date} className="border-b border-white/5 hover:bg-white/5">
+                            <td className="py-2 px-3 text-primary">{new Date(row.date).toLocaleDateString()}</td>
+                            <td className="py-2 px-3 text-right font-mono text-cyan-400">{row.totalBattles}</td>
+                            <td className="py-2 px-3 text-right font-mono text-indigo-400">{row.uniquePlayers}</td>
+                            <td className={`py-2 px-3 text-right font-mono ${row.rateLimitHits > 0 ? 'text-error' : 'text-success'}`}>
+                              {row.rateLimitHits}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </details>
 
       {/* System Health — collapsible section (absorbed from SystemHealthPage) */}
       <details

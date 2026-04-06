@@ -1189,30 +1189,51 @@ export class CombatMessageGenerator {
         const r1HP = this.getHPFromEvent(event, context.robot1Name, context);
         const r2HP = this.getHPFromEvent(event, context.robot2Name, context);
         const isRobot1Destroyed = (r1HP.hp || 0) === 0;
-        const destroyedRobot = isRobot1Destroyed ? context.robot1Name : context.robot2Name;
-        const winnerRobot = isRobot1Destroyed ? context.robot2Name : context.robot1Name;
-        const winnerHP = isRobot1Destroyed ? (r2HP.hp || 0) : (r1HP.hp || 0);
-        const winnerMaxHP = isRobot1Destroyed ? context.robot2MaxHP : context.robot1MaxHP;
+        const isRobot2Destroyed = (r2HP.hp || 0) === 0;
 
-        // Destruction message
-        narrativeEvents.push({
-          timestamp: ts,
-          type: 'destroyed',
-          message: this.generateDestruction(destroyedRobot),
-        });
+        // Mutual destruction: both robots at 0 HP on the same tick → draw
+        if (isRobot1Destroyed && isRobot2Destroyed) {
+          narrativeEvents.push({
+            timestamp: ts,
+            type: 'destroyed',
+            message: this.generateDestruction(context.robot1Name),
+          });
+          narrativeEvents.push({
+            timestamp: ts,
+            type: 'destroyed',
+            message: this.generateDestruction(context.robot2Name),
+          });
+          narrativeEvents.push({
+            timestamp: ts,
+            type: 'draw',
+            message: this.generateDraw(),
+          });
+        } else {
+          const destroyedRobot = isRobot1Destroyed ? context.robot1Name : context.robot2Name;
+          const winnerRobot = isRobot1Destroyed ? context.robot2Name : context.robot1Name;
+          const winnerHP = isRobot1Destroyed ? (r2HP.hp || 0) : (r1HP.hp || 0);
+          const winnerMaxHP = isRobot1Destroyed ? context.robot2MaxHP : context.robot1MaxHP;
 
-        // Victory message
-        narrativeEvents.push({
-          timestamp: ts,
-          type: 'battle_end',
-          message: this.generateBattleEnd({
-            winnerName: winnerRobot,
-            loserName: destroyedRobot,
-            winnerHP,
-            winnerMaxHP,
-            reason: 'destruction',
-          }),
-        });
+          // Destruction message
+          narrativeEvents.push({
+            timestamp: ts,
+            type: 'destroyed',
+            message: this.generateDestruction(destroyedRobot),
+          });
+
+          // Victory message
+          narrativeEvents.push({
+            timestamp: ts,
+            type: 'battle_end',
+            message: this.generateBattleEnd({
+              winnerName: winnerRobot,
+              loserName: destroyedRobot,
+              winnerHP,
+              winnerMaxHP,
+              reason: 'destruction',
+            }),
+          });
+        }
 
       } else if (event.type === 'shield_break') {
         // Explicit shield break event from simulator (if any)

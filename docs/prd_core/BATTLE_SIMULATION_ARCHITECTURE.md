@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-This document provides a unified architectural overview of the battle simulation system. It ties together the shared combat engine, the four battle orchestrators (league, tournament, tag team, KotH), the narrative generation pipeline, the BattleParticipant data model, and the audit log — all of which were previously documented in isolation.
+This document provides a unified architectural overview of the battle simulation system. It ties together the shared combat engine, the four battle orchestrators (league, tournament, tag team, KotH), the Practice Arena (a fifth, non-orchestrator consumer of the combat engine), the narrative generation pipeline, the BattleParticipant data model, and the audit log — all of which were previously documented in isolation.
 
 ---
 
@@ -252,9 +252,96 @@ Each orchestrator handles a different match type but follows the same core patte
 
 ---
 
+## The Fifth Consumer: Practice Arena
+
+**Added**: April 2026  
+**Status**: ✅ Implemented  
+**Location**: `services/practice-arena/`
+
+The Practice Arena is a standalone, synchronous request/response service that calls the same `simulateBattle()` function as the four orchestrators — but with a fundamentally different architecture. It is NOT an orchestrator and does not participate in the cycle scheduler pipeline.
+
+### How It Differs from the Four Orchestrators
+
+| Aspect | Four Orchestrators | Practice Arena |
+|--------|-------------------|----------------|
+| Trigger | Cron jobs via `cycleScheduler.ts` | On-demand player API request |
+| Pattern | `BattleStrategy`/`BattleProcessor` or custom orchestrator flow | Simple service function call |
+| Post-combat | Full pipeline via `battlePostCombat.ts` (stats, rewards, audit) | Skipped entirely — zero post-combat processing |
+| DB writes | Battle, BattleParticipant, Robot updates, User updates, AuditLog | Zero writes (reads only: robot data, weapon catalog) |
+| Match source | `ScheduledMatch`, `TournamentMatch`, `TagTeamMatch`, `ScheduledKothMatch` | No scheduled matches — player-initiated |
+| Result persistence | Database (Battle + BattleParticipant records) | Client-side localStorage only |
+| Scheduling | Cycle-driven with repair → battle → rebalance → matchmaking flow | Synchronous request/response, no scheduling |
+
+### Dependency Boundary
+
+```
+services/practice-arena/
+  ├── practiceArenaService.ts
+  │     IMPORTS FROM battle/:
+  │       - simulateBattle from combatSimulator.ts
+  │       - CombatMessageGenerator from combatMessageGenerator.ts
+  │     IMPORTS FROM utils/:
+  │       - selectWeapon, selectShield from weaponSelection.ts
+  │       - TIER_CONFIGS from tierConfig.ts
+  │       - calculateMaxHP, calculateMaxShield from robotCalculations.ts
+  │     DOES NOT IMPORT:
+  │       - battlePostCombat.ts (no post-combat pipeline)
+  │       - battleStrategy.ts (no BattleStrategy/BattleProcessor)
+  │       - cycleScheduler.ts (no cron triggers)
+  │       - baseOrchestrator.ts (no orchestrator base)
+  │       - Any ScheduledMatch model
+  │
+  └── practiceArenaMetrics.ts
+        Pure in-memory counters, no battle-level DB dependency
+        (daily flush to practice_arena_daily_stats during settlement only)
+```
+
+### Execution Flow
+
+```
+  Player API Request (POST /api/practice-arena/battle)
+           │
+           ▼
+  Validate input (Zod schemas)
+           │
+           ▼
+  Check cycle guard (reject with 503 if cycle job running)
+           │
+           ▼
+  Check rate limit (30 battles / 15 min per user)
+           │
+           ▼
+  Build RobotWithWeapons (clone owned robot OR construct sparring partner)
+           │
+           ▼
+  Set currentHP = maxHP, currentShield = maxShield (full repair)
+           │
+           ▼
+  Call simulateBattle(r1, r2) with allowDraws: true
+           │
+           ▼
+  Generate narrative via CombatMessageGenerator.convertBattleEvents()
+           │
+           ▼
+  Increment in-memory metrics (practiceArenaMetrics.recordBattle)
+           │
+           ▼
+  Return PracticeBattleResult to client (zero DB writes)
+```
+
+### Cycle Execution Guard
+
+The Practice Arena checks `getSchedulerState().runningJob` before executing any battle. If a cycle job is running, the API returns 503 Service Unavailable. This prevents CPU contention with the real battle pipeline.
+
+### Related Documentation
+
+- [PRD_PRACTICE_ARENA.md](../prd_pages/PRD_PRACTICE_ARENA.md) — Full feature specification
+
+---
+
 ## Combat Simulator Deep Dive
 
-The combat simulator (`combatSimulator.ts`) is the shared, stateless engine used by all orchestrators. It has no database dependencies — it takes an array of `RobotWithWeapons` objects and a `BattleConfig`, and returns a `SpatialCombatResult`.
+The combat simulator (`combatSimulator.ts`) is the shared, stateless engine used by all orchestrators and the Practice Arena. It has no database dependencies — it takes an array of `RobotWithWeapons` objects and a `BattleConfig`, and returns a `SpatialCombatResult`.
 
 The primary entry point is `simulateBattleMulti(robots[], config)` which supports N-robot battles. The legacy `simulateBattle(robot1, robot2, isTournament?)` function is preserved as a backward-compatible wrapper that delegates to `simulateBattleMulti()`.
 
@@ -688,6 +775,8 @@ The acc/production environment uses individual cron triggers rather than a monol
 | `src/services/tag-team/tagTeamBattleOrchestrator.ts` | 2v2 tag team battles, tag-out mechanics, 4-robot participation |
 | `src/services/koth/kothBattleOrchestrator.ts` | KotH battle orchestration, placement rewards, zone scoring |
 | `src/services/koth/kothMatchmakingService.ts` | KotH-specific matchmaking (snake-draft, one-per-stable) |
+| `src/services/practice-arena/practiceArenaService.ts` | Practice Arena battle service — builds virtual robots, calls `simulateBattle`, returns results with zero DB writes |
+| `src/services/practice-arena/practiceArenaMetrics.ts` | In-memory usage counters with daily flush to `practice_arena_daily_stats` |
 | `src/services/common/eventLogger.ts` | Audit log writer (one event per robot pattern) |
 | `src/services/economy/streamingRevenueService.ts` | Streaming revenue calculation and awarding |
 | `src/utils/battleMath.ts` | ELO calculations (K-factor, expected score, delta) |

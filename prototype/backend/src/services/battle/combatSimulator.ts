@@ -1607,6 +1607,7 @@ export function simulateBattleMulti(
     }
 
     // ── PHASE 6: STATE CHECKS ──
+    // Step 1: Process destructions first (HP <= 0)
     for (const state of states) {
       if (!state.isAlive) continue;
       if (state.currentHP <= 0) {
@@ -1621,18 +1622,29 @@ export function simulateBattleMulti(
           robot2Shield: states[1]?.currentShield ?? 0,
           ...buildPositionSnapshot(...states),
         });
-      } else if (shouldYield(state)) {
-        state.isAlive = false;
-        events.push({
-          timestamp: Number(currentTime.toFixed(1)),
-          type: 'yield',
-          message: `🏳️ ${state.robot.name} yields at ${((state.currentHP / state.maxHP) * 100).toFixed(0)}% HP!`,
-          robot1HP: states[0]?.currentHP ?? 0,
-          robot2HP: states[1]?.currentHP ?? 0,
-          robot1Shield: states[0]?.currentShield ?? 0,
-          robot2Shield: states[1]?.currentShield ?? 0,
-          ...buildPositionSnapshot(...states),
-        });
+      }
+    }
+
+    // Step 2: Only process yields if no robot was destroyed this tick.
+    // When a robot is destroyed, the surviving robot wins — they shouldn't
+    // also yield on the same tick just because they're below threshold.
+    const anyDestroyedThisTick = states.some(s => !s.isAlive && s.currentHP <= 0);
+    if (!anyDestroyedThisTick) {
+      for (const state of states) {
+        if (!state.isAlive) continue;
+        if (shouldYield(state)) {
+          state.isAlive = false;
+          events.push({
+            timestamp: Number(currentTime.toFixed(1)),
+            type: 'yield',
+            message: `🏳️ ${state.robot.name} yields at ${((state.currentHP / state.maxHP) * 100).toFixed(0)}% HP!`,
+            robot1HP: states[0]?.currentHP ?? 0,
+            robot2HP: states[1]?.currentHP ?? 0,
+            robot1Shield: states[0]?.currentShield ?? 0,
+            robot2Shield: states[1]?.currentShield ?? 0,
+            ...buildPositionSnapshot(...states),
+          });
+        }
       }
     }
 
