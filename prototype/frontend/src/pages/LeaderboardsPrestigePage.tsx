@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
+import OwnerNameLink from '../components/OwnerNameLink';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
 
@@ -171,7 +172,7 @@ function LeaderboardsPrestigePage() {
                       <td className="px-4 py-3 text-primary font-medium">#{entry.rank}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
-                          <span className="text-primary font-medium">{entry.stableName}</span>
+                          <OwnerNameLink userId={entry.userId} displayName={entry.stableName} />
                           {isOwnStable && <span className="text-xs px-2 py-0.5 bg-primary text-white rounded font-semibold">YOU</span>}
                         </div>
                       </td>
@@ -203,7 +204,7 @@ function LeaderboardsPrestigePage() {
                   <div className="flex justify-between items-start mb-2">
                     <div>
                       <span className="text-secondary text-sm">#{entry.rank}</span>
-                      <span className="text-primary font-medium ml-2">{entry.stableName}</span>
+                      <OwnerNameLink userId={entry.userId} displayName={entry.stableName} className="ml-2" />
                       {isOwnStable && <span className="text-xs px-2 py-0.5 bg-primary text-white rounded font-semibold ml-2">YOU</span>}
                     </div>
                     <span className="text-primary font-semibold">{entry.prestige.toLocaleString()}</span>

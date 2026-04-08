@@ -12,6 +12,7 @@ import {
   getLeagueTierColor,
   getLeagueTierIcon,
 } from '../utils/matchmakingApi';
+import OwnerNameLink from '../components/OwnerNameLink';
 
 const TIERS = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'];
 
@@ -271,9 +272,11 @@ function LeagueStandingsPage() {
                           </td>
                           <td className="px-1.5 lg:px-4 py-3 text-secondary text-sm lg:text-base">
                             <div className="flex items-center gap-1.5">
-                              <span className="truncate max-w-[80px] lg:max-w-none">
-                                {robot.user.stableName || robot.user.username}
-                              </span>
+                              <OwnerNameLink
+                                userId={robot.userId}
+                                displayName={robot.user.stableName || robot.user.username}
+                                className="truncate max-w-[80px] lg:max-w-none"
+                              />
                               {isMyBot && (
                                 <span className="shrink-0 text-xs bg-primary text-white px-1.5 py-0.5 rounded font-semibold">
                                   YOU

@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
 import { getLeagueColor } from '../utils/formatters';
+import OwnerNameLink from '../components/OwnerNameLink';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
 
@@ -204,7 +205,7 @@ function LeaderboardsFamePage() {
                       </td>
                       <td className="px-4 py-3 text-primary font-semibold">{entry.fame.toLocaleString()}</td>
                       <td className="px-4 py-3"><span className={`font-medium ${getTierColor(entry.fameTier)}`}>{entry.fameTier}</span></td>
-                      <td className="px-4 py-3 text-secondary">{entry.stableName}</td>
+                      <td className="px-4 py-3"><OwnerNameLink userId={entry.stableId} displayName={entry.stableName} /></td>
                       <td className="px-4 py-3"><span className={`capitalize ${getLeagueColor(entry.currentLeague)}`}>{entry.currentLeague}</span></td>
                       <td className="px-4 py-3 text-primary">{entry.elo}</td>
                       <td className="px-4 py-3 text-secondary text-sm">{entry.wins}W-{entry.losses}L-{entry.draws}D</td>
@@ -236,7 +237,7 @@ function LeaderboardsFamePage() {
                     <div className="flex justify-between"><span className="text-secondary">ELO</span><span className="text-primary">{entry.elo}</span></div>
                     <div className="flex justify-between"><span className="text-secondary">Win %</span><span className={entry.winRate >= 60 ? 'text-success' : entry.winRate >= 50 ? 'text-warning' : 'text-orange-400'}>{entry.winRate}%</span></div>
                     <div className="flex justify-between"><span className="text-secondary">Record</span><span className="text-secondary">{entry.wins}W-{entry.losses}L-{entry.draws}D</span></div>
-                    <div className="flex justify-between"><span className="text-secondary">Stable</span><span className="text-secondary truncate ml-2">{entry.stableName}</span></div>
+                    <div className="flex justify-between"><span className="text-secondary">Stable</span><OwnerNameLink userId={entry.stableId} displayName={entry.stableName} className="truncate ml-2" /></div>
                   </div>
                 </div>
               );

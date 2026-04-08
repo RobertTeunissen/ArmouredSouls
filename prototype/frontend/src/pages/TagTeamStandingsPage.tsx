@@ -13,6 +13,7 @@ import {
   getTagTeamLeagueTierIcon,
   getTeamName,
 } from '../utils/tagTeamApi';
+import OwnerNameLink from '../components/OwnerNameLink';
 
 function TagTeamStandingsPage() {
   const { user, logout } = useAuth();
@@ -199,8 +200,8 @@ function TagTeamStandingsPage() {
                           {/* Team */}
                           <td className="px-4 py-3">
                             <div className="space-y-1">
-                              <div className="font-semibold text-white text-base">
-                                {getTeamName(team)}
+                              <div className="font-semibold text-base">
+                                <OwnerNameLink userId={team.stableId} displayName={getTeamName(team)} />
                               </div>
                               <div className="flex items-center gap-2 text-sm">
                                 <span className="text-primary">{team.activeRobot.name}</span>

@@ -49,6 +49,8 @@ const unitTestFiles = [
   'securityHeaders\\.property\\.test\\.ts',
   'errorHandler\\.property\\.test\\.ts',
   'currencyConstraint\\.property\\.test\\.ts',
+  'prestigeUtils\\.property\\.test\\.ts',
+  'stableSanitization\\.property\\.test\\.ts',
 ];
 
 module.exports = {
