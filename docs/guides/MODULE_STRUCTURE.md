@@ -29,7 +29,7 @@ ArmouredSouls/
 │   │   │   ├── middleware/     # Auth, error handling, validation
 │   │   │   ├── routes/        # Express route handlers
 │   │   │   ├── services/      # Domain-organized service layer (see below)
-│   │   │   └── utils/         # Shared utilities (battleMath, etc.)
+│   │   │   └── utils/         # Shared utilities (battleMath, prestigeUtils, etc.)
 │   │   ├── generated/prisma/  # Prisma 7 generated client
 │   │   ├── prisma/            # Schema and migrations
 │   │   └── tests/             # Jest test files
@@ -38,7 +38,7 @@ ArmouredSouls/
 │           ├── components/    # React components
 │           ├── contexts/      # React Context providers
 │           ├── hooks/         # Custom hooks
-│           ├── pages/         # Page components
+│           ├── pages/         # Page components (28 pages including StableViewPage)
 │           ├── services/      # API client layer
 │           └── types/         # TypeScript type definitions
 ```
@@ -306,6 +306,14 @@ The battle orchestrators (league, tournament, tag-team, KotH) share a common `ba
 - `discord-integration.ts` — Discord webhook integration: `DiscordIntegration` class implementing `Integration`.
 
 **Dependencies**: Database, Auth (user targeting)
+
+---
+
+### Standalone Routes
+
+Some routes exist outside the 13 domain service directories, serving cross-domain or social features:
+
+- `stables.ts` — Public stable viewing (`GET /api/stables/:userId`). Returns sanitized robot data, facility levels, and aggregate stats for any user's stable. Uses `sanitizeRobotForPublic` from `robots.ts` and `getPrestigeRank` from `utils/prestigeUtils.ts`.
 
 ---
 

@@ -86,6 +86,7 @@ export class PracticeArenaMetrics {
 
     const playerIds = Array.from(this.stats.uniquePlayersToday);
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (prisma as any).practiceArenaDailyStats.upsert({
       where: { date: today },
       update: {
@@ -124,6 +125,7 @@ export class PracticeArenaMetrics {
     since.setUTCHours(0, 0, 0, 0);
     since.setUTCDate(since.getUTCDate() - days);
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (prisma as any).practiceArenaDailyStats.findMany({
       where: {
         date: { gte: since },

@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
 import { useNavigate } from 'react-router-dom';
 import { formatCurrency } from '../utils/formatters';
+import OwnerNameLink from '../components/OwnerNameLink';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
 
@@ -653,7 +654,7 @@ function HallOfRecordsPage() {
                         key={record.userId}
                         rank={index + 1}
                         value={formatCurrency(record.currency)}
-                        description={`${record.username}'s stable`}
+                        description={<><OwnerNameLink userId={record.userId} displayName={record.username} />'s stable</>}
                         details={[
                           `Robots: ${record.robotCount}`,
                           `Prestige: ${record.prestige.toLocaleString()}`,
@@ -676,7 +677,7 @@ function HallOfRecordsPage() {
                         key={record.userId}
                         rank={index + 1}
                         value={`${record.prestige.toLocaleString()} prestige`}
-                        description={`${record.username}'s stable`}
+                        description={<><OwnerNameLink userId={record.userId} displayName={record.username} />'s stable</>}
                         details={[
                           `Robots: ${record.robotCount}`,
                           `Championships: ${record.championshipTitles}`,
@@ -694,7 +695,7 @@ function HallOfRecordsPage() {
                         key={record.userId}
                         rank={index + 1}
                         value={`${record.championshipTitles} titles`}
-                        description={`${record.username}'s stable`}
+                        description={<><OwnerNameLink userId={record.userId} displayName={record.username} />'s stable</>}
                         details={[
                           `Prestige: ${record.prestige.toLocaleString()}`,
                           `Robots: ${record.robotCount}`,
@@ -865,8 +866,8 @@ function RecordSection({ title, children }: RecordSectionProps) {
 interface RecordCardProps {
   rank: number;
   value: string;
-  description: string;
-  details?: string[];
+  description: React.ReactNode;
+  details?: React.ReactNode[];
   onClick?: () => void;
 }
 

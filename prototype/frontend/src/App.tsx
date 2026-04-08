@@ -28,6 +28,7 @@ import OnboardingPage from './pages/OnboardingPage';
 import OnboardingAnalyticsPage from './pages/OnboardingAnalyticsPage';
 import GuidePage from './pages/GuidePage';
 import PracticeArenaPage from './pages/PracticeArenaPage';
+import StableViewPage from './pages/StableViewPage';
 // import SystemHealthPage from './pages/SystemHealthPage';
 
 function App() {
@@ -261,6 +262,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <GuidePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/stables/:userId"
+            element={
+              <ProtectedRoute>
+                <StableViewPage />
               </ProtectedRoute>
             }
           />

@@ -142,7 +142,7 @@ Domain-specific error classes extend a base `AppError`:
 
 Each class carries typed error codes. Express 5 automatically forwards rejected promises to the error middleware — no manual try-catch wrappers needed in route handlers.
 
-### API Routes (21 route files)
+### API Routes (22 route files)
 
 ```
 /api/auth              — Registration, login
@@ -156,6 +156,7 @@ Each class carries typed error codes. Express 5 automatically forwards rejected 
 /api/leagues           — League standings
 /api/leaderboards      — Rankings (prestige, fame, losses)
 /api/records           — Hall of Records
+/api/stables           — Public stable viewing (robots, facilities, stats)
 /api/tournaments       — Tournament management
 /api/tag-teams         — Tag team management
 /api/koth              — King of the Hill
@@ -243,7 +244,7 @@ Battles run on configurable cron schedules via `node-cron`. The cycle scheduler 
 
 ## Frontend Architecture
 
-### Pages (27 implemented)
+### Pages (28 implemented)
 
 - **Auth**: FrontPage, LoginForm, RegistrationForm
 - **Core**: DashboardPage, ProfilePage, RobotsPage, RobotDetailPage, CreateRobotPage
@@ -253,6 +254,7 @@ Battles run on configurable cron schedules via `node-cron`. The cycle scheduler 
 - **Tag Teams**: TagTeamManagementPage, TagTeamStandingsPage
 - **KotH**: KothStandingsPage
 - **Economy**: FacilitiesPage, WeaponShopPage, FinancialReportPage
+- **Social**: StableViewPage
 - **Admin**: AdminPage, OnboardingAnalyticsPage
 - **Other**: GuidePage, HallOfRecordsPage, CycleSummaryPage
 

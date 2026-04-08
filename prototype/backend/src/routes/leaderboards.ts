@@ -1,32 +1,9 @@
 import express, { Request, Response } from 'express';
 import prisma from '../lib/prisma';
 import logger from '../config/logger';
+import { getPrestigeRank, getFameTier } from '../utils/prestigeUtils';
 
 const router = express.Router();
-
-/**
- * Get fame tier name based on fame value
- */
-function getFameTier(fame: number): string {
-  if (fame < 100) return "Unknown";
-  if (fame < 500) return "Known";
-  if (fame < 1000) return "Famous";
-  if (fame < 2500) return "Renowned";
-  if (fame < 5000) return "Legendary";
-  return "Mythical";
-}
-
-/**
- * Get prestige rank title based on prestige value
- */
-function getPrestigeRank(prestige: number): string {
-  if (prestige < 1000) return "Novice";
-  if (prestige < 5000) return "Established";
-  if (prestige < 10000) return "Veteran";
-  if (prestige < 25000) return "Elite";
-  if (prestige < 50000) return "Champion";
-  return "Legendary";
-}
 
 /**
  * Calculate battle winnings bonus percentage
