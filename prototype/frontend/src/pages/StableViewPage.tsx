@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import Navigation from '../components/Navigation';
 import RobotDashboardCard from '../components/RobotDashboardCard';
 import apiClient from '../utils/apiClient';
@@ -108,9 +109,7 @@ function StableViewPage() {
       setData(response.data);
       setState('success');
     } catch (err: unknown) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const status = (err as any)?.response?.status;
-      if (status === 404) {
+      if (axios.isAxiosError(err) && err.response?.status === 404) {
         setState('not-found');
       } else {
         setState('error');

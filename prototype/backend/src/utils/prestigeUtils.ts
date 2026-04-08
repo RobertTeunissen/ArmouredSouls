@@ -15,12 +15,12 @@
  *   ≥ 50000  → Legendary
  */
 export function getPrestigeRank(prestige: number): string {
-  if (prestige < 1000) return "Novice";
-  if (prestige < 5000) return "Established";
-  if (prestige < 10000) return "Veteran";
-  if (prestige < 25000) return "Elite";
-  if (prestige < 50000) return "Champion";
-  return "Legendary";
+  if (prestige < 1000) return 'Novice';
+  if (prestige < 5000) return 'Established';
+  if (prestige < 10000) return 'Veteran';
+  if (prestige < 25000) return 'Elite';
+  if (prestige < 50000) return 'Champion';
+  return 'Legendary';
 }
 
 /**
@@ -35,10 +35,10 @@ export function getPrestigeRank(prestige: number): string {
  *   ≥ 5000  → Mythical
  */
 export function getFameTier(fame: number): string {
-  if (fame < 100) return "Unknown";
-  if (fame < 500) return "Known";
-  if (fame < 1000) return "Famous";
-  if (fame < 2500) return "Renowned";
-  if (fame < 5000) return "Legendary";
-  return "Mythical";
+  if (fame < 100) return 'Unknown';
+  if (fame < 500) return 'Known';
+  if (fame < 1000) return 'Famous';
+  if (fame < 2500) return 'Renowned';
+  if (fame < 5000) return 'Legendary';
+  return 'Mythical';
 }

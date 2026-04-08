@@ -109,7 +109,14 @@ function RobotDashboardCard({ robot, variant = 'owner' }: RobotDashboardCardProp
       role="button"
       tabIndex={0}
       onClick={() => navigate(`/robots/${robot.id}`)}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigate(`/robots/${robot.id}`); }}
+      onKeyDown={(e) => {
+        if (e.key === ' ') {
+          e.preventDefault();
+          navigate(`/robots/${robot.id}`);
+        } else if (e.key === 'Enter') {
+          navigate(`/robots/${robot.id}`);
+        }
+      }}
     >
       <div className="flex gap-3">
         {/* Robot Portrait (96x96) */}

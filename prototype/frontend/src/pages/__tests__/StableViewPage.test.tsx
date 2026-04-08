@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Routes, Route } from 'react-router-dom';
 
 // --- Mocks ---
 
@@ -83,7 +83,9 @@ function buildStableResponse(overrides: Record<string, unknown> = {}) {
 function renderPage(userId = '42') {
   return render(
     <MemoryRouter initialEntries={[`/stables/${userId}`]}>
-      <StableViewPage />
+      <Routes>
+        <Route path="/stables/:userId" element={<StableViewPage />} />
+      </Routes>
     </MemoryRouter>,
   );
 }
@@ -105,7 +107,10 @@ describe('StableViewPage', () => {
 
   // Requirement 8.1 — 404 error state
   it('renders 404 error state with "Stable not found" and back link', async () => {
-    vi.mocked(apiClient.get).mockRejectedValue({ response: { status: 404 } });
+    const axiosError = new Error('Request failed with status code 404') as any;
+    axiosError.isAxiosError = true;
+    axiosError.response = { status: 404 };
+    vi.mocked(apiClient.get).mockRejectedValue(axiosError);
     renderPage();
 
     await waitFor(() => {
