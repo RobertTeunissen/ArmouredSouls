@@ -5,9 +5,9 @@
 Quick reference for diagnosing and fixing issues with the New Player Onboarding System (5-step interactive tutorial; backend internally uses steps 1-9). Covers stuck states, display issues, reset problems, and manual database fixes.
 
 **Key files**:
-- Backend service: `app/backend/src/services/onboardingService.ts`
+- Backend service: `app/backend/src/services/onboarding/onboardingService.ts`
 - Backend routes: `app/backend/src/routes/onboarding.ts`
-- Analytics service: `app/backend/src/services/onboardingAnalyticsService.ts`
+- Analytics service: `app/backend/src/services/analytics/onboardingAnalyticsService.ts`
 - Error definitions: `app/backend/src/errors/onboardingErrors.ts`
 - Frontend orchestrator: `app/frontend/src/components/onboarding/OnboardingContainer.tsx`
 - Frontend context: `app/frontend/src/contexts/OnboardingContext.tsx`

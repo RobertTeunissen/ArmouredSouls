@@ -111,45 +111,14 @@ export const getTagTeamStandings = async (
   return api.get<PaginatedStandings>(`/api/tag-teams/leagues/${tier}/standings`, { page, perPage });
 };
 
-// Helper Functions
-export const getTagTeamLeagueTierName = (tier: string): string => {
-  const tierNames: { [key: string]: string } = {
-    bronze: 'Bronze',
-    silver: 'Silver',
-    gold: 'Gold',
-    platinum: 'Platinum',
-    diamond: 'Diamond',
-    champion: 'Champion'
-  };
-  return tierNames[tier] || tier;
-};
-
-export const getTagTeamLeagueTierColor = (tier: string): string => {
-  const colors: { [key: string]: string } = {
-    bronze: 'text-orange-600',
-    silver: 'text-gray-400',
-    gold: 'text-yellow-500',
-    platinum: 'text-cyan-400',
-    diamond: 'text-blue-400',
-    champion: 'text-purple-500'
-  };
-  return colors[tier] || 'text-gray-400';
-};
-
-export const getTagTeamLeagueTierIcon = (tier: string): string => {
-  const icons: { [key: string]: string } = {
-    bronze: '🥉',
-    silver: '🥈',
-    gold: '🥇',
-    platinum: '💎',
-    diamond: '💠',
-    champion: '👑',
-  };
-  return icons[tier.toLowerCase()] || '⚔️';
-};
-
-export const TAG_TEAM_LEAGUE_TIERS = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'] as const;
-export type TagTeamLeagueTier = typeof TAG_TEAM_LEAGUE_TIERS[number];
+// Re-export tier helpers from single source of truth
+export {
+  getTierName as getTagTeamLeagueTierName,
+  getTierColor as getTagTeamLeagueTierColor,
+  getTierIcon as getTagTeamLeagueTierIcon,
+  LEAGUE_TIERS as TAG_TEAM_LEAGUE_TIERS,
+  type LeagueTier as TagTeamLeagueTier,
+} from './tierHelpers';
 
 /**
  * Generate a team name based on stable name and team ID

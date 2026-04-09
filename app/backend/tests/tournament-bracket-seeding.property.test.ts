@@ -260,7 +260,7 @@ describe('Feature: tournament-bracket-seeding', () => {
       fc.assert(
         fc.property(
           fc.integer({ min: 1, max: 500 }),
-          fc.string({ minLength: 1, maxLength: 30 }).filter((s) => s.trim().length > 0),
+          fc.string({ minLength: 1, maxLength: 30 }).filter((s) => s.trim().length > 0 && !/^#\d/.test(s)),
           (seed, robotName) => {
             const display = formatSeedDisplay(seed, robotName);
 

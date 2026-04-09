@@ -2,6 +2,7 @@ import { Robot, Prisma } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { checkTeamSchedulingReadiness, calculateCombinedELO, TagTeamWithRobots } from './tagTeamService';
+import { TAG_TEAM_LEAGUE_TIERS } from './tagTeamLeagueInstanceService';
 
 
 // Matchmaking configuration
@@ -441,7 +442,6 @@ export async function scheduleMatches(matches: TagTeamMatchPair[], scheduledFor:
  */
 export async function runTagTeamMatchmaking(scheduledFor?: Date): Promise<number> {
   const matchTime = scheduledFor || new Date(Date.now() + 24 * 60 * 60 * 1000); // Default: 24 hours from now
-  const TAG_TEAM_LEAGUE_TIERS = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'];
 
   let totalMatches = 0;
 

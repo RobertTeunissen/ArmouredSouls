@@ -1,149 +1,243 @@
 # Product Requirements Document: Cycle System
 
-**Last Updated**: March 18, 2026  
+**Project**: Armoured Souls  
+**Document Type**: Product Requirements Document (PRD)  
+**Version**: v2.0  
+**Last Updated**: April 9, 2026  
 **Status**: ✅ Implemented  
 **Owner**: Robert Teunissen  
-**Epic**: Game Systems - Time Management
+**Epic**: Game Systems — Time Management
+
+**Revision History**:
+
+v1.0 (Feb 2026): Initial PRD — monolithic 15-step cycle design  
+v1.1 (Mar 2026): Added KotH cycle, tag team odd-cycle logic  
+v2.0 (Apr 2026): Major rewrite — documented production scheduler (5 independent cron jobs), admin bulk cycle, corrected schema to match implementation, removed references to non-existent docs, consolidated with CYCLE_PROCESS.md
 
 ---
 
-## Executive Summary
-
-This PRD documents the Cycle System, which serves as the game's time progression mechanism. A "cycle" represents one complete execution of all game activities (battles, income, expenses, repairs, etc.) and provides the temporal structure for the game's economy and progression systems.
-
-**Key Achievement**: The cycle system enables batch processing of game activities, financial snapshots, and historical tracking while maintaining data consistency through the AuditLog → CycleSnapshot architecture.
+**Related Documents**:
+- [PRD_AUDIT_SYSTEM.md](PRD_AUDIT_SYSTEM.md) — Audit log architecture
+- [PRD_BATTLE_DATA_ARCHITECTURE.md](PRD_BATTLE_DATA_ARCHITECTURE.md) — Battle data structure
+- [PRD_ECONOMY_SYSTEM.md](PRD_ECONOMY_SYSTEM.md) — Economic systems and repair cost formulas
+- [PRD_MATCHMAKING.md](PRD_MATCHMAKING.md) — Matchmaking algorithm
+- [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) — Complete database schema
 
 ---
 
-## Background & Context
+## Table of Contents
+
+1. [Executive Summary](#1-executive-summary)
+2. [Background & Context](#2-background--context)
+3. [Production Scheduler Architecture](#3-production-scheduler-architecture)
+4. [Scheduler Job Details](#4-scheduler-job-details)
+5. [Admin Bulk Cycle](#5-admin-bulk-cycle)
+6. [Database Schema](#6-database-schema)
+7. [Cycle Snapshot Architecture](#7-cycle-snapshot-architecture)
+8. [AuditLog vs CycleSnapshot](#8-auditlog-vs-cyclesnapshot)
+9. [API Endpoints](#9-api-endpoints)
+10. [Performance](#10-performance)
+11. [Data Consistency](#11-data-consistency)
+
+---
+
+## 1. Executive Summary
+
+The Cycle System is the game's time progression mechanism. A "cycle" represents one complete round of game activities — battles, income, expenses, repairs, promotions — and provides the temporal structure for the economy and progression systems.
+
+Data consistency is maintained through the **AuditLog → CycleSnapshot** architecture: all events are written to the immutable AuditLog during execution, then aggregated into a CycleSnapshot for fast analytics queries.
+
+---
+
+## 2. Background & Context
 
 ### What is a Cycle?
 
-A **cycle** is the fundamental unit of time in Armoured Souls. Each cycle represents one complete round of game activities:
-- League battles (all robots fight once)
+A **cycle** is the fundamental unit of time in Armoured Souls. Each cycle processes:
+- League battles (1v1)
+- Tag team battles (odd cycles only)
+- KotH battles (Mon/Wed/Fri only)
 - Tournament matches
-- Tag team battles
-- Passive income generation
-- Operating cost deductions
+- Passive income and operating costs
 - Robot repairs
 - League promotions/demotions
+- Matchmaking for next cycle
 
-### Design Philosophy
+### Two Execution Modes
 
-**Batch Processing Model:**
-- All activities execute sequentially in a single cycle
-- Deterministic execution order
-- Complete financial snapshot at end
-- Audit trail for all events
-
-**Future Evolution:**
-- Current: Manual trigger (admin endpoint)
-- Phase 2: Scheduled execution (daily/weekly)
-- Phase 3: Real-time continuous play
+| Mode | Source | Use Case |
+|------|--------|----------|
+| **Production Scheduler** | `cycleScheduler.ts` | 5 independent cron jobs running on UTC schedule |
+| **Admin Bulk Cycle** | `adminCycleService.ts` | Single sequential pass via `POST /api/admin/cycles/bulk` for testing/simulation |
 
 ---
 
-## Architecture Design
+## 3. Production Scheduler Architecture
 
-### Cycle Execution Flow
+The scheduler registers 5 independent cron jobs, each with its own step sequence. All jobs share an in-memory mutex lock (`acquireLock()`) to prevent overlap.
+
+### Daily Timeline
 
 ```
-┌─────────────────────────────────────────────────────┐
-│              CYCLE EXECUTION (15 Steps)             │
-├─────────────────────────────────────────────────────┤
-│                                                     │
-│  Step 0:  Cycle Start Event                        │
-│  Step 1:  League Battles                           │
-│  Step 2:  Tournament Battles                       │
-│  Step 3:  Tag Team Battles                         │
-│  Step 4:  Apply Damage Decay                       │
-│  Step 5:  Passive Income (Merchandising)           │
-│  Step 6:  Operating Costs                          │
-│  Step 7:  Robot Repairs                            │
-│  Step 8:  League Promotions/Demotions              │
-│  Step 9:  League Rebalancing                       │
-│  Step 10: Tournament Advancement                   │
-│  Step 11: Update Robot Stats                       │
-│  Step 12: Update User Stats                        │
-│  Step 13: Create Cycle Snapshot ⭐                 │
-│  Step 14: Log End-of-Cycle Balances                │
-│  Step 15: Cycle Complete Event                     │
-│                                                     │
-└─────────────────────────────────────────────────────┘
+UTC   Job
+08:00 Tournament Cycle
+12:00 Tag Team Cycle (battles on odd cycles only)
+16:00 KotH Cycle (Mon/Wed/Fri only)
+20:00 League Cycle
+23:00 Settlement (passive income, operating costs, counters, snapshot)
 ```
 
-### Database Schema
+4-hour gaps between jobs provide ample separation.
 
-#### CycleMetadata Table
+### Key Source Files
+
+- Scheduler: `app/backend/src/services/cycle/cycleScheduler.ts`
+- Admin bulk: `app/backend/src/services/admin/adminCycleService.ts`
+- Snapshot service: `app/backend/src/services/cycle/cycleSnapshotService.ts`
+- Repair service: `app/backend/src/services/robot/robotRepairService.ts`
+
+---
+
+## 4. Scheduler Job Details
+
+### League Cycle (`executeLeagueCycle`)
+
+| Step | Action |
+|------|--------|
+| 1 | Repair all robots |
+| 2 | Execute scheduled league battles |
+| 3 | Rebalance leagues (promote/demote) |
+| 4 | Schedule league matchmaking (24h lead time) |
+
+### Tournament Cycle (`executeTournamentCycle`)
+
+| Step | Action |
+|------|--------|
+| 1 | Repair all robots |
+| 2 | Execute tournament matches for active tournaments |
+| 3 | Advance winners to next round |
+| 4 | Auto-create next tournament if none active |
+
+### Tag Team Cycle (`executeTagTeamCycle`)
+
+| Step | Action |
+|------|--------|
+| 1 | Repair all robots |
+| 2 | Execute tag team battles (odd cycles only; skipped on even) |
+| 3 | Rebalance tag team leagues |
+| 4 | Schedule tag team matchmaking (48h lead time) |
+
+### KotH Cycle (`executeKothCycle`)
+
+| Step | Action |
+|------|--------|
+| 1 | Repair all robots |
+| 2 | Execute scheduled KotH battles |
+| 3 | Schedule KotH matchmaking for next Mon/Wed/Fri at 16:00 UTC |
+
+### Settlement (`executeSettlement`)
+
+| Step | Action |
+|------|--------|
+| 1 | Calculate and credit passive income (merchandising, streaming) |
+| 2 | Calculate and debit operating costs (facilities, roster) |
+| 3 | Log end-of-cycle balances for all users |
+| 4 | Increment cycle counters (`cyclesInCurrentLeague`, `cyclesInTagTeamLeague`, `totalCycles`) |
+| 5 | Create analytics snapshot (CycleSnapshot) |
+| 6 | Flush practice arena daily stats |
+| 7 | Auto-generate users (if configured) |
+
+---
+
+## 5. Admin Bulk Cycle
+
+The admin bulk endpoint (`POST /api/admin/cycles/bulk`) runs all game phases in a single sequential pass. Step ordering differs from the scheduler — notably, repairs happen *after* battles rather than before.
+
+### Step Sequence
+
+| Step | Action | Condition |
+|------|--------|-----------|
+| 1 | Execute league battles (1v1) | Always |
+| 2 | Repair all robots (post-league) | Always |
+| 3 | Execute tag team battles | Odd cycles only |
+| 4 | Repair all robots (post-tag-team) | Always |
+| 4.5 | Execute KotH battles | KotH days + `includeKoth=true` |
+| 4.6 | Repair all robots (post-KotH) | If KotH battles ran |
+| 4.7 | KotH matchmaking | KotH days |
+| 5 | Tournament execution/scheduling | `includeTournaments=true` |
+| 6 | Repair all robots (post-tournament) | Always |
+| 7 | Rebalance leagues | Always |
+| 7.5 | Rebalance tag team leagues | Odd cycles only |
+| 8 | Auto-generate users | `generateUsersPerCycle=true` |
+| 9 | League matchmaking (1v1) | Always |
+| 9.5 | Tag team matchmaking | Odd cycles only |
+| 10 | Finalize cycle counters | Always |
+| 11 | Calculate passive income & operating costs | Always |
+
+KotH day-of-week is simulated during bulk execution:  
+`simulatedDayOfWeek = ((cycleNumber - 1) % 7) + 1` (1=Mon … 7=Sun)
+
+---
+
+## 6. Database Schema
+
+### CycleMetadata
 
 ```prisma
 model CycleMetadata {
-  id                Int      @id @default(1)
-  totalCycles       Int      @default(0)
-  lastCycleTime     DateTime?
-  isExecuting       Boolean  @default(false)
-  
+  id          Int       @id @default(1)
+  totalCycles Int       @default(0) @map("total_cycles")
+  lastCycleAt DateTime? @map("last_cycle_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
   @@map("cycle_metadata")
 }
 ```
 
-**Purpose:**
-- Track total number of cycles executed
-- Prevent concurrent cycle execution
-- Record last execution time
+Singleton row (id=1). Tracks total cycles executed and last execution time. Concurrent execution is prevented by the scheduler's in-memory mutex lock.
 
-#### CycleSnapshot Table
+### CycleSnapshot
 
 ```prisma
 model CycleSnapshot {
-  id              Int      @id @default(autoincrement())
-  cycle_number    Int      @unique
-  snapshot_time   DateTime @default(now())
-  
-  // Timing data
-  cycleStartTime  DateTime?
-  cycleEndTime    DateTime?
-  durationMs      Int?
-  
-  // Aggregated metrics
-  stableMetrics   Json     // Per-user financial summary
-  robotMetrics    Json?    // Per-robot battle stats
-  stepDurations   Json?    // Performance timing per step
-  
-  // Summary statistics
-  totalBattles    Int?
-  totalCreditsTransacted BigInt?
-  totalPrestigeAwarded   Int?
-  
-  // Metadata
-  triggerType     String?  // "manual" or "scheduled"
-  
-  @@index([cycle_number])
+  id          Int    @id @default(autoincrement())
+  cycleNumber Int    @unique @map("cycle_number")
+  triggerType String @map("trigger_type") @db.VarChar(20)
+
+  startTime  DateTime @map("start_time")
+  endTime    DateTime @map("end_time")
+  durationMs Int      @map("duration_ms")
+
+  stableMetrics Json @map("stable_metrics")
+  robotMetrics  Json @map("robot_metrics")
+  stepDurations Json @map("step_durations")
+
+  totalBattles           Int    @default(0) @map("total_battles")
+  totalCreditsTransacted BigInt @default(0) @map("total_credits_transacted")
+  totalPrestigeAwarded   Int    @default(0) @map("total_prestige_awarded")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([cycleNumber])
+  @@index([startTime])
   @@map("cycle_snapshots")
 }
 ```
 
-**Purpose:**
-- Store pre-aggregated cycle summaries
-- Enable fast analytics queries
-- Track cycle execution performance
-
 ---
 
-## Cycle Snapshot Architecture
+## 7. Cycle Snapshot Architecture
 
 ### Data Flow
 
 ```
-During Cycle (Steps 1-12):
-  ↓
-Write Events to AuditLog
-  ↓
-Step 13: Aggregate from AuditLog
-  ↓
-Create CycleSnapshot
-  ↓
-Step 14: Log End Balances
+During cycle execution:
+  → Events written to AuditLog (battle_complete, passive_income, operating_costs, robot_repair, etc.)
+
+Settlement Step 5 (or admin bulk post-cycle):
+  → Aggregate AuditLog events for this cycle
+  → Create CycleSnapshot with pre-computed metrics
 ```
 
 ### StableMetrics Structure
@@ -153,34 +247,34 @@ interface StableMetric {
   userId: number;
   username: string;
   stableName: string;
-  
+
   // Battle activity
   battlesParticipated: number;
   wins: number;
   losses: number;
   draws: number;
-  
+
   // Income
-  totalCreditsEarned: number;    // Battle winnings
-  streamingIncome: number;       // Per-battle streaming
-  merchandisingIncome: number;   // Daily passive income
-  
+  totalCreditsEarned: number;
+  streamingIncome: number;
+  merchandisingIncome: number;
+
   // Expenses
   totalRepairCosts: number;
   operatingCosts: number;
-  
+
   // Purchases
   weaponPurchases: number;
   facilityPurchases: number;
   attributeUpgrades: number;
   robotPurchases: number;
-  
+
   // Reputation
   totalPrestigeEarned: number;
   totalFameEarned: number;
-  
+
   // Balance
-  balance: number;               // End-of-cycle balance
+  balance: number;
 }
 ```
 
@@ -191,497 +285,164 @@ interface RobotMetric {
   robotId: number;
   robotName: string;
   userId: number;
-  
-  // Battle stats
+
   battles: number;
   wins: number;
   losses: number;
   draws: number;
-  
-  // Performance
+
   damageDealt: number;
   damageTaken: number;
   kills: number;
-  
-  // Progression
+  destructions: number;
+
   eloChange: number;
-  prestigeEarned: number;
-  fameEarned: number;
-  
-  // Economics
   creditsEarned: number;
-  streamingRevenue: number;
+  fameChange: number;
   repairCosts: number;
+  streamingRevenue: number;
 }
 ```
 
-### StepDurations Structure
+### Snapshot Aggregation
 
-```typescript
-interface StepDurations {
-  step1_league_battles: number;      // ms
-  step2_tournament_battles: number;
-  step3_tag_team_battles: number;
-  step4_damage_decay: number;
-  step5_passive_income: number;
-  step6_operating_costs: number;
-  step7_repairs: number;
-  step8_promotions: number;
-  step9_rebalancing: number;
-  step10_tournament_advancement: number;
-  step11_robot_stats: number;
-  step12_user_stats: number;
-  step13_snapshot: number;
-  step14_balance_logging: number;
-  step15_complete: number;
-}
-```
+The snapshot service (`cycleSnapshotService.ts`) aggregates from these AuditLog event types:
 
----
-
-## Snapshot Aggregation Logic
-
-### Source of Truth: AuditLog
-
-**All data comes from AuditLog events:**
-
-```typescript
-async function createSnapshot(cycleNumber: number) {
-  // 1. Query all events for cycle
-  const auditLogs = await prisma.auditLog.findMany({
-    where: { cycleNumber }
-  });
-  
-  // 2. Aggregate battle events
-  const battleEvents = auditLogs.filter(e => e.eventType === 'battle_complete');
-  battleEvents.forEach(event => {
-    const metric = getOrCreateMetric(event.userId);
-    metric.battlesParticipated++;
-    metric.totalCreditsEarned += event.payload.credits;
-    metric.streamingIncome += event.payload.streamingRevenue;
-    metric.totalPrestigeEarned += event.payload.prestige;
-  });
-  
-  // 3. Aggregate streaming revenue from RobotStreamingRevenue table
-  const streamingRecords = await prisma.robotStreamingRevenue.findMany({
-    where: { cycleNumber },
-    include: { robot: { select: { userId: true } } }
-  });
-  streamingRecords.forEach(record => {
-    const metric = getOrCreateMetric(record.robot.userId);
-    metric.streamingIncome += record.streamingRevenue;
-  });
-  
-  // 4. Aggregate income events
-  const incomeEvents = auditLogs.filter(e => e.eventType === 'passive_income');
-  incomeEvents.forEach(event => {
-    const metric = getOrCreateMetric(event.userId);
-    metric.merchandisingIncome += event.payload.merchandisingIncome;
-  });
-  
-  // 5. Aggregate cost events
-  const costEvents = auditLogs.filter(e => e.eventType === 'operating_costs');
-  costEvents.forEach(event => {
-    const metric = getOrCreateMetric(event.userId);
-    metric.operatingCosts += event.payload.operatingCost;
-  });
-  
-  // 6. Aggregate repair events
-  const repairEvents = auditLogs.filter(e => e.eventType === 'robot_repair');
-  repairEvents.forEach(event => {
-    const metric = getOrCreateMetric(event.userId);
-    metric.totalRepairCosts += event.payload.repairCost;
-  });
-  
-  // 7. Fetch final balances
-  const users = await prisma.user.findMany({
-    where: { id: { in: Array.from(metricsMap.keys()) } },
-    select: { id: true, currency: true }
-  });
-  users.forEach(user => {
-    const metric = metricsMap.get(user.id);
-    if (metric) {
-      metric.balance = user.currency;
-    }
-  });
-  
-  // 8. Save snapshot
-  await prisma.cycleSnapshot.create({
-    data: {
-      cycle_number: cycleNumber,
-      snapshot_time: new Date(),
-      stableMetrics: JSON.stringify(Array.from(metricsMap.values())),
-      cycleStartTime: startTime,
-      cycleEndTime: endTime,
-      durationMs: duration,
-      stepDurations: JSON.stringify(stepDurations)
-    }
-  });
-}
-```
+| Event Type | Data Extracted |
+|------------|---------------|
+| `battle_complete` | Credits, streaming, prestige, fame, damage, wins/losses |
+| `passive_income` | Merchandising income |
+| `operating_costs` | Facility costs, roster costs |
+| `robot_repair` | Repair costs |
+| `weapon_purchase` | Weapon spending |
+| `facility_upgrade` | Facility spending |
+| `attribute_upgrade` | Attribute spending |
+| `robot_purchase` | Robot spending |
+| `cycle_end_balance` | End-of-cycle balance per user |
 
 ### Backfill Capability
 
-**Snapshots can be reconstructed from AuditLog:**
+Snapshots can be reconstructed from AuditLog at any time:
 
-```typescript
+```
 POST /api/admin/snapshots/backfill
-
-// Deletes existing snapshot and recreates from AuditLog
-// Ensures consistency with source of truth
 ```
 
-**Use cases:**
-- Fix corrupted snapshots
-- Update aggregation logic
-- Regenerate historical data
+Deletes existing snapshots and recreates them from AuditLog events. Use cases: fix corrupted snapshots, update aggregation logic, regenerate historical data.
 
 ---
 
-## What's in CycleSnapshot vs AuditLog?
-
-### Only in CycleSnapshot (NOT in AuditLog)
-
-**1. Cycle Timing Data:**
-- `cycleStartTime` - When cycle execution began
-- `cycleEndTime` - When cycle execution completed
-- `durationMs` - Total milliseconds to execute
-- `triggerType` - Manual or scheduled
-
-**2. Step Execution Times:**
-- Performance monitoring per step
-- Identifies slow operations
-- Not part of game logic
-
-**3. Pre-Aggregated Metrics:**
-- Per-user totals (battles, credits, income, expenses)
-- Per-robot stats (wins, losses, damage)
-- Summary statistics (total battles, total credits)
-
-**4. Summary Statistics:**
-- `totalBattles` - Total battles in cycle
-- `totalCreditsTransacted` - Total credits moved
-- `totalPrestigeAwarded` - Total prestige earned
+## 8. AuditLog vs CycleSnapshot
 
 ### Why Both Tables?
 
-**AuditLog = Complete History:**
-- Immutable record of every event
-- Detailed audit trail
-- Debugging and verification
-- Slower queries (many rows)
+| | AuditLog | CycleSnapshot |
+|---|----------|---------------|
+| **Role** | Complete event history | Pre-aggregated summaries |
+| **Granularity** | One row per event | One row per cycle |
+| **Mutability** | Immutable | Derived (can be regenerated) |
+| **Query speed** | Slower (many rows) | Fast (< 1ms) |
+| **Use case** | Debugging, audit trail | Dashboards, charts, analytics |
 
-**CycleSnapshot = Fast Analytics:**
-- Pre-computed summaries
-- One row per cycle
-- Dashboard and charts
-- Fast queries (< 1ms)
+### Only in CycleSnapshot
+
+- Cycle timing data (`startTime`, `endTime`, `durationMs`)
+- Step execution times (performance monitoring)
+- Pre-aggregated per-user and per-robot totals
+- Summary statistics (`totalBattles`, `totalCreditsTransacted`, `totalPrestigeAwarded`)
 
 ---
 
-## API Endpoints
+## 9. API Endpoints
 
-### Admin Endpoints
+### Admin: Bulk Cycle Execution
 
-**Execute Cycle:**
 ```
-POST /api/admin/execute-cycle
+POST /api/admin/cycles/bulk
 Authorization: Bearer <admin-token>
-
-Response:
-{
-  "success": true,
-  "cycleNumber": 3,
-  "duration": 150000,
-  "stepDurations": { ... },
-  "summary": {
-    "totalBattles": 24,
-    "totalCredits": 95432,
-    "totalPrestige": 120
-  }
-}
 ```
 
-**Backfill Snapshot:**
-```
-POST /api/admin/snapshots/backfill
-Authorization: Bearer <admin-token>
-Body: { "cycleNumber": 2 }
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `cycles` | int | 1 | Number of cycles to run (1–100) |
+| `includeTournaments` | bool | true | Enable tournament processing |
+| `includeKoth` | bool | true | Enable KotH processing |
+| `generateUsersPerCycle` | bool | false | Enable AI user generation |
 
-Response:
-{
-  "success": true,
-  "cycleNumber": 2,
-  "message": "Snapshot recreated from AuditLog"
-}
-```
-
-### Analytics Endpoints
-
-**Get Cycle Summary:**
-```
-GET /api/analytics/cycles/:cycleNumber
-
-Response:
-{
-  "cycleNumber": 2,
-  "startTime": "2026-02-20T10:00:00Z",
-  "endTime": "2026-02-20T10:02:30Z",
-  "duration": 150000,
-  "stableMetrics": [ ... ],
-  "robotMetrics": [ ... ],
-  "totalBattles": 24
-}
-```
-
-**Get Cycle Range:**
-```
-GET /api/analytics/cycles?start=1&end=5
-
-Response:
-{
-  "cycles": [
-    { "cycleNumber": 1, ... },
-    { "cycleNumber": 2, ... },
-    { "cycleNumber": 3, ... },
-    { "cycleNumber": 4, ... },
-    { "cycleNumber": 5, ... }
-  ]
-}
-```
-
----
-
-## Performance Considerations
-
-### Cycle Execution Time
-
-**Target:** < 3 minutes for 100 robots
-
-**Typical breakdown:**
-- League battles: 45-60 seconds
-- Tournament battles: 30-45 seconds
-- Tag team battles: 15-30 seconds
-- Other steps: 10-20 seconds
-- Snapshot creation: 5-10 seconds
-
-**Optimization strategies:**
-- Batch database operations
-- Parallel battle execution (future)
-- Efficient queries with indexes
-- Minimal logging overhead
-
-### Snapshot Query Performance
-
-**Target:** < 1ms for single cycle query
-
-**Achieved through:**
-- One row per cycle (not thousands)
-- Pre-aggregated metrics
-- Indexed cycle_number column
-- JSON fields for complex data
-
----
-
-## Data Consistency
-
-### Consistency Guarantees
-
-**1. AuditLog is Source of Truth:**
-- All events written during cycle execution
-- Immutable once written
-- Complete audit trail
-
-**2. CycleSnapshot is Derived:**
-- 100% computed from AuditLog
-- Can be regenerated at any time
-- No independent data
-
-**3. Backfill Ensures Consistency:**
-- Detects and fixes corrupted snapshots
-- Updates snapshots with new logic
-- Maintains data integrity
-
-### Validation Checks
-
-**Snapshot creation validates:**
-- Event counts match expected values
-- Credit totals are consistent
-- No missing user data
-- All timestamps valid
-
-**Backfill validates:**
-- AuditLog events exist for cycle
-- Aggregation produces same results
-- No data loss during recreation
-
----
-
-## Testing
-
-### Unit Tests
-
-**Cycle execution:**
-- ✅ All 15 steps execute in order
-- ✅ Events logged to AuditLog
-- ✅ Snapshot created correctly
-- ✅ Balances updated
-
-**Snapshot aggregation:**
-- ✅ Correct totals from AuditLog
-- ✅ All users included
-- ✅ All metrics calculated
-- ✅ Timing data captured
-
-### Integration Tests
-
-**Full cycle:**
-- ✅ Execute complete cycle
-- ✅ Verify all battles fought
-- ✅ Verify income/expenses applied
-- ✅ Verify snapshot matches AuditLog
-
-**Backfill:**
-- ✅ Recreate snapshot from AuditLog
-- ✅ Verify identical results
-- ✅ Handle missing events gracefully
-
-### Performance Tests
-
-**Execution time:**
-- ✅ 100 robots: < 3 minutes
-- ✅ 500 robots: < 10 minutes
-- ✅ 1000 robots: < 20 minutes
-
-**Query performance:**
-- ✅ Single cycle query: < 1ms
-- ✅ Range query (10 cycles): < 10ms
-- ✅ User history query: < 50ms
-
----
-
-## Future Enhancements
-
-### Phase 2: Scheduled Execution
-
-**Automatic cycle execution:**
-- Daily at specific time
-- Weekly on specific day
-- Configurable schedule
-- Email notifications
-
-**Implementation:**
-- Cron job or scheduler service
-- Queue system for reliability
-- Monitoring and alerting
-- Automatic retry on failure
-
-### Phase 3: Real-Time Play
-
-**Continuous battle execution:**
-- Battles execute as robots become available
-- No batch processing
-- Real-time income/expenses
-- Live leaderboards
-
-**Challenges:**
-- Concurrent battle execution
-- Race condition handling
-- Real-time snapshot updates
-- Performance at scale
-
-### Phase 4: Advanced Analytics
-
-**Enhanced metrics:**
-- Win rate trends
-- ELO progression charts
-- Income/expense forecasting
-- Comparative analysis
-
-**Visualization:**
-- Interactive dashboards
-- Historical comparisons
-- Performance heatmaps
-- Predictive analytics
-
----
-
-## King of the Hill Cycle
-
-**Last Updated**: March 18, 2026  
-**Status**: ✅ Implemented
-
-### Cron Schedule
-
-```
-0 16 * * 1,3,5    (Monday, Wednesday, Friday at 16:00 UTC)
-```
-
-The KotH cycle is the 5th independent cron job registered in `cycleScheduler.ts`, alongside league, tournament, tag team, and settlement.
-
-### Daily Timeline Position
-
-```
-UTC   Job
-08:00 Tournament Cycle
-12:00 Tag Team Cycle (battles on odd cycles only)
-16:00 KotH Cycle (Mon/Wed/Fri only) ← NEW
-20:00 League Cycle
-23:00 Settlement
-```
-
-The 4-hour gap between Tag Team (12:00) and KotH (16:00), and between KotH (16:00) and League (20:00), provides ample separation.
-
-### Execution Order
-
-```
-KotH Cycle Steps:
-  1. repairAllRobots(true)                    — Ensure full HP before KotH
-  2. executeScheduledKothBattles(new Date())   — Run all scheduled KotH matches
-  3. runKothMatchmaking(nextScheduledFor)       — Schedule next KotH event
-  4. dispatchNotification({ jobName: 'koth' }) — Discord webhook (if matches > 0)
-```
-
-### Mutex Lock
-
-The KotH job acquires the same in-memory mutex lock as all other jobs (`acquireLock()`), preventing overlap with league, tournament, tag team, or settlement execution.
-
-### Manual Trigger
+### Admin: KotH Manual Trigger
 
 ```
 POST /api/admin/koth/trigger
 Authorization: Bearer <admin-token>
 ```
 
-Executes the full KotH cycle on demand (repair → battles → matchmaking → notification). Available to admin users for testing and manual intervention.
+Executes the full KotH cycle on demand (repair → battles → matchmaking).
+
+### Admin: Backfill Snapshots
+
+```
+POST /api/admin/snapshots/backfill
+Authorization: Bearer <admin-token>
+```
+
+Regenerates all CycleSnapshots from AuditLog.
+
+### Analytics: Cycle Summary
+
+```
+GET /api/analytics/stable/:userId/summary?lastNCycles=10
+```
+
+Returns per-cycle breakdown (battle credits, streaming, merchandising, repairs, operating costs, balance) for the specified user.
 
 ---
 
-## Related Documentation
+## 10. Performance
 
-### Core Documents
-- [PRD_AUDIT_SYSTEM.md](PRD_AUDIT_SYSTEM.md) - Audit log architecture
-- [PRD_BATTLE_DATA_ARCHITECTURE.md](PRD_BATTLE_DATA_ARCHITECTURE.md) - Battle data structure
-- [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) - Complete database schema
-- [PRD_ECONOMY_SYSTEM.md](PRD_ECONOMY_SYSTEM.md) - Economic systems
+### Cycle Execution Time
 
-### Implementation Files
-- `app/backend/src/routes/admin.ts` - Cycle execution endpoint
-- `app/backend/src/services/cycleSnapshotService.ts` - Snapshot creation
-- `app/backend/src/routes/analytics.ts` - Cycle analytics endpoints
+**Target**: < 3 minutes for 100 robots
 
-### Documentation
-- `CYCLESNAPSHOT_VS_AUDITLOG.md` - Comparison and rationale
-- `CYCLE_SUMMARY_FIX.md` - Streaming revenue fix
-- `AUDITLOG_CYCLESNAPSHOT_FLOW.md` - Data flow documentation
+Typical breakdown:
+- League battles: 45–60s
+- Tournament battles: 30–45s
+- Tag team battles: 15–30s
+- Settlement + snapshot: 10–20s
+
+### Snapshot Query Performance
+
+**Target**: < 1ms for single cycle query
+
+Achieved through one row per cycle, pre-aggregated metrics, and indexed `cycle_number` column.
 
 ---
 
-## Status: ✅ COMPLETE
+## 11. Data Consistency
 
-**Implementation:** Fully implemented and tested  
-**Performance:** Meets targets (< 3 min for 100 robots)  
-**Documentation:** Complete  
-**Status:** Production-ready
+### Guarantees
 
-The cycle system provides reliable batch processing, complete audit trails, and fast analytics through the AuditLog → CycleSnapshot architecture.
+1. **AuditLog is source of truth** — all events written during execution, immutable once written
+2. **CycleSnapshot is derived** — 100% computed from AuditLog, can be regenerated at any time
+3. **Backfill ensures consistency** — detects and fixes corrupted snapshots
+
+### Battle Readiness Criteria
+
+For a robot to be included in matchmaking:
+
+1. `currentHP ≥ 80%` of maxHP
+2. Has a main weapon equipped
+3. Not the "Bye Robot"
+4. Belongs to an active league instance
+
+### Repair Cost Formula
+
+Per [PRD_ECONOMY_SYSTEM.md](PRD_ECONOMY_SYSTEM.md):
+
+```
+base_repair = sum_of_all_23_attributes × 100
+damage_pct  = damage_taken / max_hp
+multiplier  = 2.0 (destroyed) | 1.5 (HP < 10%) | 1.0 (normal)
+final_cost  = base_repair × damage_pct × multiplier × (1 - repair_bay_discount)
+```
+
+Repair Bay discount: 5% per level, max 50%. Medical Bay reduces the 2.0× critical multiplier.

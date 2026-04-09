@@ -107,7 +107,7 @@ The feature uses the `AuditLog` table to track financial history:
 
 ## Configuration
 
-To change the bankruptcy threshold, modify the constant in `app/backend/src/routes/admin.ts`:
+To change the bankruptcy threshold, modify the constant in `app/backend/src/services/admin/adminStatsService.ts` (and the matching constant in `app/backend/src/routes/admin.ts`):
 
 ```typescript
 const BANKRUPTCY_RISK_THRESHOLD = 10000; // Credits below which a user is considered at risk
