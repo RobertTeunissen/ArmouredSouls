@@ -9,11 +9,9 @@ import { rebalanceTagTeamLeagues } from '../services/tag-team/tagTeamLeagueRebal
 import { runTagTeamMatchmaking } from '../services/tag-team/tagTeamMatchmakingService';
 import { executeScheduledTagTeamBattles } from '../services/tag-team/tagTeamBattleOrchestrator';
 import { processAllDailyFinances } from '../utils/economyCalculations';
-import prisma from '../lib/prisma';
 import tournamentRoutes from './adminTournaments';
-import { EventLogger } from '../services/common/eventLogger';
 import { getSchedulerState } from '../services/cycle/cycleScheduler';
-import { AppError, BattleError, BattleErrorCode } from '../errors';
+import { AppError } from '../errors';
 import { validateRequest } from '../middleware/schemaValidator';
 import { positiveIntParam, paginationQuery } from '../utils/securityValidation';
 import { securityMonitor } from '../services/security/securityMonitor';
@@ -40,7 +38,6 @@ import {
 } from '../services/admin/adminCycleService';
 
 const router = express.Router();
-const eventLogger = new EventLogger();
 
 // --- Zod schemas for admin routes ---
 

@@ -2,7 +2,7 @@ import { Robot, TagTeam, ScheduledTagTeamMatch, Battle, Prisma } from '../../../
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { simulateBattle } from '../battle/combatSimulator';
-import { RobotWithWeapons, CombatEvent } from '../battle/combatSimulator';
+import { RobotWithWeapons } from '../battle/combatSimulator';
 import { getLeagueWinReward, getParticipationReward } from '../../utils/economyCalculations';
 import { CombatMessageGenerator } from '../battle/combatMessageGenerator';
 import {
@@ -15,7 +15,6 @@ import {
   awardStreamingRevenueForParticipant,
 } from '../battle/battlePostCombat';
 import { TagTeamError, TagTeamErrorCode } from '../../errors/tagTeamErrors';
-import { NarrativeEvent } from '../../types/battleLogTypes';
 import { CycleEventPayload } from '../../types/snapshotTypes';
 
 // Battle constants

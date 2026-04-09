@@ -1,6 +1,6 @@
 import prisma from '../../lib/prisma';
 import type { BattleParticipant, Prisma } from '../../../generated/prisma';
-import { AppError, BattleError, BattleErrorCode } from '../../errors';
+import { BattleError, BattleErrorCode } from '../../errors';
 import { mapRobotAttributes } from './adminStatsService';
 
 // Typed query result for battles with robot selects and participants (used in admin battle listing)

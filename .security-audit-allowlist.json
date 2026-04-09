@@ -1,6 +1,49 @@
 {
   "_description": "Vulnerability allowlist for npm audit. Each entry documents a known vulnerability that has been reviewed and accepted with justification.",
-  "allowlist": [],
+  "allowlist": [
+    {
+      "id": "GHSA-92pp-h63x-v22m",
+      "package": "@hono/node-server",
+      "justification": "Transitive dependency of @prisma/dev (Prisma CLI tooling). Not used in application code — hono's serveStatic middleware is not invoked. Fix requires breaking Prisma major version downgrade.",
+      "reviewDate": "2026-04-09",
+      "nextReviewDate": "2026-05-09"
+    },
+    {
+      "id": "GHSA-wmmm-f939-6g9c",
+      "package": "hono",
+      "justification": "Transitive dependency of @prisma/dev. Hono is not used directly — only pulled in by Prisma's internal dev tooling. serveStatic middleware bypass is not reachable.",
+      "reviewDate": "2026-04-09",
+      "nextReviewDate": "2026-05-09"
+    },
+    {
+      "id": "GHSA-26pp-8wgv-hjvm",
+      "package": "hono",
+      "justification": "Transitive dependency of @prisma/dev. Cookie handling vulnerability not reachable — hono is not used as the application's HTTP framework.",
+      "reviewDate": "2026-04-09",
+      "nextReviewDate": "2026-05-09"
+    },
+    {
+      "id": "GHSA-r5rp-j6wh-rvv4",
+      "package": "hono",
+      "justification": "Transitive dependency of @prisma/dev. Cookie name bypass not reachable — hono is not used as the application's HTTP framework.",
+      "reviewDate": "2026-04-09",
+      "nextReviewDate": "2026-05-09"
+    },
+    {
+      "id": "GHSA-xpcf-pg52-r92g",
+      "package": "hono",
+      "justification": "Transitive dependency of @prisma/dev. IP restriction bypass not reachable — hono is not used for IP filtering.",
+      "reviewDate": "2026-04-09",
+      "nextReviewDate": "2026-05-09"
+    },
+    {
+      "id": "GHSA-xf4j-xp2r-rqqx",
+      "package": "hono",
+      "justification": "Transitive dependency of @prisma/dev. Path traversal in toSSG() not reachable — SSG functionality is not used.",
+      "reviewDate": "2026-04-09",
+      "nextReviewDate": "2026-05-09"
+    }
+  ],
   "_entrySchema": {
     "id": "GHSA advisory ID (e.g., GHSA-xxxx-xxxx-xxxx)",
     "package": "Affected npm package name",

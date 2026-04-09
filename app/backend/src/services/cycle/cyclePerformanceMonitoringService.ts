@@ -383,7 +383,17 @@ export class CyclePerformanceMonitoringService {
       throw new Error('Not enough cycle data for trend analysis');
     }
 
-    const durations = cycleEvents.map((e) => (e.payload as unknown as CycleEventPayload).duration as number);
+    const durations = cycleEvents
+      .map((e) => {
+        const payload = e.payload as unknown as CycleEventPayload;
+        return payload.totalDuration ?? payload.duration;
+      })
+      .filter((d): d is number => typeof d === 'number' && Number.isFinite(d));
+
+    if (durations.length < 2) {
+      throw new Error('Not enough valid cycle data for trend analysis');
+    }
+
     const averageDuration = durations.reduce((sum, d) => sum + d, 0) / durations.length;
 
     // Compare first half vs second half

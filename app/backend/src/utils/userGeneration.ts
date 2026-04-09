@@ -210,6 +210,7 @@ export async function generateBattleReadyUsers(
               // Extract numbers from existing names and find the max
               let maxNum = 0;
               for (const robot of existingRobots) {
+                // eslint-disable-next-line security/detect-non-literal-regexp -- namePrefix is escaped via standard regex escape pattern
                 const match = robot.name.match(new RegExp(`^${namePrefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} (\\d+)$`));
                 if (match) {
                   const num = parseInt(match[1], 10);

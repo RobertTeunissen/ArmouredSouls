@@ -72,10 +72,6 @@ type BattleDataForLog = Omit<BattleWithRobotsAndUsers, 'team1TagOutTime' | 'team
   team2TagOutTime: number | null;
 };
 
-type BattleParticipantWithRobot = Prisma.BattleParticipantGetPayload<{
-  include: { robot: { include: { user: { select: { id: true; username: true; stableName: true } } } } };
-}>;
-
 type TagTeamRobot = Prisma.RobotGetPayload<{
   include: { user: { select: { id: true; username: true; stableName: true } } };
 }> | null;
@@ -511,7 +507,10 @@ async function formatBattleHistoryEntry(battle: BattleWithFullRelations, targetR
 
 async function formatKothHistoryEntry(battle: BattleWithFullRelations, baseData: Record<string, unknown>, targetRobotIds: number[]) {
   const userParticipant = battle.participants.find((p) => targetRobotIds.includes(p.robotId));
-  const battleLogData = typeof battle.battleLog === 'object' ? battle.battleLog as Record<string, unknown> : {};
+  const battleLogData =
+    battle.battleLog !== null && typeof battle.battleLog === 'object'
+      ? battle.battleLog as Record<string, unknown>
+      : {};
   const logPlacements = ((battleLogData as Record<string, unknown>).placements || []) as Array<Pick<KothPlacement, 'robotId' | 'zoneScore'>>;
   const userLogEntry = userParticipant ? logPlacements.find((lp) => lp.robotId === userParticipant.robotId) : null;
 

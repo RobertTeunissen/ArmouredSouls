@@ -779,25 +779,14 @@ export async function executeScheduledBattles(_scheduledFor?: Date): Promise<Bat
         summary.byeBattles++;
       }
       
-      // Track streaming revenue from audit log
+      // Track streaming revenue from BattleParticipant records (more reliable than audit log)
       if (!result.isByeMatch) {
-        const battleCompleteEvent = await prisma.auditLog.findFirst({
-          where: {
-            eventType: 'battle_complete',
-            payload: {
-              path: ['battleId'],
-              equals: result.battleId,
-            },
-          },
-          orderBy: { id: 'desc' },
+        const participants = await prisma.battleParticipant.findMany({
+          where: { battleId: result.battleId },
+          select: { streamingRevenue: true },
         });
-        
-        if (battleCompleteEvent) {
-          const payload = battleCompleteEvent.payload as Record<string, unknown>;
-          const streamingRevenue1 = (payload?.streamingRevenue1 as number) || 0;
-          const streamingRevenue2 = (payload?.streamingRevenue2 as number) || 0;
-          summary.totalStreamingRevenue = (summary.totalStreamingRevenue || 0) + streamingRevenue1 + streamingRevenue2;
-        }
+        const totalStreaming = participants.reduce((sum, p) => sum + (p.streamingRevenue || 0), 0);
+        summary.totalStreamingRevenue = (summary.totalStreamingRevenue || 0) + totalStreaming;
       }
       
       // Track reputation awards
