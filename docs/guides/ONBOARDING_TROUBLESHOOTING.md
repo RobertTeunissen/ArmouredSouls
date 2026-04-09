@@ -14,7 +14,6 @@ Quick reference for diagnosing and fixing issues with the New Player Onboarding 
 
 **Related docs**:
 - [PRD_ONBOARDING_SYSTEM.md](../prd_core/PRD_ONBOARDING_SYSTEM.md)
-- [ONBOARDING_IMPLEMENTATION_NOTES.md](../implementation_notes/ONBOARDING_IMPLEMENTATION_NOTES.md)
 
 ---
 

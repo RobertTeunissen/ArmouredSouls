@@ -12,7 +12,7 @@
 
 v1.0 (Feb 2026): Initial PRD — monolithic 15-step cycle design  
 v1.1 (Mar 2026): Added KotH cycle, tag team odd-cycle logic  
-v2.0 (Apr 2026): Major rewrite — documented production scheduler (5 independent cron jobs), admin bulk cycle, corrected schema to match implementation, removed references to non-existent docs, consolidated with CYCLE_PROCESS.md
+v2.0 (Apr 2026): Major rewrite — documented production scheduler (5 independent cron jobs), admin bulk cycle, corrected schema to match implementation, removed references to non-existent docs, and consolidated legacy cycle-process documentation into this PRD
 
 ---
 

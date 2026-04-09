@@ -8,7 +8,7 @@
 export const LEAGUE_TIERS = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'] as const;
 export type LeagueTier = typeof LEAGUE_TIERS[number];
 
-const TIER_NAMES: Record<string, string> = {
+const TIER_NAMES: Record<LeagueTier, string> = {
   bronze: 'Bronze',
   silver: 'Silver',
   gold: 'Gold',
@@ -17,7 +17,7 @@ const TIER_NAMES: Record<string, string> = {
   champion: 'Champion',
 };
 
-const TIER_COLORS: Record<string, string> = {
+const TIER_COLORS: Record<LeagueTier, string> = {
   bronze: 'text-orange-600',
   silver: 'text-gray-400',
   gold: 'text-yellow-500',
@@ -26,7 +26,7 @@ const TIER_COLORS: Record<string, string> = {
   champion: 'text-purple-500',
 };
 
-const TIER_ICONS: Record<string, string> = {
+const TIER_ICONS: Record<LeagueTier, string> = {
   bronze: '🥉',
   silver: '🥈',
   gold: '🥇',
@@ -35,6 +35,9 @@ const TIER_ICONS: Record<string, string> = {
   champion: '👑',
 };
 
-export const getTierName = (tier: string): string => TIER_NAMES[tier] || tier;
-export const getTierColor = (tier: string): string => TIER_COLORS[tier] || 'text-gray-400';
-export const getTierIcon = (tier: string): string => TIER_ICONS[tier.toLowerCase()] || '⚔️';
+/** Get display name for a league tier. Accepts any string for API compatibility. */
+export const getTierName = (tier: string): string => TIER_NAMES[tier.toLowerCase() as LeagueTier] || tier;
+/** Get Tailwind color class for a league tier. */
+export const getTierColor = (tier: string): string => TIER_COLORS[tier.toLowerCase() as LeagueTier] || 'text-gray-400';
+/** Get emoji icon for a league tier. */
+export const getTierIcon = (tier: string): string => TIER_ICONS[tier.toLowerCase() as LeagueTier] || '⚔️';
