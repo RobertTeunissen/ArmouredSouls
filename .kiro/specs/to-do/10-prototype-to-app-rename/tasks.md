@@ -130,6 +130,27 @@ Rename `/prototype/` to `/app/` using `git mv`, remove the empty `/modules/` dir
     - Run `grep -rn "prototype/" .kiro/specs/to-do/4-frontend-state-management/` and update any matches
     - _Requirements: 7.1_
 
+  - [ ] 8.6 Update completed spec files under `.kiro/specs/done-april26/15-route-handler-extraction/`, `16-zod-validation-gaps/`, `17-type-safety-any-elimination/`, `18-frontend-component-splitting/`, `19-frontend-testing-foundation/`
+    - Replace all `prototype/backend` and `prototype/frontend` path references with `app/backend` and `app/frontend` in all `design.md`, `requirements.md`, and `tasks.md` files
+    - Replace `prototype/shared` with `app/shared`
+    - _Requirements: 7.1_
+
+  - [ ] 8.7 Update spec 20 files under `.kiro/specs/to-do/20-robot-image-upload/` if they contain `prototype/` references
+    - Run `grep -rn "prototype/" .kiro/specs/to-do/20-robot-image-upload/` and update any matches
+    - _Requirements: 7.1_
+
+  - [ ] 8.8 Update GitNexus steering files under `.kiro/steering/gitnexus-*.md`
+    - Replace all `prototype/backend` and `prototype/frontend` path references with `app/backend` and `app/frontend`
+    - _Requirements: 4.5_
+
+  - [ ] 8.9 Update `AGENTS.md` and `CLAUDE.md` in the repository root
+    - Replace all `prototype/` path references with `app/`
+    - _Requirements: 5.4_
+
+  - [ ] 8.10 Update `.claude/skills/gitnexus/` skill files
+    - Replace all `prototype/` path references with `app/`
+    - _Requirements: 5.4_
+
 - [ ] 9. Update shell scripts and infrastructure files
   - [ ] 9.1 Update `app/backend/scripts/fix-test-patterns.sh`
     - Replace comment `# Run from prototype/backend directory` → `# Run from app/backend directory`
@@ -183,5 +204,8 @@ Rename `/prototype/` to `/app/` using `git mv`, remove the empty `/modules/` dir
 - The `git mv` approach preserves full file history when using `git log --follow`
 - Infrastructure files (`docker-compose.yml`, `Caddyfile`, `ecosystem.config.js`) use deployment paths (`/opt/armouredsouls/`), not repo paths, so they need no content edits
 - Internal TypeScript imports use relative paths within `backend/` and `frontend/`, so they are unaffected by the top-level rename
-- This spec must execute after spec 3 (backend-service-consolidation) to avoid conflicting structural changes
+- This spec must execute AFTER spec 5 (modular-architecture-migration) since spec 5 creates docs in `modules/` which spec 10 removes
+- Specs 15–19 added significant new files that reference `prototype/` paths: service directories (`admin/`, `robot/`, `match/`), frontend component directories (`practice-arena/`, `facilities/`, `weapon-shop/`, etc.), `shared/utils/`, 125 frontend test files, and 6 GitNexus steering files. Task 8.6 covers these.
+- `AGENTS.md`, `CLAUDE.md`, and `.claude/skills/` were added by GitNexus setup and contain `prototype/` paths. Task 8.9 and 8.10 cover these.
 - Checkpoints at tasks 4, 10, and 12 ensure incremental validation
+- After completing this spec, re-run `npx gitnexus analyze` to update the index with the new paths

@@ -15,9 +15,10 @@ This is a documentation-only spec. No code is moved. The deliverables are module
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6_
 
 - [ ] 2. Create service-to-module mapping
-  - [ ] 2.1 Create `docs/guides/SERVICE_MODULE_MAPPING.md` with a table mapping every service file in `prototype/backend/src/services/` to its target module
-  - [ ] 2.2 Identify and document cross-cutting services that span module boundaries (eventLogger, queryService, etc.) with notes on resolution
-  - [ ] 2.3 Identify and document any circular dependencies between services that must be resolved before extraction
+  - [ ] 2.1 Create `docs/guides/SERVICE_MODULE_MAPPING.md` with a table mapping every service file across all 18 directories in `prototype/backend/src/services/` to its target module (including `admin/`, `robot/`, `match/`, `arena/`, `practice-arena/`, `security/`, `notifications/` added in specs 3 and 15)
+  - [ ] 2.2 Include the `shared/utils/` directory (discounts, academyCaps, upgradeCosts) in the mapping
+  - [ ] 2.3 Identify and document cross-cutting services that span module boundaries (eventLogger, queryService, etc.) with notes on resolution
+  - [ ] 2.4 Identify and document any circular dependencies between services that must be resolved before extraction
   - _Requirements: 2.1, 2.2, 2.3_
 
 - [ ] 3. Document migration strategy
@@ -41,6 +42,8 @@ This is a documentation-only spec. No code is moved. The deliverables are module
 ## Notes
 
 - This spec produces documentation only — no code is moved
-- The service-to-module mapping assumes Spec 3 (service consolidation) has been completed, so services are already in domain subdirectories
+- The service-to-module mapping must account for the 18 service directories now in `prototype/backend/src/services/`, including `admin/`, `robot/`, `match/`, `arena/`, `practice-arena/`, `security/`, and `notifications/` which were added or expanded in specs 3 and 15
+- The `shared/utils/` directory (discounts, academyCaps, upgradeCosts) created in spec 15 needs to be mapped — likely to `game-engine` module
 - Module contracts should be reviewed by the team before Phase 2 extraction begins
-- The migration strategy should be validated against the actual dependency graph once Spec 3 is complete
+- The migration strategy should be validated against the actual dependency graph
+- This spec should run BEFORE spec 10 (prototype → app rename) since it references `prototype/` paths and creates docs in `modules/`

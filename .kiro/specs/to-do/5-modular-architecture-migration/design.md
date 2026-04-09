@@ -71,17 +71,28 @@ Dependencies flow downward. No circular dependencies between modules.
 | `services/economy/` | `modules/game-engine` | |
 | `services/cycle/` | `modules/game-engine` | |
 | `services/onboarding/` | `modules/game-engine` | |
-| `services/analytics/` | `modules/game-engine` | |
+| `services/analytics/` (11 files incl. cycle, facility, koth, leaderboard, stable analytics) | `modules/game-engine` | |
+| `services/arena/` (15 files: movement AI, threat scoring, pressure system, etc.) | `modules/game-engine` | 2D combat arena subsystem |
+| `services/robot/` (7 files: creation, query, ranking, repair, sanitizer, upgrade, weapon) | `modules/game-engine` | Extracted from routes in spec 15 |
+| `services/match/` (matchHistoryService) | `modules/game-engine` | Extracted from routes in spec 15 |
+| `services/admin/` (4 files: battle, cycle, maintenance, stats services) | `modules/api` | Admin-specific, route-adjacent |
+| `services/practice-arena/` | `modules/game-engine` | |
+| `services/notifications/` (discord, notification-service) | `modules/api` | External integrations |
+| `services/security/` (securityLogger, securityMonitor) | `modules/api` | HTTP-layer security |
 | `services/common/eventLogger` | `modules/database` | Cross-cutting, DB-dependent |
 | `services/common/queryService` | `modules/database` | Direct DB access |
 | `services/common/dataIntegrityService` | `modules/database` | DB maintenance |
+| `services/common/eventCompression` | `modules/database` | Event storage optimization |
 | `services/common/guide-service, markdown-parser` | `modules/api` | Content serving |
 | `services/common/resetService` | `modules/game-engine` | Game state reset |
+| `shared/utils/` (discounts, academyCaps, upgradeCosts) | `modules/game-engine` | Shared formulas, created in spec 15 |
 | `lib/prisma.ts` | `modules/database` | Prisma client singleton |
 | `middleware/auth.ts` | `modules/auth` | Auth middleware |
-| `middleware/rateLimiter.ts, requestLogger.ts` | `modules/api` | HTTP middleware |
+| `middleware/rateLimiter.ts, requestLogger.ts, schemaValidator.ts` | `modules/api` | HTTP middleware |
+| `middleware/ownership.ts` | `modules/api` | Route-level ownership checks |
 | `routes/*` | `modules/api` | Route definitions |
 | `errors/*` | `modules/game-engine` + `modules/auth` | Domain errors with their domains |
+| `utils/securityValidation.ts` | `modules/api` | Zod schemas and validation primitives |
 | `frontend/` | `modules/ui` | Entire React app |
 
 ### Migration Phases
