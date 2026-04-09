@@ -6,9 +6,9 @@
  * validation + cost math that runs both before and inside the transaction.
  */
 
-import { getCapForLevel } from '../../../../shared/utils/academyCaps';
-import { calculateBaseCost } from '../../../../shared/utils/upgradeCosts';
-import { calculateTrainingFacilityDiscount } from '../../../../shared/utils/discounts';
+import { getCapForLevel } from '../../shared/utils/academyCaps';
+import { calculateBaseCost } from '../../shared/utils/upgradeCosts';
+import { calculateTrainingFacilityDiscount } from '../../shared/utils/discounts';
 import { RobotError, RobotErrorCode } from '../../errors/robotErrors';
 
 // ── Valid attribute names ────────────────────────────────────────────
