@@ -29,7 +29,6 @@ import OnboardingAnalyticsPage from './pages/OnboardingAnalyticsPage';
 import GuidePage from './pages/GuidePage';
 import PracticeArenaPage from './pages/PracticeArenaPage';
 import StableViewPage from './pages/StableViewPage';
-// import SystemHealthPage from './pages/SystemHealthPage';
 
 function App() {
   return (

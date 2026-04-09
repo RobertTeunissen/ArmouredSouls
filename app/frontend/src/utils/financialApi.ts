@@ -139,12 +139,8 @@ export const getFinancialProjections = async (): Promise<FinancialProjections> =
   return api.get<FinancialProjections>('/api/finances/projections');
 };
 
-/**
- * Format currency with symbol
- */
-export const formatCurrency = (amount: number): string => {
-  return `₡${amount.toLocaleString()}`;
-};
+// Re-export for consumers that import formatCurrency from this module
+export { formatCurrency } from './formatters';
 
 /**
  * Get financial health color

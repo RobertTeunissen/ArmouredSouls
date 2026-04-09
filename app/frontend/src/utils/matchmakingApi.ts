@@ -260,42 +260,8 @@ export const getRobotUpcomingMatches = async (robotId: number): Promise<Schedule
   return api.get<ScheduledMatch[]>(`/api/robots/${robotId}/upcoming`);
 };
 
-// Helper Functions
-export const getLeagueTierName = (tier: string): string => {
-  const tierNames: { [key: string]: string } = {
-    bronze: 'Bronze',
-    silver: 'Silver',
-    gold: 'Gold',
-    platinum: 'Platinum',
-    diamond: 'Diamond',
-    champion: 'Champion'
-  };
-  return tierNames[tier] || tier;
-};
-
-export const getLeagueTierColor = (tier: string): string => {
-  const colors: { [key: string]: string } = {
-    bronze: 'text-orange-600',
-    silver: 'text-gray-400',
-    gold: 'text-yellow-500',
-    platinum: 'text-cyan-400',
-    diamond: 'text-blue-400',
-    champion: 'text-purple-500'
-  };
-  return colors[tier] || 'text-gray-400';
-};
-
-export const getLeagueTierIcon = (tier: string): string => {
-  const icons: { [key: string]: string } = {
-    bronze: '🥉',
-    silver: '🥈',
-    gold: '🥇',
-    platinum: '💎',
-    diamond: '💠',
-    champion: '👑',
-  };
-  return icons[tier.toLowerCase()] || '⚔️';
-};
+// Re-export tier helpers from single source of truth
+export { getTierName as getLeagueTierName, getTierColor as getLeagueTierColor, getTierIcon as getLeagueTierIcon } from './tierHelpers';
 
 export const getBattleOutcome = (battle: BattleHistory, robotId: number): 'win' | 'loss' | 'draw' => {
   if (!battle.winnerId) return 'draw';
