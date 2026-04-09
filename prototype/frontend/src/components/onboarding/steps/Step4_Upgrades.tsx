@@ -7,6 +7,7 @@ import { useState, useEffect, memo } from 'react';
 import { useOnboarding } from '../../../contexts/OnboardingContext';
 import RobotImage from '../../RobotImage';
 import apiClient from '../../../utils/apiClient';
+import { calculateDiscountedUpgradeCost } from '../../../../../shared/utils/upgradeCosts';
 
 interface Robot { id: number; name: string; imageUrl: string | null; [key: string]: unknown }
 type Focus = 'combat' | 'defense' | 'mobility' | 'ai';
@@ -20,13 +21,6 @@ const FOCUSES: { id: Focus; icon: string; label: string; attrs: string[] }[] = [
 
 const fmt = (n: number) => `₡${n.toLocaleString()}`;
 const RESERVE = 50_000;
-
-/** Backend formula: cost to go from `level` to `level+1` = (level+1) × 1500, minus training discount */
-function upgCost(level: number, tfLevel: number): number {
-  const base = (level + 1) * 1500;
-  const disc = Math.min(tfLevel * 10, 90);
-  return Math.floor(base * (1 - disc / 100));
-}
 
 const Step8 = memo(({ onPrevious: _p }: { onNext?: () => void; onPrevious?: () => void }) => {
   const { refreshState } = useOnboarding();
@@ -107,7 +101,7 @@ const Step8 = memo(({ onPrevious: _p }: { onNext?: () => void; onPrevious?: () =
         for (const r of fresh) {
           if (!robotAttrs[r.id]) continue;
           for (const a of robotAttrs[r.id]) {
-            const cost = upgCost(levels[r.id][a], tfLevel);
+            const cost = calculateDiscountedUpgradeCost(levels[r.id][a], tfLevel);
             if (cost > 0 && remaining - cost >= RESERVE && levels[r.id][a] < 10) {
               levels[r.id][a]++;
               remaining -= cost;

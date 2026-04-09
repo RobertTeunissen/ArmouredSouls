@@ -149,8 +149,8 @@ describe('Matches Routes', () => {
         .get('/api/matches/battles/non-existent-id/log')
         .set('Authorization', `Bearer ${authToken}`);
 
-      // Should return 404, 500, or empty result, not crash
-      expect([200, 404, 500]).toContain(response.status);
+      // Zod validation rejects non-numeric ID with 400, or handler returns 404/500
+      expect([200, 400, 404, 500]).toContain(response.status);
     });
   });
 });

@@ -1,6 +1,9 @@
 import { useState, useMemo } from 'react';
 import AttributeUpgradeRow from './AttributeUpgradeRow';
 import ConfirmationModal from './ConfirmationModal';
+import { getCapForLevel } from '../../../shared/utils/academyCaps';
+import { calculateBaseCost } from '../../../shared/utils/upgradeCosts';
+import { calculateTrainingFacilityDiscount } from '../../../shared/utils/discounts';
 
 interface Robot {
   id: number;
@@ -95,15 +98,6 @@ const attributeCategories = {
   },
 };
 
-// Get cap for academy level
-const getCapForLevel = (level: number): number => {
-  const capMap: { [key: number]: number } = {
-    0: 10, 1: 15, 2: 20, 3: 25, 4: 30,
-    5: 35, 6: 40, 7: 42, 8: 45, 9: 48, 10: 50
-  };
-  return capMap[level] || 10;
-};
-
 function UpgradePlanner({ 
   robot, 
   currentCredits, 
@@ -117,16 +111,10 @@ function UpgradePlanner({
   const [isCommitting, setIsCommitting] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
-  // Calculate base cost for a single level upgrade (before discounts)
-  const calculateBaseCost = (currentLevel: number): number => {
-    return (Math.floor(currentLevel) + 1) * 1500;
-  };
-
   // Calculate cost for a single level upgrade with training facility discount
   const calculateUpgradeCost = (currentLevel: number): number => {
     const baseCost = calculateBaseCost(currentLevel);
-    // Training Facility: 10% per level, capped at 90% (see docs/prd_core/STABLE_SYSTEM.md)
-    const trainingDiscountPercent = Math.min(trainingLevel * 10, 90);
+    const trainingDiscountPercent = calculateTrainingFacilityDiscount(trainingLevel);
     const trainingDiscount = trainingDiscountPercent / 100;
     
     // Apply training facility discount
@@ -263,7 +251,7 @@ function UpgradePlanner({
         {trainingLevel > 0 && (
           <div className="bg-green-900/20 border border-green-700 text-green-300 px-4 py-2 rounded flex items-center justify-between">
             <span className="font-semibold">Training Facility Discount:</span>
-            <span>{Math.min(trainingLevel * 10, 90)}%</span>
+            <span>{calculateTrainingFacilityDiscount(trainingLevel)}%</span>
           </div>
         )}
       </div>

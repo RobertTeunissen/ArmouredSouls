@@ -24,7 +24,7 @@ const upgradeBodySchema = z.object({
 });
 
 // Get all facility types and user's current levels
-router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get('/', authenticateToken, validateRequest({}), async (req: AuthRequest, res: Response) => {
     const userId = req.user!.userId;
 
     // Get user's current facilities and prestige

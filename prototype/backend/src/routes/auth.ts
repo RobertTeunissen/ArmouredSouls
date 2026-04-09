@@ -235,7 +235,7 @@ router.post('/login', validateRequest({ body: loginBodySchema }), async (req: Re
  * **Responses:**
  * - `200 OK` — `{ message: "Logged out successfully" }`
  */
-router.post('/logout', (req: Request, res: Response) => {
+router.post('/logout', validateRequest({}), (req: Request, res: Response) => {
   res.json({ message: 'Logged out successfully' });
 });
 

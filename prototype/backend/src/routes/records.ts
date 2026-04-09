@@ -1,5 +1,6 @@
 import express, { Request, Response } from 'express';
 import logger from '../config/logger';
+import { validateRequest } from '../middleware/schemaValidator';
 import {
   fetchCombatRecords,
   fetchUpsetRecords,
@@ -15,7 +16,7 @@ const router = express.Router();
  * GET /api/records
  * Get all Hall of Records statistics
  */
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', validateRequest({}), async (req: Request, res: Response) => {
   try {
     const [combat, upsets, career, economic, prestige, kothRecords] = await Promise.all([
       fetchCombatRecords(),

@@ -1,0 +1,28 @@
+{
+  "mcpServers": {
+    "gitnexus": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "gitnexus",
+        "mcp"
+      ],
+      "disabled": false,
+      "autoApprove": [
+        "list_repos",
+        "query",
+        "route_map",
+        "detect_changes",
+        "shape_check",
+        "cypher",
+        "cypher",
+        "cypher",
+        "context",
+        "context",
+        "impact",
+        "impact",
+        "impact"
+      ]
+    }
+  }
+}

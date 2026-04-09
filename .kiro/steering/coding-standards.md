@@ -11,6 +11,9 @@ inclusion: always
 - Use interfaces for object shapes, types for unions/intersections
 - Leverage TypeScript's strict mode features
 - Define return types for all functions
+- Use `Prisma.{Model}GetPayload<{ include: {...} }>` for typed query results with includes (e.g., `Prisma.BattleGetPayload<{ include: { participants: true } }>`)
+- Use `Number(value)` instead of `(value as any).toNumber()` for Prisma Decimal conversion
+- Use `as unknown as TypedInterface[]` for casting Prisma JSON fields to typed arrays (e.g., `snapshot.metrics as unknown as StableMetric[]`)
 
 ### Naming Conventions
 - **Files**: kebab-case (e.g., `robot-service.ts`)
@@ -25,6 +28,13 @@ inclusion: always
 - Group related functionality into services
 - Keep functions focused and single-purpose
 - Maximum function length: ~50 lines (guideline, not strict rule)
+- Game formulas shared between frontend and backend (upgrade costs, academy caps, discount calculations) must live in `prototype/shared/utils/` — never inline or locally redefine a formula that already exists there
+
+### Route Handler Guidelines
+- Route handlers should be thin wrappers: parse input, call a service, return the response
+- No standalone `function` definitions inside route files — extract helpers into service modules under `src/services/`
+- No inline Prisma queries with complex joins or aggregations — move those to service methods
+- Express 5 catches async errors automatically — no try-catch wrappers needed in route handlers
 
 ## Framework-Specific Standards
 
@@ -189,6 +199,7 @@ See `docs/guides/SECURITY.md` for comprehensive security strategy covering:
 - Import reusable primitives from `src/utils/securityValidation.ts` (`safeName`, `safeSlug`, `positiveIntParam`, `safeImageUrl`, `orderByColumn`)
 - Never write inline regex checks in route handlers — use the centralized primitives
 - Zod's default `.strip()` mode removes unknown fields, preventing mass-assignment
+- The `custom-routes/require-validate-request` ESLint rule enforces this automatically — any `router.get/post/put/delete/patch` call in `src/routes/` without `validateRequest` will fail lint
 
 ### Ownership Verification (Required for All Mutations)
 - Every route that mutates a user-owned resource must verify ownership before the mutation

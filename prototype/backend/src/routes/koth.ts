@@ -1,15 +1,25 @@
 import express, { Response } from 'express';
+import { z } from 'zod';
 import { AuthRequest, authenticateToken } from '../middleware/auth';
 import prisma from '../lib/prisma';
 import logger from '../config/logger';
+import { validateRequest } from '../middleware/schemaValidator';
 
 const router = express.Router();
+
+// --- Zod schemas for koth routes ---
+
+const kothStandingsQuerySchema = z.object({
+  view: z.enum(['all_time', 'last_10']).optional(),
+  page: z.coerce.number().int().positive().optional(),
+  limit: z.coerce.number().int().positive().max(100).optional(),
+});
 
 /**
  * GET /api/koth/standings
  * KotH standings with pagination and time filter
  */
-router.get('/standings', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get('/standings', authenticateToken, validateRequest({ query: kothStandingsQuerySchema }), async (req: AuthRequest, res: Response) => {
   try {
     const view = (req.query.view as string) || 'all_time'; // 'all_time' | 'last_10'
     const page = Math.max(1, parseInt(req.query.page as string) || 1);

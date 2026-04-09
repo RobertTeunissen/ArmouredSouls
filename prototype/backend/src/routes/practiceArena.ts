@@ -211,6 +211,7 @@ router.post(
 router.get(
   '/sparring-partners',
   authenticateToken,
+  validateRequest({}),
   async (_req: AuthRequest, res: Response) => {
     const definitions = getSparringPartnerDefinitions();
     res.json({ sparringPartners: definitions });

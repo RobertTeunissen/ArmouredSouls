@@ -37,7 +37,7 @@ const applyDiscount = (cost: number, discountPercent: number): number => {
 };
 
 // Get user's weapon inventory
-router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get('/', authenticateToken, validateRequest({}), async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
 
@@ -278,7 +278,7 @@ router.get('/:id/available', authenticateToken, validateRequest({ params: invent
 });
 
 // Get storage capacity status
-router.get('/storage-status', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get('/storage-status', authenticateToken, validateRequest({}), async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
 

@@ -41,3 +41,21 @@ export type {
   OnboardingAnalyticsEvent,
   StoredEvent,
 } from './onboardingAnalyticsService';
+
+export { getCurrentCycle } from './cycleAnalyticsService';
+export type { CurrentCycleInfo } from './cycleAnalyticsService';
+
+export { getStableSummary } from './stableAnalyticsService';
+export type { StableSummary } from './stableAnalyticsService';
+
+export { getLeaderboardWithTotal } from './leaderboardAnalyticsService';
+export type { LeaderboardResult } from './leaderboardAnalyticsService';
+
+export { getAllFacilityROIs } from './facilityAnalyticsService';
+export type { AllFacilityROIResult } from './facilityAnalyticsService';
+
+export { getKothPerformance } from './kothAnalyticsService';
+export type { KothPerformance } from './kothAnalyticsService';
+
+export { calculateEloMovingAverage, calculateTrendLine } from './trendHelpers';
+export type { TrendLine } from './trendHelpers';

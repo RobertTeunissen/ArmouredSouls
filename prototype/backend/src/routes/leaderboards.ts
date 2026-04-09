@@ -1,27 +1,46 @@
 import express, { Request, Response } from 'express';
+import { z } from 'zod';
 import prisma from '../lib/prisma';
 import logger from '../config/logger';
 import { getPrestigeRank, getFameTier } from '../utils/prestigeUtils';
+import { getPrestigeMultiplier } from '../utils/economyCalculations';
+import { validateRequest } from '../middleware/schemaValidator';
 
 const router = express.Router();
 
+// --- Zod schemas for leaderboard routes ---
+
+const fameQuerySchema = z.object({
+  page: z.coerce.number().int().positive().optional(),
+  limit: z.coerce.number().int().positive().max(100).optional(),
+  league: z.string().max(30).optional(),
+  minBattles: z.coerce.number().int().nonnegative().optional(),
+});
+
+const lossesQuerySchema = z.object({
+  page: z.coerce.number().int().positive().optional(),
+  limit: z.coerce.number().int().positive().max(100).optional(),
+  league: z.string().max(30).optional(),
+});
+
+const prestigeQuerySchema = z.object({
+  page: z.coerce.number().int().positive().optional(),
+  limit: z.coerce.number().int().positive().max(100).optional(),
+  minRobots: z.coerce.number().int().nonnegative().optional(),
+});
+
 /**
- * Calculate battle winnings bonus percentage
+ * Derive battle winnings bonus percentage from the canonical prestige multiplier.
  */
 function calculateBattleWinningsBonus(prestige: number): number {
-  if (prestige >= 50000) return 50;
-  if (prestige >= 25000) return 40;
-  if (prestige >= 10000) return 30;
-  if (prestige >= 5000) return 20;
-  if (prestige >= 1000) return 10;
-  return 0;
+  return Math.round((getPrestigeMultiplier(prestige) - 1) * 100);
 }
 
 /**
  * GET /api/leaderboards/fame
  * Get top robots ranked by fame
  */
-router.get('/fame', async (req: Request, res: Response) => {
+router.get('/fame', validateRequest({ query: fameQuerySchema }), async (req: Request, res: Response) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
     const limit = Math.min(parseInt(req.query.limit as string) || 100, 100);
@@ -107,7 +126,7 @@ router.get('/fame', async (req: Request, res: Response) => {
  * Get top robots ranked by total losses (opponents destroyed)
  * This is a cumulative/lifetime leaderboard - shows all robots regardless of battle count
  */
-router.get('/losses', async (req: Request, res: Response) => {
+router.get('/losses', validateRequest({ query: lossesQuerySchema }), async (req: Request, res: Response) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
     const limit = Math.min(parseInt(req.query.limit as string) || 100, 100);
@@ -194,7 +213,7 @@ router.get('/losses', async (req: Request, res: Response) => {
  * GET /api/leaderboards/prestige
  * Get top stables/users ranked by prestige
  */
-router.get('/prestige', async (req: Request, res: Response) => {
+router.get('/prestige', validateRequest({ query: prestigeQuerySchema }), async (req: Request, res: Response) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
     const limit = Math.min(parseInt(req.query.limit as string) || 100, 100);

@@ -8,12 +8,25 @@
  * Requirements: 26.1-26.12
  */
 import express, { Response } from 'express';
+import { z } from 'zod';
 import { authenticateToken, requireAdmin, AuthRequest } from '../middleware/auth';
 import { recordEvents, OnboardingAnalyticsEvent } from '../services/analytics/onboardingAnalyticsService';
 import logger from '../config/logger';
 import { AppError } from '../errors';
+import { validateRequest } from '../middleware/schemaValidator';
 
 const router = express.Router();
+
+// --- Zod schemas for onboarding analytics routes ---
+
+const analyticsEventsBodySchema = z.object({
+  events: z.array(z.object({
+    eventType: z.string().min(1).max(100),
+    timestamp: z.string().min(1).max(50),
+    step: z.number().int().min(1).max(9).optional(),
+    metadata: z.record(z.string(), z.unknown()).optional(),
+  })).min(1).max(100),
+});
 
 /**
  * POST /api/onboarding/analytics
@@ -33,7 +46,7 @@ const router = express.Router();
  * - `401 Unauthorized` — Not authenticated
  * - `500 Internal Server Error` — Server error
  */
-router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.post('/', authenticateToken, validateRequest({ body: analyticsEventsBodySchema }), async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
     const { events } = req.body;
@@ -90,7 +103,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
  * - `403 Forbidden` — Not admin
  * - `500 Internal Server Error` — Server error
  */
-router.get('/summary', authenticateToken, requireAdmin, async (req: AuthRequest, res: Response) => {
+router.get('/summary', authenticateToken, requireAdmin, validateRequest({}), async (req: AuthRequest, res: Response) => {
   try {
     const { getSummary } = await import('../services/analytics/onboardingAnalyticsService');
     const summary = getSummary();

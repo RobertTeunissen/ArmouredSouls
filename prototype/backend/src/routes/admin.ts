@@ -2,36 +2,42 @@ import express, { Request, Response } from 'express';
 import { z } from 'zod';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 import { executeScheduledBattles } from '../services/league/leagueBattleOrchestrator';
-import { executeScheduledKothBattles } from '../services/koth/kothBattleOrchestrator';
 import { runMatchmaking } from '../services/analytics/matchmakingService';
-import { runKothMatchmaking } from '../services/koth/kothMatchmakingService';
 import { rebalanceLeagues } from '../services/league/leagueRebalancingService';
 import logger from '../config/logger';
 import { rebalanceTagTeamLeagues } from '../services/tag-team/tagTeamLeagueRebalancingService';
-import { shouldRunTagTeamMatchmaking as _shouldRunTagTeamMatchmaking, runTagTeamMatchmaking } from '../services/tag-team/tagTeamMatchmakingService';
+import { runTagTeamMatchmaking } from '../services/tag-team/tagTeamMatchmakingService';
 import { executeScheduledTagTeamBattles } from '../services/tag-team/tagTeamBattleOrchestrator';
 import { processAllDailyFinances } from '../utils/economyCalculations';
-import { generateBattleReadyUsers } from '../utils/userGeneration';
-import { calculateMaxHP, calculateRepairCost, calculateAttributeSum } from '../utils/robotCalculations';
-import { repairAllRobots } from '../services/economy/repairService';
-import { cycleLogger } from '../utils/cycleLogger';
 import prisma from '../lib/prisma';
 import tournamentRoutes from './adminTournaments';
-import { 
-  getActiveTournaments, 
-  getCurrentRoundMatches,
-  autoCreateNextTournament 
-} from '../services/tournament/tournamentService';
-import { processTournamentBattle } from '../services/tournament/tournamentBattleOrchestrator';
-import { advanceWinnersToNextRound } from '../services/tournament/tournamentService';
 import { EventLogger } from '../services/common/eventLogger';
 import { getSchedulerState } from '../services/cycle/cycleScheduler';
 import { AppError, BattleError, BattleErrorCode } from '../errors';
 import { validateRequest } from '../middleware/schemaValidator';
-import { positiveIntParam } from '../utils/securityValidation';
+import { positiveIntParam, paginationQuery } from '../utils/securityValidation';
 import { securityMonitor } from '../services/security/securityMonitor';
 import { SecuritySeverity } from '../services/security/securityLogger';
 import { practiceArenaMetrics } from '../services/practice-arena/practiceArenaMetrics';
+import {
+  getAdminBattleList,
+  getAdminBattleDetail,
+} from '../services/admin/adminBattleService';
+import {
+  getSystemStats,
+  getAtRiskUsers,
+  getRobotAttributeStats,
+  getRecentUserActivity,
+  getRepairAuditLog,
+} from '../services/admin/adminStatsService';
+import {
+  repairAllRobotsAdmin,
+  recalculateAllRobotHP,
+} from '../services/admin/adminMaintenanceService';
+import {
+  executeBulkCycles,
+  backfillCycleSnapshots,
+} from '../services/admin/adminCycleService';
 
 const router = express.Router();
 const eventLogger = new EventLogger();
@@ -40,6 +46,46 @@ const eventLogger = new EventLogger();
 
 const battleIdParamsSchema = z.object({
   id: positiveIntParam,
+});
+
+const scheduledForBodySchema = z.object({
+  scheduledFor: z.string().optional(),
+});
+
+const repairAllBodySchema = z.object({
+  deductCosts: z.boolean().optional().default(false),
+});
+
+const bulkCyclesBodySchema = z.object({
+  cycles: z.number().int().positive().max(100).optional().default(1),
+  generateUsersPerCycle: z.boolean().optional().default(false),
+  includeTournaments: z.boolean().optional().default(true),
+  includeKoth: z.boolean().optional().default(true),
+});
+
+const battlesQuerySchema = paginationQuery.extend({
+  leagueType: z.string().optional(),
+  battleType: z.string().optional(),
+});
+
+const recentUsersQuerySchema = z.object({
+  cycles: z.coerce.number().int().positive().max(200).optional().default(10),
+});
+
+const repairAuditQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(25),
+  repairType: z.enum(['manual', 'automatic']).optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+});
+
+const securityEventsQuerySchema = z.object({
+  severity: z.enum(['info', 'warning', 'critical']).optional(),
+  eventType: z.string().optional(),
+  userId: z.coerce.number().int().positive().optional(),
+  since: z.string().optional(),
+  limit: z.coerce.number().int().positive().max(200).default(50),
 });
 
 // Mount tournament routes
@@ -52,7 +98,7 @@ const BANKRUPTCY_RISK_THRESHOLD = 10000; // Credits below which a user is consid
  * POST /api/admin/matchmaking/run
  * Trigger matchmaking for all leagues
  */
-router.post('/matchmaking/run', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+router.post('/matchmaking/run', authenticateToken, requireAdmin, validateRequest({ body: scheduledForBodySchema }), async (req: Request, res: Response) => {
   try {
     const { scheduledFor } = req.body;
     const targetTime = scheduledFor ? new Date(scheduledFor) : new Date(Date.now() + 24 * 60 * 60 * 1000);
@@ -79,7 +125,7 @@ router.post('/matchmaking/run', authenticateToken, requireAdmin, async (req: Req
  * POST /api/admin/battles/run
  * Execute scheduled battles
  */
-router.post('/battles/run', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+router.post('/battles/run', authenticateToken, requireAdmin, validateRequest({ body: scheduledForBodySchema }), async (req: Request, res: Response) => {
   try {
     const { scheduledFor } = req.body;
     // Only pass a date if scheduledFor is explicitly provided
@@ -107,7 +153,7 @@ router.post('/battles/run', authenticateToken, requireAdmin, async (req: Request
  * POST /api/admin/leagues/rebalance
  * Trigger league rebalancing (promotions/demotions)
  */
-router.post('/leagues/rebalance', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+router.post('/leagues/rebalance', authenticateToken, requireAdmin, validateRequest({}), async (req: Request, res: Response) => {
   try {
     logger.info('[Admin] Triggering league rebalancing...');
     const summary = await rebalanceLeagues();
@@ -130,142 +176,11 @@ router.post('/leagues/rebalance', authenticateToken, requireAdmin, async (req: R
  * POST /api/admin/repair/all
  * Auto-repair all robots to 100% HP
  */
-router.post('/repair/all', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+router.post('/repair/all', authenticateToken, requireAdmin, validateRequest({ body: repairAllBodySchema }), async (req: Request, res: Response) => {
   try {
     const { deductCosts = false } = req.body;
-
-    logger.info('[Admin] Auto-repairing all robots...');
-
-    // Get all robots that need repair
-    const robots = await prisma.robot.findMany({
-      where: {
-        currentHP: {
-          lt: prisma.robot.fields.maxHP,
-        },
-        NOT: {
-          name: 'Bye Robot',
-        },
-      },
-      select: {
-        id: true,
-        name: true,
-        userId: true,
-        currentHP: true,
-        maxHP: true,
-        maxShield: true,
-      },
-    });
-
-    const repairs = [];
-
-    // Group robots by user to apply facility discounts
-    const robotsByUser = new Map<number, typeof robots>();
-    for (const robot of robots) {
-      if (!robotsByUser.has(robot.userId)) {
-        robotsByUser.set(robot.userId, []);
-      }
-      robotsByUser.get(robot.userId)!.push(robot);
-    }
-
-    for (const [userId, userRobots] of robotsByUser.entries()) {
-      // Get repair bay and medical bay facilities for discounts
-      const facilities = await prisma.facility.findMany({
-        where: {
-          userId,
-          facilityType: {
-            in: ['repair_bay', 'medical_bay'],
-          },
-        },
-      });
-
-      const repairBay = facilities.find(f => f.facilityType === 'repair_bay');
-      const medicalBay = facilities.find(f => f.facilityType === 'medical_bay');
-      
-      const repairBayLevel = repairBay?.level || 0;
-      const medicalBayLevel = medicalBay?.level || 0;
-      
-      // Query active robot count for multi-robot discount
-      const activeRobotCount = await prisma.robot.count({
-        where: {
-          userId,
-          NOT: { name: 'Bye Robot' }
-        }
-      });
-
-      let totalUserRepairCost = 0;
-
-      for (const robot of userRobots) {
-        // Fetch full robot data for attribute calculation
-        const fullRobot = await prisma.robot.findUnique({
-          where: { id: robot.id },
-        });
-        
-        if (!fullRobot) continue;
-        
-        // Use the SAME calculation as repairService.ts
-        const sumOfAllAttributes = calculateAttributeSum(fullRobot);
-        const damageTaken = fullRobot.maxHP - fullRobot.currentHP;
-        const damagePercent = (damageTaken / fullRobot.maxHP) * 100;
-        const hpPercent = (fullRobot.currentHP / fullRobot.maxHP) * 100;
-        
-        const repairCost = calculateRepairCost(
-          sumOfAllAttributes,
-          damagePercent,
-          hpPercent,
-          repairBayLevel,
-          medicalBayLevel,
-          activeRobotCount
-        );
-        
-        const hpToRestore = robot.maxHP - robot.currentHP;
-
-        // Update robot HP and set battle ready
-        await prisma.robot.update({
-          where: { id: robot.id },
-          data: { 
-            currentHP: robot.maxHP,
-            currentShield: robot.maxShield,
-            repairCost: 0,
-            battleReadiness: 100,
-          },
-        });
-
-        totalUserRepairCost += repairCost;
-
-        repairs.push({
-          robotId: robot.id,
-          robotName: robot.name,
-          userId: robot.userId,
-          hpRestored: hpToRestore,
-          baseCost: repairCost,
-          discount: 0, // Discount already included in calculation
-          finalCost: repairCost,
-          costDeducted: deductCosts,
-        });
-      }
-
-      // Deduct costs if requested
-      if (deductCosts && totalUserRepairCost > 0) {
-        await prisma.user.update({
-          where: { id: userId },
-          data: {
-            currency: {
-              decrement: totalUserRepairCost,
-            },
-          },
-        });
-      }
-    }
-
-    res.json({
-      success: true,
-      robotsRepaired: robots.length,
-      totalBaseCost: repairs.reduce((sum, r) => sum + r.baseCost, 0),
-      totalFinalCost: repairs.reduce((sum, r) => sum + r.finalCost, 0),
-      costsDeducted: deductCosts,
-      repairs,
-      timestamp: new Date().toISOString(),
-    });
+    const result = await repairAllRobotsAdmin(deductCosts);
+    res.json(result);
   } catch (error) {
     logger.error('[Admin] Auto-repair error:', error);
     res.status(500).json({
@@ -279,63 +194,10 @@ router.post('/repair/all', authenticateToken, requireAdmin, async (req: Request,
  * POST /api/admin/recalculate-hp
  * Recalculate HP for all robots using the new formula: 30 + (hullIntegrity × 8)
  */
-router.post('/recalculate-hp', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+router.post('/recalculate-hp', authenticateToken, requireAdmin, validateRequest({}), async (req: Request, res: Response) => {
   try {
-    logger.info('[Admin] Recalculating HP for all robots using new formula...');
-
-    // Get all robots
-    const robots = await prisma.robot.findMany({
-      include: {
-        mainWeapon: {
-          include: {
-            weapon: true,
-          },
-        },
-        offhandWeapon: {
-          include: {
-            weapon: true,
-          },
-        },
-      },
-    });
-
-    const updates = [];
-
-    for (const robot of robots) {
-      const oldMaxHP = robot.maxHP;
-      
-      // Calculate new maxHP using the formula
-      const newMaxHP = calculateMaxHP(robot);
-      
-      // Calculate currentHP proportionally
-      const hpPercentage = robot.maxHP > 0 ? robot.currentHP / robot.maxHP : 1;
-      const newCurrentHP = Math.round(newMaxHP * hpPercentage);
-
-      // Update robot
-      await prisma.robot.update({
-        where: { id: robot.id },
-        data: {
-          maxHP: newMaxHP,
-          currentHP: Math.min(newCurrentHP, newMaxHP), // Cap at maxHP
-        },
-      });
-
-      updates.push({
-        robotId: robot.id,
-        robotName: robot.name,
-        hullIntegrity: Number(robot.hullIntegrity),
-        oldMaxHP,
-        newMaxHP,
-        change: newMaxHP - oldMaxHP,
-      });
-    }
-
-    res.json({
-      success: true,
-      robotsUpdated: robots.length,
-      updates,
-      timestamp: new Date().toISOString(),
-    });
+    const result = await recalculateAllRobotHP();
+    res.json(result);
   } catch (error) {
     logger.error('[Admin] HP recalculation error:', error);
     res.status(500).json({
@@ -349,7 +211,7 @@ router.post('/recalculate-hp', authenticateToken, requireAdmin, async (req: Requ
  * POST /api/admin/daily-finances/process
  * Process daily financial obligations (operating costs) for all users
  */
-router.post('/daily-finances/process', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+router.post('/daily-finances/process', authenticateToken, requireAdmin, validateRequest({}), async (req: Request, res: Response) => {
   try {
     logger.info('[Admin] Processing daily finances for all users...');
     
@@ -375,701 +237,13 @@ router.post('/daily-finances/process', authenticateToken, requireAdmin, async (r
 
 /**
  * POST /api/admin/cycles/bulk
- * Run multiple complete cycles with the following flow:
- * 1. Repair All Robots (costs deducted)
- * 2. Tournament Execution / Scheduling
- * 3. Repair All Robots (costs deducted)
- * 4. Execute League Battles
- * 5. Rebalance Leagues
- * 6. Auto Generate New Users (battle ready)
- * 7. Repair All Robots (costs deducted)
- * 8. Matchmaking for Leagues
+ * Run multiple complete cycles — delegates to adminCycleService.
  */
-router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+router.post('/cycles/bulk', authenticateToken, requireAdmin, validateRequest({ body: bulkCyclesBodySchema }), async (req: Request, res: Response) => {
   try {
-    const { 
-      cycles = 1, 
-      _includeDailyFinances = false, // Deprecated, kept for backwards compatibility
-      generateUsersPerCycle = false,
-      includeTournaments = true,
-      includeKoth = true
-    } = req.body;
-    const maxCycles = 100;
-    const cycleCount = Math.min(Math.max(1, cycles), maxCycles);
+    const result = await executeBulkCycles(req.body);
 
-    logger.info(`[Admin] Running ${cycleCount} bulk cycles (includeTournaments: ${includeTournaments}, generateUsersPerCycle: ${generateUsersPerCycle})...`);
-
-    // Get or create cycle metadata (singleton pattern)
-    // Note: This initialization is also in seed.ts. Both locations create the same
-    // record (id=1, totalCycles=0) to ensure the singleton exists regardless of
-    // whether the database was seeded or if cycles are run after a fresh migration.
-    let cycleMetadata = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
-    if (!cycleMetadata) {
-      cycleMetadata = await prisma.cycleMetadata.create({
-        data: { id: 1, totalCycles: 0 },
-      });
-    }
-
-    let currentCycleNumber = cycleMetadata.totalCycles;
-    const cycleResults = [];
-    const startTime = Date.now();
-
-    for (let i = 1; i <= cycleCount; i++) {
-      const cycleStart = Date.now();
-      currentCycleNumber++;
-      
-      // Start cycle logging
-      cycleLogger.startCycle(currentCycleNumber);
-      cycleLogger.log('INFO', `Cycle ${currentCycleNumber} (${i}/${cycleCount})`);
-
-      logger.info(`\n[Admin] === Cycle ${currentCycleNumber} (${i}/${cycleCount}) ===`);
-
-      try {
-        // Advance cycle number in DB so getCurrentCycleNumber() returns the
-        // correct value when called by battle orchestrators during this cycle.
-        await prisma.cycleMetadata.update({
-          where: { id: 1 },
-          data: { totalCycles: currentCycleNumber },
-        });
-
-        // Log cycle start
-        await eventLogger.logCycleStart(currentCycleNumber, 'manual');
-
-        // Step 1: Execute League Battles (1v1) - matches scheduled in previous cycle
-        logger.info(`[Admin] Step 1: Execute League Battles (1v1)`);
-        const step1Start = Date.now();
-        const battleSummary = await executeScheduledBattles(new Date());
-        await eventLogger.logCycleStepComplete(
-          currentCycleNumber,
-          'execute_league_battles',
-          1,
-          Date.now() - step1Start,
-          { battlesExecuted: battleSummary.totalBattles }
-        );
-
-        // Step 2: Repair All Robots (costs deducted) - after league battles
-        logger.info(`[Admin] Step 2: Repair All Robots (post-league)`);
-        const step2Start = Date.now();
-        const repair1Summary = await repairAllRobots(true, currentCycleNumber);
-        await eventLogger.logCycleStepComplete(
-          currentCycleNumber,
-          'repair_post_league',
-          2,
-          Date.now() - step2Start,
-          { robotsRepaired: repair1Summary.robotsRepaired, totalCost: repair1Summary.totalFinalCost }
-        );
-
-        // Step 3: Execute Tag Team Battles (odd cycles only, after 1v1)
-        // Requirement 11.4: Process 1v1 matches before tag team matches
-        let tagTeamBattleSummary = null;
-        const shouldRunTagTeam = currentCycleNumber % 2 === 1; // Odd cycles only
-        if (shouldRunTagTeam) {
-          logger.info(`[Admin] Step 3: Execute Tag Team Battles (Cycle ${currentCycleNumber})`);
-          const step3Start = Date.now();
-          tagTeamBattleSummary = await executeScheduledTagTeamBattles(new Date());
-          await eventLogger.logCycleStepComplete(
-            currentCycleNumber,
-            'execute_tag_team_battles',
-            3,
-            Date.now() - step3Start,
-            { battlesExecuted: tagTeamBattleSummary?.totalBattles || 0 }
-          );
-        } else {
-          logger.info(`[Admin] Step 3: Skipping Tag Team Battles (even cycle ${currentCycleNumber})`);
-        }
-
-        // Step 4: Repair All Robots (costs deducted) - after tag team battles
-        logger.info(`[Admin] Step 4: Repair All Robots (post-tag-team)`);
-        const step4Start = Date.now();
-        const repair2Summary = await repairAllRobots(true, currentCycleNumber);
-        await eventLogger.logCycleStepComplete(
-          currentCycleNumber,
-          'repair_post_tag_team',
-          4,
-          Date.now() - step4Start,
-          { robotsRepaired: repair2Summary.robotsRepaired, totalCost: repair2Summary.totalFinalCost }
-        );
-
-        // Step 4.5: Execute Scheduled KotH Battles
-        // KotH only runs on Mon/Wed/Fri. In bulk testing, simulate day-of-week
-        // using cycle number: cycle 1 = Mon(1), cycle 2 = Tue(2), ..., cycle 7 = Sun(0), cycle 8 = Mon(1), etc.
-        const simulatedDayOfWeek = ((currentCycleNumber - 1) % 7) + 1; // 1=Mon, 2=Tue, ..., 7=Sun
-        const isKothDay = simulatedDayOfWeek === 1 || simulatedDayOfWeek === 3 || simulatedDayOfWeek === 5; // Mon, Wed, Fri
-        let kothBattleSummary = null;
-        if (includeKoth && isKothDay) {
-          logger.info(`[Admin] Step 4.5: Execute Scheduled KotH Battles (simulated day ${simulatedDayOfWeek})`);
-          const step4_5Start = Date.now();
-          kothBattleSummary = await executeScheduledKothBattles(new Date());
-          await eventLogger.logCycleStepComplete(
-            currentCycleNumber,
-            'execute_koth_battles',
-            4.5,
-            Date.now() - step4_5Start,
-            { battlesExecuted: kothBattleSummary.totalMatches }
-          );
-        } else if (includeKoth && !isKothDay) {
-          logger.info(`[Admin] Step 4.5: Skipping KotH Battles (not a KotH day, simulated day ${simulatedDayOfWeek})`);
-        } else {
-          logger.info(`[Admin] Step 4.5: Skipping KotH Battles (includeKoth=false)`);
-        }
-
-        // Step 4.6: Repair All Robots (post-KotH)
-        let repairKothSummary = null;
-        if (includeKoth && kothBattleSummary && kothBattleSummary.totalMatches > 0) {
-          logger.info(`[Admin] Step 4.6: Repair All Robots (post-KotH)`);
-          const step4_6Start = Date.now();
-          repairKothSummary = await repairAllRobots(true, currentCycleNumber);
-          await eventLogger.logCycleStepComplete(
-            currentCycleNumber,
-            'repair_post_koth',
-            4.6,
-            Date.now() - step4_6Start,
-            { robotsRepaired: repairKothSummary.robotsRepaired, totalCost: repairKothSummary.totalFinalCost }
-          );
-        }
-
-        // Step 4.7: KotH Matchmaking (only on KotH days — schedule for next KotH day)
-        let kothMatchmakingSummary = null;
-        if (includeKoth && isKothDay) {
-          logger.info(`[Admin] Step 4.7: KotH Matchmaking (simulated day ${simulatedDayOfWeek})`);
-          const step4_7Start = Date.now();
-          // Build a scheduledFor date for the NEXT occurrence of the simulated day of week
-          // so runKothMatchmaking picks the correct zone variant (rotating on Wed)
-          const kothScheduledFor = new Date();
-          kothScheduledFor.setUTCHours(16, 0, 0, 0);
-          // Our simulatedDayOfWeek: 1=Mon,...,7=Sun → JS: 1=Mon,...,6=Sat,0=Sun
-          const jsDayOfWeek = (simulatedDayOfWeek as number) === 7 ? 0 : simulatedDayOfWeek;
-          const currentJsDay = kothScheduledFor.getUTCDay();
-          let daysUntil = jsDayOfWeek - currentJsDay;
-          if (daysUntil <= 0) daysUntil += 7; // always schedule in the future
-          kothScheduledFor.setUTCDate(kothScheduledFor.getUTCDate() + daysUntil);
-          const kothMatchesCreated = await runKothMatchmaking(kothScheduledFor);
-          kothMatchmakingSummary = { matchesCreated: kothMatchesCreated };
-          await eventLogger.logCycleStepComplete(
-            currentCycleNumber,
-            'matchmaking_koth',
-            4.7,
-            Date.now() - step4_7Start,
-            { matchesCreated: kothMatchesCreated }
-          );
-        } else if (includeKoth && !isKothDay) {
-          logger.info(`[Admin] Step 4.7: Skipping KotH Matchmaking (not a KotH day, simulated day ${simulatedDayOfWeek})`);
-        } else {
-          logger.info(`[Admin] Step 4.7: Skipping KotH Matchmaking (includeKoth=false)`);
-        }
-
-        // Step 5: Tournament Execution / Scheduling
-        logger.info(`[Admin] Step 5: Tournament Execution / Scheduling`);
-        const step5Start = Date.now();
-        let tournamentSummary = null;
-        if (includeTournaments) {
-          try {
-            tournamentSummary = {
-              tournamentsExecuted: 0,
-              roundsExecuted: 0,
-              matchesExecuted: 0,
-              tournamentsCompleted: 0,
-              tournamentsCreated: 0,
-              errors: [] as string[],
-            };
-
-            // Get all active tournaments
-            const activeTournaments = await getActiveTournaments();
-
-            for (const tournament of activeTournaments) {
-              try {
-                // Get current round matches
-                const currentRoundMatches = await getCurrentRoundMatches(tournament.id);
-                
-                if (currentRoundMatches.length > 0) {
-                  // Execute matches — skip bye matches (robot2Id is null)
-                  for (const match of currentRoundMatches) {
-                    // Auto-complete bye matches that slipped through
-                    if (match.robot1Id && !match.robot2Id) {
-                      await prisma.scheduledTournamentMatch.update({
-                        where: { id: match.id },
-                        data: {
-                          winnerId: match.robot1Id,
-                          status: 'completed',
-                          isByeMatch: true,
-                          completedAt: new Date(),
-                        },
-                      });
-                      logger.info(`[Admin] Auto-completed bye match ${match.id} in tournament ${tournament.id}`);
-                      tournamentSummary.matchesExecuted++;
-                      continue;
-                    }
-
-                    // Skip matches with no robots at all
-                    if (!match.robot1Id && !match.robot2Id) {
-                      tournamentSummary.errors.push(`Tournament ${tournament.id} Match ${match.id}: No robots assigned`);
-                      continue;
-                    }
-
-                    try {
-                      await processTournamentBattle(match);
-                      tournamentSummary.matchesExecuted++;
-                    } catch (error) {
-                      const errorMsg = error instanceof Error ? error.message : String(error);
-                      tournamentSummary.errors.push(`Tournament ${tournament.id} Match ${match.id}: ${errorMsg}`);
-                    }
-                  }
-
-                  // Advance winners
-                  await advanceWinnersToNextRound(tournament.id);
-                  tournamentSummary.roundsExecuted++;
-                }
-
-                tournamentSummary.tournamentsExecuted++;
-
-                // Check if tournament completed
-                const updatedTournament = await prisma.tournament.findUnique({
-                  where: { id: tournament.id },
-                });
-
-                if (updatedTournament?.status === 'completed') {
-                  tournamentSummary.tournamentsCompleted++;
-                }
-              } catch (error) {
-                const errorMsg = error instanceof Error ? error.message : String(error);
-                tournamentSummary.errors.push(`Tournament ${tournament.id}: ${errorMsg}`);
-              }
-            }
-
-            // Auto-create next tournament if none active
-            try {
-              const nextTournament = await autoCreateNextTournament();
-              if (nextTournament) {
-                tournamentSummary.tournamentsCreated++;
-                logger.info(`[Admin] Auto-created tournament: ${nextTournament.name}`);
-              }
-            } catch (error) {
-              logger.error('[Admin] Failed to auto-create tournament:', error);
-            }
-
-            logger.info(`[Admin] Tournaments: ${tournamentSummary.tournamentsExecuted} executed, ${tournamentSummary.roundsExecuted} rounds, ${tournamentSummary.matchesExecuted} matches`);
-          } catch (error) {
-            logger.error('[Admin] Tournament execution error:', error);
-            tournamentSummary = {
-              error: error instanceof Error ? error.message : String(error),
-            };
-          }
-        }
-        await eventLogger.logCycleStepComplete(
-          currentCycleNumber,
-          'tournament_execution',
-          5,
-          Date.now() - step5Start,
-          { 
-            tournamentsExecuted: tournamentSummary?.tournamentsExecuted || 0,
-            matchesExecuted: tournamentSummary?.matchesExecuted || 0
-          }
-        );
-
-        // Step 6: Repair All Robots (costs deducted) - after tournaments
-        logger.info(`[Admin] Step 6: Repair All Robots (post-tournament)`);
-        const step6Start = Date.now();
-        const repair3Summary = await repairAllRobots(true, currentCycleNumber);
-        await eventLogger.logCycleStepComplete(
-          currentCycleNumber,
-          'repair_post_tournament',
-          6,
-          Date.now() - step6Start,
-          { robotsRepaired: repair3Summary.robotsRepaired, totalCost: repair3Summary.totalFinalCost }
-        );
-
-        // Step 7: Rebalance Leagues
-        logger.info(`[Admin] Step 7: Rebalance Leagues`);
-        const step7Start = Date.now();
-        const rebalancingSummary = await rebalanceLeagues();
-        await eventLogger.logCycleStepComplete(
-          currentCycleNumber,
-          'rebalance_leagues',
-          7,
-          Date.now() - step7Start,
-          { promotions: rebalancingSummary.totalPromoted, demotions: rebalancingSummary.totalDemoted }
-        );
-
-        // Step 7.5: Rebalance Tag Team Leagues (odd cycles only)
-        let tagTeamRebalancingSummary = null;
-        if (shouldRunTagTeam) {
-          logger.info(`[Admin] Step 7.5: Rebalance Tag Team Leagues (Cycle ${currentCycleNumber})`);
-          const step7_5Start = Date.now();
-          tagTeamRebalancingSummary = await rebalanceTagTeamLeagues();
-          await eventLogger.logCycleStepComplete(
-            currentCycleNumber,
-            'rebalance_tag_team_leagues',
-            8,
-            Date.now() - step7_5Start,
-            { promotions: tagTeamRebalancingSummary.totalPromoted, demotions: tagTeamRebalancingSummary.totalDemoted }
-          );
-        } else {
-          logger.info(`[Admin] Step 7.5: Skipping Tag Team Rebalancing (even cycle ${currentCycleNumber})`);
-        }
-
-        // Step 8: Auto Generate New Users (battle ready)
-        logger.info(`[Admin] Step 8: Auto Generate New Users`);
-        const step8Start = Date.now();
-        let userGenerationSummary = null;
-        if (generateUsersPerCycle) {
-          try {
-            userGenerationSummary = await generateBattleReadyUsers(currentCycleNumber);
-            logger.info(`[Admin] Generated ${userGenerationSummary.usersCreated} users for cycle ${currentCycleNumber}`);
-          } catch (error) {
-            logger.error(`[Admin] Error generating users:`, error);
-            userGenerationSummary = {
-              error: error instanceof Error ? error.message : String(error),
-            };
-          }
-        }
-        await eventLogger.logCycleStepComplete(
-          currentCycleNumber,
-          'auto_generate_users',
-          9,
-          Date.now() - step8Start,
-          { usersCreated: userGenerationSummary?.usersCreated || 0 }
-        );
-
-        // Step 9: Matchmaking for Leagues (1v1) - schedule for next cycle
-        logger.info(`[Admin] Step 9: Matchmaking for Leagues (1v1)`);
-        const step9Start = Date.now();
-        const scheduledFor = new Date(Date.now() + 1000); // 1 second ahead
-        const matchesCreated = await runMatchmaking(scheduledFor);
-        const matchmakingSummary = { matchesCreated };
-        await eventLogger.logCycleStepComplete(
-          currentCycleNumber,
-          'matchmaking_leagues',
-          10,
-          Date.now() - step9Start,
-          { matchesCreated }
-        );
-
-        // Step 9.5: Matchmaking for Tag Teams (odd cycles only)
-        let tagTeamMatchmakingSummary = null;
-        if (shouldRunTagTeam) {
-          logger.info(`[Admin] Step 9.5: Matchmaking for Tag Teams (Cycle ${currentCycleNumber})`);
-          const step9_5Start = Date.now();
-          const tagTeamMatchesCreated = await runTagTeamMatchmaking(scheduledFor);
-          tagTeamMatchmakingSummary = { matchesCreated: tagTeamMatchesCreated };
-          await eventLogger.logCycleStepComplete(
-            currentCycleNumber,
-            'matchmaking_tag_teams',
-            11,
-            Date.now() - step9_5Start,
-            { matchesCreated: tagTeamMatchesCreated }
-          );
-        } else {
-          logger.info(`[Admin] Step 9.5: Skipping Tag Team Matchmaking (even cycle ${currentCycleNumber})`);
-        }
-
-        // Step 10: Finalize Cycle Counters
-        logger.info(`[Admin] Step 10: Finalize Cycle Counters`);
-        const step10Start = Date.now();
-        
-        // Update lastCycleAt timestamp (totalCycles already set at cycle start)
-        await prisma.cycleMetadata.update({
-          where: { id: 1 },
-          data: {
-            lastCycleAt: new Date(),
-          },
-        });
-
-        // Increment cyclesInCurrentLeague for all robots (after rebalancing)
-        await prisma.robot.updateMany({
-          where: {
-            NOT: { name: 'Bye Robot' },
-          },
-          data: {
-            cyclesInCurrentLeague: {
-              increment: 1,
-            },
-          },
-        });
-
-        // Increment cyclesInTagTeamLeague for all tag teams (after rebalancing)
-        await prisma.tagTeam.updateMany({
-          data: {
-            cyclesInTagTeamLeague: {
-              increment: 1,
-            },
-          },
-        });
-        await eventLogger.logCycleStepComplete(
-          currentCycleNumber,
-          'increment_cycle_counters',
-          12,
-          Date.now() - step10Start,
-          {}
-        );
-
-        // Step 11: Calculate and Log Passive Income & Operating Costs
-        logger.info(`[Admin] Step 11: Calculate Passive Income & Operating Costs`);
-        const step11Start = Date.now();
-        const { calculateDailyPassiveIncome, calculateFacilityOperatingCost } = await import('../utils/economyCalculations');
-        
-        // Get all users
-        const allUsers = await prisma.user.findMany({
-          where: {
-            NOT: { username: 'bye_robot_user' }, // Exclude system users
-          },
-          select: { id: true, prestige: true },
-        });
-
-        let totalPassiveIncome = 0;
-        let totalOperatingCosts = 0;
-
-        for (const user of allUsers) {
-          // Calculate passive income
-          const passiveIncome = await calculateDailyPassiveIncome(user.id);
-          
-          // Get user's facilities for operating costs
-          const facilities = await prisma.facility.findMany({
-            where: { userId: user.id },
-          });
-
-          // Get user's robots to calculate roster costs
-          const userRobots = await prisma.robot.findMany({
-            where: { userId: user.id },
-            select: { totalBattles: true, fame: true },
-          });
-
-          const facilityCosts = facilities.map(f => ({
-            facilityType: f.facilityType,
-            level: f.level,
-            cost: calculateFacilityOperatingCost(f.facilityType, f.level),
-          }));
-
-          let totalCost = facilityCosts.reduce((sum, f) => sum + f.cost, 0);
-
-          // Add roster expansion cost: ₡500/day per robot beyond first
-          if (userRobots.length > 1) {
-            const rosterCost = (userRobots.length - 1) * 500;
-            facilityCosts.push({
-              facilityType: 'roster_expansion',
-              level: 0, // Not level-based
-              cost: rosterCost,
-            });
-            totalCost += rosterCost;
-          }
-
-          const totalBattles = userRobots.reduce((sum, r) => sum + r.totalBattles, 0);
-          const totalFame = userRobots.reduce((sum, r) => sum + r.fame, 0);
-
-          const incomeGenerator = await prisma.facility.findUnique({
-            where: {
-              userId_facilityType: {
-                userId: user.id,
-                facilityType: 'merchandising_hub',
-              },
-            },
-          });
-
-          // Log passive income event and credit user account
-          if (passiveIncome.total > 0) {
-            await eventLogger.logPassiveIncome(
-              currentCycleNumber,
-              user.id,
-              passiveIncome.merchandising,
-              0, // Streaming revenue is now per-battle, not passive income
-              incomeGenerator?.level || 0,
-              user.prestige,
-              totalBattles,
-              totalFame
-            );
-            
-            // Credit the passive income to user's account
-            await prisma.user.update({
-              where: { id: user.id },
-              data: {
-                currency: {
-                  increment: passiveIncome.total,
-                },
-              },
-            });
-            
-            totalPassiveIncome += passiveIncome.total;
-          }
-
-          // Log operating costs event and debit user account
-          if (totalCost > 0) {
-            await eventLogger.logOperatingCosts(
-              currentCycleNumber,
-              user.id,
-              facilityCosts.filter(f => f.cost > 0),
-              totalCost
-            );
-            
-            // Deduct operating costs from user's account
-            const _userBeforeDeduction = await prisma.user.findUnique({
-              where: { id: user.id },
-              select: { currency: true },
-            });
-            
-            await prisma.user.update({
-              where: { id: user.id },
-              data: {
-                currency: {
-                  decrement: totalCost,
-                },
-              },
-            });
-            
-            // Console log for cycle logs
-            const facilityList = facilityCosts.filter(f => f.cost > 0).map(f => `${f.facilityType}(L${f.level}): ₡${f.cost}`).join(', ');
-            logger.info(`[OperatingCosts] User ${user.id} | Total: ₡${totalCost.toLocaleString()} | Facilities: ${facilityList}`);
-            
-            totalOperatingCosts += totalCost;
-          }
-        }
-
-        logger.info(`[Admin] Passive income: ₡${totalPassiveIncome.toLocaleString()}, Operating costs: ₡${totalOperatingCosts.toLocaleString()}`);
-        
-        await eventLogger.logCycleStepComplete(
-          currentCycleNumber,
-          'calculate_passive_income_and_costs',
-          11,
-          Date.now() - step11Start,
-          { 
-            usersProcessed: allUsers.length,
-            totalPassiveIncome,
-            totalOperatingCosts,
-          }
-        );
-
-        // Step 12: Wait (1.1 second delay)
-        logger.info(`[Admin] Step 12: Wait (1.1 second delay)`);
-        const step12Start = Date.now();
-        await new Promise(resolve => setTimeout(resolve, 1100));
-        await eventLogger.logCycleStepComplete(
-          currentCycleNumber,
-          'wait_delay',
-          12,
-          Date.now() - step12Start,
-          {}
-        );
-
-        // Log cycle complete
-        const cycleDuration = Date.now() - cycleStart;
-        await eventLogger.logCycleComplete(currentCycleNumber, cycleDuration);
-
-        // Step 13: Log End-of-Cycle Balances
-        logger.info(`[Admin] Step 13: Log End-of-Cycle Balances`);
-        logger.info(`[Admin] === End of Cycle ${currentCycleNumber} Balances ===`);
-        const step13Start = Date.now();
-        const endOfCycleUsers = await prisma.user.findMany({
-          where: {
-            NOT: { username: 'bye_robot_user' },
-          },
-          select: {
-            id: true,
-            username: true,
-            stableName: true,
-            currency: true,
-          },
-          orderBy: { id: 'asc' },
-        });
-
-        for (const user of endOfCycleUsers) {
-          logger.info(`[Balance] User ${user.id} | Stable: ${user.stableName || user.username} | Balance: ₡${user.currency.toLocaleString()}`);
-          
-          // Log end-of-cycle balance to audit log
-          await eventLogger.logCycleEndBalance(
-            currentCycleNumber,
-            user.id,
-            user.username,
-            user.stableName,
-            user.currency
-          );
-        }
-        logger.info(`[Admin] ===================================`);
-        await eventLogger.logCycleStepComplete(
-          currentCycleNumber,
-          'log_end_of_cycle_balances',
-          13,
-          Date.now() - step13Start,
-          { usersLogged: endOfCycleUsers.length }
-        );
-
-        // Step 14: Create Cycle Snapshot for analytics (LAST STEP - aggregates all data including balances)
-        logger.info(`[Admin] Step 14: Create Cycle Snapshot`);
-        const step14Start = Date.now();
-        try {
-          const { cycleSnapshotService } = await import('../services/cycle/cycleSnapshotService');
-          await cycleSnapshotService.createSnapshot(currentCycleNumber);
-          logger.info(`[Admin] Cycle snapshot created for cycle ${currentCycleNumber}`);
-          await eventLogger.logCycleStepComplete(
-            currentCycleNumber,
-            'create_cycle_snapshot',
-            14,
-            Date.now() - step14Start,
-            {}
-          );
-        } catch (snapshotError) {
-          logger.error(`[Admin] Failed to create cycle snapshot:`, snapshotError);
-          // Don't fail the entire cycle if snapshot creation fails
-        }
-
-        // Display Cycle Summary
-        logger.info(`[Admin] === Cycle ${currentCycleNumber} Summary ===`);
-        logger.info(`[Admin] Battles: ${battleSummary.totalBattles}`);
-        if (kothBattleSummary) {
-          logger.info(`[Admin] KotH Battles: ${kothBattleSummary.totalMatches} (${kothBattleSummary.successfulMatches} successful, ${kothBattleSummary.failedMatches} failed)`);
-        }
-        const totalStreamingRevenue = (battleSummary.totalStreamingRevenue || 0) + (tagTeamBattleSummary?.totalStreamingRevenue || 0);
-        if (totalStreamingRevenue > 0) {
-          logger.info(`[Admin] Streaming Revenue: ₡${totalStreamingRevenue.toLocaleString()}`);
-        }
-        logger.info(`[Admin] ===================================`);
-
-        cycleResults.push({
-          cycle: currentCycleNumber,
-          battles: battleSummary,
-          repair1: repair1Summary,
-          tagTeamBattles: tagTeamBattleSummary,
-          repair2: repair2Summary,
-          kothBattles: kothBattleSummary,
-          repairPostKoth: repairKothSummary,
-          kothMatchmaking: kothMatchmakingSummary,
-          tournaments: tournamentSummary,
-          repair3: repair3Summary,
-          rebalancing: rebalancingSummary,
-          tagTeamRebalancing: tagTeamRebalancingSummary,
-          userGeneration: userGenerationSummary,
-          matchmaking: matchmakingSummary,
-          tagTeamMatchmaking: tagTeamMatchmakingSummary,
-          totalStreamingRevenue,
-          duration: Date.now() - cycleStart,
-        });
-
-        // End cycle logging
-        cycleLogger.endCycle();
-      } catch (error) {
-        logger.error(`[Admin] Error in cycle ${currentCycleNumber}:`, error);
-        cycleLogger.log('ERROR', `Cycle ${currentCycleNumber} failed`, { error: error instanceof Error ? error.message : String(error) });
-        cycleLogger.endCycle();
-        
-        cycleResults.push({
-          cycle: currentCycleNumber,
-          error: error instanceof Error ? error.message : String(error),
-          duration: Date.now() - cycleStart,
-        });
-      }
-    }
-
-    const totalDuration = Date.now() - startTime;
-
-    res.json({
-      success: true,
-      cyclesCompleted: cycleCount,
-      totalCyclesInSystem: currentCycleNumber,
-      includeTournaments,
-      includeKoth,
-      generateUsersPerCycleEnabled: generateUsersPerCycle,
-      totalDuration,
-      averageCycleDuration: Math.round(totalDuration / cycleCount),
-      results: cycleResults,
-      timestamp: new Date().toISOString(),
-    });
+    res.json(result);
   } catch (error) {
     logger.error('[Admin] Bulk cycles error:', error);
     res.status(500).json({
@@ -1081,61 +255,19 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, async (req: Request
 
 /**
  * POST /api/admin/snapshots/backfill
- * Backfill cycle snapshots for cycles that don't have them
+ * Backfill cycle snapshots for cycles that don't have them — delegates to adminCycleService.
  */
-router.post('/snapshots/backfill', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+router.post('/snapshots/backfill', authenticateToken, requireAdmin, validateRequest({}), async (req: Request, res: Response) => {
   try {
-    logger.info('[Admin] Backfilling cycle snapshots...');
-    
-    const { cycleSnapshotService } = await import('../services/cycle/cycleSnapshotService');
-    
-    // Get current cycle number
-    const cycleMetadata = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
-    if (!cycleMetadata || cycleMetadata.totalCycles === 0) {
+    const result = await backfillCycleSnapshots();
+    if (result.totalCycles === 0) {
       return res.json({
         success: true,
         message: 'No cycles to backfill',
         snapshotsCreated: 0,
       });
     }
-
-    const totalCycles = cycleMetadata.totalCycles;
-    const snapshotsCreated = [];
-    const errors = [];
-
-    // Check which cycles already have snapshots
-    const existingSnapshots = await prisma.cycleSnapshot.findMany({
-      select: { cycleNumber: true },
-    });
-    const existingCycles = new Set(existingSnapshots.map(s => s.cycleNumber));
-
-    // Create snapshots for missing cycles
-    for (let cycle = 1; cycle <= totalCycles; cycle++) {
-      if (existingCycles.has(cycle)) {
-        logger.info(`[Admin] Snapshot already exists for cycle ${cycle}, skipping`);
-        continue;
-      }
-
-      try {
-        logger.info(`[Admin] Creating snapshot for cycle ${cycle}`);
-        await cycleSnapshotService.createSnapshot(cycle);
-        snapshotsCreated.push(cycle);
-      } catch (error) {
-        logger.error(`[Admin] Failed to create snapshot for cycle ${cycle}:`, error);
-        errors.push({
-          cycle,
-          error: error instanceof Error ? error.message : String(error),
-        });
-      }
-    }
-
-    res.json({
-      success: true,
-      totalCycles,
-      snapshotsCreated: snapshotsCreated.length,
-      cycles: snapshotsCreated,
-      errors: errors.length > 0 ? errors : undefined,
-    });
+    res.json(result);
   } catch (error) {
     logger.error('[Admin] Backfill snapshots error:', error);
     res.status(500).json({
@@ -1149,193 +281,10 @@ router.post('/snapshots/backfill', authenticateToken, requireAdmin, async (req: 
  * GET /api/admin/stats
  * Get system statistics
  */
-router.get('/stats', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+router.get('/stats', authenticateToken, requireAdmin, validateRequest({}), async (req: Request, res: Response) => {
   try {
-    // Total robots by tier
-    const robotsByTier = await prisma.robot.groupBy({
-      by: ['currentLeague'],
-      where: {
-        NOT: { name: 'Bye Robot' },
-      },
-      _count: { id: true },
-      _avg: { elo: true },
-    });
-
-    // Battle readiness
-    const totalRobots = await prisma.robot.count({
-      where: { NOT: { name: 'Bye Robot' } },
-    });
-
-    const readyRobots = await prisma.robot.count({
-      where: {
-        NOT: { name: 'Bye Robot' },
-        currentHP: {
-          gte: prisma.robot.fields.maxHP,
-        },
-        mainWeaponId: {
-          not: null,
-        },
-      },
-    });
-
-    // Scheduled matches by type
-    const leagueMatchesScheduled = await prisma.scheduledLeagueMatch.count({
-      where: { status: 'scheduled' },
-    });
-    const leagueMatchesCompleted = await prisma.scheduledLeagueMatch.count({
-      where: { status: 'completed' },
-    });
-
-    const tournamentMatchesScheduled = await prisma.scheduledTournamentMatch.count({
-      where: { status: { in: ['pending', 'scheduled'] } },
-    });
-    const tournamentMatchesCompleted = await prisma.scheduledTournamentMatch.count({
-      where: { status: 'completed' },
-    });
-
-    const tagTeamMatchesScheduled = await prisma.scheduledTagTeamMatch.count({
-      where: { status: 'scheduled' },
-    });
-    const tagTeamMatchesCompleted = await prisma.scheduledTagTeamMatch.count({
-      where: { status: 'completed' },
-    });
-
-    const kothMatchesScheduled = await prisma.scheduledKothMatch.count({
-      where: { status: 'scheduled' },
-    });
-    const kothMatchesCompleted = await prisma.scheduledKothMatch.count({
-      where: { status: 'completed' },
-    });
-
-    // Total scheduled/completed across all types
-    const scheduledMatches = leagueMatchesScheduled + tournamentMatchesScheduled + tagTeamMatchesScheduled + kothMatchesScheduled;
-    const completedMatches = leagueMatchesCompleted + tournamentMatchesCompleted + tagTeamMatchesCompleted + kothMatchesCompleted;
-
-    // Recent battles
-    const recentBattles = await prisma.battle.count({
-      where: {
-        createdAt: {
-          gte: new Date(Date.now() - 24 * 60 * 60 * 1000), // Last 24 hours
-        },
-      },
-    });
-
-    // Total battles
-    const totalBattles = await prisma.battle.count();
-
-    // Battle statistics - draw count and duration
-    const battles = await prisma.battle.findMany({
-      select: {
-        winnerId: true,
-        robot1Id: true,
-        robot2Id: true,
-        durationSeconds: true,
-        participants: true, // Get BattleParticipant data
-      },
-    });
-
-    const drawCount = battles.filter(b => b.winnerId === null).length;
-    const drawPercentage = totalBattles > 0 ? (drawCount / totalBattles) * 100 : 0;
-    const avgDuration = battles.length > 0 
-      ? battles.reduce((sum, b) => sum + b.durationSeconds, 0) / battles.length 
-      : 0;
-
-    // Count kill outcomes (where loser has 0 HP - not including draws)
-    const killCount = battles.filter(b => {
-      if (!b.winnerId) return false; // Not a draw
-      // Check if the loser has 0 HP from BattleParticipant data
-      const loserParticipant = b.participants.find(p => p.robotId !== b.winnerId);
-      return loserParticipant?.finalHP === 0;
-    }).length;
-
-    // Financial statistics
-    const users = await prisma.user.findMany({
-      select: {
-        currency: true,
-        facilities: {
-          select: {
-            facilityType: true,
-            level: true,
-          },
-        },
-      },
-    });
-
-    const totalCredits = users.reduce((sum, u) => sum + u.currency, 0);
-    const avgBalance = users.length > 0 ? totalCredits / users.length : 0;
-    
-    // Users at risk of bankruptcy (using configured threshold)
-    const bankruptcyRisk = users.filter(u => u.currency < BANKRUPTCY_RISK_THRESHOLD).length;
-
-    // Facility statistics
-    const facilityStats: Record<string, { count: number; totalLevel: number }> = {};
-    users.forEach(user => {
-      user.facilities.forEach(facility => {
-        if (facility.level > 0) { // Only count purchased facilities
-          if (!facilityStats[facility.facilityType]) {
-            facilityStats[facility.facilityType] = { count: 0, totalLevel: 0 };
-          }
-          facilityStats[facility.facilityType].count++;
-          facilityStats[facility.facilityType].totalLevel += facility.level;
-        }
-      });
-    });
-
-    const facilitySummary = Object.entries(facilityStats)
-      .map(([type, stats]) => ({
-        type,
-        purchaseCount: stats.count,
-        avgLevel: stats.count > 0 ? stats.totalLevel / stats.count : 0,
-      }))
-      .sort((a, b) => b.purchaseCount - a.purchaseCount);
-
-    res.json({
-      robots: {
-        total: totalRobots,
-        byTier: robotsByTier.map(tier => ({
-          league: tier.currentLeague,
-          count: tier._count.id,
-          averageElo: Math.round(tier._avg.elo || 0),
-        })),
-        battleReady: readyRobots,
-        battleReadyPercentage: Math.round((readyRobots / totalRobots) * 100),
-      },
-      matches: {
-        scheduled: scheduledMatches,
-        completed: completedMatches,
-        byType: {
-          league: { scheduled: leagueMatchesScheduled, completed: leagueMatchesCompleted },
-          tournament: { scheduled: tournamentMatchesScheduled, completed: tournamentMatchesCompleted },
-          tagTeam: { scheduled: tagTeamMatchesScheduled, completed: tagTeamMatchesCompleted },
-          koth: { scheduled: kothMatchesScheduled, completed: kothMatchesCompleted },
-        },
-      },
-      battles: {
-        last24Hours: recentBattles,
-        total: totalBattles,
-        draws: drawCount,
-        drawPercentage: Math.round(drawPercentage * 10) / 10,
-        avgDuration: Math.round(avgDuration * 10) / 10,
-        kills: killCount,
-        killPercentage: totalBattles > 0 ? Math.round((killCount / totalBattles) * 1000) / 10 : 0,
-      },
-      finances: {
-        totalCredits,
-        avgBalance: Math.round(avgBalance),
-        usersAtRisk: bankruptcyRisk,
-        totalUsers: users.length,
-      },
-      facilities: {
-        summary: facilitySummary,
-        totalPurchases: facilitySummary.reduce((sum, f) => sum + f.purchaseCount, 0),
-        mostPopular: facilitySummary[0]?.type || 'None',
-      },
-      weapons: await getWeaponStats(),
-      stances: await getStanceStats(),
-      loadouts: await getLoadoutStats(),
-      yieldThresholds: await getYieldThresholdStats(),
-      timestamp: new Date().toISOString(),
-    });
+    const stats = await getSystemStats();
+    res.json(stats);
   } catch (error) {
     logger.error('[Admin] Stats error:', error);
     res.status(500).json({
@@ -1349,181 +298,10 @@ router.get('/stats', authenticateToken, requireAdmin, async (req: Request, res: 
  * GET /api/admin/users/at-risk
  * Get list of users at risk of bankruptcy with financial history
  */
-router.get('/users/at-risk', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+router.get('/users/at-risk', authenticateToken, requireAdmin, validateRequest({}), async (req: Request, res: Response) => {
   try {
-    // Get current cycle number
-    const cycleMetadata = await prisma.cycleMetadata.findUnique({
-      where: { id: 1 },
-    });
-    const currentCycle = cycleMetadata?.totalCycles || 0;
-
-    // Get users below bankruptcy threshold
-    const atRiskUsers = await prisma.user.findMany({
-      where: {
-        currency: {
-          lt: BANKRUPTCY_RISK_THRESHOLD,
-        },
-      },
-      select: {
-        id: true,
-        username: true,
-        stableName: true,
-        currency: true,
-        createdAt: true,
-        robots: {
-          select: {
-            id: true,
-            name: true,
-            currentHP: true,
-            maxHP: true,
-            repairCost: true,
-            battleReadiness: true,
-          },
-        },
-      },
-      orderBy: {
-        currency: 'asc', // Most at risk first
-      },
-    });
-
-    // For each user, get their financial history from audit logs
-    const usersWithHistory = await Promise.all(
-      atRiskUsers.map(async (user) => {
-        // Get all financial events from audit logs
-        const financialEvents = await prisma.auditLog.findMany({
-          where: {
-            userId: user.id,
-            eventType: {
-              in: ['credit_change', 'operating_costs', 'passive_income', 'robot_repair'],
-            },
-            cycleNumber: {
-              gte: Math.max(1, currentCycle - 30), // Last 30 cycles
-            },
-          },
-          select: {
-            cycleNumber: true,
-            eventTimestamp: true,
-            eventType: true,
-            payload: true,
-            sequenceNumber: true,
-          },
-          orderBy: [
-            { cycleNumber: 'desc' },
-            { sequenceNumber: 'desc' },
-          ],
-        });
-
-        // Calculate balance for each cycle by working backwards from current balance
-        const cycleMap = new Map<number, { costs: number; income: number; repairs: number }>();
-        
-        for (const event of financialEvents) {
-          const cycle = event.cycleNumber;
-          if (!cycleMap.has(cycle)) {
-            cycleMap.set(cycle, { costs: 0, income: 0, repairs: 0 });
-          }
-          
-          const cycleData = cycleMap.get(cycle)!;
-          
-          if (event.eventType === 'operating_costs') {
-            cycleData.costs += (event.payload as Record<string, number>)?.totalCost || 0;
-          } else if (event.eventType === 'passive_income') {
-            cycleData.income += (event.payload as Record<string, number>)?.totalIncome || 0;
-          } else if (event.eventType === 'robot_repair') {
-            cycleData.repairs += (event.payload as Record<string, number>)?.cost || 0;
-          } else if (event.eventType === 'credit_change') {
-            // Track credit changes (battle rewards, etc.)
-            const amount = (event.payload as Record<string, number>)?.amount || 0;
-            if (amount > 0) {
-              cycleData.income += amount;
-            } else {
-              cycleData.costs += Math.abs(amount);
-            }
-          }
-        }
-
-        // Build balance history by working backwards from current balance
-        const cycles = Array.from(cycleMap.keys()).sort((a, b) => b - a); // Descending order
-        const balanceHistory: Array<{
-          cycle: number;
-          timestamp: Date;
-          balance: number;
-          dailyCost: number;
-          dailyIncome: number;
-        }> = [];
-        
-        let runningBalance = user.currency; // Start with current balance (end of most recent cycle)
-        
-        for (const cycle of cycles) {
-          const data = cycleMap.get(cycle)!;
-          const totalCosts = data.costs + data.repairs;
-          const netChange = data.income - totalCosts;
-          
-          // Store the balance at the END of this cycle
-          balanceHistory.push({
-            cycle,
-            timestamp: financialEvents.find(e => e.cycleNumber === cycle)?.eventTimestamp || new Date(),
-            balance: runningBalance,
-            dailyCost: totalCosts,
-            dailyIncome: data.income,
-          });
-          
-          // Work backwards: subtract the net change to get balance at END of previous cycle
-          runningBalance -= netChange;
-        }
-        
-        // Sort by cycle descending (most recent first) and limit to 10
-        balanceHistory.sort((a, b) => b.cycle - a.cycle);
-        const recentHistory = balanceHistory.slice(0, 10);
-
-        // Determine when they first went below threshold
-        let cyclesAtRisk = 0;
-        let firstAtRiskCycle = null;
-        
-        // Check balance history in reverse chronological order
-        for (let i = 0; i < balanceHistory.length; i++) {
-          if (balanceHistory[i].balance < BANKRUPTCY_RISK_THRESHOLD) {
-            cyclesAtRisk++;
-            firstAtRiskCycle = balanceHistory[i].cycle;
-          } else {
-            // Found a cycle where they were above threshold, stop counting
-            break;
-          }
-        }
-
-        // Calculate total repair costs needed
-        const totalRepairCost = user.robots.reduce((sum, robot) => sum + robot.repairCost, 0);
-
-        // Calculate days of runway (assuming average daily cost)
-        const avgDailyCost = recentHistory.length > 0
-          ? recentHistory.reduce((sum, h) => sum + h.dailyCost, 0) / recentHistory.length
-          : 0;
-        const daysOfRunway = avgDailyCost > 0 ? Math.floor(user.currency / avgDailyCost) : 999;
-
-        return {
-          userId: user.id,
-          username: user.username,
-          stableName: user.stableName || user.username,
-          currentBalance: user.currency,
-          totalRepairCost,
-          netBalance: user.currency - totalRepairCost,
-          cyclesAtRisk,
-          firstAtRiskCycle,
-          daysOfRunway,
-          robotCount: user.robots.length,
-          damagedRobots: user.robots.filter(r => r.battleReadiness < 100).length,
-          balanceHistory: recentHistory,
-          createdAt: user.createdAt,
-        };
-      })
-    );
-
-    res.json({
-      threshold: BANKRUPTCY_RISK_THRESHOLD,
-      currentCycle,
-      totalAtRisk: usersWithHistory.length,
-      users: usersWithHistory,
-      timestamp: new Date().toISOString(),
-    });
+    const result = await getAtRiskUsers(BANKRUPTCY_RISK_THRESHOLD);
+    res.json(result);
   } catch (error) {
     logger.error('[Admin] At-risk users error:', error);
     res.status(500).json({
@@ -1533,261 +311,7 @@ router.get('/users/at-risk', authenticateToken, requireAdmin, async (req: Reques
   }
 });
 
-// Helper function to get weapon statistics
-async function getWeaponStats() {
-  const totalWeapons = await prisma.weapon.count();
-  const equippedWeapons = await prisma.robot.count({
-    where: {
-      NOT: { name: 'Bye Robot' },
-      mainWeaponId: { not: null },
-    },
-  });
-  
-  return {
-    totalBought: totalWeapons,
-    equipped: equippedWeapons,
-  };
-}
 
-// Helper function to get stance statistics
-async function getStanceStats() {
-  const stances = await prisma.robot.groupBy({
-    by: ['stance'],
-    where: {
-      NOT: { name: 'Bye Robot' },
-    },
-    _count: { id: true },
-  });
-  
-  return stances.map(s => ({
-    stance: s.stance,
-    count: s._count.id,
-  }));
-}
-
-// Helper function to get loadout statistics
-async function getLoadoutStats() {
-  const loadouts = await prisma.robot.groupBy({
-    by: ['loadoutType'],
-    where: {
-      NOT: { name: 'Bye Robot' },
-    },
-    _count: { id: true },
-  });
-  
-  return loadouts.map(l => ({
-    type: l.loadoutType,
-    count: l._count.id,
-  }));
-}
-
-// Helper function to get yield threshold statistics
-async function getYieldThresholdStats() {
-  const yieldThresholds = await prisma.robot.groupBy({
-    by: ['yieldThreshold'],
-    where: {
-      NOT: { name: 'Bye Robot' },
-    },
-    _count: { id: true },
-  });
-  
-  const distribution = yieldThresholds
-    .map(y => ({
-      threshold: y.yieldThreshold,
-      count: y._count.id,
-    }))
-    .sort((a, b) => a.threshold - b.threshold);
-  
-  // Find most common threshold
-  const mostCommon = distribution.length > 0
-    ? distribution.reduce((max, curr) => curr.count > max.count ? curr : max)
-    : { threshold: 10, count: 0 };
-  
-  return {
-    distribution,
-    mostCommon: mostCommon.threshold,
-    mostCommonCount: mostCommon.count,
-  };
-}
-
-// ===== Tag Team Battle Helpers =====
-
-interface BattleQueryParams {
-  page: number;
-  limit: number;
-  skip: number;
-  search?: string;
-  leagueType?: string;
-}
-
-/**
- * Build a Prisma where clause for TagTeamMatch queries with optional search/league filters.
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function buildTagTeamWhere(search?: string, leagueType?: string): any {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const where: any = {
-    status: 'completed',
-    battleId: { not: null },
-  };
-
-  if (leagueType && leagueType !== 'all') {
-    where.tagTeamLeague = leagueType;
-  }
-
-  if (search) {
-    where.OR = [
-      { team1: { activeRobot: { name: { contains: search, mode: 'insensitive' } } } },
-      { team1: { reserveRobot: { name: { contains: search, mode: 'insensitive' } } } },
-      { team2: { activeRobot: { name: { contains: search, mode: 'insensitive' } } } },
-      { team2: { reserveRobot: { name: { contains: search, mode: 'insensitive' } } } },
-    ];
-  }
-
-  return where;
-}
-
-/**
- * Map a standard Battle record to the API response shape with battleFormat.
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function mapBattleRecord(battle: any, battleFormat: '1v1' | '2v2') {
-  const robot1Participant = battle.participants?.find(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (p: any) => p.robotId === battle.robot1Id
-  );
-  const robot2Participant = battle.participants?.find(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (p: any) => p.robotId === battle.robot2Id
-  );
-
-  return {
-    id: battle.id,
-    robot1: battle.robot1,
-    robot2: battle.robot2,
-    winnerId: battle.winnerId,
-    winnerName:
-      battle.winnerId === battle.robot1.id
-        ? battle.robot1.name
-        : battle.winnerId === battle.robot2.id
-        ? battle.robot2.name
-        : 'Draw',
-    leagueType: battle.leagueType,
-    durationSeconds: battle.durationSeconds,
-    robot1FinalHP: robot1Participant?.finalHP || 0,
-    robot2FinalHP: robot2Participant?.finalHP || 0,
-    robot1ELOBefore: robot1Participant?.eloBefore || 0,
-    robot2ELOBefore: robot2Participant?.eloBefore || 0,
-    robot1ELOAfter: robot1Participant?.eloAfter || 0,
-    robot2ELOAfter: robot2Participant?.eloAfter || 0,
-    createdAt: battle.createdAt,
-    battleFormat,
-  };
-}
-
-/**
- * Map a TagTeamMatch (with included battle and team data) to the API response shape.
- * Includes team robot names for display in admin portal (Requirements 2.6, 3.8).
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function mapTagTeamRecord(match: any) {
-  const battle = match.battle;
-  const base = mapBattleRecord(battle, '2v2');
-
-  // Determine winner name for tag team battles (should be team name, not robot name)
-  // winnerId in tag team battles should be team1.id or team2.id (after fix in Task 3)
-  let winnerName = base.winnerName;
-  if (battle.winnerId === match.team1.id) {
-    winnerName = 'Team 1';
-  } else if (match.team2 && battle.winnerId === match.team2.id) {
-    winnerName = 'Team 2';
-  } else if (battle.winnerId === null) {
-    winnerName = 'Draw';
-  }
-
-  return {
-    ...base,
-    winnerName,
-    // Include team robot names for display (Requirements 2.6)
-    team1ActiveName: match.team1.activeRobot?.name,
-    team1ReserveName: match.team1.reserveRobot?.name,
-    team2ActiveName: match.team2?.activeRobot?.name,
-    team2ReserveName: match.team2?.reserveRobot?.name,
-    // Include team IDs for winner determination
-    team1Id: match.team1.id,
-    team2Id: match.team2?.id,
-    teams: {
-      team1: {
-        id: match.team1.id,
-        activeRobot: match.team1.activeRobot,
-        reserveRobot: match.team1.reserveRobot,
-        stableId: match.team1.stableId,
-        league: match.tagTeamLeague,
-      },
-      team2: match.team2
-        ? {
-            id: match.team2.id,
-            activeRobot: match.team2.activeRobot,
-            reserveRobot: match.team2.reserveRobot,
-            stableId: match.team2.stableId,
-            league: match.tagTeamLeague,
-          }
-        : null,
-    },
-  };
-}
-
-/**
- * Fetch tag team battles with pagination, search, and league filtering.
- */
-async function fetchTagTeamBattles({ page, limit, skip, search, leagueType }: BattleQueryParams) {
-  const where = buildTagTeamWhere(search, leagueType);
-
-  const totalBattles = await prisma.scheduledTagTeamMatch.count({ where });
-
-  const tagTeamMatches = await prisma.scheduledTagTeamMatch.findMany({
-    where,
-    skip,
-    take: limit,
-    orderBy: { createdAt: 'desc' },
-    include: {
-      battle: {
-        include: {
-          robot1: { select: { id: true, name: true, userId: true } },
-          robot2: { select: { id: true, name: true, userId: true } },
-          participants: true,
-        },
-      },
-      team1: {
-        include: {
-          activeRobot: { select: { id: true, name: true } },
-          reserveRobot: { select: { id: true, name: true } },
-        },
-      },
-      team2: {
-        include: {
-          activeRobot: { select: { id: true, name: true } },
-          reserveRobot: { select: { id: true, name: true } },
-        },
-      },
-    },
-  });
-
-  const battles = tagTeamMatches
-    .filter(m => m.battle !== null)
-    .map(m => mapTagTeamRecord(m));
-
-  return {
-    battles,
-    pagination: {
-      page,
-      limit,
-      totalBattles,
-      totalPages: Math.ceil(totalBattles / limit),
-      hasMore: skip + battles.length < totalBattles,
-    },
-  };
-}
 
 /**
  * GET /api/admin/battles
@@ -1795,187 +319,16 @@ async function fetchTagTeamBattles({ page, limit, skip, search, leagueType }: Ba
  * Supports battleType: 'all' | 'league' | 'tournament' | 'tagteam'
  * Returns battleFormat ('1v1' | '2v2') on each record.
  */
-router.get('/battles', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+router.get('/battles', authenticateToken, requireAdmin, validateRequest({ query: battlesQuerySchema }), async (req: Request, res: Response) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
-    const limit = Math.min(parseInt(req.query.limit as string) || 20, 100); // Max 100 per page
+    const limit = Math.min(parseInt(req.query.limit as string) || 20, 100);
     const search = req.query.search as string;
     const leagueType = req.query.leagueType as string;
     const battleType = req.query.battleType as string;
-    const skip = (page - 1) * limit;
 
-    // Tag team only: query TagTeamMatch joined with Battle and TagTeam
-    if (battleType === 'tagteam') {
-      const tagTeamResult = await fetchTagTeamBattles({ page, limit, skip, search, leagueType });
-      return res.json(tagTeamResult);
-    }
-
-    // KotH only: query battles with battleType 'koth'
-    if (battleType === 'koth') {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const kothWhere: any = { battleType: 'koth' };
-      if (search) {
-        kothWhere.OR = [
-          { robot1: { name: { contains: search, mode: 'insensitive' } } },
-          { robot2: { name: { contains: search, mode: 'insensitive' } } },
-        ];
-      }
-
-      const totalBattles = await prisma.battle.count({ where: kothWhere });
-      const kothBattles = await prisma.battle.findMany({
-        where: kothWhere,
-        skip,
-        take: limit,
-        orderBy: { createdAt: 'desc' },
-        include: {
-          robot1: { select: { id: true, name: true, userId: true } },
-          robot2: { select: { id: true, name: true, userId: true } },
-          participants: true,
-        },
-      });
-
-      return res.json({
-        battles: kothBattles.map(battle => mapBattleRecord(battle, '1v1')),
-        pagination: {
-          page,
-          limit,
-          totalBattles,
-          totalPages: Math.ceil(totalBattles / limit),
-          hasMore: skip + kothBattles.length < totalBattles,
-        },
-      });
-    }
-
-    // Build where clause for standard battle query
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const where: any = {};
-
-    // Search by robot name
-    if (search) {
-      where.OR = [
-        { robot1: { name: { contains: search, mode: 'insensitive' } } },
-        { robot2: { name: { contains: search, mode: 'insensitive' } } },
-      ];
-    }
-
-    // Filter by league type
-    if (leagueType && leagueType !== 'all') {
-      where.leagueType = leagueType;
-    }
-
-    // Filter by battle type (league vs tournament) — excludes tag team for these specific filters
-    if (battleType && battleType !== 'all') {
-      if (battleType === 'tournament') {
-        where.tournamentId = { not: null };
-        where.battleType = { not: 'tag_team' };
-      } else if (battleType === 'league') {
-        where.tournamentId = null;
-        where.battleType = { not: 'tag_team' };
-      }
-    }
-
-    // For 'all', we need to union 1v1 battles with tag team battles
-    if (!battleType || battleType === 'all') {
-      // Count 1v1 battles (non-tag-team)
-      const oneVOneWhere = { ...where, battleType: { not: 'tag_team' } };
-      const oneVOneCount = await prisma.battle.count({ where: oneVOneWhere });
-
-      // Count tag team battles
-      const tagTeamCount = await prisma.scheduledTagTeamMatch.count({
-        where: buildTagTeamWhere(search, leagueType),
-      });
-
-      const totalBattles = oneVOneCount + tagTeamCount;
-
-      // Fetch 1v1 battles
-      const oneVOneBattles = await prisma.battle.findMany({
-        where: oneVOneWhere,
-        skip,
-        take: limit,
-        orderBy: { createdAt: 'desc' },
-        include: {
-          robot1: { select: { id: true, name: true, userId: true } },
-          robot2: { select: { id: true, name: true, userId: true } },
-          participants: true,
-        },
-      });
-
-      // Fetch tag team battles
-      const tagTeamMatches = await prisma.scheduledTagTeamMatch.findMany({
-        where: buildTagTeamWhere(search, leagueType),
-        skip,
-        take: limit,
-        orderBy: { createdAt: 'desc' },
-        include: {
-          battle: {
-            include: {
-              robot1: { select: { id: true, name: true, userId: true } },
-              robot2: { select: { id: true, name: true, userId: true } },
-              participants: true,
-            },
-          },
-          team1: {
-            include: {
-              activeRobot: { select: { id: true, name: true } },
-              reserveRobot: { select: { id: true, name: true } },
-            },
-          },
-          team2: {
-            include: {
-              activeRobot: { select: { id: true, name: true } },
-              reserveRobot: { select: { id: true, name: true } },
-            },
-          },
-        },
-      });
-
-      // Map and merge results, sorted by createdAt desc
-      const mappedOneVOne = oneVOneBattles.map(battle => mapBattleRecord(battle, '1v1'));
-      const mappedTagTeam = tagTeamMatches
-        .filter(m => m.battle !== null)
-        .map(m => mapTagTeamRecord(m));
-
-      const allBattles = [...mappedOneVOne, ...mappedTagTeam]
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        .slice(0, limit);
-
-      return res.json({
-        battles: allBattles,
-        pagination: {
-          page,
-          limit,
-          totalBattles,
-          totalPages: Math.ceil(totalBattles / limit),
-          hasMore: skip + allBattles.length < totalBattles,
-        },
-      });
-    }
-
-    // Standard 1v1 query for league/tournament filters
-    const totalBattles = await prisma.battle.count({ where });
-
-    const battles = await prisma.battle.findMany({
-      where,
-      skip,
-      take: limit,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        robot1: { select: { id: true, name: true, userId: true } },
-        robot2: { select: { id: true, name: true, userId: true } },
-        participants: true,
-      },
-    });
-
-    res.json({
-      battles: battles.map(battle => mapBattleRecord(battle, '1v1')),
-      pagination: {
-        page,
-        limit,
-        totalBattles,
-        totalPages: Math.ceil(totalBattles / limit),
-        hasMore: skip + battles.length < totalBattles,
-      },
-    });
+    const result = await getAdminBattleList({ page, limit, search, leagueType, battleType });
+    res.json(result);
   } catch (error) {
     logger.error('[Admin] Battles list error:', error);
     res.status(500).json({
@@ -1998,171 +351,8 @@ router.get('/battles/:id', authenticateToken, requireAdmin, validateRequest({ pa
       throw new AppError('INVALID_BATTLE_ID', 'Invalid battle ID', 400);
     }
 
-    const battle = await prisma.battle.findUnique({
-      where: { id: battleId },
-      include: {
-        robot1: true,
-        robot2: true,
-      },
-    });
-
-    if (!battle) {
-      throw new BattleError(BattleErrorCode.BATTLE_NOT_FOUND, 'Battle not found', 404);
-    }
-
-    // Check if this battle has an associated TagTeamMatch record
-    const tagTeamMatch = await prisma.scheduledTagTeamMatch.findFirst({
-      where: { battleId: battle.id },
-      include: {
-        team1: {
-          include: {
-            activeRobot: { select: { id: true, name: true, userId: true } },
-            reserveRobot: { select: { id: true, name: true, userId: true } },
-          },
-        },
-        team2: {
-          include: {
-            activeRobot: { select: { id: true, name: true, userId: true } },
-            reserveRobot: { select: { id: true, name: true, userId: true } },
-          },
-        },
-      },
-    });
-
-    const isTagTeam = tagTeamMatch !== null;
-
-    // Get participant data from BattleParticipant table
-    const participants = await prisma.battleParticipant.findMany({
-      where: { battleId: battle.id },
-      select: {
-        robotId: true,
-        team: true,
-        role: true,
-        credits: true,
-        streamingRevenue: true,
-        eloBefore: true,
-        eloAfter: true,
-        prestigeAwarded: true,
-        fameAwarded: true,
-        damageDealt: true,
-        finalHP: true,
-        yielded: true,
-        destroyed: true,
-      },
-    });
-
-    // Helper to map robot attributes
-    const mapRobotAttributes = (robot: typeof battle.robot1) => ({
-      combatPower: robot.combatPower,
-      targetingSystems: robot.targetingSystems,
-      criticalSystems: robot.criticalSystems,
-      penetration: robot.penetration,
-      weaponControl: robot.weaponControl,
-      attackSpeed: robot.attackSpeed,
-      armorPlating: robot.armorPlating,
-      shieldCapacity: robot.shieldCapacity,
-      evasionThrusters: robot.evasionThrusters,
-      damageDampeners: robot.damageDampeners,
-      counterProtocols: robot.counterProtocols,
-      hullIntegrity: robot.hullIntegrity,
-      servoMotors: robot.servoMotors,
-      gyroStabilizers: robot.gyroStabilizers,
-      hydraulicSystems: robot.hydraulicSystems,
-      powerCore: robot.powerCore,
-      combatAlgorithms: robot.combatAlgorithms,
-      threatAnalysis: robot.threatAnalysis,
-      adaptiveAI: robot.adaptiveAI,
-      logicCores: robot.logicCores,
-      syncProtocols: robot.syncProtocols,
-      supportSystems: robot.supportSystems,
-      formationTactics: robot.formationTactics,
-    });
-
-    // Build base response (shared between 1v1 and 2v2)
-    const baseResponse = {
-      id: battle.id,
-      battleType: battle.battleType,
-      leagueType: battle.leagueType,
-      durationSeconds: battle.durationSeconds,
-      createdAt: battle.createdAt,
-      battleFormat: isTagTeam ? '2v2' as const : '1v1' as const,
-
-      // Robot data
-      robot1: {
-        id: battle.robot1.id,
-        name: battle.robot1.name,
-        userId: battle.robot1.userId,
-        maxHP: battle.robot1.maxHP,
-        maxShield: battle.robot1.maxShield,
-        attributes: mapRobotAttributes(battle.robot1),
-        loadout: battle.robot1.loadoutType,
-        stance: battle.robot1.stance,
-      },
-      robot2: {
-        id: battle.robot2.id,
-        name: battle.robot2.name,
-        userId: battle.robot2.userId,
-        maxHP: battle.robot2.maxHP,
-        maxShield: battle.robot2.maxShield,
-        attributes: mapRobotAttributes(battle.robot2),
-        loadout: battle.robot2.loadoutType,
-        stance: battle.robot2.stance,
-      },
-
-      participants,
-
-      // Battle results (kept for backward compatibility)
-      winnerId: battle.winnerId,
-
-      // ELO changes (from Battle table for now)
-      robot1ELOBefore: battle.robot1ELOBefore,
-      robot2ELOBefore: battle.robot2ELOBefore,
-      robot1ELOAfter: battle.robot1ELOAfter,
-      robot2ELOAfter: battle.robot2ELOAfter,
-      eloChange: battle.eloChange,
-
-      // Economic (from Battle table for now)
-      winnerReward: battle.winnerReward,
-      loserReward: battle.loserReward,
-
-      // Tag Team specific fields (null for non-tag-team battles)
-      team1ActiveRobotId: battle.team1ActiveRobotId,
-      team1ReserveRobotId: battle.team1ReserveRobotId,
-      team2ActiveRobotId: battle.team2ActiveRobotId,
-      team2ReserveRobotId: battle.team2ReserveRobotId,
-      team1TagOutTime: battle.team1TagOutTime ? Number(battle.team1TagOutTime) / 1000 : null,
-      team2TagOutTime: battle.team2TagOutTime ? Number(battle.team2TagOutTime) / 1000 : null,
-
-      // Combat log with detailed events
-      battleLog: battle.battleLog,
-    };
-
-    // Append tag team data when present
-    if (isTagTeam && tagTeamMatch) {
-      return res.json({
-        ...baseResponse,
-        teams: {
-          team1: {
-            id: tagTeamMatch.team1.id,
-            activeRobot: tagTeamMatch.team1.activeRobot,
-            reserveRobot: tagTeamMatch.team1.reserveRobot,
-            stableId: tagTeamMatch.team1.stableId,
-            league: tagTeamMatch.tagTeamLeague,
-          },
-          team2: tagTeamMatch.team2
-            ? {
-                id: tagTeamMatch.team2.id,
-                activeRobot: tagTeamMatch.team2.activeRobot,
-                reserveRobot: tagTeamMatch.team2.reserveRobot,
-                stableId: tagTeamMatch.team2.stableId,
-                league: tagTeamMatch.tagTeamLeague,
-              }
-            : null,
-        },
-      });
-    }
-
-    res.json(baseResponse);
+    const result = await getAdminBattleDetail(battleId);
+    res.json(result);
   } catch (error) {
     logger.error('[Admin] Battle detail error:', error);
     res.status(500).json({
@@ -2180,269 +370,10 @@ router.get('/battles/:id', authenticateToken, requireAdmin, validateRequest({ pa
  * Rate limiting not implemented as admin endpoints are used for debugging/analysis only.
  * Future: Consider adding rate limiting for production deployments.
  */
-router.get('/stats/robots', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+router.get('/stats/robots', authenticateToken, requireAdmin, validateRequest({}), async (req: Request, res: Response) => {
   try {
-    // Get all robots (excluding bye robots)
-    const robots = await prisma.robot.findMany({
-      where: {
-        NOT: { name: 'Bye Robot' },
-      },
-      select: {
-        id: true,
-        name: true,
-        userId: true,
-        currentLeague: true,
-        elo: true,
-        totalBattles: true,
-        wins: true,
-        losses: true,
-        draws: true,
-        // Combat Systems (6 attributes)
-        combatPower: true,
-        targetingSystems: true,
-        criticalSystems: true,
-        penetration: true,
-        weaponControl: true,
-        attackSpeed: true,
-        // Defensive Systems (5 attributes)
-        armorPlating: true,
-        shieldCapacity: true,
-        evasionThrusters: true,
-        damageDampeners: true,
-        counterProtocols: true,
-        // Chassis & Mobility (5 attributes)
-        hullIntegrity: true,
-        servoMotors: true,
-        gyroStabilizers: true,
-        hydraulicSystems: true,
-        powerCore: true,
-        // AI Processing (4 attributes)
-        combatAlgorithms: true,
-        threatAnalysis: true,
-        adaptiveAI: true,
-        logicCores: true,
-        // Team Coordination (3 attributes)
-        syncProtocols: true,
-        supportSystems: true,
-        formationTactics: true,
-      },
-    });
-
-    if (robots.length === 0) {
-      return res.json({
-        message: 'No robots found',
-        totalRobots: 0,
-        timestamp: new Date().toISOString(),
-      });
-    }
-
-    // Define all 23 attributes to analyze
-    type RobotAttribute = 'combatPower' | 'targetingSystems' | 'criticalSystems' | 'penetration' | 'weaponControl' | 'attackSpeed'
-      | 'armorPlating' | 'shieldCapacity' | 'evasionThrusters' | 'damageDampeners' | 'counterProtocols'
-      | 'hullIntegrity' | 'servoMotors' | 'gyroStabilizers' | 'hydraulicSystems' | 'powerCore'
-      | 'combatAlgorithms' | 'threatAnalysis' | 'adaptiveAI' | 'logicCores'
-      | 'syncProtocols' | 'supportSystems' | 'formationTactics';
-
-    const attributes: RobotAttribute[] = [
-      'combatPower', 'targetingSystems', 'criticalSystems', 'penetration', 'weaponControl', 'attackSpeed',
-      'armorPlating', 'shieldCapacity', 'evasionThrusters', 'damageDampeners', 'counterProtocols',
-      'hullIntegrity', 'servoMotors', 'gyroStabilizers', 'hydraulicSystems', 'powerCore',
-      'combatAlgorithms', 'threatAnalysis', 'adaptiveAI', 'logicCores',
-      'syncProtocols', 'supportSystems', 'formationTactics'
-    ];
-
-    // Helper function to calculate statistics for an attribute
-    const calculateStats = (values: number[]) => {
-      if (values.length === 0) return null;
-      
-      const sorted = [...values].sort((a, b) => a - b);
-      const sum = values.reduce((acc, val) => acc + val, 0);
-      const mean = sum / values.length;
-      
-      // Calculate median
-      const mid = Math.floor(sorted.length / 2);
-      const median = sorted.length % 2 === 0
-        ? (sorted[mid - 1] + sorted[mid]) / 2
-        : sorted[mid];
-      
-      // Calculate quartiles
-      const q1Index = Math.floor(sorted.length * 0.25);
-      const q3Index = Math.floor(sorted.length * 0.75);
-      const q1 = sorted[q1Index];
-      const q3 = sorted[q3Index];
-      const iqr = q3 - q1;
-      
-      // Calculate standard deviation
-      const variance = values.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / values.length;
-      const stdDev = Math.sqrt(variance);
-      
-      // Identify outliers using IQR method (values beyond 1.5 * IQR from quartiles)
-      const lowerBound = q1 - 1.5 * iqr;
-      const upperBound = q3 + 1.5 * iqr;
-      
-      return {
-        mean: Number(mean.toFixed(2)),
-        median: Number(median.toFixed(2)),
-        stdDev: Number(stdDev.toFixed(2)),
-        min: sorted[0],
-        max: sorted[sorted.length - 1],
-        q1: Number(q1.toFixed(2)),
-        q3: Number(q3.toFixed(2)),
-        iqr: Number(iqr.toFixed(2)),
-        lowerBound: Number(lowerBound.toFixed(2)),
-        upperBound: Number(upperBound.toFixed(2)),
-      };
-    };
-
-    // Calculate statistics for each attribute
-    const attributeStats: Record<string, ReturnType<typeof calculateStats>> = {};
-    const outliers: Record<string, Array<{ id: number; name: string; value: number; league: string; elo: number; winRate: number }>> = {};
-
-    for (const attr of attributes) {
-      const values = robots.map(r => Number(r[attr]));
-      const stats = calculateStats(values);
-      
-      if (stats) {
-        attributeStats[attr] = stats;
-        
-        // Find outliers for this attribute
-        const robotsWithOutliers = robots
-          .map(r => ({
-            id: r.id,
-            name: r.name,
-            value: Number(r[attr]),
-            league: r.currentLeague,
-            elo: r.elo,
-            winRate: r.totalBattles > 0 ? Number((r.wins / r.totalBattles * 100).toFixed(1)) : 0,
-          }))
-          .filter(r => r.value < stats.lowerBound || r.value > stats.upperBound)
-          .sort((a, b) => Math.abs(b.value - stats.mean) - Math.abs(a.value - stats.mean))
-          .slice(0, 10); // Top 10 outliers
-        
-        if (robotsWithOutliers.length > 0) {
-          outliers[attr] = robotsWithOutliers;
-        }
-      }
-    }
-
-    // Calculate statistics by league tier
-    const leagues = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'];
-    const statsByLeague: Record<string, { count: number; averageElo: number; attributes: Record<string, { mean: number; median: number; min: number; max: number }> }> = {};
-
-    for (const league of leagues) {
-      const leagueRobots = robots.filter(r => r.currentLeague === league);
-      if (leagueRobots.length === 0) continue;
-
-      statsByLeague[league] = {
-        count: leagueRobots.length,
-        averageElo: Number((leagueRobots.reduce((sum, r) => sum + r.elo, 0) / leagueRobots.length).toFixed(0)),
-        attributes: {},
-      };
-
-      for (const attr of attributes) {
-        const values = leagueRobots.map(r => Number(r[attr]));
-        const stats = calculateStats(values);
-        if (stats) {
-          statsByLeague[league].attributes[attr] = {
-            mean: stats.mean,
-            median: stats.median,
-            min: stats.min,
-            max: stats.max,
-          };
-        }
-      }
-    }
-
-    // Calculate win rate correlations
-    // For each attribute, group robots into ranges and calculate average win rate
-    const winRateAnalysis: Record<string, Array<{ quintile: number; avgValue: number; avgWinRate: number; sampleSize: number }>> = {};
-    
-    for (const attr of attributes) {
-      const robotsWithWinRate = robots
-        .filter(r => r.totalBattles >= 5) // Only consider robots with at least 5 battles
-        .map(r => ({
-          value: Number(r[attr]),
-          winRate: r.wins / r.totalBattles,
-        }));
-
-      if (robotsWithWinRate.length === 0) continue;
-
-      // Sort by attribute value and divide into 5 quintiles
-      robotsWithWinRate.sort((a, b) => a.value - b.value);
-      const quintileSize = Math.floor(robotsWithWinRate.length / 5);
-      
-      const quintiles = [];
-      for (let i = 0; i < 5; i++) {
-        const start = i * quintileSize;
-        const end = i === 4 ? robotsWithWinRate.length : (i + 1) * quintileSize;
-        const quintileRobots = robotsWithWinRate.slice(start, end);
-        
-        if (quintileRobots.length > 0) {
-          const avgValue = quintileRobots.reduce((sum, r) => sum + r.value, 0) / quintileRobots.length;
-          const avgWinRate = quintileRobots.reduce((sum, r) => sum + r.winRate, 0) / quintileRobots.length;
-          
-          quintiles.push({
-            quintile: i + 1,
-            avgValue: Number(avgValue.toFixed(2)),
-            avgWinRate: Number((avgWinRate * 100).toFixed(1)),
-            sampleSize: quintileRobots.length,
-          });
-        }
-      }
-      
-      winRateAnalysis[attr] = quintiles;
-    }
-
-    // Find top and bottom performers by each attribute
-    type PerformerEntry = { id: number; name: string; value: number; league: string; elo: number; winRate: number };
-    const topPerformers: Record<string, PerformerEntry[]> = {};
-    const bottomPerformers: Record<string, PerformerEntry[]> = {};
-
-    for (const attr of attributes) {
-      const sorted = [...robots].sort((a, b) => Number(b[attr]) - Number(a[attr]));
-      
-      topPerformers[attr] = sorted.slice(0, 5).map(r => ({
-        id: r.id,
-        name: r.name,
-        value: Number(r[attr]),
-        league: r.currentLeague,
-        elo: r.elo,
-        winRate: r.totalBattles > 0 ? Number((r.wins / r.totalBattles * 100).toFixed(1)) : 0,
-      }));
-
-      bottomPerformers[attr] = sorted.slice(-5).reverse().map(r => ({
-        id: r.id,
-        name: r.name,
-        value: Number(r[attr]),
-        league: r.currentLeague,
-        elo: r.elo,
-        winRate: r.totalBattles > 0 ? Number((r.wins / r.totalBattles * 100).toFixed(1)) : 0,
-      }));
-    }
-
-    // Overall summary statistics
-    const totalBattles = robots.reduce((sum, r) => sum + r.totalBattles, 0);
-    const robotsWithBattles = robots.filter(r => r.totalBattles > 0);
-    const overallWinRate = totalBattles > 0
-      ? robots.reduce((sum, r) => sum + r.wins, 0) / totalBattles * 100
-      : 0;
-
-    res.json({
-      summary: {
-        totalRobots: robots.length,
-        robotsWithBattles: robotsWithBattles.length,
-        totalBattles,
-        overallWinRate: Number(overallWinRate.toFixed(2)),
-        averageElo: Number((robots.reduce((sum, r) => sum + r.elo, 0) / robots.length).toFixed(0)),
-      },
-      attributeStats,
-      outliers,
-      statsByLeague,
-      winRateAnalysis,
-      topPerformers,
-      bottomPerformers,
-      timestamp: new Date().toISOString(),
-    });
+    const result = await getRobotAttributeStats();
+    res.json(result);
   } catch (error) {
     logger.error('[Admin] Robot stats error:', error);
     res.status(500).json({
@@ -2456,7 +387,7 @@ router.get('/stats/robots', authenticateToken, requireAdmin, async (req: Request
  * POST /api/admin/tag-teams/matchmaking
  * Manually trigger tag team matchmaking
  */
-router.post('/tag-teams/matchmaking', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+router.post('/tag-teams/matchmaking', authenticateToken, requireAdmin, validateRequest({ body: scheduledForBodySchema }), async (req: Request, res: Response) => {
   try {
     const { scheduledFor } = req.body;
     const targetTime = scheduledFor ? new Date(scheduledFor) : new Date(Date.now() + 24 * 60 * 60 * 1000);
@@ -2483,7 +414,7 @@ router.post('/tag-teams/matchmaking', authenticateToken, requireAdmin, async (re
  * POST /api/admin/tag-teams/battles
  * Manually execute scheduled tag team battles
  */
-router.post('/tag-teams/battles', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+router.post('/tag-teams/battles', authenticateToken, requireAdmin, validateRequest({ body: scheduledForBodySchema }), async (req: Request, res: Response) => {
   try {
     const { scheduledFor } = req.body;
     const targetTime = scheduledFor ? new Date(scheduledFor) : undefined;
@@ -2509,7 +440,7 @@ router.post('/tag-teams/battles', authenticateToken, requireAdmin, async (req: R
  * POST /api/admin/tag-teams/rebalance
  * Manually trigger tag team league rebalancing
  */
-router.post('/tag-teams/rebalance', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+router.post('/tag-teams/rebalance', authenticateToken, requireAdmin, validateRequest({}), async (req: Request, res: Response) => {
   try {
     logger.info('[Admin] Triggering tag team league rebalancing...');
     const summary = await rebalanceTagTeamLeagues();
@@ -2534,185 +465,10 @@ router.post('/tag-teams/rebalance', authenticateToken, requireAdmin, async (req:
  * Query params:
  *   - cycles: number of recent cycles to look back (default: 10)
  */
-router.get('/users/recent', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
-  try {
-    const cyclesBack = Math.min(Math.max(1, parseInt(req.query.cycles as string) || 10), 200);
-
-    // Get current cycle number
-    const cycleMetadata = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
-    const currentCycle = cycleMetadata?.totalCycles || 0;
-
-    // Get the timestamp of the cycle we're looking back to (from cycle snapshots)
-    let cutoffDate: Date | null = null;
-    const targetCycle = Math.max(0, currentCycle - cyclesBack);
-    if (targetCycle > 0) {
-      const snapshot = await prisma.cycleSnapshot.findUnique({
-        where: { cycleNumber: targetCycle },
-        select: { createdAt: true },
-      });
-      cutoffDate = snapshot?.createdAt || null;
-    }
-
-    // If no snapshot found, fall back to cycle metadata lastCycleAt minus rough estimate
-    if (!cutoffDate && cycleMetadata?.lastCycleAt) {
-      // Rough fallback: assume ~1 cycle per trigger, use creation time heuristic
-      cutoffDate = new Date(Date.now() - cyclesBack * 24 * 60 * 60 * 1000);
-    }
-
-    // Fetch real users (exclude auto-generated, seeded, and system users)
-    // Excluded patterns:
-    //   archetype_*  = auto-generated each cycle
-    //   test_user_*  = seeded WimpBot users
-    //   attr_*       = seeded attribute test users
-    //   bye_robot_user = system matchmaking placeholder
-    //   player1-5, admin = seeded dev accounts
-    const recentUsers = await prisma.user.findMany({
-      where: {
-        NOT: [
-          { username: { startsWith: 'archetype_' } },
-          { username: { startsWith: 'test_user_' } },
-          { username: { startsWith: 'attr_' } },
-          { username: 'bye_robot_user' },
-          { username: 'admin' },
-          { username: { startsWith: 'player' } },
-        ],
-        ...(cutoffDate ? { createdAt: { gte: cutoffDate } } : {}),
-      },
-      select: {
-        id: true,
-        username: true,
-        stableName: true,
-        currency: true,
-        role: true,
-        hasCompletedOnboarding: true,
-        onboardingSkipped: true,
-        onboardingStep: true,
-        onboardingStrategy: true,
-        createdAt: true,
-        robots: {
-          select: {
-            id: true,
-            name: true,
-            currentHP: true,
-            maxHP: true,
-            elo: true,
-            currentLeague: true,
-            totalBattles: true,
-            wins: true,
-            losses: true,
-            draws: true,
-            battleReadiness: true,
-            mainWeaponId: true,
-            offhandWeaponId: true,
-            loadoutType: true,
-            stance: true,
-            createdAt: true,
-          },
-        },
-        facilities: {
-          where: { level: { gt: 0 } },
-          select: {
-            facilityType: true,
-            level: true,
-          },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
-
-    // Enrich each user with activity indicators
-    const usersWithActivity = recentUsers.map((user) => {
-      const robots = user.robots;
-      const totalRobots = robots.length;
-      const battleReadyRobots = robots.filter(
-        (r) => r.battleReadiness >= 80 && r.mainWeaponId !== null
-      ).length;
-      const robotsWithBattles = robots.filter((r) => r.totalBattles > 0).length;
-      const totalBattles = robots.reduce((sum, r) => sum + r.totalBattles, 0);
-      const totalWins = robots.reduce((sum, r) => sum + r.wins, 0);
-
-      // Determine user status / potential issues
-      const issues: string[] = [];
-      if (!user.hasCompletedOnboarding && !user.onboardingSkipped) {
-        issues.push(`Stuck in onboarding (step ${user.onboardingStep})`);
-      }
-      if (totalRobots === 0) {
-        issues.push('No robots created');
-      }
-      if (totalRobots > 0 && battleReadyRobots === 0) {
-        issues.push('No battle-ready robots');
-      }
-      if (totalRobots > 0 && robots.every((r) => r.mainWeaponId === null)) {
-        issues.push('No weapons equipped');
-      }
-      if (totalRobots > 0 && robotsWithBattles === 0 && user.hasCompletedOnboarding) {
-        issues.push('Completed onboarding but no battles yet');
-      }
-      if (user.currency < 10000 && totalRobots > 0) {
-        issues.push('Low balance');
-      }
-
-      return {
-        userId: user.id,
-        username: user.username,
-        stableName: user.stableName,
-        currency: user.currency,
-        role: user.role,
-        createdAt: user.createdAt,
-        onboarding: {
-          completed: user.hasCompletedOnboarding,
-          skipped: user.onboardingSkipped,
-          currentStep: user.onboardingStep,
-          strategy: user.onboardingStrategy,
-        },
-        robots: robots.map((r) => ({
-          id: r.id,
-          name: r.name,
-          currentHP: r.currentHP,
-          maxHP: r.maxHP,
-          hpPercent: r.maxHP > 0 ? Math.round((r.currentHP / r.maxHP) * 100) : 0,
-          elo: r.elo,
-          league: r.currentLeague,
-          totalBattles: r.totalBattles,
-          wins: r.wins,
-          losses: r.losses,
-          draws: r.draws,
-          winRate: r.totalBattles > 0 ? Math.round((r.wins / r.totalBattles) * 100) : 0,
-          battleReady: r.battleReadiness >= 80 && r.mainWeaponId !== null,
-          hasWeapon: r.mainWeaponId !== null,
-          loadout: r.loadoutType,
-          stance: r.stance,
-          createdAt: r.createdAt,
-        })),
-        summary: {
-          totalRobots,
-          battleReadyRobots,
-          robotsWithBattles,
-          totalBattles,
-          totalWins,
-          winRate: totalBattles > 0 ? Math.round((totalWins / totalBattles) * 100) : 0,
-          facilitiesPurchased: user.facilities.length,
-        },
-        issues,
-      };
-    });
-
-    res.json({
-      currentCycle,
-      cyclesBack,
-      cutoffDate: cutoffDate?.toISOString() || null,
-      totalUsers: usersWithActivity.length,
-      usersWithIssues: usersWithActivity.filter((u) => u.issues.length > 0).length,
-      users: usersWithActivity,
-      timestamp: new Date().toISOString(),
-    });
-  } catch (error) {
-    logger.error('[Admin] Recent users error:', error);
-    res.status(500).json({
-      error: 'Failed to retrieve recent users',
-      message: error instanceof Error ? error.message : String(error),
-    });
-  }
+router.get('/users/recent', authenticateToken, requireAdmin, validateRequest({ query: recentUsersQuerySchema }), async (req: Request, res: Response) => {
+  const cyclesBack = Math.min(Math.max(1, parseInt(req.query.cycles as string) || 10), 200);
+  const result = await getRecentUserActivity(cyclesBack);
+  res.json(result);
 });
 
 /**
@@ -2720,157 +476,27 @@ router.get('/users/recent', authenticateToken, requireAdmin, async (req: Request
  * Get paginated repair audit log events with optional filtering by repairType and date range.
  * Returns events, summary stats, and pagination.
  */
-router.get('/audit-log/repairs', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
-  try {
-    const repairType = req.query.repairType as string | undefined;
-    const startDate = req.query.startDate as string | undefined;
-    const endDate = req.query.endDate as string | undefined;
-    const page = Math.max(1, parseInt(req.query.page as string) || 1);
-    const limit = Math.min(Math.max(1, parseInt(req.query.limit as string) || 25), 100);
-    const skip = (page - 1) * limit;
+router.get('/audit-log/repairs', authenticateToken, requireAdmin, validateRequest({ query: repairAuditQuerySchema }), async (req: Request, res: Response) => {
+  const repairType = req.query.repairType as string | undefined;
+  const startDate = req.query.startDate as string | undefined;
+  const endDate = req.query.endDate as string | undefined;
+  const page = Math.max(1, parseInt(req.query.page as string) || 1);
+  const limit = Math.min(Math.max(1, parseInt(req.query.limit as string) || 25), 100);
 
-    // Validate repairType if provided
-    if (repairType && repairType !== 'manual' && repairType !== 'automatic') {
-      throw new AppError('INVALID_REPAIR_TYPE', "Invalid repairType. Must be 'manual' or 'automatic'", 400);
-    }
-
-    // Build where clause for audit log query
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const where: any = {
-      eventType: 'robot_repair',
-    };
-
-    // Date range filtering
-    if (startDate || endDate) {
-      where.eventTimestamp = {};
-      if (startDate) {
-        where.eventTimestamp.gte = new Date(startDate);
-      }
-      if (endDate) {
-        where.eventTimestamp.lte = new Date(endDate);
-      }
-    }
-
-    // For repairType filtering, we need to filter on the JSON payload field.
-    // Prisma supports JSON filtering with `path` for PostgreSQL.
-    if (repairType) {
-      where.payload = {
-        path: ['repairType'],
-        equals: repairType,
-      };
-    }
-
-    // Get total count for pagination
-    const totalEvents = await prisma.auditLog.count({ where });
-
-    // Fetch paginated audit log events
-    const auditEvents = await prisma.auditLog.findMany({
-      where,
-      skip,
-      take: limit,
-      orderBy: { eventTimestamp: 'desc' },
-      select: {
-        userId: true,
-        robotId: true,
-        payload: true,
-        eventTimestamp: true,
-      },
-    });
-
-    // Collect unique user and robot IDs for batch lookup
-    const userIds = [...new Set(auditEvents.map(e => e.userId).filter((id): id is number => id !== null))];
-    const robotIds = [...new Set(auditEvents.map(e => e.robotId).filter((id): id is number => id !== null))];
-
-    // Batch fetch users and robots
-    const [users, robots] = await Promise.all([
-      prisma.user.findMany({
-        where: { id: { in: userIds } },
-        select: { id: true, stableName: true, username: true },
-      }),
-      prisma.robot.findMany({
-        where: { id: { in: robotIds } },
-        select: { id: true, name: true },
-      }),
-    ]);
-
-    const userMap = new Map(users.map(u => [u.id, u.stableName || u.username]));
-    const robotMap = new Map(robots.map(r => [r.id, r.name]));
-
-    // Map events to response shape
-    const events = auditEvents.map(event => {
-      const payload = event.payload as Record<string, unknown>;
-      return {
-        userId: event.userId || 0,
-        stableName: userMap.get(event.userId || 0) || 'Unknown',
-        robotId: event.robotId || 0,
-        robotName: robotMap.get(event.robotId || 0) || 'Unknown',
-        repairType: (payload.repairType as 'manual' | 'automatic') || 'automatic',
-        cost: (payload.cost as number) || 0,
-        preDiscountCost: (payload.preDiscountCost as number) ?? null,
-        manualRepairDiscount: (payload.manualRepairDiscount as number) ?? null,
-        eventTimestamp: event.eventTimestamp.toISOString(),
-      };
-    });
-
-    // Calculate summary stats from ALL matching events (not just current page)
-    // We need to fetch all matching events for summary calculation
-    const allEvents = await prisma.auditLog.findMany({
-      where,
-      select: {
-        payload: true,
-      },
-    });
-
-    let totalManualRepairs = 0;
-    let totalAutomaticRepairs = 0;
-    let totalSavings = 0;
-
-    for (const event of allEvents) {
-      const payload = event.payload as Record<string, unknown>;
-      const eventRepairType = (payload.repairType as string) || 'automatic';
-      if (eventRepairType === 'manual') {
-        totalManualRepairs++;
-        const preDiscount = payload.preDiscountCost as number | undefined;
-        const cost = payload.cost as number | undefined;
-        if (preDiscount != null && cost != null) {
-          totalSavings += preDiscount - cost;
-        }
-      } else {
-        totalAutomaticRepairs++;
-      }
-    }
-
-    const totalPages = Math.ceil(totalEvents / limit);
-
-    res.json({
-      events,
-      summary: {
-        totalManualRepairs,
-        totalAutomaticRepairs,
-        totalSavings,
-      },
-      pagination: {
-        page,
-        limit,
-        totalEvents,
-        totalPages,
-        hasMore: page < totalPages,
-      },
-    });
-  } catch (error) {
-    logger.error('[Admin] Repair audit log error:', error);
-    res.status(500).json({
-      error: 'Failed to retrieve repair audit log',
-      message: error instanceof Error ? error.message : String(error),
-    });
+  // Validate repairType if provided
+  if (repairType && repairType !== 'manual' && repairType !== 'automatic') {
+    throw new AppError('INVALID_REPAIR_TYPE', "Invalid repairType. Must be 'manual' or 'automatic'", 400);
   }
+
+  const result = await getRepairAuditLog({ repairType, startDate, endDate, page, limit });
+  res.json(result);
 });
 
 /**
  * GET /api/admin/scheduler/status
  * Return the current state of the Cycle Scheduler
  */
-router.get('/scheduler/status', authenticateToken, requireAdmin, (_req: Request, res: Response) => {
+router.get('/scheduler/status', authenticateToken, requireAdmin, validateRequest({}), (_req: Request, res: Response) => {
   const state = getSchedulerState();
   res.json(state);
 });
@@ -2879,7 +505,7 @@ router.get('/scheduler/status', authenticateToken, requireAdmin, (_req: Request,
  * POST /api/admin/koth/trigger
  * Manually trigger a KotH cycle execution (admin-only)
  */
-router.post('/koth/trigger', authenticateToken, requireAdmin, async (_req: Request, res: Response) => {
+router.post('/koth/trigger', authenticateToken, requireAdmin, validateRequest({}), async (_req: Request, res: Response) => {
   try {
     const { runJob } = await import('../services/cycle/cycleScheduler');
     const { executeScheduledKothBattles } = await import('../services/koth/kothBattleOrchestrator');
@@ -2917,7 +543,7 @@ router.post('/koth/trigger', authenticateToken, requireAdmin, async (_req: Reque
  * GET /api/admin/practice-arena/stats
  * Returns current in-memory practice arena metrics and historical daily stats.
  */
-router.get('/practice-arena/stats', authenticateToken, requireAdmin, async (_req: Request, res: Response) => {
+router.get('/practice-arena/stats', authenticateToken, requireAdmin, validateRequest({}), async (_req: Request, res: Response) => {
   res.json({
     current: practiceArenaMetrics.getStats(),
     history: await practiceArenaMetrics.getHistory(),
@@ -2929,7 +555,7 @@ router.get('/practice-arena/stats', authenticateToken, requireAdmin, async (_req
  * Query recent security events with optional filters.
  * Query params: severity, eventType, userId, since (ISO date), limit (default 50, max 200)
  */
-router.get('/security/events', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+router.get('/security/events', authenticateToken, requireAdmin, validateRequest({ query: securityEventsQuerySchema }), async (req: Request, res: Response) => {
   const events = securityMonitor.getRecentEvents({
     severity: req.query.severity as SecuritySeverity | undefined,
     eventType: req.query.eventType as string | undefined,
@@ -2944,7 +570,7 @@ router.get('/security/events', authenticateToken, requireAdmin, async (req: Requ
  * GET /api/admin/security/summary
  * Get a high-level overview: event counts by severity, active alerts, flagged users.
  */
-router.get('/security/summary', authenticateToken, requireAdmin, async (_req: Request, res: Response) => {
+router.get('/security/summary', authenticateToken, requireAdmin, validateRequest({}), async (_req: Request, res: Response) => {
   const summary = securityMonitor.getSummary();
   res.json(summary);
 });

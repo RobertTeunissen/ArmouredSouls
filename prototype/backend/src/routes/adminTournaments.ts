@@ -30,11 +30,19 @@ const tournamentIdParamsSchema = z.object({
   id: positiveIntParam,
 });
 
+const createTournamentBodySchema = z.object({
+  tournamentType: z.enum(['single_elimination']).optional().default('single_elimination'),
+});
+
+const tournamentListQuerySchema = z.object({
+  status: z.string().max(30).optional(),
+});
+
 /**
  * POST /api/admin/tournaments/create
  * Create a new single elimination tournament
  */
-router.post('/create', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+router.post('/create', authenticateToken, requireAdmin, validateRequest({ body: createTournamentBodySchema }), async (req: Request, res: Response) => {
   try {
     const { tournamentType = 'single_elimination' } = req.body;
 
@@ -62,7 +70,7 @@ router.post('/create', authenticateToken, requireAdmin, async (req: Request, res
  * GET /api/admin/tournaments
  * Get all tournaments (or filter by status)
  */
-router.get('/', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+router.get('/', authenticateToken, requireAdmin, validateRequest({ query: tournamentListQuerySchema }), async (req: Request, res: Response) => {
   try {
     const { status } = req.query;
 
@@ -104,7 +112,7 @@ router.get('/', authenticateToken, requireAdmin, async (req: Request, res: Respo
  * Get robots eligible for tournament participation
  * NOTE: Must be defined before /:id to avoid Express matching "eligible-robots" as an :id param
  */
-router.get('/eligible-robots', authenticateToken, requireAdmin, async (req: Request, res: Response) => {
+router.get('/eligible-robots', authenticateToken, requireAdmin, validateRequest({}), async (req: Request, res: Response) => {
   try {
     const eligibleRobots = await getEligibleRobotsForTournament();
 

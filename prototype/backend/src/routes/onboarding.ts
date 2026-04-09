@@ -27,8 +27,23 @@ import {
 import onboardingAnalyticsRouter from './onboardingAnalytics';
 import logger from '../config/logger';
 import { securityMonitor } from '../services/security/securityMonitor';
+import { z } from 'zod';
+import { validateRequest } from '../middleware/schemaValidator';
 
 const router = express.Router();
+
+// --- Zod schemas for onboarding routes ---
+
+const updateStateBodySchema = z.object({
+  step: z.number().int().min(1).max(9).optional(),
+  strategy: z.enum(['1_mighty', '2_average', '3_flimsy']).optional(),
+  choices: z.record(z.string(), z.unknown()).optional(),
+});
+
+const resetAccountBodySchema = z.object({
+  confirmation: z.string().min(1).max(20),
+  reason: z.string().max(500).optional(),
+});
 
 /**
  * Strict rate limiter for account reset endpoints.
@@ -113,7 +128,7 @@ function handleOnboardingError(
  *
  * Requirements: 1.3, 1.4
  */
-router.get('/state', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get('/state', authenticateToken, validateRequest({}), async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
 
@@ -166,7 +181,7 @@ router.get('/state', authenticateToken, async (req: AuthRequest, res: Response) 
  *
  * Requirements: 1.3, 2.3, 2.6, 2.7
  */
-router.post('/state', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.post('/state', authenticateToken, validateRequest({ body: updateStateBodySchema }), async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
     const { step, strategy, choices } = req.body;
@@ -258,7 +273,7 @@ router.post('/state', authenticateToken, async (req: AuthRequest, res: Response)
  *
  * Requirements: 1.5, 2.3, 13.15
  */
-router.post('/complete', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.post('/complete', authenticateToken, validateRequest({}), async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
 
@@ -294,7 +309,7 @@ router.post('/complete', authenticateToken, async (req: AuthRequest, res: Respon
  *
  * Requirements: 1.6
  */
-router.post('/skip', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.post('/skip', authenticateToken, validateRequest({}), async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
 
@@ -343,7 +358,7 @@ router.post('/skip', authenticateToken, async (req: AuthRequest, res: Response) 
  *
  * Requirements: 14.1-14.15
  */
-router.post('/reset-account', authenticateToken, resetLimiter, async (req: AuthRequest, res: Response) => {
+router.post('/reset-account', authenticateToken, resetLimiter, validateRequest({ body: resetAccountBodySchema }), async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
     const { confirmation, reason } = req.body;
@@ -407,7 +422,7 @@ router.post('/reset-account', authenticateToken, resetLimiter, async (req: AuthR
  *
  * Requirements: 14.4-14.8
  */
-router.get('/reset-eligibility', authenticateToken, resetLimiter, async (req: AuthRequest, res: Response) => {
+router.get('/reset-eligibility', authenticateToken, resetLimiter, validateRequest({}), async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
 

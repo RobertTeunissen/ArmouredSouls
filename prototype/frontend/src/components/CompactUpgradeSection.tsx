@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { calculateAttributeBonus } from '../utils/robotStats';
 import { formatCost } from '../utils/formatters';
+import { calculateBaseCost } from '../../../shared/utils/upgradeCosts';
+import { calculateTrainingFacilityDiscount } from '../../../shared/utils/discounts';
 
 interface WeaponInventory {
   id: number;
@@ -49,9 +51,8 @@ function CompactUpgradeSection({
   const getAttributeInfo = (attributeKey: string) => {
     const currentLevel = Math.floor(robot[attributeKey] as number);
     const weaponBonus = calculateAttributeBonus(attributeKey, robot.mainWeapon, robot.offhandWeapon);
-    const baseCost = (currentLevel + 1) * 1500;
-    // Training Facility: 10% per level, capped at 90% (see docs/prd_core/STABLE_SYSTEM.md)
-    const discountPercent = Math.min(trainingLevel * 10, 90);
+    const baseCost = calculateBaseCost(currentLevel);
+    const discountPercent = calculateTrainingFacilityDiscount(trainingLevel);
     const upgradeCost = Math.floor(baseCost * (1 - discountPercent / 100));
 
     return {

@@ -162,9 +162,7 @@ function RobotDetailPage() {
   // Max attribute level cap (from STABLE_SYSTEM.md)
   // const MAX_ATTRIBUTE_LEVEL = 50;
 
-  /* getCapForLevel and attributeCategories are kept for future use when
-     the inline upgrade UI is re-enabled. Currently upgrades go through
-     CompactUpgradeSection which has its own copy. */
+  // getCapForLevel and calculateBaseCost are now in shared/utils/ — import from there if needed.
 
   useEffect(() => {
     let isFetching = false;

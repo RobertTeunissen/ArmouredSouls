@@ -29,7 +29,7 @@ const roiCalculatorBodySchema = z.object({
  * GET /api/finances/daily
  * Get comprehensive daily financial report
  */
-router.get('/daily', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get('/daily', authenticateToken, validateRequest({}), async (req: AuthRequest, res: Response) => {
     const userId = req.user!.userId;
 
     // Get user for prestige
@@ -161,7 +161,7 @@ router.get('/daily', authenticateToken, async (req: AuthRequest, res: Response) 
  * GET /api/finances/summary
  * Get quick financial summary for dashboard
  */
-router.get('/summary', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get('/summary', authenticateToken, validateRequest({}), async (req: AuthRequest, res: Response) => {
     const userId = req.user!.userId;
 
     const user = await prisma.user.findUnique({
@@ -191,7 +191,7 @@ router.get('/summary', authenticateToken, async (req: AuthRequest, res: Response
  * GET /api/finances/operating-costs
  * Get detailed operating costs breakdown
  */
-router.get('/operating-costs', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get('/operating-costs', authenticateToken, validateRequest({}), async (req: AuthRequest, res: Response) => {
     const userId = req.user!.userId;
 
     const operatingCosts = await calculateTotalDailyOperatingCosts(userId);
@@ -203,7 +203,7 @@ router.get('/operating-costs', authenticateToken, async (req: AuthRequest, res: 
  * GET /api/finances/revenue-streams
  * Get detailed revenue streams breakdown
  */
-router.get('/revenue-streams', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get('/revenue-streams', authenticateToken, validateRequest({}), async (req: AuthRequest, res: Response) => {
     const userId = req.user!.userId;
 
     const user = await prisma.user.findUnique({
@@ -243,7 +243,7 @@ router.get('/revenue-streams', authenticateToken, async (req: AuthRequest, res: 
  * GET /api/finances/projections
  * Get financial projections and recommendations
  */
-router.get('/projections', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get('/projections', authenticateToken, validateRequest({}), async (req: AuthRequest, res: Response) => {
     const userId = req.user!.userId;
 
     const user = await prisma.user.findUnique({
@@ -323,7 +323,7 @@ router.get('/projections', authenticateToken, async (req: AuthRequest, res: Resp
  * GET /api/finances/per-robot
  * Get per-robot financial breakdown with profitability analysis
  */
-router.get('/per-robot', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get('/per-robot', authenticateToken, validateRequest({}), async (req: AuthRequest, res: Response) => {
     const userId = req.user!.userId;
 
     const report = await generatePerRobotFinancialReport(userId);

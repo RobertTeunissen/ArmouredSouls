@@ -51,6 +51,8 @@ const unitTestFiles = [
   'currencyConstraint\\.property\\.test\\.ts',
   'prestigeUtils\\.property\\.test\\.ts',
   'stableSanitization\\.property\\.test\\.ts',
+  'adminServices\\.test\\.ts',
+  'robotServices\\.test\\.ts',
 ];
 
 module.exports = {

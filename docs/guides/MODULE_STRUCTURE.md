@@ -33,6 +33,8 @@ ArmouredSouls/
 │   │   ├── generated/prisma/  # Prisma 7 generated client
 │   │   ├── prisma/            # Schema and migrations
 │   │   └── tests/             # Jest test files
+│   ├── shared/                # Shared TypeScript modules (imported by both frontend and backend)
+│   │   └── utils/             # Game formulas: academyCaps, upgradeCosts, discounts
 │   └── frontend/              # React 19 + Vite + Tailwind CSS
 │       └── src/
 │           ├── components/    # React components
@@ -61,6 +63,8 @@ prototype/backend/src/services/
 ├── analytics/      # Matchmaking, robot performance, robot stats, onboarding analytics
 ├── onboarding/     # Onboarding service
 ├── arena/          # Arena layout, movement, position tracking
+├── robot/          # Robot sanitization, upgrade validation, ranking
+├── security/       # Security monitoring
 └── notifications/  # Notification system
 ```
 
@@ -313,7 +317,7 @@ The battle orchestrators (league, tournament, tag-team, KotH) share a common `ba
 
 Some routes exist outside the 13 domain service directories, serving cross-domain or social features:
 
-- `stables.ts` — Public stable viewing (`GET /api/stables/:userId`). Returns sanitized robot data, facility levels, and aggregate stats for any user's stable. Uses `sanitizeRobotForPublic` from `robots.ts` and `getPrestigeRank` from `utils/prestigeUtils.ts`.
+- `stables.ts` — Public stable viewing (`GET /api/stables/:userId`). Returns sanitized robot data, facility levels, and aggregate stats for any user's stable. Uses `sanitizeRobotForPublic` from `src/services/robot/robotSanitizer.ts` and `getPrestigeRank` from `utils/prestigeUtils.ts`.
 
 ---
 

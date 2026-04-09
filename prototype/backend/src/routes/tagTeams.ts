@@ -104,7 +104,7 @@ router.post('/', authenticateToken, validateRequest({ body: createTagTeamBodySch
  * List all teams for the current user's stable
  * Requirements: 9.1, 9.2
  */
-router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get('/', authenticateToken, validateRequest({}), async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user) {
       throw new AuthError(AuthErrorCode.UNAUTHORIZED, 'Authentication required', 401);

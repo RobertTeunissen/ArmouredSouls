@@ -2,6 +2,7 @@ import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import globals from 'globals';
 import security from 'eslint-plugin-security';
+import requireValidateRequest from './eslint-rules/require-validate-request.js';
 
 export default tseslint.config(
   { ignores: ['dist/', 'node_modules/', '*.js'] },
@@ -42,6 +43,19 @@ export default tseslint.config(
       'security/detect-child-process': 'warn',
       'security/detect-new-buffer': 'error',
       'security/detect-pseudoRandomBytes': 'warn',
+    },
+  },
+  {
+    files: ['src/routes/**/*.ts'],
+    plugins: {
+      'custom-routes': {
+        rules: {
+          'require-validate-request': requireValidateRequest,
+        },
+      },
+    },
+    rules: {
+      'custom-routes/require-validate-request': 'error',
     },
   },
 );

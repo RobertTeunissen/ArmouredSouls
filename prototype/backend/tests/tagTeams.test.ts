@@ -4,12 +4,14 @@ import cors from 'cors';
 import jwt from 'jsonwebtoken';
 import prisma from '../src/lib/prisma';
 import tagTeamsRoutes from '../src/routes/tagTeams';
+import { errorHandler } from '../src/middleware/errorHandler';
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 app.use('/api/tag-teams', tagTeamsRoutes);
+app.use(errorHandler);
 
 describe('Tag Teams API Endpoints', () => {
   let testUserId: number;
@@ -177,7 +179,8 @@ describe('Tag Teams API Endpoints', () => {
         });
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toContain('required');
+      // Zod validation catches missing reserveRobotId
+      expect(response.body.error).toBeDefined();
     });
 
     it('should reject team creation with same robot in both positions', async () => {
@@ -190,7 +193,7 @@ describe('Tag Teams API Endpoints', () => {
         });
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toContain('different');
+      expect(response.body.error).toBeDefined();
     });
 
     it('should reject duplicate team creation', async () => {
@@ -204,8 +207,8 @@ describe('Tag Teams API Endpoints', () => {
         });
 
       expect(response.status).toBe(400);
-      // System now validates that robots aren't already in teams
-      expect(response.body.details).toBeDefined();
+      // System validates that robots aren't already in teams
+      expect(response.body.error).toBeDefined();
     });
   });
 

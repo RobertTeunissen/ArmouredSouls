@@ -34,7 +34,7 @@ const LEAGUE_POINTS_DRAW = 1;
 // Battle simulation constants
 const _WINNER_DAMAGE_PERCENT = 0.15; // Winners lose 15% HP
 const _LOSER_DAMAGE_PERCENT = 0.40; // Losers lose 40% HP
-const BYE_BATTLE_DAMAGE_PERCENT = 0.08; // Bye battles: 8% HP loss
+// Bye battles: zero damage to player (bye exists only for scheduling fairness)
 const _MIN_BATTLE_DURATION = 20; // Minimum battle duration in seconds
 const _BATTLE_DURATION_VARIANCE = 25; // Random variance added to duration
 const BYE_BATTLE_DURATION = 15; // Fixed duration for bye battles
@@ -180,21 +180,15 @@ function simulateBattleWrapper(robot1: Robot, robot2: Robot): BattleResult {
  * Simulate a bye-robot battle (player always wins easily)
  */
 function simulateByeBattle(playerRobot: Robot, byeRobot: Robot): BattleResult {
-  // Player wins with minimal damage (BYE_BATTLE_DAMAGE_PERCENT HP)
-  const playerDamage = Math.floor(playerRobot.maxHP * BYE_BATTLE_DAMAGE_PERCENT);
-  const playerFinalHP = Math.max(0, playerRobot.currentHP - playerDamage);
-  
-  // Bye-robot loses badly
-  const byeRobotFinalHP = 0;
-  const byeRobotDamage = byeRobot.currentHP;
-  
+  // Player wins unscathed — bye matches exist to ensure all battle-ready
+  // robots get scheduled when there's an odd count. No damage penalty.
   return {
     battleId: 0,
     winnerId: playerRobot.id,
-    robot1FinalHP: playerFinalHP,
-    robot2FinalHP: byeRobotFinalHP,
-    robot1Damage: playerDamage,
-    robot2Damage: byeRobotDamage,
+    robot1FinalHP: playerRobot.currentHP,
+    robot2FinalHP: 0,
+    robot1Damage: 0,
+    robot2Damage: byeRobot.currentHP,
     durationSeconds: BYE_BATTLE_DURATION,
     isDraw: false,
     isByeMatch: true,

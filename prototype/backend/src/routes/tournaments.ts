@@ -16,11 +16,15 @@ const tournamentIdParamsSchema = z.object({
   id: positiveIntParam,
 });
 
+const tournamentListQuerySchema = z.object({
+  status: z.string().max(30).optional(),
+});
+
 /**
  * GET /api/tournaments
  * Get all tournaments (public access for all authenticated users)
  */
-router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get('/', authenticateToken, validateRequest({ query: tournamentListQuerySchema }), async (req: AuthRequest, res: Response) => {
   try {
     const { status } = req.query;
 

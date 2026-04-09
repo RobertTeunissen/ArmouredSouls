@@ -84,6 +84,16 @@ export function safeEnum<T extends readonly [string, ...string[]]>(values: T) {
 }
 
 /**
+ * Reusable pagination query schema for list endpoints.
+ * Uses z.coerce.number() because query params arrive as strings.
+ */
+export const paginationQuery = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(20),
+  search: z.string().max(200).optional(),
+});
+
+/**
  * Stable name: letters, numbers, spaces, hyphens, underscores.
  * Used for player stable names (public display names).
  */

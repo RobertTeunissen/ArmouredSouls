@@ -252,8 +252,8 @@ With Option C, multiple strategies are viable:
 1. **`prototype/backend/prisma/schema.prisma`**
    - Line 20: `currency Int @default(3000000)`
 
-2. **`prototype/backend/src/routes/robots.ts`**
-   - Line 321: `const baseCost = (Math.floor(currentLevel) + 1) * 1500;`
+2. **`prototype/shared/utils/upgradeCosts.ts`** (previously inline in `robots.ts`)
+   - `calculateBaseCost`: `(Math.floor(currentLevel) + 1) * 1500`
 
 3. **`prototype/backend/src/config/facilities.ts`**
    - All 14 facility cost arrays updated to 50% of original

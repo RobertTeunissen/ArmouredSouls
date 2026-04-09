@@ -385,9 +385,48 @@ it('should always calculate positive damage', () => {
 - Load testing
 - Security testing automation
 
+## Frontend Testing
+
+### Framework
+- **Runner**: Vitest 4 with jsdom environment
+- **Component testing**: React Testing Library (`@testing-library/react`, `@testing-library/user-event`)
+- **Assertions**: `@testing-library/jest-dom` matchers
+- **Property testing**: fast-check
+- **Coverage**: `@vitest/coverage-v8`
+
+### Setup
+- Config: `prototype/frontend/vitest.config.ts`
+- Setup file: `prototype/frontend/src/setupTests.ts` (RTL cleanup, jest-dom matchers, matchMedia/localStorage/sessionStorage mocks)
+
+### File Conventions
+- Test files live in `__tests__/` subdirectories next to source files (not co-located)
+- Naming: `*.test.ts` for utilities, `*.test.tsx` for components, `*.pbt.test.ts(x)` for property-based tests
+
+### Coverage Targets
+- **Utilities and stores**: 80% minimum
+- **Components**: Baseline coverage (at least one test file per extracted directory)
+
+### Running Frontend Tests
+```bash
+cd prototype/frontend
+npx vitest --run                   # Single run (CI-safe)
+npx vitest --run --coverage        # With coverage report
+npx vitest                         # Watch mode (local dev)
+```
+
+### CI Integration
+Already integrated in `.github/workflows/ci.yml` under the `frontend-tests` job, which runs `npx vitest --run --reporter=verbose`.
+
+### Test File Locations
+- Utility tests: `src/utils/__tests__/*.test.ts`
+- Store tests: `src/stores/__tests__/*.test.ts`
+- Component tests: `src/components/__tests__/*.test.tsx` and `src/components/{feature}/__tests__/*.test.tsx`
+- Page tests: `src/pages/__tests__/*.test.tsx`
+- Property-based tests: `*.pbt.test.ts(x)` or `*.property.test.ts(x)`
+
 ## Quick Reference
 
-### Run Tests
+### Run Backend Tests
 ```bash
 npm test                           # All tests
 npm test -- tests/facility.test.ts # Specific file
@@ -396,7 +435,7 @@ npm test -- --maxWorkers=1         # Sequential (most stable)
 npm test -- --coverage             # With coverage
 ```
 
-### Debug Tests
+### Debug Backend Tests
 ```bash
 # Run with verbose output
 npm test -- --verbose
@@ -408,8 +447,22 @@ npm test -- -t "should create facility"
 # Add breakpoint, press F5 with Jest debug config
 ```
 
-### Test File Locations
+### Backend Test File Locations
 - Unit tests: `prototype/backend/tests/*.test.ts`
 - Property tests: `prototype/backend/tests/*.property.test.ts`
 - Integration tests: `prototype/backend/tests/integration/*.test.ts`
 - Test utilities: `prototype/backend/tests/helpers/`
+
+### Run Frontend Tests
+```bash
+cd prototype/frontend
+npx vitest --run                   # Single run
+npx vitest --run --coverage        # With coverage
+npx vitest                         # Watch mode
+```
+
+### Frontend Test File Locations
+- Utility tests: `src/utils/__tests__/*.test.ts`
+- Store tests: `src/stores/__tests__/*.test.ts`
+- Component tests: `src/components/{feature}/__tests__/*.test.tsx`
+- Page tests: `src/pages/__tests__/*.test.tsx`

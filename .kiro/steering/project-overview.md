@@ -41,7 +41,8 @@ Browser-based robot combat strategy game with turn-based mechanics, league syste
 
 ## Project Structure
 - `/prototype/backend` - Main backend application (services organized into 13 domain subdirectories under src/services/)
-- `/prototype/frontend` - React frontend application  
+- `/prototype/frontend` - React frontend application
+- `/prototype/shared` - Shared TypeScript modules imported by both frontend and backend (game formulas, discount calculations)
 - `/docs` - Comprehensive documentation organized by category
 - `/modules` - Modular architecture (api, auth, database, game-engine, ui)
 

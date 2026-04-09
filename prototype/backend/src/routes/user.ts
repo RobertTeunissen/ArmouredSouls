@@ -9,6 +9,42 @@ import { AppError } from '../errors/AppError';
 import { validateRequest } from '../middleware/schemaValidator';
 import { stableName as stableNameSchema } from '../utils/securityValidation';
 import { generateToken } from '../services/auth/jwtService';
+import type { Prisma } from '../../generated/prisma';
+
+// Typed interfaces for cycle snapshot metrics (matches JSON stored by CycleSnapshotService)
+interface StableMetric {
+  userId: number;
+  battlesParticipated: number;
+  totalCreditsEarned: number;
+  totalPrestigeEarned: number;
+  totalRepairCosts: number;
+  merchandisingIncome: number;
+  streamingIncome: number;
+  operatingCosts: number;
+  weaponPurchases: number;
+  facilityPurchases: number;
+  robotPurchases: number;
+  attributeUpgrades: number;
+  totalPurchases: number;
+  netProfit: number;
+  balance: number;
+}
+
+interface RobotMetric {
+  robotId: number;
+  battlesParticipated: number;
+  wins: number;
+  losses: number;
+  draws: number;
+  damageDealt: number;
+  damageReceived: number;
+  creditsEarned: number;
+  repairCosts: number;
+  kills: number;
+  destructions: number;
+  eloChange: number;
+  fameChange: number;
+}
 
 const router = express.Router();
 
@@ -25,7 +61,7 @@ const profileUpdateBodySchema = z.object({
 });
 
 // Get current user profile
-router.get('/profile', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get('/profile', authenticateToken, validateRequest({}), async (req: AuthRequest, res: Response) => {
   const user = await prisma.user.findUnique({
     where: { id: req.user!.userId },
     select: {
@@ -69,7 +105,7 @@ function getPrestigeRank(prestige: number): string {
 }
 
 // Get user's stable statistics (aggregate across all robots)
-router.get('/stats', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get('/stats', authenticateToken, validateRequest({}), async (req: AuthRequest, res: Response) => {
   const userId = req.user!.userId;
 
   // Get user data including prestige
@@ -133,40 +169,28 @@ router.get('/stats', authenticateToken, async (req: AuthRequest, res: Response) 
 
     if (currentSnapshot && previousSnapshot) {
       // Extract user's metrics from snapshots
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const currentStableMetrics = (currentSnapshot.stableMetrics as any[]).find(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (m: any) => m.userId === userId
+      const currentStableMetrics = (currentSnapshot.stableMetrics as unknown as StableMetric[]).find(
+        (m: StableMetric) => m.userId === userId
       );
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const _previousStableMetrics = (previousSnapshot.stableMetrics as any[]).find(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (m: any) => m.userId === userId
+      const _previousStableMetrics = (previousSnapshot.stableMetrics as unknown as StableMetric[]).find(
+        (m: StableMetric) => m.userId === userId
       );
 
       // Get robot IDs for this user
       const robotIds = robots.map(r => r.id);
 
       // Calculate aggregate robot stats from snapshots
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const currentRobotMetrics = (currentSnapshot.robotMetrics as any[]).filter(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (m: any) => robotIds.includes(m.robotId)
+      const currentRobotMetrics = (currentSnapshot.robotMetrics as unknown as RobotMetric[]).filter(
+        (m: RobotMetric) => robotIds.includes(m.robotId)
       );
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const previousRobotMetrics = (previousSnapshot.robotMetrics as any[]).filter(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (m: any) => robotIds.includes(m.robotId)
+      const previousRobotMetrics = (previousSnapshot.robotMetrics as unknown as RobotMetric[]).filter(
+        (m: RobotMetric) => robotIds.includes(m.robotId)
       );
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const currentWins = currentRobotMetrics.reduce((sum: number, m: any) => sum + (m.wins || 0), 0);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const currentLosses = currentRobotMetrics.reduce((sum: number, m: any) => sum + (m.losses || 0), 0);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const previousWins = previousRobotMetrics.reduce((sum: number, m: any) => sum + (m.wins || 0), 0);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const previousLosses = previousRobotMetrics.reduce((sum: number, m: any) => sum + (m.losses || 0), 0);
+      const currentWins = currentRobotMetrics.reduce((sum: number, m: RobotMetric) => sum + (m.wins || 0), 0);
+      const currentLosses = currentRobotMetrics.reduce((sum: number, m: RobotMetric) => sum + (m.losses || 0), 0);
+      const previousWins = previousRobotMetrics.reduce((sum: number, m: RobotMetric) => sum + (m.wins || 0), 0);
+      const previousLosses = previousRobotMetrics.reduce((sum: number, m: RobotMetric) => sum + (m.losses || 0), 0);
 
       // Get highest ELO change - compare current highest with previous highest
       const currentHighestElo = robots.length > 0 ? Math.max(...robots.map(r => r.elo)) : 0;
@@ -177,8 +201,7 @@ router.get('/stats', authenticateToken, async (req: AuthRequest, res: Response) 
         // Find the robot with current highest ELO and get its previous value
         const highestEloRobot = robots.find(r => r.elo === currentHighestElo);
         if (highestEloRobot) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const robotMetric = currentRobotMetrics.find((m: any) => m.robotId === highestEloRobot.id);
+          const robotMetric = currentRobotMetrics.find((m: RobotMetric) => m.robotId === highestEloRobot.id);
           if (robotMetric && robotMetric.eloChange !== undefined) {
             previousHighestElo = currentHighestElo - robotMetric.eloChange;
           }
@@ -349,8 +372,7 @@ router.put('/profile', authenticateToken, validateRequest({ body: profileUpdateB
   }
 
   // Build update data object (only include provided fields)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const updateData: any = {};
+  const updateData: Prisma.UserUpdateInput = {};
   // Only include stableName if it's explicitly provided and not an empty string
   if (stableName !== undefined && stableName !== null) {
     // Trim whitespace and only update if non-empty

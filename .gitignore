@@ -113,3 +113,4 @@ android/app/build/
 # Miscellaneous
 *.bak
 *.orig
+.gitnexus

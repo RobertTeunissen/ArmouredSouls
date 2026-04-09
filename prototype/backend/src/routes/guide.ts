@@ -20,7 +20,7 @@ const articleParamsSchema = z.object({
  * GET /api/guide/sections
  * Returns all guide sections with article summaries
  */
-router.get('/sections', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get('/sections', authenticateToken, validateRequest({}), async (req: AuthRequest, res: Response) => {
   try {
     const sections = guideService.getSections();
     res.json(sections);
@@ -62,7 +62,7 @@ router.get('/articles/:sectionSlug/:articleSlug', authenticateToken, validateReq
  * GET /api/guide/search-index
  * Returns flat list of all articles for client-side search
  */
-router.get('/search-index', authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get('/search-index', authenticateToken, validateRequest({}), async (req: AuthRequest, res: Response) => {
   try {
     const searchIndex = guideService.getSearchIndex();
     res.json(searchIndex);
