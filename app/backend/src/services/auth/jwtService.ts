@@ -1,4 +1,4 @@
-import jwt from 'jsonwebtoken';
+import jwt, { type SignOptions } from 'jsonwebtoken';
 import logger from '../../config/logger';
 import { AuthError, AuthErrorCode } from '../../errors/authErrors';
 
@@ -103,8 +103,7 @@ export function generateToken(user: UserForToken): string {
     tokenVersion: user.tokenVersion ?? 0,
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const token = jwt.sign(payload, secret, { expiresIn: expiration as any });
+  const token = jwt.sign(payload, secret, { expiresIn: expiration } as SignOptions);
   return token;
 }
 

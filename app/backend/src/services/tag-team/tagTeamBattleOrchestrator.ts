@@ -2,6 +2,7 @@ import { Robot, TagTeam, ScheduledTagTeamMatch, Battle, Prisma } from '../../../
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { simulateBattle } from '../battle/combatSimulator';
+import { RobotWithWeapons, CombatEvent } from '../battle/combatSimulator';
 import { getLeagueWinReward, getParticipationReward } from '../../utils/economyCalculations';
 import { CombatMessageGenerator } from '../battle/combatMessageGenerator';
 import {
@@ -14,6 +15,8 @@ import {
   awardStreamingRevenueForParticipant,
 } from '../battle/battlePostCombat';
 import { TagTeamError, TagTeamErrorCode } from '../../errors/tagTeamErrors';
+import { NarrativeEvent } from '../../types/battleLogTypes';
+import { CycleEventPayload } from '../../types/snapshotTypes';
 
 // Battle constants
 const BATTLE_TIME_LIMIT = 300; // 5 minutes in seconds
@@ -24,18 +27,8 @@ const _DESTRUCTION_MULTIPLIER = 2; // Destroyed robots have 2x repair cost
 
 // Types
 interface TagTeamWithRobots extends TagTeam {
-  activeRobot: Robot & {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    mainWeapon: any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    offhandWeapon: any;
-  };
-  reserveRobot: Robot & {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    mainWeapon: any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    offhandWeapon: any;
-  };
+  activeRobot: RobotWithWeapons;
+  reserveRobot: RobotWithWeapons;
 }
 
 interface TagTeamBattleResult {
@@ -59,8 +52,7 @@ interface TagTeamBattleResult {
   team1ReserveSurvivalTime: number; // Time in combat for team1 reserve robot
   team2ActiveSurvivalTime: number; // Time in combat for team2 active robot
   team2ReserveSurvivalTime: number; // Time in combat for team2 reserve robot
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  battleLog: any[]; // Complete battle log with all events
+  battleLog: TagTeamRawEvent[]; // Complete battle log with all events
   // 2D arena spatial metadata (from first phase)
   arenaRadius?: number;
   startingPositions?: Record<string, { x: number; y: number }>;
@@ -77,6 +69,14 @@ interface TagTeamBattleResult {
   team2Name: string;
   team1ReserveName: string;
   team2ReserveName: string;
+}
+
+/** Base event type for the mixed event array during tag team simulation.
+ * Holds both raw CombatEvent objects and manually constructed tag_out/tag_in events. */
+interface TagTeamRawEvent {
+  timestamp: number;
+  type: string;
+  [key: string]: unknown;
 }
 
 interface TagOutEvent {
@@ -102,8 +102,7 @@ interface TagInEvent {
  */
 function createByeTeamForBattle(league: string, leagueId: string): TagTeamWithRobots {
   // Create bye robots with ELO 1000 each (combined 2000)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const byeRobot1: Robot & { mainWeapon: any; offhandWeapon: any } = {
+  const byeRobot1: RobotWithWeapons = {
     id: -1,
     userId: -1,
     name: 'Bye Robot 1',
@@ -194,8 +193,7 @@ function createByeTeamForBattle(league: string, leagueId: string): TagTeamWithRo
     updatedAt: new Date(),
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const byeRobot2: Robot & { mainWeapon: any; offhandWeapon: any } = { 
+  const byeRobot2: RobotWithWeapons = { 
     ...byeRobot1, 
     id: -2, 
     name: 'Bye Robot 2' 
@@ -332,8 +330,7 @@ async function simulateTagTeamBattle(
   team1: TagTeamWithRobots,
   team2: TagTeamWithRobots
 ): Promise<TagTeamBattleResult> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const battleEvents: any[] = [];
+  const battleEvents: TagTeamRawEvent[] = [];
   const tagOutEvents: TagOutEvent[] = [];
   const tagInEvents: TagInEvent[] = [];
 
@@ -379,7 +376,7 @@ async function simulateTagTeamBattle(
   
   // Collect combat events from phase 1 (Requirement 7.1)
   if (phase1Result.events && Array.isArray(phase1Result.events)) {
-    battleEvents.push(...phase1Result.events);
+    battleEvents.push(...phase1Result.events.map(e => ({ ...e })));
   }
 
   // Capture arena metadata from phase 1 (same radius for all phases)
@@ -947,8 +944,9 @@ async function simulateTagTeamBattle(
   // (later phases override phase1's endingPositions)
   for (let i = battleEvents.length - 1; i >= 0; i--) {
     const evt = battleEvents[i];
-    if (evt.positions && Object.keys(evt.positions).length > 0) {
-      endingPositions = evt.positions;
+    const positions = evt.positions as Record<string, { x: number; y: number }> | undefined;
+    if (positions && Object.keys(positions).length > 0) {
+      endingPositions = positions;
       break;
     }
   }
@@ -1073,8 +1071,7 @@ export function shouldTagOut(robot: Robot): boolean {
  * Activate a reserve robot
  * Requirement 3.5: Set HP to 100%, reset weapon cooldowns to 0
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function activateReserveRobot(robot: Robot & { mainWeapon: any; offhandWeapon: any }): Robot & { mainWeapon: any; offhandWeapon: any } {
+function activateReserveRobot(robot: RobotWithWeapons): RobotWithWeapons {
   robot.currentHP = robot.maxHP;
   robot.currentShield = robot.maxShield;
   // Note: Weapon cooldowns are handled by combat simulator
@@ -1126,7 +1123,7 @@ async function createTagTeamBattleRecord(
         arenaRadius: result.arenaRadius,
         startingPositions: result.startingPositions,
         endingPositions: result.endingPositions,
-      },
+      } as unknown as Prisma.InputJsonValue,
       durationSeconds: result.durationSeconds,
 
       // Economic data (placeholder)
@@ -1465,8 +1462,7 @@ export async function executeScheduledTagTeamBattles(_scheduledFor?: Date): Prom
         });
         
         for (const evt of battleCompleteEvents) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const payload = evt.payload as any;
+          const payload = evt.payload as unknown as CycleEventPayload;
           totalStreamingRevenue += payload?.streamingRevenue || 0;
         }
       }

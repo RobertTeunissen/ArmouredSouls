@@ -14,6 +14,9 @@ inclusion: always
 - Use `Prisma.{Model}GetPayload<{ include: {...} }>` for typed query results with includes (e.g., `Prisma.BattleGetPayload<{ include: { participants: true } }>`)
 - Use `Number(value)` instead of `(value as any).toNumber()` for Prisma Decimal conversion
 - Use `as unknown as TypedInterface[]` for casting Prisma JSON fields to typed arrays (e.g., `snapshot.metrics as unknown as StableMetric[]`)
+- Define explicit interfaces in `src/types/` for all JSON payload structures stored in Prisma `Json` fields (e.g., `CycleSnapshot.stableMetrics`, `AuditLog.payload`, `Battle.battleLog`)
+- Import shared types from `src/types/` barrel export — never define local copies of `StableMetric`, `RobotMetric`, `BattleLogData`, etc.
+- For Prisma `Json` → typed object casts, use `as unknown as SpecificType` (two-step cast through `unknown`)
 
 ### Naming Conventions
 - **Files**: kebab-case (e.g., `robot-service.ts`)

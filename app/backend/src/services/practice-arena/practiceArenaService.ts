@@ -19,10 +19,11 @@ import { selectWeapon, selectShield, type WeaponRecord } from '../../utils/weapo
 import { TIER_CONFIGS } from '../../utils/tierConfig';
 import { calculateMaxHP, calculateMaxShield } from '../../utils/robotCalculations';
 import { verifyRobotOwnership } from '../../middleware/ownership';
-import { Prisma } from '../../../generated/prisma';
+import { Prisma, Weapon } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import { practiceArenaMetrics } from './practiceArenaMetrics';
 import { AppError } from '../../errors';
+import type { NarrativeEvent } from '../../types/battleLogTypes';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -64,8 +65,7 @@ export interface PracticeBattleRequest {
 /** Practice battle result returned to the frontend */
 export interface PracticeBattleResult {
   combatResult: CombatResult;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  battleLog: any[]; // narrative events from convertSimulatorEvents
+  battleLog: NarrativeEvent[]; // narrative events from convertSimulatorEvents
   robot1Info: { name: string; maxHP: number; maxShield: number };
   robot2Info: { name: string; maxHP: number; maxShield: number };
 }
@@ -211,8 +211,7 @@ function getBotTierConfig(botTier: BotTier): { attributeLevel: number; priceTier
  * Looks up the full weapon data from the cached full weapons list.
  * Used for sparring partners and what-if weapon swaps.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function buildSyntheticWeaponInventory(record: WeaponRecord, fullWeapons: any[]) {
+function buildSyntheticWeaponInventory(record: WeaponRecord, fullWeapons: Weapon[]) {
   // Find the full weapon record with all fields (baseDamage, cooldown, bonuses)
   const fullWeapon = fullWeapons.find(w => w.id === record.id);
   const weapon = fullWeapon || {
@@ -712,15 +711,13 @@ async function loadWeaponCatalog(): Promise<WeaponRecord[]> {
   return weapons;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let _fullWeaponCache: any[] | null = null;
+let _fullWeaponCache: Weapon[] | null = null;
 
 /**
  * Loads full weapon records (all fields) for building weapon inventory objects.
  * Cached after first load.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function loadFullWeapons(): Promise<any[]> {
+async function loadFullWeapons(): Promise<Weapon[]> {
   if (_fullWeaponCache) return _fullWeaponCache;
   _fullWeaponCache = await prisma.weapon.findMany();
   return _fullWeaponCache;

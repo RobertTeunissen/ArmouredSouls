@@ -1,4 +1,5 @@
 import prisma from '../../lib/prisma';
+import { Prisma, TagTeam } from '../../../generated/prisma';
 import logger from '../../config/logger';
 
 // NOTE: This service mirrors leagueInstanceService.ts for 1v1 leagues.
@@ -183,8 +184,7 @@ export async function createTagTeamWithInstanceAssignment(
     cyclesInTagTeamLeague?: number;
   },
   tier: TagTeamLeagueTier
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-): Promise<any> {
+): Promise<TagTeam> {
   return await prisma.$transaction(async (tx) => {
     // Acquire an advisory lock for this tier
     const lockId = hashTierName(tier);
@@ -275,8 +275,7 @@ export async function rebalanceTagTeamInstances(tier: TagTeamLeagueTier): Promis
   logger.info(`[TagTeamLeagueInstance] Rebalancing ${tier}: ${allTeams.length} teams across ${targetInstanceCount} instances`);
 
   // Redistribute teams ROUND-ROBIN to maintain competitive balance
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const updates: Promise<any>[] = [];
+  const updates: Promise<unknown>[] = [];
   
   for (let i = 0; i < allTeams.length; i++) {
     const team = allTeams[i];
@@ -301,11 +300,17 @@ export async function rebalanceTagTeamInstances(tier: TagTeamLeagueTier): Promis
   }
 }
 
+type TagTeamWithRobots = Prisma.TagTeamGetPayload<{
+  include: {
+    activeRobot: { select: { id: true; name: true; elo: true } };
+    reserveRobot: { select: { id: true; name: true; elo: true } };
+  };
+}>;
+
 /**
  * Get all teams in a specific instance
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function getTeamsInInstance(leagueId: string): Promise<any[]> {
+export async function getTeamsInInstance(leagueId: string): Promise<TagTeamWithRobots[]> {
   return prisma.tagTeam.findMany({
     where: { tagTeamLeagueId: leagueId },
     include: {
@@ -351,8 +356,7 @@ export async function moveTeamToInstance(teamId: number, newTier: TagTeamLeagueT
  * Requirement 9.3: Sort by league points (descending), then ELO (descending)
  * Includes team rank calculation
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function getStandingsForInstance(leagueId: string): Promise<any[]> {
+export async function getStandingsForInstance(leagueId: string): Promise<(TagTeamWithRobots & { combinedELO: number; rank: number })[]> {
   const teams = await prisma.tagTeam.findMany({
     where: { tagTeamLeagueId: leagueId },
     include: {
@@ -394,13 +398,20 @@ export async function getStandingsForInstance(leagueId: string): Promise<any[]> 
   }));
 }
 
+type TagTeamWithRobotsAndStable = Prisma.TagTeamGetPayload<{
+  include: {
+    activeRobot: { select: { id: true; name: true; elo: true } };
+    reserveRobot: { select: { id: true; name: true; elo: true } };
+    stable: { select: { stableName: true } };
+  };
+}>;
+
 /**
  * Get standings for an entire tag team league tier (all instances combined)
  * Requirement 9.3: Sort by league points (descending), then ELO (descending)
  * Includes team rank calculation
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function getStandingsForTier(tier: TagTeamLeagueTier): Promise<any[]> {
+export async function getStandingsForTier(tier: TagTeamLeagueTier): Promise<(TagTeamWithRobotsAndStable & { combinedELO: number; rank: number })[]> {
   const teams = await prisma.tagTeam.findMany({
     where: { tagTeamLeague: tier },
     include: {

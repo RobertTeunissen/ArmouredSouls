@@ -1,6 +1,84 @@
 import prisma from '../../lib/prisma';
+import { Prisma, BattleParticipant } from '../../../generated/prisma';
 import { getConfig } from '../../config/env';
 import { getNextCronOccurrence } from '../../utils/scheduleUtils';
+import type { KothPlacement } from '../../types/battleLogTypes';
+
+// ─── Prisma Payload Types ────────────────────────────────────────────
+
+const robotUserSelect = { select: { id: true, username: true } } as const;
+const robotInclude = { include: { user: robotUserSelect } } as const;
+
+type RobotWithUser = Prisma.RobotGetPayload<{ include: { user: { select: { id: true; username: true } } } }>;
+
+type ScheduledLeagueMatchWithRobots = Prisma.ScheduledLeagueMatchGetPayload<{
+  include: { robot1: { include: { user: { select: { id: true; username: true } } } }; robot2: { include: { user: { select: { id: true; username: true } } } } };
+}>;
+
+type ScheduledTournamentMatchWithRobots = Prisma.ScheduledTournamentMatchGetPayload<{
+  include: {
+    robot1: { include: { user: { select: { id: true; username: true } } } };
+    robot2: { include: { user: { select: { id: true; username: true } } } };
+    tournament: { select: { id: true; name: true; currentRound: true; maxRounds: true } };
+  };
+}>;
+
+type ScheduledTournamentByeMatchWithRobots = Prisma.ScheduledTournamentMatchGetPayload<{
+  include: {
+    robot1: { include: { user: { select: { id: true; username: true } } } };
+    robot2: true;
+    tournament: { select: { id: true; name: true; currentRound: true; maxRounds: true } };
+  };
+}>;
+
+type TagTeamWithMembers = Prisma.TagTeamGetPayload<{
+  include: {
+    activeRobot: { include: { user: { select: { id: true; username: true } } } };
+    reserveRobot: { include: { user: { select: { id: true; username: true } } } };
+    stable: { select: { stableName: true } };
+  };
+}>;
+
+type ScheduledTagTeamMatchWithTeams = Prisma.ScheduledTagTeamMatchGetPayload<{
+  include: {
+    team1: { include: { activeRobot: { include: { user: { select: { id: true; username: true } } } }; reserveRobot: { include: { user: { select: { id: true; username: true } } } }; stable: { select: { stableName: true } } } };
+    team2: { include: { activeRobot: { include: { user: { select: { id: true; username: true } } } }; reserveRobot: { include: { user: { select: { id: true; username: true } } } }; stable: { select: { stableName: true } } } };
+  };
+}>;
+
+type ScheduledKothMatchWithParticipants = Prisma.ScheduledKothMatchGetPayload<{
+  include: { participants: { include: { robot: { include: { user: { select: { id: true; username: true } } } } } } };
+}>;
+
+type BattleWithFullRelations = Prisma.BattleGetPayload<{
+  include: {
+    robot1: { include: { user: { select: { id: true; username: true; stableName: true } } } };
+    robot2: { include: { user: { select: { id: true; username: true; stableName: true } } } };
+    tournament: { select: { id: true; name: true; maxRounds: true } };
+    participants: true;
+  };
+}>;
+
+type BattleWithRobotsAndUsers = Prisma.BattleGetPayload<{
+  include: {
+    robot1: { include: { user: { select: { id: true; username: true; stableName: true } } } };
+    robot2: { include: { user: { select: { id: true; username: true; stableName: true } } } };
+  };
+}>;
+
+/** battleData in getBattleLog — bigint tag-out times converted to number */
+type BattleDataForLog = Omit<BattleWithRobotsAndUsers, 'team1TagOutTime' | 'team2TagOutTime'> & {
+  team1TagOutTime: number | null;
+  team2TagOutTime: number | null;
+};
+
+type BattleParticipantWithRobot = Prisma.BattleParticipantGetPayload<{
+  include: { robot: { include: { user: { select: { id: true; username: true; stableName: true } } } } };
+}>;
+
+type TagTeamRobot = Prisma.RobotGetPayload<{
+  include: { user: { select: { id: true; username: true; stableName: true } } };
+}> | null;
 
 // ─── Upcoming Matches ────────────────────────────────────────────────
 
@@ -108,9 +186,6 @@ export async function getUpcomingMatches(robotIds: number[], teamIds: number[]) 
 
 // ─── Upcoming: Prisma queries ────────────────────────────────────────
 
-const robotUserSelect = { select: { id: true, username: true } } as const;
-const robotInclude = { include: { user: robotUserSelect } } as const;
-
 async function fetchScheduledLeagueMatches(robotIds: number[]) {
   return prisma.scheduledLeagueMatch.findMany({
     where: {
@@ -172,9 +247,7 @@ async function fetchScheduledKothMatches(robotIds: number[]) {
 
 // ─── Upcoming: Formatters ────────────────────────────────────────────
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
-function formatRobotSummary(robot: any) {
+function formatRobotSummary(robot: RobotWithUser) {
   return {
     id: robot.id,
     name: robot.name,
@@ -186,7 +259,7 @@ function formatRobotSummary(robot: any) {
   };
 }
 
-function formatLeagueMatches(matches: any[]) {
+function formatLeagueMatches(matches: ScheduledLeagueMatchWithRobots[]) {
   return matches.map(match => ({
     id: match.id,
     matchType: 'league' as const,
@@ -200,7 +273,7 @@ function formatLeagueMatches(matches: any[]) {
   }));
 }
 
-function formatTournamentMatches(matches: any[]) {
+function formatTournamentMatches(matches: ScheduledTournamentMatchWithRobots[]) {
   return matches.map(match => ({
     id: `tournament-${match.id}`,
     matchType: 'tournament' as const,
@@ -220,7 +293,7 @@ function formatTournamentMatches(matches: any[]) {
   }));
 }
 
-function formatByeMatches(matches: any[]) {
+function formatByeMatches(matches: ScheduledTournamentByeMatchWithRobots[]) {
   return matches.map(match => ({
     id: `tournament-bye-${match.id}`,
     matchType: 'tournament' as const,
@@ -240,11 +313,11 @@ function formatByeMatches(matches: any[]) {
   }));
 }
 
-function formatTagTeamMatches(matches: any[]) {
+function formatTagTeamMatches(matches: ScheduledTagTeamMatchWithTeams[]) {
   return matches
     .filter(match => match.team2 !== null)
     .map(match => {
-      const formatTeam = (team: any) => ({
+      const formatTeam = (team: TagTeamWithMembers) => ({
         id: team.id,
         stableName: team.stable?.stableName || null,
         activeRobot: {
@@ -282,7 +355,7 @@ function formatTagTeamMatches(matches: any[]) {
     });
 }
 
-function formatKothMatches(matches: any[]) {
+function formatKothMatches(matches: ScheduledKothMatchWithParticipants[]) {
   return matches.map(match => ({
     id: `koth-${match.id}`,
     matchType: 'koth' as const,
@@ -290,7 +363,7 @@ function formatKothMatches(matches: any[]) {
     status: match.status,
     kothRotatingZone: match.rotatingZone,
     kothParticipantCount: match.participants.length,
-    kothParticipants: match.participants.map((p: any) => ({
+    kothParticipants: match.participants.map((p) => ({
       id: p.robot.id,
       name: p.robot.name,
       elo: 0,
@@ -299,8 +372,6 @@ function formatKothMatches(matches: any[]) {
     })),
   }));
 }
-
-/* eslint-enable @typescript-eslint/no-explicit-any */
 
 // ─── Match History ───────────────────────────────────────────────────
 
@@ -326,8 +397,7 @@ export async function getMatchHistory(params: HistoryParams) {
   const userRobotIds = userRobots.map(r => r.id);
   const targetRobotIds = robotId !== undefined ? [robotId] : userRobotIds;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const whereClause: Record<string, any> = {};
+  const whereClause: Prisma.BattleWhereInput = {};
 
   if (battleType === 'league') {
     whereClause.battleType = { notIn: ['tournament', 'tag_team', 'koth'] };
@@ -385,10 +455,9 @@ export async function getMatchHistory(params: HistoryParams) {
   };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function formatBattleHistoryEntry(battle: any, targetRobotIds: number[]) {
-  const robot1Participant = battle.participants.find((p: any) => p.robotId === battle.robot1Id);
-  const robot2Participant = battle.participants.find((p: any) => p.robotId === battle.robot2Id);
+async function formatBattleHistoryEntry(battle: BattleWithFullRelations, targetRobotIds: number[]) {
+  const robot1Participant = battle.participants.find((p) => p.robotId === battle.robot1Id);
+  const robot2Participant = battle.participants.find((p) => p.robotId === battle.robot2Id);
 
   const baseData = {
     id: battle.id,
@@ -440,21 +509,18 @@ async function formatBattleHistoryEntry(battle: any, targetRobotIds: number[]) {
   return baseData;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function formatKothHistoryEntry(battle: any, baseData: any, targetRobotIds: number[]) {
-  const userParticipant = battle.participants.find((p: any) => targetRobotIds.includes(p.robotId));
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const battleLogData = typeof battle.battleLog === 'object' ? battle.battleLog as Record<string, any> : {};
-  const logPlacements = (battleLogData.placements || []) as Array<{ robotId: number; zoneScore: number }>;
-  const userLogEntry = userParticipant ? logPlacements.find((lp: any) => lp.robotId === userParticipant.robotId) : null;
+async function formatKothHistoryEntry(battle: BattleWithFullRelations, baseData: Record<string, unknown>, targetRobotIds: number[]) {
+  const userParticipant = battle.participants.find((p) => targetRobotIds.includes(p.robotId));
+  const battleLogData = typeof battle.battleLog === 'object' ? battle.battleLog as Record<string, unknown> : {};
+  const logPlacements = ((battleLogData as Record<string, unknown>).placements || []) as Array<Pick<KothPlacement, 'robotId' | 'zoneScore'>>;
+  const userLogEntry = userParticipant ? logPlacements.find((lp) => lp.robotId === userParticipant.robotId) : null;
 
   const kothMatch = await prisma.scheduledKothMatch.findFirst({
     where: { battleId: battle.id },
     select: { rotatingZone: true },
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const kothData: any = {
+  const kothData: Record<string, unknown> = {
     ...baseData,
     winnerReward: userParticipant?.credits ?? 0,
     loserReward: userParticipant?.credits ?? 0,
@@ -485,8 +551,7 @@ async function formatKothHistoryEntry(battle: any, baseData: any, targetRobotIds
   return kothData;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function formatTagTeamHistoryEntry(battle: any, baseData: any) {
+async function formatTagTeamHistoryEntry(battle: BattleWithFullRelations, baseData: Record<string, unknown>) {
   const tagTeamMatch = await prisma.scheduledTagTeamMatch.findFirst({
     where: { battleId: battle.id },
     include: {
@@ -562,8 +627,7 @@ export async function getBattleLog(battleId: number) {
   const streamingRevenue1 = robot1Participant?.streamingRevenue || 0;
   const streamingRevenue2 = robot2Participant?.streamingRevenue || 0;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const baseResponse: Record<string, any> = {
+  const baseResponse: Record<string, unknown> = {
     battleId: battleData.id,
     createdAt: battleData.createdAt,
     battleType: battleData.battleType,
@@ -593,8 +657,9 @@ export async function getBattleLog(battleId: number) {
       baseResponse.winner = battleData.winnerId === battleData.robot1Id ? 'robot1' : null;
     }
   } else if (battleData.battleType === 'tag_team' && baseResponse.tagTeam) {
-    const team1Id = baseResponse.tagTeam.team1.teamId;
-    const team2Id = baseResponse.tagTeam.team2.teamId;
+    const tagTeam = baseResponse.tagTeam as { team1: { teamId: number | null }; team2: { teamId: number | null } };
+    const team1Id = tagTeam.team1.teamId;
+    const team2Id = tagTeam.team2.teamId;
     baseResponse.winner = battleData.winnerId === team1Id ? 'robot1' : battleData.winnerId === team2Id ? 'robot2' : null;
   } else {
     baseResponse.winner = battleData.winnerId === battleData.robot1Id ? 'robot1' : battleData.winnerId === battleData.robot2Id ? 'robot2' : null;
@@ -603,8 +668,7 @@ export async function getBattleLog(battleId: number) {
   return baseResponse;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function buildTagTeamLogResponse(baseResponse: Record<string, any>, battleData: any, battleParticipants: any[]) {
+async function buildTagTeamLogResponse(baseResponse: Record<string, unknown>, battleData: BattleDataForLog, battleParticipants: BattleParticipant[]) {
   const tagTeamUserSelect = { select: { id: true, username: true, stableName: true } };
   const [team1Active, team1Reserve, team2Active, team2Reserve] = await Promise.all([
     battleData.team1ActiveRobotId
@@ -635,8 +699,7 @@ async function buildTagTeamLogResponse(baseResponse: Record<string, any>, battle
       : null,
   ]);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const formatTagRobot = (robot: any, damageDealt: any, fameAwarded: any) =>
+  const formatTagRobot = (robot: TagTeamRobot, damageDealt: number, fameAwarded: number) =>
     robot
       ? {
           id: robot.id,
@@ -670,8 +733,7 @@ async function buildTagTeamLogResponse(baseResponse: Record<string, any>, battle
   const team1Participants = battleParticipants.filter(p => p.team === 1);
   const team2Participants = battleParticipants.filter(p => p.team === 2);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const sumField = (arr: any[], field: string) => arr.reduce((sum, p) => sum + (p[field] || 0), 0);
+  const sumField = (arr: BattleParticipant[], field: keyof BattleParticipant) => arr.reduce((sum, p) => sum + (Number(p[field]) || 0), 0);
 
   baseResponse.team1Summary = {
     reward: sumField(team1Participants, 'credits'),
@@ -690,8 +752,7 @@ async function buildTagTeamLogResponse(baseResponse: Record<string, any>, battle
   };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function buildKothLogResponse(baseResponse: Record<string, any>, battleData: any, battleId: number, _battleParticipants: any[]) {
+async function buildKothLogResponse(baseResponse: Record<string, unknown>, battleData: BattleDataForLog, battleId: number, _battleParticipants: BattleParticipant[]) {
   const allParticipants = await prisma.battleParticipant.findMany({
     where: { battleId },
     include: {
@@ -733,8 +794,7 @@ async function buildKothLogResponse(baseResponse: Record<string, any>, battleDat
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function buildStandardLogResponse(baseResponse: Record<string, any>, battleData: any, robot1Participant: any, robot2Participant: any, streamingRevenue1: number, streamingRevenue2: number) {
+function buildStandardLogResponse(baseResponse: Record<string, unknown>, battleData: BattleDataForLog, robot1Participant: BattleParticipant | undefined, robot2Participant: BattleParticipant | undefined, streamingRevenue1: number, streamingRevenue2: number) {
   baseResponse.robot1 = {
     id: battleData.robot1.id,
     name: battleData.robot1.name,

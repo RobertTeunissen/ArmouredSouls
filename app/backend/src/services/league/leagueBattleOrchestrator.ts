@@ -1,8 +1,8 @@
-import { Robot, ScheduledLeagueMatch, Battle } from '../../../generated/prisma';
+import { Robot, ScheduledLeagueMatch, Battle, Prisma } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { CombatMessageGenerator } from '../battle/combatMessageGenerator';
-import { simulateBattle } from '../battle/combatSimulator';
+import { simulateBattle, type CombatEvent } from '../battle/combatSimulator';
 import {
   getLeagueWinReward,
   getParticipationReward,
@@ -52,8 +52,7 @@ export interface BattleResult {
   durationSeconds: number;
   isDraw: boolean;
   isByeMatch: boolean;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  combatEvents?: any[]; // Detailed combat events for admin debugging
+  combatEvents?: CombatEvent[]; // Detailed combat events for admin debugging
   // 2D arena spatial metadata
   arenaRadius?: number;
   startingPositions?: Record<string, { x: number; y: number }>;
@@ -390,7 +389,7 @@ async function createBattleRecord(
         arenaRadius: result.arenaRadius,
         startingPositions: result.startingPositions,
         endingPositions: result.endingPositions,
-      },
+      } as unknown as Prisma.InputJsonValue,
       durationSeconds: result.durationSeconds,
       
       // Economic data
@@ -794,10 +793,9 @@ export async function executeScheduledBattles(_scheduledFor?: Date): Promise<Bat
         });
         
         if (battleCompleteEvent) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const payload = battleCompleteEvent.payload as any;
-          const streamingRevenue1 = payload?.streamingRevenue1 || 0;
-          const streamingRevenue2 = payload?.streamingRevenue2 || 0;
+          const payload = battleCompleteEvent.payload as Record<string, unknown>;
+          const streamingRevenue1 = (payload?.streamingRevenue1 as number) || 0;
+          const streamingRevenue2 = (payload?.streamingRevenue2 as number) || 0;
           summary.totalStreamingRevenue = (summary.totalStreamingRevenue || 0) + streamingRevenue1 + streamingRevenue2;
         }
       }

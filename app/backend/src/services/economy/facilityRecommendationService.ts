@@ -2,6 +2,8 @@ import prisma from '../../lib/prisma';
 import { getFacilityConfig, FACILITY_TYPES } from '../../config/facilities';
 import { roiCalculatorService, FacilityROI } from './roiCalculatorService';
 import { AuthError, AuthErrorCode } from '../../errors/authErrors';
+import type { User } from '../../../generated/prisma';
+import type { StableMetric } from '../../types/snapshotTypes';
 
 export interface FacilityRecommendation {
   facilityType: string;
@@ -153,11 +155,9 @@ export class FacilityRecommendationService {
 
     // Extract user-specific data from stableMetrics JSON
     for (const snapshot of cycleSnapshots) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const stableMetrics = snapshot.stableMetrics as any;
+      const stableMetrics = snapshot.stableMetrics as unknown as StableMetric[];
       if (Array.isArray(stableMetrics)) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const userMetrics = stableMetrics.find((m: any) => m.userId === userId);
+        const userMetrics = stableMetrics.find((m) => m.userId === userId);
         if (userMetrics) {
           totalRepairCost += userMetrics.totalRepairCosts || 0;
           totalBattles += userMetrics.battlesParticipated || 0;
@@ -179,8 +179,7 @@ export class FacilityRecommendationService {
     });
 
     totalUpgradeCost = upgradeEvents.reduce(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (sum, e) => sum + ((e.payload as any).cost || 0),
+      (sum, e) => sum + ((e.payload as unknown as Record<string, unknown>).cost as number || 0),
       0
     );
     const avgUpgradeCostPerCycle = totalUpgradeCost / cycleCount;
@@ -195,8 +194,7 @@ export class FacilityRecommendationService {
     });
 
     totalWeaponCost = weaponEvents.reduce(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (sum, e) => sum + ((e.payload as any).cost || 0),
+      (sum, e) => sum + ((e.payload as unknown as Record<string, unknown>).cost as number || 0),
       0
     );
     const avgWeaponCostPerCycle = totalWeaponCost / cycleCount;
@@ -228,8 +226,7 @@ export class FacilityRecommendationService {
     nextLevel: number,
     activityMetrics: ActivityMetrics,
     existingROIs: FacilityROI[],
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    user: any
+    user: User
   ): Promise<FacilityRecommendation | null> {
     const config = getFacilityConfig(facilityType);
     if (!config) {

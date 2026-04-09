@@ -347,21 +347,20 @@ export async function generateFinancialReport(
   let streamingBattleCount = 0;
 
   for (const event of battleCompleteEvents) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const payload = event.payload as any;
+    const payload = event.payload as unknown as Record<string, unknown>;
     
     // Check if robot1 belongs to this user
-    if (payload.robot1Id && userRobotIds.has(payload.robot1Id)) {
-      if (payload.streamingRevenue1 && payload.streamingRevenue1 > 0) {
-        totalStreamingRevenue += payload.streamingRevenue1;
+    if (payload.robot1Id && userRobotIds.has(payload.robot1Id as number)) {
+      if (payload.streamingRevenue1 && (payload.streamingRevenue1 as number) > 0) {
+        totalStreamingRevenue += payload.streamingRevenue1 as number;
         streamingBattleCount++;
       }
     }
     
     // Check if robot2 belongs to this user
-    if (payload.robot2Id && userRobotIds.has(payload.robot2Id)) {
-      if (payload.streamingRevenue2 && payload.streamingRevenue2 > 0) {
-        totalStreamingRevenue += payload.streamingRevenue2;
+    if (payload.robot2Id && userRobotIds.has(payload.robot2Id as number)) {
+      if (payload.streamingRevenue2 && (payload.streamingRevenue2 as number) > 0) {
+        totalStreamingRevenue += payload.streamingRevenue2 as number;
         streamingBattleCount++;
       }
     }

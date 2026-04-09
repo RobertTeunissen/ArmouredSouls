@@ -65,8 +65,7 @@ class CycleLogger {
   }
 
   /** Direct log method for non-Winston callers */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  log(level: string, message: string, data?: any): void {
+  log(level: string, message: string, data?: Record<string, unknown>): void {
     const dataStr = data ? ` ${JSON.stringify(data)}` : '';
     this.capture(level, `${message}${dataStr}`);
   }
@@ -107,10 +106,9 @@ export const cycleLogger = new CycleLogger();
  * Add this to the Winston logger's transports array.
  */
 export class CycleLoggerTransport extends Transport {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  log(info: any, callback: () => void): void {
-    const level = info.level || 'info';
-    const message = info.message || '';
+  log(info: Record<string, unknown>, callback: () => void): void {
+    const level = (info.level as string) || 'info';
+    const message = (info.message as string) || '';
     cycleLogger.capture(level, message);
     callback();
   }

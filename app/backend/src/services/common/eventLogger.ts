@@ -66,8 +66,7 @@ export enum EventType {
  * Base interface for all event payloads
  */
 interface BaseEventPayload {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 /**
@@ -75,10 +74,8 @@ interface BaseEventPayload {
  */
 interface EventMetadata {
   formula?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  inputs?: Record<string, any>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  output?: any;
+  inputs?: Record<string, unknown>;
+  output?: unknown;
 }
 
 /**
@@ -324,8 +321,7 @@ export class EventLogger {
     stepName: string,
     stepNumber: number,
     durationMs: number,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    summary?: Record<string, any>
+    summary?: Record<string, unknown>
   ): Promise<void> {
     await this.logEvent(cycleNumber, EventType.CYCLE_STEP_COMPLETE, {
       stepName,
@@ -595,10 +591,8 @@ export class EventLogger {
     cycleNumber: number,
     calculationType: string,
     formula: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    inputs: Record<string, any>,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    output: any,
+    inputs: Record<string, unknown>,
+    output: unknown,
     userId?: number,
     robotId?: number
   ): Promise<void> {

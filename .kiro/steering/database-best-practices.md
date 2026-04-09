@@ -452,6 +452,57 @@ const user = await prisma.$queryRaw`
 - Use environment variables for credentials
 - Rotate database passwords periodically
 
+## JSON Field Typing
+
+Prisma `Json` fields are typed as `Prisma.JsonValue` at the ORM level, which is a union of `string | number | boolean | null | JsonObject | JsonArray`. This provides no structural type safety when accessing nested properties.
+
+### Defining Interfaces for JSON Shapes
+
+Define explicit TypeScript interfaces in `app/backend/src/types/` that match the runtime JSON structures stored in `Json` columns. These are hand-written types (not Prisma-generated) that describe what the application actually writes and reads.
+
+```typescript
+// src/types/snapshotTypes.ts
+export interface StableMetric {
+  userId: number;
+  battlesParticipated: number;
+  totalCreditsEarned: number;
+  // ... fields matching the actual JSON shape
+}
+```
+
+Import these from the `src/types/` barrel export:
+```typescript
+import { StableMetric, RobotMetric } from '../../types';
+```
+
+### Reading JSON Fields (Cast Pattern)
+
+Use the two-step cast through `unknown` when reading a Prisma `Json` field into a typed interface:
+
+```typescript
+const metrics = snapshot.stableMetrics as unknown as StableMetric[];
+```
+
+This is necessary because `Prisma.JsonValue` and your interface are not directly assignable. The `as unknown as T` pattern makes the intent explicit.
+
+### Writing JSON Fields (Cast Pattern)
+
+When writing typed objects back to a Prisma `Json` field, cast through `unknown` to `Prisma.InputJsonValue`:
+
+```typescript
+import { Prisma } from '../../generated/prisma';
+
+await prisma.cycleSnapshot.create({
+  data: {
+    stableMetrics: metrics as unknown as Prisma.InputJsonValue,
+  },
+});
+```
+
+### Flexible Objects
+
+Use `Record<string, unknown>` instead of `Record<string, any>` for flexible objects that don't have a defined interface. This forces explicit type narrowing when accessing properties, catching errors at compile time rather than runtime.
+
 ## Checklist
 
 ### Before Schema Changes

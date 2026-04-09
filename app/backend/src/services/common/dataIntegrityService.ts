@@ -1,12 +1,12 @@
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
+import { StableMetric } from '../../types/snapshotTypes';
 
 export interface IntegrityIssue {
   type: 'credit_mismatch' | 'sequence_gap' | 'missing_events' | 'invalid_data';
   severity: 'warning' | 'error';
   message: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  details: Record<string, any>;
+  details: Record<string, unknown>;
 }
 
 export interface IntegrityReport {
@@ -73,8 +73,7 @@ export class DataIntegrityService {
     const userCreditChanges = new Map<number, number[]>();
     for (const event of creditEvents) {
       const userId = event.userId!;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const amount = (event.payload as any).amount;
+      const amount = (event.payload as unknown as Record<string, unknown>).amount as number;
       
       if (!userCreditChanges.has(userId)) {
         userCreditChanges.set(userId, []);
@@ -92,10 +91,8 @@ export class DataIntegrityService {
       });
 
       if (snapshot) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const stableMetrics = (snapshot.stableMetrics as any[]) || [];
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const userMetrics = stableMetrics.find((m: any) => m.userId === userId);
+        const stableMetrics = (snapshot.stableMetrics as unknown as StableMetric[]) || [];
+        const userMetrics = stableMetrics.find((m) => m.userId === userId);
         
         if (userMetrics) {
           const expectedNetChange = 

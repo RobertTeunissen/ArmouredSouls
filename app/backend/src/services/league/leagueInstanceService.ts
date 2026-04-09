@@ -1,4 +1,5 @@
 import prisma from '../../lib/prisma';
+import { Prisma } from '../../../generated/prisma';
 import logger from '../../config/logger';
 
 // NOTE: This service mirrors tagTeamLeagueInstanceService.ts for tag team leagues.
@@ -151,8 +152,7 @@ export async function rebalanceInstances(tier: LeagueTier): Promise<void> {
 
   // Redistribute robots ROUND-ROBIN to maintain competitive balance
   // This ensures each instance has a mix of high, medium, and low LP robots
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const updates: Promise<any>[] = [];
+  const updates: Promise<unknown>[] = [];
   
   for (let i = 0; i < allRobots.length; i++) {
     const robot = allRobots[i];
@@ -177,11 +177,14 @@ export async function rebalanceInstances(tier: LeagueTier): Promise<void> {
   }
 }
 
+type RobotWithUser = Prisma.RobotGetPayload<{
+  include: { user: { select: { id: true; username: true } } };
+}>;
+
 /**
  * Get all robots in a specific instance
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function getRobotsInInstance(leagueId: string): Promise<any[]> {
+export async function getRobotsInInstance(leagueId: string): Promise<RobotWithUser[]> {
   return prisma.robot.findMany({
     where: { leagueId },
     include: {

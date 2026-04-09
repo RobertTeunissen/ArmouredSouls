@@ -13,7 +13,28 @@
  */
 
 import prisma from '../../lib/prisma';
+import type { Prisma } from '../../../generated/prisma';
 import { cycleSnapshotService } from '../cycle/cycleSnapshotService';
+import type { RobotMetric as RobotMetricData } from '../../types/snapshotTypes';
+
+/** Shape of snapshot objects returned by cycleSnapshotService.getSnapshotRange() */
+interface SnapshotWithMetrics {
+  cycleNumber: number;
+  robotMetrics: RobotMetricData[];
+}
+
+/** BattleParticipant with included battle select fields, as returned by metric progression queries */
+type ParticipantWithBattle = Prisma.BattleParticipantGetPayload<{
+  include: {
+    battle: {
+      select: {
+        id: true;
+        winnerId: true;
+        createdAt: true;
+      };
+    };
+  };
+}>;
 
 /**
  * Robot performance summary interface
@@ -117,8 +138,7 @@ export class RobotPerformanceService {
   private async aggregateFromSnapshots(
     robotId: number,
     cycleRange: [number, number],
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    snapshots: any[]
+    snapshots: SnapshotWithMetrics[]
   ): Promise<RobotPerformanceSummary> {
     let battlesParticipated = 0;
     let wins = 0;
@@ -137,10 +157,8 @@ export class RobotPerformanceService {
 
     // Aggregate metrics from snapshots
     for (const snapshot of snapshots) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const robotMetrics = snapshot.robotMetrics as any[];
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const robotMetric = robotMetrics.find((m: any) => m.robotId === robotId);
+      const robotMetrics = snapshot.robotMetrics;
+      const robotMetric = robotMetrics.find((m) => m.robotId === robotId);
 
       if (robotMetric) {
         battlesParticipated += robotMetric.battlesParticipated;
@@ -329,11 +347,9 @@ export class RobotPerformanceService {
       },
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    repairEvents.forEach((event: any) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const payload = event.payload as any;
-      totalRepairCosts += payload.cost || 0;
+    repairEvents.forEach((event) => {
+      const payload = event.payload as unknown as Record<string, unknown>;
+      totalRepairCosts += (payload.cost as number) || 0;
     });
 
     // Calculate win rate
@@ -421,8 +437,7 @@ export class RobotPerformanceService {
     }
 
     // Extract metric value from participant based on metric type
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const extractMetricValue = (participant: any, metric: RobotMetric): number => {
+    const extractMetricValue = (participant: ParticipantWithBattle, metric: RobotMetric): number => {
       switch (metric) {
         case 'elo':
           return participant.eloAfter;
@@ -450,8 +465,7 @@ export class RobotPerformanceService {
     };
 
     // Get starting value for the metric
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const getStartingValue = (participant: any, metric: RobotMetric): number => {
+    const getStartingValue = (participant: ParticipantWithBattle, metric: RobotMetric): number => {
       if (metric === 'elo') {
         return participant.eloBefore;
       }
