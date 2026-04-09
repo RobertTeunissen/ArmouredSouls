@@ -8,9 +8,18 @@ This document breaks down the Armoured Souls system into logical modules, each w
 
 **Note**: For project phases and development timeline, see ROADMAP.md. This document focuses on module organization and current implementation status.
 
+## Modular Architecture Plan
+
+The `modules/` directory now contains documented contracts and a migration strategy for Phase 2 extraction:
+
+- **Module Contracts**: Each module has a `MODULE_CONTRACT.md` defining its public API, dependencies, and current source locations. See [modules/README.md](../../modules/README.md).
+- **Service-to-Module Mapping**: Every service file is mapped to its target module. See [SERVICE_MODULE_MAPPING.md](./SERVICE_MODULE_MAPPING.md).
+- **Migration Strategy**: Phased extraction plan (database → auth → game-engine → api → ui) with workspace configuration and rollback procedures. See [MODULAR_MIGRATION_STRATEGY.md](./MODULAR_MIGRATION_STRATEGY.md).
+- **Module Template**: Standardized package structure for all modules. See [MODULE_TEMPLATE.md](./MODULE_TEMPLATE.md).
+
 ## Module Hierarchy
 
-The project has two structural layers: the aspirational `modules/` directory (placeholder READMEs for future extraction) and the working `prototype/` directory where all implementation lives.
+The project has two structural layers: the `modules/` directory (documented contracts and migration plan for Phase 2 extraction) and the working `prototype/` directory where all implementation lives.
 
 ```
 ArmouredSouls/
