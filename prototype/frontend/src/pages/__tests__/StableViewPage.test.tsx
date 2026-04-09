@@ -107,7 +107,7 @@ describe('StableViewPage', () => {
 
   // Requirement 8.1 — 404 error state
   it('renders 404 error state with "Stable not found" and back link', async () => {
-    const axiosError = new Error('Request failed with status code 404') as any;
+    const axiosError = new Error('Request failed with status code 404') as Error & { isAxiosError: boolean; response: { status: number } };
     axiosError.isAxiosError = true;
     axiosError.response = { status: 404 };
     vi.mocked(apiClient.get).mockRejectedValue(axiosError);

@@ -4,44 +4,7 @@ import axios from 'axios';
 import Navigation from '../components/Navigation';
 import RobotDashboardCard from '../components/RobotDashboardCard';
 import apiClient from '../utils/apiClient';
-
-// Facility category mapping — exported for property testing (Task 6.4)
-export const FACILITY_CATEGORIES = [
-  {
-    id: 'economy',
-    name: 'Economy & Discounts',
-    icon: '💰',
-    facilityTypes: ['repair_bay', 'training_facility', 'weapons_workshop', 'merchandising_hub', 'streaming_studio'],
-  },
-  {
-    id: 'capacity',
-    name: 'Capacity & Storage',
-    icon: '📦',
-    facilityTypes: ['roster_expansion', 'storage_facility'],
-  },
-  {
-    id: 'training',
-    name: 'Training Academies',
-    icon: '🎓',
-    facilityTypes: ['combat_training_academy', 'defense_training_academy', 'mobility_training_academy', 'ai_training_academy'],
-  },
-  {
-    id: 'advanced',
-    name: 'Advanced Features',
-    icon: '⭐',
-    facilityTypes: ['research_lab', 'medical_bay', 'coaching_staff', 'booking_office'],
-  },
-] as const;
-
-/** Returns the category name for a given facility type, or null if unknown. */
-export function getFacilityCategory(facilityType: string): string | null {
-  for (const cat of FACILITY_CATEGORIES) {
-    if ((cat.facilityTypes as readonly string[]).includes(facilityType)) {
-      return cat.name;
-    }
-  }
-  return null;
-}
+import { FACILITY_CATEGORIES } from '../utils/facilityCategories';
 
 interface StableUser {
   id: number;

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { computeBattleSummary, EMPTY_SUMMARY, BattleSummaryStats } from '../battleHistoryStats';
+import { computeBattleSummary, EMPTY_SUMMARY } from '../battleHistoryStats';
 import type { BattleHistory } from '../matchmakingApi';
 
 // Mock the matchmakingApi helpers

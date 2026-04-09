@@ -41,7 +41,8 @@ function LeagueStandingsPage() {
     setSelectedInstance(null); // Reset selected instance when tier changes
     fetchLeagueData(selectedTier, 1);
     fetchStoreRobots(); // Fetch user's robots via store
-  }, [selectedTier]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fetchLeagueData changes on every render; fetchStoreRobots is a stable store selector
+  }, [selectedTier, fetchStoreRobots]);
 
   // Derive user robot tiers/instances from store
   useEffect(() => {

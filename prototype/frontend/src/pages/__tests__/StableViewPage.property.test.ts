@@ -3,7 +3,7 @@
 
 import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
-import { FACILITY_CATEGORIES, getFacilityCategory } from '../StableViewPage';
+import { FACILITY_CATEGORIES, getFacilityCategory } from '../../utils/facilityCategories';
 
 const ALL_FACILITY_TYPES = [
   'repair_bay',

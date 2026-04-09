@@ -143,6 +143,7 @@ describe('Property 18: HP Bar Color Coding (Property-Based Test)', () => {
         fc.integer({ min: 100, max: 50000 }),
         (hpPercent, maxHP) => {
           const currentHP = Math.max(1, Math.floor((hpPercent / 100) * maxHP));
+          const actualPercent = (currentHP / maxHP) * 100;
           const robot = createRobot(currentHP, maxHP, maxHP, maxHP);
 
           render(
@@ -155,9 +156,9 @@ describe('Property 18: HP Bar Color Coding (Property-Based Test)', () => {
           expect(hpBar).toBeTruthy();
 
           const bg = hpBar.style.backgroundColor;
-          if (hpPercent >= 70) {
+          if (actualPercent >= 70) {
             expect(isColor(bg, GREEN)).toBe(true);
-          } else if (hpPercent >= 30) {
+          } else if (actualPercent >= 30) {
             expect(isColor(bg, AMBER)).toBe(true);
           } else {
             expect(isColor(bg, RED)).toBe(true);
