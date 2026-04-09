@@ -18,7 +18,7 @@ export function calculateBaseCost(currentLevel: number): number {
 export function calculateDiscountedUpgradeCost(currentLevel: number, trainingLevel: number): number {
   const baseCost = calculateBaseCost(currentLevel);
   const discountPercent = calculateTrainingFacilityDiscount(trainingLevel);
-  return Math.floor(baseCost * (1 - discountPercent / 100));
+  return Math.floor(baseCost * (100 - discountPercent) / 100);
 }
 
 /** Total base cost for upgrading from fromLevel to toLevel (before discounts). */

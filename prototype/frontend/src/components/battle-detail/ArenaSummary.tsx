@@ -45,8 +45,7 @@ export function ArenaSummary({ battleLog }: ArenaSummaryProps) {
 
   for (const event of spatialEvts) {
     if (event.positions) {
-      for (const name of robotNames) {
-        const pos = event.positions[name];
+      for (const [name, pos] of Object.entries(event.positions) as [string, { x: number; y: number }][]) {
         if (!pos) continue;
         if (!firstKnownPos[name]) {
           firstKnownPos[name] = pos;

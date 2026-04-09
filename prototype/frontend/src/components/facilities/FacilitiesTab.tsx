@@ -7,6 +7,7 @@
 import { FacilityCard } from './FacilityCard';
 import { FACILITY_CATEGORIES } from './constants';
 import type { Facility } from './types';
+import type { MutableRefObject } from 'react';
 
 export interface FacilitiesTabProps {
   facilities: Facility[];
@@ -14,7 +15,7 @@ export interface FacilitiesTabProps {
   userPrestige: number;
   upgrading: string | null;
   collapsedCategories: Set<string>;
-  facilityRefs: React.MutableRefObject<Record<string, HTMLDivElement | null>>;
+  facilityRefs: MutableRefObject<Record<string, HTMLDivElement | null>>;
   onUpgrade: (facilityType: string) => void;
   onToggleCategory: (categoryId: string) => void;
   getCategoryFacilities: (categoryTypes: string[]) => Facility[];

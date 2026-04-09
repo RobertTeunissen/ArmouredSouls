@@ -52,6 +52,7 @@ module.exports = {
 
     /**
      * Recursively check if a node is or contains a call to validateRequest.
+     * Handles direct calls, array expressions, spread elements, conditionals, etc.
      */
     function containsValidateRequest(node) {
       if (!node) return false;
@@ -65,7 +66,31 @@ module.exports = {
         return true;
       }
 
-      return false;
+      switch (node.type) {
+        case 'ArrayExpression':
+          return node.elements.some((el) => containsValidateRequest(el));
+        case 'SpreadElement':
+          return containsValidateRequest(node.argument);
+        case 'SequenceExpression':
+          return node.expressions.some((expr) => containsValidateRequest(expr));
+        case 'ConditionalExpression':
+          return (
+            containsValidateRequest(node.consequent) ||
+            containsValidateRequest(node.alternate)
+          );
+        case 'LogicalExpression':
+          return (
+            containsValidateRequest(node.left) || containsValidateRequest(node.right)
+          );
+        case 'CallExpression':
+        case 'NewExpression':
+          return (
+            containsValidateRequest(node.callee) ||
+            node.arguments.some((arg) => containsValidateRequest(arg))
+          );
+        default:
+          return false;
+      }
     }
   },
 };

@@ -68,10 +68,10 @@ describe('upgradeCosts', () => {
     });
 
     it('should cap discount at 90% (training level 9)', () => {
-      // Level 0 base cost = 1500, 90% discount → floor(1500 * 0.1) = 149 (floating point)
-      expect(calculateDiscountedUpgradeCost(0, 9)).toBe(149);
+      // Level 0 base cost = 1500, 90% discount = 150
+      expect(calculateDiscountedUpgradeCost(0, 9)).toBe(150);
       // Training level 10 should still cap at 90%
-      expect(calculateDiscountedUpgradeCost(0, 10)).toBe(149);
+      expect(calculateDiscountedUpgradeCost(0, 10)).toBe(150);
     });
 
     it('should floor the result', () => {

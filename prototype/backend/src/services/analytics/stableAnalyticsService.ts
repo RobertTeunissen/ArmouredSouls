@@ -76,8 +76,7 @@ async function getLatestCycleNumber(): Promise<number | null> {
  * Build a single cycle's financial summary from a snapshot for a given user.
  */
 function buildCycleSummary(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  snapshot: any,
+  snapshot: { cycleNumber: number; stableMetrics: unknown; robotMetrics: unknown },
   userId: number,
 ): CycleSummary {
   const userMetrics = (snapshot.stableMetrics as StableMetric[]).find(

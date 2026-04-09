@@ -41,12 +41,27 @@ export function calculateTrendLine(
   dataPoints: Array<{ cycleNumber: number; value: number }>,
 ): TrendLine {
   const n = dataPoints.length;
+  if (n === 0) {
+    return { slope: 0, intercept: 0, points: [] };
+  }
+
   const sumX = dataPoints.reduce((s, dp) => s + dp.cycleNumber, 0);
   const sumY = dataPoints.reduce((s, dp) => s + dp.value, 0);
   const sumXY = dataPoints.reduce((s, dp) => s + dp.cycleNumber * dp.value, 0);
   const sumX2 = dataPoints.reduce((s, dp) => s + dp.cycleNumber * dp.cycleNumber, 0);
 
-  const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+  const denominator = n * sumX2 - sumX * sumX;
+  if (denominator === 0) {
+    // All x-values are identical — flat line at the mean
+    const mean = sumY / n;
+    return {
+      slope: 0,
+      intercept: Math.round(mean * 100) / 100,
+      points: dataPoints.map((dp) => ({ cycleNumber: dp.cycleNumber, value: Math.round(mean * 100) / 100 })),
+    };
+  }
+
+  const slope = (n * sumXY - sumX * sumY) / denominator;
   const intercept = (sumY - slope * sumX) / n;
 
   const points = dataPoints.map((dp) => ({

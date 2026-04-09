@@ -22,7 +22,7 @@ export function TagTeamInfo({ battleLog }: TagTeamInfoProps) {
               <span className="text-white">Reserve:</span> {battleLog.tagTeam.team1.reserveRobot.name}
             </div>
           )}
-          {battleLog.tagTeam.team1.tagOutTime !== null && (
+          {battleLog.tagTeam.team1.tagOutTime != null && (
             <div className="text-xs text-cyan-400">
               Tagged out at {battleLog.tagTeam.team1.tagOutTime.toFixed(1)}s
             </div>
@@ -44,7 +44,7 @@ export function TagTeamInfo({ battleLog }: TagTeamInfoProps) {
               <span className="text-white">Reserve:</span> {battleLog.tagTeam.team2.reserveRobot.name}
             </div>
           )}
-          {battleLog.tagTeam.team2.tagOutTime !== null && (
+          {battleLog.tagTeam.team2.tagOutTime != null && (
             <div className="text-xs text-cyan-400">
               Tagged out at {battleLog.tagTeam.team2.tagOutTime.toFixed(1)}s
             </div>
