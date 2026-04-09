@@ -6,6 +6,7 @@
  */
 
 import prisma from '../../lib/prisma';
+import type { CycleEventPayload } from '../../types/snapshotTypes';
 
 interface BattleCSVRow {
   cycle: number;
@@ -41,8 +42,7 @@ export async function exportCycleBattlesToCSV(cycleNumber: number): Promise<stri
   const rows: BattleCSVRow[] = [];
 
   for (const event of battleEvents) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const payload = event.payload as any;
+    const payload = event.payload as unknown as CycleEventPayload;
     
     // Get robot details (this robot)
     const robot = await prisma.robot.findUnique({
@@ -52,7 +52,7 @@ export async function exportCycleBattlesToCSV(cycleNumber: number): Promise<stri
     
     // Get opponent details
     const opponent = await prisma.robot.findUnique({
-      where: { id: payload.opponentId },
+      where: { id: payload.opponentId || 0 },
       select: { id: true, name: true },
     });
 

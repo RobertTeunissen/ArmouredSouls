@@ -11,40 +11,8 @@ import { stableName as stableNameSchema } from '../utils/securityValidation';
 import { generateToken } from '../services/auth/jwtService';
 import type { Prisma } from '../../generated/prisma';
 
-// Typed interfaces for cycle snapshot metrics (matches JSON stored by CycleSnapshotService)
-interface StableMetric {
-  userId: number;
-  battlesParticipated: number;
-  totalCreditsEarned: number;
-  totalPrestigeEarned: number;
-  totalRepairCosts: number;
-  merchandisingIncome: number;
-  streamingIncome: number;
-  operatingCosts: number;
-  weaponPurchases: number;
-  facilityPurchases: number;
-  robotPurchases: number;
-  attributeUpgrades: number;
-  totalPurchases: number;
-  netProfit: number;
-  balance: number;
-}
-
-interface RobotMetric {
-  robotId: number;
-  battlesParticipated: number;
-  wins: number;
-  losses: number;
-  draws: number;
-  damageDealt: number;
-  damageReceived: number;
-  creditsEarned: number;
-  repairCosts: number;
-  kills: number;
-  destructions: number;
-  eloChange: number;
-  fameChange: number;
-}
+// Shared typed interfaces for cycle snapshot metrics
+import type { StableMetric, RobotMetric } from '../types/snapshotTypes';
 
 const router = express.Router();
 

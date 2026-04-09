@@ -9,6 +9,7 @@
 
 import { CombatEvent } from './combatSimulator';
 import { compressEventsForStorage } from '../common/eventCompression';
+import { NarrativeEvent, KothBattleLogData } from '../../types/battleLogTypes';
 
 export interface BattleStartEvent {
   robot1Name: string;
@@ -619,10 +620,10 @@ export class CombatMessageGenerator {
 
   // ── Utility Methods ────────────────────────────────────────────────────
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private static interpolate(template: string, values: Record<string, any>): string {
+  private static interpolate(template: string, values: object): string {
+    const record = values as Record<string, unknown>;
     return template.replace(/{(\w+)}/g, (match, key) => {
-      const val = values[key];
+      const val = record[key];
       if (val === undefined) return match;
       // Round numeric values and format with thousand separators (e.g. ₡1,500)
       if (typeof val === 'number') return Math.round(val).toLocaleString('en-US');
@@ -942,10 +943,8 @@ export class CombatMessageGenerator {
       // Phase 2+ flag - skip battle_start emission for subsequent phases
       skipBattleStart?: boolean;
     }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ): any[] {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const narrativeEvents: any[] = [];
+  ): NarrativeEvent[] {
+    const narrativeEvents: NarrativeEvent[] = [];
 
     // Track shield state to detect shield breaks (Map keyed by robot name for N-robot support)
     const prevShields = new Map<string, number>();
@@ -1356,8 +1355,7 @@ export class CombatMessageGenerator {
     event: CombatEvent,
     context: { robot1Name: string; robot2Name: string },
     prevShields: Map<string, number>,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    narrativeEvents: any[],
+    narrativeEvents: NarrativeEvent[],
     ts: number
   ): void {
     // Only check the defender's shield
@@ -1382,8 +1380,7 @@ export class CombatMessageGenerator {
     event: CombatEvent,
     context: { robot1Name: string; robot2Name: string; robot1MaxHP: number; robot2MaxHP: number },
     thresholds: Map<string, Set<number>>,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    narrativeEvents: any[],
+    narrativeEvents: NarrativeEvent[],
     ts: number
   ): void {
     const damageThresholds = [75, 50, 25]; // Light, Moderate, Heavy
@@ -1432,8 +1429,7 @@ export class CombatMessageGenerator {
    * while passing through tag_out/tag_in events unchanged.
    */
   static convertTagTeamEvents(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    mixedEvents: any[],
+    mixedEvents: Array<{ timestamp: number; type: string; [key: string]: unknown }>,
     context: {
       team1Name: string;
       team2Name: string;
@@ -1450,10 +1446,8 @@ export class CombatMessageGenerator {
         robot2MaxHP: number;
       }>;
     }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ): any[] {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const narrativeEvents: any[] = [];
+  ): NarrativeEvent[] {
+    const narrativeEvents: NarrativeEvent[] = [];
     let currentPhase = 0;
     let phaseEvents: CombatEvent[] = [];
     let _phaseStarted = false;
@@ -1485,13 +1479,13 @@ export class CombatMessageGenerator {
           phaseEvents = [];
           currentPhase++;
         }
-        narrativeEvents.push(event);
+        narrativeEvents.push(event as NarrativeEvent);
         _phaseStarted = false;
         continue;
       }
 
       // Raw simulator event - accumulate for phase conversion
-      phaseEvents.push(event as CombatEvent);
+      phaseEvents.push(event as unknown as CombatEvent);
       _phaseStarted = true;
     }
 
@@ -1555,8 +1549,7 @@ export class CombatMessageGenerator {
     robot1MaxHP?: number;
     robot2MaxHP?: number;
     battleType?: 'league' | 'tournament' | 'tag_team' | 'koth';
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  }): any[] {
+  }): NarrativeEvent[] {
     // If real simulator events are provided, convert them
     if (battleData.simulatorEvents && battleData.simulatorEvents.length > 0) {
       return this.convertSimulatorEvents(battleData.simulatorEvents, {
@@ -1574,8 +1567,7 @@ export class CombatMessageGenerator {
     }
 
     // Fallback: generate minimal log without real events (bye matches, etc.)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const log: any[] = [];
+    const log: NarrativeEvent[] = [];
     log.push({
       timestamp: 0.0,
       type: 'battle_start',
@@ -1617,10 +1609,8 @@ export class CombatMessageGenerator {
    */
   static convertKothSimulatorEvents(
     simulatorEvents: CombatEvent[],
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ): any[] {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const narrativeEvents: any[] = [];
+  ): NarrativeEvent[] {
+    const narrativeEvents: NarrativeEvent[] = [];
 
     for (const event of simulatorEvents) {
       const ts = event.timestamp;
@@ -1690,7 +1680,7 @@ export class CombatMessageGenerator {
         }
       } else if (event.type === 'yield') {
         // Pass through with original message (KotH yield messages are already narrative)
-        narrativeEvents.push(event);
+        narrativeEvents.push({ ...event } as NarrativeEvent);
       } else if (event.type === 'shield_break') {
         narrativeEvents.push({
           ...event,
@@ -1704,7 +1694,7 @@ export class CombatMessageGenerator {
       } else {
         // KotH-specific events (zone_enter, zone_exit, score_tick, etc.)
         // and movement events — pass through with original message
-        narrativeEvents.push(event);
+        narrativeEvents.push({ ...event } as NarrativeEvent);
       }
     }
 
@@ -1823,8 +1813,7 @@ export class CombatMessageGenerator {
       kills: number;
       destroyed: boolean;
     }>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  }): Record<string, any> {
+  }): KothBattleLogData {
     // 1. Sample events to reduce count
     const sampledEvents = this.sampleEventsForStorage(data.events);
     

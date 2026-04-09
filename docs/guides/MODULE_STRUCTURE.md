@@ -38,6 +38,7 @@ ArmouredSouls/
 │   │   │   ├── middleware/     # Auth, error handling, validation
 │   │   │   ├── routes/        # Express route handlers
 │   │   │   ├── services/      # Domain-organized service layer (see below)
+│   │   │   ├── types/         # Shared type definitions (JSON payload interfaces)
 │   │   │   └── utils/         # Shared utilities (battleMath, prestigeUtils, etc.)
 │   │   ├── generated/prisma/  # Prisma 7 generated client
 │   │   ├── prisma/            # Schema and migrations

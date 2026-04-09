@@ -184,8 +184,7 @@ export async function updateRobotCombatStats(opts: RobotStatUpdateOptions): Prom
   const lpChange = opts.leaguePointsChange ?? 0;
   const currentLP = opts.currentLeaguePoints ?? 0;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const data: Record<string, any> = {
+  const data: Record<string, unknown> = {
     currentHP: opts.finalHP,
     elo: opts.newELO,
     totalBattles: { increment: 1 },

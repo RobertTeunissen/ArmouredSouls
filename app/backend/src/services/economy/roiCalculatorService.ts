@@ -2,6 +2,32 @@ import prisma from '../../lib/prisma';
 import { getFacilityConfig } from '../../config/facilities';
 import { EconomyError, EconomyErrorCode } from '../../errors/economyErrors';
 
+/** Shape of AuditLog.payload for passive_income events */
+interface PassiveIncomePayload {
+  merchandising?: number;
+  streaming?: number;
+  [key: string]: unknown;
+}
+
+/** Shape of AuditLog.payload for battle_complete events */
+interface BattleCompletePayload {
+  battleId?: number;
+  [key: string]: unknown;
+}
+
+/** Shape of AuditLog.payload for discount-related events (robot_repair, attribute_upgrade, weapon_purchase) */
+interface DiscountEventPayload {
+  cost?: number;
+  discountPercent?: number;
+  [key: string]: unknown;
+}
+
+/** Shape of AuditLog.payload for operating_costs events */
+interface OperatingCostsPayload {
+  costs?: Array<{ facilityType: string; cost: number }>;
+  [key: string]: unknown;
+}
+
 export interface FacilityROI {
   facilityType: string;
   currentLevel: number;
@@ -184,8 +210,7 @@ export class ROICalculatorService {
     let streaming = 0;
 
     for (const event of incomeEvents) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const payload = event.payload as any;
+      const payload = event.payload as unknown as PassiveIncomePayload;
       merchandising += payload.merchandising || 0;
       streaming += payload.streaming || 0;
     }
@@ -226,8 +251,7 @@ export class ROICalculatorService {
 
     // For each battle event, get the streaming revenue
     for (const event of battleEvents) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const payload = event.payload as any;
+      const payload = event.payload as unknown as BattleCompletePayload;
       const battleId = payload.battleId;
       
       if (battleId) {
@@ -284,8 +308,7 @@ export class ROICalculatorService {
       });
 
       for (const event of repairEvents) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const payload = event.payload as any;
+        const payload = event.payload as unknown as DiscountEventPayload;
         const actualCost = payload.cost || 0;
         const discountPercent = payload.discountPercent || 0;
 
@@ -313,8 +336,7 @@ export class ROICalculatorService {
       });
 
       for (const event of upgradeEvents) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const payload = event.payload as any;
+        const payload = event.payload as unknown as DiscountEventPayload;
         const actualCost = payload.cost || 0;
         const discountPercent = payload.discountPercent || 0;
 
@@ -338,8 +360,7 @@ export class ROICalculatorService {
       });
 
       for (const event of weaponEvents) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const payload = event.payload as any;
+        const payload = event.payload as unknown as DiscountEventPayload;
         const actualCost = payload.cost || 0;
         const discountPercent = payload.discountPercent || 0;
 
@@ -380,8 +401,7 @@ export class ROICalculatorService {
     let totalCost = 0;
 
     for (const event of operatingCostEvents) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const payload = event.payload as any;
+      const payload = event.payload as unknown as OperatingCostsPayload;
       const costs = payload.costs || [];
 
       // Find the cost for this specific facility type
@@ -447,8 +467,7 @@ export class ROICalculatorService {
 
       // Get streaming revenue for each battle
       for (const event of battleEvents) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const payload = event.payload as any;
+        const payload = event.payload as unknown as BattleCompletePayload;
         const battleId = payload.battleId;
         const cycle = event.cycleNumber;
 
@@ -477,8 +496,7 @@ export class ROICalculatorService {
     let cumulativeOperatingCosts = 0;
 
     for (const event of events) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const payload = event.payload as any;
+      const payload = event.payload as unknown as (PassiveIncomePayload & DiscountEventPayload & OperatingCostsPayload);
 
       // Add returns
       if (event.eventType === 'passive_income' && facilityType === 'merchandising_hub') {

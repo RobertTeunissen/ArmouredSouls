@@ -42,24 +42,8 @@ export interface StableSummary {
   cycles: CycleSummary[];
 }
 
-// StableMetric shape matches the JSON stored by CycleSnapshotService
-interface StableMetric {
-  userId: number;
-  battlesParticipated: number;
-  totalCreditsEarned: number;
-  totalPrestigeEarned: number;
-  totalRepairCosts: number;
-  merchandisingIncome: number;
-  streamingIncome: number;
-  operatingCosts: number;
-  weaponPurchases: number;
-  facilityPurchases: number;
-  robotPurchases: number;
-  attributeUpgrades: number;
-  totalPurchases: number;
-  netProfit: number;
-  balance: number;
-}
+// Shared typed interface for cycle snapshot metrics
+import type { StableMetric } from '../../types/snapshotTypes';
 
 /**
  * Get the latest cycle number from snapshots.

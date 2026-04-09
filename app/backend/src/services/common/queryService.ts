@@ -22,10 +22,8 @@ export interface AuditLogEntry {
   sequenceNumber: number;
   userId: number | null;
   robotId: number | null;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  payload: Record<string, any>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  metadata?: Record<string, any> | null;
+  payload: Record<string, unknown>;
+  metadata?: Record<string, unknown> | null;
 }
 
 export interface QueryResult {
@@ -123,10 +121,8 @@ export class QueryService {
         sequenceNumber: e.sequenceNumber,
         userId: e.userId,
         robotId: e.robotId,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        payload: e.payload as Record<string, any>,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        metadata: e.metadata as Record<string, any> | null,
+        payload: e.payload as Record<string, unknown>,
+        metadata: e.metadata as Record<string, unknown> | null,
       })),
       total,
       hasMore: offset + events.length < total,
@@ -214,8 +210,7 @@ export class QueryService {
    */
   async searchEventsByPayload(
     searchKey: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    searchValue: any,
+    searchValue: Prisma.InputJsonValue,
     cycleRange?: [number, number]
   ): Promise<AuditLogEntry[]> {
     const where: Prisma.AuditLogWhereInput = {
@@ -248,10 +243,8 @@ export class QueryService {
       sequenceNumber: e.sequenceNumber,
       userId: e.userId,
       robotId: e.robotId,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      payload: e.payload as Record<string, any>,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      metadata: e.metadata as Record<string, any> | null,
+      payload: e.payload as Record<string, unknown>,
+      metadata: e.metadata as Record<string, unknown> | null,
     }));
   }
 
@@ -334,10 +327,8 @@ export class QueryService {
       sequenceNumber: e.sequenceNumber,
       userId: e.userId,
       robotId: e.robotId,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      payload: e.payload as Record<string, any>,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      metadata: e.metadata as Record<string, any> | null,
+      payload: e.payload as Record<string, unknown>,
+      metadata: e.metadata as Record<string, unknown> | null,
     }));
   }
 
@@ -377,10 +368,8 @@ export class QueryService {
       sequenceNumber: e.sequenceNumber,
       userId: e.userId,
       robotId: e.robotId,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      payload: e.payload as Record<string, any>,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      metadata: e.metadata as Record<string, any> | null,
+      payload: e.payload as Record<string, unknown>,
+      metadata: e.metadata as Record<string, unknown> | null,
     }));
   }
 

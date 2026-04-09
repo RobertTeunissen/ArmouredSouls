@@ -1,5 +1,7 @@
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
+import type { Prisma, AuditLog } from '../../../generated/prisma';
+import type { StableMetric, RobotMetric, StepDuration, CycleEventPayload } from '../../types/snapshotTypes';
 
 /**
  * CycleSnapshotService
@@ -14,45 +16,6 @@ import logger from '../../config/logger';
  * 
  * Requirements: 10.1, 10.5
  */
-
-interface StableMetric {
-  userId: number;
-  battlesParticipated: number;
-  totalCreditsEarned: number;
-  totalPrestigeEarned: number;
-  totalRepairCosts: number;
-  merchandisingIncome: number;
-  streamingIncome: number;
-  operatingCosts: number;
-  weaponPurchases: number;
-  facilityPurchases: number;
-  robotPurchases: number;
-  attributeUpgrades: number;
-  totalPurchases: number;
-  netProfit: number;
-  balance: number;
-}
-
-interface RobotMetric {
-  robotId: number;
-  battlesParticipated: number;
-  wins: number;
-  losses: number;
-  draws: number;
-  damageDealt: number;
-  damageReceived: number;
-  creditsEarned: number;
-  repairCosts: number;
-  kills: number;
-  destructions: number;
-  eloChange: number;
-  fameChange: number;
-}
-
-interface StepDuration {
-  stepName: string;
-  duration: number;
-}
 
 interface CycleSnapshot {
   cycleNumber: number;
@@ -95,8 +58,7 @@ export class CycleSnapshotService {
     const startTime = cycleStartEvent.eventTimestamp;
     const endTime = cycleCompleteEvent.eventTimestamp;
     const duration = endTime.getTime() - startTime.getTime();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const triggerType = (cycleStartEvent.payload as any).triggerType || 'manual';
+    const triggerType = (cycleStartEvent.payload as unknown as CycleEventPayload).triggerType || 'manual';
 
     // Aggregate stable metrics
     const stableMetrics = await this.aggregateStableMetrics(cycleNumber);
@@ -120,12 +82,9 @@ export class CycleSnapshotService {
         startTime,
         endTime,
         durationMs: duration,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        stableMetrics: stableMetrics as any,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        robotMetrics: robotMetrics as any,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        stepDurations: stepDurations as any,
+        stableMetrics: stableMetrics as unknown as Prisma.InputJsonValue,
+        robotMetrics: robotMetrics as unknown as Prisma.InputJsonValue,
+        stepDurations: stepDurations as unknown as Prisma.InputJsonValue,
         totalBattles: Math.floor(totalBattles),
         totalCreditsTransacted: BigInt(totalCreditsTransacted),
         totalPrestigeAwarded,
@@ -209,16 +168,14 @@ export class CycleSnapshotService {
 
       // Process battle_complete events - MUCH SIMPLER NOW!
       // Each event is for ONE robot, with userId and robotId in columns
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      battleCompleteEvents.forEach((event: any) => {
+      battleCompleteEvents.forEach((event: AuditLog) => {
         if (!event.userId) {
           logger.info(`[CycleSnapshotService] WARNING: battle_complete event ${event.id} has no userId`);
           return; // Skip invalid events
         }
         
         const metric = getOrCreateMetric(event.userId);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const payload = event.payload as any;
+        const payload = event.payload as unknown as CycleEventPayload;
         
         // Debug logging
         logger.info(`[CycleSnapshotService] Processing battle_complete for user ${event.userId}: credits=${payload.credits}, streaming=${payload.streamingRevenue}, prestige=${payload.prestige}`);
@@ -232,23 +189,19 @@ export class CycleSnapshotService {
       });
 
       // Add passive income (merchandising and streaming)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      passiveIncomeEvents.forEach((event: any) => {
+      passiveIncomeEvents.forEach((event: AuditLog) => {
         if (!event.userId) return;
         const metric = getOrCreateMetric(event.userId);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const payload = event.payload as any;
+        const payload = event.payload as unknown as CycleEventPayload;
         metric.merchandisingIncome += payload.merchandising || 0;
         metric.streamingIncome += payload.streaming || 0;
       });
 
       // Add operating costs
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      operatingCostsEvents.forEach((event: any) => {
+      operatingCostsEvents.forEach((event: AuditLog) => {
         if (!event.userId) return;
         const metric = getOrCreateMetric(event.userId);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const payload = event.payload as any;
+        const payload = event.payload as unknown as CycleEventPayload;
         metric.operatingCosts += payload.totalCost || 0;
       });
 
@@ -260,12 +213,10 @@ export class CycleSnapshotService {
         },
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      repairEvents.forEach((event: any) => {
+      repairEvents.forEach((event: AuditLog) => {
         if (!event.userId) return;
         const metric = getOrCreateMetric(event.userId);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const payload = event.payload as any;
+        const payload = event.payload as unknown as CycleEventPayload;
         metric.totalRepairCosts += payload.cost || 0;
       });
 
@@ -299,32 +250,26 @@ export class CycleSnapshotService {
       });
 
       // Aggregate weapon purchases
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      weaponPurchaseEvents.forEach((event: any) => {
+      weaponPurchaseEvents.forEach((event: AuditLog) => {
         if (!event.userId) return;
         const metric = getOrCreateMetric(event.userId);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const payload = event.payload as any;
+        const payload = event.payload as unknown as CycleEventPayload;
         metric.weaponPurchases += payload.cost || 0;
       });
 
       // Aggregate facility purchases
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      facilityPurchaseEvents.forEach((event: any) => {
+      facilityPurchaseEvents.forEach((event: AuditLog) => {
         if (!event.userId) return;
         const metric = getOrCreateMetric(event.userId);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const payload = event.payload as any;
+        const payload = event.payload as unknown as CycleEventPayload;
         metric.facilityPurchases += payload.cost || 0;
       });
 
       // Aggregate robot purchases
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      robotPurchaseEvents.forEach((event: any) => {
+      robotPurchaseEvents.forEach((event: AuditLog) => {
         if (!event.userId) return;
         const metric = getOrCreateMetric(event.userId);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const payload = event.payload as any;
+        const payload = event.payload as unknown as CycleEventPayload;
         metric.robotPurchases += payload.cost || 0;
       });
 
@@ -341,8 +286,7 @@ export class CycleSnapshotService {
         if (!robot) continue;
 
         const metric = getOrCreateMetric(robot.userId);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const payload = event.payload as any;
+        const payload = event.payload as unknown as CycleEventPayload;
         metric.attributeUpgrades += payload.cost || 0;
       }
 
@@ -357,10 +301,10 @@ export class CycleSnapshotService {
 
       // Create map of userId -> balance from cycle_end_balance events
       const balanceMap = new Map<number, number>();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      cycleEndBalanceEvents.forEach((event: any) => {
+      cycleEndBalanceEvents.forEach((event: AuditLog) => {
         if (event.userId && event.payload) {
-          balanceMap.set(event.userId, event.payload.balance || 0);
+          const payload = event.payload as unknown as CycleEventPayload;
+          balanceMap.set(event.userId, payload.balance || 0);
         }
       });
 
@@ -421,8 +365,7 @@ export class CycleSnapshotService {
     });
 
     // Process each battle_complete event
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    battleCompleteEvents.forEach((event: any) => {
+    battleCompleteEvents.forEach((event: AuditLog) => {
       if (!event.robotId) return; // Skip invalid events
       
       let robotMetric = metricsMap.get(event.robotId);
@@ -431,8 +374,7 @@ export class CycleSnapshotService {
         metricsMap.set(event.robotId, robotMetric);
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const payload = event.payload as any;
+      const payload = event.payload as unknown as CycleEventPayload;
       
       // Aggregate battle participation
       robotMetric.battlesParticipated++;
@@ -462,24 +404,20 @@ export class CycleSnapshotService {
       },
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    repairEvents.forEach((event: any) => {
+    repairEvents.forEach((event: AuditLog) => {
       if (!event.robotId) return;
 
       const robotMetric = metricsMap.get(event.robotId);
       if (robotMetric) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const payload = event.payload as any;
+        const payload = event.payload as unknown as CycleEventPayload;
         robotMetric.repairCosts += payload.cost || 0;
       }
     });
     
     // Calculate damage received by looking at opponent's damageDealt
     // For each battle, we need to find the opponent's event
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const battleEventsByBattle = new Map<number, any[]>();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    battleCompleteEvents.forEach((event: any) => {
+    const battleEventsByBattle = new Map<number, AuditLog[]>();
+    battleCompleteEvents.forEach((event: AuditLog) => {
       const battleId = event.battleId;
       if (!battleId) return;
       
@@ -493,20 +431,14 @@ export class CycleSnapshotService {
     battleEventsByBattle.forEach((events) => {
       if (events.length !== 2 && events.length !== 4) return; // Should be 2 for 1v1/tournament, 4 for tag team
       
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      events.forEach((event: any) => {
-        const robotMetric = metricsMap.get(event.robotId);
+      events.forEach((event: AuditLog) => {
+        const robotMetric = metricsMap.get(event.robotId!);
         if (!robotMetric) return;
-        
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const _payload = event.payload as any;
         
         // Find opponent(s) in the same battle
         const opponents = events.filter(e => e.robotId !== event.robotId);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        opponents.forEach((oppEvent: any) => {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const oppPayload = oppEvent.payload as any;
+        opponents.forEach((oppEvent: AuditLog) => {
+          const oppPayload = oppEvent.payload as unknown as CycleEventPayload;
           
           // Add opponent's damage as damage received
           robotMetric.damageReceived += oppPayload.damageDealt || 0;
@@ -536,13 +468,11 @@ export class CycleSnapshotService {
       },
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return stepEvents.map((event: any) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const payload = event.payload as any;
+    return stepEvents.map((event: AuditLog) => {
+      const payload = event.payload as unknown as CycleEventPayload;
       return {
-        stepName: payload.stepName,
-        duration: payload.duration,
+        stepName: payload.stepName as string,
+        duration: payload.duration as number,
       };
     });
   }
@@ -643,8 +573,7 @@ export class CycleSnapshotService {
       },
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return snapshots.map((snapshot: any) => ({
+    return snapshots.map((snapshot) => ({
       cycleNumber: snapshot.cycleNumber,
       triggerType: snapshot.triggerType as 'manual' | 'scheduled',
       startTime: snapshot.startTime,

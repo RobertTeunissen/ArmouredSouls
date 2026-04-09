@@ -7,10 +7,10 @@
  * and DO create battles with participation rewards.
  */
 
-import { Robot, ScheduledTournamentMatch, Battle } from '../../../generated/prisma';
+import { Robot, ScheduledTournamentMatch, Battle, Prisma } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
-import { simulateBattle } from '../battle/combatSimulator';
+import { simulateBattle, CombatResult } from '../battle/combatSimulator';
 import { CombatMessageGenerator } from '../battle/combatMessageGenerator';
 import { calculateELOChange } from '../../utils/battleMath';
 import {
@@ -290,8 +290,7 @@ async function createTournamentBattleRecord(
   tournamentMatch: ScheduledTournamentMatch,
   robot1: Robot,
   robot2: Robot,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  combatResult: any,
+  combatResult: CombatResult,
   round: number,
   maxRounds: number,
   totalParticipants: number,
@@ -397,7 +396,7 @@ async function createTournamentBattleRecord(
         arenaRadius: combatResult.arenaRadius,
         startingPositions: combatResult.startingPositions,
         endingPositions: combatResult.endingPositions,
-      },
+      } as unknown as Prisma.InputJsonValue,
       durationSeconds: combatResult.durationSeconds,
 
       // Economic data

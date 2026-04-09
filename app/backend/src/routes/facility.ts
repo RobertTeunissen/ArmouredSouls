@@ -10,9 +10,6 @@ import logger from '../config/logger';
 import { AuthError, AuthErrorCode } from '../errors/authErrors';
 import { EconomyError, EconomyErrorCode } from '../errors/economyErrors';
 import { validateRequest } from '../middleware/schemaValidator';
-// Ownership helpers available for future use — facility routes use userId_facilityType
-// compound key which inherently verifies ownership
-import { verifyFacilityOwnership } from '../middleware/ownership';
 import { securityMonitor } from '../services/security/securityMonitor';
 
 const router = express.Router();

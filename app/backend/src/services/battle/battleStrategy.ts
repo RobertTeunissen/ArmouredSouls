@@ -29,10 +29,12 @@
  * └─────────────────────────────────────────────────────────────┘
  */
 
-import { Robot, Battle } from '../../../generated/prisma';
+import { Robot, Battle, Prisma } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
+import { CombatEvent } from './combatSimulator';
 import { calculateELOChange } from '../../utils/battleMath';
+import { BattleLogData } from '../../types/battleLogTypes';
 import {
   awardStreamingRevenueForParticipant,
   logBattleAuditEvent,
@@ -65,8 +67,7 @@ export interface SimulationResult {
     destroyed: boolean;
   }>;
   /** Raw combat events for battle log */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  events: any[];
+  events: CombatEvent[];
   /** 2D arena spatial metadata */
   arenaRadius?: number;
   startingPositions?: Record<string, { x: number; y: number }>;
@@ -159,8 +160,7 @@ export interface BattleStrategy<TMatch = unknown> {
    * Build the battle log JSON for the Battle record.
    * Each match type has its own log format (narrative messages, KotH placements, etc.)
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  buildBattleLog(result: SimulationResult, participants: LoadedParticipant[], match: TMatch): any;
+  buildBattleLog(result: SimulationResult, participants: LoadedParticipant[], match: TMatch): BattleLogData;
 
   /**
    * Return any type-specific fields for the Battle record.
@@ -282,7 +282,7 @@ export class BattleProcessor<TMatch = unknown> {
         winnerId: simResult.winnerId,
         battleType: strategy.battleType,
         leagueType: strategy.leagueType,
-        battleLog,
+        battleLog: battleLog as unknown as Prisma.InputJsonValue,
         durationSeconds: simResult.durationSeconds,
         winnerReward,
         loserReward,
