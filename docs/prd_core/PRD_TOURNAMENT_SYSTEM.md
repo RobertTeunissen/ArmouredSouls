@@ -1701,11 +1701,11 @@ User
 git pull
 
 # 2. Install dependencies (if needed)
-cd prototype/backend && npm install
-cd prototype/frontend && npm install
+cd app/backend && npm install
+cd app/frontend && npm install
 
 # 3. Reset database
-cd prototype/backend
+cd app/backend
 npm run prisma:reset
 
 # 4. Apply migrations
@@ -1718,11 +1718,11 @@ npm run prisma:seed
 #### Running the System
 ```bash
 # Terminal 1: Start backend
-cd prototype/backend
+cd app/backend
 npm run dev
 
 # Terminal 2: Start frontend
-cd prototype/frontend
+cd app/frontend
 npm run dev
 
 # Terminal 3: Open browser
@@ -1818,7 +1818,7 @@ Cycle 7 (Finals):
 
 **Setup:**
 ```bash
-cd prototype/backend
+cd app/backend
 npm run prisma:seed
 ```
 
@@ -2181,14 +2181,14 @@ curl -X GET http://localhost:3001/api/admin/tournaments/eligible-robots \
 
 3. **Verify Prisma version compatibility**
    ```bash
-   cd prototype/backend
+   cd app/backend
    npm list prisma
    ```
 
 #### Migration Details
 
 **Migration File:**
-- Location: `prototype/backend/prisma/migrations/20260205111500_add_tournament_system/`
+- Location: `app/backend/prisma/migrations/20260205111500_add_tournament_system/`
 - File: `migration.sql`
 
 **Migration Includes:**
@@ -2201,7 +2201,7 @@ curl -X GET http://localhost:3001/api/admin/tournaments/eligible-robots \
 #### To Apply Migration
 
 ```bash
-cd prototype/backend
+cd app/backend
 
 # 1. Apply migration
 npx prisma migrate deploy

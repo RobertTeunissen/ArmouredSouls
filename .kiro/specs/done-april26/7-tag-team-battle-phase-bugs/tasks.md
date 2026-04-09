@@ -9,7 +9,7 @@ This spec depends on spec 6 (combat-event-hp-tracking-fix) which introduces `rob
 - [x] 1. Write bug condition exploration tests
   - **Property 1: Bug Condition** - Tag team phase transition bugs
   - **CRITICAL**: These tests MUST FAIL on unfixed code - failure confirms the bugs exist
-  - Create `prototype/backend/tests/tagTeamPhaseBugs.pbt.test.ts`
+  - Create `app/backend/tests/tagTeamPhaseBugs.pbt.test.ts`
   - Bug condition tests (should FAIL on unfixed code):
     - Test: `winnerId` for tag team battles is NOT a robot ID (should be team ID)
     - Test: Phase 2 narrative events do NOT contain a `battle_start` event at timestamp 0
@@ -22,7 +22,7 @@ This spec depends on spec 6 (combat-event-hp-tracking-fix) which introduces `rob
 
 - [x] 2. Write preservation property tests (BEFORE implementing fix)
   - **Property 2: Preservation** - Existing behavior that must not change
-  - Create preservation tests in `prototype/backend/tests/tagTeamPhaseBugs.pbt.test.ts`
+  - Create preservation tests in `app/backend/tests/tagTeamPhaseBugs.pbt.test.ts`
   - Preservation tests (should PASS on unfixed code):
     - Test: Standard 1v1 battles continue to use robot ID as winnerId
     - Test: Phase 1 events start at timestamp 0 with a `battle_start` event
@@ -38,7 +38,7 @@ This spec depends on spec 6 (combat-event-hp-tracking-fix) which introduces `rob
 - [x] 3. Fix winner determination in tag team orchestrator
 
   - [x] 3.1 Update winner ID assignment to use team ID
-    - File: `prototype/backend/src/services/tagTeamBattleOrchestrator.ts`
+    - File: `app/backend/src/services/tagTeamBattleOrchestrator.ts`
     - Lines: 900-912
     - Change `winnerId = team1CurrentFighterId` to `winnerId = team1.id`
     - Change `winnerId = team2CurrentFighterId` to `winnerId = team2.id`
@@ -48,7 +48,7 @@ This spec depends on spec 6 (combat-event-hp-tracking-fix) which introduces `rob
     - _Requirements: 2.1_
 
   - [x] 3.2 Fix draw detection logic
-    - File: `prototype/backend/src/services/tagTeamBattleOrchestrator.ts`
+    - File: `app/backend/src/services/tagTeamBattleOrchestrator.ts`
     - Lines: 870-912
     - Calculate total remaining HP for each team (active + reserve)
     - Only declare draw when both teams have 0 total HP
@@ -77,7 +77,7 @@ This spec depends on spec 6 (combat-event-hp-tracking-fix) which introduces `rob
 - [x] 4. Fix shield state preservation
 
   - [x] 4.1 Capture shield state after each phase
-    - File: `prototype/backend/src/services/tagTeamBattleOrchestrator.ts`
+    - File: `app/backend/src/services/tagTeamBattleOrchestrator.ts`
     - After `phase1Result = simulateBattle()`, extract final shield values from `robotShield` map
     - Update `team1CurrentRobot.currentShield` and `team2CurrentRobot.currentShield`
     - Do the same after phase 2 if there's a phase 3
@@ -104,13 +104,13 @@ This spec depends on spec 6 (combat-event-hp-tracking-fix) which introduces `rob
 - [x] 5. Fix timestamp and battle_start handling
 
   - [x] 5.1 Add skipBattleStart flag to convertSimulatorEvents
-    - File: `prototype/backend/src/services/combatMessageGenerator.ts`
+    - File: `app/backend/src/services/combatMessageGenerator.ts`
     - Add `skipBattleStart?: boolean` to context parameter
     - Skip battle_start emission when flag is true
     - _Requirements: 2.2_
 
   - [x] 5.2 Update convertTagTeamEvents to track timestamp offset
-    - File: `prototype/backend/src/services/combatMessageGenerator.ts`
+    - File: `app/backend/src/services/combatMessageGenerator.ts`
     - Track cumulative timestamp from phase end times
     - Pass `skipBattleStart: true` for phase 2+
     - Note: Timestamp offset is already applied by orchestrator (events have correct timestamps)
@@ -132,7 +132,7 @@ This spec depends on spec 6 (combat-event-hp-tracking-fix) which introduces `rob
 - [x] 6. Fix robot name display in attack messages
 
   - [x] 6.1 Ensure attack messages use event.attacker/defender
-    - File: `prototype/backend/src/services/combatMessageGenerator.ts`
+    - File: `app/backend/src/services/combatMessageGenerator.ts`
     - In `convertSimulatorEvents()`, use `event.attacker` and `event.defender` directly
     - Add fallback to context robot names if event names are missing
     - _Requirements: 2.3, 2.5_
@@ -153,13 +153,13 @@ This spec depends on spec 6 (combat-event-hp-tracking-fix) which introduces `rob
 - [x] 7. Fix admin portal display
 
   - [x] 7.1 Update BattleLogsTab to show all 4 robots for tag team
-    - File: `prototype/frontend/src/components/admin/BattleLogsTab.tsx`
+    - File: `app/frontend/src/components/admin/BattleLogsTab.tsx`
     - For `battleFormat === '2v2'`, show "Team 1 (Active + Reserve)" format
     - Keep existing display for 1v1 battles
     - _Requirements: 2.6, 3.8_
 
   - [x] 7.2 Update admin battles API to include team robot names
-    - File: `prototype/backend/src/routes/admin.ts` (or relevant API file)
+    - File: `app/backend/src/routes/admin.ts` (or relevant API file)
     - Include `team1ActiveName`, `team1ReserveName`, `team2ActiveName`, `team2ReserveName` in response
     - _Requirements: 2.6_
 

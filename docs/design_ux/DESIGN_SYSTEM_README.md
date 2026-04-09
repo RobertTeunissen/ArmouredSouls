@@ -218,7 +218,7 @@ Located in `/docs/` - These define **CONTENT** to visualize
 - **Target**: Scannable cards, icon-based attributes (60% reduction)
 
 ### User Experience
-- **Current**: "Feels like a prototype/spreadsheet"
+- **Current**: "Feels like a app/spreadsheet"
 - **Target**: "Feels like a complete game"
 
 ### Performance

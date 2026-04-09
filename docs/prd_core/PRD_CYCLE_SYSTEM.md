@@ -666,9 +666,9 @@ Executes the full KotH cycle on demand (repair → battles → matchmaking → n
 - [PRD_ECONOMY_SYSTEM.md](PRD_ECONOMY_SYSTEM.md) - Economic systems
 
 ### Implementation Files
-- `prototype/backend/src/routes/admin.ts` - Cycle execution endpoint
-- `prototype/backend/src/services/cycleSnapshotService.ts` - Snapshot creation
-- `prototype/backend/src/routes/analytics.ts` - Cycle analytics endpoints
+- `app/backend/src/routes/admin.ts` - Cycle execution endpoint
+- `app/backend/src/services/cycleSnapshotService.ts` - Snapshot creation
+- `app/backend/src/routes/analytics.ts` - Cycle analytics endpoints
 
 ### Documentation
 - `CYCLESNAPSHOT_VS_AUDITLOG.md` - Comparison and rationale

@@ -6,7 +6,7 @@ Fixed 5 display and calculation issues in the Investments & ROI tab on the Facil
 ## Changes Made
 
 ### 1. Financial Metrics Layout (✅ Complete)
-**Location**: `prototype/frontend/src/pages/FacilitiesPage.tsx`
+**Location**: `app/frontend/src/pages/FacilitiesPage.tsx`
 
 Changed financial metrics from 3-column grid to 4-column single row:
 - Investment
@@ -17,12 +17,12 @@ Changed financial metrics from 3-column grid to 4-column single row:
 All metrics now displayed on one line for better readability.
 
 ### 2. ROI Progress Bar Removal (✅ Complete)
-**Location**: `prototype/frontend/src/pages/FacilitiesPage.tsx`
+**Location**: `app/frontend/src/pages/FacilitiesPage.tsx`
 
 Removed the ROI progress bar section entirely as it added no value.
 
 ### 3. Breakeven Display Enhancement (✅ Complete)
-**Location**: `prototype/frontend/src/pages/FacilitiesPage.tsx`
+**Location**: `app/frontend/src/pages/FacilitiesPage.tsx`
 
 Updated breakeven display to show:
 - "X cycles remaining" if breakeven is in the future
@@ -32,7 +32,7 @@ Updated breakeven display to show:
 Added current cycle fetching to enable proper calculation.
 
 ### 4. Repair Bay Rounding (✅ Complete)
-**Location**: `prototype/backend/src/services/roiCalculatorService.ts`
+**Location**: `app/backend/src/services/roiCalculatorService.ts`
 
 Added `Math.round()` to repair bay savings calculation to round to whole credits, matching other values on the page.
 
@@ -58,11 +58,11 @@ Added `Math.round()` to repair bay savings calculation to round to whole credits
 ## Files Modified
 
 ### Backend
-- `prototype/backend/src/services/roiCalculatorService.ts`
+- `app/backend/src/services/roiCalculatorService.ts`
   - Added rounding for repair bay savings
 
 ### Frontend
-- `prototype/frontend/src/pages/FacilitiesPage.tsx`
+- `app/frontend/src/pages/FacilitiesPage.tsx`
   - Changed financial metrics layout to 4-column grid
   - Removed ROI progress bar
   - Added current cycle state and fetching

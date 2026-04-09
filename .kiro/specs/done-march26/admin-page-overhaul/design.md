@@ -9,12 +9,12 @@ The Admin Page (`/admin`) has accumulated 10 distinct bugs spanning structural b
 - **Bug_Condition (C)**: The set of conditions that trigger any of the 10 identified bugs — tab overcount, buried bankruptcy check, broken onboarding navigation, confusing refresh behavior, skipped tests, broken tournament management, missing tag team support, hardcoded 1v1 modal, redundant System Health tab, fragmented user/onboarding views
 - **Property (P)**: The desired behavior after fix — streamlined 7-tab layout with dedicated Bankruptcy Monitor tab, component decomposition for testability, tag team battle visibility, working tournament management, comprehensive per-component test coverage
 - **Preservation**: Existing cycle controls, 1v1 battle log display, 1v1 battle details modal, robot stats analytics, tab persistence via localStorage/URL hash, session logging, and all backend admin API endpoints must continue working identically
-- **AdminPage**: The main admin portal component at `prototype/frontend/src/pages/AdminPage.tsx` (2,249 lines) — to be decomposed into a thin shell + separate tab components
-- **Tab Components**: New per-tab components extracted from AdminPage: `DashboardTab`, `CycleControlsTab`, `BattleLogsTab`, `RobotStatsTab`, `BankruptcyMonitorTab`, `RecentUsersTab` — each in `prototype/frontend/src/components/admin/`
-- **BattleDetailsModal**: The battle analysis modal at `prototype/frontend/src/components/BattleDetailsModal.tsx` hardcoded for 1v1 robot1/robot2 structure
-- **TournamentManagement**: The tournament admin component at `prototype/frontend/src/components/TournamentManagement.tsx` using `tournamentApi.ts` contracts
-- **SystemHealthPage**: The standalone system health component at `prototype/frontend/src/pages/SystemHealthPage.tsx` fetching from `/api/analytics/*` endpoints
-- **OnboardingAnalyticsPage**: The separate onboarding analytics page at `prototype/frontend/src/pages/OnboardingAnalyticsPage.tsx` fetching from `/api/onboarding/analytics/summary`
+- **AdminPage**: The main admin portal component at `app/frontend/src/pages/AdminPage.tsx` (2,249 lines) — to be decomposed into a thin shell + separate tab components
+- **Tab Components**: New per-tab components extracted from AdminPage: `DashboardTab`, `CycleControlsTab`, `BattleLogsTab`, `RobotStatsTab`, `BankruptcyMonitorTab`, `RecentUsersTab` — each in `app/frontend/src/components/admin/`
+- **BattleDetailsModal**: The battle analysis modal at `app/frontend/src/components/BattleDetailsModal.tsx` hardcoded for 1v1 robot1/robot2 structure
+- **TournamentManagement**: The tournament admin component at `app/frontend/src/components/TournamentManagement.tsx` using `tournamentApi.ts` contracts
+- **SystemHealthPage**: The standalone system health component at `app/frontend/src/pages/SystemHealthPage.tsx` fetching from `/api/analytics/*` endpoints
+- **OnboardingAnalyticsPage**: The separate onboarding analytics page at `app/frontend/src/pages/OnboardingAnalyticsPage.tsx` fetching from `/api/onboarding/analytics/summary`
 - **TagTeamMatch**: Prisma model for 2v2 scheduled battles linking two `TagTeam` records to a `Battle` via `battleId`
 - **TagTeam**: Prisma model representing a 2v2 team with `activeRobotId` and `reserveRobotId`
 
@@ -209,7 +209,7 @@ Assuming our root cause analysis is correct:
 
 The monolithic `AdminPage.tsx` (2,249 lines) is decomposed into a thin shell component + separate tab components. This is the foundational change that enables all other fixes and makes the codebase testable.
 
-**New directory**: `prototype/frontend/src/components/admin/`
+**New directory**: `app/frontend/src/components/admin/`
 
 **New tab components** (extracted from AdminPage.tsx):
 - `DashboardTab.tsx` — System statistics grid (cleaned up layout), System Health collapsible section (absorbed from SystemHealthPage)
@@ -219,9 +219,9 @@ The monolithic `AdminPage.tsx` (2,249 lines) is decomposed into a thin shell com
 - `BankruptcyMonitorTab.tsx` — Dedicated at-risk users view (extracted from Dashboard's conditional section), always shows status even when 0 users at risk
 - `RecentUsersTab.tsx` — Recent real users list with per-user onboarding status, robot details, issue detection (kept as-is from current recent-users tab)
 
-**Shared types file**: `prototype/frontend/src/components/admin/types.ts` — Shared interfaces (`SystemStats`, `Battle`, `SessionLogEntry`, `RobotStats`, `AtRiskUser`, etc.) extracted from AdminPage.tsx
+**Shared types file**: `app/frontend/src/components/admin/types.ts` — Shared interfaces (`SystemStats`, `Battle`, `SessionLogEntry`, `RobotStats`, `AtRiskUser`, etc.) extracted from AdminPage.tsx
 
-**File**: `prototype/frontend/src/pages/AdminPage.tsx`
+**File**: `app/frontend/src/pages/AdminPage.tsx`
 
 **Specific Changes**:
 1. **Reduce to thin shell**: AdminPage becomes a ~100-200 line shell that handles tab navigation, URL hash/localStorage persistence, and renders the active tab component. All tab-specific state, data fetching, and rendering moves into the respective tab components.
@@ -232,24 +232,24 @@ The monolithic `AdminPage.tsx` (2,249 lines) is decomposed into a thin shell com
 
 4. **Session log as shared state**: Pass `addSessionLog` and `sessionLog` as props or via a lightweight context to tab components that need it (CycleControlsTab, BattleLogsTab, RobotStatsTab).
 
-**File**: `prototype/frontend/src/components/admin/DashboardTab.tsx`
+**File**: `app/frontend/src/components/admin/DashboardTab.tsx`
 
 **Specific Changes**:
 5. **Dashboard Layout Cleanup**: Reorganize the system statistics grid for better visual hierarchy. Group related stats into clear sections (Robots, Battles, Economy, Facilities, Combat). Use consistent card sizing and spacing.
 
 6. **System Health Integration**: Absorb the `SystemHealthPage` content as a collapsible `<details>` section at the bottom of the Dashboard. Fetch from `/api/analytics/performance`, `/api/analytics/integrity`, and `/api/analytics/logs/summary`. Show cycle performance, data integrity status, and event statistics.
 
-**File**: `prototype/frontend/src/components/admin/BankruptcyMonitorTab.tsx`
+**File**: `app/frontend/src/components/admin/BankruptcyMonitorTab.tsx`
 
 **Specific Changes**:
 7. **Dedicated Bankruptcy Tab**: Extract the at-risk users functionality from Dashboard into its own tab component. Fetch from `GET /api/admin/users/at-risk`. Always render — when `totalAtRisk === 0`, show a green "✓ No users at risk of bankruptcy" confirmation with the threshold displayed. When users are at risk, show the full detailed list with balance history, runway days, and robot damage info.
 
-**File**: `prototype/frontend/src/components/admin/BattleLogsTab.tsx`
+**File**: `app/frontend/src/components/admin/BattleLogsTab.tsx`
 
 **Specific Changes**:
 8. **Tag Team Filter**: Add "Tag Team" option to the `battleTypeFilter` dropdown (`<option value="tagteam">Tag Team Battles</option>`). Pass `battleType=tagteam` query parameter to the backend.
 
-**File**: `prototype/backend/src/routes/admin.ts`
+**File**: `app/backend/src/routes/admin.ts`
 
 **Function**: `GET /api/admin/battles`
 
@@ -258,29 +258,29 @@ The monolithic `AdminPage.tsx` (2,249 lines) is decomposed into a thin shell com
 
 10. **Tag Team Battle Details Endpoint**: Extend `GET /api/admin/battles/:id` to detect if a battle has an associated `TagTeamMatch` and return team data (team1 with activeRobot/reserveRobot, team2 with activeRobot/reserveRobot) alongside the standard battle data.
 
-**File**: `prototype/frontend/src/components/BattleDetailsModal.tsx`
+**File**: `app/frontend/src/components/BattleDetailsModal.tsx`
 
 **Specific Changes**:
 11. **Tag Team Detection and Rendering**: Add conditional rendering that checks for a `battleFormat` or `teams` field in the battle data. When tag team data is present, render a 2v2 layout showing Team 1 (active + reserve robots) vs Team 2 (active + reserve robots) with team-level stats. Preserve the existing 1v1 layout for standard battles.
 
-**File**: `prototype/frontend/src/components/TournamentManagement.tsx`
+**File**: `app/frontend/src/components/TournamentManagement.tsx`
 
 **Specific Changes**:
 12. **API Contract Alignment**: Verify and update the component to work with the current `tournamentApi.ts` contracts. The `getTournamentDetails()` now returns `{ tournament: TournamentDetails; seedings: SeedEntry[] }` where `TournamentDetails` includes `matches` (all rounds) and `currentRoundMatches` (derived client-side). Ensure the component accesses `currentRoundMatches` correctly from the response.
 
-**File**: `prototype/frontend/src/pages/OnboardingAnalyticsPage.tsx`
+**File**: `app/frontend/src/pages/OnboardingAnalyticsPage.tsx`
 
 **Specific Changes**:
 13. **Remove link, keep route**: Remove the admin header link to this page. The route can remain for direct URL access but is no longer part of the admin workflow. The page's in-memory analytics are unreliable (lost on server restart) so it should not be prominently featured.
 
 ### Test Suite Architecture
 
-**File**: `prototype/frontend/src/pages/__tests__/AdminPage.test.tsx`
+**File**: `app/frontend/src/pages/__tests__/AdminPage.test.tsx`
 
 **Specific Changes**:
 14. **Shell-only tests**: Remove `describe.skip()`. Rewrite to test only the AdminPage shell: 7-tab rendering, tab switching, URL hash persistence, localStorage persistence. Mock all tab components.
 
-**New test files** in `prototype/frontend/src/components/admin/__tests__/`:
+**New test files** in `app/frontend/src/components/admin/__tests__/`:
 - `DashboardTab.test.tsx` — Stats loading, grid rendering, System Health collapsible section
 - `CycleControlsTab.test.tsx` — Button rendering, cycle execution, session log
 - `BattleLogsTab.test.tsx` — Search, filtering (including tag team), pagination, battle selection

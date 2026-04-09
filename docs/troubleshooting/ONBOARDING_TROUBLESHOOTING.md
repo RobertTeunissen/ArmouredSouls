@@ -5,12 +5,12 @@
 Quick reference for diagnosing and fixing issues with the New Player Onboarding System (5-step interactive tutorial; backend internally uses steps 1-9). Covers stuck states, display issues, reset problems, and manual database fixes.
 
 **Key files**:
-- Backend service: `prototype/backend/src/services/onboardingService.ts`
-- Backend routes: `prototype/backend/src/routes/onboarding.ts`
-- Analytics service: `prototype/backend/src/services/onboardingAnalyticsService.ts`
-- Error definitions: `prototype/backend/src/errors/onboardingErrors.ts`
-- Frontend orchestrator: `prototype/frontend/src/components/onboarding/OnboardingContainer.tsx`
-- Frontend context: `prototype/frontend/src/contexts/OnboardingContext.tsx`
+- Backend service: `app/backend/src/services/onboardingService.ts`
+- Backend routes: `app/backend/src/routes/onboarding.ts`
+- Analytics service: `app/backend/src/services/onboardingAnalyticsService.ts`
+- Error definitions: `app/backend/src/errors/onboardingErrors.ts`
+- Frontend orchestrator: `app/frontend/src/components/onboarding/OnboardingContainer.tsx`
+- Frontend context: `app/frontend/src/contexts/OnboardingContext.tsx`
 
 **Related docs**:
 - [PRD_ONBOARDING_SYSTEM.md](../prd_core/PRD_ONBOARDING_SYSTEM.md)
@@ -38,7 +38,7 @@ UPDATE users SET onboarding_step = <nextStep> WHERE id = <userId>;
 
 Or use Prisma Studio:
 ```bash
-cd prototype/backend
+cd app/backend
 npx prisma studio
 ```
 Navigate to User table → find user → update `onboardingStep`.
@@ -196,7 +196,7 @@ curl -X POST http://localhost:3001/api/onboarding/analytics \
 - Hard refresh (Ctrl+Shift+R) to retry chunk loading
 - If it persists, verify the build includes all step component chunks:
 ```bash
-cd prototype/frontend
+cd app/frontend
 npm run build
 ls dist/assets/*.js | wc -l  # Should include step chunks
 ```
@@ -284,7 +284,7 @@ WHERE user_id = <userId>
 ### Using Prisma Studio
 
 ```bash
-cd prototype/backend
+cd app/backend
 npx prisma studio
 ```
 

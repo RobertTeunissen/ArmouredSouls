@@ -1,6 +1,6 @@
 # Service-to-Module Mapping
 
-This document maps every service file in `prototype/backend/src/services/` (and related directories) to its target module for the Phase 2 modular architecture migration.
+This document maps every service file in `app/backend/src/services/` (and related directories) to its target module for the Phase 2 modular architecture migration.
 
 See [MODULAR_MIGRATION_STRATEGY.md](./MODULAR_MIGRATION_STRATEGY.md) for the extraction plan.
 

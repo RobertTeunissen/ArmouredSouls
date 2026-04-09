@@ -2,11 +2,11 @@
 
 ## Introduction
 
-Reorganize and consolidate the 41 backend services in `prototype/backend/src/services/` from a flat directory of loosely related files into a domain-organized structure with clear boundaries. The primary targets are the 4 duplicate battle orchestrators, the 3 overlapping league services, and the 5 tag-team services that mirror league services. This reduces cognitive load, makes the codebase navigable, and establishes a pattern for future service development.
+Reorganize and consolidate the 41 backend services in `app/backend/src/services/` from a flat directory of loosely related files into a domain-organized structure with clear boundaries. The primary targets are the 4 duplicate battle orchestrators, the 3 overlapping league services, and the 5 tag-team services that mirror league services. This reduces cognitive load, makes the codebase navigable, and establishes a pattern for future service development.
 
 ## Glossary
 
-- **Service_Directory**: The `prototype/backend/src/services/` directory containing all backend service files.
+- **Service_Directory**: The `app/backend/src/services/` directory containing all backend service files.
 - **Domain_Subdirectory**: A subdirectory within Service_Directory that groups related services by domain (e.g., `services/battle/`, `services/league/`).
 - **Battle_Orchestrator**: A service that coordinates the execution of a battle for a specific mode (league, tournament, tag-team, KotH). Currently 4 separate files with overlapping logic.
 - **Base_Orchestrator**: A shared abstraction that encapsulates common battle orchestration logic (matchmaking validation, battle execution, post-combat processing, result recording) used by all battle modes.
@@ -25,7 +25,7 @@ This spec targets the "service sprawl" debt identified in the project assessment
 
 After all tasks are marked complete, run these checks to confirm the debt reduction was achieved:
 
-1. `ls prototype/backend/src/services/*.ts 2>/dev/null` returns zero files (no service files in root, only subdirectories)
+1. `ls app/backend/src/services/*.ts 2>/dev/null` returns zero files (no service files in root, only subdirectories)
 2. Every subdirectory has an `index.ts` barrel file
 3. All backend tests pass with zero assertion changes (only import path changes)
 4. The application starts and serves requests

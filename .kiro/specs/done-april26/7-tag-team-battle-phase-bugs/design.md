@@ -164,7 +164,7 @@ The current bug where `winnerId` is set to a robot ID causes **incorrect reward 
 
 ### Component 1: Winner Determination Fix
 
-**File**: `prototype/backend/src/services/tagTeamBattleOrchestrator.ts`
+**File**: `app/backend/src/services/tagTeamBattleOrchestrator.ts`
 **Lines**: 900-912
 
 **Current Code (Defective)**:
@@ -193,7 +193,7 @@ The current bug where `winnerId` is set to a robot ID causes **incorrect reward 
 
 ### Component 2: Timestamp Offset Fix
 
-**File**: `prototype/backend/src/services/combatMessageGenerator.ts`
+**File**: `app/backend/src/services/combatMessageGenerator.ts`
 **Function**: `convertTagTeamEvents()` and `convertSimulatorEvents()`
 
 **Problem**: Each phase's events start at timestamp 0, and `convertSimulatorEvents` emits `battle_start` at timestamp 0 for each phase.
@@ -257,7 +257,7 @@ static convertSimulatorEvents(
 
 ### Component 3: Robot Name Context Fix
 
-**File**: `prototype/backend/src/services/combatMessageGenerator.ts`
+**File**: `app/backend/src/services/combatMessageGenerator.ts`
 
 **Problem**: After tag-in, attack messages show empty attacker/defender names because the context still references the tagged-out robot.
 
@@ -293,7 +293,7 @@ static convertSimulatorEvents(
 
 ### Component 4: Shield State Preservation
 
-**File**: `prototype/backend/src/services/tagTeamBattleOrchestrator.ts`
+**File**: `app/backend/src/services/tagTeamBattleOrchestrator.ts`
 **Function**: `simulateTagTeamBattle()`
 
 **Problem**: When phase 2 starts, the surviving robot (who just defeated their opponent) has full shields instead of their depleted shield state from phase 1.
@@ -330,7 +330,7 @@ if (team2NeedsTagOut && !team1NeedsTagOut) {
 
 ### Component 5: Admin Portal Display Fix
 
-**File**: `prototype/frontend/src/components/admin/BattleLogsTab.tsx`
+**File**: `app/frontend/src/components/admin/BattleLogsTab.tsx`
 
 **Problem**: Tag team battles only show "Robot 1 vs Robot 2" instead of all 4 participating robots.
 
@@ -372,7 +372,7 @@ if (team2NeedsTagOut && !team1NeedsTagOut) {
 
 ### Component 6: Draw Detection Fix
 
-**File**: `prototype/backend/src/services/tagTeamBattleOrchestrator.ts`
+**File**: `app/backend/src/services/tagTeamBattleOrchestrator.ts`
 **Lines**: 870-912
 
 **Problem**: When both active robots are destroyed but reserves are available, the system incorrectly declares a draw instead of continuing with reserves.

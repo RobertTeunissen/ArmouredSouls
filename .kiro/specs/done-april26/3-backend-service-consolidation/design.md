@@ -248,7 +248,7 @@ For any API endpoint, the response for a given request must be byte-identical be
 The following existing documentation and steering files will need updating:
 
 - `docs/guides/MODULE_STRUCTURE.md` — Must be updated to reflect the new domain-based service directory structure.
-- `.kiro/steering/project-overview.md` — Project Structure section should mention the domain-organized services under `/prototype/backend`.
+- `.kiro/steering/project-overview.md` — Project Structure section should mention the domain-organized services under `/app/backend`.
 
 ## Testing Strategy
 

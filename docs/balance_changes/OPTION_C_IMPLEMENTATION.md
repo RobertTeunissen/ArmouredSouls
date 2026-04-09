@@ -249,16 +249,16 @@ With Option C, multiple strategies are viable:
 ## Implementation Files Changed
 
 ### Backend Changes
-1. **`prototype/backend/prisma/schema.prisma`**
+1. **`app/backend/prisma/schema.prisma`**
    - Line 20: `currency Int @default(3000000)`
 
-2. **`prototype/shared/utils/upgradeCosts.ts`** (previously inline in `robots.ts`)
+2. **`app/shared/utils/upgradeCosts.ts`** (previously inline in `robots.ts`)
    - `calculateBaseCost`: `(Math.floor(currentLevel) + 1) * 1500`
 
-3. **`prototype/backend/src/config/facilities.ts`**
+3. **`app/backend/src/config/facilities.ts`**
    - All 14 facility cost arrays updated to 50% of original
 
-4. **`prototype/backend/prisma/seed.ts`**
+4. **`app/backend/prisma/seed.ts`**
    - All 47 weapon costs increased by 25%
 
 ### Migration Required

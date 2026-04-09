@@ -294,7 +294,7 @@ The Weapon Shop (`/weapon-shop`) is the primary economic interface where players
 
 ```bash
 # Unit Tests
-cd prototype/frontend
+cd app/frontend
 npm test                    # Run all unit tests
 npm test:coverage          # Generate coverage report
 npm test:ui                # Run with UI
@@ -368,11 +368,11 @@ npm run test:e2e:debug    # Run in debug mode
 - **Recommendation**: Execute E2E tests before adding 100+ more weapons
 
 **Test Files Created**:
-1. `prototype/frontend/src/utils/__tests__/weaponConstants.test.ts` (67 lines)
-2. `prototype/frontend/src/__tests__/weaponShopFiltering.test.ts` (428 lines)
-3. `prototype/frontend/tests/e2e/weapon-shop.spec.ts` (535 lines)
-4. `prototype/frontend/vitest.config.ts` (28 lines)
-5. `prototype/frontend/TEST_COVERAGE_SUMMARY.md` (documentation)
+1. `app/frontend/src/utils/__tests__/weaponConstants.test.ts` (67 lines)
+2. `app/frontend/src/__tests__/weaponShopFiltering.test.ts` (428 lines)
+3. `app/frontend/tests/e2e/weapon-shop.spec.ts` (535 lines)
+4. `app/frontend/vitest.config.ts` (28 lines)
+5. `app/frontend/TEST_COVERAGE_SUMMARY.md` (documentation)
 
 **Total Test Code**: 1,030+ lines  
 
@@ -1593,7 +1593,7 @@ const processedWeapons = useMemo(() => {
   - Ballistic: Orange/gray theme
   - Energy: Blue/purple theme
   - Shields: Cyan/blue theme
-- **Location**: `/prototype/frontend/src/assets/weapons/`
+- **Location**: `/app/frontend/src/assets/weapons/`
 - **Naming**: Lowercase with hyphens (e.g., `practice-sword.svg`)
 
 **Placeholder Strategy**:
@@ -2045,7 +2045,7 @@ const processedWeapons = useMemo(() => {
 
 ### B. Weapon Images Documentation
 
-**Image Location**: `/prototype/frontend/src/assets/weapons/`  
+**Image Location**: `/app/frontend/src/assets/weapons/`  
 **Image Format**: SVG (256×256px viewBox), scalable vector graphics  
 **Naming Convention**: Weapon name in lowercase with hyphens (e.g., `practice-sword.svg`)  
 **Current Status**: ✅ All 47 weapon placeholder images created

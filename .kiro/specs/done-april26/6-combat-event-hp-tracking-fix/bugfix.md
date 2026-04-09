@@ -30,25 +30,25 @@ After all tasks are complete, run these checks to confirm the fix:
 
 1. **No direct robot1HP/robot2HP usage in message generator**:
    ```bash
-   grep -n "event\.robot1HP\|event\.robot2HP\|event\.robot1Shield\|event\.robot2Shield" prototype/backend/src/services/combatMessageGenerator.ts | grep -v "// legacy fallback" | wc -l
+   grep -n "event\.robot1HP\|event\.robot2HP\|event\.robot1Shield\|event\.robot2Shield" app/backend/src/services/combatMessageGenerator.ts | grep -v "// legacy fallback" | wc -l
    # Expected: 0 (all usages should be robotHP/robotShield maps or marked as legacy fallback)
    ```
 
 2. **Admin portal uses robotHP maps**:
    ```bash
-   grep -n "event\.robotHP\|event\.robotShield" prototype/frontend/src/components/BattleDetailsModal.tsx | wc -l
+   grep -n "event\.robotHP\|event\.robotShield" app/frontend/src/components/BattleDetailsModal.tsx | wc -l
    # Expected: >= 2 (at least HP and Shield map usage)
    ```
 
 3. **Combat simulator tests pass**:
    ```bash
-   cd prototype/backend && npm test -- --testPathPattern="combatSimulator|combatMessageGenerator" --silent
+   cd app/backend && npm test -- --testPathPattern="combatSimulator|combatMessageGenerator" --silent
    # Expected: All tests pass
    ```
 
 4. **Property-based test for HP consistency**:
    ```bash
-   cd prototype/backend && npm test -- --testPathPattern="hpTracking.pbt" --silent
+   cd app/backend && npm test -- --testPathPattern="hpTracking.pbt" --silent
    # Expected: New PBT test passes, verifying robotHP[name] === states[index].currentHP for all events
    ```
 

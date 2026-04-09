@@ -48,7 +48,7 @@ graph TD
 
 ## Components and Interfaces
 
-### 1. Seed System (`prototype/backend/prisma/seed.ts`)
+### 1. Seed System (`app/backend/prisma/seed.ts`)
 
 Simplified to 5 steps:
 
@@ -71,7 +71,7 @@ async function main() {
 - `seedAdminAccount` — currency reduced from ₡10M to ₡3M, prestige set to 0, stableName assigned
 - `seedWimpBotUsers` — 200 users (up from 100), distributed across 4 practice weapons (50 each), robots named using the `{Tier} {LoadoutTitle} {WeaponCodename} {Number}` format (e.g., "WimpBot Lone Rusty 1" for Practice Sword/Single), loadoutType set to "single" for one-handed weapons and "two_handed" for two-handed weapons, stableName assigned to each user
 
-### 2. Auto-Generation System (`prototype/backend/src/utils/userGeneration.ts`)
+### 2. Auto-Generation System (`app/backend/src/utils/userGeneration.ts`)
 
 Complete rewrite of `generateBattleReadyUsers()`:
 
@@ -528,7 +528,7 @@ for (const stableConfig of stablesToCreate) {
 - **Unit tests**: Jest 30 with ts-jest
 - **Property-based tests**: fast-check (via `@fast-check/jest` or direct import)
 - **Minimum iterations**: 100 per property test
-- **Test location**: `prototype/backend/tests/`
+- **Test location**: `app/backend/tests/`
 
 ### Existing Tests to Rewrite
 
@@ -588,7 +588,7 @@ Each correctness property (1–13) maps to exactly one property-based test. Test
 ### Test Organization
 
 ```
-prototype/backend/tests/
+app/backend/tests/
 ├── seed.property.test.ts                 # REWRITE: Property tests for new seed structure
 ├── userGeneration.test.ts                # REWRITE: Unit + property tests for tiered auto-generation
 ├── twoRobotTagTeamGeneration.test.ts     # REWRITE: Tag team tests for multi-robot stables

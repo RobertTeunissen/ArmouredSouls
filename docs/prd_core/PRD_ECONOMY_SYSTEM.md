@@ -69,7 +69,7 @@
 ### Implementation Files
 
 **Backend (5 files + 2 enhancements):**
-1. `prototype/backend/src/utils/economyCalculations.ts` (620+ lines)
+1. `app/backend/src/utils/economyCalculations.ts` (620+ lines)
    - All economic formulas and calculations
    - Facility operating costs
    - Revenue streams (battle rewards, passive income)
@@ -80,14 +80,14 @@
      - `processAllDailyFinances()` - Batch process all users
      - Deducts operating costs, detects bankruptcy
 
-2. `prototype/backend/src/routes/finances.ts` (165 lines)
+2. `app/backend/src/routes/finances.ts` (165 lines)
    - `GET /api/finances/summary` - Quick overview
    - `GET /api/finances/daily` - Full report
    - `GET /api/finances/operating-costs` - Cost breakdown
    - `GET /api/finances/revenue-streams` - Income sources
    - `GET /api/finances/projections` - Forecasts
 
-3. `prototype/backend/src/services/leagueBattleOrchestrator.ts` (enhanced, shared helpers in `battlePostCombat.ts`)
+3. `app/backend/src/services/leagueBattleOrchestrator.ts` (enhanced, shared helpers in `battlePostCombat.ts`)
    - League-based battle rewards
    - Prestige multipliers (5%-20%)
    - Participation rewards (30% of base)
@@ -96,39 +96,39 @@
      - Displays prestige bonus percentage and amount
      - Breaks down winner/loser rewards separately
 
-4. `prototype/backend/src/routes/admin.ts` (enhanced)
+4. `app/backend/src/routes/admin.ts` (enhanced)
    - `POST /api/admin/daily-finances/process` endpoint
    - Integrated financial processing into bulk cycles
    - Shows costs deducted, users processed, bankruptcies
 
-5. `prototype/backend/src/utils/robotCalculations.ts` (modified)
+5. `app/backend/src/utils/robotCalculations.ts` (modified)
    - Medical Bay support for repair costs
 
-6. `prototype/backend/tests/economyCalculations.test.ts` (215 lines, 27 tests ✅)
+6. `app/backend/tests/economyCalculations.test.ts` (215 lines, 27 tests ✅)
 
 **Frontend (4 files + 1 enhanced):**
-1. `prototype/frontend/src/utils/financialApi.ts` (200 lines)
+1. `app/frontend/src/utils/financialApi.ts` (200 lines)
    - TypeScript interfaces
    - API client functions
    - Helper functions (formatting, colors)
 
-2. `prototype/frontend/src/components/FinancialSummary.tsx` (140 lines)
+2. `app/frontend/src/components/FinancialSummary.tsx` (140 lines)
    - Dashboard widget
    - Shows: balance, daily net, prestige bonus
    - Financial warnings
 
-3. `prototype/frontend/src/pages/FinancialReportPage.tsx` (280 lines)
+3. `app/frontend/src/pages/FinancialReportPage.tsx` (280 lines)
    - Full financial report page
    - Revenue/expense breakdown
    - Operating costs by facility
    - Projections and recommendations
 
-4. `prototype/frontend/src/pages/AdminPage.tsx` (enhanced)
+4. `app/frontend/src/pages/AdminPage.tsx` (enhanced)
    - Displays financial data in bulk cycle results
    - Shows costs deducted per cycle
    - Bankruptcy alerts highlighted in red
 
-5. `prototype/frontend/src/App.tsx` (modified)
+5. `app/frontend/src/App.tsx` (modified)
    - Added `/finances` route
 
 ### Key Features
@@ -544,11 +544,11 @@ This section tracks the chronological evolution of the economy system implementa
 - Reward calculation details in battle logs
 
 **Files Created/Modified:**
-- `prototype/backend/src/utils/economyCalculations.ts` (620+ lines)
-- `prototype/backend/src/routes/finances.ts` (165 lines)
-- `prototype/backend/src/services/leagueBattleOrchestrator.ts` (enhanced, shared helpers in `battlePostCombat.ts`)
-- `prototype/backend/src/routes/admin.ts` (enhanced)
-- `prototype/backend/tests/economyCalculations.test.ts` (215 lines, 27 tests)
+- `app/backend/src/utils/economyCalculations.ts` (620+ lines)
+- `app/backend/src/routes/finances.ts` (165 lines)
+- `app/backend/src/services/leagueBattleOrchestrator.ts` (enhanced, shared helpers in `battlePostCombat.ts`)
+- `app/backend/src/routes/admin.ts` (enhanced)
+- `app/backend/tests/economyCalculations.test.ts` (215 lines, 27 tests)
 
 #### Phase 2: Frontend Implementation (February 4, 2026)
 
@@ -561,11 +561,11 @@ This section tracks the chronological evolution of the economy system implementa
 - Bulk cycle checkbox for daily finances integration
 
 **Files Created/Modified:**
-- `prototype/frontend/src/utils/financialApi.ts` (200 lines)
-- `prototype/frontend/src/components/FinancialSummary.tsx` (140 lines)
-- `prototype/frontend/src/pages/FinancialReportPage.tsx` (280 lines)
-- `prototype/frontend/src/pages/AdminPage.tsx` (enhanced)
-- `prototype/frontend/src/App.tsx` (modified)
+- `app/frontend/src/utils/financialApi.ts` (200 lines)
+- `app/frontend/src/components/FinancialSummary.tsx` (140 lines)
+- `app/frontend/src/pages/FinancialReportPage.tsx` (280 lines)
+- `app/frontend/src/pages/AdminPage.tsx` (enhanced)
+- `app/frontend/src/App.tsx` (modified)
 
 #### Key Milestones
 
@@ -628,12 +628,12 @@ This PRD defines the complete economy system for Armoured Souls, covering all co
 - ✅ Robot attribute upgrade costs in ROBOT_ATTRIBUTES.md
 - ✅ Repair cost formulas with Medical Bay support
 - ✅ Database schema for all economic tracking (DATABASE_SCHEMA.md)
-- ✅ **Economic calculation utilities** (`prototype/backend/src/utils/economyCalculations.ts`)
+- ✅ **Economic calculation utilities** (`app/backend/src/utils/economyCalculations.ts`)
   - Facility operating costs (all 14 facilities)
   - Revenue calculations (battle rewards, merchandising, streaming)
   - Repair costs with facility discounts
   - Financial health indicators
-- ✅ **Financial API endpoints** (`prototype/backend/src/routes/finances.ts`)
+- ✅ **Financial API endpoints** (`app/backend/src/routes/finances.ts`)
   - `GET /api/finances/summary` - Quick dashboard overview
   - `GET /api/finances/daily` - Comprehensive financial report
   - `GET /api/finances/operating-costs` - Cost breakdown
@@ -652,7 +652,7 @@ This PRD defines the complete economy system for Armoured Souls, covering all co
 - ✅ **Comprehensive unit tests** - 27 tests covering all economic formulas
 
 **✅ IMPLEMENTED (Frontend - February 3-4, 2026):**
-- ✅ **Financial API utilities** (`prototype/frontend/src/utils/financialApi.ts`)
+- ✅ **Financial API utilities** (`app/frontend/src/utils/financialApi.ts`)
 - ✅ **FinancialSummary component** - Dashboard widget
 - ✅ **FinancialReportPage** - Full financial report page
 - ✅ **NEW (Feb 4)**: Battle rewards display in admin modal
@@ -895,7 +895,7 @@ The Streaming Studio dramatically increases streaming revenue earned per battle 
 
 **Phase 1 Implemented Weapons** (26 total):
 
-> **For complete weapon catalog, pricing, and methodology**: See **[PRD_WEAPON_ECONOMY_OVERHAUL.md](PRD_WEAPON_ECONOMY_OVERHAUL.md)** - the authoritative document for weapon economy system (implemented in `prototype/backend/prisma/seed.ts`).
+> **For complete weapon catalog, pricing, and methodology**: See **[PRD_WEAPON_ECONOMY_OVERHAUL.md](PRD_WEAPON_ECONOMY_OVERHAUL.md)** - the authoritative document for weapon economy system (implemented in `app/backend/prisma/seed.ts`).
 
 **Weapon Pricing Methodology**:
 

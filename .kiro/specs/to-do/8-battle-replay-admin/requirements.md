@@ -50,37 +50,37 @@ After all tasks are complete, run these checks to confirm the feature works:
 
 1. **Revert endpoint exists and is admin-protected**:
    ```bash
-   grep -r "battle.*revert\|revert.*battle" prototype/backend/src/routes/ | grep -v test | wc -l
+   grep -r "battle.*revert\|revert.*battle" app/backend/src/routes/ | grep -v test | wc -l
    # Expected: >= 1 (route defined)
    ```
 
 2. **Revert service handles all battle types**:
    ```bash
-   grep -E "league|tournament|tag_team|koth" prototype/backend/src/services/battleRevertService.ts | wc -l
+   grep -E "league|tournament|tag_team|koth" app/backend/src/services/battleRevertService.ts | wc -l
    # Expected: >= 4 (all battle types handled)
    ```
 
 3. **Audit log events created for revert actions**:
    ```bash
-   grep -r "battle_reverted\|battle_replayed" prototype/backend/src/services/ | wc -l
+   grep -r "battle_reverted\|battle_replayed" app/backend/src/services/ | wc -l
    # Expected: >= 2 (both event types logged)
    ```
 
 4. **Frontend tab component exists**:
    ```bash
-   ls prototype/frontend/src/components/admin/BattleRevertTab.tsx 2>/dev/null && echo "exists"
+   ls app/frontend/src/components/admin/BattleRevertTab.tsx 2>/dev/null && echo "exists"
    # Expected: "exists"
    ```
 
 5. **Integration test covers revert flow**:
    ```bash
-   grep -r "revert" prototype/backend/src/__tests__/ | grep -i battle | wc -l
+   grep -r "revert" app/backend/src/__tests__/ | grep -i battle | wc -l
    # Expected: >= 1 (test exists)
    ```
 
 6. **Closed cycle check is enforced**:
    ```bash
-   grep -r "closed.*cycle\|current.*cycle" prototype/backend/src/services/battleRevertService.ts | wc -l
+   grep -r "closed.*cycle\|current.*cycle" app/backend/src/services/battleRevertService.ts | wc -l
    # Expected: >= 1 (cycle validation exists)
    ```
 

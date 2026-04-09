@@ -91,13 +91,13 @@ npm install
 ### Daily Development Workflow
 **Terminal 1 - Backend**:
 ```bash
-cd prototype/backend
+cd app/backend
 npm run dev  # Starts on http://localhost:3001
 ```
 
 **Terminal 2 - Frontend**:
 ```bash
-cd prototype/frontend
+cd app/frontend
 npm run dev  # Starts on http://localhost:3000
 ```
 
@@ -106,7 +106,7 @@ npm run dev  # Starts on http://localhost:3000
 ### Testing Locally
 ```bash
 # Run backend tests
-cd prototype/backend
+cd app/backend
 npm test
 
 # Run specific test file
@@ -246,7 +246,7 @@ pm2 monit                  # Real-time monitoring
 
 ### Local Database Reset
 ```bash
-cd prototype/backend
+cd app/backend
 npm run db:reset  # Drops, recreates, applies migrations, seeds
 ```
 

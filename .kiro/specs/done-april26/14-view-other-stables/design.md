@@ -52,7 +52,7 @@ graph TD
 
 ### Backend
 
-#### New Route: `prototype/backend/src/routes/stables.ts`
+#### New Route: `app/backend/src/routes/stables.ts`
 
 ```typescript
 // GET /api/stables/:userId
@@ -133,7 +133,7 @@ interface FacilitySummary {
 }
 ```
 
-#### Shared Utility: `prototype/backend/src/utils/prestigeUtils.ts`
+#### Shared Utility: `app/backend/src/utils/prestigeUtils.ts`
 
 Extract `getPrestigeRank` and `getFameTier` from `leaderboards.ts` into a shared utility so both `leaderboards.ts` and `stables.ts` can import them without duplication.
 
@@ -157,7 +157,7 @@ export function getFameTier(fame: number): string {
 }
 ```
 
-#### Route Registration: `prototype/backend/src/index.ts`
+#### Route Registration: `app/backend/src/index.ts`
 
 Add `app.use('/api/stables', stablesRoutes);` alongside existing route registrations.
 
@@ -165,7 +165,7 @@ Add `app.use('/api/stables', stablesRoutes);` alongside existing route registrat
 
 #### New Page: `StableViewPage`
 
-Located at `prototype/frontend/src/pages/StableViewPage.tsx`. Registered in `App.tsx` at route `/stables/:userId`.
+Located at `app/frontend/src/pages/StableViewPage.tsx`. Registered in `App.tsx` at route `/stables/:userId`.
 
 Sections:
 1. **Stable Header**: Username/stable name, prestige with rank title, championship titles, "Back" button
@@ -401,7 +401,7 @@ Error handling follows the existing `AppError` hierarchy pattern. The route hand
 
 Each correctness property maps to a single property-based test with minimum 100 iterations. Tests use `fast-check` (already in the project for both backend and frontend).
 
-**Backend property tests** (`prototype/backend/tests/stableSanitization.property.test.ts`):
+**Backend property tests** (`app/backend/tests/stableSanitization.property.test.ts`):
 - Property 1: Generate random robot objects with all fields, run `sanitizeRobotForPublic`, assert no sensitive fields remain
   - Tag: `Feature: view-other-stables, Property 1: Sensitive field stripping on stable endpoint`
 - Property 2: Generate random arrays of robots with random ELO values, sort by ELO desc, verify ordering invariant
@@ -421,7 +421,7 @@ Each correctness property maps to a single property-based test with minimum 100 
 
 Unit tests cover specific examples, edge cases, and error conditions:
 
-**Backend** (`prototype/backend/tests/stables.test.ts`):
+**Backend** (`app/backend/tests/stables.test.ts`):
 - 404 for non-existent user
 - 401 for unauthenticated request
 - Correct response shape for a user with robots and facilities
@@ -429,7 +429,7 @@ Unit tests cover specific examples, edge cases, and error conditions:
 - Bye Robot excluded from response
 - Facility name resolution from type
 
-**Frontend** (`prototype/frontend/src/pages/__tests__/StableViewPage.test.tsx`):
+**Frontend** (`app/frontend/src/pages/__tests__/StableViewPage.test.tsx`):
 - Renders loading state
 - Renders 404 error state with back link
 - Renders network error state with retry button
@@ -438,7 +438,7 @@ Unit tests cover specific examples, edge cases, and error conditions:
 - Robot cards navigate to `/robots/:id` on click
 - Back button navigates to previous page
 
-**Frontend** (`prototype/frontend/src/components/__tests__/RobotDashboardCard.test.tsx`):
+**Frontend** (`app/frontend/src/components/__tests__/RobotDashboardCard.test.tsx`):
 - Public variant renders fame, kills, lifetime damage
 - Public variant does not render HP bar, battle readiness badge, weapon info
 - Owner variant (default) renders HP bar and battle readiness

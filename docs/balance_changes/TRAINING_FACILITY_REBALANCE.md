@@ -266,7 +266,7 @@ Training Facility has been rebalanced to be a viable early-game investment for 1
 ## Next Steps
 
 1. **Backend Implementation:**
-   - Update `prototype/backend/src/config/facilities.ts`
+   - Update `app/backend/src/config/facilities.ts`
    - Change discount formula: `level × 10` (capped at 90%)
    - Change operating cost formula: `level × 250`
    - Remove Level 10, cap at Level 9

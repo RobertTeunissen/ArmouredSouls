@@ -29,28 +29,28 @@ After all tasks are complete, run these checks to confirm the fix:
 1. **Winner ID is team ID for tag team battles**:
    ```bash
    # Run tag team battle test
-   cd prototype/backend && npm test -- --testPathPattern="tagTeam" --silent
+   cd app/backend && npm test -- --testPathPattern="tagTeam" --silent
    # Expected: All tests pass, winnerId is team.id not robot.id
    ```
 
 2. **Timestamp continuity across phases**:
    ```bash
    # Check that phase 2 events have timestamps > phase 1 end
-   cd prototype/backend && npm test -- --testPathPattern="tagTeamPhase" --silent
+   cd app/backend && npm test -- --testPathPattern="tagTeamPhase" --silent
    # Expected: All phase 2 timestamps >= phase 1 final timestamp
    ```
 
 3. **Shield state preserved for surviving robot**:
    ```bash
    # Run shield preservation test
-   cd prototype/backend && npm test -- --testPathPattern="shieldPreservation" --silent
+   cd app/backend && npm test -- --testPathPattern="shieldPreservation" --silent
    # Expected: Surviving robot's shield matches phase 1 final state
    ```
 
 4. **Admin portal shows all 4 robots**:
    ```bash
    # Verify BattleLogsTab renders team info
-   grep -n "team1ActiveName\|team2ActiveName" prototype/frontend/src/components/admin/BattleLogsTab.tsx | wc -l
+   grep -n "team1ActiveName\|team2ActiveName" app/frontend/src/components/admin/BattleLogsTab.tsx | wc -l
    # Expected: >= 2 (team names rendered for tag team battles)
    ```
 

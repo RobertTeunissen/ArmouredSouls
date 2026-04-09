@@ -168,7 +168,7 @@ The BattleParticipant model scales to any number of robots per battle without sc
 
 ## Implementation Files
 
-All paths relative to `prototype/backend/src/`.
+All paths relative to `app/backend/src/`.
 
 | File | Responsibility |
 |---|---|

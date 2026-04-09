@@ -20,14 +20,14 @@ This spec targets the "type safety erosion" debt where `any` types bypass TypeSc
 
 ### Verification Criteria
 
-1. `grep -c "eslint-disable.*no-explicit-any" prototype/backend/src/routes/robots.ts` returns 0
-2. `grep -c "eslint-disable.*no-explicit-any" prototype/backend/src/routes/admin.ts` returns 0
-3. `grep -c "eslint-disable.*no-explicit-any" prototype/backend/src/routes/user.ts` returns 0
-4. `grep -c ": any" prototype/backend/src/routes/robots.ts` returns 0
-5. `grep -c ": any" prototype/backend/src/routes/admin.ts` returns 0
-6. `grep -c ": any" prototype/backend/src/routes/user.ts` returns 0
-7. All backend tests pass: `cd prototype/backend && npm test`
-8. TypeScript compilation succeeds with no errors: `cd prototype/backend && npx tsc --noEmit`
+1. `grep -c "eslint-disable.*no-explicit-any" app/backend/src/routes/robots.ts` returns 0
+2. `grep -c "eslint-disable.*no-explicit-any" app/backend/src/routes/admin.ts` returns 0
+3. `grep -c "eslint-disable.*no-explicit-any" app/backend/src/routes/user.ts` returns 0
+4. `grep -c ": any" app/backend/src/routes/robots.ts` returns 0
+5. `grep -c ": any" app/backend/src/routes/admin.ts` returns 0
+6. `grep -c ": any" app/backend/src/routes/user.ts` returns 0
+7. All backend tests pass: `cd app/backend && npm test`
+8. TypeScript compilation succeeds with no errors: `cd app/backend && npx tsc --noEmit`
 
 ## Requirements
 

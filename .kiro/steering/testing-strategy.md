@@ -50,14 +50,14 @@ fileMatchPattern: "**/tests/**,**/*.test.ts,**/*.test.tsx,**/*.spec.ts,**/*.prop
 - Test individual functions and services in isolation
 - Mock external dependencies (database, APIs)
 - Fast execution (<1s per test)
-- Located in `prototype/backend/tests/`
+- Located in `app/backend/tests/`
 - **Coverage target**: 80% minimum
 
 ### Integration Tests (Required for Critical Paths)
 - Test multiple components working together
 - Use real database (test transactions)
 - Slower execution (1-5s per test)
-- Located in `prototype/backend/tests/integration/`
+- Located in `app/backend/tests/integration/`
 - **Coverage target**: 90% for critical functionality
 
 ### Property-Based Tests (Recommended)
@@ -77,7 +77,7 @@ fileMatchPattern: "**/tests/**,**/*.test.ts,**/*.test.tsx,**/*.spec.ts,**/*.prop
 
 ### Required: Run All Tests After Development
 ```bash
-cd prototype/backend
+cd app/backend
 npm test
 ```
 **Must pass before committing code**
@@ -395,8 +395,8 @@ it('should always calculate positive damage', () => {
 - **Coverage**: `@vitest/coverage-v8`
 
 ### Setup
-- Config: `prototype/frontend/vitest.config.ts`
-- Setup file: `prototype/frontend/src/setupTests.ts` (RTL cleanup, jest-dom matchers, matchMedia/localStorage/sessionStorage mocks)
+- Config: `app/frontend/vitest.config.ts`
+- Setup file: `app/frontend/src/setupTests.ts` (RTL cleanup, jest-dom matchers, matchMedia/localStorage/sessionStorage mocks)
 
 ### File Conventions
 - Test files live in `__tests__/` subdirectories next to source files (not co-located)
@@ -408,7 +408,7 @@ it('should always calculate positive damage', () => {
 
 ### Running Frontend Tests
 ```bash
-cd prototype/frontend
+cd app/frontend
 npx vitest --run                   # Single run (CI-safe)
 npx vitest --run --coverage        # With coverage report
 npx vitest                         # Watch mode (local dev)
@@ -448,14 +448,14 @@ npm test -- -t "should create facility"
 ```
 
 ### Backend Test File Locations
-- Unit tests: `prototype/backend/tests/*.test.ts`
-- Property tests: `prototype/backend/tests/*.property.test.ts`
-- Integration tests: `prototype/backend/tests/integration/*.test.ts`
-- Test utilities: `prototype/backend/tests/helpers/`
+- Unit tests: `app/backend/tests/*.test.ts`
+- Property tests: `app/backend/tests/*.property.test.ts`
+- Integration tests: `app/backend/tests/integration/*.test.ts`
+- Test utilities: `app/backend/tests/helpers/`
 
 ### Run Frontend Tests
 ```bash
-cd prototype/frontend
+cd app/frontend
 npx vitest --run                   # Single run
 npx vitest --run --coverage        # With coverage
 npx vitest                         # Watch mode

@@ -177,7 +177,7 @@ Malfunction: 20 base - (5.0 weapon_control × 0.4) = 18.0% (rolled 12.5, result:
 
 ### Implementation Reference
 
-**File**: `prototype/backend/src/services/combatSimulator.ts`  
+**File**: `app/backend/src/services/combatSimulator.ts`  
 **Function**: `calculateMalfunctionChance()`  
 **Lines**: ~178-197
 
@@ -599,7 +599,7 @@ HP Damage = Max(1, Remaining Damage × Damage Multiplier)
 
 ### Implementation Reference
 
-**File**: `prototype/backend/src/services/combatSimulator.ts`  
+**File**: `app/backend/src/services/combatSimulator.ts`  
 **Function**: `applyDamage()`  
 **Lines**: ~220-296 (to be updated)
 

@@ -701,7 +701,7 @@ Place test files in a `__tests__/` subdirectory next to the source files being t
 
 ### Running Tests
 ```bash
-cd prototype/frontend
+cd app/frontend
 npx vitest --run          # Single run (CI-safe)
 npx vitest                # Watch mode (local dev)
 npx vitest --run --coverage  # With coverage report

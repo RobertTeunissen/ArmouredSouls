@@ -33,25 +33,25 @@ inclusion: manual
 ### Debugging Issues
 1. Check `docs/guides/TROUBLESHOOTING.md`
 2. Review `docs/troubleshooting/` for known issues
-3. Check logs in `prototype/backend/cycle_logs/`
+3. Check logs in `app/backend/cycle_logs/`
 4. Use `diagnostic.sh` if available
 5. Document solution in troubleshooting docs if novel
 
 ## Common File Locations
 
 ### Backend
-- **Services**: `prototype/backend/src/services/`
-- **Routes**: `prototype/backend/src/routes/`
-- **Database**: `prototype/backend/src/db/`
-- **Types**: `prototype/backend/src/types/`
-- **Config**: `prototype/backend/.env` (never commit!)
+- **Services**: `app/backend/src/services/`
+- **Routes**: `app/backend/src/routes/`
+- **Database**: `app/backend/src/db/`
+- **Types**: `app/backend/src/types/`
+- **Config**: `app/backend/.env` (never commit!)
 
 ### Frontend
-- **Components**: `prototype/frontend/src/components/`
-- **Pages**: `prototype/frontend/src/pages/`
-- **Services**: `prototype/frontend/src/services/`
-- **Types**: `prototype/frontend/src/types/`
-- **Styles**: `prototype/frontend/src/styles/`
+- **Components**: `app/frontend/src/components/`
+- **Pages**: `app/frontend/src/pages/`
+- **Services**: `app/frontend/src/services/`
+- **Types**: `app/frontend/src/types/`
+- **Styles**: `app/frontend/src/styles/`
 
 ### Documentation
 - **Core specs**: `docs/prd_core/`
@@ -133,7 +133,7 @@ See `docs/guides/MAINTENANCE.md` for:
 ### Backend
 ```bash
 # Development
-cd prototype/backend
+cd app/backend
 npm install
 npm run dev
 
@@ -147,7 +147,7 @@ npm run build
 ### Frontend
 ```bash
 # Development
-cd prototype/frontend
+cd app/frontend
 npm install
 npm run dev
 

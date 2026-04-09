@@ -37,25 +37,25 @@ jobs:
           node-version: '24'
 
       - name: Install backend dependencies
-        working-directory: ./prototype/backend
+        working-directory: ./app/backend
         run: npm ci
 
       - name: Generate Prisma Client
-        working-directory: ./prototype/backend
+        working-directory: ./app/backend
         env:
           DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
         run: npm run prisma:generate
 
       - name: Lint backend code
-        working-directory: ./prototype/backend
+        working-directory: ./app/backend
         run: npm run lint || true
 
       - name: Build backend
-        working-directory: ./prototype/backend
+        working-directory: ./app/backend
         run: npm run build
 
       - name: Run unit tests
-        working-directory: ./prototype/backend
+        working-directory: ./app/backend
         env:
           NODE_ENV: test
           JWT_SECRET: test-secret-key-for-ci
@@ -91,23 +91,23 @@ jobs:
           node-version: '24'
 
       - name: Install backend dependencies
-        working-directory: ./prototype/backend
+        working-directory: ./app/backend
         run: npm ci
 
       - name: Generate Prisma Client
-        working-directory: ./prototype/backend
+        working-directory: ./app/backend
         env:
           DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
         run: npm run prisma:generate
 
       - name: Run database migrations
-        working-directory: ./prototype/backend
+        working-directory: ./app/backend
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_test?connection_limit=5
         run: npx prisma migrate deploy
 
       - name: Run integration tests
-        working-directory: ./prototype/backend
+        working-directory: ./app/backend
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_test?connection_limit=5
           JWT_SECRET: test-secret-key-for-ci
@@ -128,22 +128,22 @@ jobs:
           node-version: '24'
 
       - name: Install frontend dependencies
-        working-directory: ./prototype/frontend
+        working-directory: ./app/frontend
         run: npm ci
 
       - name: Lint frontend code
-        working-directory: ./prototype/frontend
+        working-directory: ./app/frontend
         run: npm run lint || true
 
       - name: Build frontend
-        working-directory: ./prototype/frontend
+        working-directory: ./app/frontend
         run: npm run build
 
       - name: Upload frontend build artifacts
         uses: actions/upload-artifact@v6
         with:
           name: frontend-build
-          path: prototype/frontend/dist/
+          path: app/frontend/dist/
           retention-days: 1
 
   # ---------------------------------------------------------------------------
@@ -180,15 +180,15 @@ jobs:
           node-version: '24'
 
       - name: Install frontend dependencies
-        working-directory: ./prototype/frontend
+        working-directory: ./app/frontend
         run: npm ci
 
       - name: Install Playwright browsers
-        working-directory: ./prototype/frontend
+        working-directory: ./app/frontend
         run: npx playwright install --with-deps chromium
 
       - name: Run E2E tests
-        working-directory: ./prototype/frontend
+        working-directory: ./app/frontend
         run: npm run test:e2e || true
 
       - name: Upload Playwright report
@@ -196,7 +196,7 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: playwright-report
-          path: prototype/frontend/playwright-report/
+          path: app/frontend/playwright-report/
           retention-days: 30
 
   # ---------------------------------------------------------------------------
@@ -226,7 +226,7 @@ jobs:
             --exclude='node_modules' \
             --exclude='.env' \
             -e "ssh -i ~/.ssh/deploy_key" \
-            ./prototype/backend/ \
+            ./app/backend/ \
             ${{ secrets.ACC_VPS_USER }}@${{ secrets.ACC_VPS_IP }}:/opt/armouredsouls/backend/
 
       - name: Transfer frontend source files via rsync
@@ -235,34 +235,34 @@ jobs:
             --exclude='node_modules' \
             --exclude='dist' \
             -e "ssh -i ~/.ssh/deploy_key" \
-            ./prototype/frontend/ \
+            ./app/frontend/ \
             ${{ secrets.ACC_VPS_USER }}@${{ secrets.ACC_VPS_IP }}:/opt/armouredsouls/frontend/
 
       - name: Download frontend build artifacts
         uses: actions/download-artifact@v6
         with:
           name: frontend-build
-          path: prototype/frontend/dist/
+          path: app/frontend/dist/
 
       - name: Transfer pre-built frontend to VPS
         run: |
           rsync -avz --delete \
             -e "ssh -i ~/.ssh/deploy_key" \
-            ./prototype/frontend/dist/ \
+            ./app/frontend/dist/ \
             ${{ secrets.ACC_VPS_USER }}@${{ secrets.ACC_VPS_IP }}:/opt/armouredsouls/frontend/dist/
 
       - name: Transfer shared utilities via rsync
         run: |
           rsync -avz --delete \
             -e "ssh -i ~/.ssh/deploy_key" \
-            ./prototype/shared/ \
+            ./app/shared/ \
             ${{ secrets.ACC_VPS_USER }}@${{ secrets.ACC_VPS_IP }}:/opt/armouredsouls/shared/
 
       - name: Transfer ecosystem config
         run: |
           rsync -avz \
             -e "ssh -i ~/.ssh/deploy_key" \
-            ./prototype/ecosystem.config.js \
+            ./app/ecosystem.config.js \
             ${{ secrets.ACC_VPS_USER }}@${{ secrets.ACC_VPS_IP }}:/opt/armouredsouls/
 
       - name: Install dependencies and build on VPS
@@ -389,7 +389,7 @@ jobs:
             --exclude='node_modules' \
             --exclude='.env' \
             -e "ssh -i ~/.ssh/deploy_key" \
-            ./prototype/backend/ \
+            ./app/backend/ \
             ${{ secrets.PRD_VPS_USER }}@${{ secrets.PRD_VPS_IP }}:/opt/armouredsouls/backend/
 
       - name: Transfer frontend source files via rsync
@@ -398,34 +398,34 @@ jobs:
             --exclude='node_modules' \
             --exclude='dist' \
             -e "ssh -i ~/.ssh/deploy_key" \
-            ./prototype/frontend/ \
+            ./app/frontend/ \
             ${{ secrets.PRD_VPS_USER }}@${{ secrets.PRD_VPS_IP }}:/opt/armouredsouls/frontend/
 
       - name: Download frontend build artifacts
         uses: actions/download-artifact@v6
         with:
           name: frontend-build
-          path: prototype/frontend/dist/
+          path: app/frontend/dist/
 
       - name: Transfer pre-built frontend to VPS
         run: |
           rsync -avz --delete \
             -e "ssh -i ~/.ssh/deploy_key" \
-            ./prototype/frontend/dist/ \
+            ./app/frontend/dist/ \
             ${{ secrets.PRD_VPS_USER }}@${{ secrets.PRD_VPS_IP }}:/opt/armouredsouls/frontend/dist/
 
       - name: Transfer shared utilities via rsync
         run: |
           rsync -avz --delete \
             -e "ssh -i ~/.ssh/deploy_key" \
-            ./prototype/shared/ \
+            ./app/shared/ \
             ${{ secrets.PRD_VPS_USER }}@${{ secrets.PRD_VPS_IP }}:/opt/armouredsouls/shared/
 
       - name: Transfer ecosystem config
         run: |
           rsync -avz \
             -e "ssh -i ~/.ssh/deploy_key" \
-            ./prototype/ecosystem.config.js \
+            ./app/ecosystem.config.js \
             ${{ secrets.PRD_VPS_USER }}@${{ secrets.PRD_VPS_IP }}:/opt/armouredsouls/
 
       - name: Install dependencies and build on VPS

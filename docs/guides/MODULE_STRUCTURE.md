@@ -19,7 +19,7 @@ The `modules/` directory now contains documented contracts and a migration strat
 
 ## Module Hierarchy
 
-The project has two structural layers: the `modules/` directory (documented contracts and migration plan for Phase 2 extraction) and the working `prototype/` directory where all implementation lives.
+The project has two structural layers: the `modules/` directory (documented contracts and migration plan for Phase 2 extraction) and the working `app/` directory where all implementation lives.
 
 ```
 ArmouredSouls/
@@ -29,7 +29,7 @@ ArmouredSouls/
 │   ├── database/
 │   ├── game-engine/
 │   └── ui/
-├── prototype/
+├── app/
 │   ├── backend/               # Express 5 + TypeScript backend
 │   │   ├── src/
 │   │   │   ├── config/        # Logger, app config
@@ -56,10 +56,10 @@ ArmouredSouls/
 
 ### Backend Services (Domain-Organized)
 
-All 41+ backend services are organized into 13 domain subdirectories under `prototype/backend/src/services/`. Each domain has an `index.ts` barrel file that defines its public API.
+All 41+ backend services are organized into 13 domain subdirectories under `app/backend/src/services/`. Each domain has an `index.ts` barrel file that defines its public API.
 
 ```
-prototype/backend/src/services/
+app/backend/src/services/
 ├── auth/           # JWT, password hashing, user management
 ├── battle/         # Combat simulation, strategy, post-combat, base orchestrator
 ├── league/         # League instances, rebalancing, league battle orchestration

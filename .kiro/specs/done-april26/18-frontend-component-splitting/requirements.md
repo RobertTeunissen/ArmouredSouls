@@ -23,14 +23,14 @@ This spec targets the "oversized frontend components" debt where page files cont
 
 ### Verification Criteria
 
-1. `wc -l prototype/frontend/src/pages/PracticeArenaPage.tsx` returns under 300
-2. `wc -l prototype/frontend/src/pages/FacilitiesPage.tsx` returns under 300
-3. `wc -l prototype/frontend/src/pages/WeaponShopPage.tsx` returns under 300
-4. `wc -l prototype/frontend/src/pages/HallOfRecordsPage.tsx` returns under 300
-5. `wc -l prototype/frontend/src/pages/BattleDetailPage.tsx` returns under 300
-6. `wc -l prototype/frontend/src/components/Navigation.tsx` returns under 200
-7. Frontend builds successfully: `cd prototype/frontend && npm run build`
-8. No inline component definitions remain in page files: `grep -c "^function [A-Z]" prototype/frontend/src/pages/PracticeArenaPage.tsx` returns 1 (only the page component itself)
+1. `wc -l app/frontend/src/pages/PracticeArenaPage.tsx` returns under 300
+2. `wc -l app/frontend/src/pages/FacilitiesPage.tsx` returns under 300
+3. `wc -l app/frontend/src/pages/WeaponShopPage.tsx` returns under 300
+4. `wc -l app/frontend/src/pages/HallOfRecordsPage.tsx` returns under 300
+5. `wc -l app/frontend/src/pages/BattleDetailPage.tsx` returns under 300
+6. `wc -l app/frontend/src/components/Navigation.tsx` returns under 200
+7. Frontend builds successfully: `cd app/frontend && npm run build`
+8. No inline component definitions remain in page files: `grep -c "^function [A-Z]" app/frontend/src/pages/PracticeArenaPage.tsx` returns 1 (only the page component itself)
 
 ## Requirements
 

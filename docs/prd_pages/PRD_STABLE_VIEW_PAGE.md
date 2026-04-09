@@ -31,11 +31,11 @@ The Stable View Page (`/stables/:userId`) is the first social/scouting feature i
 - **Stable System**: [docs/prd_core/STABLE_SYSTEM.md](../prd_core/STABLE_SYSTEM.md)
 - **Prestige & Fame**: [docs/prd_core/PRD_PRESTIGE_AND_FAME.md](../prd_core/PRD_PRESTIGE_AND_FAME.md)
 - **Related Files**:
-  - Frontend Page: `prototype/frontend/src/pages/StableViewPage.tsx`
-  - Backend Route: `prototype/backend/src/routes/stables.ts`
-  - Shared Utility: `prototype/backend/src/utils/prestigeUtils.ts`
-  - Robot Card Component: `prototype/frontend/src/components/RobotDashboardCard.tsx` (public variant)
-  - Navigation Component: `prototype/frontend/src/components/OwnerNameLink.tsx`
+  - Frontend Page: `app/frontend/src/pages/StableViewPage.tsx`
+  - Backend Route: `app/backend/src/routes/stables.ts`
+  - Shared Utility: `app/backend/src/utils/prestigeUtils.ts`
+  - Robot Card Component: `app/frontend/src/components/RobotDashboardCard.tsx` (public variant)
+  - Navigation Component: `app/frontend/src/components/OwnerNameLink.tsx`
 
 ---
 
@@ -226,31 +226,31 @@ The `OwnerNameLink` component renders owner/stable names as clickable links to `
 
 ### Backend
 ```
-prototype/backend/src/routes/
+app/backend/src/routes/
 └── stables.ts                 # GET /api/stables/:userId endpoint
 
-prototype/backend/src/utils/
+app/backend/src/utils/
 └── prestigeUtils.ts           # Shared getPrestigeRank, getFameTier utilities
 ```
 
 ### Frontend
 ```
-prototype/frontend/src/pages/
+app/frontend/src/pages/
 └── StableViewPage.tsx         # Stable view page
 
-prototype/frontend/src/components/
+app/frontend/src/components/
 ├── RobotDashboardCard.tsx     # Extended with variant="public" support
 └── OwnerNameLink.tsx          # Reusable owner name link component
 ```
 
 ### Tests
 ```
-prototype/backend/tests/
+app/backend/tests/
 ├── stables.test.ts                        # Unit tests for stables endpoint
 ├── stableSanitization.property.test.ts    # Property-based tests (Properties 1-6)
 └── prestigeUtils.property.test.ts         # Property 4: prestige rank mapping
 
-prototype/frontend/src/pages/__tests__/
+app/frontend/src/pages/__tests__/
 ├── StableViewPage.test.tsx                # Unit tests for StableViewPage
 └── StableViewPage.property.test.ts        # Property 7: facility category grouping
 ```

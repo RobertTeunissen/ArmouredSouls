@@ -433,7 +433,7 @@ function calculateRepairCost(damagePercent, hpPercent, repairBayLevel = 0, activ
 
 #### StanceSelector Component
 
-**Location:** `prototype/frontend/src/components/StanceSelector.tsx`
+**Location:** `app/frontend/src/components/StanceSelector.tsx`
 
 **Props:**
 ```typescript
@@ -452,7 +452,7 @@ interface StanceSelectorProps {
 
 #### YieldThresholdSlider Component
 
-**Location:** `prototype/frontend/src/components/YieldThresholdSlider.tsx`
+**Location:** `app/frontend/src/components/YieldThresholdSlider.tsx`
 
 **Props:**
 ```typescript
@@ -471,7 +471,7 @@ interface YieldThresholdSliderProps {
 
 #### EffectiveStatsDisplay Component
 
-**Location:** `prototype/frontend/src/components/EffectiveStatsDisplay.tsx`
+**Location:** `app/frontend/src/components/EffectiveStatsDisplay.tsx`
 
 **Props:**
 ```typescript
@@ -490,7 +490,7 @@ interface EffectiveStatsDisplayProps {
 
 #### BattleConfigurationPanel Component
 
-**Location:** `prototype/frontend/src/components/BattleConfigurationPanel.tsx`
+**Location:** `app/frontend/src/components/BattleConfigurationPanel.tsx`
 
 **Props:**
 ```typescript

@@ -7,8 +7,8 @@ Upgrade all dependencies across the Armoured Souls project (backend, frontend, a
 ## Glossary
 
 - **Upgrade_Pipeline**: The end-to-end process of updating dependency versions, applying code migrations, and verifying correctness across the Armoured Souls project
-- **Backend**: The Node.js/Express/Prisma application located at `prototype/backend`
-- **Frontend**: The React/Vite application located at `prototype/frontend`
+- **Backend**: The Node.js/Express/Prisma application located at `app/backend`
+- **Frontend**: The React/Vite application located at `app/frontend`
 - **Stable_Version**: A published release that is not tagged as alpha, beta, release candidate (RC), canary, next, or experimental
 - **Breaking_Change**: A change in a dependency's API or behavior that requires modifications to existing application code
 - **Migration_Codemod**: An automated tool provided by a dependency author to transform source code for compatibility with a new major version

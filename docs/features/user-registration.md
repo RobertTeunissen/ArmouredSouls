@@ -60,17 +60,17 @@ graph TD
 
 | Layer | Component | Path |
 |-------|-----------|------|
-| Frontend | FrontPage | `prototype/frontend/src/pages/FrontPage.tsx` |
-| Frontend | RegistrationForm | `prototype/frontend/src/components/RegistrationForm.tsx` |
-| Frontend | LoginForm | `prototype/frontend/src/components/LoginForm.tsx` |
-| Frontend | AuthContext | `prototype/frontend/src/contexts/AuthContext.tsx` |
-| Backend | Auth routes | `prototype/backend/src/routes/auth.ts` |
-| Backend | Validation Service | `prototype/backend/src/utils/validation.ts` |
-| Backend | User Service | `prototype/backend/src/services/userService.ts` |
-| Backend | Password Service | `prototype/backend/src/services/passwordService.ts` |
-| Backend | JWT Service | `prototype/backend/src/services/jwtService.ts` |
-| Backend | Rate Limiter | `prototype/backend/src/middleware/rateLimiter.ts` |
-| Data | Prisma client | `prototype/backend/src/lib/prisma.ts` |
+| Frontend | FrontPage | `app/frontend/src/pages/FrontPage.tsx` |
+| Frontend | RegistrationForm | `app/frontend/src/components/RegistrationForm.tsx` |
+| Frontend | LoginForm | `app/frontend/src/components/LoginForm.tsx` |
+| Frontend | AuthContext | `app/frontend/src/contexts/AuthContext.tsx` |
+| Backend | Auth routes | `app/backend/src/routes/auth.ts` |
+| Backend | Validation Service | `app/backend/src/utils/validation.ts` |
+| Backend | User Service | `app/backend/src/services/userService.ts` |
+| Backend | Password Service | `app/backend/src/services/passwordService.ts` |
+| Backend | JWT Service | `app/backend/src/services/jwtService.ts` |
+| Backend | Rate Limiter | `app/backend/src/middleware/rateLimiter.ts` |
+| Data | Prisma client | `app/backend/src/lib/prisma.ts` |
 
 ---
 
@@ -270,7 +270,7 @@ flowchart TD
 
 ### 1. Environment Variables
 
-Create or update your `.env` file in the backend root (`prototype/backend/`):
+Create or update your `.env` file in the backend root (`app/backend/`):
 
 ```bash
 # Database
@@ -303,7 +303,7 @@ The registration module adds an `email` column to the existing `users` table.
 
 ```bash
 # From the backend directory
-cd prototype/backend
+cd app/backend
 
 # Run Prisma migrations
 npx prisma migrate deploy
@@ -328,11 +328,11 @@ SELECT id, username, email FROM "User" LIMIT 5;
 
 ```bash
 # Backend
-cd prototype/backend
+cd app/backend
 npm install
 
 # Frontend
-cd prototype/frontend
+cd app/frontend
 npm install
 ```
 
@@ -349,21 +349,21 @@ Key dependencies used by this module:
 
 ```bash
 # Backend unit + integration tests
-cd prototype/backend
+cd app/backend
 npx vitest --run
 
 # Frontend component tests
-cd prototype/frontend
+cd app/frontend
 npx vitest --run
 ```
 
 ### 5. Start Development Servers
 
 ```bash
-# Backend (from prototype/backend)
+# Backend (from app/backend)
 npm run dev
 
-# Frontend (from prototype/frontend)
+# Frontend (from app/frontend)
 npm run dev
 ```
 
@@ -511,7 +511,7 @@ Because the registration and login endpoints return the same user profile shape,
 
 ### Extending Validation Rules
 
-Validation functions live in `prototype/backend/src/utils/validation.ts`. Each function returns a `ValidationResult` with an `isValid` flag and an `errors` array.
+Validation functions live in `app/backend/src/utils/validation.ts`. Each function returns a `ValidationResult` with an `isValid` flag and an `errors` array.
 
 **Current validation rules:**
 
@@ -525,7 +525,7 @@ Validation functions live in `prototype/backend/src/utils/validation.ts`. Each f
 **Adding a new validation rule — example: require username to start with a letter:**
 
 ```typescript
-// In prototype/backend/src/utils/validation.ts
+// In app/backend/src/utils/validation.ts
 
 export function validateUsername(username: string): ValidationResult {
   const errors: string[] = [];
@@ -561,7 +561,7 @@ The orchestrating function `validateRegistrationRequest()` calls each individual
 
 ### Customizing Default User Values
 
-Default values for new accounts are defined in the Prisma schema at `prototype/backend/prisma/schema.prisma`:
+Default values for new accounts are defined in the Prisma schema at `app/backend/prisma/schema.prisma`:
 
 ```prisma
 model User {
@@ -577,7 +577,7 @@ model User {
 1. Update the `@default(...)` value in the Prisma schema.
 2. Generate a new migration:
    ```bash
-   cd prototype/backend
+   cd app/backend
    npx prisma migrate dev --name change_default_currency
    ```
 3. Regenerate the Prisma client:
@@ -585,14 +585,14 @@ model User {
    npx prisma generate
    ```
 
-The `createUser()` function in `prototype/backend/src/services/userService.ts` does not explicitly set these fields — it relies on the database defaults. This means changing the schema default is the single source of truth for new account values.
+The `createUser()` function in `app/backend/src/services/userService.ts` does not explicitly set these fields — it relies on the database defaults. This means changing the schema default is the single source of truth for new account values.
 
 **Setting defaults at the application level instead:**
 
 If you need conditional defaults (e.g., different starting currency for promotional accounts), pass them explicitly in `createUser()`:
 
 ```typescript
-// In prototype/backend/src/services/userService.ts
+// In app/backend/src/services/userService.ts
 
 export async function createUser(userData: CreateUserData): Promise<User> {
   const user = await prisma.user.create({
@@ -620,7 +620,7 @@ export interface CreateUserData {
 
 ### Rate Limiting
 
-Both `/api/auth/register` and `/api/auth/login` share the same `authLimiter` middleware defined in `prototype/backend/src/middleware/rateLimiter.ts`:
+Both `/api/auth/register` and `/api/auth/login` share the same `authLimiter` middleware defined in `app/backend/src/middleware/rateLimiter.ts`:
 
 | Setting | Value |
 |---------|-------|
@@ -654,7 +654,7 @@ These rules run before the form submits, preventing unnecessary server round-tri
 | Password              | 8–128 chars                                                          |
 | Password Confirmation | Must match password field                                            |
 
-These mirror the backend validation in `prototype/backend/src/utils/validation.ts`. When adding new backend validation rules, update the client-side validators in `RegistrationForm.tsx` to match.
+These mirror the backend validation in `app/backend/src/utils/validation.ts`. When adding new backend validation rules, update the client-side validators in `RegistrationForm.tsx` to match.
 
 ### Error Display Behavior
 

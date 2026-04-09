@@ -161,7 +161,7 @@ src/
 
 ### User Model Updates (Existing Table)
 
-Add to existing User model in `prototype/backend/prisma/schema.prisma`:
+Add to existing User model in `app/backend/prisma/schema.prisma`:
 
 ```prisma
 model User {
@@ -233,7 +233,7 @@ model ResetLog {
 
 **Critical Question**: Did you run a check to see whether you can reuse already existing functions/components?
 
-**Answer**: Yes. Analysis of `prototype/frontend/src/components/` reveals the following reusable components:
+**Answer**: Yes. Analysis of `app/frontend/src/components/` reveals the following reusable components:
 
 ### Components to Reuse (Existing)
 
@@ -1472,7 +1472,7 @@ Property tests will be defined after prework analysis in the Correctness Propert
 ### File Organization Structure
 
 ```
-prototype/frontend/public/assets/onboarding/
+app/frontend/public/assets/onboarding/
 ├── strategies/
 │   ├── roster-1-mighty.png
 │   ├── roster-2-average.png
@@ -1527,7 +1527,7 @@ import loadoutSingle from '/assets/onboarding/loadouts/loadout-single.png';
 For mobile optimization, consider providing multiple sizes:
 
 ```
-prototype/frontend/public/assets/onboarding/
+app/frontend/public/assets/onboarding/
 ├── strategies/
 │   ├── roster-1-mighty.png          (400×300px - desktop)
 │   ├── roster-1-mighty@2x.png       (800×600px - retina)
@@ -2669,7 +2669,7 @@ Update tutorial state
 
 #### 1. README Updates
 
-**File**: `prototype/frontend/README.md`
+**File**: `app/frontend/README.md`
 
 Add section:
 ```markdown
@@ -2691,7 +2691,7 @@ npm run test:onboarding
 Set `SKIP_ONBOARDING=true` in `.env.local`
 ```
 
-**File**: `prototype/backend/README.md`
+**File**: `app/backend/README.md`
 
 Add section:
 ```markdown

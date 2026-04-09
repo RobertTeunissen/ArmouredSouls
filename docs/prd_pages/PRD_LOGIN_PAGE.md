@@ -393,7 +393,7 @@ This section clearly defines all visual assets that need to be created for the l
 #### 1. Direction D Logo (PRIMARY ASSET - CRITICAL)
 
 **File Name**: `logo-d.svg`  
-**Location**: `prototype/frontend/src/assets/logos/logo-d.svg` ✅ **IMPLEMENTED**  
+**Location**: `app/frontend/src/assets/logos/logo-d.svg` ✅ **IMPLEMENTED**  
 **Format**: SVG (vector, scalable)  
 **Dimensions**: 128×128px design, displayed at 80×80px (w-20 h-20)
 
@@ -462,7 +462,7 @@ background: #0a0e14; /* Deep space black from design system */
 
 **For Developer Implementation**: ✅ COMPLETE
 
-- [x] Place logo SVG in `prototype/frontend/src/assets/logos/`
+- [x] Place logo SVG in `app/frontend/src/assets/logos/`
 - [x] Import logo in `LoginPage.tsx`
 - [x] Implement with proper alt text and accessibility
 - [x] Apply CSS background color from design system
@@ -806,7 +806,7 @@ font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', '
 
 - [x] Create Direction D logo SVG asset (geometric shield-inspired design)
 - [x] Optimize logo file size (minimal SVG with proper metadata)
-- [x] Add logo to assets directory (prototype/frontend/src/assets/logos/)
+- [x] Add logo to assets directory (app/frontend/src/assets/logos/)
 - [x] Test with different screen densities (SVG scales perfectly)
 - [x] Test with slow network (loading states functional)
 - [x] Cross-browser testing (modern browsers supported)
@@ -819,7 +819,7 @@ font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', '
 ### File Structure
 
 ```
-prototype/frontend/
+app/frontend/
 ├── src/
 │   ├── pages/
 │   │   └── LoginPage.tsx          (UPDATE)
@@ -978,7 +978,7 @@ Tested on:
 
 ### A. Implementation Details (Actual Code)
 
-**File Location**: `prototype/frontend/src/pages/LoginPage.tsx`
+**File Location**: `app/frontend/src/pages/LoginPage.tsx`
 
 **Key Implementation Features**:
 

@@ -103,7 +103,7 @@ The 4-hour gaps between adjacent jobs provide ample separation. The KotH job acq
 
 ## Components and Interfaces
 
-### 1. KotH Engine (`prototype/backend/src/services/arena/kothEngine.ts`)
+### 1. KotH Engine (`app/backend/src/services/arena/kothEngine.ts`)
 
 The KotH engine is a collection of pure functions and strategy implementations that produce a `GameModeConfig` for the combat simulator.
 
@@ -269,7 +269,7 @@ function tickPassivePenalties(
 //   accuracyPenalty = passiveTimer >= 60 ? 0.15 : 0
 ```
 
-### 4. KotH Matchmaking Service (`prototype/backend/src/services/kothMatchmakingService.ts`)
+### 4. KotH Matchmaking Service (`app/backend/src/services/kothMatchmakingService.ts`)
 
 ```typescript
 interface KothMatchGroup {
@@ -303,7 +303,7 @@ function getEligibleRobots(): Promise<Robot[]>;
 function distributeIntoGroups(robots: Robot[], groupCount: number): KothMatchGroup[];
 ```
 
-### 5. Battle Orchestrator Extension (`prototype/backend/src/services/battleOrchestrator.ts`)
+### 5. Battle Orchestrator Extension (`app/backend/src/services/battleOrchestrator.ts`)
 
 ```typescript
 // New exports added to existing file:
@@ -351,7 +351,7 @@ function calculateKothRewards(placement: number, zoneScore: number, totalUnconte
 };
 ```
 
-### 6. Cycle Scheduler Extension (`prototype/backend/src/services/cycleScheduler.ts`)
+### 6. Cycle Scheduler Extension (`app/backend/src/services/cycleScheduler.ts`)
 
 ```typescript
 // Extended SchedulerConfig:

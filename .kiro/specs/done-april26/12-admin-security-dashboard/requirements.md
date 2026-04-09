@@ -24,12 +24,12 @@ This spec delivers a usable frontend for the security monitoring APIs that were 
 
 ### Verification Criteria
 
-1. `grep -r "SecurityTab" prototype/frontend/src/components/admin/ | wc -l` — returns ≥ 2 (component file + barrel export)
-2. `grep "'security'" prototype/frontend/src/pages/AdminPage.tsx | wc -l` — returns ≥ 1 (tab registered in admin shell)
-3. `ls prototype/frontend/src/components/admin/__tests__/SecurityTab.test.tsx` — file exists
+1. `grep -r "SecurityTab" app/frontend/src/components/admin/ | wc -l` — returns ≥ 2 (component file + barrel export)
+2. `grep "'security'" app/frontend/src/pages/AdminPage.tsx | wc -l` — returns ≥ 1 (tab registered in admin shell)
+3. `ls app/frontend/src/components/admin/__tests__/SecurityTab.test.tsx` — file exists
 4. The Security tab renders a summary panel with severity counts and a filterable event table when the backend returns data
 5. The Security tab renders a meaningful zero-state when the backend returns no events
-6. `grep -r "security/events\|security/summary" prototype/frontend/src/components/admin/SecurityTab.tsx | wc -l` — returns ≥ 2 (both API endpoints consumed)
+6. `grep -r "security/events\|security/summary" app/frontend/src/components/admin/SecurityTab.tsx | wc -l` — returns ≥ 2 (both API endpoints consumed)
 
 ## Requirements
 

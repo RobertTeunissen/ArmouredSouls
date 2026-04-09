@@ -36,7 +36,7 @@ The integration point is inside `runJob()`. After the handler completes (success
 ### Integration Interface
 
 ```typescript
-// prototype/backend/src/services/notifications/integration.ts
+// app/backend/src/services/notifications/integration.ts
 
 export interface NotificationResult {
   success: boolean;
@@ -53,7 +53,7 @@ export interface Integration {
 ### Discord Integration
 
 ```typescript
-// prototype/backend/src/services/notifications/discord-integration.ts
+// app/backend/src/services/notifications/discord-integration.ts
 
 import logger from '../../config/logger';
 import { Integration, NotificationResult } from './integration';
@@ -101,7 +101,7 @@ export class DiscordIntegration implements Integration {
 ### Notification Service
 
 ```typescript
-// prototype/backend/src/services/notifications/notification-service.ts
+// app/backend/src/services/notifications/notification-service.ts
 
 import logger from '../../config/logger';
 import { Integration, NotificationResult } from './integration';
@@ -271,7 +271,7 @@ Key principle: notification failures are always swallowed. The cron job's succes
 
 Each correctness property maps to a single property-based test with a minimum of 100 iterations. Tests use `fast-check` arbitraries to generate random job contexts, base URLs, tournament names, round numbers, and integration lists.
 
-Test file: `prototype/backend/tests/notifications.property.test.ts`
+Test file: `app/backend/tests/notifications.property.test.ts`
 
 | Test | Property | Generators |
 |---|---|---|
@@ -286,7 +286,7 @@ Each test is tagged with: `Feature: match-notifications, Property {N}: {title}`
 
 ### Unit Tests
 
-Test file: `prototype/backend/tests/notifications.test.ts`
+Test file: `app/backend/tests/notifications.test.ts`
 
 Unit tests cover specific examples and integration points:
 

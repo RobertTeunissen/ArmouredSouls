@@ -835,7 +835,7 @@ className="flex flex-col items-center justify-center flex-1 h-16
 #### 1. Direction B Logo (PRIMARY ASSET - CRITICAL)
 
 **File Name**: `logo-b.svg`  
-**Location**: `prototype/frontend/src/assets/logos/logo-b.svg`  
+**Location**: `app/frontend/src/assets/logos/logo-b.svg`  
 **Format**: SVG (vector, scalable)  
 **Dimensions**: Design at 128×128px artboard, use at 32-40px in UI
 
@@ -909,7 +909,7 @@ className="flex flex-col items-center justify-center flex-1 h-16
 - **Color**: Inherit from parent (`currentColor`)
 - **States**: Single icon file, styled via CSS for active/inactive states
 
-**Location**: `prototype/frontend/src/assets/icons/`
+**Location**: `app/frontend/src/assets/icons/`
 
 ---
 
@@ -935,7 +935,7 @@ className="flex flex-col items-center justify-center flex-1 h-16
 **Style**: Simple avatar silhouette or user outline  
 **Color**: Primary text (#e6edf3) or secondary (#8b949e)
 
-**Location**: `prototype/frontend/src/assets/icons/icon-user.svg`
+**Location**: `app/frontend/src/assets/icons/icon-user.svg`
 
 ---
 
@@ -946,7 +946,7 @@ className="flex flex-col items-center justify-center flex-1 h-16
 **Style**: Simple downward-pointing chevron/arrow  
 **Color**: Inherit from parent
 
-**Location**: `prototype/frontend/src/assets/icons/icon-chevron-down.svg`
+**Location**: `app/frontend/src/assets/icons/icon-chevron-down.svg`
 
 ---
 
@@ -983,7 +983,7 @@ className="flex flex-col items-center justify-center flex-1 h-16
 
 **For Developer Implementation**:
 
-- [x] Place all assets in `prototype/frontend/src/assets/` (logos/, icons/) ✅ COMPLETED
+- [x] Place all assets in `app/frontend/src/assets/` (logos/, icons/) ✅ COMPLETED
 - [x] Import logo in navigation component ✅ COMPLETED
 - [x] Implement with proper alt text and ARIA labels ✅ COMPLETED
 - [x] Test logo at different screen densities (1x, 2x, 3x) ✅ COMPLETED

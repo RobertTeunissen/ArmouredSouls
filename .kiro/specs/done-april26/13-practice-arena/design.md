@@ -633,17 +633,17 @@ Property-based tests use `fast-check` (already in the project for both backend J
 
 Each test is tagged with: `Feature: practice-arena, Property {number}: {property_text}`
 
-Backend property tests (`prototype/backend/tests/unit/practiceArena.property.test.ts`):
+Backend property tests (`app/backend/tests/unit/practiceArena.property.test.ts`):
 - Properties 1-9, 12-15 (service logic, validation, metrics)
 
-Frontend property tests (`prototype/frontend/src/hooks/__tests__/usePracticeHistory.property.test.ts`):
+Frontend property tests (`app/frontend/src/hooks/__tests__/usePracticeHistory.property.test.ts`):
 - Properties 10-11 (localStorage round trip, max capacity)
 
 ### Unit Tests
 
 Unit tests cover specific examples, edge cases, and integration points:
 
-Backend (`prototype/backend/tests/unit/practiceArenaService.test.ts`):
+Backend (`app/backend/tests/unit/practiceArenaService.test.ts`):
 - `buildOwnedRobot` clones robot data correctly
 - `buildOwnedRobot` rejects non-owned robots with 403
 - `buildOwnedRobot` rejects weaponless robots with 400
@@ -653,19 +653,19 @@ Backend (`prototype/backend/tests/unit/practiceArenaService.test.ts`):
 - `getSparringPartnerDefinitions` returns exactly 4 entries with correct attribute levels
 - LuxuryBot config has attributeLevel 15 and priceTier min 400000
 
-Backend route tests (`prototype/backend/tests/unit/practiceArena.route.test.ts`):
+Backend route tests (`app/backend/tests/unit/practiceArena.route.test.ts`):
 - POST /battle returns 400 for invalid body
 - POST /battle returns 403 for non-owned robot
 - GET /sparring-partners returns 4 definitions
 - Rate limiter returns 429 after 30 requests
 
-Backend metrics tests (`prototype/backend/tests/unit/practiceArenaMetrics.test.ts`):
+Backend metrics tests (`app/backend/tests/unit/practiceArenaMetrics.test.ts`):
 - `recordBattle` increments counters correctly
 - `recordRateLimitHit` increments rate limit counter
 - `getStats` returns correct unique player count
 - Daily reset zeroes daily counters but preserves lifetime counter
 
-Frontend tests (`prototype/frontend/src/pages/__tests__/PracticeArenaPage.test.tsx`):
+Frontend tests (`app/frontend/src/pages/__tests__/PracticeArenaPage.test.tsx`):
 - Renders two battle slot panels
 - "My Robot" mode shows robot dropdown
 - "Sparring Partner" mode shows bot tier buttons and config controls
@@ -677,7 +677,7 @@ Frontend tests (`prototype/frontend/src/pages/__tests__/PracticeArenaPage.test.t
 - "Clear History" removes all results
 - Rate limit error displays retry message
 
-Frontend hook tests (`prototype/frontend/src/hooks/__tests__/usePracticeHistory.test.ts`):
+Frontend hook tests (`app/frontend/src/hooks/__tests__/usePracticeHistory.test.ts`):
 - Stores and retrieves results from localStorage
 - Caps at 10 results
 - Clears history

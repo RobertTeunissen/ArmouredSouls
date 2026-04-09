@@ -71,13 +71,13 @@ The following decisions have been finalized based on user input:
 
 The following files contain hardcoded `http://localhost:3001/api` references that must be replaced with the centralized API client:
 
-- `prototype/frontend/src/utils/userApi.ts` (line 8): `const API_BASE_URL = 'http://localhost:3001/api'`
-- `prototype/frontend/src/utils/matchmakingApi.ts` (line 3): `const API_BASE_URL = 'http://localhost:3001/api'`
-- `prototype/frontend/src/utils/financialApi.ts` (line 5): `const API_BASE_URL = 'http://localhost:3001/api'`
-- `prototype/frontend/src/contexts/AuthContext.tsx` (line 60): `axios.get('http://localhost:3001/api/user/profile')`
-- `prototype/frontend/src/contexts/AuthContext.tsx` (line 86): `axios.post('http://localhost:3001/api/auth/login', ...)`
+- `app/frontend/src/utils/userApi.ts` (line 8): `const API_BASE_URL = 'http://localhost:3001/api'`
+- `app/frontend/src/utils/matchmakingApi.ts` (line 3): `const API_BASE_URL = 'http://localhost:3001/api'`
+- `app/frontend/src/utils/financialApi.ts` (line 5): `const API_BASE_URL = 'http://localhost:3001/api'`
+- `app/frontend/src/contexts/AuthContext.tsx` (line 60): `axios.get('http://localhost:3001/api/user/profile')`
+- `app/frontend/src/contexts/AuthContext.tsx` (line 86): `axios.post('http://localhost:3001/api/auth/login', ...)`
 
-Additionally, the Vite dev proxy in `prototype/frontend/vite.config.ts` targets `http://localhost:3001` — this is correct for development but will not exist in production (the Reverse_Proxy handles routing instead).
+Additionally, the Vite dev proxy in `app/frontend/vite.config.ts` targets `http://localhost:3001` — this is correct for development but will not exist in production (the Reverse_Proxy handles routing instead).
 
 ---
 
@@ -96,10 +96,10 @@ Additionally, the Vite dev proxy in `prototype/frontend/vite.config.ts` targets 
 
 Each of the following API utility files currently creates its own `API_BASE_URL` constant and `getAuthHeaders()` helper — these must be refactored to use the shared Axios instance:
 
-- `prototype/frontend/src/utils/userApi.ts` — user profile, registration, admin endpoints
-- `prototype/frontend/src/utils/matchmakingApi.ts` — matchmaking and battle endpoints
-- `prototype/frontend/src/utils/financialApi.ts` — economy and financial endpoints
-- `prototype/frontend/src/contexts/AuthContext.tsx` — login and profile fetch (uses raw `axios.get`/`axios.post` with hardcoded URLs)
+- `app/frontend/src/utils/userApi.ts` — user profile, registration, admin endpoints
+- `app/frontend/src/utils/matchmakingApi.ts` — matchmaking and battle endpoints
+- `app/frontend/src/utils/financialApi.ts` — economy and financial endpoints
+- `app/frontend/src/contexts/AuthContext.tsx` — login and profile fetch (uses raw `axios.get`/`axios.post` with hardcoded URLs)
 
 ---
 
@@ -118,8 +118,8 @@ Each of the following API utility files currently creates its own `API_BASE_URL`
 
 #### Current Code to Migrate
 
-- `prototype/backend/src/index.ts` line 26: `app.use(cors())` — currently allows all origins with no restrictions; must be replaced with environment-based CORS configuration reading `CORS_ORIGIN`.
-- `prototype/backend/src/index.ts` line 29: Health endpoint returns only `{ status: 'ok', message: 'Armoured Souls API is running' }` with no database connectivity check — must be enhanced per Requirement 12.
+- `app/backend/src/index.ts` line 26: `app.use(cors())` — currently allows all origins with no restrictions; must be replaced with environment-based CORS configuration reading `CORS_ORIGIN`.
+- `app/backend/src/index.ts` line 29: Health endpoint returns only `{ status: 'ok', message: 'Armoured Souls API is running' }` with no database connectivity check — must be enhanced per Requirement 12.
 
 ---
 
@@ -329,7 +329,7 @@ Each of the following API utility files currently creates its own `API_BASE_URL`
 2. THE documentation SHALL include a deployment guide covering: first deployment steps, subsequent deployment steps, and environment variable configuration.
 3. THE documentation SHALL include a maintenance guide covering: log inspection, backup verification, SSL certificate status, database maintenance, and server resource monitoring.
 4. THE documentation SHALL include a troubleshooting guide covering: common deployment failures, database connection issues, SSL certificate renewal failures, and process crash recovery.
-5. THE `prototype/README.md` SHALL be updated to include a section on production deployment alongside the existing local development instructions.
+5. THE `app/README.md` SHALL be updated to include a section on production deployment alongside the existing local development instructions.
 6. THE `docs/guides/SETUP.md` SHALL be updated to reference the new VPS deployment documentation.
 7. THE `.env.example` files SHALL be updated to document all production-specific environment variables with comments.
 
@@ -409,7 +409,7 @@ Each of the following API utility files currently creates its own `API_BASE_URL`
 
 #### Acceptance Criteria
 
-1. THE Playwright configuration (`prototype/frontend/playwright.config.ts`) SHALL read `baseURL` from the `PLAYWRIGHT_BASE_URL` environment variable instead of hardcoding `http://localhost:3000`.
+1. THE Playwright configuration (`app/frontend/playwright.config.ts`) SHALL read `baseURL` from the `PLAYWRIGHT_BASE_URL` environment variable instead of hardcoding `http://localhost:3000`.
 2. WHEN `PLAYWRIGHT_BASE_URL` is not set, THE Playwright configuration SHALL default to `http://localhost:3000` to preserve the local development experience.
 3. THE Playwright configuration SHALL read the `webServer.command` and `webServer.url` from environment variables or conditionally disable the `webServer` block when targeting a remote environment.
 4. THE Backend_Service test configuration SHALL support a separate `DATABASE_URL` for test execution, distinct from the production database.
@@ -420,8 +420,8 @@ Each of the following API utility files currently creates its own `API_BASE_URL`
 
 #### Known Hardcoded Locations (to be migrated)
 
-- `prototype/frontend/playwright.config.ts` line 33: `baseURL: 'http://localhost:3000'` — must be replaced with `process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000'`
-- `prototype/frontend/playwright.config.ts` lines 57-61: `webServer` block hardcodes `command: 'npm run dev'` and `url: 'http://localhost:3000'` — must be conditionally disabled for remote testing
+- `app/frontend/playwright.config.ts` line 33: `baseURL: 'http://localhost:3000'` — must be replaced with `process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000'`
+- `app/frontend/playwright.config.ts` lines 57-61: `webServer` block hardcodes `command: 'npm run dev'` and `url: 'http://localhost:3000'` — must be conditionally disabled for remote testing
 - Backend Jest tests rely on `DATABASE_URL` from the local `.env` file — must support a test-specific database URL
 
 ---
@@ -432,11 +432,11 @@ Each of the following API utility files currently creates its own `API_BASE_URL`
 
 #### Acceptance Criteria
 
-1. THE documentation SHALL record the decision to retain the current `prototype/backend`, `prototype/frontend`, `prototype/shared` directory structure for this migration.
-2. THE documentation SHALL state the rationale: the shared code is minimal (only `prototype/shared/utils/discounts.ts`), and restructuring during a migration adds unnecessary risk and scope.
+1. THE documentation SHALL record the decision to retain the current `app/backend`, `app/frontend`, `app/shared` directory structure for this migration.
+2. THE documentation SHALL state the rationale: the shared code is minimal (only `app/shared/utils/discounts.ts`), and restructuring during a migration adds unnecessary risk and scope.
 3. THE documentation SHALL list what would need to change if the project is restructured in the future, including: CI/CD pipeline paths, Docker build contexts, import paths, Prisma schema location references, and deployment scripts.
-4. THE CI_CD_Pipeline SHALL reference all build and deploy paths relative to the `prototype/` directory to ensure compatibility with the current structure.
-5. THE Reverse_Proxy configuration SHALL serve the Frontend_Build from `prototype/frontend/dist/` (or the deployed artifact location) without requiring a directory rename.
+4. THE CI_CD_Pipeline SHALL reference all build and deploy paths relative to the `app/` directory to ensure compatibility with the current structure.
+5. THE Reverse_Proxy configuration SHALL serve the Frontend_Build from `app/frontend/dist/` (or the deployed artifact location) without requiring a directory rename.
 
 ---
 

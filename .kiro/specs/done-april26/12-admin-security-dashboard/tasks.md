@@ -7,13 +7,13 @@ Add a Security tab to the admin portal that consumes the existing backend securi
 ## Tasks
 
 - [x] 1. Add shared types and register the Security tab in the admin shell
-  - [x] 1.1 Add `SecurityEvent`, `SecuritySummary`, and `SecurityEventsResponse` interfaces to `prototype/frontend/src/components/admin/types.ts`
+  - [x] 1.1 Add `SecurityEvent`, `SecuritySummary`, and `SecurityEventsResponse` interfaces to `app/frontend/src/components/admin/types.ts`
     - _Requirements: 2.1, 3.1_
-  - [x] 1.2 Add `'security'` to the `TabType` union, `VALID_TABS` array, and `TAB_LABELS` record (with `'🛡️ Security'` label) in `prototype/frontend/src/pages/AdminPage.tsx`
+  - [x] 1.2 Add `'security'` to the `TabType` union, `VALID_TABS` array, and `TAB_LABELS` record (with `'🛡️ Security'` label) in `app/frontend/src/pages/AdminPage.tsx`
     - _Requirements: 1.1, 1.3, 1.4_
-  - [x] 1.3 Create `prototype/frontend/src/components/admin/SecurityTab.tsx` as a skeleton component that renders a `data-testid="security-tab"` wrapper div with the heading "Security" and a "Loading security data..." placeholder
+  - [x] 1.3 Create `app/frontend/src/components/admin/SecurityTab.tsx` as a skeleton component that renders a `data-testid="security-tab"` wrapper div with the heading "Security" and a "Loading security data..." placeholder
     - _Requirements: 1.2, 6.1_
-  - [x] 1.4 Export `SecurityTab` from the barrel file `prototype/frontend/src/components/admin/index.ts`
+  - [x] 1.4 Export `SecurityTab` from the barrel file `app/frontend/src/components/admin/index.ts`
     - _Requirements: 1.2_
   - [x] 1.5 Import `SecurityTab` in `AdminPage.tsx` and render it in the tab panel when `activeTab === 'security'`
     - _Requirements: 1.2, 1.3_
@@ -35,7 +35,7 @@ Add a Security tab to the admin portal that consumes the existing backend securi
     - _Requirements: 6.1, 6.2, 6.3_
 
 - [x] 3. Write component tests
-  - [x] 3.1 Create `prototype/frontend/src/components/admin/__tests__/SecurityTab.test.tsx` following the existing admin tab test pattern (mock `apiClient`, render component, assert DOM)
+  - [x] 3.1 Create `app/frontend/src/components/admin/__tests__/SecurityTab.test.tsx` following the existing admin tab test pattern (mock `apiClient`, render component, assert DOM)
     - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6_
   - [x] 3.2 Test cases to implement:
     - Loading state: mock pending promise, verify "Loading security data..." text renders
@@ -53,10 +53,10 @@ Add a Security tab to the admin portal that consumes the existing backend securi
     - _Requirements: 1.1, 2.1, 3.1, 4.1, 5.1_
 
 - [x] 5. Verification
-  - [x] 5.1 Run the frontend test suite (`npm test` in `prototype/frontend`) and confirm all tests pass including the new SecurityTab tests
+  - [x] 5.1 Run the frontend test suite (`npm test` in `app/frontend`) and confirm all tests pass including the new SecurityTab tests
   - [x] 5.2 Run verification checks from the requirements:
-    - `grep -r "SecurityTab" prototype/frontend/src/components/admin/ | wc -l` — returns 14 (≥ 2 ✅)
-    - `grep "'security'" prototype/frontend/src/pages/AdminPage.tsx | wc -l` — returns 4 (≥ 1 ✅)
-    - `ls prototype/frontend/src/components/admin/__tests__/SecurityTab.test.tsx` — file exists ✅
-    - `grep -r "security/events\|security/summary" prototype/frontend/src/components/admin/SecurityTab.tsx | wc -l` — returns 3 (≥ 2 ✅)
-  - [x] 5.3 Run `npx tsc --noEmit` in `prototype/frontend` to confirm no TypeScript errors ✅
+    - `grep -r "SecurityTab" app/frontend/src/components/admin/ | wc -l` — returns 14 (≥ 2 ✅)
+    - `grep "'security'" app/frontend/src/pages/AdminPage.tsx | wc -l` — returns 4 (≥ 1 ✅)
+    - `ls app/frontend/src/components/admin/__tests__/SecurityTab.test.tsx` — file exists ✅
+    - `grep -r "security/events\|security/summary" app/frontend/src/components/admin/SecurityTab.tsx | wc -l` — returns 3 (≥ 2 ✅)
+  - [x] 5.3 Run `npx tsc --noEmit` in `app/frontend` to confirm no TypeScript errors ✅

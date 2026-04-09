@@ -12,7 +12,7 @@ Implemented a unique constraint on robot names to prevent users from creating mu
 
 ### 1. Database Schema (Prisma)
 
-**File**: `prototype/backend/prisma/schema.prisma`
+**File**: `app/backend/prisma/schema.prisma`
 
 - Added unique constraint on the combination of `userId` and `name` in the `Robot` model
 - This allows different users to have robots with the same name, but prevents duplicate names within a single user's roster
@@ -32,7 +32,7 @@ model Robot {
 
 ### 2. Backend API Validation
 
-**File**: `prototype/backend/src/routes/robots.ts`
+**File**: `app/backend/src/routes/robots.ts`
 
 #### Added Pre-Creation Check
 Before attempting to create a robot, the API now checks if a robot with the same name already exists for the user:
@@ -66,7 +66,7 @@ catch (error) {
 
 ### 3. Frontend Validation
 
-**File**: `prototype/frontend/src/pages/CreateRobotPage.tsx`
+**File**: `app/frontend/src/pages/CreateRobotPage.tsx`
 
 #### Fixed Character Limit Bug
 The frontend was allowing 100 characters, but the backend/database only accepts 50:
@@ -95,7 +95,7 @@ The API error messages are automatically displayed to the user through the exist
 
 ### 4. Comprehensive Test Suite
 
-**File**: `prototype/backend/tests/robotNameUniqueness.test.ts`
+**File**: `app/backend/tests/robotNameUniqueness.test.ts`
 
 Created integration tests covering:
 
@@ -214,11 +214,11 @@ This implementation is documented in:
 
 ## References
 
-- **Database Schema**: `prototype/backend/prisma/schema.prisma`
-- **Migration**: `prototype/backend/prisma/migrations/20260207134300_unique_robot_names_per_user/`
-- **Backend API**: `prototype/backend/src/routes/robots.ts` (lines 118-127, 214-220)
-- **Frontend**: `prototype/frontend/src/pages/CreateRobotPage.tsx` (lines 31-33, 142-148)
-- **Tests**: `prototype/backend/tests/robotNameUniqueness.test.ts`
+- **Database Schema**: `app/backend/prisma/schema.prisma`
+- **Migration**: `app/backend/prisma/migrations/20260207134300_unique_robot_names_per_user/`
+- **Backend API**: `app/backend/src/routes/robots.ts` (lines 118-127, 214-220)
+- **Frontend**: `app/frontend/src/pages/CreateRobotPage.tsx` (lines 31-33, 142-148)
+- **Tests**: `app/backend/tests/robotNameUniqueness.test.ts`
 
 ---
 

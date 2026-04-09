@@ -149,7 +149,7 @@ To prevent regression (new routes added without `validateRequest`), add a custom
 
 ### Rule Design
 
-Create a local ESLint plugin at `prototype/backend/eslint-rules/require-validate-request.js`:
+Create a local ESLint plugin at `app/backend/eslint-rules/require-validate-request.js`:
 
 ```javascript
 module.exports = {
@@ -191,7 +191,7 @@ module.exports = {
 
 ### ESLint Config Integration
 
-Add the custom rule to `prototype/backend/eslint.config.mjs`:
+Add the custom rule to `app/backend/eslint.config.mjs`:
 
 ```javascript
 import requireValidateRequest from './eslint-rules/require-validate-request.js';

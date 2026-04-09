@@ -59,13 +59,13 @@ Add Zod schema validation to all 69 route handlers currently missing it across 2
   - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.8, 8.9, 8.10, 8.11, 8.12, 8.13, 8.14, 9.1_
 
 - [x] 8. Add custom ESLint rule to enforce validateRequest on all routes
-  - [x] 8.1 Create `prototype/backend/eslint-rules/require-validate-request.js` with a custom ESLint rule that reports an error on any `router.get/post/put/delete/patch` call in `src/routes/` that does not include `validateRequest` in its middleware chain
-  - [x] 8.2 Add the custom rule plugin to `prototype/backend/eslint.config.mjs`, scoped to `src/routes/**/*.ts` files, at error level
+  - [x] 8.1 Create `app/backend/eslint-rules/require-validate-request.js` with a custom ESLint rule that reports an error on any `router.get/post/put/delete/patch` call in `src/routes/` that does not include `validateRequest` in its middleware chain
+  - [x] 8.2 Add the custom rule plugin to `app/backend/eslint.config.mjs`, scoped to `src/routes/**/*.ts` files, at error level
   - [x] 8.3 Run `npm run lint` and confirm zero errors (all routes now have `validateRequest`)
   - _Requirements: 10.1, 10.2, 10.3_
 
 - [x] 9. Documentation and verification
   - [x] 9.1 Update `docs/guides/SECURITY.md` to document the `custom-routes/require-validate-request` ESLint rule that enforces 100% route validation coverage
   - [x] 9.2 Update `.kiro/steering/coding-standards.md` to add a note in the "Zod Schema Validation" section that the `custom-routes/require-validate-request` ESLint rule enforces this automatically
-  - [x] 9.3 Run verification criteria: for each route file, confirm route handler count equals `validateRequest` count; confirm `grep -rn "router\.\(get\|post\|put\|delete\)" prototype/backend/src/routes/ | grep -v "validateRequest"` returns zero matches; confirm `npm run lint` passes; confirm all backend tests pass
+  - [x] 9.3 Run verification criteria: for each route file, confirm route handler count equals `validateRequest` count; confirm `grep -rn "router\.\(get\|post\|put\|delete\)" app/backend/src/routes/ | grep -v "validateRequest"` returns zero matches; confirm `npm run lint` passes; confirm all backend tests pass
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 2.1, 2.2, 3.1, 3.2, 4.1, 4.2, 5.1, 6.1, 7.1, 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.8, 8.9, 8.10, 8.11, 8.12, 8.13, 8.14, 9.1, 9.2, 10.1, 10.2, 10.3_

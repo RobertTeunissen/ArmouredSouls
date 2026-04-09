@@ -1449,7 +1449,7 @@ This section provides detailed technical specifications for all visual assets, i
 ### Asset Directory Structure
 
 ```
-prototype/frontend/src/assets/
+app/frontend/src/assets/
 ├── brand/                  # Logo variants, currency, UI frames
 │   ├── logo-b.svg          # Direction B (precision/management)
 │   ├── logo-c.svg          # Direction C (soul/energy/battle)

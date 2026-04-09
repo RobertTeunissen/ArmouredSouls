@@ -28,17 +28,17 @@ This spec adds a new user-facing feature (custom robot images) while establishin
 
 ### Verification Criteria
 
-1. `ls prototype/backend/src/services/moderation/` shows `contentModerationService.ts`, `fileValidationService.ts`, and `fileStorageService.ts`
-2. `grep -c "POST.*image" prototype/backend/src/routes/robots.ts` returns at least 1 (upload route exists)
-3. `grep -c "nsfwjs" prototype/backend/package.json` returns 1 (dependency installed)
-4. `grep -c "multer" prototype/backend/package.json` returns 1 (dependency installed)
-5. `grep -c "sharp" prototype/backend/package.json` returns 1 (dependency installed)
-6. `grep -rn "IMAGE_MODERATION_FAILED\|MODERATION_UNAVAILABLE\|INVALID_IMAGE\|FILE_TOO_LARGE" prototype/backend/src/ --include="*.ts" | wc -l` returns at least 4 (error codes used in handler)
-7. `grep -c "image_moderation_rejection" prototype/backend/src/ -r --include="*.ts"` returns at least 1 (audit logging for rejections)
-8. `grep -c "uploadRateLimiter\|upload.*rate" prototype/backend/src/ -r --include="*.ts"` returns at least 1 (rate limiter exists)
-9. `find prototype/frontend/src -name "*.tsx" | xargs grep -l "Upload\|upload.*image" | wc -l` returns at least 1 (frontend upload component exists)
-10. `cd prototype/backend && npm test` passes all tests
-11. `cd prototype/frontend && npm run build` succeeds
+1. `ls app/backend/src/services/moderation/` shows `contentModerationService.ts`, `fileValidationService.ts`, and `fileStorageService.ts`
+2. `grep -c "POST.*image" app/backend/src/routes/robots.ts` returns at least 1 (upload route exists)
+3. `grep -c "nsfwjs" app/backend/package.json` returns 1 (dependency installed)
+4. `grep -c "multer" app/backend/package.json` returns 1 (dependency installed)
+5. `grep -c "sharp" app/backend/package.json` returns 1 (dependency installed)
+6. `grep -rn "IMAGE_MODERATION_FAILED\|MODERATION_UNAVAILABLE\|INVALID_IMAGE\|FILE_TOO_LARGE" app/backend/src/ --include="*.ts" | wc -l` returns at least 4 (error codes used in handler)
+7. `grep -c "image_moderation_rejection" app/backend/src/ -r --include="*.ts"` returns at least 1 (audit logging for rejections)
+8. `grep -c "uploadRateLimiter\|upload.*rate" app/backend/src/ -r --include="*.ts"` returns at least 1 (rate limiter exists)
+9. `find app/frontend/src -name "*.tsx" | xargs grep -l "Upload\|upload.*image" | wc -l` returns at least 1 (frontend upload component exists)
+10. `cd app/backend && npm test` passes all tests
+11. `cd app/frontend && npm run build` succeeds
 12. `grep -c "Image Upload" docs/guides/SECURITY.md` returns at least 1 (security docs updated)
 13. `grep -c "uploads/robots" docs/guides/DEPLOYMENT.md` returns at least 1 (deployment docs updated)
 

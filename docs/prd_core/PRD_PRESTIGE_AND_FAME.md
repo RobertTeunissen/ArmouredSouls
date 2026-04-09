@@ -174,7 +174,7 @@ Displayed on the fame leaderboard (`/leaderboards/fame`).
 
 ## Implementation Files
 
-All paths relative to `prototype/backend/src/`.
+All paths relative to `app/backend/src/`.
 
 | File | Responsibility |
 |---|---|

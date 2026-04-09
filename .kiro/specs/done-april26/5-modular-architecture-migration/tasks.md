@@ -15,7 +15,7 @@ This is a documentation-only spec. No code is moved. The deliverables are module
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6_
 
 - [x] 2. Create service-to-module mapping
-  - [x] 2.1 Create `docs/guides/SERVICE_MODULE_MAPPING.md` with a table mapping every service file across all 18 directories in `prototype/backend/src/services/` to its target module (including `admin/`, `robot/`, `match/`, `arena/`, `practice-arena/`, `security/`, `notifications/` added in specs 3 and 15)
+  - [x] 2.1 Create `docs/guides/SERVICE_MODULE_MAPPING.md` with a table mapping every service file across all 18 directories in `app/backend/src/services/` to its target module (including `admin/`, `robot/`, `match/`, `arena/`, `practice-arena/`, `security/`, `notifications/` added in specs 3 and 15)
   - [x] 2.2 Include the `shared/utils/` directory (discounts, academyCaps, upgradeCosts) in the mapping
   - [x] 2.3 Identify and document cross-cutting services that span module boundaries (eventLogger, queryService, etc.) with notes on resolution
   - [x] 2.4 Identify and document any circular dependencies between services that must be resolved before extraction
@@ -42,8 +42,8 @@ This is a documentation-only spec. No code is moved. The deliverables are module
 ## Notes
 
 - This spec produces documentation only — no code is moved
-- The service-to-module mapping accounts for all 18 service directories in `prototype/backend/src/services/`, including `admin/`, `robot/`, `match/`, `arena/`, `practice-arena/`, `security/`, and `notifications/`
+- The service-to-module mapping accounts for all 18 service directories in `app/backend/src/services/`, including `admin/`, `robot/`, `match/`, `arena/`, `practice-arena/`, `security/`, and `notifications/`
 - The `shared/utils/` directory (discounts, academyCaps, upgradeCosts) is mapped to `game-engine` module
 - Module contracts should be reviewed by the team before Phase 2 extraction begins
 - The migration strategy should be validated against the actual dependency graph
-- This spec should run BEFORE spec 10 (prototype → app rename) since it references `prototype/` paths and creates docs in `modules/`
+- This spec should run BEFORE spec 10 (prototype → app rename) since it references `app/` paths and creates docs in `modules/`

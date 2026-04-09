@@ -31,7 +31,7 @@ npm run dev  # Terminal 2
 
 Open http://localhost:3000 — test credentials are in [SETUP.md](docs/guides/SETUP.md).
 
-If you see "Environment variable not found: DATABASE_URL", you forgot to create the `.env` file — run `cp .env.example .env` in `prototype/backend/`.
+If you see "Environment variable not found: DATABASE_URL", you forgot to create the `.env` file — run `cp .env.example .env` in `app/backend/`.
 
 ## What's Built
 
@@ -69,7 +69,7 @@ ArmouredSouls/
 │   ├── implementation_notes/# Technical implementation details
 │   ├── migrations/          # Database migration notes
 │   └── troubleshooting/     # Debugging guides
-├── prototype/
+├── app/
 │   ├── backend/             # Express 5 API (13 domain service directories)
 │   ├── frontend/            # React 19 SPA (27 pages)
 │   ├── docker-compose.yml   # PostgreSQL for local dev

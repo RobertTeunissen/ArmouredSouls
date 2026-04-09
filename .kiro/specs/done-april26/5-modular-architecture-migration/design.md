@@ -2,15 +2,15 @@
 
 ## Overview
 
-This is a documentation-only spec. No code is moved. The deliverable is a set of module contract documents and a migration strategy that maps the current monolithic `prototype/` structure to the target `modules/` architecture. This gives the team a clear, unambiguous roadmap for Phase 2 extraction.
+This is a documentation-only spec. No code is moved. The deliverable is a set of module contract documents and a migration strategy that maps the current monolithic `app/` structure to the target `modules/` architecture. This gives the team a clear, unambiguous roadmap for Phase 2 extraction.
 
 ### Key Research Findings
 
 - `modules/` contains 5 placeholder directories: `api/`, `auth/`, `database/`, `game-engine/`, `ui/`. Each has only a README.
-- The actual codebase in `prototype/backend/src/services/` has 41 services (being reorganized into domain subdirectories per Spec 3).
-- The frontend in `prototype/frontend/` is a single React app with 23 pages.
+- The actual codebase in `app/backend/src/services/` has 41 services (being reorganized into domain subdirectories per Spec 3).
+- The frontend in `app/frontend/` is a single React app with 23 pages.
 - No npm workspace configuration exists yet.
-- The Prisma schema and generated client live in `prototype/backend/` — the `database` module needs to own these.
+- The Prisma schema and generated client live in `app/backend/` — the `database` module needs to own these.
 
 ## Architecture
 

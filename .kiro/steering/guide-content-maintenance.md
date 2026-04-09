@@ -1,6 +1,6 @@
 ---
 inclusion: fileMatch
-fileMatchPattern: "prototype/backend/src/services/**,prototype/backend/src/game-engine/**,docs/prd_core/**,docs/balance_changes/**"
+fileMatchPattern: "app/backend/src/services/**,app/backend/src/game-engine/**,docs/prd_core/**,docs/balance_changes/**"
 ---
 
 # In-Game Guide Content Maintenance

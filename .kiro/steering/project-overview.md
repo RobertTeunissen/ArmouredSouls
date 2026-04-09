@@ -40,11 +40,10 @@ Browser-based robot combat strategy game with turn-based mechanics, league syste
 - **Backups**: Automated daily PostgreSQL dumps
 
 ## Project Structure
-- `/prototype/backend` - Main backend application (services organized into 18 domain subdirectories under src/services/)
-- `/prototype/frontend` - React frontend application
-- `/prototype/shared` - Shared TypeScript modules imported by both frontend and backend (game formulas, discount calculations)
-- `/docs` - Comprehensive documentation organized by category
-- `/modules` - Target modular architecture with documented contracts and migration strategy (see [Migration Strategy](docs/guides/MODULAR_MIGRATION_STRATEGY.md) and [Service Mapping](docs/guides/SERVICE_MODULE_MAPPING.md))
+- `/app/backend` - Main backend application (services organized into 18 domain subdirectories under src/services/)
+- `/app/frontend` - React frontend application
+- `/app/shared` - Shared TypeScript modules imported by both frontend and backend (game formulas, discount calculations)
+- `/docs` - Comprehensive documentation organized by category (includes modular architecture migration plan in `docs/guides/`)
 
 ## Key Systems
 1. **Combat System** - Turn-based robot battles with weapons, armor, and damage calculations

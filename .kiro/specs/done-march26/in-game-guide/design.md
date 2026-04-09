@@ -8,7 +8,7 @@ The guide is a content-delivery feature — not a CRUD application. There is no 
 
 ### Key Design Decisions
 
-1. **File-based content, not database-stored**: Guide articles are Markdown files with YAML frontmatter, stored in `prototype/backend/src/content/guide/`. This avoids database migrations for content changes and allows content updates via simple file edits or git commits.
+1. **File-based content, not database-stored**: Guide articles are Markdown files with YAML frontmatter, stored in `app/backend/src/content/guide/`. This avoids database migrations for content changes and allows content updates via simple file edits or git commits.
 
 2. **Server-side content parsing, client-side search**: The backend parses Markdown files and serves structured JSON. Search is implemented client-side against a pre-fetched content index to meet the <300ms requirement without adding search infrastructure.
 
@@ -62,7 +62,7 @@ graph TB
 
 ### Route Integration
 
-**Backend** — new route file `prototype/backend/src/routes/guide.ts`, registered in `index.ts`:
+**Backend** — new route file `app/backend/src/routes/guide.ts`, registered in `index.ts`:
 ```typescript
 app.use('/api/guide', guideRoutes);
 ```
@@ -80,7 +80,7 @@ All guide routes are wrapped in `<ProtectedRoute>` consistent with existing patt
 
 ### Backend Components
 
-#### GuideService (`prototype/backend/src/services/guide-service.ts`)
+#### GuideService (`app/backend/src/services/guide-service.ts`)
 
 Responsible for reading, parsing, and caching guide content from the filesystem.
 
@@ -160,7 +160,7 @@ class GuideService {
 
 The service reads from a content directory structured as:
 ```
-prototype/backend/src/content/guide/
+app/backend/src/content/guide/
 ├── sections.json              # Section ordering and metadata
 ├── getting-started/
 │   ├── core-game-loop.md
@@ -196,7 +196,7 @@ relatedArticles:
 When a robot attacks, the game processes several steps in order...
 ```
 
-#### Guide Router (`prototype/backend/src/routes/guide.ts`)
+#### Guide Router (`app/backend/src/routes/guide.ts`)
 
 Three endpoints, all behind `authenticateToken`:
 
@@ -206,7 +206,7 @@ Three endpoints, all behind `authenticateToken`:
 | GET | `/api/guide/articles/:sectionSlug/:articleSlug` | `GuideArticle` | Single article with full content |
 | GET | `/api/guide/search-index` | `SearchIndexEntry[]` | Flat list for client-side search |
 
-#### MarkdownParser (`prototype/backend/src/services/markdown-parser.ts`)
+#### MarkdownParser (`app/backend/src/services/markdown-parser.ts`)
 
 Utility that:
 - Parses YAML frontmatter using `gray-matter`
@@ -218,13 +218,13 @@ Utility that:
 
 #### Page Component
 
-**GuidePage** (`prototype/frontend/src/pages/GuidePage.tsx`)
+**GuidePage** (`app/frontend/src/pages/GuidePage.tsx`)
 - Top-level page component, renders inside `Navigation` layout
 - Uses `useParams()` to determine current section/article from URL
 - Manages guide state: sections list, current article, search state
 - Responsive: sidebar on desktop, toggleable drawer on mobile (<768px)
 
-#### Guide-Specific Components (`prototype/frontend/src/components/guide/`)
+#### Guide-Specific Components (`app/frontend/src/components/guide/`)
 
 | Component | Responsibility |
 |-----------|---------------|
@@ -264,7 +264,7 @@ The `ContentRenderer` component uses `react-markdown` with custom renderers:
 
 ### API Client Extension
 
-New file `prototype/frontend/src/utils/guideApi.ts`:
+New file `app/frontend/src/utils/guideApi.ts`:
 
 ```typescript
 import apiClient from './apiClient';
@@ -394,7 +394,7 @@ interface GuideCache {
 
 ### Content Directory Convention
 
-- Each section is a subdirectory under `prototype/backend/src/content/guide/`
+- Each section is a subdirectory under `app/backend/src/content/guide/`
 - Directory name must match the section `slug` in `sections.json`
 - Each article is a `.md` file within its section directory
 - Article slug is derived from the filename (minus `.md` extension)
@@ -404,12 +404,12 @@ interface GuideCache {
 
 ## Image & Visual Asset Specification
 
-Guide articles reference static images stored in `prototype/frontend/public/images/guide/`. Each image is referenced in Markdown via relative path: `![alt text](/images/guide/section/filename.webp)`.
+Guide articles reference static images stored in `app/frontend/public/images/guide/`. Each image is referenced in Markdown via relative path: `![alt text](/images/guide/section/filename.webp)`.
 
 ### Image Storage Structure
 
 ```
-prototype/frontend/public/images/guide/
+app/frontend/public/images/guide/
 ├── getting-started/
 │   ├── core-game-loop-diagram.webp        # Visual flowchart: Build → Configure → Battle → Results → Iterate
 │   └── roster-strategy-comparison.webp    # Side-by-side comparison of 1/2/3 robot approaches
@@ -474,39 +474,39 @@ Each image needs to be created manually (or via design tool). The following deta
 
 | # | Full Path | Dimensions (px) | Section | Content Description | Key Elements to Include |
 |---|-----------|-----------------|---------|--------------------|-----------------------|
-| 1 | `prototype/frontend/public/images/guide/getting-started/core-game-loop-diagram.webp` | 1200 × 600 | Getting Started | Circular flow showing the daily game loop | 5 steps: Build Robots → Configure Strategy → Enlist in Battles → View Results → Iterate. Arrows connecting each step. |
-| 2 | `prototype/frontend/public/images/guide/getting-started/roster-strategy-comparison.webp` | 1200 × 500 | Getting Started | Side-by-side comparison of roster approaches | 3 columns: "1 Mighty Robot" (high stats, single point of failure), "2 Average Robots" (balanced), "3 Flimsy Robots" (quantity, low individual power). Pros/cons for each. |
-| 3 | `prototype/frontend/public/images/guide/robots/attribute-categories-overview.webp` | 1200 × 800 | Robots | Map of all 23 attributes in their 5 categories | 5 grouped boxes: Combat Systems, Defensive Systems, Chassis & Mobility, AI Processing, Team Coordination. Each box lists its attributes. |
-| 4 | `prototype/frontend/public/images/guide/robots/attribute-combat-influence.webp` | 1200 × 700 | Robots | How attributes feed into combat outcomes | Arrows from attribute groups to combat results: damage output, hit chance, critical rate, defense, evasion, etc. |
-| 5 | `prototype/frontend/public/images/guide/robots/training-academy-progression.webp` | 1000 × 600 | Robots | Academy levels unlocking attribute caps | 4 academy types, each showing level 1-10 → attribute cap from 10 to 50. |
-| 6 | `prototype/frontend/public/images/guide/combat/attack-order-of-operations.webp` | 1200 × 400 | Combat | Sequential attack resolution steps | Linear flow: Malfunction Check → Hit Calculation → Critical Hit Check → Damage Calculation → Shield Absorption → Armor Reduction → HP Damage. Each step with brief label. |
-| 7 | `prototype/frontend/public/images/guide/combat/stance-comparison-chart.webp` | 900 × 500 | Combat | 3 stances with their attribute modifiers | Table/chart: Offensive (+ attack, - defense), Defensive (+ defense, - attack), Balanced (neutral). Visual indicators for each modifier. |
-| 8 | `prototype/frontend/public/images/guide/combat/yield-threshold-tradeoff.webp` | 1000 × 600 | Combat | Yield % vs repair cost vs survival | Graph or diagram showing: low yield = more damage taken but fights longer, high yield = less damage but surrenders earlier. Repair cost implications. |
-| 9 | `prototype/frontend/public/images/guide/weapons/loadout-types-comparison.webp` | 1200 × 500 | Weapons | 4 loadout types with bonuses/penalties | 4 cards: Single, Weapon+Shield, Two-Handed, Dual-Wield. Each showing bonus %, penalty %, and recommended use case. |
-| 10 | `prototype/frontend/public/images/guide/weapons/weapon-categories-overview.webp` | 1000 × 500 | Weapons | 4 weapon categories with characteristics | Energy, Ballistic, Melee, Shield — each with icon, general damage range, and key trait. |
-| 11 | `prototype/frontend/public/images/guide/weapons/dual-wield-mechanics.webp` | 1000 × 600 | Weapons | Per-hand bonus application and offhand rules | Diagram showing main hand (full bonuses, normal hit chance) vs offhand (per-hand bonuses, 50% hit chance, 40% cooldown penalty). |
-| 12 | `prototype/frontend/public/images/guide/leagues/league-tier-progression.webp` | 1200 × 400 | Leagues | 6 tiers from Bronze to Champion | Vertical or horizontal progression: Bronze → Silver → Gold → Platinum → Diamond → Champion. Each tier with color and instance info (max 100 robots). |
-| 13 | `prototype/frontend/public/images/guide/leagues/matchmaking-flow.webp` | 1000 × 600 | Leagues | LP-primary matching with ELO secondary | Flowchart: Find opponents ±10 LP → if none, expand to ±20 LP → ELO quality check → match confirmed. |
-| 14 | `prototype/frontend/public/images/guide/leagues/promotion-demotion-rules.webp` | 1000 × 500 | Leagues | Promotion/demotion thresholds | Visual: Top 10% + ≥25 LP + ≥5 cycles = PROMOTE. Bottom 10% + ≥5 cycles = DEMOTE. 5-cycle protection for newly promoted. |
-| 15 | `prototype/frontend/public/images/guide/tournaments/bracket-generation-example.webp` | 1200 × 700 | Tournaments | Example 8 or 16 robot bracket | Single elimination bracket with seeded positions. Show bye slots for non-power-of-2 counts. |
-| 16 | `prototype/frontend/public/images/guide/tournaments/tournament-rewards-by-round.webp` | 900 × 500 | Tournaments | Reward scaling per round | Chart showing how credits scale with round progression (currentRound/maxRounds) and tournament size multiplier. Base ₡20,000 × size × progression. |
-| 17 | `prototype/frontend/public/images/guide/economy/daily-financial-cycle.webp` | 1200 × 600 | Economy | Revenue in, costs out, net income | Flow diagram: Left side = income sources (battle winnings, merchandising, streaming). Right side = expenses (facility costs, repairs). Center = net income. |
-| 18 | `prototype/frontend/public/images/guide/economy/income-sources-overview.webp` | 1200 × 600 | Economy | Breakdown of all income types | 3 sections: Battle Winnings (by league tier), Merchandising (prestige-scaled), Streaming (fame + battles + studio). Impact descriptions, no formulas. |
-| 19 | `prototype/frontend/public/images/guide/economy/league-tier-reward-scaling.webp` | 900 × 500 | Economy | Base win rewards per league tier | Bar chart or table: Bronze ₡7,500, Silver ₡15,000, Gold ₡30,000, Platinum ₡60,000, Diamond ₡115,000, Champion ₡225,000. |
-| 20 | `prototype/frontend/public/images/guide/facilities/facility-overview-grid.webp` | 1200 × 900 | Facilities | All 15 facilities at a glance | Grid of 15 facility cards with icon, name, purpose, cost range, daily operating cost. Grouped by category (Economic, Progression, Combat). |
-| 21 | `prototype/frontend/public/images/guide/facilities/training-academy-system.webp` | 1000 × 600 | Facilities | 4 academies controlling attribute caps | Diagram: Combat Academy → Combat Systems attributes cap. Defense Academy → Defensive Systems cap. Mobility Academy → Chassis & Mobility cap. AI Academy → AI Processing cap. Level 1-10 scale. |
-| 22 | `prototype/frontend/public/images/guide/facilities/coaching-staff-system.webp` | 900 × 500 | Facilities | Coach types and switching mechanics | Visual: Available coach types with bonuses. One-active-coach rule. Switching cost indicator. |
-| 23 | `prototype/frontend/public/images/guide/facilities/investment-priority-roadmap.webp` | 1200 × 500 | Facilities | Recommended facility order by game stage | Timeline: Early game (Repair Bay, Training Facility, Storage) → Mid game (Academies, Workshop, Coaching) → Late game (Streaming Studio, Booking Office, Research Lab). |
-| 24 | `prototype/frontend/public/images/guide/prestige-fame/prestige-rank-progression.webp` | 1200 × 350 | Prestige & Fame | 6 prestige ranks with thresholds | Progression bar: Novice → Established → Veteran → Elite → Champion → Legendary. Each with threshold value. |
-| 25 | `prototype/frontend/public/images/guide/prestige-fame/fame-tier-progression.webp` | 1200 × 350 | Prestige & Fame | 6 fame tiers with thresholds | Progression bar: Unknown → Known → Famous → Renowned → Legendary → Mythical. Each with threshold value. |
-| 26 | `prototype/frontend/public/images/guide/prestige-fame/prestige-income-impact.webp` | 1000 × 600 | Prestige & Fame | How prestige scales income | Visual showing: higher prestige → bigger battle winnings bonus + higher merchandising income. Impact arrows, no formulas. |
-| 27 | `prototype/frontend/public/images/guide/strategy/tank-archetype.webp` | 800 × 600 | Strategy | Tank build recommendation | Robot silhouette with: key attributes highlighted (hull integrity, armor, defense), recommended weapons, stance (defensive), loadout (weapon+shield). |
-| 28 | `prototype/frontend/public/images/guide/strategy/glass-cannon-archetype.webp` | 800 × 600 | Strategy | Glass Cannon build recommendation | Robot silhouette with: key attributes (firepower, targeting, critical systems), recommended weapons, stance (offensive), loadout (two-handed). |
-| 29 | `prototype/frontend/public/images/guide/strategy/speed-demon-archetype.webp` | 800 × 600 | Strategy | Speed Demon build recommendation | Robot silhouette with: key attributes (speed, evasion, initiative), recommended weapons, stance (balanced), loadout (dual-wield). |
-| 30 | `prototype/frontend/public/images/guide/strategy/counter-striker-archetype.webp` | 800 × 600 | Strategy | Counter Striker build recommendation | Robot silhouette with: key attributes (counter-attack, reflexes, defense), recommended weapons, stance (defensive), loadout (weapon+shield). |
-| 31 | `prototype/frontend/public/images/guide/strategy/sniper-archetype.webp` | 800 × 600 | Strategy | Sniper build recommendation | Robot silhouette with: key attributes (targeting, critical, range), recommended weapons, stance (offensive), loadout (single). |
-| 32 | `prototype/frontend/public/images/guide/strategy/budget-allocation-strategies.webp` | 1200 × 500 | Strategy | Budget split for 1/2/3 robot approaches | 3 pie charts or bar charts showing ₡3M allocation: robots, weapons, facilities, reserves for each approach. |
-| 33 | `prototype/frontend/public/images/guide/integrations/notification-flow-diagram.webp` | 1200 × 500 | Integrations | Notification dispatch flow | Flow: Cron Job (league/tournament/tag team/settlement) → NotificationService → buildMessage → dispatch → Discord Integration (webhook POST). Future: Slack, email. |
+| 1 | `app/frontend/public/images/guide/getting-started/core-game-loop-diagram.webp` | 1200 × 600 | Getting Started | Circular flow showing the daily game loop | 5 steps: Build Robots → Configure Strategy → Enlist in Battles → View Results → Iterate. Arrows connecting each step. |
+| 2 | `app/frontend/public/images/guide/getting-started/roster-strategy-comparison.webp` | 1200 × 500 | Getting Started | Side-by-side comparison of roster approaches | 3 columns: "1 Mighty Robot" (high stats, single point of failure), "2 Average Robots" (balanced), "3 Flimsy Robots" (quantity, low individual power). Pros/cons for each. |
+| 3 | `app/frontend/public/images/guide/robots/attribute-categories-overview.webp` | 1200 × 800 | Robots | Map of all 23 attributes in their 5 categories | 5 grouped boxes: Combat Systems, Defensive Systems, Chassis & Mobility, AI Processing, Team Coordination. Each box lists its attributes. |
+| 4 | `app/frontend/public/images/guide/robots/attribute-combat-influence.webp` | 1200 × 700 | Robots | How attributes feed into combat outcomes | Arrows from attribute groups to combat results: damage output, hit chance, critical rate, defense, evasion, etc. |
+| 5 | `app/frontend/public/images/guide/robots/training-academy-progression.webp` | 1000 × 600 | Robots | Academy levels unlocking attribute caps | 4 academy types, each showing level 1-10 → attribute cap from 10 to 50. |
+| 6 | `app/frontend/public/images/guide/combat/attack-order-of-operations.webp` | 1200 × 400 | Combat | Sequential attack resolution steps | Linear flow: Malfunction Check → Hit Calculation → Critical Hit Check → Damage Calculation → Shield Absorption → Armor Reduction → HP Damage. Each step with brief label. |
+| 7 | `app/frontend/public/images/guide/combat/stance-comparison-chart.webp` | 900 × 500 | Combat | 3 stances with their attribute modifiers | Table/chart: Offensive (+ attack, - defense), Defensive (+ defense, - attack), Balanced (neutral). Visual indicators for each modifier. |
+| 8 | `app/frontend/public/images/guide/combat/yield-threshold-tradeoff.webp` | 1000 × 600 | Combat | Yield % vs repair cost vs survival | Graph or diagram showing: low yield = more damage taken but fights longer, high yield = less damage but surrenders earlier. Repair cost implications. |
+| 9 | `app/frontend/public/images/guide/weapons/loadout-types-comparison.webp` | 1200 × 500 | Weapons | 4 loadout types with bonuses/penalties | 4 cards: Single, Weapon+Shield, Two-Handed, Dual-Wield. Each showing bonus %, penalty %, and recommended use case. |
+| 10 | `app/frontend/public/images/guide/weapons/weapon-categories-overview.webp` | 1000 × 500 | Weapons | 4 weapon categories with characteristics | Energy, Ballistic, Melee, Shield — each with icon, general damage range, and key trait. |
+| 11 | `app/frontend/public/images/guide/weapons/dual-wield-mechanics.webp` | 1000 × 600 | Weapons | Per-hand bonus application and offhand rules | Diagram showing main hand (full bonuses, normal hit chance) vs offhand (per-hand bonuses, 50% hit chance, 40% cooldown penalty). |
+| 12 | `app/frontend/public/images/guide/leagues/league-tier-progression.webp` | 1200 × 400 | Leagues | 6 tiers from Bronze to Champion | Vertical or horizontal progression: Bronze → Silver → Gold → Platinum → Diamond → Champion. Each tier with color and instance info (max 100 robots). |
+| 13 | `app/frontend/public/images/guide/leagues/matchmaking-flow.webp` | 1000 × 600 | Leagues | LP-primary matching with ELO secondary | Flowchart: Find opponents ±10 LP → if none, expand to ±20 LP → ELO quality check → match confirmed. |
+| 14 | `app/frontend/public/images/guide/leagues/promotion-demotion-rules.webp` | 1000 × 500 | Leagues | Promotion/demotion thresholds | Visual: Top 10% + ≥25 LP + ≥5 cycles = PROMOTE. Bottom 10% + ≥5 cycles = DEMOTE. 5-cycle protection for newly promoted. |
+| 15 | `app/frontend/public/images/guide/tournaments/bracket-generation-example.webp` | 1200 × 700 | Tournaments | Example 8 or 16 robot bracket | Single elimination bracket with seeded positions. Show bye slots for non-power-of-2 counts. |
+| 16 | `app/frontend/public/images/guide/tournaments/tournament-rewards-by-round.webp` | 900 × 500 | Tournaments | Reward scaling per round | Chart showing how credits scale with round progression (currentRound/maxRounds) and tournament size multiplier. Base ₡20,000 × size × progression. |
+| 17 | `app/frontend/public/images/guide/economy/daily-financial-cycle.webp` | 1200 × 600 | Economy | Revenue in, costs out, net income | Flow diagram: Left side = income sources (battle winnings, merchandising, streaming). Right side = expenses (facility costs, repairs). Center = net income. |
+| 18 | `app/frontend/public/images/guide/economy/income-sources-overview.webp` | 1200 × 600 | Economy | Breakdown of all income types | 3 sections: Battle Winnings (by league tier), Merchandising (prestige-scaled), Streaming (fame + battles + studio). Impact descriptions, no formulas. |
+| 19 | `app/frontend/public/images/guide/economy/league-tier-reward-scaling.webp` | 900 × 500 | Economy | Base win rewards per league tier | Bar chart or table: Bronze ₡7,500, Silver ₡15,000, Gold ₡30,000, Platinum ₡60,000, Diamond ₡115,000, Champion ₡225,000. |
+| 20 | `app/frontend/public/images/guide/facilities/facility-overview-grid.webp` | 1200 × 900 | Facilities | All 15 facilities at a glance | Grid of 15 facility cards with icon, name, purpose, cost range, daily operating cost. Grouped by category (Economic, Progression, Combat). |
+| 21 | `app/frontend/public/images/guide/facilities/training-academy-system.webp` | 1000 × 600 | Facilities | 4 academies controlling attribute caps | Diagram: Combat Academy → Combat Systems attributes cap. Defense Academy → Defensive Systems cap. Mobility Academy → Chassis & Mobility cap. AI Academy → AI Processing cap. Level 1-10 scale. |
+| 22 | `app/frontend/public/images/guide/facilities/coaching-staff-system.webp` | 900 × 500 | Facilities | Coach types and switching mechanics | Visual: Available coach types with bonuses. One-active-coach rule. Switching cost indicator. |
+| 23 | `app/frontend/public/images/guide/facilities/investment-priority-roadmap.webp` | 1200 × 500 | Facilities | Recommended facility order by game stage | Timeline: Early game (Repair Bay, Training Facility, Storage) → Mid game (Academies, Workshop, Coaching) → Late game (Streaming Studio, Booking Office, Research Lab). |
+| 24 | `app/frontend/public/images/guide/prestige-fame/prestige-rank-progression.webp` | 1200 × 350 | Prestige & Fame | 6 prestige ranks with thresholds | Progression bar: Novice → Established → Veteran → Elite → Champion → Legendary. Each with threshold value. |
+| 25 | `app/frontend/public/images/guide/prestige-fame/fame-tier-progression.webp` | 1200 × 350 | Prestige & Fame | 6 fame tiers with thresholds | Progression bar: Unknown → Known → Famous → Renowned → Legendary → Mythical. Each with threshold value. |
+| 26 | `app/frontend/public/images/guide/prestige-fame/prestige-income-impact.webp` | 1000 × 600 | Prestige & Fame | How prestige scales income | Visual showing: higher prestige → bigger battle winnings bonus + higher merchandising income. Impact arrows, no formulas. |
+| 27 | `app/frontend/public/images/guide/strategy/tank-archetype.webp` | 800 × 600 | Strategy | Tank build recommendation | Robot silhouette with: key attributes highlighted (hull integrity, armor, defense), recommended weapons, stance (defensive), loadout (weapon+shield). |
+| 28 | `app/frontend/public/images/guide/strategy/glass-cannon-archetype.webp` | 800 × 600 | Strategy | Glass Cannon build recommendation | Robot silhouette with: key attributes (firepower, targeting, critical systems), recommended weapons, stance (offensive), loadout (two-handed). |
+| 29 | `app/frontend/public/images/guide/strategy/speed-demon-archetype.webp` | 800 × 600 | Strategy | Speed Demon build recommendation | Robot silhouette with: key attributes (speed, evasion, initiative), recommended weapons, stance (balanced), loadout (dual-wield). |
+| 30 | `app/frontend/public/images/guide/strategy/counter-striker-archetype.webp` | 800 × 600 | Strategy | Counter Striker build recommendation | Robot silhouette with: key attributes (counter-attack, reflexes, defense), recommended weapons, stance (defensive), loadout (weapon+shield). |
+| 31 | `app/frontend/public/images/guide/strategy/sniper-archetype.webp` | 800 × 600 | Strategy | Sniper build recommendation | Robot silhouette with: key attributes (targeting, critical, range), recommended weapons, stance (offensive), loadout (single). |
+| 32 | `app/frontend/public/images/guide/strategy/budget-allocation-strategies.webp` | 1200 × 500 | Strategy | Budget split for 1/2/3 robot approaches | 3 pie charts or bar charts showing ₡3M allocation: robots, weapons, facilities, reserves for each approach. |
+| 33 | `app/frontend/public/images/guide/integrations/notification-flow-diagram.webp` | 1200 × 500 | Integrations | Notification dispatch flow | Flow: Cron Job (league/tournament/tag team/settlement) → NotificationService → buildMessage → dispatch → Discord Integration (webhook POST). Future: Slack, email. |
 
 ### Total Images Required: 33
 
@@ -577,7 +577,7 @@ All images should be created before or during the content authoring task. Placeh
 | File read error (permissions) | Log error, return `{ error: "Internal server error" }` | 500 |
 | Invalid `relatedArticles` reference | Silently filter out non-existent references, log warning | N/A (filtered) |
 
-All errors are logged via the existing `logger` from `prototype/backend/src/config/logger.ts`. Error responses follow the existing pattern: `{ error: string }`.
+All errors are logged via the existing `logger` from `app/backend/src/config/logger.ts`. Error responses follow the existing pattern: `{ error: string }`.
 
 ### Frontend Error Handling
 
@@ -615,7 +615,7 @@ Each correctness property from the design is implemented as a single `fast-check
 
 ### Backend Tests
 
-**Location**: `prototype/backend/src/__tests__/guide/`
+**Location**: `app/backend/src/__tests__/guide/`
 
 #### Property Tests
 
@@ -639,7 +639,7 @@ Each correctness property from the design is implemented as a single `fast-check
 
 ### Frontend Tests
 
-**Location**: `prototype/frontend/src/__tests__/guide/`
+**Location**: `app/frontend/src/__tests__/guide/`
 
 #### Property Tests
 

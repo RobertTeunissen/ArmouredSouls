@@ -24,4 +24,4 @@ These documents provide historical context for major schema changes and serve as
 
 These are historical documents. For current schema documentation, always refer to:
 - `docs/prd_core/DATABASE_SCHEMA.md` - Current database schema
-- `prototype/backend/prisma/schema.prisma` - Prisma schema definition
+- `app/backend/prisma/schema.prisma` - Prisma schema definition

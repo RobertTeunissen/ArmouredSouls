@@ -1,6 +1,6 @@
 # Modular Architecture Migration Strategy
 
-This document defines the phased plan for extracting the monolithic `prototype/` codebase into the `modules/` architecture.
+This document defines the phased plan for extracting the monolithic `app/` codebase into the `modules/` architecture.
 
 See [SERVICE_MODULE_MAPPING.md](./SERVICE_MODULE_MAPPING.md) for the complete file-to-module mapping.
 See [MODULE_TEMPLATE.md](./MODULE_TEMPLATE.md) for the standardized module package structure.
@@ -26,20 +26,20 @@ Phase 2e: ui          (no code dependencies, HTTP only)
 ## Phase 2a: Extract `database` Module
 
 ### What Moves
-- `prototype/backend/prisma/` → `modules/database/prisma/`
-- `prototype/backend/generated/prisma/` → `modules/database/generated/prisma/`
-- `prototype/backend/src/lib/prisma.ts` → `modules/database/src/lib/prisma.ts`
-- `prototype/backend/src/services/common/eventLogger.ts` → `modules/database/src/services/eventLogger.ts`
-- `prototype/backend/src/services/common/queryService.ts` → `modules/database/src/services/queryService.ts`
-- `prototype/backend/src/services/common/dataIntegrityService.ts` → `modules/database/src/services/dataIntegrityService.ts`
-- `prototype/backend/src/services/common/eventCompression.ts` → `modules/database/src/services/eventCompression.ts`
-- `prototype/backend/src/errors/AppError.ts` → `modules/database/src/errors/AppError.ts`
+- `app/backend/prisma/` → `modules/database/prisma/`
+- `app/backend/generated/prisma/` → `modules/database/generated/prisma/`
+- `app/backend/src/lib/prisma.ts` → `modules/database/src/lib/prisma.ts`
+- `app/backend/src/services/common/eventLogger.ts` → `modules/database/src/services/eventLogger.ts`
+- `app/backend/src/services/common/queryService.ts` → `modules/database/src/services/queryService.ts`
+- `app/backend/src/services/common/dataIntegrityService.ts` → `modules/database/src/services/dataIntegrityService.ts`
+- `app/backend/src/services/common/eventCompression.ts` → `modules/database/src/services/eventCompression.ts`
+- `app/backend/src/errors/AppError.ts` → `modules/database/src/errors/AppError.ts`
 
 ### Coexistence Approach
-The monolith's `prototype/backend/` imports from `@armoured-souls/database` via npm workspace. The old files are replaced with re-exports:
+The monolith's `app/backend/` imports from `@armoured-souls/database` via npm workspace. The old files are replaced with re-exports:
 
 ```typescript
-// prototype/backend/src/lib/prisma.ts (after extraction)
+// app/backend/src/lib/prisma.ts (after extraction)
 export { prisma } from '@armoured-souls/database';
 ```
 
@@ -52,9 +52,9 @@ export { prisma } from '@armoured-souls/database';
 ## Phase 2b: Extract `auth` Module
 
 ### What Moves
-- `prototype/backend/src/services/auth/` → `modules/auth/src/services/`
-- `prototype/backend/src/middleware/auth.ts` → `modules/auth/src/middleware/auth.ts`
-- `prototype/backend/src/errors/authErrors.ts` → `modules/auth/src/errors/authErrors.ts`
+- `app/backend/src/services/auth/` → `modules/auth/src/services/`
+- `app/backend/src/middleware/auth.ts` → `modules/auth/src/middleware/auth.ts`
+- `app/backend/src/errors/authErrors.ts` → `modules/auth/src/errors/authErrors.ts`
 
 ### Coexistence Approach
 Same as Phase 2a — old files become re-exports from `@armoured-souls/auth`.
@@ -82,22 +82,22 @@ Same pattern. Due to the size, keep a git tag before starting this phase.
 ## Phase 2d: Extract `api` Module
 
 ### What Moves
-- All route files (`prototype/backend/src/routes/`)
+- All route files (`app/backend/src/routes/`)
 - HTTP middleware (`errorHandler`, `rateLimiter`, `schemaValidator`, `ownership`, `requestLogger`)
 - Admin services, security services, notification services
 - Express app configuration (`index.ts`)
 - Validation utilities, credit guard, facility config, logger config
 
 ### Coexistence Approach
-At this point, the monolith is essentially empty — the `api` module IS the application entry point. The `prototype/backend/` directory can be replaced entirely.
+At this point, the monolith is essentially empty — the `api` module IS the application entry point. The `app/backend/` directory can be replaced entirely.
 
 ### Rollback
-Restore `prototype/backend/` from git. Remove workspace configuration.
+Restore `app/backend/` from git. Remove workspace configuration.
 
 ## Phase 2e: Extract `ui` Module
 
 ### What Moves
-- `prototype/frontend/` → `modules/ui/`
+- `app/frontend/` → `modules/ui/`
 
 ### Coexistence Approach
 The frontend already communicates with the backend via HTTP only. This is a directory move with no import changes.
@@ -149,8 +149,8 @@ While the monolith coexists with extracted modules, the workspace includes both:
 {
   "private": true,
   "workspaces": [
-    "prototype/backend",
-    "prototype/frontend",
+    "app/backend",
+    "app/frontend",
     "modules/database"
   ]
 }

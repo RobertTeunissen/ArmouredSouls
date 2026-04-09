@@ -40,19 +40,19 @@
 
 - [x] 3. Create shared types and admin component directory structure
 
-  - [x] 3.1 Create `prototype/frontend/src/components/admin/types.ts` with shared interfaces
+  - [x] 3.1 Create `app/frontend/src/components/admin/types.ts` with shared interfaces
     - Extract `SystemStats`, `Battle`, `SessionLogEntry`, `RobotStats`, `AtRiskUser`, `AtRiskUsersResponse`, `RecentUser`, `RecentUsersResponse` interfaces from AdminPage.tsx
     - Add new `TagTeamBattle` interface with `battleFormat: '1v1' | '2v2'` field and team data shape
     - Export all types for use by tab components
     - _Requirements: 2.1_
 
-  - [x] 3.2 Create `prototype/frontend/src/components/admin/index.ts` barrel export
+  - [x] 3.2 Create `app/frontend/src/components/admin/index.ts` barrel export
     - Export all tab components from a single entry point
     - _Requirements: 2.1_
 
 - [x] 4. Decompose AdminPage.tsx into tab components
 
-  - [x] 4.1 Create `prototype/frontend/src/components/admin/DashboardTab.tsx`
+  - [x] 4.1 Create `app/frontend/src/components/admin/DashboardTab.tsx`
     - Extract Dashboard tab rendering from AdminPage.tsx
     - Include system statistics grid with grouped sections (Robots, Battles, Economy, Facilities, Combat)
     - Absorb SystemHealthPage content as a collapsible `<details>` section at the bottom
@@ -63,7 +63,7 @@
     - _Preservation: Dashboard statistics grid continues to display all existing stats correctly_
     - _Requirements: 2.1, 2.9_
 
-  - [x] 4.2 Create `prototype/frontend/src/components/admin/CycleControlsTab.tsx`
+  - [x] 4.2 Create `app/frontend/src/components/admin/CycleControlsTab.tsx`
     - Extract Cycle Controls tab rendering from AdminPage.tsx
     - Include individual cycle control buttons (Run Matchmaking, Execute Battles, Rebalance Leagues, Auto-Repair All, Process Daily Finances)
     - Include bulk cycle runner with configuration options (autoRepair, includeTournaments, includeDailyFinances, generateUsersPerCycle)
@@ -72,7 +72,7 @@
     - _Preservation: All cycle control operations continue to execute correctly with session logging_
     - _Requirements: 3.1, 3.6_
 
-  - [x] 4.3 Create `prototype/frontend/src/components/admin/BattleLogsTab.tsx`
+  - [x] 4.3 Create `app/frontend/src/components/admin/BattleLogsTab.tsx`
     - Extract Battle Logs tab rendering from AdminPage.tsx
     - Include search input, league filter, battle type filter, pagination
     - Add "Tag Team" option to battle type filter dropdown: `<option value="tagteam">Tag Team Battles</option>`
@@ -84,14 +84,14 @@
     - _Preservation: 1v1 battle display with search, filtering, pagination, clickable robot names, visual indicators unchanged_
     - _Requirements: 2.7, 3.2_
 
-  - [x] 4.4 Create `prototype/frontend/src/components/admin/RobotStatsTab.tsx`
+  - [x] 4.4 Create `app/frontend/src/components/admin/RobotStatsTab.tsx`
     - Extract Robot Stats tab rendering from AdminPage.tsx
     - Include attribute selector, statistical analysis, outlier detection, win rate correlation, league comparison, top/bottom performers
     - Maintain clickable robot name links
     - _Preservation: All robot stats analytics continue to display correctly_
     - _Requirements: 3.4_
 
-  - [x] 4.5 Create `prototype/frontend/src/components/admin/BankruptcyMonitorTab.tsx`
+  - [x] 4.5 Create `app/frontend/src/components/admin/BankruptcyMonitorTab.tsx`
     - Extract at-risk users functionality from Dashboard's conditional section into dedicated tab
     - Fetch from `GET /api/admin/users/at-risk` (or use existing stats endpoint)
     - Always render — when `totalAtRisk === 0`, show green "✓ No users at risk of bankruptcy" confirmation with threshold displayed
@@ -100,7 +100,7 @@
     - _Expected_Behavior: Dedicated tab always accessible, always renders status even when 0 users at risk_
     - _Requirements: 2.2_
 
-  - [x] 4.6 Create `prototype/frontend/src/components/admin/RecentUsersTab.tsx`
+  - [x] 4.6 Create `app/frontend/src/components/admin/RecentUsersTab.tsx`
     - Extract Recent Users tab rendering from AdminPage.tsx
     - Include recent real users list with per-user onboarding status, robot details, issue detection
     - Include cycle range control for filtering
@@ -130,7 +130,7 @@
 - [x] 6. Backend: Extend battle endpoints for tag team support
 
   - [x] 6.1 Extend `GET /api/admin/battles` for tag team battles
-    - In `prototype/backend/src/routes/admin.ts`, update the battles endpoint
+    - In `app/backend/src/routes/admin.ts`, update the battles endpoint
     - When `battleType === 'tagteam'`, query `TagTeamMatch` joined with `Battle` and `TagTeam` (with robot relations)
     - When `battleType === 'all'`, union 1v1 battle results with tag team battle results
     - Return `battleFormat` field (`'1v1'` or `'2v2'`) in each battle record
@@ -153,7 +153,7 @@
 - [x] 7. Frontend: Update BattleDetailsModal for tag team support
 
   - [x] 7.1 Add tag team detection and 2v2 rendering to BattleDetailsModal
-    - In `prototype/frontend/src/components/BattleDetailsModal.tsx`
+    - In `app/frontend/src/components/BattleDetailsModal.tsx`
     - Add conditional check for `battleFormat === '2v2'` or presence of `teams` field
     - When tag team: render Team 1 (active + reserve robots) vs Team 2 (active + reserve robots) layout
     - Show team-level stats and individual robot stats per team member
@@ -166,7 +166,7 @@
 - [x] 8. Frontend: Align TournamentManagement with current API contracts
 
   - [x] 8.1 Verify and update TournamentManagement.tsx
-    - In `prototype/frontend/src/components/TournamentManagement.tsx`
+    - In `app/frontend/src/components/TournamentManagement.tsx`
     - Verify component works with current `tournamentApi.ts` contracts
     - `getTournamentDetails()` returns `{ tournament: TournamentDetails; seedings: SeedEntry[] }` where `TournamentDetails` includes `matches` (all rounds) and `currentRoundMatches` (derived client-side in tournamentApi.ts)
     - Ensure `activeTournament.currentRoundMatches` access works correctly (it's derived in `getTournamentDetails` from `tournament.matches.filter(m => m.round === tournament.currentRound)`)
@@ -178,7 +178,7 @@
 
 - [x] 9. Write per-component test suite
 
-  - [x] 9.1 Rewrite `prototype/frontend/src/pages/__tests__/AdminPage.test.tsx` as shell-only tests
+  - [x] 9.1 Rewrite `app/frontend/src/pages/__tests__/AdminPage.test.tsx` as shell-only tests
     - Remove `describe.skip()` wrapper
     - Test only the AdminPage shell: 7 tabs rendered (Dashboard, Cycle Controls, Tournaments, Battle Logs, Robot Stats, Bankruptcy Monitor, Recent Users)
     - Test tab switching updates activeTab, localStorage, and URL hash
@@ -189,41 +189,41 @@
     - _Expected_Behavior: Tests run and pass, covering shell tab navigation and persistence_
     - _Requirements: 2.5_
 
-  - [x] 9.2 Create `prototype/frontend/src/components/admin/__tests__/DashboardTab.test.tsx`
+  - [x] 9.2 Create `app/frontend/src/components/admin/__tests__/DashboardTab.test.tsx`
     - Test stats grid rendering with mock SystemStats data
     - Test System Health collapsible section expand/collapse
     - Test loading state
     - _Requirements: 2.5, 2.9_
 
-  - [x] 9.3 Create `prototype/frontend/src/components/admin/__tests__/CycleControlsTab.test.tsx`
+  - [x] 9.3 Create `app/frontend/src/components/admin/__tests__/CycleControlsTab.test.tsx`
     - Test all cycle control buttons render
     - Test session log display with entries
     - Test clear and export session log functionality
     - _Requirements: 2.5, 3.1_
 
-  - [x] 9.4 Create `prototype/frontend/src/components/admin/__tests__/BattleLogsTab.test.tsx`
+  - [x] 9.4 Create `app/frontend/src/components/admin/__tests__/BattleLogsTab.test.tsx`
     - Test search input, league filter, battle type filter (including "Tag Team" option)
     - Test pagination controls
     - Test battle row rendering with 1v1 and 2v2 indicators
     - _Requirements: 2.5, 2.7_
 
-  - [x] 9.5 Create `prototype/frontend/src/components/admin/__tests__/RobotStatsTab.test.tsx`
+  - [x] 9.5 Create `app/frontend/src/components/admin/__tests__/RobotStatsTab.test.tsx`
     - Test attribute selector dropdown
     - Test stats display sections
     - _Requirements: 2.5, 3.4_
 
-  - [x] 9.6 Create `prototype/frontend/src/components/admin/__tests__/BankruptcyMonitorTab.test.tsx`
+  - [x] 9.6 Create `app/frontend/src/components/admin/__tests__/BankruptcyMonitorTab.test.tsx`
     - Test at-risk users display with mock data
     - Test zero-state rendering ("✓ No users at risk of bankruptcy")
     - Test loading state
     - _Requirements: 2.5, 2.2_
 
-  - [x] 9.7 Create `prototype/frontend/src/components/admin/__tests__/RecentUsersTab.test.tsx`
+  - [x] 9.7 Create `app/frontend/src/components/admin/__tests__/RecentUsersTab.test.tsx`
     - Test user list rendering with onboarding status badges
     - Test cycle range control
     - _Requirements: 2.5, 2.10_
 
-  - [x] 9.8 Create `prototype/frontend/src/components/admin/__tests__/BattleDetailsModal.test.tsx`
+  - [x] 9.8 Create `app/frontend/src/components/admin/__tests__/BattleDetailsModal.test.tsx`
     - Test 1v1 rendering: robot1 vs robot2 side-by-side, attribute comparison, combat log, formula breakdowns
     - Test 2v2 tag team rendering: team layout with active + reserve robots per side
     - Test draw handling
@@ -266,7 +266,7 @@
     - Confirm all tests still pass after fix (no regressions)
 
 - [x] 12. Checkpoint - Ensure all tests pass
-  - Run full frontend test suite: `cd prototype/frontend && npx vitest --run`
+  - Run full frontend test suite: `cd app/frontend && npx vitest --run`
   - Ensure all per-component tests pass
   - Ensure AdminPage shell tests pass
   - Ensure exploration tests (Property 1) pass

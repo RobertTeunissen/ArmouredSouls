@@ -29,9 +29,9 @@ This spec delivers the first social/scouting feature in Armoured Souls, enabling
 
 1. `curl -H "Authorization: Bearer <token>" http://localhost:3001/api/stables/<userId>` returns 200 with `robots`, `facilities`, and `stats` fields
 2. `curl -H "Authorization: Bearer <token>" http://localhost:3001/api/stables/999999` returns 404 with `"User not found"` message
-3. `grep -r "SENSITIVE_ROBOT_FIELDS" prototype/backend/src/routes/stables.ts` confirms the new route uses the existing sanitization
-4. `grep -rn "/stables/" prototype/frontend/src/pages/LeagueStandingsPage.tsx` confirms owner names link to stable view
-5. `grep -rn "StableViewPage" prototype/frontend/src/App.tsx` confirms the route is registered
+3. `grep -r "SENSITIVE_ROBOT_FIELDS" app/backend/src/routes/stables.ts` confirms the new route uses the existing sanitization
+4. `grep -rn "/stables/" app/frontend/src/pages/LeagueStandingsPage.tsx` confirms owner names link to stable view
+5. `grep -rn "StableViewPage" app/frontend/src/App.tsx` confirms the route is registered
 6. Response from `GET /api/stables/:userId` does not contain any of: `combatPower`, `targetingSystems`, `stance`, `yieldThreshold`, `loadoutType`, `mainWeaponId`, `currentHP`, `currentShield`
 
 ## Requirements
@@ -54,7 +54,7 @@ This spec delivers the first social/scouting feature in Armoured Souls, enabling
 #### Acceptance Criteria
 
 1. THE Stable_API SHALL return a list of the Target_User's robots with Public_Robot_Data only
-2. THE Stable_View_Page SHALL display each robot using a variant of the existing `RobotDashboardCard` component (`prototype/frontend/src/components/RobotDashboardCard.tsx`) that shows the robot's image, name, ELO rating, current league, league points, and win/draw/loss record with win rate percentage
+2. THE Stable_View_Page SHALL display each robot using a variant of the existing `RobotDashboardCard` component (`app/frontend/src/components/RobotDashboardCard.tsx`) that shows the robot's image, name, ELO rating, current league, league points, and win/draw/loss record with win rate percentage
 3. THE robot card variant SHALL additionally display fame, fame tier, total battles, kills, lifetime damage dealt, and lifetime damage taken
 4. THE robot card variant SHALL omit owner-only information: HP bar, shield bar, battle readiness badge, and weapon details
 5. THE Stable_API SHALL exclude all Sensitive_Robot_Data (23 core attributes, stance, yield threshold, loadout type, equipped weapon IDs, current HP, current shield, damage taken) from the response

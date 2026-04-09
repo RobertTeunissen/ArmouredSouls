@@ -2,11 +2,11 @@
 
 ## Introduction
 
-Document the migration path from the monolithic `prototype/` structure to the modular `modules/` architecture. The `modules/` directory currently contains only placeholder READMEs for 5 modules (api, auth, database, game-engine, ui). This spec does not move code — it defines the module boundaries, dependency contracts, and migration strategy so that the team has a clear roadmap for Phase 2.
+Document the migration path from the monolithic `app/` structure to the modular `modules/` architecture. The `modules/` directory currently contains only placeholder READMEs for 5 modules (api, auth, database, game-engine, ui). This spec does not move code — it defines the module boundaries, dependency contracts, and migration strategy so that the team has a clear roadmap for Phase 2.
 
 ## Glossary
 
-- **Prototype_Monolith**: The current application code in `prototype/backend/` and `prototype/frontend/`, organized as a single deployable unit.
+- **Prototype_Monolith**: The current application code in `app/backend/` and `app/frontend/`, organized as a single deployable unit.
 - **Module**: A self-contained package in `modules/` with its own `package.json`, public API surface, and internal implementation. Modules communicate through defined interfaces, not direct file imports.
 - **Module_Boundary**: The public API exported by a module's `index.ts` — the only entry point other modules may import from.
 - **Dependency_Contract**: A documented specification of what a module exports (functions, types, interfaces) and what it depends on from other modules.
@@ -26,7 +26,7 @@ This spec targets the "modules/ directory is all placeholders with no documented
 After all tasks are marked complete, run these checks to confirm the debt reduction was achieved:
 
 1. `ls modules/*/MODULE_CONTRACT.md` returns 5 files (one per module)
-2. `docs/guides/SERVICE_MODULE_MAPPING.md` exists and contains a row for every service file in `prototype/backend/src/services/`
+2. `docs/guides/SERVICE_MODULE_MAPPING.md` exists and contains a row for every service file in `app/backend/src/services/`
 3. `docs/guides/MODULAR_MIGRATION_STRATEGY.md` exists and contains phase order, coexistence approach, and rollback procedures
 4. `docs/guides/MODULE_TEMPLATE.md` exists with standardized package structure
 5. Each `modules/{name}/README.md` references its `MODULE_CONTRACT.md`
@@ -48,11 +48,11 @@ After all tasks are marked complete, run these checks to confirm the debt reduct
 
 ### Requirement 2: Service-to-Module Mapping
 
-**User Story:** As a developer, I want a mapping document that shows which current services in `prototype/backend/src/services/` belong to which target module, so that the migration can be executed incrementally without ambiguity.
+**User Story:** As a developer, I want a mapping document that shows which current services in `app/backend/src/services/` belong to which target module, so that the migration can be executed incrementally without ambiguity.
 
 #### Acceptance Criteria
 
-1. WHEN the mapping is documented, EVERY service file in `prototype/backend/src/services/` SHALL be assigned to exactly one target module.
+1. WHEN the mapping is documented, EVERY service file in `app/backend/src/services/` SHALL be assigned to exactly one target module.
 2. WHEN the mapping is documented, SERVICES that are shared across modules (e.g., `eventLogger`, `queryService`) SHALL be assigned to a `common` or `database` module with a note explaining the cross-cutting nature.
 3. WHEN the mapping is documented, THE document SHALL identify circular dependencies between services that must be resolved before migration.
 

@@ -20,7 +20,7 @@ Write tests for the four untested utility files and three extracted component di
 All new test files follow the existing `__tests__/` subdirectory convention:
 
 ```
-prototype/frontend/src/
+app/frontend/src/
 ├── utils/
 │   └── __tests__/
 │       ├── robotStats.test.ts          # NEW — tests for robotStats.ts
@@ -162,8 +162,8 @@ No data model changes.
   - Setup file: `src/setupTests.ts`
   - File convention: `__tests__/` subdirectories (not co-located)
   - Coverage targets: 80% for utilities/stores, baseline for components
-  - Running tests: `cd prototype/frontend && npx vitest --run`
-  - Coverage: `cd prototype/frontend && npx vitest --run --coverage`
+  - Running tests: `cd app/frontend && npx vitest --run`
+  - Coverage: `cd app/frontend && npx vitest --run --coverage`
   - CI: Already integrated in `.github/workflows/ci.yml` `frontend-tests` job
 
 - `.kiro/steering/frontend-standards.md` — Add a "Testing" section with:

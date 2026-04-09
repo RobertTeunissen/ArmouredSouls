@@ -115,60 +115,60 @@ Successfully implemented new economics for both Merchandising Hub and Streaming 
 
 ### Backend (8 files)
 
-1. **`prototype/backend/src/config/facilities.ts`**
+1. **`app/backend/src/config/facilities.ts`**
    - Renamed `income_generator` to `merchandising_hub`
    - Updated costs, benefits, description
    - Updated Streaming Studio benefits to show multipliers
 
-2. **`prototype/backend/src/utils/economyCalculations.ts`**
+2. **`app/backend/src/utils/economyCalculations.ts`**
    - Updated `getMerchandisingBaseRate()` with new rates
    - Updated `calculateMerchandisingIncome()` parameter names
    - Updated `calculateFacilityOperatingCost()` for merchandising_hub
    - Updated all facility type references
 
-3. **`prototype/backend/src/services/streamingRevenueService.ts`**
+3. **`app/backend/src/services/streamingRevenueService.ts`**
    - Updated studio multiplier formula: `1 + (level × 1.0)`
    - Updated comments and documentation
    - Applied to both 1v1 and Tag Team calculations
 
-4. **`prototype/backend/src/services/facilityRecommendationService.ts`**
+4. **`app/backend/src/services/facilityRecommendationService.ts`**
    - Updated studio multiplier calculation
    - Updated facility type checks
 
-5. **`prototype/backend/src/services/roiCalculatorService.ts`**
+5. **`app/backend/src/services/roiCalculatorService.ts`**
    - Updated facility type from `income_generator` to `merchandising_hub`
 
-6. **`prototype/backend/src/routes/finances.ts`**
+6. **`app/backend/src/routes/finances.ts`**
    - Updated facility lookups
    - Updated studio multiplier calculation
    - Updated recommendation text
 
-7. **`prototype/backend/src/routes/analytics.ts`**
+7. **`app/backend/src/routes/analytics.ts`**
    - Updated facility type lists
 
-8. **`prototype/backend/src/routes/admin.ts`**
+8. **`app/backend/src/routes/admin.ts`**
    - Updated facility type references
 
 ### Frontend (4 files)
 
-1. **`prototype/frontend/src/pages/FacilitiesPage.tsx`**
+1. **`app/frontend/src/pages/FacilitiesPage.tsx`**
    - Updated display name mapping
    - Updated facility type in categories
    - Updated help text
 
-2. **`prototype/frontend/src/components/FacilityIcon.tsx`**
+2. **`app/frontend/src/components/FacilityIcon.tsx`**
    - Updated icon mapping
 
-3. **`prototype/frontend/src/components/FacilityROICalculator.tsx`**
+3. **`app/frontend/src/components/FacilityROICalculator.tsx`**
    - Updated default facility
    - Updated facility options
 
-4. **`prototype/frontend/src/components/MultiplierBreakdown.tsx`**
+4. **`app/frontend/src/components/MultiplierBreakdown.tsx`**
    - Updated help text
 
 ### Database
 
-**`prototype/backend/prisma/migrations/rename_income_generator_to_merchandising_hub.sql`**
+**`app/backend/prisma/migrations/rename_income_generator_to_merchandising_hub.sql`**
 - SQL migration to update existing records
 
 ### Documentation (5 files)
@@ -187,29 +187,29 @@ Successfully implemented new economics for both Merchandising Hub and Streaming 
 
 The following test files have been updated from the old multiplier (0.1) to the new multiplier (1.0):
 
-1. **`prototype/backend/tests/streamingRevenueFormula.property.test.ts`** ✓
+1. **`app/backend/tests/streamingRevenueFormula.property.test.ts`** ✓
    - Updated expected studio multiplier: `1 + (studioLevel * 1.0)`
    - Updated all assertions for 1v1 and Tag Team battles
    - Updated all property-based tests
 
-2. **`prototype/backend/tests/battleLogStreamingRevenue.property.test.ts`** ✓
+2. **`app/backend/tests/battleLogStreamingRevenue.property.test.ts`** ✓
    - Updated studio multiplier calculations
    - Updated expected revenue values
    - Updated battle log display tests
 
-3. **`prototype/backend/tests/facilityAdvisorStreamingStudioROI.property.test.ts`** ✓
+3. **`app/backend/tests/facilityAdvisorStreamingStudioROI.property.test.ts`** ✓
    - Updated ROI calculations with new multiplier
    - Updated facility recommendation tests
 
-4. **`prototype/backend/tests/economyCalculations.test.ts`** (needs manual review)
+4. **`app/backend/tests/economyCalculations.test.ts`** (needs manual review)
    - Update Merchandising Hub operating cost tests
    - Update facility name references
 
-5. **`prototype/backend/tests/roiCalculatorService.test.ts`** (needs manual review)
+5. **`app/backend/tests/roiCalculatorService.test.ts`** (needs manual review)
    - Update facility type to `merchandising_hub`
    - Update expected values
 
-6. **`prototype/backend/tests/facilityRecommendationService.test.ts`** (needs manual review)
+6. **`app/backend/tests/facilityRecommendationService.test.ts`** (needs manual review)
    - Update facility type references
 
 ### Integration Tests
@@ -222,7 +222,7 @@ The following test files have been updated from the old multiplier (0.1) to the 
 ### Running Tests
 
 ```bash
-cd prototype/backend
+cd app/backend
 npm test
 ```
 
@@ -238,7 +238,7 @@ Expected results:
 ### 1. Run Database Migration
 
 ```bash
-cd prototype/backend
+cd app/backend
 psql -d armoured_souls_dev < prisma/migrations/rename_income_generator_to_merchandising_hub.sql
 ```
 
@@ -252,7 +252,7 @@ Replace all instances of:
 ### 3. Regenerate Prisma Client
 
 ```bash
-cd prototype/backend
+cd app/backend
 npx prisma generate
 ```
 
@@ -360,7 +360,7 @@ The new economics make facilities accessible, rewarding, and strategically inter
 
 1. **Run Tests**
    ```bash
-   cd prototype/backend
+   cd app/backend
    npm test
    ```
 

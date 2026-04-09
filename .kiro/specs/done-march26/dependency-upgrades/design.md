@@ -2,7 +2,7 @@
 
 ## Overview
 
-This design covers the upgrade of all dependencies across the Armoured Souls project to their latest stable versions. The upgrade spans three layers: backend (`prototype/backend`), frontend (`prototype/frontend`), and infrastructure (PostgreSQL via Docker Compose). The work is organized into discrete, independently committable phases ordered by dependency graph depth — infrastructure and runtime first, then toolchain, then frameworks, then minor/patch updates, and finally guardrails and documentation.
+This design covers the upgrade of all dependencies across the Armoured Souls project to their latest stable versions. The upgrade spans three layers: backend (`app/backend`), frontend (`app/frontend`), and infrastructure (PostgreSQL via Docker Compose). The work is organized into discrete, independently committable phases ordered by dependency graph depth — infrastructure and runtime first, then toolchain, then frameworks, then minor/patch updates, and finally guardrails and documentation.
 
 The guiding principle is: upgrade one major dependency at a time, verify the full test suite passes, commit, then move to the next. This minimizes blast radius and makes rollback trivial via `git revert`.
 
@@ -71,7 +71,7 @@ After each phase, the following gate must pass before proceeding:
 
 This upgrade does not introduce new application components. It modifies configuration and dependency versions across existing components. The key files touched per phase:
 
-### Backend (`prototype/backend`)
+### Backend (`app/backend`)
 - `package.json` — dependency versions, engines field, overrides
 - `package-lock.json` — regenerated after each phase
 - `tsconfig.json` — compiler options for TS 5.8
@@ -83,7 +83,7 @@ This upgrade does not introduce new application components. It modifies configur
 - `.npmrc` — engine-strict setting
 - `eslint.config.mjs` — ESLint config updates if needed
 
-### Frontend (`prototype/frontend`)
+### Frontend (`app/frontend`)
 - `package.json` — dependency versions, engines field, overrides
 - `package-lock.json` — regenerated
 - `tsconfig.json`, `tsconfig.node.json` — TS 5.8 options
@@ -97,8 +97,8 @@ This upgrade does not introduce new application components. It modifies configur
 - `eslint.config.js` — ESLint config updates if needed
 
 ### Infrastructure
-- `prototype/docker-compose.yml` — PostgreSQL 17 image
-- `prototype/docker-compose.production.yml` — PostgreSQL 17 image
+- `app/docker-compose.yml` — PostgreSQL 17 image
+- `app/docker-compose.production.yml` — PostgreSQL 17 image
 
 ### CI/CD
 - `.github/workflows/ci.yml` — Node.js 24, PostgreSQL 17 service image
@@ -137,7 +137,7 @@ Most acceptance criteria in this spec are process-oriented ("apply the upgrade, 
 
 ### Property 2: No legacy Prisma import paths in source code
 
-*For any* TypeScript source file in `prototype/backend/src` or `prototype/backend/tests`, if the file imports from a Prisma client module, the import path must reference the project-local generated output directory (e.g., `../generated/prisma` or equivalent relative path) and must NOT import from `@prisma/client`.
+*For any* TypeScript source file in `app/backend/src` or `app/backend/tests`, if the file imports from a Prisma client module, the import path must reference the project-local generated output directory (e.g., `../generated/prisma` or equivalent relative path) and must NOT import from `@prisma/client`.
 
 **Validates: Requirements 3.6**
 
@@ -149,7 +149,7 @@ Most acceptance criteria in this spec are process-oriented ("apply the upgrade, 
 
 ### Property 4: All dependency versions are stable and properly pinned
 
-*For any* dependency entry (both `dependencies` and `devDependencies`) in both `prototype/backend/package.json` and `prototype/frontend/package.json`, the version string must: (a) match a caret-pinned (`^X.Y.Z`) or exact (`X.Y.Z`) semver pattern, (b) not contain pre-release identifiers (alpha, beta, rc, canary, next, experimental), and (c) not use wildcard (`*`) or `latest` specifiers.
+*For any* dependency entry (both `dependencies` and `devDependencies`) in both `app/backend/package.json` and `app/frontend/package.json`, the version string must: (a) match a caret-pinned (`^X.Y.Z`) or exact (`X.Y.Z`) semver pattern, (b) not contain pre-release identifiers (alpha, beta, rc, canary, next, experimental), and (c) not use wildcard (`*`) or `latest` specifiers.
 
 **Validates: Requirements 11.1, 11.2, 12.1, 12.2, 15.5**
 
@@ -215,7 +215,7 @@ This upgrade relies on two complementary testing strategies:
 
 - **Library**: `fast-check` (already installed in both backend and frontend)
 - **Minimum iterations**: 100 per property test
-- **Location**: `prototype/backend/tests/dependency-upgrade-invariants.property.test.ts` (for properties 1-3, 5-6 which involve backend files) and `prototype/frontend/src/__tests__/dependency-upgrade-invariants.property.test.ts` (for frontend-specific checks)
+- **Location**: `app/backend/tests/dependency-upgrade-invariants.property.test.ts` (for properties 1-3, 5-6 which involve backend files) and `app/frontend/src/__tests__/dependency-upgrade-invariants.property.test.ts` (for frontend-specific checks)
 - **Tag format**: Each test tagged with `Feature: dependency-upgrades, Property N: <title>`
 
 ### Property Test Implementation Notes
@@ -239,14 +239,14 @@ Unit tests are not the primary verification mechanism for this upgrade — the e
 After each upgrade phase, run:
 ```bash
 # Backend
-cd prototype/backend
+cd app/backend
 npm run build
 npm run lint
 npm run test:unit -- --silent
 npm run test:integration -- --silent
 
 # Frontend
-cd prototype/frontend
+cd app/frontend
 npm run build
 npm run lint
 npx vitest --run

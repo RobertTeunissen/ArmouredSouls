@@ -25,7 +25,7 @@
 To completely remove the `.env` file from git history:
 ```bash
 git filter-branch --force --index-filter \
-  "git rm --cached --ignore-unmatch prototype/backend/.env" \
+  "git rm --cached --ignore-unmatch app/backend/.env" \
   --prune-empty --tag-name-filter cat -- --all
 
 # Force push (WARNING: This rewrites history)
@@ -57,7 +57,7 @@ git push origin --force --all
 
 **Remediation**:
 ```bash
-cd prototype/backend
+cd app/backend
 npm audit fix
 ```
 
@@ -76,7 +76,7 @@ npm install bcrypt@latest
 
 **Remediation**:
 ```bash
-cd prototype/frontend
+cd app/frontend
 npm audit fix
 ```
 
@@ -182,7 +182,7 @@ The `security-audit` job in `.github/workflows/ci.yml` runs on every push and PR
 
 ## ESLint Security Rules (`eslint-plugin-security`)
 
-The backend ESLint configuration (`prototype/backend/eslint.config.mjs`) includes `eslint-plugin-security` with these rules:
+The backend ESLint configuration (`app/backend/eslint.config.mjs`) includes `eslint-plugin-security` with these rules:
 
 | Rule | Level | What It Catches |
 |------|-------|-----------------|

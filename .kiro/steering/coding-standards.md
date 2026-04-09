@@ -28,7 +28,7 @@ inclusion: always
 - Group related functionality into services
 - Keep functions focused and single-purpose
 - Maximum function length: ~50 lines (guideline, not strict rule)
-- Game formulas shared between frontend and backend (upgrade costs, academy caps, discount calculations) must live in `prototype/shared/utils/` — never inline or locally redefine a formula that already exists there
+- Game formulas shared between frontend and backend (upgrade costs, academy caps, discount calculations) must live in `app/shared/utils/` — never inline or locally redefine a formula that already exists there
 
 ### Route Handler Guidelines
 - Route handlers should be thin wrappers: parse input, call a service, return the response
@@ -41,7 +41,7 @@ inclusion: always
 ### Prisma 7
 - Import Prisma client from the project-local `generated/prisma` directory, NOT from `@prisma/client`
 - Example: `import { PrismaClient } from '../generated/prisma'`
-- The generated client lives at `prototype/backend/generated/prisma/`
+- The generated client lives at `app/backend/generated/prisma/`
 - Run `npx prisma generate` after schema changes to regenerate the client
 - **Driver Adapter Required**: Prisma 7 uses the `client` engine type by default, which requires a driver adapter. Always pass an adapter to the PrismaClient constructor:
   ```typescript

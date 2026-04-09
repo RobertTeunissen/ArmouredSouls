@@ -8,17 +8,17 @@ Upgrade all dependencies across the Armoured Souls project in a linear pipeline 
 
 - [x] 1. PostgreSQL 16 → 17 (Infrastructure)
   - [x] 1.1 Update Docker Compose files to PostgreSQL 17
-    - Change `image: postgres:16-alpine` to `image: postgres:17-alpine` in `prototype/docker-compose.yml`
-    - Change `image: postgres:16-alpine` to `image: postgres:17-alpine` in `prototype/docker-compose.production.yml`
+    - Change `image: postgres:16-alpine` to `image: postgres:17-alpine` in `app/docker-compose.yml`
+    - Change `image: postgres:16-alpine` to `image: postgres:17-alpine` in `app/docker-compose.production.yml`
     - Destroy and recreate the local Docker volume to start fresh on PG 17: `docker compose down -v && docker compose up -d`
-    - Run `npx prisma migrate deploy` in `prototype/backend` to verify all migrations apply cleanly against PG 17
+    - Run `npx prisma migrate deploy` in `app/backend` to verify all migrations apply cleanly against PG 17
     - Run backend build and full test suite to confirm database compatibility
     - _Requirements: 10.1, 10.2, 10.3_
 
 - [x] 2. Node.js 20 → 24 LTS (Runtime)
   - [x] 2.1 Update Node.js version across the project
-    - Update `engines` field in `prototype/backend/package.json` to `"node": ">=24.0.0"`
-    - Update `engines` field in `prototype/frontend/package.json` to `"node": ">=24.0.0"`
+    - Update `engines` field in `app/backend/package.json` to `"node": ">=24.0.0"`
+    - Update `engines` field in `app/frontend/package.json` to `"node": ">=24.0.0"`
     - Create or update `.nvmrc` in project root with `24`
     - Update `@types/node` in backend `devDependencies` to a version compatible with Node.js 24
     - Update `@types/node` in frontend `devDependencies` to a version compatible with Node.js 24
@@ -31,7 +31,7 @@ Upgrade all dependencies across the Armoured Souls project in a linear pipeline 
 
 - [x] 4. TypeScript 5.3 → 5.8 (Compiler)
   - [x] 4.1 Upgrade TypeScript in both packages
-    - Update `typescript` to `^5.8.0` in both `prototype/backend/package.json` and `prototype/frontend/package.json`
+    - Update `typescript` to `^5.8.0` in both `app/backend/package.json` and `app/frontend/package.json`
     - Run `npm install` in both directories
     - Review `tsconfig.json` and `tsconfig.seed.json` (backend) and `tsconfig.json` / `tsconfig.node.json` (frontend) for new TS 5.8 compiler options worth enabling
     - Run `npm run build` in both backend and frontend; fix any new type errors surfaced by stricter checking
@@ -40,13 +40,13 @@ Upgrade all dependencies across the Armoured Souls project in a linear pipeline 
 
 - [x] 5. Prisma 5 → 7 (ORM Migration)
   - [x] 5.1 Upgrade Prisma packages and configure generated client output
-    - Update `prisma` and `@prisma/client` to `^7.0.0` in `prototype/backend/package.json`
-    - Add `output = "../generated/prisma"` to the `generator client` block in `prototype/backend/prisma/schema.prisma`
+    - Update `prisma` and `@prisma/client` to `^7.0.0` in `app/backend/package.json`
+    - Add `output = "../generated/prisma"` to the `generator client` block in `app/backend/prisma/schema.prisma`
     - Run `npx prisma generate` to produce the client in the new location
-    - Add `prototype/backend/generated/` to `.gitignore` if the generated client should not be committed (or keep it — follow Prisma 7 recommendations)
+    - Add `app/backend/generated/` to `.gitignore` if the generated client should not be committed (or keep it — follow Prisma 7 recommendations)
     - _Requirements: 3.1, 3.2, 3.5_
   - [x] 5.2 Update all Prisma import paths across backend source and tests
-    - Find all files in `prototype/backend/src/` and `prototype/backend/tests/` that import from `@prisma/client`
+    - Find all files in `app/backend/src/` and `app/backend/tests/` that import from `@prisma/client`
     - Replace every `@prisma/client` import with the relative path to `generated/prisma` (e.g., `import { PrismaClient } from '../generated/prisma'`)
     - Update `prisma.seed` configuration in `package.json` for Prisma 7 compatibility
     - Remove `@prisma/client` from `dependencies` in `package.json` if Prisma 7 no longer requires it as a direct dependency
@@ -54,15 +54,15 @@ Upgrade all dependencies across the Armoured Souls project in a linear pipeline 
     - _Requirements: 3.3, 3.4, 3.6, 3.7, 3.8_
   - [x] 5.3 Write property test: No legacy Prisma import paths (Property 2)
     - **Property 2: No legacy Prisma import paths in source code**
-    - Glob all `.ts` files in `prototype/backend/src/` and `prototype/backend/tests/`; for each file, assert no import references `@prisma/client`
-    - Create test in `prototype/backend/tests/dependency-upgrade-invariants.property.test.ts`
+    - Glob all `.ts` files in `app/backend/src/` and `app/backend/tests/`; for each file, assert no import references `@prisma/client`
+    - Create test in `app/backend/tests/dependency-upgrade-invariants.property.test.ts`
     - **Validates: Requirements 3.6**
 
 - [x] 6. Express 4 → 5 (Web Framework)
   - [x] 6.1 Upgrade Express and apply codemod
-    - Update `express` to `^5.1.0` in `prototype/backend/package.json`
+    - Update `express` to `^5.1.0` in `app/backend/package.json`
     - Update `@types/express` to the Express 5 compatible version
-    - Run the official Express 5 codemod: `npx @expressjs/codemod` in `prototype/backend`
+    - Run the official Express 5 codemod: `npx @expressjs/codemod` in `app/backend`
     - Review codemod output and manually fix any remaining issues (removed `req.param()`, stricter path patterns, `app.del()` removal)
     - Verify async error handling works — Express 5 catches rejected promises in route handlers automatically
     - Run `npm run build` and full backend test suite
@@ -70,7 +70,7 @@ Upgrade all dependencies across the Armoured Souls project in a linear pipeline 
   - [x] 6.2 Write property test: Express 5 async error propagation (Property 3)
     - **Property 3: Express 5 async error propagation**
     - Generate random async route handlers that throw various error types; mount on a test Express app; assert proper HTTP error responses (status >= 400) rather than timeouts or crashes
-    - Add test to `prototype/backend/tests/dependency-upgrade-invariants.property.test.ts`
+    - Add test to `app/backend/tests/dependency-upgrade-invariants.property.test.ts`
     - **Validates: Requirements 4.4**
 
 - [x] 7. Checkpoint — Core backend upgrades (Prisma + Express)
@@ -78,7 +78,7 @@ Upgrade all dependencies across the Armoured Souls project in a linear pipeline 
 
 - [x] 8. Jest 29 → 30 (Backend Test Runner)
   - [x] 8.1 Upgrade Jest and ts-jest
-    - Update `jest` to `^30.0.0` and `ts-jest` to the Jest 30 compatible version in `prototype/backend/package.json`
+    - Update `jest` to `^30.0.0` and `ts-jest` to the Jest 30 compatible version in `app/backend/package.json`
     - Update `@types/jest` to the Jest 30 compatible version
     - Review and update Jest config files (`jest.config.js`, `jest.config.unit.js`, `jest.config.integration.js`, `jest.config.heavy.js`) for any changed/removed options
     - Run `npm run test:unit` and `npm run test:integration` to verify all backend tests pass
@@ -87,7 +87,7 @@ Upgrade all dependencies across the Armoured Souls project in a linear pipeline 
 
 - [x] 9. React 18 → 19 (UI Framework)
   - [x] 9.1 Upgrade React, ReactDOM, and type packages
-    - Update `react` and `react-dom` to `^19.0.0` in `prototype/frontend/package.json`
+    - Update `react` and `react-dom` to `^19.0.0` in `app/frontend/package.json`
     - Update `@types/react` and `@types/react-dom` to React 19 compatible versions
     - Update `@vitejs/plugin-react` to a version compatible with React 19
     - Run `npm install` in frontend
@@ -103,18 +103,18 @@ Upgrade all dependencies across the Armoured Souls project in a linear pipeline 
 
 - [x] 10. Vite 5 → 6 (Build Tool)
   - [x] 10.1 Upgrade Vite and update configuration
-    - Update `vite` to `^6.0.0` in `prototype/frontend/package.json`
+    - Update `vite` to `^6.0.0` in `app/frontend/package.json`
     - Ensure `@vitejs/plugin-react` is at a Vite 6 compatible version (may already be updated in React phase)
     - Update `vite-plugin-svgr` to a Vite 6 compatible version
-    - Review `prototype/frontend/vite.config.ts` for deprecated or changed config options and update
+    - Review `app/frontend/vite.config.ts` for deprecated or changed config options and update
     - Run `npm run build` to verify production build succeeds
     - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5_
 
 - [x] 11. Vitest 1 → 4 (Frontend Test Runner)
   - [x] 11.1 Upgrade Vitest and companion packages
-    - Update `vitest` to `^4.0.0` in `prototype/frontend/package.json`
+    - Update `vitest` to `^4.0.0` in `app/frontend/package.json`
     - Update `@vitest/coverage-v8` and `@vitest/ui` to Vitest 4 compatible versions
-    - Review `prototype/frontend/vitest.config.ts` for deprecated or changed config options and update
+    - Review `app/frontend/vitest.config.ts` for deprecated or changed config options and update
     - Run `npx vitest --run` to verify all frontend tests pass
     - Fix any test files that use removed or changed Vitest APIs
     - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5_
@@ -124,10 +124,10 @@ Upgrade all dependencies across the Armoured Souls project in a linear pipeline 
 
 - [x] 13. Tailwind CSS 3 → 4 (Styling)
   - [x] 13.1 Migrate Tailwind to CSS-first configuration
-    - Update `tailwindcss` to `^4.0.0` in `prototype/frontend/package.json`
-    - Replace `@tailwind base; @tailwind components; @tailwind utilities;` in `prototype/frontend/src/index.css` with `@import "tailwindcss"` and add `@theme` block with custom theme values migrated from `tailwind.config.js`
-    - Update `prototype/frontend/postcss.config.js` for Tailwind 4 (Tailwind 4 may use its own PostCSS plugin or Vite plugin instead of `tailwindcss` PostCSS plugin)
-    - Delete `prototype/frontend/tailwind.config.js` after migrating all config to CSS
+    - Update `tailwindcss` to `^4.0.0` in `app/frontend/package.json`
+    - Replace `@tailwind base; @tailwind components; @tailwind utilities;` in `app/frontend/src/index.css` with `@import "tailwindcss"` and add `@theme` block with custom theme values migrated from `tailwind.config.js`
+    - Update `app/frontend/postcss.config.js` for Tailwind 4 (Tailwind 4 may use its own PostCSS plugin or Vite plugin instead of `tailwindcss` PostCSS plugin)
+    - Delete `app/frontend/tailwind.config.js` after migrating all config to CSS
     - Update `autoprefixer` if needed or remove if Tailwind 4 handles it internally
     - Run `npm run build` to verify CSS output is correct
     - Spot-check key pages visually (dashboard, robot detail, weapon shop) for styling consistency — note this as a manual verification step
@@ -166,8 +166,8 @@ Upgrade all dependencies across the Armoured Souls project in a linear pipeline 
 
 - [x] 18. Regression guardrails
   - [x] 18.1 Add engine-strict and version pinning guardrails
-    - Create `prototype/backend/.npmrc` with `engine-strict=true`
-    - Create `prototype/frontend/.npmrc` with `engine-strict=true`
+    - Create `app/backend/.npmrc` with `engine-strict=true`
+    - Create `app/frontend/.npmrc` with `engine-strict=true`
     - Verify `engines` field exists in both `package.json` files with `"node": ">=24.0.0"` (should already be set from task 2.1)
     - Add `overrides` section to backend `package.json` if needed to prevent transitive dependencies pulling deprecated major versions (e.g., Prisma 5, Express 4)
     - Add `overrides` section to frontend `package.json` if needed to prevent transitive dependencies pulling deprecated major versions (e.g., React 18)
@@ -181,17 +181,17 @@ Upgrade all dependencies across the Armoured Souls project in a linear pipeline 
   - [x] 18.3 Write property test: Node.js version consistency (Property 1)
     - **Property 1: Node.js version consistency across all configuration sources**
     - Scan `package.json` engines fields, `.nvmrc`, CI workflow `node-version` fields; assert all resolve to Node.js 24.x
-    - Add test to `prototype/backend/tests/dependency-upgrade-invariants.property.test.ts`
+    - Add test to `app/backend/tests/dependency-upgrade-invariants.property.test.ts`
     - **Validates: Requirements 1.1, 1.4, 1.5, 14.1**
   - [x] 18.4 Write property test: Stable pinned versions (Property 4)
     - **Property 4: All dependency versions are stable and properly pinned**
     - Parse both `package.json` files; for each dependency version string, assert it matches caret-pinned or exact semver and contains no pre-release identifiers
-    - Add test to `prototype/backend/tests/dependency-upgrade-invariants.property.test.ts`
+    - Add test to `app/backend/tests/dependency-upgrade-invariants.property.test.ts`
     - **Validates: Requirements 11.1, 11.2, 12.1, 12.2, 15.5**
   - [x] 18.5 Write property test: Engines field enforces minimum versions (Property 5)
     - **Property 5: Engines field enforces post-upgrade minimum versions**
     - Parse both `package.json` files; assert `engines.node` specifies `>=24.0.0`
-    - Add test to `prototype/backend/tests/dependency-upgrade-invariants.property.test.ts`
+    - Add test to `app/backend/tests/dependency-upgrade-invariants.property.test.ts`
     - **Validates: Requirements 15.1**
 
 - [x] 19. Documentation updates
@@ -204,7 +204,7 @@ Upgrade all dependencies across the Armoured Souls project in a linear pipeline 
   - [x] 19.2 Write property test: Version reference table round-trip consistency (Property 6)
     - **Property 6: Version reference table round-trip consistency**
     - Parse the version reference table from documentation; for each row, look up the dependency in the corresponding `package.json`; assert documented version matches actual version
-    - Add test to `prototype/backend/tests/dependency-upgrade-invariants.property.test.ts`
+    - Add test to `app/backend/tests/dependency-upgrade-invariants.property.test.ts`
     - **Validates: Requirements 16.4**
 
 - [x] 20. Final checkpoint — Full verification

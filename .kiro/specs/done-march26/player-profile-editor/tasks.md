@@ -18,7 +18,7 @@ This implementation plan breaks down the player profile editor feature into disc
     - _Requirements: 1.1, 4.1, 5.1, 5.2_
   
   - [x] 1.2 Create validation utility module
-    - Create `prototype/backend/src/utils/validation.ts`
+    - Create `app/backend/src/utils/validation.ts`
     - Implement `validateStableName(name: string)` function
     - Implement `isStableNameUnique(name: string, userId: number)` function
     - Implement `validatePassword(password: string)` function
@@ -39,7 +39,7 @@ This implementation plan breaks down the player profile editor feature into disc
 
 - [ ] 2. Backend API endpoints
   - [x] 2.1 Extend GET /api/user/profile endpoint
-    - Update `prototype/backend/src/routes/user.ts`
+    - Update `app/backend/src/routes/user.ts`
     - Add new profile fields to the select statement
     - Return stableName, profileVisibility, notificationsBattle, notificationsLeague, themePreference
     - Handle null stableName (return username as fallback in response)
@@ -51,7 +51,7 @@ This implementation plan breaks down the player profile editor feature into disc
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9_
   
   - [x] 2.3 Implement PUT /api/user/profile endpoint
-    - Add PUT route handler in `prototype/backend/src/routes/user.ts`
+    - Add PUT route handler in `app/backend/src/routes/user.ts`
     - Extract userId from JWT token (req.user.userId)
     - Parse request body for optional fields: stableName, profileVisibility, notificationsBattle, notificationsLeague, themePreference, currentPassword, newPassword
     - Validate all provided fields using validation service
@@ -86,7 +86,7 @@ This implementation plan breaks down the player profile editor feature into disc
 
 - [ ] 4. Frontend API client
   - [x] 4.1 Extend user API utilities
-    - Update `prototype/frontend/src/utils/userApi.ts`
+    - Update `app/frontend/src/utils/userApi.ts`
     - Add ProfileData interface with all profile fields
     - Add ProfileUpdateRequest interface
     - Implement `getProfile()` function (already exists, verify it returns new fields)
@@ -101,7 +101,7 @@ This implementation plan breaks down the player profile editor feature into disc
 
 - [ ] 5. Frontend ProfilePage component
   - [x] 5.1 Create ProfilePage component structure
-    - Create `prototype/frontend/src/pages/ProfilePage.tsx`
+    - Create `app/frontend/src/pages/ProfilePage.tsx`
     - Set up component state: profile, editedProfile, passwordData, errors, loading, saveSuccess
     - Implement useEffect to fetch profile data on mount
     - Create section layout: Account Info, Stable Identity, Statistics, Privacy, Preferences, Security
@@ -154,12 +154,12 @@ This implementation plan breaks down the player profile editor feature into disc
 
 - [ ] 6. Navigation and routing integration
   - [x] 6.1 Enable profile link in navigation
-    - Update `prototype/frontend/src/components/Navigation.tsx`
+    - Update `app/frontend/src/components/Navigation.tsx`
     - Remove disabled flag from /profile navigation item
     - _Requirements: 7.1_
   
   - [x] 6.2 Add profile route to App
-    - Update `prototype/frontend/src/App.tsx`
+    - Update `app/frontend/src/App.tsx`
     - Add route: `<Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />`
     - _Requirements: 7.1_
 

@@ -7,17 +7,17 @@ Implement a public stable viewing system: a new backend endpoint (`GET /api/stab
 ## Tasks
 
 - [x] 1. Extract shared prestige/fame utilities
-  - [x] 1.1 Create `prototype/backend/src/utils/prestigeUtils.ts`
-    - Extract `getPrestigeRank` and `getFameTier` functions from `prototype/backend/src/routes/leaderboards.ts` into a new shared utility file
+  - [x] 1.1 Create `app/backend/src/utils/prestigeUtils.ts`
+    - Extract `getPrestigeRank` and `getFameTier` functions from `app/backend/src/routes/leaderboards.ts` into a new shared utility file
     - Export both functions so they can be imported by `leaderboards.ts` and the new `stables.ts` route
     - _Requirements: 4.5, 1.3_
-  - [x] 1.2 Update `prototype/backend/src/routes/leaderboards.ts` to import from `prestigeUtils.ts`
+  - [x] 1.2 Update `app/backend/src/routes/leaderboards.ts` to import from `prestigeUtils.ts`
     - Remove the local `getPrestigeRank` and `getFameTier` function definitions
     - Replace with imports from `../utils/prestigeUtils`
     - Verify existing leaderboard endpoints still function correctly
     - _Requirements: 4.5_
   - [x] 1.3 Write property test for prestige rank mapping (Property 4)
-    - Create or extend `prototype/backend/tests/prestigeUtils.property.test.ts`
+    - Create or extend `app/backend/tests/prestigeUtils.property.test.ts`
     - **Property 4: Prestige rank mapping correctness**
     - For any non-negative integer prestige value, verify `getPrestigeRank` returns the correct rank per the threshold table (Novice < 1000, Established < 5000, Veteran < 10000, Elite < 25000, Champion < 50000, Legendary ≥ 50000)
     - Use fast-check with minimum 100 iterations
@@ -25,7 +25,7 @@ Implement a public stable viewing system: a new backend endpoint (`GET /api/stab
 
 
 - [x] 2. Implement the stable API endpoint
-  - [x] 2.1 Create `prototype/backend/src/routes/stables.ts` with `GET /:userId`
+  - [x] 2.1 Create `app/backend/src/routes/stables.ts` with `GET /:userId`
     - Apply `authenticateToken` middleware for authentication
     - Validate `userId` param with Zod `positiveIntParam` via `validateRequest` middleware
     - Query User with robots (excluding Bye Robot, ordered by ELO desc) and facilities using Prisma `select`/`include`
@@ -37,10 +37,10 @@ Implement a public stable viewing system: a new backend endpoint (`GET /api/stab
     - Ensure response does not contain any sensitive fields (combatPower, targetingSystems, stance, yieldThreshold, loadoutType, mainWeaponId, currentHP, currentShield, etc.)
     - Ensure the same response is returned regardless of whether the viewer is the target user or a different user
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 2.1, 2.5, 2.6, 3.1, 4.1, 4.2, 4.3, 4.4, 4.5, 5.1, 5.2, 5.3, 5.4_
-  - [x] 2.2 Register the stables route in `prototype/backend/src/index.ts`
+  - [x] 2.2 Register the stables route in `app/backend/src/index.ts`
     - Import the stables router and add `app.use('/api/stables', stablesRoutes)` alongside existing route registrations
     - _Requirements: 5.1_
-  - [x] 2.3 Write unit tests for the stables endpoint in `prototype/backend/tests/stables.test.ts`
+  - [x] 2.3 Write unit tests for the stables endpoint in `app/backend/tests/stables.test.ts`
     - Test 404 for non-existent user
     - Test 401 for unauthenticated request
     - Test 400 for invalid userId (negative, zero, float, non-numeric)
@@ -51,41 +51,41 @@ Implement a public stable viewing system: a new backend endpoint (`GET /api/stab
     - Test that owner viewing own stable gets identical response to another viewer
     - _Requirements: 1.1, 1.2, 1.4, 2.1, 2.5, 4.1, 5.1, 5.2, 5.4, 8.4_
   - [x] 2.4 Write property test for sensitive field stripping on stable endpoint (Property 1)
-    - Create `prototype/backend/tests/stableSanitization.property.test.ts`
+    - Create `app/backend/tests/stableSanitization.property.test.ts`
     - **Property 1: Sensitive field stripping on stable endpoint**
     - For any robot object with all fields populated, after `sanitizeRobotForPublic`, no key from `SENSITIVE_ROBOT_FIELDS` shall be present
     - Use fast-check with minimum 100 iterations
     - **Validates: Requirements 2.1, 2.5**
   - [x] 2.5 Write property test for robot list sorted by ELO descending (Property 2)
-    - Add to `prototype/backend/tests/stableSanitization.property.test.ts`
+    - Add to `app/backend/tests/stableSanitization.property.test.ts`
     - **Property 2: Robot list sorted by ELO descending**
     - For any array of robots with random ELO values, after sorting by ELO desc, each robot's ELO shall be ≥ the next robot's ELO
     - Use fast-check with minimum 100 iterations
     - **Validates: Requirements 2.6**
   - [x] 2.6 Write property test for stable statistics aggregation (Property 3)
-    - Add to `prototype/backend/tests/stableSanitization.property.test.ts`
+    - Add to `app/backend/tests/stableSanitization.property.test.ts`
     - **Property 3: Stable statistics aggregation correctness**
     - For any set of robot stat objects, verify totalBattles = sum of all robots' totalBattles, totalWins = sum of wins, totalLosses = sum of losses, totalDraws = sum of draws, highestElo = max elo (or 0 if empty), activeRobots = count
     - Use fast-check with minimum 100 iterations
     - **Validates: Requirements 4.1, 4.2, 4.3, 4.4**
   - [x] 2.7 Write property test for userId parameter validation (Property 5)
-    - Add to `prototype/backend/tests/stableSanitization.property.test.ts`
+    - Add to `app/backend/tests/stableSanitization.property.test.ts`
     - **Property 5: userId parameter validation rejects invalid inputs**
     - For any string that is not a positive integer representation, the Zod `positiveIntParam` schema shall reject it
     - Use fast-check with minimum 100 iterations
     - **Validates: Requirements 5.4**
   - [x] 2.8 Write property test for owner vs non-owner consistency (Property 6)
-    - Add to `prototype/backend/tests/stableSanitization.property.test.ts` or `stables.test.ts`
+    - Add to `app/backend/tests/stableSanitization.property.test.ts` or `stables.test.ts`
     - **Property 6: Owner and non-owner receive identical stable response**
     - Verify that the endpoint returns the same response shape and data regardless of whether the authenticated user matches the target userId
     - **Validates: Requirements 1.4**
 
 
 - [x] 3. Checkpoint — Backend complete
-  - Ensure all backend tests pass (`cd prototype/backend && npm test`), ask the user if questions arise.
+  - Ensure all backend tests pass (`cd app/backend && npm test`), ask the user if questions arise.
 
 - [x] 4. Implement the public robot card variant
-  - [x] 4.1 Add `variant` prop to `RobotDashboardCard` in `prototype/frontend/src/components/RobotDashboardCard.tsx`
+  - [x] 4.1 Add `variant` prop to `RobotDashboardCard` in `app/frontend/src/components/RobotDashboardCard.tsx`
     - Add `variant?: 'owner' | 'public'` to `RobotDashboardCardProps` interface
     - Add optional public-only fields to the robot prop type: `fame`, `kills`, `damageDealtLifetime`, `damageTakenLifetime`
     - Default variant to `'owner'` to preserve existing behavior
@@ -94,7 +94,7 @@ Implement a public stable viewing system: a new backend endpoint (`GET /api/stab
     - Ensure the card remains clickable and navigates to `/robots/:robotId`
     - Ensure touch-friendly tap targets (minimum 44px) for mobile
     - _Requirements: 2.2, 2.3, 2.4, 2.7, 7.3_
-  - [x] 4.2 Write unit tests for `RobotDashboardCard` variants in `prototype/frontend/src/components/__tests__/RobotDashboardCard.test.tsx`
+  - [x] 4.2 Write unit tests for `RobotDashboardCard` variants in `app/frontend/src/components/__tests__/RobotDashboardCard.test.tsx`
     - Test public variant renders fame, fame tier, kills, lifetime damage dealt, lifetime damage taken
     - Test public variant does NOT render HP bar, battle readiness badge, weapon info
     - Test owner variant (default) still renders HP bar, battle readiness badge
@@ -102,33 +102,33 @@ Implement a public stable viewing system: a new backend endpoint (`GET /api/stab
     - _Requirements: 2.2, 2.3, 2.4, 2.7_
 
 - [x] 5. Create the OwnerNameLink component and update navigation pages
-  - [x] 5.1 Create `prototype/frontend/src/components/OwnerNameLink.tsx`
+  - [x] 5.1 Create `app/frontend/src/components/OwnerNameLink.tsx`
     - Accept props: `userId: number`, `displayName: string`, `className?: string`
     - Render a React Router `<Link>` to `/stables/:userId`
     - Style consistently with existing link patterns in the app
     - _Requirements: 6.1, 6.2, 6.3, 6.4_
-  - [x] 5.2 Update `prototype/frontend/src/pages/LeagueStandingsPage.tsx`
+  - [x] 5.2 Update `app/frontend/src/pages/LeagueStandingsPage.tsx`
     - Replace plain-text owner names with `<OwnerNameLink>` component linking to `/stables/:userId`
     - _Requirements: 6.1_
-  - [x] 5.3 Update `prototype/frontend/src/pages/LeaderboardsPrestigePage.tsx`
+  - [x] 5.3 Update `app/frontend/src/pages/LeaderboardsPrestigePage.tsx`
     - Replace plain-text stable names with `<OwnerNameLink>` component linking to `/stables/:userId`
     - _Requirements: 6.2_
-  - [x] 5.4 Update `prototype/frontend/src/pages/LeaderboardsFamePage.tsx`
+  - [x] 5.4 Update `app/frontend/src/pages/LeaderboardsFamePage.tsx`
     - Replace plain-text stable names with `<OwnerNameLink>` component linking to `/stables/:userId`
     - _Requirements: 6.2_
-  - [x] 5.5 Update `prototype/frontend/src/pages/LeaderboardsLossesPage.tsx`
+  - [x] 5.5 Update `app/frontend/src/pages/LeaderboardsLossesPage.tsx`
     - Replace plain-text stable names with `<OwnerNameLink>` component linking to `/stables/:userId`
     - _Requirements: 6.2_
-  - [x] 5.6 Update `prototype/frontend/src/pages/HallOfRecordsPage.tsx`
+  - [x] 5.6 Update `app/frontend/src/pages/HallOfRecordsPage.tsx`
     - Replace plain-text owner names with `<OwnerNameLink>` component linking to `/stables/:userId`
     - _Requirements: 6.3_
-  - [x] 5.7 Update `prototype/frontend/src/pages/TagTeamStandingsPage.tsx`
+  - [x] 5.7 Update `app/frontend/src/pages/TagTeamStandingsPage.tsx`
     - Replace plain-text owner names with `<OwnerNameLink>` component linking to `/stables/:userId`
     - _Requirements: 6.4_
 
 
 - [x] 6. Implement the StableViewPage
-  - [x] 6.1 Create `prototype/frontend/src/pages/StableViewPage.tsx`
+  - [x] 6.1 Create `app/frontend/src/pages/StableViewPage.tsx`
     - Fetch `GET /api/stables/:userId` with auth token on mount
     - Render stable header section: username/stable name, prestige value, prestige rank title, championship titles
     - Render stable statistics section: total battles, total wins, total losses, total draws, win rate, highest ELO, active robots count
@@ -141,7 +141,7 @@ Implement a public stable viewing system: a new backend endpoint (`GET /api/stab
     - Display "Failed to load stable. Please try again." with retry button on network error
     - Display "This stable has no robots yet" when robots array is empty
     - _Requirements: 1.1, 1.3, 2.2, 2.6, 3.2, 3.3, 3.4, 3.5, 4.2, 4.3, 4.4, 4.5, 6.5, 8.1, 8.2, 8.3, 8.4_
-  - [x] 6.2 Register the StableViewPage route in `prototype/frontend/src/App.tsx`
+  - [x] 6.2 Register the StableViewPage route in `app/frontend/src/App.tsx`
     - Import `StableViewPage` and add a `<Route path="/stables/:userId" ...>` wrapped in `<ProtectedRoute>`
     - _Requirements: 1.1_
   - [x] 6.3 Implement responsive layout for StableViewPage
@@ -151,12 +151,12 @@ Implement a public stable viewing system: a new backend endpoint (`GET /api/stab
     - Support viewports from 320px and above
     - _Requirements: 7.1, 7.2, 7.4, 7.5_
   - [x] 6.4 Write property test for facility category grouping (Property 7)
-    - Create `prototype/frontend/src/pages/__tests__/StableViewPage.property.test.ts`
+    - Create `app/frontend/src/pages/__tests__/StableViewPage.property.test.ts`
     - **Property 7: Facility category grouping completeness**
     - For any facility type from the known set of 15 types, the category mapping function shall assign it to exactly one of the four categories, and no type shall be left ungrouped
     - Use fast-check with minimum 100 iterations
     - **Validates: Requirements 3.2**
-  - [x] 6.5 Write unit tests for StableViewPage in `prototype/frontend/src/pages/__tests__/StableViewPage.test.tsx`
+  - [x] 6.5 Write unit tests for StableViewPage in `app/frontend/src/pages/__tests__/StableViewPage.test.tsx`
     - Test renders loading state while fetching
     - Test renders 404 error state with "Stable not found" and back link
     - Test renders network error state with "Failed to load stable. Please try again." and retry button
@@ -169,7 +169,7 @@ Implement a public stable viewing system: a new backend endpoint (`GET /api/stab
     - _Requirements: 1.1, 1.3, 3.2, 3.3, 3.4, 4.2, 4.3, 4.4, 4.5, 6.5, 8.1, 8.2, 8.3, 8.4_
 
 - [x] 7. Checkpoint — Frontend complete
-  - Ensure all frontend tests pass (`cd prototype/frontend && npx vitest --run`), ask the user if questions arise.
+  - Ensure all frontend tests pass (`cd app/frontend && npx vitest --run`), ask the user if questions arise.
 
 
 - [x] 8. Documentation updates
@@ -190,12 +190,12 @@ Implement a public stable viewing system: a new backend endpoint (`GET /api/stab
   - Run all verification criteria from the requirements document:
     - `curl -H "Authorization: Bearer <token>" http://localhost:3001/api/stables/<userId>` returns 200 with `robots`, `facilities`, and `stats` fields
     - `curl -H "Authorization: Bearer <token>" http://localhost:3001/api/stables/999999` returns 404 with `"User not found"` message
-    - `grep -r "SENSITIVE_ROBOT_FIELDS" prototype/backend/src/routes/stables.ts` confirms the new route uses the existing sanitization (via `sanitizeRobotForPublic` import)
-    - `grep -rn "/stables/" prototype/frontend/src/pages/LeagueStandingsPage.tsx` confirms owner names link to stable view
-    - `grep -rn "StableViewPage" prototype/frontend/src/App.tsx` confirms the route is registered
+    - `grep -r "SENSITIVE_ROBOT_FIELDS" app/backend/src/routes/stables.ts` confirms the new route uses the existing sanitization (via `sanitizeRobotForPublic` import)
+    - `grep -rn "/stables/" app/frontend/src/pages/LeagueStandingsPage.tsx` confirms owner names link to stable view
+    - `grep -rn "StableViewPage" app/frontend/src/App.tsx` confirms the route is registered
     - Response from `GET /api/stables/:userId` does not contain any of: `combatPower`, `targetingSystems`, `stance`, `yieldThreshold`, `loadoutType`, `mainWeaponId`, `currentHP`, `currentShield`
-  - Ensure all backend tests pass: `cd prototype/backend && npm test`
-  - Ensure all frontend tests pass: `cd prototype/frontend && npx vitest --run`
+  - Ensure all backend tests pass: `cd app/backend && npm test`
+  - Ensure all frontend tests pass: `cd app/frontend && npx vitest --run`
   - Ask the user if questions arise.
 
 ## Requirements Traceability Matrix

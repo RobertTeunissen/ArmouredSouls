@@ -75,15 +75,15 @@ flowchart TD
 
 | File | Change Type |
 |------|-------------|
-| `prototype/backend/prisma/seed.ts` | Update `WEAPON_DEFINITIONS` array — swap bonus fields on 7 weapons |
+| `app/backend/prisma/seed.ts` | Update `WEAPON_DEFINITIONS` array — swap bonus fields on 7 weapons |
 | `docs/prd_core/SEED_DATA_SPECIFICATION.md` | Update weapon bonus descriptions for 7 weapons |
 | `docs/prd_core/PRD_WEAPONS_LOADOUT.md` | Update weapon bonus descriptions where individual bonuses are listed |
-| `prototype/backend/prisma/migrations/<timestamp>_weapon_bonus_rebalance/migration.sql` | New SQL migration with 7 UPDATE statements |
+| `app/backend/prisma/migrations/<timestamp>_weapon_bonus_rebalance/migration.sql` | New SQL migration with 7 UPDATE statements |
 
 ### Files NOT Modified
 
-- `prototype/backend/src/services/combatSimulator.ts` — no formula changes
-- `prototype/backend/prisma/schema.prisma` — no schema changes
+- `app/backend/src/services/combatSimulator.ts` — no formula changes
+- `app/backend/prisma/schema.prisma` — no schema changes
 - All frontend files — no UI changes
 - All other backend source files
 
@@ -186,7 +186,7 @@ For each weapon, `Attribute Cost = Σ(500 × bonus²)`. Since every swap preserv
 
 ### Prisma Migration SQL
 
-Migration file: `prototype/backend/prisma/migrations/<timestamp>_weapon_bonus_rebalance/migration.sql`
+Migration file: `app/backend/prisma/migrations/<timestamp>_weapon_bonus_rebalance/migration.sql`
 
 ```sql
 -- Weapon Bonus Rebalance: swap dead/mismatched bonuses to live attributes
@@ -349,6 +349,6 @@ Unit tests verify the specific before/after values for each of the 7 modified we
 
 ### Test File Location
 
-`prototype/backend/src/__tests__/weapon-bonus-rebalance.test.ts`
+`app/backend/src/__tests__/weapon-bonus-rebalance.test.ts`
 
 Tests import `WEAPON_DEFINITIONS` directly from `../../../prisma/seed.ts` (the array is exported as a named constant).

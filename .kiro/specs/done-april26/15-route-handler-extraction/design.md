@@ -2,7 +2,7 @@
 
 ## Overview
 
-Move all inline business logic from the four largest route files (`admin.ts`, `robots.ts`, `analytics.ts`, `matches.ts`) into dedicated service modules, and consolidate duplicated game formulas (`getCapForLevel`, `calculateBaseCost`) into `prototype/shared/utils/`. Route handlers become thin wrappers: parse input, call service, return response. Cross-boundary formulas land in `shared/` so both frontend and backend import from one place.
+Move all inline business logic from the four largest route files (`admin.ts`, `robots.ts`, `analytics.ts`, `matches.ts`) into dedicated service modules, and consolidate duplicated game formulas (`getCapForLevel`, `calculateBaseCost`) into `app/shared/utils/`. Route handlers become thin wrappers: parse input, call service, return response. Cross-boundary formulas land in `shared/` so both frontend and backend import from one place.
 
 ### Key Research Findings
 
@@ -16,7 +16,7 @@ Move all inline business logic from the four largest route files (`admin.ts`, `r
 - `calculateBaseCost` / `(level + 1) * 1500` exists in **5 places** (not 2): `UpgradePlanner.tsx`, `PracticeArenaPage.tsx`, `CompactUpgradeSection.tsx` (inline), `Step4_Upgrades.tsx` (`upgCost()` function), and `robots.ts` (inline in upgrade handler, appears twice).
 - The training facility discount formula `Math.min(level * 10, 90)` is inlined in **6 places** despite `calculateTrainingFacilityDiscount` already existing in `shared/utils/discounts.ts`: `UpgradePlanner.tsx`, `PracticeArenaPage.tsx`, `CompactUpgradeSection.tsx`, `Step4_Upgrades.tsx`, and `robots.ts` (twice in upgrade handler). None of these import the shared version.
 - `calculateBattleWinningsBonus` in `leaderboards.ts` duplicates the prestige tier thresholds from `getPrestigeMultiplier` in `economyCalculations.ts` — same breakpoints (1K/5K/10K/25K/50K), returns percentage instead of multiplier. Should use `(getPrestigeMultiplier(prestige) - 1) * 100`.
-- Both frontend and backend already import from `prototype/shared/utils/discounts.ts`, so the shared import path pattern is established.
+- Both frontend and backend already import from `app/shared/utils/discounts.ts`, so the shared import path pattern is established.
 - The `RobotDetailPage.tsx` has a commented-out `getCapForLevel` with a note saying "CompactUpgradeSection has its own copy" — confirming the duplication is known.
 
 ## Architecture
@@ -43,7 +43,7 @@ src/services/match/ (new directory)
 ### Shared Formula Targets
 
 ```
-prototype/shared/utils/
+app/shared/utils/
 ├── discounts.ts          # Existing: calculateWeaponWorkshopDiscount, calculateTrainingFacilityDiscount, applyDiscount
 ├── academyCaps.ts        # New: getCapForLevel, ACADEMY_CAP_MAP
 ├── upgradeCosts.ts       # New: calculateBaseCost, calculateDiscountedUpgradeCost, calculateUpgradeCostRange (imports calculateTrainingFacilityDiscount from discounts.ts)
@@ -164,12 +164,12 @@ export { calculateBaseCost, calculateDiscountedUpgradeCost, calculateUpgradeCost
 
 | File | Old | New |
 |------|-----|-----|
-| `prototype/backend/src/routes/robots.ts` | Local `getCapForLevel` definition + inline `(level + 1) * 1500` + inline `Math.min(trainingLevel * 10, 90)` | `import { getCapForLevel } from '../../../shared/utils/academyCaps'`, `import { calculateBaseCost } from '../../../shared/utils/upgradeCosts'`, `import { calculateTrainingFacilityDiscount } from '../../../shared/utils/discounts'` |
-| `prototype/frontend/src/components/UpgradePlanner.tsx` | Local `getCapForLevel` + `calculateBaseCost` + inline training discount | Imports from `shared/utils/` |
-| `prototype/frontend/src/pages/PracticeArenaPage.tsx` | Local `getCapForLevel` + `calculateBaseCost` + inline training discount | Imports from `shared/utils/` |
-| `prototype/frontend/src/components/CompactUpgradeSection.tsx` | Inline `(currentLevel + 1) * 1500` + inline `Math.min(trainingLevel * 10, 90)` | Imports `calculateBaseCost` from `shared/utils/upgradeCosts` and `calculateTrainingFacilityDiscount` from `shared/utils/discounts` |
-| `prototype/frontend/src/components/onboarding/steps/Step4_Upgrades.tsx` | Local `upgCost()` with inline base cost + training discount | Imports `calculateBaseCost` from `shared/utils/upgradeCosts` and `calculateTrainingFacilityDiscount` from `shared/utils/discounts` |
-| `prototype/backend/src/routes/leaderboards.ts` | Local `calculateBattleWinningsBonus` duplicating prestige tiers | Import `getPrestigeMultiplier` from `economyCalculations.ts`, derive bonus as `(getPrestigeMultiplier(prestige) - 1) * 100` |
+| `app/backend/src/routes/robots.ts` | Local `getCapForLevel` definition + inline `(level + 1) * 1500` + inline `Math.min(trainingLevel * 10, 90)` | `import { getCapForLevel } from '../../../shared/utils/academyCaps'`, `import { calculateBaseCost } from '../../../shared/utils/upgradeCosts'`, `import { calculateTrainingFacilityDiscount } from '../../../shared/utils/discounts'` |
+| `app/frontend/src/components/UpgradePlanner.tsx` | Local `getCapForLevel` + `calculateBaseCost` + inline training discount | Imports from `shared/utils/` |
+| `app/frontend/src/pages/PracticeArenaPage.tsx` | Local `getCapForLevel` + `calculateBaseCost` + inline training discount | Imports from `shared/utils/` |
+| `app/frontend/src/components/CompactUpgradeSection.tsx` | Inline `(currentLevel + 1) * 1500` + inline `Math.min(trainingLevel * 10, 90)` | Imports `calculateBaseCost` from `shared/utils/upgradeCosts` and `calculateTrainingFacilityDiscount` from `shared/utils/discounts` |
+| `app/frontend/src/components/onboarding/steps/Step4_Upgrades.tsx` | Local `upgCost()` with inline base cost + training discount | Imports `calculateBaseCost` from `shared/utils/upgradeCosts` and `calculateTrainingFacilityDiscount` from `shared/utils/discounts` |
+| `app/backend/src/routes/leaderboards.ts` | Local `calculateBattleWinningsBonus` duplicating prestige tiers | Import `getPrestigeMultiplier` from `economyCalculations.ts`, derive bonus as `(getPrestigeMultiplier(prestige) - 1) * 100` |
 
 ## Data Models
 
@@ -177,9 +177,9 @@ No data model changes. This is a pure code organization refactoring.
 
 ## Documentation Impact
 
-- `.kiro/steering/coding-standards.md` — Add a "Route Handler Guidelines" section specifying the thin-route pattern and maximum handler size. Add a note in Code Organization that game formulas shared between frontend and backend must live in `prototype/shared/utils/`. Add a rule that inline formulas must not duplicate functions already exported from `shared/utils/` (specifically: never inline `(level + 1) * 1500` or `Math.min(level * 10, 90)` when `calculateBaseCost` and `calculateTrainingFacilityDiscount` exist).
-- `.kiro/steering/project-overview.md` — Add `/prototype/shared` to the Project Structure section, describing it as shared TypeScript modules imported by both frontend and backend (game formulas, discount calculations).
-- `docs/guides/MODULE_STRUCTURE.md` — Update to reflect new service directories (`robot/`, `match/`, `admin/`) and document the `shared/` directory purpose and contents. Update the `stables.ts` standalone route entry to reference `sanitizeRobotForPublic` from `src/services/robot/robotSanitizer.ts` instead of `robots.ts`. Add `prototype/shared/` to the project tree diagram.
+- `.kiro/steering/coding-standards.md` — Add a "Route Handler Guidelines" section specifying the thin-route pattern and maximum handler size. Add a note in Code Organization that game formulas shared between frontend and backend must live in `app/shared/utils/`. Add a rule that inline formulas must not duplicate functions already exported from `shared/utils/` (specifically: never inline `(level + 1) * 1500` or `Math.min(level * 10, 90)` when `calculateBaseCost` and `calculateTrainingFacilityDiscount` exist).
+- `.kiro/steering/project-overview.md` — Add `/app/shared` to the Project Structure section, describing it as shared TypeScript modules imported by both frontend and backend (game formulas, discount calculations).
+- `docs/guides/MODULE_STRUCTURE.md` — Update to reflect new service directories (`robot/`, `match/`, `admin/`) and document the `shared/` directory purpose and contents. Update the `stables.ts` standalone route entry to reference `sanitizeRobotForPublic` from `src/services/robot/robotSanitizer.ts` instead of `robots.ts`. Add `app/shared/` to the project tree diagram.
 - `docs/balance_changes/OPTION_C_IMPLEMENTATION.md` — Update the file reference on line 255 that points to `robots.ts` line 321 for the `baseCost = (Math.floor(currentLevel) + 1) * 1500` formula — this will move to `shared/utils/upgradeCosts.ts`.
 
 ## Testing Strategy
@@ -202,4 +202,4 @@ No data model changes. This is a pure code organization refactoring.
 
 - This spec should run AFTER spec 18 (type safety) since typed route files are easier to extract from.
 - This spec should run BEFORE spec 5 (modular architecture) since it creates new service files that spec 5's mapping needs to account for.
-- This spec should run BEFORE spec 10 (prototype → app rename) since it uses `prototype/` paths throughout.
+- This spec should run BEFORE spec 10 (prototype → app rename) since it uses `app/` paths throughout.

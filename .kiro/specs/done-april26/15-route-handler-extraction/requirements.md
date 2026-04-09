@@ -2,14 +2,14 @@
 
 ## Introduction
 
-Extract inline business logic from oversized route handler files into dedicated service modules, and consolidate duplicated game formulas into the `prototype/shared/` directory. The backend route files `admin.ts` (2,952 lines), `robots.ts` (2,346 lines), `analytics.ts` (1,312 lines), and `matches.ts` (1,093 lines) contain data transformation, aggregation, and business logic that belongs in the service layer. Additionally, functions like `getCapForLevel` and `calculateBaseCost` are copy-pasted across 3+ files in both frontend and backend — these must land in `shared/` as the single source of truth.
+Extract inline business logic from oversized route handler files into dedicated service modules, and consolidate duplicated game formulas into the `app/shared/` directory. The backend route files `admin.ts` (2,952 lines), `robots.ts` (2,346 lines), `analytics.ts` (1,312 lines), and `matches.ts` (1,093 lines) contain data transformation, aggregation, and business logic that belongs in the service layer. Additionally, functions like `getCapForLevel` and `calculateBaseCost` are copy-pasted across 3+ files in both frontend and backend — these must land in `shared/` as the single source of truth.
 
 ## Glossary
 
 - **Route Handler**: An Express route callback that receives a request and sends a response. Should contain no business logic beyond input extraction and response formatting.
 - **Service Module**: A file in `src/services/` that encapsulates domain-specific business logic, data transformation, and database queries.
 - **Thin Route**: A route handler that delegates all logic to services, containing only input parsing, service invocation, and response serialization.
-- **Shared Module**: A TypeScript file in `prototype/shared/` that is importable by both the frontend and backend codebases.
+- **Shared Module**: A TypeScript file in `app/shared/` that is importable by both the frontend and backend codebases.
 - **Game Formula**: A pure function that computes a game mechanic value (e.g., upgrade cost, attribute cap, discount percentage).
 
 ## Expected Contribution
@@ -20,7 +20,7 @@ This spec targets two related debts: "god files" where route handlers contain hu
 2. **robots.ts line reduction**: From 2,346 lines to under 600 lines. Functions like `sanitizeRobotForPublic`, `calculateCategorySum`, `calculateRanking`, `getBattleResult`, `getBattleStats`, and inline upgrade/ranking logic move to services. `getCapForLevel` moves to `shared/`.
 3. **analytics.ts line reduction**: From 1,312 lines to under 400 lines. Inline data aggregation and transformation logic moves to analytics services.
 4. **matches.ts line reduction**: From 1,093 lines to under 300 lines. Battle log formatting and history filtering logic moves to a match service.
-5. **getCapForLevel deduplication**: From 3 production implementations (in `robots.ts`, `UpgradePlanner.tsx`, `PracticeArenaPage.tsx`) to 1 shared implementation in `prototype/shared/utils/`.
+5. **getCapForLevel deduplication**: From 3 production implementations (in `robots.ts`, `UpgradePlanner.tsx`, `PracticeArenaPage.tsx`) to 1 shared implementation in `app/shared/utils/`.
 6. **calculateBaseCost deduplication**: From 5 separate implementations (in `UpgradePlanner.tsx`, `PracticeArenaPage.tsx`, `CompactUpgradeSection.tsx`, `Step4_Upgrades.tsx`, and `robots.ts`) to 1 shared implementation.
 7. **Training discount formula deduplication**: From 6 inline `Math.min(level * 10, 90)` usages (in `UpgradePlanner.tsx`, `PracticeArenaPage.tsx`, `CompactUpgradeSection.tsx`, `Step4_Upgrades.tsx`, `robots.ts` ×2) to imports of the existing `calculateTrainingFacilityDiscount` from `shared/utils/discounts.ts`.
 8. **calculateBattleWinningsBonus deduplication**: The local function in `leaderboards.ts` duplicating prestige tier thresholds from `getPrestigeMultiplier` in `economyCalculations.ts` is replaced with a derived call.
@@ -29,20 +29,20 @@ This spec targets two related debts: "god files" where route handlers contain hu
 
 ### Verification Criteria
 
-1. `wc -l prototype/backend/src/routes/admin.ts` returns under 800
-2. `wc -l prototype/backend/src/routes/robots.ts` returns under 600
-3. `wc -l prototype/backend/src/routes/analytics.ts` returns under 400
-4. `wc -l prototype/backend/src/routes/matches.ts` returns under 300
-5. `grep -c "function " prototype/backend/src/routes/admin.ts` returns 0 (no standalone function definitions in route files)
-6. `grep -c "function " prototype/backend/src/routes/robots.ts` returns 0
-7. `grep -rn "getCapForLevel" prototype/backend/src/ prototype/frontend/src/ --include="*.ts" --include="*.tsx" | grep -v "from.*shared" | grep -v "import" | grep -c "const\|function"` returns 0 (no local definitions, only imports from shared)
-8. `grep -rn "calculateBaseCost" prototype/frontend/src/ prototype/backend/src/routes/ --include="*.ts" --include="*.tsx" | grep -v "from.*shared" | grep -v "import" | grep -c "const\|function\|=>"` returns 0 (no local definitions)
-9. `grep -rn "upgCost" prototype/frontend/src/ --include="*.tsx" | grep -c "function"` returns 0 (Step4_Upgrades.tsx local function removed)
-10. `grep -rn "(currentLevel + 1) \* 1500\|(level + 1) \* 1500" prototype/frontend/src/ prototype/backend/src/routes/ --include="*.ts" --include="*.tsx" | wc -l` returns 0 (no inline base cost formulas)
-11. `grep -rn "calculateBattleWinningsBonus" prototype/backend/src/ --include="*.ts" | wc -l` returns 0 (replaced with getPrestigeMultiplier import)
-12. `ls prototype/shared/utils/` shows at least 3 files (discounts.ts + new files)
-13. All backend tests pass: `cd prototype/backend && npm test`
-14. Frontend builds successfully: `cd prototype/frontend && npm run build`
+1. `wc -l app/backend/src/routes/admin.ts` returns under 800
+2. `wc -l app/backend/src/routes/robots.ts` returns under 600
+3. `wc -l app/backend/src/routes/analytics.ts` returns under 400
+4. `wc -l app/backend/src/routes/matches.ts` returns under 300
+5. `grep -c "function " app/backend/src/routes/admin.ts` returns 0 (no standalone function definitions in route files)
+6. `grep -c "function " app/backend/src/routes/robots.ts` returns 0
+7. `grep -rn "getCapForLevel" app/backend/src/ app/frontend/src/ --include="*.ts" --include="*.tsx" | grep -v "from.*shared" | grep -v "import" | grep -c "const\|function"` returns 0 (no local definitions, only imports from shared)
+8. `grep -rn "calculateBaseCost" app/frontend/src/ app/backend/src/routes/ --include="*.ts" --include="*.tsx" | grep -v "from.*shared" | grep -v "import" | grep -c "const\|function\|=>"` returns 0 (no local definitions)
+9. `grep -rn "upgCost" app/frontend/src/ --include="*.tsx" | grep -c "function"` returns 0 (Step4_Upgrades.tsx local function removed)
+10. `grep -rn "(currentLevel + 1) \* 1500\|(level + 1) \* 1500" app/frontend/src/ app/backend/src/routes/ --include="*.ts" --include="*.tsx" | wc -l` returns 0 (no inline base cost formulas)
+11. `grep -rn "calculateBattleWinningsBonus" app/backend/src/ --include="*.ts" | wc -l` returns 0 (replaced with getPrestigeMultiplier import)
+12. `ls app/shared/utils/` shows at least 3 files (discounts.ts + new files)
+13. All backend tests pass: `cd app/backend && npm test`
+14. Frontend builds successfully: `cd app/frontend && npm run build`
 
 ## Requirements
 
@@ -67,7 +67,7 @@ This spec targets two related debts: "god files" where route handlers contain hu
 2. WHEN inline upgrade validation and cost calculation logic is extracted, IT SHALL be placed in a robot upgrade service that can be unit-tested independently.
 3. WHEN `sanitizeRobotForPublic` is extracted, IT SHALL be typed with proper Prisma model types instead of `any`.
 4. WHEN the extraction is complete, EACH robot route handler SHALL contain at most: input extraction, ownership verification, a service call, and response formatting.
-5. WHEN `getCapForLevel` is extracted from `robots.ts`, IT SHALL be placed in `prototype/shared/utils/` (not in a backend-only service) since it is also needed by the frontend.
+5. WHEN `getCapForLevel` is extracted from `robots.ts`, IT SHALL be placed in `app/shared/utils/` (not in a backend-only service) since it is also needed by the frontend.
 
 ### Requirement 3: Analytics Route Extraction
 
@@ -91,16 +91,16 @@ This spec targets two related debts: "god files" where route handlers contain hu
 
 ### Requirement 5: Shared Game Formula Consolidation
 
-**User Story:** As a developer, I want duplicated game formulas consolidated into `prototype/shared/utils/`, so that both frontend and backend use a single source of truth and formula drift is impossible.
+**User Story:** As a developer, I want duplicated game formulas consolidated into `app/shared/utils/`, so that both frontend and backend use a single source of truth and formula drift is impossible.
 
 #### Acceptance Criteria
 
-1. WHEN `getCapForLevel` is moved to `prototype/shared/utils/academyCaps.ts`, IT SHALL be exported as a named function with the signature `(level: number) => number`, including the complete cap map matching `docs/prd_core/STABLE_SYSTEM.md`, returning default 10 for unknown levels.
+1. WHEN `getCapForLevel` is moved to `app/shared/utils/academyCaps.ts`, IT SHALL be exported as a named function with the signature `(level: number) => number`, including the complete cap map matching `docs/prd_core/STABLE_SYSTEM.md`, returning default 10 for unknown levels.
 2. WHEN the shared `getCapForLevel` is created, ALL existing implementations in `robots.ts`, `UpgradePlanner.tsx`, and `PracticeArenaPage.tsx` SHALL be replaced with imports from the shared module.
-3. WHEN `calculateBaseCost` is moved to `prototype/shared/utils/upgradeCosts.ts`, IT SHALL be exported with the signature `(currentLevel: number) => number`, preserving the formula `(Math.floor(currentLevel) + 1) * 1500` exactly.
+3. WHEN `calculateBaseCost` is moved to `app/shared/utils/upgradeCosts.ts`, IT SHALL be exported with the signature `(currentLevel: number) => number`, preserving the formula `(Math.floor(currentLevel) + 1) * 1500` exactly.
 4. WHEN the shared `calculateBaseCost` is created, ALL existing implementations in `UpgradePlanner.tsx`, `PracticeArenaPage.tsx`, `CompactUpgradeSection.tsx`, `Step4_Upgrades.tsx`, and inline usages in `robots.ts` SHALL be replaced with imports from the shared module.
 5. WHEN new shared files are created, THEY SHALL follow the existing pattern in `discounts.ts` with JSDoc comments referencing the authoritative PRD document.
-6. WHEN the shared module is expanded, A barrel export file (`prototype/shared/utils/index.ts`) SHALL exist to simplify imports.
+6. WHEN the shared module is expanded, A barrel export file (`app/shared/utils/index.ts`) SHALL exist to simplify imports.
 7. WHEN the consolidation is complete, THE shared module SHALL contain at minimum: `discounts.ts` (existing), `academyCaps.ts` (new), and `upgradeCosts.ts` (new).
 8. WHEN inline training discount formulas (`Math.min(level * 10, 90)`) exist in frontend or backend route files, THEY SHALL be replaced with imports of `calculateTrainingFacilityDiscount` from `shared/utils/discounts.ts`.
 9. WHEN `calculateBattleWinningsBonus` in `leaderboards.ts` duplicates the prestige tier thresholds, IT SHALL be replaced with a call to `getPrestigeMultiplier` from `economyCalculations.ts`, deriving the bonus percentage as `(getPrestigeMultiplier(prestige) - 1) * 100`.
@@ -122,7 +122,7 @@ This spec targets two related debts: "god files" where route handlers contain hu
 
 #### Acceptance Criteria
 
-1. WHEN the refactoring is complete, `.kiro/steering/coding-standards.md` SHALL contain a "Route Handler Guidelines" section specifying the thin-route pattern, and a rule that game formulas shared between frontend and backend must live in `prototype/shared/utils/` (never inlined or locally redefined).
-2. WHEN the refactoring is complete, `.kiro/steering/project-overview.md` SHALL list `/prototype/shared` in the Project Structure section.
-3. WHEN the refactoring is complete, `docs/guides/MODULE_STRUCTURE.md` SHALL include `prototype/shared/` in the project tree, document the new service directories (`robot/`, `match/`), and update the `stables.ts` entry to reference `sanitizeRobotForPublic` from its new location in `src/services/robot/robotSanitizer.ts`.
+1. WHEN the refactoring is complete, `.kiro/steering/coding-standards.md` SHALL contain a "Route Handler Guidelines" section specifying the thin-route pattern, and a rule that game formulas shared between frontend and backend must live in `app/shared/utils/` (never inlined or locally redefined).
+2. WHEN the refactoring is complete, `.kiro/steering/project-overview.md` SHALL list `/app/shared` in the Project Structure section.
+3. WHEN the refactoring is complete, `docs/guides/MODULE_STRUCTURE.md` SHALL include `app/shared/` in the project tree, document the new service directories (`robot/`, `match/`), and update the `stables.ts` entry to reference `sanitizeRobotForPublic` from its new location in `src/services/robot/robotSanitizer.ts`.
 4. WHEN the `baseCost` formula moves out of `robots.ts`, `docs/balance_changes/OPTION_C_IMPLEMENTATION.md` SHALL be updated to reference the new file location.

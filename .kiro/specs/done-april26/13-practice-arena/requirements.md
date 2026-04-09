@@ -35,23 +35,23 @@ This spec addresses a gap in the player experience: there is currently no way fo
 
 ### Verification Criteria
 
-1. `grep -r "practice-arena" prototype/backend/src/routes/ | wc -l` returns at least 1 (route file exists)
-2. `grep -r "practice-arena" prototype/frontend/src/ | wc -l` returns at least 1 (frontend page exists)
-3. `grep -r "simulateBattleMulti\|simulateBattle" prototype/backend/src/services/practice-arena/ | wc -l` returns at least 1 (service calls existing combat engine)
-4. `grep -rn "prisma\.\(battle\|battleParticipant\)\.create" prototype/backend/src/services/practice-arena/ | wc -l` returns 0 (no production battle records created)
-5. `grep -rn "prisma\.robot\.update" prototype/backend/src/services/practice-arena/ | wc -l` returns 0 (no robot state mutations)
-6. `grep -rn "prisma\.user\.update" prototype/backend/src/services/practice-arena/ | wc -l` returns 0 (no user economy mutations)
-7. `ls prototype/backend/prisma/migrations/ | wc -l` increases by exactly 1 after implementation (one migration for `practice_arena_daily_stats` table)
-8. Backend practice arena tests pass: `cd prototype/backend && npx jest --testPathPattern=practice-arena --passWithNoTests`
-9. Frontend practice arena tests pass: `cd prototype/frontend && npx vitest run --reporter=verbose src/**/*practice-arena*`
-10. `grep -r "rateLimit\|rateLimiter\|rate-limit" prototype/backend/src/routes/practiceArena.ts | wc -l` returns at least 1 (rate limiting configured)
-11. `grep -rn "localStorage" prototype/frontend/src/pages/PracticeArenaPage.tsx prototype/frontend/src/hooks/usePracticeHistory.ts | wc -l` returns at least 1 (localStorage used for result persistence)
-12. `grep -rn "BattlePlaybackViewer" prototype/frontend/src/pages/PracticeArenaPage.tsx | wc -l` returns at least 1 (reuses existing playback component)
-13. `grep -rn "convertBattleEvents\|convertSimulatorEvents" prototype/backend/src/services/practice-arena/ | wc -l` returns at least 1 (reuses existing narrative generator)
-14. `grep -rn "battlePostCombat\|updateRobotCombatStats\|awardCreditsToUser\|awardPrestigeToUser\|awardFameToRobot\|logBattleAuditEvent" prototype/backend/src/services/practice-arena/ | wc -l` returns 0 (no post-combat pipeline imports)
-15. `grep -rn "cycleScheduler\|BattleStrategy\|BattleProcessor" prototype/backend/src/services/practice-arena/ | wc -l` returns 0 (no orchestrator dependencies)
-16. `grep -rn "practice-arena/stats" prototype/backend/src/routes/admin.ts | wc -l` returns at least 1 (admin metrics endpoint exists)
-17. `grep -rn "getSchedulerState" prototype/backend/src/routes/practiceArena.ts | wc -l` returns at least 1 (cycle execution guard exists)
+1. `grep -r "practice-arena" app/backend/src/routes/ | wc -l` returns at least 1 (route file exists)
+2. `grep -r "practice-arena" app/frontend/src/ | wc -l` returns at least 1 (frontend page exists)
+3. `grep -r "simulateBattleMulti\|simulateBattle" app/backend/src/services/practice-arena/ | wc -l` returns at least 1 (service calls existing combat engine)
+4. `grep -rn "prisma\.\(battle\|battleParticipant\)\.create" app/backend/src/services/practice-arena/ | wc -l` returns 0 (no production battle records created)
+5. `grep -rn "prisma\.robot\.update" app/backend/src/services/practice-arena/ | wc -l` returns 0 (no robot state mutations)
+6. `grep -rn "prisma\.user\.update" app/backend/src/services/practice-arena/ | wc -l` returns 0 (no user economy mutations)
+7. `ls app/backend/prisma/migrations/ | wc -l` increases by exactly 1 after implementation (one migration for `practice_arena_daily_stats` table)
+8. Backend practice arena tests pass: `cd app/backend && npx jest --testPathPattern=practice-arena --passWithNoTests`
+9. Frontend practice arena tests pass: `cd app/frontend && npx vitest run --reporter=verbose src/**/*practice-arena*`
+10. `grep -r "rateLimit\|rateLimiter\|rate-limit" app/backend/src/routes/practiceArena.ts | wc -l` returns at least 1 (rate limiting configured)
+11. `grep -rn "localStorage" app/frontend/src/pages/PracticeArenaPage.tsx app/frontend/src/hooks/usePracticeHistory.ts | wc -l` returns at least 1 (localStorage used for result persistence)
+12. `grep -rn "BattlePlaybackViewer" app/frontend/src/pages/PracticeArenaPage.tsx | wc -l` returns at least 1 (reuses existing playback component)
+13. `grep -rn "convertBattleEvents\|convertSimulatorEvents" app/backend/src/services/practice-arena/ | wc -l` returns at least 1 (reuses existing narrative generator)
+14. `grep -rn "battlePostCombat\|updateRobotCombatStats\|awardCreditsToUser\|awardPrestigeToUser\|awardFameToRobot\|logBattleAuditEvent" app/backend/src/services/practice-arena/ | wc -l` returns 0 (no post-combat pipeline imports)
+15. `grep -rn "cycleScheduler\|BattleStrategy\|BattleProcessor" app/backend/src/services/practice-arena/ | wc -l` returns 0 (no orchestrator dependencies)
+16. `grep -rn "practice-arena/stats" app/backend/src/routes/admin.ts | wc -l` returns at least 1 (admin metrics endpoint exists)
+17. `grep -rn "getSchedulerState" app/backend/src/routes/practiceArena.ts | wc -l` returns at least 1 (cycle execution guard exists)
 
 ## Requirements
 

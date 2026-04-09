@@ -4,7 +4,7 @@
 
 This design covers the migration of the Armoured Souls application from a local-only development setup to a production-ready deployment on Scaleway VPS instances. The migration touches every layer of the stack: frontend API configuration, backend hardening, infrastructure provisioning, CI/CD automation, database operations, scheduled job decomposition, and multi-environment support.
 
-The current state is a monorepo under `prototype/` with:
+The current state is a monorepo under `app/` with:
 - A React + Vite frontend with 30+ hardcoded `localhost:3001` references across API utility files
 - An Express.js + Prisma backend with open CORS, no process management, and a monolithic cycle endpoint
 - A local Docker PostgreSQL container with hardcoded credentials
@@ -127,7 +127,7 @@ graph LR
 
 A centralized Axios instance replaces all hardcoded `localhost:3001` references.
 
-**File:** `prototype/frontend/src/utils/apiClient.ts`
+**File:** `app/frontend/src/utils/apiClient.ts`
 
 ```typescript
 import axios from 'axios';
@@ -173,7 +173,7 @@ export default apiClient;
 
 ### 2. Backend Environment Configuration (Requirement 3, 19, 20)
 
-**Startup validation** (`prototype/backend/src/config/env.ts`):
+**Startup validation** (`app/backend/src/config/env.ts`):
 
 ```typescript
 interface EnvConfig {
@@ -225,7 +225,7 @@ app.use(cors({
 }));
 ```
 
-**Rate limiting** (`prototype/backend/src/middleware/rateLimiter.ts`):
+**Rate limiting** (`app/backend/src/middleware/rateLimiter.ts`):
 
 ```typescript
 import rateLimit from 'express-rate-limit';
@@ -353,7 +353,7 @@ module.exports = {
 
 The monolithic `POST /admin/cycles/bulk` endpoint (14 steps in a single request) is decomposed into 4 independent scheduled jobs using `node-cron`, running in-process within the backend.
 
-**File:** `prototype/backend/src/services/cycleScheduler.ts`
+**File:** `app/backend/src/services/cycleScheduler.ts`
 
 ```typescript
 interface SchedulerConfig {
@@ -564,7 +564,7 @@ Target: restore within 10 minutes.
 
 The following environment variables govern runtime behavior across all environments:
 
-**Backend (`prototype/backend/.env`)**:
+**Backend (`app/backend/.env`)**:
 
 | Variable | DEV Default | ACC Example | PRD Example | Required |
 |----------|-------------|-------------|-------------|----------|
@@ -580,13 +580,13 @@ The following environment variables govern runtime behavior across all environme
 | `SETTLEMENT_SCHEDULE` | — | `0 23 * * *` | `0 23 * * *` | No |
 | `LOG_LEVEL` | `debug` | `info` | `info` | No |
 
-**Frontend (`prototype/frontend/.env`)**:
+**Frontend (`app/frontend/.env`)**:
 
 | Variable | DEV Default | ACC Build | PRD Build |
 |----------|-------------|-----------|-----------|
 | `VITE_API_URL` | (empty — uses Vite proxy) | (empty — relative paths through Caddy) | (empty — relative paths through Caddy) |
 
-**Playwright (`prototype/frontend/.env.test`)**:
+**Playwright (`app/frontend/.env.test`)**:
 
 | Variable | Local | Remote ACC |
 |----------|-------|------------|

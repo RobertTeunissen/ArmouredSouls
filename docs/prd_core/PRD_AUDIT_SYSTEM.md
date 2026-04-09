@@ -784,9 +784,9 @@ if (event.battleId) {
 - [PRD_CYCLE_SYSTEM.md](PRD_CYCLE_SYSTEM.md) - Cycle execution and snapshots
 
 ### Implementation Files
-- `prototype/backend/src/services/eventLogger.ts` - Event logging service
-- `prototype/backend/src/services/leagueBattleOrchestrator.ts` - Battle event creation (via shared `battlePostCombat.ts` helpers)
-- `prototype/backend/src/services/cycleSnapshotService.ts` - Snapshot aggregation
+- `app/backend/src/services/eventLogger.ts` - Event logging service
+- `app/backend/src/services/leagueBattleOrchestrator.ts` - Battle event creation (via shared `battlePostCombat.ts` helpers)
+- `app/backend/src/services/cycleSnapshotService.ts` - Snapshot aggregation
 
 ### Migration Documents
 - `AUDIT_LOG_RESTRUCTURING.md` - Restructuring completion notes

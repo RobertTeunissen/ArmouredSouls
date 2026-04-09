@@ -151,7 +151,7 @@ Incremental implementation of security guardrails across the Armoured Souls back
     - _Requirements: 8.1, 8.2, 8.3, 8.4_
   - [x] 13.2 Create `.security-audit-allowlist.json` at project root with empty allowlist array and documented schema (id, package, justification, reviewDate, nextReviewDate)
     - _Requirements: 8.4_
-  - [x] 13.3 Install `eslint-plugin-security` and add security rules to `prototype/backend/eslint.config.mjs` — flag `eval()`, dynamic `require()`, hardcoded secrets, unparameterized queries
+  - [x] 13.3 Install `eslint-plugin-security` and add security rules to `app/backend/eslint.config.mjs` — flag `eval()`, dynamic `require()`, hardcoded secrets, unparameterized queries
     - _Requirements: 8.5_
 
 - [x] 14. CORS and transport security verification
@@ -178,13 +178,13 @@ Incremental implementation of security guardrails across the Armoured Souls back
   - [x] 16.2 Run `npm run lint` and confirm no ESLint errors (including new security rules)
   - [x] 16.3 Verify requirements coverage: confirm every acceptance criterion from requirements 1–10 is addressed by at least one implemented task
   - [x] 16.4 Run verification checks:
-    - `grep -r "validateRequest" prototype/backend/src/routes/ | wc -l` — confirm schema validation applied to all route files
-    - `grep -r "verifyRobotOwnership\|verifyWeaponOwnership\|verifyFacilityOwnership" prototype/backend/src/routes/ | wc -l` — confirm ownership checks in mutation routes
-    - `grep -r "getConfig().jwtSecret\|getConfig\\(\\).jwtSecret" prototype/backend/src/ | wc -l` — confirm JWT secret loaded from EnvConfig, not process.env
-    - `grep -r "process.env.JWT_SECRET" prototype/backend/src/ --include="*.ts" | grep -v node_modules | grep -v ".test."` — confirm no direct process.env.JWT_SECRET reads remain in application code
-    - `grep -r "securityMonitor" prototype/backend/src/ | wc -l` — confirm security monitor integrated across middleware and routes
-    - `grep "tokenVersion" prototype/backend/prisma/schema.prisma` — confirm tokenVersion column exists
-    - `npm audit --audit-level=high` in `prototype/backend/` — confirm no high/critical vulnerabilities
+    - `grep -r "validateRequest" app/backend/src/routes/ | wc -l` — confirm schema validation applied to all route files
+    - `grep -r "verifyRobotOwnership\|verifyWeaponOwnership\|verifyFacilityOwnership" app/backend/src/routes/ | wc -l` — confirm ownership checks in mutation routes
+    - `grep -r "getConfig().jwtSecret\|getConfig\\(\\).jwtSecret" app/backend/src/ | wc -l` — confirm JWT secret loaded from EnvConfig, not process.env
+    - `grep -r "process.env.JWT_SECRET" app/backend/src/ --include="*.ts" | grep -v node_modules | grep -v ".test."` — confirm no direct process.env.JWT_SECRET reads remain in application code
+    - `grep -r "securityMonitor" app/backend/src/ | wc -l` — confirm security monitor integrated across middleware and routes
+    - `grep "tokenVersion" app/backend/prisma/schema.prisma` — confirm tokenVersion column exists
+    - `npm audit --audit-level=high` in `app/backend/` — confirm no high/critical vulnerabilities
     - Verify `logs/security.log` transport configured in securityLogger
     - Verify `.security-audit-allowlist.json` exists with valid schema
 

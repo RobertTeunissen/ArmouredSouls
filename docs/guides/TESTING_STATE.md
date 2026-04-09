@@ -386,7 +386,7 @@ Tests pass individually but fail when run together due to shared database state 
 ## Running Tests
 
 ```bash
-cd prototype/backend
+cd app/backend
 
 # Run all tests
 npm test

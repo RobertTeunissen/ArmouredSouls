@@ -2,14 +2,14 @@
 
 ## Overview
 
-Extract inline business logic from the four largest route files into dedicated service modules, and consolidate duplicated game formulas into `prototype/shared/utils/`. Shared formulas are created first (since both backend extraction and frontend cleanup depend on them), then each route file is extracted, followed by frontend import updates and verification.
+Extract inline business logic from the four largest route files into dedicated service modules, and consolidate duplicated game formulas into `app/shared/utils/`. Shared formulas are created first (since both backend extraction and frontend cleanup depend on them), then each route file is extracted, followed by frontend import updates and verification.
 
 ## Tasks
 
 - [x] 1. Create shared game formula modules
-  - [x] 1.1 Create `prototype/shared/utils/academyCaps.ts` with `ACADEMY_CAP_MAP` constant and `getCapForLevel` function, with JSDoc referencing `docs/prd_core/STABLE_SYSTEM.md`
-  - [x] 1.2 Create `prototype/shared/utils/upgradeCosts.ts` with `calculateBaseCost`, `calculateDiscountedUpgradeCost`, and `calculateUpgradeCostRange` functions, with JSDoc referencing the PRD. `calculateDiscountedUpgradeCost` imports `calculateTrainingFacilityDiscount` from `discounts.ts` to avoid duplicating the training discount formula.
-  - [x] 1.3 Create `prototype/shared/utils/index.ts` barrel export re-exporting all functions from `discounts.ts`, `academyCaps.ts`, and `upgradeCosts.ts`
+  - [x] 1.1 Create `app/shared/utils/academyCaps.ts` with `ACADEMY_CAP_MAP` constant and `getCapForLevel` function, with JSDoc referencing `docs/prd_core/STABLE_SYSTEM.md`
+  - [x] 1.2 Create `app/shared/utils/upgradeCosts.ts` with `calculateBaseCost`, `calculateDiscountedUpgradeCost`, and `calculateUpgradeCostRange` functions, with JSDoc referencing the PRD. `calculateDiscountedUpgradeCost` imports `calculateTrainingFacilityDiscount` from `discounts.ts` to avoid duplicating the training discount formula.
+  - [x] 1.3 Create `app/shared/utils/index.ts` barrel export re-exporting all functions from `discounts.ts`, `academyCaps.ts`, and `upgradeCosts.ts`
   - [x] 1.4 Write unit tests for `getCapForLevel` (all levels 0–10, out-of-range, default return of 10), `calculateBaseCost` (levels 0, 1, 10, 49), `calculateDiscountedUpgradeCost` (with various training levels), and `calculateUpgradeCostRange` (multi-level ranges)
   - _Requirements: 5.1, 5.3, 5.5, 5.6, 5.7, 6.2_
 
@@ -47,23 +47,23 @@ Extract inline business logic from the four largest route files into dedicated s
   - _Requirements: 4.1, 4.2, 4.3, 6.1, 6.3_
 
 - [x] 6. Replace frontend local formula implementations with shared imports
-  - [x] 6.1 Replace `getCapForLevel` and `calculateBaseCost` in `prototype/frontend/src/components/UpgradePlanner.tsx` with imports from `shared/utils/`, remove local definitions, replace inline training discount with `calculateTrainingFacilityDiscount` import
-  - [x] 6.2 Replace `getCapForLevel` and `calculateBaseCost` in `prototype/frontend/src/pages/PracticeArenaPage.tsx` with imports from `shared/utils/`, remove local definitions, replace inline training discount with `calculateTrainingFacilityDiscount` import
-  - [x] 6.3 Remove the commented-out `getCapForLevel` reference in `prototype/frontend/src/pages/RobotDetailPage.tsx`
-  - [x] 6.4 Replace inline `(currentLevel + 1) * 1500` and `Math.min(trainingLevel * 10, 90)` in `prototype/frontend/src/components/CompactUpgradeSection.tsx` with imports from `shared/utils/`
-  - [x] 6.5 Replace the local `upgCost()` function in `prototype/frontend/src/components/onboarding/steps/Step4_Upgrades.tsx` with imports of `calculateBaseCost` and `calculateTrainingFacilityDiscount` from `shared/utils/`
+  - [x] 6.1 Replace `getCapForLevel` and `calculateBaseCost` in `app/frontend/src/components/UpgradePlanner.tsx` with imports from `shared/utils/`, remove local definitions, replace inline training discount with `calculateTrainingFacilityDiscount` import
+  - [x] 6.2 Replace `getCapForLevel` and `calculateBaseCost` in `app/frontend/src/pages/PracticeArenaPage.tsx` with imports from `shared/utils/`, remove local definitions, replace inline training discount with `calculateTrainingFacilityDiscount` import
+  - [x] 6.3 Remove the commented-out `getCapForLevel` reference in `app/frontend/src/pages/RobotDetailPage.tsx`
+  - [x] 6.4 Replace inline `(currentLevel + 1) * 1500` and `Math.min(trainingLevel * 10, 90)` in `app/frontend/src/components/CompactUpgradeSection.tsx` with imports from `shared/utils/`
+  - [x] 6.5 Replace the local `upgCost()` function in `app/frontend/src/components/onboarding/steps/Step4_Upgrades.tsx` with imports of `calculateBaseCost` and `calculateTrainingFacilityDiscount` from `shared/utils/`
   - [x] 6.6 Run frontend build (`npm run build`) to verify no import errors
   - _Requirements: 5.2, 5.4, 5.8, 6.2, 6.4_
 
 - [x] 7. Replace leaderboards.ts duplicate prestige formula
-  - [x] 7.1 Replace the local `calculateBattleWinningsBonus` function in `prototype/backend/src/routes/leaderboards.ts` with an import of `getPrestigeMultiplier` from `economyCalculations.ts`, deriving the bonus as `Math.round((getPrestigeMultiplier(prestige) - 1) * 100)`
+  - [x] 7.1 Replace the local `calculateBattleWinningsBonus` function in `app/backend/src/routes/leaderboards.ts` with an import of `getPrestigeMultiplier` from `economyCalculations.ts`, deriving the bonus as `Math.round((getPrestigeMultiplier(prestige) - 1) * 100)`
   - [x] 7.2 Run full backend test suite to verify no regressions
   - _Requirements: 5.9, 6.1, 6.3_
 
 - [x] 8. Documentation and verification
-  - [x] 8.1 Update `.kiro/steering/coding-standards.md`: add a "Route Handler Guidelines" section specifying the thin-route pattern and maximum handler size, add a note in Code Organization that game formulas shared between frontend and backend must live in `prototype/shared/utils/`, and add a rule that inline formulas must not duplicate functions already exported from `shared/utils/`
-  - [x] 8.2 Update `.kiro/steering/project-overview.md`: add `/prototype/shared` to the Project Structure section describing it as shared TypeScript modules imported by both frontend and backend
-  - [x] 8.3 Update `docs/guides/MODULE_STRUCTURE.md`: add `prototype/shared/` to the project tree diagram, reflect new service directories (`robot/`, `match/`, `admin/`), document the `shared/` directory purpose and contents, and update the `stables.ts` standalone route entry to reference `sanitizeRobotForPublic` from `src/services/robot/robotSanitizer.ts` instead of `robots.ts`
+  - [x] 8.1 Update `.kiro/steering/coding-standards.md`: add a "Route Handler Guidelines" section specifying the thin-route pattern and maximum handler size, add a note in Code Organization that game formulas shared between frontend and backend must live in `app/shared/utils/`, and add a rule that inline formulas must not duplicate functions already exported from `shared/utils/`
+  - [x] 8.2 Update `.kiro/steering/project-overview.md`: add `/app/shared` to the Project Structure section describing it as shared TypeScript modules imported by both frontend and backend
+  - [x] 8.3 Update `docs/guides/MODULE_STRUCTURE.md`: add `app/shared/` to the project tree diagram, reflect new service directories (`robot/`, `match/`, `admin/`), document the `shared/` directory purpose and contents, and update the `stables.ts` standalone route entry to reference `sanitizeRobotForPublic` from `src/services/robot/robotSanitizer.ts` instead of `robots.ts`
   - [x] 8.4 Update `docs/balance_changes/OPTION_C_IMPLEMENTATION.md`: update the file reference that points to `robots.ts` for the `baseCost` formula to point to `shared/utils/upgradeCosts.ts`
   - [x] 8.5 Run verification criteria: confirm `wc -l` targets met for all four route files, confirm `grep -c "function "` returns 0 for `admin.ts` and `robots.ts`, confirm no local `getCapForLevel` or `calculateBaseCost` definitions remain outside `shared/`, confirm no inline `(level + 1) * 1500` or `Math.min(level * 10, 90)` remain in route/component files, confirm `calculateBattleWinningsBonus` is removed from `leaderboards.ts`, confirm `shared/utils/` has at least 3 files, confirm all backend tests pass and frontend builds
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 2.1, 2.2, 2.3, 2.4, 2.5, 3.1, 3.2, 3.3, 4.1, 4.2, 4.3, 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, 5.9, 6.1, 6.2, 6.3, 6.4, 7.1, 7.2, 7.3, 7.4_
@@ -73,4 +73,4 @@ Extract inline business logic from the four largest route files into dedicated s
 - Shared formulas (task 1) are created first because both backend extraction (task 3) and frontend cleanup (task 6) depend on them.
 - This spec should run AFTER spec 18 (type safety) since typed route files are easier to extract from.
 - This spec should run BEFORE spec 5 (modular architecture) since it creates new service files that spec 5's mapping needs to account for.
-- This spec should run BEFORE spec 10 (prototype → app rename) since it uses `prototype/` paths throughout.
+- This spec should run BEFORE spec 10 (prototype → app rename) since it uses `app/` paths throughout.

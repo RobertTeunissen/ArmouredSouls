@@ -7,7 +7,7 @@ Standalone 1v1 sandbox battle simulator allowing players to run consequence-free
 ## Tasks
 
 - [x] 1. Create the practice arena backend service
-  - [x] 1.1 Create `prototype/backend/src/services/practice-arena/practiceArenaService.ts` with:
+  - [x] 1.1 Create `app/backend/src/services/practice-arena/practiceArenaService.ts` with:
     - `LUXURY_BOT_CONFIG` constant: `{ name: 'LuxuryBot', attributeLevel: 15, priceTier: { min: 400000, max: Infinity } }`
     - `getSparringPartnerDefinitions()` — returns 4 bot type definitions: WimpBot (attr 1, Budget ₡0–₡99,999 from `TIER_CONFIGS[0]`), AverageBot (attr 5, Standard ₡100K–₡250K from `TIER_CONFIGS[1]`), ExpertBot (attr 10, Premium ₡250K–₡400K from `TIER_CONFIGS[2]`), LuxuryBot (attr 15, Luxury ₡400K+ from `LUXURY_BOT_CONFIG`)
     - `buildSparringPartner(config: SparringPartnerConfig, allWeapons: WeaponRecord[])` — constructs a virtual `RobotWithWeapons` with all 23 attributes set to the tier's `attributeLevel`, calls `selectWeapon(allWeapons, { loadoutType, rangeBand, priceTier })` and `selectShield(allWeapons, priceTier)` (for `weapon_shield` loadout) to auto-select weapons, assigns synthetic negative IDs (-1, -2)
@@ -16,7 +16,7 @@ Standalone 1v1 sandbox battle simulator allowing players to run consequence-free
     - `executePracticeBatch(userId: number, request: PracticeBattleRequest, count: number)` — runs `count` battles (2-10) sequentially with the same configuration, re-cloning robot data each iteration, returns `PracticeBatchResult` with all individual results plus aggregate stats (robot1Wins, robot2Wins, draws, avgDurationSeconds, avgRobot1DamageDealt, avgRobot2DamageDealt). Each battle increments the metrics counter.
     - Only imports from `battle/` domain: `simulateBattle` from `combatSimulator.ts`, `CombatMessageGenerator` from `combatMessageGenerator.ts`. Does NOT import `battlePostCombat.ts`, `battleStrategy.ts`, `cycleScheduler.ts`, or any `ScheduledMatch` model.
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 2.1, 2.2, 2.3, 2.4, 3.1, 3.4, 3.5, 3.6, 4.1, 4.2, 4.3, 5.1, 5.2, 5.3, 5.4, 5.5, 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 6.8, 7.1, 7.2, 7.3, 7.6, 7.8, 10.2, 12.1, 12.2, 12.3, 12.4, 12.5_
-  - [x] 1.2 Create `prototype/backend/src/services/practice-arena/practiceArenaMetrics.ts` with:
+  - [x] 1.2 Create `app/backend/src/services/practice-arena/practiceArenaMetrics.ts` with:
     - `PracticeArenaMetrics` class: in-memory counters for `totalBattlesSinceStart`, `battlesToday`, `rateLimitHitsToday`, `uniquePlayersToday` (Set<number>)
     - `recordBattle(userId)` — increments `totalBattlesSinceStart` and `battlesToday`, adds userId to `uniquePlayersToday`
     - `recordRateLimitHit()` — increments `rateLimitHitsToday`
@@ -26,20 +26,20 @@ Standalone 1v1 sandbox battle simulator allowing players to run consequence-free
     - Export singleton `practiceArenaMetrics`
     - _Requirements: 13.1, 13.4, 13.5_
   - [x] 1.3 Create Prisma migration for `practice_arena_daily_stats` table:
-    - Add model to `prototype/backend/prisma/schema.prisma`: `PracticeArenaDailyStats` with `id` (autoincrement), `date` (DateTime, unique, @db.Date), `totalBattles` (Int, default 0), `uniquePlayers` (Int, default 0), `rateLimitHits` (Int, default 0), `playerIds` (Json, default "[]" — JSON array of integer user IDs), `createdAt` (DateTime, default now()). Map to `practice_arena_daily_stats`.
+    - Add model to `app/backend/prisma/schema.prisma`: `PracticeArenaDailyStats` with `id` (autoincrement), `date` (DateTime, unique, @db.Date), `totalBattles` (Int, default 0), `uniquePlayers` (Int, default 0), `rateLimitHits` (Int, default 0), `playerIds` (Json, default "[]" — JSON array of integer user IDs), `createdAt` (DateTime, default now()). Map to `practice_arena_daily_stats`.
     - Run `npx prisma migrate dev --name add-practice-arena-daily-stats` to generate and apply the migration.
     - Run `npx prisma generate` to regenerate the Prisma client.
     - _Requirements: 13.4, 13.5_
-  - [x] 1.4 Add `practiceArenaMetrics.flushAndReset()` call to the settlement cycle in `prototype/backend/src/services/cycle/cycleScheduler.ts`:
+  - [x] 1.4 Add `practiceArenaMetrics.flushAndReset()` call to the settlement cycle in `app/backend/src/services/cycle/cycleScheduler.ts`:
     - Import `practiceArenaMetrics` from `services/practice-arena/practiceArenaMetrics`
     - Add a new step in `executeSettlementCycle()` (after analytics snapshot, before cycle increment) that calls `await practiceArenaMetrics.flushAndReset()`
     - Log the flush: `logger.info('Settlement: Flushed practice arena daily stats')`
     - _Requirements: 13.4_
-  - [x] 1.5 Create `prototype/backend/src/services/practice-arena/index.ts` barrel file exporting `executePracticeBattle`, `executePracticeBatch`, `buildOwnedRobot`, `buildSparringPartner`, `getSparringPartnerDefinitions` from the service and `practiceArenaMetrics` from the metrics module
+  - [x] 1.5 Create `app/backend/src/services/practice-arena/index.ts` barrel file exporting `executePracticeBattle`, `executePracticeBatch`, `buildOwnedRobot`, `buildSparringPartner`, `getSparringPartnerDefinitions` from the service and `practiceArenaMetrics` from the metrics module
     - _Requirements: 12.1_
 
 - [x] 2. Create the practice arena API route
-  - [x] 2.1 Create `prototype/backend/src/routes/practiceArena.ts` with:
+  - [x] 2.1 Create `app/backend/src/routes/practiceArena.ts` with:
     - `POST /battle` — accepts `{ robot1: BattleSlot, robot2: BattleSlot, count?: number }` where each slot is a discriminated union (`type: 'owned'` with `robotId` + optional `overrides`, or `type: 'sparring'` with `config: SparringPartnerConfig`), `count` is optional integer 1-10 (default 1). Validates via Zod schema. If `count` is 1, calls `executePracticeBattle`. If `count` > 1, calls `executePracticeBatch`. Returns `PracticeBattleResult` or `PracticeBatchResult`.
     - `GET /sparring-partners` — returns sparring partner definitions from `getSparringPartnerDefinitions()`
     - Cycle execution guard middleware: import `getSchedulerState` from `services/cycle/cycleScheduler`, check `state.runningJob !== null`, return 503 with `{ error: 'Practice Arena is temporarily unavailable while battles are being processed', code: 'CYCLE_IN_PROGRESS', runningJob: state.runningJob }`. Applied to `POST /battle` before the rate limiter.
@@ -48,14 +48,14 @@ Standalone 1v1 sandbox battle simulator allowing players to run consequence-free
     - Rate limiter: `express-rate-limit` with `windowMs: 15 * 60 * 1000`, `max: 30`, `keyGenerator` based on `authReq.user.userId`. On exceed: call `practiceArenaMetrics.recordRateLimitHit()` and `securityMonitor.trackRateLimitViolation(userId, endpoint)`, return 429 with `retryAfter`.
     - All routes protected by `authenticateToken`
     - _Requirements: 8.6, 8.7, 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 10.1, 10.2, 10.3, 10.4, 10.5, 10.6_
-  - [x] 2.2 Add admin metrics endpoint to `prototype/backend/src/routes/admin.ts`:
+  - [x] 2.2 Add admin metrics endpoint to `app/backend/src/routes/admin.ts`:
     - `GET /practice-arena/stats` — protected by `authenticateToken` and `requireAdmin`, returns `{ current: practiceArenaMetrics.getStats(), history: await practiceArenaMetrics.getHistory() }` (current in-memory counters + last 30 days from DB)
     - _Requirements: 13.2, 13.3_
-  - [x] 2.3 Mount the practice arena router in `prototype/backend/src/index.ts` at `/api/practice-arena`
+  - [x] 2.3 Mount the practice arena router in `app/backend/src/index.ts` at `/api/practice-arena`
     - _Requirements: 10.1_
 
 - [x] 3. Write backend unit tests
-  - [x] 3.1 Create `prototype/backend/tests/unit/practiceArenaService.test.ts`:
+  - [x] 3.1 Create `app/backend/tests/unit/practiceArenaService.test.ts`:
     - Test `buildOwnedRobot` clones robot data and applies attribute overrides correctly
     - Test `buildOwnedRobot` sets `currentHP = maxHP` and `currentShield = maxShield` even when the robot's persisted `currentHP` is below `maxHP` (damaged robot enters practice at full health)
     - Test `buildOwnedRobot` rejects non-owned robots with 403 (verifies `verifyRobotOwnership` from `middleware/ownership.ts` is called, which logs to `securityMonitor.logAuthorizationFailure`)
@@ -68,7 +68,7 @@ Standalone 1v1 sandbox battle simulator allowing players to run consequence-free
     - Test that NO Prisma write operations (create, update, delete) are called during any practice battle execution
     - Test that `battlePostCombat` functions are never imported or called
     - _Requirements: 1.1, 1.3, 1.4, 1.5, 2.1, 2.3, 4.1, 5.1, 5.2, 5.3, 5.4, 5.5, 6.1, 6.5, 6.6, 6.8, 7.1, 12.3_
-  - [x] 3.2 Create `prototype/backend/tests/unit/practiceArena.route.test.ts`:
+  - [x] 3.2 Create `app/backend/tests/unit/practiceArena.route.test.ts`:
     - Test POST /battle returns 400 for invalid body (missing robot configs, invalid attribute range, incompatible weapon-loadout, invalid botTier, arbitrary unknown fields stripped by Zod)
     - Test POST /battle returns 403 when robot is not owned by the authenticated user (verifies `securityMonitor.logAuthorizationFailure` is called)
     - Test POST /battle returns 503 when a cycle job is running (mock `getSchedulerState` to return `runningJob: 'league'`)
@@ -77,7 +77,7 @@ Standalone 1v1 sandbox battle simulator allowing players to run consequence-free
     - Test GET /sparring-partners returns 4 definitions with expected structure
     - Test rate limiter returns 429 after 30 requests with retryAfter info
     - _Requirements: 8.6, 8.7, 9.1, 9.2, 9.4, 9.5, 10.1, 10.2, 10.3, 10.4, 10.5, 10.6_
-  - [x] 3.3 Create `prototype/backend/tests/unit/practiceArenaMetrics.test.ts`:
+  - [x] 3.3 Create `app/backend/tests/unit/practiceArenaMetrics.test.ts`:
     - Test `recordBattle` increments `totalBattlesSinceStart` and `battlesToday`
     - Test `recordBattle` tracks unique player IDs correctly
     - Test `recordRateLimitHit` increments `rateLimitHitsToday`
@@ -86,7 +86,7 @@ Standalone 1v1 sandbox battle simulator allowing players to run consequence-free
     - Test `flushAndReset` zeroes `battlesToday`, `rateLimitHitsToday`, `uniquePlayersToday` but preserves `totalBattlesSinceStart`
     - Test `getHistory` returns rows ordered by date descending
     - _Requirements: 13.1, 13.4, 13.5_
-  - [x] 3.4 Create `prototype/backend/tests/unit/practiceArena.property.test.ts` with fast-check property-based tests:
+  - [x] 3.4 Create `app/backend/tests/unit/practiceArena.property.test.ts` with fast-check property-based tests:
     - Property 5: Zero database side effects — for any random valid practice battle request, assert zero Prisma write calls
     - Property 7: Sparring partner weapon auto-selection validity — for any random (botTier, loadoutType, rangeBand) combination, auto-selected weapons are within price tier and compatible with loadout
     - Property 8: What-If override application — for any random valid overrides, built robot reflects overridden values while preserving non-overridden fields
@@ -99,17 +99,17 @@ Standalone 1v1 sandbox battle simulator allowing players to run consequence-free
     - _Requirements: 5.1, 5.4, 6.5, 6.6, 7.1, 7.7, 10.5, 13.1, 13.4_
 
 - [x] 4. Backend checkpoint
-  - Run `cd prototype/backend && npx jest --testPathPattern=practice-arena --passWithNoTests` and confirm all practice arena tests pass. Run `cd prototype/backend && npm run lint` and confirm no ESLint errors in new files.
+  - Run `cd app/backend && npx jest --testPathPattern=practice-arena --passWithNoTests` and confirm all practice arena tests pass. Run `cd app/backend && npm run lint` and confirm no ESLint errors in new files.
 
 - [x] 5. Create the practice arena frontend page
-  - [x] 5.1 Create `prototype/frontend/src/hooks/usePracticeHistory.ts`:
+  - [x] 5.1 Create `app/frontend/src/hooks/usePracticeHistory.ts`:
     - localStorage key: `practice-arena-history-${userId}`
     - `usePracticeHistory(userId)` hook returning `{ results, addResult, clearHistory }`
     - `addResult` stores new result, caps at 10 most recent, writes to localStorage
     - `clearHistory` removes all results from localStorage for that player
     - Reads from localStorage on mount to restore history
     - _Requirements: 8.1, 8.2, 8.3, 8.7, 8.8_
-  - [x] 5.2 Create `prototype/frontend/src/pages/PracticeArenaPage.tsx` with:
+  - [x] 5.2 Create `app/frontend/src/pages/PracticeArenaPage.tsx` with:
     - Page header: "Combat Simulation Lab" with subheading "Run predictive combat simulations to test configurations before entering the real arena"
     - Two battle slot panels (left = robot 1, right = robot 2)
     - Each slot has a toggle: "Deploy Robot" (dropdown of player's robots from `/api/robots`) or "Simulate Opponent" (bot tier selector + config panel)
@@ -123,9 +123,9 @@ Standalone 1v1 sandbox battle simulator allowing players to run consequence-free
     - "Recent Simulations" history panel using `usePracticeHistory` hook — shows last 10 results with win/loss indicators and timestamps, comparison view for repeated matchups (win/loss count, avg damage, avg duration), "Clear Simulation History" button
     - Responsive layout following the design system (dark theme, Tailwind classes)
     - _Requirements: 1.1, 1.2, 1.5, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 4.4, 6.2, 6.3, 6.4, 6.7, 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.8, 9.6, 11.2, 11.3, 11.4, 11.5, 11.6, 11.7, 11.8, 11.9, 11.10_
-  - [x] 5.3 Add the `/practice-arena` route to `prototype/frontend/src/App.tsx` as a `ProtectedRoute` rendering `PracticeArenaPage`. Update the navigation menu in `prototype/frontend/src/components/Navigation.tsx` — add "Combat Simulator" (or "Simulation Lab") to the Battle section. Add `/practice-arena` to the `PROTECTED_ROUTES` array.
+  - [x] 5.3 Add the `/practice-arena` route to `app/frontend/src/App.tsx` as a `ProtectedRoute` rendering `PracticeArenaPage`. Update the navigation menu in `app/frontend/src/components/Navigation.tsx` — add "Combat Simulator" (or "Simulation Lab") to the Battle section. Add `/practice-arena` to the `PROTECTED_ROUTES` array.
     - _Requirements: 11.1_
-  - [x] 5.4 Add "Practice Arena" section to `prototype/frontend/src/components/admin/DashboardTab.tsx`:
+  - [x] 5.4 Add "Practice Arena" section to `app/frontend/src/components/admin/DashboardTab.tsx`:
     - Fetch from `GET /api/admin/practice-arena/stats` (only when admin dashboard is loaded)
     - Display current stats: battles today, unique players today, rate limit hits today, total battles since server start
     - Display historical trend: simple table or mini chart of daily usage from the `history` array (last 7-30 days)
@@ -133,7 +133,7 @@ Standalone 1v1 sandbox battle simulator allowing players to run consequence-free
     - _Requirements: 13.3_
 
 - [x] 6. Write frontend tests
-  - [x] 6.1 Create `prototype/frontend/src/pages/__tests__/PracticeArenaPage.test.tsx`:
+  - [x] 6.1 Create `app/frontend/src/pages/__tests__/PracticeArenaPage.test.tsx`:
     - Test renders two battle slot panels with "Deploy Robot" / "Simulate Opponent" toggles
     - Test "Deploy Robot" mode shows robot dropdown populated from API
     - Test "Simulate Opponent" mode shows bot tier buttons with in-universe names (Scrapyard Drone, Standard Combatant, Elite Sparring Unit, Apex Prototype) and config controls (loadout, range band, stance, yield)
@@ -152,14 +152,14 @@ Standalone 1v1 sandbox battle simulator allowing players to run consequence-free
     - Test What-If overrides show visual differentiation and upgrade cost
     - Test responsive layout renders on mobile viewport
     - _Requirements: 3.2, 3.3, 3.4, 3.5, 7.4, 7.5, 7.7, 8.4, 8.5, 8.6, 8.7, 8.8, 9.2, 9.6, 11.2, 11.3, 11.4, 11.5, 11.6, 11.7, 11.8, 11.9, 11.10_
-  - [x] 6.2 Create `prototype/frontend/src/hooks/__tests__/usePracticeHistory.test.ts`:
+  - [x] 6.2 Create `app/frontend/src/hooks/__tests__/usePracticeHistory.test.ts`:
     - Test stores and retrieves results from localStorage
     - Test caps at 10 results (oldest removed)
     - Test clears history
     - Test keys by player ID (different players don't see each other's results)
     - Test restores history on mount
     - _Requirements: 8.1, 8.2, 8.3, 8.7, 8.8_
-  - [x] 6.3 Create `prototype/frontend/src/hooks/__tests__/usePracticeHistory.property.test.ts` with fast-check property-based tests:
+  - [x] 6.3 Create `app/frontend/src/hooks/__tests__/usePracticeHistory.property.test.ts` with fast-check property-based tests:
     - Property 10: localStorage round trip — for any random practice result, store then retrieve produces equivalent object
     - Property 11: Max capacity invariant — for any sequence of N > 10 results, stored history contains exactly 10 most recent
     - Each test tagged: `Feature: practice-arena, Property {N}: {title}`
@@ -167,7 +167,7 @@ Standalone 1v1 sandbox battle simulator allowing players to run consequence-free
     - _Requirements: 8.1, 8.2_
 
 - [x] 7. Frontend checkpoint
-  - Run `cd prototype/frontend && npx vitest run src/pages/__tests__/PracticeArenaPage.test.tsx src/hooks/__tests__/usePracticeHistory.test.ts src/hooks/__tests__/usePracticeHistory.property.test.ts --reporter=verbose` and confirm all tests pass. Run `cd prototype/frontend && npx tsc --noEmit` and confirm no TypeScript errors.
+  - Run `cd app/frontend && npx vitest run src/pages/__tests__/PracticeArenaPage.test.tsx src/hooks/__tests__/usePracticeHistory.test.ts src/hooks/__tests__/usePracticeHistory.property.test.ts --reporter=verbose` and confirm all tests pass. Run `cd app/frontend && npx tsc --noEmit` and confirm no TypeScript errors.
 
 - [x] 8. Documentation updates
   - [x] 8.1 Create `docs/prd_pages/PRD_PRACTICE_ARENA.md` documenting: feature overview, sparring partner system (4 bot tiers with attribute levels and price tiers, auto-weapon-selection via `selectWeapon`/`selectShield`, no free-form attribute editing), What-If configuration overrides, battle configuration options, zero-consequence guarantee, rate limiting (30/15min), API endpoints (`POST /battle`, `GET /sparring-partners`, `GET /admin/practice-arena/stats`), frontend page structure, localStorage result history, admin metrics, and testing status.
@@ -180,22 +180,22 @@ Standalone 1v1 sandbox battle simulator allowing players to run consequence-free
     - _Requirements: 9.1_
 
 - [x] 9. Final verification
-  - [x] 9.1 Run full backend test suite: `cd prototype/backend && npx jest --testPathPattern=practice-arena --passWithNoTests` — confirm all practice arena tests pass
-  - [x] 9.2 Run frontend tests: `cd prototype/frontend && npx vitest run src/pages/__tests__/PracticeArenaPage.test.tsx src/hooks/__tests__/usePracticeHistory.test.ts src/hooks/__tests__/usePracticeHistory.property.test.ts --reporter=verbose` — confirm all tests pass
+  - [x] 9.1 Run full backend test suite: `cd app/backend && npx jest --testPathPattern=practice-arena --passWithNoTests` — confirm all practice arena tests pass
+  - [x] 9.2 Run frontend tests: `cd app/frontend && npx vitest run src/pages/__tests__/PracticeArenaPage.test.tsx src/hooks/__tests__/usePracticeHistory.test.ts src/hooks/__tests__/usePracticeHistory.property.test.ts --reporter=verbose` — confirm all tests pass
   - [x] 9.3 Run verification checks from requirements:
-    - `grep -r "practice-arena" prototype/backend/src/routes/ | wc -l` — expect ≥ 1
-    - `grep -r "practice-arena" prototype/frontend/src/ | wc -l` — expect ≥ 1
-    - `grep -r "simulateBattleMulti\|simulateBattle" prototype/backend/src/services/practice-arena/ | wc -l` — expect ≥ 1
-    - `grep -rn "prisma\.\(battle\|battleParticipant\)\.create" prototype/backend/src/services/practice-arena/ | wc -l` — expect 0
-    - `grep -rn "prisma\.robot\.update" prototype/backend/src/services/practice-arena/ | wc -l` — expect 0
-    - `grep -rn "prisma\.user\.update" prototype/backend/src/services/practice-arena/ | wc -l` — expect 0
-    - `grep -r "rateLimit\|rateLimiter\|rate-limit" prototype/backend/src/routes/practiceArena.ts | wc -l` — expect ≥ 1
-    - `grep -rn "localStorage" prototype/frontend/src/pages/PracticeArenaPage.tsx prototype/frontend/src/hooks/usePracticeHistory.ts | wc -l` — expect ≥ 1
-    - `grep -rn "BattlePlaybackViewer" prototype/frontend/src/pages/PracticeArenaPage.tsx | wc -l` — expect ≥ 1
-    - `grep -rn "convertBattleEvents\|convertSimulatorEvents" prototype/backend/src/services/practice-arena/ | wc -l` — expect ≥ 1
-    - `grep -rn "battlePostCombat\|updateRobotCombatStats\|awardCreditsToUser\|awardPrestigeToUser\|awardFameToRobot\|logBattleAuditEvent" prototype/backend/src/services/practice-arena/ | wc -l` — expect 0
-    - `grep -rn "cycleScheduler\|BattleStrategy\|BattleProcessor" prototype/backend/src/services/practice-arena/ | wc -l` — expect 0
-    - `grep -rn "practice-arena/stats" prototype/backend/src/routes/admin.ts | wc -l` — expect ≥ 1
-    - `grep -rn "getSchedulerState" prototype/backend/src/routes/practiceArena.ts | wc -l` — expect ≥ 1
-  - [x] 9.4 Run `cd prototype/backend && npm run lint` — confirm no ESLint errors
-  - [x] 9.5 Run `cd prototype/frontend && npx tsc --noEmit` — confirm no TypeScript errors
+    - `grep -r "practice-arena" app/backend/src/routes/ | wc -l` — expect ≥ 1
+    - `grep -r "practice-arena" app/frontend/src/ | wc -l` — expect ≥ 1
+    - `grep -r "simulateBattleMulti\|simulateBattle" app/backend/src/services/practice-arena/ | wc -l` — expect ≥ 1
+    - `grep -rn "prisma\.\(battle\|battleParticipant\)\.create" app/backend/src/services/practice-arena/ | wc -l` — expect 0
+    - `grep -rn "prisma\.robot\.update" app/backend/src/services/practice-arena/ | wc -l` — expect 0
+    - `grep -rn "prisma\.user\.update" app/backend/src/services/practice-arena/ | wc -l` — expect 0
+    - `grep -r "rateLimit\|rateLimiter\|rate-limit" app/backend/src/routes/practiceArena.ts | wc -l` — expect ≥ 1
+    - `grep -rn "localStorage" app/frontend/src/pages/PracticeArenaPage.tsx app/frontend/src/hooks/usePracticeHistory.ts | wc -l` — expect ≥ 1
+    - `grep -rn "BattlePlaybackViewer" app/frontend/src/pages/PracticeArenaPage.tsx | wc -l` — expect ≥ 1
+    - `grep -rn "convertBattleEvents\|convertSimulatorEvents" app/backend/src/services/practice-arena/ | wc -l` — expect ≥ 1
+    - `grep -rn "battlePostCombat\|updateRobotCombatStats\|awardCreditsToUser\|awardPrestigeToUser\|awardFameToRobot\|logBattleAuditEvent" app/backend/src/services/practice-arena/ | wc -l` — expect 0
+    - `grep -rn "cycleScheduler\|BattleStrategy\|BattleProcessor" app/backend/src/services/practice-arena/ | wc -l` — expect 0
+    - `grep -rn "practice-arena/stats" app/backend/src/routes/admin.ts | wc -l` — expect ≥ 1
+    - `grep -rn "getSchedulerState" app/backend/src/routes/practiceArena.ts | wc -l` — expect ≥ 1
+  - [x] 9.4 Run `cd app/backend && npm run lint` — confirm no ESLint errors
+  - [x] 9.5 Run `cd app/frontend && npx tsc --noEmit` — confirm no TypeScript errors

@@ -330,7 +330,7 @@ model Robot {
 
 **Create Migration**:
 ```bash
-cd prototype/backend
+cd app/backend
 npx prisma migrate dev --name add_robot_image_url
 ```
 

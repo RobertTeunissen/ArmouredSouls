@@ -6,16 +6,16 @@
   - **DO NOT attempt to fix the test or the code when it fails**
   - **NOTE**: This test encodes the expected behavior - it will validate the fix when it passes after implementation
   - **GOAL**: Surface counterexamples that demonstrate all 10 defect categories exist
-  - **Scoped PBT Approach**: Write a structural verification test suite (e.g., `prototype/backend/src/__tests__/project-quality-audit.pbt.test.ts`) using fast-check that checks:
+  - **Scoped PBT Approach**: Write a structural verification test suite (e.g., `app/backend/src/__tests__/project-quality-audit.pbt.test.ts`) using fast-check that checks:
     - Parse `README.md` for all markdown links `[text](path)` where path is a relative file path; assert each target file exists in the filesystem (will fail — 16+ broken links)
     - Parse `.github/workflows/ci.yml` and assert all `node-version` values are `'20'` (will fail — all 4 jobs use `'18'`)
     - Parse `ci.yml` `frontend-tests` job steps and assert a step containing `vitest --run` exists (will fail — no vitest step)
-    - Assert `prototype/backend/.env.prd.example` does NOT exist (will fail — file exists)
-    - Parse `prototype/backend/.env.example` and assert it contains `LEAGUE_SCHEDULE`, `TOURNAMENT_SCHEDULE`, `TAGTEAM_SCHEDULE`, `SETTLEMENT_SCHEDULE`, `KOTH_SCHEDULE` (will fail — vars missing)
-    - Parse `prototype/backend/src/routes/adminTournaments.ts` and count route registrations for `'/eligible-robots'`; assert exactly 1 (will fail — 2 found)
-    - Assert `prototype/frontend/src/pages/LoginPage.tsx` does NOT exist (will fail — file exists)
-    - Assert `prototype/frontend/src/pages/SystemHealthPage.tsx` does NOT exist (will fail — file exists)
-    - Assert `prototype/frontend/src/components/__tests__/RobotUpcomingMatches.pbt.test.tsx` does NOT exist (will fail — file exists)
+    - Assert `app/backend/.env.prd.example` does NOT exist (will fail — file exists)
+    - Parse `app/backend/.env.example` and assert it contains `LEAGUE_SCHEDULE`, `TOURNAMENT_SCHEDULE`, `TAGTEAM_SCHEDULE`, `SETTLEMENT_SCHEDULE`, `KOTH_SCHEDULE` (will fail — vars missing)
+    - Parse `app/backend/src/routes/adminTournaments.ts` and count route registrations for `'/eligible-robots'`; assert exactly 1 (will fail — 2 found)
+    - Assert `app/frontend/src/pages/LoginPage.tsx` does NOT exist (will fail — file exists)
+    - Assert `app/frontend/src/pages/SystemHealthPage.tsx` does NOT exist (will fail — file exists)
+    - Assert `app/frontend/src/components/__tests__/RobotUpcomingMatches.pbt.test.tsx` does NOT exist (will fail — file exists)
   - Run test on UNFIXED code
   - **EXPECTED OUTCOME**: Test FAILS (this is correct — it proves the defects exist)
   - Document counterexamples found (broken link paths, wrong Node version, missing vitest step, etc.)
@@ -25,12 +25,12 @@
 - [x] 2. Write preservation property tests (BEFORE implementing fix)
   - **Property 2: Preservation** - Existing Behavior Unchanged
   - **IMPORTANT**: Follow observation-first methodology
-  - Write a preservation test suite (e.g., `prototype/backend/src/__tests__/project-quality-preservation.pbt.test.ts`) that captures current correct behavior:
+  - Write a preservation test suite (e.g., `app/backend/src/__tests__/project-quality-preservation.pbt.test.ts`) that captures current correct behavior:
   - Observe: `CONTRIBUTING.md` link in README resolves correctly on unfixed code
   - Observe: Backend CI jobs (`backend-unit-tests`, `backend-integration-tests`, `security-audit`) have their current test commands in `ci.yml`
   - Observe: `env.ts` default values for scheduler variables are `'0 20 * * *'` (league), `'0 8 * * *'` (tournament), `'0 12 * * *'` (tagteam), `'0 23 * * *'` (settlement), `'0 16 * * 1,3,5'` (koth)
-  - Observe: `prototype/backend/.env.acc.example` exists and is available
-  - Observe: `prototype/backend/.env.production.example` exists as canonical production template
+  - Observe: `app/backend/.env.acc.example` exists and is available
+  - Observe: `app/backend/.env.production.example` exists as canonical production template
   - Observe: The first `/eligible-robots` handler at line ~103 in `adminTournaments.ts` has the correct ordering comment and response shape (`success`, `eligibleRobots`, `count`, `timestamp`)
   - Observe: `ci.yml` `frontend-tests` job contains lint and build steps
   - Write property-based tests asserting these observations hold for the non-defective artifacts
@@ -87,27 +87,27 @@
     - _Requirements: 2.5, 3.6_
 
 - [x] 5. Remove duplicate .env.prd.example file
-  - Delete `prototype/backend/.env.prd.example` — `.env.production.example` is the canonical production template
+  - Delete `app/backend/.env.prd.example` — `.env.production.example` is the canonical production template
   - _Bug_Condition: isBugCondition(input) where input.type == "env_file" AND input.path == ".env.prd.example"_
   - _Expected_Behavior: Only .env.production.example exists as canonical production env template_
   - _Preservation: .env.acc.example and .env.production.example must remain unchanged_
   - _Requirements: 2.6, 3.7_
 
 - [x] 6. Add scheduler env vars to .env.example
-  - Append scheduler configuration section to `prototype/backend/.env.example` with documented defaults:
+  - Append scheduler configuration section to `app/backend/.env.example` with documented defaults:
     - `LEAGUE_SCHEDULE=0 20 * * *`
     - `TOURNAMENT_SCHEDULE=0 8 * * *`
     - `TAGTEAM_SCHEDULE=0 12 * * *`
     - `SETTLEMENT_SCHEDULE=0 23 * * *`
     - `KOTH_SCHEDULE=0 16 * * 1,3,5`
-  - Values must match the defaults in `prototype/backend/src/config/env.ts`
+  - Values must match the defaults in `app/backend/src/config/env.ts`
   - _Bug_Condition: isBugCondition(input) where input.type == "env_example" AND NOT containsSchedulerVars(input)_
   - _Expected_Behavior: .env.example contains all 5 scheduler variable comments with default values_
   - _Preservation: Existing env.ts default values must remain identical_
   - _Requirements: 2.7, 3.3_
 
 - [x] 7. Remove duplicate route handler in adminTournaments.ts
-  - Delete the second `GET /eligible-robots` handler (lines ~261–280) in `prototype/backend/src/routes/adminTournaments.ts`
+  - Delete the second `GET /eligible-robots` handler (lines ~261–280) in `app/backend/src/routes/adminTournaments.ts`
   - The first handler at line ~103 with the ordering comment is the correct one
   - _Bug_Condition: isBugCondition(input) where input.type == "route_handler" AND isDuplicateHandler(input, "eligible-robots")_
   - _Expected_Behavior: Exactly one /eligible-robots route handler exists_
@@ -115,9 +115,9 @@
   - _Requirements: 2.8, 3.5_
 
 - [x] 8. Delete dead code files
-  - Delete `prototype/frontend/src/pages/LoginPage.tsx` — superseded by FrontPage, not imported in App.tsx
-  - Delete `prototype/frontend/src/pages/SystemHealthPage.tsx` — commented out in App.tsx, absorbed into DashboardTab.tsx
-  - Delete `prototype/frontend/src/components/__tests__/RobotUpcomingMatches.pbt.test.tsx` — empty skipped test stubs
+  - Delete `app/frontend/src/pages/LoginPage.tsx` — superseded by FrontPage, not imported in App.tsx
+  - Delete `app/frontend/src/pages/SystemHealthPage.tsx` — commented out in App.tsx, absorbed into DashboardTab.tsx
+  - Delete `app/frontend/src/components/__tests__/RobotUpcomingMatches.pbt.test.tsx` — empty skipped test stubs
   - _Bug_Condition: isBugCondition(input) where input.type == "source_file" AND NOT isImportedOrUsed(input)_
   - _Expected_Behavior: Dead files are removed from the codebase_
   - _Preservation: Frontend routing in App.tsx must continue to work — these files are not imported_
@@ -149,11 +149,11 @@
     - Confirm all tests still pass after fix (no regressions)
 
   - [x] 10.3 Run backend unit tests to confirm no regressions
-    - Run `npm run test:unit` in `prototype/backend`
+    - Run `npm run test:unit` in `app/backend`
     - All existing tests must pass
 
   - [x] 10.4 Run frontend build to confirm deleted files don't break build
-    - Run `npm run build` in `prototype/frontend`
+    - Run `npm run build` in `app/frontend`
     - Build must succeed without the deleted files
 
 - [x] 11. Checkpoint - Ensure all tests pass

@@ -2,29 +2,29 @@
 
 ---
 
-## Decision: Retain `prototype/` Directory Structure
+## Decision: Retain `app/` Directory Structure
 
 **Status**: Accepted  
 **Date**: February 2026
 
 ### Context
 
-The entire codebase lives under `prototype/` — backend, frontend, Docker Compose, infrastructure configs. During the VPS migration, we considered flattening this to a root-level `backend/` and `frontend/` structure.
+The entire codebase lives under `app/` — backend, frontend, Docker Compose, infrastructure configs. During the VPS migration, we considered flattening this to a root-level `backend/` and `frontend/` structure.
 
 ### Decision
 
-Keep the `prototype/` directory structure as-is.
+Keep the `app/` directory structure as-is.
 
 ### Rationale
 
-- **CI/CD stability**: The GitHub Actions workflow references `prototype/backend` and `prototype/frontend` throughout. Renaming would require updating every path in the pipeline, test configs, and deployment scripts simultaneously.
+- **CI/CD stability**: The GitHub Actions workflow references `app/backend` and `app/frontend` throughout. Renaming would require updating every path in the pipeline, test configs, and deployment scripts simultaneously.
 - **Import paths**: Backend and frontend internal imports, Prisma config, and TypeScript path mappings all assume the current structure. A rename risks subtle breakage.
-- **Developer workflows**: All existing documentation, setup guides, and developer muscle memory reference `prototype/`. Changing this mid-migration adds unnecessary confusion.
+- **Developer workflows**: All existing documentation, setup guides, and developer muscle memory reference `app/`. Changing this mid-migration adds unnecessary confusion.
 - **No functional benefit**: The directory name doesn't affect runtime behavior. The deployment pipeline rsyncs the contents to `/opt/armouredsouls/` on the VPS regardless of the source directory name.
 
 ### Consequences
 
-- New developers may find the `prototype/` name misleading for a production application. The README addresses this.
+- New developers may find the `app/` name misleading for a production application. The README addresses this.
 - If the project grows beyond a single prototype, the directory can be renamed in a dedicated refactoring effort with proper migration tooling.
 
 ---

@@ -6,7 +6,7 @@ Successfully renamed "Income Generator" facility to "Merchandising Hub" with upd
 ## Changes Made
 
 ### 1. Backend Configuration
-- **File**: `prototype/backend/src/config/facilities.ts`
+- **File**: `app/backend/src/config/facilities.ts`
   - Changed facility type from `income_generator` to `merchandising_hub`
   - Changed display name from "Income Generator" to "Merchandising Hub"
   - Updated costs: L1-L10 now cost ₡150K, ₡300K, ₡450K, ₡600K, ₡750K, ₡900K, ₡1.05M, ₡1.2M, ₡1.35M, ₡1.5M
@@ -14,7 +14,7 @@ Successfully renamed "Income Generator" facility to "Merchandising Hub" with upd
   - Updated description to clarify merchandising revenue
 
 ### 2. Backend Economy Calculations
-- **File**: `prototype/backend/src/utils/economyCalculations.ts`
+- **File**: `app/backend/src/utils/economyCalculations.ts`
   - Updated `getMerchandisingBaseRate()` with new income rates (₡5K per level)
   - Updated `calculateMerchandisingIncome()` parameter names
   - Updated `calculateDailyPassiveIncome()` to use `merchandising_hub` facility type
@@ -25,55 +25,55 @@ Successfully renamed "Income Generator" facility to "Merchandising Hub" with upd
   - Updated `generatePerRobotFinancialReport()` to use `merchandising_hub`
 
 ### 3. Backend Services
-- **File**: `prototype/backend/src/services/roiCalculatorService.ts`
+- **File**: `app/backend/src/services/roiCalculatorService.ts`
   - Updated facility type checks from `income_generator` to `merchandising_hub`
   
-- **File**: `prototype/backend/src/services/facilityRecommendationService.ts`
+- **File**: `app/backend/src/services/facilityRecommendationService.ts`
   - Updated facility type checks from `income_generator` to `merchandising_hub`
 
 ### 4. Backend Routes
-- **File**: `prototype/backend/src/routes/finances.ts`
+- **File**: `app/backend/src/routes/finances.ts`
   - Updated facility lookup from `income_generator` to `merchandising_hub`
   - Updated recommendation text to use "Merchandising Hub"
   
-- **File**: `prototype/backend/src/routes/analytics.ts`
+- **File**: `app/backend/src/routes/analytics.ts`
   - Updated facility type list and documentation
   
-- **File**: `prototype/backend/src/routes/admin.ts`
+- **File**: `app/backend/src/routes/admin.ts`
   - Updated facility type from `income_generator` to `merchandising_hub`
 
 ### 5. Backend Utilities
-- **File**: `prototype/backend/src/utils/userGeneration.ts`
+- **File**: `app/backend/src/utils/userGeneration.ts`
   - Updated default facility type from `income_generator` to `merchandising_hub`
 
 ### 6. Backend Seed Data
-- **File**: `prototype/backend/prisma/seed.ts`
+- **File**: `app/backend/prisma/seed.ts`
   - Updated facility type from `income_generator` to `merchandising_hub`
   - Updated console output documentation
 
 ### 7. Frontend Components
-- **File**: `prototype/frontend/src/pages/FacilitiesPage.tsx`
+- **File**: `app/frontend/src/pages/FacilitiesPage.tsx`
   - Updated `getFacilityDisplayName()` mapping
   - Updated facility type in Economy & Discounts category
   - Updated ROI data fetching
   - Updated help text from "Income Generator" to "Merchandising Hub"
   
-- **File**: `prototype/frontend/src/components/FacilityIcon.tsx`
+- **File**: `app/frontend/src/components/FacilityIcon.tsx`
   - Updated icon mapping from `income_generator` to `merchandising_hub`
   
-- **File**: `prototype/frontend/src/components/FacilityROICalculator.tsx`
+- **File**: `app/frontend/src/components/FacilityROICalculator.tsx`
   - Updated default facility from `income_generator` to `merchandising_hub`
   - Updated FACILITY_OPTIONS array
   
-- **File**: `prototype/frontend/src/components/MultiplierBreakdown.tsx`
+- **File**: `app/frontend/src/components/MultiplierBreakdown.tsx`
   - Updated help text from "Income Generator" to "Merchandising Hub"
 
 ### 8. Database Migration
-- **File**: `prototype/backend/prisma/migrations/rename_income_generator_to_merchandising_hub.sql`
+- **File**: `app/backend/prisma/migrations/rename_income_generator_to_merchandising_hub.sql`
   - Created SQL migration to update existing facility records
 
 ### 9. Integration Tests
-- **File**: `prototype/backend/src/__tests__/integration/prestigeFeatures.integration.test.ts`
+- **File**: `app/backend/src/__tests__/integration/prestigeFeatures.integration.test.ts`
   - Updated facility config lookup from `income_generator` to `merchandising_hub`
 
 ## New Economics Summary
@@ -116,19 +116,19 @@ Successfully renamed "Income Generator" facility to "Merchandising Hub" with upd
 
 The following test files reference `income_generator` and will need to be updated:
 
-1. `prototype/backend/tests/economyCalculations.test.ts`
-2. `prototype/backend/tests/facilityTransactionLogging.test.ts`
-3. `prototype/backend/tests/eventLogger.property.test.ts`
-4. `prototype/backend/tests/roiCalculatorService.test.ts`
-5. `prototype/backend/tests/facilityRecommendationService.test.ts`
-6. `prototype/backend/tests/incomeGeneratorNoStreaming.property.test.ts`
-7. `prototype/backend/tests/facilityROI.property.test.ts`
+1. `app/backend/tests/economyCalculations.test.ts`
+2. `app/backend/tests/facilityTransactionLogging.test.ts`
+3. `app/backend/tests/eventLogger.property.test.ts`
+4. `app/backend/tests/roiCalculatorService.test.ts`
+5. `app/backend/tests/facilityRecommendationService.test.ts`
+6. `app/backend/tests/incomeGeneratorNoStreaming.property.test.ts`
+7. `app/backend/tests/facilityROI.property.test.ts`
 
 ## Migration Steps
 
 1. **Run Database Migration:**
    ```bash
-   cd prototype/backend
+   cd app/backend
    psql -d your_database < prisma/migrations/rename_income_generator_to_merchandising_hub.sql
    ```
 
@@ -138,7 +138,7 @@ The following test files reference `income_generator` and will need to be update
 
 3. **Regenerate Prisma Client:**
    ```bash
-   cd prototype/backend
+   cd app/backend
    npx prisma generate
    ```
 

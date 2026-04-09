@@ -21,10 +21,10 @@ This spec closes the remaining utility and sub-component test gaps in the fronte
 
 ### Verification Criteria
 
-1. `find prototype/frontend/src/utils/__tests__ -name "robotStats.test.ts" -o -name "battleHistoryStats.test.ts" -o -name "formatters.test.ts" -o -name "weaponRange.test.ts" | wc -l` returns 4
-2. `find prototype/frontend/src/components/practice-arena prototype/frontend/src/components/facilities prototype/frontend/src/components/weapon-shop -name "*.test.tsx" | wc -l` returns at least 3
-3. `cd prototype/frontend && npx vitest --run` exits with code 0
-4. `cd prototype/frontend && npx vitest --run --coverage` shows `robotStats.ts`, `battleHistoryStats.ts`, `formatters.ts`, and `weaponRange.ts` each at 80%+ coverage
+1. `find app/frontend/src/utils/__tests__ -name "robotStats.test.ts" -o -name "battleHistoryStats.test.ts" -o -name "formatters.test.ts" -o -name "weaponRange.test.ts" | wc -l` returns 4
+2. `find app/frontend/src/components/practice-arena app/frontend/src/components/facilities app/frontend/src/components/weapon-shop -name "*.test.tsx" | wc -l` returns at least 3
+3. `cd app/frontend && npx vitest --run` exits with code 0
+4. `cd app/frontend && npx vitest --run --coverage` shows `robotStats.ts`, `battleHistoryStats.ts`, `formatters.ts`, and `weaponRange.ts` each at 80%+ coverage
 5. `grep -c "Frontend Testing" .kiro/steering/testing-strategy.md` returns at least 1
 
 ## Requirements
@@ -83,5 +83,5 @@ This spec closes the remaining utility and sub-component test gaps in the fronte
 
 #### Acceptance Criteria
 
-1. WHEN documentation is updated, `.kiro/steering/testing-strategy.md` SHALL include a "Frontend Testing" section describing the Vitest + RTL setup, the `__tests__/` subdirectory convention, coverage targets (80% utilities, baseline for components), and how to run frontend tests (`cd prototype/frontend && npx vitest --run`).
+1. WHEN documentation is updated, `.kiro/steering/testing-strategy.md` SHALL include a "Frontend Testing" section describing the Vitest + RTL setup, the `__tests__/` subdirectory convention, coverage targets (80% utilities, baseline for components), and how to run frontend tests (`cd app/frontend && npx vitest --run`).
 2. WHEN documentation is updated, `.kiro/steering/frontend-standards.md` SHALL include a "Testing" section with the `__tests__/` co-location pattern and minimum coverage requirements.

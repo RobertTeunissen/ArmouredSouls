@@ -26,10 +26,10 @@ This spec closes the input validation gap identified in the codebase audit, brin
 ### Verification Criteria
 
 1. For each route file, count route handlers and `validateRequest` calls — they must match:
-   - `grep -c "router\.\(get\|post\|put\|delete\)" prototype/backend/src/routes/<file>` equals `grep "router\.\(get\|post\|put\|delete\)" prototype/backend/src/routes/<file> | grep -c "validateRequest"` for every `.ts` file in the routes directory.
-2. All backend tests pass: `cd prototype/backend && npm test`
-3. `grep -rn "router\.\(get\|post\|put\|delete\)" prototype/backend/src/routes/ | grep -v "validateRequest"` returns zero matches (every route handler uses validation).
-4. `cd prototype/backend && npm run lint` passes with zero errors from the `custom-routes/require-validate-request` rule.
+   - `grep -c "router\.\(get\|post\|put\|delete\)" app/backend/src/routes/<file>` equals `grep "router\.\(get\|post\|put\|delete\)" app/backend/src/routes/<file> | grep -c "validateRequest"` for every `.ts` file in the routes directory.
+2. All backend tests pass: `cd app/backend && npm test`
+3. `grep -rn "router\.\(get\|post\|put\|delete\)" app/backend/src/routes/ | grep -v "validateRequest"` returns zero matches (every route handler uses validation).
+4. `cd app/backend && npm run lint` passes with zero errors from the `custom-routes/require-validate-request` rule.
 
 ## Requirements
 

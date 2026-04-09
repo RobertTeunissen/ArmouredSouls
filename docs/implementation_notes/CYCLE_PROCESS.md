@@ -304,8 +304,8 @@ Check server logs for cycle execution details.
 
 ## Related Documentation
 
-- [Matchmaking System](../prototype/backend/src/services/matchmakingService.ts)
-- [Battle Orchestrator (League)](../prototype/backend/src/services/leagueBattleOrchestrator.ts)
-- [League Rebalancing](../prototype/backend/src/services/leagueRebalancingService.ts)
+- [Matchmaking System](../app/backend/src/services/matchmakingService.ts)
+- [Battle Orchestrator (League)](../app/backend/src/services/leagueBattleOrchestrator.ts)
+- [League Rebalancing](../app/backend/src/services/leagueRebalancingService.ts)
 - [Tournament System](./prd_core/PRD_TOURNAMENT_SYSTEM.md)
 - [Economy System](./prd_core/PRD_ECONOMY_SYSTEM.md)

@@ -11,8 +11,8 @@ A quality audit of the Armoured Souls repository uncovered 10 categories of defe
 - **Preservation**: Existing behaviors that must remain unchanged — working links, backend test jobs, env defaults, frontend routing, API endpoint behavior.
 - **README.md**: Root project README at `/README.md` containing documentation links, quick-start guide, and project status.
 - **ci.yml**: GitHub Actions workflow at `.github/workflows/ci.yml` defining CI/CD pipeline jobs.
-- **adminTournaments.ts**: Backend route file at `prototype/backend/src/routes/adminTournaments.ts` containing tournament admin endpoints.
-- **env.ts**: Environment config loader at `prototype/backend/src/config/env.ts` that reads scheduler cron variables with defaults.
+- **adminTournaments.ts**: Backend route file at `app/backend/src/routes/adminTournaments.ts` containing tournament admin endpoints.
+- **env.ts**: Environment config loader at `app/backend/src/config/env.ts` that reads scheduler cron variables with defaults.
 
 ## Bug Details
 
@@ -145,20 +145,20 @@ Assuming our root cause analysis is correct:
 5. **Add vitest step to frontend-tests job**: Add a step after the build step:
    ```yaml
    - name: Run frontend unit tests
-     working-directory: ./prototype/frontend
+     working-directory: ./app/frontend
      run: npx vitest --run
    ```
 
 ---
 
-**File**: `prototype/backend/.env.prd.example`
+**File**: `app/backend/.env.prd.example`
 
 **Specific Changes**:
 6. **Delete duplicate file**: Remove `.env.prd.example` entirely. `.env.production.example` is the canonical production template.
 
 ---
 
-**File**: `prototype/backend/.env.example`
+**File**: `app/backend/.env.example`
 
 **Specific Changes**:
 7. **Add scheduler env vars**: Append a scheduler configuration section with documented defaults:
@@ -174,7 +174,7 @@ Assuming our root cause analysis is correct:
 
 ---
 
-**File**: `prototype/backend/src/routes/adminTournaments.ts`
+**File**: `app/backend/src/routes/adminTournaments.ts`
 
 **Specific Changes**:
 8. **Remove duplicate route handler**: Delete the second `GET /eligible-robots` handler (the block starting around line 261 through the end of the route, just before `export default router`). The first handler at line ~103 is the correct one with the proper ordering comment.
@@ -183,9 +183,9 @@ Assuming our root cause analysis is correct:
 
 **Files to delete**:
 9. **Remove dead code files**:
-   - `prototype/frontend/src/pages/LoginPage.tsx` — superseded by FrontPage
-   - `prototype/frontend/src/pages/SystemHealthPage.tsx` — commented out in App.tsx, absorbed into DashboardTab
-   - `prototype/frontend/src/components/__tests__/RobotUpcomingMatches.pbt.test.tsx` — empty skipped test stubs
+   - `app/frontend/src/pages/LoginPage.tsx` — superseded by FrontPage
+   - `app/frontend/src/pages/SystemHealthPage.tsx` — commented out in App.tsx, absorbed into DashboardTab
+   - `app/frontend/src/components/__tests__/RobotUpcomingMatches.pbt.test.tsx` — empty skipped test stubs
 
 ---
 

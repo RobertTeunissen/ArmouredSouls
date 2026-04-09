@@ -42,10 +42,10 @@ The Battle History Page (`/battle-history`) provides match history, performance 
 - **Design System**: [docs/design_ux/DESIGN_SYSTEM_QUICK_REFERENCE.md](../design_ux/DESIGN_SYSTEM_QUICK_REFERENCE.md)
 - **Implementation Summary**: [docs/prd_pages/BATTLE_HISTORY_IMPLEMENTATION_SUMMARY.md](./BATTLE_HISTORY_IMPLEMENTATION_SUMMARY.md)
 - **Related Files**:
-  - Frontend: `prototype/frontend/src/pages/BattleHistoryPage.tsx`
-  - Components: `prototype/frontend/src/components/BattleHistorySummary.tsx`, `prototype/frontend/src/components/CompactBattleCard.tsx`
-  - Backend: `prototype/backend/src/routes/matches.ts`
-  - API Utils: `prototype/frontend/src/utils/matchmakingApi.ts`
+  - Frontend: `app/frontend/src/pages/BattleHistoryPage.tsx`
+  - Components: `app/frontend/src/components/BattleHistorySummary.tsx`, `app/frontend/src/components/CompactBattleCard.tsx`
+  - Backend: `app/backend/src/routes/matches.ts`
+  - API Utils: `app/frontend/src/utils/matchmakingApi.ts`
 
 ---
 
@@ -130,7 +130,7 @@ The Battle History Page (`/battle-history`) provides match history, performance 
 
 ### ✅ League Tier Display (COMPLETE)
 
-**Backend Changes** - `prototype/backend/src/routes/matches.ts`
+**Backend Changes** - `app/backend/src/routes/matches.ts`
 - Added `currentLeague` and `leagueId` to robot data in battle history response
 - Line 275-320: Enhanced battle history formatting
 

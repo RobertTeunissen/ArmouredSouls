@@ -97,11 +97,11 @@ Net effect: cheap weapons got cheaper, expensive weapons stayed relatively simil
 
 ### Files Modified
 
-- `prototype/backend/prisma/seed.ts` — weapon damage/cost values, shield formula
-- `prototype/backend/src/utils/robotCalculations.ts` — `shieldCapacity * 4`
-- `prototype/frontend/src/utils/robotStats.ts` — `shieldCapacity * 4`
-- `prototype/backend/src/routes/robots.ts` — new robot shield calc
-- `prototype/backend/src/utils/userGeneration.ts` — tiered stable shield values
+- `app/backend/prisma/seed.ts` — weapon damage/cost values, shield formula
+- `app/backend/src/utils/robotCalculations.ts` — `shieldCapacity * 4`
+- `app/frontend/src/utils/robotStats.ts` — `shieldCapacity * 4`
+- `app/backend/src/routes/robots.ts` — new robot shield calc
+- `app/backend/src/utils/userGeneration.ts` — tiered stable shield values
 
 ---
 
@@ -1117,7 +1117,7 @@ To complete the full 47-weapon roster, we added:
 
 ### Seed Data Updates
 
-**File**: `prototype/backend/prisma/seed.ts`
+**File**: `app/backend/prisma/seed.ts`
 
 1. Update Practice Sword cost from ₡0 to ₡50,000
 2. Remove all `specialProperty` values

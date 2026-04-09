@@ -68,10 +68,10 @@ This change affects:
 ### Affected Files
 
 **Core Logic**:
-- `prototype/backend/src/utils/robotCalculations.ts` - Update `calculateRepairCost()` function (CANONICAL)
-- `prototype/backend/src/utils/economyCalculations.ts` - Remove duplicate function
-- `prototype/backend/src/services/tagTeamBattleOrchestrator.ts` - Remove local function, use canonical
-- `prototype/backend/src/services/repairService.ts` - Pass robot count to calculation
+- `app/backend/src/utils/robotCalculations.ts` - Update `calculateRepairCost()` function (CANONICAL)
+- `app/backend/src/utils/economyCalculations.ts` - Remove duplicate function
+- `app/backend/src/services/tagTeamBattleOrchestrator.ts` - Remove local function, use canonical
+- `app/backend/src/services/repairService.ts` - Pass robot count to calculation
 
 **API Integration**:
 - Any API endpoints that call repair service (already integrated via repairService)
@@ -83,15 +83,15 @@ This change affects:
 - `docs/prd_pages/PRD_BATTLE_STANCES_AND_YIELD.md` - Update repair cost calculations
 
 **Testing**:
-- `prototype/backend/tests/stanceAndYield.test.ts` - Update existing tests
-- `prototype/backend/tests/tagTeamBattleOrchestrator.property.test.ts` - Update to use canonical function
+- `app/backend/tests/stanceAndYield.test.ts` - Update existing tests
+- `app/backend/tests/tagTeamBattleOrchestrator.property.test.ts` - Update to use canonical function
 - New property-based tests for the 90% cap and multi-robot discount
 
 ## Components and Interfaces
 
 ### 1. Updated `calculateRepairCost()` Function
 
-**Location**: `prototype/backend/src/utils/robotCalculations.ts`
+**Location**: `app/backend/src/utils/robotCalculations.ts`
 
 **Current Signature**:
 ```typescript
@@ -126,7 +126,7 @@ const repairBayDiscount = Math.min(rawDiscount, 90) / 100;
 
 ### 2. Updated Repair Service
 
-**Location**: `prototype/backend/src/services/repairService.ts`
+**Location**: `app/backend/src/services/repairService.ts`
 
 **Changes**:
 1. Query robot count for each user
@@ -160,13 +160,13 @@ const repairBayDiscount = Math.min(rawDiscount, 90);
 
 ### 3. Consolidation: Remove Duplicate Functions
 
-**Location**: `prototype/backend/src/utils/economyCalculations.ts`
+**Location**: `app/backend/src/utils/economyCalculations.ts`
 
 **Action**: Remove `calculateRepairCostWithDiscounts()` function entirely
 
 **Rationale**: This function is an exact duplicate of `robotCalculations.ts::calculateRepairCost()`. All call sites should use the canonical function instead.
 
-**Location**: `prototype/backend/src/services/tagTeamBattleOrchestrator.ts`
+**Location**: `app/backend/src/services/tagTeamBattleOrchestrator.ts`
 
 **Action**: Remove local `calculateRepairCost()` function and import from `robotCalculations.ts`
 
@@ -214,10 +214,10 @@ const repairCost = calculateRepairCost(
 ### 4. Update All Call Sites
 
 **Locations to Update**:
-1. `prototype/backend/src/services/repairService.ts` - Main repair service
-2. `prototype/backend/src/services/battleOrchestrator.ts` - League battle repairs
-3. `prototype/backend/src/services/tagTeamBattleOrchestrator.ts` - Tag team battle repairs
-4. `prototype/backend/src/services/tournamentService.ts` - Tournament battle repairs (if applicable)
+1. `app/backend/src/services/repairService.ts` - Main repair service
+2. `app/backend/src/services/battleOrchestrator.ts` - League battle repairs
+3. `app/backend/src/services/tagTeamBattleOrchestrator.ts` - Tag team battle repairs
+4. `app/backend/src/services/tournamentService.ts` - Tournament battle repairs (if applicable)
 5. Any admin endpoints that trigger auto-repair
 
 **Consistency Requirements**:

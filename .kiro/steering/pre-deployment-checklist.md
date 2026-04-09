@@ -11,7 +11,7 @@ inclusion: manual
 ### Required Verifications
 
 1. **Backend Tests Pass Locally**
-   - Run: `cd prototype/backend && npm test`
+   - Run: `cd app/backend && npm test`
    - Verify: All tests pass (no failures allowed)
    - Check: Coverage meets minimum thresholds (80% general, 90% critical)
    - Run: `npm test -- --coverage` to verify coverage
@@ -19,7 +19,7 @@ inclusion: manual
    - **CRITICAL**: Do not push if any backend tests fail
 
 2. **Frontend Tests Pass Locally**
-   - Run: `cd prototype/frontend && npm run test:e2e`
+   - Run: `cd app/frontend && npm run test:e2e`
    - Verify: All E2E tests pass (no failures allowed)
    - Check: Tests complete without timeouts
    - Confirm: All new features have E2E test coverage
@@ -49,9 +49,9 @@ inclusion: manual
    - Check: README files current for modified modules
 
 7. **Security Scanning Passes**
-   - Run: `cd prototype/backend && npm audit --audit-level=high`
+   - Run: `cd app/backend && npm audit --audit-level=high`
    - Verify: No high or critical vulnerabilities (or all are in `.security-audit-allowlist.json` with valid justification)
-   - Run: `cd prototype/backend && npm run lint`
+   - Run: `cd app/backend && npm run lint`
    - Verify: No ESLint security rule violations (`eslint-plugin-security` errors block CI)
    - Review: `.security-audit-allowlist.json` — check that all entries have a `nextReviewDate` in the future
    - Confirm: No new dependencies added without `npm audit` check
@@ -62,7 +62,7 @@ inclusion: manual
 
 ```bash
 # 1. Backend tests
-cd prototype/backend
+cd app/backend
 npm test
 
 # 2. Security scanning
