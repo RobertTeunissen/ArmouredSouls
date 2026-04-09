@@ -9,9 +9,9 @@ Multiple pages across the Armoured Souls frontend have mobile responsiveness def
 - **Bug_Condition (C)**: The viewport width is below 1024px and the page renders layout elements that overflow, collide, or are unusable on narrow screens; OR hardcoded gray colors are used instead of design tokens at any viewport width
 - **Property (P)**: All pages render correctly at all viewport widths — mobile layouts stack/scroll appropriately, touch targets meet 44x44px minimum, and design tokens are used consistently
 - **Preservation**: All desktop layouts (≥1024px) and existing functionality (data fetching, filtering, sorting, pagination, navigation, form submission) remain unchanged
-- **useIsMobile (useIsMobile.ts)**: Hook in `prototype/frontend/src/hooks/useIsMobile.ts` that returns `true` when `window.innerWidth < 768`
-- **useIsMobile (useMediaQuery.ts)**: Convenience hook in `prototype/frontend/src/hooks/useMediaQuery.ts` that returns `true` when `max-width: 768px`
-- **Navigation**: Component in `prototype/frontend/src/components/Navigation.tsx` that switches between desktop top-nav and mobile bottom-tab at Tailwind `lg:1024px`
+- **useIsMobile (useIsMobile.ts)**: Hook in `app/frontend/src/hooks/useIsMobile.ts` that returns `true` when `window.innerWidth < 768`
+- **useIsMobile (useMediaQuery.ts)**: Convenience hook in `app/frontend/src/hooks/useMediaQuery.ts` that returns `true` when `max-width: 768px`
+- **Navigation**: Component in `app/frontend/src/components/Navigation.tsx` that switches between desktop top-nav and mobile bottom-tab at Tailwind `lg:1024px`
 - **Design Tokens**: Custom colors defined in `tailwind.config.js` — `background (#0a0e14)`, `surface (#1a1f29)`, `surface-elevated (#252b38)`, `primary`, `secondary`, `tertiary`, `success`, `warning`, `error`, `info`
 
 ## Bug Details
@@ -137,62 +137,62 @@ Assuming our root cause analysis is correct:
 
 **1. Breakpoint Alignment**
 
-**File**: `prototype/frontend/src/hooks/useIsMobile.ts`
+**File**: `app/frontend/src/hooks/useIsMobile.ts`
 - Change `MOBILE_BREAKPOINT` from `768` to `1024` so the hook aligns with Navigation's `lg:` breakpoint
 
-**File**: `prototype/frontend/src/hooks/useMediaQuery.ts`
+**File**: `app/frontend/src/hooks/useMediaQuery.ts`
 - Change the convenience `useIsMobile()` function from `max-width: 768px` to `max-width: 1023px` to align with Tailwind's `lg:` breakpoint (1024px and above is desktop)
 
 **2. LeagueStandingsPage Mobile Layout (Defect 1.2)**
 
-**File**: `prototype/frontend/src/pages/LeagueStandingsPage.tsx`
+**File**: `app/frontend/src/pages/LeagueStandingsPage.tsx`
 - Wrap table in `overflow-x-auto` container (already has one — verify scroll affordance)
 - Add mobile-friendly column hiding or card layout for key stats below `lg:`
 - Replace hardcoded gray colors with design tokens
 
 **3. AdminPage Tab Navigation & Stats Grid (Defect 1.3)**
 
-**File**: `prototype/frontend/src/pages/AdminPage.tsx`
+**File**: `app/frontend/src/pages/AdminPage.tsx`
 - Make tab navigation horizontally scrollable with `overflow-x-auto` and `flex-nowrap`
 - Adjust stats grid to use `grid-cols-2` on small screens
 - Replace hardcoded gray colors with design tokens
 
 **4. AdminPage Battle Logs (Defect 1.4)**
 
-**File**: `prototype/frontend/src/pages/AdminPage.tsx`
+**File**: `app/frontend/src/pages/AdminPage.tsx`
 - Wrap battle table in `overflow-x-auto` container
 - Stack search/filter controls vertically on mobile with `flex-col lg:flex-row`
 - Ensure filter inputs are full-width on mobile
 
 **5. BattleHistoryPage Filter Controls (Defect 1.5)**
 
-**File**: `prototype/frontend/src/pages/BattleHistoryPage.tsx`
+**File**: `app/frontend/src/pages/BattleHistoryPage.tsx`
 - Change filter bar to `flex flex-col lg:flex-row` for mobile stacking
 - Make each control full-width on mobile
 - Add `min-h-[44px]` to all interactive controls
 
 **6. FinancialReportPage Header & Layout (Defect 1.6)**
 
-**File**: `prototype/frontend/src/pages/FinancialReportPage.tsx`
+**File**: `app/frontend/src/pages/FinancialReportPage.tsx`
 - Change header from `flex justify-between` to `flex flex-col lg:flex-row lg:justify-between`
 - Change Financial Health section from side-by-side to `flex flex-col lg:flex-row`
 - Replace all hardcoded gray/blue colors with design tokens
 
 **7. HallOfRecordsPage Grid (Defect 1.7)**
 
-**File**: `prototype/frontend/src/pages/HallOfRecordsPage.tsx`
+**File**: `app/frontend/src/pages/HallOfRecordsPage.tsx`
 - Ensure record sections use single-column layout on mobile
 - Replace hardcoded gray colors with design tokens
 
 **8. DashboardPage Header (Defect 1.8)**
 
-**File**: `prototype/frontend/src/pages/DashboardPage.tsx`
+**File**: `app/frontend/src/pages/DashboardPage.tsx`
 - Change header from `flex items-center justify-between` to `flex flex-col lg:flex-row lg:items-center lg:justify-between`
 - Replace `border-gray-700` and `text-gray-400` with design tokens
 
 **9. TournamentDetailPage Bracket (Defect 1.9)**
 
-**File**: `prototype/frontend/src/pages/TournamentDetailPage.tsx`
+**File**: `app/frontend/src/pages/TournamentDetailPage.tsx`
 - BracketView already has mobile/desktop split via `useIsMobile` from `useMediaQuery.ts` — fixing the breakpoint in step 1 will resolve the dead zone
 - Replace hardcoded gray colors with design tokens throughout the page
 
@@ -221,7 +221,7 @@ Assuming our root cause analysis is correct:
 
 **12. WeaponShopPage Cards (Defect 1.13)**
 
-**File**: `prototype/frontend/src/pages/WeaponShopPage.tsx`
+**File**: `app/frontend/src/pages/WeaponShopPage.tsx`
 - Ensure weapon card grid uses `grid-cols-1 lg:grid-cols-2 xl:grid-cols-3` for mobile single-column
 - Add adequate spacing and touch-friendly interaction areas
 

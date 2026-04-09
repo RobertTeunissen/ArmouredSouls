@@ -78,7 +78,7 @@ The Facilities Page (`/facilities`) is a critical economic and progression inter
 #### ✅ **Fully Implemented**
 
 **Backend System:**
-- ✅ Complete facility configuration: 14 facilities defined in `/prototype/backend/src/config/facilities.ts`
+- ✅ Complete facility configuration: 14 facilities defined in `/app/backend/src/config/facilities.ts`
 - ✅ Database schema: User facilities stored in database
 - ✅ Backend API: `GET /api/facilities` (returns all facilities with user's current levels)
 - ✅ Backend API: `POST /api/facilities/upgrade` (upgrade facility)
@@ -88,7 +88,7 @@ The Facilities Page (`/facilities`) is a critical economic and progression inter
 - ✅ Benefit calculation and display
 
 **Frontend - Basic Interface:**
-- ✅ FacilitiesPage component (`/prototype/frontend/src/pages/FacilitiesPage.tsx`)
+- ✅ FacilitiesPage component (`/app/frontend/src/pages/FacilitiesPage.tsx`)
 - ✅ 2-column grid layout (responsive: 1 column on mobile, 2 on desktop)
 - ✅ Current level vs max level display for each facility
 - ✅ Current benefit and next level benefit display
@@ -386,7 +386,7 @@ No icon / image on the Visual Example?
 - **File Naming**: 
   - Primary: `facility-{type}-icon.webp` (e.g., `facility-training-facility-icon.webp`)
   - Fallback: `facility-{type}-icon.svg` (e.g., `facility-training-facility-icon.svg`)
-- **Storage Path**: `/prototype/frontend/src/assets/facilities/` (create this directory)
+- **Storage Path**: `/app/frontend/src/assets/facilities/` (create this directory)
 - **Loading Strategy**: Load WebP first, fallback to SVG if WebP not supported or fails to load
 
 **Rationale for WebP Primary:**
@@ -990,7 +990,7 @@ const FacilityIcon: React.FC<FacilityIconProps> = ({ facilityType, alt, classNam
 
 **File Structure:**
 ```
-/prototype/frontend/src/assets/facilities/
+/app/frontend/src/assets/facilities/
 ├── facility-training-facility-icon.webp    (256×256px)
 ├── facility-training-facility-icon.svg     (fallback)
 ├── facility-weapons-workshop-icon.webp     (256×256px)

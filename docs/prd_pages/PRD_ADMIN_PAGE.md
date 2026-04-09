@@ -425,11 +425,11 @@ npm run test:ui
 ### File Structure
 
 **Frontend**:
-- `prototype/frontend/src/pages/AdminPage.tsx` (~100-200 lines)
+- `app/frontend/src/pages/AdminPage.tsx` (~100-200 lines)
   - Thin shell component handling tab navigation, URL hash persistence, localStorage persistence
   - Imports and renders active tab component based on selected tab
   - Passes shared state (session log, addSessionLog) as props to tab components
-- `prototype/frontend/src/components/admin/` — Per-tab components:
+- `app/frontend/src/components/admin/` — Per-tab components:
   - `types.ts` — Shared interfaces (`SystemStats`, `Battle`, `SessionLogEntry`, `RobotStats`, `AtRiskUser`, `TagTeamBattle`, etc.)
   - `index.ts` — Barrel export for all tab components
   - `DashboardTab.tsx` — System statistics grid + System Health collapsible section
@@ -439,25 +439,25 @@ npm run test:ui
   - `BankruptcyMonitorTab.tsx` — Dedicated at-risk users view, always renders (zero-state when no users at risk)
   - `RecentUsersTab.tsx` — Recent real users list with per-user onboarding status, robot details, issue detection
   - `SecurityTab.tsx` — Security monitoring dashboard with summary panel, filterable events table, flagged users
-- `prototype/frontend/src/components/BattleDetailsModal.tsx` (~500 lines)
+- `app/frontend/src/components/BattleDetailsModal.tsx` (~500 lines)
   - Battle analysis modal supporting both 1v1 and 2v2 tag team layouts
   - Attribute comparison
   - Combat log with formula breakdowns
-- `prototype/frontend/src/components/TournamentManagement.tsx`
+- `app/frontend/src/components/TournamentManagement.tsx`
   - Tournament administration interface (aligned with bracket seeding API contracts)
 
 **Frontend Tests**:
-- `prototype/frontend/src/pages/__tests__/AdminPage.test.tsx` — Shell-only tests
-- `prototype/frontend/src/components/admin/__tests__/DashboardTab.test.tsx`
-- `prototype/frontend/src/components/admin/__tests__/CycleControlsTab.test.tsx`
-- `prototype/frontend/src/components/admin/__tests__/BattleLogsTab.test.tsx`
-- `prototype/frontend/src/components/admin/__tests__/RobotStatsTab.test.tsx`
-- `prototype/frontend/src/components/admin/__tests__/BankruptcyMonitorTab.test.tsx`
-- `prototype/frontend/src/components/admin/__tests__/RecentUsersTab.test.tsx`
-- `prototype/frontend/src/components/admin/__tests__/BattleDetailsModal.test.tsx`
+- `app/frontend/src/pages/__tests__/AdminPage.test.tsx` — Shell-only tests
+- `app/frontend/src/components/admin/__tests__/DashboardTab.test.tsx`
+- `app/frontend/src/components/admin/__tests__/CycleControlsTab.test.tsx`
+- `app/frontend/src/components/admin/__tests__/BattleLogsTab.test.tsx`
+- `app/frontend/src/components/admin/__tests__/RobotStatsTab.test.tsx`
+- `app/frontend/src/components/admin/__tests__/BankruptcyMonitorTab.test.tsx`
+- `app/frontend/src/components/admin/__tests__/RecentUsersTab.test.tsx`
+- `app/frontend/src/components/admin/__tests__/BattleDetailsModal.test.tsx`
 
 **Backend**:
-- `prototype/backend/src/routes/admin.ts` (1,000+ lines)
+- `app/backend/src/routes/admin.ts` (1,000+ lines)
   - All admin API endpoints
   - Authentication and authorization
   - Business logic for admin operations

@@ -30,28 +30,28 @@ jobs:
         with:
           node-version: '24'
           cache: 'npm'
-          cache-dependency-path: prototype/backend/package-lock.json
+          cache-dependency-path: app/backend/package-lock.json
       
       - name: Install backend dependencies
-        working-directory: ./prototype/backend
+        working-directory: ./app/backend
         run: npm ci
       
       - name: Generate Prisma Client
-        working-directory: ./prototype/backend
+        working-directory: ./app/backend
         env:
           DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
         run: npm run prisma:generate
       
       - name: Lint backend code
-        working-directory: ./prototype/backend
+        working-directory: ./app/backend
         run: npm run lint
       
       - name: Build backend
-        working-directory: ./prototype/backend
+        working-directory: ./app/backend
         run: npm run build
       
       - name: Run unit tests
-        working-directory: ./prototype/backend
+        working-directory: ./app/backend
         env:
           NODE_ENV: test
           JWT_SECRET: test-secret-key-for-ci
@@ -90,26 +90,26 @@ jobs:
         with:
           node-version: '24'
           cache: 'npm'
-          cache-dependency-path: prototype/backend/package-lock.json
+          cache-dependency-path: app/backend/package-lock.json
       
       - name: Install backend dependencies
-        working-directory: ./prototype/backend
+        working-directory: ./app/backend
         run: npm ci
       
       - name: Generate Prisma Client
-        working-directory: ./prototype/backend
+        working-directory: ./app/backend
         env:
           DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
         run: npm run prisma:generate
       
       - name: Run database migrations
-        working-directory: ./prototype/backend
+        working-directory: ./app/backend
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_test?connection_limit=5
         run: npx prisma migrate deploy
       
       - name: Run integration tests
-        working-directory: ./prototype/backend
+        working-directory: ./app/backend
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_test?connection_limit=5
           JWT_SECRET: test-secret-key-for-ci
@@ -133,28 +133,28 @@ jobs:
         with:
           node-version: '24'
           cache: 'npm'
-          cache-dependency-path: prototype/frontend/package-lock.json
+          cache-dependency-path: app/frontend/package-lock.json
       
       - name: Install frontend dependencies
-        working-directory: ./prototype/frontend
+        working-directory: ./app/frontend
         run: npm ci
       
       - name: Lint frontend code
-        working-directory: ./prototype/frontend
+        working-directory: ./app/frontend
         run: npm run lint
       
       - name: Build frontend
-        working-directory: ./prototype/frontend
+        working-directory: ./app/frontend
         run: npm run build
 
       - name: Run frontend unit tests
-        working-directory: ./prototype/frontend
+        working-directory: ./app/frontend
         timeout-minutes: 15
         run: npx vitest --run --reporter=verbose
 
       # Note: E2E tests (Playwright) are skipped in CI because they require
       # a running backend with a seeded database. Run locally before pushing:
-      #   cd prototype/frontend && npm run test:e2e
+      #   cd app/frontend && npm run test:e2e
 
   security-audit:
     name: Security Audit
@@ -174,19 +174,19 @@ jobs:
           node-version: '24'
 
       - name: Install backend dependencies
-        working-directory: ./prototype/backend
+        working-directory: ./app/backend
         run: npm ci
 
       - name: Install frontend dependencies
-        working-directory: ./prototype/frontend
+        working-directory: ./app/frontend
         run: npm ci
 
       - name: Generate audit report (backend)
-        working-directory: ./prototype/backend
+        working-directory: ./app/backend
         run: npm audit --json > audit-report-backend.json || true
 
       - name: Generate audit report (frontend)
-        working-directory: ./prototype/frontend
+        working-directory: ./app/frontend
         run: npm audit --json > audit-report-frontend.json || true
 
       - name: Upload audit reports
@@ -195,11 +195,11 @@ jobs:
         with:
           name: security-audit-reports
           path: |
-            prototype/backend/audit-report-backend.json
-            prototype/frontend/audit-report-frontend.json
+            app/backend/audit-report-backend.json
+            app/frontend/audit-report-frontend.json
 
       - name: Check allowlist and audit backend
-        working-directory: ./prototype/backend
+        working-directory: ./app/backend
         run: |
           # Run npm audit at high level — fail on high/critical vulnerabilities in production deps only
           # Dev dependencies are not deployed and don't affect the production attack surface
@@ -212,7 +212,7 @@ jobs:
           npm audit --audit-level=high --omit=dev
 
       - name: Check allowlist and audit frontend
-        working-directory: ./prototype/frontend
+        working-directory: ./app/frontend
         run: |
           # Production deps only — dev tooling (vitest, mermaid, eslint) excluded
           ALLOWLIST_FILE="../../.security-audit-allowlist.json"

@@ -8,9 +8,18 @@ This document breaks down the Armoured Souls system into logical modules, each w
 
 **Note**: For project phases and development timeline, see ROADMAP.md. This document focuses on module organization and current implementation status.
 
+## Modular Architecture Plan
+
+The `modules/` directory now contains documented contracts and a migration strategy for Phase 2 extraction:
+
+- **Module Contracts**: Each module has a `MODULE_CONTRACT.md` defining its public API, dependencies, and current source locations. See [modules/README.md](../../modules/README.md).
+- **Service-to-Module Mapping**: Every service file is mapped to its target module. See [SERVICE_MODULE_MAPPING.md](./SERVICE_MODULE_MAPPING.md).
+- **Migration Strategy**: Phased extraction plan (database → auth → game-engine → api → ui) with workspace configuration and rollback procedures. See [MODULAR_MIGRATION_STRATEGY.md](./MODULAR_MIGRATION_STRATEGY.md).
+- **Module Template**: Standardized package structure for all modules. See [MODULE_TEMPLATE.md](./MODULE_TEMPLATE.md).
+
 ## Module Hierarchy
 
-The project has two structural layers: the aspirational `modules/` directory (placeholder READMEs for future extraction) and the working `prototype/` directory where all implementation lives.
+The project has two structural layers: the `modules/` directory (documented contracts and migration plan for Phase 2 extraction) and the working `app/` directory where all implementation lives.
 
 ```
 ArmouredSouls/
@@ -20,7 +29,7 @@ ArmouredSouls/
 │   ├── database/
 │   ├── game-engine/
 │   └── ui/
-├── prototype/
+├── app/
 │   ├── backend/               # Express 5 + TypeScript backend
 │   │   ├── src/
 │   │   │   ├── config/        # Logger, app config
@@ -33,6 +42,8 @@ ArmouredSouls/
 │   │   ├── generated/prisma/  # Prisma 7 generated client
 │   │   ├── prisma/            # Schema and migrations
 │   │   └── tests/             # Jest test files
+│   ├── shared/                # Shared TypeScript modules (imported by both frontend and backend)
+│   │   └── utils/             # Game formulas: academyCaps, upgradeCosts, discounts
 │   └── frontend/              # React 19 + Vite + Tailwind CSS
 │       └── src/
 │           ├── components/    # React components
@@ -45,10 +56,10 @@ ArmouredSouls/
 
 ### Backend Services (Domain-Organized)
 
-All 41+ backend services are organized into 13 domain subdirectories under `prototype/backend/src/services/`. Each domain has an `index.ts` barrel file that defines its public API.
+All 41+ backend services are organized into 13 domain subdirectories under `app/backend/src/services/`. Each domain has an `index.ts` barrel file that defines its public API.
 
 ```
-prototype/backend/src/services/
+app/backend/src/services/
 ├── auth/           # JWT, password hashing, user management
 ├── battle/         # Combat simulation, strategy, post-combat, base orchestrator
 ├── league/         # League instances, rebalancing, league battle orchestration
@@ -61,6 +72,8 @@ prototype/backend/src/services/
 ├── analytics/      # Matchmaking, robot performance, robot stats, onboarding analytics
 ├── onboarding/     # Onboarding service
 ├── arena/          # Arena layout, movement, position tracking
+├── robot/          # Robot sanitization, upgrade validation, ranking
+├── security/       # Security monitoring
 └── notifications/  # Notification system
 ```
 
@@ -313,7 +326,7 @@ The battle orchestrators (league, tournament, tag-team, KotH) share a common `ba
 
 Some routes exist outside the 13 domain service directories, serving cross-domain or social features:
 
-- `stables.ts` — Public stable viewing (`GET /api/stables/:userId`). Returns sanitized robot data, facility levels, and aggregate stats for any user's stable. Uses `sanitizeRobotForPublic` from `robots.ts` and `getPrestigeRank` from `utils/prestigeUtils.ts`.
+- `stables.ts` — Public stable viewing (`GET /api/stables/:userId`). Returns sanitized robot data, facility levels, and aggregate stats for any user's stable. Uses `sanitizeRobotForPublic` from `src/services/robot/robotSanitizer.ts` and `getPrestigeRank` from `utils/prestigeUtils.ts`.
 
 ---
 

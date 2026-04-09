@@ -94,7 +94,7 @@ When a zone control game mode is active, the result now includes `kothMetadata`:
 
 ## Files Modified
 
-1. `prototype/backend/src/services/combatSimulator.ts` — Added `simulateBattleMulti()` time limit handling (section 5), result building (section 6), and backward-compatible `simulateBattle()` wrapper
+1. `app/backend/src/services/combatSimulator.ts` — Added `simulateBattleMulti()` time limit handling (section 5), result building (section 6), and backward-compatible `simulateBattle()` wrapper
 
 ---
 

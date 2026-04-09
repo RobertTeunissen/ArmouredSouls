@@ -5,6 +5,36 @@ fileMatchPattern: "**/frontend/**,**/*.tsx,**/*.jsx,**/*.css,**/tailwind.config.
 
 # Frontend Standards
 
+## Component Size Guidelines
+
+### Maximum File Sizes
+- Page components (`src/pages/*.tsx`): 300 lines max
+- Layout components (`src/components/Navigation.tsx` etc.): 200 lines max
+- Feature components: 300 lines max
+
+### Extraction Pattern
+
+When a page or component exceeds the size limit, extract inline sub-components:
+
+1. Create a feature directory under `src/components/` named after the page (kebab-case, e.g., `practice-arena/`)
+2. Move shared interfaces/types to `types.ts` in the feature directory
+3. Move each sub-component to its own file with an explicit props interface
+4. If the page has complex state/logic, extract a custom hook (e.g., `usePracticeArena.ts`)
+5. Create an `index.ts` barrel export for clean imports
+6. The page file keeps only page-level state management and sub-component composition
+
+### Existing Feature Directories
+
+```
+src/components/
+├── practice-arena/    # PracticeArenaPage sub-components + usePracticeArena hook
+├── facilities/        # FacilitiesPage sub-components + useFacilities hook
+├── weapon-shop/       # WeaponShopPage sub-components + useWeaponShop hook
+├── hall-of-records/   # HallOfRecordsPage sub-components
+├── battle-detail/     # BattleDetailPage sub-components + useBattlePlaybackData hook
+├── nav/               # Navigation sub-components (NavLink, DropdownMenu, MobileTab, MobileDrawer)
+```
+
 ## Component Architecture
 
 ### Component Structure
@@ -642,6 +672,39 @@ function Modal({ isOpen, onClose }: ModalProps) {
     </div>
   );
 }
+```
+
+## Testing
+
+### Test File Location
+Place test files in a `__tests__/` subdirectory next to the source files being tested — not co-located in the same directory.
+
+### Naming Conventions
+- `*.test.ts` — unit tests for utilities and stores
+- `*.test.tsx` — unit tests for React components
+- `*.pbt.test.ts(x)` — property-based tests (fast-check)
+
+### Minimum Coverage
+- **Utilities and stores**: 80% code coverage
+- **Components**: Baseline coverage (at least one test file per extracted directory)
+
+### Component Tests
+- Render with RTL's `render()`, query with `screen`
+- Mock API calls and external dependencies with `vi.mock()`
+- Test user interactions via `userEvent` (clicks, typing, toggles)
+- Verify rendered output, not implementation details
+
+### Store Tests
+- Reset state in `beforeEach`: `useStore.setState(useStore.getInitialState())`
+- Test actions by calling them and asserting resulting state
+- Test selectors by setting state and verifying selector output
+
+### Running Tests
+```bash
+cd app/frontend
+npx vitest --run          # Single run (CI-safe)
+npx vitest                # Watch mode (local dev)
+npx vitest --run --coverage  # With coverage report
 ```
 
 ## Checklist

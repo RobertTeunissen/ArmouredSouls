@@ -37,10 +37,10 @@
 This document has been thoroughly reviewed against the current codebase implementation. All formulas, attributes, and mechanics documented here match the actual implementation in:
 
 ### Verified Files:
-- `prototype/backend/prisma/schema.prisma` - All 23 robot attributes present and correctly typed
-- `prototype/backend/src/services/combatSimulator.ts` - Combat formulas match documentation
-- `prototype/backend/src/utils/robotCalculations.ts` - HP, shield, and stat calculations verified
-- `prototype/backend/src/routes/robots.ts` - Attribute upgrade system verified
+- `app/backend/prisma/schema.prisma` - All 23 robot attributes present and correctly typed
+- `app/backend/src/services/combatSimulator.ts` - Combat formulas match documentation
+- `app/backend/src/utils/robotCalculations.ts` - HP, shield, and stat calculations verified
+- `app/backend/src/routes/robots.ts` - Attribute upgrade system verified
 
 ### Key Verifications:
 ✅ **HP Formula**: `50 + (hull_integrity × 5)` - Correctly implemented  

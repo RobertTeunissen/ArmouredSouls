@@ -24,7 +24,7 @@ This document explains EXACTLY how data flows from battle execution to the cycle
 **Table:** `AuditLog`  
 **Event Type:** `battle_complete`
 
-**Code location:** `prototype/backend/src/services/battleOrchestrator.ts` (lines 615-685)
+**Code location:** `app/backend/src/services/battleOrchestrator.ts` (lines 615-685)
 
 **What's stored in the event payload:**
 ```typescript
@@ -68,7 +68,7 @@ LIMIT 5;
 
 **Table:** `robot_streaming_revenue`
 
-**Code location:** `prototype/backend/src/services/robotAnalyticsService.ts` (lines 29-73)
+**Code location:** `app/backend/src/services/robotAnalyticsService.ts` (lines 29-73)
 
 **What's stored:**
 - robotId: 54
@@ -98,7 +98,7 @@ LIMIT 10;
 
 **Table:** `CycleSnapshot`
 
-**Code location:** `prototype/backend/src/services/cycleSnapshotService.ts` (line 70+)
+**Code location:** `app/backend/src/services/cycleSnapshotService.ts` (line 70+)
 
 **When:** End of cycle execution, snapshot is created
 
@@ -154,7 +154,7 @@ WHERE "cycle_number" = 2;
 
 **Endpoint:** `GET /api/analytics/stable/:userId/summary?lastNCycles=10`
 
-**Code location:** `prototype/backend/src/routes/analytics.ts` (lines 85-312)
+**Code location:** `app/backend/src/routes/analytics.ts` (lines 85-312)
 
 **What it does:**
 1. Fetch snapshots from `CycleSnapshot` table
@@ -203,7 +203,7 @@ curl "http://localhost:3001/api/analytics/stable/2/summary?lastNCycles=2" | jq
 ### 6. FRONTEND DISPLAY
 
 **Page:** `/cycle-summary`  
-**Component:** `prototype/frontend/src/pages/CycleSummaryPage.tsx`
+**Component:** `app/frontend/src/pages/CycleSummaryPage.tsx`
 
 **What it does:**
 1. Calls the API from Step 5

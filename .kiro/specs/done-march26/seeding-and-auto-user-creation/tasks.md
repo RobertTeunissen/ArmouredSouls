@@ -8,7 +8,7 @@ Overhaul the seed system and auto-generation system to replace archetype-based u
 
 - [x] 1. Create shared constants and utility functions
   - [x] 1.1 Create tier configuration constants and shared types
-    - Create a new file `prototype/backend/src/utils/tierConfig.ts`
+    - Create a new file `app/backend/src/utils/tierConfig.ts`
     - Define `TierConfig` interface, `TIER_CONFIGS` array (WimpBot/AverageBot/ExpertBot with robotCount, attributeLevel, priceTier, createTagTeam)
     - Define `LOADOUT_TITLES` mapping (single→Lone, weapon_shield→Guardian, dual_wield→Twin, two_handed→Heavy)
     - Define `WEAPON_CODENAMES` mapping for all 47 weapons
@@ -17,41 +17,41 @@ Overhaul the seed system and auto-generation system to replace archetype-based u
     - _Requirements: 8.1, 8.2, 9.1, 10.1, 11.1, 13.2, 13.3, 13.5_
 
   - [x] 1.2 Implement `distributeTiers(n)` function
-    - Add to `tierConfig.ts` or a new `prototype/backend/src/utils/distributeTiers.ts`
+    - Add to `tierConfig.ts` or a new `app/backend/src/utils/distributeTiers.ts`
     - Integer division by 3 with remainder allocated WimpBot-first, then AverageBot, then ExpertBot
     - Return `{ wimpBot, averageBot, expertBot }` object
     - Handle edge cases: n=0 returns all zeros, n=1 returns {1,0,0}, n=2 returns {1,1,0}
     - _Requirements: 8.2, 8.3_
 
   - [x] 1.3 Write property test for `distributeTiers` (Property 1)
-    - Create `prototype/backend/tests/utils/distributeTiers.test.ts`
+    - Create `app/backend/tests/utils/distributeTiers.test.ts`
     - **Property 1: Tier distribution is correct and exhaustive**
     - For any positive integer N, verify sum equals N, each count is floor(N/3) or ceil(N/3), and wimpBot >= averageBot >= expertBot
     - Use fast-check with `fc.integer({ min: 1, max: 500 })`, 100 runs
     - **Validates: Requirements 8.2, 8.3**
 
   - [x] 1.4 Implement `generateStableName(existingNames)` function
-    - Create `prototype/backend/src/utils/stableNameGenerator.ts`
+    - Create `app/backend/src/utils/stableNameGenerator.ts`
     - Combine random adjective + noun from word lists
     - If collision with existingNames, append incrementing numeric suffix
     - Return unique stable name string
     - _Requirements: 13.5, 13.6_
 
   - [x] 1.5 Write property test for `generateStableName` (Property 8)
-    - Create `prototype/backend/tests/utils/stableNameGenerator.test.ts`
+    - Create `app/backend/tests/utils/stableNameGenerator.test.ts`
     - **Property 8: Stable names are unique and use only neutral words**
     - Verify all names are unique, composed of valid adjective+noun, and contain no tier keywords ("Wimp", "Average", "Expert", "Bot")
     - **Validates: Requirements 13.5, 13.6**
 
   - [x] 1.6 Implement `selectWeapon` and `selectShield` functions
-    - Create `prototype/backend/src/utils/weaponSelection.ts`
+    - Create `app/backend/src/utils/weaponSelection.ts`
     - Implement 3-level fallback chain: loadout+range+tier → loadout+tier → any weapon in tier
     - `selectShield` filters for `handsRequired = 'shield'` within price tier
     - Log warnings at each fallback level
     - _Requirements: 14.1, 14.2, 14.3_
 
   - [x] 1.7 Write property tests for weapon selection (Properties 3, 4)
-    - Create `prototype/backend/tests/utils/weaponSelection.test.ts`
+    - Create `app/backend/tests/utils/weaponSelection.test.ts`
     - **Property 3: Weapon selection respects loadout and price tier constraints**
     - **Property 4: Weapon selection fallback always produces a valid weapon**
     - **Validates: Requirements 9.4, 9.5, 9.6, 10.4, 10.5, 10.6, 11.4, 11.5, 11.6, 14.1, 14.2**
@@ -59,7 +59,7 @@ Overhaul the seed system and auto-generation system to replace archetype-based u
 - [x] 2. Checkpoint - Ensure all utility tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [x] 3. Rewrite seed system (`prototype/backend/prisma/seed.ts`)
+- [x] 3. Rewrite seed system (`app/backend/prisma/seed.ts`)
   - [x] 3.1 Rewrite `seedAdminAccount` and remove `seedCoreTestUsers`
     - Remove `seedCoreTestUsers` function entirely (no more player1–5)
     - Modify admin creation: currency ₡3,000,000, prestige 0, assign stableName via `generateStableName`
@@ -81,7 +81,7 @@ Overhaul the seed system and auto-generation system to replace archetype-based u
     - Confirm `seedCycleMetadata` remains intact
     - _Requirements: 6.1, 6.2, 6.3, 7.1_
 
-- [x] 4. Rewrite auto-generation system (`prototype/backend/src/utils/userGeneration.ts`)
+- [x] 4. Rewrite auto-generation system (`app/backend/src/utils/userGeneration.ts`)
   - [x] 4.1 Rewrite `generateBattleReadyUsers` with tiered stable creation
     - Remove all archetype code (ARCHETYPE_SPECS, archetype cycling logic)
     - Accept `cycleNumber`, use `distributeTiers(cycleNumber)` to determine tier counts
@@ -117,7 +117,7 @@ Overhaul the seed system and auto-generation system to replace archetype-based u
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 6. Rewrite existing test files
-  - [x] 6.1 Rewrite `prototype/backend/tests/userGeneration.test.ts`
+  - [x] 6.1 Rewrite `app/backend/tests/userGeneration.test.ts`
     - Remove all archetype references (`archetype_` usernames, `cleanupArchetypeUsers` helper)
     - Test tiered generation: verify WimpBot/AverageBot/ExpertBot stable creation
     - Test correct robot counts per tier (3/2/1)
@@ -135,7 +135,7 @@ Overhaul the seed system and auto-generation system to replace archetype-based u
     - **Property 12: HP and shield are correctly derived from attributes**
     - **Validates: Requirements 5.2, 5.3, 5.4, 5.7, 8.4, 8.5, 9.1, 9.2, 9.3, 9.7, 10.1, 10.2, 10.3, 10.7, 11.1, 11.2, 11.3, 11.7, 12.1, 12.2, 15.1, 16.1, 16.2**
 
-  - [x] 6.3 Rewrite `prototype/backend/tests/twoRobotTagTeamGeneration.test.ts`
+  - [x] 6.3 Rewrite `app/backend/tests/twoRobotTagTeamGeneration.test.ts`
     - Remove all archetype references ("Two-Robot Specialist", `archetype_two_robot_*` usernames, "Specialist Alpha"/"Specialist Beta" robot names)
     - Test tag team creation for WimpBot stables (3 robots, tag team from first 2)
     - Test tag team creation for AverageBot stables (2 robots, tag team from both)
@@ -148,7 +148,7 @@ Overhaul the seed system and auto-generation system to replace archetype-based u
     - **Property 9: Tag teams are created for multi-robot stables**
     - **Validates: Requirements 9.8, 10.8**
 
-  - [x] 6.5 Rewrite `prototype/backend/tests/seed.property.test.ts`
+  - [x] 6.5 Rewrite `app/backend/tests/seed.property.test.ts`
     - Update `simulateSeed()` to reflect new seed structure: admin with ₡3M/prestige 0, no player1–5, no archetypes, no attribute test users
     - Update user count expectations: bye_robot_user + admin + 200 WimpBots = 202 (dev/acceptance), bye_robot_user only (production)
     - Verify idempotence properties still hold with new seed structure
@@ -161,7 +161,7 @@ Overhaul the seed system and auto-generation system to replace archetype-based u
     - Verify one-handed weapons get "single" loadout, two-handed weapons get "two_handed" loadout
     - **Validates: Requirements 5.6**
 
-  - [x] 6.7 Rewrite `prototype/backend/tests/integration/adminCycleGeneration.test.ts`
+  - [x] 6.7 Rewrite `app/backend/tests/integration/adminCycleGeneration.test.ts`
     - Remove archetype weapon seeding, replace with full weapon catalog or representative budget/mid/premium weapons
     - Update cleanup to target `auto_wimpbot_*`, `auto_averagebot_*`, `auto_expertbot_*` usernames
     - Verify tiered stable creation during cycle execution

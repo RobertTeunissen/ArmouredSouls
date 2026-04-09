@@ -27,7 +27,7 @@ Data-only rebalance swapping dead/mismatched attribute bonuses on 7 weapons to l
     - _Requirements: 10.2, 10.3, 10.4_
 
 - [x] 2. Write property-based and unit tests
-  - [x] 2.1 Create test file `prototype/backend/src/__tests__/weapon-bonus-rebalance.test.ts` with imports
+  - [x] 2.1 Create test file `app/backend/src/__tests__/weapon-bonus-rebalance.test.ts` with imports
     - Import `WEAPON_DEFINITIONS` from `../../../prisma/seed.ts`
     - Import `fc` from `fast-check`
     - Define helper constants: list of 9 dead attribute bonus field names, list of 7 modified weapon names, pre-rebalance snapshot lookup (Σ(bonus²), cost, non-bonus fields, and full field snapshots for unmodified weapons)
@@ -68,7 +68,7 @@ Data-only rebalance swapping dead/mismatched attribute bonuses on 7 weapons to l
 
 - [x] 4. Create Prisma migration for acc/prod environments
   - [x] 4.1 Create migration directory and SQL file
-    - Create `prototype/backend/prisma/migrations/<timestamp>_weapon_bonus_rebalance/migration.sql`
+    - Create `app/backend/prisma/migrations/<timestamp>_weapon_bonus_rebalance/migration.sql`
     - Write 7 idempotent UPDATE statements matching weapons by name, updating only changed bonus columns
     - Energy Blade: set hydraulic_systems_bonus = 0, combat_power_bonus = 4
     - Plasma Blade: set hydraulic_systems_bonus = 0, combat_power_bonus = 5

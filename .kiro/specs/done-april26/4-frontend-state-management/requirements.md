@@ -30,7 +30,7 @@ After all tasks are marked complete, run these checks to confirm the debt reduct
 3. The `AuthContext.logout()` function calls `.clear()` on both stores
 4. All frontend tests pass
 5. A state management guideline document exists in `.kiro/steering/` or `docs/guides/`
-6. `zustand` appears in `prototype/frontend/package.json` dependencies
+6. `zustand` appears in `app/frontend/package.json` dependencies
 
 ## Requirements
 
@@ -40,7 +40,7 @@ After all tasks are marked complete, run these checks to confirm the debt reduct
 
 #### Acceptance Criteria
 
-1. WHEN Zustand is added, IT SHALL be installed as a production dependency in `prototype/frontend/package.json` at the latest stable version compatible with React 19.
+1. WHEN Zustand is added, IT SHALL be installed as a production dependency in `app/frontend/package.json` at the latest stable version compatible with React 19.
 2. WHEN Zustand is configured, A `src/stores/` directory SHALL be created to house all Zustand stores.
 3. WHEN Zustand is configured, THE existing Auth and Onboarding contexts SHALL NOT be migrated — they remain as React Context (migration is out of scope for this spec).
 

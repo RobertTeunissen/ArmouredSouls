@@ -48,7 +48,7 @@ This document provides comprehensive instructions for GitHub Copilot when workin
 ```
 ArmouredSouls/
 ├── docs/               # Project documentation
-├── prototype/          # Phase 1 local prototype (CURRENT ACTIVE DEVELOPMENT)
+├── app/          # Phase 1 local prototype (CURRENT ACTIVE DEVELOPMENT)
 │   ├── backend/        # Express + Prisma backend
 │   │   ├── src/
 │   │   │   ├── routes/      # API endpoint handlers
@@ -63,8 +63,9 @@ ArmouredSouls/
 │   │       ├── pages/       # Page-level components
 │   │       ├── services/    # API service layer
 │   │       └── utils/       # Frontend utilities
+│   ├── shared/              # Shared game formulas (frontend + backend)
 │   └── docker-compose.yml   # Local database setup
-└── modules/            # Future production codebase (Phase 2+)
+└── docs/               # Project documentation
 ```
 
 ---
@@ -322,13 +323,13 @@ describe('POST /api/robots', () => {
 ### Running Tests
 ```bash
 # Backend tests
-cd prototype/backend
+cd app/backend
 npm test                    # Run all tests
 npm test -- --watch        # Watch mode for TDD
 npm test -- --coverage     # Generate coverage report
 
 # Frontend tests (when added in future)
-cd prototype/frontend
+cd app/frontend
 npm test
 ```
 
@@ -700,4 +701,4 @@ When writing code for Armoured Souls, ensure:
 ---
 
 **Questions or Clarifications?**  
-If you're unsure about any guideline or pattern, refer to existing code in the `prototype/` directory as examples. When in doubt, prioritize clarity and maintainability over cleverness.
+If you're unsure about any guideline or pattern, refer to existing code in the `app/` directory as examples. When in doubt, prioritize clarity and maintainability over cleverness.

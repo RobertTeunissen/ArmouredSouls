@@ -800,7 +800,7 @@ colors: {
 
 ### Component Architecture
 
-**File**: `/prototype/frontend/src/pages/RobotsPage.tsx`
+**File**: `/app/frontend/src/pages/RobotsPage.tsx`
 
 **Imports**:
 ```typescript
@@ -919,7 +919,7 @@ const calculateWinRate = (wins: number, totalBattles: number): string => {
 - **Component Tests**: 35+ tests, ~85% coverage
 - **Overall Coverage**: ~88% (statements, branches, functions, lines)
 - Test infrastructure: Vitest + jsdom + React Testing Library
-- Location: `prototype/frontend/src/pages/__tests__/`
+- Location: `app/frontend/src/pages/__tests__/`
 
 **Test Files Created**:
 1. `RobotsPage.utils.test.ts` - 60+ tests for utility functions
@@ -935,7 +935,7 @@ const calculateWinRate = (wins: number, totalBattles: number): string => {
 - **Weapon Inventory**: Covered in `weaponInventory.test.ts`
 - **Facilities**: Covered in `facility.test.ts`
 - Test framework: Jest with Supertest
-- Location: `prototype/backend/tests/`
+- Location: `app/backend/tests/`
 
 ### Test Infrastructure
 
@@ -1015,7 +1015,7 @@ const calculateWinRate = (wins: number, totalBattles: number): string => {
 
 ```bash
 # Run all tests
-cd prototype/frontend
+cd app/frontend
 npm test
 
 # Run with coverage
@@ -1159,7 +1159,7 @@ All files                    |   88.xx |    85.xx |   92.xx |   88.xx |
 **Status**: ✅ **FULLY IMPLEMENTED** (February 2, 2026)
 
 All requirements from this PRD have been successfully implemented in:
-- **File**: `prototype/frontend/src/pages/RobotsPage.tsx`
+- **File**: `app/frontend/src/pages/RobotsPage.tsx`
 - **Lines**: ~520 lines of production code
 - **Version**: v1.8.1 (latest)
 
@@ -1450,7 +1450,7 @@ All questions from the initial PRD have been resolved through implementation:
    - This is CORRECT behavior - new robots don't need repairs
 
 6. **Code Changes**
-   - File: `/prototype/frontend/src/pages/RobotsPage.tsx`
+   - File: `/app/frontend/src/pages/RobotsPage.tsx`
    - Line 215: Changed `/api/facility` to `/api/facilities`
    - That's it! Simple one-character typo fix
 
@@ -1543,7 +1543,7 @@ All questions from the initial PRD have been resolved through implementation:
    ```
 
 7. **Code Changes**
-   - File: `/prototype/frontend/src/pages/RobotsPage.tsx`
+   - File: `/app/frontend/src/pages/RobotsPage.tsx`
    - Lines 237-279: Completely rewrote `calculateTotalRepairCost()` function
    - Added REPAIR_COST_PER_HP constant (50 credits per HP)
    - Added HP-based cost calculation fallback
@@ -1586,7 +1586,7 @@ const robots = await prisma.robot.findMany({
 
 ### Solution
 
-**Updated Backend** (`/prototype/backend/src/routes/robots.ts` lines 1241-1286):
+**Updated Backend** (`/app/backend/src/routes/robots.ts` lines 1241-1286):
 
 1. **Get All Robots** (not just those with repairCost > 0):
 ```typescript
@@ -1660,7 +1660,7 @@ const finalCost = Math.floor(totalBaseCost * (1 - discount / 100));
 
 ### Files Changed
 
-**Backend**: `/prototype/backend/src/routes/robots.ts`
+**Backend**: `/app/backend/src/routes/robots.ts`
 - Lines 1241-1286: Rewrote repair-all endpoint logic
 - ~29 lines modified
 
@@ -1686,7 +1686,7 @@ const finalCost = Math.floor(totalBaseCost * (1 - discount / 100));
 
 ### Implementation Details
 
-**File**: `prototype/frontend/src/pages/RobotsPage.tsx`
+**File**: `app/frontend/src/pages/RobotsPage.tsx`
 - Complete Robot interface with all required fields (lines 6-36)
 - 5 utility functions for calculations and validation (lines 39-138)
 - Full implementation with all PRD requirements

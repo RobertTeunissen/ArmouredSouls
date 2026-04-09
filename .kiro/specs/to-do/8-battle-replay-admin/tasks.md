@@ -17,14 +17,14 @@ Implementation uses TypeScript throughout (backend services, API routes, fronten
     - _Requirements: 2.7, 3.4_
 
   - [ ] 1.2 Create BattleRevertErrorCode enum
-    - Create `prototype/backend/src/errors/battleRevertError.ts`
+    - Create `app/backend/src/errors/battleRevertError.ts`
     - Define error codes: BATTLE_NOT_FOUND, BATTLE_ALREADY_REVERTED, CLOSED_CYCLE_BATTLE, UNSUPPORTED_BATTLE_TYPE, REVERT_NOT_COMPLETED, REVERT_TRANSACTION_FAILED, REPLAY_TRANSACTION_FAILED
     - Create BattleRevertError class extending AppError
     - _Requirements: 1.8, 1.9, 1.10, 5.6_
 
 - [ ] 2. Implement BattleRevertService
   - [ ] 2.1 Create BattleRevertService with validation methods
-    - Create `prototype/backend/src/services/battleRevertService.ts`
+    - Create `app/backend/src/services/battleRevertService.ts`
     - Implement `validateBattle()` method checking: battle exists, not already reverted, is from current cycle
     - Implement `getCurrentCycleNumber()` and `getBattleCycleNumber()` helpers
     - _Requirements: 1.8, 1.9, 1.10, 2.1_
@@ -78,7 +78,7 @@ Implementation uses TypeScript throughout (backend services, API routes, fronten
 
 - [ ] 4. Implement BattleReplayService
   - [ ] 4.1 Create BattleReplayService with replay method
-    - Create `prototype/backend/src/services/battleReplayService.ts`
+    - Create `app/backend/src/services/battleReplayService.ts`
     - Implement `replayBattle()` method
     - Validate battle is reverted before replay
     - Load original robot configurations from BattleParticipant records
@@ -163,7 +163,7 @@ Implementation uses TypeScript throughout (backend services, API routes, fronten
 
 - [ ] 8. Implement BattleRevertTab frontend component
   - [ ] 8.1 Create BattleRevertTab component structure
-    - Create `prototype/frontend/src/components/admin/BattleRevertTab.tsx`
+    - Create `app/frontend/src/components/admin/BattleRevertTab.tsx`
     - Add battle ID input field with numeric validation
     - Add "Load Preview" button
     - Implement state management for preview, loading, error, and result

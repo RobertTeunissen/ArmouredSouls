@@ -681,11 +681,11 @@ Examples:
 
 ## Seed Script Location
 
-**File**: `prototype/backend/prisma/seed.ts`
+**File**: `app/backend/prisma/seed.ts`
 
 **Run Command**:
 ```bash
-cd prototype/backend
+cd app/backend
 npx prisma db seed
 ```
 

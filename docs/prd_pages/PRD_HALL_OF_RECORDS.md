@@ -24,9 +24,9 @@
 - **[PRD_BATTLE_HISTORY_PAGE.md](./PRD_BATTLE_HISTORY_PAGE.md)** - Battle history page with battle detail navigation
 
 ### Implementation Files
-- **Backend**: `prototype/backend/src/routes/records.ts` - Hall of Records API endpoint
-- **Frontend**: `prototype/frontend/src/pages/HallOfRecordsPage.tsx` - Hall of Records page component
-- **Tests**: `prototype/backend/tests/records.test.ts` - API endpoint tests
+- **Backend**: `app/backend/src/routes/records.ts` - Hall of Records API endpoint
+- **Frontend**: `app/frontend/src/pages/HallOfRecordsPage.tsx` - Hall of Records page component
+- **Tests**: `app/backend/tests/records.test.ts` - API endpoint tests
 
 ---
 
@@ -104,7 +104,7 @@ The **Hall of Records** is a feature that displays prestigious achievements and 
 
 ### Records Categories
 
-**Implementation Note**: All records below are ✅ fully implemented in `prototype/backend/src/routes/records.ts` and displayed in `prototype/frontend/src/pages/HallOfRecordsPage.tsx`.
+**Implementation Note**: All records below are ✅ fully implemented in `app/backend/src/routes/records.ts` and displayed in `app/frontend/src/pages/HallOfRecordsPage.tsx`.
 
 #### 1. **Combat Records** (Battle Performance) ✅ Implemented
 

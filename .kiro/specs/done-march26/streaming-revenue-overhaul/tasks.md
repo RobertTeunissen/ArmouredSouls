@@ -15,7 +15,7 @@ Key implementation areas:
 ## Tasks
 
 - [x] 1. Create Streaming Studio facility configuration
-  - Add Streaming Studio to FACILITY_TYPES array in `prototype/backend/src/config/facilities.ts`
+  - Add Streaming Studio to FACILITY_TYPES array in `app/backend/src/config/facilities.ts`
   - Configure 10 levels with costs: [100000, 200000, ..., 1000000]
   - Configure prestige requirements: [0, 0, 0, 1000, 2500, 5000, 10000, 15000, 25000, 50000]
   - Configure operating costs: level × 100
@@ -24,7 +24,7 @@ Key implementation areas:
 
 - [ ] 2. Implement streaming revenue calculation service
   - [x] 2.1 Create streamingRevenueService.ts with core calculation functions
-    - Create `prototype/backend/src/services/streamingRevenueService.ts`
+    - Create `app/backend/src/services/streamingRevenueService.ts`
     - Implement `calculateStreamingRevenue()` for 1v1 battles
     - Implement `calculateTagTeamStreamingRevenue()` for Tag Team battles
     - Implement `getStreamingStudioLevel()` helper
@@ -94,7 +94,7 @@ Key implementation areas:
 
 - [ ] 6. Remove streaming revenue from Income Generator
   - [x] 6.1 Update Income Generator facility configuration
-    - Modify benefits array in `prototype/backend/src/config/facilities.ts`
+    - Modify benefits array in `app/backend/src/config/facilities.ts`
     - Remove all streaming revenue mentions
     - Update description to note streaming is now per-battle via Streaming Studio
     - _Requirements: 13.1-13.8_
@@ -117,7 +117,7 @@ Key implementation areas:
 
 - [ ] 7. Add streaming revenue to battle log display
   - [x] 7.1 Update battle log UI component
-    - Modify `prototype/frontend/src/components/BattleLog.tsx`
+    - Modify `app/frontend/src/components/BattleLog.tsx`
     - Add streaming revenue section after battle outcome
     - Display: "📺 Streaming Revenue: ₡X,XXX (Base: ₡1,000 × Battles: X.XX × Fame: X.XX × Studio: X.XX)"
     - For Tag Team, show which robot's stats were used
@@ -129,14 +129,14 @@ Key implementation areas:
 
 - [ ] 8. Add streaming revenue tracking and analytics
   - [x] 8.1 Create database migration for robot_streaming_revenue table
-    - Create migration file in `prototype/backend/prisma/migrations/`
+    - Create migration file in `app/backend/prisma/migrations/`
     - Add RobotStreamingRevenue model to schema.prisma
     - Fields: id, robotId, cycleNumber, streamingRevenue, battlesInCycle, createdAt
     - Add unique constraint on [robotId, cycleNumber]
     - _Requirements: 15.1-15.7, 18.1-18.7_
   
   - [x] 8.2 Create robotAnalyticsService.ts for tracking
-    - Create `prototype/backend/src/services/robotAnalyticsService.ts`
+    - Create `app/backend/src/services/robotAnalyticsService.ts`
     - Implement `trackStreamingRevenue()` function
     - Implement `getRobotStreamingAnalytics()` function
     - Call from streamingRevenueService after awarding revenue
@@ -154,7 +154,7 @@ Key implementation areas:
     - _Requirements: 11.1-11.9_
   
   - [x] 9.2 Add streaming_revenue column to cycle CSV export
-    - Modify `prototype/backend/src/services/cycleCsvExportService.ts`
+    - Modify `app/backend/src/services/cycleCsvExportService.ts`
     - Add streaming_revenue column to CSV header
     - Populate with revenue earned per battle
     - Show ₡0 for bye matches
@@ -185,7 +185,7 @@ Key implementation areas:
 
 - [ ] 12. Integrate with Facility Advisor for ROI analysis
   - [x] 12.1 Add Streaming Studio to Facility Advisor
-    - Modify `prototype/backend/src/services/facilityRecommendationService.ts`
+    - Modify `app/backend/src/services/facilityRecommendationService.ts`
     - Add Streaming Studio analysis to facility recommendations
     - Calculate current streaming revenue per battle (average)
     - Calculate projected revenue increase at next level

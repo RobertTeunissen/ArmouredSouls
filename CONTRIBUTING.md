@@ -85,18 +85,12 @@ npm test  # or: pytest
 
 ```
 ArmouredSouls/
-├── docs/               # Project documentation
-├── modules/            # Application modules
-│   ├── auth/          # Authentication module
-│   ├── game-engine/   # Core game logic
-│   ├── robot/         # Robot management
-│   ├── battle/        # Battle simulation
-│   └── ...            # Other modules
-├── tests/             # Test suites
-│   ├── unit/          # Unit tests
-│   ├── integration/   # Integration tests
-│   └── e2e/           # End-to-end tests
-└── scripts/           # Utility scripts
+├── app/               # Main application
+│   ├── backend/       # Express API server
+│   ├── frontend/      # React frontend
+│   └── shared/        # Shared utilities (game formulas)
+├── docs/              # Project documentation
+└── .kiro/             # Kiro specs and steering files
 ```
 
 See [MODULE_STRUCTURE.md](docs/MODULE_STRUCTURE.md) for detailed module documentation.

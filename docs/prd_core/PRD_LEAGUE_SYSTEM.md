@@ -160,7 +160,7 @@ export const RECENT_OPPONENT_LIMIT = 5;
 
 ## Implementation Files
 
-All paths relative to `prototype/backend/src/`.
+All paths relative to `app/backend/src/`.
 
 | File | Responsibility |
 |---|---|

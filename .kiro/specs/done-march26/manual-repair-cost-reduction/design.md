@@ -49,7 +49,7 @@ The discount order is: Base Cost → Repair Bay discount → 50% manual discount
 
 ### Backend Changes
 
-#### 1. `POST /api/robots/repair-all` endpoint (`prototype/backend/src/routes/robots.ts`)
+#### 1. `POST /api/robots/repair-all` endpoint (`app/backend/src/routes/robots.ts`)
 
 Current flow calculates `finalCost = Math.floor(totalBaseCost * (1 - discount / 100))`. The change adds:
 
@@ -75,7 +75,7 @@ interface RepairAllResponse {
 }
 ```
 
-#### 2. `EventLogger.logRobotRepair()` (`prototype/backend/src/services/eventLogger.ts`)
+#### 2. `EventLogger.logRobotRepair()` (`app/backend/src/services/eventLogger.ts`)
 
 Add optional parameters for repair type metadata:
 
@@ -106,11 +106,11 @@ The audit log payload becomes:
 }
 ```
 
-#### 3. `repairAllRobots()` (`prototype/backend/src/services/repairService.ts`)
+#### 3. `repairAllRobots()` (`app/backend/src/services/repairService.ts`)
 
 Pass `repairType: 'automatic'` to `eventLogger.logRobotRepair()`. No cost calculation changes.
 
-#### 4. Admin audit log filtering (`prototype/backend/src/routes/admin.ts`)
+#### 4. Admin audit log filtering (`app/backend/src/routes/admin.ts`)
 
 Add a new endpoint or query parameter to filter `robot_repair` events by `repairType`:
 
@@ -129,7 +129,7 @@ Response includes: `userId`, `stableName`, `robotId`, `robotName`, `repairType`,
 
 ### Frontend Changes
 
-#### 5. `RobotsPage.tsx` (`prototype/frontend/src/pages/RobotsPage.tsx`)
+#### 5. `RobotsPage.tsx` (`app/frontend/src/pages/RobotsPage.tsx`)
 
 Update `calculateTotalRepairCost()` to apply the 50% manual discount:
 
@@ -146,7 +146,7 @@ Update the confirmation modal to show a discount breakdown:
 - Manual Repair Discount: 50% off
 - Final Cost: ₡Y
 
-#### 6. `RepairLogTab.tsx` (`prototype/frontend/src/components/admin/RepairLogTab.tsx`)
+#### 6. `RepairLogTab.tsx` (`app/frontend/src/components/admin/RepairLogTab.tsx`)
 
 New admin tab component that gives admins visibility into manual vs automatic repair activity. Follows the same patterns as `BankruptcyMonitorTab` and `RecentUsersTab` (fetch on mount, loading/error states, summary cards + data table).
 
@@ -218,7 +218,7 @@ interface RepairLogResponse {
 
 **State management:** Local state via `useState` for filters, data, loading, and error — same pattern as other admin tabs. No global context needed.
 
-#### 7. `AdminPage.tsx` (`prototype/frontend/src/pages/AdminPage.tsx`)
+#### 7. `AdminPage.tsx` (`app/frontend/src/pages/AdminPage.tsx`)
 
 Register the new tab in the admin page shell:
 
@@ -245,11 +245,11 @@ const TAB_LABELS: Record<TabType, string> = {
 };
 ```
 
-#### 8. Admin barrel export (`prototype/frontend/src/components/admin/index.ts`)
+#### 8. Admin barrel export (`app/frontend/src/components/admin/index.ts`)
 
 Add `export { RepairLogTab } from './RepairLogTab';` to the barrel file.
 
-#### 9. Admin types (`prototype/frontend/src/components/admin/types.ts`)
+#### 9. Admin types (`app/frontend/src/components/admin/types.ts`)
 
 Add `RepairLogEvent` and `RepairLogResponse` interfaces (shown in component #6 above) to the shared types file so they are co-located with other admin type definitions.
 
@@ -359,7 +359,7 @@ The manual repair endpoint has no currency gate — repairs are always allowed a
 
 ### Property-Based Tests (fast-check)
 
-Each correctness property maps to a single property-based test with minimum 100 iterations. Tests go in `prototype/backend/tests/manualRepairDiscount.property.test.ts`.
+Each correctness property maps to a single property-based test with minimum 100 iterations. Tests go in `app/backend/tests/manualRepairDiscount.property.test.ts`.
 
 | Test | Property | Generator Strategy |
 |---|---|---|
@@ -377,7 +377,7 @@ Each test must be tagged with a comment:
 
 ### Unit Tests
 
-Unit tests go in `prototype/backend/tests/manualRepairDiscount.test.ts`. Focus on specific examples and edge cases:
+Unit tests go in `app/backend/tests/manualRepairDiscount.test.ts`. Focus on specific examples and edge cases:
 
 - 50% discount applied to a known cost (e.g., base 10000, no Repair Bay → final 5000)
 - Odd cost rounds down (e.g., base 10001, no Repair Bay → `Math.floor(10001 * 0.5)` = 5000)

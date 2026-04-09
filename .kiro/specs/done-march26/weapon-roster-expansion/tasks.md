@@ -7,7 +7,7 @@ Expand the weapon catalog from 26 to 47 weapons by adding a `rangeBand` column, 
 ## Tasks
 
 - [x] 1. Database schema update and migration
-  - [x] 1.1 Add `rangeBand` column to Weapon model in `prototype/backend/prisma/schema.prisma`
+  - [x] 1.1 Add `rangeBand` column to Weapon model in `app/backend/prisma/schema.prisma`
     - Add `rangeBand String @map("range_band") @db.VarChar(10)` field to the Weapon model
     - Place it after the `description` field
     - _Requirements: 3.4, 7.1_
@@ -17,7 +17,7 @@ Expand the weapon catalog from 26 to 47 weapons by adding a `rangeBand` column, 
     - _Requirements: 3.4_
 
 - [x] 2. Seed data: add new weapons and reclassify existing ones
-  - [x] 2.1 Update `prototype/backend/prisma/seed.ts` with reclassified weapons
+  - [x] 2.1 Update `app/backend/prisma/seed.ts` with reclassified weapons
     - Laser Rifle: change handsRequired to "two", loadoutType to "two_handed", baseDamage to 9, cost to 243000, update description
     - Assault Rifle: change baseDamage to 14, cost to 293000, combatPowerBonus to +6, targetingSystemsBonus to +5, weaponControlBonus to +4, attackSpeedBonus to +3, update description
     - Battle Axe: acknowledge tier correction (no stat changes, cost 402000 already Luxury)
@@ -27,7 +27,7 @@ Expand the weapon catalog from 26 to 47 weapons by adding a `rangeBand` column, 
     - Check all 10 player archetype test users in seed data — ensure their equipped weapons (especially Laser Rifle and Assault Rifle) still exist with valid stats after reclassification
     - If any archetype user equips Laser Rifle, update their loadout since it's now two-handed
     - _Requirements: 11.4_
-  - [x] 2.3 Add 21 new weapon definitions to `prototype/backend/prisma/seed.ts`
+  - [x] 2.3 Add 21 new weapon definitions to `app/backend/prisma/seed.ts`
     - Add weapons B1-B21 from design Section 7: Vibro Mace, War Club, Shock Maul, Thermal Lance, Volt Sabre, Scatter Cannon, Pulse Accelerator, Arc Projector, Bolt Carbine, Flux Repeater, Disruptor Cannon, Nova Caster, Mortar System, Beam Pistol, Photon Marksman, Gauss Pistol, Particle Lance, Siege Cannon, Barrier Shield, Fortress Shield, Aegis Bulwark
     - Each definition must include: name, weaponType, baseDamage, cooldown, cost, handsRequired, damageType, loadoutType, rangeBand, specialProperty, description, and all attribute bonus fields
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 4.1, 4.2, 4.3, 7.1, 7.3, 7.4, 7.5_
@@ -49,13 +49,13 @@ Expand the weapon catalog from 26 to 47 weapons by adding a `rangeBand` column, 
   - Ensure all tests pass, ask the user if questions arise.
 
 - [x] 4. Simplify range classification logic
-  - [x] 4.1 Simplify `prototype/backend/src/services/arena/rangeBands.ts`
+  - [x] 4.1 Simplify `app/backend/src/services/arena/rangeBands.ts`
     - Update `WeaponLike` interface to `{ name: string; rangeBand: RangeBand }`
     - Replace `getWeaponOptimalRange()` rule chain with `return weapon.rangeBand`
     - Remove `LONG_RANGE_WEAPONS` list
     - Update `canAttack()` to use `weapon.rangeBand === 'melee'` instead of `weapon.weaponType === 'melee'`
     - _Requirements: 3.4_
-  - [x] 4.2 Simplify `prototype/frontend/src/utils/weaponRange.ts`
+  - [x] 4.2 Simplify `app/frontend/src/utils/weaponRange.ts`
     - Update `WeaponLike` interface to `{ name: string; rangeBand: RangeBand }`
     - Replace `getWeaponOptimalRange()` rule chain with `return weapon.rangeBand`
     - Remove `LONG_RANGE_WEAPONS` list
@@ -73,26 +73,26 @@ Expand the weapon catalog from 26 to 47 weapons by adding a `rangeBand` column, 
 
 - [x] 5. Dead code removal — recommendation pipeline
   - [x] 5.1 Delete dead recommendation files
-    - DELETE `prototype/frontend/src/components/onboarding/WeaponRecommendationCard.tsx`
-    - DELETE `prototype/backend/src/services/recommendationEngine.ts`
-    - DELETE `prototype/backend/tests/recommendationEngine.test.ts`
+    - DELETE `app/frontend/src/components/onboarding/WeaponRecommendationCard.tsx`
+    - DELETE `app/backend/src/services/recommendationEngine.ts`
+    - DELETE `app/backend/tests/recommendationEngine.test.ts`
     - _Requirements: 8.9_
-  - [x] 5.2 Remove recommendation exports from `prototype/frontend/src/components/onboarding/index.ts`
+  - [x] 5.2 Remove recommendation exports from `app/frontend/src/components/onboarding/index.ts`
     - Remove `WeaponRecommendationCard`, `STARTER_WEAPONS` export
     - Remove `WeaponRecommendation` type export
     - _Requirements: 8.9_
-  - [x] 5.3 Remove recommendation route from `prototype/backend/src/routes/onboarding.ts`
+  - [x] 5.3 Remove recommendation route from `app/backend/src/routes/onboarding.ts`
     - Remove the `GET /api/onboarding/recommendations` route handler
     - Remove the `import { recommendationEngine } from '../services/recommendationEngine'` import
     - _Requirements: 8.9_
-  - [x] 5.4 Remove recommendation code from frontend API client `prototype/frontend/src/utils/onboardingApi.ts`
+  - [x] 5.4 Remove recommendation code from frontend API client `app/frontend/src/utils/onboardingApi.ts`
     - Remove `getRecommendations()`, `getRecommendationsWithRetry()`, `clearRecommendationCache()`
     - Remove recommendation cache object and `buildRecommendationCacheKey()`
     - Remove exported types: `Recommendation`, `BudgetAllocation`, `RecommendationsResponse`
     - _Requirements: 8.9_
   - [x] 5.5 Remove recommendation test sections from test files
-    - Remove recommendations test section from `prototype/backend/tests/onboardingApi.test.ts`
-    - Remove recommendations endpoint mock from `prototype/frontend/src/components/onboarding/__tests__/performance.test.tsx`
+    - Remove recommendations test section from `app/backend/tests/onboardingApi.test.ts`
+    - Remove recommendations endpoint mock from `app/frontend/src/components/onboarding/__tests__/performance.test.tsx`
     - _Requirements: 8.9_
 
 - [x] 6. Checkpoint — Ensure dead code removal is clean
@@ -111,9 +111,9 @@ Expand the weapon catalog from 26 to 47 weapons by adding a `rangeBand` column, 
     - Update any ₡300K references in guidance text to ₡250K
     - _Requirements: 12.3_
   - [x] 7.4 Update weapon shop filtering tests
-    - Update `prototype/frontend/src/__tests__/weaponShopFiltering.test.ts` tier boundary assertions
-    - Update `prototype/frontend/src/pages/__tests__/WeaponShopPage.onboarding.test.tsx` 300000 assertion to 250000
-    - Update `prototype/frontend/tests/e2e/weapon-shop.spec.ts` if tier labels changed
+    - Update `app/frontend/src/__tests__/weaponShopFiltering.test.ts` tier boundary assertions
+    - Update `app/frontend/src/pages/__tests__/WeaponShopPage.onboarding.test.tsx` 300000 assertion to 250000
+    - Update `app/frontend/tests/e2e/weapon-shop.spec.ts` if tier labels changed
     - _Requirements: 12.4, 12.6_
 
 - [x] 8. Weapon stat validation property tests
@@ -149,7 +149,7 @@ Expand the weapon catalog from 26 to 47 weapons by adding a `rangeBand` column, 
   - Ensure all tests pass, ask the user if questions arise.
 
 - [x] 10. Weapon image assets
-  - [x] 10.1 Create 21 new `.webp` image files in `prototype/frontend/src/assets/weapons/`
+  - [x] 10.1 Create 21 new `.webp` image files in `app/frontend/src/assets/weapons/`
     - Create placeholder images for: vibro-mace, war-club, shock-maul, thermal-lance, volt-sabre, scatter-cannon, pulse-accelerator, arc-projector, bolt-carbine, flux-repeater, disruptor-cannon, nova-caster, mortar-system, beam-pistol, photon-marksman, gauss-pistol, particle-lance, siege-cannon, barrier-shield, fortress-shield, aegis-bulwark
     - Use kebab-case naming convention matching weapon names
     - _Requirements: 9.1, 9.3_
@@ -180,8 +180,8 @@ Expand the weapon catalog from 26 to 47 weapons by adding a `rangeBand` column, 
     - Update "Appendix B: Complete Weapon Catalog" with all new and reclassified weapons
     - _Requirements: 8.5_
   - [x] 11.6 Update in-game guide files
-    - Update `prototype/backend/src/content/guide/weapons/loadout-types.md`: 1H 15→22, 2H 8→19, Shield 3→6
-    - Update `prototype/backend/src/content/guide/combat/movement-and-positioning.md`: add new weapon examples per range band
+    - Update `app/backend/src/content/guide/weapons/loadout-types.md`: 1H 15→22, 2H 8→19, Shield 3→6
+    - Update `app/backend/src/content/guide/combat/movement-and-positioning.md`: add new weapon examples per range band
     - _Requirements: 8.6, 8.7_
   - [x] 11.7 Update `docs/prd_core/PRD_ONBOARDING_SYSTEM.md`
     - Update weapon type counts in Step 6: Energy 6→13, Ballistic 10→17, Melee 7→11, Shield 3→6

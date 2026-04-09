@@ -11,7 +11,7 @@ This feature fills those 22 gaps through a combination of reclassifying existing
 - **Grid**: The 36-slot matrix of Range × Hand Type × Price Tier (plus 4 Shield tiers) that defines the weapon roster structure
 - **Roster_Planner**: The system responsible for analyzing the grid, identifying gaps, proposing weapon moves and new weapon designs, and validating that all slots are filled
 - **Pricing_Engine**: The subsystem that calculates weapon cost using the formula: `Total Cost = (Base Cost + Attribute Cost + DPS Cost) × Hand Multiplier`
-- **Seed_Data_Manager**: The component that manages the weapon catalog in the database seed file (`prototype/backend/prisma/seed.ts`) and the specification document (`docs/prd_core/SEED_DATA_SPECIFICATION.md`)
+- **Seed_Data_Manager**: The component that manages the weapon catalog in the database seed file (`app/backend/prisma/seed.ts`) and the specification document (`docs/prd_core/SEED_DATA_SPECIFICATION.md`)
 - **Weapon_Validator**: The subsystem that verifies weapon stat integrity — ensuring DPS, cost, range assignment, and attribute bonuses are internally consistent
 - **Range_Band**: One of four distance classifications: Melee (0–2 units), Short (3–6 units), Mid (7–12 units), Long (13+ units)
 - **Price_Tier**: One of four cost brackets: Budget (<₡100K), Mid (₡100–250K), Premium (₡250–400K), Luxury (₡400K+)
@@ -132,7 +132,7 @@ This feature fills those 22 gaps through a combination of reclassifying existing
 
 #### Acceptance Criteria
 
-1. THE Seed_Data_Manager SHALL create a `.webp` image file for each new weapon in `prototype/frontend/src/assets/weapons/` using the kebab-case naming convention (e.g., `plasma-lance.webp`)
+1. THE Seed_Data_Manager SHALL create a `.webp` image file for each new weapon in `app/frontend/src/assets/weapons/` using the kebab-case naming convention (e.g., `plasma-lance.webp`)
 2. THE Seed_Data_Manager SHALL create a corresponding `.svg` source file for each new weapon in the same directory
 3. THE Seed_Data_Manager SHALL ensure each image follows the existing visual style: weapon illustration on a transparent or dark background, suitable for display at 48×48 to 192×192 pixels
 4. THE Seed_Data_Manager SHALL verify that the `getWeaponImagePath()` utility in `weaponImages.ts` correctly resolves each new weapon name to its image file without code changes (the utility uses dynamic glob import of `*.webp` files)

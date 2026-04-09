@@ -65,7 +65,7 @@ The Combat Training Academy costs were exactly 2× the Defense Training Academy 
 
 ## Files Modified
 
-1. `prototype/backend/src/config/facilities.ts` — Combat Training Academy `costs` array updated
+1. `app/backend/src/config/facilities.ts` — Combat Training Academy `costs` array updated
 
 ---
 

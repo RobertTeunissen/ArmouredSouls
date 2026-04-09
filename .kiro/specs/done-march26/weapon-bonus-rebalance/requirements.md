@@ -8,7 +8,7 @@ This feature swaps each dead or mismatched bonus 1:1 to a live attribute at the 
 
 ## Glossary
 
-- **Seed_Data**: The WEAPON_DEFINITIONS array in `prototype/backend/prisma/seed.ts` and corresponding documentation that defines all 23 weapons
+- **Seed_Data**: The WEAPON_DEFINITIONS array in `app/backend/prisma/seed.ts` and corresponding documentation that defines all 23 weapons
 - **Dead_Attribute**: A robot attribute that has no implementation in `combatSimulator.ts` and therefore provides zero combat value (hydraulicSystems, servoMotors, combatAlgorithms, threatAnalysis, adaptiveAI, logicCores, syncProtocols, supportSystems, formationTactics)
 - **Live_Attribute**: A robot attribute that is referenced by at least one combat formula in `combatSimulator.ts` (combatPower, targetingSystems, criticalSystems, penetration, weaponControl, attackSpeed, armorPlating, shieldCapacity, evasionThrusters, damageDampeners, counterProtocols, hullIntegrity, gyroStabilizers, powerCore)
 - **Pricing_Formula**: `Total Cost = (Base Cost + Attribute Cost + DPS Cost) × Hand Multiplier` where `Attribute Cost = Σ(500 × bonus²)` for all bonuses
@@ -166,7 +166,7 @@ This feature swaps each dead or mismatched bonus 1:1 to a live attribute at the 
 
 #### Acceptance Criteria
 
-1. THE WEAPON_DEFINITIONS array in `prototype/backend/prisma/seed.ts` SHALL reflect the new bonus values for all 7 modified weapons
+1. THE WEAPON_DEFINITIONS array in `app/backend/prisma/seed.ts` SHALL reflect the new bonus values for all 7 modified weapons
 2. THE seed file SHALL not modify baseDamage, cooldown, weaponType, handsRequired, damageType, loadoutType, cost, or description fields for any weapon
 3. THE seed file SHALL not add or remove any weapon entries from the WEAPON_DEFINITIONS array
 4. THE seed.ts file SHALL compile without TypeScript errors after the changes
@@ -200,7 +200,7 @@ This feature swaps each dead or mismatched bonus 1:1 to a live attribute at the 
 
 #### Acceptance Criteria
 
-1. THE rebalance SHALL not modify any file outside of `prototype/backend/prisma/seed.ts`, `docs/prd_core/SEED_DATA_SPECIFICATION.md`, `docs/prd_core/PRD_WEAPONS_LOADOUT.md`, and the new Prisma migration file
+1. THE rebalance SHALL not modify any file outside of `app/backend/prisma/seed.ts`, `docs/prd_core/SEED_DATA_SPECIFICATION.md`, `docs/prd_core/PRD_WEAPONS_LOADOUT.md`, and the new Prisma migration file
 2. THE rebalance SHALL not change the total number of weapons (23)
 3. THE rebalance SHALL not modify the 16 weapons that have no dead bonuses and no flavour mismatches
 4. THE rebalance SHALL not modify combatSimulator.ts or any other backend source code

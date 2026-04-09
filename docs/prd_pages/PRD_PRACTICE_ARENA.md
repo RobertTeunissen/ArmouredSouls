@@ -35,7 +35,7 @@ The Practice Arena (in-universe: "Combat Simulation Lab") is a 1v1 sandbox battl
 - [SECURITY.md](../guides/SECURITY.md) — Security strategy (includes Practice Arena rate limiting)
 - [COMBAT_FORMULAS.md](../prd_core/COMBAT_FORMULAS.md) — Combat math reference
 - [COMBAT_MESSAGES.md](../prd_core/COMBAT_MESSAGES.md) — Narrative generation system
-- [combat-simulator.md](../prototype/backend/src/content/guide/strategy/combat-simulator.md) — In-game guide article for the Combat Simulator
+- [combat-simulator.md](../app/backend/src/content/guide/strategy/combat-simulator.md) — In-game guide article for the Combat Simulator
 
 ---
 
@@ -372,15 +372,15 @@ The Dashboard tab in the admin portal displays a "Practice Arena" section showin
 ## File Structure
 
 ### Backend
-- `prototype/backend/src/services/practice-arena/practiceArenaService.ts` — Core service (robot building, battle execution)
-- `prototype/backend/src/services/practice-arena/practiceArenaMetrics.ts` — In-memory metrics singleton
-- `prototype/backend/src/services/practice-arena/index.ts` — Barrel exports
-- `prototype/backend/src/routes/practiceArena.ts` — API routes with Zod validation, rate limiting, cycle guard
+- `app/backend/src/services/practice-arena/practiceArenaService.ts` — Core service (robot building, battle execution)
+- `app/backend/src/services/practice-arena/practiceArenaMetrics.ts` — In-memory metrics singleton
+- `app/backend/src/services/practice-arena/index.ts` — Barrel exports
+- `app/backend/src/routes/practiceArena.ts` — API routes with Zod validation, rate limiting, cycle guard
 
 ### Frontend
-- `prototype/frontend/src/pages/PracticeArenaPage.tsx` — Main page component
-- `prototype/frontend/src/hooks/usePracticeHistory.ts` — localStorage history hook
+- `app/frontend/src/pages/PracticeArenaPage.tsx` — Main page component
+- `app/frontend/src/hooks/usePracticeHistory.ts` — localStorage history hook
 
 ### Database
-- `prototype/backend/prisma/schema.prisma` — `PracticeArenaDailyStats` model
+- `app/backend/prisma/schema.prisma` — `PracticeArenaDailyStats` model
 - One migration: `add-practice-arena-daily-stats`

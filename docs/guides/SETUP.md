@@ -55,17 +55,17 @@ Two terminals:
 
 ```bash
 # Terminal 1 — Backend
-cd prototype/backend
+cd app/backend
 npm run dev
 # → http://localhost:3001
 
 # Terminal 2 — Frontend
-cd prototype/frontend
+cd app/frontend
 npm run dev
 # → http://localhost:3000
 ```
 
-Test credentials are in `prototype/backend/prisma/seed.ts`. Do not commit credentials to docs.
+Test credentials are in `app/backend/prisma/seed.ts`. Do not commit credentials to docs.
 
 ---
 
@@ -73,7 +73,7 @@ Test credentials are in `prototype/backend/prisma/seed.ts`. Do not commit creden
 
 ### Reset (drop + recreate + migrate + seed)
 ```bash
-cd prototype/backend
+cd app/backend
 npm run db:reset
 ```
 
@@ -81,20 +81,20 @@ This runs `prisma migrate reset --force` which drops the database, re-applies al
 
 ### Apply new migrations (after pulling changes)
 ```bash
-cd prototype/backend
+cd app/backend
 npx prisma migrate deploy
 ```
 
 ### Inspect the database
 ```bash
-cd prototype/backend
+cd app/backend
 npx prisma studio
 # → http://localhost:5555
 ```
 
 ### Create a new migration (after editing schema.prisma)
 ```bash
-cd prototype/backend
+cd app/backend
 npx prisma migrate dev --name describe_your_change
 ```
 
@@ -109,7 +109,7 @@ npx prisma generate
 
 Prisma 7 uses the `client` engine type which requires a driver adapter. The app handles this automatically in `src/lib/prisma.ts` via `@prisma/adapter-pg`. Standalone scripts and tests that create their own PrismaClient must also pass an adapter — see the existing scripts for the pattern.
 
-The generated client lives at `prototype/backend/generated/prisma/` (not `@prisma/client`). Import from there or from `src/lib/prisma.ts`.
+The generated client lives at `app/backend/generated/prisma/` (not `@prisma/client`). Import from there or from `src/lib/prisma.ts`.
 
 ---
 
@@ -117,7 +117,7 @@ The generated client lives at `prototype/backend/generated/prisma/` (not `@prism
 
 ### Backend (Jest 30)
 ```bash
-cd prototype/backend
+cd app/backend
 npm run test:unit          # Unit tests only
 npm run test:integration   # Integration tests only
 npm run test               # Both
@@ -127,14 +127,14 @@ npm run test:all           # Everything
 
 ### Frontend (Vitest 4)
 ```bash
-cd prototype/frontend
+cd app/frontend
 npm run test -- --run      # Single run (no watch mode)
 npm run test:coverage      # With coverage report
 ```
 
 ### E2E (Playwright)
 ```bash
-cd prototype/frontend
+cd app/frontend
 npm run test:e2e           # Headless
 npm run test:e2e:headed    # With browser visible
 npm run test:e2e:debug     # Debug mode
@@ -172,11 +172,11 @@ Navigate to the admin page in the UI after logging in with an admin account. The
 
 ```bash
 # Backend — compiles TypeScript to dist/
-cd prototype/backend
+cd app/backend
 npm run build
 
 # Frontend — builds to dist/
-cd prototype/frontend
+cd app/frontend
 npm run build
 ```
 
@@ -188,7 +188,7 @@ npm run build
 
 You forgot to create the `.env` file:
 ```bash
-cd prototype/backend
+cd app/backend
 cp .env.example .env
 ```
 
@@ -216,7 +216,7 @@ lsof -ti:3000 | xargs kill -9   # Frontend
 
 If you see migration conflicts or "relation does not exist" errors:
 ```bash
-cd prototype/backend
+cd app/backend
 npm run db:reset
 ```
 
@@ -233,14 +233,14 @@ npx tsx prisma/seed.ts
 ### "Prisma Client not generated"
 
 ```bash
-cd prototype/backend
+cd app/backend
 npx prisma generate
 ```
 
 ### Node modules issues
 
 ```bash
-cd prototype/backend
+cd app/backend
 rm -rf node_modules package-lock.json
 npm install
 

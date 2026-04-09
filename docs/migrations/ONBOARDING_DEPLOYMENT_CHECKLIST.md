@@ -12,7 +12,7 @@ Deployment is triggered by pushing to `main`. GitHub Actions runs the full pipel
 
 ### Frontend
 - [ ] All onboarding tests pass: `npx vitest run src/components/onboarding src/contexts/__tests__/OnboardingContext src/utils/__tests__/onboarding`
-- [ ] All 21 SVG placeholder images present in `prototype/frontend/public/assets/onboarding/`
+- [ ] All 21 SVG placeholder images present in `app/frontend/public/assets/onboarding/`
 
 ### Database
 - [ ] Migration `20260304200102_add_onboarding_tracking` applies cleanly locally

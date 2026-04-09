@@ -578,6 +578,8 @@ router.put('/:id', authenticateToken, validateRequest({ params: paramsSchema, bo
 );
 ```
 
+The `custom-routes/require-validate-request` ESLint rule enforces 100% route validation coverage. Any `router.get/post/put/delete/patch` call in `src/routes/` that does not include `validateRequest` in its middleware chain will fail lint. This prevents regression — new routes cannot be added without validation.
+
 ---
 
 ## Future Security Enhancements

@@ -62,7 +62,7 @@ graph TD
 
 ### 1. Streaming Revenue Calculator
 
-**Location**: `prototype/backend/src/services/streamingRevenueService.ts` (new file)
+**Location**: `app/backend/src/services/streamingRevenueService.ts` (new file)
 
 **Purpose**: Calculate streaming revenue for battles using the new per-battle formula and multipliers.
 
@@ -116,7 +116,7 @@ async function calculateTagTeamStreamingRevenue(
 
 ### 2. Streaming Studio Facility
 
-**Location**: `prototype/backend/src/config/facilities.ts` (modify existing)
+**Location**: `app/backend/src/config/facilities.ts` (modify existing)
 
 **Purpose**: Define the new Streaming Studio facility configuration.
 
@@ -150,7 +150,7 @@ async function calculateTagTeamStreamingRevenue(
 
 ### 3. Battle Orchestrator Integration
 
-**Location**: `prototype/backend/src/services/battleOrchestrator.ts` (modify existing)
+**Location**: `app/backend/src/services/battleOrchestrator.ts` (modify existing)
 
 **Purpose**: Integrate streaming revenue calculation and award into battle completion flow.
 
@@ -210,7 +210,7 @@ async function processBattle(scheduledMatch: ScheduledMatch) {
 
 ### 4. Tag Team Battle Integration
 
-**Location**: `prototype/backend/src/services/tagTeamBattleOrchestrator.ts` (modify existing)
+**Location**: `app/backend/src/services/tagTeamBattleOrchestrator.ts` (modify existing)
 
 **Purpose**: Calculate streaming revenue for Tag Team matches using highest fame and highest battles from each team.
 
@@ -249,7 +249,7 @@ async function processTagTeamBattle(team1, team2) {
 
 ### 5. Income Generator Modification
 
-**Location**: `prototype/backend/src/config/facilities.ts` (modify existing)
+**Location**: `app/backend/src/config/facilities.ts` (modify existing)
 
 **Purpose**: Remove streaming revenue from Income Generator facility.
 
@@ -274,7 +274,7 @@ benefits: [
 ],
 ```
 
-**Location**: `prototype/backend/src/utils/economyCalculations.ts` (modify existing)
+**Location**: `app/backend/src/utils/economyCalculations.ts` (modify existing)
 
 **Changes**:
 - **DELETE** `calculateStreamingIncome()` function (old daily passive model)
@@ -286,7 +286,7 @@ benefits: [
 
 ### 6. Robot Analytics Tracking
 
-**Location**: `prototype/backend/src/services/robotAnalyticsService.ts` (new file)
+**Location**: `app/backend/src/services/robotAnalyticsService.ts` (new file)
 
 **Purpose**: Track streaming revenue per robot per cycle for analytics display.
 
@@ -329,7 +329,7 @@ async function getRobotStreamingAnalytics(
 
 ### 7. Battle Log Display
 
-**Location**: `prototype/frontend/src/components/BattleLog.tsx` (modify existing)
+**Location**: `app/frontend/src/components/BattleLog.tsx` (modify existing)
 
 **Purpose**: Display streaming revenue in battle log UI.
 
@@ -347,7 +347,7 @@ async function getRobotStreamingAnalytics(
 
 ### 8. Cycle Summary Display
 
-**Location**: `prototype/backend/src/services/cycleExecutionService.ts` (modify existing)
+**Location**: `app/backend/src/services/cycleExecutionService.ts` (modify existing)
 
 **Purpose**: Include streaming revenue in cycle summary output.
 
@@ -366,7 +366,7 @@ Cycle Summary:
 
 ### 9. Cycle CSV Export
 
-**Location**: `prototype/backend/src/services/cycleCsvExportService.ts` (modify existing)
+**Location**: `app/backend/src/services/cycleCsvExportService.ts` (modify existing)
 
 **Purpose**: Add streaming revenue column to cycle CSV exports.
 
@@ -377,7 +377,7 @@ cycle,battle_id,robot_id,robot_name,opponent_id,opponent_name,result,winnings,st
 
 ### 10. Facility Advisor Integration
 
-**Location**: `prototype/backend/src/services/facilityRecommendationService.ts` (modify existing)
+**Location**: `app/backend/src/services/facilityRecommendationService.ts` (modify existing)
 
 **Purpose**: Provide ROI analysis for Streaming Studio upgrades.
 

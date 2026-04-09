@@ -7,7 +7,7 @@ Install Zustand, create robot and stable stores, migrate the highest-traffic pag
 ## Tasks
 
 - [x] 1. Install Zustand and create store infrastructure
-  - [x] 1.1 Install `zustand` as a production dependency in `prototype/frontend/`
+  - [x] 1.1 Install `zustand` as a production dependency in `app/frontend/`
   - [x] 1.2 Create `src/stores/` directory with `index.ts` barrel file
   - [x] 1.3 Verify Zustand is compatible with React 19 (run build)
   - [x] 1.4 Verify existing Auth and Onboarding contexts are untouched (no changes to `src/contexts/`)

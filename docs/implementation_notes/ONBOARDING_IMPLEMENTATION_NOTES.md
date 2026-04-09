@@ -60,7 +60,7 @@ Storage capacity full → auto-buys Storage Facility upgrade and retries.
 
 ### Active Step Components
 ```
-prototype/frontend/src/components/onboarding/steps/
+app/frontend/src/components/onboarding/steps/
 ├── Step1_Welcome.tsx          # Welcome + strategy + robot creation
 ├── Step3_FacilityTiming.tsx   # Facility investment choices
 ├── Step6_WeaponEducation.tsx  # Per-robot battle-ready wizard

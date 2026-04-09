@@ -357,7 +357,7 @@ This means `computeSeedings()` only needs the round-1 matches and the bracket si
 
 Use **fast-check** (already in the project's test dependencies) for property-based tests. Each property test runs a minimum of 100 iterations.
 
-**Backend property tests** (`prototype/backend/src/__tests__/tournament-bracket-seeding.property.test.ts`):
+**Backend property tests** (`app/backend/src/__tests__/tournament-bracket-seeding.property.test.ts`):
 
 1. **Property 3 test**: Generate random arrays of 4-128 robots with random ELO values. Run `seedRobotsByELO()` → `generateStandardSeedOrder()` → `computeSeedings()`. Assert seedings are in descending ELO order.
    - Tag: `Feature: tournament-bracket-seeding, Property 3: Seedings round-trip`
@@ -371,7 +371,7 @@ Use **fast-check** (already in the project's test dependencies) for property-bas
 4. **Property 6 test**: Generate random seed numbers (1-500) and robot names. Assert the seed display function shows prefix for seeds ≤ 32 and omits it for seeds > 32.
    - Tag: `Feature: tournament-bracket-seeding, Property 6: Seed display threshold`
 
-**Frontend property tests** (`prototype/frontend/src/__tests__/tournament-bracket-seeding.property.test.ts`):
+**Frontend property tests** (`app/frontend/src/__tests__/tournament-bracket-seeding.property.test.ts`):
 
 5. **Property 4 test**: Generate random tournament data with 1-7 rounds. Render `BracketView` and assert correct number of round columns and match cards per round.
    - Tag: `Feature: tournament-bracket-seeding, Property 4: Bracket renders correct structure`

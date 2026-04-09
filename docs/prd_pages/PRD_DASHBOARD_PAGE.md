@@ -57,10 +57,10 @@ The Dashboard Page (`/dashboard`) is the most critical page in Armoured Souls - 
 ## References
 - **Design System**: [docs/design_ux/DESIGN_SYSTEM_QUICK_REFERENCE.md](../design_ux/DESIGN_SYSTEM_QUICK_REFERENCE.md)
 - **Related Files**:
-  - Frontend: `prototype/frontend/src/pages/DashboardPage.tsx`
-  - Components: `prototype/frontend/src/components/StableStatistics.tsx`, `RobotDashboardCard.tsx`, `HPBar.tsx`, `BattleReadinessBadge.tsx`, `FinancialSummary.tsx`, `UpcomingMatches.tsx`, `RecentMatches.tsx`
-  - Backend: `prototype/backend/src/routes/user.ts`
-  - API Utils: `prototype/frontend/src/utils/userApi.ts`
+  - Frontend: `app/frontend/src/pages/DashboardPage.tsx`
+  - Components: `app/frontend/src/components/StableStatistics.tsx`, `RobotDashboardCard.tsx`, `HPBar.tsx`, `BattleReadinessBadge.tsx`, `FinancialSummary.tsx`, `UpcomingMatches.tsx`, `RecentMatches.tsx`
+  - Backend: `app/backend/src/routes/user.ts`
+  - API Utils: `app/frontend/src/utils/userApi.ts`
 
 ---
 
@@ -135,7 +135,7 @@ The Dashboard Page (`/dashboard`) is the most critical page in Armoured Souls - 
 
 ### ✅ Phase 2: Stable Statistics Panel (COMPLETE)
 
-**Backend Implementation** - `prototype/backend/src/routes/user.ts`
+**Backend Implementation** - `app/backend/src/routes/user.ts`
 - **GET /api/user/stats** endpoint
 - Calculates aggregate statistics across all robots
 - Returns: totalBattles, wins, losses, draws, winRate, avgELO, highestLeague, totalRobots, robotsReady
@@ -774,13 +774,13 @@ Coming Soon: Roster Expansion Level 4 (requires 1,000 prestige) ✓
 
 ### Backend Files
 ```
-prototype/backend/src/routes/
+app/backend/src/routes/
 └── user.ts                    # ✅ GET /api/user/stats endpoint
 ```
 
 ### Frontend Components
 ```
-prototype/frontend/src/components/
+app/frontend/src/components/
 ├── HPBar.tsx                  # ✅ Reusable HP bar component
 ├── BattleReadinessBadge.tsx   # ✅ Status badge component
 ├── RobotDashboardCard.tsx     # ✅ Compact robot card
@@ -792,19 +792,19 @@ prototype/frontend/src/components/
 
 ### Frontend Pages
 ```
-prototype/frontend/src/pages/
+app/frontend/src/pages/
 └── DashboardPage.tsx          # ✅ Main dashboard page (major refactor)
 ```
 
 ### Frontend Utils
 ```
-prototype/frontend/src/utils/
+app/frontend/src/utils/
 └── userApi.ts                 # ✅ User API utilities
 ```
 
 ### Styles
 ```
-prototype/frontend/src/
+app/frontend/src/
 └── index.css                  # ✅ Custom scrollbar styling
 ```
 

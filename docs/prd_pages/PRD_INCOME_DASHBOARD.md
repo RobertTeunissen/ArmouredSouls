@@ -286,10 +286,10 @@ breakdown.push({
 
 #### Files Modified (5)
 
-1. `prototype/frontend/src/components/Navigation.tsx`
-2. `prototype/frontend/src/App.tsx`
-3. `prototype/frontend/src/pages/FinancialReportPage.tsx`
-4. `prototype/frontend/src/components/FinancialSummary.tsx`
+1. `app/frontend/src/components/Navigation.tsx`
+2. `app/frontend/src/App.tsx`
+3. `app/frontend/src/pages/FinancialReportPage.tsx`
+4. `app/frontend/src/components/FinancialSummary.tsx`
 5. `docs/PRD_INCOME_DASHBOARD.md`
 
 **Result**: Navigation now works correctly, terminology is consistent, no breaking changes.
@@ -347,7 +347,7 @@ bg-gray-800 (outer container)
 
 #### Components Modified
 
-- `prototype/frontend/src/pages/FinancialReportPage.tsx`
+- `app/frontend/src/pages/FinancialReportPage.tsx`
 - `docs/PRD_INCOME_DASHBOARD.md` (updated to v1.2)
 
 **Result**: Daily Stable Report format successfully implemented, matching PRD_ECONOMY_SYSTEM.md specification.
@@ -1068,9 +1068,9 @@ PrismaClientValidationError: Unknown field `league` for select statement on mode
 ```
 
 **Solution**: Updated 3 files to use correct field name:
-1. `prototype/backend/src/utils/economyCalculations.ts` - Changed Prisma query and return type
-2. `prototype/frontend/src/utils/financialApi.ts` - Updated interface
-3. `prototype/frontend/src/components/RobotFinancialCard.tsx` - Updated display
+1. `app/backend/src/utils/economyCalculations.ts` - Changed Prisma query and return type
+2. `app/frontend/src/utils/financialApi.ts` - Updated interface
+3. `app/frontend/src/components/RobotFinancialCard.tsx` - Updated display
 
 **Commit**: `5ab8f4f` - Fix database field name (league → currentLeague)
 
@@ -1088,8 +1088,8 @@ PrismaClientValidationError: Unknown field `league` for select statement on mode
 **Root Cause**: Type inconsistency between backend return type declaration and actual database schema.
 
 **Solution**: Updated 2 files to use consistent `number` type:
-1. `prototype/backend/src/utils/economyCalculations.ts` - Changed return type from `id: string` to `id: number`
-2. `prototype/frontend/src/utils/financialApi.ts` - Changed interface from `id: string` to `id: number`
+1. `app/backend/src/utils/economyCalculations.ts` - Changed return type from `id: string` to `id: number`
+2. `app/frontend/src/utils/financialApi.ts` - Changed interface from `id: string` to `id: number`
 
 **Commit**: `c860eb4` - Fix robot id type mismatch (string → number)
 
@@ -1105,7 +1105,7 @@ This section provides comprehensive technical documentation of the Income Dashbo
 
 #### Core Calculation Functions
 
-**Location**: `prototype/backend/src/utils/economyCalculations.ts`
+**Location**: `app/backend/src/utils/economyCalculations.ts`
 
 **Key Functions**:
 
@@ -1528,7 +1528,7 @@ Renders:
 
 #### Backend Types
 
-**Location**: `prototype/backend/src/utils/economyCalculations.ts`
+**Location**: `app/backend/src/utils/economyCalculations.ts`
 
 ```typescript
 interface FinancialReport {
@@ -1617,7 +1617,7 @@ interface ROICalculation {
 
 #### Frontend Types
 
-**Location**: `prototype/frontend/src/utils/financialApi.ts`
+**Location**: `app/frontend/src/utils/financialApi.ts`
 
 ```typescript
 // Mirrors backend types with same structure
@@ -2828,20 +2828,20 @@ Three key improvements to Per-Robot Breakdown tab:
 
 #### Code Files Modified: 12
 **Backend** (2 files):
-1. `prototype/backend/src/utils/economyCalculations.ts`
-2. `prototype/backend/src/routes/finances.ts`
+1. `app/backend/src/utils/economyCalculations.ts`
+2. `app/backend/src/routes/finances.ts`
 
 **Frontend** (10 files):
-3. `prototype/frontend/src/pages/FinancialReportPage.tsx`
-4. `prototype/frontend/src/components/DailyStableReport.tsx`
-5. `prototype/frontend/src/components/RobotFinancialCard.tsx` (NEW)
-6. `prototype/frontend/src/components/PerRobotBreakdown.tsx` (NEW)
-7. `prototype/frontend/src/components/FacilityROICalculator.tsx` (NEW)
-8. `prototype/frontend/src/components/InvestmentsTab.tsx` (NEW)
-9. `prototype/frontend/src/components/Navigation.tsx`
-10. `prototype/frontend/src/components/FinancialSummary.tsx`
-11. `prototype/frontend/src/utils/financialApi.ts`
-12. `prototype/frontend/src/App.tsx`
+3. `app/frontend/src/pages/FinancialReportPage.tsx`
+4. `app/frontend/src/components/DailyStableReport.tsx`
+5. `app/frontend/src/components/RobotFinancialCard.tsx` (NEW)
+6. `app/frontend/src/components/PerRobotBreakdown.tsx` (NEW)
+7. `app/frontend/src/components/FacilityROICalculator.tsx` (NEW)
+8. `app/frontend/src/components/InvestmentsTab.tsx` (NEW)
+9. `app/frontend/src/components/Navigation.tsx`
+10. `app/frontend/src/components/FinancialSummary.tsx`
+11. `app/frontend/src/utils/financialApi.ts`
+12. `app/frontend/src/App.tsx`
 
 #### Documentation Files
 **Primary Documentation:**

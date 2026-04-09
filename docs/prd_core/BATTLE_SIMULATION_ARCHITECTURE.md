@@ -783,7 +783,7 @@ The acc/production environment uses individual cron triggers rather than a monol
 | `src/utils/economyCalculations.ts` | Credit rewards, prestige multipliers, participation rewards |
 | `src/utils/tournamentRewards.ts` | Tournament-specific reward scaling |
 
-All paths relative to `prototype/backend/`.
+All paths relative to `app/backend/`.
 
 ---
 

@@ -7,7 +7,7 @@
   - **NOTE**: This test encodes the expected behavior - it will validate the fix when it passes after implementation
   - **GOAL**: Surface counterexamples that demonstrate HP values swap when robot2 attacks
   - **Scoped PBT Approach**: Generate battles where robot2 attacks robot1, verify robotHP map values match actual robot state
-  - Create `prototype/backend/tests/hpTracking.pbt.test.ts`
+  - Create `app/backend/tests/hpTracking.pbt.test.ts`
   - Test property: For all combat events where robot2 is the attacker, `event.robotHP[robot1.name]` should equal robot1's actual HP (not robot2's HP)
   - Bug condition `C(X)`: `event.attacker === robot2.name` (robot2 attacks)
   - Expected behavior `P(result)`: `event.robotHP[robotName] === actualRobotState[robotName].currentHP` for all robots
@@ -20,7 +20,7 @@
 - [x] 2. Write preservation property tests (BEFORE implementing fix)
   - **Property 2: Preservation** - Non-Swapped Behavior for Robot1 Attacks
   - **IMPORTANT**: Follow observation-first methodology
-  - Create preservation tests in `prototype/backend/tests/hpTracking.pbt.test.ts`
+  - Create preservation tests in `app/backend/tests/hpTracking.pbt.test.ts`
   - Observe: When robot1 attacks, `robot1HP`/`robot2HP` fields happen to be correct (attacker position matches robot position)
   - Observe: Shield regeneration, yield conditions, and damage calculations work correctly
   - Write property-based test: For events where robot1 is attacker, verify HP tracking is consistent
@@ -162,8 +162,8 @@
     - _Requirements: 3.1_
 
 - [x] 6. Checkpoint - Final verification
-  - Run verification command: `grep -n "event\.robot1HP\|event\.robot2HP" prototype/backend/src/services/combatMessageGenerator.ts` — Expected: Only in `getHPFromEvent()` legacy fallback section (lines ~159-162)
-  - Run verification command: `grep -n "event\.robotHP\|event\.robotShield" prototype/frontend/src/components/BattleDetailsModal.tsx | wc -l` — Expected: >= 2 ✅ (actual: 7)
-  - Run HP tracking PBT: `npm test -- --testPathPatterns="hpTracking.pbt" --silent` (from prototype/backend) — ✅ 7 tests pass
+  - Run verification command: `grep -n "event\.robot1HP\|event\.robot2HP" app/backend/src/services/combatMessageGenerator.ts` — Expected: Only in `getHPFromEvent()` legacy fallback section (lines ~159-162)
+  - Run verification command: `grep -n "event\.robotHP\|event\.robotShield" app/frontend/src/components/BattleDetailsModal.tsx | wc -l` — Expected: >= 2 ✅ (actual: 7)
+  - Run HP tracking PBT: `npm test -- --testPathPatterns="hpTracking.pbt" --silent` (from app/backend) — ✅ 7 tests pass
   - **VERIFICATION COMPLETE**: All checks pass, legacy fields only used in fallback helpers
   - _Requirements: All verification criteria from bugfix.md_

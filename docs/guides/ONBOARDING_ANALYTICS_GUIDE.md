@@ -160,9 +160,9 @@ Ingests analytics events from the frontend. Requires JWT authentication.
 }
 ```
 
-**Backend service**: `onboardingAnalyticsService.ts` in `prototype/backend/src/services/`
+**Backend service**: `onboardingAnalyticsService.ts` in `app/backend/src/services/`
 
-**Route file**: `onboardingAnalytics.ts` in `prototype/backend/src/routes/`
+**Route file**: `onboardingAnalytics.ts` in `app/backend/src/routes/`
 
 Events are batched on the client side and sent in bulk to reduce network overhead.
 

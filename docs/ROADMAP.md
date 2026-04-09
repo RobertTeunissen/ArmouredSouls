@@ -92,8 +92,8 @@ Phase 1 delivered a fully functional game with 4 battle modes, 14 facilities, 47
 
 | Spec | Summary |
 |---|---|
-| Prototype → App Rename | Rename `/prototype/` to `/app/`, remove empty `/modules/`, update all references |
-| Modular Architecture Migration | Document module boundaries and migration strategy (planning only, no code moves) |
+| ~~Prototype → App Rename~~ | ✅ Renamed `/prototype/` to `/app/`, removed `/modules/`, updated all references |
+| ~~Modular Architecture Migration~~ | ✅ Module contracts, service mapping, and migration strategy documented |
 | Battle Replay/Revert Admin | Admin tool to revert and replay buggy battles from the current cycle |
 | Web Push Notifications | Browser push notifications for battle results and cycle events |
 

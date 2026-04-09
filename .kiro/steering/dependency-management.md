@@ -63,7 +63,7 @@ npm ls <package-name>
 
 **Install with npm**:
 ```bash
-cd prototype/backend
+cd app/backend
 npm install <package-name>
 
 # Or with specific version

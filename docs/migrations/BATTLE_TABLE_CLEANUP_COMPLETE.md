@@ -113,7 +113,7 @@ Read from AuditLog (battle_complete events)
 
 ### To Apply Migration:
 1. Start the database: `docker-compose up -d` (or your database startup command)
-2. Apply migration: `cd prototype/backend && npx prisma migrate deploy`
+2. Apply migration: `cd app/backend && npx prisma migrate deploy`
 3. Verify: `npx prisma migrate status`
 
 ### To Test:
@@ -129,22 +129,22 @@ Read from AuditLog (battle_complete events)
 ## Files Modified
 
 ### Schema & Migrations
-- `prototype/backend/prisma/schema.prisma`
-- `prototype/backend/prisma/migrations/20260220201630_remove_old_battle_columns/migration.sql`
+- `app/backend/prisma/schema.prisma`
+- `app/backend/prisma/migrations/20260220201630_remove_old_battle_columns/migration.sql`
 
 ### Battle Orchestrators
-- `prototype/backend/src/services/battleOrchestrator.ts`
-- `prototype/backend/src/services/tournamentBattleOrchestrator.ts`
-- `prototype/backend/src/services/tagTeamBattleOrchestrator.ts`
+- `app/backend/src/services/battleOrchestrator.ts`
+- `app/backend/src/services/tournamentBattleOrchestrator.ts`
+- `app/backend/src/services/tagTeamBattleOrchestrator.ts`
 
 ### API Routes
-- `prototype/backend/src/routes/matches.ts`
-- `prototype/backend/src/routes/robots.ts`
-- `prototype/backend/src/routes/admin.ts`
+- `app/backend/src/routes/matches.ts`
+- `app/backend/src/routes/robots.ts`
+- `app/backend/src/routes/admin.ts`
 
 ### Previously Fixed (Earlier Sessions)
-- `prototype/backend/src/routes/records.ts`
-- `prototype/backend/src/services/robotPerformanceService.ts`
+- `app/backend/src/routes/records.ts`
+- `app/backend/src/services/robotPerformanceService.ts`
 
 ## Status: READY FOR TESTING 🚀
 

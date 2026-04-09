@@ -182,7 +182,7 @@ const buildInstanceDisplayLabel = (leagueIdentifier: string) => {
 ## Technical Details
 
 ### Files Modified
-- **Code**: `prototype/frontend/src/pages/LeagueStandingsPage.tsx`
+- **Code**: `app/frontend/src/pages/LeagueStandingsPage.tsx`
   - Lines changed: 102 modified, 44 removed
   - Net change: +58 lines
 

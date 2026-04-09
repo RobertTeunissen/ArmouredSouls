@@ -898,7 +898,7 @@ Errors:
 
 ### Stat Calculation Implementation
 
-**Location**: `/prototype/backend/src/utils/robotCalculations.ts`
+**Location**: `/app/backend/src/utils/robotCalculations.ts`
 
 ```typescript
 interface Robot {

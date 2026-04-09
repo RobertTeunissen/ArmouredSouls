@@ -16,7 +16,7 @@ Successfully implemented instance-based promotions/demotions, LP-primary matchma
 
 ### 1. Instance-Based Promotions & Demotions (1v1 Leagues)
 
-**File**: `prototype/backend/src/services/leagueRebalancingService.ts`
+**File**: `app/backend/src/services/leagueRebalancingService.ts`
 
 **Changes**:
 - ✅ `determinePromotions()` now accepts `instanceId` instead of `tier`
@@ -53,7 +53,7 @@ Successfully implemented instance-based promotions/demotions, LP-primary matchma
 
 ### 2. Instance-Based Promotions & Demotions (Tag Team Leagues)
 
-**File**: `prototype/backend/src/services/tagTeamLeagueRebalancingService.ts`
+**File**: `app/backend/src/services/tagTeamLeagueRebalancingService.ts`
 
 **Changes**:
 - ✅ `determinePromotions()` now accepts `instanceId` instead of `tier`
@@ -86,7 +86,7 @@ Successfully implemented instance-based promotions/demotions, LP-primary matchma
 
 ### 3. LP-Primary Matchmaking (1v1 Leagues)
 
-**File**: `prototype/backend/src/services/matchmakingService.ts`
+**File**: `app/backend/src/services/matchmakingService.ts`
 
 **Changes**:
 - ✅ Added LP matching constants:
@@ -124,7 +124,7 @@ else score += 1000;                           // Reject
 
 ### 4. Tag Team Matchmaking (Already LP-Based)
 
-**File**: `prototype/backend/src/services/tagTeamMatchmakingService.ts`
+**File**: `app/backend/src/services/tagTeamMatchmakingService.ts`
 
 **Status**: ✅ No changes needed
 
@@ -191,22 +191,22 @@ ORDER BY updatedAt DESC LIMIT 20;
 ## Files Modified
 
 ### Backend Services (4 files)
-1. ✅ `prototype/backend/src/services/leagueRebalancingService.ts`
+1. ✅ `app/backend/src/services/leagueRebalancingService.ts`
    - Instance-based promotions/demotions
    - LP retention
    - Conditional rebalancing
 
-2. ✅ `prototype/backend/src/services/tagTeamLeagueRebalancingService.ts`
+2. ✅ `app/backend/src/services/tagTeamLeagueRebalancingService.ts`
    - Instance-based promotions/demotions
    - Team LP retention
    - Instance-aware processing
 
-3. ✅ `prototype/backend/src/services/matchmakingService.ts`
+3. ✅ `app/backend/src/services/matchmakingService.ts`
    - LP-primary matching
    - Updated scoring algorithm
    - New LP constants
 
-4. ✅ `prototype/backend/src/services/leagueInstanceService.ts`
+4. ✅ `app/backend/src/services/leagueInstanceService.ts`
    - No changes needed (already supports instance-based logic)
 
 ### Documentation (To be updated)

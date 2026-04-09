@@ -467,7 +467,7 @@ This implementation plan converts the New Player Onboarding feature design into 
 
 - [x] 29. Adapt dashboard for onboarding integration
   - [x] 29.1 Replace existing "welcome to your stable" messaging in DashboardPage.tsx
-    - **Location**: `prototype/frontend/src/pages/DashboardPage.tsx` lines 229-267
+    - **Location**: `app/frontend/src/pages/DashboardPage.tsx` lines 229-267
     - **Current behavior**: Shows "Welcome to Your Stable!" with 4-step getting started guide when robots.length === 0
     - **New behavior for new users (hasCompletedOnboarding = false)**:
       - Replace welcome section with "Start Your Journey" onboarding trigger
@@ -747,7 +747,7 @@ This implementation plan converts the New Player Onboarding feature design into 
     - Create or source `roster-1-mighty.png` (400×300px)
     - Create or source `roster-2-average.png` (400×300px)
     - Create or source `roster-3-flimsy.png` (400×300px)
-    - Place in `prototype/frontend/public/assets/onboarding/strategies/`
+    - Place in `app/frontend/public/assets/onboarding/strategies/`
     - _Requirements: 16.1-16.10_
   
   - [x] 43.2 Create loadout diagrams
@@ -755,32 +755,32 @@ This implementation plan converts the New Player Onboarding feature design into 
     - Create `loadout-weapon-shield.png` (300×200px)
     - Create `loadout-two-handed.png` (300×200px)
     - Create `loadout-dual-wield.png` (300×200px)
-    - Place in `prototype/frontend/public/assets/onboarding/loadouts/`
+    - Place in `app/frontend/public/assets/onboarding/loadouts/`
     - _Requirements: 16.1-16.10_
   
   - [x] 43.3 Create facility icons (if not already existing)
     - Create facility icons (64×64px each)
-    - Place in `prototype/frontend/public/assets/onboarding/facilities/`
+    - Place in `app/frontend/public/assets/onboarding/facilities/`
     - _Requirements: 16.1-16.10_
   
   - [x] 43.4 Create battle type illustrations
     - Create `battle-league.png` (600×400px)
     - Create `battle-tag-team.png` (600×400px)
     - Create `battle-tournament.png` (600×400px)
-    - Place in `prototype/frontend/public/assets/onboarding/battles/`
+    - Place in `app/frontend/public/assets/onboarding/battles/`
     - _Requirements: 16.1-16.10_
   
   - [x] 43.5 Create budget charts
     - Create `budget-chart-1-mighty.png` (400×400px)
     - Create `budget-chart-2-average.png` (400×400px)
     - Create `budget-chart-3-flimsy.png` (400×400px)
-    - Place in `prototype/frontend/public/assets/onboarding/charts/`
+    - Place in `app/frontend/public/assets/onboarding/charts/`
     - _Requirements: 16.1-16.10_
   
   - [x] 43.6 Create diagrams
     - Create `attribute-bonus-stacking.png` (500×300px)
     - Create `cycle-schedule.png` (800×200px)
-    - Place in `prototype/frontend/public/assets/onboarding/diagrams/`
+    - Place in `app/frontend/public/assets/onboarding/diagrams/`
     - _Requirements: 16.1-16.10_
   
   - [x] 43.7 Optimize all images
@@ -791,8 +791,8 @@ This implementation plan converts the New Player Onboarding feature design into 
 
 - [x] 44. Prepare for deployment
   - [x] 44.1 Run full test suite
-    - Backend unit tests: `cd prototype/backend && npm test`
-    - Frontend tests: `cd prototype/frontend && npm test`
+    - Backend unit tests: `cd app/backend && npm test`
+    - Frontend tests: `cd app/frontend && npm test`
     - Verify all tests pass
     - Check coverage meets minimum thresholds (80% general, 90% critical)
     - _Requirements: Testing standards_
@@ -889,7 +889,7 @@ This implementation plan converts the New Player Onboarding feature design into 
 ## Image Asset Organization
 
 ```
-prototype/frontend/public/assets/onboarding/
+app/frontend/public/assets/onboarding/
 ├── strategies/
 │   ├── roster-1-mighty.png
 │   ├── roster-2-average.png

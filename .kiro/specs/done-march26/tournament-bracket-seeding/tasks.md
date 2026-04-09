@@ -32,7 +32,7 @@ Transform the tournament viewing experience from a flat modal-based view into a 
     - Generate random arrays of 4–128 robots with distinct random ELO values using fast-check
     - Run `seedRobotsByELO()` → `generateStandardSeedOrder()` → simulate round-1 match placement → `computeSeedings()`
     - Assert seedings sorted by seed ascending have strictly descending ELO values
-    - Place test in `prototype/backend/src/__tests__/tournament-bracket-seeding.property.test.ts`
+    - Place test in `app/backend/src/__tests__/tournament-bracket-seeding.property.test.ts`
     - Tag: `Feature: tournament-bracket-seeding, Property 3: Seedings round-trip`
     - **Validates: Requirements 2.1, 2.2, 2.3**
 
@@ -40,7 +40,7 @@ Transform the tournament viewing experience from a flat modal-based view into a 
     - **Property 1: API returns all matches across all rounds in correct order**
     - Generate random tournament match arrays with varying rounds and match numbers
     - Pass through the ordering logic and assert output is sorted by `(round ASC, matchNumber ASC)`
-    - Place test in `prototype/backend/src/__tests__/tournament-bracket-seeding.property.test.ts`
+    - Place test in `app/backend/src/__tests__/tournament-bracket-seeding.property.test.ts`
     - Tag: `Feature: tournament-bracket-seeding, Property 1: API returns all matches in correct order`
     - **Validates: Requirements 1.1, 1.4**
 
@@ -48,7 +48,7 @@ Transform the tournament viewing experience from a flat modal-based view into a 
     - **Property 10: Round labels follow naming convention**
     - Generate random `(round, maxRounds)` pairs where `1 <= round <= maxRounds` and `maxRounds >= 1`
     - Assert `getRoundLabel()` returns "Finals" when `round === maxRounds`, "Semi-finals" when `round === maxRounds - 1`, "Quarter-finals" when `round === maxRounds - 2`, and `"Round N"` otherwise
-    - Place test in `prototype/backend/src/__tests__/tournament-bracket-seeding.property.test.ts`
+    - Place test in `app/backend/src/__tests__/tournament-bracket-seeding.property.test.ts`
     - Tag: `Feature: tournament-bracket-seeding, Property 10: Round labels follow naming convention`
     - **Validates: Requirements 7.1**
 
@@ -56,7 +56,7 @@ Transform the tournament viewing experience from a flat modal-based view into a 
     - **Property 6: Seed display threshold — top 32 seeds show number, others don't**
     - Generate random seed numbers (1–500) and robot names
     - Assert the seed display utility shows prefix for seeds ≤ 32 and omits it for seeds > 32
-    - Place test in `prototype/backend/src/__tests__/tournament-bracket-seeding.property.test.ts`
+    - Place test in `app/backend/src/__tests__/tournament-bracket-seeding.property.test.ts`
     - Tag: `Feature: tournament-bracket-seeding, Property 6: Seed display threshold`
     - **Validates: Requirements 4.1, 4.2, 5.3, 5.4**
 
@@ -65,7 +65,7 @@ Transform the tournament viewing experience from a flat modal-based view into a 
 
 - [ ] 3. Frontend: Shared utilities and API client updates
   - [x] 3.1 Extract `getRoundLabel()` utility and create shared bracket helpers
-    - Create `prototype/frontend/src/utils/bracketUtils.ts`
+    - Create `app/frontend/src/utils/bracketUtils.ts`
     - Extract `getRoundName()` from `TournamentsPage.tsx` into `getRoundLabel(round, maxRounds)` following the design spec naming convention
     - Implement `buildBracketTree(matches, maxRounds)` that organizes flat match array into `Map<number, TournamentMatchWithRobots[]>` keyed by round
     - Implement `formatSeedDisplay(seed: number, robotName: string)` that returns `"#N RobotName"` for seeds ≤ 32 and just `robotName` for seeds > 32
@@ -80,14 +80,14 @@ Transform the tournament viewing experience from a flat modal-based view into a 
     - _Requirements: 1.2, 2.1_
 
   - [x] 3.3 Create `useMediaQuery` hook
-    - Create `prototype/frontend/src/hooks/useMediaQuery.ts`
+    - Create `app/frontend/src/hooks/useMediaQuery.ts`
     - Simple hook wrapping `window.matchMedia` for responsive breakpoint detection
     - Export a convenience `useIsMobile()` that checks `(max-width: 768px)`
     - _Requirements: 9.1_
 
 - [ ] 4. Frontend: Tournament Detail Page and routing
   - [x] 4.1 Create `TournamentDetailPage` component
-    - Create `prototype/frontend/src/pages/TournamentDetailPage.tsx`
+    - Create `app/frontend/src/pages/TournamentDetailPage.tsx`
     - Route: `/tournaments/:id` — extract ID from URL params
     - Fetch tournament data via `tournamentApi.getTournamentDetails()`
     - Render header: tournament name, status badge, current round, total rounds, total participants, creation date
@@ -114,14 +114,14 @@ Transform the tournament viewing experience from a flat modal-based view into a 
 
 - [ ] 5. Frontend: Bracket visualization components
   - [x] 5.1 Create `BracketView` container component
-    - Create `prototype/frontend/src/components/tournament/BracketView.tsx`
+    - Create `app/frontend/src/components/tournament/BracketView.tsx`
     - Accept tournament data (matches, seedings, maxRounds, currentRound, status, userRobotIds) as props
     - Use `useIsMobile()` hook to switch between `DesktopBracket` and `MobileBracket`
     - Manage zoom/pan state for large brackets on desktop
     - _Requirements: 3.1, 3.7, 9.1_
 
   - [x] 5.2 Create `DesktopBracket` component
-    - Create `prototype/frontend/src/components/tournament/DesktopBracket.tsx`
+    - Create `app/frontend/src/components/tournament/DesktopBracket.tsx`
     - CSS Grid layout: one column per round
     - Use `buildBracketTree()` to organize matches by round
     - Render `RoundColumn` for each round
@@ -131,14 +131,14 @@ Transform the tournament viewing experience from a flat modal-based view into a 
     - _Requirements: 3.1, 3.2, 3.7, 9.5_
 
   - [x] 5.3 Create `RoundColumn` component
-    - Create `prototype/frontend/src/components/tournament/RoundColumn.tsx`
+    - Create `app/frontend/src/components/tournament/RoundColumn.tsx`
     - Render round label using `getRoundLabel()` ("Round N", "Quarter-finals", "Semi-finals", "Finals")
     - Contain `MatchCard` components for that round, vertically spaced so round N+1 matches align between their feeder matches
     - Visually distinguish current round column with accent border/background when tournament is active
     - _Requirements: 7.1, 7.2, 3.2_
 
   - [x] 5.4 Create `MatchCard` component
-    - Create `prototype/frontend/src/components/tournament/MatchCard.tsx`
+    - Create `app/frontend/src/components/tournament/MatchCard.tsx`
     - Display two robot slots with the following states:
       - Completed: winner name in green/bold, loser dimmed
       - Pending (two robots assigned): both names neutral + "Pending" indicator
@@ -150,7 +150,7 @@ Transform the tournament viewing experience from a flat modal-based view into a 
     - _Requirements: 3.3, 3.4, 3.5, 3.6, 4.1, 4.2, 4.3, 6.1, 6.2, 6.3, 6.4_
 
   - [x] 5.5 Create `SeedingList` panel component
-    - Create `prototype/frontend/src/components/tournament/SeedingList.tsx`
+    - Create `app/frontend/src/components/tournament/SeedingList.tsx`
     - Collapsible side panel listing all participants by seed number ascending
     - Show seed number for top 32, robot name, and ELO for each entry
     - Omit seed number prefix for seeds > 32
@@ -163,7 +163,7 @@ Transform the tournament viewing experience from a flat modal-based view into a 
 
 - [ ] 7. Frontend: Mobile bracket views
   - [x] 7.1 Create `MobileBracket` component
-    - Create `prototype/frontend/src/components/tournament/MobileBracket.tsx`
+    - Create `app/frontend/src/components/tournament/MobileBracket.tsx`
     - Two view modes: "My Path" and "Round List" with toggle between them
     - Default to "My Path" if user has a robot in the tournament, otherwise default to "Round List"
     - _Requirements: 9.1, 9.4_
@@ -192,7 +192,7 @@ Transform the tournament viewing experience from a flat modal-based view into a 
     - **Property 8: User robot matches are highlighted in bracket**
     - Generate random match data and random user robot ID sets using fast-check
     - Assert highlight class is applied if and only if the match contains a user robot
-    - Place test in `prototype/frontend/src/__tests__/tournament-bracket-seeding.property.test.ts`
+    - Place test in `app/frontend/src/__tests__/tournament-bracket-seeding.property.test.ts`
     - Tag: `Feature: tournament-bracket-seeding, Property 8: User robot match highlighting`
     - **Validates: Requirements 6.1, 6.2, 6.4**
 
@@ -200,7 +200,7 @@ Transform the tournament viewing experience from a flat modal-based view into a 
     - **Property 4: Bracket renders correct structure per round**
     - Generate random tournament data with 1–7 rounds using fast-check
     - Render bracket utility and assert correct number of round columns and match cards per round
-    - Place test in `prototype/frontend/src/__tests__/tournament-bracket-seeding.property.test.ts`
+    - Place test in `app/frontend/src/__tests__/tournament-bracket-seeding.property.test.ts`
     - Tag: `Feature: tournament-bracket-seeding, Property 4: Bracket renders correct structure`
     - **Validates: Requirements 3.1, 3.2**
 
@@ -229,8 +229,8 @@ Transform the tournament viewing experience from a flat modal-based view into a 
     - Test `TournamentDetailPage` shows 404 state, loading skeleton, header info
     - Test `computeSeedings()` with a known 8-robot tournament for exact seed assignments
     - Test `computeSeedings()` with bye matches (5 robots in 8-slot bracket)
-    - Backend tests in `prototype/backend/tests/compute-seedings.unit.test.ts`
-    - Frontend tests in `prototype/frontend/src/__tests__/tournament-components.unit.test.tsx`
+    - Backend tests in `app/backend/tests/compute-seedings.unit.test.ts`
+    - Frontend tests in `app/frontend/src/__tests__/tournament-components.unit.test.tsx`
     - _Requirements: 3.4, 3.5, 3.6, 8.5, 8.6, 2.1, 2.3_
 
 - [x] 11. Final checkpoint - Ensure all tests pass

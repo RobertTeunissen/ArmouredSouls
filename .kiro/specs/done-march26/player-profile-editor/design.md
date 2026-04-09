@@ -169,7 +169,7 @@ model User {
 
 ### Backend Route Handler
 
-**File**: `prototype/backend/src/routes/user.ts`
+**File**: `app/backend/src/routes/user.ts`
 
 **Implementation Pattern**:
 ```typescript
@@ -186,7 +186,7 @@ router.put('/profile', authenticateToken, async (req: AuthRequest, res: Response
 
 ### Validation Service
 
-**File**: `prototype/backend/src/utils/validation.ts` (new file)
+**File**: `app/backend/src/utils/validation.ts` (new file)
 
 **Functions**:
 
@@ -210,7 +210,7 @@ export function containsProfanity(text: string): boolean
 
 #### ProfilePage Component
 
-**File**: `prototype/frontend/src/pages/ProfilePage.tsx`
+**File**: `app/frontend/src/pages/ProfilePage.tsx`
 
 **State Management**:
 ```typescript
@@ -276,7 +276,7 @@ ProfilePage
 
 #### Profile API Client
 
-**File**: `prototype/frontend/src/utils/userApi.ts` (extend existing)
+**File**: `app/frontend/src/utils/userApi.ts` (extend existing)
 
 **New Functions**:
 ```typescript
@@ -340,7 +340,7 @@ const validatePasswordFormat = (password: string): string | null => {
 
 ### Navigation Integration
 
-**File**: `prototype/frontend/src/components/Navigation.tsx`
+**File**: `app/frontend/src/components/Navigation.tsx`
 
 **Change**: Enable the /profile link (currently disabled). Update the navigation item:
 
@@ -552,8 +552,8 @@ test('accepts all valid stable names', () => {
 ### Backend Testing
 
 **Test Files**:
-- `prototype/backend/tests/profileUpdate.test.ts` - Profile update endpoint tests
-- `prototype/backend/tests/validation.test.ts` - Validation service tests
+- `app/backend/tests/profileUpdate.test.ts` - Profile update endpoint tests
+- `app/backend/tests/validation.test.ts` - Validation service tests
 
 **Test Coverage**:
 - GET /api/user/profile returns all fields (Property 3)
@@ -573,8 +573,8 @@ test('accepts all valid stable names', () => {
 ### Frontend Testing
 
 **Test Files**:
-- `prototype/frontend/src/pages/__tests__/ProfilePage.test.tsx` - Component tests
-- `prototype/frontend/src/utils/__tests__/userApi.test.ts` - API client tests
+- `app/frontend/src/pages/__tests__/ProfilePage.test.tsx` - Component tests
+- `app/frontend/src/utils/__tests__/userApi.test.ts` - API client tests
 
 **Test Coverage**:
 - Profile page renders all sections
@@ -632,7 +632,7 @@ const weakPasswordGenerator = () =>
 
 ### Database Migration
 
-Create migration file: `prototype/backend/prisma/migrations/YYYYMMDDHHMMSS_add_profile_fields/migration.sql`
+Create migration file: `app/backend/prisma/migrations/YYYYMMDDHHMMSS_add_profile_fields/migration.sql`
 
 ```sql
 -- Add new profile fields to users table

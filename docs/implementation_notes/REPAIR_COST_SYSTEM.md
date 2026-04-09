@@ -214,7 +214,7 @@ A dedicated "🔧 Repair Log" tab in the Admin Panel (`GET /api/admin/audit-log/
 ## Implementation Details
 
 ### RepairService Location
-- **File**: `prototype/backend/src/services/repairService.ts`
+- **File**: `app/backend/src/services/repairService.ts`
 - **Function**: `repairAllRobots(deductCosts: boolean)`
 - **Formula**: Uses `calculateRepairCost()` from `robotCalculations.ts`
 

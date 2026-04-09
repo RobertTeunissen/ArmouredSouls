@@ -96,7 +96,7 @@ This design document describes the architecture for an admin feature that allows
 
 ### 1. BattleRevertService
 
-Location: `prototype/backend/src/services/battleRevertService.ts`
+Location: `app/backend/src/services/battleRevertService.ts`
 
 ```typescript
 interface RevertPreview {
@@ -209,7 +209,7 @@ class BattleRevertService {
 
 ### 2. BattleReplayService
 
-Location: `prototype/backend/src/services/battleReplayService.ts`
+Location: `app/backend/src/services/battleReplayService.ts`
 
 ```typescript
 interface ReplayConfig {
@@ -269,7 +269,7 @@ interface BattleConfig {
 
 ### 3. Admin API Routes
 
-Location: `prototype/backend/src/routes/admin.ts` (additions)
+Location: `app/backend/src/routes/admin.ts` (additions)
 
 ```typescript
 // GET /api/admin/battles/:id/revert-preview
@@ -310,7 +310,7 @@ router.post('/battles/:id/replay', requireAdmin, async (req, res) => {
 
 ### 4. Frontend Component
 
-Location: `prototype/frontend/src/components/admin/BattleRevertTab.tsx`
+Location: `app/frontend/src/components/admin/BattleRevertTab.tsx`
 
 ```typescript
 interface BattleRevertTabProps {
@@ -346,7 +346,7 @@ interface BattleRevertTabState {
 
 ### Schema Changes
 
-Add to `prototype/backend/prisma/schema.prisma`:
+Add to `app/backend/prisma/schema.prisma`:
 
 ```prisma
 model Battle {
@@ -636,7 +636,7 @@ async executeRevert(battleId: number, adminUserId: number): Promise<RevertResult
 ### Test File Structure
 
 ```
-prototype/backend/src/__tests__/
+app/backend/src/__tests__/
 ├── services/
 │   ├── battleRevertService.test.ts      # Unit tests
 │   ├── battleRevertService.property.ts  # Property tests
@@ -645,7 +645,7 @@ prototype/backend/src/__tests__/
 └── integration/
     └── battleRevert.integration.test.ts # End-to-end tests
 
-prototype/frontend/src/components/admin/__tests__/
+app/frontend/src/components/admin/__tests__/
 └── BattleRevertTab.test.tsx             # Component tests
 ```
 

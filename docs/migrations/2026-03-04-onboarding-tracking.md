@@ -51,7 +51,7 @@ CREATE INDEX "reset_logs_reset_at_idx" ON "reset_logs"("reset_at");
 
 All existing users must be marked as having completed onboarding to avoid forcing them through the tutorial.
 
-**Script**: `prototype/backend/scripts/migrate-existing-users-onboarding.ts`
+**Script**: `app/backend/scripts/migrate-existing-users-onboarding.ts`
 
 **What it does**:
 - Marks all existing users with `hasCompletedOnboarding = true`
@@ -60,7 +60,7 @@ All existing users must be marked as having completed onboarding to avoid forcin
 
 **How to run**:
 ```bash
-cd prototype/backend
+cd app/backend
 npx tsx scripts/migrate-existing-users-onboarding.ts
 ```
 
@@ -91,7 +91,7 @@ Migration complete
 1. Pull latest code with schema changes
 2. Run Prisma migration:
    ```bash
-   cd prototype/backend
+   cd app/backend
    npx prisma migrate dev
    ```
 3. Run data migration script:
@@ -231,7 +231,7 @@ LIMIT 10;
 
 Run test suite to verify no regressions:
 ```bash
-cd prototype/backend
+cd app/backend
 npm test
 ```
 

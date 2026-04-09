@@ -1794,7 +1794,7 @@ All critical questions have been answered and documented:
 - Edge cases (no battle-ready robots)
 - Data consistency validation
 
-**Test Scripts** (prototype/backend/scripts/):
+**Test Scripts** (app/backend/scripts/):
 - `testMatchmaking.ts` - Matchmaking algorithm
 - `executeBattles.js` - Battle execution
 - `testLeagueRebalancing.js` - Promotion/demotion
@@ -1808,7 +1808,7 @@ All critical questions have been answered and documented:
 
 **Step 1: Check Initial State**
 ```bash
-cd prototype/backend
+cd app/backend
 node scripts/showDatabaseSummary.js
 # Expected: 101 robots (100 test + 1 bye-robot), 100% battle-ready
 ```
@@ -2380,7 +2380,7 @@ Response:
 
 ### Matchmaking Constants
 
-**File**: `prototype/backend/src/services/matchmakingService.ts`
+**File**: `app/backend/src/services/matchmakingService.ts`
 
 ```typescript
 // ELO matching ranges
@@ -2409,7 +2409,7 @@ same_stable_penalty = 500       // Strong deprioritize
 
 ### Battle Execution Constants
 
-**File**: `prototype/backend/src/services/battleOrchestrator.ts`
+**File**: `app/backend/src/services/battleOrchestrator.ts`
 
 ```typescript
 // ELO calculation
@@ -2431,7 +2431,7 @@ LOSER_DAMAGE_PERCENT = 0.40     // Losers lose 35-40% HP
 
 ### League Rebalancing Constants
 
-**File**: `prototype/backend/src/services/leagueRebalancingService.ts`
+**File**: `app/backend/src/services/leagueRebalancingService.ts`
 
 ```typescript
 // Promotion/demotion thresholds

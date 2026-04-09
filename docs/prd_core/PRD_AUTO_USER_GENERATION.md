@@ -22,7 +22,7 @@
 
 ### ✅ Completed Features
 - **Database Schema**: `CycleMetadata` model with migration `20260204134733_add_cycle_metadata`
-- **User Generation Utility**: `generateBattleReadyUsers()` in `prototype/backend/src/utils/userGeneration.ts`
+- **User Generation Utility**: `generateBattleReadyUsers()` in `app/backend/src/utils/userGeneration.ts`
 - **Tiered Stable System**: WimpBot/AverageBot/ExpertBot tiers with varying robot counts (3/2/1)
 - **Backend API**: `POST /api/admin/cycles/bulk` with `generateUsersPerCycle` flag
 - **Frontend UI**: Admin dashboard checkbox with help text and result display
@@ -34,9 +34,9 @@
 
 ### ✅ Testing Complete
 - **Unit Tests**: Comprehensive tests for `generateBattleReadyUsers()` function
-  - Test file: `prototype/backend/tests/userGeneration.test.ts`
+  - Test file: `app/backend/tests/userGeneration.test.ts`
   - Coverage: Tiered generation, robot creation, weapon inventory, attributes, battle readiness, error handling, performance
-- **Integration Tests**: `prototype/backend/tests/integration/adminCycleGeneration.test.ts`
+- **Integration Tests**: `app/backend/tests/integration/adminCycleGeneration.test.ts`
 - **Property Tests**: Tier distribution, weapon selection, robot naming validation
 
 ### 📝 Implementation Notes
@@ -76,7 +76,7 @@ This PRD defines the requirements for an automated user and robot generation sys
 - 15 comprehensive unit tests for user generation utility
 - 100% coverage of `generateBattleReadyUsers()` function
 - All tests passing (15/15)
-- Test file: `prototype/backend/tests/userGeneration.test.ts`
+- Test file: `app/backend/tests/userGeneration.test.ts`
 
 **⚠️ INTEGRATION TESTING INCOMPLETE**:
 - No integration tests for admin endpoint cycle persistence
@@ -273,8 +273,8 @@ interface TieredGenerationResult {
 3. Update seed script to initialize `CycleMetadata` record with `totalCycles: 0`
 
 **Files Modified**:
-- `prototype/backend/prisma/schema.prisma`
-- `prototype/backend/prisma/seed.ts`
+- `app/backend/prisma/schema.prisma`
+- `app/backend/prisma/seed.ts`
 
 ---
 
@@ -285,7 +285,7 @@ interface TieredGenerationResult {
 4. Add comprehensive error handling and logging
 
 **Files Created**:
-- `prototype/backend/src/utils/userGeneration.ts`
+- `app/backend/src/utils/userGeneration.ts`
 
 **Dependencies**:
 - Reuse `DEFAULT_ROBOT_ATTRIBUTES` from seed.ts
@@ -303,7 +303,7 @@ interface TieredGenerationResult {
 4. Update `CycleMetadata.totalCycles` after all cycles complete
 
 **Files Modified**:
-- `prototype/backend/src/routes/admin.ts`
+- `app/backend/src/routes/admin.ts`
 
 **Logic Flow**:
 ```typescript
@@ -345,7 +345,7 @@ await prisma.cycleMetadata.update({
 4. Update results display to show user generation summary
 
 **Files Modified**:
-- `prototype/frontend/src/pages/Admin.tsx` (or equivalent admin component)
+- `app/frontend/src/pages/Admin.tsx` (or equivalent admin component)
 
 ---
 
@@ -365,8 +365,8 @@ await prisma.cycleMetadata.update({
    - Check database for correct `totalCycles` value (10)
 
 **Files Created**:
-- `prototype/backend/tests/utils/userGeneration.test.ts`
-- `prototype/backend/tests/routes/adminCycleGeneration.test.ts`
+- `app/backend/tests/utils/userGeneration.test.ts`
+- `app/backend/tests/routes/adminCycleGeneration.test.ts`
 
 ---
 
@@ -522,35 +522,35 @@ describe('POST /api/admin/cycles/bulk with generateUsersPerCycle', () => {
   - ✅ Initialized in `seed.ts` with `id: 1, totalCycles: 0`
   - ✅ Auto-created in admin routes if missing (singleton pattern)
 - [x] `generateBattleReadyUsers()` utility function implemented
-  - ✅ Location: `prototype/backend/src/utils/userGeneration.ts`
+  - ✅ Location: `app/backend/src/utils/userGeneration.ts`
   - ✅ Generates users with format `auto_user_NNNN`
   - ✅ Creates robots with Practice Sword equipped
   - ✅ All attributes set to 1.00, HP: 55, Shield: 2, ELO: 1200
   - ✅ Uses transaction for atomicity
   - ✅ Reuses robot name generation logic
 - [x] `POST /api/admin/cycles/bulk` accepts `generateUsersPerCycle` flag
-  - ✅ Location: `prototype/backend/src/routes/admin.ts`
+  - ✅ Location: `app/backend/src/routes/admin.ts`
   - ✅ Flag defaults to `false`
   - ✅ Generates N users per cycle (where N = cycle number)
   - ✅ Returns user generation summary in response
   - ✅ Persists cycle counter across bulk runs
   - ✅ Error handling for user generation failures
 - [x] Admin UI checkbox for "Generate Users Per Cycle" functional
-  - ✅ Location: `prototype/frontend/src/pages/AdminPage.tsx`
+  - ✅ Location: `app/frontend/src/pages/AdminPage.tsx`
   - ✅ Checkbox with help text implemented
   - ✅ State variable: `generateUsersPerCycle` (default: false)
   - ✅ Sends flag to API in request body
   - ✅ Displays user generation results in cycle summary
   - ✅ Logs user generation events in session log
 - [x] Unit tests pass with >80% coverage
-  - ✅ 15 unit tests implemented in `prototype/backend/tests/userGeneration.test.ts`
+  - ✅ 15 unit tests implemented in `app/backend/tests/userGeneration.test.ts`
   - ✅ 100% coverage of `generateBattleReadyUsers()` function
   - ✅ All 15 tests passing
   - ✅ **TEST AREAS**: Username generation, robot creation, weapon inventory, attributes, battle readiness, error handling, performance, edge cases
 - [ ] Integration tests verify cycle persistence
   - ⚠️ **NOT IMPLEMENTED**: No integration tests for cycle counter persistence
   - ⚠️ **RECOMMENDED**: Add tests for multi-run cycle counter behavior via admin API endpoint
-  - 📝 **TEST FILE CREATED**: `prototype/backend/tests/integration/adminCycleGeneration.test.ts` (ready to run)
+  - 📝 **TEST FILE CREATED**: `app/backend/tests/integration/adminCycleGeneration.test.ts` (ready to run)
 - ✅ Documentation updated (PRD, API docs, inline comments)
   - ✅ Comprehensive inline comments in `userGeneration.ts`
   - ✅ JSDoc comments for public functions
@@ -653,17 +653,17 @@ CREATE TABLE "cycle_metadata" (
 ```
 
 ### C. Code Style Guidelines
-- Follow existing TypeScript conventions in `prototype/backend/`
+- Follow existing TypeScript conventions in `app/backend/`
 - Use async/await (no callbacks or raw promises)
 - Add JSDoc comments for public functions
 - Log all user generation operations at INFO level
 - Use Prisma transactions for multi-step operations
 
 ### D. References
-- Robot creation: `prototype/backend/prisma/seed.ts:660-695`
-- Cycle processing: `prototype/backend/src/routes/admin.ts:290-387`
-- Robot name generation: `prototype/backend/src/utils/userGeneration.ts:53-63`
-- Battle readiness checks: `prototype/backend/src/services/matchmakingService.ts`
+- Robot creation: `app/backend/prisma/seed.ts:660-695`
+- Cycle processing: `app/backend/src/routes/admin.ts:290-387`
+- Robot name generation: `app/backend/src/utils/userGeneration.ts:53-63`
+- Battle readiness checks: `app/backend/src/services/matchmakingService.ts`
 
 ---
 
@@ -674,14 +674,14 @@ This section documents the actual implementation as found in the codebase.
 ### 13.1 File Locations
 
 **Backend**:
-- Schema: `prototype/backend/prisma/schema.prisma` (lines with `CycleMetadata` model)
-- Migration: `prototype/backend/prisma/migrations/20260204134733_add_cycle_metadata/migration.sql`
-- Utility: `prototype/backend/src/utils/userGeneration.ts`
-- API Route: `prototype/backend/src/routes/admin.ts` (POST `/api/admin/cycles/bulk`)
-- Seed: `prototype/backend/prisma/seed.ts` (CycleMetadata initialization)
+- Schema: `app/backend/prisma/schema.prisma` (lines with `CycleMetadata` model)
+- Migration: `app/backend/prisma/migrations/20260204134733_add_cycle_metadata/migration.sql`
+- Utility: `app/backend/src/utils/userGeneration.ts`
+- API Route: `app/backend/src/routes/admin.ts` (POST `/api/admin/cycles/bulk`)
+- Seed: `app/backend/prisma/seed.ts` (CycleMetadata initialization)
 
 **Frontend**:
-- Admin Page: `prototype/frontend/src/pages/AdminPage.tsx`
+- Admin Page: `app/frontend/src/pages/AdminPage.tsx`
   - State variable: `generateUsersPerCycle` (line ~288)
   - Checkbox UI: (lines ~1000-1010)
   - API call: `runBulkCycles()` function (lines ~449-500)
@@ -780,7 +780,7 @@ WHERE u.username LIKE 'auto_user_%';
 
 ### 13.5 Unit Test Coverage
 
-**Test File**: `prototype/backend/tests/userGeneration.test.ts`  
+**Test File**: `app/backend/tests/userGeneration.test.ts`  
 **Status**: ✅ All 15 tests passing  
 **Coverage**: 100% of `generateBattleReadyUsers()` function
 
@@ -826,7 +826,7 @@ WHERE u.username LIKE 'auto_user_%';
 
 ### 13.6 Integration Test Coverage
 
-**Test File**: `prototype/backend/tests/integration/adminCycleGeneration.test.ts`  
+**Test File**: `app/backend/tests/integration/adminCycleGeneration.test.ts`  
 **Status**: ⚠️ Created but not executed  
 **Purpose**: Test admin API endpoint with `generateUsersPerCycle` flag
 
@@ -849,7 +849,7 @@ npm test -- adminCycleGeneration.test.ts
 
 ### 13.7 Testing Recommendations
 
-**Unit Tests** (`prototype/backend/tests/utils/userGeneration.test.ts`):
+**Unit Tests** (`app/backend/tests/utils/userGeneration.test.ts`):
 ```typescript
 describe('generateBattleReadyUsers', () => {
   it('should create N users with unique usernames', async () => {
@@ -878,7 +878,7 @@ describe('generateBattleReadyUsers', () => {
 });
 ```
 
-**Integration Tests** (`prototype/backend/tests/routes/adminCycleGeneration.test.ts`):
+**Integration Tests** (`app/backend/tests/routes/adminCycleGeneration.test.ts`):
 ```typescript
 describe('POST /api/admin/cycles/bulk with generateUsersPerCycle', () => {
   it('should generate progressive users per cycle', async () => {

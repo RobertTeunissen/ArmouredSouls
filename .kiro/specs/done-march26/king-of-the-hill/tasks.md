@@ -25,7 +25,7 @@ Implement the King of the Hill (KotH) zone-control battle mode for Armoured Soul
 
 - [x] 2. KotH Engine — Core zone mechanics and scoring
   - [x] 2.1 Implement zone management and spawn positioning
-    - Create `prototype/backend/src/services/arena/kothEngine.ts`
+    - Create `app/backend/src/services/arena/kothEngine.ts`
     - Implement `createControlZone(config)` returning an `ArenaZone` with `effect: 'control_point'`, center `{x:0, y:0}`, default radius 5, constrained [3, 8]
     - Implement `calculateSpawnPositions(participantCount, arenaRadius)` distributing robots at (arenaRadius - 2) distance with equal angular spacing (72° for 5, 60° for 6)
     - Implement `validateKothConfig(config)` validating: participantCount [5,6], scoreThreshold [15,90], timeLimit [60,300], zoneRadius [3,8], returning `{ valid, errors[] }`
@@ -248,7 +248,7 @@ Implement the King of the Hill (KotH) zone-control battle mode for Armoured Soul
 
 - [x] 8. KotH Matchmaking Service
   - [x] 8.1 Implement kothMatchmakingService.ts
-    - Create `prototype/backend/src/services/kothMatchmakingService.ts`
+    - Create `app/backend/src/services/kothMatchmakingService.ts`
     - Implement `getEligibleRobots()`: query robots with weapon readiness, not already scheduled for KotH, one robot per stable (highest ELO per user)
     - Implement `distributeIntoGroups(robots, groupCount)`: snake-draft distribution sorting by ELO descending, groups of 6 first, remainder of 5
     - Implement `runKothMatchmaking(scheduledFor)`: orchestrate eligibility → grouping → ScheduledKothMatch + participant record creation

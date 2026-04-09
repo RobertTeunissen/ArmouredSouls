@@ -248,7 +248,7 @@ The API has two rate limiters:
 
 This is working as intended. The response includes a `Retry-After` header indicating when to retry.
 
-If legitimate traffic is being rate-limited, adjust the limits in `prototype/backend/src/middleware/rateLimiter.ts` and redeploy.
+If legitimate traffic is being rate-limited, adjust the limits in `app/backend/src/middleware/rateLimiter.ts` and redeploy.
 
 ### Rate limiter not working behind Caddy
 

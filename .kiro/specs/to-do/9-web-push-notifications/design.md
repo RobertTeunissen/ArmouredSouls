@@ -713,23 +713,23 @@ The following properties must hold for any valid system state:
 
 - VAPID key pair generated via `web-push generate-vapid-keys` CLI
 - Three new environment variables: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`
-- PWA manifest file at `prototype/frontend/public/manifest.json`
-- Service worker file compiled to `prototype/frontend/public/sw.js`
+- PWA manifest file at `app/frontend/public/manifest.json`
+- Service worker file compiled to `app/frontend/public/sw.js`
 
 ### File Changes Summary
 
 | File | Action | Description |
 |------|--------|-------------|
-| `prototype/backend/prisma/schema.prisma` | Modify | Add `PushSubscription` model and relation on `User` |
-| `prototype/backend/src/config/env.ts` | Modify | Add VAPID env vars to `EnvConfig` |
-| `prototype/backend/src/services/notifications/web-push-integration.ts` | Create | `WebPushIntegration` class |
-| `prototype/backend/src/services/notifications/notification-service.ts` | Modify | Register `WebPushIntegration` in `getActiveIntegrations()` |
-| `prototype/backend/src/routes/push.ts` | Create | Push subscription REST endpoints |
-| `prototype/backend/src/errors/pushErrors.ts` | Create | `PushError` class and error codes |
-| `prototype/backend/src/index.ts` | Modify | Mount push routes |
-| `prototype/frontend/public/manifest.json` | Create | PWA manifest |
-| `prototype/frontend/public/sw.js` | Create | Service worker for push events |
-| `prototype/frontend/src/hooks/usePushNotifications.ts` | Create | React hook for push lifecycle |
-| `prototype/frontend/src/components/NotificationToggle.tsx` | Create | UI toggle component |
-| `prototype/frontend/src/main.tsx` | Modify | Register service worker |
-| `prototype/frontend/index.html` | Modify | Link to manifest |
+| `app/backend/prisma/schema.prisma` | Modify | Add `PushSubscription` model and relation on `User` |
+| `app/backend/src/config/env.ts` | Modify | Add VAPID env vars to `EnvConfig` |
+| `app/backend/src/services/notifications/web-push-integration.ts` | Create | `WebPushIntegration` class |
+| `app/backend/src/services/notifications/notification-service.ts` | Modify | Register `WebPushIntegration` in `getActiveIntegrations()` |
+| `app/backend/src/routes/push.ts` | Create | Push subscription REST endpoints |
+| `app/backend/src/errors/pushErrors.ts` | Create | `PushError` class and error codes |
+| `app/backend/src/index.ts` | Modify | Mount push routes |
+| `app/frontend/public/manifest.json` | Create | PWA manifest |
+| `app/frontend/public/sw.js` | Create | Service worker for push events |
+| `app/frontend/src/hooks/usePushNotifications.ts` | Create | React hook for push lifecycle |
+| `app/frontend/src/components/NotificationToggle.tsx` | Create | UI toggle component |
+| `app/frontend/src/main.tsx` | Modify | Register service worker |
+| `app/frontend/index.html` | Modify | Link to manifest |

@@ -184,7 +184,7 @@ Copy the production Docker Compose file to the server (CI/CD does this later, bu
 
 ```bash
 # On your local machine:
-scp prototype/docker-compose.production.yml deploy@YOUR_VPS_IP:/opt/armouredsouls/
+scp app/docker-compose.production.yml deploy@YOUR_VPS_IP:/opt/armouredsouls/
 ```
 
 On the VPS, create the `.env` file first (see next step), then start PostgreSQL:
@@ -207,7 +207,7 @@ Copy the example env file and fill in real values:
 
 ```bash
 # On your local machine:
-scp prototype/backend/.env.production.example deploy@YOUR_VPS_IP:/opt/armouredsouls/backend/.env
+scp app/backend/.env.production.example deploy@YOUR_VPS_IP:/opt/armouredsouls/backend/.env
 ```
 
 On the VPS, edit the `.env` file:
@@ -233,7 +233,7 @@ Copy the Caddyfile:
 
 ```bash
 # On your local machine:
-scp prototype/Caddyfile deploy@YOUR_VPS_IP:/etc/caddy/Caddyfile
+scp app/Caddyfile deploy@YOUR_VPS_IP:/etc/caddy/Caddyfile
 ```
 
 Edit to set your domain:
@@ -265,8 +265,8 @@ Copy the backup script:
 
 ```bash
 # On your local machine:
-scp prototype/scripts/backup.sh deploy@YOUR_VPS_IP:/opt/armouredsouls/scripts/
-scp prototype/scripts/restore.sh deploy@YOUR_VPS_IP:/opt/armouredsouls/scripts/
+scp app/scripts/backup.sh deploy@YOUR_VPS_IP:/opt/armouredsouls/scripts/
+scp app/scripts/restore.sh deploy@YOUR_VPS_IP:/opt/armouredsouls/scripts/
 ```
 
 Make executable and set up the daily cron job:

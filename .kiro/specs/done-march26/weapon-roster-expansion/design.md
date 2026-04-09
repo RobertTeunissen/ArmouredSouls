@@ -56,24 +56,24 @@ flowchart LR
 ### Systems that change
 | System | What changes |
 |--------|-------------|
-| `prototype/backend/prisma/seed.ts` | Add 21 new weapon definitions, update 3 existing |
-| `prototype/frontend/src/utils/weaponRange.ts` | Simplify `getWeaponOptimalRange()` to return `weapon.rangeBand` |
-| `prototype/frontend/src/components/onboarding/WeaponRecommendationCard.tsx` | DELETE — dead code (exported but never imported/rendered) |
-| `prototype/frontend/src/components/onboarding/index.ts` | Remove `WeaponRecommendationCard`, `STARTER_WEAPONS`, and `WeaponRecommendation` exports |
-| `prototype/backend/src/services/recommendationEngine.ts` | DELETE — dead code (backend service never called by any frontend) |
-| `prototype/backend/tests/recommendationEngine.test.ts` | DELETE — tests for dead recommendation engine |
-| `prototype/backend/src/routes/onboarding.ts` | Remove `GET /recommendations` route and `recommendationEngine` import |
-| `prototype/backend/tests/onboardingApi.test.ts` | Remove recommendations test section |
-| `prototype/frontend/src/utils/onboardingApi.ts` | Remove `getRecommendations()`, `getRecommendationsWithRetry()`, `clearRecommendationCache()`, recommendation cache, and related types (`Recommendation`, `BudgetAllocation`, `RecommendationsResponse`) |
-| `prototype/frontend/src/components/onboarding/__tests__/performance.test.tsx` | Remove recommendations endpoint mock |
-| `prototype/frontend/src/assets/weapons/` | Add 21 `.webp` + 21 `.svg` image files |
+| `app/backend/prisma/seed.ts` | Add 21 new weapon definitions, update 3 existing |
+| `app/frontend/src/utils/weaponRange.ts` | Simplify `getWeaponOptimalRange()` to return `weapon.rangeBand` |
+| `app/frontend/src/components/onboarding/WeaponRecommendationCard.tsx` | DELETE — dead code (exported but never imported/rendered) |
+| `app/frontend/src/components/onboarding/index.ts` | Remove `WeaponRecommendationCard`, `STARTER_WEAPONS`, and `WeaponRecommendation` exports |
+| `app/backend/src/services/recommendationEngine.ts` | DELETE — dead code (backend service never called by any frontend) |
+| `app/backend/tests/recommendationEngine.test.ts` | DELETE — tests for dead recommendation engine |
+| `app/backend/src/routes/onboarding.ts` | Remove `GET /recommendations` route and `recommendationEngine` import |
+| `app/backend/tests/onboardingApi.test.ts` | Remove recommendations test section |
+| `app/frontend/src/utils/onboardingApi.ts` | Remove `getRecommendations()`, `getRecommendationsWithRetry()`, `clearRecommendationCache()`, recommendation cache, and related types (`Recommendation`, `BudgetAllocation`, `RecommendationsResponse`) |
+| `app/frontend/src/components/onboarding/__tests__/performance.test.tsx` | Remove recommendations endpoint mock |
+| `app/frontend/src/assets/weapons/` | Add 21 `.webp` + 21 `.svg` image files |
 | `docs/prd_core/SEED_DATA_SPECIFICATION.md` | Weapon count, new entries, version bump to v1.5 |
 | `docs/prd_core/PRD_WEAPONS_LOADOUT.md` | Category counts, DPS rankings, tier distribution |
 | `docs/balance_changes/PRD_WEAPON_ECONOMY_OVERHAUL.md` | Revised catalog, summary counts |
 | `docs/prd_pages/PRD_WEAPON_SHOP.md` | Category counts in filtering/test sections |
 | `docs/PLAYER_ARCHETYPES_GUIDE.md` | Weapon count reference, Appendix B catalog |
-| `prototype/backend/src/content/guide/weapons/loadout-types.md` | Hand-type counts |
-| `prototype/backend/src/content/guide/combat/movement-and-positioning.md` | Range-band weapon examples |
+| `app/backend/src/content/guide/weapons/loadout-types.md` | Hand-type counts |
+| `app/backend/src/content/guide/combat/movement-and-positioning.md` | Range-band weapon examples |
 | `docs/prd_core/PRD_ONBOARDING_SYSTEM.md` | Weapon type counts (Step 6), recommended weapons (Step 7) |
 
 ### Systems that do NOT change
@@ -894,44 +894,44 @@ The entire recommendation pipeline is dead code. The backend service and route e
 
 | File | Reason |
 |------|--------|
-| `prototype/frontend/src/components/onboarding/WeaponRecommendationCard.tsx` | Frontend component — exported from barrel but never imported or rendered |
-| `prototype/backend/src/services/recommendationEngine.ts` | Backend service — generates recommendations but no frontend consumer exists |
-| `prototype/backend/tests/recommendationEngine.test.ts` | Tests for the dead recommendation engine |
+| `app/frontend/src/components/onboarding/WeaponRecommendationCard.tsx` | Frontend component — exported from barrel but never imported or rendered |
+| `app/backend/src/services/recommendationEngine.ts` | Backend service — generates recommendations but no frontend consumer exists |
+| `app/backend/tests/recommendationEngine.test.ts` | Tests for the dead recommendation engine |
 
 ### Files to EDIT (remove dead code sections)
 
 | File | What to remove |
 |------|---------------|
-| `prototype/frontend/src/components/onboarding/index.ts` | Remove `WeaponRecommendationCard`, `STARTER_WEAPONS`, and `WeaponRecommendation` exports |
-| `prototype/backend/src/routes/onboarding.ts` | Remove the `GET /api/onboarding/recommendations` route handler and the `recommendationEngine` import |
-| `prototype/backend/tests/onboardingApi.test.ts` | Remove the recommendations test section (tests for `GET /recommendations`) |
-| `prototype/frontend/src/utils/onboardingApi.ts` | Remove `getRecommendations()`, `getRecommendationsWithRetry()`, `clearRecommendationCache()`, the recommendation cache object, `buildRecommendationCacheKey()`, and the exported types `Recommendation`, `BudgetAllocation`, `RecommendationsResponse` |
-| `prototype/frontend/src/components/onboarding/__tests__/performance.test.tsx` | Remove the recommendations endpoint mock |
+| `app/frontend/src/components/onboarding/index.ts` | Remove `WeaponRecommendationCard`, `STARTER_WEAPONS`, and `WeaponRecommendation` exports |
+| `app/backend/src/routes/onboarding.ts` | Remove the `GET /api/onboarding/recommendations` route handler and the `recommendationEngine` import |
+| `app/backend/tests/onboardingApi.test.ts` | Remove the recommendations test section (tests for `GET /recommendations`) |
+| `app/frontend/src/utils/onboardingApi.ts` | Remove `getRecommendations()`, `getRecommendationsWithRetry()`, `clearRecommendationCache()`, the recommendation cache object, `buildRecommendationCacheKey()`, and the exported types `Recommendation`, `BudgetAllocation`, `RecommendationsResponse` |
+| `app/frontend/src/components/onboarding/__tests__/performance.test.tsx` | Remove the recommendations endpoint mock |
 
 ## 13. Files Requiring Changes
 
 | File | Changes |
 |------|---------|
-| `prototype/backend/prisma/schema.prisma` | Add `rangeBand` column (`VARCHAR(10)`) to Weapon model |
-| `prototype/backend/prisma/seed.ts` | Add 21 new weapon definitions with `rangeBand` field; update Laser Rifle (handsRequired, loadoutType, baseDamage, cooldown, cost, description); update Assault Rifle (baseDamage, cost, bonuses, description); set `rangeBand` on all 47 weapons |
-| `prototype/frontend/src/utils/weaponRange.ts` | Simplify `getWeaponOptimalRange()` to return `weapon.rangeBand`; remove rule chain and `LONG_RANGE_WEAPONS` |
-| `prototype/backend/src/services/arena/rangeBands.ts` | Simplify `getWeaponOptimalRange()` to return `weapon.rangeBand`; remove rule chain and `LONG_RANGE_WEAPONS`; update `WeaponLike` interface |
-| `prototype/frontend/src/components/onboarding/WeaponRecommendationCard.tsx` | DELETE — dead code (exported but never imported/rendered) |
-| `prototype/frontend/src/components/onboarding/index.ts` | Remove `WeaponRecommendationCard`, `STARTER_WEAPONS`, and `WeaponRecommendation` exports |
-| `prototype/backend/src/services/recommendationEngine.ts` | DELETE — dead code (backend service never called by any frontend) |
-| `prototype/backend/tests/recommendationEngine.test.ts` | DELETE — tests for dead recommendation engine |
-| `prototype/backend/src/routes/onboarding.ts` | Remove `GET /recommendations` route and `recommendationEngine` import |
-| `prototype/backend/tests/onboardingApi.test.ts` | Remove recommendations test section |
-| `prototype/frontend/src/utils/onboardingApi.ts` | Remove `getRecommendations()`, `getRecommendationsWithRetry()`, `clearRecommendationCache()`, recommendation cache, and related types (`Recommendation`, `BudgetAllocation`, `RecommendationsResponse`) |
-| `prototype/frontend/src/components/onboarding/__tests__/performance.test.tsx` | Remove recommendations endpoint mock |
-| `prototype/frontend/src/assets/weapons/` | Add 21 new `.webp` + `.svg` image pairs |
+| `app/backend/prisma/schema.prisma` | Add `rangeBand` column (`VARCHAR(10)`) to Weapon model |
+| `app/backend/prisma/seed.ts` | Add 21 new weapon definitions with `rangeBand` field; update Laser Rifle (handsRequired, loadoutType, baseDamage, cooldown, cost, description); update Assault Rifle (baseDamage, cost, bonuses, description); set `rangeBand` on all 47 weapons |
+| `app/frontend/src/utils/weaponRange.ts` | Simplify `getWeaponOptimalRange()` to return `weapon.rangeBand`; remove rule chain and `LONG_RANGE_WEAPONS` |
+| `app/backend/src/services/arena/rangeBands.ts` | Simplify `getWeaponOptimalRange()` to return `weapon.rangeBand`; remove rule chain and `LONG_RANGE_WEAPONS`; update `WeaponLike` interface |
+| `app/frontend/src/components/onboarding/WeaponRecommendationCard.tsx` | DELETE — dead code (exported but never imported/rendered) |
+| `app/frontend/src/components/onboarding/index.ts` | Remove `WeaponRecommendationCard`, `STARTER_WEAPONS`, and `WeaponRecommendation` exports |
+| `app/backend/src/services/recommendationEngine.ts` | DELETE — dead code (backend service never called by any frontend) |
+| `app/backend/tests/recommendationEngine.test.ts` | DELETE — tests for dead recommendation engine |
+| `app/backend/src/routes/onboarding.ts` | Remove `GET /recommendations` route and `recommendationEngine` import |
+| `app/backend/tests/onboardingApi.test.ts` | Remove recommendations test section |
+| `app/frontend/src/utils/onboardingApi.ts` | Remove `getRecommendations()`, `getRecommendationsWithRetry()`, `clearRecommendationCache()`, recommendation cache, and related types (`Recommendation`, `BudgetAllocation`, `RecommendationsResponse`) |
+| `app/frontend/src/components/onboarding/__tests__/performance.test.tsx` | Remove recommendations endpoint mock |
+| `app/frontend/src/assets/weapons/` | Add 21 new `.webp` + `.svg` image pairs |
 | `docs/prd_core/SEED_DATA_SPECIFICATION.md` | Update weapon count (26->47), add new weapon entries, update reclassified entries, update "Weapon Summary by Loadout Type", add v1.5 version history |
 | `docs/prd_core/PRD_WEAPONS_LOADOUT.md` | Update category counts, DPS rankings, tier distribution |
 | `docs/balance_changes/PRD_WEAPON_ECONOMY_OVERHAUL.md` | Update "Revised Weapon Catalog" and "Final Weapon Catalog Summary" |
 | `docs/prd_pages/PRD_WEAPON_SHOP.md` | Update weapon counts in filtering/test sections |
 | `docs/PLAYER_ARCHETYPES_GUIDE.md` | Update "26 weapons" -> "47 weapons", update Appendix B |
-| `prototype/backend/src/content/guide/weapons/loadout-types.md` | Update hand-type counts: 1H 15->22, 2H 8->19, Shield 3->6 |
-| `prototype/backend/src/content/guide/combat/movement-and-positioning.md` | Add new weapon examples per range band |
+| `app/backend/src/content/guide/weapons/loadout-types.md` | Update hand-type counts: 1H 15->22, 2H 8->19, Shield 3->6 |
+| `app/backend/src/content/guide/combat/movement-and-positioning.md` | Add new weapon examples per range band |
 | `docs/prd_core/PRD_ONBOARDING_SYSTEM.md` | Update weapon type counts in Step 6, update recommended weapons in Step 7 |
 
 
@@ -1022,12 +1022,12 @@ The design document tiers are the authoritative boundaries for this expansion. T
 
 | File | Change |
 |------|--------|
-| `prototype/frontend/src/components/FilterPanel.tsx` | Update `priceRanges` array: Mid max 250000, Premium min 250000 max 400000, Luxury min 400000 |
-| `prototype/frontend/src/__tests__/weaponShopFiltering.test.ts` | Update tier boundary assertions to match new ranges |
-| `prototype/frontend/src/pages/WeaponShopPage.tsx` | Update onboarding price filter cap from 300000 to 250000; update "under ₡300,000" text to "under ₡250,000" |
-| `prototype/frontend/src/pages/__tests__/WeaponShopPage.onboarding.test.tsx` | Update 300000 assertion to 250000 |
-| `prototype/frontend/src/components/onboarding/steps/Step7_WeaponPurchase.tsx` | Update ₡300K references in guidance text |
-| `prototype/frontend/tests/e2e/weapon-shop.spec.ts` | Update "Budget (<₡100K)" filter test if label changes |
+| `app/frontend/src/components/FilterPanel.tsx` | Update `priceRanges` array: Mid max 250000, Premium min 250000 max 400000, Luxury min 400000 |
+| `app/frontend/src/__tests__/weaponShopFiltering.test.ts` | Update tier boundary assertions to match new ranges |
+| `app/frontend/src/pages/WeaponShopPage.tsx` | Update onboarding price filter cap from 300000 to 250000; update "under ₡300,000" text to "under ₡250,000" |
+| `app/frontend/src/pages/__tests__/WeaponShopPage.onboarding.test.tsx` | Update 300000 assertion to 250000 |
+| `app/frontend/src/components/onboarding/steps/Step7_WeaponPurchase.tsx` | Update ₡300K references in guidance text |
+| `app/frontend/tests/e2e/weapon-shop.spec.ts` | Update "Budget (<₡100K)" filter test if label changes |
 | `docs/balance_changes/PRD_WEAPON_ECONOMY_OVERHAUL.md` | Update tier definitions to match (currently uses yet another set of boundaries) |
 
 ### Updated FilterPanel code
