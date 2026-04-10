@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
+import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
-import { authenticateToken, requireAdmin } from '../middleware/auth';
+import { authenticateToken, requireAdmin, AuthRequest } from '../middleware/auth';
 import { executeScheduledBattles } from '../services/league/leagueBattleOrchestrator';
 import { runMatchmaking } from '../services/analytics/matchmakingService';
 import { rebalanceLeagues } from '../services/league/leagueRebalancingService';
@@ -16,6 +17,8 @@ import { validateRequest } from '../middleware/schemaValidator';
 import { positiveIntParam, paginationQuery } from '../utils/securityValidation';
 import { securityMonitor } from '../services/security/securityMonitor';
 import { SecuritySeverity } from '../services/security/securityLogger';
+import { resetPassword } from '../services/auth/passwordResetService';
+import { validatePassword } from '../utils/validation';
 import { practiceArenaMetrics } from '../services/practice-arena/practiceArenaMetrics';
 import {
   getAdminBattleList,
@@ -36,6 +39,7 @@ import {
   executeBulkCycles,
   backfillCycleSnapshots,
 } from '../services/admin/adminCycleService';
+import prisma from '../lib/prisma';
 
 const router = express.Router();
 
@@ -83,6 +87,18 @@ const securityEventsQuerySchema = z.object({
   userId: z.coerce.number().int().positive().optional(),
   since: z.string().optional(),
   limit: z.coerce.number().int().positive().max(200).default(50),
+});
+
+const userSearchQuerySchema = z.object({
+  q: z.string().min(1).max(50),
+});
+
+const resetPasswordParamsSchema = z.object({
+  id: positiveIntParam,
+});
+
+const resetPasswordBodySchema = z.object({
+  password: z.string(),
 });
 
 // Mount tournament routes
@@ -570,6 +586,110 @@ router.get('/security/events', authenticateToken, requireAdmin, validateRequest(
 router.get('/security/summary', authenticateToken, requireAdmin, validateRequest({}), async (_req: Request, res: Response) => {
   const summary = securityMonitor.getSummary();
   res.json(summary);
+});
+
+/**
+ * GET /api/admin/users/search
+ * Search for users by username, email, or user ID.
+ * Returns at most 10 results with only safe fields.
+ */
+router.get('/users/search', authenticateToken, requireAdmin, validateRequest({ query: userSearchQuerySchema }), async (req: Request, res: Response) => {
+  const q = (req.query.q as string).trim();
+
+  const safeSelect = { id: true, username: true, email: true, stableName: true } as const;
+
+  // Search by exact user ID if query is numeric
+  const idResults = /^\d+$/.test(q)
+    ? await prisma.user.findMany({
+        where: { id: Number(q) },
+        select: safeSelect,
+        take: 10,
+      })
+    : [];
+
+  // Search by username (partial, case-insensitive)
+  const usernameResults = await prisma.user.findMany({
+    where: { username: { contains: q, mode: 'insensitive' } },
+    select: safeSelect,
+    take: 10,
+  });
+
+  // Search by email (partial, case-insensitive)
+  const emailResults = await prisma.user.findMany({
+    where: { email: { contains: q, mode: 'insensitive' } },
+    select: safeSelect,
+    take: 10,
+  });
+
+  // Deduplicate by user ID and limit to 10
+  const seen = new Set<number>();
+  const users: typeof idResults = [];
+  for (const user of [...idResults, ...usernameResults, ...emailResults]) {
+    if (!seen.has(user.id)) {
+      seen.add(user.id);
+      users.push(user);
+      if (users.length >= 10) break;
+    }
+  }
+
+  res.json({ users });
+});
+
+/**
+ * Strict rate limiter for admin password reset.
+ * 10 requests per 15-minute window per authenticated admin user.
+ */
+const resetPasswordLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: false,
+  keyGenerator: (req) => {
+    const authReq = req as AuthRequest;
+    return `admin-reset:${authReq.user?.userId?.toString() || req.ip || 'unknown'}`;
+  },
+  handler: (req, res) => {
+    const authReq = req as AuthRequest;
+    if (authReq.user?.userId) {
+      securityMonitor.trackRateLimitViolation(authReq.user.userId, req.originalUrl);
+    }
+    res.status(429).json({
+      error: 'Too many password reset attempts. Try again later.',
+      code: 'RATE_LIMIT_EXCEEDED',
+      retryAfter: 900,
+    });
+  },
+});
+
+/**
+ * POST /api/admin/users/:id/reset-password
+ * Reset a user's password. Admin-only, rate-limited, fully audited.
+ * The PasswordResetService handles hashing, session invalidation, and audit logging atomically.
+ */
+router.post('/users/:id/reset-password', resetPasswordLimiter, authenticateToken, requireAdmin, validateRequest({ params: resetPasswordParamsSchema, body: resetPasswordBodySchema }), async (req: Request, res: Response) => {
+  const authReq = req as AuthRequest;
+  const targetUserId = Number(req.params.id);
+  const { password } = req.body;
+  const initiatorId = authReq.user!.userId;
+
+  // Validate password strength before delegating to service
+  const validation = validatePassword(password);
+  if (!validation.valid) {
+    logger.warn('[Admin] Password reset validation failure', { initiatorId, targetUserId });
+    securityMonitor.logValidationFailure(req.originalUrl, 'weak_password', req.ip || 'unknown');
+    res.status(400).json({ error: validation.error, code: 'VALIDATION_ERROR' });
+    return;
+  }
+
+  const result = await resetPassword(targetUserId, password, {
+    initiatorId,
+    resetType: 'admin',
+  });
+
+  logger.info('[Admin] Password reset successful', { initiatorId, targetUserId: result.userId });
+
+  res.json({ success: true, userId: result.userId, username: result.username });
 });
 
 export default router;

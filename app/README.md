@@ -4,7 +4,7 @@ This is the Phase 1 local prototype for Armoured Souls. The prototype runs entir
 
 ## 🚀 Setup Instructions
 
-**→ See [Complete Setup Guide](../docs/SETUP.md) for detailed instructions**
+**→ See [Complete Setup Guide](../docs/guides/operations/LOCAL_SETUP.md) for detailed instructions**
 
 Quick setup:
 ```bash
@@ -26,7 +26,7 @@ cd frontend && npm run dev  # Terminal 2 - http://localhost:3000
 
 ## 📖 Full Documentation
 
-See [../docs/SETUP.md](../docs/SETUP.md) for:
+See [../docs/guides/operations/LOCAL_SETUP.md](../docs/guides/operations/LOCAL_SETUP.md) for:
 - Initial setup steps
 - Testing new versions
 - Database reset instructions
@@ -61,14 +61,14 @@ app/
 
 Armoured Souls deploys to Scaleway DEV1-S VPS instances running Ubuntu 22.04, with Caddy as reverse proxy, PM2 for process management, and PostgreSQL in Docker.
 
-- [VPS Setup Guide](../docs/guides/VPS_SETUP.md) — Provision a new VPS from scratch
-- [Deployment Guide](../docs/guides/DEPLOYMENT.md) — CI/CD pipeline, first deploy, and manual PRD promotion
-- [Maintenance Guide](../docs/guides/MAINTENANCE.md) — Logs, backups, monitoring
-- [Troubleshooting Guide](../docs/guides/TROUBLESHOOTING.md) — Common issues and rollback procedure
-- [Architecture Decisions](../docs/guides/DECISIONS.md) — Project structure rationale and risk register
+- [VPS Setup Guide](../docs/guides/operations/VPS_SETUP.md) — Provision a new VPS from scratch
+- [Deployment Guide](../docs/guides/operations/DEPLOYMENT.md) — CI/CD pipeline, first deploy, and manual PRD promotion
+- [Maintenance Guide](../docs/guides/operations/MAINTENANCE.md) — Logs, backups, monitoring
+- [Troubleshooting Guide](../docs/guides/operations/TROUBLESHOOTING.md) — Common issues and rollback procedure
+- [Architecture Decisions](../docs/architecture/ARCHITECTURE.md) — Project structure rationale and risk register
 
 ACC auto-deploys on push to `main`. PRD requires manual promotion via GitHub Actions.
 
 ---
 
-For complete setup, troubleshooting, and reset instructions: [../docs/SETUP.md](../docs/SETUP.md)
+For complete setup, troubleshooting, and reset instructions: [../docs/guides/operations/LOCAL_SETUP.md](../docs/guides/operations/LOCAL_SETUP.md)

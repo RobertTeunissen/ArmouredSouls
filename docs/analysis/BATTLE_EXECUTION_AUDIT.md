@@ -1,8 +1,26 @@
-# Battle Execution System — Comprehensive Audit
+# Battle Execution System — Cross-Type Reference
 
-**Date**: March 18, 2026
-**Scope**: All four match types (League, Tournament, Tag Team, King of the Hill)
-**Status**: Complete audit of implementation vs. documentation
+**Project**: Armoured Souls  
+**Document Type**: Technical Reference  
+**Version**: v2.0  
+**Last Updated**: April 9, 2026  
+**Status**: ✅ Current  
+**Owner**: Robert Teunissen
+
+**Revision History**:
+
+v1.0 (Mar 18, 2026): Initial comprehensive audit of all 4 battle modes  
+v2.0 (Apr 9, 2026): Converted from audit to reference doc — removed resolved audit trail (sections 10–12), added versioning header
+
+---
+
+**Related Documents**:
+- [BATTLE_SIMULATION_ARCHITECTURE.md](../prd_core/BATTLE_SIMULATION_ARCHITECTURE.md) — Engine architecture and simulator design
+- [COMBAT_FORMULAS.md](../prd_core/COMBAT_FORMULAS.md) — Detailed combat math
+- [PRD_MATCHMAKING.md](../prd_core/PRD_MATCHMAKING.md) — Matchmaking algorithm
+- [PRD_TOURNAMENT_SYSTEM.md](../prd_core/PRD_TOURNAMENT_SYSTEM.md) — Tournament bracket and rewards
+- [PRD_CYCLE_SYSTEM.md](../prd_core/PRD_CYCLE_SYSTEM.md) — Cycle execution and scheduler
+- [PRD_BATTLE_DATA_ARCHITECTURE.md](../prd_core/PRD_BATTLE_DATA_ARCHITECTURE.md) — BattleParticipant data model
 
 ---
 
@@ -13,13 +31,10 @@
 3. [Match Type: League (1v1)](#3-match-type-league-1v1)
 4. [Match Type: Tournament](#4-match-type-tournament)
 5. [Match Type: Tag Team (2v2)](#5-match-type-tag-team-2v2)
-6. [Match Type: King of the Hill (N-player FFA)](#6-match-type-king-of-the-hill)
+6. [Match Type: King of the Hill](#6-match-type-king-of-the-hill)
 7. [Cross-Type Comparison Matrix](#7-cross-type-comparison-matrix)
 8. [Database Schema & Storage](#8-database-schema--storage)
 9. [Frontend Presentation](#9-frontend-presentation)
-10. [Documentation Alignment Findings](#10-documentation-alignment-findings)
-11. [Issues & Discrepancies](#11-issues--discrepancies)
-12. [Recommendations](#12-recommendations)
 
 ---
 
@@ -569,226 +584,7 @@ Type-specific display:
 - `TournamentsPage.tsx`: List of active/completed tournaments
 - `TournamentDetailPage.tsx`: Full bracket visualization via `BracketView` component
 
----
-
-## 10. Documentation Alignment Findings
-
-### PRD vs. Implementation — Aligned ✅
-
-1. **COMBAT_FORMULAS.md** ↔ `combatSimulator.ts`: All formulas match implementation:
-   - Malfunction: `Max(0, 20% - WC × 0.4%)` ✅
-   - Hit chance: `Clamp(70% + Targeting/2 + Stance - Evasion/3 - Gyro/5 ± variance, 10%, 95%)` ✅
-   - Critical: `Clamp(5% + CritSystems/8 + Targeting/25 + loadout + variance, 0%, 50%)` ✅
-   - Damage: `WeaponDmg × CPMult × WCMult × LoadoutMult × StanceMult` ✅
-   - Armor: `ARMOR_EFFECTIVENESS = 1.5`, `PENETRATION_BONUS = 2.0` ✅
-   - Counter: `Clamp(CounterProtocols/100 × StanceMult × LoadoutMult, 0%, 40%)` ✅
-
-2. **PRD_MATCHMAKING.md** ↔ `matchmakingService.ts`: Core algorithm matches:
-   - LP primary (±10/±20), ELO secondary (±150/±300) ✅
-   - Recent opponent tracking (last 5) ✅
-   - Same-stable penalty (+500) ✅
-   - Bye-robot for odd numbers ✅
-   - Weapons-only readiness check ✅
-
-3. **PRD_TOURNAMENT_SYSTEM.md** ↔ `tournamentService.ts` + `tournamentBattleOrchestrator.ts`:
-   - Single elimination format ✅
-   - ELO-based seeding ✅
-   - HP tiebreaker for draws ✅
-   - Auto-create next tournament ✅
-   - Bye matches auto-completed (no battle, no rewards) ✅
-
-4. **BATTLE_SIMULATION_ARCHITECTURE.md** ↔ Implementation:
-   - 4 cron jobs (league/tournament/tag team/settlement) documented ✅
-   - KotH 5th cron job exists in code but architecture doc shows only 4 — see Issues
-   - Orchestrator → Simulator → Message Generator → DB pipeline ✅
-   - BattleParticipant model ✅
-
-5. **PRD_CYCLE_SYSTEM.md** ↔ `cycleScheduler.ts`:
-   - 15-step cycle execution flow documented ✅
-   - Repair-first pattern ✅
-   - Settlement as separate job ✅
-
-6. **In-Game Guide** ↔ Implementation:
-   - `combat/battle-flow.md`: Attack sequence matches `performAttack()` ✅
-   - `tournaments/rewards.md`: Reward formulas match `tournamentRewards.ts` ✅
-   - `tournaments/tournament-format.md`: Bracket generation matches `tournamentService.ts` ✅
-   - `leagues/matchmaking.md`: Scoring system matches `matchmakingService.ts` ✅
-   - `king-of-the-hill/scoring-and-win-conditions.md`: Score/time/last-standing match code ✅
-   - `king-of-the-hill/rewards.md`: Placement tiers and zone dominance bonus match code ✅
-   - `king-of-the-hill/match-formats.md`: Fixed/rotating variants match code ✅
-
-### PRD vs. Implementation — Discrepancies ⚠️
-
-See Section 11 for the full list.
 
 ---
 
-## 11. Issues & Discrepancies
-
-### ISSUE-01: Tournament ELO Changes — PRD Contradiction (Severity: Medium) ✅ RESOLVED
-
-**Finding:** The `createTournamentBattleRecord()` function calculates and stores ELO changes for tournament battles using the standard K=32 formula. The PRD_TOURNAMENT_SYSTEM.md (User Story 3.1) states "ELO changes apply normally," confirming this is intentional behavior.
-
-**Resolution:** Tournament ELO changes are by design. The in-game guide `tournaments/rewards.md` has been updated with a dedicated "ELO Impact" section documenting that tournament battles affect ELO using K=32, and explaining the distinction from KotH (which does not affect ELO). The KotH vs tournament difference is intentional: tournaments are competitive seeded events where results should carry weight, while KotH is a casual format.
-
----
-
-### ISSUE-02: KotH Missing from Architecture Documentation (Severity: Low) ✅ RESOLVED
-
-**Finding:** `BATTLE_SIMULATION_ARCHITECTURE.md` documents 4 cron jobs (league, tournament, tag team, settlement) and 3 orchestrators (league, tournament, tag team). KotH is not mentioned despite being fully implemented.
-
-**Resolution:** Architecture doc updated to show 5 cron jobs, 4 orchestrators, KotH in the system overview diagram, daily timeline, audit event types table, and file reference. KotH Integration section was already present from the unified simulator work.
-
----
-
-### ISSUE-03: KotH Analysis Doc Says "FUTURE RELEASE" — But It's Implemented (Severity: Low) ✅ RESOLVED
-
-**Finding:** `docs/analysis/KING_OF_THE_HILL_MODE.md` was marked as `📋 FUTURE RELEASE — Design notes only` with open questions about rewards, yield mechanics, and respawning. However, KotH is fully implemented.
-
-**Resolution:** Status changed to "✅ Implemented." Added "Implementation Decisions" section resolving all 5 open questions. Dependencies updated to show all are satisfied.
-
----
-
-### ISSUE-04: KotH Simplified Combat Engine — ✅ RESOLVED by Unified Simulator
-
-**Finding:** The KotH simulation engine previously used a significantly simplified combat model compared to the shared 1v1 engine, missing 10+ combat mechanics.
-
-**Resolution:** KotH now runs on the unified `simulateBattleMulti()` engine in `combatSimulator.ts`, which uses the full 7-phase tick loop with all 23 attributes active. KotH-specific behavior is injected via `GameModeConfig` strategy objects (`KothTargetPriorityStrategy`, `KothMovementIntentModifier`, `KothWinConditionEvaluator`) defined in `arena/kothEngine.ts`. All combat mechanics (counter-attacks, shield regen, offhand attacks, range bands, backstab/flanking, adaptation, pressure, servo strain, yield) are now active in KotH. The in-game guide `combat/battle-flow.md` has been updated to accurately describe what's shared and what's different.
-
----
-
-### ISSUE-05: KotH `BattleParticipant.team` Semantic Mismatch (Severity: Low) ✅ RESOLVED
-
-**Finding:** For KotH battles, the `team` field in `BattleParticipant` stored the robot's final placement (1-6) rather than a team number.
-
-**Resolution:** Added a dedicated `placement` column (`Int?`, nullable) to `BattleParticipant`. KotH now writes `team: 1` (free-for-all) and `placement: 1-6`. The API reads `placement` for KotH display with fallback to `team` for old records. Migration: `20260318201357_add_placement_to_battle_participant`.
-
----
-
-### ISSUE-06: Battle Table Denormalization Still Present (Severity: Low)
-
-**Finding:** The `PRD_BATTLE_DATA_ARCHITECTURE.md` documents the migration from denormalized robot1/robot2 columns to the `BattleParticipant` table. However, the `Battle` table still contains:
-- `robot1Id`, `robot2Id` (kept for relations)
-- `robot1ELOBefore`, `robot2ELOBefore`, `robot1ELOAfter`, `robot2ELOAfter`, `eloChange`
-- Tag team-specific columns: `team1ActiveRobotId`, `team1ReserveRobotId`, etc.
-- Tag team damage/fame columns: `team1ActiveDamageDealt`, etc.
-
-The PRD acknowledges these are "kept for backward compatibility and aggregate queries." Both the old columns AND the new `BattleParticipant` records are populated.
-
-**Impact:** Dual-write means data could theoretically diverge. The tag team-specific columns on the Battle table are only used for tag team battles, creating sparse columns for other types.
-
-**Recommendation:** This is a known tradeoff documented in the PRD. No immediate action needed, but consider a future migration to fully rely on `BattleParticipant`.
-
----
-
-### ISSUE-07: KotH Rotating Zone Implementation vs. Guide (Severity: Low) ✅ RESOLVED
-
-**Finding:** The audit originally flagged that the zone rotation code didn't enforce the 6-unit boundary and 8-unit minimum distance constraints documented in the in-game guide.
-
-**Resolution:** The `kothEngine.ts` implementation in `generateNextZonePosition()` already enforces both constraints correctly: `maxDist = arenaRadius - 6 - zoneRadius` for boundary enforcement, and `distFromPrevious < 8` rejection loop for minimum distance. The audit's finding was based on the old `simulateKothBattle()` code which used `(arenaR * 0.3) + rand() * (arenaR * 0.3)`. That code has been replaced by the unified simulator + kothEngine. The guide is accurate.
-
----
-
-### ISSUE-08: KotH Score Threshold Discrepancy (Severity: Low)
-
-**Finding:** The in-game guide (`scoring-and-win-conditions.md`) states score thresholds of 30 (fixed) and 45 (rotating). The code uses `KOTH_MATCH_DEFAULTS` which should match, but the actual defaults are resolved in `processKothBattle()` via:
-```typescript
-const scoreThreshold = match.scoreThreshold ?? (match.rotatingZone
-  ? KOTH_MATCH_DEFAULTS.rotatingZoneScoreThreshold
-  : KOTH_MATCH_DEFAULTS.scoreThreshold);
-```
-
-**Verified:** `KOTH_MATCH_DEFAULTS` in `kothEngine.ts` confirms:
-- `scoreThreshold: 30`, `rotatingZoneScoreThreshold: 45` ✅ matches guide
-- `timeLimit: 150`, `rotatingZoneTimeLimit: 210` ✅ matches guide
-- `killBonus: 5` ✅ matches guide
-- `lastStandingDuration: 10` ✅ matches guide
-- `zoneWarningTime: 5`, `zoneTransitionDuration: 3` ✅ matches guide
-
-**Status:** No discrepancy. The `kothEngine.ts` defaults are authoritative and match the in-game guide. The old `simulateKothBattle()` code that hardcoded its own values has been replaced by the unified simulator + kothEngine.
-
----
-
-### ISSUE-09: Tournament Streaming Revenue — PRD Updated (Severity: Medium) ✅ RESOLVED
-
-**Finding:** The PRD_TOURNAMENT_SYSTEM.md stated "No Streaming Income" for tournaments, but the code awards streaming revenue.
-
-**Resolution:** Decision: keep the code, update the PRD. `PRD_TOURNAMENT_SYSTEM.md` updated to document that tournament battles award streaming revenue using the same formula as league battles. The reward summary table row changed from "No streaming for tournaments" to "Same formula as league battles." Bye matches still correctly do not generate streaming income (no match to stream).
-
----
-
-### ISSUE-10: PRD_BATTLE_RESULTS_PAGE.md — Not Implemented (Severity: Low)
-
-**Finding:** `docs/prd_pages/PRD_BATTLE_RESULTS_PAGE.md` is marked as `❌ NOT IMPLEMENTED`. This page would show post-battle summaries with prestige/fame earned. Currently, players can only see battle results through the Battle History page and Battle Detail page, which do show rewards but not in a dedicated post-battle summary format.
-
-**Impact:** Players don't get immediate feedback after battles. This is a UX gap, not a system correctness issue.
-
-**Recommendation:** This is a known gap documented in the PRD. Prioritize based on player feedback.
-
----
-
-### ISSUE-11: Tag Team Battle Time Limit Inconsistency (Severity: Low)
-
-**Finding:** The tag team orchestrator defines `BATTLE_TIME_LIMIT = 300` (5 minutes), but each phase calls `simulateBattle()` which has its own `MAX_BATTLE_DURATION = 120s`. The total battle time is the sum of all phase durations, which could theoretically exceed 300s (e.g., 3 phases × 120s = 360s). The code checks `currentTime < maxTime` between phases but not within them.
-
-**Impact:** A tag team battle could run slightly over 300s if the final phase's 120s simulation pushes past the limit. The `durationSeconds` is clamped to `Math.min(currentTime, maxTime)` in the return value, so the stored duration is correct, but the simulation itself may run longer.
-
-**Recommendation:** Minor issue. The clamping handles it for storage purposes. Consider adding a remaining-time parameter to `simulateBattle()` for tag team phases if precise time limits matter.
-
----
-
-## 12. Recommendations
-
-### Priority 1 — KotH Engine Parity Decision (ISSUE-04) ✅ RESOLVED
-
-This was the single most impactful finding. The KotH engine previously shared only the core damage pipeline with the 1v1 engine, stripping out 10+ combat mechanics.
-
-**Resolution:** KotH now runs on the unified `simulateBattleMulti()` engine. All 23 robot attributes are meaningful in KotH. The old `simulateKothBattle()` function has been replaced by `simulateBattleMulti()` with KotH-specific `GameModeConfig` strategy objects. The in-game guide has been updated to accurately describe the unified engine with KotH-specific strategy differences.
-
-### Priority 2 — Documentation Corrections ✅ RESOLVED
-
-These are straightforward fixes with no code changes required:
-
-1. ✅ **Updated `BATTLE_SIMULATION_ARCHITECTURE.md`** — Added KotH as the 5th cron job. Updated system overview diagram, daily timeline, orchestrator list (now 4), audit event types table, and file reference. (ISSUE-02)
-2. ✅ **Updated `KING_OF_THE_HILL_MODE.md`** — Changed status from "FUTURE RELEASE" to "Implemented." Added "Implementation Decisions" section resolving all 5 open questions (zone visibility, scoring mechanic, yield interaction, respawning, rewards). (ISSUE-03)
-3. ✅ **Updated in-game guide `combat/battle-flow.md`** — Replaced the misleading "KotH uses the same combat engine" statement with an accurate description of what's shared (full 7-phase tick loop, all 23 attributes, complete attack chain) and what's different (target priority, movement bias, win condition, zone scoring, anti-passive penalties, no ELO). (ISSUE-04)
-4. ~~**Clarify tournament ELO policy**~~ ✅ RESOLVED — Added "ELO Impact" section to `tournaments/rewards.md` documenting that tournament battles affect ELO (K=32), with explanation of why this differs from KotH. (ISSUE-01)
-
-### Priority 3 — Design Decisions Needed ✅ RESOLVED
-
-5. ✅ **Tournament streaming revenue** — Decision: keep the code, update the PRD. `PRD_TOURNAMENT_SYSTEM.md` updated to document that tournament battles award streaming revenue using the same formula as league battles. Bye matches still do not generate streaming income. (ISSUE-09)
-6. ✅ **KotH rotating zone constraints** — The `kothEngine.ts` implementation in `generateNextZonePosition()` already enforces both constraints: 6-unit boundary (`maxDist = arenaRadius - 6 - zoneRadius`) and 8-unit minimum distance from previous position (`distFromPrevious < 8`). The in-game guide is accurate. The audit's finding was based on the old `simulateKothBattle()` code, which has been replaced by the unified simulator + kothEngine. No changes needed. (ISSUE-07)
-7. ✅ **KotH `BattleParticipant.team` semantic overload** — Added a dedicated `placement` column (nullable `Int?`) to `BattleParticipant`. KotH now writes `team: 1` (free-for-all, no team affiliation) and `placement: 1-6` (final placement). The `matches.ts` API reads `placement` for KotH display with fallback to `team` for backward compatibility with old records. Migration created: `20260318201357_add_placement_to_battle_participant`. `PRD_BATTLE_DATA_ARCHITECTURE.md` updated with KotH data structure, validation rules, and participant count. (ISSUE-05)
-
-### Priority 4 — Code Quality ✅ RESOLVED
-
-8. ✅ **Extract KotH orchestration** — Extracted all KotH code (`KothBattleExecutionSummary`, `calculateKothRewards`, `updateKothRobotStats`, `processKothBattle`, `executeScheduledKothBattles`) into `kothBattleOrchestrator.ts`. Renamed `battleOrchestrator.ts` → `leagueBattleOrchestrator.ts` for naming consistency with `tournamentBattleOrchestrator.ts` and `tagTeamBattleOrchestrator.ts`. All four orchestrators now have their own dedicated file. All imports updated across source and test files. (ISSUE-02, ISSUE-04)
-9. **Tag team time limit enforcement** — Consider passing a `remainingTime` parameter to `simulateBattle()` for tag team phases so the 300s total limit is enforced within the simulation, not just between phases. Current clamping handles storage correctly but the simulation itself can overrun. (ISSUE-11)
-10. ~~**Verify `KOTH_MATCH_DEFAULTS`**~~ — Verified ✅ (values match guide: 30/45 score, 150/210 time, 5 kill bonus, 10s last standing)
-
-### Priority 5 — Orchestrator Architecture for Scalability ✅ RESOLVED
-
-**Original finding:** 3 orchestrator files handling 4 match types with significant code duplication. Each orchestrator independently reimplemented the same 6-step post-combat pipeline (ELO, battle record, participants, stat updates, streaming revenue, audit logging). Adding a 5th or 6th match type would require copying 500+ lines.
-
-**Resolution — Two-layer approach:**
-
-1. **`battlePostCombat.ts`** — Shared post-combat helpers extracted from all 4 orchestrators:
-   - `awardStreamingRevenueForParticipant()` — replaces 3-step calc+award+update pattern
-   - `logBattleAuditEvent()` — replaces ~50-line `eventLogger.logEvent` blocks with type-specific extras
-   - `updateRobotCombatStats()` — replaces per-orchestrator `prisma.robot.update` blocks (wins/losses/kills/damage/ELO/HP/LP/fame)
-   - `awardCreditsToUser()`, `awardPrestigeToUser()`, `awardFameToRobot()` — simple currency increments
-
-2. **`battleStrategy.ts`** — Strategy Pattern interface + `BattleProcessor` class:
-   - `BattleStrategy<TMatch>` interface with config flags (`affectsELO`, `affectsLeaguePoints`, `allowsDraws`, `hasStreamingRevenue`, `hasByeMatches`) and pipeline methods (`loadParticipants`, `simulate`, `calculateRewards`, `buildBattleLog`, etc.)
-   - `BattleProcessor` class with shared 11-step pipeline that new match types plug into
-
-**Migration approach (pragmatic):**
-- Existing orchestrators (league, tournament, tag team, KotH) refactored to use `battlePostCombat.ts` helpers directly within their existing `processBattle()` flows. Their battle-tested flows are preserved — no risky rewrites.
-- New match types use `BattleProcessor.process()` instead of writing a full orchestrator from scratch (~100-150 lines of strategy implementation vs. 500+ lines of copy-paste).
-
-**Files created:** `battlePostCombat.ts`, `battleStrategy.ts`
-**Files refactored:** All 4 orchestrators now use shared helpers (streaming, audit, stats, credits/prestige/fame).
-
----
-
-*End of audit.*
+Two open items from the original March 2026 audit (battle table denormalization, tag team time limit overrun) are tracked in [docs/BACKLOG.md](../BACKLOG.md).

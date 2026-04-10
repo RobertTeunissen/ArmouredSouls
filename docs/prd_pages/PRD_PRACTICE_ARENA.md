@@ -32,7 +32,7 @@ The Practice Arena (in-universe: "Combat Simulation Lab") is a 1v1 sandbox battl
 
 - [BATTLE_SIMULATION_ARCHITECTURE.md](../prd_core/BATTLE_SIMULATION_ARCHITECTURE.md) — Combat engine architecture (Practice Arena is the fifth consumer)
 - [PRD_ADMIN_PAGE.md](PRD_ADMIN_PAGE.md) — Admin portal (includes Practice Arena metrics in Dashboard tab)
-- [SECURITY.md](../guides/SECURITY.md) — Security strategy (includes Practice Arena rate limiting)
+- [PRD_SECURITY.md](../architecture/PRD_SECURITY.md) — Security strategy (includes Practice Arena rate limiting)
 - [COMBAT_FORMULAS.md](../prd_core/COMBAT_FORMULAS.md) — Combat math reference
 - [COMBAT_MESSAGES.md](../prd_core/COMBAT_MESSAGES.md) — Narrative generation system
 - [combat-simulator.md](../app/backend/src/content/guide/strategy/combat-simulator.md) — In-game guide article for the Combat Simulator

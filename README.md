@@ -4,12 +4,12 @@ A strategy simulation game where players manage a stable of battle robots, compe
 
 ## Quick Start
 
-See [docs/guides/SETUP.md](docs/guides/SETUP.md) for the full setup guide and troubleshooting.
+See [docs/guides/operations/LOCAL_SETUP.md](docs/guides/operations/LOCAL_SETUP.md) for the full setup guide and troubleshooting.
 
 ```bash
 # Clone and navigate
 git clone https://github.com/RobertTeunissen/ArmouredSouls.git
-cd ArmouredSouls/prototype
+cd ArmouredSouls/app
 
 # Start database
 docker compose up -d
@@ -29,7 +29,7 @@ npm install
 npm run dev  # Terminal 2
 ```
 
-Open http://localhost:3000 — test credentials are in [SETUP.md](docs/guides/SETUP.md).
+Open http://localhost:3000 — test credentials are in [LOCAL_SETUP.md](docs/guides/operations/LOCAL_SETUP.md).
 
 If you see "Environment variable not found: DATABASE_URL", you forgot to create the `.env` file — run `cp .env.example .env` in `app/backend/`.
 
@@ -60,7 +60,8 @@ Armoured Souls is a fully functional prototype deployed to a production VPS. The
 ```
 ArmouredSouls/
 ├── docs/                    # Documentation (organized by category)
-│   ├── prd_core/            # Core game design, architecture, schema, combat
+│   ├── architecture/        # System architecture, schema, combat engine, security
+│   ├── game-systems/        # Game design, economy, leagues, weapons, onboarding
 │   ├── prd_pages/           # Page-specific requirements
 │   ├── guides/              # Setup, deployment, maintenance, security
 │   ├── design_ux/           # Design system and brand guidelines
@@ -84,25 +85,25 @@ ArmouredSouls/
 ## Documentation
 
 ### Getting Started
-- [Setup Guide](docs/guides/SETUP.md) — Local development setup, testing, troubleshooting
-- [Architecture](docs/prd_core/ARCHITECTURE.md) — System architecture and deployment
-- [Game Design](docs/prd_core/GAME_DESIGN.md) — Core game concept and mechanics
+- [Setup Guide](docs/guides/operations/LOCAL_SETUP.md) — Local development setup, testing, troubleshooting
+- [Architecture](docs/architecture/ARCHITECTURE.md) — System architecture and deployment
+- [Game Design](docs/game-systems/GAME_DESIGN.md) — Core game concept and mechanics
 
 ### Core Systems
-- [Database Schema](docs/prd_core/DATABASE_SCHEMA.md) — Complete schema reference (18 models)
-- [Battle Simulation](docs/prd_core/BATTLE_SIMULATION_ARCHITECTURE.md) — Combat engine, orchestrators, cycle scheduler
-- [Combat Formulas](docs/prd_core/COMBAT_FORMULAS.md) — Hit chance, damage, crits, counters
-- [Economy System](docs/prd_core/PRD_ECONOMY_SYSTEM.md) — Credits, facilities, rewards
-- [Prestige & Fame](docs/prd_core/PRD_PRESTIGE_AND_FAME.md) — Dual reputation systems
-- [Matchmaking](docs/prd_core/PRD_MATCHMAKING.md) — LP-primary matching algorithm
-- [Weapons & Loadout](docs/prd_core/PRD_WEAPONS_LOADOUT.md) — 47 weapons, 4 loadout types
-- [Onboarding](docs/prd_core/PRD_ONBOARDING_SYSTEM.md) — 5-step tutorial system
+- [Database Schema](docs/architecture/DATABASE_SCHEMA.md) — Complete schema reference (18 models)
+- [Battle Simulation](docs/architecture/BATTLE_SIMULATION_ARCHITECTURE.md) — Combat engine, orchestrators, cycle scheduler
+- [Combat Formulas](docs/architecture/COMBAT_FORMULAS.md) — Hit chance, damage, crits, counters
+- [Economy System](docs/game-systems/PRD_ECONOMY_SYSTEM.md) — Credits, facilities, rewards
+- [Prestige & Fame](docs/game-systems/PRD_PRESTIGE_AND_FAME.md) — Dual reputation systems
+- [Matchmaking](docs/game-systems/PRD_MATCHMAKING.md) — LP-primary matching algorithm
+- [Weapons & Loadout](docs/game-systems/PRD_WEAPONS_LOADOUT.md) — 47 weapons, 4 loadout types
+- [Onboarding](docs/game-systems/PRD_ONBOARDING_SYSTEM.md) — 5-step tutorial system
 
 ### Operations
 - [Deployment Guide](docs/guides/DEPLOYMENT.md) — VPS deployment and maintenance
-- [Security](docs/guides/SECURITY.md) — Security strategy and practices
+- [Security](docs/architecture/PRD_SECURITY.md) — Security strategy and practices
 - [Error Codes](docs/guides/ERROR_CODES.md) — Domain-specific error reference
-- [Module Structure](docs/guides/MODULE_STRUCTURE.md) — Backend service organization
+- [Service Directory](docs/architecture/PRD_SERVICE_DIRECTORY.md) — Backend service organization
 
 ### Development
 - [Roadmap](docs/ROADMAP.md) — Development phases and completed specs

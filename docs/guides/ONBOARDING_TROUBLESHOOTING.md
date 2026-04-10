@@ -13,7 +13,7 @@ Quick reference for diagnosing and fixing issues with the New Player Onboarding 
 - Frontend context: `app/frontend/src/contexts/OnboardingContext.tsx`
 
 **Related docs**:
-- [PRD_ONBOARDING_SYSTEM.md](../prd_core/PRD_ONBOARDING_SYSTEM.md)
+- [PRD_ONBOARDING_SYSTEM.md](../game-systems/PRD_ONBOARDING_SYSTEM.md)
 
 ---
 
