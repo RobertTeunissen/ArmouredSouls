@@ -1,7 +1,7 @@
 # Movement Event Throttling Revert
 
 **Date**: March 28, 2026  
-**File Modified**: `app/backend/src/services/combatSimulator.ts`
+**File Modified**: `app/backend/src/services/battle/combatSimulator.ts`
 
 ## What Changed
 

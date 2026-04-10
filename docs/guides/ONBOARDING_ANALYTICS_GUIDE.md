@@ -306,7 +306,6 @@ const skipDistribution = await prisma.user.groupBy({
 
 ## Related Documentation
 
-- [PRD_ONBOARDING_SYSTEM.md](../prd_core/PRD_ONBOARDING_SYSTEM.md) — Full product requirements and analytics event definitions
-- [ONBOARDING_IMPLEMENTATION_NOTES.md](../implementation_notes/ONBOARDING_IMPLEMENTATION_NOTES.md) — Technical architecture and component details
-- [PRD_ECONOMY_SYSTEM.md](../prd_core/PRD_ECONOMY_SYSTEM.md) — Starting budget and facility costs
-- [TESTING_STATE.md](./TESTING_STATE.md) — Current test status and coverage
+- [PRD_ONBOARDING_SYSTEM.md](../game-systems/PRD_ONBOARDING_SYSTEM.md) — Full product requirements, 5-step flow, and analytics event definitions
+- [ONBOARDING_TROUBLESHOOTING.md](./ONBOARDING_TROUBLESHOOTING.md) — Operational troubleshooting for stuck states and reset issues
+- [PRD_ECONOMY_SYSTEM.md](../game-systems/PRD_ECONOMY_SYSTEM.md) — Starting budget and facility costs

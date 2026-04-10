@@ -79,7 +79,6 @@ This PRD defines the requirements for overhauling the My Robots list page (`/rob
 
 - [DESIGN_SYSTEM_AND_UX_GUIDE.md - Section 3: My Robots Page](design_ux/DESIGN_SYSTEM_AND_UX_GUIDE.md)
 - [DESIGN_SYSTEM_QUICK_REFERENCE.md - Card Component Pattern](design_ux/DESIGN_SYSTEM_QUICK_REFERENCE.md)
-- [NAVIGATION_AND_PAGE_STRUCTURE.md - Core Management Pages](NAVIGATION_AND_PAGE_STRUCTURE.md)
 - [PRD_LOGIN_PAGE_DESIGN_ALIGNMENT.md](PRD_LOGIN_PAGE_DESIGN_ALIGNMENT.md) - Reference for design alignment approach
 - [PRD_NAVIGATION_MENU_DESIGN_ALIGNMENT.md](PRD_NAVIGATION_MENU_DESIGN_ALIGNMENT.md) - Navigation implementation patterns
 - [PRD_ROBOT_DETAIL_PAGE.md](PRD_ROBOT_DETAIL_PAGE.md) - Robot Detail page (`/robots/:id`) - Battle configuration, stats, and upgrades

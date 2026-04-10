@@ -694,7 +694,7 @@ When writing code for Armoured Souls, ensure:
 
 - **README**: `/README.md` - Quick start guide
 - **Architecture**: `/docs/ARCHITECTURE.md` - System design and tech stack
-- **Setup Guide**: `/docs/SETUP.md` - Detailed setup instructions
+- **Setup Guide**: `/docs/guides/operations/LOCAL_SETUP.md` - Detailed setup instructions
 - **Contributing**: `/CONTRIBUTING.md` - Contribution guidelines
 - **Robot System**: `/docs/ROBOT_ATTRIBUTES.md` - Game mechanics documentation
 

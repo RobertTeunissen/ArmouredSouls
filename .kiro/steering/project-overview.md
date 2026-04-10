@@ -65,6 +65,6 @@ Browser-based robot combat strategy game with turn-based mechanics, league syste
 ## Development Principles
 - Modular architecture for maintainability
 - Comprehensive documentation for all features
-- Security-first approach (see docs/guides/SECURITY.md)
+- Security-first approach (see docs/architecture/PRD_SECURITY.md)
 - Database-driven game state management
 - RESTful API design

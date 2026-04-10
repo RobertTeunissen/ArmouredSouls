@@ -66,9 +66,9 @@ graph TD
 | Frontend | AuthContext | `app/frontend/src/contexts/AuthContext.tsx` |
 | Backend | Auth routes | `app/backend/src/routes/auth.ts` |
 | Backend | Validation Service | `app/backend/src/utils/validation.ts` |
-| Backend | User Service | `app/backend/src/services/userService.ts` |
-| Backend | Password Service | `app/backend/src/services/passwordService.ts` |
-| Backend | JWT Service | `app/backend/src/services/jwtService.ts` |
+| Backend | User Service | `app/backend/src/services/auth/userService.ts` |
+| Backend | Password Service | `app/backend/src/services/auth/passwordService.ts` |
+| Backend | JWT Service | `app/backend/src/services/auth/jwtService.ts` |
 | Backend | Rate Limiter | `app/backend/src/middleware/rateLimiter.ts` |
 | Data | Prisma client | `app/backend/src/lib/prisma.ts` |
 
@@ -585,14 +585,14 @@ model User {
    npx prisma generate
    ```
 
-The `createUser()` function in `app/backend/src/services/userService.ts` does not explicitly set these fields — it relies on the database defaults. This means changing the schema default is the single source of truth for new account values.
+The `createUser()` function in `app/backend/src/services/auth/userService.ts` does not explicitly set these fields — it relies on the database defaults. This means changing the schema default is the single source of truth for new account values.
 
 **Setting defaults at the application level instead:**
 
 If you need conditional defaults (e.g., different starting currency for promotional accounts), pass them explicitly in `createUser()`:
 
 ```typescript
-// In app/backend/src/services/userService.ts
+// In app/backend/src/services/auth/userService.ts
 
 export async function createUser(userData: CreateUserData): Promise<User> {
   const user = await prisma.user.create({

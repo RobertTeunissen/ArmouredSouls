@@ -6,8 +6,8 @@ Welcome to the Armoured Souls documentation. This folder contains all project do
 
 **New to the project?** Start here:
 1. Read `ROADMAP.md` for project overview and current status
-2. Check `guides/SETUP.md` for development environment setup
-3. Review `prd_core/ARCHITECTURE.md` for system architecture
+2. Check `docs/guides/operations/LOCAL_SETUP.md` for development environment setup
+3. Review `docs/architecture/ARCHITECTURE.md` for system architecture
 4. Explore `design_ux/DESIGN_SYSTEM_README.md` for design guidelines
 
 **Looking for something specific?** Use the directory below.
@@ -110,7 +110,7 @@ Visual specifications, brand guidelines, and UX patterns. Define the look and fe
 
 ### I want to understand...
 - **The overall project**: Read `ROADMAP.md`
-- **How to set up development**: See `guides/SETUP.md`
+- **How to set up development**: See `guides/operations/LOCAL_SETUP.md`
 - **System architecture**: Check `prd_core/ARCHITECTURE.md`
 - **Database structure**: Review `prd_core/DATABASE_SCHEMA.md`
 - **How battles work**: Read `prd_core/COMBAT_FORMULAS.md`

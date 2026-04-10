@@ -71,7 +71,7 @@ Counter events now include a `hit` boolean field (`true` for landed counters, `f
 
 ## Files Modified
 
-1. `app/backend/src/services/combatSimulator.ts` — Counter-attack logic extracted from hit branch, moved to post-attack phase with independent hit check and defender-based damage
+1. `app/backend/src/services/battle/combatSimulator.ts` — Counter-attack logic extracted from hit branch, moved to post-attack phase with independent hit check and defender-based damage
 
 ---
 

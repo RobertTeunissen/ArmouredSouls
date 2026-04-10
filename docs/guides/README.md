@@ -1,54 +1,36 @@
 # Guides
 
-This folder contains operational guides, setup instructions, and best practices for developers working on Armoured Souls.
+Practical guides for developers working on Armoured Souls.
 
-## Purpose
+## Operations (Terminal Guides)
 
-Guides provide practical, actionable information for:
-- Setting up the development environment
-- Testing the application
-- Understanding security practices
-- Managing the admin panel
-- Working with the module structure
-- Ensuring code portability
+Step-by-step procedures for setup, deployment, and maintenance. See [operations/README.md](operations/README.md).
 
-## Contents
+- `operations/LOCAL_SETUP.md` — Local development setup, testing, database management
+- `operations/VPS_SETUP.md` — Provisioning a new Scaleway VPS
+- `operations/DEPLOYMENT.md` — CI/CD pipeline, ACC/PRD deployment
+- `operations/MAINTENANCE.md` — Logs, backups, server monitoring
+- `operations/TROUBLESHOOTING.md` — Common production issues, rollback
 
-### Setup & Configuration
-- `SETUP.md` - Complete development environment setup and testing guide
-- `MODULE_STRUCTURE.md` - Module organization and architecture guide
-- `PORTABILITY.md` - Guidelines for maintaining code portability
+## Architecture & Code Organization
 
-### Testing
-- `TESTING_STATE.md` - Current state of test coverage, testing infrastructure, and known failures
+## Security
 
-### Security
-- `SECURITY.md` - Security best practices and guidelines
-- `SECURITY_ADVISORY.md` - Security considerations and advisories
+- `ERROR_CODES.md` — Error code reference
+- Security strategy → moved to [PRD_SECURITY.md](../prd_core/PRD_SECURITY.md)
 
-### Operations
-- `ADMIN_PANEL_GUIDE.md` - Guide to using the admin panel features
+## Testing
 
-## Related Documentation
+- Test commands and infrastructure documented in [operations/LOCAL_SETUP.md](operations/LOCAL_SETUP.md)
 
-For technical specifications and requirements, see:
-- `docs/prd_core/` - Product Requirements Documents
-- `docs/prd_pages/` - Page-specific PRDs
-- `docs/implementation_notes/` - Implementation summaries
-- `docs/troubleshooting/` - Debugging and problem-solving guides
+## Feature Guides
+
+- `ADMIN_PANEL_GUIDE.md` — Admin panel usage
+- `ONBOARDING_ANALYTICS_GUIDE.md` — Onboarding analytics dashboard
+- `ONBOARDING_TROUBLESHOOTING.md` — Onboarding system troubleshooting
 
 ## Getting Started
 
-New developers should start with:
-1. `SETUP.md` - Get your environment running
-2. `MODULE_STRUCTURE.md` - Understand the codebase organization
-3. `TESTING_STATE.md` - Understand test coverage and known failures
-4. `SECURITY.md` - Understand security requirements
-
-## Usage
-
-These guides are living documents that should be updated as:
-- Development processes evolve
-- New tools are adopted
-- Best practices are discovered
-- Security requirements change
+1. `operations/LOCAL_SETUP.md` — Get your environment running
+2. `MODULE_STRUCTURE.md` — Understand the codebase organization
+3. `SECURITY.md` — Understand security requirements

@@ -184,7 +184,7 @@ inclusion: always
 - Different secrets per environment
 
 ### OWASP Top 10 Compliance
-See `docs/guides/SECURITY.md` for comprehensive security strategy covering:
+See `docs/architecture/PRD_SECURITY.md` for comprehensive security strategy covering:
 - Injection prevention
 - Broken authentication
 - Sensitive data exposure
@@ -214,7 +214,7 @@ See `docs/guides/SECURITY.md` for comprehensive security strategy covering:
 - Every credit-spending endpoint (weapon purchase, facility upgrade, robot creation, attribute upgrade) must use `lockUserForSpending` from `src/lib/creditGuard.ts` inside a Prisma interactive transaction
 - Re-read all mutable state (facility levels, roster counts, attribute levels) after acquiring the lock
 - For multi-row serialization (team creation), use `pg_advisory_xact_lock` instead
-- See `docs/guides/SECURITY.md` → Security Playbook → Transaction Integrity Pattern for the full pattern
+- See `docs/architecture/PRD_SECURITY.md` → Security Playbook → Transaction Integrity Pattern for the full pattern
 
 ### Rate Limiting for Destructive Endpoints
 - Heavy or destructive operations (account reset, bulk deletes) must have dedicated per-user rate limiters beyond the general API limiter

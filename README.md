@@ -4,7 +4,7 @@ A strategy simulation game where players manage a stable of battle robots, compe
 
 ## Quick Start
 
-See [docs/guides/SETUP.md](docs/guides/SETUP.md) for the full setup guide and troubleshooting.
+See [docs/guides/operations/LOCAL_SETUP.md](docs/guides/operations/LOCAL_SETUP.md) for the full setup guide and troubleshooting.
 
 ```bash
 # Clone and navigate
@@ -29,7 +29,7 @@ npm install
 npm run dev  # Terminal 2
 ```
 
-Open http://localhost:3000 — test credentials are in [SETUP.md](docs/guides/SETUP.md).
+Open http://localhost:3000 — test credentials are in [LOCAL_SETUP.md](docs/guides/operations/LOCAL_SETUP.md).
 
 If you see "Environment variable not found: DATABASE_URL", you forgot to create the `.env` file — run `cp .env.example .env` in `app/backend/`.
 
@@ -84,9 +84,9 @@ ArmouredSouls/
 ## Documentation
 
 ### Getting Started
-- [Setup Guide](docs/guides/SETUP.md) — Local development setup, testing, troubleshooting
-- [Architecture](docs/prd_core/ARCHITECTURE.md) — System architecture and deployment
-- [Game Design](docs/prd_core/GAME_DESIGN.md) — Core game concept and mechanics
+- [Setup Guide](docs/guides/operations/LOCAL_SETUP.md) — Local development setup, testing, troubleshooting
+- [Architecture](docs/architecture/ARCHITECTURE.md) — System architecture and deployment
+- [Game Design](docs/game-systems/GAME_DESIGN.md) — Core game concept and mechanics
 
 ### Core Systems
 - [Database Schema](docs/prd_core/DATABASE_SCHEMA.md) — Complete schema reference (18 models)
@@ -100,9 +100,9 @@ ArmouredSouls/
 
 ### Operations
 - [Deployment Guide](docs/guides/DEPLOYMENT.md) — VPS deployment and maintenance
-- [Security](docs/guides/SECURITY.md) — Security strategy and practices
+- [Security](docs/architecture/PRD_SECURITY.md) — Security strategy and practices
 - [Error Codes](docs/guides/ERROR_CODES.md) — Domain-specific error reference
-- [Module Structure](docs/guides/MODULE_STRUCTURE.md) — Backend service organization
+- [Service Directory](docs/architecture/PRD_SERVICE_DIRECTORY.md) — Backend service organization
 
 ### Development
 - [Roadmap](docs/ROADMAP.md) — Development phases and completed specs
