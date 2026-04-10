@@ -667,7 +667,7 @@ const resetPasswordLimiter = rateLimit({
  * Reset a user's password. Admin-only, rate-limited, fully audited.
  * The PasswordResetService handles hashing, session invalidation, and audit logging atomically.
  */
-router.post('/users/:id/reset-password', resetPasswordLimiter, authenticateToken, requireAdmin, validateRequest({ params: resetPasswordParamsSchema, body: resetPasswordBodySchema }), async (req: Request, res: Response) => {
+router.post('/users/:id/reset-password', authenticateToken, requireAdmin, resetPasswordLimiter, validateRequest({ params: resetPasswordParamsSchema, body: resetPasswordBodySchema }), async (req: Request, res: Response) => {
   const authReq = req as AuthRequest;
   const targetUserId = Number(req.params.id);
   const { password } = req.body;

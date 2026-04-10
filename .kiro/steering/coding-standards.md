@@ -219,6 +219,7 @@ See `docs/architecture/PRD_SECURITY.md` for comprehensive security strategy cove
 ### Rate Limiting for Destructive Endpoints
 - Heavy or destructive operations (account reset, bulk deletes) must have dedicated per-user rate limiters beyond the general API limiter
 - Use `express-rate-limit` with `keyGenerator` based on `authReq.user.userId` to prevent abuse from authenticated sessions
+- The rate limiter middleware must run AFTER `authenticateToken` so that `req.user` is populated for the `keyGenerator`
 - Track violations via `securityMonitor.trackRateLimitViolation()` so they appear in the admin Security dashboard
 - Example: account reset is limited to 3 req/hr per user (see `src/routes/onboarding.ts`)
 - Example: admin password reset is limited to 10 req/15min per admin (see `src/routes/admin.ts`)

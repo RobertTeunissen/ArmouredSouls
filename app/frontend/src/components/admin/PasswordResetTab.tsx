@@ -5,9 +5,9 @@
  * - GET /api/admin/users/search?q=... for user lookup
  * - POST /api/admin/users/:id/reset-password for password reset
  *
- * Password validation replicates the same rules as RegistrationForm.tsx
- * (8+ chars, uppercase, lowercase, number) — inline, following the existing
- * frontend pattern where no shared validation module exists.
+ * Password validation follows the backend validatePassword() rules
+ * (8+ chars, uppercase, lowercase, number) and is kept inline here,
+ * following the existing frontend pattern where no shared validation module exists.
  *
  * Requirements: 8.1, 8.2, 8.3, 8.4, 9.1, 9.2, 9.3, 9.4, 9.5, 9.6
  */

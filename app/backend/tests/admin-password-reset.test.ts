@@ -130,10 +130,9 @@ describe('POST /api/admin/users/:id/reset-password', () => {
   });
 
   // -----------------------------------------------------------------------
-  // Auth tests first — these fail early in the middleware chain and are
-  // the most important to verify. The rate limiter is IP-based (req.user
-  // isn't set yet when it runs), so we keep total requests across all
-  // tests in this describe block under the 10-request limit.
+  // Auth tests first — these fail early in the middleware chain.
+  // The rate limiter runs AFTER authenticateToken, so it's keyed by
+  // the admin's userId (truly per-admin, not per-IP).
   // -----------------------------------------------------------------------
 
   describe('authentication and authorization', () => {
@@ -259,11 +258,7 @@ describe('POST /api/admin/users/:id/reset-password', () => {
   });
 
   // -----------------------------------------------------------------------
-  // Rate limiting is tested last with a dedicated describe that sends
-  // many requests. The rate limiter is IP-based (keyed by req.ip since
-  // req.user isn't set when the limiter runs), so all supertest requests
-  // share the same bucket. We keep the tests above to ≤ 10 total requests
-  // and then exhaust the limit here.
+  // Rate limiting — the limiter runs after auth, keyed by admin userId.
   // -----------------------------------------------------------------------
 
   describe('rate limiting', () => {

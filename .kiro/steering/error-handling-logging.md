@@ -572,7 +572,7 @@ interface SecurityEvent {
 | `rate_limit_violation` | info | Rate limit hit |
 | `rate_limit_escalation` | warning | >5 rate limit hits in 1 hour |
 | `admin_password_reset` | info | Successful admin password reset |
-| `admin_password_reset` | warning | Repeated resets across many users |
+| `admin_password_reset_pattern` | warning | ≥5 admin password resets affecting ≥3 distinct target users within 15 minutes by the same admin |
 
 ### Transport Configuration
 
