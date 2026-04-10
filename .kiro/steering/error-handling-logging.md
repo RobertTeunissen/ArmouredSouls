@@ -571,6 +571,8 @@ interface SecurityEvent {
 | `automated_robot_creation` | warning | >3 robots created in 10 minutes |
 | `rate_limit_violation` | info | Rate limit hit |
 | `rate_limit_escalation` | warning | >5 rate limit hits in 1 hour |
+| `admin_password_reset` | info | Successful admin password reset |
+| `admin_password_reset` | warning | Repeated resets across many users |
 
 ### Transport Configuration
 

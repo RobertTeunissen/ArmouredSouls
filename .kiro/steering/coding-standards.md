@@ -159,7 +159,7 @@ inclusion: always
 - **Hash passwords** - bcrypt with salt rounds 10-12
 - **Secure JWT tokens** - Strong secrets, short expiration
 - **HTTPS only** - Enforce in production (Caddy handles this)
-- **Rate limiting** - Protect auth endpoints (10 req/15min login, 300 req/min general, 60 req/min per-user economic, 3 req/hr account reset)
+- **Rate limiting** - Protect auth endpoints (10 req/15min login, 10 req/15min admin password reset, 300 req/min general, 60 req/min per-user economic, 3 req/hr account reset)
 - **CORS configuration** - Whitelist specific origins only
 
 ### Authentication & Authorization
@@ -221,6 +221,7 @@ See `docs/architecture/PRD_SECURITY.md` for comprehensive security strategy cove
 - Use `express-rate-limit` with `keyGenerator` based on `authReq.user.userId` to prevent abuse from authenticated sessions
 - Track violations via `securityMonitor.trackRateLimitViolation()` so they appear in the admin Security dashboard
 - Example: account reset is limited to 3 req/hr per user (see `src/routes/onboarding.ts`)
+- Example: admin password reset is limited to 10 req/15min per admin (see `src/routes/admin.ts`)
 
 ### Admin Endpoint Authorization Logging
 - The `requireAdmin` middleware logs all unauthorized access attempts via `securityMonitor.logAuthorizationFailure()`

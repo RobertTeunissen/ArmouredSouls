@@ -127,6 +127,7 @@ Zod's default `.strip()` mode removes unknown fields, preventing mass-assignment
 | Economic | 1 min | 60 | `userId` | Weapon purchase, facility upgrade, robot creation, attribute upgrade |
 | Account reset | 1 hour | 3 | `userId` | `/api/onboarding/reset-account` and `/api/onboarding/reset-eligibility` |
 | Practice Arena | 15 min | 30 battles | `userId` | `/api/practice-arena/battle` |
+| Admin password reset | 15 min | 10 | `userId` | `POST /api/admin/users/:id/reset-password` |
 
 All rate limit violations tracked by `SecurityMonitor`. Repeated violations (>5 in 1 hour on economic endpoints) trigger a `rate_limit_escalation` security event visible in the admin Security Dashboard.
 
@@ -303,3 +304,7 @@ Every new endpoint must be reviewed against this list.
 ### Unauthorized Admin API Access
 **Exploit**: Non-admin users probing admin endpoints.  
 **Prevention**: `requireAdmin` middleware, generic error message, all attempts logged.
+
+### Admin Password Reset Abuse
+**Exploit**: Compromised admin mass-resets passwords across many user accounts.  
+**Prevention**: Per-admin rate limit (10 requests per 15 minutes), audit trail via `AuditLog` with `eventType: "admin_password_reset"`, `tokenVersion` invalidation on every reset, all attempts (success and failure) logged via `SecurityMonitor`.
