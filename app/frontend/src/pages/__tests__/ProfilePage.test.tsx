@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import ProfilePage from '../ProfilePage';
@@ -57,6 +57,7 @@ const mockProfileData: userApi.ProfileData = {
 describe('ProfilePage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.useFakeTimers({ shouldAdvanceTime: true });
     
     // Mock localStorage
     const localStorageMock = {
@@ -72,6 +73,10 @@ describe('ProfilePage', () => {
 
     // Default mock implementation
     vi.mocked(userApi.getProfile).mockResolvedValue(mockProfileData);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   const renderProfilePage = () => {

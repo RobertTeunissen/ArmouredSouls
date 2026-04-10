@@ -191,11 +191,11 @@ describe('Property 2: Preservation — Existing Admin Functionality Unchanged', 
 
       // Wait for the battle data to load — robot names appear multiple times
       // (in summary header, rewards section, winner announcement, combat log)
-      const robot1Names = await screen.findAllByText(sampleBattle.robot1.name, {}, { timeout: 3000 });
+      const robot1Names = await screen.findAllByText(sampleBattle.robot1.name, { exact: true }, { timeout: 3000 });
       expect(robot1Names.length).toBeGreaterThanOrEqual(1);
 
       // Robot 2 name should also appear
-      const robot2Names = screen.getAllByText(sampleBattle.robot2.name);
+      const robot2Names = screen.getAllByText(sampleBattle.robot2.name, { exact: true });
       expect(robot2Names.length).toBeGreaterThanOrEqual(1);
 
       // Attribute comparison section should exist
