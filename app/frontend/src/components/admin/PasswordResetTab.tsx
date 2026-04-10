@@ -11,7 +11,7 @@
  *
  * Requirements: 8.1, 8.2, 8.3, 8.4, 9.1, 9.2, 9.3, 9.4, 9.5, 9.6
  */
-import { useState } from 'react';
+import React, { useState } from 'react';
 import type { FormEvent } from 'react';
 import apiClient from '../../utils/apiClient';
 
@@ -38,7 +38,7 @@ function validatePassword(password: string): string | undefined {
   return undefined;
 }
 
-export function PasswordResetTab(): JSX.Element {
+export function PasswordResetTab(): React.ReactElement {
   /* ---------- Search state ---------- */
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchUser[] | null>(null);
