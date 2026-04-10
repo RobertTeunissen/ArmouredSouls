@@ -9,7 +9,7 @@ fileMatchPattern: "docs/**,**/README.md,**/CONTRIBUTING.md"
 
 ### Always Update When:
 1. **Adding new features** - Create or update relevant PRD documents
-2. **Changing game mechanics** - Update docs/prd_core/ specifications
+2. **Changing game mechanics** - Update docs/game-systems/ or docs/architecture/ specifications
 3. **Modifying UI/UX** - Update docs/prd_pages/ and design_ux/ files
 4. **Changing database schema** - Update DATABASE_SCHEMA.md
 5. **Adding API endpoints** - Update API documentation
@@ -20,12 +20,12 @@ fileMatchPattern: "docs/**,**/README.md,**/CONTRIBUTING.md"
 Use these file patterns when working on specific areas:
 
 #### Core Systems
-- Combat mechanics → `docs/prd_core/COMBAT_FORMULAS.md`
-- Economy → `docs/prd_core/PRD_ECONOMY_SYSTEM.md`
-- Leagues → `docs/prd_core/PRD_LEAGUE_PROMOTION.md`
-- Cycles → `docs/prd_core/PRD_CYCLE_SYSTEM.md`
-- Fame/Prestige → `docs/prd_core/PRD_FAME_SYSTEM.md`
-- Matchmaking → `docs/prd_core/PRD_MATCHMAKING.md`
+- Combat mechanics → `docs/architecture/COMBAT_FORMULAS.md`
+- Economy → `docs/game-systems/PRD_ECONOMY_SYSTEM.md`
+- Leagues → `docs/game-systems/PRD_LEAGUE_SYSTEM.md`
+- Cycles → `docs/game-systems/PRD_CYCLE_SYSTEM.md`
+- Fame/Prestige → `docs/game-systems/PRD_PRESTIGE_AND_FAME.md`
+- Matchmaking → `docs/game-systems/PRD_MATCHMAKING.md`
 
 #### Page Features
 - Dashboard → `docs/prd_pages/PRD_DASHBOARD_PAGE.md`

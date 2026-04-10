@@ -37,9 +37,9 @@ These define what to implement:
 | `DESIGN_SYSTEM_QUICK_REFERENCE.md` | Developer cheat sheet |
 
 ### Game Content (Content to Visualize)
-Located in `docs/prd_core/`:
+Located in `docs/game-systems/`:
 
-- [GAME_DESIGN.md](../prd_core/GAME_DESIGN.md) — Core game concept, player fantasy
-- [PRD_ROBOT_ATTRIBUTES.md](../prd_core/PRD_ROBOT_ATTRIBUTES.md) — 23 attributes system
-- [STABLE_SYSTEM.md](../prd_core/STABLE_SYSTEM.md) — 14 facilities system
-- [PRD_WEAPON_ECONOMY.md](../prd_core/PRD_WEAPON_ECONOMY.md) — 47 weapons catalog and pricing
+- [GAME_DESIGN.md](../game-systems/GAME_DESIGN.md) — Core game concept, player fantasy
+- [PRD_ROBOT_ATTRIBUTES.md](../game-systems/PRD_ROBOT_ATTRIBUTES.md) — 23 attributes system
+- [STABLE_SYSTEM.md](../game-systems/STABLE_SYSTEM.md) — 14 facilities system
+- [PRD_WEAPON_ECONOMY.md](../game-systems/PRD_WEAPON_ECONOMY.md) — 47 weapons catalog and pricing

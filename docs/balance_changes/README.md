@@ -2,7 +2,7 @@
 
 Game balance adjustments documenting what changed, why, and what the old values were. These serve as design history for future balance decisions.
 
-The authoritative weapon catalog and pricing formula lives in [PRD_WEAPON_ECONOMY.md](../prd_core/PRD_WEAPON_ECONOMY.md) (moved to `prd_core/`).
+The authoritative weapon catalog and pricing formula lives in [PRD_WEAPON_ECONOMY.md](../game-systems/PRD_WEAPON_ECONOMY.md).
 
 ## Contents
 
@@ -26,6 +26,6 @@ The authoritative weapon catalog and pricing formula lives in [PRD_WEAPON_ECONOM
 
 ## Related Documentation
 
-- [PRD_WEAPON_ECONOMY.md](../prd_core/PRD_WEAPON_ECONOMY.md) — Weapon catalog, pricing formula, 47-weapon roster
-- [COMBAT_FORMULAS.md](../prd_core/COMBAT_FORMULAS.md) — Combat calculation formulas
-- [PRD_ECONOMY_SYSTEM.md](../prd_core/PRD_ECONOMY_SYSTEM.md) — Overall economy design
+- [PRD_WEAPON_ECONOMY.md](../game-systems/PRD_WEAPON_ECONOMY.md) — Weapon catalog, pricing formula, 47-weapon roster
+- [COMBAT_FORMULAS.md](../architecture/COMBAT_FORMULAS.md) — Combat calculation formulas
+- [PRD_ECONOMY_SYSTEM.md](../game-systems/PRD_ECONOMY_SYSTEM.md) — Overall economy design

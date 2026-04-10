@@ -64,8 +64,8 @@ Armoured Souls deploys to Scaleway DEV1-S VPS instances running Ubuntu 22.04, wi
 - [VPS Setup Guide](../docs/guides/operations/VPS_SETUP.md) — Provision a new VPS from scratch
 - [Deployment Guide](../docs/guides/operations/DEPLOYMENT.md) — CI/CD pipeline, first deploy, and manual PRD promotion
 - [Maintenance Guide](../docs/guides/operations/MAINTENANCE.md) — Logs, backups, monitoring
-- [Troubleshooting Guide](../docs/guides/TROUBLESHOOTING.md) — Common issues and rollback procedure
-- [Architecture Decisions](../docs/guides/DECISIONS.md) — Project structure rationale and risk register
+- [Troubleshooting Guide](../docs/guides/operations/TROUBLESHOOTING.md) — Common issues and rollback procedure
+- [Architecture Decisions](../docs/architecture/ARCHITECTURE.md) — Project structure rationale and risk register
 
 ACC auto-deploys on push to `main`. PRD requires manual promotion via GitHub Actions.
 

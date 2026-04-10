@@ -9,7 +9,7 @@ See [docs/guides/operations/LOCAL_SETUP.md](docs/guides/operations/LOCAL_SETUP.m
 ```bash
 # Clone and navigate
 git clone https://github.com/RobertTeunissen/ArmouredSouls.git
-cd ArmouredSouls/prototype
+cd ArmouredSouls/app
 
 # Start database
 docker compose up -d
@@ -60,7 +60,8 @@ Armoured Souls is a fully functional prototype deployed to a production VPS. The
 ```
 ArmouredSouls/
 ├── docs/                    # Documentation (organized by category)
-│   ├── prd_core/            # Core game design, architecture, schema, combat
+│   ├── architecture/        # System architecture, schema, combat engine, security
+│   ├── game-systems/        # Game design, economy, leagues, weapons, onboarding
 │   ├── prd_pages/           # Page-specific requirements
 │   ├── guides/              # Setup, deployment, maintenance, security
 │   ├── design_ux/           # Design system and brand guidelines
@@ -89,14 +90,14 @@ ArmouredSouls/
 - [Game Design](docs/game-systems/GAME_DESIGN.md) — Core game concept and mechanics
 
 ### Core Systems
-- [Database Schema](docs/prd_core/DATABASE_SCHEMA.md) — Complete schema reference (18 models)
-- [Battle Simulation](docs/prd_core/BATTLE_SIMULATION_ARCHITECTURE.md) — Combat engine, orchestrators, cycle scheduler
-- [Combat Formulas](docs/prd_core/COMBAT_FORMULAS.md) — Hit chance, damage, crits, counters
-- [Economy System](docs/prd_core/PRD_ECONOMY_SYSTEM.md) — Credits, facilities, rewards
-- [Prestige & Fame](docs/prd_core/PRD_PRESTIGE_AND_FAME.md) — Dual reputation systems
-- [Matchmaking](docs/prd_core/PRD_MATCHMAKING.md) — LP-primary matching algorithm
-- [Weapons & Loadout](docs/prd_core/PRD_WEAPONS_LOADOUT.md) — 47 weapons, 4 loadout types
-- [Onboarding](docs/prd_core/PRD_ONBOARDING_SYSTEM.md) — 5-step tutorial system
+- [Database Schema](docs/architecture/DATABASE_SCHEMA.md) — Complete schema reference (18 models)
+- [Battle Simulation](docs/architecture/BATTLE_SIMULATION_ARCHITECTURE.md) — Combat engine, orchestrators, cycle scheduler
+- [Combat Formulas](docs/architecture/COMBAT_FORMULAS.md) — Hit chance, damage, crits, counters
+- [Economy System](docs/game-systems/PRD_ECONOMY_SYSTEM.md) — Credits, facilities, rewards
+- [Prestige & Fame](docs/game-systems/PRD_PRESTIGE_AND_FAME.md) — Dual reputation systems
+- [Matchmaking](docs/game-systems/PRD_MATCHMAKING.md) — LP-primary matching algorithm
+- [Weapons & Loadout](docs/game-systems/PRD_WEAPONS_LOADOUT.md) — 47 weapons, 4 loadout types
+- [Onboarding](docs/game-systems/PRD_ONBOARDING_SYSTEM.md) — 5-step tutorial system
 
 ### Operations
 - [Deployment Guide](docs/guides/DEPLOYMENT.md) — VPS deployment and maintenance

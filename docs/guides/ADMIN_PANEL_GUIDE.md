@@ -382,8 +382,8 @@ Pagination with Previous/Next buttons (default 25 rows per page).
 
 ## Related Documentation
 
-- [Cycle Process Details](../implementation_notes/CYCLE_PROCESS.md)
-- [Tournament System](../prd_core/PRD_TOURNAMENT_SYSTEM.md)
-- [Matchmaking System](../prd_core/PRD_MATCHMAKING.md)
-- [Economy System](../prd_core/PRD_ECONOMY_SYSTEM.md)
+- [Cycle Process Details](../game-systems/PRD_CYCLE_SYSTEM.md)
+- [Tournament System](../game-systems/PRD_TOURNAMENT_SYSTEM.md)
+- [Matchmaking System](../game-systems/PRD_MATCHMAKING.md)
+- [Economy System](../game-systems/PRD_ECONOMY_SYSTEM.md)
 - [Admin Page PRD](../prd_pages/PRD_ADMIN_PAGE.md)

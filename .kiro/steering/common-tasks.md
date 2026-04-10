@@ -8,9 +8,9 @@ inclusion: manual
 
 ### Starting Development
 1. Review `docs/guides/operations/LOCAL_SETUP.md` for environment setup
-2. Read relevant PRD documents (docs/prd_core/ or docs/prd_pages/)
+2. Read relevant PRD documents (docs/architecture/ or docs/game-systems/ or docs/prd_pages/)
 3. Check `docs/architecture/PRD_SERVICE_DIRECTORY.md` for code organization
-4. Review `docs/guides/TESTING_STATE.md` for current test status
+4. Review docs/guides/operations/LOCAL_SETUP.md for current test commands
 
 ### Adding New Features
 1. **Research**: Read related PRD documents in docs/prd_core/ and docs/prd_pages/

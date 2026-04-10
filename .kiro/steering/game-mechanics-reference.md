@@ -19,32 +19,32 @@ fileMatchPattern: "**/game-engine/**,**/services/battle*,**/services/combat*,**/
 - Each robot has attributes (armor, speed, etc.)
 - Robots can be equipped with weapons
 - Robots participate in battles and earn/lose stats
-- See: `docs/prd_core/PRD_ROBOT_ATTRIBUTES.md`
+- See: `docs/game-systems/PRD_ROBOT_ATTRIBUTES.md`
 
 ### Weapons & Loadouts
 - Weapons have different types and stats
 - Robots can equip multiple weapons (loadout)
 - Weapon shop for purchasing
-- See: `docs/prd_core/PRD_WEAPONS_LOADOUT.md`
+- See: `docs/game-systems/PRD_WEAPONS_LOADOUT.md`
 
 ### Combat System
 - Turn-based battle resolution
 - Damage calculations based on weapons and armor
 - Battle stances affect outcomes
-- See: `docs/prd_core/COMBAT_FORMULAS.md`
+- See: `docs/architecture/COMBAT_FORMULAS.md`
 
 ### League System
 - Multiple leagues (divisions)
 - Promotion and relegation based on performance
 - League Points (LP) determine standings
-- See: `docs/prd_core/PRD_LEAGUE_PROMOTION.md`
+- See: `docs/game-systems/PRD_LEAGUE_SYSTEM.md`
 
 ### Economy
 - Credits as primary currency
 - Facilities generate income
 - Investments provide returns
 - Repair costs for damaged robots
-- See: `docs/prd_core/PRD_ECONOMY_SYSTEM.md`
+- See: `docs/game-systems/PRD_ECONOMY_SYSTEM.md`
 
 ### Facilities
 - Players can build/upgrade facilities
@@ -56,25 +56,25 @@ fileMatchPattern: "**/game-engine/**,**/services/battle*,**/services/combat*,**/
 - Fame earned through victories
 - Prestige as long-term progression
 - Affects matchmaking and rewards
-- See: `docs/prd_core/PRD_FAME_SYSTEM.md`
+- See: `docs/game-systems/PRD_PRESTIGE_AND_FAME.md`
 
 ### Cycle System
 - Automated game progression
 - Daily and weekly cycles
 - Processes battles, updates standings, distributes rewards
-- See: `docs/prd_core/PRD_CYCLE_SYSTEM.md`
+- See: `docs/game-systems/PRD_CYCLE_SYSTEM.md`
 
 ### Matchmaking
 - Pairs robots for battles
 - Considers league, fame, and other factors
 - Aims for balanced matches
-- See: `docs/prd_core/PRD_MATCHMAKING.md`
+- See: `docs/game-systems/PRD_MATCHMAKING.md`
 
 ### Tournaments
 - Special competitive events
 - Bracket-style competition
 - Enhanced rewards
-- See: `docs/prd_core/PRD_TOURNAMENT_SYSTEM.md`
+- See: `docs/game-systems/PRD_TOURNAMENT_SYSTEM.md`
 
 ## Important Game Balance Considerations
 

@@ -259,4 +259,4 @@ For deploying to the Scaleway VPS (acceptance or production), see:
 - [VPS Setup Guide](VPS_SETUP.md) — Provisioning a new VPS from scratch
 - [Maintenance Guide](MAINTENANCE.md) — Logs, backups, monitoring
 - [Troubleshooting](TROUBLESHOOTING.md) — Common production issues and rollback
-- [Architecture Decisions](../DECISIONS.md) — Project structure rationale
+- [Architecture Decisions](../../architecture/ARCHITECTURE.md) — Project structure rationale and risk register

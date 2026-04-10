@@ -54,7 +54,8 @@ Browser-based robot combat strategy game with turn-based mechanics, league syste
 6. **Tournament System** - Competitive events
 
 ## Documentation Organization
-- `docs/prd_core/` - Core game design and system specifications
+- `docs/architecture/` - System architecture, schema, combat engine, security
+- `docs/game-systems/` - Game design and system specifications
 - `docs/prd_pages/` - Page-specific requirements
 - `docs/guides/` - Setup, deployment, maintenance guides
 - `docs/analysis/` - Feature analysis and planning

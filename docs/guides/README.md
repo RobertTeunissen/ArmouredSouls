@@ -17,7 +17,7 @@ Step-by-step procedures for setup, deployment, and maintenance. See [operations/
 ## Security
 
 - `ERROR_CODES.md` — Error code reference
-- Security strategy → moved to [PRD_SECURITY.md](../prd_core/PRD_SECURITY.md)
+- Security strategy → moved to [PRD_SECURITY.md](../architecture/PRD_SECURITY.md)
 
 ## Testing
 
@@ -32,5 +32,5 @@ Step-by-step procedures for setup, deployment, and maintenance. See [operations/
 ## Getting Started
 
 1. `operations/LOCAL_SETUP.md` — Get your environment running
-2. `MODULE_STRUCTURE.md` — Understand the codebase organization
-3. `SECURITY.md` — Understand security requirements
+2. `../architecture/PRD_SERVICE_DIRECTORY.md` — Understand the codebase organization
+3. `../architecture/PRD_SECURITY.md` — Understand security requirements
