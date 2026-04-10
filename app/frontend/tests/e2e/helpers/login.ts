@@ -7,8 +7,8 @@ import { Page } from '@playwright/test';
  */
 export async function loginAndGoToDashboard(
   page: Page,
-  username = 'player1',
-  password = 'password123',
+  username = 'test_user_001',
+  password = 'testpass123',
 ) {
   await page.goto('/login');
   await page.getByLabel('Username or Email').fill(username);

@@ -20,12 +20,6 @@ The Investments & ROI tab and Investment Advisor tab on the Facilities page are 
 
 Current observability: Winston logs, `CyclePerformanceMonitoringService`, `securityMonitor`, admin Security Dashboard. Missing: external uptime monitoring, alerting on backend crashes or cycle failures, log aggregation. Lightweight approach: UptimeRobot for uptime, Discord webhook for cycle failures (notification service already supports Discord).
 
-### E2E Test Coverage with Playwright
-**Source**: Phase 2 roadmap  
-**Priority**: High — CI deploys without verifying user flows
-
-Playwright infrastructure exists (config, CI job, env var support) but the CI job is `|| true` (non-blocking) and there's no meaningful test coverage. Key flows: registration → onboarding → robot creation → battle cycle → battle history.
-
 ### Landing Page / Marketing Front Page
 **Source**: Current state — visitors land on a login/register form with no context  
 **Priority**: High — first impression for new players

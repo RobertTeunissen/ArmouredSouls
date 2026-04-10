@@ -72,8 +72,8 @@ Check the frontend loads via your domain in a browser.
 
 Every push to `main` triggers the full pipeline:
 
-1. **Stage 1**: Backend tests + frontend build/lint (parallel)
-2. **Stage 2**: E2E tests (Playwright)
+1. **Stage 1**: Backend tests (unit + integration) + frontend build/lint/unit tests (parallel)
+2. **Stage 2**: E2E tests — provisions a PostgreSQL 17 service container, runs database migrations, seeds test data (`npx prisma db seed`), starts the backend server, builds the frontend, installs Playwright Chromium, and runs the full Playwright E2E suite. Uploads HTML report and failure artifacts (screenshots, traces) to GitHub Actions. 15-minute timeout. Blocks deployment on failure.
 3. **Deploy**: rsync artifacts → `npm ci --production` → pre-migration backup → `prisma migrate deploy` → PM2 restart
 4. **Smoke tests**: Health endpoint, frontend load, login API
 

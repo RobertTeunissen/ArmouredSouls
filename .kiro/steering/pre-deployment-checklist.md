@@ -19,11 +19,11 @@ inclusion: manual
    - **CRITICAL**: Do not push if any backend tests fail
 
 2. **Frontend Tests Pass Locally**
-   - Run: `cd app/frontend && npm run test:e2e`
-   - Verify: All E2E tests pass (no failures allowed)
-   - Check: Tests complete without timeouts
-   - Confirm: All new features have E2E test coverage
-   - **CRITICAL**: Do not push if any frontend tests fail
+   - Run: `cd app/frontend && npx vitest --run` (unit/component tests)
+   - Verify: All frontend unit tests pass
+   - E2E tests: CI now runs a fully provisioned E2E job (`e2e-tests`) that blocks deployment on failure — local E2E runs are optional but recommended before pushing large UI changes
+   - Optional local E2E: `cd app/frontend && npx playwright test`
+   - **CRITICAL**: CI will block the pipeline if any E2E test fails, so frontend regressions are caught automatically
 
 3. **No Debug Code in Production**
    - Search for: `console.log`, `console.debug`, `console.warn`
@@ -69,11 +69,14 @@ npm test
 npm audit --audit-level=high
 npm run lint
 
-# 3. Frontend E2E tests  
+# 3. Frontend unit tests
 cd ../frontend
-npm run test:e2e
+npx vitest --run
 
-# 4. If all pass, commit and push
+# 4. Optional: E2E tests (CI runs these automatically)
+# npx playwright test
+
+# 5. If all pass, commit and push
 cd ../..
 git add -A
 git commit -m "your commit message"

@@ -24,7 +24,7 @@ export async function navigateToProtectedPage(page: Page, path: string) {
   // Final attempt: if still on login, the token may be missing from
   // localStorage. Inject it via the API directly.
   const { loginAndGoToDashboard } = await import('./login');
-  await loginAndGoToDashboard(page, 'player1', 'password123');
+  await loginAndGoToDashboard(page, 'test_user_001', 'testpass123');
   await page.goto(path);
   await page.waitForLoadState('networkidle');
 }

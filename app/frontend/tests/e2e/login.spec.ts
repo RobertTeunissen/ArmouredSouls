@@ -1,72 +1,49 @@
 import { test, expect } from '@playwright/test';
+import { generateUniqueId } from './helpers/register';
 
 /**
  * E2E tests for Login Page
- * These tests verify the login functionality and capture screenshots
+ *
+ * Validates: Requirements 11.2, 11.3, 13.1, 13.2
+ *
+ * These tests verify login functionality and auth security boundaries.
+ * Manual screenshots are omitted — playwright.config.ts captures them
+ * automatically on failure via the `screenshot: 'on'` setting.
  */
 
 test.describe('Login Page', () => {
   test.beforeEach(async ({ page }) => {
-    // Navigate to the login page before each test
     await page.goto('/login');
   });
 
   test('should display login page correctly', async ({ page }) => {
-    // Check that main elements are visible
     await expect(page.getByRole('heading', { name: 'ARMOURED SOULS' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Login' })).toBeVisible();
     await expect(page.getByLabel('Username or Email')).toBeVisible();
     await expect(page.getByLabel('Password')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Login' })).toBeVisible();
-    
-    // Take screenshot of initial login page
-    await page.screenshot({ 
-      path: 'test-results/screenshots/login-page-initial.png',
-      fullPage: true 
-    });
   });
 
-
-
-  test('should show error for invalid credentials', async ({ page }) => {
-    // Try to login with invalid credentials
+  test('should show generic error for invalid credentials', async ({ page }) => {
+    // Req 11.2 — error must be generic, not revealing which field was wrong
     await page.getByLabel('Username or Email').fill('invalid_user');
     await page.getByLabel('Password').fill('wrong_password');
-    
-    // Take screenshot before clicking login
-    await page.screenshot({ 
-      path: 'test-results/screenshots/login-page-before-invalid-submit.png',
-      fullPage: true 
-    });
-    
+
     await page.getByRole('button', { name: 'Login' }).click();
-    
-    // Wait for error message
-    await expect(page.getByText(/Login failed|Invalid credentials/i)).toBeVisible({
-      timeout: 5000
-    });
-    
-    // Take screenshot showing error state
-    await page.screenshot({ 
-      path: 'test-results/screenshots/login-page-error-state.png',
-      fullPage: true 
+
+    // Must show "Invalid credentials" — not "username not found" or "wrong password"
+    await expect(page.getByText('Invalid credentials')).toBeVisible({
+      timeout: 5000,
     });
   });
 
   test('should successfully login with valid credentials', async ({ page }) => {
-    // Fill in valid credentials
-    await page.getByLabel('Username or Email').fill('player1');
-    await page.getByLabel('Password').fill('password123');
-    
-    // Take screenshot before login
-    await page.screenshot({ 
-      path: 'test-results/screenshots/login-page-before-valid-submit.png',
-      fullPage: true 
-    });
-    
-    // Click login button
+    // Updated credentials: test_user_001 / testpass123 (player1 was removed)
+    await page.getByLabel('Username or Email').fill('test_user_001');
+    await page.getByLabel('Password').fill('testpass123');
+
     await page.getByRole('button', { name: 'Login' }).click();
-    
+
     // Wait for navigation to dashboard or onboarding
     await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 20000 });
 
@@ -74,38 +51,48 @@ test.describe('Login Page', () => {
     if (page.url().includes('/onboarding')) {
       await page.getByRole('button', { name: 'Skip Tutorial' }).click();
       const skipConfirm = page.getByRole('button', { name: 'Skip Anyway' }).or(
-        page.getByRole('button', { name: 'Yes, Skip' })
+        page.getByRole('button', { name: 'Yes, Skip' }),
       );
       await skipConfirm.click({ timeout: 5000 });
       await page.waitForURL('**/dashboard', { timeout: 10000 });
     }
 
     await page.waitForLoadState('networkidle');
-    
+
     // Verify we're on the dashboard
     await expect(page).toHaveURL(/.*dashboard/);
-    
-    // Take screenshot of dashboard after successful login
-    await page.screenshot({ 
-      path: 'test-results/screenshots/login-success-dashboard.png',
-      fullPage: true 
-    });
   });
 
   test('should have responsive design on mobile', async ({ page }) => {
-    // Set viewport to mobile size
     await page.setViewportSize({ width: 375, height: 667 });
-    
+
     await page.goto('/login');
-    
-    // Check elements are still visible
+
     await expect(page.getByRole('heading', { name: 'ARMOURED SOULS' })).toBeVisible();
     await expect(page.getByLabel('Username or Email')).toBeVisible();
-    
-    // Take screenshot on mobile viewport
-    await page.screenshot({ 
-      path: 'test-results/screenshots/login-page-mobile.png',
-      fullPage: true 
-    });
+  });
+
+  test('should reject registration with password shorter than 8 characters', async ({
+    page,
+  }) => {
+    // Req 11.3 — security: registration form must reject passwords < 8 chars
+    await page.getByRole('tab', { name: 'Register' }).click();
+
+    const uniqueId = generateUniqueId();
+    await page.getByLabel('Username').fill(uniqueId);
+    await page.getByLabel('Stable Name').fill(`Short PW ${uniqueId}`);
+    await page.getByLabel('Email').fill(`${uniqueId}@test.armouredsouls.com`);
+    await page.getByLabel('Password', { exact: true }).fill('Ab1!xyz');
+    await page.getByLabel('Confirm Password').fill('Ab1!xyz');
+
+    await page.getByRole('button', { name: 'Create Account' }).click();
+
+    // Validation error for password minimum length
+    await expect(
+      page.getByText('Password must be at least 8 characters long'),
+    ).toBeVisible();
+
+    // Verify we're still on the login page (form was not submitted)
+    expect(page.url()).toContain('/login');
   });
 });

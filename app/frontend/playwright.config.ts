@@ -43,7 +43,7 @@ export default defineConfig({
         ...devices['Desktop Chrome'],
         screenshot: 'on',
         // Reuse auth state from setup project (skips login per test)
-        storageState: '.auth/player1.json',
+        storageState: '.auth/test_user_001.json',
       },
       dependencies: ['setup'],
     },

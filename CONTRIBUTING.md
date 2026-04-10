@@ -172,10 +172,12 @@ def calc(a, d):
 ### Testing Pyramid
 
 ```
-E2E Tests (10%)      ← Few, slow, high-level
+E2E Tests (10%)      ← Playwright, blocking in CI, 11 spec files
 Integration (30%)    ← Medium count and speed
 Unit Tests (60%)     ← Many, fast, focused
 ```
+
+E2E tests run in the CI pipeline via the `e2e-tests` job, which provisions a PostgreSQL service container, seeds the database, starts the backend, and runs the full Playwright suite. E2E failures block deployment.
 
 ### Writing Tests
 

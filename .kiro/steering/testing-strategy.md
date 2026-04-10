@@ -67,11 +67,32 @@ fileMatchPattern: "**/tests/**,**/*.test.ts,**/*.test.tsx,**/*.spec.ts,**/*.prop
 - Files named `*.property.test.ts`
 - Use for complex algorithms and game mechanics
 
-### E2E Tests (Future)
-- Test complete user workflows
-- Use Playwright
-- Run in CI/CD pipeline before deployment
-- Not yet implemented
+### E2E Tests (Implemented)
+- Test complete user workflows through a real browser using Playwright
+- Located in `app/frontend/tests/e2e/`
+- 11+ spec files covering registration, onboarding, robot creation, weapon shop, practice arena, financial flow, battle history, protected page smoke tests, and a critical user journey
+- Blocking CI gate — E2E failures prevent deployment
+
+**Helpers** (`tests/e2e/helpers/`):
+- `login.ts` — `loginAndGoToDashboard` for authenticating as a test user (default: `test_user_001`)
+- `navigate.ts` — `navigateToProtectedPage` with retry logic for auth race conditions
+- `register.ts` — `registerNewUser` for creating fresh accounts via the UI with unique timestamp-based identifiers
+
+**Auth Setup**: The `setup` project in `playwright.config.ts` logs in as `test_user_001` and saves storage state to `.auth/test_user_001.json`. Tests in the `chromium` project reuse this state.
+
+**Conventions**:
+- Serial execution: `fullyParallel: false`, `workers: 1` (tests mutate shared state)
+- Locators: role-based (`getByRole`), label-based (`getByLabel`), text-based (`getByText`) — no CSS class selectors
+- Waits: condition-based (`waitForLoadState`, `toBeVisible`) — no `waitForTimeout`
+- Retries: 2 in CI, 0 locally
+- Artifacts: screenshots on failure, video retained on failure, trace on first retry
+
+**Running E2E tests**:
+```bash
+cd app/frontend && npx playwright test          # Run all E2E tests
+cd app/frontend && npx playwright test --list   # List all test cases
+cd app/frontend && npx playwright test --ui     # Interactive UI mode (local dev)
+```
 
 ## Running Tests
 
@@ -374,7 +395,7 @@ it('should always calculate positive damage', () => {
 - Achieve 90%+ pass rate
 
 ### Medium Term
-- Add E2E tests with Playwright
+- ~~Add E2E tests with Playwright~~ ✅ Done — 11+ spec files, blocking CI gate
 - Improve test coverage for critical paths
 - Add performance benchmarks
 - Implement visual regression testing
