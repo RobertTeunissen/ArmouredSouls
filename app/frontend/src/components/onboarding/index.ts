@@ -9,11 +9,7 @@ export { default as BudgetTracker } from './BudgetTracker';
 export { default as GuidedUIOverlay } from './GuidedUIOverlay';
 export { default as RosterStrategyCard } from './RosterStrategyCard';
 export { default as StrategyComparison } from './StrategyComparison';
-export { default as BudgetAllocationChart } from './BudgetAllocationChart';
-export { default as BudgetComparisonTable } from './BudgetComparisonTable';
 export { default as FacilityPriorityList } from './FacilityPriorityList';
-export { default as FacilityBenefitCards } from './FacilityBenefitCards';
-export { default as LoadoutDiagram } from './LoadoutDiagram';
 export { default as LoadoutSelectorEducational } from './LoadoutSelectorEducational';
 export { default as BattleTypeCard, BATTLE_TYPE_INFO } from './BattleTypeCard';
 export { default as CycleScheduleVisualization } from './CycleScheduleVisualization';
@@ -26,7 +22,6 @@ export { default as Step1_Welcome } from './steps/Step1_Welcome';
 
 // Re-export types
 export type { RosterStrategy, StrategyData } from './RosterStrategyCard';
-export type { LoadoutType } from './LoadoutDiagram';
 export type { BattleType, BattleTypeInfo } from './BattleTypeCard';
 export type { CycleEvent } from './CycleScheduleVisualization';
 export type { RobotHealthExample } from './BattleReadinessEducation';
