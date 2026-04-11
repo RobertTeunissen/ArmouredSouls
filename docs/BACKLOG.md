@@ -96,6 +96,27 @@ This item is about diagnosis, not solutions. Needs a proper design deep-dive to 
 
 One-time rewards for milestones (ELO thresholds, win counts, streaks). Examples: first robot to ELO 1500 (₡50K + 50 prestige), 100 wins (₡250K + 200 prestige). Needs: database tables, tracking service, UI (dashboard trophies, notification toasts). Includes fame-based cosmetic unlocks as a later extension.
 
+### Flex-Point Attribute Bucket (Pre-Battle Tactical Allocation)
+**Source**: Player feedback (Tymen, LortGob)  
+**Priority**: Medium — directly addresses the thin "Adjust" step in the core loop
+
+Idea: a percentage of a robot's total attribute points (e.g. 20%) becomes a flexible pool that the player can reallocate before each battle depending on the opponent. Fixed attributes stay locked, flex points are assigned per matchup. If you don't allocate them, you fight without — rewarding players who invest time in scouting and preparation.
+
+This solves multiple problems at once:
+- Enriches the core loop's "Adjust" step — there's now a meaningful decision between every battle
+- Rewards engagement depth (the "show me everything" player archetype benefits most)
+- Creates counter-play and opponent reading as a skill
+- Doesn't invalidate existing attribute investments — flex points are derived from what you already have
+
+Implementation angle from LortGob: tie it to a facility (new, or repurpose Research Lab). Facility level determines the size of the flex pool (e.g. 5% at level 1, up to 20% at level 10). This avoids disrupting the current season — existing players keep their fixed builds, the flex system layers on top as a new investment. Also creates a meaningful late-game credit sink and a reason to keep upgrading the facility.
+
+Design questions to resolve:
+- What's the right percentage range? 20% of total stats is significant — could swing matchups hard
+- Per-robot or per-battle allocation? (per-battle is more interesting but more UI work)
+- Can you see opponent stats before allocating? (scouting as a prerequisite — ties into Spy Facility idea from Player Personas item)
+- How does this interact with Tag Team / KotH where you don't know your exact opponent?
+- Does the flex pool come from existing points (weakening your base) or is it bonus points on top?
+
 ### Post-Battle Results Page
 **Source**: PRD_BATTLE_RESULTS_PAGE.md (marked ❌ NOT IMPLEMENTED)  
 **Priority**: Medium — players lack immediate feedback after battles
@@ -107,6 +128,28 @@ Dedicated post-battle summary showing prestige/fame earned, damage breakdown, an
 **Priority**: Medium — would significantly deepen combat strategy
 
 All 47 weapons currently have only attribute bonuses — no special effects. The pricing formula and combat simulator are designed to support properties like "ignores armor", "shield drain", "area damage" but none are implemented. Requires combat simulator changes and balance testing.
+
+### Arena / Terrain Modifiers with Home Arena Selection
+**Source**: Player idea  
+**Priority**: Medium — adds meta variation and per-battle decision-making
+
+Battles take place in a randomly assigned arena, each with gameplay modifiers (e.g. "corrosive atmosphere: -15% armor effectiveness", "magnetic field: +10% shield regen", "tight quarters: melee range bonus", "open plains: long-range advantage"). Players can choose a preferred "home arena" for their robot or stable, which gives a slight familiarity bonus when drawn — but also means opponents can scout your preference and build against it.
+
+What this solves:
+- Injects variety into the daily loop — same matchup plays differently on different terrain
+- Creates a new axis of strategy (build for your home arena vs build generalist)
+- Feeds the scouting/intel angle (Spy Facility could reveal opponent's home arena)
+- Natural content drip — new arenas can be added over time as meta-shifting events
+- Addresses the "every day is identical" problem from the game loop audit
+
+The `ArenaConfig` type already exists in the combat simulator for KotH (geometry, radius, zones) but has no gameplay modifiers — this would extend it.
+
+Design questions:
+- How many arenas? Start small (5–8) or go wide?
+- How strong should modifiers be? Subtle nudges (5%) or build-defining (20%+)?
+- Home arena per robot or per stable?
+- Does home arena cost credits to set/change? (another facility tie-in?)
+- How does this interact with Tag Team and KotH which already have arena configs?
 
 ---
 

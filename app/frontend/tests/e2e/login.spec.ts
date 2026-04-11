@@ -49,16 +49,21 @@ test.describe('Login Page', () => {
 
     // If redirected to onboarding, skip the tutorial
     if (page.url().includes('/onboarding')) {
-      // The "Skip Tutorial" button may show as "Skip" on mobile viewports
-      const skipButton = page.getByRole('button', { name: /Skip Tutorial/i });
-      await skipButton.click({ timeout: 5000 });
+      // Wait for the onboarding page to fully render
+      await page.waitForLoadState('networkidle');
 
-      // Confirmation modal — try both button variants
+      // The "Skip Tutorial" button has aria-label="Skip Tutorial"
+      const skipButton = page.getByRole('button', { name: /Skip Tutorial/i });
+      await expect(skipButton).toBeVisible({ timeout: 10000 });
+      await skipButton.click();
+
+      // Confirmation modal — "Skip Anyway" button with aria-label="Confirm skip tutorial"
       const skipAnyway = page.getByRole('button', { name: 'Skip Anyway' });
       const yesSkip = page.getByRole('button', { name: 'Yes, Skip' });
       const confirmSkip = page.getByRole('button', { name: /Confirm skip tutorial/i });
       const skipConfirm = skipAnyway.or(yesSkip).or(confirmSkip);
-      await skipConfirm.click({ timeout: 10000 });
+      await expect(skipConfirm).toBeVisible({ timeout: 10000 });
+      await skipConfirm.click();
 
       await page.waitForURL('**/dashboard', { timeout: 15000 });
     }

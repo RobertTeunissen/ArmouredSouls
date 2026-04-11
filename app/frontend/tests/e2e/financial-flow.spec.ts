@@ -154,8 +154,7 @@ test.describe('Financial Flow', () => {
     await expect(page.getByText('Financial Health')).toBeVisible();
 
     // Verify the financial health indicator shows one of the valid states
-    // (excellent, good, stable, critical, etc.)
-    const healthIndicator = page.getByText(/EXCELLENT|GOOD|STABLE|CRITICAL|POOR/i);
+    const healthIndicator = page.getByText(/EXCELLENT|GOOD|STABLE|WARNING|CRITICAL/i);
     await expect(healthIndicator.first()).toBeVisible();
 
     // Verify the Current Balance is displayed

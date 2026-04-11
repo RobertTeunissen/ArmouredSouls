@@ -56,6 +56,13 @@ export async function registerNewUser(
   await page.goto('/login');
   await page.waitForLoadState('networkidle');
 
+  // If we got redirected to dashboard (auth state leaked), clear it and retry
+  if (page.url().includes('/dashboard') || page.url().includes('/onboarding')) {
+    await page.evaluate(() => localStorage.clear());
+    await page.goto('/login');
+    await page.waitForLoadState('networkidle');
+  }
+
   // Switch to the Register tab
   await page.getByRole('tab', { name: 'Register' }).click();
 
