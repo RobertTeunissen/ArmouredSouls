@@ -157,6 +157,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: [backend-unit-tests, frontend-tests]
+    # Run E2E even if frontend unit tests fail — E2E is the real deployment gate
+    # Only skip if backend-unit-tests failed (no point running E2E without a working backend)
+    if: ${{ always() && needs.backend-unit-tests.result == 'success' }}
 
     permissions:
       contents: read
