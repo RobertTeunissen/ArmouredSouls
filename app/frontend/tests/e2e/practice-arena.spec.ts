@@ -58,6 +58,9 @@ test.describe('Practice Arena', () => {
     // Click Run Simulation (includes emoji: ⚡ Run Simulation)
     // canRun requires: robot selected + robot has weapon equipped + not running + cycle not offline
     const runButton = page.getByRole('button', { name: /Run Simulation/i });
+
+    // Wait briefly for UI to update after robot selection before checking enabled state
+    await page.waitForTimeout(1000);
     const isEnabled = await runButton.isEnabled().catch(() => false);
     if (!isEnabled) {
       // Robot may not have a weapon equipped — skip gracefully
@@ -90,6 +93,7 @@ test.describe('Practice Arena', () => {
 
     // Check if Run Simulation is enabled before proceeding
     const runButton = page.getByRole('button', { name: /Run Simulation/i });
+    await page.waitForTimeout(1000);
     const isEnabled = await runButton.isEnabled().catch(() => false);
     if (!isEnabled) {
       test.skip(true, 'Run Simulation button is disabled — robot may not have a weapon equipped');
@@ -129,6 +133,7 @@ test.describe('Practice Arena', () => {
 
     // Run a single simulation
     const runButton = page.getByRole('button', { name: /Run Simulation/i });
+    await page.waitForTimeout(1000);
     const isEnabled = await runButton.isEnabled().catch(() => false);
     if (!isEnabled) {
       test.skip(true, 'Run Simulation button is disabled — robot may not have a weapon equipped');

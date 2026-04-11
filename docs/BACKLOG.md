@@ -167,7 +167,7 @@ Also: battle log verbosity levels. Players have asked for more detail in combat 
 - **Shorthand** (current): `"Dikke Aap missed"`
 - **Verbose**: `"Dikke Aap missed (76% hit chance — Combat Power 34 vs Evasion Thrusters 28)"`
 
-Verbose mode would show the underlying formula inputs: hit chance percentages, which attributes drove the outcome, damage breakdowns with armor/penetration values, crit chance on critical hits, etc. Ties into the Player Personas / Complexity Modes item (#16) — verbose mode is exactly what the "show me everything" player wants, while shorthand suits the "just let me fight" player.
+Verbose mode would show the underlying formula inputs: hit chance percentages, which attributes drove the outcome, damage breakdowns with armor/penetration values, crit chance on critical hits, etc. Ties into the Player Personas / Complexity Modes item (#15) — verbose mode is exactly what the "show me everything" player wants, while shorthand suits the "just let me fight" player.
 
 ### #14 — Feature Flags / Per-User Feature Rollout
 **Source**: Backlog triage  
@@ -179,73 +179,89 @@ Add a feature toggle system manageable from the admin portal. Flags can be globa
 **Source**: Backlog triage  
 **Priority**: Medium — different players want fundamentally different experiences
 
-Not all players want the same depth. Two archetypes: the "just let me fight" player who wants streamlined combat with minimal management, and the "show me everything" player who wants full stat transparency, detailed analytics, and granular control. Possible approaches: a complexity toggle in settings that shows/hides advanced panels, or tie it to a facility — e.g. a "Spy Facility" that progressively unlocks deeper analytics and opponent intel as it levels up (fits the existing facility progression model). The Spy Facility angle would give the transparency a gameplay cost, making it a strategic choice rather than just a UI preference. Cross-ref: "Progressive Feature Disclosure" (#25) covers time-gated unlocks — this is about *player-chosen* depth. Also relates to "Unimplemented Facilities" (#6) if the Spy Facility route is taken.
+Not all players want the same depth. Two archetypes: the "just let me fight" player who wants streamlined combat with minimal management, and the "show me everything" player who wants full stat transparency, detailed analytics, and granular control. Possible approaches: a complexity toggle in settings that shows/hides advanced panels, or tie it to a facility — e.g. a "Spy Facility" that progressively unlocks deeper analytics and opponent intel as it levels up (fits the existing facility progression model). The Spy Facility angle would give the transparency a gameplay cost, making it a strategic choice rather than just a UI preference. Cross-ref: "Progressive Feature Disclosure" (#27) covers time-gated unlocks — this is about *player-chosen* depth. Also relates to "Unimplemented Facilities" (#6) if the Spy Facility route is taken.
+
+### #16 — In-Game Changelog / "What's New" Component
+**Source**: Player communication need  
+**Priority**: Medium — players miss updates that directly affect their strategy
+
+When players log in, show them meaningful game updates: balance changes, new features, bug fixes that affect gameplay. Currently there's no in-game communication channel — players only find out about changes if they happen to notice or hear about it in Discord.
+
+Should be as automated as possible. Ideal flow: developer writes a short changelog entry (or it's generated from deploy/release notes), tagged with categories (balance, feature, bugfix, economy). On login, players see a dismissable modal or sidebar with unread updates since their last visit. Each entry explains what changed and how it impacts them — not just "fixed bug #1234" but "Repair Bay discount now correctly applies to all robots in your stable."
+
+Could tie into the Feature Flags system (#14) — when a feature is toggled on for a player, auto-generate a "What's New" entry for them. Also relevant for balance changes (weapon damage adjustments, economy tweaks) where players need to know their builds may be affected.
+
+Design considerations:
+- Where does changelog content live? Markdown files in the repo, a DB table, or a CMS?
+- How granular? Per-deploy, per-feature, or curated batches?
+- Dismissal tracking — per-user "last seen changelog" timestamp vs per-entry read state?
+- Can it surface personalized impact? ("You own a Plasma Cannon — its damage was adjusted by -5%")
 
 ---
 
 ## Low Priority
 
-### #16 — Battle Table Denormalization Cleanup
+### #17 — Battle Table Denormalization Cleanup
 **Source**: [Battle Execution Audit](analysis/BATTLE_EXECUTION_AUDIT.md)  
 **Priority**: Low — works correctly, just redundant data
 
 The `Battle` table dual-writes per-robot columns alongside `BattleParticipant`. Consider a migration to drop legacy columns and fully rely on `BattleParticipant`.
 
-### #17 — Tag Team Battle Time Limit Enforcement
+### #18 — Tag Team Battle Time Limit Enforcement
 **Source**: [Battle Execution Audit](analysis/BATTLE_EXECUTION_AUDIT.md)  
 **Priority**: Low — stored duration is correct, only simulation overruns
 
 Tag team battles can theoretically exceed 300s because each phase has its own 120s cap. Fix by passing `remainingTime` to `simulateBattle()`.
 
-### #18 — Performance Optimization
+### #19 — Performance Optimization
 **Source**: Phase 2 roadmap  
 **Priority**: Low — current scale doesn't demand it
 
 Areas to investigate: slow Prisma queries, N+1 in analytics endpoints, pagination on heavy lists, in-memory caching for weapon catalog and facility configs.
 
-### #19 — Prestige Gating for Facilities
+### #20 — Prestige Gating for Facilities
 **Source**: PRD_FACILITIES_PAGE.md §6, PRD_PRESTIGE_AND_FAME.md  
 **Priority**: Low — documented but not blocking gameplay
 
 Facility upgrades gated by prestige level. UI shows lock indicators. Adds progression depth but not essential.
 
-### #20 — Promotion/Demotion History Tracking
+### #21 — Promotion/Demotion History Tracking
 **Source**: PRD_LEAGUE_SYSTEM.md  
 **Priority**: Low — nice for analytics, not player-facing
 
 Track league tier changes over time (PromotionHistory model). Enables progression charts and yo-yo detection.
 
-### #21 — Historical Financial Tracking
+### #22 — Historical Financial Tracking
 **Source**: PRD_ECONOMY_SYSTEM.md  
 **Priority**: Low — cycle snapshots provide basic history already
 
 Dedicated financial trend tracking beyond what CycleSnapshot provides.
 
-### #22 — Dashboard Enhancements
+### #23 — Dashboard Enhancements
 **Source**: PRD_DASHBOARD_PAGE.md  
 **Priority**: Low — cosmetic improvements
 
 Enhanced prestige display (rank tiers, progress bar), tournament wins/trophy display, loading skeletons, notification toasts.
 
-### #23 — Battle History URL State Persistence
+### #24 — Battle History URL State Persistence
 **Source**: PRD_BATTLE_HISTORY_PAGE.md  
 **Priority**: Low — QoL improvement
 
 Persist filter/sort state in URL query params for shareable links and browser navigation.
 
-### #24 — Hall of Records Performance Caching
+### #25 — Hall of Records Performance Caching
 **Source**: PRD_HALL_OF_RECORDS.md  
 **Priority**: Low — only matters at scale
 
 Cache leaderboard queries. Currently queries run on every request.
 
-### #25 — Command Palette (Cmd+K)
+### #26 — Command Palette (Cmd+K)
 **Source**: Deleted navigation analysis doc  
 **Priority**: Low — power user feature
 
 Keyboard-driven quick access to pages, robots, and actions with fuzzy search.
 
-### #26 — Progressive Feature Disclosure
+### #27 — Progressive Feature Disclosure
 **Source**: Deleted navigation analysis doc  
 **Priority**: Low — reduces new player overwhelm
 
@@ -255,30 +271,30 @@ Unlock advanced features based on prestige level or activity milestones.
 
 ## Not Scoped (Future Ideas)
 
-### #27 — Weapon Crafting System
+### #28 — Weapon Crafting System
 **Source**: PRD_WEAPONS_LOADOUT.md, PRD_ECONOMY_SYSTEM.md  
 Custom weapon design at Workshop Level 6+. Pricing formula already supports it. Legendary crafting at Level 10.
 
-### #28 — Free-for-All / Battle Royale Mode
+### #29 — Free-for-All / Battle Royale Mode
 **Source**: [Design analysis](analysis/FREE_FOR_ALL_BATTLE_ROYALE_MODE.md)  
 Large-scale elimination (8–100 robots). Detailed design analysis exists covering arena scaling, shrinking boundary, vulture problem, performance.
 
-### #29 — 3v3 Team Battles
+### #30 — 3v3 Team Battles
 **Source**: Roadmap Phase 9  
 BattleParticipant model already supports N robots. Needs team formation, matchmaking, rewards, orchestrator.
 
-### #30 — Conditional Battle Triggers / Robot AI Scripting
+### #31 — Conditional Battle Triggers / Robot AI Scripting
 **Source**: GAME_DESIGN.md  
 Player-defined robot behaviors: "switch stance when HP < 30%", "target weakest in KotH". Requires scripting or rule-builder UI.
 
-### #31 — Future Revenue Streams
+### #32 — Future Revenue Streams
 **Source**: PRD_ECONOMY_SYSTEM.md §7  
 Trading commission (marketplace), sponsorship deals, arena attendance, championship bonuses, daily login bonuses.
 
-### #32 — Daily Login Bonuses & Seasonal Events
+### #33 — Daily Login Bonuses & Seasonal Events
 **Source**: PRD_ECONOMY_SYSTEM.md, GAME_DESIGN.md  
 Consecutive login rewards, limited-time challenges, end-of-season league placement rewards.
 
-### #33 — Modular Package Extraction
+### #34 — Modular Package Extraction
 **Source**: Deleted migration strategy docs  
 npm workspace extraction. Only relevant when multiple consumers need shared backend logic (mobile app, separate battle server, team scaling).

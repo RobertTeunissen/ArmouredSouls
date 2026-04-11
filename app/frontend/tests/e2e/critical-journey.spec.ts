@@ -36,11 +36,10 @@ test.describe('Critical User Journey', () => {
     if (page.url().includes('/onboarding')) {
       await page.getByRole('button', { name: 'Skip Tutorial' }).click();
 
-      // Confirmation modal — click "Skip Anyway"
-      const skipAnyway = page.getByRole('button', { name: 'Skip Anyway' });
-      const yesSkip = page.getByRole('button', { name: 'Yes, Skip' });
-      const skipConfirm = skipAnyway.or(yesSkip);
-      await skipConfirm.click({ timeout: 5000 });
+      // Confirmation modal — button has aria-label="Confirm skip tutorial"
+      const skipConfirm = page.getByRole('button', { name: /Confirm skip tutorial/i });
+      await expect(skipConfirm).toBeVisible({ timeout: 5000 });
+      await skipConfirm.click();
 
       await expect(page).toHaveURL(/\/dashboard/, { timeout: 15000 });
     }

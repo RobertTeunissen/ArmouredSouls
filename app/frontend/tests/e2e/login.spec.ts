@@ -67,8 +67,8 @@ test.describe('Login Page', () => {
 
     await page.waitForLoadState('networkidle');
 
-    // Verify we're on the dashboard
-    await expect(page).toHaveURL(/.*dashboard/);
+    // Verify we're on the dashboard (use longer timeout — redirect from onboarding can be slow)
+    await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
   });
 
   test('should have responsive design on mobile', async ({ page }) => {

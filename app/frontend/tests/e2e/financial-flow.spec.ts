@@ -151,7 +151,7 @@ test.describe('Financial Flow', () => {
     await expect(page.getByText('Loading financial report...')).toBeHidden({ timeout: 15000 });
 
     // Verify the Financial Health section is displayed
-    await expect(page.getByText('Financial Health')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Financial Health' })).toBeVisible();
 
     // Verify the financial health indicator shows one of the valid states
     const healthIndicator = page.getByText(/EXCELLENT|GOOD|STABLE|WARNING|CRITICAL/i);

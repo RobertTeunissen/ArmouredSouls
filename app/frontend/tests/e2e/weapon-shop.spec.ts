@@ -46,17 +46,17 @@ test.describe('Weapon Shop Page', () => {
     test('should expand and collapse filter panel', async ({ page }) => {
       // Click the Filters heading to expand
       await page.getByRole('heading', { name: 'Filters', exact: true }).click();
-      await expect(page.getByText('Loadout Type')).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Loadout Type' })).toBeVisible();
 
       // Click again to collapse
       await page.getByRole('heading', { name: 'Filters', exact: true }).click();
-      await expect(page.getByText('Loadout Type')).not.toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Loadout Type' })).not.toBeVisible();
     });
 
     test('should filter weapons by loadout type', async ({ page }) => {
       // Expand filters
       await page.getByRole('heading', { name: 'Filters', exact: true }).click();
-      await expect(page.getByText('Loadout Type')).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Loadout Type' })).toBeVisible();
 
       // Get initial weapon count
       const countText = page.getByText(/Showing \d+ of \d+ weapons/);
@@ -72,10 +72,10 @@ test.describe('Weapon Shop Page', () => {
     test('should filter weapons by weapon type', async ({ page }) => {
       // Expand filters
       await page.getByRole('heading', { name: 'Filters', exact: true }).click();
-      await expect(page.getByText('Weapon Type')).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Weapon Type' })).toBeVisible();
 
       // Click "Melee" filter button
-      await page.getByRole('button', { name: 'Melee', exact: true }).click();
+      await page.getByRole('button', { name: 'Melee', exact: true }).first().click();
 
       // Verify the active filter chip appears with a remove button
       await expect(page.getByRole('button', { name: 'Remove Melee filter' })).toBeVisible();
@@ -84,7 +84,7 @@ test.describe('Weapon Shop Page', () => {
     test('should filter weapons by price range', async ({ page }) => {
       // Expand filters
       await page.getByRole('heading', { name: 'Filters', exact: true }).click();
-      await expect(page.getByText('Price Range')).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Price Range' })).toBeVisible();
 
       // Click "Budget (<₡100K)" filter
       await page.getByRole('button', { name: /Budget.*100K/ }).click();
@@ -96,12 +96,12 @@ test.describe('Weapon Shop Page', () => {
     test('should apply multiple filters simultaneously', async ({ page }) => {
       // Expand filters
       await page.getByRole('heading', { name: 'Filters', exact: true }).click();
-      await expect(page.getByText('Loadout Type')).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Loadout Type' })).toBeVisible();
 
       // Apply loadout type filter
       await page.getByRole('button', { name: 'Single', exact: true }).click();
       // Apply weapon type filter
-      await page.getByRole('button', { name: 'Melee', exact: true }).click();
+      await page.getByRole('button', { name: 'Melee', exact: true }).first().click();
 
       // Verify both filter chips are displayed via their remove buttons
       await expect(page.getByRole('button', { name: 'Remove Single filter' })).toBeVisible();
@@ -111,8 +111,8 @@ test.describe('Weapon Shop Page', () => {
     test('should clear all filters', async ({ page }) => {
       // Expand filters and apply a filter
       await page.getByRole('heading', { name: 'Filters', exact: true }).click();
-      await expect(page.getByText('Weapon Type')).toBeVisible();
-      await page.getByRole('button', { name: 'Melee', exact: true }).click();
+      await expect(page.getByRole('heading', { name: 'Weapon Type' })).toBeVisible();
+      await page.getByRole('button', { name: 'Melee', exact: true }).first().click();
 
       // Verify chip is visible
       await expect(page.getByRole('button', { name: 'Remove Melee filter' })).toBeVisible();
@@ -127,8 +127,8 @@ test.describe('Weapon Shop Page', () => {
     test('should remove individual filter chips', async ({ page }) => {
       // Expand filters and apply a filter
       await page.getByRole('heading', { name: 'Filters', exact: true }).click();
-      await expect(page.getByText('Weapon Type')).toBeVisible();
-      await page.getByRole('button', { name: 'Melee', exact: true }).click();
+      await expect(page.getByRole('heading', { name: 'Weapon Type' })).toBeVisible();
+      await page.getByRole('button', { name: 'Melee', exact: true }).first().click();
 
       // Verify chip is visible
       const removeButton = page.getByRole('button', { name: 'Remove Melee filter' });
@@ -229,7 +229,8 @@ test.describe('Weapon Shop Page', () => {
     test('should open weapon detail modal when clicking weapon name', async ({ page }) => {
       // Wait for weapon headings to be visible, then click the first one
       // Weapon names are rendered as h3 headings inside clickable cards
-      const weaponHeadings = page.getByRole('heading', { level: 3 });
+      // Filter out known section headings (Storage Capacity, Loadout Type, etc.)
+      const weaponHeadings = page.locator('h3').filter({ hasNotText: /Storage Capacity|Loadout Type|Weapon Type|Range Band|Price Range|Quick Filters/ });
       const firstWeapon = weaponHeadings.first();
       await expect(firstWeapon).toBeVisible();
       const nameText = await firstWeapon.textContent();
@@ -245,7 +246,8 @@ test.describe('Weapon Shop Page', () => {
 
     test('should close weapon detail modal', async ({ page }) => {
       // Open modal
-      const firstWeapon = page.getByRole('heading', { level: 3 }).first();
+      const weaponHeadings = page.locator('h3').filter({ hasNotText: /Storage Capacity|Loadout Type|Weapon Type|Range Band|Price Range|Quick Filters/ });
+      const firstWeapon = weaponHeadings.first();
       await expect(firstWeapon).toBeVisible();
       await firstWeapon.click();
 
