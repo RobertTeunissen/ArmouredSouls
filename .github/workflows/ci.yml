@@ -152,9 +152,142 @@ jobs:
         timeout-minutes: 15
         run: npx vitest --run --reporter=verbose
 
-      # Note: E2E tests (Playwright) are skipped in CI because they require
-      # a running backend with a seeded database. Run locally before pushing:
-      #   cd app/frontend && npm run test:e2e
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [backend-unit-tests, frontend-tests]
+
+    permissions:
+      contents: read
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: armouredsouls_e2e
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          --shm-size=256mb
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: |
+            app/backend/package-lock.json
+            app/frontend/package-lock.json
+
+      - name: Install backend dependencies
+        working-directory: ./app/backend
+        run: npm ci
+
+      - name: Generate Prisma Client
+        working-directory: ./app/backend
+        env:
+          DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
+        run: npm run prisma:generate
+
+      - name: Run database migrations
+        working-directory: ./app/backend
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_e2e?connection_limit=5
+        run: npx prisma migrate deploy
+
+      - name: Seed database
+        working-directory: ./app/backend
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_e2e?connection_limit=5
+        run: npx prisma db seed
+
+      - name: Build backend
+        working-directory: ./app/backend
+        run: npm run build
+
+      - name: Start backend server
+        working-directory: ./app/backend
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_e2e?connection_limit=5
+          JWT_SECRET: test-secret-key-for-ci
+          NODE_ENV: test
+          PORT: 3001
+          CORS_ORIGIN: http://localhost:4173
+          SCHEDULER_ENABLED: false
+        run: |
+          node dist/index.js &
+          echo "Waiting for backend to start..."
+          backend_ready=false
+          for i in $(seq 1 30); do
+            if curl -s http://localhost:3001/api/health > /dev/null 2>&1; then
+              echo "Backend is ready"
+              backend_ready=true
+              break
+            fi
+            sleep 1
+          done
+          if [ "$backend_ready" != "true" ]; then
+            echo "Backend failed to become ready within 30 seconds"
+            exit 1
+          fi
+
+      - name: Install frontend dependencies
+        working-directory: ./app/frontend
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: ./app/frontend
+        env:
+          VITE_API_URL: http://localhost:3001
+        run: npm run build
+
+      - name: Install Playwright browsers
+        working-directory: ./app/frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright tests
+        working-directory: ./app/frontend
+        env:
+          PLAYWRIGHT_BASE_URL: http://localhost:4173
+        run: |
+          npx vite preview --port 4173 &
+          echo "Waiting for frontend preview server to start..."
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:4173/ > /dev/null 2>&1; then
+              echo "Frontend preview server is ready"
+              break
+            fi
+            sleep 1
+          done
+          npx playwright test
+
+      - name: Upload Playwright HTML report
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: playwright-html-report
+          path: app/frontend/playwright-report/
+          retention-days: 14
+
+      - name: Upload Playwright failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: playwright-failure-artifacts
+          path: |
+            app/frontend/test-results/
+          retention-days: 14
 
   security-audit:
     name: Security Audit

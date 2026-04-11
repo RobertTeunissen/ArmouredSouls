@@ -133,12 +133,23 @@ npm run test:coverage      # With coverage report
 ```
 
 ### E2E (Playwright)
+
+E2E tests run against a real backend with a seeded database. The test suite uses `test_user_001` (password: `testpass123`) as the primary seeded test account. Auth state is saved to `.auth/test_user_001.json` and reused across tests.
+
+Available helpers in `tests/e2e/helpers/`:
+- `loginAndGoToDashboard(page, username?, password?)` — logs in (defaults to `test_user_001` / `testpass123`)
+- `navigateToProtectedPage(page, path)` — navigates with retry logic for auth race conditions, falls back to re-login as `test_user_001`
+- `registerNewUser(page, options?)` — registers a fresh user via the UI with unique timestamp-based credentials, returns the generated username/email/password/stableName
+
 ```bash
 cd app/frontend
+npx playwright install     # One-time: install Chromium browser
 npm run test:e2e           # Headless
 npm run test:e2e:headed    # With browser visible
 npm run test:e2e:debug     # Debug mode
 ```
+
+Requires the backend running locally with a seeded database (see [Running Locally](#running-locally) above).
 
 ---
 

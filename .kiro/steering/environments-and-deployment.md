@@ -125,8 +125,13 @@ npm test -- --coverage
 1. **Test Stage** (parallel execution)
    - Backend: Jest unit + property tests
    - Frontend: Build + ESLint
-2. **E2E Stage**
-   - Playwright end-to-end tests
+2. **E2E Stage** (`e2e-tests` job)
+   - PostgreSQL 17 service container (`armouredsouls_e2e` database with health checks)
+   - Backend: dependencies installed, Prisma client generated, migrations applied, database seeded, server started in background
+   - Frontend: dependencies installed, production build, served via `vite preview`
+   - Playwright: Chromium browser installed, tests run against `PLAYWRIGHT_BASE_URL=http://localhost:4173`
+   - Artifacts: HTML report uploaded (14-day retention), failure artifacts (screenshots/traces) uploaded on failure
+   - 15-minute timeout — failures block the pipeline
 3. **Deploy Stage**
    - rsync artifacts to VPS
    - `npm ci --production`

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
 import ProfilePage from '../ProfilePage';
 import * as userApi from '../../utils/userApi';
@@ -224,15 +225,9 @@ describe('ProfilePage', () => {
     /** Helper: change stable name and wait for Save button to become enabled */
     async function changeStableNameAndWaitForButton(newName: string): Promise<HTMLElement> {
       const stableNameInput = screen.getByPlaceholderText('testuser');
-      // Use native value setter to ensure React picks up the change
-      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-        window.HTMLInputElement.prototype, 'value'
-      )!.set!;
-      await act(async () => {
-        nativeInputValueSetter.call(stableNameInput, newName);
-        stableNameInput.dispatchEvent(new Event('input', { bubbles: true }));
-        stableNameInput.dispatchEvent(new Event('change', { bubbles: true }));
-      });
+      // Clear existing value and type the new name using userEvent for proper React event handling
+      await userEvent.clear(stableNameInput);
+      await userEvent.type(stableNameInput, newName);
       await waitFor(() => {
         expect(screen.getByRole('button', { name: /Save Changes/i })).not.toBeDisabled();
       });

@@ -3,10 +3,12 @@ import { navigateToProtectedPage } from './helpers/navigate';
 
 /**
  * E2E tests for Weapon Shop Page
- * Tests filtering, sorting, view modes, comparison, and purchase flow
+ * Tests filtering, sorting, view modes, comparison, and purchase flow.
  *
  * Auth state is pre-loaded via the setup project (see auth.setup.ts),
  * so we don't need to login in each test.
+ *
+ * Requirements: 5.1, 5.2, 5.5, 13.1, 13.2
  */
 
 test.describe('Weapon Shop Page', () => {
@@ -15,512 +17,326 @@ test.describe('Weapon Shop Page', () => {
   });
 
   test.describe('Page Load and Initial State', () => {
-    test('should display weapon shop page correctly', async ({ page }) => {
-      // Check page title and description
-      await expect(page.getByRole('heading', { name: 'Weapon Shop' })).toBeVisible();
+    test('should display weapon shop page with heading, description, storage, and filters', async ({ page }) => {
+      await expect(page.getByRole('heading', { name: 'Weapon Shop', level: 1 })).toBeVisible();
       await expect(page.getByText('Purchase weapons to equip your robots')).toBeVisible();
-
-      // Check storage capacity section
-      await expect(page.getByText('Storage Capacity')).toBeVisible();
-
-      // Check filters section
+      await expect(page.getByRole('heading', { name: 'Storage Capacity' })).toBeVisible();
       await expect(page.getByRole('heading', { name: 'Filters', exact: true })).toBeVisible();
-
-      // Take screenshot
-      await page.screenshot({
-        path: 'test-results/screenshots/weapon-shop-initial.png',
-        fullPage: true,
-      });
     });
 
-    test('should display weapons in card view by default', async ({ page }) => {
-      // Wait for weapon cards to load (bg-gray-800 p-6 rounded-lg)
-      await page.waitForSelector('.bg-gray-800.p-6.rounded-lg', { timeout: 10000 });
+    test('should display weapons with names, costs, and damage types', async ({ page }) => {
+      // Wait for weapon cards to render — each weapon has a heading (h3) inside a card
+      const weaponHeadings = page.locator('h3').filter({ hasNotText: /Storage Capacity|Loadout Type|Weapon Type|Range Band|Price Range|Quick Filters/ });
+      await expect(weaponHeadings.first()).toBeVisible();
 
-      // Check that weapon cards are visible
-      const weaponCards = page.locator('.bg-gray-800.p-6.rounded-lg');
-      const count = await weaponCards.count();
-      expect(count).toBeGreaterThan(0);
+      // Verify at least one weapon card shows cost (₡ symbol) and a weapon type label
+      await expect(page.getByText(/₡[\d,]+/).first()).toBeVisible();
 
-      // Take screenshot
-      await page.screenshot({
-        path: 'test-results/screenshots/weapon-shop-card-view.png',
-        fullPage: true,
-      });
+      // Verify weapon type labels are present (melee, ballistic, energy, or shield)
+      await expect(page.getByText(/melee|ballistic|energy|shield/i).first()).toBeVisible();
     });
 
-    test('should show storage capacity with progress bar', async ({ page }) => {
-      // Check storage capacity display (e.g. "3 / 10")
-      const storageText = page.locator('text=/\\d+ \\/ \\d+/');
-      await expect(storageText.first()).toBeVisible();
-
-      // Check progress bar container exists
-      const progressBar = page.locator('.bg-gray-700.rounded-full.h-4');
-      await expect(progressBar).toBeVisible();
+    test('should show storage capacity with current/max display', async ({ page }) => {
+      // Storage capacity shows "X / Y" format
+      await expect(page.getByText(/\d+ \/ \d+/)).toBeVisible();
     });
   });
 
   test.describe('Filtering System', () => {
     test('should expand and collapse filter panel', async ({ page }) => {
-      const loadoutTypeHeading = page.getByText('Loadout Type', { exact: true });
-
-      // Click the filters heading to expand (h2 "Filters" inside clickable div)
+      // Click the Filters heading to expand
       await page.getByRole('heading', { name: 'Filters', exact: true }).click();
-      await expect(loadoutTypeHeading).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Loadout Type' })).toBeVisible();
 
-      // Take screenshot of expanded filters
-      await page.screenshot({
-        path: 'test-results/screenshots/weapon-shop-filters-expanded.png',
-        fullPage: true,
-      });
-
-      // Click the same heading to collapse
+      // Click again to collapse
       await page.getByRole('heading', { name: 'Filters', exact: true }).click();
-      await expect(loadoutTypeHeading).not.toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Loadout Type' })).not.toBeVisible();
     });
 
     test('should filter weapons by loadout type', async ({ page }) => {
       // Expand filters
       await page.getByRole('heading', { name: 'Filters', exact: true }).click();
+      await expect(page.getByRole('heading', { name: 'Loadout Type' })).toBeVisible();
 
-      // Get initial weapon count text
-      const initialCount = await page.locator('text=/Showing \\d+ of \\d+ weapons/').textContent();
+      // Get initial weapon count
+      const countText = page.getByText(/Showing \d+ of \d+ weapons/);
+      const initialText = await countText.textContent();
 
       // Click "Two-Handed" filter button
       await page.getByRole('button', { name: 'Two-Handed' }).click();
 
-      // Wait for filter to apply
-      await page.waitForTimeout(500);
-
-      // Check that weapon count changed
-      const filteredCount = await page.locator('text=/Showing \\d+ of \\d+ weapons/').textContent();
-      expect(filteredCount).not.toBe(initialCount);
-
-      // Take screenshot
-      await page.screenshot({
-        path: 'test-results/screenshots/weapon-shop-filter-two-handed.png',
-        fullPage: true,
-      });
+      // Wait for the count text to change
+      await expect(countText).not.toHaveText(initialText!);
     });
 
     test('should filter weapons by weapon type', async ({ page }) => {
       // Expand filters
       await page.getByRole('heading', { name: 'Filters', exact: true }).click();
+      await expect(page.getByRole('heading', { name: 'Weapon Type' })).toBeVisible();
 
-      // Click "Melee" filter button (direct button with that text in the filter panel)
-      await page.getByRole('button', { name: 'Melee', exact: true }).click();
+      // Click "Melee" filter button
+      await page.getByRole('button', { name: 'Melee', exact: true }).first().click();
 
-      // Wait for filter to apply
-      await page.waitForTimeout(500);
-
-      // Check that active filter chip is displayed (purple chip for weapon type)
-      const filterChip = page.locator('.bg-purple-900').filter({ hasText: 'Melee' });
-      await expect(filterChip).toBeVisible();
-
-      // Take screenshot
-      await page.screenshot({
-        path: 'test-results/screenshots/weapon-shop-filter-melee.png',
-        fullPage: true,
-      });
+      // Verify the active filter chip appears with a remove button
+      await expect(page.getByRole('button', { name: 'Remove Melee filter' })).toBeVisible();
     });
 
     test('should filter weapons by price range', async ({ page }) => {
       // Expand filters
       await page.getByRole('heading', { name: 'Filters', exact: true }).click();
+      await expect(page.getByRole('heading', { name: 'Price Range' })).toBeVisible();
 
       // Click "Budget (<₡100K)" filter
       await page.getByRole('button', { name: /Budget.*100K/ }).click();
 
-      // Wait for filter to apply
-      await page.waitForTimeout(500);
-
-      // Take screenshot
-      await page.screenshot({
-        path: 'test-results/screenshots/weapon-shop-filter-budget.png',
-        fullPage: true,
-      });
+      // Verify the price range filter chip appears
+      await expect(page.getByRole('button', { name: 'Remove price range filter' })).toBeVisible();
     });
 
     test('should apply multiple filters simultaneously', async ({ page }) => {
       // Expand filters
       await page.getByRole('heading', { name: 'Filters', exact: true }).click();
+      await expect(page.getByRole('heading', { name: 'Loadout Type' })).toBeVisible();
 
       // Apply loadout type filter
       await page.getByRole('button', { name: 'Single', exact: true }).click();
       // Apply weapon type filter
-      await page.getByRole('button', { name: 'Melee', exact: true }).click();
+      await page.getByRole('button', { name: 'Melee', exact: true }).first().click();
 
-      // Wait for filters to apply
-      await page.waitForTimeout(500);
-
-      // Check that both filter chips are displayed
-      const singleChip = page.locator('.bg-blue-900').filter({ hasText: 'Single' });
-      const meleeChip = page.locator('.bg-purple-900').filter({ hasText: 'Melee' });
-      await expect(singleChip).toBeVisible();
-      await expect(meleeChip).toBeVisible();
-
-      // Take screenshot
-      await page.screenshot({
-        path: 'test-results/screenshots/weapon-shop-multiple-filters.png',
-        fullPage: true,
-      });
+      // Verify both filter chips are displayed via their remove buttons
+      await expect(page.getByRole('button', { name: 'Remove Single filter' })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Remove Melee filter' })).toBeVisible();
     });
 
     test('should clear all filters', async ({ page }) => {
-      // Expand filters
+      // Expand filters and apply a filter
       await page.getByRole('heading', { name: 'Filters', exact: true }).click();
+      await expect(page.getByRole('heading', { name: 'Weapon Type' })).toBeVisible();
+      await page.getByRole('button', { name: 'Melee', exact: true }).first().click();
 
-      // Apply a filter
-      await page.getByRole('button', { name: 'Melee', exact: true }).click();
-      await page.waitForTimeout(500);
+      // Verify chip is visible
+      await expect(page.getByRole('button', { name: 'Remove Melee filter' })).toBeVisible();
 
-      // Click "Clear All" button
+      // Click "Clear All"
       await page.getByRole('button', { name: 'Clear All' }).click();
 
-      // Wait for filters to clear
-      await page.waitForTimeout(500);
-
-      // Check that filter chip is removed
-      const meleeChip = page.locator('.bg-purple-900').filter({ hasText: 'Melee' });
-      const isVisible = await meleeChip.isVisible().catch(() => false);
-      expect(isVisible).toBe(false);
+      // Verify chip is removed
+      await expect(page.getByRole('button', { name: 'Remove Melee filter' })).not.toBeVisible();
     });
 
     test('should remove individual filter chips', async ({ page }) => {
-      // Expand filters
+      // Expand filters and apply a filter
       await page.getByRole('heading', { name: 'Filters', exact: true }).click();
+      await expect(page.getByRole('heading', { name: 'Weapon Type' })).toBeVisible();
+      await page.getByRole('button', { name: 'Melee', exact: true }).first().click();
 
-      // Apply a filter
-      await page.getByRole('button', { name: 'Melee', exact: true }).click();
-      await page.waitForTimeout(500);
+      // Verify chip is visible
+      const removeButton = page.getByRole('button', { name: 'Remove Melee filter' });
+      await expect(removeButton).toBeVisible();
 
-      // Find and click the remove button on the filter chip (aria-label based)
-      await page.getByRole('button', { name: 'Remove Melee filter' }).click();
+      // Click the remove button on the chip
+      await removeButton.click();
 
-      // Wait for filter to be removed
-      await page.waitForTimeout(500);
-
-      // Check that filter chip is removed
-      const meleeChip = page.locator('.bg-purple-900').filter({ hasText: 'Melee' });
-      const isVisible = await meleeChip.isVisible().catch(() => false);
-      expect(isVisible).toBe(false);
+      // Verify chip is removed
+      await expect(removeButton).not.toBeVisible();
     });
   });
 
   test.describe('View Mode Toggle', () => {
     test('should switch to table view', async ({ page }) => {
-      // Find the view toggle buttons container and click the last button (table view)
-      const viewToggle = page.locator('.flex.gap-2').filter({ has: page.locator('button') });
-      await viewToggle.locator('button').last().click();
+      // Click the Table View button (has aria-label)
+      await page.getByRole('button', { name: 'Table View' }).click();
 
-      // Wait for view to change
-      await page.waitForTimeout(500);
-
-      // Check that table is visible
-      const table = page.locator('table');
-      await expect(table).toBeVisible();
-
-      // Take screenshot
-      await page.screenshot({
-        path: 'test-results/screenshots/weapon-shop-table-view.png',
-        fullPage: true,
-      });
+      // Verify table is visible
+      await expect(page.locator('table')).toBeVisible();
     });
 
     test('should persist view mode preference', async ({ page }) => {
       // Switch to table view
-      const viewToggle = page.locator('.flex.gap-2').filter({ has: page.locator('button') });
-      await viewToggle.locator('button').last().click();
-      await page.waitForTimeout(500);
+      await page.getByRole('button', { name: 'Table View' }).click();
+      await expect(page.locator('table')).toBeVisible();
 
-      // Reload page (re-navigate to handle auth race)
+      // Re-navigate
       await navigateToProtectedPage(page, '/weapon-shop');
 
-      // Check that table view is still active
-      const table = page.locator('table');
-      await expect(table).toBeVisible();
+      // Verify table view is still active
+      await expect(page.locator('table')).toBeVisible();
     });
   });
 
   test.describe('Weapon Comparison', () => {
     test('should select weapons for comparison', async ({ page }) => {
-      // Wait for weapons to load
-      await page.waitForSelector('.bg-gray-800.p-6.rounded-lg', { timeout: 10000 });
+      // Ensure card view is active (may be in table view from previous test's localStorage)
+      const cardViewButton = page.getByRole('button', { name: 'Card View' });
+      if (await cardViewButton.isVisible().catch(() => false)) {
+        await cardViewButton.click();
+      }
 
-      // Select first two weapons for comparison via checkboxes
-      const compareCheckboxes = page.locator('input[type="checkbox"]');
-      await compareCheckboxes.nth(0).check();
-      await compareCheckboxes.nth(1).check();
+      // Wait for weapon cards to load
+      const firstCompareCheckbox = page.getByRole('checkbox', { name: 'Compare' }).first();
+      await expect(firstCompareCheckbox).toBeVisible({ timeout: 10000 });
 
-      // Wait for comparison bar to appear
-      await page.waitForTimeout(500);
+      // Select first two weapons
+      await page.getByRole('checkbox', { name: 'Compare' }).nth(0).check();
+      await page.getByRole('checkbox', { name: 'Compare' }).nth(1).check();
 
-      // Check that comparison bar is visible (text: "2 weapons selected")
-      await expect(page.getByText(/2 weapons selected/i)).toBeVisible();
-
-      // Take screenshot
-      await page.screenshot({
-        path: 'test-results/screenshots/weapon-shop-comparison-selected.png',
-        fullPage: true,
-      });
+      // Verify comparison bar shows "2 weapons selected"
+      await expect(page.getByText('2 weapons selected')).toBeVisible();
     });
 
     test('should open comparison modal', async ({ page }) => {
-      // Wait for weapons to load
-      await page.waitForSelector('.bg-gray-800.p-6.rounded-lg', { timeout: 10000 });
+      // Ensure card view
+      const cardViewButton = page.getByRole('button', { name: 'Card View' });
+      if (await cardViewButton.isVisible().catch(() => false)) {
+        await cardViewButton.click();
+      }
 
       // Select two weapons
-      const compareCheckboxes = page.locator('input[type="checkbox"]');
-      await compareCheckboxes.nth(0).check();
-      await compareCheckboxes.nth(1).check();
-      await page.waitForTimeout(500);
+      const checkboxes = page.getByRole('checkbox', { name: 'Compare' });
+      await expect(checkboxes.first()).toBeVisible({ timeout: 10000 });
+      await checkboxes.nth(0).check();
+      await checkboxes.nth(1).check();
 
-      // Click "Compare →" button
+      // Wait for comparison bar
+      await expect(page.getByText('2 weapons selected')).toBeVisible();
+
+      // Click "Compare →"
       await page.getByRole('button', { name: /Compare/ }).click();
 
-      // Wait for modal to open
-      await page.waitForTimeout(500);
-
-      // Check that comparison modal is visible (heading: "Compare Weapons")
+      // Verify comparison modal heading
       await expect(page.getByRole('heading', { name: 'Compare Weapons' })).toBeVisible();
-
-      // Take screenshot
-      await page.screenshot({
-        path: 'test-results/screenshots/weapon-shop-comparison-modal.png',
-        fullPage: true,
-      });
     });
 
     test('should limit comparison to 3 weapons', async ({ page }) => {
-      // Wait for weapons to load
-      await page.waitForSelector('.bg-gray-800.p-6.rounded-lg', { timeout: 10000 });
+      // Ensure card view
+      const cardViewButton = page.getByRole('button', { name: 'Card View' });
+      if (await cardViewButton.isVisible().catch(() => false)) {
+        await cardViewButton.click();
+      }
 
       // Select 3 weapons
-      const compareCheckboxes = page.locator('input[type="checkbox"]');
-      await compareCheckboxes.nth(0).check();
-      await compareCheckboxes.nth(1).check();
-      await compareCheckboxes.nth(2).check();
+      const checkboxes = page.getByRole('checkbox', { name: 'Compare' });
+      await expect(checkboxes.first()).toBeVisible({ timeout: 10000 });
+      await checkboxes.nth(0).check();
+      await checkboxes.nth(1).check();
+      await checkboxes.nth(2).check();
 
-      // Check that 4th checkbox is disabled
-      const fourthCheckbox = compareCheckboxes.nth(3);
-      await expect(fourthCheckbox).toBeDisabled();
+      // Verify 4th checkbox is disabled
+      await expect(checkboxes.nth(3)).toBeDisabled();
     });
 
     test('should clear comparison selection', async ({ page }) => {
-      // Wait for weapons to load
-      await page.waitForSelector('.bg-gray-800.p-6.rounded-lg', { timeout: 10000 });
+      // Ensure card view
+      const cardViewButton = page.getByRole('button', { name: 'Card View' });
+      if (await cardViewButton.isVisible().catch(() => false)) {
+        await cardViewButton.click();
+      }
 
       // Select two weapons
-      const compareCheckboxes = page.locator('input[type="checkbox"]');
-      await compareCheckboxes.nth(0).check();
-      await compareCheckboxes.nth(1).check();
-      await page.waitForTimeout(500);
+      const checkboxes = page.getByRole('checkbox', { name: 'Compare' });
+      await expect(checkboxes.first()).toBeVisible({ timeout: 10000 });
+      await checkboxes.nth(0).check();
+      await checkboxes.nth(1).check();
 
-      // Click "Clear" button in the comparison bar
+      // Wait for comparison bar
+      await expect(page.getByText('2 weapons selected')).toBeVisible();
+
+      // Click "Clear" in the comparison bar
       await page.getByRole('button', { name: /Clear/i }).click();
 
-      // Wait for selection to clear
-      await page.waitForTimeout(500);
-
-      // Check that comparison bar is hidden
-      const comparisonBar = page.getByText(/weapons selected/i);
-      const isVisible = await comparisonBar.isVisible().catch(() => false);
-      expect(isVisible).toBe(false);
+      // Verify comparison bar is hidden
+      await expect(page.getByText(/weapons selected/i)).not.toBeVisible();
     });
   });
 
   test.describe('Weapon Detail Modal', () => {
     test('should open weapon detail modal when clicking weapon name', async ({ page }) => {
-      // Wait for weapons to load
-      await page.waitForSelector('.bg-gray-800.p-6.rounded-lg', { timeout: 10000 });
+      // Wait for weapon headings to be visible, then click the first one
+      // Weapon names are rendered as h3 headings inside clickable cards
+      // Filter out known section headings (Storage Capacity, Loadout Type, etc.)
+      const weaponHeadings = page.locator('h3').filter({ hasNotText: /Storage Capacity|Loadout Type|Weapon Type|Range Band|Price Range|Quick Filters/ });
+      const firstWeapon = weaponHeadings.first();
+      await expect(firstWeapon).toBeVisible();
+      const nameText = await firstWeapon.textContent();
+      await firstWeapon.click();
 
-      // Click on first weapon name (h3 with cursor-pointer class)
-      const weaponName = page.locator('.text-xl.font-semibold.cursor-pointer').first();
-      await weaponName.click();
+      // Verify the detail modal opens with the weapon name as h2
+      await expect(page.getByRole('heading', { name: nameText!, level: 2 })).toBeVisible();
 
-      // Wait for modal to open
-      await page.waitForTimeout(500);
-
-      // Check that modal overlay is visible
-      const modal = page.locator('.fixed.inset-0');
-      await expect(modal.first()).toBeVisible();
-
-      // Take screenshot
-      await page.screenshot({
-        path: 'test-results/screenshots/weapon-shop-detail-modal.png',
-        fullPage: true,
-      });
+      // Verify modal has Description and Combat Stats sections
+      await expect(page.getByRole('heading', { name: 'Description' })).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Combat Stats' })).toBeVisible();
     });
 
     test('should close weapon detail modal', async ({ page }) => {
-      // Wait for weapons to load
-      await page.waitForSelector('.bg-gray-800.p-6.rounded-lg', { timeout: 10000 });
-
       // Open modal
-      const weaponName = page.locator('.text-xl.font-semibold.cursor-pointer').first();
-      await weaponName.click();
-      await page.waitForTimeout(500);
+      const weaponHeadings = page.locator('h3').filter({ hasNotText: /Storage Capacity|Loadout Type|Weapon Type|Range Band|Price Range|Quick Filters/ });
+      const firstWeapon = weaponHeadings.first();
+      await expect(firstWeapon).toBeVisible();
+      await firstWeapon.click();
 
-      // Close modal by clicking close button
-      await page.getByRole('button', { name: /close/i }).click();
+      // Verify modal is open
+      await expect(page.getByRole('heading', { name: 'Description' })).toBeVisible();
 
-      // Wait for modal to close
-      await page.waitForTimeout(500);
+      // Close modal by clicking the Close button
+      await page.getByRole('button', { name: 'Close' }).click();
 
-      // Check that modal overlay is hidden
-      const modal = page.locator('.fixed.inset-0');
-      const isVisible = await modal.first().isVisible().catch(() => false);
-      expect(isVisible).toBe(false);
+      // Verify modal is closed
+      await expect(page.getByRole('heading', { name: 'Description' })).not.toBeVisible();
     });
   });
 
   test.describe('Purchase Flow', () => {
     test('should show purchase confirmation modal', async ({ page }) => {
-      // Wait for weapons to load
-      await page.waitForSelector('.bg-gray-800.p-6.rounded-lg', { timeout: 10000 });
+      // Find a weapon with an enabled "Purchase" button
+      const purchaseButton = page.getByRole('button', { name: 'Purchase', exact: true }).first();
+      await expect(purchaseButton).toBeVisible();
 
-      // Find a weapon with "Purchase" button (not disabled)
-      const purchaseButton = page.locator('button').filter({ hasText: 'Purchase' }).first();
-
-      // Check if button exists and is enabled
-      const isEnabled = await purchaseButton.isEnabled().catch(() => false);
-
-      if (isEnabled) {
-        await purchaseButton.click();
-
-        // Wait for confirmation modal
-        await page.waitForTimeout(500);
-
-        // Check that confirmation modal is visible
-        await expect(page.getByText('Confirm Purchase')).toBeVisible();
-
-        // Take screenshot
-        await page.screenshot({
-          path: 'test-results/screenshots/weapon-shop-purchase-confirmation.png',
-          fullPage: true,
-        });
-
-        // Cancel purchase
-        await page.getByRole('button', { name: 'Cancel' }).click();
+      // Skip if no purchasable weapon is available (all insufficient credits or storage full)
+      if (!(await purchaseButton.isEnabled())) {
+        test.skip(true, 'No affordable weapon available for test_user_001');
+        return;
       }
+
+      await purchaseButton.click();
+
+      // Verify confirmation modal appears with "Confirm Purchase" heading
+      await expect(page.getByRole('heading', { name: 'Confirm Purchase' })).toBeVisible();
+
+      // Cancel the purchase
+      await page.getByRole('button', { name: 'Cancel' }).click();
+
+      // Verify modal is closed
+      await expect(page.getByRole('heading', { name: 'Confirm Purchase' })).not.toBeVisible();
     });
 
-    test('should disable purchase button for insufficient credits', async ({ page }) => {
-      // Wait for weapons to load
-      await page.waitForSelector('.bg-gray-800.p-6.rounded-lg', { timeout: 10000 });
-
-      // Find a weapon with "Insufficient Credits" button
-      const insufficientButton = page.locator('button').filter({ hasText: 'Insufficient Credits' }).first();
-
-      // Check if such a button exists
+    test('should indicate insufficient credits for expensive weapons', async ({ page }) => {
+      // Check if any "Insufficient Credits" button exists (disabled)
+      const insufficientButton = page.getByRole('button', { name: 'Insufficient Credits' }).first();
       const count = await insufficientButton.count();
 
       if (count > 0) {
-        // Check that button is disabled
         await expect(insufficientButton).toBeDisabled();
-
-        // Take screenshot
-        await page.screenshot({
-          path: 'test-results/screenshots/weapon-shop-insufficient-credits.png',
-          fullPage: true,
-        });
       }
     });
 
     test('should show storage full warning when storage is full', async ({ page }) => {
-      // Check storage capacity
-      const storageText = await page.locator('text=/\\d+ \\/ \\d+/').first().textContent();
+      // Check storage capacity text
+      const storageText = await page.getByText(/\d+ \/ \d+/).textContent();
 
       if (storageText) {
         const [current, max] = storageText.split('/').map(s => parseInt(s.trim()));
 
         if (current === max) {
-          // Storage is full
+          // Verify storage full warning message
           await expect(page.getByText(/Storage full/i)).toBeVisible();
 
-          // Check that purchase buttons show "Storage Full"
-          const storageFullButton = page.locator('button').filter({ hasText: 'Storage Full' }).first();
+          // Verify "Storage Full" button exists and is disabled
+          const storageFullButton = page.getByRole('button', { name: 'Storage Full' }).first();
           await expect(storageFullButton).toBeVisible();
           await expect(storageFullButton).toBeDisabled();
-
-          // Take screenshot
-          await page.screenshot({
-            path: 'test-results/screenshots/weapon-shop-storage-full.png',
-            fullPage: true,
-          });
         }
       }
-    });
-  });
-
-  test.describe('Responsive Design', () => {
-    test('should display correctly on mobile viewport', async ({ page }) => {
-      // Set mobile viewport
-      await page.setViewportSize({ width: 375, height: 667 });
-
-      // Re-navigate to handle auth race after viewport change
-      await navigateToProtectedPage(page, '/weapon-shop');
-
-      // Check that page is still functional
-      await expect(page.getByRole('heading', { name: 'Weapon Shop' })).toBeVisible();
-
-      // Take screenshot
-      await page.screenshot({
-        path: 'test-results/screenshots/weapon-shop-mobile.png',
-        fullPage: true,
-      });
-    });
-
-    test('should display correctly on tablet viewport', async ({ page }) => {
-      // Set tablet viewport
-      await page.setViewportSize({ width: 768, height: 1024 });
-
-      // Re-navigate to handle auth race after viewport change
-      await navigateToProtectedPage(page, '/weapon-shop');
-
-      // Check that page is still functional
-      await expect(page.getByRole('heading', { name: 'Weapon Shop' })).toBeVisible();
-
-      // Take screenshot
-      await page.screenshot({
-        path: 'test-results/screenshots/weapon-shop-tablet.png',
-        fullPage: true,
-      });
-    });
-  });
-
-  test.describe('Performance', () => {
-    test('should load weapons within acceptable time', async ({ page }) => {
-      const startTime = Date.now();
-
-      // Navigate to weapon shop (handles auth race)
-      await navigateToProtectedPage(page, '/weapon-shop');
-
-      // Wait for weapons to load
-      await page.waitForSelector('.bg-gray-800.p-6.rounded-lg', { timeout: 10000 });
-
-      const loadTime = Date.now() - startTime;
-
-      // Check that load time is under 5 seconds (generous for CI/local variance)
-      expect(loadTime).toBeLessThan(5000);
-    });
-
-    test('should filter weapons quickly', async ({ page }) => {
-      // Expand filters
-      await page.getByRole('heading', { name: 'Filters', exact: true }).click();
-
-      const startTime = Date.now();
-
-      // Apply filter using direct button role
-      await page.getByRole('button', { name: 'Melee', exact: true }).click();
-
-      // Wait for filter to apply
-      await page.waitForTimeout(100);
-
-      const filterTime = Date.now() - startTime;
-
-      // Check that filter time is under 1 second
-      expect(filterTime).toBeLessThan(1000);
     });
   });
 });

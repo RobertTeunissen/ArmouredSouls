@@ -15,121 +15,59 @@ test.describe('Dashboard Page', () => {
   });
 
   test('should display dashboard with user profile', async ({ page }) => {
-    // Check main dashboard elements - actual implementation uses "Command Center"
+    // Check main dashboard heading
     await expect(page.getByRole('heading', { name: 'Command Center' })).toBeVisible();
+    // Check stable name is displayed (format: "{stableName}'s Stable")
     await expect(page.getByText(/Stable$/)).toBeVisible();
-    
-    // Take screenshot of dashboard profile section
-    await page.screenshot({ 
-      path: 'test-results/screenshots/dashboard-profile.png',
-      fullPage: true 
-    });
   });
 
   test('should display credits balance', async ({ page }) => {
-    // Check financial overview section exists
-    await expect(page.getByText('Financial Overview')).toBeVisible();
-    
-    // Check that credits amount is visible (should start with ₡ symbol)
-    const creditsElement = page.locator('text=/₡[0-9,]+/');
+    // Check Financial Overview section heading exists
+    await expect(page.getByRole('heading', { name: 'Financial Overview' })).toBeVisible();
+
+    // Check that a credits amount is visible (₡ symbol followed by digits)
+    await expect(page.getByText('Current Balance')).toBeVisible();
+    const creditsElement = page.getByText(/₡[\d,]+/);
     await expect(creditsElement.first()).toBeVisible();
-    
-    // Take screenshot of credits section
-    await page.screenshot({ 
-      path: 'test-results/screenshots/dashboard-credits.png',
-      fullPage: true 
-    });
   });
 
   test('should display navigation menu', async ({ page }) => {
-    // Check navigation elements are present (they're buttons, not links)
+    // Check the Dashboard nav button is present
     await expect(page.getByRole('button', { name: 'Dashboard', exact: true })).toBeVisible();
-    
-    // Check dropdown menus exist
-    await expect(page.getByText('Robots ▾')).toBeVisible();
-    await expect(page.getByText('Battle ▾')).toBeVisible();
-    await expect(page.getByText('Stable ▾')).toBeVisible();
-    
-    // Take screenshot showing navigation
-    await page.screenshot({ 
-      path: 'test-results/screenshots/dashboard-navigation.png',
-      fullPage: true 
-    });
+
+    // Check dropdown menu buttons exist (rendered as "{label} ▾")
+    await expect(page.getByRole('button', { name: 'Robots ▾' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Battle ▾' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Stable ▾' })).toBeVisible();
   });
 
+  test('should display robots section with robot cards', async ({ page }) => {
+    // The seeded test_user_001 has robots — assert "My Robots" heading is visible
+    await expect(page.getByRole('heading', { name: 'My Robots' })).toBeVisible();
 
+    // Robot cards have role="button" and contain ELO info
+    const robotCards = page.getByRole('button').filter({ hasText: 'ELO:' });
+    await expect(robotCards.first()).toBeVisible();
 
-  test('should display robots table if user has robots', async ({ page }) => {
-    // Wait for page to fully load
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(1000);
-    
-    // Check if "My Robots" section exists
-    const myRobotsHeading = page.getByRole('heading', { name: 'My Robots' });
-    const welcomeHeading = page.getByRole('heading', { name: 'Welcome to Your Stable!' });
-    
-    // Check which section is visible
-    const hasRobots = await myRobotsHeading.isVisible().catch(() => false);
-    const noRobots = await welcomeHeading.isVisible().catch(() => false);
-    
-    if (hasRobots) {
-      // If user has robots, verify robot cards are displayed
-      // RobotDashboardCard uses .bg-surface class and contains ELO, HP, League info
-      const robotCards = page.locator('.bg-surface.border.border-gray-700.rounded-lg');
-      
-      // Wait for at least one robot card to be visible
-      await expect(robotCards.first()).toBeVisible({ timeout: 3000 });
-      
-      // Verify the card contains expected robot information
-      await expect(page.locator('text=/ELO:/i').first()).toBeVisible();
-      
-      // Take screenshot with robots
-      await page.screenshot({ 
-        path: 'test-results/screenshots/dashboard-with-robots.png',
-        fullPage: true 
-      });
-    } else if (noRobots) {
-      // If no robots, verify empty state message
-      await expect(page.getByText(/Welcome to Your Stable/i)).toBeVisible();
-      await expect(page.getByRole('button', { name: 'Get Started' })).toBeVisible();
-      
-      // Take screenshot of empty state
-      await page.screenshot({ 
-        path: 'test-results/screenshots/dashboard-empty-stable.png',
-        fullPage: true 
-      });
-    } else {
-      // Neither section found - just verify page loaded
-      await expect(page.getByRole('heading', { name: 'Command Center' })).toBeVisible();
-    }
+    // Verify robot card contains expected information fields
+    await expect(page.getByText('ELO:').first()).toBeVisible();
+    await expect(page.getByText('League:').first()).toBeVisible();
   });
 
   test('should be responsive on tablet', async ({ page }) => {
     // Set viewport to tablet size
     await page.setViewportSize({ width: 768, height: 1024 });
-    
+
     // Verify main elements are still visible
     await expect(page.getByRole('heading', { name: 'Command Center' })).toBeVisible();
-    await expect(page.getByText('Financial Overview')).toBeVisible();
-    
-    // Take screenshot on tablet viewport
-    await page.screenshot({ 
-      path: 'test-results/screenshots/dashboard-tablet.png',
-      fullPage: true 
-    });
+    await expect(page.getByRole('heading', { name: 'Financial Overview' })).toBeVisible();
   });
 
   test('should be responsive on mobile', async ({ page }) => {
     // Set viewport to mobile size
     await page.setViewportSize({ width: 375, height: 667 });
-    
-    // Verify main elements are still visible
+
+    // Verify main heading is still visible
     await expect(page.getByRole('heading', { name: 'Command Center' })).toBeVisible();
-    
-    // Take screenshot on mobile viewport
-    await page.screenshot({ 
-      path: 'test-results/screenshots/dashboard-mobile.png',
-      fullPage: true 
-    });
   });
 });

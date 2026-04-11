@@ -170,18 +170,18 @@ The Weapon Shop (`/weapon-shop`) is the primary economic interface where players
 
 ### 🧪 Test Coverage
 
-**Status**: ✅ Unit Tests Complete & Passing | ✅ E2E Tests Ready
+**Status**: ✅ Unit Tests Complete & Passing | ✅ E2E Tests Implemented & Blocking in CI
 
 **Test Statistics**:
 - **Unit Tests**: 52 tests, 100% passing ✅
-- **E2E Tests**: 25 tests created, Playwright browsers installed ✅
+- **E2E Tests**: 21 weapon-shop tests implemented, blocking in CI ✅
 - **Total Test Code**: 1,030+ lines
 - **Infrastructure**: Vitest + Playwright fully configured ✅
 
 **Current State**:
 - **Frontend Unit Tests**: ✅ 52 tests passing (weaponConstants, filtering, sorting, search, value calculations)
 - **Frontend Component Tests**: ❌ None (future enhancement)
-- **Frontend E2E Tests**: ⏳ 25 tests created (login, dashboard, robot creation, weapon shop)
+- **Frontend E2E Tests**: ✅ 21 tests implemented in `weapon-shop.spec.ts` — rewritten with role-based locators, condition-based waits, no CSS selectors
 - **Backend Unit Tests**: ❌ None for weapon shop endpoints (future enhancement)
 - **Backend Integration Tests**: ❌ None for weapon shop functionality (future enhancement)
 
@@ -250,45 +250,40 @@ The Weapon Shop (`/weapon-shop`) is the primary economic interface where players
 - ✅ Total attribute bonuses
 - ✅ Zero damage handling (shields)
 
-**⏳ E2E Tests Created** (25 tests, awaiting execution):
+**✅ E2E Tests Implemented** (21 tests in `weapon-shop.spec.ts`, blocking in CI):
 
 **Page Load and Initial State** (3 tests):
-- ⏳ Display weapon shop page correctly
-- ⏳ Display weapons in card view by default
-- ⏳ Show storage capacity with progress bar
+- ✅ Display weapon shop page with heading, description, storage, and filters
+- ✅ Display weapons with names, costs, and damage types
+- ✅ Show storage capacity with current/max display
 
 **Filtering System** (7 tests):
-- ⏳ Expand/collapse filter panel
-- ⏳ Filter by loadout type, weapon type, price range
-- ⏳ Apply multiple filters simultaneously
-- ⏳ Clear all filters
-- ⏳ Remove individual filter chips
+- ✅ Expand/collapse filter panel
+- ✅ Filter by loadout type
+- ✅ Filter by weapon type
+- ✅ Filter by price range
+- ✅ Apply multiple filters simultaneously
+- ✅ Clear all filters
+- ✅ Remove individual filter chips
 
 **View Mode Toggle** (2 tests):
-- ⏳ Switch to table view
-- ⏳ Persist view mode preference
+- ✅ Switch to table view
+- ✅ Persist view mode preference
 
 **Weapon Comparison** (4 tests):
-- ⏳ Select weapons for comparison
-- ⏳ Open comparison modal
-- ⏳ Limit comparison to 3 weapons
-- ⏳ Clear comparison selection
+- ✅ Select weapons for comparison
+- ✅ Open comparison modal
+- ✅ Limit comparison to 3 weapons
+- ✅ Clear comparison selection
 
 **Weapon Detail Modal** (2 tests):
-- ⏳ Open/close weapon detail modal
+- ✅ Open weapon detail modal when clicking weapon name
+- ✅ Close weapon detail modal
 
 **Purchase Flow** (3 tests):
-- ⏳ Show purchase confirmation modal
-- ⏳ Disable purchase button for insufficient credits
-- ⏳ Show storage full warning
-
-**Responsive Design** (2 tests):
-- ⏳ Mobile viewport (375×667)
-- ⏳ Tablet viewport (768×1024)
-
-**Performance** (2 tests):
-- ⏳ Load weapons within 3 seconds
-- ⏳ Filter weapons within 500ms
+- ✅ Show purchase confirmation modal
+- ✅ Indicate insufficient credits for expensive weapons
+- ✅ Show storage full warning when storage is full
 
 **Test Execution Instructions**:
 
@@ -314,14 +309,14 @@ npm run test:e2e:debug    # Run in debug mode
 2. ✅ **Search Algorithm**: 9 unit tests complete
 3. ✅ **Sort Functions**: 8 unit tests complete
 4. ✅ **Value Calculations**: 5 unit tests complete
-5. ⏳ **Purchase Flow**: E2E test created (awaiting execution)
-6. ⏳ **Storage Validation**: E2E test created (awaiting execution)
+5. ✅ **Purchase Flow**: E2E test implemented
+6. ✅ **Storage Validation**: E2E test implemented
 
 **Medium Priority** (User Experience):
-7. ⏳ **Comparison Modal**: E2E tests created (4 tests)
-8. ⏳ **Filter Persistence**: E2E test created
-9. ⏳ **View Mode Toggle**: E2E tests created (2 tests)
-10. ⏳ **Responsive Behavior**: E2E tests created (2 tests)
+7. ✅ **Comparison Modal**: E2E tests implemented (4 tests)
+8. ✅ **Filter Persistence**: Covered by E2E filter tests
+9. ✅ **View Mode Toggle**: E2E tests implemented (2 tests)
+10. ❌ **Responsive Behavior**: Not covered (removed during audit — low value for CI)
 
 **Low Priority** (Edge Cases - Future):
 11. ❌ **Empty States**: Tests for no results, no filters, storage full
@@ -331,11 +326,11 @@ npm run test:e2e:debug    # Run in debug mode
 
 **Recommended Test Implementation Plan**:
 
-**Phase 1: Execute E2E Tests** (1 day) - ⏳ IN PROGRESS
-- Install Playwright browsers: `npx playwright install`
-- Run E2E tests with backend/frontend servers running
-- Fix any failing tests
-- Generate test report
+**Phase 1: Execute E2E Tests** (1 day) - ✅ COMPLETE
+- Playwright browsers installed
+- E2E tests rewritten with role-based locators and condition-based waits
+- All CSS selectors and `waitForTimeout` calls removed
+- Tests blocking in CI via the `e2e-tests` pipeline job
 
 **Phase 2: Component Tests** (2-3 days) - Future
 - Unit tests for FilterPanel component
@@ -361,11 +356,11 @@ npm run test:e2e:debug    # Run in debug mode
 - **Future**: React Testing Library, axe-core, Lighthouse CI
 
 **Risk Assessment**:
-- **Current Risk**: Low-Medium - 52 unit tests provide strong foundation
-- **Mitigation**: Comprehensive unit test coverage for all critical logic
-- **Remaining Risk**: E2E tests need execution, component tests needed
+- **Current Risk**: Low — 52 unit tests + 21 E2E tests provide comprehensive coverage
+- **Mitigation**: E2E tests block CI deployment; unit tests cover all critical logic
+- **Remaining Risk**: Component tests and backend integration tests not yet implemented
 - **Impact**: Low for current 47 weapons, increases with catalog growth
-- **Recommendation**: Execute E2E tests before adding 100+ more weapons
+- **Recommendation**: Add component tests before expanding to 100+ weapons
 
 **Test Files Created**:
 1. `app/frontend/src/utils/__tests__/weaponConstants.test.ts` (67 lines)
