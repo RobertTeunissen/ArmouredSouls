@@ -8,7 +8,7 @@ NSFW content is a hard block (HTTP 422, `IMAGE_MODERATION_FAILED`) with full aud
 
 Before uploading, the frontend renders a client-side 512×512 center-crop preview (using canvas or CSS `object-fit: cover` on a square container) so the player can see exactly what the server will produce and decide if the crop looks good before submitting. This prevents "trash" uploads — every image stored on disk is one the user intentionally confirmed.
 
-Orphaned images (files on disk not referenced by any robot's `imageUrl`) are cleaned up by a periodic cleanup job that scans `uploads/user-robots/` and cross-references against `Robot.imageUrl` in the database. The job can run daily or on-demand via an admin endpoint. Additionally, when a robot is deleted or switches from a custom image to a preset, the old file is eagerly removed from disk.
+Orphaned images (files on disk not referenced by any robot's `imageUrl`) are cleaned up as a step in the daily settlement cycle (`adminCycleService.executeBulkCycles`, Step 15) and on-demand via an admin endpoint. The cleanup job scans `uploads/user-robots/` and cross-references against `Robot.imageUrl` in the database. Additionally, when a robot is deleted or switches from a custom image to a preset, the old file is eagerly removed from disk.
 
 Server-side file validation (magic bytes, dimensions), content moderation (fail-closed), server-side conversion to 512×512 WebP via `sharp`, and local filesystem storage under `uploads/user-robots/` with UUID-based non-guessable filenames. A frontend upload tab is added to the existing `RobotImageSelector` modal with mobile-responsive design. Uploaded images are served as static files by Caddy. Moderation rejections are dual-logged to both the persistent `AuditLog` database table (via EventLogger) and the in-memory `SecurityMonitor` for real-time admin dashboard visibility. An admin endpoint (`GET /api/admin/uploads`) provides paginated visibility into all uploaded images by querying existing AuditLog data. No moderation scores are exposed to clients.
 
@@ -26,7 +26,7 @@ Server-side file validation (magic bytes, dimensions), content moderation (fail-
 - **RobotImageSelector**: Existing React modal component for choosing a robot's image from preset assets; extended with a new "Upload Custom Image" tab with mobile-responsive layout and a crop preview confirmation step.
 - **Moderation_Threshold**: Configurable probability cutoff for each NSFW category (porn: 0.3, hentai: 0.3, sexy: 0.5) above which an image is hard-blocked.
 - **Robot_Likeness_Score**: A heuristic derived from nsfwjs scores — images that score very low on both "drawing" and "neutral" categories trigger a soft warning (HTTP 422 with `LOW_ROBOT_LIKENESS`). The user can override by re-uploading with `?acknowledgeRobotLikeness=true`.
-- **Orphan_Cleanup_Job**: A periodic backend job (daily or on-demand via admin endpoint) that scans `uploads/user-robots/` and cross-references files against `Robot.imageUrl` in the database, deleting any file not referenced by any robot.
+- **Orphan_Cleanup_Job**: A cleanup step integrated into the daily settlement cycle (Step 15 in `adminCycleService.executeBulkCycles`) that scans `uploads/user-robots/` and cross-references files against `Robot.imageUrl` in the database, deleting any file not referenced by any robot. Also executable on-demand via admin endpoint.
 - **Admin_Uploads_Handler**: Express route handler at `GET /api/admin/uploads` that returns a paginated list of all uploaded images by querying `AuditLog` entries with event type `image_upload_success`. Supports filtering by userId and date range.
 - **Magic_Bytes**: The first bytes of a file that identify its true format, independent of the declared MIME type or file extension.
 - **Audit_Log**: Existing `AuditLog` database model used to record security-relevant events including moderation rejections and successful uploads.
@@ -44,7 +44,7 @@ This spec adds a new user-facing feature (custom robot images) while establishin
 6. **Dual audit trail for moderation**: Every rejection is logged to both the persistent `AuditLog` database (via EventLogger) for permanent history and the in-memory `SecurityMonitor` for real-time visibility in the admin Security dashboard. Robot-likeness overrides are also tracked.
 7. **Mobile-responsive upload UI**: The upload interface works on desktop and mobile browsers with touch-friendly file picker, responsive modal layout, camera roll access on iOS/Android, client-side crop preview before upload, and server-processed preview that scales on small screens.
 8. **Static file serving**: Caddy configuration for `/uploads/*` with cache headers and `X-Content-Type-Options: nosniff` establishes the pattern for serving user-uploaded content safely.
-9. **Orphaned image cleanup**: A periodic cleanup job scans `uploads/user-robots/` and cross-references against `Robot.imageUrl` in the database, deleting unreferenced files and logging results. Runnable daily or on-demand via admin endpoint.
+9. **Orphaned image cleanup**: A cleanup step integrated into the daily settlement cycle (Step 15) scans `uploads/user-robots/` and cross-references against `Robot.imageUrl` in the database, deleting unreferenced files and logging results via `eventLogger.logCycleStepComplete()`. Also runnable on-demand via admin endpoint.
 10. **Admin uploads visibility**: An admin endpoint (`GET /api/admin/uploads`) provides paginated, filterable visibility into all uploaded images by querying existing AuditLog data — no new database tables needed.
 
 ### Verification Criteria
@@ -224,7 +224,7 @@ This spec adds a new user-facing feature (custom robot images) while establishin
 
 ### Requirement 12: Orphaned Image Cleanup Job
 
-**User Story:** As a system operator, I want a periodic cleanup job that removes uploaded image files no longer referenced by any robot, so that disk space is not wasted on orphaned files that slipped past eager cleanup.
+**User Story:** As a system operator, I want orphaned uploaded images cleaned up automatically as part of the daily settlement cycle, so that disk space is not wasted on files no longer referenced by any robot.
 
 #### Acceptance Criteria
 
@@ -232,7 +232,7 @@ This spec adds a new user-facing feature (custom robot images) while establishin
 2. WHEN a file on disk is not referenced by any robot's `imageUrl`, THE Orphan_Cleanup_Job SHALL delete that file.
 3. THE Orphan_Cleanup_Job SHALL log cleanup results including the number of files deleted and total disk space reclaimed.
 4. THE Orphan_Cleanup_Job SHALL be executable on-demand via an admin endpoint (`POST /api/admin/uploads/cleanup`).
-5. THE Orphan_Cleanup_Job SHALL be schedulable to run daily via a cron-style timer (e.g., `node-cron` or PM2 cron).
+5. THE Orphan_Cleanup_Job SHALL run as Step 15 in the daily settlement cycle (`adminCycleService.executeBulkCycles`), after the cycle snapshot step, using the existing `eventLogger.logCycleStepComplete()` pattern to log step duration and results.
 6. WHEN the Orphan_Cleanup_Job completes, IT SHALL return a summary with `{ filesDeleted: number, bytesReclaimed: number, errors: string[] }`.
 
 ### Requirement 13: Admin Uploads View
