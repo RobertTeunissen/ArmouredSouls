@@ -108,9 +108,11 @@ test.describe('Critical User Journey', () => {
     await expect(purchaseButton).toBeVisible({ timeout: 15000 });
     await purchaseButton.click();
 
-    // Confirmation modal appears — "Confirm Purchase" with a "Purchase" confirm button
+    // Confirmation modal appears — click the confirm button inside the modal dialog
     await expect(page.getByText('Confirm Purchase')).toBeVisible({ timeout: 5000 });
-    await page.getByRole('button', { name: 'Purchase' }).click();
+    // The modal has its own "Purchase" button — scope to the dialog
+    const confirmDialog = page.getByRole('dialog').or(page.locator('[role="dialog"]')).or(page.locator('.fixed.inset-0'));
+    await confirmDialog.getByRole('button', { name: 'Purchase' }).click();
 
     // Wait for success modal — "Purchase Successful"
     await expect(page.getByText('Purchase Successful')).toBeVisible({ timeout: 15000 });

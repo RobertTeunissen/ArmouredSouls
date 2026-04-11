@@ -158,7 +158,7 @@ test.describe('Financial Flow', () => {
     await expect(healthIndicator.first()).toBeVisible();
 
     // Verify the Current Balance is displayed
-    await expect(page.getByText(/Current Balance/i)).toBeVisible();
+    await expect(page.getByText('Current Balance', { exact: true })).toBeVisible();
 
     // Verify the balance amount is shown (₡ followed by a number)
     await expect(page.getByText(/₡[\d,]+/).first()).toBeVisible();
