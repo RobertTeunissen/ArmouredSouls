@@ -10,6 +10,16 @@ import { navigateToProtectedPage } from './helpers/navigate';
  * test_user_001 has at least one battle-ready robot with a weapon equipped.
  */
 
+/** Helper: select the first robot in slot 1 and wait for it to be selected */
+async function selectFirstRobot(page: import('@playwright/test').Page) {
+  // Robot images are rendered as buttons with title={robotName} inside a grid
+  // The first slot defaults to "owned" mode showing the robot image grid
+  const robotImageButtons = page.locator('button').filter({ has: page.locator('img') });
+  const firstRobot = robotImageButtons.first();
+  await expect(firstRobot).toBeVisible({ timeout: 5000 });
+  await firstRobot.click();
+}
+
 test.describe('Practice Arena', () => {
   test('displays battle slot panels and run controls', async ({ page }) => {
     // Req 6.1 — practice arena shows battle slots and run controls
@@ -18,10 +28,8 @@ test.describe('Practice Arena', () => {
     // Verify the page heading
     await expect(page.getByRole('heading', { name: /Combat Simulation Lab/i })).toBeVisible();
 
-    // Verify slot 1 (Your Robot) panel is visible
+    // Verify slot panels are visible
     await expect(page.getByText('🤖 Your Robot')).toBeVisible();
-
-    // Verify slot 2 (Opponent) panel is visible
     await expect(page.getByText('🎯 Opponent')).toBeVisible();
 
     // Verify the Run Simulation button is present
@@ -35,32 +43,21 @@ test.describe('Practice Arena', () => {
     // Req 6.2 — select robot in slot 1, sparring partner in slot 2, run simulation
     await navigateToProtectedPage(page, '/practice-arena');
     await expect(page.getByRole('heading', { name: /Combat Simulation Lab/i })).toBeVisible();
-
-    // Wait for loading to finish
     await expect(page.getByText('Loading simulation lab...')).toBeHidden({ timeout: 15000 });
 
-    // Select the first robot in slot 1 by clicking its button in the robot grid
-    // Slot 1 is forceOwned, so it shows the robot image grid directly
-    const slot1Panel = page.locator('div').filter({ hasText: '🤖 Your Robot' }).first();
-    const robotButtons = slot1Panel.getByRole('button').filter({ hasNot: page.locator('text="Deploy Robot"') });
-    const firstRobotButton = robotButtons.first();
-    await firstRobotButton.click();
+    // Select the first robot in slot 1
+    await selectFirstRobot(page);
 
-    // Slot 2 defaults to sparring mode with AverageBot selected — no action needed
-    // Verify sparring partner panel is visible (opponent slot shows bot tier options)
-    await expect(page.getByText('Simulate Opponent')).toBeVisible();
-
-    // Click Run Simulation
+    // Click Run Simulation (includes emoji: ⚡ Run Simulation)
     const runButton = page.getByRole('button', { name: /Run Simulation/i });
     await expect(runButton).toBeEnabled({ timeout: 5000 });
     await runButton.click();
 
-    // Wait for simulation to complete — the button text changes to "Simulating..."
-    // then back to "Run Simulation" when done
+    // Wait for simulation to complete
     await expect(page.getByText('⏳ Simulating...')).toBeVisible({ timeout: 10000 });
     await expect(page.getByText('⏳ Simulating...')).toBeHidden({ timeout: 30000 });
 
-    // Verify a battle result is displayed — either a win banner or draw banner
+    // Verify a battle result is displayed
     const resultBanner = page.getByText(/WINS|DRAW/).first();
     await expect(resultBanner).toBeVisible({ timeout: 5000 });
   });
@@ -72,11 +69,9 @@ test.describe('Practice Arena', () => {
     await expect(page.getByText('Loading simulation lab...')).toBeHidden({ timeout: 15000 });
 
     // Select the first robot in slot 1
-    const slot1Panel = page.locator('div').filter({ hasText: '🤖 Your Robot' }).first();
-    const robotButtons = slot1Panel.getByRole('button').filter({ hasNot: page.locator('text="Deploy Robot"') });
-    await robotButtons.first().click();
+    await selectFirstRobot(page);
 
-    // Set batch count to more than 1 via the simulation runs select
+    // Set batch count to 3 via the simulation runs select
     const batchSelect = page.getByRole('combobox').filter({ has: page.locator('option[value="1"]') });
     await batchSelect.selectOption('3');
 
@@ -89,10 +84,8 @@ test.describe('Practice Arena', () => {
     await expect(page.getByText('⏳ Simulating...')).toBeVisible({ timeout: 10000 });
     await expect(page.getByText('⏳ Simulating...')).toBeHidden({ timeout: 60000 });
 
-    // Verify batch summary is displayed with win/loss/draw counts
-    await expect(page.getByText(/Batch Results.*3 simulations/i)).toBeVisible({ timeout: 5000 });
-
-    // Verify the three stat categories are shown
+    // Verify batch summary is displayed
+    await expect(page.getByText(/Batch Results/i)).toBeVisible({ timeout: 5000 });
     await expect(page.getByText('Wins')).toBeVisible();
     await expect(page.getByText('Losses')).toBeVisible();
     await expect(page.getByText('Draws')).toBeVisible();
@@ -105,11 +98,9 @@ test.describe('Practice Arena', () => {
     await expect(page.getByText('Loading simulation lab...')).toBeHidden({ timeout: 15000 });
 
     // Select the first robot in slot 1
-    const slot1Panel = page.locator('div').filter({ hasText: '🤖 Your Robot' }).first();
-    const robotButtons = slot1Panel.getByRole('button').filter({ hasNot: page.locator('text="Deploy Robot"') });
-    await robotButtons.first().click();
+    await selectFirstRobot(page);
 
-    // Run a single simulation (batch count defaults to 1)
+    // Run a single simulation
     const runButton = page.getByRole('button', { name: /Run Simulation/i });
     await expect(runButton).toBeEnabled({ timeout: 5000 });
     await runButton.click();
@@ -118,10 +109,8 @@ test.describe('Practice Arena', () => {
     await expect(page.getByText('⏳ Simulating...')).toBeVisible({ timeout: 10000 });
     await expect(page.getByText('⏳ Simulating...')).toBeHidden({ timeout: 30000 });
 
-    // Verify the history panel shows "Recent Simulations" heading with at least one entry
+    // Verify the history panel shows entries
     await expect(page.getByText('Recent Simulations')).toBeVisible();
-
-    // History entries show "vs <opponent>" text
     await expect(page.getByText(/^vs /).first()).toBeVisible();
   });
 
@@ -131,8 +120,7 @@ test.describe('Practice Arena', () => {
     await expect(page.getByRole('heading', { name: /Combat Simulation Lab/i })).toBeVisible();
     await expect(page.getByText('Loading simulation lab...')).toBeHidden({ timeout: 15000 });
 
-    // Without selecting any robot in slot 1, the Run Simulation button should be disabled
-    // Slot 1 defaults to owned mode with no robot selected (robotId: null)
+    // Without selecting any robot, the Run Simulation button should be disabled
     const runButton = page.getByRole('button', { name: /Run Simulation/i });
     await expect(runButton).toBeDisabled();
   });

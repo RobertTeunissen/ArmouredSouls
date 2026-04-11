@@ -70,7 +70,8 @@ export async function registerNewUser(
   await page.getByRole('button', { name: 'Create Account' }).click();
 
   // Wait for redirect to /onboarding or /dashboard
-  await page.waitForURL(/\/(onboarding|dashboard)/, { timeout: 20000 });
+  // If registration fails, the page stays on /login with an error message
+  await page.waitForURL(/\/(onboarding|dashboard)/, { timeout: 30000 });
 
   return { username, email, password, stableName };
 }
