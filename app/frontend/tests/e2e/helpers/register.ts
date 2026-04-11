@@ -22,14 +22,14 @@ export interface RegisterResult {
 }
 
 /**
- * Generates a unique identifier with format: `e2e_{timestamp}_{randomSuffix}`
- * where randomSuffix is a 4-character hex string.
- * Used for usernames, emails, and stable names to prevent collisions.
+ * Generates a short unique identifier for test data.
+ * Format: `t{8-char hex}` (9 chars total, fits within 20-char username limit).
+ * Uses timestamp base-36 + random suffix for uniqueness across runs.
  */
 export function generateUniqueId(): string {
-  const timestamp = Date.now();
-  const randomSuffix = Math.random().toString(16).slice(2, 6);
-  return `e2e_${timestamp}_${randomSuffix}`;
+  const ts = Date.now().toString(36).slice(-6);
+  const rand = Math.random().toString(36).slice(2, 4);
+  return `t${ts}${rand}`;
 }
 
 /**
@@ -47,10 +47,11 @@ export async function registerNewUser(
 ): Promise<RegisterResult> {
   const uniqueId = generateUniqueId();
 
+  // Username max 20 chars, stable name max 30 chars
   const username = options?.username ?? uniqueId;
   const email = options?.email ?? `${uniqueId}@test.armouredsouls.com`;
   const password = options?.password ?? 'TestPass123!';
-  const stableName = options?.stableName ?? `E2E Stable ${uniqueId}`;
+  const stableName = options?.stableName ?? `E2E ${uniqueId}`;
 
   // Navigate to the login page
   await page.goto('/login');

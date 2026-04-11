@@ -20,16 +20,12 @@ export async function loginAndGoToDashboard(
 
   // If redirected to onboarding, skip the tutorial to reach the dashboard
   if (page.url().includes('/onboarding')) {
-    // Click the "Skip Tutorial" button
-    await page.getByRole('button', { name: 'Skip Tutorial' }).click();
+    // Click the "Skip Tutorial" button (aria-label="Skip Tutorial")
+    await page.getByRole('button', { name: /Skip Tutorial/i }).click();
 
-    // Confirmation modal appears — click "Skip Anyway" or "Yes, Skip"
-    const skipAnyway = page.getByRole('button', { name: 'Skip Anyway' });
-    const yesSkip = page.getByRole('button', { name: 'Yes, Skip' });
-
-    // Wait for whichever confirmation button is visible
-    const skipConfirm = skipAnyway.or(yesSkip);
-    await skipConfirm.click({ timeout: 5000 });
+    // Confirmation modal — button has aria-label="Confirm skip tutorial", text "Skip Anyway" or "Yes, Skip"
+    const skipConfirm = page.getByRole('button', { name: /Confirm skip tutorial/i });
+    await skipConfirm.click({ timeout: 10000 });
 
     await page.waitForURL('**/dashboard', { timeout: 10000 });
   }

@@ -22,13 +22,16 @@ test.describe('Registration Flow', () => {
     expect(page.url()).toMatch(/\/(onboarding|dashboard)/);
 
     // Verify the credentials were unique (helper generates them)
-    expect(result.username).toMatch(/^e2e_/);
+    expect(result.username).toMatch(/^t[a-z0-9]+$/);
     expect(result.email).toContain('@test.armouredsouls.com');
   });
 
   test('duplicate username shows error message', async ({ page }) => {
     // Req 1.2, 1.6 — register a user, then try the same username again
     const first = await registerNewUser(page);
+
+    // Clear auth state so /login doesn't redirect to /dashboard
+    await page.evaluate(() => localStorage.clear());
 
     // Navigate back to /login for a second registration attempt
     await page.goto('/login');
@@ -38,7 +41,7 @@ test.describe('Registration Flow', () => {
     // Use the same username but a different email
     const uniqueId = generateUniqueId();
     await page.getByLabel('Username').fill(first.username);
-    await page.getByLabel('Stable Name').fill(`Dup Stable ${uniqueId}`);
+    await page.getByLabel('Stable Name').fill(`Dup ${uniqueId}`);
     await page.getByLabel('Email').fill(`${uniqueId}@test.armouredsouls.com`);
     await page.getByLabel('Password', { exact: true }).fill('TestPass123!');
     await page.getByLabel('Confirm Password').fill('TestPass123!');
@@ -53,6 +56,9 @@ test.describe('Registration Flow', () => {
     // Req 1.3, 1.6 — register a user, then try the same email again
     const first = await registerNewUser(page);
 
+    // Clear auth state so /login doesn't redirect to /dashboard
+    await page.evaluate(() => localStorage.clear());
+
     // Navigate back to /login for a second registration attempt
     await page.goto('/login');
     await page.waitForLoadState('networkidle');
@@ -61,7 +67,7 @@ test.describe('Registration Flow', () => {
     // Use a different username but the same email
     const uniqueId = generateUniqueId();
     await page.getByLabel('Username').fill(uniqueId);
-    await page.getByLabel('Stable Name').fill(`Dup Stable ${uniqueId}`);
+    await page.getByLabel('Stable Name').fill(`Dup ${uniqueId}`);
     await page.getByLabel('Email').fill(first.email);
     await page.getByLabel('Password', { exact: true }).fill('TestPass123!');
     await page.getByLabel('Confirm Password').fill('TestPass123!');

@@ -57,11 +57,8 @@ test.describe('Login Page', () => {
       await expect(skipButton).toBeVisible({ timeout: 10000 });
       await skipButton.click();
 
-      // Confirmation modal — "Skip Anyway" button with aria-label="Confirm skip tutorial"
-      const skipAnyway = page.getByRole('button', { name: 'Skip Anyway' });
-      const yesSkip = page.getByRole('button', { name: 'Yes, Skip' });
-      const confirmSkip = page.getByRole('button', { name: /Confirm skip tutorial/i });
-      const skipConfirm = skipAnyway.or(yesSkip).or(confirmSkip);
+      // Confirmation modal — button has aria-label="Confirm skip tutorial"
+      const skipConfirm = page.getByRole('button', { name: /Confirm skip tutorial/i });
       await expect(skipConfirm).toBeVisible({ timeout: 10000 });
       await skipConfirm.click();
 

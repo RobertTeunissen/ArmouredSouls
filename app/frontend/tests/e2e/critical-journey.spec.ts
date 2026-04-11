@@ -55,7 +55,7 @@ test.describe('Critical User Journey', () => {
     await page.waitForLoadState('networkidle');
 
     // Verify the creation form shows the cost
-    await expect(page.getByText('₡500,000')).toBeVisible();
+    await expect(page.getByText('₡500,000').first()).toBeVisible();
 
     // Read the balance displayed on the creation page before creating
     const balanceBeforeRobot = await page.getByText(/Your Balance/).locator('..').textContent();
