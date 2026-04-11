@@ -12,7 +12,7 @@ The upload uses a two-step preview/confirm flow to prevent storing images users 
 
 NSFW content is always a hard block. Robot-likeness below threshold is a soft warning — the first attempt returns HTTP 422 with `LOW_ROBOT_LIKENESS`, and the user can override by re-uploading with `?acknowledgeRobotLikeness=true`. Both initial warnings and acknowledged overrides are logged to AuditLog and SecurityMonitor for tracking.
 
-Orphaned images are cleaned up both eagerly and periodically: when a robot switches from a custom image to a preset, or when a robot with a custom image is deleted, the old file is eagerly removed from disk. Additionally, a periodic cleanup job scans `uploads/user-robots/` and cross-references against `Robot.imageUrl` in the database, deleting any unreferenced files. The job can run daily or on-demand via an admin endpoint.
+Orphaned images are cleaned up both eagerly and as part of the daily settlement cycle: when a robot switches from a custom image to a preset, or when a robot with a custom image is deleted, the old file is eagerly removed from disk. Additionally, a cleanup step runs as Step 15 in `adminCycleService.executeBulkCycles` (after the cycle snapshot), scanning `uploads/user-robots/` and cross-referencing against `Robot.imageUrl` in the database, deleting any unreferenced files. The cleanup is also available on-demand via an admin endpoint.
 
 Uploaded images are stored on the local filesystem under `uploads/user-robots/{userId}/{uuid}.webp` — deliberately separate from the bundled preset images in `app/frontend/src/assets/robots/`. UUID-based filenames prevent URL enumeration. Images are served as static files by Caddy. This avoids external storage costs and keeps latency minimal on the single-VPS architecture.
 
@@ -72,7 +72,7 @@ graph TD
     subgraph "Orphan Cleanup"
         OC1[Robot switches to preset] -->|Eager: Delete old file| N
         OC2[Robot deleted] -->|Eager: Delete custom file| N
-        OC3[Orphan Cleanup Job<br/>Daily / Admin on-demand] -->|Periodic: Scan & delete<br/>unreferenced files| N
+        OC3[Orphan Cleanup Job<br/>Cycle Step 15 / Admin on-demand] -->|Periodic: Scan & delete<br/>unreferenced files| N
     end
 
     subgraph "Admin"
@@ -445,7 +445,7 @@ interface UploadState {
 
 ### Component 7: Orphan Cleanup Job
 
-**Purpose**: Periodic backend job that scans `uploads/user-robots/` and cross-references files against `Robot.imageUrl` in the database, deleting any file not referenced by any robot. Runnable daily via cron or on-demand via admin endpoint.
+**Purpose**: Cleanup step integrated into the daily settlement cycle (Step 15 in `adminCycleService.executeBulkCycles`) that scans `uploads/user-robots/` and cross-references files against `Robot.imageUrl` in the database, deleting any file not referenced by any robot. Also executable on-demand via admin endpoint.
 
 ```typescript
 interface OrphanCleanupJob {
@@ -467,7 +467,7 @@ interface OrphanCleanupResult {
 - Track and return the count of deleted files and bytes reclaimed
 - Log errors for files that fail to delete (permissions, etc.) without aborting the entire job
 - Expose via `POST /api/admin/uploads/cleanup` (admin-only, requires `requireAdmin` middleware)
-- Schedulable via `node-cron` or PM2 cron for daily execution
+- Integrated as Step 15 in `adminCycleService.executeBulkCycles`, after the cycle snapshot step (Step 14), using `eventLogger.logCycleStepComplete()` to log step duration and results (`filesDeleted`, `bytesReclaimed`)
 
 ### Component 8: Admin Uploads Handler
 
@@ -1063,7 +1063,7 @@ END
 ### Orphan Cleanup Algorithm
 
 ```typescript
-// POST /api/admin/uploads/cleanup (or daily cron)
+// POST /api/admin/uploads/cleanup (or Step 15 in daily settlement cycle)
 ALGORITHM runOrphanCleanup()
 INPUT: none
 OUTPUT: OrphanCleanupResult
@@ -1665,7 +1665,7 @@ handle /uploads/* {
 The following existing documentation and configuration files will need updating after this feature is implemented:
 
 - `docs/guides/SECURITY.md` — Add new Security Playbook entry for "Image Upload Content Moderation" covering the fail-closed moderation pattern, NSFW hard block vs robot-likeness soft warning with override (`?acknowledgeRobotLikeness=true`), two-step preview/confirm flow, client-side crop preview, magic byte validation, non-guessable UUID URLs, separate storage path, dual audit logging (including `image_robot_likeness_override` events), confirmation token security, PendingUploadCache memory limits, and file upload rate limiting.
-- `docs/guides/DEPLOYMENT.md` — Add instructions for creating the `uploads/user-robots/` directory with correct permissions, the Caddy static file serving configuration for `/uploads/*`, and the periodic orphan cleanup job configuration (cron schedule or PM2 cron).
+- `docs/guides/DEPLOYMENT.md` — Add instructions for creating the `uploads/user-robots/` directory with correct permissions, and the Caddy static file serving configuration for `/uploads/*`.
 - `docs/prd_core/ARCHITECTURE.md` — Update the Backend Service Architecture table to include the new `moderation` service directory (with `contentModerationService.ts`, `fileValidationService.ts`, `fileStorageService.ts`, `imageProcessingService.ts`, `pendingUploadCache.ts`, `orphanCleanupJob.ts`). Update the API Routes section to document `POST /api/robots/:id/image` (preview), `PUT /api/robots/:id/image/confirm`, `GET /api/admin/uploads`, and `POST /api/admin/uploads/cleanup`. Update Dependencies section for nsfwjs, sharp, multer.
 - `docs/prd_core/DATABASE_SCHEMA.md` — Document the new audit log event types (`image_moderation_rejection`, `image_robot_likeness_warning`, `image_robot_likeness_override`, `image_upload_success`) in the AuditLog section.
 - `docs/prd_pages/PRD_ROBOT_DETAIL_PAGE.md` — Document the new "Upload Custom Image" tab in the RobotImageSelector modal, including the client-side crop preview, two-step preview/confirm flow, robot-likeness warning with "Upload anyway" override, and mobile-responsive behavior.
