@@ -228,13 +228,19 @@ jobs:
         run: |
           node dist/index.js &
           echo "Waiting for backend to start..."
+          backend_ready=false
           for i in $(seq 1 30); do
             if curl -s http://localhost:3001/api/health > /dev/null 2>&1; then
               echo "Backend is ready"
+              backend_ready=true
               break
             fi
             sleep 1
           done
+          if [ "$backend_ready" != "true" ]; then
+            echo "Backend failed to become ready within 30 seconds"
+            exit 1
+          fi
 
       - name: Install frontend dependencies
         working-directory: ./app/frontend
@@ -242,6 +248,8 @@ jobs:
 
       - name: Build frontend
         working-directory: ./app/frontend
+        env:
+          VITE_API_URL: http://localhost:3001
         run: npm run build
 
       - name: Install Playwright browsers
@@ -254,7 +262,14 @@ jobs:
           PLAYWRIGHT_BASE_URL: http://localhost:4173
         run: |
           npx vite preview --port 4173 &
-          sleep 3
+          echo "Waiting for frontend preview server to start..."
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:4173/ > /dev/null 2>&1; then
+              echo "Frontend preview server is ready"
+              break
+            fi
+            sleep 1
+          done
           npx playwright test
 
       - name: Upload Playwright HTML report

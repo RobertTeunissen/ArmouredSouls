@@ -7,8 +7,8 @@ import { generateUniqueId } from './helpers/register';
  * Validates: Requirements 11.2, 11.3, 13.1, 13.2
  *
  * These tests verify login functionality and auth security boundaries.
- * Manual screenshots are omitted — playwright.config.ts captures them
- * automatically on failure via the `screenshot: 'on'` setting.
+ * Manual screenshots are omitted — playwright.config.ts handles screenshot
+ * capture automatically according to the configured Playwright setting.
  */
 
 test.describe('Login Page', () => {

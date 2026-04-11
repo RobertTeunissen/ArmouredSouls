@@ -227,12 +227,13 @@ test.describe('Weapon Shop Page', () => {
 
   test.describe('Weapon Detail Modal', () => {
     test('should open weapon detail modal when clicking weapon name', async ({ page }) => {
-      // Wait for a weapon heading to be visible, then click it
-      // Weapon names are h3 elements that are clickable
-      const weaponName = page.locator('h3.cursor-pointer').first();
-      await expect(weaponName).toBeVisible();
-      const nameText = await weaponName.textContent();
-      await weaponName.click();
+      // Wait for weapon headings to be visible, then click the first one
+      // Weapon names are rendered as h3 headings inside clickable cards
+      const weaponHeadings = page.getByRole('heading', { level: 3 });
+      const firstWeapon = weaponHeadings.first();
+      await expect(firstWeapon).toBeVisible();
+      const nameText = await firstWeapon.textContent();
+      await firstWeapon.click();
 
       // Verify the detail modal opens with the weapon name as h2
       await expect(page.getByRole('heading', { name: nameText!, level: 2 })).toBeVisible();
@@ -244,9 +245,9 @@ test.describe('Weapon Shop Page', () => {
 
     test('should close weapon detail modal', async ({ page }) => {
       // Open modal
-      const weaponName = page.locator('h3.cursor-pointer').first();
-      await expect(weaponName).toBeVisible();
-      await weaponName.click();
+      const firstWeapon = page.getByRole('heading', { level: 3 }).first();
+      await expect(firstWeapon).toBeVisible();
+      await firstWeapon.click();
 
       // Verify modal is open
       await expect(page.getByRole('heading', { name: 'Description' })).toBeVisible();
@@ -265,18 +266,22 @@ test.describe('Weapon Shop Page', () => {
       const purchaseButton = page.getByRole('button', { name: 'Purchase', exact: true }).first();
       await expect(purchaseButton).toBeVisible();
 
-      if (await purchaseButton.isEnabled()) {
-        await purchaseButton.click();
-
-        // Verify confirmation modal appears with "Confirm Purchase" heading
-        await expect(page.getByRole('heading', { name: 'Confirm Purchase' })).toBeVisible();
-
-        // Cancel the purchase
-        await page.getByRole('button', { name: 'Cancel' }).click();
-
-        // Verify modal is closed
-        await expect(page.getByRole('heading', { name: 'Confirm Purchase' })).not.toBeVisible();
+      // Skip if no purchasable weapon is available (all insufficient credits or storage full)
+      if (!(await purchaseButton.isEnabled())) {
+        test.skip(true, 'No affordable weapon available for test_user_001');
+        return;
       }
+
+      await purchaseButton.click();
+
+      // Verify confirmation modal appears with "Confirm Purchase" heading
+      await expect(page.getByRole('heading', { name: 'Confirm Purchase' })).toBeVisible();
+
+      // Cancel the purchase
+      await page.getByRole('button', { name: 'Cancel' }).click();
+
+      // Verify modal is closed
+      await expect(page.getByRole('heading', { name: 'Confirm Purchase' })).not.toBeVisible();
     });
 
     test('should indicate insufficient credits for expensive weapons', async ({ page }) => {

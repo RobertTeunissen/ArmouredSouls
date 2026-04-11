@@ -8,8 +8,8 @@ import { navigateToProtectedPage } from './helpers/navigate';
  *
  * These tests verify the robot creation workflow including form display,
  * validation, cost information, and successful creation flow.
- * Manual screenshots are omitted — playwright.config.ts captures them
- * automatically on failure via the `screenshot: 'on'` setting.
+ * Manual screenshots are omitted — playwright.config.ts handles screenshot
+ * capture automatically according to the configured Playwright setting.
  *
  * Auth state is pre-loaded via the setup project (see auth.setup.ts).
  */
