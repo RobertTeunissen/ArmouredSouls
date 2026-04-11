@@ -30,12 +30,10 @@ test.describe('Registration Flow', () => {
     // Req 1.2, 1.6 — register a user, then try the same username again
     const first = await registerNewUser(page);
 
-    // Clear auth state so /login doesn't redirect to /dashboard
+    // Clear auth state and wait for redirect to settle before navigating
     await page.evaluate(() => localStorage.clear());
-
-    // Navigate back to /login for a second registration attempt
-    await page.goto('/login');
-    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(500);
+    await page.goto('/login', { waitUntil: 'networkidle' });
     await page.getByRole('tab', { name: 'Register' }).click();
 
     // Use the same username but a different email
@@ -56,12 +54,10 @@ test.describe('Registration Flow', () => {
     // Req 1.3, 1.6 — register a user, then try the same email again
     const first = await registerNewUser(page);
 
-    // Clear auth state so /login doesn't redirect to /dashboard
+    // Clear auth state and wait for redirect to settle before navigating
     await page.evaluate(() => localStorage.clear());
-
-    // Navigate back to /login for a second registration attempt
-    await page.goto('/login');
-    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(500);
+    await page.goto('/login', { waitUntil: 'networkidle' });
     await page.getByRole('tab', { name: 'Register' }).click();
 
     // Use a different username but the same email

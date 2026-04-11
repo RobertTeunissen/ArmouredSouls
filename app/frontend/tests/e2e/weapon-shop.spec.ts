@@ -156,11 +156,18 @@ test.describe('Weapon Shop Page', () => {
       await page.getByRole('button', { name: 'Table View' }).click();
       await expect(page.locator('table')).toBeVisible();
 
-      // Re-navigate
-      await navigateToProtectedPage(page, '/weapon-shop');
+      // Reload the page (simpler than re-navigating, avoids auth race conditions)
+      await page.reload();
+      await page.waitForLoadState('networkidle');
 
-      // Verify table view is still active
-      await expect(page.locator('table')).toBeVisible();
+      // Verify table view is still active after reload
+      await expect(page.locator('table')).toBeVisible({ timeout: 10000 });
+
+      // Switch back to card view for subsequent tests
+      const cardViewButton = page.getByRole('button', { name: 'Card View' });
+      if (await cardViewButton.isVisible().catch(() => false)) {
+        await cardViewButton.click();
+      }
     });
   });
 
