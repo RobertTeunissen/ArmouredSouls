@@ -164,17 +164,16 @@ test.describe('Financial Flow', () => {
     await expect(page.getByText(/₡[\d,]+/).first()).toBeVisible();
 
     // Verify the daily income/expense breakdown is visible
-    // The DailyStableReport shows "DAILY STABLE REPORT" heading
     await expect(page.getByText('DAILY STABLE REPORT')).toBeVisible();
 
-    // Verify revenue streams section
-    await expect(page.getByText('REVENUE STREAMS:')).toBeVisible();
+    // Verify revenue streams section heading
+    await expect(page.getByRole('heading', { name: 'REVENUE STREAMS:' })).toBeVisible();
 
-    // Verify operating costs section
-    await expect(page.getByText('OPERATING COSTS:')).toBeVisible();
+    // Verify operating costs section heading
+    await expect(page.getByRole('heading', { name: 'OPERATING COSTS:' })).toBeVisible();
 
     // Verify net income is displayed
-    await expect(page.getByText('NET INCOME:')).toBeVisible();
+    await expect(page.getByText('NET INCOME:', { exact: true })).toBeVisible();
   });
 
   test('switching to per-robot tab on income dashboard displays per-robot financial data', async ({ page }) => {

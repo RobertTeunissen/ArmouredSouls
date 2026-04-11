@@ -166,9 +166,15 @@ test.describe('Weapon Shop Page', () => {
 
   test.describe('Weapon Comparison', () => {
     test('should select weapons for comparison', async ({ page }) => {
+      // Ensure card view is active (may be in table view from previous test's localStorage)
+      const cardViewButton = page.getByRole('button', { name: 'Card View' });
+      if (await cardViewButton.isVisible().catch(() => false)) {
+        await cardViewButton.click();
+      }
+
       // Wait for weapon cards to load
       const firstCompareCheckbox = page.getByRole('checkbox', { name: 'Compare' }).first();
-      await expect(firstCompareCheckbox).toBeVisible();
+      await expect(firstCompareCheckbox).toBeVisible({ timeout: 10000 });
 
       // Select first two weapons
       await page.getByRole('checkbox', { name: 'Compare' }).nth(0).check();
@@ -179,9 +185,15 @@ test.describe('Weapon Shop Page', () => {
     });
 
     test('should open comparison modal', async ({ page }) => {
+      // Ensure card view
+      const cardViewButton = page.getByRole('button', { name: 'Card View' });
+      if (await cardViewButton.isVisible().catch(() => false)) {
+        await cardViewButton.click();
+      }
+
       // Select two weapons
       const checkboxes = page.getByRole('checkbox', { name: 'Compare' });
-      await expect(checkboxes.first()).toBeVisible();
+      await expect(checkboxes.first()).toBeVisible({ timeout: 10000 });
       await checkboxes.nth(0).check();
       await checkboxes.nth(1).check();
 
@@ -196,9 +208,15 @@ test.describe('Weapon Shop Page', () => {
     });
 
     test('should limit comparison to 3 weapons', async ({ page }) => {
+      // Ensure card view
+      const cardViewButton = page.getByRole('button', { name: 'Card View' });
+      if (await cardViewButton.isVisible().catch(() => false)) {
+        await cardViewButton.click();
+      }
+
       // Select 3 weapons
       const checkboxes = page.getByRole('checkbox', { name: 'Compare' });
-      await expect(checkboxes.first()).toBeVisible();
+      await expect(checkboxes.first()).toBeVisible({ timeout: 10000 });
       await checkboxes.nth(0).check();
       await checkboxes.nth(1).check();
       await checkboxes.nth(2).check();
@@ -208,9 +226,15 @@ test.describe('Weapon Shop Page', () => {
     });
 
     test('should clear comparison selection', async ({ page }) => {
+      // Ensure card view
+      const cardViewButton = page.getByRole('button', { name: 'Card View' });
+      if (await cardViewButton.isVisible().catch(() => false)) {
+        await cardViewButton.click();
+      }
+
       // Select two weapons
       const checkboxes = page.getByRole('checkbox', { name: 'Compare' });
-      await expect(checkboxes.first()).toBeVisible();
+      await expect(checkboxes.first()).toBeVisible({ timeout: 10000 });
       await checkboxes.nth(0).check();
       await checkboxes.nth(1).check();
 

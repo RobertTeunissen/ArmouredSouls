@@ -14,19 +14,29 @@ Items identified during audits, reviews, and development. Prioritized by impact 
 
 The Investments & ROI tab and Investment Advisor tab on the Facilities page are not working as intended. The consolidation from the old pages was structural only — the data isn't flowing correctly. Players see empty or wrong numbers.
 
-### #2 — Monitoring and Alerting
+### #2 — Statistical Rankings Broken on Robot Detail Page
+**Source**: Bug — broken since exploit audit  
+**Priority**: High — broken feature visible to all players viewing other robots
+
+The "Statistical Rankings" section on robot detail pages (e.g. `/robots/285`) shows "Failed to load rankings. Please try again later." when viewing any robot you don't own. Broke as a side effect of the exploit audit that restricted attribute visibility for non-owners.
+
+Root cause: the `GET /api/robots/:id/rankings` endpoint in `routes/robots.ts` has an ownership check (`robot.userId !== userId`) that rejects non-owners with a 404. But the robot detail page is a public profile viewable by any logged-in user. The rankings endpoint only returns aggregated category sums, percentiles, and ranks (via `robotRankingService.ts`) — it does not expose individual attribute values, so the exploit audit concern doesn't apply here.
+
+Fix: remove or relax the ownership check on the rankings endpoint. The `getRobotRankings` service returns `combatCategory`, `defenseCategory`, etc. as rank/percentile pairs — no raw attribute leakage.
+
+### #3 — Monitoring and Alerting
 **Source**: Phase 2 roadmap  
 **Priority**: High — no way to know if production breaks
 
 Current observability: Winston logs, `CyclePerformanceMonitoringService`, `securityMonitor`, admin Security Dashboard. Missing: external uptime monitoring, alerting on backend crashes or cycle failures, log aggregation. Lightweight approach: UptimeRobot for uptime, Discord webhook for cycle failures (notification service already supports Discord).
 
-### #3 — Landing Page / Marketing Front Page
+### #4 — Landing Page / Marketing Front Page
 **Source**: Current state — visitors land on a login/register form with no context  
 **Priority**: High — first impression for new players
 
 The current front page is just a login and registration module. New visitors have no idea what the game is, how it plays, or why they should sign up. Needs: game concept pitch, screenshots or gameplay preview, feature highlights (4 battle modes, 47 weapons, league system), call-to-action to register. Could be a simple static page above the login form or a dedicated `/` route that redirects authenticated users to the dashboard.
 
-### #4 — Weapon Experimentation Problem — Players Never Switch Weapons
+### #5 — Weapon Experimentation Problem — Players Never Switch Weapons
 **Source**: Observed player behavior  
 **Priority**: High — core gameplay loop stagnation
 
@@ -43,7 +53,7 @@ Possible solutions (not mutually exclusive — spec should evaluate combinations
 
 The fix likely needs both a way to *recover value* from unwanted weapons (resale/trade-in) and a way to *reduce information asymmetry* before purchase (trials/practice). One without the other only half-solves it.
 
-### #5 — Game Loop Audit — Structural Design Flaws
+### #6 — Game Loop Audit — Structural Design Flaws
 **Source**: Design review  
 **Priority**: High — foundational issues that limit long-term retention
 
@@ -80,7 +90,7 @@ This item is about diagnosis, not solutions. Needs a proper design deep-dive to 
 
 ## Medium Priority
 
-### #6 — Unimplemented Facilities (4 remaining)
+### #7 — Unimplemented Facilities (4 remaining)
 **Source**: PRD_FACILITIES_PAGE.md  
 **Priority**: Medium — players can buy them but they do nothing
 
@@ -90,13 +100,13 @@ This item is about diagnosis, not solutions. Needs a proper design deep-dive to 
 - Coaching Staff — stable-wide stat bonuses via hired coaches
 - Booking Office — tournament access and prestige rewards
 
-### #7 — Achievement / Milestone System
+### #8 — Achievement / Milestone System
 **Source**: PRD_PRESTIGE_AND_FAME.md, PRD_ECONOMY_SYSTEM.md §6  
 **Priority**: Medium — key engagement/retention driver
 
 One-time rewards for milestones (ELO thresholds, win counts, streaks). Examples: first robot to ELO 1500 (₡50K + 50 prestige), 100 wins (₡250K + 200 prestige). Needs: database tables, tracking service, UI (dashboard trophies, notification toasts). Includes fame-based cosmetic unlocks as a later extension.
 
-### #8 — Flex-Point Attribute Bucket (Pre-Battle Tactical Allocation)
+### #9 — Flex-Point Attribute Bucket (Pre-Battle Tactical Allocation)
 **Source**: Player feedback (Tymen, LortGob)  
 **Priority**: Medium — directly addresses the thin "Adjust" step in the core loop
 
@@ -117,19 +127,19 @@ Design questions to resolve:
 - How does this interact with Tag Team / KotH where you don't know your exact opponent?
 - Does the flex pool come from existing points (weakening your base) or is it bonus points on top?
 
-### #9 — Post-Battle Results Page
+### #10 — Post-Battle Results Page
 **Source**: PRD_BATTLE_RESULTS_PAGE.md (marked ❌ NOT IMPLEMENTED)  
 **Priority**: Medium — players lack immediate feedback after battles
 
 Dedicated post-battle summary showing prestige/fame earned, damage breakdown, and streaming revenue. Currently players only see results through Battle History and Battle Detail pages.
 
-### #10 — Weapon Special Properties
+### #11 — Weapon Special Properties
 **Source**: PRD_WEAPON_ECONOMY.md, PRD_WEAPONS_LOADOUT.md  
 **Priority**: Medium — would significantly deepen combat strategy
 
 All 47 weapons currently have only attribute bonuses — no special effects. The pricing formula and combat simulator are designed to support properties like "ignores armor", "shield drain", "area damage" but none are implemented. Requires combat simulator changes and balance testing.
 
-### #11 — Arena / Terrain Modifiers with Home Arena Selection
+### #12 — Arena / Terrain Modifiers with Home Arena Selection
 **Source**: Player idea  
 **Priority**: Medium — adds meta variation and per-battle decision-making
 
@@ -151,17 +161,17 @@ Design questions:
 - Does home arena cost credits to set/change? (another facility tie-in?)
 - How does this interact with Tag Team and KotH which already have arena configs?
 
-### #12 — Admin Portal Redesign / Separate Admin App
+### #13 — Admin Portal Redesign / Separate Admin App
 **Source**: Backlog triage  
 **Priority**: Medium — admin tooling is scattered across the main app
 
 The admin experience currently lives as routes within the player-facing app. As admin features grow (security dashboard, cycle management, user management, feature toggles), it makes sense to either redesign the admin section with its own layout/navigation or extract it into a separate portal entirely. A separate app would allow independent deployment, stricter access controls, and a purpose-built UI without bloating the player bundle.
 
-### #13 — Battle Report Layout Overhaul
+### #14 — Battle Report Layout Overhaul
 **Source**: Backlog triage  
 **Priority**: Medium — current layout undersells the combat data
 
-The existing Battle Detail page shows the data but the layout doesn't do it justice. Redesign the battle report with better visual hierarchy: timeline visualization, damage flow diagrams, round-by-round breakdown with animations or transitions, weapon effectiveness highlights. Related: "Post-Battle Results Page" (#9) covers a *new* post-battle summary screen — this item is about improving the detailed report itself.
+The existing Battle Detail page shows the data but the layout doesn't do it justice. Redesign the battle report with better visual hierarchy: timeline visualization, damage flow diagrams, round-by-round breakdown with animations or transitions, weapon effectiveness highlights. Related: "Post-Battle Results Page" (#10) covers a *new* post-battle summary screen — this item is about improving the detailed report itself.
 
 Also: battle log verbosity levels. Players have asked for more detail in combat events. Two modes:
 - **Shorthand** (current): `"Dikke Aap missed"`
@@ -169,19 +179,19 @@ Also: battle log verbosity levels. Players have asked for more detail in combat 
 
 Verbose mode would show the underlying formula inputs: hit chance percentages, which attributes drove the outcome, damage breakdowns with armor/penetration values, crit chance on critical hits, etc. Ties into the Player Personas / Complexity Modes item (#15) — verbose mode is exactly what the "show me everything" player wants, while shorthand suits the "just let me fight" player.
 
-### #14 — Feature Flags / Per-User Feature Rollout
+### #15 — Feature Flags / Per-User Feature Rollout
 **Source**: Backlog triage  
 **Priority**: Medium — enables safer releases and A/B testing
 
 Add a feature toggle system manageable from the admin portal. Flags can be global (on/off), percentage-based (roll out to 10% of users), or per-user/per-role. Enables: gradual rollout of new features, A/B testing gameplay changes, kill switches for problematic features, beta access for specific users. Needs: flags table, middleware/hook to check flags, admin UI to manage them, frontend context/hook to gate UI components.
 
-### #15 — Player Personas / Complexity Modes
+### #16 — Player Personas / Complexity Modes
 **Source**: Backlog triage  
 **Priority**: Medium — different players want fundamentally different experiences
 
-Not all players want the same depth. Two archetypes: the "just let me fight" player who wants streamlined combat with minimal management, and the "show me everything" player who wants full stat transparency, detailed analytics, and granular control. Possible approaches: a complexity toggle in settings that shows/hides advanced panels, or tie it to a facility — e.g. a "Spy Facility" that progressively unlocks deeper analytics and opponent intel as it levels up (fits the existing facility progression model). The Spy Facility angle would give the transparency a gameplay cost, making it a strategic choice rather than just a UI preference. Cross-ref: "Progressive Feature Disclosure" (#27) covers time-gated unlocks — this is about *player-chosen* depth. Also relates to "Unimplemented Facilities" (#6) if the Spy Facility route is taken.
+Not all players want the same depth. Two archetypes: the "just let me fight" player who wants streamlined combat with minimal management, and the "show me everything" player who wants full stat transparency, detailed analytics, and granular control. Possible approaches: a complexity toggle in settings that shows/hides advanced panels, or tie it to a facility — e.g. a "Spy Facility" that progressively unlocks deeper analytics and opponent intel as it levels up (fits the existing facility progression model). The Spy Facility angle would give the transparency a gameplay cost, making it a strategic choice rather than just a UI preference. Cross-ref: "Progressive Feature Disclosure" (#28) covers time-gated unlocks — this is about *player-chosen* depth. Also relates to "Unimplemented Facilities" (#7) if the Spy Facility route is taken.
 
-### #16 — In-Game Changelog / "What's New" Component
+### #17 — In-Game Changelog / "What's New" Component
 **Source**: Player communication need  
 **Priority**: Medium — players miss updates that directly affect their strategy
 
@@ -201,67 +211,67 @@ Design considerations:
 
 ## Low Priority
 
-### #17 — Battle Table Denormalization Cleanup
+### #18 — Battle Table Denormalization Cleanup
 **Source**: [Battle Execution Audit](analysis/BATTLE_EXECUTION_AUDIT.md)  
 **Priority**: Low — works correctly, just redundant data
 
 The `Battle` table dual-writes per-robot columns alongside `BattleParticipant`. Consider a migration to drop legacy columns and fully rely on `BattleParticipant`.
 
-### #18 — Tag Team Battle Time Limit Enforcement
+### #19 — Tag Team Battle Time Limit Enforcement
 **Source**: [Battle Execution Audit](analysis/BATTLE_EXECUTION_AUDIT.md)  
 **Priority**: Low — stored duration is correct, only simulation overruns
 
 Tag team battles can theoretically exceed 300s because each phase has its own 120s cap. Fix by passing `remainingTime` to `simulateBattle()`.
 
-### #19 — Performance Optimization
+### #20 — Performance Optimization
 **Source**: Phase 2 roadmap  
 **Priority**: Low — current scale doesn't demand it
 
 Areas to investigate: slow Prisma queries, N+1 in analytics endpoints, pagination on heavy lists, in-memory caching for weapon catalog and facility configs.
 
-### #20 — Prestige Gating for Facilities
+### #21 — Prestige Gating for Facilities
 **Source**: PRD_FACILITIES_PAGE.md §6, PRD_PRESTIGE_AND_FAME.md  
 **Priority**: Low — documented but not blocking gameplay
 
 Facility upgrades gated by prestige level. UI shows lock indicators. Adds progression depth but not essential.
 
-### #21 — Promotion/Demotion History Tracking
+### #22 — Promotion/Demotion History Tracking
 **Source**: PRD_LEAGUE_SYSTEM.md  
 **Priority**: Low — nice for analytics, not player-facing
 
 Track league tier changes over time (PromotionHistory model). Enables progression charts and yo-yo detection.
 
-### #22 — Historical Financial Tracking
+### #23 — Historical Financial Tracking
 **Source**: PRD_ECONOMY_SYSTEM.md  
 **Priority**: Low — cycle snapshots provide basic history already
 
 Dedicated financial trend tracking beyond what CycleSnapshot provides.
 
-### #23 — Dashboard Enhancements
+### #24 — Dashboard Enhancements
 **Source**: PRD_DASHBOARD_PAGE.md  
 **Priority**: Low — cosmetic improvements
 
 Enhanced prestige display (rank tiers, progress bar), tournament wins/trophy display, loading skeletons, notification toasts.
 
-### #24 — Battle History URL State Persistence
+### #25 — Battle History URL State Persistence
 **Source**: PRD_BATTLE_HISTORY_PAGE.md  
 **Priority**: Low — QoL improvement
 
 Persist filter/sort state in URL query params for shareable links and browser navigation.
 
-### #25 — Hall of Records Performance Caching
+### #26 — Hall of Records Performance Caching
 **Source**: PRD_HALL_OF_RECORDS.md  
 **Priority**: Low — only matters at scale
 
 Cache leaderboard queries. Currently queries run on every request.
 
-### #26 — Command Palette (Cmd+K)
+### #27 — Command Palette (Cmd+K)
 **Source**: Deleted navigation analysis doc  
 **Priority**: Low — power user feature
 
 Keyboard-driven quick access to pages, robots, and actions with fuzzy search.
 
-### #27 — Progressive Feature Disclosure
+### #28 — Progressive Feature Disclosure
 **Source**: Deleted navigation analysis doc  
 **Priority**: Low — reduces new player overwhelm
 
@@ -271,30 +281,30 @@ Unlock advanced features based on prestige level or activity milestones.
 
 ## Not Scoped (Future Ideas)
 
-### #28 — Weapon Crafting System
+### #29 — Weapon Crafting System
 **Source**: PRD_WEAPONS_LOADOUT.md, PRD_ECONOMY_SYSTEM.md  
 Custom weapon design at Workshop Level 6+. Pricing formula already supports it. Legendary crafting at Level 10.
 
-### #29 — Free-for-All / Battle Royale Mode
+### #30 — Free-for-All / Battle Royale Mode
 **Source**: [Design analysis](analysis/FREE_FOR_ALL_BATTLE_ROYALE_MODE.md)  
 Large-scale elimination (8–100 robots). Detailed design analysis exists covering arena scaling, shrinking boundary, vulture problem, performance.
 
-### #30 — 3v3 Team Battles
+### #31 — 3v3 Team Battles
 **Source**: Roadmap Phase 9  
 BattleParticipant model already supports N robots. Needs team formation, matchmaking, rewards, orchestrator.
 
-### #31 — Conditional Battle Triggers / Robot AI Scripting
+### #32 — Conditional Battle Triggers / Robot AI Scripting
 **Source**: GAME_DESIGN.md  
 Player-defined robot behaviors: "switch stance when HP < 30%", "target weakest in KotH". Requires scripting or rule-builder UI.
 
-### #32 — Future Revenue Streams
+### #33 — Future Revenue Streams
 **Source**: PRD_ECONOMY_SYSTEM.md §7  
 Trading commission (marketplace), sponsorship deals, arena attendance, championship bonuses, daily login bonuses.
 
-### #33 — Daily Login Bonuses & Seasonal Events
+### #34 — Daily Login Bonuses & Seasonal Events
 **Source**: PRD_ECONOMY_SYSTEM.md, GAME_DESIGN.md  
 Consecutive login rewards, limited-time challenges, end-of-season league placement rewards.
 
-### #34 — Modular Package Extraction
+### #35 — Modular Package Extraction
 **Source**: Deleted migration strategy docs  
 npm workspace extraction. Only relevant when multiple consumers need shared backend logic (mobile app, separate battle server, team scaling).
