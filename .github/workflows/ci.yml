@@ -363,14 +363,29 @@ jobs:
               const audit = JSON.parse(input);
               const allowed = new Set(process.argv.slice(1));
               const vulns = audit.vulnerabilities || {};
+              
+              // Collect all direct advisory IDs for each package (recursive via resolution)
+              function getAdvisoryIds(pkgName, visited = new Set()) {
+                if (visited.has(pkgName)) return [];
+                visited.add(pkgName);
+                const info = vulns[pkgName];
+                if (!info) return [];
+                const ids = [];
+                for (const v of (info.via || [])) {
+                  if (typeof v === 'object' && v.url) {
+                    ids.push(v.url.split('/').pop());
+                  } else if (typeof v === 'string') {
+                    ids.push(...getAdvisoryIds(v, visited));
+                  }
+                }
+                return ids;
+              }
+              
               let found = false;
               for (const [name, info] of Object.entries(vulns)) {
                 const severity = info.severity;
                 if (severity !== 'high' && severity !== 'critical') continue;
-                const viaEntries = info.via || [];
-                const advisoryIds = viaEntries
-                  .filter(v => typeof v === 'object' && v.url)
-                  .map(v => v.url.split('/').pop());
+                const advisoryIds = getAdvisoryIds(name);
                 const allAllowed = advisoryIds.length > 0 && advisoryIds.every(id => allowed.has(id));
                 if (!allAllowed) {
                   console.error('UNALLOWED: ' + name + ' (' + severity + ') — ' + advisoryIds.join(', '));
