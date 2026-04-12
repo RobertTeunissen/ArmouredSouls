@@ -351,15 +351,41 @@ jobs:
             ./app/ecosystem.config.js \
             ${{ secrets.ACC_VPS_USER }}@${{ secrets.ACC_VPS_IP }}:/opt/armouredsouls/
 
-      - name: Install dependencies and build on VPS
+      - name: Transfer Caddyfile
+        run: |
+          rsync -avz \
+            -e "ssh -i ~/.ssh/deploy_key" \
+            ./app/Caddyfile \
+            ${{ secrets.ACC_VPS_USER }}@${{ secrets.ACC_VPS_IP }}:/opt/armouredsouls/app/
+
+      - name: Sync Caddyfile and reload Caddy
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.ACC_VPS_IP }}
           username: ${{ secrets.ACC_VPS_USER }}
           key: ${{ secrets.ACC_SSH_KEY }}
           script: |
+            # Copy repo Caddyfile to Caddy config if it differs
+            REPO_CADDY="/opt/armouredsouls/app/Caddyfile"
+            SYSTEM_CADDY="/etc/caddy/Caddyfile"
+            if [ -f "$REPO_CADDY" ] && ! diff -q "$REPO_CADDY" "$SYSTEM_CADDY" > /dev/null 2>&1; then
+              echo "Caddyfile changed — updating and reloading"
+              sudo cp "$REPO_CADDY" "$SYSTEM_CADDY"
+              sudo systemctl reload caddy
+            else
+              echo "Caddyfile unchanged — skipping reload"
+            fi
+
+      - name: Install dependencies and build on VPS
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.ACC_VPS_IP }}
+          username: ${{ secrets.ACC_VPS_USER }}
+          key: ${{ secrets.ACC_SSH_KEY }}
+          command_timeout: 20m
+          script: |
             cd /opt/armouredsouls/backend
-            npm ci
+            npm install --prefer-offline
             npx prisma generate
             npm run build
 
@@ -514,15 +540,41 @@ jobs:
             ./app/ecosystem.config.js \
             ${{ secrets.PRD_VPS_USER }}@${{ secrets.PRD_VPS_IP }}:/opt/armouredsouls/
 
-      - name: Install dependencies and build on VPS
+      - name: Transfer Caddyfile
+        run: |
+          rsync -avz \
+            -e "ssh -i ~/.ssh/deploy_key" \
+            ./app/Caddyfile \
+            ${{ secrets.PRD_VPS_USER }}@${{ secrets.PRD_VPS_IP }}:/opt/armouredsouls/app/
+
+      - name: Sync Caddyfile and reload Caddy
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.PRD_VPS_IP }}
           username: ${{ secrets.PRD_VPS_USER }}
           key: ${{ secrets.PRD_SSH_KEY }}
           script: |
+            # Copy repo Caddyfile to Caddy config if it differs
+            REPO_CADDY="/opt/armouredsouls/app/Caddyfile"
+            SYSTEM_CADDY="/etc/caddy/Caddyfile"
+            if [ -f "$REPO_CADDY" ] && ! diff -q "$REPO_CADDY" "$SYSTEM_CADDY" > /dev/null 2>&1; then
+              echo "Caddyfile changed — updating and reloading"
+              sudo cp "$REPO_CADDY" "$SYSTEM_CADDY"
+              sudo systemctl reload caddy
+            else
+              echo "Caddyfile unchanged — skipping reload"
+            fi
+
+      - name: Install dependencies and build on VPS
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.PRD_VPS_IP }}
+          username: ${{ secrets.PRD_VPS_USER }}
+          key: ${{ secrets.PRD_SSH_KEY }}
+          command_timeout: 20m
+          script: |
             cd /opt/armouredsouls/backend
-            npm ci
+            npm install --prefer-offline
             npx prisma generate
             npm run build
 
