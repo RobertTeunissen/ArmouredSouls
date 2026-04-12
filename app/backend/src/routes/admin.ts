@@ -39,6 +39,7 @@ import {
   executeBulkCycles,
   backfillCycleSnapshots,
 } from '../services/admin/adminCycleService';
+import { handleAdminUploads, handleAdminCleanup } from '../services/moderation/adminUploadsHandler';
 import prisma from '../lib/prisma';
 
 const router = express.Router();
@@ -99,6 +100,14 @@ const resetPasswordParamsSchema = z.object({
 
 const resetPasswordBodySchema = z.object({
   password: z.string(),
+});
+
+const adminUploadsQuerySchema = z.object({
+  page: z.coerce.number().int().positive().optional().default(1),
+  limit: z.coerce.number().int().positive().max(200).optional().default(50),
+  userId: z.coerce.number().int().positive().optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
 });
 
 // Mount tournament routes
@@ -691,5 +700,18 @@ router.post('/users/:id/reset-password', authenticateToken, requireAdmin, resetP
 
   res.json({ success: true, userId: result.userId, username: result.username });
 });
+
+/**
+ * GET /api/admin/uploads
+ * Paginated list of uploaded images from AuditLog (image_upload_success events).
+ * Query params: page, limit, userId, startDate, endDate
+ */
+router.get('/uploads', authenticateToken, requireAdmin, validateRequest({ query: adminUploadsQuerySchema }), handleAdminUploads);
+
+/**
+ * POST /api/admin/uploads/cleanup
+ * Trigger on-demand orphan image cleanup.
+ */
+router.post('/uploads/cleanup', authenticateToken, requireAdmin, validateRequest({}), handleAdminCleanup);
 
 export default router;

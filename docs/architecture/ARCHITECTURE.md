@@ -2,8 +2,8 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: v2.1  
-**Last Updated**: April 10, 2026  
+**Version**: v2.2  
+**Last Updated**: June 2026  
 **Status**: ✅ Current  
 **Owner**: Robert Teunissen
 
@@ -12,6 +12,7 @@
 v1.0 (Jan 24, 2026): Initial architecture design  
 v2.0 (Apr 2, 2026): Updated for service consolidation, Prisma 7, React 19, deployment architecture  
 v2.1 (Apr 10, 2026): Corrected service count (13→18), route count (22→23), added missing domains (admin, match, practice-arena, robot, security), added architecture decisions and risk register, added proper versioning
+v2.2 (Jun 2026): Added moderation service domain (18→19 services, 23→24 routes), added nsfwjs/sharp/multer dependencies for image upload feature
 
 ---
 
@@ -47,11 +48,12 @@ Armoured Souls is a monolithic Node.js application with a React SPA frontend, de
 │  ┌──────────────────────────────────────────────────────┐   │
 │  │         Express 5 (Node.js 24 LTS)                   │   │
 │  │                                                       │   │
-│  │  18 Domain Services:                                  │   │
+│  │  19 Domain Services:                                  │   │
 │  │  admin · analytics · arena · auth · battle · common   │   │
 │  │  cycle · economy · koth · league · match              │   │
-│  │  notifications · onboarding · practice-arena          │   │
-│  │  robot · security · tag-team · tournament             │   │
+│  │  moderation · notifications · onboarding              │   │
+│  │  practice-arena · robot · security · tag-team         │   │
+│  │  tournament                                           │   │
 │  └──────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────┘
                             │
@@ -69,7 +71,7 @@ Armoured Souls is a monolithic Node.js application with a React SPA frontend, de
 ### 1. Monolith-First
 - Single Express application with domain-organized services
 - No microservices overhead — all services share one process and one database
-- Clear module boundaries via the 18 service directories allow future extraction if needed
+- Clear module boundaries via the 19 service directories allow future extraction if needed
 
 ### 2. Server-Authoritative Game Logic
 - All battle simulation, economy calculations, and league processing run server-side
@@ -108,6 +110,9 @@ Armoured Souls is a monolithic Node.js application with a React SPA frontend, de
 - **Rate Limiting**: express-rate-limit 8
 - **Process Manager**: PM2 (production)
 - **Testing**: Jest 30, Supertest 7, fast-check 4
+- **Content Moderation**: nsfwjs (NSFW classification), @tensorflow/tfjs-node (CPU backend)
+- **Image Processing**: sharp (resize, format conversion)
+- **File Upload**: multer (multipart form handling)
 
 ### Frontend
 - **Framework**: React 19 with TypeScript 5.8
@@ -131,7 +136,7 @@ Armoured Souls is a monolithic Node.js application with a React SPA frontend, de
 
 ## Backend Service Architecture
 
-The backend is organized into 18 domain service directories under `src/services/`. See [PRD_SERVICE_DIRECTORY.md](PRD_SERVICE_DIRECTORY.md) for the full breakdown with individual service descriptions.
+The backend is organized into 19 domain service directories under `src/services/`. See [PRD_SERVICE_DIRECTORY.md](PRD_SERVICE_DIRECTORY.md) for the full breakdown with individual service descriptions.
 
 | Service | Responsibility |
 |---|---|
@@ -153,6 +158,7 @@ The backend is organized into 18 domain service directories under `src/services/
 | `security` | Security monitoring, rate limit tracking, auth failure logging |
 | `tag-team` | 2v2 tag team orchestrator, matchmaking, league management |
 | `tournament` | Tournament orchestrator, bracket management, auto-creation |
+| `moderation` | Image upload content moderation, file validation, image processing, file storage, orphan cleanup, admin uploads |
 
 ### Middleware Stack
 - `auth.ts` — JWT validation for protected routes
@@ -170,7 +176,7 @@ Domain-specific error classes extend a base `AppError`:
 
 Each class carries typed error codes. Express 5 automatically forwards rejected promises to the error middleware — no manual try-catch wrappers needed in route handlers.
 
-### API Routes (23 route files)
+### API Routes (24 route files)
 
 ```
 /api/auth              — Registration, login
@@ -193,6 +199,7 @@ Each class carries typed error codes. Express 5 automatically forwards rejected 
 /api/guide             — In-game guide content
 /api/admin             — Admin controls, cycle management
 /api/admin/tournaments — Tournament admin operations
+/api/admin/uploads     — Admin uploads visibility, orphan cleanup
 /api/practice-arena    — Practice battles
 /api/onboarding/analytics — Onboarding funnel analytics
 /api/health            — Health check (DB connectivity)

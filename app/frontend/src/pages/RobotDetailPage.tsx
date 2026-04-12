@@ -360,6 +360,15 @@ function RobotDetailPage() {
     setError('');
     setSuccessMessage('');
 
+    // If the imageUrl starts with /uploads/, it was set by the upload confirm handler
+    // which already updated the robot in the database — just refresh local state
+    if (imageUrl.startsWith('/uploads/')) {
+      setRobot({ ...robot, imageUrl });
+      setSuccessMessage('Robot image updated successfully!');
+      setTimeout(() => setSuccessMessage(''), 3000);
+      return;
+    }
+
     try {
       const token = localStorage.getItem('token');
       console.log('Updating robot appearance:', { robotId: id, imageUrl });
@@ -772,6 +781,7 @@ function RobotDetailPage() {
             currentImageUrl={robot.imageUrl}
             onSelect={handleAppearanceChange}
             onClose={() => setShowImageSelector(false)}
+            robotId={robot.id}
           />
         )}
       </div>

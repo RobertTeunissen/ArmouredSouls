@@ -1,5 +1,6 @@
 import express, { Response } from 'express';
 import { z } from 'zod';
+import multer from 'multer';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import prisma from '../lib/prisma';
 import { eventLogger } from '../services/common/eventLogger';
@@ -38,6 +39,7 @@ import {
   checkRosterCapacity,
   createRobotTransaction,
 } from '../services/robot/robotCreationService';
+import { uploadRateLimiter, handleImagePreview, handleImageConfirm, fileStorageService } from '../services/moderation';
 
 // Re-export for backward compatibility (stables.ts imports from here)
 export { sanitizeRobotForPublic, SENSITIVE_ROBOT_FIELDS };
@@ -80,6 +82,21 @@ const upgradesBodySchema = z.object({
     plannedLevel: z.number().int().positive(),
   })),
 });
+
+// --- Multer config for image uploads (memory storage, 2 MB limit) ---
+const multerUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 2 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    cb(null, allowed.includes(file.mimetype));
+  },
+});
+
+// --- Zod schemas for image upload routes ---
+const imageParamsSchema = z.object({ id: positiveIntParam });
+const imageQuerySchema = z.object({ acknowledgeRobotLikeness: z.enum(['true']).optional() });
+const confirmBodySchema = z.object({ confirmationToken: z.string().uuid() });
 
 
 // Get all robots from all users
@@ -450,13 +467,19 @@ router.put('/:id/appearance', authenticateToken, validateRequest({ params: robot
     throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Invalid imageUrl', 400);
   }
 
-  const safeImagePattern = /^\/(?:src\/)?assets\/robots?[\w/-]*\.webp$/;
+  const safeImagePattern = /^\/(?:(?:src\/)?assets\/robots?[\w/-]*|uploads\/user-robots\/\d+\/[0-9a-f-]+)\.webp$/;
   if (!safeImagePattern.test(imageUrl)) {
     logger.info('Invalid image path:', imageUrl);
     throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Invalid image path. Must be a .webp file in the robots assets directory.', 400);
   }
 
   await verifyRobotOwnership(prisma, robotId, userId);
+
+  // Eager cleanup: if the robot currently has a custom uploaded image and is switching to a preset, delete the old file
+  const currentRobot = await prisma.robot.findUnique({ where: { id: robotId }, select: { imageUrl: true } });
+  if (currentRobot?.imageUrl?.startsWith('/uploads/')) {
+    await fileStorageService.deleteImage(currentRobot.imageUrl);
+  }
 
   logger.info('Updating robot with imageUrl...');
   
@@ -544,5 +567,23 @@ router.post('/:id/upgrades', authenticateToken, validateRequest({ params: robotI
     message: `Successfully upgraded ${result.upgradeOperations.length} attribute${result.upgradeOperations.length > 1 ? 's' : ''}`,
   });
 });
+
+// Upload image preview (Step 1: validate, moderate, process, return base64 preview)
+router.post(
+  '/:id/image',
+  authenticateToken,
+  uploadRateLimiter,
+  multerUpload.single('image'),
+  validateRequest({ params: imageParamsSchema, query: imageQuerySchema }),
+  handleImagePreview as never,
+);
+
+// Confirm image upload (Step 2: store to disk, update robot)
+router.put(
+  '/:id/image/confirm',
+  authenticateToken,
+  validateRequest({ params: imageParamsSchema, body: confirmBodySchema }),
+  handleImageConfirm as never,
+);
 
 export default router;

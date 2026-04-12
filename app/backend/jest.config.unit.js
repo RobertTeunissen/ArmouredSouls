@@ -53,6 +53,22 @@ const unitTestFiles = [
   'stableSanitization\\.property\\.test\\.ts',
   'adminServices\\.test\\.ts',
   'robotServices\\.test\\.ts',
+  'fileValidationService\\.test\\.ts',
+  'fileValidationService\\.property\\.test\\.ts',
+  'contentModerationService\\.test\\.ts',
+  'contentModerationService\\.property\\.test\\.ts',
+  'imageProcessingService\\.test\\.ts',
+  'imageProcessingService\\.property\\.test\\.ts',
+  'fileStorageService\\.test\\.ts',
+  'fileStorageService\\.property\\.test\\.ts',
+  'pendingUploadCache\\.test\\.ts',
+  'pendingUploadCache\\.property\\.test\\.ts',
+  'imageUploadHandlers\\.test\\.ts',
+  'imageUploadHandlers\\.property\\.test\\.ts',
+  'orphanCleanupJob\\.test\\.ts',
+  'orphanCleanupJob\\.property\\.test\\.ts',
+  'adminUploadsHandler\\.test\\.ts',
+  'adminUploadsHandler\\.property\\.test\\.ts',
 ];
 
 module.exports = {

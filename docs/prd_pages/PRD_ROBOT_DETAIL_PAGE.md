@@ -1347,6 +1347,34 @@ The overlay is never shown for users who have completed or skipped onboarding.
 
 ---
 
+---
+
+## Upload Custom Image Tab (RobotImageSelector Modal)
+
+The existing `RobotImageSelector` modal has been extended with a new "Upload Custom Image" tab alongside the preset image grid.
+
+### Tab Navigation
+- **Preset Images** tab: Existing grid of bundled robot images (unchanged)
+- **Upload Custom Image** tab: New upload flow for user-provided images
+
+### Upload Flow
+1. **File Selection**: User selects a JPEG, PNG, or WebP file (max 2 MB). Frontend validates type and size before upload.
+2. **Client-Side Crop Preview**: A 512×512 center-crop preview is rendered immediately using canvas, showing the user what the server will produce. "Upload" and "Cancel" buttons are displayed.
+3. **Server Preview**: On "Upload", the file is sent to `POST /api/robots/:id/image`. The server validates, moderates (NSFW hard block + robot-likeness soft warning), and processes the image to 512×512 WebP. A base64 preview and confirmation token are returned.
+4. **Confirmation**: User reviews the server-processed preview and clicks "Confirm" to store the image, or "Cancel" to discard.
+
+### Error Handling
+- `IMAGE_MODERATION_FAILED` (422): "This image was not approved. Please choose a different image." — no override.
+- `LOW_ROBOT_LIKENESS` (422): Warning "This doesn't look like a robot — are you sure?" with "Upload anyway" button. Re-sends with `?acknowledgeRobotLikeness=true`.
+- `PREVIEW_EXPIRED` (410): "Preview expired, please re-upload the image."
+- `RATE_LIMIT_EXCEEDED` (429): Rate limit message displayed.
+
+### Mobile-Responsive Behavior
+- Touch-friendly tap targets (minimum 44×44px)
+- Responsive modal layout without horizontal scrolling
+- Preview image scales to fit viewport
+- File picker accesses device camera roll on iOS/Android via `accept="image/*"`
+
 ## Revision History
 
 | Version | Date | Author | Changes |

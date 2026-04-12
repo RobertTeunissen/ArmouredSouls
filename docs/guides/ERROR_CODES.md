@@ -161,6 +161,19 @@ Example with details:
 | `DATABASE_FOREIGN_KEY_VIOLATION` | 400 | Foreign key constraint violation (P2003) |
 | `DATABASE_RELATION_VIOLATION` | 400 | Relation constraint violation (P2014) |
 
+### Image Upload Errors
+
+| Code | HTTP Status | Description |
+|------|-------------|-------------|
+| `IMAGE_MODERATION_FAILED` | 422 | Image rejected by NSFW content moderation (hard block, no override) |
+| `INVALID_IMAGE` | 400 | Image dimensions outside allowed range (64×64 to 4096×4096) |
+| `INVALID_IMAGE_FORMAT` | 400 | File magic bytes do not match JPEG, PNG, or WebP format |
+| `MODERATION_UNAVAILABLE` | 503 | Content moderation model is not loaded — all uploads rejected (fail-closed) |
+| `FILE_TOO_LARGE` | 400 | Uploaded file exceeds 2 MB size limit |
+| `PREVIEW_EXPIRED` | 410 | Confirmation token has expired (5-minute TTL) — user must re-upload |
+| `LOW_ROBOT_LIKENESS` | 422 | Image does not appear robot-like (soft warning — user can override with `?acknowledgeRobotLikeness=true`) |
+| `ROBOT_NOT_OWNED` | 403 | Robot belongs to another user — upload denied |
+
 ### Generic Errors
 
 | Code | HTTP Status | Description |

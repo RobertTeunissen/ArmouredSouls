@@ -14,6 +14,14 @@
 	# Compression
 	encode gzip zstd
 
+	# Serve uploaded images as static files (Req 10.1, 10.2)
+	handle /uploads/* {
+		root * /opt/armouredsouls/backend
+		header Cache-Control "public, max-age=86400"
+		header X-Content-Type-Options "nosniff"
+		file_server
+	}
+
 	# Proxy API requests to backend
 	handle /api/* {
 		reverse_proxy 127.0.0.1:3001

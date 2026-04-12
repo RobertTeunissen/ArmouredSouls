@@ -20,13 +20,14 @@ import {
   RepairLogTab,
   SecurityTab,
   PasswordResetTab,
+  ImageUploadsTab,
 } from '../components/admin';
 import type { SessionLogEntry, SystemStats } from '../components/admin/types';
 import apiClient from '../utils/apiClient';
 
-type TabType = 'dashboard' | 'cycles' | 'tournaments' | 'battles' | 'stats' | 'bankruptcy-monitor' | 'recent-users' | 'repair-log' | 'security' | 'password-reset';
+type TabType = 'dashboard' | 'cycles' | 'tournaments' | 'battles' | 'stats' | 'bankruptcy-monitor' | 'recent-users' | 'repair-log' | 'security' | 'password-reset' | 'image-uploads';
 
-const VALID_TABS: TabType[] = ['dashboard', 'cycles', 'tournaments', 'battles', 'stats', 'bankruptcy-monitor', 'recent-users', 'repair-log', 'security', 'password-reset'];
+const VALID_TABS: TabType[] = ['dashboard', 'cycles', 'tournaments', 'battles', 'stats', 'bankruptcy-monitor', 'recent-users', 'repair-log', 'security', 'password-reset', 'image-uploads'];
 
 const TAB_LABELS: Record<TabType, string> = {
   dashboard: '📊 Dashboard',
@@ -39,6 +40,7 @@ const TAB_LABELS: Record<TabType, string> = {
   'repair-log': '🔧 Repair Log',
   'security': '🛡️ Security',
   'password-reset': '🔑 Password Reset',
+  'image-uploads': '🖼️ Image Uploads',
 };
 
 function isValidTab(value: string): value is TabType {
@@ -214,6 +216,11 @@ function AdminPage() {
         {activeTab === 'password-reset' && (
           <div role="tabpanel" id="password-reset-panel" aria-labelledby="password-reset-tab">
             <PasswordResetTab />
+          </div>
+        )}
+        {activeTab === 'image-uploads' && (
+          <div role="tabpanel" id="image-uploads-panel" aria-labelledby="image-uploads-tab">
+            <ImageUploadsTab />
           </div>
         )}
       </div>
