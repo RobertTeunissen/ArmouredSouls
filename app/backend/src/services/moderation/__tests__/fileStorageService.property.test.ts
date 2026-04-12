@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Property-based tests for FileStorageService.
  * Uses fast-check to verify universal properties across generated inputs.
@@ -58,12 +59,14 @@ beforeEach(async () => {
       },
     }));
 
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const mod = require('../fileStorageService');
     service = mod.fileStorageService;
   });
 
   // Override storeImage to use temp dir
   service.storeImage = async (userId: number, buffer: Buffer): Promise<string> => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { randomUUID } = require('crypto');
     const userDir = path.join(tempDir, String(userId));
     await fs.mkdir(userDir, { recursive: true });
@@ -94,7 +97,7 @@ beforeEach(async () => {
           await fs.unlink(filePath);
           result.filesDeleted++;
           result.bytesReclaimed += stat.size;
-        } catch (error) {
+        } catch {
           result.errors.push(`Failed to delete ${filePath}`);
         }
       }
@@ -178,6 +181,7 @@ describe('FileStorageService Property Tests', () => {
 
             // Local storeImage that writes into iterDir
             const storeInIter = async (uid: number, buffer: Buffer): Promise<string> => {
+              // eslint-disable-next-line @typescript-eslint/no-require-imports
               const { randomUUID } = require('crypto');
               const userDir = path.join(iterDir, String(uid));
               await fs.mkdir(userDir, { recursive: true });

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { promises as fs } from 'fs';
 import os from 'os';
 import path from 'path';
@@ -41,6 +42,7 @@ beforeEach(async () => {
       randomUUID: actualCrypto.randomUUID,
     }));
 
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const mod = require('../fileStorageService');
     service = mod.fileStorageService;
   });
@@ -51,11 +53,12 @@ beforeEach(async () => {
   const UPLOAD_URL_PREFIX = '/uploads/user-robots';
 
   // Store original methods
-  const originalStoreImage = service.storeImage.bind(service);
-  const originalGetAbsolutePath = service.getAbsolutePath.bind(service);
+  const _originalStoreImage = service.storeImage.bind(service);
+  const _originalGetAbsolutePath = service.getAbsolutePath.bind(service);
 
   // Override storeImage to use temp dir
   service.storeImage = async (userId: number, buffer: Buffer): Promise<string> => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { randomUUID } = require('crypto');
     const userDir = path.join(tempDir, String(userId));
     await fs.mkdir(userDir, { recursive: true });
@@ -94,7 +97,7 @@ beforeEach(async () => {
           await fs.unlink(filePath);
           result.filesDeleted++;
           result.bytesReclaimed += stat.size;
-        } catch (error) {
+        } catch {
           result.errors.push(`Failed to delete ${filePath}`);
         }
       }

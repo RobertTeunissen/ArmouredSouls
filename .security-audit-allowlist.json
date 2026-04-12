@@ -42,6 +42,48 @@
       "justification": "Transitive dependency of @prisma/dev. Path traversal in toSSG() not reachable — SSG functionality is not used.",
       "reviewDate": "2026-04-09",
       "nextReviewDate": "2026-05-09"
+    },
+    {
+      "id": "GHSA-34x7-hfp2-rc4v",
+      "package": "tar",
+      "justification": "Transitive dependency of @tensorflow/tfjs-node via @mapbox/node-pre-gyp. Only used during native binary installation, not at runtime. tar is not used to extract user-supplied archives.",
+      "reviewDate": "2026-04-12",
+      "nextReviewDate": "2026-05-12"
+    },
+    {
+      "id": "GHSA-8qq5-rm4j-mr97",
+      "package": "tar",
+      "justification": "Transitive dependency of @tensorflow/tfjs-node via @mapbox/node-pre-gyp. Only used during native binary installation, not at runtime.",
+      "reviewDate": "2026-04-12",
+      "nextReviewDate": "2026-05-12"
+    },
+    {
+      "id": "GHSA-83g3-92jg-28cx",
+      "package": "tar",
+      "justification": "Transitive dependency of @tensorflow/tfjs-node via @mapbox/node-pre-gyp. Only used during native binary installation, not at runtime.",
+      "reviewDate": "2026-04-12",
+      "nextReviewDate": "2026-05-12"
+    },
+    {
+      "id": "GHSA-qffp-2rhf-9h96",
+      "package": "tar",
+      "justification": "Transitive dependency of @tensorflow/tfjs-node via @mapbox/node-pre-gyp. Only used during native binary installation, not at runtime.",
+      "reviewDate": "2026-04-12",
+      "nextReviewDate": "2026-05-12"
+    },
+    {
+      "id": "GHSA-9ppj-qmqm-q256",
+      "package": "tar",
+      "justification": "Transitive dependency of @tensorflow/tfjs-node via @mapbox/node-pre-gyp. Only used during native binary installation, not at runtime.",
+      "reviewDate": "2026-04-12",
+      "nextReviewDate": "2026-05-12"
+    },
+    {
+      "id": "GHSA-r6q2-hw4h-h46w",
+      "package": "tar",
+      "justification": "Transitive dependency of @tensorflow/tfjs-node via @mapbox/node-pre-gyp. Only used during native binary installation, not at runtime.",
+      "reviewDate": "2026-04-12",
+      "nextReviewDate": "2026-05-12"
     }
   ],
   "_entrySchema": {

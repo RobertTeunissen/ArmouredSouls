@@ -133,10 +133,7 @@ describe('FileValidationService Property Tests', () => {
    * dimension range, the service SHALL reject it.
    */
   describe('Property 4: Invalid file rejection', () => {
-    // Magic byte prefixes to filter out when generating random buffers
-    const JPEG_PREFIX = [0xff, 0xd8, 0xff];
-    const PNG_PREFIX = [0x89, 0x50, 0x4e, 0x47];
-    // WebP: RIFF at offset 0 and WEBP at offset 8
+    // Magic byte prefixes checked inline in startsWithKnownMagicBytes below
 
     function startsWithKnownMagicBytes(bytes: Uint8Array): boolean {
       if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) {

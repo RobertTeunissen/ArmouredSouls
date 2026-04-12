@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Unit tests for adminUploadsHandler.
  *
@@ -169,7 +170,7 @@ describe('handleAdminUploads', () => {
     await handleAdminUploads(req, res);
 
     // Verify the where clause includes userId
-    const txCall = (prisma.$transaction as jest.Mock).mock.calls[0][0];
+    const _txCall = (prisma.$transaction as jest.Mock).mock.calls[0][0];
     // The transaction receives an array of promises; we verify the handler ran without error
     expect(res.status).toHaveBeenCalledWith(200);
   });

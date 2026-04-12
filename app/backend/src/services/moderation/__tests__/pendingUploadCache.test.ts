@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Unit tests for PendingUploadCache
  * Validates: Requirements 1.6, 1.7
@@ -41,6 +42,7 @@ beforeEach(() => {
 
     // Import the class fresh — the module-level singleton calls startCleanup(),
     // but with fake timers the interval won't fire until we advance time.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const mod = require('../pendingUploadCache');
     cache = mod.pendingUploadCache;
   });

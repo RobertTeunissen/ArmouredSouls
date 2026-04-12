@@ -47,7 +47,7 @@ async function fileExists(filePath: string): Promise<boolean> {
 }
 
 // We need to mock the service to use our temp directory
-let mockDeleteImage: jest.Mock;
+let _mockDeleteImage: jest.Mock;
 
 jest.mock('../../../config/logger', () => ({
   __esModule: true,
@@ -61,7 +61,7 @@ jest.mock('../../../config/logger', () => ({
 
 beforeEach(async () => {
   tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'orphan-prop-test-'));
-  mockDeleteImage = jest.fn();
+  _mockDeleteImage = jest.fn();
 });
 
 afterEach(async () => {

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Property-based tests for ContentModerationService.
  * Uses fast-check to verify universal properties across generated inputs.
@@ -72,6 +73,7 @@ async function createService(): Promise<any> {
       },
     }));
 
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const mod = require('../contentModerationService');
     service = mod.contentModerationService;
   });

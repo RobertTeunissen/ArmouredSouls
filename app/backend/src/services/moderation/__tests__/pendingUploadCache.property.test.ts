@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Property-based tests for PendingUploadCache.
  * Uses fast-check to verify universal properties across generated inputs.
@@ -43,6 +44,7 @@ beforeEach(() => {
       },
     }));
 
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const mod = require('../pendingUploadCache');
     cache = mod.pendingUploadCache;
   });

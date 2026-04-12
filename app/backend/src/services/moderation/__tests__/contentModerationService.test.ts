@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Unit tests for ContentModerationService
  * Validates: Requirements 3.1, 3.2, 3.4, 3.5, 4.1, 4.2
@@ -63,6 +64,7 @@ async function createService(options?: { failLoad?: boolean }) {
       },
     }));
 
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const mod = require('../contentModerationService');
     service = mod.contentModerationService;
   });
