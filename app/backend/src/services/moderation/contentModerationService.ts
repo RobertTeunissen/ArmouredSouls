@@ -1,5 +1,5 @@
 import * as nsfwjs from 'nsfwjs';
-import * as tf from '@tensorflow/tfjs-node';
+import * as tf from '@tensorflow/tfjs';
 import logger from '../../config/logger';
 
 export interface ModerationResult {
@@ -60,7 +60,17 @@ class ContentModerationService {
 
     let imageTensor: tf.Tensor3D | null = null;
     try {
-      imageTensor = tf.node.decodeImage(buffer, 3) as tf.Tensor3D;
+      // Use sharp to decode image to raw RGB pixels, then create tensor
+      const sharp = (await import('sharp')).default;
+      const { data, info } = await sharp(buffer)
+        .resize(224, 224) // nsfwjs MobileNetV2 expects 224×224
+        .removeAlpha()
+        .raw()
+        .toBuffer({ resolveWithObject: true });
+      imageTensor = tf.tensor3d(
+        new Uint8Array(data),
+        [info.height, info.width, info.channels],
+      );
       const predictions = await this.model.classify(imageTensor);
 
       const scores = this.predictionsToScores(predictions);

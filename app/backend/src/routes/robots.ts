@@ -415,9 +415,8 @@ router.post('/repair-all', authenticateToken, validateRequest({}), async (req: A
   });
 });
 
-// Get robot rankings
+// Get robot rankings (public — returns only aggregated category sums, percentiles, and ranks; no raw attributes)
 router.get('/:id/rankings', authenticateToken, validateRequest({ params: robotIdParamsSchema }), async (req: AuthRequest, res: Response) => {
-  const userId = req.user!.userId;
   const robotId = parseInt(String(req.params.id));
 
   if (isNaN(robotId)) {
@@ -427,10 +426,6 @@ router.get('/:id/rankings', authenticateToken, validateRequest({ params: robotId
   const robot = await prisma.robot.findUnique({ where: { id: robotId } });
 
   if (!robot) {
-    throw new RobotError(RobotErrorCode.ROBOT_NOT_FOUND, 'Robot not found', 404);
-  }
-
-  if (robot.userId !== userId) {
     throw new RobotError(RobotErrorCode.ROBOT_NOT_FOUND, 'Robot not found', 404);
   }
 
