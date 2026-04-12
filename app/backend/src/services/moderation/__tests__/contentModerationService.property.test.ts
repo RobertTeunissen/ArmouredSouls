@@ -60,9 +60,21 @@ async function createService(): Promise<any> {
 
   jest.isolateModules(() => {
     jest.doMock('nsfwjs', () => ({ load: mockLoad }));
-    jest.doMock('@tensorflow/tfjs-node', () => ({
-      node: { decodeImage: mockDecodeImage },
+    jest.doMock('@tensorflow/tfjs', () => ({
+      tensor3d: () => ({ dispose: mockDispose }),
     }));
+    jest.doMock('sharp', () => {
+      const mockSharp = () => ({
+        resize: () => mockSharp(),
+        removeAlpha: () => mockSharp(),
+        raw: () => mockSharp(),
+        toBuffer: jest.fn().mockResolvedValue({
+          data: Buffer.alloc(224 * 224 * 3),
+          info: { height: 224, width: 224, channels: 3 },
+        }),
+      });
+      return { __esModule: true, default: mockSharp };
+    });
     jest.doMock('../../../config/logger', () => ({
       __esModule: true,
       default: {

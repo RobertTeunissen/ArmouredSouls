@@ -12,27 +12,26 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 
 | Rank | Item | # | Votes | BV | TC | RR | Size | WSJF |
 |------|------|---|-------|----|----|-----|------|------|
-| 1 | Statistical Rankings Bug Fix | 2 | — | 4 | 5 | 2 | 1 | **11.0** |
-| 2 | Game Loop Audit | 6 | 3 🗳️ | 3 | 4 | 5 | 2 | **6.0** |
-| 3 | Monitoring and Alerting | 3 | 2 🗳️ | 3 | 4 | 4 | 2 | **5.5** |
-| 4 | Post-Battle Results Page | 10 | 4 🗳️ | 5 | 3 | 2 | 2 | **5.0** |
-| 5 | Facility Investment Advisor | 1 | 1 🗳️ | 4 | 5 | 1 | 2 | **5.0** |
-| 6 | In-Game Changelog / "What's New" | 17 | 4 🗳️ | 4 | 3 | 2 | 2 | **4.5** |
-| 7 | Feature Flags | 15 | 1 🗳️ | 2 | 2 | 4 | 2 | **4.0** |
-| 8 | Battle Report Layout Overhaul | 14 | 5 🗳️ | 5 | 3 | 2 | 3 | **3.3** |
-| 9 | Achievement / Milestone System | 8 | 3 🗳️ | 4 | 2 | 3 | 3 | **3.0** |
-| 10 | Landing Page | 4 | 0 🗳️ | 3 | 2 | 1 | 2 | **3.0** |
-| 11 | Weapon Experimentation Problem | 5 | 1 🗳️ | 4 | 3 | 4 | 4 | **2.8** |
-| 12 | Flex-Point Attribute Bucket | 9 | 1 🗳️ | 3 | 2 | 3 | 4 | **2.0** |
-| 13 | Weapon Special Properties | 11 | 1 🗳️ | 3 | 2 | 2 | 4 | **1.8** |
-| 14 | Admin Portal Redesign | 13 | 1 🗳️ | 2 | 1 | 2 | 3 | **1.7** |
-| 15 | Player Personas / Complexity Modes | 16 | 1 🗳️ | 2 | 1 | 2 | 3 | **1.7** |
-| 16 | Arena / Terrain Modifiers | 12 | 1 🗳️ | 3 | 1 | 2 | 4 | **1.5** |
-| 17 | Unimplemented Facilities | 7 | 0 🗳️ | 2 | 1 | 1 | 5 | **0.8** |
+| 1 | Game Loop Audit | 6 | 3 🗳️ | 3 | 4 | 5 | 2 | **6.0** |
+| 2 | Monitoring and Alerting | 3 | 2 🗳️ | 3 | 4 | 4 | 2 | **5.5** |
+| 3 | Post-Battle Results Page | 10 | 4 🗳️ | 5 | 3 | 2 | 2 | **5.0** |
+| 4 | Facility Investment Advisor | 1 | 1 🗳️ | 4 | 5 | 1 | 2 | **5.0** |
+| 5 | In-Game Changelog / "What's New" | 17 | 4 🗳️ | 4 | 3 | 2 | 2 | **4.5** |
+| 6 | Feature Flags | 15 | 1 🗳️ | 2 | 2 | 4 | 2 | **4.0** |
+| 7 | Battle Report Layout Overhaul | 14 | 5 🗳️ | 5 | 3 | 2 | 3 | **3.3** |
+| 8 | Achievement / Milestone System | 8 | 3 🗳️ | 4 | 2 | 3 | 3 | **3.0** |
+| 9 | Landing Page | 4 | 0 🗳️ | 3 | 2 | 1 | 2 | **3.0** |
+| 10 | Weapon Experimentation Problem | 5 | 1 🗳️ | 4 | 3 | 4 | 4 | **2.8** |
+| 11 | Flex-Point Attribute Bucket | 9 | 1 🗳️ | 3 | 2 | 3 | 4 | **2.0** |
+| 12 | Weapon Special Properties | 11 | 1 🗳️ | 3 | 2 | 2 | 4 | **1.8** |
+| 13 | Admin Portal Redesign | 13 | 1 🗳️ | 2 | 1 | 2 | 3 | **1.7** |
+| 14 | Player Personas / Complexity Modes | 16 | 1 🗳️ | 2 | 1 | 2 | 3 | **1.7** |
+| 15 | Arena / Terrain Modifiers | 12 | 1 🗳️ | 3 | 1 | 2 | 4 | **1.5** |
+| 16 | Unimplemented Facilities | 7 | 0 🗳️ | 2 | 1 | 1 | 5 | **0.8** |
 
 ### Recommended Build Order
 
-**Tier 1 — Do Now** (next 2–4 weeks): #2 bug fix (1 day), #1 broken feature (~1 week), #6 design audit (parallel), #3 monitoring (lightweight)
+**Tier 1 — Do Now** (next 2–4 weeks): #1 broken feature (~1 week), #6 design audit (parallel), #3 monitoring (lightweight)
 
 **Tier 2 — Build Next** (weeks 4–8): #10 + #14 battle feedback pair (9 combined votes, strongest player signal), #17 changelog (~1 week)
 
@@ -49,16 +48,6 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 **Priority**: High — broken feature visible to players
 
 The Investments & ROI tab and Investment Advisor tab on the Facilities page are not working as intended. The consolidation from the old pages was structural only — the data isn't flowing correctly. Players see empty or wrong numbers.
-
-### #2 — Statistical Rankings Broken on Robot Detail Page
-**Source**: Bug — broken since exploit audit  
-**Priority**: High — broken feature visible to all players viewing other robots
-
-The "Statistical Rankings" section on robot detail pages (e.g. `/robots/285`) shows "Failed to load rankings. Please try again later." when viewing any robot you don't own. Broke as a side effect of the exploit audit that restricted attribute visibility for non-owners.
-
-Root cause: the `GET /api/robots/:id/rankings` endpoint in `routes/robots.ts` has an ownership check (`robot.userId !== userId`) that rejects non-owners with a 404. But the robot detail page is a public profile viewable by any logged-in user. The rankings endpoint only returns aggregated category sums, percentiles, and ranks (via `robotRankingService.ts`) — it does not expose individual attribute values, so the exploit audit concern doesn't apply here.
-
-Fix: remove or relax the ownership check on the rankings endpoint. The `getRobotRankings` service returns `combatCategory`, `defenseCategory`, etc. as rank/percentile pairs — no raw attribute leakage.
 
 ### #3 — Monitoring and Alerting
 **Source**: Phase 2 roadmap  

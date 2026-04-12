@@ -1,6 +1,3 @@
-// Polyfill must be the very first import — patches util.isNullOrUndefined for tfjs-node on Node 22+
-import './polyfills';
-
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
