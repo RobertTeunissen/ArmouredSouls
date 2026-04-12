@@ -185,3 +185,29 @@ ssh deploy@YOUR_VPS_IP
 pm2 status
 pm2 logs armouredsouls-backend --lines 20
 ```
+
+---
+
+## User Uploads Directory
+
+The image upload feature stores user-uploaded robot images on the local filesystem. The uploads directory must exist with correct permissions before the feature can be used.
+
+### Create Uploads Directory
+
+```bash
+ssh deploy@YOUR_VPS_IP
+mkdir -p /opt/armouredsouls/backend/uploads/user-robots
+chown deploy:deploy /opt/armouredsouls/backend/uploads/user-robots
+chmod 755 /opt/armouredsouls/backend/uploads/user-robots
+```
+
+### Caddy Static File Serving
+
+The `Caddyfile` includes a `handle /uploads/*` block that serves uploaded images as static files from the backend directory. This is already configured in `app/Caddyfile` — no manual Caddy changes are needed on deploy. The block sets:
+- `root * /opt/armouredsouls/backend`
+- `Cache-Control: public, max-age=86400`
+- `X-Content-Type-Options: nosniff`
+
+### Backup Considerations
+
+The `uploads/user-robots/` directory is not included in the PostgreSQL backup. Consider adding a separate rsync or tar backup for uploaded images if data durability is critical. Orphaned images are cleaned up automatically during the daily settlement cycle (Step 15).

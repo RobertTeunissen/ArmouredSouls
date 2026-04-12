@@ -798,6 +798,15 @@ model AuditLog {
 - `metadata` is optional calculation metadata for debugging
 - Heavily indexed for cycle-based, user-based, and robot-based queries
 
+**Image Upload Event Types**:
+
+| Event Type | Trigger | Payload Fields |
+|---|---|---|
+| `image_moderation_rejection` | NSFW content detected (hard block) | `{ robotId, scores: { neutral, drawing, hentai, porn, sexy }, robotLikenessScore, reason: 'nsfw_content', filename, timestamp }` |
+| `image_robot_likeness_warning` | Robot-likeness below threshold (soft warning, initial 422) | `{ robotId, robotLikenessScore, timestamp }` |
+| `image_robot_likeness_override` | User re-uploaded with `?acknowledgeRobotLikeness=true` | `{ robotId, robotLikenessScore, timestamp }` |
+| `image_upload_success` | Image confirmed and stored to disk | `{ robotId, imageUrl, fileSize, originalDimensions: { width, height } }` |
+
 ### CycleSnapshot Model
 
 Pre-aggregated metrics per cycle for fast historical queries.

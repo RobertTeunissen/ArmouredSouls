@@ -15,6 +15,7 @@ import {
   advanceWinnersToNextRound,
 } from '../tournament/tournamentService';
 import { processTournamentBattle } from '../tournament/tournamentBattleOrchestrator';
+import { runOrphanCleanup } from '../moderation/orphanCleanupJob';
 import { EventLogger } from '../common/eventLogger';
 import { cycleLogger } from '../../utils/cycleLogger';
 import prisma from '../../lib/prisma';
@@ -632,6 +633,22 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
         );
       } catch (snapshotError) {
         logger.error(`[Admin] Failed to create cycle snapshot:`, snapshotError);
+      }
+
+      // Step 15: Orphan Image Cleanup
+      logger.info(`[Admin] Step 15: Orphan Image Cleanup`);
+      const step15Start = Date.now();
+      try {
+        const orphanResult = await runOrphanCleanup();
+        await eventLogger.logCycleStepComplete(
+          currentCycleNumber,
+          'orphan_image_cleanup',
+          15,
+          Date.now() - step15Start,
+          { filesDeleted: orphanResult.filesDeleted, bytesReclaimed: orphanResult.bytesReclaimed }
+        );
+      } catch (orphanError) {
+        logger.error(`[Admin] Failed to run orphan image cleanup:`, orphanError);
       }
 
       // Display Cycle Summary

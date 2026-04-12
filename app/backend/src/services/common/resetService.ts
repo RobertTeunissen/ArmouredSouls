@@ -1,6 +1,7 @@
 import prisma from '../../lib/prisma';
 import { OnboardingError, OnboardingErrorCode } from '../../errors/onboardingErrors';
 import { AuthError, AuthErrorCode } from '../../errors/authErrors';
+import { fileStorageService } from '../moderation';
 
 /**
  * Reset Service
@@ -196,6 +197,17 @@ export async function performAccountReset(userId: number, reason?: string): Prom
 
   // Perform reset in transaction
   await prisma.$transaction(async (tx) => {
+    // Eager cleanup: delete custom uploaded images for robots being deleted
+    const robotsWithCustomImages = await tx.robot.findMany({
+      where: { userId, imageUrl: { startsWith: '/uploads/' } },
+      select: { imageUrl: true },
+    });
+    for (const robot of robotsWithCustomImages) {
+      if (robot.imageUrl) {
+        await fileStorageService.deleteImage(robot.imageUrl);
+      }
+    }
+
     // Delete all robots (cascade will handle battle history)
     await tx.robot.deleteMany({
       where: { userId },

@@ -19,3 +19,7 @@ id_ed25519
 
 # OS files
 .DS_Store
+
+# User-uploaded robot images (keep .gitkeep for directory structure)
+uploads/user-robots/*
+!uploads/user-robots/.gitkeep

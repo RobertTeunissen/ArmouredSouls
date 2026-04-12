@@ -308,3 +308,18 @@ Every new endpoint must be reviewed against this list.
 ### Admin Password Reset Abuse
 **Exploit**: Compromised admin mass-resets passwords across many user accounts.  
 **Prevention**: Per-admin rate limit (10 requests per 15 minutes), audit trail via `AuditLog` with `eventType: "admin_password_reset"`, `tokenVersion` invalidation on every reset, all attempts (success and failure) logged via `SecurityMonitor`.
+
+### Image Upload Content Moderation
+**Exploit**: Users upload NSFW, malicious, or non-image files disguised as images.  
+**Prevention**:
+- **Fail-closed moderation**: If the nsfwjs model is unavailable, all uploads are rejected (HTTP 503 `MODERATION_UNAVAILABLE`). No image is ever stored without passing moderation.
+- **NSFW hard block**: Images exceeding NSFW thresholds (porn ≥ 0.3, hentai ≥ 0.3, sexy ≥ 0.5) are rejected with HTTP 422 `IMAGE_MODERATION_FAILED`. No override available.
+- **Robot-likeness soft warning**: Images with low drawing + neutral scores (< 0.6) trigger a 422 `LOW_ROBOT_LIKENESS` warning. Users can override via `?acknowledgeRobotLikeness=true`. Both warnings and overrides are logged.
+- **Two-step preview/confirm flow**: Preview step validates, moderates, and processes the image but stores nothing to disk. Only after explicit user confirmation is the image persisted. Pending uploads are held in an in-memory `PendingUploadCache` with 5-minute TTL and max 3 entries per user.
+- **Magic byte validation**: File type is determined by magic bytes (JPEG `FF D8 FF`, PNG `89 50 4E 47`, WebP `RIFF....WEBP`), not declared MIME type. Prevents disguised executables.
+- **Non-guessable UUID URLs**: Stored as `uploads/user-robots/{userId}/{uuid}.webp` using `crypto.randomUUID()`. Prevents URL enumeration.
+- **Separate storage path**: User uploads stored under `uploads/user-robots/`, never co-located with bundled preset images in `app/frontend/src/assets/robots/`.
+- **Dual audit logging**: NSFW rejections logged to both `AuditLog` DB (`image_moderation_rejection`) and `SecurityMonitor` (severity: medium). Robot-likeness warnings (`image_robot_likeness_warning`) and overrides (`image_robot_likeness_override`) logged at severity: low.
+- **Confirmation token security**: Tokens are UUIDs validated via Zod. Expired/invalid tokens return 410 `PREVIEW_EXPIRED`.
+- **Upload rate limiting**: Per-user limit of 5 uploads per 10-minute window via `express-rate-limit`, keyed by `userId` (runs after `authenticateToken`). Violations tracked by `SecurityMonitor`.
+- **Client-side crop preview**: Frontend renders a 512×512 center-crop preview before upload, reducing unnecessary server round-trips.

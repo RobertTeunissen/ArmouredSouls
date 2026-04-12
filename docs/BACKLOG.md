@@ -6,6 +6,42 @@ Items identified during audits, reviews, and development. Prioritized by impact 
 
 ---
 
+## WSJF Priority Ranking
+
+Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Business Value + Time Criticality + Risk Reduction) / Job Size. Each factor 1–5. Items already in spec queue (#8 Battle Replay, #9 Web Push, #20 Robot Image Upload) excluded.
+
+| Rank | Item | # | Votes | BV | TC | RR | Size | WSJF |
+|------|------|---|-------|----|----|-----|------|------|
+| 1 | Statistical Rankings Bug Fix | 2 | — | 4 | 5 | 2 | 1 | **11.0** |
+| 2 | Game Loop Audit | 6 | 3 🗳️ | 3 | 4 | 5 | 2 | **6.0** |
+| 3 | Monitoring and Alerting | 3 | 2 🗳️ | 3 | 4 | 4 | 2 | **5.5** |
+| 4 | Post-Battle Results Page | 10 | 4 🗳️ | 5 | 3 | 2 | 2 | **5.0** |
+| 5 | Facility Investment Advisor | 1 | 1 🗳️ | 4 | 5 | 1 | 2 | **5.0** |
+| 6 | In-Game Changelog / "What's New" | 17 | 4 🗳️ | 4 | 3 | 2 | 2 | **4.5** |
+| 7 | Feature Flags | 15 | 1 🗳️ | 2 | 2 | 4 | 2 | **4.0** |
+| 8 | Battle Report Layout Overhaul | 14 | 5 🗳️ | 5 | 3 | 2 | 3 | **3.3** |
+| 9 | Achievement / Milestone System | 8 | 3 🗳️ | 4 | 2 | 3 | 3 | **3.0** |
+| 10 | Landing Page | 4 | 0 🗳️ | 3 | 2 | 1 | 2 | **3.0** |
+| 11 | Weapon Experimentation Problem | 5 | 1 🗳️ | 4 | 3 | 4 | 4 | **2.8** |
+| 12 | Flex-Point Attribute Bucket | 9 | 1 🗳️ | 3 | 2 | 3 | 4 | **2.0** |
+| 13 | Weapon Special Properties | 11 | 1 🗳️ | 3 | 2 | 2 | 4 | **1.8** |
+| 14 | Admin Portal Redesign | 13 | 1 🗳️ | 2 | 1 | 2 | 3 | **1.7** |
+| 15 | Player Personas / Complexity Modes | 16 | 1 🗳️ | 2 | 1 | 2 | 3 | **1.7** |
+| 16 | Arena / Terrain Modifiers | 12 | 1 🗳️ | 3 | 1 | 2 | 4 | **1.5** |
+| 17 | Unimplemented Facilities | 7 | 0 🗳️ | 2 | 1 | 1 | 5 | **0.8** |
+
+### Recommended Build Order
+
+**Tier 1 — Do Now** (next 2–4 weeks): #2 bug fix (1 day), #1 broken feature (~1 week), #6 design audit (parallel), #3 monitoring (lightweight)
+
+**Tier 2 — Build Next** (weeks 4–8): #10 + #14 battle feedback pair (9 combined votes, strongest player signal), #17 changelog (~1 week)
+
+**Tier 3 — Plan After** (weeks 8–12): #8 achievements, #15 feature flags, #5 weapon experimentation (needs #6 audit input)
+
+**Tier 4 — Backlog**: Everything else — revisit after Tier 3.
+
+---
+
 ## High Priority
 
 ### #1 — Facility Investment Advisor & ROI Calculator
@@ -265,11 +301,31 @@ Persist filter/sort state in URL query params for shareable links and browser na
 
 Cache leaderboard queries. Currently queries run on every request.
 
-### #27 — Command Palette (Cmd+K)
-**Source**: Deleted navigation analysis doc  
-**Priority**: Low — power user feature
+### #27 — Universal Search / Command Palette (Cmd+K)
+**Source**: Deleted navigation analysis doc, backlog triage  
+**Priority**: Low → Medium candidate — improves discoverability across the entire app
 
-Keyboard-driven quick access to pages, robots, and actions with fuzzy search.
+No global search exists. Players can't search for a robot by name, find another player's stable, look up a weapon, or jump to a specific page without navigating manually. The only search inputs are page-local filters (battle history, admin user lookup, guide articles).
+
+A universal search bar (header or Cmd+K overlay) that queries across:
+- **Robots** — by name, owner, league tier
+- **Players/Stables** — by username
+- **Weapons** — by name, type, tier
+- **Pages** — fuzzy match on page names and sections
+- **Guide articles** — already has a search index (`/api/guide/search-index`)
+- **Battle history** — by robot names, battle ID
+
+Implementation options:
+- **Simple**: Single search input in the header, backend `/api/search?q=...` endpoint that queries multiple tables with `ILIKE` and returns categorized results. Frontend renders grouped results (robots, players, weapons, pages).
+- **Power user**: Cmd+K modal with keyboard navigation, recent searches, and type-ahead. More effort but better UX for engaged players.
+- **Hybrid**: Start with the header search bar, add Cmd+K shortcut later.
+
+Existing infrastructure to leverage:
+- `SearchBar` component already exists (`app/frontend/src/components/SearchBar.tsx`)
+- Guide search index API already built
+- Admin user search endpoint pattern (`/api/admin/users/search`) can be generalized
+
+Could pair with the In-Game Changelog (#17) — search should also surface changelog entries so players can find "what changed about X."
 
 ### #28 — Progressive Feature Disclosure
 **Source**: Deleted navigation analysis doc  

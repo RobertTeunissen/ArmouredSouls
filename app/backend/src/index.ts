@@ -1,3 +1,6 @@
+// Polyfill must be the very first import — patches util.isNullOrUndefined for tfjs-node on Node 22+
+import './polyfills';
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -24,6 +27,7 @@ import practiceArenaRouter from './routes/practiceArena';
 import stablesRoutes from './routes/stables';
 import { loadEnvConfig } from './config/env';
 import { initScheduler } from './services/cycle/cycleScheduler';
+import { contentModerationService } from './services/moderation';
 import { createGeneralLimiter, createAuthLimiter, createLoginLimiter } from './middleware/rateLimiter';
 import { createUserEconomicLimiter } from './middleware/userRateLimiter';
 import { authenticateToken } from './middleware/auth';
@@ -129,8 +133,23 @@ app.use('/api/koth', kothRoutes);
 app.use('/api/practice-arena', practiceArenaRouter);
 app.use('/api/stables', stablesRoutes);
 
+// Serve uploaded images as static files (in production, Caddy handles this)
+import path from 'path';
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads'), {
+  maxAge: '1d',
+  setHeaders: (res) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+  },
+}));
+
 // Error handling middleware
 app.use(errorHandler);
+
+// Initialize content moderation model (fire-and-forget — service handles errors internally)
+contentModerationService.initialize().catch(err => {
+  logger.error('Failed to initialize content moderation service:', err);
+  // App continues — uploads will be rejected via fail-closed pattern
+});
 
 const host = (config.nodeEnv === 'production' || config.nodeEnv === 'acceptance')
   ? '127.0.0.1'

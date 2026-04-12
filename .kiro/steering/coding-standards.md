@@ -234,6 +234,27 @@ See `docs/architecture/PRD_SECURITY.md` for comprehensive security strategy cove
 - `error`-level rules (`detect-eval-with-expression`, `detect-no-csrf-before-method-override`, `detect-buffer-noassert`, `detect-new-buffer`) block CI
 - Run `npm run lint` before committing to catch security anti-patterns
 
+### Content Moderation Service Pattern
+- The `ContentModerationService` is a singleton loaded once at application startup via `contentModerationService.initialize()` in `src/index.ts`
+- If model loading fails, the service operates in fail-closed mode: all `classifyImage()` calls return `{ safe: false, reason: 'moderation_unavailable' }`, and the upload handler returns HTTP 503
+- The service uses nsfwjs with TensorFlow.js CPU backend — no GPU required
+- All TensorFlow tensors must be disposed after classification to prevent memory leaks
+- Pattern: `const tensor = tf.node.decodeImage(buffer); try { ... } finally { tensor.dispose(); }`
+
+### Upload Rate Limiter Pattern
+- Per-user upload rate limiting uses `express-rate-limit` with `keyGenerator` based on `req.user.userId`
+- The rate limiter middleware runs AFTER `authenticateToken` so that `req.user` is populated
+- Violations are tracked via `securityMonitor.trackRateLimitViolation()` for admin dashboard visibility
+- Configuration: 5 uploads per 10-minute window per user
+- See `src/services/moderation/uploadRateLimiter.ts` for implementation
+
+### PendingUploadCache Pattern
+- In-memory `Map<string, PendingUploadEntry>` keyed by UUID confirmation token
+- 5-minute TTL with automatic cleanup via `setInterval` every 60 seconds
+- Per-user limit of 3 pending entries to prevent memory abuse (oldest evicted when exceeded)
+- Used in the two-step upload flow: preview stores to cache, confirm retrieves and persists to disk
+- See `src/services/moderation/pendingUploadCache.ts` for implementation
+
 ## Performance Considerations
 - Optimize database queries (use EXPLAIN when needed)
 - Implement pagination for large datasets
