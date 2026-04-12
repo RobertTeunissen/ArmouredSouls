@@ -357,9 +357,10 @@ jobs:
           host: ${{ secrets.ACC_VPS_IP }}
           username: ${{ secrets.ACC_VPS_USER }}
           key: ${{ secrets.ACC_SSH_KEY }}
+          command_timeout: 20m
           script: |
             cd /opt/armouredsouls/backend
-            npm ci
+            npm install --prefer-offline
             npx prisma generate
             npm run build
 
@@ -520,9 +521,10 @@ jobs:
           host: ${{ secrets.PRD_VPS_IP }}
           username: ${{ secrets.PRD_VPS_USER }}
           key: ${{ secrets.PRD_SSH_KEY }}
+          command_timeout: 20m
           script: |
             cd /opt/armouredsouls/backend
-            npm ci
+            npm install --prefer-offline
             npx prisma generate
             npm run build
 
