@@ -19,7 +19,7 @@ import { contentModerationService } from './contentModerationService';
 import { imageProcessingService } from './imageProcessingService';
 import { pendingUploadCache } from './pendingUploadCache';
 import { fileStorageService } from './fileStorageService';
-import { SecuritySeverity } from '../security/securityLogger';
+import { SecuritySeverity, SecurityEvent } from '../security/securityLogger';
 import logger from '../../config/logger';
 
 /**
@@ -50,7 +50,10 @@ export async function handleImagePreview(req: AuthRequest, res: Response): Promi
   // Step 3: Validate file (magic bytes + dimensions)
   const validation = await fileValidationService.validateImage(file.buffer, file.mimetype);
   if (!validation.valid) {
-    res.status(400).json({ error: validation.error, code: 'INVALID_IMAGE' });
+    const code = validation.error?.includes('format') || validation.error?.includes('not supported')
+      ? 'INVALID_IMAGE_FORMAT'
+      : 'INVALID_IMAGE';
+    res.status(400).json({ error: validation.error, code });
     return;
   }
 
@@ -76,13 +79,13 @@ export async function handleImagePreview(req: AuthRequest, res: Response): Promi
       timestamp: new Date().toISOString(),
     }, { userId });
 
-    securityMonitor['recordEvent']({
+    (securityMonitor as unknown as { recordEvent(event: SecurityEvent): void }).recordEvent({
       severity: SecuritySeverity.WARNING,
       eventType: 'image_moderation_rejection',
       userId,
       details: { robotId, reason: moderation.reason },
       timestamp: new Date().toISOString(),
-    });
+    } as SecurityEvent);
 
     res.status(422).json({
       error: 'Image did not pass content moderation',
@@ -99,13 +102,13 @@ export async function handleImagePreview(req: AuthRequest, res: Response): Promi
       timestamp: new Date().toISOString(),
     }, { userId });
 
-    securityMonitor['recordEvent']({
+    (securityMonitor as unknown as { recordEvent(event: SecurityEvent): void }).recordEvent({
       severity: SecuritySeverity.INFO,
       eventType: 'image_robot_likeness_warning',
       userId,
       details: { robotId, robotLikenessScore: moderation.robotLikenessScore },
       timestamp: new Date().toISOString(),
-    });
+    } as SecurityEvent);
 
     res.status(422).json({
       error: "This doesn't look like a robot",
@@ -122,13 +125,13 @@ export async function handleImagePreview(req: AuthRequest, res: Response): Promi
       timestamp: new Date().toISOString(),
     }, { userId });
 
-    securityMonitor['recordEvent']({
+    (securityMonitor as unknown as { recordEvent(event: SecurityEvent): void }).recordEvent({
       severity: SecuritySeverity.INFO,
       eventType: 'image_robot_likeness_override',
       userId,
       details: { robotId, robotLikenessScore: moderation.robotLikenessScore },
       timestamp: new Date().toISOString(),
-    });
+    } as SecurityEvent);
   }
 
   // Step 5: Process image to 512×512 WebP
@@ -143,6 +146,8 @@ export async function handleImagePreview(req: AuthRequest, res: Response): Promi
     originalFileSize: file.size,
     originalDimensions: { width: validation.width!, height: validation.height! },
     acknowledgedRobotLikeness: acknowledgeRobotLikeness,
+    moderationScores: moderation.scores as unknown as Record<string, number>,
+    robotLikenessScore: moderation.robotLikenessScore,
     createdAt: Date.now(),
   });
 
@@ -201,13 +206,16 @@ export async function handleImageConfirm(req: AuthRequest, res: Response): Promi
     data: { imageUrl },
   });
 
-  // Step 7: Audit log success
+  // Step 7: Audit log success (include moderation scores for admin visibility, NOT in client response)
   await eventLogger.logEvent(0, 'image_upload_success' as never, {
     robotId,
     imageUrl,
     fileSize: pending.originalFileSize,
     originalDimensions: pending.originalDimensions,
+    scores: pending.moderationScores,
+    robotLikenessScore: pending.robotLikenessScore,
   }, { userId });
+
 
   // Step 8: Remove from cache
   pendingUploadCache.delete(confirmationToken);

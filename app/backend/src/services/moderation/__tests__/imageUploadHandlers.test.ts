@@ -167,7 +167,7 @@ describe('handleImagePreview', () => {
     expect(res.status).toHaveBeenCalledWith(400);
   });
 
-  it('should return 400 INVALID_IMAGE on validation failure', async () => {
+  it('should return 400 INVALID_IMAGE_FORMAT on validation failure', async () => {
     const req = makeReq();
     const res = makeRes();
     (mockPrisma.robot.findUnique as jest.Mock).mockResolvedValue({ id: 10, userId: 1 });
@@ -176,7 +176,7 @@ describe('handleImagePreview', () => {
     await handleImagePreview(req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ code: 'INVALID_IMAGE' }));
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ code: 'INVALID_IMAGE_FORMAT' }));
   });
 
   it('should return 422 IMAGE_MODERATION_FAILED on NSFW and dual-log', async () => {

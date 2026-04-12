@@ -41,7 +41,15 @@ export async function handleAdminUploads(req: AuthRequest, res: Response): Promi
   const limit = Math.min(Math.max(1, parseInt(String(req.query.limit)) || 50), 200);
   const userId = req.query.userId ? parseInt(String(req.query.userId)) : undefined;
   const startDate = req.query.startDate ? new Date(String(req.query.startDate)) : undefined;
+  if (startDate && isNaN(startDate.getTime())) {
+    res.status(400).json({ error: 'Invalid startDate format' });
+    return;
+  }
   const endDate = req.query.endDate ? new Date(String(req.query.endDate)) : undefined;
+  if (endDate && isNaN(endDate.getTime())) {
+    res.status(400).json({ error: 'Invalid endDate format' });
+    return;
+  }
 
   // Build where clause
   const where: Record<string, unknown> = { eventType: 'image_upload_success' };

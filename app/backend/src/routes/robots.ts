@@ -84,14 +84,24 @@ const upgradesBodySchema = z.object({
 });
 
 // --- Multer config for image uploads (memory storage, 2 MB limit) ---
+// MIME filtering removed — magic-byte validation in fileValidationService is authoritative
 const multerUpload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 2 * 1024 * 1024 },
-  fileFilter: (_req, file, cb) => {
-    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
-    cb(null, allowed.includes(file.mimetype));
-  },
 });
+
+/** Translate MulterError into structured JSON responses. */
+function handleMulterError(err: unknown, _req: express.Request, res: Response, next: express.NextFunction): void {
+  if (err instanceof multer.MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      res.status(400).json({ error: 'File too large. Maximum size is 2 MB.', code: 'FILE_TOO_LARGE' });
+      return;
+    }
+    res.status(400).json({ error: err.message, code: 'INVALID_IMAGE' });
+    return;
+  }
+  next(err);
+}
 
 // --- Zod schemas for image upload routes ---
 const imageParamsSchema = z.object({ id: positiveIntParam });
@@ -470,14 +480,14 @@ router.put('/:id/appearance', authenticateToken, validateRequest({ params: robot
   const safeImagePattern = /^\/(?:(?:src\/)?assets\/robots?[\w/-]*|uploads\/user-robots\/\d+\/[0-9a-f-]+)\.webp$/;
   if (!safeImagePattern.test(imageUrl)) {
     logger.info('Invalid image path:', imageUrl);
-    throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Invalid image path. Must be a .webp file in the robots assets directory.', 400);
+    throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Invalid image path. Must be a .webp file from presets or uploads.', 400);
   }
 
   await verifyRobotOwnership(prisma, robotId, userId);
 
   // Eager cleanup: if the robot currently has a custom uploaded image and is switching to a preset, delete the old file
   const currentRobot = await prisma.robot.findUnique({ where: { id: robotId }, select: { imageUrl: true } });
-  if (currentRobot?.imageUrl?.startsWith('/uploads/')) {
+  if (currentRobot?.imageUrl?.startsWith('/uploads/') && !imageUrl.startsWith('/uploads/')) {
     await fileStorageService.deleteImage(currentRobot.imageUrl);
   }
 
@@ -574,6 +584,7 @@ router.post(
   authenticateToken,
   uploadRateLimiter,
   multerUpload.single('image'),
+  handleMulterError,
   validateRequest({ params: imageParamsSchema, query: imageQuerySchema }),
   handleImagePreview as never,
 );

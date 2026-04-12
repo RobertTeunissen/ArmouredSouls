@@ -11,6 +11,8 @@ export interface PendingUploadEntry {
   originalFileSize: number;
   originalDimensions: { width: number; height: number };
   acknowledgedRobotLikeness: boolean;
+  moderationScores?: Record<string, number>;
+  robotLikenessScore?: number;
   createdAt: number;
 }
 
