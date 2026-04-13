@@ -465,6 +465,13 @@ jobs:
             done
             echo "Health check passed"
 
+      - name: Generate changelog drafts
+        continue-on-error: true
+        env:
+          CHANGELOG_API_URL: ${{ secrets.CHANGELOG_API_URL }}
+          CHANGELOG_DEPLOY_TOKEN: ${{ secrets.CHANGELOG_DEPLOY_TOKEN }}
+        run: npx ts-node app/backend/scripts/generate-changelog-drafts.ts
+
       - name: Cleanup SSH key
         if: always()
         run: rm -f ~/.ssh/deploy_key
@@ -643,6 +650,13 @@ jobs:
               ELAPSED=$((ELAPSED + 2))
             done
             echo "Health check passed"
+
+      - name: Generate changelog drafts
+        continue-on-error: true
+        env:
+          CHANGELOG_API_URL: ${{ secrets.CHANGELOG_API_URL }}
+          CHANGELOG_DEPLOY_TOKEN: ${{ secrets.CHANGELOG_DEPLOY_TOKEN }}
+        run: npx ts-node app/backend/scripts/generate-changelog-drafts.ts
 
       - name: Cleanup SSH key
         if: always()

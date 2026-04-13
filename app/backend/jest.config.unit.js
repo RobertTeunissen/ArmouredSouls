@@ -69,6 +69,10 @@ const unitTestFiles = [
   'orphanCleanupJob\\.property\\.test\\.ts',
   'adminUploadsHandler\\.test\\.ts',
   'adminUploadsHandler\\.property\\.test\\.ts',
+  'changelogImageService\\.test\\.ts',
+  'changelogImageService\\.property\\.test\\.ts',
+  'generate-changelog-drafts\\.test\\.ts',
+  'generate-changelog-drafts\\.property\\.test\\.ts',
 ];
 
 module.exports = {

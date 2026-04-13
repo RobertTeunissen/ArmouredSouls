@@ -38,6 +38,7 @@ export const implementedPages = new Set([
   '/system-health',
   '/guide',
   '/practice-arena',
+  '/changelog',
 ]);
 
 export const allPages: Record<string, NavCategory> = {
@@ -91,6 +92,7 @@ export const allPages: Record<string, NavCategory> = {
       { path: '/leaderboards/prestige', label: 'Prestige Leaderboard' },
       { path: '/leaderboards/losses', label: 'Total Losses Leaderboard' },
       { path: '/hall-of-records', label: 'Hall of Records' },
+      { path: '/changelog', label: '📰 What\'s New' },
       { path: '/chat', label: 'Chat' },
     ]
   },

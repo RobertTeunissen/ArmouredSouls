@@ -29,6 +29,7 @@ import OnboardingAnalyticsPage from './pages/OnboardingAnalyticsPage';
 import GuidePage from './pages/GuidePage';
 import PracticeArenaPage from './pages/PracticeArenaPage';
 import StableViewPage from './pages/StableViewPage';
+import ChangelogPage from './pages/ChangelogPage';
 
 function App() {
   return (
@@ -261,6 +262,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <GuidePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/changelog"
+            element={
+              <ProtectedRoute>
+                <ChangelogPage />
               </ProtectedRoute>
             }
           />

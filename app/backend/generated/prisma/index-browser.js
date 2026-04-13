@@ -24,11 +24,11 @@ exports.Prisma = Prisma
 exports.$Enums = {}
 
 /**
- * Prisma Client JS version: 7.6.0
+ * Prisma Client JS version: 7.7.0
  * Query Engine version: 75cbdc1eb7150937890ad5465d861175c6624711
  */
 Prisma.prismaVersion = {
-  client: "7.6.0",
+  client: "7.7.0",
   engine: "75cbdc1eb7150937890ad5465d861175c6624711"
 }
 
@@ -142,6 +142,7 @@ exports.Prisma.UserScalarFieldEnum = {
   onboardingChoices: 'onboardingChoices',
   onboardingStartedAt: 'onboardingStartedAt',
   onboardingCompletedAt: 'onboardingCompletedAt',
+  lastSeenChangelog: 'lastSeenChangelog',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -477,6 +478,21 @@ exports.Prisma.PracticeArenaDailyStatsScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.ChangelogEntryScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  body: 'body',
+  category: 'category',
+  status: 'status',
+  imageUrl: 'imageUrl',
+  publishDate: 'publishDate',
+  sourceType: 'sourceType',
+  sourceRef: 'sourceRef',
+  createdBy: 'createdBy',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -527,7 +543,8 @@ exports.Prisma.ModelName = {
   ResetLog: 'ResetLog',
   ScheduledKothMatch: 'ScheduledKothMatch',
   ScheduledKothMatchParticipant: 'ScheduledKothMatchParticipant',
-  PracticeArenaDailyStats: 'PracticeArenaDailyStats'
+  PracticeArenaDailyStats: 'PracticeArenaDailyStats',
+  ChangelogEntry: 'ChangelogEntry'
 };
 
 /**
