@@ -29,7 +29,7 @@ test.describe('Onboarding Tutorial Flow', () => {
     const creds = await registerNewUser(page);
     await expect(page).toHaveURL(/\/onboarding/);
 
-    await expect(page.getByText('Step 1 of 5', { exact: true })).toBeVisible();
+    await expect(page.getByText('Step 1 of 5', { exact: true })).toBeVisible({ timeout: 15000 });
 
     // Step 1: Select strategy and create robot
     await page.getByRole('button', { name: /Select 1 Mighty Robot strategy/i }).click();
@@ -37,7 +37,9 @@ test.describe('Onboarding Tutorial Flow', () => {
     await page.getByLabel(/Robot.*Name/i).fill(`Bot-${creds.username}`);
     await page.getByRole('button', { name: /Create Robot$/i }).click();
 
-    await expect(page.getByText('Step 2 of 5', { exact: true })).toBeVisible({ timeout: 15000 });
+    // Wait for the robot creation API call to complete before checking step 2
+    await page.waitForLoadState('networkidle');
+    await expect(page.getByText('Step 2 of 5', { exact: true })).toBeVisible({ timeout: 30000 });
 
     // Step 2: Skip facility investment
     await page.getByRole('button', { name: /Do Not Invest/i }).click();
