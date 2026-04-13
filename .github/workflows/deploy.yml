@@ -311,6 +311,7 @@ jobs:
           rsync -avz --delete \
             --exclude='node_modules' \
             --exclude='.env' \
+            --exclude='uploads' \
             -e "ssh -i ~/.ssh/deploy_key" \
             ./app/backend/ \
             ${{ secrets.ACC_VPS_USER }}@${{ secrets.ACC_VPS_IP }}:/opt/armouredsouls/backend/
@@ -507,6 +508,7 @@ jobs:
           rsync -avz --delete \
             --exclude='node_modules' \
             --exclude='.env' \
+            --exclude='uploads' \
             -e "ssh -i ~/.ssh/deploy_key" \
             ./app/backend/ \
             ${{ secrets.PRD_VPS_USER }}@${{ secrets.PRD_VPS_IP }}:/opt/armouredsouls/backend/
