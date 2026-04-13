@@ -108,6 +108,11 @@ export type ScheduledKothMatchParticipant = $Result.DefaultSelection<Prisma.$Sch
  * 
  */
 export type PracticeArenaDailyStats = $Result.DefaultSelection<Prisma.$PracticeArenaDailyStatsPayload>
+/**
+ * Model ChangelogEntry
+ * 
+ */
+export type ChangelogEntry = $Result.DefaultSelection<Prisma.$ChangelogEntryPayload>
 
 /**
  * ##  Prisma Client ʲˢ
@@ -419,6 +424,16 @@ export class PrismaClient<
     * ```
     */
   get practiceArenaDailyStats(): Prisma.PracticeArenaDailyStatsDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.changelogEntry`: Exposes CRUD operations for the **ChangelogEntry** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ChangelogEntries
+    * const changelogEntries = await prisma.changelogEntry.findMany()
+    * ```
+    */
+  get changelogEntry(): Prisma.ChangelogEntryDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -469,7 +484,7 @@ export namespace Prisma {
   export import Exact = $Public.Exact
 
   /**
-   * Prisma Client JS version: 7.6.0
+   * Prisma Client JS version: 7.7.0
    * Query Engine version: 75cbdc1eb7150937890ad5465d861175c6624711
    */
   export type PrismaVersion = {
@@ -871,7 +886,8 @@ export namespace Prisma {
     ResetLog: 'ResetLog',
     ScheduledKothMatch: 'ScheduledKothMatch',
     ScheduledKothMatchParticipant: 'ScheduledKothMatchParticipant',
-    PracticeArenaDailyStats: 'PracticeArenaDailyStats'
+    PracticeArenaDailyStats: 'PracticeArenaDailyStats',
+    ChangelogEntry: 'ChangelogEntry'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -887,7 +903,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "facility" | "robot" | "weaponInventory" | "weapon" | "battleParticipant" | "battle" | "scheduledLeagueMatch" | "cycleMetadata" | "auditLog" | "cycleSnapshot" | "tournament" | "scheduledTournamentMatch" | "tagTeam" | "scheduledTagTeamMatch" | "resetLog" | "scheduledKothMatch" | "scheduledKothMatchParticipant" | "practiceArenaDailyStats"
+      modelProps: "user" | "facility" | "robot" | "weaponInventory" | "weapon" | "battleParticipant" | "battle" | "scheduledLeagueMatch" | "cycleMetadata" | "auditLog" | "cycleSnapshot" | "tournament" | "scheduledTournamentMatch" | "tagTeam" | "scheduledTagTeamMatch" | "resetLog" | "scheduledKothMatch" | "scheduledKothMatchParticipant" | "practiceArenaDailyStats" | "changelogEntry"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2297,6 +2313,80 @@ export namespace Prisma {
           }
         }
       }
+      ChangelogEntry: {
+        payload: Prisma.$ChangelogEntryPayload<ExtArgs>
+        fields: Prisma.ChangelogEntryFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ChangelogEntryFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChangelogEntryPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ChangelogEntryFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChangelogEntryPayload>
+          }
+          findFirst: {
+            args: Prisma.ChangelogEntryFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChangelogEntryPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ChangelogEntryFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChangelogEntryPayload>
+          }
+          findMany: {
+            args: Prisma.ChangelogEntryFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChangelogEntryPayload>[]
+          }
+          create: {
+            args: Prisma.ChangelogEntryCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChangelogEntryPayload>
+          }
+          createMany: {
+            args: Prisma.ChangelogEntryCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ChangelogEntryCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChangelogEntryPayload>[]
+          }
+          delete: {
+            args: Prisma.ChangelogEntryDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChangelogEntryPayload>
+          }
+          update: {
+            args: Prisma.ChangelogEntryUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChangelogEntryPayload>
+          }
+          deleteMany: {
+            args: Prisma.ChangelogEntryDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ChangelogEntryUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.ChangelogEntryUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChangelogEntryPayload>[]
+          }
+          upsert: {
+            args: Prisma.ChangelogEntryUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChangelogEntryPayload>
+          }
+          aggregate: {
+            args: Prisma.ChangelogEntryAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateChangelogEntry>
+          }
+          groupBy: {
+            args: Prisma.ChangelogEntryGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ChangelogEntryGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ChangelogEntryCountArgs<ExtArgs>
+            result: $Utils.Optional<ChangelogEntryCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -2424,6 +2514,7 @@ export namespace Prisma {
     scheduledKothMatch?: ScheduledKothMatchOmit
     scheduledKothMatchParticipant?: ScheduledKothMatchParticipantOmit
     practiceArenaDailyStats?: PracticeArenaDailyStatsOmit
+    changelogEntry?: ChangelogEntryOmit
   }
 
   /* Types for Logging */
@@ -2991,6 +3082,7 @@ export namespace Prisma {
     onboardingStrategy: string | null
     onboardingStartedAt: Date | null
     onboardingCompletedAt: Date | null
+    lastSeenChangelog: Date | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -3016,6 +3108,7 @@ export namespace Prisma {
     onboardingStrategy: string | null
     onboardingStartedAt: Date | null
     onboardingCompletedAt: Date | null
+    lastSeenChangelog: Date | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -3042,6 +3135,7 @@ export namespace Prisma {
     onboardingChoices: number
     onboardingStartedAt: number
     onboardingCompletedAt: number
+    lastSeenChangelog: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -3087,6 +3181,7 @@ export namespace Prisma {
     onboardingStrategy?: true
     onboardingStartedAt?: true
     onboardingCompletedAt?: true
+    lastSeenChangelog?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -3112,6 +3207,7 @@ export namespace Prisma {
     onboardingStrategy?: true
     onboardingStartedAt?: true
     onboardingCompletedAt?: true
+    lastSeenChangelog?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -3138,6 +3234,7 @@ export namespace Prisma {
     onboardingChoices?: true
     onboardingStartedAt?: true
     onboardingCompletedAt?: true
+    lastSeenChangelog?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -3251,6 +3348,7 @@ export namespace Prisma {
     onboardingChoices: JsonValue
     onboardingStartedAt: Date | null
     onboardingCompletedAt: Date | null
+    lastSeenChangelog: Date
     createdAt: Date
     updatedAt: Date
     _count: UserCountAggregateOutputType | null
@@ -3296,6 +3394,7 @@ export namespace Prisma {
     onboardingChoices?: boolean
     onboardingStartedAt?: boolean
     onboardingCompletedAt?: boolean
+    lastSeenChangelog?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     robots?: boolean | User$robotsArgs<ExtArgs>
@@ -3327,6 +3426,7 @@ export namespace Prisma {
     onboardingChoices?: boolean
     onboardingStartedAt?: boolean
     onboardingCompletedAt?: boolean
+    lastSeenChangelog?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["user"]>
@@ -3353,6 +3453,7 @@ export namespace Prisma {
     onboardingChoices?: boolean
     onboardingStartedAt?: boolean
     onboardingCompletedAt?: boolean
+    lastSeenChangelog?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["user"]>
@@ -3379,11 +3480,12 @@ export namespace Prisma {
     onboardingChoices?: boolean
     onboardingStartedAt?: boolean
     onboardingCompletedAt?: boolean
+    lastSeenChangelog?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "username" | "email" | "passwordHash" | "role" | "currency" | "prestige" | "championshipTitles" | "stableName" | "profileVisibility" | "notificationsBattle" | "notificationsLeague" | "themePreference" | "tokenVersion" | "hasCompletedOnboarding" | "onboardingSkipped" | "onboardingStep" | "onboardingStrategy" | "onboardingChoices" | "onboardingStartedAt" | "onboardingCompletedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "username" | "email" | "passwordHash" | "role" | "currency" | "prestige" | "championshipTitles" | "stableName" | "profileVisibility" | "notificationsBattle" | "notificationsLeague" | "themePreference" | "tokenVersion" | "hasCompletedOnboarding" | "onboardingSkipped" | "onboardingStep" | "onboardingStrategy" | "onboardingChoices" | "onboardingStartedAt" | "onboardingCompletedAt" | "lastSeenChangelog" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     robots?: boolean | User$robotsArgs<ExtArgs>
     facilities?: boolean | User$facilitiesArgs<ExtArgs>
@@ -3424,6 +3526,7 @@ export namespace Prisma {
       onboardingChoices: Prisma.JsonValue
       onboardingStartedAt: Date | null
       onboardingCompletedAt: Date | null
+      lastSeenChangelog: Date
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["user"]>
@@ -3874,6 +3977,7 @@ export namespace Prisma {
     readonly onboardingChoices: FieldRef<"User", 'Json'>
     readonly onboardingStartedAt: FieldRef<"User", 'DateTime'>
     readonly onboardingCompletedAt: FieldRef<"User", 'DateTime'>
+    readonly lastSeenChangelog: FieldRef<"User", 'DateTime'>
     readonly createdAt: FieldRef<"User", 'DateTime'>
     readonly updatedAt: FieldRef<"User", 'DateTime'>
   }
@@ -28002,6 +28106,1135 @@ export namespace Prisma {
 
 
   /**
+   * Model ChangelogEntry
+   */
+
+  export type AggregateChangelogEntry = {
+    _count: ChangelogEntryCountAggregateOutputType | null
+    _avg: ChangelogEntryAvgAggregateOutputType | null
+    _sum: ChangelogEntrySumAggregateOutputType | null
+    _min: ChangelogEntryMinAggregateOutputType | null
+    _max: ChangelogEntryMaxAggregateOutputType | null
+  }
+
+  export type ChangelogEntryAvgAggregateOutputType = {
+    id: number | null
+    createdBy: number | null
+  }
+
+  export type ChangelogEntrySumAggregateOutputType = {
+    id: number | null
+    createdBy: number | null
+  }
+
+  export type ChangelogEntryMinAggregateOutputType = {
+    id: number | null
+    title: string | null
+    body: string | null
+    category: string | null
+    status: string | null
+    imageUrl: string | null
+    publishDate: Date | null
+    sourceType: string | null
+    sourceRef: string | null
+    createdBy: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ChangelogEntryMaxAggregateOutputType = {
+    id: number | null
+    title: string | null
+    body: string | null
+    category: string | null
+    status: string | null
+    imageUrl: string | null
+    publishDate: Date | null
+    sourceType: string | null
+    sourceRef: string | null
+    createdBy: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ChangelogEntryCountAggregateOutputType = {
+    id: number
+    title: number
+    body: number
+    category: number
+    status: number
+    imageUrl: number
+    publishDate: number
+    sourceType: number
+    sourceRef: number
+    createdBy: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type ChangelogEntryAvgAggregateInputType = {
+    id?: true
+    createdBy?: true
+  }
+
+  export type ChangelogEntrySumAggregateInputType = {
+    id?: true
+    createdBy?: true
+  }
+
+  export type ChangelogEntryMinAggregateInputType = {
+    id?: true
+    title?: true
+    body?: true
+    category?: true
+    status?: true
+    imageUrl?: true
+    publishDate?: true
+    sourceType?: true
+    sourceRef?: true
+    createdBy?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ChangelogEntryMaxAggregateInputType = {
+    id?: true
+    title?: true
+    body?: true
+    category?: true
+    status?: true
+    imageUrl?: true
+    publishDate?: true
+    sourceType?: true
+    sourceRef?: true
+    createdBy?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ChangelogEntryCountAggregateInputType = {
+    id?: true
+    title?: true
+    body?: true
+    category?: true
+    status?: true
+    imageUrl?: true
+    publishDate?: true
+    sourceType?: true
+    sourceRef?: true
+    createdBy?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type ChangelogEntryAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ChangelogEntry to aggregate.
+     */
+    where?: ChangelogEntryWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ChangelogEntries to fetch.
+     */
+    orderBy?: ChangelogEntryOrderByWithRelationInput | ChangelogEntryOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ChangelogEntryWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ChangelogEntries from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ChangelogEntries.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ChangelogEntries
+    **/
+    _count?: true | ChangelogEntryCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: ChangelogEntryAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: ChangelogEntrySumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ChangelogEntryMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ChangelogEntryMaxAggregateInputType
+  }
+
+  export type GetChangelogEntryAggregateType<T extends ChangelogEntryAggregateArgs> = {
+        [P in keyof T & keyof AggregateChangelogEntry]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateChangelogEntry[P]>
+      : GetScalarType<T[P], AggregateChangelogEntry[P]>
+  }
+
+
+
+
+  export type ChangelogEntryGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ChangelogEntryWhereInput
+    orderBy?: ChangelogEntryOrderByWithAggregationInput | ChangelogEntryOrderByWithAggregationInput[]
+    by: ChangelogEntryScalarFieldEnum[] | ChangelogEntryScalarFieldEnum
+    having?: ChangelogEntryScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ChangelogEntryCountAggregateInputType | true
+    _avg?: ChangelogEntryAvgAggregateInputType
+    _sum?: ChangelogEntrySumAggregateInputType
+    _min?: ChangelogEntryMinAggregateInputType
+    _max?: ChangelogEntryMaxAggregateInputType
+  }
+
+  export type ChangelogEntryGroupByOutputType = {
+    id: number
+    title: string
+    body: string
+    category: string
+    status: string
+    imageUrl: string | null
+    publishDate: Date | null
+    sourceType: string | null
+    sourceRef: string | null
+    createdBy: number | null
+    createdAt: Date
+    updatedAt: Date
+    _count: ChangelogEntryCountAggregateOutputType | null
+    _avg: ChangelogEntryAvgAggregateOutputType | null
+    _sum: ChangelogEntrySumAggregateOutputType | null
+    _min: ChangelogEntryMinAggregateOutputType | null
+    _max: ChangelogEntryMaxAggregateOutputType | null
+  }
+
+  type GetChangelogEntryGroupByPayload<T extends ChangelogEntryGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ChangelogEntryGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ChangelogEntryGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ChangelogEntryGroupByOutputType[P]>
+            : GetScalarType<T[P], ChangelogEntryGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ChangelogEntrySelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    title?: boolean
+    body?: boolean
+    category?: boolean
+    status?: boolean
+    imageUrl?: boolean
+    publishDate?: boolean
+    sourceType?: boolean
+    sourceRef?: boolean
+    createdBy?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["changelogEntry"]>
+
+  export type ChangelogEntrySelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    title?: boolean
+    body?: boolean
+    category?: boolean
+    status?: boolean
+    imageUrl?: boolean
+    publishDate?: boolean
+    sourceType?: boolean
+    sourceRef?: boolean
+    createdBy?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["changelogEntry"]>
+
+  export type ChangelogEntrySelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    title?: boolean
+    body?: boolean
+    category?: boolean
+    status?: boolean
+    imageUrl?: boolean
+    publishDate?: boolean
+    sourceType?: boolean
+    sourceRef?: boolean
+    createdBy?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["changelogEntry"]>
+
+  export type ChangelogEntrySelectScalar = {
+    id?: boolean
+    title?: boolean
+    body?: boolean
+    category?: boolean
+    status?: boolean
+    imageUrl?: boolean
+    publishDate?: boolean
+    sourceType?: boolean
+    sourceRef?: boolean
+    createdBy?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type ChangelogEntryOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "title" | "body" | "category" | "status" | "imageUrl" | "publishDate" | "sourceType" | "sourceRef" | "createdBy" | "createdAt" | "updatedAt", ExtArgs["result"]["changelogEntry"]>
+
+  export type $ChangelogEntryPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ChangelogEntry"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      title: string
+      body: string
+      category: string
+      status: string
+      imageUrl: string | null
+      publishDate: Date | null
+      sourceType: string | null
+      sourceRef: string | null
+      createdBy: number | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["changelogEntry"]>
+    composites: {}
+  }
+
+  type ChangelogEntryGetPayload<S extends boolean | null | undefined | ChangelogEntryDefaultArgs> = $Result.GetResult<Prisma.$ChangelogEntryPayload, S>
+
+  type ChangelogEntryCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ChangelogEntryFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ChangelogEntryCountAggregateInputType | true
+    }
+
+  export interface ChangelogEntryDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ChangelogEntry'], meta: { name: 'ChangelogEntry' } }
+    /**
+     * Find zero or one ChangelogEntry that matches the filter.
+     * @param {ChangelogEntryFindUniqueArgs} args - Arguments to find a ChangelogEntry
+     * @example
+     * // Get one ChangelogEntry
+     * const changelogEntry = await prisma.changelogEntry.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ChangelogEntryFindUniqueArgs>(args: SelectSubset<T, ChangelogEntryFindUniqueArgs<ExtArgs>>): Prisma__ChangelogEntryClient<$Result.GetResult<Prisma.$ChangelogEntryPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one ChangelogEntry that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {ChangelogEntryFindUniqueOrThrowArgs} args - Arguments to find a ChangelogEntry
+     * @example
+     * // Get one ChangelogEntry
+     * const changelogEntry = await prisma.changelogEntry.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ChangelogEntryFindUniqueOrThrowArgs>(args: SelectSubset<T, ChangelogEntryFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ChangelogEntryClient<$Result.GetResult<Prisma.$ChangelogEntryPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ChangelogEntry that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ChangelogEntryFindFirstArgs} args - Arguments to find a ChangelogEntry
+     * @example
+     * // Get one ChangelogEntry
+     * const changelogEntry = await prisma.changelogEntry.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ChangelogEntryFindFirstArgs>(args?: SelectSubset<T, ChangelogEntryFindFirstArgs<ExtArgs>>): Prisma__ChangelogEntryClient<$Result.GetResult<Prisma.$ChangelogEntryPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ChangelogEntry that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ChangelogEntryFindFirstOrThrowArgs} args - Arguments to find a ChangelogEntry
+     * @example
+     * // Get one ChangelogEntry
+     * const changelogEntry = await prisma.changelogEntry.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ChangelogEntryFindFirstOrThrowArgs>(args?: SelectSubset<T, ChangelogEntryFindFirstOrThrowArgs<ExtArgs>>): Prisma__ChangelogEntryClient<$Result.GetResult<Prisma.$ChangelogEntryPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more ChangelogEntries that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ChangelogEntryFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ChangelogEntries
+     * const changelogEntries = await prisma.changelogEntry.findMany()
+     * 
+     * // Get first 10 ChangelogEntries
+     * const changelogEntries = await prisma.changelogEntry.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const changelogEntryWithIdOnly = await prisma.changelogEntry.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ChangelogEntryFindManyArgs>(args?: SelectSubset<T, ChangelogEntryFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ChangelogEntryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a ChangelogEntry.
+     * @param {ChangelogEntryCreateArgs} args - Arguments to create a ChangelogEntry.
+     * @example
+     * // Create one ChangelogEntry
+     * const ChangelogEntry = await prisma.changelogEntry.create({
+     *   data: {
+     *     // ... data to create a ChangelogEntry
+     *   }
+     * })
+     * 
+     */
+    create<T extends ChangelogEntryCreateArgs>(args: SelectSubset<T, ChangelogEntryCreateArgs<ExtArgs>>): Prisma__ChangelogEntryClient<$Result.GetResult<Prisma.$ChangelogEntryPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many ChangelogEntries.
+     * @param {ChangelogEntryCreateManyArgs} args - Arguments to create many ChangelogEntries.
+     * @example
+     * // Create many ChangelogEntries
+     * const changelogEntry = await prisma.changelogEntry.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ChangelogEntryCreateManyArgs>(args?: SelectSubset<T, ChangelogEntryCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ChangelogEntries and returns the data saved in the database.
+     * @param {ChangelogEntryCreateManyAndReturnArgs} args - Arguments to create many ChangelogEntries.
+     * @example
+     * // Create many ChangelogEntries
+     * const changelogEntry = await prisma.changelogEntry.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ChangelogEntries and only return the `id`
+     * const changelogEntryWithIdOnly = await prisma.changelogEntry.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ChangelogEntryCreateManyAndReturnArgs>(args?: SelectSubset<T, ChangelogEntryCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ChangelogEntryPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a ChangelogEntry.
+     * @param {ChangelogEntryDeleteArgs} args - Arguments to delete one ChangelogEntry.
+     * @example
+     * // Delete one ChangelogEntry
+     * const ChangelogEntry = await prisma.changelogEntry.delete({
+     *   where: {
+     *     // ... filter to delete one ChangelogEntry
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ChangelogEntryDeleteArgs>(args: SelectSubset<T, ChangelogEntryDeleteArgs<ExtArgs>>): Prisma__ChangelogEntryClient<$Result.GetResult<Prisma.$ChangelogEntryPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one ChangelogEntry.
+     * @param {ChangelogEntryUpdateArgs} args - Arguments to update one ChangelogEntry.
+     * @example
+     * // Update one ChangelogEntry
+     * const changelogEntry = await prisma.changelogEntry.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ChangelogEntryUpdateArgs>(args: SelectSubset<T, ChangelogEntryUpdateArgs<ExtArgs>>): Prisma__ChangelogEntryClient<$Result.GetResult<Prisma.$ChangelogEntryPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more ChangelogEntries.
+     * @param {ChangelogEntryDeleteManyArgs} args - Arguments to filter ChangelogEntries to delete.
+     * @example
+     * // Delete a few ChangelogEntries
+     * const { count } = await prisma.changelogEntry.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ChangelogEntryDeleteManyArgs>(args?: SelectSubset<T, ChangelogEntryDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ChangelogEntries.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ChangelogEntryUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ChangelogEntries
+     * const changelogEntry = await prisma.changelogEntry.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ChangelogEntryUpdateManyArgs>(args: SelectSubset<T, ChangelogEntryUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ChangelogEntries and returns the data updated in the database.
+     * @param {ChangelogEntryUpdateManyAndReturnArgs} args - Arguments to update many ChangelogEntries.
+     * @example
+     * // Update many ChangelogEntries
+     * const changelogEntry = await prisma.changelogEntry.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more ChangelogEntries and only return the `id`
+     * const changelogEntryWithIdOnly = await prisma.changelogEntry.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends ChangelogEntryUpdateManyAndReturnArgs>(args: SelectSubset<T, ChangelogEntryUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ChangelogEntryPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one ChangelogEntry.
+     * @param {ChangelogEntryUpsertArgs} args - Arguments to update or create a ChangelogEntry.
+     * @example
+     * // Update or create a ChangelogEntry
+     * const changelogEntry = await prisma.changelogEntry.upsert({
+     *   create: {
+     *     // ... data to create a ChangelogEntry
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ChangelogEntry we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ChangelogEntryUpsertArgs>(args: SelectSubset<T, ChangelogEntryUpsertArgs<ExtArgs>>): Prisma__ChangelogEntryClient<$Result.GetResult<Prisma.$ChangelogEntryPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of ChangelogEntries.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ChangelogEntryCountArgs} args - Arguments to filter ChangelogEntries to count.
+     * @example
+     * // Count the number of ChangelogEntries
+     * const count = await prisma.changelogEntry.count({
+     *   where: {
+     *     // ... the filter for the ChangelogEntries we want to count
+     *   }
+     * })
+    **/
+    count<T extends ChangelogEntryCountArgs>(
+      args?: Subset<T, ChangelogEntryCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ChangelogEntryCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ChangelogEntry.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ChangelogEntryAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ChangelogEntryAggregateArgs>(args: Subset<T, ChangelogEntryAggregateArgs>): Prisma.PrismaPromise<GetChangelogEntryAggregateType<T>>
+
+    /**
+     * Group by ChangelogEntry.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ChangelogEntryGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ChangelogEntryGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ChangelogEntryGroupByArgs['orderBy'] }
+        : { orderBy?: ChangelogEntryGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ChangelogEntryGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetChangelogEntryGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ChangelogEntry model
+   */
+  readonly fields: ChangelogEntryFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ChangelogEntry.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ChangelogEntryClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ChangelogEntry model
+   */
+  interface ChangelogEntryFieldRefs {
+    readonly id: FieldRef<"ChangelogEntry", 'Int'>
+    readonly title: FieldRef<"ChangelogEntry", 'String'>
+    readonly body: FieldRef<"ChangelogEntry", 'String'>
+    readonly category: FieldRef<"ChangelogEntry", 'String'>
+    readonly status: FieldRef<"ChangelogEntry", 'String'>
+    readonly imageUrl: FieldRef<"ChangelogEntry", 'String'>
+    readonly publishDate: FieldRef<"ChangelogEntry", 'DateTime'>
+    readonly sourceType: FieldRef<"ChangelogEntry", 'String'>
+    readonly sourceRef: FieldRef<"ChangelogEntry", 'String'>
+    readonly createdBy: FieldRef<"ChangelogEntry", 'Int'>
+    readonly createdAt: FieldRef<"ChangelogEntry", 'DateTime'>
+    readonly updatedAt: FieldRef<"ChangelogEntry", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ChangelogEntry findUnique
+   */
+  export type ChangelogEntryFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChangelogEntry
+     */
+    select?: ChangelogEntrySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChangelogEntry
+     */
+    omit?: ChangelogEntryOmit<ExtArgs> | null
+    /**
+     * Filter, which ChangelogEntry to fetch.
+     */
+    where: ChangelogEntryWhereUniqueInput
+  }
+
+  /**
+   * ChangelogEntry findUniqueOrThrow
+   */
+  export type ChangelogEntryFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChangelogEntry
+     */
+    select?: ChangelogEntrySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChangelogEntry
+     */
+    omit?: ChangelogEntryOmit<ExtArgs> | null
+    /**
+     * Filter, which ChangelogEntry to fetch.
+     */
+    where: ChangelogEntryWhereUniqueInput
+  }
+
+  /**
+   * ChangelogEntry findFirst
+   */
+  export type ChangelogEntryFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChangelogEntry
+     */
+    select?: ChangelogEntrySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChangelogEntry
+     */
+    omit?: ChangelogEntryOmit<ExtArgs> | null
+    /**
+     * Filter, which ChangelogEntry to fetch.
+     */
+    where?: ChangelogEntryWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ChangelogEntries to fetch.
+     */
+    orderBy?: ChangelogEntryOrderByWithRelationInput | ChangelogEntryOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ChangelogEntries.
+     */
+    cursor?: ChangelogEntryWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ChangelogEntries from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ChangelogEntries.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ChangelogEntries.
+     */
+    distinct?: ChangelogEntryScalarFieldEnum | ChangelogEntryScalarFieldEnum[]
+  }
+
+  /**
+   * ChangelogEntry findFirstOrThrow
+   */
+  export type ChangelogEntryFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChangelogEntry
+     */
+    select?: ChangelogEntrySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChangelogEntry
+     */
+    omit?: ChangelogEntryOmit<ExtArgs> | null
+    /**
+     * Filter, which ChangelogEntry to fetch.
+     */
+    where?: ChangelogEntryWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ChangelogEntries to fetch.
+     */
+    orderBy?: ChangelogEntryOrderByWithRelationInput | ChangelogEntryOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ChangelogEntries.
+     */
+    cursor?: ChangelogEntryWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ChangelogEntries from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ChangelogEntries.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ChangelogEntries.
+     */
+    distinct?: ChangelogEntryScalarFieldEnum | ChangelogEntryScalarFieldEnum[]
+  }
+
+  /**
+   * ChangelogEntry findMany
+   */
+  export type ChangelogEntryFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChangelogEntry
+     */
+    select?: ChangelogEntrySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChangelogEntry
+     */
+    omit?: ChangelogEntryOmit<ExtArgs> | null
+    /**
+     * Filter, which ChangelogEntries to fetch.
+     */
+    where?: ChangelogEntryWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ChangelogEntries to fetch.
+     */
+    orderBy?: ChangelogEntryOrderByWithRelationInput | ChangelogEntryOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ChangelogEntries.
+     */
+    cursor?: ChangelogEntryWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ChangelogEntries from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ChangelogEntries.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ChangelogEntries.
+     */
+    distinct?: ChangelogEntryScalarFieldEnum | ChangelogEntryScalarFieldEnum[]
+  }
+
+  /**
+   * ChangelogEntry create
+   */
+  export type ChangelogEntryCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChangelogEntry
+     */
+    select?: ChangelogEntrySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChangelogEntry
+     */
+    omit?: ChangelogEntryOmit<ExtArgs> | null
+    /**
+     * The data needed to create a ChangelogEntry.
+     */
+    data: XOR<ChangelogEntryCreateInput, ChangelogEntryUncheckedCreateInput>
+  }
+
+  /**
+   * ChangelogEntry createMany
+   */
+  export type ChangelogEntryCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ChangelogEntries.
+     */
+    data: ChangelogEntryCreateManyInput | ChangelogEntryCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ChangelogEntry createManyAndReturn
+   */
+  export type ChangelogEntryCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChangelogEntry
+     */
+    select?: ChangelogEntrySelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChangelogEntry
+     */
+    omit?: ChangelogEntryOmit<ExtArgs> | null
+    /**
+     * The data used to create many ChangelogEntries.
+     */
+    data: ChangelogEntryCreateManyInput | ChangelogEntryCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ChangelogEntry update
+   */
+  export type ChangelogEntryUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChangelogEntry
+     */
+    select?: ChangelogEntrySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChangelogEntry
+     */
+    omit?: ChangelogEntryOmit<ExtArgs> | null
+    /**
+     * The data needed to update a ChangelogEntry.
+     */
+    data: XOR<ChangelogEntryUpdateInput, ChangelogEntryUncheckedUpdateInput>
+    /**
+     * Choose, which ChangelogEntry to update.
+     */
+    where: ChangelogEntryWhereUniqueInput
+  }
+
+  /**
+   * ChangelogEntry updateMany
+   */
+  export type ChangelogEntryUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ChangelogEntries.
+     */
+    data: XOR<ChangelogEntryUpdateManyMutationInput, ChangelogEntryUncheckedUpdateManyInput>
+    /**
+     * Filter which ChangelogEntries to update
+     */
+    where?: ChangelogEntryWhereInput
+    /**
+     * Limit how many ChangelogEntries to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ChangelogEntry updateManyAndReturn
+   */
+  export type ChangelogEntryUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChangelogEntry
+     */
+    select?: ChangelogEntrySelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChangelogEntry
+     */
+    omit?: ChangelogEntryOmit<ExtArgs> | null
+    /**
+     * The data used to update ChangelogEntries.
+     */
+    data: XOR<ChangelogEntryUpdateManyMutationInput, ChangelogEntryUncheckedUpdateManyInput>
+    /**
+     * Filter which ChangelogEntries to update
+     */
+    where?: ChangelogEntryWhereInput
+    /**
+     * Limit how many ChangelogEntries to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ChangelogEntry upsert
+   */
+  export type ChangelogEntryUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChangelogEntry
+     */
+    select?: ChangelogEntrySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChangelogEntry
+     */
+    omit?: ChangelogEntryOmit<ExtArgs> | null
+    /**
+     * The filter to search for the ChangelogEntry to update in case it exists.
+     */
+    where: ChangelogEntryWhereUniqueInput
+    /**
+     * In case the ChangelogEntry found by the `where` argument doesn't exist, create a new ChangelogEntry with this data.
+     */
+    create: XOR<ChangelogEntryCreateInput, ChangelogEntryUncheckedCreateInput>
+    /**
+     * In case the ChangelogEntry was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ChangelogEntryUpdateInput, ChangelogEntryUncheckedUpdateInput>
+  }
+
+  /**
+   * ChangelogEntry delete
+   */
+  export type ChangelogEntryDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChangelogEntry
+     */
+    select?: ChangelogEntrySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChangelogEntry
+     */
+    omit?: ChangelogEntryOmit<ExtArgs> | null
+    /**
+     * Filter which ChangelogEntry to delete.
+     */
+    where: ChangelogEntryWhereUniqueInput
+  }
+
+  /**
+   * ChangelogEntry deleteMany
+   */
+  export type ChangelogEntryDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ChangelogEntries to delete
+     */
+    where?: ChangelogEntryWhereInput
+    /**
+     * Limit how many ChangelogEntries to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * ChangelogEntry without action
+   */
+  export type ChangelogEntryDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChangelogEntry
+     */
+    select?: ChangelogEntrySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChangelogEntry
+     */
+    omit?: ChangelogEntryOmit<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -28037,6 +29270,7 @@ export namespace Prisma {
     onboardingChoices: 'onboardingChoices',
     onboardingStartedAt: 'onboardingStartedAt',
     onboardingCompletedAt: 'onboardingCompletedAt',
+    lastSeenChangelog: 'lastSeenChangelog',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -28429,6 +29663,24 @@ export namespace Prisma {
   export type PracticeArenaDailyStatsScalarFieldEnum = (typeof PracticeArenaDailyStatsScalarFieldEnum)[keyof typeof PracticeArenaDailyStatsScalarFieldEnum]
 
 
+  export const ChangelogEntryScalarFieldEnum: {
+    id: 'id',
+    title: 'title',
+    body: 'body',
+    category: 'category',
+    status: 'status',
+    imageUrl: 'imageUrl',
+    publishDate: 'publishDate',
+    sourceType: 'sourceType',
+    sourceRef: 'sourceRef',
+    createdBy: 'createdBy',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type ChangelogEntryScalarFieldEnum = (typeof ChangelogEntryScalarFieldEnum)[keyof typeof ChangelogEntryScalarFieldEnum]
+
+
   export const SortOrder: {
     asc: 'asc',
     desc: 'desc'
@@ -28615,6 +29867,7 @@ export namespace Prisma {
     onboardingChoices?: JsonFilter<"User">
     onboardingStartedAt?: DateTimeNullableFilter<"User"> | Date | string | null
     onboardingCompletedAt?: DateTimeNullableFilter<"User"> | Date | string | null
+    lastSeenChangelog?: DateTimeFilter<"User"> | Date | string
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
     robots?: RobotListRelationFilter
@@ -28645,6 +29898,7 @@ export namespace Prisma {
     onboardingChoices?: SortOrder
     onboardingStartedAt?: SortOrderInput | SortOrder
     onboardingCompletedAt?: SortOrderInput | SortOrder
+    lastSeenChangelog?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     robots?: RobotOrderByRelationAggregateInput
@@ -28678,6 +29932,7 @@ export namespace Prisma {
     onboardingChoices?: JsonFilter<"User">
     onboardingStartedAt?: DateTimeNullableFilter<"User"> | Date | string | null
     onboardingCompletedAt?: DateTimeNullableFilter<"User"> | Date | string | null
+    lastSeenChangelog?: DateTimeFilter<"User"> | Date | string
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
     robots?: RobotListRelationFilter
@@ -28708,6 +29963,7 @@ export namespace Prisma {
     onboardingChoices?: SortOrder
     onboardingStartedAt?: SortOrderInput | SortOrder
     onboardingCompletedAt?: SortOrderInput | SortOrder
+    lastSeenChangelog?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: UserCountOrderByAggregateInput
@@ -28742,6 +29998,7 @@ export namespace Prisma {
     onboardingChoices?: JsonWithAggregatesFilter<"User">
     onboardingStartedAt?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
     onboardingCompletedAt?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
+    lastSeenChangelog?: DateTimeWithAggregatesFilter<"User"> | Date | string
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
   }
@@ -30820,6 +32077,95 @@ export namespace Prisma {
     createdAt?: DateTimeWithAggregatesFilter<"PracticeArenaDailyStats"> | Date | string
   }
 
+  export type ChangelogEntryWhereInput = {
+    AND?: ChangelogEntryWhereInput | ChangelogEntryWhereInput[]
+    OR?: ChangelogEntryWhereInput[]
+    NOT?: ChangelogEntryWhereInput | ChangelogEntryWhereInput[]
+    id?: IntFilter<"ChangelogEntry"> | number
+    title?: StringFilter<"ChangelogEntry"> | string
+    body?: StringFilter<"ChangelogEntry"> | string
+    category?: StringFilter<"ChangelogEntry"> | string
+    status?: StringFilter<"ChangelogEntry"> | string
+    imageUrl?: StringNullableFilter<"ChangelogEntry"> | string | null
+    publishDate?: DateTimeNullableFilter<"ChangelogEntry"> | Date | string | null
+    sourceType?: StringNullableFilter<"ChangelogEntry"> | string | null
+    sourceRef?: StringNullableFilter<"ChangelogEntry"> | string | null
+    createdBy?: IntNullableFilter<"ChangelogEntry"> | number | null
+    createdAt?: DateTimeFilter<"ChangelogEntry"> | Date | string
+    updatedAt?: DateTimeFilter<"ChangelogEntry"> | Date | string
+  }
+
+  export type ChangelogEntryOrderByWithRelationInput = {
+    id?: SortOrder
+    title?: SortOrder
+    body?: SortOrder
+    category?: SortOrder
+    status?: SortOrder
+    imageUrl?: SortOrderInput | SortOrder
+    publishDate?: SortOrderInput | SortOrder
+    sourceType?: SortOrderInput | SortOrder
+    sourceRef?: SortOrderInput | SortOrder
+    createdBy?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ChangelogEntryWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    AND?: ChangelogEntryWhereInput | ChangelogEntryWhereInput[]
+    OR?: ChangelogEntryWhereInput[]
+    NOT?: ChangelogEntryWhereInput | ChangelogEntryWhereInput[]
+    title?: StringFilter<"ChangelogEntry"> | string
+    body?: StringFilter<"ChangelogEntry"> | string
+    category?: StringFilter<"ChangelogEntry"> | string
+    status?: StringFilter<"ChangelogEntry"> | string
+    imageUrl?: StringNullableFilter<"ChangelogEntry"> | string | null
+    publishDate?: DateTimeNullableFilter<"ChangelogEntry"> | Date | string | null
+    sourceType?: StringNullableFilter<"ChangelogEntry"> | string | null
+    sourceRef?: StringNullableFilter<"ChangelogEntry"> | string | null
+    createdBy?: IntNullableFilter<"ChangelogEntry"> | number | null
+    createdAt?: DateTimeFilter<"ChangelogEntry"> | Date | string
+    updatedAt?: DateTimeFilter<"ChangelogEntry"> | Date | string
+  }, "id">
+
+  export type ChangelogEntryOrderByWithAggregationInput = {
+    id?: SortOrder
+    title?: SortOrder
+    body?: SortOrder
+    category?: SortOrder
+    status?: SortOrder
+    imageUrl?: SortOrderInput | SortOrder
+    publishDate?: SortOrderInput | SortOrder
+    sourceType?: SortOrderInput | SortOrder
+    sourceRef?: SortOrderInput | SortOrder
+    createdBy?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: ChangelogEntryCountOrderByAggregateInput
+    _avg?: ChangelogEntryAvgOrderByAggregateInput
+    _max?: ChangelogEntryMaxOrderByAggregateInput
+    _min?: ChangelogEntryMinOrderByAggregateInput
+    _sum?: ChangelogEntrySumOrderByAggregateInput
+  }
+
+  export type ChangelogEntryScalarWhereWithAggregatesInput = {
+    AND?: ChangelogEntryScalarWhereWithAggregatesInput | ChangelogEntryScalarWhereWithAggregatesInput[]
+    OR?: ChangelogEntryScalarWhereWithAggregatesInput[]
+    NOT?: ChangelogEntryScalarWhereWithAggregatesInput | ChangelogEntryScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"ChangelogEntry"> | number
+    title?: StringWithAggregatesFilter<"ChangelogEntry"> | string
+    body?: StringWithAggregatesFilter<"ChangelogEntry"> | string
+    category?: StringWithAggregatesFilter<"ChangelogEntry"> | string
+    status?: StringWithAggregatesFilter<"ChangelogEntry"> | string
+    imageUrl?: StringNullableWithAggregatesFilter<"ChangelogEntry"> | string | null
+    publishDate?: DateTimeNullableWithAggregatesFilter<"ChangelogEntry"> | Date | string | null
+    sourceType?: StringNullableWithAggregatesFilter<"ChangelogEntry"> | string | null
+    sourceRef?: StringNullableWithAggregatesFilter<"ChangelogEntry"> | string | null
+    createdBy?: IntNullableWithAggregatesFilter<"ChangelogEntry"> | number | null
+    createdAt?: DateTimeWithAggregatesFilter<"ChangelogEntry"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"ChangelogEntry"> | Date | string
+  }
+
   export type UserCreateInput = {
     username: string
     email?: string | null
@@ -30841,6 +32187,7 @@ export namespace Prisma {
     onboardingChoices?: JsonNullValueInput | InputJsonValue
     onboardingStartedAt?: Date | string | null
     onboardingCompletedAt?: Date | string | null
+    lastSeenChangelog?: Date | string
     createdAt?: Date | string
     updatedAt?: Date | string
     robots?: RobotCreateNestedManyWithoutUserInput
@@ -30871,6 +32218,7 @@ export namespace Prisma {
     onboardingChoices?: JsonNullValueInput | InputJsonValue
     onboardingStartedAt?: Date | string | null
     onboardingCompletedAt?: Date | string | null
+    lastSeenChangelog?: Date | string
     createdAt?: Date | string
     updatedAt?: Date | string
     robots?: RobotUncheckedCreateNestedManyWithoutUserInput
@@ -30900,6 +32248,7 @@ export namespace Prisma {
     onboardingChoices?: JsonNullValueInput | InputJsonValue
     onboardingStartedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     onboardingCompletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastSeenChangelog?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     robots?: RobotUpdateManyWithoutUserNestedInput
@@ -30930,6 +32279,7 @@ export namespace Prisma {
     onboardingChoices?: JsonNullValueInput | InputJsonValue
     onboardingStartedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     onboardingCompletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastSeenChangelog?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     robots?: RobotUncheckedUpdateManyWithoutUserNestedInput
@@ -30960,6 +32310,7 @@ export namespace Prisma {
     onboardingChoices?: JsonNullValueInput | InputJsonValue
     onboardingStartedAt?: Date | string | null
     onboardingCompletedAt?: Date | string | null
+    lastSeenChangelog?: Date | string
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -30985,6 +32336,7 @@ export namespace Prisma {
     onboardingChoices?: JsonNullValueInput | InputJsonValue
     onboardingStartedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     onboardingCompletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastSeenChangelog?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -31011,6 +32363,7 @@ export namespace Prisma {
     onboardingChoices?: JsonNullValueInput | InputJsonValue
     onboardingStartedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     onboardingCompletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastSeenChangelog?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -33356,6 +34709,108 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type ChangelogEntryCreateInput = {
+    title: string
+    body: string
+    category: string
+    status?: string
+    imageUrl?: string | null
+    publishDate?: Date | string | null
+    sourceType?: string | null
+    sourceRef?: string | null
+    createdBy?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ChangelogEntryUncheckedCreateInput = {
+    id?: number
+    title: string
+    body: string
+    category: string
+    status?: string
+    imageUrl?: string | null
+    publishDate?: Date | string | null
+    sourceType?: string | null
+    sourceRef?: string | null
+    createdBy?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ChangelogEntryUpdateInput = {
+    title?: StringFieldUpdateOperationsInput | string
+    body?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    publishDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    sourceType?: NullableStringFieldUpdateOperationsInput | string | null
+    sourceRef?: NullableStringFieldUpdateOperationsInput | string | null
+    createdBy?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ChangelogEntryUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    title?: StringFieldUpdateOperationsInput | string
+    body?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    publishDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    sourceType?: NullableStringFieldUpdateOperationsInput | string | null
+    sourceRef?: NullableStringFieldUpdateOperationsInput | string | null
+    createdBy?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ChangelogEntryCreateManyInput = {
+    id?: number
+    title: string
+    body: string
+    category: string
+    status?: string
+    imageUrl?: string | null
+    publishDate?: Date | string | null
+    sourceType?: string | null
+    sourceRef?: string | null
+    createdBy?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ChangelogEntryUpdateManyMutationInput = {
+    title?: StringFieldUpdateOperationsInput | string
+    body?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    publishDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    sourceType?: NullableStringFieldUpdateOperationsInput | string | null
+    sourceRef?: NullableStringFieldUpdateOperationsInput | string | null
+    createdBy?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ChangelogEntryUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    title?: StringFieldUpdateOperationsInput | string
+    body?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    publishDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    sourceType?: NullableStringFieldUpdateOperationsInput | string | null
+    sourceRef?: NullableStringFieldUpdateOperationsInput | string | null
+    createdBy?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type IntFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
     in?: number[] | ListIntFieldRefInput<$PrismaModel>
@@ -33514,6 +34969,7 @@ export namespace Prisma {
     onboardingChoices?: SortOrder
     onboardingStartedAt?: SortOrder
     onboardingCompletedAt?: SortOrder
+    lastSeenChangelog?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -33548,6 +35004,7 @@ export namespace Prisma {
     onboardingStrategy?: SortOrder
     onboardingStartedAt?: SortOrder
     onboardingCompletedAt?: SortOrder
+    lastSeenChangelog?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -33573,6 +35030,7 @@ export namespace Prisma {
     onboardingStrategy?: SortOrder
     onboardingStartedAt?: SortOrder
     onboardingCompletedAt?: SortOrder
+    lastSeenChangelog?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -35532,6 +36990,61 @@ export namespace Prisma {
     totalBattles?: SortOrder
     uniquePlayers?: SortOrder
     rateLimitHits?: SortOrder
+  }
+
+  export type ChangelogEntryCountOrderByAggregateInput = {
+    id?: SortOrder
+    title?: SortOrder
+    body?: SortOrder
+    category?: SortOrder
+    status?: SortOrder
+    imageUrl?: SortOrder
+    publishDate?: SortOrder
+    sourceType?: SortOrder
+    sourceRef?: SortOrder
+    createdBy?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ChangelogEntryAvgOrderByAggregateInput = {
+    id?: SortOrder
+    createdBy?: SortOrder
+  }
+
+  export type ChangelogEntryMaxOrderByAggregateInput = {
+    id?: SortOrder
+    title?: SortOrder
+    body?: SortOrder
+    category?: SortOrder
+    status?: SortOrder
+    imageUrl?: SortOrder
+    publishDate?: SortOrder
+    sourceType?: SortOrder
+    sourceRef?: SortOrder
+    createdBy?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ChangelogEntryMinOrderByAggregateInput = {
+    id?: SortOrder
+    title?: SortOrder
+    body?: SortOrder
+    category?: SortOrder
+    status?: SortOrder
+    imageUrl?: SortOrder
+    publishDate?: SortOrder
+    sourceType?: SortOrder
+    sourceRef?: SortOrder
+    createdBy?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ChangelogEntrySumOrderByAggregateInput = {
+    id?: SortOrder
+    createdBy?: SortOrder
   }
 
   export type RobotCreateNestedManyWithoutUserInput = {
@@ -38081,6 +39594,7 @@ export namespace Prisma {
     onboardingChoices?: JsonNullValueInput | InputJsonValue
     onboardingStartedAt?: Date | string | null
     onboardingCompletedAt?: Date | string | null
+    lastSeenChangelog?: Date | string
     createdAt?: Date | string
     updatedAt?: Date | string
     robots?: RobotCreateNestedManyWithoutUserInput
@@ -38110,6 +39624,7 @@ export namespace Prisma {
     onboardingChoices?: JsonNullValueInput | InputJsonValue
     onboardingStartedAt?: Date | string | null
     onboardingCompletedAt?: Date | string | null
+    lastSeenChangelog?: Date | string
     createdAt?: Date | string
     updatedAt?: Date | string
     robots?: RobotUncheckedCreateNestedManyWithoutUserInput
@@ -38154,6 +39669,7 @@ export namespace Prisma {
     onboardingChoices?: JsonNullValueInput | InputJsonValue
     onboardingStartedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     onboardingCompletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastSeenChangelog?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     robots?: RobotUpdateManyWithoutUserNestedInput
@@ -38183,6 +39699,7 @@ export namespace Prisma {
     onboardingChoices?: JsonNullValueInput | InputJsonValue
     onboardingStartedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     onboardingCompletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastSeenChangelog?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     robots?: RobotUncheckedUpdateManyWithoutUserNestedInput
@@ -38211,6 +39728,7 @@ export namespace Prisma {
     onboardingChoices?: JsonNullValueInput | InputJsonValue
     onboardingStartedAt?: Date | string | null
     onboardingCompletedAt?: Date | string | null
+    lastSeenChangelog?: Date | string
     createdAt?: Date | string
     updatedAt?: Date | string
     facilities?: FacilityCreateNestedManyWithoutUserInput
@@ -38240,6 +39758,7 @@ export namespace Prisma {
     onboardingChoices?: JsonNullValueInput | InputJsonValue
     onboardingStartedAt?: Date | string | null
     onboardingCompletedAt?: Date | string | null
+    lastSeenChangelog?: Date | string
     createdAt?: Date | string
     updatedAt?: Date | string
     facilities?: FacilityUncheckedCreateNestedManyWithoutUserInput
@@ -38862,6 +40381,7 @@ export namespace Prisma {
     onboardingChoices?: JsonNullValueInput | InputJsonValue
     onboardingStartedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     onboardingCompletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastSeenChangelog?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     facilities?: FacilityUpdateManyWithoutUserNestedInput
@@ -38891,6 +40411,7 @@ export namespace Prisma {
     onboardingChoices?: JsonNullValueInput | InputJsonValue
     onboardingStartedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     onboardingCompletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastSeenChangelog?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     facilities?: FacilityUncheckedUpdateManyWithoutUserNestedInput
@@ -39286,6 +40807,7 @@ export namespace Prisma {
     onboardingChoices?: JsonNullValueInput | InputJsonValue
     onboardingStartedAt?: Date | string | null
     onboardingCompletedAt?: Date | string | null
+    lastSeenChangelog?: Date | string
     createdAt?: Date | string
     updatedAt?: Date | string
     robots?: RobotCreateNestedManyWithoutUserInput
@@ -39315,6 +40837,7 @@ export namespace Prisma {
     onboardingChoices?: JsonNullValueInput | InputJsonValue
     onboardingStartedAt?: Date | string | null
     onboardingCompletedAt?: Date | string | null
+    lastSeenChangelog?: Date | string
     createdAt?: Date | string
     updatedAt?: Date | string
     robots?: RobotUncheckedCreateNestedManyWithoutUserInput
@@ -39803,6 +41326,7 @@ export namespace Prisma {
     onboardingChoices?: JsonNullValueInput | InputJsonValue
     onboardingStartedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     onboardingCompletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastSeenChangelog?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     robots?: RobotUpdateManyWithoutUserNestedInput
@@ -39832,6 +41356,7 @@ export namespace Prisma {
     onboardingChoices?: JsonNullValueInput | InputJsonValue
     onboardingStartedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     onboardingCompletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastSeenChangelog?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     robots?: RobotUncheckedUpdateManyWithoutUserNestedInput
@@ -44343,6 +45868,7 @@ export namespace Prisma {
     onboardingChoices?: JsonNullValueInput | InputJsonValue
     onboardingStartedAt?: Date | string | null
     onboardingCompletedAt?: Date | string | null
+    lastSeenChangelog?: Date | string
     createdAt?: Date | string
     updatedAt?: Date | string
     robots?: RobotCreateNestedManyWithoutUserInput
@@ -44372,6 +45898,7 @@ export namespace Prisma {
     onboardingChoices?: JsonNullValueInput | InputJsonValue
     onboardingStartedAt?: Date | string | null
     onboardingCompletedAt?: Date | string | null
+    lastSeenChangelog?: Date | string
     createdAt?: Date | string
     updatedAt?: Date | string
     robots?: RobotUncheckedCreateNestedManyWithoutUserInput
@@ -44826,6 +46353,7 @@ export namespace Prisma {
     onboardingChoices?: JsonNullValueInput | InputJsonValue
     onboardingStartedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     onboardingCompletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastSeenChangelog?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     robots?: RobotUpdateManyWithoutUserNestedInput
@@ -44855,6 +46383,7 @@ export namespace Prisma {
     onboardingChoices?: JsonNullValueInput | InputJsonValue
     onboardingStartedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     onboardingCompletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastSeenChangelog?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     robots?: RobotUncheckedUpdateManyWithoutUserNestedInput

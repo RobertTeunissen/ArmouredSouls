@@ -9,3 +9,4 @@ export * from './leagueErrors';
 export * from './tournamentErrors';
 export * from './tagTeamErrors';
 export * from './kothErrors';
+export * from './changelogErrors';

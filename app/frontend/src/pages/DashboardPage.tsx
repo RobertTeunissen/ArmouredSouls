@@ -11,6 +11,7 @@ import StableStatistics from '../components/StableStatistics';
 import TagTeamReadinessWarning from '../components/TagTeamReadinessWarning';
 import DashboardWelcome from '../components/DashboardWelcome';
 import DashboardOnboardingBanner from '../components/DashboardOnboardingBanner';
+import ChangelogModal from '../components/ChangelogModal';
 import { useRobotStore, useStableStore } from '../stores';
 
 interface Notification {
@@ -89,6 +90,7 @@ function DashboardPage() {
   return (
     <div className="min-h-screen bg-background text-white">
       <Navigation />
+      <ChangelogModal />
 
       <div className="container mx-auto px-4 py-8 pb-24 lg:pb-8">
         {/* Dashboard Header */}

@@ -22,6 +22,7 @@ import guideRoutes from './routes/guide';
 import kothRoutes from './routes/koth';
 import practiceArenaRouter from './routes/practiceArena';
 import stablesRoutes from './routes/stables';
+import changelogRoutes from './routes/changelog';
 import { loadEnvConfig } from './config/env';
 import { initScheduler } from './services/cycle/cycleScheduler';
 import { contentModerationService } from './services/moderation';
@@ -129,6 +130,7 @@ app.use('/api/guide', guideRoutes);
 app.use('/api/koth', kothRoutes);
 app.use('/api/practice-arena', practiceArenaRouter);
 app.use('/api/stables', stablesRoutes);
+app.use('/api/changelog', changelogRoutes);
 
 // Serve uploaded images as static files (in production, Caddy handles this)
 import path from 'path';

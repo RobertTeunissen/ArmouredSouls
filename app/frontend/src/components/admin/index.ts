@@ -13,5 +13,6 @@ export { RepairLogTab } from './RepairLogTab';
 export { SecurityTab } from './SecurityTab';
 export { PasswordResetTab } from './PasswordResetTab';
 export { ImageUploadsTab } from './ImageUploadsTab';
+export { AdminChangelogTab } from './AdminChangelogTab';
 
 export * from './types';

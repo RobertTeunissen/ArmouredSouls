@@ -52,6 +52,7 @@ Browser-based robot combat strategy game with turn-based mechanics, league syste
 4. **Cycle System** - Automated daily game cycles
 5. **Fame & Prestige** - Player progression 
 6. **Tournament System** - Competitive events
+7. **Changelog System** - In-game "What's New" feed with auto-generated drafts from deploys, admin review/publish workflow, and player notification modal
 
 ## Documentation Organization
 - `docs/architecture/` - System architecture, schema, combat engine, security

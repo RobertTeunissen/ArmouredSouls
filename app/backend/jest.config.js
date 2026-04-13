@@ -11,7 +11,7 @@ const baseTransform = {
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
-  roots: ['<rootDir>/tests', '<rootDir>/src'],
+  roots: ['<rootDir>/tests', '<rootDir>/src', '<rootDir>/scripts'],
   testMatch: ['**/*.test.ts'],
   setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],

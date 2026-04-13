@@ -55,6 +55,14 @@ The Investments & ROI tab and Investment Advisor tab on the Facilities page are 
 
 Current observability: Winston logs, `CyclePerformanceMonitoringService`, `securityMonitor`, admin Security Dashboard. Missing: external uptime monitoring, alerting on backend crashes or cycle failures, log aggregation. Lightweight approach: UptimeRobot for uptime, Discord webhook for cycle failures (notification service already supports Discord).
 
+**Incident — April 2026 (ACC)**: Full-disk condition during robot image feature launch required a hard VPS restart. The restart left a partial `dist/` build (entire `utils/` directory missing). The server appeared healthy (PM2 status: online) but the daily settlement cron failed at 23:00 UTC with `Cannot find module '../../utils/economyCalculations'`. The error was only discovered the next morning via a Discord notification. Root causes: (1) no disk usage alerting, (2) no post-restart build verification, (3) dynamic `import()` in settlement allowed the server to start despite missing modules.
+
+Specific gaps this exposed — should be addressed in the spec:
+- **Disk usage monitoring**: Cron job or agent that alerts (Discord webhook) when disk usage crosses 80%. Would have caught the full-disk condition before it required a hard restart.
+- **Post-restart/deploy build verification**: A health check that validates critical modules are loadable and key endpoints respond. PM2 `online` status only means the process started — not that the app is functional.
+- **Startup self-test**: On boot, verify that all cron job handlers can resolve their dependencies (especially dynamic imports). Fail loudly at startup rather than silently at 23:00.
+- **Log rotation cleanup**: 26+ rotated log files were sitting in `/var/log/armouredsouls/`. More aggressive `logrotate` config to prevent logs from contributing to disk pressure.
+
 ### #4 — Landing Page / Marketing Front Page
 **Source**: Current state — visitors land on a login/register form with no context  
 **Priority**: High — first impression for new players

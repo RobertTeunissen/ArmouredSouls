@@ -43,6 +43,9 @@ model User {
   onboardingStartedAt    DateTime? @map("onboarding_started_at")
   onboardingCompletedAt  DateTime? @map("onboarding_completed_at")
 
+  // ===== CHANGELOG =====
+  lastSeenChangelog DateTime @default(now()) @map("last_seen_changelog")
+
   // ===== TIMESTAMPS =====
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -687,4 +690,24 @@ model PracticeArenaDailyStats {
   createdAt     DateTime @default(now())
 
   @@map("practice_arena_daily_stats")
+}
+
+// Changelog entries for the in-game "What's New" feed
+model ChangelogEntry {
+  id          Int       @id @default(autoincrement())
+  title       String    @db.VarChar(200)
+  body        String    @db.Text
+  category    String    @db.VarChar(20) // "balance", "feature", "bugfix", "economy"
+  status      String    @default("draft") @db.VarChar(20) // "draft", "published"
+  imageUrl    String?   @map("image_url") @db.VarChar(500)
+  publishDate DateTime? @map("publish_date")
+  sourceType  String?   @map("source_type") @db.VarChar(20) // "spec", "commit", "manual"
+  sourceRef   String?   @map("source_ref") @db.VarChar(200)
+  createdBy   Int?      @map("created_by") // Admin user ID, null for auto-generated
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@index([status, publishDate])
+  @@index([sourceRef])
+  @@map("changelog_entries")
 }
