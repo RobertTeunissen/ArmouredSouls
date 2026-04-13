@@ -16,6 +16,8 @@ test.describe('Protected Pages — Smoke Tests', () => {
     { path: '/league-standings', heading: 'League Standings' },
     { path: '/facilities', heading: 'Stable Facilities' },
     { path: '/profile', heading: 'My Profile' },
+    { path: '/guide', heading: /Guide/i },
+    { path: '/changelog', heading: /What's New/i },
   ];
 
   for (const { path, heading } of protectedPages) {

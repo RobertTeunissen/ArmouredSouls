@@ -359,6 +359,7 @@ jobs:
             ${{ secrets.ACC_VPS_USER }}@${{ secrets.ACC_VPS_IP }}:/opt/armouredsouls/app/
 
       - name: Sync Caddyfile and reload Caddy
+        continue-on-error: true
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.ACC_VPS_IP }}
@@ -370,8 +371,7 @@ jobs:
             SYSTEM_CADDY="/etc/caddy/Caddyfile"
             if [ -f "$REPO_CADDY" ] && ! diff -q "$REPO_CADDY" "$SYSTEM_CADDY" > /dev/null 2>&1; then
               echo "Caddyfile changed — updating and reloading"
-              sudo cp "$REPO_CADDY" "$SYSTEM_CADDY"
-              sudo systemctl reload caddy
+              sudo cp "$REPO_CADDY" "$SYSTEM_CADDY" && sudo systemctl reload caddy || echo "WARNING: Caddy reload failed — sudo may need passwordless config for deploy user"
             else
               echo "Caddyfile unchanged — skipping reload"
             fi
@@ -555,6 +555,7 @@ jobs:
             ${{ secrets.PRD_VPS_USER }}@${{ secrets.PRD_VPS_IP }}:/opt/armouredsouls/app/
 
       - name: Sync Caddyfile and reload Caddy
+        continue-on-error: true
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.PRD_VPS_IP }}
@@ -566,8 +567,7 @@ jobs:
             SYSTEM_CADDY="/etc/caddy/Caddyfile"
             if [ -f "$REPO_CADDY" ] && ! diff -q "$REPO_CADDY" "$SYSTEM_CADDY" > /dev/null 2>&1; then
               echo "Caddyfile changed — updating and reloading"
-              sudo cp "$REPO_CADDY" "$SYSTEM_CADDY"
-              sudo systemctl reload caddy
+              sudo cp "$REPO_CADDY" "$SYSTEM_CADDY" && sudo systemctl reload caddy || echo "WARNING: Caddy reload failed — sudo may need passwordless config for deploy user"
             else
               echo "Caddyfile unchanged — skipping reload"
             fi
