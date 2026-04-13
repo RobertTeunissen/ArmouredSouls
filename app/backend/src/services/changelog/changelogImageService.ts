@@ -17,19 +17,32 @@ import sharp from 'sharp';
 import logger from '../../config/logger';
 
 const BACKEND_ROOT = path.resolve(__dirname, '../../..');
-const UPLOAD_DIR = path.join(BACKEND_ROOT, 'uploads', 'changelog');
+const DEFAULT_UPLOAD_DIR = path.join(BACKEND_ROOT, 'uploads', 'changelog');
 const UPLOAD_URL_PREFIX = '/uploads/changelog';
+
+/** Overridable upload directory — allows tests to inject a temp directory. */
+let uploadDir = DEFAULT_UPLOAD_DIR;
+
+/** Set a custom upload directory (for testing). */
+export function setUploadDir(dir: string): void {
+  uploadDir = dir;
+}
+
+/** Reset upload directory to the default (for testing teardown). */
+export function resetUploadDir(): void {
+  uploadDir = DEFAULT_UPLOAD_DIR;
+}
 
 /**
  * Process an image buffer (resize to max 800px width, convert to WebP)
- * and store it in uploads/changelog/{uuid}.webp.
+ * and store it in the upload directory as {uuid}.webp.
  *
- * Creates the uploads/changelog/ directory if it doesn't exist.
+ * Creates the directory if it doesn't exist.
  *
  * @returns The relative URL path for database storage (e.g. /uploads/changelog/abc-123.webp)
  */
 export async function processAndStore(buffer: Buffer): Promise<string> {
-  await fs.mkdir(UPLOAD_DIR, { recursive: true });
+  await fs.mkdir(uploadDir, { recursive: true });
 
   const processed = await sharp(buffer)
     .resize({ width: 800, withoutEnlargement: true })
@@ -37,7 +50,7 @@ export async function processAndStore(buffer: Buffer): Promise<string> {
     .toBuffer();
 
   const filename = `${randomUUID()}.webp`;
-  const filePath = path.join(UPLOAD_DIR, filename);
+  const filePath = path.join(uploadDir, filename);
   await fs.writeFile(filePath, processed);
 
   return `${UPLOAD_URL_PREFIX}/${filename}`;
@@ -56,7 +69,7 @@ export async function deleteImage(imageUrl: string): Promise<void> {
       return;
     }
     const filename = path.basename(imageUrl);
-    const absolutePath = path.join(UPLOAD_DIR, filename);
+    const absolutePath = path.join(uploadDir, filename);
     await fs.unlink(absolutePath);
   } catch (error) {
     logger.error(

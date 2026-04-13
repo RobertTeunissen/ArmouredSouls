@@ -37,8 +37,10 @@ test.describe('Weapon Shop Page', () => {
     });
 
     test('should show storage capacity with current/max display', async ({ page }) => {
+      // Wait for weapon data to load before checking storage capacity
+      await page.waitForLoadState('networkidle');
       // Storage capacity shows "X / Y" format
-      await expect(page.getByText(/\d+ \/ \d+/)).toBeVisible();
+      await expect(page.getByText(/\d+ \/ \d+/)).toBeVisible({ timeout: 15000 });
     });
   });
 
@@ -221,15 +223,18 @@ test.describe('Weapon Shop Page', () => {
         await cardViewButton.click();
       }
 
-      // Select 3 weapons
+      // Select 3 weapons with waits between each to let state update
       const checkboxes = page.getByRole('checkbox', { name: 'Compare' });
       await expect(checkboxes.first()).toBeVisible({ timeout: 10000 });
       await checkboxes.nth(0).check();
+      await expect(page.getByText('1 weapon selected')).toBeVisible();
       await checkboxes.nth(1).check();
+      await expect(page.getByText('2 weapons selected')).toBeVisible();
       await checkboxes.nth(2).check();
+      await expect(page.getByText('3 weapons selected')).toBeVisible();
 
-      // Verify 4th checkbox is disabled
-      await expect(checkboxes.nth(3)).toBeDisabled();
+      // Verify 4th checkbox is disabled after state settles
+      await expect(checkboxes.nth(3)).toBeDisabled({ timeout: 5000 });
     });
 
     test('should clear comparison selection', async ({ page }) => {
