@@ -32,6 +32,7 @@ function ChangelogPage() {
   const [category, setCategory] = useState<CategoryFilter>('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryKey, setRetryKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -53,7 +54,7 @@ function ChangelogPage() {
     };
     load();
     return () => { cancelled = true; };
-  }, [page, perPage, category]);
+  }, [page, perPage, category, retryKey]);
 
   const totalPages = Math.ceil(total / perPage);
 
@@ -96,7 +97,7 @@ function ChangelogPage() {
           <div className="text-center py-20">
             <p className="text-secondary mb-4">{error}</p>
             <button
-              onClick={() => setPage(page)}
+              onClick={() => setRetryKey(k => k + 1)}
               className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
             >
               Try Again

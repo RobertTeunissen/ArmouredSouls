@@ -60,6 +60,7 @@ const TAB_LABELS = [
   '🛡️ Security',
   '🔑 Password Reset',
   '🖼️ Image Uploads',
+  '📋 Changelog',
 ];
 
 function renderAdminPage() {
@@ -80,7 +81,7 @@ describe('AdminPage shell', () => {
   it('should render all 7 tab buttons', () => {
     renderAdminPage();
     const tabs = screen.getAllByRole('tab');
-    expect(tabs).toHaveLength(11);
+    expect(tabs).toHaveLength(12);
     for (const label of TAB_LABELS) {
       expect(screen.getByRole('tab', { name: label })).toBeInTheDocument();
     }

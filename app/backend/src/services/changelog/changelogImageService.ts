@@ -49,8 +49,14 @@ export async function processAndStore(buffer: Buffer): Promise<string> {
  */
 export async function deleteImage(imageUrl: string): Promise<void> {
   try {
-    const subPath = imageUrl.replace(/^\/uploads\/changelog\//, '');
-    const absolutePath = path.join(UPLOAD_DIR, subPath);
+    // Validate the imageUrl matches the expected pattern to prevent path traversal
+    const safePattern = /^\/uploads\/changelog\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.webp$/;
+    if (!safePattern.test(imageUrl)) {
+      logger.error(`Refusing to delete changelog image with unsafe path: ${imageUrl}`);
+      return;
+    }
+    const filename = path.basename(imageUrl);
+    const absolutePath = path.join(UPLOAD_DIR, filename);
     await fs.unlink(absolutePath);
   } catch (error) {
     logger.error(

@@ -232,6 +232,11 @@ class ChangelogService {
       );
     }
 
+    // Only allow draft → published transition
+    if (existing.status === 'published') {
+      return existing;
+    }
+
     return prisma.changelogEntry.update({
       where: { id },
       data: {

@@ -5,17 +5,25 @@ import { authenticateToken, requireAdmin, AuthRequest } from '../middleware/auth
 import { validateRequest } from '../middleware/schemaValidator';
 import { positiveIntParam } from '../utils/securityValidation';
 import { changelogService, processAndStore } from '../services/changelog';
+import { ChangelogError, ChangelogErrorCode } from '../errors/changelogErrors';
+import { fileValidationService } from '../services/moderation/fileValidationService';
 
 const router = express.Router();
 
 // --- Zod schemas for changelog routes ---
+
+// Safe imageUrl pattern: only allow /uploads/changelog/{uuid}.webp or null
+const safeChangelogImageUrl = z.string().max(500).regex(
+  /^\/uploads\/changelog\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.webp$/,
+  'imageUrl must match /uploads/changelog/{uuid}.webp pattern',
+).nullable().optional();
 
 const createEntrySchema = z.object({
   title: z.string().min(1).max(200),
   body: z.string().min(1).max(5000),
   category: z.enum(['balance', 'feature', 'bugfix', 'economy']),
   status: z.enum(['draft', 'published']).default('draft'),
-  imageUrl: z.string().max(500).nullable().optional(),
+  imageUrl: safeChangelogImageUrl,
   sourceType: z.enum(['spec', 'commit', 'manual']).optional(),
   sourceRef: z.string().max(200).optional(),
 });
@@ -25,7 +33,7 @@ const updateEntrySchema = z.object({
   body: z.string().min(1).max(5000).optional(),
   category: z.enum(['balance', 'feature', 'bugfix', 'economy']).optional(),
   status: z.enum(['draft', 'published']).optional(),
-  imageUrl: z.string().max(500).nullable().optional(),
+  imageUrl: safeChangelogImageUrl,
 });
 
 const listQuerySchema = z.object({
@@ -131,13 +139,30 @@ router.post(
   requireAdmin,
   multerUpload.single('image'),
   handleMulterError,
+  validateRequest({}),
   async (req: AuthRequest, res: Response) => {
     if (!req.file) {
       res.status(400).json({ error: 'No image file provided', code: 'INVALID_IMAGE' });
       return;
     }
-    const imageUrl = await processAndStore(req.file.buffer);
-    res.json({ imageUrl });
+
+    // Validate magic bytes and dimensions (reuses robot upload validation)
+    const validation = await fileValidationService.validateImage(req.file.buffer, req.file.mimetype);
+    if (!validation.valid) {
+      res.status(400).json({ error: validation.error, code: 'INVALID_IMAGE' });
+      return;
+    }
+
+    try {
+      const imageUrl = await processAndStore(req.file.buffer);
+      res.json({ imageUrl });
+    } catch {
+      throw new ChangelogError(
+        ChangelogErrorCode.CHANGELOG_IMAGE_ERROR,
+        'Failed to process image',
+        500,
+      );
+    }
   },
 );
 
