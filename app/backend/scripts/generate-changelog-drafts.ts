@@ -155,9 +155,20 @@ function getLastDeployTag(): string {
       'git tag --sort=-creatordate | grep -E "^deploy-(acc|prd)-" | head -n 1',
       { encoding: 'utf-8' },
     ).trim();
+    if (!tag) {
+      // No deploy tags exist yet — fall back to first commit
+      console.log('No deploy tags found. Using first commit as baseline.');
+      return execSync('git rev-list --max-parents=0 HEAD', { encoding: 'utf-8' }).trim();
+    }
     return tag;
   } catch {
-    throw new Error('Failed to find last deploy tag');
+    // Git command failed — fall back to first commit
+    try {
+      console.log('Deploy tag lookup failed. Using first commit as baseline.');
+      return execSync('git rev-list --max-parents=0 HEAD', { encoding: 'utf-8' }).trim();
+    } catch {
+      throw new Error('Failed to find last deploy tag or initial commit');
+    }
   }
 }
 

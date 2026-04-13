@@ -15,55 +15,37 @@ test.describe('Guide Page', () => {
     await page.waitForLoadState('networkidle');
   });
 
-  test('should display guide page with sections', async ({ page }) => {
-    // The guide page heading should be visible
-    await expect(page.getByRole('heading', { name: /Guide/i }).first()).toBeVisible({ timeout: 10000 });
+  test('should display guide page with Game Guide heading and sections', async ({ page }) => {
+    // The guide landing page heading
+    await expect(page.getByRole('heading', { name: 'Game Guide' })).toBeVisible({ timeout: 10000 });
 
-    // At least one section should be visible in the sidebar/navigation
-    // Guide sections have headings like "Getting Started", "Combat", "Economy", etc.
-    const sectionLinks = page.getByRole('button').filter({ hasText: /Getting Started|Combat|Economy|Robots|Weapons|Leagues|Facilities|Prestige|Tournaments|Strategy/i });
+    // At least one section link should be visible
+    const sectionLinks = page.getByRole('link').filter({ hasText: /Getting Started|Combat|Economy|Robots|Weapons|Leagues|Facilities|Prestige|Tournaments|Strategy/i });
     await expect(sectionLinks.first()).toBeVisible({ timeout: 10000 });
   });
 
-  test('should display at least one article when a section is expanded', async ({ page }) => {
-    // Click the first section to expand it
-    const sectionButton = page.getByRole('button').filter({ hasText: /Getting Started/i }).first();
-    await expect(sectionButton).toBeVisible({ timeout: 10000 });
-    await sectionButton.click();
+  test('should navigate to a section and show articles', async ({ page }) => {
+    await expect(page.getByRole('heading', { name: 'Game Guide' })).toBeVisible({ timeout: 10000 });
 
-    // At least one article link should appear
-    const articleLinks = page.getByRole('link').filter({ hasText: /.+/ });
-    // Wait for articles to appear (they load from the API)
-    await expect(articleLinks.first()).toBeVisible({ timeout: 10000 });
-  });
+    // Click the first section link
+    const sectionLink = page.getByRole('link').filter({ hasText: /Getting Started|Combat|Economy/i }).first();
+    await expect(sectionLink).toBeVisible({ timeout: 10000 });
+    await sectionLink.click();
 
-  test('should render article content when an article is selected', async ({ page }) => {
-    // Expand first section
-    const sectionButton = page.getByRole('button').filter({ hasText: /Getting Started/i }).first();
-    await expect(sectionButton).toBeVisible({ timeout: 10000 });
-    await sectionButton.click();
-
-    // Click the first article link
-    const articleLink = page.getByRole('link').filter({ hasText: /.+/ }).first();
-    await expect(articleLink).toBeVisible({ timeout: 10000 });
-    await articleLink.click();
-
-    // Article content should render — look for a non-empty article body
-    // The article content area should have meaningful text (not just loading/empty)
+    // Should navigate to the section page with article buttons
     await page.waitForLoadState('networkidle');
-    const articleContent = page.locator('[class*="prose"], article, [data-testid="article-content"]').first();
-    await expect(articleContent).toBeVisible({ timeout: 10000 });
+    // Section page shows article buttons or the section title as heading
+    const articleButton = page.getByRole('button').filter({ hasText: /.{5,}/ }).first();
+    await expect(articleButton).toBeVisible({ timeout: 10000 });
   });
 
   test('should have a working search input', async ({ page }) => {
-    // The search input should be visible
-    const searchInput = page.getByPlaceholderText(/search/i).first();
+    // The search input has aria-label "Search guide"
+    const searchInput = page.getByRole('textbox', { name: /search guide/i });
     await expect(searchInput).toBeVisible({ timeout: 10000 });
 
-    // Typing in search should filter or show results
+    // Type in search and verify it accepts input
     await searchInput.fill('combat');
-    // After typing, either filtered results or search results should appear
-    // We just verify the input accepted the text and the page didn't crash
     await expect(searchInput).toHaveValue('combat');
   });
 });

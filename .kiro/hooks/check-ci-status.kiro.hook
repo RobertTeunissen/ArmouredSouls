@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Check CI Status",
+  "description": "Fetches the latest GitHub Actions workflow run status and failure details for the current branch, so the agent can see CI results without manual copy-pasting.",
+  "version": "1",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Run this command to check CI status: `gh run list --branch $(git branch --show-current) --limit 1 --json status,conclusion,name,databaseId` then if there are failures, run `gh run view {databaseId} --log-failed` to get the failure details. Analyze the failures and fix them."
+  }
+}
