@@ -98,21 +98,22 @@ This means high-DPS weapons always win, attribute upgrades and tuning have dimin
 
 ### #6 — Game Loop Audit — Structural Design Flaws
 **Source**: Design review  
-**Priority**: High — foundational issues that limit long-term retention
+**Priority**: High — foundational issues that limit long-term retention  
+**Progress**: Loop 1 explored in depth — see [Game Loop 1 Core Loop Exploration](analysis/GAME_LOOP_1_CORE_LOOP_EXPLORATION.md). The Tuning Pool (spec #25) directly addressed the thin "Adjust" step. Weapon Experimentation (#5) is the remaining high-impact fix for Loop 1. Loops 2–6 and missing loops still need exploration.
 
-The game has six identifiable loops, most of which degrade or stall at some point in the player lifecycle. This needs a deep design audit before we build more features on top of broken foundations.
+The game has six identifiable loops, most of which degrade or stall at some point in the player lifecycle.
 
-**Loop 1: Core Loop (Configure → Battle → Results → Adjust)** — The "Adjust" step was too thin; the Tuning Pool (spec #25) enriches it with meaningful per-battle decisions. Weapon switching remains economically punished (see #5).
+**Loop 1: Core Loop (Configure → Battle → Results → Adjust)** — ✅ Partially addressed. The Tuning Pool (spec #25) enriches the "Adjust" step with meaningful per-battle decisions. Weapon switching remains economically punished (see #5) — that's the remaining gap. See exploration doc for full analysis and rejected ideas (per-match overrides, stance depth, pre-battle orders).
 
-**Loop 2: Economic Loop (Earn → Invest → Earn More)** — Works early/mid game. Breaks in late game — credits accumulate with no meaningful sink once facilities and attributes are maxed.
+**Loop 2: Economic Loop (Earn → Invest → Earn More)** — Not explored yet. Breaks in late game — credits accumulate with no meaningful sink once facilities and attributes are maxed.
 
-**Loop 3: Competitive Loop (Battle → Earn LP → Promote → Harder Opponents)** — One-dimensional. No lateral movement, no reason to try different builds. No seasons, resets, or meta shifts.
+**Loop 3: Competitive Loop (Battle → Earn LP → Promote → Harder Opponents)** — Not explored yet. One-dimensional. No seasons, resets, or meta shifts.
 
-**Loop 4: Reputation Loop (Win → Prestige/Fame → Unlock → Win More)** — Prestige gates are functional but invisible. Fame feeds a streaming formula players never see. See [Prestige & Fame Design Exploration](analysis/PRESTIGE_FAME_DESIGN_EXPLORATION.md).
+**Loop 4: Reputation Loop (Win → Prestige/Fame → Unlock → Win More)** — Explored in [Prestige & Fame Design Exploration](analysis/PRESTIGE_FAME_DESIGN_EXPLORATION.md). Prestige gates functional but invisible. Achievement System (#8) identified as the right vehicle for milestone celebrations.
 
-**Loop 5: Roster Loop (Buy Robot → Train → Battle → Specialize → Expand)** — Robots don't interact outside Tag Team. No synergy, no stable-wide strategy.
+**Loop 5: Roster Loop (Buy Robot → Train → Battle → Specialize → Expand)** — Not explored yet. Robots don't interact outside Tag Team.
 
-**Loop 6: Facility Investment Loop (Spend Now → Save Later)** — Mechanically strong, experientially invisible. No "your Repair Bay saved you ₡50K this cycle" feedback.
+**Loop 6: Facility Investment Loop (Spend Now → Save Later)** — Not explored yet. Mechanically strong, experientially invisible.
 
 **Missing loops**: experimentation, social/rivalry, collection/completion, seasonal/event, recovery/comeback.
 
