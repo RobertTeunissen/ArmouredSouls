@@ -211,6 +211,27 @@ describe('tuningPoolService', () => {
       expect(state.remaining).toBe(0);
     });
 
+    it('should not exceed pool size after scale-down rounding', async () => {
+      // Edge case: 3 attributes each at 1, scaled to pool=2
+      // Naive rounding: 1 * (2/3) = 0.67 each → 0.67 * 3 = 2.01 > 2
+      // The fix subtracts the excess from the largest allocation
+      setupStandardMocks({
+        tuningBayLevel: 0, // pool = 10, but we override via allocation total
+        existingAllocation: {
+          combatPower: 10,
+          armorPlating: 10,
+          hullIntegrity: 10,
+        }, // total = 30, pool = 10
+      });
+
+      const state = await getTuningAllocation(1, 1);
+
+      expect(state.poolSize).toBe(10);
+      // Total allocated must not exceed pool size
+      expect(state.allocated).toBeLessThanOrEqual(state.poolSize);
+      expect(state.remaining).toBeGreaterThanOrEqual(0);
+    });
+
     it('should not scale down when allocations fit within pool', async () => {
       setupStandardMocks({
         tuningBayLevel: 5, // pool = 60

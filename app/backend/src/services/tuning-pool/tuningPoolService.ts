@@ -102,7 +102,9 @@ async function getTuningBayLevel(userId: number): Promise<number> {
 
 /**
  * Proportionally scale down allocations to fit within a pool size.
- * All values are rounded to 2 decimal places.
+ * All values are rounded to 2 decimal places. After rounding, the total
+ * is verified and any overshoot is subtracted from the largest allocation
+ * to guarantee total ≤ poolSize.
  */
 function scaleDownAllocations(allocations: TuningAttributeMap, poolSize: number): TuningAttributeMap {
   const total = Object.values(allocations).reduce((sum, v) => sum + (v ?? 0), 0);
@@ -115,6 +117,26 @@ function scaleDownAllocations(allocations: TuningAttributeMap, poolSize: number)
       scaled[attr as RobotAttribute] = Math.round(value * ratio * 100) / 100;
     }
   }
+
+  // Fix rounding overshoot: if the rounded sum exceeds poolSize,
+  // subtract the excess from the largest allocation
+  const scaledTotal = Object.values(scaled).reduce((sum, v) => sum + (v ?? 0), 0);
+  const roundedTotal = Math.round(scaledTotal * 100) / 100;
+  if (roundedTotal > poolSize) {
+    const excess = Math.round((roundedTotal - poolSize) * 100) / 100;
+    let largestAttr: RobotAttribute | null = null;
+    let largestVal = 0;
+    for (const [attr, value] of Object.entries(scaled)) {
+      if (value && value > largestVal) {
+        largestVal = value;
+        largestAttr = attr as RobotAttribute;
+      }
+    }
+    if (largestAttr && scaled[largestAttr]) {
+      scaled[largestAttr] = Math.round((scaled[largestAttr]! - excess) * 100) / 100;
+    }
+  }
+
   return scaled;
 }
 
