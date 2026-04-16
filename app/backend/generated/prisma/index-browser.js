@@ -493,6 +493,36 @@ exports.Prisma.ChangelogEntryScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.TuningAllocationScalarFieldEnum = {
+  id: 'id',
+  robotId: 'robotId',
+  combatPower: 'combatPower',
+  targetingSystems: 'targetingSystems',
+  criticalSystems: 'criticalSystems',
+  penetration: 'penetration',
+  weaponControl: 'weaponControl',
+  attackSpeed: 'attackSpeed',
+  armorPlating: 'armorPlating',
+  shieldCapacity: 'shieldCapacity',
+  evasionThrusters: 'evasionThrusters',
+  damageDampeners: 'damageDampeners',
+  counterProtocols: 'counterProtocols',
+  hullIntegrity: 'hullIntegrity',
+  servoMotors: 'servoMotors',
+  gyroStabilizers: 'gyroStabilizers',
+  hydraulicSystems: 'hydraulicSystems',
+  powerCore: 'powerCore',
+  combatAlgorithms: 'combatAlgorithms',
+  threatAnalysis: 'threatAnalysis',
+  adaptiveAI: 'adaptiveAI',
+  logicCores: 'logicCores',
+  syncProtocols: 'syncProtocols',
+  supportSystems: 'supportSystems',
+  formationTactics: 'formationTactics',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -544,7 +574,8 @@ exports.Prisma.ModelName = {
   ScheduledKothMatch: 'ScheduledKothMatch',
   ScheduledKothMatchParticipant: 'ScheduledKothMatchParticipant',
   PracticeArenaDailyStats: 'PracticeArenaDailyStats',
-  ChangelogEntry: 'ChangelogEntry'
+  ChangelogEntry: 'ChangelogEntry',
+  TuningAllocation: 'TuningAllocation'
 };
 
 /**

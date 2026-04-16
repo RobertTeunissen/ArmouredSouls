@@ -38,6 +38,8 @@ type SpatialGameModeState = GameModeState;
 export interface RobotWithWeapons extends Robot {
   mainWeapon?: (WeaponInventory & { weapon: Weapon }) | null;
   offhandWeapon?: (WeaponInventory & { weapon: Weapon }) | null;
+  /** Tuning bonuses — sparse map of attribute name → bonus value. Folded into attributes by prepareRobotForCombat(). */
+  tuningBonuses?: Partial<Record<string, number>>;
 }
 
 export interface CombatEvent {
@@ -187,7 +189,12 @@ export function random(min: number, max: number): number {
 }
 
 /**
- * Get effective attribute value including weapon bonuses
+ * Get effective attribute value including weapon bonuses and tuning bonuses.
+ *
+ * @deprecated After `prepareRobotForCombat()` runs, all robot attributes already
+ * contain effective values (base + both weapons + tuning). The combat simulator
+ * should read them directly with `Number(robot.attribute)`. This function is kept
+ * as a no-op passthrough for backward compatibility.
  */
 export function getEffectiveAttribute(
   robot: RobotWithWeapons,
@@ -195,17 +202,10 @@ export function getEffectiveAttribute(
   hand: 'main' | 'offhand',
   bonusField: keyof Weapon
 ): number {
-  const baseValue = typeof baseAttribute === 'object' && 'toNumber' in baseAttribute
+  // Attributes are pre-computed by prepareRobotForCombat() — just return the value.
+  return typeof baseAttribute === 'object' && 'toNumber' in baseAttribute
     ? baseAttribute.toNumber()
     : Number(baseAttribute);
-  const weapon = hand === 'main' ? robot.mainWeapon?.weapon : robot.offhandWeapon?.weapon;
-
-  if (!weapon || !(bonusField in weapon)) {
-    return baseValue;
-  }
-
-  const bonus = weapon[bonusField];
-  return baseValue + Number(bonus);
 }
 
 
@@ -219,7 +219,7 @@ export function calculateHitChance(
   spatialBonuses?: { adaptationHitBonus: number; pressureAccuracyMod: number; combatAlgorithmScore: number; passiveAccuracyPenalty?: number }
 ): { hitChance: number; breakdown: FormulaBreakdown } {
   const baseHitChance = attackerHand === 'offhand' ? 50 : 70;
-  const effectiveTargeting = getEffectiveAttribute(attacker, attacker.targetingSystems, attackerHand, 'targetingSystemsBonus');
+  const effectiveTargeting = Number(attacker.targetingSystems);
   const targetingBonus = effectiveTargeting / 2;
   const stanceBonus = attacker.stance === 'offensive' ? 5 : 0;
   const evasionPenalty = Number(defender.evasionThrusters) / 3;
@@ -269,9 +269,9 @@ export function calculateHitChance(
  */
 export function calculateCritChance(attacker: RobotWithWeapons, attackerHand: 'main' | 'offhand' = 'main'): { critChance: number; breakdown: FormulaBreakdown } {
   const baseCrit = 5;
-  const effectiveCritSystems = getEffectiveAttribute(attacker, attacker.criticalSystems, attackerHand, 'criticalSystemsBonus');
+  const effectiveCritSystems = Number(attacker.criticalSystems);
   const critBonus = effectiveCritSystems / 8;
-  const effectiveTargeting = getEffectiveAttribute(attacker, attacker.targetingSystems, attackerHand, 'targetingSystemsBonus');
+  const effectiveTargeting = Number(attacker.targetingSystems);
   const targetingBonus = effectiveTargeting / 25;
   const loadoutBonus = attacker.loadoutType === 'two_handed' ? 10 : 0;
 
@@ -299,7 +299,7 @@ export function calculateCritChance(attacker: RobotWithWeapons, attackerHand: 'm
  * Calculate weapon malfunction chance based on weapon control
  */
 export function calculateMalfunctionChance(attacker: RobotWithWeapons, attackerHand: 'main' | 'offhand' = 'main'): { malfunctionChance: number; breakdown: FormulaBreakdown } {
-  const effectiveWeaponControl = getEffectiveAttribute(attacker, attacker.weaponControl, attackerHand, 'weaponControlBonus');
+  const effectiveWeaponControl = Number(attacker.weaponControl);
   const baseMalfunction = 20;
   const reductionPerPoint = 0.4;
   const calculated = baseMalfunction - (effectiveWeaponControl * reductionPerPoint);
@@ -328,7 +328,7 @@ export function calculateBaseDamage(
   attackerHand: 'main' | 'offhand' = 'main',
   spatialMultipliers?: { rangePenalty: number; hydraulicBonus: number; backstabBonus: number; adaptationDamageBonus: number; pressureDamageMod: number; syncVolleyBonus: number }
 ): { damage: number; breakdown: FormulaBreakdown } {
-  const effectiveCombatPower = getEffectiveAttribute(attacker, attacker.combatPower, attackerHand, 'combatPowerBonus');
+  const effectiveCombatPower = Number(attacker.combatPower);
   const combatPowerMult = 1 + (effectiveCombatPower * 1.5) / 100;
   let damage = weaponBaseDamage * combatPowerMult;
 
@@ -336,7 +336,7 @@ export function calculateBaseDamage(
                       attacker.loadoutType === 'dual_wield' ? 0.90 : 1.0;
   damage *= loadoutMult;
 
-  const effectiveWeaponControl = getEffectiveAttribute(attacker, attacker.weaponControl, attackerHand, 'weaponControlBonus');
+  const effectiveWeaponControl = Number(attacker.weaponControl);
   const controlMult = 1 + effectiveWeaponControl / 150;
   damage *= controlMult;
 
@@ -425,7 +425,7 @@ export function applyDamage(
     damage *= (1 - formationDefenseBonus);
   }
 
-  const effectivePenetration = getEffectiveAttribute(attacker, attacker.penetration, attackerHand, 'penetrationBonus');
+  const effectivePenetration = Number(attacker.penetration);
   const effectiveArmorPlating = Number(defender.armorPlating);
 
   let shieldDamage = 0;
@@ -1067,8 +1067,8 @@ export interface BattleConfig {
 function calcCooldown(robot: RobotWithWeapons, weaponCooldown: number | undefined, hand: 'main' | 'offhand'): number {
   const baseCooldown = weaponCooldown || BASE_WEAPON_COOLDOWN;
   const cooldownWithPenalty = hand === 'offhand' ? baseCooldown * 1.4 : baseCooldown;
-  const effectiveAttackSpeed = getEffectiveAttribute(robot, robot.attackSpeed, hand, 'attackSpeedBonus');
-  return cooldownWithPenalty / (1 + Number(effectiveAttackSpeed) / 50);
+  const effectiveAttackSpeed = Number(robot.attackSpeed);
+  return cooldownWithPenalty / (1 + effectiveAttackSpeed / 50);
 }
 
 // ─── Helper: build spatial context for an attack pair ────────────────

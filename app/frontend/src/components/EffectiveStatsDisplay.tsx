@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { calculateAttributeBonus, getLoadoutBonus, getStanceModifier } from '../utils/robotStats';
+import apiClient from '../utils/apiClient';
 
 interface EffectiveStatsDisplayProps {
   robot: {
+    id: number;
     loadoutType: string;
     stance: string;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -62,23 +64,44 @@ const attributeCategories = {
 
 function EffectiveStatsDisplay({ robot }: EffectiveStatsDisplayProps) {
   const [expandedAttribute, setExpandedAttribute] = useState<string | null>(null);
+  const [tuningAllocations, setTuningAllocations] = useState<Record<string, number>>({});
+
+  // Fetch tuning allocation for this robot
+  useEffect(() => {
+    if (!robot.id) return;
+    let cancelled = false;
+    apiClient
+      .get<{ allocations: Record<string, number> }>(`/api/robots/${robot.id}/tuning-allocation`)
+      .then((res) => {
+        if (!cancelled) {
+          setTuningAllocations(res.data.allocations ?? {});
+        }
+      })
+      .catch(() => {
+        // Silently ignore — tuning data is optional enhancement
+        if (!cancelled) setTuningAllocations({});
+      });
+    return () => { cancelled = true; };
+  }, [robot.id]);
 
   const getEffectiveStat = (attributeKey: string) => {
     const baseValue = robot[attributeKey] as number;
     const numericBase = typeof baseValue === 'string' ? parseFloat(baseValue) : baseValue;
     
     const weaponBonus = calculateAttributeBonus(attributeKey, robot.mainWeapon, robot.offhandWeapon);
+    const tuningBonus = tuningAllocations[attributeKey] ?? 0;
     const loadoutBonus = getLoadoutBonus(robot.loadoutType, attributeKey);
     const stanceBonus = getStanceModifier(robot.stance, attributeKey);
 
     // Calculate total modifier percentage
     const totalModifier = loadoutBonus + stanceBonus;
     
-    // Calculate effective value: (base + weapon) × (1 + loadout) × (1 + stance)
-    const effectiveValue = (numericBase + weaponBonus) * (1 + loadoutBonus) * (1 + stanceBonus);
+    // Calculate effective value: (base + tuning + weapon) × (1 + loadout) × (1 + stance)
+    const effectiveValue = (numericBase + tuningBonus + weaponBonus) * (1 + loadoutBonus) * (1 + stanceBonus);
 
     return {
       base: Math.floor(numericBase),
+      tuning: tuningBonus,
       weapon: weaponBonus,
       loadout: loadoutBonus,
       stance: stanceBonus,
@@ -184,6 +207,12 @@ function EffectiveStatsDisplay({ robot }: EffectiveStatsDisplayProps) {
                                 <span className="text-white font-semibold">{stats.base}</span>
                               </div>
                               <div className="flex justify-between items-center py-2 border-b border-white/10">
+                                <span className="text-teal-400">Tuning Bonus:</span>
+                                <span className="text-teal-400">
+                                  {stats.tuning > 0 ? `+${stats.tuning}` : '0'}
+                                </span>
+                              </div>
+                              <div className="flex justify-between items-center py-2 border-b border-white/10">
                                 <span className="text-secondary">Weapon Bonus:</span>
                                 <span className={getModifierColor(stats.weapon)}>
                                   {stats.weapon > 0 ? `+${stats.weapon}` : stats.weapon || '0'}
@@ -208,7 +237,7 @@ function EffectiveStatsDisplay({ robot }: EffectiveStatsDisplayProps) {
                               
                               <div className="mt-4 pt-3 border-t border-white/10">
                                 <span className="text-tertiary text-xs font-mono block">
-                                  ({stats.base} + {stats.weapon}) × (1 {formatModifier(stats.loadout)}) × (1 {formatModifier(stats.stance)})
+                                  ({stats.base} + <span className="text-teal-400">{stats.tuning}</span> + {stats.weapon}) × (1 {formatModifier(stats.loadout)}) × (1 {formatModifier(stats.stance)})
                                 </span>
                               </div>
                             </div>
@@ -238,7 +267,8 @@ function EffectiveStatsDisplay({ robot }: EffectiveStatsDisplayProps) {
       <div className="mt-6 text-sm text-secondary space-y-1">
         <p>
           <span className="text-success">Green</span> = Positive modifier | 
-          <span className="text-error ml-2">Red</span> = Negative modifier
+          <span className="text-error ml-2">Red</span> = Negative modifier |
+          <span className="text-teal-400 ml-2">Teal</span> = Tuning bonus
         </p>
         <p>
           <span className="text-yellow-500">Highlighted</span> = Significant modifier (&gt;20%)

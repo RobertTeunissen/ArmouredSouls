@@ -1,6 +1,8 @@
 // Robot stat calculations including weapon bonuses, loadout modifiers, and stance modifiers
 
 import { Robot, WeaponInventory, Weapon, Prisma } from '../../generated/prisma';
+import { ROBOT_ATTRIBUTES } from '../services/tuning-pool/tuningPoolConfig';
+import type { TuningAttributeMap } from '../services/tuning-pool';
 
 /**
  * Convert Prisma Decimal to JavaScript number for calculations
@@ -69,9 +71,15 @@ type RobotWithWeapons = Robot & {
 
 /**
  * Calculate effective stats for a robot including base attributes,
- * weapon bonuses, and loadout modifiers
+ * weapon bonuses, optional tuning bonuses, and loadout modifiers.
+ *
+ * Formula: (base + weaponBonus + tuningBonus) × loadoutMultiplier
+ *
+ * @param robot - Robot with optional weapon includes
+ * @param tuningBonuses - Optional sparse map of attribute → tuning bonus value.
+ *                        When not provided, behaviour is unchanged (backward compatible).
  */
-export function calculateEffectiveStats(robot: RobotWithWeapons): Record<string, number> {
+export function calculateEffectiveStats(robot: RobotWithWeapons, tuningBonuses?: TuningAttributeMap): Record<string, number> {
   const loadoutType = robot.loadoutType as keyof typeof LOADOUT_BONUSES;
   const loadoutBonuses = LOADOUT_BONUSES[loadoutType] || {};
 
@@ -113,14 +121,64 @@ export function calculateEffectiveStats(robot: RobotWithWeapons): Record<string,
     // Convert Prisma Decimal to JavaScript number
     const baseValue = toNumber(robot[attr as keyof Robot] as number | Prisma.Decimal);
     const weaponBonus = getWeaponBonus(robot, attr);
+    const tuningBonus = tuningBonuses?.[attr as keyof TuningAttributeMap] ?? 0;
     const loadoutMultiplier = (loadoutBonuses[attr as keyof typeof loadoutBonuses] || 0) + 1;
 
-    // Formula: (base + weaponBonus) × loadoutMultiplier
+    // Formula: (base + weaponBonus + tuningBonus) × loadoutMultiplier
     // Round to 2 decimal places for precision
-    effectiveStats[attr] = roundToTwo((baseValue + weaponBonus) * loadoutMultiplier);
+    effectiveStats[attr] = roundToTwo((baseValue + weaponBonus + tuningBonus) * loadoutMultiplier);
   });
 
   return effectiveStats;
+}
+
+/**
+ * Prepare a robot for combat by computing all 23 effective attribute values
+ * and writing them directly onto the robot object. This replaces scattered
+ * `getEffectiveAttribute()` calls and raw `Number()` reads in the combat simulator.
+ *
+ * For each attribute:
+ * 1. Read the base value: `Number(robot[attr])` (handles Prisma Decimal)
+ * 2. Add weapon bonuses from BOTH main and offhand weapons
+ * 3. Add tuning bonus (if provided)
+ * 4. Write the effective value back onto the robot
+ *
+ * Then recalculates maxHP, maxShield, currentHP, and currentShield using
+ * the now-effective attribute values.
+ *
+ * After this function runs, the robot's attribute fields contain effective values
+ * (base + all weapon bonuses + tuning). The combat simulator can then read them
+ * directly with `Number(robot.combatPower)` and get the correct effective value.
+ *
+ * @param robot - Robot with optional weapon includes (mutated in place)
+ * @param tuningBonuses - Optional sparse map of attribute → tuning bonus value
+ */
+export function prepareRobotForCombat(
+  robot: RobotWithWeapons,
+  tuningBonuses?: TuningAttributeMap
+): void {
+  // Store tuning bonuses on the robot for downstream access
+  (robot as RobotWithWeapons & { tuningBonuses?: TuningAttributeMap }).tuningBonuses = tuningBonuses ?? {};
+
+  // Compute and write effective values for all 23 attributes
+  for (const attr of ROBOT_ATTRIBUTES) {
+    const baseValue = Number(robot[attr as keyof Robot]);
+    const weaponBonus = getWeaponBonus(robot, attr);
+    const tuningBonus = tuningBonuses?.[attr] ?? 0;
+    const effectiveValue = baseValue + weaponBonus + tuningBonus;
+
+    // Write effective value back — combat simulator reads with Number()
+    (robot as Record<string, unknown>)[attr] = effectiveValue;
+  }
+
+  // Recalculate maxHP and maxShield using the now-effective attribute values
+  // hullIntegrity and shieldCapacity are already effective (plain numbers) at this point
+  robot.maxHP = BASE_HP + Number(robot.hullIntegrity) * HP_MULTIPLIER;
+  robot.maxShield = Number(robot.shieldCapacity) * 4;
+
+  // Set current HP and shield to max (robots enter combat at full health)
+  robot.currentHP = robot.maxHP;
+  robot.currentShield = robot.maxShield;
 }
 
 /**
@@ -151,16 +209,28 @@ function getWeaponBonus(robot: RobotWithWeapons, attribute: string): number {
 export const BASE_HP = 50; // Base HP for all robots
 export const HP_MULTIPLIER = 5; // Multiplier per hull integrity point
 
-export function calculateMaxHP(robot: RobotWithWeapons): number {
-  const effectiveStats = calculateEffectiveStats(robot);
+/**
+ * Calculate maximum HP based on hull integrity, weapon bonuses, tuning bonuses, and loadout
+ * Formula: BASE_HP + (hullIntegrity × HP_MULTIPLIER)
+ * This gives starting robots (hull=1) a reasonable base HP while maintaining scaling
+ * Updated for better weapon damage scaling: 50 + (hull × 5)
+ *
+ * @param robot - Robot with optional weapon includes
+ * @param tuningBonuses - Optional tuning bonuses passed through to effective stats calculation
+ */
+export function calculateMaxHP(robot: RobotWithWeapons, tuningBonuses?: TuningAttributeMap): number {
+  const effectiveStats = calculateEffectiveStats(robot, tuningBonuses);
   return BASE_HP + (effectiveStats.hullIntegrity * HP_MULTIPLIER);
 }
 
 /**
- * Calculate maximum Shield based on shield capacity, weapon bonuses, and loadout
+ * Calculate maximum Shield based on shield capacity, weapon bonuses, tuning bonuses, and loadout
+ *
+ * @param robot - Robot with optional weapon includes
+ * @param tuningBonuses - Optional tuning bonuses passed through to effective stats calculation
  */
-export function calculateMaxShield(robot: RobotWithWeapons): number {
-  const effectiveStats = calculateEffectiveStats(robot);
+export function calculateMaxShield(robot: RobotWithWeapons, tuningBonuses?: TuningAttributeMap): number {
+  const effectiveStats = calculateEffectiveStats(robot, tuningBonuses);
   return effectiveStats.shieldCapacity * 4;
 }
 
@@ -185,10 +255,13 @@ export function getLoadoutModifiedAttributes(loadoutType: string): string[] {
 /**
  * Calculate effective stats including stance modifiers
  * Stance modifiers are applied after loadout modifiers
+ *
+ * @param robot - Robot with optional weapon includes
+ * @param tuningBonuses - Optional tuning bonuses passed through to effective stats calculation
  */
-export function calculateEffectiveStatsWithStance(robot: RobotWithWeapons): Record<string, number> {
-  // First get base effective stats with weapons and loadout
-  const baseEffectiveStats = calculateEffectiveStats(robot);
+export function calculateEffectiveStatsWithStance(robot: RobotWithWeapons, tuningBonuses?: TuningAttributeMap): Record<string, number> {
+  // First get base effective stats with weapons, tuning, and loadout
+  const baseEffectiveStats = calculateEffectiveStats(robot, tuningBonuses);
   
   // Apply stance modifiers
   const stance = robot.stance as keyof typeof STANCE_MODIFIERS;

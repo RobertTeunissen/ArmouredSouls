@@ -16,6 +16,11 @@ Every robot in Armoured Souls is defined by **23 core attributes** spread across
 
 All attributes start at level 1 and can be upgraded to a maximum of level 50 using Credits. However, attributes are capped at level 10 until you invest in [Training Academies](/guide/robots/training-academies) to unlock higher levels.
 
+Beyond permanent upgrades, attributes can be boosted in three ways:
+- **Base level** — Permanent attribute upgrades purchased with Credits
+- **Weapon bonuses** — Equipped weapons add flat bonuses to specific attributes
+- **Tuning pool** — The [Tuning Bay](/guide/facilities/tuning-bay) system provides a pool of bonus points (10 free, up to 110 with facility) that can be freely allocated across any attributes before each battle. Tuning bonuses are added alongside weapon bonuses in the effective stat formula: `(base + weaponBonus + tuningBonus) × loadoutMultiplier`
+
 All 23 attributes are active in the combat simulator and directly influence battle outcomes.
 
 ![Robot attribute categories overview](/images/guide/robots/attribute-categories-overview.png)

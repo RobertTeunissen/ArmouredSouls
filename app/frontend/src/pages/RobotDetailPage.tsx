@@ -6,6 +6,7 @@ import { useRobotStore } from '../stores';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
 import TabNavigation from '../components/TabNavigation';
+import type { TabId } from '../components/TabNavigation';
 import BattleConfigTab from '../components/BattleConfigTab';
 import EffectiveStatsDisplay from '../components/EffectiveStatsDisplay';
 import { RangeBand } from '../utils/weaponRange';
@@ -18,6 +19,7 @@ import UpcomingMatches from '../components/UpcomingMatches';
 import UpgradePlanner from '../components/UpgradePlanner';
 import Toast from '../components/Toast';
 import RobotPerformanceAnalytics from '../components/RobotPerformanceAnalytics';
+import TuningPoolEditor from '../components/TuningPoolEditor';
 import { getMatchHistory } from '../utils/matchmakingApi';
 
 interface Robot {
@@ -148,10 +150,10 @@ function RobotDetailPage() {
   const navigate = useNavigate();
 
   // Tab state management from URL
-  const tabParam = searchParams.get('tab') as 'overview' | 'matches' | 'battle-config' | 'upgrades' | 'stats' | 'analytics' | null;
+  const tabParam = searchParams.get('tab') as TabId | null;
   const activeTab = tabParam || 'overview';
 
-  const handleTabChange = (tab: 'overview' | 'matches' | 'battle-config' | 'upgrades' | 'stats' | 'analytics') => {
+  const handleTabChange = (tab: TabId) => {
     const params: Record<string, string> = { tab };
     if (isOnboarding) {
       params.onboarding = 'true';
@@ -214,7 +216,7 @@ function RobotDetailPage() {
       window.removeEventListener('focus', handleFocus);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, location]); // Re-fetch when route location changes
+  }, [id]); // Re-fetch when robot ID changes (not on tab/location changes)
 
   useEffect(() => {
     if (user) {
@@ -750,6 +752,13 @@ function RobotDetailPage() {
             />
           )}
 
+          {activeTab === 'tuning' && isOwner && (
+            <TuningPoolEditor
+              robotId={robot.id}
+              robot={robot}
+            />
+          )}
+
           {activeTab === 'stats' && (
             <div className="mb-6">
               <EffectiveStatsDisplay robot={robot} />
@@ -757,7 +766,7 @@ function RobotDetailPage() {
           )}
 
           {/* Non-Owner View for owner-only tabs */}
-          {!isOwner && (activeTab === 'battle-config' || activeTab === 'upgrades' || activeTab === 'stats') && (
+          {!isOwner && (activeTab === 'battle-config' || activeTab === 'upgrades' || activeTab === 'tuning' || activeTab === 'stats') && (
             <div className="bg-surface p-6 rounded-lg text-center">
               <p className="text-secondary text-lg">
                 {activeTab === 'stats' 

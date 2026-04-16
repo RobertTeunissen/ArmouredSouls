@@ -53,6 +53,7 @@ Browser-based robot combat strategy game with turn-based mechanics, league syste
 5. **Fame & Prestige** - Player progression 
 6. **Tournament System** - Competitive events
 7. **Changelog System** - In-game "What's New" feed with auto-generated drafts from deploys, admin review/publish workflow, and player notification modal
+8. **Tuning Pool System** - Per-robot tactical attribute tuning with facility-gated pool size (Spec #25)
 
 ## Documentation Organization
 - `docs/architecture/` - System architecture, schema, combat engine, security

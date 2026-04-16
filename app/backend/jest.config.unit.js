@@ -73,6 +73,10 @@ const unitTestFiles = [
   'changelogImageService\\.property\\.test\\.ts',
   'generate-changelog-drafts\\.test\\.ts',
   'generate-changelog-drafts\\.property\\.test\\.ts',
+  'tuningPoolConfig\\.test\\.ts',
+  'tuningPoolService\\.test\\.ts',
+  'tuningCombatIntegration\\.test\\.ts',
+  'tuningPracticeArena\\.test\\.ts',
 ];
 
 module.exports = {

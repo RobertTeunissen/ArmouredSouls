@@ -36,6 +36,8 @@ import {
 import { CombatMessageGenerator } from '../battle/combatMessageGenerator';
 import { calculateStreamingRevenue } from '../economy/streamingRevenueService';
 import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
+import { prepareRobotForCombat } from '../../utils/robotCalculations';
+import { getTuningBonuses } from '../tuning-pool';
 
 /** Prepared participant data for batched DB operations */
 interface PreparedParticipant {
@@ -221,9 +223,12 @@ async function processKothBattle(
 
   // 1b. Ensure in-memory HP/shield is at max for simulation
   // Robots enter KotH battles at full HP (simulation uses maxHP, damage persisted after battle)
-  for (const robot of robots) {
-    robot.currentHP = robot.maxHP;
-    robot.currentShield = robot.maxShield;
+  // Fetch tuning bonuses and prepare all robots for combat (applies tuning, recalculates maxHP/maxShield, sets full HP)
+  const tuningBonusesMap = await Promise.all(
+    robots.map(robot => getTuningBonuses(robot.id))
+  );
+  for (let i = 0; i < robots.length; i++) {
+    prepareRobotForCombat(robots[i], tuningBonusesMap[i]);
   }
 
   // 2. Resolve config values

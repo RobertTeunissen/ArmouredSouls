@@ -203,6 +203,7 @@ model Robot {
   tagTeamsAsReserve         TagTeam[]                       @relation("TagTeamReserveRobot")
   battleParticipations      BattleParticipant[]
   kothMatchParticipations   ScheduledKothMatchParticipant[]
+  tuningAllocation          TuningAllocation?
 
   @@index([userId])
   @@index([elo])
@@ -710,4 +711,55 @@ model ChangelogEntry {
   @@index([status, publishDate])
   @@index([sourceRef])
   @@map("changelog_entries")
+}
+
+// Tuning allocation table — stores per-robot tuning point allocations for the Tuning Bay system
+model TuningAllocation {
+  id      Int @id @default(autoincrement())
+  robotId Int @unique @map("robot_id")
+
+  // ===== 23 TUNING ATTRIBUTE ALLOCATIONS (Decimal(5,2), default 0.00) =====
+
+  // Combat Systems (6 attributes)
+  combatPower      Decimal @default(0.00) @map("combat_power") @db.Decimal(5, 2)
+  targetingSystems Decimal @default(0.00) @map("targeting_systems") @db.Decimal(5, 2)
+  criticalSystems  Decimal @default(0.00) @map("critical_systems") @db.Decimal(5, 2)
+  penetration      Decimal @default(0.00) @db.Decimal(5, 2)
+  weaponControl    Decimal @default(0.00) @map("weapon_control") @db.Decimal(5, 2)
+  attackSpeed      Decimal @default(0.00) @map("attack_speed") @db.Decimal(5, 2)
+
+  // Defensive Systems (5 attributes)
+  armorPlating     Decimal @default(0.00) @map("armor_plating") @db.Decimal(5, 2)
+  shieldCapacity   Decimal @default(0.00) @map("shield_capacity") @db.Decimal(5, 2)
+  evasionThrusters Decimal @default(0.00) @map("evasion_thrusters") @db.Decimal(5, 2)
+  damageDampeners  Decimal @default(0.00) @map("damage_dampeners") @db.Decimal(5, 2)
+  counterProtocols Decimal @default(0.00) @map("counter_protocols") @db.Decimal(5, 2)
+
+  // Chassis & Mobility (5 attributes)
+  hullIntegrity    Decimal @default(0.00) @map("hull_integrity") @db.Decimal(5, 2)
+  servoMotors      Decimal @default(0.00) @map("servo_motors") @db.Decimal(5, 2)
+  gyroStabilizers  Decimal @default(0.00) @map("gyro_stabilizers") @db.Decimal(5, 2)
+  hydraulicSystems Decimal @default(0.00) @map("hydraulic_systems") @db.Decimal(5, 2)
+  powerCore        Decimal @default(0.00) @map("power_core") @db.Decimal(5, 2)
+
+  // AI Processing (4 attributes)
+  combatAlgorithms Decimal @default(0.00) @map("combat_algorithms") @db.Decimal(5, 2)
+  threatAnalysis   Decimal @default(0.00) @map("threat_analysis") @db.Decimal(5, 2)
+  adaptiveAI       Decimal @default(0.00) @map("adaptive_ai") @db.Decimal(5, 2)
+  logicCores       Decimal @default(0.00) @map("logic_cores") @db.Decimal(5, 2)
+
+  // Team Coordination (3 attributes)
+  syncProtocols    Decimal @default(0.00) @map("sync_protocols") @db.Decimal(5, 2)
+  supportSystems   Decimal @default(0.00) @map("support_systems") @db.Decimal(5, 2)
+  formationTactics Decimal @default(0.00) @map("formation_tactics") @db.Decimal(5, 2)
+
+  // ===== TIMESTAMPS =====
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // ===== RELATIONS =====
+  robot Robot @relation(fields: [robotId], references: [id], onDelete: Cascade)
+
+  @@index([robotId])
+  @@map("tuning_allocations")
 }

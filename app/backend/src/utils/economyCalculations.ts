@@ -76,6 +76,10 @@ export function calculateFacilityOperatingCost(facilityType: string, level: numb
       // Operating cost: level × 100 credits per day
       return level * 100;
     
+    case 'tuning_bay':
+      // Operating cost: level × 300 credits per day
+      return level * 300;
+    
     default:
       return 0;
   }

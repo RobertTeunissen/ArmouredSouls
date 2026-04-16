@@ -48,6 +48,8 @@ const Step6 = memo(({onPrevious:_p}:{onNext?:()=>void;onPrevious?:()=>void}) => 
   const [busy,setBusy] = useState(false);
   const [err,setErr] = useState<string|null>(null);
   const [revert,setRevert] = useState(false);
+  const [tuningCallout,setTuningCallout] = useState(false);
+  const [selectedMainWeapon,setSelectedMainWeapon] = useState<Weapon|null>(null);
 
   const bot = robots[idx]??null;
   const done = phase==='done';
@@ -114,7 +116,7 @@ const Step6 = memo(({onPrevious:_p}:{onNext?:()=>void;onPrevious?:()=>void}) => 
   const mainPicks = (lt&&rng) ? pickWeapons(lt==='two_handed'?'two':'one', rng) : [];
   const offPicks = (lt&&rng) ? (lt==='weapon_shield'?pickShields():pickWeapons('one',rng)) : [];
 
-  const nextBot = () => { const n=idx+1; if(n>=robots.length) setPhase('done'); else {setIdx(n);setPhase('loadout');setLt(null);setStance('');setRng(null);} };
+  const nextBot = () => { const n=idx+1; if(n>=robots.length) setPhase('done'); else {setIdx(n);setPhase('loadout');setLt(null);setStance('');setRng(null);setSelectedMainWeapon(null);setTuningCallout(false);} };
 
   const buyEquip = async (wId:number,rId:number,slot:'main'|'offhand') => {
     try {
@@ -137,15 +139,77 @@ const Step6 = memo(({onPrevious:_p}:{onNext?:()=>void;onPrevious?:()=>void}) => 
     }
   };
 
+  /**
+   * Auto-allocate 10 tuning points proportionally into the same attributes
+   * the equipped weapon boosts. Called after the final weapon is equipped.
+   */
+  const autoAllocateTuning = async (weapon: Weapon, robotId: number) => {
+    try {
+      // Collect non-zero weapon bonuses and map bonus keys to tuning attribute keys
+      const bonusEntries: { attr: string; value: number }[] = [];
+      const allBonusKeys = [
+        'combatPowerBonus', 'targetingSystemsBonus', 'criticalSystemsBonus',
+        'penetrationBonus', 'weaponControlBonus', 'attackSpeedBonus',
+        'armorPlatingBonus', 'shieldCapacityBonus', 'evasionThrustersBonus',
+        'damageDampenersBonus', 'counterProtocolsBonus', 'hullIntegrityBonus',
+        'servoMotorsBonus', 'gyroStabilizersBonus', 'hydraulicSystemsBonus',
+        'powerCoreBonus', 'combatAlgorithmsBonus', 'threatAnalysisBonus',
+        'adaptiveAIBonus', 'logicCoresBonus', 'syncProtocolsBonus',
+        'supportSystemsBonus', 'formationTacticsBonus',
+      ];
+      for (const bonusKey of allBonusKeys) {
+        const v = Number(weapon[bonusKey]) || 0;
+        if (v > 0) {
+          // Strip 'Bonus' suffix to get the tuning attribute key
+          const attr = bonusKey.replace(/Bonus$/, '');
+          bonusEntries.push({ attr, value: v });
+        }
+      }
+      if (bonusEntries.length === 0) return;
+
+      // Distribute 10 points proportionally
+      const totalBonus = bonusEntries.reduce((s, e) => s + e.value, 0);
+      const TUNING_POINTS = 10;
+      const rawAllocations = bonusEntries.map(e => ({
+        attr: e.attr,
+        value: (e.value / totalBonus) * TUNING_POINTS,
+      }));
+
+      // Round to 2 decimal places, then adjust to ensure sum is exactly 10
+      const rounded = rawAllocations.map(a => ({
+        attr: a.attr,
+        value: Math.round(a.value * 100) / 100,
+      }));
+      const roundedSum = rounded.reduce((s, a) => s + a.value, 0);
+      const diff = Math.round((TUNING_POINTS - roundedSum) * 100) / 100;
+      if (diff !== 0 && rounded.length > 0) {
+        // Add the rounding remainder to the largest allocation
+        const largest = rounded.reduce((max, a) => a.value > max.value ? a : max, rounded[0]);
+        largest.value = Math.round((largest.value + diff) * 100) / 100;
+      }
+
+      const allocations: Record<string, number> = {};
+      for (const a of rounded) {
+        if (a.value > 0) allocations[a.attr] = a.value;
+      }
+
+      await apiClient.put(`/api/robots/${robotId}/tuning-allocation`, allocations);
+      setTuningCallout(true);
+    } catch {
+      // Non-critical — don't block onboarding if tuning auto-allocation fails
+      console.warn('[Step6] Auto-tuning allocation failed, continuing onboarding');
+    }
+  };
+
   const onMain = async (w:Weapon) => {
     if(!bot||!lt) return;
-    try { setBusy(true);setErr(null); await buyEquip(w.id,bot.id,'main'); if(needsOff) setPhase('offhand'); else setPhase('portrait'); }
+    try { setBusy(true);setErr(null); await buyEquip(w.id,bot.id,'main'); setSelectedMainWeapon(w); if(needsOff) setPhase('offhand'); else { await autoAllocateTuning(w,bot.id); setPhase('portrait'); } }
     catch(e:unknown){setErr((e as {response?:{data?:{error?:string}}})?.response?.data?.error||'Something went wrong.');}
     finally{setBusy(false);}
   };
   const onOff = async (w:Weapon) => {
     if(!bot) return;
-    try { setBusy(true);setErr(null); await buyEquip(w.id,bot.id,'offhand'); setPhase('portrait'); }
+    try { setBusy(true);setErr(null); await buyEquip(w.id,bot.id,'offhand'); if(selectedMainWeapon) await autoAllocateTuning(selectedMainWeapon,bot.id); setPhase('portrait'); }
     catch(e:unknown){setErr((e as {response?:{data?:{error?:string}}})?.response?.data?.error||'Something went wrong.');}
     finally{setBusy(false);}
   };
@@ -246,6 +310,9 @@ const Step6 = memo(({onPrevious:_p}:{onNext?:()=>void;onPrevious?:()=>void}) => 
     </div>}
 
     {phase==='portrait'&&bot&&<div>
+      {tuningCallout&&<div className="bg-teal-900/20 border border-teal-700 rounded-lg p-4 max-w-2xl mx-auto mb-6">
+        <p className="text-teal-400 text-sm text-center">⚙️ Your engineering team has tuned your robot to complement its weapon loadout. You can adjust your tuning before every battle on the Tuning tab.</p>
+      </div>}
       <div className="text-center mb-4">
         <h3 className="text-lg font-semibold text-secondary uppercase tracking-wide">
           Choose a Portrait for {bot.name}

@@ -24,9 +24,9 @@ export const FACILITY_CATEGORIES = [
   },
   {
     id: 'advanced',
-    name: 'Advanced Features',
+    name: 'Tactical & Advanced',
     icon: '⭐',
-    facilityTypes: ['research_lab', 'medical_bay', 'coaching_staff', 'booking_office'],
+    facilityTypes: ['tuning_bay', 'research_lab', 'medical_bay', 'coaching_staff', 'booking_office'],
   },
 ] as const;
 

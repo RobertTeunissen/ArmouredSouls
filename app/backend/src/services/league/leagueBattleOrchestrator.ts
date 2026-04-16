@@ -22,6 +22,8 @@ import {
 } from '../battle/battlePostCombat';
 import { BattleError, BattleErrorCode } from '../../errors/battleErrors';
 import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
+import { prepareRobotForCombat } from '../../utils/robotCalculations';
+import { getTuningBonuses } from '../tuning-pool';
 
 // Re-export so existing consumers don't break
 export { getCurrentCycleNumber };
@@ -580,10 +582,13 @@ export async function processBattle(scheduledMatch: ScheduledLeagueMatch): Promi
   
   // Robots enter battles fully repaired (battle-ready state)
   // This is the intended game mechanic - players should repair before battles
-  robot1.currentHP = robot1.maxHP;
-  robot1.currentShield = robot1.maxShield;
-  robot2.currentHP = robot2.maxHP;
-  robot2.currentShield = robot2.maxShield;
+  // Fetch tuning bonuses and prepare robots for combat (applies tuning, recalculates maxHP/maxShield, sets full HP)
+  const [tuning1, tuning2] = await Promise.all([
+    getTuningBonuses(robot1.id),
+    getTuningBonuses(robot2.id),
+  ]);
+  prepareRobotForCombat(robot1, tuning1);
+  prepareRobotForCombat(robot2, tuning2);
   
   // Check if this is a bye-robot match
   const isByeMatch = robot1.name === BYE_ROBOT_NAME || robot2.name === BYE_ROBOT_NAME;

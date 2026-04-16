@@ -63,6 +63,11 @@ const attributeOverridesSchema = z.object({
   formationTactics: z.number().int().min(1).max(50).optional(),
 });
 
+const tuningBonusesSchema = z.record(
+  z.string(),
+  z.number().min(0).max(55),
+).optional();
+
 const whatIfOverridesSchema = z.object({
   attributes: attributeOverridesSchema.optional(),
   mainWeaponId: positiveInt.optional(),
@@ -70,6 +75,7 @@ const whatIfOverridesSchema = z.object({
   loadoutType: z.enum(['single', 'weapon_shield', 'two_handed', 'dual_wield']).optional(),
   stance: z.enum(['offensive', 'defensive', 'balanced']).optional(),
   yieldThreshold: z.number().int().min(0).max(50).optional(),
+  tuningBonuses: tuningBonusesSchema,
 });
 
 const ownedSlotSchema = z.object({

@@ -152,21 +152,32 @@ export function getStanceModifier(stance: string, attribute: string): number {
 }
 
 /**
- * Calculate effective stat value including weapon bonuses and loadout modifiers
+ * Sparse map of attribute → tuning bonus value.
+ * Mirrors the backend TuningAttributeMap type.
+ */
+export type TuningAttributeMap = Partial<Record<string, number>>;
+
+/**
+ * Calculate effective stat value including weapon bonuses, tuning bonuses, and loadout modifiers
  */
 export function calculateEffectiveStat(
   baseValue: number,
   weaponBonus: number,
-  loadoutBonus: number
+  loadoutBonus: number,
+  tuningBonus: number = 0
 ): number {
   const loadoutMultiplier = 1 + loadoutBonus;
-  return Math.floor((baseValue + weaponBonus) * loadoutMultiplier);
+  return Math.floor((baseValue + weaponBonus + tuningBonus) * loadoutMultiplier);
 }
 
 /**
  * Calculate all effective stats for a robot
+ *
+ * @param robot - Robot with attributes and optional weapons
+ * @param tuningBonuses - Optional sparse map of attribute → tuning bonus value.
+ *                        When not provided, behaviour is unchanged (backward compatible).
  */
-export function calculateEffectiveStats(robot: Robot): Record<string, number> {
+export function calculateEffectiveStats(robot: Robot, tuningBonuses?: TuningAttributeMap): Record<string, number> {
   const attributes = [
     'combatPower', 'targetingSystems', 'criticalSystems', 'penetration', 'weaponControl', 'attackSpeed',
     'armorPlating', 'shieldCapacity', 'evasionThrusters', 'damageDampeners', 'counterProtocols',
@@ -181,7 +192,8 @@ export function calculateEffectiveStats(robot: Robot): Record<string, number> {
     const baseValue = robot[attr as keyof Robot] as number;
     const weaponBonus = calculateAttributeBonus(attr, robot.mainWeapon, robot.offhandWeapon);
     const loadoutBonus = getLoadoutBonus(robot.loadoutType, attr);
-    effectiveStats[attr] = calculateEffectiveStat(baseValue, weaponBonus, loadoutBonus);
+    const tuningBonus = tuningBonuses?.[attr] ?? 0;
+    effectiveStats[attr] = calculateEffectiveStat(baseValue, weaponBonus, loadoutBonus, tuningBonus);
   });
 
   return effectiveStats;
@@ -190,17 +202,23 @@ export function calculateEffectiveStats(robot: Robot): Record<string, number> {
 /**
  * Calculate max HP based on effective hull integrity
  * Formula: 50 + (hullIntegrity × 5)
+ *
+ * @param robot - Robot with attributes and optional weapons
+ * @param tuningBonuses - Optional tuning bonuses passed through to effective stats calculation
  */
-export function calculateMaxHP(robot: Robot): number {
-  const effectiveStats = calculateEffectiveStats(robot);
+export function calculateMaxHP(robot: Robot, tuningBonuses?: TuningAttributeMap): number {
+  const effectiveStats = calculateEffectiveStats(robot, tuningBonuses);
   return 50 + (effectiveStats.hullIntegrity * 5);
 }
 
 /**
  * Calculate max Shield based on effective shield capacity
+ *
+ * @param robot - Robot with attributes and optional weapons
+ * @param tuningBonuses - Optional tuning bonuses passed through to effective stats calculation
  */
-export function calculateMaxShield(robot: Robot): number {
-  const effectiveStats = calculateEffectiveStats(robot);
+export function calculateMaxShield(robot: Robot, tuningBonuses?: TuningAttributeMap): number {
+  const effectiveStats = calculateEffectiveStats(robot, tuningBonuses);
   return effectiveStats.shieldCapacity * 4;
 }
 

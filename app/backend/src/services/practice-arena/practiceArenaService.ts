@@ -17,7 +17,8 @@ import { simulateBattle, type RobotWithWeapons, type CombatResult } from '../bat
 import { CombatMessageGenerator } from '../battle/combatMessageGenerator';
 import { selectWeapon, selectShield, type WeaponRecord } from '../../utils/weaponSelection';
 import { TIER_CONFIGS } from '../../utils/tierConfig';
-import { calculateMaxHP, calculateMaxShield } from '../../utils/robotCalculations';
+import { prepareRobotForCombat } from '../../utils/robotCalculations';
+import { getTuningBonuses } from '../tuning-pool';
 import { verifyRobotOwnership } from '../../middleware/ownership';
 import { Prisma, Weapon } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
@@ -49,6 +50,7 @@ export interface WhatIfOverrides {
   yieldThreshold?: number;
   mainWeaponId?: number;
   offhandWeaponId?: number;
+  tuningBonuses?: Partial<Record<string, number>>; // override tuning allocation for this practice battle
 }
 
 /** A battle slot is either an owned robot ID or a sparring partner config */
@@ -379,11 +381,8 @@ export async function buildSparringPartner(
     offhandWeapon: offhandWeapon,
   } as unknown as RobotWithWeapons;
 
-  // Calculate maxHP/maxShield and set current to max (full health)
-  robot.maxHP = calculateMaxHP(robot);
-  robot.maxShield = calculateMaxShield(robot);
-  robot.currentHP = robot.maxHP;
-  robot.currentShield = robot.maxShield;
+  // Prepare sparring partner for combat: applies weapon bonuses to attributes, recalculates maxHP/maxShield
+  prepareRobotForCombat(robot);
 
   return robot;
 }
@@ -523,22 +522,13 @@ export async function buildOwnedRobot(
     cloned.yieldThreshold = overrides.yieldThreshold;
   }
 
-  // Only recalculate maxHP/maxShield if attributes or weapons were changed.
-  // Otherwise use the stored DB values — same as real battle orchestrators.
-  const hasAttributeOverrides = overrides?.attributes && Object.keys(overrides.attributes).length > 0;
-  const hasWeaponOverrides = overrides?.mainWeaponId || overrides?.offhandWeaponId;
-  if (hasAttributeOverrides || hasWeaponOverrides) {
-    cloned.maxHP = calculateMaxHP(cloned);
-    cloned.maxShield = calculateMaxShield(cloned);
-  } else {
-    // Use stored DB values (already numbers after JSON round-trip)
-    cloned.maxHP = Number(robot.maxHP);
-    cloned.maxShield = Number(robot.maxShield);
-  }
+  // Load tuning bonuses — use override if provided, otherwise load saved allocation
+  const tuningBonuses = overrides?.tuningBonuses && Object.keys(overrides.tuningBonuses).length > 0
+    ? overrides.tuningBonuses
+    : await getTuningBonuses(robotId);
 
-  // Set full HP/shield (practice battles always start fully repaired)
-  cloned.currentHP = cloned.maxHP;
-  cloned.currentShield = cloned.maxShield;
+  // Prepare robot for combat: applies tuning, recalculates maxHP/maxShield, sets full HP/shield
+  prepareRobotForCombat(cloned, tuningBonuses);
 
   return cloned;
 }
