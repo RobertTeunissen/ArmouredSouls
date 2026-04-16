@@ -24,6 +24,7 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 | 10 | Flex-Point Attribute Bucket | 9 | 1 🗳️ | 3 | 2 | 3 | 4 | **2.0** |
 | 11 | Weapon Special Properties | 11 | 1 🗳️ | 3 | 2 | 2 | 4 | **1.8** |
 | 12 | Admin Portal Redesign | 13 | 1 🗳️ | 2 | 1 | 2 | 3 | **1.7** |
+| — | Admin Tuning Adoption Dashboard | 38 | — | 2 | 2 | 1 | 1 | **5.0** |
 | 13 | Player Personas / Complexity Modes | 16 | 1 🗳️ | 2 | 1 | 2 | 3 | **1.7** |
 | 14 | Arena / Terrain Modifiers | 12 | 1 🗳️ | 3 | 1 | 2 | 4 | **1.5** |
 | 15 | Unimplemented Facilities | 7 | 0 🗳️ | 2 | 1 | 1 | 5 | **0.8** |
@@ -217,6 +218,20 @@ Design questions:
 **Priority**: Medium — admin tooling is scattered across the main app
 
 The admin experience currently lives as routes within the player-facing app. As admin features grow (security dashboard, cycle management, user management, feature toggles), it makes sense to either redesign the admin section with its own layout/navigation or extract it into a separate portal entirely. A separate app would allow independent deployment, stricter access controls, and a purpose-built UI without bloating the player bundle.
+
+### #38 — Admin Tuning Adoption Dashboard
+**Source**: Tuning Bay feature (spec #25)  
+**Priority**: Medium — admin visibility into feature adoption
+
+Add an admin view showing which players/robots have configured their tuning allocations and which haven't. Useful for gauging adoption of the Tuning Bay feature and identifying players who may not have discovered it yet.
+
+What to show:
+- **Per-player summary**: player name, number of robots, how many have tuning set (non-zero allocations), how many are untuned
+- **Per-robot detail**: robot name, owner, tuning pool size, points allocated vs available, last tuning change timestamp
+- **Aggregate stats**: total robots with tuning set vs total robots, adoption percentage, average points allocated as % of pool
+- **Filters**: show only untuned robots, filter by league tier, sort by last activity
+
+This feeds into broader admin analytics (#13) and could inform whether to add in-game nudges (e.g. a "You have unspent tuning points" reminder on the dashboard) if adoption is low.
 
 ### #14 — Battle Report Layout Overhaul
 **Source**: Backlog triage, PRD_BATTLE_RESULTS_PAGE.md (deleted)  
