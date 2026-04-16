@@ -38,7 +38,12 @@ describe('Property 3: Tab State Persistence (Property-Based Test)', () => {
 
           const initialTabElement = screen.getByRole('tab', { name: new RegExp(initialTab.replace('-', ' '), 'i') });
           expect(initialTabElement).toHaveAttribute('aria-selected', 'true');
-          expect(initialTabElement).toHaveClass('bg-primary');
+          // Tuning tab uses teal accent
+          if (initialTab === 'tuning') {
+            expect(initialTabElement).toHaveClass('bg-teal-600');
+          } else {
+            expect(initialTabElement).toHaveClass('bg-primary');
+          }
 
           for (let i = 0; i < numRerenders; i++) {
             rerender(
@@ -53,7 +58,11 @@ describe('Property 3: Tab State Persistence (Property-Based Test)', () => {
 
             const tabElement = screen.getByRole('tab', { name: new RegExp(initialTab.replace('-', ' '), 'i') });
             expect(tabElement).toHaveAttribute('aria-selected', 'true');
-            expect(tabElement).toHaveClass('bg-primary');
+            if (initialTab === 'tuning') {
+              expect(tabElement).toHaveClass('bg-teal-600');
+            } else {
+              expect(tabElement).toHaveClass('bg-primary');
+            }
             expect(mockOnTabChange).not.toHaveBeenCalled();
           }
 
@@ -206,7 +215,11 @@ describe('Property 3: Tab State Persistence (Property-Based Test)', () => {
           expect(activeTabElement).toHaveAttribute('aria-selected', 'true');
           expect(mockOnTabChange).not.toHaveBeenCalled();
 
-          expect(activeTabElement).toHaveClass('bg-primary');
+          if (selectedTab === 'tuning') {
+            expect(activeTabElement).toHaveClass('bg-teal-600');
+          } else {
+            expect(activeTabElement).toHaveClass('bg-primary');
+          }
 
           container.remove();
         }

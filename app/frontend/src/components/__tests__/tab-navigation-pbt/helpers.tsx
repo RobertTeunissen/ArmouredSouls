@@ -3,11 +3,11 @@ import { BrowserRouter } from 'react-router-dom';
 import { vi } from 'vitest';
 import TabNavigation from '../../TabNavigation';
 
-export type TabId = 'overview' | 'matches' | 'analytics' | 'battle-config' | 'upgrades' | 'stats';
+export type TabId = 'overview' | 'matches' | 'analytics' | 'battle-config' | 'upgrades' | 'tuning' | 'stats';
 
-export const ALL_TABS: TabId[] = ['overview', 'matches', 'analytics', 'battle-config', 'upgrades', 'stats'];
+export const ALL_TABS: TabId[] = ['overview', 'matches', 'analytics', 'battle-config', 'upgrades', 'tuning', 'stats'];
 export const PUBLIC_TABS: TabId[] = ['overview', 'matches', 'analytics'];
-export const OWNER_ONLY_TABS: TabId[] = ['battle-config', 'upgrades', 'stats'];
+export const OWNER_ONLY_TABS: TabId[] = ['battle-config', 'upgrades', 'tuning', 'stats'];
 
 export function isOwnerOnlyTab(tab: TabId): boolean {
   return OWNER_ONLY_TABS.includes(tab);

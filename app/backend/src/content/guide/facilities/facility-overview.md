@@ -2,7 +2,7 @@
 title: "All 16 Facility Types"
 description: "A complete overview of every facility in Armoured Souls — what each one does, what it costs, and why it matters for your stable."
 order: 1
-lastUpdated: "2026-03-11"
+lastUpdated: "2026-04-16"
 relatedArticles:
   - facilities/facility-progression
   - facilities/training-academies
