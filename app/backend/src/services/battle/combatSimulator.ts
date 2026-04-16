@@ -197,10 +197,10 @@ export function random(min: number, max: number): number {
  * as a no-op passthrough for backward compatibility.
  */
 export function getEffectiveAttribute(
-  robot: RobotWithWeapons,
+  _robot: RobotWithWeapons,
   baseAttribute: number | string | { toNumber(): number },
-  hand: 'main' | 'offhand',
-  bonusField: keyof Weapon
+  _hand: 'main' | 'offhand',
+  _bonusField: keyof Weapon
 ): number {
   // Attributes are pre-computed by prepareRobotForCombat() — just return the value.
   return typeof baseAttribute === 'object' && 'toNumber' in baseAttribute
@@ -267,7 +267,7 @@ export function calculateHitChance(
 /**
  * Calculate critical hit chance
  */
-export function calculateCritChance(attacker: RobotWithWeapons, attackerHand: 'main' | 'offhand' = 'main'): { critChance: number; breakdown: FormulaBreakdown } {
+export function calculateCritChance(attacker: RobotWithWeapons, _attackerHand: 'main' | 'offhand' = 'main'): { critChance: number; breakdown: FormulaBreakdown } {
   const baseCrit = 5;
   const effectiveCritSystems = Number(attacker.criticalSystems);
   const critBonus = effectiveCritSystems / 8;
@@ -298,7 +298,7 @@ export function calculateCritChance(attacker: RobotWithWeapons, attackerHand: 'm
 /**
  * Calculate weapon malfunction chance based on weapon control
  */
-export function calculateMalfunctionChance(attacker: RobotWithWeapons, attackerHand: 'main' | 'offhand' = 'main'): { malfunctionChance: number; breakdown: FormulaBreakdown } {
+export function calculateMalfunctionChance(attacker: RobotWithWeapons, _attackerHand: 'main' | 'offhand' = 'main'): { malfunctionChance: number; breakdown: FormulaBreakdown } {
   const effectiveWeaponControl = Number(attacker.weaponControl);
   const baseMalfunction = 20;
   const reductionPerPoint = 0.4;
@@ -325,7 +325,7 @@ export function calculateMalfunctionChance(attacker: RobotWithWeapons, attackerH
 export function calculateBaseDamage(
   attacker: RobotWithWeapons,
   weaponBaseDamage: number,
-  attackerHand: 'main' | 'offhand' = 'main',
+  _attackerHand: 'main' | 'offhand' = 'main',
   spatialMultipliers?: { rangePenalty: number; hydraulicBonus: number; backstabBonus: number; adaptationDamageBonus: number; pressureDamageMod: number; syncVolleyBonus: number }
 ): { damage: number; breakdown: FormulaBreakdown } {
   const effectiveCombatPower = Number(attacker.combatPower);
@@ -402,7 +402,7 @@ export function applyDamage(
   defender: RobotWithWeapons,
   defenderState: SpatialRobotCombatState,
   isCritical: boolean,
-  attackerHand: 'main' | 'offhand' = 'main',
+  _attackerHand: 'main' | 'offhand' = 'main',
   formationDefenseBonus: number = 0
 ): { hpDamage: number; shieldDamage: number; breakdown: FormulaBreakdown } {
   let damage = baseDamage;

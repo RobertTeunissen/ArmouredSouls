@@ -72,8 +72,8 @@ async function resetTuningIfNeeded(page: import('@playwright/test').Page): Promi
 }
 
 test.describe('Tuning Bay', () => {
-  test('displays Tuning tab with budget bar and attribute sliders', async ({ page }) => {
-    // Req 9.1, 9.2 — Tuning tab exists and shows budget bar + sliders
+  test('displays Tuning tab with budget bar and stepper controls', async ({ page }) => {
+    // Req 9.1, 9.2 — Tuning tab exists and shows budget bar + stepper buttons
     const navigated = await navigateToFirstRobot(page);
     if (!navigated) {
       test.skip(true, 'No robots available for test_user_001');
@@ -83,15 +83,17 @@ test.describe('Tuning Bay', () => {
     await openTuningTab(page);
 
     // Verify the budget bar shows allocated / pool size
-    // The budget bar text format is: "{allocated} / {poolSize} allocated"
     await expect(page.getByText(/\d+ \/ \d+ allocated/)).toBeVisible();
 
     // Verify at least one category header is visible (e.g., Combat Systems)
     await expect(page.getByText('Combat Systems')).toBeVisible();
 
-    // Verify at least one attribute slider is present
-    const slider = page.locator('input[type="range"]').first();
-    await expect(slider).toBeVisible();
+    // Verify stepper buttons exist (+ and − buttons for attributes)
+    const incrementButton = page.getByLabel(/Increase tuning for/i).first();
+    await expect(incrementButton).toBeVisible();
+
+    const decrementButton = page.getByLabel(/Decrease tuning for/i).first();
+    await expect(decrementButton).toBeVisible();
 
     // Verify the Save Tuning button exists
     await expect(page.getByRole('button', { name: /Save Tuning/i })).toBeVisible();
@@ -101,7 +103,7 @@ test.describe('Tuning Bay', () => {
   });
 
   test('allocating tuning points, saving, and verifying persistence after reload', async ({ page }) => {
-    // Req 9.2, 9.4 — allocate points via slider, save, reload, verify persistence
+    // Req 9.2, 9.4 — allocate points via stepper, save, reload, verify persistence
     test.setTimeout(60_000);
 
     const navigated = await navigateToFirstRobot(page);
@@ -118,30 +120,26 @@ test.describe('Tuning Bay', () => {
     // Reset any existing allocations to start from a clean state
     await resetTuningIfNeeded(page);
 
-    // Re-open the tuning tab after reset (page state should still be on tuning)
     // Verify we're back to 0 allocated
     await expect(page.getByText(/0 \/ \d+ allocated/)).toBeVisible({ timeout: 5000 });
 
-    // Find the first enabled slider (Combat Power is typically first)
-    const sliders = page.locator('input[type="range"]:not([disabled])');
-    const firstSlider = sliders.first();
-    const isSliderVisible = await firstSlider.isVisible().catch(() => false);
-    if (!isSliderVisible) {
-      test.skip(true, 'No enabled tuning sliders available — all attributes may be at max');
+    // Find the first enabled + button (Combat Power is typically first)
+    const incrementButtons = page.getByLabel(/Increase tuning for/i);
+    const firstIncrement = incrementButtons.first();
+    const isButtonVisible = await firstIncrement.isVisible().catch(() => false);
+    if (!isButtonVisible) {
+      test.skip(true, 'No enabled tuning stepper buttons — all attributes may be at max');
       return;
     }
 
-    // Get the slider's max value to determine a valid allocation
-    const maxValue = await firstSlider.getAttribute('max');
-    const maxNum = parseInt(maxValue ?? '0', 10);
-    if (maxNum === 0) {
-      test.skip(true, 'First slider has max=0 — attribute may be at academy cap');
+    const isEnabled = await firstIncrement.isEnabled().catch(() => false);
+    if (!isEnabled) {
+      test.skip(true, 'First stepper button is disabled — attribute may be at cap or no budget');
       return;
     }
 
-    // Set the slider to a value (use 1 to stay within budget)
-    const targetValue = Math.min(1, maxNum);
-    await firstSlider.fill(String(targetValue));
+    // Click + once to allocate 1 point
+    await firstIncrement.click();
 
     // Verify the budget bar updated — should show non-zero allocated
     await expect(page.getByText(/[1-9]\d* \/ \d+ allocated/)).toBeVisible({ timeout: 3000 });
@@ -166,8 +164,7 @@ test.describe('Tuning Bay', () => {
     // Verify the allocation persisted — budget bar should show non-zero allocated
     await expect(page.getByText(/[1-9]\d* \/ \d+ allocated/)).toBeVisible({ timeout: 5000 });
 
-    // Verify the first slider still has the allocated value
-    const persistedValue = await sliders.first().inputValue();
-    expect(Number(persistedValue)).toBeGreaterThanOrEqual(targetValue);
+    // Verify at least one attribute shows a +N allocation
+    await expect(page.getByText(/\+\d+/).first()).toBeVisible({ timeout: 3000 });
   });
 });
