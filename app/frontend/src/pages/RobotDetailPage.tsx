@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import apiClient from '../utils/apiClient';
 import { useRobotStore } from '../stores';
@@ -121,7 +121,6 @@ interface Weapon {
 
 function RobotDetailPage() {
   const { id } = useParams();
-  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const isOnboarding = searchParams.get('onboarding') === 'true';
   const [robot, setRobot] = useState<Robot | null>(null);
