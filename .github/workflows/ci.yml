@@ -206,13 +206,13 @@ jobs:
       - name: Run database migrations
         working-directory: ./app/backend
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_e2e?connection_limit=5
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_e2e?connection_limit=20
         run: npx prisma migrate deploy
 
       - name: Seed database
         working-directory: ./app/backend
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_e2e?connection_limit=5
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_e2e?connection_limit=20
         run: npx prisma db seed
 
       - name: Build backend
@@ -222,7 +222,7 @@ jobs:
       - name: Start backend server
         working-directory: ./app/backend
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_e2e?connection_limit=5
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_e2e?connection_limit=20
           JWT_SECRET: test-secret-key-for-ci
           NODE_ENV: test
           PORT: 3001

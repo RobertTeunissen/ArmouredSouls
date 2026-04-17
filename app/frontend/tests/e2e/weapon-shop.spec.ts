@@ -4,7 +4,7 @@ import { navigateToProtectedPage } from './helpers/navigate';
 /**
  * Navigate to the weapon shop and ensure the page has fully loaded.
  * Retries navigation up to 3 times if the page gets stuck in a loading
- * or error state (transient backend hiccups in CI).
+ * or error state (transient backend/DB connection issues in CI).
  */
 async function navigateToWeaponShop(page: import('@playwright/test').Page) {
   const filtersHeading = page.getByRole('heading', { name: 'Filters', exact: true });
@@ -19,6 +19,16 @@ async function navigateToWeaponShop(page: import('@playwright/test').Page) {
 
     if (await filtersHeading.isVisible({ timeout: 10000 }).catch(() => false)) {
       return; // Page loaded successfully
+    }
+
+    // If the page shows an error with a Retry button, click it
+    const retryButton = page.getByRole('button', { name: 'Retry' });
+    if (await retryButton.isVisible({ timeout: 1000 }).catch(() => false)) {
+      await retryButton.click();
+      await page.waitForLoadState('networkidle');
+      if (await filtersHeading.isVisible({ timeout: 10000 }).catch(() => false)) {
+        return;
+      }
     }
   }
 
