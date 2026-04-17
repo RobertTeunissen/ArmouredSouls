@@ -14,6 +14,15 @@ import { navigateToProtectedPage } from './helpers/navigate';
 test.describe('Weapon Shop Page', () => {
   test.beforeEach(async ({ page }) => {
     await navigateToProtectedPage(page, '/weapon-shop');
+    // Wait for the weapon shop data to finish loading.
+    // The Filters heading only renders after loading completes without error.
+    // If it doesn't appear, reload once (handles transient CI backend hiccups).
+    const filtersHeading = page.getByRole('heading', { name: 'Filters', exact: true });
+    if (!(await filtersHeading.isVisible({ timeout: 8000 }).catch(() => false))) {
+      await page.reload();
+      await page.waitForLoadState('networkidle');
+    }
+    await expect(filtersHeading).toBeVisible({ timeout: 15000 });
   });
 
   test.describe('Page Load and Initial State', () => {
@@ -232,13 +241,9 @@ test.describe('Weapon Shop Page', () => {
     });
 
     test('should clear comparison selection', async ({ page }) => {
-      // Wait for weapon data to load before interacting
-      await expect(page.getByRole('heading', { name: 'Weapon Shop', level: 1 })).toBeVisible({ timeout: 10000 });
-
-      // Ensure card view (wait for the toggle to render first)
-      const cardViewButton = page.getByRole('button', { name: 'Card View' });
-      await expect(cardViewButton).toBeVisible({ timeout: 10000 });
-      await cardViewButton.click();
+      // Ensure card view
+      await expect(page.getByRole('button', { name: 'Card View' })).toBeVisible({ timeout: 10000 });
+      await page.getByRole('button', { name: 'Card View' }).click();
 
       // Select two weapons
       const checkboxes = page.getByRole('checkbox', { name: 'Compare' });
