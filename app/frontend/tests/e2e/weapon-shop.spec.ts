@@ -3,37 +3,29 @@ import { navigateToProtectedPage } from './helpers/navigate';
 
 /**
  * Navigate to the weapon shop and ensure the page has fully loaded.
- * Retries navigation up to 3 times if the page gets stuck in a loading
- * or error state (transient backend/DB connection issues in CI).
+ * The weapon shop API calls intermittently fail in CI (transient DB pool
+ * pressure). When the page shows "Failed to load weapons" with a Retry
+ * button, click it. Retry up to 5 times with short waits.
  */
 async function navigateToWeaponShop(page: import('@playwright/test').Page) {
+  await navigateToProtectedPage(page, '/weapon-shop');
+
   const filtersHeading = page.getByRole('heading', { name: 'Filters', exact: true });
+  const retryButton = page.getByRole('button', { name: 'Retry' });
 
-  for (let attempt = 0; attempt < 3; attempt++) {
-    if (attempt === 0) {
-      await navigateToProtectedPage(page, '/weapon-shop');
-    } else {
-      await page.goto('/weapon-shop');
-      await page.waitForLoadState('networkidle');
+  for (let attempt = 0; attempt < 5; attempt++) {
+    // Check if the page loaded successfully
+    if (await filtersHeading.isVisible({ timeout: 5000 }).catch(() => false)) {
+      return;
     }
-
-    if (await filtersHeading.isVisible({ timeout: 10000 }).catch(() => false)) {
-      return; // Page loaded successfully
-    }
-
-    // If the page shows an error with a Retry button, click it
-    const retryButton = page.getByRole('button', { name: 'Retry' });
-    if (await retryButton.isVisible({ timeout: 1000 }).catch(() => false)) {
+    // If the error state is showing, click Retry to re-fetch data
+    if (await retryButton.isVisible({ timeout: 500 }).catch(() => false)) {
       await retryButton.click();
       await page.waitForLoadState('networkidle');
-      if (await filtersHeading.isVisible({ timeout: 10000 }).catch(() => false)) {
-        return;
-      }
     }
   }
 
-  // Final assertion — will fail with a clear error if page never loaded
-  await expect(filtersHeading).toBeVisible({ timeout: 15000 });
+  await expect(filtersHeading).toBeVisible({ timeout: 10000 });
 }
 
 /**
