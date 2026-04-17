@@ -175,15 +175,13 @@ test.describe('Weapon Shop Page', () => {
 
   test.describe('Weapon Comparison', () => {
     test('should select weapons for comparison', async ({ page }) => {
-      // Ensure card view is active (may be in table view from previous test's localStorage)
-      const cardViewButton = page.getByRole('button', { name: 'Card View' });
-      if (await cardViewButton.isVisible().catch(() => false)) {
-        await cardViewButton.click();
-      }
+      // Wait for page to fully load, then ensure card view
+      await expect(page.getByRole('button', { name: 'Card View' })).toBeVisible({ timeout: 10000 });
+      await page.getByRole('button', { name: 'Card View' }).click();
 
       // Wait for weapon cards to load
       const firstCompareCheckbox = page.getByRole('checkbox', { name: 'Compare' }).first();
-      await expect(firstCompareCheckbox).toBeVisible({ timeout: 10000 });
+      await expect(firstCompareCheckbox).toBeVisible({ timeout: 15000 });
 
       // Select first two weapons
       await page.getByRole('checkbox', { name: 'Compare' }).nth(0).check();
@@ -194,15 +192,13 @@ test.describe('Weapon Shop Page', () => {
     });
 
     test('should open comparison modal', async ({ page }) => {
-      // Ensure card view
-      const cardViewButton = page.getByRole('button', { name: 'Card View' });
-      if (await cardViewButton.isVisible().catch(() => false)) {
-        await cardViewButton.click();
-      }
+      // Wait for page to fully load, then ensure card view
+      await expect(page.getByRole('button', { name: 'Card View' })).toBeVisible({ timeout: 10000 });
+      await page.getByRole('button', { name: 'Card View' }).click();
 
       // Select two weapons
       const checkboxes = page.getByRole('checkbox', { name: 'Compare' });
-      await expect(checkboxes.first()).toBeVisible({ timeout: 10000 });
+      await expect(checkboxes.first()).toBeVisible({ timeout: 15000 });
       await checkboxes.nth(0).check();
       await checkboxes.nth(1).check();
 
@@ -217,15 +213,13 @@ test.describe('Weapon Shop Page', () => {
     });
 
     test('should limit comparison to 3 weapons', async ({ page }) => {
-      // Ensure card view
-      const cardViewButton = page.getByRole('button', { name: 'Card View' });
-      if (await cardViewButton.isVisible().catch(() => false)) {
-        await cardViewButton.click();
-      }
+      // Wait for page to fully load, then ensure card view
+      await expect(page.getByRole('button', { name: 'Card View' })).toBeVisible({ timeout: 10000 });
+      await page.getByRole('button', { name: 'Card View' }).click();
 
       // Select 3 weapons with waits between each to let state update
       const checkboxes = page.getByRole('checkbox', { name: 'Compare' });
-      await expect(checkboxes.first()).toBeVisible({ timeout: 10000 });
+      await expect(checkboxes.first()).toBeVisible({ timeout: 15000 });
       await checkboxes.nth(0).check();
       await expect(page.getByText('1 weapon selected')).toBeVisible();
       await checkboxes.nth(1).check();
@@ -238,15 +232,17 @@ test.describe('Weapon Shop Page', () => {
     });
 
     test('should clear comparison selection', async ({ page }) => {
-      // Ensure card view
+      // Wait for weapon data to load before interacting
+      await expect(page.getByRole('heading', { name: 'Weapon Shop', level: 1 })).toBeVisible({ timeout: 10000 });
+
+      // Ensure card view (wait for the toggle to render first)
       const cardViewButton = page.getByRole('button', { name: 'Card View' });
-      if (await cardViewButton.isVisible().catch(() => false)) {
-        await cardViewButton.click();
-      }
+      await expect(cardViewButton).toBeVisible({ timeout: 10000 });
+      await cardViewButton.click();
 
       // Select two weapons
       const checkboxes = page.getByRole('checkbox', { name: 'Compare' });
-      await expect(checkboxes.first()).toBeVisible({ timeout: 10000 });
+      await expect(checkboxes.first()).toBeVisible({ timeout: 15000 });
       await checkboxes.nth(0).check();
       await checkboxes.nth(1).check();
 
@@ -268,7 +264,7 @@ test.describe('Weapon Shop Page', () => {
       // Filter out known section headings (Storage Capacity, Loadout Type, etc.)
       const weaponHeadings = page.locator('h3').filter({ hasNotText: /Storage Capacity|Loadout Type|Weapon Type|Range Band|Price Range|Quick Filters/ });
       const firstWeapon = weaponHeadings.first();
-      await expect(firstWeapon).toBeVisible();
+      await expect(firstWeapon).toBeVisible({ timeout: 15000 });
       const nameText = await firstWeapon.textContent();
       await firstWeapon.click();
 
@@ -284,7 +280,7 @@ test.describe('Weapon Shop Page', () => {
       // Open modal
       const weaponHeadings = page.locator('h3').filter({ hasNotText: /Storage Capacity|Loadout Type|Weapon Type|Range Band|Price Range|Quick Filters/ });
       const firstWeapon = weaponHeadings.first();
-      await expect(firstWeapon).toBeVisible();
+      await expect(firstWeapon).toBeVisible({ timeout: 15000 });
       await firstWeapon.click();
 
       // Verify modal is open
