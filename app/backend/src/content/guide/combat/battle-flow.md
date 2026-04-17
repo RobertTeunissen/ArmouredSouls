@@ -159,6 +159,7 @@ Raw damage is calculated from multiple factors:
 - **Weapon base damage** — Each weapon has an inherent damage value
 - **Combat Power** — Primary damage-scaling attribute
 - **Weapon Control** — Secondary damage multiplier
+- **Tuning bonuses** — Bonus attribute points from the [Tuning Bay](/guide/facilities/tuning-bay) system, added to base attributes alongside weapon bonuses before multipliers apply. Formula: `(base + weaponBonus + tuningBonus) × loadoutMultiplier`
 - **Range penalty** — 1.1× at optimal range, 0.75× one band away, 0.5× two+ bands away
 - **Hydraulic Systems bonus** — Up to +100% at melee range, +75% at short range
 - **Backstab/flanking bonus** — Up to +10% (backstab) or +20% (flanking) for positional advantage

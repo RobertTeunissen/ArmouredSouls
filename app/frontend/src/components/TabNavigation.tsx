@@ -1,18 +1,23 @@
 import { useEffect, useRef } from 'react';
 
+type TabId = 'overview' | 'matches' | 'battle-config' | 'upgrades' | 'tuning' | 'stats' | 'analytics';
+
+export type { TabId };
+
 interface TabNavigationProps {
-  activeTab: 'overview' | 'matches' | 'battle-config' | 'upgrades' | 'stats' | 'analytics';
-  onTabChange: (tab: 'overview' | 'matches' | 'battle-config' | 'upgrades' | 'stats' | 'analytics') => void;
+  activeTab: TabId;
+  onTabChange: (tab: TabId) => void;
   isOwner: boolean;
 }
 
 const tabs = [
-  { id: 'overview' as const, label: 'Overview', icon: '📊', ownerOnly: false },
-  { id: 'matches' as const, label: 'Matches', icon: '⚔️', ownerOnly: false },
-  { id: 'analytics' as const, label: 'Analytics', icon: '📈', ownerOnly: false },
-  { id: 'battle-config' as const, label: 'Battle Config', icon: '⚙️', ownerOnly: true },
-  { id: 'upgrades' as const, label: 'Upgrades', icon: '⬆️', ownerOnly: true },
-  { id: 'stats' as const, label: 'Stats', icon: '🔧', ownerOnly: true },
+  { id: 'overview' as const, label: 'Overview', icon: '📊', ownerOnly: false, accentClass: '' },
+  { id: 'matches' as const, label: 'Matches', icon: '⚔️', ownerOnly: false, accentClass: '' },
+  { id: 'upgrades' as const, label: 'Upgrades', icon: '⬆️', ownerOnly: true, accentClass: '' },
+  { id: 'tuning' as const, label: 'Tuning', icon: '⚙️', ownerOnly: true, accentClass: 'tuning' },
+  { id: 'battle-config' as const, label: 'Battle Config', icon: '🔧', ownerOnly: true, accentClass: '' },
+  { id: 'stats' as const, label: 'Stats', icon: '📈', ownerOnly: true, accentClass: '' },
+  { id: 'analytics' as const, label: 'Analytics', icon: '📊', ownerOnly: false, accentClass: '' },
 ];
 
 function TabNavigation({ activeTab, onTabChange, isOwner }: TabNavigationProps) {
@@ -70,9 +75,13 @@ function TabNavigation({ activeTab, onTabChange, isOwner }: TabNavigationProps) 
                 px-3 sm:px-4 lg:px-6 py-2.5 sm:py-3 min-h-[44px] font-medium text-sm rounded-t-lg
                 transition-all duration-150 ease-out
                 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-background
-                ${isActive 
-                  ? 'bg-primary text-white border-b-2 border-blue-600' 
-                  : 'bg-surface text-secondary hover:bg-surface-elevated hover:text-secondary'
+                ${isActive
+                  ? tab.accentClass === 'tuning'
+                    ? 'bg-teal-600 text-white border-b-2 border-teal-500'
+                    : 'bg-primary text-white border-b-2 border-blue-600'
+                  : tab.accentClass === 'tuning'
+                    ? 'bg-surface text-secondary hover:bg-teal-900/30 hover:text-teal-300'
+                    : 'bg-surface text-secondary hover:bg-surface-elevated hover:text-secondary'
                 }
               `}
             >

@@ -1,26 +1,27 @@
 ---
-title: "All 15 Facility Types"
+title: "All 16 Facility Types"
 description: "A complete overview of every facility in Armoured Souls — what each one does, what it costs, and why it matters for your stable."
 order: 1
-lastUpdated: "2026-03-11"
+lastUpdated: "2026-04-16"
 relatedArticles:
   - facilities/facility-progression
   - facilities/training-academies
   - facilities/coaching-staff
   - facilities/investment-strategy
+  - facilities/tuning-bay
   - economy/credits-and-income
 ---
 
 ## Overview
 
-Your stable can house up to **15 different facilities**, each providing a unique benefit — from slashing repair bills to unlocking higher attribute caps. Every facility has up to 10 upgrade levels (except Roster Expansion, which caps at 9), and each level increases both the benefit and the daily operating cost.
+Your stable can house up to **16 different facilities**, each providing a unique benefit — from slashing repair bills to unlocking higher attribute caps. Every facility has up to 10 upgrade levels (except Roster Expansion, which caps at 9), and each level increases both the benefit and the daily operating cost.
 
 Facilities are your long-term investments. Unlike one-time purchases like weapons or attribute upgrades, facilities generate ongoing value every single cycle — but they also charge ongoing operating costs. Choosing which facilities to invest in, and when, is one of the most important strategic decisions in the game.
 
 ![Facility overview grid](/images/guide/facilities/facility-overview-grid.png)
 
 ```callout-info
-Facilities are grouped into four categories: Economy & Discounts, Capacity & Storage, Training Academies, and Advanced Features. This guide covers all 15 at a glance — see the individual articles for deep dives on level progression and ROI.
+Facilities are grouped into four categories: Economy & Discounts, Capacity & Storage, Training Academies, and Tactical & Advanced. This guide covers all 16 at a glance — see the individual articles for deep dives on level progression and ROI.
 ```
 
 ## Economy & Discount Facilities
@@ -109,16 +110,25 @@ All four academies follow the same pricing structure: ₡100,000 per level, with
 Training Academies are the only way to push attributes past level 10. If you want competitive robots in higher leagues, you'll need to invest in the academies that cover your build's key attributes.
 ```
 
-## Advanced Facilities
+## Tactical & Advanced Facilities
 
 These facilities unlock special features and late-game mechanics. Some are not yet fully implemented.
 
 | Facility | Purpose | Level 1 Cost | Operating Cost | Key Benefit |
 |----------|---------|-------------|----------------|-------------|
+| Tuning Bay | Per-robot tactical attribute tuning | ₡200,000 | level × ₡300/day | 10–110 bonus attribute points per robot |
 | Research Lab | Analytics & tools | ₡200,000 | ₡2,000 + ₡1,000/level | Not yet implemented |
 | Medical Bay | Critical damage reduction | ₡175,000 | ₡2,000 + ₡1,000/level | Not yet implemented |
 | Coaching Staff | Stable-wide stat bonuses | ₡250,000 | ₡3,000/day when active | Not yet implemented |
 | Booking Office | Tournament access & rewards | ₡250,000 | None | Not yet implemented |
+
+### Tuning Bay
+
+The Tuning Bay provides a pool of bonus attribute points that can be freely allocated across any of a robot's 23 attributes. Every player gets 10 free tuning points per robot — the facility increases this to 20 at Level 1 and up to 110 at Level 10. Tuning points are added to base attributes alongside weapon bonuses before loadout multipliers apply: `(base + weapon + tuning) × loadout`. Allocations persist until changed — no decay, no cost to reallocate.
+
+**Pool size formula**: (Level + 1) × 10
+
+See the [Tuning Bay Guide](/guide/facilities/tuning-bay) for the full level table and the [Tactical Tuning Guide](/guide/strategy/tactical-tuning) for allocation strategies.
 
 ### Research Lab
 
@@ -153,6 +163,7 @@ Here's what you'll pay daily for each facility at various levels:
 | Defense Academy | ₡250 | ₡1,250 | ₡2,500 |
 | Mobility Academy | ₡250 | ₡1,250 | ₡2,500 |
 | AI Academy | ₡250 | ₡1,250 | ₡2,500 |
+| Tuning Bay | ₡300 | ₡1,500 | ₡3,000 |
 | Research Lab | ₡2,000 | ₡6,000 | ₡11,000 |
 | Medical Bay | ₡2,000 | ₡6,000 | ₡11,000 |
 | Coaching Staff | ₡3,000 | ₡3,000 | ₡3,000 |

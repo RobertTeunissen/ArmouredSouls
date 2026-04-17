@@ -17,6 +17,7 @@ const ALL_FACILITY_TYPES = [
   'defense_training_academy',
   'mobility_training_academy',
   'ai_training_academy',
+  'tuning_bay',
   'research_lab',
   'medical_bay',
   'coaching_staff',
@@ -27,7 +28,7 @@ const EXPECTED_CATEGORIES = [
   'Economy & Discounts',
   'Capacity & Storage',
   'Training Academies',
-  'Advanced Features',
+  'Tactical & Advanced',
 ] as const;
 
 describe('Property 7: Facility category grouping completeness', () => {

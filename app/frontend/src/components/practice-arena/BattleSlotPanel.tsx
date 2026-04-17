@@ -1,8 +1,11 @@
+import { useState, useEffect } from 'react';
 import type { OwnedRobot, SparringPartnerDef, SlotState, AcademyLevels } from './types';
 import { SlotToggle } from './SlotToggle';
 import { WhatIfPanel } from './WhatIfPanel';
+import type { TuningAllocations } from './WhatIfPanel';
 import { SparringConfigPanel } from './SparringConfigPanel';
 import RobotImage from '../RobotImage';
+import apiClient from '../../utils/apiClient';
 
 export interface BattleSlotPanelProps {
   label: string;
@@ -26,6 +29,33 @@ export function BattleSlotPanel({
   academyLevels = { combat_training_academy: 0, defense_training_academy: 0, mobility_training_academy: 0, ai_training_academy: 0 },
 }: BattleSlotPanelProps) {
   const selectedRobot = robots.find((r) => r.id === slot.robotId) || null;
+
+  // Fetch tuning allocation when an owned robot is selected
+  const [tuningAllocations, setTuningAllocations] = useState<TuningAllocations | undefined>(undefined);
+
+  useEffect(() => {
+    if (slot.mode !== 'owned' || !slot.robotId) {
+      setTuningAllocations(undefined);
+      return;
+    }
+
+    let cancelled = false;
+    apiClient
+      .get(`/api/robots/${slot.robotId}/tuning-allocation`)
+      .then((res) => {
+        if (!cancelled) {
+          setTuningAllocations(res.data?.allocations || undefined);
+        }
+      })
+      .catch(() => {
+        // Don't block the panel if the fetch fails — just don't show tuning
+        if (!cancelled) {
+          setTuningAllocations(undefined);
+        }
+      });
+
+    return () => { cancelled = true; };
+  }, [slot.mode, slot.robotId]);
 
   return (
     <div className="bg-surface-elevated rounded-lg border border-white/10 p-4 space-y-4">
@@ -83,6 +113,7 @@ export function BattleSlotPanel({
               onChange={(o) => onSlotChange({ ...slot, overrides: o })}
               trainingLevel={trainingLevel}
               academyLevels={academyLevels}
+              tuningAllocations={tuningAllocations}
             />
           )}
         </div>

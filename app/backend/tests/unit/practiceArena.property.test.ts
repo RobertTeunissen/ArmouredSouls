@@ -87,6 +87,10 @@ jest.mock('../../src/config/logger', () => ({
   default: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
 }));
 
+jest.mock('../../src/services/tuning-pool', () => ({
+  getTuningBonuses: jest.fn().mockResolvedValue({}),
+}));
+
 // ---------------------------------------------------------------------------
 // Imports (after mocks)
 // ---------------------------------------------------------------------------

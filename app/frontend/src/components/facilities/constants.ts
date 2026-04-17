@@ -28,10 +28,10 @@ export const FACILITY_CATEGORIES: CategoryInfo[] = [
   },
   {
     id: 'advanced',
-    name: 'Advanced Features',
+    name: 'Tactical & Advanced',
     icon: '⭐',
     description: 'Unlock special features and advanced gameplay mechanics',
-    facilityTypes: ['research_lab', 'medical_bay', 'coaching_staff', 'booking_office']
+    facilityTypes: ['tuning_bay', 'research_lab', 'medical_bay', 'coaching_staff', 'booking_office']
   }
 ];
 

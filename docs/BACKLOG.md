@@ -8,36 +8,42 @@ Items identified during audits, reviews, and development. Prioritized by impact 
 
 ## WSJF Priority Ranking
 
-Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Business Value + Time Criticality + Risk Reduction) / Job Size. Each factor 1–5. Items already in spec queue (#8 Battle Replay, #9 Web Push, #20 Robot Image Upload) excluded.
+Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Business Value + Time Criticality + Risk Reduction) / Job Size. Each factor 1–5.
 
 | Rank | Item | # | Votes | BV | TC | RR | Size | WSJF |
 |------|------|---|-------|----|----|-----|------|------|
 | 1 | Game Loop Audit | 6 | 3 🗳️ | 3 | 4 | 5 | 2 | **6.0** |
 | 2 | Monitoring and Alerting | 3 | 2 🗳️ | 3 | 4 | 4 | 2 | **5.5** |
-| 3 | Post-Battle Results Page | 10 | 4 🗳️ | 5 | 3 | 2 | 2 | **5.0** |
-| 4 | Facility Investment Advisor | 1 | 1 🗳️ | 4 | 5 | 1 | 2 | **5.0** |
-| 5 | In-Game Changelog / "What's New" | 17 | 4 🗳️ | 4 | 3 | 2 | 2 | **4.5** |
-| 6 | Feature Flags | 15 | 1 🗳️ | 2 | 2 | 4 | 2 | **4.0** |
-| 7 | Battle Report Layout Overhaul | 14 | 5 🗳️ | 5 | 3 | 2 | 3 | **3.3** |
-| 8 | Achievement / Milestone System | 8 | 3 🗳️ | 4 | 2 | 3 | 3 | **3.0** |
-| 9 | Landing Page | 4 | 0 🗳️ | 3 | 2 | 1 | 2 | **3.0** |
-| 10 | Weapon Experimentation Problem | 5 | 1 🗳️ | 4 | 3 | 4 | 4 | **2.8** |
-| 11 | Flex-Point Attribute Bucket | 9 | 1 🗳️ | 3 | 2 | 3 | 4 | **2.0** |
-| 12 | Weapon Special Properties | 11 | 1 🗳️ | 3 | 2 | 2 | 4 | **1.8** |
-| 13 | Admin Portal Redesign | 13 | 1 🗳️ | 2 | 1 | 2 | 3 | **1.7** |
-| 14 | Player Personas / Complexity Modes | 16 | 1 🗳️ | 2 | 1 | 2 | 3 | **1.7** |
-| 15 | Arena / Terrain Modifiers | 12 | 1 🗳️ | 3 | 1 | 2 | 4 | **1.5** |
-| 16 | Unimplemented Facilities | 7 | 0 🗳️ | 2 | 1 | 1 | 5 | **0.8** |
+| 3 | Facility Investment Advisor | 1 | 1 🗳️ | 4 | 5 | 1 | 2 | **5.0** |
+| 4 | Admin Tuning Adoption Dashboard | 38 | — | 2 | 2 | 1 | 1 | **5.0** |
+| 5 | Feature Flags | 15 | 1 🗳️ | 2 | 2 | 4 | 2 | **4.0** |
+| 6 | Battle Report Layout Overhaul | 14 | 9 🗳️ | 5 | 3 | 2 | 3 | **3.3** |
+| 7 | Achievement / Milestone System | 8 | 3 🗳️ | 4 | 2 | 3 | 3 | **3.0** |
+| 8 | Landing Page | 4 | 0 🗳️ | 3 | 2 | 1 | 2 | **3.0** |
+| 9 | Weapon Experimentation Problem | 5 | 1 🗳️ | 4 | 3 | 4 | 4 | **2.8** |
+| 10 | Weapon Special Properties | 11 | 1 🗳️ | 3 | 2 | 2 | 4 | **1.8** |
+| 11 | Admin Portal Redesign | 13 | 1 🗳️ | 2 | 1 | 2 | 3 | **1.7** |
+| 12 | Player Personas / Complexity Modes | 16 | 1 🗳️ | 2 | 1 | 2 | 3 | **1.7** |
+| 13 | Arena / Terrain Modifiers | 12 | 1 🗳️ | 3 | 1 | 2 | 4 | **1.5** |
+| 14 | Unimplemented Facilities | 7 | 0 🗳️ | 2 | 1 | 1 | 5 | **0.8** |
 
 ### Recommended Build Order
 
 **Tier 1 — Do Now** (next 2–4 weeks): #1 broken feature (~1 week), #6 design audit (parallel), #3 monitoring (lightweight)
 
-**Tier 2 — Build Next** (weeks 4–8): #10 + #14 battle feedback pair (9 combined votes, strongest player signal), #17 changelog (~1 week)
+**Tier 2 — Build Next** (weeks 4–8): #14 battle report overhaul (9 combined votes — strongest player signal), #38 admin tuning dashboard (small, quick win)
 
 **Tier 3 — Plan After** (weeks 8–12): #8 achievements, #15 feature flags, #5 weapon experimentation (needs #6 audit input)
 
 **Tier 4 — Backlog**: Everything else — revisit after Tier 3.
+
+### Recently Completed (removed from backlog)
+
+| Item | # | Spec | Completed |
+|------|---|------|-----------|
+| In-Game Changelog / "What's New" | 17 | [Spec #24](/.kiro/specs/done-april26/24-in-game-changelog/) | April 2026 |
+| Tuning Pool (Tactical Tuning) | 9 | [Spec #25](/.kiro/specs/done-april26/25-tuning-bay/) | April 2026 |
+| Prestige Gating for Facilities | 21 | — (already implemented) | Pre-backlog |
 
 ---
 
@@ -58,66 +64,58 @@ Current observability: Winston logs, `CyclePerformanceMonitoringService`, `secur
 **Incident — April 2026 (ACC)**: Full-disk condition during robot image feature launch required a hard VPS restart. The restart left a partial `dist/` build (entire `utils/` directory missing). The server appeared healthy (PM2 status: online) but the daily settlement cron failed at 23:00 UTC with `Cannot find module '../../utils/economyCalculations'`. The error was only discovered the next morning via a Discord notification. Root causes: (1) no disk usage alerting, (2) no post-restart build verification, (3) dynamic `import()` in settlement allowed the server to start despite missing modules.
 
 Specific gaps this exposed — should be addressed in the spec:
-- **Disk usage monitoring**: Cron job or agent that alerts (Discord webhook) when disk usage crosses 80%. Would have caught the full-disk condition before it required a hard restart.
-- **Post-restart/deploy build verification**: A health check that validates critical modules are loadable and key endpoints respond. PM2 `online` status only means the process started — not that the app is functional.
-- **Startup self-test**: On boot, verify that all cron job handlers can resolve their dependencies (especially dynamic imports). Fail loudly at startup rather than silently at 23:00.
-- **Log rotation cleanup**: 26+ rotated log files were sitting in `/var/log/armouredsouls/`. More aggressive `logrotate` config to prevent logs from contributing to disk pressure.
+- **Disk usage monitoring**: Cron job or agent that alerts (Discord webhook) when disk usage crosses 80%.
+- **Post-restart/deploy build verification**: A health check that validates critical modules are loadable and key endpoints respond.
+- **Startup self-test**: On boot, verify that all cron job handlers can resolve their dependencies (especially dynamic imports).
+- **Log rotation cleanup**: More aggressive `logrotate` config to prevent logs from contributing to disk pressure.
 
 ### #4 — Landing Page / Marketing Front Page
 **Source**: Current state — visitors land on a login/register form with no context  
 **Priority**: High — first impression for new players
 
-The current front page is just a login and registration module. New visitors have no idea what the game is, how it plays, or why they should sign up. Needs: game concept pitch, screenshots or gameplay preview, feature highlights (4 battle modes, 47 weapons, league system), call-to-action to register. Could be a simple static page above the login form or a dedicated `/` route that redirects authenticated users to the dashboard.
+The current front page is just a login and registration module. New visitors have no idea what the game is, how it plays, or why they should sign up. Needs: game concept pitch, screenshots or gameplay preview, feature highlights (4 battle modes, 47 weapons, league system), call-to-action to register.
 
 ### #5 — Weapon Experimentation Problem — Players Never Switch Weapons
 **Source**: Observed player behavior  
 **Priority**: High — core gameplay loop stagnation
 
-Players buy one weapon set and never change. The investment is too high and too permanent — there's no way to sell weapons back, no way to try before you buy, and no partial recovery on a bad purchase. This kills experimentation and makes the 47-weapon catalog feel like a 1-weapon catalog per player. The Player Archetypes Guide already documents this trap (₡700K wasted on wrong weapons with no recourse).
-
-Currently there is no sell/resale mechanic at all. The weapon shop PRD marks rentals as "not planned" and trading as "future Phase 2+".
+Players buy one weapon set and never change. The investment is too high and too permanent — there's no way to sell weapons back, no way to try before you buy, and no partial recovery on a bad purchase. This kills experimentation and makes the 47-weapon catalog feel like a 1-weapon catalog per player.
 
 Possible solutions (not mutually exclusive — spec should evaluate combinations):
-- **Weapon resale**: Sell weapons back at a percentage of purchase price (50–70%). Simple, immediate. Risk: too generous and weapons become risk-free; too stingy and nobody uses it.
-- **Practice Arena weapon trials**: Let players test-drive any weapon in a no-stakes practice fight before buying. Zero economic risk, high information value. Could tie into the existing Practice Arena system.
-- **Weapon rental**: Rent a weapon for N battles at a fraction of purchase cost. Lower commitment, ongoing cost. Previously marked as "not planned" but worth reconsidering given the experimentation problem.
-- **Weapon exchange/trade-in**: Swap an owned weapon for a different one of similar tier, paying only the price difference. Reduces switching cost without injecting credits.
-- **Workshop facility perk**: Higher Workshop levels could unlock better resale rates or free trial battles, giving the facility more gameplay value.
+- **Weapon resale**: Sell weapons back at a percentage of purchase price (50–70%).
+- **Practice Arena weapon trials**: Test-drive any weapon in a no-stakes practice fight before buying.
+- **Weapon rental**: Rent a weapon for N battles at a fraction of purchase cost.
+- **Weapon exchange/trade-in**: Swap an owned weapon for a different one of similar tier, paying only the price difference.
+- **Workshop facility perk**: Higher Workshop levels could unlock better resale rates or free trial battles.
 
-The fix likely needs both a way to *recover value* from unwanted weapons (resale/trade-in) and a way to *reduce information asymmetry* before purchase (trials/practice). One without the other only half-solves it.
+**Deeper issue — baseDamage dominance in the damage formula (discovered during Tuning Bay spec #25):**
+
+The damage formula is `baseDamage × (1 + combatPower × 1.5 / 100) × loadout × weaponControl × stance`. Because `baseDamage` is a flat multiplier and attributes are percentage modifiers, weapon baseDamage is the single most important combat variable — far more impactful than any attribute investment or tuning.
+
+Concrete example: a robot with +15 tuning on ALL 23 stats equipped with a Beam Pistol (baseDamage 5, ₡93K) loses 10/10 practice battles against an ExpertBot with a tier-3 weapon (baseDamage ~12). The 2.4× baseDamage gap overwhelms a +6 attribute advantage on every stat.
+
+This means high-DPS weapons always win, attribute upgrades and tuning have diminishing returns relative to weapon choice, and the 47-weapon catalog effectively reduces to "sort by DPS, buy the best you can afford." The damage formula may need rebalancing.
 
 ### #6 — Game Loop Audit — Structural Design Flaws
 **Source**: Design review  
-**Priority**: High — foundational issues that limit long-term retention
+**Priority**: High — foundational issues that limit long-term retention  
+**Progress**: Loop 1 explored in depth — see [Game Loop 1 Core Loop Exploration](analysis/GAME_LOOP_1_CORE_LOOP_EXPLORATION.md). The Tuning Pool (spec #25) directly addressed the thin "Adjust" step. Weapon Experimentation (#5) is the remaining high-impact fix for Loop 1. Loops 2–6 and missing loops still need exploration.
 
-The game has six identifiable loops, most of which degrade or stall at some point in the player lifecycle. This needs a deep design audit before we build more features on top of broken foundations.
+The game has six identifiable loops, most of which degrade or stall at some point in the player lifecycle.
 
-**Loop 1: Core Loop (Configure → Battle → Results → Adjust)**
-The "Adjust" step is too thin. After viewing results, the only meaningful changes are stance tweaks, yield threshold, and occasional attribute upgrades. Weapon switching is economically punished (see weapon experimentation item). Loadout changes require new weapons. The loop often collapses into: configure once → watch results on repeat. The daily rhythm is sound, but the decision space between cycles is too narrow.
+**Loop 1: Core Loop (Configure → Battle → Results → Adjust)** — ✅ Partially addressed. The Tuning Pool (spec #25) enriches the "Adjust" step with meaningful per-battle decisions. Weapon switching remains economically punished (see #5) — that's the remaining gap. See exploration doc for full analysis and rejected ideas (per-match overrides, stance depth, pre-battle orders).
 
-**Loop 2: Economic Loop (Earn → Invest → Earn More)**
-Works in early/mid game when upgrade targets are clear. Breaks down in late game — once facilities are maxed and attributes hit academy caps, credits accumulate with no meaningful sink. There's no late-game spending that feels worthwhile. The compounding income from Merchandising Hub and Streaming Studio is well-designed but eventually outpaces all expenses, removing economic tension entirely.
+**Loop 2: Economic Loop (Earn → Invest → Earn More)** — Not explored yet. Breaks in late game — credits accumulate with no meaningful sink once facilities and attributes are maxed.
 
-**Loop 3: Competitive Loop (Battle → Earn LP → Promote → Harder Opponents)**
-One-dimensional. LP is the only axis. There's no lateral movement — no reason to try a different build once you've found one that climbs. The system rewards optimizing a single strategy, not exploring alternatives. Once a player hits Champion (or their natural ceiling), the loop has nowhere to go. No seasons, no resets, no meta shifts to force adaptation.
+**Loop 3: Competitive Loop (Battle → Earn LP → Promote → Harder Opponents)** — Not explored yet. One-dimensional. No seasons, resets, or meta shifts.
 
-**Loop 4: Reputation Loop (Win → Prestige/Fame → Unlock → Win More)**
-Prestige gates are functional but invisible. Players earn prestige passively and hit gates they didn't anticipate. There's no "I'm 500 prestige away from unlocking X" moment surfaced in the UI. Fame is even more abstract — it feeds a streaming revenue formula that players never see or understand. The progression *exists* mechanically but players don't *experience* it as progression.
+**Loop 4: Reputation Loop (Win → Prestige/Fame → Unlock → Win More)** — Explored in [Prestige & Fame Design Exploration](analysis/PRESTIGE_FAME_DESIGN_EXPLORATION.md). Prestige gates functional but invisible. Achievement System (#8) identified as the right vehicle for milestone celebrations.
 
-**Loop 5: Roster Loop (Buy Robot → Train → Battle → Specialize → Expand)**
-Robots don't interact with each other outside Tag Team. No synergy between builds, no stable-wide strategy, no "my roster composition matters." Feels like running parallel instances of the same single-player game. The Coaching Staff facility (designed, not built) would add some stable-wide identity, but even that is just a flat bonus.
+**Loop 5: Roster Loop (Buy Robot → Train → Battle → Specialize → Expand)** — Not explored yet. Robots don't interact outside Tag Team.
 
-**Loop 6: Facility Investment Loop (Spend Now → Save Later)**
-Mechanically strong — the ROI math is real. Experientially invisible. Players don't *feel* the savings. There's no "your Repair Bay saved you ₡50K this cycle" feedback. The investment payoff is silent, which means the loop doesn't generate the satisfaction it should.
+**Loop 6: Facility Investment Loop (Spend Now → Save Later)** — Not explored yet. Mechanically strong, experientially invisible.
 
-**Missing loops (not broken — absent entirely):**
-- No experimentation loop (no low-risk way to try things)
-- No social/rivalry loop (competition is anonymous, no narrative between players)
-- No collection/completion loop (47 weapons, zero incentive to own more than 2)
-- No seasonal/event loop (every day is identical, no meta variation, no urgency)
-- No recovery/comeback loop (losing players fall further behind with no catch-up mechanic)
-
-This item is about diagnosis, not solutions. Needs a proper design deep-dive to understand which loops are most critical to fix first, how they interact, and what the minimum viable changes are to restore engagement at each stage of the player lifecycle.
+**Missing loops**: experimentation, social/rivalry, collection/completion, seasonal/event, recovery/comeback.
 
 ---
 
@@ -137,108 +135,49 @@ This item is about diagnosis, not solutions. Needs a proper design deep-dive to 
 **Source**: PRD_PRESTIGE_AND_FAME.md, PRD_ECONOMY_SYSTEM.md §6  
 **Priority**: Medium — key engagement/retention driver
 
-One-time rewards for milestones (ELO thresholds, win counts, streaks). Examples: first robot to ELO 1500 (₡50K + 50 prestige), 100 wins (₡250K + 200 prestige). Needs: database tables, tracking service, UI (dashboard trophies, notification toasts). Includes fame-based cosmetic unlocks as a later extension.
-
-### #9 — Flex-Point Attribute Bucket (Pre-Battle Tactical Allocation)
-**Source**: Player feedback (Tymen, LortGob)  
-**Priority**: Medium — directly addresses the thin "Adjust" step in the core loop
-
-Idea: a percentage of a robot's total attribute points (e.g. 20%) becomes a flexible pool that the player can reallocate before each battle depending on the opponent. Fixed attributes stay locked, flex points are assigned per matchup. If you don't allocate them, you fight without — rewarding players who invest time in scouting and preparation.
-
-This solves multiple problems at once:
-- Enriches the core loop's "Adjust" step — there's now a meaningful decision between every battle
-- Rewards engagement depth (the "show me everything" player archetype benefits most)
-- Creates counter-play and opponent reading as a skill
-- Doesn't invalidate existing attribute investments — flex points are derived from what you already have
-
-Implementation angle from LortGob: tie it to a facility (new, or repurpose Research Lab). Facility level determines the size of the flex pool (e.g. 5% at level 1, up to 20% at level 10). This avoids disrupting the current season — existing players keep their fixed builds, the flex system layers on top as a new investment. Also creates a meaningful late-game credit sink and a reason to keep upgrading the facility.
-
-Design questions to resolve:
-- What's the right percentage range? 20% of total stats is significant — could swing matchups hard
-- Per-robot or per-battle allocation? (per-battle is more interesting but more UI work)
-- Can you see opponent stats before allocating? (scouting as a prerequisite — ties into Spy Facility idea from Player Personas item)
-- How does this interact with Tag Team / KotH where you don't know your exact opponent?
-- Does the flex pool come from existing points (weakening your base) or is it bonus points on top?
-
-### #10 — Post-Battle Results Page
-**Source**: PRD_BATTLE_RESULTS_PAGE.md (marked ❌ NOT IMPLEMENTED)  
-**Priority**: Medium — players lack immediate feedback after battles
-
-Dedicated post-battle summary showing prestige/fame earned, damage breakdown, and streaming revenue. Currently players only see results through Battle History and Battle Detail pages.
+One-time rewards for milestones (ELO thresholds, win counts, streaks). Includes fame-based cosmetic unlocks as a later extension. Per the [Prestige & Fame Design Exploration](analysis/PRESTIGE_FAME_DESIGN_EXPLORATION.md): this is the recommended vehicle for prestige/fame milestone celebrations.
 
 ### #11 — Weapon Special Properties
 **Source**: PRD_WEAPON_ECONOMY.md, PRD_WEAPONS_LOADOUT.md  
 **Priority**: Medium — would significantly deepen combat strategy
 
-All 47 weapons currently have only attribute bonuses — no special effects. The pricing formula and combat simulator are designed to support properties like "ignores armor", "shield drain", "area damage" but none are implemented. Requires combat simulator changes and balance testing.
+All 47 weapons currently have only attribute bonuses — no special effects. The pricing formula and combat simulator are designed to support properties like "ignores armor", "shield drain", "area damage" but none are implemented.
 
 ### #12 — Arena / Terrain Modifiers with Home Arena Selection
 **Source**: Player idea  
 **Priority**: Medium — adds meta variation and per-battle decision-making
 
-Battles take place in a randomly assigned arena, each with gameplay modifiers (e.g. "corrosive atmosphere: -15% armor effectiveness", "magnetic field: +10% shield regen", "tight quarters: melee range bonus", "open plains: long-range advantage"). Players can choose a preferred "home arena" for their robot or stable, which gives a slight familiarity bonus when drawn — but also means opponents can scout your preference and build against it.
-
-What this solves:
-- Injects variety into the daily loop — same matchup plays differently on different terrain
-- Creates a new axis of strategy (build for your home arena vs build generalist)
-- Feeds the scouting/intel angle (Spy Facility could reveal opponent's home arena)
-- Natural content drip — new arenas can be added over time as meta-shifting events
-- Addresses the "every day is identical" problem from the game loop audit
-
-The `ArenaConfig` type already exists in the combat simulator for KotH (geometry, radius, zones) but has no gameplay modifiers — this would extend it.
-
-Design questions:
-- How many arenas? Start small (5–8) or go wide?
-- How strong should modifiers be? Subtle nudges (5%) or build-defining (20%+)?
-- Home arena per robot or per stable?
-- Does home arena cost credits to set/change? (another facility tie-in?)
-- How does this interact with Tag Team and KotH which already have arena configs?
+Battles take place in a randomly assigned arena with gameplay modifiers (e.g. "corrosive atmosphere: -15% armor effectiveness"). Players choose a preferred "home arena" for a familiarity bonus. The `ArenaConfig` type already exists in the combat simulator for KotH but has no gameplay modifiers.
 
 ### #13 — Admin Portal Redesign / Separate Admin App
 **Source**: Backlog triage  
 **Priority**: Medium — admin tooling is scattered across the main app
 
-The admin experience currently lives as routes within the player-facing app. As admin features grow (security dashboard, cycle management, user management, feature toggles), it makes sense to either redesign the admin section with its own layout/navigation or extract it into a separate portal entirely. A separate app would allow independent deployment, stricter access controls, and a purpose-built UI without bloating the player bundle.
+The admin experience currently lives as routes within the player-facing app. As admin features grow, it makes sense to either redesign the admin section with its own layout/navigation or extract it into a separate portal entirely.
+
+### #38 — Admin Tuning Adoption Dashboard
+**Source**: Tuning Bay feature (spec #25)  
+**Priority**: Medium — admin visibility into feature adoption
+
+Add an admin view showing which players/robots have configured their tuning allocations and which haven't. Per-player summary, per-robot detail, aggregate adoption stats, filters. Feeds into broader admin analytics (#13).
 
 ### #14 — Battle Report Layout Overhaul
 **Source**: Backlog triage  
-**Priority**: Medium — current layout undersells the combat data
+**Priority**: Medium — current layout undersells the combat data and hides economic context
 
-The existing Battle Detail page shows the data but the layout doesn't do it justice. Redesign the battle report with better visual hierarchy: timeline visualization, damage flow diagrams, round-by-round breakdown with animations or transitions, weapon effectiveness highlights. Related: "Post-Battle Results Page" (#10) covers a *new* post-battle summary screen — this item is about improving the detailed report itself.
-
-Also: battle log verbosity levels. Players have asked for more detail in combat events. Two modes:
-- **Shorthand** (current): `"Dikke Aap missed"`
-- **Verbose**: `"Dikke Aap missed (76% hit chance — Combat Power 34 vs Evasion Thrusters 28)"`
-
-Verbose mode would show the underlying formula inputs: hit chance percentages, which attributes drove the outcome, damage breakdowns with armor/penetration values, crit chance on critical hits, etc. Ties into the Player Personas / Complexity Modes item (#15) — verbose mode is exactly what the "show me everything" player wants, while shorthand suits the "just let me fight" player.
+Redesign the battle report with better visual hierarchy: timeline visualization, damage flow diagrams, round-by-round breakdown. Includes credit reward breakdown (base + prestige bonus), prestige/fame on CompactBattleCard, and battle log verbosity levels (shorthand vs verbose showing formula inputs).
 
 ### #15 — Feature Flags / Per-User Feature Rollout
 **Source**: Backlog triage  
 **Priority**: Medium — enables safer releases and A/B testing
 
-Add a feature toggle system manageable from the admin portal. Flags can be global (on/off), percentage-based (roll out to 10% of users), or per-user/per-role. Enables: gradual rollout of new features, A/B testing gameplay changes, kill switches for problematic features, beta access for specific users. Needs: flags table, middleware/hook to check flags, admin UI to manage them, frontend context/hook to gate UI components.
+Add a feature toggle system manageable from the admin portal. Flags can be global, percentage-based, or per-user/per-role.
 
 ### #16 — Player Personas / Complexity Modes
 **Source**: Backlog triage  
 **Priority**: Medium — different players want fundamentally different experiences
 
-Not all players want the same depth. Two archetypes: the "just let me fight" player who wants streamlined combat with minimal management, and the "show me everything" player who wants full stat transparency, detailed analytics, and granular control. Possible approaches: a complexity toggle in settings that shows/hides advanced panels, or tie it to a facility — e.g. a "Spy Facility" that progressively unlocks deeper analytics and opponent intel as it levels up (fits the existing facility progression model). The Spy Facility angle would give the transparency a gameplay cost, making it a strategic choice rather than just a UI preference. Cross-ref: "Progressive Feature Disclosure" (#28) covers time-gated unlocks — this is about *player-chosen* depth. Also relates to "Unimplemented Facilities" (#7) if the Spy Facility route is taken.
-
-### #17 — In-Game Changelog / "What's New" Component
-**Source**: Player communication need  
-**Priority**: Medium — players miss updates that directly affect their strategy
-
-When players log in, show them meaningful game updates: balance changes, new features, bug fixes that affect gameplay. Currently there's no in-game communication channel — players only find out about changes if they happen to notice or hear about it in Discord.
-
-Should be as automated as possible. Ideal flow: developer writes a short changelog entry (or it's generated from deploy/release notes), tagged with categories (balance, feature, bugfix, economy). On login, players see a dismissable modal or sidebar with unread updates since their last visit. Each entry explains what changed and how it impacts them — not just "fixed bug #1234" but "Repair Bay discount now correctly applies to all robots in your stable."
-
-Could tie into the Feature Flags system (#14) — when a feature is toggled on for a player, auto-generate a "What's New" entry for them. Also relevant for balance changes (weapon damage adjustments, economy tweaks) where players need to know their builds may be affected.
-
-Design considerations:
-- Where does changelog content live? Markdown files in the repo, a DB table, or a CMS?
-- How granular? Per-deploy, per-feature, or curated batches?
-- Dismissal tracking — per-user "last seen changelog" timestamp vs per-entry read state?
-- Can it surface personalized impact? ("You own a Plasma Cannon — its damage was adjusted by -5%")
+Two archetypes: "just let me fight" vs "show me everything." Per the [Prestige & Fame Design Exploration](analysis/PRESTIGE_FAME_DESIGN_EXPLORATION.md): gating depth by prestige doesn't work — a preference toggle may be the right approach.
 
 ---
 
@@ -248,25 +187,19 @@ Design considerations:
 **Source**: [Battle Execution Audit](analysis/BATTLE_EXECUTION_AUDIT.md)  
 **Priority**: Low — works correctly, just redundant data
 
-The `Battle` table dual-writes per-robot columns alongside `BattleParticipant`. Consider a migration to drop legacy columns and fully rely on `BattleParticipant`.
+The `Battle` table dual-writes per-robot columns alongside `BattleParticipant`. Consider a migration to drop legacy columns.
 
 ### #19 — Tag Team Battle Time Limit Enforcement
 **Source**: [Battle Execution Audit](analysis/BATTLE_EXECUTION_AUDIT.md)  
 **Priority**: Low — stored duration is correct, only simulation overruns
 
-Tag team battles can theoretically exceed 300s because each phase has its own 120s cap. Fix by passing `remainingTime` to `simulateBattle()`.
+Tag team battles can theoretically exceed 300s because each phase has its own 120s cap.
 
 ### #20 — Performance Optimization
 **Source**: Phase 2 roadmap  
 **Priority**: Low — current scale doesn't demand it
 
 Areas to investigate: slow Prisma queries, N+1 in analytics endpoints, pagination on heavy lists, in-memory caching for weapon catalog and facility configs.
-
-### #21 — Prestige Gating for Facilities
-**Source**: PRD_FACILITIES_PAGE.md §6, PRD_PRESTIGE_AND_FAME.md  
-**Priority**: Low — documented but not blocking gameplay
-
-Facility upgrades gated by prestige level. UI shows lock indicators. Adds progression depth but not essential.
 
 ### #22 — Promotion/Demotion History Tracking
 **Source**: PRD_LEAGUE_SYSTEM.md  
@@ -284,7 +217,7 @@ Dedicated financial trend tracking beyond what CycleSnapshot provides.
 **Source**: PRD_DASHBOARD_PAGE.md  
 **Priority**: Low — cosmetic improvements
 
-Enhanced prestige display (rank tiers, progress bar), tournament wins/trophy display, loading skeletons, notification toasts.
+Tournament wins/trophy display, loading skeletons, notification toasts. If fame cosmetics (titles, visual indicators) are implemented via #8, the dashboard should display them.
 
 ### #25 — Battle History URL State Persistence
 **Source**: PRD_BATTLE_HISTORY_PAGE.md  
@@ -302,62 +235,45 @@ Cache leaderboard queries. Currently queries run on every request.
 **Source**: Deleted navigation analysis doc, backlog triage  
 **Priority**: Low → Medium candidate — improves discoverability across the entire app
 
-No global search exists. Players can't search for a robot by name, find another player's stable, look up a weapon, or jump to a specific page without navigating manually. The only search inputs are page-local filters (battle history, admin user lookup, guide articles).
-
-A universal search bar (header or Cmd+K overlay) that queries across:
-- **Robots** — by name, owner, league tier
-- **Players/Stables** — by username
-- **Weapons** — by name, type, tier
-- **Pages** — fuzzy match on page names and sections
-- **Guide articles** — already has a search index (`/api/guide/search-index`)
-- **Battle history** — by robot names, battle ID
-
-Implementation options:
-- **Simple**: Single search input in the header, backend `/api/search?q=...` endpoint that queries multiple tables with `ILIKE` and returns categorized results. Frontend renders grouped results (robots, players, weapons, pages).
-- **Power user**: Cmd+K modal with keyboard navigation, recent searches, and type-ahead. More effort but better UX for engaged players.
-- **Hybrid**: Start with the header search bar, add Cmd+K shortcut later.
-
-Existing infrastructure to leverage:
-- `SearchBar` component already exists (`app/frontend/src/components/SearchBar.tsx`)
-- Guide search index API already built
-- Admin user search endpoint pattern (`/api/admin/users/search`) can be generalized
-
-Could pair with the In-Game Changelog (#17) — search should also surface changelog entries so players can find "what changed about X."
+No global search exists. A universal search bar (header or Cmd+K overlay) querying robots, players, weapons, pages, guide articles, and battle history. Existing infrastructure: `SearchBar` component, guide search index API, admin user search pattern.
 
 ### #28 — Progressive Feature Disclosure
 **Source**: Deleted navigation analysis doc  
 **Priority**: Low — reduces new player overwhelm
 
-Unlock advanced features based on prestige level or activity milestones.
+Per the [Prestige & Fame Design Exploration](analysis/PRESTIGE_FAME_DESIGN_EXPLORATION.md): prestige-gated feature unlocks were largely rejected. A simple preference toggle (#16) may be more appropriate.
 
 ---
 
 ## Not Scoped (Future Ideas)
 
 ### #29 — Weapon Crafting System
-**Source**: PRD_WEAPONS_LOADOUT.md, PRD_ECONOMY_SYSTEM.md  
-Custom weapon design at Workshop Level 6+. Pricing formula already supports it. Legendary crafting at Level 10.
+Custom weapon design at Workshop Level 6+. Pricing formula already supports it.
 
 ### #30 — Free-for-All / Battle Royale Mode
-**Source**: [Design analysis](analysis/FREE_FOR_ALL_BATTLE_ROYALE_MODE.md)  
-Large-scale elimination (8–100 robots). Detailed design analysis exists covering arena scaling, shrinking boundary, vulture problem, performance.
+Large-scale elimination (8–100 robots). [Design analysis](analysis/FREE_FOR_ALL_BATTLE_ROYALE_MODE.md) exists.
 
 ### #31 — 3v3 Team Battles
-**Source**: Roadmap Phase 9  
 BattleParticipant model already supports N robots. Needs team formation, matchmaking, rewards, orchestrator.
 
 ### #32 — Conditional Battle Triggers / Robot AI Scripting
-**Source**: GAME_DESIGN.md  
-Player-defined robot behaviors: "switch stance when HP < 30%", "target weakest in KotH". Requires scripting or rule-builder UI.
+Player-defined robot behaviors: "switch stance when HP < 30%", "target weakest in KotH".
 
 ### #33 — Future Revenue Streams
-**Source**: PRD_ECONOMY_SYSTEM.md §7  
-Trading commission (marketplace), sponsorship deals, arena attendance, championship bonuses, daily login bonuses.
+Trading commission, sponsorship deals, arena attendance, championship bonuses, daily login bonuses.
 
 ### #34 — Daily Login Bonuses & Seasonal Events
-**Source**: PRD_ECONOMY_SYSTEM.md, GAME_DESIGN.md  
 Consecutive login rewards, limited-time challenges, end-of-season league placement rewards.
 
 ### #35 — Modular Package Extraction
-**Source**: Deleted migration strategy docs  
-npm workspace extraction. Only relevant when multiple consumers need shared backend logic (mobile app, separate battle server, team scaling).
+npm workspace extraction. Only relevant when multiple consumers need shared backend logic.
+
+### #36 — Convert Battle Winnings Bonus to Smooth Scaling
+**Source**: [Prestige & Fame Design Exploration](analysis/PRESTIGE_FAME_DESIGN_EXPLORATION.md)  
+
+`getPrestigeMultiplier()` uses hard thresholds while other formulas scale smoothly. Convert to a smooth formula like `1 + prestige/100,000`. Small code change.
+
+### #37 — Robot Detail Page Split: Review vs Prepare / Stable Preparation Dashboard
+**Source**: Tuning Pool spec discussion (spec #25)  
+
+The Robot Detail page serves two distinct intents (Review: Overview/Matches/Analytics vs Prepare: Upgrades/Tuning/Battle Config/Stats). With 7 tabs, consider visual tab grouping or a Stable Preparation Dashboard for managing all robots from one view.

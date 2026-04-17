@@ -8,6 +8,7 @@
 
 ## Version History
 
+- **v1.2** (April 16, 2026): Added Tuning Bay (facility #16) to the facility list with pool size formula, operating costs, prestige requirements, and combat integration summary. Updated facility count from 15 to 16.
 - **v1.1** (April 2, 2026): Audit against codebase. Fixed operating cost formulas (Repair Bay, Training Facility). Fixed Training Facility maxLevel (9, not 10). Fixed streaming studio multiplier formula inconsistency. Removed stale User model fields (totalBattles, totalWins, highestELO — computed at query time). Updated facility count to 15 (added Streaming Studio). Updated file path references for backend service consolidation.
 - **v1.0** (Jan 30, 2026): Initial draft
 
@@ -66,7 +67,7 @@ Statistics are captured at both stable-level and robot-level for comprehensive t
 
 Players invest Credits in facility upgrades that provide stable-wide benefits. All facilities have **10 levels** (Level 0 = not purchased, Levels 1-10 = upgrades). Some facility levels require prestige thresholds to unlock.
 
-### Complete Facility List (15 Total)
+### Complete Facility List (16 Total)
 1. **Repair Bay** - Repair cost discounts
 2. **Training Facility** - Attribute upgrade discounts
 3. **Weapons Workshop** - Weapon purchase discounts, crafting
@@ -82,6 +83,7 @@ Players invest Credits in facility upgrades that provide stable-wide benefits. A
 13. **AI Training Academy** - AI Processing + Team Coordination attribute caps
 14. **Merchandising Hub** - Merchandising revenue (scales with prestige)
 15. **Streaming Studio** - Increases streaming revenue per battle
+16. **Tuning Bay** - Bonus attribute points for tactical per-battle tuning
 
 ### Facility Upgrades
 
@@ -379,6 +381,29 @@ Where:
 - Studio multiplier applies to all robots in the stable
 - For Tag Team matches, uses highest battles and highest fame from each team
 - Each level adds 100% to the multiplier (L1 = 2×, L2 = 3×, L3 = 4×, etc.)
+
+**16. Tuning Bay** (Operating Cost: ₡300/day per level)
+- **Level 0**: 10 free tuning points per robot (no facility required)
+- **Level 1** (₡200,000): 20 tuning points per robot (₡300/day operating cost)
+- **Level 2** (₡400,000): 30 tuning points per robot (₡600/day operating cost)
+- **Level 3** (₡600,000, requires 1,000 prestige): 40 tuning points per robot (₡900/day operating cost)
+- **Level 4** (₡800,000): 50 tuning points per robot (₡1,200/day operating cost)
+- **Level 5** (₡1,000,000, requires 3,000 prestige): 60 tuning points per robot (₡1,500/day operating cost)
+- **Level 6** (₡1,200,000): 70 tuning points per robot (₡1,800/day operating cost)
+- **Level 7** (₡1,400,000, requires 5,000 prestige): 80 tuning points per robot (₡2,100/day operating cost)
+- **Level 8** (₡1,600,000): 90 tuning points per robot (₡2,400/day operating cost)
+- **Level 9** (₡1,800,000, requires 10,000 prestige): 100 tuning points per robot (₡2,700/day operating cost)
+- **Level 10** (₡2,000,000, requires 15,000 prestige): 110 tuning points per robot — maximum (₡3,000/day operating cost)
+
+**Pool Size Formula**: Pool Size = (Level + 1) × 10
+
+**Per-Attribute Cap**: base + tuningBonus ≤ academyCap + 5. The "+5" overclock window lets the engineering team push 5 points beyond academy-rated specs. Higher academy investment = more room for tuning.
+
+**Operating Cost Formula**: Operating Cost = Level × ₡300/day
+
+**Combat Integration**: Tuning bonuses are added as a third additive term in the effective stat formula: `(base + weaponBonus + tuningBonus) × loadoutMultiplier`. Allocations persist until changed — no decay, no per-battle reset.
+
+For the full system specification, see [TUNING_BAY_SYSTEM.md](TUNING_BAY_SYSTEM.md).
 
 ---
 

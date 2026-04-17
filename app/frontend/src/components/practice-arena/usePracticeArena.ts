@@ -165,7 +165,7 @@ export function usePracticeArena(userId: number): UsePracticeArenaReturn {
     if (slot.mode === 'owned') {
       const payload: Record<string, unknown> = { type: 'owned', robotId: slot.robotId };
       const o = slot.overrides;
-      if (o && (o.attributes || o.loadoutType || o.stance || o.yieldThreshold !== undefined || o.mainWeaponId || o.offhandWeaponId)) {
+      if (o && (o.attributes || o.loadoutType || o.stance || o.yieldThreshold !== undefined || o.mainWeaponId || o.offhandWeaponId || o.tuningBonuses)) {
         const { simulatedAcademyLevels: _ignored, ...backendOverrides } = o;
         payload.overrides = backendOverrides;
       }

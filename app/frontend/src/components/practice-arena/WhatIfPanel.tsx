@@ -73,12 +73,25 @@ const WHATIF_CATEGORIES: Record<string, {
   },
 };
 
+/** Sparse map of attribute name → tuning bonus value (only non-zero entries) */
+export type TuningAllocations = Record<string, number>;
+
 export interface WhatIfPanelProps {
   robot: OwnedRobot;
   overrides: WhatIfOverrides;
   onChange: (o: WhatIfOverrides) => void;
   trainingLevel: number;
   academyLevels: AcademyLevels;
+  /** Optional tuning allocations for the robot — displayed as read-only context */
+  tuningAllocations?: TuningAllocations;
+}
+
+/** Build a label lookup from WHATIF_CATEGORIES for displaying tuning allocations */
+const ATTRIBUTE_LABELS: Record<string, string> = {};
+for (const config of Object.values(WHATIF_CATEGORIES)) {
+  for (const attr of config.attributes) {
+    ATTRIBUTE_LABELS[attr.key] = attr.label;
+  }
 }
 
 export function WhatIfPanel({
@@ -87,11 +100,15 @@ export function WhatIfPanel({
   onChange,
   trainingLevel,
   academyLevels,
+  tuningAllocations,
 }: WhatIfPanelProps) {
   const [expanded, setExpanded] = useState(false);
+  const [tuningExpanded, setTuningExpanded] = useState(false);
   const hasOverrides = Object.keys(overrides.attributes || {}).length > 0 ||
     overrides.stance || overrides.yieldThreshold !== undefined ||
-    Object.keys(overrides.simulatedAcademyLevels || {}).length > 0;
+    Object.keys(overrides.simulatedAcademyLevels || {}).length > 0 ||
+    Object.keys(overrides.tuningBonuses || {}).length > 0;
+  const hasTuningOverrides = Object.keys(overrides.tuningBonuses || {}).length > 0;
 
   const trainingDiscountPercent = calculateTrainingFacilityDiscount(trainingLevel);
   const trainingDiscount = trainingDiscountPercent / 100;
@@ -193,8 +210,26 @@ export function WhatIfPanel({
   }
   const totalCost = totalAttrCost + uniqueAcademyCost;
 
+  // Filter tuning allocations to non-zero entries
+  const nonZeroTuning = tuningAllocations
+    ? Object.entries(tuningAllocations).filter(([, v]) => v > 0)
+    : [];
+  const hasTuning = nonZeroTuning.length > 0;
+
   return (
     <div className="space-y-3">
+      {/* Tuning Active — read-only summary of current tuning allocation */}
+      {hasTuning && (
+        <div className="bg-teal-900/20 border border-teal-700/50 rounded-lg px-3 py-2 space-y-1">
+          <span className="text-teal-400 text-sm font-semibold">⚙️ Tuning Active</span>
+          <p className="text-teal-300 text-xs">
+            {nonZeroTuning
+              .map(([key, val]) => `+${val} ${ATTRIBUTE_LABELS[key] || key}`)
+              .join(', ')}
+          </p>
+        </div>
+      )}
+
       <button
         onClick={() => setExpanded(!expanded)}
         className="w-full flex items-center justify-between text-sm text-secondary hover:text-primary transition-colors"
@@ -236,6 +271,66 @@ export function WhatIfPanel({
                 className="w-full"
               />
             </div>
+          </div>
+
+          {/* Tuning Overrides */}
+          <div className="border border-teal-700/50 rounded-lg overflow-hidden">
+            <button
+              onClick={() => setTuningExpanded(!tuningExpanded)}
+              className="w-full flex items-center justify-between px-3 py-2 bg-teal-900/20 text-sm text-teal-400 hover:bg-teal-900/30 transition-colors"
+            >
+              <span>⚙️ Tuning Overrides {hasTuningOverrides ? '(modified)' : ''}</span>
+              <span>{tuningExpanded ? '▼' : '▶'}</span>
+            </button>
+            {tuningExpanded && (
+              <div className="p-3 space-y-2">
+                <p className="text-xs text-teal-300/70 mb-2">Override tuning allocation for this simulation only</p>
+                {Object.entries(WHATIF_CATEGORIES).map(([category, config]) => (
+                  <div key={`tuning-${category}`}>
+                    <div className="text-xs text-secondary font-semibold mb-1">{config.icon} {category}</div>
+                    {config.attributes.map(({ key, label }) => {
+                      const tuningValue = overrides.tuningBonuses?.[key] ?? tuningAllocations?.[key] ?? 0;
+                      const maxTuning = 15; // Reasonable max for the slider — actual cap enforced server-side
+                      return (
+                        <div key={`tuning-${key}`} className="flex items-center gap-2 py-0.5">
+                          <span className="text-xs text-secondary w-32 truncate">{label}</span>
+                          <input
+                            type="range"
+                            min={0}
+                            max={maxTuning}
+                            step={1}
+                            value={tuningValue}
+                            onChange={(e) => {
+                              const val = Number(e.target.value);
+                              const newTuning = { ...(overrides.tuningBonuses || tuningAllocations || {}) };
+                              if (val === 0) {
+                                delete newTuning[key];
+                              } else {
+                                newTuning[key] = val;
+                              }
+                              onChange({ ...overrides, tuningBonuses: Object.keys(newTuning).length > 0 ? newTuning : undefined });
+                            }}
+                            className="flex-1 h-1.5 rounded-lg appearance-none cursor-pointer accent-teal-500 bg-teal-900/30"
+                            aria-label={`Tuning override for ${label}`}
+                          />
+                          <span className={`text-xs w-6 text-right ${tuningValue > 0 ? 'text-teal-400 font-semibold' : 'text-gray-600'}`}>
+                            {tuningValue > 0 ? `+${tuningValue}` : '0'}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
+                {hasTuningOverrides && (
+                  <button
+                    onClick={() => onChange({ ...overrides, tuningBonuses: undefined })}
+                    className="text-xs text-error hover:text-red-400 transition-colors mt-1"
+                  >
+                    Reset Tuning Overrides
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Categories in rows — matching UpgradePlanner layout */}

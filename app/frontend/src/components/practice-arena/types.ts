@@ -54,6 +54,8 @@ export interface WhatIfOverrides {
   offhandWeaponId?: number;
   /** Simulated academy level overrides (local to What-If, not sent to backend) */
   simulatedAcademyLevels?: Record<string, number>;
+  /** Tuning allocation overrides — replaces saved tuning for this practice battle */
+  tuningBonuses?: Record<string, number>;
 }
 
 export interface SlotState {

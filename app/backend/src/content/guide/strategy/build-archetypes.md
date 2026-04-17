@@ -178,6 +178,16 @@ The Sniper focuses on precision — high targeting, critical hit chance, and pen
 No archetype dominates all matchups. The best strategy is to understand what you're likely to face in your league instance and build accordingly — or run multiple robots with different archetypes to cover your weaknesses.
 ```
 
+## Tuning: Adapting Your Archetype Per-Matchup
+
+The [Tuning Pool](/guide/facilities/tuning-bay) adds a tactical layer on top of every archetype. With 10–110 bonus attribute points to allocate freely before each battle, you can sharpen your build's strengths or shore up its weaknesses depending on what you're facing.
+
+- **Tank vs Sniper?** Tune extra Armor Plating and Damage Dampeners to absorb penetration hits
+- **Glass Cannon vs Tank?** Tune Penetration to punch through heavy armor
+- **Speed Demon vs Counter Striker?** Tune Targeting Systems to land more hits despite counter-attack pressure
+
+Tuning doesn't change your archetype — it lets you adapt it. A Tank is still a Tank, but a Tank with 60 tuning points in Penetration and Combat Power becomes a Tank that can actually threaten other Tanks. See the [Tactical Tuning Guide](/guide/strategy/tactical-tuning) for allocation strategies.
+
 ## What's Next?
 
 - [Yield Threshold Strategy](/guide/strategy/yield-strategy) — Optimizing surrender settings for each archetype

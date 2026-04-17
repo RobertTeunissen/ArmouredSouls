@@ -113,6 +113,11 @@ export type PracticeArenaDailyStats = $Result.DefaultSelection<Prisma.$PracticeA
  * 
  */
 export type ChangelogEntry = $Result.DefaultSelection<Prisma.$ChangelogEntryPayload>
+/**
+ * Model TuningAllocation
+ * 
+ */
+export type TuningAllocation = $Result.DefaultSelection<Prisma.$TuningAllocationPayload>
 
 /**
  * ##  Prisma Client ʲˢ
@@ -434,6 +439,16 @@ export class PrismaClient<
     * ```
     */
   get changelogEntry(): Prisma.ChangelogEntryDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.tuningAllocation`: Exposes CRUD operations for the **TuningAllocation** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more TuningAllocations
+    * const tuningAllocations = await prisma.tuningAllocation.findMany()
+    * ```
+    */
+  get tuningAllocation(): Prisma.TuningAllocationDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -887,7 +902,8 @@ export namespace Prisma {
     ScheduledKothMatch: 'ScheduledKothMatch',
     ScheduledKothMatchParticipant: 'ScheduledKothMatchParticipant',
     PracticeArenaDailyStats: 'PracticeArenaDailyStats',
-    ChangelogEntry: 'ChangelogEntry'
+    ChangelogEntry: 'ChangelogEntry',
+    TuningAllocation: 'TuningAllocation'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -903,7 +919,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "facility" | "robot" | "weaponInventory" | "weapon" | "battleParticipant" | "battle" | "scheduledLeagueMatch" | "cycleMetadata" | "auditLog" | "cycleSnapshot" | "tournament" | "scheduledTournamentMatch" | "tagTeam" | "scheduledTagTeamMatch" | "resetLog" | "scheduledKothMatch" | "scheduledKothMatchParticipant" | "practiceArenaDailyStats" | "changelogEntry"
+      modelProps: "user" | "facility" | "robot" | "weaponInventory" | "weapon" | "battleParticipant" | "battle" | "scheduledLeagueMatch" | "cycleMetadata" | "auditLog" | "cycleSnapshot" | "tournament" | "scheduledTournamentMatch" | "tagTeam" | "scheduledTagTeamMatch" | "resetLog" | "scheduledKothMatch" | "scheduledKothMatchParticipant" | "practiceArenaDailyStats" | "changelogEntry" | "tuningAllocation"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2387,6 +2403,80 @@ export namespace Prisma {
           }
         }
       }
+      TuningAllocation: {
+        payload: Prisma.$TuningAllocationPayload<ExtArgs>
+        fields: Prisma.TuningAllocationFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.TuningAllocationFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TuningAllocationPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.TuningAllocationFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TuningAllocationPayload>
+          }
+          findFirst: {
+            args: Prisma.TuningAllocationFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TuningAllocationPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.TuningAllocationFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TuningAllocationPayload>
+          }
+          findMany: {
+            args: Prisma.TuningAllocationFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TuningAllocationPayload>[]
+          }
+          create: {
+            args: Prisma.TuningAllocationCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TuningAllocationPayload>
+          }
+          createMany: {
+            args: Prisma.TuningAllocationCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.TuningAllocationCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TuningAllocationPayload>[]
+          }
+          delete: {
+            args: Prisma.TuningAllocationDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TuningAllocationPayload>
+          }
+          update: {
+            args: Prisma.TuningAllocationUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TuningAllocationPayload>
+          }
+          deleteMany: {
+            args: Prisma.TuningAllocationDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.TuningAllocationUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.TuningAllocationUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TuningAllocationPayload>[]
+          }
+          upsert: {
+            args: Prisma.TuningAllocationUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TuningAllocationPayload>
+          }
+          aggregate: {
+            args: Prisma.TuningAllocationAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateTuningAllocation>
+          }
+          groupBy: {
+            args: Prisma.TuningAllocationGroupByArgs<ExtArgs>
+            result: $Utils.Optional<TuningAllocationGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.TuningAllocationCountArgs<ExtArgs>
+            result: $Utils.Optional<TuningAllocationCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -2515,6 +2605,7 @@ export namespace Prisma {
     scheduledKothMatchParticipant?: ScheduledKothMatchParticipantOmit
     practiceArenaDailyStats?: PracticeArenaDailyStatsOmit
     changelogEntry?: ChangelogEntryOmit
+    tuningAllocation?: TuningAllocationOmit
   }
 
   /* Types for Logging */
@@ -6628,6 +6719,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: boolean | Robot$tagTeamsAsReserveArgs<ExtArgs>
     battleParticipations?: boolean | Robot$battleParticipationsArgs<ExtArgs>
     kothMatchParticipations?: boolean | Robot$kothMatchParticipationsArgs<ExtArgs>
+    tuningAllocation?: boolean | Robot$tuningAllocationArgs<ExtArgs>
     _count?: boolean | RobotCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["robot"]>
 
@@ -6879,6 +6971,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: boolean | Robot$tagTeamsAsReserveArgs<ExtArgs>
     battleParticipations?: boolean | Robot$battleParticipationsArgs<ExtArgs>
     kothMatchParticipations?: boolean | Robot$kothMatchParticipationsArgs<ExtArgs>
+    tuningAllocation?: boolean | Robot$tuningAllocationArgs<ExtArgs>
     _count?: boolean | RobotCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type RobotIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -6910,6 +7003,7 @@ export namespace Prisma {
       tagTeamsAsReserve: Prisma.$TagTeamPayload<ExtArgs>[]
       battleParticipations: Prisma.$BattleParticipantPayload<ExtArgs>[]
       kothMatchParticipations: Prisma.$ScheduledKothMatchParticipantPayload<ExtArgs>[]
+      tuningAllocation: Prisma.$TuningAllocationPayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
       id: number
@@ -7393,6 +7487,7 @@ export namespace Prisma {
     tagTeamsAsReserve<T extends Robot$tagTeamsAsReserveArgs<ExtArgs> = {}>(args?: Subset<T, Robot$tagTeamsAsReserveArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TagTeamPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     battleParticipations<T extends Robot$battleParticipationsArgs<ExtArgs> = {}>(args?: Subset<T, Robot$battleParticipationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BattleParticipantPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     kothMatchParticipations<T extends Robot$kothMatchParticipationsArgs<ExtArgs> = {}>(args?: Subset<T, Robot$kothMatchParticipationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ScheduledKothMatchParticipantPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    tuningAllocation<T extends Robot$tuningAllocationArgs<ExtArgs> = {}>(args?: Subset<T, Robot$tuningAllocationArgs<ExtArgs>>): Prisma__TuningAllocationClient<$Result.GetResult<Prisma.$TuningAllocationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -8218,6 +8313,25 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: ScheduledKothMatchParticipantScalarFieldEnum | ScheduledKothMatchParticipantScalarFieldEnum[]
+  }
+
+  /**
+   * Robot.tuningAllocation
+   */
+  export type Robot$tuningAllocationArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TuningAllocation
+     */
+    select?: TuningAllocationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TuningAllocation
+     */
+    omit?: TuningAllocationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TuningAllocationInclude<ExtArgs> | null
+    where?: TuningAllocationWhereInput
   }
 
   /**
@@ -29235,6 +29349,1485 @@ export namespace Prisma {
 
 
   /**
+   * Model TuningAllocation
+   */
+
+  export type AggregateTuningAllocation = {
+    _count: TuningAllocationCountAggregateOutputType | null
+    _avg: TuningAllocationAvgAggregateOutputType | null
+    _sum: TuningAllocationSumAggregateOutputType | null
+    _min: TuningAllocationMinAggregateOutputType | null
+    _max: TuningAllocationMaxAggregateOutputType | null
+  }
+
+  export type TuningAllocationAvgAggregateOutputType = {
+    id: number | null
+    robotId: number | null
+    combatPower: Decimal | null
+    targetingSystems: Decimal | null
+    criticalSystems: Decimal | null
+    penetration: Decimal | null
+    weaponControl: Decimal | null
+    attackSpeed: Decimal | null
+    armorPlating: Decimal | null
+    shieldCapacity: Decimal | null
+    evasionThrusters: Decimal | null
+    damageDampeners: Decimal | null
+    counterProtocols: Decimal | null
+    hullIntegrity: Decimal | null
+    servoMotors: Decimal | null
+    gyroStabilizers: Decimal | null
+    hydraulicSystems: Decimal | null
+    powerCore: Decimal | null
+    combatAlgorithms: Decimal | null
+    threatAnalysis: Decimal | null
+    adaptiveAI: Decimal | null
+    logicCores: Decimal | null
+    syncProtocols: Decimal | null
+    supportSystems: Decimal | null
+    formationTactics: Decimal | null
+  }
+
+  export type TuningAllocationSumAggregateOutputType = {
+    id: number | null
+    robotId: number | null
+    combatPower: Decimal | null
+    targetingSystems: Decimal | null
+    criticalSystems: Decimal | null
+    penetration: Decimal | null
+    weaponControl: Decimal | null
+    attackSpeed: Decimal | null
+    armorPlating: Decimal | null
+    shieldCapacity: Decimal | null
+    evasionThrusters: Decimal | null
+    damageDampeners: Decimal | null
+    counterProtocols: Decimal | null
+    hullIntegrity: Decimal | null
+    servoMotors: Decimal | null
+    gyroStabilizers: Decimal | null
+    hydraulicSystems: Decimal | null
+    powerCore: Decimal | null
+    combatAlgorithms: Decimal | null
+    threatAnalysis: Decimal | null
+    adaptiveAI: Decimal | null
+    logicCores: Decimal | null
+    syncProtocols: Decimal | null
+    supportSystems: Decimal | null
+    formationTactics: Decimal | null
+  }
+
+  export type TuningAllocationMinAggregateOutputType = {
+    id: number | null
+    robotId: number | null
+    combatPower: Decimal | null
+    targetingSystems: Decimal | null
+    criticalSystems: Decimal | null
+    penetration: Decimal | null
+    weaponControl: Decimal | null
+    attackSpeed: Decimal | null
+    armorPlating: Decimal | null
+    shieldCapacity: Decimal | null
+    evasionThrusters: Decimal | null
+    damageDampeners: Decimal | null
+    counterProtocols: Decimal | null
+    hullIntegrity: Decimal | null
+    servoMotors: Decimal | null
+    gyroStabilizers: Decimal | null
+    hydraulicSystems: Decimal | null
+    powerCore: Decimal | null
+    combatAlgorithms: Decimal | null
+    threatAnalysis: Decimal | null
+    adaptiveAI: Decimal | null
+    logicCores: Decimal | null
+    syncProtocols: Decimal | null
+    supportSystems: Decimal | null
+    formationTactics: Decimal | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type TuningAllocationMaxAggregateOutputType = {
+    id: number | null
+    robotId: number | null
+    combatPower: Decimal | null
+    targetingSystems: Decimal | null
+    criticalSystems: Decimal | null
+    penetration: Decimal | null
+    weaponControl: Decimal | null
+    attackSpeed: Decimal | null
+    armorPlating: Decimal | null
+    shieldCapacity: Decimal | null
+    evasionThrusters: Decimal | null
+    damageDampeners: Decimal | null
+    counterProtocols: Decimal | null
+    hullIntegrity: Decimal | null
+    servoMotors: Decimal | null
+    gyroStabilizers: Decimal | null
+    hydraulicSystems: Decimal | null
+    powerCore: Decimal | null
+    combatAlgorithms: Decimal | null
+    threatAnalysis: Decimal | null
+    adaptiveAI: Decimal | null
+    logicCores: Decimal | null
+    syncProtocols: Decimal | null
+    supportSystems: Decimal | null
+    formationTactics: Decimal | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type TuningAllocationCountAggregateOutputType = {
+    id: number
+    robotId: number
+    combatPower: number
+    targetingSystems: number
+    criticalSystems: number
+    penetration: number
+    weaponControl: number
+    attackSpeed: number
+    armorPlating: number
+    shieldCapacity: number
+    evasionThrusters: number
+    damageDampeners: number
+    counterProtocols: number
+    hullIntegrity: number
+    servoMotors: number
+    gyroStabilizers: number
+    hydraulicSystems: number
+    powerCore: number
+    combatAlgorithms: number
+    threatAnalysis: number
+    adaptiveAI: number
+    logicCores: number
+    syncProtocols: number
+    supportSystems: number
+    formationTactics: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type TuningAllocationAvgAggregateInputType = {
+    id?: true
+    robotId?: true
+    combatPower?: true
+    targetingSystems?: true
+    criticalSystems?: true
+    penetration?: true
+    weaponControl?: true
+    attackSpeed?: true
+    armorPlating?: true
+    shieldCapacity?: true
+    evasionThrusters?: true
+    damageDampeners?: true
+    counterProtocols?: true
+    hullIntegrity?: true
+    servoMotors?: true
+    gyroStabilizers?: true
+    hydraulicSystems?: true
+    powerCore?: true
+    combatAlgorithms?: true
+    threatAnalysis?: true
+    adaptiveAI?: true
+    logicCores?: true
+    syncProtocols?: true
+    supportSystems?: true
+    formationTactics?: true
+  }
+
+  export type TuningAllocationSumAggregateInputType = {
+    id?: true
+    robotId?: true
+    combatPower?: true
+    targetingSystems?: true
+    criticalSystems?: true
+    penetration?: true
+    weaponControl?: true
+    attackSpeed?: true
+    armorPlating?: true
+    shieldCapacity?: true
+    evasionThrusters?: true
+    damageDampeners?: true
+    counterProtocols?: true
+    hullIntegrity?: true
+    servoMotors?: true
+    gyroStabilizers?: true
+    hydraulicSystems?: true
+    powerCore?: true
+    combatAlgorithms?: true
+    threatAnalysis?: true
+    adaptiveAI?: true
+    logicCores?: true
+    syncProtocols?: true
+    supportSystems?: true
+    formationTactics?: true
+  }
+
+  export type TuningAllocationMinAggregateInputType = {
+    id?: true
+    robotId?: true
+    combatPower?: true
+    targetingSystems?: true
+    criticalSystems?: true
+    penetration?: true
+    weaponControl?: true
+    attackSpeed?: true
+    armorPlating?: true
+    shieldCapacity?: true
+    evasionThrusters?: true
+    damageDampeners?: true
+    counterProtocols?: true
+    hullIntegrity?: true
+    servoMotors?: true
+    gyroStabilizers?: true
+    hydraulicSystems?: true
+    powerCore?: true
+    combatAlgorithms?: true
+    threatAnalysis?: true
+    adaptiveAI?: true
+    logicCores?: true
+    syncProtocols?: true
+    supportSystems?: true
+    formationTactics?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type TuningAllocationMaxAggregateInputType = {
+    id?: true
+    robotId?: true
+    combatPower?: true
+    targetingSystems?: true
+    criticalSystems?: true
+    penetration?: true
+    weaponControl?: true
+    attackSpeed?: true
+    armorPlating?: true
+    shieldCapacity?: true
+    evasionThrusters?: true
+    damageDampeners?: true
+    counterProtocols?: true
+    hullIntegrity?: true
+    servoMotors?: true
+    gyroStabilizers?: true
+    hydraulicSystems?: true
+    powerCore?: true
+    combatAlgorithms?: true
+    threatAnalysis?: true
+    adaptiveAI?: true
+    logicCores?: true
+    syncProtocols?: true
+    supportSystems?: true
+    formationTactics?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type TuningAllocationCountAggregateInputType = {
+    id?: true
+    robotId?: true
+    combatPower?: true
+    targetingSystems?: true
+    criticalSystems?: true
+    penetration?: true
+    weaponControl?: true
+    attackSpeed?: true
+    armorPlating?: true
+    shieldCapacity?: true
+    evasionThrusters?: true
+    damageDampeners?: true
+    counterProtocols?: true
+    hullIntegrity?: true
+    servoMotors?: true
+    gyroStabilizers?: true
+    hydraulicSystems?: true
+    powerCore?: true
+    combatAlgorithms?: true
+    threatAnalysis?: true
+    adaptiveAI?: true
+    logicCores?: true
+    syncProtocols?: true
+    supportSystems?: true
+    formationTactics?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type TuningAllocationAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which TuningAllocation to aggregate.
+     */
+    where?: TuningAllocationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TuningAllocations to fetch.
+     */
+    orderBy?: TuningAllocationOrderByWithRelationInput | TuningAllocationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: TuningAllocationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TuningAllocations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TuningAllocations.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned TuningAllocations
+    **/
+    _count?: true | TuningAllocationCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: TuningAllocationAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: TuningAllocationSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: TuningAllocationMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: TuningAllocationMaxAggregateInputType
+  }
+
+  export type GetTuningAllocationAggregateType<T extends TuningAllocationAggregateArgs> = {
+        [P in keyof T & keyof AggregateTuningAllocation]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateTuningAllocation[P]>
+      : GetScalarType<T[P], AggregateTuningAllocation[P]>
+  }
+
+
+
+
+  export type TuningAllocationGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: TuningAllocationWhereInput
+    orderBy?: TuningAllocationOrderByWithAggregationInput | TuningAllocationOrderByWithAggregationInput[]
+    by: TuningAllocationScalarFieldEnum[] | TuningAllocationScalarFieldEnum
+    having?: TuningAllocationScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: TuningAllocationCountAggregateInputType | true
+    _avg?: TuningAllocationAvgAggregateInputType
+    _sum?: TuningAllocationSumAggregateInputType
+    _min?: TuningAllocationMinAggregateInputType
+    _max?: TuningAllocationMaxAggregateInputType
+  }
+
+  export type TuningAllocationGroupByOutputType = {
+    id: number
+    robotId: number
+    combatPower: Decimal
+    targetingSystems: Decimal
+    criticalSystems: Decimal
+    penetration: Decimal
+    weaponControl: Decimal
+    attackSpeed: Decimal
+    armorPlating: Decimal
+    shieldCapacity: Decimal
+    evasionThrusters: Decimal
+    damageDampeners: Decimal
+    counterProtocols: Decimal
+    hullIntegrity: Decimal
+    servoMotors: Decimal
+    gyroStabilizers: Decimal
+    hydraulicSystems: Decimal
+    powerCore: Decimal
+    combatAlgorithms: Decimal
+    threatAnalysis: Decimal
+    adaptiveAI: Decimal
+    logicCores: Decimal
+    syncProtocols: Decimal
+    supportSystems: Decimal
+    formationTactics: Decimal
+    createdAt: Date
+    updatedAt: Date
+    _count: TuningAllocationCountAggregateOutputType | null
+    _avg: TuningAllocationAvgAggregateOutputType | null
+    _sum: TuningAllocationSumAggregateOutputType | null
+    _min: TuningAllocationMinAggregateOutputType | null
+    _max: TuningAllocationMaxAggregateOutputType | null
+  }
+
+  type GetTuningAllocationGroupByPayload<T extends TuningAllocationGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<TuningAllocationGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof TuningAllocationGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], TuningAllocationGroupByOutputType[P]>
+            : GetScalarType<T[P], TuningAllocationGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type TuningAllocationSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    robotId?: boolean
+    combatPower?: boolean
+    targetingSystems?: boolean
+    criticalSystems?: boolean
+    penetration?: boolean
+    weaponControl?: boolean
+    attackSpeed?: boolean
+    armorPlating?: boolean
+    shieldCapacity?: boolean
+    evasionThrusters?: boolean
+    damageDampeners?: boolean
+    counterProtocols?: boolean
+    hullIntegrity?: boolean
+    servoMotors?: boolean
+    gyroStabilizers?: boolean
+    hydraulicSystems?: boolean
+    powerCore?: boolean
+    combatAlgorithms?: boolean
+    threatAnalysis?: boolean
+    adaptiveAI?: boolean
+    logicCores?: boolean
+    syncProtocols?: boolean
+    supportSystems?: boolean
+    formationTactics?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    robot?: boolean | RobotDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["tuningAllocation"]>
+
+  export type TuningAllocationSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    robotId?: boolean
+    combatPower?: boolean
+    targetingSystems?: boolean
+    criticalSystems?: boolean
+    penetration?: boolean
+    weaponControl?: boolean
+    attackSpeed?: boolean
+    armorPlating?: boolean
+    shieldCapacity?: boolean
+    evasionThrusters?: boolean
+    damageDampeners?: boolean
+    counterProtocols?: boolean
+    hullIntegrity?: boolean
+    servoMotors?: boolean
+    gyroStabilizers?: boolean
+    hydraulicSystems?: boolean
+    powerCore?: boolean
+    combatAlgorithms?: boolean
+    threatAnalysis?: boolean
+    adaptiveAI?: boolean
+    logicCores?: boolean
+    syncProtocols?: boolean
+    supportSystems?: boolean
+    formationTactics?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    robot?: boolean | RobotDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["tuningAllocation"]>
+
+  export type TuningAllocationSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    robotId?: boolean
+    combatPower?: boolean
+    targetingSystems?: boolean
+    criticalSystems?: boolean
+    penetration?: boolean
+    weaponControl?: boolean
+    attackSpeed?: boolean
+    armorPlating?: boolean
+    shieldCapacity?: boolean
+    evasionThrusters?: boolean
+    damageDampeners?: boolean
+    counterProtocols?: boolean
+    hullIntegrity?: boolean
+    servoMotors?: boolean
+    gyroStabilizers?: boolean
+    hydraulicSystems?: boolean
+    powerCore?: boolean
+    combatAlgorithms?: boolean
+    threatAnalysis?: boolean
+    adaptiveAI?: boolean
+    logicCores?: boolean
+    syncProtocols?: boolean
+    supportSystems?: boolean
+    formationTactics?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    robot?: boolean | RobotDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["tuningAllocation"]>
+
+  export type TuningAllocationSelectScalar = {
+    id?: boolean
+    robotId?: boolean
+    combatPower?: boolean
+    targetingSystems?: boolean
+    criticalSystems?: boolean
+    penetration?: boolean
+    weaponControl?: boolean
+    attackSpeed?: boolean
+    armorPlating?: boolean
+    shieldCapacity?: boolean
+    evasionThrusters?: boolean
+    damageDampeners?: boolean
+    counterProtocols?: boolean
+    hullIntegrity?: boolean
+    servoMotors?: boolean
+    gyroStabilizers?: boolean
+    hydraulicSystems?: boolean
+    powerCore?: boolean
+    combatAlgorithms?: boolean
+    threatAnalysis?: boolean
+    adaptiveAI?: boolean
+    logicCores?: boolean
+    syncProtocols?: boolean
+    supportSystems?: boolean
+    formationTactics?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type TuningAllocationOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "robotId" | "combatPower" | "targetingSystems" | "criticalSystems" | "penetration" | "weaponControl" | "attackSpeed" | "armorPlating" | "shieldCapacity" | "evasionThrusters" | "damageDampeners" | "counterProtocols" | "hullIntegrity" | "servoMotors" | "gyroStabilizers" | "hydraulicSystems" | "powerCore" | "combatAlgorithms" | "threatAnalysis" | "adaptiveAI" | "logicCores" | "syncProtocols" | "supportSystems" | "formationTactics" | "createdAt" | "updatedAt", ExtArgs["result"]["tuningAllocation"]>
+  export type TuningAllocationInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    robot?: boolean | RobotDefaultArgs<ExtArgs>
+  }
+  export type TuningAllocationIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    robot?: boolean | RobotDefaultArgs<ExtArgs>
+  }
+  export type TuningAllocationIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    robot?: boolean | RobotDefaultArgs<ExtArgs>
+  }
+
+  export type $TuningAllocationPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "TuningAllocation"
+    objects: {
+      robot: Prisma.$RobotPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      robotId: number
+      combatPower: Prisma.Decimal
+      targetingSystems: Prisma.Decimal
+      criticalSystems: Prisma.Decimal
+      penetration: Prisma.Decimal
+      weaponControl: Prisma.Decimal
+      attackSpeed: Prisma.Decimal
+      armorPlating: Prisma.Decimal
+      shieldCapacity: Prisma.Decimal
+      evasionThrusters: Prisma.Decimal
+      damageDampeners: Prisma.Decimal
+      counterProtocols: Prisma.Decimal
+      hullIntegrity: Prisma.Decimal
+      servoMotors: Prisma.Decimal
+      gyroStabilizers: Prisma.Decimal
+      hydraulicSystems: Prisma.Decimal
+      powerCore: Prisma.Decimal
+      combatAlgorithms: Prisma.Decimal
+      threatAnalysis: Prisma.Decimal
+      adaptiveAI: Prisma.Decimal
+      logicCores: Prisma.Decimal
+      syncProtocols: Prisma.Decimal
+      supportSystems: Prisma.Decimal
+      formationTactics: Prisma.Decimal
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["tuningAllocation"]>
+    composites: {}
+  }
+
+  type TuningAllocationGetPayload<S extends boolean | null | undefined | TuningAllocationDefaultArgs> = $Result.GetResult<Prisma.$TuningAllocationPayload, S>
+
+  type TuningAllocationCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<TuningAllocationFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: TuningAllocationCountAggregateInputType | true
+    }
+
+  export interface TuningAllocationDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['TuningAllocation'], meta: { name: 'TuningAllocation' } }
+    /**
+     * Find zero or one TuningAllocation that matches the filter.
+     * @param {TuningAllocationFindUniqueArgs} args - Arguments to find a TuningAllocation
+     * @example
+     * // Get one TuningAllocation
+     * const tuningAllocation = await prisma.tuningAllocation.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends TuningAllocationFindUniqueArgs>(args: SelectSubset<T, TuningAllocationFindUniqueArgs<ExtArgs>>): Prisma__TuningAllocationClient<$Result.GetResult<Prisma.$TuningAllocationPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one TuningAllocation that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {TuningAllocationFindUniqueOrThrowArgs} args - Arguments to find a TuningAllocation
+     * @example
+     * // Get one TuningAllocation
+     * const tuningAllocation = await prisma.tuningAllocation.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends TuningAllocationFindUniqueOrThrowArgs>(args: SelectSubset<T, TuningAllocationFindUniqueOrThrowArgs<ExtArgs>>): Prisma__TuningAllocationClient<$Result.GetResult<Prisma.$TuningAllocationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first TuningAllocation that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TuningAllocationFindFirstArgs} args - Arguments to find a TuningAllocation
+     * @example
+     * // Get one TuningAllocation
+     * const tuningAllocation = await prisma.tuningAllocation.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends TuningAllocationFindFirstArgs>(args?: SelectSubset<T, TuningAllocationFindFirstArgs<ExtArgs>>): Prisma__TuningAllocationClient<$Result.GetResult<Prisma.$TuningAllocationPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first TuningAllocation that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TuningAllocationFindFirstOrThrowArgs} args - Arguments to find a TuningAllocation
+     * @example
+     * // Get one TuningAllocation
+     * const tuningAllocation = await prisma.tuningAllocation.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends TuningAllocationFindFirstOrThrowArgs>(args?: SelectSubset<T, TuningAllocationFindFirstOrThrowArgs<ExtArgs>>): Prisma__TuningAllocationClient<$Result.GetResult<Prisma.$TuningAllocationPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more TuningAllocations that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TuningAllocationFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all TuningAllocations
+     * const tuningAllocations = await prisma.tuningAllocation.findMany()
+     * 
+     * // Get first 10 TuningAllocations
+     * const tuningAllocations = await prisma.tuningAllocation.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const tuningAllocationWithIdOnly = await prisma.tuningAllocation.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends TuningAllocationFindManyArgs>(args?: SelectSubset<T, TuningAllocationFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TuningAllocationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a TuningAllocation.
+     * @param {TuningAllocationCreateArgs} args - Arguments to create a TuningAllocation.
+     * @example
+     * // Create one TuningAllocation
+     * const TuningAllocation = await prisma.tuningAllocation.create({
+     *   data: {
+     *     // ... data to create a TuningAllocation
+     *   }
+     * })
+     * 
+     */
+    create<T extends TuningAllocationCreateArgs>(args: SelectSubset<T, TuningAllocationCreateArgs<ExtArgs>>): Prisma__TuningAllocationClient<$Result.GetResult<Prisma.$TuningAllocationPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many TuningAllocations.
+     * @param {TuningAllocationCreateManyArgs} args - Arguments to create many TuningAllocations.
+     * @example
+     * // Create many TuningAllocations
+     * const tuningAllocation = await prisma.tuningAllocation.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends TuningAllocationCreateManyArgs>(args?: SelectSubset<T, TuningAllocationCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many TuningAllocations and returns the data saved in the database.
+     * @param {TuningAllocationCreateManyAndReturnArgs} args - Arguments to create many TuningAllocations.
+     * @example
+     * // Create many TuningAllocations
+     * const tuningAllocation = await prisma.tuningAllocation.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many TuningAllocations and only return the `id`
+     * const tuningAllocationWithIdOnly = await prisma.tuningAllocation.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends TuningAllocationCreateManyAndReturnArgs>(args?: SelectSubset<T, TuningAllocationCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TuningAllocationPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a TuningAllocation.
+     * @param {TuningAllocationDeleteArgs} args - Arguments to delete one TuningAllocation.
+     * @example
+     * // Delete one TuningAllocation
+     * const TuningAllocation = await prisma.tuningAllocation.delete({
+     *   where: {
+     *     // ... filter to delete one TuningAllocation
+     *   }
+     * })
+     * 
+     */
+    delete<T extends TuningAllocationDeleteArgs>(args: SelectSubset<T, TuningAllocationDeleteArgs<ExtArgs>>): Prisma__TuningAllocationClient<$Result.GetResult<Prisma.$TuningAllocationPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one TuningAllocation.
+     * @param {TuningAllocationUpdateArgs} args - Arguments to update one TuningAllocation.
+     * @example
+     * // Update one TuningAllocation
+     * const tuningAllocation = await prisma.tuningAllocation.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends TuningAllocationUpdateArgs>(args: SelectSubset<T, TuningAllocationUpdateArgs<ExtArgs>>): Prisma__TuningAllocationClient<$Result.GetResult<Prisma.$TuningAllocationPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more TuningAllocations.
+     * @param {TuningAllocationDeleteManyArgs} args - Arguments to filter TuningAllocations to delete.
+     * @example
+     * // Delete a few TuningAllocations
+     * const { count } = await prisma.tuningAllocation.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends TuningAllocationDeleteManyArgs>(args?: SelectSubset<T, TuningAllocationDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more TuningAllocations.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TuningAllocationUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many TuningAllocations
+     * const tuningAllocation = await prisma.tuningAllocation.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends TuningAllocationUpdateManyArgs>(args: SelectSubset<T, TuningAllocationUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more TuningAllocations and returns the data updated in the database.
+     * @param {TuningAllocationUpdateManyAndReturnArgs} args - Arguments to update many TuningAllocations.
+     * @example
+     * // Update many TuningAllocations
+     * const tuningAllocation = await prisma.tuningAllocation.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more TuningAllocations and only return the `id`
+     * const tuningAllocationWithIdOnly = await prisma.tuningAllocation.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends TuningAllocationUpdateManyAndReturnArgs>(args: SelectSubset<T, TuningAllocationUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TuningAllocationPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one TuningAllocation.
+     * @param {TuningAllocationUpsertArgs} args - Arguments to update or create a TuningAllocation.
+     * @example
+     * // Update or create a TuningAllocation
+     * const tuningAllocation = await prisma.tuningAllocation.upsert({
+     *   create: {
+     *     // ... data to create a TuningAllocation
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the TuningAllocation we want to update
+     *   }
+     * })
+     */
+    upsert<T extends TuningAllocationUpsertArgs>(args: SelectSubset<T, TuningAllocationUpsertArgs<ExtArgs>>): Prisma__TuningAllocationClient<$Result.GetResult<Prisma.$TuningAllocationPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of TuningAllocations.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TuningAllocationCountArgs} args - Arguments to filter TuningAllocations to count.
+     * @example
+     * // Count the number of TuningAllocations
+     * const count = await prisma.tuningAllocation.count({
+     *   where: {
+     *     // ... the filter for the TuningAllocations we want to count
+     *   }
+     * })
+    **/
+    count<T extends TuningAllocationCountArgs>(
+      args?: Subset<T, TuningAllocationCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], TuningAllocationCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a TuningAllocation.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TuningAllocationAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends TuningAllocationAggregateArgs>(args: Subset<T, TuningAllocationAggregateArgs>): Prisma.PrismaPromise<GetTuningAllocationAggregateType<T>>
+
+    /**
+     * Group by TuningAllocation.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TuningAllocationGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends TuningAllocationGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: TuningAllocationGroupByArgs['orderBy'] }
+        : { orderBy?: TuningAllocationGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, TuningAllocationGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetTuningAllocationGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the TuningAllocation model
+   */
+  readonly fields: TuningAllocationFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for TuningAllocation.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__TuningAllocationClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    robot<T extends RobotDefaultArgs<ExtArgs> = {}>(args?: Subset<T, RobotDefaultArgs<ExtArgs>>): Prisma__RobotClient<$Result.GetResult<Prisma.$RobotPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the TuningAllocation model
+   */
+  interface TuningAllocationFieldRefs {
+    readonly id: FieldRef<"TuningAllocation", 'Int'>
+    readonly robotId: FieldRef<"TuningAllocation", 'Int'>
+    readonly combatPower: FieldRef<"TuningAllocation", 'Decimal'>
+    readonly targetingSystems: FieldRef<"TuningAllocation", 'Decimal'>
+    readonly criticalSystems: FieldRef<"TuningAllocation", 'Decimal'>
+    readonly penetration: FieldRef<"TuningAllocation", 'Decimal'>
+    readonly weaponControl: FieldRef<"TuningAllocation", 'Decimal'>
+    readonly attackSpeed: FieldRef<"TuningAllocation", 'Decimal'>
+    readonly armorPlating: FieldRef<"TuningAllocation", 'Decimal'>
+    readonly shieldCapacity: FieldRef<"TuningAllocation", 'Decimal'>
+    readonly evasionThrusters: FieldRef<"TuningAllocation", 'Decimal'>
+    readonly damageDampeners: FieldRef<"TuningAllocation", 'Decimal'>
+    readonly counterProtocols: FieldRef<"TuningAllocation", 'Decimal'>
+    readonly hullIntegrity: FieldRef<"TuningAllocation", 'Decimal'>
+    readonly servoMotors: FieldRef<"TuningAllocation", 'Decimal'>
+    readonly gyroStabilizers: FieldRef<"TuningAllocation", 'Decimal'>
+    readonly hydraulicSystems: FieldRef<"TuningAllocation", 'Decimal'>
+    readonly powerCore: FieldRef<"TuningAllocation", 'Decimal'>
+    readonly combatAlgorithms: FieldRef<"TuningAllocation", 'Decimal'>
+    readonly threatAnalysis: FieldRef<"TuningAllocation", 'Decimal'>
+    readonly adaptiveAI: FieldRef<"TuningAllocation", 'Decimal'>
+    readonly logicCores: FieldRef<"TuningAllocation", 'Decimal'>
+    readonly syncProtocols: FieldRef<"TuningAllocation", 'Decimal'>
+    readonly supportSystems: FieldRef<"TuningAllocation", 'Decimal'>
+    readonly formationTactics: FieldRef<"TuningAllocation", 'Decimal'>
+    readonly createdAt: FieldRef<"TuningAllocation", 'DateTime'>
+    readonly updatedAt: FieldRef<"TuningAllocation", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * TuningAllocation findUnique
+   */
+  export type TuningAllocationFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TuningAllocation
+     */
+    select?: TuningAllocationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TuningAllocation
+     */
+    omit?: TuningAllocationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TuningAllocationInclude<ExtArgs> | null
+    /**
+     * Filter, which TuningAllocation to fetch.
+     */
+    where: TuningAllocationWhereUniqueInput
+  }
+
+  /**
+   * TuningAllocation findUniqueOrThrow
+   */
+  export type TuningAllocationFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TuningAllocation
+     */
+    select?: TuningAllocationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TuningAllocation
+     */
+    omit?: TuningAllocationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TuningAllocationInclude<ExtArgs> | null
+    /**
+     * Filter, which TuningAllocation to fetch.
+     */
+    where: TuningAllocationWhereUniqueInput
+  }
+
+  /**
+   * TuningAllocation findFirst
+   */
+  export type TuningAllocationFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TuningAllocation
+     */
+    select?: TuningAllocationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TuningAllocation
+     */
+    omit?: TuningAllocationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TuningAllocationInclude<ExtArgs> | null
+    /**
+     * Filter, which TuningAllocation to fetch.
+     */
+    where?: TuningAllocationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TuningAllocations to fetch.
+     */
+    orderBy?: TuningAllocationOrderByWithRelationInput | TuningAllocationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for TuningAllocations.
+     */
+    cursor?: TuningAllocationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TuningAllocations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TuningAllocations.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of TuningAllocations.
+     */
+    distinct?: TuningAllocationScalarFieldEnum | TuningAllocationScalarFieldEnum[]
+  }
+
+  /**
+   * TuningAllocation findFirstOrThrow
+   */
+  export type TuningAllocationFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TuningAllocation
+     */
+    select?: TuningAllocationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TuningAllocation
+     */
+    omit?: TuningAllocationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TuningAllocationInclude<ExtArgs> | null
+    /**
+     * Filter, which TuningAllocation to fetch.
+     */
+    where?: TuningAllocationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TuningAllocations to fetch.
+     */
+    orderBy?: TuningAllocationOrderByWithRelationInput | TuningAllocationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for TuningAllocations.
+     */
+    cursor?: TuningAllocationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TuningAllocations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TuningAllocations.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of TuningAllocations.
+     */
+    distinct?: TuningAllocationScalarFieldEnum | TuningAllocationScalarFieldEnum[]
+  }
+
+  /**
+   * TuningAllocation findMany
+   */
+  export type TuningAllocationFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TuningAllocation
+     */
+    select?: TuningAllocationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TuningAllocation
+     */
+    omit?: TuningAllocationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TuningAllocationInclude<ExtArgs> | null
+    /**
+     * Filter, which TuningAllocations to fetch.
+     */
+    where?: TuningAllocationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TuningAllocations to fetch.
+     */
+    orderBy?: TuningAllocationOrderByWithRelationInput | TuningAllocationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing TuningAllocations.
+     */
+    cursor?: TuningAllocationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TuningAllocations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TuningAllocations.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of TuningAllocations.
+     */
+    distinct?: TuningAllocationScalarFieldEnum | TuningAllocationScalarFieldEnum[]
+  }
+
+  /**
+   * TuningAllocation create
+   */
+  export type TuningAllocationCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TuningAllocation
+     */
+    select?: TuningAllocationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TuningAllocation
+     */
+    omit?: TuningAllocationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TuningAllocationInclude<ExtArgs> | null
+    /**
+     * The data needed to create a TuningAllocation.
+     */
+    data: XOR<TuningAllocationCreateInput, TuningAllocationUncheckedCreateInput>
+  }
+
+  /**
+   * TuningAllocation createMany
+   */
+  export type TuningAllocationCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many TuningAllocations.
+     */
+    data: TuningAllocationCreateManyInput | TuningAllocationCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * TuningAllocation createManyAndReturn
+   */
+  export type TuningAllocationCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TuningAllocation
+     */
+    select?: TuningAllocationSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the TuningAllocation
+     */
+    omit?: TuningAllocationOmit<ExtArgs> | null
+    /**
+     * The data used to create many TuningAllocations.
+     */
+    data: TuningAllocationCreateManyInput | TuningAllocationCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TuningAllocationIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * TuningAllocation update
+   */
+  export type TuningAllocationUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TuningAllocation
+     */
+    select?: TuningAllocationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TuningAllocation
+     */
+    omit?: TuningAllocationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TuningAllocationInclude<ExtArgs> | null
+    /**
+     * The data needed to update a TuningAllocation.
+     */
+    data: XOR<TuningAllocationUpdateInput, TuningAllocationUncheckedUpdateInput>
+    /**
+     * Choose, which TuningAllocation to update.
+     */
+    where: TuningAllocationWhereUniqueInput
+  }
+
+  /**
+   * TuningAllocation updateMany
+   */
+  export type TuningAllocationUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update TuningAllocations.
+     */
+    data: XOR<TuningAllocationUpdateManyMutationInput, TuningAllocationUncheckedUpdateManyInput>
+    /**
+     * Filter which TuningAllocations to update
+     */
+    where?: TuningAllocationWhereInput
+    /**
+     * Limit how many TuningAllocations to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * TuningAllocation updateManyAndReturn
+   */
+  export type TuningAllocationUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TuningAllocation
+     */
+    select?: TuningAllocationSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the TuningAllocation
+     */
+    omit?: TuningAllocationOmit<ExtArgs> | null
+    /**
+     * The data used to update TuningAllocations.
+     */
+    data: XOR<TuningAllocationUpdateManyMutationInput, TuningAllocationUncheckedUpdateManyInput>
+    /**
+     * Filter which TuningAllocations to update
+     */
+    where?: TuningAllocationWhereInput
+    /**
+     * Limit how many TuningAllocations to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TuningAllocationIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * TuningAllocation upsert
+   */
+  export type TuningAllocationUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TuningAllocation
+     */
+    select?: TuningAllocationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TuningAllocation
+     */
+    omit?: TuningAllocationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TuningAllocationInclude<ExtArgs> | null
+    /**
+     * The filter to search for the TuningAllocation to update in case it exists.
+     */
+    where: TuningAllocationWhereUniqueInput
+    /**
+     * In case the TuningAllocation found by the `where` argument doesn't exist, create a new TuningAllocation with this data.
+     */
+    create: XOR<TuningAllocationCreateInput, TuningAllocationUncheckedCreateInput>
+    /**
+     * In case the TuningAllocation was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<TuningAllocationUpdateInput, TuningAllocationUncheckedUpdateInput>
+  }
+
+  /**
+   * TuningAllocation delete
+   */
+  export type TuningAllocationDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TuningAllocation
+     */
+    select?: TuningAllocationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TuningAllocation
+     */
+    omit?: TuningAllocationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TuningAllocationInclude<ExtArgs> | null
+    /**
+     * Filter which TuningAllocation to delete.
+     */
+    where: TuningAllocationWhereUniqueInput
+  }
+
+  /**
+   * TuningAllocation deleteMany
+   */
+  export type TuningAllocationDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which TuningAllocations to delete
+     */
+    where?: TuningAllocationWhereInput
+    /**
+     * Limit how many TuningAllocations to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * TuningAllocation without action
+   */
+  export type TuningAllocationDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TuningAllocation
+     */
+    select?: TuningAllocationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TuningAllocation
+     */
+    omit?: TuningAllocationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TuningAllocationInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -29679,6 +31272,39 @@ export namespace Prisma {
   };
 
   export type ChangelogEntryScalarFieldEnum = (typeof ChangelogEntryScalarFieldEnum)[keyof typeof ChangelogEntryScalarFieldEnum]
+
+
+  export const TuningAllocationScalarFieldEnum: {
+    id: 'id',
+    robotId: 'robotId',
+    combatPower: 'combatPower',
+    targetingSystems: 'targetingSystems',
+    criticalSystems: 'criticalSystems',
+    penetration: 'penetration',
+    weaponControl: 'weaponControl',
+    attackSpeed: 'attackSpeed',
+    armorPlating: 'armorPlating',
+    shieldCapacity: 'shieldCapacity',
+    evasionThrusters: 'evasionThrusters',
+    damageDampeners: 'damageDampeners',
+    counterProtocols: 'counterProtocols',
+    hullIntegrity: 'hullIntegrity',
+    servoMotors: 'servoMotors',
+    gyroStabilizers: 'gyroStabilizers',
+    hydraulicSystems: 'hydraulicSystems',
+    powerCore: 'powerCore',
+    combatAlgorithms: 'combatAlgorithms',
+    threatAnalysis: 'threatAnalysis',
+    adaptiveAI: 'adaptiveAI',
+    logicCores: 'logicCores',
+    syncProtocols: 'syncProtocols',
+    supportSystems: 'supportSystems',
+    formationTactics: 'formationTactics',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type TuningAllocationScalarFieldEnum = (typeof TuningAllocationScalarFieldEnum)[keyof typeof TuningAllocationScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -30167,6 +31793,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamListRelationFilter
     battleParticipations?: BattleParticipantListRelationFilter
     kothMatchParticipations?: ScheduledKothMatchParticipantListRelationFilter
+    tuningAllocation?: XOR<TuningAllocationNullableScalarRelationFilter, TuningAllocationWhereInput> | null
   }
 
   export type RobotOrderByWithRelationInput = {
@@ -30257,6 +31884,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamOrderByRelationAggregateInput
     battleParticipations?: BattleParticipantOrderByRelationAggregateInput
     kothMatchParticipations?: ScheduledKothMatchParticipantOrderByRelationAggregateInput
+    tuningAllocation?: TuningAllocationOrderByWithRelationInput
   }
 
   export type RobotWhereUniqueInput = Prisma.AtLeast<{
@@ -30350,6 +31978,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamListRelationFilter
     battleParticipations?: BattleParticipantListRelationFilter
     kothMatchParticipations?: ScheduledKothMatchParticipantListRelationFilter
+    tuningAllocation?: XOR<TuningAllocationNullableScalarRelationFilter, TuningAllocationWhereInput> | null
   }, "id" | "name">
 
   export type RobotOrderByWithAggregationInput = {
@@ -32166,6 +33795,173 @@ export namespace Prisma {
     updatedAt?: DateTimeWithAggregatesFilter<"ChangelogEntry"> | Date | string
   }
 
+  export type TuningAllocationWhereInput = {
+    AND?: TuningAllocationWhereInput | TuningAllocationWhereInput[]
+    OR?: TuningAllocationWhereInput[]
+    NOT?: TuningAllocationWhereInput | TuningAllocationWhereInput[]
+    id?: IntFilter<"TuningAllocation"> | number
+    robotId?: IntFilter<"TuningAllocation"> | number
+    combatPower?: DecimalFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    targetingSystems?: DecimalFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    criticalSystems?: DecimalFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    penetration?: DecimalFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    weaponControl?: DecimalFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    attackSpeed?: DecimalFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    armorPlating?: DecimalFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    shieldCapacity?: DecimalFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    evasionThrusters?: DecimalFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    damageDampeners?: DecimalFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    counterProtocols?: DecimalFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    hullIntegrity?: DecimalFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    servoMotors?: DecimalFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    gyroStabilizers?: DecimalFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    hydraulicSystems?: DecimalFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    powerCore?: DecimalFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    combatAlgorithms?: DecimalFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    threatAnalysis?: DecimalFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    adaptiveAI?: DecimalFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    logicCores?: DecimalFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    syncProtocols?: DecimalFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    supportSystems?: DecimalFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    formationTactics?: DecimalFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    createdAt?: DateTimeFilter<"TuningAllocation"> | Date | string
+    updatedAt?: DateTimeFilter<"TuningAllocation"> | Date | string
+    robot?: XOR<RobotScalarRelationFilter, RobotWhereInput>
+  }
+
+  export type TuningAllocationOrderByWithRelationInput = {
+    id?: SortOrder
+    robotId?: SortOrder
+    combatPower?: SortOrder
+    targetingSystems?: SortOrder
+    criticalSystems?: SortOrder
+    penetration?: SortOrder
+    weaponControl?: SortOrder
+    attackSpeed?: SortOrder
+    armorPlating?: SortOrder
+    shieldCapacity?: SortOrder
+    evasionThrusters?: SortOrder
+    damageDampeners?: SortOrder
+    counterProtocols?: SortOrder
+    hullIntegrity?: SortOrder
+    servoMotors?: SortOrder
+    gyroStabilizers?: SortOrder
+    hydraulicSystems?: SortOrder
+    powerCore?: SortOrder
+    combatAlgorithms?: SortOrder
+    threatAnalysis?: SortOrder
+    adaptiveAI?: SortOrder
+    logicCores?: SortOrder
+    syncProtocols?: SortOrder
+    supportSystems?: SortOrder
+    formationTactics?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    robot?: RobotOrderByWithRelationInput
+  }
+
+  export type TuningAllocationWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    robotId?: number
+    AND?: TuningAllocationWhereInput | TuningAllocationWhereInput[]
+    OR?: TuningAllocationWhereInput[]
+    NOT?: TuningAllocationWhereInput | TuningAllocationWhereInput[]
+    combatPower?: DecimalFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    targetingSystems?: DecimalFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    criticalSystems?: DecimalFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    penetration?: DecimalFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    weaponControl?: DecimalFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    attackSpeed?: DecimalFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    armorPlating?: DecimalFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    shieldCapacity?: DecimalFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    evasionThrusters?: DecimalFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    damageDampeners?: DecimalFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    counterProtocols?: DecimalFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    hullIntegrity?: DecimalFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    servoMotors?: DecimalFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    gyroStabilizers?: DecimalFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    hydraulicSystems?: DecimalFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    powerCore?: DecimalFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    combatAlgorithms?: DecimalFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    threatAnalysis?: DecimalFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    adaptiveAI?: DecimalFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    logicCores?: DecimalFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    syncProtocols?: DecimalFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    supportSystems?: DecimalFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    formationTactics?: DecimalFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    createdAt?: DateTimeFilter<"TuningAllocation"> | Date | string
+    updatedAt?: DateTimeFilter<"TuningAllocation"> | Date | string
+    robot?: XOR<RobotScalarRelationFilter, RobotWhereInput>
+  }, "id" | "robotId">
+
+  export type TuningAllocationOrderByWithAggregationInput = {
+    id?: SortOrder
+    robotId?: SortOrder
+    combatPower?: SortOrder
+    targetingSystems?: SortOrder
+    criticalSystems?: SortOrder
+    penetration?: SortOrder
+    weaponControl?: SortOrder
+    attackSpeed?: SortOrder
+    armorPlating?: SortOrder
+    shieldCapacity?: SortOrder
+    evasionThrusters?: SortOrder
+    damageDampeners?: SortOrder
+    counterProtocols?: SortOrder
+    hullIntegrity?: SortOrder
+    servoMotors?: SortOrder
+    gyroStabilizers?: SortOrder
+    hydraulicSystems?: SortOrder
+    powerCore?: SortOrder
+    combatAlgorithms?: SortOrder
+    threatAnalysis?: SortOrder
+    adaptiveAI?: SortOrder
+    logicCores?: SortOrder
+    syncProtocols?: SortOrder
+    supportSystems?: SortOrder
+    formationTactics?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: TuningAllocationCountOrderByAggregateInput
+    _avg?: TuningAllocationAvgOrderByAggregateInput
+    _max?: TuningAllocationMaxOrderByAggregateInput
+    _min?: TuningAllocationMinOrderByAggregateInput
+    _sum?: TuningAllocationSumOrderByAggregateInput
+  }
+
+  export type TuningAllocationScalarWhereWithAggregatesInput = {
+    AND?: TuningAllocationScalarWhereWithAggregatesInput | TuningAllocationScalarWhereWithAggregatesInput[]
+    OR?: TuningAllocationScalarWhereWithAggregatesInput[]
+    NOT?: TuningAllocationScalarWhereWithAggregatesInput | TuningAllocationScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"TuningAllocation"> | number
+    robotId?: IntWithAggregatesFilter<"TuningAllocation"> | number
+    combatPower?: DecimalWithAggregatesFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    targetingSystems?: DecimalWithAggregatesFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    criticalSystems?: DecimalWithAggregatesFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    penetration?: DecimalWithAggregatesFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    weaponControl?: DecimalWithAggregatesFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    attackSpeed?: DecimalWithAggregatesFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    armorPlating?: DecimalWithAggregatesFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    shieldCapacity?: DecimalWithAggregatesFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    evasionThrusters?: DecimalWithAggregatesFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    damageDampeners?: DecimalWithAggregatesFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    counterProtocols?: DecimalWithAggregatesFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    hullIntegrity?: DecimalWithAggregatesFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    servoMotors?: DecimalWithAggregatesFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    gyroStabilizers?: DecimalWithAggregatesFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    hydraulicSystems?: DecimalWithAggregatesFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    powerCore?: DecimalWithAggregatesFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    combatAlgorithms?: DecimalWithAggregatesFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    threatAnalysis?: DecimalWithAggregatesFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    adaptiveAI?: DecimalWithAggregatesFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    logicCores?: DecimalWithAggregatesFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    syncProtocols?: DecimalWithAggregatesFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    supportSystems?: DecimalWithAggregatesFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    formationTactics?: DecimalWithAggregatesFilter<"TuningAllocation"> | Decimal | DecimalJsLike | number | string
+    createdAt?: DateTimeWithAggregatesFilter<"TuningAllocation"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"TuningAllocation"> | Date | string
+  }
+
   export type UserCreateInput = {
     username: string
     email?: string | null
@@ -32525,6 +34321,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamCreateNestedManyWithoutReserveRobotInput
     battleParticipations?: BattleParticipantCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantCreateNestedManyWithoutRobotInput
+    tuningAllocation?: TuningAllocationCreateNestedOneWithoutRobotInput
   }
 
   export type RobotUncheckedCreateInput = {
@@ -32612,6 +34409,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUncheckedCreateNestedManyWithoutReserveRobotInput
     battleParticipations?: BattleParticipantUncheckedCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedCreateNestedManyWithoutRobotInput
+    tuningAllocation?: TuningAllocationUncheckedCreateNestedOneWithoutRobotInput
   }
 
   export type RobotUpdateInput = {
@@ -32698,6 +34496,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUpdateManyWithoutReserveRobotNestedInput
     battleParticipations?: BattleParticipantUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUpdateManyWithoutRobotNestedInput
+    tuningAllocation?: TuningAllocationUpdateOneWithoutRobotNestedInput
   }
 
   export type RobotUncheckedUpdateInput = {
@@ -32785,6 +34584,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUncheckedUpdateManyWithoutReserveRobotNestedInput
     battleParticipations?: BattleParticipantUncheckedUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedUpdateManyWithoutRobotNestedInput
+    tuningAllocation?: TuningAllocationUncheckedUpdateOneWithoutRobotNestedInput
   }
 
   export type RobotCreateManyInput = {
@@ -34811,6 +36611,212 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type TuningAllocationCreateInput = {
+    combatPower?: Decimal | DecimalJsLike | number | string
+    targetingSystems?: Decimal | DecimalJsLike | number | string
+    criticalSystems?: Decimal | DecimalJsLike | number | string
+    penetration?: Decimal | DecimalJsLike | number | string
+    weaponControl?: Decimal | DecimalJsLike | number | string
+    attackSpeed?: Decimal | DecimalJsLike | number | string
+    armorPlating?: Decimal | DecimalJsLike | number | string
+    shieldCapacity?: Decimal | DecimalJsLike | number | string
+    evasionThrusters?: Decimal | DecimalJsLike | number | string
+    damageDampeners?: Decimal | DecimalJsLike | number | string
+    counterProtocols?: Decimal | DecimalJsLike | number | string
+    hullIntegrity?: Decimal | DecimalJsLike | number | string
+    servoMotors?: Decimal | DecimalJsLike | number | string
+    gyroStabilizers?: Decimal | DecimalJsLike | number | string
+    hydraulicSystems?: Decimal | DecimalJsLike | number | string
+    powerCore?: Decimal | DecimalJsLike | number | string
+    combatAlgorithms?: Decimal | DecimalJsLike | number | string
+    threatAnalysis?: Decimal | DecimalJsLike | number | string
+    adaptiveAI?: Decimal | DecimalJsLike | number | string
+    logicCores?: Decimal | DecimalJsLike | number | string
+    syncProtocols?: Decimal | DecimalJsLike | number | string
+    supportSystems?: Decimal | DecimalJsLike | number | string
+    formationTactics?: Decimal | DecimalJsLike | number | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    robot: RobotCreateNestedOneWithoutTuningAllocationInput
+  }
+
+  export type TuningAllocationUncheckedCreateInput = {
+    id?: number
+    robotId: number
+    combatPower?: Decimal | DecimalJsLike | number | string
+    targetingSystems?: Decimal | DecimalJsLike | number | string
+    criticalSystems?: Decimal | DecimalJsLike | number | string
+    penetration?: Decimal | DecimalJsLike | number | string
+    weaponControl?: Decimal | DecimalJsLike | number | string
+    attackSpeed?: Decimal | DecimalJsLike | number | string
+    armorPlating?: Decimal | DecimalJsLike | number | string
+    shieldCapacity?: Decimal | DecimalJsLike | number | string
+    evasionThrusters?: Decimal | DecimalJsLike | number | string
+    damageDampeners?: Decimal | DecimalJsLike | number | string
+    counterProtocols?: Decimal | DecimalJsLike | number | string
+    hullIntegrity?: Decimal | DecimalJsLike | number | string
+    servoMotors?: Decimal | DecimalJsLike | number | string
+    gyroStabilizers?: Decimal | DecimalJsLike | number | string
+    hydraulicSystems?: Decimal | DecimalJsLike | number | string
+    powerCore?: Decimal | DecimalJsLike | number | string
+    combatAlgorithms?: Decimal | DecimalJsLike | number | string
+    threatAnalysis?: Decimal | DecimalJsLike | number | string
+    adaptiveAI?: Decimal | DecimalJsLike | number | string
+    logicCores?: Decimal | DecimalJsLike | number | string
+    syncProtocols?: Decimal | DecimalJsLike | number | string
+    supportSystems?: Decimal | DecimalJsLike | number | string
+    formationTactics?: Decimal | DecimalJsLike | number | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type TuningAllocationUpdateInput = {
+    combatPower?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    targetingSystems?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    criticalSystems?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    penetration?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    weaponControl?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    attackSpeed?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    armorPlating?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    shieldCapacity?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    evasionThrusters?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    damageDampeners?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    counterProtocols?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    hullIntegrity?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    servoMotors?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    gyroStabilizers?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    hydraulicSystems?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    powerCore?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    combatAlgorithms?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    threatAnalysis?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    adaptiveAI?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    logicCores?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    syncProtocols?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    supportSystems?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    formationTactics?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    robot?: RobotUpdateOneRequiredWithoutTuningAllocationNestedInput
+  }
+
+  export type TuningAllocationUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    robotId?: IntFieldUpdateOperationsInput | number
+    combatPower?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    targetingSystems?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    criticalSystems?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    penetration?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    weaponControl?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    attackSpeed?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    armorPlating?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    shieldCapacity?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    evasionThrusters?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    damageDampeners?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    counterProtocols?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    hullIntegrity?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    servoMotors?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    gyroStabilizers?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    hydraulicSystems?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    powerCore?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    combatAlgorithms?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    threatAnalysis?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    adaptiveAI?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    logicCores?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    syncProtocols?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    supportSystems?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    formationTactics?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TuningAllocationCreateManyInput = {
+    id?: number
+    robotId: number
+    combatPower?: Decimal | DecimalJsLike | number | string
+    targetingSystems?: Decimal | DecimalJsLike | number | string
+    criticalSystems?: Decimal | DecimalJsLike | number | string
+    penetration?: Decimal | DecimalJsLike | number | string
+    weaponControl?: Decimal | DecimalJsLike | number | string
+    attackSpeed?: Decimal | DecimalJsLike | number | string
+    armorPlating?: Decimal | DecimalJsLike | number | string
+    shieldCapacity?: Decimal | DecimalJsLike | number | string
+    evasionThrusters?: Decimal | DecimalJsLike | number | string
+    damageDampeners?: Decimal | DecimalJsLike | number | string
+    counterProtocols?: Decimal | DecimalJsLike | number | string
+    hullIntegrity?: Decimal | DecimalJsLike | number | string
+    servoMotors?: Decimal | DecimalJsLike | number | string
+    gyroStabilizers?: Decimal | DecimalJsLike | number | string
+    hydraulicSystems?: Decimal | DecimalJsLike | number | string
+    powerCore?: Decimal | DecimalJsLike | number | string
+    combatAlgorithms?: Decimal | DecimalJsLike | number | string
+    threatAnalysis?: Decimal | DecimalJsLike | number | string
+    adaptiveAI?: Decimal | DecimalJsLike | number | string
+    logicCores?: Decimal | DecimalJsLike | number | string
+    syncProtocols?: Decimal | DecimalJsLike | number | string
+    supportSystems?: Decimal | DecimalJsLike | number | string
+    formationTactics?: Decimal | DecimalJsLike | number | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type TuningAllocationUpdateManyMutationInput = {
+    combatPower?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    targetingSystems?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    criticalSystems?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    penetration?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    weaponControl?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    attackSpeed?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    armorPlating?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    shieldCapacity?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    evasionThrusters?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    damageDampeners?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    counterProtocols?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    hullIntegrity?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    servoMotors?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    gyroStabilizers?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    hydraulicSystems?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    powerCore?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    combatAlgorithms?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    threatAnalysis?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    adaptiveAI?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    logicCores?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    syncProtocols?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    supportSystems?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    formationTactics?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TuningAllocationUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    robotId?: IntFieldUpdateOperationsInput | number
+    combatPower?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    targetingSystems?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    criticalSystems?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    penetration?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    weaponControl?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    attackSpeed?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    armorPlating?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    shieldCapacity?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    evasionThrusters?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    damageDampeners?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    counterProtocols?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    hullIntegrity?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    servoMotors?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    gyroStabilizers?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    hydraulicSystems?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    powerCore?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    combatAlgorithms?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    threatAnalysis?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    adaptiveAI?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    logicCores?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    syncProtocols?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    supportSystems?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    formationTactics?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type IntFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
     in?: number[] | ListIntFieldRefInput<$PrismaModel>
@@ -35287,6 +37293,11 @@ export namespace Prisma {
     every?: ScheduledKothMatchParticipantWhereInput
     some?: ScheduledKothMatchParticipantWhereInput
     none?: ScheduledKothMatchParticipantWhereInput
+  }
+
+  export type TuningAllocationNullableScalarRelationFilter = {
+    is?: TuningAllocationWhereInput | null
+    isNot?: TuningAllocationWhereInput | null
   }
 
   export type BattleOrderByRelationAggregateInput = {
@@ -37047,6 +39058,152 @@ export namespace Prisma {
     createdBy?: SortOrder
   }
 
+  export type TuningAllocationCountOrderByAggregateInput = {
+    id?: SortOrder
+    robotId?: SortOrder
+    combatPower?: SortOrder
+    targetingSystems?: SortOrder
+    criticalSystems?: SortOrder
+    penetration?: SortOrder
+    weaponControl?: SortOrder
+    attackSpeed?: SortOrder
+    armorPlating?: SortOrder
+    shieldCapacity?: SortOrder
+    evasionThrusters?: SortOrder
+    damageDampeners?: SortOrder
+    counterProtocols?: SortOrder
+    hullIntegrity?: SortOrder
+    servoMotors?: SortOrder
+    gyroStabilizers?: SortOrder
+    hydraulicSystems?: SortOrder
+    powerCore?: SortOrder
+    combatAlgorithms?: SortOrder
+    threatAnalysis?: SortOrder
+    adaptiveAI?: SortOrder
+    logicCores?: SortOrder
+    syncProtocols?: SortOrder
+    supportSystems?: SortOrder
+    formationTactics?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type TuningAllocationAvgOrderByAggregateInput = {
+    id?: SortOrder
+    robotId?: SortOrder
+    combatPower?: SortOrder
+    targetingSystems?: SortOrder
+    criticalSystems?: SortOrder
+    penetration?: SortOrder
+    weaponControl?: SortOrder
+    attackSpeed?: SortOrder
+    armorPlating?: SortOrder
+    shieldCapacity?: SortOrder
+    evasionThrusters?: SortOrder
+    damageDampeners?: SortOrder
+    counterProtocols?: SortOrder
+    hullIntegrity?: SortOrder
+    servoMotors?: SortOrder
+    gyroStabilizers?: SortOrder
+    hydraulicSystems?: SortOrder
+    powerCore?: SortOrder
+    combatAlgorithms?: SortOrder
+    threatAnalysis?: SortOrder
+    adaptiveAI?: SortOrder
+    logicCores?: SortOrder
+    syncProtocols?: SortOrder
+    supportSystems?: SortOrder
+    formationTactics?: SortOrder
+  }
+
+  export type TuningAllocationMaxOrderByAggregateInput = {
+    id?: SortOrder
+    robotId?: SortOrder
+    combatPower?: SortOrder
+    targetingSystems?: SortOrder
+    criticalSystems?: SortOrder
+    penetration?: SortOrder
+    weaponControl?: SortOrder
+    attackSpeed?: SortOrder
+    armorPlating?: SortOrder
+    shieldCapacity?: SortOrder
+    evasionThrusters?: SortOrder
+    damageDampeners?: SortOrder
+    counterProtocols?: SortOrder
+    hullIntegrity?: SortOrder
+    servoMotors?: SortOrder
+    gyroStabilizers?: SortOrder
+    hydraulicSystems?: SortOrder
+    powerCore?: SortOrder
+    combatAlgorithms?: SortOrder
+    threatAnalysis?: SortOrder
+    adaptiveAI?: SortOrder
+    logicCores?: SortOrder
+    syncProtocols?: SortOrder
+    supportSystems?: SortOrder
+    formationTactics?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type TuningAllocationMinOrderByAggregateInput = {
+    id?: SortOrder
+    robotId?: SortOrder
+    combatPower?: SortOrder
+    targetingSystems?: SortOrder
+    criticalSystems?: SortOrder
+    penetration?: SortOrder
+    weaponControl?: SortOrder
+    attackSpeed?: SortOrder
+    armorPlating?: SortOrder
+    shieldCapacity?: SortOrder
+    evasionThrusters?: SortOrder
+    damageDampeners?: SortOrder
+    counterProtocols?: SortOrder
+    hullIntegrity?: SortOrder
+    servoMotors?: SortOrder
+    gyroStabilizers?: SortOrder
+    hydraulicSystems?: SortOrder
+    powerCore?: SortOrder
+    combatAlgorithms?: SortOrder
+    threatAnalysis?: SortOrder
+    adaptiveAI?: SortOrder
+    logicCores?: SortOrder
+    syncProtocols?: SortOrder
+    supportSystems?: SortOrder
+    formationTactics?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type TuningAllocationSumOrderByAggregateInput = {
+    id?: SortOrder
+    robotId?: SortOrder
+    combatPower?: SortOrder
+    targetingSystems?: SortOrder
+    criticalSystems?: SortOrder
+    penetration?: SortOrder
+    weaponControl?: SortOrder
+    attackSpeed?: SortOrder
+    armorPlating?: SortOrder
+    shieldCapacity?: SortOrder
+    evasionThrusters?: SortOrder
+    damageDampeners?: SortOrder
+    counterProtocols?: SortOrder
+    hullIntegrity?: SortOrder
+    servoMotors?: SortOrder
+    gyroStabilizers?: SortOrder
+    hydraulicSystems?: SortOrder
+    powerCore?: SortOrder
+    combatAlgorithms?: SortOrder
+    threatAnalysis?: SortOrder
+    adaptiveAI?: SortOrder
+    logicCores?: SortOrder
+    syncProtocols?: SortOrder
+    supportSystems?: SortOrder
+    formationTactics?: SortOrder
+  }
+
   export type RobotCreateNestedManyWithoutUserInput = {
     create?: XOR<RobotCreateWithoutUserInput, RobotUncheckedCreateWithoutUserInput> | RobotCreateWithoutUserInput[] | RobotUncheckedCreateWithoutUserInput[]
     connectOrCreate?: RobotCreateOrConnectWithoutUserInput | RobotCreateOrConnectWithoutUserInput[]
@@ -37359,6 +39516,12 @@ export namespace Prisma {
     connect?: ScheduledKothMatchParticipantWhereUniqueInput | ScheduledKothMatchParticipantWhereUniqueInput[]
   }
 
+  export type TuningAllocationCreateNestedOneWithoutRobotInput = {
+    create?: XOR<TuningAllocationCreateWithoutRobotInput, TuningAllocationUncheckedCreateWithoutRobotInput>
+    connectOrCreate?: TuningAllocationCreateOrConnectWithoutRobotInput
+    connect?: TuningAllocationWhereUniqueInput
+  }
+
   export type BattleUncheckedCreateNestedManyWithoutRobot1Input = {
     create?: XOR<BattleCreateWithoutRobot1Input, BattleUncheckedCreateWithoutRobot1Input> | BattleCreateWithoutRobot1Input[] | BattleUncheckedCreateWithoutRobot1Input[]
     connectOrCreate?: BattleCreateOrConnectWithoutRobot1Input | BattleCreateOrConnectWithoutRobot1Input[]
@@ -37441,6 +39604,12 @@ export namespace Prisma {
     connectOrCreate?: ScheduledKothMatchParticipantCreateOrConnectWithoutRobotInput | ScheduledKothMatchParticipantCreateOrConnectWithoutRobotInput[]
     createMany?: ScheduledKothMatchParticipantCreateManyRobotInputEnvelope
     connect?: ScheduledKothMatchParticipantWhereUniqueInput | ScheduledKothMatchParticipantWhereUniqueInput[]
+  }
+
+  export type TuningAllocationUncheckedCreateNestedOneWithoutRobotInput = {
+    create?: XOR<TuningAllocationCreateWithoutRobotInput, TuningAllocationUncheckedCreateWithoutRobotInput>
+    connectOrCreate?: TuningAllocationCreateOrConnectWithoutRobotInput
+    connect?: TuningAllocationWhereUniqueInput
   }
 
   export type DecimalFieldUpdateOperationsInput = {
@@ -37663,6 +39832,16 @@ export namespace Prisma {
     deleteMany?: ScheduledKothMatchParticipantScalarWhereInput | ScheduledKothMatchParticipantScalarWhereInput[]
   }
 
+  export type TuningAllocationUpdateOneWithoutRobotNestedInput = {
+    create?: XOR<TuningAllocationCreateWithoutRobotInput, TuningAllocationUncheckedCreateWithoutRobotInput>
+    connectOrCreate?: TuningAllocationCreateOrConnectWithoutRobotInput
+    upsert?: TuningAllocationUpsertWithoutRobotInput
+    disconnect?: TuningAllocationWhereInput | boolean
+    delete?: TuningAllocationWhereInput | boolean
+    connect?: TuningAllocationWhereUniqueInput
+    update?: XOR<XOR<TuningAllocationUpdateToOneWithWhereWithoutRobotInput, TuningAllocationUpdateWithoutRobotInput>, TuningAllocationUncheckedUpdateWithoutRobotInput>
+  }
+
   export type BattleUncheckedUpdateManyWithoutRobot1NestedInput = {
     create?: XOR<BattleCreateWithoutRobot1Input, BattleUncheckedCreateWithoutRobot1Input> | BattleCreateWithoutRobot1Input[] | BattleUncheckedCreateWithoutRobot1Input[]
     connectOrCreate?: BattleCreateOrConnectWithoutRobot1Input | BattleCreateOrConnectWithoutRobot1Input[]
@@ -37829,6 +40008,16 @@ export namespace Prisma {
     update?: ScheduledKothMatchParticipantUpdateWithWhereUniqueWithoutRobotInput | ScheduledKothMatchParticipantUpdateWithWhereUniqueWithoutRobotInput[]
     updateMany?: ScheduledKothMatchParticipantUpdateManyWithWhereWithoutRobotInput | ScheduledKothMatchParticipantUpdateManyWithWhereWithoutRobotInput[]
     deleteMany?: ScheduledKothMatchParticipantScalarWhereInput | ScheduledKothMatchParticipantScalarWhereInput[]
+  }
+
+  export type TuningAllocationUncheckedUpdateOneWithoutRobotNestedInput = {
+    create?: XOR<TuningAllocationCreateWithoutRobotInput, TuningAllocationUncheckedCreateWithoutRobotInput>
+    connectOrCreate?: TuningAllocationCreateOrConnectWithoutRobotInput
+    upsert?: TuningAllocationUpsertWithoutRobotInput
+    disconnect?: TuningAllocationWhereInput | boolean
+    delete?: TuningAllocationWhereInput | boolean
+    connect?: TuningAllocationWhereUniqueInput
+    update?: XOR<XOR<TuningAllocationUpdateToOneWithWhereWithoutRobotInput, TuningAllocationUpdateWithoutRobotInput>, TuningAllocationUncheckedUpdateWithoutRobotInput>
   }
 
   export type UserCreateNestedOneWithoutWeaponInventoryInput = {
@@ -38763,6 +40952,20 @@ export namespace Prisma {
     update?: XOR<XOR<RobotUpdateToOneWithWhereWithoutKothMatchParticipationsInput, RobotUpdateWithoutKothMatchParticipationsInput>, RobotUncheckedUpdateWithoutKothMatchParticipationsInput>
   }
 
+  export type RobotCreateNestedOneWithoutTuningAllocationInput = {
+    create?: XOR<RobotCreateWithoutTuningAllocationInput, RobotUncheckedCreateWithoutTuningAllocationInput>
+    connectOrCreate?: RobotCreateOrConnectWithoutTuningAllocationInput
+    connect?: RobotWhereUniqueInput
+  }
+
+  export type RobotUpdateOneRequiredWithoutTuningAllocationNestedInput = {
+    create?: XOR<RobotCreateWithoutTuningAllocationInput, RobotUncheckedCreateWithoutTuningAllocationInput>
+    connectOrCreate?: RobotCreateOrConnectWithoutTuningAllocationInput
+    upsert?: RobotUpsertWithoutTuningAllocationInput
+    connect?: RobotWhereUniqueInput
+    update?: XOR<XOR<RobotUpdateToOneWithWhereWithoutTuningAllocationInput, RobotUpdateWithoutTuningAllocationInput>, RobotUncheckedUpdateWithoutTuningAllocationInput>
+  }
+
   export type NestedIntFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
     in?: number[] | ListIntFieldRefInput<$PrismaModel>
@@ -39190,6 +41393,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamCreateNestedManyWithoutReserveRobotInput
     battleParticipations?: BattleParticipantCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantCreateNestedManyWithoutRobotInput
+    tuningAllocation?: TuningAllocationCreateNestedOneWithoutRobotInput
   }
 
   export type RobotUncheckedCreateWithoutUserInput = {
@@ -39276,6 +41480,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUncheckedCreateNestedManyWithoutReserveRobotInput
     battleParticipations?: BattleParticipantUncheckedCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedCreateNestedManyWithoutRobotInput
+    tuningAllocation?: TuningAllocationUncheckedCreateNestedOneWithoutRobotInput
   }
 
   export type RobotCreateOrConnectWithoutUserInput = {
@@ -40349,6 +42554,68 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type TuningAllocationCreateWithoutRobotInput = {
+    combatPower?: Decimal | DecimalJsLike | number | string
+    targetingSystems?: Decimal | DecimalJsLike | number | string
+    criticalSystems?: Decimal | DecimalJsLike | number | string
+    penetration?: Decimal | DecimalJsLike | number | string
+    weaponControl?: Decimal | DecimalJsLike | number | string
+    attackSpeed?: Decimal | DecimalJsLike | number | string
+    armorPlating?: Decimal | DecimalJsLike | number | string
+    shieldCapacity?: Decimal | DecimalJsLike | number | string
+    evasionThrusters?: Decimal | DecimalJsLike | number | string
+    damageDampeners?: Decimal | DecimalJsLike | number | string
+    counterProtocols?: Decimal | DecimalJsLike | number | string
+    hullIntegrity?: Decimal | DecimalJsLike | number | string
+    servoMotors?: Decimal | DecimalJsLike | number | string
+    gyroStabilizers?: Decimal | DecimalJsLike | number | string
+    hydraulicSystems?: Decimal | DecimalJsLike | number | string
+    powerCore?: Decimal | DecimalJsLike | number | string
+    combatAlgorithms?: Decimal | DecimalJsLike | number | string
+    threatAnalysis?: Decimal | DecimalJsLike | number | string
+    adaptiveAI?: Decimal | DecimalJsLike | number | string
+    logicCores?: Decimal | DecimalJsLike | number | string
+    syncProtocols?: Decimal | DecimalJsLike | number | string
+    supportSystems?: Decimal | DecimalJsLike | number | string
+    formationTactics?: Decimal | DecimalJsLike | number | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type TuningAllocationUncheckedCreateWithoutRobotInput = {
+    id?: number
+    combatPower?: Decimal | DecimalJsLike | number | string
+    targetingSystems?: Decimal | DecimalJsLike | number | string
+    criticalSystems?: Decimal | DecimalJsLike | number | string
+    penetration?: Decimal | DecimalJsLike | number | string
+    weaponControl?: Decimal | DecimalJsLike | number | string
+    attackSpeed?: Decimal | DecimalJsLike | number | string
+    armorPlating?: Decimal | DecimalJsLike | number | string
+    shieldCapacity?: Decimal | DecimalJsLike | number | string
+    evasionThrusters?: Decimal | DecimalJsLike | number | string
+    damageDampeners?: Decimal | DecimalJsLike | number | string
+    counterProtocols?: Decimal | DecimalJsLike | number | string
+    hullIntegrity?: Decimal | DecimalJsLike | number | string
+    servoMotors?: Decimal | DecimalJsLike | number | string
+    gyroStabilizers?: Decimal | DecimalJsLike | number | string
+    hydraulicSystems?: Decimal | DecimalJsLike | number | string
+    powerCore?: Decimal | DecimalJsLike | number | string
+    combatAlgorithms?: Decimal | DecimalJsLike | number | string
+    threatAnalysis?: Decimal | DecimalJsLike | number | string
+    adaptiveAI?: Decimal | DecimalJsLike | number | string
+    logicCores?: Decimal | DecimalJsLike | number | string
+    syncProtocols?: Decimal | DecimalJsLike | number | string
+    supportSystems?: Decimal | DecimalJsLike | number | string
+    formationTactics?: Decimal | DecimalJsLike | number | string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type TuningAllocationCreateOrConnectWithoutRobotInput = {
+    where: TuningAllocationWhereUniqueInput
+    create: XOR<TuningAllocationCreateWithoutRobotInput, TuningAllocationUncheckedCreateWithoutRobotInput>
+  }
+
   export type UserUpsertWithoutRobotsInput = {
     update: XOR<UserUpdateWithoutRobotsInput, UserUncheckedUpdateWithoutRobotsInput>
     create: XOR<UserCreateWithoutRobotsInput, UserUncheckedCreateWithoutRobotsInput>
@@ -40786,6 +43053,74 @@ export namespace Prisma {
     robotId?: IntFilter<"ScheduledKothMatchParticipant"> | number
   }
 
+  export type TuningAllocationUpsertWithoutRobotInput = {
+    update: XOR<TuningAllocationUpdateWithoutRobotInput, TuningAllocationUncheckedUpdateWithoutRobotInput>
+    create: XOR<TuningAllocationCreateWithoutRobotInput, TuningAllocationUncheckedCreateWithoutRobotInput>
+    where?: TuningAllocationWhereInput
+  }
+
+  export type TuningAllocationUpdateToOneWithWhereWithoutRobotInput = {
+    where?: TuningAllocationWhereInput
+    data: XOR<TuningAllocationUpdateWithoutRobotInput, TuningAllocationUncheckedUpdateWithoutRobotInput>
+  }
+
+  export type TuningAllocationUpdateWithoutRobotInput = {
+    combatPower?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    targetingSystems?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    criticalSystems?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    penetration?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    weaponControl?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    attackSpeed?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    armorPlating?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    shieldCapacity?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    evasionThrusters?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    damageDampeners?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    counterProtocols?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    hullIntegrity?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    servoMotors?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    gyroStabilizers?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    hydraulicSystems?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    powerCore?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    combatAlgorithms?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    threatAnalysis?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    adaptiveAI?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    logicCores?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    syncProtocols?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    supportSystems?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    formationTactics?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TuningAllocationUncheckedUpdateWithoutRobotInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    combatPower?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    targetingSystems?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    criticalSystems?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    penetration?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    weaponControl?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    attackSpeed?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    armorPlating?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    shieldCapacity?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    evasionThrusters?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    damageDampeners?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    counterProtocols?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    hullIntegrity?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    servoMotors?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    gyroStabilizers?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    hydraulicSystems?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    powerCore?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    combatAlgorithms?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    threatAnalysis?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    adaptiveAI?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    logicCores?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    syncProtocols?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    supportSystems?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    formationTactics?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type UserCreateWithoutWeaponInventoryInput = {
     username: string
     email?: string | null
@@ -41015,6 +43350,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamCreateNestedManyWithoutReserveRobotInput
     battleParticipations?: BattleParticipantCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantCreateNestedManyWithoutRobotInput
+    tuningAllocation?: TuningAllocationCreateNestedOneWithoutRobotInput
   }
 
   export type RobotUncheckedCreateWithoutMainWeaponInput = {
@@ -41101,6 +43437,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUncheckedCreateNestedManyWithoutReserveRobotInput
     battleParticipations?: BattleParticipantUncheckedCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedCreateNestedManyWithoutRobotInput
+    tuningAllocation?: TuningAllocationUncheckedCreateNestedOneWithoutRobotInput
   }
 
   export type RobotCreateOrConnectWithoutMainWeaponInput = {
@@ -41196,6 +43533,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamCreateNestedManyWithoutReserveRobotInput
     battleParticipations?: BattleParticipantCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantCreateNestedManyWithoutRobotInput
+    tuningAllocation?: TuningAllocationCreateNestedOneWithoutRobotInput
   }
 
   export type RobotUncheckedCreateWithoutOffhandWeaponInput = {
@@ -41282,6 +43620,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUncheckedCreateNestedManyWithoutReserveRobotInput
     battleParticipations?: BattleParticipantUncheckedCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedCreateNestedManyWithoutRobotInput
+    tuningAllocation?: TuningAllocationUncheckedCreateNestedOneWithoutRobotInput
   }
 
   export type RobotCreateOrConnectWithoutOffhandWeaponInput = {
@@ -41692,6 +44031,7 @@ export namespace Prisma {
     tagTeamsAsActive?: TagTeamCreateNestedManyWithoutActiveRobotInput
     tagTeamsAsReserve?: TagTeamCreateNestedManyWithoutReserveRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantCreateNestedManyWithoutRobotInput
+    tuningAllocation?: TuningAllocationCreateNestedOneWithoutRobotInput
   }
 
   export type RobotUncheckedCreateWithoutBattleParticipationsInput = {
@@ -41778,6 +44118,7 @@ export namespace Prisma {
     tagTeamsAsActive?: TagTeamUncheckedCreateNestedManyWithoutActiveRobotInput
     tagTeamsAsReserve?: TagTeamUncheckedCreateNestedManyWithoutReserveRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedCreateNestedManyWithoutRobotInput
+    tuningAllocation?: TuningAllocationUncheckedCreateNestedOneWithoutRobotInput
   }
 
   export type RobotCreateOrConnectWithoutBattleParticipationsInput = {
@@ -41967,6 +44308,7 @@ export namespace Prisma {
     tagTeamsAsActive?: TagTeamUpdateManyWithoutActiveRobotNestedInput
     tagTeamsAsReserve?: TagTeamUpdateManyWithoutReserveRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUpdateManyWithoutRobotNestedInput
+    tuningAllocation?: TuningAllocationUpdateOneWithoutRobotNestedInput
   }
 
   export type RobotUncheckedUpdateWithoutBattleParticipationsInput = {
@@ -42053,6 +44395,7 @@ export namespace Prisma {
     tagTeamsAsActive?: TagTeamUncheckedUpdateManyWithoutActiveRobotNestedInput
     tagTeamsAsReserve?: TagTeamUncheckedUpdateManyWithoutReserveRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedUpdateManyWithoutRobotNestedInput
+    tuningAllocation?: TuningAllocationUncheckedUpdateOneWithoutRobotNestedInput
   }
 
   export type RobotCreateWithoutBattlesAsRobot1Input = {
@@ -42138,6 +44481,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamCreateNestedManyWithoutReserveRobotInput
     battleParticipations?: BattleParticipantCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantCreateNestedManyWithoutRobotInput
+    tuningAllocation?: TuningAllocationCreateNestedOneWithoutRobotInput
   }
 
   export type RobotUncheckedCreateWithoutBattlesAsRobot1Input = {
@@ -42224,6 +44568,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUncheckedCreateNestedManyWithoutReserveRobotInput
     battleParticipations?: BattleParticipantUncheckedCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedCreateNestedManyWithoutRobotInput
+    tuningAllocation?: TuningAllocationUncheckedCreateNestedOneWithoutRobotInput
   }
 
   export type RobotCreateOrConnectWithoutBattlesAsRobot1Input = {
@@ -42314,6 +44659,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamCreateNestedManyWithoutReserveRobotInput
     battleParticipations?: BattleParticipantCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantCreateNestedManyWithoutRobotInput
+    tuningAllocation?: TuningAllocationCreateNestedOneWithoutRobotInput
   }
 
   export type RobotUncheckedCreateWithoutBattlesAsRobot2Input = {
@@ -42400,6 +44746,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUncheckedCreateNestedManyWithoutReserveRobotInput
     battleParticipations?: BattleParticipantUncheckedCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedCreateNestedManyWithoutRobotInput
+    tuningAllocation?: TuningAllocationUncheckedCreateNestedOneWithoutRobotInput
   }
 
   export type RobotCreateOrConnectWithoutBattlesAsRobot2Input = {
@@ -42710,6 +45057,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUpdateManyWithoutReserveRobotNestedInput
     battleParticipations?: BattleParticipantUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUpdateManyWithoutRobotNestedInput
+    tuningAllocation?: TuningAllocationUpdateOneWithoutRobotNestedInput
   }
 
   export type RobotUncheckedUpdateWithoutBattlesAsRobot1Input = {
@@ -42796,6 +45144,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUncheckedUpdateManyWithoutReserveRobotNestedInput
     battleParticipations?: BattleParticipantUncheckedUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedUpdateManyWithoutRobotNestedInput
+    tuningAllocation?: TuningAllocationUncheckedUpdateOneWithoutRobotNestedInput
   }
 
   export type RobotUpsertWithoutBattlesAsRobot2Input = {
@@ -42892,6 +45241,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUpdateManyWithoutReserveRobotNestedInput
     battleParticipations?: BattleParticipantUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUpdateManyWithoutRobotNestedInput
+    tuningAllocation?: TuningAllocationUpdateOneWithoutRobotNestedInput
   }
 
   export type RobotUncheckedUpdateWithoutBattlesAsRobot2Input = {
@@ -42978,6 +45328,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUncheckedUpdateManyWithoutReserveRobotNestedInput
     battleParticipations?: BattleParticipantUncheckedUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedUpdateManyWithoutRobotNestedInput
+    tuningAllocation?: TuningAllocationUncheckedUpdateOneWithoutRobotNestedInput
   }
 
   export type TournamentUpsertWithoutBattlesInput = {
@@ -43212,6 +45563,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamCreateNestedManyWithoutReserveRobotInput
     battleParticipations?: BattleParticipantCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantCreateNestedManyWithoutRobotInput
+    tuningAllocation?: TuningAllocationCreateNestedOneWithoutRobotInput
   }
 
   export type RobotUncheckedCreateWithoutScheduledMatchesAsRobot1Input = {
@@ -43298,6 +45650,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUncheckedCreateNestedManyWithoutReserveRobotInput
     battleParticipations?: BattleParticipantUncheckedCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedCreateNestedManyWithoutRobotInput
+    tuningAllocation?: TuningAllocationUncheckedCreateNestedOneWithoutRobotInput
   }
 
   export type RobotCreateOrConnectWithoutScheduledMatchesAsRobot1Input = {
@@ -43388,6 +45741,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamCreateNestedManyWithoutReserveRobotInput
     battleParticipations?: BattleParticipantCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantCreateNestedManyWithoutRobotInput
+    tuningAllocation?: TuningAllocationCreateNestedOneWithoutRobotInput
   }
 
   export type RobotUncheckedCreateWithoutScheduledMatchesAsRobot2Input = {
@@ -43474,6 +45828,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUncheckedCreateNestedManyWithoutReserveRobotInput
     battleParticipations?: BattleParticipantUncheckedCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedCreateNestedManyWithoutRobotInput
+    tuningAllocation?: TuningAllocationUncheckedCreateNestedOneWithoutRobotInput
   }
 
   export type RobotCreateOrConnectWithoutScheduledMatchesAsRobot2Input = {
@@ -43657,6 +46012,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUpdateManyWithoutReserveRobotNestedInput
     battleParticipations?: BattleParticipantUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUpdateManyWithoutRobotNestedInput
+    tuningAllocation?: TuningAllocationUpdateOneWithoutRobotNestedInput
   }
 
   export type RobotUncheckedUpdateWithoutScheduledMatchesAsRobot1Input = {
@@ -43743,6 +46099,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUncheckedUpdateManyWithoutReserveRobotNestedInput
     battleParticipations?: BattleParticipantUncheckedUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedUpdateManyWithoutRobotNestedInput
+    tuningAllocation?: TuningAllocationUncheckedUpdateOneWithoutRobotNestedInput
   }
 
   export type RobotUpsertWithoutScheduledMatchesAsRobot2Input = {
@@ -43839,6 +46196,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUpdateManyWithoutReserveRobotNestedInput
     battleParticipations?: BattleParticipantUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUpdateManyWithoutRobotNestedInput
+    tuningAllocation?: TuningAllocationUpdateOneWithoutRobotNestedInput
   }
 
   export type RobotUncheckedUpdateWithoutScheduledMatchesAsRobot2Input = {
@@ -43925,6 +46283,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUncheckedUpdateManyWithoutReserveRobotNestedInput
     battleParticipations?: BattleParticipantUncheckedUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedUpdateManyWithoutRobotNestedInput
+    tuningAllocation?: TuningAllocationUncheckedUpdateOneWithoutRobotNestedInput
   }
 
   export type BattleUpsertWithoutScheduledMatchInput = {
@@ -44098,6 +46457,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamCreateNestedManyWithoutReserveRobotInput
     battleParticipations?: BattleParticipantCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantCreateNestedManyWithoutRobotInput
+    tuningAllocation?: TuningAllocationCreateNestedOneWithoutRobotInput
   }
 
   export type RobotUncheckedCreateWithoutTournamentsWonInput = {
@@ -44184,6 +46544,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUncheckedCreateNestedManyWithoutReserveRobotInput
     battleParticipations?: BattleParticipantUncheckedCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedCreateNestedManyWithoutRobotInput
+    tuningAllocation?: TuningAllocationUncheckedCreateNestedOneWithoutRobotInput
   }
 
   export type RobotCreateOrConnectWithoutTournamentsWonInput = {
@@ -44409,6 +46770,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUpdateManyWithoutReserveRobotNestedInput
     battleParticipations?: BattleParticipantUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUpdateManyWithoutRobotNestedInput
+    tuningAllocation?: TuningAllocationUpdateOneWithoutRobotNestedInput
   }
 
   export type RobotUncheckedUpdateWithoutTournamentsWonInput = {
@@ -44495,6 +46857,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUncheckedUpdateManyWithoutReserveRobotNestedInput
     battleParticipations?: BattleParticipantUncheckedUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedUpdateManyWithoutRobotNestedInput
+    tuningAllocation?: TuningAllocationUncheckedUpdateOneWithoutRobotNestedInput
   }
 
   export type ScheduledTournamentMatchUpsertWithWhereUniqueWithoutTournamentInput = {
@@ -44646,6 +47009,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamCreateNestedManyWithoutReserveRobotInput
     battleParticipations?: BattleParticipantCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantCreateNestedManyWithoutRobotInput
+    tuningAllocation?: TuningAllocationCreateNestedOneWithoutRobotInput
   }
 
   export type RobotUncheckedCreateWithoutTournamentMatchesAsRobot1Input = {
@@ -44732,6 +47096,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUncheckedCreateNestedManyWithoutReserveRobotInput
     battleParticipations?: BattleParticipantUncheckedCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedCreateNestedManyWithoutRobotInput
+    tuningAllocation?: TuningAllocationUncheckedCreateNestedOneWithoutRobotInput
   }
 
   export type RobotCreateOrConnectWithoutTournamentMatchesAsRobot1Input = {
@@ -44822,6 +47187,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamCreateNestedManyWithoutReserveRobotInput
     battleParticipations?: BattleParticipantCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantCreateNestedManyWithoutRobotInput
+    tuningAllocation?: TuningAllocationCreateNestedOneWithoutRobotInput
   }
 
   export type RobotUncheckedCreateWithoutTournamentMatchesAsRobot2Input = {
@@ -44908,6 +47274,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUncheckedCreateNestedManyWithoutReserveRobotInput
     battleParticipations?: BattleParticipantUncheckedCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedCreateNestedManyWithoutRobotInput
+    tuningAllocation?: TuningAllocationUncheckedCreateNestedOneWithoutRobotInput
   }
 
   export type RobotCreateOrConnectWithoutTournamentMatchesAsRobot2Input = {
@@ -44998,6 +47365,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamCreateNestedManyWithoutReserveRobotInput
     battleParticipations?: BattleParticipantCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantCreateNestedManyWithoutRobotInput
+    tuningAllocation?: TuningAllocationCreateNestedOneWithoutRobotInput
   }
 
   export type RobotUncheckedCreateWithoutTournamentMatchesWonInput = {
@@ -45084,6 +47452,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUncheckedCreateNestedManyWithoutReserveRobotInput
     battleParticipations?: BattleParticipantUncheckedCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedCreateNestedManyWithoutRobotInput
+    tuningAllocation?: TuningAllocationUncheckedCreateNestedOneWithoutRobotInput
   }
 
   export type RobotCreateOrConnectWithoutTournamentMatchesWonInput = {
@@ -45307,6 +47676,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUpdateManyWithoutReserveRobotNestedInput
     battleParticipations?: BattleParticipantUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUpdateManyWithoutRobotNestedInput
+    tuningAllocation?: TuningAllocationUpdateOneWithoutRobotNestedInput
   }
 
   export type RobotUncheckedUpdateWithoutTournamentMatchesAsRobot1Input = {
@@ -45393,6 +47763,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUncheckedUpdateManyWithoutReserveRobotNestedInput
     battleParticipations?: BattleParticipantUncheckedUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedUpdateManyWithoutRobotNestedInput
+    tuningAllocation?: TuningAllocationUncheckedUpdateOneWithoutRobotNestedInput
   }
 
   export type RobotUpsertWithoutTournamentMatchesAsRobot2Input = {
@@ -45489,6 +47860,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUpdateManyWithoutReserveRobotNestedInput
     battleParticipations?: BattleParticipantUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUpdateManyWithoutRobotNestedInput
+    tuningAllocation?: TuningAllocationUpdateOneWithoutRobotNestedInput
   }
 
   export type RobotUncheckedUpdateWithoutTournamentMatchesAsRobot2Input = {
@@ -45575,6 +47947,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUncheckedUpdateManyWithoutReserveRobotNestedInput
     battleParticipations?: BattleParticipantUncheckedUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedUpdateManyWithoutRobotNestedInput
+    tuningAllocation?: TuningAllocationUncheckedUpdateOneWithoutRobotNestedInput
   }
 
   export type RobotUpsertWithoutTournamentMatchesWonInput = {
@@ -45671,6 +48044,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUpdateManyWithoutReserveRobotNestedInput
     battleParticipations?: BattleParticipantUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUpdateManyWithoutRobotNestedInput
+    tuningAllocation?: TuningAllocationUpdateOneWithoutRobotNestedInput
   }
 
   export type RobotUncheckedUpdateWithoutTournamentMatchesWonInput = {
@@ -45757,6 +48131,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUncheckedUpdateManyWithoutReserveRobotNestedInput
     battleParticipations?: BattleParticipantUncheckedUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedUpdateManyWithoutRobotNestedInput
+    tuningAllocation?: TuningAllocationUncheckedUpdateOneWithoutRobotNestedInput
   }
 
   export type BattleUpsertWithoutTournamentMatchesInput = {
@@ -45994,6 +48369,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamCreateNestedManyWithoutReserveRobotInput
     battleParticipations?: BattleParticipantCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantCreateNestedManyWithoutRobotInput
+    tuningAllocation?: TuningAllocationCreateNestedOneWithoutRobotInput
   }
 
   export type RobotUncheckedCreateWithoutTagTeamsAsActiveInput = {
@@ -46080,6 +48456,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUncheckedCreateNestedManyWithoutReserveRobotInput
     battleParticipations?: BattleParticipantUncheckedCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedCreateNestedManyWithoutRobotInput
+    tuningAllocation?: TuningAllocationUncheckedCreateNestedOneWithoutRobotInput
   }
 
   export type RobotCreateOrConnectWithoutTagTeamsAsActiveInput = {
@@ -46170,6 +48547,7 @@ export namespace Prisma {
     tagTeamsAsActive?: TagTeamCreateNestedManyWithoutActiveRobotInput
     battleParticipations?: BattleParticipantCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantCreateNestedManyWithoutRobotInput
+    tuningAllocation?: TuningAllocationCreateNestedOneWithoutRobotInput
   }
 
   export type RobotUncheckedCreateWithoutTagTeamsAsReserveInput = {
@@ -46256,6 +48634,7 @@ export namespace Prisma {
     tagTeamsAsActive?: TagTeamUncheckedCreateNestedManyWithoutActiveRobotInput
     battleParticipations?: BattleParticipantUncheckedCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedCreateNestedManyWithoutRobotInput
+    tuningAllocation?: TuningAllocationUncheckedCreateNestedOneWithoutRobotInput
   }
 
   export type RobotCreateOrConnectWithoutTagTeamsAsReserveInput = {
@@ -46485,6 +48864,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUpdateManyWithoutReserveRobotNestedInput
     battleParticipations?: BattleParticipantUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUpdateManyWithoutRobotNestedInput
+    tuningAllocation?: TuningAllocationUpdateOneWithoutRobotNestedInput
   }
 
   export type RobotUncheckedUpdateWithoutTagTeamsAsActiveInput = {
@@ -46571,6 +48951,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUncheckedUpdateManyWithoutReserveRobotNestedInput
     battleParticipations?: BattleParticipantUncheckedUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedUpdateManyWithoutRobotNestedInput
+    tuningAllocation?: TuningAllocationUncheckedUpdateOneWithoutRobotNestedInput
   }
 
   export type RobotUpsertWithoutTagTeamsAsReserveInput = {
@@ -46667,6 +49048,7 @@ export namespace Prisma {
     tagTeamsAsActive?: TagTeamUpdateManyWithoutActiveRobotNestedInput
     battleParticipations?: BattleParticipantUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUpdateManyWithoutRobotNestedInput
+    tuningAllocation?: TuningAllocationUpdateOneWithoutRobotNestedInput
   }
 
   export type RobotUncheckedUpdateWithoutTagTeamsAsReserveInput = {
@@ -46753,6 +49135,7 @@ export namespace Prisma {
     tagTeamsAsActive?: TagTeamUncheckedUpdateManyWithoutActiveRobotNestedInput
     battleParticipations?: BattleParticipantUncheckedUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedUpdateManyWithoutRobotNestedInput
+    tuningAllocation?: TuningAllocationUncheckedUpdateOneWithoutRobotNestedInput
   }
 
   export type ScheduledTagTeamMatchUpsertWithWhereUniqueWithoutTeam1Input = {
@@ -47437,6 +49820,7 @@ export namespace Prisma {
     tagTeamsAsActive?: TagTeamCreateNestedManyWithoutActiveRobotInput
     tagTeamsAsReserve?: TagTeamCreateNestedManyWithoutReserveRobotInput
     battleParticipations?: BattleParticipantCreateNestedManyWithoutRobotInput
+    tuningAllocation?: TuningAllocationCreateNestedOneWithoutRobotInput
   }
 
   export type RobotUncheckedCreateWithoutKothMatchParticipationsInput = {
@@ -47523,6 +49907,7 @@ export namespace Prisma {
     tagTeamsAsActive?: TagTeamUncheckedCreateNestedManyWithoutActiveRobotInput
     tagTeamsAsReserve?: TagTeamUncheckedCreateNestedManyWithoutReserveRobotInput
     battleParticipations?: BattleParticipantUncheckedCreateNestedManyWithoutRobotInput
+    tuningAllocation?: TuningAllocationUncheckedCreateNestedOneWithoutRobotInput
   }
 
   export type RobotCreateOrConnectWithoutKothMatchParticipationsInput = {
@@ -47658,6 +50043,7 @@ export namespace Prisma {
     tagTeamsAsActive?: TagTeamUpdateManyWithoutActiveRobotNestedInput
     tagTeamsAsReserve?: TagTeamUpdateManyWithoutReserveRobotNestedInput
     battleParticipations?: BattleParticipantUpdateManyWithoutRobotNestedInput
+    tuningAllocation?: TuningAllocationUpdateOneWithoutRobotNestedInput
   }
 
   export type RobotUncheckedUpdateWithoutKothMatchParticipationsInput = {
@@ -47744,6 +50130,369 @@ export namespace Prisma {
     tagTeamsAsActive?: TagTeamUncheckedUpdateManyWithoutActiveRobotNestedInput
     tagTeamsAsReserve?: TagTeamUncheckedUpdateManyWithoutReserveRobotNestedInput
     battleParticipations?: BattleParticipantUncheckedUpdateManyWithoutRobotNestedInput
+    tuningAllocation?: TuningAllocationUncheckedUpdateOneWithoutRobotNestedInput
+  }
+
+  export type RobotCreateWithoutTuningAllocationInput = {
+    name: string
+    frameId?: number
+    paintJob?: string | null
+    combatPower?: Decimal | DecimalJsLike | number | string
+    targetingSystems?: Decimal | DecimalJsLike | number | string
+    criticalSystems?: Decimal | DecimalJsLike | number | string
+    penetration?: Decimal | DecimalJsLike | number | string
+    weaponControl?: Decimal | DecimalJsLike | number | string
+    attackSpeed?: Decimal | DecimalJsLike | number | string
+    armorPlating?: Decimal | DecimalJsLike | number | string
+    shieldCapacity?: Decimal | DecimalJsLike | number | string
+    evasionThrusters?: Decimal | DecimalJsLike | number | string
+    damageDampeners?: Decimal | DecimalJsLike | number | string
+    counterProtocols?: Decimal | DecimalJsLike | number | string
+    hullIntegrity?: Decimal | DecimalJsLike | number | string
+    servoMotors?: Decimal | DecimalJsLike | number | string
+    gyroStabilizers?: Decimal | DecimalJsLike | number | string
+    hydraulicSystems?: Decimal | DecimalJsLike | number | string
+    powerCore?: Decimal | DecimalJsLike | number | string
+    combatAlgorithms?: Decimal | DecimalJsLike | number | string
+    threatAnalysis?: Decimal | DecimalJsLike | number | string
+    adaptiveAI?: Decimal | DecimalJsLike | number | string
+    logicCores?: Decimal | DecimalJsLike | number | string
+    syncProtocols?: Decimal | DecimalJsLike | number | string
+    supportSystems?: Decimal | DecimalJsLike | number | string
+    formationTactics?: Decimal | DecimalJsLike | number | string
+    currentHP: number
+    maxHP: number
+    currentShield: number
+    maxShield: number
+    damageTaken?: number
+    elo?: number
+    totalBattles?: number
+    wins?: number
+    draws?: number
+    losses?: number
+    damageDealtLifetime?: number
+    damageTakenLifetime?: number
+    kills?: number
+    currentLeague?: string
+    leagueId?: string
+    leaguePoints?: number
+    cyclesInCurrentLeague?: number
+    fame?: number
+    titles?: string | null
+    totalTagTeamBattles?: number
+    totalTagTeamWins?: number
+    totalTagTeamLosses?: number
+    totalTagTeamDraws?: number
+    timesTaggedIn?: number
+    timesTaggedOut?: number
+    kothWins?: number
+    kothMatches?: number
+    kothTotalZoneScore?: number
+    kothTotalZoneTime?: number
+    kothKills?: number
+    kothBestPlacement?: number | null
+    kothCurrentWinStreak?: number
+    kothBestWinStreak?: number
+    repairCost?: number
+    battleReadiness?: number
+    totalRepairsPaid?: number
+    yieldThreshold?: number
+    loadoutType?: string
+    stance?: string
+    imageUrl?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    user: UserCreateNestedOneWithoutRobotsInput
+    mainWeapon?: WeaponInventoryCreateNestedOneWithoutRobotsMainInput
+    offhandWeapon?: WeaponInventoryCreateNestedOneWithoutRobotsOffhandInput
+    battlesAsRobot1?: BattleCreateNestedManyWithoutRobot1Input
+    battlesAsRobot2?: BattleCreateNestedManyWithoutRobot2Input
+    scheduledMatchesAsRobot1?: ScheduledLeagueMatchCreateNestedManyWithoutRobot1Input
+    scheduledMatchesAsRobot2?: ScheduledLeagueMatchCreateNestedManyWithoutRobot2Input
+    tournamentsWon?: TournamentCreateNestedManyWithoutWinnerInput
+    tournamentMatchesAsRobot1?: ScheduledTournamentMatchCreateNestedManyWithoutRobot1Input
+    tournamentMatchesAsRobot2?: ScheduledTournamentMatchCreateNestedManyWithoutRobot2Input
+    tournamentMatchesWon?: ScheduledTournamentMatchCreateNestedManyWithoutWinnerInput
+    tagTeamsAsActive?: TagTeamCreateNestedManyWithoutActiveRobotInput
+    tagTeamsAsReserve?: TagTeamCreateNestedManyWithoutReserveRobotInput
+    battleParticipations?: BattleParticipantCreateNestedManyWithoutRobotInput
+    kothMatchParticipations?: ScheduledKothMatchParticipantCreateNestedManyWithoutRobotInput
+  }
+
+  export type RobotUncheckedCreateWithoutTuningAllocationInput = {
+    id?: number
+    userId: number
+    name: string
+    frameId?: number
+    paintJob?: string | null
+    combatPower?: Decimal | DecimalJsLike | number | string
+    targetingSystems?: Decimal | DecimalJsLike | number | string
+    criticalSystems?: Decimal | DecimalJsLike | number | string
+    penetration?: Decimal | DecimalJsLike | number | string
+    weaponControl?: Decimal | DecimalJsLike | number | string
+    attackSpeed?: Decimal | DecimalJsLike | number | string
+    armorPlating?: Decimal | DecimalJsLike | number | string
+    shieldCapacity?: Decimal | DecimalJsLike | number | string
+    evasionThrusters?: Decimal | DecimalJsLike | number | string
+    damageDampeners?: Decimal | DecimalJsLike | number | string
+    counterProtocols?: Decimal | DecimalJsLike | number | string
+    hullIntegrity?: Decimal | DecimalJsLike | number | string
+    servoMotors?: Decimal | DecimalJsLike | number | string
+    gyroStabilizers?: Decimal | DecimalJsLike | number | string
+    hydraulicSystems?: Decimal | DecimalJsLike | number | string
+    powerCore?: Decimal | DecimalJsLike | number | string
+    combatAlgorithms?: Decimal | DecimalJsLike | number | string
+    threatAnalysis?: Decimal | DecimalJsLike | number | string
+    adaptiveAI?: Decimal | DecimalJsLike | number | string
+    logicCores?: Decimal | DecimalJsLike | number | string
+    syncProtocols?: Decimal | DecimalJsLike | number | string
+    supportSystems?: Decimal | DecimalJsLike | number | string
+    formationTactics?: Decimal | DecimalJsLike | number | string
+    currentHP: number
+    maxHP: number
+    currentShield: number
+    maxShield: number
+    damageTaken?: number
+    elo?: number
+    totalBattles?: number
+    wins?: number
+    draws?: number
+    losses?: number
+    damageDealtLifetime?: number
+    damageTakenLifetime?: number
+    kills?: number
+    currentLeague?: string
+    leagueId?: string
+    leaguePoints?: number
+    cyclesInCurrentLeague?: number
+    fame?: number
+    titles?: string | null
+    totalTagTeamBattles?: number
+    totalTagTeamWins?: number
+    totalTagTeamLosses?: number
+    totalTagTeamDraws?: number
+    timesTaggedIn?: number
+    timesTaggedOut?: number
+    kothWins?: number
+    kothMatches?: number
+    kothTotalZoneScore?: number
+    kothTotalZoneTime?: number
+    kothKills?: number
+    kothBestPlacement?: number | null
+    kothCurrentWinStreak?: number
+    kothBestWinStreak?: number
+    repairCost?: number
+    battleReadiness?: number
+    totalRepairsPaid?: number
+    yieldThreshold?: number
+    loadoutType?: string
+    stance?: string
+    mainWeaponId?: number | null
+    offhandWeaponId?: number | null
+    imageUrl?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    battlesAsRobot1?: BattleUncheckedCreateNestedManyWithoutRobot1Input
+    battlesAsRobot2?: BattleUncheckedCreateNestedManyWithoutRobot2Input
+    scheduledMatchesAsRobot1?: ScheduledLeagueMatchUncheckedCreateNestedManyWithoutRobot1Input
+    scheduledMatchesAsRobot2?: ScheduledLeagueMatchUncheckedCreateNestedManyWithoutRobot2Input
+    tournamentsWon?: TournamentUncheckedCreateNestedManyWithoutWinnerInput
+    tournamentMatchesAsRobot1?: ScheduledTournamentMatchUncheckedCreateNestedManyWithoutRobot1Input
+    tournamentMatchesAsRobot2?: ScheduledTournamentMatchUncheckedCreateNestedManyWithoutRobot2Input
+    tournamentMatchesWon?: ScheduledTournamentMatchUncheckedCreateNestedManyWithoutWinnerInput
+    tagTeamsAsActive?: TagTeamUncheckedCreateNestedManyWithoutActiveRobotInput
+    tagTeamsAsReserve?: TagTeamUncheckedCreateNestedManyWithoutReserveRobotInput
+    battleParticipations?: BattleParticipantUncheckedCreateNestedManyWithoutRobotInput
+    kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedCreateNestedManyWithoutRobotInput
+  }
+
+  export type RobotCreateOrConnectWithoutTuningAllocationInput = {
+    where: RobotWhereUniqueInput
+    create: XOR<RobotCreateWithoutTuningAllocationInput, RobotUncheckedCreateWithoutTuningAllocationInput>
+  }
+
+  export type RobotUpsertWithoutTuningAllocationInput = {
+    update: XOR<RobotUpdateWithoutTuningAllocationInput, RobotUncheckedUpdateWithoutTuningAllocationInput>
+    create: XOR<RobotCreateWithoutTuningAllocationInput, RobotUncheckedCreateWithoutTuningAllocationInput>
+    where?: RobotWhereInput
+  }
+
+  export type RobotUpdateToOneWithWhereWithoutTuningAllocationInput = {
+    where?: RobotWhereInput
+    data: XOR<RobotUpdateWithoutTuningAllocationInput, RobotUncheckedUpdateWithoutTuningAllocationInput>
+  }
+
+  export type RobotUpdateWithoutTuningAllocationInput = {
+    name?: StringFieldUpdateOperationsInput | string
+    frameId?: IntFieldUpdateOperationsInput | number
+    paintJob?: NullableStringFieldUpdateOperationsInput | string | null
+    combatPower?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    targetingSystems?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    criticalSystems?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    penetration?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    weaponControl?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    attackSpeed?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    armorPlating?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    shieldCapacity?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    evasionThrusters?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    damageDampeners?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    counterProtocols?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    hullIntegrity?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    servoMotors?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    gyroStabilizers?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    hydraulicSystems?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    powerCore?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    combatAlgorithms?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    threatAnalysis?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    adaptiveAI?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    logicCores?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    syncProtocols?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    supportSystems?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    formationTactics?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currentHP?: IntFieldUpdateOperationsInput | number
+    maxHP?: IntFieldUpdateOperationsInput | number
+    currentShield?: IntFieldUpdateOperationsInput | number
+    maxShield?: IntFieldUpdateOperationsInput | number
+    damageTaken?: IntFieldUpdateOperationsInput | number
+    elo?: IntFieldUpdateOperationsInput | number
+    totalBattles?: IntFieldUpdateOperationsInput | number
+    wins?: IntFieldUpdateOperationsInput | number
+    draws?: IntFieldUpdateOperationsInput | number
+    losses?: IntFieldUpdateOperationsInput | number
+    damageDealtLifetime?: IntFieldUpdateOperationsInput | number
+    damageTakenLifetime?: IntFieldUpdateOperationsInput | number
+    kills?: IntFieldUpdateOperationsInput | number
+    currentLeague?: StringFieldUpdateOperationsInput | string
+    leagueId?: StringFieldUpdateOperationsInput | string
+    leaguePoints?: IntFieldUpdateOperationsInput | number
+    cyclesInCurrentLeague?: IntFieldUpdateOperationsInput | number
+    fame?: IntFieldUpdateOperationsInput | number
+    titles?: NullableStringFieldUpdateOperationsInput | string | null
+    totalTagTeamBattles?: IntFieldUpdateOperationsInput | number
+    totalTagTeamWins?: IntFieldUpdateOperationsInput | number
+    totalTagTeamLosses?: IntFieldUpdateOperationsInput | number
+    totalTagTeamDraws?: IntFieldUpdateOperationsInput | number
+    timesTaggedIn?: IntFieldUpdateOperationsInput | number
+    timesTaggedOut?: IntFieldUpdateOperationsInput | number
+    kothWins?: IntFieldUpdateOperationsInput | number
+    kothMatches?: IntFieldUpdateOperationsInput | number
+    kothTotalZoneScore?: FloatFieldUpdateOperationsInput | number
+    kothTotalZoneTime?: FloatFieldUpdateOperationsInput | number
+    kothKills?: IntFieldUpdateOperationsInput | number
+    kothBestPlacement?: NullableIntFieldUpdateOperationsInput | number | null
+    kothCurrentWinStreak?: IntFieldUpdateOperationsInput | number
+    kothBestWinStreak?: IntFieldUpdateOperationsInput | number
+    repairCost?: IntFieldUpdateOperationsInput | number
+    battleReadiness?: IntFieldUpdateOperationsInput | number
+    totalRepairsPaid?: IntFieldUpdateOperationsInput | number
+    yieldThreshold?: IntFieldUpdateOperationsInput | number
+    loadoutType?: StringFieldUpdateOperationsInput | string
+    stance?: StringFieldUpdateOperationsInput | string
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutRobotsNestedInput
+    mainWeapon?: WeaponInventoryUpdateOneWithoutRobotsMainNestedInput
+    offhandWeapon?: WeaponInventoryUpdateOneWithoutRobotsOffhandNestedInput
+    battlesAsRobot1?: BattleUpdateManyWithoutRobot1NestedInput
+    battlesAsRobot2?: BattleUpdateManyWithoutRobot2NestedInput
+    scheduledMatchesAsRobot1?: ScheduledLeagueMatchUpdateManyWithoutRobot1NestedInput
+    scheduledMatchesAsRobot2?: ScheduledLeagueMatchUpdateManyWithoutRobot2NestedInput
+    tournamentsWon?: TournamentUpdateManyWithoutWinnerNestedInput
+    tournamentMatchesAsRobot1?: ScheduledTournamentMatchUpdateManyWithoutRobot1NestedInput
+    tournamentMatchesAsRobot2?: ScheduledTournamentMatchUpdateManyWithoutRobot2NestedInput
+    tournamentMatchesWon?: ScheduledTournamentMatchUpdateManyWithoutWinnerNestedInput
+    tagTeamsAsActive?: TagTeamUpdateManyWithoutActiveRobotNestedInput
+    tagTeamsAsReserve?: TagTeamUpdateManyWithoutReserveRobotNestedInput
+    battleParticipations?: BattleParticipantUpdateManyWithoutRobotNestedInput
+    kothMatchParticipations?: ScheduledKothMatchParticipantUpdateManyWithoutRobotNestedInput
+  }
+
+  export type RobotUncheckedUpdateWithoutTuningAllocationInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    userId?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    frameId?: IntFieldUpdateOperationsInput | number
+    paintJob?: NullableStringFieldUpdateOperationsInput | string | null
+    combatPower?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    targetingSystems?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    criticalSystems?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    penetration?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    weaponControl?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    attackSpeed?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    armorPlating?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    shieldCapacity?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    evasionThrusters?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    damageDampeners?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    counterProtocols?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    hullIntegrity?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    servoMotors?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    gyroStabilizers?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    hydraulicSystems?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    powerCore?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    combatAlgorithms?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    threatAnalysis?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    adaptiveAI?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    logicCores?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    syncProtocols?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    supportSystems?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    formationTactics?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currentHP?: IntFieldUpdateOperationsInput | number
+    maxHP?: IntFieldUpdateOperationsInput | number
+    currentShield?: IntFieldUpdateOperationsInput | number
+    maxShield?: IntFieldUpdateOperationsInput | number
+    damageTaken?: IntFieldUpdateOperationsInput | number
+    elo?: IntFieldUpdateOperationsInput | number
+    totalBattles?: IntFieldUpdateOperationsInput | number
+    wins?: IntFieldUpdateOperationsInput | number
+    draws?: IntFieldUpdateOperationsInput | number
+    losses?: IntFieldUpdateOperationsInput | number
+    damageDealtLifetime?: IntFieldUpdateOperationsInput | number
+    damageTakenLifetime?: IntFieldUpdateOperationsInput | number
+    kills?: IntFieldUpdateOperationsInput | number
+    currentLeague?: StringFieldUpdateOperationsInput | string
+    leagueId?: StringFieldUpdateOperationsInput | string
+    leaguePoints?: IntFieldUpdateOperationsInput | number
+    cyclesInCurrentLeague?: IntFieldUpdateOperationsInput | number
+    fame?: IntFieldUpdateOperationsInput | number
+    titles?: NullableStringFieldUpdateOperationsInput | string | null
+    totalTagTeamBattles?: IntFieldUpdateOperationsInput | number
+    totalTagTeamWins?: IntFieldUpdateOperationsInput | number
+    totalTagTeamLosses?: IntFieldUpdateOperationsInput | number
+    totalTagTeamDraws?: IntFieldUpdateOperationsInput | number
+    timesTaggedIn?: IntFieldUpdateOperationsInput | number
+    timesTaggedOut?: IntFieldUpdateOperationsInput | number
+    kothWins?: IntFieldUpdateOperationsInput | number
+    kothMatches?: IntFieldUpdateOperationsInput | number
+    kothTotalZoneScore?: FloatFieldUpdateOperationsInput | number
+    kothTotalZoneTime?: FloatFieldUpdateOperationsInput | number
+    kothKills?: IntFieldUpdateOperationsInput | number
+    kothBestPlacement?: NullableIntFieldUpdateOperationsInput | number | null
+    kothCurrentWinStreak?: IntFieldUpdateOperationsInput | number
+    kothBestWinStreak?: IntFieldUpdateOperationsInput | number
+    repairCost?: IntFieldUpdateOperationsInput | number
+    battleReadiness?: IntFieldUpdateOperationsInput | number
+    totalRepairsPaid?: IntFieldUpdateOperationsInput | number
+    yieldThreshold?: IntFieldUpdateOperationsInput | number
+    loadoutType?: StringFieldUpdateOperationsInput | string
+    stance?: StringFieldUpdateOperationsInput | string
+    mainWeaponId?: NullableIntFieldUpdateOperationsInput | number | null
+    offhandWeaponId?: NullableIntFieldUpdateOperationsInput | number | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    battlesAsRobot1?: BattleUncheckedUpdateManyWithoutRobot1NestedInput
+    battlesAsRobot2?: BattleUncheckedUpdateManyWithoutRobot2NestedInput
+    scheduledMatchesAsRobot1?: ScheduledLeagueMatchUncheckedUpdateManyWithoutRobot1NestedInput
+    scheduledMatchesAsRobot2?: ScheduledLeagueMatchUncheckedUpdateManyWithoutRobot2NestedInput
+    tournamentsWon?: TournamentUncheckedUpdateManyWithoutWinnerNestedInput
+    tournamentMatchesAsRobot1?: ScheduledTournamentMatchUncheckedUpdateManyWithoutRobot1NestedInput
+    tournamentMatchesAsRobot2?: ScheduledTournamentMatchUncheckedUpdateManyWithoutRobot2NestedInput
+    tournamentMatchesWon?: ScheduledTournamentMatchUncheckedUpdateManyWithoutWinnerNestedInput
+    tagTeamsAsActive?: TagTeamUncheckedUpdateManyWithoutActiveRobotNestedInput
+    tagTeamsAsReserve?: TagTeamUncheckedUpdateManyWithoutReserveRobotNestedInput
+    battleParticipations?: BattleParticipantUncheckedUpdateManyWithoutRobotNestedInput
+    kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedUpdateManyWithoutRobotNestedInput
   }
 
   export type RobotCreateManyUserInput = {
@@ -47935,6 +50684,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUpdateManyWithoutReserveRobotNestedInput
     battleParticipations?: BattleParticipantUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUpdateManyWithoutRobotNestedInput
+    tuningAllocation?: TuningAllocationUpdateOneWithoutRobotNestedInput
   }
 
   export type RobotUncheckedUpdateWithoutUserInput = {
@@ -48021,6 +50771,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUncheckedUpdateManyWithoutReserveRobotNestedInput
     battleParticipations?: BattleParticipantUncheckedUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedUpdateManyWithoutRobotNestedInput
+    tuningAllocation?: TuningAllocationUncheckedUpdateOneWithoutRobotNestedInput
   }
 
   export type RobotUncheckedUpdateManyWithoutUserInput = {
@@ -49237,6 +51988,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUpdateManyWithoutReserveRobotNestedInput
     battleParticipations?: BattleParticipantUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUpdateManyWithoutRobotNestedInput
+    tuningAllocation?: TuningAllocationUpdateOneWithoutRobotNestedInput
   }
 
   export type RobotUncheckedUpdateWithoutMainWeaponInput = {
@@ -49323,6 +52075,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUncheckedUpdateManyWithoutReserveRobotNestedInput
     battleParticipations?: BattleParticipantUncheckedUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedUpdateManyWithoutRobotNestedInput
+    tuningAllocation?: TuningAllocationUncheckedUpdateOneWithoutRobotNestedInput
   }
 
   export type RobotUncheckedUpdateManyWithoutMainWeaponInput = {
@@ -49482,6 +52235,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUpdateManyWithoutReserveRobotNestedInput
     battleParticipations?: BattleParticipantUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUpdateManyWithoutRobotNestedInput
+    tuningAllocation?: TuningAllocationUpdateOneWithoutRobotNestedInput
   }
 
   export type RobotUncheckedUpdateWithoutOffhandWeaponInput = {
@@ -49568,6 +52322,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUncheckedUpdateManyWithoutReserveRobotNestedInput
     battleParticipations?: BattleParticipantUncheckedUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedUpdateManyWithoutRobotNestedInput
+    tuningAllocation?: TuningAllocationUncheckedUpdateOneWithoutRobotNestedInput
   }
 
   export type RobotUncheckedUpdateManyWithoutOffhandWeaponInput = {

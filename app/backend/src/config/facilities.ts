@@ -1,4 +1,4 @@
-// Facility configuration for Phase 1 prototype - All 14 facilities
+// Facility configuration for Phase 1 prototype - All 16 facilities
 export interface FacilityConfig {
   type: string;
   name: string;
@@ -332,6 +332,27 @@ export const FACILITY_TYPES: FacilityConfig[] = [
     ],
     implemented: true,
     prestigeRequirements: [0, 0, 0, 1000, 2500, 5000, 10000, 15000, 25000, 50000], // L4: 1000, L5: 2500, L6: 5000, L7: 10000, L8: 15000, L9: 25000, L10: 50000
+  },
+  {
+    type: 'tuning_bay',
+    name: 'Tuning Bay',
+    description: 'Fine-tune your robots for specific matchups with bonus attribute points. Higher levels grant a larger tuning pool.',
+    maxLevel: 10,
+    costs: [200000, 400000, 600000, 800000, 1000000, 1200000, 1400000, 1600000, 1800000, 2000000],
+    benefits: [
+      'Tuning pool: 20 bonus points per robot (₡300/day operating cost)',
+      'Tuning pool: 30 bonus points per robot (₡600/day operating cost)',
+      'Tuning pool: 40 bonus points per robot (₡900/day operating cost)',
+      'Tuning pool: 50 bonus points per robot (₡1,200/day operating cost)',
+      'Tuning pool: 60 bonus points per robot (₡1,500/day operating cost)',
+      'Tuning pool: 70 bonus points per robot (₡1,800/day operating cost)',
+      'Tuning pool: 80 bonus points per robot (₡2,100/day operating cost)',
+      'Tuning pool: 90 bonus points per robot (₡2,400/day operating cost)',
+      'Tuning pool: 100 bonus points per robot (₡2,700/day operating cost)',
+      'Tuning pool: 110 bonus points per robot — maximum (₡3,000/day operating cost)',
+    ],
+    implemented: true,
+    prestigeRequirements: [0, 0, 1000, 0, 3000, 0, 5000, 0, 10000, 15000], // L3: 1000, L5: 3000, L7: 5000, L9: 10000, L10: 15000
   },
 ];
 

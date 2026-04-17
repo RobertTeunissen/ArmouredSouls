@@ -24,6 +24,7 @@ const EMOJI_FALLBACKS: Record<string, string> = {
   medical_bay: '⚕️',
   coaching_staff: '📋',
   booking_office: '🏆',
+  tuning_bay: '⚙️',
 };
 
 const SIZE_CLASSES = {

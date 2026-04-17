@@ -13,6 +13,7 @@ import {
   getLoadoutDescription,
   LOADOUT_BONUSES,
   STANCE_MODIFIERS,
+  type TuningAttributeMap,
 } from '../robotStats';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -382,6 +383,106 @@ describe('getLoadoutDescription', () => {
 
   it('should return empty string for unknown loadout', () => {
     expect(getLoadoutDescription('unknown_type')).toBe('');
+  });
+});
+
+// ─── Task 4.3 — Tuning Bonuses ──────────────────────────────────────────────
+
+describe('TuningAttributeMap type', () => {
+  it('should accept a partial record of attribute bonuses', () => {
+    const tuning: TuningAttributeMap = { combatPower: 3, armorPlating: 5 };
+    expect(tuning.combatPower).toBe(3);
+    expect(tuning.armorPlating).toBe(5);
+    expect(tuning.attackSpeed).toBeUndefined();
+  });
+});
+
+describe('calculateEffectiveStat with tuning bonus', () => {
+  it('should include tuning bonus in the formula', () => {
+    // (10 + 0 + 3) * 1.0 = 13
+    expect(calculateEffectiveStat(10, 0, 0, 3)).toBe(13);
+  });
+
+  it('should combine weapon bonus, tuning bonus, and loadout multiplier', () => {
+    // (10 + 5 + 3) * 1.20 = 21.6 → floor to 21
+    expect(calculateEffectiveStat(10, 5, 0.20, 3)).toBe(21);
+  });
+
+  it('should default tuning bonus to 0 when omitted (backward compatible)', () => {
+    expect(calculateEffectiveStat(10, 5, 0)).toBe(15);
+  });
+});
+
+describe('calculateEffectiveStats with tuningBonuses', () => {
+  it('should apply tuning bonuses to specified attributes', () => {
+    const robot = makeRobot({ combatPower: 20, armorPlating: 15 });
+    const tuning: TuningAttributeMap = { combatPower: 5, armorPlating: 3 };
+    const stats = calculateEffectiveStats(robot, tuning);
+
+    // single loadout: combatPower has no loadout bonus → (20 + 0 + 5) * 1.0 = 25
+    expect(stats.combatPower).toBe(25);
+    // single loadout: armorPlating has no loadout bonus → (15 + 0 + 3) * 1.0 = 18
+    expect(stats.armorPlating).toBe(18);
+  });
+
+  it('should leave untuned attributes unchanged', () => {
+    const robot = makeRobot({ attackSpeed: 12 });
+    const tuning: TuningAttributeMap = { combatPower: 5 };
+    const stats = calculateEffectiveStats(robot, tuning);
+
+    // attackSpeed not in tuning map → (12 + 0) * 1.0 = 12
+    expect(stats.attackSpeed).toBe(12);
+  });
+
+  it('should combine tuning with weapon bonuses and loadout multiplier', () => {
+    const robot = makeRobot({
+      loadoutType: 'two_handed',
+      mainWeapon: makeWeaponInventory({ combatPowerBonus: 5 }),
+      combatPower: 20,
+    });
+    const tuning: TuningAttributeMap = { combatPower: 3 };
+    const stats = calculateEffectiveStats(robot, tuning);
+
+    // two_handed: combatPower +10% → (20 + 5 + 3) * 1.10 = 30.8 → floor to 30
+    expect(stats.combatPower).toBe(30);
+  });
+
+  it('should be backward compatible when tuningBonuses is undefined', () => {
+    const robot = makeRobot({ combatPower: 20 });
+    const withoutTuning = calculateEffectiveStats(robot);
+    const withEmptyTuning = calculateEffectiveStats(robot, {});
+
+    expect(withoutTuning.combatPower).toBe(withEmptyTuning.combatPower);
+  });
+});
+
+describe('calculateMaxHP with tuningBonuses', () => {
+  it('should include tuning bonus in HP calculation', () => {
+    const robot = makeRobot({ hullIntegrity: 10 });
+    const tuning: TuningAttributeMap = { hullIntegrity: 4 };
+    // effective hullIntegrity = (10 + 0 + 4) * 1.0 = 14
+    // HP = 50 + 14 * 5 = 120
+    expect(calculateMaxHP(robot, tuning)).toBe(120);
+  });
+
+  it('should be backward compatible when tuningBonuses is omitted', () => {
+    const robot = makeRobot({ hullIntegrity: 10 });
+    expect(calculateMaxHP(robot)).toBe(100);
+  });
+});
+
+describe('calculateMaxShield with tuningBonuses', () => {
+  it('should include tuning bonus in shield calculation', () => {
+    const robot = makeRobot({ shieldCapacity: 10 });
+    const tuning: TuningAttributeMap = { shieldCapacity: 5 };
+    // effective shieldCapacity = (10 + 0 + 5) * 1.0 = 15
+    // Shield = 15 * 4 = 60
+    expect(calculateMaxShield(robot, tuning)).toBe(60);
+  });
+
+  it('should be backward compatible when tuningBonuses is omitted', () => {
+    const robot = makeRobot({ shieldCapacity: 10 });
+    expect(calculateMaxShield(robot)).toBe(40);
   });
 });
 

@@ -16,6 +16,8 @@ import {
 } from '../battle/battlePostCombat';
 import { TagTeamError, TagTeamErrorCode } from '../../errors/tagTeamErrors';
 import { CycleEventPayload } from '../../types/snapshotTypes';
+import { prepareRobotForCombat } from '../../utils/robotCalculations';
+import { getTuningBonuses } from '../tuning-pool';
 
 // Battle constants
 const BATTLE_TIME_LIMIT = 300; // 5 minutes in seconds
@@ -280,10 +282,17 @@ export async function executeTagTeamBattle(match: ScheduledTagTeamMatch): Promis
   }
 
   // Start battle with active robots at full HP
-  team1.activeRobot.currentHP = team1.activeRobot.maxHP;
-  team1.activeRobot.currentShield = team1.activeRobot.maxShield;
-  team2.activeRobot.currentHP = team2.activeRobot.maxHP;
-  team2.activeRobot.currentShield = team2.activeRobot.maxShield;
+  // Fetch tuning bonuses and prepare all robots for combat (applies tuning, recalculates maxHP/maxShield, sets full HP)
+  const [t1ActiveTuning, t1ReserveTuning, t2ActiveTuning, t2ReserveTuning] = await Promise.all([
+    getTuningBonuses(team1.activeRobot.id),
+    getTuningBonuses(team1.reserveRobot.id),
+    getTuningBonuses(team2.activeRobot.id),
+    getTuningBonuses(team2.reserveRobot.id),
+  ]);
+  prepareRobotForCombat(team1.activeRobot, t1ActiveTuning);
+  prepareRobotForCombat(team1.reserveRobot, t1ReserveTuning);
+  prepareRobotForCombat(team2.activeRobot, t2ActiveTuning);
+  prepareRobotForCombat(team2.reserveRobot, t2ReserveTuning);
 
   // Simulate the tag team battle
   const result = await simulateTagTeamBattle(team1 as TagTeamWithRobots, team2 as TagTeamWithRobots);
