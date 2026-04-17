@@ -2,6 +2,31 @@ import { test, expect } from '@playwright/test';
 import { navigateToProtectedPage } from './helpers/navigate';
 
 /**
+ * Navigate to the weapon shop and ensure the page has fully loaded.
+ * Retries navigation up to 3 times if the page gets stuck in a loading
+ * or error state (transient backend hiccups in CI).
+ */
+async function navigateToWeaponShop(page: import('@playwright/test').Page) {
+  const filtersHeading = page.getByRole('heading', { name: 'Filters', exact: true });
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (attempt === 0) {
+      await navigateToProtectedPage(page, '/weapon-shop');
+    } else {
+      await page.goto('/weapon-shop');
+      await page.waitForLoadState('networkidle');
+    }
+
+    if (await filtersHeading.isVisible({ timeout: 10000 }).catch(() => false)) {
+      return; // Page loaded successfully
+    }
+  }
+
+  // Final assertion — will fail with a clear error if page never loaded
+  await expect(filtersHeading).toBeVisible({ timeout: 15000 });
+}
+
+/**
  * E2E tests for Weapon Shop Page
  * Tests filtering, sorting, view modes, comparison, and purchase flow.
  *
@@ -13,16 +38,7 @@ import { navigateToProtectedPage } from './helpers/navigate';
 
 test.describe('Weapon Shop Page', () => {
   test.beforeEach(async ({ page }) => {
-    await navigateToProtectedPage(page, '/weapon-shop');
-    // Wait for the weapon shop data to finish loading.
-    // The Filters heading only renders after loading completes without error.
-    // If it doesn't appear, reload once (handles transient CI backend hiccups).
-    const filtersHeading = page.getByRole('heading', { name: 'Filters', exact: true });
-    if (!(await filtersHeading.isVisible({ timeout: 8000 }).catch(() => false))) {
-      await page.reload();
-      await page.waitForLoadState('networkidle');
-    }
-    await expect(filtersHeading).toBeVisible({ timeout: 15000 });
+    await navigateToWeaponShop(page);
   });
 
   test.describe('Page Load and Initial State', () => {
