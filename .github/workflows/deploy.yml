@@ -295,10 +295,15 @@ jobs:
     needs: [backend-unit-tests, backend-integration-tests, frontend-build]
     if: github.event_name == 'push'
     environment: acceptance
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          fetch-tags: true
 
       - name: Setup SSH key
         run: |
@@ -438,6 +443,25 @@ jobs:
             cd /opt/armouredsouls/backend
             npm prune --production
 
+      - name: Ensure CHANGELOG_DEPLOY_TOKEN in .env
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.ACC_VPS_IP }}
+          username: ${{ secrets.ACC_VPS_USER }}
+          key: ${{ secrets.ACC_SSH_KEY }}
+          envs: CHANGELOG_DEPLOY_TOKEN
+          script: |
+            ENV_FILE="/opt/armouredsouls/backend/.env"
+            if ! grep -q '^CHANGELOG_DEPLOY_TOKEN=' "$ENV_FILE" 2>/dev/null; then
+              echo "CHANGELOG_DEPLOY_TOKEN=${CHANGELOG_DEPLOY_TOKEN}" >> "$ENV_FILE"
+              echo "Added CHANGELOG_DEPLOY_TOKEN to .env"
+            else
+              sed -i "s|^CHANGELOG_DEPLOY_TOKEN=.*|CHANGELOG_DEPLOY_TOKEN=${CHANGELOG_DEPLOY_TOKEN}|" "$ENV_FILE"
+              echo "Updated CHANGELOG_DEPLOY_TOKEN in .env"
+            fi
+        env:
+          CHANGELOG_DEPLOY_TOKEN: ${{ secrets.CHANGELOG_DEPLOY_TOKEN }}
+
       - name: Restart backend via PM2
         uses: appleboy/ssh-action@v1
         with:
@@ -472,7 +496,16 @@ jobs:
         env:
           CHANGELOG_API_URL: ${{ secrets.CHANGELOG_API_URL }}
           CHANGELOG_DEPLOY_TOKEN: ${{ secrets.CHANGELOG_DEPLOY_TOKEN }}
-        run: npx ts-node app/backend/scripts/generate-changelog-drafts.ts
+          DEPLOY_ENV: acc
+        run: bash app/backend/scripts/generate-changelog-drafts.sh
+
+      - name: Create deploy tag
+        continue-on-error: true
+        run: |
+          TAG="deploy-acc-$(date +%Y%m%d-%H%M%S)"
+          git tag "$TAG"
+          git push origin "$TAG"
+          echo "Created deploy tag: $TAG"
 
       - name: Cleanup SSH key
         if: always()
@@ -487,10 +520,15 @@ jobs:
     needs: [backend-unit-tests, backend-integration-tests, frontend-build]
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production'
     environment: production
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          fetch-tags: true
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
@@ -625,6 +663,25 @@ jobs:
             cd /opt/armouredsouls/backend
             npm prune --production
 
+      - name: Ensure CHANGELOG_DEPLOY_TOKEN in .env
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.PRD_VPS_IP }}
+          username: ${{ secrets.PRD_VPS_USER }}
+          key: ${{ secrets.PRD_SSH_KEY }}
+          envs: CHANGELOG_DEPLOY_TOKEN
+          script: |
+            ENV_FILE="/opt/armouredsouls/backend/.env"
+            if ! grep -q '^CHANGELOG_DEPLOY_TOKEN=' "$ENV_FILE" 2>/dev/null; then
+              echo "CHANGELOG_DEPLOY_TOKEN=${CHANGELOG_DEPLOY_TOKEN}" >> "$ENV_FILE"
+              echo "Added CHANGELOG_DEPLOY_TOKEN to .env"
+            else
+              sed -i "s|^CHANGELOG_DEPLOY_TOKEN=.*|CHANGELOG_DEPLOY_TOKEN=${CHANGELOG_DEPLOY_TOKEN}|" "$ENV_FILE"
+              echo "Updated CHANGELOG_DEPLOY_TOKEN in .env"
+            fi
+        env:
+          CHANGELOG_DEPLOY_TOKEN: ${{ secrets.CHANGELOG_DEPLOY_TOKEN }}
+
       - name: Restart backend via PM2
         uses: appleboy/ssh-action@v1
         with:
@@ -659,7 +716,16 @@ jobs:
         env:
           CHANGELOG_API_URL: ${{ secrets.CHANGELOG_API_URL }}
           CHANGELOG_DEPLOY_TOKEN: ${{ secrets.CHANGELOG_DEPLOY_TOKEN }}
-        run: npx ts-node app/backend/scripts/generate-changelog-drafts.ts
+          DEPLOY_ENV: prd
+        run: bash app/backend/scripts/generate-changelog-drafts.sh
+
+      - name: Create deploy tag
+        continue-on-error: true
+        run: |
+          TAG="deploy-prd-$(date +%Y%m%d-%H%M%S)"
+          git tag "$TAG"
+          git push origin "$TAG"
+          echo "Created deploy tag: $TAG"
 
       - name: Cleanup SSH key
         if: always()

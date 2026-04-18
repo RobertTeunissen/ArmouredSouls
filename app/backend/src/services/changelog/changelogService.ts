@@ -125,6 +125,20 @@ class ChangelogService {
   }
 
   /**
+   * List all non-null sourceRefs across all entries.
+   * Used by the deploy endpoint for idempotency checks.
+   */
+  async listAllSourceRefs(): Promise<string[]> {
+    const entries = await prisma.changelogEntry.findMany({
+      where: { sourceRef: { not: null } },
+      select: { sourceRef: true },
+    });
+    return entries
+      .map((e) => e.sourceRef)
+      .filter((ref): ref is string => ref != null);
+  }
+
+  /**
    * List all entries (drafts + published) for admin, ordered by createdAt desc.
    */
   async listAll(
