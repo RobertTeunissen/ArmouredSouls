@@ -2,6 +2,7 @@ import express, { Response } from 'express';
 import { z } from 'zod';
 import multer from 'multer';
 import { authenticateToken, requireAdmin, AuthRequest } from '../middleware/auth';
+import { authenticateDeployToken, DeployRequest } from '../middleware/deployToken';
 import { validateRequest } from '../middleware/schemaValidator';
 import { positiveIntParam } from '../utils/securityValidation';
 import { changelogService, processAndStore } from '../services/changelog';
@@ -109,6 +110,24 @@ router.post('/admin', authenticateToken, requireAdmin, validateRequest({ body: c
     createdBy: req.user!.userId,
   });
   res.status(201).json(entry);
+});
+
+// --- Deploy endpoint (CI/CD service token auth) ---
+
+// POST /api/changelog/deploy — create draft entry via deploy token (used by GitHub Actions)
+router.post('/deploy', authenticateDeployToken, validateRequest({ body: createEntrySchema }), async (req: DeployRequest, res: Response) => {
+  const entry = await changelogService.create({
+    ...req.body,
+    status: 'draft', // deploy endpoint always creates drafts, never published
+    createdBy: null, // deploy script has no user context
+  });
+  res.status(201).json(entry);
+});
+
+// GET /api/changelog/deploy/sources — list existing sourceRefs for idempotency checks
+router.get('/deploy/sources', authenticateDeployToken, validateRequest({}), async (_req: DeployRequest, res: Response) => {
+  const sourceRefs = await changelogService.listAllSourceRefs();
+  res.json({ sourceRefs });
 });
 
 // PUT /api/changelog/admin/:id — update entry

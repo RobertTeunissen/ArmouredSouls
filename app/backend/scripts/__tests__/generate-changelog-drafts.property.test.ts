@@ -56,9 +56,14 @@ const bugfixSpecNameArb = fc.oneof(
   fc.constant('3-bugfix-credits'),
 );
 
-/** Generate a spec name that contains "balance" */
+/** Generate a spec name that contains "balance" but not "fix" or "bug" */
 const balanceSpecNameArb = fc.oneof(
-  specNameArb.map((name) => name + '-balance'),
+  specNameArb
+    .filter((name) => {
+      const lower = name.toLowerCase();
+      return !lower.includes('fix') && !lower.includes('bug');
+    })
+    .map((name) => name + '-balance'),
   fc.constant('8-weapon-balance-pass'),
 );
 
