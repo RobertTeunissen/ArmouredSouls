@@ -13,28 +13,16 @@ import {
   TAG_TEAM_LEAGUE_TIERS,
   TagTeamLeagueTier 
 } from './tagTeamLeagueInstanceService';
+import { getMinLPForPromotion } from '../league/leaguePromotionThresholds';
 
 // Promotion/Demotion thresholds
-// Per-tier LP thresholds: higher tiers require more LP to promote
-const PROMOTION_LP_THRESHOLDS: Record<string, number> = {
-  bronze: 25,   // Bronze → Silver
-  silver: 50,   // Silver → Gold
-  gold: 75,     // Gold → Platinum
-  platinum: 100, // Platinum → Diamond
-  diamond: 125,  // Diamond → Champion
-  champion: Infinity, // Cannot promote from Champion
-};
 const PROMOTION_PERCENTAGE = 0.10; // Top 10%
 const DEMOTION_PERCENTAGE = 0.10; // Bottom 10%
 const MIN_CYCLES_IN_LEAGUE_FOR_REBALANCING = 5; // Must be in current league for 5+ cycles
 const MIN_TEAMS_FOR_REBALANCING = 10;
 
-/**
- * Get the minimum LP required for promotion from a given tier
- */
-export function getMinLPForPromotion(tier: string): number {
-  return PROMOTION_LP_THRESHOLDS[tier] ?? 25;
-}
+// Re-export for consumers that need the helper
+export { getMinLPForPromotion } from '../league/leaguePromotionThresholds';
 
 // Re-export from instance service for convenience
 export { TAG_TEAM_LEAGUE_TIERS, TagTeamLeagueTier };

@@ -1,6 +1,6 @@
 # Product Requirements Document: League System
 
-**Last Updated**: April 2, 2026  
+**Last Updated**: April 18, 2026  
 **Status**: ✅ Implemented  
 **Owner**: Robert Teunissen  
 **Epic**: League Progression System  

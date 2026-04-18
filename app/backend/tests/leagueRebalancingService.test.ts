@@ -243,12 +243,6 @@ describe('League Rebalancing Service', () => {
       expect(toPromote.length).toBe(2);
       expect(toPromote[0].leaguePoints).toBeGreaterThanOrEqual(50);
       expect(toPromote[1].leaguePoints).toBeGreaterThanOrEqual(50);
-
-      // Clean up
-      for (const robot of robots) {
-        await prisma.robot.deleteMany({ where: { id: robot.id } });
-      }
-      await prisma.weaponInventory.deleteMany({ where: { userId: testUser.id } });
     });
 
     it('should not promote silver robots with 25-49 LP (below silver threshold)', async () => {
@@ -284,12 +278,6 @@ describe('League Rebalancing Service', () => {
 
       // No robots meet the 50 LP threshold for silver, so no promotions
       expect(toPromote).toEqual([]);
-
-      // Clean up
-      for (const robot of robots) {
-        await prisma.robot.deleteMany({ where: { id: robot.id } });
-      }
-      await prisma.weaponInventory.deleteMany({ where: { userId: testUser.id } });
     });
 
     it('should return empty array when too few robots', async () => {
