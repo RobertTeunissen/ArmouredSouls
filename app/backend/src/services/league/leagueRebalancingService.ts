@@ -16,11 +16,26 @@ import {
 } from './leagueInstanceService';
 
 // Promotion/Demotion thresholds
-const MIN_LEAGUE_POINTS_FOR_PROMOTION = 25; // Must have 25+ league points for promotion
+// Per-tier LP thresholds: higher tiers require more LP to promote
+const PROMOTION_LP_THRESHOLDS: Record<string, number> = {
+  bronze: 25,   // Bronze → Silver
+  silver: 50,   // Silver → Gold
+  gold: 75,     // Gold → Platinum
+  platinum: 100, // Platinum → Diamond
+  diamond: 125,  // Diamond → Champion
+  champion: Infinity, // Cannot promote from Champion
+};
 const PROMOTION_PERCENTAGE = 0.10; // Top 10%
 const DEMOTION_PERCENTAGE = 0.10; // Bottom 10%
 const MIN_CYCLES_IN_LEAGUE_FOR_REBALANCING = 5; // Must be in current league for 5+ cycles
 const MIN_ROBOTS_FOR_REBALANCING = 10;
+
+/**
+ * Get the minimum LP required for promotion from a given tier
+ */
+export function getMinLPForPromotion(tier: string): number {
+  return PROMOTION_LP_THRESHOLDS[tier] ?? 25;
+}
 
 export interface RebalancingSummary {
   tier: LeagueTier;
@@ -40,7 +55,8 @@ export interface FullRebalancingSummary {
 
 /**
  * Determine which robots should be promoted from a SPECIFIC INSTANCE
- * Robots must have ≥25 league points AND be in top 10% AND ≥5 cycles in current league
+ * Robots must meet per-tier LP threshold AND be in top 10% AND ≥5 cycles in current league
+ * LP thresholds: Bronze→Silver 25, Silver→Gold 50, Gold→Platinum 75, Platinum→Diamond 100, Diamond→Champion 125
  * @param instanceId - The specific league instance to evaluate (e.g., "bronze_1")
  * @param excludeRobotIds - Set of robot IDs to exclude (already processed in this cycle)
  */
@@ -52,6 +68,9 @@ export async function determinePromotions(instanceId: string, excludeRobotIds: S
     return [];
   }
 
+  // Get the per-tier LP threshold for promotion
+  const minLP = getMinLPForPromotion(tier);
+
   // Get all robots in this INSTANCE with minimum cycles AND minimum league points
   const robotsWithMinPoints = await prisma.robot.findMany({
     where: {
@@ -60,7 +79,7 @@ export async function determinePromotions(instanceId: string, excludeRobotIds: S
         gte: MIN_CYCLES_IN_LEAGUE_FOR_REBALANCING,
       },
       leaguePoints: {
-        gte: MIN_LEAGUE_POINTS_FOR_PROMOTION,
+        gte: minLP,
       },
       NOT: [
         { name: 'Bye Robot' },
@@ -75,7 +94,7 @@ export async function determinePromotions(instanceId: string, excludeRobotIds: S
 
   // If no robots meet the minimum points threshold, skip
   if (robotsWithMinPoints.length === 0) {
-    logger.info(`[Rebalancing] ${instanceId}: No robots with ≥${MIN_LEAGUE_POINTS_FOR_PROMOTION} league points, skipping promotions`);
+    logger.info(`[Rebalancing] ${instanceId}: No robots with ≥${minLP} league points (${tier} tier threshold), skipping promotions`);
     return [];
   }
 
@@ -107,10 +126,10 @@ export async function determinePromotions(instanceId: string, excludeRobotIds: S
     return [];
   }
 
-  // Take the top 10%, but only from robots with ≥25 league points
+  // Take the top 10%, but only from robots meeting the per-tier LP threshold
   const toPromote = robotsWithMinPoints.slice(0, Math.min(promotionCount, robotsWithMinPoints.length));
   
-  logger.info(`[Rebalancing] ${instanceId}: ${toPromote.length} robots eligible for promotion (top ${PROMOTION_PERCENTAGE * 100}% of ${totalEligibleRobots} AND ≥${MIN_LEAGUE_POINTS_FOR_PROMOTION} league points, ${robotsWithMinPoints.length} met points threshold)`);
+  logger.info(`[Rebalancing] ${instanceId}: ${toPromote.length} robots eligible for promotion (top ${PROMOTION_PERCENTAGE * 100}% of ${totalEligibleRobots} AND ≥${minLP} league points [${tier} tier], ${robotsWithMinPoints.length} met points threshold)`);
   
   return toPromote;
 }

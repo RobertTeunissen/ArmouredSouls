@@ -5,6 +5,7 @@ import {
   promoteRobot,
   demoteRobot,
   rebalanceLeagues,
+  getMinLPForPromotion,
 } from '../src/services/league/leagueRebalancingService';
 
 
@@ -69,7 +70,7 @@ describe('League Rebalancing Service', () => {
   });
 
   describe('determinePromotions', () => {
-    it('should return top 10% of robots with ≥5 cycles AND ≥25 league points', async () => {
+    it('should return top 10% of robots with ≥5 cycles AND per-tier LP threshold', async () => {
       // Create 20 robots in bronze league with varying league points
       const robots = [];
       for (let i = 0; i < 20; i++) {
@@ -88,7 +89,7 @@ describe('League Rebalancing Service', () => {
             currentShield: 2,
             maxShield: 2,
             elo: 1200,
-            leaguePoints: i * 5, // 0, 5, 10, ..., 95 (robots 5+ have ≥25 points)
+            leaguePoints: i * 5, // 0, 5, 10, ..., 95 (robots 5+ have ≥25 points — bronze threshold)
             totalBattles: 10,
             cyclesInCurrentLeague: 10, // All have enough cycles in current league
             loadoutType: 'single',
@@ -100,7 +101,7 @@ describe('League Rebalancing Service', () => {
 
       const toPromote = await determinePromotions('bronze_1'); // Changed to instance ID
 
-      // Should get top 10% of 20 = 2 robots, but only from those with ≥25 points
+      // Should get top 10% of 20 = 2 robots, but only from those with ≥25 points (bronze threshold)
       // Robots 5-19 have ≥25 points (15 robots), top 2 are robots 19 and 18
       expect(toPromote.length).toBe(2);
       expect(toPromote[0].name).toBe('Bronze Robot 19'); // 95 points
@@ -146,7 +147,7 @@ describe('League Rebalancing Service', () => {
       const toPromote = await determinePromotions('bronze_1'); // Changed to instance ID
 
       // Should only consider robots with ≥5 cycles in current league (last 10 robots)
-      // 10% of 10 = 1 robot, and must have ≥25 points
+      // 10% of 10 = 1 robot, and must have ≥25 points (bronze threshold)
       // Robots 10-19 have ≥5 cycles, robots 5-19 have ≥25 points
       // So robots 10-19 meet both criteria (10 robots), top 10% = 1 robot
       expect(toPromote.length).toBe(1);
@@ -165,8 +166,8 @@ describe('League Rebalancing Service', () => {
       expect(toPromote).toEqual([]);
     });
 
-    it('should return empty array when no robots have ≥25 league points', async () => {
-      // Create 20 robots but none with ≥25 league points
+    it('should return empty array when no robots meet per-tier LP threshold', async () => {
+      // Create 20 robots but none with ≥25 league points (bronze threshold)
       const robots = [];
       for (let i = 0; i < 20; i++) {
         const weaponInv = await prisma.weaponInventory.create({
@@ -195,6 +196,93 @@ describe('League Rebalancing Service', () => {
       }
 
       const toPromote = await determinePromotions('bronze_1'); // Changed to instance ID
+      expect(toPromote).toEqual([]);
+
+      // Clean up
+      for (const robot of robots) {
+        await prisma.robot.deleteMany({ where: { id: robot.id } });
+      }
+      await prisma.weaponInventory.deleteMany({ where: { userId: testUser.id } });
+    });
+
+    it('should use higher LP threshold for silver tier (50 LP for Silver→Gold)', async () => {
+      // Create 20 robots in silver league
+      const robots = [];
+      for (let i = 0; i < 20; i++) {
+        const weaponInv = await prisma.weaponInventory.create({
+          data: { userId: testUser.id, weaponId: practiceSword.id },
+        });
+
+        const robot = await prisma.robot.create({
+          data: {
+            userId: testUser.id,
+            name: `Silver Threshold Robot ${i}`,
+            leagueId: 'silver_1',
+            currentLeague: 'silver',
+            currentHP: 10,
+            maxHP: 10,
+            currentShield: 2,
+            maxShield: 2,
+            elo: 1200,
+            // LP: 0, 5, 10, ..., 95. Only robots with ≥50 LP should be promotion candidates
+            // That's robots 10-19 (50, 55, 60, ..., 95) = 10 robots meet threshold
+            leaguePoints: i * 5,
+            totalBattles: 10,
+            cyclesInCurrentLeague: 10,
+            loadoutType: 'single',
+            mainWeaponId: weaponInv.id,
+          },
+        });
+        robots.push(robot);
+      }
+
+      const toPromote = await determinePromotions('silver_1');
+
+      // Top 10% of 20 eligible = 2 slots, but only robots with ≥50 LP qualify (silver threshold)
+      // Robots 10-19 have ≥50 LP, top 2 are robots 19 (95) and 18 (90)
+      expect(toPromote.length).toBe(2);
+      expect(toPromote[0].leaguePoints).toBeGreaterThanOrEqual(50);
+      expect(toPromote[1].leaguePoints).toBeGreaterThanOrEqual(50);
+
+      // Clean up
+      for (const robot of robots) {
+        await prisma.robot.deleteMany({ where: { id: robot.id } });
+      }
+      await prisma.weaponInventory.deleteMany({ where: { userId: testUser.id } });
+    });
+
+    it('should not promote silver robots with 25-49 LP (below silver threshold)', async () => {
+      // Create 20 robots in silver league, all with LP between 25-49
+      const robots = [];
+      for (let i = 0; i < 20; i++) {
+        const weaponInv = await prisma.weaponInventory.create({
+          data: { userId: testUser.id, weaponId: practiceSword.id },
+        });
+
+        const robot = await prisma.robot.create({
+          data: {
+            userId: testUser.id,
+            name: `Silver Below Threshold ${i}`,
+            leagueId: 'silver_1',
+            currentLeague: 'silver',
+            currentHP: 10,
+            maxHP: 10,
+            currentShield: 2,
+            maxShield: 2,
+            elo: 1200,
+            leaguePoints: 25 + i, // 25-44, all below silver threshold of 50
+            totalBattles: 10,
+            cyclesInCurrentLeague: 10,
+            loadoutType: 'single',
+            mainWeaponId: weaponInv.id,
+          },
+        });
+        robots.push(robot);
+      }
+
+      const toPromote = await determinePromotions('silver_1');
+
+      // No robots meet the 50 LP threshold for silver, so no promotions
       expect(toPromote).toEqual([]);
 
       // Clean up
@@ -542,6 +630,21 @@ describe('League Rebalancing Service', () => {
         await prisma.robot.deleteMany({ where: { id: robot.id } });
       }
       await prisma.weaponInventory.deleteMany({ where: { userId: testUser.id } });
+    });
+  });
+
+  describe('getMinLPForPromotion', () => {
+    it('should return correct per-tier LP thresholds', () => {
+      expect(getMinLPForPromotion('bronze')).toBe(25);
+      expect(getMinLPForPromotion('silver')).toBe(50);
+      expect(getMinLPForPromotion('gold')).toBe(75);
+      expect(getMinLPForPromotion('platinum')).toBe(100);
+      expect(getMinLPForPromotion('diamond')).toBe(125);
+      expect(getMinLPForPromotion('champion')).toBe(Infinity);
+    });
+
+    it('should return 25 as default for unknown tiers', () => {
+      expect(getMinLPForPromotion('unknown')).toBe(25);
     });
   });
 });

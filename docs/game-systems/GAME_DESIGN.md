@@ -122,7 +122,7 @@ Configurable 0–50% HP threshold where the robot surrenders instead of fighting
 6-tier competitive ranking: Bronze → Silver → Gold → Platinum → Diamond → Champion
 
 - League points: +3 win, -1 loss, +1 draw
-- Top 10% per instance promoted (with ≥25 LP), bottom 10% demoted
+- Top 10% per instance promoted (with per-tier LP threshold: 25/50/75/100/125), bottom 10% demoted
 - LP carries over across promotions/demotions
 - Multiple instances per tier (max 100 robots each)
 - ELO rating (K=32) used for matchmaking, not combat
