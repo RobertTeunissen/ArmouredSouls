@@ -1,14 +1,15 @@
 # Product Requirements Document: League System
 
-**Last Updated**: April 2, 2026  
+**Last Updated**: April 18, 2026  
 **Status**: ✅ Implemented  
 **Owner**: Robert Teunissen  
 **Epic**: League Progression System  
-**Version**: 2.0
+**Version**: 2.1
 
 ---
 
 ## Version History
+- v2.1 (April 18, 2026) — Per-tier LP promotion thresholds: Bronze 25, Silver 50, Gold 75, Platinum 100, Diamond 125. Replaces flat 25 LP threshold for all tiers.
 - v2.0 (April 2, 2026) — Consolidated from three separate documents (`LEAGUE_SYSTEM_IMPLEMENTATION_GUIDE.md`, `PRD_LEAGUE_PROMOTION.md`, `PRD_LEAGUE_REBALANCING.md`) and the LP matchmaking addendum (`PRD_MATCHMAKING_LP_UPDATE.md`). Removed proposed-but-not-implemented features (PromotionHistory model, Team2v2 model, instance change tracking, UI mockups for non-existent pages). Updated file paths to reflect backend service consolidation.
 - v1.1 (February 22, 2026) — Documentation corrections to match implementation
 - v1.0 (February 10, 2026) — Initial drafts of promotion and rebalancing PRDs
@@ -52,8 +53,18 @@ ELO (K=32, starting 1200) is used for matchmaking quality and seeding, not for p
 ### Promotion Requirements (all three must be met)
 
 1. Top 10% of robots within the specific instance (not the entire tier)
-2. ≥25 League Points
+2. League Points at or above the per-tier threshold (see table below)
 3. ≥5 cycles in current tier
+
+#### Per-Tier LP Thresholds
+
+| Current Tier | Promotion To | LP Required |
+|---|---|---|
+| Bronze | Silver | ≥25 |
+| Silver | Gold | ≥50 |
+| Gold | Platinum | ≥75 |
+| Platinum | Diamond | ≥100 |
+| Diamond | Champion | ≥125 |
 
 ### Demotion Requirements (both must be met)
 
@@ -131,7 +142,14 @@ Rebalancing is checked after each promotion/demotion cycle. The cycle scheduler 
 ### Promotion/Demotion (`services/league/leagueRebalancingService.ts`)
 
 ```typescript
-const MIN_LEAGUE_POINTS_FOR_PROMOTION = 25;
+const PROMOTION_LP_THRESHOLDS: Record<string, number> = {
+  bronze: 25,     // Bronze → Silver
+  silver: 50,     // Silver → Gold
+  gold: 75,       // Gold → Platinum
+  platinum: 100,  // Platinum → Diamond
+  diamond: 125,   // Diamond → Champion
+  champion: Infinity,
+};
 const PROMOTION_PERCENTAGE = 0.10;           // Top 10%
 const DEMOTION_PERCENTAGE = 0.10;            // Bottom 10%
 const MIN_CYCLES_IN_LEAGUE_FOR_REBALANCING = 5;
@@ -177,7 +195,7 @@ All paths relative to `app/backend/src/`.
 
 ### Promotion/Demotion
 
-- Robot promoted with high LP (e.g., 45): Retains LP, but still needs 5 cycles before next promotion
+- Robot promoted with high LP (e.g., 45): Retains LP, but still needs 5 cycles before next promotion. Note: higher tiers require more LP (e.g., 50 for Silver→Gold)
 - Robot demoted with low LP (e.g., 2): Retains LP, lower tier competition should be easier
 - Yo-yo prevention: `cyclesInCurrentLeague` resets to 0 on any tier change, requiring 5 cycles before the next move
 - Champion tier: No promotions possible. Demotions still apply.
@@ -205,7 +223,6 @@ These are design ideas documented for future consideration:
 - Instance consolidation for underpopulated instances (<20 robots)
 - UI promotion zone indicators with LP progress bars
 - Promotion/demotion notifications
-- Dynamic LP thresholds based on tier difficulty
 
 ---
 

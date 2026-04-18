@@ -2,7 +2,7 @@
 title: "Promotion & Demotion"
 description: "How robots earn promotion to higher tiers and face demotion to lower ones — the requirements, timing, protection mechanics, and LP retention that govern league progression."
 order: 4
-lastUpdated: "2026-03-12"
+lastUpdated: "2026-04-18"
 relatedArticles:
   - leagues/league-points
   - leagues/league-tiers
@@ -31,10 +31,10 @@ flowchart TD
     C["🏆 Champion\nThe pinnacle\nNo promotion beyond this"]
 
     B -->|"Promote: Top 10% + ≥25 LP + ≥5 cycles"| S
-    S -->|"Promote"| G
-    G -->|"Promote"| P
-    P -->|"Promote"| D
-    D -->|"Promote"| C
+    S -->|"Promote: Top 10% + ≥50 LP + ≥5 cycles"| G
+    G -->|"Promote: Top 10% + ≥75 LP + ≥5 cycles"| P
+    P -->|"Promote: Top 10% + ≥100 LP + ≥5 cycles"| D
+    D -->|"Promote: Top 10% + ≥125 LP + ≥5 cycles"| C
 
     S -->|"Demote: Bottom 10% + ≥5 cycles"| B
     G -->|"Demote"| S
@@ -50,7 +50,7 @@ flowchart TD
     style C fill:#9d4edd,stroke:#7b2cbf,color:#fff
 ```
 
-Each arrow represents a tier change. Promotion requires meeting all three criteria (top 10% of instance, ≥25 LP, ≥5 cycles). Demotion requires being in the bottom 10% after ≥5 cycles. Bronze has no demotion, and Champion has no promotion.
+Each arrow represents a tier change. Promotion requires meeting all three criteria (top 10% of instance, per-tier LP threshold, ≥5 cycles). Demotion requires being in the bottom 10% after ≥5 cycles. Bronze has no demotion, and Champion has no promotion.
 
 ## Promotion Requirements
 
@@ -59,14 +59,14 @@ To be promoted to the next tier, your robot must meet **all three** of these con
 | Requirement | Threshold | Why It Exists |
 |-------------|-----------|---------------|
 | **Instance Rank** | Top 10% of your instance | Ensures you're outperforming most of your direct competition |
-| **League Points** | ≥25 LP | Proves sustained winning performance, not just a lucky cycle |
+| **League Points** | Per-tier threshold (see below) | Proves sustained winning performance, not just a lucky cycle |
 | **Time in Tier** | ≥5 cycles in current tier | Prevents premature promotion before you've established yourself |
 
 All three must be true at the same time. Missing even one means you stay in your current tier until the next cycle evaluation.
 
 ### LP Required Per Promotion
 
-The LP threshold is a flat **25 LP** at every tier. Because LP carries over when you're promoted, you don't reset to 0 — but you still need to have at least 25 LP at the moment of each evaluation.
+Higher tiers demand more LP to earn promotion. The thresholds increase by 25 LP per tier, reflecting the greater challenge of climbing through stronger competition. Because LP carries over when you're promoted, you don't reset to 0 — but you need to reach the next tier's threshold to keep climbing.
 
 | Promotion | LP Required | Notes |
 |-----------|-------------|-------|
@@ -77,7 +77,7 @@ The LP threshold is a flat **25 LP** at every tier. Because LP carries over when
 | Diamond → Champion | ≥125 LP | The final gate. Only the top performers in Diamond break through. |
 
 ```callout-info
-Since LP carries over, a robot promoted with 32 LP enters the next tier with 32 LP — already above the 25 LP threshold. But tougher opponents in the new tier may push your LP down before the next evaluation. The real challenge isn't reaching 25 LP once — it's staying above it while competing against stronger robots.
+Since LP carries over, a robot promoted from Bronze with 32 LP enters Silver with 32 LP. But the Silver→Gold threshold is 50 LP, so you'll need to keep winning to reach it. Tougher opponents in the new tier may slow your LP growth — the real challenge is building momentum against stronger competition.
 ```
 
 ### How the Top 10% Works
@@ -220,13 +220,15 @@ Here's what a typical progression from Bronze to Gold might look like:
 - Opponents are stronger — win rate may drop to 45-50% initially
 - 5-cycle protection gives you breathing room
 - LP may dip slightly during adjustment, then stabilize
+- Need to reach 50 LP for Gold promotion (higher threshold than Bronze→Silver)
 - By cycle 25-30, you've adapted, rebuilt LP, and are pushing top 10% again
 - **Promoted to Gold** around cycle 28-32
 
 ### Phase 3: Gold and Beyond
 
 - Each tier takes longer to master as competition intensifies
-- The 25 LP threshold remains constant, but earning LP is harder against better opponents
+- LP thresholds increase: 75 for Platinum, 100 for Diamond, 125 for Champion
+- Earning LP is harder against better opponents
 - Expect 15-25 cycles per tier at higher levels
 - Not every robot reaches Champion — and that's by design
 

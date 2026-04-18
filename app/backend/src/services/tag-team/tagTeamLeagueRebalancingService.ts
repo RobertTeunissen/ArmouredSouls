@@ -13,13 +13,16 @@ import {
   TAG_TEAM_LEAGUE_TIERS,
   TagTeamLeagueTier 
 } from './tagTeamLeagueInstanceService';
+import { getMinLPForPromotion } from '../league/leaguePromotionThresholds';
 
 // Promotion/Demotion thresholds
-const MIN_LEAGUE_POINTS_FOR_PROMOTION = 25; // Must have 25+ league points for promotion
 const PROMOTION_PERCENTAGE = 0.10; // Top 10%
 const DEMOTION_PERCENTAGE = 0.10; // Bottom 10%
 const MIN_CYCLES_IN_LEAGUE_FOR_REBALANCING = 5; // Must be in current league for 5+ cycles
 const MIN_TEAMS_FOR_REBALANCING = 10;
+
+// Re-export for consumers that need the helper
+export { getMinLPForPromotion } from '../league/leaguePromotionThresholds';
 
 // Re-export from instance service for convenience
 export { TAG_TEAM_LEAGUE_TIERS, TagTeamLeagueTier };
@@ -42,7 +45,8 @@ export interface FullTagTeamRebalancingSummary {
 
 /**
  * Determine which teams should be promoted from a SPECIFIC INSTANCE
- * Requirement 6.3: Promote top 10% of eligible teams (≥5 cycles in tier AND ≥25 league points)
+ * Requirement 6.3: Promote top 10% of eligible teams (≥5 cycles in tier AND per-tier LP threshold)
+ * LP thresholds: Bronze→Silver 25, Silver→Gold 50, Gold→Platinum 75, Platinum→Diamond 100, Diamond→Champion 125
  * @param instanceId - The specific league instance to evaluate (e.g., "bronze_1")
  * @param excludeTeamIds - Set of team IDs to exclude (already processed in this cycle)
  */
@@ -57,6 +61,9 @@ export async function determinePromotions(
     return [];
   }
 
+  // Get the per-tier LP threshold for promotion
+  const minLP = getMinLPForPromotion(tier);
+
   // Get all teams in this INSTANCE with minimum cycles AND minimum league points
   const teamsWithMinPoints = await prisma.tagTeam.findMany({
     where: {
@@ -65,7 +72,7 @@ export async function determinePromotions(
         gte: MIN_CYCLES_IN_LEAGUE_FOR_REBALANCING,
       },
       tagTeamLeaguePoints: {
-        gte: MIN_LEAGUE_POINTS_FOR_PROMOTION,
+        gte: minLP,
       },
       NOT: {
         id: { in: Array.from(excludeTeamIds) },
@@ -80,7 +87,7 @@ export async function determinePromotions(
   // If no teams meet the minimum points threshold, skip
   if (teamsWithMinPoints.length === 0) {
     logger.info(
-      `[TagTeamRebalancing] ${instanceId}: No teams with ≥${MIN_LEAGUE_POINTS_FOR_PROMOTION} league points, skipping promotions`
+      `[TagTeamRebalancing] ${instanceId}: No teams with ≥${minLP} league points (${tier} tier threshold), skipping promotions`
     );
     return [];
   }
@@ -116,11 +123,11 @@ export async function determinePromotions(
     return [];
   }
 
-  // Take the top 10%, but only from teams with ≥25 league points
+  // Take the top 10%, but only from teams meeting the per-tier LP threshold
   const toPromote = teamsWithMinPoints.slice(0, Math.min(promotionCount, teamsWithMinPoints.length));
   
   logger.info(
-    `[TagTeamRebalancing] ${instanceId}: ${toPromote.length} teams eligible for promotion (top ${PROMOTION_PERCENTAGE * 100}% of ${totalEligibleTeams} AND ≥${MIN_LEAGUE_POINTS_FOR_PROMOTION} league points, ${teamsWithMinPoints.length} met points threshold)`
+    `[TagTeamRebalancing] ${instanceId}: ${toPromote.length} teams eligible for promotion (top ${PROMOTION_PERCENTAGE * 100}% of ${totalEligibleTeams} AND ≥${minLP} league points [${tier} tier], ${teamsWithMinPoints.length} met points threshold)`
   );
 
   return toPromote;

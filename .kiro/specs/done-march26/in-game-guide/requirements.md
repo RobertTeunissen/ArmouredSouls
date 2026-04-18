@@ -116,7 +116,7 @@ Armoured Souls is a complex robot combat strategy game with many interconnected 
 1. THE Guide SHALL include an article explaining the six league tiers (Bronze, Silver, Gold, Platinum, Diamond, Champion) and the instance system (max 100 robots per instance)
 2. THE Guide SHALL include an article explaining the matchmaking algorithm: LP-primary matching (±10 LP ideal, ±20 LP fallback) with ELO as secondary quality check
 3. THE Guide SHALL include an article explaining League Points (LP) earning (+3 win, -1 loss, +1 draw) and their role in promotion
-4. THE Guide SHALL include an article explaining promotion requirements (top 10% of instance + ≥25 LP + ≥5 cycles in tier) and demotion rules (bottom 10% + ≥5 cycles)
+4. THE Guide SHALL include an article explaining promotion requirements (top 10% of instance + per-tier LP threshold + ≥5 cycles in tier) and demotion rules (bottom 10% + ≥5 cycles)
 5. THE Guide SHALL include an article explaining LP retention across tier changes and the automatic 5-cycle demotion protection for newly promoted robots
 6. THE Guide SHALL include a diagram showing the league tier progression path from Bronze to Champion
 

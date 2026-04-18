@@ -100,9 +100,7 @@ function HallOfRecordsPage() {
               onClick={() => setActiveCategory(category.key)}
               className={`px-6 py-3 rounded-lg font-medium whitespace-nowrap transition-colors ${
                 activeCategory === category.key
-                  ? category.key === 'koth'
-                    ? 'bg-orange-500 text-gray-900'
-                    : 'bg-yellow-500 text-gray-900'
+                  ? 'bg-yellow-500 text-gray-900'
                   : 'bg-surface text-secondary hover:bg-surface-elevated'
               }`}
             >
