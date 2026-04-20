@@ -82,15 +82,15 @@ export function ArenaSummary({ battleLog }: ArenaSummaryProps) {
   }
 
   const rangeBandColors: Record<string, string> = {
-    melee: 'text-red-400',
-    short: 'text-yellow-400',
-    mid: 'text-green-400',
-    long: 'text-blue-400',
+    melee: 'text-error',
+    short: 'text-warning',
+    mid: 'text-success',
+    long: 'text-primary',
   };
 
   return (
     <div className="bg-surface rounded-lg mb-3 p-3">
-      <h2 className="text-lg font-bold mb-2 text-blue-400">🗺️ Arena Summary</h2>
+      <h3 className="text-lg font-bold mb-3">🗺️ Arena Summary</h3>
       <div className="grid grid-cols-2 gap-4 text-xs">
         <div className="space-y-1">
           <div className="flex justify-between bg-background rounded px-2 py-1">
@@ -115,7 +115,7 @@ export function ArenaSummary({ battleLog }: ArenaSummaryProps) {
       {robotNames.length > 0 && (
         <div className="grid grid-cols-2 gap-4 text-xs mt-2">
           <div className="space-y-1">
-            <div className="text-xs text-secondary font-semibold mb-1">Starting Positions</div>
+            <div className="text-xs text-secondary font-bold mb-1">Starting Positions</div>
             {robotNames.map((name) => {
               const pos = firstKnownPos[name];
               return pos ? (
@@ -127,7 +127,7 @@ export function ArenaSummary({ battleLog }: ArenaSummaryProps) {
             })}
           </div>
           <div className="space-y-1">
-            <div className="text-xs text-secondary font-semibold mb-1">Ending Positions</div>
+            <div className="text-xs text-secondary font-bold mb-1">Ending Positions</div>
             {robotNames.map((name) => {
               const pos = lastKnownPos[name];
               return pos ? (
@@ -143,14 +143,14 @@ export function ArenaSummary({ battleLog }: ArenaSummaryProps) {
 
       {totalRangeBandEvents > 0 && (
         <div className="mt-2">
-          <div className="text-xs text-secondary font-semibold mb-1">Range Band Distribution</div>
+          <div className="text-xs text-secondary font-bold mb-1">Range Band Distribution</div>
           <div className="flex gap-2">
             {(['melee', 'short', 'mid', 'long'] as const).map((band) => {
               const count = rangeBandCounts[band];
               const pct = totalRangeBandEvents > 0 ? (count / totalRangeBandEvents) * 100 : 0;
               return (
                 <div key={band} className="flex-1 bg-background rounded px-2 py-1 text-center text-xs">
-                  <div className={`font-semibold capitalize ${rangeBandColors[band]}`}>{band}</div>
+                  <div className={`font-bold capitalize ${rangeBandColors[band]}`}>{band}</div>
                   <div>{pct.toFixed(0)}%</div>
                 </div>
               );

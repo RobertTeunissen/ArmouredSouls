@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Navigation from '../components/Navigation';
 import { useRobotStore } from '../stores';
 import {
@@ -19,9 +19,11 @@ const TIERS = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'];
 function LeagueStandingsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const storeRobots = useRobotStore(state => state.robots);
   const fetchStoreRobots = useRobotStore(state => state.fetchRobots);
-  const [selectedTier, setSelectedTier] = useState('bronze');
+  const initialTier = TIERS.includes(searchParams.get('tier') ?? '') ? searchParams.get('tier')! : 'bronze';
+  const [selectedTier, setSelectedTier] = useState(initialTier);
   const [selectedInstance, setSelectedInstance] = useState<string | null>(null);
   const [robots, setRobots] = useState<LeagueRobot[]>([]);
   const [instances, setInstances] = useState<LeagueInstance[]>([]);

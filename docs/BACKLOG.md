@@ -61,13 +61,17 @@ The Investments & ROI tab and Investment Advisor tab on the Facilities page are 
 
 Current observability: Winston logs, `CyclePerformanceMonitoringService`, `securityMonitor`, admin Security Dashboard. Missing: external uptime monitoring, alerting on backend crashes or cycle failures, log aggregation. Lightweight approach: UptimeRobot for uptime, Discord webhook for cycle failures (notification service already supports Discord).
 
-**Incident — April 2026 (ACC)**: Full-disk condition during robot image feature launch required a hard VPS restart. The restart left a partial `dist/` build (entire `utils/` directory missing). The server appeared healthy (PM2 status: online) but the daily settlement cron failed at 23:00 UTC with `Cannot find module '../../utils/economyCalculations'`. The error was only discovered the next morning via a Discord notification. Root causes: (1) no disk usage alerting, (2) no post-restart build verification, (3) dynamic `import()` in settlement allowed the server to start despite missing modules.
+**Incident 1 — April 2026 (ACC)**: Full-disk condition during robot image feature launch required a hard VPS restart. The restart left a partial `dist/` build (entire `utils/` directory missing). The server appeared healthy (PM2 status: online) but the daily settlement cron failed at 23:00 UTC with `Cannot find module '../../utils/economyCalculations'`. The error was only discovered the next morning via a Discord notification. Root causes: (1) no disk usage alerting, (2) no post-restart build verification, (3) dynamic `import()` in settlement allowed the server to start despite missing modules.
 
-Specific gaps this exposed — should be addressed in the spec:
-- **Disk usage monitoring**: Cron job or agent that alerts (Discord webhook) when disk usage crosses 80%.
+**Incident 2 — April 20, 2026 (ACC)**: Login returned HTTP 500 ("Internal Server Error") for all users. Prisma threw `DriverAdapterError: could not write init file` on every DB query. Root cause: disk 100% full (`/dev/sda1 8.0G used of 8.0G`). The 8G DEV1-S disk filled up from daily DB backup accumulation — 7 daily backups (112M–196M each, ~1.2G total) plus 4 weekly copies (~343M), combined with growing PostgreSQL data, Docker images (990M), and systemd journal (510M). The backup script's retention policy (7 daily + 4 weekly) was working correctly but the DB growth rate (~20% per week from auto-generated users/robots) outpaced the available disk. Immediate fix: removed old backups, vacuumed journal, restarted PM2. Preventive fix applied: reduced backup retention to 3 daily + 2 weekly, added disk space guard to `app/scripts/backup.sh` (skips backup at 90% usage).
+
+Specific gaps these incidents exposed — should be addressed in the spec:
+- **Disk usage monitoring**: Alert (Discord webhook) when disk usage crosses 80%. Scaleway Cockpit provides Instance CPU metrics natively (free), but OS-level disk usage requires the Grafana Alloy agent (custom data, billed at €0.15/million samples). A lightweight cron + Discord webhook is simpler for a single VPS.
+- **Backup retention scaling**: Retention policy must account for DB growth rate. On the 8G ACC disk, 3 daily + 2 weekly is the safe maximum. Production (if same disk size) needs the same treatment.
 - **Post-restart/deploy build verification**: A health check that validates critical modules are loadable and key endpoints respond.
 - **Startup self-test**: On boot, verify that all cron job handlers can resolve their dependencies (especially dynamic imports).
 - **Log rotation cleanup**: More aggressive `logrotate` config to prevent logs from contributing to disk pressure.
+- **Disk sizing**: The DEV1-S 8G disk is undersized for a growing DB with daily backups. Consider upgrading to a larger volume or adding block storage.
 
 ### #4 — Landing Page / Marketing Front Page
 **Source**: Current state — visitors land on a login/register form with no context  
@@ -242,6 +246,12 @@ No global search exists. A universal search bar (header or Cmd+K overlay) queryi
 **Priority**: Low — reduces new player overwhelm
 
 Per the [Prestige & Fame Design Exploration](analysis/PRESTIGE_FAME_DESIGN_EXPLORATION.md): prestige-gated feature unlocks were largely rejected. A simple preference toggle (#16) may be more appropriate.
+
+### #39 — League & Tag Team Instance Deep Linking
+**Source**: Battle Report Overhaul (spec #26) follow-up  
+**Priority**: Low — QoL improvement for battle report navigation
+
+The battle report links to `/league-standings?tier=gold` but can't link to the specific league instance the battle was fought in. Same for tag team standings. League instances use string identifiers (e.g., `gold_1`) not numeric IDs, and the standings pages don't support URL-based instance selection. Fix: add `?instance=gold_1` query param support to LeagueStandingsPage and TagTeamStandingsPage, and include the league instance ID in the battle log API response. Also backfill `tournamentId` on old battle records so tournament links work for historical battles.
 
 ---
 

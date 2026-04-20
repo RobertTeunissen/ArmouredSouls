@@ -66,8 +66,15 @@ type BattleWithRobotsAndUsers = Prisma.BattleGetPayload<{
   };
 }>;
 
+type BattleWithRobotsAndWeapons = Prisma.BattleGetPayload<{
+  include: {
+    robot1: { include: { user: { select: { id: true; username: true; stableName: true } }; mainWeapon: { include: { weapon: { select: { name: true; rangeBand: true } } } }; offhandWeapon: { include: { weapon: { select: { name: true; rangeBand: true } } } } } };
+    robot2: { include: { user: { select: { id: true; username: true; stableName: true } }; mainWeapon: { include: { weapon: { select: { name: true; rangeBand: true } } } }; offhandWeapon: { include: { weapon: { select: { name: true; rangeBand: true } } } } } };
+  };
+}>;
+
 /** battleData in getBattleLog — bigint tag-out times converted to number */
-type BattleDataForLog = Omit<BattleWithRobotsAndUsers, 'team1TagOutTime' | 'team2TagOutTime'> & {
+type BattleDataForLog = Omit<BattleWithRobotsAndWeapons, 'team1TagOutTime' | 'team2TagOutTime'> & {
   team1TagOutTime: number | null;
   team2TagOutTime: number | null;
 };
@@ -451,9 +458,12 @@ export async function getMatchHistory(params: HistoryParams) {
   };
 }
 
-async function formatBattleHistoryEntry(battle: BattleWithFullRelations, targetRobotIds: number[]) {
+export async function formatBattleHistoryEntry(battle: BattleWithFullRelations, targetRobotIds: number[]) {
   const robot1Participant = battle.participants.find((p) => p.robotId === battle.robot1Id);
   const robot2Participant = battle.participants.find((p) => p.robotId === battle.robot2Id);
+
+  // Find the requesting user's participant for economic fields
+  const userParticipant = battle.participants.find((p) => targetRobotIds.includes(p.robotId));
 
   const baseData = {
     id: battle.id,
@@ -476,6 +486,9 @@ async function formatBattleHistoryEntry(battle: BattleWithFullRelations, targetR
     tournamentRound: battle.tournamentRound,
     tournamentName: battle.tournament?.name,
     tournamentMaxRounds: battle.tournament?.maxRounds,
+    prestigeAwarded: userParticipant?.prestigeAwarded ?? 0,
+    fameAwarded: userParticipant?.fameAwarded ?? 0,
+    streamingRevenue: userParticipant?.streamingRevenue ?? 0,
     robot1: {
       id: battle.robot1.id,
       name: battle.robot1.name,
@@ -599,10 +612,18 @@ export async function getBattleLog(battleId: number) {
     where: { id: battleId },
     include: {
       robot1: {
-        include: { user: { select: { id: true, username: true, stableName: true } } },
+        include: {
+          user: { select: { id: true, username: true, stableName: true } },
+          mainWeapon: { include: { weapon: { select: { name: true, rangeBand: true } } } },
+          offhandWeapon: { include: { weapon: { select: { name: true, rangeBand: true } } } },
+        },
       },
       robot2: {
-        include: { user: { select: { id: true, username: true, stableName: true } } },
+        include: {
+          user: { select: { id: true, username: true, stableName: true } },
+          mainWeapon: { include: { weapon: { select: { name: true, rangeBand: true } } } },
+          offhandWeapon: { include: { weapon: { select: { name: true, rangeBand: true } } } },
+        },
       },
     },
   });
@@ -617,6 +638,15 @@ export async function getBattleLog(battleId: number) {
 
   const battleParticipants = await prisma.battleParticipant.findMany({
     where: { battleId },
+    include: {
+      robot: {
+        include: {
+          user: { select: { id: true, username: true, stableName: true } },
+          mainWeapon: { include: { weapon: { select: { name: true, rangeBand: true } } } },
+          offhandWeapon: { include: { weapon: { select: { name: true, rangeBand: true } } } },
+        },
+      },
+    },
   });
 
   const participantMap = new Map(battleParticipants.map(p => [p.robotId, p]));
@@ -631,6 +661,7 @@ export async function getBattleLog(battleId: number) {
     createdAt: battleData.createdAt,
     battleType: battleData.battleType,
     leagueType: battleData.leagueType,
+    tournamentId: battleData.tournamentId ?? null,
     duration: battleData.durationSeconds,
     battleLog:
       typeof battleData.battleLog === 'object' && battleData.battleLog !== null
@@ -641,6 +672,41 @@ export async function getBattleLog(battleId: number) {
           )
         : battleData.battleLog,
   };
+
+  // Build unified participants array from BattleParticipant records
+  // This is the single source of truth — same shape for all battle types
+  baseResponse.participants = battleParticipants.map(p => ({
+    robotId: p.robotId,
+    robotName: p.robot.name,
+    owner: p.robot.user.stableName || p.robot.user.username,
+    ownerId: p.robot.user.id,
+    imageUrl: p.robot.imageUrl ?? null,
+    teamIndex: p.team - 1, // DB uses 1-based, frontend uses 0-based
+    team: p.team,
+    role: p.role,
+    placement: p.placement,
+    // Combat outcome
+    finalHP: p.finalHP,
+    maxHP: p.robot.maxHP,
+    maxShield: p.robot.maxShield,
+    destroyed: p.destroyed,
+    yielded: p.yielded,
+    damageDealt: p.damageDealt,
+    // Economy
+    eloBefore: p.eloBefore,
+    eloAfter: p.eloAfter,
+    credits: p.credits,
+    streamingRevenue: p.streamingRevenue,
+    prestigeAwarded: p.prestigeAwarded,
+    fameAwarded: p.fameAwarded,
+    // Loadout
+    stance: p.robot.stance,
+    loadoutType: p.robot.loadoutType,
+    mainWeaponName: p.robot.mainWeapon?.weapon?.name ?? null,
+    mainWeaponRangeBand: p.robot.mainWeapon?.weapon?.rangeBand ?? null,
+    offhandWeaponName: p.robot.offhandWeapon?.weapon?.name ?? null,
+    offhandWeaponRangeBand: p.robot.offhandWeapon?.weapon?.rangeBand ?? null,
+  }));
 
   if (battleData.battleType === 'tag_team' && battleData.team1ActiveRobotId && battleData.team2ActiveRobotId) {
     await buildTagTeamLogResponse(baseResponse, battleData, battleParticipants);
@@ -708,6 +774,7 @@ async function buildTagTeamLogResponse(baseResponse: Record<string, unknown>, ba
           maxShield: robot.maxShield,
           damageDealt,
           fameAwarded,
+          imageUrl: robot.imageUrl ?? null,
         }
       : null;
 
@@ -783,6 +850,7 @@ async function buildKothLogResponse(baseResponse: Record<string, unknown>, battl
       fame: p.fameAwarded,
       prestige: p.prestigeAwarded,
       streamingRevenue: p.streamingRevenue || 0,
+      imageUrl: p.robot.imageUrl ?? null,
     };
   });
 
@@ -809,6 +877,15 @@ function buildStandardLogResponse(baseResponse: Record<string, unknown>, battleD
     prestige: robot1Participant?.prestigeAwarded ?? 0,
     fame: robot1Participant?.fameAwarded ?? 0,
     streamingRevenue: streamingRevenue1,
+    yielded: robot1Participant?.yielded ?? false,
+    destroyed: robot1Participant?.destroyed ?? false,
+    imageUrl: battleData.robot1.imageUrl ?? null,
+    loadoutType: battleData.robot1.loadoutType,
+    rangeBand: battleData.robot1.mainWeapon?.weapon?.rangeBand ?? null,
+    stance: battleData.robot1.stance,
+    mainWeaponName: battleData.robot1.mainWeapon?.weapon?.name ?? null,
+    offhandWeaponName: battleData.robot1.offhandWeapon?.weapon?.name ?? null,
+    offhandRangeBand: battleData.robot1.offhandWeapon?.weapon?.rangeBand ?? null,
   };
 
   baseResponse.robot2 = {
@@ -826,5 +903,14 @@ function buildStandardLogResponse(baseResponse: Record<string, unknown>, battleD
     prestige: robot2Participant?.prestigeAwarded ?? 0,
     fame: robot2Participant?.fameAwarded ?? 0,
     streamingRevenue: streamingRevenue2,
+    yielded: robot2Participant?.yielded ?? false,
+    destroyed: robot2Participant?.destroyed ?? false,
+    imageUrl: battleData.robot2.imageUrl ?? null,
+    loadoutType: battleData.robot2.loadoutType,
+    rangeBand: battleData.robot2.mainWeapon?.weapon?.rangeBand ?? null,
+    stance: battleData.robot2.stance,
+    mainWeaponName: battleData.robot2.mainWeapon?.weapon?.name ?? null,
+    offhandWeaponName: battleData.robot2.offhandWeapon?.weapon?.name ?? null,
+    offhandRangeBand: battleData.robot2.offhandWeapon?.weapon?.rangeBand ?? null,
   };
 }

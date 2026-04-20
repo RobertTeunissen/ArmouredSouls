@@ -250,6 +250,7 @@ export async function generateBattleReadyUsers(
                 stance,
                 battleReadiness: 100,
                 yieldThreshold,
+                imageUrl: `/assets/robots/${tier.name.toLowerCase()}_512x512.webp`,
               },
             });
 

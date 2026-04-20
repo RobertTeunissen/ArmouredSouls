@@ -55,6 +55,14 @@ function makeKothBattle(overrides: Partial<BattleHistory> = {}): BattleHistory {
   } as BattleHistory;
 }
 
+const defaultKothProps = {
+  myRobotId: 10,
+  eloChange: 0,
+  reward: 500,
+  outcome: 'win' as const,
+  onClick: vi.fn(),
+};
+
 describe('KothMatchCards', () => {
   it('should render 👑 icon and orange border for KotH battle', () => {
     const battle = makeKothBattle();
@@ -64,11 +72,10 @@ describe('KothMatchCards', () => {
         battle={battle}
         myRobot={battle.robot1}
         opponent={battle.robot2}
-        outcome="win"
-        eloChange={0}
-        myRobotId={10}
-        reward={500}
-        onClick={vi.fn()}
+        prestige={3}
+        fame={2}
+        streamingRevenue={50}
+        {...defaultKothProps}
       />
     );
 
@@ -88,11 +95,10 @@ describe('KothMatchCards', () => {
         battle={battle}
         myRobot={battle.robot1}
         opponent={battle.robot2}
-        outcome="win"
-        eloChange={0}
-        myRobotId={10}
-        reward={500}
-        onClick={vi.fn()}
+        prestige={5}
+        fame={3}
+        streamingRevenue={100}
+        {...defaultKothProps}
       />
     );
 
@@ -103,5 +109,105 @@ describe('KothMatchCards', () => {
     expect(screen.queryByText('WIN')).toBeNull();
     expect(screen.queryByText('LOSS')).toBeNull();
     expect(screen.queryByText('DRAW')).toBeNull();
+  });
+
+  /**
+   * Validates: Requirements 7.1, 7.2
+   */
+  it('should display prestige and fame indicators on KotH battle cards', () => {
+    const battle = makeKothBattle();
+
+    renderWithRouter(
+      <CompactBattleCard
+        battle={battle}
+        myRobot={battle.robot1}
+        opponent={battle.robot2}
+        prestige={8}
+        fame={4}
+        {...defaultKothProps}
+      />
+    );
+
+    // Prestige indicator should render
+    expect(screen.getAllByText('⭐+8').length).toBeGreaterThan(0);
+
+    // Fame indicator should render
+    expect(screen.getAllByText('🎖️+4').length).toBeGreaterThan(0);
+  });
+
+  /**
+   * Validates: Requirements 7.4
+   */
+  it('should omit prestige and fame indicators when not provided on KotH cards', () => {
+    const battle = makeKothBattle();
+
+    renderWithRouter(
+      <CompactBattleCard
+        battle={battle}
+        myRobot={battle.robot1}
+        opponent={battle.robot2}
+        {...defaultKothProps}
+      />
+    );
+
+    // Neither indicator should render
+    expect(screen.queryByText(/⭐\+/)).toBeNull();
+    expect(screen.queryByText(/🎖️\+/)).toBeNull();
+  });
+
+  /**
+   * Validates: Requirements 7.1, 7.2
+   */
+  it('should display prestige and fame with correct colors on KotH cards', () => {
+    const battle = makeKothBattle();
+
+    renderWithRouter(
+      <CompactBattleCard
+        battle={battle}
+        myRobot={battle.robot1}
+        opponent={battle.robot2}
+        prestige={10}
+        fame={6}
+        {...defaultKothProps}
+      />
+    );
+
+    // Prestige should use info color (#a371f7)
+    const prestigeElements = screen.getAllByText('⭐+10');
+    const hasPrestigeColor = prestigeElements.some(
+      (el) => el.className.includes('#a371f7') || el.closest('[class*="#a371f7"]') !== null
+    );
+    expect(hasPrestigeColor).toBe(true);
+
+    // Fame should use warning color (#d29922)
+    const fameElements = screen.getAllByText('🎖️+6');
+    const hasFameColor = fameElements.some(
+      (el) => el.className.includes('#d29922') || el.closest('[class*="#d29922"]') !== null
+    );
+    expect(hasFameColor).toBe(true);
+  });
+
+  /**
+   * Validates: Requirements 7.4
+   */
+  it('should display total credits including streaming revenue on KotH cards', () => {
+    const battle = makeKothBattle();
+
+    renderWithRouter(
+      <CompactBattleCard
+        battle={battle}
+        myRobot={battle.robot1}
+        opponent={battle.robot2}
+        streamingRevenue={200}
+        reward={500}
+        eloChange={0}
+        outcome="win"
+        myRobotId={10}
+        onClick={vi.fn()}
+      />
+    );
+
+    // Total credits = 500 + 200 = 700
+    expect(screen.getAllByText('₡700').length).toBeGreaterThan(0);
   });
 });

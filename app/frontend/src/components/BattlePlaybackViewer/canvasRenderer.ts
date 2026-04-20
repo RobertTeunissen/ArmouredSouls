@@ -26,12 +26,12 @@ const ATTACK_COLORS: Record<string, string> = {
   malfunction: '#EF4444',
 };
 
-const ROBOT_RADIUS = 12;
-const HP_BAR_WIDTH = 30;
-const HP_BAR_HEIGHT = 4;
-const SHIELD_BAR_HEIGHT = 3;
-const NAME_OFFSET_Y = -22;
-const HP_BAR_OFFSET_Y = 18;
+const ROBOT_RADIUS = 14;
+const HP_BAR_WIDTH = 40;
+const HP_BAR_HEIGHT = 5;
+const SHIELD_BAR_HEIGHT = 4;
+const NAME_OFFSET_Y = -24;
+const HP_BAR_OFFSET_Y = 20;
 
 /** Clear the canvas */
 export function clearCanvas(
@@ -40,6 +40,49 @@ export function clearCanvas(
   height: number
 ): void {
   ctx.clearRect(0, 0, width, height);
+}
+
+/**
+ * Render the arena background with a radial gradient and concentric grid circles.
+ * Replaces plain clearCanvas() in the render loop — clears the canvas first,
+ * then draws a radial gradient from #0a0e14 (center) to #0f1318 (edge),
+ * plus concentric circles at 25%/50%/75% of arena radius using #1a1f29.
+ */
+export function renderArenaBackground(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  centerX: number,
+  centerY: number,
+  arenaRadiusPixels: number
+): void {
+  // Clear the canvas first
+  ctx.clearRect(0, 0, width, height);
+
+  // Draw radial gradient background
+  const gradient = ctx.createRadialGradient(
+    centerX, centerY, 0,
+    centerX, centerY, arenaRadiusPixels
+  );
+  gradient.addColorStop(0, '#0a0e14');
+  gradient.addColorStop(1, '#0f1318');
+
+  ctx.save();
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, width, height);
+
+  // Draw concentric grid circles at 25%, 50%, 75% of arena radius
+  const gridColor = '#1a1f29';
+  ctx.strokeStyle = gridColor;
+  ctx.lineWidth = 1;
+
+  for (const fraction of [0.25, 0.5, 0.75]) {
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, arenaRadiusPixels * fraction, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  ctx.restore();
 }
 
 /** Render the circular arena boundary */
@@ -53,7 +96,7 @@ export function renderArenaBoundary(
   ctx.beginPath();
   ctx.arc(centerX, centerY, radiusPixels, 0, Math.PI * 2);
   ctx.setLineDash([8, 6]);
-  ctx.strokeStyle = '#4B5563';
+  ctx.strokeStyle = '#57606a';
   ctx.lineWidth = 2;
   ctx.stroke();
   ctx.setLineDash([]);
@@ -67,7 +110,43 @@ function getHPColor(hpPercent: number): string {
   return '#EF4444';
 }
 
-/** Render a robot icon with team color, name, and facing direction */
+/** Draw a hexagonal robot body with a "head" bump at the top (facing direction) */
+function renderHexagonalBody(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  radius: number,
+  facingRad: number,
+  fillColor: string,
+  strokeColor: string
+): void {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(facingRad);
+
+  // Hexagonal body
+  ctx.beginPath();
+  for (let i = 0; i < 6; i++) {
+    const angle = (Math.PI / 3) * i - Math.PI / 2; // start from top
+    const hx = Math.cos(angle) * radius;
+    const hy = Math.sin(angle) * radius;
+    if (i === 0) {
+      ctx.moveTo(hx, hy);
+    } else {
+      ctx.lineTo(hx, hy);
+    }
+  }
+  ctx.closePath();
+  ctx.fillStyle = fillColor;
+  ctx.fill();
+  ctx.strokeStyle = strokeColor;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+/** Render a robot with team color, name, HP bar, and facing direction */
 export function renderRobot(
   ctx: CanvasRenderingContext2D,
   position: { x: number; y: number },
@@ -77,7 +156,7 @@ export function renderRobot(
   hp: number,
   maxHP: number,
   shield: number,
-  maxShield: number
+  maxShield: number,
 ): void {
   const { x, y } = position;
   const color = TEAM_COLORS[teamIndex] ?? TEAM_COLORS[0];
@@ -111,20 +190,14 @@ export function renderRobot(
     ctx.stroke();
 
     // 💀 label
-    ctx.font = '14px sans-serif';
+    ctx.font = '18px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#EF4444';
     ctx.fillText('💀', x, y - ROBOT_RADIUS - 8);
   } else {
-    // Robot body circle
-    ctx.beginPath();
-    ctx.arc(x, y, ROBOT_RADIUS, 0, Math.PI * 2);
-    ctx.fillStyle = color;
-    ctx.fill();
-    ctx.strokeStyle = '#1F2937';
-    ctx.lineWidth = 2;
-    ctx.stroke();
+    // Render hexagonal robot body in team color
+    renderHexagonalBody(ctx, x, y, ROBOT_RADIUS, facingRad, color, '#1F2937');
 
     // Facing direction arrow
     const arrowLen = ROBOT_RADIUS + 6;
@@ -149,7 +222,7 @@ export function renderRobot(
   }
 
   // Name label above robot
-  ctx.font = '11px sans-serif';
+  ctx.font = 'bold 14px sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'bottom';
   ctx.shadowColor = '#000000';
@@ -311,11 +384,61 @@ export function renderKothZone(
   state: 'uncontested' | 'contested' | 'empty' | 'inactive',
   controllerColorIndex?: number,
   animationTime?: number,
+  previousCenter?: { x: number; y: number },
+  transitionProgress?: number,
 ): void {
   ctx.save();
 
-  if (state === 'inactive') {
-    // Faded zone during transition
+  // If we have a previous center and transition progress, render the animated transition
+  const isTransitioning = previousCenter !== undefined && transitionProgress !== undefined;
+
+  if (state === 'inactive' && isTransitioning) {
+    // Zone is moving: fade out at old position, fade in at new position
+    const fadeOut = Math.max(0, 1 - transitionProgress * 2); // fades out in first half
+    const fadeIn = Math.max(0, transitionProgress * 2 - 1);  // fades in in second half
+
+    // Fading-out zone at previous position
+    if (fadeOut > 0) {
+      ctx.globalAlpha = fadeOut;
+      ctx.beginPath();
+      ctx.arc(previousCenter.x, previousCenter.y, radiusPixels, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(245, 158, 11, 0.2)';
+      ctx.fill();
+      ctx.setLineDash([4, 4]);
+      ctx.strokeStyle = 'rgba(245, 158, 11, 0.4)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.globalAlpha = 1;
+    }
+
+    // Fading-in zone at new position
+    if (fadeIn > 0) {
+      ctx.globalAlpha = fadeIn;
+      ctx.beginPath();
+      ctx.arc(center.x, center.y, radiusPixels, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(245, 158, 11, 0.2)';
+      ctx.fill();
+      ctx.setLineDash([4, 4]);
+      ctx.strokeStyle = 'rgba(245, 158, 11, 0.4)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.globalAlpha = 1;
+    }
+
+    // Pulsing "moving" label at midpoint between old and new positions
+    const midX = previousCenter.x + (center.x - previousCenter.x) * transitionProgress;
+    const midY = previousCenter.y + (center.y - previousCenter.y) * transitionProgress;
+    const pulse = animationTime !== undefined ? 0.5 + 0.3 * Math.sin(animationTime * 6) : 0.7;
+    ctx.globalAlpha = pulse;
+    ctx.beginPath();
+    ctx.arc(midX, midY, 4, 0, Math.PI * 2);
+    ctx.fillStyle = '#F59E0B';
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  } else if (state === 'inactive' && !isTransitioning) {
+    // Inactive without transition data — original faded zone rendering
     ctx.beginPath();
     ctx.arc(center.x, center.y, radiusPixels, 0, Math.PI * 2);
     ctx.fillStyle = 'rgba(107, 114, 128, 0.15)';
@@ -325,7 +448,52 @@ export function renderKothZone(
     ctx.lineWidth = 1;
     ctx.stroke();
     ctx.setLineDash([]);
+  } else if (isTransitioning && transitionProgress < 1) {
+    // Zone just became active but transition is still completing — show both positions
+    const fadeOut = Math.max(0, 1 - transitionProgress);
+    const fadeIn = transitionProgress;
+
+    // Fading-out ghost at previous position
+    if (fadeOut > 0.05) {
+      ctx.globalAlpha = fadeOut * 0.5;
+      ctx.beginPath();
+      ctx.arc(previousCenter.x, previousCenter.y, radiusPixels, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(107, 114, 128, 0.2)';
+      ctx.fill();
+      ctx.setLineDash([4, 4]);
+      ctx.strokeStyle = 'rgba(107, 114, 128, 0.3)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.globalAlpha = 1;
+    }
+
+    // Render the new zone at its active state with fade-in
+    ctx.globalAlpha = fadeIn;
+    renderKothZoneActive(ctx, center, radiusPixels, state, controllerColorIndex, animationTime);
+    ctx.globalAlpha = 1;
   } else if (state === 'contested') {
+    renderKothZoneActive(ctx, center, radiusPixels, state, controllerColorIndex, animationTime);
+  } else if (state === 'uncontested' && controllerColorIndex !== undefined) {
+    renderKothZoneActive(ctx, center, radiusPixels, state, controllerColorIndex, animationTime);
+  } else {
+    // Empty — gold/amber base
+    renderKothZoneActive(ctx, center, radiusPixels, state, controllerColorIndex, animationTime);
+  }
+
+  ctx.restore();
+}
+
+/** Render the active KotH zone (non-transitioning states) */
+function renderKothZoneActive(
+  ctx: CanvasRenderingContext2D,
+  center: { x: number; y: number },
+  radiusPixels: number,
+  state: 'uncontested' | 'contested' | 'empty' | 'inactive',
+  controllerColorIndex?: number,
+  animationTime?: number,
+): void {
+  if (state === 'contested') {
     // Pulsing red tint
     const pulse = animationTime !== undefined ? 0.3 + 0.15 * Math.sin(animationTime * 4) : 0.35;
     ctx.beginPath();
@@ -358,8 +526,6 @@ export function renderKothZone(
     ctx.lineWidth = 1.5;
     ctx.stroke();
   }
-
-  ctx.restore();
 }
 
 /** Render KotH scoreboard panel on the canvas */
@@ -369,53 +535,64 @@ export function renderKothScoreboard(
   canvasWidth: number,
   scoreThreshold: number,
 ): void {
-  const panelX = canvasWidth - 140;
+  const panelWidth = 160;
+  const panelX = canvasWidth - panelWidth - 8;
   const panelY = 8;
   const rowHeight = 16;
   const panelHeight = 20 + scores.length * rowHeight;
+  const scoreColWidth = 40; // reserved for right-aligned score
+  const nameMaxWidth = panelWidth - 12 - scoreColWidth; // 12 = left+right padding
 
   ctx.save();
 
   // Panel background
   ctx.fillStyle = 'rgba(17, 24, 39, 0.85)';
-  ctx.fillRect(panelX, panelY, 132, panelHeight);
+  ctx.fillRect(panelX, panelY, panelWidth, panelHeight);
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
   ctx.lineWidth = 1;
-  ctx.strokeRect(panelX, panelY, 132, panelHeight);
+  ctx.strokeRect(panelX, panelY, panelWidth, panelHeight);
 
   // Title
-  ctx.font = 'bold 10px sans-serif';
+  ctx.font = 'bold 12px sans-serif';
   ctx.fillStyle = '#F59E0B';
   ctx.textAlign = 'left';
   ctx.textBaseline = 'top';
   ctx.fillText(`👑 KotH (${scoreThreshold})`, panelX + 6, panelY + 4);
 
   // Score rows
-  ctx.font = '9px sans-serif';
+  ctx.font = '11px sans-serif';
   scores
     .slice()
     .sort((a, b) => b.zoneScore - a.zoneScore)
     .forEach((entry, i) => {
       const y = panelY + 18 + i * rowHeight;
       const color = KOTH_COLORS[i] ?? '#9CA3AF';
+      const prefix = entry.isEliminated ? '☠ ' : '';
+      const displayName = truncateText(ctx, prefix + entry.robotName, nameMaxWidth);
 
-      if (entry.isEliminated) {
-        ctx.fillStyle = '#6B7280';
-        ctx.fillText(`☠ ${entry.robotName}`, panelX + 6, y);
-        ctx.textAlign = 'right';
-        ctx.fillText(entry.zoneScore.toFixed(1), panelX + 126, y);
-        ctx.textAlign = 'left';
-      } else {
-        ctx.fillStyle = color;
-        ctx.fillText(entry.robotName, panelX + 6, y);
-        ctx.textAlign = 'right';
-        ctx.fillStyle = '#E5E7EB';
-        ctx.fillText(entry.zoneScore.toFixed(1), panelX + 126, y);
-        ctx.textAlign = 'left';
-      }
+      // Name (left-aligned, truncated to fit)
+      ctx.textAlign = 'left';
+      ctx.fillStyle = entry.isEliminated ? '#6B7280' : color;
+      ctx.fillText(displayName, panelX + 6, y);
+
+      // Score (right-aligned)
+      ctx.textAlign = 'right';
+      ctx.fillStyle = entry.isEliminated ? '#6B7280' : '#E5E7EB';
+      ctx.fillText(entry.zoneScore.toFixed(1), panelX + panelWidth - 6, y);
+      ctx.textAlign = 'left';
     });
 
   ctx.restore();
+}
+
+/** Truncate text with ellipsis to fit within maxWidth pixels */
+function truncateText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string {
+  if (ctx.measureText(text).width <= maxWidth) return text;
+  let truncated = text;
+  while (truncated.length > 1 && ctx.measureText(truncated + '…').width > maxWidth) {
+    truncated = truncated.slice(0, -1);
+  }
+  return truncated + '…';
 }
 
 /** Render zone occupation indicator on a robot (small crown icon above) */
@@ -424,9 +601,9 @@ export function renderZoneOccupationIndicator(
   position: { x: number; y: number },
 ): void {
   ctx.save();
-  ctx.font = '10px sans-serif';
+  ctx.font = '14px sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'bottom';
-  ctx.fillText('👑', position.x, position.y - 28);
+  ctx.fillText('👑', position.x, position.y - 34);
   ctx.restore();
 }

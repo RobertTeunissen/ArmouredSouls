@@ -9,7 +9,7 @@ import {
   KothScoreEntry,
 } from './types';
 import {
-  clearCanvas,
+  renderArenaBackground,
   renderArenaBoundary,
   renderRobot,
   renderAttackIndicator,
@@ -20,6 +20,7 @@ import {
   renderKothScoreboard,
   renderZoneOccupationIndicator,
 } from './canvasRenderer';
+import { useContainerSize } from '../../hooks/useContainerSize';
 
 interface ArenaCanvasProps {
   arenaRadius: number;
@@ -40,7 +41,6 @@ interface ArenaCanvasProps {
   kothScoreThreshold?: number;
 }
 
-const CANVAS_SIZE = 500;
 const TARGET_FPS = 30;
 const FRAME_INTERVAL = 1000 / TARGET_FPS;
 
@@ -64,8 +64,15 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
   kothScoreThreshold,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number | null>(null);
   const lastRenderTimeRef = useRef<number>(0);
+
+  // Responsive sizing: observe container width, clamp to [300, 500]
+  const { width: displaySize, devicePixelRatio } = useContainerSize(containerRef, {
+    minSize: 300,
+    maxSize: 500,
+  });
 
   // Store latest props in refs so the render loop always reads current values
   const frameRef = useRef(frame);
@@ -90,13 +97,14 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
   useEffect(() => { kothScoresRef.current = kothScores; }, [kothScores]);
   useEffect(() => { kothScoreThresholdRef.current = kothScoreThreshold; }, [kothScoreThreshold]);
 
-  // Set canvas pixel dimensions once on mount
+  // Update canvas pixel dimensions for HiDPI rendering when size or DPR changes
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    canvas.width = CANVAS_SIZE;
-    canvas.height = CANVAS_SIZE;
-  }, []);
+    const pixelSize = Math.round(displaySize * devicePixelRatio);
+    canvas.width = pixelSize;
+    canvas.height = pixelSize;
+  }, [displaySize, devicePixelRatio]);
 
   const renderFrame = useCallback((): void => {
     const canvas = canvasRef.current;
@@ -104,7 +112,15 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const { width, height } = canvas;
+    // Scale context for HiDPI — draw in CSS pixel coordinates, not device pixels
+    const dpr = devicePixelRatio || 1;
+    const cssWidth = canvas.width / dpr;
+    const cssHeight = canvas.height / dpr;
+    ctx.save();
+    ctx.scale(dpr, dpr);
+
+    const width = cssWidth;
+    const height = cssHeight;
     const f = frameRef.current;
     const robs = robotsRef.current;
     const indicators = attackIndicatorsRef.current;
@@ -119,13 +135,15 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
     const toPixel = (pos: { x: number; y: number }): { x: number; y: number } =>
       arenaToPixel(pos, width, height, arenaRadius);
 
-    // Clear
-    clearCanvas(ctx, width, height);
-
-    // Arena boundary
+    // Arena center and radius in pixel coordinates (needed for background and boundary)
     const center = toPixel({ x: 0, y: 0 });
     const edgePoint = toPixel({ x: arenaRadius, y: 0 });
     const radiusPixels = Math.abs(edgePoint.x - center.x);
+
+    // Clear and draw arena background (radial gradient + concentric grid)
+    renderArenaBackground(ctx, width, height, center.x, center.y, radiusPixels);
+
+    // Arena boundary
     renderArenaBoundary(ctx, center.x, center.y, radiusPixels);
 
     // KotH zone overlay (rendered after arena boundary, before robots)
@@ -136,6 +154,10 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
       const controllerIndex = zone.controllingRobotName
         ? robs.findIndex(r => r.name === zone.controllingRobotName)
         : undefined;
+
+      // Convert previous center to pixel coordinates for zone transition animation
+      const prevCenterPx = zone.previousCenter ? toPixel(zone.previousCenter) : undefined;
+
       renderKothZone(
         ctx,
         zoneCenterPx,
@@ -143,6 +165,8 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
         zone.state,
         controllerIndex !== undefined && controllerIndex >= 0 ? controllerIndex : undefined,
         time,
+        prevCenterPx,
+        zone.transitionProgress,
       );
     }
 
@@ -196,7 +220,7 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
         hp,
         robot.maxHP,
         shield,
-        robot.maxShield
+        robot.maxShield,
       );
     }
 
@@ -220,7 +244,10 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
     if (scores && threshold !== undefined) {
       renderKothScoreboard(ctx, scores, width, threshold);
     }
-  }, [arenaRadius]);
+
+    // Restore context (undo DPR scale)
+    ctx.restore();
+  }, [arenaRadius, devicePixelRatio]);
 
   // Animation loop at ~30fps
   useEffect(() => {
@@ -244,11 +271,14 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
   }, [renderFrame]);
 
   return (
-    <div style={{ width: CANVAS_SIZE, height: CANVAS_SIZE, flexShrink: 0 }}>
+    <div
+      ref={containerRef}
+      className="w-full max-w-[500px] min-w-[300px] shrink-0 aspect-square"
+    >
       <canvas
         ref={canvasRef}
-        className="bg-gray-900 rounded-lg"
-        style={{ width: CANVAS_SIZE, height: CANVAS_SIZE }}
+        className="bg-[#0a0e14] rounded-lg"
+        style={{ width: displaySize, height: displaySize }}
         aria-label="Battle arena playback canvas"
         role="img"
       />

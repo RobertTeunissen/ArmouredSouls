@@ -21,8 +21,8 @@ Page PRDs define:
 - `PRD_FACILITIES_PAGE.md` - Stable facilities management
 
 ### Battle & Competition
-- `PRD_BATTLE_HISTORY_PAGE.md` - Battle history and replay viewer
-- `PRD_BATTLE_RESULTS_PAGE.md` - Post-battle results display
+- `PRD_BATTLE_HISTORY_PAGE.md` - Battle history listing and filtering
+- `PRD_BATTLE_REPORT_PAGE.md` - Battle report detail page (`/battle/:id`)
 - `PRD_BATTLE_STANCES_AND_YIELD.md` - Battle stance and yield threshold configuration
 - `PRD_LEAGUE_STANDINGS.md` - League rankings and standings
 
