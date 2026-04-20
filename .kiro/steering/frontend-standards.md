@@ -480,6 +480,108 @@ function RobotForm() {
 }
 ```
 
+## Responsive Canvas/Container Sizing
+
+### `useContainerSize` Hook
+
+For responsive canvas or container sizing, use the `useContainerSize` hook from `src/hooks/useContainerSize.ts`. This hook uses `ResizeObserver` to track a container element's dimensions and returns clamped width/height values.
+
+```typescript
+import { useRef } from 'react';
+import { useContainerSize } from '../hooks/useContainerSize';
+
+function MyCanvasComponent() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { width, height, devicePixelRatio } = useContainerSize(containerRef, {
+    minSize: 300,
+    maxSize: 500,
+  });
+
+  return (
+    <div ref={containerRef} className="w-full">
+      <canvas
+        width={width * devicePixelRatio}
+        height={height * devicePixelRatio}
+        style={{ width, height }}
+      />
+    </div>
+  );
+}
+```
+
+Key behaviors:
+- Returns clamped `{ width, height }` maintaining a 1:1 aspect ratio
+- Falls back to 500px fixed size if `ResizeObserver` is not supported
+- Falls back to `devicePixelRatio = 1` if undefined
+- Prefer this over hardcoded pixel constants (e.g., `CANVAS_SIZE = 500`) for any canvas or container that needs to adapt to viewport width
+
+## Responsive Tab Layout Pattern
+
+### Desktop Tabs / Mobile Stacked
+
+For pages with multiple content sections, use the tab layout pattern: desktop tabs (≥1024px) with a mobile stacked fallback (<1024px). The `TabLayout` component in `src/components/battle-detail/TabLayout.tsx` is the reference implementation.
+
+```typescript
+// Desktop (≥1024px): render TabLayout
+// Mobile (<1024px): render all sections stacked vertically
+const isDesktop = useMediaQuery('(min-width: 1024px)');
+
+{isDesktop ? (
+  <TabLayout activeTab={activeTab} onTabChange={setActiveTab} hasPlayback={hasPlayback}>
+    {{
+      overview: <OverviewContent />,
+      playback: <PlaybackContent />,
+      combatLog: <CombatLogContent />,
+    }}
+  </TabLayout>
+) : (
+  <>
+    <OverviewContent />
+    <PlaybackContent />
+    <CombatLogContent />
+  </>
+)}
+```
+
+Guidelines:
+- Tab bar uses `bg-surface-elevated` background with `border-primary` active indicator
+- Active tab: `text-primary border-b-2 border-primary`; inactive: `text-secondary` with 150ms hover transition
+- Respect `prefers-reduced-motion` on tab transitions
+- Hide tabs that have no content (e.g., hide "Playback" when no spatial data exists)
+- Tab state defaults to the first tab on initial load and persists across data refreshes via component state
+
+## Client-Side Data Derivation Pattern
+
+### Pure Functions for API Response Processing
+
+When the API response contains raw data that needs aggregation or transformation for display, extract the computation into a pure function in `src/utils/`. This keeps components focused on rendering and makes the logic independently testable with unit and property-based tests.
+
+Reference implementation: `computeBattleStatistics` in `src/utils/battleStatistics.ts`.
+
+```typescript
+// Pure function — no side effects, no hooks, no API calls
+export function computeBattleStatistics(
+  events: BattleLogEvent[],
+  battleDuration: number,
+  battleType?: string,
+  tagTeamInfo?: { team1Robots: string[]; team2Robots: string[] },
+  robotMaxHP?: Record<string, number>,
+): BattleStatistics { /* ... */ }
+
+// Called once when data loads, result passed as props
+const statistics = useMemo(
+  () => computeBattleStatistics(events, duration, battleType, tagTeamInfo, robotMaxHP),
+  [events, duration, battleType, tagTeamInfo, robotMaxHP],
+);
+```
+
+Guidelines:
+- Keep the function pure — accept data in, return derived data out
+- Wrap the call in `useMemo` at the page level to avoid recomputation on unrelated re-renders
+- Pass the derived result as props to child components rather than having each child recompute
+- Write property-based tests (fast-check) for invariants like conservation laws (e.g., sum of parts equals total)
+- Handle edge cases explicitly: empty inputs return a safe default (e.g., `hasData: false`), division by zero returns 0 instead of NaN
+
 ## Performance Optimization
 
 ### Memoization

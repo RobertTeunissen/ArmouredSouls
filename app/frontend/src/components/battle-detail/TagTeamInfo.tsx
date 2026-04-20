@@ -4,9 +4,9 @@ export function TagTeamInfo({ battleLog }: TagTeamInfoProps) {
   if (battleLog.battleType !== 'tag_team' || !battleLog.tagTeam) return null;
 
   return (
-    <div className="bg-cyan-900/20 border border-cyan-600 rounded-lg mb-3 p-3">
-      <h3 className="text-lg font-bold text-cyan-400 mb-2">Tag Team Battle</h3>
-      <div className="grid grid-cols-2 gap-4 text-sm">
+    <div className="bg-surface rounded-lg mb-3 p-3">
+      <h3 className="text-lg font-bold mb-3">🤝 Tag Team Battle</h3>
+      <div className="grid grid-cols-2 gap-4 text-xs">
         {/* Team 1 */}
         <div className="space-y-1">
           <div className="font-semibold text-white text-base">
@@ -23,7 +23,7 @@ export function TagTeamInfo({ battleLog }: TagTeamInfoProps) {
             </div>
           )}
           {battleLog.tagTeam.team1.tagOutTime != null && (
-            <div className="text-xs text-cyan-400">
+            <div className="text-xs text-primary">
               Tagged out at {battleLog.tagTeam.team1.tagOutTime.toFixed(1)}s
             </div>
           )}
@@ -45,7 +45,7 @@ export function TagTeamInfo({ battleLog }: TagTeamInfoProps) {
             </div>
           )}
           {battleLog.tagTeam.team2.tagOutTime != null && (
-            <div className="text-xs text-cyan-400">
+            <div className="text-xs text-primary">
               Tagged out at {battleLog.tagTeam.team2.tagOutTime.toFixed(1)}s
             </div>
           )}

@@ -139,6 +139,10 @@ export interface BattleHistory {
   team2ReserveRobotName?: string | null;
   team1TagOutTime?: number | null;
   team2TagOutTime?: number | null;
+  // Economic fields (from BattleParticipant for the requesting user's robot)
+  prestigeAwarded?: number;
+  fameAwarded?: number;
+  streamingRevenue?: number;
   robot1: {
     id: number;
     name: string;
@@ -345,12 +349,49 @@ export interface BattleLogEvent {
   [key: string]: any;
 }
 
+/** Unified participant record — same shape for all battle types (1v1, tag team, KotH) */
+export interface BattleLogParticipant {
+  robotId: number;
+  robotName: string;
+  owner: string;
+  ownerId: number;
+  imageUrl: string | null;
+  teamIndex: number;
+  team: number;
+  role: string | null;
+  placement: number | null;
+  // Combat outcome
+  finalHP: number;
+  maxHP: number;
+  maxShield: number;
+  destroyed: boolean;
+  yielded: boolean;
+  damageDealt: number;
+  // Economy
+  eloBefore: number;
+  eloAfter: number;
+  credits: number;
+  streamingRevenue: number;
+  prestigeAwarded: number;
+  fameAwarded: number;
+  // Loadout
+  stance: string;
+  loadoutType: string;
+  mainWeaponName: string | null;
+  mainWeaponRangeBand: string | null;
+  offhandWeaponName: string | null;
+  offhandWeaponRangeBand: string | null;
+}
+
 export interface BattleLogResponse {
   battleId: number;
   createdAt: string;
   battleType?: string;
   leagueType: string;
+  tournamentId?: number | null;
   duration: number;
+  /** Unified participants array — single source of truth for all battle types */
+  participants?: BattleLogParticipant[];
   robot1?: {
     id: number;
     name: string;
@@ -375,6 +416,15 @@ export interface BattleLogResponse {
       robotFame: number;
       studioLevel: number;
     } | null;
+    yielded?: boolean;
+    destroyed?: boolean;
+    imageUrl?: string | null;
+    loadoutType?: string;
+    rangeBand?: string | null;
+    stance?: string;
+    mainWeaponName?: string | null;
+    offhandWeaponName?: string | null;
+    offhandRangeBand?: string | null;
   };
   robot2?: {
     id: number;
@@ -400,6 +450,15 @@ export interface BattleLogResponse {
       robotFame: number;
       studioLevel: number;
     } | null;
+    yielded?: boolean;
+    destroyed?: boolean;
+    imageUrl?: string | null;
+    loadoutType?: string;
+    rangeBand?: string | null;
+    stance?: string;
+    mainWeaponName?: string | null;
+    offhandWeaponName?: string | null;
+    offhandRangeBand?: string | null;
   };
   winner: 'robot1' | 'robot2' | null;
   battleLog: {
@@ -429,6 +488,7 @@ export interface BattleLogResponse {
         owner: string;
         maxHP?: number;
         maxShield?: number;
+        imageUrl?: string | null;
       } | null;
       reserveRobot: {
         id: number;
@@ -436,6 +496,7 @@ export interface BattleLogResponse {
         owner: string;
         maxHP?: number;
         maxShield?: number;
+        imageUrl?: string | null;
       } | null;
       tagOutTime: number | null;
       stableName?: string | null;
@@ -448,6 +509,7 @@ export interface BattleLogResponse {
         owner: string;
         maxHP?: number;
         maxShield?: number;
+        imageUrl?: string | null;
       } | null;
       reserveRobot: {
         id: number;
@@ -455,6 +517,7 @@ export interface BattleLogResponse {
         owner: string;
         maxHP?: number;
         maxShield?: number;
+        imageUrl?: string | null;
       } | null;
       tagOutTime: number | null;
       stableName?: string | null;
@@ -510,6 +573,7 @@ export interface BattleLogResponse {
     fame: number;
     prestige: number;
     streamingRevenue: number;
+    imageUrl?: string | null;
   }>;
   // KotH playback data
   kothData?: {

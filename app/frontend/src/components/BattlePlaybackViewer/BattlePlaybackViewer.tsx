@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef, useEffect } from 'react';
 import {
   PlaybackCombatResult,
   PlaybackRobotInfo,
@@ -264,7 +264,7 @@ export const BattlePlaybackViewer: React.FC<BattlePlaybackViewerProps> = ({
   return (
     <div className="flex flex-col lg:flex-row gap-3 w-full">
       {/* Left: Arena + Controls */}
-      <div className="flex flex-col gap-2 flex-shrink-0" style={{ width: 500 }}>
+      <div className="flex flex-col gap-2 flex-shrink-0 w-full max-w-[500px]">
         <ArenaCanvas
           arenaRadius={battleResult.arenaRadius!}
           frame={frame}
@@ -289,8 +289,8 @@ export const BattlePlaybackViewer: React.FC<BattlePlaybackViewerProps> = ({
         />
       </div>
 
-      {/* Right: Combat Log — fixed height matching arena column */}
-      <div className="flex-1 min-w-0" style={{ height: 540 }}>
+      {/* Right: Combat Log — height adapts to match arena column */}
+      <div className="flex-1 min-w-0 lg:max-h-[540px] h-96 lg:h-auto lg:self-stretch">
         <CombatLogPanel
           events={logEvents}
           currentEventIndex={currentLogEventIndex}

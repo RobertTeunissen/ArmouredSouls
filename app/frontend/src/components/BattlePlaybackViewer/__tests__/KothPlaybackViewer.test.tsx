@@ -14,6 +14,7 @@ function createMockCtx(): CanvasRenderingContext2D {
     strokeRect: vi.fn(),
     fillText: vi.fn(),
     setLineDash: vi.fn(),
+    measureText: vi.fn().mockReturnValue({ width: 50 }),
     fillStyle: '',
     strokeStyle: '',
     lineWidth: 0,

@@ -2,9 +2,9 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: v2.0  
+**Version**: v2.1  
 **Date**: February 9, 2026  
-**Status**: Phase 1 & 2 Complete ✅
+**Status**: Phase 1 & 2 Complete ✅ | Economic Indicators ✅
 
 ---
 
@@ -19,6 +19,11 @@
   - ✅ League tier display implemented (backend + frontend)
   - Consolidated Success Criteria and Implementation Plan
   - Clear documentation of what's implemented and where
+- v2.1 - CompactBattleCard economic indicators (Battle Report Overhaul spec #26)
+  - ✅ Prestige, fame, and streaming revenue indicators on CompactBattleCard
+  - ✅ Total credits display (base reward + streaming revenue)
+  - ✅ New API fields: `prestigeAwarded`, `fameAwarded`, `streamingRevenue`
+  - ✅ Responsive layout for economic indicators (desktop and mobile)
 
 ---
 
@@ -35,6 +40,7 @@ The Battle History Page (`/battle-history`) provides match history, performance 
 - ✅ Battle type differentiation (league tier + tournament info)
 - ✅ Responsive mobile layout
 - ✅ Statistics breakdown by battle type
+- ✅ Economic indicators on CompactBattleCard (prestige, fame, total credits)
 
 ---
 
@@ -139,6 +145,29 @@ The Battle History Page (`/battle-history`) provides match history, performance 
 - `matchmakingApi.ts`: Added `getLeagueTierIcon()` helper function
 - `CompactBattleCard.tsx`: Displays league tier name (e.g., "Bronze League")
 
+### ✅ CompactBattleCard Economic Indicators (COMPLETE)
+
+**Backend Changes** - `app/backend/src/services/match/matchHistoryService.ts`
+- `formatBattleHistoryEntry` includes `prestigeAwarded`, `fameAwarded`, and `streamingRevenue` from the `BattleParticipant` records for the requesting user's robot
+- Fields are sourced per-battle from the participant record matching the authenticated user's robot
+
+**Frontend Changes**:
+- `matchmakingApi.ts`: Updated `BattleHistory` interface with economic fields:
+  - `prestigeAwarded?: number` — prestige earned from the battle
+  - `fameAwarded?: number` — fame earned from the battle
+  - `streamingRevenue?: number` — streaming credits earned from the battle
+- `CompactBattleCard.tsx`: Accepts new optional props (`prestige`, `fame`, `streamingRevenue`)
+  - Displays `totalCredits = reward + (streamingRevenue ?? 0)` instead of base reward only
+  - Shows `⭐+{prestige}` in info color (#a371f7) when prestige > 0
+  - Shows `🎖️+{fame}` in warning color (#d29922) when fame > 0
+  - Omits indicators when values are 0 or undefined
+  - Desktop layout (≥768px): prestige and fame indicators between the date column and the ELO change column
+  - Mobile layout (<768px): prestige and fame in the stats row alongside ELO and credits
+- `BattleHistoryPage.tsx`: Maps API response fields to CompactBattleCard props:
+  - `battle.prestigeAwarded` → `prestige`
+  - `battle.fameAwarded` → `fame`
+  - `battle.streamingRevenue` → `streamingRevenue`
+
 ---
 
 ## Implementation Metrics
@@ -161,6 +190,7 @@ The Battle History Page (`/battle-history`) provides match history, performance 
 - ✅ Flexible sorting (date, ELO, reward)
 - ✅ Responsive mobile layout
 - ✅ Design system alignment
+- ✅ Economic indicators per battle (prestige, fame, total credits)
 
 ---
 
@@ -267,8 +297,10 @@ The Battle History Page (`/battle-history`) provides match history, performance 
 │   │   ├── Matchup Information ✅
 │   │   ├── Battle Type Text (league tier or tournament) ✅
 │   │   ├── Date/Time ✅
+│   │   ├── Prestige Indicator (⭐+N, info color, when > 0) ✅
+│   │   ├── Fame Indicator (🎖️+N, warning color, when > 0) ✅
 │   │   ├── ELO Change ✅
-│   │   └── Reward Amount ✅
+│   │   └── Total Credits (base reward + streaming revenue) ✅
 │   └── Empty State (no battles or no matches) ✅
 └── Pagination Controls ✅ IMPLEMENTED
     ├── Previous/Next Buttons ✅
@@ -295,7 +327,10 @@ BattleHistoryPage.tsx ✅ IMPLEMENTED
 │   ├── Filter count display
 │   ├── CompactBattleCard.tsx (repeated) ✅ IMPLEMENTED
 │   │   ├── Desktop layout (horizontal)
+│   │   │   ├── Economic indicators (prestige, fame) between date and ELO columns
+│   │   │   └── Total credits (base + streaming) in reward column
 │   │   └── Mobile layout (stacked)
+│   │       └── Economic indicators in stats row alongside ELO and credits
 │   └── Empty state (conditional)
 └── Pagination Controls
     ├── Previous button
@@ -404,6 +439,10 @@ interface BattleHistory {
   tournamentRound?: number | null;
   tournamentName?: string | null;
   tournamentMaxRounds?: number | null;
+  // Economic fields (from BattleParticipant for the requesting user's robot)
+  prestigeAwarded?: number;   // ✅ Added — prestige earned from the battle
+  fameAwarded?: number;       // ✅ Added — fame earned from the battle
+  streamingRevenue?: number;  // ✅ Added — streaming credits earned from the battle
   robot1: {
     id: number;
     name: string;
@@ -449,6 +488,16 @@ interface BattleHistory {
 - [x] Empty state shows when no matches
 - [x] Empty state clear filters button works
 
+#### Economic Indicators
+- [x] Prestige indicator (⭐+N) displays when prestige > 0
+- [x] Fame indicator (🎖️+N) displays when fame > 0
+- [x] Total credits shows base reward + streaming revenue
+- [x] Prestige uses info color (#a371f7)
+- [x] Fame uses warning color (#d29922)
+- [x] Indicators omitted when values are 0 or undefined
+- [x] Desktop: prestige/fame between date and ELO columns
+- [x] Mobile: prestige/fame in stats row alongside ELO and credits
+
 #### Browser Testing
 - [ ] Chrome (desktop)
 - [ ] Firefox (desktop)
@@ -489,6 +538,7 @@ interface BattleHistory {
 - ✅ Battle type differentiation (league tier + tournament info)
 - ✅ Responsive mobile layout
 - ✅ Statistics breakdown by battle type
+- ✅ Economic indicators per battle card (prestige, fame, total credits)
 
 ### Phase 3 (Future)
 - Loading skeletons for smooth UX
@@ -601,6 +651,42 @@ const getBattleTypeText = () => {
   }
   return 'League Match';
 };
+```
+
+### Economic Indicators
+
+```typescript
+// CompactBattleCard.tsx — economic indicator props and total credits computation
+interface CompactBattleCardProps {
+  // ... existing props ...
+  prestige?: number;        // From battle.prestigeAwarded
+  fame?: number;            // From battle.fameAwarded
+  streamingRevenue?: number; // From battle.streamingRevenue
+}
+
+// Total credits = base reward + streaming revenue
+const totalCredits = reward + (streamingRevenue ?? 0);
+
+// Desktop layout: prestige/fame indicators between date and ELO columns
+{prestige != null && prestige > 0 && (
+  <span className="text-xs font-medium text-[#a371f7]">⭐+{prestige}</span>
+)}
+{fame != null && fame > 0 && (
+  <span className="text-xs font-medium text-[#d29922]">🎖️+{fame}</span>
+)}
+
+// Reward column shows totalCredits instead of base reward
+<span className="text-xs font-medium text-[#e6edf3]">₡{totalCredits.toLocaleString()}</span>
+```
+
+```typescript
+// BattleHistoryPage.tsx — mapping API fields to CompactBattleCard props
+<CompactBattleCard
+  // ... existing props ...
+  prestige={battle.prestigeAwarded}
+  fame={battle.fameAwarded}
+  streamingRevenue={battle.streamingRevenue}
+/>
 ```
 
 ---

@@ -258,6 +258,8 @@ export function calculateHitChance(
         algorithmBonus: algoBonus,
         passivePenalty: -passivePenalty,
         variance: randomVariance,
+        // hitChanceBase: static base from robot stats only (no spatial modifiers, no variance)
+        hitChanceBase: clamp(baseHitChance + targetingBonus + stanceBonus - evasionPenalty - gyroPenalty, 10, 95),
       },
       result: final,
     },
@@ -289,6 +291,7 @@ export function calculateCritChance(attacker: RobotWithWeapons, _attackerHand: '
         targeting: targetingBonus,
         loadout: loadoutBonus,
         variance: randomVariance,
+        critChanceBase: clamp(calculated, 0, 50),
       },
       result: final,
     },
@@ -695,7 +698,7 @@ function performAttack(
       message: `⚠️${handLabel} ${attackerName}'s ${weaponInfo.name} malfunctions! (Weapon Control failure)`,
       formulaBreakdown: {
         calculation: `Malfunction: ${malfunctionBreakdown.calculation} (rolled ${malfunctionRoll.toFixed(1)}, result: MALFUNCTION)`,
-        components: { ...malfunctionBreakdown.components, malfunctionRoll },
+        components: { ...malfunctionBreakdown.components, malfunctionRoll, malfunctionChance: malfunctionBreakdown.result },
         result: 0,
       },
       ...spatialContext.positionSnapshot,
@@ -789,8 +792,11 @@ function performAttack(
         calculation: formulaParts.join('\n'),
         components: {
           ...malfunctionBreakdown.components, malfunctionRoll,
+          malfunctionChance: malfunctionBreakdown.result,
           ...hitBreakdown.components, hitRoll,
+          hitChance: hitBreakdown.result,
           ...critBreakdown.components, critRoll,
+          critChance: critBreakdown.result,
           ...damageBreakdown.components,
           ...applyBreakdown.components,
         },
@@ -841,8 +847,11 @@ function performAttack(
         calculation: formulaParts.join('\n'),
         components: {
           ...malfunctionBreakdown.components, malfunctionRoll,
+          malfunctionChance: malfunctionBreakdown.result,
           ...hitBreakdown.components, hitRoll,
+          hitChance: hitBreakdown.result,
           ...critBreakdown.components, critRoll,
+          critChance: critBreakdown.result,
         },
         result: 0,
       },
@@ -939,6 +948,7 @@ function performAttack(
         calculation: `Counter trigger: ${counterBreakdown.calculation} (rolled ${counterRoll.toFixed(1)}, result: COUNTER)\nCounter hit: ${counterHitBreakdown.calculation} (rolled ${counterHitRoll.toFixed(1)}, result: HIT)\nCounter damage: ${counterDamageBreakdown.calculation} × 0.70 × ${counterResult.rangePenaltyMultiplier.toFixed(2)} range × ${counterResult.hydraulicMultiplier.toFixed(2)} hydraulic = ${counterDamage.toFixed(1)}\n${counterApplyBreakdown.calculation}`,
         components: {
           counterChance, counterRoll, counterHitChance, counterHitRoll,
+          counterHitChanceBase: counterHitBreakdown.components.hitChanceBase ?? counterHitChance,
           counterBase: counterDamage,
           counterRangePenalty: counterResult.rangePenaltyMultiplier,
           counterHydraulic: counterResult.hydraulicMultiplier,
@@ -970,7 +980,7 @@ function performAttack(
       message: `🔄❌ ${defenderName} counters but misses ${attackerName}!`,
       formulaBreakdown: {
         calculation: `Counter trigger: ${counterBreakdown.calculation} (rolled ${counterRoll.toFixed(1)}, result: COUNTER)\nCounter hit: ${counterHitBreakdown.calculation} (rolled ${counterHitRoll.toFixed(1)}, result: MISS)`,
-        components: { counterChance, counterRoll, counterHitChance, counterHitRoll },
+        components: { counterChance, counterRoll, counterHitChance, counterHitRoll, counterHitChanceBase: counterHitBreakdown.components.hitChanceBase ?? counterHitChance },
         result: 0,
       },
       ...spatialContext.positionSnapshot,

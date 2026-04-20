@@ -247,6 +247,47 @@ function getHPColor(percent) {
 </button>
 ```
 
+### Tab Layout Component
+
+```jsx
+// Desktop tabbed layout (≥1024px) — used on Battle Report page
+type TabId = 'overview' | 'playback' | 'combat-log';
+
+<div className="bg-surface-elevated border-b border-gray-700">
+  <div className="flex gap-0">
+    {tabs.map(tab => (
+      <button
+        key={tab.id}
+        className={`
+          px-6 py-3 text-sm font-medium transition-colors duration-150 ease-out
+          ${activeTab === tab.id
+            ? 'border-b-2 border-primary text-primary'
+            : 'text-secondary hover:text-primary'}
+        `}
+        onClick={() => onTabChange(tab.id)}
+      >
+        {tab.label}
+      </button>
+    ))}
+  </div>
+</div>
+
+{/* Active tab content */}
+<div className="animate-fade-in">
+  {activeTab === 'overview' && children.overview}
+  {activeTab === 'playback' && children.playback}
+  {activeTab === 'combat-log' && children.combatLog}
+</div>
+```
+
+**Rules:**
+- Active tab: `border-b-2 border-primary text-primary`
+- Inactive tab: `text-secondary` with 150ms ease-out hover transition
+- Tab bar background: `bg-surface-elevated`
+- Hide tabs when `hasPlayback` is false (omit Playback tab)
+- On mobile (<1024px): render all sections stacked without tabs
+- Respect `prefers-reduced-motion` media query
+
 ### Modal Component
 
 ```jsx
@@ -341,9 +382,23 @@ function getHPColor(percent) {
     /currency/
       currency-credits.svg
       currency-prestige.svg
+  
+  /arena-sprites/
+    robot-{loadoutType}-{rangeBand}.png
+    # 64×64px PNG, transparent background, dark metallic grayscale
+    # loadoutType: single, dual_wield, two_handed, weapon_shield
+    # rangeBand: melee, short, mid, long
+    # Examples:
+    robot-single-melee.png
+    robot-single-short.png
+    robot-dual_wield-melee.png
+    robot-weapon_shield-mid.png
+    robot-two_handed-long.png
+    # 16 total sprites (4 loadout types × 4 range bands)
 ```
 
 **Naming Pattern**: `{type}-{name}-{size}.{ext}`
+**Arena Sprites**: `robot-{loadoutType}-{rangeBand}.png` (64×64px, transparent PNG)
 
 ---
 
@@ -605,6 +660,80 @@ function formatEffectiveStat(value) {
 
 ## ⚔️ Battle Result Format
 
+### Page Layout
+
+The Battle Report page (`/battle/:id`) uses a **tabbed layout on desktop** (≥1024px) and a **stacked layout on mobile** (<1024px).
+
+**Desktop tabs:** Overview | Playback | Combat Log (via `TabLayout` component)
+**Mobile:** All sections stacked vertically without tabs
+
+| Tab | Contents |
+|-----|----------|
+| **Overview** | BattleResultBanner, BattleStatisticsSummary, StableRewards (Battle Outcomes), DamageFlowDiagram (heatmap, 3+ robots only), ArenaSummary. If no playback: also CombatMessages. |
+| **Playback** | BattlePlaybackViewer (responsive arena canvas + synced combat log panel) |
+
+If the battle has no spatial data (`arenaRadius` absent), the Playback tab is hidden and CombatMessages appears in the Overview tab.
+
+### Battle Result Banner
+
+Two modes based on whether the viewer owns a participating robot:
+
+```jsx
+// Participant mode — outcome from player's perspective
+<div className={`rounded-lg p-6 ${resultStyles[outcome].bg} border ${resultStyles[outcome].border}`}>
+  <h1 className="text-4xl font-bold">{/* "Victory" | "Defeat" | "Draw" */}</h1>
+  <p className="text-secondary">{/* "by Destruction" | "by Yield" | "by Time Limit" | "by Zone Score" */}</p>
+  {/* Winner robot image (medium, full opacity) left, loser (medium, reduced opacity) right */}
+</div>
+
+// Spectator mode — neutral presentation
+<div className="rounded-lg p-6 bg-primary/10 border border-primary">
+  <h1 className="text-4xl font-bold text-primary">{winnerName} Wins</h1>
+  {/* Both robot images at equal emphasis */}
+</div>
+```
+
+### Battle Result Colors
+
+```jsx
+const resultStyles = {
+  victory: { border: 'border-success', text: 'text-success', bg: 'bg-success/10' },
+  defeat:  { border: 'border-error',   text: 'text-error',   bg: 'bg-error/10' },
+  draw:    { border: 'border-warning',  text: 'text-warning',  bg: 'bg-warning/10' },
+};
+```
+
+### Battle Outcomes
+
+Battle outcomes are displayed in a unified N-column table (`StableRewards` component, heading `🏁 Battle Outcomes`):
+
+- One column per robot, same layout for all battle types
+- Result, ELO change, credits, streaming, prestige, fame
+- KotH: additional `⛰️ Zone Scoring` module with zone score, zone time, kills
+
+### Statistics Summary
+
+`BattleStatisticsSummary` displays per-robot combat statistics in a unified N-column table, computed client-side from the battle log events array via `computeBattleStatistics()`:
+
+- Per-robot columns: active time, attacks, hits, misses, criticals, malfunctions (main/offhand split for dual-wield)
+- Expected chances from formula breakdowns (excluding variance and spatial modifiers)
+- Counter stats: triggered, hits, misses
+- Hit severity breakdown: glancing / solid / heavy / devastating
+- Shield stats: damage absorbed, shield recharged
+- Damage totals: dealt (with DPS based on active duration), received
+- `AttributeTooltip` info icons mapping each stat to influencing robot attributes
+- Targeting section (KotH / multi-robot): target switches, per-target focus duration
+- 2 robots: side-by-side table. 3+: horizontally scrollable table.
+
+### Damage Matrix (Heatmap)
+
+`DamageFlowDiagram` renders a heatmap grid for 3+ robots showing who damaged whom. Hidden for 1v1 (stats table covers it).
+
+- Rows = attackers, columns = defenders
+- Cell color intensity scales with damage (sqrt scale)
+- Diagonal cells (self) show `—`
+- Horizontally scrollable for many participants
+
 ### Compact Battle Card (Dashboard, Lists)
 
 ```jsx
@@ -624,94 +753,18 @@ function formatEffectiveStat(value) {
       <p className="text-xs text-tertiary">League Match • Jan 15, 2026</p>
     </div>
     
-    {/* Rewards */}
+    {/* Economic Indicators (desktop: between date and ELO columns) */}
+    {prestige > 0 && <span className="text-info">⭐+{prestige}</span>}
+    {fame > 0 && <span className="text-warning">🎖️+{fame}</span>}
+    
+    {/* Rewards — total credits = reward + streamingRevenue */}
     <div className="text-right">
       <p className="text-success">+25 ELO</p>
-      <p className="text-sm text-secondary">+₡1,000</p>
+      <p className="text-sm text-secondary">+₡{totalCredits}</p>
     </div>
     
-    {/* Action */}
-    <button className="btn-secondary btn-sm">
-      View Details →
-    </button>
+    <button className="btn-secondary btn-sm">View Details →</button>
   </div>
-</div>
-```
-
-### Battle Result Colors
-
-```jsx
-// Border and text colors based on result
-const resultStyles = {
-  victory: {
-    border: 'border-success',
-    text: 'text-success',
-    bg: 'bg-success/10'
-  },
-  defeat: {
-    border: 'border-error',
-    text: 'text-error',
-    bg: 'bg-error/10'
-  },
-  draw: {
-    border: 'border-warning',
-    text: 'text-warning',
-    bg: 'bg-warning/10'
-  }
-};
-```
-
-### Detailed Battle Log Header
-
-```jsx
-<div className="bg-surface-elevated rounded-lg p-6 mb-6">
-  {/* Battle Type Badge */}
-  <div className="flex items-center justify-between mb-4">
-    <span className="badge badge-primary">League Match</span>
-    <span className="text-sm text-tertiary">Battle #12345 • Jan 15, 2026</span>
-  </div>
-  
-  {/* Result Banner */}
-  <div className="text-center py-8 bg-success/10 rounded-lg mb-6">
-    <h1 className="text-4xl font-bold text-success mb-2">VICTORY</h1>
-    <p className="text-secondary">Battle completed in 45 seconds</p>
-  </div>
-  
-  {/* Participants */}
-  <div className="grid grid-cols-2 gap-6">
-    {/* Winner */}
-    <div className="text-center">
-      <img src={winner.portrait} className="w-48 h-48 mx-auto rounded-lg mb-4" />
-      <h3 className="text-xl font-bold">{winner.name}</h3>
-      <p className="text-secondary">{winner.owner}</p>
-      <div className="mt-2">
-        <span className="text-success font-bold">+25 ELO</span>
-        <span className="text-tertiary mx-2">•</span>
-        <span className="text-success">+₡1,000</span>
-      </div>
-    </div>
-    
-    {/* Loser */}
-    <div className="text-center opacity-70">
-      <img src={loser.portrait} className="w-48 h-48 mx-auto rounded-lg mb-4" />
-      <h3 className="text-xl font-bold">{loser.name}</h3>
-      <p className="text-secondary">{loser.owner}</p>
-      <div className="mt-2">
-        <span className="text-error font-bold">-18 ELO</span>
-        <span className="text-tertiary mx-2">•</span>
-        <span className="text-error">Repair: ₡500</span>
-      </div>
-    </div>
-  </div>
-  
-  {/* League Change (if applicable) */}
-  {leagueChange && (
-    <div className="mt-4 text-center">
-      <div className="inline-block bg-success/20 text-success px-4 py-2 rounded-lg">
-        ✨ PROMOTED to Silver League!
-      </div>
-    </div>
-  )}
 </div>
 ```
 

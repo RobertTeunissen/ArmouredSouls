@@ -71,6 +71,9 @@ const RecentBattles: React.FC<RecentBattlesProps> = ({ battles, robotId }) => {
               eloChange={eloChange}
               myRobotId={myRobotId}
               reward={reward}
+              prestige={battle.prestigeAwarded}
+              fame={battle.fameAwarded}
+              streamingRevenue={battle.streamingRevenue}
               onClick={() => navigate(`/battle/${battle.id}`)}
             />
           );

@@ -13,6 +13,9 @@ interface CompactBattleCardProps {
   eloChange: number;
   myRobotId: number;
   reward: number;
+  prestige?: number;
+  fame?: number;
+  streamingRevenue?: number;
   onClick: () => void;
 }
 
@@ -24,8 +27,12 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
   eloChange,
   myRobotId,
   reward,
+  prestige,
+  fame,
+  streamingRevenue,
   onClick,
 }) => {
+  const totalCredits = reward + (streamingRevenue ?? 0);
   const isTournament = battle.battleType === 'tournament';
   const isTagTeam = battle.battleType === 'tag_team';
   const isKoth = battle.battleType === 'koth';
@@ -229,6 +236,18 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
           {formatDateTime(battle.createdAt)}
         </div>
         
+        {/* Prestige & Fame Indicators */}
+        {(prestige != null && prestige > 0) || (fame != null && fame > 0) ? (
+          <div className="flex-shrink-0 flex items-center gap-2">
+            {prestige != null && prestige > 0 && (
+              <span className="text-xs font-medium text-[#a371f7]">⭐+{prestige}</span>
+            )}
+            {fame != null && fame > 0 && (
+              <span className="text-xs font-medium text-[#d29922]">🎖️+{fame}</span>
+            )}
+          </div>
+        ) : null}
+        
         {/* ELO Change / Zone Score */}
         <div className="flex-shrink-0 w-20 text-center">
           {isKoth && battle.kothZoneScore != null ? (
@@ -244,7 +263,7 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
         
         {/* Reward */}
         <div className="flex-shrink-0 w-16 text-right">
-          <div className="text-xs font-medium text-[#e6edf3]">₡{reward.toLocaleString()}</div>
+          <div className="text-xs font-medium text-[#e6edf3]">₡{totalCredits.toLocaleString()}</div>
         </div>
         
         {/* Arrow Icon */}
@@ -314,7 +333,7 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
         </div>
         
         {/* Stats Row */}
-        <div className="flex justify-between text-xs">
+        <div className="flex flex-wrap justify-between text-xs gap-y-1">
           <div>
             <span className="text-[#57606a]">{isKoth ? 'Zone: ' : 'ELO: '}</span>
             {isKoth && battle.kothZoneScore != null ? (
@@ -327,9 +346,19 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
               </span>
             )}
           </div>
+          {prestige != null && prestige > 0 && (
+            <div>
+              <span className="text-xs font-medium text-[#a371f7]">⭐+{prestige}</span>
+            </div>
+          )}
+          {fame != null && fame > 0 && (
+            <div>
+              <span className="text-xs font-medium text-[#d29922]">🎖️+{fame}</span>
+            </div>
+          )}
           <div>
             <span className="text-[#57606a]">₡</span>
-            <span className="font-medium text-[#e6edf3]">{reward.toLocaleString()}</span>
+            <span className="font-medium text-[#e6edf3]">{totalCredits.toLocaleString()}</span>
           </div>
         </div>
       </div>

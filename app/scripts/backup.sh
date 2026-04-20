@@ -3,14 +3,16 @@ set -euo pipefail
 
 # ============================================================================
 # Armoured Souls — Daily PostgreSQL Backup
-# Retains 7 daily + 4 weekly backups
+# Configurable retention (defaults: 3 daily + 2 weekly)
+# Skips backup if disk usage exceeds threshold to prevent ENOSPC outages
 # ============================================================================
 
 BACKUP_DIR="/opt/armouredsouls/backups"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 DAY_OF_WEEK=$(date +%u)  # 1=Monday, 7=Sunday
-DAILY_RETAIN=7
-WEEKLY_RETAIN=4
+DAILY_RETAIN="${BACKUP_DAILY_RETAIN:-3}"
+WEEKLY_RETAIN="${BACKUP_WEEKLY_RETAIN:-2}"
+DISK_THRESHOLD="${BACKUP_DISK_THRESHOLD:-90}"
 
 # Load database credentials from environment or .env file
 if [ -f /opt/armouredsouls/backend/.env ]; then
@@ -29,6 +31,13 @@ mkdir -p "${BACKUP_DIR}/daily" "${BACKUP_DIR}/weekly"
 log() {
   echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
 }
+
+# --- Disk space guard ---
+DISK_USAGE=$(df / --output=pcent | tail -1 | tr -d ' %')
+if [ "${DISK_USAGE}" -ge "${DISK_THRESHOLD}" ]; then
+  log "SKIPPED: Disk usage ${DISK_USAGE}% exceeds ${DISK_THRESHOLD}% threshold — free space before next backup"
+  exit 1
+fi
 
 # --- Create daily backup ---
 DAILY_FILE="${BACKUP_DIR}/daily/${DB_NAME}_daily_${TIMESTAMP}.sql.gz"
