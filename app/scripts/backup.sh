@@ -36,7 +36,7 @@ log() {
 DISK_USAGE=$(df / --output=pcent | tail -1 | tr -d ' %')
 if [ "${DISK_USAGE}" -ge "${DISK_THRESHOLD}" ]; then
   log "SKIPPED: Disk usage ${DISK_USAGE}% exceeds ${DISK_THRESHOLD}% threshold — free space before next backup"
-  exit 1
+  exit 0
 fi
 
 # --- Create daily backup ---

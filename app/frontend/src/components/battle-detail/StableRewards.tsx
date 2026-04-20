@@ -43,9 +43,19 @@ function fmtElo(p: BattleLogParticipant): string {
 
 function fmtPlacement(placement: number): string {
   const medals: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' };
-  const suffixes: Record<number, string> = { 1: 'st', 2: 'nd', 3: 'rd' };
   const medal = medals[placement] ?? '';
-  return `${medal} ${placement}${suffixes[placement] || 'th'}`.trim();
+  return `${medal} ${placement}${ordinalSuffix(placement)}`.trim();
+}
+
+function ordinalSuffix(n: number): string {
+  const mod100 = n % 100;
+  if (mod100 >= 11 && mod100 <= 13) return 'th';
+  switch (n % 10) {
+    case 1: return 'st';
+    case 2: return 'nd';
+    case 3: return 'rd';
+    default: return 'th';
+  }
 }
 
 // ── Unified N-column outcomes table ──────────────────────────────────

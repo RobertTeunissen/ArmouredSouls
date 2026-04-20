@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import {
   PlaybackCombatResult,
   PlaybackRobotInfo,

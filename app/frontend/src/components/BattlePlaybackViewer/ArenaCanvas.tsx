@@ -113,7 +113,7 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
     if (!ctx) return;
 
     // Scale context for HiDPI — draw in CSS pixel coordinates, not device pixels
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = devicePixelRatio || 1;
     const cssWidth = canvas.width / dpr;
     const cssHeight = canvas.height / dpr;
     ctx.save();
@@ -247,7 +247,7 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
 
     // Restore context (undo DPR scale)
     ctx.restore();
-  }, [arenaRadius]);
+  }, [arenaRadius, devicePixelRatio]);
 
   // Animation loop at ~30fps
   useEffect(() => {

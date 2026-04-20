@@ -176,8 +176,8 @@ function BattleDetailContent({ battleLog: rawBattleLog, userId }: { battleLog: B
     kothPlaybackData,
   } = useBattlePlaybackData(battleLog);
 
-  // Determine if playback is available based on arenaRadius
-  const hasPlayback = !!battleLog.battleLog.arenaRadius && battleLog.battleLog.arenaRadius > 0;
+  // Determine if playback is available — use the hook's determination as source of truth
+  const hasPlayback = showPlaybackViewer && !!playbackResult;
 
   // Compute battle statistics once from detailed combat events (raw simulator output).
   // The narrative `events` array strips hit/damage/hand fields for standard battles,

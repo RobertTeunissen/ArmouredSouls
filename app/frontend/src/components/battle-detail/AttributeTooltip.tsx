@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
+import type { AttributeTooltipProps } from './types';
 
 /**
  * AttributeTooltip — info icon that shows which robot attributes influence a combat stat.
@@ -13,10 +14,6 @@ import { createPortal } from 'react-dom';
  */
 
 /* ── Types ──────────────────────────────────────────────────────────── */
-
-export interface AttributeTooltipProps {
-  statName: string;
-}
 
 export interface AttributeEntry {
   attribute: string;

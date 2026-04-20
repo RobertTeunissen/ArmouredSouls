@@ -57,7 +57,6 @@ function getOrderedNames(damageFlows: DamageFlow[], participants?: BattleLogPart
 
 export function DamageFlowDiagram({
   damageFlows,
-  battleType,
   battleLog,
   selectedRobotIndex,
 }: DamageFlowDiagramProps): React.ReactNode {
