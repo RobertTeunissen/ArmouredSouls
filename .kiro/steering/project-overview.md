@@ -54,6 +54,8 @@ Browser-based robot combat strategy game with turn-based mechanics, league syste
 6. **Tournament System** - Competitive events
 7. **Changelog System** - In-game "What's New" feed with auto-generated drafts from deploys, admin review/publish workflow, and player notification modal
 8. **Tuning Pool System** - Per-robot tactical attribute tuning with facility-gated pool size (Spec #25)
+9. **Achievement System** - 77-achievement progression layer with badges, progress tracking, rarity, pinned showcase, and toast notifications (Spec #27)
+10. **Admin Portal** - Dedicated admin experience with sidebar navigation, 18 route-based lazy-loaded pages, Zustand shared state (useAdminStore), AdminRoute guard, 6 analytics dashboards, shared UI component library, and server-side audit trail (Spec #28)
 
 ## Documentation Organization
 - `docs/architecture/` - System architecture, schema, combat engine, security

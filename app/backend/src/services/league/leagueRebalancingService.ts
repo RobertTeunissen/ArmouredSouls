@@ -2,6 +2,7 @@ import { Robot } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { LeagueError, LeagueErrorCode } from '../../errors/leagueErrors';
+import { achievementService } from '../achievement';
 
 // NOTE: This service mirrors tagTeamLeagueRebalancingService.ts for tag team leagues.
 // Both share identical promotion/demotion logic but operate on different Prisma models
@@ -226,6 +227,16 @@ export async function promoteRobot(robot: Robot): Promise<void> {
   });
 
   logger.info(`[Rebalancing] Promoted: ${robot.name} (${robot.currentLeague} → ${nextTier}, LP: ${robot.leaguePoints} retained)`);
+
+  // Check and award league promotion achievements
+  try {
+    await achievementService.checkAndAward(robot.userId, robot.id, {
+      type: 'league_promotion',
+      data: { newLeague: nextTier, robotId: robot.id },
+    });
+  } catch (error) {
+    logger.error(`[Rebalancing] Achievement evaluation failed for promotion of robot ${robot.id}: ${error}`);
+  }
 }
 
 /**

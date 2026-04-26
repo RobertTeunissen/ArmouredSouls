@@ -25,6 +25,7 @@ export interface StableMetric {
   robotPurchases: number;
   attributeUpgrades: number;
   totalPurchases: number;
+  achievementRewards: number;
   netProfit: number;
   balance: number;
 }
@@ -80,5 +81,8 @@ export interface CycleEventPayload {
   opponentId?: number;
   isByeMatch?: boolean;
   totalDuration?: number;
+  achievementId?: string;
+  rewardCredits?: number;
+  rewardPrestige?: number;
   [key: string]: unknown;
 }

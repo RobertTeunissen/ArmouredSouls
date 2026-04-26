@@ -10,15 +10,18 @@
  *  4. awardCreditsToUser()              — simple currency increment
  *  5. awardPrestigeToUser()             — simple prestige increment
  *  6. awardFameToRobot()                — simple fame increment
+ *  7. checkAndAwardAchievements()       — evaluate + award achievements
  *
  * Each orchestrator still owns its own processBattle() flow, reward formulas,
  * and type-specific DB fields. These helpers just eliminate the copy-paste.
  */
 
 import prisma from '../../lib/prisma';
+import logger from '../../config/logger';
 import { calculateStreamingRevenue, awardStreamingRevenue, StreamingRevenueCalculation } from '../economy/streamingRevenueService';
 import { eventLogger, EventType } from '../common/eventLogger';
 import { getCurrentCycleNumber } from './baseOrchestrator';
+import { achievementService, type AchievementEvent, type UnlockedAchievement } from '../achievement';
 
 // ─── Shared Types ────────────────────────────────────────────────────
 
@@ -174,6 +177,12 @@ export interface RobotStatUpdateOptions {
   fameIncrement?: number;
   /** Additional fields for type-specific stat updates */
   extraData?: Record<string, unknown>;
+  /** Battle type for streak tracking (only 'league' battles affect league streaks) */
+  battleType?: string;
+  /** Robot's stance at battle time (for stance win counters) */
+  stance?: string;
+  /** Robot's loadout type at battle time (for loadout win counters) */
+  loadoutType?: string;
 }
 
 /**
@@ -202,6 +211,38 @@ export async function updateRobotCombatStats(opts: RobotStatUpdateOptions): Prom
     data.leaguePoints = Math.max(0, currentLP + lpChange);
   }
 
+  // ── League Win/Lose Streak Tracking ──
+  if (opts.battleType === 'league') {
+    if (opts.isWinner) {
+      // Win: increment win streak, reset lose streak
+      data.currentWinStreak = { increment: 1 };
+      data.currentLoseStreak = 0;
+    } else if (opts.isDraw) {
+      // Draw: reset both streaks
+      data.currentWinStreak = 0;
+      data.currentLoseStreak = 0;
+    } else {
+      // Loss: reset win streak, increment lose streak
+      data.currentWinStreak = 0;
+      data.currentLoseStreak = { increment: 1 };
+    }
+  }
+
+  // ── Stance/Loadout Win Counters ──
+  if (opts.isWinner) {
+    if (opts.stance === 'offensive') {
+      data.offensiveWins = { increment: 1 };
+    } else if (opts.stance === 'defensive') {
+      data.defensiveWins = { increment: 1 };
+    } else if (opts.stance === 'balanced') {
+      data.balancedWins = { increment: 1 };
+    }
+
+    if (opts.loadoutType === 'dual_wield') {
+      data.dualWieldWins = { increment: 1 };
+    }
+  }
+
   // Merge any type-specific extra fields
   if (opts.extraData) {
     Object.assign(data, opts.extraData);
@@ -216,6 +257,14 @@ export async function updateRobotCombatStats(opts: RobotStatUpdateOptions): Prom
     where: { id: opts.robotId },
     data,
   });
+
+  // Update bestWinStreak if currentWinStreak exceeds it (only for league wins)
+  if (opts.battleType === 'league' && opts.isWinner) {
+    await prisma.$executeRawUnsafe(
+      `UPDATE robots SET best_win_streak = current_win_streak WHERE id = $1 AND current_win_streak > best_win_streak`,
+      opts.robotId,
+    );
+  }
 }
 
 // ─── 4–6. Simple Currency / Prestige / Fame Awards ──────────────────
@@ -246,3 +295,53 @@ export async function awardFameToRobot(robotId: number, amount: number): Promise
     data: { fame: { increment: amount } },
   });
 }
+
+// ─── 7. Achievement Evaluation ──────────────────────────────────────
+
+/**
+ * Check and award achievements after a battle completes.
+ *
+ * Wraps achievementService.checkAndAward() with battle-specific event data.
+ * Achievement failures MUST NOT block battle processing — wrapped in try-catch.
+ *
+ * @returns Array of newly unlocked achievements (empty on failure)
+ */
+export async function checkAndAwardAchievements(
+  userId: number,
+  robotId: number,
+  battleData: {
+    won: boolean;
+    destroyed: boolean;
+    finalHpPercent: number;
+    eloDiff: number;
+    opponentElo: number;
+    yielded: boolean;
+    opponentYielded: boolean;
+    previousBattleLost: boolean;
+    damageDealt: number;
+    opponentDamageDealt: number;
+    loadoutType: string;
+    stance: string;
+    yieldThreshold: number;
+    hasTuning: boolean;
+    hasMainWeapon: boolean;
+    battleType: string;
+    battleDurationSeconds: number;
+    taggedIn?: boolean;
+    soloCarry?: boolean;
+    minHpPercent?: number;
+  },
+): Promise<UnlockedAchievement[]> {
+  try {
+    const event: AchievementEvent = {
+      type: 'battle_complete',
+      data: battleData as unknown as Record<string, unknown>,
+    };
+    return await achievementService.checkAndAward(userId, robotId, event);
+  } catch (error) {
+    logger.error(`Achievement evaluation failed for user ${userId}, robot ${robotId}: ${error}`);
+    return [];
+  }
+}
+
+export type { UnlockedAchievement };

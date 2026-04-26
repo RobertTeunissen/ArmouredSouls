@@ -25,6 +25,8 @@ import prisma from '../../lib/prisma';
 import { practiceArenaMetrics } from './practiceArenaMetrics';
 import { AppError } from '../../errors';
 import type { NarrativeEvent } from '../../types/battleLogTypes';
+import { achievementService, type UnlockedAchievement } from '../achievement';
+import logger from '../../config/logger';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -70,6 +72,7 @@ export interface PracticeBattleResult {
   battleLog: NarrativeEvent[]; // narrative events from convertSimulatorEvents
   robot1Info: { name: string; maxHP: number; maxShield: number };
   robot2Info: { name: string; maxHP: number; maxShield: number };
+  achievementUnlocks?: UnlockedAchievement[];
 }
 
 /** Batch result returned when count > 1 */
@@ -587,11 +590,27 @@ export async function executePracticeBattle(
   // Track metrics
   practiceArenaMetrics.recordBattle(userId);
 
+  // Increment totalPracticeBattles and check achievements
+  let achievementUnlocks: UnlockedAchievement[] = [];
+  try {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { totalPracticeBattles: { increment: 1 } },
+    });
+    achievementUnlocks = await achievementService.checkAndAward(userId, null, {
+      type: 'practice_battle',
+      data: {},
+    });
+  } catch (error) {
+    logger.error(`[PracticeArena] Achievement/counter update failed for user ${userId}: ${error}`);
+  }
+
   return {
     combatResult,
     battleLog,
     robot1Info: { name: robot1.name, maxHP: Number(robot1.maxHP), maxShield: Number(robot1.maxShield) },
     robot2Info: { name: robot2.name, maxHP: Number(robot2.maxHP), maxShield: Number(robot2.maxShield) },
+    achievementUnlocks,
   };
 }
 
@@ -641,6 +660,26 @@ export async function executePracticeBatch(
       robot1Info: { name: robot1.name, maxHP: Number(robot1.maxHP), maxShield: Number(robot1.maxShield) },
       robot2Info: { name: robot2.name, maxHP: Number(robot2.maxHP), maxShield: Number(robot2.maxShield) },
     });
+  }
+
+  // Increment totalPracticeBattles for the batch and check achievements
+  let batchAchievementUnlocks: UnlockedAchievement[] = [];
+  try {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { totalPracticeBattles: { increment: count } },
+    });
+    batchAchievementUnlocks = await achievementService.checkAndAward(userId, null, {
+      type: 'practice_battle',
+      data: {},
+    });
+  } catch (error) {
+    logger.error(`[PracticeArena] Achievement/counter update failed for user ${userId}: ${error}`);
+  }
+
+  // Attach achievement unlocks to the last result
+  if (results.length > 0 && batchAchievementUnlocks.length > 0) {
+    results[results.length - 1].achievementUnlocks = batchAchievementUnlocks;
   }
 
   // Compute aggregate stats

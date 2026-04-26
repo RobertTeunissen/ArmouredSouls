@@ -121,18 +121,19 @@ describeContent('GuideService — content existence (Req 2.1)', () => {
     'economy',
     'facilities',
     'prestige-fame',
+    'achievements',
     'strategy',
     'integrations',
   ] as const;
 
-  it('should return all 11 required sections', () => {
+  it('should return all 12 required sections', () => {
     const sections = service.getSections();
     const slugs = sections.map((s) => s.slug);
 
     for (const required of REQUIRED_SECTIONS) {
       expect(slugs).toContain(required);
     }
-    expect(sections.length).toBeGreaterThanOrEqual(11);
+    expect(sections.length).toBeGreaterThanOrEqual(12);
   });
 
   // Req 4.1-4.4: Getting Started articles

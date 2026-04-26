@@ -13,6 +13,7 @@ import {
   awardCreditsToUser,
   awardPrestigeToUser,
   awardStreamingRevenueForParticipant,
+  checkAndAwardAchievements,
 } from '../battle/battlePostCombat';
 import { TagTeamError, TagTeamErrorCode } from '../../errors/tagTeamErrors';
 import { CycleEventPayload } from '../../types/snapshotTypes';
@@ -184,6 +185,15 @@ function createByeTeamForBattle(league: string, leagueId: string): TagTeamWithRo
     kothBestPlacement: null,
     kothCurrentWinStreak: 0,
     kothBestWinStreak: 0,
+    // League Win/Lose Streak
+    currentWinStreak: 0,
+    bestWinStreak: 0,
+    currentLoseStreak: 0,
+    // Stance/Loadout Win Counters
+    offensiveWins: 0,
+    defensiveWins: 0,
+    balancedWins: 0,
+    dualWieldWins: 0,
     // Equipment
     mainWeaponId: null,
     offhandWeaponId: null,
@@ -2216,5 +2226,30 @@ async function updateTagTeamBattleResults(
       `[TagTeamBattles] Created 4 audit log events for tag team battle ${battle.id} ` +
       `(one per robot, rewards split 50/50 per team)`
     );
+
+    // Check and award achievements for all 4 robots
+    for (const r of tagTeamAuditRobots) {
+      await checkAndAwardAchievements(r.userId, r.robotId, {
+        won: r.isWinner,
+        destroyed: r.destroyed,
+        finalHpPercent: 0,
+        eloDiff: 0,
+        opponentElo: 0,
+        yielded: r.yielded,
+        opponentYielded: false,
+        previousBattleLost: false,
+        damageDealt: r.damageDealt,
+        opponentDamageDealt: 0,
+        loadoutType: 'single',
+        stance: 'balanced',
+        yieldThreshold: 0,
+        hasTuning: false,
+        hasMainWeapon: true,
+        battleType: 'tag_team',
+        battleDurationSeconds: battle.durationSeconds,
+        taggedIn: r.extras.wasTaggedIn === true,
+        soloCarry: false,
+      });
+    }
   }
 }

@@ -1571,17 +1571,16 @@ team1_streaming = 1,000 × team1_battle_multiplier × team1_fame_multiplier × s
 
 ### 6. Achievement Rewards
 
-**Status**: Achievement system not yet fully defined. Specifications below are preliminary examples and subject to change during achievement feature implementation.
+**Status**: ✅ Implemented (Spec #27). See **[PRD_ACHIEVEMENT_SYSTEM.md](PRD_ACHIEVEMENT_SYSTEM.md)** for the full achievement catalog and reward details.
 
-**Milestone Examples** (preliminary):
-- First robot to ELO 1500: ₡50,000 + 50 prestige
-- First robot to ELO 1800: ₡100,000 + 100 prestige
-- First robot to ELO 2000: ₡200,000 + 200 prestige
-- 100 total wins: ₡75,000 + 50 prestige
-- 500 total wins: ₡300,000 + 250 prestige
-- 1,000 total wins: ₡750,000 + 500 prestige
+**Reward Amounts by Tier:**
+- Easy: ₡25,000 + 25 prestige
+- Medium: ₡50,000 + 50 prestige
+- Hard: ₡100,000 + 100 prestige
+- Very Hard: ₡250,000 + 250 prestige
+- Secret: ₡50,000 + 50 prestige (default)
 
-**Design Note**: Achievement rewards are one-time bonuses that encourage progression and provide economic boosts at key milestones.
+**Design Note**: Achievement rewards are one-time bonuses (credits + prestige only). No combat stat bonuses or gameplay gating.
 
 ---
 

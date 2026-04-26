@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
+import AchievementBadge from '../components/AchievementBadge';
 import {
   getBattleLog,
   formatDateTime,
@@ -252,6 +253,25 @@ function BattleDetailContent({ battleLog: rawBattleLog, userId }: { battleLog: B
         selectedRobotIndex={isMobile ? selectedRobotIndex : undefined}
       />
       <StableRewards battleLog={battleLog} selectedRobotIndex={isMobile ? selectedRobotIndex : undefined} />
+      {/* Achievement unlocks from this battle */}
+      {battleLog.achievementUnlocks && battleLog.achievementUnlocks.length > 0 && (
+        <div className="bg-surface rounded-lg mb-3 p-3">
+          <h3 className="text-lg font-bold mb-3">🏆 Achievements Earned</h3>
+          <div className="flex flex-wrap gap-3">
+            {battleLog.achievementUnlocks.map(unlock => (
+              <div key={unlock.id} className="flex items-center gap-2 bg-surface-elevated rounded-lg px-3 py-2">
+                <AchievementBadge tier={unlock.tier} badgeIconFile={unlock.badgeIconFile} size={48} />
+                <div>
+                  <p className="text-sm font-bold text-white">{unlock.name}</p>
+                  <p className="text-xs text-success">
+                    +₡{unlock.rewardCredits.toLocaleString()} +{unlock.rewardPrestige} prestige
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       <DamageFlowDiagram
         damageFlows={statistics.damageFlows}
         battleType={battleLog.battleType}

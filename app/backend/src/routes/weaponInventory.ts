@@ -14,6 +14,7 @@ import { positiveIntParam } from '../utils/securityValidation';
 // via findFirst({ where: { id, userId } }) which is equivalent
 import { verifyWeaponOwnership } from '../middleware/ownership';
 import { securityMonitor } from '../services/security/securityMonitor';
+import { achievementService, type UnlockedAchievement } from '../services/achievement';
 
 const router = express.Router();
 
@@ -225,6 +226,14 @@ router.post('/purchase', authenticateToken, validateRequest({ body: purchaseBody
       weaponInventory: result.weaponInventory,
       currency: result.user.currency,
       message: 'Weapon purchased successfully',
+      achievementUnlocks: await (async (): Promise<UnlockedAchievement[]> => {
+        try {
+          return await achievementService.checkAndAward(userId, null, {
+            type: 'weapon_purchased',
+            data: { weaponId: weaponIdNum, weaponType: weapon.weaponType, weaponName: weapon.name },
+          });
+        } catch { return []; }
+      })(),
     });
   } catch (error) {
     logger.error('Weapon purchase error:', error);

@@ -369,6 +369,30 @@ async function executeSettlement(): Promise<JobContext> {
   }
   logger.info(`Daily Settlement: Operating costs debited — ₡${totalOperatingCosts.toLocaleString()}`);
 
+  // Check for bankrupt users and award daily_finances achievements
+  try {
+    const { achievementService } = await import('../achievement');
+    const bankruptUsers = await prisma.user.findMany({
+      where: {
+        NOT: { username: 'bye_robot_user' },
+        currency: { lt: 0 },
+      },
+      select: { id: true },
+    });
+    for (const user of bankruptUsers) {
+      try {
+        await achievementService.checkAndAward(user.id, null, {
+          type: 'daily_finances',
+          data: { bankrupt: true },
+        });
+      } catch (err) {
+        logger.error(`[Settlement] Achievement check failed for bankrupt user ${user.id}: ${err}`);
+      }
+    }
+  } catch (err) {
+    logger.error(`[Settlement] Bankrupt achievement check failed: ${err}`);
+  }
+
   // Step 3: Log end-of-cycle balances for all users
   logger.info('Daily Settlement: Step 3 — Logging end-of-cycle balances');
   const endOfCycleUsers = await prisma.user.findMany({
@@ -444,6 +468,15 @@ async function executeSettlement(): Promise<JobContext> {
   }
 
   logger.info(`Daily Settlement: Completed — passive income ₡${totalPassiveIncome.toLocaleString()}, operating costs ₡${totalOperatingCosts.toLocaleString()}, ${endOfCycleUsers.length} users processed`);
+
+  // Refresh achievement rarity cache after settlement
+  try {
+    const { achievementService } = await import('../achievement');
+    await achievementService.refreshRarityCache();
+    logger.info('Daily Settlement: Achievement rarity cache refreshed');
+  } catch (err) {
+    logger.error(`Daily Settlement: Failed to refresh achievement rarity cache — ${err instanceof Error ? err.message : String(err)}`);
+  }
 
   return { jobName: 'settlement' };
 }

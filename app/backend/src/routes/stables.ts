@@ -5,6 +5,7 @@ import { validateRequest } from '../middleware/schemaValidator';
 import { positiveIntParam } from '../utils/securityValidation';
 import { sanitizeRobotForPublic } from './robots';
 import { getPrestigeRank } from '../utils/prestigeUtils';
+import { achievementService } from '../services/achievement';
 import prisma from '../lib/prisma';
 
 const router = Router();
@@ -99,6 +100,8 @@ router.get(
       maxLevel: f.maxLevel,
     }));
 
+    const achievements = await achievementService.getStableAchievements(userId);
+
     return res.json({
       user: {
         id: user.id,
@@ -111,6 +114,7 @@ router.get(
       robots,
       facilities,
       stats,
+      achievements,
     });
   },
 );

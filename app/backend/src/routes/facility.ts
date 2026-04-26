@@ -11,6 +11,7 @@ import { AuthError, AuthErrorCode } from '../errors/authErrors';
 import { EconomyError, EconomyErrorCode } from '../errors/economyErrors';
 import { validateRequest } from '../middleware/schemaValidator';
 import { securityMonitor } from '../services/security/securityMonitor';
+import { achievementService, type UnlockedAchievement } from '../services/achievement';
 
 const router = express.Router();
 
@@ -320,6 +321,14 @@ router.post('/upgrade', authenticateToken, validateRequest({ body: upgradeBodySc
       facility: result.facility,
       currency: result.user.currency,
       message: 'Facility upgraded successfully',
+      achievementUnlocks: await (async (): Promise<UnlockedAchievement[]> => {
+        try {
+          return await achievementService.checkAndAward(userId, null, {
+            type: 'facility_upgraded',
+            data: { facilityType, newLevel: targetLevel },
+          });
+        } catch { return []; }
+      })(),
     });
 });
 

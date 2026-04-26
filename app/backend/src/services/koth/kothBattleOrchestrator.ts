@@ -32,6 +32,7 @@ import {
 
 import {
   logBattleAuditEvent,
+  checkAndAwardAchievements,
 } from '../battle/battlePostCombat';
 import { CombatMessageGenerator } from '../battle/combatMessageGenerator';
 import { calculateStreamingRevenue } from '../economy/streamingRevenueService';
@@ -448,6 +449,29 @@ async function processKothBattle(
 
   // 13. BATCHED: Update KotH robot stats
   await batchUpdateKothRobotStats(preparedParticipants);
+
+  // 13b. Check and award achievements for all participants
+  for (const p of preparedParticipants) {
+    await checkAndAwardAchievements(p.robot.userId, p.robot.id, {
+      won: p.isWinner,
+      destroyed: p.destroyed,
+      finalHpPercent: p.robot.maxHP > 0 ? (p.finalHP / p.robot.maxHP) * 100 : 0,
+      eloDiff: 0,
+      opponentElo: 0,
+      yielded: false,
+      opponentYielded: false,
+      previousBattleLost: false,
+      damageDealt: p.damageDealt,
+      opponentDamageDealt: 0,
+      loadoutType: (p.robot as unknown as { loadoutType?: string }).loadoutType || 'single',
+      stance: (p.robot as unknown as { stance?: string }).stance || 'balanced',
+      yieldThreshold: 0,
+      hasTuning: false,
+      hasMainWeapon: p.robot.mainWeaponId !== null,
+      battleType: 'koth',
+      battleDurationSeconds: simResult.durationSeconds,
+    });
+  }
 
   // 14. BATCHED: Log audit events (fire-and-forget for performance)
   // Audit logging is non-critical and can be done asynchronously

@@ -18,6 +18,7 @@ import { validateRequest } from '../middleware/schemaValidator';
 import { positiveIntParam } from '../utils/securityValidation';
 import { getTuningAllocation, setTuningAllocation } from '../services/tuning-pool';
 import { ROBOT_ATTRIBUTES, type RobotAttribute } from '../services/tuning-pool/tuningPoolConfig';
+import { achievementService, type UnlockedAchievement } from '../services/achievement';
 
 const router = express.Router();
 
@@ -108,7 +109,15 @@ router.put(
     const allocations = req.body as Partial<Record<RobotAttribute, number>>;
     const state = await setTuningAllocation(robotId, req.user.userId, allocations);
 
-    res.json(state);
+    let achievementUnlocks: UnlockedAchievement[] = [];
+    try {
+      achievementUnlocks = await achievementService.checkAndAward(req.user.userId, robotId, {
+        type: 'tuning_allocated',
+        data: { robotId, allocations },
+      });
+    } catch { /* achievement failures don't block */ }
+
+    res.json({ ...state, achievementUnlocks });
   },
 );
 

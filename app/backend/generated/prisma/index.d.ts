@@ -114,10 +114,20 @@ export type PracticeArenaDailyStats = $Result.DefaultSelection<Prisma.$PracticeA
  */
 export type ChangelogEntry = $Result.DefaultSelection<Prisma.$ChangelogEntryPayload>
 /**
+ * Model UserAchievement
+ * 
+ */
+export type UserAchievement = $Result.DefaultSelection<Prisma.$UserAchievementPayload>
+/**
  * Model TuningAllocation
  * 
  */
 export type TuningAllocation = $Result.DefaultSelection<Prisma.$TuningAllocationPayload>
+/**
+ * Model AdminAuditLog
+ * 
+ */
+export type AdminAuditLog = $Result.DefaultSelection<Prisma.$AdminAuditLogPayload>
 
 /**
  * ##  Prisma Client ʲˢ
@@ -441,6 +451,16 @@ export class PrismaClient<
   get changelogEntry(): Prisma.ChangelogEntryDelegate<ExtArgs, ClientOptions>;
 
   /**
+   * `prisma.userAchievement`: Exposes CRUD operations for the **UserAchievement** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more UserAchievements
+    * const userAchievements = await prisma.userAchievement.findMany()
+    * ```
+    */
+  get userAchievement(): Prisma.UserAchievementDelegate<ExtArgs, ClientOptions>;
+
+  /**
    * `prisma.tuningAllocation`: Exposes CRUD operations for the **TuningAllocation** model.
     * Example usage:
     * ```ts
@@ -449,6 +469,16 @@ export class PrismaClient<
     * ```
     */
   get tuningAllocation(): Prisma.TuningAllocationDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.adminAuditLog`: Exposes CRUD operations for the **AdminAuditLog** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more AdminAuditLogs
+    * const adminAuditLogs = await prisma.adminAuditLog.findMany()
+    * ```
+    */
+  get adminAuditLog(): Prisma.AdminAuditLogDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -903,7 +933,9 @@ export namespace Prisma {
     ScheduledKothMatchParticipant: 'ScheduledKothMatchParticipant',
     PracticeArenaDailyStats: 'PracticeArenaDailyStats',
     ChangelogEntry: 'ChangelogEntry',
-    TuningAllocation: 'TuningAllocation'
+    UserAchievement: 'UserAchievement',
+    TuningAllocation: 'TuningAllocation',
+    AdminAuditLog: 'AdminAuditLog'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -919,7 +951,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "facility" | "robot" | "weaponInventory" | "weapon" | "battleParticipant" | "battle" | "scheduledLeagueMatch" | "cycleMetadata" | "auditLog" | "cycleSnapshot" | "tournament" | "scheduledTournamentMatch" | "tagTeam" | "scheduledTagTeamMatch" | "resetLog" | "scheduledKothMatch" | "scheduledKothMatchParticipant" | "practiceArenaDailyStats" | "changelogEntry" | "tuningAllocation"
+      modelProps: "user" | "facility" | "robot" | "weaponInventory" | "weapon" | "battleParticipant" | "battle" | "scheduledLeagueMatch" | "cycleMetadata" | "auditLog" | "cycleSnapshot" | "tournament" | "scheduledTournamentMatch" | "tagTeam" | "scheduledTagTeamMatch" | "resetLog" | "scheduledKothMatch" | "scheduledKothMatchParticipant" | "practiceArenaDailyStats" | "changelogEntry" | "userAchievement" | "tuningAllocation" | "adminAuditLog"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2403,6 +2435,80 @@ export namespace Prisma {
           }
         }
       }
+      UserAchievement: {
+        payload: Prisma.$UserAchievementPayload<ExtArgs>
+        fields: Prisma.UserAchievementFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.UserAchievementFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserAchievementPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.UserAchievementFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserAchievementPayload>
+          }
+          findFirst: {
+            args: Prisma.UserAchievementFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserAchievementPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.UserAchievementFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserAchievementPayload>
+          }
+          findMany: {
+            args: Prisma.UserAchievementFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserAchievementPayload>[]
+          }
+          create: {
+            args: Prisma.UserAchievementCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserAchievementPayload>
+          }
+          createMany: {
+            args: Prisma.UserAchievementCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.UserAchievementCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserAchievementPayload>[]
+          }
+          delete: {
+            args: Prisma.UserAchievementDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserAchievementPayload>
+          }
+          update: {
+            args: Prisma.UserAchievementUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserAchievementPayload>
+          }
+          deleteMany: {
+            args: Prisma.UserAchievementDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.UserAchievementUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.UserAchievementUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserAchievementPayload>[]
+          }
+          upsert: {
+            args: Prisma.UserAchievementUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserAchievementPayload>
+          }
+          aggregate: {
+            args: Prisma.UserAchievementAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateUserAchievement>
+          }
+          groupBy: {
+            args: Prisma.UserAchievementGroupByArgs<ExtArgs>
+            result: $Utils.Optional<UserAchievementGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.UserAchievementCountArgs<ExtArgs>
+            result: $Utils.Optional<UserAchievementCountAggregateOutputType> | number
+          }
+        }
+      }
       TuningAllocation: {
         payload: Prisma.$TuningAllocationPayload<ExtArgs>
         fields: Prisma.TuningAllocationFieldRefs
@@ -2474,6 +2580,80 @@ export namespace Prisma {
           count: {
             args: Prisma.TuningAllocationCountArgs<ExtArgs>
             result: $Utils.Optional<TuningAllocationCountAggregateOutputType> | number
+          }
+        }
+      }
+      AdminAuditLog: {
+        payload: Prisma.$AdminAuditLogPayload<ExtArgs>
+        fields: Prisma.AdminAuditLogFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.AdminAuditLogFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AdminAuditLogPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.AdminAuditLogFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AdminAuditLogPayload>
+          }
+          findFirst: {
+            args: Prisma.AdminAuditLogFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AdminAuditLogPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.AdminAuditLogFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AdminAuditLogPayload>
+          }
+          findMany: {
+            args: Prisma.AdminAuditLogFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AdminAuditLogPayload>[]
+          }
+          create: {
+            args: Prisma.AdminAuditLogCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AdminAuditLogPayload>
+          }
+          createMany: {
+            args: Prisma.AdminAuditLogCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.AdminAuditLogCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AdminAuditLogPayload>[]
+          }
+          delete: {
+            args: Prisma.AdminAuditLogDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AdminAuditLogPayload>
+          }
+          update: {
+            args: Prisma.AdminAuditLogUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AdminAuditLogPayload>
+          }
+          deleteMany: {
+            args: Prisma.AdminAuditLogDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.AdminAuditLogUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.AdminAuditLogUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AdminAuditLogPayload>[]
+          }
+          upsert: {
+            args: Prisma.AdminAuditLogUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AdminAuditLogPayload>
+          }
+          aggregate: {
+            args: Prisma.AdminAuditLogAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateAdminAuditLog>
+          }
+          groupBy: {
+            args: Prisma.AdminAuditLogGroupByArgs<ExtArgs>
+            result: $Utils.Optional<AdminAuditLogGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.AdminAuditLogCountArgs<ExtArgs>
+            result: $Utils.Optional<AdminAuditLogCountAggregateOutputType> | number
           }
         }
       }
@@ -2605,7 +2785,9 @@ export namespace Prisma {
     scheduledKothMatchParticipant?: ScheduledKothMatchParticipantOmit
     practiceArenaDailyStats?: PracticeArenaDailyStatsOmit
     changelogEntry?: ChangelogEntryOmit
+    userAchievement?: UserAchievementOmit
     tuningAllocation?: TuningAllocationOmit
+    adminAuditLog?: AdminAuditLogOmit
   }
 
   /* Types for Logging */
@@ -2690,6 +2872,7 @@ export namespace Prisma {
     facilities: number
     weaponInventory: number
     tagTeams: number
+    achievements: number
   }
 
   export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -2697,6 +2880,7 @@ export namespace Prisma {
     facilities?: boolean | UserCountOutputTypeCountFacilitiesArgs
     weaponInventory?: boolean | UserCountOutputTypeCountWeaponInventoryArgs
     tagTeams?: boolean | UserCountOutputTypeCountTagTeamsArgs
+    achievements?: boolean | UserCountOutputTypeCountAchievementsArgs
   }
 
   // Custom InputTypes
@@ -2738,6 +2922,13 @@ export namespace Prisma {
     where?: TagTeamWhereInput
   }
 
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountAchievementsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: UserAchievementWhereInput
+  }
+
 
   /**
    * Count Type RobotCountOutputType
@@ -2756,6 +2947,7 @@ export namespace Prisma {
     tagTeamsAsReserve: number
     battleParticipations: number
     kothMatchParticipations: number
+    achievements: number
   }
 
   export type RobotCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -2771,6 +2963,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: boolean | RobotCountOutputTypeCountTagTeamsAsReserveArgs
     battleParticipations?: boolean | RobotCountOutputTypeCountBattleParticipationsArgs
     kothMatchParticipations?: boolean | RobotCountOutputTypeCountKothMatchParticipationsArgs
+    achievements?: boolean | RobotCountOutputTypeCountAchievementsArgs
   }
 
   // Custom InputTypes
@@ -2866,6 +3059,13 @@ export namespace Prisma {
    */
   export type RobotCountOutputTypeCountKothMatchParticipationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: ScheduledKothMatchParticipantWhereInput
+  }
+
+  /**
+   * RobotCountOutputType without action
+   */
+  export type RobotCountOutputTypeCountAchievementsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: UserAchievementWhereInput
   }
 
 
@@ -3141,6 +3341,7 @@ export namespace Prisma {
     championshipTitles: number | null
     tokenVersion: number | null
     onboardingStep: number | null
+    totalPracticeBattles: number | null
   }
 
   export type UserSumAggregateOutputType = {
@@ -3150,6 +3351,7 @@ export namespace Prisma {
     championshipTitles: number | null
     tokenVersion: number | null
     onboardingStep: number | null
+    totalPracticeBattles: number | null
   }
 
   export type UserMinAggregateOutputType = {
@@ -3174,6 +3376,8 @@ export namespace Prisma {
     onboardingStartedAt: Date | null
     onboardingCompletedAt: Date | null
     lastSeenChangelog: Date | null
+    totalPracticeBattles: number | null
+    lastLoginAt: Date | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -3200,6 +3404,8 @@ export namespace Prisma {
     onboardingStartedAt: Date | null
     onboardingCompletedAt: Date | null
     lastSeenChangelog: Date | null
+    totalPracticeBattles: number | null
+    lastLoginAt: Date | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -3227,6 +3433,9 @@ export namespace Prisma {
     onboardingStartedAt: number
     onboardingCompletedAt: number
     lastSeenChangelog: number
+    pinnedAchievements: number
+    totalPracticeBattles: number
+    lastLoginAt: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -3240,6 +3449,7 @@ export namespace Prisma {
     championshipTitles?: true
     tokenVersion?: true
     onboardingStep?: true
+    totalPracticeBattles?: true
   }
 
   export type UserSumAggregateInputType = {
@@ -3249,6 +3459,7 @@ export namespace Prisma {
     championshipTitles?: true
     tokenVersion?: true
     onboardingStep?: true
+    totalPracticeBattles?: true
   }
 
   export type UserMinAggregateInputType = {
@@ -3273,6 +3484,8 @@ export namespace Prisma {
     onboardingStartedAt?: true
     onboardingCompletedAt?: true
     lastSeenChangelog?: true
+    totalPracticeBattles?: true
+    lastLoginAt?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -3299,6 +3512,8 @@ export namespace Prisma {
     onboardingStartedAt?: true
     onboardingCompletedAt?: true
     lastSeenChangelog?: true
+    totalPracticeBattles?: true
+    lastLoginAt?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -3326,6 +3541,9 @@ export namespace Prisma {
     onboardingStartedAt?: true
     onboardingCompletedAt?: true
     lastSeenChangelog?: true
+    pinnedAchievements?: true
+    totalPracticeBattles?: true
+    lastLoginAt?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -3440,6 +3658,9 @@ export namespace Prisma {
     onboardingStartedAt: Date | null
     onboardingCompletedAt: Date | null
     lastSeenChangelog: Date
+    pinnedAchievements: JsonValue
+    totalPracticeBattles: number
+    lastLoginAt: Date | null
     createdAt: Date
     updatedAt: Date
     _count: UserCountAggregateOutputType | null
@@ -3486,12 +3707,16 @@ export namespace Prisma {
     onboardingStartedAt?: boolean
     onboardingCompletedAt?: boolean
     lastSeenChangelog?: boolean
+    pinnedAchievements?: boolean
+    totalPracticeBattles?: boolean
+    lastLoginAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     robots?: boolean | User$robotsArgs<ExtArgs>
     facilities?: boolean | User$facilitiesArgs<ExtArgs>
     weaponInventory?: boolean | User$weaponInventoryArgs<ExtArgs>
     tagTeams?: boolean | User$tagTeamsArgs<ExtArgs>
+    achievements?: boolean | User$achievementsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
@@ -3518,6 +3743,9 @@ export namespace Prisma {
     onboardingStartedAt?: boolean
     onboardingCompletedAt?: boolean
     lastSeenChangelog?: boolean
+    pinnedAchievements?: boolean
+    totalPracticeBattles?: boolean
+    lastLoginAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["user"]>
@@ -3545,6 +3773,9 @@ export namespace Prisma {
     onboardingStartedAt?: boolean
     onboardingCompletedAt?: boolean
     lastSeenChangelog?: boolean
+    pinnedAchievements?: boolean
+    totalPracticeBattles?: boolean
+    lastLoginAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["user"]>
@@ -3572,16 +3803,20 @@ export namespace Prisma {
     onboardingStartedAt?: boolean
     onboardingCompletedAt?: boolean
     lastSeenChangelog?: boolean
+    pinnedAchievements?: boolean
+    totalPracticeBattles?: boolean
+    lastLoginAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "username" | "email" | "passwordHash" | "role" | "currency" | "prestige" | "championshipTitles" | "stableName" | "profileVisibility" | "notificationsBattle" | "notificationsLeague" | "themePreference" | "tokenVersion" | "hasCompletedOnboarding" | "onboardingSkipped" | "onboardingStep" | "onboardingStrategy" | "onboardingChoices" | "onboardingStartedAt" | "onboardingCompletedAt" | "lastSeenChangelog" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "username" | "email" | "passwordHash" | "role" | "currency" | "prestige" | "championshipTitles" | "stableName" | "profileVisibility" | "notificationsBattle" | "notificationsLeague" | "themePreference" | "tokenVersion" | "hasCompletedOnboarding" | "onboardingSkipped" | "onboardingStep" | "onboardingStrategy" | "onboardingChoices" | "onboardingStartedAt" | "onboardingCompletedAt" | "lastSeenChangelog" | "pinnedAchievements" | "totalPracticeBattles" | "lastLoginAt" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     robots?: boolean | User$robotsArgs<ExtArgs>
     facilities?: boolean | User$facilitiesArgs<ExtArgs>
     weaponInventory?: boolean | User$weaponInventoryArgs<ExtArgs>
     tagTeams?: boolean | User$tagTeamsArgs<ExtArgs>
+    achievements?: boolean | User$achievementsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -3594,6 +3829,7 @@ export namespace Prisma {
       facilities: Prisma.$FacilityPayload<ExtArgs>[]
       weaponInventory: Prisma.$WeaponInventoryPayload<ExtArgs>[]
       tagTeams: Prisma.$TagTeamPayload<ExtArgs>[]
+      achievements: Prisma.$UserAchievementPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: number
@@ -3618,6 +3854,9 @@ export namespace Prisma {
       onboardingStartedAt: Date | null
       onboardingCompletedAt: Date | null
       lastSeenChangelog: Date
+      pinnedAchievements: Prisma.JsonValue
+      totalPracticeBattles: number
+      lastLoginAt: Date | null
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["user"]>
@@ -4018,6 +4257,7 @@ export namespace Prisma {
     facilities<T extends User$facilitiesArgs<ExtArgs> = {}>(args?: Subset<T, User$facilitiesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FacilityPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     weaponInventory<T extends User$weaponInventoryArgs<ExtArgs> = {}>(args?: Subset<T, User$weaponInventoryArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WeaponInventoryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     tagTeams<T extends User$tagTeamsArgs<ExtArgs> = {}>(args?: Subset<T, User$tagTeamsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TagTeamPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    achievements<T extends User$achievementsArgs<ExtArgs> = {}>(args?: Subset<T, User$achievementsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserAchievementPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -4069,6 +4309,9 @@ export namespace Prisma {
     readonly onboardingStartedAt: FieldRef<"User", 'DateTime'>
     readonly onboardingCompletedAt: FieldRef<"User", 'DateTime'>
     readonly lastSeenChangelog: FieldRef<"User", 'DateTime'>
+    readonly pinnedAchievements: FieldRef<"User", 'Json'>
+    readonly totalPracticeBattles: FieldRef<"User", 'Int'>
+    readonly lastLoginAt: FieldRef<"User", 'DateTime'>
     readonly createdAt: FieldRef<"User", 'DateTime'>
     readonly updatedAt: FieldRef<"User", 'DateTime'>
   }
@@ -4557,6 +4800,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: TagTeamScalarFieldEnum | TagTeamScalarFieldEnum[]
+  }
+
+  /**
+   * User.achievements
+   */
+  export type User$achievementsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserAchievement
+     */
+    select?: UserAchievementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserAchievement
+     */
+    omit?: UserAchievementOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserAchievementInclude<ExtArgs> | null
+    where?: UserAchievementWhereInput
+    orderBy?: UserAchievementOrderByWithRelationInput | UserAchievementOrderByWithRelationInput[]
+    cursor?: UserAchievementWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: UserAchievementScalarFieldEnum | UserAchievementScalarFieldEnum[]
   }
 
   /**
@@ -5795,6 +6062,13 @@ export namespace Prisma {
     kothBestPlacement: number | null
     kothCurrentWinStreak: number | null
     kothBestWinStreak: number | null
+    currentWinStreak: number | null
+    bestWinStreak: number | null
+    currentLoseStreak: number | null
+    offensiveWins: number | null
+    defensiveWins: number | null
+    balancedWins: number | null
+    dualWieldWins: number | null
     repairCost: number | null
     battleReadiness: number | null
     totalRepairsPaid: number | null
@@ -5860,6 +6134,13 @@ export namespace Prisma {
     kothBestPlacement: number | null
     kothCurrentWinStreak: number | null
     kothBestWinStreak: number | null
+    currentWinStreak: number | null
+    bestWinStreak: number | null
+    currentLoseStreak: number | null
+    offensiveWins: number | null
+    defensiveWins: number | null
+    balancedWins: number | null
+    dualWieldWins: number | null
     repairCost: number | null
     battleReadiness: number | null
     totalRepairsPaid: number | null
@@ -5930,6 +6211,13 @@ export namespace Prisma {
     kothBestPlacement: number | null
     kothCurrentWinStreak: number | null
     kothBestWinStreak: number | null
+    currentWinStreak: number | null
+    bestWinStreak: number | null
+    currentLoseStreak: number | null
+    offensiveWins: number | null
+    defensiveWins: number | null
+    balancedWins: number | null
+    dualWieldWins: number | null
     repairCost: number | null
     battleReadiness: number | null
     totalRepairsPaid: number | null
@@ -6005,6 +6293,13 @@ export namespace Prisma {
     kothBestPlacement: number | null
     kothCurrentWinStreak: number | null
     kothBestWinStreak: number | null
+    currentWinStreak: number | null
+    bestWinStreak: number | null
+    currentLoseStreak: number | null
+    offensiveWins: number | null
+    defensiveWins: number | null
+    balancedWins: number | null
+    dualWieldWins: number | null
     repairCost: number | null
     battleReadiness: number | null
     totalRepairsPaid: number | null
@@ -6080,6 +6375,13 @@ export namespace Prisma {
     kothBestPlacement: number
     kothCurrentWinStreak: number
     kothBestWinStreak: number
+    currentWinStreak: number
+    bestWinStreak: number
+    currentLoseStreak: number
+    offensiveWins: number
+    defensiveWins: number
+    balancedWins: number
+    dualWieldWins: number
     repairCost: number
     battleReadiness: number
     totalRepairsPaid: number
@@ -6152,6 +6454,13 @@ export namespace Prisma {
     kothBestPlacement?: true
     kothCurrentWinStreak?: true
     kothBestWinStreak?: true
+    currentWinStreak?: true
+    bestWinStreak?: true
+    currentLoseStreak?: true
+    offensiveWins?: true
+    defensiveWins?: true
+    balancedWins?: true
+    dualWieldWins?: true
     repairCost?: true
     battleReadiness?: true
     totalRepairsPaid?: true
@@ -6217,6 +6526,13 @@ export namespace Prisma {
     kothBestPlacement?: true
     kothCurrentWinStreak?: true
     kothBestWinStreak?: true
+    currentWinStreak?: true
+    bestWinStreak?: true
+    currentLoseStreak?: true
+    offensiveWins?: true
+    defensiveWins?: true
+    balancedWins?: true
+    dualWieldWins?: true
     repairCost?: true
     battleReadiness?: true
     totalRepairsPaid?: true
@@ -6287,6 +6603,13 @@ export namespace Prisma {
     kothBestPlacement?: true
     kothCurrentWinStreak?: true
     kothBestWinStreak?: true
+    currentWinStreak?: true
+    bestWinStreak?: true
+    currentLoseStreak?: true
+    offensiveWins?: true
+    defensiveWins?: true
+    balancedWins?: true
+    dualWieldWins?: true
     repairCost?: true
     battleReadiness?: true
     totalRepairsPaid?: true
@@ -6362,6 +6685,13 @@ export namespace Prisma {
     kothBestPlacement?: true
     kothCurrentWinStreak?: true
     kothBestWinStreak?: true
+    currentWinStreak?: true
+    bestWinStreak?: true
+    currentLoseStreak?: true
+    offensiveWins?: true
+    defensiveWins?: true
+    balancedWins?: true
+    dualWieldWins?: true
     repairCost?: true
     battleReadiness?: true
     totalRepairsPaid?: true
@@ -6437,6 +6767,13 @@ export namespace Prisma {
     kothBestPlacement?: true
     kothCurrentWinStreak?: true
     kothBestWinStreak?: true
+    currentWinStreak?: true
+    bestWinStreak?: true
+    currentLoseStreak?: true
+    offensiveWins?: true
+    defensiveWins?: true
+    balancedWins?: true
+    dualWieldWins?: true
     repairCost?: true
     battleReadiness?: true
     totalRepairsPaid?: true
@@ -6599,6 +6936,13 @@ export namespace Prisma {
     kothBestPlacement: number | null
     kothCurrentWinStreak: number
     kothBestWinStreak: number
+    currentWinStreak: number
+    bestWinStreak: number
+    currentLoseStreak: number
+    offensiveWins: number
+    defensiveWins: number
+    balancedWins: number
+    dualWieldWins: number
     repairCost: number
     battleReadiness: number
     totalRepairsPaid: number
@@ -6693,6 +7037,13 @@ export namespace Prisma {
     kothBestPlacement?: boolean
     kothCurrentWinStreak?: boolean
     kothBestWinStreak?: boolean
+    currentWinStreak?: boolean
+    bestWinStreak?: boolean
+    currentLoseStreak?: boolean
+    offensiveWins?: boolean
+    defensiveWins?: boolean
+    balancedWins?: boolean
+    dualWieldWins?: boolean
     repairCost?: boolean
     battleReadiness?: boolean
     totalRepairsPaid?: boolean
@@ -6720,6 +7071,7 @@ export namespace Prisma {
     battleParticipations?: boolean | Robot$battleParticipationsArgs<ExtArgs>
     kothMatchParticipations?: boolean | Robot$kothMatchParticipationsArgs<ExtArgs>
     tuningAllocation?: boolean | Robot$tuningAllocationArgs<ExtArgs>
+    achievements?: boolean | Robot$achievementsArgs<ExtArgs>
     _count?: boolean | RobotCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["robot"]>
 
@@ -6785,6 +7137,13 @@ export namespace Prisma {
     kothBestPlacement?: boolean
     kothCurrentWinStreak?: boolean
     kothBestWinStreak?: boolean
+    currentWinStreak?: boolean
+    bestWinStreak?: boolean
+    currentLoseStreak?: boolean
+    offensiveWins?: boolean
+    defensiveWins?: boolean
+    balancedWins?: boolean
+    dualWieldWins?: boolean
     repairCost?: boolean
     battleReadiness?: boolean
     totalRepairsPaid?: boolean
@@ -6863,6 +7222,13 @@ export namespace Prisma {
     kothBestPlacement?: boolean
     kothCurrentWinStreak?: boolean
     kothBestWinStreak?: boolean
+    currentWinStreak?: boolean
+    bestWinStreak?: boolean
+    currentLoseStreak?: boolean
+    offensiveWins?: boolean
+    defensiveWins?: boolean
+    balancedWins?: boolean
+    dualWieldWins?: boolean
     repairCost?: boolean
     battleReadiness?: boolean
     totalRepairsPaid?: boolean
@@ -6941,6 +7307,13 @@ export namespace Prisma {
     kothBestPlacement?: boolean
     kothCurrentWinStreak?: boolean
     kothBestWinStreak?: boolean
+    currentWinStreak?: boolean
+    bestWinStreak?: boolean
+    currentLoseStreak?: boolean
+    offensiveWins?: boolean
+    defensiveWins?: boolean
+    balancedWins?: boolean
+    dualWieldWins?: boolean
     repairCost?: boolean
     battleReadiness?: boolean
     totalRepairsPaid?: boolean
@@ -6954,7 +7327,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type RobotOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "name" | "frameId" | "paintJob" | "combatPower" | "targetingSystems" | "criticalSystems" | "penetration" | "weaponControl" | "attackSpeed" | "armorPlating" | "shieldCapacity" | "evasionThrusters" | "damageDampeners" | "counterProtocols" | "hullIntegrity" | "servoMotors" | "gyroStabilizers" | "hydraulicSystems" | "powerCore" | "combatAlgorithms" | "threatAnalysis" | "adaptiveAI" | "logicCores" | "syncProtocols" | "supportSystems" | "formationTactics" | "currentHP" | "maxHP" | "currentShield" | "maxShield" | "damageTaken" | "elo" | "totalBattles" | "wins" | "draws" | "losses" | "damageDealtLifetime" | "damageTakenLifetime" | "kills" | "currentLeague" | "leagueId" | "leaguePoints" | "cyclesInCurrentLeague" | "fame" | "titles" | "totalTagTeamBattles" | "totalTagTeamWins" | "totalTagTeamLosses" | "totalTagTeamDraws" | "timesTaggedIn" | "timesTaggedOut" | "kothWins" | "kothMatches" | "kothTotalZoneScore" | "kothTotalZoneTime" | "kothKills" | "kothBestPlacement" | "kothCurrentWinStreak" | "kothBestWinStreak" | "repairCost" | "battleReadiness" | "totalRepairsPaid" | "yieldThreshold" | "loadoutType" | "stance" | "mainWeaponId" | "offhandWeaponId" | "imageUrl" | "createdAt" | "updatedAt", ExtArgs["result"]["robot"]>
+  export type RobotOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "name" | "frameId" | "paintJob" | "combatPower" | "targetingSystems" | "criticalSystems" | "penetration" | "weaponControl" | "attackSpeed" | "armorPlating" | "shieldCapacity" | "evasionThrusters" | "damageDampeners" | "counterProtocols" | "hullIntegrity" | "servoMotors" | "gyroStabilizers" | "hydraulicSystems" | "powerCore" | "combatAlgorithms" | "threatAnalysis" | "adaptiveAI" | "logicCores" | "syncProtocols" | "supportSystems" | "formationTactics" | "currentHP" | "maxHP" | "currentShield" | "maxShield" | "damageTaken" | "elo" | "totalBattles" | "wins" | "draws" | "losses" | "damageDealtLifetime" | "damageTakenLifetime" | "kills" | "currentLeague" | "leagueId" | "leaguePoints" | "cyclesInCurrentLeague" | "fame" | "titles" | "totalTagTeamBattles" | "totalTagTeamWins" | "totalTagTeamLosses" | "totalTagTeamDraws" | "timesTaggedIn" | "timesTaggedOut" | "kothWins" | "kothMatches" | "kothTotalZoneScore" | "kothTotalZoneTime" | "kothKills" | "kothBestPlacement" | "kothCurrentWinStreak" | "kothBestWinStreak" | "currentWinStreak" | "bestWinStreak" | "currentLoseStreak" | "offensiveWins" | "defensiveWins" | "balancedWins" | "dualWieldWins" | "repairCost" | "battleReadiness" | "totalRepairsPaid" | "yieldThreshold" | "loadoutType" | "stance" | "mainWeaponId" | "offhandWeaponId" | "imageUrl" | "createdAt" | "updatedAt", ExtArgs["result"]["robot"]>
   export type RobotInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
     mainWeapon?: boolean | Robot$mainWeaponArgs<ExtArgs>
@@ -6972,6 +7345,7 @@ export namespace Prisma {
     battleParticipations?: boolean | Robot$battleParticipationsArgs<ExtArgs>
     kothMatchParticipations?: boolean | Robot$kothMatchParticipationsArgs<ExtArgs>
     tuningAllocation?: boolean | Robot$tuningAllocationArgs<ExtArgs>
+    achievements?: boolean | Robot$achievementsArgs<ExtArgs>
     _count?: boolean | RobotCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type RobotIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -7004,6 +7378,7 @@ export namespace Prisma {
       battleParticipations: Prisma.$BattleParticipantPayload<ExtArgs>[]
       kothMatchParticipations: Prisma.$ScheduledKothMatchParticipantPayload<ExtArgs>[]
       tuningAllocation: Prisma.$TuningAllocationPayload<ExtArgs> | null
+      achievements: Prisma.$UserAchievementPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: number
@@ -7067,6 +7442,13 @@ export namespace Prisma {
       kothBestPlacement: number | null
       kothCurrentWinStreak: number
       kothBestWinStreak: number
+      currentWinStreak: number
+      bestWinStreak: number
+      currentLoseStreak: number
+      offensiveWins: number
+      defensiveWins: number
+      balancedWins: number
+      dualWieldWins: number
       repairCost: number
       battleReadiness: number
       totalRepairsPaid: number
@@ -7488,6 +7870,7 @@ export namespace Prisma {
     battleParticipations<T extends Robot$battleParticipationsArgs<ExtArgs> = {}>(args?: Subset<T, Robot$battleParticipationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BattleParticipantPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     kothMatchParticipations<T extends Robot$kothMatchParticipationsArgs<ExtArgs> = {}>(args?: Subset<T, Robot$kothMatchParticipationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ScheduledKothMatchParticipantPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     tuningAllocation<T extends Robot$tuningAllocationArgs<ExtArgs> = {}>(args?: Subset<T, Robot$tuningAllocationArgs<ExtArgs>>): Prisma__TuningAllocationClient<$Result.GetResult<Prisma.$TuningAllocationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    achievements<T extends Robot$achievementsArgs<ExtArgs> = {}>(args?: Subset<T, Robot$achievementsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserAchievementPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -7578,6 +7961,13 @@ export namespace Prisma {
     readonly kothBestPlacement: FieldRef<"Robot", 'Int'>
     readonly kothCurrentWinStreak: FieldRef<"Robot", 'Int'>
     readonly kothBestWinStreak: FieldRef<"Robot", 'Int'>
+    readonly currentWinStreak: FieldRef<"Robot", 'Int'>
+    readonly bestWinStreak: FieldRef<"Robot", 'Int'>
+    readonly currentLoseStreak: FieldRef<"Robot", 'Int'>
+    readonly offensiveWins: FieldRef<"Robot", 'Int'>
+    readonly defensiveWins: FieldRef<"Robot", 'Int'>
+    readonly balancedWins: FieldRef<"Robot", 'Int'>
+    readonly dualWieldWins: FieldRef<"Robot", 'Int'>
     readonly repairCost: FieldRef<"Robot", 'Int'>
     readonly battleReadiness: FieldRef<"Robot", 'Int'>
     readonly totalRepairsPaid: FieldRef<"Robot", 'Int'>
@@ -8332,6 +8722,30 @@ export namespace Prisma {
      */
     include?: TuningAllocationInclude<ExtArgs> | null
     where?: TuningAllocationWhereInput
+  }
+
+  /**
+   * Robot.achievements
+   */
+  export type Robot$achievementsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserAchievement
+     */
+    select?: UserAchievementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserAchievement
+     */
+    omit?: UserAchievementOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserAchievementInclude<ExtArgs> | null
+    where?: UserAchievementWhereInput
+    orderBy?: UserAchievementOrderByWithRelationInput | UserAchievementOrderByWithRelationInput[]
+    cursor?: UserAchievementWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: UserAchievementScalarFieldEnum | UserAchievementScalarFieldEnum[]
   }
 
   /**
@@ -29349,6 +29763,1138 @@ export namespace Prisma {
 
 
   /**
+   * Model UserAchievement
+   */
+
+  export type AggregateUserAchievement = {
+    _count: UserAchievementCountAggregateOutputType | null
+    _avg: UserAchievementAvgAggregateOutputType | null
+    _sum: UserAchievementSumAggregateOutputType | null
+    _min: UserAchievementMinAggregateOutputType | null
+    _max: UserAchievementMaxAggregateOutputType | null
+  }
+
+  export type UserAchievementAvgAggregateOutputType = {
+    id: number | null
+    userId: number | null
+    robotId: number | null
+  }
+
+  export type UserAchievementSumAggregateOutputType = {
+    id: number | null
+    userId: number | null
+    robotId: number | null
+  }
+
+  export type UserAchievementMinAggregateOutputType = {
+    id: number | null
+    userId: number | null
+    achievementId: string | null
+    robotId: number | null
+    unlockedAt: Date | null
+  }
+
+  export type UserAchievementMaxAggregateOutputType = {
+    id: number | null
+    userId: number | null
+    achievementId: string | null
+    robotId: number | null
+    unlockedAt: Date | null
+  }
+
+  export type UserAchievementCountAggregateOutputType = {
+    id: number
+    userId: number
+    achievementId: number
+    robotId: number
+    unlockedAt: number
+    _all: number
+  }
+
+
+  export type UserAchievementAvgAggregateInputType = {
+    id?: true
+    userId?: true
+    robotId?: true
+  }
+
+  export type UserAchievementSumAggregateInputType = {
+    id?: true
+    userId?: true
+    robotId?: true
+  }
+
+  export type UserAchievementMinAggregateInputType = {
+    id?: true
+    userId?: true
+    achievementId?: true
+    robotId?: true
+    unlockedAt?: true
+  }
+
+  export type UserAchievementMaxAggregateInputType = {
+    id?: true
+    userId?: true
+    achievementId?: true
+    robotId?: true
+    unlockedAt?: true
+  }
+
+  export type UserAchievementCountAggregateInputType = {
+    id?: true
+    userId?: true
+    achievementId?: true
+    robotId?: true
+    unlockedAt?: true
+    _all?: true
+  }
+
+  export type UserAchievementAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which UserAchievement to aggregate.
+     */
+    where?: UserAchievementWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of UserAchievements to fetch.
+     */
+    orderBy?: UserAchievementOrderByWithRelationInput | UserAchievementOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: UserAchievementWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` UserAchievements from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` UserAchievements.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned UserAchievements
+    **/
+    _count?: true | UserAchievementCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: UserAchievementAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: UserAchievementSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: UserAchievementMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: UserAchievementMaxAggregateInputType
+  }
+
+  export type GetUserAchievementAggregateType<T extends UserAchievementAggregateArgs> = {
+        [P in keyof T & keyof AggregateUserAchievement]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateUserAchievement[P]>
+      : GetScalarType<T[P], AggregateUserAchievement[P]>
+  }
+
+
+
+
+  export type UserAchievementGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: UserAchievementWhereInput
+    orderBy?: UserAchievementOrderByWithAggregationInput | UserAchievementOrderByWithAggregationInput[]
+    by: UserAchievementScalarFieldEnum[] | UserAchievementScalarFieldEnum
+    having?: UserAchievementScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: UserAchievementCountAggregateInputType | true
+    _avg?: UserAchievementAvgAggregateInputType
+    _sum?: UserAchievementSumAggregateInputType
+    _min?: UserAchievementMinAggregateInputType
+    _max?: UserAchievementMaxAggregateInputType
+  }
+
+  export type UserAchievementGroupByOutputType = {
+    id: number
+    userId: number
+    achievementId: string
+    robotId: number | null
+    unlockedAt: Date
+    _count: UserAchievementCountAggregateOutputType | null
+    _avg: UserAchievementAvgAggregateOutputType | null
+    _sum: UserAchievementSumAggregateOutputType | null
+    _min: UserAchievementMinAggregateOutputType | null
+    _max: UserAchievementMaxAggregateOutputType | null
+  }
+
+  type GetUserAchievementGroupByPayload<T extends UserAchievementGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<UserAchievementGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof UserAchievementGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], UserAchievementGroupByOutputType[P]>
+            : GetScalarType<T[P], UserAchievementGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type UserAchievementSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    achievementId?: boolean
+    robotId?: boolean
+    unlockedAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    robot?: boolean | UserAchievement$robotArgs<ExtArgs>
+  }, ExtArgs["result"]["userAchievement"]>
+
+  export type UserAchievementSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    achievementId?: boolean
+    robotId?: boolean
+    unlockedAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    robot?: boolean | UserAchievement$robotArgs<ExtArgs>
+  }, ExtArgs["result"]["userAchievement"]>
+
+  export type UserAchievementSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    achievementId?: boolean
+    robotId?: boolean
+    unlockedAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    robot?: boolean | UserAchievement$robotArgs<ExtArgs>
+  }, ExtArgs["result"]["userAchievement"]>
+
+  export type UserAchievementSelectScalar = {
+    id?: boolean
+    userId?: boolean
+    achievementId?: boolean
+    robotId?: boolean
+    unlockedAt?: boolean
+  }
+
+  export type UserAchievementOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "achievementId" | "robotId" | "unlockedAt", ExtArgs["result"]["userAchievement"]>
+  export type UserAchievementInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    robot?: boolean | UserAchievement$robotArgs<ExtArgs>
+  }
+  export type UserAchievementIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    robot?: boolean | UserAchievement$robotArgs<ExtArgs>
+  }
+  export type UserAchievementIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    robot?: boolean | UserAchievement$robotArgs<ExtArgs>
+  }
+
+  export type $UserAchievementPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "UserAchievement"
+    objects: {
+      user: Prisma.$UserPayload<ExtArgs>
+      robot: Prisma.$RobotPayload<ExtArgs> | null
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      userId: number
+      achievementId: string
+      robotId: number | null
+      unlockedAt: Date
+    }, ExtArgs["result"]["userAchievement"]>
+    composites: {}
+  }
+
+  type UserAchievementGetPayload<S extends boolean | null | undefined | UserAchievementDefaultArgs> = $Result.GetResult<Prisma.$UserAchievementPayload, S>
+
+  type UserAchievementCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<UserAchievementFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: UserAchievementCountAggregateInputType | true
+    }
+
+  export interface UserAchievementDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['UserAchievement'], meta: { name: 'UserAchievement' } }
+    /**
+     * Find zero or one UserAchievement that matches the filter.
+     * @param {UserAchievementFindUniqueArgs} args - Arguments to find a UserAchievement
+     * @example
+     * // Get one UserAchievement
+     * const userAchievement = await prisma.userAchievement.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends UserAchievementFindUniqueArgs>(args: SelectSubset<T, UserAchievementFindUniqueArgs<ExtArgs>>): Prisma__UserAchievementClient<$Result.GetResult<Prisma.$UserAchievementPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one UserAchievement that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {UserAchievementFindUniqueOrThrowArgs} args - Arguments to find a UserAchievement
+     * @example
+     * // Get one UserAchievement
+     * const userAchievement = await prisma.userAchievement.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends UserAchievementFindUniqueOrThrowArgs>(args: SelectSubset<T, UserAchievementFindUniqueOrThrowArgs<ExtArgs>>): Prisma__UserAchievementClient<$Result.GetResult<Prisma.$UserAchievementPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first UserAchievement that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserAchievementFindFirstArgs} args - Arguments to find a UserAchievement
+     * @example
+     * // Get one UserAchievement
+     * const userAchievement = await prisma.userAchievement.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends UserAchievementFindFirstArgs>(args?: SelectSubset<T, UserAchievementFindFirstArgs<ExtArgs>>): Prisma__UserAchievementClient<$Result.GetResult<Prisma.$UserAchievementPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first UserAchievement that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserAchievementFindFirstOrThrowArgs} args - Arguments to find a UserAchievement
+     * @example
+     * // Get one UserAchievement
+     * const userAchievement = await prisma.userAchievement.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends UserAchievementFindFirstOrThrowArgs>(args?: SelectSubset<T, UserAchievementFindFirstOrThrowArgs<ExtArgs>>): Prisma__UserAchievementClient<$Result.GetResult<Prisma.$UserAchievementPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more UserAchievements that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserAchievementFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all UserAchievements
+     * const userAchievements = await prisma.userAchievement.findMany()
+     * 
+     * // Get first 10 UserAchievements
+     * const userAchievements = await prisma.userAchievement.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const userAchievementWithIdOnly = await prisma.userAchievement.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends UserAchievementFindManyArgs>(args?: SelectSubset<T, UserAchievementFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserAchievementPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a UserAchievement.
+     * @param {UserAchievementCreateArgs} args - Arguments to create a UserAchievement.
+     * @example
+     * // Create one UserAchievement
+     * const UserAchievement = await prisma.userAchievement.create({
+     *   data: {
+     *     // ... data to create a UserAchievement
+     *   }
+     * })
+     * 
+     */
+    create<T extends UserAchievementCreateArgs>(args: SelectSubset<T, UserAchievementCreateArgs<ExtArgs>>): Prisma__UserAchievementClient<$Result.GetResult<Prisma.$UserAchievementPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many UserAchievements.
+     * @param {UserAchievementCreateManyArgs} args - Arguments to create many UserAchievements.
+     * @example
+     * // Create many UserAchievements
+     * const userAchievement = await prisma.userAchievement.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends UserAchievementCreateManyArgs>(args?: SelectSubset<T, UserAchievementCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many UserAchievements and returns the data saved in the database.
+     * @param {UserAchievementCreateManyAndReturnArgs} args - Arguments to create many UserAchievements.
+     * @example
+     * // Create many UserAchievements
+     * const userAchievement = await prisma.userAchievement.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many UserAchievements and only return the `id`
+     * const userAchievementWithIdOnly = await prisma.userAchievement.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends UserAchievementCreateManyAndReturnArgs>(args?: SelectSubset<T, UserAchievementCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserAchievementPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a UserAchievement.
+     * @param {UserAchievementDeleteArgs} args - Arguments to delete one UserAchievement.
+     * @example
+     * // Delete one UserAchievement
+     * const UserAchievement = await prisma.userAchievement.delete({
+     *   where: {
+     *     // ... filter to delete one UserAchievement
+     *   }
+     * })
+     * 
+     */
+    delete<T extends UserAchievementDeleteArgs>(args: SelectSubset<T, UserAchievementDeleteArgs<ExtArgs>>): Prisma__UserAchievementClient<$Result.GetResult<Prisma.$UserAchievementPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one UserAchievement.
+     * @param {UserAchievementUpdateArgs} args - Arguments to update one UserAchievement.
+     * @example
+     * // Update one UserAchievement
+     * const userAchievement = await prisma.userAchievement.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends UserAchievementUpdateArgs>(args: SelectSubset<T, UserAchievementUpdateArgs<ExtArgs>>): Prisma__UserAchievementClient<$Result.GetResult<Prisma.$UserAchievementPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more UserAchievements.
+     * @param {UserAchievementDeleteManyArgs} args - Arguments to filter UserAchievements to delete.
+     * @example
+     * // Delete a few UserAchievements
+     * const { count } = await prisma.userAchievement.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends UserAchievementDeleteManyArgs>(args?: SelectSubset<T, UserAchievementDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more UserAchievements.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserAchievementUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many UserAchievements
+     * const userAchievement = await prisma.userAchievement.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends UserAchievementUpdateManyArgs>(args: SelectSubset<T, UserAchievementUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more UserAchievements and returns the data updated in the database.
+     * @param {UserAchievementUpdateManyAndReturnArgs} args - Arguments to update many UserAchievements.
+     * @example
+     * // Update many UserAchievements
+     * const userAchievement = await prisma.userAchievement.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more UserAchievements and only return the `id`
+     * const userAchievementWithIdOnly = await prisma.userAchievement.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends UserAchievementUpdateManyAndReturnArgs>(args: SelectSubset<T, UserAchievementUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserAchievementPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one UserAchievement.
+     * @param {UserAchievementUpsertArgs} args - Arguments to update or create a UserAchievement.
+     * @example
+     * // Update or create a UserAchievement
+     * const userAchievement = await prisma.userAchievement.upsert({
+     *   create: {
+     *     // ... data to create a UserAchievement
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the UserAchievement we want to update
+     *   }
+     * })
+     */
+    upsert<T extends UserAchievementUpsertArgs>(args: SelectSubset<T, UserAchievementUpsertArgs<ExtArgs>>): Prisma__UserAchievementClient<$Result.GetResult<Prisma.$UserAchievementPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of UserAchievements.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserAchievementCountArgs} args - Arguments to filter UserAchievements to count.
+     * @example
+     * // Count the number of UserAchievements
+     * const count = await prisma.userAchievement.count({
+     *   where: {
+     *     // ... the filter for the UserAchievements we want to count
+     *   }
+     * })
+    **/
+    count<T extends UserAchievementCountArgs>(
+      args?: Subset<T, UserAchievementCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], UserAchievementCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a UserAchievement.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserAchievementAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends UserAchievementAggregateArgs>(args: Subset<T, UserAchievementAggregateArgs>): Prisma.PrismaPromise<GetUserAchievementAggregateType<T>>
+
+    /**
+     * Group by UserAchievement.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserAchievementGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends UserAchievementGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: UserAchievementGroupByArgs['orderBy'] }
+        : { orderBy?: UserAchievementGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, UserAchievementGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetUserAchievementGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the UserAchievement model
+   */
+  readonly fields: UserAchievementFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for UserAchievement.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__UserAchievementClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    robot<T extends UserAchievement$robotArgs<ExtArgs> = {}>(args?: Subset<T, UserAchievement$robotArgs<ExtArgs>>): Prisma__RobotClient<$Result.GetResult<Prisma.$RobotPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the UserAchievement model
+   */
+  interface UserAchievementFieldRefs {
+    readonly id: FieldRef<"UserAchievement", 'Int'>
+    readonly userId: FieldRef<"UserAchievement", 'Int'>
+    readonly achievementId: FieldRef<"UserAchievement", 'String'>
+    readonly robotId: FieldRef<"UserAchievement", 'Int'>
+    readonly unlockedAt: FieldRef<"UserAchievement", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * UserAchievement findUnique
+   */
+  export type UserAchievementFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserAchievement
+     */
+    select?: UserAchievementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserAchievement
+     */
+    omit?: UserAchievementOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserAchievementInclude<ExtArgs> | null
+    /**
+     * Filter, which UserAchievement to fetch.
+     */
+    where: UserAchievementWhereUniqueInput
+  }
+
+  /**
+   * UserAchievement findUniqueOrThrow
+   */
+  export type UserAchievementFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserAchievement
+     */
+    select?: UserAchievementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserAchievement
+     */
+    omit?: UserAchievementOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserAchievementInclude<ExtArgs> | null
+    /**
+     * Filter, which UserAchievement to fetch.
+     */
+    where: UserAchievementWhereUniqueInput
+  }
+
+  /**
+   * UserAchievement findFirst
+   */
+  export type UserAchievementFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserAchievement
+     */
+    select?: UserAchievementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserAchievement
+     */
+    omit?: UserAchievementOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserAchievementInclude<ExtArgs> | null
+    /**
+     * Filter, which UserAchievement to fetch.
+     */
+    where?: UserAchievementWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of UserAchievements to fetch.
+     */
+    orderBy?: UserAchievementOrderByWithRelationInput | UserAchievementOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for UserAchievements.
+     */
+    cursor?: UserAchievementWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` UserAchievements from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` UserAchievements.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of UserAchievements.
+     */
+    distinct?: UserAchievementScalarFieldEnum | UserAchievementScalarFieldEnum[]
+  }
+
+  /**
+   * UserAchievement findFirstOrThrow
+   */
+  export type UserAchievementFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserAchievement
+     */
+    select?: UserAchievementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserAchievement
+     */
+    omit?: UserAchievementOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserAchievementInclude<ExtArgs> | null
+    /**
+     * Filter, which UserAchievement to fetch.
+     */
+    where?: UserAchievementWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of UserAchievements to fetch.
+     */
+    orderBy?: UserAchievementOrderByWithRelationInput | UserAchievementOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for UserAchievements.
+     */
+    cursor?: UserAchievementWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` UserAchievements from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` UserAchievements.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of UserAchievements.
+     */
+    distinct?: UserAchievementScalarFieldEnum | UserAchievementScalarFieldEnum[]
+  }
+
+  /**
+   * UserAchievement findMany
+   */
+  export type UserAchievementFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserAchievement
+     */
+    select?: UserAchievementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserAchievement
+     */
+    omit?: UserAchievementOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserAchievementInclude<ExtArgs> | null
+    /**
+     * Filter, which UserAchievements to fetch.
+     */
+    where?: UserAchievementWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of UserAchievements to fetch.
+     */
+    orderBy?: UserAchievementOrderByWithRelationInput | UserAchievementOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing UserAchievements.
+     */
+    cursor?: UserAchievementWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` UserAchievements from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` UserAchievements.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of UserAchievements.
+     */
+    distinct?: UserAchievementScalarFieldEnum | UserAchievementScalarFieldEnum[]
+  }
+
+  /**
+   * UserAchievement create
+   */
+  export type UserAchievementCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserAchievement
+     */
+    select?: UserAchievementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserAchievement
+     */
+    omit?: UserAchievementOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserAchievementInclude<ExtArgs> | null
+    /**
+     * The data needed to create a UserAchievement.
+     */
+    data: XOR<UserAchievementCreateInput, UserAchievementUncheckedCreateInput>
+  }
+
+  /**
+   * UserAchievement createMany
+   */
+  export type UserAchievementCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many UserAchievements.
+     */
+    data: UserAchievementCreateManyInput | UserAchievementCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * UserAchievement createManyAndReturn
+   */
+  export type UserAchievementCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserAchievement
+     */
+    select?: UserAchievementSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserAchievement
+     */
+    omit?: UserAchievementOmit<ExtArgs> | null
+    /**
+     * The data used to create many UserAchievements.
+     */
+    data: UserAchievementCreateManyInput | UserAchievementCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserAchievementIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * UserAchievement update
+   */
+  export type UserAchievementUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserAchievement
+     */
+    select?: UserAchievementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserAchievement
+     */
+    omit?: UserAchievementOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserAchievementInclude<ExtArgs> | null
+    /**
+     * The data needed to update a UserAchievement.
+     */
+    data: XOR<UserAchievementUpdateInput, UserAchievementUncheckedUpdateInput>
+    /**
+     * Choose, which UserAchievement to update.
+     */
+    where: UserAchievementWhereUniqueInput
+  }
+
+  /**
+   * UserAchievement updateMany
+   */
+  export type UserAchievementUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update UserAchievements.
+     */
+    data: XOR<UserAchievementUpdateManyMutationInput, UserAchievementUncheckedUpdateManyInput>
+    /**
+     * Filter which UserAchievements to update
+     */
+    where?: UserAchievementWhereInput
+    /**
+     * Limit how many UserAchievements to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * UserAchievement updateManyAndReturn
+   */
+  export type UserAchievementUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserAchievement
+     */
+    select?: UserAchievementSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserAchievement
+     */
+    omit?: UserAchievementOmit<ExtArgs> | null
+    /**
+     * The data used to update UserAchievements.
+     */
+    data: XOR<UserAchievementUpdateManyMutationInput, UserAchievementUncheckedUpdateManyInput>
+    /**
+     * Filter which UserAchievements to update
+     */
+    where?: UserAchievementWhereInput
+    /**
+     * Limit how many UserAchievements to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserAchievementIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * UserAchievement upsert
+   */
+  export type UserAchievementUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserAchievement
+     */
+    select?: UserAchievementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserAchievement
+     */
+    omit?: UserAchievementOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserAchievementInclude<ExtArgs> | null
+    /**
+     * The filter to search for the UserAchievement to update in case it exists.
+     */
+    where: UserAchievementWhereUniqueInput
+    /**
+     * In case the UserAchievement found by the `where` argument doesn't exist, create a new UserAchievement with this data.
+     */
+    create: XOR<UserAchievementCreateInput, UserAchievementUncheckedCreateInput>
+    /**
+     * In case the UserAchievement was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<UserAchievementUpdateInput, UserAchievementUncheckedUpdateInput>
+  }
+
+  /**
+   * UserAchievement delete
+   */
+  export type UserAchievementDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserAchievement
+     */
+    select?: UserAchievementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserAchievement
+     */
+    omit?: UserAchievementOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserAchievementInclude<ExtArgs> | null
+    /**
+     * Filter which UserAchievement to delete.
+     */
+    where: UserAchievementWhereUniqueInput
+  }
+
+  /**
+   * UserAchievement deleteMany
+   */
+  export type UserAchievementDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which UserAchievements to delete
+     */
+    where?: UserAchievementWhereInput
+    /**
+     * Limit how many UserAchievements to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * UserAchievement.robot
+   */
+  export type UserAchievement$robotArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Robot
+     */
+    select?: RobotSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Robot
+     */
+    omit?: RobotOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RobotInclude<ExtArgs> | null
+    where?: RobotWhereInput
+  }
+
+  /**
+   * UserAchievement without action
+   */
+  export type UserAchievementDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserAchievement
+     */
+    select?: UserAchievementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserAchievement
+     */
+    omit?: UserAchievementOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserAchievementInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Model TuningAllocation
    */
 
@@ -30828,6 +32374,1053 @@ export namespace Prisma {
 
 
   /**
+   * Model AdminAuditLog
+   */
+
+  export type AggregateAdminAuditLog = {
+    _count: AdminAuditLogCountAggregateOutputType | null
+    _avg: AdminAuditLogAvgAggregateOutputType | null
+    _sum: AdminAuditLogSumAggregateOutputType | null
+    _min: AdminAuditLogMinAggregateOutputType | null
+    _max: AdminAuditLogMaxAggregateOutputType | null
+  }
+
+  export type AdminAuditLogAvgAggregateOutputType = {
+    id: number | null
+    adminUserId: number | null
+  }
+
+  export type AdminAuditLogSumAggregateOutputType = {
+    id: number | null
+    adminUserId: number | null
+  }
+
+  export type AdminAuditLogMinAggregateOutputType = {
+    id: number | null
+    adminUserId: number | null
+    operationType: string | null
+    operationResult: string | null
+    createdAt: Date | null
+  }
+
+  export type AdminAuditLogMaxAggregateOutputType = {
+    id: number | null
+    adminUserId: number | null
+    operationType: string | null
+    operationResult: string | null
+    createdAt: Date | null
+  }
+
+  export type AdminAuditLogCountAggregateOutputType = {
+    id: number
+    adminUserId: number
+    operationType: number
+    operationResult: number
+    resultSummary: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type AdminAuditLogAvgAggregateInputType = {
+    id?: true
+    adminUserId?: true
+  }
+
+  export type AdminAuditLogSumAggregateInputType = {
+    id?: true
+    adminUserId?: true
+  }
+
+  export type AdminAuditLogMinAggregateInputType = {
+    id?: true
+    adminUserId?: true
+    operationType?: true
+    operationResult?: true
+    createdAt?: true
+  }
+
+  export type AdminAuditLogMaxAggregateInputType = {
+    id?: true
+    adminUserId?: true
+    operationType?: true
+    operationResult?: true
+    createdAt?: true
+  }
+
+  export type AdminAuditLogCountAggregateInputType = {
+    id?: true
+    adminUserId?: true
+    operationType?: true
+    operationResult?: true
+    resultSummary?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type AdminAuditLogAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AdminAuditLog to aggregate.
+     */
+    where?: AdminAuditLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AdminAuditLogs to fetch.
+     */
+    orderBy?: AdminAuditLogOrderByWithRelationInput | AdminAuditLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: AdminAuditLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AdminAuditLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AdminAuditLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned AdminAuditLogs
+    **/
+    _count?: true | AdminAuditLogCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: AdminAuditLogAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: AdminAuditLogSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: AdminAuditLogMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: AdminAuditLogMaxAggregateInputType
+  }
+
+  export type GetAdminAuditLogAggregateType<T extends AdminAuditLogAggregateArgs> = {
+        [P in keyof T & keyof AggregateAdminAuditLog]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateAdminAuditLog[P]>
+      : GetScalarType<T[P], AggregateAdminAuditLog[P]>
+  }
+
+
+
+
+  export type AdminAuditLogGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: AdminAuditLogWhereInput
+    orderBy?: AdminAuditLogOrderByWithAggregationInput | AdminAuditLogOrderByWithAggregationInput[]
+    by: AdminAuditLogScalarFieldEnum[] | AdminAuditLogScalarFieldEnum
+    having?: AdminAuditLogScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: AdminAuditLogCountAggregateInputType | true
+    _avg?: AdminAuditLogAvgAggregateInputType
+    _sum?: AdminAuditLogSumAggregateInputType
+    _min?: AdminAuditLogMinAggregateInputType
+    _max?: AdminAuditLogMaxAggregateInputType
+  }
+
+  export type AdminAuditLogGroupByOutputType = {
+    id: number
+    adminUserId: number
+    operationType: string
+    operationResult: string
+    resultSummary: JsonValue
+    createdAt: Date
+    _count: AdminAuditLogCountAggregateOutputType | null
+    _avg: AdminAuditLogAvgAggregateOutputType | null
+    _sum: AdminAuditLogSumAggregateOutputType | null
+    _min: AdminAuditLogMinAggregateOutputType | null
+    _max: AdminAuditLogMaxAggregateOutputType | null
+  }
+
+  type GetAdminAuditLogGroupByPayload<T extends AdminAuditLogGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<AdminAuditLogGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof AdminAuditLogGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], AdminAuditLogGroupByOutputType[P]>
+            : GetScalarType<T[P], AdminAuditLogGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type AdminAuditLogSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    adminUserId?: boolean
+    operationType?: boolean
+    operationResult?: boolean
+    resultSummary?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["adminAuditLog"]>
+
+  export type AdminAuditLogSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    adminUserId?: boolean
+    operationType?: boolean
+    operationResult?: boolean
+    resultSummary?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["adminAuditLog"]>
+
+  export type AdminAuditLogSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    adminUserId?: boolean
+    operationType?: boolean
+    operationResult?: boolean
+    resultSummary?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["adminAuditLog"]>
+
+  export type AdminAuditLogSelectScalar = {
+    id?: boolean
+    adminUserId?: boolean
+    operationType?: boolean
+    operationResult?: boolean
+    resultSummary?: boolean
+    createdAt?: boolean
+  }
+
+  export type AdminAuditLogOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "adminUserId" | "operationType" | "operationResult" | "resultSummary" | "createdAt", ExtArgs["result"]["adminAuditLog"]>
+
+  export type $AdminAuditLogPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "AdminAuditLog"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      adminUserId: number
+      operationType: string
+      operationResult: string
+      resultSummary: Prisma.JsonValue
+      createdAt: Date
+    }, ExtArgs["result"]["adminAuditLog"]>
+    composites: {}
+  }
+
+  type AdminAuditLogGetPayload<S extends boolean | null | undefined | AdminAuditLogDefaultArgs> = $Result.GetResult<Prisma.$AdminAuditLogPayload, S>
+
+  type AdminAuditLogCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<AdminAuditLogFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: AdminAuditLogCountAggregateInputType | true
+    }
+
+  export interface AdminAuditLogDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['AdminAuditLog'], meta: { name: 'AdminAuditLog' } }
+    /**
+     * Find zero or one AdminAuditLog that matches the filter.
+     * @param {AdminAuditLogFindUniqueArgs} args - Arguments to find a AdminAuditLog
+     * @example
+     * // Get one AdminAuditLog
+     * const adminAuditLog = await prisma.adminAuditLog.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends AdminAuditLogFindUniqueArgs>(args: SelectSubset<T, AdminAuditLogFindUniqueArgs<ExtArgs>>): Prisma__AdminAuditLogClient<$Result.GetResult<Prisma.$AdminAuditLogPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one AdminAuditLog that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {AdminAuditLogFindUniqueOrThrowArgs} args - Arguments to find a AdminAuditLog
+     * @example
+     * // Get one AdminAuditLog
+     * const adminAuditLog = await prisma.adminAuditLog.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends AdminAuditLogFindUniqueOrThrowArgs>(args: SelectSubset<T, AdminAuditLogFindUniqueOrThrowArgs<ExtArgs>>): Prisma__AdminAuditLogClient<$Result.GetResult<Prisma.$AdminAuditLogPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first AdminAuditLog that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AdminAuditLogFindFirstArgs} args - Arguments to find a AdminAuditLog
+     * @example
+     * // Get one AdminAuditLog
+     * const adminAuditLog = await prisma.adminAuditLog.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends AdminAuditLogFindFirstArgs>(args?: SelectSubset<T, AdminAuditLogFindFirstArgs<ExtArgs>>): Prisma__AdminAuditLogClient<$Result.GetResult<Prisma.$AdminAuditLogPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first AdminAuditLog that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AdminAuditLogFindFirstOrThrowArgs} args - Arguments to find a AdminAuditLog
+     * @example
+     * // Get one AdminAuditLog
+     * const adminAuditLog = await prisma.adminAuditLog.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends AdminAuditLogFindFirstOrThrowArgs>(args?: SelectSubset<T, AdminAuditLogFindFirstOrThrowArgs<ExtArgs>>): Prisma__AdminAuditLogClient<$Result.GetResult<Prisma.$AdminAuditLogPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more AdminAuditLogs that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AdminAuditLogFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all AdminAuditLogs
+     * const adminAuditLogs = await prisma.adminAuditLog.findMany()
+     * 
+     * // Get first 10 AdminAuditLogs
+     * const adminAuditLogs = await prisma.adminAuditLog.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const adminAuditLogWithIdOnly = await prisma.adminAuditLog.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends AdminAuditLogFindManyArgs>(args?: SelectSubset<T, AdminAuditLogFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AdminAuditLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a AdminAuditLog.
+     * @param {AdminAuditLogCreateArgs} args - Arguments to create a AdminAuditLog.
+     * @example
+     * // Create one AdminAuditLog
+     * const AdminAuditLog = await prisma.adminAuditLog.create({
+     *   data: {
+     *     // ... data to create a AdminAuditLog
+     *   }
+     * })
+     * 
+     */
+    create<T extends AdminAuditLogCreateArgs>(args: SelectSubset<T, AdminAuditLogCreateArgs<ExtArgs>>): Prisma__AdminAuditLogClient<$Result.GetResult<Prisma.$AdminAuditLogPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many AdminAuditLogs.
+     * @param {AdminAuditLogCreateManyArgs} args - Arguments to create many AdminAuditLogs.
+     * @example
+     * // Create many AdminAuditLogs
+     * const adminAuditLog = await prisma.adminAuditLog.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends AdminAuditLogCreateManyArgs>(args?: SelectSubset<T, AdminAuditLogCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many AdminAuditLogs and returns the data saved in the database.
+     * @param {AdminAuditLogCreateManyAndReturnArgs} args - Arguments to create many AdminAuditLogs.
+     * @example
+     * // Create many AdminAuditLogs
+     * const adminAuditLog = await prisma.adminAuditLog.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many AdminAuditLogs and only return the `id`
+     * const adminAuditLogWithIdOnly = await prisma.adminAuditLog.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends AdminAuditLogCreateManyAndReturnArgs>(args?: SelectSubset<T, AdminAuditLogCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AdminAuditLogPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a AdminAuditLog.
+     * @param {AdminAuditLogDeleteArgs} args - Arguments to delete one AdminAuditLog.
+     * @example
+     * // Delete one AdminAuditLog
+     * const AdminAuditLog = await prisma.adminAuditLog.delete({
+     *   where: {
+     *     // ... filter to delete one AdminAuditLog
+     *   }
+     * })
+     * 
+     */
+    delete<T extends AdminAuditLogDeleteArgs>(args: SelectSubset<T, AdminAuditLogDeleteArgs<ExtArgs>>): Prisma__AdminAuditLogClient<$Result.GetResult<Prisma.$AdminAuditLogPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one AdminAuditLog.
+     * @param {AdminAuditLogUpdateArgs} args - Arguments to update one AdminAuditLog.
+     * @example
+     * // Update one AdminAuditLog
+     * const adminAuditLog = await prisma.adminAuditLog.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends AdminAuditLogUpdateArgs>(args: SelectSubset<T, AdminAuditLogUpdateArgs<ExtArgs>>): Prisma__AdminAuditLogClient<$Result.GetResult<Prisma.$AdminAuditLogPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more AdminAuditLogs.
+     * @param {AdminAuditLogDeleteManyArgs} args - Arguments to filter AdminAuditLogs to delete.
+     * @example
+     * // Delete a few AdminAuditLogs
+     * const { count } = await prisma.adminAuditLog.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends AdminAuditLogDeleteManyArgs>(args?: SelectSubset<T, AdminAuditLogDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more AdminAuditLogs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AdminAuditLogUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many AdminAuditLogs
+     * const adminAuditLog = await prisma.adminAuditLog.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends AdminAuditLogUpdateManyArgs>(args: SelectSubset<T, AdminAuditLogUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more AdminAuditLogs and returns the data updated in the database.
+     * @param {AdminAuditLogUpdateManyAndReturnArgs} args - Arguments to update many AdminAuditLogs.
+     * @example
+     * // Update many AdminAuditLogs
+     * const adminAuditLog = await prisma.adminAuditLog.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more AdminAuditLogs and only return the `id`
+     * const adminAuditLogWithIdOnly = await prisma.adminAuditLog.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends AdminAuditLogUpdateManyAndReturnArgs>(args: SelectSubset<T, AdminAuditLogUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AdminAuditLogPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one AdminAuditLog.
+     * @param {AdminAuditLogUpsertArgs} args - Arguments to update or create a AdminAuditLog.
+     * @example
+     * // Update or create a AdminAuditLog
+     * const adminAuditLog = await prisma.adminAuditLog.upsert({
+     *   create: {
+     *     // ... data to create a AdminAuditLog
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the AdminAuditLog we want to update
+     *   }
+     * })
+     */
+    upsert<T extends AdminAuditLogUpsertArgs>(args: SelectSubset<T, AdminAuditLogUpsertArgs<ExtArgs>>): Prisma__AdminAuditLogClient<$Result.GetResult<Prisma.$AdminAuditLogPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of AdminAuditLogs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AdminAuditLogCountArgs} args - Arguments to filter AdminAuditLogs to count.
+     * @example
+     * // Count the number of AdminAuditLogs
+     * const count = await prisma.adminAuditLog.count({
+     *   where: {
+     *     // ... the filter for the AdminAuditLogs we want to count
+     *   }
+     * })
+    **/
+    count<T extends AdminAuditLogCountArgs>(
+      args?: Subset<T, AdminAuditLogCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], AdminAuditLogCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a AdminAuditLog.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AdminAuditLogAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends AdminAuditLogAggregateArgs>(args: Subset<T, AdminAuditLogAggregateArgs>): Prisma.PrismaPromise<GetAdminAuditLogAggregateType<T>>
+
+    /**
+     * Group by AdminAuditLog.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AdminAuditLogGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends AdminAuditLogGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: AdminAuditLogGroupByArgs['orderBy'] }
+        : { orderBy?: AdminAuditLogGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, AdminAuditLogGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetAdminAuditLogGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the AdminAuditLog model
+   */
+  readonly fields: AdminAuditLogFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for AdminAuditLog.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__AdminAuditLogClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the AdminAuditLog model
+   */
+  interface AdminAuditLogFieldRefs {
+    readonly id: FieldRef<"AdminAuditLog", 'Int'>
+    readonly adminUserId: FieldRef<"AdminAuditLog", 'Int'>
+    readonly operationType: FieldRef<"AdminAuditLog", 'String'>
+    readonly operationResult: FieldRef<"AdminAuditLog", 'String'>
+    readonly resultSummary: FieldRef<"AdminAuditLog", 'Json'>
+    readonly createdAt: FieldRef<"AdminAuditLog", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * AdminAuditLog findUnique
+   */
+  export type AdminAuditLogFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdminAuditLog
+     */
+    select?: AdminAuditLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdminAuditLog
+     */
+    omit?: AdminAuditLogOmit<ExtArgs> | null
+    /**
+     * Filter, which AdminAuditLog to fetch.
+     */
+    where: AdminAuditLogWhereUniqueInput
+  }
+
+  /**
+   * AdminAuditLog findUniqueOrThrow
+   */
+  export type AdminAuditLogFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdminAuditLog
+     */
+    select?: AdminAuditLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdminAuditLog
+     */
+    omit?: AdminAuditLogOmit<ExtArgs> | null
+    /**
+     * Filter, which AdminAuditLog to fetch.
+     */
+    where: AdminAuditLogWhereUniqueInput
+  }
+
+  /**
+   * AdminAuditLog findFirst
+   */
+  export type AdminAuditLogFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdminAuditLog
+     */
+    select?: AdminAuditLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdminAuditLog
+     */
+    omit?: AdminAuditLogOmit<ExtArgs> | null
+    /**
+     * Filter, which AdminAuditLog to fetch.
+     */
+    where?: AdminAuditLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AdminAuditLogs to fetch.
+     */
+    orderBy?: AdminAuditLogOrderByWithRelationInput | AdminAuditLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AdminAuditLogs.
+     */
+    cursor?: AdminAuditLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AdminAuditLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AdminAuditLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AdminAuditLogs.
+     */
+    distinct?: AdminAuditLogScalarFieldEnum | AdminAuditLogScalarFieldEnum[]
+  }
+
+  /**
+   * AdminAuditLog findFirstOrThrow
+   */
+  export type AdminAuditLogFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdminAuditLog
+     */
+    select?: AdminAuditLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdminAuditLog
+     */
+    omit?: AdminAuditLogOmit<ExtArgs> | null
+    /**
+     * Filter, which AdminAuditLog to fetch.
+     */
+    where?: AdminAuditLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AdminAuditLogs to fetch.
+     */
+    orderBy?: AdminAuditLogOrderByWithRelationInput | AdminAuditLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AdminAuditLogs.
+     */
+    cursor?: AdminAuditLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AdminAuditLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AdminAuditLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AdminAuditLogs.
+     */
+    distinct?: AdminAuditLogScalarFieldEnum | AdminAuditLogScalarFieldEnum[]
+  }
+
+  /**
+   * AdminAuditLog findMany
+   */
+  export type AdminAuditLogFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdminAuditLog
+     */
+    select?: AdminAuditLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdminAuditLog
+     */
+    omit?: AdminAuditLogOmit<ExtArgs> | null
+    /**
+     * Filter, which AdminAuditLogs to fetch.
+     */
+    where?: AdminAuditLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AdminAuditLogs to fetch.
+     */
+    orderBy?: AdminAuditLogOrderByWithRelationInput | AdminAuditLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing AdminAuditLogs.
+     */
+    cursor?: AdminAuditLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AdminAuditLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AdminAuditLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AdminAuditLogs.
+     */
+    distinct?: AdminAuditLogScalarFieldEnum | AdminAuditLogScalarFieldEnum[]
+  }
+
+  /**
+   * AdminAuditLog create
+   */
+  export type AdminAuditLogCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdminAuditLog
+     */
+    select?: AdminAuditLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdminAuditLog
+     */
+    omit?: AdminAuditLogOmit<ExtArgs> | null
+    /**
+     * The data needed to create a AdminAuditLog.
+     */
+    data: XOR<AdminAuditLogCreateInput, AdminAuditLogUncheckedCreateInput>
+  }
+
+  /**
+   * AdminAuditLog createMany
+   */
+  export type AdminAuditLogCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many AdminAuditLogs.
+     */
+    data: AdminAuditLogCreateManyInput | AdminAuditLogCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * AdminAuditLog createManyAndReturn
+   */
+  export type AdminAuditLogCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdminAuditLog
+     */
+    select?: AdminAuditLogSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdminAuditLog
+     */
+    omit?: AdminAuditLogOmit<ExtArgs> | null
+    /**
+     * The data used to create many AdminAuditLogs.
+     */
+    data: AdminAuditLogCreateManyInput | AdminAuditLogCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * AdminAuditLog update
+   */
+  export type AdminAuditLogUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdminAuditLog
+     */
+    select?: AdminAuditLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdminAuditLog
+     */
+    omit?: AdminAuditLogOmit<ExtArgs> | null
+    /**
+     * The data needed to update a AdminAuditLog.
+     */
+    data: XOR<AdminAuditLogUpdateInput, AdminAuditLogUncheckedUpdateInput>
+    /**
+     * Choose, which AdminAuditLog to update.
+     */
+    where: AdminAuditLogWhereUniqueInput
+  }
+
+  /**
+   * AdminAuditLog updateMany
+   */
+  export type AdminAuditLogUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update AdminAuditLogs.
+     */
+    data: XOR<AdminAuditLogUpdateManyMutationInput, AdminAuditLogUncheckedUpdateManyInput>
+    /**
+     * Filter which AdminAuditLogs to update
+     */
+    where?: AdminAuditLogWhereInput
+    /**
+     * Limit how many AdminAuditLogs to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * AdminAuditLog updateManyAndReturn
+   */
+  export type AdminAuditLogUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdminAuditLog
+     */
+    select?: AdminAuditLogSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdminAuditLog
+     */
+    omit?: AdminAuditLogOmit<ExtArgs> | null
+    /**
+     * The data used to update AdminAuditLogs.
+     */
+    data: XOR<AdminAuditLogUpdateManyMutationInput, AdminAuditLogUncheckedUpdateManyInput>
+    /**
+     * Filter which AdminAuditLogs to update
+     */
+    where?: AdminAuditLogWhereInput
+    /**
+     * Limit how many AdminAuditLogs to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * AdminAuditLog upsert
+   */
+  export type AdminAuditLogUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdminAuditLog
+     */
+    select?: AdminAuditLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdminAuditLog
+     */
+    omit?: AdminAuditLogOmit<ExtArgs> | null
+    /**
+     * The filter to search for the AdminAuditLog to update in case it exists.
+     */
+    where: AdminAuditLogWhereUniqueInput
+    /**
+     * In case the AdminAuditLog found by the `where` argument doesn't exist, create a new AdminAuditLog with this data.
+     */
+    create: XOR<AdminAuditLogCreateInput, AdminAuditLogUncheckedCreateInput>
+    /**
+     * In case the AdminAuditLog was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<AdminAuditLogUpdateInput, AdminAuditLogUncheckedUpdateInput>
+  }
+
+  /**
+   * AdminAuditLog delete
+   */
+  export type AdminAuditLogDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdminAuditLog
+     */
+    select?: AdminAuditLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdminAuditLog
+     */
+    omit?: AdminAuditLogOmit<ExtArgs> | null
+    /**
+     * Filter which AdminAuditLog to delete.
+     */
+    where: AdminAuditLogWhereUniqueInput
+  }
+
+  /**
+   * AdminAuditLog deleteMany
+   */
+  export type AdminAuditLogDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AdminAuditLogs to delete
+     */
+    where?: AdminAuditLogWhereInput
+    /**
+     * Limit how many AdminAuditLogs to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * AdminAuditLog without action
+   */
+  export type AdminAuditLogDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AdminAuditLog
+     */
+    select?: AdminAuditLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AdminAuditLog
+     */
+    omit?: AdminAuditLogOmit<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -30864,6 +33457,9 @@ export namespace Prisma {
     onboardingStartedAt: 'onboardingStartedAt',
     onboardingCompletedAt: 'onboardingCompletedAt',
     lastSeenChangelog: 'lastSeenChangelog',
+    pinnedAchievements: 'pinnedAchievements',
+    totalPracticeBattles: 'totalPracticeBattles',
+    lastLoginAt: 'lastLoginAt',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -30947,6 +33543,13 @@ export namespace Prisma {
     kothBestPlacement: 'kothBestPlacement',
     kothCurrentWinStreak: 'kothCurrentWinStreak',
     kothBestWinStreak: 'kothBestWinStreak',
+    currentWinStreak: 'currentWinStreak',
+    bestWinStreak: 'bestWinStreak',
+    currentLoseStreak: 'currentLoseStreak',
+    offensiveWins: 'offensiveWins',
+    defensiveWins: 'defensiveWins',
+    balancedWins: 'balancedWins',
+    dualWieldWins: 'dualWieldWins',
     repairCost: 'repairCost',
     battleReadiness: 'battleReadiness',
     totalRepairsPaid: 'totalRepairsPaid',
@@ -31274,6 +33877,17 @@ export namespace Prisma {
   export type ChangelogEntryScalarFieldEnum = (typeof ChangelogEntryScalarFieldEnum)[keyof typeof ChangelogEntryScalarFieldEnum]
 
 
+  export const UserAchievementScalarFieldEnum: {
+    id: 'id',
+    userId: 'userId',
+    achievementId: 'achievementId',
+    robotId: 'robotId',
+    unlockedAt: 'unlockedAt'
+  };
+
+  export type UserAchievementScalarFieldEnum = (typeof UserAchievementScalarFieldEnum)[keyof typeof UserAchievementScalarFieldEnum]
+
+
   export const TuningAllocationScalarFieldEnum: {
     id: 'id',
     robotId: 'robotId',
@@ -31305,6 +33919,18 @@ export namespace Prisma {
   };
 
   export type TuningAllocationScalarFieldEnum = (typeof TuningAllocationScalarFieldEnum)[keyof typeof TuningAllocationScalarFieldEnum]
+
+
+  export const AdminAuditLogScalarFieldEnum: {
+    id: 'id',
+    adminUserId: 'adminUserId',
+    operationType: 'operationType',
+    operationResult: 'operationResult',
+    resultSummary: 'resultSummary',
+    createdAt: 'createdAt'
+  };
+
+  export type AdminAuditLogScalarFieldEnum = (typeof AdminAuditLogScalarFieldEnum)[keyof typeof AdminAuditLogScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -31494,12 +34120,16 @@ export namespace Prisma {
     onboardingStartedAt?: DateTimeNullableFilter<"User"> | Date | string | null
     onboardingCompletedAt?: DateTimeNullableFilter<"User"> | Date | string | null
     lastSeenChangelog?: DateTimeFilter<"User"> | Date | string
+    pinnedAchievements?: JsonFilter<"User">
+    totalPracticeBattles?: IntFilter<"User"> | number
+    lastLoginAt?: DateTimeNullableFilter<"User"> | Date | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
     robots?: RobotListRelationFilter
     facilities?: FacilityListRelationFilter
     weaponInventory?: WeaponInventoryListRelationFilter
     tagTeams?: TagTeamListRelationFilter
+    achievements?: UserAchievementListRelationFilter
   }
 
   export type UserOrderByWithRelationInput = {
@@ -31525,12 +34155,16 @@ export namespace Prisma {
     onboardingStartedAt?: SortOrderInput | SortOrder
     onboardingCompletedAt?: SortOrderInput | SortOrder
     lastSeenChangelog?: SortOrder
+    pinnedAchievements?: SortOrder
+    totalPracticeBattles?: SortOrder
+    lastLoginAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     robots?: RobotOrderByRelationAggregateInput
     facilities?: FacilityOrderByRelationAggregateInput
     weaponInventory?: WeaponInventoryOrderByRelationAggregateInput
     tagTeams?: TagTeamOrderByRelationAggregateInput
+    achievements?: UserAchievementOrderByRelationAggregateInput
   }
 
   export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -31559,12 +34193,16 @@ export namespace Prisma {
     onboardingStartedAt?: DateTimeNullableFilter<"User"> | Date | string | null
     onboardingCompletedAt?: DateTimeNullableFilter<"User"> | Date | string | null
     lastSeenChangelog?: DateTimeFilter<"User"> | Date | string
+    pinnedAchievements?: JsonFilter<"User">
+    totalPracticeBattles?: IntFilter<"User"> | number
+    lastLoginAt?: DateTimeNullableFilter<"User"> | Date | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
     robots?: RobotListRelationFilter
     facilities?: FacilityListRelationFilter
     weaponInventory?: WeaponInventoryListRelationFilter
     tagTeams?: TagTeamListRelationFilter
+    achievements?: UserAchievementListRelationFilter
   }, "id" | "username" | "email" | "stableName">
 
   export type UserOrderByWithAggregationInput = {
@@ -31590,6 +34228,9 @@ export namespace Prisma {
     onboardingStartedAt?: SortOrderInput | SortOrder
     onboardingCompletedAt?: SortOrderInput | SortOrder
     lastSeenChangelog?: SortOrder
+    pinnedAchievements?: SortOrder
+    totalPracticeBattles?: SortOrder
+    lastLoginAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: UserCountOrderByAggregateInput
@@ -31625,6 +34266,9 @@ export namespace Prisma {
     onboardingStartedAt?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
     onboardingCompletedAt?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
     lastSeenChangelog?: DateTimeWithAggregatesFilter<"User"> | Date | string
+    pinnedAchievements?: JsonWithAggregatesFilter<"User">
+    totalPracticeBattles?: IntWithAggregatesFilter<"User"> | number
+    lastLoginAt?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
   }
@@ -31767,6 +34411,13 @@ export namespace Prisma {
     kothBestPlacement?: IntNullableFilter<"Robot"> | number | null
     kothCurrentWinStreak?: IntFilter<"Robot"> | number
     kothBestWinStreak?: IntFilter<"Robot"> | number
+    currentWinStreak?: IntFilter<"Robot"> | number
+    bestWinStreak?: IntFilter<"Robot"> | number
+    currentLoseStreak?: IntFilter<"Robot"> | number
+    offensiveWins?: IntFilter<"Robot"> | number
+    defensiveWins?: IntFilter<"Robot"> | number
+    balancedWins?: IntFilter<"Robot"> | number
+    dualWieldWins?: IntFilter<"Robot"> | number
     repairCost?: IntFilter<"Robot"> | number
     battleReadiness?: IntFilter<"Robot"> | number
     totalRepairsPaid?: IntFilter<"Robot"> | number
@@ -31794,6 +34445,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantListRelationFilter
     kothMatchParticipations?: ScheduledKothMatchParticipantListRelationFilter
     tuningAllocation?: XOR<TuningAllocationNullableScalarRelationFilter, TuningAllocationWhereInput> | null
+    achievements?: UserAchievementListRelationFilter
   }
 
   export type RobotOrderByWithRelationInput = {
@@ -31858,6 +34510,13 @@ export namespace Prisma {
     kothBestPlacement?: SortOrderInput | SortOrder
     kothCurrentWinStreak?: SortOrder
     kothBestWinStreak?: SortOrder
+    currentWinStreak?: SortOrder
+    bestWinStreak?: SortOrder
+    currentLoseStreak?: SortOrder
+    offensiveWins?: SortOrder
+    defensiveWins?: SortOrder
+    balancedWins?: SortOrder
+    dualWieldWins?: SortOrder
     repairCost?: SortOrder
     battleReadiness?: SortOrder
     totalRepairsPaid?: SortOrder
@@ -31885,6 +34544,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantOrderByRelationAggregateInput
     kothMatchParticipations?: ScheduledKothMatchParticipantOrderByRelationAggregateInput
     tuningAllocation?: TuningAllocationOrderByWithRelationInput
+    achievements?: UserAchievementOrderByRelationAggregateInput
   }
 
   export type RobotWhereUniqueInput = Prisma.AtLeast<{
@@ -31952,6 +34612,13 @@ export namespace Prisma {
     kothBestPlacement?: IntNullableFilter<"Robot"> | number | null
     kothCurrentWinStreak?: IntFilter<"Robot"> | number
     kothBestWinStreak?: IntFilter<"Robot"> | number
+    currentWinStreak?: IntFilter<"Robot"> | number
+    bestWinStreak?: IntFilter<"Robot"> | number
+    currentLoseStreak?: IntFilter<"Robot"> | number
+    offensiveWins?: IntFilter<"Robot"> | number
+    defensiveWins?: IntFilter<"Robot"> | number
+    balancedWins?: IntFilter<"Robot"> | number
+    dualWieldWins?: IntFilter<"Robot"> | number
     repairCost?: IntFilter<"Robot"> | number
     battleReadiness?: IntFilter<"Robot"> | number
     totalRepairsPaid?: IntFilter<"Robot"> | number
@@ -31979,6 +34646,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantListRelationFilter
     kothMatchParticipations?: ScheduledKothMatchParticipantListRelationFilter
     tuningAllocation?: XOR<TuningAllocationNullableScalarRelationFilter, TuningAllocationWhereInput> | null
+    achievements?: UserAchievementListRelationFilter
   }, "id" | "name">
 
   export type RobotOrderByWithAggregationInput = {
@@ -32043,6 +34711,13 @@ export namespace Prisma {
     kothBestPlacement?: SortOrderInput | SortOrder
     kothCurrentWinStreak?: SortOrder
     kothBestWinStreak?: SortOrder
+    currentWinStreak?: SortOrder
+    bestWinStreak?: SortOrder
+    currentLoseStreak?: SortOrder
+    offensiveWins?: SortOrder
+    defensiveWins?: SortOrder
+    balancedWins?: SortOrder
+    dualWieldWins?: SortOrder
     repairCost?: SortOrder
     battleReadiness?: SortOrder
     totalRepairsPaid?: SortOrder
@@ -32126,6 +34801,13 @@ export namespace Prisma {
     kothBestPlacement?: IntNullableWithAggregatesFilter<"Robot"> | number | null
     kothCurrentWinStreak?: IntWithAggregatesFilter<"Robot"> | number
     kothBestWinStreak?: IntWithAggregatesFilter<"Robot"> | number
+    currentWinStreak?: IntWithAggregatesFilter<"Robot"> | number
+    bestWinStreak?: IntWithAggregatesFilter<"Robot"> | number
+    currentLoseStreak?: IntWithAggregatesFilter<"Robot"> | number
+    offensiveWins?: IntWithAggregatesFilter<"Robot"> | number
+    defensiveWins?: IntWithAggregatesFilter<"Robot"> | number
+    balancedWins?: IntWithAggregatesFilter<"Robot"> | number
+    dualWieldWins?: IntWithAggregatesFilter<"Robot"> | number
     repairCost?: IntWithAggregatesFilter<"Robot"> | number
     battleReadiness?: IntWithAggregatesFilter<"Robot"> | number
     totalRepairsPaid?: IntWithAggregatesFilter<"Robot"> | number
@@ -33795,6 +36477,67 @@ export namespace Prisma {
     updatedAt?: DateTimeWithAggregatesFilter<"ChangelogEntry"> | Date | string
   }
 
+  export type UserAchievementWhereInput = {
+    AND?: UserAchievementWhereInput | UserAchievementWhereInput[]
+    OR?: UserAchievementWhereInput[]
+    NOT?: UserAchievementWhereInput | UserAchievementWhereInput[]
+    id?: IntFilter<"UserAchievement"> | number
+    userId?: IntFilter<"UserAchievement"> | number
+    achievementId?: StringFilter<"UserAchievement"> | string
+    robotId?: IntNullableFilter<"UserAchievement"> | number | null
+    unlockedAt?: DateTimeFilter<"UserAchievement"> | Date | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+    robot?: XOR<RobotNullableScalarRelationFilter, RobotWhereInput> | null
+  }
+
+  export type UserAchievementOrderByWithRelationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    achievementId?: SortOrder
+    robotId?: SortOrderInput | SortOrder
+    unlockedAt?: SortOrder
+    user?: UserOrderByWithRelationInput
+    robot?: RobotOrderByWithRelationInput
+  }
+
+  export type UserAchievementWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    userId_achievementId?: UserAchievementUserIdAchievementIdCompoundUniqueInput
+    AND?: UserAchievementWhereInput | UserAchievementWhereInput[]
+    OR?: UserAchievementWhereInput[]
+    NOT?: UserAchievementWhereInput | UserAchievementWhereInput[]
+    userId?: IntFilter<"UserAchievement"> | number
+    achievementId?: StringFilter<"UserAchievement"> | string
+    robotId?: IntNullableFilter<"UserAchievement"> | number | null
+    unlockedAt?: DateTimeFilter<"UserAchievement"> | Date | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+    robot?: XOR<RobotNullableScalarRelationFilter, RobotWhereInput> | null
+  }, "id" | "userId_achievementId">
+
+  export type UserAchievementOrderByWithAggregationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    achievementId?: SortOrder
+    robotId?: SortOrderInput | SortOrder
+    unlockedAt?: SortOrder
+    _count?: UserAchievementCountOrderByAggregateInput
+    _avg?: UserAchievementAvgOrderByAggregateInput
+    _max?: UserAchievementMaxOrderByAggregateInput
+    _min?: UserAchievementMinOrderByAggregateInput
+    _sum?: UserAchievementSumOrderByAggregateInput
+  }
+
+  export type UserAchievementScalarWhereWithAggregatesInput = {
+    AND?: UserAchievementScalarWhereWithAggregatesInput | UserAchievementScalarWhereWithAggregatesInput[]
+    OR?: UserAchievementScalarWhereWithAggregatesInput[]
+    NOT?: UserAchievementScalarWhereWithAggregatesInput | UserAchievementScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"UserAchievement"> | number
+    userId?: IntWithAggregatesFilter<"UserAchievement"> | number
+    achievementId?: StringWithAggregatesFilter<"UserAchievement"> | string
+    robotId?: IntNullableWithAggregatesFilter<"UserAchievement"> | number | null
+    unlockedAt?: DateTimeWithAggregatesFilter<"UserAchievement"> | Date | string
+  }
+
   export type TuningAllocationWhereInput = {
     AND?: TuningAllocationWhereInput | TuningAllocationWhereInput[]
     OR?: TuningAllocationWhereInput[]
@@ -33962,6 +36705,65 @@ export namespace Prisma {
     updatedAt?: DateTimeWithAggregatesFilter<"TuningAllocation"> | Date | string
   }
 
+  export type AdminAuditLogWhereInput = {
+    AND?: AdminAuditLogWhereInput | AdminAuditLogWhereInput[]
+    OR?: AdminAuditLogWhereInput[]
+    NOT?: AdminAuditLogWhereInput | AdminAuditLogWhereInput[]
+    id?: IntFilter<"AdminAuditLog"> | number
+    adminUserId?: IntFilter<"AdminAuditLog"> | number
+    operationType?: StringFilter<"AdminAuditLog"> | string
+    operationResult?: StringFilter<"AdminAuditLog"> | string
+    resultSummary?: JsonFilter<"AdminAuditLog">
+    createdAt?: DateTimeFilter<"AdminAuditLog"> | Date | string
+  }
+
+  export type AdminAuditLogOrderByWithRelationInput = {
+    id?: SortOrder
+    adminUserId?: SortOrder
+    operationType?: SortOrder
+    operationResult?: SortOrder
+    resultSummary?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type AdminAuditLogWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    AND?: AdminAuditLogWhereInput | AdminAuditLogWhereInput[]
+    OR?: AdminAuditLogWhereInput[]
+    NOT?: AdminAuditLogWhereInput | AdminAuditLogWhereInput[]
+    adminUserId?: IntFilter<"AdminAuditLog"> | number
+    operationType?: StringFilter<"AdminAuditLog"> | string
+    operationResult?: StringFilter<"AdminAuditLog"> | string
+    resultSummary?: JsonFilter<"AdminAuditLog">
+    createdAt?: DateTimeFilter<"AdminAuditLog"> | Date | string
+  }, "id">
+
+  export type AdminAuditLogOrderByWithAggregationInput = {
+    id?: SortOrder
+    adminUserId?: SortOrder
+    operationType?: SortOrder
+    operationResult?: SortOrder
+    resultSummary?: SortOrder
+    createdAt?: SortOrder
+    _count?: AdminAuditLogCountOrderByAggregateInput
+    _avg?: AdminAuditLogAvgOrderByAggregateInput
+    _max?: AdminAuditLogMaxOrderByAggregateInput
+    _min?: AdminAuditLogMinOrderByAggregateInput
+    _sum?: AdminAuditLogSumOrderByAggregateInput
+  }
+
+  export type AdminAuditLogScalarWhereWithAggregatesInput = {
+    AND?: AdminAuditLogScalarWhereWithAggregatesInput | AdminAuditLogScalarWhereWithAggregatesInput[]
+    OR?: AdminAuditLogScalarWhereWithAggregatesInput[]
+    NOT?: AdminAuditLogScalarWhereWithAggregatesInput | AdminAuditLogScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"AdminAuditLog"> | number
+    adminUserId?: IntWithAggregatesFilter<"AdminAuditLog"> | number
+    operationType?: StringWithAggregatesFilter<"AdminAuditLog"> | string
+    operationResult?: StringWithAggregatesFilter<"AdminAuditLog"> | string
+    resultSummary?: JsonWithAggregatesFilter<"AdminAuditLog">
+    createdAt?: DateTimeWithAggregatesFilter<"AdminAuditLog"> | Date | string
+  }
+
   export type UserCreateInput = {
     username: string
     email?: string | null
@@ -33984,12 +36786,16 @@ export namespace Prisma {
     onboardingStartedAt?: Date | string | null
     onboardingCompletedAt?: Date | string | null
     lastSeenChangelog?: Date | string
+    pinnedAchievements?: JsonNullValueInput | InputJsonValue
+    totalPracticeBattles?: number
+    lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     robots?: RobotCreateNestedManyWithoutUserInput
     facilities?: FacilityCreateNestedManyWithoutUserInput
     weaponInventory?: WeaponInventoryCreateNestedManyWithoutUserInput
     tagTeams?: TagTeamCreateNestedManyWithoutStableInput
+    achievements?: UserAchievementCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateInput = {
@@ -34015,12 +36821,16 @@ export namespace Prisma {
     onboardingStartedAt?: Date | string | null
     onboardingCompletedAt?: Date | string | null
     lastSeenChangelog?: Date | string
+    pinnedAchievements?: JsonNullValueInput | InputJsonValue
+    totalPracticeBattles?: number
+    lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     robots?: RobotUncheckedCreateNestedManyWithoutUserInput
     facilities?: FacilityUncheckedCreateNestedManyWithoutUserInput
     weaponInventory?: WeaponInventoryUncheckedCreateNestedManyWithoutUserInput
     tagTeams?: TagTeamUncheckedCreateNestedManyWithoutStableInput
+    achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserUpdateInput = {
@@ -34045,12 +36855,16 @@ export namespace Prisma {
     onboardingStartedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     onboardingCompletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastSeenChangelog?: DateTimeFieldUpdateOperationsInput | Date | string
+    pinnedAchievements?: JsonNullValueInput | InputJsonValue
+    totalPracticeBattles?: IntFieldUpdateOperationsInput | number
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     robots?: RobotUpdateManyWithoutUserNestedInput
     facilities?: FacilityUpdateManyWithoutUserNestedInput
     weaponInventory?: WeaponInventoryUpdateManyWithoutUserNestedInput
     tagTeams?: TagTeamUpdateManyWithoutStableNestedInput
+    achievements?: UserAchievementUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateInput = {
@@ -34076,12 +36890,16 @@ export namespace Prisma {
     onboardingStartedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     onboardingCompletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastSeenChangelog?: DateTimeFieldUpdateOperationsInput | Date | string
+    pinnedAchievements?: JsonNullValueInput | InputJsonValue
+    totalPracticeBattles?: IntFieldUpdateOperationsInput | number
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     robots?: RobotUncheckedUpdateManyWithoutUserNestedInput
     facilities?: FacilityUncheckedUpdateManyWithoutUserNestedInput
     weaponInventory?: WeaponInventoryUncheckedUpdateManyWithoutUserNestedInput
     tagTeams?: TagTeamUncheckedUpdateManyWithoutStableNestedInput
+    achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateManyInput = {
@@ -34107,6 +36925,9 @@ export namespace Prisma {
     onboardingStartedAt?: Date | string | null
     onboardingCompletedAt?: Date | string | null
     lastSeenChangelog?: Date | string
+    pinnedAchievements?: JsonNullValueInput | InputJsonValue
+    totalPracticeBattles?: number
+    lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -34133,6 +36954,9 @@ export namespace Prisma {
     onboardingStartedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     onboardingCompletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastSeenChangelog?: DateTimeFieldUpdateOperationsInput | Date | string
+    pinnedAchievements?: JsonNullValueInput | InputJsonValue
+    totalPracticeBattles?: IntFieldUpdateOperationsInput | number
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -34160,6 +36984,9 @@ export namespace Prisma {
     onboardingStartedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     onboardingCompletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastSeenChangelog?: DateTimeFieldUpdateOperationsInput | Date | string
+    pinnedAchievements?: JsonNullValueInput | InputJsonValue
+    totalPracticeBattles?: IntFieldUpdateOperationsInput | number
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -34297,6 +37124,13 @@ export namespace Prisma {
     kothBestPlacement?: number | null
     kothCurrentWinStreak?: number
     kothBestWinStreak?: number
+    currentWinStreak?: number
+    bestWinStreak?: number
+    currentLoseStreak?: number
+    offensiveWins?: number
+    defensiveWins?: number
+    balancedWins?: number
+    dualWieldWins?: number
     repairCost?: number
     battleReadiness?: number
     totalRepairsPaid?: number
@@ -34322,6 +37156,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantCreateNestedManyWithoutRobotInput
     tuningAllocation?: TuningAllocationCreateNestedOneWithoutRobotInput
+    achievements?: UserAchievementCreateNestedManyWithoutRobotInput
   }
 
   export type RobotUncheckedCreateInput = {
@@ -34386,6 +37221,13 @@ export namespace Prisma {
     kothBestPlacement?: number | null
     kothCurrentWinStreak?: number
     kothBestWinStreak?: number
+    currentWinStreak?: number
+    bestWinStreak?: number
+    currentLoseStreak?: number
+    offensiveWins?: number
+    defensiveWins?: number
+    balancedWins?: number
+    dualWieldWins?: number
     repairCost?: number
     battleReadiness?: number
     totalRepairsPaid?: number
@@ -34410,6 +37252,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantUncheckedCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedCreateNestedManyWithoutRobotInput
     tuningAllocation?: TuningAllocationUncheckedCreateNestedOneWithoutRobotInput
+    achievements?: UserAchievementUncheckedCreateNestedManyWithoutRobotInput
   }
 
   export type RobotUpdateInput = {
@@ -34472,6 +37315,13 @@ export namespace Prisma {
     kothBestPlacement?: NullableIntFieldUpdateOperationsInput | number | null
     kothCurrentWinStreak?: IntFieldUpdateOperationsInput | number
     kothBestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentWinStreak?: IntFieldUpdateOperationsInput | number
+    bestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentLoseStreak?: IntFieldUpdateOperationsInput | number
+    offensiveWins?: IntFieldUpdateOperationsInput | number
+    defensiveWins?: IntFieldUpdateOperationsInput | number
+    balancedWins?: IntFieldUpdateOperationsInput | number
+    dualWieldWins?: IntFieldUpdateOperationsInput | number
     repairCost?: IntFieldUpdateOperationsInput | number
     battleReadiness?: IntFieldUpdateOperationsInput | number
     totalRepairsPaid?: IntFieldUpdateOperationsInput | number
@@ -34497,6 +37347,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUpdateManyWithoutRobotNestedInput
     tuningAllocation?: TuningAllocationUpdateOneWithoutRobotNestedInput
+    achievements?: UserAchievementUpdateManyWithoutRobotNestedInput
   }
 
   export type RobotUncheckedUpdateInput = {
@@ -34561,6 +37412,13 @@ export namespace Prisma {
     kothBestPlacement?: NullableIntFieldUpdateOperationsInput | number | null
     kothCurrentWinStreak?: IntFieldUpdateOperationsInput | number
     kothBestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentWinStreak?: IntFieldUpdateOperationsInput | number
+    bestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentLoseStreak?: IntFieldUpdateOperationsInput | number
+    offensiveWins?: IntFieldUpdateOperationsInput | number
+    defensiveWins?: IntFieldUpdateOperationsInput | number
+    balancedWins?: IntFieldUpdateOperationsInput | number
+    dualWieldWins?: IntFieldUpdateOperationsInput | number
     repairCost?: IntFieldUpdateOperationsInput | number
     battleReadiness?: IntFieldUpdateOperationsInput | number
     totalRepairsPaid?: IntFieldUpdateOperationsInput | number
@@ -34585,6 +37443,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantUncheckedUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedUpdateManyWithoutRobotNestedInput
     tuningAllocation?: TuningAllocationUncheckedUpdateOneWithoutRobotNestedInput
+    achievements?: UserAchievementUncheckedUpdateManyWithoutRobotNestedInput
   }
 
   export type RobotCreateManyInput = {
@@ -34649,6 +37508,13 @@ export namespace Prisma {
     kothBestPlacement?: number | null
     kothCurrentWinStreak?: number
     kothBestWinStreak?: number
+    currentWinStreak?: number
+    bestWinStreak?: number
+    currentLoseStreak?: number
+    offensiveWins?: number
+    defensiveWins?: number
+    balancedWins?: number
+    dualWieldWins?: number
     repairCost?: number
     battleReadiness?: number
     totalRepairsPaid?: number
@@ -34722,6 +37588,13 @@ export namespace Prisma {
     kothBestPlacement?: NullableIntFieldUpdateOperationsInput | number | null
     kothCurrentWinStreak?: IntFieldUpdateOperationsInput | number
     kothBestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentWinStreak?: IntFieldUpdateOperationsInput | number
+    bestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentLoseStreak?: IntFieldUpdateOperationsInput | number
+    offensiveWins?: IntFieldUpdateOperationsInput | number
+    defensiveWins?: IntFieldUpdateOperationsInput | number
+    balancedWins?: IntFieldUpdateOperationsInput | number
+    dualWieldWins?: IntFieldUpdateOperationsInput | number
     repairCost?: IntFieldUpdateOperationsInput | number
     battleReadiness?: IntFieldUpdateOperationsInput | number
     totalRepairsPaid?: IntFieldUpdateOperationsInput | number
@@ -34795,6 +37668,13 @@ export namespace Prisma {
     kothBestPlacement?: NullableIntFieldUpdateOperationsInput | number | null
     kothCurrentWinStreak?: IntFieldUpdateOperationsInput | number
     kothBestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentWinStreak?: IntFieldUpdateOperationsInput | number
+    bestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentLoseStreak?: IntFieldUpdateOperationsInput | number
+    offensiveWins?: IntFieldUpdateOperationsInput | number
+    defensiveWins?: IntFieldUpdateOperationsInput | number
+    balancedWins?: IntFieldUpdateOperationsInput | number
+    dualWieldWins?: IntFieldUpdateOperationsInput | number
     repairCost?: IntFieldUpdateOperationsInput | number
     battleReadiness?: IntFieldUpdateOperationsInput | number
     totalRepairsPaid?: IntFieldUpdateOperationsInput | number
@@ -36611,6 +39491,57 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type UserAchievementCreateInput = {
+    achievementId: string
+    unlockedAt?: Date | string
+    user: UserCreateNestedOneWithoutAchievementsInput
+    robot?: RobotCreateNestedOneWithoutAchievementsInput
+  }
+
+  export type UserAchievementUncheckedCreateInput = {
+    id?: number
+    userId: number
+    achievementId: string
+    robotId?: number | null
+    unlockedAt?: Date | string
+  }
+
+  export type UserAchievementUpdateInput = {
+    achievementId?: StringFieldUpdateOperationsInput | string
+    unlockedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutAchievementsNestedInput
+    robot?: RobotUpdateOneWithoutAchievementsNestedInput
+  }
+
+  export type UserAchievementUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    userId?: IntFieldUpdateOperationsInput | number
+    achievementId?: StringFieldUpdateOperationsInput | string
+    robotId?: NullableIntFieldUpdateOperationsInput | number | null
+    unlockedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UserAchievementCreateManyInput = {
+    id?: number
+    userId: number
+    achievementId: string
+    robotId?: number | null
+    unlockedAt?: Date | string
+  }
+
+  export type UserAchievementUpdateManyMutationInput = {
+    achievementId?: StringFieldUpdateOperationsInput | string
+    unlockedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UserAchievementUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    userId?: IntFieldUpdateOperationsInput | number
+    achievementId?: StringFieldUpdateOperationsInput | string
+    robotId?: NullableIntFieldUpdateOperationsInput | number | null
+    unlockedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type TuningAllocationCreateInput = {
     combatPower?: Decimal | DecimalJsLike | number | string
     targetingSystems?: Decimal | DecimalJsLike | number | string
@@ -36817,6 +39748,66 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type AdminAuditLogCreateInput = {
+    adminUserId: number
+    operationType: string
+    operationResult: string
+    resultSummary: JsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+  }
+
+  export type AdminAuditLogUncheckedCreateInput = {
+    id?: number
+    adminUserId: number
+    operationType: string
+    operationResult: string
+    resultSummary: JsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+  }
+
+  export type AdminAuditLogUpdateInput = {
+    adminUserId?: IntFieldUpdateOperationsInput | number
+    operationType?: StringFieldUpdateOperationsInput | string
+    operationResult?: StringFieldUpdateOperationsInput | string
+    resultSummary?: JsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AdminAuditLogUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    adminUserId?: IntFieldUpdateOperationsInput | number
+    operationType?: StringFieldUpdateOperationsInput | string
+    operationResult?: StringFieldUpdateOperationsInput | string
+    resultSummary?: JsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AdminAuditLogCreateManyInput = {
+    id?: number
+    adminUserId: number
+    operationType: string
+    operationResult: string
+    resultSummary: JsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+  }
+
+  export type AdminAuditLogUpdateManyMutationInput = {
+    adminUserId?: IntFieldUpdateOperationsInput | number
+    operationType?: StringFieldUpdateOperationsInput | string
+    operationResult?: StringFieldUpdateOperationsInput | string
+    resultSummary?: JsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AdminAuditLogUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    adminUserId?: IntFieldUpdateOperationsInput | number
+    operationType?: StringFieldUpdateOperationsInput | string
+    operationResult?: StringFieldUpdateOperationsInput | string
+    resultSummary?: JsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type IntFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
     in?: number[] | ListIntFieldRefInput<$PrismaModel>
@@ -36932,6 +39923,12 @@ export namespace Prisma {
     none?: TagTeamWhereInput
   }
 
+  export type UserAchievementListRelationFilter = {
+    every?: UserAchievementWhereInput
+    some?: UserAchievementWhereInput
+    none?: UserAchievementWhereInput
+  }
+
   export type SortOrderInput = {
     sort: SortOrder
     nulls?: NullsOrder
@@ -36950,6 +39947,10 @@ export namespace Prisma {
   }
 
   export type TagTeamOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type UserAchievementOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -36976,6 +39977,9 @@ export namespace Prisma {
     onboardingStartedAt?: SortOrder
     onboardingCompletedAt?: SortOrder
     lastSeenChangelog?: SortOrder
+    pinnedAchievements?: SortOrder
+    totalPracticeBattles?: SortOrder
+    lastLoginAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -36987,6 +39991,7 @@ export namespace Prisma {
     championshipTitles?: SortOrder
     tokenVersion?: SortOrder
     onboardingStep?: SortOrder
+    totalPracticeBattles?: SortOrder
   }
 
   export type UserMaxOrderByAggregateInput = {
@@ -37011,6 +40016,8 @@ export namespace Prisma {
     onboardingStartedAt?: SortOrder
     onboardingCompletedAt?: SortOrder
     lastSeenChangelog?: SortOrder
+    totalPracticeBattles?: SortOrder
+    lastLoginAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -37037,6 +40044,8 @@ export namespace Prisma {
     onboardingStartedAt?: SortOrder
     onboardingCompletedAt?: SortOrder
     lastSeenChangelog?: SortOrder
+    totalPracticeBattles?: SortOrder
+    lastLoginAt?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -37048,6 +40057,7 @@ export namespace Prisma {
     championshipTitles?: SortOrder
     tokenVersion?: SortOrder
     onboardingStep?: SortOrder
+    totalPracticeBattles?: SortOrder
   }
 
   export type IntWithAggregatesFilter<$PrismaModel = never> = {
@@ -37386,6 +40396,13 @@ export namespace Prisma {
     kothBestPlacement?: SortOrder
     kothCurrentWinStreak?: SortOrder
     kothBestWinStreak?: SortOrder
+    currentWinStreak?: SortOrder
+    bestWinStreak?: SortOrder
+    currentLoseStreak?: SortOrder
+    offensiveWins?: SortOrder
+    defensiveWins?: SortOrder
+    balancedWins?: SortOrder
+    dualWieldWins?: SortOrder
     repairCost?: SortOrder
     battleReadiness?: SortOrder
     totalRepairsPaid?: SortOrder
@@ -37456,6 +40473,13 @@ export namespace Prisma {
     kothBestPlacement?: SortOrder
     kothCurrentWinStreak?: SortOrder
     kothBestWinStreak?: SortOrder
+    currentWinStreak?: SortOrder
+    bestWinStreak?: SortOrder
+    currentLoseStreak?: SortOrder
+    offensiveWins?: SortOrder
+    defensiveWins?: SortOrder
+    balancedWins?: SortOrder
+    dualWieldWins?: SortOrder
     repairCost?: SortOrder
     battleReadiness?: SortOrder
     totalRepairsPaid?: SortOrder
@@ -37526,6 +40550,13 @@ export namespace Prisma {
     kothBestPlacement?: SortOrder
     kothCurrentWinStreak?: SortOrder
     kothBestWinStreak?: SortOrder
+    currentWinStreak?: SortOrder
+    bestWinStreak?: SortOrder
+    currentLoseStreak?: SortOrder
+    offensiveWins?: SortOrder
+    defensiveWins?: SortOrder
+    balancedWins?: SortOrder
+    dualWieldWins?: SortOrder
     repairCost?: SortOrder
     battleReadiness?: SortOrder
     totalRepairsPaid?: SortOrder
@@ -37601,6 +40632,13 @@ export namespace Prisma {
     kothBestPlacement?: SortOrder
     kothCurrentWinStreak?: SortOrder
     kothBestWinStreak?: SortOrder
+    currentWinStreak?: SortOrder
+    bestWinStreak?: SortOrder
+    currentLoseStreak?: SortOrder
+    offensiveWins?: SortOrder
+    defensiveWins?: SortOrder
+    balancedWins?: SortOrder
+    dualWieldWins?: SortOrder
     repairCost?: SortOrder
     battleReadiness?: SortOrder
     totalRepairsPaid?: SortOrder
@@ -37671,6 +40709,13 @@ export namespace Prisma {
     kothBestPlacement?: SortOrder
     kothCurrentWinStreak?: SortOrder
     kothBestWinStreak?: SortOrder
+    currentWinStreak?: SortOrder
+    bestWinStreak?: SortOrder
+    currentLoseStreak?: SortOrder
+    offensiveWins?: SortOrder
+    defensiveWins?: SortOrder
+    balancedWins?: SortOrder
+    dualWieldWins?: SortOrder
     repairCost?: SortOrder
     battleReadiness?: SortOrder
     totalRepairsPaid?: SortOrder
@@ -39058,6 +42103,47 @@ export namespace Prisma {
     createdBy?: SortOrder
   }
 
+  export type UserAchievementUserIdAchievementIdCompoundUniqueInput = {
+    userId: number
+    achievementId: string
+  }
+
+  export type UserAchievementCountOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    achievementId?: SortOrder
+    robotId?: SortOrder
+    unlockedAt?: SortOrder
+  }
+
+  export type UserAchievementAvgOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    robotId?: SortOrder
+  }
+
+  export type UserAchievementMaxOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    achievementId?: SortOrder
+    robotId?: SortOrder
+    unlockedAt?: SortOrder
+  }
+
+  export type UserAchievementMinOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    achievementId?: SortOrder
+    robotId?: SortOrder
+    unlockedAt?: SortOrder
+  }
+
+  export type UserAchievementSumOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    robotId?: SortOrder
+  }
+
   export type TuningAllocationCountOrderByAggregateInput = {
     id?: SortOrder
     robotId?: SortOrder
@@ -39204,6 +42290,41 @@ export namespace Prisma {
     formationTactics?: SortOrder
   }
 
+  export type AdminAuditLogCountOrderByAggregateInput = {
+    id?: SortOrder
+    adminUserId?: SortOrder
+    operationType?: SortOrder
+    operationResult?: SortOrder
+    resultSummary?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type AdminAuditLogAvgOrderByAggregateInput = {
+    id?: SortOrder
+    adminUserId?: SortOrder
+  }
+
+  export type AdminAuditLogMaxOrderByAggregateInput = {
+    id?: SortOrder
+    adminUserId?: SortOrder
+    operationType?: SortOrder
+    operationResult?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type AdminAuditLogMinOrderByAggregateInput = {
+    id?: SortOrder
+    adminUserId?: SortOrder
+    operationType?: SortOrder
+    operationResult?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type AdminAuditLogSumOrderByAggregateInput = {
+    id?: SortOrder
+    adminUserId?: SortOrder
+  }
+
   export type RobotCreateNestedManyWithoutUserInput = {
     create?: XOR<RobotCreateWithoutUserInput, RobotUncheckedCreateWithoutUserInput> | RobotCreateWithoutUserInput[] | RobotUncheckedCreateWithoutUserInput[]
     connectOrCreate?: RobotCreateOrConnectWithoutUserInput | RobotCreateOrConnectWithoutUserInput[]
@@ -39232,6 +42353,13 @@ export namespace Prisma {
     connect?: TagTeamWhereUniqueInput | TagTeamWhereUniqueInput[]
   }
 
+  export type UserAchievementCreateNestedManyWithoutUserInput = {
+    create?: XOR<UserAchievementCreateWithoutUserInput, UserAchievementUncheckedCreateWithoutUserInput> | UserAchievementCreateWithoutUserInput[] | UserAchievementUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: UserAchievementCreateOrConnectWithoutUserInput | UserAchievementCreateOrConnectWithoutUserInput[]
+    createMany?: UserAchievementCreateManyUserInputEnvelope
+    connect?: UserAchievementWhereUniqueInput | UserAchievementWhereUniqueInput[]
+  }
+
   export type RobotUncheckedCreateNestedManyWithoutUserInput = {
     create?: XOR<RobotCreateWithoutUserInput, RobotUncheckedCreateWithoutUserInput> | RobotCreateWithoutUserInput[] | RobotUncheckedCreateWithoutUserInput[]
     connectOrCreate?: RobotCreateOrConnectWithoutUserInput | RobotCreateOrConnectWithoutUserInput[]
@@ -39258,6 +42386,13 @@ export namespace Prisma {
     connectOrCreate?: TagTeamCreateOrConnectWithoutStableInput | TagTeamCreateOrConnectWithoutStableInput[]
     createMany?: TagTeamCreateManyStableInputEnvelope
     connect?: TagTeamWhereUniqueInput | TagTeamWhereUniqueInput[]
+  }
+
+  export type UserAchievementUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<UserAchievementCreateWithoutUserInput, UserAchievementUncheckedCreateWithoutUserInput> | UserAchievementCreateWithoutUserInput[] | UserAchievementUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: UserAchievementCreateOrConnectWithoutUserInput | UserAchievementCreateOrConnectWithoutUserInput[]
+    createMany?: UserAchievementCreateManyUserInputEnvelope
+    connect?: UserAchievementWhereUniqueInput | UserAchievementWhereUniqueInput[]
   }
 
   export type StringFieldUpdateOperationsInput = {
@@ -39344,6 +42479,20 @@ export namespace Prisma {
     deleteMany?: TagTeamScalarWhereInput | TagTeamScalarWhereInput[]
   }
 
+  export type UserAchievementUpdateManyWithoutUserNestedInput = {
+    create?: XOR<UserAchievementCreateWithoutUserInput, UserAchievementUncheckedCreateWithoutUserInput> | UserAchievementCreateWithoutUserInput[] | UserAchievementUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: UserAchievementCreateOrConnectWithoutUserInput | UserAchievementCreateOrConnectWithoutUserInput[]
+    upsert?: UserAchievementUpsertWithWhereUniqueWithoutUserInput | UserAchievementUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: UserAchievementCreateManyUserInputEnvelope
+    set?: UserAchievementWhereUniqueInput | UserAchievementWhereUniqueInput[]
+    disconnect?: UserAchievementWhereUniqueInput | UserAchievementWhereUniqueInput[]
+    delete?: UserAchievementWhereUniqueInput | UserAchievementWhereUniqueInput[]
+    connect?: UserAchievementWhereUniqueInput | UserAchievementWhereUniqueInput[]
+    update?: UserAchievementUpdateWithWhereUniqueWithoutUserInput | UserAchievementUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: UserAchievementUpdateManyWithWhereWithoutUserInput | UserAchievementUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: UserAchievementScalarWhereInput | UserAchievementScalarWhereInput[]
+  }
+
   export type RobotUncheckedUpdateManyWithoutUserNestedInput = {
     create?: XOR<RobotCreateWithoutUserInput, RobotUncheckedCreateWithoutUserInput> | RobotCreateWithoutUserInput[] | RobotUncheckedCreateWithoutUserInput[]
     connectOrCreate?: RobotCreateOrConnectWithoutUserInput | RobotCreateOrConnectWithoutUserInput[]
@@ -39398,6 +42547,20 @@ export namespace Prisma {
     update?: TagTeamUpdateWithWhereUniqueWithoutStableInput | TagTeamUpdateWithWhereUniqueWithoutStableInput[]
     updateMany?: TagTeamUpdateManyWithWhereWithoutStableInput | TagTeamUpdateManyWithWhereWithoutStableInput[]
     deleteMany?: TagTeamScalarWhereInput | TagTeamScalarWhereInput[]
+  }
+
+  export type UserAchievementUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<UserAchievementCreateWithoutUserInput, UserAchievementUncheckedCreateWithoutUserInput> | UserAchievementCreateWithoutUserInput[] | UserAchievementUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: UserAchievementCreateOrConnectWithoutUserInput | UserAchievementCreateOrConnectWithoutUserInput[]
+    upsert?: UserAchievementUpsertWithWhereUniqueWithoutUserInput | UserAchievementUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: UserAchievementCreateManyUserInputEnvelope
+    set?: UserAchievementWhereUniqueInput | UserAchievementWhereUniqueInput[]
+    disconnect?: UserAchievementWhereUniqueInput | UserAchievementWhereUniqueInput[]
+    delete?: UserAchievementWhereUniqueInput | UserAchievementWhereUniqueInput[]
+    connect?: UserAchievementWhereUniqueInput | UserAchievementWhereUniqueInput[]
+    update?: UserAchievementUpdateWithWhereUniqueWithoutUserInput | UserAchievementUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: UserAchievementUpdateManyWithWhereWithoutUserInput | UserAchievementUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: UserAchievementScalarWhereInput | UserAchievementScalarWhereInput[]
   }
 
   export type UserCreateNestedOneWithoutFacilitiesInput = {
@@ -39522,6 +42685,13 @@ export namespace Prisma {
     connect?: TuningAllocationWhereUniqueInput
   }
 
+  export type UserAchievementCreateNestedManyWithoutRobotInput = {
+    create?: XOR<UserAchievementCreateWithoutRobotInput, UserAchievementUncheckedCreateWithoutRobotInput> | UserAchievementCreateWithoutRobotInput[] | UserAchievementUncheckedCreateWithoutRobotInput[]
+    connectOrCreate?: UserAchievementCreateOrConnectWithoutRobotInput | UserAchievementCreateOrConnectWithoutRobotInput[]
+    createMany?: UserAchievementCreateManyRobotInputEnvelope
+    connect?: UserAchievementWhereUniqueInput | UserAchievementWhereUniqueInput[]
+  }
+
   export type BattleUncheckedCreateNestedManyWithoutRobot1Input = {
     create?: XOR<BattleCreateWithoutRobot1Input, BattleUncheckedCreateWithoutRobot1Input> | BattleCreateWithoutRobot1Input[] | BattleUncheckedCreateWithoutRobot1Input[]
     connectOrCreate?: BattleCreateOrConnectWithoutRobot1Input | BattleCreateOrConnectWithoutRobot1Input[]
@@ -39610,6 +42780,13 @@ export namespace Prisma {
     create?: XOR<TuningAllocationCreateWithoutRobotInput, TuningAllocationUncheckedCreateWithoutRobotInput>
     connectOrCreate?: TuningAllocationCreateOrConnectWithoutRobotInput
     connect?: TuningAllocationWhereUniqueInput
+  }
+
+  export type UserAchievementUncheckedCreateNestedManyWithoutRobotInput = {
+    create?: XOR<UserAchievementCreateWithoutRobotInput, UserAchievementUncheckedCreateWithoutRobotInput> | UserAchievementCreateWithoutRobotInput[] | UserAchievementUncheckedCreateWithoutRobotInput[]
+    connectOrCreate?: UserAchievementCreateOrConnectWithoutRobotInput | UserAchievementCreateOrConnectWithoutRobotInput[]
+    createMany?: UserAchievementCreateManyRobotInputEnvelope
+    connect?: UserAchievementWhereUniqueInput | UserAchievementWhereUniqueInput[]
   }
 
   export type DecimalFieldUpdateOperationsInput = {
@@ -39842,6 +43019,20 @@ export namespace Prisma {
     update?: XOR<XOR<TuningAllocationUpdateToOneWithWhereWithoutRobotInput, TuningAllocationUpdateWithoutRobotInput>, TuningAllocationUncheckedUpdateWithoutRobotInput>
   }
 
+  export type UserAchievementUpdateManyWithoutRobotNestedInput = {
+    create?: XOR<UserAchievementCreateWithoutRobotInput, UserAchievementUncheckedCreateWithoutRobotInput> | UserAchievementCreateWithoutRobotInput[] | UserAchievementUncheckedCreateWithoutRobotInput[]
+    connectOrCreate?: UserAchievementCreateOrConnectWithoutRobotInput | UserAchievementCreateOrConnectWithoutRobotInput[]
+    upsert?: UserAchievementUpsertWithWhereUniqueWithoutRobotInput | UserAchievementUpsertWithWhereUniqueWithoutRobotInput[]
+    createMany?: UserAchievementCreateManyRobotInputEnvelope
+    set?: UserAchievementWhereUniqueInput | UserAchievementWhereUniqueInput[]
+    disconnect?: UserAchievementWhereUniqueInput | UserAchievementWhereUniqueInput[]
+    delete?: UserAchievementWhereUniqueInput | UserAchievementWhereUniqueInput[]
+    connect?: UserAchievementWhereUniqueInput | UserAchievementWhereUniqueInput[]
+    update?: UserAchievementUpdateWithWhereUniqueWithoutRobotInput | UserAchievementUpdateWithWhereUniqueWithoutRobotInput[]
+    updateMany?: UserAchievementUpdateManyWithWhereWithoutRobotInput | UserAchievementUpdateManyWithWhereWithoutRobotInput[]
+    deleteMany?: UserAchievementScalarWhereInput | UserAchievementScalarWhereInput[]
+  }
+
   export type BattleUncheckedUpdateManyWithoutRobot1NestedInput = {
     create?: XOR<BattleCreateWithoutRobot1Input, BattleUncheckedCreateWithoutRobot1Input> | BattleCreateWithoutRobot1Input[] | BattleUncheckedCreateWithoutRobot1Input[]
     connectOrCreate?: BattleCreateOrConnectWithoutRobot1Input | BattleCreateOrConnectWithoutRobot1Input[]
@@ -40018,6 +43209,20 @@ export namespace Prisma {
     delete?: TuningAllocationWhereInput | boolean
     connect?: TuningAllocationWhereUniqueInput
     update?: XOR<XOR<TuningAllocationUpdateToOneWithWhereWithoutRobotInput, TuningAllocationUpdateWithoutRobotInput>, TuningAllocationUncheckedUpdateWithoutRobotInput>
+  }
+
+  export type UserAchievementUncheckedUpdateManyWithoutRobotNestedInput = {
+    create?: XOR<UserAchievementCreateWithoutRobotInput, UserAchievementUncheckedCreateWithoutRobotInput> | UserAchievementCreateWithoutRobotInput[] | UserAchievementUncheckedCreateWithoutRobotInput[]
+    connectOrCreate?: UserAchievementCreateOrConnectWithoutRobotInput | UserAchievementCreateOrConnectWithoutRobotInput[]
+    upsert?: UserAchievementUpsertWithWhereUniqueWithoutRobotInput | UserAchievementUpsertWithWhereUniqueWithoutRobotInput[]
+    createMany?: UserAchievementCreateManyRobotInputEnvelope
+    set?: UserAchievementWhereUniqueInput | UserAchievementWhereUniqueInput[]
+    disconnect?: UserAchievementWhereUniqueInput | UserAchievementWhereUniqueInput[]
+    delete?: UserAchievementWhereUniqueInput | UserAchievementWhereUniqueInput[]
+    connect?: UserAchievementWhereUniqueInput | UserAchievementWhereUniqueInput[]
+    update?: UserAchievementUpdateWithWhereUniqueWithoutRobotInput | UserAchievementUpdateWithWhereUniqueWithoutRobotInput[]
+    updateMany?: UserAchievementUpdateManyWithWhereWithoutRobotInput | UserAchievementUpdateManyWithWhereWithoutRobotInput[]
+    deleteMany?: UserAchievementScalarWhereInput | UserAchievementScalarWhereInput[]
   }
 
   export type UserCreateNestedOneWithoutWeaponInventoryInput = {
@@ -40952,6 +44157,36 @@ export namespace Prisma {
     update?: XOR<XOR<RobotUpdateToOneWithWhereWithoutKothMatchParticipationsInput, RobotUpdateWithoutKothMatchParticipationsInput>, RobotUncheckedUpdateWithoutKothMatchParticipationsInput>
   }
 
+  export type UserCreateNestedOneWithoutAchievementsInput = {
+    create?: XOR<UserCreateWithoutAchievementsInput, UserUncheckedCreateWithoutAchievementsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutAchievementsInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type RobotCreateNestedOneWithoutAchievementsInput = {
+    create?: XOR<RobotCreateWithoutAchievementsInput, RobotUncheckedCreateWithoutAchievementsInput>
+    connectOrCreate?: RobotCreateOrConnectWithoutAchievementsInput
+    connect?: RobotWhereUniqueInput
+  }
+
+  export type UserUpdateOneRequiredWithoutAchievementsNestedInput = {
+    create?: XOR<UserCreateWithoutAchievementsInput, UserUncheckedCreateWithoutAchievementsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutAchievementsInput
+    upsert?: UserUpsertWithoutAchievementsInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutAchievementsInput, UserUpdateWithoutAchievementsInput>, UserUncheckedUpdateWithoutAchievementsInput>
+  }
+
+  export type RobotUpdateOneWithoutAchievementsNestedInput = {
+    create?: XOR<RobotCreateWithoutAchievementsInput, RobotUncheckedCreateWithoutAchievementsInput>
+    connectOrCreate?: RobotCreateOrConnectWithoutAchievementsInput
+    upsert?: RobotUpsertWithoutAchievementsInput
+    disconnect?: RobotWhereInput | boolean
+    delete?: RobotWhereInput | boolean
+    connect?: RobotWhereUniqueInput
+    update?: XOR<XOR<RobotUpdateToOneWithWhereWithoutAchievementsInput, RobotUpdateWithoutAchievementsInput>, RobotUncheckedUpdateWithoutAchievementsInput>
+  }
+
   export type RobotCreateNestedOneWithoutTuningAllocationInput = {
     create?: XOR<RobotCreateWithoutTuningAllocationInput, RobotUncheckedCreateWithoutTuningAllocationInput>
     connectOrCreate?: RobotCreateOrConnectWithoutTuningAllocationInput
@@ -41370,6 +44605,13 @@ export namespace Prisma {
     kothBestPlacement?: number | null
     kothCurrentWinStreak?: number
     kothBestWinStreak?: number
+    currentWinStreak?: number
+    bestWinStreak?: number
+    currentLoseStreak?: number
+    offensiveWins?: number
+    defensiveWins?: number
+    balancedWins?: number
+    dualWieldWins?: number
     repairCost?: number
     battleReadiness?: number
     totalRepairsPaid?: number
@@ -41394,6 +44636,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantCreateNestedManyWithoutRobotInput
     tuningAllocation?: TuningAllocationCreateNestedOneWithoutRobotInput
+    achievements?: UserAchievementCreateNestedManyWithoutRobotInput
   }
 
   export type RobotUncheckedCreateWithoutUserInput = {
@@ -41457,6 +44700,13 @@ export namespace Prisma {
     kothBestPlacement?: number | null
     kothCurrentWinStreak?: number
     kothBestWinStreak?: number
+    currentWinStreak?: number
+    bestWinStreak?: number
+    currentLoseStreak?: number
+    offensiveWins?: number
+    defensiveWins?: number
+    balancedWins?: number
+    dualWieldWins?: number
     repairCost?: number
     battleReadiness?: number
     totalRepairsPaid?: number
@@ -41481,6 +44731,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantUncheckedCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedCreateNestedManyWithoutRobotInput
     tuningAllocation?: TuningAllocationUncheckedCreateNestedOneWithoutRobotInput
+    achievements?: UserAchievementUncheckedCreateNestedManyWithoutRobotInput
   }
 
   export type RobotCreateOrConnectWithoutUserInput = {
@@ -41592,6 +44843,29 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type UserAchievementCreateWithoutUserInput = {
+    achievementId: string
+    unlockedAt?: Date | string
+    robot?: RobotCreateNestedOneWithoutAchievementsInput
+  }
+
+  export type UserAchievementUncheckedCreateWithoutUserInput = {
+    id?: number
+    achievementId: string
+    robotId?: number | null
+    unlockedAt?: Date | string
+  }
+
+  export type UserAchievementCreateOrConnectWithoutUserInput = {
+    where: UserAchievementWhereUniqueInput
+    create: XOR<UserAchievementCreateWithoutUserInput, UserAchievementUncheckedCreateWithoutUserInput>
+  }
+
+  export type UserAchievementCreateManyUserInputEnvelope = {
+    data: UserAchievementCreateManyUserInput | UserAchievementCreateManyUserInput[]
+    skipDuplicates?: boolean
+  }
+
   export type RobotUpsertWithWhereUniqueWithoutUserInput = {
     where: RobotWhereUniqueInput
     update: XOR<RobotUpdateWithoutUserInput, RobotUncheckedUpdateWithoutUserInput>
@@ -41673,6 +44947,13 @@ export namespace Prisma {
     kothBestPlacement?: IntNullableFilter<"Robot"> | number | null
     kothCurrentWinStreak?: IntFilter<"Robot"> | number
     kothBestWinStreak?: IntFilter<"Robot"> | number
+    currentWinStreak?: IntFilter<"Robot"> | number
+    bestWinStreak?: IntFilter<"Robot"> | number
+    currentLoseStreak?: IntFilter<"Robot"> | number
+    offensiveWins?: IntFilter<"Robot"> | number
+    defensiveWins?: IntFilter<"Robot"> | number
+    balancedWins?: IntFilter<"Robot"> | number
+    dualWieldWins?: IntFilter<"Robot"> | number
     repairCost?: IntFilter<"Robot"> | number
     battleReadiness?: IntFilter<"Robot"> | number
     totalRepairsPaid?: IntFilter<"Robot"> | number
@@ -41778,6 +45059,33 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"TagTeam"> | Date | string
   }
 
+  export type UserAchievementUpsertWithWhereUniqueWithoutUserInput = {
+    where: UserAchievementWhereUniqueInput
+    update: XOR<UserAchievementUpdateWithoutUserInput, UserAchievementUncheckedUpdateWithoutUserInput>
+    create: XOR<UserAchievementCreateWithoutUserInput, UserAchievementUncheckedCreateWithoutUserInput>
+  }
+
+  export type UserAchievementUpdateWithWhereUniqueWithoutUserInput = {
+    where: UserAchievementWhereUniqueInput
+    data: XOR<UserAchievementUpdateWithoutUserInput, UserAchievementUncheckedUpdateWithoutUserInput>
+  }
+
+  export type UserAchievementUpdateManyWithWhereWithoutUserInput = {
+    where: UserAchievementScalarWhereInput
+    data: XOR<UserAchievementUpdateManyMutationInput, UserAchievementUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type UserAchievementScalarWhereInput = {
+    AND?: UserAchievementScalarWhereInput | UserAchievementScalarWhereInput[]
+    OR?: UserAchievementScalarWhereInput[]
+    NOT?: UserAchievementScalarWhereInput | UserAchievementScalarWhereInput[]
+    id?: IntFilter<"UserAchievement"> | number
+    userId?: IntFilter<"UserAchievement"> | number
+    achievementId?: StringFilter<"UserAchievement"> | string
+    robotId?: IntNullableFilter<"UserAchievement"> | number | null
+    unlockedAt?: DateTimeFilter<"UserAchievement"> | Date | string
+  }
+
   export type UserCreateWithoutFacilitiesInput = {
     username: string
     email?: string | null
@@ -41800,11 +45108,15 @@ export namespace Prisma {
     onboardingStartedAt?: Date | string | null
     onboardingCompletedAt?: Date | string | null
     lastSeenChangelog?: Date | string
+    pinnedAchievements?: JsonNullValueInput | InputJsonValue
+    totalPracticeBattles?: number
+    lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     robots?: RobotCreateNestedManyWithoutUserInput
     weaponInventory?: WeaponInventoryCreateNestedManyWithoutUserInput
     tagTeams?: TagTeamCreateNestedManyWithoutStableInput
+    achievements?: UserAchievementCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutFacilitiesInput = {
@@ -41830,11 +45142,15 @@ export namespace Prisma {
     onboardingStartedAt?: Date | string | null
     onboardingCompletedAt?: Date | string | null
     lastSeenChangelog?: Date | string
+    pinnedAchievements?: JsonNullValueInput | InputJsonValue
+    totalPracticeBattles?: number
+    lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     robots?: RobotUncheckedCreateNestedManyWithoutUserInput
     weaponInventory?: WeaponInventoryUncheckedCreateNestedManyWithoutUserInput
     tagTeams?: TagTeamUncheckedCreateNestedManyWithoutStableInput
+    achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutFacilitiesInput = {
@@ -41875,11 +45191,15 @@ export namespace Prisma {
     onboardingStartedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     onboardingCompletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastSeenChangelog?: DateTimeFieldUpdateOperationsInput | Date | string
+    pinnedAchievements?: JsonNullValueInput | InputJsonValue
+    totalPracticeBattles?: IntFieldUpdateOperationsInput | number
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     robots?: RobotUpdateManyWithoutUserNestedInput
     weaponInventory?: WeaponInventoryUpdateManyWithoutUserNestedInput
     tagTeams?: TagTeamUpdateManyWithoutStableNestedInput
+    achievements?: UserAchievementUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutFacilitiesInput = {
@@ -41905,11 +45225,15 @@ export namespace Prisma {
     onboardingStartedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     onboardingCompletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastSeenChangelog?: DateTimeFieldUpdateOperationsInput | Date | string
+    pinnedAchievements?: JsonNullValueInput | InputJsonValue
+    totalPracticeBattles?: IntFieldUpdateOperationsInput | number
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     robots?: RobotUncheckedUpdateManyWithoutUserNestedInput
     weaponInventory?: WeaponInventoryUncheckedUpdateManyWithoutUserNestedInput
     tagTeams?: TagTeamUncheckedUpdateManyWithoutStableNestedInput
+    achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateWithoutRobotsInput = {
@@ -41934,11 +45258,15 @@ export namespace Prisma {
     onboardingStartedAt?: Date | string | null
     onboardingCompletedAt?: Date | string | null
     lastSeenChangelog?: Date | string
+    pinnedAchievements?: JsonNullValueInput | InputJsonValue
+    totalPracticeBattles?: number
+    lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     facilities?: FacilityCreateNestedManyWithoutUserInput
     weaponInventory?: WeaponInventoryCreateNestedManyWithoutUserInput
     tagTeams?: TagTeamCreateNestedManyWithoutStableInput
+    achievements?: UserAchievementCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutRobotsInput = {
@@ -41964,11 +45292,15 @@ export namespace Prisma {
     onboardingStartedAt?: Date | string | null
     onboardingCompletedAt?: Date | string | null
     lastSeenChangelog?: Date | string
+    pinnedAchievements?: JsonNullValueInput | InputJsonValue
+    totalPracticeBattles?: number
+    lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     facilities?: FacilityUncheckedCreateNestedManyWithoutUserInput
     weaponInventory?: WeaponInventoryUncheckedCreateNestedManyWithoutUserInput
     tagTeams?: TagTeamUncheckedCreateNestedManyWithoutStableInput
+    achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutRobotsInput = {
@@ -42616,6 +45948,29 @@ export namespace Prisma {
     create: XOR<TuningAllocationCreateWithoutRobotInput, TuningAllocationUncheckedCreateWithoutRobotInput>
   }
 
+  export type UserAchievementCreateWithoutRobotInput = {
+    achievementId: string
+    unlockedAt?: Date | string
+    user: UserCreateNestedOneWithoutAchievementsInput
+  }
+
+  export type UserAchievementUncheckedCreateWithoutRobotInput = {
+    id?: number
+    userId: number
+    achievementId: string
+    unlockedAt?: Date | string
+  }
+
+  export type UserAchievementCreateOrConnectWithoutRobotInput = {
+    where: UserAchievementWhereUniqueInput
+    create: XOR<UserAchievementCreateWithoutRobotInput, UserAchievementUncheckedCreateWithoutRobotInput>
+  }
+
+  export type UserAchievementCreateManyRobotInputEnvelope = {
+    data: UserAchievementCreateManyRobotInput | UserAchievementCreateManyRobotInput[]
+    skipDuplicates?: boolean
+  }
+
   export type UserUpsertWithoutRobotsInput = {
     update: XOR<UserUpdateWithoutRobotsInput, UserUncheckedUpdateWithoutRobotsInput>
     create: XOR<UserCreateWithoutRobotsInput, UserUncheckedCreateWithoutRobotsInput>
@@ -42649,11 +46004,15 @@ export namespace Prisma {
     onboardingStartedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     onboardingCompletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastSeenChangelog?: DateTimeFieldUpdateOperationsInput | Date | string
+    pinnedAchievements?: JsonNullValueInput | InputJsonValue
+    totalPracticeBattles?: IntFieldUpdateOperationsInput | number
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     facilities?: FacilityUpdateManyWithoutUserNestedInput
     weaponInventory?: WeaponInventoryUpdateManyWithoutUserNestedInput
     tagTeams?: TagTeamUpdateManyWithoutStableNestedInput
+    achievements?: UserAchievementUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutRobotsInput = {
@@ -42679,11 +46038,15 @@ export namespace Prisma {
     onboardingStartedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     onboardingCompletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastSeenChangelog?: DateTimeFieldUpdateOperationsInput | Date | string
+    pinnedAchievements?: JsonNullValueInput | InputJsonValue
+    totalPracticeBattles?: IntFieldUpdateOperationsInput | number
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     facilities?: FacilityUncheckedUpdateManyWithoutUserNestedInput
     weaponInventory?: WeaponInventoryUncheckedUpdateManyWithoutUserNestedInput
     tagTeams?: TagTeamUncheckedUpdateManyWithoutStableNestedInput
+    achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type WeaponInventoryUpsertWithoutRobotsMainInput = {
@@ -43121,6 +46484,22 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type UserAchievementUpsertWithWhereUniqueWithoutRobotInput = {
+    where: UserAchievementWhereUniqueInput
+    update: XOR<UserAchievementUpdateWithoutRobotInput, UserAchievementUncheckedUpdateWithoutRobotInput>
+    create: XOR<UserAchievementCreateWithoutRobotInput, UserAchievementUncheckedCreateWithoutRobotInput>
+  }
+
+  export type UserAchievementUpdateWithWhereUniqueWithoutRobotInput = {
+    where: UserAchievementWhereUniqueInput
+    data: XOR<UserAchievementUpdateWithoutRobotInput, UserAchievementUncheckedUpdateWithoutRobotInput>
+  }
+
+  export type UserAchievementUpdateManyWithWhereWithoutRobotInput = {
+    where: UserAchievementScalarWhereInput
+    data: XOR<UserAchievementUpdateManyMutationInput, UserAchievementUncheckedUpdateManyWithoutRobotInput>
+  }
+
   export type UserCreateWithoutWeaponInventoryInput = {
     username: string
     email?: string | null
@@ -43143,11 +46522,15 @@ export namespace Prisma {
     onboardingStartedAt?: Date | string | null
     onboardingCompletedAt?: Date | string | null
     lastSeenChangelog?: Date | string
+    pinnedAchievements?: JsonNullValueInput | InputJsonValue
+    totalPracticeBattles?: number
+    lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     robots?: RobotCreateNestedManyWithoutUserInput
     facilities?: FacilityCreateNestedManyWithoutUserInput
     tagTeams?: TagTeamCreateNestedManyWithoutStableInput
+    achievements?: UserAchievementCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutWeaponInventoryInput = {
@@ -43173,11 +46556,15 @@ export namespace Prisma {
     onboardingStartedAt?: Date | string | null
     onboardingCompletedAt?: Date | string | null
     lastSeenChangelog?: Date | string
+    pinnedAchievements?: JsonNullValueInput | InputJsonValue
+    totalPracticeBattles?: number
+    lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     robots?: RobotUncheckedCreateNestedManyWithoutUserInput
     facilities?: FacilityUncheckedCreateNestedManyWithoutUserInput
     tagTeams?: TagTeamUncheckedCreateNestedManyWithoutStableInput
+    achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutWeaponInventoryInput = {
@@ -43327,6 +46714,13 @@ export namespace Prisma {
     kothBestPlacement?: number | null
     kothCurrentWinStreak?: number
     kothBestWinStreak?: number
+    currentWinStreak?: number
+    bestWinStreak?: number
+    currentLoseStreak?: number
+    offensiveWins?: number
+    defensiveWins?: number
+    balancedWins?: number
+    dualWieldWins?: number
     repairCost?: number
     battleReadiness?: number
     totalRepairsPaid?: number
@@ -43351,6 +46745,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantCreateNestedManyWithoutRobotInput
     tuningAllocation?: TuningAllocationCreateNestedOneWithoutRobotInput
+    achievements?: UserAchievementCreateNestedManyWithoutRobotInput
   }
 
   export type RobotUncheckedCreateWithoutMainWeaponInput = {
@@ -43415,6 +46810,13 @@ export namespace Prisma {
     kothBestPlacement?: number | null
     kothCurrentWinStreak?: number
     kothBestWinStreak?: number
+    currentWinStreak?: number
+    bestWinStreak?: number
+    currentLoseStreak?: number
+    offensiveWins?: number
+    defensiveWins?: number
+    balancedWins?: number
+    dualWieldWins?: number
     repairCost?: number
     battleReadiness?: number
     totalRepairsPaid?: number
@@ -43438,6 +46840,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantUncheckedCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedCreateNestedManyWithoutRobotInput
     tuningAllocation?: TuningAllocationUncheckedCreateNestedOneWithoutRobotInput
+    achievements?: UserAchievementUncheckedCreateNestedManyWithoutRobotInput
   }
 
   export type RobotCreateOrConnectWithoutMainWeaponInput = {
@@ -43510,6 +46913,13 @@ export namespace Prisma {
     kothBestPlacement?: number | null
     kothCurrentWinStreak?: number
     kothBestWinStreak?: number
+    currentWinStreak?: number
+    bestWinStreak?: number
+    currentLoseStreak?: number
+    offensiveWins?: number
+    defensiveWins?: number
+    balancedWins?: number
+    dualWieldWins?: number
     repairCost?: number
     battleReadiness?: number
     totalRepairsPaid?: number
@@ -43534,6 +46944,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantCreateNestedManyWithoutRobotInput
     tuningAllocation?: TuningAllocationCreateNestedOneWithoutRobotInput
+    achievements?: UserAchievementCreateNestedManyWithoutRobotInput
   }
 
   export type RobotUncheckedCreateWithoutOffhandWeaponInput = {
@@ -43598,6 +47009,13 @@ export namespace Prisma {
     kothBestPlacement?: number | null
     kothCurrentWinStreak?: number
     kothBestWinStreak?: number
+    currentWinStreak?: number
+    bestWinStreak?: number
+    currentLoseStreak?: number
+    offensiveWins?: number
+    defensiveWins?: number
+    balancedWins?: number
+    dualWieldWins?: number
     repairCost?: number
     battleReadiness?: number
     totalRepairsPaid?: number
@@ -43621,6 +47039,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantUncheckedCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedCreateNestedManyWithoutRobotInput
     tuningAllocation?: TuningAllocationUncheckedCreateNestedOneWithoutRobotInput
+    achievements?: UserAchievementUncheckedCreateNestedManyWithoutRobotInput
   }
 
   export type RobotCreateOrConnectWithoutOffhandWeaponInput = {
@@ -43666,11 +47085,15 @@ export namespace Prisma {
     onboardingStartedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     onboardingCompletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastSeenChangelog?: DateTimeFieldUpdateOperationsInput | Date | string
+    pinnedAchievements?: JsonNullValueInput | InputJsonValue
+    totalPracticeBattles?: IntFieldUpdateOperationsInput | number
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     robots?: RobotUpdateManyWithoutUserNestedInput
     facilities?: FacilityUpdateManyWithoutUserNestedInput
     tagTeams?: TagTeamUpdateManyWithoutStableNestedInput
+    achievements?: UserAchievementUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutWeaponInventoryInput = {
@@ -43696,11 +47119,15 @@ export namespace Prisma {
     onboardingStartedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     onboardingCompletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastSeenChangelog?: DateTimeFieldUpdateOperationsInput | Date | string
+    pinnedAchievements?: JsonNullValueInput | InputJsonValue
+    totalPracticeBattles?: IntFieldUpdateOperationsInput | number
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     robots?: RobotUncheckedUpdateManyWithoutUserNestedInput
     facilities?: FacilityUncheckedUpdateManyWithoutUserNestedInput
     tagTeams?: TagTeamUncheckedUpdateManyWithoutStableNestedInput
+    achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type WeaponUpsertWithoutWeaponInventoryInput = {
@@ -44008,6 +47435,13 @@ export namespace Prisma {
     kothBestPlacement?: number | null
     kothCurrentWinStreak?: number
     kothBestWinStreak?: number
+    currentWinStreak?: number
+    bestWinStreak?: number
+    currentLoseStreak?: number
+    offensiveWins?: number
+    defensiveWins?: number
+    balancedWins?: number
+    dualWieldWins?: number
     repairCost?: number
     battleReadiness?: number
     totalRepairsPaid?: number
@@ -44032,6 +47466,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamCreateNestedManyWithoutReserveRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantCreateNestedManyWithoutRobotInput
     tuningAllocation?: TuningAllocationCreateNestedOneWithoutRobotInput
+    achievements?: UserAchievementCreateNestedManyWithoutRobotInput
   }
 
   export type RobotUncheckedCreateWithoutBattleParticipationsInput = {
@@ -44096,6 +47531,13 @@ export namespace Prisma {
     kothBestPlacement?: number | null
     kothCurrentWinStreak?: number
     kothBestWinStreak?: number
+    currentWinStreak?: number
+    bestWinStreak?: number
+    currentLoseStreak?: number
+    offensiveWins?: number
+    defensiveWins?: number
+    balancedWins?: number
+    dualWieldWins?: number
     repairCost?: number
     battleReadiness?: number
     totalRepairsPaid?: number
@@ -44119,6 +47561,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUncheckedCreateNestedManyWithoutReserveRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedCreateNestedManyWithoutRobotInput
     tuningAllocation?: TuningAllocationUncheckedCreateNestedOneWithoutRobotInput
+    achievements?: UserAchievementUncheckedCreateNestedManyWithoutRobotInput
   }
 
   export type RobotCreateOrConnectWithoutBattleParticipationsInput = {
@@ -44285,6 +47728,13 @@ export namespace Prisma {
     kothBestPlacement?: NullableIntFieldUpdateOperationsInput | number | null
     kothCurrentWinStreak?: IntFieldUpdateOperationsInput | number
     kothBestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentWinStreak?: IntFieldUpdateOperationsInput | number
+    bestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentLoseStreak?: IntFieldUpdateOperationsInput | number
+    offensiveWins?: IntFieldUpdateOperationsInput | number
+    defensiveWins?: IntFieldUpdateOperationsInput | number
+    balancedWins?: IntFieldUpdateOperationsInput | number
+    dualWieldWins?: IntFieldUpdateOperationsInput | number
     repairCost?: IntFieldUpdateOperationsInput | number
     battleReadiness?: IntFieldUpdateOperationsInput | number
     totalRepairsPaid?: IntFieldUpdateOperationsInput | number
@@ -44309,6 +47759,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUpdateManyWithoutReserveRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUpdateManyWithoutRobotNestedInput
     tuningAllocation?: TuningAllocationUpdateOneWithoutRobotNestedInput
+    achievements?: UserAchievementUpdateManyWithoutRobotNestedInput
   }
 
   export type RobotUncheckedUpdateWithoutBattleParticipationsInput = {
@@ -44373,6 +47824,13 @@ export namespace Prisma {
     kothBestPlacement?: NullableIntFieldUpdateOperationsInput | number | null
     kothCurrentWinStreak?: IntFieldUpdateOperationsInput | number
     kothBestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentWinStreak?: IntFieldUpdateOperationsInput | number
+    bestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentLoseStreak?: IntFieldUpdateOperationsInput | number
+    offensiveWins?: IntFieldUpdateOperationsInput | number
+    defensiveWins?: IntFieldUpdateOperationsInput | number
+    balancedWins?: IntFieldUpdateOperationsInput | number
+    dualWieldWins?: IntFieldUpdateOperationsInput | number
     repairCost?: IntFieldUpdateOperationsInput | number
     battleReadiness?: IntFieldUpdateOperationsInput | number
     totalRepairsPaid?: IntFieldUpdateOperationsInput | number
@@ -44396,6 +47854,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUncheckedUpdateManyWithoutReserveRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedUpdateManyWithoutRobotNestedInput
     tuningAllocation?: TuningAllocationUncheckedUpdateOneWithoutRobotNestedInput
+    achievements?: UserAchievementUncheckedUpdateManyWithoutRobotNestedInput
   }
 
   export type RobotCreateWithoutBattlesAsRobot1Input = {
@@ -44458,6 +47917,13 @@ export namespace Prisma {
     kothBestPlacement?: number | null
     kothCurrentWinStreak?: number
     kothBestWinStreak?: number
+    currentWinStreak?: number
+    bestWinStreak?: number
+    currentLoseStreak?: number
+    offensiveWins?: number
+    defensiveWins?: number
+    balancedWins?: number
+    dualWieldWins?: number
     repairCost?: number
     battleReadiness?: number
     totalRepairsPaid?: number
@@ -44482,6 +47948,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantCreateNestedManyWithoutRobotInput
     tuningAllocation?: TuningAllocationCreateNestedOneWithoutRobotInput
+    achievements?: UserAchievementCreateNestedManyWithoutRobotInput
   }
 
   export type RobotUncheckedCreateWithoutBattlesAsRobot1Input = {
@@ -44546,6 +48013,13 @@ export namespace Prisma {
     kothBestPlacement?: number | null
     kothCurrentWinStreak?: number
     kothBestWinStreak?: number
+    currentWinStreak?: number
+    bestWinStreak?: number
+    currentLoseStreak?: number
+    offensiveWins?: number
+    defensiveWins?: number
+    balancedWins?: number
+    dualWieldWins?: number
     repairCost?: number
     battleReadiness?: number
     totalRepairsPaid?: number
@@ -44569,6 +48043,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantUncheckedCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedCreateNestedManyWithoutRobotInput
     tuningAllocation?: TuningAllocationUncheckedCreateNestedOneWithoutRobotInput
+    achievements?: UserAchievementUncheckedCreateNestedManyWithoutRobotInput
   }
 
   export type RobotCreateOrConnectWithoutBattlesAsRobot1Input = {
@@ -44636,6 +48111,13 @@ export namespace Prisma {
     kothBestPlacement?: number | null
     kothCurrentWinStreak?: number
     kothBestWinStreak?: number
+    currentWinStreak?: number
+    bestWinStreak?: number
+    currentLoseStreak?: number
+    offensiveWins?: number
+    defensiveWins?: number
+    balancedWins?: number
+    dualWieldWins?: number
     repairCost?: number
     battleReadiness?: number
     totalRepairsPaid?: number
@@ -44660,6 +48142,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantCreateNestedManyWithoutRobotInput
     tuningAllocation?: TuningAllocationCreateNestedOneWithoutRobotInput
+    achievements?: UserAchievementCreateNestedManyWithoutRobotInput
   }
 
   export type RobotUncheckedCreateWithoutBattlesAsRobot2Input = {
@@ -44724,6 +48207,13 @@ export namespace Prisma {
     kothBestPlacement?: number | null
     kothCurrentWinStreak?: number
     kothBestWinStreak?: number
+    currentWinStreak?: number
+    bestWinStreak?: number
+    currentLoseStreak?: number
+    offensiveWins?: number
+    defensiveWins?: number
+    balancedWins?: number
+    dualWieldWins?: number
     repairCost?: number
     battleReadiness?: number
     totalRepairsPaid?: number
@@ -44747,6 +48237,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantUncheckedCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedCreateNestedManyWithoutRobotInput
     tuningAllocation?: TuningAllocationUncheckedCreateNestedOneWithoutRobotInput
+    achievements?: UserAchievementUncheckedCreateNestedManyWithoutRobotInput
   }
 
   export type RobotCreateOrConnectWithoutBattlesAsRobot2Input = {
@@ -45034,6 +48525,13 @@ export namespace Prisma {
     kothBestPlacement?: NullableIntFieldUpdateOperationsInput | number | null
     kothCurrentWinStreak?: IntFieldUpdateOperationsInput | number
     kothBestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentWinStreak?: IntFieldUpdateOperationsInput | number
+    bestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentLoseStreak?: IntFieldUpdateOperationsInput | number
+    offensiveWins?: IntFieldUpdateOperationsInput | number
+    defensiveWins?: IntFieldUpdateOperationsInput | number
+    balancedWins?: IntFieldUpdateOperationsInput | number
+    dualWieldWins?: IntFieldUpdateOperationsInput | number
     repairCost?: IntFieldUpdateOperationsInput | number
     battleReadiness?: IntFieldUpdateOperationsInput | number
     totalRepairsPaid?: IntFieldUpdateOperationsInput | number
@@ -45058,6 +48556,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUpdateManyWithoutRobotNestedInput
     tuningAllocation?: TuningAllocationUpdateOneWithoutRobotNestedInput
+    achievements?: UserAchievementUpdateManyWithoutRobotNestedInput
   }
 
   export type RobotUncheckedUpdateWithoutBattlesAsRobot1Input = {
@@ -45122,6 +48621,13 @@ export namespace Prisma {
     kothBestPlacement?: NullableIntFieldUpdateOperationsInput | number | null
     kothCurrentWinStreak?: IntFieldUpdateOperationsInput | number
     kothBestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentWinStreak?: IntFieldUpdateOperationsInput | number
+    bestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentLoseStreak?: IntFieldUpdateOperationsInput | number
+    offensiveWins?: IntFieldUpdateOperationsInput | number
+    defensiveWins?: IntFieldUpdateOperationsInput | number
+    balancedWins?: IntFieldUpdateOperationsInput | number
+    dualWieldWins?: IntFieldUpdateOperationsInput | number
     repairCost?: IntFieldUpdateOperationsInput | number
     battleReadiness?: IntFieldUpdateOperationsInput | number
     totalRepairsPaid?: IntFieldUpdateOperationsInput | number
@@ -45145,6 +48651,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantUncheckedUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedUpdateManyWithoutRobotNestedInput
     tuningAllocation?: TuningAllocationUncheckedUpdateOneWithoutRobotNestedInput
+    achievements?: UserAchievementUncheckedUpdateManyWithoutRobotNestedInput
   }
 
   export type RobotUpsertWithoutBattlesAsRobot2Input = {
@@ -45218,6 +48725,13 @@ export namespace Prisma {
     kothBestPlacement?: NullableIntFieldUpdateOperationsInput | number | null
     kothCurrentWinStreak?: IntFieldUpdateOperationsInput | number
     kothBestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentWinStreak?: IntFieldUpdateOperationsInput | number
+    bestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentLoseStreak?: IntFieldUpdateOperationsInput | number
+    offensiveWins?: IntFieldUpdateOperationsInput | number
+    defensiveWins?: IntFieldUpdateOperationsInput | number
+    balancedWins?: IntFieldUpdateOperationsInput | number
+    dualWieldWins?: IntFieldUpdateOperationsInput | number
     repairCost?: IntFieldUpdateOperationsInput | number
     battleReadiness?: IntFieldUpdateOperationsInput | number
     totalRepairsPaid?: IntFieldUpdateOperationsInput | number
@@ -45242,6 +48756,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUpdateManyWithoutRobotNestedInput
     tuningAllocation?: TuningAllocationUpdateOneWithoutRobotNestedInput
+    achievements?: UserAchievementUpdateManyWithoutRobotNestedInput
   }
 
   export type RobotUncheckedUpdateWithoutBattlesAsRobot2Input = {
@@ -45306,6 +48821,13 @@ export namespace Prisma {
     kothBestPlacement?: NullableIntFieldUpdateOperationsInput | number | null
     kothCurrentWinStreak?: IntFieldUpdateOperationsInput | number
     kothBestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentWinStreak?: IntFieldUpdateOperationsInput | number
+    bestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentLoseStreak?: IntFieldUpdateOperationsInput | number
+    offensiveWins?: IntFieldUpdateOperationsInput | number
+    defensiveWins?: IntFieldUpdateOperationsInput | number
+    balancedWins?: IntFieldUpdateOperationsInput | number
+    dualWieldWins?: IntFieldUpdateOperationsInput | number
     repairCost?: IntFieldUpdateOperationsInput | number
     battleReadiness?: IntFieldUpdateOperationsInput | number
     totalRepairsPaid?: IntFieldUpdateOperationsInput | number
@@ -45329,6 +48851,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantUncheckedUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedUpdateManyWithoutRobotNestedInput
     tuningAllocation?: TuningAllocationUncheckedUpdateOneWithoutRobotNestedInput
+    achievements?: UserAchievementUncheckedUpdateManyWithoutRobotNestedInput
   }
 
   export type TournamentUpsertWithoutBattlesInput = {
@@ -45540,6 +49063,13 @@ export namespace Prisma {
     kothBestPlacement?: number | null
     kothCurrentWinStreak?: number
     kothBestWinStreak?: number
+    currentWinStreak?: number
+    bestWinStreak?: number
+    currentLoseStreak?: number
+    offensiveWins?: number
+    defensiveWins?: number
+    balancedWins?: number
+    dualWieldWins?: number
     repairCost?: number
     battleReadiness?: number
     totalRepairsPaid?: number
@@ -45564,6 +49094,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantCreateNestedManyWithoutRobotInput
     tuningAllocation?: TuningAllocationCreateNestedOneWithoutRobotInput
+    achievements?: UserAchievementCreateNestedManyWithoutRobotInput
   }
 
   export type RobotUncheckedCreateWithoutScheduledMatchesAsRobot1Input = {
@@ -45628,6 +49159,13 @@ export namespace Prisma {
     kothBestPlacement?: number | null
     kothCurrentWinStreak?: number
     kothBestWinStreak?: number
+    currentWinStreak?: number
+    bestWinStreak?: number
+    currentLoseStreak?: number
+    offensiveWins?: number
+    defensiveWins?: number
+    balancedWins?: number
+    dualWieldWins?: number
     repairCost?: number
     battleReadiness?: number
     totalRepairsPaid?: number
@@ -45651,6 +49189,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantUncheckedCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedCreateNestedManyWithoutRobotInput
     tuningAllocation?: TuningAllocationUncheckedCreateNestedOneWithoutRobotInput
+    achievements?: UserAchievementUncheckedCreateNestedManyWithoutRobotInput
   }
 
   export type RobotCreateOrConnectWithoutScheduledMatchesAsRobot1Input = {
@@ -45718,6 +49257,13 @@ export namespace Prisma {
     kothBestPlacement?: number | null
     kothCurrentWinStreak?: number
     kothBestWinStreak?: number
+    currentWinStreak?: number
+    bestWinStreak?: number
+    currentLoseStreak?: number
+    offensiveWins?: number
+    defensiveWins?: number
+    balancedWins?: number
+    dualWieldWins?: number
     repairCost?: number
     battleReadiness?: number
     totalRepairsPaid?: number
@@ -45742,6 +49288,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantCreateNestedManyWithoutRobotInput
     tuningAllocation?: TuningAllocationCreateNestedOneWithoutRobotInput
+    achievements?: UserAchievementCreateNestedManyWithoutRobotInput
   }
 
   export type RobotUncheckedCreateWithoutScheduledMatchesAsRobot2Input = {
@@ -45806,6 +49353,13 @@ export namespace Prisma {
     kothBestPlacement?: number | null
     kothCurrentWinStreak?: number
     kothBestWinStreak?: number
+    currentWinStreak?: number
+    bestWinStreak?: number
+    currentLoseStreak?: number
+    offensiveWins?: number
+    defensiveWins?: number
+    balancedWins?: number
+    dualWieldWins?: number
     repairCost?: number
     battleReadiness?: number
     totalRepairsPaid?: number
@@ -45829,6 +49383,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantUncheckedCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedCreateNestedManyWithoutRobotInput
     tuningAllocation?: TuningAllocationUncheckedCreateNestedOneWithoutRobotInput
+    achievements?: UserAchievementUncheckedCreateNestedManyWithoutRobotInput
   }
 
   export type RobotCreateOrConnectWithoutScheduledMatchesAsRobot2Input = {
@@ -45989,6 +49544,13 @@ export namespace Prisma {
     kothBestPlacement?: NullableIntFieldUpdateOperationsInput | number | null
     kothCurrentWinStreak?: IntFieldUpdateOperationsInput | number
     kothBestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentWinStreak?: IntFieldUpdateOperationsInput | number
+    bestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentLoseStreak?: IntFieldUpdateOperationsInput | number
+    offensiveWins?: IntFieldUpdateOperationsInput | number
+    defensiveWins?: IntFieldUpdateOperationsInput | number
+    balancedWins?: IntFieldUpdateOperationsInput | number
+    dualWieldWins?: IntFieldUpdateOperationsInput | number
     repairCost?: IntFieldUpdateOperationsInput | number
     battleReadiness?: IntFieldUpdateOperationsInput | number
     totalRepairsPaid?: IntFieldUpdateOperationsInput | number
@@ -46013,6 +49575,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUpdateManyWithoutRobotNestedInput
     tuningAllocation?: TuningAllocationUpdateOneWithoutRobotNestedInput
+    achievements?: UserAchievementUpdateManyWithoutRobotNestedInput
   }
 
   export type RobotUncheckedUpdateWithoutScheduledMatchesAsRobot1Input = {
@@ -46077,6 +49640,13 @@ export namespace Prisma {
     kothBestPlacement?: NullableIntFieldUpdateOperationsInput | number | null
     kothCurrentWinStreak?: IntFieldUpdateOperationsInput | number
     kothBestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentWinStreak?: IntFieldUpdateOperationsInput | number
+    bestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentLoseStreak?: IntFieldUpdateOperationsInput | number
+    offensiveWins?: IntFieldUpdateOperationsInput | number
+    defensiveWins?: IntFieldUpdateOperationsInput | number
+    balancedWins?: IntFieldUpdateOperationsInput | number
+    dualWieldWins?: IntFieldUpdateOperationsInput | number
     repairCost?: IntFieldUpdateOperationsInput | number
     battleReadiness?: IntFieldUpdateOperationsInput | number
     totalRepairsPaid?: IntFieldUpdateOperationsInput | number
@@ -46100,6 +49670,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantUncheckedUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedUpdateManyWithoutRobotNestedInput
     tuningAllocation?: TuningAllocationUncheckedUpdateOneWithoutRobotNestedInput
+    achievements?: UserAchievementUncheckedUpdateManyWithoutRobotNestedInput
   }
 
   export type RobotUpsertWithoutScheduledMatchesAsRobot2Input = {
@@ -46173,6 +49744,13 @@ export namespace Prisma {
     kothBestPlacement?: NullableIntFieldUpdateOperationsInput | number | null
     kothCurrentWinStreak?: IntFieldUpdateOperationsInput | number
     kothBestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentWinStreak?: IntFieldUpdateOperationsInput | number
+    bestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentLoseStreak?: IntFieldUpdateOperationsInput | number
+    offensiveWins?: IntFieldUpdateOperationsInput | number
+    defensiveWins?: IntFieldUpdateOperationsInput | number
+    balancedWins?: IntFieldUpdateOperationsInput | number
+    dualWieldWins?: IntFieldUpdateOperationsInput | number
     repairCost?: IntFieldUpdateOperationsInput | number
     battleReadiness?: IntFieldUpdateOperationsInput | number
     totalRepairsPaid?: IntFieldUpdateOperationsInput | number
@@ -46197,6 +49775,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUpdateManyWithoutRobotNestedInput
     tuningAllocation?: TuningAllocationUpdateOneWithoutRobotNestedInput
+    achievements?: UserAchievementUpdateManyWithoutRobotNestedInput
   }
 
   export type RobotUncheckedUpdateWithoutScheduledMatchesAsRobot2Input = {
@@ -46261,6 +49840,13 @@ export namespace Prisma {
     kothBestPlacement?: NullableIntFieldUpdateOperationsInput | number | null
     kothCurrentWinStreak?: IntFieldUpdateOperationsInput | number
     kothBestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentWinStreak?: IntFieldUpdateOperationsInput | number
+    bestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentLoseStreak?: IntFieldUpdateOperationsInput | number
+    offensiveWins?: IntFieldUpdateOperationsInput | number
+    defensiveWins?: IntFieldUpdateOperationsInput | number
+    balancedWins?: IntFieldUpdateOperationsInput | number
+    dualWieldWins?: IntFieldUpdateOperationsInput | number
     repairCost?: IntFieldUpdateOperationsInput | number
     battleReadiness?: IntFieldUpdateOperationsInput | number
     totalRepairsPaid?: IntFieldUpdateOperationsInput | number
@@ -46284,6 +49870,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantUncheckedUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedUpdateManyWithoutRobotNestedInput
     tuningAllocation?: TuningAllocationUncheckedUpdateOneWithoutRobotNestedInput
+    achievements?: UserAchievementUncheckedUpdateManyWithoutRobotNestedInput
   }
 
   export type BattleUpsertWithoutScheduledMatchInput = {
@@ -46434,6 +50021,13 @@ export namespace Prisma {
     kothBestPlacement?: number | null
     kothCurrentWinStreak?: number
     kothBestWinStreak?: number
+    currentWinStreak?: number
+    bestWinStreak?: number
+    currentLoseStreak?: number
+    offensiveWins?: number
+    defensiveWins?: number
+    balancedWins?: number
+    dualWieldWins?: number
     repairCost?: number
     battleReadiness?: number
     totalRepairsPaid?: number
@@ -46458,6 +50052,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantCreateNestedManyWithoutRobotInput
     tuningAllocation?: TuningAllocationCreateNestedOneWithoutRobotInput
+    achievements?: UserAchievementCreateNestedManyWithoutRobotInput
   }
 
   export type RobotUncheckedCreateWithoutTournamentsWonInput = {
@@ -46522,6 +50117,13 @@ export namespace Prisma {
     kothBestPlacement?: number | null
     kothCurrentWinStreak?: number
     kothBestWinStreak?: number
+    currentWinStreak?: number
+    bestWinStreak?: number
+    currentLoseStreak?: number
+    offensiveWins?: number
+    defensiveWins?: number
+    balancedWins?: number
+    dualWieldWins?: number
     repairCost?: number
     battleReadiness?: number
     totalRepairsPaid?: number
@@ -46545,6 +50147,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantUncheckedCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedCreateNestedManyWithoutRobotInput
     tuningAllocation?: TuningAllocationUncheckedCreateNestedOneWithoutRobotInput
+    achievements?: UserAchievementUncheckedCreateNestedManyWithoutRobotInput
   }
 
   export type RobotCreateOrConnectWithoutTournamentsWonInput = {
@@ -46747,6 +50350,13 @@ export namespace Prisma {
     kothBestPlacement?: NullableIntFieldUpdateOperationsInput | number | null
     kothCurrentWinStreak?: IntFieldUpdateOperationsInput | number
     kothBestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentWinStreak?: IntFieldUpdateOperationsInput | number
+    bestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentLoseStreak?: IntFieldUpdateOperationsInput | number
+    offensiveWins?: IntFieldUpdateOperationsInput | number
+    defensiveWins?: IntFieldUpdateOperationsInput | number
+    balancedWins?: IntFieldUpdateOperationsInput | number
+    dualWieldWins?: IntFieldUpdateOperationsInput | number
     repairCost?: IntFieldUpdateOperationsInput | number
     battleReadiness?: IntFieldUpdateOperationsInput | number
     totalRepairsPaid?: IntFieldUpdateOperationsInput | number
@@ -46771,6 +50381,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUpdateManyWithoutRobotNestedInput
     tuningAllocation?: TuningAllocationUpdateOneWithoutRobotNestedInput
+    achievements?: UserAchievementUpdateManyWithoutRobotNestedInput
   }
 
   export type RobotUncheckedUpdateWithoutTournamentsWonInput = {
@@ -46835,6 +50446,13 @@ export namespace Prisma {
     kothBestPlacement?: NullableIntFieldUpdateOperationsInput | number | null
     kothCurrentWinStreak?: IntFieldUpdateOperationsInput | number
     kothBestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentWinStreak?: IntFieldUpdateOperationsInput | number
+    bestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentLoseStreak?: IntFieldUpdateOperationsInput | number
+    offensiveWins?: IntFieldUpdateOperationsInput | number
+    defensiveWins?: IntFieldUpdateOperationsInput | number
+    balancedWins?: IntFieldUpdateOperationsInput | number
+    dualWieldWins?: IntFieldUpdateOperationsInput | number
     repairCost?: IntFieldUpdateOperationsInput | number
     battleReadiness?: IntFieldUpdateOperationsInput | number
     totalRepairsPaid?: IntFieldUpdateOperationsInput | number
@@ -46858,6 +50476,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantUncheckedUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedUpdateManyWithoutRobotNestedInput
     tuningAllocation?: TuningAllocationUncheckedUpdateOneWithoutRobotNestedInput
+    achievements?: UserAchievementUncheckedUpdateManyWithoutRobotNestedInput
   }
 
   export type ScheduledTournamentMatchUpsertWithWhereUniqueWithoutTournamentInput = {
@@ -46986,6 +50605,13 @@ export namespace Prisma {
     kothBestPlacement?: number | null
     kothCurrentWinStreak?: number
     kothBestWinStreak?: number
+    currentWinStreak?: number
+    bestWinStreak?: number
+    currentLoseStreak?: number
+    offensiveWins?: number
+    defensiveWins?: number
+    balancedWins?: number
+    dualWieldWins?: number
     repairCost?: number
     battleReadiness?: number
     totalRepairsPaid?: number
@@ -47010,6 +50636,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantCreateNestedManyWithoutRobotInput
     tuningAllocation?: TuningAllocationCreateNestedOneWithoutRobotInput
+    achievements?: UserAchievementCreateNestedManyWithoutRobotInput
   }
 
   export type RobotUncheckedCreateWithoutTournamentMatchesAsRobot1Input = {
@@ -47074,6 +50701,13 @@ export namespace Prisma {
     kothBestPlacement?: number | null
     kothCurrentWinStreak?: number
     kothBestWinStreak?: number
+    currentWinStreak?: number
+    bestWinStreak?: number
+    currentLoseStreak?: number
+    offensiveWins?: number
+    defensiveWins?: number
+    balancedWins?: number
+    dualWieldWins?: number
     repairCost?: number
     battleReadiness?: number
     totalRepairsPaid?: number
@@ -47097,6 +50731,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantUncheckedCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedCreateNestedManyWithoutRobotInput
     tuningAllocation?: TuningAllocationUncheckedCreateNestedOneWithoutRobotInput
+    achievements?: UserAchievementUncheckedCreateNestedManyWithoutRobotInput
   }
 
   export type RobotCreateOrConnectWithoutTournamentMatchesAsRobot1Input = {
@@ -47164,6 +50799,13 @@ export namespace Prisma {
     kothBestPlacement?: number | null
     kothCurrentWinStreak?: number
     kothBestWinStreak?: number
+    currentWinStreak?: number
+    bestWinStreak?: number
+    currentLoseStreak?: number
+    offensiveWins?: number
+    defensiveWins?: number
+    balancedWins?: number
+    dualWieldWins?: number
     repairCost?: number
     battleReadiness?: number
     totalRepairsPaid?: number
@@ -47188,6 +50830,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantCreateNestedManyWithoutRobotInput
     tuningAllocation?: TuningAllocationCreateNestedOneWithoutRobotInput
+    achievements?: UserAchievementCreateNestedManyWithoutRobotInput
   }
 
   export type RobotUncheckedCreateWithoutTournamentMatchesAsRobot2Input = {
@@ -47252,6 +50895,13 @@ export namespace Prisma {
     kothBestPlacement?: number | null
     kothCurrentWinStreak?: number
     kothBestWinStreak?: number
+    currentWinStreak?: number
+    bestWinStreak?: number
+    currentLoseStreak?: number
+    offensiveWins?: number
+    defensiveWins?: number
+    balancedWins?: number
+    dualWieldWins?: number
     repairCost?: number
     battleReadiness?: number
     totalRepairsPaid?: number
@@ -47275,6 +50925,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantUncheckedCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedCreateNestedManyWithoutRobotInput
     tuningAllocation?: TuningAllocationUncheckedCreateNestedOneWithoutRobotInput
+    achievements?: UserAchievementUncheckedCreateNestedManyWithoutRobotInput
   }
 
   export type RobotCreateOrConnectWithoutTournamentMatchesAsRobot2Input = {
@@ -47342,6 +50993,13 @@ export namespace Prisma {
     kothBestPlacement?: number | null
     kothCurrentWinStreak?: number
     kothBestWinStreak?: number
+    currentWinStreak?: number
+    bestWinStreak?: number
+    currentLoseStreak?: number
+    offensiveWins?: number
+    defensiveWins?: number
+    balancedWins?: number
+    dualWieldWins?: number
     repairCost?: number
     battleReadiness?: number
     totalRepairsPaid?: number
@@ -47366,6 +51024,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantCreateNestedManyWithoutRobotInput
     tuningAllocation?: TuningAllocationCreateNestedOneWithoutRobotInput
+    achievements?: UserAchievementCreateNestedManyWithoutRobotInput
   }
 
   export type RobotUncheckedCreateWithoutTournamentMatchesWonInput = {
@@ -47430,6 +51089,13 @@ export namespace Prisma {
     kothBestPlacement?: number | null
     kothCurrentWinStreak?: number
     kothBestWinStreak?: number
+    currentWinStreak?: number
+    bestWinStreak?: number
+    currentLoseStreak?: number
+    offensiveWins?: number
+    defensiveWins?: number
+    balancedWins?: number
+    dualWieldWins?: number
     repairCost?: number
     battleReadiness?: number
     totalRepairsPaid?: number
@@ -47453,6 +51119,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantUncheckedCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedCreateNestedManyWithoutRobotInput
     tuningAllocation?: TuningAllocationUncheckedCreateNestedOneWithoutRobotInput
+    achievements?: UserAchievementUncheckedCreateNestedManyWithoutRobotInput
   }
 
   export type RobotCreateOrConnectWithoutTournamentMatchesWonInput = {
@@ -47653,6 +51320,13 @@ export namespace Prisma {
     kothBestPlacement?: NullableIntFieldUpdateOperationsInput | number | null
     kothCurrentWinStreak?: IntFieldUpdateOperationsInput | number
     kothBestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentWinStreak?: IntFieldUpdateOperationsInput | number
+    bestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentLoseStreak?: IntFieldUpdateOperationsInput | number
+    offensiveWins?: IntFieldUpdateOperationsInput | number
+    defensiveWins?: IntFieldUpdateOperationsInput | number
+    balancedWins?: IntFieldUpdateOperationsInput | number
+    dualWieldWins?: IntFieldUpdateOperationsInput | number
     repairCost?: IntFieldUpdateOperationsInput | number
     battleReadiness?: IntFieldUpdateOperationsInput | number
     totalRepairsPaid?: IntFieldUpdateOperationsInput | number
@@ -47677,6 +51351,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUpdateManyWithoutRobotNestedInput
     tuningAllocation?: TuningAllocationUpdateOneWithoutRobotNestedInput
+    achievements?: UserAchievementUpdateManyWithoutRobotNestedInput
   }
 
   export type RobotUncheckedUpdateWithoutTournamentMatchesAsRobot1Input = {
@@ -47741,6 +51416,13 @@ export namespace Prisma {
     kothBestPlacement?: NullableIntFieldUpdateOperationsInput | number | null
     kothCurrentWinStreak?: IntFieldUpdateOperationsInput | number
     kothBestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentWinStreak?: IntFieldUpdateOperationsInput | number
+    bestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentLoseStreak?: IntFieldUpdateOperationsInput | number
+    offensiveWins?: IntFieldUpdateOperationsInput | number
+    defensiveWins?: IntFieldUpdateOperationsInput | number
+    balancedWins?: IntFieldUpdateOperationsInput | number
+    dualWieldWins?: IntFieldUpdateOperationsInput | number
     repairCost?: IntFieldUpdateOperationsInput | number
     battleReadiness?: IntFieldUpdateOperationsInput | number
     totalRepairsPaid?: IntFieldUpdateOperationsInput | number
@@ -47764,6 +51446,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantUncheckedUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedUpdateManyWithoutRobotNestedInput
     tuningAllocation?: TuningAllocationUncheckedUpdateOneWithoutRobotNestedInput
+    achievements?: UserAchievementUncheckedUpdateManyWithoutRobotNestedInput
   }
 
   export type RobotUpsertWithoutTournamentMatchesAsRobot2Input = {
@@ -47837,6 +51520,13 @@ export namespace Prisma {
     kothBestPlacement?: NullableIntFieldUpdateOperationsInput | number | null
     kothCurrentWinStreak?: IntFieldUpdateOperationsInput | number
     kothBestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentWinStreak?: IntFieldUpdateOperationsInput | number
+    bestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentLoseStreak?: IntFieldUpdateOperationsInput | number
+    offensiveWins?: IntFieldUpdateOperationsInput | number
+    defensiveWins?: IntFieldUpdateOperationsInput | number
+    balancedWins?: IntFieldUpdateOperationsInput | number
+    dualWieldWins?: IntFieldUpdateOperationsInput | number
     repairCost?: IntFieldUpdateOperationsInput | number
     battleReadiness?: IntFieldUpdateOperationsInput | number
     totalRepairsPaid?: IntFieldUpdateOperationsInput | number
@@ -47861,6 +51551,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUpdateManyWithoutRobotNestedInput
     tuningAllocation?: TuningAllocationUpdateOneWithoutRobotNestedInput
+    achievements?: UserAchievementUpdateManyWithoutRobotNestedInput
   }
 
   export type RobotUncheckedUpdateWithoutTournamentMatchesAsRobot2Input = {
@@ -47925,6 +51616,13 @@ export namespace Prisma {
     kothBestPlacement?: NullableIntFieldUpdateOperationsInput | number | null
     kothCurrentWinStreak?: IntFieldUpdateOperationsInput | number
     kothBestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentWinStreak?: IntFieldUpdateOperationsInput | number
+    bestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentLoseStreak?: IntFieldUpdateOperationsInput | number
+    offensiveWins?: IntFieldUpdateOperationsInput | number
+    defensiveWins?: IntFieldUpdateOperationsInput | number
+    balancedWins?: IntFieldUpdateOperationsInput | number
+    dualWieldWins?: IntFieldUpdateOperationsInput | number
     repairCost?: IntFieldUpdateOperationsInput | number
     battleReadiness?: IntFieldUpdateOperationsInput | number
     totalRepairsPaid?: IntFieldUpdateOperationsInput | number
@@ -47948,6 +51646,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantUncheckedUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedUpdateManyWithoutRobotNestedInput
     tuningAllocation?: TuningAllocationUncheckedUpdateOneWithoutRobotNestedInput
+    achievements?: UserAchievementUncheckedUpdateManyWithoutRobotNestedInput
   }
 
   export type RobotUpsertWithoutTournamentMatchesWonInput = {
@@ -48021,6 +51720,13 @@ export namespace Prisma {
     kothBestPlacement?: NullableIntFieldUpdateOperationsInput | number | null
     kothCurrentWinStreak?: IntFieldUpdateOperationsInput | number
     kothBestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentWinStreak?: IntFieldUpdateOperationsInput | number
+    bestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentLoseStreak?: IntFieldUpdateOperationsInput | number
+    offensiveWins?: IntFieldUpdateOperationsInput | number
+    defensiveWins?: IntFieldUpdateOperationsInput | number
+    balancedWins?: IntFieldUpdateOperationsInput | number
+    dualWieldWins?: IntFieldUpdateOperationsInput | number
     repairCost?: IntFieldUpdateOperationsInput | number
     battleReadiness?: IntFieldUpdateOperationsInput | number
     totalRepairsPaid?: IntFieldUpdateOperationsInput | number
@@ -48045,6 +51751,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUpdateManyWithoutRobotNestedInput
     tuningAllocation?: TuningAllocationUpdateOneWithoutRobotNestedInput
+    achievements?: UserAchievementUpdateManyWithoutRobotNestedInput
   }
 
   export type RobotUncheckedUpdateWithoutTournamentMatchesWonInput = {
@@ -48109,6 +51816,13 @@ export namespace Prisma {
     kothBestPlacement?: NullableIntFieldUpdateOperationsInput | number | null
     kothCurrentWinStreak?: IntFieldUpdateOperationsInput | number
     kothBestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentWinStreak?: IntFieldUpdateOperationsInput | number
+    bestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentLoseStreak?: IntFieldUpdateOperationsInput | number
+    offensiveWins?: IntFieldUpdateOperationsInput | number
+    defensiveWins?: IntFieldUpdateOperationsInput | number
+    balancedWins?: IntFieldUpdateOperationsInput | number
+    dualWieldWins?: IntFieldUpdateOperationsInput | number
     repairCost?: IntFieldUpdateOperationsInput | number
     battleReadiness?: IntFieldUpdateOperationsInput | number
     totalRepairsPaid?: IntFieldUpdateOperationsInput | number
@@ -48132,6 +51846,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantUncheckedUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedUpdateManyWithoutRobotNestedInput
     tuningAllocation?: TuningAllocationUncheckedUpdateOneWithoutRobotNestedInput
+    achievements?: UserAchievementUncheckedUpdateManyWithoutRobotNestedInput
   }
 
   export type BattleUpsertWithoutTournamentMatchesInput = {
@@ -48244,11 +51959,15 @@ export namespace Prisma {
     onboardingStartedAt?: Date | string | null
     onboardingCompletedAt?: Date | string | null
     lastSeenChangelog?: Date | string
+    pinnedAchievements?: JsonNullValueInput | InputJsonValue
+    totalPracticeBattles?: number
+    lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     robots?: RobotCreateNestedManyWithoutUserInput
     facilities?: FacilityCreateNestedManyWithoutUserInput
     weaponInventory?: WeaponInventoryCreateNestedManyWithoutUserInput
+    achievements?: UserAchievementCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutTagTeamsInput = {
@@ -48274,11 +51993,15 @@ export namespace Prisma {
     onboardingStartedAt?: Date | string | null
     onboardingCompletedAt?: Date | string | null
     lastSeenChangelog?: Date | string
+    pinnedAchievements?: JsonNullValueInput | InputJsonValue
+    totalPracticeBattles?: number
+    lastLoginAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     robots?: RobotUncheckedCreateNestedManyWithoutUserInput
     facilities?: FacilityUncheckedCreateNestedManyWithoutUserInput
     weaponInventory?: WeaponInventoryUncheckedCreateNestedManyWithoutUserInput
+    achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutTagTeamsInput = {
@@ -48346,6 +52069,13 @@ export namespace Prisma {
     kothBestPlacement?: number | null
     kothCurrentWinStreak?: number
     kothBestWinStreak?: number
+    currentWinStreak?: number
+    bestWinStreak?: number
+    currentLoseStreak?: number
+    offensiveWins?: number
+    defensiveWins?: number
+    balancedWins?: number
+    dualWieldWins?: number
     repairCost?: number
     battleReadiness?: number
     totalRepairsPaid?: number
@@ -48370,6 +52100,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantCreateNestedManyWithoutRobotInput
     tuningAllocation?: TuningAllocationCreateNestedOneWithoutRobotInput
+    achievements?: UserAchievementCreateNestedManyWithoutRobotInput
   }
 
   export type RobotUncheckedCreateWithoutTagTeamsAsActiveInput = {
@@ -48434,6 +52165,13 @@ export namespace Prisma {
     kothBestPlacement?: number | null
     kothCurrentWinStreak?: number
     kothBestWinStreak?: number
+    currentWinStreak?: number
+    bestWinStreak?: number
+    currentLoseStreak?: number
+    offensiveWins?: number
+    defensiveWins?: number
+    balancedWins?: number
+    dualWieldWins?: number
     repairCost?: number
     battleReadiness?: number
     totalRepairsPaid?: number
@@ -48457,6 +52195,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantUncheckedCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedCreateNestedManyWithoutRobotInput
     tuningAllocation?: TuningAllocationUncheckedCreateNestedOneWithoutRobotInput
+    achievements?: UserAchievementUncheckedCreateNestedManyWithoutRobotInput
   }
 
   export type RobotCreateOrConnectWithoutTagTeamsAsActiveInput = {
@@ -48524,6 +52263,13 @@ export namespace Prisma {
     kothBestPlacement?: number | null
     kothCurrentWinStreak?: number
     kothBestWinStreak?: number
+    currentWinStreak?: number
+    bestWinStreak?: number
+    currentLoseStreak?: number
+    offensiveWins?: number
+    defensiveWins?: number
+    balancedWins?: number
+    dualWieldWins?: number
     repairCost?: number
     battleReadiness?: number
     totalRepairsPaid?: number
@@ -48548,6 +52294,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantCreateNestedManyWithoutRobotInput
     tuningAllocation?: TuningAllocationCreateNestedOneWithoutRobotInput
+    achievements?: UserAchievementCreateNestedManyWithoutRobotInput
   }
 
   export type RobotUncheckedCreateWithoutTagTeamsAsReserveInput = {
@@ -48612,6 +52359,13 @@ export namespace Prisma {
     kothBestPlacement?: number | null
     kothCurrentWinStreak?: number
     kothBestWinStreak?: number
+    currentWinStreak?: number
+    bestWinStreak?: number
+    currentLoseStreak?: number
+    offensiveWins?: number
+    defensiveWins?: number
+    balancedWins?: number
+    dualWieldWins?: number
     repairCost?: number
     battleReadiness?: number
     totalRepairsPaid?: number
@@ -48635,6 +52389,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantUncheckedCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedCreateNestedManyWithoutRobotInput
     tuningAllocation?: TuningAllocationUncheckedCreateNestedOneWithoutRobotInput
+    achievements?: UserAchievementUncheckedCreateNestedManyWithoutRobotInput
   }
 
   export type RobotCreateOrConnectWithoutTagTeamsAsReserveInput = {
@@ -48733,11 +52488,15 @@ export namespace Prisma {
     onboardingStartedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     onboardingCompletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastSeenChangelog?: DateTimeFieldUpdateOperationsInput | Date | string
+    pinnedAchievements?: JsonNullValueInput | InputJsonValue
+    totalPracticeBattles?: IntFieldUpdateOperationsInput | number
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     robots?: RobotUpdateManyWithoutUserNestedInput
     facilities?: FacilityUpdateManyWithoutUserNestedInput
     weaponInventory?: WeaponInventoryUpdateManyWithoutUserNestedInput
+    achievements?: UserAchievementUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutTagTeamsInput = {
@@ -48763,11 +52522,15 @@ export namespace Prisma {
     onboardingStartedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     onboardingCompletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastSeenChangelog?: DateTimeFieldUpdateOperationsInput | Date | string
+    pinnedAchievements?: JsonNullValueInput | InputJsonValue
+    totalPracticeBattles?: IntFieldUpdateOperationsInput | number
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     robots?: RobotUncheckedUpdateManyWithoutUserNestedInput
     facilities?: FacilityUncheckedUpdateManyWithoutUserNestedInput
     weaponInventory?: WeaponInventoryUncheckedUpdateManyWithoutUserNestedInput
+    achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type RobotUpsertWithoutTagTeamsAsActiveInput = {
@@ -48841,6 +52604,13 @@ export namespace Prisma {
     kothBestPlacement?: NullableIntFieldUpdateOperationsInput | number | null
     kothCurrentWinStreak?: IntFieldUpdateOperationsInput | number
     kothBestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentWinStreak?: IntFieldUpdateOperationsInput | number
+    bestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentLoseStreak?: IntFieldUpdateOperationsInput | number
+    offensiveWins?: IntFieldUpdateOperationsInput | number
+    defensiveWins?: IntFieldUpdateOperationsInput | number
+    balancedWins?: IntFieldUpdateOperationsInput | number
+    dualWieldWins?: IntFieldUpdateOperationsInput | number
     repairCost?: IntFieldUpdateOperationsInput | number
     battleReadiness?: IntFieldUpdateOperationsInput | number
     totalRepairsPaid?: IntFieldUpdateOperationsInput | number
@@ -48865,6 +52635,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUpdateManyWithoutRobotNestedInput
     tuningAllocation?: TuningAllocationUpdateOneWithoutRobotNestedInput
+    achievements?: UserAchievementUpdateManyWithoutRobotNestedInput
   }
 
   export type RobotUncheckedUpdateWithoutTagTeamsAsActiveInput = {
@@ -48929,6 +52700,13 @@ export namespace Prisma {
     kothBestPlacement?: NullableIntFieldUpdateOperationsInput | number | null
     kothCurrentWinStreak?: IntFieldUpdateOperationsInput | number
     kothBestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentWinStreak?: IntFieldUpdateOperationsInput | number
+    bestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentLoseStreak?: IntFieldUpdateOperationsInput | number
+    offensiveWins?: IntFieldUpdateOperationsInput | number
+    defensiveWins?: IntFieldUpdateOperationsInput | number
+    balancedWins?: IntFieldUpdateOperationsInput | number
+    dualWieldWins?: IntFieldUpdateOperationsInput | number
     repairCost?: IntFieldUpdateOperationsInput | number
     battleReadiness?: IntFieldUpdateOperationsInput | number
     totalRepairsPaid?: IntFieldUpdateOperationsInput | number
@@ -48952,6 +52730,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantUncheckedUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedUpdateManyWithoutRobotNestedInput
     tuningAllocation?: TuningAllocationUncheckedUpdateOneWithoutRobotNestedInput
+    achievements?: UserAchievementUncheckedUpdateManyWithoutRobotNestedInput
   }
 
   export type RobotUpsertWithoutTagTeamsAsReserveInput = {
@@ -49025,6 +52804,13 @@ export namespace Prisma {
     kothBestPlacement?: NullableIntFieldUpdateOperationsInput | number | null
     kothCurrentWinStreak?: IntFieldUpdateOperationsInput | number
     kothBestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentWinStreak?: IntFieldUpdateOperationsInput | number
+    bestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentLoseStreak?: IntFieldUpdateOperationsInput | number
+    offensiveWins?: IntFieldUpdateOperationsInput | number
+    defensiveWins?: IntFieldUpdateOperationsInput | number
+    balancedWins?: IntFieldUpdateOperationsInput | number
+    dualWieldWins?: IntFieldUpdateOperationsInput | number
     repairCost?: IntFieldUpdateOperationsInput | number
     battleReadiness?: IntFieldUpdateOperationsInput | number
     totalRepairsPaid?: IntFieldUpdateOperationsInput | number
@@ -49049,6 +52835,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUpdateManyWithoutRobotNestedInput
     tuningAllocation?: TuningAllocationUpdateOneWithoutRobotNestedInput
+    achievements?: UserAchievementUpdateManyWithoutRobotNestedInput
   }
 
   export type RobotUncheckedUpdateWithoutTagTeamsAsReserveInput = {
@@ -49113,6 +52900,13 @@ export namespace Prisma {
     kothBestPlacement?: NullableIntFieldUpdateOperationsInput | number | null
     kothCurrentWinStreak?: IntFieldUpdateOperationsInput | number
     kothBestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentWinStreak?: IntFieldUpdateOperationsInput | number
+    bestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentLoseStreak?: IntFieldUpdateOperationsInput | number
+    offensiveWins?: IntFieldUpdateOperationsInput | number
+    defensiveWins?: IntFieldUpdateOperationsInput | number
+    balancedWins?: IntFieldUpdateOperationsInput | number
+    dualWieldWins?: IntFieldUpdateOperationsInput | number
     repairCost?: IntFieldUpdateOperationsInput | number
     battleReadiness?: IntFieldUpdateOperationsInput | number
     totalRepairsPaid?: IntFieldUpdateOperationsInput | number
@@ -49136,6 +52930,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantUncheckedUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedUpdateManyWithoutRobotNestedInput
     tuningAllocation?: TuningAllocationUncheckedUpdateOneWithoutRobotNestedInput
+    achievements?: UserAchievementUncheckedUpdateManyWithoutRobotNestedInput
   }
 
   export type ScheduledTagTeamMatchUpsertWithWhereUniqueWithoutTeam1Input = {
@@ -49797,6 +53592,13 @@ export namespace Prisma {
     kothBestPlacement?: number | null
     kothCurrentWinStreak?: number
     kothBestWinStreak?: number
+    currentWinStreak?: number
+    bestWinStreak?: number
+    currentLoseStreak?: number
+    offensiveWins?: number
+    defensiveWins?: number
+    balancedWins?: number
+    dualWieldWins?: number
     repairCost?: number
     battleReadiness?: number
     totalRepairsPaid?: number
@@ -49821,6 +53623,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamCreateNestedManyWithoutReserveRobotInput
     battleParticipations?: BattleParticipantCreateNestedManyWithoutRobotInput
     tuningAllocation?: TuningAllocationCreateNestedOneWithoutRobotInput
+    achievements?: UserAchievementCreateNestedManyWithoutRobotInput
   }
 
   export type RobotUncheckedCreateWithoutKothMatchParticipationsInput = {
@@ -49885,6 +53688,13 @@ export namespace Prisma {
     kothBestPlacement?: number | null
     kothCurrentWinStreak?: number
     kothBestWinStreak?: number
+    currentWinStreak?: number
+    bestWinStreak?: number
+    currentLoseStreak?: number
+    offensiveWins?: number
+    defensiveWins?: number
+    balancedWins?: number
+    dualWieldWins?: number
     repairCost?: number
     battleReadiness?: number
     totalRepairsPaid?: number
@@ -49908,6 +53718,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUncheckedCreateNestedManyWithoutReserveRobotInput
     battleParticipations?: BattleParticipantUncheckedCreateNestedManyWithoutRobotInput
     tuningAllocation?: TuningAllocationUncheckedCreateNestedOneWithoutRobotInput
+    achievements?: UserAchievementUncheckedCreateNestedManyWithoutRobotInput
   }
 
   export type RobotCreateOrConnectWithoutKothMatchParticipationsInput = {
@@ -50020,6 +53831,13 @@ export namespace Prisma {
     kothBestPlacement?: NullableIntFieldUpdateOperationsInput | number | null
     kothCurrentWinStreak?: IntFieldUpdateOperationsInput | number
     kothBestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentWinStreak?: IntFieldUpdateOperationsInput | number
+    bestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentLoseStreak?: IntFieldUpdateOperationsInput | number
+    offensiveWins?: IntFieldUpdateOperationsInput | number
+    defensiveWins?: IntFieldUpdateOperationsInput | number
+    balancedWins?: IntFieldUpdateOperationsInput | number
+    dualWieldWins?: IntFieldUpdateOperationsInput | number
     repairCost?: IntFieldUpdateOperationsInput | number
     battleReadiness?: IntFieldUpdateOperationsInput | number
     totalRepairsPaid?: IntFieldUpdateOperationsInput | number
@@ -50044,6 +53862,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUpdateManyWithoutReserveRobotNestedInput
     battleParticipations?: BattleParticipantUpdateManyWithoutRobotNestedInput
     tuningAllocation?: TuningAllocationUpdateOneWithoutRobotNestedInput
+    achievements?: UserAchievementUpdateManyWithoutRobotNestedInput
   }
 
   export type RobotUncheckedUpdateWithoutKothMatchParticipationsInput = {
@@ -50108,6 +53927,13 @@ export namespace Prisma {
     kothBestPlacement?: NullableIntFieldUpdateOperationsInput | number | null
     kothCurrentWinStreak?: IntFieldUpdateOperationsInput | number
     kothBestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentWinStreak?: IntFieldUpdateOperationsInput | number
+    bestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentLoseStreak?: IntFieldUpdateOperationsInput | number
+    offensiveWins?: IntFieldUpdateOperationsInput | number
+    defensiveWins?: IntFieldUpdateOperationsInput | number
+    balancedWins?: IntFieldUpdateOperationsInput | number
+    dualWieldWins?: IntFieldUpdateOperationsInput | number
     repairCost?: IntFieldUpdateOperationsInput | number
     battleReadiness?: IntFieldUpdateOperationsInput | number
     totalRepairsPaid?: IntFieldUpdateOperationsInput | number
@@ -50130,6 +53956,551 @@ export namespace Prisma {
     tagTeamsAsActive?: TagTeamUncheckedUpdateManyWithoutActiveRobotNestedInput
     tagTeamsAsReserve?: TagTeamUncheckedUpdateManyWithoutReserveRobotNestedInput
     battleParticipations?: BattleParticipantUncheckedUpdateManyWithoutRobotNestedInput
+    tuningAllocation?: TuningAllocationUncheckedUpdateOneWithoutRobotNestedInput
+    achievements?: UserAchievementUncheckedUpdateManyWithoutRobotNestedInput
+  }
+
+  export type UserCreateWithoutAchievementsInput = {
+    username: string
+    email?: string | null
+    passwordHash: string
+    role?: string
+    currency?: number
+    prestige?: number
+    championshipTitles?: number
+    stableName?: string | null
+    profileVisibility?: string
+    notificationsBattle?: boolean
+    notificationsLeague?: boolean
+    themePreference?: string
+    tokenVersion?: number
+    hasCompletedOnboarding?: boolean
+    onboardingSkipped?: boolean
+    onboardingStep?: number
+    onboardingStrategy?: string | null
+    onboardingChoices?: JsonNullValueInput | InputJsonValue
+    onboardingStartedAt?: Date | string | null
+    onboardingCompletedAt?: Date | string | null
+    lastSeenChangelog?: Date | string
+    pinnedAchievements?: JsonNullValueInput | InputJsonValue
+    totalPracticeBattles?: number
+    lastLoginAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    robots?: RobotCreateNestedManyWithoutUserInput
+    facilities?: FacilityCreateNestedManyWithoutUserInput
+    weaponInventory?: WeaponInventoryCreateNestedManyWithoutUserInput
+    tagTeams?: TagTeamCreateNestedManyWithoutStableInput
+  }
+
+  export type UserUncheckedCreateWithoutAchievementsInput = {
+    id?: number
+    username: string
+    email?: string | null
+    passwordHash: string
+    role?: string
+    currency?: number
+    prestige?: number
+    championshipTitles?: number
+    stableName?: string | null
+    profileVisibility?: string
+    notificationsBattle?: boolean
+    notificationsLeague?: boolean
+    themePreference?: string
+    tokenVersion?: number
+    hasCompletedOnboarding?: boolean
+    onboardingSkipped?: boolean
+    onboardingStep?: number
+    onboardingStrategy?: string | null
+    onboardingChoices?: JsonNullValueInput | InputJsonValue
+    onboardingStartedAt?: Date | string | null
+    onboardingCompletedAt?: Date | string | null
+    lastSeenChangelog?: Date | string
+    pinnedAchievements?: JsonNullValueInput | InputJsonValue
+    totalPracticeBattles?: number
+    lastLoginAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    robots?: RobotUncheckedCreateNestedManyWithoutUserInput
+    facilities?: FacilityUncheckedCreateNestedManyWithoutUserInput
+    weaponInventory?: WeaponInventoryUncheckedCreateNestedManyWithoutUserInput
+    tagTeams?: TagTeamUncheckedCreateNestedManyWithoutStableInput
+  }
+
+  export type UserCreateOrConnectWithoutAchievementsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutAchievementsInput, UserUncheckedCreateWithoutAchievementsInput>
+  }
+
+  export type RobotCreateWithoutAchievementsInput = {
+    name: string
+    frameId?: number
+    paintJob?: string | null
+    combatPower?: Decimal | DecimalJsLike | number | string
+    targetingSystems?: Decimal | DecimalJsLike | number | string
+    criticalSystems?: Decimal | DecimalJsLike | number | string
+    penetration?: Decimal | DecimalJsLike | number | string
+    weaponControl?: Decimal | DecimalJsLike | number | string
+    attackSpeed?: Decimal | DecimalJsLike | number | string
+    armorPlating?: Decimal | DecimalJsLike | number | string
+    shieldCapacity?: Decimal | DecimalJsLike | number | string
+    evasionThrusters?: Decimal | DecimalJsLike | number | string
+    damageDampeners?: Decimal | DecimalJsLike | number | string
+    counterProtocols?: Decimal | DecimalJsLike | number | string
+    hullIntegrity?: Decimal | DecimalJsLike | number | string
+    servoMotors?: Decimal | DecimalJsLike | number | string
+    gyroStabilizers?: Decimal | DecimalJsLike | number | string
+    hydraulicSystems?: Decimal | DecimalJsLike | number | string
+    powerCore?: Decimal | DecimalJsLike | number | string
+    combatAlgorithms?: Decimal | DecimalJsLike | number | string
+    threatAnalysis?: Decimal | DecimalJsLike | number | string
+    adaptiveAI?: Decimal | DecimalJsLike | number | string
+    logicCores?: Decimal | DecimalJsLike | number | string
+    syncProtocols?: Decimal | DecimalJsLike | number | string
+    supportSystems?: Decimal | DecimalJsLike | number | string
+    formationTactics?: Decimal | DecimalJsLike | number | string
+    currentHP: number
+    maxHP: number
+    currentShield: number
+    maxShield: number
+    damageTaken?: number
+    elo?: number
+    totalBattles?: number
+    wins?: number
+    draws?: number
+    losses?: number
+    damageDealtLifetime?: number
+    damageTakenLifetime?: number
+    kills?: number
+    currentLeague?: string
+    leagueId?: string
+    leaguePoints?: number
+    cyclesInCurrentLeague?: number
+    fame?: number
+    titles?: string | null
+    totalTagTeamBattles?: number
+    totalTagTeamWins?: number
+    totalTagTeamLosses?: number
+    totalTagTeamDraws?: number
+    timesTaggedIn?: number
+    timesTaggedOut?: number
+    kothWins?: number
+    kothMatches?: number
+    kothTotalZoneScore?: number
+    kothTotalZoneTime?: number
+    kothKills?: number
+    kothBestPlacement?: number | null
+    kothCurrentWinStreak?: number
+    kothBestWinStreak?: number
+    currentWinStreak?: number
+    bestWinStreak?: number
+    currentLoseStreak?: number
+    offensiveWins?: number
+    defensiveWins?: number
+    balancedWins?: number
+    dualWieldWins?: number
+    repairCost?: number
+    battleReadiness?: number
+    totalRepairsPaid?: number
+    yieldThreshold?: number
+    loadoutType?: string
+    stance?: string
+    imageUrl?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    user: UserCreateNestedOneWithoutRobotsInput
+    mainWeapon?: WeaponInventoryCreateNestedOneWithoutRobotsMainInput
+    offhandWeapon?: WeaponInventoryCreateNestedOneWithoutRobotsOffhandInput
+    battlesAsRobot1?: BattleCreateNestedManyWithoutRobot1Input
+    battlesAsRobot2?: BattleCreateNestedManyWithoutRobot2Input
+    scheduledMatchesAsRobot1?: ScheduledLeagueMatchCreateNestedManyWithoutRobot1Input
+    scheduledMatchesAsRobot2?: ScheduledLeagueMatchCreateNestedManyWithoutRobot2Input
+    tournamentsWon?: TournamentCreateNestedManyWithoutWinnerInput
+    tournamentMatchesAsRobot1?: ScheduledTournamentMatchCreateNestedManyWithoutRobot1Input
+    tournamentMatchesAsRobot2?: ScheduledTournamentMatchCreateNestedManyWithoutRobot2Input
+    tournamentMatchesWon?: ScheduledTournamentMatchCreateNestedManyWithoutWinnerInput
+    tagTeamsAsActive?: TagTeamCreateNestedManyWithoutActiveRobotInput
+    tagTeamsAsReserve?: TagTeamCreateNestedManyWithoutReserveRobotInput
+    battleParticipations?: BattleParticipantCreateNestedManyWithoutRobotInput
+    kothMatchParticipations?: ScheduledKothMatchParticipantCreateNestedManyWithoutRobotInput
+    tuningAllocation?: TuningAllocationCreateNestedOneWithoutRobotInput
+  }
+
+  export type RobotUncheckedCreateWithoutAchievementsInput = {
+    id?: number
+    userId: number
+    name: string
+    frameId?: number
+    paintJob?: string | null
+    combatPower?: Decimal | DecimalJsLike | number | string
+    targetingSystems?: Decimal | DecimalJsLike | number | string
+    criticalSystems?: Decimal | DecimalJsLike | number | string
+    penetration?: Decimal | DecimalJsLike | number | string
+    weaponControl?: Decimal | DecimalJsLike | number | string
+    attackSpeed?: Decimal | DecimalJsLike | number | string
+    armorPlating?: Decimal | DecimalJsLike | number | string
+    shieldCapacity?: Decimal | DecimalJsLike | number | string
+    evasionThrusters?: Decimal | DecimalJsLike | number | string
+    damageDampeners?: Decimal | DecimalJsLike | number | string
+    counterProtocols?: Decimal | DecimalJsLike | number | string
+    hullIntegrity?: Decimal | DecimalJsLike | number | string
+    servoMotors?: Decimal | DecimalJsLike | number | string
+    gyroStabilizers?: Decimal | DecimalJsLike | number | string
+    hydraulicSystems?: Decimal | DecimalJsLike | number | string
+    powerCore?: Decimal | DecimalJsLike | number | string
+    combatAlgorithms?: Decimal | DecimalJsLike | number | string
+    threatAnalysis?: Decimal | DecimalJsLike | number | string
+    adaptiveAI?: Decimal | DecimalJsLike | number | string
+    logicCores?: Decimal | DecimalJsLike | number | string
+    syncProtocols?: Decimal | DecimalJsLike | number | string
+    supportSystems?: Decimal | DecimalJsLike | number | string
+    formationTactics?: Decimal | DecimalJsLike | number | string
+    currentHP: number
+    maxHP: number
+    currentShield: number
+    maxShield: number
+    damageTaken?: number
+    elo?: number
+    totalBattles?: number
+    wins?: number
+    draws?: number
+    losses?: number
+    damageDealtLifetime?: number
+    damageTakenLifetime?: number
+    kills?: number
+    currentLeague?: string
+    leagueId?: string
+    leaguePoints?: number
+    cyclesInCurrentLeague?: number
+    fame?: number
+    titles?: string | null
+    totalTagTeamBattles?: number
+    totalTagTeamWins?: number
+    totalTagTeamLosses?: number
+    totalTagTeamDraws?: number
+    timesTaggedIn?: number
+    timesTaggedOut?: number
+    kothWins?: number
+    kothMatches?: number
+    kothTotalZoneScore?: number
+    kothTotalZoneTime?: number
+    kothKills?: number
+    kothBestPlacement?: number | null
+    kothCurrentWinStreak?: number
+    kothBestWinStreak?: number
+    currentWinStreak?: number
+    bestWinStreak?: number
+    currentLoseStreak?: number
+    offensiveWins?: number
+    defensiveWins?: number
+    balancedWins?: number
+    dualWieldWins?: number
+    repairCost?: number
+    battleReadiness?: number
+    totalRepairsPaid?: number
+    yieldThreshold?: number
+    loadoutType?: string
+    stance?: string
+    mainWeaponId?: number | null
+    offhandWeaponId?: number | null
+    imageUrl?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    battlesAsRobot1?: BattleUncheckedCreateNestedManyWithoutRobot1Input
+    battlesAsRobot2?: BattleUncheckedCreateNestedManyWithoutRobot2Input
+    scheduledMatchesAsRobot1?: ScheduledLeagueMatchUncheckedCreateNestedManyWithoutRobot1Input
+    scheduledMatchesAsRobot2?: ScheduledLeagueMatchUncheckedCreateNestedManyWithoutRobot2Input
+    tournamentsWon?: TournamentUncheckedCreateNestedManyWithoutWinnerInput
+    tournamentMatchesAsRobot1?: ScheduledTournamentMatchUncheckedCreateNestedManyWithoutRobot1Input
+    tournamentMatchesAsRobot2?: ScheduledTournamentMatchUncheckedCreateNestedManyWithoutRobot2Input
+    tournamentMatchesWon?: ScheduledTournamentMatchUncheckedCreateNestedManyWithoutWinnerInput
+    tagTeamsAsActive?: TagTeamUncheckedCreateNestedManyWithoutActiveRobotInput
+    tagTeamsAsReserve?: TagTeamUncheckedCreateNestedManyWithoutReserveRobotInput
+    battleParticipations?: BattleParticipantUncheckedCreateNestedManyWithoutRobotInput
+    kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedCreateNestedManyWithoutRobotInput
+    tuningAllocation?: TuningAllocationUncheckedCreateNestedOneWithoutRobotInput
+  }
+
+  export type RobotCreateOrConnectWithoutAchievementsInput = {
+    where: RobotWhereUniqueInput
+    create: XOR<RobotCreateWithoutAchievementsInput, RobotUncheckedCreateWithoutAchievementsInput>
+  }
+
+  export type UserUpsertWithoutAchievementsInput = {
+    update: XOR<UserUpdateWithoutAchievementsInput, UserUncheckedUpdateWithoutAchievementsInput>
+    create: XOR<UserCreateWithoutAchievementsInput, UserUncheckedCreateWithoutAchievementsInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutAchievementsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutAchievementsInput, UserUncheckedUpdateWithoutAchievementsInput>
+  }
+
+  export type UserUpdateWithoutAchievementsInput = {
+    username?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    role?: StringFieldUpdateOperationsInput | string
+    currency?: IntFieldUpdateOperationsInput | number
+    prestige?: IntFieldUpdateOperationsInput | number
+    championshipTitles?: IntFieldUpdateOperationsInput | number
+    stableName?: NullableStringFieldUpdateOperationsInput | string | null
+    profileVisibility?: StringFieldUpdateOperationsInput | string
+    notificationsBattle?: BoolFieldUpdateOperationsInput | boolean
+    notificationsLeague?: BoolFieldUpdateOperationsInput | boolean
+    themePreference?: StringFieldUpdateOperationsInput | string
+    tokenVersion?: IntFieldUpdateOperationsInput | number
+    hasCompletedOnboarding?: BoolFieldUpdateOperationsInput | boolean
+    onboardingSkipped?: BoolFieldUpdateOperationsInput | boolean
+    onboardingStep?: IntFieldUpdateOperationsInput | number
+    onboardingStrategy?: NullableStringFieldUpdateOperationsInput | string | null
+    onboardingChoices?: JsonNullValueInput | InputJsonValue
+    onboardingStartedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    onboardingCompletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastSeenChangelog?: DateTimeFieldUpdateOperationsInput | Date | string
+    pinnedAchievements?: JsonNullValueInput | InputJsonValue
+    totalPracticeBattles?: IntFieldUpdateOperationsInput | number
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    robots?: RobotUpdateManyWithoutUserNestedInput
+    facilities?: FacilityUpdateManyWithoutUserNestedInput
+    weaponInventory?: WeaponInventoryUpdateManyWithoutUserNestedInput
+    tagTeams?: TagTeamUpdateManyWithoutStableNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutAchievementsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    username?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    role?: StringFieldUpdateOperationsInput | string
+    currency?: IntFieldUpdateOperationsInput | number
+    prestige?: IntFieldUpdateOperationsInput | number
+    championshipTitles?: IntFieldUpdateOperationsInput | number
+    stableName?: NullableStringFieldUpdateOperationsInput | string | null
+    profileVisibility?: StringFieldUpdateOperationsInput | string
+    notificationsBattle?: BoolFieldUpdateOperationsInput | boolean
+    notificationsLeague?: BoolFieldUpdateOperationsInput | boolean
+    themePreference?: StringFieldUpdateOperationsInput | string
+    tokenVersion?: IntFieldUpdateOperationsInput | number
+    hasCompletedOnboarding?: BoolFieldUpdateOperationsInput | boolean
+    onboardingSkipped?: BoolFieldUpdateOperationsInput | boolean
+    onboardingStep?: IntFieldUpdateOperationsInput | number
+    onboardingStrategy?: NullableStringFieldUpdateOperationsInput | string | null
+    onboardingChoices?: JsonNullValueInput | InputJsonValue
+    onboardingStartedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    onboardingCompletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastSeenChangelog?: DateTimeFieldUpdateOperationsInput | Date | string
+    pinnedAchievements?: JsonNullValueInput | InputJsonValue
+    totalPracticeBattles?: IntFieldUpdateOperationsInput | number
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    robots?: RobotUncheckedUpdateManyWithoutUserNestedInput
+    facilities?: FacilityUncheckedUpdateManyWithoutUserNestedInput
+    weaponInventory?: WeaponInventoryUncheckedUpdateManyWithoutUserNestedInput
+    tagTeams?: TagTeamUncheckedUpdateManyWithoutStableNestedInput
+  }
+
+  export type RobotUpsertWithoutAchievementsInput = {
+    update: XOR<RobotUpdateWithoutAchievementsInput, RobotUncheckedUpdateWithoutAchievementsInput>
+    create: XOR<RobotCreateWithoutAchievementsInput, RobotUncheckedCreateWithoutAchievementsInput>
+    where?: RobotWhereInput
+  }
+
+  export type RobotUpdateToOneWithWhereWithoutAchievementsInput = {
+    where?: RobotWhereInput
+    data: XOR<RobotUpdateWithoutAchievementsInput, RobotUncheckedUpdateWithoutAchievementsInput>
+  }
+
+  export type RobotUpdateWithoutAchievementsInput = {
+    name?: StringFieldUpdateOperationsInput | string
+    frameId?: IntFieldUpdateOperationsInput | number
+    paintJob?: NullableStringFieldUpdateOperationsInput | string | null
+    combatPower?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    targetingSystems?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    criticalSystems?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    penetration?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    weaponControl?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    attackSpeed?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    armorPlating?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    shieldCapacity?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    evasionThrusters?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    damageDampeners?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    counterProtocols?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    hullIntegrity?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    servoMotors?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    gyroStabilizers?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    hydraulicSystems?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    powerCore?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    combatAlgorithms?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    threatAnalysis?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    adaptiveAI?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    logicCores?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    syncProtocols?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    supportSystems?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    formationTactics?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currentHP?: IntFieldUpdateOperationsInput | number
+    maxHP?: IntFieldUpdateOperationsInput | number
+    currentShield?: IntFieldUpdateOperationsInput | number
+    maxShield?: IntFieldUpdateOperationsInput | number
+    damageTaken?: IntFieldUpdateOperationsInput | number
+    elo?: IntFieldUpdateOperationsInput | number
+    totalBattles?: IntFieldUpdateOperationsInput | number
+    wins?: IntFieldUpdateOperationsInput | number
+    draws?: IntFieldUpdateOperationsInput | number
+    losses?: IntFieldUpdateOperationsInput | number
+    damageDealtLifetime?: IntFieldUpdateOperationsInput | number
+    damageTakenLifetime?: IntFieldUpdateOperationsInput | number
+    kills?: IntFieldUpdateOperationsInput | number
+    currentLeague?: StringFieldUpdateOperationsInput | string
+    leagueId?: StringFieldUpdateOperationsInput | string
+    leaguePoints?: IntFieldUpdateOperationsInput | number
+    cyclesInCurrentLeague?: IntFieldUpdateOperationsInput | number
+    fame?: IntFieldUpdateOperationsInput | number
+    titles?: NullableStringFieldUpdateOperationsInput | string | null
+    totalTagTeamBattles?: IntFieldUpdateOperationsInput | number
+    totalTagTeamWins?: IntFieldUpdateOperationsInput | number
+    totalTagTeamLosses?: IntFieldUpdateOperationsInput | number
+    totalTagTeamDraws?: IntFieldUpdateOperationsInput | number
+    timesTaggedIn?: IntFieldUpdateOperationsInput | number
+    timesTaggedOut?: IntFieldUpdateOperationsInput | number
+    kothWins?: IntFieldUpdateOperationsInput | number
+    kothMatches?: IntFieldUpdateOperationsInput | number
+    kothTotalZoneScore?: FloatFieldUpdateOperationsInput | number
+    kothTotalZoneTime?: FloatFieldUpdateOperationsInput | number
+    kothKills?: IntFieldUpdateOperationsInput | number
+    kothBestPlacement?: NullableIntFieldUpdateOperationsInput | number | null
+    kothCurrentWinStreak?: IntFieldUpdateOperationsInput | number
+    kothBestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentWinStreak?: IntFieldUpdateOperationsInput | number
+    bestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentLoseStreak?: IntFieldUpdateOperationsInput | number
+    offensiveWins?: IntFieldUpdateOperationsInput | number
+    defensiveWins?: IntFieldUpdateOperationsInput | number
+    balancedWins?: IntFieldUpdateOperationsInput | number
+    dualWieldWins?: IntFieldUpdateOperationsInput | number
+    repairCost?: IntFieldUpdateOperationsInput | number
+    battleReadiness?: IntFieldUpdateOperationsInput | number
+    totalRepairsPaid?: IntFieldUpdateOperationsInput | number
+    yieldThreshold?: IntFieldUpdateOperationsInput | number
+    loadoutType?: StringFieldUpdateOperationsInput | string
+    stance?: StringFieldUpdateOperationsInput | string
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutRobotsNestedInput
+    mainWeapon?: WeaponInventoryUpdateOneWithoutRobotsMainNestedInput
+    offhandWeapon?: WeaponInventoryUpdateOneWithoutRobotsOffhandNestedInput
+    battlesAsRobot1?: BattleUpdateManyWithoutRobot1NestedInput
+    battlesAsRobot2?: BattleUpdateManyWithoutRobot2NestedInput
+    scheduledMatchesAsRobot1?: ScheduledLeagueMatchUpdateManyWithoutRobot1NestedInput
+    scheduledMatchesAsRobot2?: ScheduledLeagueMatchUpdateManyWithoutRobot2NestedInput
+    tournamentsWon?: TournamentUpdateManyWithoutWinnerNestedInput
+    tournamentMatchesAsRobot1?: ScheduledTournamentMatchUpdateManyWithoutRobot1NestedInput
+    tournamentMatchesAsRobot2?: ScheduledTournamentMatchUpdateManyWithoutRobot2NestedInput
+    tournamentMatchesWon?: ScheduledTournamentMatchUpdateManyWithoutWinnerNestedInput
+    tagTeamsAsActive?: TagTeamUpdateManyWithoutActiveRobotNestedInput
+    tagTeamsAsReserve?: TagTeamUpdateManyWithoutReserveRobotNestedInput
+    battleParticipations?: BattleParticipantUpdateManyWithoutRobotNestedInput
+    kothMatchParticipations?: ScheduledKothMatchParticipantUpdateManyWithoutRobotNestedInput
+    tuningAllocation?: TuningAllocationUpdateOneWithoutRobotNestedInput
+  }
+
+  export type RobotUncheckedUpdateWithoutAchievementsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    userId?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    frameId?: IntFieldUpdateOperationsInput | number
+    paintJob?: NullableStringFieldUpdateOperationsInput | string | null
+    combatPower?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    targetingSystems?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    criticalSystems?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    penetration?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    weaponControl?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    attackSpeed?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    armorPlating?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    shieldCapacity?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    evasionThrusters?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    damageDampeners?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    counterProtocols?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    hullIntegrity?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    servoMotors?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    gyroStabilizers?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    hydraulicSystems?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    powerCore?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    combatAlgorithms?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    threatAnalysis?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    adaptiveAI?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    logicCores?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    syncProtocols?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    supportSystems?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    formationTactics?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    currentHP?: IntFieldUpdateOperationsInput | number
+    maxHP?: IntFieldUpdateOperationsInput | number
+    currentShield?: IntFieldUpdateOperationsInput | number
+    maxShield?: IntFieldUpdateOperationsInput | number
+    damageTaken?: IntFieldUpdateOperationsInput | number
+    elo?: IntFieldUpdateOperationsInput | number
+    totalBattles?: IntFieldUpdateOperationsInput | number
+    wins?: IntFieldUpdateOperationsInput | number
+    draws?: IntFieldUpdateOperationsInput | number
+    losses?: IntFieldUpdateOperationsInput | number
+    damageDealtLifetime?: IntFieldUpdateOperationsInput | number
+    damageTakenLifetime?: IntFieldUpdateOperationsInput | number
+    kills?: IntFieldUpdateOperationsInput | number
+    currentLeague?: StringFieldUpdateOperationsInput | string
+    leagueId?: StringFieldUpdateOperationsInput | string
+    leaguePoints?: IntFieldUpdateOperationsInput | number
+    cyclesInCurrentLeague?: IntFieldUpdateOperationsInput | number
+    fame?: IntFieldUpdateOperationsInput | number
+    titles?: NullableStringFieldUpdateOperationsInput | string | null
+    totalTagTeamBattles?: IntFieldUpdateOperationsInput | number
+    totalTagTeamWins?: IntFieldUpdateOperationsInput | number
+    totalTagTeamLosses?: IntFieldUpdateOperationsInput | number
+    totalTagTeamDraws?: IntFieldUpdateOperationsInput | number
+    timesTaggedIn?: IntFieldUpdateOperationsInput | number
+    timesTaggedOut?: IntFieldUpdateOperationsInput | number
+    kothWins?: IntFieldUpdateOperationsInput | number
+    kothMatches?: IntFieldUpdateOperationsInput | number
+    kothTotalZoneScore?: FloatFieldUpdateOperationsInput | number
+    kothTotalZoneTime?: FloatFieldUpdateOperationsInput | number
+    kothKills?: IntFieldUpdateOperationsInput | number
+    kothBestPlacement?: NullableIntFieldUpdateOperationsInput | number | null
+    kothCurrentWinStreak?: IntFieldUpdateOperationsInput | number
+    kothBestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentWinStreak?: IntFieldUpdateOperationsInput | number
+    bestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentLoseStreak?: IntFieldUpdateOperationsInput | number
+    offensiveWins?: IntFieldUpdateOperationsInput | number
+    defensiveWins?: IntFieldUpdateOperationsInput | number
+    balancedWins?: IntFieldUpdateOperationsInput | number
+    dualWieldWins?: IntFieldUpdateOperationsInput | number
+    repairCost?: IntFieldUpdateOperationsInput | number
+    battleReadiness?: IntFieldUpdateOperationsInput | number
+    totalRepairsPaid?: IntFieldUpdateOperationsInput | number
+    yieldThreshold?: IntFieldUpdateOperationsInput | number
+    loadoutType?: StringFieldUpdateOperationsInput | string
+    stance?: StringFieldUpdateOperationsInput | string
+    mainWeaponId?: NullableIntFieldUpdateOperationsInput | number | null
+    offhandWeaponId?: NullableIntFieldUpdateOperationsInput | number | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    battlesAsRobot1?: BattleUncheckedUpdateManyWithoutRobot1NestedInput
+    battlesAsRobot2?: BattleUncheckedUpdateManyWithoutRobot2NestedInput
+    scheduledMatchesAsRobot1?: ScheduledLeagueMatchUncheckedUpdateManyWithoutRobot1NestedInput
+    scheduledMatchesAsRobot2?: ScheduledLeagueMatchUncheckedUpdateManyWithoutRobot2NestedInput
+    tournamentsWon?: TournamentUncheckedUpdateManyWithoutWinnerNestedInput
+    tournamentMatchesAsRobot1?: ScheduledTournamentMatchUncheckedUpdateManyWithoutRobot1NestedInput
+    tournamentMatchesAsRobot2?: ScheduledTournamentMatchUncheckedUpdateManyWithoutRobot2NestedInput
+    tournamentMatchesWon?: ScheduledTournamentMatchUncheckedUpdateManyWithoutWinnerNestedInput
+    tagTeamsAsActive?: TagTeamUncheckedUpdateManyWithoutActiveRobotNestedInput
+    tagTeamsAsReserve?: TagTeamUncheckedUpdateManyWithoutReserveRobotNestedInput
+    battleParticipations?: BattleParticipantUncheckedUpdateManyWithoutRobotNestedInput
+    kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedUpdateManyWithoutRobotNestedInput
     tuningAllocation?: TuningAllocationUncheckedUpdateOneWithoutRobotNestedInput
   }
 
@@ -50193,6 +54564,13 @@ export namespace Prisma {
     kothBestPlacement?: number | null
     kothCurrentWinStreak?: number
     kothBestWinStreak?: number
+    currentWinStreak?: number
+    bestWinStreak?: number
+    currentLoseStreak?: number
+    offensiveWins?: number
+    defensiveWins?: number
+    balancedWins?: number
+    dualWieldWins?: number
     repairCost?: number
     battleReadiness?: number
     totalRepairsPaid?: number
@@ -50217,6 +54595,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamCreateNestedManyWithoutReserveRobotInput
     battleParticipations?: BattleParticipantCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantCreateNestedManyWithoutRobotInput
+    achievements?: UserAchievementCreateNestedManyWithoutRobotInput
   }
 
   export type RobotUncheckedCreateWithoutTuningAllocationInput = {
@@ -50281,6 +54660,13 @@ export namespace Prisma {
     kothBestPlacement?: number | null
     kothCurrentWinStreak?: number
     kothBestWinStreak?: number
+    currentWinStreak?: number
+    bestWinStreak?: number
+    currentLoseStreak?: number
+    offensiveWins?: number
+    defensiveWins?: number
+    balancedWins?: number
+    dualWieldWins?: number
     repairCost?: number
     battleReadiness?: number
     totalRepairsPaid?: number
@@ -50304,6 +54690,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUncheckedCreateNestedManyWithoutReserveRobotInput
     battleParticipations?: BattleParticipantUncheckedCreateNestedManyWithoutRobotInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedCreateNestedManyWithoutRobotInput
+    achievements?: UserAchievementUncheckedCreateNestedManyWithoutRobotInput
   }
 
   export type RobotCreateOrConnectWithoutTuningAllocationInput = {
@@ -50382,6 +54769,13 @@ export namespace Prisma {
     kothBestPlacement?: NullableIntFieldUpdateOperationsInput | number | null
     kothCurrentWinStreak?: IntFieldUpdateOperationsInput | number
     kothBestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentWinStreak?: IntFieldUpdateOperationsInput | number
+    bestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentLoseStreak?: IntFieldUpdateOperationsInput | number
+    offensiveWins?: IntFieldUpdateOperationsInput | number
+    defensiveWins?: IntFieldUpdateOperationsInput | number
+    balancedWins?: IntFieldUpdateOperationsInput | number
+    dualWieldWins?: IntFieldUpdateOperationsInput | number
     repairCost?: IntFieldUpdateOperationsInput | number
     battleReadiness?: IntFieldUpdateOperationsInput | number
     totalRepairsPaid?: IntFieldUpdateOperationsInput | number
@@ -50406,6 +54800,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUpdateManyWithoutReserveRobotNestedInput
     battleParticipations?: BattleParticipantUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUpdateManyWithoutRobotNestedInput
+    achievements?: UserAchievementUpdateManyWithoutRobotNestedInput
   }
 
   export type RobotUncheckedUpdateWithoutTuningAllocationInput = {
@@ -50470,6 +54865,13 @@ export namespace Prisma {
     kothBestPlacement?: NullableIntFieldUpdateOperationsInput | number | null
     kothCurrentWinStreak?: IntFieldUpdateOperationsInput | number
     kothBestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentWinStreak?: IntFieldUpdateOperationsInput | number
+    bestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentLoseStreak?: IntFieldUpdateOperationsInput | number
+    offensiveWins?: IntFieldUpdateOperationsInput | number
+    defensiveWins?: IntFieldUpdateOperationsInput | number
+    balancedWins?: IntFieldUpdateOperationsInput | number
+    dualWieldWins?: IntFieldUpdateOperationsInput | number
     repairCost?: IntFieldUpdateOperationsInput | number
     battleReadiness?: IntFieldUpdateOperationsInput | number
     totalRepairsPaid?: IntFieldUpdateOperationsInput | number
@@ -50493,6 +54895,7 @@ export namespace Prisma {
     tagTeamsAsReserve?: TagTeamUncheckedUpdateManyWithoutReserveRobotNestedInput
     battleParticipations?: BattleParticipantUncheckedUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedUpdateManyWithoutRobotNestedInput
+    achievements?: UserAchievementUncheckedUpdateManyWithoutRobotNestedInput
   }
 
   export type RobotCreateManyUserInput = {
@@ -50556,6 +54959,13 @@ export namespace Prisma {
     kothBestPlacement?: number | null
     kothCurrentWinStreak?: number
     kothBestWinStreak?: number
+    currentWinStreak?: number
+    bestWinStreak?: number
+    currentLoseStreak?: number
+    offensiveWins?: number
+    defensiveWins?: number
+    balancedWins?: number
+    dualWieldWins?: number
     repairCost?: number
     battleReadiness?: number
     totalRepairsPaid?: number
@@ -50599,6 +55009,13 @@ export namespace Prisma {
     totalTagTeamDraws?: number
     createdAt?: Date | string
     updatedAt?: Date | string
+  }
+
+  export type UserAchievementCreateManyUserInput = {
+    id?: number
+    achievementId: string
+    robotId?: number | null
+    unlockedAt?: Date | string
   }
 
   export type RobotUpdateWithoutUserInput = {
@@ -50661,6 +55078,13 @@ export namespace Prisma {
     kothBestPlacement?: NullableIntFieldUpdateOperationsInput | number | null
     kothCurrentWinStreak?: IntFieldUpdateOperationsInput | number
     kothBestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentWinStreak?: IntFieldUpdateOperationsInput | number
+    bestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentLoseStreak?: IntFieldUpdateOperationsInput | number
+    offensiveWins?: IntFieldUpdateOperationsInput | number
+    defensiveWins?: IntFieldUpdateOperationsInput | number
+    balancedWins?: IntFieldUpdateOperationsInput | number
+    dualWieldWins?: IntFieldUpdateOperationsInput | number
     repairCost?: IntFieldUpdateOperationsInput | number
     battleReadiness?: IntFieldUpdateOperationsInput | number
     totalRepairsPaid?: IntFieldUpdateOperationsInput | number
@@ -50685,6 +55109,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUpdateManyWithoutRobotNestedInput
     tuningAllocation?: TuningAllocationUpdateOneWithoutRobotNestedInput
+    achievements?: UserAchievementUpdateManyWithoutRobotNestedInput
   }
 
   export type RobotUncheckedUpdateWithoutUserInput = {
@@ -50748,6 +55173,13 @@ export namespace Prisma {
     kothBestPlacement?: NullableIntFieldUpdateOperationsInput | number | null
     kothCurrentWinStreak?: IntFieldUpdateOperationsInput | number
     kothBestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentWinStreak?: IntFieldUpdateOperationsInput | number
+    bestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentLoseStreak?: IntFieldUpdateOperationsInput | number
+    offensiveWins?: IntFieldUpdateOperationsInput | number
+    defensiveWins?: IntFieldUpdateOperationsInput | number
+    balancedWins?: IntFieldUpdateOperationsInput | number
+    dualWieldWins?: IntFieldUpdateOperationsInput | number
     repairCost?: IntFieldUpdateOperationsInput | number
     battleReadiness?: IntFieldUpdateOperationsInput | number
     totalRepairsPaid?: IntFieldUpdateOperationsInput | number
@@ -50772,6 +55204,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantUncheckedUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedUpdateManyWithoutRobotNestedInput
     tuningAllocation?: TuningAllocationUncheckedUpdateOneWithoutRobotNestedInput
+    achievements?: UserAchievementUncheckedUpdateManyWithoutRobotNestedInput
   }
 
   export type RobotUncheckedUpdateManyWithoutUserInput = {
@@ -50835,6 +55268,13 @@ export namespace Prisma {
     kothBestPlacement?: NullableIntFieldUpdateOperationsInput | number | null
     kothCurrentWinStreak?: IntFieldUpdateOperationsInput | number
     kothBestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentWinStreak?: IntFieldUpdateOperationsInput | number
+    bestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentLoseStreak?: IntFieldUpdateOperationsInput | number
+    offensiveWins?: IntFieldUpdateOperationsInput | number
+    defensiveWins?: IntFieldUpdateOperationsInput | number
+    balancedWins?: IntFieldUpdateOperationsInput | number
+    dualWieldWins?: IntFieldUpdateOperationsInput | number
     repairCost?: IntFieldUpdateOperationsInput | number
     battleReadiness?: IntFieldUpdateOperationsInput | number
     totalRepairsPaid?: IntFieldUpdateOperationsInput | number
@@ -50947,6 +55387,26 @@ export namespace Prisma {
     totalTagTeamDraws?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UserAchievementUpdateWithoutUserInput = {
+    achievementId?: StringFieldUpdateOperationsInput | string
+    unlockedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    robot?: RobotUpdateOneWithoutAchievementsNestedInput
+  }
+
+  export type UserAchievementUncheckedUpdateWithoutUserInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    achievementId?: StringFieldUpdateOperationsInput | string
+    robotId?: NullableIntFieldUpdateOperationsInput | number | null
+    unlockedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UserAchievementUncheckedUpdateManyWithoutUserInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    achievementId?: StringFieldUpdateOperationsInput | string
+    robotId?: NullableIntFieldUpdateOperationsInput | number | null
+    unlockedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type BattleCreateManyRobot1Input = {
@@ -51144,6 +55604,13 @@ export namespace Prisma {
   export type ScheduledKothMatchParticipantCreateManyRobotInput = {
     id?: number
     matchId: number
+  }
+
+  export type UserAchievementCreateManyRobotInput = {
+    id?: number
+    userId: number
+    achievementId: string
+    unlockedAt?: Date | string
   }
 
   export type BattleUpdateWithoutRobot1Input = {
@@ -51757,6 +56224,26 @@ export namespace Prisma {
     matchId?: IntFieldUpdateOperationsInput | number
   }
 
+  export type UserAchievementUpdateWithoutRobotInput = {
+    achievementId?: StringFieldUpdateOperationsInput | string
+    unlockedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutAchievementsNestedInput
+  }
+
+  export type UserAchievementUncheckedUpdateWithoutRobotInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    userId?: IntFieldUpdateOperationsInput | number
+    achievementId?: StringFieldUpdateOperationsInput | string
+    unlockedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UserAchievementUncheckedUpdateManyWithoutRobotInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    userId?: IntFieldUpdateOperationsInput | number
+    achievementId?: StringFieldUpdateOperationsInput | string
+    unlockedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type RobotCreateManyMainWeaponInput = {
     id?: number
     userId: number
@@ -51819,6 +56306,13 @@ export namespace Prisma {
     kothBestPlacement?: number | null
     kothCurrentWinStreak?: number
     kothBestWinStreak?: number
+    currentWinStreak?: number
+    bestWinStreak?: number
+    currentLoseStreak?: number
+    offensiveWins?: number
+    defensiveWins?: number
+    balancedWins?: number
+    dualWieldWins?: number
     repairCost?: number
     battleReadiness?: number
     totalRepairsPaid?: number
@@ -51893,6 +56387,13 @@ export namespace Prisma {
     kothBestPlacement?: number | null
     kothCurrentWinStreak?: number
     kothBestWinStreak?: number
+    currentWinStreak?: number
+    bestWinStreak?: number
+    currentLoseStreak?: number
+    offensiveWins?: number
+    defensiveWins?: number
+    balancedWins?: number
+    dualWieldWins?: number
     repairCost?: number
     battleReadiness?: number
     totalRepairsPaid?: number
@@ -51965,6 +56466,13 @@ export namespace Prisma {
     kothBestPlacement?: NullableIntFieldUpdateOperationsInput | number | null
     kothCurrentWinStreak?: IntFieldUpdateOperationsInput | number
     kothBestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentWinStreak?: IntFieldUpdateOperationsInput | number
+    bestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentLoseStreak?: IntFieldUpdateOperationsInput | number
+    offensiveWins?: IntFieldUpdateOperationsInput | number
+    defensiveWins?: IntFieldUpdateOperationsInput | number
+    balancedWins?: IntFieldUpdateOperationsInput | number
+    dualWieldWins?: IntFieldUpdateOperationsInput | number
     repairCost?: IntFieldUpdateOperationsInput | number
     battleReadiness?: IntFieldUpdateOperationsInput | number
     totalRepairsPaid?: IntFieldUpdateOperationsInput | number
@@ -51989,6 +56497,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUpdateManyWithoutRobotNestedInput
     tuningAllocation?: TuningAllocationUpdateOneWithoutRobotNestedInput
+    achievements?: UserAchievementUpdateManyWithoutRobotNestedInput
   }
 
   export type RobotUncheckedUpdateWithoutMainWeaponInput = {
@@ -52053,6 +56562,13 @@ export namespace Prisma {
     kothBestPlacement?: NullableIntFieldUpdateOperationsInput | number | null
     kothCurrentWinStreak?: IntFieldUpdateOperationsInput | number
     kothBestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentWinStreak?: IntFieldUpdateOperationsInput | number
+    bestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentLoseStreak?: IntFieldUpdateOperationsInput | number
+    offensiveWins?: IntFieldUpdateOperationsInput | number
+    defensiveWins?: IntFieldUpdateOperationsInput | number
+    balancedWins?: IntFieldUpdateOperationsInput | number
+    dualWieldWins?: IntFieldUpdateOperationsInput | number
     repairCost?: IntFieldUpdateOperationsInput | number
     battleReadiness?: IntFieldUpdateOperationsInput | number
     totalRepairsPaid?: IntFieldUpdateOperationsInput | number
@@ -52076,6 +56592,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantUncheckedUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedUpdateManyWithoutRobotNestedInput
     tuningAllocation?: TuningAllocationUncheckedUpdateOneWithoutRobotNestedInput
+    achievements?: UserAchievementUncheckedUpdateManyWithoutRobotNestedInput
   }
 
   export type RobotUncheckedUpdateManyWithoutMainWeaponInput = {
@@ -52140,6 +56657,13 @@ export namespace Prisma {
     kothBestPlacement?: NullableIntFieldUpdateOperationsInput | number | null
     kothCurrentWinStreak?: IntFieldUpdateOperationsInput | number
     kothBestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentWinStreak?: IntFieldUpdateOperationsInput | number
+    bestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentLoseStreak?: IntFieldUpdateOperationsInput | number
+    offensiveWins?: IntFieldUpdateOperationsInput | number
+    defensiveWins?: IntFieldUpdateOperationsInput | number
+    balancedWins?: IntFieldUpdateOperationsInput | number
+    dualWieldWins?: IntFieldUpdateOperationsInput | number
     repairCost?: IntFieldUpdateOperationsInput | number
     battleReadiness?: IntFieldUpdateOperationsInput | number
     totalRepairsPaid?: IntFieldUpdateOperationsInput | number
@@ -52212,6 +56736,13 @@ export namespace Prisma {
     kothBestPlacement?: NullableIntFieldUpdateOperationsInput | number | null
     kothCurrentWinStreak?: IntFieldUpdateOperationsInput | number
     kothBestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentWinStreak?: IntFieldUpdateOperationsInput | number
+    bestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentLoseStreak?: IntFieldUpdateOperationsInput | number
+    offensiveWins?: IntFieldUpdateOperationsInput | number
+    defensiveWins?: IntFieldUpdateOperationsInput | number
+    balancedWins?: IntFieldUpdateOperationsInput | number
+    dualWieldWins?: IntFieldUpdateOperationsInput | number
     repairCost?: IntFieldUpdateOperationsInput | number
     battleReadiness?: IntFieldUpdateOperationsInput | number
     totalRepairsPaid?: IntFieldUpdateOperationsInput | number
@@ -52236,6 +56767,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUpdateManyWithoutRobotNestedInput
     tuningAllocation?: TuningAllocationUpdateOneWithoutRobotNestedInput
+    achievements?: UserAchievementUpdateManyWithoutRobotNestedInput
   }
 
   export type RobotUncheckedUpdateWithoutOffhandWeaponInput = {
@@ -52300,6 +56832,13 @@ export namespace Prisma {
     kothBestPlacement?: NullableIntFieldUpdateOperationsInput | number | null
     kothCurrentWinStreak?: IntFieldUpdateOperationsInput | number
     kothBestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentWinStreak?: IntFieldUpdateOperationsInput | number
+    bestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentLoseStreak?: IntFieldUpdateOperationsInput | number
+    offensiveWins?: IntFieldUpdateOperationsInput | number
+    defensiveWins?: IntFieldUpdateOperationsInput | number
+    balancedWins?: IntFieldUpdateOperationsInput | number
+    dualWieldWins?: IntFieldUpdateOperationsInput | number
     repairCost?: IntFieldUpdateOperationsInput | number
     battleReadiness?: IntFieldUpdateOperationsInput | number
     totalRepairsPaid?: IntFieldUpdateOperationsInput | number
@@ -52323,6 +56862,7 @@ export namespace Prisma {
     battleParticipations?: BattleParticipantUncheckedUpdateManyWithoutRobotNestedInput
     kothMatchParticipations?: ScheduledKothMatchParticipantUncheckedUpdateManyWithoutRobotNestedInput
     tuningAllocation?: TuningAllocationUncheckedUpdateOneWithoutRobotNestedInput
+    achievements?: UserAchievementUncheckedUpdateManyWithoutRobotNestedInput
   }
 
   export type RobotUncheckedUpdateManyWithoutOffhandWeaponInput = {
@@ -52387,6 +56927,13 @@ export namespace Prisma {
     kothBestPlacement?: NullableIntFieldUpdateOperationsInput | number | null
     kothCurrentWinStreak?: IntFieldUpdateOperationsInput | number
     kothBestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentWinStreak?: IntFieldUpdateOperationsInput | number
+    bestWinStreak?: IntFieldUpdateOperationsInput | number
+    currentLoseStreak?: IntFieldUpdateOperationsInput | number
+    offensiveWins?: IntFieldUpdateOperationsInput | number
+    defensiveWins?: IntFieldUpdateOperationsInput | number
+    balancedWins?: IntFieldUpdateOperationsInput | number
+    dualWieldWins?: IntFieldUpdateOperationsInput | number
     repairCost?: IntFieldUpdateOperationsInput | number
     battleReadiness?: IntFieldUpdateOperationsInput | number
     totalRepairsPaid?: IntFieldUpdateOperationsInput | number

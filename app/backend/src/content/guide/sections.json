@@ -60,15 +60,21 @@
     "order": 10
   },
   {
+    "slug": "achievements",
+    "title": "Achievements",
+    "description": "Milestones, badges, rewards, and progression tracking",
+    "order": 11
+  },
+  {
     "slug": "strategy",
     "title": "Strategy Guides",
     "description": "Build archetypes, budget allocation, and advanced tactics",
-    "order": 11
+    "order": 12
   },
   {
     "slug": "integrations",
     "title": "Integrations & API",
     "description": "Webhooks, notifications, and community integrations",
-    "order": 12
+    "order": 13
   }
 ]

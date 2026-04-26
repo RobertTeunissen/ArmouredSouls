@@ -19,6 +19,8 @@ import {
   updateRobotCombatStats,
   awardCreditsToUser,
   awardPrestigeToUser,
+  checkAndAwardAchievements,
+  type UnlockedAchievement,
 } from '../battle/battlePostCombat';
 import { BattleError, BattleErrorCode } from '../../errors/battleErrors';
 import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
@@ -554,7 +556,7 @@ async function updateRobotStats(
 /**
  * Process a single scheduled battle
  */
-export async function processBattle(scheduledMatch: ScheduledLeagueMatch): Promise<BattleResult & { prestigeAwarded: number; fameAwarded: number }> {
+export async function processBattle(scheduledMatch: ScheduledLeagueMatch): Promise<BattleResult & { prestigeAwarded: number; fameAwarded: number; achievementUnlocks: UnlockedAchievement[] }> {
   // Load both robots with their weapons
   const robot1 = await prisma.robot.findUnique({ 
     where: { id: scheduledMatch.robot1Id },
@@ -710,6 +712,52 @@ export async function processBattle(scheduledMatch: ScheduledLeagueMatch): Promi
   // Prestige/fame awards are already stored in BattleParticipant records
   // No need to update Battle table
   
+  // Check and award achievements for both robots
+  let achievementUnlocks: UnlockedAchievement[] = [];
+  if (!result.isByeMatch) {
+    const [unlocks1, unlocks2] = await Promise.all([
+      checkAndAwardAchievements(robot1.userId, robot1.id, {
+        won: robot1IsWinner,
+        destroyed: robot2Participant.destroyed,
+        finalHpPercent: robot1.maxHP > 0 ? (robot1Participant.finalHP / robot1.maxHP) * 100 : 0,
+        eloDiff: robot1Participant.eloAfter - robot1Participant.eloBefore,
+        opponentElo: robot2.elo,
+        yielded: robot1Participant.yielded,
+        opponentYielded: robot2Participant.yielded,
+        previousBattleLost: false,
+        damageDealt: robot1Participant.damageDealt,
+        opponentDamageDealt: robot2Participant.damageDealt,
+        loadoutType: robot1.loadoutType || 'single',
+        stance: robot1.stance || 'balanced',
+        yieldThreshold: robot1.yieldThreshold,
+        hasTuning: Object.values(tuning1).some(v => v !== undefined && v > 0),
+        hasMainWeapon: robot1.mainWeaponId !== null,
+        battleType: 'league',
+        battleDurationSeconds: result.durationSeconds,
+      }),
+      checkAndAwardAchievements(robot2.userId, robot2.id, {
+        won: robot2IsWinner,
+        destroyed: robot1Participant.destroyed,
+        finalHpPercent: robot2.maxHP > 0 ? (robot2Participant.finalHP / robot2.maxHP) * 100 : 0,
+        eloDiff: robot2Participant.eloAfter - robot2Participant.eloBefore,
+        opponentElo: robot1.elo,
+        yielded: robot2Participant.yielded,
+        opponentYielded: robot1Participant.yielded,
+        previousBattleLost: false,
+        damageDealt: robot2Participant.damageDealt,
+        opponentDamageDealt: robot1Participant.damageDealt,
+        loadoutType: robot2.loadoutType || 'single',
+        stance: robot2.stance || 'balanced',
+        yieldThreshold: robot2.yieldThreshold,
+        hasTuning: Object.values(tuning2).some(v => v !== undefined && v > 0),
+        hasMainWeapon: robot2.mainWeaponId !== null,
+        battleType: 'league',
+        battleDurationSeconds: result.durationSeconds,
+      }),
+    ]);
+    achievementUnlocks = [...unlocks1, ...unlocks2];
+  }
+
   // Update scheduled match
   await prisma.scheduledLeagueMatch.update({
     where: { id: scheduledMatch.id },
@@ -735,6 +783,7 @@ export async function processBattle(scheduledMatch: ScheduledLeagueMatch): Promi
     ...result,
     prestigeAwarded: totalPrestige,
     fameAwarded: totalFame,
+    achievementUnlocks,
   };
 }
 
