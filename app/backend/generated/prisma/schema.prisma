@@ -50,9 +50,6 @@ model User {
   pinnedAchievements   Json @default("[]") @map("pinned_achievements")
   totalPracticeBattles Int  @default(0) @map("total_practice_battles")
 
-  // ===== LOGIN TRACKING =====
-  lastLoginAt DateTime? @map("last_login_at")
-
   // ===== TIMESTAMPS =====
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -800,19 +797,4 @@ model TuningAllocation {
 
   @@index([robotId])
   @@map("tuning_allocations")
-}
-
-// Admin audit log table for tracking admin-triggered operations
-model AdminAuditLog {
-  id              Int      @id @default(autoincrement())
-  adminUserId     Int      @map("admin_user_id")
-  operationType   String   @map("operation_type") @db.VarChar(100)
-  operationResult String   @map("operation_result") @db.VarChar(20) // 'success' | 'failure'
-  resultSummary   Json     @map("result_summary")
-  createdAt       DateTime @default(now()) @map("created_at")
-
-  @@index([adminUserId])
-  @@index([operationType])
-  @@index([createdAt])
-  @@map("admin_audit_logs")
 }
