@@ -566,6 +566,9 @@ async function updateRobotStatsForTournament(
     opponentDestroyed: opponentParticipant?.destroyed || false,
     // No league points for tournament battles
     fameIncrement: isWinner ? fameAwarded : 0,
+    battleType: 'tournament',
+    stance: robot.stance,
+    loadoutType: robot.loadoutType,
   });
 
   // Award prestige and credits via shared helpers

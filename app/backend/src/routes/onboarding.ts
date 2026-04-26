@@ -28,7 +28,8 @@ import onboardingAnalyticsRouter from './onboardingAnalytics';
 import logger from '../config/logger';
 import { securityMonitor } from '../services/security/securityMonitor';
 import { z } from 'zod';
-import { achievementService, type UnlockedAchievement } from '../services/achievement';import { validateRequest } from '../middleware/schemaValidator';
+import { achievementService, type UnlockedAchievement } from '../services/achievement';
+import { validateRequest } from '../middleware/schemaValidator';
 
 const router = express.Router();
 

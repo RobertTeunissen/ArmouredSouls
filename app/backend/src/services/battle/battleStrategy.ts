@@ -353,6 +353,8 @@ export class BattleProcessor<TMatch = unknown> {
         damageTakenByOpponent,
         opponentDestroyed,
         fameIncrement: reward?.fame ?? 0,
+        stance: p.robot.stance,
+        loadoutType: p.robot.loadoutType,
       });
 
       // Award credits and prestige to user

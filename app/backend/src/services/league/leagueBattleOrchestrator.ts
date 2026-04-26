@@ -528,6 +528,9 @@ async function updateRobotStats(
     leaguePointsChange,
     currentLeaguePoints: robot.leaguePoints,
     fameIncrement: isWinner ? fameAwarded : 0,
+    battleType: 'league',
+    stance: robot.stance,
+    loadoutType: robot.loadoutType,
     extraData: {
       repairCost: 0, // Repair costs calculated by RepairService
     },
