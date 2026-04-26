@@ -24,6 +24,7 @@ import practiceArenaRouter from './routes/practiceArena';
 import stablesRoutes from './routes/stables';
 import changelogRoutes from './routes/changelog';
 import tuningAllocationRoutes from './routes/tuningAllocation';
+import achievementsRoutes from './routes/achievements';
 import { loadEnvConfig } from './config/env';
 import { initScheduler } from './services/cycle/cycleScheduler';
 import { contentModerationService } from './services/moderation';
@@ -133,6 +134,7 @@ app.use('/api/practice-arena', practiceArenaRouter);
 app.use('/api/stables', stablesRoutes);
 app.use('/api/changelog', changelogRoutes);
 app.use('/api/robots', tuningAllocationRoutes);
+app.use('/api/achievements', achievementsRoutes);
 
 // Serve uploaded images as static files (in production, Caddy handles this)
 import path from 'path';
@@ -146,10 +148,21 @@ app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads'), {
 // Error handling middleware
 app.use(errorHandler);
 
-// Initialize content moderation model (fire-and-forget — service handles errors internally)
-contentModerationService.initialize().catch(err => {
-  logger.error('Failed to initialize content moderation service:', err);
-  // App continues — uploads will be rejected via fail-closed pattern
+// Initialize content moderation model — skip in development unless explicitly enabled
+// TF.js pure-JS backend blocks the Node event loop and adds ~5-13s latency to every request
+if (config.nodeEnv === 'production' || config.nodeEnv === 'acceptance' || process.env.ENABLE_MODERATION === 'true') {
+  contentModerationService.initialize().catch(err => {
+    logger.error('Failed to initialize content moderation service:', err);
+    // App continues — uploads will be rejected via fail-closed pattern
+  });
+} else {
+  logger.info('Content moderation model skipped in development (set ENABLE_MODERATION=true to enable)');
+}
+
+// Populate achievement rarity cache on startup so /api/achievements has rarity data immediately
+import { achievementService } from './services/achievement';
+achievementService.refreshRarityCache().catch(err => {
+  logger.error('Failed to initialize achievement rarity cache:', err);
 });
 
 const host = (config.nodeEnv === 'production' || config.nodeEnv === 'acceptance')

@@ -291,6 +291,15 @@ function createByeTeam(league: string, leagueId: string): TagTeamWithRobots {
     kothBestPlacement: null,
     kothCurrentWinStreak: 0,
     kothBestWinStreak: 0,
+    // League Win/Lose Streak
+    currentWinStreak: 0,
+    bestWinStreak: 0,
+    currentLoseStreak: 0,
+    // Stance/Loadout Win Counters
+    offensiveWins: 0,
+    defensiveWins: 0,
+    balancedWins: 0,
+    dualWieldWins: 0,
     // Equipment
     mainWeaponId: null,
     offhandWeaponId: null,

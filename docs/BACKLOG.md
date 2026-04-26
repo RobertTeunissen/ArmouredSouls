@@ -17,21 +17,20 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 | 3 | Facility Investment Advisor | 1 | 1 🗳️ | 4 | 5 | 1 | 2 | **5.0** |
 | 4 | Admin Tuning Adoption Dashboard | 38 | — | 2 | 2 | 1 | 1 | **5.0** |
 | 5 | Feature Flags | 15 | 1 🗳️ | 2 | 2 | 4 | 2 | **4.0** |
-| 6 | Battle Report Layout Overhaul | 14 | 9 🗳️ | 5 | 3 | 2 | 3 | **3.3** |
-| 7 | Achievement / Milestone System | 8 | 3 🗳️ | 4 | 2 | 3 | 3 | **3.0** |
-| 8 | Landing Page | 4 | 0 🗳️ | 3 | 2 | 1 | 2 | **3.0** |
-| 9 | Weapon Experimentation Problem | 5 | 1 🗳️ | 4 | 3 | 4 | 4 | **2.8** |
-| 10 | Weapon Special Properties | 11 | 1 🗳️ | 3 | 2 | 2 | 4 | **1.8** |
-| 11 | Admin Portal Redesign | 13 | 1 🗳️ | 2 | 1 | 2 | 3 | **1.7** |
-| 12 | Player Personas / Complexity Modes | 16 | 1 🗳️ | 2 | 1 | 2 | 3 | **1.7** |
-| 13 | Arena / Terrain Modifiers | 12 | 1 🗳️ | 3 | 1 | 2 | 4 | **1.5** |
-| 14 | Unimplemented Facilities | 7 | 0 🗳️ | 2 | 1 | 1 | 5 | **0.8** |
+| 6 | Achievement / Milestone System | 8 | 3 🗳️ | 4 | 2 | 3 | 3 | **3.0** |
+| 7 | Landing Page | 4 | 0 🗳️ | 3 | 2 | 1 | 2 | **3.0** |
+| 8 | Weapon Experimentation Problem | 5 | 1 🗳️ | 4 | 3 | 4 | 4 | **2.8** |
+| 9 | Weapon Special Properties | 11 | 1 🗳️ | 3 | 2 | 2 | 4 | **1.8** |
+| 10 | Admin Portal Redesign | 13 | 1 🗳️ | 2 | 1 | 2 | 3 | **1.7** |
+| 11 | Player Personas / Complexity Modes | 16 | 1 🗳️ | 2 | 1 | 2 | 3 | **1.7** |
+| 12 | Arena / Terrain Modifiers | 12 | 1 🗳️ | 3 | 1 | 2 | 4 | **1.5** |
+| 13 | Unimplemented Facilities | 7 | 0 🗳️ | 2 | 1 | 1 | 5 | **0.8** |
 
 ### Recommended Build Order
 
 **Tier 1 — Do Now** (next 2–4 weeks): #1 broken feature (~1 week), #6 design audit (parallel), #3 monitoring (lightweight)
 
-**Tier 2 — Build Next** (weeks 4–8): #14 battle report overhaul (9 combined votes — strongest player signal), #38 admin tuning dashboard (small, quick win)
+**Tier 2 — Build Next** (weeks 4–8): #38 admin tuning dashboard (small, quick win), #8 achievements (3 votes + key retention driver)
 
 **Tier 3 — Plan After** (weeks 8–12): #8 achievements, #15 feature flags, #5 weapon experimentation (needs #6 audit input)
 
@@ -41,8 +40,12 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 
 | Item | # | Spec | Completed |
 |------|---|------|-----------|
+| Admin Portal Redesign | 13 | [Spec #28](/.kiro/specs/to-do/28-admin-portal-redesign/) | April 2026 |
+| Admin Tuning Adoption Dashboard | 38 | [Spec #28](/.kiro/specs/to-do/28-admin-portal-redesign/) | April 2026 |
+| Achievement / Milestone System | 8 | [Spec #27](/.kiro/specs/to-do/27-achievement-system/) | April 2026 |
 | In-Game Changelog / "What's New" | 17 | [Spec #24](/.kiro/specs/done-april26/24-in-game-changelog/) | April 2026 |
 | Tuning Pool (Tactical Tuning) | 9 | [Spec #25](/.kiro/specs/done-april26/25-tuning-bay/) | April 2026 |
+| Battle Report Layout Overhaul | 14 | [Spec #26](/.kiro/specs/done-april26/26-battle-report-overhaul/) | April 2026 |
 | Prestige Gating for Facilities | 21 | — (already implemented) | Pre-backlog |
 
 ---
@@ -148,10 +151,12 @@ One-time rewards for milestones (ELO thresholds, win counts, streaks). Includes 
 All 47 weapons currently have only attribute bonuses — no special effects. The pricing formula and combat simulator are designed to support properties like "ignores armor", "shield drain", "area damage" but none are implemented.
 
 ### #12 — Arena / Terrain Modifiers with Home Arena Selection
-**Source**: Player idea  
+**Source**: Player idea, [GitHub #278](https://github.com/RobertTeunissen/ArmouredSouls/issues/278)  
 **Priority**: Medium — adds meta variation and per-battle decision-making
 
 Battles take place in a randomly assigned arena with gameplay modifiers (e.g. "corrosive atmosphere: -15% armor effectiveness"). Players choose a preferred "home arena" for a familiarity bonus. The `ArenaConfig` type already exists in the combat simulator for KotH but has no gameplay modifiers.
+
+**Player ideas from #278**: Arena shape/size as a gameplay variable — big arena, small arena, "endless arena", square, octagon, rolling floor that changes direction. Different arenas favor different robot builds and weapon types, which ties into tuning strategy and incentivizes weapon diversity (synergy with #5).
 
 ### #13 — Admin Portal Redesign / Separate Admin App
 **Source**: Backlog triage  
@@ -164,12 +169,6 @@ The admin experience currently lives as routes within the player-facing app. As 
 **Priority**: Medium — admin visibility into feature adoption
 
 Add an admin view showing which players/robots have configured their tuning allocations and which haven't. Per-player summary, per-robot detail, aggregate adoption stats, filters. Feeds into broader admin analytics (#13).
-
-### #14 — Battle Report Layout Overhaul
-**Source**: Backlog triage  
-**Priority**: Medium — current layout undersells the combat data and hides economic context
-
-Redesign the battle report with better visual hierarchy: timeline visualization, damage flow diagrams, round-by-round breakdown. Includes credit reward breakdown (base + prestige bonus), prestige/fame on CompactBattleCard, and battle log verbosity levels (shorthand vs verbose showing formula inputs).
 
 ### #15 — Feature Flags / Per-User Feature Rollout
 **Source**: Backlog triage  
@@ -210,6 +209,8 @@ Areas to investigate: slow Prisma queries, N+1 in analytics endpoints, paginatio
 **Priority**: Low — nice for analytics, not player-facing
 
 Track league tier changes over time (PromotionHistory model). Enables progression charts and yo-yo detection.
+
+**Achievement dependency**: The L15 "Ctrl+Z" achievement (get demoted and re-promoted in the same league within 10 cycles) requires this history data. Add L15 to the achievement config once promotion/demotion history is implemented.
 
 ### #23 — Historical Financial Tracking
 **Source**: PRD_ECONOMY_SYSTEM.md  
@@ -287,3 +288,9 @@ npm workspace extraction. Only relevant when multiple consumers need shared back
 **Source**: Tuning Pool spec discussion (spec #25)  
 
 The Robot Detail page serves two distinct intents (Review: Overview/Matches/Analytics vs Prepare: Upgrades/Tuning/Battle Config/Stats). With 7 tabs, consider visual tab grouping or a Stable Preparation Dashboard for managing all robots from one view.
+
+### #40 — Achievement Persistence Across Seasons
+**Source**: Achievement System spec (#27) discussion  
+**Priority**: Not scoped — depends on season system design
+
+When a season system is introduced, decide what happens to achievements: do they persist permanently (lifetime collection), reset each season (seasonal grind), or split into permanent and seasonal categories? The `UserAchievement` table currently has no season reference. Options include adding a `seasonId` column, creating a separate `SeasonalAchievement` table, or keeping achievements entirely outside the season reset scope. This decision should be made as part of the season system design, not retroactively bolted onto achievements.

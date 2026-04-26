@@ -583,6 +583,16 @@ export interface BattleLogResponse {
     zoneRadius: number;
     colorPalette: string[];
   };
+  /** Achievement unlocks triggered by this battle (empty array if none) */
+  achievementUnlocks?: Array<{
+    id: string;
+    name: string;
+    description: string;
+    tier: string;
+    rewardCredits: number;
+    rewardPrestige: number;
+    badgeIconFile: string;
+  }>;
 }
 
 export const getBattleLog = async (battleId: number): Promise<BattleLogResponse> => {

@@ -94,6 +94,9 @@ The following event types are supported in the audit_logs table:
 ### Tag Team Events
 - `tag_team_battle`: Tag team battle result
 
+### Achievement Events
+- `achievement_unlock`: Achievement awarded to a player, with credit and prestige rewards
+
 ### Cycle Execution Events
 - `cycle_start`: Cycle execution started
 - `cycle_step_complete`: Individual cycle step completed

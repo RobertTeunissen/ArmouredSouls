@@ -55,6 +55,9 @@ export enum EventType {
    */
   TAG_TEAM_BATTLE = 'tag_team_battle',
   
+  // Achievement events
+  ACHIEVEMENT_UNLOCK = 'achievement_unlock',
+  
   // Cycle execution events
   CYCLE_START = 'cycle_start',
   CYCLE_STEP_COMPLETE = 'cycle_step_complete',
@@ -678,6 +681,30 @@ export class EventLogger {
         balance,
       },
       { userId }
+    );
+  }
+
+  /**
+   * Log an achievement unlock event with credit and prestige rewards.
+   * Called by AchievementService after awarding an achievement.
+   */
+  async logAchievementUnlock(
+    cycleNumber: number,
+    userId: number,
+    achievementId: string,
+    rewardCredits: number,
+    rewardPrestige: number,
+    robotId?: number,
+  ): Promise<void> {
+    await this.logEvent(
+      cycleNumber,
+      EventType.ACHIEVEMENT_UNLOCK,
+      {
+        achievementId,
+        rewardCredits,
+        rewardPrestige,
+      },
+      { userId, robotId }
     );
   }
 }

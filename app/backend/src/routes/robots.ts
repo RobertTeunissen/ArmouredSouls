@@ -40,6 +40,7 @@ import {
   createRobotTransaction,
 } from '../services/robot/robotCreationService';
 import { uploadRateLimiter, handleImagePreview, handleImageConfirm, fileStorageService } from '../services/moderation';
+import { achievementService, type UnlockedAchievement } from '../services/achievement';
 
 // Re-export for backward compatibility (stables.ts imports from here)
 export { sanitizeRobotForPublic, SENSITIVE_ROBOT_FIELDS };
@@ -166,6 +167,14 @@ router.post('/', authenticateToken, validateRequest({ body: createRobotBodySchem
     robot: result.robot,
     currency: result.user.currency,
     message: 'Robot created successfully',
+    achievementUnlocks: await (async (): Promise<UnlockedAchievement[]> => {
+      try {
+        return await achievementService.checkAndAward(userId, result.robot.id, {
+          type: 'robot_created',
+          data: { robotId: result.robot.id, robotName: trimmedName },
+        });
+      } catch { return []; }
+    })(),
   });
 });
 
@@ -202,7 +211,16 @@ router.put('/:id/equip-main-weapon', authenticateToken, validateRequest({ params
   }
 
   const finalRobot = await equipMainWeapon(userId, robotId, parseInt(weaponInventoryId));
-  res.json({ robot: finalRobot, message: 'Main weapon equipped successfully' });
+
+  let achievementUnlocks: UnlockedAchievement[] = [];
+  try {
+    achievementUnlocks = await achievementService.checkAndAward(userId, robotId, {
+      type: 'weapon_equipped',
+      data: { robotId, slot: 'main' },
+    });
+  } catch { /* achievement failures don't block */ }
+
+  res.json({ robot: finalRobot, message: 'Main weapon equipped successfully', achievementUnlocks });
 });
 
 // Equip offhand weapon
@@ -220,7 +238,16 @@ router.put('/:id/equip-offhand-weapon', authenticateToken, validateRequest({ par
   }
 
   const finalRobot = await equipOffhandWeapon(userId, robotId, parseInt(weaponInventoryId));
-  res.json({ robot: finalRobot, message: 'Offhand weapon equipped successfully' });
+
+  let achievementUnlocks: UnlockedAchievement[] = [];
+  try {
+    achievementUnlocks = await achievementService.checkAndAward(userId, robotId, {
+      type: 'weapon_equipped',
+      data: { robotId, slot: 'offhand' },
+    });
+  } catch { /* achievement failures don't block */ }
+
+  res.json({ robot: finalRobot, message: 'Offhand weapon equipped successfully', achievementUnlocks });
 });
 
 // Unequip main weapon
@@ -301,7 +328,15 @@ router.patch('/:id/stance', authenticateToken, validateRequest({ params: robotId
     },
   });
 
-  res.json({ ...stanceRobot, message: `Stance updated to ${normalizedStance}` });
+  let achievementUnlocks: UnlockedAchievement[] = [];
+  try {
+    achievementUnlocks = await achievementService.checkAndAward(req.user!.userId, robotId, {
+      type: 'stance_changed',
+      data: { robotId, stance: normalizedStance },
+    });
+  } catch { /* achievement failures don't block */ }
+
+  res.json({ ...stanceRobot, message: `Stance updated to ${normalizedStance}`, achievementUnlocks });
 });
 
 // Update robot yield threshold
@@ -570,6 +605,14 @@ router.post('/:id/upgrades', authenticateToken, validateRequest({ params: robotI
     totalCost: result.totalCost,
     upgradesApplied: result.upgradeOperations.length,
     message: `Successfully upgraded ${result.upgradeOperations.length} attribute${result.upgradeOperations.length > 1 ? 's' : ''}`,
+    achievementUnlocks: await (async (): Promise<UnlockedAchievement[]> => {
+      try {
+        return await achievementService.checkAndAward(userId, robotId, {
+          type: 'attribute_upgraded',
+          data: { robotId, upgrades: result.upgradeOperations },
+        });
+      } catch { return []; }
+    })(),
   });
 });
 

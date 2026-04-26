@@ -17,6 +17,7 @@ const mockPrisma = {
   user: {
     update: jest.fn().mockResolvedValue({}),
   },
+  $executeRawUnsafe: jest.fn().mockResolvedValue(0),
 };
 
 jest.mock('../src/lib/prisma', () => ({
@@ -389,6 +390,260 @@ describe('updateRobotCombatStats', () => {
 
     const call = mockPrisma.robot.update.mock.calls[0][0];
     expect(call.data.kothBattles).toEqual({ increment: 1 });
+  });
+
+  // ── League Win/Lose Streak Tests ──
+
+  it('should increment currentWinStreak and reset currentLoseStreak on league win', async () => {
+    await updateRobotCombatStats({
+      robotId: 1,
+      finalHP: 80,
+      newELO: 1216,
+      isWinner: true,
+      isDraw: false,
+      damageDealt: 250,
+      damageTakenByOpponent: 120,
+      opponentDestroyed: false,
+      battleType: 'league',
+    });
+
+    const call = mockPrisma.robot.update.mock.calls[0][0];
+    expect(call.data.currentWinStreak).toEqual({ increment: 1 });
+    expect(call.data.currentLoseStreak).toBe(0);
+  });
+
+  it('should update bestWinStreak via raw SQL on league win', async () => {
+    await updateRobotCombatStats({
+      robotId: 42,
+      finalHP: 80,
+      newELO: 1216,
+      isWinner: true,
+      isDraw: false,
+      damageDealt: 250,
+      damageTakenByOpponent: 120,
+      opponentDestroyed: false,
+      battleType: 'league',
+    });
+
+    expect(mockPrisma.$executeRawUnsafe).toHaveBeenCalledWith(
+      `UPDATE robots SET best_win_streak = current_win_streak WHERE id = $1 AND current_win_streak > best_win_streak`,
+      42,
+    );
+  });
+
+  it('should reset currentWinStreak and increment currentLoseStreak on league loss', async () => {
+    await updateRobotCombatStats({
+      robotId: 1,
+      finalHP: 0,
+      newELO: 1184,
+      isWinner: false,
+      isDraw: false,
+      damageDealt: 100,
+      damageTakenByOpponent: 200,
+      opponentDestroyed: false,
+      battleType: 'league',
+    });
+
+    const call = mockPrisma.robot.update.mock.calls[0][0];
+    expect(call.data.currentWinStreak).toBe(0);
+    expect(call.data.currentLoseStreak).toEqual({ increment: 1 });
+    expect(mockPrisma.$executeRawUnsafe).not.toHaveBeenCalled();
+  });
+
+  it('should reset both streaks on league draw', async () => {
+    await updateRobotCombatStats({
+      robotId: 1,
+      finalHP: 50,
+      newELO: 1200,
+      isWinner: false,
+      isDraw: true,
+      damageDealt: 200,
+      damageTakenByOpponent: 200,
+      opponentDestroyed: false,
+      battleType: 'league',
+    });
+
+    const call = mockPrisma.robot.update.mock.calls[0][0];
+    expect(call.data.currentWinStreak).toBe(0);
+    expect(call.data.currentLoseStreak).toBe(0);
+    expect(mockPrisma.$executeRawUnsafe).not.toHaveBeenCalled();
+  });
+
+  it('should not update streak fields when battleType is not league', async () => {
+    await updateRobotCombatStats({
+      robotId: 1,
+      finalHP: 80,
+      newELO: 1216,
+      isWinner: true,
+      isDraw: false,
+      damageDealt: 250,
+      damageTakenByOpponent: 120,
+      opponentDestroyed: false,
+      battleType: 'koth',
+    });
+
+    const call = mockPrisma.robot.update.mock.calls[0][0];
+    expect(call.data.currentWinStreak).toBeUndefined();
+    expect(call.data.currentLoseStreak).toBeUndefined();
+    expect(mockPrisma.$executeRawUnsafe).not.toHaveBeenCalled();
+  });
+
+  it('should not update streak fields when battleType is not provided', async () => {
+    await updateRobotCombatStats({
+      robotId: 1,
+      finalHP: 80,
+      newELO: 1216,
+      isWinner: true,
+      isDraw: false,
+      damageDealt: 250,
+      damageTakenByOpponent: 120,
+      opponentDestroyed: false,
+    });
+
+    const call = mockPrisma.robot.update.mock.calls[0][0];
+    expect(call.data.currentWinStreak).toBeUndefined();
+    expect(call.data.currentLoseStreak).toBeUndefined();
+    expect(mockPrisma.$executeRawUnsafe).not.toHaveBeenCalled();
+  });
+
+  // ── Stance/Loadout Win Counter Tests ──
+
+  it('should increment offensiveWins on win with offensive stance', async () => {
+    await updateRobotCombatStats({
+      robotId: 1,
+      finalHP: 80,
+      newELO: 1216,
+      isWinner: true,
+      isDraw: false,
+      damageDealt: 250,
+      damageTakenByOpponent: 120,
+      opponentDestroyed: false,
+      stance: 'offensive',
+    });
+
+    const call = mockPrisma.robot.update.mock.calls[0][0];
+    expect(call.data.offensiveWins).toEqual({ increment: 1 });
+    expect(call.data.defensiveWins).toBeUndefined();
+    expect(call.data.balancedWins).toBeUndefined();
+  });
+
+  it('should increment defensiveWins on win with defensive stance', async () => {
+    await updateRobotCombatStats({
+      robotId: 1,
+      finalHP: 80,
+      newELO: 1216,
+      isWinner: true,
+      isDraw: false,
+      damageDealt: 250,
+      damageTakenByOpponent: 120,
+      opponentDestroyed: false,
+      stance: 'defensive',
+    });
+
+    const call = mockPrisma.robot.update.mock.calls[0][0];
+    expect(call.data.defensiveWins).toEqual({ increment: 1 });
+    expect(call.data.offensiveWins).toBeUndefined();
+    expect(call.data.balancedWins).toBeUndefined();
+  });
+
+  it('should increment balancedWins on win with balanced stance', async () => {
+    await updateRobotCombatStats({
+      robotId: 1,
+      finalHP: 80,
+      newELO: 1216,
+      isWinner: true,
+      isDraw: false,
+      damageDealt: 250,
+      damageTakenByOpponent: 120,
+      opponentDestroyed: false,
+      stance: 'balanced',
+    });
+
+    const call = mockPrisma.robot.update.mock.calls[0][0];
+    expect(call.data.balancedWins).toEqual({ increment: 1 });
+    expect(call.data.offensiveWins).toBeUndefined();
+    expect(call.data.defensiveWins).toBeUndefined();
+  });
+
+  it('should increment dualWieldWins on win with dual_wield loadout', async () => {
+    await updateRobotCombatStats({
+      robotId: 1,
+      finalHP: 80,
+      newELO: 1216,
+      isWinner: true,
+      isDraw: false,
+      damageDealt: 250,
+      damageTakenByOpponent: 120,
+      opponentDestroyed: false,
+      loadoutType: 'dual_wield',
+    });
+
+    const call = mockPrisma.robot.update.mock.calls[0][0];
+    expect(call.data.dualWieldWins).toEqual({ increment: 1 });
+  });
+
+  it('should not increment stance/loadout counters on loss', async () => {
+    await updateRobotCombatStats({
+      robotId: 1,
+      finalHP: 0,
+      newELO: 1184,
+      isWinner: false,
+      isDraw: false,
+      damageDealt: 100,
+      damageTakenByOpponent: 200,
+      opponentDestroyed: false,
+      stance: 'offensive',
+      loadoutType: 'dual_wield',
+    });
+
+    const call = mockPrisma.robot.update.mock.calls[0][0];
+    expect(call.data.offensiveWins).toBeUndefined();
+    expect(call.data.dualWieldWins).toBeUndefined();
+  });
+
+  it('should not increment stance/loadout counters on draw', async () => {
+    await updateRobotCombatStats({
+      robotId: 1,
+      finalHP: 50,
+      newELO: 1200,
+      isWinner: false,
+      isDraw: true,
+      damageDealt: 200,
+      damageTakenByOpponent: 200,
+      opponentDestroyed: false,
+      stance: 'defensive',
+      loadoutType: 'dual_wield',
+    });
+
+    const call = mockPrisma.robot.update.mock.calls[0][0];
+    expect(call.data.defensiveWins).toBeUndefined();
+    expect(call.data.dualWieldWins).toBeUndefined();
+  });
+
+  it('should handle league win with stance and loadout together', async () => {
+    await updateRobotCombatStats({
+      robotId: 1,
+      finalHP: 80,
+      newELO: 1216,
+      isWinner: true,
+      isDraw: false,
+      damageDealt: 250,
+      damageTakenByOpponent: 120,
+      opponentDestroyed: false,
+      battleType: 'league',
+      stance: 'offensive',
+      loadoutType: 'dual_wield',
+    });
+
+    const call = mockPrisma.robot.update.mock.calls[0][0];
+    // Streak fields
+    expect(call.data.currentWinStreak).toEqual({ increment: 1 });
+    expect(call.data.currentLoseStreak).toBe(0);
+    // Stance/loadout counters
+    expect(call.data.offensiveWins).toEqual({ increment: 1 });
+    expect(call.data.dualWieldWins).toEqual({ increment: 1 });
+    // bestWinStreak raw SQL
+    expect(mockPrisma.$executeRawUnsafe).toHaveBeenCalledTimes(1);
   });
 });
 

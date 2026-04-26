@@ -46,6 +46,13 @@ model User {
   // ===== CHANGELOG =====
   lastSeenChangelog DateTime @default(now()) @map("last_seen_changelog")
 
+  // ===== ACHIEVEMENTS =====
+  pinnedAchievements   Json @default("[]") @map("pinned_achievements")
+  totalPracticeBattles Int  @default(0) @map("total_practice_battles")
+
+  // ===== LOGIN TRACKING =====
+  lastLoginAt DateTime? @map("last_login_at")
+
   // ===== TIMESTAMPS =====
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -55,6 +62,7 @@ model User {
   facilities      Facility[]
   weaponInventory WeaponInventory[]
   tagTeams        TagTeam[]
+  achievements    UserAchievement[]
 
   @@map("users")
 }
@@ -166,6 +174,17 @@ model Robot {
   kothCurrentWinStreak Int   @default(0) @map("koth_current_win_streak")
   kothBestWinStreak    Int   @default(0) @map("koth_best_win_streak") // for Hall of Records
 
+  // ===== LEAGUE WIN/LOSE STREAK =====
+  currentWinStreak  Int @default(0) @map("current_win_streak")
+  bestWinStreak     Int @default(0) @map("best_win_streak")
+  currentLoseStreak Int @default(0) @map("current_lose_streak")
+
+  // ===== STANCE/LOADOUT WIN COUNTERS =====
+  offensiveWins Int @default(0) @map("offensive_wins")
+  defensiveWins Int @default(0) @map("defensive_wins")
+  balancedWins  Int @default(0) @map("balanced_wins")
+  dualWieldWins Int @default(0) @map("dual_wield_wins")
+
   // ===== ECONOMIC STATE =====
   repairCost       Int @default(0) @map("repair_cost") // Cost to fully repair (formula-based)
   battleReadiness  Int @default(100) @map("battle_readiness") // Percentage (100% = full HP, 0% = critical)
@@ -204,6 +223,7 @@ model Robot {
   battleParticipations      BattleParticipant[]
   kothMatchParticipations   ScheduledKothMatchParticipant[]
   tuningAllocation          TuningAllocation?
+  achievements              UserAchievement[]
 
   @@index([userId])
   @@index([elo])
@@ -713,6 +733,24 @@ model ChangelogEntry {
   @@map("changelog_entries")
 }
 
+// Achievement tracking — records which achievements each user has unlocked
+model UserAchievement {
+  id            Int      @id @default(autoincrement())
+  userId        Int      @map("user_id")
+  achievementId String   @map("achievement_id") @db.VarChar(10)
+  robotId       Int?     @map("robot_id")
+  unlockedAt    DateTime @default(now()) @map("unlocked_at")
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  robot Robot? @relation(fields: [robotId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, achievementId])
+  @@index([userId])
+  @@index([robotId])
+  @@index([achievementId])
+  @@map("user_achievements")
+}
+
 // Tuning allocation table — stores per-robot tuning point allocations for the Tuning Bay system
 model TuningAllocation {
   id      Int @id @default(autoincrement())
@@ -762,4 +800,19 @@ model TuningAllocation {
 
   @@index([robotId])
   @@map("tuning_allocations")
+}
+
+// Admin audit log table for tracking admin-triggered operations
+model AdminAuditLog {
+  id              Int      @id @default(autoincrement())
+  adminUserId     Int      @map("admin_user_id")
+  operationType   String   @map("operation_type") @db.VarChar(100)
+  operationResult String   @map("operation_result") @db.VarChar(20) // 'success' | 'failure'
+  resultSummary   Json     @map("result_summary")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@index([adminUserId])
+  @@index([operationType])
+  @@index([createdAt])
+  @@map("admin_audit_logs")
 }

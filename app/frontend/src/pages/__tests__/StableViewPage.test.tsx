@@ -28,6 +28,10 @@ vi.mock('../../utils/apiClient', () => ({
   },
 }));
 
+vi.mock('../../contexts/AuthContext', () => ({
+  useAuth: () => ({ user: { userId: 1, username: 'test_user', role: 'user' } }),
+}));
+
 import apiClient from '../../utils/apiClient';
 import StableViewPage from '../StableViewPage';
 

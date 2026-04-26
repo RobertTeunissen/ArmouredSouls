@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Validate Guide Edits",
+  "description": "After any file is edited in the guide content directory, validates that sections.json is valid JSON, all section slugs have matching directories with at least one .md article, and all relatedArticles references in frontmatter point to existing articles.",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "app/backend/src/content/guide/**"
+    ]
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "node -e \"const fs=require('fs'),path=require('path'),dir='app/backend/src/content/guide';let errors=[];try{const sections=JSON.parse(fs.readFileSync(path.join(dir,'sections.json'),'utf8'));const slugs=new Set();for(const s of sections){if(slugs.has(s.slug)){errors.push('Duplicate slug: '+s.slug)}slugs.add(s.slug);const sdir=path.join(dir,s.slug);if(!fs.existsSync(sdir)){errors.push('Missing directory for section: '+s.slug)}else{const mds=fs.readdirSync(sdir).filter(f=>f.endsWith('.md'));if(mds.length===0)errors.push('No articles in section: '+s.slug);for(const md of mds){const content=fs.readFileSync(path.join(sdir,md),'utf8');const match=content.match(/relatedArticles:\\\\n([\\\\s\\\\S]*?)\\\\n---/);if(match){const refs=match[1].split('\\\\n').map(l=>l.trim().replace(/^- /,'')).filter(Boolean);for(const ref of refs){const[sec,art]=ref.split('/');if(!fs.existsSync(path.join(dir,sec,art+'.md')))errors.push(md+': broken relatedArticle: '+ref)}}}}}if(errors.length){console.error('Guide validation FAILED:');errors.forEach(e=>console.error('  - '+e));process.exit(1)}else{console.log('Guide validation passed: '+sections.length+' sections OK')}}catch(e){console.error('Guide validation error: '+e.message);process.exit(1)}\""
+  }
+}

@@ -207,8 +207,8 @@ All paths relative to `app/backend/src/`.
 
 These are documented design ideas, not current features:
 
-- Milestone achievement system (ELO milestones, win count milestones, streak bonuses)
-- PrestigeMilestone / FameMilestone database tables
+- ~~Milestone achievement system (ELO milestones, win count milestones, streak bonuses)~~ → **✅ Implemented** as the Achievement System ([PRD_ACHIEVEMENT_SYSTEM.md](PRD_ACHIEVEMENT_SYSTEM.md), Spec #27)
+- PrestigeMilestone / FameMilestone database tables → Replaced by the `UserAchievement` table in the Achievement System
 - Fame affecting matchmaking quality
 - Fame-based cosmetic unlocks (titles, paint jobs, animations)
 - Post-battle reputation summary in UI

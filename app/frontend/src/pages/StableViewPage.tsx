@@ -1,10 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import Navigation from '../components/Navigation';
 import RobotDashboardCard from '../components/RobotDashboardCard';
+import AchievementBadge from '../components/AchievementBadge';
+import AchievementPinnerModal from '../components/AchievementPinnerModal';
 import apiClient from '../utils/apiClient';
+import { useAuth } from '../contexts/AuthContext';
 import { FACILITY_CATEGORIES } from '../utils/facilityCategories';
+import type { AchievementWithProgress } from '../utils/achievementUtils';
 
 interface StableUser {
   id: number;
@@ -54,6 +58,17 @@ interface StableData {
   robots: PublicRobot[];
   facilities: FacilitySummary[];
   stats: StableStats;
+  achievements?: {
+    pinned: Array<{
+      id: string;
+      name: string;
+      tier: string;
+      badgeIconFile: string;
+      unlockedAt: string;
+    }>;
+    totalUnlocked: number;
+    totalAvailable: number;
+  };
 }
 
 type PageState = 'loading' | 'success' | 'not-found' | 'error';
@@ -61,8 +76,11 @@ type PageState = 'loading' | 'success' | 'not-found' | 'error';
 function StableViewPage() {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
+  const { user: authUser } = useAuth();
   const [state, setState] = useState<PageState>('loading');
   const [data, setData] = useState<StableData | null>(null);
+  const [pinnerOpen, setPinnerOpen] = useState(false);
+  const [pinnerAchievements, setPinnerAchievements] = useState<AchievementWithProgress[]>([]);
 
   const fetchStable = useCallback(async () => {
     setState('loading');
@@ -135,6 +153,45 @@ function StableViewPage() {
   // --- Success ---
   const { user, robots, facilities, stats } = data!;
   const displayName = user.stableName || user.username;
+  const isOwner = authUser?.id === user.id;
+  const achievements = data!.achievements;
+
+  const handleOpenPinner = async () => {
+    try {
+      const response = await apiClient.get('/api/achievements');
+      setPinnerAchievements(response.data.achievements);
+      setPinnerOpen(true);
+    } catch {
+      // Silently handle
+    }
+  };
+
+  const handleUnpin = async (achievementId: string) => {
+    if (!achievements) return;
+    const newPinned = achievements.pinned
+      .filter(p => p.id !== achievementId)
+      .map(p => p.id);
+    try {
+      await apiClient.put('/api/achievements/pinned', { achievementIds: newPinned });
+      setData(prev => {
+        if (!prev || !prev.achievements) return prev;
+        return {
+          ...prev,
+          achievements: {
+            ...prev.achievements,
+            pinned: prev.achievements.pinned.filter(p => p.id !== achievementId),
+          },
+        };
+      });
+    } catch {
+      // Silently handle
+    }
+  };
+
+  const handlePinnedChange = (_newPinnedIds: string[]) => {
+    // Refresh stable data to get updated pinned achievements
+    fetchStable();
+  };
 
   // Group facilities by category
   const groupedFacilities = FACILITY_CATEGORIES.map((cat) => ({
@@ -191,6 +248,74 @@ function StableViewPage() {
             <StatCard label="Active Robots" value={String(stats.activeRobots)} />
           </div>
         </div>
+
+        {/* Achievement Showcase */}
+        {achievements && (
+          <div className="bg-surface border border-white/10 rounded-lg p-6 mb-8">
+            <h3 className="text-xl font-semibold mb-4">Achievement Showcase</h3>
+            <div className="flex items-center gap-3 mb-4">
+              {Array.from({ length: 6 }).map((_, i) => {
+                const pinned = achievements.pinned[i];
+                if (pinned) {
+                  return (
+                    <div key={pinned.id} className="relative group">
+                      <AchievementBadge tier={pinned.tier} badgeIconFile={pinned.badgeIconFile} size={64} />
+                      {/* Tooltip */}
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-10">
+                        <div className="bg-surface-elevated border border-white/10 rounded px-3 py-2 text-xs whitespace-nowrap shadow-lg">
+                          <p className="font-bold text-white">{pinned.name}</p>
+                          <p className="text-secondary">Unlocked {new Date(pinned.unlockedAt).toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                      {/* Unpin button (own stable only) */}
+                      {isOwner && (
+                        <button
+                          onClick={() => handleUnpin(pinned.id)}
+                          className="absolute -top-1 -right-1 w-5 h-5 bg-error/80 hover:bg-error rounded-full text-white text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="Unpin"
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
+                  );
+                }
+                // Empty slot
+                return (
+                  <div key={`empty-${i}`} className="w-16 h-16 flex items-center justify-center">
+                    {isOwner ? (
+                      <button
+                        onClick={handleOpenPinner}
+                        className="w-16 h-16 border-2 border-dashed border-white/20 rounded-lg flex items-center justify-center text-white/30 hover:border-white/40 hover:text-white/50 transition-colors"
+                        title="Pin an achievement"
+                      >
+                        +
+                      </button>
+                    ) : (
+                      <div className="w-16 h-16 border-2 border-dashed border-white/20 rounded-lg" />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <Link
+              to="/achievements"
+              className="text-sm text-primary hover:underline"
+            >
+              {achievements.totalUnlocked}/{achievements.totalAvailable} Achievements · View all →
+            </Link>
+          </div>
+        )}
+
+        {/* Pinner Modal */}
+        {pinnerOpen && (
+          <AchievementPinnerModal
+            achievements={pinnerAchievements}
+            currentPinned={achievements?.pinned.map(p => p.id) ?? []}
+            onClose={() => setPinnerOpen(false)}
+            onPinnedChange={handlePinnedChange}
+          />
+        )}
 
         {/* Robots Section */}
         <div className="mb-8">

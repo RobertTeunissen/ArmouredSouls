@@ -23,6 +23,8 @@ import {
   updateRobotCombatStats,
   awardCreditsToUser,
   awardPrestigeToUser,
+  checkAndAwardAchievements,
+  type UnlockedAchievement,
 } from '../battle/battlePostCombat';
 import { TournamentError, TournamentErrorCode } from '../../errors/tournamentErrors';
 import { prepareRobotForCombat } from '../../utils/robotCalculations';
@@ -42,6 +44,7 @@ export interface TournamentBattleResult {
   prestigeAwarded: number;
   fameAwarded: number;
   isByeMatch: boolean;
+  achievementUnlocks: UnlockedAchievement[];
 }
 
 /**
@@ -258,6 +261,52 @@ export async function processTournamentBattle(
     },
   });
 
+  // Check and award achievements for both robots (battle_complete + tournament_complete for winner)
+  let achievementUnlocks: UnlockedAchievement[] = [];
+  {
+    const [unlocks1, unlocks2] = await Promise.all([
+      checkAndAwardAchievements(robot1.userId, robot1.id, {
+        won: robot1IsWinner,
+        destroyed: robot2Participant.destroyed,
+        finalHpPercent: robot1.maxHP > 0 ? (robot1Participant.finalHP / robot1.maxHP) * 100 : 0,
+        eloDiff: robot1Participant.eloAfter - robot1Participant.eloBefore,
+        opponentElo: robot2.elo,
+        yielded: robot1Participant.yielded,
+        opponentYielded: robot2Participant.yielded,
+        previousBattleLost: false,
+        damageDealt: robot1Participant.damageDealt,
+        opponentDamageDealt: robot2Participant.damageDealt,
+        loadoutType: robot1.loadoutType || 'single',
+        stance: robot1.stance || 'balanced',
+        yieldThreshold: robot1.yieldThreshold,
+        hasTuning: false,
+        hasMainWeapon: robot1.mainWeaponId !== null,
+        battleType: 'tournament',
+        battleDurationSeconds: combatResult.durationSeconds,
+      }),
+      checkAndAwardAchievements(robot2.userId, robot2.id, {
+        won: robot2IsWinner,
+        destroyed: robot1Participant.destroyed,
+        finalHpPercent: robot2.maxHP > 0 ? (robot2Participant.finalHP / robot2.maxHP) * 100 : 0,
+        eloDiff: robot2Participant.eloAfter - robot2Participant.eloBefore,
+        opponentElo: robot1.elo,
+        yielded: robot2Participant.yielded,
+        opponentYielded: robot1Participant.yielded,
+        previousBattleLost: false,
+        damageDealt: robot2Participant.damageDealt,
+        opponentDamageDealt: robot1Participant.damageDealt,
+        loadoutType: robot2.loadoutType || 'single',
+        stance: robot2.stance || 'balanced',
+        yieldThreshold: robot2.yieldThreshold,
+        hasTuning: false,
+        hasMainWeapon: robot2.mainWeaponId !== null,
+        battleType: 'tournament',
+        battleDurationSeconds: combatResult.durationSeconds,
+      }),
+    ]);
+    achievementUnlocks = [...unlocks1, ...unlocks2];
+  }
+
   // Get user IDs for logging
   const robot1User = await prisma.user.findUnique({ where: { id: robot1.userId }, select: { id: true } });
   const robot2User = await prisma.user.findUnique({ where: { id: robot2.userId }, select: { id: true } });
@@ -285,6 +334,7 @@ export async function processTournamentBattle(
     prestigeAwarded: stats1.prestigeAwarded + stats2.prestigeAwarded,
     fameAwarded: stats1.fameAwarded + stats2.fameAwarded,
     isByeMatch: false,
+    achievementUnlocks,
   };
 }
 
@@ -516,6 +566,9 @@ async function updateRobotStatsForTournament(
     opponentDestroyed: opponentParticipant?.destroyed || false,
     // No league points for tournament battles
     fameIncrement: isWinner ? fameAwarded : 0,
+    battleType: 'tournament',
+    stance: robot.stance,
+    loadoutType: robot.loadoutType,
   });
 
   // Award prestige and credits via shared helpers

@@ -158,6 +158,7 @@ export class CycleSnapshotService {
             robotPurchases: 0,
             attributeUpgrades: 0,
             totalPurchases: 0,
+            achievementRewards: 0,
             netProfit: 0,
             balance: 0,
           };
@@ -299,6 +300,21 @@ export class CycleSnapshotService {
         },
       });
 
+      // Aggregate achievement rewards
+      const achievementUnlockEvents = await prisma.auditLog.findMany({
+        where: {
+          cycleNumber,
+          eventType: 'achievement_unlock',
+        },
+      });
+
+      achievementUnlockEvents.forEach((event: AuditLog) => {
+        if (!event.userId) return;
+        const metric = getOrCreateMetric(event.userId);
+        const payload = event.payload as unknown as CycleEventPayload;
+        metric.achievementRewards += payload.rewardCredits || 0;
+      });
+
       // Create map of userId -> balance from cycle_end_balance events
       const balanceMap = new Map<number, number>();
       cycleEndBalanceEvents.forEach((event: AuditLog) => {
@@ -320,7 +336,8 @@ export class CycleSnapshotService {
         metric.netProfit = 
           metric.totalCreditsEarned +
           metric.merchandisingIncome +
-          metric.streamingIncome -
+          metric.streamingIncome +
+          metric.achievementRewards -
           metric.totalRepairCosts -
           metric.operatingCosts -
           metric.totalPurchases;

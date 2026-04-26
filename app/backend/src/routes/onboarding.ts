@@ -28,6 +28,7 @@ import onboardingAnalyticsRouter from './onboardingAnalytics';
 import logger from '../config/logger';
 import { securityMonitor } from '../services/security/securityMonitor';
 import { z } from 'zod';
+import { achievementService, type UnlockedAchievement } from '../services/achievement';
 import { validateRequest } from '../middleware/schemaValidator';
 
 const router = express.Router();
@@ -281,11 +282,20 @@ router.post('/complete', authenticateToken, validateRequest({}), async (req: Aut
 
     logger.info('Tutorial completed', { userId });
 
+    let achievementUnlocks: UnlockedAchievement[] = [];
+    try {
+      achievementUnlocks = await achievementService.checkAndAward(userId, null, {
+        type: 'onboarding_complete',
+        data: {},
+      });
+    } catch { /* achievement failures don't block */ }
+
     res.json({
       success: true,
       data: {
         message: 'Tutorial completed',
       },
+      achievementUnlocks,
     });
   } catch (error) {
     handleOnboardingError(res, error, 'Complete tutorial error', req.user?.userId);

@@ -143,6 +143,9 @@ exports.Prisma.UserScalarFieldEnum = {
   onboardingStartedAt: 'onboardingStartedAt',
   onboardingCompletedAt: 'onboardingCompletedAt',
   lastSeenChangelog: 'lastSeenChangelog',
+  pinnedAchievements: 'pinnedAchievements',
+  totalPracticeBattles: 'totalPracticeBattles',
+  lastLoginAt: 'lastLoginAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -220,6 +223,13 @@ exports.Prisma.RobotScalarFieldEnum = {
   kothBestPlacement: 'kothBestPlacement',
   kothCurrentWinStreak: 'kothCurrentWinStreak',
   kothBestWinStreak: 'kothBestWinStreak',
+  currentWinStreak: 'currentWinStreak',
+  bestWinStreak: 'bestWinStreak',
+  currentLoseStreak: 'currentLoseStreak',
+  offensiveWins: 'offensiveWins',
+  defensiveWins: 'defensiveWins',
+  balancedWins: 'balancedWins',
+  dualWieldWins: 'dualWieldWins',
   repairCost: 'repairCost',
   battleReadiness: 'battleReadiness',
   totalRepairsPaid: 'totalRepairsPaid',
@@ -493,6 +503,14 @@ exports.Prisma.ChangelogEntryScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.UserAchievementScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  achievementId: 'achievementId',
+  robotId: 'robotId',
+  unlockedAt: 'unlockedAt'
+};
+
 exports.Prisma.TuningAllocationScalarFieldEnum = {
   id: 'id',
   robotId: 'robotId',
@@ -521,6 +539,15 @@ exports.Prisma.TuningAllocationScalarFieldEnum = {
   formationTactics: 'formationTactics',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
+};
+
+exports.Prisma.AdminAuditLogScalarFieldEnum = {
+  id: 'id',
+  adminUserId: 'adminUserId',
+  operationType: 'operationType',
+  operationResult: 'operationResult',
+  resultSummary: 'resultSummary',
+  createdAt: 'createdAt'
 };
 
 exports.Prisma.SortOrder = {
@@ -575,7 +602,9 @@ exports.Prisma.ModelName = {
   ScheduledKothMatchParticipant: 'ScheduledKothMatchParticipant',
   PracticeArenaDailyStats: 'PracticeArenaDailyStats',
   ChangelogEntry: 'ChangelogEntry',
-  TuningAllocation: 'TuningAllocation'
+  UserAchievement: 'UserAchievement',
+  TuningAllocation: 'TuningAllocation',
+  AdminAuditLog: 'AdminAuditLog'
 };
 
 /**
