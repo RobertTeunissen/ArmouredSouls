@@ -39,6 +39,7 @@ export const implementedPages = new Set([
   '/guide',
   '/practice-arena',
   '/changelog',
+  '/achievements',
 ]);
 
 export const allPages: Record<string, NavCategory> = {
@@ -93,6 +94,7 @@ export const allPages: Record<string, NavCategory> = {
       { path: '/leaderboards/losses', label: 'Total Losses Leaderboard' },
       { path: '/hall-of-records', label: 'Hall of Records' },
       { path: '/changelog', label: '📰 What\'s New' },
+      { path: '/achievements', label: '🏆 Achievements' },
       { path: '/chat', label: 'Chat' },
     ]
   },

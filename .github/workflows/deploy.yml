@@ -433,6 +433,22 @@ jobs:
             cd /opt/armouredsouls/backend
             NODE_ENV=acceptance npx prisma db seed
 
+      - name: Run retroactive achievement awards
+        continue-on-error: true
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.ACC_VPS_IP }}
+          username: ${{ secrets.ACC_VPS_USER }}
+          key: ${{ secrets.ACC_SSH_KEY }}
+          script: |
+            cd /opt/armouredsouls/backend
+            if [ -f scripts/retroactive-achievements.ts ]; then
+              echo "Running retroactive achievement awards..."
+              NODE_ENV=acceptance npx tsx scripts/retroactive-achievements.ts
+            else
+              echo "Retroactive achievements script not found — skipping"
+            fi
+
       - name: Prune dev dependencies
         uses: appleboy/ssh-action@v1
         with:
