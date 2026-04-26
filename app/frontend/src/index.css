@@ -113,3 +113,30 @@ body {
 .animate-slide-in {
   animation: slide-in 0.3s ease-out;
 }
+
+/* Achievement badge locked/unlocked states */
+.achievement-badge--locked {
+  filter: grayscale(100%) brightness(0.4);
+  opacity: 0.4;
+}
+
+.achievement-badge--unlocked {
+  filter: none;
+  opacity: 1;
+}
+
+/* Achievement unlock animation */
+@keyframes achievement-unlock {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.achievement-badge--just-unlocked {
+  animation: achievement-unlock 300ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .achievement-badge--just-unlocked {
+    animation: none;
+  }
+}
