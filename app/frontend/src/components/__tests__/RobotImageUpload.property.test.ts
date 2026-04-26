@@ -6,7 +6,7 @@
 
 import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
-import { validateUploadFile, type FileValidationResult } from '../RobotImageSelector';
+import { validateUploadFile, type FileValidationResult } from '../robotImageValidation';
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_SIZE = 2 * 1024 * 1024; // 2 MB

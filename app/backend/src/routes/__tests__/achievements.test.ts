@@ -30,7 +30,7 @@ jest.mock('../../services/achievement', () => ({
 
 // Mock auth middleware to inject userId
 jest.mock('../../middleware/auth', () => ({
-  authenticateToken: (req: any, _res: any, next: any) => {
+  authenticateToken: (req: Record<string, unknown>, _res: unknown, next: () => void) => {
     req.user = { userId: 1, username: 'test_user', role: 'user' };
     next();
   },
@@ -39,7 +39,7 @@ jest.mock('../../middleware/auth', () => ({
 
 // Mock validateRequest to pass through
 jest.mock('../../middleware/schemaValidator', () => ({
-  validateRequest: () => (_req: any, _res: any, next: any) => next(),
+  validateRequest: () => (_req: unknown, _res: unknown, next: () => void) => next(),
 }));
 
 // Mock logger to suppress output during tests

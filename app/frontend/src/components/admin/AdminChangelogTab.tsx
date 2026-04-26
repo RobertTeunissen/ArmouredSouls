@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   fetchAllEntries,
   createEntry,
@@ -61,7 +61,7 @@ export function AdminChangelogTab() {
 
   const perPage = 20;
 
-  const loadEntries = async () => {
+  const loadEntries = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -73,9 +73,9 @@ export function AdminChangelogTab() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, perPage]);
 
-  useEffect(() => { loadEntries(); }, [page]);
+  useEffect(() => { loadEntries(); }, [loadEntries]);
 
   const validateForm = (): string[] => {
     const errors: string[] = [];

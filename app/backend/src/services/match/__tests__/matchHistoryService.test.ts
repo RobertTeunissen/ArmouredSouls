@@ -57,7 +57,7 @@ function makeRobotWithUser(overrides: Record<string, unknown> = {}) {
  * For league battles, formatBattleHistoryEntry returns baseData directly
  * without additional Prisma queries, making this safe for unit testing.
  */
-function makeBattle(overrides: Record<string, unknown> = {}): any {
+function makeBattle(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   const robot1 = makeRobotWithUser({ id: 10, name: 'Bot-Alpha', userId: 1 });
   const robot2 = makeRobotWithUser({
     id: 20,
@@ -112,6 +112,9 @@ function makeBattle(overrides: Record<string, unknown> = {}): any {
 
 // ─── Tests ───────────────────────────────────────────────────────────
 
+/** Helper type for accessing result properties in assertions. */
+type HistoryResult = Record<string, unknown>;
+
 describe('formatBattleHistoryEntry — economic fields', () => {
   it('should include prestigeAwarded, fameAwarded, and streamingRevenue in the response', async () => {
     const battle = makeBattle({
@@ -121,7 +124,7 @@ describe('formatBattleHistoryEntry — economic fields', () => {
       ],
     });
 
-    const result: any = await formatBattleHistoryEntry(battle, [10]);
+    const result = await formatBattleHistoryEntry(battle as never, [10]) as HistoryResult;
 
     expect(result).toHaveProperty('prestigeAwarded', 5);
     expect(result).toHaveProperty('fameAwarded', 3);
@@ -136,7 +139,7 @@ describe('formatBattleHistoryEntry — economic fields', () => {
       ],
     });
 
-    const result: any = await formatBattleHistoryEntry(battle, [10]);
+    const result = await formatBattleHistoryEntry(battle as never, [10]) as HistoryResult;
 
     // Should use robot1's participant values, not robot2's
     expect(result.prestigeAwarded).toBe(10);
@@ -152,7 +155,7 @@ describe('formatBattleHistoryEntry — economic fields', () => {
       ],
     });
 
-    const result: any = await formatBattleHistoryEntry(battle, [20]);
+    const result = await formatBattleHistoryEntry(battle as never, [20]) as HistoryResult;
 
     // Should use robot2's participant values
     expect(result.prestigeAwarded).toBe(2);
@@ -169,7 +172,7 @@ describe('formatBattleHistoryEntry — economic fields', () => {
     });
 
     // Request with a robotId that doesn't match any participant
-    const result: any = await formatBattleHistoryEntry(battle, [999]);
+    const result = await formatBattleHistoryEntry(battle as never, [999]) as HistoryResult;
 
     expect(result.prestigeAwarded).toBe(0);
     expect(result.fameAwarded).toBe(0);
@@ -184,7 +187,7 @@ describe('formatBattleHistoryEntry — economic fields', () => {
       ],
     });
 
-    const result: any = await formatBattleHistoryEntry(battle, [10]);
+    const result = await formatBattleHistoryEntry(battle as never, [10]) as HistoryResult;
 
     expect(result.prestigeAwarded).toBe(0);
     expect(result.fameAwarded).toBe(0);
@@ -199,7 +202,7 @@ describe('formatBattleHistoryEntry — economic fields', () => {
       ],
     });
 
-    const result: any = await formatBattleHistoryEntry(battle, [10]);
+    const result = await formatBattleHistoryEntry(battle as never, [10]) as HistoryResult;
 
     // Standard fields still present
     expect(result).toHaveProperty('id', 100);
@@ -225,7 +228,7 @@ describe('formatBattleHistoryEntry — economic fields', () => {
     });
 
     // User owns both robots (e.g., viewing all battles)
-    const result: any = await formatBattleHistoryEntry(battle, [10, 20]);
+    const result = await formatBattleHistoryEntry(battle as never, [10, 20]) as HistoryResult;
 
     // Should find the first matching participant (robot 10)
     expect(result.prestigeAwarded).toBe(8);

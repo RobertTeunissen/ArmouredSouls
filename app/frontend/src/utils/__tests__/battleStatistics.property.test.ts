@@ -152,7 +152,7 @@ describe('computeBattleStatistics — property-based tests', () => {
         const counterCount = events.filter((e) => isCounterEvent(e.type)).length;
 
         // Sum hits+misses+criticals+malfunctions across all robots
-        const totalAttackStats = result.perRobot.reduce(
+        const _totalAttackStats = result.perRobot.reduce(
           (sum, r) => sum + r.hits + r.misses + r.criticals + r.malfunctions,
           0,
         );
