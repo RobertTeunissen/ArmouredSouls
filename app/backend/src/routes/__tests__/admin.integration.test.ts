@@ -61,6 +61,7 @@ let mockUser: { userId: number; username: string; role: string } | null = {
 };
 
 jest.mock('../../middleware/auth', () => ({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   authenticateToken: (req: any, _res: any, next: any) => {
     if (!mockUser) {
       return _res.status(401).json({ error: 'Access token required' });
@@ -68,6 +69,7 @@ jest.mock('../../middleware/auth', () => ({
     req.user = mockUser;
     next();
   },
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   requireAdmin: (req: any, res: any, next: any) => {
     if (!req.user) {
       return res.status(401).json({ error: 'Authentication required' });
@@ -168,10 +170,13 @@ jest.mock('../../utils/validation', () => ({
   validatePassword: jest.fn().mockReturnValue({ valid: true }),
 }));
 jest.mock('../../services/moderation/adminUploadsHandler', () => ({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   handleAdminUploads: jest.fn((_req: any, res: any) => res.json([])),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   handleAdminCleanup: jest.fn((_req: any, res: any) => res.json({ success: true })),
 }));
 jest.mock('../adminTournaments', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { Router } = require('express');
   return { __esModule: true, default: Router() };
 });
@@ -733,6 +738,7 @@ describe('Admin API — New Endpoints Integration Tests', () => {
       // At least one call should include the robots relation filter
       const calls = mockPrismaUserFindMany.mock.calls;
       const robotNameCall = calls.find(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (call: any) => call[0]?.where?.robots?.some?.name
       );
       expect(robotNameCall).toBeDefined();
@@ -763,6 +769,7 @@ describe('Admin API — New Endpoints Integration Tests', () => {
       expect(res.status).toBe(200);
       // Even though the same user is returned from multiple queries,
       // the endpoint deduplicates by ID
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const userIds = res.body.users.map((u: any) => u.id);
       const uniqueIds = new Set(userIds);
       expect(userIds.length).toBe(uniqueIds.size);

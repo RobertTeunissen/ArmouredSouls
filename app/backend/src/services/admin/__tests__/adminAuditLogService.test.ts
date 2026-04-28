@@ -94,7 +94,7 @@ describe('recordAction', () => {
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     const rejection = Promise.reject(new Error('DB connection lost'));
     // Attach a catch to prevent unhandled rejection in the mock itself
-    const catchableRejection = { ...rejection, catch: rejection.catch.bind(rejection) };
+    rejection.catch(() => {});
     mockPrisma.adminAuditLog.create.mockReturnValue(rejection);
 
     // recordAction should not throw

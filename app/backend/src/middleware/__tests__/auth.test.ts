@@ -286,6 +286,7 @@ describe('requireAdmin — rate limiter and access logging', () => {
 
   it('should track rate limit violations when rate limiter handler fires', () => {
     // Access the stored options from the rateLimit mock to get the handler
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const rateLimit = require('express-rate-limit');
     const options = rateLimit.mock.calls[0]?.[0];
 
@@ -309,6 +310,7 @@ describe('requireAdmin — rate limiter and access logging', () => {
   });
 
   it('should generate rate limiter key using admin:{userId}', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const rateLimit = require('express-rate-limit');
     const options = rateLimit.mock.calls[0]?.[0];
 

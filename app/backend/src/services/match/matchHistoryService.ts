@@ -59,7 +59,7 @@ type BattleWithFullRelations = Prisma.BattleGetPayload<{
   };
 }>;
 
-type BattleWithRobotsAndUsers = Prisma.BattleGetPayload<{
+type _BattleWithRobotsAndUsers = Prisma.BattleGetPayload<{
   include: {
     robot1: { include: { user: { select: { id: true; username: true; stableName: true } } } };
     robot2: { include: { user: { select: { id: true; username: true; stableName: true } } } };

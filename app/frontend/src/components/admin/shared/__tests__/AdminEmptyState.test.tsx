@@ -44,9 +44,7 @@ describe('AdminEmptyState', () => {
   it('should not render description when not provided', () => {
     render(<AdminEmptyState title="Empty" />);
 
-    // Only the title heading should be present
-    const paragraphs = screen.queryAllByRole('paragraph');
-    // No description paragraph
+    // Only the title heading should be present — no description paragraph
     expect(screen.queryByText('Try adjusting')).not.toBeInTheDocument();
   });
 

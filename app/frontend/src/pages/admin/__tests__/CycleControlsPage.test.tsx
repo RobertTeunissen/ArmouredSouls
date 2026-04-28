@@ -7,7 +7,7 @@
  * _Requirements: 8.1, 8.2, 8.3, 8.5, 8.6, 8.7, 8.8_
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import CycleControlsPage from '../CycleControlsPage';
 

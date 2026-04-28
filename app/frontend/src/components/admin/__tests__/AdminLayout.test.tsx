@@ -10,7 +10,7 @@
  * _Requirements: 1.1, 1.2, 1.3, 1.5, 1.6, 1.7_
  */
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import AdminLayout from '../AdminLayout';

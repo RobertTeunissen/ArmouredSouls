@@ -15,26 +15,13 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 | 1 | Game Loop Audit | 6 | 3 🗳️ | 3 | 4 | 5 | 2 | **6.0** |
 | 2 | Monitoring and Alerting | 3 | 2 🗳️ | 3 | 4 | 4 | 2 | **5.5** |
 | 3 | Facility Investment Advisor | 1 | 1 🗳️ | 4 | 5 | 1 | 2 | **5.0** |
-| 4 | ~~Admin Tuning Adoption Dashboard~~ | 38 | — | 2 | 2 | 1 | 1 | ~~5.0~~ ✅ |
 | 5 | Feature Flags | 15 | 1 🗳️ | 2 | 2 | 4 | 2 | **4.0** |
-| 6 | ~~Achievement / Milestone System~~ | 8 | 3 🗳️ | 4 | 2 | 3 | 3 | ~~3.0~~ ✅ |
 | 7 | Landing Page | 4 | 0 🗳️ | 3 | 2 | 1 | 2 | **3.0** |
 | 8 | Weapon Experimentation Problem | 5 | 1 🗳️ | 4 | 3 | 4 | 4 | **2.8** |
 | 9 | Weapon Special Properties | 11 | 1 🗳️ | 3 | 2 | 2 | 4 | **1.8** |
-| 10 | ~~Admin Portal Redesign~~ | 13 | 1 🗳️ | 2 | 1 | 2 | 3 | ~~1.7~~ ✅ |
 | 11 | Player Personas / Complexity Modes | 16 | 1 🗳️ | 2 | 1 | 2 | 3 | **1.7** |
 | 12 | Arena / Terrain Modifiers | 12 | 1 🗳️ | 3 | 1 | 2 | 4 | **1.5** |
 | 13 | Unimplemented Facilities | 7 | 0 🗳️ | 2 | 1 | 1 | 5 | **0.8** |
-
-### Recommended Build Order
-
-**Tier 1 — Do Now** (next 2–4 weeks): #1 broken feature (~1 week), #6 design audit (parallel), #3 monitoring (lightweight)
-
-**Tier 2 — Build Next** (weeks 4–8): ~~#38 admin tuning dashboard~~ ✅, ~~#8 achievements~~ ✅ — both completed
-
-**Tier 3 — Plan After** (weeks 8–12): #15 feature flags, #5 weapon experimentation (needs #6 audit input)
-
-**Tier 4 — Backlog**: Everything else — revisit after Tier 3.
 
 ### Recently Completed (removed from backlog)
 
@@ -137,9 +124,6 @@ The game has six identifiable loops, most of which degrade or stall at some poin
 - Medical Bay — critical damage repair cost reduction (separate from Repair Bay)
 - Coaching Staff — stable-wide stat bonuses via hired coaches
 - Booking Office — tournament access and prestige rewards
-
-### ~~#8 — Achievement / Milestone System~~ ✅
-Completed in [Spec #27](/.kiro/specs/done-april26/27-achievement-system/) — April 2026. 77 achievements with badges, progress tracking, rarity, pinned showcase, and toast notifications.
 
 ### #11 — Weapon Special Properties
 **Source**: PRD_WEAPON_ECONOMY.md, PRD_WEAPONS_LOADOUT.md  

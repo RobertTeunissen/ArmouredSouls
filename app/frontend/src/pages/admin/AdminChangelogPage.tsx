@@ -3,7 +3,7 @@
  *
  * Requirements: 20.3, 25.1, 25.2, 25.3, 25.4
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { AdminPageHeader } from '../../components/admin/shared';
 import {
   fetchAllEntries,
@@ -64,7 +64,7 @@ function AdminChangelogPage() {
 
   const perPage = 20;
 
-  const loadEntries = async () => {
+  const loadEntries = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -76,9 +76,9 @@ function AdminChangelogPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page]);
 
-  useEffect(() => { loadEntries(); }, [page]);
+  useEffect(() => { loadEntries(); }, [loadEntries]);
 
   const validateForm = (): string[] => {
     const errors: string[] = [];

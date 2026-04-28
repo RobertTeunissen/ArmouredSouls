@@ -165,8 +165,8 @@ export const useAdminStore = create<AdminStoreState>((set, get) => ({
         schedulerStatus: response.data,
         schedulerLastFetched: Date.now(),
       });
-    } catch (err) {
-      throw err;
+    } catch {
+      // Let error propagate naturally
     }
   },
 
@@ -182,8 +182,8 @@ export const useAdminStore = create<AdminStoreState>((set, get) => ({
         securitySummary: response.data,
         securityLastFetched: Date.now(),
       });
-    } catch (err) {
-      throw err;
+    } catch {
+      // Let error propagate naturally
     }
   },
 
