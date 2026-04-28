@@ -15,13 +15,13 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 | 1 | Game Loop Audit | 6 | 3 🗳️ | 3 | 4 | 5 | 2 | **6.0** |
 | 2 | Monitoring and Alerting | 3 | 2 🗳️ | 3 | 4 | 4 | 2 | **5.5** |
 | 3 | Facility Investment Advisor | 1 | 1 🗳️ | 4 | 5 | 1 | 2 | **5.0** |
-| 4 | Admin Tuning Adoption Dashboard | 38 | — | 2 | 2 | 1 | 1 | **5.0** |
+| 4 | ~~Admin Tuning Adoption Dashboard~~ | 38 | — | 2 | 2 | 1 | 1 | ~~5.0~~ ✅ |
 | 5 | Feature Flags | 15 | 1 🗳️ | 2 | 2 | 4 | 2 | **4.0** |
-| 6 | Achievement / Milestone System | 8 | 3 🗳️ | 4 | 2 | 3 | 3 | **3.0** |
+| 6 | ~~Achievement / Milestone System~~ | 8 | 3 🗳️ | 4 | 2 | 3 | 3 | ~~3.0~~ ✅ |
 | 7 | Landing Page | 4 | 0 🗳️ | 3 | 2 | 1 | 2 | **3.0** |
 | 8 | Weapon Experimentation Problem | 5 | 1 🗳️ | 4 | 3 | 4 | 4 | **2.8** |
 | 9 | Weapon Special Properties | 11 | 1 🗳️ | 3 | 2 | 2 | 4 | **1.8** |
-| 10 | Admin Portal Redesign | 13 | 1 🗳️ | 2 | 1 | 2 | 3 | **1.7** |
+| 10 | ~~Admin Portal Redesign~~ | 13 | 1 🗳️ | 2 | 1 | 2 | 3 | ~~1.7~~ ✅ |
 | 11 | Player Personas / Complexity Modes | 16 | 1 🗳️ | 2 | 1 | 2 | 3 | **1.7** |
 | 12 | Arena / Terrain Modifiers | 12 | 1 🗳️ | 3 | 1 | 2 | 4 | **1.5** |
 | 13 | Unimplemented Facilities | 7 | 0 🗳️ | 2 | 1 | 1 | 5 | **0.8** |
@@ -30,9 +30,9 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 
 **Tier 1 — Do Now** (next 2–4 weeks): #1 broken feature (~1 week), #6 design audit (parallel), #3 monitoring (lightweight)
 
-**Tier 2 — Build Next** (weeks 4–8): #38 admin tuning dashboard (small, quick win), #8 achievements (3 votes + key retention driver)
+**Tier 2 — Build Next** (weeks 4–8): ~~#38 admin tuning dashboard~~ ✅, ~~#8 achievements~~ ✅ — both completed
 
-**Tier 3 — Plan After** (weeks 8–12): #8 achievements, #15 feature flags, #5 weapon experimentation (needs #6 audit input)
+**Tier 3 — Plan After** (weeks 8–12): #15 feature flags, #5 weapon experimentation (needs #6 audit input)
 
 **Tier 4 — Backlog**: Everything else — revisit after Tier 3.
 
@@ -40,9 +40,9 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 
 | Item | # | Spec | Completed |
 |------|---|------|-----------|
-| Admin Portal Redesign | 13 | [Spec #28](/.kiro/specs/to-do/28-admin-portal-redesign/) | April 2026 |
-| Admin Tuning Adoption Dashboard | 38 | [Spec #28](/.kiro/specs/to-do/28-admin-portal-redesign/) | April 2026 |
-| Achievement / Milestone System | 8 | [Spec #27](/.kiro/specs/to-do/27-achievement-system/) | April 2026 |
+| Admin Portal Redesign | 13 | [Spec #28](/.kiro/specs/done-april26/28-admin-portal-redesign/) | April 2026 |
+| Admin Tuning Adoption Dashboard | 38 | [Spec #28](/.kiro/specs/done-april26/28-admin-portal-redesign/) | April 2026 |
+| Achievement / Milestone System | 8 | [Spec #27](/.kiro/specs/done-april26/27-achievement-system/) | April 2026 |
 | In-Game Changelog / "What's New" | 17 | [Spec #24](/.kiro/specs/done-april26/24-in-game-changelog/) | April 2026 |
 | Tuning Pool (Tactical Tuning) | 9 | [Spec #25](/.kiro/specs/done-april26/25-tuning-bay/) | April 2026 |
 | Battle Report Layout Overhaul | 14 | [Spec #26](/.kiro/specs/done-april26/26-battle-report-overhaul/) | April 2026 |
@@ -138,11 +138,8 @@ The game has six identifiable loops, most of which degrade or stall at some poin
 - Coaching Staff — stable-wide stat bonuses via hired coaches
 - Booking Office — tournament access and prestige rewards
 
-### #8 — Achievement / Milestone System
-**Source**: PRD_PRESTIGE_AND_FAME.md, PRD_ECONOMY_SYSTEM.md §6  
-**Priority**: Medium — key engagement/retention driver
-
-One-time rewards for milestones (ELO thresholds, win counts, streaks). Includes fame-based cosmetic unlocks as a later extension. Per the [Prestige & Fame Design Exploration](analysis/PRESTIGE_FAME_DESIGN_EXPLORATION.md): this is the recommended vehicle for prestige/fame milestone celebrations.
+### ~~#8 — Achievement / Milestone System~~ ✅
+Completed in [Spec #27](/.kiro/specs/done-april26/27-achievement-system/) — April 2026. 77 achievements with badges, progress tracking, rarity, pinned showcase, and toast notifications.
 
 ### #11 — Weapon Special Properties
 **Source**: PRD_WEAPON_ECONOMY.md, PRD_WEAPONS_LOADOUT.md  
@@ -157,18 +154,6 @@ All 47 weapons currently have only attribute bonuses — no special effects. The
 Battles take place in a randomly assigned arena with gameplay modifiers (e.g. "corrosive atmosphere: -15% armor effectiveness"). Players choose a preferred "home arena" for a familiarity bonus. The `ArenaConfig` type already exists in the combat simulator for KotH but has no gameplay modifiers.
 
 **Player ideas from #278**: Arena shape/size as a gameplay variable — big arena, small arena, "endless arena", square, octagon, rolling floor that changes direction. Different arenas favor different robot builds and weapon types, which ties into tuning strategy and incentivizes weapon diversity (synergy with #5).
-
-### #13 — Admin Portal Redesign / Separate Admin App
-**Source**: Backlog triage  
-**Priority**: Medium — admin tooling is scattered across the main app
-
-The admin experience currently lives as routes within the player-facing app. As admin features grow, it makes sense to either redesign the admin section with its own layout/navigation or extract it into a separate portal entirely.
-
-### #38 — Admin Tuning Adoption Dashboard
-**Source**: Tuning Bay feature (spec #25)  
-**Priority**: Medium — admin visibility into feature adoption
-
-Add an admin view showing which players/robots have configured their tuning allocations and which haven't. Per-player summary, per-robot detail, aggregate adoption stats, filters. Feeds into broader admin analytics (#13).
 
 ### #15 — Feature Flags / Per-User Feature Rollout
 **Source**: Backlog triage  
