@@ -1,30 +1,37 @@
 import prisma from '../../lib/prisma';
 import type { Prisma } from '../../../generated/prisma';
+import { buildUserFilter } from '../../utils/buildUserFilter';
 
 const BANKRUPTCY_RISK_THRESHOLD = 10000; // Credits below which a user is considered at risk
 
 // Helper function to get weapon statistics
-export async function getWeaponStats() {
-  const totalWeapons = await prisma.weapon.count();
+export async function getWeaponStats(userFilter: Prisma.UserWhereInput = {}) {
+  const totalBought = await prisma.weaponInventory.count({
+    where: {
+      user: userFilter,
+    },
+  });
   const equippedWeapons = await prisma.robot.count({
     where: {
       NOT: { name: 'Bye Robot' },
       mainWeaponId: { not: null },
+      user: userFilter,
     },
   });
   
   return {
-    totalBought: totalWeapons,
+    totalBought,
     equipped: equippedWeapons,
   };
 }
 
 // Helper function to get stance statistics
-export async function getStanceStats() {
+export async function getStanceStats(userFilter: Prisma.UserWhereInput = {}) {
   const stances = await prisma.robot.groupBy({
     by: ['stance'],
     where: {
       NOT: { name: 'Bye Robot' },
+      user: userFilter,
     },
     _count: { id: true },
   });
@@ -36,11 +43,12 @@ export async function getStanceStats() {
 }
 
 // Helper function to get loadout statistics
-export async function getLoadoutStats() {
+export async function getLoadoutStats(userFilter: Prisma.UserWhereInput = {}) {
   const loadouts = await prisma.robot.groupBy({
     by: ['loadoutType'],
     where: {
       NOT: { name: 'Bye Robot' },
+      user: userFilter,
     },
     _count: { id: true },
   });
@@ -52,11 +60,12 @@ export async function getLoadoutStats() {
 }
 
 // Helper function to get yield threshold statistics
-export async function getYieldThresholdStats() {
+export async function getYieldThresholdStats(userFilter: Prisma.UserWhereInput = {}) {
   const yieldThresholds = await prisma.robot.groupBy({
     by: ['yieldThreshold'],
     where: {
       NOT: { name: 'Bye Robot' },
+      user: userFilter,
     },
     _count: { id: true },
   });
@@ -186,18 +195,18 @@ export function calculateStats(values: number[]) {
  * Gather all system-wide statistics for the admin /stats endpoint.
  * Returns the exact shape that the route handler sends as JSON.
  */
-export async function getSystemStats() {
+export async function getSystemStats(userFilter: Prisma.UserWhereInput = {}) {
   // Total robots by tier
   const robotsByTier = await prisma.robot.groupBy({
     by: ['currentLeague'],
-    where: { NOT: { name: 'Bye Robot' } },
+    where: { NOT: { name: 'Bye Robot' }, user: userFilter },
     _count: { id: true },
     _avg: { elo: true },
   });
 
   // Battle readiness
   const totalRobots = await prisma.robot.count({
-    where: { NOT: { name: 'Bye Robot' } },
+    where: { NOT: { name: 'Bye Robot' }, user: userFilter },
   });
 
   const readyRobots = await prisma.robot.count({
@@ -205,6 +214,7 @@ export async function getSystemStats() {
       NOT: { name: 'Bye Robot' },
       currentHP: { gte: prisma.robot.fields.maxHP },
       mainWeaponId: { not: null },
+      user: userFilter,
     },
   });
 
@@ -258,6 +268,7 @@ export async function getSystemStats() {
       robot1Id: true,
       robot2Id: true,
       durationSeconds: true,
+      battleType: true,
       participants: true,
     },
   });
@@ -276,8 +287,38 @@ export async function getSystemStats() {
     return loserParticipant?.finalHP === 0;
   }).length;
 
+  // Per-type battle stats
+  function computeTypeStats(typeBattles: typeof battles) {
+    const total = typeBattles.length;
+    const draws = typeBattles.filter(b => b.winnerId === null).length;
+    const kills = typeBattles.filter(b => {
+      if (!b.winnerId) return false;
+      const loser = b.participants.find(p => p.robotId !== b.winnerId);
+      return loser?.finalHP === 0;
+    }).length;
+    const avgDur = total > 0
+      ? typeBattles.reduce((sum, b) => sum + b.durationSeconds, 0) / total
+      : 0;
+    return {
+      total,
+      draws,
+      drawPercentage: total > 0 ? Math.round((draws / total) * 1000) / 10 : 0,
+      kills,
+      killPercentage: total > 0 ? Math.round((kills / total) * 1000) / 10 : 0,
+      avgDuration: Math.round(avgDur * 10) / 10,
+    };
+  }
+
+  const battlesByType = {
+    league: computeTypeStats(battles.filter(b => b.battleType === 'league')),
+    tournament: computeTypeStats(battles.filter(b => b.battleType === 'tournament')),
+    tagTeam: computeTypeStats(battles.filter(b => b.battleType === 'tag_team')),
+    koth: computeTypeStats(battles.filter(b => b.battleType === 'koth')),
+  };
+
   // Financial statistics
   const users = await prisma.user.findMany({
+    where: userFilter,
     select: {
       currency: true,
       facilities: { select: { facilityType: true, level: true } },
@@ -319,7 +360,7 @@ export async function getSystemStats() {
         averageElo: Math.round(tier._avg.elo || 0),
       })),
       battleReady: readyRobots,
-      battleReadyPercentage: Math.round((readyRobots / totalRobots) * 100),
+      battleReadyPercentage: totalRobots > 0 ? Math.round((readyRobots / totalRobots) * 100) : 0,
     },
     matches: {
       scheduled: scheduledMatches,
@@ -339,6 +380,7 @@ export async function getSystemStats() {
       avgDuration: Math.round(avgDuration * 10) / 10,
       kills: killCount,
       killPercentage: totalBattles > 0 ? Math.round((killCount / totalBattles) * 1000) / 10 : 0,
+      byType: battlesByType,
     },
     finances: {
       totalCredits,
@@ -351,10 +393,10 @@ export async function getSystemStats() {
       totalPurchases: facilitySummary.reduce((sum, f) => sum + f.purchaseCount, 0),
       mostPopular: facilitySummary[0]?.type || 'None',
     },
-    weapons: await getWeaponStats(),
-    stances: await getStanceStats(),
-    loadouts: await getLoadoutStats(),
-    yieldThresholds: await getYieldThresholdStats(),
+    weapons: await getWeaponStats(userFilter),
+    stances: await getStanceStats(userFilter),
+    loadouts: await getLoadoutStats(userFilter),
+    yieldThresholds: await getYieldThresholdStats(userFilter),
     timestamp: new Date().toISOString(),
   };
 }
@@ -737,7 +779,7 @@ export async function getRobotAttributeStats() {
  * Get recent real (non-auto-generated) user activity across cycles.
  * Returns the exact shape that the /users/recent route handler sends as JSON.
  */
-export async function getRecentUserActivity(cyclesBack: number) {
+export async function getRecentUserActivity(cyclesBack: number, filter: string = 'real') {
   // Get current cycle number
   const cycleMetadata = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
   const currentCycle = cycleMetadata?.totalCycles || 0;
@@ -758,17 +800,11 @@ export async function getRecentUserActivity(cyclesBack: number) {
     cutoffDate = new Date(Date.now() - cyclesBack * 24 * 60 * 60 * 1000);
   }
 
-  // Fetch real users (exclude auto-generated, seeded, and system users)
+  // Apply user filter (real/auto/all)
+  const userFilter = buildUserFilter(filter as 'all' | 'real' | 'auto');
   const recentUsers = await prisma.user.findMany({
     where: {
-      NOT: [
-        { username: { startsWith: 'archetype_' } },
-        { username: { startsWith: 'test_user_' } },
-        { username: { startsWith: 'attr_' } },
-        { username: 'bye_robot_user' },
-        { username: 'admin' },
-        { username: { startsWith: 'player' } },
-      ],
+      ...userFilter,
       ...(cutoffDate ? { createdAt: { gte: cutoffDate } } : {}),
     },
     select: {
@@ -781,6 +817,7 @@ export async function getRecentUserActivity(cyclesBack: number) {
       onboardingSkipped: true,
       onboardingStep: true,
       onboardingStrategy: true,
+      lastLoginAt: true,
       createdAt: true,
       robots: {
         select: {
@@ -852,6 +889,8 @@ export async function getRecentUserActivity(cyclesBack: number) {
       currency: user.currency,
       role: user.role,
       createdAt: user.createdAt,
+      lastLoginAt: user.lastLoginAt?.toISOString() ?? null,
+      churnRisk: classifyChurnRisk(user),
       onboarding: {
         completed: user.hasCompletedOnboarding,
         skipped: user.onboardingSkipped,
@@ -1034,5 +1073,429 @@ export async function getRepairAuditLog(params: {
       totalPages,
       hasMore: page < totalPages,
     },
+  };
+}
+
+
+// ---------------------------------------------------------------------------
+// New analytics service functions for admin portal redesign (Spec #28)
+// ---------------------------------------------------------------------------
+
+/**
+ * Get high-level KPI metrics for the admin dashboard.
+ */
+export async function getDashboardKpis(userFilter: Prisma.UserWhereInput = {}) {
+  const now = new Date();
+  const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+  const [
+    totalUsers,
+    newUsersLast7d,
+    totalRobots,
+    battlesLast24h,
+    totalBattles,
+    activeUsersLast7d,
+    cycleMetadata,
+  ] = await Promise.all([
+    prisma.user.count({ where: userFilter }),
+    prisma.user.count({ where: { ...userFilter, createdAt: { gte: sevenDaysAgo } } }),
+    prisma.robot.count({ where: { NOT: { name: 'Bye Robot' }, user: userFilter } }),
+    prisma.battle.count({ where: { createdAt: { gte: oneDayAgo } } }),
+    prisma.battle.count(),
+    prisma.user.count({
+      where: {
+        ...userFilter,
+        robots: { some: { updatedAt: { gte: sevenDaysAgo } } },
+      },
+    }),
+    prisma.cycleMetadata.findUnique({ where: { id: 1 } }),
+  ]);
+
+  return {
+    totalUsers,
+    newUsersLast7d,
+    totalRobots,
+    battlesLast24h,
+    totalBattles,
+    activeUsersLast7d,
+    currentCycle: cycleMetadata?.totalCycles ?? 0,
+    lastCycleAt: cycleMetadata?.lastCycleAt?.toISOString() ?? null,
+    timestamp: now.toISOString(),
+  };
+}
+
+/**
+ * Classify a user's churn risk based on activity signals.
+ */
+export function classifyChurnRisk(user: {
+  lastLoginAt: Date | null;
+  createdAt: Date;
+  robots: { totalBattles: number }[];
+}): 'low' | 'medium' | 'high' {
+  const now = Date.now();
+  const lastActive = user.lastLoginAt?.getTime() ?? user.createdAt.getTime();
+  const daysSinceActive = (now - lastActive) / (1000 * 60 * 60 * 24);
+  const totalBattles = user.robots.reduce((sum, r) => sum + r.totalBattles, 0);
+
+  if (daysSinceActive > 14 || (totalBattles === 0 && daysSinceActive > 3)) return 'high';
+  if (daysSinceActive > 7 || totalBattles < 5) return 'medium';
+  return 'low';
+}
+
+/**
+ * Get player engagement data with churn risk classification.
+ */
+export async function getEngagementPlayers(
+  userFilter: Prisma.UserWhereInput = {},
+  page = 1,
+  limit = 50,
+) {
+  const skip = (page - 1) * limit;
+
+  const [users, total] = await Promise.all([
+    prisma.user.findMany({
+      where: userFilter,
+      select: {
+        id: true,
+        username: true,
+        stableName: true,
+        currency: true,
+        lastLoginAt: true,
+        createdAt: true,
+        hasCompletedOnboarding: true,
+        robots: {
+          select: {
+            totalBattles: true,
+            wins: true,
+            currentLeague: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit,
+    }),
+    prisma.user.count({ where: userFilter }),
+  ]);
+
+  const players = users.map((u) => {
+    const totalBattles = u.robots.reduce((sum, r) => sum + r.totalBattles, 0);
+    const totalWins = u.robots.reduce((sum, r) => sum + r.wins, 0);
+    return {
+      userId: u.id,
+      username: u.username,
+      stableName: u.stableName,
+      currency: u.currency,
+      lastLoginAt: u.lastLoginAt?.toISOString() ?? null,
+      createdAt: u.createdAt.toISOString(),
+      onboardingComplete: u.hasCompletedOnboarding,
+      robotCount: u.robots.length,
+      totalBattles,
+      totalWins,
+      winRate: totalBattles > 0 ? Math.round((totalWins / totalBattles) * 100) : 0,
+      churnRisk: classifyChurnRisk(u),
+    };
+  });
+
+  return {
+    players,
+    total,
+    page,
+    pageSize: limit,
+    totalPages: Math.ceil(total / limit),
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
+ * Get economy overview metrics.
+ */
+export async function getEconomyOverview(userFilter: Prisma.UserWhereInput = {}) {
+  const users = await prisma.user.findMany({
+    where: userFilter,
+    select: {
+      currency: true,
+      facilities: { select: { facilityType: true, level: true } },
+    },
+  });
+
+  const balances = users.map((u) => u.currency);
+  const totalCredits = balances.reduce((sum, b) => sum + b, 0);
+  const avgBalance = users.length > 0 ? Math.round(totalCredits / users.length) : 0;
+  const medianBalance = balances.length > 0
+    ? [...balances].sort((a, b) => a - b)[Math.floor(balances.length / 2)]
+    : 0;
+  const bankruptcyRisk = users.filter((u) => u.currency < BANKRUPTCY_RISK_THRESHOLD).length;
+
+  // Facility adoption — aggregate stats + per-level breakdown
+  const facilityStats: Record<string, { count: number; totalLevel: number; levels: Record<number, number> }> = {};
+  users.forEach((user) => {
+    user.facilities.forEach((f) => {
+      if (f.level > 0) {
+        if (!facilityStats[f.facilityType]) {
+          facilityStats[f.facilityType] = { count: 0, totalLevel: 0, levels: {} };
+        }
+        facilityStats[f.facilityType].count++;
+        facilityStats[f.facilityType].totalLevel += f.level;
+        facilityStats[f.facilityType].levels[f.level] = (facilityStats[f.facilityType].levels[f.level] || 0) + 1;
+      }
+    });
+  });
+
+  const facilities = Object.entries(facilityStats)
+    .map(([type, stats]) => ({
+      type,
+      owners: stats.count,
+      avgLevel: stats.count > 0 ? Number((stats.totalLevel / stats.count).toFixed(1)) : 0,
+      maxLevel: Math.max(...Object.keys(stats.levels).map(Number), 0),
+      levelDistribution: Object.entries(stats.levels)
+        .map(([level, count]) => ({ level: Number(level), count }))
+        .sort((a, b) => a.level - b.level),
+    }))
+    .sort((a, b) => b.owners - a.owners);
+
+  return {
+    totalCreditsInCirculation: totalCredits,
+    averageBalance: avgBalance,
+    medianBalance,
+    usersAtBankruptcyRisk: bankruptcyRisk,
+    totalUsers: users.length,
+    facilities,
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
+ * Get league health metrics.
+ */
+export async function getLeagueHealth(userFilter: Prisma.UserWhereInput = {}) {
+  const leagues = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'];
+
+  const robotsByLeague = await prisma.robot.groupBy({
+    by: ['currentLeague'],
+    where: { NOT: { name: 'Bye Robot' }, user: userFilter },
+    _count: { id: true },
+    _avg: { elo: true },
+  });
+
+  // Count distinct league instances per tier
+  const instancesByLeague = await prisma.robot.groupBy({
+    by: ['currentLeague', 'leagueId'],
+    where: { NOT: { name: 'Bye Robot' }, user: userFilter },
+    _count: { id: true },
+  });
+
+  const leagueData = leagues.map((league) => {
+    const data = robotsByLeague.find((r) => r.currentLeague === league);
+    const instances = instancesByLeague.filter((r) => r.currentLeague === league);
+    return {
+      league,
+      robotCount: data?._count.id ?? 0,
+      averageElo: Math.round(data?._avg.elo ?? 0),
+      instances: instances.length,
+      instanceDetails: instances.map((i) => ({
+        id: i.leagueId,
+        robotCount: i._count.id,
+      })),
+    };
+  });
+
+  const totalRobots = leagueData.reduce((sum, l) => sum + l.robotCount, 0);
+
+  return {
+    leagues: leagueData,
+    totalRobots,
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
+ * Get weapon analytics data.
+ */
+export async function getWeaponAnalytics(userFilter: Prisma.UserWhereInput = {}) {
+  // Weapon type distribution
+  const weaponTypes = await prisma.weaponInventory.groupBy({
+    by: ['weaponId'],
+    where: { user: userFilter },
+    _count: { id: true },
+  });
+
+  // Get weapon details for the IDs
+  const weaponIds = weaponTypes.map((w) => w.weaponId);
+  const weapons = await prisma.weapon.findMany({
+    where: { id: { in: weaponIds } },
+    select: { id: true, name: true, weaponType: true, cost: true, baseDamage: true },
+  });
+
+  const weaponMap = new Map(weapons.map((w) => [w.id, w]));
+
+  const weaponPopularity = weaponTypes
+    .map((wt) => {
+      const weapon = weaponMap.get(wt.weaponId);
+      return {
+        weaponId: wt.weaponId,
+        name: weapon?.name ?? 'Unknown',
+        type: weapon?.weaponType ?? 'unknown',
+        cost: weapon?.cost ?? 0,
+        baseDamage: weapon?.baseDamage ?? 0,
+        owned: wt._count.id,
+      };
+    })
+    .sort((a, b) => b.owned - a.owned);
+
+  // Type breakdown
+  const typeBreakdown: Record<string, number> = {};
+  for (const wp of weaponPopularity) {
+    typeBreakdown[wp.type] = (typeBreakdown[wp.type] || 0) + wp.owned;
+  }
+
+  return {
+    weapons: weaponPopularity.slice(0, 50),
+    typeBreakdown,
+    totalWeaponsOwned: weaponPopularity.reduce((sum, w) => sum + w.owned, 0),
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
+ * Get achievement analytics data.
+ */
+export async function getAchievementAnalytics(userFilter: Prisma.UserWhereInput = {}) {
+  // Total unlocks grouped by achievement ID
+  const unlocksByAchievement = await prisma.userAchievement.groupBy({
+    by: ['achievementId'],
+    where: { user: userFilter },
+    _count: { id: true },
+  });
+
+  const totalUsers = await prisma.user.count({ where: userFilter });
+  const usersWithAnyAchievement = await prisma.userAchievement.findMany({
+    where: { user: userFilter },
+    select: { userId: true },
+    distinct: ['userId'],
+  });
+
+  const unlockMap = new Map(unlocksByAchievement.map(a => [a.achievementId, a._count.id]));
+
+  // Import achievement config to enrich with names, tiers, categories
+  const { ACHIEVEMENTS } = await import('../../config/achievements');
+
+  const achievements = ACHIEVEMENTS.map((def) => {
+    const unlockCount = unlockMap.get(def.id) || 0;
+    return {
+      achievementId: def.id,
+      name: def.name,
+      description: def.description,
+      category: def.category,
+      tier: def.tier,
+      scope: def.scope,
+      hidden: def.hidden,
+      unlockCount,
+      unlockRate: totalUsers > 0 ? Number(((unlockCount / totalUsers) * 100).toFixed(1)) : 0,
+    };
+  }).sort((a, b) => b.unlockCount - a.unlockCount);
+
+  return {
+    achievements,
+    totalAchievements: ACHIEVEMENTS.length,
+    totalUnlocks: achievements.reduce((sum, a) => sum + a.unlockCount, 0),
+    uniquePlayersWithAchievements: usersWithAnyAchievement.length,
+    totalUsers,
+    participationRate: totalUsers > 0
+      ? Number(((usersWithAnyAchievement.length / totalUsers) * 100).toFixed(1))
+      : 0,
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
+ * Get tuning system adoption metrics.
+ */
+export async function getTuningAdoption(userFilter: Prisma.UserWhereInput = {}) {
+  // Count robots with any tuning allocation
+  const robotsWithTuning = await prisma.tuningAllocation.count({
+    where: {
+      robot: { user: userFilter, NOT: { name: 'Bye Robot' } },
+    },
+  });
+
+  const totalRobots = await prisma.robot.count({
+    where: { NOT: { name: 'Bye Robot' }, user: userFilter },
+  });
+
+  // Get tuning allocations with details
+  const allocations = await prisma.tuningAllocation.findMany({
+    where: {
+      robot: { user: userFilter, NOT: { name: 'Bye Robot' } },
+    },
+    select: {
+      combatPower: true,
+      targetingSystems: true,
+      criticalSystems: true,
+      penetration: true,
+      weaponControl: true,
+      attackSpeed: true,
+      armorPlating: true,
+      shieldCapacity: true,
+      evasionThrusters: true,
+      damageDampeners: true,
+      counterProtocols: true,
+      hullIntegrity: true,
+      servoMotors: true,
+      gyroStabilizers: true,
+      hydraulicSystems: true,
+      powerCore: true,
+      combatAlgorithms: true,
+      threatAnalysis: true,
+      adaptiveAI: true,
+      logicCores: true,
+      syncProtocols: true,
+      supportSystems: true,
+      formationTactics: true,
+    },
+  });
+
+  // Calculate which attributes are most tuned
+  const attributeStats: Record<string, { total: number; robotCount: number }> = {};
+  const tuningAttributes = [
+    'combatPower', 'targetingSystems', 'criticalSystems', 'penetration',
+    'weaponControl', 'attackSpeed', 'armorPlating', 'shieldCapacity',
+    'evasionThrusters', 'damageDampeners', 'counterProtocols', 'hullIntegrity',
+    'servoMotors', 'gyroStabilizers', 'hydraulicSystems', 'powerCore',
+    'combatAlgorithms', 'threatAnalysis', 'adaptiveAI', 'logicCores',
+    'syncProtocols', 'supportSystems', 'formationTactics',
+  ];
+
+  for (const attr of tuningAttributes) {
+    attributeStats[attr] = { total: 0, robotCount: 0 };
+  }
+
+  for (const alloc of allocations) {
+    for (const attr of tuningAttributes) {
+      const val = Number((alloc as Record<string, unknown>)[attr] ?? 0);
+      if (val > 0) {
+        attributeStats[attr].total += val;
+        attributeStats[attr].robotCount++;
+      }
+    }
+  }
+
+  const attributeRanking = Object.entries(attributeStats)
+    .map(([attribute, stats]) => ({
+      attribute,
+      totalPoints: Number(stats.total.toFixed(2)),
+      robotCount: stats.robotCount,
+      avgPerRobot: stats.robotCount > 0 ? Number((stats.total / stats.robotCount).toFixed(2)) : 0,
+    }))
+    .sort((a, b) => b.robotCount - a.robotCount || b.totalPoints - a.totalPoints);
+
+  return {
+    robotsWithTuning,
+    totalRobots,
+    adoptionRate: totalRobots > 0 ? Number(((robotsWithTuning / totalRobots) * 100).toFixed(1)) : 0,
+    totalAllocations: allocations.length,
+    attributeRanking,
+    timestamp: new Date().toISOString(),
   };
 }

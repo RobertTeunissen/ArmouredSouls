@@ -5,9 +5,10 @@
 
 import express, { Request, Response } from 'express';
 import { z } from 'zod';
-import { authenticateToken, requireAdmin } from '../middleware/auth';
+import { authenticateToken, requireAdmin, AuthRequest } from '../middleware/auth';
 import prisma from '../lib/prisma';
 import logger from '../config/logger';
+import { recordAction as recordAuditAction } from '../services/admin/adminAuditLogService';
 import {
   createSingleEliminationTournament,
   getActiveTournaments,
@@ -248,6 +249,14 @@ router.post('/:id/execute-round', authenticateToken, requireAdmin, validateReque
         logger.error('[Admin] Failed to auto-create next tournament:', error);
       }
     }
+
+    const authReq = req as AuthRequest;
+    recordAuditAction(authReq.user!.userId, 'tournament_execute_round', 'success', {
+      tournamentId,
+      round: summary.round,
+      matchesExecuted: summary.matchesExecuted,
+      tournamentComplete: summary.tournamentComplete,
+    });
 
     res.json({
       success: true,

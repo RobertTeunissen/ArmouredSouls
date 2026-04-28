@@ -65,7 +65,6 @@ export interface SlotState {
   sparringConfig: SparringConfig;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface PracticeBattleResult {
   combatResult: PlaybackCombatResult;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

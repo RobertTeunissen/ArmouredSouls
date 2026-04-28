@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import rateLimit from 'express-rate-limit';
 import { getConfig } from '../config/env';
 import prisma from '../lib/prisma';
 import { securityMonitor } from '../services/security/securityMonitor';
@@ -37,15 +38,18 @@ export const authenticateToken = async (
 
   // Verify tokenVersion against the database to support server-side invalidation
   const tokenVersion = decoded.tokenVersion ?? 0;
+  let dbRole: string;
   try {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { tokenVersion: true, stableName: true },
+      select: { tokenVersion: true, stableName: true, role: true },
     });
 
     if (!user || user.tokenVersion !== tokenVersion) {
       return res.status(401).json({ error: 'Invalid or expired token' });
     }
+
+    dbRole = user.role;
 
     // Cache stable name for security event enrichment (no extra DB call)
     if (user.stableName) {
@@ -58,10 +62,33 @@ export const authenticateToken = async (
   req.user = {
     userId,
     username: decoded.username,
-    role: decoded.role,
+    role: dbRole,
   };
   next();
 };
+
+const adminRateLimiter = rateLimit({
+  windowMs: 60_000,
+  max: 120,
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: false,
+  keyGenerator: (req) => {
+    const authReq = req as AuthRequest;
+    return `admin:${authReq.user?.userId?.toString() || req.ip || 'unknown'}`;
+  },
+  handler: (req, res) => {
+    const authReq = req as AuthRequest;
+    if (authReq.user?.userId) {
+      securityMonitor.trackRateLimitViolation(authReq.user.userId, req.originalUrl);
+    }
+    res.status(429).json({
+      error: 'Too many admin requests. Try again later.',
+      code: 'RATE_LIMIT_EXCEEDED',
+      retryAfter: 60,
+    });
+  },
+});
 
 export const requireAdmin = (
   req: AuthRequest,
@@ -80,5 +107,13 @@ export const requireAdmin = (
     return res.status(403).json({ error: 'Admin access required' });
   }
 
-  next();
+  const sourceIp = req.ip || undefined;
+  const endpoint = req.originalUrl;
+  const method = req.method;
+
+  securityMonitor.logAdminAccess(req.user.userId, { sourceIp, endpoint, method });
+
+  adminRateLimiter(req, res, () => {
+    next();
+  });
 };

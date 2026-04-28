@@ -6,7 +6,7 @@ import {
   filterAchievements,
   sortAchievements,
 } from '../achievementUtils';
-import type { AchievementWithProgress, AchievementFilters } from '../achievementUtils';
+import type { AchievementWithProgress } from '../achievementUtils';
 
 // Helper to create a mock achievement
 function mockAchievement(overrides: Partial<AchievementWithProgress> = {}): AchievementWithProgress {

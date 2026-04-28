@@ -23,6 +23,7 @@ import { AuthError, AuthErrorCode } from '../errors/authErrors';
 import { AppError } from '../errors/AppError';
 import { validateRequest } from '../middleware/schemaValidator';
 import { stableName as stableNameSchema } from '../utils/securityValidation';
+import prisma from '../lib/prisma';
 
 const router = express.Router();
 
@@ -210,6 +211,11 @@ router.post('/login', validateRequest({ body: loginBodySchema }), async (req: Re
     username: user.username,
     role: user.role,
     tokenVersion: user.tokenVersion ?? 0,
+  });
+
+  // Fire-and-forget lastLoginAt update
+  prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } }).catch((err) => {
+    logger.error('Failed to update lastLoginAt', { userId: user.id, error: err instanceof Error ? err.message : String(err) });
   });
 
   // Return user profile without passwordHash — never expose hashes to clients

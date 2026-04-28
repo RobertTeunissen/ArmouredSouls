@@ -105,9 +105,9 @@ describe('AchievementService.checkAndAward', () => {
       data: {},
     };
 
-    const result = await achievementService.checkAndAward(1, 1, event);
+    const _result = await achievementService.checkAndAward(1, 1, event);
 
-    expect(result).toEqual([]);
+    expect(_result).toEqual([]);
   });
 
   it('should skip already-unlocked achievements', async () => {
@@ -131,7 +131,7 @@ describe('AchievementService.checkAndAward', () => {
       data: { won: true, finalHpPercent: 50 },
     };
 
-    const result = await achievementService.checkAndAward(1, 1, event);
+    const _result = await achievementService.checkAndAward(1, 1, event);
 
     // C1 is already unlocked, so create should not be called for it
     // Other achievements may or may not qualify, but C1 should be skipped
@@ -152,7 +152,7 @@ describe('AchievementService.checkAndAward', () => {
       data: { won: true, finalHpPercent: 50 },
     };
 
-    const result = await achievementService.checkAndAward(1, 1, event);
+    const _result = await achievementService.checkAndAward(1, 1, event);
 
     // Verify create was called with C1
     const createCalls = mockPrisma.userAchievement.create.mock.calls;

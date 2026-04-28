@@ -212,7 +212,6 @@ export function usePracticeArena(userId: number): UsePracticeArenaReturn {
       const res = await apiClient.post('/api/practice-arena/battle', payload);
       const data = res.data;
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const toHistoryEntry = (r: PracticeBattleResult) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const cr = r.combatResult as any;

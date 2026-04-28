@@ -22,6 +22,14 @@ export {
   getRobotAttributeStats,
   getRecentUserActivity,
   getRepairAuditLog,
+  getDashboardKpis,
+  classifyChurnRisk,
+  getEngagementPlayers,
+  getEconomyOverview,
+  getLeagueHealth,
+  getWeaponAnalytics,
+  getAchievementAnalytics,
+  getTuningAdoption,
 } from './adminStatsService';
 
 export {
@@ -39,3 +47,11 @@ export {
   type CycleResult,
   type BackfillSnapshotsResult,
 } from './adminCycleService';
+
+export {
+  recordAction as recordAuditAction,
+  getEntries as getAuditEntries,
+  type GetEntriesParams,
+  type AuditLogEntry,
+  type GetEntriesResult,
+} from './adminAuditLogService';

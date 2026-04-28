@@ -243,6 +243,21 @@ class SecurityMonitor {
   }
 
   /**
+   * Log an admin access event (informational).
+   */
+  logAdminAccess(userId: number, context: { sourceIp?: string; endpoint: string; method: string }): void {
+    this.recordEvent({
+      severity: SecuritySeverity.INFO,
+      eventType: 'admin_access',
+      userId,
+      sourceIp: context.sourceIp,
+      endpoint: context.endpoint,
+      details: { method: context.method },
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  /**
    * Track rate limit violations per user (Req 6.6).
    * If >5 violations in 1 hour, emit a warning alert.
    */

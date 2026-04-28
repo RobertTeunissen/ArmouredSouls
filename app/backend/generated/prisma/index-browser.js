@@ -145,6 +145,7 @@ exports.Prisma.UserScalarFieldEnum = {
   lastSeenChangelog: 'lastSeenChangelog',
   pinnedAchievements: 'pinnedAchievements',
   totalPracticeBattles: 'totalPracticeBattles',
+  lastLoginAt: 'lastLoginAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -540,6 +541,15 @@ exports.Prisma.TuningAllocationScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.AdminAuditLogScalarFieldEnum = {
+  id: 'id',
+  adminUserId: 'adminUserId',
+  operationType: 'operationType',
+  operationResult: 'operationResult',
+  resultSummary: 'resultSummary',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -593,7 +603,8 @@ exports.Prisma.ModelName = {
   PracticeArenaDailyStats: 'PracticeArenaDailyStats',
   ChangelogEntry: 'ChangelogEntry',
   UserAchievement: 'UserAchievement',
-  TuningAllocation: 'TuningAllocation'
+  TuningAllocation: 'TuningAllocation',
+  AdminAuditLog: 'AdminAuditLog'
 };
 
 /**
