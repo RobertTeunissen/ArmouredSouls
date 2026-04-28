@@ -4,7 +4,7 @@
 export { EventLogger, EventType, clearSequenceCache } from './eventLogger';
 
 // Event compression
-export { stripDebugFields, compressEventsForStorage, estimateEventSize, estimateEventsMemory, logEventMemoryStats } from './eventCompression';
+export { compressEventsForStorage, estimateEventSize, estimateEventsMemory } from './eventCompression';
 
 // Data integrity
 export { DataIntegrityService } from './dataIntegrityService';

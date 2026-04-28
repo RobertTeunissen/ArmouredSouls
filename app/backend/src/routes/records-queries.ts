@@ -62,12 +62,16 @@ export async function fetchCombatRecords() {
     take: 10,
   });
 
+  const damagesBattleIds = [...new Set(battleParticipants.map(p => p.battleId))];
+  const damagesBattles = await prisma.battle.findMany({
+    where: { id: { in: damagesBattleIds } },
+    include: battleInclude,
+  });
+  const damagesBattleMap = new Map(damagesBattles.map(b => [b.id, b]));
+
   const mostDamageDataList = [];
   for (const participant of battleParticipants) {
-    const battle = await prisma.battle.findUnique({
-      where: { id: participant.battleId },
-      include: battleInclude,
-    });
+    const battle = damagesBattleMap.get(participant.battleId);
     if (battle) {
       const robot = participant.robotId === battle.robot1Id ? battle.robot1 : battle.robot2;
       const opponent = participant.robotId === battle.robot1Id ? battle.robot2 : battle.robot1;
@@ -89,9 +93,16 @@ export async function fetchCombatRecords() {
     .sort((a, b) => a.finalHP - b.finalHP)
     .slice(0, 10);
 
+  const narrowBattleIds = [...new Set(winnerParticipants.map(p => p.battleId))];
+  const narrowBattles = await prisma.battle.findMany({
+    where: { id: { in: narrowBattleIds } },
+    include: battleInclude,
+  });
+  const narrowBattleMap = new Map(narrowBattles.map(b => [b.id, b]));
+
   const narrowestVictories = [];
   for (const participant of winnerParticipants) {
-    const battle = await prisma.battle.findUnique({ where: { id: participant.battleId }, include: battleInclude });
+    const battle = narrowBattleMap.get(participant.battleId);
     if (battle) narrowestVictories.push({ battle, remainingHP: participant.finalHP });
   }
 
@@ -135,9 +146,16 @@ export async function fetchUpsetRecords() {
   }
   upsetBattles.sort((a, b) => b.upsetDiff - a.upsetDiff);
 
+  const upsetBattleIds = upsetBattles.slice(0, 10).map(u => u.battleId);
+  const upsetBattlesData = await prisma.battle.findMany({
+    where: { id: { in: upsetBattleIds } },
+    include: battleInclude,
+  });
+  const upsetBattleMap = new Map(upsetBattlesData.map(b => [b.id, b]));
+
   const biggestUpsets = [];
   for (const upset of upsetBattles.slice(0, 10)) {
-    const battle = await prisma.battle.findUnique({ where: { id: upset.battleId }, include: battleInclude });
+    const battle = upsetBattleMap.get(upset.battleId);
     if (battle) biggestUpsets.push({ battle, upsetDiff: upset.upsetDiff });
   }
 

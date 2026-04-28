@@ -4,15 +4,10 @@ import ConfirmationModal from './ConfirmationModal';
 import { getCapForLevel } from '../../../shared/utils/academyCaps';
 import { calculateBaseCost } from '../../../shared/utils/upgradeCosts';
 import { calculateTrainingFacilityDiscount } from '../../../shared/utils/discounts';
-
-interface Robot {
-  id: number;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any;
-}
+import type { RobotWithAttributes } from '../types/robot';
 
 interface UpgradePlannerProps {
-  robot: Robot;
+  robot: RobotWithAttributes;
   currentCredits: number;
   trainingLevel: number;
   academyLevels: {

@@ -26,14 +26,6 @@ export interface TagTeamLeagueInstance {
   isFull: boolean;
 }
 
-export interface TagTeamLeagueInstanceStats {
-  tier: TagTeamLeagueTier;
-  instances: TagTeamLeagueInstance[];
-  totalTeams: number;
-  averagePerInstance: number;
-  needsRebalancing: boolean;
-}
-
 /**
  * Get all instances for a specific tag team league tier
  */
@@ -66,30 +58,6 @@ export async function getInstancesForTier(tier: TagTeamLeagueTier): Promise<TagT
 
   // Sort by instance number
   return leagueInstances.sort((a, b) => a.instanceNumber - b.instanceNumber);
-}
-
-/**
- * Get statistics for a tag team league tier
- */
-export async function getTagTeamLeagueInstanceStats(tier: TagTeamLeagueTier): Promise<TagTeamLeagueInstanceStats> {
-  const instances = await getInstancesForTier(tier);
-  const totalTeams = instances.reduce((sum, inst) => sum + inst.currentTeams, 0);
-  const averagePerInstance = instances.length > 0 ? totalTeams / instances.length : 0;
-
-  // Check if rebalancing is needed:
-  // Only when any instance exceeds the maximum team limit
-  // (Deviation check not needed since assignTagTeamLeagueInstance fills evenly)
-  const needsRebalancing = instances.some((inst) => 
-    inst.currentTeams > MAX_TEAMS_PER_INSTANCE
-  );
-
-  return {
-    tier,
-    instances,
-    totalTeams,
-    averagePerInstance,
-    needsRebalancing,
-  };
 }
 
 /**

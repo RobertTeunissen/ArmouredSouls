@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import apiClient from '../utils/apiClient';
 
 interface BattleDetailsModalProps {
   isOpen: boolean;
@@ -98,8 +98,7 @@ interface BattleParticipant {
 
 function BattleDetailsModal({ isOpen, onClose, battleId }: BattleDetailsModalProps) {
   const [loading, setLoading] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [battle, setBattle] = useState<any>(null);
+  const [battle, setBattle] = useState<Record<string, unknown> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [expandedEvent, setExpandedEvent] = useState<number | null>(null);
 
@@ -116,15 +115,10 @@ function BattleDetailsModal({ isOpen, onClose, battleId }: BattleDetailsModalPro
     setLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`/api/admin/battles/${battleId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await apiClient.get(`/api/admin/battles/${battleId}`);
       setBattle(response.data);
-    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-      setError(err.response?.data?.error || 'Failed to load battle details');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to load battle details');
     } finally {
       setLoading(false);
     }

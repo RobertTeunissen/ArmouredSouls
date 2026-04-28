@@ -3,18 +3,16 @@ import { z } from 'zod';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import prisma from '../lib/prisma';
 import {
-  generateFinancialReport,
   calculateTotalDailyOperatingCosts,
   calculateDailyPassiveIncome,
   getPrestigeMultiplier,
   generatePerRobotFinancialReport,
   calculateFacilityROI,
-  getNextPrestigeTier,
-  getMerchandisingBaseRate,
 } from '../utils/economyCalculations';
 import { AuthError, AuthErrorCode } from '../errors/authErrors';
 import { EconomyError, EconomyErrorCode } from '../errors/economyErrors';
 import { validateRequest } from '../middleware/schemaValidator';
+import { getDailyFinancialReport } from '../services/economy/financialReportService';
 
 const router = express.Router();
 
@@ -30,131 +28,8 @@ const roiCalculatorBodySchema = z.object({
  * Get comprehensive daily financial report
  */
 router.get('/daily', authenticateToken, validateRequest({}), async (req: AuthRequest, res: Response) => {
-    const userId = req.user!.userId;
-
-    // Get user for prestige
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { prestige: true },
-    });
-
-    if (!user) {
-      throw new AuthError(AuthErrorCode.USER_NOT_FOUND, 'User not found', 404, { userId });
-    }
-
-    // Calculate recent battle winnings from last 7 days
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-    const userRobots = await prisma.robot.findMany({
-      where: { userId },
-      select: { id: true, totalBattles: true, fame: true },
-    });
-
-    const robotIds = userRobots.map(r => r.id);
-
-    let recentBattleWinnings = 0;
-
-    if (robotIds.length > 0) {
-      const battles = await prisma.battle.findMany({
-        where: {
-          createdAt: {
-            gte: sevenDaysAgo,
-          },
-          OR: [
-            { robot1Id: { in: robotIds } },
-            { robot2Id: { in: robotIds } },
-          ],
-        },
-      });
-
-      for (const battle of battles) {
-        if (battle.winnerId && robotIds.includes(battle.winnerId)) {
-          recentBattleWinnings += battle.winnerReward || 0;
-        }
-        if (robotIds.includes(battle.robot1Id) || robotIds.includes(battle.robot2Id)) {
-          // Add loser reward if this robot participated
-          const loserId = battle.winnerId === battle.robot1Id ? battle.robot2Id : battle.robot1Id;
-          if (robotIds.includes(loserId)) {
-            recentBattleWinnings += battle.loserReward || 0;
-          }
-        }
-      }
-    }
-
-    const report = await generateFinancialReport(userId, recentBattleWinnings);
-
-    // Add multiplier breakdown
-    const passiveIncome = await calculateDailyPassiveIncome(userId);
-    const prestigeMultiplier = getPrestigeMultiplier(user.prestige);
-    
-    // Get Merchandising Hub level
-    const merchandisingHub = await prisma.facility.findUnique({
-      where: {
-        userId_facilityType: {
-          userId,
-          facilityType: 'merchandising_hub',
-        },
-      },
-    });
-    const merchandisingHubLevel = merchandisingHub?.level || 0;
-    
-    // Calculate merchandising breakdown
-    const merchandisingBase = getMerchandisingBaseRate(merchandisingHubLevel);
-    const merchandisingMultiplier = 1 + (user.prestige / 10000);
-    
-    // Calculate streaming breakdown
-    // Get aggregate stats from user's robots
-    const totalBattles = userRobots.reduce((sum, r) => sum + r.totalBattles, 0);
-    const totalFame = userRobots.reduce((sum, r) => sum + r.fame, 0);
-    
-    // Get Streaming Studio level
-    const streamingStudio = await prisma.facility.findUnique({
-      where: {
-        userId_facilityType: {
-          userId,
-          facilityType: 'streaming_studio',
-        },
-      },
-    });
-    const streamingStudioLevel = streamingStudio?.level || 0;
-    
-    // Calculate streaming multipliers (using same formula as streamingRevenueService)
-    const baseRate = 1000; // Base streaming revenue per battle
-    const battleMultiplier = Math.min(1 + (totalBattles / 100) * 0.1, 3.0);
-    const fameMultiplier = Math.min(1 + (totalFame / 500) * 0.1, 2.0);
-    const studioMultiplier = 1 + (streamingStudioLevel * 1.0); // 100% per level
-    const streamingTotal = report.revenue.streaming || 0;
-    
-    const multiplierBreakdown = {
-      prestige: {
-        current: user.prestige,
-        multiplier: prestigeMultiplier,
-        bonusPercent: Math.round((prestigeMultiplier - 1) * 100),
-        nextTier: getNextPrestigeTier(user.prestige),
-      },
-      merchandising: {
-        baseRate: merchandisingBase,
-        prestigeMultiplier: merchandisingMultiplier,
-        total: passiveIncome.merchandising,
-        formula: `₡${merchandisingBase.toLocaleString()} × ${merchandisingMultiplier.toFixed(2)}`,
-      },
-      streaming: {
-        baseRate,
-        battleMultiplier,
-        fameMultiplier,
-        studioMultiplier,
-        totalBattles,
-        totalFame,
-        total: streamingTotal,
-        formula: `₡${baseRate.toLocaleString()} × ${battleMultiplier.toFixed(2)} × ${fameMultiplier.toFixed(2)} × ${studioMultiplier.toFixed(2)}`,
-      },
-    };
-
-    res.json({
-      ...report,
-      multiplierBreakdown,
-    });
+    const report = await getDailyFinancialReport(req.user!.userId);
+    res.json(report);
 });
 
 /**

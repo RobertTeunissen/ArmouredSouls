@@ -14,9 +14,7 @@ interface Weapon {
   description: string;
   baseDamage: number;
   cost: number;
-  // Attribute bonuses (add as needed)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any;
+  [key: string]: string | number | boolean | null | undefined;
 }
 
 interface WeaponTableProps {
@@ -93,10 +91,8 @@ const WeaponTable: React.FC<WeaponTableProps> = ({
 
   const getSortedWeapons = () => {
     return [...weapons].sort((a, b) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let aValue: any;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let bValue: any;
+      let aValue: string | number;
+      let bValue: string | number;
 
       const rangeBandOrder: Record<string, number> = { melee: 0, short: 1, mid: 2, long: 3 };
 

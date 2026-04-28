@@ -39,9 +39,8 @@ const TournamentManagement = () => {
       } else {
         setActiveTournament(null);
       }
-    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-      console.error('Failed to load tournaments:', err);
-      setError(err.response?.data?.error || 'Failed to load tournaments');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to load tournaments');
     }
   };
 
@@ -51,8 +50,8 @@ const TournamentManagement = () => {
     try {
       const data = await getEligibleRobots();
       setEligibleRobots(data);
-    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-      console.error('Failed to load eligible robots:', err);
+    } catch (err: unknown) {
+      // Silently ignore - eligible robots is supplementary data
     }
   };
 
@@ -68,8 +67,8 @@ const TournamentManagement = () => {
       setSuccessMessage(result.message);
       await loadTournaments();
       await loadEligibleRobots();
-    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-      setError(err.response?.data?.error || 'Failed to create tournament');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to create tournament');
     } finally {
       setLoading(false);
     }
@@ -87,8 +86,8 @@ const TournamentManagement = () => {
       setSuccessMessage(result.message);
       await loadTournaments();
       await loadEligibleRobots();
-    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-      setError(err.response?.data?.error || 'Failed to execute round');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to execute round');
     } finally {
       setLoading(false);
     }

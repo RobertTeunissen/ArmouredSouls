@@ -5,26 +5,9 @@ import StanceSelector from './StanceSelector';
 import YieldThresholdSlider from './YieldThresholdSlider';
 import WeaponSelectionModal from './WeaponSelectionModal';
 import { RangeBand } from '../utils/weaponRange';
+import type { RobotWithAttributes, WeaponInventoryItem } from '../types/robot';
 
-interface Robot {
-  id: number;
-  name: string;
-  currentHP: number;
-  maxHP: number;
-  currentShield: number;
-  maxShield: number;
-  battleReadiness: number;
-  repairCost: number;
-  loadoutType: string;
-  mainWeaponId: number | null;
-  offhandWeaponId: number | null;
-  stance: string;
-  yieldThreshold: number;
-  mainWeapon: WeaponInventory | null;
-  offhandWeapon: WeaponInventory | null;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any; // For other robot attributes
-}
+type Robot = RobotWithAttributes;
 
 interface WeaponInventory {
   id: number;

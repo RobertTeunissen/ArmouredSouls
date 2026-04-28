@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import apiClient from '../utils/apiClient';
 import LogoB from '../assets/logos/logo-b.svg?react';
 import HomeIcon from '../assets/icons/home.svg?react';
 import RobotIcon from '../assets/icons/robot.svg?react';
@@ -22,16 +23,8 @@ function Navigation() {
   useEffect(() => {
     const fetchRobots = async () => {
       try {
-        const token = localStorage.getItem('token');
-        if (!token) return;
-        const response = await fetch('/api/robots', {
-          headers: { 'Authorization': `Bearer ${token}` },
-        });
-        if (response.ok) {
-          const data = await response.json();
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          setUserRobots(data.map((robot: any) => ({ id: robot.id, name: robot.name })));
-        }
+        const response = await apiClient.get('/api/robots');
+        setUserRobots(response.data.map((robot: { id: number; name: string }) => ({ id: robot.id, name: robot.name })));
       } catch {
         // Silently handle fetch failure
       }

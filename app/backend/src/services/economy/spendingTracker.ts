@@ -78,35 +78,3 @@ export async function trackSpending(
     logger.error('Failed to track spending:', error);
   }
 }
-
-/**
- * Get current spending for a user.
- * 
- * @param userId - The user ID
- * @returns The budget spent by category, or null if not tracking
- */
-export async function getSpending(userId: number): Promise<BudgetSpent | null> {
-  try {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        onboardingChoices: true,
-      },
-    });
-
-    if (!user) {
-      return null;
-    }
-
-    const choices = (user.onboardingChoices as Record<string, unknown>) || {};
-    return (choices.budgetSpent as BudgetSpent) || {
-      facilities: 0,
-      robots: 0,
-      weapons: 0,
-      attributes: 0,
-    };
-  } catch (error) {
-    logger.error('Failed to get spending:', error);
-    return null;
-  }
-}

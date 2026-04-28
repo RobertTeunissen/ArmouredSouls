@@ -34,37 +34,22 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
 
       const token = localStorage.getItem('token');
       if (!token) {
-        console.error('[UpcomingMatches] No authentication token found');
         logout();
         navigate('/login');
         return;
       }
 
-      console.log('[UpcomingMatches] Fetching upcoming matches...');
       const data = await getUpcomingMatches(robotId);
-      console.log('[UpcomingMatches] Received matches:', {
-        total: data.length,
-        leagueMatches: data.filter(m => m.matchType === 'league').length,
-        tournamentMatches: data.filter(m => m.matchType === 'tournament').length,
-        matches: data,
-      });
 
       setMatches(data);
       setError(null);
-    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+    } catch (err: unknown) {
       if (axios.isAxiosError(err) && err.response?.status === 401) {
-        console.error('[UpcomingMatches] Authentication error:', err);
         logout();
         navigate('/login');
         return;
       }
-      console.error('[UpcomingMatches] Failed to fetch upcoming matches:', err);
-      console.error('[UpcomingMatches] Error details:', {
-        message: err.message,
-        response: err.response?.data,
-        status: err.response?.status,
-      });
-      setError(err.response?.data?.message || 'Failed to load upcoming matches');
+      setError(axios.isAxiosError(err) ? err.response?.data?.message || 'Failed to load upcoming matches' : 'Failed to load upcoming matches');
     } finally {
       setLoading(false);
     }
@@ -165,12 +150,6 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
 
     const matchResult = getMatchResult(match);
     if (!matchResult) {
-      console.log('[UpcomingMatches] Filtering out match:', {
-        id: match.id,
-        matchType: match.matchType,
-        hasRobot1: !!match.robot1,
-        hasRobot2: !!match.robot2,
-      });
       return null;
     }
 
@@ -186,7 +165,7 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
       );
     }
 
-    const { myRobot, opponent } = matchResult as { myRobot: any; opponent: any; isTagTeam: false; isByeMatch?: boolean }; // eslint-disable-line @typescript-eslint/no-explicit-any
+    const { myRobot, opponent } = matchResult as { myRobot: { name: string; id: number } | null; opponent: { name: string; id: number } | null; isTagTeam: false; isByeMatch?: boolean };
     if (!myRobot) return null;
 
     // Bye matches

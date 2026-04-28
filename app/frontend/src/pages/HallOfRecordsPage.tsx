@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import apiClient from '../utils/apiClient';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
 import { useNavigate } from 'react-router-dom';
@@ -12,8 +12,6 @@ import {
   KothRecords,
 } from '../components/hall-of-records';
 import type { RecordsData, CategoryKey } from '../components/hall-of-records';
-
-const API_URL = import.meta.env.VITE_API_URL || '';
 
 function HallOfRecordsPage() {
   const { user } = useAuth();
@@ -32,11 +30,7 @@ function HallOfRecordsPage() {
       setLoading(true);
       setError(null);
 
-      const response = await axios.get<RecordsData>(`${API_URL}/api/records`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
+      const response = await apiClient.get<RecordsData>('/api/records');
 
       setRecords(response.data);
     } catch (err) {

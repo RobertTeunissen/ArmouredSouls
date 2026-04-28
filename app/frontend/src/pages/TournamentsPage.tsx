@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import Navigation from '../components/Navigation';
 import { listTournaments, Tournament } from '../utils/tournamentApi';
 import { getRoundLabel } from '../utils/bracketUtils';
@@ -31,13 +32,12 @@ function TournamentsPage() {
       const data = await listTournaments();
       setTournaments(data.tournaments || []);
       setError(null);
-    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-      if (err.response?.status === 401) {
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err) && err.response?.status === 401) {
         logout();
         navigate('/login');
         return;
       }
-      console.error('Failed to fetch tournaments:', err);
       setError('Failed to load tournaments');
     } finally {
       setLoading(false);
@@ -222,8 +222,7 @@ function TournamentsPage() {
                         <div className="text-sm text-warning font-semibold">Champion</div>
                         <div className="text-xl font-bold">{tournament.winner.name}</div>
                         <div className="text-sm text-secondary">
-                          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                          Owned by {(tournament.winner as any).user?.stableName || (tournament.winner as any).user?.username || 'Unknown'}
+                          Owned by {(tournament.winner as { user?: { stableName?: string; username?: string } }).user?.stableName || (tournament.winner as { user?: { username?: string } }).user?.username || 'Unknown'}
                         </div>
                       </div>
                     </div>

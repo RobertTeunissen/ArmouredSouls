@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import axios from 'axios';
 import apiClient from '../utils/apiClient';
 
 interface StableNameModalProps {
@@ -32,8 +33,8 @@ function StableNameModal({ onComplete }: StableNameModalProps) {
       });
       
       onComplete();
-    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-      setError(err.response?.data?.error || 'Failed to set stable name');
+    } catch (err: unknown) {
+      setError(axios.isAxiosError(err) ? err.response?.data?.error || 'Failed to set stable name' : 'Failed to set stable name');
       setSubmitting(false);
     }
   };

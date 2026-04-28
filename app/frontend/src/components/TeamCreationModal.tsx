@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import { createTagTeam } from '../utils/tagTeamApi';
 import { Robot } from '../utils/robotApi';
@@ -74,15 +75,17 @@ function TeamCreationModal({ onClose, onTeamCreated }: TeamCreationModalProps) {
       setError(null);
       await createTagTeam(activeRobotId, reserveRobotId);
       onTeamCreated();
-    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-      console.error('Failed to create team:', err);
-      const errorMessage = err.response?.data?.error || err.response?.data?.message || 'Failed to create team';
-      const errorDetails = err.response?.data?.details;
-      
-      if (errorDetails && Array.isArray(errorDetails)) {
-        setError(`${errorMessage}: ${errorDetails.join(', ')}`);
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        const errorMessage = err.response?.data?.error || err.response?.data?.message || 'Failed to create team';
+        const errorDetails = err.response?.data?.details;
+        if (errorDetails && Array.isArray(errorDetails)) {
+          setError(`${errorMessage}: ${errorDetails.join(', ')}`);
+        } else {
+          setError(errorMessage);
+        }
       } else {
-        setError(errorMessage);
+        setError(err instanceof Error ? err.message : 'Failed to create team');
       }
     } finally {
       setCreating(false);

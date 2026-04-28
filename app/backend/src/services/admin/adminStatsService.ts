@@ -1362,19 +1362,19 @@ export async function getWeaponAnalytics(userFilter: Prisma.UserWhereInput = {})
  * Get achievement analytics data.
  */
 export async function getAchievementAnalytics(userFilter: Prisma.UserWhereInput = {}) {
-  // Total unlocks grouped by achievement ID
-  const unlocksByAchievement = await prisma.userAchievement.groupBy({
-    by: ['achievementId'],
-    where: { user: userFilter },
-    _count: { id: true },
-  });
-
-  const totalUsers = await prisma.user.count({ where: userFilter });
-  const usersWithAnyAchievement = await prisma.userAchievement.findMany({
-    where: { user: userFilter },
-    select: { userId: true },
-    distinct: ['userId'],
-  });
+  const [unlocksByAchievement, totalUsers, usersWithAnyAchievement] = await Promise.all([
+    prisma.userAchievement.groupBy({
+      by: ['achievementId'],
+      where: { user: userFilter },
+      _count: { id: true },
+    }),
+    prisma.user.count({ where: userFilter }),
+    prisma.userAchievement.findMany({
+      where: { user: userFilter },
+      select: { userId: true },
+      distinct: ['userId'],
+    }),
+  ]);
 
   const unlockMap = new Map(unlocksByAchievement.map(a => [a.achievementId, a._count.id]));
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import apiClient from '../utils/apiClient';
 import Navigation from '../components/Navigation';
 import {
@@ -40,8 +41,7 @@ function TagTeamStandingsPage() {
       const response = await apiClient.get('/api/tag-teams');
       
       const teams = response.data.teams || [];
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const tiers = new Set<string>(teams.map((team: any) => team.tagTeamLeague));
+      const tiers = new Set<string>(teams.map((team: { tagTeamLeague: string }) => team.tagTeamLeague));
       setUserTeamTiers(tiers);
     } catch (err) {
       console.error('Failed to fetch user team tiers:', err);
@@ -63,14 +63,14 @@ function TagTeamStandingsPage() {
       const data = await getTagTeamStandings(selectedTier, page, 50);
       setStandings(data.standings);
       setTotalPages(data.pagination.totalPages);
-    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-      if (err.response?.status === 401) {
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err) && err.response?.status === 401) {
         logout();
         navigate('/login');
         return;
       }
-      console.error('Failed to fetch tag team standings:', err);
-      setError(err.response?.data?.message || 'Failed to load standings');
+      const message = axios.isAxiosError(err) ? err.response?.data?.message : undefined;
+      setError(message || 'Failed to load standings');
     } finally {
       setLoading(false);
     }

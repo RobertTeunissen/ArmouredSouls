@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import Navigation from '../components/Navigation';
 import BattleHistorySummary from '../components/BattleHistorySummary';
 import CompactBattleCard from '../components/CompactBattleCard';
@@ -58,8 +59,9 @@ function BattleHistoryPage() {
       setBattles(data.data);
       setPagination(data.pagination);
       setError(null);
-    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-      setError(err.response?.data?.message || 'Failed to load battle history');
+    } catch (err: unknown) {
+      const message = axios.isAxiosError(err) ? err.response?.data?.message : undefined;
+      setError(message || 'Failed to load battle history');
     } finally {
       setLoading(false);
     }
@@ -203,8 +205,7 @@ function BattleHistoryPage() {
                 {/* Outcome Filter */}
                 <select 
                   value={outcomeFilter}
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  onChange={(e) => setOutcomeFilter(e.target.value as any)}
+                  onChange={(e) => setOutcomeFilter(e.target.value as typeof outcomeFilter)}
                   className="w-full lg:w-auto min-h-[44px] bg-[#1a1f29] border border-white/10 rounded px-3 py-2 text-sm text-[#e6edf3] hover:border-[#58a6ff]/50 transition-colors"
                 >
                   <option value="all">All Outcomes</option>
@@ -216,8 +217,7 @@ function BattleHistoryPage() {
                 {/* Sort Control */}
                 <select 
                   value={sortBy}
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  onChange={(e) => setSortBy(e.target.value as any)}
+                  onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
                   className="w-full lg:w-auto min-h-[44px] bg-[#1a1f29] border border-white/10 rounded px-3 py-2 text-sm text-[#e6edf3] hover:border-[#58a6ff]/50 transition-colors"
                 >
                   <option value="date-desc">Sort: Newest First</option>

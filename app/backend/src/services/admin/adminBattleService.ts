@@ -237,18 +237,20 @@ export async function getAdminBattleList(params: {
       ];
     }
 
-    const totalBattles = await prisma.battle.count({ where: kothWhere });
-    const kothBattles = await prisma.battle.findMany({
-      where: kothWhere,
-      skip,
-      take: limit,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        robot1: { select: { id: true, name: true, userId: true } },
-        robot2: { select: { id: true, name: true, userId: true } },
-        participants: true,
-      },
-    });
+    const [totalBattles, kothBattles] = await Promise.all([
+      prisma.battle.count({ where: kothWhere }),
+      prisma.battle.findMany({
+        where: kothWhere,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          robot1: { select: { id: true, name: true, userId: true } },
+          robot2: { select: { id: true, name: true, userId: true } },
+          participants: true,
+        },
+      }),
+    ]);
 
     return {
       battles: kothBattles.map(battle => mapBattleRecord(battle, '1v1')),
@@ -289,51 +291,54 @@ export async function getAdminBattleList(params: {
   // For 'all', union 1v1 battles with tag team battles
   if (!battleType || battleType === 'all') {
     const oneVOneWhere = { ...where, battleType: { not: 'tag_team' } };
-    const oneVOneCount = await prisma.battle.count({ where: oneVOneWhere });
-    const tagTeamCount = await prisma.scheduledTagTeamMatch.count({
-      where: buildTagTeamWhere(search, leagueType),
-    });
+    const [oneVOneCount, tagTeamCount] = await Promise.all([
+      prisma.battle.count({ where: oneVOneWhere }),
+      prisma.scheduledTagTeamMatch.count({
+        where: buildTagTeamWhere(search, leagueType),
+      }),
+    ]);
     const totalBattles = oneVOneCount + tagTeamCount;
 
-    const oneVOneBattles = await prisma.battle.findMany({
-      where: oneVOneWhere,
-      skip,
-      take: limit,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        robot1: { select: { id: true, name: true, userId: true } },
-        robot2: { select: { id: true, name: true, userId: true } },
-        participants: true,
-      },
-    });
-
-    const tagTeamMatches = await prisma.scheduledTagTeamMatch.findMany({
-      where: buildTagTeamWhere(search, leagueType),
-      skip,
-      take: limit,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        battle: {
-          include: {
-            robot1: { select: { id: true, name: true, userId: true } },
-            robot2: { select: { id: true, name: true, userId: true } },
-            participants: true,
+    const [oneVOneBattles, tagTeamMatches] = await Promise.all([
+      prisma.battle.findMany({
+        where: oneVOneWhere,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          robot1: { select: { id: true, name: true, userId: true } },
+          robot2: { select: { id: true, name: true, userId: true } },
+          participants: true,
+        },
+      }),
+      prisma.scheduledTagTeamMatch.findMany({
+        where: buildTagTeamWhere(search, leagueType),
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          battle: {
+            include: {
+              robot1: { select: { id: true, name: true, userId: true } },
+              robot2: { select: { id: true, name: true, userId: true } },
+              participants: true,
+            },
+          },
+          team1: {
+            include: {
+              activeRobot: { select: { id: true, name: true } },
+              reserveRobot: { select: { id: true, name: true } },
+            },
+          },
+          team2: {
+            include: {
+              activeRobot: { select: { id: true, name: true } },
+              reserveRobot: { select: { id: true, name: true } },
+            },
           },
         },
-        team1: {
-          include: {
-            activeRobot: { select: { id: true, name: true } },
-            reserveRobot: { select: { id: true, name: true } },
-          },
-        },
-        team2: {
-          include: {
-            activeRobot: { select: { id: true, name: true } },
-            reserveRobot: { select: { id: true, name: true } },
-          },
-        },
-      },
-    });
+      }),
+    ]);
 
     const mappedOneVOne = oneVOneBattles.map(battle => mapBattleRecord(battle, '1v1'));
     const mappedTagTeam = tagTeamMatches
@@ -357,18 +362,20 @@ export async function getAdminBattleList(params: {
   }
 
   // Standard 1v1 query for league/tournament filters
-  const totalBattles = await prisma.battle.count({ where });
-  const battles = await prisma.battle.findMany({
-    where,
-    skip,
-    take: limit,
-    orderBy: { createdAt: 'desc' },
-    include: {
-      robot1: { select: { id: true, name: true, userId: true } },
-      robot2: { select: { id: true, name: true, userId: true } },
-      participants: true,
-    },
-  });
+  const [totalBattles, battles] = await Promise.all([
+    prisma.battle.count({ where }),
+    prisma.battle.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        robot1: { select: { id: true, name: true, userId: true } },
+        robot2: { select: { id: true, name: true, userId: true } },
+        participants: true,
+      },
+    }),
+  ]);
 
   return {
     battles: battles.map(battle => mapBattleRecord(battle, '1v1')),

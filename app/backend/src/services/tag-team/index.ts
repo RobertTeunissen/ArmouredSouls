@@ -40,7 +40,6 @@ export type {
 
 export {
   getInstancesForTier,
-  getTagTeamLeagueInstanceStats,
   assignTagTeamLeagueInstance,
   createTagTeamWithInstanceAssignment,
   rebalanceTagTeamInstances,
@@ -52,7 +51,6 @@ export {
 } from './tagTeamLeagueInstanceService';
 export type {
   TagTeamLeagueInstance,
-  TagTeamLeagueInstanceStats,
 } from './tagTeamLeagueInstanceService';
 
 export {
