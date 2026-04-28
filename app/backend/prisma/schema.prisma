@@ -51,8 +51,9 @@ model User {
   totalPracticeBattles Int  @default(0) @map("total_practice_battles")
 
   // ===== TIMESTAMPS =====
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  lastLoginAt DateTime? @map("last_login_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
 
   // ===== RELATIONS =====
   robots          Robot[]
@@ -797,4 +798,18 @@ model TuningAllocation {
 
   @@index([robotId])
   @@map("tuning_allocations")
+}
+
+model AdminAuditLog {
+  id              Int      @id @default(autoincrement())
+  adminUserId     Int      @map("admin_user_id")
+  operationType   String   @map("operation_type") @db.VarChar(100)
+  operationResult String   @map("operation_result") @db.VarChar(20)
+  resultSummary   Json     @map("result_summary")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@index([adminUserId])
+  @@index([operationType])
+  @@index([createdAt])
+  @@map("admin_audit_logs")
 }

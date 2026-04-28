@@ -1,18 +1,31 @@
 /**
- * Admin tab components barrel export.
- * Single entry point for all admin tab components and shared types.
+ * Admin portal barrel export.
+ * Single entry point for admin route guard, layout, shared components, and types.
  */
 
-export { DashboardTab } from './DashboardTab';
-export { CycleControlsTab } from './CycleControlsTab';
-export { BattleLogsTab } from './BattleLogsTab';
-export { RobotStatsTab } from './RobotStatsTab';
-export { BankruptcyMonitorTab } from './BankruptcyMonitorTab';
-export { RecentUsersTab } from './RecentUsersTab';
-export { RepairLogTab } from './RepairLogTab';
-export { SecurityTab } from './SecurityTab';
-export { PasswordResetTab } from './PasswordResetTab';
-export { ImageUploadsTab } from './ImageUploadsTab';
-export { AdminChangelogTab } from './AdminChangelogTab';
+export { default as AdminRoute } from './AdminRoute';
+export { default as AdminLayout } from './AdminLayout';
 
+// Shared UI components
+export {
+  AdminStatCard,
+  AdminDataTable,
+  AdminFilterBar,
+  AdminPageHeader,
+  AdminSlideOver,
+  AdminEmptyState,
+} from './shared';
+
+export type {
+  AdminStatCardProps,
+  AdminDataTableProps,
+  AdminDataTableColumn,
+  AdminFilterBarProps,
+  FilterChip,
+  AdminPageHeaderProps,
+  AdminSlideOverProps,
+  AdminEmptyStateProps,
+} from './shared';
+
+// Shared types
 export * from './types';

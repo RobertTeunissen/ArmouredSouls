@@ -35,6 +35,12 @@ export interface SystemStats {
     avgDuration: number;
     kills: number;
     killPercentage: number;
+    byType?: {
+      league: { total: number; draws: number; drawPercentage: number; kills: number; killPercentage: number; avgDuration: number };
+      tournament: { total: number; draws: number; drawPercentage: number; kills: number; killPercentage: number; avgDuration: number };
+      tagTeam: { total: number; draws: number; drawPercentage: number; kills: number; killPercentage: number; avgDuration: number };
+      koth: { total: number; draws: number; drawPercentage: number; kills: number; killPercentage: number; avgDuration: number };
+    };
   };
   finances: {
     totalCredits: number;
@@ -216,6 +222,8 @@ export interface RecentUser {
   currency: number;
   role: string;
   createdAt: string;
+  lastLoginAt: string | null;
+  churnRisk: 'low' | 'medium' | 'high';
   onboarding: {
     completed: boolean;
     skipped: boolean;

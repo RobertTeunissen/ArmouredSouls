@@ -1,389 +1,254 @@
-# Admin Panel Guide
+# Admin Portal Guide
 
 ## Overview
 
-The Admin Panel provides tools for managing the game's daily cycle, tournaments, battles, and system operations. Access it at `/admin` (requires admin role).
+The Admin Portal (`/admin`) is the primary management and monitoring tool for Armoured Souls. It requires the `admin` role and is accessed via a dedicated sidebar-based layout separate from the player-facing game UI.
 
-The panel is organized into 8 tabs:
-1. **Dashboard** — System statistics overview with integrated System Health monitoring
-2. **Cycle Controls** — Run matchmaking, battles, rebalancing, repairs, and bulk cycles
-3. **Tournaments** — Create and manage competitive tournaments
-4. **Battle Logs** — Browse and filter battle history (1v1 and 2v2 tag team)
-5. **Robot Stats** — Statistical analysis, outlier detection, and performance analytics
-6. **Bankruptcy Monitor** — Monitor users at risk of bankruptcy (always visible)
-7. **Recent Users** — Recent real users with onboarding status and issue detection
-8. **Repair Log** — View and filter manual vs automatic repair activity with savings tracking
+## Architecture
 
-## Component Architecture
+The portal uses a **sidebar + page** architecture:
 
-The Admin Page uses a **thin shell + tab components** pattern:
+- **`AdminLayout.tsx`** — Fixed sidebar with grouped navigation, header bar with page title, error boundary, and `<Outlet>` for page content
+- **Pages** — Each page is a lazy-loaded standalone component in `pages/admin/`
+- **Shared components** — Reusable UI in `components/admin/shared/`: `AdminPageHeader`, `AdminStatCard`, `AdminDataTable`, `AdminFilterBar`, `AdminSlideOver`, `AdminEmptyState`
+- **Shared types** — `components/admin/types.ts` contains shared interfaces
+- **Store** — `stores/adminStore.ts` (Zustand) manages scheduler status, session log, and cached stats
 
-- **`AdminPage.tsx`** — Lightweight shell (~100-200 lines) handling tab navigation, URL hash persistence, and localStorage persistence. Renders the active tab component.
-- **Tab components** — Each tab is a self-contained component in `components/admin/`:
-  - `DashboardTab.tsx`
-  - `CycleControlsTab.tsx`
-  - `BattleLogsTab.tsx`
-  - `RobotStatsTab.tsx`
-  - `BankruptcyMonitorTab.tsx`
-  - `RecentUsersTab.tsx`
-  - `RepairLogTab.tsx`
-- **Shared types** — `components/admin/types.ts` contains shared interfaces (`SystemStats`, `Battle`, `SessionLogEntry`, `RobotStats`, `AtRiskUser`, etc.)
-- **Barrel export** — `components/admin/index.ts` re-exports all tab components
+All pages manage their own data fetching. The sidebar collapses to icons on narrow screens (`w-16` → `md:w-60`).
 
-Each tab component manages its own data fetching and refresh logic. The `TournamentManagement` component is imported directly from `components/TournamentManagement.tsx`.
+## Navigation Structure
 
-## Tab Navigation
+| Section | Page | Route | Description |
+|---------|------|-------|-------------|
+| **Overview** | Dashboard | `/admin/dashboard` | KPI cards, system stats, battle type breakdown |
+| **Game Operations** | Cycle Controls | `/admin/cycles` | Scheduler status, manual triggers, bulk cycle runner |
+| | Practice Arena | `/admin/practice-arena` | Practice battle usage and daily trends |
+| **Battle Data** | Battle Logs | `/admin/battles` | Paginated battle history with type filters and detail slide-over |
+| | Robot Stats | `/admin/robot-stats` | Attribute analysis, outlier detection, win rate correlation |
+| | League Health | `/admin/league-health` | Per-league robot counts, ELO averages, instance counts |
+| | Weapons | `/admin/weapons` | Weapon popularity, type breakdown, ownership stats |
+| **Player Management** | Players | `/admin/players` | Player list with tabs (New Players, Auto-Generated, At-Risk), churn risk, engagement, search, detail slide-over |
+| | Economy | `/admin/economy` | Credit circulation, balance distribution, facility adoption |
+| **Security & Moderation** | Security | `/admin/security` | Security events, severity summary, flagged users |
+| | Image Uploads | `/admin/image-uploads` | Upload history, moderation events, orphan cleanup |
+| **Content** | Changelog | `/admin/changelog` | Create, edit, publish changelog entries |
+| | Achievements | `/admin/achievements` | Unlock rates, participation stats |
+| | Tuning | `/admin/tuning` | Tuning allocation adoption, attribute ranking |
+| **Maintenance** | Repair Log | `/admin/repair-log` | Manual vs automatic repairs, savings tracking |
+| | Audit Log | `/admin/audit-log` | Admin action audit trail with filters |
 
-Tabs persist across page reloads via two mechanisms:
-- **localStorage** — `adminActiveTab` key stores the active tab ID
-- **URL hash** — e.g., `#dashboard`, `#battles`, `#bankruptcy-monitor`
+## UI Patterns
 
-Switching tabs updates both localStorage and the URL hash. On page load, the tab is restored from the URL hash first, then localStorage as fallback.
+### Filter Style
+
+All pages use the `AdminFilterBar` component for filter controls — pill-shaped toggle buttons with a consistent look. This includes:
+- Tab-like navigation within pages (e.g., Players: New Players / Auto-Generated / At-Risk)
+- Data type filters (e.g., Battle Logs: All / League / Tournament / Tag Team / KotH)
+- User type filters (e.g., Achievements: Real Players / Auto-Generated / All)
+
+### Stat Cards
+
+`AdminStatCard` provides KPI display with label, value, color coding, optional trend indicator, and icon. Used at the top of most pages for summary metrics.
+
+### Data Tables
+
+`AdminDataTable` provides sortable, paginated tables with custom column renderers, row click handlers, and empty state messages.
+
+### Slide-Overs
+
+`AdminSlideOver` provides a right-side panel for detail views (player detail, battle detail) without leaving the current page.
+
+## Page Details
+
+### Dashboard (`/admin/dashboard`)
+
+KPI cards showing total users, new users (7d), total robots, battles (24h), total battles, active users (7d), current cycle, and last cycle timestamp. Below the KPIs: system stats grid with robot tier breakdown, match scheduling, battle statistics (overall and per-type: league/tournament/tag team/KotH), economy overview, facility stats, weapon stats, stance/loadout/yield distributions.
+
+**API:** `GET /api/admin/dashboard/kpis`, `GET /api/admin/stats`
+**Filter:** Real / Auto / All user filter
+
+### Cycle Controls (`/admin/cycles`)
+
+Scheduler status panel showing active state, running job, and queue. Manual trigger buttons with confirmation dialogs for: matchmaking, battles, league rebalancing, repairs, daily finances, KotH. Bulk cycle runner with configurable cycle count (1-100), tournament/KotH/finance/user-generation toggles. Session log with export and clear.
+
+**API:** `GET /api/admin/scheduler/status`, `POST /api/admin/cycles/bulk`, and individual operation endpoints
+
+### Players (`/admin/players`)
+
+Unified player management page combining player listing, engagement monitoring, and at-risk detection.
+
+**Tabs** (via `AdminFilterBar` pills):
+- **New Players** — Real (non-test, non-auto) players from recent cycles
+- **Auto-Generated** — Bot accounts created by the bulk cycle runner
+- **At-Risk** — Users near bankruptcy threshold (₡10,000)
+
+**Controls:**
+- Cycle range dropdown (5 / 10 / 25 / 50 / 100 / All)
+- Churn risk filter dropdown (All / High / Medium / Low) — client-side filter on the loaded data
+
+**Table columns:** Player name, Balance, Robots, Battles, Win %, Last Login, Churn Risk, Issues count
+
+**Search:** Username, stable name, or robot name search across all users
+
+**Detail slide-over** (click any row):
+- Basic info: ID, username, stable, balance, role, join date, onboarding status, last login, churn risk
+- Summary stats: robots, battle ready, win rate, facilities
+- Issues list (if any)
+- Robot details with HP, battle readiness badge, stance, win rate
+- Facility list
+- Password reset form
+
+**API:** `GET /api/admin/users/recent?cycles=N&filter=real|auto|all`, `GET /api/admin/users/at-risk`, `GET /api/admin/users/search?q=...`, `GET /api/admin/users/:id`, `POST /api/admin/users/:id/reset-password`
+
+### Economy (`/admin/economy`)
+
+Credit circulation, average/median balance, bankruptcy risk count, and facility adoption table.
+
+**API:** `GET /api/admin/economy/overview`
+
+### Battle Logs (`/admin/battles`)
+
+Paginated battle list with type filter (All / League / Tournament / Tag Team / KotH), robot name search, format indicators (1v1 / 2v2 / KotH), ELO changes, and duration. Detail slide-over shows formula breakdowns.
+
+**API:** `GET /api/admin/battles`, `GET /api/admin/battles/:id`
+
+### League Health (`/admin/league-health`)
+
+Per-league tier breakdown: robot count, average ELO, number of league instances, and per-instance robot counts.
+
+**API:** `GET /api/admin/league-health`
+
+### Weapons (`/admin/weapons`)
+
+Weapon popularity ranking, type breakdown, total weapons owned.
+
+**API:** `GET /api/admin/weapons/analytics`
+**Filter:** Real / Auto / All user filter
+
+### Security (`/admin/security`)
+
+Security event summary (by severity), flagged users, filterable event list with severity/type/user/date filters.
+
+**API:** `GET /api/admin/security/summary`, `GET /api/admin/security/events`
+
+### Achievements (`/admin/achievements`)
+
+Per-achievement unlock count and rate, participation stats, never-unlocked and high-unlock flags.
+
+**API:** `GET /api/admin/achievements/analytics`
+**Filter:** Real / Auto / All user filter
+
+### Tuning (`/admin/tuning`)
+
+Tuning allocation adoption rate, total robots with tuning, and attribute ranking showing which attributes players invest tuning points into most.
+
+**API:** `GET /api/admin/tuning/adoption`
+**Filter:** Real / Auto / All user filter
+
+### Practice Arena (`/admin/practice-arena`)
+
+Current session stats (battles today, unique players, rate limit hits, total since start) and daily usage history table.
+
+**API:** `GET /api/admin/practice-arena/stats`
+
+### Repair Log (`/admin/repair-log`)
+
+Manual vs automatic repair events with cost breakdowns, pre-discount costs, and savings tracking. Filterable by repair type and date range.
+
+**API:** `GET /api/admin/audit-log/repairs`
+
+### Audit Log (`/admin/audit-log`)
+
+Paginated admin action audit trail. Filterable by operation type and date range.
+
+**API:** `GET /api/admin/audit-log`
+
+### Changelog (`/admin/changelog`)
+
+Create, edit, publish, and delete changelog entries. Supports categories (balance, feature, bugfix, economy), draft/published status, and optional image upload.
+
+**API:** Changelog CRUD endpoints under `/api/changelog/`
+
+### Image Uploads (`/admin/image-uploads`)
+
+Uploaded image history with user/robot info, moderation event log (rejections, warnings), and orphan file cleanup tool.
+
+**API:** `GET /api/admin/uploads`, `POST /api/admin/uploads/cleanup`, `GET /api/admin/security/events`
+
+### Robot Stats (`/admin/robot-stats`)
+
+Statistical analysis of all 23 robot attributes: mean/median/stddev, outlier detection (IQR method), win rate correlation by quintile, league tier comparison, top/bottom performers.
+
+**API:** `GET /api/admin/stats/robots`
+
+## Churn Risk Classification
+
+The Players page includes a churn risk indicator for each user, combining login recency with battle engagement to flag players who may be leaving the game.
+
+### Risk Levels
+
+| Level | Criteria | Meaning |
+|-------|----------|---------|
+| **High** | Last login > 14 days ago, OR no battles and last login > 3 days ago | Player is likely gone or never engaged |
+| **Medium** | Last login > 7 days ago, OR fewer than 5 total battles | Player is disengaging or hasn't found their footing |
+| **Low** | Recent login and 5+ battles | Player is active and engaged |
+
+### How It Works
+
+The `classifyChurnRisk` function in `adminStatsService.ts` evaluates two signals:
+
+1. **Login recency** — days since `lastLoginAt` (falls back to `createdAt` if the user never logged in after account creation)
+2. **Battle activity** — total battles across all of the user's robots
+
+These two signals catch different churn patterns:
+- A veteran player who stops logging in (high battles, stale login)
+- A new player who registered but never engaged (zero battles, stale login)
+- A player who logs in but doesn't play (recent login, low battles)
+
+### Filtering by Churn Risk
+
+The Players page provides a churn risk filter dropdown alongside the cycle range selector. Options: All / High / Medium / Low. The filter is applied client-side on the already-fetched user list, so switching between risk levels is instant.
+
+### Data Source
+
+Churn risk is computed per-user in the `GET /api/admin/users/recent` endpoint response. Each user object includes:
+- `lastLoginAt` — ISO timestamp of last login, or `null` if never logged in after registration
+- `churnRisk` — `'low'` | `'medium'` | `'high'`
+
+## User Filter System
+
+Many admin pages support filtering data by user type to separate real player activity from auto-generated bot noise:
+
+| Filter | What it shows |
+|--------|---------------|
+| **Real** (default) | Excludes `auto_wimpbot_*`, `auto_averagebot_*`, `auto_expertbot_*`, `test_user_*`, `bye_robot_user` |
+| **Auto** | Only auto-generated bot accounts (`auto_*` prefixes) |
+| **All** | Everything including test and system accounts |
+
+The filter is implemented by `buildUserFilter()` in `src/utils/buildUserFilter.ts` which returns a Prisma `UserWhereInput` clause.
 
 ## Daily Cycle System
 
-### What is a Cycle?
-
-A cycle represents one "day" in the game world. It processes all automated activities in a specific order to ensure fair gameplay.
-
-### New Cycle Flow (8 Steps)
-
-1. **Repair All Robots** - Pre-tournament repair with costs deducted
-2. **Tournament Execution** - Process tournament rounds and create new tournaments
-3. **Repair All Robots** - Post-tournament repair with costs deducted
-4. **Execute League Battles** - Run all scheduled league matches
-5. **Rebalance Leagues** - Promote/demote robots between tiers
-6. **Auto Generate Users** - Add new AI players (optional)
-7. **Repair All Robots** - Post-league repair with costs deducted
-8. **Matchmaking** - Schedule matches for next cycle
-
-### Running Cycles
-
-**Location:** Admin Panel → Cycle Controls Tab
-
-**Controls:**
-- **Cycles to Run:** 1-100 (default: 1)
-- **Include Tournaments:** Enable/disable tournament processing (default: enabled)
-- **Include Daily Finances:** Enable/disable daily finance processing
-- **Generate Users Per Cycle:** Auto-create N users per cycle where N = cycle number (default: disabled)
-- **Auto-Repair:** Enable/disable automatic robot repairs
-
-**Button:** 🚀 Run X Cycle(s)
-
-**What Happens:**
-- All 8 steps execute sequentially
-- Repair costs are automatically deducted from user balances
-- Session log shows detailed progress for each step
-- Stats refresh automatically after completion
-
-### Session Log
-
-The session log shows real-time progress:
-
-```
-✓ Cycle 1: Step 1 - Repaired 15 robot(s) for ₡60,000
-✓ Cycle 1: Step 2 - Tournaments: 1 tournament(s), 1 round(s), 4 match(es)
-✓ Cycle 1: Step 3 - Repaired 8 robot(s) for ₡32,000
-✓ Cycle 1: Step 4 - Executed 20 battle(s) (20 successful, 0 failed)
-ℹ Cycle 1: Step 5 - Rebalanced: 3 promoted, 2 demoted
-✓ Cycle 1: Step 8 - Created 18 match(es)
-```
-
-Session log features:
-- Timestamps and color-coded entry types
-- Persists to localStorage (`adminSessionLog` key, max 100 entries FIFO)
-- Clear log and export-to-JSON functionality
-
-## Individual Operations
-
-### Matchmaking
-
-**Button:** 🎯 Run Matchmaking
-
-**What it does:**
-- Creates scheduled league matches for all battle-ready robots
-- Matches are scheduled 24 hours in the future by default
-- Uses ELO-based pairing within league instances
-
-**When to use:**
-- To manually schedule matches outside of the cycle
-- For testing matchmaking algorithms
-- When you need immediate match scheduling
-
-### Execute Battles
-
-**Button:** ⚔️ Execute Battles
-
-**What it does:**
-- Runs all scheduled matches with status='scheduled'
-- Processes combat, updates ELO, awards rewards
-- Records battle history
-
-**When to use:**
-- To manually execute scheduled matches
-- For testing battle mechanics
-- When you want battles without running a full cycle
-
-### Rebalance Leagues
-
-**Button:** 🔄 Rebalance Leagues
-
-**What it does:**
-- Evaluates robots based on league points
-- Promotes top performers to higher tiers
-- Demotes bottom performers to lower tiers
-
-**When to use:**
-- To manually trigger league rebalancing
-- For testing promotion/demotion logic
-- After significant ELO changes
-
-### Auto-Repair All Robots
-
-**Button:** 🔧 Auto-Repair All Robots
-
-**What it does:**
-- Repairs all damaged robots to full HP
-- Applies Repair Bay facility discounts
-- **Deducts costs from user balances**
-
-**When to use:**
-- To manually repair all robots
-- For testing repair cost calculations
-- Before important events or testing
-
-### Process Daily Finances
-
-**Button:** 💰 Process Daily Finances
-
-**What it does:**
-- Processes daily financial operations for all users
-- Applies facility operating costs and income
-
-**When to use:**
-- To manually trigger daily finance processing
-- For testing economic balance
-
-## Dashboard Tab
-
-### System Statistics
-
-The Dashboard displays a statistics grid organized into sections:
-
-**Robots:**
-- Total robots by tier
-- Battle-ready percentage
-- Average ELO by league
-
-**Battles:**
-- Last 24 hours activity
-- Total battles
-- Draw percentage
-- Kill percentage
-- Average duration
-
-**Economy:**
-- Total credits in system
-- Average user balance
-
-**Facilities:**
-- Most popular facilities
-- Average facility levels
-- Total purchases
-
-**Combat Stats:**
-- Stance distribution
-- Loadout type distribution
-- Yield threshold patterns
-
-### System Health (Collapsible Section)
-
-At the bottom of the Dashboard, a collapsible `<details>` section provides System Health monitoring (previously a standalone tab). Expand it to view:
-
-- **Cycle Performance** — Average cycle duration, step durations, degradation detection (fetched from `/api/analytics/performance`)
-- **Data Integrity** — Valid/invalid cycle counts, integrity issues (fetched from `/api/analytics/integrity`)
-- **Event Statistics** — Total events, active users/robots, events by type (fetched from `/api/analytics/logs/summary`)
-
-## Bankruptcy Monitor Tab
-
-The Bankruptcy Monitor is a dedicated tab for monitoring users at risk of bankruptcy. Unlike the old conditional section buried in the Dashboard, this tab **always renders**:
-
-- **When users are at risk:** Displays a detailed list with balance history, runway days (estimated days until bankruptcy), and robot damage information for each at-risk user
-- **When no users are at risk:** Shows a green "✓ No users at risk of bankruptcy" confirmation with the bankruptcy threshold displayed
-
-This tab fetches data from `GET /api/admin/users/at-risk`.
-
-**When to use:**
-- To proactively monitor the economic health of the player base
-- To identify users who may need balance adjustments
-- After running cycles with high repair costs
-
-## Tournaments Tab
-
-### Tournament Management
-
-**Create Tournament:**
-- Set tournament name
-- Choose number of participants (power of 2: 4, 8, 16, 32, 64)
-- System auto-selects top robots by ELO
-
-**Active Tournaments:**
-- View current round and progress
-- See bracket structure with seedings
-- Execute next round manually
-- Complete tournament when finished
-
-**Tournament History:**
-- View past tournaments
-- See winners and participants
-- Review tournament statistics
-
-## Battle Logs Tab
-
-### Battle History
-
-**Filters:**
-- **League Type:** All, Bronze, Silver, Gold, Platinum, Diamond
-- **Battle Type:** All, League, Tournament, Tag Team
-- **Search:** Robot names or usernames
-
-### Tag Team Battle Filtering
-
-Select "Tag Team" from the Battle Type filter to view 2v2 tag team battles. When this filter is active, the backend queries `TagTeamMatch` records joined with `Battle` and `TagTeam` data.
-
-Each battle row displays a **battle format indicator**:
-- **1v1** — Standard league or tournament battle
-- **2v2** — Tag team battle
-
-When "All" is selected, both 1v1 and 2v2 battles are shown together with their format indicators.
-
-### Battle Details
-
-Click any battle to open the Battle Details Modal:
-
-- **1v1 battles:** Side-by-side robot comparison, attribute comparison grid, combat log with expandable formula breakdowns, and battle rewards
-- **2v2 tag team battles:** Team layout showing Team 1 (active + reserve robots) vs Team 2 (active + reserve robots), team-level stats, individual robot stats per team member, and the combat log
-
-## Robot Stats Tab
-
-### System Statistics
-
-**Attribute Selector:** Choose which robot attribute to analyze
-
-**Analysis Sections:**
-- Statistical analysis cards
-- Outlier detection
-- Win rate correlation
-- League comparison
-- Top/bottom performers with clickable robot name links
-
-## Recent Users Tab
-
-Displays recent real users with:
-- Per-user onboarding status (completion, skip, current step)
-- Robot details per user
-- Issue detection flags
-- Cycle range control for filtering the time window
-
-## Repair Log Tab
-
-The Repair Log tab provides visibility into manual vs automatic repair activity across all players. It helps admins track the impact of the 50% manual repair discount.
-
-**Data Source:** `GET /api/admin/audit-log/repairs`
-
-### Summary Stats
-
-Three summary cards at the top of the tab:
-- **Total Manual Repairs** — Count of repairs triggered via the Repair All button
-- **Total Automatic Repairs** — Count of repairs triggered during cycle processing
-- **Total Savings** — Sum of credits saved from the 50% manual repair discount
-
-### Filters
-
-| Filter | Control | Default |
-|--------|---------|---------|
-| Repair Type | Select: All / Manual / Automatic | All |
-| Start Date | Date picker | 7 days ago |
-| End Date | Date picker | Today |
-
-Changing any filter triggers a re-fetch from the API.
-
-### Data Table
-
-| Column | Description |
-|--------|-------------|
-| Player | Stable name |
-| Robot | Robot name |
-| Repair Type | Badge-styled: green for manual, gray for automatic |
-| Cost | Final cost paid (₡X) |
-| Pre-Discount Cost | Cost before manual discount (₡X), shown as `—` for automatic repairs |
-| Savings | Credits saved from manual discount (₡X), shown as `—` for automatic repairs |
-| Timestamp | When the repair occurred |
-
-Pagination with Previous/Next buttons (default 25 rows per page).
-
-**When to use:**
-- To monitor how players are using manual vs automatic repairs
-- To track the economic impact of the 50% manual repair discount
-- To identify players who are actively managing their repair costs
-
-## Best Practices
-
-### Testing Workflow
-
-1. **Initial Setup:**
-   - Run 1 cycle with tournaments enabled
-   - Check session log for any errors
-   - Verify matches were created
-
-2. **Ongoing Testing:**
-   - Run cycles as needed to progress time
-   - Monitor repair costs and user balances via Bankruptcy Monitor
-   - Check tournament progression
-
-3. **Debugging:**
-   - Use individual operations to isolate issues
-   - Check battle details for combat problems (both 1v1 and 2v2)
-   - Review session log for error patterns
-
-### Performance Tips
-
-- Running 10+ cycles may take several minutes
-- Session log updates in real-time
-- Each tab manages its own data refresh
-- Use browser console for detailed backend logs
-
-### Common Issues
-
-**No matches created:**
-- Check if robots are battle-ready (HP ≥ 80%)
-- Verify robots have weapons equipped
-- Ensure league instances have enough robots
-
-**Battles failing:**
-- Check robot HP levels
-- Verify weapon configurations
-- Review combat logs for errors
-
-**Users going bankrupt:**
-- Use the Bankruptcy Monitor tab to track at-risk users
-- Monitor repair costs vs. battle rewards
-- Check facility operating costs
-- Adjust economic balance if needed
-
-**Tag team battles not appearing:**
-- Ensure tag team battles have been executed (odd cycles)
-- Select "Tag Team" or "All" in the Battle Type filter
-- Verify tag team matchmaking has run
-
-## Keyboard Shortcuts
-
-- None currently (future enhancement)
+A cycle represents one "day" in the game world. The bulk cycle runner on the Cycle Controls page executes these steps in sequence:
+
+1. Repair all robots (with cost deduction)
+2. Tournament execution
+3. Post-tournament repair
+4. League battle execution
+5. League rebalancing (promotions/demotions)
+6. Auto-generate users (optional)
+7. Post-league repair
+8. Matchmaking for next cycle
+
+Individual operations can also be triggered manually via the production job buttons.
 
 ## Related Documentation
 
-- [Cycle Process Details](../game-systems/PRD_CYCLE_SYSTEM.md)
+- [Cycle System](../game-systems/PRD_CYCLE_SYSTEM.md)
 - [Tournament System](../game-systems/PRD_TOURNAMENT_SYSTEM.md)
 - [Matchmaking System](../game-systems/PRD_MATCHMAKING.md)
 - [Economy System](../game-systems/PRD_ECONOMY_SYSTEM.md)
-- [Admin Page PRD](../prd_pages/PRD_ADMIN_PAGE.md)
+- [Security Architecture](../architecture/PRD_SECURITY.md)
+- [Robot Statistics](../../app/backend/docs/ROBOT_STATISTICS.md)
+- [Achievement System](../game-systems/PRD_ACHIEVEMENT_SYSTEM.md)
+- [Tuning Bay System](../game-systems/TUNING_BAY_SYSTEM.md)

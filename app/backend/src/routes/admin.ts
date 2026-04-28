@@ -20,6 +20,8 @@ import { SecuritySeverity } from '../services/security/securityLogger';
 import { resetPassword } from '../services/auth/passwordResetService';
 import { validatePassword } from '../utils/validation';
 import { practiceArenaMetrics } from '../services/practice-arena/practiceArenaMetrics';
+import { buildUserFilter } from '../utils/buildUserFilter';
+import type { UserFilterType } from '../utils/buildUserFilter';
 import {
   getAdminBattleList,
   getAdminBattleDetail,
@@ -30,6 +32,13 @@ import {
   getRobotAttributeStats,
   getRecentUserActivity,
   getRepairAuditLog,
+  getDashboardKpis,
+  getEngagementPlayers,
+  getEconomyOverview,
+  getLeagueHealth,
+  getWeaponAnalytics,
+  getAchievementAnalytics,
+  getTuningAdoption,
 } from '../services/admin/adminStatsService';
 import {
   repairAllRobotsAdmin,
@@ -39,6 +48,7 @@ import {
   executeBulkCycles,
   backfillCycleSnapshots,
 } from '../services/admin/adminCycleService';
+import { recordAction as recordAuditAction, getEntries as getAuditEntries } from '../services/admin/adminAuditLogService';
 import { handleAdminUploads, handleAdminCleanup } from '../services/moderation/adminUploadsHandler';
 import prisma from '../lib/prisma';
 
@@ -72,6 +82,7 @@ const battlesQuerySchema = paginationQuery.extend({
 
 const recentUsersQuerySchema = z.object({
   cycles: z.coerce.number().int().positive().max(200).optional().default(10),
+  filter: z.enum(['all', 'real', 'auto']).optional().default('real'),
 });
 
 const repairAuditQuerySchema = z.object({
@@ -110,6 +121,46 @@ const adminUploadsQuerySchema = z.object({
   endDate: z.string().optional(),
 });
 
+const statsQuerySchema = z.object({
+  filter: z.enum(['all', 'real', 'auto']).optional().default('real'),
+});
+
+const dashboardKpisQuerySchema = z.object({
+  filter: z.enum(['all', 'real', 'auto']).optional().default('real'),
+});
+
+const engagementPlayersQuerySchema = z.object({
+  filter: z.enum(['all', 'real', 'auto']).optional().default('real'),
+  page: z.coerce.number().int().positive().optional().default(1),
+  limit: z.coerce.number().int().positive().max(100).optional().default(50),
+});
+
+const weaponAnalyticsQuerySchema = z.object({
+  filter: z.enum(['all', 'real', 'auto']).optional().default('real'),
+});
+
+const achievementAnalyticsQuerySchema = z.object({
+  filter: z.enum(['all', 'real', 'auto']).optional().default('real'),
+});
+
+const tuningAdoptionQuerySchema = z.object({
+  filter: z.enum(['all', 'real', 'auto']).optional().default('real'),
+});
+
+const auditLogQuerySchema = z.object({
+  page: z.coerce.number().int().positive().optional().default(1),
+  pageSize: z.coerce.number().int().positive().max(100).optional().default(25),
+  operationType: z.string().max(100).optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+});
+
+const auditLogBodySchema = z.object({
+  operationType: z.string().min(1).max(100),
+  operationResult: z.enum(['success', 'failure']),
+  resultSummary: z.record(z.string(), z.unknown()),
+});
+
 // Mount tournament routes
 router.use('/tournaments', tournamentRoutes);
 
@@ -121,12 +172,15 @@ const BANKRUPTCY_RISK_THRESHOLD = 10000; // Credits below which a user is consid
  * Trigger matchmaking for all leagues
  */
 router.post('/matchmaking/run', authenticateToken, requireAdmin, validateRequest({ body: scheduledForBodySchema }), async (req: Request, res: Response) => {
+  const authReq = req as AuthRequest;
   try {
     const { scheduledFor } = req.body;
     const targetTime = scheduledFor ? new Date(scheduledFor) : new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     logger.info('[Admin] Triggering matchmaking...');
     const totalMatches = await runMatchmaking(targetTime);
+
+    recordAuditAction(authReq.user!.userId, 'matchmaking_run', 'success', { matchesCreated: totalMatches, scheduledFor: targetTime.toISOString() });
 
     res.json({
       success: true,
@@ -135,6 +189,7 @@ router.post('/matchmaking/run', authenticateToken, requireAdmin, validateRequest
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
+    recordAuditAction(authReq.user!.userId, 'matchmaking_run', 'failure', { error: error instanceof Error ? error.message : String(error) });
     logger.error('[Admin] Matchmaking error:', error);
     res.status(500).json({
       error: 'Failed to run matchmaking',
@@ -148,6 +203,7 @@ router.post('/matchmaking/run', authenticateToken, requireAdmin, validateRequest
  * Execute scheduled battles
  */
 router.post('/battles/run', authenticateToken, requireAdmin, validateRequest({ body: scheduledForBodySchema }), async (req: Request, res: Response) => {
+  const authReq = req as AuthRequest;
   try {
     const { scheduledFor } = req.body;
     // Only pass a date if scheduledFor is explicitly provided
@@ -157,12 +213,15 @@ router.post('/battles/run', authenticateToken, requireAdmin, validateRequest({ b
     logger.info('[Admin] Executing battles...');
     const summary = await executeScheduledBattles(targetTime);
 
+    recordAuditAction(authReq.user!.userId, 'battles_run', 'success', { summary });
+
     res.json({
       success: true,
       summary,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
+    recordAuditAction(authReq.user!.userId, 'battles_run', 'failure', { error: error instanceof Error ? error.message : String(error) });
     logger.error('[Admin] Battle execution error:', error);
     res.status(500).json({
       error: 'Failed to execute battles',
@@ -176,9 +235,12 @@ router.post('/battles/run', authenticateToken, requireAdmin, validateRequest({ b
  * Trigger league rebalancing (promotions/demotions)
  */
 router.post('/leagues/rebalance', authenticateToken, requireAdmin, validateRequest({}), async (req: Request, res: Response) => {
+  const authReq = req as AuthRequest;
   try {
     logger.info('[Admin] Triggering league rebalancing...');
     const summary = await rebalanceLeagues();
+
+    recordAuditAction(authReq.user!.userId, 'leagues_rebalance', 'success', { summary });
 
     res.json({
       success: true,
@@ -186,6 +248,7 @@ router.post('/leagues/rebalance', authenticateToken, requireAdmin, validateReque
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
+    recordAuditAction(authReq.user!.userId, 'leagues_rebalance', 'failure', { error: error instanceof Error ? error.message : String(error) });
     logger.error('[Admin] Rebalancing error:', error);
     res.status(500).json({
       error: 'Failed to rebalance leagues',
@@ -199,11 +262,14 @@ router.post('/leagues/rebalance', authenticateToken, requireAdmin, validateReque
  * Auto-repair all robots to 100% HP
  */
 router.post('/repair/all', authenticateToken, requireAdmin, validateRequest({ body: repairAllBodySchema }), async (req: Request, res: Response) => {
+  const authReq = req as AuthRequest;
   try {
     const { deductCosts = false } = req.body;
     const result = await repairAllRobotsAdmin(deductCosts);
+    recordAuditAction(authReq.user!.userId, 'repair_all', 'success', { deductCosts, robotsRepaired: result.robotsRepaired });
     res.json(result);
   } catch (error) {
+    recordAuditAction(authReq.user!.userId, 'repair_all', 'failure', { error: error instanceof Error ? error.message : String(error) });
     logger.error('[Admin] Auto-repair error:', error);
     res.status(500).json({
       error: 'Failed to auto-repair robots',
@@ -234,6 +300,7 @@ router.post('/recalculate-hp', authenticateToken, requireAdmin, validateRequest(
  * Process daily financial obligations (operating costs) for all users
  */
 router.post('/daily-finances/process', authenticateToken, requireAdmin, validateRequest({}), async (req: Request, res: Response) => {
+  const authReq = req as AuthRequest;
   try {
     logger.info('[Admin] Processing daily finances for all users...');
     
@@ -243,12 +310,15 @@ router.post('/daily-finances/process', authenticateToken, requireAdmin, validate
       `deducted ₡${summary.totalCostsDeducted.toLocaleString()}, ` +
       `${summary.bankruptUsers} bankruptcies`);
     
+    recordAuditAction(authReq.user!.userId, 'daily_finances_process', 'success', { usersProcessed: summary.usersProcessed, totalCostsDeducted: summary.totalCostsDeducted });
+
     res.json({
       success: true,
       summary,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
+    recordAuditAction(authReq.user!.userId, 'daily_finances_process', 'failure', { error: error instanceof Error ? error.message : String(error) });
     logger.error('[Admin] Daily finances error:', error);
     res.status(500).json({
       error: 'Failed to process daily finances',
@@ -262,11 +332,15 @@ router.post('/daily-finances/process', authenticateToken, requireAdmin, validate
  * Run multiple complete cycles — delegates to adminCycleService.
  */
 router.post('/cycles/bulk', authenticateToken, requireAdmin, validateRequest({ body: bulkCyclesBodySchema }), async (req: Request, res: Response) => {
+  const authReq = req as AuthRequest;
   try {
     const result = await executeBulkCycles(req.body);
 
+    recordAuditAction(authReq.user!.userId, 'cycles_bulk', 'success', { cyclesRequested: req.body.cycles, cyclesCompleted: result.cyclesCompleted });
+
     res.json(result);
   } catch (error) {
+    recordAuditAction(authReq.user!.userId, 'cycles_bulk', 'failure', { error: error instanceof Error ? error.message : String(error) });
     logger.error('[Admin] Bulk cycles error:', error);
     res.status(500).json({
       error: 'Failed to run bulk cycles',
@@ -303,9 +377,11 @@ router.post('/snapshots/backfill', authenticateToken, requireAdmin, validateRequ
  * GET /api/admin/stats
  * Get system statistics
  */
-router.get('/stats', authenticateToken, requireAdmin, validateRequest({}), async (req: Request, res: Response) => {
+router.get('/stats', authenticateToken, requireAdmin, validateRequest({ query: statsQuerySchema }), async (req: Request, res: Response) => {
   try {
-    const stats = await getSystemStats();
+    const filter = (req.query.filter as UserFilterType) || 'real';
+    const userFilter = buildUserFilter(filter);
+    const stats = await getSystemStats(userFilter);
     res.json(stats);
   } catch (error) {
     logger.error('[Admin] Stats error:', error);
@@ -410,12 +486,15 @@ router.get('/stats/robots', authenticateToken, requireAdmin, validateRequest({})
  * Manually trigger tag team matchmaking
  */
 router.post('/tag-teams/matchmaking', authenticateToken, requireAdmin, validateRequest({ body: scheduledForBodySchema }), async (req: Request, res: Response) => {
+  const authReq = req as AuthRequest;
   try {
     const { scheduledFor } = req.body;
     const targetTime = scheduledFor ? new Date(scheduledFor) : new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     logger.info('[Admin] Triggering tag team matchmaking...');
     const totalMatches = await runTagTeamMatchmaking(targetTime);
+
+    recordAuditAction(authReq.user!.userId, 'tag_team_matchmaking', 'success', { matchesCreated: totalMatches });
 
     res.json({
       success: true,
@@ -424,6 +503,7 @@ router.post('/tag-teams/matchmaking', authenticateToken, requireAdmin, validateR
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
+    recordAuditAction(authReq.user!.userId, 'tag_team_matchmaking', 'failure', { error: error instanceof Error ? error.message : String(error) });
     logger.error('[Admin] Tag team matchmaking error:', error);
     res.status(500).json({
       error: 'Failed to run tag team matchmaking',
@@ -437,6 +517,7 @@ router.post('/tag-teams/matchmaking', authenticateToken, requireAdmin, validateR
  * Manually execute scheduled tag team battles
  */
 router.post('/tag-teams/battles', authenticateToken, requireAdmin, validateRequest({ body: scheduledForBodySchema }), async (req: Request, res: Response) => {
+  const authReq = req as AuthRequest;
   try {
     const { scheduledFor } = req.body;
     const targetTime = scheduledFor ? new Date(scheduledFor) : undefined;
@@ -444,12 +525,15 @@ router.post('/tag-teams/battles', authenticateToken, requireAdmin, validateReque
     logger.info('[Admin] Executing tag team battles...');
     const summary = await executeScheduledTagTeamBattles(targetTime);
 
+    recordAuditAction(authReq.user!.userId, 'tag_team_battles_run', 'success', { summary });
+
     res.json({
       success: true,
       summary,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
+    recordAuditAction(authReq.user!.userId, 'tag_team_battles_run', 'failure', { error: error instanceof Error ? error.message : String(error) });
     logger.error('[Admin] Tag team battle execution error:', error);
     res.status(500).json({
       error: 'Failed to execute tag team battles',
@@ -463,9 +547,12 @@ router.post('/tag-teams/battles', authenticateToken, requireAdmin, validateReque
  * Manually trigger tag team league rebalancing
  */
 router.post('/tag-teams/rebalance', authenticateToken, requireAdmin, validateRequest({}), async (req: Request, res: Response) => {
+  const authReq = req as AuthRequest;
   try {
     logger.info('[Admin] Triggering tag team league rebalancing...');
     const summary = await rebalanceTagTeamLeagues();
+
+    recordAuditAction(authReq.user!.userId, 'tag_team_rebalance', 'success', { summary });
 
     res.json({
       success: true,
@@ -473,6 +560,7 @@ router.post('/tag-teams/rebalance', authenticateToken, requireAdmin, validateReq
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
+    recordAuditAction(authReq.user!.userId, 'tag_team_rebalance', 'failure', { error: error instanceof Error ? error.message : String(error) });
     logger.error('[Admin] Tag team rebalancing error:', error);
     res.status(500).json({
       error: 'Failed to rebalance tag team leagues',
@@ -483,13 +571,15 @@ router.post('/tag-teams/rebalance', authenticateToken, requireAdmin, validateReq
 
 /**
  * GET /api/admin/users/recent
- * Get real (non-auto-generated) users registered in the last X cycles, with their robots and activity status.
+ * Get users registered in the last X cycles, with their robots and activity status.
  * Query params:
  *   - cycles: number of recent cycles to look back (default: 10)
+ *   - filter: 'real' | 'auto' | 'all' (default: 'real')
  */
 router.get('/users/recent', authenticateToken, requireAdmin, validateRequest({ query: recentUsersQuerySchema }), async (req: Request, res: Response) => {
   const cyclesBack = Math.min(Math.max(1, parseInt(req.query.cycles as string) || 10), 200);
-  const result = await getRecentUserActivity(cyclesBack);
+  const filter = (req.query.filter as string) || 'real';
+  const result = await getRecentUserActivity(cyclesBack, filter);
   res.json(result);
 });
 
@@ -528,6 +618,7 @@ router.get('/scheduler/status', authenticateToken, requireAdmin, validateRequest
  * Manually trigger a KotH cycle execution (admin-only)
  */
 router.post('/koth/trigger', authenticateToken, requireAdmin, validateRequest({}), async (_req: Request, res: Response) => {
+  const authReq = _req as AuthRequest;
   try {
     const { runJob } = await import('../services/cycle/cycleScheduler');
     const { executeScheduledKothBattles } = await import('../services/koth/kothBattleOrchestrator');
@@ -547,12 +638,15 @@ router.post('/koth/trigger', authenticateToken, requireAdmin, validateRequest({}
       };
     });
 
+    recordAuditAction(authReq.user!.userId, 'koth_trigger', 'success', { message: 'KotH cycle triggered' });
+
     res.json({
       success: true,
       message: 'KotH cycle triggered successfully',
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
+    recordAuditAction(authReq.user!.userId, 'koth_trigger', 'failure', { error: error instanceof Error ? error.message : String(error) });
     logger.error('[Admin] KotH trigger error:', error);
     res.status(500).json({
       error: 'Failed to trigger KotH cycle',
@@ -630,10 +724,24 @@ router.get('/users/search', authenticateToken, requireAdmin, validateRequest({ q
     take: 10,
   });
 
+  // Search by stable name (partial, case-insensitive)
+  const stableNameResults = await prisma.user.findMany({
+    where: { stableName: { contains: q, mode: 'insensitive' } },
+    select: safeSelect,
+    take: 10,
+  });
+
+  // Search by robot name (partial, case-insensitive) — return the owning user
+  const robotResults = await prisma.robot.findMany({
+    where: { name: { contains: q, mode: 'insensitive' } },
+    select: { user: { select: safeSelect } },
+    take: 10,
+  });
+
   // Deduplicate by user ID and limit to 10
   const seen = new Set<number>();
   const users: typeof idResults = [];
-  for (const user of [...idResults, ...usernameResults, ...emailResults]) {
+  for (const user of [...idResults, ...usernameResults, ...emailResults, ...stableNameResults, ...robotResults.map(r => r.user)]) {
     if (!seen.has(user.id)) {
       seen.add(user.id);
       users.push(user);
@@ -669,6 +777,82 @@ const resetPasswordLimiter = rateLimit({
       retryAfter: 900,
     });
   },
+});
+
+/**
+ * GET /api/admin/users/:id
+ * Get detailed user info for the admin player detail panel.
+ */
+router.get('/users/:id', authenticateToken, requireAdmin, validateRequest({ params: resetPasswordParamsSchema }), async (req: Request, res: Response) => {
+  const userId = Number(req.params.id);
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      username: true,
+      email: true,
+      stableName: true,
+      currency: true,
+      role: true,
+      createdAt: true,
+      hasCompletedOnboarding: true,
+      onboardingStep: true,
+      robots: {
+        where: { NOT: { name: 'Bye Robot' } },
+        select: {
+          id: true,
+          name: true,
+          elo: true,
+          currentLeague: true,
+          wins: true,
+          losses: true,
+          draws: true,
+          mainWeapon: { select: { weapon: { select: { name: true } } } },
+        },
+      },
+      facilities: {
+        where: { level: { gt: 0 } },
+        select: {
+          facilityType: true,
+          level: true,
+        },
+      },
+    },
+  });
+
+  if (!user) {
+    throw new AppError('USER_NOT_FOUND', 'User not found', 404);
+  }
+
+  res.json({
+    id: user.id,
+    username: user.username,
+    email: user.email,
+    stableName: user.stableName,
+    currency: user.currency,
+    role: user.role,
+    createdAt: user.createdAt.toISOString(),
+    onboarding: {
+      completed: user.hasCompletedOnboarding,
+      currentStep: user.onboardingStep,
+    },
+    robots: user.robots.map((r) => ({
+      id: r.id,
+      name: r.name,
+      elo: r.elo,
+      league: r.currentLeague,
+      wins: r.wins,
+      losses: r.losses,
+      draws: r.draws,
+      equippedWeapon: r.mainWeapon?.weapon?.name ?? null,
+    })),
+    facilities: user.facilities.map((f) => ({
+      type: f.facilityType,
+      level: f.level,
+      passiveIncome: 0,
+    })),
+  });
 });
 
 /**
@@ -713,5 +897,109 @@ router.get('/uploads', authenticateToken, requireAdmin, validateRequest({ query:
  * Trigger on-demand orphan image cleanup.
  */
 router.post('/uploads/cleanup', authenticateToken, requireAdmin, validateRequest({}), handleAdminCleanup);
+
+/**
+ * GET /api/admin/dashboard/kpis
+ * Get high-level KPI metrics for the admin dashboard.
+ */
+router.get('/dashboard/kpis', authenticateToken, requireAdmin, validateRequest({ query: dashboardKpisQuerySchema }), async (req: Request, res: Response) => {
+  const filter = (req.query.filter as UserFilterType) || 'real';
+  const userFilter = buildUserFilter(filter);
+  const kpis = await getDashboardKpis(userFilter);
+  res.json(kpis);
+});
+
+/**
+ * GET /api/admin/engagement/players
+ * Get player engagement data with churn risk classification.
+ */
+router.get('/engagement/players', authenticateToken, requireAdmin, validateRequest({ query: engagementPlayersQuerySchema }), async (req: Request, res: Response) => {
+  const filter = (req.query.filter as UserFilterType) || 'real';
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = Math.min(parseInt(req.query.limit as string) || 50, 100);
+  const userFilter = buildUserFilter(filter);
+  const result = await getEngagementPlayers(userFilter, page, limit);
+  res.json(result);
+});
+
+/**
+ * GET /api/admin/economy/overview
+ * Get economy overview metrics.
+ */
+router.get('/economy/overview', authenticateToken, requireAdmin, validateRequest({ query: dashboardKpisQuerySchema }), async (req: Request, res: Response) => {
+  const filter = (req.query.filter as UserFilterType) || 'real';
+  const userFilter = buildUserFilter(filter);
+  const result = await getEconomyOverview(userFilter);
+  res.json(result);
+});
+
+/**
+ * GET /api/admin/league-health
+ * Get league health metrics.
+ */
+router.get('/league-health', authenticateToken, requireAdmin, validateRequest({}), async (_req: Request, res: Response) => {
+  const result = await getLeagueHealth();
+  res.json(result);
+});
+
+/**
+ * GET /api/admin/weapons/analytics
+ * Get weapon analytics data.
+ */
+router.get('/weapons/analytics', authenticateToken, requireAdmin, validateRequest({ query: weaponAnalyticsQuerySchema }), async (req: Request, res: Response) => {
+  const filter = (req.query.filter as UserFilterType) || 'real';
+  const userFilter = buildUserFilter(filter);
+  const result = await getWeaponAnalytics(userFilter);
+  res.json(result);
+});
+
+/**
+ * GET /api/admin/achievements/analytics
+ * Get achievement analytics data.
+ */
+router.get('/achievements/analytics', authenticateToken, requireAdmin, validateRequest({ query: achievementAnalyticsQuerySchema }), async (req: Request, res: Response) => {
+  const filter = (req.query.filter as UserFilterType) || 'real';
+  const userFilter = buildUserFilter(filter);
+  const result = await getAchievementAnalytics(userFilter);
+  res.json(result);
+});
+
+/**
+ * GET /api/admin/tuning/adoption
+ * Get tuning system adoption metrics.
+ */
+router.get('/tuning/adoption', authenticateToken, requireAdmin, validateRequest({ query: tuningAdoptionQuerySchema }), async (req: Request, res: Response) => {
+  const filter = (req.query.filter as UserFilterType) || 'real';
+  const userFilter = buildUserFilter(filter);
+  const result = await getTuningAdoption(userFilter);
+  res.json(result);
+});
+
+/**
+ * GET /api/admin/audit-log
+ * Get paginated admin audit log entries.
+ */
+router.get('/audit-log', authenticateToken, requireAdmin, validateRequest({ query: auditLogQuerySchema }), async (req: Request, res: Response) => {
+  const page = parseInt(req.query.page as string) || 1;
+  const pageSize = Math.min(parseInt(req.query.pageSize as string) || 25, 100);
+  const operationType = req.query.operationType as string | undefined;
+  const startDate = req.query.startDate ? new Date(req.query.startDate as string) : undefined;
+  const endDate = req.query.endDate ? new Date(req.query.endDate as string) : undefined;
+
+  const result = await getAuditEntries({ page, pageSize, operationType, startDate, endDate });
+  res.json(result);
+});
+
+/**
+ * POST /api/admin/audit-log
+ * Manually record an admin audit log entry.
+ */
+router.post('/audit-log', authenticateToken, requireAdmin, validateRequest({ body: auditLogBodySchema }), async (req: Request, res: Response) => {
+  const authReq = req as AuthRequest;
+  const { operationType, operationResult, resultSummary } = req.body;
+  recordAuditAction(authReq.user!.userId, operationType, operationResult, resultSummary);
+  res.json({ success: true });
+});
+
 
 export default router;
