@@ -70,7 +70,6 @@ export interface WeaponInventoryItem {
     hydraulicSystemsBonus: number;
     powerCoreBonus: number;
     threatAnalysisBonus: number;
-    [key: string]: string | number | boolean | null | undefined;
   };
 }
 
@@ -94,8 +93,8 @@ export interface RobotWithAttributes extends RobotAttributes {
   maxShield: number;
   mainWeaponId: number | null;
   offhandWeaponId: number | null;
-  mainWeapon: WeaponInventoryItem | null;
-  offhandWeapon: WeaponInventoryItem | null;
+  mainWeapon: { id: number; weapon: Record<string, unknown> } | null;
+  offhandWeapon: { id: number; weapon: Record<string, unknown> } | null;
   loadoutType: string;
   stance: string;
   yieldThreshold: number;

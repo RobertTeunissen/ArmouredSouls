@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import { z } from 'zod';
 import { getInstancesForTier, LeagueTier, LEAGUE_TIERS } from '../services/league/leagueInstanceService';
 import prisma from '../lib/prisma';
+import type { Prisma } from '../../generated/prisma';
 import { LeagueError, LeagueErrorCode } from '../errors';
 import { validateRequest } from '../middleware/schemaValidator';
 
@@ -35,8 +36,7 @@ router.get('/:tier/standings', validateRequest({ params: leagueTierParamsSchema 
     leagueIds = instances.map(i => i.leagueId);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const whereClause: Record<string, any> = {
+  const whereClause: Prisma.RobotWhereInput = {
     leagueId: { in: leagueIds },
     NOT: { name: 'Bye Robot' },
   };

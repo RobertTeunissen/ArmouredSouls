@@ -59,32 +59,32 @@ export interface Robot {
   damageDealtLifetime: number;
   damageTakenLifetime: number;
   totalRepairsPaid: number;
-  titles: string;
+  titles: string | null;
   user: RobotUser;
   // Attributes (Decimal fields serialized as numbers)
   combatPower: number;
-  armorPlating: number;
-  shieldCapacity: number;
-  energyGeneration: number;
-  speed: number;
-  accuracy: number;
-  evasion: number;
-  criticalHit: number;
-  hullIntegrity: number;
-  thermalManagement: number;
-  signatureReduction: number;
-  electronicWarfare: number;
-  propulsion: number;
-  hydraulicSystems: number;
-  sensorArray: number;
-  targetingComputer: number;
-  reactiveArmor: number;
-  fieldRepairKit: number;
-  overclockModule: number;
+  targetingSystems: number;
   criticalSystems: number;
   penetration: number;
   weaponControl: number;
   attackSpeed: number;
+  armorPlating: number;
+  shieldCapacity: number;
+  evasionThrusters: number;
+  damageDampeners: number;
+  counterProtocols: number;
+  hullIntegrity: number;
+  servoMotors: number;
+  gyroStabilizers: number;
+  hydraulicSystems: number;
+  powerCore: number;
+  combatAlgorithms: number;
+  threatAnalysis: number;
+  adaptiveAI: number;
+  logicCores: number;
+  syncProtocols: number;
+  supportSystems: number;
+  formationTactics: number;
 }
 
 export interface WeaponInventory {
@@ -264,7 +264,7 @@ export function useRobotDetail(robotId: string | undefined): UseRobotDetailResul
   // Debounced fetch with visibility/focus re-fetch
   useEffect(() => {
     let isFetching = false;
-    let fetchTimeout: NodeJS.Timeout | null = null;
+    let fetchTimeout: ReturnType<typeof setTimeout> | null = null;
 
     const debouncedFetch = () => {
       if (fetchTimeout) clearTimeout(fetchTimeout);

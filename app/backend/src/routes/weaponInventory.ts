@@ -13,7 +13,7 @@ import { positiveIntParam } from '../utils/securityValidation';
 import { verifyWeaponOwnership } from '../middleware/ownership';
 import { securityMonitor } from '../services/security/securityMonitor';
 import { achievementService, type UnlockedAchievement } from '../services/achievement';
-import { calculateWeaponWorkshopDiscount, applyDiscount } from '../../shared/utils/discounts';
+import { calculateWeaponWorkshopDiscount, applyDiscount } from '../../../shared/utils/discounts';
 
 const router = express.Router();
 
@@ -123,7 +123,7 @@ router.post('/purchase', authenticateToken, validateRequest({ body: purchaseBody
     const freshWorkshop = freshFacilities.find(f => f.facilityType === 'weapons_workshop');
     const freshWorkshopLevel = freshWorkshop?.level || 0;
     if (freshWorkshopLevel !== weaponWorkshopLevel) {
-      throw new EconomyError(EconomyErrorCode.INSUFFICIENT_CREDITS, 'Facility level changed, please retry', 409);
+      throw new EconomyError(EconomyErrorCode.INVALID_TRANSACTION, 'Facility level changed, please retry', 409);
     }
 
     // Re-verify storage capacity inside transaction
@@ -155,7 +155,8 @@ router.post('/purchase', authenticateToken, validateRequest({ body: purchaseBody
     await eventLogger.logWeaponPurchase(currentCycle, userId, weaponIdNum, finalCost);
 
     const discountInfo = discountPercent > 0 ? ` | Discount: ${discountPercent}% (base: ₡${weapon.cost.toLocaleString()})` : '';
-    logger.info(`[Weapon] User ${userId} | Purchased: ${weapon.name} | Cost: ₡${finalCost.toLocaleString()}${discountInfo} | Balance: ₡${user.currency.toLocaleString()} → ₡${result.user.currency.toLocaleString()}`);
+    const previousBalance = result.user.currency + finalCost;
+    logger.info(`[Weapon] User ${userId} | Purchased: ${weapon.name} | Cost: ₡${finalCost.toLocaleString()}${discountInfo} | Balance: ₡${previousBalance.toLocaleString()} → ₡${result.user.currency.toLocaleString()}`);
 
     await trackSpending(userId, 'weapons', finalCost);
     securityMonitor.trackSpending(userId, finalCost, { sourceIp: req.ip || undefined, endpoint: req.originalUrl });

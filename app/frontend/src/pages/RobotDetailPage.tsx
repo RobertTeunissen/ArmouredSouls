@@ -166,7 +166,7 @@ function RobotDetailPage() {
 
   useEffect(() => {
     let isFetching = false;
-    let fetchTimeout: NodeJS.Timeout | null = null;
+    let fetchTimeout: ReturnType<typeof setTimeout> | null = null;
 
     const debouncedFetch = () => {
       // Clear any pending fetch
@@ -373,7 +373,7 @@ function RobotDetailPage() {
     }
   };
 
-  const handleCommitUpgrades = async (upgradePlan: Record<string, { plannedLevel: number; totalCost: number }>) => {
+  const handleCommitUpgrades = async (upgradePlan: Record<string, { currentLevel: number; plannedLevel: number; cost: number; baseCost: number }>) => {
     if (!robot) return;
 
     setError('');

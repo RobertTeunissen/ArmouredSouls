@@ -33,6 +33,8 @@ export interface Weapon {
   hydraulicSystemsBonus: number;
   powerCoreBonus: number;
   threatAnalysisBonus: number;
+  /** Allow dynamic attribute bonus access */
+  [key: string]: string | number | boolean | null | undefined;
 }
 
 export interface WeaponFacility {
