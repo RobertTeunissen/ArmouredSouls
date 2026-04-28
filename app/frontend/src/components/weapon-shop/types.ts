@@ -34,7 +34,7 @@ export interface Weapon {
   powerCoreBonus: number;
   threatAnalysisBonus: number;
   /** Allow dynamic attribute bonus access */
-  [key: string]: string | number | boolean | null | undefined;
+  [key: string]: unknown;
 }
 
 export interface WeaponFacility {

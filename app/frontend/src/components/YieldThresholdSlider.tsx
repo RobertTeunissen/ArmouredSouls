@@ -4,7 +4,7 @@ import apiClient from '../utils/apiClient';
 interface YieldThresholdSliderProps {
   robotId: number;
   currentThreshold: number;
-  robotAttributes: Record<string, number | string>;
+  robotAttributes: Record<string, unknown>;
   repairBayLevel?: number;
   activeRobotCount?: number;
   onThresholdChange: (newThreshold: number) => void;
@@ -89,9 +89,9 @@ function YieldThresholdSlider({
     ];
 
     return attributes.reduce((sum, attr) => {
-      const value = robotAttributes[attr] || 0;
+      const value = robotAttributes[attr];
       // Convert to number in case it's a string from Decimal serialization
-      const numValue = typeof value === 'string' ? parseFloat(value) : value;
+      const numValue = typeof value === 'string' ? parseFloat(value) : Number(value) || 0;
       return sum + numValue;
     }, 0);
   };

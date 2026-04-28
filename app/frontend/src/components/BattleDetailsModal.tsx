@@ -98,7 +98,8 @@ interface BattleParticipant {
 
 function BattleDetailsModal({ isOpen, onClose, battleId }: BattleDetailsModalProps) {
   const [loading, setLoading] = useState(false);
-  const [battle, setBattle] = useState<Record<string, unknown> | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [battle, setBattle] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [expandedEvent, setExpandedEvent] = useState<number | null>(null);
 

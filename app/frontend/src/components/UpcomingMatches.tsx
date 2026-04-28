@@ -165,7 +165,7 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
       );
     }
 
-    const { myRobot, opponent } = matchResult as { myRobot: { name: string; id: number } | null; opponent: { name: string; id: number } | null; isTagTeam: false; isByeMatch?: boolean };
+    const { myRobot, opponent } = matchResult as { myRobot: { name: string; id: number; elo: number; userId: number } | null; opponent: { name: string; id: number; elo: number; userId: number } | null; isTagTeam: false; isByeMatch?: boolean };
     if (!myRobot) return null;
 
     // Bye matches

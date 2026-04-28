@@ -13,7 +13,7 @@ import { positiveIntParam } from '../utils/securityValidation';
 import { verifyWeaponOwnership } from '../middleware/ownership';
 import { securityMonitor } from '../services/security/securityMonitor';
 import { achievementService, type UnlockedAchievement } from '../services/achievement';
-import { calculateWeaponWorkshopDiscount, applyDiscount } from '../../../shared/utils/discounts';
+import { calculateWeaponWorkshopDiscount, applyDiscount } from '../shared/utils/discounts';
 
 const router = express.Router();
 

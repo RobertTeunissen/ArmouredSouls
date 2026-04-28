@@ -5,7 +5,7 @@ import StanceSelector from './StanceSelector';
 import YieldThresholdSlider from './YieldThresholdSlider';
 import WeaponSelectionModal from './WeaponSelectionModal';
 import { RangeBand } from '../utils/weaponRange';
-import type { RobotWithAttributes, WeaponInventoryItem } from '../types/robot';
+import type { RobotWithAttributes } from '../types/robot';
 
 type Robot = RobotWithAttributes;
 
@@ -204,7 +204,7 @@ function BattleConfigTab({ robot, weapons, repairBayLevel = 0, activeRobotCount 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <WeaponSlot
               label="Main Weapon"
-              weapon={robot.mainWeapon}
+              weapon={robot.mainWeapon as WeaponInventory | null}
               onEquip={() => {
                 setWeaponSlotToEquip('main');
                 setShowWeaponModal(true);
@@ -214,7 +214,7 @@ function BattleConfigTab({ robot, weapons, repairBayLevel = 0, activeRobotCount 
             {(robot.loadoutType === 'weapon_shield' || robot.loadoutType === 'dual_wield') && (
               <WeaponSlot
                 label="Offhand Weapon"
-                weapon={robot.offhandWeapon}
+                weapon={robot.offhandWeapon as WeaponInventory | null}
                 onEquip={() => {
                   setWeaponSlotToEquip('offhand');
                   setShowWeaponModal(true);

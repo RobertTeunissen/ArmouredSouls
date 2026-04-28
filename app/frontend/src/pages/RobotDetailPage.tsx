@@ -21,7 +21,8 @@ import UpgradePlanner from '../components/UpgradePlanner';
 import Toast from '../components/Toast';
 import RobotPerformanceAnalytics from '../components/RobotPerformanceAnalytics';
 import TuningPoolEditor from '../components/TuningPoolEditor';
-import { getMatchHistory } from '../utils/matchmakingApi';
+import { getMatchHistory, BattleHistory } from '../utils/matchmakingApi';
+import type { RobotWithAttributes } from '../types/robot';
 
 interface Robot {
   id: number;
@@ -644,7 +645,7 @@ function RobotDetailPage() {
 
           {activeTab === 'matches' && (
             <div className="space-y-6">
-              <RecentBattles battles={recentBattles} robotId={robot.id} />
+              <RecentBattles battles={recentBattles as BattleHistory[]} robotId={robot.id} />
               <UpcomingMatches robotId={robot.id} battleReadiness={battleReadiness} />
             </div>
           )}
@@ -655,7 +656,7 @@ function RobotDetailPage() {
 
           {activeTab === 'battle-config' && isOwner && (
             <BattleConfigTab
-              robot={robot}
+              robot={robot as unknown as RobotWithAttributes}
               weapons={weapons}
               repairBayLevel={repairBayLevel}
               activeRobotCount={activeRobotCount}
@@ -691,7 +692,7 @@ function RobotDetailPage() {
 
           {activeTab === 'upgrades' && isOwner && (
             <UpgradePlanner
-              robot={robot}
+              robot={robot as unknown as RobotWithAttributes}
               currentCredits={currency}
               trainingLevel={trainingLevel}
               academyLevels={academyLevels}
@@ -703,13 +704,13 @@ function RobotDetailPage() {
           {activeTab === 'tuning' && isOwner && (
             <TuningPoolEditor
               robotId={robot.id}
-              robot={robot}
+              robot={robot as unknown as RobotWithAttributes}
             />
           )}
 
           {activeTab === 'stats' && (
             <div className="mb-6">
-              <EffectiveStatsDisplay robot={robot} />
+              <EffectiveStatsDisplay robot={robot as unknown as RobotWithAttributes} />
             </div>
           )}
 

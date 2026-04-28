@@ -14,7 +14,7 @@ interface Weapon {
   description: string;
   baseDamage: number;
   cost: number;
-  [key: string]: string | number | boolean | null | undefined;
+  [key: string]: unknown;
 }
 
 interface WeaponDetailModalProps {
@@ -45,7 +45,7 @@ const WeaponDetailModal: React.FC<WeaponDetailModalProps> = ({
   const discountedPrice = calculateDiscountedPrice(weapon.cost);
   const canAfford = userCredits >= discountedPrice;
   const canPurchase = canAfford && !isFull && !purchasing;
-  const cooldown = weapon.cooldown;
+  const cooldown = weapon.cooldown as number;
   const dps = calcDPS(weapon.baseDamage, cooldown);
 
   const getWeaponTypeIcon = (type: string) => {

@@ -14,7 +14,7 @@ interface Weapon {
   description: string;
   baseDamage: number;
   cost: number;
-  [key: string]: string | number | boolean | null | undefined;
+  [key: string]: unknown;
 }
 
 interface WeaponTableProps {
@@ -65,7 +65,7 @@ const WeaponTable: React.FC<WeaponTableProps> = ({
   };
 
   const calculateDPS = (weapon: Weapon): string => {
-    return calcDPS(weapon.baseDamage, weapon.cooldown);
+    return calcDPS(weapon.baseDamage, weapon.cooldown as number);
   };
 
   const calculateAttributeTotal = (weapon: Weapon): number => {
@@ -77,7 +77,7 @@ const WeaponTable: React.FC<WeaponTableProps> = ({
       'hydraulicSystemsBonus', 'powerCoreBonus', 'threatAnalysisBonus'
     ];
     
-    return attributeKeys.reduce((sum, key) => sum + (weapon[key] || 0), 0);
+    return attributeKeys.reduce((sum, key) => sum + ((weapon[key] as number) || 0), 0);
   };
 
   const handleSort = (field: SortField) => {
@@ -98,12 +98,12 @@ const WeaponTable: React.FC<WeaponTableProps> = ({
 
       switch (sortField) {
         case 'rangeBand':
-          aValue = rangeBandOrder[a.rangeBand] ?? 99;
-          bValue = rangeBandOrder[b.rangeBand] ?? 99;
+          aValue = rangeBandOrder[a.rangeBand as string] ?? 99;
+          bValue = rangeBandOrder[b.rangeBand as string] ?? 99;
           break;
         case 'cooldown':
-          aValue = a.cooldown;
-          bValue = b.cooldown;
+          aValue = a.cooldown as number;
+          bValue = b.cooldown as number;
           break;
         case 'dps':
           aValue = parseFloat(calculateDPS(a));
@@ -118,8 +118,8 @@ const WeaponTable: React.FC<WeaponTableProps> = ({
           bValue = calculateAttributeTotal(b);
           break;
         default:
-          aValue = a[sortField];
-          bValue = b[sortField];
+          aValue = a[sortField] as string | number;
+          bValue = b[sortField] as string | number;
       }
 
       if (typeof aValue === 'string') {
@@ -262,7 +262,7 @@ const WeaponTable: React.FC<WeaponTableProps> = ({
                   <span className="font-mono">{weapon.baseDamage}</span>
                 </td>
                 <td className="px-4 py-3 text-right">
-                  <span className="font-mono text-secondary">{weapon.cooldown}s</span>
+                  <span className="font-mono text-secondary">{String(weapon.cooldown)}s</span>
                 </td>
                 <td className="px-4 py-3 text-right">
                   <span className="font-mono">{dps}</span>
