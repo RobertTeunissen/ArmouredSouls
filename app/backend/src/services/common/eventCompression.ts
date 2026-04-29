@@ -39,7 +39,7 @@ const EVENTS_NEEDING_POSITIONS = new Set([
  * Strip debug-only fields from a combat event.
  * Returns a new object - does not mutate the original.
  */
-export function stripDebugFields(event: CombatEvent): CombatEvent {
+function stripDebugFields(event: CombatEvent): CombatEvent {
   const stripped = { ...event };
   
   for (const field of DEBUG_ONLY_FIELDS) {
@@ -88,29 +88,4 @@ export function estimateEventSize(event: CombatEvent): number {
  */
 export function estimateEventsMemory(events: CombatEvent[]): number {
   return events.reduce((sum, e) => sum + estimateEventSize(e), 0);
-}
-
-/**
- * Log memory statistics for an event array.
- */
-export function logEventMemoryStats(events: CombatEvent[], label: string = 'Events'): void {
-  const totalBytes = estimateEventsMemory(events);
-  const avgBytes = events.length > 0 ? totalBytes / events.length : 0;
-  
-  const byType: Record<string, { count: number; bytes: number }> = {};
-  for (const event of events) {
-    if (!byType[event.type]) {
-      byType[event.type] = { count: 0, bytes: 0 };
-    }
-    byType[event.type].count++;
-    byType[event.type].bytes += estimateEventSize(event);
-  }
-  
-  console.log(`[${label}] Total: ${events.length} events, ${(totalBytes / 1024).toFixed(1)}KB`);
-  console.log(`[${label}] Average: ${avgBytes.toFixed(0)} bytes/event`);
-  console.log(`[${label}] By type:`, Object.entries(byType)
-    .sort((a, b) => b[1].bytes - a[1].bytes)
-    .slice(0, 5)
-    .map(([type, stats]) => `${type}: ${stats.count} (${(stats.bytes / 1024).toFixed(1)}KB)`)
-    .join(', '));
 }

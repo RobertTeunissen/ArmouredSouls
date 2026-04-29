@@ -4,30 +4,18 @@ import '@testing-library/jest-dom';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import ResetAccountModal from '../ResetAccountModal';
 
-// Mock fetch
-global.fetch = vi.fn();
+// Mock apiClient
+vi.mock('../../../utils/apiClient', () => ({
+  default: {
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn(),
+  },
+}));
 
-// Mock localStorage
-const localStorageMock = (() => {
-  let store: Record<string, string> = {};
-
-  return {
-    getItem: (key: string) => store[key] || null,
-    setItem: (key: string, value: string) => {
-      store[key] = value.toString();
-    },
-    removeItem: (key: string) => {
-      delete store[key];
-    },
-    clear: () => {
-      store = {};
-    },
-  };
-})();
-
-Object.defineProperty(window, 'localStorage', {
-  value: localStorageMock,
-});
+import apiClient from '../../../utils/apiClient';
+const mockedApiClient = apiClient as any;
 
 describe('ResetAccountModal', () => {
   const mockOnClose = vi.fn();
@@ -35,21 +23,17 @@ describe('ResetAccountModal', () => {
 
   beforeEach(() => {
     vi.resetAllMocks();
-    localStorageMock.clear();
-    localStorageMock.setItem('token', 'test-token');
   });
 
-  afterEach(() => {
-    localStorageMock.clear();
-  });
+  afterEach(() => {});
 
   describe('Eligibility Checking', () => {
     it('should check reset eligibility when modal opens', async () => {
-      (global.fetch as any).mockResolvedValueOnce({
-        json: async () => ({
+      mockedApiClient.get.mockResolvedValueOnce({
+        data: {
           success: true,
           data: { canReset: true },
-        }),
+        },
       });
 
       render(
@@ -65,23 +49,18 @@ describe('ResetAccountModal', () => {
 
       // Wait for eligibility check to complete
       await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith(
-          '/api/onboarding/reset-eligibility',
-          expect.objectContaining({
-            headers: {
-              Authorization: 'Bearer test-token',
-            },
-          })
+        expect(mockedApiClient.get).toHaveBeenCalledWith(
+          '/api/onboarding/reset-eligibility'
         );
       });
     });
 
     it('should display reset form when eligible', async () => {
-      (global.fetch as any).mockResolvedValueOnce({
-        json: async () => ({
+      mockedApiClient.get.mockResolvedValueOnce({
+        data: {
           success: true,
           data: { canReset: true },
-        }),
+        },
       });
 
       render(
@@ -104,14 +83,14 @@ describe('ResetAccountModal', () => {
     });
 
     it('should display blockers when not eligible', async () => {
-      (global.fetch as any).mockResolvedValueOnce({
-        json: async () => ({
+      mockedApiClient.get.mockResolvedValueOnce({
+        data: {
           success: true,
           data: {
             canReset: false,
             blockers: ['scheduled_battles', 'active_tournament'],
           },
-        }),
+        },
       });
 
       render(
@@ -138,7 +117,7 @@ describe('ResetAccountModal', () => {
     });
 
     it('should handle eligibility check error', async () => {
-      (global.fetch as any).mockRejectedValueOnce(new Error('Network error'));
+      mockedApiClient.get.mockRejectedValueOnce(new Error('Network error'));
 
       render(
         <ResetAccountModal
@@ -162,11 +141,11 @@ describe('ResetAccountModal', () => {
 
   describe('Confirmation Text Validation', () => {
     beforeEach(async () => {
-      (global.fetch as any).mockResolvedValueOnce({
-        json: async () => ({
+      mockedApiClient.get.mockResolvedValueOnce({
+        data: {
           success: true,
           data: { canReset: true },
-        }),
+        },
       });
 
       render(
@@ -228,11 +207,11 @@ describe('ResetAccountModal', () => {
 
   describe('Reset Flow', () => {
     beforeEach(async () => {
-      (global.fetch as any).mockResolvedValueOnce({
-        json: async () => ({
+      mockedApiClient.get.mockResolvedValueOnce({
+        data: {
           success: true,
           data: { canReset: true },
-        }),
+        },
       });
 
       render(
@@ -249,11 +228,11 @@ describe('ResetAccountModal', () => {
     });
 
     it('should successfully reset account with "RESET" confirmation', async () => {
-      (global.fetch as any).mockResolvedValueOnce({
-        json: async () => ({
+      mockedApiClient.post.mockResolvedValueOnce({
+        data: {
           success: true,
           data: { message: 'Account reset successfully' },
-        }),
+        },
       });
 
       const input = screen.getByPlaceholderText('Type RESET or START OVER');
@@ -263,19 +242,12 @@ describe('ResetAccountModal', () => {
       fireEvent.click(resetButton);
 
       await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith(
+        expect(mockedApiClient.post).toHaveBeenCalledWith(
           '/api/onboarding/reset-account',
-          expect.objectContaining({
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: 'Bearer test-token',
-            },
-            body: JSON.stringify({
-              confirmation: 'RESET',
-              reason: 'User requested reset from onboarding',
-            }),
-          })
+          {
+            confirmation: 'RESET',
+            reason: 'User requested reset from onboarding',
+          }
         );
       });
 
@@ -283,11 +255,11 @@ describe('ResetAccountModal', () => {
     });
 
     it('should successfully reset account with "START OVER" confirmation', async () => {
-      (global.fetch as any).mockResolvedValueOnce({
-        json: async () => ({
+      mockedApiClient.post.mockResolvedValueOnce({
+        data: {
           success: true,
           data: { message: 'Account reset successfully' },
-        }),
+        },
       });
 
       const input = screen.getByPlaceholderText('Type RESET or START OVER');
@@ -297,15 +269,12 @@ describe('ResetAccountModal', () => {
       fireEvent.click(resetButton);
 
       await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith(
+        expect(mockedApiClient.post).toHaveBeenCalledWith(
           '/api/onboarding/reset-account',
-          expect.objectContaining({
-            method: 'POST',
-            body: JSON.stringify({
-              confirmation: 'START OVER',
-              reason: 'User requested reset from onboarding',
-            }),
-          })
+          {
+            confirmation: 'START OVER',
+            reason: 'User requested reset from onboarding',
+          }
         );
       });
 
@@ -313,16 +282,16 @@ describe('ResetAccountModal', () => {
     });
 
     it('should show loading state during reset', async () => {
-      (global.fetch as any).mockImplementationOnce(
+      mockedApiClient.post.mockImplementationOnce(
         () =>
           new Promise((resolve) =>
             setTimeout(
               () =>
                 resolve({
-                  json: async () => ({
+                  data: {
                     success: true,
                     data: { message: 'Account reset successfully' },
-                  }),
+                  },
                 }),
               100
             )
@@ -343,11 +312,11 @@ describe('ResetAccountModal', () => {
     });
 
     it('should handle reset API error', async () => {
-      (global.fetch as any).mockResolvedValueOnce({
-        json: async () => ({
+      mockedApiClient.post.mockResolvedValueOnce({
+        data: {
           success: false,
           error: 'Cannot reset - you have scheduled battles',
-        }),
+        },
       });
 
       const input = screen.getByPlaceholderText('Type RESET or START OVER');
@@ -366,7 +335,7 @@ describe('ResetAccountModal', () => {
     });
 
     it('should handle network error during reset', async () => {
-      (global.fetch as any).mockRejectedValueOnce(new Error('Network error'));
+      mockedApiClient.post.mockRejectedValueOnce(new Error('Network error'));
 
       const input = screen.getByPlaceholderText('Type RESET or START OVER');
       fireEvent.change(input, { target: { value: 'RESET' } });
@@ -396,11 +365,11 @@ describe('ResetAccountModal', () => {
     });
 
     it('should call onClose when cancel button is clicked', async () => {
-      (global.fetch as any).mockResolvedValueOnce({
-        json: async () => ({
+      mockedApiClient.get.mockResolvedValueOnce({
+        data: {
           success: true,
           data: { canReset: true },
-        }),
+        },
       });
 
       render(
@@ -422,11 +391,11 @@ describe('ResetAccountModal', () => {
     });
 
     it('should call onClose when overlay is clicked', async () => {
-      (global.fetch as any).mockResolvedValueOnce({
-        json: async () => ({
+      mockedApiClient.get.mockResolvedValueOnce({
+        data: {
           success: true,
           data: { canReset: true },
-        }),
+        },
       });
 
       const { container } = render(
@@ -451,11 +420,11 @@ describe('ResetAccountModal', () => {
     });
 
     it('should reset confirmation text when modal reopens', async () => {
-      (global.fetch as any).mockResolvedValue({
-        json: async () => ({
+      mockedApiClient.get.mockResolvedValue({
+        data: {
           success: true,
           data: { canReset: true },
-        }),
+        },
       });
 
       const { rerender } = render(
@@ -502,14 +471,14 @@ describe('ResetAccountModal', () => {
 
   describe('Blocker Display', () => {
     it('should display scheduled battles blocker', async () => {
-      (global.fetch as any).mockResolvedValueOnce({
-        json: async () => ({
+      mockedApiClient.get.mockResolvedValueOnce({
+        data: {
           success: true,
           data: {
             canReset: false,
             blockers: ['scheduled_battles'],
           },
-        }),
+        },
       });
 
       render(
@@ -530,14 +499,14 @@ describe('ResetAccountModal', () => {
     });
 
     it('should display active tournament blocker', async () => {
-      (global.fetch as any).mockResolvedValueOnce({
-        json: async () => ({
+      mockedApiClient.get.mockResolvedValueOnce({
+        data: {
           success: true,
           data: {
             canReset: false,
             blockers: ['active_tournament'],
           },
-        }),
+        },
       });
 
       render(
@@ -558,14 +527,14 @@ describe('ResetAccountModal', () => {
     });
 
     it('should display pending battles blocker', async () => {
-      (global.fetch as any).mockResolvedValueOnce({
-        json: async () => ({
+      mockedApiClient.get.mockResolvedValueOnce({
+        data: {
           success: true,
           data: {
             canReset: false,
             blockers: ['pending_battles'],
           },
-        }),
+        },
       });
 
       render(
@@ -586,14 +555,14 @@ describe('ResetAccountModal', () => {
     });
 
     it('should display multiple blockers', async () => {
-      (global.fetch as any).mockResolvedValueOnce({
-        json: async () => ({
+      mockedApiClient.get.mockResolvedValueOnce({
+        data: {
           success: true,
           data: {
             canReset: false,
             blockers: ['scheduled_battles', 'active_tournament', 'pending_battles'],
           },
-        }),
+        },
       });
 
       render(
@@ -616,11 +585,11 @@ describe('ResetAccountModal', () => {
 
   describe('Consequences Display', () => {
     beforeEach(async () => {
-      (global.fetch as any).mockResolvedValueOnce({
-        json: async () => ({
+      mockedApiClient.get.mockResolvedValueOnce({
+        data: {
           success: true,
           data: { canReset: true },
-        }),
+        },
       });
 
       render(

@@ -3,12 +3,16 @@ import { BattleHistory, getTournamentRoundName, getLeagueTierName, getLeagueTier
 import { getTeamNameFromMatch } from '../utils/tagTeamApi';
 import { formatDateTime } from '../utils/matchmakingApi';
 
+interface BattleRobot {
+  name: string;
+  id: number;
+  userId: number;
+}
+
 interface CompactBattleCardProps {
   battle: BattleHistory;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  myRobot: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  opponent: any;
+  myRobot: BattleRobot;
+  opponent: BattleRobot;
   outcome: string;
   eloChange: number;
   myRobotId: number;

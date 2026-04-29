@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navigation from '../components/Navigation';
 import { useAuth } from '../contexts/AuthContext';
-import axios from 'axios';
+import apiClient from '../utils/apiClient';
 
 interface AnalyticsSummary {
   totalEvents: number;
@@ -34,16 +34,10 @@ function OnboardingAnalyticsPage() {
     setLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('/api/onboarding/analytics/summary', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await apiClient.get('/api/onboarding/analytics/summary');
       setSummary(response.data.data);
-    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-      console.error('Failed to fetch analytics:', err);
-      setError(err.response?.data?.error || 'Failed to load analytics data');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to load analytics data');
     } finally {
       setLoading(false);
     }

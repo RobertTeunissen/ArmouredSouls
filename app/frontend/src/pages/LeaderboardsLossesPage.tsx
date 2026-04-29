@@ -1,11 +1,9 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import apiClient from '../utils/apiClient';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
 import { getLeagueColor } from '../utils/formatters';
 import OwnerNameLink from '../components/OwnerNameLink';
-
-const API_URL = import.meta.env.VITE_API_URL || '';
 
 interface LossesLeaderboardEntry {
   rank: number;
@@ -52,16 +50,13 @@ function LeaderboardsLossesPage() {
       setLoading(true);
       setError(null);
       
-      const response = await axios.get<LeaderboardResponse>(
-        `${API_URL}/api/leaderboards/losses`,
+      const response = await apiClient.get<LeaderboardResponse>(
+        '/api/leaderboards/losses',
         {
           params: {
             page: 1,
             limit: 100,
             league: leagueFilter,
-          },
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
         }
       );

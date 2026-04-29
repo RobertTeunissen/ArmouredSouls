@@ -61,7 +61,6 @@ const Step6 = memo(({onPrevious:_p}:{onNext?:()=>void;onPrevious?:()=>void}) => 
       try {
         // 1. Weapons — exactly like WeaponShopPage
         const wRes = await apiClient.get('/api/weapons');
-        console.log('[Step6] weapons raw:', Array.isArray(wRes.data), wRes.data?.length);
         if (cancelled) return;
         const weapons = Array.isArray(wRes.data)
           ? (wRes.data as Weapon[]).filter(w => w.name !== 'Basic Laser' && w.cost >= 10000)

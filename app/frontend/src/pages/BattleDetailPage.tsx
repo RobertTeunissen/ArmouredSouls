@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
 import AchievementBadge from '../components/AchievementBadge';
@@ -44,12 +45,15 @@ function BattleDetailPage() {
       const data = await getBattleLog(battleId);
       setBattleLog(data);
       setError(null);
-    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-      console.error('Failed to fetch battle log:', err);
-      if (err.response?.status === 404) {
-        setError('Battle not found');
-      } else if (err.response?.status === 403) {
-        setError('Access denied to this battle');
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        if (err.response?.status === 404) {
+          setError('Battle not found');
+        } else if (err.response?.status === 403) {
+          setError('Access denied to this battle');
+        } else {
+          setError('Failed to load battle details');
+        }
       } else {
         setError('Failed to load battle details');
       }

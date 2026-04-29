@@ -18,7 +18,6 @@ export type {
 
 export {
   trackSpending,
-  getSpending,
 } from './spendingTracker';
 export type {
   SpendingCategory,

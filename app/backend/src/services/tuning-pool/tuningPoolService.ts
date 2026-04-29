@@ -348,37 +348,3 @@ export async function getTuningBonuses(robotId: number): Promise<TuningAttribute
 export async function clearTuningAllocation(robotId: number): Promise<void> {
   await prisma.tuningAllocation.deleteMany({ where: { robotId } });
 }
-
-
-/**
- * Apply tuning bonuses to a robot's attribute values in-place.
- *
- * Mutates the robot object by adding tuning bonus values to each
- * Decimal attribute field. This ensures the combat simulator — which
- * reads attributes directly via Number(robot.combatPower) — sees the
- * tuning-boosted values without needing changes to the simulator itself.
- *
- * Call this after loading tuning bonuses and before passing the robot
- * to simulateBattle().
- *
- * @param robot - The robot object to mutate (must have Decimal attribute fields)
- * @param tuningBonuses - Sparse map of attribute → bonus value
- */
-export function applyTuningToRobot(robot: Record<string, unknown>, tuningBonuses: TuningAttributeMap): void {
-  if (!tuningBonuses || Object.keys(tuningBonuses).length === 0) return;
-
-  for (const attr of ROBOT_ATTRIBUTES) {
-    const bonus = tuningBonuses[attr];
-    if (!bonus || bonus <= 0) continue;
-
-    const current = robot[attr];
-    if (current !== undefined && current !== null) {
-      // Handle both Prisma Decimal and plain number
-      const currentNum = typeof current === 'object' && 'toNumber' in (current as { toNumber?: () => number })
-        ? (current as { toNumber(): number }).toNumber()
-        : Number(current);
-      // Store as a plain number — the combat simulator uses Number() to read it
-      robot[attr] = currentNum + bonus;
-    }
-  }
-}

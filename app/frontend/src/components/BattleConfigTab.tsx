@@ -5,26 +5,9 @@ import StanceSelector from './StanceSelector';
 import YieldThresholdSlider from './YieldThresholdSlider';
 import WeaponSelectionModal from './WeaponSelectionModal';
 import { RangeBand } from '../utils/weaponRange';
+import type { RobotWithAttributes } from '../types/robot';
 
-interface Robot {
-  id: number;
-  name: string;
-  currentHP: number;
-  maxHP: number;
-  currentShield: number;
-  maxShield: number;
-  battleReadiness: number;
-  repairCost: number;
-  loadoutType: string;
-  mainWeaponId: number | null;
-  offhandWeaponId: number | null;
-  stance: string;
-  yieldThreshold: number;
-  mainWeapon: WeaponInventory | null;
-  offhandWeapon: WeaponInventory | null;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any; // For other robot attributes
-}
+type Robot = RobotWithAttributes;
 
 interface WeaponInventory {
   id: number;
@@ -221,7 +204,7 @@ function BattleConfigTab({ robot, weapons, repairBayLevel = 0, activeRobotCount 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <WeaponSlot
               label="Main Weapon"
-              weapon={robot.mainWeapon}
+              weapon={robot.mainWeapon as WeaponInventory | null}
               onEquip={() => {
                 setWeaponSlotToEquip('main');
                 setShowWeaponModal(true);
@@ -231,7 +214,7 @@ function BattleConfigTab({ robot, weapons, repairBayLevel = 0, activeRobotCount 
             {(robot.loadoutType === 'weapon_shield' || robot.loadoutType === 'dual_wield') && (
               <WeaponSlot
                 label="Offhand Weapon"
-                weapon={robot.offhandWeapon}
+                weapon={robot.offhandWeapon as WeaponInventory | null}
                 onEquip={() => {
                   setWeaponSlotToEquip('offhand');
                   setShowWeaponModal(true);

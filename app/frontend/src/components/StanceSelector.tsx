@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import axios from 'axios';
 import apiClient from '../utils/apiClient';
 
 interface StanceSelectorProps {
@@ -65,9 +66,8 @@ function StanceSelector({ robotId, currentStance, onStanceChange }: StanceSelect
       if (response.data) {
         onStanceChange(newStance);
       }
-    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-      console.error('Failed to change stance:', err);
-      setError(err.response?.data?.error || 'Failed to change stance');
+    } catch (err: unknown) {
+      setError(axios.isAxiosError(err) ? err.response?.data?.error || 'Failed to change stance' : 'Failed to change stance');
     } finally {
       setLoading(false);
     }

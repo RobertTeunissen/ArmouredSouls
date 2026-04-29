@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
+import axios from 'axios';
 import apiClient from '../utils/apiClient';
 
 function CreateRobotPage() {
@@ -72,13 +73,17 @@ function CreateRobotPage() {
         // Normal flow: navigate to the newly created robot
         navigate(`/robots/${data.robot.id}`);
       }
-    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-      if (err.response?.status === 401) {
-        logout();
-        navigate('/login');
-        return;
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        if (err.response?.status === 401) {
+          logout();
+          navigate('/login');
+          return;
+        }
+        setError(err.response?.data?.error || 'Failed to create robot');
+      } else {
+        setError(err instanceof Error ? err.message : 'Failed to create robot');
       }
-      setError(err.response?.data?.error || err.message || 'Failed to create robot');
     } finally {
       setLoading(false);
     }

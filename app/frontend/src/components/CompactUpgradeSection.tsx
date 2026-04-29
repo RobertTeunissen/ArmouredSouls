@@ -3,14 +3,7 @@ import { calculateAttributeBonus } from '../utils/robotStats';
 import { formatCost } from '../utils/formatters';
 import { calculateBaseCost } from '../../../shared/utils/upgradeCosts';
 import { calculateTrainingFacilityDiscount } from '../../../shared/utils/discounts';
-
-interface WeaponInventory {
-  id: number;
-  weapon: {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    [key: string]: any;
-  };
-}
+import type { RobotWithAttributes } from '../types/robot';
 
 interface AttributeCategory {
   category: string;
@@ -24,12 +17,7 @@ interface AttributeCategory {
 
 interface CompactUpgradeSectionProps {
   categories: AttributeCategory[];
-  robot: {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    [key: string]: any;
-    mainWeapon?: WeaponInventory | null;
-    offhandWeapon?: WeaponInventory | null;
-  };
+  robot: RobotWithAttributes;
   trainingLevel: number;
   currency: number;
   onUpgrade: (attribute: string, currentLevel: number) => void;
@@ -117,11 +105,6 @@ function CompactUpgradeSection({
                     const canUpgrade = nextLevel <= 50 && nextLevel <= cap;
                     const canAfford = currency >= info.upgradeCost;
                     const atCap = nextLevel > cap;
-
-                    // Debug logging
-                    if (key === 'combatPower' || key === 'armorPlating') {
-                      console.log(`[${label}] current: ${info.currentLevel}, next: ${nextLevel}, cap: ${cap}, canUpgrade: ${canUpgrade}, atCap: ${atCap}`);
-                    }
 
                     return (
                       <div

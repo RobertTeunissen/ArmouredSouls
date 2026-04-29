@@ -34,6 +34,7 @@ import ChangelogPage from './pages/ChangelogPage';
 import AchievementsPage from './pages/AchievementsPage';
 import { useAchievementToasts } from './hooks/useAchievementToasts';
 import AchievementToast from './components/AchievementToast';
+import AppErrorBoundary from './components/AppErrorBoundary';
 
 // Lazy-loaded admin pages
 const AdminDashboardPage = React.lazy(() => import('./pages/admin/DashboardPage'));
@@ -139,12 +140,14 @@ function AppRoutes() {
 
 function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <AchievementToastLayer />
-        <AppRoutes />
-      </BrowserRouter>
-    </AuthProvider>
+    <AppErrorBoundary>
+      <AuthProvider>
+        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <AchievementToastLayer />
+          <AppRoutes />
+        </BrowserRouter>
+      </AuthProvider>
+    </AppErrorBoundary>
   );
 }
 

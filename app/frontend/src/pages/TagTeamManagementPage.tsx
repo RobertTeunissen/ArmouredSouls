@@ -37,14 +37,14 @@ function TagTeamManagementPage() {
       
       const data = await getMyTagTeams();
       setTeams(data);
-    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+    } catch (err: unknown) {
       if (axios.isAxiosError(err) && err.response?.status === 401) {
         logout();
         navigate('/login');
         return;
       }
-      console.error('Failed to fetch tag teams:', err);
-      setError(err.response?.data?.message || 'Failed to load tag teams');
+      const message = axios.isAxiosError(err) ? err.response?.data?.message : undefined;
+      setError(message || 'Failed to load tag teams');
     } finally {
       setLoading(false);
     }
@@ -58,9 +58,9 @@ function TagTeamManagementPage() {
       await disbandTagTeam(teamToDisband.id);
       setTeams(teams.filter(t => t.id !== teamToDisband.id));
       setTeamToDisband(null);
-    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-      console.error('Failed to disband team:', err);
-      alert(err.response?.data?.message || 'Failed to disband team');
+    } catch (err: unknown) {
+      const message = axios.isAxiosError(err) ? err.response?.data?.message : undefined;
+      alert(message || 'Failed to disband team');
     } finally {
       setDisbanding(false);
     }

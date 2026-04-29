@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import Transport from 'winston-transport';
+import logger from '../config/logger';
 
 interface LogEntry {
   timestamp: string;
@@ -83,9 +84,9 @@ class CycleLogger {
 
     try {
       fs.writeFileSync(filename, header + rows, 'utf-8');
-      console.log(`[CycleLogger] Saved ${this.logs.length} log entries to ${filename}`);
+      logger.info(`[CycleLogger] Saved ${this.logs.length} log entries to ${filename}`);
     } catch (error) {
-      console.error(`[CycleLogger] Error saving logs:`, error);
+      logger.error(`[CycleLogger] Error saving logs:`, error);
     }
   }
 

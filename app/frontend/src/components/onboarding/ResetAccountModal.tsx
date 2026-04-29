@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import apiClient from '../../utils/apiClient';
 
 interface ResetBlocker {
   type: string;
@@ -36,13 +37,8 @@ const ResetAccountModal: React.FC<ResetAccountModalProps> = ({
   const checkResetEligibility = async () => {
     setIsCheckingEligibility(true);
     try {
-      const response = await fetch('/api/onboarding/reset-eligibility', {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-
-      const data = await response.json();
+      const response = await apiClient.get('/api/onboarding/reset-eligibility');
+      const data = response.data;
 
       if (data.success) {
         setCanReset(data.data.canReset);
@@ -87,19 +83,12 @@ const ResetAccountModal: React.FC<ResetAccountModalProps> = ({
     setError(null);
 
     try {
-      const response = await fetch('/api/onboarding/reset-account', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({
-          confirmation: confirmationText,
-          reason: 'User requested reset from onboarding',
-        }),
+      const response = await apiClient.post('/api/onboarding/reset-account', {
+        confirmation: confirmationText,
+        reason: 'User requested reset from onboarding',
       });
 
-      const data = await response.json();
+      const data = response.data;
 
       if (data.success) {
         onResetComplete();

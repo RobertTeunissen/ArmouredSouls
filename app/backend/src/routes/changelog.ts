@@ -8,6 +8,7 @@ import { positiveIntParam } from '../utils/securityValidation';
 import { changelogService, processAndStore } from '../services/changelog';
 import { ChangelogError, ChangelogErrorCode } from '../errors/changelogErrors';
 import { fileValidationService } from '../services/moderation/fileValidationService';
+import { handleMulterError } from '../middleware/handleMulterError';
 
 const router = express.Router();
 
@@ -52,19 +53,6 @@ const multerUpload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 2 * 1024 * 1024 },
 });
-
-/** Translate MulterError into structured JSON responses. */
-function handleMulterError(err: unknown, _req: express.Request, res: Response, next: express.NextFunction): void {
-  if (err instanceof multer.MulterError) {
-    if (err.code === 'LIMIT_FILE_SIZE') {
-      res.status(400).json({ error: 'File too large. Maximum size is 2 MB.', code: 'FILE_TOO_LARGE' });
-      return;
-    }
-    res.status(400).json({ error: err.message, code: 'INVALID_IMAGE' });
-    return;
-  }
-  next(err);
-}
 
 // --- Player endpoints ---
 

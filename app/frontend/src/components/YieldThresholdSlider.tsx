@@ -4,8 +4,7 @@ import apiClient from '../utils/apiClient';
 interface YieldThresholdSliderProps {
   robotId: number;
   currentThreshold: number;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  robotAttributes: any; // Full robot object with all attributes
+  robotAttributes: Record<string, unknown>;
   repairBayLevel?: number;
   activeRobotCount?: number;
   onThresholdChange: (newThreshold: number) => void;
@@ -54,9 +53,9 @@ function YieldThresholdSlider({
         onThresholdChange(threshold);
         setHasChanges(false);
       }
-    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-      console.error('Failed to update yield threshold:', err);
-      setError(err.response?.data?.error || 'Failed to update yield threshold');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to update yield threshold';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -90,9 +89,9 @@ function YieldThresholdSlider({
     ];
 
     return attributes.reduce((sum, attr) => {
-      const value = robotAttributes[attr] || 0;
+      const value = robotAttributes[attr];
       // Convert to number in case it's a string from Decimal serialization
-      const numValue = typeof value === 'string' ? parseFloat(value) : value;
+      const numValue = typeof value === 'string' ? parseFloat(value) : Number(value) || 0;
       return sum + numValue;
     }, 0);
   };

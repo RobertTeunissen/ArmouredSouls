@@ -1,19 +1,10 @@
 import { useState, useEffect } from 'react';
 import { calculateAttributeBonus, getLoadoutBonus, getStanceModifier } from '../utils/robotStats';
 import apiClient from '../utils/apiClient';
+import type { RobotWithAttributes } from '../types/robot';
 
 interface EffectiveStatsDisplayProps {
-  robot: {
-    id: number;
-    loadoutType: string;
-    stance: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    mainWeapon?: any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    offhandWeapon?: any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    [key: string]: any;
-  };
+  robot: RobotWithAttributes;
 }
 
 // Category colors matching the design system

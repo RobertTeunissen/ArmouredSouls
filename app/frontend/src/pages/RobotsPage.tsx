@@ -7,7 +7,7 @@ import ConfirmationModal from '../components/ConfirmationModal';
 import ViewModeToggle from '../components/ViewModeToggle';
 import apiClient from '../utils/apiClient';
 import { useRobotStore } from '../stores';
-
+import type { Facility } from '../components/facilities/types';
 // Utility functions
 const getHPColor = (currentHP: number, maxHP: number): string => {
   const percentage = (currentHP / maxHP) * 100;
@@ -161,13 +161,11 @@ function RobotsPage() {
       const response = await apiClient.get('/api/facilities');
       const data = response.data;
       const facilities = data.facilities || data; // Handle both response formats
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const repairBay = facilities.find((f: any) => f.type === 'repair_bay');
+      const repairBay = facilities.find((f: Facility) => f.type === 'repair_bay');
       if (repairBay) {
         setRepairBayLevel(repairBay.currentLevel || 0);
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const rosterExpansion = facilities.find((f: any) => f.type === 'roster_expansion');
+      const rosterExpansion = facilities.find((f: Facility) => f.type === 'roster_expansion');
       if (rosterExpansion) {
         setRosterLevel(rosterExpansion.currentLevel || 0);
       }
@@ -248,10 +246,8 @@ function RobotsPage() {
     const sorted = [...robots];
     
     sorted.sort((a, b) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let aValue: any;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let bValue: any;
+      let aValue: string | number;
+      let bValue: string | number;
 
       switch (sortColumn) {
         case 'name':

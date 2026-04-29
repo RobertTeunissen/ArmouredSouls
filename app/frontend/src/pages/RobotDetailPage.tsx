@@ -13,6 +13,7 @@ import { RangeBand } from '../utils/weaponRange';
 import RobotImage from '../components/RobotImage';
 import RobotImageSelector from '../components/RobotImageSelector';
 import StatisticalRankings from '../components/StatisticalRankings';
+import type { Facility } from '../components/facilities/types';
 import PerformanceByContext from '../components/PerformanceByContext';
 import RecentBattles from '../components/RecentBattles';
 import UpcomingMatches from '../components/UpcomingMatches';
@@ -20,7 +21,8 @@ import UpgradePlanner from '../components/UpgradePlanner';
 import Toast from '../components/Toast';
 import RobotPerformanceAnalytics from '../components/RobotPerformanceAnalytics';
 import TuningPoolEditor from '../components/TuningPoolEditor';
-import { getMatchHistory } from '../utils/matchmakingApi';
+import { getMatchHistory, BattleHistory } from '../utils/matchmakingApi';
+import type { RobotWithAttributes } from '../types/robot';
 
 interface Robot {
   id: number;
@@ -139,10 +141,8 @@ function RobotDetailPage() {
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [showImageSelector, setShowImageSelector] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [recentBattles, setRecentBattles] = useState<any[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [battleReadiness, setBattleReadiness] = useState<any>({ isReady: true, warnings: [] });
+  const [recentBattles, setRecentBattles] = useState<unknown[]>([]);
+  const [battleReadiness, setBattleReadiness] = useState<{ isReady: boolean; warnings: string[] }>({ isReady: true, warnings: [] });
   const [leagueRank, setLeagueRank] = useState<{ rank: number; total: number; percentile: number } | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
   const { user, logout, refreshUser } = useAuth();
@@ -167,7 +167,7 @@ function RobotDetailPage() {
 
   useEffect(() => {
     let isFetching = false;
-    let fetchTimeout: NodeJS.Timeout | null = null;
+    let fetchTimeout: ReturnType<typeof setTimeout> | null = null;
 
     const debouncedFetch = () => {
       // Clear any pending fetch
@@ -227,11 +227,9 @@ function RobotDetailPage() {
   const fetchRobotAndWeapons = async () => {
     try {
       // Fetch robot details
-      console.log(`Fetching robot with ID: ${id}`);
       const robotResponse = await apiClient.get(`/api/robots/${id}`);
 
       const robotData = robotResponse.data;
-      console.log('Robot data received:', robotData.name);
       setRobot(robotData);
 
       // Fetch league rank for this robot
@@ -239,8 +237,7 @@ function RobotDetailPage() {
         const leagueResponse = await apiClient.get(`/api/leagues/${robotData.currentLeague}/standings?instance=${robotData.leagueId}`);
         const leagueData = leagueResponse.data;
         const standings = leagueData.data || [];
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const robotIndex = standings.findIndex((r: any) => r.id === parseInt(id!));
+        const robotIndex = standings.findIndex((r: { id: number }) => r.id === parseInt(id!));
         
         if (robotIndex !== -1) {
           const rank = robotIndex + 1;
@@ -266,31 +263,22 @@ function RobotDetailPage() {
         const facilitiesResponse = await apiClient.get('/api/facilities');
         const data = facilitiesResponse.data;
         const facilities = data.facilities || data; // Handle both response formats
-        console.log('Facilities API Response:', data);
-        console.log('Facilities Array:', facilities);
         
         // Always set training level (even if 0)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const trainingFacility = facilities.find((f: any) => f.type === 'training_facility');
+        const trainingFacility = facilities.find((f: Facility) => f.type === 'training_facility');
         setTrainingLevel(trainingFacility?.currentLevel || 0);
 
         // Set repair bay level
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const repairBay = facilities.find((f: any) => f.type === 'repair_bay');
+        const repairBay = facilities.find((f: Facility) => f.type === 'repair_bay');
         setRepairBayLevel(repairBay?.currentLevel || 0);
 
         // Always set academy levels (even if 0)
         const newAcademyLevels = {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          combat_training_academy: facilities.find((f: any) => f.type === 'combat_training_academy')?.currentLevel || 0,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          defense_training_academy: facilities.find((f: any) => f.type === 'defense_training_academy')?.currentLevel || 0,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          mobility_training_academy: facilities.find((f: any) => f.type === 'mobility_training_academy')?.currentLevel || 0,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          ai_training_academy: facilities.find((f: any) => f.type === 'ai_training_academy')?.currentLevel || 0,
+          combat_training_academy: facilities.find((f: Facility) => f.type === 'combat_training_academy')?.currentLevel || 0,
+          defense_training_academy: facilities.find((f: Facility) => f.type === 'defense_training_academy')?.currentLevel || 0,
+          mobility_training_academy: facilities.find((f: Facility) => f.type === 'mobility_training_academy')?.currentLevel || 0,
+          ai_training_academy: facilities.find((f: Facility) => f.type === 'ai_training_academy')?.currentLevel || 0,
         };
-        console.log('Academy Levels:', newAcademyLevels);
         setAcademyLevels(newAcademyLevels);
 
         // Fetch active robot count for repair cost calculation via store
@@ -333,19 +321,20 @@ function RobotDetailPage() {
       }
       
       setBattleReadiness({ isReady, warnings });
-    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-      if (err.response?.status === 401) {
-        logout();
-        navigate('/login');
-        return;
-      }
-      if (err.response?.status === 404) {
-        setError(`Robot with ID ${id} not found. It may have been deleted or you may not have permission to view it.`);
-        setLoading(false);
-        return;
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        if (err.response?.status === 401) {
+          logout();
+          navigate('/login');
+          return;
+        }
+        if (err.response?.status === 404) {
+          setError(`Robot with ID ${id} not found. It may have been deleted or you may not have permission to view it.`);
+          setLoading(false);
+          return;
+        }
       }
       setError('Failed to load robot details');
-      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -371,32 +360,21 @@ function RobotDetailPage() {
     }
 
     try {
-      const token = localStorage.getItem('token');
-      console.log('Updating robot appearance:', { robotId: id, imageUrl });
-      
-      const response = await axios.put(
+      const response = await apiClient.put(
         `/api/robots/${id}/appearance`,
         { imageUrl },
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        }
       );
 
-      console.log('Update response:', response.data);
       setRobot(response.data.robot);
       setSuccessMessage('Robot image updated successfully!');
       setTimeout(() => setSuccessMessage(''), 3000);
-    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-      console.error('Failed to update appearance:', err);
-      console.error('Error response:', err.response?.data);
-      setError(err.response?.data?.error || 'Failed to update robot image');
+    } catch (err: unknown) {
+      const message = axios.isAxiosError(err) ? err.response?.data?.error : undefined;
+      setError(message || 'Failed to update robot image');
     }
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleCommitUpgrades = async (upgradePlan: any) => {
+  const handleCommitUpgrades = async (upgradePlan: Record<string, { currentLevel: number; plannedLevel: number; cost: number; baseCost: number }>) => {
     if (!robot) return;
 
     setError('');
@@ -406,34 +384,19 @@ function RobotDetailPage() {
     const originalRobot = { ...robot };
 
     try {
-      const token = localStorage.getItem('token');
-      
-      console.log('Committing upgrade plan:', upgradePlan);
-      console.log('Robot ID:', id);
-      console.log('Current robot state:', robot);
-      
       // Optimistic UI update: immediately apply upgrades to robot state
       const optimisticRobot = { ...robot };
       for (const [attribute, plan] of Object.entries(upgradePlan)) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { plannedLevel } = plan as any;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (optimisticRobot as any)[attribute] = plannedLevel;
+        const { plannedLevel } = plan;
+        (optimisticRobot as Record<string, unknown>)[attribute] = plannedLevel;
       }
       setRobot(optimisticRobot);
 
       // Call bulk upgrades endpoint
-      const response = await axios.post(
+      const response = await apiClient.post(
         `/api/robots/${id}/upgrades`,
         { upgrades: upgradePlan },
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        }
       );
-
-      console.log('Upgrade response:', response.data);
 
       // Update state with actual robot data from server
       setRobot(response.data.robot);
@@ -444,19 +407,20 @@ function RobotDetailPage() {
         message: `Successfully upgraded ${upgradeCount} attribute${upgradeCount > 1 ? 's' : ''}!`,
         type: 'success',
       });
-    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-      console.error('Failed to commit upgrades:', err);
-      console.error('Error response:', err.response);
-      console.error('Error response data:', err.response?.data);
-      console.error('Error message:', err.message);
-      
+    } catch (err: unknown) {
       // Rollback optimistic update
       setRobot(originalRobot);
       
-      const errorMessage = err.response?.data?.error || err.message || 'Failed to commit upgrades';
-      const errorDetails = err.response?.data?.required 
-        ? ` (Required: ₡${err.response.data.required.toLocaleString()}, Current: ₡${err.response.data.current.toLocaleString()})`
-        : '';
+      let errorMessage = 'Failed to commit upgrades';
+      let errorDetails = '';
+      if (axios.isAxiosError(err) && err.response?.data) {
+        errorMessage = err.response.data.error || errorMessage;
+        if (err.response.data.required) {
+          errorDetails = ` (Required: ₡${err.response.data.required.toLocaleString()}, Current: ₡${err.response.data.current.toLocaleString()})`;
+        }
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      }
       
       setToast({
         message: errorMessage + errorDetails,
@@ -681,7 +645,7 @@ function RobotDetailPage() {
 
           {activeTab === 'matches' && (
             <div className="space-y-6">
-              <RecentBattles battles={recentBattles} robotId={robot.id} />
+              <RecentBattles battles={recentBattles as BattleHistory[]} robotId={robot.id} />
               <UpcomingMatches robotId={robot.id} battleReadiness={battleReadiness} />
             </div>
           )}
@@ -692,7 +656,7 @@ function RobotDetailPage() {
 
           {activeTab === 'battle-config' && isOwner && (
             <BattleConfigTab
-              robot={robot}
+              robot={robot as unknown as RobotWithAttributes}
               weapons={weapons}
               repairBayLevel={repairBayLevel}
               activeRobotCount={activeRobotCount}
@@ -702,37 +666,23 @@ function RobotDetailPage() {
                 setTimeout(() => setSuccessMessage(''), 3000);
               }}
               onEquipWeapon={async (slot, weaponInventoryId) => {
-                const token = localStorage.getItem('token');
                 const endpoint =
                   slot === 'main'
                     ? `/api/robots/${id}/equip-main-weapon`
                     : `/api/robots/${id}/equip-offhand-weapon`;
 
-                const response = await axios.put(
-                  endpoint,
-                  { weaponInventoryId },
-                  {
-                    headers: {
-                      'Authorization': `Bearer ${token}`,
-                    },
-                  }
-                );
+                const response = await apiClient.put(endpoint, { weaponInventoryId });
                 setRobot(response.data.robot);
                 setSuccessMessage('Weapon equipped successfully!');
                 setTimeout(() => setSuccessMessage(''), 3000);
               }}
               onUnequipWeapon={async (slot) => {
-                const token = localStorage.getItem('token');
                 const endpoint =
                   slot === 'main'
                     ? `/api/robots/${id}/unequip-main-weapon`
                     : `/api/robots/${id}/unequip-offhand-weapon`;
 
-                const response = await axios.delete(endpoint, {
-                  headers: {
-                    'Authorization': `Bearer ${token}`,
-                  },
-                });
+                const response = await apiClient.delete(endpoint);
                 setRobot(response.data.robot);
                 setSuccessMessage('Weapon unequipped!');
                 setTimeout(() => setSuccessMessage(''), 3000);
@@ -742,7 +692,7 @@ function RobotDetailPage() {
 
           {activeTab === 'upgrades' && isOwner && (
             <UpgradePlanner
-              robot={robot}
+              robot={robot as unknown as RobotWithAttributes}
               currentCredits={currency}
               trainingLevel={trainingLevel}
               academyLevels={academyLevels}
@@ -754,13 +704,13 @@ function RobotDetailPage() {
           {activeTab === 'tuning' && isOwner && (
             <TuningPoolEditor
               robotId={robot.id}
-              robot={robot}
+              robot={robot as unknown as RobotWithAttributes}
             />
           )}
 
           {activeTab === 'stats' && (
             <div className="mb-6">
-              <EffectiveStatsDisplay robot={robot} />
+              <EffectiveStatsDisplay robot={robot as unknown as RobotWithAttributes} />
             </div>
           )}
 

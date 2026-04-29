@@ -2,7 +2,6 @@ import express, { Response } from 'express';
 import { z } from 'zod';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import guideService from '../services/common/guide-service';
-import logger from '../config/logger';
 import { AppError } from '../errors';
 import { validateRequest } from '../middleware/schemaValidator';
 import { safeSlug } from '../utils/securityValidation';
@@ -21,13 +20,8 @@ const articleParamsSchema = z.object({
  * Returns all guide sections with article summaries
  */
 router.get('/sections', authenticateToken, validateRequest({}), async (req: AuthRequest, res: Response) => {
-  try {
-    const sections = guideService.getSections();
-    res.json(sections);
-  } catch (error) {
-    logger.error('[Guide] Failed to fetch sections:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
+  const sections = guideService.getSections();
+  res.json(sections);
 });
 
 /**
@@ -35,27 +29,22 @@ router.get('/sections', authenticateToken, validateRequest({}), async (req: Auth
  * Returns a single guide article with full content
  */
 router.get('/articles/:sectionSlug/:articleSlug', authenticateToken, validateRequest({ params: articleParamsSchema }), async (req: AuthRequest, res: Response) => {
-  try {
-    const sectionSlug = String(req.params.sectionSlug);
-    const articleSlug = String(req.params.articleSlug);
+  const sectionSlug = String(req.params.sectionSlug);
+  const articleSlug = String(req.params.articleSlug);
 
-    // Prevent path traversal — slugs must be simple alphanumeric/hyphen/underscore tokens
-    const safeSlugPattern = /^[a-zA-Z0-9_-]+$/;
-    if (!safeSlugPattern.test(sectionSlug) || !safeSlugPattern.test(articleSlug)) {
-      throw new AppError('INVALID_SLUG', 'Invalid section or article slug', 400);
-    }
-
-    const article = guideService.getArticle(sectionSlug, articleSlug);
-
-    if (!article) {
-      throw new AppError('ARTICLE_NOT_FOUND', 'Article not found', 404);
-    }
-
-    res.json(article);
-  } catch (error) {
-    logger.error('[Guide] Failed to fetch article:', error);
-    throw error;
+  // Prevent path traversal — slugs must be simple alphanumeric/hyphen/underscore tokens
+  const safeSlugPattern = /^[a-zA-Z0-9_-]+$/;
+  if (!safeSlugPattern.test(sectionSlug) || !safeSlugPattern.test(articleSlug)) {
+    throw new AppError('INVALID_SLUG', 'Invalid section or article slug', 400);
   }
+
+  const article = guideService.getArticle(sectionSlug, articleSlug);
+
+  if (!article) {
+    throw new AppError('ARTICLE_NOT_FOUND', 'Article not found', 404);
+  }
+
+  res.json(article);
 });
 
 /**
@@ -63,13 +52,8 @@ router.get('/articles/:sectionSlug/:articleSlug', authenticateToken, validateReq
  * Returns flat list of all articles for client-side search
  */
 router.get('/search-index', authenticateToken, validateRequest({}), async (req: AuthRequest, res: Response) => {
-  try {
-    const searchIndex = guideService.getSearchIndex();
-    res.json(searchIndex);
-  } catch (error) {
-    logger.error('[Guide] Failed to fetch search index:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
+  const searchIndex = guideService.getSearchIndex();
+  res.json(searchIndex);
 });
 
 export default router;

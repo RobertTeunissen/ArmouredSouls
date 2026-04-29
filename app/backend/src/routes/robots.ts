@@ -11,6 +11,7 @@ import { validateRequest } from '../middleware/schemaValidator';
 import { safeName, positiveIntParam } from '../utils/securityValidation';
 import { verifyRobotOwnership } from '../middleware/ownership';
 import { securityMonitor } from '../services/security/securityMonitor';
+import { handleMulterError } from '../middleware/handleMulterError';
 
 // Service imports
 import { sanitizeRobotForPublic, SENSITIVE_ROBOT_FIELDS } from '../services/robot/robotSanitizer';
@@ -90,19 +91,6 @@ const multerUpload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 2 * 1024 * 1024 },
 });
-
-/** Translate MulterError into structured JSON responses. */
-function handleMulterError(err: unknown, _req: express.Request, res: Response, next: express.NextFunction): void {
-  if (err instanceof multer.MulterError) {
-    if (err.code === 'LIMIT_FILE_SIZE') {
-      res.status(400).json({ error: 'File too large. Maximum size is 2 MB.', code: 'FILE_TOO_LARGE' });
-      return;
-    }
-    res.status(400).json({ error: err.message, code: 'INVALID_IMAGE' });
-    return;
-  }
-  next(err);
-}
 
 // --- Zod schemas for image upload routes ---
 const imageParamsSchema = z.object({ id: positiveIntParam });
@@ -202,15 +190,7 @@ router.put('/:id/equip-main-weapon', authenticateToken, validateRequest({ params
   const robotId = parseInt(String(req.params.id));
   const { weaponInventoryId } = req.body;
 
-  if (isNaN(robotId)) {
-    throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Invalid robot ID', 400);
-  }
-
-  if (!weaponInventoryId || isNaN(parseInt(weaponInventoryId))) {
-    throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Valid weapon inventory ID is required', 400);
-  }
-
-  const finalRobot = await equipMainWeapon(userId, robotId, parseInt(weaponInventoryId));
+  const finalRobot = await equipMainWeapon(userId, robotId, Number(weaponInventoryId));
 
   let achievementUnlocks: UnlockedAchievement[] = [];
   try {
@@ -229,15 +209,7 @@ router.put('/:id/equip-offhand-weapon', authenticateToken, validateRequest({ par
   const robotId = parseInt(String(req.params.id));
   const { weaponInventoryId } = req.body;
 
-  if (isNaN(robotId)) {
-    throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Invalid robot ID', 400);
-  }
-
-  if (!weaponInventoryId || isNaN(parseInt(weaponInventoryId))) {
-    throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Valid weapon inventory ID is required', 400);
-  }
-
-  const finalRobot = await equipOffhandWeapon(userId, robotId, parseInt(weaponInventoryId));
+  const finalRobot = await equipOffhandWeapon(userId, robotId, Number(weaponInventoryId));
 
   let achievementUnlocks: UnlockedAchievement[] = [];
   try {

@@ -117,11 +117,8 @@ function RobotPerformanceAnalytics({ robotId, lastNCycles = 10 }: RobotPerforman
       } catch {
         setKothStats(null);
       }
-    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-      if (import.meta.env.DEV) {
-        console.error('Failed to fetch analytics:', err);
-      }
-      setError(err.response?.data?.message || 'Failed to load analytics data');
+    } catch (err: unknown) {
+      setError('Failed to load analytics data');
     } finally {
       setLoading(false);
     }

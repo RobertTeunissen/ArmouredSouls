@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import apiClient from '../utils/apiClient';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
 import OwnerNameLink from '../components/OwnerNameLink';
-
-const API_URL = import.meta.env.VITE_API_URL || '';
 
 interface PrestigeLeaderboardEntry {
   rank: number;
@@ -49,16 +47,13 @@ function LeaderboardsPrestigePage() {
       setLoading(true);
       setError(null);
       
-      const response = await axios.get<LeaderboardResponse>(
-        `${API_URL}/api/leaderboards/prestige`,
+      const response = await apiClient.get<LeaderboardResponse>(
+        '/api/leaderboards/prestige',
         {
           params: {
             page: 1,
             limit: 100,
             minRobots,
-          },
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
         }
       );

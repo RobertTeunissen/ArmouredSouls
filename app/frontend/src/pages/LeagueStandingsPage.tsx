@@ -66,8 +66,7 @@ function LeagueStandingsPage() {
       setPagination(standingsData.pagination);
       setInstances(instancesData);
       setError(null);
-    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-      console.error('Failed to fetch league data:', err);
+    } catch (err: unknown) {
       setError('Failed to load league standings');
     } finally {
       setLoading(false);

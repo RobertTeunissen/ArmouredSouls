@@ -14,8 +14,7 @@ interface Weapon {
   description: string;
   baseDamage: number;
   cost: number;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface WeaponDetailModalProps {
@@ -46,7 +45,7 @@ const WeaponDetailModal: React.FC<WeaponDetailModalProps> = ({
   const discountedPrice = calculateDiscountedPrice(weapon.cost);
   const canAfford = userCredits >= discountedPrice;
   const canPurchase = canAfford && !isFull && !purchasing;
-  const cooldown = weapon.cooldown;
+  const cooldown = weapon.cooldown as number;
   const dps = calcDPS(weapon.baseDamage, cooldown);
 
   const getWeaponTypeIcon = (type: string) => {

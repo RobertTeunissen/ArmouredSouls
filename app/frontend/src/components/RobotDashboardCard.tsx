@@ -29,10 +29,8 @@ interface RobotDashboardCardProps {
     losses?: number;
     draws?: number;
     totalBattles?: number;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    mainWeapon?: any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    offhandWeapon?: any;
+    mainWeapon?: { weapon: { name: string; weaponType: string } } | null;
+    offhandWeapon?: { weapon: { name: string; weaponType: string } } | null;
     loadoutType?: string;
     // Public-only fields (available when variant === 'public')
     fame?: number;

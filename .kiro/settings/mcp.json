@@ -1,10 +1,9 @@
 {
   "mcpServers": {
     "gitnexus": {
-      "command": "npx",
+      "command": "node",
       "args": [
-        "-y",
-        "gitnexus",
+        "app/backend/node_modules/.bin/gitnexus",
         "mcp"
       ],
       "disabled": false,
@@ -15,12 +14,7 @@
         "detect_changes",
         "shape_check",
         "cypher",
-        "cypher",
-        "cypher",
         "context",
-        "context",
-        "impact",
-        "impact",
         "impact"
       ]
     }

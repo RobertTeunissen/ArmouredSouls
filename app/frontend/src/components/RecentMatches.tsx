@@ -30,25 +30,17 @@ function RecentMatches() {
       
       console.log('[RecentMatches] Fetching recent matches...');
       const data = await getMatchHistory(1, 5); // Get last 5 matches
-      console.log('[RecentMatches] Received data:', data);
       
       setMatches(data.data);
       setError(null);
-    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-      // Handle 401 Unauthorized errors
+    } catch (err: unknown) {
       if (axios.isAxiosError(err) && err.response?.status === 401) {
-        console.error('[RecentMatches] Authentication error:', err);
         logout();
         navigate('/login');
         return;
       }
-      console.error('[RecentMatches] Failed to fetch recent matches:', err);
-      console.error('[RecentMatches] Error details:', {
-        message: err.message,
-        response: err.response?.data,
-        status: err.response?.status,
-      });
-      setError(err.response?.data?.message || 'Failed to load recent matches');
+      const message = axios.isAxiosError(err) ? err.response?.data?.message : undefined;
+      setError(message || 'Failed to load recent matches');
     } finally {
       setLoading(false);
     }

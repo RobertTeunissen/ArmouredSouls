@@ -1,11 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import axios from 'axios';
 import HallOfRecordsPage from '../HallOfRecordsPage';
 import { mockAuthContext } from '../../test-utils';
 
-vi.mock('axios');
+vi.mock('../../utils/apiClient', () => ({
+  default: {
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn(),
+  },
+}));
+
+import apiClient from '../../utils/apiClient';
+
 vi.mock('../../contexts/AuthContext', () => ({
   useAuth: () => mockAuthContext,
 }));
@@ -54,7 +63,7 @@ describe('HallOfRecordsPage - KotH Tab', () => {
   });
 
   it('should render KotH tab when koth records exist', async () => {
-    (axios.get as ReturnType<typeof vi.fn>).mockResolvedValueOnce({ data: mockRecordsWithKoth });
+    (apiClient.get as ReturnType<typeof vi.fn>).mockResolvedValueOnce({ data: mockRecordsWithKoth });
 
     render(
       <BrowserRouter>
@@ -71,7 +80,7 @@ describe('HallOfRecordsPage - KotH Tab', () => {
   });
 
   it('should render KotH tab even when koth records are empty', async () => {
-    (axios.get as ReturnType<typeof vi.fn>).mockResolvedValueOnce({ data: mockRecordsWithoutKoth });
+    (apiClient.get as ReturnType<typeof vi.fn>).mockResolvedValueOnce({ data: mockRecordsWithoutKoth });
 
     render(
       <BrowserRouter>
@@ -92,7 +101,7 @@ describe('HallOfRecordsPage - KotH Tab', () => {
   });
 
   it('should display KotH records when KotH tab is clicked', async () => {
-    (axios.get as ReturnType<typeof vi.fn>).mockResolvedValueOnce({ data: mockRecordsWithKoth });
+    (apiClient.get as ReturnType<typeof vi.fn>).mockResolvedValueOnce({ data: mockRecordsWithKoth });
 
     render(
       <BrowserRouter>

@@ -3,47 +3,10 @@ import {
   getLoadoutBonus,
   calculateEffectiveStat,
 } from '../utils/robotStats';
-
-interface WeaponInventory {
-  id: number;
-  weapon: {
-    id: number;
-    name: string;
-    weaponType: string;
-    combatPowerBonus?: number;
-    targetingSystemsBonus?: number;
-    criticalSystemsBonus?: number;
-    penetrationBonus?: number;
-    weaponControlBonus?: number;
-    attackSpeedBonus?: number;
-    armorPlatingBonus?: number;
-    shieldCapacityBonus?: number;
-    evasionThrustersBonus?: number;
-    damageDampenersBonus?: number;
-    counterProtocolsBonus?: number;
-    hullIntegrityBonus?: number;
-    servoMotorsBonus?: number;
-    gyroStabilizersBonus?: number;
-    hydraulicSystemsBonus?: number;
-    powerCoreBonus?: number;
-    combatAlgorithmsBonus?: number;
-    threatAnalysisBonus?: number;
-    adaptiveAIBonus?: number;
-    logicCoresBonus?: number;
-    syncProtocolsBonus?: number;
-    supportSystemsBonus?: number;
-    formationTacticsBonus?: number;
-  };
-}
+import type { RobotWithAttributes } from '../types/robot';
 
 interface StatComparisonProps {
-  robot: {
-    loadoutType: string;
-    mainWeapon?: WeaponInventory | null;
-    offhandWeapon?: WeaponInventory | null;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    [key: string]: any;
-  };
+  robot: RobotWithAttributes;
   attributes: Array<{ key: string; label: string }>;
   showOnlyModified?: boolean;
 }

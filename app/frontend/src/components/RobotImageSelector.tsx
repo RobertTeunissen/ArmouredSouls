@@ -1,4 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import axios from 'axios';
+import apiClient from '../utils/apiClient';
 import { validateUploadFile } from './robotImageValidation';
 
 interface RobotImageSelectorProps {
@@ -139,7 +141,6 @@ function UploadTab({
     setState(prev => ({ ...prev, uploading: true, error: null, robotLikenessRejected: false }));
 
     try {
-      const token = localStorage.getItem('token');
       const formData = new FormData();
       formData.append('image', state.file);
 
@@ -148,15 +149,18 @@ function UploadTab({
         url += '?acknowledgeRobotLikeness=true';
       }
 
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
-        body: formData,
-      });
+      const response = await apiClient.post(url, formData);
 
-      if (!response.ok) {
-        const data = await response.json();
-        const code = data.code as string | undefined;
+      setState(prev => ({
+        ...prev,
+        uploading: false,
+        serverPreview: response.data.preview,
+        confirmationToken: response.data.confirmationToken,
+        robotLikenessRejected: false,
+      }));
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err) && err.response?.data) {
+        const code = err.response.data.code as string | undefined;
 
         if (code === 'IMAGE_MODERATION_FAILED') {
           setState(prev => ({
@@ -191,20 +195,11 @@ function UploadTab({
         setState(prev => ({
           ...prev,
           uploading: false,
-          error: data.error || 'Upload failed. Please try again.',
+          error: err.response?.data?.error || 'Upload failed. Please try again.',
         }));
         return;
       }
 
-      const data = await response.json();
-      setState(prev => ({
-        ...prev,
-        uploading: false,
-        serverPreview: data.preview,
-        confirmationToken: data.confirmationToken,
-        robotLikenessRejected: false,
-      }));
-    } catch {
       setState(prev => ({
         ...prev,
         uploading: false,
@@ -219,50 +214,32 @@ function UploadTab({
     setState(prev => ({ ...prev, confirming: true, error: null }));
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/robots/${robotId}/image/confirm`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ confirmationToken: state.confirmationToken }),
+      const response = await apiClient.put(`/api/robots/${robotId}/image/confirm`, {
+        confirmationToken: state.confirmationToken,
       });
 
-      if (!response.ok) {
-        const data = await response.json();
-        const code = data.code as string | undefined;
-
-        if (code === 'PREVIEW_EXPIRED') {
-          setState(prev => ({
-            ...prev,
-            confirming: false,
-            error: 'Preview expired, please re-upload the image.',
-            serverPreview: null,
-            confirmationToken: null,
-          }));
-          return;
-        }
-
-        setState(prev => ({
-          ...prev,
-          confirming: false,
-          error: data.error || 'Confirmation failed. Please try again.',
-        }));
-        return;
-      }
-
-      const data = await response.json();
-      const newImageUrl = data.robot?.imageUrl;
+      const newImageUrl = response.data.robot?.imageUrl;
       if (newImageUrl) {
         onUploadComplete(newImageUrl);
       }
       resetState();
-    } catch {
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err) && err.response?.data?.code === 'PREVIEW_EXPIRED') {
+        setState(prev => ({
+          ...prev,
+          confirming: false,
+          error: 'Preview expired, please re-upload the image.',
+          serverPreview: null,
+          confirmationToken: null,
+        }));
+        return;
+      }
+
+      const message = axios.isAxiosError(err) ? err.response?.data?.error : undefined;
       setState(prev => ({
         ...prev,
         confirming: false,
-        error: 'Network error. Please check your connection and try again.',
+        error: message || 'Network error. Please check your connection and try again.',
       }));
     }
   };

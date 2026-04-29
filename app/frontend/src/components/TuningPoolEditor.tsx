@@ -2,15 +2,13 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import apiClient from '../utils/apiClient';
 import ConfirmationModal from './ConfirmationModal';
 import Toast from './Toast';
+import type { RobotWithAttributes } from '../types/robot';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
 interface TuningPoolEditorProps {
   robotId: number;
-  robot: {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    [key: string]: any;
-  };
+  robot: RobotWithAttributes;
 }
 
 interface TuningAllocationState {

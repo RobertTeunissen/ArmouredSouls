@@ -1,11 +1,19 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
-import axios from 'axios';
 import BattleDetailsModal from '../../BattleDetailsModal';
 
-// Mock axios
-vi.mock('axios');
-const mockedAxios = vi.mocked(axios, true);
+// Mock apiClient
+vi.mock('../../../utils/apiClient', () => ({
+  default: {
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn(),
+  },
+}));
+
+import apiClient from '../../../utils/apiClient';
+const mockedApiClient = vi.mocked(apiClient, true);
 
 /* ------------------------------------------------------------------ */
 /*  Mock data                                                          */
@@ -191,7 +199,7 @@ describe('BattleDetailsModal', () => {
   });
 
   it('should not render when isOpen is false', () => {
-    mockedAxios.get.mockResolvedValue({ data: mock1v1Battle });
+    mockedApiClient.get.mockResolvedValue({ data: mock1v1Battle });
     renderModal({ isOpen: false });
 
     expect(screen.queryByText(/Battle Details/)).not.toBeInTheDocument();
@@ -199,14 +207,14 @@ describe('BattleDetailsModal', () => {
 
   it('should render loading state', async () => {
     // Make axios hang indefinitely
-    mockedAxios.get.mockReturnValue(new Promise(() => {}));
+    mockedApiClient.get.mockReturnValue(new Promise(() => {}));
     renderModal();
 
     expect(screen.getByText('Loading battle details...')).toBeInTheDocument();
   });
 
   it('should render 1v1 battle with robot names and attribute comparison', async () => {
-    mockedAxios.get.mockResolvedValue({ data: mock1v1Battle });
+    mockedApiClient.get.mockResolvedValue({ data: mock1v1Battle });
     renderModal();
 
     await waitFor(() => {
@@ -236,7 +244,7 @@ describe('BattleDetailsModal', () => {
       ...mock1v1Battle,
       battleLog: { detailedCombatEvents: mockCombatEvents },
     };
-    mockedAxios.get.mockResolvedValue({ data: battleWithEvents });
+    mockedApiClient.get.mockResolvedValue({ data: battleWithEvents });
     renderModal();
 
     await waitFor(() => {
@@ -253,7 +261,7 @@ describe('BattleDetailsModal', () => {
   });
 
   it('should render 2v2 tag team battle with team layout', async () => {
-    mockedAxios.get.mockResolvedValue({ data: mock2v2Battle });
+    mockedApiClient.get.mockResolvedValue({ data: mock2v2Battle });
     renderModal({ battleId: 99 });
 
     await waitFor(() => {
@@ -282,7 +290,7 @@ describe('BattleDetailsModal', () => {
   });
 
   it('should render draw result', async () => {
-    mockedAxios.get.mockResolvedValue({ data: mockDrawBattle });
+    mockedApiClient.get.mockResolvedValue({ data: mockDrawBattle });
     renderModal({ battleId: 77 });
 
     await waitFor(() => {
@@ -311,7 +319,7 @@ describe('BattleDetailsModal', () => {
           team2: { id: 2, activeRobot: { id: 20, name: 'Gamma' }, reserveRobot: { id: 21, name: 'Delta' }, stableId: 2, league: 'gold' },
         },
       };
-      mockedAxios.get.mockResolvedValue({ data: team1WinsBattle });
+      mockedApiClient.get.mockResolvedValue({ data: team1WinsBattle });
       renderModal({ battleId: 99 });
 
       await waitFor(() => {
@@ -335,7 +343,7 @@ describe('BattleDetailsModal', () => {
           team2: { id: 2, activeRobot: { id: 20, name: 'Gamma' }, reserveRobot: { id: 21, name: 'Delta' }, stableId: 2, league: 'gold' },
         },
       };
-      mockedAxios.get.mockResolvedValue({ data: team2WinsBattle });
+      mockedApiClient.get.mockResolvedValue({ data: team2WinsBattle });
       renderModal({ battleId: 99 });
 
       await waitFor(() => {
@@ -359,7 +367,7 @@ describe('BattleDetailsModal', () => {
           team2: { id: 2, activeRobot: { id: 20, name: 'Gamma' }, reserveRobot: { id: 21, name: 'Delta' }, stableId: 2, league: 'gold' },
         },
       };
-      mockedAxios.get.mockResolvedValue({ data: drawBattle });
+      mockedApiClient.get.mockResolvedValue({ data: drawBattle });
       renderModal({ battleId: 99 });
 
       await waitFor(() => {
@@ -389,7 +397,7 @@ describe('BattleDetailsModal', () => {
           { robotId: 21, team: 2, role: 'reserve', credits: 50, eloBefore: 1050, eloAfter: 1035, damageDealt: 20, finalHP: 10, yielded: false, destroyed: false },
         ],
       };
-      mockedAxios.get.mockResolvedValue({ data: team1WinsBattle });
+      mockedApiClient.get.mockResolvedValue({ data: team1WinsBattle });
       renderModal({ battleId: 99 });
 
       await waitFor(() => {
