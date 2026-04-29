@@ -163,7 +163,7 @@ describe('BattleDetailsModal', () => {
     render(<BattleDetailsModal isOpen={true} onClose={onClose} battleId={1} />);
     
     await waitFor(() => {
-      expect(screen.getByText(/Failed to load battle details/i)).toBeInTheDocument();
+      expect(screen.getByText('API Error')).toBeInTheDocument();
     });
   });
 
