@@ -124,7 +124,7 @@ const WeaponTable: React.FC<WeaponTableProps> = ({
 
       if (typeof aValue === 'string') {
         aValue = aValue.toLowerCase();
-        bValue = bValue.toLowerCase();
+        bValue = typeof bValue === 'string' ? bValue.toLowerCase() : bValue;
       }
 
       if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
