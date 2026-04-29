@@ -22,3 +22,7 @@ Every test in the repository must pass. There is no such thing as a "pre-existin
 5. **Never skip or `.skip` a test to make CI green.** The test exists for a reason. Fix the code or fix the test — don't hide the failure.
 
 6. **CI must be green before requesting review.** If CI fails after pushing, fix the failures immediately in a follow-up commit on the same branch.
+
+7. **E2E and integration test failures are real failures.** Do not dismiss them as "environment issues" or "pre-existing." If an E2E test fails, investigate and fix the root cause — whether it's a test bug, a code bug, or a deployment configuration issue.
+
+8. **Never say "pre-existing" or "unrelated" to justify leaving a failure unfixed.** The codebase should always be in a passing state. If you discover a broken test during your work, fixing it is part of your work.
