@@ -117,7 +117,7 @@ function RobotPerformanceAnalytics({ robotId, lastNCycles = 10 }: RobotPerforman
       } catch {
         setKothStats(null);
       }
-    } catch (err: unknown) {
+    } catch {
       setError('Failed to load analytics data');
     } finally {
       setLoading(false);

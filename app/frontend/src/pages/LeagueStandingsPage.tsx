@@ -66,7 +66,7 @@ function LeagueStandingsPage() {
       setPagination(standingsData.pagination);
       setInstances(instancesData);
       setError(null);
-    } catch (err: unknown) {
+    } catch {
       setError('Failed to load league standings');
     } finally {
       setLoading(false);

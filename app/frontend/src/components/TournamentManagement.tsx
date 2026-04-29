@@ -50,7 +50,7 @@ const TournamentManagement = () => {
     try {
       const data = await getEligibleRobots();
       setEligibleRobots(data);
-    } catch (err: unknown) {
+    } catch {
       // Silently ignore - eligible robots is supplementary data
     }
   };

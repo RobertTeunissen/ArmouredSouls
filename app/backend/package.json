@@ -74,7 +74,6 @@
     "eslint": "^9.39.4",
     "eslint-plugin-security": "^4.0.0",
     "fast-check": "^4.6.0",
-    "gitnexus": "^1.6.3",
     "globals": "^17.4.0",
     "jest": "^30.0.0",
     "prisma": "^7.0.0",

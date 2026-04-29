@@ -7,7 +7,7 @@ import { lockUserForSpending } from '../lib/creditGuard';
 import { eventLogger } from '../services/common/eventLogger';
 import { trackSpending } from '../services/economy/spendingTracker';
 import logger from '../config/logger';
-import { AppError, EconomyError, EconomyErrorCode, AuthError, AuthErrorCode } from '../errors';
+import { EconomyError, EconomyErrorCode, AuthError, AuthErrorCode } from '../errors';
 import { validateRequest } from '../middleware/schemaValidator';
 import { positiveIntParam } from '../utils/securityValidation';
 import { verifyWeaponOwnership } from '../middleware/ownership';
