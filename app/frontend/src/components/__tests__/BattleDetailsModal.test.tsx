@@ -1,13 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import axios from 'axios';
 import BattleDetailsModal from '../BattleDetailsModal';
 
-// Mock axios
-vi.mock('axios');
+// Mock apiClient
+vi.mock('../../utils/apiClient', () => ({
+  default: {
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn(),
+  },
+}));
+
+import apiClient from '../../utils/apiClient';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mockedAxios = axios as any;
+const mockedApiClient = apiClient as any;
 
 const mockBattleData = {
   id: 1,
@@ -59,7 +67,7 @@ const mockBattleData = {
 describe('BattleDetailsModal', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockedAxios.get.mockResolvedValue({ data: mockBattleData });
+    mockedApiClient.get.mockResolvedValue({ data: mockBattleData });
   });
 
   it('does not render when isOpen is false', () => {
@@ -80,7 +88,7 @@ describe('BattleDetailsModal', () => {
 
   it('fetches and displays battle information', async () => {
     const onClose = vi.fn();
-    mockedAxios.get.mockResolvedValue({ data: mockBattleData });
+    mockedApiClient.get.mockResolvedValue({ data: mockBattleData });
     render(<BattleDetailsModal isOpen={true} onClose={onClose} battleId={1} />);
     
     await waitFor(() => {
@@ -142,7 +150,7 @@ describe('BattleDetailsModal', () => {
   });
 
   it('shows loading state while fetching battle data', () => {
-    mockedAxios.get.mockImplementation(() => new Promise(() => {}));
+    mockedApiClient.get.mockImplementation(() => new Promise(() => {}));
     const onClose = vi.fn();
     render(<BattleDetailsModal isOpen={true} onClose={onClose} battleId={1} />);
     
@@ -150,7 +158,7 @@ describe('BattleDetailsModal', () => {
   });
 
   it('handles API errors gracefully', async () => {
-    mockedAxios.get.mockRejectedValue(new Error('API Error'));
+    mockedApiClient.get.mockRejectedValue(new Error('API Error'));
     const onClose = vi.fn();
     render(<BattleDetailsModal isOpen={true} onClose={onClose} battleId={1} />);
     
@@ -161,7 +169,7 @@ describe('BattleDetailsModal', () => {
 
   it('handles draw battles correctly', async () => {
     const drawBattle = { ...mockBattleData, winnerId: null };
-    mockedAxios.get.mockResolvedValue({ data: drawBattle });
+    mockedApiClient.get.mockResolvedValue({ data: drawBattle });
     const onClose = vi.fn();
     render(<BattleDetailsModal isOpen={true} onClose={onClose} battleId={1} />);
     

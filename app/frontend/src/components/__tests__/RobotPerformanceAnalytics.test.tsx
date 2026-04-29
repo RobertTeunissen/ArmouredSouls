@@ -29,14 +29,12 @@ describe('RobotPerformanceAnalytics', () => {
   });
 
   it('renders error state when API fails', async () => {
-    mockedApiClient.get.mockRejectedValue({
-      response: { data: { message: 'Failed to fetch data' } },
-    });
+    mockedApiClient.get.mockRejectedValue(new Error('Network error'));
 
     render(<RobotPerformanceAnalytics robotId={1} lastNCycles={10} />);
 
     await waitFor(() => {
-      expect(screen.getByText('Failed to fetch data')).toBeInTheDocument();
+      expect(screen.getByText('Failed to load analytics data')).toBeInTheDocument();
     });
   });
 

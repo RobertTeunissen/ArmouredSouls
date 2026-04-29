@@ -109,8 +109,10 @@ export function stripMarkdown(markdown: string): string {
   // Remove horizontal rules
   text = text.replace(/^[-*_]{3,}\s*$/gm, '');
 
-  // Remove HTML tags
-  text = text.replace(/<[^>]+>/g, '');
+  // Remove HTML tags (loop to handle nested/broken tags like <scr<script>ipt>)
+  while (/<[^>]+>/.test(text)) {
+    text = text.replace(/<[^>]+>/g, '');
+  }
 
   // Remove unordered list markers
   text = text.replace(/^[\s]*[-*+]\s+/gm, '');
