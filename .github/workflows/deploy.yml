@@ -392,7 +392,7 @@ jobs:
           command_timeout: 20m
           script: |
             cd /opt/armouredsouls/backend
-            npm install --prefer-offline --ignore-scripts
+            npm install --prefer-offline
             npx prisma generate
             npm run build
 
@@ -638,7 +638,7 @@ jobs:
           command_timeout: 20m
           script: |
             cd /opt/armouredsouls/backend
-            npm install --prefer-offline --ignore-scripts
+            npm install --prefer-offline
             npx prisma generate
             npm run build
 
