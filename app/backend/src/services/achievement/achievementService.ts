@@ -137,6 +137,7 @@ const EVENT_TRIGGER_MAP: Record<AchievementEventType, AchievementTriggerType[]> 
     'survival_streak', 'lose_streak', 'all_modes_win',
     'prestige', 'fame', 'streaming_revenue',
     'lifetime_earnings', 'currency',
+    'league_promotion',
   ],
   league_promotion: ['league_promotion'],
   weapon_purchased: ['weapon_count', 'weapon_type'],
@@ -460,7 +461,12 @@ class AchievementService implements IAchievementService {
           where: { id: robotId },
           select: { currentLeague: true },
         });
-        return robot?.currentLeague === targetLeague;
+        if (!robot) return false;
+        // Check if robot is at or above the target league tier
+        const tierOrder = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'];
+        const currentIndex = tierOrder.indexOf(robot.currentLeague);
+        const targetIndex = tierOrder.indexOf(targetLeague);
+        return currentIndex >= targetIndex && targetIndex >= 0;
       }
 
       // ── Weapon Type ───────────────────────────────────────────
