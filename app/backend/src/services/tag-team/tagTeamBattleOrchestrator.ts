@@ -14,6 +14,7 @@ import {
   awardPrestigeToUser,
   awardStreamingRevenueForParticipant,
   checkAndAwardAchievements,
+  didRobotLosePreviousBattle,
 } from '../battle/battlePostCombat';
 import { TagTeamError, TagTeamErrorCode } from '../../errors/tagTeamErrors';
 import { CycleEventPayload } from '../../types/snapshotTypes';
@@ -2229,6 +2230,7 @@ async function updateTagTeamBattleResults(
 
     // Check and award achievements for all 4 robots
     for (const r of tagTeamAuditRobots) {
+      const prevLost = await didRobotLosePreviousBattle(r.robotId, battle.id);
       await checkAndAwardAchievements(r.userId, r.robotId, {
         won: r.isWinner,
         destroyed: r.destroyed,
@@ -2237,7 +2239,7 @@ async function updateTagTeamBattleResults(
         opponentElo: 0,
         yielded: r.yielded,
         opponentYielded: false,
-        previousBattleLost: false,
+        previousBattleLost: prevLost,
         damageDealt: r.damageDealt,
         opponentDamageDealt: 0,
         loadoutType: 'single',
