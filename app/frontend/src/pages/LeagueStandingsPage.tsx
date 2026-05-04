@@ -8,6 +8,7 @@ import {
   getLeagueInstances,
   LeagueRobot,
   LeagueInstance,
+  ZoneMeta,
   getLeagueTierName,
   getLeagueTierColor,
   getLeagueTierIcon,
@@ -30,6 +31,7 @@ function LeagueStandingsPage() {
   const [userRobotTiers, setUserRobotTiers] = useState<Set<string>>(new Set());
   const [userRobotInstances, setUserRobotInstances] = useState<Set<string>>(new Set());
   const [showInstancesList, setShowInstancesList] = useState(false);
+  const [zoneMeta, setZoneMeta] = useState<ZoneMeta | null>(null);
   const [pagination, setPagination] = useState({
     page: 1,
     pageSize: 50,
@@ -64,6 +66,7 @@ function LeagueStandingsPage() {
       ]);
       setRobots(standingsData.data);
       setPagination(standingsData.pagination);
+      setZoneMeta(standingsData.zoneMeta);
       setInstances(instancesData);
       setError(null);
     } catch {
@@ -228,6 +231,31 @@ function LeagueStandingsPage() {
 
         {!loading && !error && robots.length > 0 && (
           <>
+            {/* Zone Legend & Status */}
+            {zoneMeta && (
+              <div className="bg-surface p-4 rounded-lg mb-4 flex flex-wrap items-center gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-sm bg-green-500 inline-block"></span>
+                  <span className="text-secondary">Promotion zone (top 10%, ≥{zoneMeta.minLP} LP, ≥{zoneMeta.minCycles} cycles)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-sm bg-red-500 inline-block"></span>
+                  <span className="text-secondary">Demotion zone (bottom 10%, ≥{zoneMeta.minCycles} cycles)</span>
+                </div>
+                {!zoneMeta.hasEnoughRobots && (
+                  <div className="flex items-center gap-2 text-warning">
+                    <span>⚠️</span>
+                    <span>Promotion/demotion paused — need {zoneMeta.minRobotsRequired} eligible robots, currently {zoneMeta.eligibleCount}</span>
+                  </div>
+                )}
+                {zoneMeta.isChampion && (
+                  <div className="text-tertiary italic">No promotion from Champion tier</div>
+                )}
+                {zoneMeta.isBronze && (
+                  <div className="text-tertiary italic">No demotion from Bronze tier</div>
+                )}
+              </div>
+            )}
             <div className="bg-surface rounded-lg overflow-hidden">
               <div className="overflow-x-auto scrollbar-thin">
                 <table className="w-full">
@@ -253,10 +281,16 @@ function LeagueStandingsPage() {
                           ? ((robot.wins / robot.totalBattles) * 100).toFixed(1)
                           : '0.0';
 
+                      const zoneClass = robot.zone === 'promotion'
+                        ? 'border-l-4 border-l-green-500 bg-green-900/10'
+                        : robot.zone === 'demotion'
+                          ? 'border-l-4 border-l-red-500 bg-red-900/10'
+                          : '';
+
                       return (
                         <tr
                           key={robot.id}
-                          className={`border-b border-white/10 ${
+                          className={`border-b border-white/10 ${zoneClass} ${
                             isMyBot ? 'bg-blue-900 bg-opacity-30' : 'hover:bg-surface-elevated'
                           } transition-colors`}
                         >
