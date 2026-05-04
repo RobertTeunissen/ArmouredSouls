@@ -28,8 +28,9 @@ A match ends when any of these conditions is met:
 ## Tiebreakers
 
 When two or more robots have the same Zone Score, ties are broken by:
-1. Total zone occupation time (more time wins)
-2. Total damage dealt (more damage wins)
+1. Survival status (alive robots rank above eliminated ones)
+2. Total zone occupation time (more time wins)
+3. Total damage dealt (more damage wins)
 
 ## Last Standing Phase
 

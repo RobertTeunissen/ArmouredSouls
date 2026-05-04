@@ -299,6 +299,31 @@ export async function awardFameToRobot(robotId: number, amount: number): Promise
 // ─── 7. Achievement Evaluation ──────────────────────────────────────
 
 /**
+ * Check whether a robot lost its most recent completed battle (before the current one).
+ * Used for the "I Didn't Hear No Bell" (C15) achievement — win after losing.
+ */
+export async function didRobotLosePreviousBattle(robotId: number, currentBattleId: number): Promise<boolean> {
+  const previousParticipation = await prisma.battleParticipant.findFirst({
+    where: {
+      robotId,
+      battleId: { not: currentBattleId },
+    },
+    orderBy: { battle: { createdAt: 'desc' } },
+    select: {
+      battleId: true,
+      battle: { select: { winnerId: true } },
+    },
+  });
+
+  if (!previousParticipation) return false;
+
+  const { winnerId } = previousParticipation.battle;
+
+  // Lost = there was a winner and it wasn't this robot
+  return winnerId !== null && winnerId !== robotId;
+}
+
+/**
  * Check and award achievements after a battle completes.
  *
  * Wraps achievementService.checkAndAward() with battle-specific event data.

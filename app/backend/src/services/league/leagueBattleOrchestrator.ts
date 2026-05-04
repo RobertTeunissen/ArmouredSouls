@@ -20,6 +20,7 @@ import {
   awardCreditsToUser,
   awardPrestigeToUser,
   checkAndAwardAchievements,
+  didRobotLosePreviousBattle,
   type UnlockedAchievement,
 } from '../battle/battlePostCombat';
 import { BattleError, BattleErrorCode } from '../../errors/battleErrors';
@@ -718,6 +719,12 @@ export async function processBattle(scheduledMatch: ScheduledLeagueMatch): Promi
   // Check and award achievements for both robots
   let achievementUnlocks: UnlockedAchievement[] = [];
   if (!result.isByeMatch) {
+    // Look up whether each robot lost their previous battle (for C15 "I Didn't Hear No Bell")
+    const [robot1PrevLost, robot2PrevLost] = await Promise.all([
+      didRobotLosePreviousBattle(robot1.id, battle.id),
+      didRobotLosePreviousBattle(robot2.id, battle.id),
+    ]);
+
     const [unlocks1, unlocks2] = await Promise.all([
       checkAndAwardAchievements(robot1.userId, robot1.id, {
         won: robot1IsWinner,
@@ -727,7 +734,7 @@ export async function processBattle(scheduledMatch: ScheduledLeagueMatch): Promi
         opponentElo: robot2.elo,
         yielded: robot1Participant.yielded,
         opponentYielded: robot2Participant.yielded,
-        previousBattleLost: false,
+        previousBattleLost: robot1PrevLost,
         damageDealt: robot1Participant.damageDealt,
         opponentDamageDealt: robot2Participant.damageDealt,
         loadoutType: robot1.loadoutType || 'single',
@@ -746,7 +753,7 @@ export async function processBattle(scheduledMatch: ScheduledLeagueMatch): Promi
         opponentElo: robot1.elo,
         yielded: robot2Participant.yielded,
         opponentYielded: robot1Participant.yielded,
-        previousBattleLost: false,
+        previousBattleLost: robot2PrevLost,
         damageDealt: robot2Participant.damageDealt,
         opponentDamageDealt: robot1Participant.damageDealt,
         loadoutType: robot2.loadoutType || 'single',

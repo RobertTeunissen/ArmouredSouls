@@ -33,6 +33,7 @@ import {
 import {
   logBattleAuditEvent,
   checkAndAwardAchievements,
+  didRobotLosePreviousBattle,
 } from '../battle/battlePostCombat';
 import { CombatMessageGenerator } from '../battle/combatMessageGenerator';
 import { calculateStreamingRevenue } from '../economy/streamingRevenueService';
@@ -452,6 +453,7 @@ async function processKothBattle(
 
   // 13b. Check and award achievements for all participants
   for (const p of preparedParticipants) {
+    const prevLost = await didRobotLosePreviousBattle(p.robot.id, battle.id);
     await checkAndAwardAchievements(p.robot.userId, p.robot.id, {
       won: p.isWinner,
       destroyed: p.destroyed,
@@ -460,7 +462,7 @@ async function processKothBattle(
       opponentElo: 0,
       yielded: false,
       opponentYielded: false,
-      previousBattleLost: false,
+      previousBattleLost: prevLost,
       damageDealt: p.damageDealt,
       opponentDamageDealt: 0,
       loadoutType: (p.robot as unknown as { loadoutType?: string }).loadoutType || 'single',

@@ -814,9 +814,12 @@ export function calculateFinalPlacements(
     };
   });
 
-  // Sort: Zone_Score desc → zone occupation time desc → damage dealt desc
+  // Sort: Zone_Score desc → survival (alive > eliminated) → zone occupation time desc → damage dealt desc
   entries.sort((a, b) => {
     if (b.zoneScore !== a.zoneScore) return b.zoneScore - a.zoneScore;
+    const aEliminated = scoreState.eliminatedRobots.has(a.robotId) ? 1 : 0;
+    const bEliminated = scoreState.eliminatedRobots.has(b.robotId) ? 1 : 0;
+    if (aEliminated !== bEliminated) return aEliminated - bEliminated; // alive (0) ranks above eliminated (1)
     if (b.zoneOccupationTime !== a.zoneOccupationTime)
       return b.zoneOccupationTime - a.zoneOccupationTime;
     return b.totalDamageDealt - a.totalDamageDealt;

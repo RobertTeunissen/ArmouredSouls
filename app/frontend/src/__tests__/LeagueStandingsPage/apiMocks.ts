@@ -1,10 +1,10 @@
 import { vi } from 'vitest';
-import { LeagueRobot, LeagueInstance, PaginatedResponse } from '../../utils/matchmakingApi';
+import { LeagueRobot, LeagueInstance, LeagueStandingsResponse } from '../../utils/matchmakingApi';
 
 // Mock API responses
 export const mockGetLeagueStandings = vi.fn<
   [string, number, number, string?],
-  Promise<PaginatedResponse<LeagueRobot>>
+  Promise<LeagueStandingsResponse>
 >();
 
 export const mockGetLeagueInstances = vi.fn<
@@ -24,6 +24,18 @@ export function setupDefaultApiMocks() {
       pageSize: 50,
       total: 0,
       totalPages: 0,
+    },
+    zoneMeta: {
+      tier: 'bronze',
+      minLP: 25,
+      minCycles: 5,
+      minRobotsRequired: 10,
+      eligibleCount: 0,
+      hasEnoughRobots: false,
+      promotionSlots: 0,
+      demotionSlots: 0,
+      isChampion: false,
+      isBronze: true,
     },
   });
 

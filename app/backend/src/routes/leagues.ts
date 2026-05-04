@@ -1,10 +1,17 @@
 import express, { Request, Response } from 'express';
 import { z } from 'zod';
 import { getInstancesForTier, LeagueTier, LEAGUE_TIERS } from '../services/league/leagueInstanceService';
+import { getMinLPForPromotion } from '../services/league/leaguePromotionThresholds';
 import prisma from '../lib/prisma';
 import type { Prisma } from '../../generated/prisma';
 import { LeagueError, LeagueErrorCode } from '../errors';
 import { validateRequest } from '../middleware/schemaValidator';
+
+// Constants matching leagueRebalancingService.ts
+const PROMOTION_PERCENTAGE = 0.10;
+const DEMOTION_PERCENTAGE = 0.10;
+const MIN_CYCLES_IN_LEAGUE = 5;
+const MIN_ROBOTS_FOR_REBALANCING = 10;
 
 const router = express.Router();
 
@@ -56,6 +63,65 @@ router.get('/:tier/standings', validateRequest({ params: leagueTierParamsSchema 
     take: perPage,
   });
 
+  // Calculate promotion/demotion zone metadata
+  const minLP = getMinLPForPromotion(tier);
+  const isChampion = tier === 'champion';
+  const isBronze = tier === 'bronze';
+
+  // Count eligible robots (≥5 cycles) across the queried instances for zone calculation
+  const eligibleCount = await prisma.robot.count({
+    where: {
+      leagueId: { in: leagueIds },
+      cyclesInCurrentLeague: { gte: MIN_CYCLES_IN_LEAGUE },
+      NOT: { name: 'Bye Robot' },
+    },
+  });
+
+  const hasEnoughRobots = eligibleCount >= MIN_ROBOTS_FOR_REBALANCING;
+  const promotionCount = hasEnoughRobots ? Math.floor(eligibleCount * PROMOTION_PERCENTAGE) : 0;
+  const demotionCount = hasEnoughRobots ? Math.floor(eligibleCount * DEMOTION_PERCENTAGE) : 0;
+
+  // Get the LP of the robot at the promotion cutoff rank (among eligible robots)
+  // to determine who is actually in the promotion zone
+  // For demotion zone, get the IDs of robots in the bottom 10% of eligible robots
+  let demotionRobotIds: Set<number> = new Set();
+  if (hasEnoughRobots && demotionCount > 0 && !isBronze) {
+    const demotionRobots = await prisma.robot.findMany({
+      where: {
+        leagueId: { in: leagueIds },
+        cyclesInCurrentLeague: { gte: MIN_CYCLES_IN_LEAGUE },
+        NOT: { name: 'Bye Robot' },
+      },
+      orderBy: [
+        { leaguePoints: 'asc' },
+        { elo: 'asc' },
+      ],
+      select: { id: true },
+      take: demotionCount,
+    });
+    demotionRobotIds = new Set(demotionRobots.map(r => r.id));
+  }
+
+  // For promotion zone, get the IDs of robots that meet ALL criteria
+  let promotionRobotIds: Set<number> = new Set();
+  if (hasEnoughRobots && promotionCount > 0 && !isChampion) {
+    const promotionRobots = await prisma.robot.findMany({
+      where: {
+        leagueId: { in: leagueIds },
+        cyclesInCurrentLeague: { gte: MIN_CYCLES_IN_LEAGUE },
+        leaguePoints: { gte: minLP },
+        NOT: { name: 'Bye Robot' },
+      },
+      orderBy: [
+        { leaguePoints: 'desc' },
+        { elo: 'desc' },
+      ],
+      select: { id: true },
+      take: promotionCount,
+    });
+    promotionRobotIds = new Set(promotionRobots.map(r => r.id));
+  }
+
   const standings = robots.map((robot) => ({
     id: robot.id,
     name: robot.name,
@@ -69,10 +135,16 @@ router.get('/:tier/standings', validateRequest({ params: leagueTierParamsSchema 
     maxHP: robot.maxHP,
     fame: robot.fame,
     userId: robot.user.id,
+    cyclesInCurrentLeague: robot.cyclesInCurrentLeague,
     user: {
       username: robot.user.username,
       stableName: robot.user.stableName,
     },
+    zone: promotionRobotIds.has(robot.id)
+      ? 'promotion' as const
+      : demotionRobotIds.has(robot.id)
+        ? 'demotion' as const
+        : null,
   }));
 
   res.json({
@@ -82,6 +154,18 @@ router.get('/:tier/standings', validateRequest({ params: leagueTierParamsSchema 
       pageSize: perPage,
       total,
       totalPages: Math.ceil(total / perPage),
+    },
+    zoneMeta: {
+      tier,
+      minLP,
+      minCycles: MIN_CYCLES_IN_LEAGUE,
+      minRobotsRequired: MIN_ROBOTS_FOR_REBALANCING,
+      eligibleCount,
+      hasEnoughRobots,
+      promotionSlots: promotionCount,
+      demotionSlots: demotionCount,
+      isChampion,
+      isBronze,
     },
   });
 });

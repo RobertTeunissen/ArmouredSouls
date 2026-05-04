@@ -2,7 +2,7 @@ import { vi } from 'vitest';
 import { render } from '@testing-library/react';
 import { ReactElement } from 'react';
 import { AuthContext } from '../../contexts/AuthContext';
-import { LeagueRobot, LeagueInstance, PaginatedResponse } from '../../utils/matchmakingApi';
+import { LeagueRobot, LeagueInstance, LeagueStandingsResponse } from '../../utils/matchmakingApi';
 
 // Mock User Type
 export interface MockUser {
@@ -47,7 +47,9 @@ export function createMockRobot(overrides?: Partial<LeagueRobot>): LeagueRobot {
     maxHP: 100,
     fame: 500,
     userId: 2,
-    user: { username: 'otheruser' },
+    cyclesInCurrentLeague: 10,
+    user: { username: 'otheruser', stableName: null },
+    zone: null,
     ...overrides,
   };
 }
@@ -64,11 +66,11 @@ export function createMockInstance(overrides?: Partial<LeagueInstance>): LeagueI
 }
 
 // Helper to create mock paginated response
-export function createMockPaginatedResponse<T>(
-  data: T[],
+export function createMockPaginatedResponse(
+  data: LeagueRobot[],
   page: number = 1,
   pageSize: number = 50
-): PaginatedResponse<T> {
+): LeagueStandingsResponse {
   return {
     data,
     pagination: {
@@ -76,6 +78,18 @@ export function createMockPaginatedResponse<T>(
       pageSize,
       total: data.length,
       totalPages: Math.ceil(data.length / pageSize),
+    },
+    zoneMeta: {
+      tier: 'bronze',
+      minLP: 25,
+      minCycles: 5,
+      minRobotsRequired: 10,
+      eligibleCount: data.length,
+      hasEnoughRobots: data.length >= 10,
+      promotionSlots: Math.floor(data.length * 0.1),
+      demotionSlots: Math.floor(data.length * 0.1),
+      isChampion: false,
+      isBronze: true,
     },
   };
 }

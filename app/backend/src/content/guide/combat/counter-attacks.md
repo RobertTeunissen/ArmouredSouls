@@ -28,6 +28,7 @@ Counter-attacks are checked after the [attack sequence](/guide/combat/battle-flo
 Key rules:
 
 - Counter-attacks trigger whenever your robot is **attacked** — whether the attack hits or misses
+- **Off-hand attacks** (from dual-wield opponents) do **not** trigger counter-attacks — only main hand attacks can be countered
 - Weapon **malfunctions** do **not** trigger counter-attacks (the weapon failed, there was no real attack to react to)
 - Counter-attacks have their own **hit check** — they can miss, just like a normal attack
 - Counter-attacks deal **reduced damage** compared to a normal attack (roughly 70% of base damage)

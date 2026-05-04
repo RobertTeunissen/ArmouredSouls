@@ -136,17 +136,33 @@ async function main(): Promise<void> {
       ];
 
       for (const eventType of nonBattleEventTypes) {
-        // Use the first robot for robot-context events, null for user-level
-        const contextRobotId = robots[0]?.id ?? null;
-        const unlocked = await achievementService.checkAndAward(user.id, contextRobotId, {
-          type: eventType,
-          data: {},
-        });
+        // Robot-scoped events need to be checked per-robot
+        // (e.g., league_promotion achievements depend on each robot's current league)
+        if (robots.length > 0) {
+          for (const robot of robots) {
+            const unlocked = await achievementService.checkAndAward(user.id, robot.id, {
+              type: eventType,
+              data: {},
+            });
 
-        for (const a of unlocked) {
-          userAwards++;
-          userCredits += a.rewardCredits;
-          userPrestige += a.rewardPrestige;
+            for (const a of unlocked) {
+              userAwards++;
+              userCredits += a.rewardCredits;
+              userPrestige += a.rewardPrestige;
+            }
+          }
+        } else {
+          // User-level only (no robots)
+          const unlocked = await achievementService.checkAndAward(user.id, null, {
+            type: eventType,
+            data: {},
+          });
+
+          for (const a of unlocked) {
+            userAwards++;
+            userCredits += a.rewardCredits;
+            userPrestige += a.rewardPrestige;
+          }
         }
       }
 

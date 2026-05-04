@@ -178,10 +178,25 @@ export interface LeagueRobot {
   maxHP: number;
   fame: number;
   userId: number;
+  cyclesInCurrentLeague: number;
   user: {
     username: string;
     stableName: string | null;
   };
+  zone: 'promotion' | 'demotion' | null;
+}
+
+export interface ZoneMeta {
+  tier: string;
+  minLP: number;
+  minCycles: number;
+  minRobotsRequired: number;
+  eligibleCount: number;
+  hasEnoughRobots: boolean;
+  promotionSlots: number;
+  demotionSlots: number;
+  isChampion: boolean;
+  isBronze: boolean;
 }
 
 export interface LeagueInstance {
@@ -199,6 +214,10 @@ export interface PaginatedResponse<T> {
     total: number;
     totalPages: number;
   };
+}
+
+export interface LeagueStandingsResponse extends PaginatedResponse<LeagueRobot> {
+  zoneMeta: ZoneMeta;
 }
 
 // API Functions
@@ -237,8 +256,8 @@ export const getLeagueStandings = async (
   page: number = 1,
   pageSize: number = 50,
   instance?: string
-): Promise<PaginatedResponse<LeagueRobot>> => {
-  return api.get<PaginatedResponse<LeagueRobot>>(`/api/leagues/${tier}/standings`, {
+): Promise<LeagueStandingsResponse> => {
+  return api.get<LeagueStandingsResponse>(`/api/leagues/${tier}/standings`, {
     page,
     pageSize,
     ...(instance && { instance }),
