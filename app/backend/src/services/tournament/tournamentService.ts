@@ -252,14 +252,14 @@ export function generateStandardSeedOrder(bracketSize: number): number[] {
   const prevBracket = generateStandardSeedOrder(bracketSize / 2);
   
   const result: number[] = [];
-  const shouldSwapOddIndices = bracketSize <= 8;
   
   for (let i = 0; i < prevBracket.length; i++) {
     const seed = prevBracket[i];
     const complement = bracketSize + 1 - seed;
     
-    // Swap at odd indices only for 4-slot and 8-slot brackets
-    if (shouldSwapOddIndices && i % 2 === 1) {
+    // At odd indices, swap seed and complement to maintain proper bracket topology
+    // This ensures seed 1 faces seed N, seed 2 faces seed N-1, etc.
+    if (i % 2 === 1) {
       result.push(complement);
       result.push(seed);
     } else {
