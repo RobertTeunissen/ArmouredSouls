@@ -4,17 +4,17 @@
  * Validates Requirement 12.1-12.7: Financial Report Integration
  * 
  * This test verifies that streaming revenue is correctly aggregated
- * and displayed in the daily financial report.
+ * and displayed in the daily financial report using BattleParticipant records.
  */
 
 import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
 import prisma from '../src/lib/prisma';
 import { generateFinancialReport } from '../src/utils/economyCalculations';
-import { eventLogger, EventType } from '../src/services/common/eventLogger';
 
 describe('Financial Report - Streaming Revenue Integration', () => {
   let testUserIds: number[] = [];
   let testRobotIds: number[] = [];
+  let testBattleIds: number[] = [];
 
   beforeAll(async () => {
     await prisma.$connect();
@@ -22,37 +22,96 @@ describe('Financial Report - Streaming Revenue Integration', () => {
 
   afterEach(async () => {
     // Clean up test data between tests
-    await prisma.auditLog.deleteMany({});
-    await prisma.battleParticipant.deleteMany({});
-    await prisma.battle.deleteMany({});
-    await prisma.robot.deleteMany({
-      where: { userId: { in: testUserIds } },
-    });
-    await prisma.user.deleteMany({
-      where: { id: { in: testUserIds } },
-    });
-    
-    // Reset tracking arrays
+    if (testBattleIds.length > 0) {
+      await prisma.battleParticipant.deleteMany({
+        where: { battleId: { in: testBattleIds } },
+      });
+      await prisma.battle.deleteMany({
+        where: { id: { in: testBattleIds } },
+      });
+    }
+    if (testRobotIds.length > 0) {
+      await prisma.robot.deleteMany({
+        where: { id: { in: testRobotIds } },
+      });
+    }
+    if (testUserIds.length > 0) {
+      await prisma.user.deleteMany({
+        where: { id: { in: testUserIds } },
+      });
+    }
+
     testUserIds = [];
     testRobotIds = [];
+    testBattleIds = [];
   });
 
   afterAll(async () => {
-    // Final cleanup
-    await prisma.auditLog.deleteMany({});
-    await prisma.battleParticipant.deleteMany({});
-    await prisma.battle.deleteMany({});
-    await prisma.robot.deleteMany({});
-    await prisma.user.deleteMany({});
-
     await prisma.$disconnect();
   });
 
+  /** Helper to create a battle with participants and streaming revenue */
+  async function createBattleWithStreaming(
+    robot1Id: number,
+    robot2Id: number,
+    winnerId: number | null,
+    streaming1: number,
+    streaming2: number,
+  ): Promise<number> {
+    const battle = await prisma.battle.create({
+      data: {
+        robot1Id,
+        robot2Id,
+        winnerId,
+        battleType: 'league',
+        leagueType: 'bronze',
+        battleLog: {},
+        durationSeconds: 60,
+        winnerReward: 7500,
+        loserReward: 1500,
+        robot1ELOBefore: 1200,
+        robot2ELOBefore: 1200,
+        robot1ELOAfter: 1210,
+        robot2ELOAfter: 1190,
+        eloChange: 10,
+      },
+    });
+    testBattleIds.push(battle.id);
+
+    await prisma.battleParticipant.createMany({
+      data: [
+        {
+          battleId: battle.id,
+          robotId: robot1Id,
+          team: 1,
+          credits: winnerId === robot1Id ? 7500 : 1500,
+          streamingRevenue: streaming1,
+          eloBefore: 1200,
+          eloAfter: 1210,
+          damageDealt: 50,
+          finalHP: 80,
+        },
+        {
+          battleId: battle.id,
+          robotId: robot2Id,
+          team: 2,
+          credits: winnerId === robot2Id ? 7500 : 1500,
+          streamingRevenue: streaming2,
+          eloBefore: 1200,
+          eloAfter: 1190,
+          damageDealt: 30,
+          finalHP: 60,
+        },
+      ],
+    });
+
+    return battle.id;
+  }
+
   it('should include streaming revenue in financial report', async () => {
-    // Create test user
     const user = await prisma.user.create({
       data: {
-        username: `test_streaming_report_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+        username: `test_streaming_${Date.now()}_${Math.random().toString(36).substring(7)}`,
         passwordHash: 'hashedpassword',
         currency: 100000,
         prestige: 1000,
@@ -60,13 +119,12 @@ describe('Financial Report - Streaming Revenue Integration', () => {
     });
     testUserIds.push(user.id);
 
-    // Create test robot
     const robot = await prisma.robot.create({
       data: {
         name: `TestRobot_${Date.now()}_${Math.random().toString(36).substring(7)}`,
         userId: user.id,
         currentLeague: 'bronze',
-        elo: 1000,
+        elo: 1200,
         maxHP: 100,
         currentHP: 100,
         maxShield: 50,
@@ -79,69 +137,38 @@ describe('Financial Report - Streaming Revenue Integration', () => {
     });
     testRobotIds.push(robot.id);
 
-    // Create battle_complete events with streaming revenue
-    const cycleNumber = 10000 + Math.floor(Math.random() * 1000);
-    
-    // Log 3 battles with streaming revenue
-    await eventLogger.logEvent(
-      cycleNumber,
-      EventType.BATTLE_COMPLETE,
-      {
-        battleId: Date.now() + 1,
-        robot1Id: robot.id,
-        robot2Id: 999,
-        winnerId: robot.id,
-        streamingRevenue1: 1500,
-        streamingRevenue2: 1200,
+    // Create a dummy opponent robot
+    const opponent = await prisma.robot.create({
+      data: {
+        name: `Opponent_${Date.now()}`,
+        userId: user.id, // same user for simplicity
+        currentLeague: 'bronze',
+        elo: 1200,
+        maxHP: 100,
+        currentHP: 100,
+        maxShield: 50,
+        currentShield: 50,
       },
-      { userId: user.id }
-    );
+    });
+    testRobotIds.push(opponent.id);
 
-    await eventLogger.logEvent(
-      cycleNumber,
-      EventType.BATTLE_COMPLETE,
-      {
-        battleId: Date.now() + 2,
-        robot1Id: robot.id,
-        robot2Id: 998,
-        winnerId: 998,
-        streamingRevenue1: 1600,
-        streamingRevenue2: 1300,
-      },
-      { userId: user.id }
-    );
+    // Create 3 battles with streaming revenue for the robot
+    await createBattleWithStreaming(robot.id, opponent.id, robot.id, 1500, 1200);
+    await createBattleWithStreaming(robot.id, opponent.id, opponent.id, 1600, 1300);
+    await createBattleWithStreaming(opponent.id, robot.id, robot.id, 1400, 1700);
 
-    await eventLogger.logEvent(
-      cycleNumber,
-      EventType.BATTLE_COMPLETE,
-      {
-        battleId: Date.now() + 3,
-        robot1Id: 997,
-        robot2Id: robot.id,
-        winnerId: robot.id,
-        streamingRevenue1: 1400,
-        streamingRevenue2: 1700,
-      },
-      { userId: user.id }
-    );
-
-    // Generate financial report
     const report = await generateFinancialReport(user.id, 0);
 
-    // Verify streaming revenue is included
-    expect(report.revenue.streaming).toBeDefined();
-    expect(report.revenue.streamingBattleCount).toBeDefined();
-
-    // Should have 3 battles worth of streaming revenue (1500 + 1600 + 1700 = 4800)
-    expect(report.revenue.streaming).toBe(4800);
-    expect(report.revenue.streamingBattleCount).toBe(3);
-
-    // Verify streaming revenue is included in total revenue
+    // Both robots belong to the same user, so all streaming revenue counts
+    // Robot gets: 1500 + 1600 + 1700 = 4800
+    // Opponent gets: 1200 + 1300 + 1400 = 3900
+    // Total: 8700
+    expect(report.revenue.streaming).toBe(8700);
+    expect(report.revenue.streamingBattleCount).toBe(6); // 6 participant records with streaming > 0
     expect(report.revenue.total).toBeGreaterThanOrEqual(report.revenue.streaming);
   });
 
   it('should show zero streaming revenue when no battles occurred', async () => {
-    // Create a new user with no battles
     const user = await prisma.user.create({
       data: {
         username: `test_no_battles_${Date.now()}_${Math.random().toString(36).substring(7)}`,
@@ -154,16 +181,14 @@ describe('Financial Report - Streaming Revenue Integration', () => {
 
     const report = await generateFinancialReport(user.id, 0);
 
-    // Should show zero streaming revenue
     expect(report.revenue.streaming).toBe(0);
     expect(report.revenue.streamingBattleCount).toBe(0);
   });
 
   it('should only count streaming revenue from user\'s own robots', async () => {
-    // Create test user
     const testUser = await prisma.user.create({
       data: {
-        username: `test_user_own_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+        username: `test_own_${Date.now()}_${Math.random().toString(36).substring(7)}`,
         passwordHash: 'hashedpassword',
         currency: 100000,
         prestige: 1000,
@@ -171,13 +196,22 @@ describe('Financial Report - Streaming Revenue Integration', () => {
     });
     testUserIds.push(testUser.id);
 
-    // Create test robot
+    const otherUser = await prisma.user.create({
+      data: {
+        username: `test_other_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+        passwordHash: 'hashedpassword',
+        currency: 100000,
+        prestige: 0,
+      },
+    });
+    testUserIds.push(otherUser.id);
+
     const testRobot = await prisma.robot.create({
       data: {
         name: `TestRobot_own_${Date.now()}_${Math.random().toString(36).substring(7)}`,
         userId: testUser.id,
         currentLeague: 'bronze',
-        elo: 1000,
+        elo: 1200,
         maxHP: 100,
         currentHP: 100,
         maxShield: 50,
@@ -190,23 +224,12 @@ describe('Financial Report - Streaming Revenue Integration', () => {
     });
     testRobotIds.push(testRobot.id);
 
-    // Create another user and robot
-    const otherUser = await prisma.user.create({
-      data: {
-        username: `test_other_user_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-        passwordHash: 'hashedpassword',
-        currency: 100000,
-        prestige: 0,
-      },
-    });
-    testUserIds.push(otherUser.id);
-
     const otherRobot = await prisma.robot.create({
       data: {
         name: `OtherRobot_${Date.now()}_${Math.random().toString(36).substring(7)}`,
         userId: otherUser.id,
         currentLeague: 'bronze',
-        elo: 1000,
+        elo: 1200,
         maxHP: 100,
         currentHP: 100,
         maxShield: 50,
@@ -215,30 +238,17 @@ describe('Financial Report - Streaming Revenue Integration', () => {
     });
     testRobotIds.push(otherRobot.id);
 
-    // Log a battle between test user's robot and other user's robot
-    const cycleNumber = 10000 + Math.floor(Math.random() * 1000);
-    await eventLogger.logEvent(
-      cycleNumber,
-      EventType.BATTLE_COMPLETE,
-      {
-        battleId: Date.now() + 100,
-        robot1Id: testRobot.id,
-        robot2Id: otherRobot.id,
-        winnerId: testRobot.id,
-        streamingRevenue1: 2000,
-        streamingRevenue2: 1800,
-      },
-      { userId: testUser.id }
-    );
+    // Battle between the two users' robots
+    await createBattleWithStreaming(testRobot.id, otherRobot.id, testRobot.id, 2000, 1800);
 
-    // Generate reports for both users
     const testUserReport = await generateFinancialReport(testUser.id, 0);
     const otherUserReport = await generateFinancialReport(otherUser.id, 0);
 
-    // Test user should only get streamingRevenue1 (2000)
-    expect(testUserReport.revenue.streaming).toBeGreaterThanOrEqual(2000);
+    // Test user should only get their robot's streaming (2000)
+    expect(testUserReport.revenue.streaming).toBe(2000);
+    expect(testUserReport.revenue.streamingBattleCount).toBe(1);
 
-    // Other user should only get streamingRevenue2 (1800)
+    // Other user should only get their robot's streaming (1800)
     expect(otherUserReport.revenue.streaming).toBe(1800);
     expect(otherUserReport.revenue.streamingBattleCount).toBe(1);
   });

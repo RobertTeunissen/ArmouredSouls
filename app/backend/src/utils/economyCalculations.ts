@@ -323,52 +323,29 @@ export async function generateFinancialReport(
   // Calculate prestige bonus on battle winnings
   const prestigeBonus = Math.round(recentBattleWinnings * (getPrestigeMultiplier(user.prestige) - 1));
 
-  // Calculate streaming revenue from recent battles (last 7 days)
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  // Calculate streaming revenue from battles in the last 24 hours
+  // Query BattleParticipant directly — it stores streamingRevenue per robot per battle
+  const oneDayAgo = new Date();
+  oneDayAgo.setDate(oneDayAgo.getDate() - 1);
 
-  // Get user's robots to identify which streaming revenue belongs to them
   const userRobots = await prisma.robot.findMany({
     where: { userId },
     select: { id: true },
   });
-  const userRobotIds = new Set(userRobots.map(r => r.id));
+  const userRobotIds = userRobots.map(r => r.id);
 
-  // Get streaming revenue from battle_complete events in audit log
-  const battleCompleteEvents = await prisma.auditLog.findMany({
+  const streamingResult = await prisma.battleParticipant.aggregate({
     where: {
-      eventType: 'battle_complete',
-      eventTimestamp: {
-        gte: sevenDaysAgo,
-      },
+      robotId: { in: userRobotIds },
+      streamingRevenue: { gt: 0 },
+      battle: { createdAt: { gte: oneDayAgo } },
     },
-    select: {
-      payload: true,
-    },
+    _sum: { streamingRevenue: true },
+    _count: { id: true },
   });
 
-  let totalStreamingRevenue = 0;
-  let streamingBattleCount = 0;
-
-  for (const event of battleCompleteEvents) {
-    const payload = event.payload as unknown as Record<string, unknown>;
-    
-    // Check if robot1 belongs to this user
-    if (payload.robot1Id && userRobotIds.has(payload.robot1Id as number)) {
-      if (payload.streamingRevenue1 && (payload.streamingRevenue1 as number) > 0) {
-        totalStreamingRevenue += payload.streamingRevenue1 as number;
-        streamingBattleCount++;
-      }
-    }
-    
-    // Check if robot2 belongs to this user
-    if (payload.robot2Id && userRobotIds.has(payload.robot2Id as number)) {
-      if (payload.streamingRevenue2 && (payload.streamingRevenue2 as number) > 0) {
-        totalStreamingRevenue += payload.streamingRevenue2 as number;
-        streamingBattleCount++;
-      }
-    }
-  }
+  const totalStreamingRevenue = streamingResult._sum.streamingRevenue ?? 0;
+  const streamingBattleCount = streamingResult._count.id;
 
   // Calculate repair costs from robot's current repair costs
   const userRobotsWithRepairCost = await prisma.robot.findMany({
