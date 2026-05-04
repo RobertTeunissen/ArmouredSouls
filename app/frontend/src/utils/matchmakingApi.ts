@@ -259,7 +259,7 @@ export const getLeagueStandings = async (
 ): Promise<LeagueStandingsResponse> => {
   return api.get<LeagueStandingsResponse>(`/api/leagues/${tier}/standings`, {
     page,
-    pageSize,
+    perPage: pageSize,
     ...(instance && { instance }),
   });
 };

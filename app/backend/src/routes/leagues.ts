@@ -64,62 +64,70 @@ router.get('/:tier/standings', validateRequest({ params: leagueTierParamsSchema 
   });
 
   // Calculate promotion/demotion zone metadata
+  // Zone indicators are only meaningful when viewing a single instance,
+  // because the rebalancer evaluates promotion/demotion per-instance.
   const minLP = getMinLPForPromotion(tier);
   const isChampion = tier === 'champion';
   const isBronze = tier === 'bronze';
+  const isSingleInstance = instance !== undefined;
 
-  // Count eligible robots (≥5 cycles) across the queried instances for zone calculation
-  const eligibleCount = await prisma.robot.count({
-    where: {
-      leagueId: { in: leagueIds },
-      cyclesInCurrentLeague: { gte: MIN_CYCLES_IN_LEAGUE },
-      NOT: { name: 'Bye Robot' },
-    },
-  });
-
-  const hasEnoughRobots = eligibleCount >= MIN_ROBOTS_FOR_REBALANCING;
-  const promotionCount = hasEnoughRobots ? Math.floor(eligibleCount * PROMOTION_PERCENTAGE) : 0;
-  const demotionCount = hasEnoughRobots ? Math.floor(eligibleCount * DEMOTION_PERCENTAGE) : 0;
-
-  // Get the LP of the robot at the promotion cutoff rank (among eligible robots)
-  // to determine who is actually in the promotion zone
-  // For demotion zone, get the IDs of robots in the bottom 10% of eligible robots
-  let demotionRobotIds: Set<number> = new Set();
-  if (hasEnoughRobots && demotionCount > 0 && !isBronze) {
-    const demotionRobots = await prisma.robot.findMany({
-      where: {
-        leagueId: { in: leagueIds },
-        cyclesInCurrentLeague: { gte: MIN_CYCLES_IN_LEAGUE },
-        NOT: { name: 'Bye Robot' },
-      },
-      orderBy: [
-        { leaguePoints: 'asc' },
-        { elo: 'asc' },
-      ],
-      select: { id: true },
-      take: demotionCount,
-    });
-    demotionRobotIds = new Set(demotionRobots.map(r => r.id));
-  }
-
-  // For promotion zone, get the IDs of robots that meet ALL criteria
+  let eligibleCount = 0;
+  let hasEnoughRobots = false;
+  let promotionCount = 0;
+  let demotionCount = 0;
   let promotionRobotIds: Set<number> = new Set();
-  if (hasEnoughRobots && promotionCount > 0 && !isChampion) {
-    const promotionRobots = await prisma.robot.findMany({
+  let demotionRobotIds: Set<number> = new Set();
+
+  if (isSingleInstance) {
+    // Count eligible robots (≥5 cycles) in this specific instance
+    eligibleCount = await prisma.robot.count({
       where: {
-        leagueId: { in: leagueIds },
+        leagueId: instance,
         cyclesInCurrentLeague: { gte: MIN_CYCLES_IN_LEAGUE },
-        leaguePoints: { gte: minLP },
         NOT: { name: 'Bye Robot' },
       },
-      orderBy: [
-        { leaguePoints: 'desc' },
-        { elo: 'desc' },
-      ],
-      select: { id: true },
-      take: promotionCount,
     });
-    promotionRobotIds = new Set(promotionRobots.map(r => r.id));
+
+    hasEnoughRobots = eligibleCount >= MIN_ROBOTS_FOR_REBALANCING;
+    promotionCount = hasEnoughRobots ? Math.floor(eligibleCount * PROMOTION_PERCENTAGE) : 0;
+    demotionCount = hasEnoughRobots ? Math.floor(eligibleCount * DEMOTION_PERCENTAGE) : 0;
+
+    // For demotion zone, get the IDs of robots in the bottom 10% of eligible robots
+    if (hasEnoughRobots && demotionCount > 0 && !isBronze) {
+      const demotionRobots = await prisma.robot.findMany({
+        where: {
+          leagueId: instance,
+          cyclesInCurrentLeague: { gte: MIN_CYCLES_IN_LEAGUE },
+          NOT: { name: 'Bye Robot' },
+        },
+        orderBy: [
+          { leaguePoints: 'asc' },
+          { elo: 'asc' },
+        ],
+        select: { id: true },
+        take: demotionCount,
+      });
+      demotionRobotIds = new Set(demotionRobots.map(r => r.id));
+    }
+
+    // For promotion zone, get the IDs of robots that meet ALL criteria
+    if (hasEnoughRobots && promotionCount > 0 && !isChampion) {
+      const promotionRobots = await prisma.robot.findMany({
+        where: {
+          leagueId: instance,
+          cyclesInCurrentLeague: { gte: MIN_CYCLES_IN_LEAGUE },
+          leaguePoints: { gte: minLP },
+          NOT: { name: 'Bye Robot' },
+        },
+        orderBy: [
+          { leaguePoints: 'desc' },
+          { elo: 'desc' },
+        ],
+        select: { id: true },
+        take: promotionCount,
+      });
+      promotionRobotIds = new Set(promotionRobots.map(r => r.id));
+    }
   }
 
   const standings = robots.map((robot) => ({

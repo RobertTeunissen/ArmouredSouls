@@ -256,8 +256,8 @@ describe('Finances Routes', () => {
           targetLevel: 1,
         });
 
-      // Should succeed, return validation error, or internal error if facility not found
-      expect([200, 400, 500]).toContain(response.status);
+      // Should succeed (200) or return validation error (400) if facility already at/above target level
+      expect([200, 400]).toContain(response.status);
     });
 
     it('should return 401 without authentication', async () => {
