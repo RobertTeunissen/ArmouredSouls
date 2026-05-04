@@ -6,6 +6,7 @@
 import { Prisma } from '../../generated/prisma';
 import prisma from '../lib/prisma';
 import { getFacilityConfig } from '../config/facilities';
+import { EconomyError, EconomyErrorCode } from '../errors/economyErrors';
 import logger from '../config/logger';
 
 /**
@@ -323,10 +324,10 @@ export async function generateFinancialReport(
   // Calculate prestige bonus on battle winnings
   const prestigeBonus = Math.round(recentBattleWinnings * (getPrestigeMultiplier(user.prestige) - 1));
 
-  // Calculate streaming revenue from battles in the last 24 hours
-  // Query BattleParticipant directly — it stores streamingRevenue per robot per battle
-  const oneDayAgo = new Date();
-  oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+  // Calculate streaming revenue from battles in the last 7 days
+  // (matches the same time window used for battle winnings in getDailyFinancialReport)
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
   const userRobots = await prisma.robot.findMany({
     where: { userId },
@@ -338,7 +339,7 @@ export async function generateFinancialReport(
     where: {
       robotId: { in: userRobotIds },
       streamingRevenue: { gt: 0 },
-      battle: { createdAt: { gte: oneDayAgo } },
+      battle: { createdAt: { gte: sevenDaysAgo } },
     },
     _sum: { streamingRevenue: true },
     _count: { id: true },
@@ -964,7 +965,12 @@ export async function calculateFacilityROI(
   // Validate target level
   const config = getFacilityConfig(facilityType);
   if (!config || targetLevel > config.maxLevel || targetLevel <= currentLevel) {
-    throw new Error('Invalid target level');
+    throw new EconomyError(
+      EconomyErrorCode.INVALID_TRANSACTION,
+      'Invalid target level',
+      400,
+      { facilityType, targetLevel, currentLevel, maxLevel: config?.maxLevel }
+    );
   }
 
   // Calculate costs
