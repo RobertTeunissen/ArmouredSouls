@@ -875,6 +875,9 @@ function performAttack(
   }
 
   // Counter-attack check (range-aware, Req 19)
+  // Off-hand attacks do not trigger counter-attacks — dual-wield robots should not
+  // be penalized with double counter exposure compared to single-weapon builds.
+  if (hand === 'offhand') return;
   if (defenderState.currentHP <= 0) return;
 
   const { counterChance, breakdown: counterBreakdown } = calculateCounterChance(defenderState.robot);
