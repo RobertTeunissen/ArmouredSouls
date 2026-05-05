@@ -25,19 +25,20 @@
     "playwright:report": "playwright show-report"
   },
   "dependencies": {
-    "axios": "^1.13.6",
+    "axios": "^1.16.0",
     "date-fns": "^4.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-markdown": "^10.1.0",
     "react-router-dom": "^6.30.3",
     "recharts": "^3.8.0",
-    "zustand": "^5.0.12",
-    "remark-gfm": "^4.0.1"
+    "remark-gfm": "^4.0.1",
+    "zustand": "^5.0.12"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
     "@playwright/test": "^1.58.2",
+    "@tailwindcss/postcss": "^4.0.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
@@ -47,7 +48,6 @@
     "@vitejs/plugin-react": "^4.7.0",
     "@vitest/coverage-v8": "^4.1.0",
     "@vitest/ui": "^4.1.0",
-    "@tailwindcss/postcss": "^4.0.0",
     "axios-mock-adapter": "^2.1.0",
     "eslint": "^9.39.4",
     "eslint-plugin-react-hooks": "^5.2.0",
