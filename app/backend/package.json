@@ -42,7 +42,7 @@
     "@prisma/adapter-pg": "^7.5.0",
     "@prisma/client": "^7.0.0",
     "@tensorflow/tfjs": "^4.22.0",
-    "axios": "^1.13.6",
+    "axios": "^1.16.0",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",

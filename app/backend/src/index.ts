@@ -31,6 +31,7 @@ import { contentModerationService } from './services/moderation';
 import { getDiskUsage, getMemoryUsage, checkCriticalModules } from './utils/systemHealth';
 import { sendMonitoringAlert } from './utils/monitoringWebhook';
 import { initDailyHealthReport } from './services/monitoring/dailyHealthReport';
+import os from 'os';
 import { createGeneralLimiter, createAuthLimiter, createLoginLimiter } from './middleware/rateLimiter';
 import { createUserEconomicLimiter } from './middleware/userRateLimiter';
 import { authenticateToken } from './middleware/auth';
@@ -113,7 +114,7 @@ app.get('/api/health', async (req, res) => {
       const emoji = disk.status === 'critical' ? '🚨' : '⚠️';
       const label = disk.status.toUpperCase();
       sendMonitoringAlert(
-        `${emoji} Disk usage ${label}: ${disk.usagePercent}% used (${disk.availableMB}MB free) on ${require('os').hostname()}`
+        `${emoji} Disk usage ${label}: ${disk.usagePercent}% used (${disk.availableMB}MB free) on ${os.hostname()}`
       );
     }
   }

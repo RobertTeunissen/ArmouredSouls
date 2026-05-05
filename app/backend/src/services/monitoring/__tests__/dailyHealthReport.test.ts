@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 import { generateHealthReport } from '../dailyHealthReport';
 
 jest.mock('../../../config/logger', () => ({
