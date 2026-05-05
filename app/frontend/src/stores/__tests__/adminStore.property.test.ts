@@ -123,6 +123,9 @@ describe('Property 3: TTL cache correctness', () => {
         fc.integer({ min: 0, max: 600_000 }),
         async (ttlMs, elapsedMs) => {
           vi.clearAllMocks();
+          vi.useFakeTimers();
+
+          const now = Date.now();
 
           const stats = makeSystemStats(ttlMs);
 
@@ -147,8 +150,8 @@ describe('Property 3: TTL cache correctness', () => {
           mockedApiGet.mockClear();
 
           // Simulate elapsed time by manipulating statsLastFetched
-          // Set lastFetched to (now - elapsedMs) so that Date.now() - lastFetched ≈ elapsedMs
-          const simulatedLastFetched = Date.now() - elapsedMs;
+          // With fake timers, Date.now() is frozen so there's no drift
+          const simulatedLastFetched = now - elapsedMs;
           useAdminStore.setState({ statsLastFetched: simulatedLastFetched });
 
           // Prepare fresh stats for potential re-fetch
@@ -169,6 +172,8 @@ describe('Property 3: TTL cache correctness', () => {
             // Store should have the fresh stats
             expect(useAdminStore.getState().systemStats).toEqual(freshStats);
           }
+
+          vi.useRealTimers();
         },
       ),
       { numRuns: 100 },

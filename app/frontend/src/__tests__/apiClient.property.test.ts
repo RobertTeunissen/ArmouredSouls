@@ -39,7 +39,9 @@ describe('API Client Interceptors - Property Tests', () => {
     it('attaches Authorization: Bearer <token> header for any non-empty token', async () => {
       await fc.assert(
         fc.asyncProperty(
-          fc.string({ minLength: 1 }).filter((s) => s.trim().length > 0),
+          // Generate non-empty strings without leading/trailing whitespace
+          // (real JWT tokens are base64url-encoded, never have surrounding spaces)
+          fc.string({ minLength: 1 }).map((s) => s.trim()).filter((s) => s.length > 0),
           async (token) => {
             vi.mocked(localStorage.getItem).mockImplementation((key: string) =>
               key === 'token' ? token : null,

@@ -1,13 +1,17 @@
 # Armoured Souls — Maintenance Guide
 
-**Last Updated**: April 9, 2026  
+**Last Updated**: May 2026  
 **Status**: ✅ Current
 
 Routine maintenance tasks for keeping the VPS healthy.
 
+> **See also**: [Monitoring & Alerting Guide](MONITORING.md) for automated alerts, Discord webhook setup, and incident response procedures.
+
 ---
 
 ## Log Inspection
+
+> **Note**: Critical errors (disk exhaustion, startup failures, backup failures) also trigger Discord alerts automatically. See [MONITORING.md](MONITORING.md) for details.
 
 ### PM2 Logs
 

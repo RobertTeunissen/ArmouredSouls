@@ -28,6 +28,10 @@ import achievementsRoutes from './routes/achievements';
 import { loadEnvConfig } from './config/env';
 import { initScheduler } from './services/cycle/cycleScheduler';
 import { contentModerationService } from './services/moderation';
+import { getDiskUsage, getMemoryUsage, checkCriticalModules } from './utils/systemHealth';
+import { sendMonitoringAlert } from './utils/monitoringWebhook';
+import { initDailyHealthReport } from './services/monitoring/dailyHealthReport';
+import os from 'os';
 import { createGeneralLimiter, createAuthLimiter, createLoginLimiter } from './middleware/rateLimiter';
 import { createUserEconomicLimiter } from './middleware/userRateLimiter';
 import { authenticateToken } from './middleware/auth';
@@ -40,6 +44,10 @@ dotenv.config();
 
 const config = loadEnvConfig();
 const app = express();
+
+// Disk alert cooldown state (15-minute cooldown per severity level)
+const DISK_ALERT_COOLDOWN_MS = 15 * 60 * 1000;
+const diskAlertCooldowns = new Map<string, number>();
 
 app.set('trust proxy', 1);
 
@@ -93,22 +101,42 @@ for (const prefix of economicPrefixes) {
 }
 
 app.get('/api/health', async (req, res) => {
+  const disk = getDiskUsage();
+  const memory = getMemoryUsage();
+  const modules = checkCriticalModules();
+
+  // Active alerting on disk threshold breach (15-minute cooldown per severity)
+  if (disk.status === 'warning' || disk.status === 'critical') {
+    const now = Date.now();
+    const lastAlert = diskAlertCooldowns.get(disk.status) || 0;
+    if (now - lastAlert >= DISK_ALERT_COOLDOWN_MS) {
+      diskAlertCooldowns.set(disk.status, now);
+      const emoji = disk.status === 'critical' ? '🚨' : '⚠️';
+      const label = disk.status.toUpperCase();
+      sendMonitoringAlert(
+        `${emoji} Disk usage ${label}: ${disk.usagePercent}% used (${disk.availableMB}MB free) on ${os.hostname()}`
+      );
+    }
+  }
+
+  let dbConnected = true;
   try {
     await prisma.$queryRaw`SELECT 1`;
-    res.json({
-      status: 'ok',
-      database: 'connected',
-      timestamp: new Date().toISOString(),
-      environment: config.nodeEnv,
-    });
   } catch {
-    res.status(503).json({
-      status: 'error',
-      database: 'disconnected',
-      timestamp: new Date().toISOString(),
-      environment: config.nodeEnv,
-    });
+    dbConnected = false;
   }
+
+  const isHealthy = dbConnected && disk.status !== 'critical';
+
+  res.status(isHealthy ? 200 : 503).json({
+    status: isHealthy ? 'ok' : 'error',
+    database: dbConnected ? 'connected' : 'disconnected',
+    disk,
+    memory,
+    modules,
+    timestamp: new Date().toISOString(),
+    environment: config.nodeEnv,
+  });
 });
 
 // Routes
@@ -169,16 +197,30 @@ const host = (config.nodeEnv === 'production' || config.nodeEnv === 'acceptance'
   ? '127.0.0.1'
   : '0.0.0.0';
 
-app.listen(config.port, host, () => {
-  logger.info(`Backend server running on http://${host}:${config.port}`);
+// Run startup self-test before accepting connections
+import { runStartupSelfTest } from './utils/startupSelfTest';
 
-  // Initialize the cycle scheduler after the server is listening
-  initScheduler({
-    enabled: config.schedulerEnabled,
-    leagueSchedule: config.leagueSchedule,
-    tournamentSchedule: config.tournamentSchedule,
-    tagTeamSchedule: config.tagTeamSchedule,
-    settlementSchedule: config.settlementSchedule,
-    kothSchedule: config.kothSchedule,
+(async () => {
+  const selfTest = await runStartupSelfTest();
+  if (!selfTest.passed) {
+    // Self-test handles logging and alerting internally
+    process.exit(1);
+  }
+
+  app.listen(config.port, host, () => {
+    logger.info(`Backend server running on http://${host}:${config.port}`);
+
+    // Initialize the cycle scheduler after the server is listening
+    initScheduler({
+      enabled: config.schedulerEnabled,
+      leagueSchedule: config.leagueSchedule,
+      tournamentSchedule: config.tournamentSchedule,
+      tagTeamSchedule: config.tagTeamSchedule,
+      settlementSchedule: config.settlementSchedule,
+      kothSchedule: config.kothSchedule,
+    });
+
+    // Initialize daily health report (independent of scheduler)
+    initDailyHealthReport();
   });
-});
+})();
