@@ -55,14 +55,15 @@ function checkLoggingHealth(): { status: 'active' | 'stale' | 'unknown'; lastWri
  * Generate and send the daily health report.
  */
 export async function generateHealthReport(): Promise<string> {
+  // Write a test log entry FIRST to verify logging is functional
+  logger.info('[health-report] logging verification');
+
   const disk = getDiskUsage();
   const memory = getMemoryUsage();
   const modules = checkCriticalModules();
+  // Check logging AFTER the write so the mtime reflects the verification entry
   const logging = checkLoggingHealth();
   const uptime = formatUptime(process.uptime());
-
-  // Write a test log entry to verify logging is functional
-  logger.info('[health-report] logging verification');
 
   // Check database connectivity
   let dbConnected = true;
@@ -153,11 +154,11 @@ export async function generateHealthReport(): Promise<string> {
  * Called during application bootstrap (after scheduler init).
  */
 export function initDailyHealthReport(): void {
-  const schedule = process.env.DAILY_REPORT_SCHEDULE || DEFAULT_SCHEDULE;
+  const configuredSchedule = process.env.DAILY_REPORT_SCHEDULE || DEFAULT_SCHEDULE;
+  const schedule = cron.validate(configuredSchedule) ? configuredSchedule : DEFAULT_SCHEDULE;
 
-  if (!cron.validate(schedule)) {
-    logger.error(`[daily-health-report] Invalid cron schedule: "${schedule}" — using default`);
-    return;
+  if (configuredSchedule !== schedule) {
+    logger.error(`[daily-health-report] Invalid cron schedule: "${configuredSchedule}" — falling back to default "${DEFAULT_SCHEDULE}"`);
   }
 
   cron.schedule(schedule, async () => {

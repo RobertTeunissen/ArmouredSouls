@@ -33,9 +33,9 @@ DISK_USAGE=$(df / --output=pcent | tail -1 | tr -d ' %')
 # Get available space in human-readable format
 AVAIL_KB=$(df / --output=avail | tail -1 | tr -d ' ')
 if [ "$AVAIL_KB" -ge 1048576 ]; then
-  AVAIL_HUMAN="$(echo "scale=1; $AVAIL_KB / 1048576" | bc)GB"
+  AVAIL_HUMAN="$(awk "BEGIN {printf \"%.1f\", $AVAIL_KB / 1048576}")GB"
 elif [ "$AVAIL_KB" -ge 1024 ]; then
-  AVAIL_HUMAN="$(echo "scale=0; $AVAIL_KB / 1024" | bc)MB"
+  AVAIL_HUMAN="$(awk "BEGIN {printf \"%d\", $AVAIL_KB / 1024}")MB"
 else
   AVAIL_HUMAN="${AVAIL_KB}KB"
 fi
