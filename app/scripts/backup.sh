@@ -32,10 +32,23 @@ log() {
   echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
 }
 
+# --- Monitoring alert helper ---
+send_alert() {
+  local message="$1"
+  local webhook="${MONITORING_DISCORD_WEBHOOK:-${DISCORD_WEBHOOK_URL:-}}"
+  if [ -n "$webhook" ]; then
+    curl -s -H "Content-Type: application/json" \
+      -d "{\"content\": \"$message\"}" \
+      "$webhook" > /dev/null 2>&1 || true
+  fi
+  log "$message"
+}
+
 # --- Disk space guard ---
 DISK_USAGE=$(df / --output=pcent | tail -1 | tr -d ' %')
 if [ "${DISK_USAGE}" -ge "${DISK_THRESHOLD}" ]; then
   log "SKIPPED: Disk usage ${DISK_USAGE}% exceeds ${DISK_THRESHOLD}% threshold — free space before next backup"
+  send_alert "⚠️ Backup SKIPPED: Disk usage ${DISK_USAGE}% exceeds ${DISK_THRESHOLD}% threshold on $(hostname). No backup created."
   exit 0
 fi
 
@@ -48,6 +61,7 @@ if pg_dump -h "${DB_HOST}" -p "${DB_PORT}" -U "${DB_USER}" "${DB_NAME}" | gzip >
   log "Daily backup complete: ${DAILY_FILE} (${FILE_SIZE})"
 else
   log "ERROR: Daily backup failed"
+  send_alert "🚨 Backup FAILED: pg_dump returned error on $(hostname). Check backup logs."
   exit 1
 fi
 

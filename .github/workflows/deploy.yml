@@ -489,7 +489,33 @@ jobs:
               sleep 2
               ELAPSED=$((ELAPSED + 2))
             done
-            echo "Health check passed"
+            # Validate enhanced health response
+            HEALTH=$(curl -s http://localhost:3001/api/health)
+            DISK_STATUS=$(echo "$HEALTH" | jq -r '.disk.status')
+            MODULE_STATUS=$(echo "$HEALTH" | jq -r '.modules.status')
+            if [ "$DISK_STATUS" = "critical" ]; then
+              echo "DEPLOY BLOCKED: Disk status is critical"
+              exit 1
+            fi
+            if [ "$MODULE_STATUS" != "ok" ]; then
+              echo "DEPLOY BLOCKED: Module check failed — $(echo "$HEALTH" | jq -r '.modules.missing')"
+              exit 1
+            fi
+            echo "Enhanced health check passed (disk: $DISK_STATUS, modules: $MODULE_STATUS)"
+
+      - name: Notify deploy success
+        if: success()
+        run: |
+          curl -s -H "Content-Type: application/json" \
+            -d "{\"content\": \"✅ Deploy to ACC complete. Health check passed. Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}" \
+            "${{ secrets.MONITORING_DISCORD_WEBHOOK }}" || true
+
+      - name: Notify deploy failure
+        if: failure()
+        run: |
+          curl -s -H "Content-Type: application/json" \
+            -d "{\"content\": \"🚨 Deploy to ACC FAILED. Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}" \
+            "${{ secrets.MONITORING_DISCORD_WEBHOOK }}" || true
 
       - name: Generate changelog drafts
         continue-on-error: true
@@ -709,7 +735,33 @@ jobs:
               sleep 2
               ELAPSED=$((ELAPSED + 2))
             done
-            echo "Health check passed"
+            # Validate enhanced health response
+            HEALTH=$(curl -s http://localhost:3001/api/health)
+            DISK_STATUS=$(echo "$HEALTH" | jq -r '.disk.status')
+            MODULE_STATUS=$(echo "$HEALTH" | jq -r '.modules.status')
+            if [ "$DISK_STATUS" = "critical" ]; then
+              echo "DEPLOY BLOCKED: Disk status is critical"
+              exit 1
+            fi
+            if [ "$MODULE_STATUS" != "ok" ]; then
+              echo "DEPLOY BLOCKED: Module check failed — $(echo "$HEALTH" | jq -r '.modules.missing')"
+              exit 1
+            fi
+            echo "Enhanced health check passed (disk: $DISK_STATUS, modules: $MODULE_STATUS)"
+
+      - name: Notify deploy success
+        if: success()
+        run: |
+          curl -s -H "Content-Type: application/json" \
+            -d "{\"content\": \"✅ Deploy to PRD complete. Health check passed. Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}" \
+            "${{ secrets.MONITORING_DISCORD_WEBHOOK }}" || true
+
+      - name: Notify deploy failure
+        if: failure()
+        run: |
+          curl -s -H "Content-Type: application/json" \
+            -d "{\"content\": \"🚨 Deploy to PRD FAILED. Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}" \
+            "${{ secrets.MONITORING_DISCORD_WEBHOOK }}" || true
 
       - name: Generate changelog drafts
         continue-on-error: true

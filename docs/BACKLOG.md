@@ -13,20 +13,31 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 | Rank | Item | # | Votes | BV | TC | RR | Size | WSJF |
 |------|------|---|-------|----|----|-----|------|------|
 | 1 | Game Loop Audit | 6 | 3 🗳️ | 3 | 4 | 5 | 2 | **6.0** |
-| 2 | Monitoring and Alerting | 3 | 2 🗳️ | 3 | 4 | 4 | 2 | **5.5** |
-| 3 | Facility Investment Advisor | 1 | 1 🗳️ | 4 | 5 | 1 | 2 | **5.0** |
-| 5 | Feature Flags | 15 | 1 🗳️ | 2 | 2 | 4 | 2 | **4.0** |
-| 7 | Landing Page | 4 | 0 🗳️ | 3 | 2 | 1 | 2 | **3.0** |
-| 8 | Weapon Experimentation Problem | 5 | 1 🗳️ | 4 | 3 | 4 | 4 | **2.8** |
-| 9 | Weapon Special Properties | 11 | 1 🗳️ | 3 | 2 | 2 | 4 | **1.8** |
-| 11 | Player Personas / Complexity Modes | 16 | 1 🗳️ | 2 | 1 | 2 | 3 | **1.7** |
-| 12 | Arena / Terrain Modifiers | 12 | 1 🗳️ | 3 | 1 | 2 | 4 | **1.5** |
-| 13 | Unimplemented Facilities | 7 | 0 🗳️ | 2 | 1 | 1 | 5 | **0.8** |
+| 2 | Facility Investment Advisor | 1 | 1 🗳️ | 4 | 5 | 1 | 2 | **5.0** |
+| 3 | Feature Flags | 15 | 1 🗳️ | 2 | 2 | 4 | 2 | **4.0** |
+| 4 | Compress Prestige Multiplier Thresholds | 36 | 0 🗳️ | 1 | 1 | 1 | 1 | **3.0** |
+| 5 | Landing Page | 4 | 0 🗳️ | 3 | 2 | 1 | 2 | **3.0** |
+| 6 | Weapon Experimentation Problem | 5 | 1 🗳️ | 4 | 3 | 4 | 4 | **2.8** |
+| 7 | Weapon Special Properties | 11 | 1 🗳️ | 3 | 2 | 2 | 4 | **1.8** |
+| 8 | Season System (100-Cycle Seasons) | 41 | 0 🗳️ | 4 | 1 | 2 | 4 | **1.8** |
+| 9 | Daily Login Bonuses & Seasonal Events | 34 | 0 🗳️ | 3 | 1 | 1 | 3 | **1.7** |
+| 10 | Player Personas / Complexity Modes | 16 | 1 🗳️ | 2 | 1 | 2 | 3 | **1.7** |
+| 11 | Arena / Terrain Modifiers | 12 | 1 🗳️ | 3 | 1 | 2 | 4 | **1.5** |
+| 12 | 3v3 Team Battles | 31 | 0 🗳️ | 3 | 1 | 1 | 4 | **1.3** |
+| 13 | Modular Package Extraction | 35 | 0 🗳️ | 1 | 1 | 2 | 3 | **1.3** |
+| 14 | Robot Detail Page Split | 37 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
+| 15 | Achievement Persistence Across Seasons | 40 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
+| 16 | Weapon Crafting System | 29 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
+| 17 | Free-for-All / Battle Royale Mode | 30 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
+| 18 | Conditional Battle Triggers / AI Scripting | 32 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
+| 19 | Future Revenue Streams | 33 | 0 🗳️ | 2 | 1 | 1 | 4 | **1.0** |
+| 20 | Unimplemented Facilities | 7 | 0 🗳️ | 2 | 1 | 1 | 5 | **0.8** |
 
 ### Recently Completed (removed from backlog)
 
 | Item | # | Spec | Completed |
 |------|---|------|-----------|
+| Monitoring and Alerting | 3 | [Spec #29](/.kiro/specs/to-do/29-monitoring-and-alerting/) | May 2026 |
 | Admin Portal Redesign | 13 | [Spec #28](/.kiro/specs/done-april26/28-admin-portal-redesign/) | April 2026 |
 | Admin Tuning Adoption Dashboard | 38 | [Spec #28](/.kiro/specs/done-april26/28-admin-portal-redesign/) | April 2026 |
 | Achievement / Milestone System | 8 | [Spec #27](/.kiro/specs/done-april26/27-achievement-system/) | April 2026 |
@@ -37,31 +48,12 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 
 ---
 
-## High Priority
 
 ### #1 — Facility Investment Advisor & ROI Calculator
 **Source**: Known issue  
 **Priority**: High — broken feature visible to players
 
 The Investments & ROI tab and Investment Advisor tab on the Facilities page are not working as intended. The consolidation from the old pages was structural only — the data isn't flowing correctly. Players see empty or wrong numbers.
-
-### #3 — Monitoring and Alerting
-**Source**: Phase 2 roadmap  
-**Priority**: High — no way to know if production breaks
-
-Current observability: Winston logs, `CyclePerformanceMonitoringService`, `securityMonitor`, admin Security Dashboard. Missing: external uptime monitoring, alerting on backend crashes or cycle failures, log aggregation. Lightweight approach: UptimeRobot for uptime, Discord webhook for cycle failures (notification service already supports Discord).
-
-**Incident 1 — April 2026 (ACC)**: Full-disk condition during robot image feature launch required a hard VPS restart. The restart left a partial `dist/` build (entire `utils/` directory missing). The server appeared healthy (PM2 status: online) but the daily settlement cron failed at 23:00 UTC with `Cannot find module '../../utils/economyCalculations'`. The error was only discovered the next morning via a Discord notification. Root causes: (1) no disk usage alerting, (2) no post-restart build verification, (3) dynamic `import()` in settlement allowed the server to start despite missing modules.
-
-**Incident 2 — April 20, 2026 (ACC)**: Login returned HTTP 500 ("Internal Server Error") for all users. Prisma threw `DriverAdapterError: could not write init file` on every DB query. Root cause: disk 100% full (`/dev/sda1 8.0G used of 8.0G`). The 8G DEV1-S disk filled up from daily DB backup accumulation — 7 daily backups (112M–196M each, ~1.2G total) plus 4 weekly copies (~343M), combined with growing PostgreSQL data, Docker images (990M), and systemd journal (510M). The backup script's retention policy (7 daily + 4 weekly) was working correctly but the DB growth rate (~20% per week from auto-generated users/robots) outpaced the available disk. Immediate fix: removed old backups, vacuumed journal, restarted PM2. Preventive fix applied: reduced backup retention to 3 daily + 2 weekly, added disk space guard to `app/scripts/backup.sh` (skips backup at 90% usage).
-
-Specific gaps these incidents exposed — should be addressed in the spec:
-- **Disk usage monitoring**: Alert (Discord webhook) when disk usage crosses 80%. Scaleway Cockpit provides Instance CPU metrics natively (free), but OS-level disk usage requires the Grafana Alloy agent (custom data, billed at €0.15/million samples). A lightweight cron + Discord webhook is simpler for a single VPS.
-- **Backup retention scaling**: Retention policy must account for DB growth rate. On the 8G ACC disk, 3 daily + 2 weekly is the safe maximum. Production (if same disk size) needs the same treatment.
-- **Post-restart/deploy build verification**: A health check that validates critical modules are loadable and key endpoints respond.
-- **Startup self-test**: On boot, verify that all cron job handlers can resolve their dependencies (especially dynamic imports).
-- **Log rotation cleanup**: More aggressive `logrotate` config to prevent logs from contributing to disk pressure.
-- **Disk sizing**: The DEV1-S 8G disk is undersized for a growing DB with daily backups. Consider upgrading to a larger volume or adding block storage.
 
 ### #4 — Landing Page / Marketing Front Page
 **Source**: Current state — visitors land on a login/register form with no context  
@@ -111,10 +103,6 @@ The game has six identifiable loops, most of which degrade or stall at some poin
 
 **Missing loops**: experimentation, social/rivalry, collection/completion, seasonal/event, recovery/comeback.
 
----
-
-## Medium Priority
-
 ### #7 — Unimplemented Facilities (4 remaining)
 **Source**: PRD_FACILITIES_PAGE.md  
 **Priority**: Medium — players can buy them but they do nothing
@@ -150,10 +138,6 @@ Add a feature toggle system manageable from the admin portal. Flags can be globa
 **Priority**: Medium — different players want fundamentally different experiences
 
 Two archetypes: "just let me fight" vs "show me everything." Per the [Prestige & Fame Design Exploration](analysis/PRESTIGE_FAME_DESIGN_EXPLORATION.md): gating depth by prestige doesn't work — a preference toggle may be the right approach.
-
----
-
-## Low Priority
 
 ### #18 — Battle Table Denormalization Cleanup
 **Source**: [Battle Execution Audit](analysis/BATTLE_EXECUTION_AUDIT.md)  
@@ -223,9 +207,6 @@ Per the [Prestige & Fame Design Exploration](analysis/PRESTIGE_FAME_DESIGN_EXPLO
 
 The battle report links to `/league-standings?tier=gold` but can't link to the specific league instance the battle was fought in. Same for tag team standings. League instances use string identifiers (e.g., `gold_1`) not numeric IDs, and the standings pages don't support URL-based instance selection. Fix: add `?instance=gold_1` query param support to LeagueStandingsPage and TagTeamStandingsPage, and include the league instance ID in the battle log API response. Also backfill `tournamentId` on old battle records so tournament links work for historical battles.
 
----
-
-## Not Scoped (Future Ideas)
 
 ### #29 — Weapon Crafting System
 Custom weapon design at Workshop Level 6+. Pricing formula already supports it.
@@ -248,15 +229,47 @@ Consecutive login rewards, limited-time challenges, end-of-season league placeme
 ### #35 — Modular Package Extraction
 npm workspace extraction. Only relevant when multiple consumers need shared backend logic.
 
-### #36 — Convert Battle Winnings Bonus to Smooth Scaling
-**Source**: [Prestige & Fame Design Exploration](analysis/PRESTIGE_FAME_DESIGN_EXPLORATION.md)  
+### #36 — Compress Prestige Multiplier Thresholds
+**Source**: [Prestige & Fame Design Exploration](analysis/PRESTIGE_FAME_DESIGN_EXPLORATION.md), ACC cycle 35 data  
 
-`getPrestigeMultiplier()` uses hard thresholds while other formulas scale smoothly. Convert to a smooth formula like `1 + prestige/100,000`. Small code change.
+The original idea was to convert `getPrestigeMultiplier()` to a smooth formula (`1 + prestige/100,000`), but analysis showed this would nerf mid-game players heavily (+10% → +2% at 2K prestige) and remove the cap, causing runaway late-game scaling.
+
+**The real problem is threshold spacing vs. actual prestige velocity.** On ACC at cycle 35, the top 10 players sit at 2K–3K prestige. Best robots earn ~25 prestige/day from battles, and achievement prestige is largely exhausted. At this rate the 5K tier is months away, and 10K+ tiers are effectively unreachable (years). The upper tiers are dead content — no player will experience them.
+
+**Proposed fix — compress thresholds to match actual prestige economy:**
+
+| Tier | Current Threshold | Proposed | Bonus |
+|------|------------------|----------|-------|
+| Established | 1,000 | 1,000 | +10% |
+| Veteran | 5,000 | 2,500 | +20% |
+| Elite | 10,000 | 5,000 | +30% |
+| Champion | 25,000 | 10,000 | +40% |
+| Legendary | 50,000 | 20,000 | +50% |
+
+This makes the next tier reachable (~80 days for a top player at 3K → 5K) while keeping the cap aspirational (~680 days to 20K). Small code change in `getPrestigeMultiplier()` and `getNextPrestigeTier()`.
+
+**Consideration**: Compressing thresholds buffs current top players immediately (3K prestige jumps from +10% to +20%). Evaluate economic impact on battle winnings income before applying.
 
 ### #37 — Robot Detail Page Split: Review vs Prepare / Stable Preparation Dashboard
 **Source**: Tuning Pool spec discussion (spec #25)  
 
 The Robot Detail page serves two distinct intents (Review: Overview/Matches/Analytics vs Prepare: Upgrades/Tuning/Battle Config/Stats). With 7 tabs, consider visual tab grouping or a Stable Preparation Dashboard for managing all robots from one view.
+
+### #41 — Season System (100-Cycle Competitive Seasons)
+**Source**: Game Loop Audit (#6) — Loop 3 (Competitive Loop) has no resets, meta shifts, or seasonal structure  
+**Priority**: Not scoped — planned for after current high-priority items
+
+100-cycle (100-day) seasons with LP soft-reset, end-of-season placement rewards, fresh leaderboards, and a visible countdown. Gives every player a reason to engage every cycle and makes the competitive loop feel alive instead of LP oscillating ±1 around a stable point.
+
+**Design considerations:**
+- LP soft-reset at season boundary (partial reset, not full wipe — preserve skill signal)
+- End-of-season rewards based on final tier/placement (credits, prestige, cosmetics)
+- Season history / archive (past season standings viewable)
+- Possible per-season meta shift (featured arena modifier, weapon category bonus) to force adaptation
+- Achievement system already designed with seasons in mind (#40 covers persistence question)
+- Promotion/demotion history (#22) would enhance season-over-season progression tracking
+
+**Dependencies**: #40 (achievement persistence decision), possibly #22 (promotion history).
 
 ### #40 — Achievement Persistence Across Seasons
 **Source**: Achievement System spec (#27) discussion  

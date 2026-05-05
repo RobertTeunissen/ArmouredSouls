@@ -75,9 +75,11 @@ Every push to `main` triggers the full pipeline:
 1. **Stage 1**: Backend tests (unit + integration) + frontend build/lint/unit tests (parallel)
 2. **Stage 2**: E2E tests — provisions a PostgreSQL 17 service container, runs database migrations, seeds test data (`npx prisma db seed`), starts the backend server, builds the frontend, installs Playwright Chromium, and runs the full Playwright E2E suite. Uploads HTML report and failure artifacts (screenshots, traces) to GitHub Actions. 15-minute timeout. Blocks deployment on failure.
 3. **Deploy**: rsync artifacts → `npm ci --production` → pre-migration backup → `prisma migrate deploy` → PM2 restart
-4. **Smoke tests**: Health endpoint, frontend load, login API
+4. **Enhanced health check**: Validates HTTP 200 + `disk.status` != "critical" + `modules.status` == "ok". Catches partial builds and disk issues.
+5. **Deploy notifications**: On success → Discord "✅ Deploy complete". On failure → Discord "🚨 Deploy FAILED" with link to the Actions run.
+6. **Smoke tests**: Health endpoint, frontend load, login API
 
-No manual action needed. Monitor the Actions tab in GitHub for status.
+No manual action needed. Deploy success/failure notifications are sent to the `#ops-alerts` Discord channel automatically. See [MONITORING.md](MONITORING.md) for webhook configuration.
 
 ### PRD (Manual Promotion)
 

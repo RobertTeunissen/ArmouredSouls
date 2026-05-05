@@ -1,0 +1,209 @@
+# Implementation Plan: Monitoring and Alerting
+
+## Overview
+
+Add lightweight monitoring and alerting to Armoured Souls: enhanced health endpoint with disk/memory/module checks, startup self-test, disk monitoring cron script, backup failure alerting, deploy pipeline enhancement, and operations documentation. All implementations use Node.js built-ins and bash — no new npm dependencies.
+
+## Tasks
+
+- [x] 1. Monitoring webhook utility and environment configuration
+  - [x] 1.1 Create monitoring webhook utility
+    - Create `app/backend/src/utils/monitoringWebhook.ts`
+    - Implement `sendMonitoringAlert(message: string): Promise<boolean>` — sends to `MONITORING_DISCORD_WEBHOOK` env var, falls back to `DISCORD_WEBHOOK_URL`, returns false if neither is set
+    - Use direct `fetch()` with 5-second timeout via `AbortController`
+    - Never throw — catch all errors, log via Winston, return false
+    - Export as named export
+    - _Requirements: 9.1, 9.2, 9.3_
+  - [x] 1.2 Add MONITORING_DISCORD_WEBHOOK to environment example files
+    - Add `MONITORING_DISCORD_WEBHOOK=` with comment "# Discord webhook for ops alerts (disk, startup, backup failures). Falls back to DISCORD_WEBHOOK_URL if not set." to `app/backend/.env.example`
+    - Add same to `app/backend/.env.acc.example`
+    - Add same to `app/backend/.env.production.example`
+    - _Requirements: 9.4_
+  - [x] 1.3 Write unit tests for monitoring webhook utility
+    - Create `app/backend/src/utils/__tests__/monitoringWebhook.test.ts`
+    - Test: sends to MONITORING_DISCORD_WEBHOOK when set
+    - Test: falls back to DISCORD_WEBHOOK_URL when monitoring webhook not set
+    - Test: returns false and logs when neither webhook is set
+    - Test: returns false on fetch timeout (mock AbortController)
+    - Test: returns false on non-2xx response
+    - Test: never throws regardless of error type
+    - Mock `fetch` globally for all tests
+    - _Requirements: 9.1, 9.2, 9.3_
+
+- [x] 2. Enhanced health endpoint
+  - [x] 2.1 Create disk and memory check utilities
+    - Create `app/backend/src/utils/systemHealth.ts`
+    - Implement `getDiskUsage(): { usagePercent: number; availableMB: number; status: 'ok' | 'warning' | 'critical' }` — uses `child_process.execSync('df / --output=pcent,avail | tail -1')` on Linux, `df -k /` parsing on macOS (dev)
+    - Implement `getMemoryUsage(): { usedMB: number; totalMB: number; usagePercent: number }` — uses `os.totalmem()` and `os.freemem()`
+    - Implement `checkCriticalModules(): { status: 'ok' | 'degraded'; missing: string[] }` — uses `require.resolve()` for each module in the critical modules list
+    - Define `CRITICAL_MODULES` constant array with paths relative to the compiled dist output
+    - Handle `execSync` failures gracefully (return unknown/degraded status, don't crash)
+    - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.7_
+  - [x] 2.2 Enhance the health endpoint in index.ts
+    - Modify the existing `GET /api/health` handler in `app/backend/src/index.ts`
+    - Import `getDiskUsage`, `getMemoryUsage`, `checkCriticalModules` from `./utils/systemHealth`
+    - Import `sendMonitoringAlert` from `./utils/monitoringWebhook`
+    - Add `disk`, `memory`, and `modules` fields to the response object
+    - Implement in-memory cooldown tracker: `Map<string, number>` mapping severity ("warning" | "critical") to last alert timestamp. When disk status is warning/critical and cooldown (15 min) has expired for that severity, fire `sendMonitoringAlert()` asynchronously (don't await — non-blocking) and update the timestamp
+    - Return HTTP 503 when database is disconnected OR `disk.status === 'critical'`
+    - Return HTTP 200 otherwise (even if disk is "warning" — that's informational)
+    - Keep existing `status`, `database`, `timestamp`, `environment` fields unchanged
+    - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9_
+  - [x] 2.3 Write unit tests for system health utilities
+    - Create `app/backend/src/utils/__tests__/systemHealth.test.ts`
+    - Test `getDiskUsage`: returns valid structure with numeric fields, status thresholds (mock execSync output for 75%, 85%, 95%)
+    - Test `getMemoryUsage`: returns valid structure with numeric fields, usagePercent between 0–100
+    - Test `checkCriticalModules`: returns "ok" when all modules resolve, returns "degraded" with missing list when a module doesn't exist
+    - Test `getDiskUsage` graceful failure: returns degraded status when execSync throws
+    - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.7_
+  - [x] 2.4 Update existing health endpoint tests
+    - Update `app/backend/tests/health.property.test.ts` to account for new response fields
+    - Add assertions for `disk`, `memory`, and `modules` fields in successful responses
+    - Add test case: health returns 503 when disk status is critical (mock getDiskUsage)
+    - Add test case: health fires monitoring alert when disk transitions to warning (mock sendMonitoringAlert, verify it's called)
+    - Add test case: health does NOT re-alert within the 15-minute cooldown window
+    - Add test case: health alerts again after cooldown expires
+    - _Requirements: 1.1, 1.6, 1.7_
+
+- [x] 3. Startup self-test
+  - [x] 3.1 Create startup self-test module
+    - Create `app/backend/src/utils/startupSelfTest.ts`
+    - Define `SelfTestResult` interface: `{ passed: boolean; resolvedModules: string[]; failedModules: { path: string; error: string }[] }`
+    - Implement `runStartupSelfTest(): Promise<SelfTestResult>`
+    - Use `require.resolve()` for each module in the critical modules list (same list as health endpoint, imported from `systemHealth.ts`)
+    - On failure: log CRITICAL via Winston, call `sendMonitoringAlert()` with failure details, return result with `passed: false`
+    - On success: log INFO "Startup self-test passed: all N critical modules verified", return result with `passed: true`
+    - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.6, 2.7_
+  - [x] 3.2 Integrate startup self-test into application bootstrap
+    - In `app/backend/src/index.ts`, import `runStartupSelfTest`
+    - Call `runStartupSelfTest()` after Express app creation but before `app.listen()`
+    - If `!selfTest.passed`, call `process.exit(1)` — PM2 will handle restart attempts
+    - Ensure the self-test runs before the scheduler is initialized (scheduler depends on modules being present)
+    - _Requirements: 2.1, 2.5_
+  - [x] 3.3 Write unit tests for startup self-test
+    - Create `app/backend/src/utils/__tests__/startupSelfTest.test.ts`
+    - Test: returns passed=true when all modules resolve (mock require.resolve)
+    - Test: returns passed=false with failed module details when a module is missing
+    - Test: calls sendMonitoringAlert with failure message when modules are missing
+    - Test: does not call sendMonitoringAlert when all modules pass
+    - Test: completes within 5 seconds (performance guard)
+    - Mock `sendMonitoringAlert` and `require.resolve`
+    - _Requirements: 2.2, 2.3, 2.4, 2.6, 2.7_
+
+- [x] 4. Disk monitor script
+  - [x] 4.1 Create disk-monitor.sh script
+    - Create `app/scripts/disk-monitor.sh`
+    - Add shebang `#!/usr/bin/env bash` and `set -euo pipefail`
+    - Read `MONITORING_DISCORD_WEBHOOK` env var, fall back to `DISCORD_WEBHOOK_URL`
+    - Get disk usage via `df / --output=pcent | tail -1 | tr -d ' %'`
+    - Get available space via `df / --output=avail | tail -1` (convert to human-readable)
+    - If usage >= 90: send CRITICAL alert with hostname, usage%, and available space
+    - Else if usage >= 80: send WARNING alert with hostname, usage%, and available space
+    - Else: exit 0 silently
+    - Always exit 0 (don't generate cron error emails)
+    - Make executable: `chmod +x`
+    - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9_
+  - [x] 4.2 Document cron installation for disk-monitor.sh
+    - Add cron entry to the monitoring operations guide (task 7.1): `*/15 * * * * /opt/armouredsouls/scripts/disk-monitor.sh`
+    - Note: the script must source the .env file or have MONITORING_DISCORD_WEBHOOK exported in the cron environment
+    - _Requirements: 3.8_
+
+- [x] 5. Backup script alerting enhancement
+  - [x] 5.1 Add Discord alerting to backup.sh
+    - Add `send_alert()` function to `app/scripts/backup.sh` that sends to `MONITORING_DISCORD_WEBHOOK` (falls back to `DISCORD_WEBHOOK_URL`, gracefully degrades if neither set)
+    - After the disk guard skip (`exit 0` path): call `send_alert` with skip message before exiting
+    - After the pg_dump failure (`exit 1` path): call `send_alert` with failure message before exiting
+    - Do not modify any existing backup logic — only add alerting calls
+    - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
+
+- [x] 6. Deploy pipeline enhancement
+  - [x] 6.1 Enhance health check step in deploy.yml
+    - Modify the "Health check (30s timeout)" step in both `deploy-acc` and `deploy-prd` jobs in `.github/workflows/deploy.yml`
+    - After the existing curl loop confirms HTTP 200, add validation of `disk.status` and `modules.status` from the JSON response
+    - Fail the step (exit 1) if `disk.status` is "critical" or `modules.status` is not "ok"
+    - Log the validated values on success for deploy audit trail
+    - Requires `jq` on the VPS (standard Ubuntu package, already available)
+    - _Requirements: 7.1, 7.2, 7.3, 7.4_
+  - [x] 6.2 Add deploy failure Discord notification step
+    - Add a new step at the end of both `deploy-acc` and `deploy-prd` jobs with `if: failure()`
+    - The step uses `curl` to send a message to `${{ secrets.MONITORING_DISCORD_WEBHOOK }}`: "🚨 Deploy to {ACC|PRD} FAILED. Run: {github_run_url}"
+    - Include the GitHub Actions run URL via `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`
+    - Use `|| true` to prevent the notification step itself from failing
+    - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5_
+  - [x] 6.3 Add deploy success Discord notification step
+    - Add a new step after the health check in both `deploy-acc` and `deploy-prd` jobs with `if: success()`
+    - The step uses `curl` to send: "✅ Deploy to {ACC|PRD} complete. Health check passed (disk: ok, modules: ok). Run: {github_run_url}"
+    - Use `|| true` to prevent the notification step itself from failing
+    - _Requirements: 8.6, 8.7_
+  - [x] 6.4 Document MONITORING_DISCORD_WEBHOOK as GitHub Actions secret
+    - Add a note in the monitoring operations guide (task 8.1) explaining that `MONITORING_DISCORD_WEBHOOK` must be configured as a GitHub Actions environment secret for both `acceptance` and `production` environments
+    - _Requirements: 8.5, 9.5_
+
+- [x] 7. Daily health report
+  - [x] 7.1 Create daily health report service
+    - Create `app/backend/src/services/monitoring/dailyHealthReport.ts`
+    - Implement `initDailyHealthReport(): void` — registers a `node-cron` job with schedule from `DAILY_REPORT_SCHEDULE` env var (default `0 8 * * *`)
+    - On trigger: call `getDiskUsage()`, `getMemoryUsage()`, `checkCriticalModules()` from `../../utils/systemHealth`
+    - Test DB connectivity via `prisma.$queryRaw\`SELECT 1\``
+    - Read latest cycle info from `prisma.cycleMetadata.findUnique({ where: { id: 1 } })`
+    - Read last successful job from scheduler state via `getSchedulerState()`
+    - Compute uptime from `process.uptime()`
+    - Check logging health: `fs.statSync` on PM2 log file (`/var/log/armouredsouls/backend-out.log`), report STALE if mtime > 24h. Write a test log entry via `logger.info('[health-report] logging verification')`. In dev (file not found), skip gracefully.
+    - Format message: green checkmark if all healthy (including logging active), warning if any degraded (disk warning, DB down, logging stale)
+    - Send via `sendMonitoringAlert()` — if webhook not configured, log at INFO level
+    - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7, 10.8_
+  - [x] 7.2 Integrate daily health report into application bootstrap
+    - In `app/backend/src/index.ts`, import `initDailyHealthReport`
+    - Call `initDailyHealthReport()` after scheduler initialization (it's independent but logically grouped with other cron jobs)
+    - _Requirements: 10.5_
+  - [x] 7.3 Add DAILY_REPORT_SCHEDULE to environment example files
+    - Add `DAILY_REPORT_SCHEDULE=0 8 * * *` with comment "# Cron schedule for daily health report (default: 08:00 UTC)" to `.env.example`, `.env.acc.example`, `.env.production.example`
+    - _Requirements: 10.1_
+  - [x] 7.4 Write unit tests for daily health report
+    - Create `app/backend/src/services/monitoring/__tests__/dailyHealthReport.test.ts`
+    - Test: formats healthy message correctly when all checks pass (including logging active)
+    - Test: formats degraded message when disk is warning
+    - Test: formats degraded message when DB is disconnected
+    - Test: formats degraded message when logging is stale (mtime > 24h)
+    - Test: calls sendMonitoringAlert with formatted message
+    - Test: logs at INFO level when webhook is not configured
+    - Test: includes uptime, disk, memory, DB, modules, logging status, and last cycle info in message
+    - Test: handles missing log file gracefully (dev environment)
+    - Mock `systemHealth` utilities, `prisma`, `getSchedulerState`, `fs.statSync`, and `sendMonitoringAlert`
+    - _Requirements: 10.2, 10.3, 10.4, 10.6, 10.8_
+
+- [x] 8. Documentation
+  - [x] 8.1 Create monitoring operations guide
+    - Create `docs/guides/operations/MONITORING.md`
+    - Document all alert types with severity, trigger condition, message format, and recommended response
+    - Document Discord webhook setup: creating a webhook, configuring the monitoring channel, separating from game notifications
+    - Document UptimeRobot setup: account creation, monitor configuration (HTTPS, 5-min interval, 2 consecutive failures), Discord integration, email alerts
+    - Document Scaleway Cockpit setup: installing scaleway-vmagent via PPA, verifying metrics in dashboard, accessing Cockpit from console, note that Instance metrics are free (no custom data charges)
+    - Document cron job setup for disk-monitor.sh (schedule, env vars, verification with `crontab -l`)
+    - Document manual testing procedures: how to test each alert type (simulate disk pressure with `fallocate`, trigger startup failure by renaming a module, test webhook with curl)
+    - Include troubleshooting section: webhook not firing (check URL, test with curl), vmagent not reporting (check systemctl status), cron not running (check crontab, check logs)
+    - Document the daily health report: its schedule, content, how to change the reporting time via `DAILY_REPORT_SCHEDULE`
+    - Document deploy failure/success notifications and how to configure `MONITORING_DISCORD_WEBHOOK` as a GitHub Actions environment secret
+    - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 6.1, 6.2, 6.3, 6.4, 6.5, 11.1, 11.2, 11.3, 11.4, 11.5, 11.6, 11.7, 11.8, 11.9, 11.10_
+  - [x] 8.2 Update MAINTENANCE.md with monitoring references
+    - Add a "Monitoring & Alerting" section to `docs/guides/operations/MAINTENANCE.md` that references the new MONITORING.md guide
+    - Update the existing "Log Inspection" section to mention that critical errors also trigger Discord alerts
+    - Add disk monitoring verification commands to the existing resource monitoring section
+    - _Requirements: 11.1_
+  - [x] 8.3 Update DEPLOYMENT.md with enhanced health check documentation
+    - Add a note in the deploy pipeline section of `docs/guides/operations/DEPLOYMENT.md` explaining that the health check now validates disk status and module integrity
+    - Document what a failed enhanced health check means and how to debug it
+    - Document that deploy success/failure now sends Discord notifications
+    - _Requirements: 7.1, 7.2, 8.1, 8.6_
+  - [x] 8.4 Update project-overview steering file
+    - Add "Monitoring & Alerting" to the Key Systems list in `.kiro/steering/project-overview.md` with brief description: "Discord webhook alerts for disk/startup/backup/deploy failures, daily health report, UptimeRobot external probes, Scaleway Cockpit metrics"
+    - _Requirements: 11.1_
+
+- [x] 9. Verification
+  - [x] 9.1 Run verification criteria checks
+    - Run all 10 verification criteria from the requirements document and confirm they pass
+    - Run `npm run build` in `app/backend` — must succeed
+    - Run `npm run test:unit` in `app/backend` — all new tests must pass
+    - Verify the disk-monitor.sh script is executable and runs without error on the local machine (with webhook unset, should exit silently)
+    - Verify the enhanced health endpoint returns the expected JSON structure when the backend is running locally
+    - _Requirements: all_
