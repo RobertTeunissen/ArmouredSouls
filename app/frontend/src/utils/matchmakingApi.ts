@@ -179,6 +179,7 @@ export interface LeagueRobot {
   fame: number;
   userId: number;
   cyclesInCurrentLeague: number;
+  eligible: boolean;
   user: {
     username: string;
     stableName: string | null;

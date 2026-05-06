@@ -64,8 +64,6 @@ router.get('/:tier/standings', validateRequest({ params: leagueTierParamsSchema 
   });
 
   // Calculate promotion/demotion zone metadata
-  // Zone indicators are only meaningful when viewing a single instance,
-  // because the rebalancer evaluates promotion/demotion per-instance.
   const minLP = getMinLPForPromotion(tier);
   const isChampion = tier === 'champion';
   const isBronze = tier === 'bronze';
@@ -128,6 +126,17 @@ router.get('/:tier/standings', validateRequest({ params: leagueTierParamsSchema 
       });
       promotionRobotIds = new Set(promotionRobots.map(r => r.id));
     }
+  } else {
+    // Tier-wide eligible count (no per-robot zone highlighting without a specific instance)
+    eligibleCount = await prisma.robot.count({
+      where: {
+        leagueId: { in: leagueIds },
+        cyclesInCurrentLeague: { gte: MIN_CYCLES_IN_LEAGUE },
+        NOT: { name: 'Bye Robot' },
+      },
+    });
+
+    hasEnoughRobots = eligibleCount >= MIN_ROBOTS_FOR_REBALANCING;
   }
 
   const standings = robots.map((robot) => ({
@@ -144,6 +153,7 @@ router.get('/:tier/standings', validateRequest({ params: leagueTierParamsSchema 
     fame: robot.fame,
     userId: robot.user.id,
     cyclesInCurrentLeague: robot.cyclesInCurrentLeague,
+    eligible: robot.cyclesInCurrentLeague >= MIN_CYCLES_IN_LEAGUE,
     user: {
       username: robot.user.username,
       stableName: robot.user.stableName,
