@@ -61,24 +61,25 @@ describe('Prestige Features Integration', () => {
       const nextTier = getNextPrestigeTier(userPrestige);
       
       // Verify calculations
-      // baseRate for level 4 = 20000, multiplier = 1 + 15000/10000 = 2.5
-      expect(prestigeMultiplier).toBe(1.30); // 30% bonus
+      // Prestige multiplier: min(1.50, 1 + 15000/50000) = 1.30
+      // baseRate for level 4 = 20000, merchandising multiplier = 1 + 15000/10000 = 2.5
+      expect(prestigeMultiplier).toBeCloseTo(1.30, 5); // 30% bonus
       expect(merchandising).toBe(50000); // 20000 * 2.5
-      expect(nextTier).toEqual({ threshold: 25000, bonus: '+40%' });
+      expect(nextTier).toEqual({ threshold: 25000, bonus: '+50% (max)' });
       
       const totalPassiveIncome = merchandising;
       expect(totalPassiveIncome).toBe(50000);
     });
 
-    test('should show progression through prestige tiers', () => {
+    test('should show smooth progression of prestige multiplier', () => {
       const prestiges = [0, 1000, 5000, 10000, 25000, 50000];
-      const expectedMultipliers = [1.0, 1.10, 1.20, 1.30, 1.40, 1.50];
+      const expectedMultipliers = [1.0, 1.02, 1.10, 1.20, 1.50, 1.50];
       const expectedNextTiers = [
-        { threshold: 1000, bonus: '+10%' },
-        { threshold: 5000, bonus: '+20%' },
-        { threshold: 10000, bonus: '+30%' },
-        { threshold: 25000, bonus: '+40%' },
-        { threshold: 50000, bonus: '+50%' },
+        { threshold: 25000, bonus: '+50% (max)' },
+        { threshold: 25000, bonus: '+50% (max)' },
+        { threshold: 25000, bonus: '+50% (max)' },
+        { threshold: 25000, bonus: '+50% (max)' },
+        null,
         null,
       ];
       
@@ -86,7 +87,7 @@ describe('Prestige Features Integration', () => {
         const multiplier = getPrestigeMultiplier(prestige);
         const nextTier = getNextPrestigeTier(prestige);
         
-        expect(multiplier).toBe(expectedMultipliers[index]);
+        expect(multiplier).toBeCloseTo(expectedMultipliers[index], 5);
         expect(nextTier).toEqual(expectedNextTiers[index]);
       });
     });

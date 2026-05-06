@@ -13,9 +13,9 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 | Rank | Item | # | Votes | BV | TC | RR | Size | WSJF |
 |------|------|---|-------|----|----|-----|------|------|
 | 1 | Game Loop Audit | 6 | 3 🗳️ | 3 | 4 | 5 | 2 | **6.0** |
-| 2 | Facility Investment Advisor | 1 | 1 🗳️ | 4 | 5 | 1 | 2 | **5.0** |
+| 2 | ~~Facility Investment Advisor~~ | 1 | 1 🗳️ | 4 | 5 | 1 | 2 | **5.0** |
 | 3 | Feature Flags | 15 | 1 🗳️ | 2 | 2 | 4 | 2 | **4.0** |
-| 4 | Compress Prestige Multiplier Thresholds | 36 | 0 🗳️ | 1 | 1 | 1 | 1 | **3.0** |
+| 4 | ~~Compress Prestige Multiplier Thresholds~~ | 36 | 0 🗳️ | 1 | 1 | 1 | 1 | **3.0** |
 | 5 | Landing Page | 4 | 0 🗳️ | 3 | 2 | 1 | 2 | **3.0** |
 | 6 | Weapon Experimentation Problem | 5 | 1 🗳️ | 4 | 3 | 4 | 4 | **2.8** |
 | 7 | Weapon Special Properties | 11 | 1 🗳️ | 3 | 2 | 2 | 4 | **1.8** |
@@ -37,6 +37,8 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 
 | Item | # | Spec | Completed |
 |------|---|------|-----------|
+| Facility Investment Advisor | 1 | [Spec #30](/.kiro/specs/to-do/30-fix-investment-advisor/) | May 2026 |
+| Smooth Prestige Multiplier Scaling | 36 | — (direct implementation) | May 2026 |
 | Monitoring and Alerting | 3 | [Spec #29](/.kiro/specs/to-do/29-monitoring-and-alerting/) | May 2026 |
 | Admin Portal Redesign | 13 | [Spec #28](/.kiro/specs/done-april26/28-admin-portal-redesign/) | April 2026 |
 | Admin Tuning Adoption Dashboard | 38 | [Spec #28](/.kiro/specs/done-april26/28-admin-portal-redesign/) | April 2026 |
@@ -49,11 +51,11 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 ---
 
 
-### #1 — Facility Investment Advisor & ROI Calculator
+### #1 — ~~Facility Investment Advisor & ROI Calculator~~ ✅ Completed (Spec #30)
 **Source**: Known issue  
-**Priority**: High — broken feature visible to players
+**Priority**: ~~High — broken feature visible to players~~ → Fixed
 
-The Investments & ROI tab and Investment Advisor tab on the Facilities page are not working as intended. The consolidation from the old pages was structural only — the data isn't flowing correctly. Players see empty or wrong numbers.
+The Investments & ROI tab and Investment Advisor tab on the Facilities page have been replaced with a single consolidated "Investment Overview" tab that uses cycle-snapshot-based ROI calculations via the `unifiedFacilityROIService`. See [Spec #30](/.kiro/specs/to-do/30-fix-investment-advisor/) for details.
 
 ### #4 — Landing Page / Marketing Front Page
 **Source**: Current state — visitors land on a login/register form with no context  
@@ -229,26 +231,10 @@ Consecutive login rewards, limited-time challenges, end-of-season league placeme
 ### #35 — Modular Package Extraction
 npm workspace extraction. Only relevant when multiple consumers need shared backend logic.
 
-### #36 — Compress Prestige Multiplier Thresholds
+### #36 — ~~Compress Prestige Multiplier Thresholds~~ → ✅ Smooth Prestige Scaling (Completed May 2026)
 **Source**: [Prestige & Fame Design Exploration](analysis/PRESTIGE_FAME_DESIGN_EXPLORATION.md), ACC cycle 35 data  
 
-The original idea was to convert `getPrestigeMultiplier()` to a smooth formula (`1 + prestige/100,000`), but analysis showed this would nerf mid-game players heavily (+10% → +2% at 2K prestige) and remove the cap, causing runaway late-game scaling.
-
-**The real problem is threshold spacing vs. actual prestige velocity.** On ACC at cycle 35, the top 10 players sit at 2K–3K prestige. Best robots earn ~25 prestige/day from battles, and achievement prestige is largely exhausted. At this rate the 5K tier is months away, and 10K+ tiers are effectively unreachable (years). The upper tiers are dead content — no player will experience them.
-
-**Proposed fix — compress thresholds to match actual prestige economy:**
-
-| Tier | Current Threshold | Proposed | Bonus |
-|------|------------------|----------|-------|
-| Established | 1,000 | 1,000 | +10% |
-| Veteran | 5,000 | 2,500 | +20% |
-| Elite | 10,000 | 5,000 | +30% |
-| Champion | 25,000 | 10,000 | +40% |
-| Legendary | 50,000 | 20,000 | +50% |
-
-This makes the next tier reachable (~80 days for a top player at 3K → 5K) while keeping the cap aspirational (~680 days to 20K). Small code change in `getPrestigeMultiplier()` and `getNextPrestigeTier()`.
-
-**Consideration**: Compressing thresholds buffs current top players immediately (3K prestige jumps from +10% to +20%). Evaluate economic impact on battle winnings income before applying.
+**Implemented**: Replaced hard threshold tiers with smooth formula `min(1.50, 1 + prestige / 50,000)`. Cap reached at 25,000 prestige (+50%). Scales linearly from 0% at 0 prestige. Consistent with merchandising and streaming formulas. No tiers, no steps — every point of prestige matters.
 
 ### #37 — Robot Detail Page Split: Review vs Prepare / Stable Preparation Dashboard
 **Source**: Tuning Pool spec discussion (spec #25)  
@@ -259,20 +245,50 @@ The Robot Detail page serves two distinct intents (Review: Overview/Matches/Anal
 **Source**: Game Loop Audit (#6) — Loop 3 (Competitive Loop) has no resets, meta shifts, or seasonal structure  
 **Priority**: Not scoped — planned for after current high-priority items
 
-100-cycle (100-day) seasons with LP soft-reset, end-of-season placement rewards, fresh leaderboards, and a visible countdown. Gives every player a reason to engage every cycle and makes the competitive loop feel alive instead of LP oscillating ±1 around a stable point.
+100-cycle (100-day) seasons with a full reset at season boundary. Forces strategic experimentation every season and permanently solves the late-game economic stagnation (Loop 2) and weapon lock-in (Loop 1).
 
-**Design considerations:**
-- LP soft-reset at season boundary (partial reset, not full wipe — preserve skill signal)
-- End-of-season rewards based on final tier/placement (credits, prestige, cosmetics)
-- Season history / archive (past season standings viewable)
-- Possible per-season meta shift (featured arena modifier, weapon category bonus) to force adaptation
-- Achievement system already designed with seasons in mind (#40 covers persistence question)
-- Promotion/demotion history (#22) would enhance season-over-season progression tracking
+**Design direction — full reset:**
 
-**Dependencies**: #40 (achievement persistence decision), possibly #22 (promotion history).
+At season end, the player's stable is archived (viewable as history) and they start fresh with starting credits, no robots, no weapons, no facilities, no attributes, no league placement. The only things that persist across seasons:
+
+| Persists | Resets |
+|----------|--------|
+| Achievements (permanent collection) | Credits / balance (back to starting amount) |
+| Lifetime prestige (cumulative) | Robots (archived) |
+| Season history / archive | Weapons (gone with robots) |
+| Account / login | Facilities (rebuild each season) |
+| | Attributes (fresh robots = fresh stats) |
+| | Fame (robot-level, dies with robot) |
+| | LP / league tier (fresh standings) |
+| | ELO (reset to 1200) |
+| | Tuning allocations (fresh robots) |
+| | Win/loss record (archived) |
+
+**Why full reset works for this game:**
+- Forces experimentation — can't run the same build, must make new choices with starting resources
+- Levels the playing field — new players joining mid-season aren't months behind
+- Makes every economic decision interesting again (credits are scarce)
+- Solves weapon experimentation (#5) naturally — players try different weapons each season
+- Solves economic loop stagnation (#6 Loop 2) permanently — no late-game credit hoarding
+- Early decisions (which weapon first? which facility?) become interesting every season
+
+**Why prestige persists:**
+- The one number that says "I've been here a while" — visible tenure marker
+- Gates facilities — veterans can access higher facility levels faster (still need to buy them, but not locked out). Fair reward for experience without insurmountable advantage.
+- Battle winnings multiplier gives veterans a slight income edge — rebuild a bit faster, not dominant
+
+**Risks to address in spec:**
+- Loss aversion — players watching 100 days of work vanish. Mitigation: archive is viewable, achievements celebrate accomplishments, prestige carries forward.
+- Grind fatigue — rebuilding from zero could feel like a treadmill. Mitigation: knowledge carries forward (you're better at building), prestige gives a small edge, each season can have a meta modifier to keep it fresh.
+- Early season repetition — first 10–20 days could feel samey. Mitigation: seasonal meta modifiers (weapon category bonuses, arena conditions) change the optimal opening strategy.
+- Achievement system must carry enough weight as the permanent progression layer.
+
+**Player framing:** "Seasons are 100 days. At the end, your stable is archived — you can view your past seasons' history, robots, and final standings. Then you start fresh with new starting credits, a blank slate, and everything you've learned. Your achievements and prestige carry forward. Your legacy grows, but the competition resets."
+
+**Dependencies**: #40 (achievement persistence — confirmed permanent), possibly #12 (arena modifiers as seasonal meta shifts).
 
 ### #40 — Achievement Persistence Across Seasons
 **Source**: Achievement System spec (#27) discussion  
-**Priority**: Not scoped — depends on season system design
+**Priority**: Not scoped — resolved: achievements persist permanently
 
-When a season system is introduced, decide what happens to achievements: do they persist permanently (lifetime collection), reset each season (seasonal grind), or split into permanent and seasonal categories? The `UserAchievement` table currently has no season reference. Options include adding a `seasonId` column, creating a separate `SeasonalAchievement` table, or keeping achievements entirely outside the season reset scope. This decision should be made as part of the season system design, not retroactively bolted onto achievements.
+Achievements persist permanently across seasons (lifetime collection). They are the primary permanent progression layer alongside prestige. The `UserAchievement` table needs no `seasonId` column — achievements are entirely outside the season reset scope. Some achievements may reference seasonal accomplishments (e.g., "reach Diamond in 3 different seasons") but the awards themselves never reset.

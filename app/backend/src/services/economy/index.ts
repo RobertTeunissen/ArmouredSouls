@@ -24,14 +24,13 @@ export type {
 } from './spendingTracker';
 
 export {
-  roiCalculatorService,
-  ROICalculatorService,
-} from './roiCalculatorService';
+  unifiedFacilityROIService,
+  UnifiedFacilityROIService,
+} from './unifiedFacilityROIService';
 export type {
-  FacilityROI,
-  FacilityIncome,
-  FacilityDiscount,
-} from './roiCalculatorService';
+  UnifiedFacilityROI,
+  AllEconomicROIsResult,
+} from './unifiedFacilityROIService';
 
 export {
   facilityRecommendationService,

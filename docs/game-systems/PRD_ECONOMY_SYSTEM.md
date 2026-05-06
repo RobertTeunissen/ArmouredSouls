@@ -48,7 +48,7 @@
 
 **Battle Rewards:**
 - ✅ League-based rewards: Bronze (₡7.5K) → Champion (₡225K)
-- ✅ Prestige multipliers: 5%-20% bonus on winnings
+- ✅ Prestige multipliers: Smooth scaling up to +50% bonus on winnings
 - ✅ Participation rewards: 30% of league base for all combatants
 - ✅ **NEW**: Detailed reward breakdown shown in battle logs:
   - League base reward with min/max range
@@ -89,7 +89,7 @@
 
 3. `app/backend/src/services/league/leagueBattleOrchestrator.ts` (enhanced, shared helpers in `battlePostCombat.ts`)
    - League-based battle rewards
-   - Prestige multipliers (5%-20%)
+   - Prestige multipliers: Smooth scaling up to +50%
    - Participation rewards (30% of base)
    - Detailed reward breakdown in battle logs:
      - Shows league base with min/max range
@@ -641,7 +641,7 @@ This PRD defines the complete economy system for Armoured Souls, covering all co
   - `GET /api/finances/projections` - Forecasts & recommendations
 - ✅ **Battle reward system** - League-based rewards with prestige multipliers
   - Bronze: ₡7.5K → Champion: ₡225K
-  - Prestige multipliers: 5%-20% bonus
+  - Prestige multipliers: Smooth scaling up to +50% bonus
   - Participation rewards: 30% of league base
   - **NEW (Feb 4)**: Rewards tracked in database and displayed in admin
 - ✅ **Fame system** - Performance-based fame awards
@@ -1346,15 +1346,18 @@ To achieve sustainability at 50% win rate with participation awards:
 
 > **For complete prestige earning mechanics**, see [PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md)
 
-Higher stable prestige increases battle winnings:
+Higher stable prestige increases battle winnings via smooth scaling:
 
-| Prestige Threshold | Battle Winnings Bonus |
+**Formula**: `min(1.50, 1 + prestige / 50,000)`
+
+| Prestige | Battle Winnings Bonus |
 |-------------------|---------------------|
-| 1,000+ | +10% |
-| 5,000+ | +20% |
-| 10,000+ | +30% |
-| 25,000+ | +40% |
-| 50,000+ | +50% |
+| 0 | 0% |
+| 1,000 | +2% |
+| 2,500 | +5% |
+| 5,000 | +10% |
+| 10,000 | +20% |
+| 25,000+ | +50% (cap) |
 
 **Bonus Application**: Prestige bonus multiplies the base battle reward **AFTER** ELO calculation, extending beyond the league reward range.
 
@@ -1378,16 +1381,7 @@ Higher stable prestige increases battle winnings:
 
 **Formula**:
 ```
-prestige_multiplier = 1.0
-
-if prestige >= 50000:
-    prestige_multiplier = 1.20
-elif prestige >= 25000:
-    prestige_multiplier = 1.15
-elif prestige >= 10000:
-    prestige_multiplier = 1.10
-elif prestige >= 5000:
-    prestige_multiplier = 1.05
+prestige_multiplier = min(1.50, 1 + prestige / 50000)
 
 final_battle_reward = base_reward × prestige_multiplier
 ```
@@ -1395,8 +1389,8 @@ final_battle_reward = base_reward × prestige_multiplier
 **Example**:
 - Bronze league win: ₡7,500 base (midpoint of ₡5K-₡10K range)
 - Prestige: 12,000
-- Multiplier: +10%
-- Final reward: ₡7,500 × 1.10 = ₡8,250
+- Multiplier: 1 + 12000/50000 = 1.24 (+24%)
+- Final reward: ₡7,500 × 1.24 = ₡9,300
 - **Note**: Base reward midpoint is determined by ELO matchup. Closer matches → higher base (closer to ₡10K). Mismatched opponents → lower base (closer to ₡5K).
 
 ### 3. Merchandising Income (Merchandising Hub Facility)
@@ -1648,7 +1642,7 @@ Prestige unlocks higher facility levels (see [STABLE_SYSTEM.md](STABLE_SYSTEM.md
 - Booking Office Level 7: Requires 25,000 prestige
 
 **2. Income Multipliers**:
-- **Battle Winnings**: +5% to +20% (see Prestige Bonuses section above)
+- **Battle Winnings**: Smooth scaling up to +50% (formula: min(1.50, 1 + prestige/50,000))
 - **Merchandising**: Scales with prestige (see Merchandising Income section above)
 
 **3. Content Access**:
@@ -1941,7 +1935,7 @@ Recommendations:
 
 **Income Sources**:
 - Diamond/Champion league battles: ₡80,000-₡250,000 per win
-- High-prestige multiplier: +15-20% on all winnings
+- High-prestige multiplier: up to +50% on all winnings
 - Per-battle streaming: ₡20,000-₡50,000 per battle (veteran robots, Studio Level 10)
 - Merchandising income: ₡100,000-₡300,000/day (from Merchandising Hub Level 10)
 - Tournament winnings: ₡500,000-₡2,000,000 (weekly)
@@ -1955,6 +1949,40 @@ Recommendations:
 **Net Result**: Highly profitable, focus on optimization and prestige
 
 ### Facility Investment ROI
+
+**Calculation Methodology**: Unified Cycle-Snapshot-Based Approach
+
+All facility ROI calculations are performed by the `unifiedFacilityROIService` — the single source of truth for facility investment performance. This service replaces the previous dual-path approach (audit-log-based historical and formula-based projections) with a consistent methodology.
+
+**Data Source**: `CycleSnapshot.stableMetrics` (pre-aggregated per-user financial data per cycle)
+
+The unified service extracts per-facility returns from the `StableMetric` fields:
+- **Merchandising Hub**: Sum of `merchandisingIncome` across all owned cycles
+- **Streaming Studio**: Sum of `streamingIncome` across all owned cycles
+- **Repair Bay**: Estimated savings from `totalRepairCosts` using facility discount formula
+- **Training Facility**: Estimated savings from `attributeUpgrades` using facility discount formula
+- **Weapons Workshop**: Estimated savings from `weaponPurchases` using facility discount formula
+
+**Fallback Strategy** (when no cycle snapshots exist for the ownership period):
+1. **Primary**: Use cycle snapshot data (most accurate, reflects actual player activity)
+2. **Fallback**: Formula-based estimates using facility config rates × cycles owned
+   - Merchandising Hub: `baseIncome[level] × prestigeMultiplier × cyclesOwned`
+   - Streaming Studio: `avgStreamingPerBattle × avgBattlesPerCycle × cyclesOwned`
+   - Discount facilities: `avgSpendingPerCycle × discountPercent × cyclesOwned`
+3. Response includes `dataSource: 'snapshot' | 'estimate'` so the UI can indicate confidence level
+
+**Purchase Cycle Determination** (no longer requires audit event):
+1. Try: `facility_purchase` audit log event
+2. Fallback: Earliest cycle snapshot with non-zero activity for that facility type
+3. Final fallback: Cycle 1
+
+**Key Metrics Calculated**:
+- `totalInvestment`: Sum of facility config costs from level 0 to current level
+- `totalReturns`: Cumulative returns from snapshot data or formula estimates
+- `totalOperatingCosts`: Daily operating cost × cycles owned
+- `netROI`: `(totalReturns - totalOperatingCosts - totalInvestment) / totalInvestment`
+- `paidOff`: Whether `(totalReturns - totalOperatingCosts) >= totalInvestment`
+- `projectedPayoffCycles`: Remaining cycles to break even (when not yet paid off)
 
 **Payback Period Examples** (Revised with correct battle frequency):
 

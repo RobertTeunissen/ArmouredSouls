@@ -1585,3 +1585,36 @@ After completing Step 3, the player has context for why certain facilities are h
 - [PRD_WEAPON_SHOP.md](PRD_WEAPON_SHOP.md) - Reference for filtering and views
 - [PRD_BATTLE_HISTORY_PAGE_OVERHAUL.md](PRD_BATTLE_HISTORY_PAGE_OVERHAUL.md) - Reference for information density
 - [PRD_MY_ROBOTS_LIST_PAGE.md](PRD_MY_ROBOTS_LIST_PAGE.md) - Card-based UI patterns
+
+---
+
+## Appendix E: Tab Structure (Updated May 2026 — Spec #30)
+
+### Current Tab Layout: 2 Tabs
+
+The Facilities page uses a 2-tab layout:
+
+**Tab 1: Facilities & Upgrades** (default)
+- All 16 facility types organized by category (Economy, Capacity, Training, Advanced)
+- Upgrade buttons, cost display, prestige gates
+- Unchanged from previous implementation
+
+**Tab 2: Investment Overview**
+- Consolidated view replacing the previous "Investments & ROI" and "Investment Advisor" tabs
+- Shows lifetime ROI data for the 5 economic facilities only:
+  1. Merchandising Hub
+  2. Streaming Studio
+  3. Repair Bay
+  4. Training Facility
+  5. Weapons Workshop
+- Per-facility metrics: total investment, total returns, paid-off status, projected payoff cycles
+- Data source indicator (snapshot-based vs estimated)
+- Upgrade recommendations section with priority badges and projected payoff periods
+- No "last N cycles" selector — lifetime data only
+
+### Removed Tabs (Spec #30)
+- ~~Investments & ROI~~ — merged into Investment Overview
+- ~~Investment Advisor~~ — merged into Investment Overview
+
+### Why Only 5 Economic Facilities?
+Non-economic facilities (academies, roster expansion, storage, research lab, medical bay, coaching staff, booking office, tuning bay) provide capability unlocks without direct financial returns. They have no meaningful ROI to track and are excluded from the investment view.

@@ -43,14 +43,17 @@ export default function MultiplierBreakdown({ multiplierData }: MultiplierBreakd
         <div className="text-sm text-secondary">
           Current Prestige: {multiplierData.prestige.current.toLocaleString()}
         </div>
+        <div className="text-xs text-tertiary mt-1">
+          Formula: min(+50%, prestige / 50,000 × 100%)
+        </div>
         {multiplierData.prestige.nextTier && (
           <div className="text-sm text-primary mt-1">
-            Next tier at {multiplierData.prestige.nextTier.threshold.toLocaleString()} prestige: {multiplierData.prestige.nextTier.bonus}
+            Cap at {multiplierData.prestige.nextTier.threshold.toLocaleString()} prestige: {multiplierData.prestige.nextTier.bonus}
           </div>
         )}
         {!multiplierData.prestige.nextTier && (
           <div className="text-sm text-success mt-1">
-            ✓ Maximum tier reached!
+            ✓ Maximum bonus reached!
           </div>
         )}
       </div>

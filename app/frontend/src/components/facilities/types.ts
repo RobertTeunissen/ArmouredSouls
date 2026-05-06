@@ -2,9 +2,10 @@
  * Shared types for Facilities page components.
  *
  * Extracted from FacilitiesPage.tsx during component splitting (Spec 18).
+ * Updated in Spec 30 to use UnifiedFacilityROI and consolidated tabs.
  */
 
-export type TabType = 'facilities' | 'investments' | 'advisor';
+export type TabType = 'facilities' | 'investment-overview';
 
 export interface Facility {
   type: string;
@@ -26,16 +27,17 @@ export interface Facility {
   nextOperatingCost?: number;
 }
 
-export interface FacilityROI {
+export interface UnifiedFacilityROI {
   facilityType: string;
   currentLevel: number;
   totalInvestment: number;
   totalReturns: number;
   totalOperatingCosts: number;
   netROI: number;
-  breakevenCycle: number | null;
+  paidOff: boolean;
+  projectedPayoffCycles: number | null;
   cyclesSincePurchase: number;
-  isProfitable: boolean;
+  dataSource: 'snapshot' | 'estimate';
 }
 
 export interface FacilityRecommendation {

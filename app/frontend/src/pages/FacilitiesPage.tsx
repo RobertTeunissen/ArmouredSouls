@@ -1,15 +1,15 @@
 /**
- * FacilitiesPage — Stable Facilities management with upgrades, investments, and advisor tabs.
+ * FacilitiesPage — Stable Facilities management with upgrades and investment overview.
  *
  * Page-level orchestrator that composes sub-components from ../components/facilities/.
  * Extracted during component splitting (Spec 18).
+ * Updated in Spec 30 to consolidate tabs (2 tabs instead of 3).
  */
 
 import Navigation from '../components/Navigation';
 import {
   FacilitiesTab,
-  InvestmentsTab,
-  AdvisorTab,
+  InvestmentOverviewTab,
   useFacilities,
 } from '../components/facilities';
 
@@ -25,17 +25,13 @@ function FacilitiesPage() {
     error,
     collapsedCategories,
     facilityRefs,
-    lastNCycles, setLastNCycles,
     facilityROIs,
     recommendations,
     advisorLoading,
-    currentCycle,
     handleUpgrade,
     toggleCategory,
     getCategoryFacilities,
     getFacilityDisplayName,
-    getROIColor,
-    fetchAdvisorData,
   } = useFacilities();
 
   if (!user) {
@@ -66,28 +62,16 @@ function FacilitiesPage() {
                 Facilities & Upgrades
               </button>
               <button
-                onClick={() => setActiveTab('investments')}
+                onClick={() => setActiveTab('investment-overview')}
                 className={`
                   py-4 px-1 border-b-2 font-medium text-sm transition-colors
-                  ${activeTab === 'investments'
+                  ${activeTab === 'investment-overview'
                     ? 'border-blue-500 text-primary'
                     : 'border-transparent text-secondary hover:text-secondary hover:border-gray-300'
                   }
                 `}
               >
-                Investments & ROI
-              </button>
-              <button
-                onClick={() => setActiveTab('advisor')}
-                className={`
-                  py-4 px-1 border-b-2 font-medium text-sm transition-colors
-                  ${activeTab === 'advisor'
-                    ? 'border-blue-500 text-primary'
-                    : 'border-transparent text-secondary hover:text-secondary hover:border-gray-300'
-                  }
-                `}
-              >
-                Investment Advisor
+                Investment Overview
               </button>
             </nav>
           </div>
@@ -119,26 +103,12 @@ function FacilitiesPage() {
               />
             )}
 
-            {activeTab === 'investments' && (
-              <InvestmentsTab
-                advisorLoading={advisorLoading}
+            {activeTab === 'investment-overview' && (
+              <InvestmentOverviewTab
+                loading={advisorLoading}
                 facilityROIs={facilityROIs}
-                currentCycle={currentCycle}
-                getFacilityDisplayName={getFacilityDisplayName}
-                getROIColor={getROIColor}
-              />
-            )}
-
-            {activeTab === 'advisor' && (
-              <AdvisorTab
-                advisorLoading={advisorLoading}
-                lastNCycles={lastNCycles}
-                setLastNCycles={setLastNCycles}
                 recommendations={recommendations}
-                facilityROIs={facilityROIs}
                 getFacilityDisplayName={getFacilityDisplayName}
-                getROIColor={getROIColor}
-                onRefresh={fetchAdvisorData}
               />
             )}
           </>

@@ -62,13 +62,15 @@ Zone dominance bonus: if uncontested zone score > 75% of total score, prestige i
 
 Applied via `getPrestigeMultiplier()` in `utils/economyCalculations.ts`:
 
+Smooth scaling formula: `min(1.50, 1 + prestige / 50,000)`
+
 | Prestige | Bonus |
 |---|---|
-| 1,000+ | +10% |
-| 5,000+ | +20% |
-| 10,000+ | +30% |
-| 25,000+ | +40% |
-| 50,000+ | +50% |
+| 0 | 0% |
+| 1,000 | +2% |
+| 5,000 | +10% |
+| 10,000 | +20% |
+| 25,000+ | +50% (cap) |
 
 #### Merchandising Income Scaling
 
