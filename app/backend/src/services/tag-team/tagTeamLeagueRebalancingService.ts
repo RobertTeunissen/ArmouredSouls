@@ -21,6 +21,9 @@ const DEMOTION_PERCENTAGE = 0.10; // Bottom 10%
 const MIN_CYCLES_IN_LEAGUE_FOR_REBALANCING = 5; // Must be in current league for 5+ cycles
 const MIN_TEAMS_FOR_REBALANCING = 10;
 
+// Minimum cohort size to open a new (empty) tier
+const MIN_COHORT_FOR_NEW_TIER = 3;
+
 // Re-export for consumers that need the helper
 export { getMinLPForPromotion } from '../league/leaguePromotionThresholds';
 
@@ -327,7 +330,10 @@ async function rebalanceTier(
   
   logger.info(`[TagTeamRebalancing] ${tier}: ${totalInTier} total teams across ${instanceIds.length} instances`);
 
-  // Process each instance separately
+  // Collect all promotion and demotion candidates across instances
+  const allPromotionCandidates: TagTeam[] = [];
+  const allDemotionCandidates: TagTeam[] = [];
+
   for (const instanceId of instanceIds) {
     logger.info(`[TagTeamRebalancing] Processing ${instanceId}...`);
     
@@ -352,30 +358,51 @@ async function rebalanceTier(
 
     // Determine promotions for this instance
     const toPromote = await determinePromotions(instanceId, excludeTeamIds);
+    allPromotionCandidates.push(...toPromote);
 
     // Determine demotions for this instance
     const toDemote = await determineDemotions(instanceId, excludeTeamIds);
+    allDemotionCandidates.push(...toDemote);
+  }
 
-    // Execute promotions
-    for (const team of toPromote) {
+  // Check if destination tier needs a minimum cohort before promoting
+  const nextTier = getNextTierUp(tier);
+  let promotionsBlocked = false;
+
+  if (nextTier && allPromotionCandidates.length > 0) {
+    const teamsInDestinationTier = await prisma.tagTeam.count({
+      where: { tagTeamLeague: nextTier },
+    });
+
+    if (teamsInDestinationTier === 0 && allPromotionCandidates.length < MIN_COHORT_FOR_NEW_TIER) {
+      logger.info(`[TagTeamRebalancing] ${tier}: Holding promotions — destination ${nextTier} is empty, need ${MIN_COHORT_FOR_NEW_TIER} candidates but only have ${allPromotionCandidates.length}`);
+      promotionsBlocked = true;
+    }
+  }
+
+  // Execute promotions (unless blocked by cohort requirement)
+  if (!promotionsBlocked) {
+    for (const team of allPromotionCandidates) {
       try {
         await promoteTeam(team);
-        excludeTeamIds.add(team.id); // Mark as processed
+        excludeTeamIds.add(team.id);
         summary.promoted++;
       } catch (error) {
         logger.error(`[TagTeamRebalancing] Error promoting team ${team.id}:`, error);
       }
     }
+  }
 
-    // Execute demotions
-    for (const team of toDemote) {
-      try {
-        await demoteTeam(team);
-        excludeTeamIds.add(team.id); // Mark as processed
-        summary.demoted++;
-      } catch (error) {
-        logger.error(`[TagTeamRebalancing] Error demoting team ${team.id}:`, error);
-      }
+  // Execute demotions (always — not affected by cohort logic)
+  // Filter out any teams that were just promoted (edge case prevention)
+  for (const team of allDemotionCandidates) {
+    if (excludeTeamIds.has(team.id)) continue;
+    try {
+      await demoteTeam(team);
+      excludeTeamIds.add(team.id);
+      summary.demoted++;
+    } catch (error) {
+      logger.error(`[TagTeamRebalancing] Error demoting team ${team.id}:`, error);
     }
   }
 

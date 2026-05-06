@@ -374,7 +374,9 @@ async function rebalanceTier(tier: LeagueTier, excludeRobotIds: Set<number>): Pr
   }
 
   // Execute demotions (always — not affected by cohort logic)
+  // Filter out any robots that were just promoted (edge case prevention)
   for (const robot of allDemotionCandidates) {
+    if (excludeRobotIds.has(robot.id)) continue;
     try {
       await demoteRobot(robot);
       excludeRobotIds.add(robot.id);
