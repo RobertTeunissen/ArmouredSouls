@@ -23,6 +23,9 @@ const DEMOTION_PERCENTAGE = 0.10; // Bottom 10%
 const MIN_CYCLES_IN_LEAGUE_FOR_REBALANCING = 5; // Must be in current league for 5+ cycles
 const MIN_ROBOTS_FOR_REBALANCING = 10;
 
+// Minimum cohort size to open a new (empty) tier
+const MIN_COHORT_FOR_NEW_TIER = 3;
+
 // Re-export for consumers that need the helper
 export { getMinLPForPromotion } from './leaguePromotionThresholds';
 
@@ -302,7 +305,10 @@ async function rebalanceTier(tier: LeagueTier, excludeRobotIds: Set<number>): Pr
   
   logger.info(`[Rebalancing] ${tier}: ${totalInTier} total robots across ${instances.length} instances`);
 
-  // Process each instance separately
+  // Collect all promotion and demotion candidates across instances
+  const allPromotionCandidates: Robot[] = [];
+  const allDemotionCandidates: Robot[] = [];
+
   for (const instance of instances) {
     logger.info(`[Rebalancing] Processing ${instance.leagueId}...`);
     
@@ -328,30 +334,53 @@ async function rebalanceTier(tier: LeagueTier, excludeRobotIds: Set<number>): Pr
 
     // Determine promotions for this instance
     const toPromote = await determinePromotions(instance.leagueId, excludeRobotIds);
+    allPromotionCandidates.push(...toPromote);
     
     // Determine demotions for this instance
     const toDemote = await determineDemotions(instance.leagueId, excludeRobotIds);
+    allDemotionCandidates.push(...toDemote);
+  }
 
-    // Execute promotions
-    for (const robot of toPromote) {
+  // Check if destination tier needs a minimum cohort before promoting
+  const nextTier = getNextTierUp(tier);
+  let promotionsBlocked = false;
+
+  if (nextTier && allPromotionCandidates.length > 0) {
+    const robotsInDestinationTier = await prisma.robot.count({
+      where: {
+        currentLeague: nextTier,
+        NOT: { name: 'Bye Robot' },
+      },
+    });
+
+    if (robotsInDestinationTier === 0 && allPromotionCandidates.length < MIN_COHORT_FOR_NEW_TIER) {
+      // Destination tier is empty and we don't have enough to form a cohort — hold promotions
+      logger.info(`[Rebalancing] ${tier}: Holding promotions — destination ${nextTier} is empty, need ${MIN_COHORT_FOR_NEW_TIER} candidates but only have ${allPromotionCandidates.length}`);
+      promotionsBlocked = true;
+    }
+  }
+
+  // Execute promotions (unless blocked by cohort requirement)
+  if (!promotionsBlocked) {
+    for (const robot of allPromotionCandidates) {
       try {
         await promoteRobot(robot);
-        excludeRobotIds.add(robot.id); // Mark as processed
+        excludeRobotIds.add(robot.id);
         summary.promoted++;
       } catch (error) {
         logger.error(`[Rebalancing] Error promoting robot ${robot.id}:`, error);
       }
     }
+  }
 
-    // Execute demotions
-    for (const robot of toDemote) {
-      try {
-        await demoteRobot(robot);
-        excludeRobotIds.add(robot.id); // Mark as processed
-        summary.demoted++;
-      } catch (error) {
-        logger.error(`[Rebalancing] Error demoting robot ${robot.id}:`, error);
-      }
+  // Execute demotions (always — not affected by cohort logic)
+  for (const robot of allDemotionCandidates) {
+    try {
+      await demoteRobot(robot);
+      excludeRobotIds.add(robot.id);
+      summary.demoted++;
+    } catch (error) {
+      logger.error(`[Rebalancing] Error demoting robot ${robot.id}:`, error);
     }
   }
 

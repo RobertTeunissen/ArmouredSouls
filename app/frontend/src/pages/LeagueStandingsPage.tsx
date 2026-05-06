@@ -242,6 +242,10 @@ function LeagueStandingsPage() {
                   <span className="w-3 h-3 rounded-sm bg-red-500 inline-block"></span>
                   <span className="text-secondary">Demotion zone (bottom 10%, ≥{zoneMeta.minCycles} cycles)</span>
                 </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-sm bg-white/30 inline-block"></span>
+                  <span className="text-secondary">Faded = not yet eligible (&lt;{zoneMeta.minCycles} cycles)</span>
+                </div>
                 {!zoneMeta.hasEnoughRobots && (
                   <div className="flex items-center gap-2 text-warning">
                     <span>⚠️</span>
@@ -287,10 +291,12 @@ function LeagueStandingsPage() {
                           ? 'border-l-4 border-l-red-500 bg-red-900/10'
                           : '';
 
+                      const eligibilityClass = !robot.eligible ? 'opacity-50' : '';
+
                       return (
                         <tr
                           key={robot.id}
-                          className={`border-b border-white/10 ${zoneClass} ${
+                          className={`border-b border-white/10 ${zoneClass} ${eligibilityClass} ${
                             isMyBot ? 'bg-blue-900 bg-opacity-30' : 'hover:bg-surface-elevated'
                           } transition-colors`}
                         >
