@@ -20,12 +20,25 @@ const TIERS = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'];
 function LeagueStandingsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const storeRobots = useRobotStore(state => state.robots);
   const fetchStoreRobots = useRobotStore(state => state.fetchRobots);
   const initialTier = TIERS.includes(searchParams.get('tier') ?? '') ? searchParams.get('tier')! : 'bronze';
-  const [selectedTier, setSelectedTier] = useState(initialTier);
-  const [selectedInstance, setSelectedInstance] = useState<string | null>(null);
+  const initialInstance = searchParams.get('instance') || null;
+  const [selectedTier, setSelectedTierRaw] = useState(initialTier);
+  const [selectedInstance, setSelectedInstance] = useState<string | null>(initialInstance);
+
+  // Wrapper that updates both state and URL when tier changes
+  const setSelectedTier = (tier: string) => {
+    setSelectedTierRaw(tier);
+    setSelectedInstance(null);
+    setSearchParams(() => {
+      const next = new URLSearchParams();
+      if (tier !== 'bronze') next.set('tier', tier);
+      return next;
+    }, { replace: true });
+    fetchLeagueData(tier, 1);
+  };
   const [robots, setRobots] = useState<LeagueRobot[]>([]);
   const [instances, setInstances] = useState<LeagueInstance[]>([]);
   const [userRobotTiers, setUserRobotTiers] = useState<Set<string>>(new Set());
@@ -42,10 +55,10 @@ function LeagueStandingsPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setSelectedInstance(null); // Reset selected instance when tier changes
-    fetchLeagueData(selectedTier, 1);
-    fetchStoreRobots(); // Fetch user's robots via store
-  }, [selectedTier, fetchStoreRobots]); // fetchLeagueData is intentionally excluded — it's not memoized
+    fetchLeagueData(selectedTier, 1, selectedInstance || undefined);
+    fetchStoreRobots();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchStoreRobots]); // Only run on mount — tier changes handled by setSelectedTier wrapper
 
   // Derive user robot tiers/instances from store
   useEffect(() => {
@@ -84,9 +97,11 @@ function LeagueStandingsPage() {
     if (selectedInstance === instanceId) {
       // Clicking on the same instance deselects it
       setSelectedInstance(null);
+      setSearchParams(prev => { const next = new URLSearchParams(prev); next.delete('instance'); return next; }, { replace: true });
       fetchLeagueData(selectedTier, 1);
     } else {
       setSelectedInstance(instanceId);
+      setSearchParams(prev => { const next = new URLSearchParams(prev); next.set('instance', instanceId); return next; }, { replace: true });
       fetchLeagueData(selectedTier, 1, instanceId);
     }
   };

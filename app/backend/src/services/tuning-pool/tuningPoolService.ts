@@ -339,6 +339,33 @@ export async function getTuningBonuses(robotId: number): Promise<TuningAttribute
 }
 
 /**
+ * Get tuning bonuses for multiple robots in a single query.
+ *
+ * Returns a Map of robotId → TuningAttributeMap. Robots without allocations
+ * will have an empty map `{}` in the result.
+ *
+ * @param robotIds - Array of robot IDs to fetch tuning bonuses for
+ * @returns Map of robotId → sparse attribute bonus map
+ */
+export async function getTuningBonusesBatch(robotIds: number[]): Promise<Map<number, TuningAttributeMap>> {
+  if (robotIds.length === 0) return new Map();
+  const rows = await prisma.tuningAllocation.findMany({
+    where: { robotId: { in: robotIds } },
+  });
+  const result = new Map<number, TuningAttributeMap>();
+  for (const row of rows) {
+    result.set(row.robotId, rowToAllocations(row as unknown as Record<string, unknown>));
+  }
+  // Ensure all requested IDs have an entry (empty map for robots without allocations)
+  for (const id of robotIds) {
+    if (!result.has(id)) {
+      result.set(id, {});
+    }
+  }
+  return result;
+}
+
+/**
  * Clear all tuning allocations for a robot.
  *
  * Deletes the allocation row entirely. Used on robot reset or deletion cleanup.

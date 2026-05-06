@@ -227,6 +227,7 @@ model Robot {
   @@index([elo])
   @@index([currentLeague])
   @@index([currentLeague, leagueId])
+  @@index([totalBattles])
   @@map("robots")
 }
 
@@ -346,6 +347,8 @@ model BattleParticipant {
   @@index([battleId])
   @@index([robotId])
   @@index([battleId, team])
+  @@index([eloBefore])
+  @@index([finalHP])
   @@map("battle_participants")
 }
 
@@ -356,6 +359,7 @@ model Battle {
   winnerId   Int?   @map("winner_id") // Winner's robot ID (null if draw)
   battleType String @map("battle_type") @db.VarChar(20) // "league", "tournament", "tag_team"
   leagueType String @map("league_type") @db.VarChar(20) // "bronze", "silver", "gold", etc.
+  leagueInstanceId String? @map("league_instance_id") @db.VarChar(20) // "gold_1", "bronze_2", etc. — instance at time of battle
 
   // ===== TOURNAMENT REFERENCE (optional) =====
   tournamentId    Int? @map("tournament_id") // Links to tournament if this is a tournament battle
@@ -413,6 +417,7 @@ model Battle {
   @@index([createdAt])
   @@index([tournamentId])
   @@index([battleType])
+  @@index([winnerId])
   @@map("battles")
 }
 

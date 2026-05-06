@@ -317,6 +317,7 @@ exports.Prisma.BattleScalarFieldEnum = {
   winnerId: 'winnerId',
   battleType: 'battleType',
   leagueType: 'leagueType',
+  leagueInstanceId: 'leagueInstanceId',
   tournamentId: 'tournamentId',
   tournamentRound: 'tournamentRound',
   team1ActiveRobotId: 'team1ActiveRobotId',

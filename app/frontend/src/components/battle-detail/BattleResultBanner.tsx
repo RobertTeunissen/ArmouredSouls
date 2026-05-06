@@ -91,7 +91,10 @@ function BattleContextLine({ battleLog }: { battleLog: BattleLogResponse }) {
   const duration = formatDuration(battleLog.duration);
 
   if (battleLog.battleType === 'tag_team') {
-    return <span><Link to="/tag-teams/standings" className="text-primary hover:text-white transition-colors">🤝 Tag Team Battle</Link>{` • Duration: ${duration}`}</span>;
+    const tagTeamLink = battleLog.leagueInstanceId
+      ? `/tag-teams/standings?tier=${battleLog.leagueType}&instance=${battleLog.leagueInstanceId}`
+      : `/tag-teams/standings?tier=${battleLog.leagueType}`;
+    return <span><Link to={tagTeamLink} className="text-primary hover:text-white transition-colors">🤝 Tag Team Battle</Link>{` • Duration: ${duration}`}</span>;
   }
   if (battleLog.battleType === 'koth') {
     const count = battleLog.participants?.length || battleLog.kothParticipants?.length || 0;
@@ -107,7 +110,10 @@ function BattleContextLine({ battleLog }: { battleLog: BattleLogResponse }) {
   }
   const tierIcon = getLeagueTierIcon(battleLog.leagueType);
   const tierName = getLeagueTierName(battleLog.leagueType);
-  return <span><Link to={`/league-standings?tier=${battleLog.leagueType}`} className="text-primary hover:text-white transition-colors">{tierIcon} {tierName} League</Link>{` • Duration: ${duration}`}</span>;
+  const leagueLink = battleLog.leagueInstanceId
+    ? `/league-standings?tier=${battleLog.leagueType}&instance=${battleLog.leagueInstanceId}`
+    : `/league-standings?tier=${battleLog.leagueType}`;
+  return <span><Link to={leagueLink} className="text-primary hover:text-white transition-colors">{tierIcon} {tierName} League</Link>{` • Duration: ${duration}`}</span>;
 }
 
 // ── Participant Card (unified — used for all battle types) ───────────

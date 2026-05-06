@@ -115,6 +115,9 @@ export interface BattleStrategy<TMatch = unknown> {
   /** League type for the battle record (e.g., 'bronze', 'tournament', 'koth') */
   readonly leagueType: string;
 
+  /** League instance ID for deep linking (e.g., 'gold_1'). Null for non-instanced modes. */
+  readonly leagueInstanceId: string | null;
+
   // ── Config flags ──
 
   /** Whether this battle type affects ELO ratings */
@@ -282,6 +285,7 @@ export class BattleProcessor<TMatch = unknown> {
         winnerId: simResult.winnerId,
         battleType: strategy.battleType,
         leagueType: strategy.leagueType,
+        leagueInstanceId: strategy.leagueInstanceId,
         battleLog: battleLog as unknown as Prisma.InputJsonValue,
         durationSeconds: simResult.durationSeconds,
         winnerReward,

@@ -242,65 +242,82 @@ export async function getPrestigeLeaderboard(params: PrestigeLeaderboardParams):
   const { page, limit, minRobots } = params;
   const skip = (page - 1) * limit;
 
-  const users = await prisma.user.findMany({
-    orderBy: { prestige: 'desc' },
-    select: {
-      id: true,
-      username: true,
-      stableName: true,
-      prestige: true,
-      championshipTitles: true,
-      robots: {
-        where: { NOT: { name: 'Bye Robot' } },
-        select: {
-          elo: true,
-          totalBattles: true,
-          wins: true,
-          losses: true,
-          draws: true,
-        },
-      },
-    },
+  // Use raw SQL to filter by robot count at DB level and paginate efficiently.
+  // This avoids loading all users into memory for large player bases.
+  interface UserRow {
+    id: number;
+    username: string;
+    stable_name: string | null;
+    prestige: number;
+    championship_titles: number;
+    robot_count: bigint;
+    highest_elo: number;
+    total_battles: bigint;
+    total_wins: bigint;
+    total_losses: bigint;
+    total_draws: bigint;
+  }
+
+  const [countResult, userRows] = await Promise.all([
+    prisma.$queryRaw<[{ count: bigint }]>`
+      SELECT COUNT(*)::bigint AS count FROM (
+        SELECT u.id FROM "users" u
+        LEFT JOIN "robots" r ON r."user_id" = u.id AND r.name != 'Bye Robot'
+        GROUP BY u.id
+        HAVING COUNT(r.id) >= ${minRobots}
+      ) sub
+    `,
+    prisma.$queryRaw<UserRow[]>`
+      SELECT
+        u.id,
+        u.username,
+        u."stable_name",
+        u.prestige,
+        u."championship_titles",
+        COUNT(r.id)::bigint AS robot_count,
+        COALESCE(MAX(r.elo), 0) AS highest_elo,
+        COALESCE(SUM(r."total_battles"), 0)::bigint AS total_battles,
+        COALESCE(SUM(r.wins), 0)::bigint AS total_wins,
+        COALESCE(SUM(r.losses), 0)::bigint AS total_losses,
+        COALESCE(SUM(r.draws), 0)::bigint AS total_draws
+      FROM "users" u
+      LEFT JOIN "robots" r ON r."user_id" = u.id AND r.name != 'Bye Robot'
+      GROUP BY u.id
+      HAVING COUNT(r.id) >= ${minRobots}
+      ORDER BY u.prestige DESC
+      LIMIT ${limit} OFFSET ${skip}
+    `,
+  ]);
+
+  const totalStables = Number(countResult[0]?.count ?? 0);
+
+  const leaderboard: PrestigeLeaderboardEntry[] = userRows.map((user, index) => {
+    const totalBattles = Number(user.total_battles);
+    const totalWins = Number(user.total_wins);
+    const totalLosses = Number(user.total_losses);
+    const totalDraws = Number(user.total_draws);
+    const winRate = totalBattles > 0 ? (totalWins / totalBattles * 100) : 0;
+    const prestige = user.prestige;
+
+    return {
+      rank: skip + index + 1,
+      userId: user.id,
+      username: user.username,
+      stableName: user.stable_name || user.username,
+      prestige,
+      prestigeRank: getPrestigeRank(prestige),
+      totalRobots: Number(user.robot_count),
+      totalBattles,
+      totalWins,
+      totalLosses,
+      totalDraws,
+      winRate: Number(winRate.toFixed(1)),
+      highestELO: user.highest_elo,
+      championshipTitles: user.championship_titles,
+      battleWinningsBonus: calculateBattleWinningsBonus(prestige),
+      merchandisingMultiplier: Number((1 + prestige / 10000).toFixed(3)),
+    };
   });
-
-  const allEntries = users
-    .map((user) => {
-      const highestELO = user.robots.length > 0
-        ? Math.max(...user.robots.map(r => r.elo), 0)
-        : 0;
-      const totalBattles = user.robots.reduce((sum, r) => sum + r.totalBattles, 0);
-      const totalWins = user.robots.reduce((sum, r) => sum + r.wins, 0);
-      const totalLosses = user.robots.reduce((sum, r) => sum + r.losses, 0);
-      const totalDraws = user.robots.reduce((sum, r) => sum + r.draws, 0);
-      const winRate = totalBattles > 0 ? (totalWins / totalBattles * 100) : 0;
-
-      return {
-        userId: user.id,
-        username: user.username,
-        stableName: user.stableName || user.username,
-        prestige: user.prestige,
-        prestigeRank: getPrestigeRank(user.prestige),
-        totalRobots: user.robots.length,
-        totalBattles,
-        totalWins,
-        totalLosses,
-        totalDraws,
-        winRate: Number(winRate.toFixed(1)),
-        highestELO,
-        championshipTitles: user.championshipTitles,
-        battleWinningsBonus: calculateBattleWinningsBonus(user.prestige),
-        merchandisingMultiplier: Number((1 + user.prestige / 10000).toFixed(3)),
-      };
-    })
-    .filter(entry => entry.totalRobots >= minRobots);
-
-  const totalStables = allEntries.length;
-  const paginatedEntries = allEntries.slice(skip, skip + limit);
-
-  const leaderboard: PrestigeLeaderboardEntry[] = paginatedEntries.map((entry, index) => ({
-    rank: skip + index + 1,
-    ...entry,
-  }));
 
   return {
     leaderboard,
@@ -310,7 +327,7 @@ export async function getPrestigeLeaderboard(params: PrestigeLeaderboardParams):
       total: totalStables,
       totalStables,
       totalPages: Math.ceil(totalStables / limit),
-      hasMore: skip + paginatedEntries.length < totalStables,
+      hasMore: skip + leaderboard.length < totalStables,
     },
     filters: { minRobots },
   };

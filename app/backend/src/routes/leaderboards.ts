@@ -9,6 +9,21 @@ import {
 
 const router = express.Router();
 
+// Cache leaderboards for 5 minutes — data only changes after battles/cycles
+const leaderboardCache = new Map<string, { data: unknown; expiresAt: number }>();
+const LEADERBOARD_TTL = 5 * 60 * 1000;
+
+function getCachedOrNull(key: string): unknown | null {
+  const entry = leaderboardCache.get(key);
+  if (entry && Date.now() < entry.expiresAt) return entry.data;
+  leaderboardCache.delete(key);
+  return null;
+}
+
+function setCache(key: string, data: unknown): void {
+  leaderboardCache.set(key, { data, expiresAt: Date.now() + LEADERBOARD_TTL });
+}
+
 // --- Zod schemas ---
 
 const fameQuerySchema = z.object({
@@ -34,6 +49,10 @@ const prestigeQuerySchema = z.object({
  * GET /api/leaderboards/fame
  */
 router.get('/fame', validateRequest({ query: fameQuerySchema }), async (req: Request, res: Response) => {
+  const cacheKey = `fame:${req.query.page || 1}:${req.query.limit || 100}:${req.query.league || ''}:${req.query.minBattles || 10}`;
+  const cached = getCachedOrNull(cacheKey);
+  if (cached) { res.json(cached); return; }
+
   const result = await getFameLeaderboard({
     page: parseInt(req.query.page as string) || 1,
     limit: Math.min(parseInt(req.query.limit as string) || 100, 100),
@@ -41,33 +60,47 @@ router.get('/fame', validateRequest({ query: fameQuerySchema }), async (req: Req
     minBattles: parseInt(req.query.minBattles as string) || 10,
   });
 
-  res.json({ ...result, timestamp: new Date().toISOString() });
+  const response = { ...result, timestamp: new Date().toISOString() };
+  setCache(cacheKey, response);
+  res.json(response);
 });
 
 /**
  * GET /api/leaderboards/losses
  */
 router.get('/losses', validateRequest({ query: lossesQuerySchema }), async (req: Request, res: Response) => {
+  const cacheKey = `losses:${req.query.page || 1}:${req.query.limit || 100}:${req.query.league || ''}`;
+  const cached = getCachedOrNull(cacheKey);
+  if (cached) { res.json(cached); return; }
+
   const result = await getLossesLeaderboard({
     page: parseInt(req.query.page as string) || 1,
     limit: Math.min(parseInt(req.query.limit as string) || 100, 100),
     league: req.query.league as string,
   });
 
-  res.json({ ...result, timestamp: new Date().toISOString() });
+  const response = { ...result, timestamp: new Date().toISOString() };
+  setCache(cacheKey, response);
+  res.json(response);
 });
 
 /**
  * GET /api/leaderboards/prestige
  */
 router.get('/prestige', validateRequest({ query: prestigeQuerySchema }), async (req: Request, res: Response) => {
+  const cacheKey = `prestige:${req.query.page || 1}:${req.query.limit || 100}:${req.query.minRobots || 1}`;
+  const cached = getCachedOrNull(cacheKey);
+  if (cached) { res.json(cached); return; }
+
   const result = await getPrestigeLeaderboard({
     page: parseInt(req.query.page as string) || 1,
     limit: Math.min(parseInt(req.query.limit as string) || 100, 100),
     minRobots: parseInt(req.query.minRobots as string) || 1,
   });
 
-  res.json({ ...result, timestamp: new Date().toISOString() });
+  const response = { ...result, timestamp: new Date().toISOString() };
+  setCache(cacheKey, response);
+  res.json(response);
 });
 
 export default router;

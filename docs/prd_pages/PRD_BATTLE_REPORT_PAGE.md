@@ -324,7 +324,7 @@ All display components use the unified `participants[]` array. Legacy components
 - Legacy API fields (`robot1`/`robot2`, `tagTeam`, `kothParticipants`) still returned alongside `participants[]` — used by playback viewer and KotH scoring module
 
 ### Backlog Items
-- **#39 — League & Tag Team Instance Deep Linking**: Link to specific league instance, not just tier ([BACKLOG.md](../BACKLOG.md))
+- ~~**#39 — League & Tag Team Instance Deep Linking**: Link to specific league instance, not just tier~~ ✅ Implemented May 2026
 - **Fame/Prestige progression display**: Show totals, next level thresholds, progress in Battle Outcomes section
 - **Deprecate legacy API fields**: Remove `robot1`/`robot2`, `tagTeam`, `kothParticipants` once all consumers use `participants[]`
 

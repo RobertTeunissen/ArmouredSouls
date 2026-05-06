@@ -274,9 +274,9 @@ export function calculateMovementIntent(
     : 1;
 
   // Find primary target (nearest living opponent, or current target)
-  const livingOpponents = opponents.filter((o) => o.isAlive);
-  const target = livingOpponents.length > 0
-    ? livingOpponents.reduce((closest, opp) => {
+  // Note: callers already pass only alive opponents — no need to re-filter
+  const target = opponents.length > 0
+    ? opponents.reduce((closest, opp) => {
         const distA = euclideanDistance(state.position, closest.position);
         const distB = euclideanDistance(state.position, opp.position);
         return distB < distA ? opp : closest;
