@@ -82,7 +82,6 @@ function Navigation() {
               <DropdownMenu label={allPages.battle.label} items={allPages.battle.items} isActive={isCategoryActive(allPages.battle.items)} checkActive={isActive} />
               <DropdownMenu label={allPages.stable.label} items={allPages.stable.items} isActive={isCategoryActive(allPages.stable.items)} checkActive={isActive} />
               <DropdownMenu label={allPages.social.label} items={allPages.social.items} isActive={isCategoryActive(allPages.social.items)} checkActive={isActive} />
-              <DropdownMenu label={allPages.customize.label} items={allPages.customize.items} isActive={isCategoryActive(allPages.customize.items)} checkActive={isActive} />
 
               <NavLink to="/guide" isActive={isActive('/guide')}>📖 Guide</NavLink>
               {user.role === 'admin' && (

@@ -34,8 +34,7 @@ export class FacilityRecommendationService {
    * Generate facility recommendations for a user based on lifetime data
    */
   async generateRecommendations(
-    userId: number,
-    lastNCycles: number = 10
+    userId: number
   ): Promise<RecommendationSummary> {
     // Get user info
     const user = await prisma.user.findUnique({

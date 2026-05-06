@@ -334,15 +334,9 @@ router.get('/facility/:userId/recommendations', validateRequest({ params: userId
   const userId = parseInt(String(req.params.userId));
   if (isNaN(userId)) throw new AppError('INVALID_USER_ID', 'userId must be a valid number', 400);
 
-  const lastNCyclesParam = req.query.lastNCycles as string;
-  const lastNCycles = lastNCyclesParam ? parseInt(lastNCyclesParam) : 10;
-  if (lastNCyclesParam && (isNaN(lastNCycles) || lastNCycles < 1)) {
-    throw new AppError('INVALID_PARAMETER', 'lastNCycles must be a positive number', 400);
-  }
-
   await requireUserExists(userId);
 
-  const recommendations = await facilityRecommendationService.generateRecommendations(userId, lastNCycles);
+  const recommendations = await facilityRecommendationService.generateRecommendations(userId);
   return res.json(recommendations);
 });
 

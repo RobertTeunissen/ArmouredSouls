@@ -3,8 +3,7 @@ import { getFacilityConfig } from '../../config/facilities';
 import { StableMetric } from '../../types/snapshotTypes';
 import {
   calculateFacilityOperatingCost,
-  getMerchandisingBaseRate,
-  getPrestigeMultiplier,
+  calculateMerchandisingIncome,
 } from '../../utils/economyCalculations';
 
 /**
@@ -123,7 +122,7 @@ export class UnifiedFacilityROIService {
 
     if (userMetrics.length > 0) {
       // Primary path: calculate from snapshot data
-      totalReturns = this.calculateReturnsFromSnapshots(
+      totalReturns = await this.calculateReturnsFromSnapshots(
         facilityType as EconomicFacilityType,
         level,
         userMetrics,
@@ -181,6 +180,7 @@ export class UnifiedFacilityROIService {
   /**
    * Calculate ROI for all economic facilities owned by a user.
    * Returns data for every owned economic facility (level > 0).
+   * Fetches shared data (cycle metadata, snapshots) once and reuses across facilities.
    */
   async calculateAllEconomicROIs(userId: number): Promise<AllEconomicROIsResult> {
     const facilities = await prisma.facility.findMany({
@@ -191,10 +191,55 @@ export class UnifiedFacilityROIService {
       },
     });
 
+    if (facilities.length === 0) {
+      return {
+        facilities: [],
+        totals: { totalInvestment: 0, totalReturns: 0, totalOperatingCosts: 0, overallNetROI: 0 },
+      };
+    }
+
+    // Fetch shared data once for all facilities
+    const currentCycleMetadata = await prisma.cycleMetadata.findUnique({
+      where: { id: 1 },
+    });
+    const currentCycle = currentCycleMetadata?.totalCycles || 1;
+
+    // Fetch all snapshots for the user (from cycle 1 to current — covers all facilities)
+    const allSnapshots = await prisma.cycleSnapshot.findMany({
+      where: { cycleNumber: { gte: 1, lte: currentCycle } },
+      select: { cycleNumber: true, stableMetrics: true },
+    });
+
+    // Pre-extract user metrics from all snapshots once
+    const userMetricsByCycle = new Map<number, StableMetric>();
+    for (const snapshot of allSnapshots) {
+      const metrics = snapshot.stableMetrics as unknown as StableMetric[];
+      if (Array.isArray(metrics)) {
+        const userMetric = metrics.find((m) => m.userId === userId);
+        if (userMetric) {
+          userMetricsByCycle.set(snapshot.cycleNumber, userMetric);
+        }
+      }
+    }
+
+    // Fetch robot count once (needed for repair bay)
+    const robots = await prisma.robot.findMany({
+      where: { userId, NOT: { name: 'Bye Robot' } },
+      select: { id: true },
+    });
+    const robotCount = robots.length || 1;
+
     const results: UnifiedFacilityROI[] = [];
 
     for (const facility of facilities) {
-      const roi = await this.calculateFacilityROI(userId, facility.facilityType);
+      const roi = await this.calculateFacilityROIWithSharedData(
+        userId,
+        facility.facilityType,
+        facility.level,
+        currentCycle,
+        userMetricsByCycle,
+        robotCount
+      );
       if (roi) {
         results.push(roi);
       }
@@ -218,6 +263,133 @@ export class UnifiedFacilityROIService {
         overallNetROI,
       },
     };
+  }
+
+  /**
+   * Internal: Calculate ROI using pre-fetched shared data (avoids redundant queries).
+   */
+  private async calculateFacilityROIWithSharedData(
+    userId: number,
+    facilityType: string,
+    level: number,
+    currentCycle: number,
+    userMetricsByCycle: Map<number, StableMetric>,
+    robotCount: number
+  ): Promise<UnifiedFacilityROI | null> {
+    if (!this.isEconomicFacility(facilityType)) return null;
+
+    const config = getFacilityConfig(facilityType);
+    if (!config) return null;
+
+    const totalInvestment = config.costs
+      .slice(0, level)
+      .reduce((sum, cost) => sum + cost, 0);
+
+    // Determine purchase cycle
+    const purchaseCycle = await this.determinePurchaseCycle(userId, facilityType);
+    const cyclesSincePurchase = Math.max(1, currentCycle - purchaseCycle + 1);
+
+    // Extract user metrics for the ownership period from pre-fetched data
+    const userMetrics: StableMetric[] = [];
+    for (let cycle = purchaseCycle; cycle <= currentCycle; cycle++) {
+      const metric = userMetricsByCycle.get(cycle);
+      if (metric) {
+        userMetrics.push(metric);
+      }
+    }
+
+    let totalReturns: number;
+    let dataSource: 'snapshot' | 'estimate';
+
+    if (userMetrics.length > 0) {
+      totalReturns = this.calculateReturnsFromSnapshotsSync(
+        facilityType as EconomicFacilityType,
+        level,
+        userMetrics,
+        robotCount
+      );
+      dataSource = 'snapshot';
+    } else {
+      totalReturns = await this.calculateEstimatedReturns(
+        userId,
+        facilityType as EconomicFacilityType,
+        level,
+        cyclesSincePurchase
+      );
+      dataSource = 'estimate';
+    }
+
+    const dailyOperatingCost = calculateFacilityOperatingCost(facilityType, level);
+    const totalOperatingCosts = dailyOperatingCost * cyclesSincePurchase;
+
+    const netProfit = totalReturns - totalOperatingCosts - totalInvestment;
+    const netROI = totalInvestment > 0 ? netProfit / totalInvestment : 0;
+    const paidOff = (totalReturns - totalOperatingCosts) >= totalInvestment;
+
+    let projectedPayoffCycles: number | null = null;
+    if (!paidOff && cyclesSincePurchase > 0) {
+      const avgNetReturnPerCycle = (totalReturns - totalOperatingCosts) / cyclesSincePurchase;
+      if (avgNetReturnPerCycle > 0) {
+        const remainingCost = totalInvestment - (totalReturns - totalOperatingCosts);
+        projectedPayoffCycles = Math.ceil(remainingCost / avgNetReturnPerCycle);
+      }
+    }
+
+    return {
+      facilityType,
+      currentLevel: level,
+      totalInvestment,
+      totalReturns,
+      totalOperatingCosts,
+      netROI,
+      paidOff,
+      projectedPayoffCycles,
+      cyclesSincePurchase,
+      dataSource,
+    };
+  }
+
+  /**
+   * Synchronous version of calculateReturnsFromSnapshots that uses pre-fetched robot count.
+   */
+  private calculateReturnsFromSnapshotsSync(
+    facilityType: EconomicFacilityType,
+    level: number,
+    userMetrics: StableMetric[],
+    robotCount: number
+  ): number {
+    switch (facilityType) {
+      case 'merchandising_hub':
+        return userMetrics.reduce((sum, m) => sum + (m.merchandisingIncome || 0), 0);
+      case 'streaming_studio':
+        return userMetrics.reduce((sum, m) => sum + (m.streamingIncome || 0), 0);
+      case 'repair_bay':
+        return this.calculateRepairBaySavingsSync(level, userMetrics, robotCount);
+      case 'training_facility':
+        return this.calculateTrainingFacilitySavings(level, userMetrics);
+      case 'weapons_workshop':
+        return this.calculateWeaponsWorkshopSavings(level, userMetrics);
+      default:
+        return 0;
+    }
+  }
+
+  /**
+   * Synchronous repair bay savings using pre-fetched robot count.
+   */
+  private calculateRepairBaySavingsSync(
+    level: number,
+    userMetrics: StableMetric[],
+    robotCount: number
+  ): number {
+    const totalRepairCosts = userMetrics.reduce(
+      (sum, m) => sum + (m.totalRepairCosts || 0),
+      0
+    );
+    const discountPercent = Math.min(90, level * (5 + robotCount));
+    if (discountPercent >= 100) return 0;
+    const savings = totalRepairCosts * (discountPercent / (100 - discountPercent));
+    return Math.round(savings);
   }
 
   /**
@@ -441,12 +613,12 @@ export class UnifiedFacilityROIService {
   /**
    * Calculate returns from snapshot data for a specific facility type.
    */
-  private calculateReturnsFromSnapshots(
+  private async calculateReturnsFromSnapshots(
     facilityType: EconomicFacilityType,
     level: number,
     userMetrics: StableMetric[],
     userId: number
-  ): number {
+  ): Promise<number> {
     switch (facilityType) {
       case 'merchandising_hub':
         return userMetrics.reduce((sum, m) => sum + (m.merchandisingIncome || 0), 0);
@@ -471,33 +643,31 @@ export class UnifiedFacilityROIService {
   /**
    * Estimate savings from Repair Bay based on total repair costs and discount percentage.
    * Discount formula: Math.min(90, level * (5 + robotCount))
-   * Since we don't have per-snapshot robot count, we use current robot count.
+   * Uses actual robot count for accurate calculation.
    */
-  private calculateRepairBaySavings(
+  private async calculateRepairBaySavings(
     level: number,
     userMetrics: StableMetric[],
     userId: number
-  ): number {
-    // We need robot count for the discount formula.
-    // Since this is a synchronous calculation from pre-fetched data,
-    // we'll use a conservative estimate. The caller should provide robot count
-    // if available, but for now we use a default of 1.
-    // The actual robot count will be fetched in the async wrapper if needed.
+  ): Promise<number> {
     const totalRepairCosts = userMetrics.reduce(
       (sum, m) => sum + (m.totalRepairCosts || 0),
       0
     );
 
-    // Use a conservative robot count estimate of 1 for synchronous calculation.
+    // Fetch actual robot count for accurate discount calculation
+    const robots = await prisma.robot.findMany({
+      where: { userId, NOT: { name: 'Bye Robot' } },
+      select: { id: true },
+    });
+    const robotCount = robots.length || 1;
+
     // The discount represents what the user saved by having the repair bay.
     // totalRepairCosts in the snapshot is the ACTUAL cost paid (after discount).
     // Savings = actualCost * (discountPercent / (100 - discountPercent))
-    const discountPercent = Math.min(90, level * (5 + 1)); // Conservative: 1 robot
+    const discountPercent = Math.min(90, level * (5 + robotCount));
     if (discountPercent >= 100) return 0;
 
-    // Savings estimation: the snapshot records what was actually paid.
-    // Original cost = actualCost / (1 - discount/100)
-    // Savings = originalCost - actualCost = actualCost * discount / (100 - discount)
     const savings = totalRepairCosts * (discountPercent / (100 - discountPercent));
     return Math.round(savings);
   }
@@ -560,9 +730,9 @@ export class UnifiedFacilityROIService {
           select: { prestige: true },
         });
         const prestige = user?.prestige || 0;
-        const baseRate = getMerchandisingBaseRate(level);
-        const prestigeMultiplier = getPrestigeMultiplier(prestige);
-        return Math.round(baseRate * prestigeMultiplier * cyclesOwned);
+        // Use the actual merchandising income formula: baseRate × (1 + prestige/10000)
+        const dailyIncome = calculateMerchandisingIncome(level, prestige);
+        return dailyIncome * cyclesOwned;
       }
 
       case 'streaming_studio': {
@@ -616,11 +786,9 @@ export class UnifiedFacilityROIService {
   ): number {
     if (facilityType === 'merchandising_hub') {
       const incomeBefore = fromLevel > 0
-        ? Math.round(getMerchandisingBaseRate(fromLevel) * (1 + userPrestige / 10000))
+        ? calculateMerchandisingIncome(fromLevel, userPrestige)
         : 0;
-      const incomeAfter = Math.round(
-        getMerchandisingBaseRate(toLevel) * (1 + userPrestige / 10000)
-      );
+      const incomeAfter = calculateMerchandisingIncome(toLevel, userPrestige);
       return incomeAfter - incomeBefore;
     }
 
