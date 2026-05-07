@@ -183,7 +183,7 @@ Don't try to save the 4 unimplemented facilities by connecting them to prestige/
 
 ## Decisions Made
 
-1. **Convert battle winnings bonus to smooth scaling** — small code change, do independently.
+1. **~~Convert battle winnings bonus to smooth scaling~~** — ✅ Done. Formula: `min(1.50, 1 + prestige/50,000)`. Cap at 25K prestige.
 2. **No combat bonuses from fame** — fame is cosmetic/economic identity, not power.
 3. **No prestige-gated feature unlocks for now** — achievements (#8) are the better vehicle for milestone celebrations.
 4. **Fame cosmetics are the priority** — titles, visual indicators, signature moves, public history.

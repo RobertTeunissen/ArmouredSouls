@@ -2,7 +2,7 @@
 title: "Facility Investment Strategy"
 description: "Recommended facility purchase and upgrade order for early, mid, and late game — maximize your return on investment at every stage."
 order: 5
-lastUpdated: "2026-03-11"
+lastUpdated: "2026-05-15"
 relatedArticles:
   - facilities/facility-overview
   - facilities/facility-progression
@@ -19,6 +19,8 @@ With 15 facilities to choose from and a limited budget, knowing what to buy and 
 ![Investment priority roadmap](/images/guide/facilities/investment-priority-roadmap.png)
 
 The key principle: **invest in facilities that either save you money or make you money before investing in facilities that provide power**. A facility that pays for itself in 30 cycles is better than one that makes your robots 5% stronger but drains your balance.
+
+You can track your facility investment performance on the **Investment Overview** tab of the Facilities page. This tab shows lifetime ROI data for the 5 economic facilities (Merchandising Hub, Streaming Studio, Repair Bay, Training Facility, Weapons Workshop) including total investment, total returns, whether each facility has paid for itself, and projected payoff cycles if not yet profitable. The data is sourced from cycle snapshots for accuracy, with formula-based estimates as a fallback when snapshot data is unavailable.
 
 ## Early Game (Cycles 1–50)
 
@@ -162,3 +164,16 @@ Check your Financial Report regularly. If your total facility operating costs ar
 - [Facility Progression & ROI](/guide/facilities/facility-progression) — Detailed cost tables for every facility
 - [Starting Budget](/guide/getting-started/starting-budget) — How to allocate your initial ₡3,000,000
 - [Credits & Income Sources](/guide/economy/credits-and-income) — Understanding your revenue streams
+
+## Understanding the Investment Overview Tab
+
+The **Investment Overview** tab on the Facilities page provides a consolidated view of your economic facility performance:
+
+- **Lifetime metrics**: Total investment, total returns, operating costs, and net ROI for each of the 5 economic facilities
+- **Paid-off status**: A clear badge showing whether each facility has earned back its investment
+- **Projected payoff**: For facilities not yet paid off, an estimate of how many more cycles until breakeven
+- **Data source indicator**: Shows whether calculations use actual cycle snapshot data ("Historical") or formula-based estimates ("Estimated")
+- **Upgrade recommendations**: Prioritized suggestions for which facilities to upgrade next, based on your current game state
+
+The ROI calculations use your actual cycle-by-cycle financial data (from `CycleSnapshot.stableMetrics`) when available. For facilities purchased before snapshot tracking began, formula-based estimates provide reasonable approximations.
+

@@ -142,19 +142,6 @@ export function MobileDrawer({ isOpen, onClose, isActive, userRobots, isAdmin, o
             ))}
           </DrawerSection>
 
-          {/* CUSTOMIZE Section */}
-          <DrawerSection emoji="🎨" title="Customization">
-            {allPages.customize.items.map(item => (
-              <DrawerMenuItem
-                key={item.path}
-                label={item.label}
-                onClick={() => navTo(item.path)}
-                isActive={isActive(item.path)}
-                disabled={!implementedPages.has(item.path)}
-              />
-            ))}
-          </DrawerSection>
-
           {/* SETTINGS & ADMIN Section */}
           <div className="border-t border-white/10 pt-4">
             <h3 className="px-4 py-2 text-xs font-semibold text-tertiary uppercase tracking-wider">

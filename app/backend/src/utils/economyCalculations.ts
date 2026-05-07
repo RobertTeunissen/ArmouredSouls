@@ -5,8 +5,6 @@
 
 import { Prisma } from '../../generated/prisma';
 import prisma from '../lib/prisma';
-import { getFacilityConfig } from '../config/facilities';
-import { EconomyError, EconomyErrorCode } from '../errors/economyErrors';
 import logger from '../config/logger';
 
 /**
@@ -149,15 +147,11 @@ export async function calculateTotalDailyOperatingCosts(userId: number): Promise
 
 /**
  * Get prestige multiplier for battle winnings
- * Tiers: Established 1K (10%), Veteran 5K (20%), Elite 10K (30%), Champion 25K (40%), Legendary 50K (50%)
+ * Smooth formula: min(1.50, 1 + prestige / 50,000)
+ * Cap: +50% at 25,000+ prestige
  */
 export function getPrestigeMultiplier(prestige: number): number {
-  if (prestige >= 50000) return 1.50;
-  if (prestige >= 25000) return 1.40;
-  if (prestige >= 10000) return 1.30;
-  if (prestige >= 5000) return 1.20;
-  if (prestige >= 1000) return 1.10;
-  return 1.0;
+  return Math.min(1.50, 1 + prestige / 50000);
 }
 
 /**
@@ -169,16 +163,13 @@ export function calculateBattleWinnings(baseReward: number, prestige: number): n
 }
 
 /**
- * Get next prestige tier information
- * Returns null if already at max tier (50,000+)
+ * Get prestige progress information for UI display.
+ * Returns current bonus percentage and progress toward the cap.
+ * Returns null if already at max (50% bonus at 25,000+ prestige).
  */
 export function getNextPrestigeTier(currentPrestige: number): { threshold: number; bonus: string } | null {
-  if (currentPrestige < 1000) return { threshold: 1000, bonus: '+10%' };
-  if (currentPrestige < 5000) return { threshold: 5000, bonus: '+20%' };
-  if (currentPrestige < 10000) return { threshold: 10000, bonus: '+30%' };
-  if (currentPrestige < 25000) return { threshold: 25000, bonus: '+40%' };
-  if (currentPrestige < 50000) return { threshold: 50000, bonus: '+50%' };
-  return null; // Max tier reached
+  if (currentPrestige >= 25000) return null; // Cap reached
+  return { threshold: 25000, bonus: '+50% (max)' };
 }
 
 /**
@@ -854,214 +845,5 @@ export async function generatePerRobotFinancialReport(userId: number): Promise<{
       mostProfitable: robotReports.length > 0 ? robotReports[0].name : null,
       leastProfitable: robotReports.length > 0 ? robotReports[robotReports.length - 1].name : null,
     },
-  };
-}
-
-// ==================== FACILITY ROI CALCULATIONS ====================
-
-/**
- * Calculate total upgrade cost from current level to target level
- */
-export function calculateTotalUpgradeCost(
-  facilityType: string,
-  fromLevel: number,
-  toLevel: number
-): number {
-  const config = getFacilityConfig(facilityType);
-  if (!config || toLevel > config.maxLevel || fromLevel >= toLevel) {
-    return 0;
-  }
-
-  let totalCost = 0;
-  for (let level = fromLevel; level < toLevel; level++) {
-    totalCost += config.costs[level] || 0;
-  }
-  return totalCost;
-}
-
-/**
- * Calculate daily operating cost increase for facility upgrade
- */
-export function calculateOperatingCostIncrease(
-  facilityType: string,
-  fromLevel: number,
-  toLevel: number
-): number {
-  const costBefore = calculateFacilityOperatingCost(facilityType, fromLevel);
-  const costAfter = calculateFacilityOperatingCost(facilityType, toLevel);
-  return costAfter - costBefore;
-}
-
-/**
- * Calculate daily benefit increase for income-generating facilities
- * Returns 0 for non-income facilities
- */
-export function calculateDailyBenefitIncrease(
-  facilityType: string,
-  fromLevel: number,
-  toLevel: number,
-  userPrestige: number,
-  _totalBattles: number,
-  _totalFame: number
-): number {
-  // Only Merchandising Hub provides direct daily income benefit
-  if (facilityType !== 'merchandising_hub') {
-    return 0; // Other facilities provide indirect benefits (discounts, caps, etc.)
-  }
-
-  // Calculate income at current level (merchandising only)
-  // Note: Streaming revenue is now awarded per-battle via Streaming Studio facility
-  const incomeBefore = calculateMerchandisingIncome(fromLevel, userPrestige);
-
-  // Calculate income at target level (merchandising only)
-  const incomeAfter = calculateMerchandisingIncome(toLevel, userPrestige);
-
-  return incomeAfter - incomeBefore;
-}
-
-/**
- * Calculate comprehensive ROI metrics for a facility upgrade
- */
-export async function calculateFacilityROI(
-  userId: number,
-  facilityType: string,
-  targetLevel: number
-): Promise<{
-  currentLevel: number;
-  targetLevel: number;
-  upgradeCost: number;
-  dailyCostIncrease: number;
-  dailyBenefitIncrease: number;
-  netDailyChange: number;
-  breakevenDays: number | null;
-  net30Days: number;
-  net90Days: number;
-  net180Days: number;
-  affordable: boolean;
-  recommendation: string;
-  recommendationType: 'excellent' | 'good' | 'neutral' | 'poor' | 'not_affordable';
-}> {
-  // Get user data
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-  });
-
-  if (!user) {
-    throw new Error('User not found');
-  }
-
-  // Get current facility level
-  const facility = await prisma.facility.findUnique({
-    where: {
-      userId_facilityType: {
-        userId,
-        facilityType,
-      },
-    },
-  });
-
-  const currentLevel = facility?.level || 0;
-
-  // Validate target level
-  const config = getFacilityConfig(facilityType);
-  if (!config || targetLevel > config.maxLevel || targetLevel <= currentLevel) {
-    throw new EconomyError(
-      EconomyErrorCode.INVALID_TRANSACTION,
-      'Invalid target level',
-      400,
-      { facilityType, targetLevel, currentLevel, maxLevel: config?.maxLevel }
-    );
-  }
-
-  // Calculate costs
-  const upgradeCost = calculateTotalUpgradeCost(facilityType, currentLevel, targetLevel);
-  const dailyCostIncrease = calculateOperatingCostIncrease(facilityType, currentLevel, targetLevel);
-
-  // Calculate benefits (for income generators)
-  const robots = await prisma.robot.findMany({
-    where: { userId },
-    select: { totalBattles: true, fame: true },
-  });
-
-  const _totalBattles = robots.reduce((sum, r) => sum + r.totalBattles, 0);
-  const _totalFame = robots.reduce((sum, r) => sum + r.fame, 0);
-
-  const dailyBenefitIncrease = calculateDailyBenefitIncrease(
-    facilityType,
-    currentLevel,
-    targetLevel,
-    user.prestige,
-    _totalBattles,
-    _totalFame
-  );
-
-  // Calculate net change
-  const netDailyChange = dailyBenefitIncrease - dailyCostIncrease;
-
-  // Calculate breakeven
-  let breakevenDays: number | null = null;
-  if (netDailyChange > 0) {
-    breakevenDays = Math.ceil(upgradeCost / netDailyChange);
-  }
-
-  // Calculate net over time periods
-  const net30Days = (netDailyChange * 30) - upgradeCost;
-  const net90Days = (netDailyChange * 90) - upgradeCost;
-  const net180Days = (netDailyChange * 180) - upgradeCost;
-
-  // Check affordability
-  const affordable = user.currency >= upgradeCost;
-
-  // Generate recommendation
-  let recommendation = '';
-  let recommendationType: 'excellent' | 'good' | 'neutral' | 'poor' | 'not_affordable' = 'neutral';
-
-  if (!affordable) {
-    recommendation = `You need ₡${(upgradeCost - user.currency).toLocaleString()} more credits to afford this upgrade.`;
-    recommendationType = 'not_affordable';
-  } else if (facilityType === 'merchandising_hub') {
-    // Merchandising Hub - calculate ROI
-    if (breakevenDays && breakevenDays <= 30) {
-      recommendation = `Excellent investment! Pays for itself in ${breakevenDays} days with ₡${netDailyChange.toLocaleString()}/day net gain.`;
-      recommendationType = 'excellent';
-    } else if (breakevenDays && breakevenDays <= 90) {
-      recommendation = `Good investment. Break-even in ${breakevenDays} days (~${Math.round(breakevenDays / 30)} months) with ₡${netDailyChange.toLocaleString()}/day net gain.`;
-      recommendationType = 'good';
-    } else if (breakevenDays) {
-      recommendation = `Long-term investment. Break-even in ${breakevenDays} days (~${Math.round(breakevenDays / 30)} months). Consider if planning long-term.`;
-      recommendationType = 'neutral';
-    } else {
-      recommendation = `This upgrade increases costs by ₡${Math.abs(netDailyChange).toLocaleString()}/day without offsetting income. Consider other facilities first.`;
-      recommendationType = 'poor';
-    }
-  } else {
-    // Non-income facilities - provide qualitative recommendation
-    const facilityName = config.name;
-    if (upgradeCost < user.currency * 0.1) {
-      recommendation = `${facilityName} upgrade is affordable (${Math.round((upgradeCost / user.currency) * 100)}% of balance). ${config.benefits[targetLevel - 1] || 'Provides valuable benefits'}.`;
-      recommendationType = 'good';
-    } else if (upgradeCost < user.currency * 0.3) {
-      recommendation = `${facilityName} upgrade costs ${Math.round((upgradeCost / user.currency) * 100)}% of your balance. ${config.benefits[targetLevel - 1] || 'Provides useful benefits'}.`;
-      recommendationType = 'neutral';
-    } else {
-      recommendation = `${facilityName} upgrade costs ${Math.round((upgradeCost / user.currency) * 100)}% of your balance. Save more credits before upgrading.`;
-      recommendationType = 'poor';
-    }
-  }
-
-  return {
-    currentLevel,
-    targetLevel,
-    upgradeCost: Math.round(upgradeCost),
-    dailyCostIncrease: Math.round(dailyCostIncrease),
-    dailyBenefitIncrease: Math.round(dailyBenefitIncrease),
-    netDailyChange: Math.round(netDailyChange),
-    breakevenDays,
-    net30Days: Math.round(net30Days),
-    net90Days: Math.round(net90Days),
-    net180Days: Math.round(net180Days),
-    affordable,
-    recommendation,
-    recommendationType,
   };
 }

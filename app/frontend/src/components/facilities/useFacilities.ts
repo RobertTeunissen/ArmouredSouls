@@ -2,6 +2,7 @@
  * Custom hook for Facilities page state management and data fetching.
  *
  * Extracted from FacilitiesPage.tsx during component splitting (Spec 18).
+ * Updated in Spec 30 to use unified ROI endpoint and consolidated tabs.
  */
 
 import { useState, useEffect, useRef } from 'react';
@@ -10,7 +11,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import apiClient from '../../utils/apiClient';
 import { useStableStore } from '../../stores';
 import { FACILITY_CATEGORIES } from './constants';
-import type { TabType, Facility, FacilityROI, FacilityRecommendation } from './types';
+import type { TabType, Facility, UnifiedFacilityROI, FacilityRecommendation } from './types';
 
 export function useFacilities() {
   const { user, refreshUser } = useAuth();
@@ -29,12 +30,10 @@ export function useFacilities() {
   );
   const facilityRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  // Advisor tab state
-  const [lastNCycles, setLastNCycles] = useState(10);
-  const [facilityROIs, setFacilityROIs] = useState<FacilityROI[]>([]);
+  // Investment overview state
+  const [facilityROIs, setFacilityROIs] = useState<UnifiedFacilityROI[]>([]);
   const [recommendations, setRecommendations] = useState<FacilityRecommendation[]>([]);
   const [advisorLoading, setAdvisorLoading] = useState(false);
-  const [currentCycle, setCurrentCycle] = useState<number>(0);
 
   // Handle hash-based scrolling to specific facility
   useEffect(() => {
@@ -74,11 +73,11 @@ export function useFacilities() {
   }, []);
 
   useEffect(() => {
-    if ((activeTab === 'advisor' || activeTab === 'investments') && user) {
+    if (activeTab === 'investment-overview' && user) {
       fetchAdvisorData();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, user, lastNCycles]);
+  }, [activeTab, user]);
 
   const fetchFacilities = async () => {
     try {
@@ -99,41 +98,21 @@ export function useFacilities() {
     try {
       setAdvisorLoading(true);
 
-      // Fetch current cycle
-      let fetchedCurrentCycle = 0;
+      // Fetch all economic facility ROIs in a single call
       try {
-        const cycleResponse = await apiClient.get('/api/analytics/cycle/current');
-        if (cycleResponse.status === 200) {
-          const cycleData = cycleResponse.data;
-          fetchedCurrentCycle = cycleData.cycleNumber;
-          setCurrentCycle(fetchedCurrentCycle);
+        const roiResponse = await apiClient.get(`/api/analytics/facility/${user.id}/roi/all-economic`);
+        if (roiResponse.status === 200) {
+          setFacilityROIs(roiResponse.data.facilities || []);
         }
       } catch (err) {
-        console.error('Error fetching current cycle:', err);
+        console.error('Error fetching ROI data:', err);
+        setFacilityROIs([]);
       }
-
-      // Fetch ROI data for all Economy & Discounts facilities
-      const facilityTypes = ['merchandising_hub', 'streaming_studio', 'repair_bay', 'training_facility', 'weapons_workshop'];
-      const roiPromises = facilityTypes.map(async (type) => {
-        try {
-          const response = await apiClient.get(`/api/analytics/facility/${user.id}/roi?facilityType=${type}`);
-          if (response.status === 200) {
-            return response.data;
-          }
-          return null;
-        } catch (err) {
-          console.error(`Error fetching ROI for ${type}:`, err);
-          return null;
-        }
-      });
-
-      const roiData = (await Promise.all(roiPromises)).filter(Boolean);
-      setFacilityROIs(roiData);
 
       // Fetch recommendations
       try {
         const recResponse = await apiClient.get(
-          `/api/analytics/facility/${user.id}/recommendations?lastNCycles=${lastNCycles}`
+          `/api/analytics/facility/${user.id}/recommendations`
         );
         if (recResponse.status === 200) {
           const recData = recResponse.data;
@@ -202,13 +181,6 @@ export function useFacilities() {
     return names[type] || type;
   };
 
-  const getROIColor = (roiPercentage: number): string => {
-    if (roiPercentage >= 50) return 'text-success';
-    if (roiPercentage >= 20) return 'text-primary';
-    if (roiPercentage >= 0) return 'text-warning';
-    return 'text-error';
-  };
-
   return {
     user,
     currency,
@@ -220,16 +192,13 @@ export function useFacilities() {
     error,
     collapsedCategories,
     facilityRefs,
-    lastNCycles, setLastNCycles,
     facilityROIs,
     recommendations,
     advisorLoading,
-    currentCycle,
     handleUpgrade,
     toggleCategory,
     getCategoryFacilities,
     getFacilityDisplayName,
-    getROIColor,
     fetchAdvisorData,
   };
 }

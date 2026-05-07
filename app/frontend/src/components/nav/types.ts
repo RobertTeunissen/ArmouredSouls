@@ -47,7 +47,6 @@ export const allPages: Record<string, NavCategory> = {
     label: 'Robots',
     items: [
       { path: '/robots', label: 'My Robots' },
-      { path: '/robots/compare', label: 'Compare Robots' },
       { path: '/robots/create', label: 'Create Robot' },
     ]
   },
@@ -59,7 +58,6 @@ export const allPages: Record<string, NavCategory> = {
       { path: '/koth-standings', label: 'King of the Hill Standings' },
       { path: '/tag-teams/standings', label: 'Tag Team Standings' },
       { path: '/tournaments', label: 'Tournament Hub' },
-      { path: '/events', label: 'Events Calendar' },
       { path: '---', label: '' },
       { path: '/practice-arena', label: '🧪 Combat Simulator' },
     ]
@@ -70,42 +68,20 @@ export const allPages: Record<string, NavCategory> = {
       { path: '/facilities', label: 'Facilities' },
       { path: '/weapon-shop', label: 'Weapon Shop' },
       { path: '/tag-teams', label: 'Tag Team Management' },
-      { path: '/marketplace', label: 'Marketplace' },
-      { path: '/marketplace/my-listings', label: 'My Listings' },
-      { path: '/marketplace/history', label: 'Transaction History' },
-      { path: '/crafting', label: 'Weapon Crafting' },
-      { path: '/blueprints', label: 'Blueprint Library' },
       { path: '/income', label: 'Income Dashboard' },
       { path: '/cycle-summary', label: 'Cycle Summary' },
-      { path: '/prestige-store', label: 'Prestige Store' },
     ]
   },
   social: {
     label: 'Social',
     items: [
       { path: '/profile', label: 'My Profile' },
-      { path: '/friends', label: 'Friends' },
-      { path: '/notifications', label: 'Notifications' },
-      { path: '/guilds', label: 'Browse Guilds' },
-      { path: '/guild', label: 'My Guild' },
-      { path: '/guild/manage', label: 'Guild Management' },
       { path: '/leaderboards/fame', label: 'Fame Leaderboard' },
       { path: '/leaderboards/prestige', label: 'Prestige Leaderboard' },
       { path: '/leaderboards/losses', label: 'Total Losses Leaderboard' },
       { path: '/hall-of-records', label: 'Hall of Records' },
       { path: '/changelog', label: '📰 What\'s New' },
       { path: '/achievements', label: '🏆 Achievements' },
-      { path: '/chat', label: 'Chat' },
-    ]
-  },
-  customize: {
-    label: 'Customize',
-    items: [
-      { path: '/customize', label: 'Customization Hub' },
-      { path: '/customize/skins', label: 'Robot Skins' },
-      { path: '/customize/stable', label: 'Stable Customization' },
-      { path: '/customize/poses', label: 'Victory Poses' },
-      { path: '/customize/emotes', label: 'Emotes & Taunts' },
     ]
   },
 };

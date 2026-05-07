@@ -13,30 +13,48 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 | Rank | Item | # | Votes | BV | TC | RR | Size | WSJF |
 |------|------|---|-------|----|----|-----|------|------|
 | 1 | Game Loop Audit | 6 | 3 🗳️ | 3 | 4 | 5 | 2 | **6.0** |
-| 2 | Facility Investment Advisor | 1 | 1 🗳️ | 4 | 5 | 1 | 2 | **5.0** |
-| 3 | Feature Flags | 15 | 1 🗳️ | 2 | 2 | 4 | 2 | **4.0** |
-| 4 | Compress Prestige Multiplier Thresholds | 36 | 0 🗳️ | 1 | 1 | 1 | 1 | **3.0** |
-| 5 | Landing Page | 4 | 0 🗳️ | 3 | 2 | 1 | 2 | **3.0** |
+| 2 | Feature Flags | 15 | 1 🗳️ | 2 | 2 | 4 | 2 | **4.0** |
+| 3 | Landing Page | 4 | 0 🗳️ | 3 | 2 | 1 | 2 | **3.0** |
+| 4 | Battle History URL State Persistence | 25 | 0 🗳️ | 1 | 1 | 1 | 1 | **3.0** |
+| 5 | Hall of Records Performance Caching | 26 | 0 🗳️ | 1 | 1 | 1 | 1 | **3.0** |
 | 6 | Weapon Experimentation Problem | 5 | 1 🗳️ | 4 | 3 | 4 | 4 | **2.8** |
-| 7 | Weapon Special Properties | 11 | 1 🗳️ | 3 | 2 | 2 | 4 | **1.8** |
-| 8 | Season System (100-Cycle Seasons) | 41 | 0 🗳️ | 4 | 1 | 2 | 4 | **1.8** |
-| 9 | Daily Login Bonuses & Seasonal Events | 34 | 0 🗳️ | 3 | 1 | 1 | 3 | **1.7** |
-| 10 | Player Personas / Complexity Modes | 16 | 1 🗳️ | 2 | 1 | 2 | 3 | **1.7** |
-| 11 | Arena / Terrain Modifiers | 12 | 1 🗳️ | 3 | 1 | 2 | 4 | **1.5** |
-| 12 | 3v3 Team Battles | 31 | 0 🗳️ | 3 | 1 | 1 | 4 | **1.3** |
-| 13 | Modular Package Extraction | 35 | 0 🗳️ | 1 | 1 | 2 | 3 | **1.3** |
-| 14 | Robot Detail Page Split | 37 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
-| 15 | Achievement Persistence Across Seasons | 40 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
-| 16 | Weapon Crafting System | 29 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
-| 17 | Free-for-All / Battle Royale Mode | 30 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
-| 18 | Conditional Battle Triggers / AI Scripting | 32 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
-| 19 | Future Revenue Streams | 33 | 0 🗳️ | 2 | 1 | 1 | 4 | **1.0** |
-| 20 | Unimplemented Facilities | 7 | 0 🗳️ | 2 | 1 | 1 | 5 | **0.8** |
+| 7 | Robot Comparison Tool | 42 | 0 🗳️ | 2 | 1 | 1 | 2 | **2.0** |
+| 8 | Dashboard Enhancements | 24 | 0 🗳️ | 2 | 1 | 1 | 2 | **2.0** |
+| 9 | Weapon Special Properties | 11 | 1 🗳️ | 3 | 2 | 2 | 4 | **1.8** |
+| 10 | Season System (100-Cycle Seasons) | 41 | 0 🗳️ | 4 | 1 | 2 | 4 | **1.8** |
+| 11 | Daily Login Bonuses & Seasonal Events | 34 | 0 🗳️ | 3 | 1 | 1 | 3 | **1.7** |
+| 12 | Player Personas / Complexity Modes | 16 | 1 🗳️ | 2 | 1 | 2 | 3 | **1.7** |
+| 13 | Arena / Terrain Modifiers | 12 | 1 🗳️ | 3 | 1 | 2 | 4 | **1.5** |
+| 14 | League & Tag Team Instance Deep Linking | 39 | 0 🗳️ | 1 | 1 | 1 | 2 | **1.5** |
+| 15 | Battle Table Denormalization Cleanup | 18 | 0 🗳️ | 1 | 1 | 1 | 2 | **1.5** |
+| 16 | Tag Team Battle Time Limit Enforcement | 19 | 0 🗳️ | 1 | 1 | 1 | 2 | **1.5** |
+| 17 | Promotion/Demotion History Tracking | 22 | 0 🗳️ | 1 | 1 | 1 | 2 | **1.5** |
+| 18 | Historical Financial Tracking | 23 | 0 🗳️ | 1 | 1 | 1 | 2 | **1.5** |
+| 19 | 3v3 Team Battles | 31 | 0 🗳️ | 3 | 1 | 1 | 4 | **1.3** |
+| 20 | Modular Package Extraction | 35 | 0 🗳️ | 1 | 1 | 2 | 3 | **1.3** |
+| 21 | Robot Detail Page Split | 37 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
+| 22 | Achievement Persistence Across Seasons | 40 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
+| 23 | Events Calendar | 43 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
+| 24 | Universal Search / Command Palette | 27 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
+| 25 | Performance Optimization | 20 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
+| 26 | Progressive Feature Disclosure | 28 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
+| 27 | Weapon Crafting System | 29 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
+| 28 | Free-for-All / Battle Royale Mode | 30 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
+| 29 | Conditional Battle Triggers / AI Scripting | 32 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
+| 30 | Future Revenue Streams | 33 | 0 🗳️ | 2 | 1 | 1 | 4 | **1.0** |
+| 31 | Player Marketplace | 44 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
+| 32 | Social Features (Friends, Guilds, Chat) | 45 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
+| 33 | Prestige Store | 47 | 0 🗳️ | 2 | 1 | 1 | 4 | **1.0** |
+| 34 | Blueprint Library | 48 | 0 🗳️ | 1 | 1 | 1 | 3 | **1.0** |
+| 35 | Unimplemented Facilities | 7 | 0 🗳️ | 2 | 1 | 1 | 5 | **0.8** |
+| 36 | Cosmetic Customization System | 46 | 0 🗳️ | 2 | 1 | 1 | 5 | **0.8** |
 
 ### Recently Completed (removed from backlog)
 
 | Item | # | Spec | Completed |
 |------|---|------|-----------|
+| Facility Investment Advisor | 1 | [Spec #30](/.kiro/specs/to-do/30-fix-investment-advisor/) | May 2026 |
+| Smooth Prestige Multiplier Scaling | 36 | — (direct implementation) | May 2026 |
 | Monitoring and Alerting | 3 | [Spec #29](/.kiro/specs/to-do/29-monitoring-and-alerting/) | May 2026 |
 | Admin Portal Redesign | 13 | [Spec #28](/.kiro/specs/done-april26/28-admin-portal-redesign/) | April 2026 |
 | Admin Tuning Adoption Dashboard | 38 | [Spec #28](/.kiro/specs/done-april26/28-admin-portal-redesign/) | April 2026 |
@@ -47,13 +65,6 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 | Prestige Gating for Facilities | 21 | — (already implemented) | Pre-backlog |
 
 ---
-
-
-### #1 — Facility Investment Advisor & ROI Calculator
-**Source**: Known issue  
-**Priority**: High — broken feature visible to players
-
-The Investments & ROI tab and Investment Advisor tab on the Facilities page are not working as intended. The consolidation from the old pages was structural only — the data isn't flowing correctly. Players see empty or wrong numbers.
 
 ### #4 — Landing Page / Marketing Front Page
 **Source**: Current state — visitors land on a login/register form with no context  
@@ -229,27 +240,6 @@ Consecutive login rewards, limited-time challenges, end-of-season league placeme
 ### #35 — Modular Package Extraction
 npm workspace extraction. Only relevant when multiple consumers need shared backend logic.
 
-### #36 — Compress Prestige Multiplier Thresholds
-**Source**: [Prestige & Fame Design Exploration](analysis/PRESTIGE_FAME_DESIGN_EXPLORATION.md), ACC cycle 35 data  
-
-The original idea was to convert `getPrestigeMultiplier()` to a smooth formula (`1 + prestige/100,000`), but analysis showed this would nerf mid-game players heavily (+10% → +2% at 2K prestige) and remove the cap, causing runaway late-game scaling.
-
-**The real problem is threshold spacing vs. actual prestige velocity.** On ACC at cycle 35, the top 10 players sit at 2K–3K prestige. Best robots earn ~25 prestige/day from battles, and achievement prestige is largely exhausted. At this rate the 5K tier is months away, and 10K+ tiers are effectively unreachable (years). The upper tiers are dead content — no player will experience them.
-
-**Proposed fix — compress thresholds to match actual prestige economy:**
-
-| Tier | Current Threshold | Proposed | Bonus |
-|------|------------------|----------|-------|
-| Established | 1,000 | 1,000 | +10% |
-| Veteran | 5,000 | 2,500 | +20% |
-| Elite | 10,000 | 5,000 | +30% |
-| Champion | 25,000 | 10,000 | +40% |
-| Legendary | 50,000 | 20,000 | +50% |
-
-This makes the next tier reachable (~80 days for a top player at 3K → 5K) while keeping the cap aspirational (~680 days to 20K). Small code change in `getPrestigeMultiplier()` and `getNextPrestigeTier()`.
-
-**Consideration**: Compressing thresholds buffs current top players immediately (3K prestige jumps from +10% to +20%). Evaluate economic impact on battle winnings income before applying.
-
 ### #37 — Robot Detail Page Split: Review vs Prepare / Stable Preparation Dashboard
 **Source**: Tuning Pool spec discussion (spec #25)  
 
@@ -259,20 +249,100 @@ The Robot Detail page serves two distinct intents (Review: Overview/Matches/Anal
 **Source**: Game Loop Audit (#6) — Loop 3 (Competitive Loop) has no resets, meta shifts, or seasonal structure  
 **Priority**: Not scoped — planned for after current high-priority items
 
-100-cycle (100-day) seasons with LP soft-reset, end-of-season placement rewards, fresh leaderboards, and a visible countdown. Gives every player a reason to engage every cycle and makes the competitive loop feel alive instead of LP oscillating ±1 around a stable point.
+100-cycle (100-day) seasons with a full reset at season boundary. Forces strategic experimentation every season and permanently solves the late-game economic stagnation (Loop 2) and weapon lock-in (Loop 1).
 
-**Design considerations:**
-- LP soft-reset at season boundary (partial reset, not full wipe — preserve skill signal)
-- End-of-season rewards based on final tier/placement (credits, prestige, cosmetics)
-- Season history / archive (past season standings viewable)
-- Possible per-season meta shift (featured arena modifier, weapon category bonus) to force adaptation
-- Achievement system already designed with seasons in mind (#40 covers persistence question)
-- Promotion/demotion history (#22) would enhance season-over-season progression tracking
+**Design direction — full reset:**
 
-**Dependencies**: #40 (achievement persistence decision), possibly #22 (promotion history).
+At season end, the player's stable is archived (viewable as history) and they start fresh with starting credits, no robots, no weapons, no facilities, no attributes, no league placement. The only things that persist across seasons:
+
+| Persists | Resets |
+|----------|--------|
+| Achievements (permanent collection) | Credits / balance (back to starting amount) |
+| Lifetime prestige (cumulative) | Robots (archived) |
+| Season history / archive | Weapons (gone with robots) |
+| Account / login | Facilities (rebuild each season) |
+| | Attributes (fresh robots = fresh stats) |
+| | Fame (robot-level, dies with robot) |
+| | LP / league tier (fresh standings) |
+| | ELO (reset to 1200) |
+| | Tuning allocations (fresh robots) |
+| | Win/loss record (archived) |
+
+**Why full reset works for this game:**
+- Forces experimentation — can't run the same build, must make new choices with starting resources
+- Levels the playing field — new players joining mid-season aren't months behind
+- Makes every economic decision interesting again (credits are scarce)
+- Solves weapon experimentation (#5) naturally — players try different weapons each season
+- Solves economic loop stagnation (#6 Loop 2) permanently — no late-game credit hoarding
+- Early decisions (which weapon first? which facility?) become interesting every season
+
+**Why prestige persists:**
+- The one number that says "I've been here a while" — visible tenure marker
+- Gates facilities — veterans can access higher facility levels faster (still need to buy them, but not locked out). Fair reward for experience without insurmountable advantage.
+- Battle winnings multiplier gives veterans a slight income edge — rebuild a bit faster, not dominant
+
+**Risks to address in spec:**
+- Loss aversion — players watching 100 days of work vanish. Mitigation: archive is viewable, achievements celebrate accomplishments, prestige carries forward.
+- Grind fatigue — rebuilding from zero could feel like a treadmill. Mitigation: knowledge carries forward (you're better at building), prestige gives a small edge, each season can have a meta modifier to keep it fresh.
+- Early season repetition — first 10–20 days could feel samey. Mitigation: seasonal meta modifiers (weapon category bonuses, arena conditions) change the optimal opening strategy.
+- Achievement system must carry enough weight as the permanent progression layer.
+
+**Player framing:** "Seasons are 100 days. At the end, your stable is archived — you can view your past seasons' history, robots, and final standings. Then you start fresh with new starting credits, a blank slate, and everything you've learned. Your achievements and prestige carry forward. Your legacy grows, but the competition resets."
+
+**Dependencies**: #40 (achievement persistence — confirmed permanent), possibly #12 (arena modifiers as seasonal meta shifts).
 
 ### #40 — Achievement Persistence Across Seasons
 **Source**: Achievement System spec (#27) discussion  
-**Priority**: Not scoped — depends on season system design
+**Priority**: Not scoped — resolved: achievements persist permanently
 
-When a season system is introduced, decide what happens to achievements: do they persist permanently (lifetime collection), reset each season (seasonal grind), or split into permanent and seasonal categories? The `UserAchievement` table currently has no season reference. Options include adding a `seasonId` column, creating a separate `SeasonalAchievement` table, or keeping achievements entirely outside the season reset scope. This decision should be made as part of the season system design, not retroactively bolted onto achievements.
+Achievements persist permanently across seasons (lifetime collection). They are the primary permanent progression layer alongside prestige. The `UserAchievement` table needs no `seasonId` column — achievements are entirely outside the season reset scope. Some achievements may reference seasonal accomplishments (e.g., "reach Diamond in 3 different seasons") but the awards themselves never reset.
+
+### #42 — Robot Comparison Tool
+**Source**: Removed from navbar — unimplemented page (`/robots/compare`)  
+**Priority**: Low — QoL feature for experienced players
+
+Side-by-side comparison of two or more robots' stats, attributes, weapons, and tuning allocations. Helps players make informed decisions about upgrades and loadout changes. Could include a simulated "who would win" prediction based on current builds.
+
+### #43 — Events Calendar
+**Source**: Removed from navbar — unimplemented page (`/events`)  
+**Priority**: Not scoped — depends on seasonal/event system (#34, #41)
+
+A calendar view showing upcoming tournaments, seasonal events, daily login bonus windows, and cycle milestones. Only useful once time-limited events exist in the game. Depends on Daily Login Bonuses (#34) or Season System (#41) being implemented first.
+
+### #44 — Player Marketplace
+**Source**: Removed from navbar — unimplemented pages (`/marketplace`, `/marketplace/my-listings`, `/marketplace/history`)  
+**Priority**: Not scoped — large feature, needs economic design
+
+Player-to-player weapon trading marketplace. Players list weapons for sale at their chosen price, others browse and buy. Includes listing management ("My Listings") and transaction history. Needs careful economic balancing to avoid inflation/deflation. Consider: listing fees, transaction tax, price floors/ceilings, trade cooldowns.
+
+**Dependencies**: Weapon resale mechanics (#5), possibly Season System (#41) which would reset inventories.
+
+### #45 — Social Features (Friends, Guilds, Chat)
+**Source**: Removed from navbar — unimplemented pages (`/friends`, `/notifications`, `/guilds`, `/guild`, `/guild/manage`, `/chat`)  
+**Priority**: Not scoped — large feature set, low player demand so far
+
+Full social layer: friend lists, in-game notifications, guild creation/management, guild chat. Would enable guild-vs-guild competitions, shared facilities, and social retention loops. Large scope — likely needs to be broken into multiple specs (friends first, then guilds, then chat).
+
+### #46 — Cosmetic Customization System
+**Source**: Removed from navbar — unimplemented pages (`/customize`, `/customize/skins`, `/customize/stable`, `/customize/poses`, `/customize/emotes`)  
+**Priority**: Not scoped — monetization opportunity, no gameplay impact
+
+Robot skins, stable visual customization, victory poses, and emotes/taunts. Pure cosmetic layer with no gameplay effect. Could serve as a credit sink for late-game players or a future monetization vector. Depends on having visual assets created.
+
+**Potential credit sinks**: Skin unlocks, pose unlocks, emote packs, stable themes.
+
+### #47 — Prestige Store
+**Source**: Removed from navbar — unimplemented page (`/prestige-store`)  
+**Priority**: Not scoped — depends on prestige having enough value
+
+A store where players spend accumulated prestige points on exclusive rewards: cosmetic items, facility unlock discounts, unique weapon skins, or seasonal advantages. Gives prestige a tangible spend path beyond passive multipliers.
+
+**Dependencies**: Cosmetic Customization (#46) for cosmetic rewards, Season System (#41) for seasonal prestige value.
+
+### #48 — Blueprint Library
+**Source**: Removed from navbar — unimplemented page (`/blueprints`)  
+**Priority**: Not scoped — depends on Weapon Crafting (#29)
+
+A collection of saved weapon blueprints for the crafting system. Players save successful designs, share blueprints with others, and browse community-created weapon configurations. Only relevant once Weapon Crafting (#29) is implemented.
+
+**Dependencies**: Weapon Crafting System (#29).

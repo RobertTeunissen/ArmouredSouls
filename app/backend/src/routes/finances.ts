@@ -7,8 +7,8 @@ import {
   calculateDailyPassiveIncome,
   getPrestigeMultiplier,
   generatePerRobotFinancialReport,
-  calculateFacilityROI,
 } from '../utils/economyCalculations';
+import { unifiedFacilityROIService } from '../services/economy/unifiedFacilityROIService';
 import { AuthError, AuthErrorCode } from '../errors/authErrors';
 import { EconomyError, EconomyErrorCode } from '../errors/economyErrors';
 import { validateRequest } from '../middleware/schemaValidator';
@@ -222,7 +222,7 @@ router.post('/roi-calculator', authenticateToken, validateRequest({ body: roiCal
       );
     }
 
-    const roiData = await calculateFacilityROI(userId, facilityType, targetLevel);
+    const roiData = await unifiedFacilityROIService.calculateProjectedROI(userId, facilityType, targetLevel);
 
     res.json(roiData);
 });

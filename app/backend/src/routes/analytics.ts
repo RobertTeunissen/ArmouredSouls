@@ -16,7 +16,7 @@ import type { LeaderboardOptions } from '../services/analytics/robotStatsViewSer
 import { getCurrentCycle } from '../services/analytics/cycleAnalyticsService';
 import { getStableSummary } from '../services/analytics/stableAnalyticsService';
 import { getLeaderboardWithTotal } from '../services/analytics/leaderboardAnalyticsService';
-import { getAllFacilityROIs } from '../services/analytics/facilityAnalyticsService';
+import { unifiedFacilityROIService } from '../services/economy/unifiedFacilityROIService';
 import { getKothPerformance } from '../services/analytics/kothAnalyticsService';
 import { calculateEloMovingAverage, calculateTrendLine } from '../services/analytics/trendHelpers';
 import prisma from '../lib/prisma';
@@ -288,7 +288,6 @@ router.post('/stats/refresh', validateRequest({}), async (_req: Request, res: Re
 
 /** GET /api/analytics/facility/:userId/roi */
 router.get('/facility/:userId/roi', validateRequest({ params: userIdParamsSchema }), async (req: Request, res: Response) => {
-  const { roiCalculatorService } = await import('../services/economy/roiCalculatorService');
   const userId = parseInt(String(req.params.userId));
   if (isNaN(userId)) throw new AppError('INVALID_USER_ID', 'userId must be a valid integer', 400);
 
@@ -300,10 +299,23 @@ router.get('/facility/:userId/roi', validateRequest({ params: userIdParamsSchema
 
   await requireUserExists(userId);
 
-  const roi = await roiCalculatorService.calculateFacilityROI(userId, facilityType);
-  if (!roi) throw new EconomyError(EconomyErrorCode.FACILITY_NOT_FOUND, `User ${userId} has not purchased ${facilityType} or no purchase event found`, 404);
+  const roi = await unifiedFacilityROIService.calculateFacilityROI(userId, facilityType);
+  if (!roi) {
+    throw new EconomyError(EconomyErrorCode.FACILITY_NOT_FOUND, 'Facility not owned or not an economic facility', 404);
+  }
 
   return res.json(roi);
+});
+
+/** GET /api/analytics/facility/:userId/roi/all-economic */
+router.get('/facility/:userId/roi/all-economic', validateRequest({ params: userIdParamsSchema }), async (req: Request, res: Response) => {
+  const userId = parseInt(String(req.params.userId));
+  if (isNaN(userId)) throw new AppError('INVALID_USER_ID', 'userId must be a valid integer', 400);
+
+  await requireUserExists(userId);
+
+  const result = await unifiedFacilityROIService.calculateAllEconomicROIs(userId);
+  return res.json(result);
 });
 
 /** GET /api/analytics/facility/:userId/roi/all */
@@ -312,7 +324,7 @@ router.get('/facility/:userId/roi/all', validateRequest({ params: userIdParamsSc
   if (isNaN(userId)) throw new AppError('INVALID_USER_ID', 'userId must be a valid integer', 400);
   await requireUserExists(userId);
 
-  const result = await getAllFacilityROIs(userId);
+  const result = await unifiedFacilityROIService.calculateAllEconomicROIs(userId);
   return res.json(result);
 });
 
@@ -322,15 +334,9 @@ router.get('/facility/:userId/recommendations', validateRequest({ params: userId
   const userId = parseInt(String(req.params.userId));
   if (isNaN(userId)) throw new AppError('INVALID_USER_ID', 'userId must be a valid number', 400);
 
-  const lastNCyclesParam = req.query.lastNCycles as string;
-  const lastNCycles = lastNCyclesParam ? parseInt(lastNCyclesParam) : 10;
-  if (lastNCyclesParam && (isNaN(lastNCycles) || lastNCycles < 1)) {
-    throw new AppError('INVALID_PARAMETER', 'lastNCycles must be a positive number', 400);
-  }
-
   await requireUserExists(userId);
 
-  const recommendations = await facilityRecommendationService.generateRecommendations(userId, lastNCycles);
+  const recommendations = await facilityRecommendationService.generateRecommendations(userId);
   return res.json(recommendations);
 });
 

@@ -1,6 +1,6 @@
 import prisma from '../../lib/prisma';
 import { getFacilityConfig, FACILITY_TYPES } from '../../config/facilities';
-import { roiCalculatorService, FacilityROI } from './roiCalculatorService';
+import { unifiedFacilityROIService, UnifiedFacilityROI } from './unifiedFacilityROIService';
 import { AuthError, AuthErrorCode } from '../../errors/authErrors';
 import type { User } from '../../../generated/prisma';
 import type { StableMetric } from '../../types/snapshotTypes';
@@ -31,11 +31,10 @@ export interface RecommendationSummary {
 
 export class FacilityRecommendationService {
   /**
-   * Generate facility recommendations for a user based on last N cycles
+   * Generate facility recommendations for a user based on lifetime data
    */
   async generateRecommendations(
-    userId: number,
-    lastNCycles: number = 10
+    userId: number
   ): Promise<RecommendationSummary> {
     // Get user info
     const user = await prisma.user.findUnique({
@@ -51,7 +50,7 @@ export class FacilityRecommendationService {
       where: { id: 1 },
     });
     const currentCycle = currentCycleMetadata?.totalCycles || 0;
-    const startCycle = Math.max(1, currentCycle - lastNCycles + 1);
+    const startCycle = 1; // Use lifetime data
 
     // Get user's current facilities
     const userFacilities = await prisma.facility.findMany({
@@ -62,10 +61,11 @@ export class FacilityRecommendationService {
       userFacilities.map((f) => [f.facilityType, f.level])
     );
 
-    // Calculate ROI for existing facilities
-    const existingROIs = await roiCalculatorService.calculateAllFacilityROIs(userId);
+    // Calculate ROI for existing economic facilities using unified service
+    const allEconomicROIs = await unifiedFacilityROIService.calculateAllEconomicROIs(userId);
+    const existingROIs = allEconomicROIs.facilities;
 
-    // Analyze user's activity in the last N cycles
+    // Analyze user's activity using lifetime data
     const activityMetrics = await this.analyzeUserActivity(
       userId,
       startCycle,
@@ -124,7 +124,7 @@ export class FacilityRecommendationService {
       analysisWindow: {
         startCycle,
         endCycle: currentCycle,
-        cycleCount: lastNCycles,
+        cycleCount: Math.max(1, currentCycle),
       },
     };
   }
@@ -225,7 +225,7 @@ export class FacilityRecommendationService {
     currentLevel: number,
     nextLevel: number,
     activityMetrics: ActivityMetrics,
-    existingROIs: FacilityROI[],
+    existingROIs: UnifiedFacilityROI[],
     user: User
   ): Promise<FacilityRecommendation | null> {
     const config = getFacilityConfig(facilityType);

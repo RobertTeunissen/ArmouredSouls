@@ -51,9 +51,6 @@ export type { StableSummary } from './stableAnalyticsService';
 export { getLeaderboardWithTotal } from './leaderboardAnalyticsService';
 export type { LeaderboardResult } from './leaderboardAnalyticsService';
 
-export { getAllFacilityROIs } from './facilityAnalyticsService';
-export type { AllFacilityROIResult } from './facilityAnalyticsService';
-
 export { getKothPerformance } from './kothAnalyticsService';
 export type { KothPerformance } from './kothAnalyticsService';
 
