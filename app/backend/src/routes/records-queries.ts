@@ -11,233 +11,330 @@ export const userSelect = {
   stableName: true,
 };
 
-const robotUserInclude = { user: { select: userSelect } };
-const battleInclude = {
-  robot1: { include: robotUserInclude },
-  robot2: { include: robotUserInclude },
+const participantInclude = {
+  robot: { include: { user: { select: userSelect } } },
 };
 
 const byeRobotFilter = { NOT: { name: 'Bye Robot' as const } };
 
-// ─── Battle helper ──────────────────────────────────────────────────
+// ─── Participant-based battle helpers ───────────────────────────────
 
-type BattleWithRobots = Awaited<ReturnType<typeof prisma.battle.findMany<{ include: typeof battleInclude }>>>[number];
-
-function mapBattleWinnerLoser(battle: BattleWithRobots) {
-  const isR1Winner = battle.winnerId === battle.robot1Id;
-  const winner = isR1Winner ? battle.robot1 : battle.robot2;
-  const loser = isR1Winner ? battle.robot2 : battle.robot1;
-  return {
-    winner: { id: winner.id, name: winner.name, username: getUserDisplayName(winner.user) },
-    loser: { id: loser.id, name: loser.name, username: getUserDisplayName(loser.user) },
-  };
+interface ParticipantWithRobot {
+  robotId: number;
+  eloBefore: number;
+  eloAfter: number;
+  damageDealt: number;
+  finalHP: number;
+  destroyed: boolean;
+  yielded: boolean;
+  robot: { id: number; name: string; user: { username: string; stableName?: string | null } };
 }
+
+interface BattleWithParticipants {
+  id: number;
+  winnerId: number | null;
+  durationSeconds: number;
+  battleType: string;
+  createdAt: Date;
+  participants: ParticipantWithRobot[];
+}
+
+function getWinnerAndLoser(battle: BattleWithParticipants) {
+  const winner = battle.participants.find(p => p.robotId === battle.winnerId);
+  const loser = battle.participants.find(p => p.robotId !== battle.winnerId);
+  return { winner, loser };
+}
+
+function mapParticipantDisplay(p: ParticipantWithRobot) {
+  return { id: p.robot.id, name: p.robot.name, username: getUserDisplayName(p.robot.user) };
+}
+
+// Standard include for battle queries using participants
+const battleWithParticipantsInclude = {
+  participants: {
+    include: { robot: { include: { user: { select: userSelect } } } },
+  },
+};
 
 // ─── Combat Records ─────────────────────────────────────────────────
 
 export async function fetchCombatRecords() {
+  // Combat records only consider 1v1 battles (league/tournament) to avoid
+  // multi-participant ambiguity in winner/loser assignment
+  const oneVsOneFilter = { winnerId: { not: null }, battleType: { in: ['league', 'tournament'] } };
+
   const fastestVictories = await prisma.battle.findMany({
-    where: { winnerId: { not: null }, durationSeconds: { gt: 0 } },
+    where: { ...oneVsOneFilter, durationSeconds: { gt: 0 } },
     orderBy: { durationSeconds: 'asc' },
     take: 10,
-    include: battleInclude,
+    include: battleWithParticipantsInclude,
   });
 
   const longestBattles = await prisma.battle.findMany({
-    where: { winnerId: { not: null } },
+    where: oneVsOneFilter,
     orderBy: { durationSeconds: 'desc' },
     take: 10,
-    include: battleInclude,
+    include: battleWithParticipantsInclude,
   });
 
-  // Most Damage in Single Battle
+  // Most Damage in Single Battle (1v1 only for clean opponent display)
   const battleParticipants = await prisma.battleParticipant.findMany({
-    select: {
-      battleId: true,
-      robotId: true,
-      damageDealt: true,
-      battle: { select: { id: true, durationSeconds: true, createdAt: true } },
-    },
+    where: { battle: { battleType: { in: ['league', 'tournament'] } } },
     orderBy: { damageDealt: 'desc' },
     take: 10,
-  });
-
-  const damagesBattleIds = [...new Set(battleParticipants.map(p => p.battleId))];
-  const damagesBattles = await prisma.battle.findMany({
-    where: { id: { in: damagesBattleIds } },
-    include: battleInclude,
-  });
-  const damagesBattleMap = new Map(damagesBattles.map(b => [b.id, b]));
-
-  const mostDamageDataList = [];
-  for (const participant of battleParticipants) {
-    const battle = damagesBattleMap.get(participant.battleId);
-    if (battle) {
-      const robot = participant.robotId === battle.robot1Id ? battle.robot1 : battle.robot2;
-      const opponent = participant.robotId === battle.robot1Id ? battle.robot2 : battle.robot1;
-      mostDamageDataList.push({ battle, damageDealt: participant.damageDealt, robotId: participant.robotId, robot, opponent });
-    }
-  }
-
-  // Narrowest Victory
-  const narrowestParticipants = await prisma.battleParticipant.findMany({
-    where: { finalHP: { gt: 0 }, battle: { winnerId: { not: null } } },
-    select: {
-      battleId: true, robotId: true, finalHP: true,
-      battle: { select: { winnerId: true, robot1Id: true, robot2Id: true } },
+    include: {
+      robot: { include: { user: { select: userSelect } } },
+      battle: {
+        include: battleWithParticipantsInclude,
+      },
     },
   });
 
-  const winnerParticipants = narrowestParticipants
-    .filter(p => p.battle.winnerId === p.robotId)
-    .sort((a, b) => a.finalHP - b.finalHP)
-    .slice(0, 10);
-
-  const narrowBattleIds = [...new Set(winnerParticipants.map(p => p.battleId))];
-  const narrowBattles = await prisma.battle.findMany({
-    where: { id: { in: narrowBattleIds } },
-    include: battleInclude,
+  const mostDamageDataList = battleParticipants.map(participant => {
+    const opponent = participant.battle.participants.find(p => p.robotId !== participant.robotId);
+    return {
+      battleId: participant.battle.id,
+      damageDealt: participant.damageDealt,
+      robot: { id: participant.robot.id, name: participant.robot.name, username: getUserDisplayName(participant.robot.user) },
+      opponent: opponent
+        ? { id: opponent.robot.id, name: opponent.robot.name, username: getUserDisplayName(opponent.robot.user) }
+        : { id: 0, name: 'Unknown', username: '' },
+      durationSeconds: participant.battle.durationSeconds,
+      date: participant.battle.createdAt,
+    };
   });
-  const narrowBattleMap = new Map(narrowBattles.map(b => [b.id, b]));
 
-  const narrowestVictories = [];
-  for (const participant of winnerParticipants) {
-    const battle = narrowBattleMap.get(participant.battleId);
-    if (battle) narrowestVictories.push({ battle, remainingHP: participant.finalHP });
-  }
+  // Narrowest Victory — winners with lowest finalHP (1v1 only)
+  const narrowWinners = await prisma.battleParticipant.findMany({
+    where: {
+      finalHP: { gt: 0 },
+      battle: { winnerId: { not: null }, battleType: { in: ['league', 'tournament'] } },
+    },
+    orderBy: { finalHP: 'asc' },
+    take: 50, // Fetch extra to filter for actual winners
+    include: {
+      robot: { include: { user: { select: userSelect } } },
+      battle: {
+        select: { id: true, winnerId: true, durationSeconds: true, createdAt: true,
+          participants: { include: participantInclude } },
+      },
+    },
+  });
+
+  // Filter to only actual winners
+  const narrowestVictories = narrowWinners
+    .filter(p => p.battle.winnerId === p.robotId)
+    .slice(0, 10)
+    .map(p => {
+      const loser = p.battle.participants.find(op => op.robotId !== p.robotId);
+      return {
+        battleId: p.battle.id,
+        remainingHP: p.finalHP,
+        winner: { id: p.robot.id, name: p.robot.name, username: getUserDisplayName(p.robot.user) },
+        loser: loser
+          ? { id: loser.robot.id, name: loser.robot.name, username: getUserDisplayName(loser.robot.user) }
+          : { id: 0, name: 'Unknown', username: '' },
+        date: p.battle.createdAt,
+      };
+    });
 
   return {
-    fastestVictory: fastestVictories.map(battle => ({
-      battleId: battle.id, durationSeconds: battle.durationSeconds,
-      ...mapBattleWinnerLoser(battle), date: battle.createdAt,
-    })),
-    longestBattle: longestBattles.map(battle => ({
-      battleId: battle.id, durationSeconds: battle.durationSeconds,
-      ...mapBattleWinnerLoser(battle), date: battle.createdAt,
-    })),
-    mostDamageInBattle: mostDamageDataList.map(data => ({
-      battleId: data.battle?.id, damageDealt: data.damageDealt,
-      robot: { id: data.robot?.id, name: data.robot?.name, username: data.robot?.user ? getUserDisplayName(data.robot.user) : '' },
-      opponent: { id: data.opponent?.id, name: data.opponent?.name, username: data.opponent?.user ? getUserDisplayName(data.opponent.user) : '' },
-      durationSeconds: data.battle?.durationSeconds, date: data.battle?.createdAt,
-    })),
-    narrowestVictory: narrowestVictories.map(data => ({
-      battleId: data.battle.id, remainingHP: data.remainingHP,
-      ...mapBattleWinnerLoser(data.battle), date: data.battle.createdAt,
-    })),
+    fastestVictory: fastestVictories.map(battle => {
+      const { winner, loser } = getWinnerAndLoser(battle);
+      return {
+        battleId: battle.id, durationSeconds: battle.durationSeconds,
+        winner: winner ? mapParticipantDisplay(winner) : { id: 0, name: 'Unknown', username: '' },
+        loser: loser ? mapParticipantDisplay(loser) : { id: 0, name: 'Unknown', username: '' },
+        date: battle.createdAt,
+      };
+    }),
+    longestBattle: longestBattles.map(battle => {
+      const { winner, loser } = getWinnerAndLoser(battle);
+      return {
+        battleId: battle.id, durationSeconds: battle.durationSeconds,
+        winner: winner ? mapParticipantDisplay(winner) : { id: 0, name: 'Unknown', username: '' },
+        loser: loser ? mapParticipantDisplay(loser) : { id: 0, name: 'Unknown', username: '' },
+        date: battle.createdAt,
+      };
+    }),
+    mostDamageInBattle: mostDamageDataList,
+    narrowestVictory: narrowestVictories,
   };
 }
 
 // ─── Upset Records ──────────────────────────────────────────────────
 
 export async function fetchUpsetRecords() {
-  const allBattlesForUpset = await prisma.battle.findMany({
-    where: { winnerId: { not: null } },
-    select: { id: true, winnerId: true, robot1Id: true, robot2Id: true, robot1ELOBefore: true, robot2ELOBefore: true },
-  });
+  // Find upsets via BattleParticipant: winner had lower eloBefore than loser.
+  // Only considers 1v1 battles (league/tournament) to avoid multi-participant ambiguity.
+  const upsetRows = await prisma.$queryRaw<Array<{ battle_id: number; upset_diff: number }>>`
+    SELECT
+      w."battle_id",
+      (l."elo_before" - w."elo_before") AS upset_diff
+    FROM "battle_participants" w
+    JOIN "battle_participants" l ON w."battle_id" = l."battle_id" AND w."robot_id" != l."robot_id"
+    JOIN "battles" b ON b.id = w."battle_id"
+    WHERE b."winner_id" = w."robot_id"
+      AND w."elo_before" < l."elo_before"
+      AND b."battle_type" IN ('league', 'tournament')
+    ORDER BY upset_diff DESC
+    LIMIT 10
+  `;
 
-  const upsetBattles: { battleId: number; upsetDiff: number }[] = [];
-  for (const battle of allBattlesForUpset) {
-    const winnerELO = battle.winnerId === battle.robot1Id ? battle.robot1ELOBefore : battle.robot2ELOBefore;
-    const loserELO = battle.winnerId === battle.robot1Id ? battle.robot2ELOBefore : battle.robot1ELOBefore;
-    if (winnerELO < loserELO) {
-      upsetBattles.push({ battleId: battle.id, upsetDiff: loserELO - winnerELO });
-    }
-  }
-  upsetBattles.sort((a, b) => b.upsetDiff - a.upsetDiff);
-
-  const upsetBattleIds = upsetBattles.slice(0, 10).map(u => u.battleId);
-  const upsetBattlesData = await prisma.battle.findMany({
-    where: { id: { in: upsetBattleIds } },
-    include: battleInclude,
-  });
+  const upsetBattleIds = upsetRows.map(u => u.battle_id);
+  const upsetBattlesData = upsetBattleIds.length > 0
+    ? await prisma.battle.findMany({
+        where: { id: { in: upsetBattleIds } },
+        include: battleWithParticipantsInclude,
+      })
+    : [];
   const upsetBattleMap = new Map(upsetBattlesData.map(b => [b.id, b]));
 
-  const biggestUpsets = [];
-  for (const upset of upsetBattles.slice(0, 10)) {
-    const battle = upsetBattleMap.get(upset.battleId);
-    if (battle) biggestUpsets.push({ battle, upsetDiff: upset.upsetDiff });
-  }
-
-  const biggestEloGains = await prisma.battle.findMany({
-    where: { winnerId: { not: null }, eloChange: { gt: 0 } },
-    orderBy: { eloChange: 'desc' }, take: 10, include: battleInclude,
-  });
-
-  const biggestEloLosses = await prisma.battle.findMany({
-    where: { winnerId: { not: null }, eloChange: { gt: 0 } },
-    orderBy: { eloChange: 'desc' }, take: 10, include: battleInclude,
-  });
-
-  return {
-    biggestUpset: biggestUpsets.map(data => {
-      const isR1Winner = data.battle.winnerId === data.battle.robot1Id;
-      const underdog = isR1Winner ? data.battle.robot1 : data.battle.robot2;
-      const favorite = isR1Winner ? data.battle.robot2 : data.battle.robot1;
+  const biggestUpsets = upsetRows
+    .map(upset => {
+      const battle = upsetBattleMap.get(upset.battle_id);
+      if (!battle) return null;
+      const winner = battle.participants.find(p => p.robotId === battle.winnerId);
+      const loser = battle.participants.find(p => p.robotId !== battle.winnerId);
+      if (!winner || !loser) return null;
       return {
-        battleId: data.battle.id, eloDifference: data.upsetDiff,
+        battleId: battle.id,
+        eloDifference: Number(upset.upset_diff),
         underdog: {
-          id: underdog.id, name: underdog.name, username: getUserDisplayName(underdog.user),
-          eloBefore: isR1Winner ? data.battle.robot1ELOBefore : data.battle.robot2ELOBefore,
+          id: winner.robot.id, name: winner.robot.name, username: getUserDisplayName(winner.robot.user),
+          eloBefore: winner.eloBefore,
         },
         favorite: {
-          id: favorite.id, name: favorite.name, username: getUserDisplayName(favorite.user),
-          eloBefore: isR1Winner ? data.battle.robot2ELOBefore : data.battle.robot1ELOBefore,
+          id: loser.robot.id, name: loser.robot.name, username: getUserDisplayName(loser.robot.user),
+          eloBefore: loser.eloBefore,
         },
-        date: data.battle.createdAt,
+        date: battle.createdAt,
       };
-    }),
-    biggestEloGain: biggestEloGains.map(battle => {
-      const isR1Winner = battle.winnerId === battle.robot1Id;
-      const winner = isR1Winner ? battle.robot1 : battle.robot2;
-      const loser = isR1Winner ? battle.robot2 : battle.robot1;
+    })
+    .filter((u): u is NonNullable<typeof u> => u !== null);
+
+  // Biggest ELO gains — use raw SQL to sort by computed ELO difference
+  const eloGainRows = await prisma.$queryRaw<Array<{ battle_id: number; robot_id: number; elo_gain: number }>>`
+    SELECT "battle_id", "robot_id", ("elo_after" - "elo_before") AS elo_gain
+    FROM "battle_participants"
+    WHERE "elo_after" > "elo_before"
+    ORDER BY elo_gain DESC
+    LIMIT 10
+  `;
+
+  const gainBattleIds = eloGainRows.map(r => r.battle_id);
+  const gainBattles = gainBattleIds.length > 0
+    ? await prisma.battle.findMany({
+        where: { id: { in: gainBattleIds } },
+        include: battleWithParticipantsInclude,
+      })
+    : [];
+  const gainBattleMap = new Map(gainBattles.map(b => [b.id, b]));
+
+  const biggestEloGain = eloGainRows
+    .map(row => {
+      const battle = gainBattleMap.get(row.battle_id);
+      if (!battle) return null;
+      const winner = battle.participants.find(p => p.robotId === row.robot_id);
+      const loser = battle.participants.find(p => p.robotId !== row.robot_id);
+      if (!winner) return null;
       return {
-        battleId: battle.id, eloChange: battle.eloChange,
+        battleId: battle.id,
+        eloChange: Number(row.elo_gain),
         winner: {
-          id: winner.id, name: winner.name, username: getUserDisplayName(winner.user),
-          eloBefore: isR1Winner ? battle.robot1ELOBefore : battle.robot2ELOBefore,
-          eloAfter: isR1Winner ? battle.robot1ELOAfter : battle.robot2ELOAfter,
+          id: winner.robot.id, name: winner.robot.name, username: getUserDisplayName(winner.robot.user),
+          eloBefore: winner.eloBefore, eloAfter: winner.eloAfter,
         },
-        loser: {
-          id: loser.id, name: loser.name, username: getUserDisplayName(loser.user),
-          eloBefore: isR1Winner ? battle.robot2ELOBefore : battle.robot1ELOBefore,
-        },
+        loser: loser
+          ? { id: loser.robot.id, name: loser.robot.name, username: getUserDisplayName(loser.robot.user), eloBefore: loser.eloBefore }
+          : undefined,
         date: battle.createdAt,
       };
-    }),
-    biggestEloLoss: biggestEloLosses.map(battle => {
-      const isR1Winner = battle.winnerId === battle.robot1Id;
-      const loser = isR1Winner ? battle.robot2 : battle.robot1;
-      const winner = isR1Winner ? battle.robot1 : battle.robot2;
+    })
+    .filter((u): u is NonNullable<typeof u> => u !== null);
+
+  // Biggest ELO losses
+  const eloLossRows = await prisma.$queryRaw<Array<{ battle_id: number; robot_id: number; elo_loss: number }>>`
+    SELECT "battle_id", "robot_id", ("elo_before" - "elo_after") AS elo_loss
+    FROM "battle_participants"
+    WHERE "elo_after" < "elo_before"
+    ORDER BY elo_loss DESC
+    LIMIT 10
+  `;
+
+  const lossBattleIds = eloLossRows.map(r => r.battle_id);
+  const lossBattles = lossBattleIds.length > 0
+    ? await prisma.battle.findMany({
+        where: { id: { in: lossBattleIds } },
+        include: battleWithParticipantsInclude,
+      })
+    : [];
+  const lossBattleMap = new Map(lossBattles.map(b => [b.id, b]));
+
+  const biggestEloLoss = eloLossRows
+    .map(row => {
+      const battle = lossBattleMap.get(row.battle_id);
+      if (!battle) return null;
+      const loser = battle.participants.find(p => p.robotId === row.robot_id);
+      const winner = battle.participants.find(p => p.robotId !== row.robot_id);
+      if (!loser) return null;
       return {
-        battleId: battle.id, eloChange: battle.eloChange,
+        battleId: battle.id,
+        eloChange: Number(row.elo_loss),
         loser: {
-          id: loser.id, name: loser.name, username: getUserDisplayName(loser.user),
-          eloBefore: isR1Winner ? battle.robot2ELOBefore : battle.robot1ELOBefore,
-          eloAfter: isR1Winner ? battle.robot2ELOAfter : battle.robot1ELOAfter,
+          id: loser.robot.id, name: loser.robot.name, username: getUserDisplayName(loser.robot.user),
+          eloBefore: loser.eloBefore, eloAfter: loser.eloAfter,
         },
-        winner: { id: winner.id, name: winner.name, username: getUserDisplayName(winner.user) },
+        winner: winner
+          ? { id: winner.robot.id, name: winner.robot.name, username: getUserDisplayName(winner.robot.user) }
+          : undefined,
         date: battle.createdAt,
       };
-    }),
+    })
+    .filter((u): u is NonNullable<typeof u> => u !== null);
+
+  return {
+    biggestUpset: biggestUpsets,
+    biggestEloGain,
+    biggestEloLoss,
   };
 }
 
 // ─── Career Records ─────────────────────────────────────────────────
 
 export async function fetchCareerRecords() {
+  const robotUserInclude = { user: { select: userSelect } };
+
   const mostBattlesRobots = await prisma.robot.findMany({
     where: byeRobotFilter, orderBy: { totalBattles: 'desc' }, take: 10, include: robotUserInclude,
   });
 
-  const highWinRateRobots = await prisma.robot.findMany({
-    where: { ...byeRobotFilter, totalBattles: { gte: 50 } },
-    select: { id: true, name: true, wins: true, totalBattles: true, elo: true, currentLeague: true, user: { select: userSelect } },
-  });
-  const robotsWithWinRate = highWinRateRobots
-    .map(r => ({ ...r, winRate: r.wins / r.totalBattles }))
-    .sort((a, b) => b.winRate - a.winRate)
-    .slice(0, 10);
+  // Highest win rate — use raw SQL to compute and sort at DB level
+  interface WinRateRow {
+    id: number;
+    name: string;
+    wins: number;
+    total_battles: number;
+    elo: number;
+    current_league: string;
+    username: string;
+    stable_name: string | null;
+  }
+  const winRateRows = await prisma.$queryRaw<WinRateRow[]>`
+    SELECT r.id, r.name, r.wins, r."total_battles", r.elo, r."current_league",
+           u.username, u."stable_name"
+    FROM "robots" r
+    JOIN "users" u ON u.id = r."user_id"
+    WHERE r.name != 'Bye Robot' AND r."total_battles" >= 50
+    ORDER BY (r.wins::float / r."total_battles") DESC
+    LIMIT 10
+  `;
+  const robotsWithWinRate = winRateRows.map(r => ({
+    id: r.id, name: r.name, wins: r.wins, totalBattles: r.total_battles,
+    elo: r.elo, currentLeague: r.current_league,
+    winRate: r.wins / r.total_battles,
+    user: { username: r.username, stableName: r.stable_name },
+  }));
 
   const mostLifetimeDamageRobots = await prisma.robot.findMany({
     where: byeRobotFilter, orderBy: { damageDealtLifetime: 'desc' }, take: 10, include: robotUserInclude,
@@ -284,6 +381,8 @@ export async function fetchCareerRecords() {
 // ─── Economic Records ───────────────────────────────────────────────
 
 export async function fetchEconomicRecords() {
+  const robotUserInclude = { user: { select: userSelect } };
+
   const highestFameRobots = await prisma.robot.findMany({
     where: byeRobotFilter, orderBy: { fame: 'desc' }, take: 10, include: robotUserInclude,
   });
@@ -341,6 +440,7 @@ export async function fetchPrestigeRecords() {
 // ─── KotH Records ───────────────────────────────────────────────────
 
 export async function fetchKothRecords(): Promise<Record<string, unknown> | undefined> {
+  const robotUserInclude = { user: { select: userSelect } };
   const kothWhere = { kothMatches: { gt: 0 }, ...byeRobotFilter };
 
   const [mostKothWins, highestAvgZoneScore, mostKothKills, longestKothWinStreak, mostZoneTime, bestKothPlacement, zoneDominators] =

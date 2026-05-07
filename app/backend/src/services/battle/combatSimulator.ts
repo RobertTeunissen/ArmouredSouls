@@ -182,6 +182,14 @@ export function clamp(value: number, min: number, max: number): number {
 }
 
 /**
+ * Round a time value to 1 decimal place without string conversion.
+ * Avoids the overhead of Number(value.toFixed(1)) which allocates a string.
+ */
+function roundTime(t: number): number {
+  return Math.round(t * 10) / 10;
+}
+
+/**
  * Get random value between min and max
  */
 export function random(min: number, max: number): number {
@@ -531,7 +539,7 @@ function calculateCounterChance(defender: RobotWithWeapons): { counterChance: nu
  * Regenerate shields based on power core
  */
 function regenerateShields(state: SpatialRobotCombatState, deltaTime: number, supportBoost: number = 0): number {
-  const regenPerSecond = Number(state.robot.powerCore) * 0.15;
+  const regenPerSecond = state.numPowerCore * 0.15;
   const stanceBonus = state.robot.stance === 'defensive' ? 1.20 : 1.0;
   let effectiveRegen = regenPerSecond * stanceBonus * deltaTime;
 
@@ -683,7 +691,7 @@ function performAttack(
 
   if (weaponMalfunctions) {
     events.push({
-      timestamp: Number(currentTime.toFixed(1)),
+      timestamp: roundTime(currentTime),
       type: 'malfunction',
       attacker: attackerName,
       defender: defenderName,
@@ -707,7 +715,7 @@ function performAttack(
     });
     // Update adaptation on miss (malfunction counts as miss for adaptation)
     const malfAdaptState = {
-      adaptiveAI: Number(attackerState.robot.adaptiveAI ?? 1),
+      adaptiveAI: attackerState.numAdaptiveAI,
       adaptationHitBonus: attackerState.adaptationHitBonus,
       adaptationDamageBonus: attackerState.adaptationDamageBonus,
       currentHP: attackerState.currentHP,
@@ -770,7 +778,7 @@ function performAttack(
     const backstabLabel = spatialContext.isBackstab ? ' 🗡️BACKSTAB!' : '';
 
     events.push({
-      timestamp: Number(currentTime.toFixed(1)),
+      timestamp: roundTime(currentTime),
       type: isCritical ? 'critical' : 'attack',
       attacker: attackerName,
       defender: defenderName,
@@ -812,7 +820,7 @@ function performAttack(
 
     // Update adaptation for defender (damage taken)
     const defAdaptState = {
-      adaptiveAI: Number(defenderState.robot.adaptiveAI ?? 1),
+      adaptiveAI: defenderState.numAdaptiveAI,
       adaptationHitBonus: defenderState.adaptationHitBonus,
       adaptationDamageBonus: defenderState.adaptationDamageBonus,
       currentHP: defenderState.currentHP,
@@ -831,7 +839,7 @@ function performAttack(
     ];
 
     events.push({
-      timestamp: Number(currentTime.toFixed(1)),
+      timestamp: roundTime(currentTime),
       type: 'miss',
       attacker: attackerName,
       defender: defenderName,
@@ -862,7 +870,7 @@ function performAttack(
 
     // Update adaptation for attacker (miss)
     const atkAdaptState = {
-      adaptiveAI: Number(attackerState.robot.adaptiveAI ?? 1),
+      adaptiveAI: attackerState.numAdaptiveAI,
       adaptationHitBonus: attackerState.adaptationHitBonus,
       adaptationDamageBonus: attackerState.adaptationDamageBonus,
       currentHP: attackerState.currentHP,
@@ -892,7 +900,7 @@ function performAttack(
   if (!counterResult.canCounter) {
     // Counter blocked by range
     events.push({
-      timestamp: Number(currentTime.toFixed(1)),
+      timestamp: roundTime(currentTime),
       type: 'counter_out_of_range',
       attacker: defenderName,
       defender: attackerName,
@@ -931,7 +939,7 @@ function performAttack(
     attackerState.totalDamageTaken += counterHP + counterShield;
 
     events.push({
-      timestamp: Number(currentTime.toFixed(1)),
+      timestamp: roundTime(currentTime),
       type: 'counter',
       attacker: defenderName,
       defender: attackerName,
@@ -965,7 +973,7 @@ function performAttack(
     });
   } else {
     events.push({
-      timestamp: Number(currentTime.toFixed(1)),
+      timestamp: roundTime(currentTime),
       type: 'counter',
       attacker: defenderName,
       defender: attackerName,
@@ -1023,6 +1031,14 @@ function initializeCombatState(
     offhandCooldown,
     totalDamageDealt: 0,
     totalDamageTaken: 0,
+    // Pre-computed numeric attributes (avoids Decimal→number per tick)
+    numServoMotors: servoMotors,
+    numGyroStabilizers: Number(robot.gyroStabilizers ?? 1),
+    numThreatAnalysis: Number(robot.threatAnalysis ?? 1),
+    numAdaptiveAI: Number(robot.adaptiveAI ?? 1),
+    numLogicCores: Number(robot.logicCores ?? 1),
+    numHydraulicSystems: Number(robot.hydraulicSystems ?? 0),
+    numPowerCore: Number(robot.powerCore ?? 1),
     // Spatial fields
     position: { x: spawnPosition.x, y: spawnPosition.y },
     facingDirection,
@@ -1093,6 +1109,7 @@ function buildSpatialContext(
   arena: ArenaConfig,
   allStates: SpatialRobotCombatState[],
   gameModeState?: SpatialGameModeState,
+  cachedPosSnapshot?: { positions: Record<string, Position>; facingDirections: Record<string, number> },
 ): {
   distance: number;
   rangeBand: RangeBand;
@@ -1119,15 +1136,15 @@ function buildSpatialContext(
   const weaponLike: WeaponLike | null = weapon ? { name: weapon.name, rangeBand: weapon.rangeBand as RangeBand } : null;
   const optimalRange = weaponLike ? getWeaponOptimalRange(weaponLike) : 'short';
   const rangePenaltyMult = getRangePenalty(optimalRange, rangeBand);
-  const hydraulicMult = calculateHydraulicBonus(Number(attacker.robot.hydraulicSystems ?? 0), rangeBand);
+  const hydraulicMult = calculateHydraulicBonus(attacker.numHydraulicSystems, rangeBand);
 
   const backstabResult = checkBackstab(
-    { position: attacker.position, facingDirection: attacker.facingDirection, gyroStabilizers: Number(attacker.robot.gyroStabilizers ?? 1), threatAnalysis: Number(attacker.robot.threatAnalysis ?? 1) },
-    { position: defender.position, facingDirection: defender.facingDirection, gyroStabilizers: Number(defender.robot.gyroStabilizers ?? 1), threatAnalysis: Number(defender.robot.threatAnalysis ?? 1) },
+    { position: attacker.position, facingDirection: attacker.facingDirection, gyroStabilizers: attacker.numGyroStabilizers, threatAnalysis: attacker.numThreatAnalysis },
+    { position: defender.position, facingDirection: defender.facingDirection, gyroStabilizers: defender.numGyroStabilizers, threatAnalysis: defender.numThreatAnalysis },
   );
 
   const adaptation = getEffectiveAdaptation({
-    adaptiveAI: Number(attacker.robot.adaptiveAI ?? 1),
+    adaptiveAI: attacker.numAdaptiveAI,
     adaptationHitBonus: attacker.adaptationHitBonus,
     adaptationDamageBonus: attacker.adaptationDamageBonus,
     currentHP: attacker.currentHP,
@@ -1135,7 +1152,7 @@ function buildSpatialContext(
   });
 
   const pressure = calculatePressureEffects({
-    logicCores: Number(attacker.robot.logicCores ?? 1),
+    logicCores: attacker.numLogicCores,
     currentHP: attacker.currentHP,
     maxHP: attacker.maxHP,
   });
@@ -1168,7 +1185,7 @@ function buildSpatialContext(
     combatAlgorithmScore: attacker.combatAlgorithmScore,
     syncVolleyBonus: syncBonus,
     formationDefenseBonus: formationBonus,
-    positionSnapshot: buildPositionSnapshot(...allStates),
+    positionSnapshot: cachedPosSnapshot ?? buildPositionSnapshot(...allStates),
     isBackstab: backstabResult.isBackstab,
     attackAngle: backstabResult.angle,
     passiveAccuracyPenalty,
@@ -1252,24 +1269,37 @@ export function simulateBattleMulti(
   let winnerId: number | null = null;
   let winReason: string | undefined;
 
-  // Create a proxy that auto-injects robotHP/robotShield maps on every event push.
-  // This ensures all events (including those from performAttack) have consistent HP/shield
-  // values keyed by robot name, avoiding the attacker/defender swap issue in 1v1 battles.
-  const events: SpatialCombatEvent[] = new Proxy(rawEvents, {
-    get(target, prop, receiver) {
-      if (prop === 'push') {
-        return (...args: SpatialCombatEvent[]): number => {
-          const snapshot = buildHPShieldSnapshot(states);
-          for (const evt of args) {
-            evt.robotHP = snapshot.robotHP;
-            evt.robotShield = snapshot.robotShield;
-          }
-          return target.push(...args);
-        };
-      }
-      return Reflect.get(target, prop, receiver);
-    },
-  });
+  // Pre-build index for O(1) lookups by teamIndex (replaces repeated linear scans)
+  const stateByTeamIndex = new Map<number, SpatialRobotCombatState>(
+    states.map(s => [s.teamIndex, s])
+  );
+
+  // Cached HP/shield snapshot to avoid rebuilding on every event push
+  let cachedHPSnapshot: { robotHP: Record<string, number>; robotShield: Record<string, number> } | null = null;
+  let hpSnapshotDirty = true;
+
+  function getHPSnapshot() {
+    if (hpSnapshotDirty || !cachedHPSnapshot) {
+      cachedHPSnapshot = buildHPShieldSnapshot(states);
+      hpSnapshotDirty = false;
+    }
+    return cachedHPSnapshot;
+  }
+
+  // Push helper that auto-injects robotHP/robotShield maps on every event.
+  // Uses cached snapshot to avoid rebuilding when HP hasn't changed.
+  // Direct function call is faster than Proxy trap in V8.
+  function pushEvent(...args: SpatialCombatEvent[]): number {
+    const snapshot = getHPSnapshot();
+    for (const evt of args) {
+      evt.robotHP = snapshot.robotHP;
+      evt.robotShield = snapshot.robotShield;
+    }
+    return rawEvents.push(...args);
+  }
+
+  // Array-like object passed to performAttack (which calls events.push internally)
+  const events = { push: pushEvent } as unknown as SpatialCombatEvent[];
 
   // Movement event throttling per robot
   const lastMoveEventTime: number[] = states.map(() => 0);
@@ -1304,8 +1334,26 @@ export function simulateBattleMulti(
   });
 
   // === 4. Main simulation loop ===
+  // Helper: round time to 1 decimal without string conversion
+  // (uses module-level roundTime defined above)
+
+  // Cached position snapshot — rebuilt once per tick after facing phase
+  let cachedPositionSnapshot: { positions: Record<string, Position>; facingDirections: Record<string, number> } | null = null;
+
+  /** Get or build position snapshot for this tick (cached after first call per tick) */
+  function getPositionSnapshot(): { positions: Record<string, Position>; facingDirections: Record<string, number> } {
+    if (!cachedPositionSnapshot) {
+      cachedPositionSnapshot = buildPositionSnapshot(...states);
+    }
+    return cachedPositionSnapshot;
+  }
+
   while (currentTime < maxDuration && !battleEnded) {
     currentTime += SIMULATION_TICK;
+    // Mark HP snapshot dirty at start of each tick (attacks may change HP/shield)
+    hpSnapshotDirty = true;
+    // Invalidate position snapshot (movement/facing phases will update positions)
+    cachedPositionSnapshot = null;
     const aliveStates = states.filter(s => s.isAlive);
     if (aliveStates.length <= 1 && !gameModeConfig?.winCondition) {
       battleEnded = true;
@@ -1335,7 +1383,7 @@ export function simulateBattleMulti(
 
         // Check if current target is still alive
         const currentTargetAlive = state.currentTarget !== null &&
-          states.some(s => s.teamIndex === state.currentTarget && s.isAlive);
+          (stateByTeamIndex.get(state.currentTarget)?.isAlive ?? false);
 
         let newTargetIdx: number | null = null;
         if (gameModeConfig?.targetPriority) {
@@ -1361,7 +1409,7 @@ export function simulateBattleMulti(
         }
         // else: keep current target (lock still active or same target selected)
 
-        target = states.find(s => s.teamIndex === state.currentTarget) ?? opponents[0];
+        target = stateByTeamIndex.get(state.currentTarget!) ?? opponents[0];
       } else {
         state.currentTarget = null;
       }
@@ -1382,7 +1430,7 @@ export function simulateBattleMulti(
       const weaponOptimalRangeMidpoint = RANGE_BAND_MIDPOINTS[weaponRangeBand as RangeBand] ?? 4.5;
       const distToTarget = target ? euclideanDistance(state.position, target.position) : 0;
       const servoState = {
-        servoMotors: Number(state.robot.servoMotors ?? 1),
+        servoMotors: state.numServoMotors,
         servoStrain: state.servoStrain,
         sustainedMovementTime: state.sustainedMovementTime,
         isUsingClosingBonus: state.isUsingClosingBonus,
@@ -1429,9 +1477,9 @@ export function simulateBattleMulti(
     // ── PHASE 2: FACING ──
     for (const state of aliveStates) {
       if (state.currentTarget === null) continue;
-      const target = states.find(s => s.teamIndex === state.currentTarget);
+      const target = stateByTeamIndex.get(state.currentTarget);
       if (!target) continue;
-      const turnSpeed = calculateTurnSpeed(Number(state.robot.gyroStabilizers ?? 1));
+      const turnSpeed = calculateTurnSpeed(state.numGyroStabilizers);
       const facingState = {
         position: state.position,
         facingDirection: state.facingDirection,
@@ -1440,7 +1488,7 @@ export function simulateBattleMulti(
       const opponentState = { position: target.position, velocity: target.velocity };
       updateFacing(
         facingState, target.position, SIMULATION_TICK,
-        opponentState, Number(state.robot.threatAnalysis ?? 1),
+        opponentState, state.numThreatAnalysis,
       );
       state.facingDirection = facingState.facingDirection;
     }
@@ -1448,7 +1496,7 @@ export function simulateBattleMulti(
     // ── Emit range transition events (per robot → target pair) ──
     for (const state of aliveStates) {
       if (state.currentTarget === null) continue;
-      const target = states.find(s => s.teamIndex === state.currentTarget);
+      const target = stateByTeamIndex.get(state.currentTarget);
       if (!target) continue;
       const dist = euclideanDistance(state.position, target.position);
       const currentBand = classifyRangeBand(dist);
@@ -1458,7 +1506,7 @@ export function simulateBattleMulti(
           lastMoveEventPos[state.teamIndex], target.position,
         ) ? 'closes to' : 'falls back to';
         events.push({
-          timestamp: Number(currentTime.toFixed(1)),
+          timestamp: roundTime(currentTime),
           type: 'range_transition',
           attacker: state.robot.name,
           defender: target.robot.name,
@@ -1467,7 +1515,7 @@ export function simulateBattleMulti(
           robot2HP: states[1]?.currentHP ?? 0,
           robot1Shield: states[0]?.currentShield ?? 0,
           robot2Shield: states[1]?.currentShield ?? 0,
-          ...buildPositionSnapshot(...states),
+          ...getPositionSnapshot(),
           distance: dist,
           rangeBand: currentBand,
         });
@@ -1480,7 +1528,7 @@ export function simulateBattleMulti(
 
     for (const state of aliveStates) {
       if (state.currentTarget === null) continue;
-      let target = states.find(s => s.teamIndex === state.currentTarget);
+      let target = stateByTeamIndex.get(state.currentTarget);
       if (!target || !target.isAlive) continue;
 
       let dist = euclideanDistance(state.position, target.position);
@@ -1499,19 +1547,24 @@ export function simulateBattleMulti(
         // Target-of-opportunity: if melee weapon can't reach primary target,
         // find the nearest in-range opponent to attack instead (FFA/KotH only)
         if (weaponLike && !canAttack(weaponLike, dist) && !forceAttack && n > 2) {
-          const nearestInRange = states
-            .filter(s => s !== state && s.isAlive && s.teamIndex !== state.teamIndex)
-            .map(s => ({ state: s, dist: euclideanDistance(state.position, s.position) }))
-            .filter(({ dist: d }) => canAttack(weaponLike, d))
-            .sort((a, b) => a.dist - b.dist)[0];
-          if (nearestInRange) {
-            target = nearestInRange.state;
-            dist = nearestInRange.dist;
+          let nearestDist = Infinity;
+          let nearestState: SpatialRobotCombatState | undefined;
+          for (const s of states) {
+            if (s === state || !s.isAlive || s.teamIndex === state.teamIndex) continue;
+            const d = euclideanDistance(state.position, s.position);
+            if (canAttack(weaponLike, d) && d < nearestDist) {
+              nearestDist = d;
+              nearestState = s;
+            }
+          }
+          if (nearestState) {
+            target = nearestState;
+            dist = nearestDist;
           }
         }
 
         if (!weaponLike || canAttack(weaponLike, dist) || forceAttack) {
-          const ctx = buildSpatialContext(state, target, 'main', currentTime, arena, states, gameModeState);
+          const ctx = buildSpatialContext(state, target, 'main', currentTime, arena, states, gameModeState, getPositionSnapshot());
           performAttack(
             state, target, state.robot.name, target.robot.name,
             currentTime, 'main', events, ctx,
@@ -1526,7 +1579,7 @@ export function simulateBattleMulti(
           if (!outOfRangeSuppressed.has(state.teamIndex)) {
             outOfRangeSuppressed.add(state.teamIndex);
             events.push({
-              timestamp: Number(currentTime.toFixed(1)),
+              timestamp: roundTime(currentTime),
               type: 'out_of_range',
               attacker: state.robot.name,
               defender: target.robot.name,
@@ -1536,7 +1589,7 @@ export function simulateBattleMulti(
               robot2HP: states[1]?.currentHP ?? 0,
               robot1Shield: states[0]?.currentShield ?? 0,
               robot2Shield: states[1]?.currentShield ?? 0,
-              ...buildPositionSnapshot(...states),
+              ...getPositionSnapshot(),
               distance: dist,
               rangeBand: classifyRangeBand(dist),
             });
@@ -1560,19 +1613,24 @@ export function simulateBattleMulti(
         let offTarget = target;
         let offDist = dist;
         if (!canAttack(offWeaponLike, offDist) && !(state.patienceTimer >= patienceLimit) && n > 2) {
-          const nearestInRange = states
-            .filter(s => s !== state && s.isAlive && s.teamIndex !== state.teamIndex)
-            .map(s => ({ state: s, dist: euclideanDistance(state.position, s.position) }))
-            .filter(({ dist: d }) => canAttack(offWeaponLike, d))
-            .sort((a, b) => a.dist - b.dist)[0];
-          if (nearestInRange) {
-            offTarget = nearestInRange.state;
-            offDist = nearestInRange.dist;
+          let nearestDist = Infinity;
+          let nearestState: SpatialRobotCombatState | undefined;
+          for (const s of states) {
+            if (s === state || !s.isAlive || s.teamIndex === state.teamIndex) continue;
+            const d = euclideanDistance(state.position, s.position);
+            if (canAttack(offWeaponLike, d) && d < nearestDist) {
+              nearestDist = d;
+              nearestState = s;
+            }
+          }
+          if (nearestState) {
+            offTarget = nearestState;
+            offDist = nearestDist;
           }
         }
 
         if (canAttack(offWeaponLike, offDist) || state.patienceTimer >= patienceLimit) {
-          const ctx = buildSpatialContext(state, offTarget, 'offhand', currentTime, arena, states, gameModeState);
+          const ctx = buildSpatialContext(state, offTarget, 'offhand', currentTime, arena, states, gameModeState, getPositionSnapshot());
           performAttack(
             state, offTarget, state.robot.name, offTarget.robot.name,
             currentTime, 'offhand', events, ctx,
@@ -1605,7 +1663,7 @@ export function simulateBattleMulti(
         const newPct = Math.floor((state.currentShield / state.maxShield) * 4);
         if (newPct > oldPct) {
           events.push({
-            timestamp: Number(currentTime.toFixed(1)),
+            timestamp: roundTime(currentTime),
             type: 'shield_regen',
             attacker: state.robot.name,
             robot1HP: states[0]?.currentHP ?? 0,
@@ -1613,7 +1671,7 @@ export function simulateBattleMulti(
             robot1Shield: states[0]?.currentShield ?? 0,
             robot2Shield: states[1]?.currentShield ?? 0,
             message: `🛡️⚡ ${state.robot.name}'s shields regenerate to ${Math.round((state.currentShield / state.maxShield) * 100)}%`,
-            ...buildPositionSnapshot(...states),
+            ...getPositionSnapshot(),
           });
         }
       }
@@ -1628,14 +1686,14 @@ export function simulateBattleMulti(
         state.isAlive = false;
         destroyedThisTick.add(state.teamIndex);
         events.push({
-          timestamp: Number(currentTime.toFixed(1)),
+          timestamp: roundTime(currentTime),
           type: 'destroyed',
           message: `💀 ${state.robot.name} destroyed!`,
           robot1HP: states[0]?.currentHP ?? 0,
           robot2HP: states[1]?.currentHP ?? 0,
           robot1Shield: states[0]?.currentShield ?? 0,
           robot2Shield: states[1]?.currentShield ?? 0,
-          ...buildPositionSnapshot(...states),
+          ...getPositionSnapshot(),
         });
       }
     }
@@ -1649,14 +1707,14 @@ export function simulateBattleMulti(
         if (shouldYield(state)) {
           state.isAlive = false;
           events.push({
-            timestamp: Number(currentTime.toFixed(1)),
+            timestamp: roundTime(currentTime),
             type: 'yield',
             message: `🏳️ ${state.robot.name} yields at ${((state.currentHP / state.maxHP) * 100).toFixed(0)}% HP!`,
             robot1HP: states[0]?.currentHP ?? 0,
             robot2HP: states[1]?.currentHP ?? 0,
             robot1Shield: states[0]?.currentShield ?? 0,
             robot2Shield: states[1]?.currentShield ?? 0,
-            ...buildPositionSnapshot(...states),
+            ...getPositionSnapshot(),
           });
         }
       }
@@ -1702,14 +1760,14 @@ export function simulateBattleMulti(
           winnerId = alive[0].robot.id;
           battleEnded = true;
           events.push({
-            timestamp: Number(currentTime.toFixed(1)),
+            timestamp: roundTime(currentTime),
             type: 'destroyed',
             message: `🏆 ${alive[0].robot.name} wins!`,
             robot1HP: states[0]?.currentHP ?? 0,
             robot2HP: states[1]?.currentHP ?? 0,
             robot1Shield: states[0]?.currentShield ?? 0,
             robot2Shield: states[1]?.currentShield ?? 0,
-            ...buildPositionSnapshot(...states),
+            ...getPositionSnapshot(),
           });
         } else if (alive.length === 0 && !config.allowDraws) {
           // Mutual destruction/yield: use HP tiebreaker (highest HP% wins)
@@ -1718,14 +1776,14 @@ export function simulateBattleMulti(
           battleEnded = true;
           const pct = ((sorted[0].currentHP / sorted[0].maxHP) * 100).toFixed(1);
           events.push({
-            timestamp: Number(currentTime.toFixed(1)),
+            timestamp: roundTime(currentTime),
             type: 'yield',
             message: `⚔️ Mutual takedown! ${sorted[0].robot.name} wins by HP tiebreaker (${pct}%)`,
             robot1HP: states[0]?.currentHP ?? 0,
             robot2HP: states[1]?.currentHP ?? 0,
             robot1Shield: states[0]?.currentShield ?? 0,
             robot2Shield: states[1]?.currentShield ?? 0,
-            ...buildPositionSnapshot(...states),
+            ...getPositionSnapshot(),
           });
         } else {
           // All eliminated and draws allowed — draw
@@ -1744,15 +1802,20 @@ export function simulateBattleMulti(
         const moveTime = currentTime - lastMoveEventTime[i];
         if ((moveDist >= MOVEMENT_EVENT_THRESHOLD || moveTime >= MOVEMENT_EVENT_MIN_INTERVAL)
             && moveDist > 0.01) {
-          const nearestOpp = states
-            .filter(s => s !== state && s.isAlive)
-            .sort((a, b) =>
-              euclideanDistance(state.position, a.position) - euclideanDistance(state.position, b.position),
-            )[0];
-          const distToNearest = nearestOpp
-            ? euclideanDistance(state.position, nearestOpp.position) : 0;
+          // Find nearest opponent with single pass (avoids filter + sort + array allocation)
+          let nearestOpp: SpatialRobotCombatState | undefined;
+          let distToNearest = Infinity;
+          for (const s of states) {
+            if (s === state || !s.isAlive) continue;
+            const d = euclideanDistance(state.position, s.position);
+            if (d < distToNearest) {
+              distToNearest = d;
+              nearestOpp = s;
+            }
+          }
+          if (!nearestOpp) distToNearest = 0;
           events.push({
-            timestamp: Number(currentTime.toFixed(1)),
+            timestamp: roundTime(currentTime),
             type: 'movement',
             attacker: state.robot.name,
             defender: nearestOpp?.robot.name,
@@ -1761,7 +1824,7 @@ export function simulateBattleMulti(
             robot2HP: states[1]?.currentHP ?? 0,
             robot1Shield: states[0]?.currentShield ?? 0,
             robot2Shield: states[1]?.currentShield ?? 0,
-            ...buildPositionSnapshot(...states),
+            ...getPositionSnapshot(),
             distance: distToNearest,
             rangeBand: classifyRangeBand(distToNearest),
           });
@@ -1782,26 +1845,26 @@ export function simulateBattleMulti(
         winnerId = alive[0].robot.id;
         const pct = ((alive[0].currentHP / alive[0].maxHP) * 100).toFixed(1);
         events.push({
-          timestamp: Number(currentTime.toFixed(1)),
+          timestamp: roundTime(currentTime),
           type: 'yield',
           message: `⏱️ Time limit! ${alive[0].robot.name} wins by HP (${pct}%)`,
           robot1HP: states[0]?.currentHP ?? 0,
           robot2HP: states[1]?.currentHP ?? 0,
           robot1Shield: states[0]?.currentShield ?? 0,
           robot2Shield: states[1]?.currentShield ?? 0,
-          ...buildPositionSnapshot(...states),
+          ...getPositionSnapshot(),
         });
       }
     } else {
       events.push({
-        timestamp: Number(currentTime.toFixed(1)),
+        timestamp: roundTime(currentTime),
         type: 'yield',
         message: `⏱️ Time limit reached - Draw!`,
         robot1HP: states[0]?.currentHP ?? 0,
         robot2HP: states[1]?.currentHP ?? 0,
         robot1Shield: states[0]?.currentShield ?? 0,
         robot2Shield: states[1]?.currentShield ?? 0,
-        ...buildPositionSnapshot(...states),
+        ...getPositionSnapshot(),
       });
     }
   }
@@ -1829,7 +1892,7 @@ export function simulateBattleMulti(
       zoneEntries: scoreState?.zoneEntries ? { ...scoreState.zoneEntries } : undefined,
       zoneExits: scoreState?.zoneExits ? { ...scoreState.zoneExits } : undefined,
       killCounts: scoreState?.killCounts ? { ...scoreState.killCounts } : undefined,
-      matchDuration: Number(currentTime.toFixed(1)),
+      matchDuration: roundTime(currentTime),
       winReason,
     };
   }
@@ -1844,7 +1907,7 @@ export function simulateBattleMulti(
     robot2Damage: states[1]?.totalDamageTaken ?? 0,
     robot1DamageDealt: states[0]?.totalDamageDealt ?? 0,
     robot2DamageDealt: states[1]?.totalDamageDealt ?? 0,
-    durationSeconds: Number(currentTime.toFixed(1)),
+    durationSeconds: roundTime(currentTime),
     isDraw: winnerId === null,
     events: rawEvents,
     arenaRadius: arena.radius,

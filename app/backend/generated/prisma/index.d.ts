@@ -12944,6 +12944,7 @@ export namespace Prisma {
     winnerId: number | null
     battleType: string | null
     leagueType: string | null
+    leagueInstanceId: string | null
     tournamentId: number | null
     tournamentRound: number | null
     team1ActiveRobotId: number | null
@@ -12978,6 +12979,7 @@ export namespace Prisma {
     winnerId: number | null
     battleType: string | null
     leagueType: string | null
+    leagueInstanceId: string | null
     tournamentId: number | null
     tournamentRound: number | null
     team1ActiveRobotId: number | null
@@ -13012,6 +13014,7 @@ export namespace Prisma {
     winnerId: number
     battleType: number
     leagueType: number
+    leagueInstanceId: number
     tournamentId: number
     tournamentRound: number
     team1ActiveRobotId: number
@@ -13111,6 +13114,7 @@ export namespace Prisma {
     winnerId?: true
     battleType?: true
     leagueType?: true
+    leagueInstanceId?: true
     tournamentId?: true
     tournamentRound?: true
     team1ActiveRobotId?: true
@@ -13145,6 +13149,7 @@ export namespace Prisma {
     winnerId?: true
     battleType?: true
     leagueType?: true
+    leagueInstanceId?: true
     tournamentId?: true
     tournamentRound?: true
     team1ActiveRobotId?: true
@@ -13179,6 +13184,7 @@ export namespace Prisma {
     winnerId?: true
     battleType?: true
     leagueType?: true
+    leagueInstanceId?: true
     tournamentId?: true
     tournamentRound?: true
     team1ActiveRobotId?: true
@@ -13301,6 +13307,7 @@ export namespace Prisma {
     winnerId: number | null
     battleType: string
     leagueType: string
+    leagueInstanceId: string | null
     tournamentId: number | null
     tournamentRound: number | null
     team1ActiveRobotId: number | null
@@ -13355,6 +13362,7 @@ export namespace Prisma {
     winnerId?: boolean
     battleType?: boolean
     leagueType?: boolean
+    leagueInstanceId?: boolean
     tournamentId?: boolean
     tournamentRound?: boolean
     team1ActiveRobotId?: boolean
@@ -13399,6 +13407,7 @@ export namespace Prisma {
     winnerId?: boolean
     battleType?: boolean
     leagueType?: boolean
+    leagueInstanceId?: boolean
     tournamentId?: boolean
     tournamentRound?: boolean
     team1ActiveRobotId?: boolean
@@ -13437,6 +13446,7 @@ export namespace Prisma {
     winnerId?: boolean
     battleType?: boolean
     leagueType?: boolean
+    leagueInstanceId?: boolean
     tournamentId?: boolean
     tournamentRound?: boolean
     team1ActiveRobotId?: boolean
@@ -13475,6 +13485,7 @@ export namespace Prisma {
     winnerId?: boolean
     battleType?: boolean
     leagueType?: boolean
+    leagueInstanceId?: boolean
     tournamentId?: boolean
     tournamentRound?: boolean
     team1ActiveRobotId?: boolean
@@ -13503,7 +13514,7 @@ export namespace Prisma {
     createdAt?: boolean
   }
 
-  export type BattleOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "robot1Id" | "robot2Id" | "winnerId" | "battleType" | "leagueType" | "tournamentId" | "tournamentRound" | "team1ActiveRobotId" | "team1ReserveRobotId" | "team2ActiveRobotId" | "team2ReserveRobotId" | "team1TagOutTime" | "team2TagOutTime" | "battleLog" | "durationSeconds" | "winnerReward" | "loserReward" | "team1ActiveDamageDealt" | "team1ReserveDamageDealt" | "team2ActiveDamageDealt" | "team2ReserveDamageDealt" | "team1ActiveFameAwarded" | "team1ReserveFameAwarded" | "team2ActiveFameAwarded" | "team2ReserveFameAwarded" | "robot1ELOBefore" | "robot2ELOBefore" | "robot1ELOAfter" | "robot2ELOAfter" | "eloChange" | "createdAt", ExtArgs["result"]["battle"]>
+  export type BattleOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "robot1Id" | "robot2Id" | "winnerId" | "battleType" | "leagueType" | "leagueInstanceId" | "tournamentId" | "tournamentRound" | "team1ActiveRobotId" | "team1ReserveRobotId" | "team2ActiveRobotId" | "team2ReserveRobotId" | "team1TagOutTime" | "team2TagOutTime" | "battleLog" | "durationSeconds" | "winnerReward" | "loserReward" | "team1ActiveDamageDealt" | "team1ReserveDamageDealt" | "team2ActiveDamageDealt" | "team2ReserveDamageDealt" | "team1ActiveFameAwarded" | "team1ReserveFameAwarded" | "team2ActiveFameAwarded" | "team2ReserveFameAwarded" | "robot1ELOBefore" | "robot2ELOBefore" | "robot1ELOAfter" | "robot2ELOAfter" | "eloChange" | "createdAt", ExtArgs["result"]["battle"]>
   export type BattleInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     robot1?: boolean | RobotDefaultArgs<ExtArgs>
     robot2?: boolean | RobotDefaultArgs<ExtArgs>
@@ -13545,6 +13556,7 @@ export namespace Prisma {
       winnerId: number | null
       battleType: string
       leagueType: string
+      leagueInstanceId: string | null
       tournamentId: number | null
       tournamentRound: number | null
       team1ActiveRobotId: number | null
@@ -14008,6 +14020,7 @@ export namespace Prisma {
     readonly winnerId: FieldRef<"Battle", 'Int'>
     readonly battleType: FieldRef<"Battle", 'String'>
     readonly leagueType: FieldRef<"Battle", 'String'>
+    readonly leagueInstanceId: FieldRef<"Battle", 'String'>
     readonly tournamentId: FieldRef<"Battle", 'Int'>
     readonly tournamentRound: FieldRef<"Battle", 'Int'>
     readonly team1ActiveRobotId: FieldRef<"Battle", 'Int'>
@@ -33649,6 +33662,7 @@ export namespace Prisma {
     winnerId: 'winnerId',
     battleType: 'battleType',
     leagueType: 'leagueType',
+    leagueInstanceId: 'leagueInstanceId',
     tournamentId: 'tournamentId',
     tournamentRound: 'tournamentRound',
     team1ActiveRobotId: 'team1ActiveRobotId',
@@ -35230,6 +35244,7 @@ export namespace Prisma {
     winnerId?: IntNullableFilter<"Battle"> | number | null
     battleType?: StringFilter<"Battle"> | string
     leagueType?: StringFilter<"Battle"> | string
+    leagueInstanceId?: StringNullableFilter<"Battle"> | string | null
     tournamentId?: IntNullableFilter<"Battle"> | number | null
     tournamentRound?: IntNullableFilter<"Battle"> | number | null
     team1ActiveRobotId?: IntNullableFilter<"Battle"> | number | null
@@ -35273,6 +35288,7 @@ export namespace Prisma {
     winnerId?: SortOrderInput | SortOrder
     battleType?: SortOrder
     leagueType?: SortOrder
+    leagueInstanceId?: SortOrderInput | SortOrder
     tournamentId?: SortOrderInput | SortOrder
     tournamentRound?: SortOrderInput | SortOrder
     team1ActiveRobotId?: SortOrderInput | SortOrder
@@ -35319,6 +35335,7 @@ export namespace Prisma {
     winnerId?: IntNullableFilter<"Battle"> | number | null
     battleType?: StringFilter<"Battle"> | string
     leagueType?: StringFilter<"Battle"> | string
+    leagueInstanceId?: StringNullableFilter<"Battle"> | string | null
     tournamentId?: IntNullableFilter<"Battle"> | number | null
     tournamentRound?: IntNullableFilter<"Battle"> | number | null
     team1ActiveRobotId?: IntNullableFilter<"Battle"> | number | null
@@ -35362,6 +35379,7 @@ export namespace Prisma {
     winnerId?: SortOrderInput | SortOrder
     battleType?: SortOrder
     leagueType?: SortOrder
+    leagueInstanceId?: SortOrderInput | SortOrder
     tournamentId?: SortOrderInput | SortOrder
     tournamentRound?: SortOrderInput | SortOrder
     team1ActiveRobotId?: SortOrderInput | SortOrder
@@ -35405,6 +35423,7 @@ export namespace Prisma {
     winnerId?: IntNullableWithAggregatesFilter<"Battle"> | number | null
     battleType?: StringWithAggregatesFilter<"Battle"> | string
     leagueType?: StringWithAggregatesFilter<"Battle"> | string
+    leagueInstanceId?: StringNullableWithAggregatesFilter<"Battle"> | string | null
     tournamentId?: IntNullableWithAggregatesFilter<"Battle"> | number | null
     tournamentRound?: IntNullableWithAggregatesFilter<"Battle"> | number | null
     team1ActiveRobotId?: IntNullableWithAggregatesFilter<"Battle"> | number | null
@@ -38160,6 +38179,7 @@ export namespace Prisma {
     winnerId?: number | null
     battleType: string
     leagueType: string
+    leagueInstanceId?: string | null
     tournamentRound?: number | null
     team1ActiveRobotId?: number | null
     team1ReserveRobotId?: number | null
@@ -38202,6 +38222,7 @@ export namespace Prisma {
     winnerId?: number | null
     battleType: string
     leagueType: string
+    leagueInstanceId?: string | null
     tournamentId?: number | null
     tournamentRound?: number | null
     team1ActiveRobotId?: number | null
@@ -38239,6 +38260,7 @@ export namespace Prisma {
     winnerId?: NullableIntFieldUpdateOperationsInput | number | null
     battleType?: StringFieldUpdateOperationsInput | string
     leagueType?: StringFieldUpdateOperationsInput | string
+    leagueInstanceId?: NullableStringFieldUpdateOperationsInput | string | null
     tournamentRound?: NullableIntFieldUpdateOperationsInput | number | null
     team1ActiveRobotId?: NullableIntFieldUpdateOperationsInput | number | null
     team1ReserveRobotId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -38281,6 +38303,7 @@ export namespace Prisma {
     winnerId?: NullableIntFieldUpdateOperationsInput | number | null
     battleType?: StringFieldUpdateOperationsInput | string
     leagueType?: StringFieldUpdateOperationsInput | string
+    leagueInstanceId?: NullableStringFieldUpdateOperationsInput | string | null
     tournamentId?: NullableIntFieldUpdateOperationsInput | number | null
     tournamentRound?: NullableIntFieldUpdateOperationsInput | number | null
     team1ActiveRobotId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -38321,6 +38344,7 @@ export namespace Prisma {
     winnerId?: number | null
     battleType: string
     leagueType: string
+    leagueInstanceId?: string | null
     tournamentId?: number | null
     tournamentRound?: number | null
     team1ActiveRobotId?: number | null
@@ -38353,6 +38377,7 @@ export namespace Prisma {
     winnerId?: NullableIntFieldUpdateOperationsInput | number | null
     battleType?: StringFieldUpdateOperationsInput | string
     leagueType?: StringFieldUpdateOperationsInput | string
+    leagueInstanceId?: NullableStringFieldUpdateOperationsInput | string | null
     tournamentRound?: NullableIntFieldUpdateOperationsInput | number | null
     team1ActiveRobotId?: NullableIntFieldUpdateOperationsInput | number | null
     team1ReserveRobotId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -38387,6 +38412,7 @@ export namespace Prisma {
     winnerId?: NullableIntFieldUpdateOperationsInput | number | null
     battleType?: StringFieldUpdateOperationsInput | string
     leagueType?: StringFieldUpdateOperationsInput | string
+    leagueInstanceId?: NullableStringFieldUpdateOperationsInput | string | null
     tournamentId?: NullableIntFieldUpdateOperationsInput | number | null
     tournamentRound?: NullableIntFieldUpdateOperationsInput | number | null
     team1ActiveRobotId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -41140,6 +41166,7 @@ export namespace Prisma {
     winnerId?: SortOrder
     battleType?: SortOrder
     leagueType?: SortOrder
+    leagueInstanceId?: SortOrder
     tournamentId?: SortOrder
     tournamentRound?: SortOrder
     team1ActiveRobotId?: SortOrder
@@ -41206,6 +41233,7 @@ export namespace Prisma {
     winnerId?: SortOrder
     battleType?: SortOrder
     leagueType?: SortOrder
+    leagueInstanceId?: SortOrder
     tournamentId?: SortOrder
     tournamentRound?: SortOrder
     team1ActiveRobotId?: SortOrder
@@ -41240,6 +41268,7 @@ export namespace Prisma {
     winnerId?: SortOrder
     battleType?: SortOrder
     leagueType?: SortOrder
+    leagueInstanceId?: SortOrder
     tournamentId?: SortOrder
     tournamentRound?: SortOrder
     team1ActiveRobotId?: SortOrder
@@ -45356,6 +45385,7 @@ export namespace Prisma {
     winnerId?: number | null
     battleType: string
     leagueType: string
+    leagueInstanceId?: string | null
     tournamentRound?: number | null
     team1ActiveRobotId?: number | null
     team1ReserveRobotId?: number | null
@@ -45396,6 +45426,7 @@ export namespace Prisma {
     winnerId?: number | null
     battleType: string
     leagueType: string
+    leagueInstanceId?: string | null
     tournamentId?: number | null
     tournamentRound?: number | null
     team1ActiveRobotId?: number | null
@@ -45443,6 +45474,7 @@ export namespace Prisma {
     winnerId?: number | null
     battleType: string
     leagueType: string
+    leagueInstanceId?: string | null
     tournamentRound?: number | null
     team1ActiveRobotId?: number | null
     team1ReserveRobotId?: number | null
@@ -45483,6 +45515,7 @@ export namespace Prisma {
     winnerId?: number | null
     battleType: string
     leagueType: string
+    leagueInstanceId?: string | null
     tournamentId?: number | null
     tournamentRound?: number | null
     team1ActiveRobotId?: number | null
@@ -46131,6 +46164,7 @@ export namespace Prisma {
     winnerId?: IntNullableFilter<"Battle"> | number | null
     battleType?: StringFilter<"Battle"> | string
     leagueType?: StringFilter<"Battle"> | string
+    leagueInstanceId?: StringNullableFilter<"Battle"> | string | null
     tournamentId?: IntNullableFilter<"Battle"> | number | null
     tournamentRound?: IntNullableFilter<"Battle"> | number | null
     team1ActiveRobotId?: IntNullableFilter<"Battle"> | number | null
@@ -47297,6 +47331,7 @@ export namespace Prisma {
     winnerId?: number | null
     battleType: string
     leagueType: string
+    leagueInstanceId?: string | null
     tournamentRound?: number | null
     team1ActiveRobotId?: number | null
     team1ReserveRobotId?: number | null
@@ -47338,6 +47373,7 @@ export namespace Prisma {
     winnerId?: number | null
     battleType: string
     leagueType: string
+    leagueInstanceId?: string | null
     tournamentId?: number | null
     tournamentRound?: number | null
     team1ActiveRobotId?: number | null
@@ -47584,6 +47620,7 @@ export namespace Prisma {
     winnerId?: NullableIntFieldUpdateOperationsInput | number | null
     battleType?: StringFieldUpdateOperationsInput | string
     leagueType?: StringFieldUpdateOperationsInput | string
+    leagueInstanceId?: NullableStringFieldUpdateOperationsInput | string | null
     tournamentRound?: NullableIntFieldUpdateOperationsInput | number | null
     team1ActiveRobotId?: NullableIntFieldUpdateOperationsInput | number | null
     team1ReserveRobotId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -47625,6 +47662,7 @@ export namespace Prisma {
     winnerId?: NullableIntFieldUpdateOperationsInput | number | null
     battleType?: StringFieldUpdateOperationsInput | string
     leagueType?: StringFieldUpdateOperationsInput | string
+    leagueInstanceId?: NullableStringFieldUpdateOperationsInput | string | null
     tournamentId?: NullableIntFieldUpdateOperationsInput | number | null
     tournamentRound?: NullableIntFieldUpdateOperationsInput | number | null
     team1ActiveRobotId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -49395,6 +49433,7 @@ export namespace Prisma {
     winnerId?: number | null
     battleType: string
     leagueType: string
+    leagueInstanceId?: string | null
     tournamentRound?: number | null
     team1ActiveRobotId?: number | null
     team1ReserveRobotId?: number | null
@@ -49436,6 +49475,7 @@ export namespace Prisma {
     winnerId?: number | null
     battleType: string
     leagueType: string
+    leagueInstanceId?: string | null
     tournamentId?: number | null
     tournamentRound?: number | null
     team1ActiveRobotId?: number | null
@@ -49888,6 +49928,7 @@ export namespace Prisma {
     winnerId?: NullableIntFieldUpdateOperationsInput | number | null
     battleType?: StringFieldUpdateOperationsInput | string
     leagueType?: StringFieldUpdateOperationsInput | string
+    leagueInstanceId?: NullableStringFieldUpdateOperationsInput | string | null
     tournamentRound?: NullableIntFieldUpdateOperationsInput | number | null
     team1ActiveRobotId?: NullableIntFieldUpdateOperationsInput | number | null
     team1ReserveRobotId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -49929,6 +49970,7 @@ export namespace Prisma {
     winnerId?: NullableIntFieldUpdateOperationsInput | number | null
     battleType?: StringFieldUpdateOperationsInput | string
     leagueType?: StringFieldUpdateOperationsInput | string
+    leagueInstanceId?: NullableStringFieldUpdateOperationsInput | string | null
     tournamentId?: NullableIntFieldUpdateOperationsInput | number | null
     tournamentRound?: NullableIntFieldUpdateOperationsInput | number | null
     team1ActiveRobotId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -50196,6 +50238,7 @@ export namespace Prisma {
     winnerId?: number | null
     battleType: string
     leagueType: string
+    leagueInstanceId?: string | null
     tournamentRound?: number | null
     team1ActiveRobotId?: number | null
     team1ReserveRobotId?: number | null
@@ -50237,6 +50280,7 @@ export namespace Prisma {
     winnerId?: number | null
     battleType: string
     leagueType: string
+    leagueInstanceId?: string | null
     tournamentRound?: number | null
     team1ActiveRobotId?: number | null
     team1ReserveRobotId?: number | null
@@ -51131,6 +51175,7 @@ export namespace Prisma {
     winnerId?: number | null
     battleType: string
     leagueType: string
+    leagueInstanceId?: string | null
     tournamentRound?: number | null
     team1ActiveRobotId?: number | null
     team1ReserveRobotId?: number | null
@@ -51172,6 +51217,7 @@ export namespace Prisma {
     winnerId?: number | null
     battleType: string
     leagueType: string
+    leagueInstanceId?: string | null
     tournamentId?: number | null
     tournamentRound?: number | null
     team1ActiveRobotId?: number | null
@@ -51864,6 +51910,7 @@ export namespace Prisma {
     winnerId?: NullableIntFieldUpdateOperationsInput | number | null
     battleType?: StringFieldUpdateOperationsInput | string
     leagueType?: StringFieldUpdateOperationsInput | string
+    leagueInstanceId?: NullableStringFieldUpdateOperationsInput | string | null
     tournamentRound?: NullableIntFieldUpdateOperationsInput | number | null
     team1ActiveRobotId?: NullableIntFieldUpdateOperationsInput | number | null
     team1ReserveRobotId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -51905,6 +51952,7 @@ export namespace Prisma {
     winnerId?: NullableIntFieldUpdateOperationsInput | number | null
     battleType?: StringFieldUpdateOperationsInput | string
     leagueType?: StringFieldUpdateOperationsInput | string
+    leagueInstanceId?: NullableStringFieldUpdateOperationsInput | string | null
     tournamentId?: NullableIntFieldUpdateOperationsInput | number | null
     tournamentRound?: NullableIntFieldUpdateOperationsInput | number | null
     team1ActiveRobotId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -53045,6 +53093,7 @@ export namespace Prisma {
     winnerId?: number | null
     battleType: string
     leagueType: string
+    leagueInstanceId?: string | null
     tournamentRound?: number | null
     team1ActiveRobotId?: number | null
     team1ReserveRobotId?: number | null
@@ -53086,6 +53135,7 @@ export namespace Prisma {
     winnerId?: number | null
     battleType: string
     leagueType: string
+    leagueInstanceId?: string | null
     tournamentId?: number | null
     tournamentRound?: number | null
     team1ActiveRobotId?: number | null
@@ -53226,6 +53276,7 @@ export namespace Prisma {
     winnerId?: NullableIntFieldUpdateOperationsInput | number | null
     battleType?: StringFieldUpdateOperationsInput | string
     leagueType?: StringFieldUpdateOperationsInput | string
+    leagueInstanceId?: NullableStringFieldUpdateOperationsInput | string | null
     tournamentRound?: NullableIntFieldUpdateOperationsInput | number | null
     team1ActiveRobotId?: NullableIntFieldUpdateOperationsInput | number | null
     team1ReserveRobotId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -53267,6 +53318,7 @@ export namespace Prisma {
     winnerId?: NullableIntFieldUpdateOperationsInput | number | null
     battleType?: StringFieldUpdateOperationsInput | string
     leagueType?: StringFieldUpdateOperationsInput | string
+    leagueInstanceId?: NullableStringFieldUpdateOperationsInput | string | null
     tournamentId?: NullableIntFieldUpdateOperationsInput | number | null
     tournamentRound?: NullableIntFieldUpdateOperationsInput | number | null
     team1ActiveRobotId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -53303,6 +53355,7 @@ export namespace Prisma {
     winnerId?: number | null
     battleType: string
     leagueType: string
+    leagueInstanceId?: string | null
     tournamentRound?: number | null
     team1ActiveRobotId?: number | null
     team1ReserveRobotId?: number | null
@@ -53344,6 +53397,7 @@ export namespace Prisma {
     winnerId?: number | null
     battleType: string
     leagueType: string
+    leagueInstanceId?: string | null
     tournamentId?: number | null
     tournamentRound?: number | null
     team1ActiveRobotId?: number | null
@@ -53415,6 +53469,7 @@ export namespace Prisma {
     winnerId?: NullableIntFieldUpdateOperationsInput | number | null
     battleType?: StringFieldUpdateOperationsInput | string
     leagueType?: StringFieldUpdateOperationsInput | string
+    leagueInstanceId?: NullableStringFieldUpdateOperationsInput | string | null
     tournamentRound?: NullableIntFieldUpdateOperationsInput | number | null
     team1ActiveRobotId?: NullableIntFieldUpdateOperationsInput | number | null
     team1ReserveRobotId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -53456,6 +53511,7 @@ export namespace Prisma {
     winnerId?: NullableIntFieldUpdateOperationsInput | number | null
     battleType?: StringFieldUpdateOperationsInput | string
     leagueType?: StringFieldUpdateOperationsInput | string
+    leagueInstanceId?: NullableStringFieldUpdateOperationsInput | string | null
     tournamentId?: NullableIntFieldUpdateOperationsInput | number | null
     tournamentRound?: NullableIntFieldUpdateOperationsInput | number | null
     team1ActiveRobotId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -55415,6 +55471,7 @@ export namespace Prisma {
     winnerId?: number | null
     battleType: string
     leagueType: string
+    leagueInstanceId?: string | null
     tournamentId?: number | null
     tournamentRound?: number | null
     team1ActiveRobotId?: number | null
@@ -55449,6 +55506,7 @@ export namespace Prisma {
     winnerId?: number | null
     battleType: string
     leagueType: string
+    leagueInstanceId?: string | null
     tournamentId?: number | null
     tournamentRound?: number | null
     team1ActiveRobotId?: number | null
@@ -55617,6 +55675,7 @@ export namespace Prisma {
     winnerId?: NullableIntFieldUpdateOperationsInput | number | null
     battleType?: StringFieldUpdateOperationsInput | string
     leagueType?: StringFieldUpdateOperationsInput | string
+    leagueInstanceId?: NullableStringFieldUpdateOperationsInput | string | null
     tournamentRound?: NullableIntFieldUpdateOperationsInput | number | null
     team1ActiveRobotId?: NullableIntFieldUpdateOperationsInput | number | null
     team1ReserveRobotId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -55657,6 +55716,7 @@ export namespace Prisma {
     winnerId?: NullableIntFieldUpdateOperationsInput | number | null
     battleType?: StringFieldUpdateOperationsInput | string
     leagueType?: StringFieldUpdateOperationsInput | string
+    leagueInstanceId?: NullableStringFieldUpdateOperationsInput | string | null
     tournamentId?: NullableIntFieldUpdateOperationsInput | number | null
     tournamentRound?: NullableIntFieldUpdateOperationsInput | number | null
     team1ActiveRobotId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -55696,6 +55756,7 @@ export namespace Prisma {
     winnerId?: NullableIntFieldUpdateOperationsInput | number | null
     battleType?: StringFieldUpdateOperationsInput | string
     leagueType?: StringFieldUpdateOperationsInput | string
+    leagueInstanceId?: NullableStringFieldUpdateOperationsInput | string | null
     tournamentId?: NullableIntFieldUpdateOperationsInput | number | null
     tournamentRound?: NullableIntFieldUpdateOperationsInput | number | null
     team1ActiveRobotId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -55728,6 +55789,7 @@ export namespace Prisma {
     winnerId?: NullableIntFieldUpdateOperationsInput | number | null
     battleType?: StringFieldUpdateOperationsInput | string
     leagueType?: StringFieldUpdateOperationsInput | string
+    leagueInstanceId?: NullableStringFieldUpdateOperationsInput | string | null
     tournamentRound?: NullableIntFieldUpdateOperationsInput | number | null
     team1ActiveRobotId?: NullableIntFieldUpdateOperationsInput | number | null
     team1ReserveRobotId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -55768,6 +55830,7 @@ export namespace Prisma {
     winnerId?: NullableIntFieldUpdateOperationsInput | number | null
     battleType?: StringFieldUpdateOperationsInput | string
     leagueType?: StringFieldUpdateOperationsInput | string
+    leagueInstanceId?: NullableStringFieldUpdateOperationsInput | string | null
     tournamentId?: NullableIntFieldUpdateOperationsInput | number | null
     tournamentRound?: NullableIntFieldUpdateOperationsInput | number | null
     team1ActiveRobotId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -55807,6 +55870,7 @@ export namespace Prisma {
     winnerId?: NullableIntFieldUpdateOperationsInput | number | null
     battleType?: StringFieldUpdateOperationsInput | string
     leagueType?: StringFieldUpdateOperationsInput | string
+    leagueInstanceId?: NullableStringFieldUpdateOperationsInput | string | null
     tournamentId?: NullableIntFieldUpdateOperationsInput | number | null
     tournamentRound?: NullableIntFieldUpdateOperationsInput | number | null
     team1ActiveRobotId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -57251,6 +57315,7 @@ export namespace Prisma {
     winnerId?: number | null
     battleType: string
     leagueType: string
+    leagueInstanceId?: string | null
     tournamentRound?: number | null
     team1ActiveRobotId?: number | null
     team1ReserveRobotId?: number | null
@@ -57323,6 +57388,7 @@ export namespace Prisma {
     winnerId?: NullableIntFieldUpdateOperationsInput | number | null
     battleType?: StringFieldUpdateOperationsInput | string
     leagueType?: StringFieldUpdateOperationsInput | string
+    leagueInstanceId?: NullableStringFieldUpdateOperationsInput | string | null
     tournamentRound?: NullableIntFieldUpdateOperationsInput | number | null
     team1ActiveRobotId?: NullableIntFieldUpdateOperationsInput | number | null
     team1ReserveRobotId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -57364,6 +57430,7 @@ export namespace Prisma {
     winnerId?: NullableIntFieldUpdateOperationsInput | number | null
     battleType?: StringFieldUpdateOperationsInput | string
     leagueType?: StringFieldUpdateOperationsInput | string
+    leagueInstanceId?: NullableStringFieldUpdateOperationsInput | string | null
     tournamentRound?: NullableIntFieldUpdateOperationsInput | number | null
     team1ActiveRobotId?: NullableIntFieldUpdateOperationsInput | number | null
     team1ReserveRobotId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -57403,6 +57470,7 @@ export namespace Prisma {
     winnerId?: NullableIntFieldUpdateOperationsInput | number | null
     battleType?: StringFieldUpdateOperationsInput | string
     leagueType?: StringFieldUpdateOperationsInput | string
+    leagueInstanceId?: NullableStringFieldUpdateOperationsInput | string | null
     tournamentRound?: NullableIntFieldUpdateOperationsInput | number | null
     team1ActiveRobotId?: NullableIntFieldUpdateOperationsInput | number | null
     team1ReserveRobotId?: NullableIntFieldUpdateOperationsInput | number | null

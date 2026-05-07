@@ -1,5 +1,5 @@
 import { vi } from 'vitest';
-import { LeagueRobot, LeagueInstance, LeagueStandingsResponse } from '../../utils/matchmakingApi';
+import { LeagueInstance, LeagueStandingsResponse } from '../../utils/matchmakingApi';
 
 // Mock API responses
 export const mockGetLeagueStandings = vi.fn<

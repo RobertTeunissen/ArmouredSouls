@@ -26,7 +26,7 @@ import {
 import { BattleError, BattleErrorCode } from '../../errors/battleErrors';
 import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
 import { prepareRobotForCombat } from '../../utils/robotCalculations';
-import { getTuningBonuses } from '../tuning-pool';
+import { getTuningBonusesBatch } from '../tuning-pool';
 
 // Re-export so existing consumers don't break
 export { getCurrentCycleNumber };
@@ -384,6 +384,7 @@ async function createBattleRecord(
       winnerId: result.winnerId,
       battleType: 'league', // Phase 1 only has league battles
       leagueType: scheduledMatch.leagueType,
+      leagueInstanceId: robot1.leagueId, // Snapshot instance at time of battle
       
       // Battle log with combat messages AND detailed combat events for admin debugging
       battleLog: {
@@ -588,13 +589,10 @@ export async function processBattle(scheduledMatch: ScheduledLeagueMatch): Promi
   
   // Robots enter battles fully repaired (battle-ready state)
   // This is the intended game mechanic - players should repair before battles
-  // Fetch tuning bonuses and prepare robots for combat (applies tuning, recalculates maxHP/maxShield, sets full HP)
-  const [tuning1, tuning2] = await Promise.all([
-    getTuningBonuses(robot1.id),
-    getTuningBonuses(robot2.id),
-  ]);
-  prepareRobotForCombat(robot1, tuning1);
-  prepareRobotForCombat(robot2, tuning2);
+  // Fetch tuning bonuses in a single batch query and prepare robots for combat
+  const tuningMap = await getTuningBonusesBatch([robot1.id, robot2.id]);
+  prepareRobotForCombat(robot1, tuningMap.get(robot1.id) ?? {});
+  prepareRobotForCombat(robot2, tuningMap.get(robot2.id) ?? {});
   
   // Check if this is a bye-robot match
   const isByeMatch = robot1.name === BYE_ROBOT_NAME || robot2.name === BYE_ROBOT_NAME;
@@ -740,7 +738,7 @@ export async function processBattle(scheduledMatch: ScheduledLeagueMatch): Promi
         loadoutType: robot1.loadoutType || 'single',
         stance: robot1.stance || 'balanced',
         yieldThreshold: robot1.yieldThreshold,
-        hasTuning: Object.values(tuning1).some(v => v !== undefined && v > 0),
+        hasTuning: Object.values(tuningMap.get(robot1.id) ?? {}).some(v => v !== undefined && v > 0),
         hasMainWeapon: robot1.mainWeaponId !== null,
         battleType: 'league',
         battleDurationSeconds: result.durationSeconds,
@@ -759,7 +757,7 @@ export async function processBattle(scheduledMatch: ScheduledLeagueMatch): Promi
         loadoutType: robot2.loadoutType || 'single',
         stance: robot2.stance || 'balanced',
         yieldThreshold: robot2.yieldThreshold,
-        hasTuning: Object.values(tuning2).some(v => v !== undefined && v > 0),
+        hasTuning: Object.values(tuningMap.get(robot2.id) ?? {}).some(v => v !== undefined && v > 0),
         hasMainWeapon: robot2.mainWeaponId !== null,
         battleType: 'league',
         battleDurationSeconds: result.durationSeconds,

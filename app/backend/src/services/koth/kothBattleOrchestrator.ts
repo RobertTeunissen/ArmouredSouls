@@ -33,13 +33,12 @@ import {
 import {
   logBattleAuditEvent,
   checkAndAwardAchievements,
-  didRobotLosePreviousBattle,
 } from '../battle/battlePostCombat';
 import { CombatMessageGenerator } from '../battle/combatMessageGenerator';
-import { calculateStreamingRevenue } from '../economy/streamingRevenueService';
+import { calculateStreamingRevenueBatch } from '../economy/streamingRevenueService';
 import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
 import { prepareRobotForCombat } from '../../utils/robotCalculations';
-import { getTuningBonuses } from '../tuning-pool';
+import { getTuningBonusesBatch } from '../tuning-pool';
 
 /** Prepared participant data for batched DB operations */
 interface PreparedParticipant {
@@ -225,12 +224,10 @@ async function processKothBattle(
 
   // 1b. Ensure in-memory HP/shield is at max for simulation
   // Robots enter KotH battles at full HP (simulation uses maxHP, damage persisted after battle)
-  // Fetch tuning bonuses and prepare all robots for combat (applies tuning, recalculates maxHP/maxShield, sets full HP)
-  const tuningBonusesMap = await Promise.all(
-    robots.map(robot => getTuningBonuses(robot.id))
-  );
-  for (let i = 0; i < robots.length; i++) {
-    prepareRobotForCombat(robots[i], tuningBonusesMap[i]);
+  // Fetch tuning bonuses in a single batch query and prepare all robots for combat
+  const tuningBonusesMap = await getTuningBonusesBatch(robotIds);
+  for (const robot of robots) {
+    prepareRobotForCombat(robot, tuningBonusesMap.get(robot.id) ?? {});
   }
 
   // 2. Resolve config values
@@ -298,7 +295,7 @@ async function processKothBattle(
       winnerId: winnerRobot.id,
       battleType: 'koth',
       leagueType: 'koth',
-      battleLog: JSON.parse(JSON.stringify(CombatMessageGenerator.buildKothBattleLog({
+      battleLog: CombatMessageGenerator.buildKothBattleLog({
         events: simResult.events,
         participantCount: robots.length,
         arenaRadius,
@@ -315,7 +312,7 @@ async function processKothBattle(
           kills: p.kills,
           destroyed: p.destroyed,
         })),
-      }))),
+      }) as unknown as Prisma.InputJsonValue,
       durationSeconds: simResult.durationSeconds,
       winnerReward: 0,
       loserReward: 0,
@@ -372,10 +369,10 @@ async function processKothBattle(
     })),
   });
 
-  // 10. BATCHED: Calculate streaming revenue in parallel, then batch update
+  // 10. BATCHED: Calculate streaming revenue with single batch query (2 queries instead of 2N)
   const _cycleNumber = await getCurrentCycleNumber();
-  const streamingCalcs = await Promise.all(
-    preparedParticipants.map(p => calculateStreamingRevenue(p.robot.id, p.robot.userId, false))
+  const streamingCalcMap = await calculateStreamingRevenueBatch(
+    preparedParticipants.map(p => ({ robotId: p.robot.id, userId: p.robot.userId }))
   );
 
   // 11. BATCHED: All currency/prestige/fame updates in a single transaction
@@ -387,7 +384,7 @@ async function processKothBattle(
   const fameByRobot = new Map<number, number>();
   const streamingByUser = new Map<number, number>();
 
-  preparedParticipants.forEach((p, i) => {
+  preparedParticipants.forEach((p) => {
     if (p.rewards.credits > 0) {
       creditsByUser.set(p.robot.userId, (creditsByUser.get(p.robot.userId) ?? 0) + p.rewards.credits);
     }
@@ -397,7 +394,7 @@ async function processKothBattle(
     if (p.rewards.fame > 0) {
       fameByRobot.set(p.robot.id, (fameByRobot.get(p.robot.id) ?? 0) + p.rewards.fame);
     }
-    const streamingCalc = streamingCalcs[i];
+    const streamingCalc = streamingCalcMap.get(p.robot.id);
     if (streamingCalc) {
       streamingByUser.set(p.robot.userId, (streamingByUser.get(p.robot.userId) ?? 0) + streamingCalc.totalRevenue);
     }
@@ -434,8 +431,8 @@ async function processKothBattle(
 
   // 12. BATCHED: Update streaming revenue on BattleParticipant records
   const streamingUpdates = preparedParticipants
-    .map((p, i) => {
-      const calc = streamingCalcs[i];
+    .map((p) => {
+      const calc = streamingCalcMap.get(p.robot.id);
       if (!calc) return null;
       return prisma.battleParticipant.update({
         where: { battleId_robotId: { battleId: battle.id, robotId: p.robot.id } },
@@ -451,29 +448,51 @@ async function processKothBattle(
   // 13. BATCHED: Update KotH robot stats
   await batchUpdateKothRobotStats(preparedParticipants);
 
-  // 13b. Check and award achievements for all participants
-  for (const p of preparedParticipants) {
-    const prevLost = await didRobotLosePreviousBattle(p.robot.id, battle.id);
-    await checkAndAwardAchievements(p.robot.userId, p.robot.id, {
-      won: p.isWinner,
-      destroyed: p.destroyed,
-      finalHpPercent: p.robot.maxHP > 0 ? (p.finalHP / p.robot.maxHP) * 100 : 0,
-      eloDiff: 0,
-      opponentElo: 0,
-      yielded: false,
-      opponentYielded: false,
-      previousBattleLost: prevLost,
-      damageDealt: p.damageDealt,
-      opponentDamageDealt: 0,
-      loadoutType: (p.robot as unknown as { loadoutType?: string }).loadoutType || 'single',
-      stance: (p.robot as unknown as { stance?: string }).stance || 'balanced',
-      yieldThreshold: 0,
-      hasTuning: false,
-      hasMainWeapon: p.robot.mainWeaponId !== null,
-      battleType: 'koth',
-      battleDurationSeconds: simResult.durationSeconds,
-    });
-  }
+  // 13b. Check and award achievements for all participants (deferred — non-critical path)
+  // Achievement checks are not required for battle results and can run asynchronously
+  // like audit logging. This removes ~12-24 sequential DB queries from the critical path.
+  setImmediate(async () => {
+    try {
+      // Batch fetch previous battle loss data for all robots in one query
+      const prevBattleResults = await prisma.battleParticipant.findMany({
+        where: {
+          robotId: { in: preparedParticipants.map(p => p.robot.id) },
+          battleId: { not: battle.id },
+        },
+        orderBy: { battle: { createdAt: 'desc' } },
+        distinct: ['robotId'],
+        select: { robotId: true, battle: { select: { winnerId: true } } },
+      });
+      const prevLostMap = new Map<number, boolean>(
+        prevBattleResults.map(r => [r.robotId, r.battle.winnerId !== null && r.battle.winnerId !== r.robotId])
+      );
+
+      await Promise.all(preparedParticipants.map(p => {
+        const prevLost = prevLostMap.get(p.robot.id) ?? false;
+        return checkAndAwardAchievements(p.robot.userId, p.robot.id, {
+          won: p.isWinner,
+          destroyed: p.destroyed,
+          finalHpPercent: p.robot.maxHP > 0 ? (p.finalHP / p.robot.maxHP) * 100 : 0,
+          eloDiff: 0,
+          opponentElo: 0,
+          yielded: false,
+          opponentYielded: false,
+          previousBattleLost: prevLost,
+          damageDealt: p.damageDealt,
+          opponentDamageDealt: 0,
+          loadoutType: (p.robot as unknown as { loadoutType?: string }).loadoutType || 'single',
+          stance: (p.robot as unknown as { stance?: string }).stance || 'balanced',
+          yieldThreshold: 0,
+          hasTuning: false,
+          hasMainWeapon: p.robot.mainWeaponId !== null,
+          battleType: 'koth',
+          battleDurationSeconds: simResult.durationSeconds,
+        });
+      }));
+    } catch (err) {
+      logger.error('[KotH] Achievement check failed (non-critical):', err);
+    }
+  });
 
   // 14. BATCHED: Log audit events (fire-and-forget for performance)
   // Audit logging is non-critical and can be done asynchronously
@@ -481,7 +500,7 @@ async function processKothBattle(
     try {
       for (let i = 0; i < preparedParticipants.length; i++) {
         const p = preparedParticipants[i];
-        const streamingCalc = streamingCalcs[i];
+        const streamingCalc = streamingCalcMap.get(p.robot.id);
         await logBattleAuditEvent(
           {
             robotId: p.robot.id,

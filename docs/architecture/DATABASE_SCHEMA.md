@@ -420,6 +420,7 @@ model Battle {
   winnerId   Int?   @map("winner_id")
   battleType String @map("battle_type") @db.VarChar(20)  // "league", "tournament", "tag_team", "koth"
   leagueType String @map("league_type") @db.VarChar(20)
+  leagueInstanceId String? @map("league_instance_id") @db.VarChar(20) // "gold_1", "bronze_2" — instance at time of battle
   
   // ===== TOURNAMENT REFERENCE =====
   tournamentId    Int? @map("tournament_id")

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import apiClient from '../utils/apiClient';
 import Navigation from '../components/Navigation';
@@ -19,13 +19,29 @@ import OwnerNameLink from '../components/OwnerNameLink';
 function TagTeamStandingsPage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [selectedTier, setSelectedTier] = useState<TagTeamLeagueTier>('bronze');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialTier = (TAG_TEAM_LEAGUE_TIERS as readonly string[]).includes(searchParams.get('tier') ?? '')
+    ? (searchParams.get('tier') as TagTeamLeagueTier)
+    : 'bronze';
+  const [selectedTier, setSelectedTierRaw] = useState<TagTeamLeagueTier>(initialTier);
   const [standings, setStandings] = useState<TagTeamStanding[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [userTeamTiers, setUserTeamTiers] = useState<Set<string>>(new Set());  useEffect(() => {
+  const [userTeamTiers, setUserTeamTiers] = useState<Set<string>>(new Set());
+
+  const setSelectedTier = (tier: TagTeamLeagueTier) => {
+    setSelectedTierRaw(tier);
+    setPage(1);
+    setSearchParams(() => {
+      const next = new URLSearchParams();
+      if (tier !== 'bronze') next.set('tier', tier);
+      return next;
+    }, { replace: true });
+  };
+
+  useEffect(() => {
     if (user) {
       fetchStandings();
       fetchUserTeamTiers();

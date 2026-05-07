@@ -408,6 +408,7 @@ export interface BattleLogResponse {
   createdAt: string;
   battleType?: string;
   leagueType: string;
+  leagueInstanceId?: string | null;
   tournamentId?: number | null;
   duration: number;
   /** Unified participants array — single source of truth for all battle types */

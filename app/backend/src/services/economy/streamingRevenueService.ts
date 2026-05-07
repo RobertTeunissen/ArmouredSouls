@@ -137,3 +137,83 @@ export async function awardStreamingRevenue(
 
   // Streaming revenue is tracked in BattleParticipant table
 }
+
+/**
+ * Calculate streaming revenue for multiple robots in batch (2 queries total instead of 2N).
+ *
+ * Fetches all robot stats and facility levels upfront, then calculates in-memory.
+ * Used by orchestrators processing multiple participants (KotH, tag team).
+ *
+ * @param participants - Array of { robotId, userId } pairs
+ * @returns Map of robotId → StreamingRevenueCalculation (or null for missing robots)
+ */
+export async function calculateStreamingRevenueBatch(
+  participants: Array<{ robotId: number; userId: number }>,
+): Promise<Map<number, StreamingRevenueCalculation | null>> {
+  if (participants.length === 0) return new Map();
+
+  const robotIds = participants.map(p => p.robotId);
+  const userIds = [...new Set(participants.map(p => p.userId))];
+
+  // Batch fetch: 1 query for all robots, 1 query for all facilities
+  const [robots, facilities] = await Promise.all([
+    prisma.robot.findMany({
+      where: { id: { in: robotIds } },
+      select: {
+        id: true,
+        name: true,
+        totalBattles: true,
+        totalTagTeamBattles: true,
+        kothMatches: true,
+        fame: true,
+      },
+    }),
+    prisma.facility.findMany({
+      where: {
+        userId: { in: userIds },
+        facilityType: 'streaming_studio',
+      },
+      select: { userId: true, level: true },
+    }),
+  ]);
+
+  const robotMap = new Map(robots.map(r => [r.id, r]));
+  const facilityMap = new Map(facilities.map(f => [f.userId, f.level]));
+
+  const result = new Map<number, StreamingRevenueCalculation | null>();
+
+  for (const { robotId, userId } of participants) {
+    const robot = robotMap.get(robotId);
+    if (!robot) {
+      result.set(robotId, null);
+      continue;
+    }
+
+    const studioLevel = facilityMap.get(userId) ?? 0;
+    const totalBattleCount = robot.totalBattles + robot.totalTagTeamBattles + robot.kothMatches;
+
+    const baseAmount = 1000;
+    const battleMultiplier = 1 + (totalBattleCount / 1000);
+    const fameMultiplier = 1 + (robot.fame / 5000);
+    const studioMultiplier = 1 + (studioLevel * 1.0);
+
+    const totalRevenue = Math.floor(
+      baseAmount * battleMultiplier * fameMultiplier * studioMultiplier
+    );
+
+    result.set(robotId, {
+      baseAmount,
+      battleMultiplier,
+      fameMultiplier,
+      studioMultiplier,
+      totalRevenue,
+      robotId: robot.id,
+      robotName: robot.name,
+      robotBattles: totalBattleCount,
+      robotFame: robot.fame,
+      studioLevel,
+    });
+  }
+
+  return result;
+}

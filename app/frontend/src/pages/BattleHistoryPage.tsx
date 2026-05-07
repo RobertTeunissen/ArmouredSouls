@@ -1,6 +1,6 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import Navigation from '../components/Navigation';
 import BattleHistorySummary from '../components/BattleHistorySummary';
@@ -15,9 +15,19 @@ import {
 } from '../utils/matchmakingApi';
 import { computeBattleSummary, EMPTY_SUMMARY } from '../utils/battleHistoryStats';
 
+type BattleFilterType = 'overall' | 'league' | 'tournament' | 'tag_team' | 'koth';
+type OutcomeFilterType = 'all' | 'win' | 'loss' | 'draw';
+type SortByType = 'date-desc' | 'date-asc' | 'elo-desc' | 'elo-asc' | 'reward-desc' | 'reward-asc';
+
+const VALID_BATTLE_FILTERS: BattleFilterType[] = ['overall', 'league', 'tournament', 'tag_team', 'koth'];
+const VALID_OUTCOME_FILTERS: OutcomeFilterType[] = ['all', 'win', 'loss', 'draw'];
+const VALID_SORT_OPTIONS: SortByType[] = ['date-desc', 'date-asc', 'elo-desc', 'elo-asc', 'reward-desc', 'reward-asc'];
+const VALID_PAGE_SIZES = [20, 50, 100];
+
 function BattleHistoryPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [battles, setBattles] = useState<BattleHistory[]>([]);
   const [pagination, setPagination] = useState({
     page: 1,
@@ -27,16 +37,64 @@ function BattleHistoryPage() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [battleFilter, setBattleFilter] = useState<'overall' | 'league' | 'tournament' | 'tag_team' | 'koth'>('overall');
-  
-  // Filter and sort state
-  const [outcomeFilter, setOutcomeFilter] = useState<'all' | 'win' | 'loss' | 'draw'>('all');
-  const [sortBy, setSortBy] = useState<'date-desc' | 'date-asc' | 'elo-desc' | 'elo-asc' | 'reward-desc' | 'reward-asc'>('date-desc');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [resultsPerPage, setResultsPerPage] = useState(20);  useEffect(() => {
+
+  // Read filter/sort state from URL params with safe defaults
+  const battleFilter: BattleFilterType = VALID_BATTLE_FILTERS.includes(searchParams.get('type') as BattleFilterType)
+    ? (searchParams.get('type') as BattleFilterType)
+    : 'overall';
+  const outcomeFilter: OutcomeFilterType = VALID_OUTCOME_FILTERS.includes(searchParams.get('outcome') as OutcomeFilterType)
+    ? (searchParams.get('outcome') as OutcomeFilterType)
+    : 'all';
+  const sortBy: SortByType = VALID_SORT_OPTIONS.includes(searchParams.get('sort') as SortByType)
+    ? (searchParams.get('sort') as SortByType)
+    : 'date-desc';
+  const searchTerm = searchParams.get('q') || '';
+  const resultsPerPage = VALID_PAGE_SIZES.includes(Number(searchParams.get('pageSize')))
+    ? Number(searchParams.get('pageSize'))
+    : 20;
+
+  // Helper to update URL params (replaces current history entry to avoid polluting back/forward)
+  const updateParams = useCallback((updates: Record<string, string | null>) => {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      for (const [key, value] of Object.entries(updates)) {
+        if (value === null || value === '') {
+          next.delete(key);
+        } else {
+          next.set(key, value);
+        }
+      }
+      return next;
+    }, { replace: true });
+  }, [setSearchParams]);
+
+  // Setters that update URL params
+  const setBattleFilter = useCallback((value: BattleFilterType) => {
+    updateParams({ type: value === 'overall' ? null : value });
+  }, [updateParams]);
+
+  const setOutcomeFilter = useCallback((value: OutcomeFilterType) => {
+    updateParams({ outcome: value === 'all' ? null : value });
+  }, [updateParams]);
+
+  const setSortBy = useCallback((value: SortByType) => {
+    updateParams({ sort: value === 'date-desc' ? null : value });
+  }, [updateParams]);
+
+  const setSearchTerm = useCallback((value: string) => {
+    updateParams({ q: value || null });
+  }, [updateParams]);
+
+  const setResultsPerPage = useCallback((value: number) => {
+    updateParams({ pageSize: value === 20 ? null : String(value) });
+  }, [updateParams]);
+
+  useEffect(() => {
     fetchBattles(1, battleFilter);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);  useEffect(() => {
+  }, []);
+
+  useEffect(() => {
     // Refetch when results per page or battle filter changes
     fetchBattles(1, battleFilter);
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -152,12 +210,9 @@ function BattleHistoryPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [battles, outcomeFilter, searchTerm, sortBy]);
 
-  const clearFilters = () => {
-    setOutcomeFilter('all');
-    setBattleFilter('overall');
-    setSearchTerm('');
-    setSortBy('date-desc');
-  };
+  const clearFilters = useCallback(() => {
+    setSearchParams({}, { replace: true });
+  }, [setSearchParams]);
 
   const hasActiveFilters = outcomeFilter !== 'all' || battleFilter !== 'overall' || searchTerm.trim() !== '' || sortBy !== 'date-desc';
 

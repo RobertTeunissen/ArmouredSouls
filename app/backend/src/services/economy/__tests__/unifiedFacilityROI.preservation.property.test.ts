@@ -12,7 +12,7 @@
  * **Validates: Requirements 3.1, 3.2, 3.4, 3.5, 3.6**
  */
 import fc from 'fast-check';
-import { getFacilityConfig, FACILITY_TYPES } from '../../../config/facilities';
+import { getFacilityConfig } from '../../../config/facilities';
 import prisma from '../../../lib/prisma';
 import { unifiedFacilityROIService } from '../unifiedFacilityROIService';
 

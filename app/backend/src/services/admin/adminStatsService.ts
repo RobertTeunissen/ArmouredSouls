@@ -261,59 +261,64 @@ export async function getSystemStats(userFilter: Prisma.UserWhereInput = {}) {
   // Total battles
   const totalBattles = await prisma.battle.count();
 
-  // Battle statistics — draw count and duration
-  const battles = await prisma.battle.findMany({
-    select: {
-      winnerId: true,
-      robot1Id: true,
-      robot2Id: true,
-      durationSeconds: true,
-      battleType: true,
-      participants: true,
-    },
-  });
+  // Battle statistics — use SQL aggregations instead of loading all battles into memory
+  interface BattleTypeStats {
+    battle_type: string;
+    total: bigint;
+    draws: bigint;
+    avg_duration: number;
+    kills: bigint;
+  }
 
-  const drawCount = battles.filter(b => b.winnerId === null).length;
+  const battleTypeStats = await prisma.$queryRaw<BattleTypeStats[]>`
+    SELECT
+      b."battle_type",
+      COUNT(*)::bigint AS total,
+      COUNT(*) FILTER (WHERE b."winner_id" IS NULL)::bigint AS draws,
+      COALESCE(AVG(b."duration_seconds"), 0) AS avg_duration,
+      COUNT(*) FILTER (
+        WHERE b."winner_id" IS NOT NULL
+        AND EXISTS (
+          SELECT 1 FROM "battle_participants" bp
+          WHERE bp."battle_id" = b.id
+            AND bp."robot_id" != b."winner_id"
+            AND bp."final_hp" = 0
+        )
+      )::bigint AS kills
+    FROM "battles" b
+    GROUP BY b."battle_type"
+  `;
+
+  const typeStatsMap = new Map(battleTypeStats.map(s => [s.battle_type, s]));
+
+  const drawCount = battleTypeStats.reduce((sum, s) => sum + Number(s.draws), 0);
   const drawPercentage = totalBattles > 0 ? (drawCount / totalBattles) * 100 : 0;
-  const avgDuration =
-    battles.length > 0
-      ? battles.reduce((sum, b) => sum + b.durationSeconds, 0) / battles.length
-      : 0;
+  const avgDuration = totalBattles > 0
+    ? battleTypeStats.reduce((sum, s) => sum + Number(s.avg_duration) * Number(s.total), 0) / totalBattles
+    : 0;
+  const killCount = battleTypeStats.reduce((sum, s) => sum + Number(s.kills), 0);
 
-  // Kill outcomes (loser has 0 HP, excluding draws)
-  const killCount = battles.filter(b => {
-    if (!b.winnerId) return false;
-    const loserParticipant = b.participants.find(p => p.robotId !== b.winnerId);
-    return loserParticipant?.finalHP === 0;
-  }).length;
-
-  // Per-type battle stats
-  function computeTypeStats(typeBattles: typeof battles) {
-    const total = typeBattles.length;
-    const draws = typeBattles.filter(b => b.winnerId === null).length;
-    const kills = typeBattles.filter(b => {
-      if (!b.winnerId) return false;
-      const loser = b.participants.find(p => p.robotId !== b.winnerId);
-      return loser?.finalHP === 0;
-    }).length;
-    const avgDur = total > 0
-      ? typeBattles.reduce((sum, b) => sum + b.durationSeconds, 0) / total
-      : 0;
+  function computeTypeStats(battleType: string) {
+    const stats = typeStatsMap.get(battleType);
+    if (!stats) return { total: 0, draws: 0, drawPercentage: 0, kills: 0, killPercentage: 0, avgDuration: 0 };
+    const total = Number(stats.total);
+    const draws = Number(stats.draws);
+    const kills = Number(stats.kills);
     return {
       total,
       draws,
       drawPercentage: total > 0 ? Math.round((draws / total) * 1000) / 10 : 0,
       kills,
       killPercentage: total > 0 ? Math.round((kills / total) * 1000) / 10 : 0,
-      avgDuration: Math.round(avgDur * 10) / 10,
+      avgDuration: Math.round(Number(stats.avg_duration) * 10) / 10,
     };
   }
 
   const battlesByType = {
-    league: computeTypeStats(battles.filter(b => b.battleType === 'league')),
-    tournament: computeTypeStats(battles.filter(b => b.battleType === 'tournament')),
-    tagTeam: computeTypeStats(battles.filter(b => b.battleType === 'tag_team')),
-    koth: computeTypeStats(battles.filter(b => b.battleType === 'koth')),
+    league: computeTypeStats('league'),
+    tournament: computeTypeStats('tournament'),
+    tagTeam: computeTypeStats('tag_team'),
+    koth: computeTypeStats('koth'),
   };
 
   // Financial statistics

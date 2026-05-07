@@ -101,13 +101,19 @@ export function selectTarget(
   opponents: RobotCombatState[],
   arenaRadius: number,
 ): ThreatScore | null {
-  const livingOpponents = opponents.filter((o) => o.isAlive);
-  if (livingOpponents.length === 0) return null;
+  // Fast path: callers in the simulation loop already pass only alive opponents.
+  // Defensive check without array allocation for external callers/tests.
+  if (opponents.length === 0) return null;
 
-  const scores = livingOpponents.map((opp) => {
+  let hasAlive = false;
+  const scores: ThreatScore[] = [];
+  for (const opp of opponents) {
+    if (!opp.isAlive) continue;
+    hasAlive = true;
     const dist = euclideanDistance(robot.position, opp.position);
-    return calculateThreatScore(robot, opp, dist, arenaRadius);
-  });
+    scores.push(calculateThreatScore(robot, opp, dist, arenaRadius));
+  }
+  if (!hasAlive) return null;
 
   scores.sort((a, b) => b.score - a.score);
 

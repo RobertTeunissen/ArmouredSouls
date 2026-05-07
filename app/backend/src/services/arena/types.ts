@@ -100,6 +100,15 @@ export interface RobotCombatState {
   totalDamageDealt: number;
   totalDamageTaken: number;
 
+  // === Pre-computed numeric attributes (avoids repeated Decimal→number conversion per tick) ===
+  numServoMotors: number;
+  numGyroStabilizers: number;
+  numThreatAnalysis: number;
+  numAdaptiveAI: number;
+  numLogicCores: number;
+  numHydraulicSystems: number;
+  numPowerCore: number;
+
   // === New spatial fields (Req 1.5) ===
   position: Position;
   facingDirection: number;

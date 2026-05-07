@@ -661,6 +661,7 @@ export async function getBattleLog(battleId: number) {
     createdAt: battleData.createdAt,
     battleType: battleData.battleType,
     leagueType: battleData.leagueType,
+    leagueInstanceId: battleData.leagueInstanceId ?? null,
     tournamentId: battleData.tournamentId ?? null,
     duration: battleData.durationSeconds,
     battleLog:
