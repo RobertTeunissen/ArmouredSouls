@@ -12,6 +12,7 @@ const router = express.Router();
 // Cache leaderboards for 5 minutes — data only changes after battles/cycles
 const leaderboardCache = new Map<string, { data: unknown; expiresAt: number }>();
 const LEADERBOARD_TTL = 5 * 60 * 1000;
+const LEADERBOARD_CACHE_MAX_SIZE = 50; // Prevent unbounded growth
 
 function getCachedOrNull(key: string): unknown | null {
   const entry = leaderboardCache.get(key);
@@ -21,6 +22,18 @@ function getCachedOrNull(key: string): unknown | null {
 }
 
 function setCache(key: string, data: unknown): void {
+  // Evict expired entries if cache is getting large
+  if (leaderboardCache.size >= LEADERBOARD_CACHE_MAX_SIZE) {
+    const now = Date.now();
+    for (const [k, v] of leaderboardCache) {
+      if (now >= v.expiresAt) leaderboardCache.delete(k);
+    }
+    // If still at max after eviction, remove oldest entry
+    if (leaderboardCache.size >= LEADERBOARD_CACHE_MAX_SIZE) {
+      const firstKey = leaderboardCache.keys().next().value;
+      if (firstKey) leaderboardCache.delete(firstKey);
+    }
+  }
   leaderboardCache.set(key, { data, expiresAt: Date.now() + LEADERBOARD_TTL });
 }
 

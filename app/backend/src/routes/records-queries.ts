@@ -59,22 +59,27 @@ const battleWithParticipantsInclude = {
 // ─── Combat Records ─────────────────────────────────────────────────
 
 export async function fetchCombatRecords() {
+  // Combat records only consider 1v1 battles (league/tournament) to avoid
+  // multi-participant ambiguity in winner/loser assignment
+  const oneVsOneFilter = { winnerId: { not: null }, battleType: { in: ['league', 'tournament'] } };
+
   const fastestVictories = await prisma.battle.findMany({
-    where: { winnerId: { not: null }, durationSeconds: { gt: 0 } },
+    where: { ...oneVsOneFilter, durationSeconds: { gt: 0 } },
     orderBy: { durationSeconds: 'asc' },
     take: 10,
     include: battleWithParticipantsInclude,
   });
 
   const longestBattles = await prisma.battle.findMany({
-    where: { winnerId: { not: null } },
+    where: oneVsOneFilter,
     orderBy: { durationSeconds: 'desc' },
     take: 10,
     include: battleWithParticipantsInclude,
   });
 
-  // Most Damage in Single Battle
+  // Most Damage in Single Battle (1v1 only for clean opponent display)
   const battleParticipants = await prisma.battleParticipant.findMany({
+    where: { battle: { battleType: { in: ['league', 'tournament'] } } },
     orderBy: { damageDealt: 'desc' },
     take: 10,
     include: {
@@ -99,11 +104,11 @@ export async function fetchCombatRecords() {
     };
   });
 
-  // Narrowest Victory — winners with lowest finalHP
+  // Narrowest Victory — winners with lowest finalHP (1v1 only)
   const narrowWinners = await prisma.battleParticipant.findMany({
     where: {
       finalHP: { gt: 0 },
-      battle: { winnerId: { not: null } },
+      battle: { winnerId: { not: null }, battleType: { in: ['league', 'tournament'] } },
     },
     orderBy: { finalHP: 'asc' },
     take: 50, // Fetch extra to filter for actual winners
@@ -161,7 +166,7 @@ export async function fetchCombatRecords() {
 
 export async function fetchUpsetRecords() {
   // Find upsets via BattleParticipant: winner had lower eloBefore than loser.
-  // Use raw SQL for efficiency — joins participants to find ELO differences.
+  // Only considers 1v1 battles (league/tournament) to avoid multi-participant ambiguity.
   const upsetRows = await prisma.$queryRaw<Array<{ battle_id: number; upset_diff: number }>>`
     SELECT
       w."battle_id",
@@ -171,6 +176,7 @@ export async function fetchUpsetRecords() {
     JOIN "battles" b ON b.id = w."battle_id"
     WHERE b."winner_id" = w."robot_id"
       AND w."elo_before" < l."elo_before"
+      AND b."battle_type" IN ('league', 'tournament')
     ORDER BY upset_diff DESC
     LIMIT 10
   `;

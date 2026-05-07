@@ -53,7 +53,7 @@ function BattleHistoryPage() {
     ? Number(searchParams.get('pageSize'))
     : 20;
 
-  // Helper to update URL params without replacing history
+  // Helper to update URL params (replaces current history entry to avoid polluting back/forward)
   const updateParams = useCallback((updates: Record<string, string | null>) => {
     setSearchParams(prev => {
       const next = new URLSearchParams(prev);
