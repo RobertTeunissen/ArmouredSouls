@@ -6,7 +6,7 @@
  *
  * **Validates: Requirements 4.2**
  */
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { InvestmentOverviewTab } from '../../components/facilities/InvestmentOverviewTab';
 import type { UnifiedFacilityROI, FacilityRecommendation } from '../../components/facilities/types';
