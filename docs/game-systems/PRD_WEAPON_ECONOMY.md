@@ -37,7 +37,7 @@ This PRD defines the requirements for the weapon economy system in Armoured Soul
 
 Weapon DPS dominated all other combat factors. The 3.0× DPS spread between cheapest and most expensive 1H weapons meant weapon tier was the single most impactful variable — a robot with all attributes at 1 and a top-tier weapon decisively beat a robot with attributes at 15 and a starter weapon. Players had no reason to invest in attributes when a weapon purchase delivered 3–6× more combat value per credit spent.
 
-Additionally, the top five 1H weapons (Vibro Mace, Volt Sabre, Nova Caster, Particle Lance) were all identical at 18 damage / 3s cooldown, offering no meaningful choice within the luxury tier.
+Additionally, the top four 1H luxury weapons (Vibro Mace, Volt Sabre, Nova Caster, Particle Lance) were all identical at 18 damage / 3s cooldown, offering no meaningful choice within the luxury tier.
 
 ### Changes Applied
 
@@ -138,7 +138,7 @@ This gives shields more staying power, extending the early phase of combat where
 - Baseline DPS changed from 2.67 to 2.0
 
 ```
-DPS Cost = ₡50,000 × (DPS Ratio - 1.0) × 6.0
+DPS Cost = ₡50,000 × (DPS Ratio - 1.0) × 3.0
 DPS Ratio = (baseDamage / cooldown) / 2.0
 ```
 

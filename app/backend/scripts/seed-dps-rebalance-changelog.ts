@@ -5,9 +5,10 @@
  * Idempotent — skips if an entry with sourceRef "31-weapon-dps-rebalance" already exists.
  *
  * Usage:
- *   npx ts-node app/backend/scripts/seed-dps-rebalance-changelog.ts
+ *   npx tsx app/backend/scripts/seed-dps-rebalance-changelog.ts
  */
 
+import 'dotenv/config';
 import { PrismaClient } from '../generated/prisma';
 import { PrismaPg } from '@prisma/adapter-pg';
 

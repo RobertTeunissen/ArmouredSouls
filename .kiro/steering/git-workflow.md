@@ -434,6 +434,25 @@ git checkout -b recovery-branch
 - Push fix to main
 - Monitor deployment
 
+### Checking CI and PR Status
+
+Use the `gh` CLI to check CI status, review comments, and PR details:
+
+```bash
+# List PRs for current branch
+gh pr list --head <branch-name>
+
+# Check CI status
+gh pr checks <pr-number>
+
+# View failed job logs
+gh run view <run-id> --job <job-id> --log
+
+# Get PR review comments
+gh api repos/RobertTeunissen/ArmouredSouls/pulls/<pr-number>/reviews
+gh api repos/RobertTeunissen/ArmouredSouls/pulls/<pr-number>/comments
+```
+
 ## Quick Reference
 
 ### Common Commands

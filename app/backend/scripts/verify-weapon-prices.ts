@@ -11,7 +11,7 @@
  * Asserts deviation is ≤ 5% for all 47 weapons.
  *
  * Usage:
- *   npx ts-node app/backend/scripts/verify-weapon-prices.ts
+ *   npx tsx app/backend/scripts/verify-weapon-prices.ts
  */
 
 import { WEAPON_DEFINITIONS } from '../prisma/seed';
