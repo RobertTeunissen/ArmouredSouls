@@ -132,7 +132,7 @@ function WeaponAnalyticsPage() {
           { key: 'name', label: 'Weapon' },
           { key: 'type', label: 'Type', render: (row) => <span className="capitalize">{row.type}</span> },
           { key: 'cost', label: 'Cost', align: 'right', render: (row) => `₡${row.cost.toLocaleString()}` },
-          { key: 'baseDamage', label: 'Base Damage', align: 'right' },
+          { key: 'baseDamage', label: 'Base Damage', align: 'right', render: (row) => row.baseDamage },
           {
             key: 'owned',
             label: 'Owned',

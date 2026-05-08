@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "weapons" ALTER COLUMN "base_damage" TYPE DOUBLE PRECISION;
+ALTER TABLE "weapons" ALTER COLUMN "cooldown" TYPE DOUBLE PRECISION;

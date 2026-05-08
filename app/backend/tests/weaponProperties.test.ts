@@ -80,7 +80,7 @@ function calculateExpectedCost(weapon: WeaponDef): number {
   let dpsCost = 0;
   if (weapon.baseDamage > 0 && weapon.cooldown > 0) {
     const dpsRatio = (weapon.baseDamage / weapon.cooldown) / 2.0;
-    dpsCost = 50000 * (dpsRatio - 1.0) * 3.0;
+    dpsCost = 50000 * (dpsRatio - 1.0) * 6.0;
   }
 
   const handMultiplier = getHandMultiplier(weapon.handsRequired);

@@ -11086,8 +11086,8 @@ export namespace Prisma {
     readonly id: FieldRef<"Weapon", 'Int'>
     readonly name: FieldRef<"Weapon", 'String'>
     readonly weaponType: FieldRef<"Weapon", 'String'>
-    readonly baseDamage: FieldRef<"Weapon", 'Int'>
-    readonly cooldown: FieldRef<"Weapon", 'Int'>
+    readonly baseDamage: FieldRef<"Weapon", 'Float'>
+    readonly cooldown: FieldRef<"Weapon", 'Float'>
     readonly cost: FieldRef<"Weapon", 'Int'>
     readonly handsRequired: FieldRef<"Weapon", 'String'>
     readonly damageType: FieldRef<"Weapon", 'String'>
@@ -34908,8 +34908,8 @@ export namespace Prisma {
     id?: IntFilter<"Weapon"> | number
     name?: StringFilter<"Weapon"> | string
     weaponType?: StringFilter<"Weapon"> | string
-    baseDamage?: IntFilter<"Weapon"> | number
-    cooldown?: IntFilter<"Weapon"> | number
+    baseDamage?: FloatFilter<"Weapon"> | number
+    cooldown?: FloatFilter<"Weapon"> | number
     cost?: IntFilter<"Weapon"> | number
     handsRequired?: StringFilter<"Weapon"> | string
     damageType?: StringFilter<"Weapon"> | string
@@ -34991,8 +34991,8 @@ export namespace Prisma {
     NOT?: WeaponWhereInput | WeaponWhereInput[]
     name?: StringFilter<"Weapon"> | string
     weaponType?: StringFilter<"Weapon"> | string
-    baseDamage?: IntFilter<"Weapon"> | number
-    cooldown?: IntFilter<"Weapon"> | number
+    baseDamage?: FloatFilter<"Weapon"> | number
+    cooldown?: FloatFilter<"Weapon"> | number
     cost?: IntFilter<"Weapon"> | number
     handsRequired?: StringFilter<"Weapon"> | string
     damageType?: StringFilter<"Weapon"> | string
@@ -35078,8 +35078,8 @@ export namespace Prisma {
     id?: IntWithAggregatesFilter<"Weapon"> | number
     name?: StringWithAggregatesFilter<"Weapon"> | string
     weaponType?: StringWithAggregatesFilter<"Weapon"> | string
-    baseDamage?: IntWithAggregatesFilter<"Weapon"> | number
-    cooldown?: IntWithAggregatesFilter<"Weapon"> | number
+    baseDamage?: FloatWithAggregatesFilter<"Weapon"> | number
+    cooldown?: FloatWithAggregatesFilter<"Weapon"> | number
     cost?: IntWithAggregatesFilter<"Weapon"> | number
     handsRequired?: StringWithAggregatesFilter<"Weapon"> | string
     damageType?: StringWithAggregatesFilter<"Weapon"> | string
@@ -37848,8 +37848,8 @@ export namespace Prisma {
   export type WeaponUpdateInput = {
     name?: StringFieldUpdateOperationsInput | string
     weaponType?: StringFieldUpdateOperationsInput | string
-    baseDamage?: IntFieldUpdateOperationsInput | number
-    cooldown?: IntFieldUpdateOperationsInput | number
+    baseDamage?: FloatFieldUpdateOperationsInput | number
+    cooldown?: FloatFieldUpdateOperationsInput | number
     cost?: IntFieldUpdateOperationsInput | number
     handsRequired?: StringFieldUpdateOperationsInput | string
     damageType?: StringFieldUpdateOperationsInput | string
@@ -37888,8 +37888,8 @@ export namespace Prisma {
     id?: IntFieldUpdateOperationsInput | number
     name?: StringFieldUpdateOperationsInput | string
     weaponType?: StringFieldUpdateOperationsInput | string
-    baseDamage?: IntFieldUpdateOperationsInput | number
-    cooldown?: IntFieldUpdateOperationsInput | number
+    baseDamage?: FloatFieldUpdateOperationsInput | number
+    cooldown?: FloatFieldUpdateOperationsInput | number
     cost?: IntFieldUpdateOperationsInput | number
     handsRequired?: StringFieldUpdateOperationsInput | string
     damageType?: StringFieldUpdateOperationsInput | string
@@ -37966,8 +37966,8 @@ export namespace Prisma {
   export type WeaponUpdateManyMutationInput = {
     name?: StringFieldUpdateOperationsInput | string
     weaponType?: StringFieldUpdateOperationsInput | string
-    baseDamage?: IntFieldUpdateOperationsInput | number
-    cooldown?: IntFieldUpdateOperationsInput | number
+    baseDamage?: FloatFieldUpdateOperationsInput | number
+    cooldown?: FloatFieldUpdateOperationsInput | number
     cost?: IntFieldUpdateOperationsInput | number
     handsRequired?: StringFieldUpdateOperationsInput | string
     damageType?: StringFieldUpdateOperationsInput | string
@@ -38005,8 +38005,8 @@ export namespace Prisma {
     id?: IntFieldUpdateOperationsInput | number
     name?: StringFieldUpdateOperationsInput | string
     weaponType?: StringFieldUpdateOperationsInput | string
-    baseDamage?: IntFieldUpdateOperationsInput | number
-    cooldown?: IntFieldUpdateOperationsInput | number
+    baseDamage?: FloatFieldUpdateOperationsInput | number
+    cooldown?: FloatFieldUpdateOperationsInput | number
     cost?: IntFieldUpdateOperationsInput | number
     handsRequired?: StringFieldUpdateOperationsInput | string
     damageType?: StringFieldUpdateOperationsInput | string
@@ -47178,8 +47178,8 @@ export namespace Prisma {
   export type WeaponUpdateWithoutWeaponInventoryInput = {
     name?: StringFieldUpdateOperationsInput | string
     weaponType?: StringFieldUpdateOperationsInput | string
-    baseDamage?: IntFieldUpdateOperationsInput | number
-    cooldown?: IntFieldUpdateOperationsInput | number
+    baseDamage?: FloatFieldUpdateOperationsInput | number
+    cooldown?: FloatFieldUpdateOperationsInput | number
     cost?: IntFieldUpdateOperationsInput | number
     handsRequired?: StringFieldUpdateOperationsInput | string
     damageType?: StringFieldUpdateOperationsInput | string
@@ -47217,8 +47217,8 @@ export namespace Prisma {
     id?: IntFieldUpdateOperationsInput | number
     name?: StringFieldUpdateOperationsInput | string
     weaponType?: StringFieldUpdateOperationsInput | string
-    baseDamage?: IntFieldUpdateOperationsInput | number
-    cooldown?: IntFieldUpdateOperationsInput | number
+    baseDamage?: FloatFieldUpdateOperationsInput | number
+    cooldown?: FloatFieldUpdateOperationsInput | number
     cost?: IntFieldUpdateOperationsInput | number
     handsRequired?: StringFieldUpdateOperationsInput | string
     damageType?: StringFieldUpdateOperationsInput | string

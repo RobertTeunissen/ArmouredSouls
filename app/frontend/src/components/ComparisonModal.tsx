@@ -1,4 +1,5 @@
 import { getWeaponImagePath } from '../utils/weaponImages';
+
 import meleeIcon from '../assets/icons/weapon-types/melee.svg';
 import ballisticIcon from '../assets/icons/weapon-types/ballistic.svg';
 import energyIcon from '../assets/icons/weapon-types/energy.svg';

@@ -1,7 +1,7 @@
 # Product Requirements Document: Weapon Economy and Starter Weapons Overhaul
 
-**Version**: 1.3  
-**Last Updated**: March 21, 2026  
+**Version**: 1.4  
+**Last Updated**: May 8, 2026  
 **Status**: Implemented with Balance Adjustments  
 **Owner**: Robert Teunissen  
 **Epic**: Weapon System Economy Redesign
@@ -11,6 +11,7 @@
 - **v1.1** (Feb 5, 2026): Updated for combat rebalancing - reduced weapon damage values
 - **v1.2** (Mar 21, 2026): ~25% weapon damage reduction + shield capacity doubled (×2 → ×4)
 - **v1.3** (Mar 21, 2026): Weapon roster expansion from 26 to 47 weapons — 21 new weapons, 2 reclassifications (Laser Rifle → 2H Short, Assault Rifle → 1H Short Premium), tier boundary alignment (Budget <100K, Mid 100–250K, Premium 250–400K, Luxury 400K+), rangeBand column added
+- **v1.4** (May 8, 2026): DPS rebalance — baseDamage compression (3.0× → 2.0× DPS spread), DPS Cost Multiplier M increased from 3.0 to 6.0, prices unchanged (±1%), big five 1H weapons differentiated via cooldown
 
 ---
 
@@ -27,6 +28,62 @@ This PRD defines the requirements for the weapon economy system in Armoured Soul
 **Context**: The combat system was rebalanced to eliminate 70% shield absorption and 30% bleed-through mechanics, resulting in 2-3x faster damage application. Weapon damage was reduced proportionally to maintain target battle duration of 40-60 seconds.
 
 **Success Criteria**: All weapons have fair pricing based on transparent formula, maintain value proposition relative to each other, and support faster battle times without economy disruption.
+
+---
+
+## Version 1.4 Updates (May 2026)
+
+### Problem Statement
+
+Weapon DPS dominated all other combat factors. The 3.0× DPS spread between cheapest and most expensive 1H weapons meant weapon tier was the single most impactful variable — a robot with all attributes at 1 and a top-tier weapon decisively beat a robot with attributes at 15 and a starter weapon. Players had no reason to invest in attributes when a weapon purchase delivered 3–6× more combat value per credit spent.
+
+Additionally, the top four 1H luxury weapons (Vibro Mace, Volt Sabre, Nova Caster, Particle Lance) were all identical at 18 damage / 3s cooldown, offering no meaningful choice within the luxury tier.
+
+### Changes Applied
+
+**1. baseDamage Compression (~20-33% reduction for mid/high-tier weapons)**
+
+All 41 non-shield weapons had baseDamage values compressed. The DPS spread for 1H weapons was reduced from 3.0× (2.0–6.0 DPS) to 2.0× (2.0–4.0 DPS). Starter weapons (Practice Sword, Practice Blaster, Laser Pistol) remain unchanged at 6 damage / 3s = 2.0 DPS baseline.
+
+Schema change: `baseDamage` and `cooldown` columns changed from `Int` to `Float` to support decimal values (e.g., 4.5, 7.5, 10.5, 3.5s).
+
+**2. DPS Cost Multiplier M increased from 3.0 to 6.0**
+
+The pricing formula multiplier was doubled to exactly reproduce current prices (±1%) with the new lower baseDamage values:
+
+```
+DPS Cost = ₡50,000 × (DPS Ratio - 1.0) × 6.0
+DPS Ratio = (baseDamage / cooldown) / 2.0
+```
+
+All weapon prices remain unchanged. The multiplier increase is purely a documentation/design-tool change — it's the formula used to *set* prices, not runtime code.
+
+**3. Big Five 1H Weapon Differentiation**
+
+Four luxury 1H weapons (₡425K each) now have distinct combat profiles at the same DPS (4.0) and same price:
+
+| Weapon | baseDamage | Cooldown | DPS | Identity |
+|--------|-----------|----------|-----|----------|
+| Vibro Mace | 8 | 2s | 4.0 | Fast brawler — more attacks, more counter/crit triggers |
+| Volt Sabre | 12 | 3s | 4.0 | Standard balanced |
+| Nova Caster | 14 | 3.5s | 4.0 | Moderate burst — fewer but harder hits |
+| Particle Lance | 16 | 4s | 4.0 | Heavy burst — slow cannon, big per-hit damage |
+
+Fast weapons benefit more from Attack Speed. Slow weapons benefit more from Critical Systems and are better against armor.
+
+### Expected Impact
+
+- **Battle duration**: ~34s → ~45s average (within 120s limit, draw rate stays <5%)
+- **Loadout diversity**: All four loadout types within 15% of each other on effective combat power (DPS × EHP) at equal budget
+- **Attribute investment**: Now competitive with weapon investment for mid-game players
+- **Price stability**: All 47 weapon prices unchanged (±1%)
+
+### Files Modified
+
+- `app/backend/prisma/schema.prisma` — `baseDamage Int` → `Float`, `cooldown Int` → `Float`
+- `app/backend/prisma/migrations/20260508000000_weapon_dps_rebalance/` — ALTER COLUMN types
+- `app/backend/prisma/seed.ts` — Updated all 41 baseDamage values + 3 cooldown values
+- `docs/analysis/WEAPON_DPS_REBALANCE.md` — Full analysis document
 
 ---
 
@@ -77,7 +134,7 @@ This gives shields more staying power, extending the early phase of combat where
 
 **3. Pricing Formula Updated**
 
-- DPS Cost multiplier M increased from 2.67 to 3.0
+- DPS Cost multiplier M increased from 2.67 to 3.0 *(subsequently increased to 6.0 in v1.4)*
 - Baseline DPS changed from 2.67 to 2.0
 
 ```

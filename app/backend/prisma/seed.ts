@@ -111,7 +111,7 @@ export const WEAPON_DEFINITIONS = [
   {
     name: 'Machine Pistol',
     weaponType: 'ballistic',
-    baseDamage: 5,
+    baseDamage: 4.5,
     cooldown: 2,
     cost: 94000,
     handsRequired: 'one',
@@ -141,7 +141,7 @@ export const WEAPON_DEFINITIONS = [
   {
     name: 'Combat Knife',
     weaponType: 'melee',
-    baseDamage: 5,
+    baseDamage: 4.5,
     cooldown: 2,
     cost: 93000,
     handsRequired: 'one',
@@ -205,7 +205,7 @@ export const WEAPON_DEFINITIONS = [
   {
     name: 'Machine Gun',
     weaponType: 'ballistic',
-    baseDamage: 5,
+    baseDamage: 4.5,
     cooldown: 2,
     cost: 107000,
     handsRequired: 'one',
@@ -221,7 +221,7 @@ export const WEAPON_DEFINITIONS = [
   {
     name: 'Burst Rifle',
     weaponType: 'ballistic',
-    baseDamage: 8,
+    baseDamage: 7,
     cooldown: 3,
     cost: 117000,
     handsRequired: 'one',
@@ -237,7 +237,7 @@ export const WEAPON_DEFINITIONS = [
   {
     name: 'Assault Rifle',
     weaponType: 'ballistic',
-    baseDamage: 14,
+    baseDamage: 10,
     cooldown: 3,
     cost: 293000,
     handsRequired: 'one',
@@ -254,7 +254,7 @@ export const WEAPON_DEFINITIONS = [
   {
     name: 'Energy Blade',
     weaponType: 'melee',
-    baseDamage: 10,
+    baseDamage: 8,
     cooldown: 3,
     cost: 175000,
     handsRequired: 'one',
@@ -270,7 +270,7 @@ export const WEAPON_DEFINITIONS = [
   {
     name: 'Laser Rifle',
     weaponType: 'energy',
-    baseDamage: 9,
+    baseDamage: 7.5,
     cooldown: 3,
     cost: 243000,
     handsRequired: 'two',
@@ -287,7 +287,7 @@ export const WEAPON_DEFINITIONS = [
   {
     name: 'Plasma Blade',
     weaponType: 'melee',
-    baseDamage: 11,
+    baseDamage: 8.5,
     cooldown: 3,
     cost: 202000,
     handsRequired: 'one',
@@ -304,7 +304,7 @@ export const WEAPON_DEFINITIONS = [
   {
     name: 'Plasma Rifle',
     weaponType: 'energy',
-    baseDamage: 13,
+    baseDamage: 9.5,
     cooldown: 3,
     cost: 258000,
     handsRequired: 'one',
@@ -321,7 +321,7 @@ export const WEAPON_DEFINITIONS = [
   {
     name: 'Power Sword',
     weaponType: 'melee',
-    baseDamage: 15,
+    baseDamage: 10.5,
     cooldown: 3,
     cost: 325000,
     handsRequired: 'one',
@@ -338,7 +338,7 @@ export const WEAPON_DEFINITIONS = [
   {
     name: 'Shotgun',
     weaponType: 'ballistic',
-    baseDamage: 14,
+    baseDamage: 11,
     cooldown: 4,
     cost: 283000,
     handsRequired: 'two',
@@ -354,7 +354,7 @@ export const WEAPON_DEFINITIONS = [
   {
     name: 'Grenade Launcher',
     weaponType: 'ballistic',
-    baseDamage: 16,
+    baseDamage: 13,
     cooldown: 5,
     cost: 293000,
     handsRequired: 'two',
@@ -371,7 +371,7 @@ export const WEAPON_DEFINITIONS = [
   {
     name: 'Sniper Rifle',
     weaponType: 'ballistic',
-    baseDamage: 22,
+    baseDamage: 17,
     cooldown: 6,
     cost: 387000,
     handsRequired: 'two',
@@ -388,7 +388,7 @@ export const WEAPON_DEFINITIONS = [
   {
     name: 'Battle Axe',
     weaponType: 'melee',
-    baseDamage: 17,
+    baseDamage: 12.5,
     cooldown: 4,
     cost: 402000,
     handsRequired: 'two',
@@ -405,7 +405,7 @@ export const WEAPON_DEFINITIONS = [
   {
     name: 'Plasma Cannon',
     weaponType: 'energy',
-    baseDamage: 20,
+    baseDamage: 15,
     cooldown: 5,
     cost: 408000,
     handsRequired: 'two',
@@ -422,7 +422,7 @@ export const WEAPON_DEFINITIONS = [
   {
     name: 'Heavy Hammer',
     weaponType: 'melee',
-    baseDamage: 22,
+    baseDamage: 16,
     cooldown: 5,
     cost: 478000,
     handsRequired: 'two',
@@ -439,7 +439,7 @@ export const WEAPON_DEFINITIONS = [
   {
     name: 'Railgun',
     weaponType: 'ballistic',
-    baseDamage: 25,
+    baseDamage: 18.5,
     cooldown: 6,
     cost: 527000,
     handsRequired: 'two',
@@ -456,7 +456,7 @@ export const WEAPON_DEFINITIONS = [
   {
     name: 'Ion Beam',
     weaponType: 'energy',
-    baseDamage: 18,
+    baseDamage: 13,
     cooldown: 4,
     cost: 544000,
     handsRequired: 'two',
@@ -473,8 +473,8 @@ export const WEAPON_DEFINITIONS = [
   {
     name: 'Vibro Mace',
     weaponType: 'melee',
-    baseDamage: 18,
-    cooldown: 3,
+    baseDamage: 8,
+    cooldown: 2,
     cost: 425000,
     handsRequired: 'one',
     damageType: 'melee',
@@ -506,7 +506,7 @@ export const WEAPON_DEFINITIONS = [
   {
     name: 'Shock Maul',
     weaponType: 'energy',
-    baseDamage: 8,
+    baseDamage: 7,
     cooldown: 3,
     cost: 183000,
     handsRequired: 'two',
@@ -522,7 +522,7 @@ export const WEAPON_DEFINITIONS = [
   {
     name: 'Thermal Lance',
     weaponType: 'energy',
-    baseDamage: 13,
+    baseDamage: 10.5,
     cooldown: 4,
     cost: 279000,
     handsRequired: 'two',
@@ -539,7 +539,7 @@ export const WEAPON_DEFINITIONS = [
   {
     name: 'Volt Sabre',
     weaponType: 'energy',
-    baseDamage: 18,
+    baseDamage: 12,
     cooldown: 3,
     cost: 425000,
     handsRequired: 'one',
@@ -572,7 +572,7 @@ export const WEAPON_DEFINITIONS = [
   {
     name: 'Pulse Accelerator',
     weaponType: 'energy',
-    baseDamage: 13,
+    baseDamage: 10.5,
     cooldown: 4,
     cost: 273000,
     handsRequired: 'two',
@@ -589,7 +589,7 @@ export const WEAPON_DEFINITIONS = [
   {
     name: 'Arc Projector',
     weaponType: 'energy',
-    baseDamage: 18,
+    baseDamage: 13,
     cooldown: 4,
     cost: 488000,
     handsRequired: 'two',
@@ -607,7 +607,7 @@ export const WEAPON_DEFINITIONS = [
   {
     name: 'Bolt Carbine',
     weaponType: 'ballistic',
-    baseDamage: 5,
+    baseDamage: 4.5,
     cooldown: 2,
     cost: 93000,
     handsRequired: 'one',
@@ -622,7 +622,7 @@ export const WEAPON_DEFINITIONS = [
   {
     name: 'Flux Repeater',
     weaponType: 'energy',
-    baseDamage: 9,
+    baseDamage: 7.5,
     cooldown: 3,
     cost: 147000,
     handsRequired: 'one',
@@ -638,7 +638,7 @@ export const WEAPON_DEFINITIONS = [
   {
     name: 'Disruptor Cannon',
     weaponType: 'energy',
-    baseDamage: 14,
+    baseDamage: 10,
     cooldown: 3,
     cost: 293000,
     handsRequired: 'one',
@@ -655,8 +655,8 @@ export const WEAPON_DEFINITIONS = [
   {
     name: 'Nova Caster',
     weaponType: 'energy',
-    baseDamage: 18,
-    cooldown: 3,
+    baseDamage: 14,
+    cooldown: 3.5,
     cost: 425000,
     handsRequired: 'one',
     damageType: 'energy',
@@ -673,7 +673,7 @@ export const WEAPON_DEFINITIONS = [
   {
     name: 'Mortar System',
     weaponType: 'ballistic',
-    baseDamage: 10,
+    baseDamage: 9,
     cooldown: 4,
     cost: 163000,
     handsRequired: 'two',
@@ -689,7 +689,7 @@ export const WEAPON_DEFINITIONS = [
   {
     name: 'Beam Pistol',
     weaponType: 'energy',
-    baseDamage: 5,
+    baseDamage: 4.5,
     cooldown: 2,
     cost: 93000,
     handsRequired: 'one',
@@ -704,7 +704,7 @@ export const WEAPON_DEFINITIONS = [
   {
     name: 'Photon Marksman',
     weaponType: 'energy',
-    baseDamage: 9,
+    baseDamage: 7.5,
     cooldown: 3,
     cost: 147000,
     handsRequired: 'one',
@@ -720,7 +720,7 @@ export const WEAPON_DEFINITIONS = [
   {
     name: 'Gauss Pistol',
     weaponType: 'ballistic',
-    baseDamage: 14,
+    baseDamage: 10,
     cooldown: 3,
     cost: 291000,
     handsRequired: 'one',
@@ -737,8 +737,8 @@ export const WEAPON_DEFINITIONS = [
   {
     name: 'Particle Lance',
     weaponType: 'energy',
-    baseDamage: 18,
-    cooldown: 3,
+    baseDamage: 16,
+    cooldown: 4,
     cost: 425000,
     handsRequired: 'one',
     damageType: 'energy',
@@ -755,7 +755,7 @@ export const WEAPON_DEFINITIONS = [
   {
     name: 'Siege Cannon',
     weaponType: 'ballistic',
-    baseDamage: 10,
+    baseDamage: 9,
     cooldown: 4,
     cost: 163000,
     handsRequired: 'two',
