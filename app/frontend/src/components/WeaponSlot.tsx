@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { getWeaponImagePath } from '../utils/weaponImages';
 
+
 interface WeaponInventory {
   id: number;
   weapon: {

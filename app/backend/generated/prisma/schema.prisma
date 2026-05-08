@@ -257,8 +257,8 @@ model Weapon {
   id              Int     @id @default(autoincrement())
   name            String  @db.VarChar(100)
   weaponType      String  @map("weapon_type") @db.VarChar(20) // "energy", "ballistic", "melee", "shield"
-  baseDamage      Int     @map("base_damage") // Base damage value
-  cooldown        Int // Seconds between attacks (time-based combat)
+  baseDamage      Float   @map("base_damage") // Base damage value
+  cooldown        Float // Seconds between attacks (time-based combat)
   cost            Int // Purchase cost in Credits
   handsRequired   String  @map("hands_required") @db.VarChar(10) // "one", "two", "shield"
   damageType      String  @map("damage_type") @db.VarChar(20) // "energy", "ballistic", "melee", "explosive"

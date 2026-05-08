@@ -6,6 +6,7 @@
 
 import { calculateWeaponWorkshopDiscount } from '../../../../shared/utils/discounts';
 import { getWeaponImagePath } from '../../utils/weaponImages';
+
 import { getWeaponOptimalRange, getRangeBandColor, getRangeBandBgColor, getRangeBandLabel } from '../../utils/weaponRange';
 import type { Weapon, StorageStatus } from './types';
 

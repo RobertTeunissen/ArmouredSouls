@@ -262,7 +262,7 @@ const WeaponTable: React.FC<WeaponTableProps> = ({
                   <span className="font-mono">{weapon.baseDamage}</span>
                 </td>
                 <td className="px-4 py-3 text-right">
-                  <span className="font-mono text-secondary">{String(weapon.cooldown)}s</span>
+                  <span className="font-mono text-secondary">{weapon.cooldown as number}s</span>
                 </td>
                 <td className="px-4 py-3 text-right">
                   <span className="font-mono">{dps}</span>

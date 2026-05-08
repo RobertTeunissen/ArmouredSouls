@@ -491,6 +491,9 @@ Stance Multiplier = 1.15 (offensive) OR 0.90 (defensive) OR 1.0 (balanced)
 Base Damage = Weapon Base Damage × Combat Power × Loadout × Weapon Control × Stance
 ```
 
+**Note on baseDamage Compression (v1.4, May 2026)**:
+Weapon `baseDamage` values were compressed in the May 2026 DPS rebalance to reduce DPS dominance over attributes. The damage formula itself is unchanged — only the input values (baseDamage) are lower. Top-tier 1H weapons now range 8–16 damage (was 18 for all). See [WEAPON_DPS_REBALANCE.md](../analysis/WEAPON_DPS_REBALANCE.md) for full details.
+
 **Note on Loadout Bonuses (v1.2)**:
 - Two-handed loadout provides +10% to Combat Power attribute (applied before multipliers)
 - Two-handed loadout also provides 1.10× damage multiplier (applied during damage calculation)

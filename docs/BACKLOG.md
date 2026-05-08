@@ -74,35 +74,49 @@ The current front page is just a login and registration module. New visitors hav
 
 ### #5 — Weapon Experimentation Problem — Players Never Switch Weapons
 **Source**: Observed player behavior  
-**Priority**: High — core gameplay loop stagnation
+**Priority**: High — core gameplay loop stagnation  
+**Progress**: baseDamage dominance identified as root cause. DPS rebalance specced — see [Spec #31](/.kiro/specs/to-do/31-weapon-dps-rebalance/). Weapon resale and weapon upgrades identified as follow-up features after the rebalance lands.
 
 Players buy one weapon set and never change. The investment is too high and too permanent — there's no way to sell weapons back, no way to try before you buy, and no partial recovery on a bad purchase. This kills experimentation and makes the 47-weapon catalog feel like a 1-weapon catalog per player.
 
-Possible solutions (not mutually exclusive — spec should evaluate combinations):
-- **Weapon resale**: Sell weapons back at a percentage of purchase price (50–70%).
-- **Practice Arena weapon trials**: Test-drive any weapon in a no-stakes practice fight before buying.
-- **Weapon rental**: Rent a weapon for N battles at a fraction of purchase cost.
-- **Weapon exchange/trade-in**: Swap an owned weapon for a different one of similar tier, paying only the price difference.
-- **Workshop facility perk**: Higher Workshop levels could unlock better resale rates or free trial battles.
+**Root cause — baseDamage dominance in the damage formula:**
 
-**Deeper issue — baseDamage dominance in the damage formula (discovered during Tuning Bay spec #25):**
+The damage formula is `baseDamage × (1 + combatPower × 1.5 / 100) × loadout × weaponControl × stance`. Because `baseDamage` is a flat multiplier and attributes are percentage modifiers, weapon baseDamage is the single most important combat variable — far more impactful than any attribute investment or tuning. The DPS spread between cheapest and most expensive 1H weapon is 3.0× (2.0 DPS to 6.0 DPS). Attributes can only provide ~1.5× multiplier at high investment. The weapon always wins.
 
-The damage formula is `baseDamage × (1 + combatPower × 1.5 / 100) × loadout × weaponControl × stance`. Because `baseDamage` is a flat multiplier and attributes are percentage modifiers, weapon baseDamage is the single most important combat variable — far more impactful than any attribute investment or tuning.
+**Analysis findings (May 2026):**
+- Five top-tier 1H weapons (Vibro Mace, Volt Sabre, Nova Caster, Particle Lance, all at 18 dmg/3s = 6.0 DPS, ₡425K) are identical in the only thing that matters (DPS). Their attribute bonuses differ but are drowned out by the baseDamage gap.
+- Dual wielding two top weapons (~₡850K) produces ~2.5× the DPS of a single weapon — making it the only viable strategy.
+- Shield builds (Weapon + Aegis Bulwark) lose decisively because fights end too fast for defensive mechanics to matter (avg 33.8s, 42.9% kill rate).
+- A robot with all attributes at 1 and a Volt Sabre beats a robot with all attributes at 15 and a Practice Sword by 127%.
+- With ₡3M starting budget, players can afford both top weapons AND good attributes — the weapon is still the obvious first buy.
 
-Concrete example: a robot with +15 tuning on ALL 23 stats equipped with a Beam Pistol (baseDamage 5, ₡93K) loses 10/10 practice battles against an ExpertBot with a tier-3 weapon (baseDamage ~12). The 2.4× baseDamage gap overwhelms a +6 attribute advantage on every stat.
+**Solution — DPS Rebalance (Spec #31):**
+- Compress baseDamage spread from 3.0× to 2.0× (top 1H goes from 18 to 12 baseDamage)
+- Increase pricing formula DPS multiplier from M=3 to M=6 so prices stay within ±1%
+- No HP/shield/cooldown/attribute changes — battles get ~33% longer (~45s avg), giving defensive builds time to work
+- After rebalance: all four loadout types (DW, 2H, single, shield) are within 15% of each other on effective combat power
+- After rebalance: attribute-heavy builds with cheap weapons can compete with weapon-heavy builds (DPS×EHP favors the attribute player at equal budget)
 
-This means high-DPS weapons always win, attribute upgrades and tuning have diminishing returns relative to weapon choice, and the 47-weapon catalog effectively reduces to "sort by DPS, buy the best you can afford." The damage formula may need rebalancing.
+**Follow-up features (to spec after rebalance lands):**
+
+1. **Weapon resale** — Sell weapons back at Workshop-level-dependent rates (40–75%). Quality-of-life improvement that reduces switching cost. Workshop gets a second meaningful purpose beyond purchase discounts.
+
+2. **Weapon upgrades** — Level individual weapon instances over time (reliability, attribute bonuses, minor damage, unique passives at thresholds). Creates attachment and identity. A fully upgraded cheap weapon could match a stock expensive weapon. Ongoing credit sink that solves late-game economic stagnation. Key design question: should upgrades make weapons *stronger* or *different*? Different is better for diversity.
+
+3. **Practice Arena catalog access** — Let players test any weapon from the shop in practice battles (not just owned weapons). The What-If system already supports weapon overrides for owned weapons — extending to unowned is a small change.
+
+4. **Matchup-dependent effectiveness** — Energy weapons bypass armor but shields resist them; ballistic shreds shields but armor blocks. Creates rock-paper-scissors requiring multiple weapons. Large scope, future spec.
 
 ### #6 — Game Loop Audit — Structural Design Flaws
 **Source**: Design review  
 **Priority**: High — foundational issues that limit long-term retention  
-**Progress**: Loop 1 explored in depth — see [Game Loop 1 Core Loop Exploration](analysis/GAME_LOOP_1_CORE_LOOP_EXPLORATION.md). The Tuning Pool (spec #25) directly addressed the thin "Adjust" step. Weapon Experimentation (#5) is the remaining high-impact fix for Loop 1. Loops 2–6 and missing loops still need exploration.
+**Progress**: Loop 1 explored in depth — see [Game Loop 1 Core Loop Exploration](analysis/GAME_LOOP_1_CORE_LOOP_EXPLORATION.md). The Tuning Pool (spec #25) addressed the thin "Adjust" step. The DPS Rebalance (spec #31) addresses baseDamage dominance, making weapon choice and attribute investment both meaningful. Weapon resale and weapon upgrades are identified as the remaining follow-ups for Loop 1. Loops 2–6 and missing loops still need exploration.
 
 The game has six identifiable loops, most of which degrade or stall at some point in the player lifecycle.
 
-**Loop 1: Core Loop (Configure → Battle → Results → Adjust)** — ✅ Partially addressed. The Tuning Pool (spec #25) enriches the "Adjust" step with meaningful per-battle decisions. Weapon switching remains economically punished (see #5) — that's the remaining gap. See exploration doc for full analysis and rejected ideas (per-match overrides, stance depth, pre-battle orders).
+**Loop 1: Core Loop (Configure → Battle → Results → Adjust)** — ✅ Mostly addressed. The Tuning Pool (spec #25) enriches the "Adjust" step. The DPS Rebalance (spec #31) makes all four loadout types viable and ensures attribute investment competes with weapon purchases. Remaining gaps: weapon resale (reduce switching cost) and weapon upgrades (create attachment and ongoing progression). See exploration doc for full analysis.
 
-**Loop 2: Economic Loop (Earn → Invest → Earn More)** — Not explored yet. Breaks in late game — credits accumulate with no meaningful sink once facilities and attributes are maxed.
+**Loop 2: Economic Loop (Earn → Invest → Earn More)** — Not explored yet. Breaks in late game — credits accumulate with no meaningful sink once facilities and attributes are maxed. Weapon upgrades (identified in #5 discussion) would serve as an ongoing credit sink. Season System (#41) would reset the economy entirely.
 
 **Loop 3: Competitive Loop (Battle → Earn LP → Promote → Harder Opponents)** — Not explored yet. One-dimensional. No seasons, resets, or meta shifts.
 
