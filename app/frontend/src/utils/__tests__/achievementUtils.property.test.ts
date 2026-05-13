@@ -117,7 +117,7 @@ describe('Property 13: Achievement sort correctness', () => {
    * preserves all elements (same length, same IDs) — sorting is a permutation.
    */
   const SORT_OPTIONS: AchievementSortOption[] = [
-    'default', 'tier_hard', 'tier_easy', 'status_locked', 'status_unlocked',
+    'default', 'tier_hard', 'tier_easy', 'status_locked', 'status_unlocked', 'date_newest', 'date_oldest',
   ];
 
   it('sorted results preserve all elements', () => {
@@ -192,6 +192,96 @@ describe('Property 13: Achievement sort correctness', () => {
           for (let i = 0; i < result.length - 1; i++) {
             expect(TIER_ORDER[result[i].tier] ?? 0).toBeLessThanOrEqual(
               TIER_ORDER[result[i + 1].tier] ?? 0,
+            );
+          }
+        },
+      ),
+      { numRuns: 100 },
+    );
+  });
+
+  it('date_newest sort places unlocked achievements before locked, ordered by timestamp descending', () => {
+    fc.assert(
+      fc.property(
+        fc.array(
+          fc.record({
+            tier: fc.constantFrom(...TIERS),
+            unlockedAt: fc.option(
+              fc.integer({ min: new Date('2024-01-01').getTime(), max: new Date('2026-12-31').getTime() }).map(ts => new Date(ts)),
+              { nil: null },
+            ),
+          }),
+          { minLength: 2, maxLength: 20 },
+        ),
+        (items) => {
+          const achievements = items.map((item, i) =>
+            mockAchievement({
+              id: `T${i}`,
+              tier: item.tier,
+              unlocked: item.unlockedAt !== null,
+              unlockedAt: item.unlockedAt ? item.unlockedAt.toISOString() : null,
+            }),
+          );
+          const result = sortAchievements(achievements, 'date_newest');
+
+          // All unlocked (with unlockedAt) should come before locked (null unlockedAt)
+          const firstNullIndex = result.findIndex(a => a.unlockedAt === null);
+          if (firstNullIndex !== -1) {
+            for (let i = firstNullIndex; i < result.length; i++) {
+              expect(result[i].unlockedAt).toBeNull();
+            }
+          }
+
+          // Unlocked achievements should be in descending timestamp order
+          const unlocked = result.filter(a => a.unlockedAt !== null);
+          for (let i = 0; i < unlocked.length - 1; i++) {
+            expect(new Date(unlocked[i].unlockedAt!).getTime()).toBeGreaterThanOrEqual(
+              new Date(unlocked[i + 1].unlockedAt!).getTime(),
+            );
+          }
+        },
+      ),
+      { numRuns: 100 },
+    );
+  });
+
+  it('date_oldest sort places unlocked achievements before locked, ordered by timestamp ascending', () => {
+    fc.assert(
+      fc.property(
+        fc.array(
+          fc.record({
+            tier: fc.constantFrom(...TIERS),
+            unlockedAt: fc.option(
+              fc.integer({ min: new Date('2024-01-01').getTime(), max: new Date('2026-12-31').getTime() }).map(ts => new Date(ts)),
+              { nil: null },
+            ),
+          }),
+          { minLength: 2, maxLength: 20 },
+        ),
+        (items) => {
+          const achievements = items.map((item, i) =>
+            mockAchievement({
+              id: `T${i}`,
+              tier: item.tier,
+              unlocked: item.unlockedAt !== null,
+              unlockedAt: item.unlockedAt ? item.unlockedAt.toISOString() : null,
+            }),
+          );
+          const result = sortAchievements(achievements, 'date_oldest');
+
+          // All unlocked (with unlockedAt) should come before locked (null unlockedAt)
+          const firstNullIndex = result.findIndex(a => a.unlockedAt === null);
+          if (firstNullIndex !== -1) {
+            for (let i = firstNullIndex; i < result.length; i++) {
+              expect(result[i].unlockedAt).toBeNull();
+            }
+          }
+
+          // Unlocked achievements should be in ascending timestamp order
+          const unlocked = result.filter(a => a.unlockedAt !== null);
+          for (let i = 0; i < unlocked.length - 1; i++) {
+            expect(new Date(unlocked[i].unlockedAt!).getTime()).toBeLessThanOrEqual(
+              new Date(unlocked[i + 1].unlockedAt!).getTime(),
             );
           }
         },

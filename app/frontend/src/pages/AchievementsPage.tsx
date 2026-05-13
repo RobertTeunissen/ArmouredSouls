@@ -34,6 +34,8 @@ const STATUS_OPTIONS: Array<{ value: 'all' | 'locked' | 'unlocked'; label: strin
 
 const SORT_OPTIONS: Array<{ value: AchievementSortOption; label: string }> = [
   { value: 'default', label: 'Default' },
+  { value: 'date_newest', label: 'Recently Unlocked' },
+  { value: 'date_oldest', label: 'Oldest Unlocked' },
   { value: 'rarity_asc', label: 'Rarest First' },
   { value: 'rarity_desc', label: 'Most Common First' },
   { value: 'status_locked', label: 'Locked First' },
