@@ -165,6 +165,7 @@ jest.mock('../../utils/buildUserFilter', () => ({
 }));
 
 jest.mock('../adminTournaments', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { Router } = require('express');
   return { __esModule: true, default: Router() };
 });
@@ -389,6 +390,7 @@ describe('Admin League History Endpoints', () => {
 // ---------------------------------------------------------------------------
 
 describe('Admin League History Zod Schema Validation', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { z } = require('zod');
 
   const leagueHistoryQuerySchema = z.object({

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Property-based tests for leagueHistoryService.
  * Uses fast-check to verify universal properties across generated inputs.
