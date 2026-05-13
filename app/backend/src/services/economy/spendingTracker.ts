@@ -21,6 +21,7 @@ interface BudgetSpent {
 /**
  * Track spending for a user during onboarding.
  * Only tracks if user hasn't completed onboarding yet.
+ * Uses a conditional update to avoid a read query for users who've already completed onboarding.
  * 
  * @param userId - The user ID
  * @param category - The spending category
@@ -32,17 +33,17 @@ export async function trackSpending(
   amount: number
 ): Promise<void> {
   try {
-    // Get user's onboarding state
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
+    // Conditional read: only fetch if user hasn't completed onboarding
+    // This avoids a wasted query for the majority of users (post-onboarding)
+    const user = await prisma.user.findFirst({
+      where: { id: userId, hasCompletedOnboarding: false },
       select: {
-        hasCompletedOnboarding: true,
         onboardingChoices: true,
       },
     });
 
-    // Only track during onboarding
-    if (!user || user.hasCompletedOnboarding) {
+    // User has completed onboarding or doesn't exist — skip
+    if (!user) {
       return;
     }
 

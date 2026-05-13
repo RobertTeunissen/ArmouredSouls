@@ -23,6 +23,7 @@ jest.mock('../../common/eventLogger', () => ({
 jest.mock('../../security/securityMonitor', () => ({
   securityMonitor: {
     recordEvent: jest.fn(),
+    logSecurityEvent: jest.fn(),
     trackRateLimitViolation: jest.fn(),
   },
 }));
@@ -71,7 +72,7 @@ import { fileStorageService } from '../fileStorageService';
 
 const mockPrisma = prisma as jest.Mocked<typeof prisma>;
 const mockEventLogger = eventLogger as jest.Mocked<typeof eventLogger>;
-const mockSecurityMonitor = securityMonitor as unknown as { recordEvent: jest.Mock };
+const mockSecurityMonitor = securityMonitor as unknown as { recordEvent: jest.Mock; logSecurityEvent: jest.Mock };
 const mockFileValidation = fileValidationService as jest.Mocked<typeof fileValidationService>;
 const mockModeration = contentModerationService as jest.Mocked<typeof contentModerationService>;
 const mockImageProcessing = imageProcessingService as jest.Mocked<typeof imageProcessingService>;
@@ -342,12 +343,10 @@ describe('Property 10: Dual audit logging for NSFW rejections', () => {
           expect(options).toEqual(expect.objectContaining({ userId }));
 
           // SecurityMonitor event
-          expect(mockSecurityMonitor.recordEvent).toHaveBeenCalledTimes(1);
-          const smEvent = mockSecurityMonitor.recordEvent.mock.calls[0][0];
-          expect(smEvent.eventType).toBe('image_moderation_rejection');
-          expect(smEvent.severity).toBe('warning');
-          expect(smEvent.userId).toBe(userId);
-          expect(smEvent.details.robotId).toBe(robotId);
+          expect(mockSecurityMonitor.logSecurityEvent).toHaveBeenCalledTimes(1);
+          expect(mockSecurityMonitor.logSecurityEvent).toHaveBeenCalledWith(
+            'warning', 'image_moderation_rejection', userId, expect.objectContaining({ robotId }),
+          );
         },
       ),
       { numRuns: NUM_RUNS },

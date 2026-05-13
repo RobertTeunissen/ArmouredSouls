@@ -574,16 +574,25 @@ export async function processAllDailyFinances(): Promise<{
   let totalCostsDeducted = 0;
   let bankruptUsers = 0;
 
-  for (const user of users) {
-    try {
-      const summary = await processDailyFinances(user.id);
-      summaries.push(summary);
-      totalCostsDeducted += summary.totalCosts;
-      if (summary.isBankrupt) {
-        bankruptUsers++;
+  // Process users in parallel batches of 20 to avoid overwhelming the DB connection pool
+  const BATCH_SIZE = 20;
+  for (let i = 0; i < users.length; i += BATCH_SIZE) {
+    const batch = users.slice(i, i + BATCH_SIZE);
+    const batchResults = await Promise.allSettled(
+      batch.map(user => processDailyFinances(user.id))
+    );
+
+    for (let j = 0; j < batchResults.length; j++) {
+      const result = batchResults[j];
+      if (result.status === 'fulfilled') {
+        summaries.push(result.value);
+        totalCostsDeducted += result.value.totalCosts;
+        if (result.value.isBankrupt) {
+          bankruptUsers++;
+        }
+      } else {
+        logger.error(`[Daily Finances] Error processing user ${batch[j].id}:`, result.reason);
       }
-    } catch (error) {
-      logger.error(`[Daily Finances] Error processing user ${user.id}:`, error);
     }
   }
 

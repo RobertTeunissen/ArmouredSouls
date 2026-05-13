@@ -432,7 +432,7 @@ router.post('/reset-account', authenticateToken, resetLimiter, validateRequest({
  *
  * Requirements: 14.4-14.8
  */
-router.get('/reset-eligibility', authenticateToken, resetLimiter, validateRequest({}), async (req: AuthRequest, res: Response) => {
+router.get('/reset-eligibility', authenticateToken, validateRequest({}), async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
 

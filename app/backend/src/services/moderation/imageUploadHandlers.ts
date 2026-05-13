@@ -19,7 +19,7 @@ import { contentModerationService } from './contentModerationService';
 import { imageProcessingService } from './imageProcessingService';
 import { pendingUploadCache } from './pendingUploadCache';
 import { fileStorageService } from './fileStorageService';
-import { SecuritySeverity, SecurityEvent } from '../security/securityLogger';
+import { SecuritySeverity } from '../security/securityLogger';
 import logger from '../../config/logger';
 
 /**
@@ -79,13 +79,10 @@ export async function handleImagePreview(req: AuthRequest, res: Response): Promi
       timestamp: new Date().toISOString(),
     }, { userId });
 
-    (securityMonitor as unknown as { recordEvent(event: SecurityEvent): void }).recordEvent({
-      severity: SecuritySeverity.WARNING,
-      eventType: 'image_moderation_rejection',
-      userId,
-      details: { robotId, reason: moderation.reason },
-      timestamp: new Date().toISOString(),
-    } as SecurityEvent);
+    securityMonitor.logSecurityEvent(SecuritySeverity.WARNING, 'image_moderation_rejection', userId, {
+      robotId,
+      reason: moderation.reason,
+    });
 
     res.status(422).json({
       error: 'Image did not pass content moderation',
@@ -102,13 +99,10 @@ export async function handleImagePreview(req: AuthRequest, res: Response): Promi
       timestamp: new Date().toISOString(),
     }, { userId });
 
-    (securityMonitor as unknown as { recordEvent(event: SecurityEvent): void }).recordEvent({
-      severity: SecuritySeverity.INFO,
-      eventType: 'image_robot_likeness_warning',
-      userId,
-      details: { robotId, robotLikenessScore: moderation.robotLikenessScore },
-      timestamp: new Date().toISOString(),
-    } as SecurityEvent);
+    securityMonitor.logSecurityEvent(SecuritySeverity.INFO, 'image_robot_likeness_warning', userId, {
+      robotId,
+      robotLikenessScore: moderation.robotLikenessScore,
+    });
 
     res.status(422).json({
       error: "This doesn't look like a robot",
@@ -125,13 +119,10 @@ export async function handleImagePreview(req: AuthRequest, res: Response): Promi
       timestamp: new Date().toISOString(),
     }, { userId });
 
-    (securityMonitor as unknown as { recordEvent(event: SecurityEvent): void }).recordEvent({
-      severity: SecuritySeverity.INFO,
-      eventType: 'image_robot_likeness_override',
-      userId,
-      details: { robotId, robotLikenessScore: moderation.robotLikenessScore },
-      timestamp: new Date().toISOString(),
-    } as SecurityEvent);
+    securityMonitor.logSecurityEvent(SecuritySeverity.INFO, 'image_robot_likeness_override', userId, {
+      robotId,
+      robotLikenessScore: moderation.robotLikenessScore,
+    });
   }
 
   // Step 5: Process image to 512×512 WebP

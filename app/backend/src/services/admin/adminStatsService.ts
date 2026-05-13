@@ -218,34 +218,26 @@ export async function getSystemStats(userFilter: Prisma.UserWhereInput = {}) {
     },
   });
 
-  // Scheduled matches by type
-  const leagueMatchesScheduled = await prisma.scheduledLeagueMatch.count({
-    where: { status: 'scheduled' },
-  });
-  const leagueMatchesCompleted = await prisma.scheduledLeagueMatch.count({
-    where: { status: 'completed' },
-  });
-
-  const tournamentMatchesScheduled = await prisma.scheduledTournamentMatch.count({
-    where: { status: { in: ['pending', 'scheduled'] } },
-  });
-  const tournamentMatchesCompleted = await prisma.scheduledTournamentMatch.count({
-    where: { status: 'completed' },
-  });
-
-  const tagTeamMatchesScheduled = await prisma.scheduledTagTeamMatch.count({
-    where: { status: 'scheduled' },
-  });
-  const tagTeamMatchesCompleted = await prisma.scheduledTagTeamMatch.count({
-    where: { status: 'completed' },
-  });
-
-  const kothMatchesScheduled = await prisma.scheduledKothMatch.count({
-    where: { status: 'scheduled' },
-  });
-  const kothMatchesCompleted = await prisma.scheduledKothMatch.count({
-    where: { status: 'completed' },
-  });
+  // Scheduled matches by type (parallel queries)
+  const [
+    leagueMatchesScheduled,
+    leagueMatchesCompleted,
+    tournamentMatchesScheduled,
+    tournamentMatchesCompleted,
+    tagTeamMatchesScheduled,
+    tagTeamMatchesCompleted,
+    kothMatchesScheduled,
+    kothMatchesCompleted,
+  ] = await Promise.all([
+    prisma.scheduledLeagueMatch.count({ where: { status: 'scheduled' } }),
+    prisma.scheduledLeagueMatch.count({ where: { status: 'completed' } }),
+    prisma.scheduledTournamentMatch.count({ where: { status: { in: ['pending', 'scheduled'] } } }),
+    prisma.scheduledTournamentMatch.count({ where: { status: 'completed' } }),
+    prisma.scheduledTagTeamMatch.count({ where: { status: 'scheduled' } }),
+    prisma.scheduledTagTeamMatch.count({ where: { status: 'completed' } }),
+    prisma.scheduledKothMatch.count({ where: { status: 'scheduled' } }),
+    prisma.scheduledKothMatch.count({ where: { status: 'completed' } }),
+  ]);
 
   // Total scheduled/completed across all types
   const scheduledMatches =

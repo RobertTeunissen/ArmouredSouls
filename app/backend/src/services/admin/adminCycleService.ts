@@ -46,7 +46,6 @@ export interface CycleResult {
   userGeneration?: unknown;
   matchmaking?: unknown;
   tagTeamMatchmaking?: unknown;
-  totalStreamingRevenue?: number;
   duration: number;
   error?: string;
 }
@@ -657,10 +656,6 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
       if (kothBattleSummary) {
         logger.info(`[Admin] KotH Battles: ${kothBattleSummary.totalMatches} (${kothBattleSummary.successfulMatches} successful, ${kothBattleSummary.failedMatches} failed)`);
       }
-      const totalStreamingRevenue = (battleSummary.totalStreamingRevenue || 0) + (tagTeamBattleSummary?.totalStreamingRevenue || 0);
-      if (totalStreamingRevenue > 0) {
-        logger.info(`[Admin] Streaming Revenue: ₡${totalStreamingRevenue.toLocaleString()}`);
-      }
       logger.info(`[Admin] ===================================`);
 
       cycleResults.push({
@@ -679,7 +674,6 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
         userGeneration: userGenerationSummary,
         matchmaking: matchmakingSummary,
         tagTeamMatchmaking: tagTeamMatchmakingSummary,
-        totalStreamingRevenue,
         duration: Date.now() - cycleStart,
       });
 

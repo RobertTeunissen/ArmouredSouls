@@ -377,7 +377,8 @@ type TagTeamWithRobotsAndStable = Prisma.TagTeamGetPayload<{
 /**
  * Get standings for an entire tag team league tier (all instances combined)
  * Requirement 9.3: Sort by league points (descending), then ELO (descending)
- * Includes team rank calculation
+ * Includes team rank calculation.
+ * Capped at 500 teams max to prevent unbounded memory usage.
  */
 export async function getStandingsForTier(tier: TagTeamLeagueTier): Promise<(TagTeamWithRobotsAndStable & { combinedELO: number; rank: number })[]> {
   const teams = await prisma.tagTeam.findMany({
@@ -403,6 +404,11 @@ export async function getStandingsForTier(tier: TagTeamLeagueTier): Promise<(Tag
         },
       },
     },
+    orderBy: { tagTeamLeaguePoints: 'desc' },
+    // Cap at 500 to prevent unbounded memory usage. Current game has ~50 teams
+    // per tier max. If tiers grow beyond 500, this should be replaced with
+    // proper DB-level pagination (skip/take passed from the route handler).
+    take: 500,
   });
 
   // Calculate combined ELO for each team and sort

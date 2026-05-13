@@ -190,6 +190,78 @@ function CycleControlsPage() {
     }
   };
 
+  const triggerLeagueCycle = async (): Promise<void> => {
+    setLoading(true);
+    addSessionLog('info', 'Starting league cycle: Repair → Battles → Rebalance → Matchmaking');
+    try {
+      const repairRes = await apiClient.post('/api/admin/repair/all', { deductCosts: true });
+      addSessionLog('info', `Step 1: Repaired ${repairRes.data.robotsRepaired} robots`);
+      const battleRes = await apiClient.post('/api/admin/battles/run', {});
+      const bs = battleRes.data.summary;
+      addSessionLog(bs.failedBattles > 0 ? 'warning' : 'success', `Step 2: ${bs.successfulBattles}/${bs.totalBattles} battles executed`);
+      const rebalRes = await apiClient.post('/api/admin/leagues/rebalance', {});
+      const rs = rebalRes.data.summary;
+      addSessionLog('success', `Step 3: ${rs.totalPromoted} promoted, ${rs.totalDemoted} demoted`);
+      const matchRes = await apiClient.post('/api/admin/matchmaking/run', {});
+      addSessionLog('success', `Step 4: ${matchRes.data.matchesCreated} matches scheduled`);
+      showMessage('success', `League cycle complete: ${bs.successfulBattles} battles, ${matchRes.data.matchesCreated} matches scheduled`);
+    } catch (error: unknown) {
+      const msg = (error as { response?: { data?: { error?: string } } })?.response?.data?.error || 'League cycle failed';
+      addSessionLog('error', `League cycle failed: ${msg}`);
+      showMessage('error', msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const triggerTournamentCycle = async (): Promise<void> => {
+    setLoading(true);
+    addSessionLog('info', 'Starting tournament cycle');
+    try {
+      const response = await apiClient.post('/api/admin/cycles/bulk', { cycles: 0, includeTournaments: true, includeKoth: false, generateUsersPerCycle: false });
+      const results = response.data.results?.[0]?.tournaments;
+      const details = results ? [
+        results.tournamentsExecuted ? `${results.tournamentsExecuted} tournament(s)` : null,
+        results.roundsExecuted ? `${results.roundsExecuted} round(s)` : null,
+        results.matchesExecuted ? `${results.matchesExecuted} match(es)` : null,
+        results.tournamentsCompleted ? `${results.tournamentsCompleted} completed` : null,
+        results.tournamentsCreated ? `${results.tournamentsCreated} created` : null,
+      ].filter(Boolean).join(', ') : 'completed';
+      addSessionLog('success', `Tournament cycle: ${details}`);
+      showMessage('success', `Tournament cycle: ${details}`);
+    } catch (error: unknown) {
+      const msg = (error as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Tournament cycle failed';
+      addSessionLog('error', `Tournament cycle failed: ${msg}`);
+      showMessage('error', msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const triggerTagTeamCycle = async (): Promise<void> => {
+    setLoading(true);
+    addSessionLog('info', 'Starting tag team cycle: Repair → Battles → Rebalance → Matchmaking');
+    try {
+      const repairRes = await apiClient.post('/api/admin/repair/all', { deductCosts: true });
+      addSessionLog('info', `Step 1: Repaired ${repairRes.data.robotsRepaired} robots`);
+      const battleRes = await apiClient.post('/api/admin/tag-teams/battles', {});
+      const bs = battleRes.data.summary;
+      addSessionLog('success', `Step 2: ${bs.totalBattles} tag team battles executed`);
+      const rebalRes = await apiClient.post('/api/admin/tag-teams/rebalance', {});
+      const rs = rebalRes.data.summary;
+      addSessionLog('success', `Step 3: ${rs.totalPromoted} promoted, ${rs.totalDemoted} demoted`);
+      const matchRes = await apiClient.post('/api/admin/tag-teams/matchmaking', {});
+      addSessionLog('success', `Step 4: ${matchRes.data.matchesCreated} tag team matches scheduled`);
+      showMessage('success', `Tag team cycle complete: ${bs.totalBattles} battles, ${matchRes.data.matchesCreated} matches scheduled`);
+    } catch (error: unknown) {
+      const msg = (error as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Tag team cycle failed';
+      addSessionLog('error', `Tag team cycle failed: ${msg}`);
+      showMessage('error', msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   /* ---------- Bulk cycle runner ---------- */
 
   const runBulkCycles = useCallback(async (): Promise<void> => {
@@ -281,15 +353,28 @@ function CycleControlsPage() {
 
       {/* Production Jobs (Manual Trigger) */}
       <div className="bg-surface rounded-lg p-6">
-        <h2 className="text-xl font-semibold mb-4">Production Jobs (Manual Trigger)</h2>
+        <h2 className="text-xl font-semibold mb-2">Production Jobs (Manual Trigger)</h2>
+        <p className="text-sm text-secondary mb-4">Each button runs the same pipeline as the corresponding cron job.</p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          <TriggerButton label="🔧 Auto-Repair All Robots" color="bg-green-600 hover:bg-green-700" disabled={loading} onClick={() => requestConfirm('Auto-Repair All Robots', 'This will repair all damaged robots and deduct costs. Continue?', repairAllRobots)} />
-          <TriggerButton label="🎯 Run Matchmaking" color="bg-primary hover:bg-blue-700" disabled={loading} onClick={() => requestConfirm('Run Matchmaking', 'This will create new match pairings for all eligible robots. Continue?', runMatchmaking)} />
-          <TriggerButton label="⚔️ Execute Battles" color="bg-red-600 hover:bg-red-700" disabled={loading} onClick={() => requestConfirm('Execute Battles', 'This will execute all pending battles. This action cannot be undone. Continue?', executeBattles)} />
-          <TriggerButton label="💰 Process Daily Finances" color="bg-yellow-600 hover:bg-yellow-700" disabled={loading} onClick={() => requestConfirm('Process Daily Finances', 'This will deduct daily costs and process income for all users. Continue?', processDailyFinances)} />
-          <TriggerButton label="📊 Rebalance Leagues" color="bg-purple-600 hover:bg-purple-700" disabled={loading} onClick={() => requestConfirm('Rebalance Leagues', 'This will promote and demote robots based on their ELO. Continue?', rebalanceLeagues)} />
-          <TriggerButton label="👑 Trigger KotH Cycle" color="bg-orange-600 hover:bg-orange-700" disabled={loading} onClick={() => requestConfirm('Trigger KotH Cycle', 'This will trigger a King of the Hill cycle. Continue?', triggerKothCycle)} />
+          <TriggerButton label="⚔️ Run League Cycle" color="bg-primary hover:bg-blue-700" disabled={loading} onClick={() => requestConfirm('Run League Cycle', 'Repair → Execute battles → Rebalance → Matchmaking. Continue?', triggerLeagueCycle)} />
+          <TriggerButton label="🏆 Run Tournament Cycle" color="bg-yellow-600 hover:bg-yellow-700" disabled={loading} onClick={() => requestConfirm('Run Tournament Cycle', 'Repair → Execute rounds → Advance winners → Auto-create. Continue?', triggerTournamentCycle)} />
+          <TriggerButton label="🤝 Run Tag Team Cycle" color="bg-cyan-600 hover:bg-cyan-700" disabled={loading} onClick={() => requestConfirm('Run Tag Team Cycle', 'Repair → Execute battles → Rebalance → Matchmaking. Continue?', triggerTagTeamCycle)} />
+          <TriggerButton label="👑 Run KotH Cycle" color="bg-orange-600 hover:bg-orange-700" disabled={loading} onClick={() => requestConfirm('Run KotH Cycle', 'Execute KotH battles → Matchmaking for next round. Continue?', triggerKothCycle)} />
+          <TriggerButton label="💰 Run Settlement" color="bg-green-600 hover:bg-green-700" disabled={loading} onClick={() => requestConfirm('Run Settlement', 'Passive income → Operating costs → Cycle counter → Snapshot. Continue?', processDailyFinances)} />
         </div>
+
+        {/* Individual Step Controls (debugging) */}
+        <details className="mt-4">
+          <summary className="cursor-pointer text-secondary hover:text-white text-sm font-medium">
+            🔧 Individual Step Controls (debugging)
+          </summary>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mt-3">
+            <TriggerButton label="🔧 Repair All Robots" color="bg-surface-elevated hover:bg-white/10" disabled={loading} onClick={() => requestConfirm('Repair All Robots', 'Repair all damaged robots and deduct costs?', repairAllRobots)} />
+            <TriggerButton label="🎯 Run Matchmaking (League)" color="bg-surface-elevated hover:bg-white/10" disabled={loading} onClick={() => requestConfirm('Run Matchmaking', 'Create new league match pairings?', runMatchmaking)} />
+            <TriggerButton label="⚔️ Execute League Battles" color="bg-surface-elevated hover:bg-white/10" disabled={loading} onClick={() => requestConfirm('Execute Battles', 'Execute all pending league battles?', executeBattles)} />
+            <TriggerButton label="📊 Rebalance Leagues" color="bg-surface-elevated hover:bg-white/10" disabled={loading} onClick={() => requestConfirm('Rebalance Leagues', 'Promote and demote robots?', rebalanceLeagues)} />
+          </div>
+        </details>
       </div>
 
       {/* Bulk Cycle Testing */}

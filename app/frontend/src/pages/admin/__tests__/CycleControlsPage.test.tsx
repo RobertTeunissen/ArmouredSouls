@@ -101,21 +101,20 @@ describe('CycleControlsPage', () => {
 
   it('should render production job trigger buttons', () => {
     render(<CycleControlsPage />);
-    expect(screen.getByText('🔧 Auto-Repair All Robots')).toBeInTheDocument();
-    expect(screen.getByText('🎯 Run Matchmaking')).toBeInTheDocument();
-    expect(screen.getByText('⚔️ Execute Battles')).toBeInTheDocument();
-    expect(screen.getByText('💰 Process Daily Finances')).toBeInTheDocument();
-    expect(screen.getByText('📊 Rebalance Leagues')).toBeInTheDocument();
-    expect(screen.getByText('👑 Trigger KotH Cycle')).toBeInTheDocument();
+    expect(screen.getByText('⚔️ Run League Cycle')).toBeInTheDocument();
+    expect(screen.getByText('🏆 Run Tournament Cycle')).toBeInTheDocument();
+    expect(screen.getByText('🤝 Run Tag Team Cycle')).toBeInTheDocument();
+    expect(screen.getByText('👑 Run KotH Cycle')).toBeInTheDocument();
+    expect(screen.getByText('💰 Run Settlement')).toBeInTheDocument();
   });
 
   it('should show confirmation dialog when a trigger button is clicked', async () => {
     const user = userEvent.setup();
     render(<CycleControlsPage />);
 
-    await user.click(screen.getByText('🎯 Run Matchmaking'));
+    await user.click(screen.getByText('⚔️ Run League Cycle'));
 
-    expect(screen.getByText('Run Matchmaking')).toBeInTheDocument();
+    expect(screen.getByText('Run League Cycle')).toBeInTheDocument();
     expect(screen.getByText('Confirm')).toBeInTheDocument();
     expect(screen.getByText('Cancel')).toBeInTheDocument();
   });
@@ -124,11 +123,11 @@ describe('CycleControlsPage', () => {
     const user = userEvent.setup();
     render(<CycleControlsPage />);
 
-    await user.click(screen.getByText('🎯 Run Matchmaking'));
+    await user.click(screen.getByText('⚔️ Run League Cycle'));
     expect(screen.getByText('Confirm')).toBeInTheDocument();
 
     await user.click(screen.getByText('Cancel'));
-    expect(screen.queryByText('This will create new match pairings')).not.toBeInTheDocument();
+    expect(screen.queryByText('Repair → Execute battles')).not.toBeInTheDocument();
   });
 
   it('should render bulk cycle testing section', () => {

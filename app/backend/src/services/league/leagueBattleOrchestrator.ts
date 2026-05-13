@@ -232,34 +232,15 @@ async function createBattleRecord(
   const baseWinRewardAmount = getLeagueWinReward(scheduledMatch.leagueType);
   const participationReward = getParticipationReward(scheduledMatch.leagueType);
   
-  // Get users for prestige multiplier
-  const robot1User = await prisma.user.findUnique({ where: { id: robot1.userId } });
-  const robot2User = await prisma.user.findUnique({ where: { id: robot2.userId } });
+  // Get users for prestige multiplier (parallel fetch)
+  const [robot1User, robot2User] = await Promise.all([
+    prisma.user.findUnique({ where: { id: robot1.userId }, select: { id: true, prestige: true } }),
+    prisma.user.findUnique({ where: { id: robot2.userId }, select: { id: true, prestige: true } }),
+  ]);
   
-  // Query facility levels and robot count for repair cost calculation
-  const robot1Facilities = await prisma.facility.findMany({
-    where: { userId: robot1.userId, facilityType: { in: ['Repair Bay', 'Medical Bay'] } }
-  });
-  const robot2Facilities = await prisma.facility.findMany({
-    where: { userId: robot2.userId, facilityType: { in: ['Repair Bay', 'Medical Bay'] } }
-  });
-  
-  const _robot1RepairBayLevel = robot1Facilities.find(f => f.facilityType === 'Repair Bay')?.level || 0;
-  const _robot1MedicalBayLevel = robot1Facilities.find(f => f.facilityType === 'Medical Bay')?.level || 0;
-  const _robot2RepairBayLevel = robot2Facilities.find(f => f.facilityType === 'Repair Bay')?.level || 0;
-  const _robot2MedicalBayLevel = robot2Facilities.find(f => f.facilityType === 'Medical Bay')?.level || 0;
-  
-  const _robot1ActiveRobotCount = await prisma.robot.count({
-    where: { userId: robot1.userId, NOT: { name: 'Bye Robot' } }
-  });
-  const _robot2ActiveRobotCount = await prisma.robot.count({
-    where: { userId: robot2.userId, NOT: { name: 'Bye Robot' } }
-  });
-  
-  // Calculate repair costs using canonical function
-  // NOTE: Repair costs are NOT calculated here anymore
-  // They are calculated by RepairService when repairs are actually triggered
-  // This ensures accurate costs based on current damage and facility levels
+  // NOTE: Repair costs are NOT calculated here anymore.
+  // They are calculated by RepairService when repairs are actually triggered.
+  // This ensures accurate costs based on current damage and facility levels.
   
   // Winner gets midpoint of league range + participation reward, with prestige bonus
   // Loser gets only participation reward
@@ -455,34 +436,17 @@ async function createBattleRecord(
 /**
  * Update robot stats after battle and award prestige/fame.
  * Uses shared updateRobotCombatStats + awardCreditsToUser + awardPrestigeToUser.
+ * Accepts pre-fetched participant data to avoid redundant DB queries.
  */
 async function updateRobotStats(
   robot: Robot,
   battle: Battle,
-  isRobot1: boolean,
+  participant: { finalHP: number; eloAfter: number; damageDealt: number; yielded: boolean; destroyed: boolean },
+  opponentParticipant: { damageDealt: number; destroyed: boolean } | null,
   isByeMatch: boolean
 ): Promise<{ prestigeAwarded: number; fameAwarded: number }> {
   const isWinner = battle.winnerId === robot.id;
   const isDraw = battle.winnerId === null;
-  
-  // Get participant data from BattleParticipant table
-  const participant = await prisma.battleParticipant.findUnique({
-    where: {
-      battleId_robotId: {
-        battleId: battle.id,
-        robotId: robot.id,
-      },
-    },
-  });
-  
-  if (!participant) {
-    throw new BattleError(
-      BattleErrorCode.INVALID_BATTLE_STATE,
-      `BattleParticipant not found for battle ${battle.id}, robot ${robot.id}`,
-      500,
-      { battleId: battle.id, robotId: robot.id }
-    );
-  }
   
   const finalHP = participant.finalHP;
   const newELO = participant.eloAfter;
@@ -505,17 +469,6 @@ async function updateRobotStats(
     prestigeAwarded = calculatePrestigeForBattle(robot, isDraw, isByeMatch);
     fameAwarded = calculateFameForBattle(robot, finalHP, isDraw, isByeMatch);
   }
-  
-  // Get opponent's participant data to check if destroyed
-  const opponentId = isRobot1 ? battle.robot2Id : battle.robot1Id;
-  const opponentParticipant = await prisma.battleParticipant.findUnique({
-    where: {
-      battleId_robotId: {
-        battleId: battle.id,
-        robotId: opponentId,
-      },
-    },
-  });
   
   // Update robot combat stats via shared helper
   await updateRobotCombatStats({
@@ -622,36 +575,12 @@ export async function processBattle(scheduledMatch: ScheduledLeagueMatch): Promi
   const battle = await createBattleRecord(scheduledMatch, robot1, robot2, result);
   result.battleId = battle.id;
   
-  // Update robot stats and award prestige/fame
-  const stats1 = await updateRobotStats(robot1, battle, true, isByeMatch);
-  const stats2 = await updateRobotStats(robot2, battle, false, isByeMatch);
-  
-  const totalPrestige = stats1.prestigeAwarded + stats2.prestigeAwarded;
-  const totalFame = stats1.fameAwarded + stats2.fameAwarded;
-  
-  // Calculate and award streaming revenue
-  let streamingRevenue1 = null;
-  let streamingRevenue2 = null;
-  
-  if (!isByeMatch) {
-    streamingRevenue1 = await awardStreamingRevenueForParticipant(robot1.id, robot1.userId, battle.id, false);
-    streamingRevenue2 = await awardStreamingRevenueForParticipant(robot2.id, robot2.userId, battle.id, false);
-    
-    if (streamingRevenue1) {
-      logger.info(`[Streaming] ${robot1.name} earned ₡${streamingRevenue1.totalRevenue.toLocaleString()} from Battle #${battle.id}`);
-    }
-    if (streamingRevenue2) {
-      logger.info(`[Streaming] ${robot2.name} earned ₡${streamingRevenue2.totalRevenue.toLocaleString()} from Battle #${battle.id}`);
-    }
-  }
-  
-  // Get participant data for audit logging
-  const robot1Participant = await prisma.battleParticipant.findUnique({
-    where: { battleId_robotId: { battleId: battle.id, robotId: robot1.id } },
+  // Fetch both participants once (created by createBattleRecord) — reused throughout
+  const participants = await prisma.battleParticipant.findMany({
+    where: { battleId: battle.id },
   });
-  const robot2Participant = await prisma.battleParticipant.findUnique({
-    where: { battleId_robotId: { battleId: battle.id, robotId: robot2.id } },
-  });
+  const robot1Participant = participants.find(p => p.robotId === robot1.id)!;
+  const robot2Participant = participants.find(p => p.robotId === robot2.id)!;
   
   if (!robot1Participant || !robot2Participant) {
     throw new BattleError(
@@ -662,54 +591,80 @@ export async function processBattle(scheduledMatch: ScheduledLeagueMatch): Promi
     );
   }
   
-  // Determine results for each robot
+  // Update robot stats and award prestige/fame (pass pre-fetched participants)
+  const stats1 = await updateRobotStats(robot1, battle, robot1Participant, robot2Participant, isByeMatch);
+  const stats2 = await updateRobotStats(robot2, battle, robot2Participant, robot1Participant, isByeMatch);
+  
+  const totalPrestige = stats1.prestigeAwarded + stats2.prestigeAwarded;
+  const totalFame = stats1.fameAwarded + stats2.fameAwarded;
+  
+  // Calculate and award streaming revenue (parallel — independent per robot)
+  let streamingRevenue1 = null;
+  let streamingRevenue2 = null;
+  
+  if (!isByeMatch) {
+    [streamingRevenue1, streamingRevenue2] = await Promise.all([
+      awardStreamingRevenueForParticipant(robot1.id, robot1.userId, battle.id, false),
+      awardStreamingRevenueForParticipant(robot2.id, robot2.userId, battle.id, false),
+    ]);
+    
+    if (streamingRevenue1) {
+      logger.info(`[Streaming] ${robot1.name} earned ₡${streamingRevenue1.totalRevenue.toLocaleString()} from Battle #${battle.id}`);
+    }
+    if (streamingRevenue2) {
+      logger.info(`[Streaming] ${robot2.name} earned ₡${streamingRevenue2.totalRevenue.toLocaleString()} from Battle #${battle.id}`);
+    }
+  }
+  
+  // Determine results for each robot (participants already fetched above)
   const robot1IsWinner = result.winnerId === robot1.id;
   const robot2IsWinner = result.winnerId === robot2.id;
   
-  // Log battle_complete events to audit log - ONE EVENT PER ROBOT (via shared helper)
-  await logBattleAuditEvent(
-    {
-      robotId: robot1.id,
-      userId: robot1.userId,
-      isWinner: robot1IsWinner,
-      isDraw: result.isDraw,
-      damageDealt: robot1Participant.damageDealt,
-      finalHP: robot1Participant.finalHP,
-      yielded: robot1Participant.yielded,
-      destroyed: robot1Participant.destroyed,
-      credits: robot1IsWinner ? (battle.winnerReward ?? 0) : (battle.loserReward ?? 0),
-      prestige: stats1.prestigeAwarded,
-      fame: stats1.fameAwarded,
-      eloBefore: robot1Participant.eloBefore,
-      eloAfter: robot1Participant.eloAfter,
-    },
-    { id: battle.id, battleType: battle.battleType, leagueType: battle.leagueType, durationSeconds: battle.durationSeconds, eloChange: battle.eloChange },
-    robot2.id,
-    streamingRevenue1?.totalRevenue || 0,
-    result.isByeMatch,
-  );
-  
-  await logBattleAuditEvent(
-    {
-      robotId: robot2.id,
-      userId: robot2.userId,
-      isWinner: robot2IsWinner,
-      isDraw: result.isDraw,
-      damageDealt: robot2Participant.damageDealt,
-      finalHP: robot2Participant.finalHP,
-      yielded: robot2Participant.yielded,
-      destroyed: robot2Participant.destroyed,
-      credits: robot2IsWinner ? (battle.winnerReward ?? 0) : (battle.loserReward ?? 0),
-      prestige: stats2.prestigeAwarded,
-      fame: stats2.fameAwarded,
-      eloBefore: robot2Participant.eloBefore,
-      eloAfter: robot2Participant.eloAfter,
-    },
-    { id: battle.id, battleType: battle.battleType, leagueType: battle.leagueType, durationSeconds: battle.durationSeconds, eloChange: battle.eloChange },
-    robot1.id,
-    streamingRevenue2?.totalRevenue || 0,
-    result.isByeMatch,
-  );
+  // Log battle_complete events to audit log - ONE EVENT PER ROBOT (parallel — independent writes)
+  await Promise.all([
+    logBattleAuditEvent(
+      {
+        robotId: robot1.id,
+        userId: robot1.userId,
+        isWinner: robot1IsWinner,
+        isDraw: result.isDraw,
+        damageDealt: robot1Participant.damageDealt,
+        finalHP: robot1Participant.finalHP,
+        yielded: robot1Participant.yielded,
+        destroyed: robot1Participant.destroyed,
+        credits: robot1IsWinner ? (battle.winnerReward ?? 0) : (battle.loserReward ?? 0),
+        prestige: stats1.prestigeAwarded,
+        fame: stats1.fameAwarded,
+        eloBefore: robot1Participant.eloBefore,
+        eloAfter: robot1Participant.eloAfter,
+      },
+      { id: battle.id, battleType: battle.battleType, leagueType: battle.leagueType, durationSeconds: battle.durationSeconds, eloChange: battle.eloChange },
+      robot2.id,
+      streamingRevenue1?.totalRevenue || 0,
+      result.isByeMatch,
+    ),
+    logBattleAuditEvent(
+      {
+        robotId: robot2.id,
+        userId: robot2.userId,
+        isWinner: robot2IsWinner,
+        isDraw: result.isDraw,
+        damageDealt: robot2Participant.damageDealt,
+        finalHP: robot2Participant.finalHP,
+        yielded: robot2Participant.yielded,
+        destroyed: robot2Participant.destroyed,
+        credits: robot2IsWinner ? (battle.winnerReward ?? 0) : (battle.loserReward ?? 0),
+        prestige: stats2.prestigeAwarded,
+        fame: stats2.fameAwarded,
+        eloBefore: robot2Participant.eloBefore,
+        eloAfter: robot2Participant.eloAfter,
+      },
+      { id: battle.id, battleType: battle.battleType, leagueType: battle.leagueType, durationSeconds: battle.durationSeconds, eloChange: battle.eloChange },
+      robot1.id,
+      streamingRevenue2?.totalRevenue || 0,
+      result.isByeMatch,
+    ),
+  ]);
   
   // Prestige/fame awards are already stored in BattleParticipant records
   // No need to update Battle table
@@ -777,15 +732,13 @@ export async function processBattle(scheduledMatch: ScheduledLeagueMatch): Promi
   
   // Consolidated battle completion log
   const winnerName = result.winnerId ? (result.winnerId === robot1.id ? robot1.name : robot2.name) : 'Draw';
-  const robot1User = await prisma.user.findUnique({ where: { id: robot1.userId }, select: { id: true } });
-  const robot2User = await prisma.user.findUnique({ where: { id: robot2.userId }, select: { id: true } });
   
   // Check for kills from BattleParticipant data (reuse variables from earlier)
   const robot1Killed = robot2Participant?.destroyed || false;
   const robot2Killed = robot1Participant?.destroyed || false;
   const killInfo = robot1Killed ? ` | Kill: ${robot1.name}` : (robot2Killed ? ` | Kill: ${robot2.name}` : '');
   
-  logger.info(`[Battle] League: ${battle.leagueType} | ${robot1.name} (User ${robot1User?.id}) vs ${robot2.name} (User ${robot2User?.id}) | Winner: ${winnerName} | Rewards: ₡${battle.winnerReward?.toLocaleString() || 0} / ₡${battle.loserReward?.toLocaleString() || 0} | Prestige: +${totalPrestige} | Fame: +${totalFame}${killInfo}`);
+  logger.info(`[Battle] League: ${battle.leagueType} | ${robot1.name} (User ${robot1.userId}) vs ${robot2.name} (User ${robot2.userId}) | Winner: ${winnerName} | Rewards: ₡${battle.winnerReward?.toLocaleString() || 0} / ₡${battle.loserReward?.toLocaleString() || 0} | Prestige: +${totalPrestige} | Fame: +${totalFame}${killInfo}`);
   
   return {
     ...result,
@@ -841,36 +794,17 @@ export async function executeScheduledBattles(_scheduledFor?: Date): Promise<Bat
         summary.byeBattles++;
       }
       
-      // Track streaming revenue from BattleParticipant records (more reliable than audit log)
-      if (!result.isByeMatch) {
-        const participants = await prisma.battleParticipant.findMany({
-          where: { battleId: result.battleId },
-          select: { streamingRevenue: true },
-        });
-        const totalStreaming = participants.reduce((sum, p) => sum + (p.streamingRevenue || 0), 0);
-        summary.totalStreamingRevenue = (summary.totalStreamingRevenue || 0) + totalStreaming;
-      }
-      
-      // Track reputation awards
+      // Track reputation awards (league type already known from the scheduled match)
       if (summary.reputationSummary) {
         summary.reputationSummary.totalPrestigeAwarded += result.prestigeAwarded;
         summary.reputationSummary.totalFameAwarded += result.fameAwarded;
         
-        // Track by league if there was a winner
         if (result.prestigeAwarded > 0 || result.fameAwarded > 0) {
-          // Get winner's league
-          const robot = await prisma.robot.findUnique({ 
-            where: { id: result.winnerId || 0 },
-            select: { currentLeague: true }
-          });
-          
-          if (robot) {
-            const league = robot.currentLeague;
-            summary.reputationSummary.prestigeByLeague[league] = 
-              (summary.reputationSummary.prestigeByLeague[league] || 0) + result.prestigeAwarded;
-            summary.reputationSummary.fameByLeague[league] = 
-              (summary.reputationSummary.fameByLeague[league] || 0) + result.fameAwarded;
-          }
+          const league = match.leagueType;
+          summary.reputationSummary.prestigeByLeague[league] = 
+            (summary.reputationSummary.prestigeByLeague[league] || 0) + result.prestigeAwarded;
+          summary.reputationSummary.fameByLeague[league] = 
+            (summary.reputationSummary.fameByLeague[league] || 0) + result.fameAwarded;
         }
       }
     } catch (error) {

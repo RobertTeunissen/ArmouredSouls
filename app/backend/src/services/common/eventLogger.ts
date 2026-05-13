@@ -97,55 +97,36 @@ interface EventLogEntry {
 }
 
 /**
- * Sequence number cache per cycle
+ * Sequence number cache per cycle.
+ * Node.js is single-threaded — no lock needed for synchronous counter increments.
+ * The cache is only invalidated on unique constraint violations (rare race with
+ * parallel test runners or multi-process deployments).
  */
 const sequenceNumberCache = new Map<number, number>();
 
 /**
- * Locks for sequence number generation to prevent race conditions
- */
-const sequenceLocks = new Map<number, Promise<void>>();
-
-/**
- * Get the next sequence number for a cycle (thread-safe)
+ * Get the next sequence number for a cycle.
+ * Synchronous in-memory increment when cached; single DB query on cache miss.
  */
 async function getNextSequenceNumber(cycleNumber: number): Promise<number> {
-  // Wait for any pending lock on this cycle
-  while (sequenceLocks.has(cycleNumber)) {
-    await sequenceLocks.get(cycleNumber);
+  // Check cache first (fast path — no DB hit)
+  if (sequenceNumberCache.has(cycleNumber)) {
+    const current = sequenceNumberCache.get(cycleNumber)!;
+    const next = current + 1;
+    sequenceNumberCache.set(cycleNumber, next);
+    return next;
   }
-  
-  // Create a lock for this operation
-  let releaseLock: () => void;
-  const lockPromise = new Promise<void>((resolve) => {
-    releaseLock = resolve;
+
+  // Cache miss: query database for the highest sequence number in this cycle
+  const lastEvent = await prisma.auditLog.findFirst({
+    where: { cycleNumber },
+    orderBy: { sequenceNumber: 'desc' },
+    select: { sequenceNumber: true },
   });
-  sequenceLocks.set(cycleNumber, lockPromise);
-  
-  try {
-    // Check cache first
-    if (sequenceNumberCache.has(cycleNumber)) {
-      const current = sequenceNumberCache.get(cycleNumber)!;
-      const next = current + 1;
-      sequenceNumberCache.set(cycleNumber, next);
-      return next;
-    }
-    
-    // Query database for the highest sequence number in this cycle
-    const lastEvent = await prisma.auditLog.findFirst({
-      where: { cycleNumber },
-      orderBy: { sequenceNumber: 'desc' },
-      select: { sequenceNumber: true },
-    });
-    
-    const nextSequence = lastEvent ? lastEvent.sequenceNumber + 1 : 1;
-    sequenceNumberCache.set(cycleNumber, nextSequence);
-    return nextSequence;
-  } finally {
-    // Release the lock
-    sequenceLocks.delete(cycleNumber);
-    releaseLock!();
-  }
+
+  const nextSequence = lastEvent ? lastEvent.sequenceNumber + 1 : 1;
+  sequenceNumberCache.set(cycleNumber, nextSequence);
+  return nextSequence;
 }
 
 /**

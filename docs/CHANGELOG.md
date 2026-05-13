@@ -1,6 +1,6 @@
 # Armoured Souls — Changelog
 
-**Last Updated**: April 9, 2026
+**Last Updated**: May 13, 2026
 
 Development history organized by phase and month. For the forward-looking roadmap, see [ROADMAP.md](ROADMAP.md).
 
@@ -22,7 +22,7 @@ Development history organized by phase and month. For the forward-looking roadma
 **Started**: January 24, 2026  
 **Status**: Feature-complete, deployed to production VPS
 
-Phase 1 delivered a fully functional game with 4 battle modes, 14 facilities, 47 weapons, a 5-step onboarding tutorial, automated daily cycles, and a production deployment on Scaleway. Development was tracked through 40 Kiro specs (22 in March, 18 in April) plus 23 earlier milestones.
+Phase 1 delivered a fully functional game with 4 battle modes, 15 facilities, 47 weapons, a 5-step onboarding tutorial, automated daily cycles, and a production deployment on Scaleway. Development was tracked through 52 Kiro specs (22 in March, 26 in April, 4 in May) plus 23 earlier milestones.
 
 ### Core Systems (Jan–Feb 2026)
 
@@ -67,7 +67,7 @@ Phase 1 delivered a fully functional game with 4 battle modes, 14 facilities, 47
 | Weapon Bonus Rebalance | Weapon attribute bonuses rebalanced across all 47 weapons |
 | Weapon & Roster Expansion | Storage facility limits, roster expansion enforcement |
 
-### April 2026 Specs (18 completed)
+### April 2026 Specs (26 completed)
 
 | # | Spec | Summary |
 |---|---|---|
@@ -88,7 +88,24 @@ Phase 1 delivered a fully functional game with 4 battle modes, 14 facilities, 47
 | 17 | Type Safety & Any Elimination | Removed `any` types, strict Prisma typing, typed JSON payloads |
 | 18 | Frontend Component Splitting | Large components decomposed into focused sub-components |
 | 19 | Frontend Testing Foundation | Vitest setup, component test patterns, coverage infrastructure |
+| 20 | Robot Image Upload | Custom robot images with nsfwjs content moderation, two-step upload flow (preview + confirm), sharp image processing, orphan cleanup, admin uploads visibility |
 | 21 | Service Layer Type Safety | Typed service interfaces, strict return types, Prisma payload typing |
+| 22 | Admin Password Reset | Secure admin password reset endpoint with PasswordResetService, session invalidation via token version, rate limiting, audit logging |
+| 23 | E2E Playwright Coverage | 11+ Playwright spec files covering registration, onboarding, robot creation, weapon shop, practice arena, financial flows, and CI blocking gate |
+| 24 | In-Game Changelog | "What's New" modal and dedicated page, auto-generated drafts from deploys, admin review/publish workflow, category badges, optional images |
+| 25 | Tuning Bay | Per-robot tactical attribute tuning with 23 sliders, facility-gated pool size (10–110 points), combat integration, onboarding auto-allocation |
+| 26 | Battle Report Overhaul | Statistics summary, Sankey damage flow diagram, responsive playback viewer, tabbed layout, design system alignment, CompactBattleCard economic enhancement |
+| 27 | Achievement System | 77-achievement progression layer with badges, progress tracking, rarity, pinned showcase, toast notifications, retroactive awards |
+| 28 | Admin Portal Redesign | Sidebar navigation, 18 lazy-loaded route pages, Zustand shared state, AdminRoute guard, 6 analytics dashboards, shared UI component library, server-side audit trail |
+
+### May 2026 Specs (4 completed)
+
+| # | Spec | Summary |
+|---|---|---|
+| 29 | Monitoring & Alerting | Discord webhook alerts for disk/startup/backup/deploy failures, enhanced health endpoint, daily health report, UptimeRobot external probes, Scaleway Cockpit integration |
+| 30 | Fix Investment Advisor | Unified ROI calculation from CycleSnapshot data, consolidated Investments & Advisor tabs, graceful degradation with incomplete audit data, economic-only facility filtering |
+| 31 | Weapon DPS Rebalance | baseDamage compression (3.0× → 2.0× DPS spread), differentiated top-tier weapon profiles (fast/standard/burst/heavy), Float schema migration, battle duration normalization (~34s → ~45s) |
+| 32 | League History Tracking | Persistent tier change tracking for robots and tag teams, admin analytics dashboard with yo-yo detection, player-facing timeline visualizations, achievement data support |
 
 ---
 

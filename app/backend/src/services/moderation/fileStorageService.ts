@@ -46,11 +46,19 @@ class FileStorageService {
   /**
    * Resolve a relative URL path (e.g. /uploads/user-robots/42/abc.webp)
    * to an absolute filesystem path.
+   * Throws if the resolved path escapes the upload directory (path traversal protection).
    */
   getAbsolutePath(relativePath: string): string {
     // Strip leading /uploads/user-robots/ to get the sub-path, then join with UPLOAD_BASE_DIR
     const subPath = relativePath.replace(/^\/uploads\/user-robots\//, '');
-    return path.join(UPLOAD_BASE_DIR, subPath);
+    const resolved = path.resolve(UPLOAD_BASE_DIR, subPath);
+
+    // Ensure resolved path stays within the upload directory
+    if (!resolved.startsWith(UPLOAD_BASE_DIR + path.sep) && resolved !== UPLOAD_BASE_DIR) {
+      throw new Error(`Path traversal attempt detected: ${relativePath}`);
+    }
+
+    return resolved;
   }
 
   /**

@@ -40,11 +40,17 @@ class SecurityMonitor {
 
   /** Cache of userId → stableName for enriching events without DB calls on every event */
   private stableNameCache = new Map<number, string>();
+  private static readonly MAX_STABLE_NAME_CACHE_SIZE = 1000;
 
   // ── helpers ──────────────────────────────────────────────────────────
 
   /** Set the stable name for a user (called by middleware/routes that have user context). */
   setStableName(userId: number, stableName: string): void {
+    // Evict oldest entry if cache is full (LRU-style via Map insertion order)
+    if (this.stableNameCache.size >= SecurityMonitor.MAX_STABLE_NAME_CACHE_SIZE && !this.stableNameCache.has(userId)) {
+      const firstKey = this.stableNameCache.keys().next().value;
+      if (firstKey !== undefined) this.stableNameCache.delete(firstKey);
+    }
     this.stableNameCache.set(userId, stableName);
   }
 
@@ -85,6 +91,20 @@ class SecurityMonitor {
   }
 
   // ── public API ───────────────────────────────────────────────────────
+
+  /**
+   * Log a generic security event (e.g., moderation events, custom alerts).
+   * Provides a public interface to recordEvent without exposing internals.
+   */
+  logSecurityEvent(severity: SecuritySeverity, eventType: string, userId: number | undefined, details: Record<string, unknown>): void {
+    this.recordEvent({
+      severity,
+      eventType,
+      userId,
+      details,
+      timestamp: new Date().toISOString(),
+    });
+  }
 
   /**
    * Track a spending event for rapid-spending detection (Req 7.1).
