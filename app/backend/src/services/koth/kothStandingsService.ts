@@ -140,17 +140,18 @@ async function getKothStandingsLast10({ page, limit }: { page: number; limit: nu
 
   const total = allRobotStats.length;
   const paginatedStats = allRobotStats.slice((page - 1) * limit, page * limit);
+  const topRobotStats = allRobotStats.length > 0 ? allRobotStats[0] : null;
 
-  // Fetch owner info for paginated robots
-  const robotIds = paginatedStats.map(s => s.robotId);
+  // Fetch owner info for paginated robots (and top robot if not on current page)
+  const robotIdsToFetch = [...new Set([...paginatedStats.map(s => s.robotId), ...(topRobotStats ? [topRobotStats.robotId] : [])])];
   const robots = await prisma.robot.findMany({
-    where: { id: { in: robotIds } },
+    where: { id: { in: robotIdsToFetch } },
     select: { id: true, user: { select: { id: true, username: true, stableName: true } } },
   });
   const ownerMap = new Map(robots.map(r => [r.id, r.user]));
 
   const uniqueParticipants = allRobotStats.length;
-  const topRobotStats = allRobotStats.length > 0 ? allRobotStats[0] : null;
+  const topRobotOwner = topRobotStats ? ownerMap.get(topRobotStats.robotId) : null;
 
   const standings = paginatedStats.map((stats, index) => {
     const owner = ownerMap.get(stats.robotId);
@@ -175,7 +176,7 @@ async function getKothStandingsLast10({ page, limit }: { page: number; limit: nu
       totalEvents: recentMatches.length,
       uniqueParticipants,
       topRobot: topRobotStats
-        ? { id: topRobotStats.robotId, name: topRobotStats.robotName, owner: standings[0]?.owner ?? 'Unknown' }
+        ? { id: topRobotStats.robotId, name: topRobotStats.robotName, owner: topRobotOwner ? (topRobotOwner.stableName || topRobotOwner.username) : 'Unknown' }
         : null,
     },
     standings,

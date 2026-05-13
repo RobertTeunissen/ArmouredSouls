@@ -199,4 +199,88 @@ describe('Property 13: Achievement sort correctness', () => {
       { numRuns: 100 },
     );
   });
+
+  it('date_newest sort places unlocked achievements before locked, ordered by timestamp descending', () => {
+    fc.assert(
+      fc.property(
+        fc.array(
+          fc.record({
+            tier: fc.constantFrom(...TIERS),
+            unlockedAt: fc.option(fc.date({ min: new Date('2024-01-01'), max: new Date('2026-12-31') }), { nil: null }),
+          }),
+          { minLength: 2, maxLength: 20 },
+        ),
+        (items) => {
+          const achievements = items.map((item, i) =>
+            mockAchievement({
+              id: `T${i}`,
+              tier: item.tier,
+              unlocked: item.unlockedAt !== null,
+              unlockedAt: item.unlockedAt ? item.unlockedAt.toISOString() : null,
+            }),
+          );
+          const result = sortAchievements(achievements, 'date_newest');
+
+          // All unlocked (with unlockedAt) should come before locked (null unlockedAt)
+          const firstNullIndex = result.findIndex(a => a.unlockedAt === null);
+          if (firstNullIndex !== -1) {
+            for (let i = firstNullIndex; i < result.length; i++) {
+              expect(result[i].unlockedAt).toBeNull();
+            }
+          }
+
+          // Unlocked achievements should be in descending timestamp order
+          const unlocked = result.filter(a => a.unlockedAt !== null);
+          for (let i = 0; i < unlocked.length - 1; i++) {
+            expect(new Date(unlocked[i].unlockedAt!).getTime()).toBeGreaterThanOrEqual(
+              new Date(unlocked[i + 1].unlockedAt!).getTime(),
+            );
+          }
+        },
+      ),
+      { numRuns: 100 },
+    );
+  });
+
+  it('date_oldest sort places unlocked achievements before locked, ordered by timestamp ascending', () => {
+    fc.assert(
+      fc.property(
+        fc.array(
+          fc.record({
+            tier: fc.constantFrom(...TIERS),
+            unlockedAt: fc.option(fc.date({ min: new Date('2024-01-01'), max: new Date('2026-12-31') }), { nil: null }),
+          }),
+          { minLength: 2, maxLength: 20 },
+        ),
+        (items) => {
+          const achievements = items.map((item, i) =>
+            mockAchievement({
+              id: `T${i}`,
+              tier: item.tier,
+              unlocked: item.unlockedAt !== null,
+              unlockedAt: item.unlockedAt ? item.unlockedAt.toISOString() : null,
+            }),
+          );
+          const result = sortAchievements(achievements, 'date_oldest');
+
+          // All unlocked (with unlockedAt) should come before locked (null unlockedAt)
+          const firstNullIndex = result.findIndex(a => a.unlockedAt === null);
+          if (firstNullIndex !== -1) {
+            for (let i = firstNullIndex; i < result.length; i++) {
+              expect(result[i].unlockedAt).toBeNull();
+            }
+          }
+
+          // Unlocked achievements should be in ascending timestamp order
+          const unlocked = result.filter(a => a.unlockedAt !== null);
+          for (let i = 0; i < unlocked.length - 1; i++) {
+            expect(new Date(unlocked[i].unlockedAt!).getTime()).toBeLessThanOrEqual(
+              new Date(unlocked[i + 1].unlockedAt!).getTime(),
+            );
+          }
+        },
+      ),
+      { numRuns: 100 },
+    );
+  });
 });
