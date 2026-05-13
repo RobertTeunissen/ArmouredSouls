@@ -61,6 +61,7 @@ model User {
   weaponInventory WeaponInventory[]
   tagTeams        TagTeam[]
   achievements    UserAchievement[]
+  leagueHistory   LeagueHistory[]
 
   @@map("users")
 }
@@ -817,4 +818,27 @@ model AdminAuditLog {
   @@index([operationType])
   @@index([createdAt])
   @@map("admin_audit_logs")
+}
+
+model LeagueHistory {
+  id                  Int      @id @default(autoincrement())
+  entityType          String   @map("entity_type") @db.VarChar(20)    // "robot" or "tag_team"
+  entityId            Int      @map("entity_id")                       // Robot ID or TagTeam ID
+  userId              Int      @map("user_id")                         // Owner (user.id for robots, stableId for tag teams)
+  changeType          String   @map("change_type") @db.VarChar(20)    // "promotion" or "demotion"
+  sourceTier          String   @map("source_tier") @db.VarChar(20)    // e.g. "bronze"
+  destinationTier     String   @map("destination_tier") @db.VarChar(20) // e.g. "silver"
+  sourceLeagueId      String   @map("source_league_id") @db.VarChar(30) // e.g. "bronze_1"
+  destinationLeagueId String   @map("destination_league_id") @db.VarChar(30) // e.g. "silver_2"
+  leaguePoints        Int      @map("league_points")                   // LP at moment of change
+  cycleNumber         Int      @map("cycle_number")                    // Game cycle when change occurred
+  createdAt           DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([entityType, entityId])    // Per-entity queries
+  @@index([cycleNumber])             // Cycle-range queries
+  @@index([userId])                  // User's history queries
+  @@map("league_history")
 }

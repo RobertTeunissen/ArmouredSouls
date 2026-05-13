@@ -551,6 +551,21 @@ exports.Prisma.AdminAuditLogScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.LeagueHistoryScalarFieldEnum = {
+  id: 'id',
+  entityType: 'entityType',
+  entityId: 'entityId',
+  userId: 'userId',
+  changeType: 'changeType',
+  sourceTier: 'sourceTier',
+  destinationTier: 'destinationTier',
+  sourceLeagueId: 'sourceLeagueId',
+  destinationLeagueId: 'destinationLeagueId',
+  leaguePoints: 'leaguePoints',
+  cycleNumber: 'cycleNumber',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -605,7 +620,8 @@ exports.Prisma.ModelName = {
   ChangelogEntry: 'ChangelogEntry',
   UserAchievement: 'UserAchievement',
   TuningAllocation: 'TuningAllocation',
-  AdminAuditLog: 'AdminAuditLog'
+  AdminAuditLog: 'AdminAuditLog',
+  LeagueHistory: 'LeagueHistory'
 };
 
 /**

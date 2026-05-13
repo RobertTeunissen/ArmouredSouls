@@ -47,7 +47,7 @@ describe('Property 2: Owner-Only Tab Access Control (Property-Based Test)', () =
           expect(analyticsTab).toBeInTheDocument();
 
           const allTabs = screen.getAllByRole('tab');
-          expect(allTabs).toHaveLength(3);
+          expect(allTabs).toHaveLength(4);
 
           container.remove();
         }
@@ -82,7 +82,7 @@ describe('Property 2: Owner-Only Tab Access Control (Property-Based Test)', () =
           expect(screen.getByRole('tab', { name: /stats/i })).toBeInTheDocument();
 
           const allTabs = screen.getAllByRole('tab');
-          expect(allTabs).toHaveLength(7);
+          expect(allTabs).toHaveLength(8);
 
           container.remove();
         }
@@ -121,11 +121,11 @@ describe('Property 2: Owner-Only Tab Access Control (Property-Based Test)', () =
             if (testCase.isOwner) {
               expect(battleConfigTab).toBeInTheDocument();
               expect(upgradesTab).toBeInTheDocument();
-              expect(screen.getAllByRole('tab')).toHaveLength(7);
+              expect(screen.getAllByRole('tab')).toHaveLength(8);
             } else {
               expect(battleConfigTab).not.toBeInTheDocument();
               expect(upgradesTab).not.toBeInTheDocument();
-              expect(screen.getAllByRole('tab')).toHaveLength(3);
+              expect(screen.getAllByRole('tab')).toHaveLength(4);
             }
 
             expect(screen.getByRole('tab', { name: /overview/i })).toBeInTheDocument();

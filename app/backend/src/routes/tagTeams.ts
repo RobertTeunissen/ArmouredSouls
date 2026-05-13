@@ -18,6 +18,7 @@ import logger from '../config/logger';
 import { AuthError, AuthErrorCode, TagTeamError, TagTeamErrorCode, RobotError, RobotErrorCode, AppError } from '../errors';
 import { validateRequest } from '../middleware/schemaValidator';
 import { positiveIntParam } from '../utils/securityValidation';
+import { getEntityHistory } from '../services/league/leagueHistoryService';
 
 const router = express.Router();
 
@@ -217,6 +218,30 @@ router.get('/leagues/:tier/standings', authenticateToken, validateRequest({ para
     pagination: { page, perPage, total, totalPages, hasMore: endIndex < total },
     tier,
   });
+});
+
+/**
+ * GET /api/tag-teams/:id/league-history
+ * Get league history for a tag team.
+ */
+router.get('/:id/league-history', authenticateToken, validateRequest({ params: tagTeamIdParamsSchema }), async (req: AuthRequest, res: Response) => {
+  if (!req.user) {
+    throw new AuthError(AuthErrorCode.UNAUTHORIZED, 'Authentication required', 401);
+  }
+
+  const teamId = parseInt(String(req.params.id));
+
+  const team = await prisma.tagTeam.findUnique({
+    where: { id: teamId },
+    select: { id: true },
+  });
+
+  if (!team) {
+    throw new TagTeamError(TagTeamErrorCode.TAG_TEAM_NOT_FOUND, 'Tag team not found', 404);
+  }
+
+  const data = await getEntityHistory('tag_team', teamId);
+  res.json({ data });
 });
 
 export default router;

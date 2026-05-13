@@ -37,6 +37,7 @@ const NAV_GROUPS: NavGroup[] = [
       { label: 'Battle Logs', path: '/admin/battles', icon: '⚔️' },
       { label: 'Robot Stats', path: '/admin/robot-stats', icon: '🤖' },
       { label: 'League Health', path: '/admin/league-health', icon: '🏆' },
+      { label: 'League History', path: '/admin/league-history', icon: '📈' },
       { label: 'Weapons', path: '/admin/weapons', icon: '🔫' },
     ],
   },
@@ -90,6 +91,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/admin/tuning': 'Tuning',
   '/admin/repair-log': 'Repair Log',
   '/admin/audit-log': 'Audit Log',
+  '/admin/league-history': 'League History',
 };
 
 // ---------------------------------------------------------------------------

@@ -7,6 +7,9 @@ import { getMyTagTeams, disbandTagTeam, TagTeam, getTeamName } from '../utils/ta
 import { getTagTeamLeagueTierName, getTagTeamLeagueTierColor, getTagTeamLeagueTierIcon } from '../utils/tagTeamApi';
 import TeamCreationModal from '../components/TeamCreationModal';
 import ConfirmationModal from '../components/ConfirmationModal';
+import LeagueTimeline from '../components/LeagueTimeline';
+import type { LeagueHistoryEntry } from '../components/LeagueTimeline';
+import apiClient from '../utils/apiClient';
 
 function TagTeamManagementPage() {
   const { user, logout } = useAuth();
@@ -306,8 +309,81 @@ function TagTeamCard({ team, onDisband }: TagTeamCardProps) {
           <div className="text-lg font-semibold text-white">{totalMatches}</div>
         </div>
       </div>
+
+      {/* League History Expandable Section */}
+      <TagTeamLeagueHistory teamId={team.id} currentTier={team.tagTeamLeague} />
     </div>
   );
 }
 
 export default TagTeamManagementPage;
+
+/* ------------------------------------------------------------------ */
+/*  Tag Team League History Expandable Section                          */
+/* ------------------------------------------------------------------ */
+
+function TagTeamLeagueHistory({ teamId, currentTier }: { teamId: number; currentTier: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const [history, setHistory] = useState<LeagueHistoryEntry[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [fetched, setFetched] = useState(false);
+
+  const handleToggle = () => {
+    const willExpand = !expanded;
+    setExpanded(willExpand);
+
+    if (willExpand && !fetched) {
+      setLoading(true);
+      apiClient
+        .get(`/api/tag-teams/${teamId}/league-history`)
+        .then((res) => {
+          const data = res.data.data || res.data;
+          setHistory(
+            (data as Array<{ cycleNumber: number; destinationTier: string; changeType: string; leaguePoints: number }>).map((r) => ({
+              cycleNumber: r.cycleNumber,
+              destinationTier: r.destinationTier,
+              changeType: r.changeType as 'promotion' | 'demotion',
+              leaguePoints: r.leaguePoints,
+            }))
+          );
+        })
+        .catch(() => {
+          setHistory([]);
+        })
+        .finally(() => {
+          setLoading(false);
+          setFetched(true);
+        });
+    }
+  };
+
+  return (
+    <div className="mt-4 pt-4 border-t border-white/10" data-testid="tag-team-league-history">
+      <button
+        type="button"
+        onClick={handleToggle}
+        aria-expanded={expanded}
+        aria-controls={`league-history-${teamId}`}
+        className="flex items-center gap-2 text-sm text-secondary hover:text-white transition-colors w-full text-left"
+        data-testid="league-history-toggle"
+      >
+        <span className={`transition-transform ${expanded ? 'rotate-90' : ''}`}>▶</span>
+        <span className="font-semibold">🏆 League History</span>
+      </button>
+
+      {expanded && (
+        <div className="mt-3" id={`league-history-${teamId}`} data-testid="league-history-content">
+          {loading ? (
+            <div className="text-center py-4 text-secondary text-sm">Loading history...</div>
+          ) : (
+            <LeagueTimeline
+              history={history}
+              currentTier={currentTier}
+              emptyMessage="No tier changes recorded yet for this team."
+            />
+          )}
+        </div>
+      )}
+    </div>
+  );
+}

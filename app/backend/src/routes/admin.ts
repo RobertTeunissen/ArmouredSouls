@@ -50,6 +50,12 @@ import {
 } from '../services/admin/adminCycleService';
 import { recordAction as recordAuditAction, getEntries as getAuditEntries } from '../services/admin/adminAuditLogService';
 import { handleAdminUploads, handleAdminCleanup } from '../services/moderation/adminUploadsHandler';
+import {
+  getHistoryByCycleRange,
+  getAggregates,
+  getEntityHistory,
+  detectYoYoCandidates,
+} from '../services/league/leagueHistoryService';
 import prisma from '../lib/prisma';
 
 const router = express.Router();
@@ -159,6 +165,30 @@ const auditLogBodySchema = z.object({
   operationType: z.string().min(1).max(100),
   operationResult: z.enum(['success', 'failure']),
   resultSummary: z.record(z.string(), z.unknown()),
+});
+
+const leagueHistoryQuerySchema = z.object({
+  startCycle: z.coerce.number().int().positive(),
+  endCycle: z.coerce.number().int().positive(),
+  entityType: z.enum(['robot', 'tag_team']).optional(),
+  page: z.coerce.number().int().positive().optional().default(1),
+  perPage: z.coerce.number().int().positive().max(100).optional().default(50),
+});
+
+const leagueHistoryAggregatesSchema = z.object({
+  startCycle: z.coerce.number().int().positive(),
+  endCycle: z.coerce.number().int().positive(),
+  entityType: z.enum(['robot', 'tag_team']).optional(),
+});
+
+const leagueHistoryEntitySchema = z.object({
+  entityType: z.enum(['robot', 'tag_team']),
+  entityId: positiveIntParam,
+});
+
+const leagueHistoryYoYoSchema = z.object({
+  cycleWindow: z.coerce.number().int().positive().optional().default(20),
+  minChanges: z.coerce.number().int().min(2).optional().default(3),
 });
 
 // Mount tournament routes
@@ -999,6 +1029,54 @@ router.post('/audit-log', authenticateToken, requireAdmin, validateRequest({ bod
   const { operationType, operationResult, resultSummary } = req.body;
   recordAuditAction(authReq.user!.userId, operationType, operationResult, resultSummary);
   res.json({ success: true });
+});
+
+/**
+ * GET /api/admin/league-history
+ * Paginated tier changes by cycle range.
+ */
+router.get('/league-history', authenticateToken, requireAdmin, validateRequest({ query: leagueHistoryQuerySchema }), async (req: Request, res: Response) => {
+  const startCycle = Number(req.query.startCycle);
+  const endCycle = Number(req.query.endCycle);
+  const entityType = req.query.entityType as string | undefined;
+  const page = req.query.page ? Number(req.query.page) : 1;
+  const perPage = req.query.perPage ? Number(req.query.perPage) : 50;
+  const result = await getHistoryByCycleRange({ startCycle, endCycle, entityType: entityType as 'robot' | 'tag_team' | undefined, page, perPage });
+  res.json(result);
+});
+
+/**
+ * GET /api/admin/league-history/aggregates
+ * Promotion/demotion counts by tier for a cycle range.
+ */
+router.get('/league-history/aggregates', authenticateToken, requireAdmin, validateRequest({ query: leagueHistoryAggregatesSchema }), async (req: Request, res: Response) => {
+  const startCycle = Number(req.query.startCycle);
+  const endCycle = Number(req.query.endCycle);
+  const entityType = req.query.entityType as string | undefined;
+  const result = await getAggregates(startCycle, endCycle, entityType as 'robot' | 'tag_team' | undefined);
+  res.json(result);
+});
+
+/**
+ * GET /api/admin/league-history/entity/:entityType/:entityId
+ * Full history for one entity.
+ */
+router.get('/league-history/entity/:entityType/:entityId', authenticateToken, requireAdmin, validateRequest({ params: leagueHistoryEntitySchema }), async (req: Request, res: Response) => {
+  const entityType = req.params.entityType as 'robot' | 'tag_team';
+  const entityId = Number(req.params.entityId);
+  const data = await getEntityHistory(entityType, entityId);
+  res.json({ data });
+});
+
+/**
+ * GET /api/admin/league-history/yo-yo
+ * Yo-yo detection candidates.
+ */
+router.get('/league-history/yo-yo', authenticateToken, requireAdmin, validateRequest({ query: leagueHistoryYoYoSchema }), async (req: Request, res: Response) => {
+  const cycleWindow = req.query.cycleWindow ? Number(req.query.cycleWindow) : 20;
+  const minChanges = req.query.minChanges ? Number(req.query.minChanges) : 3;
+  const result = await detectYoYoCandidates(cycleWindow, minChanges);
+  res.json(result);
 });
 
 

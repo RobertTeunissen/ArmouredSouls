@@ -3,6 +3,7 @@ import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { LeagueError, LeagueErrorCode } from '../../errors/leagueErrors';
 import { achievementService } from '../achievement';
+import { recordTierChange, getCurrentCycleNumber } from './leagueHistoryService';
 
 // NOTE: This service mirrors tagTeamLeagueRebalancingService.ts for tag team leagues.
 // Both share identical promotion/demotion logic but operate on different Prisma models
@@ -231,6 +232,25 @@ export async function promoteRobot(robot: Robot): Promise<void> {
 
   logger.info(`[Rebalancing] Promoted: ${robot.name} (${robot.currentLeague} → ${nextTier}, LP: ${robot.leaguePoints} retained)`);
 
+  // Record league history
+  try {
+    const cycleNumber = await getCurrentCycleNumber();
+    await recordTierChange({
+      entityType: 'robot',
+      entityId: robot.id,
+      userId: robot.userId,
+      changeType: 'promotion',
+      sourceTier: robot.currentLeague,
+      destinationTier: nextTier,
+      sourceLeagueId: robot.leagueId,
+      destinationLeagueId: newLeagueId,
+      leaguePoints: robot.leaguePoints,
+      cycleNumber,
+    });
+  } catch (error) {
+    logger.error(`[Rebalancing] Failed to record promotion history for robot ${robot.id}: ${error}`);
+  }
+
   // Check and award league promotion achievements
   try {
     await achievementService.checkAndAward(robot.userId, robot.id, {
@@ -273,6 +293,25 @@ export async function demoteRobot(robot: Robot): Promise<void> {
   });
 
   logger.info(`[Rebalancing] Demoted: ${robot.name} (${robot.currentLeague} → ${previousTier}, LP: ${robot.leaguePoints} retained)`);
+
+  // Record league history
+  try {
+    const cycleNumber = await getCurrentCycleNumber();
+    await recordTierChange({
+      entityType: 'robot',
+      entityId: robot.id,
+      userId: robot.userId,
+      changeType: 'demotion',
+      sourceTier: robot.currentLeague,
+      destinationTier: previousTier,
+      sourceLeagueId: robot.leagueId,
+      destinationLeagueId: newLeagueId,
+      leaguePoints: robot.leaguePoints,
+      cycleNumber,
+    });
+  } catch (error) {
+    logger.error(`[Rebalancing] Failed to record demotion history for robot ${robot.id}: ${error}`);
+  }
 }
 
 /**
