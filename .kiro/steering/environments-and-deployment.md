@@ -200,6 +200,30 @@ Same as ACC but with:
 - `CORS_ORIGIN=https://armouredsouls.com,https://www.armouredsouls.com`
 - `LOG_LEVEL=warn`
 
+## Cycle Architecture (Important)
+
+The game does NOT run "complete cycles" as a single monolithic operation. Instead, the scheduler fires **separate cron jobs** at different times throughout the day:
+
+| Job | Schedule (UTC) | What it does |
+|-----|---------------|--------------|
+| League | 8 PM | Matchmaking → Battle execution → League rebalancing |
+| Tournament | 8 AM | Tournament bracket advancement |
+| Tag Team | 12 PM | Tag team matchmaking → battles → rebalancing |
+| KotH | Mon/Wed/Fri | KotH matchmaking → battles |
+| Settlement | 11 PM | Passive income → Operating costs → Cycle counter increment → Snapshot |
+
+Each job runs independently. They do NOT share a transaction or execution context. When optimizing or debugging cycle-related code, always consider which specific job is involved — not "the cycle" as a whole.
+
+The admin "bulk cycles" endpoint (`POST /api/admin/cycles/bulk`) is the only place that runs all jobs sequentially in a single call, and it's used exclusively for local development and seeding.
+
+## CI/CD & Tooling Notes
+
+- The agent has `gh` CLI access and is authenticated with GitHub. Use `gh` for viewing action logs, creating PRs, etc.
+- Always push to a new branch, never directly to main.
+- Use `gh run view <run-id> --log-failed` to inspect CI failures.
+- The E2E tests use Playwright with `continue-on-error: true` — they don't block the deploy, but failures should still be investigated.
+- The deploy to ACC is triggered automatically on push to `main` and depends on `backend-unit-tests`, `backend-integration-tests`, and `frontend-build` (NOT on E2E).
+
 ## VPS Architecture
 
 ### Scaleway DEV1-S Specs

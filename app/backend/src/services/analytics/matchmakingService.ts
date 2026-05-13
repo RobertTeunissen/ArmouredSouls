@@ -85,6 +85,54 @@ export function checkSchedulingReadiness(robot: Robot): BattleReadinessCheck {
 }
 
 /**
+ * Get recent opponents for multiple robots in a single query (batch version).
+ * Returns a map of robotId → array of recent opponent IDs.
+ *
+ * NOTE: Uses a global `take` limit which is an approximation — if one robot
+ * has many more recent battles than others, some robots may get incomplete
+ * opponent lists. This is an acceptable tradeoff for matchmaking quality vs
+ * query count (1 query instead of N). The soft deprioritization of recent
+ * opponents means an occasional repeat match is not game-breaking.
+ */
+async function getRecentOpponentsBatch(robotIds: number[], limit: number = RECENT_OPPONENT_LIMIT): Promise<Map<number, number[]>> {
+  if (robotIds.length === 0) return new Map();
+
+  // Single query to get recent battles for all robots in the set
+  const recentBattles = await prisma.battle.findMany({
+    where: {
+      OR: [
+        { robot1Id: { in: robotIds } },
+        { robot2Id: { in: robotIds } },
+      ],
+    },
+    orderBy: { createdAt: 'desc' },
+    // Fetch enough battles to cover all robots (worst case: each robot has `limit` unique battles)
+    take: robotIds.length * limit,
+    select: {
+      robot1Id: true,
+      robot2Id: true,
+    },
+  });
+
+  // Build per-robot opponent lists from the batch result
+  const map = new Map<number, number[]>();
+  for (const robotId of robotIds) {
+    const opponents: number[] = [];
+    for (const battle of recentBattles) {
+      if (opponents.length >= limit) break;
+      if (battle.robot1Id === robotId) {
+        opponents.push(battle.robot2Id);
+      } else if (battle.robot2Id === robotId) {
+        opponents.push(battle.robot1Id);
+      }
+    }
+    map.set(robotId, opponents);
+  }
+
+  return map;
+}
+
+/**
  * Get recent opponents for a robot (last N matches)
  */
 async function getRecentOpponents(robotId: number, limit: number = RECENT_OPPONENT_LIMIT): Promise<number[]> {
@@ -256,14 +304,8 @@ async function pairRobots(robots: Robot[]): Promise<MatchPair[]> {
   const matches: MatchPair[] = [];
   const availableRobots = [...robots]; // Copy array
   
-  // Pre-fetch recent opponents for all robots
-  const recentOpponentsMap = new Map<number, number[]>();
-  await Promise.all(
-    robots.map(async robot => {
-      const opponents = await getRecentOpponents(robot.id);
-      recentOpponentsMap.set(robot.id, opponents);
-    })
-  );
+  // Pre-fetch recent opponents for all robots in a single batch query
+  const recentOpponentsMap = await getRecentOpponentsBatch(robots.map(r => r.id));
   
   // Pair robots using greedy algorithm
   while (availableRobots.length > 1) {

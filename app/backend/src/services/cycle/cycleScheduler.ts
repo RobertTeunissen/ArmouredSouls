@@ -1,5 +1,6 @@
 import cron, { ScheduledTask } from 'node-cron';
 import logger from '../../config/logger';
+import { getNextCronOccurrence } from '../../utils/scheduleUtils';
 import { repairAllRobots } from '../economy/repairService';
 import { executeScheduledBattles } from '../league/leagueBattleOrchestrator';
 import { executeScheduledKothBattles } from '../koth/kothBattleOrchestrator';
@@ -18,7 +19,7 @@ import { runTagTeamMatchmaking } from '../tag-team/tagTeamMatchmakingService';
 import { runKothMatchmaking } from '../koth/kothMatchmakingService';
 import prisma from '../../lib/prisma';
 import { practiceArenaMetrics } from '../practice-arena/practiceArenaMetrics';
-import { EventLogger } from '../common/eventLogger';
+import { EventLogger, EventType } from '../common/eventLogger';
 import { JobContext } from '../notifications/integration';
 import { buildSuccessMessage, buildErrorMessage, getActiveIntegrations, dispatchNotification } from '../notifications/notification-service';
 
@@ -269,71 +270,101 @@ async function executeSettlement(): Promise<JobContext> {
 
   // Step 1: Calculate and credit passive income for all users
   logger.info('Daily Settlement: Step 1 — Processing passive income');
-  const { calculateDailyPassiveIncome, calculateFacilityOperatingCost } = await import('../../utils/economyCalculations');
+  const { calculateMerchandisingIncome, calculateFacilityOperatingCost } = await import('../../utils/economyCalculations');
 
   const allUsers = await prisma.user.findMany({
     where: { NOT: { username: 'bye_robot_user' } },
     select: { id: true, prestige: true },
   });
 
+  const userIds = allUsers.map(u => u.id);
+
+  // Batch-load all facilities and robots for all users (2 queries instead of 2N)
+  const [allFacilities, allRobots] = await Promise.all([
+    prisma.facility.findMany({ where: { userId: { in: userIds } } }),
+    prisma.robot.findMany({
+      where: { userId: { in: userIds } },
+      select: { id: true, userId: true, totalBattles: true, fame: true, name: true },
+    }),
+  ]);
+
+  // Group by userId in memory
+  const facilitiesByUser = new Map<number, typeof allFacilities>();
+  for (const f of allFacilities) {
+    if (!facilitiesByUser.has(f.userId)) facilitiesByUser.set(f.userId, []);
+    facilitiesByUser.get(f.userId)!.push(f);
+  }
+  const robotsByUser = new Map<number, typeof allRobots>();
+  for (const r of allRobots) {
+    if (!robotsByUser.has(r.userId)) robotsByUser.set(r.userId, []);
+    robotsByUser.get(r.userId)!.push(r);
+  }
+
   let totalPassiveIncome = 0;
   let totalOperatingCosts = 0;
 
-  for (const user of allUsers) {
-    const passiveIncome = await calculateDailyPassiveIncome(user.id);
+  // Collect audit events for batch insertion
+  const passiveIncomeEvents: Array<{
+    eventType: typeof import('../common/eventLogger').EventType.PASSIVE_INCOME;
+    payload: Record<string, unknown>;
+    userId: number;
+  }> = [];
 
-    if (passiveIncome.total > 0) {
-      const userRobots = await prisma.robot.findMany({
-        where: { userId: user.id },
-        select: { totalBattles: true, fame: true },
-      });
+  for (const user of allUsers) {
+    const userFacilities = facilitiesByUser.get(user.id) || [];
+    const merchHub = userFacilities.find(f => f.facilityType === 'merchandising_hub');
+    const merchLevel = merchHub?.level || 0;
+
+    const merchandising = calculateMerchandisingIncome(merchLevel, user.prestige);
+
+    if (merchandising > 0) {
+      const userRobots = robotsByUser.get(user.id) || [];
       const totalBattles = userRobots.reduce((sum, r) => sum + r.totalBattles, 0);
       const totalFame = userRobots.reduce((sum, r) => sum + r.fame, 0);
 
-      const incomeGenerator = await prisma.facility.findUnique({
-        where: {
-          userId_facilityType: {
-            userId: user.id,
-            facilityType: 'merchandising_hub',
-          },
+      passiveIncomeEvents.push({
+        eventType: EventType.PASSIVE_INCOME,
+        payload: {
+          merchandising,
+          streaming: 0,
+          totalIncome: merchandising,
+          facilityLevel: merchLevel,
+          prestige: user.prestige,
+          totalBattles,
+          totalFame,
         },
+        userId: user.id,
       });
-
-      await eventLogger.logPassiveIncome(
-        currentCycleNumber,
-        user.id,
-        passiveIncome.merchandising,
-        0,
-        incomeGenerator?.level || 0,
-        user.prestige,
-        totalBattles,
-        totalFame
-      );
 
       await prisma.user.update({
         where: { id: user.id },
-        data: { currency: { increment: passiveIncome.total } },
+        data: { currency: { increment: merchandising } },
       });
 
-      totalPassiveIncome += passiveIncome.total;
+      totalPassiveIncome += merchandising;
     }
+  }
+
+  // Batch-insert passive income audit events
+  if (passiveIncomeEvents.length > 0) {
+    await eventLogger.logEventBatch(currentCycleNumber, passiveIncomeEvents);
   }
   logger.info(`Daily Settlement: Passive income credited — ₡${totalPassiveIncome.toLocaleString()}`);
 
   // Step 2: Calculate and debit operating costs for all users
   logger.info('Daily Settlement: Step 2 — Processing operating costs');
 
+  const operatingCostEvents: Array<{
+    eventType: typeof import('../common/eventLogger').EventType.OPERATING_COSTS;
+    payload: Record<string, unknown>;
+    userId: number;
+  }> = [];
+
   for (const user of allUsers) {
-    const facilities = await prisma.facility.findMany({
-      where: { userId: user.id },
-    });
+    const userFacilities = facilitiesByUser.get(user.id) || [];
+    const userRobots = robotsByUser.get(user.id) || [];
 
-    const userRobots = await prisma.robot.findMany({
-      where: { userId: user.id },
-      select: { totalBattles: true, fame: true },
-    });
-
-    const facilityCosts = facilities.map(f => ({
+    const facilityCosts = userFacilities.map(f => ({
       facilityType: f.facilityType,
       level: f.level,
       cost: calculateFacilityOperatingCost(f.facilityType, f.level),
@@ -352,12 +383,14 @@ async function executeSettlement(): Promise<JobContext> {
     }
 
     if (totalCost > 0) {
-      await eventLogger.logOperatingCosts(
-        currentCycleNumber,
-        user.id,
-        facilityCosts.filter(f => f.cost > 0),
-        totalCost
-      );
+      operatingCostEvents.push({
+        eventType: EventType.OPERATING_COSTS,
+        payload: {
+          costs: facilityCosts.filter(f => f.cost > 0),
+          totalCost,
+        },
+        userId: user.id,
+      });
 
       await prisma.user.update({
         where: { id: user.id },
@@ -366,6 +399,11 @@ async function executeSettlement(): Promise<JobContext> {
 
       totalOperatingCosts += totalCost;
     }
+  }
+
+  // Batch-insert operating cost audit events
+  if (operatingCostEvents.length > 0) {
+    await eventLogger.logEventBatch(currentCycleNumber, operatingCostEvents);
   }
   logger.info(`Daily Settlement: Operating costs debited — ₡${totalOperatingCosts.toLocaleString()}`);
 
@@ -393,7 +431,7 @@ async function executeSettlement(): Promise<JobContext> {
     logger.error(`[Settlement] Bankrupt achievement check failed: ${err}`);
   }
 
-  // Step 3: Log end-of-cycle balances for all users
+  // Step 3: Log end-of-cycle balances for all users (batch insert)
   logger.info('Daily Settlement: Step 3 — Logging end-of-cycle balances');
   const endOfCycleUsers = await prisma.user.findMany({
     where: { NOT: { username: 'bye_robot_user' } },
@@ -401,15 +439,18 @@ async function executeSettlement(): Promise<JobContext> {
     orderBy: { id: 'asc' },
   });
 
-  for (const user of endOfCycleUsers) {
-    await eventLogger.logCycleEndBalance(
-      currentCycleNumber,
-      user.id,
-      user.username,
-      user.stableName,
-      user.currency
-    );
-  }
+  await eventLogger.logEventBatch(
+    currentCycleNumber,
+    endOfCycleUsers.map(user => ({
+      eventType: EventType.CYCLE_END_BALANCE,
+      payload: {
+        username: user.username,
+        stableName: user.stableName,
+        balance: user.currency,
+      },
+      userId: user.id,
+    })),
+  );
   logger.info(`Daily Settlement: Balances logged for ${endOfCycleUsers.length} users`);
 
   // Step 4: Increment cycle counters (cycleMetadata.totalCycles + 1, lastCycleAt, robot/tagTeam counters)
@@ -640,11 +681,17 @@ export function initScheduler(config: SchedulerConfig): void {
 // --- State query ---
 
 export function getSchedulerState(): SchedulerState {
+  // Compute nextRunAt dynamically from each job's cron schedule
+  const jobs = Array.from(jobStates.values()).map(job => ({
+    ...job,
+    nextRunAt: schedulerActive ? getNextCronOccurrence(job.schedule) : null,
+  }));
+
   return {
     active: schedulerActive,
     runningJob,
     queue: [...jobQueue],
-    jobs: Array.from(jobStates.values()),
+    jobs,
   };
 }
 

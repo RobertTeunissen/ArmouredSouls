@@ -67,11 +67,11 @@ describe('CycleControlsTab', () => {
   it('should render all cycle control buttons', () => {
     render(<CycleControlsTab {...defaultProps} />);
 
-    expect(screen.getByRole('button', { name: /run matchmaking/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /execute battles/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /rebalance leagues/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /auto-repair all/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /process daily finances/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /run league cycle/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /run tournament cycle/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /run tag team cycle/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /run koth cycle/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /run settlement/i })).toBeInTheDocument();
   });
 
   it('should render bulk cycle runner section', () => {

@@ -23,6 +23,7 @@ jest.mock('../../common/eventLogger', () => ({
 jest.mock('../../security/securityMonitor', () => ({
   securityMonitor: {
     recordEvent: jest.fn(),
+    logSecurityEvent: jest.fn(),
     trackRateLimitViolation: jest.fn(),
   },
 }));
@@ -70,7 +71,7 @@ import { fileStorageService } from '../fileStorageService';
 
 const mockPrisma = prisma as jest.Mocked<typeof prisma>;
 const mockEventLogger = eventLogger as jest.Mocked<typeof eventLogger>;
-const mockSecurityMonitor = securityMonitor as unknown as { recordEvent: jest.Mock; trackRateLimitViolation: jest.Mock };
+const mockSecurityMonitor = securityMonitor as unknown as { recordEvent: jest.Mock; logSecurityEvent: jest.Mock; trackRateLimitViolation: jest.Mock };
 const mockFileValidation = fileValidationService as jest.Mocked<typeof fileValidationService>;
 const mockModeration = contentModerationService as jest.Mocked<typeof contentModerationService>;
 const mockImageProcessing = imageProcessingService as jest.Mocked<typeof imageProcessingService>;
@@ -196,9 +197,9 @@ describe('handleImagePreview', () => {
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ code: 'IMAGE_MODERATION_FAILED' }));
     // Dual audit log
     expect(mockEventLogger.logEvent).toHaveBeenCalledTimes(1);
-    expect(mockSecurityMonitor.recordEvent).toHaveBeenCalledTimes(1);
-    expect(mockSecurityMonitor.recordEvent).toHaveBeenCalledWith(
-      expect.objectContaining({ eventType: 'image_moderation_rejection', severity: 'warning' }),
+    expect(mockSecurityMonitor.logSecurityEvent).toHaveBeenCalledTimes(1);
+    expect(mockSecurityMonitor.logSecurityEvent).toHaveBeenCalledWith(
+      'warning', 'image_moderation_rejection', 1, expect.objectContaining({ robotId: 10 }),
     );
     // No scores in response
     const body = res.json.mock.calls[0][0];
@@ -219,8 +220,8 @@ describe('handleImagePreview', () => {
     expect(mockEventLogger.logEvent).toHaveBeenCalledWith(
       0, 'image_robot_likeness_warning', expect.anything(), expect.anything(),
     );
-    expect(mockSecurityMonitor.recordEvent).toHaveBeenCalledWith(
-      expect.objectContaining({ eventType: 'image_robot_likeness_warning' }),
+    expect(mockSecurityMonitor.logSecurityEvent).toHaveBeenCalledWith(
+      'info', 'image_robot_likeness_warning', 1, expect.objectContaining({ robotId: 10 }),
     );
   });
 
@@ -239,8 +240,8 @@ describe('handleImagePreview', () => {
     expect(mockEventLogger.logEvent).toHaveBeenCalledWith(
       0, 'image_robot_likeness_override', expect.anything(), expect.anything(),
     );
-    expect(mockSecurityMonitor.recordEvent).toHaveBeenCalledWith(
-      expect.objectContaining({ eventType: 'image_robot_likeness_override' }),
+    expect(mockSecurityMonitor.logSecurityEvent).toHaveBeenCalledWith(
+      'info', 'image_robot_likeness_override', 1, expect.objectContaining({ robotId: 10 }),
     );
   });
 

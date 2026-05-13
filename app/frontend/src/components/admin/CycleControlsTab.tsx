@@ -232,6 +232,101 @@ export function CycleControlsTab({
     }
   };
 
+  const triggerTournamentCycle = async (): Promise<void> => {
+    setLoading(true);
+    try {
+      const response = await apiClient.post('/api/admin/cycles/bulk', {
+        cycles: 0,
+        includeTournaments: true,
+        includeKoth: false,
+        generateUsersPerCycle: false,
+      });
+      const results = response.data.results?.[0]?.tournaments;
+      const details = results
+        ? [
+            results.tournamentsExecuted ? `${results.tournamentsExecuted} tournament(s) executed` : null,
+            results.roundsExecuted ? `${results.roundsExecuted} round(s)` : null,
+            results.matchesExecuted ? `${results.matchesExecuted} match(es)` : null,
+            results.tournamentsCompleted ? `${results.tournamentsCompleted} completed` : null,
+            results.tournamentsCreated ? `${results.tournamentsCreated} created` : null,
+          ].filter(Boolean).join(', ')
+        : 'Tournament cycle triggered';
+      addSessionLog('success', `Tournament cycle: ${details || 'completed'}`);
+      showMessage('success', details || 'Tournament cycle completed');
+    } catch (error: unknown) {
+      const msg = (error as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Tournament cycle trigger failed';
+      addSessionLog('error', `Tournament cycle failed: ${msg}`);
+      showMessage('error', msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const triggerLeagueCycle = async (): Promise<void> => {
+    setLoading(true);
+    addSessionLog('info', 'Starting league cycle: Repair → Battles → Rebalance → Matchmaking');
+    try {
+      // Step 1: Repair
+      const repairRes = await apiClient.post('/api/admin/repair/all', { deductCosts: true });
+      addSessionLog('info', `Step 1: Repaired ${repairRes.data.robotsRepaired} robots`);
+
+      // Step 2: Execute battles
+      const battleRes = await apiClient.post('/api/admin/battles/run', {});
+      const bs = battleRes.data.summary;
+      addSessionLog(bs.failedBattles > 0 ? 'warning' : 'success',
+        `Step 2: ${bs.successfulBattles}/${bs.totalBattles} battles executed${bs.failedBattles > 0 ? ` (${bs.failedBattles} failed)` : ''}`);
+
+      // Step 3: Rebalance
+      const rebalRes = await apiClient.post('/api/admin/leagues/rebalance', {});
+      const rs = rebalRes.data.summary;
+      addSessionLog('success', `Step 3: Rebalanced — ${rs.totalPromoted} promoted, ${rs.totalDemoted} demoted`);
+
+      // Step 4: Matchmaking
+      const matchRes = await apiClient.post('/api/admin/matchmaking/run', {});
+      addSessionLog('success', `Step 4: ${matchRes.data.matchesCreated} matches scheduled`);
+
+      showMessage('success', `League cycle complete: ${bs.successfulBattles} battles, ${rs.totalPromoted} promoted, ${matchRes.data.matchesCreated} matches scheduled`);
+    } catch (error: unknown) {
+      const msg = (error as { response?: { data?: { error?: string } } })?.response?.data?.error || 'League cycle failed';
+      addSessionLog('error', `League cycle failed: ${msg}`);
+      showMessage('error', msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const triggerTagTeamCycle = async (): Promise<void> => {
+    setLoading(true);
+    addSessionLog('info', 'Starting tag team cycle: Repair → Battles → Rebalance → Matchmaking');
+    try {
+      // Step 1: Repair
+      const repairRes = await apiClient.post('/api/admin/repair/all', { deductCosts: true });
+      addSessionLog('info', `Step 1: Repaired ${repairRes.data.robotsRepaired} robots`);
+
+      // Step 2: Execute tag team battles
+      const battleRes = await apiClient.post('/api/admin/tag-teams/battles', {});
+      const bs = battleRes.data.summary;
+      addSessionLog('success', `Step 2: ${bs.totalBattles} tag team battles executed`);
+
+      // Step 3: Rebalance tag team leagues
+      const rebalRes = await apiClient.post('/api/admin/tag-teams/rebalance', {});
+      const rs = rebalRes.data.summary;
+      addSessionLog('success', `Step 3: Rebalanced — ${rs.totalPromoted} promoted, ${rs.totalDemoted} demoted`);
+
+      // Step 4: Tag team matchmaking
+      const matchRes = await apiClient.post('/api/admin/tag-teams/matchmaking', {});
+      addSessionLog('success', `Step 4: ${matchRes.data.matchesCreated} tag team matches scheduled`);
+
+      showMessage('success', `Tag team cycle complete: ${bs.totalBattles} battles, ${rs.totalPromoted} promoted, ${matchRes.data.matchesCreated} matches scheduled`);
+    } catch (error: unknown) {
+      const msg = (error as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Tag team cycle failed';
+      addSessionLog('error', `Tag team cycle failed: ${msg}`);
+      showMessage('error', msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   /* ---------- Bulk cycle runner ---------- */
 
   const runBulkCycles = async (): Promise<void> => {
@@ -350,53 +445,89 @@ export function CycleControlsTab({
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Daily Cycle Controls */}
+        {/* Production Cycle Triggers */}
         <div className="bg-surface rounded-lg p-6">
-          <h2 className="text-2xl font-bold mb-4">Daily Cycle Controls</h2>
+          <h2 className="text-2xl font-bold mb-2">Production Jobs (Manual Trigger)</h2>
+          <p className="text-secondary text-sm mb-4">Each button runs the same pipeline as the corresponding cron job.</p>
           <div className="grid grid-cols-1 gap-4">
             <button
-              onClick={repairAllRobots}
+              onClick={triggerLeagueCycle}
               disabled={loading}
-              className="bg-green-600 hover:bg-green-700 disabled:bg-surface-elevated px-6 py-3 rounded font-semibold transition-colors"
+              className="bg-primary hover:bg-blue-700 disabled:bg-surface-elevated px-6 py-3 rounded font-semibold transition-colors text-left"
             >
-              🔧 Auto-Repair All Robots
+              ⚔️ Run League Cycle
+              <span className="block text-xs font-normal opacity-75 mt-0.5">Repair → Execute battles → Rebalance → Matchmaking</span>
             </button>
             <button
-              onClick={runMatchmaking}
+              onClick={triggerTournamentCycle}
               disabled={loading}
-              className="bg-primary hover:bg-blue-700 disabled:bg-surface-elevated px-6 py-3 rounded font-semibold transition-colors"
+              className="bg-yellow-600 hover:bg-yellow-700 disabled:bg-surface-elevated px-6 py-3 rounded font-semibold transition-colors text-left"
             >
-              🎯 Run Matchmaking
+              🏆 Run Tournament Cycle
+              <span className="block text-xs font-normal opacity-75 mt-0.5">Repair → Execute rounds → Advance winners → Auto-create</span>
             </button>
             <button
-              onClick={executeBattles}
+              onClick={triggerTagTeamCycle}
               disabled={loading}
-              className="bg-red-600 hover:bg-red-700 disabled:bg-surface-elevated px-6 py-3 rounded font-semibold transition-colors"
+              className="bg-cyan-600 hover:bg-cyan-700 disabled:bg-surface-elevated px-6 py-3 rounded font-semibold transition-colors text-left"
             >
-              ⚔️ Execute Battles
-            </button>
-            <button
-              onClick={processDailyFinances}
-              disabled={loading}
-              className="bg-yellow-600 hover:bg-yellow-700 disabled:bg-surface-elevated px-6 py-3 rounded font-semibold transition-colors"
-            >
-              💰 Process Daily Finances
-            </button>
-            <button
-              onClick={rebalanceLeagues}
-              disabled={loading}
-              className="bg-purple-600 hover:bg-purple-700 disabled:bg-surface-elevated px-6 py-3 rounded font-semibold transition-colors"
-            >
-              📊 Rebalance Leagues
+              🤝 Run Tag Team Cycle
+              <span className="block text-xs font-normal opacity-75 mt-0.5">Repair → Execute battles → Rebalance → Matchmaking</span>
             </button>
             <button
               onClick={triggerKothCycle}
               disabled={loading}
-              className="bg-orange-600 hover:bg-orange-700 disabled:bg-surface-elevated px-6 py-3 rounded font-semibold transition-colors"
+              className="bg-orange-600 hover:bg-orange-700 disabled:bg-surface-elevated px-6 py-3 rounded font-semibold transition-colors text-left"
             >
-              👑 Trigger KotH Cycle
+              👑 Run KotH Cycle
+              <span className="block text-xs font-normal opacity-75 mt-0.5">Execute battles → Matchmaking for next round</span>
+            </button>
+            <button
+              onClick={processDailyFinances}
+              disabled={loading}
+              className="bg-green-600 hover:bg-green-700 disabled:bg-surface-elevated px-6 py-3 rounded font-semibold transition-colors text-left"
+            >
+              💰 Run Settlement
+              <span className="block text-xs font-normal opacity-75 mt-0.5">Passive income → Operating costs → Cycle counter → Snapshot</span>
             </button>
           </div>
+
+          {/* Individual Step Controls (collapsed) */}
+          <details className="mt-6">
+            <summary className="cursor-pointer text-secondary hover:text-white text-sm font-medium">
+              🔧 Individual Step Controls (debugging)
+            </summary>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+              <button
+                onClick={repairAllRobots}
+                disabled={loading}
+                className="bg-surface-elevated hover:bg-white/10 disabled:opacity-50 px-4 py-2 rounded text-sm transition-colors"
+              >
+                🔧 Repair All Robots
+              </button>
+              <button
+                onClick={runMatchmaking}
+                disabled={loading}
+                className="bg-surface-elevated hover:bg-white/10 disabled:opacity-50 px-4 py-2 rounded text-sm transition-colors"
+              >
+                🎯 Run Matchmaking (League)
+              </button>
+              <button
+                onClick={executeBattles}
+                disabled={loading}
+                className="bg-surface-elevated hover:bg-white/10 disabled:opacity-50 px-4 py-2 rounded text-sm transition-colors"
+              >
+                ⚔️ Execute League Battles
+              </button>
+              <button
+                onClick={rebalanceLeagues}
+                disabled={loading}
+                className="bg-surface-elevated hover:bg-white/10 disabled:opacity-50 px-4 py-2 rounded text-sm transition-colors"
+              >
+                📊 Rebalance Leagues
+              </button>
+            </div>
+          </details>
         </div>
 
         {/* Bulk Cycle Testing */}

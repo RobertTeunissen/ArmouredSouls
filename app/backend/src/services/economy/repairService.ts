@@ -62,34 +62,46 @@ export async function repairAllRobots(deductCosts: boolean = true, cycleNumber?:
     robotsByUser.get(robot.userId)!.push(robot);
   }
 
+  // Batch-load all facilities and robot counts for all affected users (2 queries instead of 2N)
+  const affectedUserIds = Array.from(robotsByUser.keys());
+  const [allFacilities, robotCounts] = await Promise.all([
+    prisma.facility.findMany({
+      where: {
+        userId: { in: affectedUserIds },
+        facilityType: { in: ['repair_bay', 'medical_bay'] },
+      },
+    }),
+    prisma.robot.groupBy({
+      by: ['userId'],
+      where: {
+        userId: { in: affectedUserIds },
+        NOT: { name: 'Bye Robot' },
+      },
+      _count: { id: true },
+    }),
+  ]);
+
+  // Build lookup maps
+  const facilitiesByUser = new Map<number, typeof allFacilities>();
+  for (const f of allFacilities) {
+    if (!facilitiesByUser.has(f.userId)) facilitiesByUser.set(f.userId, []);
+    facilitiesByUser.get(f.userId)!.push(f);
+  }
+  const robotCountByUser = new Map(robotCounts.map(r => [r.userId, r._count.id]));
+
   let totalBaseCost = 0;
   let totalFinalCost = 0;
   const userSummaries = [];
 
   for (const [userId, userRobots] of robotsByUser.entries()) {
-    // Get repair bay and medical bay facilities for discounts
-    const facilities = await prisma.facility.findMany({
-      where: {
-        userId,
-        facilityType: {
-          in: ['repair_bay', 'medical_bay'],
-        },
-      },
-    });
+    const facilities = facilitiesByUser.get(userId) || [];
 
     const repairBay = facilities.find(f => f.facilityType === 'repair_bay');
     const medicalBay = facilities.find(f => f.facilityType === 'medical_bay');
     
     const repairBayLevel = repairBay?.level || 0;
     const medicalBayLevel = medicalBay?.level || 0;
-    
-    // Query active robot count for multi-robot discount (exclude "Bye Robot")
-    const activeRobotCount = await prisma.robot.count({
-      where: {
-        userId,
-        NOT: { name: 'Bye Robot' }
-      }
-    });
+    const activeRobotCount = robotCountByUser.get(userId) || 0;
     
     // Calculate discount using new formula: repairBayLevel × (5 + activeRobotCount), capped at 90%
     const rawDiscount = repairBayLevel * (5 + activeRobotCount);
@@ -158,15 +170,7 @@ export async function repairAllRobots(deductCosts: boolean = true, cycleNumber?:
           'automatic'
         );
         
-        // Get user's stable name for logging
-        const user = await prisma.user.findUnique({
-          where: { id: userId },
-          select: { stableName: true },
-        });
-        const stableInfo = user?.stableName ? ` (${user.stableName})` : '';
-        
-        // Single consolidated log per robot
-        logger.info(`[RepairService] | User ${userId}${stableInfo} | Robot ${robot.id} (${robot.name}) | Cost: ₡${repairCost.toLocaleString()} | Discount: ${repairBayDiscount}%`);
+        logger.info(`[RepairService] | User ${userId} | Robot ${robot.id} (${robot.name}) | Cost: ₡${repairCost.toLocaleString()} | Discount: ${repairBayDiscount}%`);
       } catch (logError) {
         logger.error(`[RepairService] | ERROR | User ${userId} | Robot ${robot.id} | Failed to log repair event:`, logError instanceof Error ? logError.message : logError);
       }

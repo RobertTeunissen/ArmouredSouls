@@ -235,13 +235,36 @@ router.post('/login', validateRequest({ body: loginBodySchema }), async (req: Re
 /**
  * POST /api/auth/logout
  *
- * Logs the user out. Token invalidation is handled client-side (token removal).
- * This endpoint exists as a conventional hook for future server-side session cleanup.
+ * Logs the user out by incrementing tokenVersion, which invalidates all
+ * existing JWT tokens for this user on subsequent requests.
+ * Best-effort: returns 200 even if no valid token is provided.
  *
  * **Responses:**
  * - `200 OK` — `{ message: "Logged out successfully" }`
  */
-router.post('/logout', validateRequest({}), (req: Request, res: Response) => {
+router.post('/logout', validateRequest({}), async (req: Request, res: Response) => {
+  // Best-effort server-side invalidation: if a valid token is present, bump tokenVersion
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (token) {
+    try {
+      const jwtSecret = (await import('../config/env')).getConfig().jwtSecret;
+      const jwt = (await import('jsonwebtoken')).default;
+      const decoded = jwt.verify(token, jwtSecret) as { userId: string | number };
+      const userId = typeof decoded.userId === 'string' ? parseInt(decoded.userId, 10) : decoded.userId;
+
+      if (userId) {
+        await prisma.user.update({
+          where: { id: userId },
+          data: { tokenVersion: { increment: 1 } },
+        });
+      }
+    } catch {
+      // Token invalid or expired — no-op, user is effectively logged out already
+    }
+  }
+
   res.json({ message: 'Logged out successfully' });
 });
 

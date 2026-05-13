@@ -46,13 +46,19 @@ type BattleWithParticipants = Prisma.BattleGetPayload<{
 
 // ── GET /all/robots ──────────────────────────────────────────────────
 
-export async function findAllRobots() {
+export async function findAllRobots(page = 1, perPage = 100) {
+  // Clamp inputs to prevent invalid skip/take values
+  const safePage = Math.max(1, Math.floor(page));
+  const safePerPage = Math.min(200, Math.max(1, Math.floor(perPage)));
+
   return prisma.robot.findMany({
     include: {
       user: { select: { username: true } },
       ...WEAPON_INCLUDE,
     },
     orderBy: { elo: 'desc' },
+    skip: (safePage - 1) * safePerPage,
+    take: safePerPage,
   });
 }
 

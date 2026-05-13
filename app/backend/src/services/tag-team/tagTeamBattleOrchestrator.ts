@@ -17,7 +17,6 @@ import {
   didRobotLosePreviousBattle,
 } from '../battle/battlePostCombat';
 import { TagTeamError, TagTeamErrorCode } from '../../errors/tagTeamErrors';
-import { CycleEventPayload } from '../../types/snapshotTypes';
 import { prepareRobotForCombat } from '../../utils/robotCalculations';
 import { getTuningBonusesBatch } from '../tuning-pool';
 
@@ -1391,7 +1390,6 @@ export async function executeScheduledTagTeamBattles(_scheduledFor?: Date): Prom
   draws: number;
   losses: number;
   skippedDueToUnreadyRobots: number;
-  totalStreamingRevenue?: number;
 }> {
   // Query scheduled tag team matches
   // Execute all matches with status 'scheduled' — the cron job controls timing,
@@ -1405,12 +1403,14 @@ export async function executeScheduledTagTeamBattles(_scheduledFor?: Date): Prom
         include: {
           activeRobot: true,
           reserveRobot: true,
+          stable: true,
         },
       },
       team2: {
         include: {
           activeRobot: true,
           reserveRobot: true,
+          stable: true,
         },
       },
     },
@@ -1426,7 +1426,6 @@ export async function executeScheduledTagTeamBattles(_scheduledFor?: Date): Prom
   let draws = 0;
   let losses = 0;
   let skippedDueToUnreadyRobots = 0;
-  let totalStreamingRevenue = 0;
 
   for (const match of scheduledMatches) {
     try {
@@ -1468,22 +1467,7 @@ export async function executeScheduledTagTeamBattles(_scheduledFor?: Date): Prom
         losses++;
       }
 
-      // Track streaming revenue from audit log (per-robot battle_complete events)
-      if (!isByeMatch) {
-        const battleCompleteEvents = await prisma.auditLog.findMany({
-          where: {
-            eventType: 'battle_complete',
-            battleId: result.battleId,
-          },
-        });
-        
-        for (const evt of battleCompleteEvents) {
-          const payload = evt.payload as unknown as CycleEventPayload;
-          totalStreamingRevenue += payload?.streamingRevenue || 0;
-        }
-      }
-
-      // Update robot stats and apply rewards
+      // Update robot stats and apply rewards (streaming revenue tracked inside)
       await updateTagTeamBattleResults(match, result);
 
     } catch (error) {
@@ -1502,9 +1486,6 @@ export async function executeScheduledTagTeamBattles(_scheduledFor?: Date): Prom
     `${wins} wins, ${draws} draws, ${losses} losses, ` +
     `${skippedDueToUnreadyRobots} skipped due to unready robots`
   );
-  if (totalStreamingRevenue > 0) {
-    logger.info(`[TagTeamBattles] Streaming Revenue: ₡${totalStreamingRevenue.toLocaleString()} total earned`);
-  }
 
   return {
     totalBattles,
@@ -1512,7 +1493,6 @@ export async function executeScheduledTagTeamBattles(_scheduledFor?: Date): Prom
     draws,
     losses,
     skippedDueToUnreadyRobots,
-    totalStreamingRevenue,
   };
 }
 
@@ -1545,32 +1525,20 @@ async function checkTeamReadinessForBattle(team: {
  * Requirements 12.4, 12.5: Full rewards for bye-team wins, normal penalties for losses
  */
 async function updateTagTeamBattleResults(
-  match: ScheduledTagTeamMatch,
+  match: ScheduledTagTeamMatch & {
+    team1: (TagTeam & { activeRobot: Robot; reserveRobot: Robot; stable: { id: number; stableName: string | null } | null }) | null;
+    team2: (TagTeam & { activeRobot: Robot; reserveRobot: Robot; stable: { id: number; stableName: string | null } | null }) | null;
+  },
   result: TagTeamBattleResult
 ): Promise<void> {
-  // Check if this is a bye-team match
-  const isByeMatch = match.team1Id === -1 || match.team2Id === -1;
-  const team1IsBye = match.team1Id === -1;
-  const team2IsBye = match.team2Id === -1;
+  // Check if this is a bye-team match (bye matches have team2Id = null in the DB)
+  const isByeMatch = match.team2Id === null;
+  const team1IsBye = false; // Team 1 is never the bye team (matchmaking always puts real team as team1)
+  const team2IsBye = match.team2Id === null;
 
-  // Load teams with full robot data (skip bye-teams)
-  const team1 = team1IsBye ? null : await prisma.tagTeam.findUnique({
-    where: { id: match.team1Id },
-    include: {
-      activeRobot: true,
-      reserveRobot: true,
-      stable: true,
-    },
-  });
-
-  const team2 = team2IsBye ? null : (match.team2Id ? await prisma.tagTeam.findUnique({
-    where: { id: match.team2Id },
-    include: {
-      activeRobot: true,
-      reserveRobot: true,
-      stable: true,
-    },
-  }) : null);
+  // Use pre-loaded teams from the scheduled match query (no re-fetch needed)
+  const team1 = team1IsBye ? null : match.team1;
+  const team2 = team2IsBye ? null : match.team2;
 
   // For bye-team matches, only update the real team
   if (isByeMatch) {
@@ -1603,31 +1571,9 @@ async function updateTagTeamBattleResults(
     const realTeamRewards = calculateTagTeamRewards(match.tagTeamLeague, realTeamWon, isDraw);
 
     // Calculate repair costs
-    const repairBay = await prisma.facility.findUnique({
-      where: {
-        userId_facilityType: {
-          userId: realTeam.stableId,
-          facilityType: 'repair_bay',
-        },
-      },
-    });
-    const medicalBay = await prisma.facility.findUnique({
-      where: {
-        userId_facilityType: {
-          userId: realTeam.stableId,
-          facilityType: 'medical_bay',
-        },
-      },
-    });
-    const _activeRobotCount = await prisma.robot.count({
-      where: {
-        userId: realTeam.stableId,
-        NOT: { name: 'Bye Robot' }
-      }
-    });
-
-    const _repairBayLevel = repairBay ? repairBay.level : 0;
-    const _medicalBayLevel = medicalBay ? medicalBay.level : 0;
+    // NOTE: Repair costs are NOT calculated here anymore
+    // They are calculated by RepairService when repairs are actually triggered
+    // This ensures accurate costs based on current damage and facility levels
 
     const activeFinalHP = team1IsBye ? result.team2ActiveFinalHP : result.team1ActiveFinalHP;
     const reserveFinalHP = team1IsBye ? result.team2ReserveFinalHP : result.team1ReserveFinalHP;
@@ -1812,58 +1758,6 @@ async function updateTagTeamBattleResults(
   const team2Rewards = calculateTagTeamRewards(match.tagTeamLeague, team2Won, isDraw);
 
   // Calculate repair costs (Requirements 4.4, 4.5, 4.6, 4.7)
-  // Get Repair Bay discount for each stable
-  const team1RepairBay = await prisma.facility.findUnique({
-    where: {
-      userId_facilityType: {
-        userId: team1.stableId,
-        facilityType: 'repair_bay',
-      },
-    },
-  });
-  const team2RepairBay = await prisma.facility.findUnique({
-    where: {
-      userId_facilityType: {
-        userId: team2.stableId,
-        facilityType: 'repair_bay',
-      },
-    },
-  });
-  const team1MedicalBay = await prisma.facility.findUnique({
-    where: {
-      userId_facilityType: {
-        userId: team1.stableId,
-        facilityType: 'medical_bay',
-      },
-    },
-  });
-  const team2MedicalBay = await prisma.facility.findUnique({
-    where: {
-      userId_facilityType: {
-        userId: team2.stableId,
-        facilityType: 'medical_bay',
-      },
-    },
-  });
-
-  const _team1ActiveRobotCount = await prisma.robot.count({
-    where: {
-      userId: team1.stableId,
-      NOT: { name: 'Bye Robot' }
-    }
-  });
-  const _team2ActiveRobotCount = await prisma.robot.count({
-    where: {
-      userId: team2.stableId,
-      NOT: { name: 'Bye Robot' }
-    }
-  });
-
-  const _team1RepairBayLevel = team1RepairBay ? team1RepairBay.level : 0;
-  const _team2RepairBayLevel = team2RepairBay ? team2RepairBay.level : 0;
-  const _team1MedicalBayLevel = team1MedicalBay ? team1MedicalBay.level : 0;
-  const _team2MedicalBayLevel = team2MedicalBay ? team2MedicalBay.level : 0;
-
   // NOTE: Repair costs are NOT calculated here anymore
   // They are calculated by RepairService when repairs are actually triggered
   // This ensures accurate costs based on current damage and facility levels

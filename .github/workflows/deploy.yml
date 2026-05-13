@@ -312,6 +312,11 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H ${{ secrets.ACC_VPS_IP }} >> ~/.ssh/known_hosts
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+
       - name: Transfer backend artifacts via rsync
         run: |
           rsync -avz --delete \
@@ -383,18 +388,33 @@ jobs:
               echo "Caddyfile unchanged — skipping reload"
             fi
 
-      - name: Install dependencies and build on VPS
+      - name: Build backend on CI runner
+        working-directory: ./app/backend
+        run: |
+          npm ci
+          npx prisma generate
+          npm run build
+        env:
+          DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
+
+      - name: Transfer backend dist to VPS
+        run: |
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/deploy_key" \
+            ./app/backend/dist/ \
+            ${{ secrets.ACC_VPS_USER }}@${{ secrets.ACC_VPS_IP }}:/opt/armouredsouls/backend/dist/
+
+      - name: Install dependencies on VPS
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.ACC_VPS_IP }}
           username: ${{ secrets.ACC_VPS_USER }}
           key: ${{ secrets.ACC_SSH_KEY }}
-          command_timeout: 20m
+          command_timeout: 10m
           script: |
             cd /opt/armouredsouls/backend
             npm install --prefer-offline
             npx prisma generate
-            npm run build
 
       - name: Create pre-migration database backup
         uses: appleboy/ssh-action@v1
@@ -643,18 +663,33 @@ jobs:
               echo "Caddyfile unchanged — skipping reload"
             fi
 
-      - name: Install dependencies and build on VPS
+      - name: Build backend on CI runner
+        working-directory: ./app/backend
+        run: |
+          npm ci
+          npx prisma generate
+          npm run build
+        env:
+          DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
+
+      - name: Transfer backend dist to VPS
+        run: |
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/deploy_key" \
+            ./app/backend/dist/ \
+            ${{ secrets.PRD_VPS_USER }}@${{ secrets.PRD_VPS_IP }}:/opt/armouredsouls/backend/dist/
+
+      - name: Install dependencies on VPS
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.PRD_VPS_IP }}
           username: ${{ secrets.PRD_VPS_USER }}
           key: ${{ secrets.PRD_SSH_KEY }}
-          command_timeout: 20m
+          command_timeout: 10m
           script: |
             cd /opt/armouredsouls/backend
             npm install --prefer-offline
             npx prisma generate
-            npm run build
 
       - name: Create pre-migration database backup
         uses: appleboy/ssh-action@v1

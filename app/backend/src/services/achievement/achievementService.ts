@@ -225,6 +225,14 @@ class AchievementService implements IAchievementService {
         return [];
       }
 
+      // Pre-fetch robot and user data once to avoid repeated DB queries in evaluators.
+      // The robot record contains all stat fields needed by checkRobotStat triggers.
+      // The user record contains prestige, currency, and other user-level stats.
+      const [cachedRobot, cachedUser] = await Promise.all([
+        robotId ? prisma.robot.findUnique({ where: { id: robotId } }) : Promise.resolve(null),
+        prisma.user.findUnique({ where: { id: userId } }),
+      ]);
+
       // Evaluate each candidate
       const newlyUnlocked: UnlockedAchievement[] = [];
 
@@ -234,6 +242,8 @@ class AchievementService implements IAchievementService {
           userId,
           robotId,
           event,
+          cachedRobot,
+          cachedUser,
         );
 
         if (conditionMet) {
@@ -329,48 +339,50 @@ class AchievementService implements IAchievementService {
     userId: number,
     robotId: number | null,
     event: AchievementEvent,
+    cachedRobot: Record<string, unknown> | null,
+    cachedUser: Record<string, unknown> | null,
   ): Promise<boolean> {
     const { triggerType, triggerThreshold, triggerMeta } = achievement;
     const data = event.data;
 
     switch (triggerType) {
-      // ── Cumulative Robot Stats (from DB) ───────────────────────
+      // ── Cumulative Robot Stats (from cached robot) ─────────────
       case 'wins':
-        return this.checkRobotStat(robotId, 'wins', triggerThreshold);
+        return this.checkRobotStatCached(cachedRobot, 'wins', triggerThreshold);
 
       case 'losses':
-        return this.checkRobotStat(robotId, 'losses', triggerThreshold);
+        return this.checkRobotStatCached(cachedRobot, 'losses', triggerThreshold);
 
       case 'battles':
-        return this.checkRobotStat(robotId, 'totalBattles', triggerThreshold);
+        return this.checkRobotStatCached(cachedRobot, 'totalBattles', triggerThreshold);
 
       case 'kills':
-        return this.checkRobotStat(robotId, 'kills', triggerThreshold);
+        return this.checkRobotStatCached(cachedRobot, 'kills', triggerThreshold);
 
       case 'elo':
-        return this.checkRobotStat(robotId, 'elo', triggerThreshold);
+        return this.checkRobotStatCached(cachedRobot, 'elo', triggerThreshold);
 
       case 'fame':
-        return this.checkRobotStat(robotId, 'fame', triggerThreshold);
+        return this.checkRobotStatCached(cachedRobot, 'fame', triggerThreshold);
 
       case 'win_streak':
-        return this.checkRobotStat(robotId, 'currentWinStreak', triggerThreshold);
+        return this.checkRobotStatCached(cachedRobot, 'currentWinStreak', triggerThreshold);
 
       case 'lose_streak':
-        return this.checkRobotStat(robotId, 'currentLoseStreak', triggerThreshold);
+        return this.checkRobotStatCached(cachedRobot, 'currentLoseStreak', triggerThreshold);
 
       case 'koth_wins':
-        return this.checkRobotStat(robotId, 'kothWins', triggerThreshold);
+        return this.checkRobotStatCached(cachedRobot, 'kothWins', triggerThreshold);
 
       case 'tag_team_wins':
-        return this.checkRobotStat(robotId, 'totalTagTeamWins', triggerThreshold);
+        return this.checkRobotStatCached(cachedRobot, 'totalTagTeamWins', triggerThreshold);
 
-      // ── Cumulative User Stats (from DB) ────────────────────────
+      // ── Cumulative User Stats (from cached user) ───────────────
       case 'prestige':
-        return this.checkUserStat(userId, 'prestige', triggerThreshold);
+        return this.checkUserStatCached(cachedUser, 'prestige', triggerThreshold);
 
       case 'currency':
-        return this.checkUserStat(userId, 'currency', triggerThreshold);
+        return this.checkUserStatCached(cachedUser, 'currency', triggerThreshold);
 
       // ── Battle-Specific Boolean Triggers (from event.data) ─────
       case 'perfect_victory':
@@ -436,17 +448,17 @@ class AchievementService implements IAchievementService {
       case 'solo_carry':
         return Boolean(data.won) && Boolean(data.soloCarry);
 
-      // ── Loadout/Stance Win Counters (from DB) ─────────────────
+      // ── Loadout/Stance Win Counters (from cached robot) ────────
       case 'loadout_wins': {
-        if (!robotId) return false;
+        if (!cachedRobot) return false;
         const loadoutType = String(triggerMeta?.loadoutType ?? 'dual_wield');
-        return this.checkLoadoutWins(robotId, loadoutType, triggerThreshold);
+        return this.checkLoadoutWinsCached(cachedRobot, loadoutType, triggerThreshold);
       }
 
       case 'stance_wins': {
-        if (!robotId) return false;
+        if (!cachedRobot) return false;
         const stance = String(triggerMeta?.stance ?? 'balanced');
-        return this.checkStanceWins(robotId, stance, triggerThreshold);
+        return this.checkStanceWinsCached(cachedRobot, stance, triggerThreshold);
       }
 
       // ── All Modes Win (DB query) ──────────────────────────────
@@ -455,16 +467,11 @@ class AchievementService implements IAchievementService {
 
       // ── League Promotion ──────────────────────────────────────
       case 'league_promotion': {
-        if (!robotId) return false;
+        if (!cachedRobot) return false;
         const targetLeague = String(triggerMeta?.league ?? '');
-        const robot = await prisma.robot.findUnique({
-          where: { id: robotId },
-          select: { currentLeague: true },
-        });
-        if (!robot) return false;
-        // Check if robot is at or above the target league tier
+        const currentLeague = String(cachedRobot.currentLeague ?? '');
         const tierOrder = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'];
-        const currentIndex = tierOrder.indexOf(robot.currentLeague);
+        const currentIndex = tierOrder.indexOf(currentLeague);
         const targetIndex = tierOrder.indexOf(targetLeague);
         return currentIndex >= targetIndex && targetIndex >= 0;
       }
@@ -491,30 +498,15 @@ class AchievementService implements IAchievementService {
         return this.checkFacilityCount(userId, triggerThreshold, minLevel);
       }
 
-      // ── One-Time Triggers ─────────────────────────────────────
-      case 'onboarding': {
-        const user = await prisma.user.findUnique({
-          where: { id: userId },
-          select: { hasCompletedOnboarding: true },
-        });
-        return user?.hasCompletedOnboarding === true;
-      }
+      // ── One-Time Triggers (from cached user) ──────────────────
+      case 'onboarding':
+        return (cachedUser as Record<string, unknown>)?.hasCompletedOnboarding === true;
 
-      case 'practice_battles': {
-        const user = await prisma.user.findUnique({
-          where: { id: userId },
-          select: { totalPracticeBattles: true },
-        });
-        return (user?.totalPracticeBattles ?? 0) >= (triggerThreshold ?? 0);
-      }
+      case 'practice_battles':
+        return (Number((cachedUser as Record<string, unknown>)?.totalPracticeBattles ?? 0)) >= (triggerThreshold ?? 0);
 
-      case 'tournament_wins': {
-        const user = await prisma.user.findUnique({
-          where: { id: userId },
-          select: { championshipTitles: true },
-        });
-        return (user?.championshipTitles ?? 0) >= (triggerThreshold ?? 0);
-      }
+      case 'tournament_wins':
+        return (Number((cachedUser as Record<string, unknown>)?.championshipTitles ?? 0)) >= (triggerThreshold ?? 0);
 
       // ── Tuning Triggers ───────────────────────────────────────
       case 'tuning_allocated':
@@ -533,13 +525,8 @@ class AchievementService implements IAchievementService {
         return true;
 
       // ── Financial Triggers (DB aggregates) ────────────────────
-      case 'bankrupt': {
-        const user = await prisma.user.findUnique({
-          where: { id: userId },
-          select: { currency: true },
-        });
-        return (user?.currency ?? 0) < 0;
-      }
+      case 'bankrupt':
+        return (Number((cachedUser as Record<string, unknown>)?.currency ?? 0)) < 0;
 
       case 'lifetime_earnings':
         return this.checkLifetimeEarnings(userId, triggerThreshold);
@@ -557,6 +544,58 @@ class AchievementService implements IAchievementService {
 
 
   // ─── DB Query Helpers ────────────────────────────────────────────
+
+  /** Check a robot stat from the pre-fetched cached robot (no DB query). */
+  private checkRobotStatCached(
+    cachedRobot: Record<string, unknown> | null,
+    field: string,
+    threshold?: number,
+  ): boolean {
+    if (!cachedRobot || threshold === undefined) return false;
+    return Number(cachedRobot[field] ?? 0) >= threshold;
+  }
+
+  /** Check a user stat from the pre-fetched cached user (no DB query). */
+  private checkUserStatCached(
+    cachedUser: Record<string, unknown> | null,
+    field: string,
+    threshold?: number,
+  ): boolean {
+    if (!cachedUser || threshold === undefined) return false;
+    return Number(cachedUser[field] ?? 0) >= threshold;
+  }
+
+  /** Check loadout wins from cached robot (no DB query). */
+  private checkLoadoutWinsCached(
+    cachedRobot: Record<string, unknown>,
+    loadoutType: string,
+    threshold?: number,
+  ): boolean {
+    if (threshold === undefined) return false;
+    if (loadoutType === 'dual_wield') {
+      return Number(cachedRobot.dualWieldWins ?? 0) >= threshold;
+    }
+    return false;
+  }
+
+  /** Check stance wins from cached robot (no DB query). */
+  private checkStanceWinsCached(
+    cachedRobot: Record<string, unknown>,
+    stance: string,
+    threshold?: number,
+  ): boolean {
+    if (threshold === undefined) return false;
+    switch (stance) {
+      case 'offensive':
+        return Number(cachedRobot.offensiveWins ?? 0) >= threshold;
+      case 'defensive':
+        return Number(cachedRobot.defensiveWins ?? 0) >= threshold;
+      case 'balanced':
+        return Number(cachedRobot.balancedWins ?? 0) >= threshold;
+      default:
+        return false;
+    }
+  }
 
   private async checkRobotStat(
     robotId: number | null,
