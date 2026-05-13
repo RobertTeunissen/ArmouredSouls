@@ -117,7 +117,7 @@ describe('Property 13: Achievement sort correctness', () => {
    * preserves all elements (same length, same IDs) — sorting is a permutation.
    */
   const SORT_OPTIONS: AchievementSortOption[] = [
-    'default', 'tier_hard', 'tier_easy', 'status_locked', 'status_unlocked',
+    'default', 'tier_hard', 'tier_easy', 'status_locked', 'status_unlocked', 'date_newest', 'date_oldest',
   ];
 
   it('sorted results preserve all elements', () => {

@@ -52,7 +52,7 @@ export interface UnlockedAchievement {
 }
 
 export type AchievementTier = 'easy' | 'medium' | 'hard' | 'very_hard' | 'secret';
-export type AchievementSortOption = 'default' | 'rarity_asc' | 'rarity_desc' | 'status_locked' | 'status_unlocked' | 'tier_hard' | 'tier_easy';
+export type AchievementSortOption = 'default' | 'rarity_asc' | 'rarity_desc' | 'status_locked' | 'status_unlocked' | 'tier_hard' | 'tier_easy' | 'date_newest' | 'date_oldest';
 
 export interface AchievementFilters {
   tier: AchievementTier | 'all';
@@ -138,6 +138,22 @@ export function sortAchievements(
       break;
     case 'tier_easy':
       sorted.sort((a, b) => (TIER_ORDER[a.tier] ?? 0) - (TIER_ORDER[b.tier] ?? 0));
+      break;
+    case 'date_newest': // most recently unlocked first, locked achievements at the end
+      sorted.sort((a, b) => {
+        if (a.unlockedAt && b.unlockedAt) return new Date(b.unlockedAt).getTime() - new Date(a.unlockedAt).getTime();
+        if (a.unlockedAt) return -1;
+        if (b.unlockedAt) return 1;
+        return 0;
+      });
+      break;
+    case 'date_oldest': // earliest unlocked first, locked achievements at the end
+      sorted.sort((a, b) => {
+        if (a.unlockedAt && b.unlockedAt) return new Date(a.unlockedAt).getTime() - new Date(b.unlockedAt).getTime();
+        if (a.unlockedAt) return -1;
+        if (b.unlockedAt) return 1;
+        return 0;
+      });
       break;
     default:
       break;
