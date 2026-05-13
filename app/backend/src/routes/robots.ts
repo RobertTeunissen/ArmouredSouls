@@ -42,6 +42,7 @@ import {
 } from '../services/robot/robotCreationService';
 import { uploadRateLimiter, handleImagePreview, handleImageConfirm, fileStorageService } from '../services/moderation';
 import { achievementService, type UnlockedAchievement } from '../services/achievement';
+import { getEntityHistory } from '../services/league/leagueHistoryService';
 
 // Re-export for backward compatibility (stables.ts imports from here)
 export { sanitizeRobotForPublic, SENSITIVE_ROBOT_FIELDS };
@@ -606,5 +607,26 @@ router.put(
   validateRequest({ params: imageParamsSchema, body: confirmBodySchema }),
   handleImageConfirm as never,
 );
+
+// Get league history for a robot
+router.get('/:id/league-history', authenticateToken, validateRequest({ params: robotIdParamsSchema }), async (req: AuthRequest, res: Response) => {
+  const robotId = parseInt(String(req.params.id));
+
+  if (isNaN(robotId)) {
+    throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Invalid robot ID', 400);
+  }
+
+  const robot = await prisma.robot.findUnique({
+    where: { id: robotId },
+    select: { id: true },
+  });
+
+  if (!robot) {
+    throw new RobotError(RobotErrorCode.ROBOT_NOT_FOUND, 'Robot not found', 404);
+  }
+
+  const data = await getEntityHistory('robot', robotId);
+  res.json({ data });
+});
 
 export default router;

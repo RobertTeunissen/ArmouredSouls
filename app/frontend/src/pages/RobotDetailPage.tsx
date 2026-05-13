@@ -21,6 +21,8 @@ import UpgradePlanner from '../components/UpgradePlanner';
 import Toast from '../components/Toast';
 import RobotPerformanceAnalytics from '../components/RobotPerformanceAnalytics';
 import TuningPoolEditor from '../components/TuningPoolEditor';
+import LeagueTimeline from '../components/LeagueTimeline';
+import type { LeagueHistoryEntry } from '../components/LeagueTimeline';
 import { getMatchHistory, BattleHistory } from '../utils/matchmakingApi';
 import type { RobotWithAttributes } from '../types/robot';
 
@@ -714,6 +716,10 @@ function RobotDetailPage() {
             </div>
           )}
 
+          {activeTab === 'league-history' && (
+            <LeagueHistoryTab robotId={robot.id} currentTier={robot.currentLeague} />
+          )}
+
           {/* Non-Owner View for owner-only tabs */}
           {!isOwner && (activeTab === 'battle-config' || activeTab === 'upgrades' || activeTab === 'tuning' || activeTab === 'stats') && (
             <div className="bg-surface p-6 rounded-lg text-center">
@@ -757,3 +763,58 @@ function RobotDetailPage() {
 }
 
 export default RobotDetailPage;
+
+/* ------------------------------------------------------------------ */
+/*  League History Tab                                                  */
+/* ------------------------------------------------------------------ */
+
+function LeagueHistoryTab({ robotId, currentTier }: { robotId: number; currentTier: string }) {
+  const [history, setHistory] = useState<LeagueHistoryEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    apiClient
+      .get(`/api/robots/${robotId}/league-history`)
+      .then((res) => {
+        if (!cancelled) {
+          const data = res.data.data || res.data;
+          setHistory(
+            (data as Array<{ cycleNumber: number; destinationTier: string; changeType: string; leaguePoints: number }>).map((r) => ({
+              cycleNumber: r.cycleNumber,
+              destinationTier: r.destinationTier,
+              changeType: r.changeType as 'promotion' | 'demotion',
+              leaguePoints: r.leaguePoints,
+            }))
+          );
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setHistory([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [robotId]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12 text-secondary">
+        Loading league history...
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-surface p-6 rounded-lg" data-testid="league-history-tab">
+      <h3 className="text-lg font-semibold text-white mb-4">League History</h3>
+      <LeagueTimeline
+        history={history}
+        currentTier={currentTier}
+        emptyMessage="No tier changes recorded yet for this robot."
+      />
+    </div>
+  );
+}

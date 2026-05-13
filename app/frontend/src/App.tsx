@@ -53,6 +53,7 @@ const AdminAchievementAnalyticsPage = React.lazy(() => import('./pages/admin/Ach
 const AdminTuningAdoptionPage = React.lazy(() => import('./pages/admin/TuningAdoptionPage'));
 const AdminRepairLogPage = React.lazy(() => import('./pages/admin/RepairLogPage'));
 const AdminAuditLogPage = React.lazy(() => import('./pages/admin/AuditLogPage'));
+const AdminLeagueHistoryPage = React.lazy(() => import('./pages/admin/LeagueHistoryPage'));
 
 function AchievementToastLayer() {
   const location = useLocation();
@@ -130,6 +131,7 @@ function AppRoutes() {
           <Route path="tuning" element={<AdminTuningAdoptionPage />} />
           <Route path="repair-log" element={<AdminRepairLogPage />} />
           <Route path="audit-log" element={<AdminAuditLogPage />} />
+          <Route path="league-history" element={<AdminLeagueHistoryPage />} />
           <Route path="*" element={<Navigate to="dashboard" replace />} />
         </Route>
       )}

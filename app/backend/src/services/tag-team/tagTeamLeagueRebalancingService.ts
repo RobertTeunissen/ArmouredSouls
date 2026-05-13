@@ -2,6 +2,7 @@ import { TagTeam } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { LeagueError, LeagueErrorCode } from '../../errors/leagueErrors';
+import { recordTierChange, getCurrentCycleNumber } from '../league/leagueHistoryService';
 
 // NOTE: This service mirrors leagueRebalancingService.ts for 1v1 leagues.
 // Both share identical promotion/demotion logic but operate on different Prisma models
@@ -253,6 +254,25 @@ export async function promoteTeam(team: TagTeam): Promise<void> {
   logger.info(
     `[TagTeamRebalancing] Promoted: Team ${team.id} (${team.tagTeamLeague} → ${nextTier}, instance ${newLeagueId}, LP: ${team.tagTeamLeaguePoints} retained)`
   );
+
+  // Record league history
+  try {
+    const cycleNumber = await getCurrentCycleNumber();
+    await recordTierChange({
+      entityType: 'tag_team',
+      entityId: team.id,
+      userId: team.stableId,
+      changeType: 'promotion',
+      sourceTier: team.tagTeamLeague,
+      destinationTier: nextTier,
+      sourceLeagueId: team.tagTeamLeagueId,
+      destinationLeagueId: newLeagueId,
+      leaguePoints: team.tagTeamLeaguePoints,
+      cycleNumber,
+    });
+  } catch (error) {
+    logger.error(`[Rebalancing] Failed to record promotion history for tag team ${team.id}: ${error}`);
+  }
 }
 
 /**
@@ -290,6 +310,25 @@ export async function demoteTeam(team: TagTeam): Promise<void> {
   logger.info(
     `[TagTeamRebalancing] Demoted: Team ${team.id} (${team.tagTeamLeague} → ${previousTier}, instance ${newLeagueId}, LP: ${team.tagTeamLeaguePoints} retained)`
   );
+
+  // Record league history
+  try {
+    const cycleNumber = await getCurrentCycleNumber();
+    await recordTierChange({
+      entityType: 'tag_team',
+      entityId: team.id,
+      userId: team.stableId,
+      changeType: 'demotion',
+      sourceTier: team.tagTeamLeague,
+      destinationTier: previousTier,
+      sourceLeagueId: team.tagTeamLeagueId,
+      destinationLeagueId: newLeagueId,
+      leaguePoints: team.tagTeamLeaguePoints,
+      cycleNumber,
+    });
+  } catch (error) {
+    logger.error(`[Rebalancing] Failed to record demotion history for tag team ${team.id}: ${error}`);
+  }
 }
 
 /**

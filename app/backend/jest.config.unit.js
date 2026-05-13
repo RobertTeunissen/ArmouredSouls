@@ -77,6 +77,9 @@ const unitTestFiles = [
   'tuningPoolService\\.test\\.ts',
   'tuningCombatIntegration\\.test\\.ts',
   'tuningPracticeArena\\.test\\.ts',
+  'leagueHistoryService\\.property\\.test\\.ts',
+  'adminLeagueHistory\\.test\\.ts',
+  'leagueHistoryPublic\\.test\\.ts',
 ];
 
 module.exports = {

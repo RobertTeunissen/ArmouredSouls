@@ -61,6 +61,38 @@ Pre-aggregated metrics for fast historical queries.
 **Constraints:**
 - `cycle_snapshots_cycle_number_key`: UNIQUE constraint on cycle_number
 
+### league_history
+
+Tracks all league tier changes (promotions and demotions) for robots and tag teams. Uses a single-table approach with an `entity_type` discriminator column to store both entity types in one table.
+
+**Columns:**
+- `id` (SERIAL, PRIMARY KEY): Unique identifier
+- `entity_type` (VARCHAR(20), NOT NULL): Discriminator — "robot" or "tag_team"
+- `entity_id` (INTEGER, NOT NULL): Robot ID or TagTeam ID depending on entity_type
+- `user_id` (INTEGER, NOT NULL, FK → users.id): Owner at time of change (user.id for robots, stableId for tag teams)
+- `change_type` (VARCHAR(20), NOT NULL): "promotion" or "demotion"
+- `source_tier` (VARCHAR(20), NOT NULL): Tier before the change (e.g., "bronze")
+- `destination_tier` (VARCHAR(20), NOT NULL): Tier after the change (e.g., "silver")
+- `source_league_id` (VARCHAR(30), NOT NULL): League instance before change (e.g., "bronze_1")
+- `destination_league_id` (VARCHAR(30), NOT NULL): League instance after change (e.g., "silver_2")
+- `league_points` (INTEGER, NOT NULL): LP at the moment of the tier change
+- `cycle_number` (INTEGER, NOT NULL): Game cycle when the change occurred
+- `created_at` (TIMESTAMP, NOT NULL, DEFAULT NOW()): When the record was created
+
+**Indexes:**
+- `league_history_entity_type_entity_id_idx`: Composite index on (entity_type, entity_id) for per-entity queries
+- `league_history_cycle_number_idx`: Single-column index on cycle_number for cycle-range queries
+- `league_history_user_id_idx`: Single-column index on user_id for user history queries
+
+**Foreign Keys:**
+- `league_history_user_id_fkey`: user_id → users(id) ON DELETE CASCADE
+
+**Design Notes:**
+- Recording is non-blocking — failures are logged but never prevent promotions/demotions from completing
+- The table starts empty and populates as game cycles run
+- Supports yo-yo detection (entities with 3+ tier changes in a configurable cycle window)
+- Supports Ctrl+Z achievement detection (demoted then re-promoted to same tier within 10 cycles)
+
 ## Event Types
 
 The following event types are supported in the audit_logs table:

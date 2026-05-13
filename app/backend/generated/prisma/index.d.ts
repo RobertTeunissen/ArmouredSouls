@@ -128,6 +128,11 @@ export type TuningAllocation = $Result.DefaultSelection<Prisma.$TuningAllocation
  * 
  */
 export type AdminAuditLog = $Result.DefaultSelection<Prisma.$AdminAuditLogPayload>
+/**
+ * Model LeagueHistory
+ * 
+ */
+export type LeagueHistory = $Result.DefaultSelection<Prisma.$LeagueHistoryPayload>
 
 /**
  * ##  Prisma Client ʲˢ
@@ -479,6 +484,16 @@ export class PrismaClient<
     * ```
     */
   get adminAuditLog(): Prisma.AdminAuditLogDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.leagueHistory`: Exposes CRUD operations for the **LeagueHistory** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more LeagueHistories
+    * const leagueHistories = await prisma.leagueHistory.findMany()
+    * ```
+    */
+  get leagueHistory(): Prisma.LeagueHistoryDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -935,7 +950,8 @@ export namespace Prisma {
     ChangelogEntry: 'ChangelogEntry',
     UserAchievement: 'UserAchievement',
     TuningAllocation: 'TuningAllocation',
-    AdminAuditLog: 'AdminAuditLog'
+    AdminAuditLog: 'AdminAuditLog',
+    LeagueHistory: 'LeagueHistory'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -951,7 +967,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "facility" | "robot" | "weaponInventory" | "weapon" | "battleParticipant" | "battle" | "scheduledLeagueMatch" | "cycleMetadata" | "auditLog" | "cycleSnapshot" | "tournament" | "scheduledTournamentMatch" | "tagTeam" | "scheduledTagTeamMatch" | "resetLog" | "scheduledKothMatch" | "scheduledKothMatchParticipant" | "practiceArenaDailyStats" | "changelogEntry" | "userAchievement" | "tuningAllocation" | "adminAuditLog"
+      modelProps: "user" | "facility" | "robot" | "weaponInventory" | "weapon" | "battleParticipant" | "battle" | "scheduledLeagueMatch" | "cycleMetadata" | "auditLog" | "cycleSnapshot" | "tournament" | "scheduledTournamentMatch" | "tagTeam" | "scheduledTagTeamMatch" | "resetLog" | "scheduledKothMatch" | "scheduledKothMatchParticipant" | "practiceArenaDailyStats" | "changelogEntry" | "userAchievement" | "tuningAllocation" | "adminAuditLog" | "leagueHistory"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2657,6 +2673,80 @@ export namespace Prisma {
           }
         }
       }
+      LeagueHistory: {
+        payload: Prisma.$LeagueHistoryPayload<ExtArgs>
+        fields: Prisma.LeagueHistoryFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.LeagueHistoryFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LeagueHistoryPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.LeagueHistoryFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LeagueHistoryPayload>
+          }
+          findFirst: {
+            args: Prisma.LeagueHistoryFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LeagueHistoryPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.LeagueHistoryFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LeagueHistoryPayload>
+          }
+          findMany: {
+            args: Prisma.LeagueHistoryFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LeagueHistoryPayload>[]
+          }
+          create: {
+            args: Prisma.LeagueHistoryCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LeagueHistoryPayload>
+          }
+          createMany: {
+            args: Prisma.LeagueHistoryCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.LeagueHistoryCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LeagueHistoryPayload>[]
+          }
+          delete: {
+            args: Prisma.LeagueHistoryDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LeagueHistoryPayload>
+          }
+          update: {
+            args: Prisma.LeagueHistoryUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LeagueHistoryPayload>
+          }
+          deleteMany: {
+            args: Prisma.LeagueHistoryDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.LeagueHistoryUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.LeagueHistoryUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LeagueHistoryPayload>[]
+          }
+          upsert: {
+            args: Prisma.LeagueHistoryUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LeagueHistoryPayload>
+          }
+          aggregate: {
+            args: Prisma.LeagueHistoryAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateLeagueHistory>
+          }
+          groupBy: {
+            args: Prisma.LeagueHistoryGroupByArgs<ExtArgs>
+            result: $Utils.Optional<LeagueHistoryGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.LeagueHistoryCountArgs<ExtArgs>
+            result: $Utils.Optional<LeagueHistoryCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -2788,6 +2878,7 @@ export namespace Prisma {
     userAchievement?: UserAchievementOmit
     tuningAllocation?: TuningAllocationOmit
     adminAuditLog?: AdminAuditLogOmit
+    leagueHistory?: LeagueHistoryOmit
   }
 
   /* Types for Logging */
@@ -2873,6 +2964,7 @@ export namespace Prisma {
     weaponInventory: number
     tagTeams: number
     achievements: number
+    leagueHistory: number
   }
 
   export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -2881,6 +2973,7 @@ export namespace Prisma {
     weaponInventory?: boolean | UserCountOutputTypeCountWeaponInventoryArgs
     tagTeams?: boolean | UserCountOutputTypeCountTagTeamsArgs
     achievements?: boolean | UserCountOutputTypeCountAchievementsArgs
+    leagueHistory?: boolean | UserCountOutputTypeCountLeagueHistoryArgs
   }
 
   // Custom InputTypes
@@ -2927,6 +3020,13 @@ export namespace Prisma {
    */
   export type UserCountOutputTypeCountAchievementsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: UserAchievementWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountLeagueHistoryArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: LeagueHistoryWhereInput
   }
 
 
@@ -3717,6 +3817,7 @@ export namespace Prisma {
     weaponInventory?: boolean | User$weaponInventoryArgs<ExtArgs>
     tagTeams?: boolean | User$tagTeamsArgs<ExtArgs>
     achievements?: boolean | User$achievementsArgs<ExtArgs>
+    leagueHistory?: boolean | User$leagueHistoryArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
@@ -3817,6 +3918,7 @@ export namespace Prisma {
     weaponInventory?: boolean | User$weaponInventoryArgs<ExtArgs>
     tagTeams?: boolean | User$tagTeamsArgs<ExtArgs>
     achievements?: boolean | User$achievementsArgs<ExtArgs>
+    leagueHistory?: boolean | User$leagueHistoryArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -3830,6 +3932,7 @@ export namespace Prisma {
       weaponInventory: Prisma.$WeaponInventoryPayload<ExtArgs>[]
       tagTeams: Prisma.$TagTeamPayload<ExtArgs>[]
       achievements: Prisma.$UserAchievementPayload<ExtArgs>[]
+      leagueHistory: Prisma.$LeagueHistoryPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: number
@@ -4258,6 +4361,7 @@ export namespace Prisma {
     weaponInventory<T extends User$weaponInventoryArgs<ExtArgs> = {}>(args?: Subset<T, User$weaponInventoryArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WeaponInventoryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     tagTeams<T extends User$tagTeamsArgs<ExtArgs> = {}>(args?: Subset<T, User$tagTeamsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TagTeamPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     achievements<T extends User$achievementsArgs<ExtArgs> = {}>(args?: Subset<T, User$achievementsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserAchievementPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    leagueHistory<T extends User$leagueHistoryArgs<ExtArgs> = {}>(args?: Subset<T, User$leagueHistoryArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LeagueHistoryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -4824,6 +4928,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: UserAchievementScalarFieldEnum | UserAchievementScalarFieldEnum[]
+  }
+
+  /**
+   * User.leagueHistory
+   */
+  export type User$leagueHistoryArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeagueHistory
+     */
+    select?: LeagueHistorySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeagueHistory
+     */
+    omit?: LeagueHistoryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeagueHistoryInclude<ExtArgs> | null
+    where?: LeagueHistoryWhereInput
+    orderBy?: LeagueHistoryOrderByWithRelationInput | LeagueHistoryOrderByWithRelationInput[]
+    cursor?: LeagueHistoryWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: LeagueHistoryScalarFieldEnum | LeagueHistoryScalarFieldEnum[]
   }
 
   /**
@@ -33434,6 +33562,1210 @@ export namespace Prisma {
 
 
   /**
+   * Model LeagueHistory
+   */
+
+  export type AggregateLeagueHistory = {
+    _count: LeagueHistoryCountAggregateOutputType | null
+    _avg: LeagueHistoryAvgAggregateOutputType | null
+    _sum: LeagueHistorySumAggregateOutputType | null
+    _min: LeagueHistoryMinAggregateOutputType | null
+    _max: LeagueHistoryMaxAggregateOutputType | null
+  }
+
+  export type LeagueHistoryAvgAggregateOutputType = {
+    id: number | null
+    entityId: number | null
+    userId: number | null
+    leaguePoints: number | null
+    cycleNumber: number | null
+  }
+
+  export type LeagueHistorySumAggregateOutputType = {
+    id: number | null
+    entityId: number | null
+    userId: number | null
+    leaguePoints: number | null
+    cycleNumber: number | null
+  }
+
+  export type LeagueHistoryMinAggregateOutputType = {
+    id: number | null
+    entityType: string | null
+    entityId: number | null
+    userId: number | null
+    changeType: string | null
+    sourceTier: string | null
+    destinationTier: string | null
+    sourceLeagueId: string | null
+    destinationLeagueId: string | null
+    leaguePoints: number | null
+    cycleNumber: number | null
+    createdAt: Date | null
+  }
+
+  export type LeagueHistoryMaxAggregateOutputType = {
+    id: number | null
+    entityType: string | null
+    entityId: number | null
+    userId: number | null
+    changeType: string | null
+    sourceTier: string | null
+    destinationTier: string | null
+    sourceLeagueId: string | null
+    destinationLeagueId: string | null
+    leaguePoints: number | null
+    cycleNumber: number | null
+    createdAt: Date | null
+  }
+
+  export type LeagueHistoryCountAggregateOutputType = {
+    id: number
+    entityType: number
+    entityId: number
+    userId: number
+    changeType: number
+    sourceTier: number
+    destinationTier: number
+    sourceLeagueId: number
+    destinationLeagueId: number
+    leaguePoints: number
+    cycleNumber: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type LeagueHistoryAvgAggregateInputType = {
+    id?: true
+    entityId?: true
+    userId?: true
+    leaguePoints?: true
+    cycleNumber?: true
+  }
+
+  export type LeagueHistorySumAggregateInputType = {
+    id?: true
+    entityId?: true
+    userId?: true
+    leaguePoints?: true
+    cycleNumber?: true
+  }
+
+  export type LeagueHistoryMinAggregateInputType = {
+    id?: true
+    entityType?: true
+    entityId?: true
+    userId?: true
+    changeType?: true
+    sourceTier?: true
+    destinationTier?: true
+    sourceLeagueId?: true
+    destinationLeagueId?: true
+    leaguePoints?: true
+    cycleNumber?: true
+    createdAt?: true
+  }
+
+  export type LeagueHistoryMaxAggregateInputType = {
+    id?: true
+    entityType?: true
+    entityId?: true
+    userId?: true
+    changeType?: true
+    sourceTier?: true
+    destinationTier?: true
+    sourceLeagueId?: true
+    destinationLeagueId?: true
+    leaguePoints?: true
+    cycleNumber?: true
+    createdAt?: true
+  }
+
+  export type LeagueHistoryCountAggregateInputType = {
+    id?: true
+    entityType?: true
+    entityId?: true
+    userId?: true
+    changeType?: true
+    sourceTier?: true
+    destinationTier?: true
+    sourceLeagueId?: true
+    destinationLeagueId?: true
+    leaguePoints?: true
+    cycleNumber?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type LeagueHistoryAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which LeagueHistory to aggregate.
+     */
+    where?: LeagueHistoryWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of LeagueHistories to fetch.
+     */
+    orderBy?: LeagueHistoryOrderByWithRelationInput | LeagueHistoryOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: LeagueHistoryWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` LeagueHistories from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` LeagueHistories.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned LeagueHistories
+    **/
+    _count?: true | LeagueHistoryCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: LeagueHistoryAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: LeagueHistorySumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: LeagueHistoryMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: LeagueHistoryMaxAggregateInputType
+  }
+
+  export type GetLeagueHistoryAggregateType<T extends LeagueHistoryAggregateArgs> = {
+        [P in keyof T & keyof AggregateLeagueHistory]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateLeagueHistory[P]>
+      : GetScalarType<T[P], AggregateLeagueHistory[P]>
+  }
+
+
+
+
+  export type LeagueHistoryGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: LeagueHistoryWhereInput
+    orderBy?: LeagueHistoryOrderByWithAggregationInput | LeagueHistoryOrderByWithAggregationInput[]
+    by: LeagueHistoryScalarFieldEnum[] | LeagueHistoryScalarFieldEnum
+    having?: LeagueHistoryScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: LeagueHistoryCountAggregateInputType | true
+    _avg?: LeagueHistoryAvgAggregateInputType
+    _sum?: LeagueHistorySumAggregateInputType
+    _min?: LeagueHistoryMinAggregateInputType
+    _max?: LeagueHistoryMaxAggregateInputType
+  }
+
+  export type LeagueHistoryGroupByOutputType = {
+    id: number
+    entityType: string
+    entityId: number
+    userId: number
+    changeType: string
+    sourceTier: string
+    destinationTier: string
+    sourceLeagueId: string
+    destinationLeagueId: string
+    leaguePoints: number
+    cycleNumber: number
+    createdAt: Date
+    _count: LeagueHistoryCountAggregateOutputType | null
+    _avg: LeagueHistoryAvgAggregateOutputType | null
+    _sum: LeagueHistorySumAggregateOutputType | null
+    _min: LeagueHistoryMinAggregateOutputType | null
+    _max: LeagueHistoryMaxAggregateOutputType | null
+  }
+
+  type GetLeagueHistoryGroupByPayload<T extends LeagueHistoryGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<LeagueHistoryGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof LeagueHistoryGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], LeagueHistoryGroupByOutputType[P]>
+            : GetScalarType<T[P], LeagueHistoryGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type LeagueHistorySelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    entityType?: boolean
+    entityId?: boolean
+    userId?: boolean
+    changeType?: boolean
+    sourceTier?: boolean
+    destinationTier?: boolean
+    sourceLeagueId?: boolean
+    destinationLeagueId?: boolean
+    leaguePoints?: boolean
+    cycleNumber?: boolean
+    createdAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["leagueHistory"]>
+
+  export type LeagueHistorySelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    entityType?: boolean
+    entityId?: boolean
+    userId?: boolean
+    changeType?: boolean
+    sourceTier?: boolean
+    destinationTier?: boolean
+    sourceLeagueId?: boolean
+    destinationLeagueId?: boolean
+    leaguePoints?: boolean
+    cycleNumber?: boolean
+    createdAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["leagueHistory"]>
+
+  export type LeagueHistorySelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    entityType?: boolean
+    entityId?: boolean
+    userId?: boolean
+    changeType?: boolean
+    sourceTier?: boolean
+    destinationTier?: boolean
+    sourceLeagueId?: boolean
+    destinationLeagueId?: boolean
+    leaguePoints?: boolean
+    cycleNumber?: boolean
+    createdAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["leagueHistory"]>
+
+  export type LeagueHistorySelectScalar = {
+    id?: boolean
+    entityType?: boolean
+    entityId?: boolean
+    userId?: boolean
+    changeType?: boolean
+    sourceTier?: boolean
+    destinationTier?: boolean
+    sourceLeagueId?: boolean
+    destinationLeagueId?: boolean
+    leaguePoints?: boolean
+    cycleNumber?: boolean
+    createdAt?: boolean
+  }
+
+  export type LeagueHistoryOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "entityType" | "entityId" | "userId" | "changeType" | "sourceTier" | "destinationTier" | "sourceLeagueId" | "destinationLeagueId" | "leaguePoints" | "cycleNumber" | "createdAt", ExtArgs["result"]["leagueHistory"]>
+  export type LeagueHistoryInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type LeagueHistoryIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type LeagueHistoryIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+
+  export type $LeagueHistoryPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "LeagueHistory"
+    objects: {
+      user: Prisma.$UserPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      entityType: string
+      entityId: number
+      userId: number
+      changeType: string
+      sourceTier: string
+      destinationTier: string
+      sourceLeagueId: string
+      destinationLeagueId: string
+      leaguePoints: number
+      cycleNumber: number
+      createdAt: Date
+    }, ExtArgs["result"]["leagueHistory"]>
+    composites: {}
+  }
+
+  type LeagueHistoryGetPayload<S extends boolean | null | undefined | LeagueHistoryDefaultArgs> = $Result.GetResult<Prisma.$LeagueHistoryPayload, S>
+
+  type LeagueHistoryCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<LeagueHistoryFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: LeagueHistoryCountAggregateInputType | true
+    }
+
+  export interface LeagueHistoryDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['LeagueHistory'], meta: { name: 'LeagueHistory' } }
+    /**
+     * Find zero or one LeagueHistory that matches the filter.
+     * @param {LeagueHistoryFindUniqueArgs} args - Arguments to find a LeagueHistory
+     * @example
+     * // Get one LeagueHistory
+     * const leagueHistory = await prisma.leagueHistory.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends LeagueHistoryFindUniqueArgs>(args: SelectSubset<T, LeagueHistoryFindUniqueArgs<ExtArgs>>): Prisma__LeagueHistoryClient<$Result.GetResult<Prisma.$LeagueHistoryPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one LeagueHistory that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {LeagueHistoryFindUniqueOrThrowArgs} args - Arguments to find a LeagueHistory
+     * @example
+     * // Get one LeagueHistory
+     * const leagueHistory = await prisma.leagueHistory.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends LeagueHistoryFindUniqueOrThrowArgs>(args: SelectSubset<T, LeagueHistoryFindUniqueOrThrowArgs<ExtArgs>>): Prisma__LeagueHistoryClient<$Result.GetResult<Prisma.$LeagueHistoryPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first LeagueHistory that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LeagueHistoryFindFirstArgs} args - Arguments to find a LeagueHistory
+     * @example
+     * // Get one LeagueHistory
+     * const leagueHistory = await prisma.leagueHistory.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends LeagueHistoryFindFirstArgs>(args?: SelectSubset<T, LeagueHistoryFindFirstArgs<ExtArgs>>): Prisma__LeagueHistoryClient<$Result.GetResult<Prisma.$LeagueHistoryPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first LeagueHistory that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LeagueHistoryFindFirstOrThrowArgs} args - Arguments to find a LeagueHistory
+     * @example
+     * // Get one LeagueHistory
+     * const leagueHistory = await prisma.leagueHistory.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends LeagueHistoryFindFirstOrThrowArgs>(args?: SelectSubset<T, LeagueHistoryFindFirstOrThrowArgs<ExtArgs>>): Prisma__LeagueHistoryClient<$Result.GetResult<Prisma.$LeagueHistoryPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more LeagueHistories that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LeagueHistoryFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all LeagueHistories
+     * const leagueHistories = await prisma.leagueHistory.findMany()
+     * 
+     * // Get first 10 LeagueHistories
+     * const leagueHistories = await prisma.leagueHistory.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const leagueHistoryWithIdOnly = await prisma.leagueHistory.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends LeagueHistoryFindManyArgs>(args?: SelectSubset<T, LeagueHistoryFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LeagueHistoryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a LeagueHistory.
+     * @param {LeagueHistoryCreateArgs} args - Arguments to create a LeagueHistory.
+     * @example
+     * // Create one LeagueHistory
+     * const LeagueHistory = await prisma.leagueHistory.create({
+     *   data: {
+     *     // ... data to create a LeagueHistory
+     *   }
+     * })
+     * 
+     */
+    create<T extends LeagueHistoryCreateArgs>(args: SelectSubset<T, LeagueHistoryCreateArgs<ExtArgs>>): Prisma__LeagueHistoryClient<$Result.GetResult<Prisma.$LeagueHistoryPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many LeagueHistories.
+     * @param {LeagueHistoryCreateManyArgs} args - Arguments to create many LeagueHistories.
+     * @example
+     * // Create many LeagueHistories
+     * const leagueHistory = await prisma.leagueHistory.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends LeagueHistoryCreateManyArgs>(args?: SelectSubset<T, LeagueHistoryCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many LeagueHistories and returns the data saved in the database.
+     * @param {LeagueHistoryCreateManyAndReturnArgs} args - Arguments to create many LeagueHistories.
+     * @example
+     * // Create many LeagueHistories
+     * const leagueHistory = await prisma.leagueHistory.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many LeagueHistories and only return the `id`
+     * const leagueHistoryWithIdOnly = await prisma.leagueHistory.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends LeagueHistoryCreateManyAndReturnArgs>(args?: SelectSubset<T, LeagueHistoryCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LeagueHistoryPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a LeagueHistory.
+     * @param {LeagueHistoryDeleteArgs} args - Arguments to delete one LeagueHistory.
+     * @example
+     * // Delete one LeagueHistory
+     * const LeagueHistory = await prisma.leagueHistory.delete({
+     *   where: {
+     *     // ... filter to delete one LeagueHistory
+     *   }
+     * })
+     * 
+     */
+    delete<T extends LeagueHistoryDeleteArgs>(args: SelectSubset<T, LeagueHistoryDeleteArgs<ExtArgs>>): Prisma__LeagueHistoryClient<$Result.GetResult<Prisma.$LeagueHistoryPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one LeagueHistory.
+     * @param {LeagueHistoryUpdateArgs} args - Arguments to update one LeagueHistory.
+     * @example
+     * // Update one LeagueHistory
+     * const leagueHistory = await prisma.leagueHistory.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends LeagueHistoryUpdateArgs>(args: SelectSubset<T, LeagueHistoryUpdateArgs<ExtArgs>>): Prisma__LeagueHistoryClient<$Result.GetResult<Prisma.$LeagueHistoryPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more LeagueHistories.
+     * @param {LeagueHistoryDeleteManyArgs} args - Arguments to filter LeagueHistories to delete.
+     * @example
+     * // Delete a few LeagueHistories
+     * const { count } = await prisma.leagueHistory.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends LeagueHistoryDeleteManyArgs>(args?: SelectSubset<T, LeagueHistoryDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more LeagueHistories.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LeagueHistoryUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many LeagueHistories
+     * const leagueHistory = await prisma.leagueHistory.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends LeagueHistoryUpdateManyArgs>(args: SelectSubset<T, LeagueHistoryUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more LeagueHistories and returns the data updated in the database.
+     * @param {LeagueHistoryUpdateManyAndReturnArgs} args - Arguments to update many LeagueHistories.
+     * @example
+     * // Update many LeagueHistories
+     * const leagueHistory = await prisma.leagueHistory.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more LeagueHistories and only return the `id`
+     * const leagueHistoryWithIdOnly = await prisma.leagueHistory.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends LeagueHistoryUpdateManyAndReturnArgs>(args: SelectSubset<T, LeagueHistoryUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LeagueHistoryPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one LeagueHistory.
+     * @param {LeagueHistoryUpsertArgs} args - Arguments to update or create a LeagueHistory.
+     * @example
+     * // Update or create a LeagueHistory
+     * const leagueHistory = await prisma.leagueHistory.upsert({
+     *   create: {
+     *     // ... data to create a LeagueHistory
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the LeagueHistory we want to update
+     *   }
+     * })
+     */
+    upsert<T extends LeagueHistoryUpsertArgs>(args: SelectSubset<T, LeagueHistoryUpsertArgs<ExtArgs>>): Prisma__LeagueHistoryClient<$Result.GetResult<Prisma.$LeagueHistoryPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of LeagueHistories.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LeagueHistoryCountArgs} args - Arguments to filter LeagueHistories to count.
+     * @example
+     * // Count the number of LeagueHistories
+     * const count = await prisma.leagueHistory.count({
+     *   where: {
+     *     // ... the filter for the LeagueHistories we want to count
+     *   }
+     * })
+    **/
+    count<T extends LeagueHistoryCountArgs>(
+      args?: Subset<T, LeagueHistoryCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], LeagueHistoryCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a LeagueHistory.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LeagueHistoryAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends LeagueHistoryAggregateArgs>(args: Subset<T, LeagueHistoryAggregateArgs>): Prisma.PrismaPromise<GetLeagueHistoryAggregateType<T>>
+
+    /**
+     * Group by LeagueHistory.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LeagueHistoryGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends LeagueHistoryGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: LeagueHistoryGroupByArgs['orderBy'] }
+        : { orderBy?: LeagueHistoryGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, LeagueHistoryGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetLeagueHistoryGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the LeagueHistory model
+   */
+  readonly fields: LeagueHistoryFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for LeagueHistory.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__LeagueHistoryClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the LeagueHistory model
+   */
+  interface LeagueHistoryFieldRefs {
+    readonly id: FieldRef<"LeagueHistory", 'Int'>
+    readonly entityType: FieldRef<"LeagueHistory", 'String'>
+    readonly entityId: FieldRef<"LeagueHistory", 'Int'>
+    readonly userId: FieldRef<"LeagueHistory", 'Int'>
+    readonly changeType: FieldRef<"LeagueHistory", 'String'>
+    readonly sourceTier: FieldRef<"LeagueHistory", 'String'>
+    readonly destinationTier: FieldRef<"LeagueHistory", 'String'>
+    readonly sourceLeagueId: FieldRef<"LeagueHistory", 'String'>
+    readonly destinationLeagueId: FieldRef<"LeagueHistory", 'String'>
+    readonly leaguePoints: FieldRef<"LeagueHistory", 'Int'>
+    readonly cycleNumber: FieldRef<"LeagueHistory", 'Int'>
+    readonly createdAt: FieldRef<"LeagueHistory", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * LeagueHistory findUnique
+   */
+  export type LeagueHistoryFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeagueHistory
+     */
+    select?: LeagueHistorySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeagueHistory
+     */
+    omit?: LeagueHistoryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeagueHistoryInclude<ExtArgs> | null
+    /**
+     * Filter, which LeagueHistory to fetch.
+     */
+    where: LeagueHistoryWhereUniqueInput
+  }
+
+  /**
+   * LeagueHistory findUniqueOrThrow
+   */
+  export type LeagueHistoryFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeagueHistory
+     */
+    select?: LeagueHistorySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeagueHistory
+     */
+    omit?: LeagueHistoryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeagueHistoryInclude<ExtArgs> | null
+    /**
+     * Filter, which LeagueHistory to fetch.
+     */
+    where: LeagueHistoryWhereUniqueInput
+  }
+
+  /**
+   * LeagueHistory findFirst
+   */
+  export type LeagueHistoryFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeagueHistory
+     */
+    select?: LeagueHistorySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeagueHistory
+     */
+    omit?: LeagueHistoryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeagueHistoryInclude<ExtArgs> | null
+    /**
+     * Filter, which LeagueHistory to fetch.
+     */
+    where?: LeagueHistoryWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of LeagueHistories to fetch.
+     */
+    orderBy?: LeagueHistoryOrderByWithRelationInput | LeagueHistoryOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for LeagueHistories.
+     */
+    cursor?: LeagueHistoryWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` LeagueHistories from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` LeagueHistories.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of LeagueHistories.
+     */
+    distinct?: LeagueHistoryScalarFieldEnum | LeagueHistoryScalarFieldEnum[]
+  }
+
+  /**
+   * LeagueHistory findFirstOrThrow
+   */
+  export type LeagueHistoryFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeagueHistory
+     */
+    select?: LeagueHistorySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeagueHistory
+     */
+    omit?: LeagueHistoryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeagueHistoryInclude<ExtArgs> | null
+    /**
+     * Filter, which LeagueHistory to fetch.
+     */
+    where?: LeagueHistoryWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of LeagueHistories to fetch.
+     */
+    orderBy?: LeagueHistoryOrderByWithRelationInput | LeagueHistoryOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for LeagueHistories.
+     */
+    cursor?: LeagueHistoryWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` LeagueHistories from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` LeagueHistories.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of LeagueHistories.
+     */
+    distinct?: LeagueHistoryScalarFieldEnum | LeagueHistoryScalarFieldEnum[]
+  }
+
+  /**
+   * LeagueHistory findMany
+   */
+  export type LeagueHistoryFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeagueHistory
+     */
+    select?: LeagueHistorySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeagueHistory
+     */
+    omit?: LeagueHistoryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeagueHistoryInclude<ExtArgs> | null
+    /**
+     * Filter, which LeagueHistories to fetch.
+     */
+    where?: LeagueHistoryWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of LeagueHistories to fetch.
+     */
+    orderBy?: LeagueHistoryOrderByWithRelationInput | LeagueHistoryOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing LeagueHistories.
+     */
+    cursor?: LeagueHistoryWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` LeagueHistories from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` LeagueHistories.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of LeagueHistories.
+     */
+    distinct?: LeagueHistoryScalarFieldEnum | LeagueHistoryScalarFieldEnum[]
+  }
+
+  /**
+   * LeagueHistory create
+   */
+  export type LeagueHistoryCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeagueHistory
+     */
+    select?: LeagueHistorySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeagueHistory
+     */
+    omit?: LeagueHistoryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeagueHistoryInclude<ExtArgs> | null
+    /**
+     * The data needed to create a LeagueHistory.
+     */
+    data: XOR<LeagueHistoryCreateInput, LeagueHistoryUncheckedCreateInput>
+  }
+
+  /**
+   * LeagueHistory createMany
+   */
+  export type LeagueHistoryCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many LeagueHistories.
+     */
+    data: LeagueHistoryCreateManyInput | LeagueHistoryCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * LeagueHistory createManyAndReturn
+   */
+  export type LeagueHistoryCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeagueHistory
+     */
+    select?: LeagueHistorySelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeagueHistory
+     */
+    omit?: LeagueHistoryOmit<ExtArgs> | null
+    /**
+     * The data used to create many LeagueHistories.
+     */
+    data: LeagueHistoryCreateManyInput | LeagueHistoryCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeagueHistoryIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * LeagueHistory update
+   */
+  export type LeagueHistoryUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeagueHistory
+     */
+    select?: LeagueHistorySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeagueHistory
+     */
+    omit?: LeagueHistoryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeagueHistoryInclude<ExtArgs> | null
+    /**
+     * The data needed to update a LeagueHistory.
+     */
+    data: XOR<LeagueHistoryUpdateInput, LeagueHistoryUncheckedUpdateInput>
+    /**
+     * Choose, which LeagueHistory to update.
+     */
+    where: LeagueHistoryWhereUniqueInput
+  }
+
+  /**
+   * LeagueHistory updateMany
+   */
+  export type LeagueHistoryUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update LeagueHistories.
+     */
+    data: XOR<LeagueHistoryUpdateManyMutationInput, LeagueHistoryUncheckedUpdateManyInput>
+    /**
+     * Filter which LeagueHistories to update
+     */
+    where?: LeagueHistoryWhereInput
+    /**
+     * Limit how many LeagueHistories to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * LeagueHistory updateManyAndReturn
+   */
+  export type LeagueHistoryUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeagueHistory
+     */
+    select?: LeagueHistorySelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeagueHistory
+     */
+    omit?: LeagueHistoryOmit<ExtArgs> | null
+    /**
+     * The data used to update LeagueHistories.
+     */
+    data: XOR<LeagueHistoryUpdateManyMutationInput, LeagueHistoryUncheckedUpdateManyInput>
+    /**
+     * Filter which LeagueHistories to update
+     */
+    where?: LeagueHistoryWhereInput
+    /**
+     * Limit how many LeagueHistories to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeagueHistoryIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * LeagueHistory upsert
+   */
+  export type LeagueHistoryUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeagueHistory
+     */
+    select?: LeagueHistorySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeagueHistory
+     */
+    omit?: LeagueHistoryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeagueHistoryInclude<ExtArgs> | null
+    /**
+     * The filter to search for the LeagueHistory to update in case it exists.
+     */
+    where: LeagueHistoryWhereUniqueInput
+    /**
+     * In case the LeagueHistory found by the `where` argument doesn't exist, create a new LeagueHistory with this data.
+     */
+    create: XOR<LeagueHistoryCreateInput, LeagueHistoryUncheckedCreateInput>
+    /**
+     * In case the LeagueHistory was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<LeagueHistoryUpdateInput, LeagueHistoryUncheckedUpdateInput>
+  }
+
+  /**
+   * LeagueHistory delete
+   */
+  export type LeagueHistoryDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeagueHistory
+     */
+    select?: LeagueHistorySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeagueHistory
+     */
+    omit?: LeagueHistoryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeagueHistoryInclude<ExtArgs> | null
+    /**
+     * Filter which LeagueHistory to delete.
+     */
+    where: LeagueHistoryWhereUniqueInput
+  }
+
+  /**
+   * LeagueHistory deleteMany
+   */
+  export type LeagueHistoryDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which LeagueHistories to delete
+     */
+    where?: LeagueHistoryWhereInput
+    /**
+     * Limit how many LeagueHistories to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * LeagueHistory without action
+   */
+  export type LeagueHistoryDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeagueHistory
+     */
+    select?: LeagueHistorySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeagueHistory
+     */
+    omit?: LeagueHistoryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeagueHistoryInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -33947,6 +35279,24 @@ export namespace Prisma {
   export type AdminAuditLogScalarFieldEnum = (typeof AdminAuditLogScalarFieldEnum)[keyof typeof AdminAuditLogScalarFieldEnum]
 
 
+  export const LeagueHistoryScalarFieldEnum: {
+    id: 'id',
+    entityType: 'entityType',
+    entityId: 'entityId',
+    userId: 'userId',
+    changeType: 'changeType',
+    sourceTier: 'sourceTier',
+    destinationTier: 'destinationTier',
+    sourceLeagueId: 'sourceLeagueId',
+    destinationLeagueId: 'destinationLeagueId',
+    leaguePoints: 'leaguePoints',
+    cycleNumber: 'cycleNumber',
+    createdAt: 'createdAt'
+  };
+
+  export type LeagueHistoryScalarFieldEnum = (typeof LeagueHistoryScalarFieldEnum)[keyof typeof LeagueHistoryScalarFieldEnum]
+
+
   export const SortOrder: {
     asc: 'asc',
     desc: 'desc'
@@ -34144,6 +35494,7 @@ export namespace Prisma {
     weaponInventory?: WeaponInventoryListRelationFilter
     tagTeams?: TagTeamListRelationFilter
     achievements?: UserAchievementListRelationFilter
+    leagueHistory?: LeagueHistoryListRelationFilter
   }
 
   export type UserOrderByWithRelationInput = {
@@ -34179,6 +35530,7 @@ export namespace Prisma {
     weaponInventory?: WeaponInventoryOrderByRelationAggregateInput
     tagTeams?: TagTeamOrderByRelationAggregateInput
     achievements?: UserAchievementOrderByRelationAggregateInput
+    leagueHistory?: LeagueHistoryOrderByRelationAggregateInput
   }
 
   export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -34217,6 +35569,7 @@ export namespace Prisma {
     weaponInventory?: WeaponInventoryListRelationFilter
     tagTeams?: TagTeamListRelationFilter
     achievements?: UserAchievementListRelationFilter
+    leagueHistory?: LeagueHistoryListRelationFilter
   }, "id" | "username" | "email" | "stableName">
 
   export type UserOrderByWithAggregationInput = {
@@ -36783,6 +38136,98 @@ export namespace Prisma {
     createdAt?: DateTimeWithAggregatesFilter<"AdminAuditLog"> | Date | string
   }
 
+  export type LeagueHistoryWhereInput = {
+    AND?: LeagueHistoryWhereInput | LeagueHistoryWhereInput[]
+    OR?: LeagueHistoryWhereInput[]
+    NOT?: LeagueHistoryWhereInput | LeagueHistoryWhereInput[]
+    id?: IntFilter<"LeagueHistory"> | number
+    entityType?: StringFilter<"LeagueHistory"> | string
+    entityId?: IntFilter<"LeagueHistory"> | number
+    userId?: IntFilter<"LeagueHistory"> | number
+    changeType?: StringFilter<"LeagueHistory"> | string
+    sourceTier?: StringFilter<"LeagueHistory"> | string
+    destinationTier?: StringFilter<"LeagueHistory"> | string
+    sourceLeagueId?: StringFilter<"LeagueHistory"> | string
+    destinationLeagueId?: StringFilter<"LeagueHistory"> | string
+    leaguePoints?: IntFilter<"LeagueHistory"> | number
+    cycleNumber?: IntFilter<"LeagueHistory"> | number
+    createdAt?: DateTimeFilter<"LeagueHistory"> | Date | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }
+
+  export type LeagueHistoryOrderByWithRelationInput = {
+    id?: SortOrder
+    entityType?: SortOrder
+    entityId?: SortOrder
+    userId?: SortOrder
+    changeType?: SortOrder
+    sourceTier?: SortOrder
+    destinationTier?: SortOrder
+    sourceLeagueId?: SortOrder
+    destinationLeagueId?: SortOrder
+    leaguePoints?: SortOrder
+    cycleNumber?: SortOrder
+    createdAt?: SortOrder
+    user?: UserOrderByWithRelationInput
+  }
+
+  export type LeagueHistoryWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    AND?: LeagueHistoryWhereInput | LeagueHistoryWhereInput[]
+    OR?: LeagueHistoryWhereInput[]
+    NOT?: LeagueHistoryWhereInput | LeagueHistoryWhereInput[]
+    entityType?: StringFilter<"LeagueHistory"> | string
+    entityId?: IntFilter<"LeagueHistory"> | number
+    userId?: IntFilter<"LeagueHistory"> | number
+    changeType?: StringFilter<"LeagueHistory"> | string
+    sourceTier?: StringFilter<"LeagueHistory"> | string
+    destinationTier?: StringFilter<"LeagueHistory"> | string
+    sourceLeagueId?: StringFilter<"LeagueHistory"> | string
+    destinationLeagueId?: StringFilter<"LeagueHistory"> | string
+    leaguePoints?: IntFilter<"LeagueHistory"> | number
+    cycleNumber?: IntFilter<"LeagueHistory"> | number
+    createdAt?: DateTimeFilter<"LeagueHistory"> | Date | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }, "id">
+
+  export type LeagueHistoryOrderByWithAggregationInput = {
+    id?: SortOrder
+    entityType?: SortOrder
+    entityId?: SortOrder
+    userId?: SortOrder
+    changeType?: SortOrder
+    sourceTier?: SortOrder
+    destinationTier?: SortOrder
+    sourceLeagueId?: SortOrder
+    destinationLeagueId?: SortOrder
+    leaguePoints?: SortOrder
+    cycleNumber?: SortOrder
+    createdAt?: SortOrder
+    _count?: LeagueHistoryCountOrderByAggregateInput
+    _avg?: LeagueHistoryAvgOrderByAggregateInput
+    _max?: LeagueHistoryMaxOrderByAggregateInput
+    _min?: LeagueHistoryMinOrderByAggregateInput
+    _sum?: LeagueHistorySumOrderByAggregateInput
+  }
+
+  export type LeagueHistoryScalarWhereWithAggregatesInput = {
+    AND?: LeagueHistoryScalarWhereWithAggregatesInput | LeagueHistoryScalarWhereWithAggregatesInput[]
+    OR?: LeagueHistoryScalarWhereWithAggregatesInput[]
+    NOT?: LeagueHistoryScalarWhereWithAggregatesInput | LeagueHistoryScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"LeagueHistory"> | number
+    entityType?: StringWithAggregatesFilter<"LeagueHistory"> | string
+    entityId?: IntWithAggregatesFilter<"LeagueHistory"> | number
+    userId?: IntWithAggregatesFilter<"LeagueHistory"> | number
+    changeType?: StringWithAggregatesFilter<"LeagueHistory"> | string
+    sourceTier?: StringWithAggregatesFilter<"LeagueHistory"> | string
+    destinationTier?: StringWithAggregatesFilter<"LeagueHistory"> | string
+    sourceLeagueId?: StringWithAggregatesFilter<"LeagueHistory"> | string
+    destinationLeagueId?: StringWithAggregatesFilter<"LeagueHistory"> | string
+    leaguePoints?: IntWithAggregatesFilter<"LeagueHistory"> | number
+    cycleNumber?: IntWithAggregatesFilter<"LeagueHistory"> | number
+    createdAt?: DateTimeWithAggregatesFilter<"LeagueHistory"> | Date | string
+  }
+
   export type UserCreateInput = {
     username: string
     email?: string | null
@@ -36815,6 +38260,7 @@ export namespace Prisma {
     weaponInventory?: WeaponInventoryCreateNestedManyWithoutUserInput
     tagTeams?: TagTeamCreateNestedManyWithoutStableInput
     achievements?: UserAchievementCreateNestedManyWithoutUserInput
+    leagueHistory?: LeagueHistoryCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateInput = {
@@ -36850,6 +38296,7 @@ export namespace Prisma {
     weaponInventory?: WeaponInventoryUncheckedCreateNestedManyWithoutUserInput
     tagTeams?: TagTeamUncheckedCreateNestedManyWithoutStableInput
     achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
+    leagueHistory?: LeagueHistoryUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserUpdateInput = {
@@ -36884,6 +38331,7 @@ export namespace Prisma {
     weaponInventory?: WeaponInventoryUpdateManyWithoutUserNestedInput
     tagTeams?: TagTeamUpdateManyWithoutStableNestedInput
     achievements?: UserAchievementUpdateManyWithoutUserNestedInput
+    leagueHistory?: LeagueHistoryUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateInput = {
@@ -36919,6 +38367,7 @@ export namespace Prisma {
     weaponInventory?: WeaponInventoryUncheckedUpdateManyWithoutUserNestedInput
     tagTeams?: TagTeamUncheckedUpdateManyWithoutStableNestedInput
     achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
+    leagueHistory?: LeagueHistoryUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateManyInput = {
@@ -39834,6 +41283,107 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type LeagueHistoryCreateInput = {
+    entityType: string
+    entityId: number
+    changeType: string
+    sourceTier: string
+    destinationTier: string
+    sourceLeagueId: string
+    destinationLeagueId: string
+    leaguePoints: number
+    cycleNumber: number
+    createdAt?: Date | string
+    user: UserCreateNestedOneWithoutLeagueHistoryInput
+  }
+
+  export type LeagueHistoryUncheckedCreateInput = {
+    id?: number
+    entityType: string
+    entityId: number
+    userId: number
+    changeType: string
+    sourceTier: string
+    destinationTier: string
+    sourceLeagueId: string
+    destinationLeagueId: string
+    leaguePoints: number
+    cycleNumber: number
+    createdAt?: Date | string
+  }
+
+  export type LeagueHistoryUpdateInput = {
+    entityType?: StringFieldUpdateOperationsInput | string
+    entityId?: IntFieldUpdateOperationsInput | number
+    changeType?: StringFieldUpdateOperationsInput | string
+    sourceTier?: StringFieldUpdateOperationsInput | string
+    destinationTier?: StringFieldUpdateOperationsInput | string
+    sourceLeagueId?: StringFieldUpdateOperationsInput | string
+    destinationLeagueId?: StringFieldUpdateOperationsInput | string
+    leaguePoints?: IntFieldUpdateOperationsInput | number
+    cycleNumber?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutLeagueHistoryNestedInput
+  }
+
+  export type LeagueHistoryUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    entityType?: StringFieldUpdateOperationsInput | string
+    entityId?: IntFieldUpdateOperationsInput | number
+    userId?: IntFieldUpdateOperationsInput | number
+    changeType?: StringFieldUpdateOperationsInput | string
+    sourceTier?: StringFieldUpdateOperationsInput | string
+    destinationTier?: StringFieldUpdateOperationsInput | string
+    sourceLeagueId?: StringFieldUpdateOperationsInput | string
+    destinationLeagueId?: StringFieldUpdateOperationsInput | string
+    leaguePoints?: IntFieldUpdateOperationsInput | number
+    cycleNumber?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type LeagueHistoryCreateManyInput = {
+    id?: number
+    entityType: string
+    entityId: number
+    userId: number
+    changeType: string
+    sourceTier: string
+    destinationTier: string
+    sourceLeagueId: string
+    destinationLeagueId: string
+    leaguePoints: number
+    cycleNumber: number
+    createdAt?: Date | string
+  }
+
+  export type LeagueHistoryUpdateManyMutationInput = {
+    entityType?: StringFieldUpdateOperationsInput | string
+    entityId?: IntFieldUpdateOperationsInput | number
+    changeType?: StringFieldUpdateOperationsInput | string
+    sourceTier?: StringFieldUpdateOperationsInput | string
+    destinationTier?: StringFieldUpdateOperationsInput | string
+    sourceLeagueId?: StringFieldUpdateOperationsInput | string
+    destinationLeagueId?: StringFieldUpdateOperationsInput | string
+    leaguePoints?: IntFieldUpdateOperationsInput | number
+    cycleNumber?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type LeagueHistoryUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    entityType?: StringFieldUpdateOperationsInput | string
+    entityId?: IntFieldUpdateOperationsInput | number
+    userId?: IntFieldUpdateOperationsInput | number
+    changeType?: StringFieldUpdateOperationsInput | string
+    sourceTier?: StringFieldUpdateOperationsInput | string
+    destinationTier?: StringFieldUpdateOperationsInput | string
+    sourceLeagueId?: StringFieldUpdateOperationsInput | string
+    destinationLeagueId?: StringFieldUpdateOperationsInput | string
+    leaguePoints?: IntFieldUpdateOperationsInput | number
+    cycleNumber?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type IntFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
     in?: number[] | ListIntFieldRefInput<$PrismaModel>
@@ -39955,6 +41505,12 @@ export namespace Prisma {
     none?: UserAchievementWhereInput
   }
 
+  export type LeagueHistoryListRelationFilter = {
+    every?: LeagueHistoryWhereInput
+    some?: LeagueHistoryWhereInput
+    none?: LeagueHistoryWhereInput
+  }
+
   export type SortOrderInput = {
     sort: SortOrder
     nulls?: NullsOrder
@@ -39977,6 +41533,10 @@ export namespace Prisma {
   }
 
   export type UserAchievementOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type LeagueHistoryOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -42354,6 +43914,67 @@ export namespace Prisma {
     adminUserId?: SortOrder
   }
 
+  export type LeagueHistoryCountOrderByAggregateInput = {
+    id?: SortOrder
+    entityType?: SortOrder
+    entityId?: SortOrder
+    userId?: SortOrder
+    changeType?: SortOrder
+    sourceTier?: SortOrder
+    destinationTier?: SortOrder
+    sourceLeagueId?: SortOrder
+    destinationLeagueId?: SortOrder
+    leaguePoints?: SortOrder
+    cycleNumber?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type LeagueHistoryAvgOrderByAggregateInput = {
+    id?: SortOrder
+    entityId?: SortOrder
+    userId?: SortOrder
+    leaguePoints?: SortOrder
+    cycleNumber?: SortOrder
+  }
+
+  export type LeagueHistoryMaxOrderByAggregateInput = {
+    id?: SortOrder
+    entityType?: SortOrder
+    entityId?: SortOrder
+    userId?: SortOrder
+    changeType?: SortOrder
+    sourceTier?: SortOrder
+    destinationTier?: SortOrder
+    sourceLeagueId?: SortOrder
+    destinationLeagueId?: SortOrder
+    leaguePoints?: SortOrder
+    cycleNumber?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type LeagueHistoryMinOrderByAggregateInput = {
+    id?: SortOrder
+    entityType?: SortOrder
+    entityId?: SortOrder
+    userId?: SortOrder
+    changeType?: SortOrder
+    sourceTier?: SortOrder
+    destinationTier?: SortOrder
+    sourceLeagueId?: SortOrder
+    destinationLeagueId?: SortOrder
+    leaguePoints?: SortOrder
+    cycleNumber?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type LeagueHistorySumOrderByAggregateInput = {
+    id?: SortOrder
+    entityId?: SortOrder
+    userId?: SortOrder
+    leaguePoints?: SortOrder
+    cycleNumber?: SortOrder
+  }
+
   export type RobotCreateNestedManyWithoutUserInput = {
     create?: XOR<RobotCreateWithoutUserInput, RobotUncheckedCreateWithoutUserInput> | RobotCreateWithoutUserInput[] | RobotUncheckedCreateWithoutUserInput[]
     connectOrCreate?: RobotCreateOrConnectWithoutUserInput | RobotCreateOrConnectWithoutUserInput[]
@@ -42389,6 +44010,13 @@ export namespace Prisma {
     connect?: UserAchievementWhereUniqueInput | UserAchievementWhereUniqueInput[]
   }
 
+  export type LeagueHistoryCreateNestedManyWithoutUserInput = {
+    create?: XOR<LeagueHistoryCreateWithoutUserInput, LeagueHistoryUncheckedCreateWithoutUserInput> | LeagueHistoryCreateWithoutUserInput[] | LeagueHistoryUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: LeagueHistoryCreateOrConnectWithoutUserInput | LeagueHistoryCreateOrConnectWithoutUserInput[]
+    createMany?: LeagueHistoryCreateManyUserInputEnvelope
+    connect?: LeagueHistoryWhereUniqueInput | LeagueHistoryWhereUniqueInput[]
+  }
+
   export type RobotUncheckedCreateNestedManyWithoutUserInput = {
     create?: XOR<RobotCreateWithoutUserInput, RobotUncheckedCreateWithoutUserInput> | RobotCreateWithoutUserInput[] | RobotUncheckedCreateWithoutUserInput[]
     connectOrCreate?: RobotCreateOrConnectWithoutUserInput | RobotCreateOrConnectWithoutUserInput[]
@@ -42422,6 +44050,13 @@ export namespace Prisma {
     connectOrCreate?: UserAchievementCreateOrConnectWithoutUserInput | UserAchievementCreateOrConnectWithoutUserInput[]
     createMany?: UserAchievementCreateManyUserInputEnvelope
     connect?: UserAchievementWhereUniqueInput | UserAchievementWhereUniqueInput[]
+  }
+
+  export type LeagueHistoryUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<LeagueHistoryCreateWithoutUserInput, LeagueHistoryUncheckedCreateWithoutUserInput> | LeagueHistoryCreateWithoutUserInput[] | LeagueHistoryUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: LeagueHistoryCreateOrConnectWithoutUserInput | LeagueHistoryCreateOrConnectWithoutUserInput[]
+    createMany?: LeagueHistoryCreateManyUserInputEnvelope
+    connect?: LeagueHistoryWhereUniqueInput | LeagueHistoryWhereUniqueInput[]
   }
 
   export type StringFieldUpdateOperationsInput = {
@@ -42522,6 +44157,20 @@ export namespace Prisma {
     deleteMany?: UserAchievementScalarWhereInput | UserAchievementScalarWhereInput[]
   }
 
+  export type LeagueHistoryUpdateManyWithoutUserNestedInput = {
+    create?: XOR<LeagueHistoryCreateWithoutUserInput, LeagueHistoryUncheckedCreateWithoutUserInput> | LeagueHistoryCreateWithoutUserInput[] | LeagueHistoryUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: LeagueHistoryCreateOrConnectWithoutUserInput | LeagueHistoryCreateOrConnectWithoutUserInput[]
+    upsert?: LeagueHistoryUpsertWithWhereUniqueWithoutUserInput | LeagueHistoryUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: LeagueHistoryCreateManyUserInputEnvelope
+    set?: LeagueHistoryWhereUniqueInput | LeagueHistoryWhereUniqueInput[]
+    disconnect?: LeagueHistoryWhereUniqueInput | LeagueHistoryWhereUniqueInput[]
+    delete?: LeagueHistoryWhereUniqueInput | LeagueHistoryWhereUniqueInput[]
+    connect?: LeagueHistoryWhereUniqueInput | LeagueHistoryWhereUniqueInput[]
+    update?: LeagueHistoryUpdateWithWhereUniqueWithoutUserInput | LeagueHistoryUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: LeagueHistoryUpdateManyWithWhereWithoutUserInput | LeagueHistoryUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: LeagueHistoryScalarWhereInput | LeagueHistoryScalarWhereInput[]
+  }
+
   export type RobotUncheckedUpdateManyWithoutUserNestedInput = {
     create?: XOR<RobotCreateWithoutUserInput, RobotUncheckedCreateWithoutUserInput> | RobotCreateWithoutUserInput[] | RobotUncheckedCreateWithoutUserInput[]
     connectOrCreate?: RobotCreateOrConnectWithoutUserInput | RobotCreateOrConnectWithoutUserInput[]
@@ -42590,6 +44239,20 @@ export namespace Prisma {
     update?: UserAchievementUpdateWithWhereUniqueWithoutUserInput | UserAchievementUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: UserAchievementUpdateManyWithWhereWithoutUserInput | UserAchievementUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: UserAchievementScalarWhereInput | UserAchievementScalarWhereInput[]
+  }
+
+  export type LeagueHistoryUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<LeagueHistoryCreateWithoutUserInput, LeagueHistoryUncheckedCreateWithoutUserInput> | LeagueHistoryCreateWithoutUserInput[] | LeagueHistoryUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: LeagueHistoryCreateOrConnectWithoutUserInput | LeagueHistoryCreateOrConnectWithoutUserInput[]
+    upsert?: LeagueHistoryUpsertWithWhereUniqueWithoutUserInput | LeagueHistoryUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: LeagueHistoryCreateManyUserInputEnvelope
+    set?: LeagueHistoryWhereUniqueInput | LeagueHistoryWhereUniqueInput[]
+    disconnect?: LeagueHistoryWhereUniqueInput | LeagueHistoryWhereUniqueInput[]
+    delete?: LeagueHistoryWhereUniqueInput | LeagueHistoryWhereUniqueInput[]
+    connect?: LeagueHistoryWhereUniqueInput | LeagueHistoryWhereUniqueInput[]
+    update?: LeagueHistoryUpdateWithWhereUniqueWithoutUserInput | LeagueHistoryUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: LeagueHistoryUpdateManyWithWhereWithoutUserInput | LeagueHistoryUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: LeagueHistoryScalarWhereInput | LeagueHistoryScalarWhereInput[]
   }
 
   export type UserCreateNestedOneWithoutFacilitiesInput = {
@@ -44230,6 +45893,20 @@ export namespace Prisma {
     update?: XOR<XOR<RobotUpdateToOneWithWhereWithoutTuningAllocationInput, RobotUpdateWithoutTuningAllocationInput>, RobotUncheckedUpdateWithoutTuningAllocationInput>
   }
 
+  export type UserCreateNestedOneWithoutLeagueHistoryInput = {
+    create?: XOR<UserCreateWithoutLeagueHistoryInput, UserUncheckedCreateWithoutLeagueHistoryInput>
+    connectOrCreate?: UserCreateOrConnectWithoutLeagueHistoryInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type UserUpdateOneRequiredWithoutLeagueHistoryNestedInput = {
+    create?: XOR<UserCreateWithoutLeagueHistoryInput, UserUncheckedCreateWithoutLeagueHistoryInput>
+    connectOrCreate?: UserCreateOrConnectWithoutLeagueHistoryInput
+    upsert?: UserUpsertWithoutLeagueHistoryInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutLeagueHistoryInput, UserUpdateWithoutLeagueHistoryInput>, UserUncheckedUpdateWithoutLeagueHistoryInput>
+  }
+
   export type NestedIntFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
     in?: number[] | ListIntFieldRefInput<$PrismaModel>
@@ -44895,6 +46572,43 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type LeagueHistoryCreateWithoutUserInput = {
+    entityType: string
+    entityId: number
+    changeType: string
+    sourceTier: string
+    destinationTier: string
+    sourceLeagueId: string
+    destinationLeagueId: string
+    leaguePoints: number
+    cycleNumber: number
+    createdAt?: Date | string
+  }
+
+  export type LeagueHistoryUncheckedCreateWithoutUserInput = {
+    id?: number
+    entityType: string
+    entityId: number
+    changeType: string
+    sourceTier: string
+    destinationTier: string
+    sourceLeagueId: string
+    destinationLeagueId: string
+    leaguePoints: number
+    cycleNumber: number
+    createdAt?: Date | string
+  }
+
+  export type LeagueHistoryCreateOrConnectWithoutUserInput = {
+    where: LeagueHistoryWhereUniqueInput
+    create: XOR<LeagueHistoryCreateWithoutUserInput, LeagueHistoryUncheckedCreateWithoutUserInput>
+  }
+
+  export type LeagueHistoryCreateManyUserInputEnvelope = {
+    data: LeagueHistoryCreateManyUserInput | LeagueHistoryCreateManyUserInput[]
+    skipDuplicates?: boolean
+  }
+
   export type RobotUpsertWithWhereUniqueWithoutUserInput = {
     where: RobotWhereUniqueInput
     update: XOR<RobotUpdateWithoutUserInput, RobotUncheckedUpdateWithoutUserInput>
@@ -45115,6 +46829,40 @@ export namespace Prisma {
     unlockedAt?: DateTimeFilter<"UserAchievement"> | Date | string
   }
 
+  export type LeagueHistoryUpsertWithWhereUniqueWithoutUserInput = {
+    where: LeagueHistoryWhereUniqueInput
+    update: XOR<LeagueHistoryUpdateWithoutUserInput, LeagueHistoryUncheckedUpdateWithoutUserInput>
+    create: XOR<LeagueHistoryCreateWithoutUserInput, LeagueHistoryUncheckedCreateWithoutUserInput>
+  }
+
+  export type LeagueHistoryUpdateWithWhereUniqueWithoutUserInput = {
+    where: LeagueHistoryWhereUniqueInput
+    data: XOR<LeagueHistoryUpdateWithoutUserInput, LeagueHistoryUncheckedUpdateWithoutUserInput>
+  }
+
+  export type LeagueHistoryUpdateManyWithWhereWithoutUserInput = {
+    where: LeagueHistoryScalarWhereInput
+    data: XOR<LeagueHistoryUpdateManyMutationInput, LeagueHistoryUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type LeagueHistoryScalarWhereInput = {
+    AND?: LeagueHistoryScalarWhereInput | LeagueHistoryScalarWhereInput[]
+    OR?: LeagueHistoryScalarWhereInput[]
+    NOT?: LeagueHistoryScalarWhereInput | LeagueHistoryScalarWhereInput[]
+    id?: IntFilter<"LeagueHistory"> | number
+    entityType?: StringFilter<"LeagueHistory"> | string
+    entityId?: IntFilter<"LeagueHistory"> | number
+    userId?: IntFilter<"LeagueHistory"> | number
+    changeType?: StringFilter<"LeagueHistory"> | string
+    sourceTier?: StringFilter<"LeagueHistory"> | string
+    destinationTier?: StringFilter<"LeagueHistory"> | string
+    sourceLeagueId?: StringFilter<"LeagueHistory"> | string
+    destinationLeagueId?: StringFilter<"LeagueHistory"> | string
+    leaguePoints?: IntFilter<"LeagueHistory"> | number
+    cycleNumber?: IntFilter<"LeagueHistory"> | number
+    createdAt?: DateTimeFilter<"LeagueHistory"> | Date | string
+  }
+
   export type UserCreateWithoutFacilitiesInput = {
     username: string
     email?: string | null
@@ -45146,6 +46894,7 @@ export namespace Prisma {
     weaponInventory?: WeaponInventoryCreateNestedManyWithoutUserInput
     tagTeams?: TagTeamCreateNestedManyWithoutStableInput
     achievements?: UserAchievementCreateNestedManyWithoutUserInput
+    leagueHistory?: LeagueHistoryCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutFacilitiesInput = {
@@ -45180,6 +46929,7 @@ export namespace Prisma {
     weaponInventory?: WeaponInventoryUncheckedCreateNestedManyWithoutUserInput
     tagTeams?: TagTeamUncheckedCreateNestedManyWithoutStableInput
     achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
+    leagueHistory?: LeagueHistoryUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutFacilitiesInput = {
@@ -45229,6 +46979,7 @@ export namespace Prisma {
     weaponInventory?: WeaponInventoryUpdateManyWithoutUserNestedInput
     tagTeams?: TagTeamUpdateManyWithoutStableNestedInput
     achievements?: UserAchievementUpdateManyWithoutUserNestedInput
+    leagueHistory?: LeagueHistoryUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutFacilitiesInput = {
@@ -45263,6 +47014,7 @@ export namespace Prisma {
     weaponInventory?: WeaponInventoryUncheckedUpdateManyWithoutUserNestedInput
     tagTeams?: TagTeamUncheckedUpdateManyWithoutStableNestedInput
     achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
+    leagueHistory?: LeagueHistoryUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateWithoutRobotsInput = {
@@ -45296,6 +47048,7 @@ export namespace Prisma {
     weaponInventory?: WeaponInventoryCreateNestedManyWithoutUserInput
     tagTeams?: TagTeamCreateNestedManyWithoutStableInput
     achievements?: UserAchievementCreateNestedManyWithoutUserInput
+    leagueHistory?: LeagueHistoryCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutRobotsInput = {
@@ -45330,6 +47083,7 @@ export namespace Prisma {
     weaponInventory?: WeaponInventoryUncheckedCreateNestedManyWithoutUserInput
     tagTeams?: TagTeamUncheckedCreateNestedManyWithoutStableInput
     achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
+    leagueHistory?: LeagueHistoryUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutRobotsInput = {
@@ -46046,6 +47800,7 @@ export namespace Prisma {
     weaponInventory?: WeaponInventoryUpdateManyWithoutUserNestedInput
     tagTeams?: TagTeamUpdateManyWithoutStableNestedInput
     achievements?: UserAchievementUpdateManyWithoutUserNestedInput
+    leagueHistory?: LeagueHistoryUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutRobotsInput = {
@@ -46080,6 +47835,7 @@ export namespace Prisma {
     weaponInventory?: WeaponInventoryUncheckedUpdateManyWithoutUserNestedInput
     tagTeams?: TagTeamUncheckedUpdateManyWithoutStableNestedInput
     achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
+    leagueHistory?: LeagueHistoryUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type WeaponInventoryUpsertWithoutRobotsMainInput = {
@@ -46565,6 +48321,7 @@ export namespace Prisma {
     facilities?: FacilityCreateNestedManyWithoutUserInput
     tagTeams?: TagTeamCreateNestedManyWithoutStableInput
     achievements?: UserAchievementCreateNestedManyWithoutUserInput
+    leagueHistory?: LeagueHistoryCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutWeaponInventoryInput = {
@@ -46599,6 +48356,7 @@ export namespace Prisma {
     facilities?: FacilityUncheckedCreateNestedManyWithoutUserInput
     tagTeams?: TagTeamUncheckedCreateNestedManyWithoutStableInput
     achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
+    leagueHistory?: LeagueHistoryUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutWeaponInventoryInput = {
@@ -47128,6 +48886,7 @@ export namespace Prisma {
     facilities?: FacilityUpdateManyWithoutUserNestedInput
     tagTeams?: TagTeamUpdateManyWithoutStableNestedInput
     achievements?: UserAchievementUpdateManyWithoutUserNestedInput
+    leagueHistory?: LeagueHistoryUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutWeaponInventoryInput = {
@@ -47162,6 +48921,7 @@ export namespace Prisma {
     facilities?: FacilityUncheckedUpdateManyWithoutUserNestedInput
     tagTeams?: TagTeamUncheckedUpdateManyWithoutStableNestedInput
     achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
+    leagueHistory?: LeagueHistoryUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type WeaponUpsertWithoutWeaponInventoryInput = {
@@ -52016,6 +53776,7 @@ export namespace Prisma {
     facilities?: FacilityCreateNestedManyWithoutUserInput
     weaponInventory?: WeaponInventoryCreateNestedManyWithoutUserInput
     achievements?: UserAchievementCreateNestedManyWithoutUserInput
+    leagueHistory?: LeagueHistoryCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutTagTeamsInput = {
@@ -52050,6 +53811,7 @@ export namespace Prisma {
     facilities?: FacilityUncheckedCreateNestedManyWithoutUserInput
     weaponInventory?: WeaponInventoryUncheckedCreateNestedManyWithoutUserInput
     achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
+    leagueHistory?: LeagueHistoryUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutTagTeamsInput = {
@@ -52545,6 +54307,7 @@ export namespace Prisma {
     facilities?: FacilityUpdateManyWithoutUserNestedInput
     weaponInventory?: WeaponInventoryUpdateManyWithoutUserNestedInput
     achievements?: UserAchievementUpdateManyWithoutUserNestedInput
+    leagueHistory?: LeagueHistoryUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutTagTeamsInput = {
@@ -52579,6 +54342,7 @@ export namespace Prisma {
     facilities?: FacilityUncheckedUpdateManyWithoutUserNestedInput
     weaponInventory?: WeaponInventoryUncheckedUpdateManyWithoutUserNestedInput
     achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
+    leagueHistory?: LeagueHistoryUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type RobotUpsertWithoutTagTeamsAsActiveInput = {
@@ -54047,6 +55811,7 @@ export namespace Prisma {
     facilities?: FacilityCreateNestedManyWithoutUserInput
     weaponInventory?: WeaponInventoryCreateNestedManyWithoutUserInput
     tagTeams?: TagTeamCreateNestedManyWithoutStableInput
+    leagueHistory?: LeagueHistoryCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutAchievementsInput = {
@@ -54081,6 +55846,7 @@ export namespace Prisma {
     facilities?: FacilityUncheckedCreateNestedManyWithoutUserInput
     weaponInventory?: WeaponInventoryUncheckedCreateNestedManyWithoutUserInput
     tagTeams?: TagTeamUncheckedCreateNestedManyWithoutStableInput
+    leagueHistory?: LeagueHistoryUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutAchievementsInput = {
@@ -54324,6 +56090,7 @@ export namespace Prisma {
     facilities?: FacilityUpdateManyWithoutUserNestedInput
     weaponInventory?: WeaponInventoryUpdateManyWithoutUserNestedInput
     tagTeams?: TagTeamUpdateManyWithoutStableNestedInput
+    leagueHistory?: LeagueHistoryUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutAchievementsInput = {
@@ -54358,6 +56125,7 @@ export namespace Prisma {
     facilities?: FacilityUncheckedUpdateManyWithoutUserNestedInput
     weaponInventory?: WeaponInventoryUncheckedUpdateManyWithoutUserNestedInput
     tagTeams?: TagTeamUncheckedUpdateManyWithoutStableNestedInput
+    leagueHistory?: LeagueHistoryUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type RobotUpsertWithoutAchievementsInput = {
@@ -54954,6 +56722,160 @@ export namespace Prisma {
     achievements?: UserAchievementUncheckedUpdateManyWithoutRobotNestedInput
   }
 
+  export type UserCreateWithoutLeagueHistoryInput = {
+    username: string
+    email?: string | null
+    passwordHash: string
+    role?: string
+    currency?: number
+    prestige?: number
+    championshipTitles?: number
+    stableName?: string | null
+    profileVisibility?: string
+    notificationsBattle?: boolean
+    notificationsLeague?: boolean
+    themePreference?: string
+    tokenVersion?: number
+    hasCompletedOnboarding?: boolean
+    onboardingSkipped?: boolean
+    onboardingStep?: number
+    onboardingStrategy?: string | null
+    onboardingChoices?: JsonNullValueInput | InputJsonValue
+    onboardingStartedAt?: Date | string | null
+    onboardingCompletedAt?: Date | string | null
+    lastSeenChangelog?: Date | string
+    pinnedAchievements?: JsonNullValueInput | InputJsonValue
+    totalPracticeBattles?: number
+    lastLoginAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    robots?: RobotCreateNestedManyWithoutUserInput
+    facilities?: FacilityCreateNestedManyWithoutUserInput
+    weaponInventory?: WeaponInventoryCreateNestedManyWithoutUserInput
+    tagTeams?: TagTeamCreateNestedManyWithoutStableInput
+    achievements?: UserAchievementCreateNestedManyWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutLeagueHistoryInput = {
+    id?: number
+    username: string
+    email?: string | null
+    passwordHash: string
+    role?: string
+    currency?: number
+    prestige?: number
+    championshipTitles?: number
+    stableName?: string | null
+    profileVisibility?: string
+    notificationsBattle?: boolean
+    notificationsLeague?: boolean
+    themePreference?: string
+    tokenVersion?: number
+    hasCompletedOnboarding?: boolean
+    onboardingSkipped?: boolean
+    onboardingStep?: number
+    onboardingStrategy?: string | null
+    onboardingChoices?: JsonNullValueInput | InputJsonValue
+    onboardingStartedAt?: Date | string | null
+    onboardingCompletedAt?: Date | string | null
+    lastSeenChangelog?: Date | string
+    pinnedAchievements?: JsonNullValueInput | InputJsonValue
+    totalPracticeBattles?: number
+    lastLoginAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    robots?: RobotUncheckedCreateNestedManyWithoutUserInput
+    facilities?: FacilityUncheckedCreateNestedManyWithoutUserInput
+    weaponInventory?: WeaponInventoryUncheckedCreateNestedManyWithoutUserInput
+    tagTeams?: TagTeamUncheckedCreateNestedManyWithoutStableInput
+    achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutLeagueHistoryInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutLeagueHistoryInput, UserUncheckedCreateWithoutLeagueHistoryInput>
+  }
+
+  export type UserUpsertWithoutLeagueHistoryInput = {
+    update: XOR<UserUpdateWithoutLeagueHistoryInput, UserUncheckedUpdateWithoutLeagueHistoryInput>
+    create: XOR<UserCreateWithoutLeagueHistoryInput, UserUncheckedCreateWithoutLeagueHistoryInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutLeagueHistoryInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutLeagueHistoryInput, UserUncheckedUpdateWithoutLeagueHistoryInput>
+  }
+
+  export type UserUpdateWithoutLeagueHistoryInput = {
+    username?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    role?: StringFieldUpdateOperationsInput | string
+    currency?: IntFieldUpdateOperationsInput | number
+    prestige?: IntFieldUpdateOperationsInput | number
+    championshipTitles?: IntFieldUpdateOperationsInput | number
+    stableName?: NullableStringFieldUpdateOperationsInput | string | null
+    profileVisibility?: StringFieldUpdateOperationsInput | string
+    notificationsBattle?: BoolFieldUpdateOperationsInput | boolean
+    notificationsLeague?: BoolFieldUpdateOperationsInput | boolean
+    themePreference?: StringFieldUpdateOperationsInput | string
+    tokenVersion?: IntFieldUpdateOperationsInput | number
+    hasCompletedOnboarding?: BoolFieldUpdateOperationsInput | boolean
+    onboardingSkipped?: BoolFieldUpdateOperationsInput | boolean
+    onboardingStep?: IntFieldUpdateOperationsInput | number
+    onboardingStrategy?: NullableStringFieldUpdateOperationsInput | string | null
+    onboardingChoices?: JsonNullValueInput | InputJsonValue
+    onboardingStartedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    onboardingCompletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastSeenChangelog?: DateTimeFieldUpdateOperationsInput | Date | string
+    pinnedAchievements?: JsonNullValueInput | InputJsonValue
+    totalPracticeBattles?: IntFieldUpdateOperationsInput | number
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    robots?: RobotUpdateManyWithoutUserNestedInput
+    facilities?: FacilityUpdateManyWithoutUserNestedInput
+    weaponInventory?: WeaponInventoryUpdateManyWithoutUserNestedInput
+    tagTeams?: TagTeamUpdateManyWithoutStableNestedInput
+    achievements?: UserAchievementUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutLeagueHistoryInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    username?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    role?: StringFieldUpdateOperationsInput | string
+    currency?: IntFieldUpdateOperationsInput | number
+    prestige?: IntFieldUpdateOperationsInput | number
+    championshipTitles?: IntFieldUpdateOperationsInput | number
+    stableName?: NullableStringFieldUpdateOperationsInput | string | null
+    profileVisibility?: StringFieldUpdateOperationsInput | string
+    notificationsBattle?: BoolFieldUpdateOperationsInput | boolean
+    notificationsLeague?: BoolFieldUpdateOperationsInput | boolean
+    themePreference?: StringFieldUpdateOperationsInput | string
+    tokenVersion?: IntFieldUpdateOperationsInput | number
+    hasCompletedOnboarding?: BoolFieldUpdateOperationsInput | boolean
+    onboardingSkipped?: BoolFieldUpdateOperationsInput | boolean
+    onboardingStep?: IntFieldUpdateOperationsInput | number
+    onboardingStrategy?: NullableStringFieldUpdateOperationsInput | string | null
+    onboardingChoices?: JsonNullValueInput | InputJsonValue
+    onboardingStartedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    onboardingCompletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastSeenChangelog?: DateTimeFieldUpdateOperationsInput | Date | string
+    pinnedAchievements?: JsonNullValueInput | InputJsonValue
+    totalPracticeBattles?: IntFieldUpdateOperationsInput | number
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    robots?: RobotUncheckedUpdateManyWithoutUserNestedInput
+    facilities?: FacilityUncheckedUpdateManyWithoutUserNestedInput
+    weaponInventory?: WeaponInventoryUncheckedUpdateManyWithoutUserNestedInput
+    tagTeams?: TagTeamUncheckedUpdateManyWithoutStableNestedInput
+    achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
+  }
+
   export type RobotCreateManyUserInput = {
     id?: number
     name: string
@@ -55072,6 +56994,20 @@ export namespace Prisma {
     achievementId: string
     robotId?: number | null
     unlockedAt?: Date | string
+  }
+
+  export type LeagueHistoryCreateManyUserInput = {
+    id?: number
+    entityType: string
+    entityId: number
+    changeType: string
+    sourceTier: string
+    destinationTier: string
+    sourceLeagueId: string
+    destinationLeagueId: string
+    leaguePoints: number
+    cycleNumber: number
+    createdAt?: Date | string
   }
 
   export type RobotUpdateWithoutUserInput = {
@@ -55463,6 +57399,47 @@ export namespace Prisma {
     achievementId?: StringFieldUpdateOperationsInput | string
     robotId?: NullableIntFieldUpdateOperationsInput | number | null
     unlockedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type LeagueHistoryUpdateWithoutUserInput = {
+    entityType?: StringFieldUpdateOperationsInput | string
+    entityId?: IntFieldUpdateOperationsInput | number
+    changeType?: StringFieldUpdateOperationsInput | string
+    sourceTier?: StringFieldUpdateOperationsInput | string
+    destinationTier?: StringFieldUpdateOperationsInput | string
+    sourceLeagueId?: StringFieldUpdateOperationsInput | string
+    destinationLeagueId?: StringFieldUpdateOperationsInput | string
+    leaguePoints?: IntFieldUpdateOperationsInput | number
+    cycleNumber?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type LeagueHistoryUncheckedUpdateWithoutUserInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    entityType?: StringFieldUpdateOperationsInput | string
+    entityId?: IntFieldUpdateOperationsInput | number
+    changeType?: StringFieldUpdateOperationsInput | string
+    sourceTier?: StringFieldUpdateOperationsInput | string
+    destinationTier?: StringFieldUpdateOperationsInput | string
+    sourceLeagueId?: StringFieldUpdateOperationsInput | string
+    destinationLeagueId?: StringFieldUpdateOperationsInput | string
+    leaguePoints?: IntFieldUpdateOperationsInput | number
+    cycleNumber?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type LeagueHistoryUncheckedUpdateManyWithoutUserInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    entityType?: StringFieldUpdateOperationsInput | string
+    entityId?: IntFieldUpdateOperationsInput | number
+    changeType?: StringFieldUpdateOperationsInput | string
+    sourceTier?: StringFieldUpdateOperationsInput | string
+    destinationTier?: StringFieldUpdateOperationsInput | string
+    sourceLeagueId?: StringFieldUpdateOperationsInput | string
+    destinationLeagueId?: StringFieldUpdateOperationsInput | string
+    leaguePoints?: IntFieldUpdateOperationsInput | number
+    cycleNumber?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type BattleCreateManyRobot1Input = {

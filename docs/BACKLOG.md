@@ -50,6 +50,7 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 | Item | # | Spec | Completed |
 |------|---|------|-----------|
 | Performance Optimization | 20 | — (direct implementation) | May 2026 |
+| Promotion/Demotion History Tracking | 22 | [Spec #32](/.kiro/specs/to-do/32-league-history-tracking/) | May 2026 |
 | Battle History URL State Persistence | 25 | — (direct implementation) | May 2026 |
 | Hall of Records Performance Caching | 26 | — (direct implementation) | May 2026 |
 | League & Tag Team Instance Deep Linking | 39 | — (direct implementation) | May 2026 |
@@ -178,7 +179,8 @@ Tag team battles can theoretically exceed 300s because each phase has its own 12
 
 ### #22 — Promotion/Demotion History Tracking
 **Source**: PRD_LEAGUE_SYSTEM.md  
-**Priority**: Low — nice for analytics, not player-facing
+**Priority**: Low — nice for analytics, not player-facing  
+**Progress**: Specced — see [Spec #32](/.kiro/specs/to-do/32-league-history-tracking/)
 
 Track league tier changes over time (PromotionHistory model). Enables progression charts and yo-yo detection.
 

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-type TabId = 'overview' | 'matches' | 'battle-config' | 'upgrades' | 'tuning' | 'stats' | 'analytics';
+type TabId = 'overview' | 'matches' | 'battle-config' | 'upgrades' | 'tuning' | 'stats' | 'analytics' | 'league-history';
 
 export type { TabId };
 
@@ -18,6 +18,7 @@ const tabs = [
   { id: 'battle-config' as const, label: 'Battle Config', icon: '🔧', ownerOnly: true, accentClass: '' },
   { id: 'stats' as const, label: 'Stats', icon: '📈', ownerOnly: true, accentClass: '' },
   { id: 'analytics' as const, label: 'Analytics', icon: '📊', ownerOnly: false, accentClass: '' },
+  { id: 'league-history' as const, label: 'League History', icon: '🏆', ownerOnly: false, accentClass: '' },
 ];
 
 function TabNavigation({ activeTab, onTabChange, isOwner }: TabNavigationProps) {

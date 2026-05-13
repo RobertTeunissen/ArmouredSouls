@@ -50,6 +50,12 @@ import {
 } from '../services/admin/adminCycleService';
 import { recordAction as recordAuditAction, getEntries as getAuditEntries } from '../services/admin/adminAuditLogService';
 import { handleAdminUploads, handleAdminCleanup } from '../services/moderation/adminUploadsHandler';
+import {
+  getHistoryByCycleRange,
+  getAggregates,
+  getEntityHistory,
+  detectYoYoCandidates,
+} from '../services/league/leagueHistoryService';
 import prisma from '../lib/prisma';
 
 const router = express.Router();
@@ -159,6 +165,30 @@ const auditLogBodySchema = z.object({
   operationType: z.string().min(1).max(100),
   operationResult: z.enum(['success', 'failure']),
   resultSummary: z.record(z.string(), z.unknown()),
+});
+
+const leagueHistoryQuerySchema = z.object({
+  startCycle: z.coerce.number().int().positive(),
+  endCycle: z.coerce.number().int().positive(),
+  entityType: z.enum(['robot', 'tag_team']).optional(),
+  page: z.coerce.number().int().positive().optional().default(1),
+  perPage: z.coerce.number().int().positive().max(100).optional().default(50),
+});
+
+const leagueHistoryAggregatesSchema = z.object({
+  startCycle: z.coerce.number().int().positive(),
+  endCycle: z.coerce.number().int().positive(),
+  entityType: z.enum(['robot', 'tag_team']).optional(),
+});
+
+const leagueHistoryEntitySchema = z.object({
+  entityType: z.enum(['robot', 'tag_team']),
+  entityId: positiveIntParam,
+});
+
+const leagueHistoryYoYoSchema = z.object({
+  cycleWindow: z.coerce.number().int().positive().optional().default(20),
+  minChanges: z.coerce.number().int().min(2).optional().default(3),
 });
 
 // Mount tournament routes
@@ -999,6 +1029,62 @@ router.post('/audit-log', authenticateToken, requireAdmin, validateRequest({ bod
   const { operationType, operationResult, resultSummary } = req.body;
   recordAuditAction(authReq.user!.userId, operationType, operationResult, resultSummary);
   res.json({ success: true });
+});
+
+/**
+ * GET /api/admin/league-history
+ * Paginated tier changes by cycle range.
+ */
+router.get('/league-history', authenticateToken, requireAdmin, validateRequest({ query: leagueHistoryQuerySchema }), async (req: Request, res: Response) => {
+  const { startCycle, endCycle, entityType, page, perPage } = req.query as unknown as {
+    startCycle: number;
+    endCycle: number;
+    entityType?: 'robot' | 'tag_team';
+    page: number;
+    perPage: number;
+  };
+  const result = await getHistoryByCycleRange({ startCycle, endCycle, entityType, page, perPage });
+  res.json(result);
+});
+
+/**
+ * GET /api/admin/league-history/aggregates
+ * Promotion/demotion counts by tier for a cycle range.
+ */
+router.get('/league-history/aggregates', authenticateToken, requireAdmin, validateRequest({ query: leagueHistoryAggregatesSchema }), async (req: Request, res: Response) => {
+  const { startCycle, endCycle, entityType } = req.query as unknown as {
+    startCycle: number;
+    endCycle: number;
+    entityType?: 'robot' | 'tag_team';
+  };
+  const result = await getAggregates(startCycle, endCycle, entityType);
+  res.json(result);
+});
+
+/**
+ * GET /api/admin/league-history/entity/:entityType/:entityId
+ * Full history for one entity.
+ */
+router.get('/league-history/entity/:entityType/:entityId', authenticateToken, requireAdmin, validateRequest({ params: leagueHistoryEntitySchema }), async (req: Request, res: Response) => {
+  const { entityType, entityId } = req.params as unknown as {
+    entityType: 'robot' | 'tag_team';
+    entityId: number;
+  };
+  const data = await getEntityHistory(entityType, entityId);
+  res.json({ data });
+});
+
+/**
+ * GET /api/admin/league-history/yo-yo
+ * Yo-yo detection candidates.
+ */
+router.get('/league-history/yo-yo', authenticateToken, requireAdmin, validateRequest({ query: leagueHistoryYoYoSchema }), async (req: Request, res: Response) => {
+  const { cycleWindow, minChanges } = req.query as unknown as {
+    cycleWindow: number;
+    minChanges: number;
+  };
+  const result = await detectYoYoCandidates(cycleWindow, minChanges);
+  res.json(result);
 });
 
 

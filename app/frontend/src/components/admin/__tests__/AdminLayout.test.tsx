@@ -36,6 +36,7 @@ const NAVIGATION_ITEMS = [
   { label: 'Battle Logs', path: '/admin/battles' },
   { label: 'Robot Stats', path: '/admin/robot-stats' },
   { label: 'League Health', path: '/admin/league-health' },
+  { label: 'League History', path: '/admin/league-history' },
   { label: 'Weapons', path: '/admin/weapons' },
   { label: 'Players', path: '/admin/players' },
   { label: 'Economy', path: '/admin/economy' },
