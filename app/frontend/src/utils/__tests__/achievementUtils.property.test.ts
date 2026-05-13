@@ -206,7 +206,10 @@ describe('Property 13: Achievement sort correctness', () => {
         fc.array(
           fc.record({
             tier: fc.constantFrom(...TIERS),
-            unlockedAt: fc.option(fc.date({ min: new Date('2024-01-01'), max: new Date('2026-12-31') }), { nil: null }),
+            unlockedAt: fc.option(
+              fc.integer({ min: new Date('2024-01-01').getTime(), max: new Date('2026-12-31').getTime() }).map(ts => new Date(ts)),
+              { nil: null },
+            ),
           }),
           { minLength: 2, maxLength: 20 },
         ),
@@ -248,7 +251,10 @@ describe('Property 13: Achievement sort correctness', () => {
         fc.array(
           fc.record({
             tier: fc.constantFrom(...TIERS),
-            unlockedAt: fc.option(fc.date({ min: new Date('2024-01-01'), max: new Date('2026-12-31') }), { nil: null }),
+            unlockedAt: fc.option(
+              fc.integer({ min: new Date('2024-01-01').getTime(), max: new Date('2026-12-31').getTime() }).map(ts => new Date(ts)),
+              { nil: null },
+            ),
           }),
           { minLength: 2, maxLength: 20 },
         ),
