@@ -17,18 +17,21 @@ const mockPrisma = {
     findMany: jest.fn().mockResolvedValue([]),
     count: jest.fn().mockResolvedValue(0),
     findFirst: jest.fn().mockResolvedValue(null),
+    groupBy: jest.fn().mockResolvedValue([]),
   },
   cycleMetadata: {
     findUnique: jest.fn().mockResolvedValue({ totalCycles: 100 }),
   },
   robot: {
     findUnique: jest.fn().mockResolvedValue({ name: 'TestBot' }),
+    findMany: jest.fn().mockResolvedValue([]),
   },
   tagTeam: {
     findUnique: jest.fn().mockResolvedValue({
       activeRobot: { name: 'Bot1' },
       reserveRobot: { name: 'Bot2' },
     }),
+    findMany: jest.fn().mockResolvedValue([]),
   },
 };
 
@@ -87,12 +90,15 @@ beforeEach(() => {
   mockPrisma.leagueHistory.findMany.mockResolvedValue([]);
   mockPrisma.leagueHistory.count.mockResolvedValue(0);
   mockPrisma.leagueHistory.findFirst.mockResolvedValue(null);
+  mockPrisma.leagueHistory.groupBy.mockResolvedValue([]);
   mockPrisma.cycleMetadata.findUnique.mockResolvedValue({ totalCycles: 100 });
   mockPrisma.robot.findUnique.mockResolvedValue({ name: 'TestBot' });
+  mockPrisma.robot.findMany.mockResolvedValue([]);
   mockPrisma.tagTeam.findUnique.mockResolvedValue({
     activeRobot: { name: 'Bot1' },
     reserveRobot: { name: 'Bot2' },
   });
+  mockPrisma.tagTeam.findMany.mockResolvedValue([]);
 });
 
 // ── Tests ───────────────────────────────────────────────────────────
@@ -462,7 +468,20 @@ describe('leagueHistoryService Property Tests', () => {
           fc.integer({ min: 0, max: 5000 }), // offset
           async (records, startCycle, offset) => {
             const endCycle = startCycle + offset;
-            mockPrisma.leagueHistory.findMany.mockResolvedValue(records);
+
+            // Compute expected groupBy result from the records
+            const tierChangeMap = new Map<string, number>();
+            for (const record of records) {
+              const key = `${record.destinationTier}:${record.changeType}`;
+              tierChangeMap.set(key, (tierChangeMap.get(key) || 0) + 1);
+            }
+
+            const groupByResult = Array.from(tierChangeMap.entries()).map(([key, count]) => {
+              const [destinationTier, changeType] = key.split(':');
+              return { destinationTier, changeType, _count: { id: count } };
+            });
+
+            mockPrisma.leagueHistory.groupBy.mockResolvedValue(groupByResult);
 
             const result = await getAggregates(startCycle, endCycle);
 
@@ -518,11 +537,16 @@ describe('leagueHistoryService Property Tests', () => {
           async (records, minChanges) => {
             mockPrisma.leagueHistory.findMany.mockResolvedValue(records);
             mockPrisma.cycleMetadata.findUnique.mockResolvedValue({ totalCycles: 100 });
-            mockPrisma.robot.findUnique.mockResolvedValue({ name: 'TestBot' });
-            mockPrisma.tagTeam.findUnique.mockResolvedValue({
-              activeRobot: { name: 'Bot1' },
-              reserveRobot: { name: 'Bot2' },
-            });
+
+            // Mock batch name resolution for robots and tag teams
+            const robotIds = [...new Set(records.filter(r => r.entityType === 'robot').map(r => r.entityId))];
+            const tagTeamIds = [...new Set(records.filter(r => r.entityType === 'tag_team').map(r => r.entityId))];
+            mockPrisma.robot.findMany.mockResolvedValue(
+              robotIds.map(id => ({ id, name: `Robot${id}` }))
+            );
+            mockPrisma.tagTeam.findMany.mockResolvedValue(
+              tagTeamIds.map(id => ({ id, activeRobot: { name: `Bot${id}A` }, reserveRobot: { name: `Bot${id}B` } }))
+            );
 
             const result = await detectYoYoCandidates(20, minChanges);
 

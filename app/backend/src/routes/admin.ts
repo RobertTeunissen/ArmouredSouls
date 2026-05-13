@@ -1036,14 +1036,12 @@ router.post('/audit-log', authenticateToken, requireAdmin, validateRequest({ bod
  * Paginated tier changes by cycle range.
  */
 router.get('/league-history', authenticateToken, requireAdmin, validateRequest({ query: leagueHistoryQuerySchema }), async (req: Request, res: Response) => {
-  const { startCycle, endCycle, entityType, page, perPage } = req.query as unknown as {
-    startCycle: number;
-    endCycle: number;
-    entityType?: 'robot' | 'tag_team';
-    page: number;
-    perPage: number;
-  };
-  const result = await getHistoryByCycleRange({ startCycle, endCycle, entityType, page, perPage });
+  const startCycle = Number(req.query.startCycle);
+  const endCycle = Number(req.query.endCycle);
+  const entityType = req.query.entityType as string | undefined;
+  const page = req.query.page ? Number(req.query.page) : 1;
+  const perPage = req.query.perPage ? Number(req.query.perPage) : 50;
+  const result = await getHistoryByCycleRange({ startCycle, endCycle, entityType: entityType as 'robot' | 'tag_team' | undefined, page, perPage });
   res.json(result);
 });
 
@@ -1052,12 +1050,10 @@ router.get('/league-history', authenticateToken, requireAdmin, validateRequest({
  * Promotion/demotion counts by tier for a cycle range.
  */
 router.get('/league-history/aggregates', authenticateToken, requireAdmin, validateRequest({ query: leagueHistoryAggregatesSchema }), async (req: Request, res: Response) => {
-  const { startCycle, endCycle, entityType } = req.query as unknown as {
-    startCycle: number;
-    endCycle: number;
-    entityType?: 'robot' | 'tag_team';
-  };
-  const result = await getAggregates(startCycle, endCycle, entityType);
+  const startCycle = Number(req.query.startCycle);
+  const endCycle = Number(req.query.endCycle);
+  const entityType = req.query.entityType as string | undefined;
+  const result = await getAggregates(startCycle, endCycle, entityType as 'robot' | 'tag_team' | undefined);
   res.json(result);
 });
 
@@ -1066,10 +1062,8 @@ router.get('/league-history/aggregates', authenticateToken, requireAdmin, valida
  * Full history for one entity.
  */
 router.get('/league-history/entity/:entityType/:entityId', authenticateToken, requireAdmin, validateRequest({ params: leagueHistoryEntitySchema }), async (req: Request, res: Response) => {
-  const { entityType, entityId } = req.params as unknown as {
-    entityType: 'robot' | 'tag_team';
-    entityId: number;
-  };
+  const entityType = req.params.entityType as 'robot' | 'tag_team';
+  const entityId = Number(req.params.entityId);
   const data = await getEntityHistory(entityType, entityId);
   res.json({ data });
 });
@@ -1079,10 +1073,8 @@ router.get('/league-history/entity/:entityType/:entityId', authenticateToken, re
  * Yo-yo detection candidates.
  */
 router.get('/league-history/yo-yo', authenticateToken, requireAdmin, validateRequest({ query: leagueHistoryYoYoSchema }), async (req: Request, res: Response) => {
-  const { cycleWindow, minChanges } = req.query as unknown as {
-    cycleWindow: number;
-    minChanges: number;
-  };
+  const cycleWindow = req.query.cycleWindow ? Number(req.query.cycleWindow) : 20;
+  const minChanges = req.query.minChanges ? Number(req.query.minChanges) : 3;
   const result = await detectYoYoCandidates(cycleWindow, minChanges);
   res.json(result);
 });

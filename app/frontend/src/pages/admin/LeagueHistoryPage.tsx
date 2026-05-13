@@ -147,6 +147,7 @@ function LeagueHistoryPage(): React.ReactElement {
       id: row.entityId,
       name: row.entityName || `${row.entityType} #${row.entityId}`,
     });
+    setEntityHistory([]); // Clear stale data immediately
     setSlideOverOpen(true);
 
     try {
@@ -167,8 +168,7 @@ function LeagueHistoryPage(): React.ReactElement {
 
   const handleFilterApply = () => {
     setPage(1);
-    fetchEvents();
-    fetchAggregates();
+    // useEffect will re-run because fetchEvents/fetchAggregates deps changed
   };
 
   /* ---------------------------------------------------------------- */
@@ -197,8 +197,8 @@ function LeagueHistoryPage(): React.ReactElement {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" data-testid="summary-cards">
-        <AdminStatCard label="Total Promotions" value={totalPromotions} color="success" icon="⬆️" />
-        <AdminStatCard label="Total Demotions" value={totalDemotions} color="error" icon="⬇️" />
+        <AdminStatCard label="Promotions" value={totalPromotions} color="success" icon="⬆️" />
+        <AdminStatCard label="Demotions" value={totalDemotions} color="error" icon="⬇️" />
         <AdminStatCard label="Total Events" value={totalPromotions + totalDemotions} color="primary" icon="📊" />
         <AdminStatCard label="Yo-Yo Candidates" value={yoyoCandidates.length} color="warning" icon="🔄" />
       </div>

@@ -10,7 +10,7 @@
 
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
-import { LeagueError, LeagueErrorCode } from '../../errors/leagueErrors';
+import { AppError } from '../../errors';
 
 // --- Types ---
 
@@ -78,10 +78,21 @@ export interface CtrlZResult {
 /**
  * Reads the current cycle number from CycleMetadata.
  * Returns 0 if no metadata row exists.
+ * Uses a short-lived cache to avoid repeated DB reads during a rebalance run.
  */
+let cachedCycleNumber: number | null = null;
+let cacheTimestamp = 0;
+const CACHE_TTL_MS = 5000; // 5 seconds — covers a full rebalance run
+
 export async function getCurrentCycleNumber(): Promise<number> {
+  const now = Date.now();
+  if (cachedCycleNumber !== null && (now - cacheTimestamp) < CACHE_TTL_MS) {
+    return cachedCycleNumber;
+  }
   const meta = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
-  return meta?.totalCycles ?? 0;
+  cachedCycleNumber = meta?.totalCycles ?? 0;
+  cacheTimestamp = now;
+  return cachedCycleNumber;
 }
 
 // --- Service Functions ---
@@ -121,8 +132,8 @@ export async function getHistoryByCycleRange(params: LeagueHistoryQueryParams): 
   const { startCycle, endCycle, entityType, page = 1, perPage = 50 } = params;
 
   if (startCycle > endCycle) {
-    throw new LeagueError(
-      LeagueErrorCode.INVALID_LEAGUE_TIER,
+    throw new AppError(
+      'INVALID_CYCLE_RANGE',
       `Invalid cycle range: startCycle (${startCycle}) must be less than or equal to endCycle (${endCycle})`,
       400,
     );
@@ -171,11 +182,12 @@ export async function getEntityHistory(entityType: EntityType, entityId: number)
 /**
  * Get aggregate promotion/demotion counts grouped by tier for a cycle range.
  * Validates that startCycle <= endCycle.
+ * Uses Prisma groupBy to push aggregation to the database.
  */
 export async function getAggregates(startCycle: number, endCycle: number, entityType?: EntityType): Promise<AggregateResult[]> {
   if (startCycle > endCycle) {
-    throw new LeagueError(
-      LeagueErrorCode.INVALID_LEAGUE_TIER,
+    throw new AppError(
+      'INVALID_CYCLE_RANGE',
       `Invalid cycle range: startCycle (${startCycle}) must be less than or equal to endCycle (${endCycle})`,
       400,
     );
@@ -188,28 +200,24 @@ export async function getAggregates(startCycle: number, endCycle: number, entity
     where.entityType = entityType;
   }
 
-  // Get all records in the range and compute aggregates
-  const records = await prisma.leagueHistory.findMany({
+  // Use Prisma groupBy to push aggregation to the database
+  const grouped = await prisma.leagueHistory.groupBy({
+    by: ['destinationTier', 'changeType'],
     where,
-    select: {
-      destinationTier: true,
-      changeType: true,
-    },
+    _count: { id: true },
   });
 
-  // Group by destination tier and count promotions/demotions
+  // Merge into per-tier results
   const tierMap = new Map<string, { promotions: number; demotions: number }>();
-
-  for (const record of records) {
-    const tier = record.destinationTier;
-    if (!tierMap.has(tier)) {
-      tierMap.set(tier, { promotions: 0, demotions: 0 });
+  for (const row of grouped) {
+    if (!tierMap.has(row.destinationTier)) {
+      tierMap.set(row.destinationTier, { promotions: 0, demotions: 0 });
     }
-    const entry = tierMap.get(tier)!;
-    if (record.changeType === 'promotion') {
-      entry.promotions++;
+    const entry = tierMap.get(row.destinationTier)!;
+    if (row.changeType === 'promotion') {
+      entry.promotions = row._count.id;
     } else {
-      entry.demotions++;
+      entry.demotions = row._count.id;
     }
   }
 
@@ -279,37 +287,34 @@ export async function detectYoYoCandidates(cycleWindow = 20, minChanges = 3): Pr
     }
   }
 
-  // Resolve entity names
-  const results: YoYoCandidate[] = [];
-  for (const candidate of candidates) {
-    let entityName = `Unknown ${candidate.entityType} #${candidate.entityId}`;
+  // Batch-resolve entity names to avoid N+1 queries
+  const robotIds = candidates.filter(c => c.entityType === 'robot').map(c => c.entityId);
+  const tagTeamIds = candidates.filter(c => c.entityType === 'tag_team').map(c => c.entityId);
 
-    if (candidate.entityType === 'robot') {
-      const robot = await prisma.robot.findUnique({
-        where: { id: candidate.entityId },
-        select: { name: true },
-      });
-      if (robot) {
-        entityName = robot.name;
-      }
-    } else if (candidate.entityType === 'tag_team') {
-      const tagTeam = await prisma.tagTeam.findUnique({
-        where: { id: candidate.entityId },
-        include: { activeRobot: { select: { name: true } }, reserveRobot: { select: { name: true } } },
-      });
-      if (tagTeam) {
-        entityName = `${tagTeam.activeRobot.name} & ${tagTeam.reserveRobot.name}`;
-      }
-    }
+  const [robots, tagTeams] = await Promise.all([
+    robotIds.length > 0
+      ? prisma.robot.findMany({ where: { id: { in: robotIds } }, select: { id: true, name: true } })
+      : Promise.resolve([]),
+    tagTeamIds.length > 0
+      ? prisma.tagTeam.findMany({
+          where: { id: { in: tagTeamIds } },
+          include: { activeRobot: { select: { name: true } }, reserveRobot: { select: { name: true } } },
+        })
+      : Promise.resolve([]),
+  ]);
 
-    results.push({
-      entityType: candidate.entityType,
-      entityId: candidate.entityId,
-      entityName,
-      changeCount: candidate.count,
-      tiersInvolved: candidate.tiers,
-    });
-  }
+  const robotNameMap = new Map(robots.map(r => [r.id, r.name]));
+  const tagTeamNameMap = new Map(tagTeams.map(t => [t.id, `${t.activeRobot.name} & ${t.reserveRobot.name}`]));
+
+  const results: YoYoCandidate[] = candidates.map(candidate => ({
+    entityType: candidate.entityType,
+    entityId: candidate.entityId,
+    entityName: candidate.entityType === 'robot'
+      ? robotNameMap.get(candidate.entityId) || `Unknown robot #${candidate.entityId}`
+      : tagTeamNameMap.get(candidate.entityId) || `Unknown tag team #${candidate.entityId}`,
+    changeCount: candidate.count,
+    tiersInvolved: candidate.tiers,
+  }));
 
   return results;
 }

@@ -249,7 +249,7 @@ describe('Admin League History Endpoints', () => {
       await request(app).get('/api/admin/league-history?startCycle=1&endCycle=50&page=2&perPage=25');
 
       expect(mockGetHistoryByCycleRange).toHaveBeenCalledWith(
-        expect.objectContaining({ page: '2', perPage: '25' }),
+        expect.objectContaining({ page: 2, perPage: 25 }),
       );
     });
 
@@ -289,7 +289,7 @@ describe('Admin League History Endpoints', () => {
 
       await request(app).get('/api/admin/league-history/aggregates?startCycle=1&endCycle=50&entityType=tag_team');
 
-      expect(mockGetAggregates).toHaveBeenCalledWith('1', '50', 'tag_team');
+      expect(mockGetAggregates).toHaveBeenCalledWith(1, 50, 'tag_team');
     });
 
     it('should propagate service errors', async () => {
@@ -318,7 +318,7 @@ describe('Admin League History Endpoints', () => {
       expect(res.status).toBe(200);
       expect(res.body).toHaveProperty('data');
       expect(Array.isArray(res.body.data)).toBe(true);
-      expect(mockGetEntityHistory).toHaveBeenCalledWith('robot', '5');
+      expect(mockGetEntityHistory).toHaveBeenCalledWith('robot', 5);
     });
 
     it('should return full history for a tag_team entity', async () => {
@@ -327,7 +327,7 @@ describe('Admin League History Endpoints', () => {
       const res = await request(app).get('/api/admin/league-history/entity/tag_team/3');
 
       expect(res.status).toBe(200);
-      expect(mockGetEntityHistory).toHaveBeenCalledWith('tag_team', '3');
+      expect(mockGetEntityHistory).toHaveBeenCalledWith('tag_team', 3);
     });
 
     it('should return empty array for entity with no history', async () => {
@@ -363,7 +363,7 @@ describe('Admin League History Endpoints', () => {
       expect(Array.isArray(res.body)).toBe(true);
       expect(res.body[0]).toHaveProperty('entityName');
       expect(res.body[0]).toHaveProperty('changeCount');
-      expect(mockDetectYoYoCandidates).toHaveBeenCalledWith(undefined, undefined);
+      expect(mockDetectYoYoCandidates).toHaveBeenCalledWith(20, 3);
     });
 
     it('should pass custom cycleWindow and minChanges', async () => {
@@ -371,7 +371,7 @@ describe('Admin League History Endpoints', () => {
 
       await request(app).get('/api/admin/league-history/yo-yo?cycleWindow=50&minChanges=5');
 
-      expect(mockDetectYoYoCandidates).toHaveBeenCalledWith('50', '5');
+      expect(mockDetectYoYoCandidates).toHaveBeenCalledWith(50, 5);
     });
 
     it('should propagate service errors', async () => {

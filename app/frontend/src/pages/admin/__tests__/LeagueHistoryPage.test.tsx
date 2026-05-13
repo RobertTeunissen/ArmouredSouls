@@ -92,8 +92,8 @@ describe('LeagueHistoryPage', () => {
       expect(screen.getByTestId('summary-cards')).toBeInTheDocument();
     });
 
-    expect(screen.getByText('Total Promotions')).toBeInTheDocument();
-    expect(screen.getByText('Total Demotions')).toBeInTheDocument();
+    expect(screen.getByText('Promotions')).toBeInTheDocument();
+    expect(screen.getByText('Demotions')).toBeInTheDocument();
     expect(screen.getByText('Total Events')).toBeInTheDocument();
     expect(screen.getByText('Yo-Yo Candidates')).toBeInTheDocument();
   });

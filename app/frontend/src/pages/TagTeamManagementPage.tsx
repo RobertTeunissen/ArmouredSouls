@@ -362,6 +362,8 @@ function TagTeamLeagueHistory({ teamId, currentTier }: { teamId: number; current
       <button
         type="button"
         onClick={handleToggle}
+        aria-expanded={expanded}
+        aria-controls={`league-history-${teamId}`}
         className="flex items-center gap-2 text-sm text-secondary hover:text-white transition-colors w-full text-left"
         data-testid="league-history-toggle"
       >
@@ -370,7 +372,7 @@ function TagTeamLeagueHistory({ teamId, currentTier }: { teamId: number; current
       </button>
 
       {expanded && (
-        <div className="mt-3" data-testid="league-history-content">
+        <div className="mt-3" id={`league-history-${teamId}`} data-testid="league-history-content">
           {loading ? (
             <div className="text-center py-4 text-secondary text-sm">Loading history...</div>
           ) : (
