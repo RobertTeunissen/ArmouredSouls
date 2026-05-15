@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import apiClient from '../utils/apiClient';
+import { fetchRobotRankings } from '../utils/robotApi';
 
 interface RankingEntry {
   rank: number;
@@ -75,13 +75,13 @@ function StatisticalRankings({ robotId }: StatisticalRankingsProps) {
   useEffect(() => {
     let isMounted = true;
 
-    const fetchRankings = async () => {
+    const fetchRankingsData = async () => {
       try {
         setIsLoading(true);
         setError(null);
-        const response = await apiClient.get(`/api/robots/${robotId}/rankings`);
+        const data = await fetchRobotRankings(robotId);
         if (isMounted) {
-          setRankings(response.data);
+          setRankings(data as RobotRankings);
         }
       } catch (err) {
         if (isMounted) {
@@ -95,10 +95,10 @@ function StatisticalRankings({ robotId }: StatisticalRankingsProps) {
       }
     };
 
-    fetchRankings();
+    fetchRankingsData();
 
     // Refresh rankings every 5 minutes
-    const intervalId = setInterval(fetchRankings, 5 * 60 * 1000);
+    const intervalId = setInterval(fetchRankingsData, 5 * 60 * 1000);
 
     return () => {
       isMounted = false;

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import apiClient from '../utils/apiClient';
+import { updateYieldThreshold } from '../utils/robotApi';
 
 interface YieldThresholdSliderProps {
   robotId: number;
@@ -44,12 +44,9 @@ function YieldThresholdSlider({
     setLoading(true);
 
     try {
-      const response = await apiClient.patch(
-        `/api/robots/${robotId}/yield-threshold`,
-        { yieldThreshold: threshold }
-      );
+      const result = await updateYieldThreshold(robotId, threshold);
 
-      if (response.data) {
+      if (result) {
         onThresholdChange(threshold);
         setHasChanges(false);
       }

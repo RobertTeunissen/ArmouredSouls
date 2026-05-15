@@ -5,7 +5,7 @@ import { WhatIfPanel } from './WhatIfPanel';
 import type { TuningAllocations } from './WhatIfPanel';
 import { SparringConfigPanel } from './SparringConfigPanel';
 import RobotImage from '../RobotImage';
-import apiClient from '../../utils/apiClient';
+import { fetchTuningAllocation } from '../../utils/robotApi';
 
 export interface BattleSlotPanelProps {
   label: string;
@@ -40,11 +40,10 @@ export function BattleSlotPanel({
     }
 
     let cancelled = false;
-    apiClient
-      .get(`/api/robots/${slot.robotId}/tuning-allocation`)
-      .then((res) => {
+    fetchTuningAllocation(slot.robotId)
+      .then((data) => {
         if (!cancelled) {
-          setTuningAllocations(res.data?.allocations || undefined);
+          setTuningAllocations(data?.allocations || undefined);
         }
       })
       .catch(() => {

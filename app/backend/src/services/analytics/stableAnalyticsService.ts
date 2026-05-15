@@ -60,7 +60,7 @@ async function getLatestCycleNumber(): Promise<number | null> {
  * Build a single cycle's financial summary from a snapshot for a given user.
  */
 function buildCycleSummary(
-  snapshot: { cycleNumber: number; stableMetrics: unknown; robotMetrics: unknown },
+  snapshot: { cycleNumber: number; stableMetrics: unknown; robotMetrics?: unknown },
   userId: number,
 ): CycleSummary {
   const userMetrics = (snapshot.stableMetrics as StableMetric[]).find(
@@ -145,7 +145,7 @@ export async function getStableSummary(
   const startCycle = Math.max(1, latestCycle - lastNCycles + 1);
   const endCycle = latestCycle;
 
-  const snapshots = await cycleSnapshotService.getSnapshotRange(startCycle, endCycle);
+  const snapshots = await cycleSnapshotService.getSnapshotRange(startCycle, endCycle, ['stableMetrics']);
 
   if (snapshots.length === 0) {
     return {
@@ -159,7 +159,7 @@ export async function getStableSummary(
     };
   }
 
-  const cycles = snapshots.map((snapshot) => buildCycleSummary(snapshot, userId));
+  const cycles = snapshots.map((snapshot) => buildCycleSummary(snapshot as { cycleNumber: number; stableMetrics: unknown }, userId));
 
   const totalIncome = cycles.reduce((sum, c) => sum + c.income, 0);
   const totalExpenses = cycles.reduce((sum, c) => sum + c.expenses, 0);

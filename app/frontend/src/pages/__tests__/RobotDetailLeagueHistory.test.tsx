@@ -14,6 +14,19 @@ vi.mock('../../utils/apiClient', () => ({
   },
 }));
 
+// Mock robotApi
+vi.mock('../../utils/robotApi', () => ({
+  fetchRobotById: vi.fn(),
+  fetchRobotLeagueHistory: vi.fn(),
+  fetchMyRobots: vi.fn().mockResolvedValue([]),
+  updateAppearance: vi.fn(),
+  commitUpgrades: vi.fn(),
+  equipMainWeapon: vi.fn(),
+  equipOffhandWeapon: vi.fn(),
+  unequipMainWeapon: vi.fn(),
+  unequipOffhandWeapon: vi.fn(),
+}));
+
 // Mock AuthContext
 vi.mock('../../contexts/AuthContext', () => ({
   useAuth: () => ({
@@ -89,7 +102,10 @@ vi.mock('../../utils/matchmakingApi', () => ({
 }));
 
 import apiClient from '../../utils/apiClient';
+import { fetchRobotById, fetchRobotLeagueHistory } from '../../utils/robotApi';
 const mockedApiClient = vi.mocked(apiClient);
+const mockedFetchRobotById = vi.mocked(fetchRobotById);
+const mockedFetchRobotLeagueHistory = vi.mocked(fetchRobotLeagueHistory);
 
 const mockRobot = {
   id: 1,
@@ -169,13 +185,9 @@ function renderWithRouter(tab: string) {
 describe('RobotDetailPage - League History Tab', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockedFetchRobotById.mockResolvedValue(mockRobot as any);
+    mockedFetchRobotLeagueHistory.mockResolvedValue(mockLeagueHistory as any);
     mockedApiClient.get.mockImplementation((url: string) => {
-      if (url === '/api/robots/1') {
-        return Promise.resolve({ data: mockRobot });
-      }
-      if (url.includes('/league-history')) {
-        return Promise.resolve({ data: mockLeagueHistory });
-      }
       if (url.includes('/standings')) {
         return Promise.resolve({ data: { data: [] } });
       }
@@ -204,17 +216,12 @@ describe('RobotDetailPage - League History Tab', () => {
       expect(screen.getByTestId('league-history-tab')).toBeInTheDocument();
     });
 
-    expect(mockedApiClient.get).toHaveBeenCalledWith('/api/robots/1/league-history');
+    expect(mockedFetchRobotLeagueHistory).toHaveBeenCalledWith(1);
   });
 
   it('shows empty state when no history exists', async () => {
+    mockedFetchRobotLeagueHistory.mockResolvedValue({ data: [] });
     mockedApiClient.get.mockImplementation((url: string) => {
-      if (url === '/api/robots/1') {
-        return Promise.resolve({ data: mockRobot });
-      }
-      if (url.includes('/league-history')) {
-        return Promise.resolve({ data: { data: [] } });
-      }
       if (url.includes('/standings')) {
         return Promise.resolve({ data: { data: [] } });
       }

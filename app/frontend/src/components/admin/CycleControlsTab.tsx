@@ -348,6 +348,7 @@ export function CycleControlsTab({
         includeTournaments,
         generateUsersPerCycle,
         includeKoth,
+        includeDailyFinances,
       });
       setBulkResults(response.data);
 

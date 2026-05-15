@@ -34,7 +34,7 @@ describe('CORS Origin Parsing - Property Tests', () => {
       )
       .map(([scheme, domain]) => `${scheme}://${domain}`);
 
-    test('in development mode, corsOrigins is always ["*"] regardless of CORS_ORIGIN value', () => {
+    test('in development mode, corsOrigins is always localhost origins regardless of CORS_ORIGIN value', () => {
       fc.assert(
         fc.property(
           fc.oneof(
@@ -49,7 +49,7 @@ describe('CORS Origin Parsing - Property Tests', () => {
 
             const config = loadEnvConfig();
 
-            expect(config.corsOrigins).toEqual(['*']);
+            expect(config.corsOrigins).toEqual(['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173', 'http://127.0.0.1:3000']);
           }
         ),
         { numRuns: NUM_RUNS }
@@ -134,7 +134,7 @@ describe('CORS Origin Parsing - Property Tests', () => {
       );
     });
 
-    test('CORS middleware receives true when corsOrigins includes wildcard', () => {
+    test('CORS middleware receives origins array in development mode', () => {
       fc.assert(
         fc.property(
           fc.string({ minLength: 0, maxLength: 50 }),
@@ -144,12 +144,13 @@ describe('CORS Origin Parsing - Property Tests', () => {
 
             const config = loadEnvConfig();
 
-            // In development, corsOrigins is ['*'], so the middleware should get `origin: true`
+            // In development, corsOrigins is the localhost array (no wildcard)
             const corsOption = config.corsOrigins.includes('*')
               ? true
               : config.corsOrigins;
 
-            expect(corsOption).toBe(true);
+            expect(Array.isArray(corsOption)).toBe(true);
+            expect(corsOption).toEqual(['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173', 'http://127.0.0.1:3000']);
           }
         ),
         { numRuns: NUM_RUNS }

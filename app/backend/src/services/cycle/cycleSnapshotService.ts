@@ -28,6 +28,13 @@ interface CycleSnapshot {
   stepDurations: StepDuration[];
 }
 
+/** Fields that can be selectively fetched to avoid overfetching large JSON columns */
+export type SnapshotField = 'stableMetrics' | 'robotMetrics' | 'stepDurations';
+
+/** Snapshot with only the requested JSON fields populated (scalars always included) */
+export type PartialSnapshot = Pick<CycleSnapshot, 'cycleNumber' | 'triggerType' | 'startTime' | 'endTime' | 'duration'> &
+  Partial<Pick<CycleSnapshot, 'stableMetrics' | 'robotMetrics' | 'stepDurations'>>;
+
 export class CycleSnapshotService {
   /**
    * Create a snapshot for a completed cycle
@@ -274,19 +281,33 @@ export class CycleSnapshotService {
         metric.robotPurchases += payload.cost || 0;
       });
 
-      // Aggregate attribute upgrades
+      // Aggregate attribute upgrades (batch robot ownership lookup to avoid N+1)
+      const robotIds = [
+        ...new Set(
+          attributeUpgradeEvents
+            .map((e) => e.robotId)
+            .filter((id): id is number => id != null)
+        ),
+      ];
+
+      const robotOwnerMap = new Map<number, number>();
+      if (robotIds.length > 0) {
+        const robots = await prisma.robot.findMany({
+          where: { id: { in: robotIds } },
+          select: { id: true, userId: true },
+        });
+        for (const robot of robots) {
+          robotOwnerMap.set(robot.id, robot.userId);
+        }
+      }
+
       for (const event of attributeUpgradeEvents) {
         if (!event.robotId) continue;
 
-        // Get robot owner from database
-        const robot = await prisma.robot.findUnique({
-          where: { id: event.robotId },
-          select: { userId: true },
-        });
+        const userId = robotOwnerMap.get(event.robotId);
+        if (userId == null) continue;
 
-        if (!robot) continue;
-
-        const metric = getOrCreateMetric(robot.userId);
+        const metric = getOrCreateMetric(userId);
         const payload = event.payload as unknown as CycleEventPayload;
         metric.attributeUpgrades += payload.cost || 0;
       }
@@ -575,20 +596,71 @@ export class CycleSnapshotService {
   }
 
   /**
-   * Get snapshots for a range of cycles
+   * Get snapshots for a range of cycles.
+   *
+   * Pass an optional `fields` array to fetch only specific JSON columns,
+   * avoiding overfetch of large payloads callers don't need.
+   * When omitted, all columns are returned (backward-compatible).
    */
-  async getSnapshotRange(startCycle: number, endCycle: number): Promise<CycleSnapshot[]> {
-    const snapshots = await prisma.cycleSnapshot.findMany({
-      where: {
-        cycleNumber: {
-          gte: startCycle,
-          lte: endCycle,
-        },
-      },
-      orderBy: {
-        cycleNumber: 'asc',
-      },
-    });
+  async getSnapshotRange(startCycle: number, endCycle: number): Promise<CycleSnapshot[]>;
+  async getSnapshotRange(
+    startCycle: number,
+    endCycle: number,
+    fields: SnapshotField[],
+  ): Promise<PartialSnapshot[]>;
+  async getSnapshotRange(
+    startCycle: number,
+    endCycle: number,
+    fields?: SnapshotField[],
+  ): Promise<CycleSnapshot[] | PartialSnapshot[]> {
+    const where = { cycleNumber: { gte: startCycle, lte: endCycle } };
+    const orderBy = { cycleNumber: 'asc' as const };
+
+    if (fields) {
+      // Build a Prisma select that always includes scalar timing columns
+      // and only the requested JSON columns.
+      const select: Record<string, boolean> = {
+        cycleNumber: true,
+        triggerType: true,
+        startTime: true,
+        endTime: true,
+        durationMs: true,
+      };
+      for (const field of fields) {
+        if (field === 'stableMetrics') select.stableMetrics = true;
+        if (field === 'robotMetrics') select.robotMetrics = true;
+        if (field === 'stepDurations') select.stepDurations = true;
+      }
+
+      const snapshots = await prisma.cycleSnapshot.findMany({
+        where,
+        orderBy,
+        select,
+      });
+
+      return snapshots.map((snapshot: Record<string, unknown>) => {
+        const result: PartialSnapshot = {
+          cycleNumber: snapshot.cycleNumber as number,
+          triggerType: snapshot.triggerType as 'manual' | 'scheduled',
+          startTime: snapshot.startTime as Date,
+          endTime: snapshot.endTime as Date,
+          duration: snapshot.durationMs as number,
+        };
+        if (select.stableMetrics) {
+          result.stableMetrics = snapshot.stableMetrics as unknown as StableMetric[];
+        }
+        if (select.robotMetrics) {
+          result.robotMetrics = snapshot.robotMetrics as unknown as RobotMetric[];
+        }
+        if (select.stepDurations) {
+          result.stepDurations = snapshot.stepDurations as unknown as StepDuration[];
+        }
+        return result;
+      });
+    }
+
+    // No fields specified — fetch everything (backward-compatible)
+    const snapshots = await prisma.cycleSnapshot.findMany({ where, orderBy });
 
     return snapshots.map((snapshot) => ({
       cycleNumber: snapshot.cycleNumber,

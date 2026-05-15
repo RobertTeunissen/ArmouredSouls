@@ -132,11 +132,11 @@ describe('Changelog Routes', () => {
       stableName: 'Test Stable',
     });
     // Default service responses
-    mockChangelogService.listPublished.mockResolvedValue({ entries: [], total: 0, page: 1, perPage: 20 });
+    mockChangelogService.listPublished.mockResolvedValue({ entries: [], total: 0, page: 1, pageSize: 20 });
     mockChangelogService.getUnread.mockResolvedValue([]);
     mockChangelogService.getUnreadCount.mockResolvedValue(0);
     mockChangelogService.dismiss.mockResolvedValue(undefined);
-    mockChangelogService.listAll.mockResolvedValue({ entries: [], total: 0, page: 1, perPage: 20 });
+    mockChangelogService.listAll.mockResolvedValue({ entries: [], total: 0, page: 1, pageSize: 20 });
     mockChangelogService.create.mockResolvedValue({ id: 1, ...VALID_ENTRY, status: 'draft' });
     mockChangelogService.update.mockResolvedValue({ id: 1, ...VALID_ENTRY, status: 'draft' });
     mockChangelogService.delete.mockResolvedValue(undefined);

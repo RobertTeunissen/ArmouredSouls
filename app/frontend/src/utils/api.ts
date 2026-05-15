@@ -57,6 +57,15 @@ export const api = {
     }
   },
 
+  async patch<T>(url: string, data?: unknown): Promise<T> {
+    try {
+      const response = await apiClient.patch<T>(url, data);
+      return response.data;
+    } catch (err) {
+      handleError(err);
+    }
+  },
+
   async delete<T>(url: string): Promise<T> {
     try {
       const response = await apiClient.delete<T>(url);

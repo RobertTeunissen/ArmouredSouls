@@ -215,7 +215,7 @@ router.get('/leagues/:tier/standings', authenticateToken, validateRequest({ para
 
   res.json({
     standings: formattedStandings,
-    pagination: { page, perPage, total, totalPages, hasMore: endIndex < total },
+    pagination: { page, pageSize: perPage, total, totalPages, hasMore: endIndex < total },
     tier,
   });
 });

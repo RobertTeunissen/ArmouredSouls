@@ -74,43 +74,6 @@ const resetLimiter = rateLimit({
 });
 
 /**
- * Shared error handler for onboarding routes.
- * Produces a consistent JSON envelope with machine-readable `code`.
- */
-function handleOnboardingError(
-  res: Response,
-  error: unknown,
-  context: string,
-  userId?: number,
-): void {
-  if (error instanceof OnboardingError) {
-    logger.warn(`${context}: ${error.message}`, {
-      code: error.code,
-      userId,
-      details: error.details,
-    });
-    res.status(error.statusCode).json({
-      success: false,
-      error: error.message,
-      code: error.code,
-      ...(error.details !== undefined && { details: error.details }),
-    });
-    return;
-  }
-
-  logger.error(context, {
-    error: error instanceof Error ? error.message : String(error),
-    stack: error instanceof Error ? error.stack : undefined,
-    userId,
-  });
-  res.status(500).json({
-    success: false,
-    error: 'Internal server error',
-    code: OnboardingErrorCode.ONBOARDING_INTERNAL_ERROR,
-  });
-}
-
-/**
  * GET /api/onboarding/state
  *
  * Get the current tutorial state for the authenticated user.
@@ -130,32 +93,28 @@ function handleOnboardingError(
  * Requirements: 1.3, 1.4
  */
 router.get('/state', authenticateToken, validateRequest({}), async (req: AuthRequest, res: Response) => {
-  try {
-    const userId = req.user!.userId;
+  const userId = req.user!.userId;
 
-    let state = await getTutorialState(userId);
+  let state = await getTutorialState(userId);
 
-    // Auto-initialize if state not found (defensive recovery)
-    if (!state) {
-      logger.info('Auto-initializing tutorial state for user', { userId });
-      state = await initializeTutorialState(userId);
-    }
-
-    res.json({
-      success: true,
-      data: {
-        currentStep: state.onboardingStep,
-        hasCompletedOnboarding: state.hasCompletedOnboarding,
-        onboardingSkipped: state.onboardingSkipped,
-        strategy: state.onboardingStrategy,
-        choices: state.onboardingChoices,
-        startedAt: state.onboardingStartedAt,
-        completedAt: state.onboardingCompletedAt,
-      },
-    });
-  } catch (error) {
-    handleOnboardingError(res, error, 'Get onboarding state error', req.user?.userId);
+  // Auto-initialize if state not found (defensive recovery)
+  if (!state) {
+    logger.info('Auto-initializing tutorial state for user', { userId });
+    state = await initializeTutorialState(userId);
   }
+
+  res.json({
+    success: true,
+    data: {
+      currentStep: state.onboardingStep,
+      hasCompletedOnboarding: state.hasCompletedOnboarding,
+      onboardingSkipped: state.onboardingSkipped,
+      strategy: state.onboardingStrategy,
+      choices: state.onboardingChoices,
+      startedAt: state.onboardingStartedAt,
+      completedAt: state.onboardingCompletedAt,
+    },
+  });
 });
 
 /**
@@ -183,78 +142,74 @@ router.get('/state', authenticateToken, validateRequest({}), async (req: AuthReq
  * Requirements: 1.3, 2.3, 2.6, 2.7
  */
 router.post('/state', authenticateToken, validateRequest({ body: updateStateBodySchema }), async (req: AuthRequest, res: Response) => {
-  try {
-    const userId = req.user!.userId;
-    const { step, strategy, choices } = req.body;
+  const userId = req.user!.userId;
+  const { step, strategy, choices } = req.body;
 
-    // Validate step if provided (basic type check; service validates transitions)
-    if (step !== undefined) {
-      if (typeof step !== 'number' || step < 1 || step > 9) {
-        throw new OnboardingError(
-          OnboardingErrorCode.INVALID_STEP_RANGE,
-          'Step must be a number between 1 and 9',
-        );
-      }
-    }
-
-    // Validate strategy if provided
-    if (strategy !== undefined) {
-      const validStrategies = ['1_mighty', '2_average', '3_flimsy'];
-      if (!validStrategies.includes(strategy)) {
-        throw new OnboardingError(
-          OnboardingErrorCode.INVALID_STRATEGY,
-          'Invalid strategy. Must be one of: 1_mighty, 2_average, 3_flimsy',
-        );
-      }
-    }
-
-    // Update tutorial state
-    const updates: Record<string, unknown> = {};
-    if (step !== undefined) {
-      updates.onboardingStep = step;
-    }
-    if (strategy !== undefined) {
-      updates.onboardingStrategy = strategy;
-    }
-
-    let state;
-    if (Object.keys(updates).length > 0) {
-      state = await updateTutorialState(userId, updates);
-    }
-
-    // Update choices if provided
-    if (choices && typeof choices === 'object') {
-      state = await updatePlayerChoices(userId, choices as Partial<OnboardingChoices>);
-    }
-
-    // If no updates, just get current state
-    if (!state) {
-      state = await getTutorialState(userId);
-    }
-
-    if (!state) {
+  // Validate step if provided (basic type check; service validates transitions)
+  if (step !== undefined) {
+    if (typeof step !== 'number' || step < 1 || step > 9) {
       throw new OnboardingError(
-        OnboardingErrorCode.TUTORIAL_STATE_NOT_FOUND,
-        'Tutorial state not found',
-        404,
+        OnboardingErrorCode.INVALID_STEP_RANGE,
+        'Step must be a number between 1 and 9',
       );
     }
-
-    res.json({
-      success: true,
-      data: {
-        currentStep: state.onboardingStep,
-        hasCompletedOnboarding: state.hasCompletedOnboarding,
-        onboardingSkipped: state.onboardingSkipped,
-        strategy: state.onboardingStrategy,
-        choices: state.onboardingChoices,
-        startedAt: state.onboardingStartedAt,
-        completedAt: state.onboardingCompletedAt,
-      },
-    });
-  } catch (error) {
-    handleOnboardingError(res, error, 'Update onboarding state error', req.user?.userId);
   }
+
+  // Validate strategy if provided
+  if (strategy !== undefined) {
+    const validStrategies = ['1_mighty', '2_average', '3_flimsy'];
+    if (!validStrategies.includes(strategy)) {
+      throw new OnboardingError(
+        OnboardingErrorCode.INVALID_STRATEGY,
+        'Invalid strategy. Must be one of: 1_mighty, 2_average, 3_flimsy',
+      );
+    }
+  }
+
+  // Update tutorial state
+  const updates: Record<string, unknown> = {};
+  if (step !== undefined) {
+    updates.onboardingStep = step;
+  }
+  if (strategy !== undefined) {
+    updates.onboardingStrategy = strategy;
+  }
+
+  let state;
+  if (Object.keys(updates).length > 0) {
+    state = await updateTutorialState(userId, updates);
+  }
+
+  // Update choices if provided
+  if (choices && typeof choices === 'object') {
+    state = await updatePlayerChoices(userId, choices as Partial<OnboardingChoices>);
+  }
+
+  // If no updates, just get current state
+  if (!state) {
+    state = await getTutorialState(userId);
+  }
+
+  if (!state) {
+    throw new OnboardingError(
+      OnboardingErrorCode.TUTORIAL_STATE_NOT_FOUND,
+      'Tutorial state not found',
+      404,
+    );
+  }
+
+  res.json({
+    success: true,
+    data: {
+      currentStep: state.onboardingStep,
+      hasCompletedOnboarding: state.hasCompletedOnboarding,
+      onboardingSkipped: state.onboardingSkipped,
+      strategy: state.onboardingStrategy,
+      choices: state.onboardingChoices,
+      startedAt: state.onboardingStartedAt,
+      completedAt: state.onboardingCompletedAt,
+    },
+  });
 });
 
 /**
@@ -275,31 +230,27 @@ router.post('/state', authenticateToken, validateRequest({ body: updateStateBody
  * Requirements: 1.5, 2.3, 13.15
  */
 router.post('/complete', authenticateToken, validateRequest({}), async (req: AuthRequest, res: Response) => {
+  const userId = req.user!.userId;
+
+  await completeTutorial(userId);
+
+  logger.info('Tutorial completed', { userId });
+
+  let achievementUnlocks: UnlockedAchievement[] = [];
   try {
-    const userId = req.user!.userId;
-
-    await completeTutorial(userId);
-
-    logger.info('Tutorial completed', { userId });
-
-    let achievementUnlocks: UnlockedAchievement[] = [];
-    try {
-      achievementUnlocks = await achievementService.checkAndAward(userId, null, {
-        type: 'onboarding_complete',
-        data: {},
-      });
-    } catch { /* achievement failures don't block */ }
-
-    res.json({
-      success: true,
-      data: {
-        message: 'Tutorial completed',
-      },
-      achievementUnlocks,
+    achievementUnlocks = await achievementService.checkAndAward(userId, null, {
+      type: 'onboarding_complete',
+      data: {},
     });
-  } catch (error) {
-    handleOnboardingError(res, error, 'Complete tutorial error', req.user?.userId);
-  }
+  } catch { /* achievement failures don't block */ }
+
+  res.json({
+    success: true,
+    data: {
+      message: 'Tutorial completed',
+    },
+    achievementUnlocks,
+  });
 });
 
 /**
@@ -320,22 +271,18 @@ router.post('/complete', authenticateToken, validateRequest({}), async (req: Aut
  * Requirements: 1.6
  */
 router.post('/skip', authenticateToken, validateRequest({}), async (req: AuthRequest, res: Response) => {
-  try {
-    const userId = req.user!.userId;
+  const userId = req.user!.userId;
 
-    await skipTutorial(userId);
+  await skipTutorial(userId);
 
-    logger.info('Tutorial skipped', { userId });
+  logger.info('Tutorial skipped', { userId });
 
-    res.json({
-      success: true,
-      data: {
-        message: 'Tutorial skipped',
-      },
-    });
-  } catch (error) {
-    handleOnboardingError(res, error, 'Skip tutorial error', req.user?.userId);
-  }
+  res.json({
+    success: true,
+    data: {
+      message: 'Tutorial skipped',
+    },
+  });
 });
 
 /**
@@ -364,50 +311,46 @@ router.post('/skip', authenticateToken, validateRequest({}), async (req: AuthReq
  * // Blocked by scheduled battles
  * POST /api/onboarding/reset-account
  * { "confirmation": "RESET" }
- * // → 400 { success: false, error: "Cannot reset - you have scheduled battles" }
+ * // → 400 { error: "Cannot reset - you have scheduled battles", code: "RESET_BLOCKED" }
  *
  * Requirements: 14.1-14.15
  */
 router.post('/reset-account', authenticateToken, resetLimiter, validateRequest({ body: resetAccountBodySchema }), async (req: AuthRequest, res: Response) => {
-  try {
-    const userId = req.user!.userId;
-    const { confirmation, reason } = req.body;
+  const userId = req.user!.userId;
+  const { confirmation, reason } = req.body;
 
-    // Validate confirmation
-    if (confirmation !== 'RESET') {
-      throw new OnboardingError(
-        OnboardingErrorCode.RESET_INVALID_CONFIRMATION,
-        'Invalid confirmation. Type "RESET" to confirm account reset',
-      );
-    }
-
-    // Validate reset eligibility
-    const eligibility = await validateResetEligibility(userId);
-
-    if (!eligibility.eligible) {
-      const blockerMessages = eligibility.blockers.map(b => b.message).join('; ');
-      throw new OnboardingError(
-        OnboardingErrorCode.RESET_BLOCKED,
-        blockerMessages,
-        400,
-        { blockers: eligibility.blockers.map(b => b.type) },
-      );
-    }
-
-    // Perform reset
-    await performAccountReset(userId, reason);
-
-    logger.info('Account reset', { userId, reason });
-
-    res.json({
-      success: true,
-      data: {
-        message: 'Account reset successfully',
-      },
-    });
-  } catch (error) {
-    handleOnboardingError(res, error, 'Reset account error', req.user?.userId);
+  // Validate confirmation
+  if (confirmation !== 'RESET') {
+    throw new OnboardingError(
+      OnboardingErrorCode.RESET_INVALID_CONFIRMATION,
+      'Invalid confirmation. Type "RESET" to confirm account reset',
+    );
   }
+
+  // Validate reset eligibility
+  const eligibility = await validateResetEligibility(userId);
+
+  if (!eligibility.eligible) {
+    const blockerMessages = eligibility.blockers.map(b => b.message).join('; ');
+    throw new OnboardingError(
+      OnboardingErrorCode.RESET_BLOCKED,
+      blockerMessages,
+      400,
+      { blockers: eligibility.blockers.map(b => b.type) },
+    );
+  }
+
+  // Perform reset
+  await performAccountReset(userId, reason);
+
+  logger.info('Account reset', { userId, reason });
+
+  res.json({
+    success: true,
+    data: {
+      message: 'Account reset successfully',
+    },
+  });
 });
 
 /**
@@ -433,22 +376,18 @@ router.post('/reset-account', authenticateToken, resetLimiter, validateRequest({
  * Requirements: 14.4-14.8
  */
 router.get('/reset-eligibility', authenticateToken, validateRequest({}), async (req: AuthRequest, res: Response) => {
-  try {
-    const userId = req.user!.userId;
+  const userId = req.user!.userId;
 
-    const eligibility = await validateResetEligibility(userId);
+  const eligibility = await validateResetEligibility(userId);
 
-    res.json({
-      success: true,
-      data: {
-        canReset: eligibility.eligible,
-        reason: eligibility.eligible ? undefined : eligibility.blockers.map(b => b.message).join('; '),
-        blockers: eligibility.eligible ? undefined : eligibility.blockers.map(b => b.type),
-      },
-    });
-  } catch (error) {
-    handleOnboardingError(res, error, 'Check reset eligibility error', req.user?.userId);
-  }
+  res.json({
+    success: true,
+    data: {
+      canReset: eligibility.eligible,
+      reason: eligibility.eligible ? undefined : eligibility.blockers.map(b => b.message).join('; '),
+      blockers: eligibility.eligible ? undefined : eligibility.blockers.map(b => b.type),
+    },
+  });
 });
 
 // Mount analytics sub-router at /api/onboarding/analytics

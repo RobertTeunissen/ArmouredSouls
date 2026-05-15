@@ -70,7 +70,7 @@ export function loadEnvConfig(): EnvConfig {
 
   const corsOriginRaw = process.env.CORS_ORIGIN || '';
   const corsOrigins = nodeEnv === 'development'
-    ? ['*']
+    ? ['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173', 'http://127.0.0.1:3000']
     : corsOriginRaw.split(',').map(o => o.trim()).filter(Boolean);
 
   return {

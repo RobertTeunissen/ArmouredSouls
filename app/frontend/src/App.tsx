@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -11,30 +11,32 @@ import RobotsPage from './pages/RobotsPage';
 import CreateRobotPage from './pages/CreateRobotPage';
 import RobotDetailPage from './pages/RobotDetailPage';
 import WeaponShopPage from './pages/WeaponShopPage';
-import BattleHistoryPage from './pages/BattleHistoryPage';
-import BattleDetailPage from './pages/BattleDetailPage';
 import LeagueStandingsPage from './pages/LeagueStandingsPage';
-import KothStandingsPage from './pages/KothStandingsPage';
-import LeaderboardsFamePage from './pages/LeaderboardsFamePage';
-import LeaderboardsPrestigePage from './pages/LeaderboardsPrestigePage';
-import LeaderboardsLossesPage from './pages/LeaderboardsLossesPage';
-import FinancialReportPage from './pages/FinancialReportPage';
-import HallOfRecordsPage from './pages/HallOfRecordsPage';
-import TournamentsPage from './pages/TournamentsPage';
-import TournamentDetailPage from './pages/TournamentDetailPage';
 import TagTeamManagementPage from './pages/TagTeamManagementPage';
-import TagTeamStandingsPage from './pages/TagTeamStandingsPage';
-import ProfilePage from './pages/ProfilePage';
-import CycleSummaryPage from './pages/CycleSummaryPage';
+import TournamentsPage from './pages/TournamentsPage';
 import OnboardingPage from './pages/OnboardingPage';
-import GuidePage from './pages/GuidePage';
-import PracticeArenaPage from './pages/PracticeArenaPage';
-import StableViewPage from './pages/StableViewPage';
-import ChangelogPage from './pages/ChangelogPage';
-import AchievementsPage from './pages/AchievementsPage';
 import { useAchievementToasts } from './hooks/useAchievementToasts';
 import AchievementToast from './components/AchievementToast';
 import AppErrorBoundary from './components/AppErrorBoundary';
+
+// Lazy-loaded player pages (infrequently visited)
+const HallOfRecordsPage = React.lazy(() => import('./pages/HallOfRecordsPage'));
+const TournamentDetailPage = React.lazy(() => import('./pages/TournamentDetailPage'));
+const BattleDetailPage = React.lazy(() => import('./pages/BattleDetailPage'));
+const BattleHistoryPage = React.lazy(() => import('./pages/BattleHistoryPage'));
+const AchievementsPage = React.lazy(() => import('./pages/AchievementsPage'));
+const PracticeArenaPage = React.lazy(() => import('./pages/PracticeArenaPage'));
+const CycleSummaryPage = React.lazy(() => import('./pages/CycleSummaryPage'));
+const FinancialReportPage = React.lazy(() => import('./pages/FinancialReportPage'));
+const StableViewPage = React.lazy(() => import('./pages/StableViewPage'));
+const KothStandingsPage = React.lazy(() => import('./pages/KothStandingsPage'));
+const TagTeamStandingsPage = React.lazy(() => import('./pages/TagTeamStandingsPage'));
+const LeaderboardsFamePage = React.lazy(() => import('./pages/LeaderboardsFamePage'));
+const LeaderboardsLossesPage = React.lazy(() => import('./pages/LeaderboardsLossesPage'));
+const LeaderboardsPrestigePage = React.lazy(() => import('./pages/LeaderboardsPrestigePage'));
+const ChangelogPage = React.lazy(() => import('./pages/ChangelogPage'));
+const GuidePage = React.lazy(() => import('./pages/GuidePage'));
+const ProfilePage = React.lazy(() => import('./pages/ProfilePage'));
 
 // Lazy-loaded admin pages
 const AdminDashboardPage = React.lazy(() => import('./pages/admin/DashboardPage'));
@@ -54,6 +56,15 @@ const AdminTuningAdoptionPage = React.lazy(() => import('./pages/admin/TuningAdo
 const AdminRepairLogPage = React.lazy(() => import('./pages/admin/RepairLogPage'));
 const AdminAuditLogPage = React.lazy(() => import('./pages/admin/AuditLogPage'));
 const AdminLeagueHistoryPage = React.lazy(() => import('./pages/admin/LeagueHistoryPage'));
+
+// Loading fallback for lazy-loaded player pages
+function PageLoader() {
+  return (
+    <div className="flex items-center justify-center min-h-[50vh]">
+      <div className="text-secondary">Loading...</div>
+    </div>
+  );
+}
 
 function AchievementToastLayer() {
   const location = useLocation();
@@ -80,6 +91,7 @@ function AppRoutes() {
   const isAdmin = user?.role === 'admin';
 
   return (
+    <Suspense fallback={<PageLoader />}>
     <Routes>
       <Route path="/login" element={<FrontPage />} />
       <Route path="/onboarding" element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />
@@ -137,6 +149,7 @@ function AppRoutes() {
       )}
       <Route path="/" element={<FrontPage />} />
     </Routes>
+    </Suspense>
   );
 }
 

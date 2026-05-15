@@ -279,6 +279,7 @@ function CycleControlsPage() {
         includeTournaments,
         generateUsersPerCycle,
         includeKoth,
+        includeDailyFinances,
       });
       setBulkResults(response.data);
 
@@ -309,7 +310,7 @@ function CycleControlsPage() {
     } finally {
       setLoading(false);
     }
-  }, [bulkCycles, includeTournaments, includeKoth, generateUsersPerCycle, addSessionLog, refreshUser]);
+  }, [bulkCycles, includeTournaments, includeKoth, includeDailyFinances, generateUsersPerCycle, addSessionLog, refreshUser]);
 
   /* ---------- Confirmation dialog handler ---------- */
 

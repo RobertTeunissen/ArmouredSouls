@@ -27,6 +27,7 @@ export interface BulkCycleOptions {
   generateUsersPerCycle?: boolean;
   includeTournaments?: boolean;
   includeKoth?: boolean;
+  includeDailyFinances?: boolean;
 }
 
 /** Per-cycle result entry. */
@@ -57,6 +58,7 @@ export interface BulkCycleResult {
   totalCyclesInSystem: number;
   includeTournaments: boolean;
   includeKoth: boolean;
+  includeDailyFinances: boolean;
   generateUsersPerCycleEnabled: boolean;
   totalDuration: number;
   averageCycleDuration: number;
@@ -77,6 +79,7 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
     generateUsersPerCycle = false,
     includeTournaments = true,
     includeKoth = true,
+    includeDailyFinances = true,
   } = options;
 
   const maxCycles = 100;
@@ -459,15 +462,22 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
       // Step 11: Calculate and Log Passive Income & Operating Costs
       logger.info(`[Admin] Step 11: Calculate Passive Income & Operating Costs`);
       const step11Start = Date.now();
+
+      let totalPassiveIncome = 0;
+      let totalOperatingCosts = 0;
+      let financesUsersProcessed = 0;
+
+      if (includeDailyFinances) {
       const { calculateDailyPassiveIncome, calculateFacilityOperatingCost } = await import('../../utils/economyCalculations');
 
       const allUsers = await prisma.user.findMany({
         where: { NOT: { username: 'bye_robot_user' } },
         select: { id: true, prestige: true },
       });
+      financesUsersProcessed = allUsers.length;
 
-      let totalPassiveIncome = 0;
-      let totalOperatingCosts = 0;
+      // Collect all currency updates to batch in a single transaction
+      const currencyUpdates: Array<ReturnType<typeof prisma.user.update>> = [];
 
       for (const user of allUsers) {
         const passiveIncome = await calculateDailyPassiveIncome(user.id);
@@ -523,11 +533,6 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
             totalFame
           );
 
-          await prisma.user.update({
-            where: { id: user.id },
-            data: { currency: { increment: passiveIncome.total } },
-          });
-
           totalPassiveIncome += passiveIncome.total;
         }
 
@@ -539,24 +544,31 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
             totalCost
           );
 
-          const _userBeforeDeduction = await prisma.user.findUnique({
-            where: { id: user.id },
-            select: { currency: true },
-          });
-
-          await prisma.user.update({
-            where: { id: user.id },
-            data: { currency: { decrement: totalCost } },
-          });
-
           const facilityList = facilityCosts.filter(f => f.cost > 0).map(f => `${f.facilityType}(L${f.level}): ₡${f.cost}`).join(', ');
           logger.info(`[OperatingCosts] User ${user.id} | Total: ₡${totalCost.toLocaleString()} | Facilities: ${facilityList}`);
 
           totalOperatingCosts += totalCost;
         }
+
+        // Calculate net change (income - costs) and batch the update
+        const netChange = passiveIncome.total - totalCost;
+        if (netChange !== 0) {
+          currencyUpdates.push(prisma.user.update({
+            where: { id: user.id },
+            data: { currency: { increment: netChange } },
+          }));
+        }
+      }
+
+      // Execute all currency updates in a single transaction
+      if (currencyUpdates.length > 0) {
+        await prisma.$transaction(currencyUpdates);
       }
 
       logger.info(`[Admin] Passive income: ₡${totalPassiveIncome.toLocaleString()}, Operating costs: ₡${totalOperatingCosts.toLocaleString()}`);
+      } else {
+        logger.info(`[Admin] Step 11: Skipping daily finances (includeDailyFinances=false)`);
+      }
 
       await eventLogger.logCycleStepComplete(
         currentCycleNumber,
@@ -564,9 +576,10 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
         11,
         Date.now() - step11Start,
         {
-          usersProcessed: allUsers.length,
+          usersProcessed: financesUsersProcessed,
           totalPassiveIncome,
           totalOperatingCosts,
+          skipped: !includeDailyFinances,
         }
       );
 
@@ -700,6 +713,7 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
     totalCyclesInSystem: currentCycleNumber,
     includeTournaments,
     includeKoth,
+    includeDailyFinances,
     generateUsersPerCycleEnabled: generateUsersPerCycle,
     totalDuration,
     averageCycleDuration: Math.round(totalDuration / cycleCount),

@@ -79,6 +79,7 @@ const bulkCyclesBodySchema = z.object({
   generateUsersPerCycle: z.boolean().optional().default(false),
   includeTournaments: z.boolean().optional().default(true),
   includeKoth: z.boolean().optional().default(true),
+  includeDailyFinances: z.boolean().optional().default(true),
 });
 
 const battlesQuerySchema = paginationQuery.extend({
@@ -223,7 +224,6 @@ router.post('/matchmaking/run', authenticateToken, requireAdmin, validateRequest
     logger.error('[Admin] Matchmaking error:', error);
     res.status(500).json({
       error: 'Failed to run matchmaking',
-      message: error instanceof Error ? error.message : String(error),
     });
   }
 });
@@ -255,7 +255,6 @@ router.post('/battles/run', authenticateToken, requireAdmin, validateRequest({ b
     logger.error('[Admin] Battle execution error:', error);
     res.status(500).json({
       error: 'Failed to execute battles',
-      message: error instanceof Error ? error.message : String(error),
     });
   }
 });
@@ -282,7 +281,6 @@ router.post('/leagues/rebalance', authenticateToken, requireAdmin, validateReque
     logger.error('[Admin] Rebalancing error:', error);
     res.status(500).json({
       error: 'Failed to rebalance leagues',
-      message: error instanceof Error ? error.message : String(error),
     });
   }
 });
@@ -303,7 +301,6 @@ router.post('/repair/all', authenticateToken, requireAdmin, validateRequest({ bo
     logger.error('[Admin] Auto-repair error:', error);
     res.status(500).json({
       error: 'Failed to auto-repair robots',
-      message: error instanceof Error ? error.message : String(error),
     });
   }
 });
@@ -320,7 +317,6 @@ router.post('/recalculate-hp', authenticateToken, requireAdmin, validateRequest(
     logger.error('[Admin] HP recalculation error:', error);
     res.status(500).json({
       error: 'Failed to recalculate HP',
-      message: error instanceof Error ? error.message : String(error),
     });
   }
 });
@@ -352,7 +348,6 @@ router.post('/daily-finances/process', authenticateToken, requireAdmin, validate
     logger.error('[Admin] Daily finances error:', error);
     res.status(500).json({
       error: 'Failed to process daily finances',
-      message: error instanceof Error ? error.message : String(error),
     });
   }
 });
@@ -374,7 +369,6 @@ router.post('/cycles/bulk', authenticateToken, requireAdmin, validateRequest({ b
     logger.error('[Admin] Bulk cycles error:', error);
     res.status(500).json({
       error: 'Failed to run bulk cycles',
-      message: error instanceof Error ? error.message : String(error),
     });
   }
 });
@@ -398,7 +392,6 @@ router.post('/snapshots/backfill', authenticateToken, requireAdmin, validateRequ
     logger.error('[Admin] Backfill snapshots error:', error);
     res.status(500).json({
       error: 'Failed to backfill snapshots',
-      message: error instanceof Error ? error.message : String(error),
     });
   }
 });
@@ -417,7 +410,6 @@ router.get('/stats', authenticateToken, requireAdmin, validateRequest({ query: s
     logger.error('[Admin] Stats error:', error);
     res.status(500).json({
       error: 'Failed to retrieve stats',
-      message: error instanceof Error ? error.message : String(error),
     });
   }
 });
@@ -434,7 +426,6 @@ router.get('/users/at-risk', authenticateToken, requireAdmin, validateRequest({}
     logger.error('[Admin] At-risk users error:', error);
     res.status(500).json({
       error: 'Failed to retrieve at-risk users',
-      message: error instanceof Error ? error.message : String(error),
     });
   }
 });
@@ -461,7 +452,6 @@ router.get('/battles', authenticateToken, requireAdmin, validateRequest({ query:
     logger.error('[Admin] Battles list error:', error);
     res.status(500).json({
       error: 'Failed to retrieve battles',
-      message: error instanceof Error ? error.message : String(error),
     });
   }
 });
@@ -485,7 +475,6 @@ router.get('/battles/:id', authenticateToken, requireAdmin, validateRequest({ pa
     logger.error('[Admin] Battle detail error:', error);
     res.status(500).json({
       error: 'Failed to retrieve battle details',
-      message: error instanceof Error ? error.message : String(error),
     });
   }
 });
@@ -506,7 +495,6 @@ router.get('/stats/robots', authenticateToken, requireAdmin, validateRequest({})
     logger.error('[Admin] Robot stats error:', error);
     res.status(500).json({
       error: 'Failed to retrieve robot statistics',
-      message: error instanceof Error ? error.message : String(error),
     });
   }
 });
@@ -537,7 +525,6 @@ router.post('/tag-teams/matchmaking', authenticateToken, requireAdmin, validateR
     logger.error('[Admin] Tag team matchmaking error:', error);
     res.status(500).json({
       error: 'Failed to run tag team matchmaking',
-      message: error instanceof Error ? error.message : String(error),
     });
   }
 });
@@ -567,7 +554,6 @@ router.post('/tag-teams/battles', authenticateToken, requireAdmin, validateReque
     logger.error('[Admin] Tag team battle execution error:', error);
     res.status(500).json({
       error: 'Failed to execute tag team battles',
-      message: error instanceof Error ? error.message : String(error),
     });
   }
 });
@@ -594,7 +580,6 @@ router.post('/tag-teams/rebalance', authenticateToken, requireAdmin, validateReq
     logger.error('[Admin] Tag team rebalancing error:', error);
     res.status(500).json({
       error: 'Failed to rebalance tag team leagues',
-      message: error instanceof Error ? error.message : String(error),
     });
   }
 });
@@ -680,7 +665,6 @@ router.post('/koth/trigger', authenticateToken, requireAdmin, validateRequest({}
     logger.error('[Admin] KotH trigger error:', error);
     res.status(500).json({
       error: 'Failed to trigger KotH cycle',
-      message: error instanceof Error ? error.message : String(error),
     });
   }
 });

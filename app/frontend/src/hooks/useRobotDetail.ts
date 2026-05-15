@@ -6,6 +6,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import apiClient from '../utils/apiClient';
+import { fetchRobotById } from '../utils/robotApi';
 import { useRobotStore } from '../stores';
 import { useAuth } from '../contexts/AuthContext';
 import { getMatchHistory } from '../utils/matchmakingApi';
@@ -167,8 +168,7 @@ export function useRobotDetail(robotId: string | undefined): UseRobotDetailResul
     if (!robotId) return;
 
     try {
-      const robotResponse = await apiClient.get(`/api/robots/${robotId}`);
-      const robotData = robotResponse.data;
+      const robotData = await fetchRobotById(parseInt(robotId)) as unknown as Robot;
       setRobot(robotData);
 
       // Fetch league rank (non-blocking)

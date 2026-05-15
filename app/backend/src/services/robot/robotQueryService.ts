@@ -95,7 +95,7 @@ export interface PaginatedMatchesResult {
     thisRobot: { finalHP: number; damageDealt: number; eloBefore: number; eloAfter: number };
     opponent: { id: number; name: string; owner: string; finalHP: number; damageDealt: number };
   }>;
-  pagination: { page: number; perPage: number; total: number; totalPages: number };
+  pagination: { page: number; pageSize: number; total: number; totalPages: number };
   robot: { id: number; name: string };
 }
 
@@ -157,7 +157,7 @@ export async function getMatchHistory(
 
   return {
     data,
-    pagination: { page, perPage, total, totalPages: Math.ceil(total / perPage) },
+    pagination: { page, pageSize: perPage, total, totalPages: Math.ceil(total / perPage) },
     robot: { id: robotId, name: robotName },
   };
 }

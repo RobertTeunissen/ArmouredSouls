@@ -453,11 +453,11 @@ export function useWeaponShop() {
     }
   };
 
-  const groupedWeapons = {
+  const groupedWeapons = useMemo(() => ({
     shield: processedWeapons.filter(w => w.loadoutType === 'weapon_shield' && w.weaponType === 'shield'),
     two_handed: processedWeapons.filter(w => w.loadoutType === 'two_handed'),
     one_handed: processedWeapons.filter(w => w.loadoutType === 'single'),
-  };
+  }), [processedWeapons]);
 
   return {
     user,

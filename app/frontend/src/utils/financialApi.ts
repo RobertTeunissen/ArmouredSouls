@@ -39,6 +39,7 @@ export interface FinancialReport {
       facilityType: string;
       facilityName: string;
       cost: number;
+      level?: number;
     }>;
     repairs: number;
     total: number;
@@ -73,10 +74,8 @@ export interface FinancialReport {
   };
 }
 
-export const getDailyFinancialReport = async (
-  battleWinnings: number = 0
-): Promise<FinancialReport> => {
-  return api.get<FinancialReport>(`/api/finances/daily?battleWinnings=${battleWinnings}`);
+export const getDailyFinancialReport = async (): Promise<FinancialReport> => {
+  return api.get<FinancialReport>('/api/finances/daily');
 };
 
 /**
@@ -238,28 +237,3 @@ export const getPerRobotFinancialReport = async (): Promise<PerRobotFinancialRep
   return api.get<PerRobotFinancialReport>('/api/finances/per-robot');
 };
 
-/**
- * Facility ROI Calculator
- */
-export interface FacilityROIData {
-  currentLevel: number;
-  targetLevel: number;
-  upgradeCost: number;
-  dailyCostIncrease: number;
-  dailyBenefitIncrease: number;
-  netDailyChange: number;
-  breakevenDays: number | null;
-  net30Days: number;
-  net90Days: number;
-  net180Days: number;
-  affordable: boolean;
-  recommendation: string;
-  recommendationType: 'excellent' | 'good' | 'neutral' | 'poor' | 'not_affordable';
-}
-
-export const calculateFacilityROI = async (
-  facilityType: string,
-  targetLevel: number
-): Promise<FacilityROIData> => {
-  return api.post<FacilityROIData>('/api/finances/roi-calculator', { facilityType, targetLevel });
-};

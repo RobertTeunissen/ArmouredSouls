@@ -129,7 +129,7 @@ export function verifyToken(token: string): TokenPayload | null {
 
   try {
     const secret = getJwtSecret();
-    const decoded = jwt.verify(token, secret) as TokenPayload;
+    const decoded = jwt.verify(token, secret, { algorithms: ['HS256'] }) as TokenPayload;
     return decoded;
   } catch {
     // Swallow verification errors (expired, malformed, bad signature) and

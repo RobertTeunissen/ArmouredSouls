@@ -1,7 +1,7 @@
 import { Robot, Prisma } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
-import { checkTeamSchedulingReadiness, calculateCombinedELO, TagTeamWithRobots } from './tagTeamService';
+import { checkTeamSchedulingReadiness, TagTeamWithRobots } from './tagTeamService';
 import { TAG_TEAM_LEAGUE_TIERS } from './tagTeamLeagueInstanceService';
 
 
@@ -102,34 +102,61 @@ export async function getEligibleTeams(
 }
 
 /**
- * Get recent opponents for a team (last N matches)
+ * Batch-fetch recent opponents for all teams in a single query.
+ * Mirrors the pattern from league matchmaking's getRecentOpponentsBatch.
+ *
+ * NOTE: With skewed match volume, some teams may get fewer than `limit` recent opponents.
+ * This is acceptable for matchmaking — recent opponent avoidance is a soft preference,
+ * not a hard constraint. The penalty score still works correctly with partial data.
  */
-async function getRecentOpponents(teamId: number, limit: number = TAG_TEAM_RECENT_OPPONENT_LIMIT): Promise<number[]> {
-  // Get recent tag team matches where this team participated
+async function getRecentOpponentsBatch(
+  teamIds: number[],
+  limit: number = TAG_TEAM_RECENT_OPPONENT_LIMIT
+): Promise<Map<number, number[]>> {
+  if (teamIds.length === 0) return new Map();
+
+  // Single query to get recent completed matches for all teams
   const recentMatches = await prisma.scheduledTagTeamMatch.findMany({
     where: {
       status: 'completed',
       OR: [
-        { team1Id: teamId },
-        { team2Id: teamId },
+        { team1Id: { in: teamIds } },
+        { team2Id: { in: teamIds } },
       ],
     },
-    orderBy: {
-      createdAt: 'desc',
-    },
-    take: limit,
+    orderBy: { createdAt: 'desc' },
+    // Fetch enough matches to cover all teams (worst case: each team has `limit` unique matches)
+    take: teamIds.length * limit,
     select: {
       team1Id: true,
       team2Id: true,
     },
   });
 
-  // Extract opponent IDs (filter out nulls from bye matches)
-  const opponentIds = recentMatches
-    .map(match => match.team1Id === teamId ? match.team2Id : match.team1Id)
-    .filter((id): id is number => id !== null);
+  // Build per-team opponent lists from the batch result
+  const map = new Map<number, number[]>();
+  for (const teamId of teamIds) {
+    const opponents: number[] = [];
+    for (const match of recentMatches) {
+      if (opponents.length >= limit) break;
+      if (match.team1Id === teamId && match.team2Id !== null) {
+        opponents.push(match.team2Id);
+      } else if (match.team2Id === teamId) {
+        opponents.push(match.team1Id);
+      }
+    }
+    map.set(teamId, opponents);
+  }
 
-  return opponentIds;
+  return map;
+}
+
+/**
+ * Calculate combined ELO from in-memory team data (no DB query needed).
+ * The team must already have activeRobot and reserveRobot included.
+ */
+function calculateCombinedELOFromTeam(team: TagTeamWithRobots): number {
+  return team.activeRobot.elo + team.reserveRobot.elo;
 }
 
 /**
@@ -343,21 +370,14 @@ export async function pairTeams(teams: TagTeamWithRobots[]): Promise<TagTeamMatc
   const matches: TagTeamMatchPair[] = [];
   const availableTeams = [...teams]; // Copy array
 
-  // Pre-calculate combined ELO for all teams
+  // Pre-calculate combined ELO for all teams from in-memory data (no DB queries)
   const combinedELOMap = new Map<number, number>();
   for (const team of teams) {
-    const combinedELO = await calculateCombinedELO(team.id);
-    combinedELOMap.set(team.id, combinedELO);
+    combinedELOMap.set(team.id, calculateCombinedELOFromTeam(team));
   }
 
-  // Pre-fetch recent opponents for all teams
-  const recentOpponentsMap = new Map<number, number[]>();
-  await Promise.all(
-    teams.map(async team => {
-      const opponents = await getRecentOpponents(team.id);
-      recentOpponentsMap.set(team.id, opponents);
-    })
-  );
+  // Batch-fetch recent opponents for all teams in a single query
+  const recentOpponentsMap = await getRecentOpponentsBatch(teams.map(t => t.id));
 
   // Pair teams using greedy algorithm
   while (availableTeams.length > 1) {

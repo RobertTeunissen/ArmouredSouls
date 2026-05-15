@@ -58,11 +58,27 @@ export interface PlaybackCombatEvent {
   };
 }
 
+/** Per-robot final state snapshot (used by practice arena history) */
+export interface RobotFinalState {
+  hp: number;
+  shield: number;
+  damageDealt: number;
+  damageTaken: number;
+}
+
 /** Combat result from the backend (subset of fields needed for playback) */
 export interface PlaybackCombatResult {
   winnerId: number | null;
   robot1FinalHP: number;
   robot2FinalHP: number;
+  robot1FinalShield?: number;
+  robot2FinalShield?: number;
+  robot1Damage?: number;
+  robot2Damage?: number;
+  robot1DamageDealt?: number;
+  robot2DamageDealt?: number;
+  /** Mapped from backend array to Record<robotName, state> by the practice arena hook */
+  finalStates?: Record<string, RobotFinalState>;
   durationSeconds: number;
   isDraw: boolean;
   events: PlaybackCombatEvent[];

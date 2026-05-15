@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import apiClient from '../utils/apiClient';
+import { fetchMyRobots } from '../utils/robotApi';
 import LogoB from '../assets/logos/logo-b.svg?react';
 import HomeIcon from '../assets/icons/home.svg?react';
 import RobotIcon from '../assets/icons/robot.svg?react';
@@ -23,8 +23,8 @@ function Navigation() {
   useEffect(() => {
     const fetchRobots = async () => {
       try {
-        const response = await apiClient.get('/api/robots');
-        setUserRobots(response.data.map((robot: { id: number; name: string }) => ({ id: robot.id, name: robot.name })));
+        const robots = await fetchMyRobots();
+        setUserRobots(robots.map((robot: { id: number; name: string }) => ({ id: robot.id, name: robot.name })));
       } catch {
         // Silently handle fetch failure
       }

@@ -31,7 +31,7 @@ const router = express.Router();
 
 const registerBodySchema = z.object({
   username: z.string().min(3).max(20).regex(/^[a-zA-Z0-9_-]+$/, 'Username can only contain letters, numbers, underscores, and hyphens'),
-  email: z.string().min(3).max(50),
+  email: z.string().min(3).max(50).email('Please provide a valid email address'),
   password: z.string().min(8).max(128),
   stableName: stableNameSchema,
 });
@@ -40,7 +40,10 @@ const loginBodySchema = z.object({
   identifier: z.string().min(1).max(50).optional(),
   username: z.string().min(1).max(50).optional(),
   password: z.string().min(1).max(128),
-});
+}).refine(
+  (data) => data.identifier || data.username,
+  { message: 'Either identifier or username must be provided', path: ['identifier'] }
+);
 
 /**
  * POST /api/auth/register

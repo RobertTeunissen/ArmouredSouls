@@ -247,8 +247,6 @@ export const getMatchHistory = async (
     params.robotId = robotId;
   }
   
-  console.log('[API] getMatchHistory params:', params);
-  
   return api.get<PaginatedResponse<BattleHistory>>('/api/matches/history', params);
 };
 
@@ -267,21 +265,6 @@ export const getLeagueStandings = async (
 
 export const getLeagueInstances = async (tier: string): Promise<LeagueInstance[]> => {
   return api.get<LeagueInstance[]>(`/api/leagues/${tier}/instances`);
-};
-
-export const getRobotMatches = async (
-  robotId: number,
-  page: number = 1,
-  pageSize: number = 10
-): Promise<PaginatedResponse<BattleHistory>> => {
-  return api.get<PaginatedResponse<BattleHistory>>(`/api/robots/${robotId}/matches`, {
-    page,
-    perPage: pageSize,
-  });
-};
-
-export const getRobotUpcomingMatches = async (robotId: number): Promise<ScheduledMatch[]> => {
-  return api.get<ScheduledMatch[]>(`/api/robots/${robotId}/upcoming`);
 };
 
 // Re-export tier helpers from single source of truth

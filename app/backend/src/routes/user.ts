@@ -9,6 +9,7 @@ import { AppError } from '../errors/AppError';
 import { validateRequest } from '../middleware/schemaValidator';
 import { stableName as stableNameSchema } from '../utils/securityValidation';
 import { generateToken } from '../services/auth/jwtService';
+import { hashPassword } from '../services/auth/passwordService';
 import { getUserProfile, getStableStats } from '../services/auth/userProfileService';
 import type { Prisma } from '../../generated/prisma';
 
@@ -109,8 +110,8 @@ router.put('/profile', authenticateToken, validateRequest({ body: profileUpdateB
       if (!passwordValidation.valid) {
         validationErrors.newPassword = passwordValidation.error!;
       } else {
-        // Hash new password
-        hashedPassword = await bcrypt.hash(newPassword, 10);
+        // Hash new password using centralized service (respects BCRYPT_SALT_ROUNDS env var)
+        hashedPassword = await hashPassword(newPassword);
       }
     }
   }

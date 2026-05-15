@@ -127,7 +127,7 @@ export async function recordTierChange(params: RecordTierChangeParams): Promise<
  */
 export async function getHistoryByCycleRange(params: LeagueHistoryQueryParams): Promise<{
   data: LeagueHistoryRecord[];
-  pagination: { page: number; perPage: number; total: number; totalPages: number };
+  pagination: { page: number; pageSize: number; total: number; totalPages: number };
 }> {
   const { startCycle, endCycle, entityType, page = 1, perPage = 50 } = params;
 
@@ -160,7 +160,7 @@ export async function getHistoryByCycleRange(params: LeagueHistoryQueryParams): 
     data: data as LeagueHistoryRecord[],
     pagination: {
       page,
-      perPage,
+      pageSize: perPage,
       total,
       totalPages: Math.ceil(total / perPage),
     },

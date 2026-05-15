@@ -35,7 +35,7 @@ export interface PaginatedResult<T> {
   entries: T[];
   total: number;
   page: number;
-  perPage: number;
+  pageSize: number;
 }
 
 class ChangelogService {
@@ -66,7 +66,7 @@ class ChangelogService {
       prisma.changelogEntry.count({ where }),
     ]);
 
-    return { entries, total, page: Math.max(page, 1), perPage: take };
+    return { entries, total, page: Math.max(page, 1), pageSize: take };
   }
 
   /**
@@ -157,7 +157,7 @@ class ChangelogService {
       prisma.changelogEntry.count(),
     ]);
 
-    return { entries, total, page: Math.max(page, 1), perPage: take };
+    return { entries, total, page: Math.max(page, 1), pageSize: take };
   }
 
   /**
