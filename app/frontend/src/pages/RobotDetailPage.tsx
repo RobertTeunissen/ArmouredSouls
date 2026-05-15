@@ -2,6 +2,16 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import apiClient from '../utils/apiClient';
+import {
+  fetchRobotById,
+  fetchRobotLeagueHistory,
+  updateAppearance,
+  commitUpgrades,
+  equipMainWeapon,
+  equipOffhandWeapon,
+  unequipMainWeapon,
+  unequipOffhandWeapon,
+} from '../utils/robotApi';
 import { useRobotStore } from '../stores';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
@@ -201,20 +211,13 @@ function RobotDetailPage() {
       }
     };
 
-    // Re-fetch when window regains focus (e.g., clicking back to this tab/window)
-    const handleFocus = () => {
-      debouncedFetch();
-    };
-
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', handleFocus);
     
     return () => {
       if (fetchTimeout) {
         clearTimeout(fetchTimeout);
       }
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleFocus);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]); // Re-fetch when robot ID changes (not on tab/location changes)
@@ -229,10 +232,8 @@ function RobotDetailPage() {
   const fetchRobotAndWeapons = async () => {
     try {
       // Fetch robot details
-      const robotResponse = await apiClient.get(`/api/robots/${id}`);
-
-      const robotData = robotResponse.data;
-      setRobot(robotData);
+      const robotData = await fetchRobotById(parseInt(id!));
+      setRobot(robotData as unknown as Robot);
 
       // Fetch league rank for this robot
       try {
@@ -362,12 +363,9 @@ function RobotDetailPage() {
     }
 
     try {
-      const response = await apiClient.put(
-        `/api/robots/${id}/appearance`,
-        { imageUrl },
-      );
+      const result = await updateAppearance(parseInt(id!), imageUrl);
 
-      setRobot(response.data.robot);
+      setRobot(result.robot as unknown as Robot);
       setSuccessMessage('Robot image updated successfully!');
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err: unknown) {
@@ -395,13 +393,10 @@ function RobotDetailPage() {
       setRobot(optimisticRobot);
 
       // Call bulk upgrades endpoint
-      const response = await apiClient.post(
-        `/api/robots/${id}/upgrades`,
-        { upgrades: upgradePlan },
-      );
+      const result = await commitUpgrades(parseInt(id!), upgradePlan);
 
       // Update state with actual robot data from server
-      setRobot(response.data.robot);
+      setRobot(result.robot as unknown as Robot);
       await refreshUser();
       
       const upgradeCount = Object.keys(upgradePlan).length;
@@ -668,24 +663,20 @@ function RobotDetailPage() {
                 setTimeout(() => setSuccessMessage(''), 3000);
               }}
               onEquipWeapon={async (slot, weaponInventoryId) => {
-                const endpoint =
-                  slot === 'main'
-                    ? `/api/robots/${id}/equip-main-weapon`
-                    : `/api/robots/${id}/equip-offhand-weapon`;
+                const result = slot === 'main'
+                  ? await equipMainWeapon(parseInt(id!), weaponInventoryId)
+                  : await equipOffhandWeapon(parseInt(id!), weaponInventoryId);
 
-                const response = await apiClient.put(endpoint, { weaponInventoryId });
-                setRobot(response.data.robot);
+                setRobot(result.robot as unknown as Robot);
                 setSuccessMessage('Weapon equipped successfully!');
                 setTimeout(() => setSuccessMessage(''), 3000);
               }}
               onUnequipWeapon={async (slot) => {
-                const endpoint =
-                  slot === 'main'
-                    ? `/api/robots/${id}/unequip-main-weapon`
-                    : `/api/robots/${id}/unequip-offhand-weapon`;
+                const result = slot === 'main'
+                  ? await unequipMainWeapon(parseInt(id!))
+                  : await unequipOffhandWeapon(parseInt(id!));
 
-                const response = await apiClient.delete(endpoint);
-                setRobot(response.data.robot);
+                setRobot(result.robot as unknown as Robot);
                 setSuccessMessage('Weapon unequipped!');
                 setTimeout(() => setSuccessMessage(''), 3000);
               }}
@@ -775,11 +766,10 @@ function LeagueHistoryTab({ robotId, currentTier }: { robotId: number; currentTi
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    apiClient
-      .get(`/api/robots/${robotId}/league-history`)
+    fetchRobotLeagueHistory(robotId)
       .then((res) => {
         if (!cancelled) {
-          const data = res.data.data || res.data;
+          const data = res.data || res;
           setHistory(
             (data as Array<{ cycleNumber: number; destinationTier: string; changeType: string; leaguePoints: number }>).map((r) => ({
               cycleNumber: r.cycleNumber,

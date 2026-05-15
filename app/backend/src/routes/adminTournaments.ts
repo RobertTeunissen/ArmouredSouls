@@ -103,7 +103,6 @@ router.get('/', authenticateToken, requireAdmin, validateRequest({ query: tourna
     logger.error('[Admin] Tournament list error:', error);
     res.status(500).json({
       error: 'Failed to fetch tournaments',
-      message: error instanceof Error ? error.message : String(error),
     });
   }
 });
@@ -116,10 +115,15 @@ router.get('/', authenticateToken, requireAdmin, validateRequest({ query: tourna
 router.get('/eligible-robots', authenticateToken, requireAdmin, validateRequest({}), async (req: Request, res: Response) => {
   try {
     const eligibleRobots = await getEligibleRobotsForTournament();
+    const totalRobots = await prisma.robot.count({
+      where: { NOT: { name: 'Bye Robot' } },
+    });
 
     res.json({
       success: true,
       eligibleRobots,
+      eligibleCount: eligibleRobots.length,
+      totalRobots,
       count: eligibleRobots.length,
       timestamp: new Date().toISOString(),
     });
@@ -127,7 +131,6 @@ router.get('/eligible-robots', authenticateToken, requireAdmin, validateRequest(
     logger.error('[Admin] Eligible robots fetch error:', error);
     res.status(500).json({
       error: 'Failed to fetch eligible robots',
-      message: error instanceof Error ? error.message : String(error),
     });
   }
 });
@@ -267,7 +270,6 @@ router.post('/:id/execute-round', authenticateToken, requireAdmin, validateReque
     logger.error('[Admin] Tournament round execution error:', error);
     res.status(500).json({
       error: 'Failed to execute tournament round',
-      message: error instanceof Error ? error.message : String(error),
     });
   }
 });

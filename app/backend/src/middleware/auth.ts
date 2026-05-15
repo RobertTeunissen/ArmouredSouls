@@ -29,7 +29,7 @@ export const authenticateToken = async (
 
   let decoded: { userId: string | number; username: string; role: string; tokenVersion?: number };
   try {
-    decoded = jwt.verify(token, jwtSecret) as typeof decoded;
+    decoded = jwt.verify(token, jwtSecret, { algorithms: ['HS256'] }) as typeof decoded;
   } catch {
     return res.status(401).json({ error: 'Invalid or expired token' });
   }

@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import axios from 'axios';
-import apiClient from '../utils/apiClient';
+import { updateStance } from '../utils/robotApi';
 
 interface StanceSelectorProps {
   robotId: number;
@@ -58,16 +57,13 @@ function StanceSelector({ robotId, currentStance, onStanceChange }: StanceSelect
     setLoading(true);
 
     try {
-      const response = await apiClient.patch(
-        `/api/robots/${robotId}/stance`,
-        { stance: newStance }
-      );
+      const result = await updateStance(robotId, newStance);
 
-      if (response.data) {
+      if (result) {
         onStanceChange(newStance);
       }
     } catch (err: unknown) {
-      setError(axios.isAxiosError(err) ? err.response?.data?.error || 'Failed to change stance' : 'Failed to change stance');
+      setError(err instanceof Error ? err.message : 'Failed to change stance');
     } finally {
       setLoading(false);
     }

@@ -7,6 +7,13 @@ import { useOnboarding } from '../../../contexts/OnboardingContext';
 import LoadoutSelector from '../../LoadoutSelector';
 import StanceSelector from '../../StanceSelector';
 import apiClient from '../../../utils/apiClient';
+import {
+  fetchMyRobots,
+  equipMainWeapon,
+  equipOffhandWeapon,
+  updateAppearance,
+  updateTuningAllocation,
+} from '../../../utils/robotApi';
 import { calculateWeaponWorkshopDiscount, applyDiscount } from '../../../../../shared/utils/discounts';
 import { getWeaponImagePath } from '../../../utils/weaponImages';
 import { ATTRIBUTE_LABELS } from '../../../utils/weaponConstants';
@@ -78,9 +85,8 @@ const Step6 = memo(({onPrevious:_p}:{onNext?:()=>void;onPrevious?:()=>void}) => 
         } catch {/* ok */}
 
         // 3. Robots
-        const rRes = await apiClient.get('/api/robots');
+        const all = await fetchMyRobots() as unknown as Robot[];
         if (cancelled) return;
-        const all = rRes.data as Robot[];
         const need = all.filter(r=>!r.mainWeaponId);
         setRobots(need.length?need:all);
         if (!need.length && all.length) setPhase('done');
@@ -121,8 +127,8 @@ const Step6 = memo(({onPrevious:_p}:{onNext?:()=>void;onPrevious?:()=>void}) => 
     try {
       const r = await apiClient.post('/api/weapon-inventory/purchase',{weaponId:wId});
       const inv = r.data.weaponInventory.id;
-      if(slot==='main') await apiClient.put(`/api/robots/${rId}/equip-main-weapon`,{weaponInventoryId:inv});
-      else await apiClient.put(`/api/robots/${rId}/equip-offhand-weapon`,{weaponInventoryId:inv});
+      if(slot==='main') await equipMainWeapon(rId, inv);
+      else await equipOffhandWeapon(rId, inv);
     } catch (e: unknown) {
       const msg = (e as {response?:{data?:{error?:string}}})?.response?.data?.error || '';
       if (msg === 'Storage capacity full') {
@@ -130,8 +136,8 @@ const Step6 = memo(({onPrevious:_p}:{onNext?:()=>void;onPrevious?:()=>void}) => 
         await apiClient.post('/api/facilities/upgrade', { facilityType: 'storage_facility' });
         const r = await apiClient.post('/api/weapon-inventory/purchase',{weaponId:wId});
         const inv = r.data.weaponInventory.id;
-        if(slot==='main') await apiClient.put(`/api/robots/${rId}/equip-main-weapon`,{weaponInventoryId:inv});
-        else await apiClient.put(`/api/robots/${rId}/equip-offhand-weapon`,{weaponInventoryId:inv});
+        if(slot==='main') await equipMainWeapon(rId, inv);
+        else await equipOffhandWeapon(rId, inv);
       } else {
         throw e;
       }
@@ -192,7 +198,7 @@ const Step6 = memo(({onPrevious:_p}:{onNext?:()=>void;onPrevious?:()=>void}) => 
         if (a.value > 0) allocations[a.attr] = a.value;
       }
 
-      await apiClient.put(`/api/robots/${robotId}/tuning-allocation`, allocations);
+      await updateTuningAllocation(robotId, allocations);
       setTuningCallout(true);
     } catch {
       // Non-critical — don't block onboarding if tuning auto-allocation fails
@@ -324,7 +330,7 @@ const Step6 = memo(({onPrevious:_p}:{onNext?:()=>void;onPrevious?:()=>void}) => 
         onSelect={async (imageUrl:string)=>{
           try {
             setBusy(true);setErr(null);
-            await apiClient.put(`/api/robots/${bot.id}/appearance`,{imageUrl});
+            await updateAppearance(bot.id, imageUrl);
             nextBot();
           } catch(e:unknown){setErr((e as {response?:{data?:{error?:string}}})?.response?.data?.error||'Failed to set image.');}
           finally{setBusy(false);}

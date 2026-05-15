@@ -96,15 +96,19 @@ const VALID_FACILITY_TYPES = [
 // --- Route handlers ---
 
 /** GET /api/analytics/cycle/current */
-router.get('/cycle/current', validateRequest({}), async (_req: Request, res: Response) => {
+router.get('/cycle/current', authenticateToken, validateRequest({}), async (_req: Request, res: Response) => {
   const result = await getCurrentCycle();
   return res.json(result);
 });
 
 /** GET /api/analytics/stable/:userId/summary */
-router.get('/stable/:userId/summary', validateRequest({ params: userIdParamsSchema }), async (req: Request, res: Response) => {
+router.get('/stable/:userId/summary', authenticateToken, validateRequest({ params: userIdParamsSchema }), async (req: Request, res: Response) => {
+  const authReq = req as AuthRequest;
   const userId = parseInt(String(req.params.userId));
   if (isNaN(userId)) throw new AppError('INVALID_USER_ID', 'Invalid userId', 400);
+  if (authReq.user!.userId !== userId && authReq.user!.role !== 'admin') {
+    return res.status(403).json({ error: 'Access denied' });
+  }
 
   const lastNCyclesParam = req.query.lastNCycles as string;
   const lastNCycles = lastNCyclesParam ? parseInt(lastNCyclesParam) : 10;
@@ -117,7 +121,7 @@ router.get('/stable/:userId/summary', validateRequest({ params: userIdParamsSche
 });
 
 /** GET /api/analytics/robot/:robotId/performance */
-router.get('/robot/:robotId/performance', validateRequest({ params: robotIdParamsSchema }), async (req: Request, res: Response) => {
+router.get('/robot/:robotId/performance', authenticateToken, validateRequest({ params: robotIdParamsSchema }), async (req: Request, res: Response) => {
   const robotId = parseInt(String(req.params.robotId));
   if (isNaN(robotId)) throw new AppError('INVALID_ROBOT_ID', 'robotId must be a valid integer', 400);
 
@@ -199,7 +203,7 @@ router.get('/robot/:robotId/elo', validateRequest({ params: robotIdParamsSchema 
 });
 
 /** GET /api/analytics/robot/:robotId/metric/:metricName */
-router.get('/robot/:robotId/metric/:metricName', validateRequest({ params: robotMetricParamsSchema }), async (req: Request, res: Response) => {
+router.get('/robot/:robotId/metric/:metricName', authenticateToken, validateRequest({ params: robotMetricParamsSchema }), async (req: Request, res: Response) => {
   const robotId = parseInt(String(req.params.robotId));
   const metricName = String(req.params.metricName) as RobotMetric;
   if (isNaN(robotId)) throw new AppError('INVALID_ROBOT_ID', 'robotId must be a valid integer', 400);
@@ -268,7 +272,7 @@ router.get('/leaderboard', validateRequest({ query: leaderboardQuerySchema }), a
 });
 
 /** GET /api/analytics/robot/:robotId/stats */
-router.get('/robot/:robotId/stats', validateRequest({ params: robotIdParamsSchema }), async (req: Request, res: Response) => {
+router.get('/robot/:robotId/stats', authenticateToken, validateRequest({ params: robotIdParamsSchema }), async (req: Request, res: Response) => {
   const { robotStatsViewService } = await import('../services/analytics/robotStatsViewService');
   const robotId = parseInt(String(req.params.robotId));
   if (isNaN(robotId)) throw new AppError('INVALID_ROBOT_ID', 'robotId must be a valid integer', 400);
@@ -280,16 +284,24 @@ router.get('/robot/:robotId/stats', validateRequest({ params: robotIdParamsSchem
 });
 
 /** POST /api/analytics/stats/refresh */
-router.post('/stats/refresh', validateRequest({}), async (_req: Request, res: Response) => {
+router.post('/stats/refresh', authenticateToken, validateRequest({}), async (req: Request, res: Response) => {
+  const authReq = req as AuthRequest;
+  if (authReq.user?.role !== 'admin') {
+    return res.status(403).json({ error: 'Admin access required' });
+  }
   const { robotStatsViewService } = await import('../services/analytics/robotStatsViewService');
   await robotStatsViewService.refreshStats();
   return res.json({ success: true, message: 'Robot stats materialized view refreshed successfully' });
 });
 
 /** GET /api/analytics/facility/:userId/roi */
-router.get('/facility/:userId/roi', validateRequest({ params: userIdParamsSchema }), async (req: Request, res: Response) => {
+router.get('/facility/:userId/roi', authenticateToken, validateRequest({ params: userIdParamsSchema }), async (req: Request, res: Response) => {
+  const authReq = req as AuthRequest;
   const userId = parseInt(String(req.params.userId));
   if (isNaN(userId)) throw new AppError('INVALID_USER_ID', 'userId must be a valid integer', 400);
+  if (authReq.user!.userId !== userId && authReq.user!.role !== 'admin') {
+    return res.status(403).json({ error: 'Access denied' });
+  }
 
   const facilityType = req.query.facilityType as string;
   if (!facilityType) throw new AppError('MISSING_PARAMETER', 'The "facilityType" query parameter is required', 400);
@@ -308,9 +320,13 @@ router.get('/facility/:userId/roi', validateRequest({ params: userIdParamsSchema
 });
 
 /** GET /api/analytics/facility/:userId/roi/all-economic */
-router.get('/facility/:userId/roi/all-economic', validateRequest({ params: userIdParamsSchema }), async (req: Request, res: Response) => {
+router.get('/facility/:userId/roi/all-economic', authenticateToken, validateRequest({ params: userIdParamsSchema }), async (req: Request, res: Response) => {
+  const authReq = req as AuthRequest;
   const userId = parseInt(String(req.params.userId));
   if (isNaN(userId)) throw new AppError('INVALID_USER_ID', 'userId must be a valid integer', 400);
+  if (authReq.user!.userId !== userId && authReq.user!.role !== 'admin') {
+    return res.status(403).json({ error: 'Access denied' });
+  }
 
   await requireUserExists(userId);
 
@@ -319,9 +335,13 @@ router.get('/facility/:userId/roi/all-economic', validateRequest({ params: userI
 });
 
 /** GET /api/analytics/facility/:userId/roi/all */
-router.get('/facility/:userId/roi/all', validateRequest({ params: userIdParamsSchema }), async (req: Request, res: Response) => {
+router.get('/facility/:userId/roi/all', authenticateToken, validateRequest({ params: userIdParamsSchema }), async (req: Request, res: Response) => {
+  const authReq = req as AuthRequest;
   const userId = parseInt(String(req.params.userId));
   if (isNaN(userId)) throw new AppError('INVALID_USER_ID', 'userId must be a valid integer', 400);
+  if (authReq.user!.userId !== userId && authReq.user!.role !== 'admin') {
+    return res.status(403).json({ error: 'Access denied' });
+  }
   await requireUserExists(userId);
 
   const result = await unifiedFacilityROIService.calculateAllEconomicROIs(userId);
@@ -329,10 +349,14 @@ router.get('/facility/:userId/roi/all', validateRequest({ params: userIdParamsSc
 });
 
 /** GET /api/analytics/facility/:userId/recommendations */
-router.get('/facility/:userId/recommendations', validateRequest({ params: userIdParamsSchema }), async (req: Request, res: Response) => {
+router.get('/facility/:userId/recommendations', authenticateToken, validateRequest({ params: userIdParamsSchema }), async (req: Request, res: Response) => {
   const { facilityRecommendationService } = await import('../services/economy/facilityRecommendationService');
+  const authReq = req as AuthRequest;
   const userId = parseInt(String(req.params.userId));
   if (isNaN(userId)) throw new AppError('INVALID_USER_ID', 'userId must be a valid number', 400);
+  if (authReq.user!.userId !== userId && authReq.user!.role !== 'admin') {
+    return res.status(403).json({ error: 'Access denied' });
+  }
 
   await requireUserExists(userId);
 
@@ -349,7 +373,12 @@ router.get('/robot/:id/koth-performance', authenticateToken, validateRequest({ p
 });
 
 /** GET /api/analytics/performance */
-router.get('/performance', validateRequest({ query: cycleRangeQuerySchema }), async (req: Request, res: Response) => {
+router.get('/performance', authenticateToken, validateRequest({ query: cycleRangeQuerySchema }), async (req: Request, res: Response) => {
+  const authReq = req as AuthRequest;
+  if (authReq.user!.role !== 'admin') {
+    return res.status(403).json({ error: 'Admin access required' });
+  }
+
   const startCycle = parseInt(req.query.startCycle as string) || 1;
   const endCycle = parseInt(req.query.endCycle as string) || 10;
 
@@ -366,7 +395,12 @@ router.get('/performance', validateRequest({ query: cycleRangeQuerySchema }), as
 });
 
 /** GET /api/analytics/integrity */
-router.get('/integrity', validateRequest({ query: cycleRangeQuerySchema }), async (req: Request, res: Response) => {
+router.get('/integrity', authenticateToken, validateRequest({ query: cycleRangeQuerySchema }), async (req: Request, res: Response) => {
+  const authReq = req as AuthRequest;
+  if (authReq.user!.role !== 'admin') {
+    return res.status(403).json({ error: 'Admin access required' });
+  }
+
   const startCycle = parseInt(req.query.startCycle as string) || 1;
   const endCycle = parseInt(req.query.endCycle as string) || 10;
 

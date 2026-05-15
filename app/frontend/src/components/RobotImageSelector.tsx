@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import axios from 'axios';
-import apiClient from '../utils/apiClient';
+import { ApiError } from '../utils/ApiError';
+import { uploadRobotImage, confirmRobotImage } from '../utils/robotApi';
 import { validateUploadFile } from './robotImageValidation';
 
 interface RobotImageSelectorProps {
@@ -141,28 +141,18 @@ function UploadTab({
     setState(prev => ({ ...prev, uploading: true, error: null, robotLikenessRejected: false }));
 
     try {
-      const formData = new FormData();
-      formData.append('image', state.file);
-
-      let url = `/api/robots/${robotId}/image`;
-      if (acknowledgeRobotLikeness) {
-        url += '?acknowledgeRobotLikeness=true';
-      }
-
-      const response = await apiClient.post(url, formData);
+      const result = await uploadRobotImage(robotId, state.file, acknowledgeRobotLikeness);
 
       setState(prev => ({
         ...prev,
         uploading: false,
-        serverPreview: response.data.preview,
-        confirmationToken: response.data.confirmationToken,
+        serverPreview: result.preview,
+        confirmationToken: result.confirmationToken,
         robotLikenessRejected: false,
       }));
     } catch (err: unknown) {
-      if (axios.isAxiosError(err) && err.response?.data) {
-        const code = err.response.data.code as string | undefined;
-
-        if (code === 'IMAGE_MODERATION_FAILED') {
+      if (err instanceof ApiError) {
+        if (err.code === 'IMAGE_MODERATION_FAILED') {
           setState(prev => ({
             ...prev,
             uploading: false,
@@ -173,7 +163,7 @@ function UploadTab({
           return;
         }
 
-        if (code === 'LOW_ROBOT_LIKENESS') {
+        if (err.code === 'LOW_ROBOT_LIKENESS') {
           setState(prev => ({
             ...prev,
             uploading: false,
@@ -183,7 +173,7 @@ function UploadTab({
           return;
         }
 
-        if (code === 'RATE_LIMIT_EXCEEDED') {
+        if (err.code === 'RATE_LIMIT_EXCEEDED') {
           setState(prev => ({
             ...prev,
             uploading: false,
@@ -195,7 +185,7 @@ function UploadTab({
         setState(prev => ({
           ...prev,
           uploading: false,
-          error: err.response?.data?.error || 'Upload failed. Please try again.',
+          error: err.message || 'Upload failed. Please try again.',
         }));
         return;
       }
@@ -214,17 +204,15 @@ function UploadTab({
     setState(prev => ({ ...prev, confirming: true, error: null }));
 
     try {
-      const response = await apiClient.put(`/api/robots/${robotId}/image/confirm`, {
-        confirmationToken: state.confirmationToken,
-      });
+      const result = await confirmRobotImage(robotId, state.confirmationToken);
 
-      const newImageUrl = response.data.robot?.imageUrl;
+      const newImageUrl = result.robot?.imageUrl;
       if (newImageUrl) {
         onUploadComplete(newImageUrl);
       }
       resetState();
     } catch (err: unknown) {
-      if (axios.isAxiosError(err) && err.response?.data?.code === 'PREVIEW_EXPIRED') {
+      if (err instanceof ApiError && err.code === 'PREVIEW_EXPIRED') {
         setState(prev => ({
           ...prev,
           confirming: false,
@@ -235,7 +223,7 @@ function UploadTab({
         return;
       }
 
-      const message = axios.isAxiosError(err) ? err.response?.data?.error : undefined;
+      const message = err instanceof ApiError ? err.message : undefined;
       setState(prev => ({
         ...prev,
         confirming: false,

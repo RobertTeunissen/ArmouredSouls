@@ -122,10 +122,10 @@ export class RobotPerformanceService {
     const [startCycle, endCycle] = cycleRange;
 
     // Try to use cycle snapshots first (more efficient)
-    const snapshots = await cycleSnapshotService.getSnapshotRange(startCycle, endCycle);
+    const snapshots = await cycleSnapshotService.getSnapshotRange(startCycle, endCycle, ['robotMetrics']);
     
     if (snapshots.length > 0) {
-      return this.aggregateFromSnapshots(robotId, cycleRange, snapshots);
+      return this.aggregateFromSnapshots(robotId, cycleRange, snapshots as SnapshotWithMetrics[]);
     }
 
     // Fallback to querying Battle table directly
@@ -425,15 +425,17 @@ export class RobotPerformanceService {
     let endValue = 0;
     let totalChange = 0;
 
-    // Group participants by cycle
+    // Group participants by cycle (batch query to avoid N+1)
     const participantsByCycle = new Map<number, typeof participants>();
+    const timestamps = participants.map(p => p.battle.createdAt);
+    const cycleMap = await this.batchGetCycleNumbers(timestamps);
     
-    for (const participant of participants) {
-      const cycleNumber = await this.getCycleNumberForBattle(participant.battle.createdAt);
+    for (let i = 0; i < participants.length; i++) {
+      const cycleNumber = cycleMap.get(i) ?? 1;
       if (!participantsByCycle.has(cycleNumber)) {
         participantsByCycle.set(cycleNumber, []);
       }
-      participantsByCycle.get(cycleNumber)!.push(participant);
+      participantsByCycle.get(cycleNumber)!.push(participants[i]);
     }
 
     // Extract metric value from participant based on metric type
@@ -607,15 +609,17 @@ export class RobotPerformanceService {
     let endElo = 0;
     let totalChange = 0;
 
-    // Group participants by cycle
+    // Group participants by cycle (batch query to avoid N+1)
     const participantsByCycle = new Map<number, typeof participants>();
+    const eloTimestamps = participants.map(p => p.battle.createdAt);
+    const eloCycleMap = await this.batchGetCycleNumbers(eloTimestamps);
     
-    for (const participant of participants) {
-      const cycleNumber = await this.getCycleNumberForBattle(participant.battle.createdAt);
+    for (let i = 0; i < participants.length; i++) {
+      const cycleNumber = eloCycleMap.get(i) ?? 1;
       if (!participantsByCycle.has(cycleNumber)) {
         participantsByCycle.set(cycleNumber, []);
       }
-      participantsByCycle.get(cycleNumber)!.push(participant);
+      participantsByCycle.get(cycleNumber)!.push(participants[i]);
     }
 
     // Create data points per cycle
@@ -837,6 +841,45 @@ export class RobotPerformanceService {
 
     // Last resort: return 1 (assume first cycle)
     return 1;
+  }
+
+  /**
+   * Batch-resolve cycle numbers for multiple battle timestamps.
+   * Pre-fetches all cycle snapshots in a single query and does in-memory lookups,
+   * avoiding N+1 queries when processing many participants.
+   */
+  private async batchGetCycleNumbers(timestamps: Date[]): Promise<Map<number, number>> {
+    if (timestamps.length === 0) return new Map();
+
+    const minTime = new Date(Math.min(...timestamps.map(t => t.getTime())));
+    const maxTime = new Date(Math.max(...timestamps.map(t => t.getTime())));
+
+    // Fetch all snapshots that could contain any of these timestamps
+    const snapshots = await prisma.cycleSnapshot.findMany({
+      where: {
+        startTime: { lte: maxTime },
+        endTime: { gte: minTime },
+      },
+      select: { cycleNumber: true, startTime: true, endTime: true },
+      orderBy: { startTime: 'asc' },
+    });
+
+    // Build a map from timestamp index → cycle number
+    const result = new Map<number, number>();
+
+    for (let i = 0; i < timestamps.length; i++) {
+      const ts = timestamps[i];
+      const snapshot = snapshots.find(s => s.startTime <= ts && s.endTime >= ts);
+      if (snapshot) {
+        result.set(i, snapshot.cycleNumber);
+      } else {
+        // Fallback: use the closest preceding snapshot
+        const preceding = snapshots.filter(s => s.startTime <= ts).pop();
+        result.set(i, preceding?.cycleNumber ?? 1);
+      }
+    }
+
+    return result;
   }
 }
 

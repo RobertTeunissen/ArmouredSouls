@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import axios from 'axios';
-import apiClient from '../utils/apiClient';
+import { updateLoadoutType } from '../utils/robotApi';
 import { LOADOUT_BONUSES, formatLoadoutName, getLoadoutDescription } from '../utils/robotStats';
 
 interface LoadoutSelectorProps {
@@ -28,15 +27,13 @@ function LoadoutSelector({ robotId, currentLoadout, onLoadoutChange }: LoadoutSe
     setLoading(true);
 
     try {
-      const response = await apiClient.put(`/api/robots/${robotId}/loadout-type`, {
-        loadoutType: newLoadout,
-      });
+      const result = await updateLoadoutType(robotId, newLoadout);
 
-      if (response.data.robot) {
+      if (result.robot) {
         onLoadoutChange(newLoadout);
       }
     } catch (err: unknown) {
-      setError(axios.isAxiosError(err) ? err.response?.data?.error || 'Failed to change loadout type' : 'Failed to change loadout type');
+      setError(err instanceof Error ? err.message : 'Failed to change loadout type');
     } finally {
       setLoading(false);
     }

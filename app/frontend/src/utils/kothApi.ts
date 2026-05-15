@@ -92,7 +92,7 @@ export const getKothStandings = async (
     },
     pagination: {
       page: raw.pagination?.page ?? 1,
-      pageSize: raw.pagination?.limit ?? raw.pagination?.pageSize ?? limit,
+      pageSize: raw.pagination?.pageSize ?? raw.pagination?.limit ?? limit,
       total: raw.pagination?.total ?? 0,
       totalPages: raw.pagination?.totalPages ?? 0,
     },

@@ -597,29 +597,6 @@ function getWeaponStatsSummary(robot: RobotWithWeapons): string {
 
 
 /**
- * Get weapon attribute bonuses summary for robot
- */
-function _getWeaponBonusesSummary(robot: RobotWithWeapons): string {
-  const parts: string[] = [];
-
-  const summarizeWeapon = (w: Weapon, label: string): void => {
-    const bonuses: string[] = [];
-    if (w.combatPowerBonus !== 0) bonuses.push(`CombatPower ${w.combatPowerBonus > 0 ? '+' : ''}${w.combatPowerBonus}`);
-    if (w.targetingSystemsBonus !== 0) bonuses.push(`Targeting ${w.targetingSystemsBonus > 0 ? '+' : ''}${w.targetingSystemsBonus}`);
-    if (w.criticalSystemsBonus !== 0) bonuses.push(`Crit ${w.criticalSystemsBonus > 0 ? '+' : ''}${w.criticalSystemsBonus}`);
-    if (w.penetrationBonus !== 0) bonuses.push(`Pen ${w.penetrationBonus > 0 ? '+' : ''}${w.penetrationBonus}`);
-    if (w.weaponControlBonus !== 0) bonuses.push(`Control ${w.weaponControlBonus > 0 ? '+' : ''}${w.weaponControlBonus}`);
-    if (w.attackSpeedBonus !== 0) bonuses.push(`Speed ${w.attackSpeedBonus > 0 ? '+' : ''}${w.attackSpeedBonus}`);
-    parts.push(bonuses.length > 0 ? `${label} (${w.name}): ${bonuses.join(', ')}` : `${label} (${w.name}): No bonuses`);
-  };
-
-  if (robot.mainWeapon?.weapon) summarizeWeapon(robot.mainWeapon.weapon, 'Main');
-  if (robot.offhandWeapon?.weapon) summarizeWeapon(robot.offhandWeapon.weapon, 'Offhand');
-
-  return parts.length > 0 ? parts.join('\n') : 'No weapons equipped';
-}
-
-/**
  * Build position snapshot for events
  */
 function buildPositionSnapshot(
@@ -1207,6 +1184,113 @@ function buildSpatialContext(
  * @param config Battle configuration (draw rules, duration, game mode hooks)
  * @returns SpatialCombatResult with full arena metadata
  */
+
+// ─── Extracted Helpers for simulateBattleMulti ───────────────────────────────
+
+/**
+ * Handle time limit reached — emit appropriate event and determine winner via HP tiebreaker.
+ */
+function handleTimeLimitReached(
+  states: SpatialRobotCombatState[],
+  config: BattleConfig,
+  events: { push: (...args: SpatialCombatEvent[]) => number },
+  currentTime: number,
+  getPositionSnapshot: () => { positions: Record<string, Position>; facingDirections: Record<string, number> },
+): void {
+  if (!config.allowDraws) {
+    const alive = states.filter(s => s.isAlive);
+    alive.sort((a, b) => (b.currentHP / b.maxHP) - (a.currentHP / a.maxHP));
+    if (alive.length > 0) {
+      const pct = ((alive[0].currentHP / alive[0].maxHP) * 100).toFixed(1);
+      events.push({
+        timestamp: roundTime(currentTime),
+        type: 'yield',
+        message: `⏱️ Time limit! ${alive[0].robot.name} wins by HP (${pct}%)`,
+        robot1HP: states[0]?.currentHP ?? 0,
+        robot2HP: states[1]?.currentHP ?? 0,
+        robot1Shield: states[0]?.currentShield ?? 0,
+        robot2Shield: states[1]?.currentShield ?? 0,
+        ...getPositionSnapshot(),
+      });
+    }
+  } else {
+    events.push({
+      timestamp: roundTime(currentTime),
+      type: 'yield',
+      message: `⏱️ Time limit reached - Draw!`,
+      robot1HP: states[0]?.currentHP ?? 0,
+      robot2HP: states[1]?.currentHP ?? 0,
+      robot1Shield: states[0]?.currentShield ?? 0,
+      robot2Shield: states[1]?.currentShield ?? 0,
+      ...getPositionSnapshot(),
+    });
+  }
+}
+
+/**
+ * Compile the final battle result from simulation state.
+ */
+function compileBattleResult(
+  states: SpatialRobotCombatState[],
+  rawEvents: SpatialCombatEvent[],
+  currentTime: number,
+  winnerId: number | null,
+  winReason: string | undefined,
+  arena: ArenaConfig,
+  startingPositions: Record<string, Position>,
+  gameModeState: GameModeState | undefined,
+  _config: BattleConfig,
+): SpatialCombatResult {
+  const endingPositions: Record<string, Position> = {};
+  for (const s of states) {
+    endingPositions[s.robot.name] = { x: s.position.x, y: s.position.y };
+  }
+
+  // Build kothMetadata if game mode state has zone scores
+  let kothMetadata: SpatialCombatResult['kothMetadata'];
+  if (gameModeState?.mode === 'zone_control' && gameModeState.zoneScores) {
+    const scoreState = gameModeState.customData?.scoreState as {
+      zoneOccupationTimes?: Record<number, number>;
+      uncontestedTimes?: Record<number, number>;
+      zoneEntries?: Record<number, number>;
+      zoneExits?: Record<number, number>;
+      killCounts?: Record<number, number>;
+    } | undefined;
+    kothMetadata = {
+      finalZoneScores: { ...gameModeState.zoneScores },
+      zoneOccupationTimes: scoreState?.zoneOccupationTimes ? { ...scoreState.zoneOccupationTimes } : undefined,
+      uncontestedTimes: scoreState?.uncontestedTimes ? { ...scoreState.uncontestedTimes } : undefined,
+      zoneEntries: scoreState?.zoneEntries ? { ...scoreState.zoneEntries } : undefined,
+      zoneExits: scoreState?.zoneExits ? { ...scoreState.zoneExits } : undefined,
+      killCounts: scoreState?.killCounts ? { ...scoreState.killCounts } : undefined,
+      matchDuration: roundTime(currentTime),
+      winReason,
+    };
+  }
+
+  return {
+    winnerId,
+    robot1FinalHP: Math.max(0, states[0]?.currentHP ?? 0),
+    robot2FinalHP: Math.max(0, states[1]?.currentHP ?? 0),
+    robot1FinalShield: states[0]?.currentShield ?? 0,
+    robot2FinalShield: states[1]?.currentShield ?? 0,
+    robot1Damage: states[0]?.totalDamageTaken ?? 0,
+    robot2Damage: states[1]?.totalDamageTaken ?? 0,
+    robot1DamageDealt: states[0]?.totalDamageDealt ?? 0,
+    robot2DamageDealt: states[1]?.totalDamageDealt ?? 0,
+    durationSeconds: roundTime(currentTime),
+    isDraw: winnerId === null,
+    events: rawEvents,
+    arenaRadius: arena.radius,
+    startingPositions,
+    endingPositions,
+    kothMetadata,
+    finalStates: states,
+  };
+}
+
+// ─── Main Simulation Function ────────────────────────────────────────────────
+
 export function simulateBattleMulti(
   robots: RobotWithWeapons[],
   config: BattleConfig = { allowDraws: true },
@@ -1837,85 +1921,18 @@ export function simulateBattleMulti(
 
   // === 5. Time limit handling ===
   if (!battleEnded) {
+    handleTimeLimitReached(states, config, events, currentTime, getPositionSnapshot);
     if (!config.allowDraws) {
-      // HP tiebreaker — highest HP% wins
       const alive = states.filter(s => s.isAlive);
       alive.sort((a, b) => (b.currentHP / b.maxHP) - (a.currentHP / a.maxHP));
       if (alive.length > 0) {
         winnerId = alive[0].robot.id;
-        const pct = ((alive[0].currentHP / alive[0].maxHP) * 100).toFixed(1);
-        events.push({
-          timestamp: roundTime(currentTime),
-          type: 'yield',
-          message: `⏱️ Time limit! ${alive[0].robot.name} wins by HP (${pct}%)`,
-          robot1HP: states[0]?.currentHP ?? 0,
-          robot2HP: states[1]?.currentHP ?? 0,
-          robot1Shield: states[0]?.currentShield ?? 0,
-          robot2Shield: states[1]?.currentShield ?? 0,
-          ...getPositionSnapshot(),
-        });
       }
-    } else {
-      events.push({
-        timestamp: roundTime(currentTime),
-        type: 'yield',
-        message: `⏱️ Time limit reached - Draw!`,
-        robot1HP: states[0]?.currentHP ?? 0,
-        robot2HP: states[1]?.currentHP ?? 0,
-        robot1Shield: states[0]?.currentShield ?? 0,
-        robot2Shield: states[1]?.currentShield ?? 0,
-        ...getPositionSnapshot(),
-      });
     }
   }
 
   // === 6. Build result ===
-  const endingPositions: Record<string, Position> = {};
-  for (const s of states) {
-    endingPositions[s.robot.name] = { x: s.position.x, y: s.position.y };
-  }
-
-  // Build kothMetadata if game mode state has zone scores
-  let kothMetadata: SpatialCombatResult['kothMetadata'];
-  if (gameModeState?.mode === 'zone_control' && gameModeState.zoneScores) {
-    const scoreState = gameModeState.customData?.scoreState as {
-      zoneOccupationTimes?: Record<number, number>;
-      uncontestedTimes?: Record<number, number>;
-      zoneEntries?: Record<number, number>;
-      zoneExits?: Record<number, number>;
-      killCounts?: Record<number, number>;
-    } | undefined;
-    kothMetadata = {
-      finalZoneScores: { ...gameModeState.zoneScores },
-      zoneOccupationTimes: scoreState?.zoneOccupationTimes ? { ...scoreState.zoneOccupationTimes } : undefined,
-      uncontestedTimes: scoreState?.uncontestedTimes ? { ...scoreState.uncontestedTimes } : undefined,
-      zoneEntries: scoreState?.zoneEntries ? { ...scoreState.zoneEntries } : undefined,
-      zoneExits: scoreState?.zoneExits ? { ...scoreState.zoneExits } : undefined,
-      killCounts: scoreState?.killCounts ? { ...scoreState.killCounts } : undefined,
-      matchDuration: roundTime(currentTime),
-      winReason,
-    };
-  }
-
-  return {
-    winnerId,
-    robot1FinalHP: Math.max(0, states[0]?.currentHP ?? 0),
-    robot2FinalHP: Math.max(0, states[1]?.currentHP ?? 0),
-    robot1FinalShield: states[0]?.currentShield ?? 0,
-    robot2FinalShield: states[1]?.currentShield ?? 0,
-    robot1Damage: states[0]?.totalDamageTaken ?? 0,
-    robot2Damage: states[1]?.totalDamageTaken ?? 0,
-    robot1DamageDealt: states[0]?.totalDamageDealt ?? 0,
-    robot2DamageDealt: states[1]?.totalDamageDealt ?? 0,
-    durationSeconds: roundTime(currentTime),
-    isDraw: winnerId === null,
-    events: rawEvents,
-    arenaRadius: arena.radius,
-    startingPositions,
-    endingPositions,
-    kothMetadata,
-    finalStates: states,
-  };
+  return compileBattleResult(states, rawEvents, currentTime, winnerId, winReason, arena, startingPositions, gameModeState, config);
 }
 
 

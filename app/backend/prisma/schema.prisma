@@ -418,6 +418,7 @@ model Battle {
   @@index([createdAt])
   @@index([tournamentId])
   @@index([battleType])
+  @@index([leagueInstanceId])
   @@index([winnerId])
   @@map("battles")
 }

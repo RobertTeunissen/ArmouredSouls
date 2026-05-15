@@ -20,7 +20,7 @@ export interface PaginatedChangelogResult {
   entries: ChangelogEntry[];
   total: number;
   page: number;
-  perPage: number;
+  pageSize: number;
 }
 
 // Player endpoints

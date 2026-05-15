@@ -451,7 +451,7 @@ export async function getMatchHistory(params: HistoryParams) {
     data: formattedBattles,
     pagination: {
       page,
-      perPage,
+      pageSize: perPage,
       total,
       totalPages: Math.ceil(total / perPage),
     },

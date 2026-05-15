@@ -13,6 +13,7 @@ import RosterStrategyCard, { RosterStrategy } from '../RosterStrategyCard';
 import RobotNamingModal from '../RobotNamingModal';
 import { trackStrategySelected } from '../../../utils/onboardingAnalytics';
 import apiClient from '../../../utils/apiClient';
+import { createRobot } from '../../../utils/robotApi';
 
 interface Step1_WelcomeProps {
   onNext: () => void;
@@ -103,8 +104,8 @@ const Step1_Welcome = ({ onNext: _onNext }: Step1_WelcomeProps) => {
       // Create robots
       const createdIds: number[] = [];
       for (const name of names) {
-        const res = await apiClient.post('/api/robots', { name });
-        createdIds.push(res.data.robot.id);
+        const res = await createRobot(name);
+        createdIds.push(res.robot.id);
       }
 
       // Track onboarding choices

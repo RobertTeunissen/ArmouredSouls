@@ -6,6 +6,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { usePracticeHistory, type PracticeHistoryEntry } from '../../hooks/usePracticeHistory';
 import apiClient from '../../utils/apiClient';
+import { fetchMyRobots } from '../../utils/robotApi';
 import type {
   OwnedRobot,
   SparringPartnerDef,
@@ -104,12 +105,12 @@ export function usePracticeArena(userId: number): UsePracticeArenaReturn {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [robotsRes, sparringRes, facilitiesRes] = await Promise.all([
-          apiClient.get('/api/robots'),
+        const [robotsData, sparringRes, facilitiesRes] = await Promise.all([
+          fetchMyRobots(),
           apiClient.get('/api/practice-arena/sparring-partners'),
           apiClient.get('/api/facilities').catch(() => ({ data: [] })),
         ]);
-        setRobots(robotsRes.data);
+        setRobots(robotsData as unknown as OwnedRobot[]);
         const defs = sparringRes.data.sparringPartners || sparringRes.data;
         setSparringDefs(Array.isArray(defs) ? defs : []);
 
@@ -213,8 +214,7 @@ export function usePracticeArena(userId: number): UsePracticeArenaReturn {
       const data = res.data;
 
       const toHistoryEntry = (r: PracticeBattleResult) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const cr = r.combatResult as any;
+        const cr = r.combatResult;
         return {
           timestamp: new Date().toISOString(),
           combatResult: {

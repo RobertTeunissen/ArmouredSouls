@@ -19,6 +19,7 @@ import {
   StorageCapacityBar,
   WeaponCardGrid,
   useWeaponShop,
+  type Weapon,
 } from '../components/weapon-shop';
 
 function WeaponShopPage() {
@@ -125,8 +126,7 @@ function WeaponShopPage() {
                   purchasing={purchasing}
                   hasDiscount={weaponWorkshopLevel > 0}
                   discountPercent={calculateWeaponWorkshopDiscount(weaponWorkshopLevel)}
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  onWeaponClick={(weapon) => setSelectedWeapon(weapon as any)}
+                  onWeaponClick={(weapon) => setSelectedWeapon(weapon as Weapon)}
                   ownedWeapons={ownedWeapons}
                 />
               </div>

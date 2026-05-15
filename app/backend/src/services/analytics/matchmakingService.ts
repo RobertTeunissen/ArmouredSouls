@@ -133,36 +133,6 @@ async function getRecentOpponentsBatch(robotIds: number[], limit: number = RECEN
 }
 
 /**
- * Get recent opponents for a robot (last N matches)
- */
-async function getRecentOpponents(robotId: number, limit: number = RECENT_OPPONENT_LIMIT): Promise<number[]> {
-  // Get recent battles where this robot participated
-  const recentBattles = await prisma.battle.findMany({
-    where: {
-      OR: [
-        { robot1Id: robotId },
-        { robot2Id: robotId },
-      ],
-    },
-    orderBy: {
-      createdAt: 'desc',
-    },
-    take: limit,
-    select: {
-      robot1Id: true,
-      robot2Id: true,
-    },
-  });
-  
-  // Extract opponent IDs
-  const opponentIds = recentBattles.map(battle => 
-    battle.robot1Id === robotId ? battle.robot2Id : battle.robot1Id
-  );
-  
-  return opponentIds;
-}
-
-/**
  * Calculate match quality score (lower is better)
  * CHANGED: LP-primary matching with ELO as secondary quality check
  */

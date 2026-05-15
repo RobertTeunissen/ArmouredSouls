@@ -91,7 +91,19 @@ export async function repairAllRobots(deductCosts: boolean = true, cycleNumber?:
 
   let totalBaseCost = 0;
   let totalFinalCost = 0;
-  const userSummaries = [];
+  const userSummaries: RepairSummary['userSummaries'] = [];
+
+  // Collect all DB operations for batching
+  const robotUpdates: ReturnType<typeof prisma.robot.update>[] = [];
+  const userDeductions: ReturnType<typeof prisma.user.update>[] = [];
+  const repairEvents: Array<{
+    userId: number;
+    robotId: number;
+    robotName: string;
+    repairCost: number;
+    damageTaken: number;
+    repairBayDiscount: number;
+  }> = [];
 
   for (const [userId, userRobots] of robotsByUser.entries()) {
     const facilities = facilitiesByUser.get(userId) || [];
@@ -144,8 +156,8 @@ export async function repairAllRobots(deductCosts: boolean = true, cycleNumber?:
       userBaseCost += baseCost;
       userFinalCost += repairCost;
 
-      // Update robot HP and set battle ready
-      await prisma.robot.update({
+      // Collect robot update for batching
+      robotUpdates.push(prisma.robot.update({
         where: { id: robot.id },
         data: {
           currentHP: robot.maxHP,
@@ -156,39 +168,32 @@ export async function repairAllRobots(deductCosts: boolean = true, cycleNumber?:
             increment: repairCost,
           },
         },
-      });
+      }));
 
-      // Log repair event for analytics
-      try {
-        await eventLogger.logRobotRepair(
-          userId,
-          robot.id,
-          repairCost,
-          damageTaken,
-          repairBayDiscount,
-          cycleNumber,
-          'automatic'
-        );
-        
-        logger.info(`[RepairService] | User ${userId} | Robot ${robot.id} (${robot.name}) | Cost: ₡${repairCost.toLocaleString()} | Discount: ${repairBayDiscount}%`);
-      } catch (logError) {
-        logger.error(`[RepairService] | ERROR | User ${userId} | Robot ${robot.id} | Failed to log repair event:`, logError instanceof Error ? logError.message : logError);
-      }
+      // Collect repair event data for logging after transaction
+      repairEvents.push({
+        userId,
+        robotId: robot.id,
+        robotName: robot.name,
+        repairCost,
+        damageTaken,
+        repairBayDiscount,
+      });
     }
 
     totalBaseCost += userBaseCost;
     totalFinalCost += userFinalCost;
 
-    // Deduct costs if requested
+    // Collect user currency deduction for batching
     if (deductCosts && userFinalCost > 0) {
-      await prisma.user.update({
+      userDeductions.push(prisma.user.update({
         where: { id: userId },
         data: {
           currency: {
             decrement: userFinalCost,
           },
         },
-      });
+      }));
     }
 
     userSummaries.push({
@@ -197,6 +202,28 @@ export async function repairAllRobots(deductCosts: boolean = true, cycleNumber?:
       totalCost: userFinalCost,
       repairBayDiscount,
     });
+  }
+
+  // Execute all robot updates and user deductions in a single transaction
+  await prisma.$transaction([...robotUpdates, ...userDeductions]);
+
+  // Log repair events sequentially (audit trail, non-critical)
+  for (const event of repairEvents) {
+    try {
+      await eventLogger.logRobotRepair(
+        event.userId,
+        event.robotId,
+        event.repairCost,
+        event.damageTaken,
+        event.repairBayDiscount,
+        cycleNumber,
+        'automatic'
+      );
+      
+      logger.info(`[RepairService] | User ${event.userId} | Robot ${event.robotId} (${event.robotName}) | Cost: ₡${event.repairCost.toLocaleString()} | Discount: ${event.repairBayDiscount}%`);
+    } catch (logError) {
+      logger.error(`[RepairService] | ERROR | User ${event.userId} | Robot ${event.robotId} | Failed to log repair event:`, logError instanceof Error ? logError.message : logError);
+    }
   }
 
   return {

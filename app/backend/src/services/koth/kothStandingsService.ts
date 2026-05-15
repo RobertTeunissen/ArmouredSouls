@@ -61,7 +61,7 @@ async function getKothStandingsAllTime({ page, limit }: { page: number; limit: n
         : null,
     },
     standings,
-    pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    pagination: { page, pageSize: limit, total, totalPages: Math.ceil(total / limit) },
     view: 'all_time',
   };
 }
@@ -180,7 +180,7 @@ async function getKothStandingsLast10({ page, limit }: { page: number; limit: nu
         : null,
     },
     standings,
-    pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    pagination: { page, pageSize: limit, total, totalPages: Math.ceil(total / limit) },
     view: 'last_10',
   };
 }

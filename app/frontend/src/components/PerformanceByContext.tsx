@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import apiClient from '../utils/apiClient';
+import { fetchPerformanceContext } from '../utils/robotApi';
 
 interface LeaguePerformance {
   leagueName: string;
@@ -48,14 +48,14 @@ function PerformanceByContext({ robotId }: PerformanceByContextProps) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchPerformanceContext = async () => {
+    const fetchData = async () => {
       try {
         setIsLoading(true);
         setError(null);
-        const response = await apiClient.get(`/api/robots/${robotId}/performance-context`);
-        setLeagues(response.data.leagues);
-        setTournaments(response.data.tournaments);
-        setTagTeam(response.data.tagTeam);
+        const data = await fetchPerformanceContext(robotId);
+        setLeagues(data.leagues as LeaguePerformance[]);
+        setTournaments(data.tournaments as TournamentPerformance[]);
+        setTagTeam(data.tagTeam as TagTeamPerformance | null);
       } catch (err) {
         setError('Failed to load performance data');
         console.error('Performance context fetch error:', err);
@@ -64,7 +64,7 @@ function PerformanceByContext({ robotId }: PerformanceByContextProps) {
       }
     };
 
-    fetchPerformanceContext();
+    fetchData();
   }, [robotId]);
 
   const getPlacementBadge = (placement: number) => {

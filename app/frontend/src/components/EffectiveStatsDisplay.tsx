@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { calculateAttributeBonus, getLoadoutBonus, getStanceModifier } from '../utils/robotStats';
-import apiClient from '../utils/apiClient';
+import { fetchTuningAllocation } from '../utils/robotApi';
 import type { RobotWithAttributes } from '../types/robot';
 
 interface EffectiveStatsDisplayProps {
@@ -61,11 +61,10 @@ function EffectiveStatsDisplay({ robot }: EffectiveStatsDisplayProps) {
   useEffect(() => {
     if (!robot.id) return;
     let cancelled = false;
-    apiClient
-      .get<{ allocations: Record<string, number> }>(`/api/robots/${robot.id}/tuning-allocation`)
-      .then((res) => {
+    fetchTuningAllocation(robot.id)
+      .then((data) => {
         if (!cancelled) {
-          setTuningAllocations(res.data.allocations ?? {});
+          setTuningAllocations(data.allocations ?? {});
         }
       })
       .catch(() => {

@@ -82,28 +82,17 @@ function RobotPerformanceAnalytics({ robotId, lastNCycles = 10 }: RobotPerforman
       const endCycle = currentCycle;
       const cycleRange = `[${startCycle},${endCycle}]`;
 
-      // Fetch performance summary
-      const summaryResponse = await apiClient.get(
-        `/api/analytics/robot/${robotId}/performance?cycleRange=${cycleRange}`
-      );
+      // Fetch all analytics data in parallel (independent requests)
+      const [summaryResponse, eloResponse, damageResponse, creditsResponse] = await Promise.all([
+        apiClient.get(`/api/analytics/robot/${robotId}/performance?cycleRange=${cycleRange}`),
+        apiClient.get(`/api/analytics/robot/${robotId}/metric/elo?cycleRange=${cycleRange}&includeMovingAverage=true`),
+        apiClient.get(`/api/analytics/robot/${robotId}/metric/damageDealt?cycleRange=${cycleRange}`),
+        apiClient.get(`/api/analytics/robot/${robotId}/metric/creditsEarned?cycleRange=${cycleRange}`),
+      ]);
+
       setSummary(summaryResponse.data);
-
-      // Fetch ELO progression
-      const eloResponse = await apiClient.get(
-        `/api/analytics/robot/${robotId}/metric/elo?cycleRange=${cycleRange}&includeMovingAverage=true`
-      );
       setEloProgression(eloResponse.data);
-
-      // Fetch damage dealt progression
-      const damageResponse = await apiClient.get(
-        `/api/analytics/robot/${robotId}/metric/damageDealt?cycleRange=${cycleRange}`
-      );
       setDamageProgression(damageResponse.data);
-
-      // Fetch credits earned progression
-      const creditsResponse = await apiClient.get(
-        `/api/analytics/robot/${robotId}/metric/creditsEarned?cycleRange=${cycleRange}`
-      );
       setCreditsProgression(creditsResponse.data);
 
       // Fetch KotH performance

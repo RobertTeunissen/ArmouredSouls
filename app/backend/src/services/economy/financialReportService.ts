@@ -15,10 +15,23 @@ import {
 } from '../../utils/economyCalculations';
 
 export async function getDailyFinancialReport(userId: number) {
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { prestige: true },
-  });
+  // Parallel group 1: all queries that only depend on userId
+  const [user, userRobots, merchandisingHub, streamingStudio] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: { prestige: true },
+    }),
+    prisma.robot.findMany({
+      where: { userId },
+      select: { id: true, totalBattles: true, fame: true },
+    }),
+    prisma.facility.findUnique({
+      where: { userId_facilityType: { userId, facilityType: 'merchandising_hub' } },
+    }),
+    prisma.facility.findUnique({
+      where: { userId_facilityType: { userId, facilityType: 'streaming_studio' } },
+    }),
+  ]);
 
   if (!user) {
     throw new AuthError(AuthErrorCode.USER_NOT_FOUND, 'User not found', 404, { userId });
@@ -27,11 +40,6 @@ export async function getDailyFinancialReport(userId: number) {
   // Calculate recent battle winnings from last 7 days
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-  const userRobots = await prisma.robot.findMany({
-    where: { userId },
-    select: { id: true, totalBattles: true, fame: true },
-  });
 
   const robotIds = userRobots.map(r => r.id);
   let recentBattleWinnings = 0;
@@ -58,14 +66,14 @@ export async function getDailyFinancialReport(userId: number) {
     }
   }
 
-  const report = await generateFinancialReport(userId, recentBattleWinnings);
-  const passiveIncome = await calculateDailyPassiveIncome(userId);
+  // Parallel group 2: report generation and passive income are independent
+  const [report, passiveIncome] = await Promise.all([
+    generateFinancialReport(userId, recentBattleWinnings),
+    calculateDailyPassiveIncome(userId),
+  ]);
   const prestigeMultiplier = getPrestigeMultiplier(user.prestige);
 
   // Merchandising breakdown
-  const merchandisingHub = await prisma.facility.findUnique({
-    where: { userId_facilityType: { userId, facilityType: 'merchandising_hub' } },
-  });
   const merchandisingHubLevel = merchandisingHub?.level || 0;
   const merchandisingBase = getMerchandisingBaseRate(merchandisingHubLevel);
   const merchandisingMultiplier = 1 + (user.prestige / 10000);
@@ -74,9 +82,6 @@ export async function getDailyFinancialReport(userId: number) {
   const totalBattles = userRobots.reduce((sum, r) => sum + r.totalBattles, 0);
   const totalFame = userRobots.reduce((sum, r) => sum + r.fame, 0);
 
-  const streamingStudio = await prisma.facility.findUnique({
-    where: { userId_facilityType: { userId, facilityType: 'streaming_studio' } },
-  });
   const streamingStudioLevel = streamingStudio?.level || 0;
 
   const baseRate = 1000;

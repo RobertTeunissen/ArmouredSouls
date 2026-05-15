@@ -6,6 +6,7 @@ import RobotImage from '../components/RobotImage';
 import ConfirmationModal from '../components/ConfirmationModal';
 import ViewModeToggle from '../components/ViewModeToggle';
 import apiClient from '../utils/apiClient';
+import { repairAllRobots } from '../utils/robotApi';
 import { useRobotStore } from '../stores';
 import type { Facility } from '../components/facilities/types';
 // Utility functions
@@ -220,7 +221,7 @@ function RobotsPage() {
 
   const confirmRepairAll = async () => {
     try {
-      await apiClient.post('/api/robots/repair-all', {});
+      await repairAllRobots();
 
       // Close modal and refresh
       setShowRepairConfirmation(false);
@@ -522,7 +523,7 @@ function RobotsPage() {
                           robot.loadoutType,
                           robot.mainWeaponId,
                           robot.offhandWeaponId,
-                          robot.offhandWeapon
+                          robot.offhandWeapon ?? null
                         );
 
                         return (
@@ -664,7 +665,7 @@ function RobotsPage() {
                 robot.loadoutType,
                 robot.mainWeaponId,
                 robot.offhandWeaponId,
-                robot.offhandWeapon
+                robot.offhandWeapon ?? null
               );
 
               return (

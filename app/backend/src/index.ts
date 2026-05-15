@@ -101,6 +101,28 @@ for (const prefix of economicPrefixes) {
 }
 
 app.get('/api/health', async (req, res) => {
+  // Public health check — minimal info for uptime monitors
+  let dbConnected = true;
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+  } catch {
+    dbConnected = false;
+  }
+
+  const isHealthy = dbConnected;
+  res.status(isHealthy ? 200 : 503).json({
+    status: isHealthy ? 'ok' : 'error',
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// Detailed health endpoint — requires admin authentication
+app.get('/api/health/detailed', authenticateToken, async (req, res) => {
+  const authReq = req as import('./middleware/auth').AuthRequest;
+  if (authReq.user?.role !== 'admin') {
+    return res.status(403).json({ error: 'Admin access required' });
+  }
+
   const disk = getDiskUsage();
   const memory = getMemoryUsage();
   const modules = checkCriticalModules();

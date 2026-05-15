@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
 import axios from 'axios';
 import apiClient from '../utils/apiClient';
+import { createRobot } from '../utils/robotApi';
 
 function CreateRobotPage() {
   const [name, setName] = useState('');
@@ -46,9 +47,7 @@ function CreateRobotPage() {
     setLoading(true);
 
     try {
-      const response = await apiClient.post('/api/robots', { name });
-
-      const data = response.data;
+      const data = await createRobot(name);
 
       // Refresh user data to update currency
       await refreshUser();

@@ -7,6 +7,7 @@ import { useState, useEffect, memo } from 'react';
 import { useOnboarding } from '../../../contexts/OnboardingContext';
 import RobotImage from '../../RobotImage';
 import apiClient from '../../../utils/apiClient';
+import { fetchMyRobots, fetchRobotById, commitUpgrades } from '../../../utils/robotApi';
 import { calculateDiscountedUpgradeCost } from '../../../../../shared/utils/upgradeCosts';
 
 interface Robot { id: number; name: string; imageUrl: string | null; [key: string]: unknown }
@@ -38,13 +39,12 @@ const Step8 = memo(({ onPrevious: _p }: { onNext?: () => void; onPrevious?: () =
   useEffect(() => {
     (async () => {
       try {
-        const [rRes, pRes, fRes] = await Promise.all([
-          apiClient.get('/api/robots'),
+        const [bots, pRes, fRes] = await Promise.all([
+          fetchMyRobots(),
           apiClient.get('/api/user/profile'),
           apiClient.get('/api/facilities').catch(() => ({ data: { facilities: [] } })),
         ]);
-        const bots = rRes.data as Robot[];
-        setRobots(bots);
+        setRobots(bots as unknown as Robot[]);
         setBudget((pRes.data as { currency: number }).currency);
         const facs = fRes.data.facilities || fRes.data || [];
         const tf = Array.isArray(facs) ? facs.find((f: { type: string }) => f.type === 'training_facility') : null;
@@ -75,7 +75,7 @@ const Step8 = memo(({ onPrevious: _p }: { onNext?: () => void; onPrevious?: () =
       setBusy(true); setErr(null);
 
       // Fetch fresh robot data
-      const fresh = await Promise.all(robots.map(r => apiClient.get(`/api/robots/${r.id}`).then(x => x.data)));
+      const fresh = await Promise.all(robots.map(r => fetchRobotById(r.id).then(x => x as unknown as Robot)));
 
       // Per-robot: which attrs to upgrade
       const robotAttrs: Record<number, string[]> = {};
@@ -122,7 +122,7 @@ const Step8 = memo(({ onPrevious: _p }: { onNext?: () => void; onPrevious?: () =
           }
         }
         if (Object.keys(upgrades).length > 0) {
-          await apiClient.post(`/api/robots/${r.id}/upgrades`, { upgrades });
+          await commitUpgrades(r.id, upgrades);
         }
       }
 

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import apiClient from '../utils/apiClient';
+import { fetchTuningAllocation, updateTuningAllocation } from '../utils/robotApi';
 import ConfirmationModal from './ConfirmationModal';
 import Toast from './Toast';
 import type { RobotWithAttributes } from '../types/robot';
@@ -94,10 +94,7 @@ function TuningPoolEditor({ robotId, robot }: TuningPoolEditorProps) {
     try {
       setLoading(true);
       setError(null);
-      const response = await apiClient.get<TuningAllocationState>(
-        `/api/robots/${robotId}/tuning-allocation`
-      );
-      const state = response.data;
+      const state = await fetchTuningAllocation(robotId);
       setTuningState(state);
       setLocalAllocations({ ...state.allocations });
       setSavedAllocations({ ...state.allocations });
@@ -191,20 +188,13 @@ function TuningPoolEditor({ robotId, robot }: TuningPoolEditorProps) {
     if (!hasChanges || isSaving) return;
     setIsSaving(true);
     try {
-      const response = await apiClient.put<TuningAllocationState>(
-        `/api/robots/${robotId}/tuning-allocation`,
-        localAllocations
-      );
-      const state = response.data;
+      const state = await updateTuningAllocation(robotId, localAllocations);
       setTuningState(state);
       setLocalAllocations({ ...state.allocations });
       setSavedAllocations({ ...state.allocations });
       setToast({ message: 'Tuning allocation saved', type: 'success' });
     } catch (err) {
-      const message =
-        err && typeof err === 'object' && 'response' in err
-          ? (err as { response?: { data?: { error?: string } } }).response?.data?.error ?? 'Failed to save tuning allocation'
-          : 'Failed to save tuning allocation';
+      const message = err instanceof Error ? err.message : 'Failed to save tuning allocation';
       setToast({ message, type: 'error' });
     } finally {
       setIsSaving(false);
