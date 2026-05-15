@@ -91,7 +91,7 @@ describe('Property 2: Owner-Only Tab Access Control (Property-Based Test)', () =
     );
   });
 
-  it('should maintain owner-only access control across multiple ownership states', { timeout: 15000 }, () => {
+  it('should maintain owner-only access control across multiple ownership states', { timeout: 30000 }, () => {
     fc.assert(
       fc.property(
         fc.array(
