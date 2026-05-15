@@ -139,7 +139,7 @@ describe('Environment Config Loading - Property Tests', () => {
       );
     });
 
-    test('CORS_ORIGIN defaults to ["*"] in development mode regardless of env value', () => {
+    test('CORS_ORIGIN defaults to localhost origins in development mode regardless of env value', () => {
       fc.assert(
         fc.property(
           fc.string({ minLength: 0, maxLength: 50 }),
@@ -149,7 +149,7 @@ describe('Environment Config Loading - Property Tests', () => {
 
             const config = loadEnvConfig();
 
-            expect(config.corsOrigins).toEqual(['*']);
+            expect(config.corsOrigins).toEqual(['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173', 'http://127.0.0.1:3000']);
           }
         ),
         { numRuns: NUM_RUNS }

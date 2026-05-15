@@ -869,13 +869,24 @@ export class RobotPerformanceService {
 
     for (let i = 0; i < timestamps.length; i++) {
       const ts = timestamps[i];
-      const snapshot = snapshots.find(s => s.startTime <= ts && s.endTime >= ts);
-      if (snapshot) {
-        result.set(i, snapshot.cycleNumber);
-      } else {
-        // Fallback: use the closest preceding snapshot
-        const preceding = snapshots.filter(s => s.startTime <= ts).pop();
-        result.set(i, preceding?.cycleNumber ?? 1);
+      // Binary search for the snapshot containing this timestamp (snapshots sorted by startTime asc)
+      let lo = 0, hi = snapshots.length - 1;
+      let found = false;
+      while (lo <= hi) {
+        const mid = Math.floor((lo + hi) / 2);
+        if (snapshots[mid].startTime <= ts && snapshots[mid].endTime >= ts) {
+          result.set(i, snapshots[mid].cycleNumber);
+          found = true;
+          break;
+        } else if (snapshots[mid].startTime > ts) {
+          hi = mid - 1;
+        } else {
+          lo = mid + 1;
+        }
+      }
+      if (!found) {
+        // Fallback: use the closest preceding snapshot (hi points to last element before ts)
+        result.set(i, hi >= 0 ? snapshots[hi].cycleNumber : 1);
       }
     }
 

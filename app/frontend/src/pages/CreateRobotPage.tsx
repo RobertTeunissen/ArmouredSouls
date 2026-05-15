@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
-import axios from 'axios';
 import apiClient from '../utils/apiClient';
 import { createRobot } from '../utils/robotApi';
+import { ApiError } from '../utils/ApiError';
 
 function CreateRobotPage() {
   const [name, setName] = useState('');
@@ -73,13 +73,13 @@ function CreateRobotPage() {
         navigate(`/robots/${data.robot.id}`);
       }
     } catch (err: unknown) {
-      if (axios.isAxiosError(err)) {
-        if (err.response?.status === 401) {
+      if (err instanceof ApiError) {
+        if (err.statusCode === 401) {
           logout();
           navigate('/login');
           return;
         }
-        setError(err.response?.data?.error || 'Failed to create robot');
+        setError(err.message || 'Failed to create robot');
       } else {
         setError(err instanceof Error ? err.message : 'Failed to create robot');
       }

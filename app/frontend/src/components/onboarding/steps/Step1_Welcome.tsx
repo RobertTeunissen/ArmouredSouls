@@ -14,6 +14,7 @@ import RobotNamingModal from '../RobotNamingModal';
 import { trackStrategySelected } from '../../../utils/onboardingAnalytics';
 import apiClient from '../../../utils/apiClient';
 import { createRobot } from '../../../utils/robotApi';
+import { ApiError } from '../../../utils/ApiError';
 
 interface Step1_WelcomeProps {
   onNext: () => void;
@@ -79,9 +80,9 @@ const Step1_Welcome = ({ onNext: _onNext }: Step1_WelcomeProps) => {
 
       setShowNamingModal(true);
     } catch (err: unknown) {
-      const message =
-        (err as { response?: { data?: { error?: string } } })?.response?.data?.error
-        || 'Something went wrong. Please try again.';
+      const message = err instanceof ApiError
+        ? err.message
+        : 'Something went wrong. Please try again.';
       setCreationError(message);
     } finally {
       setIsSubmitting(false);
@@ -127,9 +128,9 @@ const Step1_Welcome = ({ onNext: _onNext }: Step1_WelcomeProps) => {
 
       setShowNamingModal(false);
     } catch (err: unknown) {
-      const message =
-        (err as { response?: { data?: { error?: string } } })?.response?.data?.error
-        || 'Something went wrong. Please try again.';
+      const message = err instanceof ApiError
+        ? err.message
+        : 'Something went wrong. Please try again.';
       setCreationError(message);
     } finally {
       setIsSubmitting(false);

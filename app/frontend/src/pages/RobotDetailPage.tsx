@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import axios from 'axios';
 import apiClient from '../utils/apiClient';
 import {
   fetchRobotById,
@@ -12,6 +11,7 @@ import {
   unequipMainWeapon,
   unequipOffhandWeapon,
 } from '../utils/robotApi';
+import { ApiError } from '../utils/ApiError';
 import { useRobotStore } from '../stores';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
@@ -325,13 +325,13 @@ function RobotDetailPage() {
       
       setBattleReadiness({ isReady, warnings });
     } catch (err: unknown) {
-      if (axios.isAxiosError(err)) {
-        if (err.response?.status === 401) {
+      if (err instanceof ApiError) {
+        if (err.statusCode === 401) {
           logout();
           navigate('/login');
           return;
         }
-        if (err.response?.status === 404) {
+        if (err.statusCode === 404) {
           setError(`Robot with ID ${id} not found. It may have been deleted or you may not have permission to view it.`);
           setLoading(false);
           return;
@@ -369,7 +369,7 @@ function RobotDetailPage() {
       setSuccessMessage('Robot image updated successfully!');
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err: unknown) {
-      const message = axios.isAxiosError(err) ? err.response?.data?.error : undefined;
+      const message = err instanceof ApiError ? err.message : undefined;
       setError(message || 'Failed to update robot image');
     }
   };
@@ -410,10 +410,11 @@ function RobotDetailPage() {
       
       let errorMessage = 'Failed to commit upgrades';
       let errorDetails = '';
-      if (axios.isAxiosError(err) && err.response?.data) {
-        errorMessage = err.response.data.error || errorMessage;
-        if (err.response.data.required) {
-          errorDetails = ` (Required: ₡${err.response.data.required.toLocaleString()}, Current: ₡${err.response.data.current.toLocaleString()})`;
+      if (err instanceof ApiError) {
+        errorMessage = err.message || errorMessage;
+        if (err.details && typeof err.details === 'object' && 'required' in err.details) {
+          const details = err.details as { required: number; current: number };
+          errorDetails = ` (Required: ₡${details.required.toLocaleString()}, Current: ₡${details.current.toLocaleString()})`;
         }
       } else if (err instanceof Error) {
         errorMessage = err.message;

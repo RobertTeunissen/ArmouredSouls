@@ -104,6 +104,10 @@ export async function getEligibleTeams(
 /**
  * Batch-fetch recent opponents for all teams in a single query.
  * Mirrors the pattern from league matchmaking's getRecentOpponentsBatch.
+ *
+ * NOTE: With skewed match volume, some teams may get fewer than `limit` recent opponents.
+ * This is acceptable for matchmaking — recent opponent avoidance is a soft preference,
+ * not a hard constraint. The penalty score still works correctly with partial data.
  */
 async function getRecentOpponentsBatch(
   teamIds: number[],

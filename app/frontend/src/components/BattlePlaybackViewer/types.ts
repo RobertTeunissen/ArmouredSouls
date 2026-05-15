@@ -77,6 +77,7 @@ export interface PlaybackCombatResult {
   robot2Damage?: number;
   robot1DamageDealt?: number;
   robot2DamageDealt?: number;
+  /** Mapped from backend array to Record<robotName, state> by the practice arena hook */
   finalStates?: Record<string, RobotFinalState>;
   durationSeconds: number;
   isDraw: boolean;
