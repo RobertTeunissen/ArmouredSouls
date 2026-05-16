@@ -10,9 +10,9 @@ set -euo pipefail
 BACKUP_DIR="/opt/armouredsouls/backups"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 DAY_OF_WEEK=$(date +%u)  # 1=Monday, 7=Sunday
-DAILY_RETAIN="${BACKUP_DAILY_RETAIN:-3}"
-WEEKLY_RETAIN="${BACKUP_WEEKLY_RETAIN:-2}"
-DISK_THRESHOLD="${BACKUP_DISK_THRESHOLD:-90}"
+DAILY_RETAIN="${BACKUP_DAILY_RETAIN:-2}"
+WEEKLY_RETAIN="${BACKUP_WEEKLY_RETAIN:-0}"
+DISK_THRESHOLD="${BACKUP_DISK_THRESHOLD:-85}"
 
 # Load database credentials from environment or .env file
 if [ -f /opt/armouredsouls/backend/.env ]; then
@@ -53,10 +53,10 @@ if [ "${DISK_USAGE}" -ge "${DISK_THRESHOLD}" ]; then
 fi
 
 # --- Create daily backup ---
-DAILY_FILE="${BACKUP_DIR}/daily/${DB_NAME}_daily_${TIMESTAMP}.sql.gz"
+DAILY_FILE="${BACKUP_DIR}/daily/${DB_NAME}_daily_${TIMESTAMP}.dump"
 log "Starting daily backup: ${DAILY_FILE}"
 
-if pg_dump -h "${DB_HOST}" -p "${DB_PORT}" -U "${DB_USER}" "${DB_NAME}" | gzip > "${DAILY_FILE}"; then
+if pg_dump -h "${DB_HOST}" -p "${DB_PORT}" -U "${DB_USER}" -Fc "${DB_NAME}" > "${DAILY_FILE}"; then
   FILE_SIZE=$(du -h "${DAILY_FILE}" | cut -f1)
   log "Daily backup complete: ${DAILY_FILE} (${FILE_SIZE})"
 else
@@ -67,26 +67,26 @@ fi
 
 # --- Promote Sunday backup to weekly ---
 if [ "${DAY_OF_WEEK}" -eq 7 ]; then
-  WEEKLY_FILE="${BACKUP_DIR}/weekly/${DB_NAME}_weekly_${TIMESTAMP}.sql.gz"
+  WEEKLY_FILE="${BACKUP_DIR}/weekly/${DB_NAME}_weekly_${TIMESTAMP}.dump"
   cp "${DAILY_FILE}" "${WEEKLY_FILE}"
   log "Weekly backup created: ${WEEKLY_FILE}"
 fi
 
 # --- Cleanup old daily backups (keep last N) ---
-DAILY_COUNT=$(find "${BACKUP_DIR}/daily" -name "*.sql.gz" -type f | wc -l)
+DAILY_COUNT=$(find "${BACKUP_DIR}/daily" \( -name "*.dump" -o -name "*.sql.gz" \) -type f | wc -l)
 if [ "${DAILY_COUNT}" -gt "${DAILY_RETAIN}" ]; then
   DELETE_COUNT=$((DAILY_COUNT - DAILY_RETAIN))
-  find "${BACKUP_DIR}/daily" -name "*.sql.gz" -type f -printf '%T+ %p\n' \
+  find "${BACKUP_DIR}/daily" \( -name "*.dump" -o -name "*.sql.gz" \) -type f -printf '%T+ %p\n' \
     | sort | head -n "${DELETE_COUNT}" | awk '{print $2}' \
     | xargs rm -f
   log "Cleaned up ${DELETE_COUNT} old daily backup(s)"
 fi
 
 # --- Cleanup old weekly backups (keep last N) ---
-WEEKLY_COUNT=$(find "${BACKUP_DIR}/weekly" -name "*.sql.gz" -type f | wc -l)
+WEEKLY_COUNT=$(find "${BACKUP_DIR}/weekly" \( -name "*.dump" -o -name "*.sql.gz" \) -type f | wc -l)
 if [ "${WEEKLY_COUNT}" -gt "${WEEKLY_RETAIN}" ]; then
   DELETE_COUNT=$((WEEKLY_COUNT - WEEKLY_RETAIN))
-  find "${BACKUP_DIR}/weekly" -name "*.sql.gz" -type f -printf '%T+ %p\n' \
+  find "${BACKUP_DIR}/weekly" \( -name "*.dump" -o -name "*.sql.gz" \) -type f -printf '%T+ %p\n' \
     | sort | head -n "${DELETE_COUNT}" | awk '{print $2}' \
     | xargs rm -f
   log "Cleaned up ${DELETE_COUNT} old weekly backup(s)"

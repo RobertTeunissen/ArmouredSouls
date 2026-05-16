@@ -601,7 +601,7 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
 
       // Execute all currency updates in a single transaction
       if (currencyUpdates.length > 0) {
-        await prisma.$transaction(currencyUpdates);
+        await prisma.$transaction(currencyUpdates, { timeout: 30000 });
       }
 
       logger.info(`[Admin] Passive income: ₡${totalPassiveIncome.toLocaleString()}, Operating costs: ₡${totalOperatingCosts.toLocaleString()}`);
