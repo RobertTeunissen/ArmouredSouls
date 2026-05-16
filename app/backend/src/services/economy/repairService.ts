@@ -204,8 +204,17 @@ export async function repairAllRobots(deductCosts: boolean = true, cycleNumber?:
     });
   }
 
-  // Execute all robot updates and user deductions in a single transaction
-  await prisma.$transaction([...robotUpdates, ...userDeductions]);
+  // Execute robot updates and user deductions in chunked transactions
+  // to avoid exceeding Prisma's interactive transaction timeout on large rosters.
+  // User deductions are small (one per user) so they go in a single batch.
+  const CHUNK_SIZE = 200;
+  for (let i = 0; i < robotUpdates.length; i += CHUNK_SIZE) {
+    const chunk = robotUpdates.slice(i, i + CHUNK_SIZE);
+    await prisma.$transaction(chunk);
+  }
+  if (userDeductions.length > 0) {
+    await prisma.$transaction(userDeductions);
+  }
 
   // Log repair events sequentially (audit trail, non-critical)
   for (const event of repairEvents) {
