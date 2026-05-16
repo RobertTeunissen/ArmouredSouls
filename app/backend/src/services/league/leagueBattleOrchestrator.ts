@@ -601,50 +601,55 @@ export async function processBattle(scheduledMatch: ScheduledLeagueMatch): Promi
   const robot2IsWinner = result.winnerId === robot2.id;
   
   // Log battle_complete events to audit log - ONE EVENT PER ROBOT (parallel — independent writes)
-  await Promise.all([
-    logBattleAuditEvent(
-      {
-        robotId: robot1.id,
-        userId: robot1.userId,
-        isWinner: robot1IsWinner,
-        isDraw: result.isDraw,
-        damageDealt: robot1Participant.damageDealt,
-        finalHP: robot1Participant.finalHP,
-        yielded: robot1Participant.yielded,
-        destroyed: robot1Participant.destroyed,
-        credits: robot1IsWinner ? (battle.winnerReward ?? 0) : (battle.loserReward ?? 0),
-        prestige: stats1.prestigeAwarded,
-        fame: stats1.fameAwarded,
-        eloBefore: robot1Participant.eloBefore,
-        eloAfter: robot1Participant.eloAfter,
-      },
-      { id: battle.id, battleType: battle.battleType, leagueType: battle.leagueType, durationSeconds: battle.durationSeconds, eloChange: battle.eloChange },
-      robot2.id,
-      streamingRevenue1?.totalRevenue || 0,
-      result.isByeMatch,
-    ),
-    logBattleAuditEvent(
-      {
-        robotId: robot2.id,
-        userId: robot2.userId,
-        isWinner: robot2IsWinner,
-        isDraw: result.isDraw,
-        damageDealt: robot2Participant.damageDealt,
-        finalHP: robot2Participant.finalHP,
-        yielded: robot2Participant.yielded,
-        destroyed: robot2Participant.destroyed,
-        credits: robot2IsWinner ? (battle.winnerReward ?? 0) : (battle.loserReward ?? 0),
-        prestige: stats2.prestigeAwarded,
-        fame: stats2.fameAwarded,
-        eloBefore: robot2Participant.eloBefore,
-        eloAfter: robot2Participant.eloAfter,
-      },
-      { id: battle.id, battleType: battle.battleType, leagueType: battle.leagueType, durationSeconds: battle.durationSeconds, eloChange: battle.eloChange },
-      robot1.id,
-      streamingRevenue2?.totalRevenue || 0,
-      result.isByeMatch,
-    ),
-  ]);
+  // Non-blocking: audit failures must never crash a battle
+  try {
+    await Promise.all([
+      logBattleAuditEvent(
+        {
+          robotId: robot1.id,
+          userId: robot1.userId,
+          isWinner: robot1IsWinner,
+          isDraw: result.isDraw,
+          damageDealt: robot1Participant.damageDealt,
+          finalHP: robot1Participant.finalHP,
+          yielded: robot1Participant.yielded,
+          destroyed: robot1Participant.destroyed,
+          credits: robot1IsWinner ? (battle.winnerReward ?? 0) : (battle.loserReward ?? 0),
+          prestige: stats1.prestigeAwarded,
+          fame: stats1.fameAwarded,
+          eloBefore: robot1Participant.eloBefore,
+          eloAfter: robot1Participant.eloAfter,
+        },
+        { id: battle.id, battleType: battle.battleType, leagueType: battle.leagueType, durationSeconds: battle.durationSeconds, eloChange: battle.eloChange },
+        robot2.id,
+        streamingRevenue1?.totalRevenue || 0,
+        result.isByeMatch,
+      ),
+      logBattleAuditEvent(
+        {
+          robotId: robot2.id,
+          userId: robot2.userId,
+          isWinner: robot2IsWinner,
+          isDraw: result.isDraw,
+          damageDealt: robot2Participant.damageDealt,
+          finalHP: robot2Participant.finalHP,
+          yielded: robot2Participant.yielded,
+          destroyed: robot2Participant.destroyed,
+          credits: robot2IsWinner ? (battle.winnerReward ?? 0) : (battle.loserReward ?? 0),
+          prestige: stats2.prestigeAwarded,
+          fame: stats2.fameAwarded,
+          eloBefore: robot2Participant.eloBefore,
+          eloAfter: robot2Participant.eloAfter,
+        },
+        { id: battle.id, battleType: battle.battleType, leagueType: battle.leagueType, durationSeconds: battle.durationSeconds, eloChange: battle.eloChange },
+        robot1.id,
+        streamingRevenue2?.totalRevenue || 0,
+        result.isByeMatch,
+      ),
+    ]);
+  } catch (auditError) {
+    logger.error(`[BattleOrchestrator] Audit log failed for battle #${battle.id}: ${auditError instanceof Error ? auditError.message : String(auditError)}`);
+  }
   
   // Prestige/fame awards are already stored in BattleParticipant records
   // No need to update Battle table

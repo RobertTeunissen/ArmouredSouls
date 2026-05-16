@@ -75,12 +75,15 @@ const repairAllBodySchema = z.object({
 });
 
 const bulkCyclesBodySchema = z.object({
-  cycles: z.number().int().positive().max(100).optional().default(1),
+  cycles: z.number().int().nonnegative().max(100).optional().default(1),
   generateUsersPerCycle: z.boolean().optional().default(false),
   includeTournaments: z.boolean().optional().default(true),
   includeKoth: z.boolean().optional().default(true),
   includeDailyFinances: z.boolean().optional().default(true),
-});
+}).refine(
+  (data) => data.cycles !== 0 || data.includeTournaments,
+  { message: 'cycles=0 requires includeTournaments=true', path: ['cycles'] }
+);
 
 const battlesQuerySchema = paginationQuery.extend({
   leagueType: z.string().optional(),
