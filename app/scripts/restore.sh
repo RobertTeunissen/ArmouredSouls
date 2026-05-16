@@ -3,11 +3,11 @@ set -euo pipefail
 
 # ============================================================================
 # Armoured Souls — PostgreSQL Backup Restore
-# Usage: ./restore.sh <backup_file.sql.gz>
+# Usage: ./restore.sh <backup_file.dump|backup_file.sql.gz>
 # ============================================================================
 
 if [ $# -lt 1 ]; then
-  echo "Usage: $0 <backup_file.sql.gz>"
+  echo "Usage: $0 <backup_file.dump|backup_file.sql.gz>"
   echo ""
   echo "Available backups:"
   ls -lht /opt/armouredsouls/backups/daily/ 2>/dev/null || echo "  No daily backups found"
@@ -66,7 +66,11 @@ dropdb -h "${DB_HOST}" -p "${DB_PORT}" -U "${DB_USER}" --if-exists "${DB_NAME}"
 createdb -h "${DB_HOST}" -p "${DB_PORT}" -U "${DB_USER}" "${DB_NAME}"
 
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Restoring from backup..."
-gunzip -c "${BACKUP_FILE}" | psql -h "${DB_HOST}" -p "${DB_PORT}" -U "${DB_USER}" "${DB_NAME}" > /dev/null
+if [[ "${BACKUP_FILE}" == *.dump ]]; then
+  pg_restore -h "${DB_HOST}" -p "${DB_PORT}" -U "${DB_USER}" -d "${DB_NAME}" --no-owner --no-acl "${BACKUP_FILE}"
+else
+  gunzip -c "${BACKUP_FILE}" | psql -h "${DB_HOST}" -p "${DB_PORT}" -U "${DB_USER}" "${DB_NAME}" > /dev/null
+fi
 
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running migrations..."
 cd /opt/armouredsouls/backend
