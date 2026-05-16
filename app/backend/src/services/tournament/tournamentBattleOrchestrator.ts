@@ -203,50 +203,59 @@ export async function processTournamentBattle(
   const isDraw = battle.winnerId === null;
   
   // Event 1: Robot 1's perspective
-  await logBattleAuditEvent(
-    {
-      robotId: robot1.id,
-      userId: robot1.userId,
-      isWinner: robot1IsWinner,
-      isDraw,
-      damageDealt: robot1Participant.damageDealt,
-      finalHP: robot1Participant.finalHP,
-      yielded: robot1Participant.yielded,
-      destroyed: robot1Participant.destroyed,
-      credits: robot1IsWinner ? (battle.winnerReward ?? 0) : (battle.loserReward ?? 0),
-      prestige: stats1.prestigeAwarded,
-      fame: stats1.fameAwarded,
-      eloBefore: robot1Participant.eloBefore,
-      eloAfter: robot1Participant.eloAfter,
-    },
-    { id: battle.id, battleType: 'tournament', leagueType: 'tournament', durationSeconds: battle.durationSeconds, eloChange: battle.eloChange },
-    robot2.id,
-    streamingRevenue1?.totalRevenue || 0,
-    false,
-  );
-  
   // Event 2: Robot 2's perspective
-  await logBattleAuditEvent(
-    {
-      robotId: robot2.id,
-      userId: robot2.userId,
-      isWinner: robot2IsWinner,
-      isDraw,
-      damageDealt: robot2Participant.damageDealt,
-      finalHP: robot2Participant.finalHP,
-      yielded: robot2Participant.yielded,
-      destroyed: robot2Participant.destroyed,
-      credits: robot2IsWinner ? (battle.winnerReward ?? 0) : (battle.loserReward ?? 0),
-      prestige: stats2.prestigeAwarded,
-      fame: stats2.fameAwarded,
-      eloBefore: robot2Participant.eloBefore,
-      eloAfter: robot2Participant.eloAfter,
-    },
-    { id: battle.id, battleType: 'tournament', leagueType: 'tournament', durationSeconds: battle.durationSeconds, eloChange: battle.eloChange },
-    robot1.id,
-    streamingRevenue2?.totalRevenue || 0,
-    false,
-  );
+  // Non-blocking: audit failures must never crash a battle
+  try {
+    await logBattleAuditEvent(
+      {
+        robotId: robot1.id,
+        userId: robot1.userId,
+        isWinner: robot1IsWinner,
+        isDraw,
+        damageDealt: robot1Participant.damageDealt,
+        finalHP: robot1Participant.finalHP,
+        yielded: robot1Participant.yielded,
+        destroyed: robot1Participant.destroyed,
+        credits: robot1IsWinner ? (battle.winnerReward ?? 0) : (battle.loserReward ?? 0),
+        prestige: stats1.prestigeAwarded,
+        fame: stats1.fameAwarded,
+        eloBefore: robot1Participant.eloBefore,
+        eloAfter: robot1Participant.eloAfter,
+      },
+      { id: battle.id, battleType: 'tournament', leagueType: 'tournament', durationSeconds: battle.durationSeconds, eloChange: battle.eloChange },
+      robot2.id,
+      streamingRevenue1?.totalRevenue || 0,
+      false,
+    );
+  } catch (auditError) {
+    logger.error(`[TournamentBattleOrchestrator] Audit log failed for robot ${robot1.id} in battle #${battle.id}: ${auditError instanceof Error ? auditError.message : String(auditError)}`);
+  }
+
+  try {
+    await logBattleAuditEvent(
+      {
+        robotId: robot2.id,
+        userId: robot2.userId,
+        isWinner: robot2IsWinner,
+        isDraw,
+        damageDealt: robot2Participant.damageDealt,
+        finalHP: robot2Participant.finalHP,
+        yielded: robot2Participant.yielded,
+        destroyed: robot2Participant.destroyed,
+        credits: robot2IsWinner ? (battle.winnerReward ?? 0) : (battle.loserReward ?? 0),
+        prestige: stats2.prestigeAwarded,
+        fame: stats2.fameAwarded,
+        eloBefore: robot2Participant.eloBefore,
+        eloAfter: robot2Participant.eloAfter,
+      },
+      { id: battle.id, battleType: 'tournament', leagueType: 'tournament', durationSeconds: battle.durationSeconds, eloChange: battle.eloChange },
+      robot1.id,
+      streamingRevenue2?.totalRevenue || 0,
+      false,
+    );
+  } catch (auditError) {
+    logger.error(`[TournamentBattleOrchestrator] Audit log failed for robot ${robot2.id} in battle #${battle.id}: ${auditError instanceof Error ? auditError.message : String(auditError)}`);
+  }
 
   // Update tournament match with result
   await prisma.scheduledTournamentMatch.update({

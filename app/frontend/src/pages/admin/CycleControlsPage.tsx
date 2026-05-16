@@ -514,7 +514,16 @@ function SchedulerStatusPanel({ status }: { status: SchedulerState | null }) {
                   <td className="px-4 py-3 text-secondary">{job.lastRunAt ? new Date(job.lastRunAt).toLocaleString() : '—'}</td>
                   <td className="px-4 py-3">
                     {job.lastRunStatus === 'success' && <span className="text-success">✓ Success</span>}
-                    {job.lastRunStatus === 'failed' && <span className="text-error">✗ Failed</span>}
+                    {job.lastRunStatus === 'failed' && (
+                      <span className="text-error" title={job.lastError || undefined}>
+                        ✗ Failed
+                        {job.lastError && (
+                          <span className="block text-xs text-error/70 mt-0.5 max-w-[300px] truncate">
+                            {job.lastError}
+                          </span>
+                        )}
+                      </span>
+                    )}
                     {!job.lastRunStatus && <span className="text-secondary">—</span>}
                   </td>
                   <td className="px-4 py-3 text-secondary">{job.lastRunDurationMs != null ? `${(job.lastRunDurationMs / 1000).toFixed(2)}s` : '—'}</td>

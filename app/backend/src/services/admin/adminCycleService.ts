@@ -66,6 +66,105 @@ export interface BulkCycleResult {
   timestamp: string;
 }
 
+/** Result shape for tournament execution step. */
+export interface TournamentStepSummary {
+  tournamentsExecuted?: number;
+  roundsExecuted?: number;
+  matchesExecuted?: number;
+  tournamentsCompleted?: number;
+  tournamentsCreated?: number;
+  errors?: string[];
+  error?: string;
+}
+
+/**
+ * Execute tournament rounds, advance winners, and auto-create next tournament.
+ * Shared by both the cycles=0 tournament-only path and the full cycle pipeline.
+ */
+async function executeTournamentStep(): Promise<TournamentStepSummary> {
+  const summary: TournamentStepSummary = {
+    tournamentsExecuted: 0,
+    roundsExecuted: 0,
+    matchesExecuted: 0,
+    tournamentsCompleted: 0,
+    tournamentsCreated: 0,
+    errors: [],
+  };
+
+  try {
+    const activeTournaments = await getActiveTournaments();
+
+    for (const tournament of activeTournaments) {
+      try {
+        const currentRoundMatches = await getCurrentRoundMatches(tournament.id);
+
+        if (currentRoundMatches.length > 0) {
+          for (const match of currentRoundMatches) {
+            if (match.robot1Id && !match.robot2Id) {
+              await prisma.scheduledTournamentMatch.update({
+                where: { id: match.id },
+                data: {
+                  winnerId: match.robot1Id,
+                  status: 'completed',
+                  isByeMatch: true,
+                  completedAt: new Date(),
+                },
+              });
+              logger.info(`[Admin] Auto-completed bye match ${match.id} in tournament ${tournament.id}`);
+              summary.matchesExecuted!++;
+              continue;
+            }
+
+            if (!match.robot1Id && !match.robot2Id) {
+              summary.errors!.push(`Tournament ${tournament.id} Match ${match.id}: No robots assigned`);
+              continue;
+            }
+
+            try {
+              await processTournamentBattle(match);
+              summary.matchesExecuted!++;
+            } catch (error) {
+              const errorMsg = error instanceof Error ? error.message : String(error);
+              summary.errors!.push(`Tournament ${tournament.id} Match ${match.id}: ${errorMsg}`);
+            }
+          }
+
+          await advanceWinnersToNextRound(tournament.id);
+          summary.roundsExecuted!++;
+        }
+
+        summary.tournamentsExecuted!++;
+
+        const updatedTournament = await prisma.tournament.findUnique({
+          where: { id: tournament.id },
+        });
+
+        if (updatedTournament?.status === 'completed') {
+          summary.tournamentsCompleted!++;
+        }
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        summary.errors!.push(`Tournament ${tournament.id}: ${errorMsg}`);
+      }
+    }
+
+    try {
+      const nextTournament = await autoCreateNextTournament();
+      if (nextTournament) {
+        summary.tournamentsCreated!++;
+        logger.info(`[Admin] Auto-created tournament: ${nextTournament.name}`);
+      }
+    } catch (error) {
+      logger.error('[Admin] Failed to auto-create tournament:', error);
+    }
+  } catch (error) {
+    logger.error('[Admin] Tournament execution error:', error);
+    return { error: error instanceof Error ? error.message : String(error) };
+  }
+
+  return summary;
+}
+
 /**
  * Execute one or more complete game cycles.
  *
@@ -83,12 +182,11 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
   } = options;
 
   const maxCycles = 100;
-  const cycleCount = Math.min(Math.max(1, cycles), maxCycles);
+  const cycleCount = cycles === 0 ? 0 : Math.min(Math.max(1, cycles), maxCycles);
   const eventLogger = new EventLogger();
+  const startTime = Date.now();
 
-  logger.info(`[Admin] Running ${cycleCount} bulk cycles (includeTournaments: ${includeTournaments}, generateUsersPerCycle: ${generateUsersPerCycle})...`);
-
-  // Get or create cycle metadata (singleton pattern)
+  // Get or create cycle metadata (singleton pattern) — needed for both paths
   let cycleMetadata = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
   if (!cycleMetadata) {
     cycleMetadata = await prisma.cycleMetadata.create({
@@ -96,9 +194,31 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
     });
   }
 
+  // cycles=0 means "run only the tournament step without a full cycle"
+  if (cycleCount === 0 && includeTournaments) {
+    logger.info('[Admin] Running tournament-only execution (cycles=0)...');
+    const tournamentSummary = await executeTournamentStep();
+    const duration = Date.now() - startTime;
+
+    return {
+      success: true as const,
+      cyclesCompleted: 0,
+      totalCyclesInSystem: cycleMetadata.totalCycles,
+      includeTournaments: true,
+      includeKoth: false,
+      includeDailyFinances: false,
+      generateUsersPerCycleEnabled: false,
+      totalDuration: duration,
+      averageCycleDuration: 0,
+      results: [{ cycle: 0, tournaments: tournamentSummary, duration }],
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  logger.info(`[Admin] Running ${cycleCount} bulk cycles (includeTournaments: ${includeTournaments}, generateUsersPerCycle: ${generateUsersPerCycle})...`);
+
   let currentCycleNumber = cycleMetadata.totalCycles;
   const cycleResults: CycleResult[] = [];
-  const startTime = Date.now();
 
   for (let i = 1; i <= cycleCount; i++) {
     const cycleStart = Date.now();
@@ -243,89 +363,8 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
       const step5Start = Date.now();
       let tournamentSummary = null;
       if (includeTournaments) {
-        try {
-          tournamentSummary = {
-            tournamentsExecuted: 0,
-            roundsExecuted: 0,
-            matchesExecuted: 0,
-            tournamentsCompleted: 0,
-            tournamentsCreated: 0,
-            errors: [] as string[],
-          };
-
-          const activeTournaments = await getActiveTournaments();
-
-          for (const tournament of activeTournaments) {
-            try {
-              const currentRoundMatches = await getCurrentRoundMatches(tournament.id);
-
-              if (currentRoundMatches.length > 0) {
-                for (const match of currentRoundMatches) {
-                  if (match.robot1Id && !match.robot2Id) {
-                    await prisma.scheduledTournamentMatch.update({
-                      where: { id: match.id },
-                      data: {
-                        winnerId: match.robot1Id,
-                        status: 'completed',
-                        isByeMatch: true,
-                        completedAt: new Date(),
-                      },
-                    });
-                    logger.info(`[Admin] Auto-completed bye match ${match.id} in tournament ${tournament.id}`);
-                    tournamentSummary.matchesExecuted++;
-                    continue;
-                  }
-
-                  if (!match.robot1Id && !match.robot2Id) {
-                    tournamentSummary.errors.push(`Tournament ${tournament.id} Match ${match.id}: No robots assigned`);
-                    continue;
-                  }
-
-                  try {
-                    await processTournamentBattle(match);
-                    tournamentSummary.matchesExecuted++;
-                  } catch (error) {
-                    const errorMsg = error instanceof Error ? error.message : String(error);
-                    tournamentSummary.errors.push(`Tournament ${tournament.id} Match ${match.id}: ${errorMsg}`);
-                  }
-                }
-
-                await advanceWinnersToNextRound(tournament.id);
-                tournamentSummary.roundsExecuted++;
-              }
-
-              tournamentSummary.tournamentsExecuted++;
-
-              const updatedTournament = await prisma.tournament.findUnique({
-                where: { id: tournament.id },
-              });
-
-              if (updatedTournament?.status === 'completed') {
-                tournamentSummary.tournamentsCompleted++;
-              }
-            } catch (error) {
-              const errorMsg = error instanceof Error ? error.message : String(error);
-              tournamentSummary.errors.push(`Tournament ${tournament.id}: ${errorMsg}`);
-            }
-          }
-
-          try {
-            const nextTournament = await autoCreateNextTournament();
-            if (nextTournament) {
-              tournamentSummary.tournamentsCreated++;
-              logger.info(`[Admin] Auto-created tournament: ${nextTournament.name}`);
-            }
-          } catch (error) {
-            logger.error('[Admin] Failed to auto-create tournament:', error);
-          }
-
-          logger.info(`[Admin] Tournaments: ${tournamentSummary.tournamentsExecuted} executed, ${tournamentSummary.roundsExecuted} rounds, ${tournamentSummary.matchesExecuted} matches`);
-        } catch (error) {
-          logger.error('[Admin] Tournament execution error:', error);
-          tournamentSummary = {
-            error: error instanceof Error ? error.message : String(error),
-          };
-        }
+        tournamentSummary = await executeTournamentStep();
+        logger.info(`[Admin] Tournaments: ${tournamentSummary.tournamentsExecuted || 0} executed, ${tournamentSummary.roundsExecuted || 0} rounds, ${tournamentSummary.matchesExecuted || 0} matches`);
       }
       await eventLogger.logCycleStepComplete(
         currentCycleNumber,

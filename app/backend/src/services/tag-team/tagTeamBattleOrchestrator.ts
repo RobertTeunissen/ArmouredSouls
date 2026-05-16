@@ -2096,26 +2096,33 @@ async function updateTagTeamBattleResults(
       },
     ];
 
+    // Non-blocking: audit failures must never crash a battle
+    let auditSuccessCount = 0;
     for (const r of tagTeamAuditRobots) {
-      await logBattleAuditEvent(
-        {
-          robotId: r.robotId, userId: r.userId,
-          isWinner: r.isWinner, isDraw: r.isDraw,
-          damageDealt: r.damageDealt, finalHP: r.finalHP,
-          yielded: r.yielded, destroyed: r.destroyed,
-          credits: r.credits, prestige: r.prestige, fame: r.fame,
-          eloBefore: r.eloBefore, eloAfter: r.eloAfter,
-        },
-        { id: battle.id, battleType: 'tag_team', leagueType: battle.leagueType, durationSeconds: battle.durationSeconds, eloChange: battle.eloChange },
-        null, // Tag team has no single opponent
-        r.streamingRevenue,
-        false,
-        r.extras,
-      );
+      try {
+        await logBattleAuditEvent(
+          {
+            robotId: r.robotId, userId: r.userId,
+            isWinner: r.isWinner, isDraw: r.isDraw,
+            damageDealt: r.damageDealt, finalHP: r.finalHP,
+            yielded: r.yielded, destroyed: r.destroyed,
+            credits: r.credits, prestige: r.prestige, fame: r.fame,
+            eloBefore: r.eloBefore, eloAfter: r.eloAfter,
+          },
+          { id: battle.id, battleType: 'tag_team', leagueType: battle.leagueType, durationSeconds: battle.durationSeconds, eloChange: battle.eloChange },
+          null, // Tag team has no single opponent
+          r.streamingRevenue,
+          false,
+          r.extras,
+        );
+        auditSuccessCount++;
+      } catch (auditError) {
+        logger.error(`[TagTeamBattles] Audit log failed for robot ${r.robotId} in battle #${battle.id}: ${auditError instanceof Error ? auditError.message : String(auditError)}`);
+      }
     }
     
     logger.info(
-      `[TagTeamBattles] Created 4 audit log events for tag team battle ${battle.id} ` +
+      `[TagTeamBattles] Created ${auditSuccessCount}/4 audit log events for tag team battle ${battle.id} ` +
       `(one per robot, rewards split 50/50 per team)`
     );
 
