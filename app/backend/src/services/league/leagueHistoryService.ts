@@ -43,6 +43,10 @@ export interface LeagueHistoryRecord {
   leaguePoints: number;
   cycleNumber: number;
   createdAt: Date;
+  /** Robot name, or "<active> & <reserve>" for tag teams. Populated by query helpers. */
+  entityName?: string;
+  /** Owner's stableName (falls back to username). Populated by query helpers. */
+  stableName?: string;
 }
 
 export interface LeagueHistoryQueryParams {
@@ -96,6 +100,70 @@ export async function getCurrentCycleNumber(): Promise<number> {
 }
 
 // --- Service Functions ---
+
+/**
+ * Batch-enrich raw league history records with entity names (robot name or
+ * "<active> & <reserve>" for tag teams) and the owner's stable name.
+ * Avoids N+1 queries by collecting all IDs first and issuing one findMany
+ * per entity type.
+ */
+async function enrichWithNames(
+  records: LeagueHistoryRecord[],
+): Promise<LeagueHistoryRecord[]> {
+  if (records.length === 0) return records;
+
+  const robotIds = new Set<number>();
+  const tagTeamIds = new Set<number>();
+  const userIds = new Set<number>();
+
+  for (const r of records) {
+    userIds.add(r.userId);
+    if (r.entityType === 'robot') robotIds.add(r.entityId);
+    else if (r.entityType === 'tag_team') tagTeamIds.add(r.entityId);
+  }
+
+  const [robots, tagTeams, users] = await Promise.all([
+    robotIds.size > 0
+      ? prisma.robot.findMany({
+          where: { id: { in: Array.from(robotIds) } },
+          select: { id: true, name: true },
+        })
+      : Promise.resolve([]),
+    tagTeamIds.size > 0
+      ? prisma.tagTeam.findMany({
+          where: { id: { in: Array.from(tagTeamIds) } },
+          select: {
+            id: true,
+            activeRobot: { select: { name: true } },
+            reserveRobot: { select: { name: true } },
+          },
+        })
+      : Promise.resolve([]),
+    userIds.size > 0
+      ? prisma.user.findMany({
+          where: { id: { in: Array.from(userIds) } },
+          select: { id: true, username: true, stableName: true },
+        })
+      : Promise.resolve([]),
+  ]);
+
+  const robotNameMap = new Map(robots.map(r => [r.id, r.name]));
+  const tagTeamNameMap = new Map(
+    tagTeams.map(t => [t.id, `${t.activeRobot.name} & ${t.reserveRobot.name}`]),
+  );
+  const stableNameMap = new Map(
+    users.map(u => [u.id, u.stableName || u.username]),
+  );
+
+  return records.map(r => ({
+    ...r,
+    entityName:
+      r.entityType === 'robot'
+        ? robotNameMap.get(r.entityId)
+        : tagTeamNameMap.get(r.entityId),
+    stableName: stableNameMap.get(r.userId),
+  }));
+}
 
 /**
  * Record a tier change event. Non-blocking — logs errors, never throws.
@@ -156,8 +224,10 @@ export async function getHistoryByCycleRange(params: LeagueHistoryQueryParams): 
     prisma.leagueHistory.count({ where }),
   ]);
 
+  const enriched = await enrichWithNames(data as LeagueHistoryRecord[]);
+
   return {
-    data: data as LeagueHistoryRecord[],
+    data: enriched,
     pagination: {
       page,
       pageSize: perPage,
@@ -176,7 +246,7 @@ export async function getEntityHistory(entityType: EntityType, entityId: number)
     orderBy: { cycleNumber: 'asc' },
   });
 
-  return records as LeagueHistoryRecord[];
+  return enrichWithNames(records as LeagueHistoryRecord[]);
 }
 
 /**
