@@ -12,6 +12,7 @@ TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 DAY_OF_WEEK=$(date +%u)  # 1=Monday, 7=Sunday
 DAILY_RETAIN="${BACKUP_DAILY_RETAIN:-2}"
 WEEKLY_RETAIN="${BACKUP_WEEKLY_RETAIN:-0}"
+PRE_DEPLOY_RETAIN="${BACKUP_PRE_DEPLOY_RETAIN:-2}"
 DISK_THRESHOLD="${BACKUP_DISK_THRESHOLD:-85}"
 
 # Load database credentials from environment or .env file
@@ -43,6 +44,17 @@ send_alert() {
   fi
   log "$message"
 }
+
+# --- Cleanup old pre-deploy backups (runs BEFORE the disk guard so we can
+#     still reclaim space when disk usage is already over the threshold) ---
+PRE_DEPLOY_COUNT=$(find "${BACKUP_DIR}" -maxdepth 1 -name "pre_deploy_*.dump" -type f | wc -l)
+if [ "${PRE_DEPLOY_COUNT}" -gt "${PRE_DEPLOY_RETAIN}" ]; then
+  DELETE_COUNT=$((PRE_DEPLOY_COUNT - PRE_DEPLOY_RETAIN))
+  find "${BACKUP_DIR}" -maxdepth 1 -name "pre_deploy_*.dump" -type f -printf '%T+ %p\n' \
+    | sort | head -n "${DELETE_COUNT}" | awk '{print $2}' \
+    | xargs rm -f
+  log "Cleaned up ${DELETE_COUNT} old pre-deploy backup(s)"
+fi
 
 # --- Disk space guard ---
 DISK_USAGE=$(df / --output=pcent | tail -1 | tr -d ' %')
@@ -90,16 +102,6 @@ if [ "${WEEKLY_COUNT}" -gt "${WEEKLY_RETAIN}" ]; then
     | sort | head -n "${DELETE_COUNT}" | awk '{print $2}' \
     | xargs rm -f
   log "Cleaned up ${DELETE_COUNT} old weekly backup(s)"
-fi
-
-# --- Cleanup old pre-deploy backups (keep last 2) ---
-PRE_DEPLOY_COUNT=$(find "${BACKUP_DIR}" -maxdepth 1 -name "pre_deploy_*.dump" -type f | wc -l)
-if [ "${PRE_DEPLOY_COUNT}" -gt 2 ]; then
-  DELETE_COUNT=$((PRE_DEPLOY_COUNT - 2))
-  find "${BACKUP_DIR}" -maxdepth 1 -name "pre_deploy_*.dump" -type f -printf '%T+ %p\n' \
-    | sort | head -n "${DELETE_COUNT}" | awk '{print $2}' \
-    | xargs rm -f
-  log "Cleaned up ${DELETE_COUNT} old pre-deploy backup(s)"
 fi
 
 log "Backup process complete"
