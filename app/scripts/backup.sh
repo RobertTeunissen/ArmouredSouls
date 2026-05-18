@@ -92,4 +92,14 @@ if [ "${WEEKLY_COUNT}" -gt "${WEEKLY_RETAIN}" ]; then
   log "Cleaned up ${DELETE_COUNT} old weekly backup(s)"
 fi
 
+# --- Cleanup old pre-deploy backups (keep last 2) ---
+PRE_DEPLOY_COUNT=$(find "${BACKUP_DIR}" -maxdepth 1 -name "pre_deploy_*.dump" -type f | wc -l)
+if [ "${PRE_DEPLOY_COUNT}" -gt 2 ]; then
+  DELETE_COUNT=$((PRE_DEPLOY_COUNT - 2))
+  find "${BACKUP_DIR}" -maxdepth 1 -name "pre_deploy_*.dump" -type f -printf '%T+ %p\n' \
+    | sort | head -n "${DELETE_COUNT}" | awk '{print $2}' \
+    | xargs rm -f
+  log "Cleaned up ${DELETE_COUNT} old pre-deploy backup(s)"
+fi
+
 log "Backup process complete"

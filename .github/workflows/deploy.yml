@@ -363,6 +363,13 @@ jobs:
             ./app/ecosystem.config.js \
             ${{ secrets.ACC_VPS_USER }}@${{ secrets.ACC_VPS_IP }}:/opt/armouredsouls/
 
+      - name: Transfer scripts
+        run: |
+          rsync -avz \
+            -e "ssh -i ~/.ssh/deploy_key" \
+            ./app/scripts/ \
+            ${{ secrets.ACC_VPS_USER }}@${{ secrets.ACC_VPS_IP }}:/opt/armouredsouls/scripts/
+
       - name: Transfer Caddyfile
         run: |
           rsync -avz \
@@ -482,6 +489,17 @@ jobs:
         env:
           CHANGELOG_DEPLOY_TOKEN: ${{ secrets.CHANGELOG_DEPLOY_TOKEN }}
 
+      - name: Ensure logrotate config
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.ACC_VPS_IP }}
+          username: ${{ secrets.ACC_VPS_USER }}
+          key: ${{ secrets.ACC_SSH_KEY }}
+          script: |
+            sudo cp /opt/armouredsouls/scripts/logrotate-armouredsouls.conf /etc/logrotate.d/armouredsouls
+            sudo chown root:root /etc/logrotate.d/armouredsouls
+            sudo chmod 644 /etc/logrotate.d/armouredsouls
+
       - name: Restart backend via PM2
         uses: appleboy/ssh-action@v1
         with:
@@ -490,6 +508,7 @@ jobs:
           key: ${{ secrets.ACC_SSH_KEY }}
           script: |
             cd /opt/armouredsouls
+            pm2 flush
             pm2 restart ecosystem.config.js --update-env
 
       - name: Health check (30s timeout)
@@ -638,6 +657,13 @@ jobs:
             ./app/ecosystem.config.js \
             ${{ secrets.PRD_VPS_USER }}@${{ secrets.PRD_VPS_IP }}:/opt/armouredsouls/
 
+      - name: Transfer scripts
+        run: |
+          rsync -avz \
+            -e "ssh -i ~/.ssh/deploy_key" \
+            ./app/scripts/ \
+            ${{ secrets.PRD_VPS_USER }}@${{ secrets.PRD_VPS_IP }}:/opt/armouredsouls/scripts/
+
       - name: Transfer Caddyfile
         run: |
           rsync -avz \
@@ -747,6 +773,17 @@ jobs:
         env:
           CHANGELOG_DEPLOY_TOKEN: ${{ secrets.CHANGELOG_DEPLOY_TOKEN }}
 
+      - name: Ensure logrotate config
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.PRD_VPS_IP }}
+          username: ${{ secrets.PRD_VPS_USER }}
+          key: ${{ secrets.PRD_SSH_KEY }}
+          script: |
+            sudo cp /opt/armouredsouls/scripts/logrotate-armouredsouls.conf /etc/logrotate.d/armouredsouls
+            sudo chown root:root /etc/logrotate.d/armouredsouls
+            sudo chmod 644 /etc/logrotate.d/armouredsouls
+
       - name: Restart backend via PM2
         uses: appleboy/ssh-action@v1
         with:
@@ -755,6 +792,7 @@ jobs:
           key: ${{ secrets.PRD_SSH_KEY }}
           script: |
             cd /opt/armouredsouls
+            pm2 flush
             pm2 restart ecosystem.config.js --update-env
 
       - name: Health check (30s timeout)
