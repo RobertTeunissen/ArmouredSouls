@@ -32,6 +32,9 @@ const mockPrisma = {
     }),
     findMany: jest.fn().mockResolvedValue([]),
   },
+  user: {
+    findMany: jest.fn().mockResolvedValue([]),
+  },
 };
 
 jest.mock('../../../lib/prisma', () => ({
@@ -98,6 +101,7 @@ beforeEach(() => {
     reserveRobot: { name: 'Bot2' },
   });
   mockPrisma.tagTeam.findMany.mockResolvedValue([]);
+  mockPrisma.user.findMany.mockResolvedValue([]);
 });
 
 // ── Tests ───────────────────────────────────────────────────────────

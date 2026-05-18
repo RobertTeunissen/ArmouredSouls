@@ -78,6 +78,7 @@ const unitTestFiles = [
   'tuningCombatIntegration\\.test\\.ts',
   'tuningPracticeArena\\.test\\.ts',
   'leagueHistoryService\\.property\\.test\\.ts',
+  'leagueHistoryEnrichment\\.test\\.ts',
   'adminLeagueHistory\\.test\\.ts',
   'leagueHistoryPublic\\.test\\.ts',
 ];

@@ -29,6 +29,7 @@ interface LeagueHistoryEvent {
   entityType: string;
   entityId: number;
   entityName?: string;
+  stableName?: string;
   changeType: string;
   sourceTier: string;
   destinationTier: string;
@@ -274,8 +275,13 @@ function LeagueHistoryPage(): React.ReactElement {
           columns={[
             {
               key: 'entityName',
-              label: 'Entity Name',
+              label: 'Name',
               render: (row) => row.entityName || `${row.entityType} #${row.entityId}`,
+            },
+            {
+              key: 'stableName',
+              label: 'Stable',
+              render: (row) => row.stableName ?? <span className="text-secondary">—</span>,
             },
             {
               key: 'entityType',

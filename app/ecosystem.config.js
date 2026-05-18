@@ -13,12 +13,11 @@ module.exports = {
       env: {
         NODE_ENV: process.env.NODE_ENV || 'production',
       },
-      // Logging
+      // Logging — rotation handled by /etc/logrotate.d/armouredsouls (copytruncate)
       output: '/var/log/armouredsouls/backend-out.log',
       error: '/var/log/armouredsouls/backend-error.log',
       log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
       merge_logs: true,
-      max_size: '50M',
     },
   ],
 };
