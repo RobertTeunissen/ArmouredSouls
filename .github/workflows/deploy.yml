@@ -490,15 +490,25 @@ jobs:
           CHANGELOG_DEPLOY_TOKEN: ${{ secrets.CHANGELOG_DEPLOY_TOKEN }}
 
       - name: Ensure logrotate config
+        continue-on-error: true
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.ACC_VPS_IP }}
           username: ${{ secrets.ACC_VPS_USER }}
           key: ${{ secrets.ACC_SSH_KEY }}
           script: |
-            sudo cp /opt/armouredsouls/scripts/logrotate-armouredsouls.conf /etc/logrotate.d/armouredsouls
-            sudo chown root:root /etc/logrotate.d/armouredsouls
-            sudo chmod 644 /etc/logrotate.d/armouredsouls
+            # Install logrotate config if it differs from the repo version
+            REPO_CONF="/opt/armouredsouls/scripts/logrotate-armouredsouls.conf"
+            SYSTEM_CONF="/etc/logrotate.d/armouredsouls"
+            if [ -f "$REPO_CONF" ] && ! diff -q "$REPO_CONF" "$SYSTEM_CONF" > /dev/null 2>&1; then
+              echo "logrotate config changed — installing"
+              sudo cp "$REPO_CONF" "$SYSTEM_CONF" \
+                && sudo chown root:root "$SYSTEM_CONF" \
+                && sudo chmod 644 "$SYSTEM_CONF" \
+                || echo "WARNING: logrotate install failed — sudo may need passwordless config for deploy user (cp/chown/chmod on /etc/logrotate.d/armouredsouls)"
+            else
+              echo "logrotate config unchanged — skipping"
+            fi
 
       - name: Restart backend via PM2
         uses: appleboy/ssh-action@v1
@@ -774,15 +784,25 @@ jobs:
           CHANGELOG_DEPLOY_TOKEN: ${{ secrets.CHANGELOG_DEPLOY_TOKEN }}
 
       - name: Ensure logrotate config
+        continue-on-error: true
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.PRD_VPS_IP }}
           username: ${{ secrets.PRD_VPS_USER }}
           key: ${{ secrets.PRD_SSH_KEY }}
           script: |
-            sudo cp /opt/armouredsouls/scripts/logrotate-armouredsouls.conf /etc/logrotate.d/armouredsouls
-            sudo chown root:root /etc/logrotate.d/armouredsouls
-            sudo chmod 644 /etc/logrotate.d/armouredsouls
+            # Install logrotate config if it differs from the repo version
+            REPO_CONF="/opt/armouredsouls/scripts/logrotate-armouredsouls.conf"
+            SYSTEM_CONF="/etc/logrotate.d/armouredsouls"
+            if [ -f "$REPO_CONF" ] && ! diff -q "$REPO_CONF" "$SYSTEM_CONF" > /dev/null 2>&1; then
+              echo "logrotate config changed — installing"
+              sudo cp "$REPO_CONF" "$SYSTEM_CONF" \
+                && sudo chown root:root "$SYSTEM_CONF" \
+                && sudo chmod 644 "$SYSTEM_CONF" \
+                || echo "WARNING: logrotate install failed — sudo may need passwordless config for deploy user (cp/chown/chmod on /etc/logrotate.d/armouredsouls)"
+            else
+              echo "logrotate config unchanged — skipping"
+            fi
 
       - name: Restart backend via PM2
         uses: appleboy/ssh-action@v1
