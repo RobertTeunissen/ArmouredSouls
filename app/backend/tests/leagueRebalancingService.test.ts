@@ -75,7 +75,7 @@ describe('League Rebalancing Service', () => {
       const robots = [];
       for (let i = 0; i < 20; i++) {
         const weaponInv = await prisma.weaponInventory.create({
-          data: { userId: testUser.id, weaponId: practiceSword.id },
+          data: { userId: testUser.id, weaponId: practiceSword.id, pricePaid: 0 },
         });
 
         const robot = await prisma.robot.create({
@@ -120,7 +120,7 @@ describe('League Rebalancing Service', () => {
       const robots = [];
       for (let i = 0; i < 20; i++) {
         const weaponInv = await prisma.weaponInventory.create({
-          data: { userId: testUser.id, weaponId: practiceSword.id },
+          data: { userId: testUser.id, weaponId: practiceSword.id, pricePaid: 0 },
         });
 
         const robot = await prisma.robot.create({
@@ -171,7 +171,7 @@ describe('League Rebalancing Service', () => {
       const robots = [];
       for (let i = 0; i < 20; i++) {
         const weaponInv = await prisma.weaponInventory.create({
-          data: { userId: testUser.id, weaponId: practiceSword.id },
+          data: { userId: testUser.id, weaponId: practiceSword.id, pricePaid: 0 },
         });
 
         const robot = await prisma.robot.create({
@@ -210,7 +210,7 @@ describe('League Rebalancing Service', () => {
       const robots = [];
       for (let i = 0; i < 20; i++) {
         const weaponInv = await prisma.weaponInventory.create({
-          data: { userId: testUser.id, weaponId: practiceSword.id },
+          data: { userId: testUser.id, weaponId: practiceSword.id, pricePaid: 0 },
         });
 
         const robot = await prisma.robot.create({
@@ -250,7 +250,7 @@ describe('League Rebalancing Service', () => {
       const robots = [];
       for (let i = 0; i < 20; i++) {
         const weaponInv = await prisma.weaponInventory.create({
-          data: { userId: testUser.id, weaponId: practiceSword.id },
+          data: { userId: testUser.id, weaponId: practiceSword.id, pricePaid: 0 },
         });
 
         const robot = await prisma.robot.create({
@@ -285,7 +285,7 @@ describe('League Rebalancing Service', () => {
       const robots = [];
       for (let i = 0; i < 5; i++) {
         const weaponInv = await prisma.weaponInventory.create({
-          data: { userId: testUser.id, weaponId: practiceSword.id },
+          data: { userId: testUser.id, weaponId: practiceSword.id, pricePaid: 0 },
         });
 
         const robot = await prisma.robot.create({
@@ -325,7 +325,7 @@ describe('League Rebalancing Service', () => {
       const robots = [];
       for (let i = 0; i < 20; i++) {
         const weaponInv = await prisma.weaponInventory.create({
-          data: { userId: testUser.id, weaponId: practiceSword.id },
+          data: { userId: testUser.id, weaponId: practiceSword.id, pricePaid: 0 },
         });
 
         const robot = await prisma.robot.create({
@@ -372,7 +372,7 @@ describe('League Rebalancing Service', () => {
   describe('promoteRobot', () => {
     it('should move robot to next tier and reset league points and cycles', async () => {
       const weaponInv = await prisma.weaponInventory.create({
-        data: { userId: testUser.id, weaponId: practiceSword.id },
+        data: { userId: testUser.id, weaponId: practiceSword.id, pricePaid: 0 },
       });
 
       const robot = await prisma.robot.create({
@@ -409,7 +409,7 @@ describe('League Rebalancing Service', () => {
 
     it('should throw error when trying to promote from champion', async () => {
       const weaponInv = await prisma.weaponInventory.create({
-        data: { userId: testUser.id, weaponId: practiceSword.id },
+        data: { userId: testUser.id, weaponId: practiceSword.id, pricePaid: 0 },
       });
 
       const robot = await prisma.robot.create({
@@ -440,7 +440,7 @@ describe('League Rebalancing Service', () => {
   describe('demoteRobot', () => {
     it('should move robot to previous tier and reset league points', async () => {
       const weaponInv = await prisma.weaponInventory.create({
-        data: { userId: testUser.id, weaponId: practiceSword.id },
+        data: { userId: testUser.id, weaponId: practiceSword.id, pricePaid: 0 },
       });
 
       const robot = await prisma.robot.create({
@@ -475,7 +475,7 @@ describe('League Rebalancing Service', () => {
 
     it('should throw error when trying to demote from bronze', async () => {
       const weaponInv = await prisma.weaponInventory.create({
-        data: { userId: testUser.id, weaponId: practiceSword.id },
+        data: { userId: testUser.id, weaponId: practiceSword.id, pricePaid: 0 },
       });
 
       const robot = await prisma.robot.create({
@@ -511,7 +511,7 @@ describe('League Rebalancing Service', () => {
       // 20 bronze robots
       for (let i = 0; i < 20; i++) {
         const weaponInv = await prisma.weaponInventory.create({
-          data: { userId: testUser.id, weaponId: practiceSword.id },
+          data: { userId: testUser.id, weaponId: practiceSword.id, pricePaid: 0 },
         });
         const robot = await prisma.robot.create({
           data: {
@@ -550,7 +550,7 @@ describe('League Rebalancing Service', () => {
       // Create 100 bronze robots (to trigger promotion)
       for (let i = 0; i < 100; i++) {
         const weaponInv = await prisma.weaponInventory.create({
-          data: { userId: testUser.id, weaponId: practiceSword.id },
+          data: { userId: testUser.id, weaponId: practiceSword.id, pricePaid: 0 },
         });
         const robot = await prisma.robot.create({
           data: {

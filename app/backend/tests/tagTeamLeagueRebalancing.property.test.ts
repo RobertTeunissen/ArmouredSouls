@@ -72,7 +72,7 @@ describe('Tag Team League Rebalancing - Property Tests', () => {
     // Get a weapon for the robot
     const weapon = await prisma.weapon.findFirst();
     const weaponInv = await prisma.weaponInventory.create({
-      data: { userId: testStableId, weaponId: weapon!.id },
+      data: { userId: testStableId, weaponId: weapon!.id, pricePaid: 0 },
     });
 
     const robot = await prisma.robot.create({

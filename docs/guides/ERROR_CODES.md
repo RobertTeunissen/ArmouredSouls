@@ -92,6 +92,7 @@ Example with details:
 | `FACILITY_NOT_FOUND` | 404 | Facility does not exist |
 | `WEAPON_NOT_FOUND` | 404 | Weapon does not exist |
 | `WEAPON_NOT_AFFORDABLE` | 400 | User cannot afford the weapon |
+| `WEAPON_EQUIPPED` | 409 | Weapon is currently equipped on a robot — unequip before selling |
 | `INVALID_TRANSACTION` | 400 | Transaction is invalid |
 | `STORAGE_CAPACITY_FULL` | 400 | Weapon storage capacity is full |
 

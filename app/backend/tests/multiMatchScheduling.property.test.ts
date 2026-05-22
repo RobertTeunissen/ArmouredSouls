@@ -108,6 +108,7 @@ async function createWeaponForRobot(userId: number, robotId: number): Promise<vo
     data: {
       userId,
       weaponId: weapon.id,
+      pricePaid: 0,
     },
   });
 

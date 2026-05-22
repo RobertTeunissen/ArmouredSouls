@@ -141,19 +141,19 @@ describe('TagTeamService', () => {
     // Add weapons to inventory
     const [weapon1, weapon2, weapon3, weapon4, weapon5] = await Promise.all([
       prisma.weaponInventory.create({
-        data: { userId: testUserId, weaponId },
+        data: { userId: testUserId, weaponId, pricePaid: 0 },
       }),
       prisma.weaponInventory.create({
-        data: { userId: testUserId, weaponId },
+        data: { userId: testUserId, weaponId, pricePaid: 0 },
       }),
       prisma.weaponInventory.create({
-        data: { userId: testUserId, weaponId },
+        data: { userId: testUserId, weaponId, pricePaid: 0 },
       }),
       prisma.weaponInventory.create({
-        data: { userId: testUserId, weaponId },
+        data: { userId: testUserId, weaponId, pricePaid: 0 },
       }),
       prisma.weaponInventory.create({
-        data: { userId: otherUserId, weaponId },
+        data: { userId: otherUserId, weaponId, pricePaid: 0 },
       }),
     ]);
 
@@ -260,7 +260,7 @@ describe('TagTeamService', () => {
       // Create a robot with low HP for this test
       const weapon = await prisma.weapon.findFirst();
       const weaponInv = await prisma.weaponInventory.create({
-        data: { userId: testUserId, weaponId: weapon!.id },
+        data: { userId: testUserId, weaponId: weapon!.id, pricePaid: 0 },
       });
       
       const unreadyRobot = await prisma.robot.create({

@@ -55,7 +55,10 @@ export type AchievementTriggerType =
   | 'solo_carry'
   | 'lose_streak'
   | 'low_hp_survival'
-  | 'battle_duration';
+  | 'battle_duration'
+  | 'weapons_sold_count'
+  | 'weapons_sold_credits'
+  | 'weapon_sold_at_max_workshop';
 
 export interface AchievementDefinition {
   id: string;
@@ -970,6 +973,71 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     triggerType: 'bankrupt',
     progressType: 'boolean',
     badgeIconFile: 'achievement-e17',
+  },
+  {
+    id: 'E18',
+    name: 'Pawn Star',
+    description: 'Sell your first weapon',
+    reference: 'Pawn Stars TV show',
+    category: 'economy',
+    tier: 'easy',
+    scope: 'user',
+    rewardCredits: TIER_REWARDS.easy.credits,
+    rewardPrestige: TIER_REWARDS.easy.prestige,
+    hidden: false,
+    triggerType: 'weapons_sold_count',
+    triggerThreshold: 1,
+    progressType: 'boolean',
+    badgeIconFile: 'achievement-e18',
+  },
+  {
+    id: 'E19',
+    name: 'Shrewd Negotiator',
+    description: 'Earn ₡500,000 lifetime from weapon resales',
+    reference: 'Business / negotiation trope',
+    category: 'economy',
+    tier: 'medium',
+    scope: 'user',
+    rewardCredits: TIER_REWARDS.medium.credits,
+    rewardPrestige: TIER_REWARDS.medium.prestige,
+    hidden: false,
+    triggerType: 'weapons_sold_credits',
+    triggerThreshold: 500_000,
+    progressType: 'numeric',
+    progressLabel: 'credits earned from resales',
+    badgeIconFile: 'achievement-e19',
+  },
+  {
+    id: 'E20',
+    name: 'Arms Dealer',
+    description: 'Sell 10 weapons',
+    reference: 'Arms dealer trope',
+    category: 'economy',
+    tier: 'hard',
+    scope: 'user',
+    rewardCredits: TIER_REWARDS.hard.credits,
+    rewardPrestige: TIER_REWARDS.hard.prestige,
+    hidden: false,
+    triggerType: 'weapons_sold_count',
+    triggerThreshold: 10,
+    progressType: 'numeric',
+    progressLabel: 'weapons sold',
+    badgeIconFile: 'achievement-e20',
+  },
+  {
+    id: 'E21',
+    name: 'Buy High, Sell Higher',
+    description: 'Sell a weapon at Workshop Level 10 (full credit recovery)',
+    reference: 'Trader meme',
+    category: 'economy',
+    tier: 'hard',
+    scope: 'user',
+    rewardCredits: TIER_REWARDS.hard.credits,
+    rewardPrestige: TIER_REWARDS.hard.prestige,
+    hidden: false,
+    triggerType: 'weapon_sold_at_max_workshop',
+    progressType: 'boolean',
+    badgeIconFile: 'achievement-e21',
   },
 
   // ============================================================

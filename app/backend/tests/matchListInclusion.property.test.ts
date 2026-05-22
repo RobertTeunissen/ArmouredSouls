@@ -119,6 +119,7 @@ describe('Feature: tag-team-matches, Property 25: Match List Inclusion', () => {
               data: {
                 userId: testUserId,
                 weaponId: weapon.id,
+                pricePaid: 0,
               },
             });
 
@@ -278,6 +279,7 @@ describe('Feature: tag-team-matches, Property 25: Match List Inclusion', () => {
               data: {
                 userId: testUserId,
                 weaponId: weapon.id,
+                pricePaid: 0,
               },
             });
 

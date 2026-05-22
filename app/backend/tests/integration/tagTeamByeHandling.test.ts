@@ -121,6 +121,7 @@ describe('Tag Team Bye-Team Handling Integration Test', () => {
           data: {
             userId: user.id,
             weaponId: weapon.id,
+            pricePaid: 0,
           },
         });
 

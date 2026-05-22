@@ -90,10 +90,10 @@ describe('Tag Team League Standings Property Tests', () => {
         async (config) => {
           // Create weapon inventory
           const weapon1Inv = await prisma.weaponInventory.create({
-            data: { userId: testUserId, weaponId },
+            data: { userId: testUserId, weaponId, pricePaid: 0 },
           });
           const weapon2Inv = await prisma.weaponInventory.create({
-            data: { userId: testUserId, weaponId },
+            data: { userId: testUserId, weaponId, pricePaid: 0 },
           });
 
           // Create two battle-ready robots with specific 1v1 league standings
@@ -231,10 +231,10 @@ describe('Tag Team League Standings Property Tests', () => {
         async (config) => {
           // Create weapon inventory
           const weapon1Inv = await prisma.weaponInventory.create({
-            data: { userId: testUserId, weaponId },
+            data: { userId: testUserId, weaponId, pricePaid: 0 },
           });
           const weapon2Inv = await prisma.weaponInventory.create({
-            data: { userId: testUserId, weaponId },
+            data: { userId: testUserId, weaponId, pricePaid: 0 },
           });
 
           // Create two battle-ready robots with specific 1v1 league standings
@@ -368,10 +368,10 @@ describe('Tag Team League Standings Property Tests', () => {
         async (config) => {
           // Create weapon inventory
           const weapon1Inv = await prisma.weaponInventory.create({
-            data: { userId: testUserId, weaponId },
+            data: { userId: testUserId, weaponId, pricePaid: 0 },
           });
           const weapon2Inv = await prisma.weaponInventory.create({
-            data: { userId: testUserId, weaponId },
+            data: { userId: testUserId, weaponId, pricePaid: 0 },
           });
 
           // Create two robots with different 1v1 league standings

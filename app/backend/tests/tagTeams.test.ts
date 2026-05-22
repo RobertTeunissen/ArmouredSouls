@@ -98,6 +98,7 @@ describe('Tag Teams API Endpoints', () => {
       data: {
         userId: testUserId,
         weaponId: weapon.id,
+        pricePaid: 0,
       },
     });
 
@@ -105,6 +106,7 @@ describe('Tag Teams API Endpoints', () => {
       data: {
         userId: testUserId,
         weaponId: weapon.id,
+        pricePaid: 0,
       },
     });
 
@@ -112,6 +114,7 @@ describe('Tag Teams API Endpoints', () => {
       data: {
         userId: testUserId,
         weaponId: weapon.id,
+        pricePaid: 0,
       },
     });
 

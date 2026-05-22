@@ -33,6 +33,7 @@ export type AchievementEventType =
   | 'battle_complete'
   | 'league_promotion'
   | 'weapon_purchased'
+  | 'weapon_sold'
   | 'weapon_equipped'
   | 'attribute_upgraded'
   | 'facility_upgraded'
@@ -141,6 +142,7 @@ const EVENT_TRIGGER_MAP: Record<AchievementEventType, AchievementTriggerType[]> 
   ],
   league_promotion: ['league_promotion'],
   weapon_purchased: ['weapon_count', 'weapon_type'],
+  weapon_sold: ['weapons_sold_count', 'weapons_sold_credits', 'weapon_sold_at_max_workshop'],
   weapon_equipped: ['weapon_type', 'effective_stat'],
   attribute_upgraded: ['attribute_upgraded', 'effective_stat'],
   facility_upgraded: ['facility_count'],
@@ -490,6 +492,15 @@ class AchievementService implements IAchievementService {
       case 'weapon_count':
         return this.checkWeaponCount(userId, triggerThreshold);
 
+      case 'weapons_sold_count':
+        return this.checkWeaponsSoldCount(userId, triggerThreshold);
+
+      case 'weapons_sold_credits':
+        return this.checkWeaponsSoldCredits(userId, triggerThreshold);
+
+      case 'weapon_sold_at_max_workshop':
+        return Number(data.workshopLevel) === 10;
+
       case 'robot_count':
         return this.checkRobotCount(userId, triggerThreshold);
 
@@ -634,6 +645,41 @@ class AchievementService implements IAchievementService {
       where: { userId },
     });
     return count >= threshold;
+  }
+
+  /**
+   * Check cumulative count of weapons sold by the user (lifetime).
+   * Source of truth: audit_log rows with event_type = 'weapon_sale'.
+   * Used by E18 (Pawn Star, threshold 1) and E20 (Arms Dealer, threshold 10).
+   */
+  private async checkWeaponsSoldCount(
+    userId: number,
+    threshold?: number,
+  ): Promise<boolean> {
+    if (threshold === undefined) return false;
+    const count = await prisma.auditLog.count({
+      where: { userId, eventType: 'weapon_sale' },
+    });
+    return count >= threshold;
+  }
+
+  /**
+   * Check cumulative credits earned from weapon resales (lifetime).
+   * Sum of `salePrice` across all weapon_sale audit log rows for the user.
+   * Used by E19 (Shrewd Negotiator, threshold ₡500,000).
+   */
+  private async checkWeaponsSoldCredits(
+    userId: number,
+    threshold?: number,
+  ): Promise<boolean> {
+    if (threshold === undefined) return false;
+    const result = await prisma.$queryRaw<{ total: bigint | null }[]>`
+      SELECT COALESCE(SUM((payload->>'salePrice')::int), 0) as total
+      FROM audit_logs
+      WHERE user_id = ${userId} AND event_type = 'weapon_sale'
+    `;
+    const total = Number(result[0]?.total ?? 0);
+    return total >= threshold;
   }
 
   private async checkRobotCount(
@@ -1042,6 +1088,8 @@ class AchievementService implements IAchievementService {
       tuningAllocations,
       earningsResult,
       streamingResult,
+      weaponsSoldCount,
+      weaponsSoldCreditsResult,
     ] = await Promise.all([
       // Achievement unlocks
       prisma.userAchievement.findMany({
@@ -1106,6 +1154,16 @@ class AchievementService implements IAchievementService {
             _sum: { streamingRevenue: true },
           })
         : Promise.resolve({ _sum: { streamingRevenue: null } }),
+      // Weapon resale count (lifetime, from audit log) — for E18, E20 progress
+      prisma.auditLog.count({
+        where: { userId, eventType: 'weapon_sale' },
+      }),
+      // Weapon resale credits sum (lifetime, from audit log JSON payload) — for E19 progress
+      prisma.$queryRaw<{ total: bigint | null }[]>`
+        SELECT COALESCE(SUM((payload->>'salePrice')::int), 0) as total
+        FROM audit_logs
+        WHERE user_id = ${userId} AND event_type = 'weapon_sale'
+      `,
     ]);
 
     const unlockMap = new Map(
@@ -1121,6 +1179,7 @@ class AchievementService implements IAchievementService {
 
     const lifetimeEarnings = earningsResult._sum.credits ?? 0;
     const streamingRevenue = streamingResult._sum.streamingRevenue ?? 0;
+    const weaponsSoldCredits = Number(weaponsSoldCreditsResult[0]?.total ?? 0);
 
     // (d) Get the rarity cache data
     const rarityData = this.getRarityData();
@@ -1189,6 +1248,8 @@ class AchievementService implements IAchievementService {
           tuningByRobot,
           lifetimeEarnings,
           streamingRevenue,
+          weaponsSoldCount,
+          weaponsSoldCredits,
         );
         progress = progressResult;
       }
@@ -1277,6 +1338,8 @@ class AchievementService implements IAchievementService {
     tuningByRobot: Map<number, number>,
     lifetimeEarnings: number,
     streamingRevenue: number,
+    weaponsSoldCount: number,
+    weaponsSoldCredits: number,
   ): AchievementWithProgress['progress'] {
     const target = achievement.triggerThreshold!;
     const label = achievement.progressLabel ?? '';
@@ -1357,6 +1420,10 @@ class AchievementService implements IAchievementService {
       // ── Count-based stats ─────────────────────────────────────
       case 'weapon_count':
         return { current: weaponCount, target, label };
+      case 'weapons_sold_count':
+        return { current: weaponsSoldCount, target, label };
+      case 'weapons_sold_credits':
+        return { current: weaponsSoldCredits, target, label };
       case 'robot_count':
         return { current: robotCount, target, label };
       case 'facility_count': {

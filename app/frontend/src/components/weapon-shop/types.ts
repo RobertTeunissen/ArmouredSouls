@@ -54,3 +54,34 @@ export interface StorageStatus {
 }
 
 export type ViewMode = 'card' | 'table';
+
+/**
+ * A single weapon-inventory row as returned by GET /api/weapon-inventory.
+ * Used by the Spec #33 inventory tab to display owned weapons and compute
+ * resale prices.
+ */
+export interface WeaponInventoryItem {
+  id: number;
+  weaponId: number;
+  pricePaid: number;
+  customName: string | null;
+  purchasedAt: string;
+  weapon: Weapon;
+  /** Robots that have this weapon equipped as their main weapon. */
+  robotsMain?: Array<{ id: number; name: string }>;
+  /** Robots that have this weapon equipped as their offhand weapon. */
+  robotsOffhand?: Array<{ id: number; name: string }>;
+}
+
+/** Achievement unlock returned in the response body of a sale. */
+export interface UnlockedAchievement {
+  id: string;
+  name: string;
+  description: string;
+  tier: string;
+  rewardCredits: number;
+  rewardPrestige: number;
+  badgeIconFile: string;
+  robotId: number | null;
+  robotName: string | null;
+}

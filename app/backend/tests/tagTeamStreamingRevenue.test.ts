@@ -136,12 +136,12 @@ describe('Tag Team Streaming Revenue Integration', () => {
   it('should calculate and award streaming revenue for Tag Team battles', async () => {
     // Create robots for team 1 with different battle counts and fame
     const weaponInv1_1 = await prisma.weaponInventory.create({
-      data: { userId: testUser1.id, weaponId: weapon.id },
+      data: { userId: testUser1.id, weaponId: weapon.id, pricePaid: 0 },
     });
     testWeaponInvIds.push(weaponInv1_1.id);
 
     const weaponInv1_2 = await prisma.weaponInventory.create({
-      data: { userId: testUser1.id, weaponId: weapon.id },
+      data: { userId: testUser1.id, weaponId: weapon.id, pricePaid: 0 },
     });
     testWeaponInvIds.push(weaponInv1_2.id);
 
@@ -193,12 +193,12 @@ describe('Tag Team Streaming Revenue Integration', () => {
 
     // Create robots for team 2
     const weaponInv2_1 = await prisma.weaponInventory.create({
-      data: { userId: testUser2.id, weaponId: weapon.id },
+      data: { userId: testUser2.id, weaponId: weapon.id, pricePaid: 0 },
     });
     testWeaponInvIds.push(weaponInv2_1.id);
 
     const weaponInv2_2 = await prisma.weaponInventory.create({
-      data: { userId: testUser2.id, weaponId: weapon.id },
+      data: { userId: testUser2.id, weaponId: weapon.id, pricePaid: 0 },
     });
     testWeaponInvIds.push(weaponInv2_2.id);
 

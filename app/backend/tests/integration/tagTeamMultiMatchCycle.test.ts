@@ -125,6 +125,7 @@ describe('Tag Team Multi-Match Cycle Integration Test', () => {
           data: {
             userId: user.id,
             weaponId: weapon.id,
+            pricePaid: 0,
           },
         });
 
@@ -273,6 +274,7 @@ describe('Tag Team Multi-Match Cycle Integration Test', () => {
         data: {
           userId,
           weaponId: weapon!.id,
+          pricePaid: 0,
         },
       });
 
@@ -378,6 +380,7 @@ describe('Tag Team Multi-Match Cycle Integration Test', () => {
           data: {
             userId: user.id,
             weaponId: weapon!.id,
+            pricePaid: 0,
           },
         });
 

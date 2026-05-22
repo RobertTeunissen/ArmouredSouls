@@ -120,16 +120,16 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
         async (config) => {
           // Create weapon inventories
           const weapon1Inv = await prisma.weaponInventory.create({
-            data: { userId: testUserId1, weaponId },
+            data: { userId: testUserId1, weaponId, pricePaid: 0 },
           });
           const weapon2Inv = await prisma.weaponInventory.create({
-            data: { userId: testUserId1, weaponId },
+            data: { userId: testUserId1, weaponId, pricePaid: 0 },
           });
           const weapon3Inv = await prisma.weaponInventory.create({
-            data: { userId: testUserId2, weaponId },
+            data: { userId: testUserId2, weaponId, pricePaid: 0 },
           });
           const weapon4Inv = await prisma.weaponInventory.create({
-            data: { userId: testUserId2, weaponId },
+            data: { userId: testUserId2, weaponId, pricePaid: 0 },
           });
 
           // Create robots for team 1
@@ -271,16 +271,16 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
         async (config) => {
           // Create weapon inventories
           const weapon1Inv = await prisma.weaponInventory.create({
-            data: { userId: testUserId1, weaponId },
+            data: { userId: testUserId1, weaponId, pricePaid: 0 },
           });
           const weapon2Inv = await prisma.weaponInventory.create({
-            data: { userId: testUserId1, weaponId },
+            data: { userId: testUserId1, weaponId, pricePaid: 0 },
           });
           const weapon3Inv = await prisma.weaponInventory.create({
-            data: { userId: testUserId2, weaponId },
+            data: { userId: testUserId2, weaponId, pricePaid: 0 },
           });
           const weapon4Inv = await prisma.weaponInventory.create({
-            data: { userId: testUserId2, weaponId },
+            data: { userId: testUserId2, weaponId, pricePaid: 0 },
           });
 
           // Create robots with low yield thresholds to increase tag-out probability
@@ -426,16 +426,16 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
         async (config) => {
           // Create weapon inventories
           const weapon1Inv = await prisma.weaponInventory.create({
-            data: { userId: testUserId1, weaponId },
+            data: { userId: testUserId1, weaponId, pricePaid: 0 },
           });
           const weapon2Inv = await prisma.weaponInventory.create({
-            data: { userId: testUserId1, weaponId },
+            data: { userId: testUserId1, weaponId, pricePaid: 0 },
           });
           const weapon3Inv = await prisma.weaponInventory.create({
-            data: { userId: testUserId2, weaponId },
+            data: { userId: testUserId2, weaponId, pricePaid: 0 },
           });
           const weapon4Inv = await prisma.weaponInventory.create({
-            data: { userId: testUserId2, weaponId },
+            data: { userId: testUserId2, weaponId, pricePaid: 0 },
           });
 
           // Create robots
@@ -582,16 +582,16 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
         async (config) => {
           // Create weapon inventories
           const weapon1Inv = await prisma.weaponInventory.create({
-            data: { userId: testUserId1, weaponId },
+            data: { userId: testUserId1, weaponId, pricePaid: 0 },
           });
           const weapon2Inv = await prisma.weaponInventory.create({
-            data: { userId: testUserId1, weaponId },
+            data: { userId: testUserId1, weaponId, pricePaid: 0 },
           });
           const weapon3Inv = await prisma.weaponInventory.create({
-            data: { userId: testUserId2, weaponId },
+            data: { userId: testUserId2, weaponId, pricePaid: 0 },
           });
           const weapon4Inv = await prisma.weaponInventory.create({
-            data: { userId: testUserId2, weaponId },
+            data: { userId: testUserId2, weaponId, pricePaid: 0 },
           });
 
           // Create robots
@@ -737,16 +737,16 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
         async (config) => {
           // Create weapon inventories
           const weapon1Inv = await prisma.weaponInventory.create({
-            data: { userId: testUserId1, weaponId },
+            data: { userId: testUserId1, weaponId, pricePaid: 0 },
           });
           const weapon2Inv = await prisma.weaponInventory.create({
-            data: { userId: testUserId1, weaponId },
+            data: { userId: testUserId1, weaponId, pricePaid: 0 },
           });
           const weapon3Inv = await prisma.weaponInventory.create({
-            data: { userId: testUserId2, weaponId },
+            data: { userId: testUserId2, weaponId, pricePaid: 0 },
           });
           const weapon4Inv = await prisma.weaponInventory.create({
-            data: { userId: testUserId2, weaponId },
+            data: { userId: testUserId2, weaponId, pricePaid: 0 },
           });
 
           // Create robots

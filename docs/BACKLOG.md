@@ -48,6 +48,7 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 
 | Item | # | Spec | Completed |
 |------|---|------|-----------|
+| Weapon Resale (Workshop-level-dependent rate, ₡0–100% recovery) | 5 (partial) | [Spec #33](/.kiro/specs/to-do/33-weapon-resale/) | May 2026 |
 | Performance Optimization | 20 | — (direct implementation) | May 2026 |
 | Promotion/Demotion History Tracking | 22 | [Spec #32](/.kiro/specs/to-do/32-league-history-tracking/) | May 2026 |
 | Battle History URL State Persistence | 25 | — (direct implementation) | May 2026 |
@@ -99,7 +100,7 @@ The damage formula is `baseDamage × (1 + combatPower × 1.5 / 100) × loadout �
 
 **Follow-up features (to spec after rebalance lands):**
 
-1. **Weapon resale** — Sell weapons back at Workshop-level-dependent rates (40–75%). Quality-of-life improvement that reduces switching cost. Workshop gets a second meaningful purpose beyond purchase discounts.
+1. ~~**Weapon resale** — Sell weapons back at Workshop-level-dependent rates (40–75%). Quality-of-life improvement that reduces switching cost. Workshop gets a second meaningful purpose beyond purchase discounts.~~ ✅ **Shipped May 22, 2026** as [Spec #33](/.kiro/specs/to-do/33-weapon-resale/) — final formula was `level × 10` (0% at L0, 100% at L10), mirroring the purchase discount slope.
 
 2. **Weapon upgrades** — Level individual weapon instances over time (reliability, attribute bonuses, minor damage, unique passives at thresholds). Creates attachment and identity. A fully upgraded cheap weapon could match a stock expensive weapon. Ongoing credit sink that solves late-game economic stagnation. Key design question: should upgrades make weapons *stronger* or *different*? Different is better for diversity.
 

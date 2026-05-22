@@ -46,6 +46,7 @@ describe('Tag Team League Rebalancing Integration Test', () => {
           data: {
             userId: user.id,
             weaponId: weapon.id,
+            pricePaid: 0,
           },
         });
 
@@ -227,6 +228,7 @@ describe('Tag Team League Rebalancing Integration Test', () => {
         data: {
           userId: user.id,
           weaponId: weapon!.id,
+          pricePaid: 0,
         },
       });
 
@@ -313,6 +315,7 @@ describe('Tag Team League Rebalancing Integration Test', () => {
           data: {
             userId: user.id,
             weaponId: weapon!.id,
+            pricePaid: 0,
           },
         });
 
@@ -415,6 +418,7 @@ describe('Tag Team League Rebalancing Integration Test', () => {
           data: {
             userId: user.id,
             weaponId: weapon!.id,
+            pricePaid: 0,
           },
         });
 

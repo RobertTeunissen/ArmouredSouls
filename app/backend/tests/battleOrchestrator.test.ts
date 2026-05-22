@@ -127,10 +127,10 @@ describe('Battle Orchestrator', () => {
     it('should execute a battle and create records', async () => {
       // Create two test robots
       const weaponInv1 = await prisma.weaponInventory.create({
-        data: { userId: testUser.id, weaponId: practiceSword.id },
+        data: { userId: testUser.id, weaponId: practiceSword.id, pricePaid: 0 },
       });
       const weaponInv2 = await prisma.weaponInventory.create({
-        data: { userId: testUser.id, weaponId: practiceSword.id },
+        data: { userId: testUser.id, weaponId: practiceSword.id, pricePaid: 0 },
       });
 
       const robot1 = await prisma.robot.create({
@@ -213,7 +213,7 @@ describe('Battle Orchestrator', () => {
     it('should handle bye-robot battles correctly', async () => {
       // Create player robot
       const weaponInv = await prisma.weaponInventory.create({
-        data: { userId: testUser.id, weaponId: practiceSword.id },
+        data: { userId: testUser.id, weaponId: practiceSword.id, pricePaid: 0 },
       });
 
       const playerRobot = await prisma.robot.create({
@@ -241,7 +241,7 @@ describe('Battle Orchestrator', () => {
       });
 
       const byeWeaponInv = await prisma.weaponInventory.create({
-        data: { userId: byeUser.id, weaponId: practiceSword.id },
+        data: { userId: byeUser.id, weaponId: practiceSword.id, pricePaid: 0 },
       });
 
       const byeRobot = await prisma.robot.create({
@@ -293,10 +293,10 @@ describe('Battle Orchestrator', () => {
     it('should increment kills when a robot destroys its opponent', async () => {
       // Create two test robots
       const weaponInv1 = await prisma.weaponInventory.create({
-        data: { userId: testUser.id, weaponId: practiceSword.id },
+        data: { userId: testUser.id, weaponId: practiceSword.id, pricePaid: 0 },
       });
       const weaponInv2 = await prisma.weaponInventory.create({
-        data: { userId: testUser.id, weaponId: practiceSword.id },
+        data: { userId: testUser.id, weaponId: practiceSword.id, pricePaid: 0 },
       });
 
       const robot1 = await prisma.robot.create({
@@ -386,7 +386,7 @@ describe('Battle Orchestrator', () => {
       const robots = [];
       for (let i = 0; i < 4; i++) {
         const weaponInv = await prisma.weaponInventory.create({
-          data: { userId: testUser.id, weaponId: practiceSword.id },
+          data: { userId: testUser.id, weaponId: practiceSword.id, pricePaid: 0 },
         });
 
         const robot = await prisma.robot.create({
@@ -451,10 +451,10 @@ describe('Battle Orchestrator', () => {
     it('should calculate and award streaming revenue after battle', async () => {
       // Create test robots with some fame and battles
       const weaponInv1 = await prisma.weaponInventory.create({
-        data: { userId: testUser.id, weaponId: practiceSword.id },
+        data: { userId: testUser.id, weaponId: practiceSword.id, pricePaid: 0 },
       });
       const weaponInv2 = await prisma.weaponInventory.create({
-        data: { userId: testUser.id, weaponId: practiceSword.id },
+        data: { userId: testUser.id, weaponId: practiceSword.id, pricePaid: 0 },
       });
 
       const robot1 = await prisma.robot.create({
@@ -528,7 +528,7 @@ describe('Battle Orchestrator', () => {
     it('should not award streaming revenue for bye matches', async () => {
       // Create player robot
       const weaponInv = await prisma.weaponInventory.create({
-        data: { userId: testUser.id, weaponId: practiceSword.id },
+        data: { userId: testUser.id, weaponId: practiceSword.id, pricePaid: 0 },
       });
 
       const playerRobot = await prisma.robot.create({
@@ -559,7 +559,7 @@ describe('Battle Orchestrator', () => {
       });
 
       const byeWeaponInv = await prisma.weaponInventory.create({
-        data: { userId: byeUser.id, weaponId: practiceSword.id },
+        data: { userId: byeUser.id, weaponId: practiceSword.id, pricePaid: 0 },
       });
 
       const byeRobot = await prisma.robot.create({
@@ -621,10 +621,10 @@ describe('Battle Orchestrator', () => {
     it('should add streaming revenue to audit log', async () => {
       // Create test robots
       const weaponInv1 = await prisma.weaponInventory.create({
-        data: { userId: testUser.id, weaponId: practiceSword.id },
+        data: { userId: testUser.id, weaponId: practiceSword.id, pricePaid: 0 },
       });
       const weaponInv2 = await prisma.weaponInventory.create({
-        data: { userId: testUser.id, weaponId: practiceSword.id },
+        data: { userId: testUser.id, weaponId: practiceSword.id, pricePaid: 0 },
       });
 
       const robot1 = await prisma.robot.create({
@@ -699,10 +699,10 @@ describe('Battle Orchestrator', () => {
     it('should log streaming revenue to terminal', async () => {
       // Create test robots
       const weaponInv1 = await prisma.weaponInventory.create({
-        data: { userId: testUser.id, weaponId: practiceSword.id },
+        data: { userId: testUser.id, weaponId: practiceSword.id, pricePaid: 0 },
       });
       const weaponInv2 = await prisma.weaponInventory.create({
-        data: { userId: testUser.id, weaponId: practiceSword.id },
+        data: { userId: testUser.id, weaponId: practiceSword.id, pricePaid: 0 },
       });
 
       const robot1 = await prisma.robot.create({

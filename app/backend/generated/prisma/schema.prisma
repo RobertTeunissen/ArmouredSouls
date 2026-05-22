@@ -240,6 +240,12 @@ model WeaponInventory {
   // Custom name (optional, for named weapons)
   customName String? @map("custom_name") @db.VarChar(100)
 
+  // Credits the player actually paid at purchase time (after Workshop discount).
+  // Used as the base for resale value — anchors resale to historical reality so
+  // a Workshop L10 player who buys for free recovers ₡0 on resale.
+  // Starter weapons granted by userGeneration.ts have pricePaid = 0.
+  pricePaid Int @map("price_paid")
+
   // ===== TIMESTAMPS =====
   purchasedAt DateTime @default(now()) @map("purchased_at")
 
@@ -418,6 +424,7 @@ model Battle {
   @@index([createdAt])
   @@index([tournamentId])
   @@index([battleType])
+  @@index([leagueInstanceId])
   @@index([winnerId])
   @@map("battles")
 }

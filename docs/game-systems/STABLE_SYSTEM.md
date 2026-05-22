@@ -140,19 +140,23 @@ Players invest Credits in facility upgrades that provide stable-wide benefits. A
 - Late game: Maximum 90% discount dramatically reduces upgrade costs for level 20-50 progression
 
 **3. Weapons Workshop** (Operating Cost: ₡100/day per level)
-- **Level 0**: No discount
-- **Level 1** (₡75,000): 10% discount on weapon purchases
-- **Level 2** (₡150,000): 20% discount on weapon purchases
-- **Level 3** (₡225,000): 30% discount on weapon purchases, unlock weapon modifications
-- **Level 4** (₡300,000, requires 1,500 prestige): 40% discount on weapon purchases
-- **Level 5** (₡375,000): 50% discount on weapon purchases
-- **Level 6** (₡450,000): 60% discount on weapon purchases, unlock custom weapon design
-- **Level 7** (₡525,000, requires 5,000 prestige): 70% discount on weapon purchases
-- **Level 8** (₡600,000): 80% discount on weapon purchases
-- **Level 9** (₡675,000, requires 10,000 prestige): 90% discount on weapon purchases
-- **Level 10** (₡750,000): 100% discount on weapon purchases (free weapons)
+- **Level 0**: No discount, no resale
+- **Level 1** (₡75,000): 10% discount on weapon purchases, **10% resale rate on sold weapons**
+- **Level 2** (₡150,000): 20% discount on weapon purchases, **20% resale rate**
+- **Level 3** (₡225,000): 30% discount on weapon purchases, **30% resale rate**, unlock weapon modifications
+- **Level 4** (₡300,000, requires 1,500 prestige): 40% discount on weapon purchases, **40% resale rate**
+- **Level 5** (₡375,000): 50% discount on weapon purchases, **50% resale rate**
+- **Level 6** (₡450,000): 60% discount on weapon purchases, **60% resale rate**, unlock custom weapon design
+- **Level 7** (₡525,000, requires 5,000 prestige): 70% discount on weapon purchases, **70% resale rate**
+- **Level 8** (₡600,000): 80% discount on weapon purchases, **80% resale rate**
+- **Level 9** (₡675,000, requires 10,000 prestige): 90% discount on weapon purchases, **90% resale rate**
+- **Level 10** (₡750,000): 100% discount on weapon purchases (free weapons), **100% resale rate** (full credit recovery)
 
-**Discount Formula**: Discount % = Weapons Workshop Level × 10
+**Dual Purpose** (since v1.5, May 22, 2026): Workshop level rewards the player on both ends of every weapon transaction at the same 10%/level slope.
+- **Discount Formula**: Discount % = Weapons Workshop Level × 10 (applies to purchases)
+- **Resale Rate Formula**: Resale Rate % = Weapons Workshop Level × 10 (applies to sales)
+
+Resale value is computed as `pricePaid × resaleRate(workshopLevel)`, where `pricePaid` is the actual credits the player paid at purchase time (after Workshop discount). This anchors resale to historical reality and prevents a free-weapon arbitrage exploit at L10. Equipped weapons cannot be sold — players must unequip first. See [PRD_WEAPON_ECONOMY.md → Version 1.5](PRD_WEAPON_ECONOMY.md) for the full design.
 
 **For complete weapon details, see [WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md)**
 
