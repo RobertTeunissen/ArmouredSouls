@@ -68,10 +68,14 @@ describe('PerformanceByContext - Property-Based Tests', () => {
 
           const { container } = render(<PerformanceByContext robotId={robotId} />);
 
-          // Wait for data to load
+          // Wait for the Leagues section header to render — replaces an
+          // earlier "wait for Loading to disappear" check that was racy
+          // under CI load (component finished loading but assertion ran
+          // mid-render). Waiting for the actual section header eliminates
+          // the race and guarantees the league rows have rendered.
           await waitFor(() => {
-            expect(container.textContent).not.toContain('Loading');
-          }, { timeout: 2000 });
+            expect(container.textContent).toContain('Leagues');
+          }, { timeout: 5000 });
 
           // All leagues with battles > 0 should be displayed
           const leagueText = container.textContent || '';
@@ -134,18 +138,17 @@ describe('PerformanceByContext - Property-Based Tests', () => {
 
           const { container } = render(<PerformanceByContext robotId={robotId} />);
 
-          // Wait for data to load
+          // Wait for the tournament section to render. Earlier this test only
+          // waited for "Loading" to disappear with a 2s timeout, which was
+          // racy under CI load — the component could finish loading but still
+          // be mid-render when the assertion ran. Waiting for the actual
+          // header text we're about to assert on eliminates that race.
           await waitFor(() => {
-            expect(container.textContent).not.toContain('Loading');
-          }, { timeout: 2000 });
+            expect(container.textContent).toContain('Tournaments');
+          }, { timeout: 5000 });
 
-          // The component shows tournament count in the header even when collapsed
-          // Check that the tournament count is correct
           const tournamentText = container.textContent || '';
-          
-          // Verify tournament section header is displayed
-          expect(tournamentText).toContain('Tournaments');
-          
+
           // If there are no tournaments, "No battles yet" should appear
           if (tournaments.length === 0) {
             expect(tournamentText).toContain('No battles yet');
@@ -229,10 +232,13 @@ describe('PerformanceByContext - Property-Based Tests', () => {
 
           const { container } = render(<PerformanceByContext robotId={robotId} />);
 
-          // Wait for data to load
+          // Wait for the Leagues section header to render. Replaces an
+          // earlier "wait for Loading to disappear" check that was racy
+          // under CI load. The Leagues section is always rendered (it
+          // shows "No battles yet" when empty), so this is a stable wait.
           await waitFor(() => {
-            expect(container.textContent).not.toContain('Loading');
-          }, { timeout: 2000 });
+            expect(container.textContent).toContain('Leagues');
+          }, { timeout: 5000 });
 
           const text = container.textContent || '';
 
