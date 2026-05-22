@@ -7,7 +7,7 @@
  * Spec #33 added a "My Inventory" tab for weapon resale.
  */
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Navigation from '../components/Navigation';
 import ViewModeToggle from '../components/ViewModeToggle';
@@ -78,6 +78,20 @@ function WeaponShopPage() {
 
   const [saleSuccessMessage, setSaleSuccessMessage] = useState<string | null>(null);
 
+  // Track the auto-dismiss timer so a fresh sale within the dismissal window
+  // resets the countdown rather than letting an old timer clear the new message.
+  // Also cleared on unmount to avoid setState-after-unmount warnings.
+  const successDismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (successDismissTimerRef.current !== null) {
+        clearTimeout(successDismissTimerRef.current);
+        successDismissTimerRef.current = null;
+      }
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-background text-white">
       <Navigation />
@@ -88,12 +102,15 @@ function WeaponShopPage() {
           <p className="text-secondary">Purchase weapons to equip your robots. Weapons provide attribute bonuses and combat capabilities.</p>
         </div>
 
-        {/* Tab bar (Spec #33 R5.1) */}
-        <div className="flex gap-2 border-b border-secondary/30 mb-6" role="tablist">
+        {/* Tab bar (Spec #33 R5.1) — ARIA pattern matches TabNavigation.tsx */}
+        <div className="flex gap-2 border-b border-secondary/30 mb-6" role="tablist" aria-label="Weapon shop tabs">
           <button
             type="button"
             role="tab"
+            id="weapons-catalog-tab"
             aria-selected={activeTab === 'catalog'}
+            aria-controls="weapons-catalog-panel"
+            tabIndex={activeTab === 'catalog' ? 0 : -1}
             onClick={() => switchTab('catalog')}
             className={
               'px-4 py-2 -mb-px border-b-2 transition-colors ' +
@@ -108,7 +125,10 @@ function WeaponShopPage() {
           <button
             type="button"
             role="tab"
+            id="weapons-inventory-tab"
             aria-selected={activeTab === 'inventory'}
+            aria-controls="weapons-inventory-panel"
+            tabIndex={activeTab === 'inventory' ? 0 : -1}
             onClick={() => switchTab('inventory')}
             className={
               'px-4 py-2 -mb-px border-b-2 transition-colors ' +
@@ -167,20 +187,36 @@ function WeaponShopPage() {
         )}
 
         {!loading && !error && activeTab === 'inventory' && (
-          <InventoryTab
-            inventory={inventory}
-            workshopLevel={weaponWorkshopLevel}
-            onSellComplete={async (result) => {
-              setSaleSuccessMessage(`Sold ${result.weaponName} for ₡${result.salePrice.toLocaleString()}`);
-              await refreshInventory();
-              // Auto-dismiss the toast after 5 seconds
-              setTimeout(() => setSaleSuccessMessage(null), 5000);
-            }}
-          />
+          <div
+            role="tabpanel"
+            id="weapons-inventory-panel"
+            aria-labelledby="weapons-inventory-tab"
+          >
+            <InventoryTab
+              inventory={inventory}
+              workshopLevel={weaponWorkshopLevel}
+              onSellComplete={async (result) => {
+                setSaleSuccessMessage(`Sold ${result.weaponName} for ₡${result.salePrice.toLocaleString()}`);
+                await refreshInventory();
+                // Reset any in-flight auto-dismiss before scheduling a new one
+                if (successDismissTimerRef.current !== null) {
+                  clearTimeout(successDismissTimerRef.current);
+                }
+                successDismissTimerRef.current = setTimeout(() => {
+                  setSaleSuccessMessage(null);
+                  successDismissTimerRef.current = null;
+                }, 5000);
+              }}
+            />
+          </div>
         )}
 
         {!loading && !error && activeTab === 'catalog' && (
-          <>
+          <div
+            role="tabpanel"
+            id="weapons-catalog-panel"
+            aria-labelledby="weapons-catalog-tab"
+          >
             {/* Filter Panel */}
             <FilterPanel
               filters={filters}
@@ -240,7 +276,7 @@ function WeaponShopPage() {
                 onSelectWeapon={setSelectedWeapon}
               />
             )}
-          </>
+          </div>
         )}
 
         {/* Comparison Bar */}

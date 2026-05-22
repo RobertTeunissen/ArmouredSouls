@@ -229,12 +229,14 @@ describe('Weapon Inventory Routes', () => {
       expect(response.body).toHaveProperty('error');
     });
 
-    it('returns 404 when inventory ID does not exist', async () => {
+    it('returns 403 (generic ownership failure) when inventory ID does not exist — prevents enumeration', async () => {
       const ctx = await createResaleUser();
       const response = await request(app)
         .delete('/api/weapon-inventory/9999999')
         .set('Authorization', `Bearer ${ctx.token}`);
-      expect(response.status).toBe(403); // ownership check returns generic 403 (resource enumeration prevention)
+      // verifyWeaponOwnership returns a generic 403 for both "not found" and "owned by another user"
+      // to prevent inventory ID enumeration. This is the same response another-user-weapon would get.
+      expect(response.status).toBe(403);
     });
 
     it('returns 409 when weapon is equipped as main weapon', async () => {

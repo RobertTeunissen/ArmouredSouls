@@ -473,16 +473,15 @@ export function useWeaponShop() {
         apiClient.get('/api/weapon-inventory'),
         apiClient.get('/api/weapon-inventory/storage-status'),
       ]);
-      const inv = inventoryResponse.data;
+      const inv = inventoryResponse.data as WeaponInventoryItem[];
       setInventory(inv);
       setStorageStatus(storageResponse.data);
 
       const ownedMap = new Map<number, number>();
       let equippedCount = 0;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      inv.forEach((item: any) => {
+      inv.forEach((item) => {
         ownedMap.set(item.weaponId, (ownedMap.get(item.weaponId) || 0) + 1);
-        if (item.robotsMain?.length > 0 || item.robotsOffhand?.length > 0) {
+        if ((item.robotsMain?.length ?? 0) > 0 || (item.robotsOffhand?.length ?? 0) > 0) {
           equippedCount++;
         }
       });
