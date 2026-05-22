@@ -117,7 +117,9 @@ The following event types are supported in the audit_logs table:
 
 ### Weapon Events
 - `weapon_purchase`: Weapon purchase transaction
-- `weapon_sale`: Weapon sale transaction
+  - Payload: `{ weaponId: number, cost: number }` — `cost` is the actual credits paid (after Workshop discount).
+- `weapon_sale`: Weapon sale transaction (Spec #33, May 2026)
+  - Payload: `{ weaponId: number, salePrice: number }` — `salePrice` is the credits the player received, computed as `pricePaid × resaleRate(workshopLevel)`. Used by achievements E18 (count) and E19 (lifetime credits) via SUM/COUNT queries on this event type.
 
 ### Tournament Events
 - `tournament_match`: Tournament match result

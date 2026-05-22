@@ -863,7 +863,8 @@ async function ensureWeaponInventory(userId: number, weaponId: number) {
     where: { userId, weaponId },
   });
   if (existing) return existing;
-  return prisma.weaponInventory.create({ data: { userId, weaponId } });
+  // Seed-granted weapons are free (matches userGeneration.ts pattern for starter weapons).
+  return prisma.weaponInventory.create({ data: { userId, weaponId, pricePaid: 0 } });
 }
 
 /**

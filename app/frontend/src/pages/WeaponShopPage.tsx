@@ -3,8 +3,12 @@
  *
  * Page-level orchestrator that composes sub-components from ../components/weapon-shop/.
  * Extracted during component splitting (Spec 18).
+ *
+ * Spec #33 added a "My Inventory" tab for weapon resale.
  */
 
+import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import Navigation from '../components/Navigation';
 import ViewModeToggle from '../components/ViewModeToggle';
 import WeaponTable from '../components/WeaponTable';
@@ -18,6 +22,7 @@ import { calculateWeaponWorkshopDiscount } from '../../../shared/utils/discounts
 import {
   StorageCapacityBar,
   WeaponCardGrid,
+  InventoryTab,
   useWeaponShop,
   type Weapon,
 } from '../components/weapon-shop';
@@ -26,6 +31,8 @@ function WeaponShopPage() {
   const {
     user,
     weapons,
+    inventory,
+    refreshInventory,
     processedWeapons,
     groupedWeapons,
     ownedWeapons,
@@ -56,6 +63,21 @@ function WeaponShopPage() {
     getLoadoutTypeColor,
   } = useWeaponShop();
 
+  // Tab state — bound to ?tab= URL param so refresh keeps the tab (Spec #33 R5.1)
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get('tab') === 'inventory' ? 'inventory' : 'catalog';
+  const switchTab = (tab: 'catalog' | 'inventory') => {
+    const next = new URLSearchParams(searchParams);
+    if (tab === 'catalog') {
+      next.delete('tab');
+    } else {
+      next.set('tab', tab);
+    }
+    setSearchParams(next, { replace: true });
+  };
+
+  const [saleSuccessMessage, setSaleSuccessMessage] = useState<string | null>(null);
+
   return (
     <div className="min-h-screen bg-background text-white">
       <Navigation />
@@ -66,8 +88,60 @@ function WeaponShopPage() {
           <p className="text-secondary">Purchase weapons to equip your robots. Weapons provide attribute bonuses and combat capabilities.</p>
         </div>
 
-        {/* Storage Capacity */}
-        {storageStatus && (
+        {/* Tab bar (Spec #33 R5.1) */}
+        <div className="flex gap-2 border-b border-secondary/30 mb-6" role="tablist">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'catalog'}
+            onClick={() => switchTab('catalog')}
+            className={
+              'px-4 py-2 -mb-px border-b-2 transition-colors ' +
+              (activeTab === 'catalog'
+                ? 'border-blue-500 text-blue-300 font-semibold'
+                : 'border-transparent text-secondary hover:text-white')
+            }
+            data-testid="tab-catalog"
+          >
+            Catalog
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'inventory'}
+            onClick={() => switchTab('inventory')}
+            className={
+              'px-4 py-2 -mb-px border-b-2 transition-colors ' +
+              (activeTab === 'inventory'
+                ? 'border-blue-500 text-blue-300 font-semibold'
+                : 'border-transparent text-secondary hover:text-white')
+            }
+            data-testid="tab-inventory"
+          >
+            My Inventory ({inventory.length})
+          </button>
+        </div>
+
+        {/* Sale success toast (Spec #33 R5.7) */}
+        {saleSuccessMessage && (
+          <div
+            className="bg-emerald-900/40 border border-emerald-500 text-emerald-200 px-4 py-3 rounded mb-4 flex justify-between items-center"
+            data-testid="sale-success-message"
+          >
+            <span>{saleSuccessMessage}</span>
+            <button
+              type="button"
+              onClick={() => setSaleSuccessMessage(null)}
+              className="text-emerald-300 hover:text-white px-2"
+              aria-label="Dismiss"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
+        {/* Storage Capacity (Catalog tab only) */}
+        {activeTab === 'catalog' && storageStatus && (
           <StorageCapacityBar
             storageStatus={storageStatus}
             equippedWeaponsCount={equippedWeaponsCount}
@@ -92,7 +166,20 @@ function WeaponShopPage() {
           </div>
         )}
 
-        {!loading && !error && (
+        {!loading && !error && activeTab === 'inventory' && (
+          <InventoryTab
+            inventory={inventory}
+            workshopLevel={weaponWorkshopLevel}
+            onSellComplete={async (result) => {
+              setSaleSuccessMessage(`Sold ${result.weaponName} for ₡${result.salePrice.toLocaleString()}`);
+              await refreshInventory();
+              // Auto-dismiss the toast after 5 seconds
+              setTimeout(() => setSaleSuccessMessage(null), 5000);
+            }}
+          />
+        )}
+
+        {!loading && !error && activeTab === 'catalog' && (
           <>
             {/* Filter Panel */}
             <FilterPanel

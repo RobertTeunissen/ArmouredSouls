@@ -61,6 +61,7 @@ async function ensureTestRobot(robotId: number, userId: number) {
       data: {
         user: { connect: { id: user.id } },
         weapon: { connect: { id: weapon.id } },
+        pricePaid: 0,
       },
     });
     

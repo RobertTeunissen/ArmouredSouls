@@ -12,7 +12,7 @@ import type { WeaponFilters } from '../FilterPanel';
 import { ATTRIBUTE_LABELS } from '../../utils/weaponConstants';
 import { calculateWeaponWorkshopDiscount, applyDiscount } from '../../../../shared/utils/discounts';
 import { getWeaponOptimalRange } from '../../utils/weaponRange';
-import type { Weapon, WeaponFacility, StorageStatus, ViewMode } from './types';
+import type { Weapon, WeaponFacility, StorageStatus, ViewMode, WeaponInventoryItem } from './types';
 
 export function useWeaponShop() {
   const { user, refreshUser } = useAuth();
@@ -21,6 +21,7 @@ export function useWeaponShop() {
   const isOnboarding = searchParams.get('onboarding') === 'true';
 
   const [weapons, setWeapons] = useState<Weapon[]>([]);
+  const [inventory, setInventory] = useState<WeaponInventoryItem[]>([]);
   const [ownedWeapons, setOwnedWeapons] = useState<Map<number, number>>(new Map());
   const [equippedWeaponsCount, setEquippedWeaponsCount] = useState(0);
   const [weaponWorkshopLevel, setWeaponWorkshopLevel] = useState(0);
@@ -97,6 +98,7 @@ export function useWeaponShop() {
         // Fetch owned weapons inventory
         const inventoryResponse = await apiClient.get('/api/weapon-inventory');
         const inventory = inventoryResponse.data;
+        setInventory(inventory);
 
         // Count owned weapons by weapon ID
         const ownedMap = new Map<number, number>();
@@ -330,6 +332,7 @@ export function useWeaponShop() {
           // Refresh owned weapons
           const inventoryResponse = await apiClient.get('/api/weapon-inventory');
           const inventory = inventoryResponse.data;
+          setInventory(inventory);
           const ownedMap = new Map<number, number>();
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           inventory.forEach((item: any) => {
@@ -459,9 +462,44 @@ export function useWeaponShop() {
     one_handed: processedWeapons.filter(w => w.loadoutType === 'single'),
   }), [processedWeapons]);
 
+  /**
+   * Refresh inventory + currency after a sale (Spec #33).
+   * Re-fetches inventory list and storage status, recomputes ownedWeapons map,
+   * and refreshes the user object so the credit balance updates everywhere.
+   */
+  const refreshInventory = async () => {
+    try {
+      const [inventoryResponse, storageResponse] = await Promise.all([
+        apiClient.get('/api/weapon-inventory'),
+        apiClient.get('/api/weapon-inventory/storage-status'),
+      ]);
+      const inv = inventoryResponse.data;
+      setInventory(inv);
+      setStorageStatus(storageResponse.data);
+
+      const ownedMap = new Map<number, number>();
+      let equippedCount = 0;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      inv.forEach((item: any) => {
+        ownedMap.set(item.weaponId, (ownedMap.get(item.weaponId) || 0) + 1);
+        if (item.robotsMain?.length > 0 || item.robotsOffhand?.length > 0) {
+          equippedCount++;
+        }
+      });
+      setOwnedWeapons(ownedMap);
+      setEquippedWeaponsCount(equippedCount);
+
+      await refreshUser();
+    } catch {
+      // Refresh failure is non-fatal — UI will recover on next mount.
+    }
+  };
+
   return {
     user,
     weapons,
+    inventory,
+    refreshInventory,
     processedWeapons,
     groupedWeapons,
     ownedWeapons,

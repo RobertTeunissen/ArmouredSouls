@@ -125,6 +125,7 @@ describe('Tag Team Auto-Repair Integration Test', () => {
           data: {
             userId: user.id,
             weaponId: weapon.id,
+            pricePaid: 0,
           },
         });
 
@@ -283,6 +284,7 @@ describe('Tag Team Auto-Repair Integration Test', () => {
         data: {
           userId,
           weaponId: weapon!.id,
+          pricePaid: 0,
         },
       });
 

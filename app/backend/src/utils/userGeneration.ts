@@ -175,8 +175,9 @@ export async function generateBattleReadyUsers(
             });
 
             // Create weapon inventory for main weapon
+            // pricePaid: 0 because starter weapons are granted free during user generation
             const mainInv = await tx.weaponInventory.create({
-              data: { userId: user.id, weaponId: mainWeaponRecord.id },
+              data: { userId: user.id, weaponId: mainWeaponRecord.id, pricePaid: 0 },
             });
 
             let offhandInvId: number | null = null;
@@ -184,13 +185,13 @@ export async function generateBattleReadyUsers(
             if (loadoutType === 'weapon_shield') {
               const shieldRecord = selectShield(allWeapons, tier.priceTier);
               const shieldInv = await tx.weaponInventory.create({
-                data: { userId: user.id, weaponId: shieldRecord.id },
+                data: { userId: user.id, weaponId: shieldRecord.id, pricePaid: 0 },
               });
               offhandInvId = shieldInv.id;
             } else if (loadoutType === 'dual_wield') {
               // Second copy of the same weapon
               const dualInv = await tx.weaponInventory.create({
-                data: { userId: user.id, weaponId: mainWeaponRecord.id },
+                data: { userId: user.id, weaponId: mainWeaponRecord.id, pricePaid: 0 },
               });
               offhandInvId = dualInv.id;
             }

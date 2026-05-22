@@ -150,7 +150,7 @@ describe('Tuning Combat Integration', () => {
       const robot = createMockRobot({ loadoutType: 'two_handed', mainWeaponId: 1 });
       const robotWithWeapon = {
         ...robot,
-        mainWeapon: { id: 1, userId: 1, weaponId: 1, customName: null, purchasedAt: new Date(), weapon },
+        mainWeapon: { id: 1, userId: 1, weaponId: 1, customName: null, pricePaid: 0, purchasedAt: new Date(), weapon },
       };
       const tuning: TuningAttributeMap = { combatPower: 4 };
 

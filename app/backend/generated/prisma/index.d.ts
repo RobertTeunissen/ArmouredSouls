@@ -247,7 +247,7 @@ export class PrismaClient<
    * 
    * Read more in our [docs](https://www.prisma.io/docs/orm/prisma-client/queries/transactions).
    */
-  $transaction<P extends Prisma.PrismaPromise<any>[]>(arg: [...P], options?: { isolationLevel?: Prisma.TransactionIsolationLevel }): $Utils.JsPromise<runtime.Types.Utils.UnwrapTuple<P>>
+  $transaction<P extends Prisma.PrismaPromise<any>[]>(arg: [...P], options?: { maxWait?: number, timeout?: number, isolationLevel?: Prisma.TransactionIsolationLevel }): $Utils.JsPromise<runtime.Types.Utils.UnwrapTuple<P>>
 
   $transaction<R>(fn: (prisma: Omit<PrismaClient, runtime.ITXClientDenyList>) => $Utils.JsPromise<R>, options?: { maxWait?: number, timeout?: number, isolationLevel?: Prisma.TransactionIsolationLevel }): $Utils.JsPromise<R>
 
@@ -544,8 +544,8 @@ export namespace Prisma {
   export import Exact = $Public.Exact
 
   /**
-   * Prisma Client JS version: 7.7.0
-   * Query Engine version: 75cbdc1eb7150937890ad5465d861175c6624711
+   * Prisma Client JS version: 7.8.0
+   * Query Engine version: 3c6e192761c0362d496ed980de936e2f3cebcd3a
    */
   export type PrismaVersion = {
     client: string
@@ -8911,12 +8911,14 @@ export namespace Prisma {
     id: number | null
     userId: number | null
     weaponId: number | null
+    pricePaid: number | null
   }
 
   export type WeaponInventorySumAggregateOutputType = {
     id: number | null
     userId: number | null
     weaponId: number | null
+    pricePaid: number | null
   }
 
   export type WeaponInventoryMinAggregateOutputType = {
@@ -8924,6 +8926,7 @@ export namespace Prisma {
     userId: number | null
     weaponId: number | null
     customName: string | null
+    pricePaid: number | null
     purchasedAt: Date | null
   }
 
@@ -8932,6 +8935,7 @@ export namespace Prisma {
     userId: number | null
     weaponId: number | null
     customName: string | null
+    pricePaid: number | null
     purchasedAt: Date | null
   }
 
@@ -8940,6 +8944,7 @@ export namespace Prisma {
     userId: number
     weaponId: number
     customName: number
+    pricePaid: number
     purchasedAt: number
     _all: number
   }
@@ -8949,12 +8954,14 @@ export namespace Prisma {
     id?: true
     userId?: true
     weaponId?: true
+    pricePaid?: true
   }
 
   export type WeaponInventorySumAggregateInputType = {
     id?: true
     userId?: true
     weaponId?: true
+    pricePaid?: true
   }
 
   export type WeaponInventoryMinAggregateInputType = {
@@ -8962,6 +8969,7 @@ export namespace Prisma {
     userId?: true
     weaponId?: true
     customName?: true
+    pricePaid?: true
     purchasedAt?: true
   }
 
@@ -8970,6 +8978,7 @@ export namespace Prisma {
     userId?: true
     weaponId?: true
     customName?: true
+    pricePaid?: true
     purchasedAt?: true
   }
 
@@ -8978,6 +8987,7 @@ export namespace Prisma {
     userId?: true
     weaponId?: true
     customName?: true
+    pricePaid?: true
     purchasedAt?: true
     _all?: true
   }
@@ -9073,6 +9083,7 @@ export namespace Prisma {
     userId: number
     weaponId: number
     customName: string | null
+    pricePaid: number
     purchasedAt: Date
     _count: WeaponInventoryCountAggregateOutputType | null
     _avg: WeaponInventoryAvgAggregateOutputType | null
@@ -9100,6 +9111,7 @@ export namespace Prisma {
     userId?: boolean
     weaponId?: boolean
     customName?: boolean
+    pricePaid?: boolean
     purchasedAt?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
     weapon?: boolean | WeaponDefaultArgs<ExtArgs>
@@ -9113,6 +9125,7 @@ export namespace Prisma {
     userId?: boolean
     weaponId?: boolean
     customName?: boolean
+    pricePaid?: boolean
     purchasedAt?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
     weapon?: boolean | WeaponDefaultArgs<ExtArgs>
@@ -9123,6 +9136,7 @@ export namespace Prisma {
     userId?: boolean
     weaponId?: boolean
     customName?: boolean
+    pricePaid?: boolean
     purchasedAt?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
     weapon?: boolean | WeaponDefaultArgs<ExtArgs>
@@ -9133,10 +9147,11 @@ export namespace Prisma {
     userId?: boolean
     weaponId?: boolean
     customName?: boolean
+    pricePaid?: boolean
     purchasedAt?: boolean
   }
 
-  export type WeaponInventoryOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "weaponId" | "customName" | "purchasedAt", ExtArgs["result"]["weaponInventory"]>
+  export type WeaponInventoryOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "weaponId" | "customName" | "pricePaid" | "purchasedAt", ExtArgs["result"]["weaponInventory"]>
   export type WeaponInventoryInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
     weapon?: boolean | WeaponDefaultArgs<ExtArgs>
@@ -9166,6 +9181,7 @@ export namespace Prisma {
       userId: number
       weaponId: number
       customName: string | null
+      pricePaid: number
       purchasedAt: Date
     }, ExtArgs["result"]["weaponInventory"]>
     composites: {}
@@ -9598,6 +9614,7 @@ export namespace Prisma {
     readonly userId: FieldRef<"WeaponInventory", 'Int'>
     readonly weaponId: FieldRef<"WeaponInventory", 'Int'>
     readonly customName: FieldRef<"WeaponInventory", 'String'>
+    readonly pricePaid: FieldRef<"WeaponInventory", 'Int'>
     readonly purchasedAt: FieldRef<"WeaponInventory", 'DateTime'>
   }
     
@@ -34916,6 +34933,7 @@ export namespace Prisma {
     userId: 'userId',
     weaponId: 'weaponId',
     customName: 'customName',
+    pricePaid: 'pricePaid',
     purchasedAt: 'purchasedAt'
   };
 
@@ -36196,6 +36214,7 @@ export namespace Prisma {
     userId?: IntFilter<"WeaponInventory"> | number
     weaponId?: IntFilter<"WeaponInventory"> | number
     customName?: StringNullableFilter<"WeaponInventory"> | string | null
+    pricePaid?: IntFilter<"WeaponInventory"> | number
     purchasedAt?: DateTimeFilter<"WeaponInventory"> | Date | string
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
     weapon?: XOR<WeaponScalarRelationFilter, WeaponWhereInput>
@@ -36208,6 +36227,7 @@ export namespace Prisma {
     userId?: SortOrder
     weaponId?: SortOrder
     customName?: SortOrderInput | SortOrder
+    pricePaid?: SortOrder
     purchasedAt?: SortOrder
     user?: UserOrderByWithRelationInput
     weapon?: WeaponOrderByWithRelationInput
@@ -36223,6 +36243,7 @@ export namespace Prisma {
     userId?: IntFilter<"WeaponInventory"> | number
     weaponId?: IntFilter<"WeaponInventory"> | number
     customName?: StringNullableFilter<"WeaponInventory"> | string | null
+    pricePaid?: IntFilter<"WeaponInventory"> | number
     purchasedAt?: DateTimeFilter<"WeaponInventory"> | Date | string
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
     weapon?: XOR<WeaponScalarRelationFilter, WeaponWhereInput>
@@ -36235,6 +36256,7 @@ export namespace Prisma {
     userId?: SortOrder
     weaponId?: SortOrder
     customName?: SortOrderInput | SortOrder
+    pricePaid?: SortOrder
     purchasedAt?: SortOrder
     _count?: WeaponInventoryCountOrderByAggregateInput
     _avg?: WeaponInventoryAvgOrderByAggregateInput
@@ -36251,6 +36273,7 @@ export namespace Prisma {
     userId?: IntWithAggregatesFilter<"WeaponInventory"> | number
     weaponId?: IntWithAggregatesFilter<"WeaponInventory"> | number
     customName?: StringNullableWithAggregatesFilter<"WeaponInventory"> | string | null
+    pricePaid?: IntWithAggregatesFilter<"WeaponInventory"> | number
     purchasedAt?: DateTimeWithAggregatesFilter<"WeaponInventory"> | Date | string
   }
 
@@ -39158,6 +39181,7 @@ export namespace Prisma {
 
   export type WeaponInventoryCreateInput = {
     customName?: string | null
+    pricePaid: number
     purchasedAt?: Date | string
     user: UserCreateNestedOneWithoutWeaponInventoryInput
     weapon: WeaponCreateNestedOneWithoutWeaponInventoryInput
@@ -39170,6 +39194,7 @@ export namespace Prisma {
     userId: number
     weaponId: number
     customName?: string | null
+    pricePaid: number
     purchasedAt?: Date | string
     robotsMain?: RobotUncheckedCreateNestedManyWithoutMainWeaponInput
     robotsOffhand?: RobotUncheckedCreateNestedManyWithoutOffhandWeaponInput
@@ -39177,6 +39202,7 @@ export namespace Prisma {
 
   export type WeaponInventoryUpdateInput = {
     customName?: NullableStringFieldUpdateOperationsInput | string | null
+    pricePaid?: IntFieldUpdateOperationsInput | number
     purchasedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutWeaponInventoryNestedInput
     weapon?: WeaponUpdateOneRequiredWithoutWeaponInventoryNestedInput
@@ -39189,6 +39215,7 @@ export namespace Prisma {
     userId?: IntFieldUpdateOperationsInput | number
     weaponId?: IntFieldUpdateOperationsInput | number
     customName?: NullableStringFieldUpdateOperationsInput | string | null
+    pricePaid?: IntFieldUpdateOperationsInput | number
     purchasedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     robotsMain?: RobotUncheckedUpdateManyWithoutMainWeaponNestedInput
     robotsOffhand?: RobotUncheckedUpdateManyWithoutOffhandWeaponNestedInput
@@ -39199,11 +39226,13 @@ export namespace Prisma {
     userId: number
     weaponId: number
     customName?: string | null
+    pricePaid: number
     purchasedAt?: Date | string
   }
 
   export type WeaponInventoryUpdateManyMutationInput = {
     customName?: NullableStringFieldUpdateOperationsInput | string | null
+    pricePaid?: IntFieldUpdateOperationsInput | number
     purchasedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -39212,6 +39241,7 @@ export namespace Prisma {
     userId?: IntFieldUpdateOperationsInput | number
     weaponId?: IntFieldUpdateOperationsInput | number
     customName?: NullableStringFieldUpdateOperationsInput | string | null
+    pricePaid?: IntFieldUpdateOperationsInput | number
     purchasedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -42368,6 +42398,7 @@ export namespace Prisma {
     userId?: SortOrder
     weaponId?: SortOrder
     customName?: SortOrder
+    pricePaid?: SortOrder
     purchasedAt?: SortOrder
   }
 
@@ -42375,6 +42406,7 @@ export namespace Prisma {
     id?: SortOrder
     userId?: SortOrder
     weaponId?: SortOrder
+    pricePaid?: SortOrder
   }
 
   export type WeaponInventoryMaxOrderByAggregateInput = {
@@ -42382,6 +42414,7 @@ export namespace Prisma {
     userId?: SortOrder
     weaponId?: SortOrder
     customName?: SortOrder
+    pricePaid?: SortOrder
     purchasedAt?: SortOrder
   }
 
@@ -42390,6 +42423,7 @@ export namespace Prisma {
     userId?: SortOrder
     weaponId?: SortOrder
     customName?: SortOrder
+    pricePaid?: SortOrder
     purchasedAt?: SortOrder
   }
 
@@ -42397,6 +42431,7 @@ export namespace Prisma {
     id?: SortOrder
     userId?: SortOrder
     weaponId?: SortOrder
+    pricePaid?: SortOrder
   }
 
   export type WeaponCountOrderByAggregateInput = {
@@ -46481,6 +46516,7 @@ export namespace Prisma {
 
   export type WeaponInventoryCreateWithoutUserInput = {
     customName?: string | null
+    pricePaid: number
     purchasedAt?: Date | string
     weapon: WeaponCreateNestedOneWithoutWeaponInventoryInput
     robotsMain?: RobotCreateNestedManyWithoutMainWeaponInput
@@ -46491,6 +46527,7 @@ export namespace Prisma {
     id?: number
     weaponId: number
     customName?: string | null
+    pricePaid: number
     purchasedAt?: Date | string
     robotsMain?: RobotUncheckedCreateNestedManyWithoutMainWeaponInput
     robotsOffhand?: RobotUncheckedCreateNestedManyWithoutOffhandWeaponInput
@@ -46764,6 +46801,7 @@ export namespace Prisma {
     userId?: IntFilter<"WeaponInventory"> | number
     weaponId?: IntFilter<"WeaponInventory"> | number
     customName?: StringNullableFilter<"WeaponInventory"> | string | null
+    pricePaid?: IntFilter<"WeaponInventory"> | number
     purchasedAt?: DateTimeFilter<"WeaponInventory"> | Date | string
   }
 
@@ -47093,6 +47131,7 @@ export namespace Prisma {
 
   export type WeaponInventoryCreateWithoutRobotsMainInput = {
     customName?: string | null
+    pricePaid: number
     purchasedAt?: Date | string
     user: UserCreateNestedOneWithoutWeaponInventoryInput
     weapon: WeaponCreateNestedOneWithoutWeaponInventoryInput
@@ -47104,6 +47143,7 @@ export namespace Prisma {
     userId: number
     weaponId: number
     customName?: string | null
+    pricePaid: number
     purchasedAt?: Date | string
     robotsOffhand?: RobotUncheckedCreateNestedManyWithoutOffhandWeaponInput
   }
@@ -47115,6 +47155,7 @@ export namespace Prisma {
 
   export type WeaponInventoryCreateWithoutRobotsOffhandInput = {
     customName?: string | null
+    pricePaid: number
     purchasedAt?: Date | string
     user: UserCreateNestedOneWithoutWeaponInventoryInput
     weapon: WeaponCreateNestedOneWithoutWeaponInventoryInput
@@ -47126,6 +47167,7 @@ export namespace Prisma {
     userId: number
     weaponId: number
     customName?: string | null
+    pricePaid: number
     purchasedAt?: Date | string
     robotsMain?: RobotUncheckedCreateNestedManyWithoutMainWeaponInput
   }
@@ -47851,6 +47893,7 @@ export namespace Prisma {
 
   export type WeaponInventoryUpdateWithoutRobotsMainInput = {
     customName?: NullableStringFieldUpdateOperationsInput | string | null
+    pricePaid?: IntFieldUpdateOperationsInput | number
     purchasedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutWeaponInventoryNestedInput
     weapon?: WeaponUpdateOneRequiredWithoutWeaponInventoryNestedInput
@@ -47862,6 +47905,7 @@ export namespace Prisma {
     userId?: IntFieldUpdateOperationsInput | number
     weaponId?: IntFieldUpdateOperationsInput | number
     customName?: NullableStringFieldUpdateOperationsInput | string | null
+    pricePaid?: IntFieldUpdateOperationsInput | number
     purchasedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     robotsOffhand?: RobotUncheckedUpdateManyWithoutOffhandWeaponNestedInput
   }
@@ -47879,6 +47923,7 @@ export namespace Prisma {
 
   export type WeaponInventoryUpdateWithoutRobotsOffhandInput = {
     customName?: NullableStringFieldUpdateOperationsInput | string | null
+    pricePaid?: IntFieldUpdateOperationsInput | number
     purchasedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutWeaponInventoryNestedInput
     weapon?: WeaponUpdateOneRequiredWithoutWeaponInventoryNestedInput
@@ -47890,6 +47935,7 @@ export namespace Prisma {
     userId?: IntFieldUpdateOperationsInput | number
     weaponId?: IntFieldUpdateOperationsInput | number
     customName?: NullableStringFieldUpdateOperationsInput | string | null
+    pricePaid?: IntFieldUpdateOperationsInput | number
     purchasedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     robotsMain?: RobotUncheckedUpdateManyWithoutMainWeaponNestedInput
   }
@@ -49046,6 +49092,7 @@ export namespace Prisma {
 
   export type WeaponInventoryCreateWithoutWeaponInput = {
     customName?: string | null
+    pricePaid: number
     purchasedAt?: Date | string
     user: UserCreateNestedOneWithoutWeaponInventoryInput
     robotsMain?: RobotCreateNestedManyWithoutMainWeaponInput
@@ -49056,6 +49103,7 @@ export namespace Prisma {
     id?: number
     userId: number
     customName?: string | null
+    pricePaid: number
     purchasedAt?: Date | string
     robotsMain?: RobotUncheckedCreateNestedManyWithoutMainWeaponInput
     robotsOffhand?: RobotUncheckedCreateNestedManyWithoutOffhandWeaponInput
@@ -56971,6 +57019,7 @@ export namespace Prisma {
     id?: number
     weaponId: number
     customName?: string | null
+    pricePaid: number
     purchasedAt?: Date | string
   }
 
@@ -57311,6 +57360,7 @@ export namespace Prisma {
 
   export type WeaponInventoryUpdateWithoutUserInput = {
     customName?: NullableStringFieldUpdateOperationsInput | string | null
+    pricePaid?: IntFieldUpdateOperationsInput | number
     purchasedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     weapon?: WeaponUpdateOneRequiredWithoutWeaponInventoryNestedInput
     robotsMain?: RobotUpdateManyWithoutMainWeaponNestedInput
@@ -57321,6 +57371,7 @@ export namespace Prisma {
     id?: IntFieldUpdateOperationsInput | number
     weaponId?: IntFieldUpdateOperationsInput | number
     customName?: NullableStringFieldUpdateOperationsInput | string | null
+    pricePaid?: IntFieldUpdateOperationsInput | number
     purchasedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     robotsMain?: RobotUncheckedUpdateManyWithoutMainWeaponNestedInput
     robotsOffhand?: RobotUncheckedUpdateManyWithoutOffhandWeaponNestedInput
@@ -57330,6 +57381,7 @@ export namespace Prisma {
     id?: IntFieldUpdateOperationsInput | number
     weaponId?: IntFieldUpdateOperationsInput | number
     customName?: NullableStringFieldUpdateOperationsInput | string | null
+    pricePaid?: IntFieldUpdateOperationsInput | number
     purchasedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -58991,11 +59043,13 @@ export namespace Prisma {
     id?: number
     userId: number
     customName?: string | null
+    pricePaid: number
     purchasedAt?: Date | string
   }
 
   export type WeaponInventoryUpdateWithoutWeaponInput = {
     customName?: NullableStringFieldUpdateOperationsInput | string | null
+    pricePaid?: IntFieldUpdateOperationsInput | number
     purchasedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutWeaponInventoryNestedInput
     robotsMain?: RobotUpdateManyWithoutMainWeaponNestedInput
@@ -59006,6 +59060,7 @@ export namespace Prisma {
     id?: IntFieldUpdateOperationsInput | number
     userId?: IntFieldUpdateOperationsInput | number
     customName?: NullableStringFieldUpdateOperationsInput | string | null
+    pricePaid?: IntFieldUpdateOperationsInput | number
     purchasedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     robotsMain?: RobotUncheckedUpdateManyWithoutMainWeaponNestedInput
     robotsOffhand?: RobotUncheckedUpdateManyWithoutOffhandWeaponNestedInput
@@ -59015,6 +59070,7 @@ export namespace Prisma {
     id?: IntFieldUpdateOperationsInput | number
     userId?: IntFieldUpdateOperationsInput | number
     customName?: NullableStringFieldUpdateOperationsInput | string | null
+    pricePaid?: IntFieldUpdateOperationsInput | number
     purchasedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 

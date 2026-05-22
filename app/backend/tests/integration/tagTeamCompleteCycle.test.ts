@@ -114,6 +114,7 @@ describe('Tag Team Complete Cycle Integration Test', () => {
           data: {
             userId: user.id,
             weaponId: weapon.id,
+            pricePaid: 0,
           },
         });
 
@@ -249,6 +250,7 @@ describe('Tag Team Complete Cycle Integration Test', () => {
         data: {
           userId: user.id,
           weaponId: weapon!.id,
+          pricePaid: 0,
         },
       });
 

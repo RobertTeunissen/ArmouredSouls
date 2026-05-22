@@ -4,6 +4,21 @@
  * Uses SELECT ... FOR UPDATE to acquire a row-level lock on the user row,
  * serializing concurrent transactions for the same user. This ensures that
  * only one purchase can read + decrement the balance at a time.
+ *
+ * ## Lock acquisition order convention
+ *
+ * Any code that takes both the `users` row lock (via `lockUserForSpending`)
+ * AND another row lock (e.g. `weapon_inventory`, `facilities`) MUST acquire
+ * locks in this order to prevent deadlocks:
+ *
+ *   1. `users` row first (via `lockUserForSpending`)
+ *   2. Other row locks second (e.g. `SELECT ... FROM weapon_inventory FOR UPDATE`)
+ *
+ * Currently enforced in:
+ * - `src/routes/weaponInventory.ts` resale handler (DELETE /:id)
+ * - `src/services/robot/robotWeaponService.ts` equipMainWeapon / equipOffhandWeapon
+ *   (only takes the weapon_inventory lock — no user lock needed since equip
+ *   does not modify currency).
  */
 
 import type { Prisma } from '../../generated/prisma';

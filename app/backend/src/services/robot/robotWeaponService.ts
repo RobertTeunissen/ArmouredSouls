@@ -38,6 +38,19 @@ async function recalcStats(
 /** Equip a weapon to the main slot inside a transaction. */
 export async function equipMainWeapon(userId: number, robotId: number, weaponInvIdNum: number) {
   return prisma.$transaction(async (tx) => {
+    // Acquire row-level lock on the weapon_inventory row to serialize against
+    // concurrent resale (DELETE /api/weapon-inventory/:id). Without this lock
+    // the FK ON DELETE SET NULL would silently null this robot's mainWeaponId
+    // if a resale committed between our read and our update.
+    // Lock acquisition order across the codebase: users row first (if needed),
+    // then weapon_inventory. See app/backend/src/lib/creditGuard.ts.
+    const lockedInvRows = await tx.$queryRaw<{ id: number }[]>`
+      SELECT id FROM weapon_inventory WHERE id = ${weaponInvIdNum} FOR UPDATE
+    `;
+    if (lockedInvRows.length === 0) {
+      throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Weapon not found in your inventory', 404);
+    }
+
     const robot = await tx.robot.findFirst({
       where: { id: robotId, userId },
       include: WEAPON_INCLUDE,
@@ -77,6 +90,15 @@ export async function equipMainWeapon(userId: number, robotId: number, weaponInv
 /** Equip a weapon to the offhand slot inside a transaction. */
 export async function equipOffhandWeapon(userId: number, robotId: number, weaponInvIdNum: number) {
   return prisma.$transaction(async (tx) => {
+    // Acquire row-level lock on the weapon_inventory row to serialize against
+    // concurrent resale. See equipMainWeapon for rationale and lock order.
+    const lockedInvRows = await tx.$queryRaw<{ id: number }[]>`
+      SELECT id FROM weapon_inventory WHERE id = ${weaponInvIdNum} FOR UPDATE
+    `;
+    if (lockedInvRows.length === 0) {
+      throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Weapon not found in your inventory', 404);
+    }
+
     const robot = await tx.robot.findFirst({
       where: { id: robotId, userId },
       include: WEAPON_INCLUDE,

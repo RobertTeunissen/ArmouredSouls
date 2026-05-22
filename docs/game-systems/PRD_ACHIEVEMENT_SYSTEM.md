@@ -174,6 +174,10 @@ Triggered by stable-wide economic activity, facility ownership, and roster manag
 | E15 | **"Fine-Tuned Machine"** | Common phrase / Tuning Bay | 🟢 Easy | Allocate tuning points on any robot for the first time | Tuning dial/knob |
 | E16 | **"Overclocked"** | PC gaming term | 🔵 Medium | Allocate 50+ tuning points on a single robot (requires Tuning Bay facility) | CPU chip with flames |
 | E17 | **"Bankrupt!"** | Monopoly / economy | ⬛ Secret | Have your balance drop below ₡0 from daily operating costs | Broken piggy bank |
+| E18 | **"Pawn Star"** | Pawn Stars TV show | 🟢 Easy | Sell your first weapon (Spec #33) | Pawn shop sign |
+| E19 | **"Shrewd Negotiator"** | Business / negotiation trope | 🔵 Medium | Earn ₡500,000 lifetime from weapon resales | Handshake / dollar sign |
+| E20 | **"Arms Dealer"** | Arms dealer trope | 🟠 Hard | Sell 10 weapons | Suitcase full of weapons |
+| E21 | **"Buy High, Sell Higher"** | Trader meme | 🟠 Hard | Sell a weapon at Workshop Level 10 (full credit recovery) | Stock chart with arrow up |
 
 ### 🌟 Prestige & Fame — Mixed Level
 

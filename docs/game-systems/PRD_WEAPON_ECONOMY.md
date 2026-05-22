@@ -1,7 +1,7 @@
 # Product Requirements Document: Weapon Economy and Starter Weapons Overhaul
 
-**Version**: 1.4  
-**Last Updated**: May 8, 2026  
+**Version**: 1.5  
+**Last Updated**: May 22, 2026  
 **Status**: Implemented with Balance Adjustments  
 **Owner**: Robert Teunissen  
 **Epic**: Weapon System Economy Redesign
@@ -12,6 +12,7 @@
 - **v1.2** (Mar 21, 2026): ~25% weapon damage reduction + shield capacity doubled (×2 → ×4)
 - **v1.3** (Mar 21, 2026): Weapon roster expansion from 26 to 47 weapons — 21 new weapons, 2 reclassifications (Laser Rifle → 2H Short, Assault Rifle → 1H Short Premium), tier boundary alignment (Budget <100K, Mid 100–250K, Premium 250–400K, Luxury 400K+), rangeBand column added
 - **v1.4** (May 8, 2026): DPS rebalance — baseDamage compression (3.0× → 2.0× DPS spread), DPS Cost Multiplier M increased from 3.0 to 6.0, prices unchanged (±1%), big five 1H weapons differentiated via cooldown
+- **v1.5** (May 22, 2026): Weapon resale system — sell weapons back at Workshop-level-dependent rate (0%/L0 → 100%/L10), `pricePaid` anchor prevents free-weapon arbitrage, equipped weapons protected by shared row lock
 
 ---
 
@@ -84,6 +85,68 @@ Fast weapons benefit more from Attack Speed. Slow weapons benefit more from Crit
 - `app/backend/prisma/migrations/20260508000000_weapon_dps_rebalance/` — ALTER COLUMN types
 - `app/backend/prisma/seed.ts` — Updated all 41 baseDamage values + 3 cooldown values
 - `docs/analysis/WEAPON_DPS_REBALANCE.md` — Full analysis document
+
+---
+
+## Version 1.5 Updates (May 22, 2026) — Weapon Resale
+
+### Problem Statement
+
+Players cannot sell weapons. Once a weapon is purchased, the credits are gone — there is no path to recover any portion of the cost, even partially, even after a Workshop upgrade. This makes weapon experimentation expensive: every purchase is a permanent commitment, and the only way to undo a bad weapon choice is to leave it sitting unused in inventory until storage capacity forces a hard decision.
+
+The DPS rebalance (v1.4) made all four loadout types competitive on paper, but players still don't switch weapons in practice because the switching cost remains prohibitive. Resale closes that gap.
+
+### Resale Rate Formula
+
+```
+resaleRate(workshopLevel) = workshopLevel × 10   // capped at 100%
+```
+
+Resale rate scales linearly at 10% per Workshop level — the same slope as the existing purchase discount. This gives the Workshop facility a unified dual purpose: every level rewards the player 10% on both buying and selling. The clean teaching: *"Workshop level rewards you 10% on both ends of every transaction."*
+
+| Workshop Level | Resale Rate | Purchase Discount |
+|---------------|-------------|--------------------|
+| 0 | 0% (resale gated) | 0% |
+| 1 | 10% | 10% |
+| 3 | 30% | 30% |
+| 5 | 50% | 50% |
+| 7 | 70% (5,000 prestige gate) | 70% |
+| 10 | 100% (10,000 prestige gate) | 100% |
+
+The 0% rate at L0 means resale is gated behind purchasing Workshop L1 (₡75K, the cheapest facility tier in the game). This makes L1 a meaningful unlock instead of a marginal upgrade.
+
+### Anti-Exploit: pricePaid Anchor
+
+A new `WeaponInventory.pricePaid` Int column stores the **actual credits the player paid** at purchase time, after Workshop discount. Resale is computed against `pricePaid`, NOT catalog price. This prevents a free-weapon arbitrage exploit at Workshop L10:
+
+- A Workshop L10 player can buy any weapon for ₡0 (100% discount).
+- If resale rate were applied to catalog price, they could sell a ₡425K weapon back for ₡425K and repeat infinitely.
+- With the `pricePaid` anchor: a weapon bought for ₡0 yields ₡0 on resale regardless of rate. Buy-then-sell is at best break-even (at L10), never net-positive.
+
+Existing weapons (purchased before this spec) get their `pricePaid` backfilled with the current catalog price as a best-effort approximation. Starter weapons granted by the user-generation script have `pricePaid = 0`, so they yield ₡0 on resale — selling them only frees up storage.
+
+### Equipped-Weapon Restriction
+
+A weapon currently equipped as `mainWeapon` or `offhandWeapon` on any robot cannot be sold. The route handler returns HTTP 409 with the robot name, and the frontend disables the Sell button with a tooltip pointing to the equipping robot.
+
+The FK constraint `Robot.main_weapon_id` uses `ON DELETE SET NULL` (not `RESTRICT`), so the FK is NOT a defense-in-depth backup against an unsynchronized resale-vs-equip race. The equip handlers (`equipMainWeapon`, `equipOffhandWeapon`) and the resale handler all acquire the same `SELECT ... FOR UPDATE` row lock on the target `weapon_inventory` row, serializing concurrent operations.
+
+### Files Modified
+
+- `app/backend/prisma/schema.prisma` — Added `WeaponInventory.pricePaid Int`
+- `app/backend/prisma/migrations/20260522000000_add_weapon_inventory_price_paid/` — Three-phase migration (add nullable → backfill → SET NOT NULL)
+- `app/shared/utils/discounts.ts` — Added `calculateWeaponResaleRate`, `applyResaleRate`
+- `app/backend/src/routes/weaponInventory.ts` — `DELETE /:id` handler with two-tier locking + per-user rate limiter (30 req / 5 min)
+- `app/backend/src/services/robot/robotWeaponService.ts` — Equip handlers acquire shared row lock
+- `app/backend/src/lib/creditGuard.ts` — Documented lock acquisition order convention
+- `app/backend/src/errors/economyErrors.ts` — Added `WEAPON_EQUIPPED` (HTTP 409)
+- `app/backend/src/config/achievements.ts` — Added 4 economy achievements (E18 Pawn Star, E19 Shrewd Negotiator, E20 Arms Dealer, E21 Buy High Sell Higher) and 3 trigger types
+- `app/backend/src/services/achievement/achievementService.ts` — Added `weapon_sold` event type and trigger logic
+- `app/frontend/src/pages/WeaponShopPage.tsx` — Tab bar (Catalog / My Inventory)
+- `app/frontend/src/components/weapon-shop/InventoryTab.tsx` — Available + Equipped sections, summary bar
+- `app/frontend/src/components/weapon-shop/InventoryRow.tsx` — Per-weapon row with sell button
+- `app/frontend/src/components/weapon-shop/InventorySummaryBar.tsx` — Total counts + aggregate resale value
+- `app/frontend/src/components/weapon-shop/ConfirmSaleModal.tsx` — Confirmation modal with formula breakdown
 
 ---
 

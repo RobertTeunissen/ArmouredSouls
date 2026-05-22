@@ -63,6 +63,7 @@ describe('ResetService', () => {
       data: {
         userId: testUserId,
         weaponId: testWeaponId,
+        pricePaid: 0,
       },
     });
     testWeaponInventoryId = weaponInventory.id;
@@ -456,6 +457,7 @@ describe('ResetService', () => {
         data: {
           userId: testUserId,
           weaponId: testWeaponId,
+          pricePaid: 0,
         },
       });
 
@@ -582,6 +584,7 @@ describe('ResetService', () => {
         data: {
           userId: testUserId,
           weaponId: testWeaponId,
+          pricePaid: 0,
         },
       });
 

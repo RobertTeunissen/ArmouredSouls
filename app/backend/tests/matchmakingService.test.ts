@@ -150,6 +150,7 @@ describe('Matchmaking Service', () => {
         data: {
           userId: testUser.id,
           weaponId: practiceSword.id,
+          pricePaid: 0,
         },
       });
       testWeaponInvIds.push(weaponInv.id);
@@ -187,6 +188,7 @@ describe('Matchmaking Service', () => {
         data: {
           userId: testUser.id,
           weaponId: practiceSword.id,
+          pricePaid: 0,
         },
       });
 
@@ -222,6 +224,7 @@ describe('Matchmaking Service', () => {
         data: {
           userId: testUser.id,
           weaponId: practiceSword.id,
+          pricePaid: 0,
         },
       });
 
@@ -283,6 +286,7 @@ describe('Matchmaking Service', () => {
         data: {
           userId: testUser.id,
           weaponId: practiceSword.id,
+          pricePaid: 0,
         },
       });
 
@@ -319,6 +323,7 @@ describe('Matchmaking Service', () => {
         data: {
           userId: testUser.id,
           weaponId: practiceSword.id,
+          pricePaid: 0,
         },
       });
       testWeaponInvIds.push(weaponInv.id);
@@ -382,6 +387,7 @@ describe('Matchmaking Service', () => {
         data: {
           userId: testUser.id,
           weaponId: practiceSword.id,
+          pricePaid: 0,
         },
       });
       testWeaponInvIds.push(weaponInv1.id);
@@ -418,6 +424,7 @@ describe('Matchmaking Service', () => {
         data: {
           userId: testUser.id,
           weaponId: practiceSword.id,
+          pricePaid: 0,
         },
       });
       testWeaponInvIds.push(weaponInv.id);
@@ -465,6 +472,7 @@ describe('Matchmaking Service', () => {
           data: {
             userId: testUser.id,
             weaponId: practiceSword.id,
+            pricePaid: 0,
           },
         });
 
@@ -541,6 +549,7 @@ describe('Matchmaking Service', () => {
           data: {
             userId: byeUser.id,
             weaponId: practiceSword.id,
+            pricePaid: 0,
           },
         });
 
@@ -568,6 +577,7 @@ describe('Matchmaking Service', () => {
           data: {
             userId: testUser.id,
             weaponId: practiceSword.id,
+            pricePaid: 0,
           },
         });
 
@@ -640,6 +650,7 @@ describe('Matchmaking Service', () => {
           data: {
             userId: testUser.id,
             weaponId: practiceSword.id,
+            pricePaid: 0,
           },
         });
 
@@ -710,6 +721,7 @@ describe('Matchmaking Service', () => {
         data: {
           userId: testUser.id,
           weaponId: practiceSword.id,
+          pricePaid: 0,
         },
       });
 
@@ -775,6 +787,7 @@ describe('Matchmaking Service', () => {
           data: {
             userId: testUser.id,
             weaponId: practiceSword.id,
+            pricePaid: 0,
           },
         });
 
@@ -842,6 +855,7 @@ describe('Matchmaking Service', () => {
             data: {
               userId: testUser.id,
               weaponId: practiceSword.id,
+              pricePaid: 0,
             },
           });
 

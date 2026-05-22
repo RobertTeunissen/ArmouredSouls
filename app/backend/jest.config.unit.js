@@ -8,6 +8,7 @@ const unitTestFiles = [
   'compute-seedings\\.unit\\.test\\.ts',
   'cors\\.property\\.test\\.ts',
   'damageDampeners\\.test\\.ts',
+  'discounts\\.test\\.ts',
   'distributeTiers\\.test\\.ts',
   'economyCalculations\\.test\\.ts',
   'stableNameGenerator\\.test\\.ts',
