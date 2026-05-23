@@ -2,27 +2,36 @@
  * InventoryTab — "My Inventory" view of WeaponShopPage.
  *
  * Partitions owned weapons into two sections:
- *   - "Available to Sell" — not equipped on any robot, sortable by sale price
- *   - "Equipped" — equipped on a robot, disabled Sell + robot-name link
+ *   - "Available to Sell" — not equipped on any robot
+ *   - "Equipped" — equipped on a robot (Sell disabled, Refine still allowed)
  *
- * Includes a summary bar at the top showing total counts and aggregate resale
- * value. Calls onSellComplete after a successful sale so the parent can
- * refresh inventory + currency.
+ * Hosts both the resale flow (Spec #33 ConfirmSaleModal) and the refinement
+ * flow (Spec #34 RefinementModal). The custom-name editor is wired
+ * per-row through `handleCustomNameSave`.
  *
- * Spec #33 R5.2 through R5.8.
+ * Specs: #33 R5.2 through R5.8 (resale) + #34 R7.1 (refinement integration).
  */
 
 import { useMemo, useState } from 'react';
 import { applyResaleRate, calculateWeaponResaleRate } from '../../../../shared/utils/discounts';
+import apiClient from '../../utils/apiClient';
 import { InventoryRow } from './InventoryRow';
 import { InventorySummaryBar } from './InventorySummaryBar';
 import { ConfirmSaleModal } from './ConfirmSaleModal';
-import type { WeaponInventoryItem } from './types';
+import { RefinementModal } from '../weapon-refinement';
+import type { UnlockedAchievement, WeaponInventoryItem } from './types';
 
 interface InventoryTabProps {
   inventory: WeaponInventoryItem[];
   workshopLevel: number;
+  userCurrency: number;
   onSellComplete: (result: { salePrice: number; weaponName: string }) => void;
+  onRefineComplete: (result: {
+    weaponInventory: WeaponInventoryItem;
+    newCurrency: number;
+    achievementUnlocks: UnlockedAchievement[];
+  }) => void;
+  onCustomNameUpdated: (updatedInventory: WeaponInventoryItem) => void;
 }
 
 interface PartitionResult {
@@ -44,9 +53,13 @@ function partitionInventory(items: WeaponInventoryItem[]): PartitionResult {
 export function InventoryTab({
   inventory,
   workshopLevel,
+  userCurrency,
   onSellComplete,
+  onRefineComplete,
+  onCustomNameUpdated,
 }: InventoryTabProps) {
   const [pendingSale, setPendingSale] = useState<WeaponInventoryItem | null>(null);
+  const [pendingRefine, setPendingRefine] = useState<WeaponInventoryItem | null>(null);
 
   const resaleRate = calculateWeaponResaleRate(workshopLevel);
 
@@ -59,6 +72,34 @@ export function InventoryTab({
     () => available.reduce((sum, item) => sum + applyResaleRate(item.pricePaid, resaleRate), 0),
     [available, resaleRate],
   );
+
+  // Custom name save helper — called by the inline CustomNameEditor in each row.
+  // Throws on API error so the editor can render the message.
+  async function handleCustomNameSave(
+    inventoryId: number,
+    newName: string | null,
+  ): Promise<void> {
+    const response = await apiClient.patch(
+      `/api/weapon-inventory/${inventoryId}/custom-name`,
+      { customName: newName },
+    );
+    onCustomNameUpdated(response.data.weaponInventory as WeaponInventoryItem);
+  }
+
+  function renderRow(item: WeaponInventoryItem, variant: 'available' | 'equipped') {
+    return (
+      <InventoryRow
+        key={item.id}
+        item={item}
+        resaleRate={resaleRate}
+        workshopLevel={workshopLevel}
+        variant={variant}
+        onClickSell={variant === 'available' ? () => setPendingSale(item) : () => { /* disabled */ }}
+        onClickRefine={() => setPendingRefine(item)}
+        onCustomNameSave={(newName) => handleCustomNameSave(item.id, newName)}
+      />
+    );
+  }
 
   return (
     <div data-testid="inventory-tab">
@@ -83,15 +124,7 @@ export function InventoryTab({
           </div>
         ) : (
           <div className="grid gap-3">
-            {available.map(item => (
-              <InventoryRow
-                key={item.id}
-                item={item}
-                resaleRate={resaleRate}
-                variant="available"
-                onClickSell={() => setPendingSale(item)}
-              />
-            ))}
+            {available.map(item => renderRow(item, 'available'))}
           </div>
         )}
       </section>
@@ -102,15 +135,7 @@ export function InventoryTab({
             Equipped ({equipped.length})
           </h3>
           <div className="grid gap-3">
-            {equipped.map(item => (
-              <InventoryRow
-                key={item.id}
-                item={item}
-                resaleRate={resaleRate}
-                variant="equipped"
-                onClickSell={() => { /* disabled */ }}
-              />
-            ))}
+            {equipped.map(item => renderRow(item, 'equipped'))}
           </div>
         </section>
       )}
@@ -124,6 +149,23 @@ export function InventoryTab({
           onConfirmed={(result) => {
             setPendingSale(null);
             onSellComplete(result);
+          }}
+        />
+      )}
+
+      {pendingRefine && (
+        <RefinementModal
+          inventoryItem={pendingRefine}
+          workshopLevel={workshopLevel}
+          userCurrency={userCurrency}
+          onCancel={() => setPendingRefine(null)}
+          onConfirmed={(updatedInventoryItem, newCurrency, achievementUnlocks) => {
+            setPendingRefine(null);
+            onRefineComplete({
+              weaponInventory: updatedInventoryItem,
+              newCurrency,
+              achievementUnlocks,
+            });
           }}
         />
       )}

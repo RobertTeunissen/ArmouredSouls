@@ -350,7 +350,7 @@ These are visual assets the user (or a designer) needs to produce. They are NOT 
   - Disabled state during save. Error rendering for 4xx errors (especially 429 rate-limit messages).
   - _Requirements: 8.4_
 
-- [ ] 18. Implement `RefinementModal`
+- [x] 18. Implement `RefinementModal`
   - Create `app/frontend/src/components/weapon-refinement/RefinementModal.tsx` per design.md spec. Layout: header (weapon display name with rank prefix, customName below, slot bar at top); tier picker (2×2 grid of `TierCard` sub-components); tier-specific configurator; stat-delta preview; cost preview with resale-recovery note; confirm bar.
   - Tier cards reflect lock state (Workshop level too low) and per-tier-cap state (Sharpen 2/2, Forge 2/2). Locked cards dimmed with the requirement visible. Disabled cards when 5/5 slots filled.
   - Configurator:
@@ -365,7 +365,7 @@ These are visual assets the user (or a designer) needs to produce. They are NOT 
   - Forward `achievementUnlocks` to the existing achievement toast system (look at how the resale flow forwards these — pattern is already established).
   - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7_
 
-- [ ] 19. Update `InventoryRow`, `WeaponCard`, `RobotDetailPage`, and weapon-name displays elsewhere
+- [x] 19. Update `InventoryRow`, `WeaponCard`, `RobotDetailPage`, and weapon-name displays elsewhere
   - In `app/frontend/src/components/weapon-shop/InventoryRow.tsx`:
     - Render `RankPrefix` next to the weapon name.
     - Render the customName in italic below the name when set.

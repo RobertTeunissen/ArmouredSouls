@@ -36,6 +36,7 @@ function WeaponShopPage() {
     processedWeapons,
     groupedWeapons,
     ownedWeapons,
+    ownedBreakdownByWeaponId,
     equippedWeaponsCount,
     weaponWorkshopLevel,
     storageStatus,
@@ -195,6 +196,7 @@ function WeaponShopPage() {
             <InventoryTab
               inventory={inventory}
               workshopLevel={weaponWorkshopLevel}
+              userCurrency={user?.currency ?? 0}
               onSellComplete={async (result) => {
                 setSaleSuccessMessage(`Sold ${result.weaponName} for ₡${result.salePrice.toLocaleString()}`);
                 await refreshInventory();
@@ -206,6 +208,32 @@ function WeaponShopPage() {
                   setSaleSuccessMessage(null);
                   successDismissTimerRef.current = null;
                 }, 5000);
+              }}
+              onRefineComplete={async (result) => {
+                // The refinement endpoint already returned the updated row + new
+                // currency, but the cleanest approach is to re-pull the full
+                // inventory + user object so other surfaces (catalog tab "Already
+                // Own" badge, header credit balance, etc.) all see the change.
+                setSaleSuccessMessage(
+                  `Refined ${result.weaponInventory.weapon.name}` +
+                  (result.achievementUnlocks.length > 0
+                    ? ` — unlocked ${result.achievementUnlocks.length} achievement${result.achievementUnlocks.length === 1 ? '' : 's'}!`
+                    : '!'),
+                );
+                await refreshInventory();
+                if (successDismissTimerRef.current !== null) {
+                  clearTimeout(successDismissTimerRef.current);
+                }
+                successDismissTimerRef.current = setTimeout(() => {
+                  setSaleSuccessMessage(null);
+                  successDismissTimerRef.current = null;
+                }, 5000);
+              }}
+              onCustomNameUpdated={async () => {
+                // Custom name change is fire-and-forget for the parent —
+                // refresh inventory so any other surface (e.g. robot pages
+                // mounted in another tab) sees the new value on next render.
+                await refreshInventory();
               }}
             />
           </div>
@@ -265,6 +293,7 @@ function WeaponShopPage() {
                 storageStatus={storageStatus}
                 purchasing={purchasing}
                 ownedWeapons={ownedWeapons}
+                ownedBreakdownByWeaponId={ownedBreakdownByWeaponId}
                 selectedForComparison={selectedForComparison}
                 calculateDiscountedPrice={calculateDiscountedPrice}
                 getTypeColor={getTypeColor}
