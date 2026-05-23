@@ -1514,11 +1514,23 @@ export async function getTuningAdoption(userFilter: Prisma.UserWhereInput = {}) 
  *   - attributeRanking: which attributes are being honed/augmented most often
  *   - topSpenders: top 10 users by refinement credits spent (username, total spent, weapon count)
  *
- * Excludes Bye Robot weapons (none should ever exist, but defensive filter for safety).
+ * Always excludes the `bye_robot_user` system account, regardless of filter mode.
+ * The `real` and `auto` filters already exclude it via `buildUserFilter`; this extra
+ * guard keeps the `all` filter honest so the system user can never appear in the
+ * adoption stats even if a future filter mode forgets to exclude it.
  */
 export async function getRefinementAdoption(userFilter: Prisma.UserWhereInput = {}) {
+  // Compose the caller's filter with a hard exclusion of the system bye_robot_user.
+  // `AND` lets us layer constraints without overwriting whatever the caller passed.
+  const scopedUserFilter: Prisma.UserWhereInput = {
+    AND: [
+      userFilter,
+      { username: { not: 'bye_robot_user' } },
+    ],
+  };
+
   // ── Total users in scope ─────────────────────────────────────────────
-  const totalUsers = await prisma.user.count({ where: userFilter });
+  const totalUsers = await prisma.user.count({ where: scopedUserFilter });
 
   // ── Pull all in-scope refinements with the user/weapon context we need ─
   // Single query — refinements are bounded (max 5 per WeaponInventory row), so
@@ -1527,7 +1539,7 @@ export async function getRefinementAdoption(userFilter: Prisma.UserWhereInput = 
   const refinements = await prisma.weaponRefinement.findMany({
     where: {
       weaponInventory: {
-        user: userFilter,
+        user: scopedUserFilter,
       },
     },
     select: {

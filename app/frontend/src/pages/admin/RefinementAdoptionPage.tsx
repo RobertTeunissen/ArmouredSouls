@@ -79,8 +79,22 @@ const TIER_DESCRIPTIONS: Record<TierBreakdownEntry['tier'], string> = {
   forge: '+1.0 base damage',
 };
 
+/**
+ * Formats credit amounts with a fixed locale so the rendered output is
+ * deterministic across dev/CI environments. We pin to `en-US` (matching
+ * the rest of the player-facing UI) instead of using the runtime locale —
+ * this keeps unit tests stable on developer machines that default to a
+ * non-English locale (e.g., `de-DE` would render `4.500.000`).
+ */
+const CREDITS_FORMATTER = new Intl.NumberFormat('en-US');
+
 function formatCredits(amount: number): string {
-  return `₡${amount.toLocaleString()}`;
+  return `₡${CREDITS_FORMATTER.format(amount)}`;
+}
+
+/** Formats integer counts with the same fixed locale as `formatCredits`. */
+function formatCount(value: number): string {
+  return CREDITS_FORMATTER.format(value);
 }
 
 function formatAttributeName(attr: string): string {
@@ -148,6 +162,7 @@ function RefinementAdoptionPage() {
         >
           <span>{error}</span>
           <button
+            type="button"
             onClick={fetchData}
             className="px-3 py-1 bg-red-500/20 text-red-400 rounded hover:bg-red-500/30 transition-colors text-sm"
           >
@@ -229,19 +244,19 @@ function RefinementAdoptionPage() {
               key: 'refinementCount',
               label: 'Slots Filled',
               align: 'right',
-              render: (row) => row.refinementCount.toLocaleString(),
+              render: (row) => formatCount(row.refinementCount),
             },
             {
               key: 'uniqueUsers',
               label: 'Unique Users',
               align: 'right',
-              render: (row) => row.uniqueUsers.toLocaleString(),
+              render: (row) => formatCount(row.uniqueUsers),
             },
             {
               key: 'totalMagnitude',
               label: 'Total Magnitude',
               align: 'right',
-              render: (row) => row.totalMagnitude.toLocaleString(),
+              render: (row) => formatCount(row.totalMagnitude),
             },
           ]}
           data={data?.tierBreakdown ?? []}
@@ -268,19 +283,19 @@ function RefinementAdoptionPage() {
               key: 'refinementCount',
               label: 'Slots',
               align: 'right',
-              render: (row) => row.refinementCount.toLocaleString(),
+              render: (row) => formatCount(row.refinementCount),
             },
             {
               key: 'uniqueUsers',
               label: 'Unique Users',
               align: 'right',
-              render: (row) => row.uniqueUsers.toLocaleString(),
+              render: (row) => formatCount(row.uniqueUsers),
             },
             {
               key: 'totalMagnitude',
               label: 'Total Magnitude',
               align: 'right',
-              render: (row) => row.totalMagnitude.toLocaleString(),
+              render: (row) => formatCount(row.totalMagnitude),
             },
           ]}
           data={data?.attributeRanking ?? []}
@@ -312,7 +327,7 @@ function RefinementAdoptionPage() {
               key: 'weaponCount',
               label: 'Weapons Refined',
               align: 'right',
-              render: (row) => row.weaponCount.toLocaleString(),
+              render: (row) => formatCount(row.weaponCount),
             },
           ]}
           data={data?.topSpenders ?? []}
