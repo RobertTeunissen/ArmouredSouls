@@ -265,7 +265,7 @@ These are visual assets the user (or a designer) needs to produce. They are NOT 
   - Run `cd app/backend && npm test -- weaponInventory` to confirm all tests pass.
   - _Requirements: 14.3_
 
-- [ ] 10. Integrate refinements into `prepareRobotForCombat`
+- [x] 10. Integrate refinements into `prepareRobotForCombat`
   - In `app/backend/src/utils/robotCalculations.ts`, update `prepareRobotForCombat` so that for each equipped weapon (`mainWeapon`, `offhandWeapon`), it calls `applyRefinementsToWeapon(weapon, refinements)` and overwrites the weapon record's `baseDamage`, `cooldown`, and per-attribute bonus fields with the effective values BEFORE the existing logic computes the robot's effective attribute totals.
   - Add a clear inline comment at the insertion point: "Refinement bonuses are folded into the weapon's effective stats here. The combat simulator reads weapon.baseDamage / weapon.cooldown / weapon.<attr>Bonus directly — it never sees refinement records."
   - Do NOT modify the simulator (`combatSimulator.ts`) — `calcCooldown` and the damage formulas continue to read `weapon.cooldown` and `weapon.baseDamage`, but those values are now the refined effective values.

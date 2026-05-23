@@ -3,6 +3,11 @@
 import { Robot, WeaponInventory, Weapon, Prisma } from '../../generated/prisma';
 import { ROBOT_ATTRIBUTES } from '../services/tuning-pool/tuningPoolConfig';
 import type { TuningAttributeMap } from '../services/tuning-pool';
+import {
+  applyRefinementsToWeapon,
+  type RefinementRow,
+  type RefinementTier,
+} from '../shared/utils/weaponRefinement';
 
 /**
  * Convert Prisma Decimal to JavaScript number for calculations
@@ -157,6 +162,15 @@ export function prepareRobotForCombat(
   robot: RobotWithWeapons,
   tuningBonuses?: TuningAttributeMap
 ): void {
+  // Spec #34: Fold weapon refinements into the weapon's effective stats here.
+  // The combat simulator reads weapon.baseDamage / weapon.cooldown / weapon.<attr>Bonus
+  // directly — it never sees refinement records. After this step, both `mainWeapon.weapon`
+  // and `offhandWeapon.weapon` carry POST-REFINEMENT effective values, plus two derived
+  // marker fields (`__refinementCount`, `__customName`) for display-name formatting in
+  // battle log events. The marker prefix `__` signals these are computed, not from the catalog.
+  foldWeaponRefinements(robot.mainWeapon ?? null);
+  foldWeaponRefinements(robot.offhandWeapon ?? null);
+
   // Store tuning bonuses on the robot for downstream access
   (robot as RobotWithWeapons & { tuningBonuses?: TuningAttributeMap }).tuningBonuses = tuningBonuses ?? {};
 
@@ -198,6 +212,61 @@ function getWeaponBonus(robot: RobotWithWeapons, attribute: string): number {
   }
 
   return bonus;
+}
+
+/**
+ * Spec #34 — Fold a weapon-inventory row's refinements into the weapon record's
+ * effective stats. Mutates the inventory's `weapon` object in place so downstream
+ * readers (`getWeaponBonus`, the combat simulator's `weapon.cooldown` / `weapon.baseDamage`
+ * reads, and `getWeaponInfo`) see the post-refinement values.
+ *
+ * Also attaches two marker fields on the weapon record for the simulator's
+ * battle-log event emission:
+ *   - `__refinementCount`: number of filled slots (0–5).
+ *   - `__customName`: the player-set custom name (or null).
+ *
+ * The marker prefix `__` signals these are derived and not part of the catalog.
+ *
+ * No-op when the inventory is null or has no refinements; safe to call on every
+ * weapon-equipped robot during combat prep.
+ */
+function foldWeaponRefinements(
+  inventory:
+    | (WeaponInventory & {
+        weapon?: Weapon;
+        refinements?: Array<{ tier: string; magnitude: number; targetAttribute: string | null }>;
+      })
+    | null,
+): void {
+  if (!inventory?.weapon) return;
+
+  const refinements: RefinementRow[] = (inventory.refinements ?? []).map((r) => ({
+    tier: r.tier as RefinementTier,
+    magnitude: r.magnitude,
+    targetAttribute: r.targetAttribute,
+  }));
+
+  // Always attach markers so consumers can rely on them being present.
+  const markerTarget = inventory.weapon as unknown as Record<string, unknown>;
+  markerTarget.__refinementCount = refinements.length;
+  markerTarget.__customName = inventory.customName ?? null;
+
+  if (refinements.length === 0) return;
+
+  const effective = applyRefinementsToWeapon(inventory.weapon, refinements);
+
+  // Overwrite catalog values with effective ones. The simulator and getWeaponBonus
+  // both read these fields directly.
+  const writable = inventory.weapon as unknown as Record<string, unknown>;
+  writable.baseDamage = effective.effectiveBaseDamage;
+  writable.cooldown = effective.effectiveCooldown;
+
+  // Refinement bonuses can only ADD to existing attribute bonuses (never reduce).
+  // The shared module returns a complete map seeded from the catalog, so this is
+  // a straight overwrite — no manual merging needed.
+  for (const [field, value] of Object.entries(effective.effectiveAttributeBonuses)) {
+    writable[field] = value;
+  }
 }
 
 /**

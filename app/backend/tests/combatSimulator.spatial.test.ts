@@ -8,6 +8,10 @@ import { Prisma } from '../generated/prisma';
 // ─── Mock Factories ─────────────────────────────────────────────────
 
 function createMockRobot(overrides?: Partial<RobotWithWeapons>): RobotWithWeapons {
+  // Test fixture cast: the Robot model has accumulated many counter fields over time
+  // (per-loadout wins, per-stance wins, KotH stats, streak counters). The cast through
+  // `unknown` avoids enumerating every default-zero counter here — combat tests only
+  // exercise the 23 attribute fields, weapon includes, and HP/shield state.
   return {
     id: 1,
     userId: 1,
@@ -79,12 +83,18 @@ function createMockRobot(overrides?: Partial<RobotWithWeapons>): RobotWithWeapon
     kothBestPlacement: null,
     kothCurrentWinStreak: 0,
     kothBestWinStreak: 0,
+    currentWinStreak: 0,
+    currentLoseStreak: 0,
+    offensiveWins: 0,
+    defensiveWins: 0,
+    balancedWins: 0,
+    dualWieldWins: 0,
     createdAt: new Date('2025-01-01'),
     updatedAt: new Date('2025-01-01'),
     mainWeapon: null,
     offhandWeapon: null,
     ...overrides,
-  };
+  } as unknown as RobotWithWeapons;
 }
 
 function createMeleeWeaponInventory(weaponId: number = 1) {
@@ -93,6 +103,7 @@ function createMeleeWeaponInventory(weaponId: number = 1) {
     userId: 1,
     weaponId,
     customName: null,
+    pricePaid: 0,
     purchasedAt: new Date('2025-01-01'),
     weapon: {
       id: weaponId,
@@ -141,6 +152,7 @@ function createRangedWeaponInventory(weaponId: number = 2) {
     userId: 1,
     weaponId,
     customName: null,
+    pricePaid: 0,
     purchasedAt: new Date('2025-01-01'),
     weapon: {
       id: weaponId,
