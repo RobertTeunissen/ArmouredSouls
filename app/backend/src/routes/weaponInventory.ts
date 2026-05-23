@@ -72,6 +72,10 @@ router.get('/', authenticateToken, validateRequest({}), async (req: AuthRequest,
       weapon: true,
       robotsMain: { select: { id: true, name: true } },
       robotsOffhand: { select: { id: true, name: true } },
+      // Spec #34: include refinements so the My Inventory tab can render the
+      // slot bar and rank-prefixed weapon name. Ordered by slotIndex for
+      // stable display.
+      refinements: { orderBy: { slotIndex: 'asc' } },
     },
     orderBy: { purchasedAt: 'desc' },
   });

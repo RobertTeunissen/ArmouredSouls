@@ -411,11 +411,13 @@ export async function buildOwnedRobot(
   await verifyRobotOwnership(prisma, robotId, userId);
 
   // Load robot with weapon includes
+  // Spec #34: include refinements so prepareRobotForCombat can fold them
+  // into the weapon's effective stats before the simulator reads them.
   const robot = await prisma.robot.findUnique({
     where: { id: robotId },
     include: {
-      mainWeapon: { include: { weapon: true } },
-      offhandWeapon: { include: { weapon: true } },
+      mainWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
+      offhandWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
     },
   });
 

@@ -240,19 +240,21 @@ export async function executeTagTeamBattle(match: ScheduledTagTeamMatch): Promis
   // Check if this is a bye-team match
   const _isByeMatch = match.team2Id === null;
   
+  // Spec #34: include refinements so prepareRobotForCombat can fold them
+  // into the weapon's effective stats before the simulator reads them.
   const team1: TagTeamWithRobots | null = await prisma.tagTeam.findUnique({
     where: { id: match.team1Id },
     include: {
       activeRobot: {
         include: {
-          mainWeapon: { include: { weapon: true } },
-          offhandWeapon: { include: { weapon: true } },
+          mainWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
+          offhandWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
         },
       },
       reserveRobot: {
         include: {
-          mainWeapon: { include: { weapon: true } },
-          offhandWeapon: { include: { weapon: true } },
+          mainWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
+          offhandWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
         },
       },
     },
@@ -268,14 +270,14 @@ export async function executeTagTeamBattle(match: ScheduledTagTeamMatch): Promis
       include: {
         activeRobot: {
           include: {
-            mainWeapon: { include: { weapon: true } },
-            offhandWeapon: { include: { weapon: true } },
+            mainWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
+            offhandWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
           },
         },
         reserveRobot: {
           include: {
-            mainWeapon: { include: { weapon: true } },
-            offhandWeapon: { include: { weapon: true } },
+            mainWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
+            offhandWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
           },
         },
       },

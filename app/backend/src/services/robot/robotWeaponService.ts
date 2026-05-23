@@ -9,9 +9,11 @@ import { canEquipToSlot, validateOffhandEquipment, isSlotAvailable, validateNoDu
 import { calculateMaxHP, calculateMaxShield } from '../../utils/robotCalculations';
 import { RobotError, RobotErrorCode } from '../../errors/robotErrors';
 
+// Spec #34: include refinements so the equip/unequip response carries
+// rank prefix + slot bar data back to the frontend for immediate render.
 const WEAPON_INCLUDE = {
-  mainWeapon: { include: { weapon: true as const } },
-  offhandWeapon: { include: { weapon: true as const } },
+  mainWeapon: { include: { weapon: true as const, refinements: { orderBy: { slotIndex: 'asc' as const } } } },
+  offhandWeapon: { include: { weapon: true as const, refinements: { orderBy: { slotIndex: 'asc' as const } } } },
 } as const;
 
 /** Recalculate HP/Shield after weapon change and persist. */

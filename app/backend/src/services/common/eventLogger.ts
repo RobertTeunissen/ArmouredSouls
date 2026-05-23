@@ -9,6 +9,7 @@
 
 import { Prisma } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
+import type { RefinementTier } from '../../shared/utils/weaponRefinement';
 
 /**
  * Event type enumeration - all event types stored in the audit log
@@ -37,6 +38,7 @@ export enum EventType {
   // Weapon events
   WEAPON_PURCHASE = 'weapon_purchase',
   WEAPON_SALE = 'weapon_sale',
+  WEAPON_REFINEMENT = 'weapon_refinement',
   
   // Tournament events
   /**
@@ -492,6 +494,32 @@ export class EventLogger {
         weaponId,
         salePrice,
       },
+      { userId }
+    );
+  }
+
+  /**
+   * Log weapon refinement (Spec #34).
+   * Mirrors `logWeaponPurchase` / `logWeaponSale`. Audit-only — no schema
+   * change to `audit_log`; this just adds a new `event_type` value.
+   */
+  async logWeaponRefinement(
+    cycleNumber: number,
+    userId: number,
+    payload: {
+      weaponInventoryId: number;
+      weaponId: number;
+      tier: RefinementTier;
+      magnitude: number;
+      targetAttribute: string | null;
+      costPaid: number;
+      workshopLevel: number;
+    },
+  ): Promise<void> {
+    await this.logEvent(
+      cycleNumber,
+      EventType.WEAPON_REFINEMENT,
+      payload,
       { userId }
     );
   }

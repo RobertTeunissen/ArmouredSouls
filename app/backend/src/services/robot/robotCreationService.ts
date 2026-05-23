@@ -124,8 +124,8 @@ export async function createRobotTransaction(userId: number, trimmedName: string
         leagueId: bronzeLeagueId,
       },
       include: {
-        mainWeapon: { include: { weapon: true } },
-        offhandWeapon: { include: { weapon: true } },
+        mainWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
+        offhandWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
       },
     });
 

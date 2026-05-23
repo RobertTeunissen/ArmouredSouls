@@ -95,6 +95,14 @@ Example with details:
 | `WEAPON_EQUIPPED` | 409 | Weapon is currently equipped on a robot — unequip before selling |
 | `INVALID_TRANSACTION` | 400 | Transaction is invalid |
 | `STORAGE_CAPACITY_FULL` | 400 | Weapon storage capacity is full |
+| `WEAPON_REFINEMENT_TIER_LOCKED` | 403 | Weapons Workshop level is below the required level for the requested refinement tier |
+| `WEAPON_REFINEMENT_SLOT_CAP_EXCEEDED` | 409 | Weapon already has 5 refinements (the per-weapon hard cap) |
+| `WEAPON_REFINEMENT_TIER_CAP_EXCEEDED` | 409 | Sharpen or Forge already has 2 instances on this weapon (per-tier cap) |
+| `WEAPON_REFINEMENT_ATTRIBUTE_STACK_CAP_EXCEEDED` | 409 | Adding the requested magnitude would push the attribute total above +10 |
+| `WEAPON_REFINEMENT_MAGNITUDE_OUT_OF_RANGE` | 400 | Magnitude not in [1, 5] for Hone/Augment, or not exactly 1 for Sharpen/Forge |
+| `WEAPON_REFINEMENT_ATTRIBUTE_NOT_ON_WEAPON` | 400 | Hone target attribute is not present on the weapon (catalog or prior Augment) |
+| `WEAPON_REFINEMENT_ATTRIBUTE_ALREADY_ON_WEAPON` | 400 | Augment target attribute is already granted (catalog or prior Augment) |
+| `WEAPON_REFINEMENT_SHIELD_CANNOT_TAKE_DPS_TIER` | 400 | Sharpen or Forge attempted on a shield weapon |
 
 ### League Errors
 

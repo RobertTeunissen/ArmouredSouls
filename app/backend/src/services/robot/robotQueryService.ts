@@ -12,9 +12,11 @@ import { getConfig } from '../../config/env';
 
 // ── Shared include fragments ─────────────────────────────────────────
 
+// Spec #34: include refinements so the frontend can render the rank prefix
+// and slot bar on equipped weapons in robot listings and the robot detail page.
 const WEAPON_INCLUDE = {
-  mainWeapon: { include: { weapon: true } },
-  offhandWeapon: { include: { weapon: true } },
+  mainWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' as const } } } },
+  offhandWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' as const } } } },
 } as const;
 
 // ── Typed query result for battles with participants ─────────────────

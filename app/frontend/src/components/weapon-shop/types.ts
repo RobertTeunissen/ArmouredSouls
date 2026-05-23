@@ -71,6 +71,31 @@ export interface WeaponInventoryItem {
   robotsMain?: Array<{ id: number; name: string }>;
   /** Robots that have this weapon equipped as their offhand weapon. */
   robotsOffhand?: Array<{ id: number; name: string }>;
+  /**
+   * Refinements applied to this weapon instance (Spec #34).
+   * Ordered by `slotIndex` ascending. Empty array for unrefined weapons.
+   */
+  refinements: WeaponRefinementItem[];
+}
+
+/**
+ * A single refinement row attached to a `WeaponInventory` (Spec #34).
+ *
+ * - `tier`: which refinement tier was applied (`hone` / `augment` / `sharpen` / `forge`).
+ * - `magnitude`: 1–5 for hone/augment, always 1 for sharpen/forge.
+ * - `targetAttribute`: attribute name for hone/augment, `null` for sharpen/forge.
+ * - `costPaid`: credits spent on this specific refinement (folded into `pricePaid`).
+ * - `slotIndex`: 1–5, stable per weapon, used to render the slot bar in order.
+ * - `createdAt`: ISO timestamp for the refinement-history popover.
+ */
+export interface WeaponRefinementItem {
+  id: number;
+  tier: 'hone' | 'augment' | 'sharpen' | 'forge';
+  magnitude: number;
+  targetAttribute: string | null;
+  costPaid: number;
+  slotIndex: number;
+  createdAt: string;
 }
 
 /** Achievement unlock returned in the response body of a sale. */

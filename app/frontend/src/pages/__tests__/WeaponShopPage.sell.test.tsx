@@ -71,6 +71,7 @@ function makeInventory() {
       weapon: mockWeapon,
       robotsMain: [],
       robotsOffhand: [],
+      refinements: [],
     },
   ];
 }

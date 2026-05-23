@@ -120,7 +120,7 @@ These are visual assets the user (or a designer) needs to produce. They are NOT 
 
 ## Tasks
 
-- [ ] 1. Add `WeaponRefinement` model and migration
+- [x] 1. Add `WeaponRefinement` model and migration
   - In `app/backend/prisma/schema.prisma`, add the new `WeaponRefinement` model exactly as specified in design.md → Components and Interfaces → Backend Components → Prisma Schema. Columns: `id`, `weaponInventoryId` (FK with `onDelete: Cascade`), `tier` (VarChar(16)), `magnitude` (Int), `targetAttribute` (VarChar(64), nullable), `costPaid` (Int), `slotIndex` (Int), `createdAt` (default now()).
   - Add the unique constraint `@@unique([weaponInventoryId, slotIndex])` and the index `@@index([weaponInventoryId])`.
   - Add the back-reference on `WeaponInventory`: `refinements WeaponRefinement[]`. No other change to `WeaponInventory`.
@@ -129,7 +129,7 @@ These are visual assets the user (or a designer) needs to produce. They are NOT 
   - Verify the migration is applied cleanly: `npx prisma migrate status` reports no drift, and `\d weapon_refinement` in psql shows the expected schema.
   - _Requirements: 1.1, 1.2, 1.3_
 
-- [ ] 2. Update `WeaponInventory` query consumers to include refinements
+- [x] 2. Update `WeaponInventory` query consumers to include refinements
   - Identify every code path that reads `WeaponInventory` for use in stat computation, display, or combat. Use `gitnexus_query` or `grep_search` for `weaponInventory.findMany`, `weaponInventory.findUnique`, and `include: { weapon`.
   - For each query that needs refinement data, update the `include` (or `select`) clause to include `refinements: { orderBy: { slotIndex: 'asc' } }`. Specifically:
     - `app/backend/src/routes/weaponInventory.ts` (`GET /api/weapon-inventory` listing) — must include refinements so the inventory tab can render the slot bar.
@@ -143,7 +143,7 @@ These are visual assets the user (or a designer) needs to produce. They are NOT 
     - Any other `WeaponShopPage.*.test.tsx` files. Run `grep -rn "pricePaid:" app/frontend/src/**/__tests__/` to find all fixture files that will need updating, and add `refinements: []` to each row.
   - _Requirements: 1.4_
 
-- [ ] 3. Build the shared formula module `app/shared/utils/weaponRefinement.ts`
+- [x] 3. Build the shared formula module `app/shared/utils/weaponRefinement.ts`
   - Create the new module with all pure functions specified in design.md → Components and Interfaces → Backend Components → Shared Formula Module:
     - `RefinementTier` type (`'hone' | 'augment' | 'sharpen' | 'forge'`).
     - `RankPrefix` type (`'Refined' | 'Crafted' | 'Mastercrafted' | 'Legendary' | null`).
@@ -176,7 +176,7 @@ These are visual assets the user (or a designer) needs to produce. They are NOT 
   - Run `cd app/backend && npm test -- weaponRefinement` and confirm all tests pass.
   - _Requirements: 14.1, 14.2_
 
-- [ ] 5. Add refinement-specific economy error codes
+- [x] 5. Add refinement-specific economy error codes
   - Locate `EconomyErrorCode` in `app/backend/src/errors/economyErrors.ts`. Add the eight new codes from design.md → Components and Interfaces → Error Codes:
     - `WEAPON_REFINEMENT_TIER_LOCKED` (HTTP 403)
     - `WEAPON_REFINEMENT_SLOT_CAP_EXCEEDED` (HTTP 409)
@@ -190,7 +190,7 @@ These are visual assets the user (or a designer) needs to produce. They are NOT 
   - Update `docs/guides/ERROR_CODES.md` with the new codes if the document enumerates economy codes.
   - _Requirements: 5.1, 5.2_
 
-- [ ] 6. Add `eventLogger.logWeaponRefinement`
+- [x] 6. Add `eventLogger.logWeaponRefinement`
   - In `app/backend/src/services/common/eventLogger.ts`, add a new method on the `EventLogger` class mirroring the shape of `logWeaponPurchase` and `logWeaponSale`:
     ```typescript
     async logWeaponRefinement(
@@ -285,7 +285,7 @@ These are visual assets the user (or a designer) needs to produce. They are NOT 
   - Assert the battle log header / event payloads include the rank prefix when refinement count > 0 (verify by checking the `weapon` field in events for the prefix substring).
   - _Requirements: 4.5_
 
-- [ ] 12. Add five new achievements (E22–E26) and trigger types
+- [x] 12. Add five new achievements (E22–E26) and trigger types
   - In `app/backend/src/config/achievements.ts`, add five new values to `AchievementTriggerType`:
     - `'weapons_refined_count'`
     - `'weapons_refined_credits_spent'`
@@ -303,7 +303,7 @@ These are visual assets the user (or a designer) needs to produce. They are NOT 
   - Define the starter-weapon name list constant for the E25 trigger somewhere reusable (e.g., `app/backend/src/config/starterWeapons.ts`): `['Practice Sword', 'Practice Blaster', 'Training Rifle', 'Training Beam']`.
   - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7_
 
-- [ ] 13. Wire `weapon_refined` event type into `AchievementService`
+- [x] 13. Wire `weapon_refined` event type into `AchievementService`
   - In `app/backend/src/services/achievement/achievementService.ts`, add `'weapon_refined'` to the `AchievementEventType` union.
   - Add to `EVENT_TRIGGER_MAP`: `weapon_refined: ['weapons_refined_count', 'weapons_refined_credits_spent', 'owns_legendary_weapon', 'owns_legendary_starter_weapon', 'owns_max_dps_weapon']`.
   - Extend the `checkCriterionMet` switch with five new cases per design.md:
@@ -328,7 +328,7 @@ These are visual assets the user (or a designer) needs to produce. They are NOT 
     - ₡1M cumulative spend unlocks E23 — pre-seed `weapon_refinement` rows summing to ₡999,000, refine once at ₡5K, assert E23 in unlocks.
   - _Requirements: 6.8, 6.9 (extension)_
 
-- [ ] 15. Add `tierVisuals` constants and base directory
+- [x] 15. Add `tierVisuals` constants and base directory
   - Create the directory `app/frontend/src/components/weapon-refinement/`.
   - Create `app/frontend/src/components/weapon-refinement/tierVisuals.ts` with the `TIER_VISUALS` constant from design.md (icon names, color tokens, hex values, labels). Export a `TierVisual` type and the `TIER_VISUALS: Record<RefinementTier, TierVisual>` constant.
   - Pick or create icon glyph references — the project already has Heroicons or similar; use existing icons where possible (e.g., spark for hone, plus for augment, arrow for sharpen, hammer for forge).
@@ -336,7 +336,7 @@ These are visual assets the user (or a designer) needs to produce. They are NOT 
   - Re-export from `app/frontend/src/components/weapon-refinement/index.ts` for clean imports.
   - _Requirements: 8.5_
 
-- [ ] 16. Implement `SlotBar`, `RankPrefix`, and `RefinementHistoryPopover`
+- [x] 16. Implement `SlotBar`, `RankPrefix`, and `RefinementHistoryPopover`
   - Create `app/frontend/src/components/weapon-refinement/SlotBar.tsx` per design.md spec. Props: `refinements`, `workshopLevel`, `compact?`, `onSlotClick?`. Renders 5 slot boxes with tier glyphs/colors for filled slots and gate icons + tooltips for locked tiers. Click on a filled slot opens the `RefinementHistoryPopover` for that slot.
   - Create `app/frontend/src/components/weapon-refinement/RankPrefix.tsx`. Props: `refinementCount`, `variant?`. Returns null for 0 refinements; otherwise renders the prefix text via `calculateRankPrefix`. Three variants: default, subtle (inline), badge (emphasis).
   - Create `app/frontend/src/components/weapon-refinement/RefinementHistoryPopover.tsx`. Props: `refinements`, `focusSlotIndex?`. Renders a list of all filled slots with tier name, magnitude (rendered tier-specifically: "+3 Combat Power" for hone, "−0.25s cooldown" for sharpen, etc.), cost paid, date stamp. Total spend summary at the bottom.

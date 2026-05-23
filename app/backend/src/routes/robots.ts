@@ -296,8 +296,10 @@ router.patch('/:id/stance', authenticateToken, validateRequest({ params: robotId
     where: { id: robotId },
     data: { stance: normalizedStance },
     include: {
-      mainWeapon: { include: { weapon: true } },
-      offhandWeapon: { include: { weapon: true } },
+      // Spec #34: refinements drive rank prefix + slot bar in the
+      // robot detail page response.
+      mainWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
+      offhandWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
     },
   });
 
@@ -336,8 +338,8 @@ router.patch('/:id/yield-threshold', authenticateToken, validateRequest({ params
     where: { id: robotId },
     data: { yieldThreshold: threshold },
     include: {
-      mainWeapon: { include: { weapon: true } },
-      offhandWeapon: { include: { weapon: true } },
+      mainWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
+      offhandWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
     },
   });
 
@@ -500,8 +502,8 @@ router.put('/:id/appearance', authenticateToken, validateRequest({ params: robot
     where: { id: robotId },
     data: { imageUrl },
     include: {
-      mainWeapon: { include: { weapon: true } },
-      offhandWeapon: { include: { weapon: true } },
+      mainWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
+      offhandWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
     },
   });
 

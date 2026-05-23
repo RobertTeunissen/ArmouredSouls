@@ -328,7 +328,9 @@ export async function executeUpgradeTransaction(
     const updatedRobot = await tx.robot.update({
       where: { id: robotId },
       data: updateData,
-      include: { mainWeapon: { include: { weapon: true } }, offhandWeapon: { include: { weapon: true } } },
+      // Spec #34: include refinements so the response carries rank prefix
+      // + slot bar data for the frontend to render.
+      include: { mainWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } }, offhandWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } } },
     });
 
     const needsHPUpdate = upgradeOperations.some(op => op.attribute === 'hullIntegrity' || op.attribute === 'shieldCapacity');
@@ -345,7 +347,7 @@ export async function executeUpgradeTransaction(
           currentHP: Math.min(Math.round(maxHP * hpPct), maxHP),
           currentShield: Math.min(Math.round(maxShield * shieldPct), maxShield),
         },
-        include: { mainWeapon: { include: { weapon: true } }, offhandWeapon: { include: { weapon: true } } },
+        include: { mainWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } }, offhandWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } } },
       });
       return { user: updatedUser, robot: finalRobot };
     }

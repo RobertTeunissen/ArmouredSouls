@@ -8,3 +8,4 @@
 
 export * from './snapshotTypes';
 export * from './battleLogTypes';
+export * from './weaponInventoryTypes';

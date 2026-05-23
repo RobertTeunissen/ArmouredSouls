@@ -252,6 +252,17 @@ exports.Prisma.WeaponInventoryScalarFieldEnum = {
   purchasedAt: 'purchasedAt'
 };
 
+exports.Prisma.WeaponRefinementScalarFieldEnum = {
+  id: 'id',
+  weaponInventoryId: 'weaponInventoryId',
+  tier: 'tier',
+  magnitude: 'magnitude',
+  targetAttribute: 'targetAttribute',
+  costPaid: 'costPaid',
+  slotIndex: 'slotIndex',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.WeaponScalarFieldEnum = {
   id: 'id',
   name: 'name',
@@ -603,6 +614,7 @@ exports.Prisma.ModelName = {
   Facility: 'Facility',
   Robot: 'Robot',
   WeaponInventory: 'WeaponInventory',
+  WeaponRefinement: 'WeaponRefinement',
   Weapon: 'Weapon',
   BattleParticipant: 'BattleParticipant',
   Battle: 'Battle',

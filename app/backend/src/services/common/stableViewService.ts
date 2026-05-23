@@ -40,8 +40,10 @@ export async function getStableProfile(userId: number) {
         where: { NOT: { name: 'Bye Robot' } },
         orderBy: { elo: 'desc' },
         include: {
-          mainWeapon: { include: { weapon: true } },
-          offhandWeapon: { include: { weapon: true } },
+          // Spec #34: include refinements so the public stable view can
+          // render rank prefix + slot bar on each robot's equipped weapons.
+          mainWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
+          offhandWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
         },
       },
       facilities: {
