@@ -245,7 +245,7 @@ These are visual assets the user (or a designer) needs to produce. They are NOT 
   - Respond with the updated `WeaponInventory` including `weapon` and `refinements`.
   - _Requirements: 10.1, 10.2, 10.3, 10.4_
 
-- [ ] 9. Add backend integration tests for the refinement and custom-name routes
+- [x] 9. Add backend integration tests for the refinement and custom-name routes
   - Create `app/backend/tests/weaponInventory.refine.test.ts` with a `describe('POST /api/weapon-inventory/:id/refine')` block covering every case from design.md → Testing Strategy → Backend Integration Tests:
     - Successful refinement at Workshop L1 (Hone), L3 (Augment), L5 (Sharpen), L8 (Forge).
     - Each `WEAPON_REFINEMENT_*` error code path explicitly.
@@ -276,7 +276,7 @@ These are visual assets the user (or a designer) needs to produce. They are NOT 
   - Run `gitnexus_impact` on `prepareRobotForCombat` first — its blast radius covers every battle orchestrator. Verify expected callers and ensure no surprise consumers exist.
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
 
-- [ ] 11. Add combat regression test for refined weapons
+- [x] 11. Add combat regression test for refined weapons
   - Create `app/backend/src/services/battle/__tests__/combatSimulator.refinement.test.ts`.
   - Set up two robots with identical attributes. Equip one with a stock weapon (e.g., Volt Sabre baseline). Equip the other with a copy of the same weapon refined: 1× Forge (+1 baseDamage), 2× Hone Combat Power (+2 each, total +4 catalog → +5 effective if catalog was +1).
   - Simulate a deterministic battle (seeded RNG via the existing `seedrandom` or test fixture pattern).
@@ -315,7 +315,7 @@ These are visual assets the user (or a designer) needs to produce. They are NOT 
   - Extend the `getProgress` method with cases for the numeric triggers (`weapons_refined_count`, `weapons_refined_credits_spent`).
   - _Requirements: 6.8, 6.9_
 
-- [ ] 14. Wire achievement check into the refinement handler
+- [x] 14. Wire achievement check into the refinement handler
   - In the refinement route handler in `app/backend/src/routes/weaponInventory.ts`, replace the placeholder from Task 7 with a real `achievementService.checkAndAward(userId, null, { type: 'weapon_refined', data: { weaponInventoryId, weaponId, tier, magnitude, targetAttribute, costPaid: cost, workshopLevel } })` call AFTER the transaction commits and AFTER `eventLogger.logWeaponRefinement` is called.
   - Wrap in try-catch; failures log via `logger.error` but do not block the response (matches the resale handler pattern).
   - Include `achievementUnlocks: UnlockedAchievement[]` in the response body.
@@ -394,14 +394,14 @@ These are visual assets the user (or a designer) needs to produce. They are NOT 
   - Run `cd app/frontend && npm test -- weapon-refinement WeaponShopPage` to confirm all tests pass.
   - _Requirements: 15.1, 15.2_
 
-- [ ] 21. Update documentation
+- [x] 21. Update documentation
   - `docs/game-systems/PRD_WEAPON_ECONOMY.md`: bump to v1.6. Add a new "Version 1.6 Updates — Weapon Refinement" section covering: problem statement, the four-tier system, slot mechanics, gating, costs, resale interaction, Files Modified list. Mirror the structure of the v1.4 and v1.5 sections.
   - `docs/game-systems/PRD_WEAPONS_LOADOUT.md`: update the weapon lifecycle text to read `Purchase → Equip → **Refine** → Configure → Battle → Unequip / Sell`.
   - `app/backend/docs/audit-logging-schema.md`: add a section documenting the `weapon_refinement` event type with the full payload schema (`weaponInventoryId`, `weaponId`, `tier`, `magnitude`, `targetAttribute`, `costPaid`, `workshopLevel`).
   - If `docs/game-systems/PRD_ACHIEVEMENTS.md` exists, add the five new economy achievements (E22–E26) to its catalog.
   - _Requirements: 12.1, 12.2, 12.3, 12.4_
 
-- [ ] 22. Add in-game guide article and create the public changelog entry
+- [x] 22. Add in-game guide article and create the public changelog entry
   - Create `app/backend/src/content/guide/weapons/refinement.md` with the frontmatter shape from design.md → Documentation Impact → New Documentation. Place it in the `weapons` section with `order: 4` (after `loadout-types`, `dual-wield-mechanics`, `buying-and-selling`). Set `relatedArticles` to `weapons/buying-and-selling`, `weapons/loadout-types`, `facilities/facility-overview`.
   - Article body covers: what refinement is, the four tiers, gating, costs, the 5-slot system + rank prefix, the per-attribute stack cap with a worked example, resale interaction, the custom name feature, two example builds (identity Practice Sword + DPS Volt Sabre), permanence warning. Match the prose style of `weapons/buying-and-selling.md`.
   - Articles are auto-discovered by `GuideService.scanSectionArticles` via filesystem scan — no edit to `app/backend/src/content/guide/sections.json` is required (sections.json only enumerates sections, not articles). Verify by spot-checking the existing `weapons/` section: dropping a new `.md` file there causes it to appear in the API response on the next service cache miss.
