@@ -409,7 +409,7 @@ These are visual assets the user (or a designer) needs to produce. They are NOT 
   - Use the admin changelog endpoint (`POST /api/changelog/admin`, then `POST /api/changelog/admin/:id/publish`) to create and publish the entry once the spec is ready to ship. The entry appears in the player-facing changelog modal on next dashboard load.
   - _Requirements: 11.1, 11.2, 11.3, 13.1, 13.2_
 
-- [ ] 23. Update BACKLOG.md and move spec to done- directory
+- [x] 23. Update BACKLOG.md and move spec to done- directory
   - In `docs/BACKLOG.md` Entry #5 (Weapon Experimentation Problem), update the follow-up checklist: mark Weapon Refinement complete, leave any remaining axes (Practice Arena catalog access, matchup-dependent effectiveness) as future work.
   - Add a new row to the "Recently Completed" table at the top of the WSJF section: `Weapon Refinement | 5 (partial) | [Spec #34](/.kiro/specs/done-{month}{year}/34-weapon-refinement/) | {month} 2026`.
   - When all preceding tasks are complete and verified, move `.kiro/specs/to-do/34-weapon-refinement/` to `.kiro/specs/done-{month}{year}/34-weapon-refinement/` (using the actual completion month).
