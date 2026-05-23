@@ -384,7 +384,7 @@ These are visual assets the user (or a designer) needs to produce. They are NOT 
     - Document the (a)/(b) decision in a code comment near each consumer touched.
   - _Requirements: 7.1, 7.2, 7.3_
 
-- [ ] 20. Add frontend tests for refinement components and pages
+- [x] 20. Add frontend tests for refinement components and pages
   - Create `app/frontend/src/components/weapon-refinement/__tests__/SlotBar.test.tsx` — 0–5 filled slots, locked tooltips when Workshop level too low, click opens history popover.
   - Create `app/frontend/src/components/weapon-refinement/__tests__/RankPrefix.test.tsx` — derivation across 0/1/2/3/4/5.
   - Create `app/frontend/src/components/weapon-refinement/__tests__/RefinementHistoryPopover.test.tsx` — lists all refinements with correct fields and total spend summary.
