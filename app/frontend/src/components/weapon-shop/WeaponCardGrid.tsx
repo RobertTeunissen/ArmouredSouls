@@ -2,9 +2,13 @@
  * WeaponCardGrid — Displays weapons grouped by loadout type in card view.
  *
  * Extracted from WeaponShopPage.tsx during component splitting (Spec 18).
+ *
+ * Spec #34: threads `ownedRankBreakdown` through to each WeaponCard so the
+ * "Already Own" indicator can show a per-rank summary when refined copies
+ * exist.
  */
 
-import { WeaponCard } from './WeaponCard';
+import { WeaponCard, type OwnedRankBreakdown } from './WeaponCard';
 import type { Weapon, StorageStatus } from './types';
 
 export interface WeaponCardGridProps {
@@ -15,6 +19,11 @@ export interface WeaponCardGridProps {
   storageStatus: StorageStatus | null;
   purchasing: number | null;
   ownedWeapons: Map<number, number>;
+  /**
+   * Optional per-weapon-id rank breakdown of owned copies (Spec #34).
+   * When omitted, WeaponCard falls back to the simple `Already Own (n)` indicator.
+   */
+  ownedBreakdownByWeaponId?: Map<number, OwnedRankBreakdown>;
   selectedForComparison: number[];
   calculateDiscountedPrice: (basePrice: number) => number;
   getTypeColor: (type: string) => string;
@@ -29,7 +38,7 @@ export interface WeaponCardGridProps {
 export function WeaponCardGrid({
   processedWeapons, groupedWeapons,
   userCurrency, weaponWorkshopLevel, storageStatus, purchasing,
-  ownedWeapons, selectedForComparison,
+  ownedWeapons, ownedBreakdownByWeaponId, selectedForComparison,
   calculateDiscountedPrice, getTypeColor, getAttributeBonuses,
   getLoadoutTypeLabel, getLoadoutTypeColor,
   onPurchase, onToggleComparison, onSelectWeapon,
@@ -61,6 +70,7 @@ export function WeaponCardGrid({
                   storageStatus={storageStatus}
                   purchasing={purchasing}
                   ownedCount={ownedWeapons.get(weapon.id) || 0}
+                  ownedRankBreakdown={ownedBreakdownByWeaponId?.get(weapon.id)}
                   isSelectedForComparison={selectedForComparison.includes(weapon.id)}
                   comparisonCount={selectedForComparison.length}
                   calculateDiscountedPrice={calculateDiscountedPrice}

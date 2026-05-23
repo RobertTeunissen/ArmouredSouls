@@ -26,6 +26,7 @@ import {
 import { AchievementError, AchievementErrorCode } from '../../errors/achievementErrors';
 import { eventLogger } from '../common/eventLogger';
 import { getCurrentCycle } from '../analytics/cycleAnalyticsService';
+import { STARTER_WEAPON_NAMES } from '../../config/starterWeapons';
 
 // ─── Event Types ─────────────────────────────────────────────────────
 
@@ -34,6 +35,7 @@ export type AchievementEventType =
   | 'league_promotion'
   | 'weapon_purchased'
   | 'weapon_sold'
+  | 'weapon_refined'
   | 'weapon_equipped'
   | 'attribute_upgraded'
   | 'facility_upgraded'
@@ -143,6 +145,13 @@ const EVENT_TRIGGER_MAP: Record<AchievementEventType, AchievementTriggerType[]> 
   league_promotion: ['league_promotion'],
   weapon_purchased: ['weapon_count', 'weapon_type'],
   weapon_sold: ['weapons_sold_count', 'weapons_sold_credits', 'weapon_sold_at_max_workshop'],
+  weapon_refined: [
+    'weapons_refined_count',
+    'weapons_refined_credits_spent',
+    'owns_legendary_weapon',
+    'owns_legendary_starter_weapon',
+    'owns_max_dps_weapon',
+  ],
   weapon_equipped: ['weapon_type', 'effective_stat'],
   attribute_upgraded: ['attribute_upgraded', 'effective_stat'],
   facility_upgraded: ['facility_count'],
@@ -501,6 +510,22 @@ class AchievementService implements IAchievementService {
       case 'weapon_sold_at_max_workshop':
         return Number(data.workshopLevel) === 10;
 
+      // ── Weapon Refinement Triggers (DB queries) ──────────────
+      case 'weapons_refined_count':
+        return this.checkWeaponsRefinedCount(userId, triggerThreshold);
+
+      case 'weapons_refined_credits_spent':
+        return this.checkWeaponsRefinedCreditsSpent(userId, triggerThreshold);
+
+      case 'owns_legendary_weapon':
+        return this.checkOwnsLegendaryWeapon(userId);
+
+      case 'owns_legendary_starter_weapon':
+        return this.checkOwnsLegendaryStarterWeapon(userId);
+
+      case 'owns_max_dps_weapon':
+        return this.checkOwnsMaxDpsWeapon(userId);
+
       case 'robot_count':
         return this.checkRobotCount(userId, triggerThreshold);
 
@@ -680,6 +705,126 @@ class AchievementService implements IAchievementService {
     `;
     const total = Number(result[0]?.total ?? 0);
     return total >= threshold;
+  }
+
+  /**
+   * Check cumulative count of weapons refined by the user (lifetime).
+   * Source of truth: audit_log rows with event_type = 'weapon_refinement'.
+   * Used by E22 (First Refinement, threshold 1).
+   */
+  private async checkWeaponsRefinedCount(
+    userId: number,
+    threshold?: number,
+  ): Promise<boolean> {
+    if (threshold === undefined) return false;
+    const count = await prisma.auditLog.count({
+      where: { userId, eventType: 'weapon_refinement' },
+    });
+    return count >= threshold;
+  }
+
+  /**
+   * Check cumulative credits spent on weapon refinements (lifetime).
+   * Sums `costPaid` across every WeaponRefinement row that belongs to a
+   * weapon currently owned by the user (`weaponInventory.userId = userId`).
+   * Used by E23 (Master Craftsman, threshold ₡1,000,000).
+   *
+   * Note: refinements cascade-delete with their parent WeaponInventory row,
+   * so a sold weapon's refinement spend is NOT counted here. That matches
+   * the spirit of the achievement (lifetime spend on weapons you've kept).
+   */
+  private async checkWeaponsRefinedCreditsSpent(
+    userId: number,
+    threshold?: number,
+  ): Promise<boolean> {
+    if (threshold === undefined) return false;
+    const result = await prisma.weaponRefinement.aggregate({
+      _sum: { costPaid: true },
+      where: { weaponInventory: { userId } },
+    });
+    const total = Number(result._sum.costPaid ?? 0);
+    return total >= threshold;
+  }
+
+  /**
+   * Check whether the user owns any WeaponInventory row with exactly 5 refinements
+   * (a "Legendary"-rank weapon per `calculateRankPrefix`).
+   * Used by E24 (Legendary Smith).
+   *
+   * Implementation: fetch the user's WeaponInventory rows that have at least
+   * one refinement, with the relation count of refinements, then check in JS
+   * whether any row has count >= 5. The slot cap is 5, so `>= 5` and `= 5`
+   * are equivalent in practice — `>= 5` is defensive against any future cap
+   * change. Doing this in JS keeps us free of Prisma's evolving relation-
+   * count filter typing.
+   */
+  private async checkOwnsLegendaryWeapon(userId: number): Promise<boolean> {
+    const candidates = await prisma.weaponInventory.findMany({
+      where: {
+        userId,
+        refinements: { some: {} },
+      },
+      select: {
+        _count: { select: { refinements: true } },
+      },
+    });
+    return candidates.some((c) => c._count.refinements >= 5);
+  }
+
+  /**
+   * Check whether the user owns a Legendary (5-refinement) weapon whose
+   * underlying catalog name is in STARTER_WEAPON_NAMES.
+   * Used by E25 (Identity Forged).
+   *
+   * Implementation: fetch all the user's WeaponInventory rows whose weapon
+   * name is in the starter list, including their refinements. Return true if
+   * any such row has refinement count >= 5. Doing this in JS avoids a
+   * three-way groupBy + relation filter that Prisma's groupBy API doesn't
+   * support directly.
+   */
+  private async checkOwnsLegendaryStarterWeapon(userId: number): Promise<boolean> {
+    const candidates = await prisma.weaponInventory.findMany({
+      where: {
+        userId,
+        weapon: { name: { in: [...STARTER_WEAPON_NAMES] } },
+      },
+      select: {
+        _count: { select: { refinements: true } },
+      },
+    });
+    return candidates.some((c) => c._count.refinements >= 5);
+  }
+
+  /**
+   * Check whether the user owns any WeaponInventory row whose refinements
+   * include exactly 2 sharpen + 2 forge (the maxed DPS build).
+   * Used by E26 (Forge Master).
+   *
+   * Implementation: fetch the user's WeaponInventory rows that have at least
+   * one refinement, including the refinement tier list, then count tiers
+   * per row in JS. The per-tier caps for sharpen/forge are 2 each, so we
+   * check `sharpen >= 2 && forge >= 2` (defensive against cap changes).
+   */
+  private async checkOwnsMaxDpsWeapon(userId: number): Promise<boolean> {
+    const candidates = await prisma.weaponInventory.findMany({
+      where: {
+        userId,
+        refinements: { some: {} },
+      },
+      select: {
+        refinements: { select: { tier: true } },
+      },
+    });
+    for (const inv of candidates) {
+      let sharpen = 0;
+      let forge = 0;
+      for (const r of inv.refinements) {
+        if (r.tier === 'sharpen') sharpen++;
+        else if (r.tier === 'forge') forge++;
+      }
+      if (sharpen >= 2 && forge >= 2) return true;
+    }
+    return false;
   }
 
   private async checkRobotCount(
@@ -867,11 +1012,13 @@ class AchievementService implements IAchievementService {
     if (threshold === undefined) return false;
 
     // Load all user's robots with weapons for effective stat calculation
+    // Spec #34: include refinements so the effective-stat calculation can
+    // fold them into the weapon's stats (matches the combat path's contract).
     const robots = await prisma.robot.findMany({
       where: { userId, name: { not: 'Bye Robot' } },
       include: {
-        mainWeapon: { include: { weapon: true } },
-        offhandWeapon: { include: { weapon: true } },
+        mainWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
+        offhandWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
         tuningAllocation: true,
       },
     });
@@ -1090,6 +1237,8 @@ class AchievementService implements IAchievementService {
       streamingResult,
       weaponsSoldCount,
       weaponsSoldCreditsResult,
+      weaponsRefinedCount,
+      weaponsRefinedCreditsSpentResult,
     ] = await Promise.all([
       // Achievement unlocks
       prisma.userAchievement.findMany({
@@ -1164,6 +1313,16 @@ class AchievementService implements IAchievementService {
         FROM audit_logs
         WHERE user_id = ${userId} AND event_type = 'weapon_sale'
       `,
+      // Weapon refinement count (lifetime, from audit log) — for E22 progress
+      prisma.auditLog.count({
+        where: { userId, eventType: 'weapon_refinement' },
+      }),
+      // Weapon refinement credits spent (lifetime, summed across the user's
+      // currently-owned WeaponRefinement rows) — for E23 progress
+      prisma.weaponRefinement.aggregate({
+        _sum: { costPaid: true },
+        where: { weaponInventory: { userId } },
+      }),
     ]);
 
     const unlockMap = new Map(
@@ -1180,6 +1339,7 @@ class AchievementService implements IAchievementService {
     const lifetimeEarnings = earningsResult._sum.credits ?? 0;
     const streamingRevenue = streamingResult._sum.streamingRevenue ?? 0;
     const weaponsSoldCredits = Number(weaponsSoldCreditsResult[0]?.total ?? 0);
+    const weaponsRefinedCreditsSpent = Number(weaponsRefinedCreditsSpentResult._sum.costPaid ?? 0);
 
     // (d) Get the rarity cache data
     const rarityData = this.getRarityData();
@@ -1250,6 +1410,8 @@ class AchievementService implements IAchievementService {
           streamingRevenue,
           weaponsSoldCount,
           weaponsSoldCredits,
+          weaponsRefinedCount,
+          weaponsRefinedCreditsSpent,
         );
         progress = progressResult;
       }
@@ -1340,6 +1502,8 @@ class AchievementService implements IAchievementService {
     streamingRevenue: number,
     weaponsSoldCount: number,
     weaponsSoldCredits: number,
+    weaponsRefinedCount: number,
+    weaponsRefinedCreditsSpent: number,
   ): AchievementWithProgress['progress'] {
     const target = achievement.triggerThreshold!;
     const label = achievement.progressLabel ?? '';
@@ -1424,6 +1588,10 @@ class AchievementService implements IAchievementService {
         return { current: weaponsSoldCount, target, label };
       case 'weapons_sold_credits':
         return { current: weaponsSoldCredits, target, label };
+      case 'weapons_refined_count':
+        return { current: weaponsRefinedCount, target, label };
+      case 'weapons_refined_credits_spent':
+        return { current: weaponsRefinedCreditsSpent, target, label };
       case 'robot_count':
         return { current: robotCount, target, label };
       case 'facility_count': {

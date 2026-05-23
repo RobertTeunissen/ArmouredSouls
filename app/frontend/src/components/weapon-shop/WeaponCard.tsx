@@ -2,6 +2,11 @@
  * WeaponCard — Renders a single weapon card with stats, bonuses, and purchase button.
  *
  * Extracted from WeaponShopPage.tsx during component splitting (Spec 18).
+ *
+ * Spec #34: when `ownedRankBreakdown` is provided AND any owned copy is
+ * refined, the "Already Own" badge expands into a multi-line summary
+ * (`"3 owned (1 Mastercrafted, 1 Refined, 1 stock)"`). When all owned copies
+ * are stock, the simple `"Already Own (n)"` form is unchanged.
  */
 
 import { calculateWeaponWorkshopDiscount } from '../../../../shared/utils/discounts';
@@ -10,6 +15,19 @@ import { getWeaponImagePath } from '../../utils/weaponImages';
 import { getWeaponOptimalRange, getRangeBandColor, getRangeBandBgColor, getRangeBandLabel } from '../../utils/weaponRange';
 import type { Weapon, StorageStatus } from './types';
 
+/**
+ * Per-rank counts of how many owned copies of a single weapon ID fall into
+ * each rank tier. Sum equals the simple `ownedCount`. Stock copies (zero
+ * refinements) live under the `'Stock'` key.
+ */
+export interface OwnedRankBreakdown {
+  Stock: number;
+  Refined: number;
+  Crafted: number;
+  Mastercrafted: number;
+  Legendary: number;
+}
+
 export interface WeaponCardProps {
   weapon: Weapon;
   userCurrency: number;
@@ -17,6 +35,12 @@ export interface WeaponCardProps {
   storageStatus: StorageStatus | null;
   purchasing: number | null;
   ownedCount: number;
+  /**
+   * Optional per-rank breakdown of owned copies (Spec #34). When omitted or
+   * when every copy is stock, the existing `Already Own (n)` indicator
+   * renders unchanged.
+   */
+  ownedRankBreakdown?: OwnedRankBreakdown;
   isSelectedForComparison: boolean;
   comparisonCount: number;
   calculateDiscountedPrice: (basePrice: number) => number;
@@ -27,9 +51,27 @@ export interface WeaponCardProps {
   onSelectWeapon: (weapon: Weapon) => void;
 }
 
+/**
+ * Build the player-facing per-rank breakdown line, e.g.
+ * `"1 Mastercrafted, 1 Refined, 1 stock"`. Returns `null` when there are no
+ * refined copies — the caller can fall back to the simple `Already Own (n)`
+ * indicator in that case.
+ */
+function formatRankBreakdown(b: OwnedRankBreakdown): string | null {
+  const refinedCount = b.Refined + b.Crafted + b.Mastercrafted + b.Legendary;
+  if (refinedCount === 0) return null;
+  const parts: string[] = [];
+  if (b.Legendary > 0) parts.push(`${b.Legendary} Legendary`);
+  if (b.Mastercrafted > 0) parts.push(`${b.Mastercrafted} Mastercrafted`);
+  if (b.Crafted > 0) parts.push(`${b.Crafted} Crafted`);
+  if (b.Refined > 0) parts.push(`${b.Refined} Refined`);
+  if (b.Stock > 0) parts.push(`${b.Stock} stock`);
+  return parts.join(', ');
+}
+
 export function WeaponCard({
   weapon, userCurrency, weaponWorkshopLevel, storageStatus, purchasing,
-  ownedCount, isSelectedForComparison, comparisonCount,
+  ownedCount, ownedRankBreakdown, isSelectedForComparison, comparisonCount,
   calculateDiscountedPrice, getTypeColor, getAttributeBonuses,
   onPurchase, onToggleComparison, onSelectWeapon,
 }: WeaponCardProps) {
@@ -37,12 +79,26 @@ export function WeaponCard({
   const discountedPrice = calculateDiscountedPrice(weapon.cost);
   const hasDiscount = weaponWorkshopLevel > 0;
 
+  const rankSummary = ownedRankBreakdown ? formatRankBreakdown(ownedRankBreakdown) : null;
+
   return (
     <div className="bg-surface p-6 rounded-lg relative">
       {/* Owned Indicator */}
       {ownedCount > 0 && (
-        <div className="absolute top-4 right-4 z-10 bg-blue-900/50 border border-blue-600 px-2 py-1 rounded text-xs font-semibold text-blue-300">
-          Already Own ({ownedCount})
+        <div
+          className="absolute top-4 right-4 z-10 bg-blue-900/50 border border-blue-600 px-2 py-1 rounded text-xs font-semibold text-blue-300 max-w-[180px] text-right"
+          title={rankSummary ? `Owned breakdown: ${rankSummary}` : `You own ${ownedCount}`}
+        >
+          {rankSummary ? (
+            <>
+              <div>Already Own ({ownedCount})</div>
+              <div className="text-[10px] font-normal text-blue-200/80 leading-tight mt-0.5">
+                {rankSummary}
+              </div>
+            </>
+          ) : (
+            <>Already Own ({ownedCount})</>
+          )}
         </div>
       )}
 

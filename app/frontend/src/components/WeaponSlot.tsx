@@ -1,9 +1,43 @@
+/**
+ * WeaponSlot — Display + control for an equipped weapon on the robot detail page.
+ *
+ * Spec #34 additions:
+ *   - Rank prefix on the weapon name (Refined / Crafted / Mastercrafted / Legendary)
+ *     when refinement count > 0.
+ *   - Player-set custom name in italic below the name when present.
+ *   - Compact `SlotBar` inline for at-a-glance refinement state.
+ *   - Hover on slot bar → `RefinementHistoryPopover` available via the SlotBar
+ *     component's own onSlotClick affordance (see SlotBar implementation).
+ *   - No Refine button on this surface — refinement happens in the Weapon Shop's
+ *     My Inventory tab. This page is for combat configuration, not progression.
+ */
+
 import { useState } from 'react';
 import { getWeaponImagePath } from '../utils/weaponImages';
+import {
+  RankPrefix,
+  SlotBar,
+} from './weapon-refinement';
 
-
+/**
+ * Local subset of WeaponInventory needed for display. The robot detail page
+ * fetches the full inventory row including refinements + customName via
+ * Spec #34 R1.4 (the shared `WEAPON_INCLUDE` constant in robotQueryService now
+ * carries refinements through), so the wider shape exists at runtime — we
+ * only consume the bits we need here.
+ */
 interface WeaponInventory {
   id: number;
+  customName?: string | null;
+  refinements?: Array<{
+    id: number;
+    tier: 'hone' | 'augment' | 'sharpen' | 'forge';
+    magnitude: number;
+    targetAttribute: string | null;
+    costPaid: number;
+    slotIndex: number;
+    createdAt: string;
+  }>;
   weapon: {
     id: number;
     name: string;
@@ -19,9 +53,15 @@ interface WeaponSlotProps {
   onEquip: () => void;
   onUnequip: () => void;
   disabled?: boolean;
+  /**
+   * Optional: the player's current Weapons Workshop level. Threaded through to
+   * the SlotBar so locked-tier tooltips render correctly. Defaults to 0 (every
+   * empty slot rendered as "available unless used") when not provided.
+   */
+  workshopLevel?: number;
 }
 
-function WeaponSlot({ label, weapon, onEquip, onUnequip, disabled }: WeaponSlotProps) {
+function WeaponSlot({ label, weapon, onEquip, onUnequip, disabled, workshopLevel = 0 }: WeaponSlotProps) {
   const [imageError, setImageError] = useState(false);
 
   const getTypeColor = (type: string) => {
@@ -53,6 +93,9 @@ function WeaponSlot({ label, weapon, onEquip, onUnequip, disabled }: WeaponSlotP
         return '⚙️';
     }
   };
+
+  const refinements = weapon?.refinements ?? [];
+  const refinementCount = refinements.length;
 
   return (
     <div className="bg-gradient-to-br from-gray-700 to-gray-750 p-4 rounded-lg border border-gray-600 hover:border-gray-500 transition-all duration-150">
@@ -94,15 +137,29 @@ function WeaponSlot({ label, weapon, onEquip, onUnequip, disabled }: WeaponSlotP
               )}
             </div>
             <div className="flex-1">
-              <div className="flex justify-between items-center mb-2">
+              <div className="flex flex-wrap items-center gap-2 mb-1">
+                <RankPrefix refinementCount={refinementCount} variant="subtle" />
                 <span className="font-semibold text-white text-lg">{weapon.weapon.name}</span>
               </div>
+              {weapon.customName && (
+                <div className="italic text-sm text-secondary mb-1">
+                  &ldquo;{weapon.customName}&rdquo;
+                </div>
+              )}
               <span className={`text-xs uppercase font-semibold px-2 py-1 rounded ${getTypeColor(weapon.weapon.weaponType)} bg-surface`}>
                 {weapon.weapon.weaponType}
               </span>
             </div>
           </div>
-          
+
+          {/* Refinement slot bar (Spec #34) — only render when we have any refinement data on the row */}
+          {weapon.refinements && (
+            <div className="mb-2 flex items-center gap-2">
+              <span className="text-xs text-secondary uppercase tracking-wide">Refinements:</span>
+              <SlotBar refinements={refinements} workshopLevel={workshopLevel} compact />
+            </div>
+          )}
+
           {weapon.weapon.description && (
             <p className="text-sm text-secondary mb-2">{weapon.weapon.description}</p>
           )}

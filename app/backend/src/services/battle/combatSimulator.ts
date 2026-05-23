@@ -1,5 +1,6 @@
 import { Robot, Weapon, WeaponInventory } from '../../../generated/prisma';
 import { BattleError, BattleErrorCode } from '../../errors/battleErrors';
+import { formatWeaponDisplayName } from '../../shared/utils/weaponRefinement';
 
 // Spatial subsystem imports
 import { Position, euclideanDistance, angleBetween } from '../arena/vector2d';
@@ -36,7 +37,16 @@ type SpatialGameModeState = GameModeState;
  */
 
 export interface RobotWithWeapons extends Robot {
+  /**
+   * Equipped main weapon. After `prepareRobotForCombat()` runs, the
+   * `weapon` field carries POST-REFINEMENT effective stats (Spec #34) plus
+   * two derived marker fields (`__refinementCount`, `__customName`) used
+   * only by the battle log event emission. The simulator reads
+   * `weapon.baseDamage` / `weapon.cooldown` / `weapon.<attr>Bonus` directly
+   * — it never touches refinement records.
+   */
   mainWeapon?: (WeaponInventory & { weapon: Weapon }) | null;
+  /** See `mainWeapon` — same post-refinement contract applies. */
   offhandWeapon?: (WeaponInventory & { weapon: Weapon }) | null;
   /** Tuning bonuses — sparse map of attribute name → bonus value. Folded into attributes by prepareRobotForCombat(). */
   tuningBonuses?: Partial<Record<string, number>>;
@@ -52,6 +62,12 @@ export interface CombatEvent {
   attacker?: string;
   defender?: string;
   weapon?: string;
+  /**
+   * Spec #34: optional player-set custom name for the weapon used in this attack.
+   * Set when the inventory row used by the attacker has a non-null `customName`.
+   * Frontend battle reports render this italicised below the (rank-prefixed) `weapon` field.
+   */
+  customName?: string | null;
   hand?: 'main' | 'offhand';
   damage?: number;
   shieldDamage?: number;
@@ -563,19 +579,34 @@ function shouldYield(state: SpatialRobotCombatState): boolean {
 }
 
 /**
- * Get weapon info for display
+/**
+ * Get weapon info for display.
+ *
+ * After Spec #34, the weapon record passed in carries POST-REFINEMENT effective
+ * stats and two derived marker fields (`__refinementCount`, `__customName`)
+ * attached during `prepareRobotForCombat`. The display name is built via
+ * `formatWeaponDisplayName(weapon.name, refinementCount)` so battle log events
+ * naturally render rank prefixes (e.g. `Mastercrafted Volt Sabre`).
  */
-export function getWeaponInfo(robot: RobotWithWeapons, hand: 'main' | 'offhand'): { name: string; baseDamage: number } {
+export function getWeaponInfo(robot: RobotWithWeapons, hand: 'main' | 'offhand'): { name: string; baseDamage: number; customName: string | null } {
   const weaponInventory = hand === 'main' ? robot.mainWeapon : robot.offhandWeapon;
   if (weaponInventory?.weapon) {
+    const weaponRecord = weaponInventory.weapon as Weapon & {
+      __refinementCount?: number;
+      __customName?: string | null;
+    };
+    const refinementCount = weaponRecord.__refinementCount ?? 0;
+    const customName = weaponRecord.__customName ?? null;
     return {
-      name: weaponInventory.weapon.name,
+      name: formatWeaponDisplayName(weaponInventory.weapon.name, refinementCount),
       baseDamage: weaponInventory.weapon.baseDamage,
+      customName,
     };
   }
   return {
     name: 'Fists',
     baseDamage: 10,
+    customName: null,
   };
 }
 
@@ -673,6 +704,7 @@ function performAttack(
       attacker: attackerName,
       defender: defenderName,
       weapon: weaponInfo.name,
+      customName: weaponInfo.customName,
       hand,
       hit: false,
       malfunction: true,
@@ -760,6 +792,7 @@ function performAttack(
       attacker: attackerName,
       defender: defenderName,
       weapon: weaponInfo.name,
+      customName: weaponInfo.customName,
       hand,
       damage: totalDamage,
       shieldDamage,
@@ -821,6 +854,7 @@ function performAttack(
       attacker: attackerName,
       defender: defenderName,
       weapon: weaponInfo.name,
+      customName: weaponInfo.customName,
       hand,
       hit: false,
       robot1HP: attackerState.currentHP,

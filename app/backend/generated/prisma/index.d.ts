@@ -34,6 +34,11 @@ export type Robot = $Result.DefaultSelection<Prisma.$RobotPayload>
  */
 export type WeaponInventory = $Result.DefaultSelection<Prisma.$WeaponInventoryPayload>
 /**
+ * Model WeaponRefinement
+ * 
+ */
+export type WeaponRefinement = $Result.DefaultSelection<Prisma.$WeaponRefinementPayload>
+/**
  * Model Weapon
  * 
  */
@@ -294,6 +299,16 @@ export class PrismaClient<
     * ```
     */
   get weaponInventory(): Prisma.WeaponInventoryDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.weaponRefinement`: Exposes CRUD operations for the **WeaponRefinement** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more WeaponRefinements
+    * const weaponRefinements = await prisma.weaponRefinement.findMany()
+    * ```
+    */
+  get weaponRefinement(): Prisma.WeaponRefinementDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.weapon`: Exposes CRUD operations for the **Weapon** model.
@@ -932,6 +947,7 @@ export namespace Prisma {
     Facility: 'Facility',
     Robot: 'Robot',
     WeaponInventory: 'WeaponInventory',
+    WeaponRefinement: 'WeaponRefinement',
     Weapon: 'Weapon',
     BattleParticipant: 'BattleParticipant',
     Battle: 'Battle',
@@ -967,7 +983,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "facility" | "robot" | "weaponInventory" | "weapon" | "battleParticipant" | "battle" | "scheduledLeagueMatch" | "cycleMetadata" | "auditLog" | "cycleSnapshot" | "tournament" | "scheduledTournamentMatch" | "tagTeam" | "scheduledTagTeamMatch" | "resetLog" | "scheduledKothMatch" | "scheduledKothMatchParticipant" | "practiceArenaDailyStats" | "changelogEntry" | "userAchievement" | "tuningAllocation" | "adminAuditLog" | "leagueHistory"
+      modelProps: "user" | "facility" | "robot" | "weaponInventory" | "weaponRefinement" | "weapon" | "battleParticipant" | "battle" | "scheduledLeagueMatch" | "cycleMetadata" | "auditLog" | "cycleSnapshot" | "tournament" | "scheduledTournamentMatch" | "tagTeam" | "scheduledTagTeamMatch" | "resetLog" | "scheduledKothMatch" | "scheduledKothMatchParticipant" | "practiceArenaDailyStats" | "changelogEntry" | "userAchievement" | "tuningAllocation" | "adminAuditLog" | "leagueHistory"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1264,6 +1280,80 @@ export namespace Prisma {
           count: {
             args: Prisma.WeaponInventoryCountArgs<ExtArgs>
             result: $Utils.Optional<WeaponInventoryCountAggregateOutputType> | number
+          }
+        }
+      }
+      WeaponRefinement: {
+        payload: Prisma.$WeaponRefinementPayload<ExtArgs>
+        fields: Prisma.WeaponRefinementFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.WeaponRefinementFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WeaponRefinementPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.WeaponRefinementFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WeaponRefinementPayload>
+          }
+          findFirst: {
+            args: Prisma.WeaponRefinementFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WeaponRefinementPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.WeaponRefinementFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WeaponRefinementPayload>
+          }
+          findMany: {
+            args: Prisma.WeaponRefinementFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WeaponRefinementPayload>[]
+          }
+          create: {
+            args: Prisma.WeaponRefinementCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WeaponRefinementPayload>
+          }
+          createMany: {
+            args: Prisma.WeaponRefinementCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.WeaponRefinementCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WeaponRefinementPayload>[]
+          }
+          delete: {
+            args: Prisma.WeaponRefinementDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WeaponRefinementPayload>
+          }
+          update: {
+            args: Prisma.WeaponRefinementUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WeaponRefinementPayload>
+          }
+          deleteMany: {
+            args: Prisma.WeaponRefinementDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.WeaponRefinementUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.WeaponRefinementUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WeaponRefinementPayload>[]
+          }
+          upsert: {
+            args: Prisma.WeaponRefinementUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WeaponRefinementPayload>
+          }
+          aggregate: {
+            args: Prisma.WeaponRefinementAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateWeaponRefinement>
+          }
+          groupBy: {
+            args: Prisma.WeaponRefinementGroupByArgs<ExtArgs>
+            result: $Utils.Optional<WeaponRefinementGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.WeaponRefinementCountArgs<ExtArgs>
+            result: $Utils.Optional<WeaponRefinementCountAggregateOutputType> | number
           }
         }
       }
@@ -2859,6 +2949,7 @@ export namespace Prisma {
     facility?: FacilityOmit
     robot?: RobotOmit
     weaponInventory?: WeaponInventoryOmit
+    weaponRefinement?: WeaponRefinementOmit
     weapon?: WeaponOmit
     battleParticipant?: BattleParticipantOmit
     battle?: BattleOmit
@@ -3176,11 +3267,13 @@ export namespace Prisma {
   export type WeaponInventoryCountOutputType = {
     robotsMain: number
     robotsOffhand: number
+    refinements: number
   }
 
   export type WeaponInventoryCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     robotsMain?: boolean | WeaponInventoryCountOutputTypeCountRobotsMainArgs
     robotsOffhand?: boolean | WeaponInventoryCountOutputTypeCountRobotsOffhandArgs
+    refinements?: boolean | WeaponInventoryCountOutputTypeCountRefinementsArgs
   }
 
   // Custom InputTypes
@@ -3206,6 +3299,13 @@ export namespace Prisma {
    */
   export type WeaponInventoryCountOutputTypeCountRobotsOffhandArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: RobotWhereInput
+  }
+
+  /**
+   * WeaponInventoryCountOutputType without action
+   */
+  export type WeaponInventoryCountOutputTypeCountRefinementsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: WeaponRefinementWhereInput
   }
 
 
@@ -9117,6 +9217,7 @@ export namespace Prisma {
     weapon?: boolean | WeaponDefaultArgs<ExtArgs>
     robotsMain?: boolean | WeaponInventory$robotsMainArgs<ExtArgs>
     robotsOffhand?: boolean | WeaponInventory$robotsOffhandArgs<ExtArgs>
+    refinements?: boolean | WeaponInventory$refinementsArgs<ExtArgs>
     _count?: boolean | WeaponInventoryCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["weaponInventory"]>
 
@@ -9157,6 +9258,7 @@ export namespace Prisma {
     weapon?: boolean | WeaponDefaultArgs<ExtArgs>
     robotsMain?: boolean | WeaponInventory$robotsMainArgs<ExtArgs>
     robotsOffhand?: boolean | WeaponInventory$robotsOffhandArgs<ExtArgs>
+    refinements?: boolean | WeaponInventory$refinementsArgs<ExtArgs>
     _count?: boolean | WeaponInventoryCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type WeaponInventoryIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -9175,6 +9277,7 @@ export namespace Prisma {
       weapon: Prisma.$WeaponPayload<ExtArgs>
       robotsMain: Prisma.$RobotPayload<ExtArgs>[]
       robotsOffhand: Prisma.$RobotPayload<ExtArgs>[]
+      refinements: Prisma.$WeaponRefinementPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: number
@@ -9581,6 +9684,7 @@ export namespace Prisma {
     weapon<T extends WeaponDefaultArgs<ExtArgs> = {}>(args?: Subset<T, WeaponDefaultArgs<ExtArgs>>): Prisma__WeaponClient<$Result.GetResult<Prisma.$WeaponPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     robotsMain<T extends WeaponInventory$robotsMainArgs<ExtArgs> = {}>(args?: Subset<T, WeaponInventory$robotsMainArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RobotPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     robotsOffhand<T extends WeaponInventory$robotsOffhandArgs<ExtArgs> = {}>(args?: Subset<T, WeaponInventory$robotsOffhandArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RobotPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    refinements<T extends WeaponInventory$refinementsArgs<ExtArgs> = {}>(args?: Subset<T, WeaponInventory$refinementsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WeaponRefinementPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -10065,6 +10169,30 @@ export namespace Prisma {
   }
 
   /**
+   * WeaponInventory.refinements
+   */
+  export type WeaponInventory$refinementsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WeaponRefinement
+     */
+    select?: WeaponRefinementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WeaponRefinement
+     */
+    omit?: WeaponRefinementOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WeaponRefinementInclude<ExtArgs> | null
+    where?: WeaponRefinementWhereInput
+    orderBy?: WeaponRefinementOrderByWithRelationInput | WeaponRefinementOrderByWithRelationInput[]
+    cursor?: WeaponRefinementWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: WeaponRefinementScalarFieldEnum | WeaponRefinementScalarFieldEnum[]
+  }
+
+  /**
    * WeaponInventory without action
    */
   export type WeaponInventoryDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -10080,6 +10208,1158 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: WeaponInventoryInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model WeaponRefinement
+   */
+
+  export type AggregateWeaponRefinement = {
+    _count: WeaponRefinementCountAggregateOutputType | null
+    _avg: WeaponRefinementAvgAggregateOutputType | null
+    _sum: WeaponRefinementSumAggregateOutputType | null
+    _min: WeaponRefinementMinAggregateOutputType | null
+    _max: WeaponRefinementMaxAggregateOutputType | null
+  }
+
+  export type WeaponRefinementAvgAggregateOutputType = {
+    id: number | null
+    weaponInventoryId: number | null
+    magnitude: number | null
+    costPaid: number | null
+    slotIndex: number | null
+  }
+
+  export type WeaponRefinementSumAggregateOutputType = {
+    id: number | null
+    weaponInventoryId: number | null
+    magnitude: number | null
+    costPaid: number | null
+    slotIndex: number | null
+  }
+
+  export type WeaponRefinementMinAggregateOutputType = {
+    id: number | null
+    weaponInventoryId: number | null
+    tier: string | null
+    magnitude: number | null
+    targetAttribute: string | null
+    costPaid: number | null
+    slotIndex: number | null
+    createdAt: Date | null
+  }
+
+  export type WeaponRefinementMaxAggregateOutputType = {
+    id: number | null
+    weaponInventoryId: number | null
+    tier: string | null
+    magnitude: number | null
+    targetAttribute: string | null
+    costPaid: number | null
+    slotIndex: number | null
+    createdAt: Date | null
+  }
+
+  export type WeaponRefinementCountAggregateOutputType = {
+    id: number
+    weaponInventoryId: number
+    tier: number
+    magnitude: number
+    targetAttribute: number
+    costPaid: number
+    slotIndex: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type WeaponRefinementAvgAggregateInputType = {
+    id?: true
+    weaponInventoryId?: true
+    magnitude?: true
+    costPaid?: true
+    slotIndex?: true
+  }
+
+  export type WeaponRefinementSumAggregateInputType = {
+    id?: true
+    weaponInventoryId?: true
+    magnitude?: true
+    costPaid?: true
+    slotIndex?: true
+  }
+
+  export type WeaponRefinementMinAggregateInputType = {
+    id?: true
+    weaponInventoryId?: true
+    tier?: true
+    magnitude?: true
+    targetAttribute?: true
+    costPaid?: true
+    slotIndex?: true
+    createdAt?: true
+  }
+
+  export type WeaponRefinementMaxAggregateInputType = {
+    id?: true
+    weaponInventoryId?: true
+    tier?: true
+    magnitude?: true
+    targetAttribute?: true
+    costPaid?: true
+    slotIndex?: true
+    createdAt?: true
+  }
+
+  export type WeaponRefinementCountAggregateInputType = {
+    id?: true
+    weaponInventoryId?: true
+    tier?: true
+    magnitude?: true
+    targetAttribute?: true
+    costPaid?: true
+    slotIndex?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type WeaponRefinementAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which WeaponRefinement to aggregate.
+     */
+    where?: WeaponRefinementWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of WeaponRefinements to fetch.
+     */
+    orderBy?: WeaponRefinementOrderByWithRelationInput | WeaponRefinementOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: WeaponRefinementWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` WeaponRefinements from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` WeaponRefinements.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned WeaponRefinements
+    **/
+    _count?: true | WeaponRefinementCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: WeaponRefinementAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: WeaponRefinementSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: WeaponRefinementMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: WeaponRefinementMaxAggregateInputType
+  }
+
+  export type GetWeaponRefinementAggregateType<T extends WeaponRefinementAggregateArgs> = {
+        [P in keyof T & keyof AggregateWeaponRefinement]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateWeaponRefinement[P]>
+      : GetScalarType<T[P], AggregateWeaponRefinement[P]>
+  }
+
+
+
+
+  export type WeaponRefinementGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: WeaponRefinementWhereInput
+    orderBy?: WeaponRefinementOrderByWithAggregationInput | WeaponRefinementOrderByWithAggregationInput[]
+    by: WeaponRefinementScalarFieldEnum[] | WeaponRefinementScalarFieldEnum
+    having?: WeaponRefinementScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: WeaponRefinementCountAggregateInputType | true
+    _avg?: WeaponRefinementAvgAggregateInputType
+    _sum?: WeaponRefinementSumAggregateInputType
+    _min?: WeaponRefinementMinAggregateInputType
+    _max?: WeaponRefinementMaxAggregateInputType
+  }
+
+  export type WeaponRefinementGroupByOutputType = {
+    id: number
+    weaponInventoryId: number
+    tier: string
+    magnitude: number
+    targetAttribute: string | null
+    costPaid: number
+    slotIndex: number
+    createdAt: Date
+    _count: WeaponRefinementCountAggregateOutputType | null
+    _avg: WeaponRefinementAvgAggregateOutputType | null
+    _sum: WeaponRefinementSumAggregateOutputType | null
+    _min: WeaponRefinementMinAggregateOutputType | null
+    _max: WeaponRefinementMaxAggregateOutputType | null
+  }
+
+  type GetWeaponRefinementGroupByPayload<T extends WeaponRefinementGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<WeaponRefinementGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof WeaponRefinementGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], WeaponRefinementGroupByOutputType[P]>
+            : GetScalarType<T[P], WeaponRefinementGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type WeaponRefinementSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    weaponInventoryId?: boolean
+    tier?: boolean
+    magnitude?: boolean
+    targetAttribute?: boolean
+    costPaid?: boolean
+    slotIndex?: boolean
+    createdAt?: boolean
+    weaponInventory?: boolean | WeaponInventoryDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["weaponRefinement"]>
+
+  export type WeaponRefinementSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    weaponInventoryId?: boolean
+    tier?: boolean
+    magnitude?: boolean
+    targetAttribute?: boolean
+    costPaid?: boolean
+    slotIndex?: boolean
+    createdAt?: boolean
+    weaponInventory?: boolean | WeaponInventoryDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["weaponRefinement"]>
+
+  export type WeaponRefinementSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    weaponInventoryId?: boolean
+    tier?: boolean
+    magnitude?: boolean
+    targetAttribute?: boolean
+    costPaid?: boolean
+    slotIndex?: boolean
+    createdAt?: boolean
+    weaponInventory?: boolean | WeaponInventoryDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["weaponRefinement"]>
+
+  export type WeaponRefinementSelectScalar = {
+    id?: boolean
+    weaponInventoryId?: boolean
+    tier?: boolean
+    magnitude?: boolean
+    targetAttribute?: boolean
+    costPaid?: boolean
+    slotIndex?: boolean
+    createdAt?: boolean
+  }
+
+  export type WeaponRefinementOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "weaponInventoryId" | "tier" | "magnitude" | "targetAttribute" | "costPaid" | "slotIndex" | "createdAt", ExtArgs["result"]["weaponRefinement"]>
+  export type WeaponRefinementInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    weaponInventory?: boolean | WeaponInventoryDefaultArgs<ExtArgs>
+  }
+  export type WeaponRefinementIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    weaponInventory?: boolean | WeaponInventoryDefaultArgs<ExtArgs>
+  }
+  export type WeaponRefinementIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    weaponInventory?: boolean | WeaponInventoryDefaultArgs<ExtArgs>
+  }
+
+  export type $WeaponRefinementPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "WeaponRefinement"
+    objects: {
+      weaponInventory: Prisma.$WeaponInventoryPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      weaponInventoryId: number
+      tier: string
+      magnitude: number
+      targetAttribute: string | null
+      costPaid: number
+      slotIndex: number
+      createdAt: Date
+    }, ExtArgs["result"]["weaponRefinement"]>
+    composites: {}
+  }
+
+  type WeaponRefinementGetPayload<S extends boolean | null | undefined | WeaponRefinementDefaultArgs> = $Result.GetResult<Prisma.$WeaponRefinementPayload, S>
+
+  type WeaponRefinementCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<WeaponRefinementFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: WeaponRefinementCountAggregateInputType | true
+    }
+
+  export interface WeaponRefinementDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['WeaponRefinement'], meta: { name: 'WeaponRefinement' } }
+    /**
+     * Find zero or one WeaponRefinement that matches the filter.
+     * @param {WeaponRefinementFindUniqueArgs} args - Arguments to find a WeaponRefinement
+     * @example
+     * // Get one WeaponRefinement
+     * const weaponRefinement = await prisma.weaponRefinement.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends WeaponRefinementFindUniqueArgs>(args: SelectSubset<T, WeaponRefinementFindUniqueArgs<ExtArgs>>): Prisma__WeaponRefinementClient<$Result.GetResult<Prisma.$WeaponRefinementPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one WeaponRefinement that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {WeaponRefinementFindUniqueOrThrowArgs} args - Arguments to find a WeaponRefinement
+     * @example
+     * // Get one WeaponRefinement
+     * const weaponRefinement = await prisma.weaponRefinement.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends WeaponRefinementFindUniqueOrThrowArgs>(args: SelectSubset<T, WeaponRefinementFindUniqueOrThrowArgs<ExtArgs>>): Prisma__WeaponRefinementClient<$Result.GetResult<Prisma.$WeaponRefinementPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first WeaponRefinement that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WeaponRefinementFindFirstArgs} args - Arguments to find a WeaponRefinement
+     * @example
+     * // Get one WeaponRefinement
+     * const weaponRefinement = await prisma.weaponRefinement.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends WeaponRefinementFindFirstArgs>(args?: SelectSubset<T, WeaponRefinementFindFirstArgs<ExtArgs>>): Prisma__WeaponRefinementClient<$Result.GetResult<Prisma.$WeaponRefinementPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first WeaponRefinement that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WeaponRefinementFindFirstOrThrowArgs} args - Arguments to find a WeaponRefinement
+     * @example
+     * // Get one WeaponRefinement
+     * const weaponRefinement = await prisma.weaponRefinement.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends WeaponRefinementFindFirstOrThrowArgs>(args?: SelectSubset<T, WeaponRefinementFindFirstOrThrowArgs<ExtArgs>>): Prisma__WeaponRefinementClient<$Result.GetResult<Prisma.$WeaponRefinementPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more WeaponRefinements that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WeaponRefinementFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all WeaponRefinements
+     * const weaponRefinements = await prisma.weaponRefinement.findMany()
+     * 
+     * // Get first 10 WeaponRefinements
+     * const weaponRefinements = await prisma.weaponRefinement.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const weaponRefinementWithIdOnly = await prisma.weaponRefinement.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends WeaponRefinementFindManyArgs>(args?: SelectSubset<T, WeaponRefinementFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WeaponRefinementPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a WeaponRefinement.
+     * @param {WeaponRefinementCreateArgs} args - Arguments to create a WeaponRefinement.
+     * @example
+     * // Create one WeaponRefinement
+     * const WeaponRefinement = await prisma.weaponRefinement.create({
+     *   data: {
+     *     // ... data to create a WeaponRefinement
+     *   }
+     * })
+     * 
+     */
+    create<T extends WeaponRefinementCreateArgs>(args: SelectSubset<T, WeaponRefinementCreateArgs<ExtArgs>>): Prisma__WeaponRefinementClient<$Result.GetResult<Prisma.$WeaponRefinementPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many WeaponRefinements.
+     * @param {WeaponRefinementCreateManyArgs} args - Arguments to create many WeaponRefinements.
+     * @example
+     * // Create many WeaponRefinements
+     * const weaponRefinement = await prisma.weaponRefinement.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends WeaponRefinementCreateManyArgs>(args?: SelectSubset<T, WeaponRefinementCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many WeaponRefinements and returns the data saved in the database.
+     * @param {WeaponRefinementCreateManyAndReturnArgs} args - Arguments to create many WeaponRefinements.
+     * @example
+     * // Create many WeaponRefinements
+     * const weaponRefinement = await prisma.weaponRefinement.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many WeaponRefinements and only return the `id`
+     * const weaponRefinementWithIdOnly = await prisma.weaponRefinement.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends WeaponRefinementCreateManyAndReturnArgs>(args?: SelectSubset<T, WeaponRefinementCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WeaponRefinementPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a WeaponRefinement.
+     * @param {WeaponRefinementDeleteArgs} args - Arguments to delete one WeaponRefinement.
+     * @example
+     * // Delete one WeaponRefinement
+     * const WeaponRefinement = await prisma.weaponRefinement.delete({
+     *   where: {
+     *     // ... filter to delete one WeaponRefinement
+     *   }
+     * })
+     * 
+     */
+    delete<T extends WeaponRefinementDeleteArgs>(args: SelectSubset<T, WeaponRefinementDeleteArgs<ExtArgs>>): Prisma__WeaponRefinementClient<$Result.GetResult<Prisma.$WeaponRefinementPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one WeaponRefinement.
+     * @param {WeaponRefinementUpdateArgs} args - Arguments to update one WeaponRefinement.
+     * @example
+     * // Update one WeaponRefinement
+     * const weaponRefinement = await prisma.weaponRefinement.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends WeaponRefinementUpdateArgs>(args: SelectSubset<T, WeaponRefinementUpdateArgs<ExtArgs>>): Prisma__WeaponRefinementClient<$Result.GetResult<Prisma.$WeaponRefinementPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more WeaponRefinements.
+     * @param {WeaponRefinementDeleteManyArgs} args - Arguments to filter WeaponRefinements to delete.
+     * @example
+     * // Delete a few WeaponRefinements
+     * const { count } = await prisma.weaponRefinement.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends WeaponRefinementDeleteManyArgs>(args?: SelectSubset<T, WeaponRefinementDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more WeaponRefinements.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WeaponRefinementUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many WeaponRefinements
+     * const weaponRefinement = await prisma.weaponRefinement.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends WeaponRefinementUpdateManyArgs>(args: SelectSubset<T, WeaponRefinementUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more WeaponRefinements and returns the data updated in the database.
+     * @param {WeaponRefinementUpdateManyAndReturnArgs} args - Arguments to update many WeaponRefinements.
+     * @example
+     * // Update many WeaponRefinements
+     * const weaponRefinement = await prisma.weaponRefinement.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more WeaponRefinements and only return the `id`
+     * const weaponRefinementWithIdOnly = await prisma.weaponRefinement.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends WeaponRefinementUpdateManyAndReturnArgs>(args: SelectSubset<T, WeaponRefinementUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WeaponRefinementPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one WeaponRefinement.
+     * @param {WeaponRefinementUpsertArgs} args - Arguments to update or create a WeaponRefinement.
+     * @example
+     * // Update or create a WeaponRefinement
+     * const weaponRefinement = await prisma.weaponRefinement.upsert({
+     *   create: {
+     *     // ... data to create a WeaponRefinement
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the WeaponRefinement we want to update
+     *   }
+     * })
+     */
+    upsert<T extends WeaponRefinementUpsertArgs>(args: SelectSubset<T, WeaponRefinementUpsertArgs<ExtArgs>>): Prisma__WeaponRefinementClient<$Result.GetResult<Prisma.$WeaponRefinementPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of WeaponRefinements.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WeaponRefinementCountArgs} args - Arguments to filter WeaponRefinements to count.
+     * @example
+     * // Count the number of WeaponRefinements
+     * const count = await prisma.weaponRefinement.count({
+     *   where: {
+     *     // ... the filter for the WeaponRefinements we want to count
+     *   }
+     * })
+    **/
+    count<T extends WeaponRefinementCountArgs>(
+      args?: Subset<T, WeaponRefinementCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], WeaponRefinementCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a WeaponRefinement.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WeaponRefinementAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends WeaponRefinementAggregateArgs>(args: Subset<T, WeaponRefinementAggregateArgs>): Prisma.PrismaPromise<GetWeaponRefinementAggregateType<T>>
+
+    /**
+     * Group by WeaponRefinement.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WeaponRefinementGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends WeaponRefinementGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: WeaponRefinementGroupByArgs['orderBy'] }
+        : { orderBy?: WeaponRefinementGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, WeaponRefinementGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetWeaponRefinementGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the WeaponRefinement model
+   */
+  readonly fields: WeaponRefinementFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for WeaponRefinement.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__WeaponRefinementClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    weaponInventory<T extends WeaponInventoryDefaultArgs<ExtArgs> = {}>(args?: Subset<T, WeaponInventoryDefaultArgs<ExtArgs>>): Prisma__WeaponInventoryClient<$Result.GetResult<Prisma.$WeaponInventoryPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the WeaponRefinement model
+   */
+  interface WeaponRefinementFieldRefs {
+    readonly id: FieldRef<"WeaponRefinement", 'Int'>
+    readonly weaponInventoryId: FieldRef<"WeaponRefinement", 'Int'>
+    readonly tier: FieldRef<"WeaponRefinement", 'String'>
+    readonly magnitude: FieldRef<"WeaponRefinement", 'Int'>
+    readonly targetAttribute: FieldRef<"WeaponRefinement", 'String'>
+    readonly costPaid: FieldRef<"WeaponRefinement", 'Int'>
+    readonly slotIndex: FieldRef<"WeaponRefinement", 'Int'>
+    readonly createdAt: FieldRef<"WeaponRefinement", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * WeaponRefinement findUnique
+   */
+  export type WeaponRefinementFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WeaponRefinement
+     */
+    select?: WeaponRefinementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WeaponRefinement
+     */
+    omit?: WeaponRefinementOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WeaponRefinementInclude<ExtArgs> | null
+    /**
+     * Filter, which WeaponRefinement to fetch.
+     */
+    where: WeaponRefinementWhereUniqueInput
+  }
+
+  /**
+   * WeaponRefinement findUniqueOrThrow
+   */
+  export type WeaponRefinementFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WeaponRefinement
+     */
+    select?: WeaponRefinementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WeaponRefinement
+     */
+    omit?: WeaponRefinementOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WeaponRefinementInclude<ExtArgs> | null
+    /**
+     * Filter, which WeaponRefinement to fetch.
+     */
+    where: WeaponRefinementWhereUniqueInput
+  }
+
+  /**
+   * WeaponRefinement findFirst
+   */
+  export type WeaponRefinementFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WeaponRefinement
+     */
+    select?: WeaponRefinementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WeaponRefinement
+     */
+    omit?: WeaponRefinementOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WeaponRefinementInclude<ExtArgs> | null
+    /**
+     * Filter, which WeaponRefinement to fetch.
+     */
+    where?: WeaponRefinementWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of WeaponRefinements to fetch.
+     */
+    orderBy?: WeaponRefinementOrderByWithRelationInput | WeaponRefinementOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for WeaponRefinements.
+     */
+    cursor?: WeaponRefinementWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` WeaponRefinements from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` WeaponRefinements.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of WeaponRefinements.
+     */
+    distinct?: WeaponRefinementScalarFieldEnum | WeaponRefinementScalarFieldEnum[]
+  }
+
+  /**
+   * WeaponRefinement findFirstOrThrow
+   */
+  export type WeaponRefinementFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WeaponRefinement
+     */
+    select?: WeaponRefinementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WeaponRefinement
+     */
+    omit?: WeaponRefinementOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WeaponRefinementInclude<ExtArgs> | null
+    /**
+     * Filter, which WeaponRefinement to fetch.
+     */
+    where?: WeaponRefinementWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of WeaponRefinements to fetch.
+     */
+    orderBy?: WeaponRefinementOrderByWithRelationInput | WeaponRefinementOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for WeaponRefinements.
+     */
+    cursor?: WeaponRefinementWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` WeaponRefinements from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` WeaponRefinements.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of WeaponRefinements.
+     */
+    distinct?: WeaponRefinementScalarFieldEnum | WeaponRefinementScalarFieldEnum[]
+  }
+
+  /**
+   * WeaponRefinement findMany
+   */
+  export type WeaponRefinementFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WeaponRefinement
+     */
+    select?: WeaponRefinementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WeaponRefinement
+     */
+    omit?: WeaponRefinementOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WeaponRefinementInclude<ExtArgs> | null
+    /**
+     * Filter, which WeaponRefinements to fetch.
+     */
+    where?: WeaponRefinementWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of WeaponRefinements to fetch.
+     */
+    orderBy?: WeaponRefinementOrderByWithRelationInput | WeaponRefinementOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing WeaponRefinements.
+     */
+    cursor?: WeaponRefinementWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` WeaponRefinements from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` WeaponRefinements.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of WeaponRefinements.
+     */
+    distinct?: WeaponRefinementScalarFieldEnum | WeaponRefinementScalarFieldEnum[]
+  }
+
+  /**
+   * WeaponRefinement create
+   */
+  export type WeaponRefinementCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WeaponRefinement
+     */
+    select?: WeaponRefinementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WeaponRefinement
+     */
+    omit?: WeaponRefinementOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WeaponRefinementInclude<ExtArgs> | null
+    /**
+     * The data needed to create a WeaponRefinement.
+     */
+    data: XOR<WeaponRefinementCreateInput, WeaponRefinementUncheckedCreateInput>
+  }
+
+  /**
+   * WeaponRefinement createMany
+   */
+  export type WeaponRefinementCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many WeaponRefinements.
+     */
+    data: WeaponRefinementCreateManyInput | WeaponRefinementCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * WeaponRefinement createManyAndReturn
+   */
+  export type WeaponRefinementCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WeaponRefinement
+     */
+    select?: WeaponRefinementSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the WeaponRefinement
+     */
+    omit?: WeaponRefinementOmit<ExtArgs> | null
+    /**
+     * The data used to create many WeaponRefinements.
+     */
+    data: WeaponRefinementCreateManyInput | WeaponRefinementCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WeaponRefinementIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * WeaponRefinement update
+   */
+  export type WeaponRefinementUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WeaponRefinement
+     */
+    select?: WeaponRefinementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WeaponRefinement
+     */
+    omit?: WeaponRefinementOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WeaponRefinementInclude<ExtArgs> | null
+    /**
+     * The data needed to update a WeaponRefinement.
+     */
+    data: XOR<WeaponRefinementUpdateInput, WeaponRefinementUncheckedUpdateInput>
+    /**
+     * Choose, which WeaponRefinement to update.
+     */
+    where: WeaponRefinementWhereUniqueInput
+  }
+
+  /**
+   * WeaponRefinement updateMany
+   */
+  export type WeaponRefinementUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update WeaponRefinements.
+     */
+    data: XOR<WeaponRefinementUpdateManyMutationInput, WeaponRefinementUncheckedUpdateManyInput>
+    /**
+     * Filter which WeaponRefinements to update
+     */
+    where?: WeaponRefinementWhereInput
+    /**
+     * Limit how many WeaponRefinements to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * WeaponRefinement updateManyAndReturn
+   */
+  export type WeaponRefinementUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WeaponRefinement
+     */
+    select?: WeaponRefinementSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the WeaponRefinement
+     */
+    omit?: WeaponRefinementOmit<ExtArgs> | null
+    /**
+     * The data used to update WeaponRefinements.
+     */
+    data: XOR<WeaponRefinementUpdateManyMutationInput, WeaponRefinementUncheckedUpdateManyInput>
+    /**
+     * Filter which WeaponRefinements to update
+     */
+    where?: WeaponRefinementWhereInput
+    /**
+     * Limit how many WeaponRefinements to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WeaponRefinementIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * WeaponRefinement upsert
+   */
+  export type WeaponRefinementUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WeaponRefinement
+     */
+    select?: WeaponRefinementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WeaponRefinement
+     */
+    omit?: WeaponRefinementOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WeaponRefinementInclude<ExtArgs> | null
+    /**
+     * The filter to search for the WeaponRefinement to update in case it exists.
+     */
+    where: WeaponRefinementWhereUniqueInput
+    /**
+     * In case the WeaponRefinement found by the `where` argument doesn't exist, create a new WeaponRefinement with this data.
+     */
+    create: XOR<WeaponRefinementCreateInput, WeaponRefinementUncheckedCreateInput>
+    /**
+     * In case the WeaponRefinement was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<WeaponRefinementUpdateInput, WeaponRefinementUncheckedUpdateInput>
+  }
+
+  /**
+   * WeaponRefinement delete
+   */
+  export type WeaponRefinementDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WeaponRefinement
+     */
+    select?: WeaponRefinementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WeaponRefinement
+     */
+    omit?: WeaponRefinementOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WeaponRefinementInclude<ExtArgs> | null
+    /**
+     * Filter which WeaponRefinement to delete.
+     */
+    where: WeaponRefinementWhereUniqueInput
+  }
+
+  /**
+   * WeaponRefinement deleteMany
+   */
+  export type WeaponRefinementDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which WeaponRefinements to delete
+     */
+    where?: WeaponRefinementWhereInput
+    /**
+     * Limit how many WeaponRefinements to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * WeaponRefinement without action
+   */
+  export type WeaponRefinementDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WeaponRefinement
+     */
+    select?: WeaponRefinementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WeaponRefinement
+     */
+    omit?: WeaponRefinementOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WeaponRefinementInclude<ExtArgs> | null
   }
 
 
@@ -34940,6 +36220,20 @@ export namespace Prisma {
   export type WeaponInventoryScalarFieldEnum = (typeof WeaponInventoryScalarFieldEnum)[keyof typeof WeaponInventoryScalarFieldEnum]
 
 
+  export const WeaponRefinementScalarFieldEnum: {
+    id: 'id',
+    weaponInventoryId: 'weaponInventoryId',
+    tier: 'tier',
+    magnitude: 'magnitude',
+    targetAttribute: 'targetAttribute',
+    costPaid: 'costPaid',
+    slotIndex: 'slotIndex',
+    createdAt: 'createdAt'
+  };
+
+  export type WeaponRefinementScalarFieldEnum = (typeof WeaponRefinementScalarFieldEnum)[keyof typeof WeaponRefinementScalarFieldEnum]
+
+
   export const WeaponScalarFieldEnum: {
     id: 'id',
     name: 'name',
@@ -36220,6 +37514,7 @@ export namespace Prisma {
     weapon?: XOR<WeaponScalarRelationFilter, WeaponWhereInput>
     robotsMain?: RobotListRelationFilter
     robotsOffhand?: RobotListRelationFilter
+    refinements?: WeaponRefinementListRelationFilter
   }
 
   export type WeaponInventoryOrderByWithRelationInput = {
@@ -36233,6 +37528,7 @@ export namespace Prisma {
     weapon?: WeaponOrderByWithRelationInput
     robotsMain?: RobotOrderByRelationAggregateInput
     robotsOffhand?: RobotOrderByRelationAggregateInput
+    refinements?: WeaponRefinementOrderByRelationAggregateInput
   }
 
   export type WeaponInventoryWhereUniqueInput = Prisma.AtLeast<{
@@ -36249,6 +37545,7 @@ export namespace Prisma {
     weapon?: XOR<WeaponScalarRelationFilter, WeaponWhereInput>
     robotsMain?: RobotListRelationFilter
     robotsOffhand?: RobotListRelationFilter
+    refinements?: WeaponRefinementListRelationFilter
   }, "id">
 
   export type WeaponInventoryOrderByWithAggregationInput = {
@@ -36275,6 +37572,79 @@ export namespace Prisma {
     customName?: StringNullableWithAggregatesFilter<"WeaponInventory"> | string | null
     pricePaid?: IntWithAggregatesFilter<"WeaponInventory"> | number
     purchasedAt?: DateTimeWithAggregatesFilter<"WeaponInventory"> | Date | string
+  }
+
+  export type WeaponRefinementWhereInput = {
+    AND?: WeaponRefinementWhereInput | WeaponRefinementWhereInput[]
+    OR?: WeaponRefinementWhereInput[]
+    NOT?: WeaponRefinementWhereInput | WeaponRefinementWhereInput[]
+    id?: IntFilter<"WeaponRefinement"> | number
+    weaponInventoryId?: IntFilter<"WeaponRefinement"> | number
+    tier?: StringFilter<"WeaponRefinement"> | string
+    magnitude?: IntFilter<"WeaponRefinement"> | number
+    targetAttribute?: StringNullableFilter<"WeaponRefinement"> | string | null
+    costPaid?: IntFilter<"WeaponRefinement"> | number
+    slotIndex?: IntFilter<"WeaponRefinement"> | number
+    createdAt?: DateTimeFilter<"WeaponRefinement"> | Date | string
+    weaponInventory?: XOR<WeaponInventoryScalarRelationFilter, WeaponInventoryWhereInput>
+  }
+
+  export type WeaponRefinementOrderByWithRelationInput = {
+    id?: SortOrder
+    weaponInventoryId?: SortOrder
+    tier?: SortOrder
+    magnitude?: SortOrder
+    targetAttribute?: SortOrderInput | SortOrder
+    costPaid?: SortOrder
+    slotIndex?: SortOrder
+    createdAt?: SortOrder
+    weaponInventory?: WeaponInventoryOrderByWithRelationInput
+  }
+
+  export type WeaponRefinementWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    weaponInventoryId_slotIndex?: WeaponRefinementWeaponInventoryIdSlotIndexCompoundUniqueInput
+    AND?: WeaponRefinementWhereInput | WeaponRefinementWhereInput[]
+    OR?: WeaponRefinementWhereInput[]
+    NOT?: WeaponRefinementWhereInput | WeaponRefinementWhereInput[]
+    weaponInventoryId?: IntFilter<"WeaponRefinement"> | number
+    tier?: StringFilter<"WeaponRefinement"> | string
+    magnitude?: IntFilter<"WeaponRefinement"> | number
+    targetAttribute?: StringNullableFilter<"WeaponRefinement"> | string | null
+    costPaid?: IntFilter<"WeaponRefinement"> | number
+    slotIndex?: IntFilter<"WeaponRefinement"> | number
+    createdAt?: DateTimeFilter<"WeaponRefinement"> | Date | string
+    weaponInventory?: XOR<WeaponInventoryScalarRelationFilter, WeaponInventoryWhereInput>
+  }, "id" | "weaponInventoryId_slotIndex">
+
+  export type WeaponRefinementOrderByWithAggregationInput = {
+    id?: SortOrder
+    weaponInventoryId?: SortOrder
+    tier?: SortOrder
+    magnitude?: SortOrder
+    targetAttribute?: SortOrderInput | SortOrder
+    costPaid?: SortOrder
+    slotIndex?: SortOrder
+    createdAt?: SortOrder
+    _count?: WeaponRefinementCountOrderByAggregateInput
+    _avg?: WeaponRefinementAvgOrderByAggregateInput
+    _max?: WeaponRefinementMaxOrderByAggregateInput
+    _min?: WeaponRefinementMinOrderByAggregateInput
+    _sum?: WeaponRefinementSumOrderByAggregateInput
+  }
+
+  export type WeaponRefinementScalarWhereWithAggregatesInput = {
+    AND?: WeaponRefinementScalarWhereWithAggregatesInput | WeaponRefinementScalarWhereWithAggregatesInput[]
+    OR?: WeaponRefinementScalarWhereWithAggregatesInput[]
+    NOT?: WeaponRefinementScalarWhereWithAggregatesInput | WeaponRefinementScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"WeaponRefinement"> | number
+    weaponInventoryId?: IntWithAggregatesFilter<"WeaponRefinement"> | number
+    tier?: StringWithAggregatesFilter<"WeaponRefinement"> | string
+    magnitude?: IntWithAggregatesFilter<"WeaponRefinement"> | number
+    targetAttribute?: StringNullableWithAggregatesFilter<"WeaponRefinement"> | string | null
+    costPaid?: IntWithAggregatesFilter<"WeaponRefinement"> | number
+    slotIndex?: IntWithAggregatesFilter<"WeaponRefinement"> | number
+    createdAt?: DateTimeWithAggregatesFilter<"WeaponRefinement"> | Date | string
   }
 
   export type WeaponWhereInput = {
@@ -39187,6 +40557,7 @@ export namespace Prisma {
     weapon: WeaponCreateNestedOneWithoutWeaponInventoryInput
     robotsMain?: RobotCreateNestedManyWithoutMainWeaponInput
     robotsOffhand?: RobotCreateNestedManyWithoutOffhandWeaponInput
+    refinements?: WeaponRefinementCreateNestedManyWithoutWeaponInventoryInput
   }
 
   export type WeaponInventoryUncheckedCreateInput = {
@@ -39198,6 +40569,7 @@ export namespace Prisma {
     purchasedAt?: Date | string
     robotsMain?: RobotUncheckedCreateNestedManyWithoutMainWeaponInput
     robotsOffhand?: RobotUncheckedCreateNestedManyWithoutOffhandWeaponInput
+    refinements?: WeaponRefinementUncheckedCreateNestedManyWithoutWeaponInventoryInput
   }
 
   export type WeaponInventoryUpdateInput = {
@@ -39208,6 +40580,7 @@ export namespace Prisma {
     weapon?: WeaponUpdateOneRequiredWithoutWeaponInventoryNestedInput
     robotsMain?: RobotUpdateManyWithoutMainWeaponNestedInput
     robotsOffhand?: RobotUpdateManyWithoutOffhandWeaponNestedInput
+    refinements?: WeaponRefinementUpdateManyWithoutWeaponInventoryNestedInput
   }
 
   export type WeaponInventoryUncheckedUpdateInput = {
@@ -39219,6 +40592,7 @@ export namespace Prisma {
     purchasedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     robotsMain?: RobotUncheckedUpdateManyWithoutMainWeaponNestedInput
     robotsOffhand?: RobotUncheckedUpdateManyWithoutOffhandWeaponNestedInput
+    refinements?: WeaponRefinementUncheckedUpdateManyWithoutWeaponInventoryNestedInput
   }
 
   export type WeaponInventoryCreateManyInput = {
@@ -39243,6 +40617,79 @@ export namespace Prisma {
     customName?: NullableStringFieldUpdateOperationsInput | string | null
     pricePaid?: IntFieldUpdateOperationsInput | number
     purchasedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type WeaponRefinementCreateInput = {
+    tier: string
+    magnitude: number
+    targetAttribute?: string | null
+    costPaid: number
+    slotIndex: number
+    createdAt?: Date | string
+    weaponInventory: WeaponInventoryCreateNestedOneWithoutRefinementsInput
+  }
+
+  export type WeaponRefinementUncheckedCreateInput = {
+    id?: number
+    weaponInventoryId: number
+    tier: string
+    magnitude: number
+    targetAttribute?: string | null
+    costPaid: number
+    slotIndex: number
+    createdAt?: Date | string
+  }
+
+  export type WeaponRefinementUpdateInput = {
+    tier?: StringFieldUpdateOperationsInput | string
+    magnitude?: IntFieldUpdateOperationsInput | number
+    targetAttribute?: NullableStringFieldUpdateOperationsInput | string | null
+    costPaid?: IntFieldUpdateOperationsInput | number
+    slotIndex?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    weaponInventory?: WeaponInventoryUpdateOneRequiredWithoutRefinementsNestedInput
+  }
+
+  export type WeaponRefinementUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    weaponInventoryId?: IntFieldUpdateOperationsInput | number
+    tier?: StringFieldUpdateOperationsInput | string
+    magnitude?: IntFieldUpdateOperationsInput | number
+    targetAttribute?: NullableStringFieldUpdateOperationsInput | string | null
+    costPaid?: IntFieldUpdateOperationsInput | number
+    slotIndex?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type WeaponRefinementCreateManyInput = {
+    id?: number
+    weaponInventoryId: number
+    tier: string
+    magnitude: number
+    targetAttribute?: string | null
+    costPaid: number
+    slotIndex: number
+    createdAt?: Date | string
+  }
+
+  export type WeaponRefinementUpdateManyMutationInput = {
+    tier?: StringFieldUpdateOperationsInput | string
+    magnitude?: IntFieldUpdateOperationsInput | number
+    targetAttribute?: NullableStringFieldUpdateOperationsInput | string | null
+    costPaid?: IntFieldUpdateOperationsInput | number
+    slotIndex?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type WeaponRefinementUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    weaponInventoryId?: IntFieldUpdateOperationsInput | number
+    tier?: StringFieldUpdateOperationsInput | string
+    magnitude?: IntFieldUpdateOperationsInput | number
+    targetAttribute?: NullableStringFieldUpdateOperationsInput | string | null
+    costPaid?: IntFieldUpdateOperationsInput | number
+    slotIndex?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type WeaponCreateInput = {
@@ -42393,6 +43840,16 @@ export namespace Prisma {
     isNot?: WeaponWhereInput
   }
 
+  export type WeaponRefinementListRelationFilter = {
+    every?: WeaponRefinementWhereInput
+    some?: WeaponRefinementWhereInput
+    none?: WeaponRefinementWhereInput
+  }
+
+  export type WeaponRefinementOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
   export type WeaponInventoryCountOrderByAggregateInput = {
     id?: SortOrder
     userId?: SortOrder
@@ -42432,6 +43889,65 @@ export namespace Prisma {
     userId?: SortOrder
     weaponId?: SortOrder
     pricePaid?: SortOrder
+  }
+
+  export type WeaponInventoryScalarRelationFilter = {
+    is?: WeaponInventoryWhereInput
+    isNot?: WeaponInventoryWhereInput
+  }
+
+  export type WeaponRefinementWeaponInventoryIdSlotIndexCompoundUniqueInput = {
+    weaponInventoryId: number
+    slotIndex: number
+  }
+
+  export type WeaponRefinementCountOrderByAggregateInput = {
+    id?: SortOrder
+    weaponInventoryId?: SortOrder
+    tier?: SortOrder
+    magnitude?: SortOrder
+    targetAttribute?: SortOrder
+    costPaid?: SortOrder
+    slotIndex?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type WeaponRefinementAvgOrderByAggregateInput = {
+    id?: SortOrder
+    weaponInventoryId?: SortOrder
+    magnitude?: SortOrder
+    costPaid?: SortOrder
+    slotIndex?: SortOrder
+  }
+
+  export type WeaponRefinementMaxOrderByAggregateInput = {
+    id?: SortOrder
+    weaponInventoryId?: SortOrder
+    tier?: SortOrder
+    magnitude?: SortOrder
+    targetAttribute?: SortOrder
+    costPaid?: SortOrder
+    slotIndex?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type WeaponRefinementMinOrderByAggregateInput = {
+    id?: SortOrder
+    weaponInventoryId?: SortOrder
+    tier?: SortOrder
+    magnitude?: SortOrder
+    targetAttribute?: SortOrder
+    costPaid?: SortOrder
+    slotIndex?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type WeaponRefinementSumOrderByAggregateInput = {
+    id?: SortOrder
+    weaponInventoryId?: SortOrder
+    magnitude?: SortOrder
+    costPaid?: SortOrder
+    slotIndex?: SortOrder
   }
 
   export type WeaponCountOrderByAggregateInput = {
@@ -44978,6 +46494,13 @@ export namespace Prisma {
     connect?: RobotWhereUniqueInput | RobotWhereUniqueInput[]
   }
 
+  export type WeaponRefinementCreateNestedManyWithoutWeaponInventoryInput = {
+    create?: XOR<WeaponRefinementCreateWithoutWeaponInventoryInput, WeaponRefinementUncheckedCreateWithoutWeaponInventoryInput> | WeaponRefinementCreateWithoutWeaponInventoryInput[] | WeaponRefinementUncheckedCreateWithoutWeaponInventoryInput[]
+    connectOrCreate?: WeaponRefinementCreateOrConnectWithoutWeaponInventoryInput | WeaponRefinementCreateOrConnectWithoutWeaponInventoryInput[]
+    createMany?: WeaponRefinementCreateManyWeaponInventoryInputEnvelope
+    connect?: WeaponRefinementWhereUniqueInput | WeaponRefinementWhereUniqueInput[]
+  }
+
   export type RobotUncheckedCreateNestedManyWithoutMainWeaponInput = {
     create?: XOR<RobotCreateWithoutMainWeaponInput, RobotUncheckedCreateWithoutMainWeaponInput> | RobotCreateWithoutMainWeaponInput[] | RobotUncheckedCreateWithoutMainWeaponInput[]
     connectOrCreate?: RobotCreateOrConnectWithoutMainWeaponInput | RobotCreateOrConnectWithoutMainWeaponInput[]
@@ -44990,6 +46513,13 @@ export namespace Prisma {
     connectOrCreate?: RobotCreateOrConnectWithoutOffhandWeaponInput | RobotCreateOrConnectWithoutOffhandWeaponInput[]
     createMany?: RobotCreateManyOffhandWeaponInputEnvelope
     connect?: RobotWhereUniqueInput | RobotWhereUniqueInput[]
+  }
+
+  export type WeaponRefinementUncheckedCreateNestedManyWithoutWeaponInventoryInput = {
+    create?: XOR<WeaponRefinementCreateWithoutWeaponInventoryInput, WeaponRefinementUncheckedCreateWithoutWeaponInventoryInput> | WeaponRefinementCreateWithoutWeaponInventoryInput[] | WeaponRefinementUncheckedCreateWithoutWeaponInventoryInput[]
+    connectOrCreate?: WeaponRefinementCreateOrConnectWithoutWeaponInventoryInput | WeaponRefinementCreateOrConnectWithoutWeaponInventoryInput[]
+    createMany?: WeaponRefinementCreateManyWeaponInventoryInputEnvelope
+    connect?: WeaponRefinementWhereUniqueInput | WeaponRefinementWhereUniqueInput[]
   }
 
   export type UserUpdateOneRequiredWithoutWeaponInventoryNestedInput = {
@@ -45036,6 +46566,20 @@ export namespace Prisma {
     deleteMany?: RobotScalarWhereInput | RobotScalarWhereInput[]
   }
 
+  export type WeaponRefinementUpdateManyWithoutWeaponInventoryNestedInput = {
+    create?: XOR<WeaponRefinementCreateWithoutWeaponInventoryInput, WeaponRefinementUncheckedCreateWithoutWeaponInventoryInput> | WeaponRefinementCreateWithoutWeaponInventoryInput[] | WeaponRefinementUncheckedCreateWithoutWeaponInventoryInput[]
+    connectOrCreate?: WeaponRefinementCreateOrConnectWithoutWeaponInventoryInput | WeaponRefinementCreateOrConnectWithoutWeaponInventoryInput[]
+    upsert?: WeaponRefinementUpsertWithWhereUniqueWithoutWeaponInventoryInput | WeaponRefinementUpsertWithWhereUniqueWithoutWeaponInventoryInput[]
+    createMany?: WeaponRefinementCreateManyWeaponInventoryInputEnvelope
+    set?: WeaponRefinementWhereUniqueInput | WeaponRefinementWhereUniqueInput[]
+    disconnect?: WeaponRefinementWhereUniqueInput | WeaponRefinementWhereUniqueInput[]
+    delete?: WeaponRefinementWhereUniqueInput | WeaponRefinementWhereUniqueInput[]
+    connect?: WeaponRefinementWhereUniqueInput | WeaponRefinementWhereUniqueInput[]
+    update?: WeaponRefinementUpdateWithWhereUniqueWithoutWeaponInventoryInput | WeaponRefinementUpdateWithWhereUniqueWithoutWeaponInventoryInput[]
+    updateMany?: WeaponRefinementUpdateManyWithWhereWithoutWeaponInventoryInput | WeaponRefinementUpdateManyWithWhereWithoutWeaponInventoryInput[]
+    deleteMany?: WeaponRefinementScalarWhereInput | WeaponRefinementScalarWhereInput[]
+  }
+
   export type RobotUncheckedUpdateManyWithoutMainWeaponNestedInput = {
     create?: XOR<RobotCreateWithoutMainWeaponInput, RobotUncheckedCreateWithoutMainWeaponInput> | RobotCreateWithoutMainWeaponInput[] | RobotUncheckedCreateWithoutMainWeaponInput[]
     connectOrCreate?: RobotCreateOrConnectWithoutMainWeaponInput | RobotCreateOrConnectWithoutMainWeaponInput[]
@@ -45062,6 +46606,34 @@ export namespace Prisma {
     update?: RobotUpdateWithWhereUniqueWithoutOffhandWeaponInput | RobotUpdateWithWhereUniqueWithoutOffhandWeaponInput[]
     updateMany?: RobotUpdateManyWithWhereWithoutOffhandWeaponInput | RobotUpdateManyWithWhereWithoutOffhandWeaponInput[]
     deleteMany?: RobotScalarWhereInput | RobotScalarWhereInput[]
+  }
+
+  export type WeaponRefinementUncheckedUpdateManyWithoutWeaponInventoryNestedInput = {
+    create?: XOR<WeaponRefinementCreateWithoutWeaponInventoryInput, WeaponRefinementUncheckedCreateWithoutWeaponInventoryInput> | WeaponRefinementCreateWithoutWeaponInventoryInput[] | WeaponRefinementUncheckedCreateWithoutWeaponInventoryInput[]
+    connectOrCreate?: WeaponRefinementCreateOrConnectWithoutWeaponInventoryInput | WeaponRefinementCreateOrConnectWithoutWeaponInventoryInput[]
+    upsert?: WeaponRefinementUpsertWithWhereUniqueWithoutWeaponInventoryInput | WeaponRefinementUpsertWithWhereUniqueWithoutWeaponInventoryInput[]
+    createMany?: WeaponRefinementCreateManyWeaponInventoryInputEnvelope
+    set?: WeaponRefinementWhereUniqueInput | WeaponRefinementWhereUniqueInput[]
+    disconnect?: WeaponRefinementWhereUniqueInput | WeaponRefinementWhereUniqueInput[]
+    delete?: WeaponRefinementWhereUniqueInput | WeaponRefinementWhereUniqueInput[]
+    connect?: WeaponRefinementWhereUniqueInput | WeaponRefinementWhereUniqueInput[]
+    update?: WeaponRefinementUpdateWithWhereUniqueWithoutWeaponInventoryInput | WeaponRefinementUpdateWithWhereUniqueWithoutWeaponInventoryInput[]
+    updateMany?: WeaponRefinementUpdateManyWithWhereWithoutWeaponInventoryInput | WeaponRefinementUpdateManyWithWhereWithoutWeaponInventoryInput[]
+    deleteMany?: WeaponRefinementScalarWhereInput | WeaponRefinementScalarWhereInput[]
+  }
+
+  export type WeaponInventoryCreateNestedOneWithoutRefinementsInput = {
+    create?: XOR<WeaponInventoryCreateWithoutRefinementsInput, WeaponInventoryUncheckedCreateWithoutRefinementsInput>
+    connectOrCreate?: WeaponInventoryCreateOrConnectWithoutRefinementsInput
+    connect?: WeaponInventoryWhereUniqueInput
+  }
+
+  export type WeaponInventoryUpdateOneRequiredWithoutRefinementsNestedInput = {
+    create?: XOR<WeaponInventoryCreateWithoutRefinementsInput, WeaponInventoryUncheckedCreateWithoutRefinementsInput>
+    connectOrCreate?: WeaponInventoryCreateOrConnectWithoutRefinementsInput
+    upsert?: WeaponInventoryUpsertWithoutRefinementsInput
+    connect?: WeaponInventoryWhereUniqueInput
+    update?: XOR<XOR<WeaponInventoryUpdateToOneWithWhereWithoutRefinementsInput, WeaponInventoryUpdateWithoutRefinementsInput>, WeaponInventoryUncheckedUpdateWithoutRefinementsInput>
   }
 
   export type WeaponInventoryCreateNestedManyWithoutWeaponInput = {
@@ -46521,6 +48093,7 @@ export namespace Prisma {
     weapon: WeaponCreateNestedOneWithoutWeaponInventoryInput
     robotsMain?: RobotCreateNestedManyWithoutMainWeaponInput
     robotsOffhand?: RobotCreateNestedManyWithoutOffhandWeaponInput
+    refinements?: WeaponRefinementCreateNestedManyWithoutWeaponInventoryInput
   }
 
   export type WeaponInventoryUncheckedCreateWithoutUserInput = {
@@ -46531,6 +48104,7 @@ export namespace Prisma {
     purchasedAt?: Date | string
     robotsMain?: RobotUncheckedCreateNestedManyWithoutMainWeaponInput
     robotsOffhand?: RobotUncheckedCreateNestedManyWithoutOffhandWeaponInput
+    refinements?: WeaponRefinementUncheckedCreateNestedManyWithoutWeaponInventoryInput
   }
 
   export type WeaponInventoryCreateOrConnectWithoutUserInput = {
@@ -47136,6 +48710,7 @@ export namespace Prisma {
     user: UserCreateNestedOneWithoutWeaponInventoryInput
     weapon: WeaponCreateNestedOneWithoutWeaponInventoryInput
     robotsOffhand?: RobotCreateNestedManyWithoutOffhandWeaponInput
+    refinements?: WeaponRefinementCreateNestedManyWithoutWeaponInventoryInput
   }
 
   export type WeaponInventoryUncheckedCreateWithoutRobotsMainInput = {
@@ -47146,6 +48721,7 @@ export namespace Prisma {
     pricePaid: number
     purchasedAt?: Date | string
     robotsOffhand?: RobotUncheckedCreateNestedManyWithoutOffhandWeaponInput
+    refinements?: WeaponRefinementUncheckedCreateNestedManyWithoutWeaponInventoryInput
   }
 
   export type WeaponInventoryCreateOrConnectWithoutRobotsMainInput = {
@@ -47160,6 +48736,7 @@ export namespace Prisma {
     user: UserCreateNestedOneWithoutWeaponInventoryInput
     weapon: WeaponCreateNestedOneWithoutWeaponInventoryInput
     robotsMain?: RobotCreateNestedManyWithoutMainWeaponInput
+    refinements?: WeaponRefinementCreateNestedManyWithoutWeaponInventoryInput
   }
 
   export type WeaponInventoryUncheckedCreateWithoutRobotsOffhandInput = {
@@ -47170,6 +48747,7 @@ export namespace Prisma {
     pricePaid: number
     purchasedAt?: Date | string
     robotsMain?: RobotUncheckedCreateNestedManyWithoutMainWeaponInput
+    refinements?: WeaponRefinementUncheckedCreateNestedManyWithoutWeaponInventoryInput
   }
 
   export type WeaponInventoryCreateOrConnectWithoutRobotsOffhandInput = {
@@ -47898,6 +49476,7 @@ export namespace Prisma {
     user?: UserUpdateOneRequiredWithoutWeaponInventoryNestedInput
     weapon?: WeaponUpdateOneRequiredWithoutWeaponInventoryNestedInput
     robotsOffhand?: RobotUpdateManyWithoutOffhandWeaponNestedInput
+    refinements?: WeaponRefinementUpdateManyWithoutWeaponInventoryNestedInput
   }
 
   export type WeaponInventoryUncheckedUpdateWithoutRobotsMainInput = {
@@ -47908,6 +49487,7 @@ export namespace Prisma {
     pricePaid?: IntFieldUpdateOperationsInput | number
     purchasedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     robotsOffhand?: RobotUncheckedUpdateManyWithoutOffhandWeaponNestedInput
+    refinements?: WeaponRefinementUncheckedUpdateManyWithoutWeaponInventoryNestedInput
   }
 
   export type WeaponInventoryUpsertWithoutRobotsOffhandInput = {
@@ -47928,6 +49508,7 @@ export namespace Prisma {
     user?: UserUpdateOneRequiredWithoutWeaponInventoryNestedInput
     weapon?: WeaponUpdateOneRequiredWithoutWeaponInventoryNestedInput
     robotsMain?: RobotUpdateManyWithoutMainWeaponNestedInput
+    refinements?: WeaponRefinementUpdateManyWithoutWeaponInventoryNestedInput
   }
 
   export type WeaponInventoryUncheckedUpdateWithoutRobotsOffhandInput = {
@@ -47938,6 +49519,7 @@ export namespace Prisma {
     pricePaid?: IntFieldUpdateOperationsInput | number
     purchasedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     robotsMain?: RobotUncheckedUpdateManyWithoutMainWeaponNestedInput
+    refinements?: WeaponRefinementUncheckedUpdateManyWithoutWeaponInventoryNestedInput
   }
 
   export type BattleUpsertWithWhereUniqueWithoutRobot1Input = {
@@ -48890,6 +50472,35 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type WeaponRefinementCreateWithoutWeaponInventoryInput = {
+    tier: string
+    magnitude: number
+    targetAttribute?: string | null
+    costPaid: number
+    slotIndex: number
+    createdAt?: Date | string
+  }
+
+  export type WeaponRefinementUncheckedCreateWithoutWeaponInventoryInput = {
+    id?: number
+    tier: string
+    magnitude: number
+    targetAttribute?: string | null
+    costPaid: number
+    slotIndex: number
+    createdAt?: Date | string
+  }
+
+  export type WeaponRefinementCreateOrConnectWithoutWeaponInventoryInput = {
+    where: WeaponRefinementWhereUniqueInput
+    create: XOR<WeaponRefinementCreateWithoutWeaponInventoryInput, WeaponRefinementUncheckedCreateWithoutWeaponInventoryInput>
+  }
+
+  export type WeaponRefinementCreateManyWeaponInventoryInputEnvelope = {
+    data: WeaponRefinementCreateManyWeaponInventoryInput | WeaponRefinementCreateManyWeaponInventoryInput[]
+    skipDuplicates?: boolean
+  }
+
   export type UserUpsertWithoutWeaponInventoryInput = {
     update: XOR<UserUpdateWithoutWeaponInventoryInput, UserUncheckedUpdateWithoutWeaponInventoryInput>
     create: XOR<UserCreateWithoutWeaponInventoryInput, UserUncheckedCreateWithoutWeaponInventoryInput>
@@ -49090,6 +50701,94 @@ export namespace Prisma {
     data: XOR<RobotUpdateManyMutationInput, RobotUncheckedUpdateManyWithoutOffhandWeaponInput>
   }
 
+  export type WeaponRefinementUpsertWithWhereUniqueWithoutWeaponInventoryInput = {
+    where: WeaponRefinementWhereUniqueInput
+    update: XOR<WeaponRefinementUpdateWithoutWeaponInventoryInput, WeaponRefinementUncheckedUpdateWithoutWeaponInventoryInput>
+    create: XOR<WeaponRefinementCreateWithoutWeaponInventoryInput, WeaponRefinementUncheckedCreateWithoutWeaponInventoryInput>
+  }
+
+  export type WeaponRefinementUpdateWithWhereUniqueWithoutWeaponInventoryInput = {
+    where: WeaponRefinementWhereUniqueInput
+    data: XOR<WeaponRefinementUpdateWithoutWeaponInventoryInput, WeaponRefinementUncheckedUpdateWithoutWeaponInventoryInput>
+  }
+
+  export type WeaponRefinementUpdateManyWithWhereWithoutWeaponInventoryInput = {
+    where: WeaponRefinementScalarWhereInput
+    data: XOR<WeaponRefinementUpdateManyMutationInput, WeaponRefinementUncheckedUpdateManyWithoutWeaponInventoryInput>
+  }
+
+  export type WeaponRefinementScalarWhereInput = {
+    AND?: WeaponRefinementScalarWhereInput | WeaponRefinementScalarWhereInput[]
+    OR?: WeaponRefinementScalarWhereInput[]
+    NOT?: WeaponRefinementScalarWhereInput | WeaponRefinementScalarWhereInput[]
+    id?: IntFilter<"WeaponRefinement"> | number
+    weaponInventoryId?: IntFilter<"WeaponRefinement"> | number
+    tier?: StringFilter<"WeaponRefinement"> | string
+    magnitude?: IntFilter<"WeaponRefinement"> | number
+    targetAttribute?: StringNullableFilter<"WeaponRefinement"> | string | null
+    costPaid?: IntFilter<"WeaponRefinement"> | number
+    slotIndex?: IntFilter<"WeaponRefinement"> | number
+    createdAt?: DateTimeFilter<"WeaponRefinement"> | Date | string
+  }
+
+  export type WeaponInventoryCreateWithoutRefinementsInput = {
+    customName?: string | null
+    pricePaid: number
+    purchasedAt?: Date | string
+    user: UserCreateNestedOneWithoutWeaponInventoryInput
+    weapon: WeaponCreateNestedOneWithoutWeaponInventoryInput
+    robotsMain?: RobotCreateNestedManyWithoutMainWeaponInput
+    robotsOffhand?: RobotCreateNestedManyWithoutOffhandWeaponInput
+  }
+
+  export type WeaponInventoryUncheckedCreateWithoutRefinementsInput = {
+    id?: number
+    userId: number
+    weaponId: number
+    customName?: string | null
+    pricePaid: number
+    purchasedAt?: Date | string
+    robotsMain?: RobotUncheckedCreateNestedManyWithoutMainWeaponInput
+    robotsOffhand?: RobotUncheckedCreateNestedManyWithoutOffhandWeaponInput
+  }
+
+  export type WeaponInventoryCreateOrConnectWithoutRefinementsInput = {
+    where: WeaponInventoryWhereUniqueInput
+    create: XOR<WeaponInventoryCreateWithoutRefinementsInput, WeaponInventoryUncheckedCreateWithoutRefinementsInput>
+  }
+
+  export type WeaponInventoryUpsertWithoutRefinementsInput = {
+    update: XOR<WeaponInventoryUpdateWithoutRefinementsInput, WeaponInventoryUncheckedUpdateWithoutRefinementsInput>
+    create: XOR<WeaponInventoryCreateWithoutRefinementsInput, WeaponInventoryUncheckedCreateWithoutRefinementsInput>
+    where?: WeaponInventoryWhereInput
+  }
+
+  export type WeaponInventoryUpdateToOneWithWhereWithoutRefinementsInput = {
+    where?: WeaponInventoryWhereInput
+    data: XOR<WeaponInventoryUpdateWithoutRefinementsInput, WeaponInventoryUncheckedUpdateWithoutRefinementsInput>
+  }
+
+  export type WeaponInventoryUpdateWithoutRefinementsInput = {
+    customName?: NullableStringFieldUpdateOperationsInput | string | null
+    pricePaid?: IntFieldUpdateOperationsInput | number
+    purchasedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutWeaponInventoryNestedInput
+    weapon?: WeaponUpdateOneRequiredWithoutWeaponInventoryNestedInput
+    robotsMain?: RobotUpdateManyWithoutMainWeaponNestedInput
+    robotsOffhand?: RobotUpdateManyWithoutOffhandWeaponNestedInput
+  }
+
+  export type WeaponInventoryUncheckedUpdateWithoutRefinementsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    userId?: IntFieldUpdateOperationsInput | number
+    weaponId?: IntFieldUpdateOperationsInput | number
+    customName?: NullableStringFieldUpdateOperationsInput | string | null
+    pricePaid?: IntFieldUpdateOperationsInput | number
+    purchasedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    robotsMain?: RobotUncheckedUpdateManyWithoutMainWeaponNestedInput
+    robotsOffhand?: RobotUncheckedUpdateManyWithoutOffhandWeaponNestedInput
+  }
+
   export type WeaponInventoryCreateWithoutWeaponInput = {
     customName?: string | null
     pricePaid: number
@@ -49097,6 +50796,7 @@ export namespace Prisma {
     user: UserCreateNestedOneWithoutWeaponInventoryInput
     robotsMain?: RobotCreateNestedManyWithoutMainWeaponInput
     robotsOffhand?: RobotCreateNestedManyWithoutOffhandWeaponInput
+    refinements?: WeaponRefinementCreateNestedManyWithoutWeaponInventoryInput
   }
 
   export type WeaponInventoryUncheckedCreateWithoutWeaponInput = {
@@ -49107,6 +50807,7 @@ export namespace Prisma {
     purchasedAt?: Date | string
     robotsMain?: RobotUncheckedCreateNestedManyWithoutMainWeaponInput
     robotsOffhand?: RobotUncheckedCreateNestedManyWithoutOffhandWeaponInput
+    refinements?: WeaponRefinementUncheckedCreateNestedManyWithoutWeaponInventoryInput
   }
 
   export type WeaponInventoryCreateOrConnectWithoutWeaponInput = {
@@ -57365,6 +59066,7 @@ export namespace Prisma {
     weapon?: WeaponUpdateOneRequiredWithoutWeaponInventoryNestedInput
     robotsMain?: RobotUpdateManyWithoutMainWeaponNestedInput
     robotsOffhand?: RobotUpdateManyWithoutOffhandWeaponNestedInput
+    refinements?: WeaponRefinementUpdateManyWithoutWeaponInventoryNestedInput
   }
 
   export type WeaponInventoryUncheckedUpdateWithoutUserInput = {
@@ -57375,6 +59077,7 @@ export namespace Prisma {
     purchasedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     robotsMain?: RobotUncheckedUpdateManyWithoutMainWeaponNestedInput
     robotsOffhand?: RobotUncheckedUpdateManyWithoutOffhandWeaponNestedInput
+    refinements?: WeaponRefinementUncheckedUpdateManyWithoutWeaponInventoryNestedInput
   }
 
   export type WeaponInventoryUncheckedUpdateManyWithoutUserInput = {
@@ -58499,6 +60202,16 @@ export namespace Prisma {
     updatedAt?: Date | string
   }
 
+  export type WeaponRefinementCreateManyWeaponInventoryInput = {
+    id?: number
+    tier: string
+    magnitude: number
+    targetAttribute?: string | null
+    costPaid: number
+    slotIndex: number
+    createdAt?: Date | string
+  }
+
   export type RobotUpdateWithoutMainWeaponInput = {
     name?: StringFieldUpdateOperationsInput | string
     frameId?: IntFieldUpdateOperationsInput | number
@@ -59039,6 +60752,35 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type WeaponRefinementUpdateWithoutWeaponInventoryInput = {
+    tier?: StringFieldUpdateOperationsInput | string
+    magnitude?: IntFieldUpdateOperationsInput | number
+    targetAttribute?: NullableStringFieldUpdateOperationsInput | string | null
+    costPaid?: IntFieldUpdateOperationsInput | number
+    slotIndex?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type WeaponRefinementUncheckedUpdateWithoutWeaponInventoryInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    tier?: StringFieldUpdateOperationsInput | string
+    magnitude?: IntFieldUpdateOperationsInput | number
+    targetAttribute?: NullableStringFieldUpdateOperationsInput | string | null
+    costPaid?: IntFieldUpdateOperationsInput | number
+    slotIndex?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type WeaponRefinementUncheckedUpdateManyWithoutWeaponInventoryInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    tier?: StringFieldUpdateOperationsInput | string
+    magnitude?: IntFieldUpdateOperationsInput | number
+    targetAttribute?: NullableStringFieldUpdateOperationsInput | string | null
+    costPaid?: IntFieldUpdateOperationsInput | number
+    slotIndex?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type WeaponInventoryCreateManyWeaponInput = {
     id?: number
     userId: number
@@ -59054,6 +60796,7 @@ export namespace Prisma {
     user?: UserUpdateOneRequiredWithoutWeaponInventoryNestedInput
     robotsMain?: RobotUpdateManyWithoutMainWeaponNestedInput
     robotsOffhand?: RobotUpdateManyWithoutOffhandWeaponNestedInput
+    refinements?: WeaponRefinementUpdateManyWithoutWeaponInventoryNestedInput
   }
 
   export type WeaponInventoryUncheckedUpdateWithoutWeaponInput = {
@@ -59064,6 +60807,7 @@ export namespace Prisma {
     purchasedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     robotsMain?: RobotUncheckedUpdateManyWithoutMainWeaponNestedInput
     robotsOffhand?: RobotUncheckedUpdateManyWithoutOffhandWeaponNestedInput
+    refinements?: WeaponRefinementUncheckedUpdateManyWithoutWeaponInventoryNestedInput
   }
 
   export type WeaponInventoryUncheckedUpdateManyWithoutWeaponInput = {

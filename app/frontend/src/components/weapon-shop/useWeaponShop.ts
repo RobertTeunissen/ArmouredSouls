@@ -11,8 +11,10 @@ import { useAuth } from '../../contexts/AuthContext';
 import type { WeaponFilters } from '../FilterPanel';
 import { ATTRIBUTE_LABELS } from '../../utils/weaponConstants';
 import { calculateWeaponWorkshopDiscount, applyDiscount } from '../../../../shared/utils/discounts';
+import { calculateRankPrefix } from '../../../../shared/utils/weaponRefinement';
 import { getWeaponOptimalRange } from '../../utils/weaponRange';
 import type { Weapon, WeaponFacility, StorageStatus, ViewMode, WeaponInventoryItem } from './types';
+import type { OwnedRankBreakdown } from './WeaponCard';
 
 export function useWeaponShop() {
   const { user, refreshUser } = useAuth();
@@ -463,6 +465,30 @@ export function useWeaponShop() {
   }), [processedWeapons]);
 
   /**
+   * Spec #34: per-weapon-id rank breakdown of owned copies.
+   *
+   * Derived from `inventory` (no separate state) so it stays in sync with
+   * any update path that mutates the inventory list. The shape is
+   * `Map<weaponId, { Stock, Refined, Crafted, Mastercrafted, Legendary }>`.
+   * The catalog's `WeaponCard` uses this to expand its "Already Own" badge
+   * into a per-rank summary when refined copies exist.
+   */
+  const ownedBreakdownByWeaponId = useMemo(() => {
+    const result = new Map<number, OwnedRankBreakdown>();
+    for (const item of inventory) {
+      let bucket = result.get(item.weaponId);
+      if (!bucket) {
+        bucket = { Stock: 0, Refined: 0, Crafted: 0, Mastercrafted: 0, Legendary: 0 };
+        result.set(item.weaponId, bucket);
+      }
+      const prefix = calculateRankPrefix(item.refinements?.length ?? 0);
+      if (prefix === null) bucket.Stock += 1;
+      else bucket[prefix] += 1;
+    }
+    return result;
+  }, [inventory]);
+
+  /**
    * Refresh inventory + currency after a sale (Spec #33).
    * Re-fetches inventory list and storage status, recomputes ownedWeapons map,
    * and refreshes the user object so the credit balance updates everywhere.
@@ -502,6 +528,7 @@ export function useWeaponShop() {
     processedWeapons,
     groupedWeapons,
     ownedWeapons,
+    ownedBreakdownByWeaponId,
     equippedWeaponsCount,
     weaponWorkshopLevel,
     storageStatus,

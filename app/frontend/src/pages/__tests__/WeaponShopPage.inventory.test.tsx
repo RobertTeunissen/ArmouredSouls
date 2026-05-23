@@ -178,9 +178,9 @@ describe('WeaponShopPage — My Inventory tab', () => {
       setupApiMocks({
         workshopLevel: 5,
         inventory: [
-          { id: 1, weaponId: 101, pricePaid: 100_000, customName: null, purchasedAt: '2026-05-22T00:00:00Z', weapon: mockWeapon1, robotsMain: [], robotsOffhand: [] },
-          { id: 2, weaponId: 102, pricePaid: 80_000, customName: null, purchasedAt: '2026-05-22T00:00:00Z', weapon: mockWeapon2, robotsMain: [{ id: 7, name: 'Iron Giant' }], robotsOffhand: [] },
-          { id: 3, weaponId: 103, pricePaid: 50_000, customName: null, purchasedAt: '2026-05-22T00:00:00Z', weapon: mockWeapon3, robotsMain: [], robotsOffhand: [{ id: 7, name: 'Iron Giant' }] },
+          { id: 1, weaponId: 101, pricePaid: 100_000, customName: null, purchasedAt: '2026-05-22T00:00:00Z', weapon: mockWeapon1, robotsMain: [], robotsOffhand: [], refinements: [] },
+          { id: 2, weaponId: 102, pricePaid: 80_000, customName: null, purchasedAt: '2026-05-22T00:00:00Z', weapon: mockWeapon2, robotsMain: [{ id: 7, name: 'Iron Giant' }], robotsOffhand: [], refinements: [] },
+          { id: 3, weaponId: 103, pricePaid: 50_000, customName: null, purchasedAt: '2026-05-22T00:00:00Z', weapon: mockWeapon3, robotsMain: [], robotsOffhand: [{ id: 7, name: 'Iron Giant' }], refinements: [] },
         ],
       });
 
@@ -198,7 +198,7 @@ describe('WeaponShopPage — My Inventory tab', () => {
       setupApiMocks({
         workshopLevel: 5,
         inventory: [
-          { id: 1, weaponId: 101, pricePaid: 100_000, customName: null, purchasedAt: '2026-05-22T00:00:00Z', weapon: mockWeapon1, robotsMain: [], robotsOffhand: [] },
+          { id: 1, weaponId: 101, pricePaid: 100_000, customName: null, purchasedAt: '2026-05-22T00:00:00Z', weapon: mockWeapon1, robotsMain: [], robotsOffhand: [], refinements: [] },
         ],
       });
       renderOnInventoryTab();
@@ -213,7 +213,7 @@ describe('WeaponShopPage — My Inventory tab', () => {
       setupApiMocks({
         workshopLevel: 5,
         inventory: [
-          { id: 1, weaponId: 101, pricePaid: 100_000, customName: null, purchasedAt: '2026-05-22T00:00:00Z', weapon: mockWeapon1, robotsMain: [{ id: 7, name: 'Iron Giant' }], robotsOffhand: [] },
+          { id: 1, weaponId: 101, pricePaid: 100_000, customName: null, purchasedAt: '2026-05-22T00:00:00Z', weapon: mockWeapon1, robotsMain: [{ id: 7, name: 'Iron Giant' }], robotsOffhand: [], refinements: [] },
         ],
       });
       renderOnInventoryTab();
@@ -230,7 +230,7 @@ describe('WeaponShopPage — My Inventory tab', () => {
       setupApiMocks({
         workshopLevel: 3,
         inventory: [
-          { id: 2, weaponId: 102, pricePaid: 80_000, customName: null, purchasedAt: '2026-05-22T00:00:00Z', weapon: mockWeapon2, robotsMain: [{ id: 7, name: 'Iron Giant' }], robotsOffhand: [] },
+          { id: 2, weaponId: 102, pricePaid: 80_000, customName: null, purchasedAt: '2026-05-22T00:00:00Z', weapon: mockWeapon2, robotsMain: [{ id: 7, name: 'Iron Giant' }], robotsOffhand: [], refinements: [] },
         ],
       });
       renderOnInventoryTab();
@@ -257,6 +257,7 @@ describe('WeaponShopPage — My Inventory tab', () => {
             weapon: mockWeapon2,
             robotsMain: [{ id: 7, name: 'Iron Giant' }],
             robotsOffhand: [{ id: 8, name: 'Steel Beast' }],
+            refinements: [],
           },
         ],
       });
@@ -275,7 +276,7 @@ describe('WeaponShopPage — My Inventory tab', () => {
       setupApiMocks({
         workshopLevel: 5,
         inventory: [
-          { id: 1, weaponId: 101, pricePaid: 100_000, customName: null, purchasedAt: '2026-05-22T00:00:00Z', weapon: mockWeapon1, robotsMain: [], robotsOffhand: [] },
+          { id: 1, weaponId: 101, pricePaid: 100_000, customName: null, purchasedAt: '2026-05-22T00:00:00Z', weapon: mockWeapon1, robotsMain: [], robotsOffhand: [], refinements: [] },
         ],
       });
       renderOnInventoryTab();
@@ -290,7 +291,7 @@ describe('WeaponShopPage — My Inventory tab', () => {
       setupApiMocks({
         workshopLevel: 5,
         inventory: [
-          { id: 2, weaponId: 102, pricePaid: 80_000, customName: null, purchasedAt: '2026-05-22T00:00:00Z', weapon: mockWeapon2, robotsMain: [{ id: 7, name: 'Iron Giant' }], robotsOffhand: [] },
+          { id: 2, weaponId: 102, pricePaid: 80_000, customName: null, purchasedAt: '2026-05-22T00:00:00Z', weapon: mockWeapon2, robotsMain: [{ id: 7, name: 'Iron Giant' }], robotsOffhand: [], refinements: [] },
         ],
       });
       renderOnInventoryTab();
@@ -308,8 +309,8 @@ describe('WeaponShopPage — My Inventory tab', () => {
       setupApiMocks({
         workshopLevel: 3,
         inventory: [
-          { id: 1, weaponId: 101, pricePaid: 100_000, customName: null, purchasedAt: '2026-05-22T00:00:00Z', weapon: mockWeapon1, robotsMain: [], robotsOffhand: [] },
-          { id: 2, weaponId: 102, pricePaid: 50_000, customName: null, purchasedAt: '2026-05-22T00:00:00Z', weapon: mockWeapon2, robotsMain: [], robotsOffhand: [] },
+          { id: 1, weaponId: 101, pricePaid: 100_000, customName: null, purchasedAt: '2026-05-22T00:00:00Z', weapon: mockWeapon1, robotsMain: [], robotsOffhand: [], refinements: [] },
+          { id: 2, weaponId: 102, pricePaid: 50_000, customName: null, purchasedAt: '2026-05-22T00:00:00Z', weapon: mockWeapon2, robotsMain: [], robotsOffhand: [], refinements: [] },
         ],
       });
       renderOnInventoryTab();
@@ -327,8 +328,8 @@ describe('WeaponShopPage — My Inventory tab', () => {
       setupApiMocks({
         workshopLevel: 5,
         inventory: [
-          { id: 1, weaponId: 101, pricePaid: 100_000, customName: null, purchasedAt: '2026-05-22T00:00:00Z', weapon: mockWeapon1, robotsMain: [], robotsOffhand: [] },
-          { id: 2, weaponId: 102, pricePaid: 100_000, customName: null, purchasedAt: '2026-05-22T00:00:00Z', weapon: mockWeapon2, robotsMain: [{ id: 7, name: 'Iron Giant' }], robotsOffhand: [] },
+          { id: 1, weaponId: 101, pricePaid: 100_000, customName: null, purchasedAt: '2026-05-22T00:00:00Z', weapon: mockWeapon1, robotsMain: [], robotsOffhand: [], refinements: [] },
+          { id: 2, weaponId: 102, pricePaid: 100_000, customName: null, purchasedAt: '2026-05-22T00:00:00Z', weapon: mockWeapon2, robotsMain: [{ id: 7, name: 'Iron Giant' }], robotsOffhand: [], refinements: [] },
         ],
       });
       renderOnInventoryTab();

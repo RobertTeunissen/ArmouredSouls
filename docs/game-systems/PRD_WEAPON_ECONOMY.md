@@ -1,7 +1,7 @@
 # Product Requirements Document: Weapon Economy and Starter Weapons Overhaul
 
-**Version**: 1.5  
-**Last Updated**: May 22, 2026  
+**Version**: 1.6  
+**Last Updated**: May 23, 2026  
 **Status**: Implemented with Balance Adjustments  
 **Owner**: Robert Teunissen  
 **Epic**: Weapon System Economy Redesign
@@ -13,6 +13,7 @@
 - **v1.3** (Mar 21, 2026): Weapon roster expansion from 26 to 47 weapons — 21 new weapons, 2 reclassifications (Laser Rifle → 2H Short, Assault Rifle → 1H Short Premium), tier boundary alignment (Budget <100K, Mid 100–250K, Premium 250–400K, Luxury 400K+), rangeBand column added
 - **v1.4** (May 8, 2026): DPS rebalance — baseDamage compression (3.0× → 2.0× DPS spread), DPS Cost Multiplier M increased from 3.0 to 6.0, prices unchanged (±1%), big five 1H weapons differentiated via cooldown
 - **v1.5** (May 22, 2026): Weapon resale system — sell weapons back at Workshop-level-dependent rate (0%/L0 → 100%/L10), `pricePaid` anchor prevents free-weapon arbitrage, equipped weapons protected by shared row lock
+- **v1.6** (May 23, 2026): Weapon Refinement system — permanent per-instance upgrades across four tiers (Hone / Augment / Sharpen / Forge), 5-slot cap, Workshop-gated tier unlocks, refinement spend folds into `pricePaid` so resale partially recovers it
 
 ---
 
@@ -85,6 +86,76 @@ Fast weapons benefit more from Attack Speed. Slow weapons benefit more from Crit
 - `app/backend/prisma/migrations/20260508000000_weapon_dps_rebalance/` — ALTER COLUMN types
 - `app/backend/prisma/seed.ts` — Updated all 41 baseDamage values + 3 cooldown values
 - `docs/analysis/WEAPON_DPS_REBALANCE.md` — Full analysis document
+
+---
+
+## Version 1.6 Updates (May 23, 2026) — Weapon Refinement
+
+### Problem Statement
+
+The DPS Rebalance (v1.4) and Weapon Resale (v1.5) addressed the cost side of weapon experimentation, but they didn't give players a reason to keep using a weapon long-term. Once a player buys their preferred weapons and maxes facilities, credits accumulate with no meaningful sink (Game Loop #6, Loop 2 stagnation), and every owned weapon feels identical to every other copy of the same catalog row.
+
+Weapon Refinement adds a per-instance progression layer: players can permanently improve individual `WeaponInventory` rows across four tiers, gated by Workshop level. This serves two purposes:
+
+1. **Identity** — every refined weapon becomes distinct from the catalog and from other players' copies of the same weapon. Two `Volt Sabre`s in different stables will be configured differently, and the player who refined one will recognise it as theirs.
+2. **Late-game credit sink** — a maxed-out weapon absorbs ~₡4M of refinement spend, giving veterans a reason to keep earning credits beyond facility caps.
+
+### The four tiers
+
+| Tier | Effect | Per-slot magnitude | Workshop unlock |
+|---|---|---|---|
+| **Hone** | Boost an attribute the weapon already grants | Player picks +1 to +5 | L1 |
+| **Augment** | Add a brand-new attribute bonus | Player picks +1 to +5 | L3 |
+| **Sharpen** | Reduce base cooldown by 0.25s | Fixed | L5 |
+| **Forge** | Increase base damage by 1.0 | Fixed | L8 |
+
+### Caps
+
+- **Slot cap**: 5 refinements per `WeaponInventory` row (hard).
+- **Per-tier cap (DPS protection)**: Sharpen and Forge are individually capped at 2 of the 5 slots. This protects the v1.4 DPS Rebalance — a 5× Sharpen on a 3s weapon would re-create the original dominance problem.
+- **Per-attribute stack cap**: combined catalog bonus + Hone + Augment for any single attribute ≤ +10.
+
+### Cost formulas
+
+- **Hone**: `10_000 × magnitude²` (₡10K, ₡40K, ₡90K, ₡160K, ₡250K)
+- **Augment**: `20_000 × magnitude²` (₡20K, ₡80K, ₡180K, ₡320K, ₡500K)
+- **Sharpen**: `300_000 × 3^instanceIndex` (1st: ₡300K, 2nd: ₡900K)
+- **Forge**: `400_000 × 3^instanceIndex` (1st: ₡400K, 2nd: ₡1.2M)
+
+The Workshop purchase discount does NOT apply to refinement — refinement is a separate transaction class with full costs. Documented because every weapon-related transaction the player makes follows the discount, but refinement is the exception.
+
+### Resale interaction (anti-regret)
+
+Every successful refinement increments `WeaponInventory.pricePaid` by the refinement cost. When the weapon is later sold, the resale formula `pricePaid × resaleRate(workshopLevel)` (from v1.5) naturally recovers a fraction of refinement spend — at Workshop L10, the recovery is full. This makes refinement spend partially or fully recoverable on resale, mitigating regret without making refinement free at any Workshop level.
+
+### Refinement is permanent and non-transferable
+
+Refinements bond to the specific `WeaponInventory` row. Swap the weapon to another robot — refinements travel. Sell the weapon — refinements die with the row (`ON DELETE CASCADE`). There is no "rip and reapply" flow between weapons.
+
+### Identity surfaces
+
+- **Rank prefix** on the weapon name based on filled slots: `Refined` (1–2), `Crafted` (3), `Mastercrafted` (4), `Legendary` (5). Visible everywhere a weapon is displayed.
+- **Custom name**: the existing `WeaponInventory.customName` field is now editable via the My Inventory tab. Stored separately from the catalog name; renders italicised below it.
+- **Slot bar**: 5-slot indicator showing tier glyphs and colors, visible on every owned weapon (even unrefined) so progression is teaching.
+- **Battle log**: live attack events carry the rank-prefixed name and `customName`. Persisted `BattleParticipant.mainWeaponName` keeps the catalog name so historical battles render stably.
+
+### Files Modified
+
+- `app/backend/prisma/schema.prisma` — new `WeaponRefinement` model with FK + cascade to `WeaponInventory`.
+- `app/backend/prisma/migrations/20260523063604_add_weapon_refinement/` — additive migration (CREATE TABLE only).
+- `app/shared/utils/weaponRefinement.ts` — formula module: `calculateRefinementCost`, `applyRefinementsToWeapon`, validators, `calculateRankPrefix`, `formatWeaponDisplayName`.
+- `app/shared/utils/robotAttributes.ts` — canonical 23-attribute constant extracted to a shared module.
+- `app/backend/src/routes/weaponInventory.ts` — `POST /:id/refine` (full validator chain, two-tier locking, `securityMonitor.trackSpending`, audit log + achievement check) and `PATCH /:id/custom-name` (Zod-validated name editor).
+- `app/backend/src/utils/robotCalculations.ts` — `prepareRobotForCombat` folds refinements into each weapon's effective stats before computing robot attributes.
+- `app/backend/src/services/battle/combatSimulator.ts` — `getWeaponInfo` returns rank-prefixed display name + customName; `CombatEvent.customName` field added.
+- `app/backend/src/config/achievements.ts` — 5 new achievements (E22–E26) + 5 trigger types.
+- `app/backend/src/services/achievement/achievementService.ts` — `weapon_refined` event type + 5 trigger evaluators.
+- `app/backend/src/errors/economyErrors.ts` — 8 new `WEAPON_REFINEMENT_*` codes.
+- `app/backend/src/services/common/eventLogger.ts` — `logWeaponRefinement` method.
+- `app/frontend/src/components/weapon-refinement/` — new component family: `SlotBar`, `RankPrefix`, `RefinementHistoryPopover`, `CustomNameEditor`, `RefinementModal`, `tierVisuals`.
+- `app/frontend/src/components/weapon-shop/InventoryRow.tsx` + `InventoryTab.tsx` + `WeaponCard.tsx` — refinement integration on the My Inventory tab and per-rank breakdown on the Catalog tab.
+- `app/frontend/src/components/WeaponSlot.tsx` — robot detail page equipped weapon shows rank prefix + customName + slot bar.
+- `app/backend/src/content/guide/weapons/refinement.md` — in-game guide article.
 
 ---
 

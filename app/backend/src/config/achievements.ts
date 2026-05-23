@@ -58,7 +58,12 @@ export type AchievementTriggerType =
   | 'battle_duration'
   | 'weapons_sold_count'
   | 'weapons_sold_credits'
-  | 'weapon_sold_at_max_workshop';
+  | 'weapon_sold_at_max_workshop'
+  | 'weapons_refined_count'
+  | 'weapons_refined_credits_spent'
+  | 'owns_legendary_weapon'
+  | 'owns_legendary_starter_weapon'
+  | 'owns_max_dps_weapon';
 
 export interface AchievementDefinition {
   id: string;
@@ -1038,6 +1043,85 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     triggerType: 'weapon_sold_at_max_workshop',
     progressType: 'boolean',
     badgeIconFile: 'achievement-e21',
+  },
+  {
+    id: 'E22',
+    name: 'First Refinement',
+    description: 'Refine your first weapon',
+    reference: 'Weapon Refinement',
+    category: 'economy',
+    tier: 'easy',
+    scope: 'user',
+    rewardCredits: TIER_REWARDS.easy.credits,
+    rewardPrestige: TIER_REWARDS.easy.prestige,
+    hidden: false,
+    triggerType: 'weapons_refined_count',
+    triggerThreshold: 1,
+    progressType: 'boolean',
+    badgeIconFile: 'achievement-e22',
+  },
+  {
+    id: 'E23',
+    name: 'Master Craftsman',
+    description: 'Spend ₡1,000,000 lifetime on weapon refinements',
+    reference: 'Crafting trope',
+    category: 'economy',
+    tier: 'medium',
+    scope: 'user',
+    rewardCredits: TIER_REWARDS.medium.credits,
+    rewardPrestige: TIER_REWARDS.medium.prestige,
+    hidden: false,
+    triggerType: 'weapons_refined_credits_spent',
+    triggerThreshold: 1_000_000,
+    progressType: 'numeric',
+    progressLabel: 'credits spent on refinement',
+    badgeIconFile: 'achievement-e23',
+  },
+  {
+    id: 'E24',
+    name: 'Legendary Smith',
+    description: 'Own a Legendary weapon (5 refinements)',
+    reference: 'Smithing trope',
+    category: 'economy',
+    tier: 'hard',
+    scope: 'user',
+    rewardCredits: TIER_REWARDS.hard.credits,
+    rewardPrestige: TIER_REWARDS.hard.prestige,
+    hidden: false,
+    triggerType: 'owns_legendary_weapon',
+    progressType: 'boolean',
+    badgeIconFile: 'achievement-e24',
+  },
+  {
+    id: 'E25',
+    name: 'Identity Forged',
+    description:
+      'Refine a starter weapon (Practice Sword, Practice Blaster, Training Rifle, or Training Beam) to Legendary status',
+    reference: 'Identity build',
+    category: 'economy',
+    tier: 'hard',
+    scope: 'user',
+    rewardCredits: TIER_REWARDS.hard.credits,
+    rewardPrestige: TIER_REWARDS.hard.prestige,
+    hidden: false,
+    triggerType: 'owns_legendary_starter_weapon',
+    progressType: 'boolean',
+    badgeIconFile: 'achievement-e25',
+  },
+  {
+    id: 'E26',
+    name: 'Forge Master',
+    description: 'Own a weapon with all four DPS slots filled (2 Sharpen + 2 Forge)',
+    reference: 'Forge / DPS build',
+    category: 'economy',
+    tier: 'hard',
+    scope: 'user',
+    rewardCredits: TIER_REWARDS.hard.credits,
+    rewardPrestige: TIER_REWARDS.hard.prestige,
+    hidden: false,
+    triggerType: 'owns_max_dps_weapon',
+    progressType: 'boolean',
+    badgeIconFile: 'achievement-e26',
   },
 
   // ============================================================

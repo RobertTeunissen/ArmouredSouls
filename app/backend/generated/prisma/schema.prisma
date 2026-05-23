@@ -250,14 +250,32 @@ model WeaponInventory {
   purchasedAt DateTime @default(now()) @map("purchased_at")
 
   // ===== RELATIONS =====
-  user          User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  weapon        Weapon  @relation(fields: [weaponId], references: [id])
-  robotsMain    Robot[] @relation("MainWeapon")
-  robotsOffhand Robot[] @relation("OffhandWeapon")
+  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  weapon        Weapon             @relation(fields: [weaponId], references: [id])
+  robotsMain    Robot[]            @relation("MainWeapon")
+  robotsOffhand Robot[]            @relation("OffhandWeapon")
+  refinements   WeaponRefinement[]
 
   @@index([userId])
   @@index([weaponId])
   @@map("weapon_inventory")
+}
+
+model WeaponRefinement {
+  id                Int      @id @default(autoincrement())
+  weaponInventoryId Int      @map("weapon_inventory_id")
+  tier              String   @db.VarChar(16) // 'hone' | 'augment' | 'sharpen' | 'forge'
+  magnitude         Int // 1-5 for hone/augment, always 1 for sharpen/forge
+  targetAttribute   String?  @map("target_attribute") @db.VarChar(64) // attribute name for hone/augment, NULL for sharpen/forge
+  costPaid          Int      @map("cost_paid")
+  slotIndex         Int      @map("slot_index") // 1-5, stable ordering for display
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  weaponInventory WeaponInventory @relation(fields: [weaponInventoryId], references: [id], onDelete: Cascade)
+
+  @@unique([weaponInventoryId, slotIndex], map: "weapon_refinement_inv_slot_unique")
+  @@index([weaponInventoryId])
+  @@map("weapon_refinement")
 }
 
 model Weapon {

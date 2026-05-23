@@ -112,7 +112,7 @@ The Weapon & Loadout System enables players to purchase weapons, manage inventor
 
 ### Primary Goals
 
-1. **Enable Complete Weapon Lifecycle**: Purchase → Equip → Configure → View Stats → Battle → Unequip
+1. **Enable Complete Weapon Lifecycle**: Purchase → Equip → **Refine** → Configure → View Stats → Battle → Unequip / Sell
 2. **Implement 4 Loadout Types**: Single, Weapon+Shield, Two-Handed, Dual-Wield with proper validation
 3. **Accurate Stat Calculations**: Weapon bonuses + loadout modifiers displayed in real-time
 4. **Intuitive UX**: Clear visual feedback for weapon status and equipment options

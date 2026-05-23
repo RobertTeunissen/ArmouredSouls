@@ -120,6 +120,11 @@ The following event types are supported in the audit_logs table:
   - Payload: `{ weaponId: number, cost: number }` — `cost` is the actual credits paid (after Workshop discount).
 - `weapon_sale`: Weapon sale transaction (Spec #33, May 2026)
   - Payload: `{ weaponId: number, salePrice: number }` — `salePrice` is the credits the player received, computed as `pricePaid × resaleRate(workshopLevel)`. Used by achievements E18 (count) and E19 (lifetime credits) via SUM/COUNT queries on this event type.
+- `weapon_refinement`: Weapon refinement transaction (Spec #34, May 2026)
+  - Payload: `{ weaponInventoryId: number, weaponId: number, tier: 'hone' | 'augment' | 'sharpen' | 'forge', magnitude: number, targetAttribute: string | null, costPaid: number, workshopLevel: number }`.
+  - `targetAttribute` is non-null for `hone`/`augment` and null for `sharpen`/`forge`. `magnitude` is in [1, 5] for `hone`/`augment` and always 1 for `sharpen`/`forge`.
+  - `costPaid` is the credits the player spent on this single refinement; the `WeaponRefinement` row's `cost_paid` column holds the same value (canonical) and is the data source for cumulative-spend queries.
+  - Used by achievement E22 (count of `weapon_refinement` rows) via `prisma.auditLog.count`. The `weaponRefinement.aggregate({ _sum: costPaid })` query feeds E23 (lifetime credits spent) directly off the `weapon_refinement` table — refinements cascade-delete with their weapon, so a sold weapon's refinement spend is NOT counted for E23 (matches the spirit of the achievement: lifetime spend on weapons you've kept).
 
 ### Tournament Events
 - `tournament_match`: Tournament match result

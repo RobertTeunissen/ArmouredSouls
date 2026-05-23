@@ -205,11 +205,13 @@ async function processKothBattle(
   const robotIds = match.participants.map(p => p.robotId);
 
   // 1. Load all participant robots with weapons
+  // Spec #34: include refinements so prepareRobotForCombat can fold them
+  // into the weapon's effective stats before the simulator reads them.
   const robots = await prisma.robot.findMany({
     where: { id: { in: robotIds } },
     include: {
-      mainWeapon: { include: { weapon: true } },
-      offhandWeapon: { include: { weapon: true } },
+      mainWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
+      offhandWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
     },
   });
 

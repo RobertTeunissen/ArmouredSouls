@@ -77,19 +77,21 @@ export async function processTournamentBattle(
   }
 
   // Load both robots with weapons
+  // Spec #34: include refinements so prepareRobotForCombat can fold them
+  // into the weapon's effective stats before the simulator reads them.
   const robot1 = await prisma.robot.findUnique({
     where: { id: tournamentMatch.robot1Id },
     include: {
-      mainWeapon: { include: { weapon: true } },
-      offhandWeapon: { include: { weapon: true } },
+      mainWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
+      offhandWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
     },
   });
 
   const robot2 = await prisma.robot.findUnique({
     where: { id: tournamentMatch.robot2Id },
     include: {
-      mainWeapon: { include: { weapon: true } },
-      offhandWeapon: { include: { weapon: true } },
+      mainWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
+      offhandWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
     },
   });
 
