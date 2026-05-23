@@ -61,6 +61,7 @@ const NAV_GROUPS: NavGroup[] = [
       { label: 'Changelog', path: '/admin/changelog', icon: '📝' },
       { label: 'Achievements', path: '/admin/achievements', icon: '🏅' },
       { label: 'Tuning', path: '/admin/tuning', icon: '🎛️' },
+      { label: 'Refinement', path: '/admin/refinement', icon: '🔨' },
     ],
   },
   {
@@ -89,6 +90,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/admin/changelog': 'Changelog',
   '/admin/achievements': 'Achievements',
   '/admin/tuning': 'Tuning',
+  '/admin/refinement': 'Refinement',
   '/admin/repair-log': 'Repair Log',
   '/admin/audit-log': 'Audit Log',
   '/admin/league-history': 'League History',

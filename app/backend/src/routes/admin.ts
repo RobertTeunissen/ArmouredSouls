@@ -39,6 +39,7 @@ import {
   getWeaponAnalytics,
   getAchievementAnalytics,
   getTuningAdoption,
+  getRefinementAdoption,
 } from '../services/admin/adminStatsService';
 import {
   repairAllRobotsAdmin,
@@ -154,6 +155,10 @@ const achievementAnalyticsQuerySchema = z.object({
 });
 
 const tuningAdoptionQuerySchema = z.object({
+  filter: z.enum(['all', 'real', 'auto']).optional().default('real'),
+});
+
+const refinementAdoptionQuerySchema = z.object({
   filter: z.enum(['all', 'real', 'auto']).optional().default('real'),
 });
 
@@ -989,6 +994,17 @@ router.get('/tuning/adoption', authenticateToken, requireAdmin, validateRequest(
   const filter = (req.query.filter as UserFilterType) || 'real';
   const userFilter = buildUserFilter(filter);
   const result = await getTuningAdoption(userFilter);
+  res.json(result);
+});
+
+/**
+ * GET /api/admin/refinement/adoption
+ * Get weapon refinement adoption metrics (Spec #34).
+ */
+router.get('/refinement/adoption', authenticateToken, requireAdmin, validateRequest({ query: refinementAdoptionQuerySchema }), async (req: Request, res: Response) => {
+  const filter = (req.query.filter as UserFilterType) || 'real';
+  const userFilter = buildUserFilter(filter);
+  const result = await getRefinementAdoption(userFilter);
   res.json(result);
 });
 

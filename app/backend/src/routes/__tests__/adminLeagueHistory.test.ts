@@ -89,6 +89,7 @@ jest.mock('../../services/admin/adminStatsService', () => ({
   getWeaponAnalytics: jest.fn(),
   getAchievementAnalytics: jest.fn(),
   getTuningAdoption: jest.fn(),
+  getRefinementAdoption: jest.fn(),
 }));
 
 jest.mock('../../services/admin/adminMaintenanceService', () => ({
