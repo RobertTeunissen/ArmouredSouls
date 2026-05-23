@@ -103,6 +103,7 @@ vi.mock('../../utils/matchmakingApi', () => ({
 
 import apiClient from '../../utils/apiClient';
 import { fetchRobotById, fetchRobotLeagueHistory } from '../../utils/robotApi';
+import type { Robot, LeagueHistoryEntry } from '../../utils/robotApi';
 const mockedApiClient = vi.mocked(apiClient);
 const mockedFetchRobotById = vi.mocked(fetchRobotById);
 const mockedFetchRobotLeagueHistory = vi.mocked(fetchRobotLeagueHistory);
@@ -185,8 +186,10 @@ function renderWithRouter(tab: string) {
 describe('RobotDetailPage - League History Tab', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockedFetchRobotById.mockResolvedValue(mockRobot as any);
-    mockedFetchRobotLeagueHistory.mockResolvedValue(mockLeagueHistory as any);
+    mockedFetchRobotById.mockResolvedValue(mockRobot as unknown as Robot);
+    mockedFetchRobotLeagueHistory.mockResolvedValue(
+      mockLeagueHistory as unknown as { data: LeagueHistoryEntry[] },
+    );
     mockedApiClient.get.mockImplementation((url: string) => {
       if (url.includes('/standings')) {
         return Promise.resolve({ data: { data: [] } });

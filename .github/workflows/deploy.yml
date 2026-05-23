@@ -337,7 +337,7 @@ jobs:
             ${{ secrets.ACC_VPS_USER }}@${{ secrets.ACC_VPS_IP }}:/opt/armouredsouls/frontend/
 
       - name: Download frontend build artifacts
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: frontend-build
           path: app/frontend/dist/
@@ -641,7 +641,7 @@ jobs:
             ${{ secrets.PRD_VPS_USER }}@${{ secrets.PRD_VPS_IP }}:/opt/armouredsouls/frontend/
 
       - name: Download frontend build artifacts
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: frontend-build
           path: app/frontend/dist/
