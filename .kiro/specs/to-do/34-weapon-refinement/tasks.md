@@ -162,7 +162,7 @@ These are visual assets the user (or a designer) needs to produce. They are NOT 
   - Reference the 23-attribute name constant — extract to a shared place if it's currently buried in `robotUpgradeService.ts`. Keep `validateAttributeOnWeapon` and the modal both reading from one source.
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 2.10, 2.11_
 
-- [ ] 4. Add unit + property-based tests for the shared module
+- [x] 4. Add unit + property-based tests for the shared module
   - Create `app/shared/utils/__tests__/weaponRefinement.test.ts`. Unit cases per design.md → Testing Strategy → Shared Module Unit Tests:
     - `calculateRefinementCost`: all four tiers, magnitudes 1–5, instance indices 0/1.
     - `validateRefinementSlotAvailable`: 0/1/2/.../5 existing refinements; existing-Sharpen 0/1/2; existing-Forge 0/1/2.
@@ -211,7 +211,7 @@ These are visual assets the user (or a designer) needs to produce. They are NOT 
   - Import `RefinementTier` from `app/shared/utils/weaponRefinement.ts`.
   - _Requirements: 3.6_
 
-- [ ] 7. Implement the refinement route handler
+- [x] 7. Implement the refinement route handler
   - In `app/backend/src/routes/weaponInventory.ts`, add `router.post('/:id/refine', ...)` following design.md → Components and Interfaces → Route Handler exactly. Apply middleware in this order: `authenticateToken`, the new per-user refinement rate limiter (defined in this same task at module scope, 10 req / 5 min keyed by userId, with `securityMonitor.trackRateLimitViolation` on 429), `validateRequest({ params: inventoryIdParamsSchema, body: refineBodySchema })`.
   - The Zod body schema enforces: `tier` is one of the four values, `magnitude` is in [1, 5], `targetAttribute` (when present) is in the 23-attribute allowlist, and a discriminated refine: hone/augment require `targetAttribute`, sharpen/forge reject `targetAttribute` and require magnitude exactly 1.
   - Call `verifyWeaponOwnership(prisma, inventoryId, userId)` before the transaction.
@@ -236,7 +236,7 @@ These are visual assets the user (or a designer) needs to produce. They are NOT 
   - Imports: `calculateRefinementCost`, `applyRefinementsToWeapon`, validators, types — all from `app/shared/utils/weaponRefinement.ts` (or via the index barrel).
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 3.10, 3.11, 3.12_
 
-- [ ] 8. Implement the custom-name endpoint
+- [x] 8. Implement the custom-name endpoint
   - Add `router.patch('/:id/custom-name', ...)` to `app/backend/src/routes/weaponInventory.ts` following design.md → Custom Name Endpoint.
   - Middleware order: `authenticateToken`, the new custom-name rate limiter (module-scope, 30 req / 10 min per user), `validateRequest({ params: inventoryIdParamsSchema, body: customNameBodySchema })`.
   - The Zod body schema accepts `customName: string | null`, with non-null values validated by `safeName.max(60)` from `app/backend/src/utils/securityValidation.ts`. Empty strings are normalized to null on the server.
@@ -343,7 +343,7 @@ These are visual assets the user (or a designer) needs to produce. They are NOT 
   - All three components import from `app/shared/utils/weaponRefinement.ts` for any formula-derived display logic.
   - _Requirements: 8.1, 8.2, 8.3_
 
-- [ ] 17. Implement `CustomNameEditor`
+- [x] 17. Implement `CustomNameEditor`
   - Create `app/frontend/src/components/weapon-refinement/CustomNameEditor.tsx`. Props: `inventoryItem`, `onSave: (newName: string | null) => Promise<void>`.
   - Inline editable text field. Validates on the client: length 0–60, allowed character set (mirror the `safeName` Zod primitive — extract the regex if needed for client-side feedback).
   - On Save: calls `apiClient.patch('/api/weapon-inventory/<id>/custom-name', { customName })`. Empty string → null.

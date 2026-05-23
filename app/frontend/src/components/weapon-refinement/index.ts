@@ -4,7 +4,6 @@
  * Spec: 34-weapon-refinement
  *
  * Subsequent tasks add:
- *   - Task 17: CustomNameEditor
  *   - Task 18: RefinementModal
  */
 
@@ -14,3 +13,4 @@ export type { TierVisual } from './tierVisuals';
 export { SlotBar } from './SlotBar';
 export { RankPrefix } from './RankPrefix';
 export { RefinementHistoryPopover } from './RefinementHistoryPopover';
+export { CustomNameEditor } from './CustomNameEditor';
