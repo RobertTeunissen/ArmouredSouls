@@ -45,6 +45,7 @@ const NAVIGATION_ITEMS = [
   { label: 'Changelog', path: '/admin/changelog' },
   { label: 'Achievements', path: '/admin/achievements' },
   { label: 'Tuning', path: '/admin/tuning' },
+  { label: 'Refinement', path: '/admin/refinement' },
   { label: 'Repair Log', path: '/admin/repair-log' },
   { label: 'Audit Log', path: '/admin/audit-log' },
 ];
@@ -103,7 +104,8 @@ describe('AdminLayout', () => {
       const sidebar = screen.getByRole('complementary', { name: /admin sidebar navigation/i });
       const links = within(sidebar).getAllByRole('link');
 
-      // 18 nav items in the sidebar
+      // 18 nav items in the sidebar (Overview 1 + Game Ops 2 + Battle Data 5 + Player Mgmt 2
+      // + Security 2 + Content 4 + Maintenance 2 = 18)
       expect(links.length).toBe(NAVIGATION_ITEMS.length);
     });
   });

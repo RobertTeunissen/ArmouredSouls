@@ -30,6 +30,7 @@ export {
   getWeaponAnalytics,
   getAchievementAnalytics,
   getTuningAdoption,
+  getRefinementAdoption,
 } from './adminStatsService';
 
 export {

@@ -145,6 +145,13 @@ Tuning allocation adoption rate, total robots with tuning, and attribute ranking
 **API:** `GET /api/admin/tuning/adoption`
 **Filter:** Real / Auto / All user filter
 
+### Refinement (`/admin/refinement`)
+
+Weapon Refinement (Spec #34) feature usage. Tracks adoption rate (users who refined ≥1 weapon), per-tier slot counts (Hone / Augment / Sharpen / Forge), most-targeted attributes, total credits spent on refinement, and the top 10 spenders.
+
+**API:** `GET /api/admin/refinement/adoption`
+**Filter:** Real / Auto / All user filter
+
 ### Practice Arena (`/admin/practice-arena`)
 
 Current session stats (battles today, unique players, rate limit hits, total since start) and daily usage history table.

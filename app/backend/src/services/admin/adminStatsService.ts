@@ -1496,3 +1496,151 @@ export async function getTuningAdoption(userFilter: Prisma.UserWhereInput = {}) 
     timestamp: new Date().toISOString(),
   };
 }
+
+/**
+ * Get weapon refinement adoption metrics.
+ *
+ * Surfaces how many players are using the Weapon Refinement system (Spec #34)
+ * so admins can track feature adoption and per-tier engagement.
+ *
+ * Response shape:
+ *   - usersWithRefinements: distinct user count with ≥1 refinement
+ *   - totalUsers: total users in the filter scope
+ *   - adoptionRate: percentage of in-scope users who have refined at least one weapon
+ *   - totalRefinements: aggregate refinement row count
+ *   - totalRefinedWeapons: count of distinct WeaponInventory rows with ≥1 refinement
+ *   - totalCreditsSpent: lifetime credits spent on refinement across all in-scope users
+ *   - tierBreakdown: per-tier slot counts and unique-user counts (hone/augment/sharpen/forge)
+ *   - attributeRanking: which attributes are being honed/augmented most often
+ *   - topSpenders: top 10 users by refinement credits spent (username, total spent, weapon count)
+ *
+ * Always excludes the `bye_robot_user` system account, regardless of filter mode.
+ * The `real` and `auto` filters already exclude it via `buildUserFilter`; this extra
+ * guard keeps the `all` filter honest so the system user can never appear in the
+ * adoption stats even if a future filter mode forgets to exclude it.
+ */
+export async function getRefinementAdoption(userFilter: Prisma.UserWhereInput = {}) {
+  // Compose the caller's filter with a hard exclusion of the system bye_robot_user.
+  // `AND` lets us layer constraints without overwriting whatever the caller passed.
+  const scopedUserFilter: Prisma.UserWhereInput = {
+    AND: [
+      userFilter,
+      { username: { not: 'bye_robot_user' } },
+    ],
+  };
+
+  // ── Total users in scope ─────────────────────────────────────────────
+  const totalUsers = await prisma.user.count({ where: scopedUserFilter });
+
+  // ── Pull all in-scope refinements with the user/weapon context we need ─
+  // Single query — refinements are bounded (max 5 per WeaponInventory row), so
+  // this scales linearly with active refining users. For large player bases we
+  // can switch to GROUP BY aggregations later if needed.
+  const refinements = await prisma.weaponRefinement.findMany({
+    where: {
+      weaponInventory: {
+        user: scopedUserFilter,
+      },
+    },
+    select: {
+      tier: true,
+      magnitude: true,
+      targetAttribute: true,
+      costPaid: true,
+      weaponInventoryId: true,
+      weaponInventory: {
+        select: {
+          userId: true,
+          user: {
+            select: { username: true },
+          },
+        },
+      },
+    },
+  });
+
+  // ── Aggregate ─────────────────────────────────────────────────────────
+  const userIds = new Set<number>();
+  const weaponInventoryIds = new Set<number>();
+  const tierBuckets: Record<string, { count: number; userIds: Set<number>; magnitudeSum: number }> = {
+    hone:    { count: 0, userIds: new Set(), magnitudeSum: 0 },
+    augment: { count: 0, userIds: new Set(), magnitudeSum: 0 },
+    sharpen: { count: 0, userIds: new Set(), magnitudeSum: 0 },
+    forge:   { count: 0, userIds: new Set(), magnitudeSum: 0 },
+  };
+  const attributeStats: Record<string, { count: number; userIds: Set<number>; magnitudeSum: number }> = {};
+  const userSpend: Record<number, { username: string; totalSpent: number; weaponInventoryIds: Set<number> }> = {};
+  let totalCreditsSpent = 0;
+
+  for (const r of refinements) {
+    const userId = r.weaponInventory.userId;
+    const username = r.weaponInventory.user.username;
+    userIds.add(userId);
+    weaponInventoryIds.add(r.weaponInventoryId);
+    totalCreditsSpent += r.costPaid;
+
+    // Tier bucket — defensive lookup so a future tier value never throws
+    const bucket = tierBuckets[r.tier];
+    if (bucket) {
+      bucket.count++;
+      bucket.userIds.add(userId);
+      bucket.magnitudeSum += r.magnitude;
+    }
+
+    // Attribute ranking (only hone/augment carry a target attribute)
+    if (r.targetAttribute) {
+      const stats = attributeStats[r.targetAttribute] ?? { count: 0, userIds: new Set(), magnitudeSum: 0 };
+      stats.count++;
+      stats.userIds.add(userId);
+      stats.magnitudeSum += r.magnitude;
+      attributeStats[r.targetAttribute] = stats;
+    }
+
+    // Per-user spend
+    const spend = userSpend[userId] ?? { username, totalSpent: 0, weaponInventoryIds: new Set() };
+    spend.totalSpent += r.costPaid;
+    spend.weaponInventoryIds.add(r.weaponInventoryId);
+    userSpend[userId] = spend;
+  }
+
+  const tierBreakdown = (Object.keys(tierBuckets) as Array<keyof typeof tierBuckets>).map((tier) => ({
+    tier,
+    refinementCount: tierBuckets[tier].count,
+    uniqueUsers: tierBuckets[tier].userIds.size,
+    totalMagnitude: tierBuckets[tier].magnitudeSum,
+  }));
+
+  const attributeRanking = Object.entries(attributeStats)
+    .map(([attribute, stats]) => ({
+      attribute,
+      refinementCount: stats.count,
+      uniqueUsers: stats.userIds.size,
+      totalMagnitude: stats.magnitudeSum,
+    }))
+    .sort((a, b) => b.refinementCount - a.refinementCount || b.totalMagnitude - a.totalMagnitude);
+
+  const topSpenders = Object.entries(userSpend)
+    .map(([userIdStr, info]) => ({
+      userId: Number(userIdStr),
+      username: info.username,
+      totalSpent: info.totalSpent,
+      weaponCount: info.weaponInventoryIds.size,
+    }))
+    .sort((a, b) => b.totalSpent - a.totalSpent)
+    .slice(0, 10);
+
+  return {
+    usersWithRefinements: userIds.size,
+    totalUsers,
+    adoptionRate: totalUsers > 0
+      ? Number(((userIds.size / totalUsers) * 100).toFixed(1))
+      : 0,
+    totalRefinements: refinements.length,
+    totalRefinedWeapons: weaponInventoryIds.size,
+    totalCreditsSpent,
+    tierBreakdown,
+    attributeRanking,
+    topSpenders,
+    timestamp: new Date().toISOString(),
+  };
+}

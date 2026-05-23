@@ -30,6 +30,7 @@ const mockGetLeagueHealth = jest.fn();
 const mockGetWeaponAnalytics = jest.fn();
 const mockGetAchievementAnalytics = jest.fn();
 const mockGetTuningAdoption = jest.fn();
+const mockGetRefinementAdoption = jest.fn();
 const mockGetAuditEntries = jest.fn();
 const mockRecordAuditAction = jest.fn();
 
@@ -46,6 +47,7 @@ jest.mock('../../services/admin/adminStatsService', () => ({
   getWeaponAnalytics: (...args: unknown[]) => mockGetWeaponAnalytics(...args),
   getAchievementAnalytics: (...args: unknown[]) => mockGetAchievementAnalytics(...args),
   getTuningAdoption: (...args: unknown[]) => mockGetTuningAdoption(...args),
+  getRefinementAdoption: (...args: unknown[]) => mockGetRefinementAdoption(...args),
 }));
 
 jest.mock('../../services/admin/adminAuditLogService', () => ({
@@ -299,6 +301,29 @@ const sampleTuningAdoption = {
   players: [
     { userId: 1, username: 'player1', robotsWithTuning: 2, totalRobots: 3 },
   ],
+};
+
+const sampleRefinementAdoption = {
+  usersWithRefinements: 12,
+  totalUsers: 50,
+  adoptionRate: 24.0,
+  totalRefinements: 38,
+  totalRefinedWeapons: 18,
+  totalCreditsSpent: 4_500_000,
+  tierBreakdown: [
+    { tier: 'hone',    refinementCount: 18, uniqueUsers: 10, totalMagnitude: 42 },
+    { tier: 'augment', refinementCount: 8,  uniqueUsers: 6,  totalMagnitude: 16 },
+    { tier: 'sharpen', refinementCount: 7,  uniqueUsers: 5,  totalMagnitude: 7 },
+    { tier: 'forge',   refinementCount: 5,  uniqueUsers: 4,  totalMagnitude: 5 },
+  ],
+  attributeRanking: [
+    { attribute: 'combatPower', refinementCount: 12, uniqueUsers: 8, totalMagnitude: 28 },
+    { attribute: 'attackSpeed', refinementCount: 6,  uniqueUsers: 4, totalMagnitude: 14 },
+  ],
+  topSpenders: [
+    { userId: 1, username: 'player1', totalSpent: 1_200_000, weaponCount: 3 },
+  ],
+  timestamp: '2026-05-23T12:00:00.000Z',
 };
 
 const sampleAuditEntries = {
@@ -590,6 +615,76 @@ describe('Admin API — New Endpoints Integration Tests', () => {
 
       expect(res.status).toBe(400);
       expect(res.body.code).toBe('VALIDATION_ERROR');
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // GET /api/admin/refinement/adoption
+  // -----------------------------------------------------------------------
+
+  describe('GET /api/admin/refinement/adoption', () => {
+    it('should return refinement adoption data with correct response shape', async () => {
+      mockGetRefinementAdoption.mockResolvedValue(sampleRefinementAdoption);
+
+      const res = await request(app).get('/api/admin/refinement/adoption');
+
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty('usersWithRefinements');
+      expect(res.body).toHaveProperty('totalUsers');
+      expect(res.body).toHaveProperty('adoptionRate');
+      expect(res.body).toHaveProperty('totalRefinements');
+      expect(res.body).toHaveProperty('totalCreditsSpent');
+      expect(res.body).toHaveProperty('tierBreakdown');
+      expect(res.body).toHaveProperty('attributeRanking');
+      expect(res.body).toHaveProperty('topSpenders');
+      expect(Array.isArray(res.body.tierBreakdown)).toBe(true);
+      expect(res.body.tierBreakdown.length).toBe(4);
+    });
+
+    it('should pass user filter to service when filter=all', async () => {
+      mockGetRefinementAdoption.mockResolvedValue(sampleRefinementAdoption);
+
+      await request(app).get('/api/admin/refinement/adoption?filter=all');
+
+      expect(mockGetRefinementAdoption).toHaveBeenCalled();
+      const arg = mockGetRefinementAdoption.mock.calls[0][0];
+      // 'all' filter → no user constraint
+      expect(arg).toEqual({});
+    });
+
+    it('should pass user filter to service when filter=real (default)', async () => {
+      mockGetRefinementAdoption.mockResolvedValue(sampleRefinementAdoption);
+
+      await request(app).get('/api/admin/refinement/adoption');
+
+      expect(mockGetRefinementAdoption).toHaveBeenCalled();
+      const arg = mockGetRefinementAdoption.mock.calls[0][0];
+      // 'real' filter is the default — must scope to real users only
+      expect(arg).toBeDefined();
+      expect(arg).not.toEqual({});
+    });
+
+    it('should reject invalid filter values', async () => {
+      const res = await request(app).get('/api/admin/refinement/adoption?filter=bogus');
+
+      expect(res.status).toBe(400);
+      expect(res.body.code).toBe('VALIDATION_ERROR');
+    });
+
+    it('should return 401 when no auth token is provided', async () => {
+      mockUser = null;
+
+      const res = await request(app).get('/api/admin/refinement/adoption');
+
+      expect(res.status).toBe(401);
+    });
+
+    it('should return 403 when non-admin user accesses endpoint', async () => {
+      mockUser = { userId: 2, username: 'player', role: 'user' };
+
+      const res = await request(app).get('/api/admin/refinement/adoption');
+
+      expect(res.status).toBe(403);
     });
   });
 

@@ -53,6 +53,7 @@ const AdminImageUploadsPage = React.lazy(() => import('./pages/admin/ImageUpload
 const AdminChangelogPage = React.lazy(() => import('./pages/admin/AdminChangelogPage'));
 const AdminAchievementAnalyticsPage = React.lazy(() => import('./pages/admin/AchievementAnalyticsPage'));
 const AdminTuningAdoptionPage = React.lazy(() => import('./pages/admin/TuningAdoptionPage'));
+const AdminRefinementAdoptionPage = React.lazy(() => import('./pages/admin/RefinementAdoptionPage'));
 const AdminRepairLogPage = React.lazy(() => import('./pages/admin/RepairLogPage'));
 const AdminAuditLogPage = React.lazy(() => import('./pages/admin/AuditLogPage'));
 const AdminLeagueHistoryPage = React.lazy(() => import('./pages/admin/LeagueHistoryPage'));
@@ -141,6 +142,7 @@ function AppRoutes() {
           <Route path="changelog" element={<AdminChangelogPage />} />
           <Route path="achievements" element={<AdminAchievementAnalyticsPage />} />
           <Route path="tuning" element={<AdminTuningAdoptionPage />} />
+          <Route path="refinement" element={<AdminRefinementAdoptionPage />} />
           <Route path="repair-log" element={<AdminRepairLogPage />} />
           <Route path="audit-log" element={<AdminAuditLogPage />} />
           <Route path="league-history" element={<AdminLeagueHistoryPage />} />
