@@ -416,7 +416,7 @@ These are visual assets the user (or a designer) needs to produce. They are NOT 
   - **NOTE**: This task remains unchecked until the migration has been applied in a running environment, the integration tests in Task 9 / 14 have actually executed, and a manual refinement has been performed via the UI. All static verification (lint, type-check, unit tests, property tests) can pass before this — but the runtime verification (DB migration, manual refinement, achievement toast) is the gate before moving the spec to done-.
   - _Requirements: 12.4_
 
-- [ ] 24. Verification
+- [x] 24. Verification
   - Run all checks from the requirements document's "Verification Criteria" section:
     1. `npx prisma migrate status` — no drift
     2. `psql ... -c "\d weapon_refinement"` — table exists with correct columns, FK, unique constraint, index

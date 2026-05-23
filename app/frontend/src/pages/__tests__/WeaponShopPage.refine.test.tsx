@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Tests for the weapon refinement flow on WeaponShopPage (Spec #34).
  *
