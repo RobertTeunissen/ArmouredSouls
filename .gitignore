@@ -58,7 +58,9 @@ dist/
 build/
 *.tsbuildinfo
 
-# Prisma 7 generated client
+# Prisma 7 generated client — actual path is app/backend/generated/, ignored
+# in app/backend/.gitignore. Keep this stale prototype/ entry as a no-op for
+# legacy clones that still have that folder lying around.
 prototype/backend/generated/
 
 # Package managers
