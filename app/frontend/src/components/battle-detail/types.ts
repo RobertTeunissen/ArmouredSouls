@@ -5,10 +5,8 @@
  */
 
 import type { ReactNode } from 'react';
-import type { BattleLogResponse, BattleLogEvent } from '../../utils/matchmakingApi';
+import type { BattleLogResponse } from '../../utils/matchmakingApi';
 import type { BattleStatistics, DamageFlow } from '../../utils/battleStatistics';
-
-export type { BattleLogResponse, BattleLogEvent };
 
 export type TabId = 'overview' | 'playback';
 
@@ -27,10 +25,6 @@ export interface BattleResultBannerProps {
   userId?: number;
   /** When true, renders compact mobile layout */
   isMobile?: boolean;
-}
-
-export interface TagTeamInfoProps {
-  battleLog: BattleLogResponse;
 }
 
 export interface StableRewardsProps {
