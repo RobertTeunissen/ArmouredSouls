@@ -22,6 +22,20 @@ jest.mock('../../../lib/prisma', () => ({
   default: mockPrisma,
 }));
 
+// Mock the structured logger so we can assert error logging without touching
+// console.* (the service was migrated from console.error to logger.error).
+const mockLogger = {
+  error: jest.fn(),
+  warn: jest.fn(),
+  info: jest.fn(),
+  debug: jest.fn(),
+};
+
+jest.mock('../../../config/logger', () => ({
+  __esModule: true,
+  default: mockLogger,
+}));
+
 // ── Imports (after mocks) ───────────────────────────────────────────
 
 import { recordAction, getEntries } from '../adminAuditLogService';
@@ -91,7 +105,6 @@ describe('recordAction', () => {
   });
 
   it('should not throw when prisma.create rejects (fire-and-forget)', async () => {
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     const rejection = Promise.reject(new Error('DB connection lost'));
     // Attach a catch to prevent unhandled rejection in the mock itself
     rejection.catch(() => {});
@@ -105,16 +118,17 @@ describe('recordAction', () => {
     // Wait for the rejection to be caught internally
     await new Promise((resolve) => setTimeout(resolve, 50));
 
-    expect(consoleSpy).toHaveBeenCalledWith(
-      'Failed to write admin audit log entry:',
-      expect.any(Error)
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      'Failed to write admin audit log entry',
+      expect.objectContaining({
+        adminUserId: 1,
+        operationType: 'matchmaking_run',
+        err: 'DB connection lost',
+      })
     );
-
-    consoleSpy.mockRestore();
   });
 
   it('should log the error message when create fails', async () => {
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     const dbError = new Error('unique constraint violation');
     mockPrisma.adminAuditLog.create.mockReturnValue(Promise.reject(dbError));
 
@@ -122,12 +136,14 @@ describe('recordAction', () => {
 
     await new Promise((resolve) => setTimeout(resolve, 50));
 
-    expect(consoleSpy).toHaveBeenCalledWith(
-      'Failed to write admin audit log entry:',
-      dbError
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      'Failed to write admin audit log entry',
+      expect.objectContaining({
+        adminUserId: 1,
+        operationType: 'test_op',
+        err: 'unique constraint violation',
+      })
     );
-
-    consoleSpy.mockRestore();
   });
 });
 

@@ -46,6 +46,18 @@ export default tseslint.config(
     },
   },
   {
+    // Forbid console.* in services and middleware — use the structured logger
+    // (`src/config/logger.ts`) instead so messages flow through Winston
+    // transports (file + cycle log + production JSON formatting).
+    // CLI scripts (`src/scripts/`) and the env loader (`src/config/env.ts`)
+    // can keep using console because they run before the logger is wired or
+    // are intentionally human-readable terminal output.
+    files: ['src/services/**/*.ts', 'src/middleware/**/*.ts', 'src/routes/**/*.ts'],
+    rules: {
+      'no-console': 'error',
+    },
+  },
+  {
     files: ['src/routes/**/*.ts'],
     plugins: {
       'custom-routes': {
