@@ -5,6 +5,9 @@ import { getCapForLevel } from '../../../shared/utils/academyCaps';
 import { calculateBaseCost } from '../../../shared/utils/upgradeCosts';
 import { calculateTrainingFacilityDiscount } from '../../../shared/utils/discounts';
 import type { RobotWithAttributes } from '../types/robot';
+import { createLogger } from '../utils/logger';
+
+const log = createLogger('UpgradePlanner');
 
 interface UpgradePlannerProps {
   robot: RobotWithAttributes;
@@ -218,7 +221,7 @@ function UpgradePlanner({
       setUpgradePlan({});
       setShowConfirmModal(false);
     } catch (error) {
-      console.error('Failed to commit upgrades:', error);
+      log.error('Failed to commit upgrades', { error });
     } finally {
       setIsCommitting(false);
     }

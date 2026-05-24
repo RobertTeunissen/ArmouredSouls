@@ -1,6 +1,9 @@
 import { Component, Suspense } from 'react';
 import type { ReactNode, ErrorInfo } from 'react';
 import { NavLink, Outlet, useLocation, Link } from 'react-router-dom';
+import { createLogger } from '../../utils/logger';
+
+const log = createLogger('AdminLayout');
 
 // ---------------------------------------------------------------------------
 // Navigation configuration
@@ -119,7 +122,7 @@ class AdminErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryStat
   }
 
   componentDidCatch(error: Error, info: ErrorInfo): void {
-    console.error('AdminLayout error boundary caught:', error, info);
+    log.error('AdminLayout error boundary caught', { error, info });
   }
 
   render(): ReactNode {

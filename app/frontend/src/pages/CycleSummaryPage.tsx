@@ -11,6 +11,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { formatCurrency } from '../utils/formatters';
 import Navigation from '../components/Navigation';
 import apiClient from '../utils/apiClient';
+import { createLogger } from '../utils/logger';
+
+const log = createLogger('CycleSummaryPage');
 
 interface CycleData {
   cycleNumber: number;
@@ -76,7 +79,7 @@ function CycleSummaryPage() {
       setData(summaryData);
       setError(null);
     } catch (err) {
-      console.error('Failed to fetch cycle summary:', err);
+      log.error('Failed to fetch cycle summary', { err });
       setError(err instanceof Error ? err.message : 'Failed to load cycle summary');
     } finally {
       setLoading(false);

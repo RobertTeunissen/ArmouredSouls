@@ -35,6 +35,9 @@ import LeagueTimeline from '../components/LeagueTimeline';
 import type { LeagueHistoryEntry } from '../components/LeagueTimeline';
 import { getMatchHistory, BattleHistory } from '../utils/matchmakingApi';
 import type { RobotWithAttributes } from '../types/robot';
+import { createLogger } from '../utils/logger';
+
+const log = createLogger('RobotDetailPage');
 
 interface Robot {
   id: number;
@@ -249,7 +252,7 @@ function RobotDetailPage() {
           setLeagueRank({ rank, total, percentile });
         }
       } catch (leagueError) {
-        console.error('Failed to fetch league rank:', leagueError);
+        log.error('Failed to fetch league rank', { error: leagueError });
         // Don't fail the entire page if league rank fails
       }
 
@@ -258,7 +261,7 @@ function RobotDetailPage() {
         const weaponsResponse = await apiClient.get('/api/weapon-inventory');
         setWeapons(weaponsResponse.data);
       } catch (err) {
-        console.error('Failed to fetch weapons:', err);
+        log.error('Failed to fetch weapons', { err });
       }
 
       // Fetch training facility level
@@ -295,10 +298,10 @@ function RobotDetailPage() {
           const activeCount = robotsData.filter((r) => r.name !== 'Bye Robot').length;
           setActiveRobotCount(activeCount);
         } catch (err) {
-          console.error('Failed to fetch robots count:', err);
+          log.error('Failed to fetch robots count', { err });
         }
       } catch (err) {
-        console.error('Failed to fetch facilities:', err);
+        log.error('Failed to fetch facilities', { err });
       }
 
       // Fetch recent battles for this specific robot via API
@@ -306,7 +309,7 @@ function RobotDetailPage() {
         const recentBattlesData = await getMatchHistory(1, 10, undefined, parseInt(id!));
         setRecentBattles(recentBattlesData.data);
       } catch (err) {
-        console.error('Failed to fetch recent battles:', err);
+        log.error('Failed to fetch recent battles', { err });
         // Don't fail the entire page if battle history fails
       }
 

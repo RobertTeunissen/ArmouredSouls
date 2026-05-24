@@ -3,6 +3,7 @@ import apiClient from '../utils/apiClient';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
 import { useNavigate } from 'react-router-dom';
+import { createLogger } from '../utils/logger';
 import {
   CombatRecords,
   UpsetRecords,
@@ -11,6 +12,8 @@ import {
   PrestigeRecords,
   KothRecords,
 } from '../components/hall-of-records';
+
+const log = createLogger('HallOfRecordsPage');
 import type { RecordsData, CategoryKey } from '../components/hall-of-records';
 
 function HallOfRecordsPage() {
@@ -35,7 +38,7 @@ function HallOfRecordsPage() {
       setRecords(response.data);
     } catch (err) {
       setError('Failed to load Hall of Records');
-      console.error('Records error:', err);
+      log.error('Records fetch error', { err });
     } finally {
       setLoading(false);
     }

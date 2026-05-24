@@ -3,6 +3,9 @@ import apiClient from '../utils/apiClient';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
 import { getLeagueColor } from '../utils/formatters';
+import { createLogger } from '../utils/logger';
+
+const log = createLogger('LeaderboardsFamePage');
 import OwnerNameLink from '../components/OwnerNameLink';
 
 interface FameLeaderboardEntry {
@@ -68,7 +71,7 @@ function LeaderboardsFamePage() {
       setLeaderboard(response.data.leaderboard);
     } catch (err) {
       setError('Failed to load fame leaderboard');
-      console.error('Fame leaderboard error:', err);
+      log.error('Fame leaderboard error', { err });
     } finally {
       setLoading(false);
     }

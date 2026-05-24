@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getMyTagTeams, TagTeam } from '../utils/tagTeamApi';
+import { createLogger } from '../utils/logger';
+
+const log = createLogger('TagTeamReadinessWarning');
 
 interface TagTeamReadinessWarningProps {
   compact?: boolean;
@@ -25,7 +28,7 @@ function TagTeamReadinessWarning({ compact = false }: TagTeamReadinessWarningPro
       const notReady = teams.filter(team => !team.readiness?.isReady);
       setUnreadyTeams(notReady);
     } catch (err) {
-      console.error('Failed to fetch tag teams for readiness check:', err);
+      log.error('Failed to fetch tag teams for readiness check', { err });
     } finally {
       setLoading(false);
     }

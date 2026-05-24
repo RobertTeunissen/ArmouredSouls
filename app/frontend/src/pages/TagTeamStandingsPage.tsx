@@ -3,6 +3,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import apiClient from '../utils/apiClient';
+import { createLogger } from '../utils/logger';
+
+const log = createLogger('TagTeamStandingsPage');
 import Navigation from '../components/Navigation';
 import {
   getTagTeamStandings,
@@ -60,7 +63,7 @@ function TagTeamStandingsPage() {
       const tiers = new Set<string>(teams.map((team: { tagTeamLeague: string }) => team.tagTeamLeague));
       setUserTeamTiers(tiers);
     } catch (err) {
-      console.error('Failed to fetch user team tiers:', err);
+      log.error('Failed to fetch user team tiers', { err });
     }
   };
 

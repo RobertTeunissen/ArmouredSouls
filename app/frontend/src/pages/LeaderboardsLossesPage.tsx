@@ -3,6 +3,9 @@ import apiClient from '../utils/apiClient';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
 import { getLeagueColor } from '../utils/formatters';
+import { createLogger } from '../utils/logger';
+
+const log = createLogger('LeaderboardsLossesPage');
 import OwnerNameLink from '../components/OwnerNameLink';
 
 interface LossesLeaderboardEntry {
@@ -64,7 +67,7 @@ function LeaderboardsLossesPage() {
       setLeaderboard(response.data.leaderboard);
     } catch (err) {
       setError('Failed to load total losses leaderboard');
-      console.error('Total losses leaderboard error:', err);
+      log.error('Total losses leaderboard error', { err });
     } finally {
       setLoading(false);
     }

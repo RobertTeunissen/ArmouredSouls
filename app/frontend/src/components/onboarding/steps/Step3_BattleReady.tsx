@@ -19,6 +19,9 @@ import { calculateWeaponWorkshopDiscount, applyDiscount } from '../../../../../s
 import { getWeaponImagePath } from '../../../utils/weaponImages';
 import { ATTRIBUTE_LABELS } from '../../../utils/weaponConstants';
 import RobotImageSelector from '../../RobotImageSelector';
+import { createLogger } from '../../../utils/logger';
+
+const log = createLogger('Step3_BattleReady');
 
 type LT = 'single' | 'weapon_shield' | 'two_handed' | 'dual_wield';
 type RB = 'melee' | 'short' | 'mid' | 'long';
@@ -203,7 +206,7 @@ const Step6 = memo(({onPrevious:_p}:{onNext?:()=>void;onPrevious?:()=>void}) => 
       setTuningCallout(true);
     } catch {
       // Non-critical — don't block onboarding if tuning auto-allocation fails
-      console.warn('[Step6] Auto-tuning allocation failed, continuing onboarding');
+      log.warn('Auto-tuning allocation failed, continuing onboarding');
     }
   };
 

@@ -1,4 +1,7 @@
 import axios from 'axios';
+import { createLogger } from './logger';
+
+const log = createLogger('apiClient');
 
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '',
@@ -41,7 +44,7 @@ apiClient.interceptors.response.use(
       } else {
         // Proxy/WAF block — don't destroy the session. The token may
         // still be perfectly valid; the request was just rejected upstream.
-        console.warn('Non-backend 401/403 received (possible proxy/WAF block), keeping session:', status, url);
+        log.warn('Non-backend 401/403 received (possible proxy/WAF block), keeping session', { status, url });
       }
     }
     return Promise.reject(error);

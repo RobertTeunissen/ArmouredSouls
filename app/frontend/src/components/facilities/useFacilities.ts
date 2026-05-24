@@ -12,6 +12,9 @@ import apiClient from '../../utils/apiClient';
 import { useStableStore } from '../../stores';
 import { FACILITY_CATEGORIES } from './constants';
 import type { TabType, Facility, UnifiedFacilityROI, FacilityRecommendation } from './types';
+import { createLogger } from '../../utils/logger';
+
+const log = createLogger('useFacilities');
 
 export function useFacilities() {
   const { user, refreshUser } = useAuth();
@@ -86,7 +89,7 @@ export function useFacilities() {
       setUserPrestige(response.data.userPrestige || 0);
     } catch (err) {
       setError('Failed to load facilities');
-      console.error(err);
+      log.error('Failed to load facilities', { err });
     } finally {
       setLoading(false);
     }
@@ -105,7 +108,7 @@ export function useFacilities() {
           setFacilityROIs(roiResponse.data.facilities || []);
         }
       } catch (err) {
-        console.error('Error fetching ROI data:', err);
+        log.error('Error fetching ROI data', { err });
         setFacilityROIs([]);
       }
 
@@ -121,11 +124,11 @@ export function useFacilities() {
           setRecommendations([]);
         }
       } catch (err) {
-        console.error('Error fetching recommendations:', err);
+        log.error('Error fetching recommendations', { err });
         setRecommendations([]);
       }
     } catch (err) {
-      console.error('Error in fetchAdvisorData:', err);
+      log.error('Error in fetchAdvisorData', { err });
     } finally {
       setAdvisorLoading(false);
     }

@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
 import { fetchPerformanceContext } from '../utils/robotApi';
+import { createLogger } from '../utils/logger';
+
+const log = createLogger('PerformanceByContext');
 
 interface LeaguePerformance {
   leagueName: string;
@@ -58,7 +61,7 @@ function PerformanceByContext({ robotId }: PerformanceByContextProps) {
         setTagTeam(data.tagTeam as TagTeamPerformance | null);
       } catch (err) {
         setError('Failed to load performance data');
-        console.error('Performance context fetch error:', err);
+        log.error('Performance context fetch error', { err });
       } finally {
         setIsLoading(false);
       }
