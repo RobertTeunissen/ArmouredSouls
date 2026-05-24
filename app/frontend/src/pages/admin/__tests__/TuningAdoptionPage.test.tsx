@@ -102,8 +102,8 @@ describe('TuningAdoptionPage', () => {
     fireEvent.click(screen.getByText('Auto-Generated'));
 
     await waitFor(() => {
-      const lastCall = mockGet.mock.calls[mockGet.mock.calls.length - 1][0] as string;
-      expect(lastCall).toContain('filter=auto');
+      const lastCall = mockGet.mock.calls[mockGet.mock.calls.length - 1];
+      expect(lastCall[1]).toMatchObject({ params: { filter: 'auto' } });
     });
   });
 
@@ -111,7 +111,8 @@ describe('TuningAdoptionPage', () => {
     renderPage();
     await waitFor(() => {
       expect(mockGet).toHaveBeenCalledWith(
-        expect.stringContaining('/api/admin/tuning/adoption'),
+        '/api/admin/tuning/adoption',
+        expect.objectContaining({ params: expect.any(Object) }),
       );
     });
   });

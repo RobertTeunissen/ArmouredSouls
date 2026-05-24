@@ -128,8 +128,8 @@ describe('WeaponAnalyticsPage', () => {
     fireEvent.click(screen.getByText('Real Players'));
 
     await waitFor(() => {
-      const lastCall = mockGet.mock.calls[mockGet.mock.calls.length - 1][0] as string;
-      expect(lastCall).toContain('filter=real');
+      const lastCall = mockGet.mock.calls[mockGet.mock.calls.length - 1];
+      expect(lastCall[1]).toMatchObject({ params: { filter: 'real' } });
     });
   });
 

@@ -69,10 +69,9 @@ describe('RefinementAdoptionPage', () => {
     renderPage();
     await waitFor(() => {
       expect(mockGet).toHaveBeenCalledWith(
-        expect.stringContaining('/api/admin/refinement/adoption'),
+        '/api/admin/refinement/adoption',
+        expect.objectContaining({ params: { filter: 'real' } }),
       );
-      const url = mockGet.mock.calls[0][0] as string;
-      expect(url).toContain('filter=real');
     });
   });
 
@@ -149,8 +148,8 @@ describe('RefinementAdoptionPage', () => {
 
     await waitFor(() => {
       const calls = mockGet.mock.calls;
-      const lastUrl = calls[calls.length - 1][0] as string;
-      expect(lastUrl).toContain('filter=auto');
+      const lastCall = calls[calls.length - 1];
+      expect(lastCall[1]).toMatchObject({ params: { filter: 'auto' } });
     });
   });
 

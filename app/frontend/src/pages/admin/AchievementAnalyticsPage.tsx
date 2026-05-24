@@ -12,7 +12,8 @@ import {
   AdminDataTable,
   AdminFilterBar,
 } from '../../components/admin/shared';
-import apiClient from '../../utils/apiClient';
+import { api } from '../../utils/api';
+import { ApiError } from '../../utils/ApiError';
 
 /* ------------------------------------------------------------------ */
 /*  Types (matches backend getAchievementAnalytics response)           */
@@ -50,14 +51,13 @@ function AchievementAnalyticsPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await apiClient.get<AchievementAnalyticsData>(
-        `/api/admin/achievements/analytics?filter=${userFilter}`,
+      const data = await api.get<AchievementAnalyticsData>(
+        '/api/admin/achievements/analytics',
+        { params: { filter: userFilter } },
       );
-      setData(res.data);
+      setData(data);
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { error?: string } } })?.response?.data?.error ||
-        'Failed to load achievement analytics';
+      const msg = (err instanceof ApiError && err.message) || 'Failed to load achievement analytics';
       setError(msg);
     } finally {
       setLoading(false);

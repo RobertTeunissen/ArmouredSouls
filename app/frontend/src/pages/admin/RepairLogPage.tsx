@@ -6,7 +6,7 @@
  */
 import { useState, useEffect, useCallback } from 'react';
 import { AdminPageHeader, AdminStatCard, AdminDataTable, AdminFilterBar } from '../../components/admin/shared';
-import apiClient from '../../utils/apiClient';
+import { api } from '../../utils/api';
 import type { RepairLogEvent, RepairLogResponse } from '../../components/admin/types';
 
 /* ------------------------------------------------------------------ */
@@ -43,20 +43,18 @@ function RepairLogPage() {
     setLoading(true);
     setError(null);
     try {
-      const params = new URLSearchParams();
-      if (repairType !== 'all') params.set('repairType', repairType);
-      if (startDate) params.set('startDate', startDate);
+      const params: Record<string, string | number> = { page, limit: DEFAULT_LIMIT };
+      if (repairType !== 'all') params.repairType = repairType;
+      if (startDate) params.startDate = startDate;
       if (endDate) {
         // Send end-of-day so the selected date is fully included
         const nextDay = new Date(endDate);
         nextDay.setDate(nextDay.getDate() + 1);
-        params.set('endDate', nextDay.toISOString().split('T')[0]);
+        params.endDate = nextDay.toISOString().split('T')[0];
       }
-      params.set('page', String(page));
-      params.set('limit', String(DEFAULT_LIMIT));
 
-      const response = await apiClient.get<RepairLogResponse>(`/api/admin/audit-log/repairs?${params.toString()}`);
-      setData(response.data);
+      const response = await api.get<RepairLogResponse>('/api/admin/audit-log/repairs', { params });
+      setData(response);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to fetch repair log';
       setError(message);

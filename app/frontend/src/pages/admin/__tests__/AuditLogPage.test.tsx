@@ -117,8 +117,8 @@ describe('AuditLogPage', () => {
     fireEvent.click(screen.getByText('Next'));
 
     await waitFor(() => {
-      const lastCall = mockGet.mock.calls[mockGet.mock.calls.length - 1][0] as string;
-      expect(lastCall).toContain('page=2');
+      const lastCall = mockGet.mock.calls[mockGet.mock.calls.length - 1];
+      expect(lastCall[1]).toMatchObject({ params: expect.objectContaining({ page: 2 }) });
     });
   });
 
@@ -137,8 +137,8 @@ describe('AuditLogPage', () => {
     fireEvent.click(screen.getByText('Matchmaking Run'));
 
     await waitFor(() => {
-      const lastCall = mockGet.mock.calls[mockGet.mock.calls.length - 1][0] as string;
-      expect(lastCall).toContain('operationType=matchmaking_run');
+      const lastCall = mockGet.mock.calls[mockGet.mock.calls.length - 1];
+      expect(lastCall[1]).toMatchObject({ params: expect.objectContaining({ operationType: 'matchmaking_run' }) });
     });
   });
 
@@ -160,7 +160,8 @@ describe('AuditLogPage', () => {
     renderPage();
     await waitFor(() => {
       expect(mockGet).toHaveBeenCalledWith(
-        expect.stringContaining('/api/admin/audit-log'),
+        '/api/admin/audit-log',
+        expect.objectContaining({ params: expect.any(Object) }),
       );
     });
   });

@@ -11,7 +11,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { useNavigate } from 'react-router-dom';
 import { AdminPageHeader, AdminStatCard, AdminDataTable, AdminFilterBar } from '../../components/admin/shared';
 import { useAdminStore } from '../../stores/adminStore';
-import apiClient from '../../utils/apiClient';
+import { api } from '../../utils/api';
 import type { SecurityEvent, SecurityEventsResponse } from '../../components/admin/types';
 
 /* ------------------------------------------------------------------ */
@@ -33,10 +33,10 @@ function SecurityPage() {
 
   const fetchEvents = useCallback(async (severity?: string) => {
     try {
-      const params = new URLSearchParams({ limit: '50' });
-      if (severity) params.set('severity', severity);
-      const res = await apiClient.get<SecurityEventsResponse>(`/api/admin/security/events?${params.toString()}`);
-      setEvents(res.data?.events ?? []);
+      const params: Record<string, string | number> = { limit: 50 };
+      if (severity) params.severity = severity;
+      const res = await api.get<SecurityEventsResponse>('/api/admin/security/events', { params });
+      setEvents(res?.events ?? []);
     } catch {
       throw new Error('Failed to load security events');
     }

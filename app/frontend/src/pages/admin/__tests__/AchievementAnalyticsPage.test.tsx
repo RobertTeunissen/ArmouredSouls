@@ -129,8 +129,9 @@ describe('AchievementAnalyticsPage', () => {
     fireEvent.click(screen.getByText('All'));
 
     await waitFor(() => {
-      const lastCall = mockGet.mock.calls[mockGet.mock.calls.length - 1][0] as string;
-      expect(lastCall).toContain('filter=all');
+      const lastCall = mockGet.mock.calls[mockGet.mock.calls.length - 1];
+      expect(lastCall[0]).toBe('/api/admin/achievements/analytics');
+      expect(lastCall[1]).toMatchObject({ params: { filter: 'all' } });
     });
   });
 
