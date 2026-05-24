@@ -33,21 +33,3 @@ export const getWeaponImagePath = (weaponName: string): string => {
   // Return a data URL for a placeholder if image not found
   return 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="64" height="64"%3E%3Crect fill="%23374151" width="64" height="64"/%3E%3Ctext x="32" y="32" text-anchor="middle" fill="%239ca3af" font-size="12"%3E%3F%3C/text%3E%3C/svg%3E';
 };
-
-/**
- * Get a fallback color based on weapon type
- */
-export const getWeaponTypeColor = (weaponType: string): string => {
-  switch (weaponType.toLowerCase()) {
-    case 'melee':
-      return '#ef4444'; // red
-    case 'ballistic':
-      return '#f97316'; // orange
-    case 'energy':
-      return '#3b82f6'; // blue
-    case 'shield':
-      return '#06b6d4'; // cyan
-    default:
-      return '#9ca3af'; // gray
-  }
-};

@@ -29,30 +29,6 @@ export interface Tournament {
   };
 }
 
-export interface TournamentMatch {
-  id: number;
-  tournamentId: number;
-  round: number;
-  matchNumber: number;
-  robot1Id: number | null;
-  robot2Id: number | null;
-  winnerId: number | null;
-  battleId: number | null;
-  status: 'pending' | 'scheduled' | 'completed';
-  isByeMatch: boolean;
-  completedAt: string | null;
-  robot1?: {
-    id: number;
-    name: string;
-    elo: number;
-  };
-  robot2?: {
-    id: number;
-    name: string;
-    elo: number;
-  };
-}
-
 export interface TournamentDetails extends Tournament {
   matches: TournamentMatchWithRobots[];
   currentRoundMatches: TournamentMatchWithRobots[];
@@ -60,41 +36,7 @@ export interface TournamentDetails extends Tournament {
   seedings: SeedEntry[];
 }
 
-export interface CreateTournamentResponse {
-  tournament: Tournament;
-  message: string;
-}
-
-export interface ExecuteRoundResponse {
-  message: string;
-  matchesExecuted: number;
-  winnersAdvanced: number;
-  tournamentCompleted: boolean;
-  winnerId?: number;
-  winnerName?: string;
-}
-
-export interface EligibleRobotsResponse {
-  eligibleCount: number;
-  totalRobots: number;
-  eligibleRobots: Array<{
-    id: number;
-    name: string;
-    elo: number;
-    currentHP: number;
-    maxHP: number;
-    weaponCount: number;
-  }>;
-}
-
 // API Functions
-
-/**
- * Create a new single elimination tournament
- */
-export const createTournament = async (): Promise<CreateTournamentResponse> => {
-  return api.post<CreateTournamentResponse>('/api/admin/tournaments/create', {});
-};
 
 /**
  * List all tournaments (public endpoint for all authenticated users)
@@ -112,7 +54,7 @@ export const getTournamentDetails = async (
   const data = await api.get<{ tournament: Tournament & { matches?: TournamentMatchWithRobots[] }; seedings: SeedEntry[] }>(
     `/api/tournaments/${tournamentId}`
   );
-  
+
   // Backend returns tournament and seedings
   const { tournament, seedings = [] } = data;
   return {
@@ -124,20 +66,4 @@ export const getTournamentDetails = async (
     } as TournamentDetails,
     seedings,
   };
-};
-
-/**
- * Execute the current round of a tournament
- */
-export const executeRound = async (
-  tournamentId: number
-): Promise<ExecuteRoundResponse> => {
-  return api.post<ExecuteRoundResponse>(`/api/admin/tournaments/${tournamentId}/execute-round`, {});
-};
-
-/**
- * Get count of eligible robots for tournament
- */
-export const getEligibleRobots = async (): Promise<EligibleRobotsResponse> => {
-  return api.get<EligibleRobotsResponse>('/api/admin/tournaments/eligible-robots');
 };

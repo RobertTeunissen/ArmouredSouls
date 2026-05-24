@@ -38,11 +38,6 @@ export async function fetchUnreadEntries(): Promise<ChangelogEntry[]> {
   return api.get<ChangelogEntry[]>('/api/changelog/unread');
 }
 
-export async function fetchUnreadCount(): Promise<number> {
-  const result = await api.get<{ count: number }>('/api/changelog/unread/count');
-  return result.count;
-}
-
 export async function dismissChangelog(): Promise<void> {
   await api.post<void>('/api/changelog/dismiss');
 }

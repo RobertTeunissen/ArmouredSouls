@@ -1,6 +1,6 @@
 import { api } from './api';
 
-export interface WeaponSlot {
+interface WeaponSlot {
   id: number;
   weaponId: number;
   customName?: string | null;
@@ -105,13 +105,6 @@ export interface TuningAllocationState {
  */
 export const fetchMyRobots = async (): Promise<Robot[]> => {
   return api.get<Robot[]>('/api/robots');
-};
-
-/**
- * Fetch all robots across all users (admin/public listing).
- */
-export const fetchAllRobots = async (): Promise<Robot[]> => {
-  return api.get<Robot[]>('/api/robots/all/robots');
 };
 
 /**

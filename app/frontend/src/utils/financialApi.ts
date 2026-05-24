@@ -79,43 +79,6 @@ export const getDailyFinancialReport = async (): Promise<FinancialReport> => {
 };
 
 /**
- * Operating Costs Breakdown
- */
-export interface OperatingCosts {
-  total: number;
-  breakdown: Array<{
-    facilityType: string;
-    facilityName: string;
-    cost: number;
-  }>;
-}
-
-export const getOperatingCosts = async (): Promise<OperatingCosts> => {
-  return api.get<OperatingCosts>('/api/finances/operating-costs');
-};
-
-/**
- * Revenue Streams
- */
-export interface RevenueStreams {
-  passive: {
-    merchandising: number;
-    streaming: number;
-    total: number;
-  };
-  battleMultipliers: {
-    prestigeMultiplier: number;
-    prestigeBonus: number;
-  };
-  robotCount: number;
-  prestige: number;
-}
-
-export const getRevenueStreams = async (): Promise<RevenueStreams> => {
-  return api.get<RevenueStreams>('/api/finances/revenue-streams');
-};
-
-/**
  * Financial Projections
  */
 export interface FinancialProjections {

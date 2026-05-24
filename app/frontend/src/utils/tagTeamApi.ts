@@ -1,7 +1,7 @@
 import { api } from './api';
 
 // Types
-export interface TagTeamRobot {
+interface TagTeamRobot {
   id: number;
   name: string;
   elo: number;
@@ -16,7 +16,7 @@ export interface TagTeamRobot {
   offhandWeapon?: any;
 }
 
-export interface ReadinessStatus {
+interface ReadinessStatus {
   isReady: boolean;
   activeRobotReady: boolean;
   reserveRobotReady: boolean;
@@ -87,11 +87,6 @@ export interface PaginatedStandings {
 export const getMyTagTeams = async (): Promise<TagTeam[]> => {
   const data = await api.get<{ teams: TagTeam[] }>('/api/tag-teams');
   return data.teams || [];
-};
-
-export const getTagTeamById = async (teamId: number): Promise<TagTeam> => {
-  const data = await api.get<{ team: TagTeam }>(`/api/tag-teams/${teamId}`);
-  return data.team;
 };
 
 export const createTagTeam = async (activeRobotId: number, reserveRobotId: number): Promise<TagTeam> => {
