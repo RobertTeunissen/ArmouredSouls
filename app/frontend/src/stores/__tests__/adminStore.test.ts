@@ -164,12 +164,14 @@ describe('fetchStats', () => {
 
   it('should set statsLoading to false and throw on API error', async () => {
     // The api wrapper normalizes thrown errors into ApiError. A bare
-    // `new Error('Network failure')` (not an Axios error) becomes
-    // `ApiError('Unknown error', 'UNKNOWN_ERROR', 0)`. Assert on that
-    // shape rather than the original message.
+    // `new Error('Network failure')` (not an Axios error) becomes an
+    // ApiError with code UNKNOWN_ERROR and empty message — callers
+    // supply their own fallback copy.
     mockedApiGet.mockRejectedValue(new Error('Network failure'));
 
-    await expect(useAdminStore.getState().fetchStats()).rejects.toThrow('Unknown error');
+    await expect(useAdminStore.getState().fetchStats()).rejects.toMatchObject({
+      code: 'UNKNOWN_ERROR',
+    });
     expect(useAdminStore.getState().statsLoading).toBe(false);
     expect(useAdminStore.getState().systemStats).toBeNull();
   });

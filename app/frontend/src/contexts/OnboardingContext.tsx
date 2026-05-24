@@ -111,21 +111,13 @@ export const OnboardingProvider = ({ children }: OnboardingProviderProps) => {
     } catch (err) {
       if (mountedRef.current) {
         const networkErr = isNetworkError(err);
-        // Prefer the structured message from the backend when one was
-        // surfaced; fall back to the caller-supplied label when the
-        // error is one of the typed wrapper's generic defaults
-        // ('Request failed' / 'Unknown error' / 'Network error') so the
-        // UI shows a contextual message rather than a vague one.
-        const isGenericMessage =
-          err instanceof ApiError &&
-          (err.message === 'Request failed' ||
-            err.message === 'Unknown error' ||
-            err.message === 'Network error');
+        // The api wrapper leaves `ApiError.message` empty when the backend
+        // didn't supply an `error`/`message` field, so a falsy check is
+        // enough to fall back to the caller-supplied label. Network errors
+        // get a generic recovery hint regardless of the original message.
         const message = networkErr
           ? 'Network error. Please check your connection and try again.'
-          : err instanceof ApiError && err.message && !isGenericMessage
-            ? err.message
-            : fallbackError;
+          : (err instanceof ApiError && err.message) || fallbackError;
         const code = err instanceof ApiError ? err.code : undefined;
 
         setError(message);

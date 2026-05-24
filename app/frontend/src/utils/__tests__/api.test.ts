@@ -237,7 +237,7 @@ describe('api helper', () => {
       }
     });
 
-    it('should fallback to "Request failed" if no error or message field', async () => {
+    it('should leave message empty when backend supplies code but no error/message field', async () => {
       const errorResponse = {
         code: 'SOME_ERROR',
       };
@@ -249,7 +249,8 @@ describe('api helper', () => {
       } catch (err) {
         expect(err).toBeInstanceOf(ApiError);
         if (err instanceof ApiError) {
-          expect(err.message).toBe('Request failed');
+          // Empty by design — caller falls back via `err.message || 'Failed to …'`.
+          expect(err.message).toBe('');
           expect(err.code).toBe('SOME_ERROR');
         }
       }
@@ -292,7 +293,9 @@ describe('api helper', () => {
         expect(err).toBeInstanceOf(ApiError);
         if (err instanceof ApiError) {
           expect(err.code).toBe('NETWORK_ERROR');
-          expect(err.message).toBe('Network error');
+          // Empty by design — caller supplies a domain-specific fallback via
+          // `err.message || 'Failed to load …'`.
+          expect(err.message).toBe('');
           expect(err.statusCode).toBe(0);
         }
       }
@@ -374,7 +377,8 @@ describe('api helper', () => {
         expect(err).toBeInstanceOf(ApiError);
         if (err instanceof ApiError) {
           expect(err.code).toBe('UNKNOWN_ERROR');
-          expect(err.message).toBe('Request failed');
+          // Empty when backend gives no error string. Caller supplies fallback.
+          expect(err.message).toBe('');
         }
       }
     });
@@ -403,7 +407,9 @@ describe('api helper', () => {
         expect(err).toBeInstanceOf(ApiError);
         if (err instanceof ApiError) {
           expect(err.code).toBe('UNKNOWN_ERROR');
-          expect(err.message).toBe('Unknown error');
+          // Bare Errors don't carry a backend response shape, so we drop
+          // the message. The caller supplies a domain-specific fallback.
+          expect(err.message).toBe('');
           expect(err.statusCode).toBe(0);
         }
       }
