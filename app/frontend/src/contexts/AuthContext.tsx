@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { isAxiosError } from 'axios';
-import apiClient from '../utils/apiClient';
+import { api } from '../utils/api';
+import { ApiError } from '../utils/ApiError';
 import { createLogger } from '../utils/logger';
 import { useRobotStore } from '../stores/robotStore';
 import { useStableStore } from '../stores/stableStore';
@@ -133,22 +133,29 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
 
     try {
-      const response = await apiClient.get('/api/user/profile');
-      setUser(response.data);
+      const userData = await api.get<User>('/api/user/profile');
+      setUser(userData);
     } catch (error) {
       // Only logout on definitive auth failures from our own backend.
-      // Proxy/WAF/DDoS layers may return 401/403 with non-JSON bodies —
-      // those should NOT destroy the session since the token may still be valid.
-      if (isAxiosError(error) && (error.response?.status === 401 || error.response?.status === 403)) {
-        const data = error.response?.data;
-        const isBackendAuthError =
-          data && typeof data === 'object' && typeof data.error === 'string';
+      // Proxy/WAF/DDoS layers may return 401/403 with non-JSON bodies; those
+      // arrive here as `ApiError` with `code === 'UNKNOWN_ERROR'` (the typed
+      // wrapper falls back to that when the response body lacks a `code`
+      // field). They should NOT destroy the session since the token may
+      // still be valid.
+      if (
+        error instanceof ApiError &&
+        (error.statusCode === 401 || error.statusCode === 403)
+      ) {
+        const isBackendAuthError = error.code !== 'UNKNOWN_ERROR';
 
         if (isBackendAuthError) {
           log.error('Auth token rejected by backend, logging out', { error });
           logout();
         } else {
-          log.warn('Non-backend 401/403 during profile fetch (possible proxy/WAF block), keeping session', { error });
+          log.warn(
+            'Non-backend 401/403 during profile fetch (possible proxy/WAF block), keeping session',
+            { error },
+          );
         }
       } else {
         log.warn('Failed to fetch user profile (keeping session)', { error });
@@ -187,13 +194,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
    */
   const login = async (identifier: string, password: string) => {
     try {
-      const response = await apiClient.post('/api/auth/login', {
-        identifier,
-        password,
-      });
+      const { token: newToken, user: userData } = await api.post<{
+        token: string;
+        user: User;
+      }>('/api/auth/login', { identifier, password });
 
-      const { token: newToken, user: userData } = response.data;
-      
       // Persist token to localStorage before updating React state so that
       // any API calls triggered by re-renders already have the token available.
       localStorage.setItem('token', newToken);
@@ -201,8 +206,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setUser(userData);
       setLoading(false);
     } catch (error) {
-      if (isAxiosError(error) && error.response) {
-        throw new Error(error.response.data.error || 'Login failed');
+      // Re-throw as a plain Error so LoginForm's existing UI logic keeps
+      // working (it expects `error.message`, not the structured ApiError
+      // shape). The original message — typically the server's
+      // 'Invalid credentials' string — is preserved.
+      if (error instanceof ApiError) {
+        throw new Error(error.message || 'Login failed');
       }
       throw new Error('Login failed');
     }

@@ -78,8 +78,9 @@ const buildAxiosConfig = (config?: ApiRequestConfig): AxiosRequestConfig | undef
 export const api = {
   async get<T>(url: string, config?: ApiRequestConfig): Promise<T> {
     try {
-      // Pass only the args the caller actually supplied so test assertions
-      // matching `[url]` keep working without explicit `undefined` placeholders.
+      // Pass only the args that were actually supplied so test assertions
+      // matching `[url]` or `[url, config]` keep working without explicit
+      // `undefined` placeholders.
       const axiosConfig = buildAxiosConfig(config);
       const response = axiosConfig
         ? await apiClient.get<T>(url, axiosConfig)
