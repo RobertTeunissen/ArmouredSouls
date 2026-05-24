@@ -1,4 +1,5 @@
 import logger from '../../config/logger';
+import { getConfig } from '../../config/env';
 import { Integration, NotificationResult, JobContext } from './integration';
 import { DiscordIntegration } from './discord-integration';
 
@@ -30,7 +31,7 @@ export function buildErrorMessage(jobName: string, appBaseUrl: string): string {
 
 export function getActiveIntegrations(): Integration[] {
   const integrations: Integration[] = [];
-  const discordUrl = process.env.DISCORD_WEBHOOK_URL;
+  const discordUrl = getConfig().discordWebhookUrl;
 
   if (discordUrl) {
     integrations.push(new DiscordIntegration(discordUrl));

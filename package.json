@@ -1,0 +1,21 @@
+{
+  "name": "armoured-souls",
+  "private": true,
+  "description": "Repo-level tooling: git hooks via husky + lint-staged. Backend and frontend live under app/.",
+  "license": "UNLICENSED",
+  "scripts": {
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^15.2.10"
+  },
+  "lint-staged": {
+    "app/backend/**/*.ts": [
+      "bash -c 'cd app/backend && npx eslint --fix --no-warn-ignored ${0#app/backend/}'"
+    ],
+    "app/frontend/**/*.{ts,tsx}": [
+      "bash -c 'cd app/frontend && npx eslint --fix --no-warn-ignored ${0#app/frontend/}'"
+    ]
+  }
+}

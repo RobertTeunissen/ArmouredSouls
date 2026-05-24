@@ -11,6 +11,7 @@
 import cron from 'node-cron';
 import fs from 'fs';
 import logger from '../../config/logger';
+import { getConfig } from '../../config/env';
 import prisma from '../../lib/prisma';
 import { getDiskUsage, getMemoryUsage, checkCriticalModules } from '../../utils/systemHealth';
 import { sendMonitoringAlert } from '../../utils/monitoringWebhook';
@@ -154,7 +155,7 @@ export async function generateHealthReport(): Promise<string> {
  * Called during application bootstrap (after scheduler init).
  */
 export function initDailyHealthReport(): void {
-  const configuredSchedule = process.env.DAILY_REPORT_SCHEDULE || DEFAULT_SCHEDULE;
+  const configuredSchedule = getConfig().dailyReportSchedule;
   const schedule = cron.validate(configuredSchedule) ? configuredSchedule : DEFAULT_SCHEDULE;
 
   if (configuredSchedule !== schedule) {

@@ -12,6 +12,7 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { timingSafeEqual } from 'crypto';
+import { getConfig } from '../config/env';
 
 export interface DeployRequest extends Request {
   deployAuth?: true;
@@ -26,7 +27,7 @@ export function authenticateDeployToken(
   res: Response,
   next: NextFunction,
 ): void {
-  const expectedToken = process.env.CHANGELOG_DEPLOY_TOKEN;
+  const expectedToken = getConfig().changelogDeployToken;
 
   if (!expectedToken) {
     res.status(503).json({ error: 'Deploy token not configured' });

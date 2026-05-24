@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt';
 import logger from '../../config/logger';
+import { getConfig } from '../../config/env';
 import { AuthError, AuthErrorCode } from '../../errors/authErrors';
 
 /**
@@ -17,9 +18,7 @@ import { AuthError, AuthErrorCode } from '../../errors/authErrors';
  * @returns The number of salt rounds to use for bcrypt hashing
  */
 function getSaltRounds(): number {
-  const saltRounds = process.env.BCRYPT_SALT_ROUNDS 
-    ? parseInt(process.env.BCRYPT_SALT_ROUNDS, 10) 
-    : 10;
+  const saltRounds = getConfig().bcryptSaltRounds;
   
   // bcrypt salt rounds control the computational cost of hashing. Values below 4
   // are too fast to resist brute-force; values above 31 cause extreme latency.

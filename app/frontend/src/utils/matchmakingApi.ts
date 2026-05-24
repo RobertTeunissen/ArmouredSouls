@@ -224,7 +224,10 @@ export interface LeagueStandingsResponse extends PaginatedResponse<LeagueRobot> 
 // API Functions
 export const getUpcomingMatches = async (robotId?: number): Promise<ScheduledMatch[]> => {
   const params = robotId ? { robotId } : undefined;
-  const response = await api.get<{ matches: ScheduledMatch[] }>('/api/matches/upcoming', params);
+  const response = await api.get<{ matches: ScheduledMatch[] }>(
+    '/api/matches/upcoming',
+    params ? { params } : undefined,
+  );
   return response.matches || [];  // Extract matches array from response
 };
 
@@ -247,7 +250,7 @@ export const getMatchHistory = async (
     params.robotId = robotId;
   }
   
-  return api.get<PaginatedResponse<BattleHistory>>('/api/matches/history', params);
+  return api.get<PaginatedResponse<BattleHistory>>('/api/matches/history', { params });
 };
 
 export const getLeagueStandings = async (
@@ -257,9 +260,11 @@ export const getLeagueStandings = async (
   instance?: string
 ): Promise<LeagueStandingsResponse> => {
   return api.get<LeagueStandingsResponse>(`/api/leagues/${tier}/standings`, {
-    page,
-    perPage: pageSize,
-    ...(instance && { instance }),
+    params: {
+      page,
+      perPage: pageSize,
+      ...(instance && { instance }),
+    },
   });
 };
 

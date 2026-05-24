@@ -108,7 +108,7 @@ export const getTagTeamStandings = async (
   page: number = 1,
   perPage: number = 50
 ): Promise<PaginatedStandings> => {
-  return api.get<PaginatedStandings>(`/api/tag-teams/leagues/${tier}/standings`, { page, perPage });
+  return api.get<PaginatedStandings>(`/api/tag-teams/leagues/${tier}/standings`, { params: { page, perPage } });
 };
 
 // Re-export tier helpers from single source of truth

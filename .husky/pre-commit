@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Pre-commit hook: lints staged TypeScript files via lint-staged.
+# Configured in the repo-root package.json under "lint-staged".
+#
+# To skip in an emergency: git commit --no-verify
+#  - Auto-fixes ESLint issues where possible (eslint --fix)
+#  - Fails the commit if remaining errors exist
+#  - Runs only on staged files for speed
+
+npx lint-staged

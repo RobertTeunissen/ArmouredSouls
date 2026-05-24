@@ -1,10 +1,12 @@
 import winston from 'winston';
 import { CycleLoggerTransport } from '../utils/cycleLogger';
+import { getConfig } from './env';
 
-const isStructuredEnv = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'acceptance';
+const { nodeEnv, logLevel } = getConfig();
+const isStructuredEnv = nodeEnv === 'production' || nodeEnv === 'acceptance';
 
 const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || 'info',
+  level: logLevel,
   format: isStructuredEnv
     ? winston.format.combine(
         winston.format.timestamp(),

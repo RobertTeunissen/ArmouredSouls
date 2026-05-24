@@ -9,6 +9,7 @@
  */
 
 import logger from '../config/logger';
+import { getConfig } from '../config/env';
 
 const WEBHOOK_TIMEOUT_MS = 5000;
 
@@ -20,10 +21,8 @@ const WEBHOOK_TIMEOUT_MS = 5000;
  * @returns true if the alert was sent successfully, false otherwise
  */
 export async function sendMonitoringAlert(message: string): Promise<boolean> {
-  const webhookUrl =
-    process.env.MONITORING_DISCORD_WEBHOOK ||
-    process.env.DISCORD_WEBHOOK_URL ||
-    '';
+  const { monitoringDiscordWebhook, discordWebhookUrl } = getConfig();
+  const webhookUrl = monitoringDiscordWebhook || discordWebhookUrl || '';
 
   if (!webhookUrl) {
     logger.warn(`[monitoring] No webhook configured — alert logged only: ${message}`);
