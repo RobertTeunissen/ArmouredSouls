@@ -18,7 +18,8 @@ import {
 } from '../../components/admin/shared';
 import LeagueTimeline from '../../components/LeagueTimeline';
 import type { LeagueHistoryEntry } from '../../components/LeagueTimeline';
-import apiClient from '../../utils/apiClient';
+import { api } from '../../utils/api';
+import { ApiError } from '../../utils/ApiError';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -93,18 +94,18 @@ function LeagueHistoryPage(): React.ReactElement {
     setLoading(true);
     setError(null);
     try {
-      const params = new URLSearchParams({
+      const params: Record<string, string | number> = {
         startCycle,
         endCycle,
-        page: String(page),
-        perPage: '50',
-      });
-      if (entityType) params.set('entityType', entityType);
+        page,
+        perPage: 50,
+      };
+      if (entityType) params.entityType = entityType;
 
-      const res = await apiClient.get<PaginatedResponse>(`/api/admin/league-history?${params.toString()}`);
-      setEvents(res.data);
+      const data = await api.get<PaginatedResponse>('/api/admin/league-history', { params });
+      setEvents(data);
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Failed to load league history';
+      const msg = (err instanceof ApiError && err.message) || 'Failed to load league history';
       setError(msg);
     } finally {
       setLoading(false);
@@ -113,11 +114,11 @@ function LeagueHistoryPage(): React.ReactElement {
 
   const fetchAggregates = useCallback(async () => {
     try {
-      const params = new URLSearchParams({ startCycle, endCycle });
-      if (entityType) params.set('entityType', entityType);
+      const params: Record<string, string | number> = { startCycle, endCycle };
+      if (entityType) params.entityType = entityType;
 
-      const res = await apiClient.get<AggregateResult[]>(`/api/admin/league-history/aggregates?${params.toString()}`);
-      setAggregates(res.data);
+      const data = await api.get<AggregateResult[]>('/api/admin/league-history/aggregates', { params });
+      setAggregates(data);
     } catch {
       // Non-critical — don't block the page
     }
@@ -125,8 +126,8 @@ function LeagueHistoryPage(): React.ReactElement {
 
   const fetchYoYo = useCallback(async () => {
     try {
-      const res = await apiClient.get<YoYoCandidate[]>('/api/admin/league-history/yo-yo');
-      setYoyoCandidates(res.data);
+      const data = await api.get<YoYoCandidate[]>('/api/admin/league-history/yo-yo');
+      setYoyoCandidates(data);
     } catch {
       // Non-critical
     }
@@ -152,10 +153,13 @@ function LeagueHistoryPage(): React.ReactElement {
     setSlideOverOpen(true);
 
     try {
-      const res = await apiClient.get(`/api/admin/league-history/entity/${row.entityType}/${row.entityId}`);
-      const records = res.data.data || res.data;
+      const data = await api.get<{ data: LeagueHistoryEvent[] } | LeagueHistoryEvent[]>(
+        `/api/admin/league-history/entity/${row.entityType}/${row.entityId}`,
+      );
+      // Endpoint may return either a paginated wrapper or the raw array.
+      const records = Array.isArray(data) ? data : (data.data ?? []);
       setEntityHistory(
-        (records as LeagueHistoryEvent[]).map((r) => ({
+        records.map((r) => ({
           cycleNumber: r.cycleNumber,
           destinationTier: r.destinationTier,
           changeType: r.changeType as 'promotion' | 'demotion',
