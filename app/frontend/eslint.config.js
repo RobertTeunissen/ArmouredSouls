@@ -56,4 +56,46 @@ export default tseslint.config(
       'no-console': 'error',
     },
   },
+  {
+    // The raw axios instance lives in `utils/apiClient.ts` but is only an
+    // implementation detail of the typed `utils/api.ts` wrapper. Production
+    // code should never reach for it directly — that bypasses the typed
+    // error contract, response subscribers, and `data` unwrapping.
+    //
+    // Tests still import `apiClient` to mock the underlying axios calls
+    // (the `api` wrapper delegates through it), so we exempt them via the
+    // `ignores` list below.
+    files: ['src/**/*.{ts,tsx}'],
+    ignores: [
+      'src/utils/api.ts',
+      'src/__tests__/**',
+      'src/**/__tests__/**',
+      'src/**/*.test.{ts,tsx}',
+      'src/**/*.spec.{ts,tsx}',
+    ],
+    rules: {
+      'no-restricted-imports': ['error', {
+        paths: [
+          {
+            name: '../utils/apiClient',
+            message: 'Use the typed `api` wrapper from utils/api.ts instead of the raw axios instance.',
+          },
+          {
+            name: '../../utils/apiClient',
+            message: 'Use the typed `api` wrapper from utils/api.ts instead of the raw axios instance.',
+          },
+          {
+            name: '../../../utils/apiClient',
+            message: 'Use the typed `api` wrapper from utils/api.ts instead of the raw axios instance.',
+          },
+        ],
+        patterns: [
+          {
+            group: ['**/utils/apiClient'],
+            message: 'Use the typed `api` wrapper from utils/api.ts instead of the raw axios instance.',
+          },
+        ],
+      }],
+    },
+  },
 );

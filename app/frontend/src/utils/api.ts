@@ -101,6 +101,69 @@ const buildAxiosConfig = (config?: ApiRequestConfig): AxiosRequestConfig | undef
   return out;
 };
 
+/**
+ * Subscriber registry for cross-cutting concerns that need to inspect every
+ * successful response body (e.g. surfacing `achievementUnlocks` envelopes
+ * regardless of which endpoint produced them).
+ *
+ * This is the typed wrapper's equivalent of `axios.interceptors.response`,
+ * with two important differences:
+ *
+ * 1. **Subscribers run after `response.data` is unwrapped.** Each callback
+ *    receives the same `T` the awaited `api.get/post/...` call resolves to.
+ *    Callers don't need to know about axios response envelopes.
+ * 2. **Subscriber failures are isolated.** If a callback throws, it logs to
+ *    the console and the original response still resolves cleanly. We never
+ *    let an observer break the request flow.
+ *
+ * Use sparingly — most cross-cutting needs (auth headers, 401 redirects)
+ * already live on the underlying `apiClient` and don't need to traverse the
+ * typed wrapper.
+ */
+type ResponseSubscriber = (data: unknown, url: string, method: HttpMethod) => void;
+type HttpMethod = 'get' | 'post' | 'put' | 'patch' | 'delete';
+
+const responseSubscribers = new Set<ResponseSubscriber>();
+
+function emitResponse(data: unknown, url: string, method: HttpMethod): void {
+  if (responseSubscribers.size === 0) return;
+  for (const subscriber of responseSubscribers) {
+    try {
+      subscriber(data, url, method);
+    } catch (subscriberError) {
+      // Subscriber failures must never break the request flow. Log and continue.
+      // Using console.warn directly (not the logger module) to avoid an import
+      // cycle — `logger.ts` doesn't import this file but that could change.
+      // eslint-disable-next-line no-console
+      console.warn('[api] response subscriber threw:', subscriberError);
+    }
+  }
+}
+
+/**
+ * Register a callback to run after every successful response. Returns an
+ * unsubscribe function that removes the callback when invoked.
+ *
+ * @example
+ * ```tsx
+ * useEffect(() => {
+ *   const unsubscribe = subscribeResponse((data) => {
+ *     const unlocks = (data as { achievementUnlocks?: unknown[] })?.achievementUnlocks;
+ *     if (Array.isArray(unlocks) && unlocks.length > 0) {
+ *       // …surface a toast
+ *     }
+ *   });
+ *   return unsubscribe;
+ * }, []);
+ * ```
+ */
+export function subscribeResponse(callback: ResponseSubscriber): () => void {
+  responseSubscribers.add(callback);
+  return () => {
+    responseSubscribers.delete(callback);
+  };
+}
+
 export const api = {
   async get<T>(url: string, config?: ApiRequestConfig): Promise<T> {
     try {
@@ -111,6 +174,7 @@ export const api = {
       const response = axiosConfig
         ? await apiClient.get<T>(url, axiosConfig)
         : await apiClient.get<T>(url);
+      emitResponse(response.data, url, 'get');
       return response.data;
     } catch (err) {
       handleError(err);
@@ -128,6 +192,7 @@ export const api = {
       } else {
         response = await apiClient.post<T>(url);
       }
+      emitResponse(response.data, url, 'post');
       return response.data;
     } catch (err) {
       handleError(err);
@@ -145,6 +210,7 @@ export const api = {
       } else {
         response = await apiClient.put<T>(url);
       }
+      emitResponse(response.data, url, 'put');
       return response.data;
     } catch (err) {
       handleError(err);
@@ -162,6 +228,7 @@ export const api = {
       } else {
         response = await apiClient.patch<T>(url);
       }
+      emitResponse(response.data, url, 'patch');
       return response.data;
     } catch (err) {
       handleError(err);
@@ -174,6 +241,7 @@ export const api = {
       const response = axiosConfig
         ? await apiClient.delete<T>(url, axiosConfig)
         : await apiClient.delete<T>(url);
+      emitResponse(response.data, url, 'delete');
       return response.data;
     } catch (err) {
       handleError(err);

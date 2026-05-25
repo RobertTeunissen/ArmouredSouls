@@ -3,6 +3,27 @@ import { createLogger } from './logger';
 
 const log = createLogger('apiClient');
 
+/**
+ * Raw axios instance used as the implementation detail of the typed `api`
+ * wrapper in {@link ./api}. **Do not import this module from anywhere else
+ * in production code.** Use `api` for typed requests; if you need to react
+ * to every successful response, use `subscribeResponse` from `api.ts`.
+ *
+ * The instance hosts two interceptors that must run on the underlying axios
+ * layer (not at the wrapper boundary):
+ *
+ * 1. **Request — JWT injection.** Reads the `token` from `localStorage` and
+ *    attaches it as `Authorization: Bearer <token>`.
+ * 2. **Response — auth failure handling.** On 401/403 from a non-auth
+ *    route, distinguishes "backend says your token is bad" (clear token
+ *    and redirect to login) from "a proxy/WAF blocked this request" (keep
+ *    the session intact). Auth route 401s are passed through so login
+ *    forms can render their own error.
+ *
+ * Test files are allowed to mock this module via `vi.mock('../apiClient')`
+ * so they can intercept the actual axios calls the wrapper makes. Outside
+ * of tests, an ESLint rule blocks direct imports of this file.
+ */
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '',
   withCredentials: true,
