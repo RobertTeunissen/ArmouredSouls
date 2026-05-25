@@ -58,10 +58,11 @@ dist/
 build/
 *.tsbuildinfo
 
-# Prisma 7 generated client — actual path is app/backend/generated/, ignored
-# in app/backend/.gitignore. Keep this stale prototype/ entry as a no-op for
-# legacy clones that still have that folder lying around.
-prototype/backend/generated/
+# Prisma 7 generated client — regenerated on `npm install` via the
+# `postinstall: patch-package && prisma generate` script in
+# app/backend/package.json. Kept out of git so PRs and code review aren't
+# polluted by tens of thousands of lines of generated TypeScript.
+app/backend/generated/
 
 # Package managers
 # package-lock.json should be committed for CI/CD
