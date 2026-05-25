@@ -87,9 +87,65 @@ fi
 print_header "USER UPLOADS"
 top_under /opt/armouredsouls/backend/uploads 2 10
 
-print_header "POSTGRES (via Docker volumes if present)"
+print_header "POSTGRES"
 if command -v docker >/dev/null 2>&1; then
+  echo "Docker disk usage:"
   docker system df 2>/dev/null || echo "  (docker available but `docker system df` failed)"
+
+  # Pull DB credentials from the backend .env so we don't hardcode role names.
+  # ACC is `as_acc`, production is `as_prd`, the Compose file's local default
+  # is `armouredsouls` — only the env file knows for sure on this host.
+  POSTGRES_ENV="/opt/armouredsouls/backend/.env"
+  if [ -f "$POSTGRES_ENV" ]; then
+    PG_USER=$(grep -E '^POSTGRES_USER=' "$POSTGRES_ENV" | head -1 | cut -d= -f2 | tr -d '"' | tr -d "'")
+    PG_DB=$(grep -E '^POSTGRES_DB=' "$POSTGRES_ENV" | head -1 | cut -d= -f2 | tr -d '"' | tr -d "'")
+  fi
+  PG_USER="${PG_USER:-armouredsouls}"
+  PG_DB="${PG_DB:-armouredsouls}"
+
+  PG_CONTAINER=$(docker ps -qf name=postgres 2>/dev/null | head -1)
+  if [ -n "$PG_CONTAINER" ]; then
+    echo
+    echo "WAL segment size:"
+    docker exec "$PG_CONTAINER" sh -c 'du -sh /var/lib/postgresql/data/pg_wal 2>/dev/null' \
+      | sed 's/^/  /' || echo "  (could not read pg_wal)"
+
+    echo
+    echo "Top 10 tables by total size (table + indexes + toast) for db=${PG_DB}:"
+    docker exec "$PG_CONTAINER" psql -U "$PG_USER" -d "$PG_DB" -At -F '|' -c "
+      SELECT
+        relname,
+        pg_size_pretty(pg_total_relation_size(schemaname||'.'||relname)),
+        pg_size_pretty(pg_relation_size(schemaname||'.'||relname)),
+        pg_size_pretty(pg_total_relation_size(schemaname||'.'||relname) - pg_relation_size(schemaname||'.'||relname))
+      FROM pg_stat_user_tables
+      ORDER BY pg_total_relation_size(schemaname||'.'||relname) DESC
+      LIMIT 10;
+    " 2>/dev/null \
+      | awk -F'|' 'BEGIN { printf "  %-30s %12s %12s %12s\n", "TABLE", "TOTAL", "TABLE", "INDEX/TOAST" }
+                  { printf "  %-30s %12s %12s %12s\n", $1, $2, $3, $4 }' \
+      || echo "  (psql query failed — check POSTGRES_USER / POSTGRES_DB in $POSTGRES_ENV)"
+
+    echo
+    echo "Tables with significant dead-tuple bloat (>1000 dead tuples):"
+    docker exec "$PG_CONTAINER" psql -U "$PG_USER" -d "$PG_DB" -At -F '|' -c "
+      SELECT
+        relname,
+        n_dead_tup,
+        n_live_tup,
+        ROUND(100.0 * n_dead_tup / NULLIF(n_live_tup + n_dead_tup, 0), 1)::text || '%',
+        COALESCE(last_autovacuum::text, 'never')
+      FROM pg_stat_user_tables
+      WHERE n_dead_tup > 1000
+      ORDER BY n_dead_tup DESC
+      LIMIT 10;
+    " 2>/dev/null \
+      | awk -F'|' 'BEGIN { printf "  %-30s %10s %10s %10s %s\n", "TABLE", "DEAD", "LIVE", "DEAD%", "LAST VACUUM" }
+                  NR > 0 { printf "  %-30s %10s %10s %10s %s\n", $1, $2, $3, $4, $5 }' \
+      || echo "  (psql query failed)"
+  else
+    echo "  (no running postgres container)"
+  fi
 else
   echo "  (docker not on PATH — Postgres may be running natively)"
 fi
