@@ -432,9 +432,14 @@ jobs:
           username: ${{ secrets.ACC_VPS_USER }}
           key: ${{ secrets.ACC_SSH_KEY }}
           command_timeout: 10m
+          # NODE_ENV=production: tells patch-package to skip dev-only patches.
+          # --omit=dev: skips devDependencies (jest, eslint, gitnexus, etc.)
+          # so we don't pull ~226 MB of @huggingface/transformers and
+          # onnxruntime-node native binaries on every deploy. Cuts the install
+          # tree from ~1.7 GB to the ~500 production packages we actually need.
           script: |
             cd /opt/armouredsouls/backend
-            npm install --prefer-offline
+            NODE_ENV=production npm install --omit=dev --prefer-offline --no-audit --no-fund
             npx prisma generate
 
       - name: Create pre-migration database backup
@@ -473,16 +478,6 @@ jobs:
           script: |
             cd /opt/armouredsouls/backend
             NODE_ENV=acceptance npx prisma db seed
-
-      - name: Prune dev dependencies
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.ACC_VPS_IP }}
-          username: ${{ secrets.ACC_VPS_USER }}
-          key: ${{ secrets.ACC_SSH_KEY }}
-          script: |
-            cd /opt/armouredsouls/backend
-            npm prune --production
 
       - name: Ensure CHANGELOG_DEPLOY_TOKEN in .env
         uses: appleboy/ssh-action@v1
@@ -750,9 +745,14 @@ jobs:
           username: ${{ secrets.PRD_VPS_USER }}
           key: ${{ secrets.PRD_SSH_KEY }}
           command_timeout: 10m
+          # NODE_ENV=production: tells patch-package to skip dev-only patches.
+          # --omit=dev: skips devDependencies (jest, eslint, gitnexus, etc.)
+          # so we don't pull ~226 MB of @huggingface/transformers and
+          # onnxruntime-node native binaries on every deploy. Cuts the install
+          # tree from ~1.7 GB to the ~500 production packages we actually need.
           script: |
             cd /opt/armouredsouls/backend
-            npm install --prefer-offline
+            NODE_ENV=production npm install --omit=dev --prefer-offline --no-audit --no-fund
             npx prisma generate
 
       - name: Create pre-migration database backup
@@ -781,16 +781,6 @@ jobs:
           script: |
             cd /opt/armouredsouls/backend
             npx prisma migrate deploy
-
-      - name: Prune dev dependencies
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.PRD_VPS_IP }}
-          username: ${{ secrets.PRD_VPS_USER }}
-          key: ${{ secrets.PRD_SSH_KEY }}
-          script: |
-            cd /opt/armouredsouls/backend
-            npm prune --production
 
       - name: Ensure CHANGELOG_DEPLOY_TOKEN in .env
         uses: appleboy/ssh-action@v1
