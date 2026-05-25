@@ -1,7 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import dotenv from 'dotenv';
 import authRoutes from './routes/auth';
 import userRoutes from './routes/user';
 import facilityRoutes from './routes/facility';
@@ -40,8 +39,9 @@ import logger from './config/logger';
 import prisma from './lib/prisma';
 import { errorHandler } from './middleware/errorHandler';
 
-dotenv.config();
-
+// `.env` is loaded as a side-effect of importing `./config/env` (via logger
+// above). Calling `loadEnvConfig()` here triggers the singleton + Zod
+// validation; if env is invalid the process exits before binding the port.
 const config = loadEnvConfig();
 const app = express();
 
@@ -177,7 +177,7 @@ app.use(errorHandler);
 
 // Initialize content moderation model — skip in development unless explicitly enabled
 // TF.js pure-JS backend blocks the Node event loop and adds ~5-13s latency to every request
-if (config.nodeEnv === 'production' || config.nodeEnv === 'acceptance' || process.env.ENABLE_MODERATION === 'true') {
+if (config.nodeEnv === 'production' || config.nodeEnv === 'acceptance' || config.enableModeration) {
   contentModerationService.initialize().catch(err => {
     logger.error('Failed to initialize content moderation service:', err);
     // App continues — uploads will be rejected via fail-closed pattern

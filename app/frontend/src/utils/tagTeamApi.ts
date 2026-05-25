@@ -1,7 +1,7 @@
 import { api } from './api';
 
 // Types
-export interface TagTeamRobot {
+interface TagTeamRobot {
   id: number;
   name: string;
   elo: number;
@@ -16,7 +16,7 @@ export interface TagTeamRobot {
   offhandWeapon?: any;
 }
 
-export interface ReadinessStatus {
+interface ReadinessStatus {
   isReady: boolean;
   activeRobotReady: boolean;
   reserveRobotReady: boolean;
@@ -89,11 +89,6 @@ export const getMyTagTeams = async (): Promise<TagTeam[]> => {
   return data.teams || [];
 };
 
-export const getTagTeamById = async (teamId: number): Promise<TagTeam> => {
-  const data = await api.get<{ team: TagTeam }>(`/api/tag-teams/${teamId}`);
-  return data.team;
-};
-
 export const createTagTeam = async (activeRobotId: number, reserveRobotId: number): Promise<TagTeam> => {
   const data = await api.post<{ team: TagTeam }>('/api/tag-teams', { activeRobotId, reserveRobotId });
   return data.team;
@@ -108,7 +103,7 @@ export const getTagTeamStandings = async (
   page: number = 1,
   perPage: number = 50
 ): Promise<PaginatedStandings> => {
-  return api.get<PaginatedStandings>(`/api/tag-teams/leagues/${tier}/standings`, { page, perPage });
+  return api.get<PaginatedStandings>(`/api/tag-teams/leagues/${tier}/standings`, { params: { page, perPage } });
 };
 
 // Re-export tier helpers from single source of truth

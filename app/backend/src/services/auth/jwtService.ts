@@ -1,5 +1,6 @@
 import jwt, { type SignOptions } from 'jsonwebtoken';
 import logger from '../../config/logger';
+import { getConfig } from '../../config/env';
 import { AuthError, AuthErrorCode } from '../../errors/authErrors';
 
 /**
@@ -39,21 +40,20 @@ export interface UserForToken {
  * @throws {Error} If `JWT_SECRET` is not set and `NODE_ENV` is `'production'`
  */
 function getJwtSecret(): string {
-  const secret = process.env.JWT_SECRET;
-  
-  // In production, a missing secret is a critical misconfiguration that would
-  // allow tokens signed with the default value to be forged. Fail hard.
-  if (!secret) {
-    if (process.env.NODE_ENV === 'production') {
+  const { jwtSecret, nodeEnv } = getConfig();
+
+  // The validated env config always provides a string. In production it is
+  // additionally guaranteed to be non-default by the schema's superRefine,
+  // so this function only needs to log a warning when a dev fallback is in use.
+  if (jwtSecret === 'default-dev-secret' || jwtSecret === 'dev-secret-change-in-production') {
+    if (nodeEnv === 'production') {
+      // Defensive double-check: schema validation should have prevented this.
       throw new Error('JWT_SECRET must be set in production environment');
     }
-    // In development, fall back to a known default so the app starts without
-    // requiring env setup. This value must never be used in production.
     logger.warn('JWT_SECRET not set, using default (not suitable for production)');
-    return 'dev-secret-change-in-production';
   }
-  
-  return secret;
+
+  return jwtSecret;
 }
 
 /**
@@ -62,7 +62,7 @@ function getJwtSecret(): string {
  * @returns A time-span string (e.g. `'24h'`, `'7d'`) or a number in seconds
  */
 function getJwtExpiration(): string | number {
-  return process.env.JWT_EXPIRATION || '24h';
+  return getConfig().jwtExpiration;
 }
 
 /**

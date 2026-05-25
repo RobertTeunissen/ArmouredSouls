@@ -60,14 +60,18 @@ describe('api helper', () => {
         const result = await api.get<{ id: number; name: string }>('/api/robots/1');
 
         expect(result).toEqual(mockData);
-        expect(mockedGet).toHaveBeenCalledWith('/api/robots/1', { params: undefined });
+        // No config supplied → wrapper calls apiClient.get with the URL only,
+        // not a placeholder undefined config. Tests rely on this so omitting
+        // the second arg in production code keeps the call shape clean.
+        expect(mockedGet).toHaveBeenCalledWith('/api/robots/1');
       });
 
       it('should pass params to apiClient', async () => {
         const mockData = [{ id: 1 }, { id: 2 }];
         mockedGet.mockResolvedValueOnce({ data: mockData });
 
-        const result = await api.get('/api/robots', { limit: 10, offset: 0 });
+        // Params are now nested under `config.params`, not passed flat.
+        const result = await api.get('/api/robots', { params: { limit: 10, offset: 0 } });
 
         expect(result).toEqual(mockData);
         expect(mockedGet).toHaveBeenCalledWith('/api/robots', {
@@ -110,7 +114,8 @@ describe('api helper', () => {
         const result = await api.post('/api/action');
 
         expect(result).toEqual(mockResponse);
-        expect(mockedPost).toHaveBeenCalledWith('/api/action', undefined);
+        // No body, no config → URL only.
+        expect(mockedPost).toHaveBeenCalledWith('/api/action');
       });
     });
   });
@@ -135,7 +140,7 @@ describe('api helper', () => {
         const result = await api.put('/api/robots/1/activate');
 
         expect(result).toEqual(mockResponse);
-        expect(mockedPut).toHaveBeenCalledWith('/api/robots/1/activate', undefined);
+        expect(mockedPut).toHaveBeenCalledWith('/api/robots/1/activate');
       });
     });
   });

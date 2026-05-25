@@ -72,7 +72,7 @@ describe('userApi', () => {
 
       const result = await getProfile();
 
-      expect(mockedGet).toHaveBeenCalledWith('/api/user/profile', { params: undefined });
+      expect(mockedGet).toHaveBeenCalledWith('/api/user/profile');
       expect(result).toEqual(mockProfileData);
     });
 
@@ -200,7 +200,7 @@ describe('userApi', () => {
 
       const result = await getStableStatistics();
 
-      expect(mockedGet).toHaveBeenCalledWith('/api/user/stats', { params: undefined });
+      expect(mockedGet).toHaveBeenCalledWith('/api/user/stats');
       expect(result).toEqual(mockStats);
     });
 

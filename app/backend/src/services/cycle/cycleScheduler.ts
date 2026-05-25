@@ -1,5 +1,6 @@
 import cron, { ScheduledTask } from 'node-cron';
 import logger from '../../config/logger';
+import { getConfig } from '../../config/env';
 import { getNextCronOccurrence } from '../../utils/scheduleUtils';
 import { repairAllRobots } from '../economy/repairService';
 import { executeScheduledBattles } from '../league/leagueBattleOrchestrator';
@@ -590,7 +591,7 @@ export async function runJob(jobName: JobState['name'], handler: () => Promise<J
     // Dispatch success notification
     try {
       if (jobContext) {
-        const appBaseUrl = process.env.APP_BASE_URL || '';
+        const appBaseUrl = getConfig().appBaseUrl ?? '';
         const message = buildSuccessMessage(jobContext, appBaseUrl);
         if (message) {
           const integrations = getActiveIntegrations();
@@ -616,7 +617,7 @@ export async function runJob(jobName: JobState['name'], handler: () => Promise<J
 
     // Dispatch error notification
     try {
-      const appBaseUrl = process.env.APP_BASE_URL || '';
+      const appBaseUrl = getConfig().appBaseUrl ?? '';
       const errorMsg = buildErrorMessage(jobName, appBaseUrl);
       const integrations = getActiveIntegrations();
       await dispatchNotification(errorMsg, integrations);

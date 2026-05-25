@@ -1,4 +1,5 @@
 import prisma from '../../lib/prisma';
+import logger from '../../config/logger';
 import type { Prisma } from '../../../generated/prisma';
 
 /**
@@ -9,8 +10,8 @@ import type { Prisma } from '../../../generated/prisma';
 
 /**
  * Record an admin action to the audit log.
- * Uses fire-and-forget: logs errors to console but never throws,
- * so the calling operation is not affected by audit write failures.
+ * Uses fire-and-forget: logs errors via the application logger but never
+ * throws, so the calling operation is not affected by audit write failures.
  */
 export function recordAction(
   adminUserId: number,
@@ -28,7 +29,11 @@ export function recordAction(
       },
     })
     .catch((err: unknown) => {
-      console.error('Failed to write admin audit log entry:', err);
+      logger.error('Failed to write admin audit log entry', {
+        adminUserId,
+        operationType,
+        err: err instanceof Error ? err.message : String(err),
+      });
     });
 }
 

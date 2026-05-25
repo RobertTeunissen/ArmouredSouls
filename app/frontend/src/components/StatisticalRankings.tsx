@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
 import { fetchRobotRankings } from '../utils/robotApi';
+import { createLogger } from '../utils/logger';
+
+const log = createLogger('StatisticalRankings');
 
 interface RankingEntry {
   rank: number;
@@ -86,7 +89,7 @@ function StatisticalRankings({ robotId }: StatisticalRankingsProps) {
       } catch (err) {
         if (isMounted) {
           setError('Failed to load rankings');
-          console.error('Rankings fetch error:', err);
+          log.error('Rankings fetch error', { err });
         }
       } finally {
         if (isMounted) {

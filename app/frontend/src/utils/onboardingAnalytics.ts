@@ -11,6 +11,9 @@
  * Requirements: 26.1-26.12
  */
 import { api } from './api';
+import { createLogger } from './logger';
+
+const log = createLogger('onboarding-analytics');
 
 // ---------------------------------------------------------------------------
 // Types
@@ -90,7 +93,7 @@ export async function flushEvents(): Promise<void> {
   const batch = eventQueue.splice(0);
 
   if (isDev()) {
-    console.debug('[onboarding-analytics] flush', batch);
+    log.debug('flush', batch);
     return;
   }
 
@@ -125,7 +128,7 @@ export function trackEvent(
   };
 
   if (isDev()) {
-    console.debug('[onboarding-analytics]', event);
+    log.debug('event', event);
   }
 
   eventQueue.push(event);

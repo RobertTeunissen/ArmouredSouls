@@ -1,0 +1,29 @@
+diff --git a/node_modules/gitnexus/dist/core/ingestion/workers/parse-worker.js b/node_modules/gitnexus/dist/core/ingestion/workers/parse-worker.js
+index 69269d0..3ba00ec 100644
+--- a/node_modules/gitnexus/dist/core/ingestion/workers/parse-worker.js
++++ b/node_modules/gitnexus/dist/core/ingestion/workers/parse-worker.js
+@@ -538,7 +538,14 @@ const ROUTE_HTTP_METHODS = new Set([
+     'match',
+ ]);
+ const ROUTE_RESOURCE_METHODS = new Set(['resource', 'apiResource']);
+-// Express/Hono method names that register routes
++// Express/Hono method names that register routes.
++// NOTE: 'use' and 'route' are intentionally excluded. `app.use('/api', router)`
++// mounts a sub-router or middleware at a prefix — it is not a leaf route, and
++// indexing it as one causes responseKeys from unrelated handlers in the same
++// file to bleed onto every mount (issue: response-shapes scans the whole file
++// content rather than per-handler scope). `route('/path')` returns a chainable
++// route builder; the actual handlers are registered via subsequent .get/.post
++// calls which are captured separately. (ArmouredSouls local patch)
+ const EXPRESS_ROUTE_METHODS = new Set([
+     'get',
+     'post',
+@@ -546,8 +553,6 @@ const EXPRESS_ROUTE_METHODS = new Set([
+     'delete',
+     'patch',
+     'all',
+-    'use',
+-    'route',
+ ]);
+ // HTTP client methods that are ONLY used by clients, not Express route registration.
+ // Methods like get/post/put/delete/patch overlap with Express — those are captured by

@@ -33,20 +33,11 @@ const SHIELD_BAR_HEIGHT = 4;
 const NAME_OFFSET_Y = -24;
 const HP_BAR_OFFSET_Y = 20;
 
-/** Clear the canvas */
-export function clearCanvas(
-  ctx: CanvasRenderingContext2D,
-  width: number,
-  height: number
-): void {
-  ctx.clearRect(0, 0, width, height);
-}
-
 /**
  * Render the arena background with a radial gradient and concentric grid circles.
- * Replaces plain clearCanvas() in the render loop — clears the canvas first,
- * then draws a radial gradient from #0a0e14 (center) to #0f1318 (edge),
- * plus concentric circles at 25%/50%/75% of arena radius using #1a1f29.
+ * Clears the canvas first, then draws a radial gradient from #0a0e14 (center)
+ * to #0f1318 (edge), plus concentric circles at 25%/50%/75% of arena radius
+ * using #1a1f29.
  */
 export function renderArenaBackground(
   ctx: CanvasRenderingContext2D,

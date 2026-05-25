@@ -1076,6 +1076,7 @@ async function seedWimpBotUsers(weapons: { id: number; name: string }[]) {
         stance: 'balanced',
         battleReadiness: 100,
         yieldThreshold: 10,
+        imageUrl: '/assets/robots/wimpbot_512x512.webp',
       });
     }
     console.log(`   Created league bronze_${leagueNum} (${MAX_ROBOTS_PER_LEAGUE} robots, mixed weapons)`);

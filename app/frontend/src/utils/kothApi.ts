@@ -65,7 +65,7 @@ export const getKothStandings = async (
   page: number = 1,
   limit: number = 50,
 ): Promise<KothStandingsResponse> => {
-  const raw = await api.get<KothStandingsBackendResponse>('/api/koth/standings', { view, page, limit });
+  const raw = await api.get<KothStandingsBackendResponse>('/api/koth/standings', { params: { view, page, limit } });
 
   // Map backend shape to frontend interface
   return {

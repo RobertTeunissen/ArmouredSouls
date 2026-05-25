@@ -1,5 +1,6 @@
 import { hashPassword, verifyPassword } from '../src/services/auth/passwordService';
 import bcrypt from 'bcrypt';
+import { _resetConfigForTesting } from '../src/config/env';
 
 describe('Password Service', () => {
   describe('hashPassword', () => {
@@ -36,21 +37,23 @@ describe('Password Service', () => {
     it('should use configurable salt rounds from environment', async () => {
       const originalEnv = process.env.BCRYPT_SALT_ROUNDS;
       process.env.BCRYPT_SALT_ROUNDS = '12';
-      
+      _resetConfigForTesting();
+
       const password = 'testPassword123';
       const hash = await hashPassword(password);
-      
+
       // Verify the hash was created with 12 rounds
       // Bcrypt hash format: $2b$[rounds]$[salt+hash]
       const rounds = hash.split('$')[2];
       expect(rounds).toBe('12');
-      
+
       // Restore original environment
       if (originalEnv) {
         process.env.BCRYPT_SALT_ROUNDS = originalEnv;
       } else {
         delete process.env.BCRYPT_SALT_ROUNDS;
       }
+      _resetConfigForTesting();
     });
 
     it('should use default salt rounds of 10 when not configured', async () => {

@@ -21,6 +21,9 @@ import {
   getHealthIcon,
 } from '../utils/financialApi';
 import { useStableStore } from '../stores';
+import { createLogger } from '../utils/logger';
+
+const log = createLogger('FinancialReportPage');
 
 type TabType = 'overview' | 'per-robot';
 
@@ -58,7 +61,7 @@ function FinancialReportPage() {
       setPerRobotReport(perRobotData);
       setError(null);
     } catch (err) {
-      console.error('Failed to fetch financial data:', err);
+      log.error('Failed to fetch financial data', { err });
       setError('Failed to load financial report');
     } finally {
       setLoading(false);

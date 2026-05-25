@@ -1,5 +1,6 @@
 import { generateToken, verifyToken, UserForToken, TokenPayload } from '../src/services/auth/jwtService';
 import jwt from 'jsonwebtoken';
+import { _resetConfigForTesting } from '../src/config/env';
 
 /**
  * JWT Service - Unit Tests
@@ -117,6 +118,7 @@ describe('JWT Service', () => {
     it('should use configurable expiration time from environment', () => {
       const originalEnv = process.env.JWT_EXPIRATION;
       process.env.JWT_EXPIRATION = '1h';
+      _resetConfigForTesting();
 
       const user: UserForToken = {
         id: 'user-505',
@@ -138,6 +140,7 @@ describe('JWT Service', () => {
       } else {
         delete process.env.JWT_EXPIRATION;
       }
+      _resetConfigForTesting();
     });
 
     it('should use default expiration of 24h when not configured', () => {

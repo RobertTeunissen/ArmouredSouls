@@ -1,8 +1,11 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { isAxiosError } from 'axios';
 import apiClient from '../utils/apiClient';
+import { createLogger } from '../utils/logger';
 import { useRobotStore } from '../stores/robotStore';
 import { useStableStore } from '../stores/stableStore';
+
+const log = createLogger('AuthContext');
 
 /**
  * Represents an authenticated user's profile data.
@@ -142,13 +145,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           data && typeof data === 'object' && typeof data.error === 'string';
 
         if (isBackendAuthError) {
-          console.error('Auth token rejected by backend, logging out:', error);
+          log.error('Auth token rejected by backend, logging out', { error });
           logout();
         } else {
-          console.warn('Non-backend 401/403 during profile fetch (possible proxy/WAF block), keeping session:', error);
+          log.warn('Non-backend 401/403 during profile fetch (possible proxy/WAF block), keeping session', { error });
         }
       } else {
-        console.warn('Failed to fetch user profile (keeping session):', error);
+        log.warn('Failed to fetch user profile (keeping session)', { error });
       }
     } finally {
       setLoading(false);

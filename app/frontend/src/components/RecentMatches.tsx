@@ -4,6 +4,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import CompactBattleCard from './CompactBattleCard';
+import { createLogger } from '../utils/logger';
+
+const log = createLogger('RecentMatches');
 
 function RecentMatches() {
   const { user, logout } = useAuth();
@@ -22,13 +25,13 @@ function RecentMatches() {
       
       const token = localStorage.getItem('token');
       if (!token) {
-        console.error('[RecentMatches] No authentication token found');
+        log.error('No authentication token found');
         logout();
         navigate('/login');
         return;
       }
-      
-      console.log('[RecentMatches] Fetching recent matches...');
+
+      log.debug('Fetching recent matches');
       const data = await getMatchHistory(1, 5); // Get last 5 matches
       
       setMatches(data.data);

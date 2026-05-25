@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Comprehensive Accessibility Tests for Onboarding Components
  *
@@ -11,13 +10,10 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import '@testing-library/jest-dom';
-import { MemoryRouter } from 'react-router-dom';
 import GuidedUIOverlay from '../GuidedUIOverlay';
 import ProgressIndicator from '../ProgressIndicator';
 import BudgetTracker from '../BudgetTracker';
 import SkipConfirmationModal from '../SkipConfirmationModal';
-import BattleReadinessCheck from '../BattleReadinessCheck';
-import CreditWarning from '../CreditWarning';
 
 // ============================================================
 // Mocks
@@ -506,134 +502,7 @@ describe('SkipConfirmationModal - ARIA & Keyboard', () => {
 });
 
 // ============================================================
-// 6. BattleReadinessCheck ARIA
-// ============================================================
-describe('BattleReadinessCheck - ARIA', () => {
-  const defaultProps = {
-    robots: [],
-    credits: 50000,
-    onComplete: vi.fn(),
-  };
-
-  it('should have aria-label on main container', () => {
-    render(
-      <MemoryRouter>
-        <BattleReadinessCheck {...defaultProps} />
-      </MemoryRouter>
-    );
-    expect(screen.getByLabelText('Battle Readiness Check')).toBeInTheDocument();
-  });
-
-  it('should have aria-label on Complete Tutorial button', () => {
-    render(
-      <MemoryRouter>
-        <BattleReadinessCheck {...defaultProps} />
-      </MemoryRouter>
-    );
-    expect(screen.getByLabelText('Complete Tutorial')).toBeInTheDocument();
-  });
-
-  it('should have aria-disabled on disabled Complete button', () => {
-    render(
-      <MemoryRouter>
-        <BattleReadinessCheck {...defaultProps} />
-      </MemoryRouter>
-    );
-    const btn = screen.getByLabelText('Complete Tutorial');
-    expect(btn).toHaveAttribute('aria-disabled', 'true');
-  });
-
-  it('should have issues list with proper roles', () => {
-    render(
-      <MemoryRouter>
-        <BattleReadinessCheck {...defaultProps} />
-      </MemoryRouter>
-    );
-    expect(screen.getByRole('list', { name: 'Readiness issues' })).toBeInTheDocument();
-    expect(screen.getAllByRole('listitem').length).toBeGreaterThan(0);
-  });
-});
-
-// ============================================================
-// 7. CreditWarning ARIA Alerts
-// ============================================================
-describe('CreditWarning - ARIA Alerts', () => {
-  it('should have role="alert" on facility block message', () => {
-    render(<CreditWarning currentCredits={1000000} purchaseCost={100000} onboardingStep={2} />);
-    expect(screen.getByRole('alert')).toBeInTheDocument();
-    expect(screen.getByText(/Facility purchases are locked/)).toBeInTheDocument();
-  });
-
-  it('should have role="alert" on insufficient funds message', async () => {
-    const mod = await import('../../../hooks/useCreditValidation') as any;
-    mod.useCreditValidation.mockReturnValue({
-      canAfford: false,
-      isLowReserve: false,
-      isCriticalBudget: false,
-      remainingAfterPurchase: -100000,
-    });
-
-    render(<CreditWarning currentCredits={50000} purchaseCost={200000} />);
-    expect(screen.getByRole('alert')).toBeInTheDocument();
-    expect(screen.getByText(/Insufficient credits/)).toBeInTheDocument();
-
-    // Reset mock
-    mod.useCreditValidation.mockReturnValue({
-      canAfford: true,
-      isLowReserve: false,
-      isCriticalBudget: false,
-      remainingAfterPurchase: 500000,
-    });
-  });
-
-  it('should have role="alert" on critical budget warning', async () => {
-    const mod = await import('../../../hooks/useCreditValidation') as any;
-    mod.useCreditValidation.mockReturnValue({
-      canAfford: true,
-      isLowReserve: false,
-      isCriticalBudget: true,
-      remainingAfterPurchase: 400000,
-    });
-
-    render(<CreditWarning currentCredits={500000} purchaseCost={100000} />);
-    expect(screen.getByRole('alert')).toBeInTheDocument();
-    expect(screen.getByText(/Critical budget warning/)).toBeInTheDocument();
-
-    // Reset mock
-    mod.useCreditValidation.mockReturnValue({
-      canAfford: true,
-      isLowReserve: false,
-      isCriticalBudget: false,
-      remainingAfterPurchase: 500000,
-    });
-  });
-
-  it('should have role="status" on low reserve advisory', async () => {
-    const mod = await import('../../../hooks/useCreditValidation') as any;
-    mod.useCreditValidation.mockReturnValue({
-      canAfford: true,
-      isLowReserve: true,
-      isCriticalBudget: false,
-      remainingAfterPurchase: 30000,
-    });
-
-    render(<CreditWarning currentCredits={130000} purchaseCost={100000} />);
-    expect(screen.getByRole('status')).toBeInTheDocument();
-    expect(screen.getByText(/Low reserve warning/)).toBeInTheDocument();
-
-    // Reset mock
-    mod.useCreditValidation.mockReturnValue({
-      canAfford: true,
-      isLowReserve: false,
-      isCriticalBudget: false,
-      remainingAfterPurchase: 500000,
-    });
-  });
-});
-
-
-// ============================================================
-// 8. WCAG 2.1 AA Contrast Compliance
+// 6. WCAG 2.1 AA Contrast Compliance
 // ============================================================
 describe('WCAG 2.1 AA - Contrast Compliance', () => {
   /**

@@ -15,7 +15,8 @@
         "shape_check",
         "cypher",
         "context",
-        "impact"
+        "impact",
+        "api_impact"
       ]
     }
   }

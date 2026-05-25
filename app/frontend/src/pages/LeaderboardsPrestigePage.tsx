@@ -3,6 +3,9 @@ import apiClient from '../utils/apiClient';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
 import OwnerNameLink from '../components/OwnerNameLink';
+import { createLogger } from '../utils/logger';
+
+const log = createLogger('LeaderboardsPrestigePage');
 
 interface PrestigeLeaderboardEntry {
   rank: number;
@@ -61,7 +64,7 @@ function LeaderboardsPrestigePage() {
       setLeaderboard(response.data.leaderboard);
     } catch (err) {
       setError('Failed to load prestige leaderboard');
-      console.error('Prestige leaderboard error:', err);
+      log.error('Prestige leaderboard error', { err });
     } finally {
       setLoading(false);
     }

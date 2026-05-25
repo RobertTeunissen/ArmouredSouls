@@ -34,11 +34,3 @@ export const FACILITY_CATEGORIES: CategoryInfo[] = [
     facilityTypes: ['tuning_bay', 'research_lab', 'medical_bay', 'coaching_staff', 'booking_office']
   }
 ];
-
-export const FACILITY_DISPLAY_NAMES: Record<string, string> = {
-  merchandising_hub: 'Merchandising Hub',
-  streaming_studio: 'Streaming Studio',
-  repair_bay: 'Repair Bay',
-  training_facility: 'Training Facility',
-  weapons_workshop: 'Weapons Workshop',
-};

@@ -36,4 +36,24 @@ export default tseslint.config(
       'no-console': 'off',
     },
   },
+  {
+    // Forbid console.* in production source — route through `utils/logger.ts`
+    // so we have a single integration point for browser monitoring (Sentry,
+    // OTel, etc.) and consistent log prefixes for grepping.
+    // The logger module itself uses `console.*` and is exempted via the
+    // `ignores` list below.
+    files: ['src/**/*.{ts,tsx}'],
+    ignores: [
+      'src/__tests__/**',
+      'src/**/__tests__/**',
+      'src/**/*.test.{ts,tsx}',
+      'src/**/*.spec.{ts,tsx}',
+      'src/test-utils.tsx',
+      'src/setupTests.ts',
+      'src/utils/logger.ts',
+    ],
+    rules: {
+      'no-console': 'error',
+    },
+  },
 );

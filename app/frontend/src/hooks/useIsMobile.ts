@@ -22,5 +22,3 @@ export function useIsMobile(): boolean {
 
   return isMobile;
 }
-
-export default useIsMobile;

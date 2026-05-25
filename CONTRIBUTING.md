@@ -63,21 +63,45 @@ We are committed to providing a welcoming and inspiring community for all. Pleas
 git clone https://github.com/RobertTeunissen/ArmouredSouls.git
 cd ArmouredSouls
 
-# Install dependencies (exact commands TBD based on tech stack)
-npm install  # or: pip install -r requirements.txt
+# Install repo-level tooling (husky pre-commit hook + lint-staged).
+# This is a one-shot at the repo root and sets up the git hook automatically.
+npm install
+
+# Install backend dependencies (also runs `prisma generate` via postinstall)
+cd app/backend && npm install && cd ../..
+
+# Install frontend dependencies
+cd app/frontend && npm install && cd ../..
 
 # Set up local database
-docker-compose up -d
+cd app && docker-compose up -d && cd ..
 
-# Run migrations
-npm run migrate  # or: python manage.py migrate
+# Run migrations + seed (from app/backend/)
+cd app/backend && npm run db:reset && cd ../..
 
-# Start development server
-npm run dev  # or: python manage.py runserver
+# Start backend dev server
+cd app/backend && npm run dev
+
+# In another terminal, start frontend dev server
+cd app/frontend && npm run dev
 
 # Run tests
-npm test  # or: pytest
+cd app/backend && npm test
+cd app/frontend && npm test
 ```
+
+### Pre-commit hook
+
+The repo root installs `husky` and `lint-staged` to run ESLint on staged files
+before each commit. The hook auto-fixes what it can, fails the commit if errors
+remain. To bypass in an emergency:
+
+```bash
+git commit --no-verify
+```
+
+Don't bypass routinely — the hook protects the `no-console` and other lint
+rules from regressing.
 
 ---
 

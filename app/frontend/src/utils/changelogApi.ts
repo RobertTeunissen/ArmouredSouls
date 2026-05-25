@@ -1,5 +1,4 @@
 import { api } from './api';
-import apiClient from './apiClient';
 
 export interface ChangelogEntry {
   id: number;
@@ -32,16 +31,11 @@ export async function fetchPublishedEntries(
 ): Promise<PaginatedChangelogResult> {
   const params: Record<string, unknown> = { page, perPage };
   if (category) params.category = category;
-  return api.get<PaginatedChangelogResult>('/api/changelog', params);
+  return api.get<PaginatedChangelogResult>('/api/changelog', { params });
 }
 
 export async function fetchUnreadEntries(): Promise<ChangelogEntry[]> {
   return api.get<ChangelogEntry[]>('/api/changelog/unread');
-}
-
-export async function fetchUnreadCount(): Promise<number> {
-  const result = await api.get<{ count: number }>('/api/changelog/unread/count');
-  return result.count;
 }
 
 export async function dismissChangelog(): Promise<void> {
@@ -54,7 +48,7 @@ export async function fetchAllEntries(
   page: number,
   perPage: number,
 ): Promise<PaginatedChangelogResult> {
-  return api.get<PaginatedChangelogResult>('/api/changelog/admin', { page, perPage });
+  return api.get<PaginatedChangelogResult>('/api/changelog/admin', { params: { page, perPage } });
 }
 
 export interface CreateChangelogData {
@@ -94,8 +88,7 @@ export async function publishEntry(id: number): Promise<ChangelogEntry> {
 export async function uploadChangelogImage(file: File): Promise<{ imageUrl: string }> {
   const formData = new FormData();
   formData.append('image', file);
-  const response = await apiClient.post<{ imageUrl: string }>('/api/changelog/admin/upload-image', formData, {
+  return api.post<{ imageUrl: string }>('/api/changelog/admin/upload-image', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
-  return response.data;
 }

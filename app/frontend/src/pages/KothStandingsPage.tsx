@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
+import { createLogger } from '../utils/logger';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import Navigation from '../components/Navigation';
+
+const log = createLogger('KothStandingsPage');
 import {
   getKothStandings,
   KothStandingRobot,
@@ -41,7 +44,7 @@ function KothStandingsPage() {
       setPagination(data.pagination);
       setError(null);
     } catch (err) {
-      console.error('Failed to fetch KotH standings:', err);
+      log.error('Failed to fetch KotH standings', { err });
       setError('Failed to load King of the Hill standings');
     } finally {
       setLoading(false);

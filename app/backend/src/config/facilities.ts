@@ -369,9 +369,3 @@ export function getFacilityUpgradeCost(type: string, currentLevel: number): numb
   }
   return config.costs[currentLevel];
 }
-
-// Helper function to get roster limit based on Roster Expansion level
-export function getRosterLimit(rosterExpansionLevel: number): number {
-  // Level 0 = 1 slot, Level 1 = 2 slots, etc.
-  return rosterExpansionLevel + 1;
-}
