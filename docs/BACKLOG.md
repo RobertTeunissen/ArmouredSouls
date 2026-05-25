@@ -18,36 +18,47 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 | 4 | Weapon Experimentation Problem | 5 | 1 🗳️ | 4 | 3 | 4 | 4 | **2.8** |
 | 5 | Robot Comparison Tool | 42 | 0 🗳️ | 2 | 1 | 1 | 2 | **2.0** |
 | 6 | Dashboard Enhancements | 24 | 0 🗳️ | 2 | 1 | 1 | 2 | **2.0** |
-| 7 | Weapon Special Properties | 11 | 1 🗳️ | 3 | 2 | 2 | 4 | **1.8** |
-| 8 | Season System (100-Cycle Seasons) | 41 | 0 🗳️ | 4 | 1 | 2 | 4 | **1.8** |
-| 9 | Daily Login Bonuses & Seasonal Events | 34 | 0 🗳️ | 3 | 1 | 1 | 3 | **1.7** |
-| 10 | Player Personas / Complexity Modes | 16 | 1 🗳️ | 2 | 1 | 2 | 3 | **1.7** |
-| 11 | Arena / Terrain Modifiers | 12 | 1 🗳️ | 3 | 1 | 2 | 4 | **1.5** |
-| 12 | Battle Table Denormalization Cleanup | 18 | 0 🗳️ | 1 | 1 | 1 | 2 | **1.5** |
-| 13 | Tag Team Battle Time Limit Enforcement | 19 | 0 🗳️ | 1 | 1 | 1 | 2 | **1.5** |
-| 14 | Historical Financial Tracking | 23 | 0 🗳️ | 1 | 1 | 1 | 2 | **1.5** |
-| 15 | 3v3 Team Battles | 31 | 0 🗳️ | 3 | 1 | 1 | 4 | **1.3** |
-| 16 | Modular Package Extraction | 35 | 0 🗳️ | 1 | 1 | 2 | 3 | **1.3** |
-| 17 | Robot Detail Page Split | 37 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
-| 18 | Achievement Persistence Across Seasons | 40 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
-| 19 | Events Calendar | 43 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
-| 20 | Universal Search / Command Palette | 27 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
-| 21 | Progressive Feature Disclosure | 28 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
-| 22 | Weapon Crafting System | 29 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
-| 23 | Free-for-All / Battle Royale Mode | 30 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
-| 24 | Conditional Battle Triggers / AI Scripting | 32 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
-| 25 | Future Revenue Streams | 33 | 0 🗳️ | 2 | 1 | 1 | 4 | **1.0** |
-| 26 | Player Marketplace | 44 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
-| 27 | Social Features (Friends, Guilds, Chat) | 45 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
-| 28 | Prestige Store | 47 | 0 🗳️ | 2 | 1 | 1 | 4 | **1.0** |
-| 29 | Blueprint Library | 48 | 0 🗳️ | 1 | 1 | 1 | 3 | **1.0** |
-| 30 | Unimplemented Facilities | 7 | 0 🗳️ | 2 | 1 | 1 | 5 | **0.8** |
-| 31 | Cosmetic Customization System | 46 | 0 🗳️ | 2 | 1 | 1 | 5 | **0.8** |
+| 7 | Frontend Page Hook Extraction (RobotsPage, RobotDetailPage) | 50 | 0 🗳️ | 1 | 1 | 2 | 2 | **2.0** |
+| 8 | Weapon Special Properties | 11 | 1 🗳️ | 3 | 2 | 2 | 4 | **1.8** |
+| 9 | Season System (100-Cycle Seasons) | 41 | 0 🗳️ | 4 | 1 | 2 | 4 | **1.8** |
+| 10 | Mega-Orchestrator Refactor (combat-critical files) | 49 | 0 🗳️ | 3 | 2 | 4 | 5 | **1.8** |
+| 11 | Daily Login Bonuses & Seasonal Events | 34 | 0 🗳️ | 3 | 1 | 1 | 3 | **1.7** |
+| 12 | Player Personas / Complexity Modes | 16 | 1 🗳️ | 2 | 1 | 2 | 3 | **1.7** |
+| 13 | Arena / Terrain Modifiers | 12 | 1 🗳️ | 3 | 1 | 2 | 4 | **1.5** |
+| 14 | Battle Table Denormalization Cleanup | 18 | 0 🗳️ | 1 | 1 | 1 | 2 | **1.5** |
+| 15 | Tag Team Battle Time Limit Enforcement | 19 | 0 🗳️ | 1 | 1 | 1 | 2 | **1.5** |
+| 16 | Historical Financial Tracking | 23 | 0 🗳️ | 1 | 1 | 1 | 2 | **1.5** |
+| 17 | Test Setup Convention Cleanup | 51 | 0 🗳️ | 1 | 1 | 1 | 2 | **1.5** |
+| 18 | Vitest Performance Tuning | 52 | 0 🗳️ | 1 | 1 | 1 | 2 | **1.5** |
+| 19 | 3v3 Team Battles | 31 | 0 🗳️ | 3 | 1 | 1 | 4 | **1.3** |
+| 20 | Modular Package Extraction | 35 | 0 🗳️ | 1 | 1 | 2 | 3 | **1.3** |
+| 21 | Robot Detail Page Split | 37 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
+| 22 | Achievement Persistence Across Seasons | 40 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
+| 23 | Events Calendar | 43 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
+| 24 | Universal Search / Command Palette | 27 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
+| 25 | Progressive Feature Disclosure | 28 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
+| 26 | Weapon Crafting System | 29 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
+| 27 | Free-for-All / Battle Royale Mode | 30 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
+| 28 | Conditional Battle Triggers / AI Scripting | 32 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
+| 29 | Future Revenue Streams | 33 | 0 🗳️ | 2 | 1 | 1 | 4 | **1.0** |
+| 30 | Player Marketplace | 44 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
+| 31 | Social Features (Friends, Guilds, Chat) | 45 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
+| 32 | Prestige Store | 47 | 0 🗳️ | 2 | 1 | 1 | 4 | **1.0** |
+| 33 | Blueprint Library | 48 | 0 🗳️ | 1 | 1 | 1 | 3 | **1.0** |
+| 34 | Unimplemented Facilities | 7 | 0 🗳️ | 2 | 1 | 1 | 5 | **0.8** |
+| 35 | Cosmetic Customization System | 46 | 0 🗳️ | 2 | 1 | 1 | 5 | **0.8** |
 
 ### Recently Completed (removed from backlog)
 
 | Item | # | Spec | Completed |
 |------|---|------|-----------|
+| Untrack Generated Prisma Client (68K lines out of git) | — | — (direct implementation) | May 2026 |
+| HTTP Client Consolidation (typed `api` wrapper everywhere) | — | — (direct implementation) | May 2026 |
+| Console → Structured Logger Migration (FE + BE) | — | — (direct implementation) | May 2026 |
+| Env Validation with Zod (fail-fast in production) | — | — (direct implementation) | May 2026 |
+| Pre-commit Hooks (husky + lint-staged) | — | — (direct implementation) | May 2026 |
+| Dead Code Audit (knip Pass A + B, ~30 files removed) | — | — (direct implementation) | May 2026 |
+| Backend `any` Eliminated from Production Source | — | — (direct implementation) | May 2026 |
 | Weapon Refinement (per-instance permanent upgrades, 4 tiers, 5-slot cap) | 5 (partial) | [Spec #34](/.kiro/specs/done-may26/34-weapon-refinement/) | May 2026 |
 | Weapon Resale (Workshop-level-dependent rate, ₡0–100% recovery) | 5 (partial) | [Spec #33](/.kiro/specs/to-do/33-weapon-resale/) | May 2026 |
 | Performance Optimization | 20 | — (direct implementation) | May 2026 |
@@ -330,3 +341,147 @@ A store where players spend accumulated prestige points on exclusive rewards: co
 A collection of saved weapon blueprints for the crafting system. Players save successful designs, share blueprints with others, and browse community-created weapon configurations. Only relevant once Weapon Crafting (#29) is implemented.
 
 **Dependencies**: Weapon Crafting System (#29).
+
+
+---
+
+## Engineering Maintenance Items
+
+These came out of the May 2026 codebase audit. They're internal-quality-of-life items rather than gameplay/UX features, but they affect velocity, reliability, and onboarding for every future change. Listed at the end so the gameplay backlog above stays the primary view.
+
+### #49 — Mega-Orchestrator Refactor (Combat-Critical Files)
+**Source**: Codebase audit (May 2026) — original audit item #1
+**Priority**: Medium — high-impact architectural win, but needs a spec before starting
+
+**Problem.** Five files exceed 1,500 lines, all in combat-critical territory:
+
+| File | Lines | Domain |
+|------|-------|--------|
+| `app/backend/src/services/tag-team/tagTeamBattleOrchestrator.ts` | 2,157 | Tag team battle orchestration |
+| `app/backend/src/services/battle/combatSimulator.ts` | 2,011 | Core combat state machine |
+| `app/backend/src/services/achievement/achievementService.ts` | 1,904 | Achievement evaluation across 77 achievements |
+| `app/backend/src/services/battle/combatMessageGenerator.ts` | 1,847 | Narrative event generation |
+| `app/backend/src/services/arena/kothEngine.ts` | 1,786 | King of the Hill multi-robot battles |
+
+`coding-standards.md` says "Maximum function length: ~50 lines" — these files are orders of magnitude past that as wholes, and almost certainly contain individual functions well past it too.
+
+**Why it matters.**
+- Combat is the single most critical surface in the game. `coding-standards.md` mandates 90% test coverage for it. Mega-files make targeted regression testing harder because everything is coupled.
+- GitNexus impact analysis loses precision when one file contains a dozen logical units — every change shows the whole file as "affected."
+- Onboarding new contributors to combat code is unreasonable when the entry point is a 2,000-line file.
+- Any change has ambiguous blast radius. Bug fixes near the orchestration boundary risk side effects in unrelated handlers in the same file.
+
+**Expected shape after refactor.** The pattern we want is "200-line coordinator delegating to handlers" — same approach the frontend already uses for things like the `WeaponShopPage` (a thin shell that pulls from `useWeaponShop`). For example `combatSimulator.ts` should become:
+
+- A small state-machine driver (~200 lines)
+- Per-phase handler modules (initiative, attack resolution, damage application, status effects, victory check)
+- A clear boundary where each handler can be unit-tested in isolation
+
+`tagTeamBattleOrchestrator.ts` similarly: orchestrate phases (active battle, tag transitions, reserve battle), but delegate per-phase logic to dedicated modules.
+
+**Strategy.** Pick **one file at a time**, in this order (lowest blast-radius first to build confidence):
+
+1. `combatMessageGenerator.ts` (1,847) — pure functions, easy to split by event type, no state
+2. `achievementService.ts` (1,904) — split by achievement category (combat / progression / economy)
+3. `kothEngine.ts` (1,786) — already isolated to KotH battles, lower coupling than 1v1
+4. `combatSimulator.ts` (2,011) — the riskiest; do it last with full regression suite green
+5. `tagTeamBattleOrchestrator.ts` (2,157) — depends on a refactored `combatSimulator`
+
+**Each refactor is its own spec.** Don't try to do all five in one PR. Each should:
+- Run `gitnexus impact` on the target file before starting (record affected processes and modules)
+- Define the new module boundary in the design doc
+- Include a regression test plan (at minimum, all existing combat tests must pass without modification)
+- Land behind a feature flag if possible (parallel implementation, swap on green)
+
+**Scope estimate.** ~3–5 days per file with test suite green throughout. Do not start without:
+1. The DPS Rebalance (#5 follow-up) landing first — combat balance changes during a refactor would muddy regression detection.
+2. A regression test inventory documenting which tests cover which paths.
+3. Agreement on the target module structure (avoid the trap of "split now, decide structure later").
+
+**Dependencies.** None blocking, but don't start during another active spec on combat. Coordinate with weapon refinement / DPS rebalance work.
+
+---
+
+### #50 — Frontend Page Hook Extraction (RobotsPage, RobotDetailPage)
+**Source**: Codebase audit (May 2026) — original audit item #8
+**Priority**: Low — natural follow-on to the HTTP client migration
+
+**Problem.** Two player-facing pages still mix data fetching, business logic, and rendering in single 800-line components:
+
+| File | Lines |
+|------|-------|
+| `app/frontend/src/pages/RobotsPage.tsx` | 818 |
+| `app/frontend/src/pages/RobotDetailPage.tsx` | 815 |
+
+Both pages own:
+- API calls for robots + facilities + weapons + league standings + battle history
+- Complex state (sort, filters, view mode, selected robot, repair confirmation, image selector, toast, league rank)
+- Business logic (repair cost calculation, readiness assessment, sort comparators)
+- Rendering of multiple sections (header, stats, tabs, modals)
+
+This was tolerable before the HTTP client consolidation. After that work, every fetch in these files is now one line of `await api.get(...)` — which makes the data-fetching layer easy to extract cleanly.
+
+**Strategy.**
+1. **Create `useRobotsList(userId)`** — owns the GET + filter + sort state + repair-all action. Returns `{ robots, loading, error, repairAll, sortBy, setSortBy, filters, setFilters }`. RobotsPage becomes a presentational shell consuming this hook. Pattern matches existing `useWeaponShop`, `useFacilities`, `usePracticeArena`.
+
+2. **Create `useRobotDetail(robotId)`** — owns the per-robot GET + weapon/facility/league fetches + tab state + image selector state. Returns the same shape. RobotDetailPage becomes a presentational shell.
+
+3. **Extract section components.** Each page has clear visual sections (header card, stats row, tabs, action bar). Pull each into its own component once the hook abstraction is in place. Target ~150 lines per page after the split.
+
+**Why this is low-priority.** It's a code-organization win, not a correctness or performance win. The current pages work. But:
+- They're hard to test as units.
+- Onboarding to "how do I add a tab to RobotDetailPage" is hard.
+- The summary in TASK 3 even noted that an old `useRobotDetail` hook had been started and abandoned — someone clearly tried this once and got distracted.
+
+**Note on the `useRobotDetail` hook deletion.** The audit summary mentions a `useRobotDetail` hook was deleted as part of dead-code cleanup because nothing used it. Do not assume that hook was the right shape — it was abandoned, not feature-complete. Start fresh and use `useWeaponShop` as the reference pattern.
+
+**Scope estimate.** ~1 day per page with tests. Total ~2 days. Mostly mechanical after the migration we just shipped.
+
+**Dependencies.** None. Could be picked up at any time.
+
+---
+
+### #51 — Test Setup Convention Cleanup
+**Source**: Codebase audit (May 2026) — original audit item #9
+**Priority**: Low — works correctly, just inconsistent
+
+**Problem.** Test files live in two conventions in the same repo:
+
+- **Co-located** — `src/components/foo/__tests__/Foo.test.tsx` (sibling of source)
+- **Centralized** — `src/__tests__/SomePage/...` (separate from source)
+
+Multiple `accessibility.test.tsx`, multiple `setupTests`-like patterns, scattered helpers. Vitest runs all of them so nothing's broken, but it makes "where do I add a test for X" ambiguous and means similar tests can drift out of sync.
+
+**Strategy.**
+1. Audit the centralized `src/__tests__/` tree and decide per directory whether the tests belong with their source file or are genuinely cross-cutting (e.g. integration-style tests spanning multiple modules).
+2. Move co-locatable tests to `__tests__/` folders next to their source, following the dominant pattern.
+3. Keep cross-cutting / integration-style tests in a dedicated `src/__tests__/integration/` folder.
+4. Document the convention in `CONTRIBUTING.md` so it doesn't drift again.
+
+**Scope estimate.** ~½ day. No code changes, just file moves + import path updates. Safe behind the test suite.
+
+**Dependencies.** None.
+
+---
+
+### #52 — Vitest Performance Tuning
+**Source**: Codebase audit (May 2026) — original audit item #10
+**Priority**: Low — current 13s for 1568 tests is fine, but there are easy wins
+
+**Problem.** Frontend test runs:
+- 1,568 tests in ~13 seconds (acceptable but not optimized)
+- Default reporter produces a lot of output dots
+- Coverage is not collected by default
+- Vitest caching/sharding likely not configured
+
+**Strategy.**
+1. **Reporter:** switch to `--reporter=verbose` for development, `--reporter=dot` only in CI logs where parsing-friendly output matters.
+2. **Coverage default:** add `npm run test:coverage` as a separate script using `@vitest/coverage-v8`. Don't make it the default — slows iteration.
+3. **Caching:** Vitest auto-caches dependencies; verify the cache directory is excluded from `git clean` and CI doesn't `rm -rf` it.
+4. **Sharding:** for CI, consider `--shard=1/4` etc. across parallel jobs if test time becomes a bottleneck. Not urgent at 13s.
+5. **Watch mode hygiene:** confirm `--watch` doesn't re-run unrelated suites on every change.
+
+**Scope estimate.** ~½ day. Most of it is profiling current behavior to confirm what's actually slow vs. what just looks slow.
+
+**Dependencies.** None.
+

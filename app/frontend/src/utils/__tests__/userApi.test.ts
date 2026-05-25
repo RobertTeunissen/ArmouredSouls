@@ -82,7 +82,6 @@ describe('userApi', () => {
 
       await expect(getProfile()).rejects.toMatchObject({
         code: 'NETWORK_ERROR',
-        message: 'Network error',
       });
     });
   });
@@ -159,7 +158,6 @@ describe('userApi', () => {
 
       await expect(updateProfile({ stableName: 'Test' })).rejects.toMatchObject({
         code: 'NETWORK_ERROR',
-        message: 'Network error',
       });
     });
 
@@ -210,7 +208,6 @@ describe('userApi', () => {
 
       await expect(getStableStatistics()).rejects.toMatchObject({
         code: 'NETWORK_ERROR',
-        message: 'Network error',
       });
     });
   });

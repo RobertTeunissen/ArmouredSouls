@@ -8,7 +8,8 @@
  */
 import { useState, useEffect, useCallback } from 'react';
 import { AdminPageHeader, AdminStatCard, AdminDataTable } from '../../components/admin/shared';
-import apiClient from '../../utils/apiClient';
+import { api } from '../../utils/api';
+import { ApiError } from '../../utils/ApiError';
 
 /* ------------------------------------------------------------------ */
 /*  Types (matches backend response)                                   */
@@ -47,10 +48,10 @@ function AdminPracticeArenaPage() {
     setLoading(true);
     setError(null);
     try {
-      const response = await apiClient.get<PracticeArenaResponse>('/api/admin/practice-arena/stats');
-      setData(response.data);
+      const response = await api.get<PracticeArenaResponse>('/api/admin/practice-arena/stats');
+      setData(response);
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Failed to load practice arena stats';
+      const msg = (err instanceof ApiError && err.message) || 'Failed to load practice arena stats';
       setError(msg);
     } finally {
       setLoading(false);

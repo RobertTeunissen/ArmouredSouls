@@ -9,7 +9,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { AdminPageHeader, AdminStatCard, AdminDataTable } from '../../components/admin/shared';
-import apiClient from '../../utils/apiClient';
+import { api } from '../../utils/api';
+import { ApiError } from '../../utils/ApiError';
 import type { RobotStats } from '../../components/admin/types';
 
 /* ------------------------------------------------------------------ */
@@ -41,10 +42,10 @@ function RobotStatsPage() {
     setLoading(true);
     setError(null);
     try {
-      const response = await apiClient.get<RobotStats>('/api/admin/stats/robots');
-      setRobotStats(response.data);
+      const response = await api.get<RobotStats>('/api/admin/stats/robots');
+      setRobotStats(response);
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Failed to fetch robot statistics';
+      const msg = (err instanceof ApiError && err.message) || 'Failed to fetch robot statistics';
       setError(msg);
     } finally {
       setLoading(false);

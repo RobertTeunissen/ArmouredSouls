@@ -8,7 +8,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { AdminPageHeader, AdminStatCard, AdminFilterBar, AdminSlideOver, AdminEmptyState } from '../../components/admin/shared';
 import { getBattleOutcome, getBattleHighlight } from '../../components/admin/battleLogHelpers';
-import apiClient from '../../utils/apiClient';
+import { api } from '../../utils/api';
 import type { Battle, BattleListResponse } from '../../components/admin/types';
 
 /* ------------------------------------------------------------------ */
@@ -125,9 +125,9 @@ function BattleLogsPage() {
       if (searchRef.current) params.search = searchRef.current;
       if (filterRef.current !== 'all') params.battleType = filterRef.current;
 
-      const response = await apiClient.get<BattleListResponse>('/api/admin/battles', { params });
-      setBattles(response.data.battles);
-      setPagination(response.data.pagination);
+      const response = await api.get<BattleListResponse>('/api/admin/battles', { params });
+      setBattles(response.battles);
+      setPagination(response.pagination);
       setCurrentPage(page);
     } catch {
       // Error handled by empty state
@@ -154,8 +154,8 @@ function BattleLogsPage() {
     setDetailLoading(true);
     setSlideOverOpen(true);
     try {
-      const response = await apiClient.get<BattleDetail>(`/api/admin/battles/${battleId}`);
-      setSelectedBattle(response.data);
+      const response = await api.get<BattleDetail>(`/api/admin/battles/${battleId}`);
+      setSelectedBattle(response);
     } catch {
       setSelectedBattle(null);
     } finally {

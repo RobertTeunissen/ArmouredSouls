@@ -6,7 +6,7 @@
  */
 import { useState, useEffect, useCallback } from 'react';
 import { AdminPageHeader, AdminDataTable } from '../../components/admin/shared';
-import apiClient from '../../utils/apiClient';
+import { api } from '../../utils/api';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -80,11 +80,11 @@ function ImageUploadsPage() {
     setUploadsLoading(true);
     setUploadsError(null);
     try {
-      const params = new URLSearchParams({ page: String(p), limit: String(LIMIT) });
-      if (filterUserId.trim()) params.set('userId', filterUserId.trim());
-      const res = await apiClient.get<UploadsResponse>(`/api/admin/uploads?${params}`);
-      setUploads(res.data.uploads);
-      setTotal(res.data.total);
+      const params: Record<string, string | number> = { page: p, limit: LIMIT };
+      if (filterUserId.trim()) params.userId = filterUserId.trim();
+      const data = await api.get<UploadsResponse>('/api/admin/uploads', { params });
+      setUploads(data.uploads);
+      setTotal(data.total);
     } catch {
       setUploadsError('Failed to load uploads');
     } finally {
@@ -95,9 +95,8 @@ function ImageUploadsPage() {
   const fetchModerationEvents = useCallback(async () => {
     setModEventsLoading(true);
     try {
-      const params = new URLSearchParams({ limit: '50' });
-      const res = await apiClient.get<{ events: ModerationEvent[] }>(`/api/admin/security/events?${params}`);
-      const imageEvents = (res.data?.events ?? []).filter(
+      const data = await api.get<{ events: ModerationEvent[] }>('/api/admin/security/events', { params: { limit: 50 } });
+      const imageEvents = (data?.events ?? []).filter(
         (e: ModerationEvent) =>
           e.eventType === 'image_moderation_rejection' ||
           e.eventType === 'image_robot_likeness_warning' ||
@@ -115,8 +114,8 @@ function ImageUploadsPage() {
     setCleanupRunning(true);
     setCleanupResult(null);
     try {
-      const res = await apiClient.post<CleanupResult>('/api/admin/uploads/cleanup');
-      setCleanupResult(res.data);
+      const data = await api.post<CleanupResult>('/api/admin/uploads/cleanup');
+      setCleanupResult(data);
     } catch {
       setCleanupResult({ success: false, filesDeleted: 0, bytesReclaimed: 0, errors: ['Cleanup request failed'] });
     } finally {

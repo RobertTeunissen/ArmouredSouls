@@ -306,7 +306,7 @@ describe('DashboardPage', () => {
     });
 
     // Initial fetch with 'real' filter
-    expect(mockGet).toHaveBeenCalledWith('/api/admin/dashboard/kpis?filter=real');
+    expect(mockGet).toHaveBeenCalledWith('/api/admin/dashboard/kpis', { params: { filter: 'real' } });
 
     mockGet.mockClear();
 
@@ -314,7 +314,7 @@ describe('DashboardPage', () => {
     await user.click(screen.getByText('Auto-Generated'));
 
     await waitFor(() => {
-      expect(mockGet).toHaveBeenCalledWith('/api/admin/dashboard/kpis?filter=auto');
+      expect(mockGet).toHaveBeenCalledWith('/api/admin/dashboard/kpis', { params: { filter: 'auto' } });
     });
   });
 
@@ -322,7 +322,7 @@ describe('DashboardPage', () => {
     render(<DashboardPage />);
 
     await waitFor(() => {
-      expect(mockGet).toHaveBeenCalledWith('/api/admin/dashboard/kpis?filter=real');
+      expect(mockGet).toHaveBeenCalledWith('/api/admin/dashboard/kpis', { params: { filter: 'real' } });
     });
   });
 
@@ -404,7 +404,9 @@ describe('DashboardPage', () => {
     render(<DashboardPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('Network error')).toBeInTheDocument();
+      // Bare Errors don't carry a backend response shape, so the api
+      // wrapper drops their message and the page renders its fallback copy.
+      expect(screen.getByText('Failed to load KPI data')).toBeInTheDocument();
     });
   });
 

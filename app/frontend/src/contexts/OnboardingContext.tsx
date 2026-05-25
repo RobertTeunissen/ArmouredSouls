@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, ReactNode, useEffect, useCallback, useRef } from 'react';
-import { isAxiosError } from 'axios';
-import apiClient from '../utils/apiClient';
+import { api } from '../utils/api';
+import { ApiError } from '../utils/ApiError';
 import type { OnboardingState, OnboardingChoices, OnboardingContextType, OnboardingErrorInfo } from './onboarding.types';
 
 export type { OnboardingState, OnboardingChoices, OnboardingContextType, OnboardingErrorInfo };
@@ -9,6 +9,23 @@ const OnboardingContext = createContext<OnboardingContextType | undefined>(undef
 
 /** Debounce delay for choice updates (ms) */
 const DEBOUNCE_DELAY = 500;
+
+/**
+ * Backend response envelope. Endpoints return either
+ *   { success: true, data: T }
+ * or
+ *   { success: false, error?: string, code?: string }.
+ *
+ * The typed `api` wrapper hands us the JSON body directly; we still need
+ * to inspect `success` to handle the application-level failure case
+ * (where the HTTP status is 200 but the operation didn't succeed).
+ */
+interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  code?: string;
+}
 
 /**
  * Custom hook to access the onboarding context.
@@ -59,13 +76,19 @@ export const OnboardingProvider = ({ children }: OnboardingProviderProps) => {
     };
   }, []);
 
-  /** Detect whether an error is a network/connectivity issue. */
+  /**
+   * Detect whether an error is a network/connectivity issue.
+   *
+   * After the typed-api migration, network failures arrive as
+   * `ApiError` with `code === 'NETWORK_ERROR'` (no response received).
+   * Gateway-style outages (502/503/504) and request timeouts (408)
+   * keep their status codes; we treat them as network errors so the
+   * UI can offer a retry rather than an account-level explanation.
+   */
   const isNetworkError = (err: unknown): boolean => {
-    if (isAxiosError(err)) {
-      // No response at all → network failure or timeout
-      if (!err.response) return true;
-      // 408 Request Timeout or 502/503/504 gateway errors
-      const status = err.response.status;
+    if (err instanceof ApiError) {
+      if (err.code === 'NETWORK_ERROR') return true;
+      const status = err.statusCode;
       if (status === 408 || status === 502 || status === 503 || status === 504) return true;
     }
     if (err instanceof TypeError && err.message === 'Network Error') return true;
@@ -88,12 +111,14 @@ export const OnboardingProvider = ({ children }: OnboardingProviderProps) => {
     } catch (err) {
       if (mountedRef.current) {
         const networkErr = isNetworkError(err);
+        // The api wrapper leaves `ApiError.message` empty when the backend
+        // didn't supply an `error`/`message` field, so a falsy check is
+        // enough to fall back to the caller-supplied label. Network errors
+        // get a generic recovery hint regardless of the original message.
         const message = networkErr
           ? 'Network error. Please check your connection and try again.'
-          : isAxiosError(err) && err.response?.data?.error
-            ? err.response.data.error
-            : fallbackError;
-        const code = isAxiosError(err) ? err.response?.data?.code : undefined;
+          : (err instanceof ApiError && err.message) || fallbackError;
+        const code = err instanceof ApiError ? err.code : undefined;
 
         setError(message);
         setErrorInfo({ message, code, isNetworkError: networkErr });
@@ -109,9 +134,12 @@ export const OnboardingProvider = ({ children }: OnboardingProviderProps) => {
     errorMsg: string,
   ) => {
     await runAction(async () => {
-      const response = await apiClient.post('/api/onboarding/state', body);
-      if (response.data.success) {
-        setTutorialState(response.data.data);
+      const response = await api.post<ApiResponse<OnboardingState>>(
+        '/api/onboarding/state',
+        body,
+      );
+      if (response.success && response.data) {
+        setTutorialState(response.data);
       } else {
         throw new Error(errorMsg);
       }
@@ -120,9 +148,11 @@ export const OnboardingProvider = ({ children }: OnboardingProviderProps) => {
 
   const refreshState = useCallback(async () => {
     await runAction(async () => {
-      const response = await apiClient.get('/api/onboarding/state');
-      if (response.data.success) {
-        setTutorialState(response.data.data);
+      const response = await api.get<ApiResponse<OnboardingState>>(
+        '/api/onboarding/state',
+      );
+      if (response.success && response.data) {
+        setTutorialState(response.data);
       } else {
         throw new Error('Failed to load tutorial state');
       }
@@ -212,8 +242,8 @@ export const OnboardingProvider = ({ children }: OnboardingProviderProps) => {
     // Flush any pending choices before completing
     await flushPendingChoices();
     await runAction(async () => {
-      const response = await apiClient.post('/api/onboarding/complete');
-      if (response.data.success) {
+      const response = await api.post<ApiResponse<unknown>>('/api/onboarding/complete');
+      if (response.success) {
         await refreshState();
       } else {
         throw new Error('Failed to complete tutorial');
@@ -225,8 +255,8 @@ export const OnboardingProvider = ({ children }: OnboardingProviderProps) => {
     // Flush any pending choices before skipping
     await flushPendingChoices();
     await runAction(async () => {
-      const response = await apiClient.post('/api/onboarding/skip');
-      if (response.data.success) {
+      const response = await api.post<ApiResponse<unknown>>('/api/onboarding/skip');
+      if (response.success) {
         await refreshState();
       } else {
         throw new Error('Failed to skip tutorial');

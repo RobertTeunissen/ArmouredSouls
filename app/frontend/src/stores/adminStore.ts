@@ -8,7 +8,7 @@
  * Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7
  */
 import { create } from 'zustand';
-import apiClient from '../utils/apiClient';
+import { api } from '../utils/api';
 import type { SystemStats, SessionLogEntry, SecuritySummary } from '../components/admin/types';
 
 // ---------------------------------------------------------------------------
@@ -140,9 +140,11 @@ export const useAdminStore = create<AdminStoreState>((set, get) => ({
 
     set({ statsLoading: true });
     try {
-      const response = await apiClient.get<SystemStats>(`/api/admin/stats?filter=${requestedFilter}`);
+      const stats = await api.get<SystemStats>('/api/admin/stats', {
+        params: { filter: requestedFilter },
+      });
       set({
-        systemStats: response.data,
+        systemStats: stats,
         statsLastFetched: Date.now(),
         statsLastFilter: requestedFilter,
         statsLoading: false,
@@ -160,9 +162,9 @@ export const useAdminStore = create<AdminStoreState>((set, get) => ({
     }
 
     try {
-      const response = await apiClient.get<SchedulerState>('/api/admin/scheduler/status');
+      const status = await api.get<SchedulerState>('/api/admin/scheduler/status');
       set({
-        schedulerStatus: response.data,
+        schedulerStatus: status,
         schedulerLastFetched: Date.now(),
       });
     } catch {
@@ -177,9 +179,9 @@ export const useAdminStore = create<AdminStoreState>((set, get) => ({
     }
 
     try {
-      const response = await apiClient.get<SecuritySummary>('/api/admin/security/summary');
+      const summary = await api.get<SecuritySummary>('/api/admin/security/summary');
       set({
-        securitySummary: response.data,
+        securitySummary: summary,
         securityLastFetched: Date.now(),
       });
     } catch {

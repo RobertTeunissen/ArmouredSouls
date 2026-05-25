@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import apiClient from '../utils/apiClient';
+import { api } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
 import OwnerNameLink from '../components/OwnerNameLink';
@@ -50,7 +50,7 @@ function LeaderboardsPrestigePage() {
       setLoading(true);
       setError(null);
       
-      const response = await apiClient.get<LeaderboardResponse>(
+      const data = await api.get<LeaderboardResponse>(
         '/api/leaderboards/prestige',
         {
           params: {
@@ -60,8 +60,8 @@ function LeaderboardsPrestigePage() {
           },
         }
       );
-      
-      setLeaderboard(response.data.leaderboard);
+
+      setLeaderboard(data.leaderboard);
     } catch (err) {
       setError('Failed to load prestige leaderboard');
       log.error('Prestige leaderboard error', { err });

@@ -7,7 +7,7 @@
 import { useEffect, useState } from 'react';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 import { formatCurrency } from '../../utils/financialApi';
-import apiClient from '../../utils/apiClient';
+import { api } from '../../utils/api';
 
 interface UserCredits { currency: number }
 
@@ -25,8 +25,8 @@ const BudgetTracker = () => {
     let ok = true;
     (async () => {
       try {
-        const r = await apiClient.get('/api/user/profile');
-        if (ok) { setCredits((r.data as UserCredits).currency); setReady(true); }
+        const profile = await api.get<UserCredits>('/api/user/profile');
+        if (ok) { setCredits(profile.currency); setReady(true); }
       } catch { if (ok) setReady(true); }
     })();
     return () => { ok = false; };

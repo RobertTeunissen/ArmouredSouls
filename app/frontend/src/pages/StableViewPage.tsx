@@ -1,14 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
 import Navigation from '../components/Navigation';
 import RobotDashboardCard from '../components/RobotDashboardCard';
 import AchievementBadge from '../components/AchievementBadge';
 import AchievementPinnerModal from '../components/AchievementPinnerModal';
-import apiClient from '../utils/apiClient';
+import { api } from '../utils/api';
+import { ApiError } from '../utils/ApiError';
 import { useAuth } from '../contexts/AuthContext';
 import { FACILITY_CATEGORIES } from '../utils/facilityCategories';
-import type { AchievementWithProgress } from '../utils/achievementUtils';
+import type { AchievementWithProgress, AchievementsResponse } from '../utils/achievementUtils';
 
 interface StableUser {
   id: number;
@@ -86,11 +86,11 @@ function StableViewPage() {
     setState('loading');
     setData(null);
     try {
-      const response = await apiClient.get(`/api/stables/${userId}`);
-      setData(response.data);
+      const data = await api.get<StableData>(`/api/stables/${userId}`);
+      setData(data);
       setState('success');
     } catch (err: unknown) {
-      if (axios.isAxiosError(err) && err.response?.status === 404) {
+      if (err instanceof ApiError && err.statusCode === 404) {
         setState('not-found');
       } else {
         setState('error');
@@ -158,8 +158,8 @@ function StableViewPage() {
 
   const handleOpenPinner = async () => {
     try {
-      const response = await apiClient.get('/api/achievements');
-      setPinnerAchievements(response.data.achievements);
+      const data = await api.get<AchievementsResponse>('/api/achievements');
+      setPinnerAchievements(data.achievements);
       setPinnerOpen(true);
     } catch {
       // Silently handle
@@ -172,7 +172,7 @@ function StableViewPage() {
       .filter(p => p.id !== achievementId)
       .map(p => p.id);
     try {
-      await apiClient.put('/api/achievements/pinned', { achievementIds: newPinned });
+      await api.put('/api/achievements/pinned', { achievementIds: newPinned });
       setData(prev => {
         if (!prev || !prev.achievements) return prev;
         return {

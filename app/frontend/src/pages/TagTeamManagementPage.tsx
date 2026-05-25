@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import Navigation from '../components/Navigation';
 import { getMyTagTeams, disbandTagTeam, TagTeam, getTeamName } from '../utils/tagTeamApi';
 import { getTagTeamLeagueTierName, getTagTeamLeagueTierColor, getTagTeamLeagueTierIcon } from '../utils/tagTeamApi';
@@ -9,7 +8,8 @@ import TeamCreationModal from '../components/TeamCreationModal';
 import ConfirmationModal from '../components/ConfirmationModal';
 import LeagueTimeline from '../components/LeagueTimeline';
 import type { LeagueHistoryEntry } from '../components/LeagueTimeline';
-import apiClient from '../utils/apiClient';
+import { api } from '../utils/api';
+import { ApiError } from '../utils/ApiError';
 
 function TagTeamManagementPage() {
   const { user, logout } = useAuth();
@@ -41,12 +41,12 @@ function TagTeamManagementPage() {
       const data = await getMyTagTeams();
       setTeams(data);
     } catch (err: unknown) {
-      if (axios.isAxiosError(err) && err.response?.status === 401) {
+      if (err instanceof ApiError && err.statusCode === 401) {
         logout();
         navigate('/login');
         return;
       }
-      const message = axios.isAxiosError(err) ? err.response?.data?.message : undefined;
+      const message = err instanceof ApiError ? err.message : undefined;
       setError(message || 'Failed to load tag teams');
     } finally {
       setLoading(false);
@@ -62,7 +62,7 @@ function TagTeamManagementPage() {
       setTeams(teams.filter(t => t.id !== teamToDisband.id));
       setTeamToDisband(null);
     } catch (err: unknown) {
-      const message = axios.isAxiosError(err) ? err.response?.data?.message : undefined;
+      const message = err instanceof ApiError ? err.message : undefined;
       alert(message || 'Failed to disband team');
     } finally {
       setDisbanding(false);
@@ -334,12 +334,13 @@ function TagTeamLeagueHistory({ teamId, currentTier }: { teamId: number; current
 
     if (willExpand && !fetched) {
       setLoading(true);
-      apiClient
-        .get(`/api/tag-teams/${teamId}/league-history`)
+      api
+        .get<{ data: Array<{ cycleNumber: number; destinationTier: string; changeType: string; leaguePoints: number }> } | Array<{ cycleNumber: number; destinationTier: string; changeType: string; leaguePoints: number }>>(`/api/tag-teams/${teamId}/league-history`)
         .then((res) => {
-          const data = res.data.data || res.data;
+          // Endpoint may return either a paginated wrapper or the raw array.
+          const data = Array.isArray(res) ? res : (res.data ?? []);
           setHistory(
-            (data as Array<{ cycleNumber: number; destinationTier: string; changeType: string; leaguePoints: number }>).map((r) => ({
+            data.map((r) => ({
               cycleNumber: r.cycleNumber,
               destinationTier: r.destinationTier,
               changeType: r.changeType as 'promotion' | 'demotion',

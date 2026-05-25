@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import apiClient from '../utils/apiClient';
+import { api } from '../utils/api';
 import { getKothRobotPerformance, KothRobotPerformance } from '../utils/kothApi';
 import {
   LineChart,
@@ -73,27 +73,27 @@ function RobotPerformanceAnalytics({ robotId, lastNCycles = 10 }: RobotPerforman
       setError('');
 
       // Get the latest cycle number
-      const latestCycleResponse = await apiClient.get(
-        '/api/analytics/cycle/current'
+      const latestCycleData = await api.get<{ cycleNumber?: number }>(
+        '/api/analytics/cycle/current',
       );
 
-      const currentCycle = latestCycleResponse.data.cycleNumber || 1;
+      const currentCycle = latestCycleData.cycleNumber || 1;
       const startCycle = Math.max(1, currentCycle - lastNCycles + 1);
       const endCycle = currentCycle;
       const cycleRange = `[${startCycle},${endCycle}]`;
 
       // Fetch all analytics data in parallel (independent requests)
-      const [summaryResponse, eloResponse, damageResponse, creditsResponse] = await Promise.all([
-        apiClient.get(`/api/analytics/robot/${robotId}/performance?cycleRange=${cycleRange}`),
-        apiClient.get(`/api/analytics/robot/${robotId}/metric/elo?cycleRange=${cycleRange}&includeMovingAverage=true`),
-        apiClient.get(`/api/analytics/robot/${robotId}/metric/damageDealt?cycleRange=${cycleRange}`),
-        apiClient.get(`/api/analytics/robot/${robotId}/metric/creditsEarned?cycleRange=${cycleRange}`),
+      const [summaryData, eloData, damageData, creditsData] = await Promise.all([
+        api.get<PerformanceSummary>(`/api/analytics/robot/${robotId}/performance`, { params: { cycleRange } }),
+        api.get<MetricProgression>(`/api/analytics/robot/${robotId}/metric/elo`, { params: { cycleRange, includeMovingAverage: true } }),
+        api.get<MetricProgression>(`/api/analytics/robot/${robotId}/metric/damageDealt`, { params: { cycleRange } }),
+        api.get<MetricProgression>(`/api/analytics/robot/${robotId}/metric/creditsEarned`, { params: { cycleRange } }),
       ]);
 
-      setSummary(summaryResponse.data);
-      setEloProgression(eloResponse.data);
-      setDamageProgression(damageResponse.data);
-      setCreditsProgression(creditsResponse.data);
+      setSummary(summaryData);
+      setEloProgression(eloData);
+      setDamageProgression(damageData);
+      setCreditsProgression(creditsData);
 
       // Fetch KotH performance
       try {

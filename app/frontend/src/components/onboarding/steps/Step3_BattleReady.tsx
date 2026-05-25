@@ -6,7 +6,7 @@ import { useState, useEffect, memo } from 'react';
 import { useOnboarding } from '../../../contexts/OnboardingContext';
 import LoadoutSelector from '../../LoadoutSelector';
 import StanceSelector from '../../StanceSelector';
-import apiClient from '../../../utils/apiClient';
+import { api } from '../../../utils/api';
 import { ApiError } from '../../../utils/ApiError';
 import {
   fetchMyRobots,
@@ -71,20 +71,20 @@ const Step6 = memo(({onPrevious:_p}:{onNext?:()=>void;onPrevious?:()=>void}) => 
     const load = async () => {
       try {
         // 1. Weapons — exactly like WeaponShopPage
-        const wRes = await apiClient.get('/api/weapons');
+        const weaponsRaw = await api.get<Weapon[]>('/api/weapons');
         if (cancelled) return;
-        const weapons = Array.isArray(wRes.data)
-          ? (wRes.data as Weapon[]).filter(w => w.name !== 'Basic Laser' && w.cost >= 10000)
+        const weapons = Array.isArray(weaponsRaw)
+          ? weaponsRaw.filter(w => w.name !== 'Basic Laser' && w.cost >= 10000)
           : [];
         setAllWeapons(weapons);
 
         // 2. Facilities
         try {
-          const fRes = await apiClient.get('/api/facilities');
+          const facData = await api.get<{ facilities?: Array<{ type: string; currentLevel: number }> } | Array<{ type: string; currentLevel: number }>>('/api/facilities');
           if (!cancelled) {
-            const facs = fRes.data.facilities || fRes.data;
-            const ws = Array.isArray(facs) ? facs.find((f:{type:string})=>f.type==='weapons_workshop') : null;
-            setWsLevel(ws?.currentLevel||0);
+            const facs = Array.isArray(facData) ? facData : (facData.facilities ?? []);
+            const ws = facs.find((f) => f.type === 'weapons_workshop');
+            setWsLevel(ws?.currentLevel || 0);
           }
         } catch {/* ok */}
 
@@ -129,17 +129,17 @@ const Step6 = memo(({onPrevious:_p}:{onNext?:()=>void;onPrevious?:()=>void}) => 
 
   const buyEquip = async (wId:number,rId:number,slot:'main'|'offhand') => {
     try {
-      const r = await apiClient.post('/api/weapon-inventory/purchase',{weaponId:wId});
-      const inv = r.data.weaponInventory.id;
+      const data = await api.post<{ weaponInventory: { id: number } }>('/api/weapon-inventory/purchase', { weaponId: wId });
+      const inv = data.weaponInventory.id;
       if(slot==='main') await equipMainWeapon(rId, inv);
       else await equipOffhandWeapon(rId, inv);
     } catch (e: unknown) {
       const msg = e instanceof ApiError ? e.message : '';
       if (msg === 'Storage capacity full') {
         // Auto-buy Storage Facility upgrade and retry
-        await apiClient.post('/api/facilities/upgrade', { facilityType: 'storage_facility' });
-        const r = await apiClient.post('/api/weapon-inventory/purchase',{weaponId:wId});
-        const inv = r.data.weaponInventory.id;
+        await api.post('/api/facilities/upgrade', { facilityType: 'storage_facility' });
+        const data = await api.post<{ weaponInventory: { id: number } }>('/api/weapon-inventory/purchase', { weaponId: wId });
+        const inv = data.weaponInventory.id;
         if(slot==='main') await equipMainWeapon(rId, inv);
         else await equipOffhandWeapon(rId, inv);
       } else {
@@ -223,12 +223,12 @@ const Step6 = memo(({onPrevious:_p}:{onNext?:()=>void;onPrevious?:()=>void}) => 
     finally{setBusy(false);}
   };
   const onFinish = async () => {
-    try { setBusy(true);setErr(null); await apiClient.post('/api/onboarding/state',{step:7}); await apiClient.post('/api/onboarding/state',{step:8}); await refreshState(); }
+    try { setBusy(true);setErr(null); await api.post('/api/onboarding/state',{step:7}); await api.post('/api/onboarding/state',{step:8}); await refreshState(); }
     catch(e:unknown){setErr(e instanceof ApiError ? e.message : 'Something went wrong.');}
     finally{setBusy(false);}
   };
   const onRevert = async () => {
-    try { setBusy(true);setErr(null); await apiClient.post('/api/onboarding/reset-account',{confirmation:'RESET',reason:'Previous from battle-ready'}); await refreshState(); }
+    try { setBusy(true);setErr(null); await api.post('/api/onboarding/reset-account',{confirmation:'RESET',reason:'Previous from battle-ready'}); await refreshState(); }
     catch(e:unknown){setErr(e instanceof ApiError ? e.message : 'Could not revert.');}
     finally{setBusy(false);setRevert(false);}
   };

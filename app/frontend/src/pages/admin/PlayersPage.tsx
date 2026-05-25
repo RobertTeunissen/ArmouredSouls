@@ -9,7 +9,8 @@
  */
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { AdminPageHeader, AdminStatCard, AdminDataTable, AdminFilterBar, AdminSlideOver } from '../../components/admin/shared';
-import apiClient from '../../utils/apiClient';
+import { api } from '../../utils/api';
+import { ApiError } from '../../utils/ApiError';
 import type { AtRiskUser, AtRiskUsersResponse, RecentUser, RecentUsersResponse } from '../../components/admin/types';
 
 /* ------------------------------------------------------------------ */
@@ -122,8 +123,8 @@ function PlayersPage() {
   const fetchPlayers = useCallback(async () => {
     setPlayersLoading(true);
     try {
-      const response = await apiClient.get<RecentUsersResponse>(`/api/admin/users/recent?cycles=${cyclesBack}&filter=real`);
-      setPlayersData(response.data);
+      const data = await api.get<RecentUsersResponse>('/api/admin/users/recent', { params: { cycles: cyclesBack, filter: 'real' } });
+      setPlayersData(data);
     } catch {
       // handled by empty state
     } finally {
@@ -134,8 +135,8 @@ function PlayersPage() {
   const fetchAutoUsers = useCallback(async () => {
     setAutoLoading(true);
     try {
-      const response = await apiClient.get<RecentUsersResponse>(`/api/admin/users/recent?cycles=${autoCyclesBack}&filter=auto`);
-      setAutoData(response.data);
+      const data = await api.get<RecentUsersResponse>('/api/admin/users/recent', { params: { cycles: autoCyclesBack, filter: 'auto' } });
+      setAutoData(data);
     } catch {
       // handled by empty state
     } finally {
@@ -146,8 +147,8 @@ function PlayersPage() {
   const fetchAtRisk = useCallback(async () => {
     setAtRiskLoading(true);
     try {
-      const response = await apiClient.get<AtRiskUsersResponse>('/api/admin/users/at-risk');
-      setAtRiskData(response.data);
+      const data = await api.get<AtRiskUsersResponse>('/api/admin/users/at-risk');
+      setAtRiskData(data);
     } catch {
       // handled by empty state
     } finally {
@@ -160,8 +161,8 @@ function PlayersPage() {
     if (!trimmed) return;
     setSearching(true);
     try {
-      const response = await apiClient.get<{ users: SearchUser[] }>('/api/admin/users/search', { params: { q: trimmed } });
-      setSearchResults(response.data.users);
+      const data = await api.get<{ users: SearchUser[] }>('/api/admin/users/search', { params: { q: trimmed } });
+      setSearchResults(data.users);
     } catch {
       setSearchResults([]);
     } finally {
@@ -182,8 +183,8 @@ function PlayersPage() {
     setPassword('');
     setConfirmPassword('');
     try {
-      const response = await apiClient.get<PlayerDetail>(`/api/admin/users/${userId}`);
-      setSelectedPlayer(response.data);
+      const data = await api.get<PlayerDetail>(`/api/admin/users/${userId}`);
+      setSelectedPlayer(data);
     } catch {
       setSelectedPlayer(null);
     } finally {
@@ -201,12 +202,12 @@ function PlayersPage() {
     setResetError(null);
     setResetSuccess(null);
     try {
-      await apiClient.post(`/api/admin/users/${selectedPlayer.id}/reset-password`, { password });
+      await api.post(`/api/admin/users/${selectedPlayer.id}/reset-password`, { password });
       setResetSuccess(`Password reset for ${selectedPlayer.username}`);
       setPassword('');
       setConfirmPassword('');
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Failed to reset password';
+      const msg = (err instanceof ApiError && err.message) || 'Failed to reset password';
       setResetError(msg);
     } finally {
       setResetting(false);

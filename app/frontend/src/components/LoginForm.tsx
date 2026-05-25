@@ -1,6 +1,6 @@
 import { useState, FormEvent } from 'react';
-import { isAxiosError } from 'axios';
-import apiClient from '../utils/apiClient';
+import { api } from '../utils/api';
+import { ApiError } from '../utils/ApiError';
 import type { UserProfile } from './RegistrationForm';
 
 /** Shared input field styling that follows the design system (matches LoginPage). */
@@ -64,19 +64,17 @@ function LoginForm({ onSuccess }: LoginFormProps) {
     setLoading(true);
 
     try {
-      const response = await apiClient.post('/api/auth/login', {
-        identifier,
-        password,
-      });
-
-      const { token, user } = response.data;
+      const { token, user } = await api.post<{ token: string; user: UserProfile }>(
+        '/api/auth/login',
+        { identifier, password },
+      );
       onSuccess(token, user);
     } catch (err) {
       // Display the server's error message (e.g. "Invalid credentials") when
       // available. For network errors or missing response bodies, show a
       // generic fallback so the user always sees something actionable.
-      if (isAxiosError(err) && err.response) {
-        setError(err.response.data.error || 'Login failed');
+      if (err instanceof ApiError && err.message) {
+        setError(err.message);
       } else {
         setError('Login failed');
       }

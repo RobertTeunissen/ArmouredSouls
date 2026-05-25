@@ -16,7 +16,8 @@ import {
   AdminDataTable,
   AdminFilterBar,
 } from '../../components/admin/shared';
-import apiClient from '../../utils/apiClient';
+import { api } from '../../utils/api';
+import { ApiError } from '../../utils/ApiError';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -116,14 +117,13 @@ function RefinementAdoptionPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await apiClient.get<RefinementAdoptionData>(
-        `/api/admin/refinement/adoption?filter=${userFilter}`,
+      const data = await api.get<RefinementAdoptionData>(
+        '/api/admin/refinement/adoption',
+        { params: { filter: userFilter } },
       );
-      setData(res.data);
+      setData(data);
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { error?: string } } })?.response?.data?.error ||
-        'Failed to load refinement adoption data';
+      const msg = (err instanceof ApiError && err.message) || 'Failed to load refinement adoption data';
       setError(msg);
     } finally {
       setLoading(false);

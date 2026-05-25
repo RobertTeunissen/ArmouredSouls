@@ -1,16 +1,29 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { UnlockedAchievement } from '../utils/achievementUtils';
 import { useAuth } from '../contexts/AuthContext';
-import apiClient from '../utils/apiClient';
+import { api, subscribeResponse } from '../utils/api';
 
 const LAST_SEEN_KEY = 'achievementLastSeen';
 
+/**
+ * Surface achievement-unlock toasts. Two pathways feed `toasts`:
+ *
+ * 1. **One-shot recap on auth.** When the user logs in we fetch
+ *    `/api/achievements/recent?since=<lastSeen>` so we don't miss unlocks
+ *    that happened while the tab was closed.
+ * 2. **Continuous via response subscriber.** Many gameplay endpoints
+ *    embed `achievementUnlocks` in their response body. We register a
+ *    callback on the typed `api` wrapper that watches every successful
+ *    response and pulls those unlocks into the toast queue. The callback
+ *    runs after `response.data` is unwrapped, so it sees the same
+ *    payload callers see.
+ */
 export function useAchievementToasts(enabled = true) {
   const [toasts, setToasts] = useState<UnlockedAchievement[]>([]);
   const { user } = useAuth();
   const isAuthenticated = !!user;
 
-  // Check for achievements unlocked since last visit when auth becomes available
+  // Pathway 1: recap-on-auth fetch.
   useEffect(() => {
     if (!enabled || !isAuthenticated) return;
 
@@ -20,10 +33,9 @@ export function useAchievementToasts(enabled = true) {
       params.since = lastSeen;
     }
 
-    apiClient
-      .get('/api/achievements/recent', { params })
-      .then((res) => {
-        const unlocks = res.data;
+    api
+      .get<Array<UnlockedAchievement & { unlockedAt?: string }>>('/api/achievements/recent', { params })
+      .then((unlocks) => {
         if (Array.isArray(unlocks) && unlocks.length > 0) {
           setToasts(prev => [...prev, ...unlocks]);
           const mostRecent = unlocks[0]?.unlockedAt;
@@ -37,25 +49,19 @@ export function useAchievementToasts(enabled = true) {
       });
   }, [enabled, isAuthenticated]);
 
-  // Axios response interceptor to watch for achievementUnlocks in any API response
+  // Pathway 2: response-subscriber for achievementUnlocks envelopes.
   useEffect(() => {
     if (!enabled) return;
 
-    const interceptorId = apiClient.interceptors.response.use(
-      (response) => {
-        const unlocks = response.data?.achievementUnlocks;
-        if (Array.isArray(unlocks) && unlocks.length > 0) {
-          setToasts(prev => [...prev, ...unlocks]);
-          localStorage.setItem(LAST_SEEN_KEY, new Date().toISOString());
-        }
-        return response;
-      },
-      (error) => Promise.reject(error),
-    );
+    const unsubscribe = subscribeResponse((data) => {
+      const unlocks = (data as { achievementUnlocks?: UnlockedAchievement[] } | null)?.achievementUnlocks;
+      if (Array.isArray(unlocks) && unlocks.length > 0) {
+        setToasts(prev => [...prev, ...unlocks]);
+        localStorage.setItem(LAST_SEEN_KEY, new Date().toISOString());
+      }
+    });
 
-    return () => {
-      apiClient.interceptors.response.eject(interceptorId);
-    };
+    return unsubscribe;
   }, [enabled]);
 
   const dismissToast = useCallback((index: number) => {

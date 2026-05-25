@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import apiClient from '../../utils/apiClient';
+import { api } from '../../utils/api';
+import { ApiError } from '../../utils/ApiError';
 
 interface ResetBlocker {
   type: string;
@@ -37,8 +38,9 @@ const ResetAccountModal: React.FC<ResetAccountModalProps> = ({
   const checkResetEligibility = async () => {
     setIsCheckingEligibility(true);
     try {
-      const response = await apiClient.get('/api/onboarding/reset-eligibility');
-      const data = response.data;
+      const data = await api.get<{ success: boolean; data: { canReset: boolean; blockers?: string[] } }>(
+        '/api/onboarding/reset-eligibility',
+      );
 
       if (data.success) {
         setCanReset(data.data.canReset);
@@ -83,20 +85,21 @@ const ResetAccountModal: React.FC<ResetAccountModalProps> = ({
     setError(null);
 
     try {
-      const response = await apiClient.post('/api/onboarding/reset-account', {
-        confirmation: confirmationText,
-        reason: 'User requested reset from onboarding',
-      });
-
-      const data = response.data;
+      const data = await api.post<{ success: boolean; error?: string }>(
+        '/api/onboarding/reset-account',
+        {
+          confirmation: confirmationText,
+          reason: 'User requested reset from onboarding',
+        },
+      );
 
       if (data.success) {
         onResetComplete();
       } else {
         setError(data.error || 'Failed to reset account');
       }
-    } catch {
-      setError('Failed to reset account. Please try again.');
+    } catch (err) {
+      setError((err instanceof ApiError && err.message) || 'Failed to reset account. Please try again.');
     } finally {
       setIsLoading(false);
     }

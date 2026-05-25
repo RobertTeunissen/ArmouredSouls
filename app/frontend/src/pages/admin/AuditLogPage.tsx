@@ -12,7 +12,8 @@ import {
   AdminDataTable,
   AdminFilterBar,
 } from '../../components/admin/shared';
-import apiClient from '../../utils/apiClient';
+import { api } from '../../utils/api';
+import { ApiError } from '../../utils/ApiError';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -70,17 +71,15 @@ function AuditLogPage() {
     setLoading(true);
     setError(null);
     try {
-      const params = new URLSearchParams({ page: String(page), pageSize: '25' });
-      if (operationType) params.set('operationType', operationType);
-      if (startDate) params.set('startDate', new Date(startDate).toISOString());
-      if (endDate) params.set('endDate', new Date(endDate).toISOString());
+      const params: Record<string, string | number> = { page, pageSize: 25 };
+      if (operationType) params.operationType = operationType;
+      if (startDate) params.startDate = new Date(startDate).toISOString();
+      if (endDate) params.endDate = new Date(endDate).toISOString();
 
-      const res = await apiClient.get<AuditLogResponse>(`/api/admin/audit-log?${params.toString()}`);
-      setData(res.data);
+      const data = await api.get<AuditLogResponse>('/api/admin/audit-log', { params });
+      setData(data);
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { error?: string } } })?.response?.data?.error ||
-        'Failed to load audit log';
+      const msg = (err instanceof ApiError && err.message) || 'Failed to load audit log';
       setError(msg);
     } finally {
       setLoading(false);

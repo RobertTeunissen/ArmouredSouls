@@ -11,7 +11,8 @@ import {
   AdminStatCard,
   AdminDataTable,
 } from '../../components/admin/shared';
-import apiClient from '../../utils/apiClient';
+import { api } from '../../utils/api';
+import { ApiError } from '../../utils/ApiError';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -44,12 +45,10 @@ function LeagueHealthPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await apiClient.get<LeagueHealthData>('/api/admin/league-health');
-      setData(res.data);
+      const data = await api.get<LeagueHealthData>('/api/admin/league-health');
+      setData(data);
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { error?: string } } })?.response?.data?.error ||
-        'Failed to load league health data';
+      const msg = (err instanceof ApiError && err.message) || 'Failed to load league health data';
       setError(msg);
     } finally {
       setLoading(false);

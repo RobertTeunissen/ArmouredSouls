@@ -11,7 +11,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { AdminPageHeader, AdminStatCard, AdminFilterBar } from '../../components/admin/shared';
 import { useAdminStore } from '../../stores/adminStore';
-import apiClient from '../../utils/apiClient';
+import { api } from '../../utils/api';
+import { ApiError } from '../../utils/ApiError';
 import type { SystemStats } from '../../components/admin/types';
 import type { TrendDirection } from '../../utils/trendIndicator';
 
@@ -93,10 +94,10 @@ function AdminDashboardPage() {
     try {
       setKpiLoading(true);
       setKpiError(null);
-      const response = await apiClient.get<KpiData>(`/api/admin/dashboard/kpis?filter=${f}`);
-      setKpis(response.data);
+      const response = await api.get<KpiData>('/api/admin/dashboard/kpis', { params: { filter: f } });
+      setKpis(response);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to load KPI data';
+      const msg = (err instanceof ApiError && err.message) || 'Failed to load KPI data';
       setKpiError(msg);
     } finally {
       setKpiLoading(false);

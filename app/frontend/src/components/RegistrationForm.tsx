@@ -1,6 +1,6 @@
 import { useState, FormEvent } from 'react';
-import { isAxiosError } from 'axios';
-import apiClient from '../utils/apiClient';
+import { api } from '../utils/api';
+import { ApiError } from '../utils/ApiError';
 
 /** Shared input field styling that follows the design system (matches LoginPage). */
 const INPUT_CLASS =
@@ -217,19 +217,16 @@ function RegistrationForm({ onSuccess }: RegistrationFormProps) {
     setGeneralError(null);
 
     try {
-      const response = await apiClient.post('/api/auth/register', {
-        username,
-        stableName,
-        email,
-        password,
-      });
-
-      const { token, user } = response.data;
+      const { token, user } = await api.post<{ token: string; user: UserProfile }>(
+        '/api/auth/register',
+        { username, stableName, email, password },
+      );
       onSuccess(token, user);
     } catch (error) {
-      if (isAxiosError(error) && error.response) {
-        const { error: serverMessage, code } = error.response.data;
-        const mapped = mapServerErrorToField(code, serverMessage || 'Registration failed');
+      if (error instanceof ApiError && error.code !== 'NETWORK_ERROR') {
+        // Backend gave us a structured response — try to map the code to
+        // a specific field, falling back to the general error banner.
+        const mapped = mapServerErrorToField(error.code, error.message || 'Registration failed');
 
         if (mapped.field) {
           setFieldErrors({ [mapped.field]: mapped.message });
@@ -237,6 +234,7 @@ function RegistrationForm({ onSuccess }: RegistrationFormProps) {
           setGeneralError(mapped.message);
         }
       } else {
+        // Network error (no response) — connectivity message.
         setGeneralError(
           'Unable to reach the server. Check your internet connection and try again.',
         );

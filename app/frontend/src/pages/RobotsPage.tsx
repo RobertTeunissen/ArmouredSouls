@@ -5,7 +5,7 @@ import Navigation from '../components/Navigation';
 import RobotImage from '../components/RobotImage';
 import ConfirmationModal from '../components/ConfirmationModal';
 import ViewModeToggle from '../components/ViewModeToggle';
-import apiClient from '../utils/apiClient';
+import { api } from '../utils/api';
 import { repairAllRobots } from '../utils/robotApi';
 import { useRobotStore } from '../stores';
 import type { Facility } from '../components/facilities/types';
@@ -159,9 +159,8 @@ function RobotsPage() {
 
   const fetchFacilities = async () => {
     try {
-      const response = await apiClient.get('/api/facilities');
-      const data = response.data;
-      const facilities = data.facilities || data; // Handle both response formats
+      const data = await api.get<{ facilities?: Facility[] } | Facility[]>('/api/facilities');
+      const facilities = Array.isArray(data) ? data : (data.facilities ?? []);
       const repairBay = facilities.find((f: Facility) => f.type === 'repair_bay');
       if (repairBay) {
         setRepairBayLevel(repairBay.currentLevel || 0);

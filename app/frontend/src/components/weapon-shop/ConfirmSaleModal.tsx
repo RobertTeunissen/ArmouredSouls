@@ -13,7 +13,8 @@
  */
 
 import { useState } from 'react';
-import apiClient from '../../utils/apiClient';
+import { api } from '../../utils/api';
+import { ApiError } from '../../utils/ApiError';
 import { applyResaleRate } from '../../../../shared/utils/discounts';
 import { getWeaponImagePath } from '../../utils/weaponImages';
 import type { WeaponInventoryItem } from './types';
@@ -45,15 +46,15 @@ export function ConfirmSaleModal({
     setSubmitting(true);
     setError(null);
     try {
-      const response = await apiClient.delete(`/api/weapon-inventory/${item.id}`);
+      const response = await api.delete<{ salePrice: number; weaponName: string }>(
+        `/api/weapon-inventory/${item.id}`,
+      );
       onConfirmed({
-        salePrice: response.data.salePrice,
-        weaponName: response.data.weaponName,
+        salePrice: response.salePrice,
+        weaponName: response.weaponName,
       });
     } catch (err: unknown) {
-      const errorObj = err as { response?: { data?: { error?: string; code?: string } } };
-      const message = errorObj.response?.data?.error
-        ?? 'Failed to sell weapon. Please try again.';
+      const message = (err instanceof ApiError && err.message) || 'Failed to sell weapon. Please try again.';
       setError(message);
       setSubmitting(false);
     }

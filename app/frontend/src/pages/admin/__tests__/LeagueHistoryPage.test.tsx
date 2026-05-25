@@ -140,12 +140,17 @@ describe('LeagueHistoryPage', () => {
     render(<LeagueHistoryPage />);
 
     await waitFor(() => {
+      // Main events endpoint with params
       expect(mockedApiClient.get).toHaveBeenCalledWith(
-        expect.stringContaining('/api/admin/league-history?')
+        '/api/admin/league-history',
+        expect.objectContaining({ params: expect.any(Object) }),
       );
+      // Aggregates endpoint
       expect(mockedApiClient.get).toHaveBeenCalledWith(
-        expect.stringContaining('/api/admin/league-history/aggregates')
+        '/api/admin/league-history/aggregates',
+        expect.objectContaining({ params: expect.any(Object) }),
       );
+      // Yo-yo endpoint (no params)
       expect(mockedApiClient.get).toHaveBeenCalledWith('/api/admin/league-history/yo-yo');
     });
   });

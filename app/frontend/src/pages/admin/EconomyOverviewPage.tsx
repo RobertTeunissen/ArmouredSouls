@@ -11,7 +11,8 @@ import {
   AdminPageHeader,
   AdminStatCard,
 } from '../../components/admin/shared';
-import apiClient from '../../utils/apiClient';
+import { api } from '../../utils/api';
+import { ApiError } from '../../utils/ApiError';
 
 /* ------------------------------------------------------------------ */
 /*  Types (matches backend getEconomyOverview response)                */
@@ -95,12 +96,10 @@ function EconomyOverviewPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await apiClient.get<EconomyOverview>('/api/admin/economy/overview');
-      setData(res.data);
+      const data = await api.get<EconomyOverview>('/api/admin/economy/overview');
+      setData(data);
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { error?: string } } })?.response?.data?.error ||
-        'Failed to load economy data';
+      const msg = (err instanceof ApiError && err.message) || 'Failed to load economy data';
       setError(msg);
     } finally {
       setLoading(false);

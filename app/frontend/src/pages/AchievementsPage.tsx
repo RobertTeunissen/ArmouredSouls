@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import Navigation from '../components/Navigation';
 import AchievementBadge from '../components/AchievementBadge';
-import apiClient from '../utils/apiClient';
+import { api } from '../utils/api';
 import {
   getTierColor,
   getTierLabel,
@@ -54,8 +54,8 @@ function AchievementsPage() {
   useEffect(() => {
     const fetchAchievements = async () => {
       try {
-        const response = await apiClient.get('/api/achievements');
-        setData(response.data);
+        const data = await api.get<AchievementsResponse>('/api/achievements');
+        setData(data);
       } catch {
         setError('Failed to load achievements.');
       } finally {
@@ -82,7 +82,7 @@ function AchievementsPage() {
     if (newPinned.length > 6) return;
 
     try {
-      await apiClient.put('/api/achievements/pinned', { achievementIds: newPinned });
+      await api.put('/api/achievements/pinned', { achievementIds: newPinned });
       setData(prev => {
         if (!prev) return prev;
         return {

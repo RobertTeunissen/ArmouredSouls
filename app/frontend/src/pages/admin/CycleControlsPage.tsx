@@ -12,7 +12,8 @@ import { useShallow } from 'zustand/react/shallow';
 import { useAuth } from '../../contexts/AuthContext';
 import { AdminPageHeader, AdminStatCard } from '../../components/admin/shared';
 import { useAdminStore } from '../../stores/adminStore';
-import apiClient from '../../utils/apiClient';
+import { api } from '../../utils/api';
+import { ApiError } from '../../utils/ApiError';
 import type { SchedulerState } from '../../stores/adminStore';
 
 /* ------------------------------------------------------------------ */
@@ -43,6 +44,33 @@ interface ConfirmAction {
   description: string;
   onConfirm: () => Promise<void>;
 }
+
+/* ------------------------------------------------------------------ */
+/*  Response shapes                                                    */
+/* ------------------------------------------------------------------ */
+
+interface MatchmakingResponse { matchesCreated: number }
+interface BattlesResponse { summary: { totalBattles: number; successfulBattles: number; failedBattles: number } }
+interface RebalanceResponse { summary: { totalPromoted: number; totalDemoted: number } }
+interface RepairResponse { robotsRepaired: number }
+interface DailyFinancesResponse { summary: { usersProcessed: number; totalCostsDeducted: number; bankruptUsers: number } }
+interface KothResponse { message?: string }
+interface TagTeamBattlesResponse { summary: { totalBattles: number } }
+interface BulkCyclesResponse {
+  cyclesCompleted: number;
+  totalDuration: number;
+  averageCycleDuration: number;
+  totalCyclesInSystem?: number;
+  results?: CycleResult[];
+}
+
+/**
+ * Extract a user-facing error message from an unknown thrown value.
+ * Backend errors arriving as `ApiError` carry their structured message;
+ * everything else falls back to the caller-supplied label.
+ */
+const errorMessage = (err: unknown, fallback: string): string =>
+  (err instanceof ApiError && err.message) || fallback;
 
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
@@ -77,8 +105,8 @@ function CycleControlsPage() {
   const [includeKoth, setIncludeKoth] = useState(true);
   const [includeDailyFinances, setIncludeDailyFinances] = useState(true);
   const [generateUsersPerCycle, setGenerateUsersPerCycle] = useState(true);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [bulkResults, setBulkResults] = useState<any>(null);
+   
+  const [bulkResults, setBulkResults] = useState<BulkCyclesResponse | null>(null);
 
   useEffect(() => {
     fetchSchedulerStatus();
@@ -94,11 +122,11 @@ function CycleControlsPage() {
   const runMatchmaking = async (): Promise<void> => {
     setLoading(true);
     try {
-      const response = await apiClient.post('/api/admin/matchmaking/run', {});
-      addSessionLog('success', `Matchmaking completed! Created ${response.data.matchesCreated} matches`);
-      showMessage('success', `Matchmaking completed! Created ${response.data.matchesCreated} matches`);
+      const data = await api.post<MatchmakingResponse>('/api/admin/matchmaking/run', {});
+      addSessionLog('success', `Matchmaking completed! Created ${data.matchesCreated} matches`);
+      showMessage('success', `Matchmaking completed! Created ${data.matchesCreated} matches`);
     } catch (error: unknown) {
-      const msg = (error as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Matchmaking failed';
+      const msg = errorMessage(error, 'Matchmaking failed');
       addSessionLog('error', `Matchmaking failed: ${msg}`);
       showMessage('error', msg);
     } finally {
@@ -109,13 +137,13 @@ function CycleControlsPage() {
   const executeBattles = async (): Promise<void> => {
     setLoading(true);
     try {
-      const response = await apiClient.post('/api/admin/battles/run', {});
-      const summary = response.data.summary;
+      const data = await api.post<BattlesResponse>('/api/admin/battles/run', {});
+      const summary = data.summary;
       const text = `Battles executed! Total: ${summary.totalBattles}, Success: ${summary.successfulBattles}, Failed: ${summary.failedBattles}`;
       addSessionLog('success', text);
       showMessage('success', text);
     } catch (error: unknown) {
-      const msg = (error as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Battle execution failed';
+      const msg = errorMessage(error, 'Battle execution failed');
       addSessionLog('error', `Battle execution failed: ${msg}`);
       showMessage('error', msg);
     } finally {
@@ -126,13 +154,13 @@ function CycleControlsPage() {
   const rebalanceLeagues = async (): Promise<void> => {
     setLoading(true);
     try {
-      const response = await apiClient.post('/api/admin/leagues/rebalance', {});
-      const summary = response.data.summary;
+      const data = await api.post<RebalanceResponse>('/api/admin/leagues/rebalance', {});
+      const summary = data.summary;
       const text = `League rebalancing completed! Promoted: ${summary.totalPromoted}, Demoted: ${summary.totalDemoted}`;
       addSessionLog('success', text);
       showMessage('success', text);
     } catch (error: unknown) {
-      const msg = (error as { response?: { data?: { error?: string } } })?.response?.data?.error || 'League rebalancing failed';
+      const msg = errorMessage(error, 'League rebalancing failed');
       addSessionLog('error', `League rebalancing failed: ${msg}`);
       showMessage('error', msg);
     } finally {
@@ -143,12 +171,12 @@ function CycleControlsPage() {
   const repairAllRobots = async (): Promise<void> => {
     setLoading(true);
     try {
-      const response = await apiClient.post('/api/admin/repair/all', { deductCosts: true });
-      const text = `Repaired ${response.data.robotsRepaired} robots`;
+      const data = await api.post<RepairResponse>('/api/admin/repair/all', { deductCosts: true });
+      const text = `Repaired ${data.robotsRepaired} robots`;
       addSessionLog('success', text);
       showMessage('success', text);
     } catch (error: unknown) {
-      const msg = (error as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Repair failed';
+      const msg = errorMessage(error, 'Repair failed');
       addSessionLog('error', `Repair failed: ${msg}`);
       showMessage('error', msg);
     } finally {
@@ -159,14 +187,14 @@ function CycleControlsPage() {
   const processDailyFinances = async (): Promise<void> => {
     setLoading(true);
     try {
-      const response = await apiClient.post('/api/admin/daily-finances/process', {});
-      const summary = response.data.summary;
+      const data = await api.post<DailyFinancesResponse>('/api/admin/daily-finances/process', {});
+      const summary = data.summary;
       const text = `Daily finances processed! ${summary.usersProcessed} users, ₡${summary.totalCostsDeducted.toLocaleString()} deducted${summary.bankruptUsers > 0 ? `, ${summary.bankruptUsers} bankruptcies` : ''}`;
       addSessionLog('success', text);
       showMessage('success', text);
       await refreshUser();
     } catch (error: unknown) {
-      const msg = (error as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Daily finances failed';
+      const msg = errorMessage(error, 'Daily finances failed');
       addSessionLog('error', `Daily finances failed: ${msg}`);
       showMessage('error', msg);
     } finally {
@@ -177,12 +205,12 @@ function CycleControlsPage() {
   const triggerKothCycle = async (): Promise<void> => {
     setLoading(true);
     try {
-      const response = await apiClient.post('/api/admin/koth/trigger', {});
-      const text = `KotH cycle triggered successfully!${response.data.message ? ` ${response.data.message}` : ''}`;
+      const data = await api.post<KothResponse>('/api/admin/koth/trigger', {});
+      const text = `KotH cycle triggered successfully!${data.message ? ` ${data.message}` : ''}`;
       addSessionLog('success', text);
       showMessage('success', text);
     } catch (error: unknown) {
-      const msg = (error as { response?: { data?: { error?: string } } })?.response?.data?.error || 'KotH cycle trigger failed';
+      const msg = errorMessage(error, 'KotH cycle trigger failed');
       addSessionLog('error', `KotH cycle trigger failed: ${msg}`);
       showMessage('error', msg);
     } finally {
@@ -194,19 +222,19 @@ function CycleControlsPage() {
     setLoading(true);
     addSessionLog('info', 'Starting league cycle: Repair → Battles → Rebalance → Matchmaking');
     try {
-      const repairRes = await apiClient.post('/api/admin/repair/all', { deductCosts: true });
-      addSessionLog('info', `Step 1: Repaired ${repairRes.data.robotsRepaired} robots`);
-      const battleRes = await apiClient.post('/api/admin/battles/run', {});
-      const bs = battleRes.data.summary;
+      const repair = await api.post<RepairResponse>('/api/admin/repair/all', { deductCosts: true });
+      addSessionLog('info', `Step 1: Repaired ${repair.robotsRepaired} robots`);
+      const battles = await api.post<BattlesResponse>('/api/admin/battles/run', {});
+      const bs = battles.summary;
       addSessionLog(bs.failedBattles > 0 ? 'warning' : 'success', `Step 2: ${bs.successfulBattles}/${bs.totalBattles} battles executed`);
-      const rebalRes = await apiClient.post('/api/admin/leagues/rebalance', {});
-      const rs = rebalRes.data.summary;
+      const rebal = await api.post<RebalanceResponse>('/api/admin/leagues/rebalance', {});
+      const rs = rebal.summary;
       addSessionLog('success', `Step 3: ${rs.totalPromoted} promoted, ${rs.totalDemoted} demoted`);
-      const matchRes = await apiClient.post('/api/admin/matchmaking/run', {});
-      addSessionLog('success', `Step 4: ${matchRes.data.matchesCreated} matches scheduled`);
-      showMessage('success', `League cycle complete: ${bs.successfulBattles} battles, ${matchRes.data.matchesCreated} matches scheduled`);
+      const match = await api.post<MatchmakingResponse>('/api/admin/matchmaking/run', {});
+      addSessionLog('success', `Step 4: ${match.matchesCreated} matches scheduled`);
+      showMessage('success', `League cycle complete: ${bs.successfulBattles} battles, ${match.matchesCreated} matches scheduled`);
     } catch (error: unknown) {
-      const msg = (error as { response?: { data?: { error?: string } } })?.response?.data?.error || 'League cycle failed';
+      const msg = errorMessage(error, 'League cycle failed');
       addSessionLog('error', `League cycle failed: ${msg}`);
       showMessage('error', msg);
     } finally {
@@ -218,8 +246,8 @@ function CycleControlsPage() {
     setLoading(true);
     addSessionLog('info', 'Starting tournament cycle');
     try {
-      const response = await apiClient.post('/api/admin/cycles/bulk', { cycles: 0, includeTournaments: true, includeKoth: false, generateUsersPerCycle: false });
-      const results = response.data.results?.[0]?.tournaments;
+      const data = await api.post<BulkCyclesResponse>('/api/admin/cycles/bulk', { cycles: 0, includeTournaments: true, includeKoth: false, generateUsersPerCycle: false });
+      const results = data.results?.[0]?.tournaments;
       const details = results ? [
         results.tournamentsExecuted ? `${results.tournamentsExecuted} tournament(s)` : null,
         results.roundsExecuted ? `${results.roundsExecuted} round(s)` : null,
@@ -230,7 +258,7 @@ function CycleControlsPage() {
       addSessionLog('success', `Tournament cycle: ${details}`);
       showMessage('success', `Tournament cycle: ${details}`);
     } catch (error: unknown) {
-      const msg = (error as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Tournament cycle failed';
+      const msg = errorMessage(error, 'Tournament cycle failed');
       addSessionLog('error', `Tournament cycle failed: ${msg}`);
       showMessage('error', msg);
     } finally {
@@ -242,19 +270,19 @@ function CycleControlsPage() {
     setLoading(true);
     addSessionLog('info', 'Starting tag team cycle: Repair → Battles → Rebalance → Matchmaking');
     try {
-      const repairRes = await apiClient.post('/api/admin/repair/all', { deductCosts: true });
-      addSessionLog('info', `Step 1: Repaired ${repairRes.data.robotsRepaired} robots`);
-      const battleRes = await apiClient.post('/api/admin/tag-teams/battles', {});
-      const bs = battleRes.data.summary;
+      const repair = await api.post<RepairResponse>('/api/admin/repair/all', { deductCosts: true });
+      addSessionLog('info', `Step 1: Repaired ${repair.robotsRepaired} robots`);
+      const battles = await api.post<TagTeamBattlesResponse>('/api/admin/tag-teams/battles', {});
+      const bs = battles.summary;
       addSessionLog('success', `Step 2: ${bs.totalBattles} tag team battles executed`);
-      const rebalRes = await apiClient.post('/api/admin/tag-teams/rebalance', {});
-      const rs = rebalRes.data.summary;
+      const rebal = await api.post<RebalanceResponse>('/api/admin/tag-teams/rebalance', {});
+      const rs = rebal.summary;
       addSessionLog('success', `Step 3: ${rs.totalPromoted} promoted, ${rs.totalDemoted} demoted`);
-      const matchRes = await apiClient.post('/api/admin/tag-teams/matchmaking', {});
-      addSessionLog('success', `Step 4: ${matchRes.data.matchesCreated} tag team matches scheduled`);
-      showMessage('success', `Tag team cycle complete: ${bs.totalBattles} battles, ${matchRes.data.matchesCreated} matches scheduled`);
+      const match = await api.post<MatchmakingResponse>('/api/admin/tag-teams/matchmaking', {});
+      addSessionLog('success', `Step 4: ${match.matchesCreated} tag team matches scheduled`);
+      showMessage('success', `Tag team cycle complete: ${bs.totalBattles} battles, ${match.matchesCreated} matches scheduled`);
     } catch (error: unknown) {
-      const msg = (error as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Tag team cycle failed';
+      const msg = errorMessage(error, 'Tag team cycle failed');
       addSessionLog('error', `Tag team cycle failed: ${msg}`);
       showMessage('error', msg);
     } finally {
@@ -274,17 +302,17 @@ function CycleControlsPage() {
     addSessionLog('info', `Starting bulk cycle run: ${bulkCycles} cycle(s)`, { includeTournaments, generateUsersPerCycle });
 
     try {
-      const response = await apiClient.post('/api/admin/cycles/bulk', {
+      const data = await api.post<BulkCyclesResponse>('/api/admin/cycles/bulk', {
         cycles: bulkCycles,
         includeTournaments,
         generateUsersPerCycle,
         includeKoth,
         includeDailyFinances,
       });
-      setBulkResults(response.data);
+      setBulkResults(data);
 
-      if (response.data.results?.length > 0) {
-        response.data.results.forEach((result: CycleResult) => {
+      if (data.results && data.results.length > 0) {
+        data.results.forEach((result: CycleResult) => {
           if (result.battles) {
             const { totalBattles, successfulBattles, failedBattles } = result.battles;
             addSessionLog(
@@ -299,14 +327,14 @@ function CycleControlsPage() {
         });
       }
 
-      const completionMsg = `Bulk cycle run completed: ${response.data.cyclesCompleted} cycle(s) in ${(response.data.totalDuration / 1000)?.toFixed(2) || 0}s`;
+      const completionMsg = `Bulk cycle run completed: ${data.cyclesCompleted} cycle(s) in ${(data.totalDuration / 1000)?.toFixed(2) || 0}s`;
       addSessionLog('success', completionMsg);
-      showMessage('success', `Completed ${response.data.cyclesCompleted} cycles in ${(response.data.totalDuration / 1000)?.toFixed(2) || 0}s`);
+      showMessage('success', `Completed ${data.cyclesCompleted} cycles in ${(data.totalDuration / 1000)?.toFixed(2) || 0}s`);
       await refreshUser();
     } catch (error: unknown) {
-      const errData = (error as { response?: { data?: { error?: string } } })?.response?.data;
-      addSessionLog('error', 'Bulk cycle run failed', errData);
-      showMessage('error', errData?.error || 'Bulk cycles failed');
+      const msg = errorMessage(error, 'Bulk cycles failed');
+      addSessionLog('error', 'Bulk cycle run failed', error instanceof ApiError ? { code: error.code, statusCode: error.statusCode, details: error.details } : undefined);
+      showMessage('error', msg);
     } finally {
       setLoading(false);
     }
