@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { formatCurrency } from '../utils/formatters';
 import Navigation from '../components/Navigation';
-import apiClient from '../utils/apiClient';
+import { api } from '../utils/api';
 import { createLogger } from '../utils/logger';
 
 const log = createLogger('CycleSummaryPage');
@@ -67,15 +67,11 @@ function CycleSummaryPage() {
         throw new Error('User not logged in');
       }
 
-      const response = await apiClient.get(
-        `/api/analytics/stable/${user.id}/summary?lastNCycles=${cycleCount}`
+      const summaryData = await api.get<CycleSummaryData>(
+        `/api/analytics/stable/${user.id}/summary`,
+        { params: { lastNCycles: cycleCount } },
       );
 
-      if (response.status !== 200) {
-        throw new Error(response.data?.message || 'Failed to fetch cycle summary');
-      }
-
-      const summaryData = response.data;
       setData(summaryData);
       setError(null);
     } catch (err) {

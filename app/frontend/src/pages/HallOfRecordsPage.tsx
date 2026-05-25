@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import apiClient from '../utils/apiClient';
+import { api } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
 import { useNavigate } from 'react-router-dom';
@@ -33,9 +33,9 @@ function HallOfRecordsPage() {
       setLoading(true);
       setError(null);
 
-      const response = await apiClient.get<RecordsData>('/api/records');
+      const data = await api.get<RecordsData>('/api/records');
 
-      setRecords(response.data);
+      setRecords(data);
     } catch (err) {
       setError('Failed to load Hall of Records');
       log.error('Records fetch error', { err });

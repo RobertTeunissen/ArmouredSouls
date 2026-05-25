@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import apiClient from '../utils/apiClient';
+import { api } from '../utils/api';
 import {
   fetchRobotById,
   fetchRobotLeagueHistory,
@@ -240,11 +240,13 @@ function RobotDetailPage() {
 
       // Fetch league rank for this robot
       try {
-        const leagueResponse = await apiClient.get(`/api/leagues/${robotData.currentLeague}/standings?instance=${robotData.leagueId}`);
-        const leagueData = leagueResponse.data;
-        const standings = leagueData.data || [];
+        const leagueData = await api.get<{ data?: Array<{ id: number }> } | Array<{ id: number }>>(
+          `/api/leagues/${robotData.currentLeague}/standings`,
+          { params: { instance: robotData.leagueId } },
+        );
+        const standings = Array.isArray(leagueData) ? leagueData : (leagueData.data ?? []);
         const robotIndex = standings.findIndex((r: { id: number }) => r.id === parseInt(id!));
-        
+
         if (robotIndex !== -1) {
           const rank = robotIndex + 1;
           const total = standings.length;
@@ -258,17 +260,16 @@ function RobotDetailPage() {
 
       // Fetch weapon inventory
       try {
-        const weaponsResponse = await apiClient.get('/api/weapon-inventory');
-        setWeapons(weaponsResponse.data);
+        const weaponsData = await api.get<WeaponInventory[]>('/api/weapon-inventory');
+        setWeapons(weaponsData);
       } catch (err) {
         log.error('Failed to fetch weapons', { err });
       }
 
       // Fetch training facility level
       try {
-        const facilitiesResponse = await apiClient.get('/api/facilities');
-        const data = facilitiesResponse.data;
-        const facilities = data.facilities || data; // Handle both response formats
+        const data = await api.get<{ facilities?: Facility[] } | Facility[]>('/api/facilities');
+        const facilities = Array.isArray(data) ? data : (data.facilities ?? []);
         
         // Always set training level (even if 0)
         const trainingFacility = facilities.find((f: Facility) => f.type === 'training_facility');

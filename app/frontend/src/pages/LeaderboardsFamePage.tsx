@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import apiClient from '../utils/apiClient';
+import { api } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
 import { getLeagueColor } from '../utils/formatters';
@@ -56,7 +56,7 @@ function LeaderboardsFamePage() {
       setLoading(true);
       setError(null);
       
-      const response = await apiClient.get<LeaderboardResponse>(
+      const data = await api.get<LeaderboardResponse>(
         '/api/leaderboards/fame',
         {
           params: {
@@ -67,8 +67,8 @@ function LeaderboardsFamePage() {
           },
         }
       );
-      
-      setLeaderboard(response.data.leaderboard);
+
+      setLeaderboard(data.leaderboard);
     } catch (err) {
       setError('Failed to load fame leaderboard');
       log.error('Fame leaderboard error', { err });

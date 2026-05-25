@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
-import apiClient from '../utils/apiClient';
+import { api } from '../utils/api';
 import { createRobot } from '../utils/robotApi';
 import { ApiError } from '../utils/ApiError';
 
@@ -55,10 +55,10 @@ function CreateRobotPage() {
       if (isOnboarding) {
         // During onboarding: update onboarding choices with new robot ID, then return to onboarding
         try {
-          const existingState = await apiClient.get('/api/onboarding/state');
-          const currentChoices = existingState.data?.data?.choices || {};
-          const robotsCreated = currentChoices.robotsCreated || [];
-          await apiClient.post('/api/onboarding/state', {
+          const existingState = await api.get<{ data?: { choices?: Record<string, unknown> } }>('/api/onboarding/state');
+          const currentChoices = (existingState?.data?.choices ?? {}) as Record<string, unknown>;
+          const robotsCreated = (currentChoices.robotsCreated as number[] | undefined) ?? [];
+          await api.post('/api/onboarding/state', {
             choices: {
               ...currentChoices,
               robotsCreated: [...robotsCreated, data.robot.id],
