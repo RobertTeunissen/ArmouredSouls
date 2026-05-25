@@ -411,6 +411,20 @@ jobs:
             ./app/backend/dist/ \
             ${{ secrets.ACC_VPS_USER }}@${{ secrets.ACC_VPS_IP }}:/opt/armouredsouls/backend/dist/
 
+      - name: Pre-flight — free disk space and verify capacity (ACC)
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.ACC_VPS_IP }}
+          username: ${{ secrets.ACC_VPS_USER }}
+          key: ${{ secrets.ACC_SSH_KEY }}
+          command_timeout: 2m
+          # Trims old pre-deploy / overflow backup dumps and aborts the deploy
+          # with a Discord alert if disk usage is still ≥ 90% afterward. Stops
+          # `npm install --prefer-offline` from hitting ENOSPC and timing out
+          # at minute 10 — see app/scripts/preflight.sh for full rationale.
+          script: |
+            bash /opt/armouredsouls/scripts/preflight.sh
+
       - name: Install dependencies on VPS
         uses: appleboy/ssh-action@v1
         with:
@@ -714,6 +728,20 @@ jobs:
             -e "ssh -i ~/.ssh/deploy_key" \
             ./app/backend/dist/ \
             ${{ secrets.PRD_VPS_USER }}@${{ secrets.PRD_VPS_IP }}:/opt/armouredsouls/backend/dist/
+
+      - name: Pre-flight — free disk space and verify capacity (production)
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.PRD_VPS_IP }}
+          username: ${{ secrets.PRD_VPS_USER }}
+          key: ${{ secrets.PRD_SSH_KEY }}
+          command_timeout: 2m
+          # Trims old pre-deploy / overflow backup dumps and aborts the deploy
+          # with a Discord alert if disk usage is still ≥ 90% afterward. Stops
+          # `npm install --prefer-offline` from hitting ENOSPC and timing out
+          # at minute 10 — see app/scripts/preflight.sh for full rationale.
+          script: |
+            bash /opt/armouredsouls/scripts/preflight.sh
 
       - name: Install dependencies on VPS
         uses: appleboy/ssh-action@v1
