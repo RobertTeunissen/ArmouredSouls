@@ -309,14 +309,21 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: |
+            app/backend/package-lock.json
+            app/frontend/package-lock.json
 
+      # npm audit only reads package-lock.json, so we skip postinstall scripts
+      # to avoid transient CDN timeouts from native-binary downloads
+      # (e.g., onnxruntime-node via gitnexus → @huggingface/transformers).
       - name: Install backend dependencies
         working-directory: ./app/backend
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Install frontend dependencies
         working-directory: ./app/frontend
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Generate audit report (backend)
         working-directory: ./app/backend
