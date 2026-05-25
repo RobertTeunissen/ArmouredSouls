@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { UnlockedAchievement } from '../utils/achievementUtils';
 import { useAuth } from '../contexts/AuthContext';
+import { api } from '../utils/api';
 import apiClient from '../utils/apiClient';
 
 const LAST_SEEN_KEY = 'achievementLastSeen';
@@ -20,10 +21,9 @@ export function useAchievementToasts(enabled = true) {
       params.since = lastSeen;
     }
 
-    apiClient
-      .get('/api/achievements/recent', { params })
-      .then((res) => {
-        const unlocks = res.data;
+    api
+      .get<Array<UnlockedAchievement & { unlockedAt?: string }>>('/api/achievements/recent', { params })
+      .then((unlocks) => {
         if (Array.isArray(unlocks) && unlocks.length > 0) {
           setToasts(prev => [...prev, ...unlocks]);
           const mostRecent = unlocks[0]?.unlockedAt;
@@ -37,7 +37,10 @@ export function useAchievementToasts(enabled = true) {
       });
   }, [enabled, isAuthenticated]);
 
-  // Axios response interceptor to watch for achievementUnlocks in any API response
+  // Axios response interceptor to watch for achievementUnlocks in any API
+  // response. The interceptor must hook the underlying `apiClient` axios
+  // instance — the typed `api` wrapper unwraps `response.data` and would
+  // strip the `achievementUnlocks` envelope before we could inspect it.
   useEffect(() => {
     if (!enabled) return;
 

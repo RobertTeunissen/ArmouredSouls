@@ -6,7 +6,8 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import apiClient from '../../utils/apiClient';
+import { api } from '../../utils/api';
+import { ApiError } from '../../utils/ApiError';
 import { useAuth } from '../../contexts/AuthContext';
 import type { WeaponFilters } from '../FilterPanel';
 import { ATTRIBUTE_LABELS } from '../../utils/weaponConstants';
@@ -90,27 +91,25 @@ export function useWeaponShop() {
     const fetchData = async () => {
       try {
         // Fetch weapons
-        const weaponsResponse = await apiClient.get('/api/weapons');
+        const weaponsRaw = await api.get<Weapon[]>('/api/weapons');
         // Filter out test weapons (Basic Laser is created by tests and shouldn't be purchasable)
-        const filteredWeapons = weaponsResponse.data.filter((w: Weapon) =>
+        const filteredWeapons = weaponsRaw.filter((w: Weapon) =>
           w.name !== 'Basic Laser' && w.cost >= 10000 // Filter out test weapons with unrealistic prices
         );
         setWeapons(filteredWeapons);
 
         // Fetch owned weapons inventory
-        const inventoryResponse = await apiClient.get('/api/weapon-inventory');
-        const inventory = inventoryResponse.data;
+        const inventory = await api.get<WeaponInventoryItem[]>('/api/weapon-inventory');
         setInventory(inventory);
 
         // Count owned weapons by weapon ID
         const ownedMap = new Map<number, number>();
         let equippedCount = 0;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        inventory.forEach((item: any) => {
+        inventory.forEach((item) => {
           const weaponId = item.weaponId;
           ownedMap.set(weaponId, (ownedMap.get(weaponId) || 0) + 1);
           // Count if weapon is equipped (has robots using it)
-          if (item.robotsMain?.length > 0 || item.robotsOffhand?.length > 0) {
+          if ((item.robotsMain?.length ?? 0) > 0 || (item.robotsOffhand?.length ?? 0) > 0) {
             equippedCount++;
           }
         });
@@ -118,17 +117,17 @@ export function useWeaponShop() {
         setEquippedWeaponsCount(equippedCount);
 
         // Fetch facilities to get Weapon Workshop level
-        const facilitiesResponse = await apiClient.get('/api/facilities');
-        const facilities = facilitiesResponse.data.facilities || facilitiesResponse.data;
+        const facData = await api.get<{ facilities?: WeaponFacility[] } | WeaponFacility[]>('/api/facilities');
+        const facilities = Array.isArray(facData) ? facData : (facData.facilities ?? []);
         const weaponWorkshop = facilities.find((f: WeaponFacility) => f.type === 'weapons_workshop');
         setWeaponWorkshopLevel(weaponWorkshop?.currentLevel || 0);
 
         // Fetch storage status
-        const storageResponse = await apiClient.get('/api/weapon-inventory/storage-status');
-        setStorageStatus(storageResponse.data);
-      } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+        const storage = await api.get<StorageStatus>('/api/weapon-inventory/storage-status');
+        setStorageStatus(storage);
+      } catch (err: unknown) {
         // Check if it's an authentication error
-        if (err.response?.status === 401 || err.response?.status === 403) {
+        if (err instanceof ApiError && (err.statusCode === 401 || err.statusCode === 403)) {
           setError('Authentication failed. Please log out and log back in.');
         } else {
           setError('Failed to load weapons. Please try refreshing the page.');
@@ -322,22 +321,20 @@ export function useWeaponShop() {
 
         setPurchasing(weaponId);
         try {
-          await apiClient.post('/api/weapon-inventory/purchase', {
+          await api.post('/api/weapon-inventory/purchase', {
             weaponId,
           });
           await refreshUser();
 
           // Refresh storage status after purchase
-          const storageResponse = await apiClient.get('/api/weapon-inventory/storage-status');
-          setStorageStatus(storageResponse.data);
+          const storage = await api.get<StorageStatus>('/api/weapon-inventory/storage-status');
+          setStorageStatus(storage);
 
           // Refresh owned weapons
-          const inventoryResponse = await apiClient.get('/api/weapon-inventory');
-          const inventory = inventoryResponse.data;
+          const inventory = await api.get<WeaponInventoryItem[]>('/api/weapon-inventory');
           setInventory(inventory);
           const ownedMap = new Map<number, number>();
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          inventory.forEach((item: any) => {
+          inventory.forEach((item) => {
             const wId = item.weaponId;
             ownedMap.set(wId, (ownedMap.get(wId) || 0) + 1);
           });
@@ -346,10 +343,10 @@ export function useWeaponShop() {
           // Update onboarding state if in onboarding mode
           if (isOnboarding) {
             try {
-              const existingState = await apiClient.get('/api/onboarding/state');
-              const currentChoices = existingState.data?.data?.choices || {};
-              const weaponsPurchased = currentChoices.weaponsPurchased || [];
-              await apiClient.post('/api/onboarding/state', {
+              const existingState = await api.get<{ data?: { choices?: Record<string, unknown> } }>('/api/onboarding/state');
+              const currentChoices = (existingState?.data?.choices ?? {}) as Record<string, unknown>;
+              const weaponsPurchased = (currentChoices.weaponsPurchased as number[] | undefined) ?? [];
+              await api.post('/api/onboarding/state', {
                 choices: {
                   ...currentChoices,
                   weaponsPurchased: [...weaponsPurchased, weaponId],
@@ -376,11 +373,11 @@ export function useWeaponShop() {
           if (selectedWeapon?.id === weaponId) {
             setSelectedWeapon(null);
           }
-        } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+        } catch (err: unknown) {
           setConfirmationModal({
             isOpen: true,
             title: 'Purchase Failed',
-            message: err.response?.data?.error || 'Failed to purchase weapon',
+            message: (err instanceof ApiError && err.message) || 'Failed to purchase weapon',
             onConfirm: () => setConfirmationModal(prev => ({ ...prev, isOpen: false })),
           });
         } finally {
@@ -495,13 +492,12 @@ export function useWeaponShop() {
    */
   const refreshInventory = async () => {
     try {
-      const [inventoryResponse, storageResponse] = await Promise.all([
-        apiClient.get('/api/weapon-inventory'),
-        apiClient.get('/api/weapon-inventory/storage-status'),
+      const [inv, storage] = await Promise.all([
+        api.get<WeaponInventoryItem[]>('/api/weapon-inventory'),
+        api.get<StorageStatus>('/api/weapon-inventory/storage-status'),
       ]);
-      const inv = inventoryResponse.data as WeaponInventoryItem[];
       setInventory(inv);
-      setStorageStatus(storageResponse.data);
+      setStorageStatus(storage);
 
       const ownedMap = new Map<number, number>();
       let equippedCount = 0;

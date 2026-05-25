@@ -12,7 +12,7 @@ import { useOnboarding } from '../../../contexts/OnboardingContext';
 import RosterStrategyCard, { RosterStrategy } from '../RosterStrategyCard';
 import RobotNamingModal from '../RobotNamingModal';
 import { trackStrategySelected } from '../../../utils/onboardingAnalytics';
-import apiClient from '../../../utils/apiClient';
+import { api } from '../../../utils/api';
 import { createRobot } from '../../../utils/robotApi';
 import { ApiError } from '../../../utils/ApiError';
 
@@ -72,7 +72,7 @@ const Step1_Welcome = ({ onNext: _onNext }: Step1_WelcomeProps) => {
       const robotCount = STRATEGY_ROBOT_COUNT[selectedStrategy];
       const expansionsNeeded = robotCount - 1;
       for (let i = 0; i < expansionsNeeded; i++) {
-        await apiClient.post('/api/facilities/upgrade', {
+        await api.post('/api/facilities/upgrade', {
           facilityType: 'roster_expansion',
         });
       }
@@ -120,8 +120,8 @@ const Step1_Welcome = ({ onNext: _onNext }: Step1_WelcomeProps) => {
 
       // Advance backend step 1 → 2 → 3 via direct API calls
       // (context helpers swallow errors, so we call the API directly)
-      await apiClient.post('/api/onboarding/state', { step: 2 });
-      await apiClient.post('/api/onboarding/state', { step: 3 });
+      await api.post('/api/onboarding/state', { step: 2 });
+      await api.post('/api/onboarding/state', { step: 3 });
 
       // Sync context with the new backend state so the container re-renders
       await refreshState();

@@ -5,7 +5,8 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { usePracticeHistory, type PracticeHistoryEntry } from '../../hooks/usePracticeHistory';
-import apiClient from '../../utils/apiClient';
+import { api } from '../../utils/api';
+import { ApiError } from '../../utils/ApiError';
 import { fetchMyRobots } from '../../utils/robotApi';
 import type {
   OwnedRobot,
@@ -105,29 +106,23 @@ export function usePracticeArena(userId: number): UsePracticeArenaReturn {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [robotsData, sparringRes, facilitiesRes] = await Promise.all([
+        const [robotsData, sparringData, facData] = await Promise.all([
           fetchMyRobots(),
-          apiClient.get('/api/practice-arena/sparring-partners'),
-          apiClient.get('/api/facilities').catch(() => ({ data: [] })),
+          api.get<{ sparringPartners?: SparringPartnerDef[] } | SparringPartnerDef[]>('/api/practice-arena/sparring-partners'),
+          api.get<{ facilities?: Array<{ type: string; currentLevel: number }> } | Array<{ type: string; currentLevel: number }>>('/api/facilities').catch(() => [] as Array<{ type: string; currentLevel: number }>),
         ]);
         setRobots(robotsData as unknown as OwnedRobot[]);
-        const defs = sparringRes.data.sparringPartners || sparringRes.data;
-        setSparringDefs(Array.isArray(defs) ? defs : []);
+        const defs = Array.isArray(sparringData) ? sparringData : (sparringData.sparringPartners ?? []);
+        setSparringDefs(defs);
 
-        const facilitiesData = facilitiesRes.data?.facilities || facilitiesRes.data;
-        const facilities = Array.isArray(facilitiesData) ? facilitiesData : [];
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const tf = facilities.find((f: any) => f.type === 'training_facility');
+        const facilities = Array.isArray(facData) ? facData : (facData.facilities ?? []);
+        const tf = facilities.find((f) => f.type === 'training_facility');
         setTrainingLevel(tf?.currentLevel || 0);
         setAcademyLevels({
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          combat_training_academy: facilities.find((f: any) => f.type === 'combat_training_academy')?.currentLevel || 0,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          defense_training_academy: facilities.find((f: any) => f.type === 'defense_training_academy')?.currentLevel || 0,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          mobility_training_academy: facilities.find((f: any) => f.type === 'mobility_training_academy')?.currentLevel || 0,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          ai_training_academy: facilities.find((f: any) => f.type === 'ai_training_academy')?.currentLevel || 0,
+          combat_training_academy: facilities.find((f) => f.type === 'combat_training_academy')?.currentLevel || 0,
+          defense_training_academy: facilities.find((f) => f.type === 'defense_training_academy')?.currentLevel || 0,
+          mobility_training_academy: facilities.find((f) => f.type === 'mobility_training_academy')?.currentLevel || 0,
+          ai_training_academy: facilities.find((f) => f.type === 'ai_training_academy')?.currentLevel || 0,
         });
       } catch {
         // Silently handle
@@ -149,7 +144,7 @@ export function usePracticeArena(userId: number): UsePracticeArenaReturn {
     if (pollTimerRef.current) return;
     pollTimerRef.current = setInterval(async () => {
       try {
-        await apiClient.get('/api/practice-arena/sparring-partners');
+        await api.get('/api/practice-arena/sparring-partners');
         setCycleOffline(false);
         if (pollTimerRef.current) {
           clearInterval(pollTimerRef.current);
@@ -210,8 +205,10 @@ export function usePracticeArena(userId: number): UsePracticeArenaReturn {
         count,
       };
 
-      const res = await apiClient.post('/api/practice-arena/battle', payload);
-      const data = res.data;
+      const data = await api.post<PracticeBattleResult | PracticeBatchResult & { results?: PracticeBattleResult[] }>(
+        '/api/practice-arena/battle',
+        payload,
+      ) as PracticeBattleResult | PracticeBatchResult;
 
       const toHistoryEntry = (r: PracticeBattleResult) => {
         const cr = r.combatResult;
@@ -235,34 +232,32 @@ export function usePracticeArena(userId: number): UsePracticeArenaReturn {
         };
       };
 
-      if (count > 1 && data.results) {
+      if (count > 1 && 'results' in data && data.results) {
         const batch = data as PracticeBatchResult;
         setBatchResult(batch);
         setBattleResult(batch.results[0] || null);
         batch.results.forEach((r) => addResult(toHistoryEntry(r)));
       } else {
-        const single = (data.results ? data.results[0] : data) as PracticeBattleResult;
+        const single = ('results' in data && data.results ? data.results[0] : data) as PracticeBattleResult;
         setBattleResult(single);
         addResult(toHistoryEntry(single));
       }
     } catch (err: unknown) {
-      if (err && typeof err === 'object' && 'response' in err) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const axiosErr = err as any;
-        const status = axiosErr.response?.status;
-        const data = axiosErr.response?.data;
+      if (err instanceof ApiError) {
+        const status = err.statusCode;
+        const details = err.details as { code?: string; retryAfter?: number; remaining?: number } | undefined;
 
-        if (status === 503 && data?.code === 'CYCLE_IN_PROGRESS') {
+        if (status === 503 && err.code === 'CYCLE_IN_PROGRESS') {
           setCycleOffline(true);
           startCyclePoll();
           setError(null);
         } else if (status === 429) {
-          const retrySeconds = data?.retryAfter || 900;
+          const retrySeconds = details?.retryAfter || 900;
           const minutes = Math.ceil(retrySeconds / 60);
-          const remaining = data?.remaining ?? 0;
+          const remaining = details?.remaining ?? 0;
           setError(`Rate limit reached (${remaining} battles remaining). Try again in ${minutes} minute${minutes !== 1 ? 's' : ''}.`);
         } else {
-          setError(data?.error || 'Simulation failed. Please try again.');
+          setError(err.message || 'Simulation failed. Please try again.');
         }
       } else {
         setError('Network error. Please check your connection.');

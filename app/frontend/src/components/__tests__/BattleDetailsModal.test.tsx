@@ -163,7 +163,9 @@ describe('BattleDetailsModal', () => {
     render(<BattleDetailsModal isOpen={true} onClose={onClose} battleId={1} />);
     
     await waitFor(() => {
-      expect(screen.getByText('API Error')).toBeInTheDocument();
+      // Bare Errors don't carry a backend response shape, so the api wrapper
+      // drops their message and the page renders its fallback copy.
+      expect(screen.getByText('Failed to load battle details')).toBeInTheDocument();
     });
   });
 

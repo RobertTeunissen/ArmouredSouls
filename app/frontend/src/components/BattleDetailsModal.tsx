@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import apiClient from '../utils/apiClient';
+import { api } from '../utils/api';
+import { ApiError } from '../utils/ApiError';
 
 interface BattleDetailsModalProps {
   isOpen: boolean;
@@ -116,10 +117,11 @@ function BattleDetailsModal({ isOpen, onClose, battleId }: BattleDetailsModalPro
     setLoading(true);
     setError(null);
     try {
-      const response = await apiClient.get(`/api/admin/battles/${battleId}`);
-      setBattle(response.data);
+      const data = await api.get(`/api/admin/battles/${battleId}`);
+      setBattle(data);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to load battle details');
+      const msg = err instanceof ApiError ? err.message : (err instanceof Error ? err.message : 'Failed to load battle details');
+      setError(msg || 'Failed to load battle details');
     } finally {
       setLoading(false);
     }

@@ -6,7 +6,8 @@
 import { useState, useEffect, memo } from 'react';
 import { useOnboarding } from '../../../contexts/OnboardingContext';
 import RobotImage from '../../RobotImage';
-import apiClient from '../../../utils/apiClient';
+import { api } from '../../../utils/api';
+import { ApiError } from '../../../utils/ApiError';
 import { fetchMyRobots, fetchRobotById, commitUpgrades } from '../../../utils/robotApi';
 import { calculateDiscountedUpgradeCost } from '../../../../../shared/utils/upgradeCosts';
 
@@ -39,15 +40,15 @@ const Step8 = memo(({ onPrevious: _p }: { onNext?: () => void; onPrevious?: () =
   useEffect(() => {
     (async () => {
       try {
-        const [bots, pRes, fRes] = await Promise.all([
+        const [bots, profile, facData] = await Promise.all([
           fetchMyRobots(),
-          apiClient.get('/api/user/profile'),
-          apiClient.get('/api/facilities').catch(() => ({ data: { facilities: [] } })),
+          api.get<{ currency: number }>('/api/user/profile'),
+          api.get<{ facilities?: Array<{ type: string; currentLevel: number }> } | Array<{ type: string; currentLevel: number }>>('/api/facilities').catch(() => [] as Array<{ type: string; currentLevel: number }>),
         ]);
         setRobots(bots as unknown as Robot[]);
-        setBudget((pRes.data as { currency: number }).currency);
-        const facs = fRes.data.facilities || fRes.data || [];
-        const tf = Array.isArray(facs) ? facs.find((f: { type: string }) => f.type === 'training_facility') : null;
+        setBudget(profile.currency);
+        const facs = Array.isArray(facData) ? facData : (facData.facilities ?? []);
+        const tf = facs.find((f) => f.type === 'training_facility');
         setTfLevel(tf?.currentLevel || 0);
         const sel: Record<number, Set<Focus>> = {};
         for (const r of bots) sel[r.id] = new Set();
@@ -126,18 +127,18 @@ const Step8 = memo(({ onPrevious: _p }: { onNext?: () => void; onPrevious?: () =
         }
       }
 
-      const p = await apiClient.get('/api/user/profile');
-      setBudget((p.data as { currency: number }).currency);
+      const profile = await api.get<{ currency: number }>('/api/user/profile');
+      setBudget(profile.currency);
       if (robots.length >= 2) setPhase('tagteam');
       else await onFinish();
     } catch (e: unknown) {
-      setErr((e as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Upgrade failed.');
+      setErr((e instanceof ApiError && e.message) || 'Upgrade failed.');
     } finally { setBusy(false); }
   };
 
   const onFinish = async () => {
-    try { setBusy(true); setErr(null); await apiClient.post('/api/onboarding/state', { step: 9 }); await refreshState(); }
-    catch (e: unknown) { setErr((e as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Something went wrong.'); }
+    try { setBusy(true); setErr(null); await api.post('/api/onboarding/state', { step: 9 }); await refreshState(); }
+    catch (e: unknown) { setErr((e instanceof ApiError && e.message) || 'Something went wrong.'); }
     finally { setBusy(false); }
   };
 
@@ -235,10 +236,10 @@ const Step8 = memo(({ onPrevious: _p }: { onNext?: () => void; onPrevious?: () =
               if (!activeBot || !reserveBot) return;
               try {
                 setBusy(true); setErr(null);
-                await apiClient.post('/api/tag-teams', { activeRobotId: activeBot, reserveRobotId: reserveBot });
+                await api.post('/api/tag-teams', { activeRobotId: activeBot, reserveRobotId: reserveBot });
                 await onFinish();
               } catch (e: unknown) {
-                setErr((e as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Failed to create tag team.');
+                setErr((e instanceof ApiError && e.message) || 'Failed to create tag team.');
               } finally { setBusy(false); }
             }} disabled={!activeBot || !reserveBot || busy}
               className={`px-8 py-3 rounded-lg font-semibold text-lg transition-all duration-200 min-h-[44px]

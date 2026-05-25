@@ -8,8 +8,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import apiClient from '../../utils/apiClient';
 import { useStableStore } from '../../stores';
+import { api } from '../../utils/api';
+import { ApiError } from '../../utils/ApiError';
 import { FACILITY_CATEGORIES } from './constants';
 import type { TabType, Facility, UnifiedFacilityROI, FacilityRecommendation } from './types';
 import { createLogger } from '../../utils/logger';
@@ -84,9 +85,15 @@ export function useFacilities() {
 
   const fetchFacilities = async () => {
     try {
-      const response = await apiClient.get('/api/facilities');
-      setFacilities(response.data.facilities || response.data);
-      setUserPrestige(response.data.userPrestige || 0);
+      const data = await api.get<{ facilities?: Facility[]; userPrestige?: number } | Facility[]>('/api/facilities');
+      // Endpoint may return either `{ facilities, userPrestige }` or the raw array.
+      if (Array.isArray(data)) {
+        setFacilities(data);
+        setUserPrestige(0);
+      } else {
+        setFacilities(data.facilities ?? []);
+        setUserPrestige(data.userPrestige || 0);
+      }
     } catch (err) {
       setError('Failed to load facilities');
       log.error('Failed to load facilities', { err });
@@ -103,10 +110,8 @@ export function useFacilities() {
 
       // Fetch all economic facility ROIs in a single call
       try {
-        const roiResponse = await apiClient.get(`/api/analytics/facility/${user.id}/roi/all-economic`);
-        if (roiResponse.status === 200) {
-          setFacilityROIs(roiResponse.data.facilities || []);
-        }
+        const roiData = await api.get<{ facilities?: UnifiedFacilityROI[] }>(`/api/analytics/facility/${user.id}/roi/all-economic`);
+        setFacilityROIs(roiData.facilities || []);
       } catch (err) {
         log.error('Error fetching ROI data', { err });
         setFacilityROIs([]);
@@ -114,15 +119,10 @@ export function useFacilities() {
 
       // Fetch recommendations
       try {
-        const recResponse = await apiClient.get(
-          `/api/analytics/facility/${user.id}/recommendations`
+        const recData = await api.get<{ recommendations?: FacilityRecommendation[] }>(
+          `/api/analytics/facility/${user.id}/recommendations`,
         );
-        if (recResponse.status === 200) {
-          const recData = recResponse.data;
-          setRecommendations(recData.recommendations || []);
-        } else {
-          setRecommendations([]);
-        }
+        setRecommendations(recData.recommendations || []);
       } catch (err) {
         log.error('Error fetching recommendations', { err });
         setRecommendations([]);
@@ -139,18 +139,18 @@ export function useFacilities() {
     setError('');
 
     try {
-      await apiClient.post('/api/facilities/upgrade', {
-        facilityType,
-      });
+      await api.post('/api/facilities/upgrade', { facilityType });
 
       // Refresh facilities, user data, and store currency
       await Promise.all([fetchFacilities(), refreshUser(), refreshCurrency()]);
-    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-      if (err.response?.status === 403) {
-        const { current, message } = err.response.data;
-        setError(`${message}. You have ${current?.toLocaleString()} prestige.`);
+    } catch (err: unknown) {
+      if (err instanceof ApiError && err.statusCode === 403) {
+        const details = err.details as { current?: number; message?: string } | undefined;
+        const current = details?.current;
+        const message = details?.message ?? err.message;
+        setError(`${message}${current != null ? `. You have ${current.toLocaleString()} prestige.` : ''}`);
       } else {
-        setError(err.response?.data?.error || 'Upgrade failed');
+        setError((err instanceof ApiError && err.message) || 'Upgrade failed');
       }
     } finally {
       setUpgrading(null);

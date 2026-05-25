@@ -26,7 +26,8 @@
  */
 
 import { useCallback, useMemo, useState } from 'react';
-import apiClient from '../../utils/apiClient';
+import { api } from '../../utils/api';
+import { ApiError } from '../../utils/ApiError';
 import {
   applyRefinementsToWeapon,
   calculateRefinementCost,
@@ -307,30 +308,28 @@ export function RefinementModal({
         body.magnitude = magnitude;
         body.targetAttribute = targetAttribute;
       }
-      const response = await apiClient.post(`/api/weapon-inventory/${inventoryItem.id}/refine`, body);
+      const response = await api.post<{
+        weaponInventory: WeaponInventoryItem;
+        currency: number;
+        achievementUnlocks?: UnlockedAchievement[];
+      }>(`/api/weapon-inventory/${inventoryItem.id}/refine`, body);
       onConfirmed(
-        response.data.weaponInventory as WeaponInventoryItem,
-        response.data.currency as number,
-        (response.data.achievementUnlocks ?? []) as UnlockedAchievement[],
+        response.weaponInventory,
+        response.currency,
+        response.achievementUnlocks ?? [],
       );
     } catch (err: unknown) {
-      const errorObj = err as {
-        response?: {
-          data?: {
-            error?: string;
-            code?: string;
-            details?: { attribute?: string; currentTotal?: number; requestedAddition?: number; requiredWorkshopLevel?: number; currentWorkshopLevel?: number };
-          };
-        };
-      };
-      const data = errorObj.response?.data;
       // Render a richer message when the server provides structured details.
-      let message = data?.error ?? 'Refinement failed. Please try again.';
-      if (data?.code === 'WEAPON_REFINEMENT_ATTRIBUTE_STACK_CAP_EXCEEDED' && data.details?.attribute) {
-        const attr = formatAttributeName(data.details.attribute);
-        message = `${attr} is already at +${data.details.currentTotal ?? '?'}. +${data.details.requestedAddition ?? '?'} would push past the +10 cap.`;
-      } else if (data?.code === 'WEAPON_REFINEMENT_TIER_LOCKED' && data.details?.requiredWorkshopLevel !== undefined) {
-        message = `Requires Weapons Workshop L${data.details.requiredWorkshopLevel} (you are L${data.details.currentWorkshopLevel ?? '?'}).`;
+      let message = 'Refinement failed. Please try again.';
+      if (err instanceof ApiError) {
+        message = err.message || message;
+        const details = err.details as { attribute?: string; currentTotal?: number; requestedAddition?: number; requiredWorkshopLevel?: number; currentWorkshopLevel?: number } | undefined;
+        if (err.code === 'WEAPON_REFINEMENT_ATTRIBUTE_STACK_CAP_EXCEEDED' && details?.attribute) {
+          const attr = formatAttributeName(details.attribute);
+          message = `${attr} is already at +${details.currentTotal ?? '?'}. +${details.requestedAddition ?? '?'} would push past the +10 cap.`;
+        } else if (err.code === 'WEAPON_REFINEMENT_TIER_LOCKED' && details?.requiredWorkshopLevel !== undefined) {
+          message = `Requires Weapons Workshop L${details.requiredWorkshopLevel} (you are L${details.currentWorkshopLevel ?? '?'}).`;
+        }
       }
       setError(message);
       setSubmitting(false);

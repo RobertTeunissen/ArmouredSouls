@@ -10,7 +10,8 @@
 
 import { useState, memo } from 'react';
 import { useOnboarding } from '../../../contexts/OnboardingContext';
-import apiClient from '../../../utils/apiClient';
+import { api } from '../../../utils/api';
+import { ApiError } from '../../../utils/ApiError';
 
 type StrategyKey = '1_mighty' | '2_average' | '3_flimsy';
 
@@ -74,7 +75,7 @@ const Step3_FacilityTiming = ({ onPrevious: _onPrevious }: Step3_FacilityTimingP
       const purchased: string[] = [];
       for (const option of options) {
         if (selected.has(option.id)) {
-          await apiClient.post('/api/facilities/upgrade', {
+          await api.post('/api/facilities/upgrade', {
             facilityType: option.facilityType,
           });
           purchased.push(option.facilityType);
@@ -83,18 +84,16 @@ const Step3_FacilityTiming = ({ onPrevious: _onPrevious }: Step3_FacilityTimingP
 
       // Track choices — append to existing facilitiesPurchased
       const existing = tutorialState?.choices?.facilitiesPurchased || [];
-      await apiClient.post('/api/onboarding/state', {
+      await api.post('/api/onboarding/state', {
         choices: { facilitiesPurchased: [...existing, ...purchased] },
       });
 
-      await apiClient.post('/api/onboarding/state', { step: 4 });
-      await apiClient.post('/api/onboarding/state', { step: 5 });
-      await apiClient.post('/api/onboarding/state', { step: 6 });
+      await api.post('/api/onboarding/state', { step: 4 });
+      await api.post('/api/onboarding/state', { step: 5 });
+      await api.post('/api/onboarding/state', { step: 6 });
       await refreshState();
     } catch (err: unknown) {
-      const message =
-        (err as { response?: { data?: { error?: string } } })?.response?.data?.error
-        || 'Something went wrong. Please try again.';
+      const message = (err instanceof ApiError && err.message) || 'Something went wrong. Please try again.';
       setError(message);
     } finally {
       setIsSubmitting(false);
@@ -106,14 +105,12 @@ const Step3_FacilityTiming = ({ onPrevious: _onPrevious }: Step3_FacilityTimingP
     try {
       setIsSubmitting(true);
       setError(null);
-      await apiClient.post('/api/onboarding/state', { step: 4 });
-      await apiClient.post('/api/onboarding/state', { step: 5 });
-      await apiClient.post('/api/onboarding/state', { step: 6 });
+      await api.post('/api/onboarding/state', { step: 4 });
+      await api.post('/api/onboarding/state', { step: 5 });
+      await api.post('/api/onboarding/state', { step: 6 });
       await refreshState();
     } catch (err: unknown) {
-      const message =
-        (err as { response?: { data?: { error?: string } } })?.response?.data?.error
-        || 'Something went wrong. Please try again.';
+      const message = (err instanceof ApiError && err.message) || 'Something went wrong. Please try again.';
       setError(message);
     } finally {
       setIsSubmitting(false);
@@ -125,15 +122,13 @@ const Step3_FacilityTiming = ({ onPrevious: _onPrevious }: Step3_FacilityTimingP
     try {
       setIsSubmitting(true);
       setError(null);
-      await apiClient.post('/api/onboarding/reset-account', {
+      await api.post('/api/onboarding/reset-account', {
         confirmation: 'RESET',
         reason: 'Onboarding: user pressed Previous on step 3',
       });
       await refreshState();
     } catch (err: unknown) {
-      const message =
-        (err as { response?: { data?: { error?: string } } })?.response?.data?.error
-        || 'Could not revert. Please try again.';
+      const message = (err instanceof ApiError && err.message) || 'Could not revert. Please try again.';
       setError(message);
     } finally {
       setIsSubmitting(false);

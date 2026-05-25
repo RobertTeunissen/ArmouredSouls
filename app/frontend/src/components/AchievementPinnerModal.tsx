@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import AchievementBadge from './AchievementBadge';
-import apiClient from '../utils/apiClient';
+import { api } from '../utils/api';
 import type { AchievementWithProgress } from '../utils/achievementUtils';
 import { getTierLabel } from '../utils/achievementUtils';
 
@@ -35,7 +35,7 @@ export default function AchievementPinnerModal({
   const handleSave = useCallback(async () => {
     setSaving(true);
     try {
-      await apiClient.put('/api/achievements/pinned', { achievementIds: pinned });
+      await api.put('/api/achievements/pinned', { achievementIds: pinned });
       onPinnedChange(pinned);
       onClose();
     } catch {

@@ -14,7 +14,7 @@
 
 import { useMemo, useState } from 'react';
 import { applyResaleRate, calculateWeaponResaleRate } from '../../../../shared/utils/discounts';
-import apiClient from '../../utils/apiClient';
+import { api } from '../../utils/api';
 import { InventoryRow } from './InventoryRow';
 import { InventorySummaryBar } from './InventorySummaryBar';
 import { ConfirmSaleModal } from './ConfirmSaleModal';
@@ -79,11 +79,11 @@ export function InventoryTab({
     inventoryId: number,
     newName: string | null,
   ): Promise<void> {
-    const response = await apiClient.patch(
+    const response = await api.patch<{ weaponInventory: WeaponInventoryItem }>(
       `/api/weapon-inventory/${inventoryId}/custom-name`,
       { customName: newName },
     );
-    onCustomNameUpdated(response.data.weaponInventory as WeaponInventoryItem);
+    onCustomNameUpdated(response.weaponInventory);
   }
 
   function renderRow(item: WeaponInventoryItem, variant: 'available' | 'equipped') {
