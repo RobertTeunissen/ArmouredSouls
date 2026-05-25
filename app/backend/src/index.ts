@@ -1,7 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import dotenv from 'dotenv';
 import authRoutes from './routes/auth';
 import userRoutes from './routes/user';
 import facilityRoutes from './routes/facility';
@@ -40,8 +39,9 @@ import logger from './config/logger';
 import prisma from './lib/prisma';
 import { errorHandler } from './middleware/errorHandler';
 
-dotenv.config();
-
+// `.env` is loaded as a side-effect of importing `./config/env` (via logger
+// above). Calling `loadEnvConfig()` here triggers the singleton + Zod
+// validation; if env is invalid the process exits before binding the port.
 const config = loadEnvConfig();
 const app = express();
 

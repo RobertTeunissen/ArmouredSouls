@@ -12,10 +12,10 @@
   },
   "lint-staged": {
     "app/backend/**/*.ts": [
-      "bash -c 'cd app/backend && npx eslint --fix --no-warn-ignored ${0#app/backend/}'"
+      "bash -c 'cd app/backend && for f in \"$@\"; do npx eslint --fix --no-warn-ignored \"${f#app/backend/}\" || exit 1; done' --"
     ],
     "app/frontend/**/*.{ts,tsx}": [
-      "bash -c 'cd app/frontend && npx eslint --fix --no-warn-ignored ${0#app/frontend/}'"
+      "bash -c 'cd app/frontend && for f in \"$@\"; do npx eslint --fix --no-warn-ignored \"${f#app/frontend/}\" || exit 1; done' --"
     ]
   }
 }

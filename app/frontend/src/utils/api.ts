@@ -78,7 +78,12 @@ const buildAxiosConfig = (config?: ApiRequestConfig): AxiosRequestConfig | undef
 export const api = {
   async get<T>(url: string, config?: ApiRequestConfig): Promise<T> {
     try {
-      const response = await apiClient.get<T>(url, buildAxiosConfig(config));
+      // Pass only the args the caller actually supplied so test assertions
+      // matching `[url]` keep working without explicit `undefined` placeholders.
+      const axiosConfig = buildAxiosConfig(config);
+      const response = axiosConfig
+        ? await apiClient.get<T>(url, axiosConfig)
+        : await apiClient.get<T>(url);
       return response.data;
     } catch (err) {
       handleError(err);
@@ -87,7 +92,15 @@ export const api = {
 
   async post<T>(url: string, data?: unknown, config?: ApiRequestConfig): Promise<T> {
     try {
-      const response = await apiClient.post<T>(url, data, buildAxiosConfig(config));
+      const axiosConfig = buildAxiosConfig(config);
+      let response;
+      if (axiosConfig) {
+        response = await apiClient.post<T>(url, data, axiosConfig);
+      } else if (data !== undefined) {
+        response = await apiClient.post<T>(url, data);
+      } else {
+        response = await apiClient.post<T>(url);
+      }
       return response.data;
     } catch (err) {
       handleError(err);
@@ -96,7 +109,15 @@ export const api = {
 
   async put<T>(url: string, data?: unknown, config?: ApiRequestConfig): Promise<T> {
     try {
-      const response = await apiClient.put<T>(url, data, buildAxiosConfig(config));
+      const axiosConfig = buildAxiosConfig(config);
+      let response;
+      if (axiosConfig) {
+        response = await apiClient.put<T>(url, data, axiosConfig);
+      } else if (data !== undefined) {
+        response = await apiClient.put<T>(url, data);
+      } else {
+        response = await apiClient.put<T>(url);
+      }
       return response.data;
     } catch (err) {
       handleError(err);
@@ -105,7 +126,15 @@ export const api = {
 
   async patch<T>(url: string, data?: unknown, config?: ApiRequestConfig): Promise<T> {
     try {
-      const response = await apiClient.patch<T>(url, data, buildAxiosConfig(config));
+      const axiosConfig = buildAxiosConfig(config);
+      let response;
+      if (axiosConfig) {
+        response = await apiClient.patch<T>(url, data, axiosConfig);
+      } else if (data !== undefined) {
+        response = await apiClient.patch<T>(url, data);
+      } else {
+        response = await apiClient.patch<T>(url);
+      }
       return response.data;
     } catch (err) {
       handleError(err);
@@ -114,7 +143,10 @@ export const api = {
 
   async delete<T>(url: string, config?: ApiRequestConfig): Promise<T> {
     try {
-      const response = await apiClient.delete<T>(url, buildAxiosConfig(config));
+      const axiosConfig = buildAxiosConfig(config);
+      const response = axiosConfig
+        ? await apiClient.delete<T>(url, axiosConfig)
+        : await apiClient.delete<T>(url);
       return response.data;
     } catch (err) {
       handleError(err);

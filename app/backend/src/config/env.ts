@@ -23,6 +23,29 @@
  */
 
 import { z } from 'zod';
+import { config as loadDotenv } from 'dotenv';
+
+// ---------------------------------------------------------------------------
+// dotenv side-effect
+// ---------------------------------------------------------------------------
+
+/**
+ * Load `.env` once at module-load time, before any `process.env` read.
+ *
+ * Why this lives here and not in `index.ts`:
+ * ESM evaluates imports before the module body runs. Anything imported by
+ * `index.ts` that calls `getConfig()` at module load (e.g. `logger.ts`) would
+ * cache `process.env` *before* `index.ts` got a chance to run `dotenv.config()`,
+ * silently producing a config from raw OS env only. Folding the dotenv load
+ * into the env module guarantees `.env` is in `process.env` by the time the
+ * first read happens, regardless of import order.
+ *
+ * `dotenv.config()` is idempotent — multiple calls are harmless. It also
+ * doesn't override variables that were already set in the OS environment, so
+ * CI/production-style runs (where vars are injected by the runtime) are
+ * unaffected.
+ */
+loadDotenv();
 
 // ---------------------------------------------------------------------------
 // Schema — pre-coercion (raw string env)
