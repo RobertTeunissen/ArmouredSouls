@@ -432,14 +432,17 @@ jobs:
           username: ${{ secrets.ACC_VPS_USER }}
           key: ${{ secrets.ACC_SSH_KEY }}
           command_timeout: 10m
-          # NODE_ENV=production: tells patch-package to skip dev-only patches.
-          # --omit=dev: skips devDependencies (jest, eslint, gitnexus, etc.)
-          # so we don't pull ~226 MB of @huggingface/transformers and
-          # onnxruntime-node native binaries on every deploy. Cuts the install
-          # tree from ~1.7 GB to the ~500 production packages we actually need.
+          # `npm ci` (not `npm install`) so `--omit=dev` is honored even when
+          # an old node_modules is on disk from a previous deploy. With
+          # `npm install` we observed it report "added 893 packages" — the
+          # full dev tree — while reporting success, leaving things in an
+          # inconsistent state that broke the seed step. `npm ci` wipes
+          # node_modules, reinstalls deterministically from the lockfile, and
+          # respects --omit=dev. NODE_ENV=production also tells patch-package
+          # to skip dev-only patches (gitnexus+1.6.5.dev.patch).
           script: |
             cd /opt/armouredsouls/backend
-            NODE_ENV=production npm install --omit=dev --prefer-offline --no-audit --no-fund
+            NODE_ENV=production npm ci --omit=dev --prefer-offline --no-audit --no-fund
             npx prisma generate
 
       - name: Create pre-migration database backup
@@ -745,14 +748,10 @@ jobs:
           username: ${{ secrets.PRD_VPS_USER }}
           key: ${{ secrets.PRD_SSH_KEY }}
           command_timeout: 10m
-          # NODE_ENV=production: tells patch-package to skip dev-only patches.
-          # --omit=dev: skips devDependencies (jest, eslint, gitnexus, etc.)
-          # so we don't pull ~226 MB of @huggingface/transformers and
-          # onnxruntime-node native binaries on every deploy. Cuts the install
-          # tree from ~1.7 GB to the ~500 production packages we actually need.
+          # See the deploy-acc job for why this is `npm ci` not `npm install`.
           script: |
             cd /opt/armouredsouls/backend
-            NODE_ENV=production npm install --omit=dev --prefer-offline --no-audit --no-fund
+            NODE_ENV=production npm ci --omit=dev --prefer-offline --no-audit --no-fund
             npx prisma generate
 
       - name: Create pre-migration database backup
