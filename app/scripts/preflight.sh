@@ -44,6 +44,13 @@ log() {
 }
 
 # --- Monitoring alert helper (best-effort, never blocks) ---
+# We rely on MONITORING_DISCORD_WEBHOOK / DISCORD_WEBHOOK_URL being present
+# in the inherited environment if a Discord alert is wanted. We deliberately
+# do NOT `source /opt/armouredsouls/backend/.env` — sourcing crashes under
+# `set -e` whenever a value contains shell-special characters (the
+# 25 May ACC deploy failed at "line 7: 20: command not found"). If the
+# webhook env vars aren't present the alert is a no-op and the script's
+# exit code still drives the deploy success/failure decision.
 send_alert() {
   local message="$1"
   local webhook="${MONITORING_DISCORD_WEBHOOK:-${DISCORD_WEBHOOK_URL:-}}"
@@ -53,14 +60,6 @@ send_alert() {
       "$webhook" > /dev/null 2>&1 || true
   fi
 }
-
-# --- Load DB env so the alert message can reference the host ---
-if [ -f /opt/armouredsouls/backend/.env ]; then
-  set -a
-  # shellcheck disable=SC1091
-  source /opt/armouredsouls/backend/.env
-  set +a
-fi
 
 # --- Disk usage helper (portable: works on Linux + BSD/macOS) ---
 # Returns the disk percent for `/` as an integer (no `%` sign).
