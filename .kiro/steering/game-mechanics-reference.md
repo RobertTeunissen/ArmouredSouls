@@ -52,6 +52,18 @@ fileMatchPattern: "**/game-engine/**,**/services/battle*,**/services/combat*,**/
 - Different facility types with different benefits
 - See: `docs/prd_pages/PRD_FACILITIES_PAGE.md`
 
+### Event Subscription System (Booking Office)
+- The Booking Office facility gates robot participation in all battle event modes
+- Every matchmaker calls `isRobotSubscribedTo(robotId, eventType)` before pairing or pool inclusion
+- Subscribable events at v1: `league`, `tournament`, `tag_team`, `koth`
+- Per-robot Max_Events_Per_Robot: L0=3, L1=4, L2=5, L3=6, L4=7, L5=8, L6=9, L7=10, L8=11, L9=12, L10=13
+- Formula: `maxSubscriptions = 3 + bookingOfficeLevel`
+- Subscriptions are per-robot, not per-Stable — enables robot specialisation
+- Switching is free, takes effect next cycle
+- Unsubscribe blocked per robot while that robot has a queued battle (locking predicate)
+- New event modes register via `registerSubscribableEvent` and become subscribable automatically
+- See: `docs/prd_pages/PRD_FACILITIES_PAGE.md` (Booking Office section)
+
 ### Fame & Prestige
 - Fame earned through victories
 - Prestige as long-term progression

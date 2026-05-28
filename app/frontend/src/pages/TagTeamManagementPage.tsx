@@ -7,6 +7,8 @@ import { getTagTeamLeagueTierName, getTagTeamLeagueTierColor, getTagTeamLeagueTi
 import TeamCreationModal from '../components/TeamCreationModal';
 import ConfirmationModal from '../components/ConfirmationModal';
 import LeagueTimeline from '../components/LeagueTimeline';
+import TagTeamSubscriptionWarning from '../components/subscriptions/TagTeamSubscriptionWarning';
+import { useStableOverview } from '../hooks/useSubscriptions';
 import type { LeagueHistoryEntry } from '../components/LeagueTimeline';
 import { api } from '../utils/api';
 import { ApiError } from '../utils/ApiError';
@@ -19,7 +21,16 @@ function TagTeamManagementPage() {
   const [error, setError] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [teamToDisband, setTeamToDisband] = useState<TagTeam | null>(null);
-  const [disbanding, setDisbanding] = useState(false);  useEffect(() => {
+  const [disbanding, setDisbanding] = useState(false);
+  const { data: stableOverview } = useStableOverview();
+
+  // Build subscription map: robotId → subscribed event types
+  const subscriptionMap = new Map<number, string[]>();
+  if (stableOverview) {
+    for (const robot of stableOverview.robots) {
+      subscriptionMap.set(robot.robotId, robot.subscriptions.map(s => s.eventType));
+    }
+  }  useEffect(() => {
     if (user) {
       fetchTeams();
     }
@@ -136,6 +147,7 @@ function TagTeamManagementPage() {
               <TagTeamCard
                 key={team.id}
                 team={team}
+                subscriptions={subscriptionMap}
                 onDisband={() => setTeamToDisband(team)}
               />
             ))}
@@ -170,10 +182,11 @@ function TagTeamManagementPage() {
 
 interface TagTeamCardProps {
   team: TagTeam;
+  subscriptions: Map<number, string[]>;
   onDisband: () => void;
 }
 
-function TagTeamCard({ team, onDisband }: TagTeamCardProps) {
+function TagTeamCard({ team, subscriptions, onDisband }: TagTeamCardProps) {
   const navigate = useNavigate();
   const tierColor = getTagTeamLeagueTierColor(team.tagTeamLeague);
   const tierName = getTagTeamLeagueTierName(team.tagTeamLeague);
@@ -208,6 +221,17 @@ function TagTeamCard({ team, onDisband }: TagTeamCardProps) {
           Disband
         </button>
       </div>
+
+      {/* Subscription Warning */}
+      <TagTeamSubscriptionWarning
+        tagTeam={{
+          activeRobotId: team.activeRobotId,
+          reserveRobotId: team.reserveRobotId,
+          activeRobotName: team.activeRobot.name,
+          reserveRobotName: team.reserveRobot.name,
+        }}
+        subscriptions={subscriptions}
+      />
 
       {/* Readiness Warning */}
       {!isReady && (

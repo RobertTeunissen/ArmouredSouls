@@ -223,6 +223,7 @@ model Robot {
   kothMatchParticipations   ScheduledKothMatchParticipant[]
   tuningAllocation          TuningAllocation?
   achievements              UserAchievement[]
+  subscriptions             Subscription[]
 
   @@index([userId])
   @@index([elo])
@@ -866,4 +867,23 @@ model LeagueHistory {
   @@index([cycleNumber])             // Cycle-range queries
   @@index([userId])                  // User's history queries
   @@map("league_history")
+}
+
+// Event subscription table — per-robot opt-in to subscribable battle events (Booking Office facility)
+// Two-state model: "active" (matchmaker will schedule) or "pending" (waiting for slot)
+model Subscription {
+  id        Int      @id @default(autoincrement())
+  robotId   Int      @map("robot_id")
+  eventType String   @map("event_type") @db.VarChar(30)
+  status    String   @default("pending") @map("status") @db.VarChar(10) // "active" or "pending"
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  robot Robot @relation(fields: [robotId], references: [id], onDelete: Cascade)
+
+  @@unique([robotId, eventType], name: "subscription_robot_event")
+  @@index([robotId])
+  @@index([eventType])
+  @@index([status, eventType])
+  @@map("subscriptions")
 }

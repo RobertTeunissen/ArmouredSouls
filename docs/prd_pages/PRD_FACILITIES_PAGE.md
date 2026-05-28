@@ -101,7 +101,7 @@ The Facilities Page (`/facilities`) is a critical economic and progression inter
 
 **Facility Types & Implementation Status:**
 
-**Implemented (10 facilities):**
+**Implemented (11 facilities):**
 1. ✅ **Training Facility** - Discount on attribute upgrades (5%-50%)
 2. ✅ **Weapons Workshop** - Discount on weapon purchases (10%-100%)
 3. ✅ **Repair Bay** - Discount on repair costs (10%-55%)
@@ -112,13 +112,13 @@ The Facilities Page (`/facilities`) is a critical economic and progression inter
 8. ✅ **Mobility Training Academy** - Chassis & Mobility caps (10→50)
 9. ✅ **AI Training Academy** - AI/Team Coordination caps (10→50)
 10. ✅ **Merchandising Hub** - Passive income streams (merchandising, scales with prestige)
+11. ✅ **Booking Office** - Event Subscription System — per-robot subscription model gating battle event participation (Spec #35)
 
-**Not Yet Implemented (4 facilities):**
+**Not Yet Implemented (3 facilities):**
 1. ❌ **Research Lab** - Unlock analytics, loadout presets, battle simulation
 2. ❌ **Medical Bay** - Critical damage repair cost reduction (15%-100%)
    - *Note: Medical Bay handles critical/permanent damage, while Repair Bay handles regular battle damage. Different systems.*
 3. ❌ **Coaching Staff** - Stable-wide stat bonuses (coaches for offense/defense/tactics)
-4. ❌ **Booking Office** - Tournament access and enhanced rewards
 
 #### 🚧 **Current UI Limitations**
 
@@ -249,14 +249,14 @@ The Facilities Page (`/facilities`) is a critical economic and progression inter
   3. Mobility Training Academy (✅ Implemented) - Chassis & Mobility caps (10→50)
   4. AI Training Academy (✅ Implemented) - AI/Team Coordination caps (10→50)
 
-**Category 4: Advanced Features** (3 facilities)
+**Category 4: Advanced Features** (4 facilities)
 - **Purpose**: Unlock special features and advanced gameplay mechanics
 - **Strategic Value**: Late-game enhancements, not required for basic progression
 - **Facilities**:
   1. Research Lab (❌ Not Implemented) - Analytics, loadout presets, battle simulation
   2. Medical Bay (❌ Not Implemented) - Critical damage repair reduction (different from Repair Bay's regular damage)
   3. Coaching Staff (❌ Not Implemented) - Stable-wide stat bonuses
-  4. Booking Office (❌ Not Implemented) - Tournament access and rewards
+  4. Booking Office (✅ Implemented) - Event Subscription System — per-robot battle event gating
 
 #### 1.2 Category Display Requirements
 
@@ -304,7 +304,7 @@ The Facilities Page (`/facilities`) is a critical economic and progression inter
 **Advanced Features** (by strategic value):
 1. Research Lab (analytics & planning tools)
 2. Coaching Staff (stable-wide bonuses)
-3. Booking Office (tournament access)
+3. Booking Office (event subscriptions)
 4. Merchandising Hub (passive income)
 5. Medical Bay (critical damage handling)
 
@@ -367,7 +367,7 @@ No icon / image on the Visual Example?
 - Economy & Discounts: `[4 of 4 ✓]` (Green - 100% implemented)
 - Capacity & Storage: `[2 of 2 ✓]` (Green - 100% implemented)
 - Training Academies: `[4 of 4 ✓]` (Green - 100% implemented)
-- Advanced Features: `[0 of 4]` (Gray - 0% implemented) 
+- Advanced Features: `[1 of 4 ⚠]` (Yellow - 25% implemented) 
 
 ### 3. Image Requirements
 
@@ -572,16 +572,9 @@ Many facility levels require prestige thresholds to unlock. Players must earn pr
 - Level 9: 10,000 prestige
 
 **Booking Office:**
-- Level 1: 1,000 prestige
-- Level 2: 2,500 prestige
-- Level 3: 5,000 prestige
-- Level 4: 10,000 prestige
-- Level 5: 15,000 prestige
-- Level 6: 20,000 prestige
-- Level 7: 25,000 prestige
-- Level 8: 35,000 prestige
-- Level 9: 45,000 prestige
-- Level 10: 50,000 prestige
+- Level 4: 1,000 prestige
+- Level 7: 5,000 prestige
+- Level 9: 10,000 prestige
 
 **Combat Training Academy:**
 - Level 3: 2,000 prestige
@@ -1311,13 +1304,13 @@ const FacilityIcon: React.FC<FacilityIconProps> = ({ facilityType, alt, classNam
 - **Strategic Value**: Advanced - Passive bonuses across all robots
 - **Implementation Status**: Not yet implemented (Phase 2+ feature)
 
-#### Booking Office (❌ Not Implemented)
+#### Booking Office (✅ Implemented — Spec #35)
 - **Type**: `booking_office`
 - **Max Level**: 10
-- **Cost Range**: ₡500K - ₡5M (total: ₡27.5M)
-- **Benefits**: Access to higher-tier tournaments, enhanced tournament rewards (+10-40%), cosmetics
-- **Strategic Value**: Advanced - Required for tournament progression system
-- **Implementation Status**: Not yet implemented (requires tournament system expansion)
+- **Cost Range**: ₡75K - ₡750K (total: ₡4.125M)
+- **Benefits**: Event Subscription System — each level grants +1 concurrent event subscription per robot (3 base + level)
+- **Strategic Value**: Advanced - Controls which battle events each robot participates in
+- **Implementation Status**: ✅ Implemented (Spec #35 — Booking Office Facility)
 
 ---
 
@@ -1618,3 +1611,79 @@ The Facilities page uses a 2-tab layout:
 
 ### Why Only 5 Economic Facilities?
 Non-economic facilities (academies, roster expansion, storage, research lab, medical bay, coaching staff, booking office, tuning bay) provide capability unlocks without direct financial returns. They have no meaningful ROI to track and are excluded from the investment view.
+
+---
+
+## Booking Office
+
+**Status**: ✅ Implemented (Spec #35)  
+**Facility Type**: `booking_office`  
+**Max Level**: 10  
+**Category**: Advanced Features → Event Subscription System
+
+### Overview
+
+The Booking Office facility implements the **Event Subscription System** — a per-robot subscription model that gates participation in all battle events. Each robot's subscriptions determine which battle modes it participates in during cycle processing.
+
+### Event-Subscription Semantics
+
+- Every battle event mode (1v1 League, 1v1 Tournament, Tag Team, KotH) is a **Subscribable Event** registered in the Event Registry.
+- A robot must hold an active Subscription to a Subscribable Event to be included in that event's matchmaking pool.
+- Subscriptions are **per-robot**, not per-Stable. Each robot independently chooses which events it participates in.
+- The Event Registry is extensible — future event modes register themselves and become subscribable without code changes to the Booking Office.
+
+### Per-Robot Max_Events_Per_Robot
+
+The Booking Office facility level determines how many concurrent event subscriptions each robot in the Stable may hold:
+
+| Level | Max Subscriptions Per Robot | Upgrade Cost | Prestige Required |
+|-------|----------------------------|-------------|-------------------|
+| 0 (free) | 3 | — | — |
+| 1 | 4 | ₡75,000 | — |
+| 2 | 5 | ₡150,000 | — |
+| 3 | 6 | ₡225,000 | 1,000 |
+| 4 | 7 | ₡300,000 | — |
+| 5 | 8 | ₡375,000 | — |
+| 6 | 9 | ₡450,000 | 5,000 |
+| 7 | 10 | ₡525,000 | — |
+| 8 | 11 | ₡600,000 | 10,000 |
+| 9 | 12 | ₡675,000 | — |
+| 10 | 13 (maximum) | ₡750,000 | — |
+
+The cap is per robot — every robot owned by the Stable gets the same cap, derived from the Stable's Booking Office level. Formula: `3 + bookingOfficeLevel`.
+
+### Switching Behaviour
+
+- Subscribing and unsubscribing is **free** — no credit cost.
+- Changes take effect at the **next cycle boundary** (the next matchmaking run).
+- Players can switch subscriptions at any time between cycles, subject to the lock rule below.
+
+### Per-Robot Lock-on-Queued-Battle Rule
+
+A robot **cannot unsubscribe** from an event while that robot has a queued (scheduled) battle for that event. This prevents mid-cycle disruption to already-paired matchups.
+
+- The lock is **per robot** — other robots in the same Stable are unaffected.
+- Once the queued battle executes (next cycle), the lock is released and the robot can freely change its subscriptions.
+- Attempting to unsubscribe a locked robot returns error code `EVENT_SUBSCRIPTION_LOCKED`.
+
+### Subscribable Events (v1)
+
+| Event Type | Label | Lock Condition |
+|-----------|-------|----------------|
+| `league` | 1v1 League | Robot has a scheduled league match |
+| `tournament` | 1v1 Tournament | Robot is alive in an active tournament bracket |
+| `tag_team` | Tag Team | Robot is on a team with a scheduled tag team match |
+| `koth` | King of the Hill | Robot is a participant in a scheduled KotH match |
+
+### Roster Eligibility Filter
+
+Not all events are available to all robots:
+- `league`, `tournament`, `koth` — always eligible (requires ≥ 1 robot in Stable)
+- `tag_team` — requires the Stable to own ≥ 2 robots
+
+### Related Surfaces
+
+- **Robot Detail Page** — per-robot subscription management section
+- **Booking Office Overview Page** (`/booking-office`) — matrix view of all robots × all events
+- **Onboarding Picker** — new players pick 3 subscriptions for their first robot
+- **Facilities Page** — Booking Office card links to the overview page

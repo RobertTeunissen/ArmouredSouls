@@ -88,6 +88,26 @@ inclusion: always
 - Use transactions for multi-step operations
 - Include proper indexes for performance
 
+### Shell Scripts (operations / deploy / cron)
+- **Never `source .env` directly.** Bash interprets unquoted values as commands. With a line like `LEAGUE_SCHEDULE=0 20 * * *` in `.env`, `source` parses the assignment as `LEAGUE_SCHEDULE=0` and tries to execute `20 * * *` as a command, crashing the script with `20: command not found`. We've hit this bug twice (PR #332 in `preflight.sh`, PR #336 in `backup.sh`).
+- **Use the `env_get` helper pattern instead.** Read keys as plain text via `grep + cut + sed`, never letting the shell evaluate values:
+
+  ```bash
+  env_get() {
+    local key="$1"
+    local file="$2"
+    [ -f "$file" ] || return 0
+    grep -E "^${key}=" "$file" | tail -n 1 | cut -d= -f2- | sed -E 's/^"(.*)"$/\1/; s/^'\''(.*)'\''$/\1/'
+  }
+
+  ENV_FILE="/opt/armouredsouls/backend/.env"
+  DB_USER="${POSTGRES_USER:-$(env_get POSTGRES_USER "$ENV_FILE")}"
+  ```
+
+  See `app/scripts/backup.sh` for the canonical implementation.
+- **Cleanup before disk guard.** Any script that has both a "free up space" step and a "skip if disk full" guard must run the cleanup *before* the guard. Otherwise the script bails out before it can recover, leaving the disk-full state self-reinforcing — exactly what happened to ACC backups in May 2026.
+- **`set -euo pipefail` at the top of every new script.** Fail-fast on errors, undefined variables, and broken pipelines.
+
 ### Error Handling
 - Use the `AppError` hierarchy for all business logic errors in services
 - Import domain-specific error classes from `src/errors/` (e.g., `AuthError`, `RobotError`, `BattleError`)

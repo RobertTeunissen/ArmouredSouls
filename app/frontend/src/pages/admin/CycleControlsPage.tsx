@@ -27,14 +27,15 @@ interface CycleResult {
   repair1?: { robotsRepaired: number; totalFinalCost: number };
   repair2?: { robotsRepaired: number; totalFinalCost: number };
   repair3?: { robotsRepaired: number; totalFinalCost: number };
-  matchmaking?: { matchesCreated: number };
+  matchmaking?: { matchesCreated: number; subscriptionExclusions?: number };
   battles?: { totalBattles: number; successfulBattles: number; failedBattles: number; byeBattles: number; errors: string[] };
   tournaments?: { executed?: number; completed?: number; failed?: number; tournamentsExecuted?: number; roundsExecuted?: number; matchesExecuted?: number; tournamentsCompleted?: number; tournamentsCreated?: number; errors?: string[]; error?: string };
   kothBattles?: { successfulMatches: number; failedMatches: number; totalMatches: number };
   repairPostKoth?: { robotsRepaired: number; totalFinalCost: number };
-  kothMatchmaking?: { matchesCreated: number };
+  kothMatchmaking?: { matchesCreated: number; subscriptionExclusions?: number };
   finances?: { usersProcessed: number; totalCostsDeducted: number; bankruptUsers: number };
   rebalancing?: { summary: { totalPromoted: number; totalDemoted: number } };
+  subscriptionExclusions?: { league: number; tournament: number; tagTeam: number; koth: number };
   duration: number;
   error?: string;
 }
@@ -49,7 +50,7 @@ interface ConfirmAction {
 /*  Response shapes                                                    */
 /* ------------------------------------------------------------------ */
 
-interface MatchmakingResponse { matchesCreated: number }
+interface MatchmakingResponse { matchesCreated: number; subscriptionExclusions?: number }
 interface BattlesResponse { summary: { totalBattles: number; successfulBattles: number; failedBattles: number } }
 interface RebalanceResponse { summary: { totalPromoted: number; totalDemoted: number } }
 interface RepairResponse { robotsRepaired: number }
@@ -123,8 +124,9 @@ function CycleControlsPage() {
     setLoading(true);
     try {
       const data = await api.post<MatchmakingResponse>('/api/admin/matchmaking/run', {});
-      addSessionLog('success', `Matchmaking completed! Created ${data.matchesCreated} matches`);
-      showMessage('success', `Matchmaking completed! Created ${data.matchesCreated} matches`);
+      const exclusionNote = data.subscriptionExclusions ? ` (${data.subscriptionExclusions} excluded by subscription)` : '';
+      addSessionLog('success', `Matchmaking completed! Created ${data.matchesCreated} matches${exclusionNote}`);
+      showMessage('success', `Matchmaking completed! Created ${data.matchesCreated} matches${exclusionNote}`);
     } catch (error: unknown) {
       const msg = errorMessage(error, 'Matchmaking failed');
       addSessionLog('error', `Matchmaking failed: ${msg}`);
@@ -445,6 +447,47 @@ function CycleControlsPage() {
             {bulkResults.totalCyclesInSystem && <p className="text-success">Total Cycles in System: {bulkResults.totalCyclesInSystem}</p>}
             <p>Total Duration: {(bulkResults.totalDuration / 1000)?.toFixed(2) || 0}s</p>
             <p>Average Cycle Duration: {(bulkResults.averageCycleDuration / 1000)?.toFixed(2) || 0}s</p>
+
+            {/* Subscription Exclusion Summary */}
+            {bulkResults.results && bulkResults.results.some(r => r.subscriptionExclusions) && (
+              <div className="mt-3 border-t border-white/10 pt-3">
+                <h4 className="text-sm font-semibold text-secondary mb-2">📋 Subscription Exclusions</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  {(() => {
+                    const totals = { league: 0, tournament: 0, tagTeam: 0, koth: 0 };
+                    bulkResults.results?.forEach(r => {
+                      if (r.subscriptionExclusions) {
+                        totals.league += r.subscriptionExclusions.league;
+                        totals.tournament += r.subscriptionExclusions.tournament;
+                        totals.tagTeam += r.subscriptionExclusions.tagTeam;
+                        totals.koth += r.subscriptionExclusions.koth;
+                      }
+                    });
+                    return (
+                      <>
+                        <div className="bg-surface rounded p-2 text-center">
+                          <p className="text-sm font-bold text-amber-400">{totals.league}</p>
+                          <p className="text-xs text-secondary">League</p>
+                        </div>
+                        <div className="bg-surface rounded p-2 text-center">
+                          <p className="text-sm font-bold text-amber-400">{totals.tournament}</p>
+                          <p className="text-xs text-secondary">Tournament</p>
+                        </div>
+                        <div className="bg-surface rounded p-2 text-center">
+                          <p className="text-sm font-bold text-amber-400">{totals.tagTeam}</p>
+                          <p className="text-xs text-secondary">Tag Team</p>
+                        </div>
+                        <div className="bg-surface rounded p-2 text-center">
+                          <p className="text-sm font-bold text-amber-400">{totals.koth}</p>
+                          <p className="text-xs text-secondary">KotH</p>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+                <p className="text-xs text-tertiary mt-2">Robots excluded from matchmaking due to missing event subscriptions</p>
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -76,11 +76,30 @@ export async function getEligibleRobots(): Promise<EligibleRobot[]> {
     .filter((r) => !alreadyScheduledIds.has(r.id))
     .map((r) => ({ id: r.id, userId: r.userId, elo: r.elo, name: r.name }));
 
+  // Activate pending subscriptions for robots that have room under cap
+  const { batchActivatePendingSubscriptions } = await import('../subscription/subscriptionService');
+  await batchActivatePendingSubscriptions(eligible.map(r => r.id), 'koth');
+
+  // Filter by koth subscription — only active subscriptions (batch query for efficiency)
+  const subscribedRobotIds = await prisma.subscription.findMany({
+    where: { eventType: 'koth', robotId: { in: eligible.map(r => r.id) }, status: 'active' },
+    select: { robotId: true },
+  });
+  const subscribedSet = new Set(subscribedRobotIds.map(s => s.robotId));
+  const subscribedEligible = eligible.filter(r => subscribedSet.has(r.id));
+
+  const excludedBySubscription = eligible.length - subscribedEligible.length;
+  if (excludedBySubscription > 0) {
+    logger.info(
+      `${LOG_PREFIX} Excluded ${excludedBySubscription} robots without koth subscription`
+    );
+  }
+
   logger.info(
-    `${LOG_PREFIX} ${eligible.length} eligible robots (${robots.length} weapon-ready, ${alreadyScheduledIds.size} already scheduled)`
+    `${LOG_PREFIX} ${subscribedEligible.length} eligible robots (${robots.length} weapon-ready, ${alreadyScheduledIds.size} already scheduled, ${excludedBySubscription} unsubscribed)`
   );
 
-  return eligible;
+  return subscribedEligible;
 }
 
 /**

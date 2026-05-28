@@ -30,13 +30,13 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 | 16 | Historical Financial Tracking | 23 | 0 🗳️ | 1 | 1 | 1 | 2 | **1.5** |
 | 17 | Test Setup Convention Cleanup | 51 | 0 🗳️ | 1 | 1 | 1 | 2 | **1.5** |
 | 18 | Vitest Performance Tuning | 52 | 0 🗳️ | 1 | 1 | 1 | 2 | **1.5** |
-| 19 | 3v3 Team Battles | 31 | 0 🗳️ | 3 | 1 | 1 | 4 | **1.3** |
-| 20 | Modular Package Extraction | 35 | 0 🗳️ | 1 | 1 | 2 | 3 | **1.3** |
-| 21 | Robot Detail Page Split | 37 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
-| 22 | Achievement Persistence Across Seasons | 40 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
-| 23 | Events Calendar | 43 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
-| 24 | Universal Search / Command Palette | 27 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
-| 25 | Progressive Feature Disclosure | 28 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
+| 19 | Modular Package Extraction | 35 | 0 🗳️ | 1 | 1 | 2 | 3 | **1.3** |
+| 20 | Robot Detail Page Split | 37 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
+| 21 | Achievement Persistence Across Seasons | 40 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
+| 22 | Events Calendar | 43 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
+| 23 | Universal Search / Command Palette | 27 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
+| 24 | Progressive Feature Disclosure | 28 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
+| 25 | ~~Battle Subscription Facility~~ | ~~55~~ | 0 🗳️ | ~~2~~ | ~~1~~ | ~~1~~ | ~~3~~ | ~~**1.3**~~ | ✅ Completed |
 | 26 | Weapon Crafting System | 29 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
 | 27 | Free-for-All / Battle Royale Mode | 30 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
 | 28 | Conditional Battle Triggers / AI Scripting | 32 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
@@ -45,8 +45,15 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 | 31 | Social Features (Friends, Guilds, Chat) | 45 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
 | 32 | Prestige Store | 47 | 0 🗳️ | 2 | 1 | 1 | 4 | **1.0** |
 | 33 | Blueprint Library | 48 | 0 🗳️ | 1 | 1 | 1 | 3 | **1.0** |
-| 34 | Unimplemented Facilities | 7 | 0 🗳️ | 2 | 1 | 1 | 5 | **0.8** |
-| 35 | Cosmetic Customization System | 46 | 0 🗳️ | 2 | 1 | 1 | 5 | **0.8** |
+| 34 | Team Battle Tournaments (2v2 / 3v3) | 54 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
+| 35 | Unimplemented Facilities | 7 | 0 🗳️ | 2 | 1 | 1 | 4 | **1.0** |
+| 36 | Cosmetic Customization System | 46 | 0 🗳️ | 2 | 1 | 1 | 5 | **0.8** |
+
+### In Progress
+
+| Item | # | Spec | Status |
+|------|---|------|--------|
+| Team Battles 2v2 and 3v3 (League) | 31 | [Spec 37 team-battles-2v2-3v3](/.kiro/specs/to-do/37-team-battles-2v2-3v3/) | In progress (not yet completed) — delivers the league piece; tournaments split out as #54 and subscription facility as #55 |
 
 ### Recently Completed (removed from backlog)
 
@@ -60,6 +67,7 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 | Dead Code Audit (knip Pass A + B, ~30 files removed) | — | — (direct implementation) | May 2026 |
 | Backend `any` Eliminated from Production Source | — | — (direct implementation) | May 2026 |
 | Weapon Refinement (per-instance permanent upgrades, 4 tiers, 5-slot cap) | 5 (partial) | [Spec #34](/.kiro/specs/done-may26/34-weapon-refinement/) | May 2026 |
+| Battle Subscription Facility (Booking Office event-subscription semantics) | 55 | [Spec #35](/.kiro/specs/to-do/35-booking-office-facility/) | June 2026 |
 | Weapon Resale (Workshop-level-dependent rate, ₡0–100% recovery) | 5 (partial) | [Spec #33](/.kiro/specs/to-do/33-weapon-resale/) | May 2026 |
 | Performance Optimization | 20 | — (direct implementation) | May 2026 |
 | Promotion/Demotion History Tracking | 22 | [Spec #32](/.kiro/specs/to-do/32-league-history-tracking/) | May 2026 |
@@ -141,15 +149,14 @@ The game has six identifiable loops, most of which degrade or stall at some poin
 
 **Missing loops**: experimentation, social/rivalry, collection/completion, seasonal/event, recovery/comeback.
 
-### #7 — Unimplemented Facilities (4 remaining)
+### #7 — Unimplemented Facilities (3 remaining)
 **Source**: PRD_FACILITIES_PAGE.md  
 **Priority**: Medium — players can buy them but they do nothing
 
-4 of 14 facility types exist in the schema but have no gameplay effect:
+3 of 14 facility types exist in the schema but have no gameplay effect:
 - Research Lab — analytics, loadout presets, battle simulation
 - Medical Bay — critical damage repair cost reduction (separate from Repair Bay)
 - Coaching Staff — stable-wide stat bonuses via hired coaches
-- Booking Office — tournament access and prestige rewards
 
 ### #11 — Weapon Special Properties
 **Source**: PRD_WEAPON_ECONOMY.md, PRD_WEAPONS_LOADOUT.md  
@@ -220,8 +227,11 @@ Custom weapon design at Workshop Level 6+. Pricing formula already supports it.
 ### #30 — Free-for-All / Battle Royale Mode
 Large-scale elimination (8–100 robots). [Design analysis](analysis/FREE_FOR_ALL_BATTLE_ROYALE_MODE.md) exists.
 
-### #31 — 3v3 Team Battles
-BattleParticipant model already supports N robots. Needs team formation, matchmaking, rewards, orchestrator.
+### #31 — Team Battles 2v2 and 3v3 (League) — IN PROGRESS
+**Source**: Backlog triage; expanded into spec  
+**Priority**: In progress — see [Spec 37 team-battles-2v2-3v3](/.kiro/specs/to-do/37-team-battles-2v2-3v3/)
+
+Active spec covering 2v2 and 3v3 league battles, persistent Teams per size, Team Coordination ally effects, daily 2v2/3v3 alternation, unified `/team-battles` UI, achievement integration, seeded-stable enrolment, and admin manual triggers. Tournaments are explicitly out of scope and tracked separately as #54 below.
 
 ### #32 — Conditional Battle Triggers / Robot AI Scripting
 Player-defined robot behaviors: "switch stance when HP < 30%", "target weakest in KotH".
@@ -341,6 +351,59 @@ A store where players spend accumulated prestige points on exclusive rewards: co
 A collection of saved weapon blueprints for the crafting system. Players save successful designs, share blueprints with others, and browse community-created weapon configurations. Only relevant once Weapon Crafting (#29) is implemented.
 
 **Dependencies**: Weapon Crafting System (#29).
+
+### #54 — Team Battle Tournaments (2v2 / 3v3)
+**Source**: Spec discussion during team-battles-2v2-3v3 review (May 2026)  
+**Priority**: Medium — natural follow-up once league Team Battles ship
+
+Bracketed tournament play for 2v2 and 3v3 Team Battles. Depends on the Team Battle league spec (#31) shipping first because it reuses Team registration, Team_ELO, the Team Battle Engine, and the unified `/team-battles` UI.
+
+**Approach (decided): Option B — generalise the existing tournament system.**
+
+The existing `Tournament`, `ScheduledTournamentMatch`, and `processTournamentBattle` are robot-keyed (`robot1Id`, `robot2Id`, `winnerId` referencing `Robot`, with `tournamentMatchesAsRobot1`/`tournamentMatchesAsRobot2` relations on the Robot model). Adding parallel `TeamTournament`/`ScheduledTeamTournamentMatch` tables would double the surface and split tournament code paths. Instead, the agreed direction is to **refactor the tournament schema and code to be entity-keyed (Robot OR Team)**, so a single tournament system serves 1v1, 2v2, and 3v3 brackets.
+
+**Why this is its own spec:**
+- The schema change is a Mega-Orchestrator Refactor-class change — Backlog #49 explicitly flags this kind of work as needing its own spec.
+- Bundling it into the league Team Battles spec would put two large efforts in motion simultaneously, making regressions hard to attribute.
+- The tournament system has 3+ cycles of historical data and championship titles tied to `User.championshipTitles` — the migration needs careful staging.
+
+**Schema refactor scope:**
+- Add `participantType` (`'robot'` | `'team_2v2'` | `'team_3v3'`) and `participantId` to `Tournament` and `ScheduledTournamentMatch`. The existing `robot1Id`/`robot2Id`/`winnerId` columns either become nullable and dual-populated during migration, or are renamed to `participant1Id`/`participant2Id` with the type discriminator.
+- Migrate existing rows: `participantType = 'robot'`, `participantId = robotId`.
+- `generateBracketPairs` accepts `seededParticipants` (Robot[] or Team[]) instead of `seededRobots`.
+- `processTournamentBattle` dispatches to either the existing 1v1 orchestrator or the Team Battle Engine based on `participantType`.
+- `advanceWinnersToNextRound` is participant-type-agnostic.
+- `autoCreateNextTournament` gains a `tournamentType` parameter so admins can create per-type tournaments.
+
+**Tournament-specific design questions for the spec to answer:**
+- **Championship title accounting.** Currently winning a tournament increments `User.championshipTitles`. For team tournaments: increment for each member's owner (all the same User in this spec since teams are single-stable), or only once per tournament regardless of team size? Or introduce `User.teamChampionshipTitles2v2` and `User.teamChampionshipTitles3v3`?
+- **C18 "Autobots, Roll Out!" achievement** is already being expanded to require all six modes (league + KotH + tag-team + tournament + team_2v2 + team_3v3) in the league spec. Tournaments piggyback on `User.championshipTitles > 0` — does that include team tournament wins, or do team tournaments need a separate counter?
+- **Cadence and scheduling.** Tournaments span multiple cycles (one round per cycle). The 2v2/3v3 daily alternation rule for league mode does not translate. Options: alternate per tournament (one tournament is 2v2, next is 3v3), run them in parallel (2v2 and 3v3 tournaments active simultaneously with separate brackets), or schedule per type (2v2 tournaments every Monday, 3v3 every Thursday). Decide in spec.
+- **Eligibility.** Top N teams per tier per size? Open to all eligible teams? Stable-snapshot at create time? What happens when a team is dissolved mid-tournament — does the team forfeit, do remaining members forfeit, or does the team auto-substitute?
+- **Reward shape.** Does the team-tournament prize pot match 1v1 tournament prizes, scale by team size, scale by team mode popularity? Distributed across team members per the existing R7.4-style contribution split?
+- **Bracket size.** Existing 1v1 tournaments use power-of-2 brackets via `generateBracketPairs`. Team tournaments likely smaller pool (fewer registered teams than robots) — minimum viable bracket size needs a sensible floor.
+- **Eligibility gating.** Should team tournaments require a facility (Booking Office, currently unimplemented per Backlog #7) or a prestige threshold? See gating discussion below.
+- **Manual matchmaking / friendlies.** Out of scope for the league spec; should team tournaments support admin-triggered exhibition brackets? See also #55 — battle subscription facility — which would feed both league and tournament event sign-ups.
+
+**Gating discussion (decision needed in spec):**
+- **Facility-based gating.** Booking Office (Backlog #7) is the existing-but-unimplemented facility whose description already references "Unlock Silver/Gold/Platinum/Diamond league tournaments". Implementing it for team tournaments aligns its purpose. Levels would gate which league tier is allowed to enter.
+- **Subscription-facility gating** (#55). The new battle subscription facility is the more general gating mechanism. If it lands first, team tournament entry could go through it.
+- **Prestige threshold.** Simpler, no schema; risk is invisible gating.
+- **No gating.** Open to all eligible teams. Cleanest for early adoption.
+
+**Dependencies:**
+- #31 (Team Battles league) must ship first — establishes Team registration, Team_ELO, Team Battle Engine, achievement triggers, unified `/team-battles` UI.
+- Decision on #55 (battle subscription facility) preferred but not blocking — gating can fall back to direct facility/prestige checks.
+- #49 (Mega-Orchestrator Refactor) is not a hard dependency but the tournament refactor is similar in shape; coordinate ordering.
+
+**Scope estimate:** Medium-to-large. Schema migration + data backfill + dual-orchestrator dispatch + UI updates (admin tournament creation flow gains type selector, tournament detail page renders team brackets, results screen handles N robots per side) + championship-title semantics + achievement wiring. Do not start until #31 has been live on ACC for at least one cycle to validate the league mode.
+
+### #55 — Battle Subscription Facility — ✅ COMPLETED
+**Source**: Spec discussion during team-battles-2v2-3v3 review (May 2026)  
+**Priority**: ~~Medium~~ → Completed  
+**Spec**: [Spec #35 — Booking Office Facility](/.kiro/specs/to-do/35-booking-office-facility/)
+
+Implemented as the **Booking Office** facility with event-subscription semantics. The system introduces a per-robot subscription model gating participation in all battle events (1v1 League, 1v1 Tournament, Tag Team, KotH) through a single, extensible Event Registry. The Booking Office facility level determines how many concurrent event subscriptions each robot may hold (3 at L0, +1 per level up to 13 at L10). Free switching with next-cycle effect, per-robot lock-on-queued-battle rule, onboarding subscription picker, and migration granting existing players free L1 + all four subscriptions per robot.
 
 
 ---
@@ -485,3 +548,57 @@ Multiple `accessibility.test.tsx`, multiple `setupTests`-like patterns, scattere
 
 **Dependencies.** None.
 
+
+### #53 — Battle Log Retention / TOAST Trim
+**Source**: Disk-pressure investigation, May 25, 2026 (ACC deploy timeout)
+**Priority**: Medium — non-urgent after disk resize, but real growth on a finite budget
+
+The `battle_log` JSON column on the `battles` table accumulates indefinitely. As of cycle #56 with ~49,341 battles on ACC, the column's TOAST storage was **4.6 GB** (≈98 KB per battle on average). At ~880 battles per cycle that's roughly **85 MB/day** of new TOAST. With a 25 GB disk and the rest of the system holding around 10 GB steady-state, we have ~6 months of runway before disk pressure returns. Not urgent now, but bounded.
+
+**The data being accumulated:**
+- `battleLog.events` — narrative event stream rendered in the battle report
+- `battleLog.detailedCombatEvents` — per-tick combat resolution with formula breakdowns, used by the BattleDetailsModal "View Details" expansion in the admin tools
+- `battleLog.placements` (KotH) — per-robot zone scoring and placement
+- `battleLog.kothData` — KotH match config
+
+The only consumers of these payloads are:
+1. The player-facing battle report (`/battles/:id` style routes via `RecentBattles`, `RobotDetailPage`, etc.)
+2. The admin BattleDetailsModal's combat-event expansion
+3. The Hall of Records cache (which extracts a few summary fields from `battleLog`)
+
+99% of "view this battle" interactions happen within hours of the battle finishing. After a few days the full event stream is essentially never read.
+
+**Investigation findings:**
+
+| Metric | Value |
+|--------|-------|
+| Total battles | 49,341 |
+| Heap size | 9 MB |
+| Index size (7 indexes, all in active use) | 4.8 MB |
+| TOAST size | **4,620 MB** |
+| Avg TOAST per battle | ~98 KB |
+
+The seven battles indexes are healthy and seeing real query traffic — none are candidates for dropping. The size is purely TOAST.
+
+**Three remediation options, ordered by safety:**
+
+1. **Strip `battleLog` from old battles (recommended).** `UPDATE battles SET battle_log = NULL WHERE created_at < NOW() - INTERVAL '<retention>'` followed by `pg_repack` or `VACUUM FULL battles`. Keeps row, participants, ELO, winner, rewards — drops only the heavy JSON. Reclaims most of the TOAST.
+2. **Compress more aggressively (Postgres 14+).** Switch the column to `lz4` compression (`ALTER TABLE battles ALTER COLUMN battle_log SET COMPRESSION lz4`). Only affects new rows, so it complements #1 rather than replacing it.
+3. **Hard delete old battles entirely.** Faster recovery, but cascades to `BattleParticipant` and risks anything that aggregates from the `battles` table. Lifetime stats already live on `Robot` directly so leaderboards are fine, but recent-battles lists, hall-of-records, and tournament history would lose data. Riskier.
+
+**Open design questions for the spec:**
+
+- **Retention window.** A blanket 7 days is the simplest answer. A smarter policy could keep the full log for tournament finals indefinitely, KotH for 30 days, and league for 7 — but that complexity needs justification.
+- **Retention vs feature visibility.** The "View Details" expansion in the admin BattleDetailsModal currently goes silent on battles with no detailed events. Does it need to render a "log no longer available" placeholder, or is silent-empty acceptable?
+- **Should the strip be application-side or DB-side?** A nightly cron in `app/scripts/` is simpler. A periodic Prisma-side maintenance task is more discoverable from the codebase. A native Postgres `pg_cron` job is most reliable but adds operational surface area.
+- **Hall of Records caching.** The Hall of Records pulls summary fields from `battleLog` for several record types. Verify the cache has already extracted everything it needs from old battles before we strip them.
+- **Should we also do the compression switch as a same-PR change?** Almost certainly yes — it gives us both immediate reclamation and slower future growth.
+
+**Scope estimate.** ~½ day for a v1 (single retention window, single cron job, manual one-shot for first cleanup) plus ~½ day for verification + monitoring. Larger if we go for differentiated retention.
+
+**Dependencies.** None blocking. Hall of Records caching would benefit from being verified before we strip historical battle logs (#26 is already shipped, but worth a sanity check).
+
+**Risks to address:**
+- **Replay regression.** Anyone clicking "view battle" on an N+1 day battle gets a degraded experience. Mitigation: clear UI affordance ("battle log archived") and ideally extend the retention window if players complain.
+- **Vacuum lock.** `VACUUM FULL battles` takes an exclusive lock and could lock out battle inserts for the duration. Either use `pg_repack` (no lock, requires extension) or run during a quiet maintenance window. Probably the latter for v1, the former once `pg_repack` is installed.
+- **One-time vs ongoing.** The first cleanup will reclaim ~4 GB; subsequent daily runs will reclaim ~85 MB/day. Confirm cron actually runs and the alert if it doesn't.

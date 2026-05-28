@@ -68,7 +68,24 @@ export async function getEligibleRobotsForTournament(): Promise<Robot[]> {
     return readiness.isReady;
   });
 
-  return battleReadyRobots;
+  // Activate pending subscriptions for robots that have room under cap
+  const { batchActivatePendingSubscriptions } = await import('../subscription/subscriptionService');
+  await batchActivatePendingSubscriptions(battleReadyRobots.map(r => r.id), 'tournament');
+
+  // Filter by tournament subscription — only active subscriptions (batch query for efficiency)
+  const subscribedRobotIds = await prisma.subscription.findMany({
+    where: { eventType: 'tournament', robotId: { in: battleReadyRobots.map(r => r.id) }, status: 'active' },
+    select: { robotId: true },
+  });
+  const subscribedSet = new Set(subscribedRobotIds.map(s => s.robotId));
+  const eligibleRobots = battleReadyRobots.filter(r => subscribedSet.has(r.id));
+
+  const excludedBySubscription = battleReadyRobots.length - eligibleRobots.length;
+  if (excludedBySubscription > 0) {
+    logger.info(`[Tournament] Excluded ${excludedBySubscription} robots without tournament subscription`);
+  }
+
+  return eligibleRobots;
 }
 
 /**

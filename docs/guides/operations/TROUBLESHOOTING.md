@@ -23,6 +23,51 @@ ls -la /opt/armouredsouls/backend/package-lock.json  # Must exist
 
 If `node` isn't found, reload nvm: `source ~/.bashrc`
 
+### Pipeline hangs at "Install dependencies on VPS" (and the public site goes down)
+
+**Symptom**: The "Install dependencies on VPS" step in the deploy job stays at `*` (running) for several minutes — typically the step completes in ~30–60 s when healthy. Eventually it hits the 10-min `command_timeout` and the job fails. While it's hung, the public site starts returning **502 from Caddy** and PM2 shows the backend in a `waiting restart` loop with a high restart counter.
+
+**Why this happens.** Since PR #335, the install step uses `npm ci --omit=dev` instead of `npm install`. `npm ci` **wipes `node_modules/` first** then re-extracts from the lockfile. If the install hangs or is killed mid-execution (process killed by OOM, runner timeout, network glitch, manual cancel), `node_modules/` is left empty or partially populated. The running PM2 process then can't `require()` its dependencies on the next restart and crash-loops.
+
+**Recovery (5 min):**
+
+1. SSH to the VPS:
+
+   ```bash
+   ssh deploy@<VPS_IP>
+   ```
+
+2. Confirm the diagnosis:
+
+   ```bash
+   pm2 status   # Look for restarts > 0 and "waiting restart" status
+   ls /opt/armouredsouls/backend/node_modules/.bin/tsx   # If missing, this is the bug
+   ```
+
+3. Manually re-run the install the workflow would have run:
+
+   ```bash
+   cd /opt/armouredsouls/backend
+   NODE_ENV=production npm ci --omit=dev --prefer-offline --no-audit --no-fund
+   npx prisma generate
+   pm2 restart armouredsouls-backend
+   sleep 5
+   pm2 status
+   curl -sI https://acc.armouredsouls.com/api/health
+   ```
+
+4. Health check should return 200. PM2 status should show `online` and `↺ 0` (or whatever it was before, no new restarts).
+
+**Why the manual run usually completes when the CI run hung.** Three factors compound in CI:
+
+- `appleboy/ssh-action` (drone-ssh) can buffer-stall on long-running commands with verbose stdout (lots of postinstall logs).
+- The deploy job opens many SSH sessions back-to-back, sometimes tripping `MaxStartups` on the VPS sshd.
+- The 2 GB RAM box can be under load from concurrent league/cycle processing during the deploy window.
+
+A direct interactive SSH session has none of these issues.
+
+**Note on the deploy state after recovery.** If the install hung, the workflow never reached migrate / seed / restart. The recovered backend is running the **previous** code, not the new code from the failing deploy. To actually land the new code, retry the deploy from GitHub Actions once the VPS is verified healthy. If retry hangs again at the same step, do not keep retrying — investigate before more attempts (see also: VPS load, `MaxStartups`, sshd `MaxSessions` settings).
+
 ### Pipeline fails at "Transfer artifacts via rsync"
 
 **Symptom**: rsync connection refused or permission denied.

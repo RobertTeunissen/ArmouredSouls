@@ -4,6 +4,7 @@
  * Extracted from FacilitiesPage.tsx during component splitting (Spec 18).
  */
 
+import { Link } from 'react-router-dom';
 import FacilityIcon from '../FacilityIcon';
 import type { Facility } from './types';
 
@@ -49,6 +50,18 @@ export function FacilityCard({ facility, currency, userPrestige, upgrading, onUp
           <p className="text-secondary text-sm">{facility.description}</p>
         </div>
       </div>
+
+      {/* Booking Office overview link */}
+      {facility.type === 'booking_office' && facility.implemented && (
+        <div className="mb-4">
+          <Link
+            to="/booking-office"
+            className="inline-flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300 transition-colors min-h-[44px]"
+          >
+            <span>Manage Subscriptions →</span>
+          </Link>
+        </div>
+      )}
 
       {/* Level Display with Progress Bar */}
       <div className="mb-4">

@@ -20,6 +20,7 @@ export const implementedPages = new Set([
   '/robots',
   '/robots/create',
   '/facilities',
+  '/booking-office',
   '/weapon-shop',
   '/battle-history',
   '/league-standings',
@@ -66,6 +67,7 @@ export const allPages: Record<string, NavCategory> = {
     label: 'Stable',
     items: [
       { path: '/facilities', label: 'Facilities' },
+      { path: '/booking-office', label: '📋 Booking Office' },
       { path: '/weapon-shop', label: 'Weapon Shop' },
       { path: '/tag-teams', label: 'Tag Team Management' },
       { path: '/income', label: 'Income Dashboard' },

@@ -91,7 +91,28 @@ export async function getEligibleTeams(
   });
 
   // Filter out already scheduled teams
-  const eligibleTeams = readyTeams.filter(team => !alreadyScheduledIds.has(team.id));
+  const availableTeams = readyTeams.filter(team => !alreadyScheduledIds.has(team.id));
+
+  // Filter by tag_team subscription — BOTH active and reserve robots must be subscribed
+  const allRobotIds = availableTeams.flatMap(t => [t.activeRobotId, t.reserveRobotId]);
+  // Activate pending subscriptions for robots that have room under cap
+  const { batchActivatePendingSubscriptions } = await import('../subscription/subscriptionService');
+  await batchActivatePendingSubscriptions(allRobotIds, 'tag_team');
+
+  // Filter by tag_team subscription — BOTH active and reserve robots must have active subscription
+  const subscribedRobotIds = await prisma.subscription.findMany({
+    where: { eventType: 'tag_team', robotId: { in: allRobotIds }, status: 'active' },
+    select: { robotId: true },
+  });
+  const subscribedSet = new Set(subscribedRobotIds.map(s => s.robotId));
+  const eligibleTeams = availableTeams.filter(t =>
+    subscribedSet.has(t.activeRobotId) && subscribedSet.has(t.reserveRobotId)
+  );
+
+  const excludedBySubscription = availableTeams.length - eligibleTeams.length;
+  if (excludedBySubscription > 0) {
+    logger.info(`[TagTeamMatchmaking] Excluded ${excludedBySubscription} teams without tag_team subscription`);
+  }
 
   logger.info(
     `[TagTeamMatchmaking] ${tagTeamLeagueId}: ${eligibleTeams.length} eligible teams ` +

@@ -216,6 +216,16 @@ Tournament system — bracket management and battle execution.
 | `tournamentBattleOrchestrator` | Tournament match execution (HP tiebreaker, round-based rewards, championship titles) |
 | `tournamentService` | Tournament CRUD, bracket generation (ELO seeding), round advancement, auto-creation |
 
+### subscription/
+Event Subscription System — per-robot subscription model gating participation in all battle events through a single, extensible Event Registry.
+
+| Service | Purpose |
+|---------|---------|
+| `eventRegistry` | Runtime singleton registry of subscribable events; exposes `registerSubscribableEvent` hook for new event modes, `isRegisteredEvent` type guard, `getRegisteredEvents` for UI rendering |
+| `subscriptionService` | Core CRUD — `subscribe`, `unsubscribe`, `getSubscriptions`, `isRobotSubscribedTo` (the single eligibility helper called by every matchmaker) |
+| `lockingPredicates` | Per-event locking predicate implementations (checks for queued battles per robot before allowing unsubscribe) |
+| `rosterEligibilityFilter` | Filters the Event Registry by Stable robot count to determine which events a robot can subscribe to (e.g. Tag Team requires ≥ 2 robots) |
+
 ---
 
 ## Supporting Directories

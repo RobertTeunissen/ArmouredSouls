@@ -37,6 +37,7 @@ const LeaderboardsPrestigePage = React.lazy(() => import('./pages/LeaderboardsPr
 const ChangelogPage = React.lazy(() => import('./pages/ChangelogPage'));
 const GuidePage = React.lazy(() => import('./pages/GuidePage'));
 const ProfilePage = React.lazy(() => import('./pages/ProfilePage'));
+const BookingOfficePage = React.lazy(() => import('./pages/BookingOfficePage'));
 
 // Lazy-loaded admin pages
 const AdminDashboardPage = React.lazy(() => import('./pages/admin/DashboardPage'));
@@ -57,6 +58,7 @@ const AdminRefinementAdoptionPage = React.lazy(() => import('./pages/admin/Refin
 const AdminRepairLogPage = React.lazy(() => import('./pages/admin/RepairLogPage'));
 const AdminAuditLogPage = React.lazy(() => import('./pages/admin/AuditLogPage'));
 const AdminLeagueHistoryPage = React.lazy(() => import('./pages/admin/LeagueHistoryPage'));
+const AdminSubscriptionAnalyticsPage = React.lazy(() => import('./pages/admin/SubscriptionAnalyticsPage'));
 
 // Loading fallback for lazy-loaded player pages
 function PageLoader() {
@@ -98,6 +100,7 @@ function AppRoutes() {
       <Route path="/onboarding" element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />
       <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
       <Route path="/facilities" element={<ProtectedRoute><FacilitiesPage /></ProtectedRoute>} />
+      <Route path="/booking-office" element={<ProtectedRoute><BookingOfficePage /></ProtectedRoute>} />
       <Route path="/robots" element={<ProtectedRoute><RobotsPage /></ProtectedRoute>} />
       <Route path="/robots/create" element={<ProtectedRoute><CreateRobotPage /></ProtectedRoute>} />
       <Route path="/robots/:id" element={<ProtectedRoute><RobotDetailPage /></ProtectedRoute>} />
@@ -146,6 +149,7 @@ function AppRoutes() {
           <Route path="repair-log" element={<AdminRepairLogPage />} />
           <Route path="audit-log" element={<AdminAuditLogPage />} />
           <Route path="league-history" element={<AdminLeagueHistoryPage />} />
+          <Route path="subscriptions" element={<AdminSubscriptionAnalyticsPage />} />
           <Route path="*" element={<Navigate to="dashboard" replace />} />
         </Route>
       )}

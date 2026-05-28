@@ -1,18 +1,76 @@
 /**
  * Step 9: Completion
- * Congratulations screen. "Complete Tutorial & Start Playing" → navigates to in-game guide.
+ * Phase 1: Subscription picker — choose event subscriptions for the first robot.
+ * Phase 2: Congratulations screen. "Complete Tutorial & Start Playing" → navigates to in-game guide.
+ *
+ * Requirements: R8.1, R8.5
  */
-import { useState, useRef, memo } from 'react';
+import { useState, useEffect, useRef, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useOnboarding } from '../../../contexts/OnboardingContext';
 import { useAuth } from '../../../contexts/AuthContext';
+import { api } from '../../../utils/api';
+import SubscriptionPicker from '../../subscriptions/SubscriptionPicker';
+
+interface UserProfile {
+  currency: number;
+  prestige?: number;
+}
+
+interface RobotSummary {
+  id: number;
+  name: string;
+}
 
 const Step9_Completion = ({ onNext: _onNext }: { onNext: () => void; onPrevious: () => void }) => {
-  const { completeTutorial, error: ctxErr } = useOnboarding();
+  const { tutorialState, completeTutorial, error: ctxErr } = useOnboarding();
   const { refreshUser } = useAuth();
   const navigate = useNavigate();
   const [completing, setCompleting] = useState(false);
   const attempted = useRef(false);
+
+  // Subscription picker phase
+  const [phase, setPhase] = useState<'subscriptions' | 'done'>('subscriptions');
+  const [firstRobotId, setFirstRobotId] = useState<number | null>(null);
+  const [allRobotIds, setAllRobotIds] = useState<number[]>([]);
+  const [robotCount, setRobotCount] = useState(1);
+  const [credits, setCredits] = useState(0);
+  const [prestige, setPrestige] = useState(0);
+  const [profileLoading, setProfileLoading] = useState(true);
+
+  // Fetch the first robot ID and user profile for the subscription picker
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [robots, profile] = await Promise.all([
+          api.get<RobotSummary[]>('/api/robots'),
+          api.get<UserProfile>('/api/user/profile'),
+        ]);
+        if (robots.length > 0) {
+          // Use the first robot created during onboarding
+          const onboardingRobots = tutorialState?.choices?.robotsCreated;
+          const targetId = onboardingRobots && onboardingRobots.length > 0
+            ? onboardingRobots[0]
+            : robots[0].id;
+          setFirstRobotId(targetId);
+          setAllRobotIds(robots.map(r => r.id));
+          setRobotCount(robots.length);
+        }
+        setCredits(profile.currency);
+        setPrestige(profile.prestige ?? 0);
+      } catch {
+        // If we can't load data, skip the picker and go straight to completion
+        setPhase('done');
+      } finally {
+        setProfileLoading(false);
+      }
+    };
+    fetchData();
+  }, [tutorialState?.choices?.robotsCreated]);
+
+  const handlePickerComplete = () => {
+    setPhase('done');
+  };
 
   const err = attempted.current && ctxErr ? ctxErr : null;
 
@@ -28,6 +86,47 @@ const Step9_Completion = ({ onNext: _onNext }: { onNext: () => void; onPrevious:
     }
   };
 
+  // Phase 1: Subscription picker
+  if (phase === 'subscriptions') {
+    if (profileLoading) {
+      return (
+        <div className="max-w-2xl mx-auto px-4 py-16 text-center">
+          <div className="text-secondary">Loading subscription options...</div>
+        </div>
+      );
+    }
+
+    if (firstRobotId === null) {
+      // No robot found — skip to completion
+      return (
+        <div className="max-w-2xl mx-auto px-4 py-16 text-center">
+          <div className="text-secondary">Setting up your account...</div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-8">
+        <div className="text-center mb-6">
+          <span className="text-4xl block mb-3">📋</span>
+          <h2 className="text-2xl font-bold mb-2">Choose Your Battle Events</h2>
+          <p className="text-secondary text-sm">
+            Select which events your {robotCount > 1 ? 'robots' : 'robot'} will compete in. You can change these later from the Robot Detail page.
+          </p>
+        </div>
+        <SubscriptionPicker
+          robotId={firstRobotId}
+          allRobotIds={allRobotIds}
+          robotCount={robotCount}
+          credits={credits}
+          prestige={prestige}
+          onComplete={handlePickerComplete}
+        />
+      </div>
+    );
+  }
+
+  // Phase 2: Congratulations
   return (
     <div className="max-w-2xl mx-auto px-4 py-16 text-center">
       <span className="text-6xl block mb-6">🏆</span>

@@ -144,7 +144,50 @@ du -sh /var/log/armouredsouls/             # Log size
 docker system df                           # Docker disk usage
 ```
 
-DEV1-S has 20 GB SSD. Keep an eye on disk usage — if it exceeds 80%, clean up old logs or backups.
+The VPS currently has a 25 GB SSD (upgraded from the original 20 GB in May 2026). Keep an eye on disk usage — if it exceeds 80%, clean up old logs or backups, or see [Disk Resize After Cloud Disk Upgrade](#disk-resize-after-cloud-disk-upgrade) below.
+
+The `battles` table TOAST is the main long-term grower (~85 MB/day on ACC under normal load). When approaching 80% sustained, prioritize backlog item #53 (Battle Log Retention) rather than another disk upgrade.
+
+### Disk Resize After Cloud Disk Upgrade
+
+When the underlying cloud disk is resized (e.g., upgrading the Scaleway VPS disk from 20 GB to 25 GB), the **partition** does not automatically grow with it. The new bytes are visible to the kernel but unallocated. `df -h /` will keep showing the old size until you extend the partition and the filesystem.
+
+**Symptom:** Scaleway dashboard shows the new disk size, but `df -h /` shows the old size and disk-full alerts continue.
+
+**Diagnose:**
+
+```bash
+lsblk                       # Disk size vs partition size
+sudo fdisk -l /dev/sda      # Partition end sector vs total sectors
+```
+
+If `sda` shows the new size (e.g., `23.3G` for a 25 GB allocation) but `sda1` is smaller (e.g., `17.6G`), the gap between the two is unallocated space waiting for the partition to grow.
+
+**Resize, online and non-destructive:**
+
+```bash
+# Extends the partition into the unused space
+sudo growpart /dev/sda 1
+
+# Online-resizes the ext4 filesystem to match
+sudo resize2fs /dev/sda1
+
+# Verify
+df -h /
+lsblk
+```
+
+If `growpart` isn't installed:
+
+```bash
+sudo apt-get update && sudo apt-get install -y cloud-guest-utils
+```
+
+**Why it's safe.** `growpart` only edits the GPT entry to extend the end-sector — no data movement. `resize2fs` on a mounted ext4 filesystem just adds new inodes at the tail of the existing structure. Both operations are non-destructive and survive reboots.
+
+**Why it can fail.**
+- `growpart` errors if the partition is already at the maximum or if there's no free space after the last partition (would mean the cloud disk wasn't actually resized).
+- `resize2fs` only fails if the filesystem is already corrupted, in which case bigger problems exist.
 
 ### Memory
 

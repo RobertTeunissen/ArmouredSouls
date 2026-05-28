@@ -87,11 +87,12 @@ export function useFacilities() {
     try {
       const data = await api.get<{ facilities?: Facility[]; userPrestige?: number } | Facility[]>('/api/facilities');
       // Endpoint may return either `{ facilities, userPrestige }` or the raw array.
+      // Defensive filter: only show implemented facilities even if API returns unimplemented rows
       if (Array.isArray(data)) {
-        setFacilities(data);
+        setFacilities(data.filter(f => f.implemented !== false));
         setUserPrestige(0);
       } else {
-        setFacilities(data.facilities ?? []);
+        setFacilities((data.facilities ?? []).filter(f => f.implemented !== false));
         setUserPrestige(data.userPrestige || 0);
       }
     } catch (err) {
