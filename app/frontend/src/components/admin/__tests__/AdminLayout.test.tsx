@@ -46,6 +46,7 @@ const NAVIGATION_ITEMS = [
   { label: 'Achievements', path: '/admin/achievements' },
   { label: 'Tuning', path: '/admin/tuning' },
   { label: 'Refinement', path: '/admin/refinement' },
+  { label: 'Subscriptions', path: '/admin/subscriptions' },
   { label: 'Repair Log', path: '/admin/repair-log' },
   { label: 'Audit Log', path: '/admin/audit-log' },
 ];

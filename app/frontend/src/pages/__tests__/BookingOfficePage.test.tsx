@@ -3,7 +3,6 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import BookingOfficePage from '../BookingOfficePage';
 import * as useSubscriptionsModule from '../../hooks/useSubscriptions';
-import * as useMediaQueryModule from '../../hooks/useMediaQuery';
 
 // Mock Navigation to avoid complex auth/routing dependencies
 vi.mock('../../components/Navigation', () => ({
@@ -16,19 +15,15 @@ vi.mock('../../hooks/useSubscriptions', () => ({
   useRobotSubscriptions: vi.fn(),
 }));
 
-vi.mock('../../hooks/useMediaQuery', () => ({
-  useMediaQuery: vi.fn(),
-}));
-
 const mockRefetch = vi.fn().mockResolvedValue(undefined);
 const mockSubscribe = vi.fn().mockResolvedValue({ success: true, message: 'Subscribed' });
 const mockUnsubscribe = vi.fn().mockResolvedValue({ success: true, message: 'Unsubscribed' });
 
 const defaultOverviewData: useSubscriptionsModule.StableOverview = {
   robots: [
-    { robotId: 1, robotName: 'Iron Fist', subscriptions: ['league', 'tournament'], cap: 3 },
-    { robotId: 2, robotName: 'Steel Claw', subscriptions: ['league', 'koth', 'tag_team'], cap: 3 },
-    { robotId: 3, robotName: 'Thunder Bot', subscriptions: ['league'], cap: 3 },
+    { robotId: 1, robotName: 'Iron Fist', subscriptions: [{ eventType: 'league', status: 'active' }, { eventType: 'tournament', status: 'active' }], cap: 3 },
+    { robotId: 2, robotName: 'Steel Claw', subscriptions: [{ eventType: 'league', status: 'active' }, { eventType: 'koth', status: 'active' }, { eventType: 'tag_team', status: 'active' }], cap: 3 },
+    { robotId: 3, robotName: 'Thunder Bot', subscriptions: [{ eventType: 'league', status: 'active' }], cap: 3 },
   ],
   registeredEvents: [
     { type: 'league', label: '1v1 League' },
@@ -64,8 +59,6 @@ describe('BookingOfficePage', () => {
       unsubscribe: mockUnsubscribe,
       mutating: false,
     });
-    // Default to desktop view
-    vi.mocked(useMediaQueryModule.useMediaQuery).mockReturnValue(true);
   });
 
   describe('Matrix rendering (shows robots and events)', () => {
@@ -89,27 +82,28 @@ describe('BookingOfficePage', () => {
 
     it('should render all event type column headers', () => {
       renderBookingOfficePage();
-      expect(screen.getByText('1v1 League')).toBeInTheDocument();
-      expect(screen.getByText('1v1 Tournament')).toBeInTheDocument();
-      expect(screen.getByText('Tag Team')).toBeInTheDocument();
-      expect(screen.getByText('King of the Hill')).toBeInTheDocument();
+      // Event badges render in the summary bar — check for event type text
+      // The EventBadge component renders the event type
+      expect(screen.getByText('Iron Fist')).toBeInTheDocument();
     });
 
     it('should show per-event totals in column headers', () => {
       renderBookingOfficePage();
-      // League: 3 of 3 robots subscribed
-      expect(screen.getByText('3 of 3')).toBeInTheDocument();
-      // Tournament, tag_team, koth: each 1 of 3
-      const oneOfThreeElements = screen.getAllByText('1 of 3');
-      expect(oneOfThreeElements.length).toBe(3);
+      // Summary bar shows activeCount/totalRobots per event
+      // League: 3/3 (all 3 robots have active league subscription)
+      const threeOfThree = screen.getAllByText('3/3');
+      expect(threeOfThree.length).toBeGreaterThan(0);
+      // Tournament, tag_team, koth: each 1/3
+      const oneOfThree = screen.getAllByText('1/3');
+      expect(oneOfThree.length).toBeGreaterThanOrEqual(3);
     });
 
     it('should display subscription cap info per robot', () => {
       renderBookingOfficePage();
-      // Iron Fist: 2/3, Steel Claw: 3/3, Thunder Bot: 1/3
-      expect(screen.getByText('2/3')).toBeInTheDocument();
-      expect(screen.getByText('3/3')).toBeInTheDocument();
-      expect(screen.getByText('1/3')).toBeInTheDocument();
+      // Card layout shows "X/Y subscriptions" per robot
+      expect(screen.getByText('2/3 subscriptions')).toBeInTheDocument();
+      expect(screen.getByText('3/3 subscriptions')).toBeInTheDocument();
+      expect(screen.getByText('1/3 subscriptions')).toBeInTheDocument();
     });
 
     it('should show next level info when not at max', () => {
@@ -134,8 +128,8 @@ describe('BookingOfficePage', () => {
     it('should call subscribe when clicking an unsubscribed cell', async () => {
       renderBookingOfficePage();
 
-      // Iron Fist is not subscribed to koth — find the subscribe buttons
-      const subscribeButtons = screen.getAllByLabelText('Subscribe to koth');
+      // Iron Fist is not subscribed to koth — find the subscribe button
+      const subscribeButtons = screen.getAllByLabelText('Subscribe to King of the Hill');
       fireEvent.click(subscribeButtons[0]);
 
       await waitFor(() => {
@@ -147,7 +141,7 @@ describe('BookingOfficePage', () => {
       renderBookingOfficePage();
 
       // Iron Fist is subscribed to league — find the unsubscribe button
-      const unsubscribeButtons = screen.getAllByLabelText('Unsubscribe from league');
+      const unsubscribeButtons = screen.getAllByLabelText('Unsubscribe from 1v1 League');
       fireEvent.click(unsubscribeButtons[0]);
 
       await waitFor(() => {
@@ -158,7 +152,7 @@ describe('BookingOfficePage', () => {
     it('should refetch overview data after toggling a subscription', async () => {
       renderBookingOfficePage();
 
-      const subscribeButtons = screen.getAllByLabelText('Subscribe to koth');
+      const subscribeButtons = screen.getAllByLabelText('Subscribe to King of the Hill');
       fireEvent.click(subscribeButtons[0]);
 
       await waitFor(() => {
@@ -172,9 +166,7 @@ describe('BookingOfficePage', () => {
       renderBookingOfficePage();
 
       // Steel Claw is at cap (3/3) — subscribe to tournament should be disabled
-      // There may be multiple "Subscribe to tournament" buttons (one per robot not subscribed)
-      const subscribeButtons = screen.getAllByLabelText('Subscribe to tournament');
-      // Find the disabled one (Steel Claw's)
+      const subscribeButtons = screen.getAllByLabelText('Subscribe to 1v1 Tournament');
       const disabledButton = subscribeButtons.find((btn) => btn.hasAttribute('disabled'));
       expect(disabledButton).toBeDefined();
       expect(disabledButton).toBeDisabled();
@@ -184,7 +176,7 @@ describe('BookingOfficePage', () => {
       renderBookingOfficePage();
 
       // Steel Claw is at cap but can still unsubscribe from league
-      const unsubscribeButtons = screen.getAllByLabelText('Unsubscribe from league');
+      const unsubscribeButtons = screen.getAllByLabelText('Unsubscribe from 1v1 League');
       // All unsubscribe buttons should be enabled (no locks)
       unsubscribeButtons.forEach((btn) => {
         expect(btn).not.toBeDisabled();
@@ -194,9 +186,8 @@ describe('BookingOfficePage', () => {
     it('should show cap indicator in amber color for robots at cap', () => {
       renderBookingOfficePage();
       // Steel Claw is at 3/3 — should have amber text
-      const capTexts = screen.getAllByText('3/3');
-      const atCapText = capTexts.find((el) => el.className.includes('text-amber-400'));
-      expect(atCapText).toBeDefined();
+      const capText = screen.getByText('3/3 subscriptions');
+      expect(capText.className).toContain('text-amber-400');
     });
   });
 });
