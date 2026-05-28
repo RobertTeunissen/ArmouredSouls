@@ -234,13 +234,30 @@ async function buildMatchmakingQueue(leagueId: string): Promise<Robot[]> {
     return readiness.isReady;
   });
   
+  // Activate pending subscriptions for robots that have room under cap
+  const { batchActivatePendingSubscriptions } = await import('../subscription/subscriptionService');
+  await batchActivatePendingSubscriptions(readyRobots.map(r => r.id), 'league');
+
+  // Filter by league subscription — only active subscriptions (batch query for efficiency)
+  const subscribedRobotIds = await prisma.subscription.findMany({
+    where: { eventType: 'league', robotId: { in: readyRobots.map(r => r.id) }, status: 'active' },
+    select: { robotId: true },
+  });
+  const subscribedSet = new Set(subscribedRobotIds.map(s => s.robotId));
+  const subscribedRobots = readyRobots.filter(r => subscribedSet.has(r.id));
+
+  const excludedBySubscription = readyRobots.length - subscribedRobots.length;
+  if (excludedBySubscription > 0) {
+    logger.info(`[Matchmaking] Excluded ${excludedBySubscription} robots without league subscription`, { leagueId });
+  }
+
   // Check if robots are already scheduled for a match
-  const scheduledRobotIds = await prisma.scheduledLeagueMatch.findMany({
+  const scheduledRobotIds2 = await prisma.scheduledLeagueMatch.findMany({
     where: {
       status: 'scheduled',
       OR: [
-        { robot1Id: { in: readyRobots.map(r => r.id) } },
-        { robot2Id: { in: readyRobots.map(r => r.id) } },
+        { robot1Id: { in: subscribedRobots.map(r => r.id) } },
+        { robot2Id: { in: subscribedRobots.map(r => r.id) } },
       ],
     },
     select: {
@@ -250,13 +267,13 @@ async function buildMatchmakingQueue(leagueId: string): Promise<Robot[]> {
   });
   
   const alreadyScheduledIds = new Set<number>();
-  scheduledRobotIds.forEach(match => {
+  scheduledRobotIds2.forEach(match => {
     alreadyScheduledIds.add(match.robot1Id);
     alreadyScheduledIds.add(match.robot2Id);
   });
   
   // Filter out already scheduled robots
-  const availableRobots = readyRobots.filter(robot => !alreadyScheduledIds.has(robot.id));
+  const availableRobots = subscribedRobots.filter(robot => !alreadyScheduledIds.has(robot.id));
   
   logger.info(`[Matchmaking] Queue for ${leagueId}: ${availableRobots.length} robots available (${robots.length} total, ${readyRobots.length} ready)`);
   

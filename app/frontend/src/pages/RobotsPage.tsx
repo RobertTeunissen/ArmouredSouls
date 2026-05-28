@@ -5,9 +5,11 @@ import Navigation from '../components/Navigation';
 import RobotImage from '../components/RobotImage';
 import ConfirmationModal from '../components/ConfirmationModal';
 import ViewModeToggle from '../components/ViewModeToggle';
+import EventBadge from '../components/subscriptions/EventBadge';
 import { api } from '../utils/api';
 import { repairAllRobots } from '../utils/robotApi';
 import { useRobotStore } from '../stores';
+import { useStableOverview } from '../hooks/useSubscriptions';
 import type { Facility } from '../components/facilities/types';
 // Utility functions
 const getHPColor = (currentHP: number, maxHP: number): string => {
@@ -131,6 +133,18 @@ function RobotsPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
+
+  // Fetch subscription data for all robots (for EventBadge display)
+  const { data: subscriptionOverview } = useStableOverview();
+  const subscriptionsByRobotId = useMemo(() => {
+    const map: Record<number, string[]> = {};
+    if (subscriptionOverview?.robots) {
+      for (const robot of subscriptionOverview.robots) {
+        map[robot.robotId] = robot.subscriptions.map(s => s.eventType);
+      }
+    }
+    return map;
+  }, [subscriptionOverview]);
 
   // Sort robots by ELO (highest first) as default
   const robots = useMemo(() => {
@@ -756,6 +770,18 @@ function RobotsPage() {
                       </span>
                     </div>
                   </div>
+
+                  {/* Event Subscriptions */}
+                  {subscriptionsByRobotId[robot.id] && subscriptionsByRobotId[robot.id].length > 0 && (
+                    <div className="mb-4">
+                      <div className="text-xs text-secondary mb-1.5">Subscriptions</div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {subscriptionsByRobotId[robot.id].map((eventType) => (
+                          <EventBadge key={eventType} eventType={eventType} />
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   {/* View Details Button */}
                   <button

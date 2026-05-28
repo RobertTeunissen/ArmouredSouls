@@ -13,6 +13,7 @@ import {
 } from './tierConfig';
 import { generateStableName } from './stableNameGenerator';
 import { selectWeapon, selectShield, WeaponRecord } from './weaponSelection';
+import { getEligibleEvents } from '../services/subscription/rosterEligibilityFilter';
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -273,6 +274,35 @@ export async function generateBattleReadyUsers(
             });
             totalTagTeamsCreated++;
             logger.info(`[UserGeneration] Created tag team for ${username}`);
+          }
+
+          // ── Subscriptions for each robot ─────────────────────
+          const eligibleEvents = getEligibleEvents(createdRobots.length);
+          const eligibleTypes = eligibleEvents.filter(e => e.eligible).map(e => e.type);
+
+          for (const robot of createdRobots) {
+            let robotSubscriptions: string[];
+
+            if (tier.createTagTeam && createdRobots.length >= 2 &&
+                (robot.id === createdRobots[0].id || robot.id === createdRobots[1].id)) {
+              // Robots on the TagTeam get tag_team unconditionally + 2 random from remaining
+              const remaining = eligibleTypes.filter(t => t !== 'tag_team');
+              const shuffled = remaining.sort(() => Math.random() - 0.5);
+              robotSubscriptions = ['tag_team', ...shuffled.slice(0, 2)];
+            } else {
+              // Pick 3 random from eligible set (or fewer if eligible < 3)
+              const shuffled = [...eligibleTypes].sort(() => Math.random() - 0.5);
+              robotSubscriptions = shuffled.slice(0, 3);
+            }
+
+            await tx.subscription.createMany({
+              data: robotSubscriptions.map(eventType => ({
+                robotId: robot.id,
+                eventType,
+                status: 'active',
+              })),
+              skipDuplicates: true,
+            });
           }
         });
 

@@ -58,6 +58,7 @@ Browser-based robot combat strategy game with turn-based mechanics, league syste
 10. **Admin Portal** - Dedicated admin experience with sidebar navigation, 18 route-based lazy-loaded pages, Zustand shared state (useAdminStore), AdminRoute guard, 6 analytics dashboards, shared UI component library, and server-side audit trail (Spec #28)
 11. **Monitoring & Alerting** - Discord webhook alerts for disk/startup/backup/deploy failures, daily health report, UptimeRobot external probes, Scaleway Cockpit metrics (Spec #29)
 12. **League History Tracking** - Persistent tier change tracking for robots and tag teams, admin analytics dashboard with yo-yo detection, player-facing timeline visualizations, achievement data support (Spec #32)
+13. **Booking Office / Event Subscription System** - Per-robot subscription model gating participation in all battle events (league, tournament, tag team, KotH) through a single extensible Event Registry, with facility-level-driven cap curve (3 base + 1 per level), free switching, and per-robot lock-on-queued-battle rule (Spec #35)
 
 ## Documentation Organization
 - `docs/architecture/` - System architecture, schema, combat engine, security

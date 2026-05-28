@@ -25,12 +25,13 @@ const ATTRIBUTES: InvestmentOption = { id: 'attributes', facilityType: 'training
 const MERCH: InvestmentOption = { id: 'income', facilityType: 'merchandising_hub', title: 'I Want Passive Income', description: 'Earn credits every day from merchandising. Scales with your prestige.', cost: 150_000, benefit: '₡5,000/day base income', icon: '💰' };
 const STREAM: InvestmentOption = { id: 'income', facilityType: 'streaming_studio', title: 'Boost My Battle Earnings', description: 'Double the streaming revenue you earn from every battle.', cost: 100_000, benefit: '2× streaming revenue per battle', icon: '📺' };
 const REPAIR: InvestmentOption = { id: 'repairs', facilityType: 'repair_bay', title: 'I Want Less Repair Costs', description: 'Reduce the credits you spend fixing your robots after lost battles.', cost: 50_000, benefit: 'Repair cost discount', icon: '🔧' };
+const BOOKING_OFFICE: InvestmentOption = { id: 'booking_office', facilityType: 'booking_office', title: 'Unlock More Battle Types', description: 'Each robot can enter a 4th battle event — like Tag Team. More events means more battles per day.', cost: 75_000, benefit: '+1 event subscription per robot', icon: '📋' };
 
 function getRecommendation(strategy: StrategyKey) {
   switch (strategy) {
     case '1_mighty': return { options: [WEAPONS, ATTRIBUTES, MERCH, REPAIR], recommended: new Set(['weapons', 'attributes']), note: 'With one robot you have plenty of budget. Discount facilities pay for themselves quickly.' };
-    case '2_average': return { options: [WEAPONS, ATTRIBUTES, STREAM, REPAIR], recommended: new Set(['weapons', 'income']), note: 'Two robots means more battles — streaming revenue adds up fast.' };
-    case '3_flimsy': return { options: [STREAM, REPAIR], recommended: new Set(['income']), note: 'Your budget is tight after three robots. Streaming studio is the best bang for your buck with maximum battles per day.' };
+    case '2_average': return { options: [WEAPONS, BOOKING_OFFICE, STREAM, REPAIR], recommended: new Set(['weapons', 'booking_office']), note: 'Two robots means Tag Team is available — unlock a 4th event slot so both robots can compete in all battle types.' };
+    case '3_flimsy': return { options: [BOOKING_OFFICE, STREAM, REPAIR], recommended: new Set(['booking_office']), note: 'Three robots can form Tag Teams. The Booking Office lets each robot enter a 4th event — more battles, more rewards.' };
   }
 }
 

@@ -82,6 +82,8 @@ const unitTestFiles = [
   'leagueHistoryEnrichment\\.test\\.ts',
   'adminLeagueHistory\\.test\\.ts',
   'leagueHistoryPublic\\.test\\.ts',
+  'bookingOfficeMigration\\.test\\.ts',
+  'subscriptionProperties\\.test\\.ts',
 ];
 
 module.exports = {

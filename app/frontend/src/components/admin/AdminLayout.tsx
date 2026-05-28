@@ -65,6 +65,7 @@ const NAV_GROUPS: NavGroup[] = [
       { label: 'Achievements', path: '/admin/achievements', icon: '🏅' },
       { label: 'Tuning', path: '/admin/tuning', icon: '🎛️' },
       { label: 'Refinement', path: '/admin/refinement', icon: '🔨' },
+      { label: 'Subscriptions', path: '/admin/subscriptions', icon: '📋' },
     ],
   },
   {

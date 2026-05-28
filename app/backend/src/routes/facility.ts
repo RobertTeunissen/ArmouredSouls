@@ -53,8 +53,10 @@ router.get('/', authenticateToken, validateRequest({}), async (req: AuthRequest,
       return acc;
     }, {} as Record<string, number>);
 
-    // Combine with facility configs
-    const facilities = FACILITY_TYPES.map((config) => {
+    // Filter to only implemented facilities, then combine with user data
+    const implementedFacilities = FACILITY_TYPES.filter((f) => f.implemented);
+
+    const facilities = implementedFacilities.map((config) => {
       const currentLevel = facilityLevels[config.type] || 0;
       const nextLevel = currentLevel + 1;
       const upgradeCost = getFacilityUpgradeCost(config.type, currentLevel);

@@ -161,6 +161,16 @@ Example with details:
 | `INVALID_CHOICES` | 400 | Invalid choices provided |
 | `ONBOARDING_INTERNAL_ERROR` | 500 | Internal onboarding error |
 
+### Subscription Errors
+
+| Code | HTTP Status | Description |
+|------|-------------|-------------|
+| `SUBSCRIPTION_CAP_EXCEEDED` | 400 | Robot has reached the maximum number of concurrent event subscriptions allowed by the Stable's Booking Office level. Upgrade the facility to increase the cap. |
+| `SUBSCRIPTION_DUPLICATE` | 400 | Robot is already subscribed to the requested event type. Each robot can only hold one subscription per event. |
+| `SUBSCRIPTION_UNKNOWN_EVENT` | 400 | The requested event type is not a valid registered subscribable event in the Event Registry. |
+| `EVENT_SUBSCRIPTION_LOCKED` | 409 | Cannot unsubscribe — the robot has a queued (scheduled) battle for this event type. Wait for the battle to execute next cycle before changing subscriptions. |
+| `SUBSCRIPTION_NOT_FOUND` | 404 | The robot does not have an active subscription to the specified event type. Cannot unsubscribe from an event the robot is not subscribed to. |
+
 ### Database Errors (Prisma)
 
 | Code | HTTP Status | Description |

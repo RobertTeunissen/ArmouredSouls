@@ -36,7 +36,7 @@ interface PlayerDetail {
   role: string;
   createdAt: string;
   onboarding?: { completed: boolean; currentStep: number };
-  robots: { id: number; name: string; elo: number; league: string; wins: number; losses: number; draws: number; equippedWeapon?: string }[];
+  robots: { id: number; name: string; elo: number; league: string; wins: number; losses: number; draws: number; equippedWeapon?: string; subscriptions?: string[] }[];
   facilities: { type: string; level: number; passiveIncome: number }[];
   [key: string]: unknown;
 }
@@ -398,6 +398,18 @@ function PlayersPage() {
                             {listRobot.stance && <span> · Stance: {listRobot.stance}</span>}
                           </p>
                         )}
+                        {robot.subscriptions && robot.subscriptions.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {robot.subscriptions.map((sub) => (
+                              <span key={sub} className="px-2 py-0.5 rounded text-xs bg-blue-900/30 text-blue-300 border border-blue-700/30">
+                                {sub.replace(/_/g, ' ')}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        {robot.subscriptions && robot.subscriptions.length === 0 && (
+                          <p className="text-xs text-tertiary mt-1 italic">No subscriptions</p>
+                        )}
                       </div>
                     );
                   })}
@@ -408,6 +420,24 @@ function PlayersPage() {
             {selectedPlayer.facilities.length > 0 && (
               <div>
                 <h4 className="text-sm font-semibold text-secondary mb-2">Facilities ({selectedPlayer.facilities.length})</h4>
+                {/* Booking Office level highlight */}
+                {(() => {
+                  const bookingOffice = selectedPlayer.facilities.find(f => f.type === 'booking_office');
+                  if (bookingOffice) {
+                    return (
+                      <div className="bg-blue-900/20 border border-blue-700/30 rounded-lg p-3 mb-2 flex items-center justify-between">
+                        <span className="text-sm font-medium text-blue-300">📋 Booking Office</span>
+                        <span className="text-sm font-bold text-blue-200">Level {bookingOffice.level}</span>
+                      </div>
+                    );
+                  }
+                  return (
+                    <div className="bg-surface-elevated/50 border border-white/5 rounded-lg p-3 mb-2 flex items-center justify-between">
+                      <span className="text-sm text-secondary">📋 Booking Office</span>
+                      <span className="text-xs text-tertiary">Not purchased</span>
+                    </div>
+                  );
+                })()}
                 <div className="space-y-1">
                   {selectedPlayer.facilities.map((f, idx) => (
                     <div key={idx} className="bg-surface-elevated rounded p-2 text-sm flex justify-between">

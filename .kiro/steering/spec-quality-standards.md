@@ -89,6 +89,18 @@ Check these directories to determine the next available number:
 
 All tasks in a spec are mandatory. Do not mark tasks as optional with `*` or `\*`. Every task that is written must be executed. If a task isn't worth doing, remove it from the spec entirely — don't mark it optional.
 
+## Mobile Responsiveness Requirement
+
+Every spec that introduces or modifies UI components must include explicit mobile responsiveness requirements. This is not optional — the game is played on mobile devices.
+
+Specifically:
+- Every new page or surface must specify its mobile layout (stacked cards, vertical lists, collapsible sections — whatever fits the content)
+- Every new component must specify how it behaves on viewports < 1024px and ≥ 320px
+- The design document must reference the responsive tab layout pattern from `.kiro/steering/frontend-standards.md` where applicable
+- Tasks must include mobile-specific test assertions (viewport rendering, no horizontal overflow, touch targets ≥ 44px)
+
+If a spec has zero UI components, this section does not apply.
+
 ## Anti-Patterns to Avoid
 
 - Requirements with no Expected Contribution section (why does this spec exist?)
