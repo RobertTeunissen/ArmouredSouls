@@ -127,6 +127,7 @@ async function main(): Promise<void> {
                 data: EVENT_TYPES.map((eventType) => ({
                   robotId: robot.id,
                   eventType,
+                  status: 'active',
                 })),
                 skipDuplicates: true,
               });
