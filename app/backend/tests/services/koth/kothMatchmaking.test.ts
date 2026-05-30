@@ -174,9 +174,9 @@ describe('KotH daily execution (R2.3, R2.4)', () => {
     const state = scheduler.getSchedulerState();
     const kothJob = state.jobs.find((j: { name: string; schedule: string }) => j.name === 'koth');
     expect(kothJob).toBeDefined();
-    expect(kothJob.schedule).toBe('0 13 * * *');
+    expect(kothJob!.schedule).toBe('0 13 * * *');
     // '0 13 * * *' means every day — no weekday restriction (would be '0 13 * * 1,3,5' for Mon/Wed/Fri)
-    expect(kothJob.schedule).not.toContain('1,3,5');
+    expect(kothJob!.schedule).not.toContain('1,3,5');
 
     scheduler.resetScheduler();
   });

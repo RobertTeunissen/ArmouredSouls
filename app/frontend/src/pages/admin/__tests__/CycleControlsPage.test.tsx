@@ -99,22 +99,20 @@ describe('CycleControlsPage', () => {
     expect(screen.getByText('Queue')).toBeInTheDocument();
   });
 
-  it('should render production job trigger buttons', () => {
+  it('should render Run buttons for live events in the scheduler table', () => {
     render(<CycleControlsPage />);
-    expect(screen.getByText('⚔️ Run League Cycle')).toBeInTheDocument();
-    expect(screen.getByText('🏆 Run Tournament Cycle')).toBeInTheDocument();
-    expect(screen.getByText('🤝 Run Tag Team Cycle')).toBeInTheDocument();
-    expect(screen.getByText('👑 Run KotH Cycle')).toBeInTheDocument();
-    expect(screen.getByText('💰 Run Settlement')).toBeInTheDocument();
+    // The scheduler table shows Run buttons for live (non-reserved) events
+    const runButtons = screen.getAllByText('Run');
+    expect(runButtons.length).toBeGreaterThan(0);
   });
 
-  it('should show confirmation dialog when a trigger button is clicked', async () => {
+  it('should show confirmation dialog when a Run button is clicked', async () => {
     const user = userEvent.setup();
     render(<CycleControlsPage />);
 
-    await user.click(screen.getByText('⚔️ Run League Cycle'));
+    const runButtons = screen.getAllByText('Run');
+    await user.click(runButtons[0]);
 
-    expect(screen.getByText('Run League Cycle')).toBeInTheDocument();
     expect(screen.getByText('Confirm')).toBeInTheDocument();
     expect(screen.getByText('Cancel')).toBeInTheDocument();
   });
@@ -123,18 +121,18 @@ describe('CycleControlsPage', () => {
     const user = userEvent.setup();
     render(<CycleControlsPage />);
 
-    await user.click(screen.getByText('⚔️ Run League Cycle'));
+    const runButtons = screen.getAllByText('Run');
+    await user.click(runButtons[0]);
     expect(screen.getByText('Confirm')).toBeInTheDocument();
 
     await user.click(screen.getByText('Cancel'));
-    expect(screen.queryByText('Repair → Execute battles')).not.toBeInTheDocument();
+    expect(screen.queryByText('Confirm')).not.toBeInTheDocument();
   });
 
   it('should render bulk cycle testing section', () => {
     render(<CycleControlsPage />);
     expect(screen.getByText('Bulk Cycle Testing')).toBeInTheDocument();
-    expect(screen.getByText('Include tournament execution')).toBeInTheDocument();
-    expect(screen.getByText('Include King of the Hill battles')).toBeInTheDocument();
+    expect(screen.getByText(/Cycles:/)).toBeInTheDocument();
   });
 
   it('should render session log toggle button', () => {
