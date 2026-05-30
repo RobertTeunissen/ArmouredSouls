@@ -72,7 +72,8 @@ fileMatchPattern: "**/game-engine/**,**/services/battle*,**/services/combat*,**/
 
 ### Cycle System
 - Automated game progression
-- Daily and weekly cycles
+- All battle events run daily (every cycle) — no alternation or weekday restrictions
+- Subscription (Spec 35 Booking Office) gates which events each robot participates in
 - Processes battles, updates standings, distributes rewards
 - See: `docs/game-systems/PRD_CYCLE_SYSTEM.md`
 

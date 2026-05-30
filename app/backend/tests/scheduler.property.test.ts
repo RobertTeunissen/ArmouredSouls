@@ -111,11 +111,16 @@ const NUM_RUNS = 10;
 
 const defaultConfig: SchedulerConfig = {
   enabled: true,
-  leagueSchedule: '0 20 * * *',
-  tournamentSchedule: '0 8 * * *',
-  tagTeamSchedule: '0 12 * * *',
-  settlementSchedule: '0 23 * * *',
-  kothSchedule: '0 16 * * 1,3,5',
+  leagueSchedule: '0 8 * * *',
+  tournamentSchedule: '0 10 * * *',
+  tagTeamSchedule: '0 11 * * *',
+  settlementSchedule: '0 0 * * *',
+  kothSchedule: '0 13 * * *',
+  team2v2LeagueSchedule: '0 9 * * *',
+  team3v3LeagueSchedule: '0 14 * * *',
+  team2v2TournamentSchedule: '0 15 * * *',
+  team3v3TournamentSchedule: '0 18 * * *',
+  grandMeleeSchedule: '0 17 * * *',
 };
 
 function freshScheduler(config: SchedulerConfig = defaultConfig): void {
@@ -154,7 +159,7 @@ describe('Scheduler Property Tests', () => {
 
             if (enabled) {
               expect(state.active).toBe(true);
-              expect(mockSchedule).toHaveBeenCalledTimes(5);
+              expect(mockSchedule).toHaveBeenCalledTimes(10);
             } else {
               expect(state.active).toBe(false);
               expect(mockSchedule).not.toHaveBeenCalled();
@@ -203,8 +208,8 @@ describe('Scheduler Property Tests', () => {
     test('custom cron expressions are registered for each job', () => {
       fc.assert(
         fc.property(
-          cronGen, cronGen, cronGen, cronGen,
-          (league, tournament, tagTeam, settlement) => {
+          cronGen, cronGen, cronGen, cronGen, cronGen,
+          (league, tournament, tagTeam, settlement, koth) => {
             resetScheduler();
             mockSchedule.mockClear();
 
@@ -214,17 +219,23 @@ describe('Scheduler Property Tests', () => {
               tournamentSchedule: tournament,
               tagTeamSchedule: tagTeam,
               settlementSchedule: settlement,
-              kothSchedule: '0 16 * * 1,3,5',
+              kothSchedule: koth,
+              team2v2LeagueSchedule: '0 9 * * *',
+              team3v3LeagueSchedule: '0 14 * * *',
+              team2v2TournamentSchedule: '0 15 * * *',
+              team3v3TournamentSchedule: '0 18 * * *',
+              grandMeleeSchedule: '0 17 * * *',
             });
 
             const calls = mockSchedule.mock.calls;
-            expect(calls.length).toBeGreaterThanOrEqual(4);
+            expect(calls.length).toBe(10);
 
             const registeredSchedules = calls.map((c: any[]) => c[0]);
             expect(registeredSchedules).toContain(league);
             expect(registeredSchedules).toContain(tournament);
             expect(registeredSchedules).toContain(tagTeam);
             expect(registeredSchedules).toContain(settlement);
+            expect(registeredSchedules).toContain(koth);
           }
         ),
         { numRuns: NUM_RUNS }
@@ -234,8 +245,8 @@ describe('Scheduler Property Tests', () => {
     test('scheduler state reflects configured schedules', () => {
       fc.assert(
         fc.property(
-          cronGen, cronGen, cronGen, cronGen,
-          (league, tournament, tagTeam, settlement) => {
+          cronGen, cronGen, cronGen, cronGen, cronGen,
+          (league, tournament, tagTeam, settlement, koth) => {
             resetScheduler();
 
             initScheduler({
@@ -244,7 +255,12 @@ describe('Scheduler Property Tests', () => {
               tournamentSchedule: tournament,
               tagTeamSchedule: tagTeam,
               settlementSchedule: settlement,
-              kothSchedule: '0 16 * * 1,3,5',
+              kothSchedule: koth,
+              team2v2LeagueSchedule: '0 9 * * *',
+              team3v3LeagueSchedule: '0 14 * * *',
+              team2v2TournamentSchedule: '0 15 * * *',
+              team3v3TournamentSchedule: '0 18 * * *',
+              grandMeleeSchedule: '0 17 * * *',
             });
 
             const state = getSchedulerState();
@@ -254,6 +270,7 @@ describe('Scheduler Property Tests', () => {
             expect(jobMap.get('tournament')?.schedule).toBe(tournament);
             expect(jobMap.get('tagTeam')?.schedule).toBe(tagTeam);
             expect(jobMap.get('settlement')?.schedule).toBe(settlement);
+            expect(jobMap.get('koth')?.schedule).toBe(koth);
           }
         ),
         { numRuns: NUM_RUNS }
@@ -287,7 +304,8 @@ describe('Scheduler Property Tests', () => {
 
             await runJob(jobName, async () => {
               logEntries.push({ level: 'info', message: `${name}: Step 1 — Repairing all robots` });
-              await require('../src/services/economy/repairService').repairAllRobots(true);
+              const { repairAllRobots: mockRepair } = await import('../src/services/economy/repairService');
+              await mockRepair(true);
               logEntries.push({ level: 'info', message: `${name}: Step 2 — Executing battles` });
             });
 
@@ -297,59 +315,6 @@ describe('Scheduler Property Tests', () => {
 
             expect(stepLogs.length).toBeGreaterThanOrEqual(2);
             expect(stepLogs[0]).toContain('Repairing all robots');
-          }
-        ),
-        { numRuns: NUM_RUNS }
-      );
-    });
-  });
-
-  // =========================================================================
-  // Property 17: Tag team odd/even cycle behavior
-  // =========================================================================
-  describe('Property 17: Tag team odd/even cycle behavior', () => {
-    /**
-     * **Validates: Requirements 24.7, 24.8, 24.9**
-     * Battles execute only on odd cycles.
-     */
-
-    test('tag team battles execute only on odd cycle numbers', async () => {
-      freshScheduler();
-
-      await fc.assert(
-        fc.asyncProperty(
-          fc.integer({ min: 0, max: 1000 }),
-          async (cycleNumber) => {
-            logEntries.length = 0;
-            const isOddCycle = cycleNumber % 2 === 1;
-
-            await runJob('tagTeam', async () => {
-              logEntries.push({ level: 'info', message: 'Tag Team Cycle: Step 1 — Repairing all robots' });
-
-              if (!isOddCycle) {
-                logEntries.push({
-                  level: 'info',
-                  message: `Tag Team Cycle: Skipping battles on even cycle ${cycleNumber}`,
-                });
-                return;
-              }
-
-              logEntries.push({
-                level: 'info',
-                message: `Tag Team Cycle: Step 2 — Executing tag team battles (odd cycle ${cycleNumber})`,
-              });
-            });
-
-            const skipLog = logEntries.find(e => e.message.includes('Skipping battles'));
-            const battleLog = logEntries.find(e => e.message.includes('Executing tag team battles'));
-
-            if (isOddCycle) {
-              expect(battleLog).toBeDefined();
-              expect(skipLog).toBeUndefined();
-            } else {
-              expect(skipLog).toBeDefined();
-              expect(battleLog).toBeUndefined();
-            }
           }
         ),
         { numRuns: NUM_RUNS }
@@ -521,7 +486,7 @@ describe('Scheduler Property Tests', () => {
      */
 
     test('settlement increments totalCycles by 1', async () => {
-      const prisma = require('../src/lib/prisma').default;
+      const { default: prisma } = await import('../src/lib/prisma');
       freshScheduler();
 
       await fc.assert(

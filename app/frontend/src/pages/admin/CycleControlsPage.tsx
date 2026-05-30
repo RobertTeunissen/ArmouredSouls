@@ -102,10 +102,6 @@ function CycleControlsPage() {
 
   // Bulk cycle state
   const [bulkCycles, setBulkCycles] = useState(1);
-  const [includeTournaments, setIncludeTournaments] = useState(true);
-  const [includeKoth, setIncludeKoth] = useState(true);
-  const [includeDailyFinances, setIncludeDailyFinances] = useState(true);
-  const [generateUsersPerCycle, setGenerateUsersPerCycle] = useState(true);
    
   const [bulkResults, setBulkResults] = useState<BulkCyclesResponse | null>(null);
 
@@ -119,72 +115,6 @@ function CycleControlsPage() {
   };
 
   /* ---------- Individual cycle operations ---------- */
-
-  const runMatchmaking = async (): Promise<void> => {
-    setLoading(true);
-    try {
-      const data = await api.post<MatchmakingResponse>('/api/admin/matchmaking/run', {});
-      const exclusionNote = data.subscriptionExclusions ? ` (${data.subscriptionExclusions} excluded by subscription)` : '';
-      addSessionLog('success', `Matchmaking completed! Created ${data.matchesCreated} matches${exclusionNote}`);
-      showMessage('success', `Matchmaking completed! Created ${data.matchesCreated} matches${exclusionNote}`);
-    } catch (error: unknown) {
-      const msg = errorMessage(error, 'Matchmaking failed');
-      addSessionLog('error', `Matchmaking failed: ${msg}`);
-      showMessage('error', msg);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const executeBattles = async (): Promise<void> => {
-    setLoading(true);
-    try {
-      const data = await api.post<BattlesResponse>('/api/admin/battles/run', {});
-      const summary = data.summary;
-      const text = `Battles executed! Total: ${summary.totalBattles}, Success: ${summary.successfulBattles}, Failed: ${summary.failedBattles}`;
-      addSessionLog('success', text);
-      showMessage('success', text);
-    } catch (error: unknown) {
-      const msg = errorMessage(error, 'Battle execution failed');
-      addSessionLog('error', `Battle execution failed: ${msg}`);
-      showMessage('error', msg);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const rebalanceLeagues = async (): Promise<void> => {
-    setLoading(true);
-    try {
-      const data = await api.post<RebalanceResponse>('/api/admin/leagues/rebalance', {});
-      const summary = data.summary;
-      const text = `League rebalancing completed! Promoted: ${summary.totalPromoted}, Demoted: ${summary.totalDemoted}`;
-      addSessionLog('success', text);
-      showMessage('success', text);
-    } catch (error: unknown) {
-      const msg = errorMessage(error, 'League rebalancing failed');
-      addSessionLog('error', `League rebalancing failed: ${msg}`);
-      showMessage('error', msg);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const repairAllRobots = async (): Promise<void> => {
-    setLoading(true);
-    try {
-      const data = await api.post<RepairResponse>('/api/admin/repair/all', { deductCosts: true });
-      const text = `Repaired ${data.robotsRepaired} robots`;
-      addSessionLog('success', text);
-      showMessage('success', text);
-    } catch (error: unknown) {
-      const msg = errorMessage(error, 'Repair failed');
-      addSessionLog('error', `Repair failed: ${msg}`);
-      showMessage('error', msg);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const processDailyFinances = async (): Promise<void> => {
     setLoading(true);
@@ -301,15 +231,11 @@ function CycleControlsPage() {
     }
     setLoading(true);
     setBulkResults(null);
-    addSessionLog('info', `Starting bulk cycle run: ${bulkCycles} cycle(s)`, { includeTournaments, generateUsersPerCycle });
+    addSessionLog('info', `Starting bulk cycle run: ${bulkCycles} cycle(s)`);
 
     try {
       const data = await api.post<BulkCyclesResponse>('/api/admin/cycles/bulk', {
         cycles: bulkCycles,
-        includeTournaments,
-        generateUsersPerCycle,
-        includeKoth,
-        includeDailyFinances,
       });
       setBulkResults(data);
 
@@ -340,7 +266,7 @@ function CycleControlsPage() {
     } finally {
       setLoading(false);
     }
-  }, [bulkCycles, includeTournaments, includeKoth, includeDailyFinances, generateUsersPerCycle, addSessionLog, refreshUser]);
+  }, [bulkCycles, addSessionLog, refreshUser]);
 
   /* ---------- Confirmation dialog handler ---------- */
 
@@ -352,6 +278,22 @@ function CycleControlsPage() {
     if (confirmAction) {
       await confirmAction.onConfirm();
       setConfirmAction(null);
+    }
+  };
+
+  /* ---------- Scheduler panel "Run" button handler ---------- */
+
+  const handleSchedulerJobTrigger = (jobName: string): void => {
+    const triggerMap: Record<string, { label: string; description: string; handler: () => Promise<void> }> = {
+      league: { label: 'Run League Cycle', description: 'Repair → Execute battles → Rebalance → Matchmaking. Continue?', handler: triggerLeagueCycle },
+      tournament: { label: 'Run Tournament Cycle', description: 'Repair → Execute rounds → Advance winners → Auto-create. Continue?', handler: triggerTournamentCycle },
+      tagTeam: { label: 'Run Tag Team Cycle', description: 'Repair → Execute battles → Rebalance → Matchmaking. Continue?', handler: triggerTagTeamCycle },
+      koth: { label: 'Run KotH Cycle', description: 'Execute KotH battles → Matchmaking for next round. Continue?', handler: triggerKothCycle },
+      settlement: { label: 'Run Settlement', description: 'User generation → Passive income → Operating costs → Cycle counter → Snapshot. Continue?', handler: processDailyFinances },
+    };
+    const action = triggerMap[jobName];
+    if (action) {
+      requestConfirm(action.label, action.description, action.handler);
     }
   };
 
@@ -380,60 +322,18 @@ function CycleControlsPage() {
       )}
 
       {/* Scheduler Status Panel */}
-      <SchedulerStatusPanel status={schedulerStatus} />
-
-      {/* Production Jobs (Manual Trigger) */}
-      <div className="bg-surface rounded-lg p-6">
-        <h2 className="text-xl font-semibold mb-2">Production Jobs (Manual Trigger)</h2>
-        <p className="text-sm text-secondary mb-4">Each button runs the same pipeline as the corresponding cron job.</p>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          <TriggerButton label="⚔️ Run League Cycle" color="bg-primary hover:bg-blue-700" disabled={loading} onClick={() => requestConfirm('Run League Cycle', 'Repair → Execute battles → Rebalance → Matchmaking. Continue?', triggerLeagueCycle)} />
-          <TriggerButton label="🏆 Run Tournament Cycle" color="bg-yellow-600 hover:bg-yellow-700" disabled={loading} onClick={() => requestConfirm('Run Tournament Cycle', 'Repair → Execute rounds → Advance winners → Auto-create. Continue?', triggerTournamentCycle)} />
-          <TriggerButton label="🤝 Run Tag Team Cycle" color="bg-cyan-600 hover:bg-cyan-700" disabled={loading} onClick={() => requestConfirm('Run Tag Team Cycle', 'Repair → Execute battles → Rebalance → Matchmaking. Continue?', triggerTagTeamCycle)} />
-          <TriggerButton label="👑 Run KotH Cycle" color="bg-orange-600 hover:bg-orange-700" disabled={loading} onClick={() => requestConfirm('Run KotH Cycle', 'Execute KotH battles → Matchmaking for next round. Continue?', triggerKothCycle)} />
-          <TriggerButton label="💰 Run Settlement" color="bg-green-600 hover:bg-green-700" disabled={loading} onClick={() => requestConfirm('Run Settlement', 'Passive income → Operating costs → Cycle counter → Snapshot. Continue?', processDailyFinances)} />
-        </div>
-
-        {/* Individual Step Controls (debugging) */}
-        <details className="mt-4">
-          <summary className="cursor-pointer text-secondary hover:text-white text-sm font-medium">
-            🔧 Individual Step Controls (debugging)
-          </summary>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mt-3">
-            <TriggerButton label="🔧 Repair All Robots" color="bg-surface-elevated hover:bg-white/10" disabled={loading} onClick={() => requestConfirm('Repair All Robots', 'Repair all damaged robots and deduct costs?', repairAllRobots)} />
-            <TriggerButton label="🎯 Run Matchmaking (League)" color="bg-surface-elevated hover:bg-white/10" disabled={loading} onClick={() => requestConfirm('Run Matchmaking', 'Create new league match pairings?', runMatchmaking)} />
-            <TriggerButton label="⚔️ Execute League Battles" color="bg-surface-elevated hover:bg-white/10" disabled={loading} onClick={() => requestConfirm('Execute Battles', 'Execute all pending league battles?', executeBattles)} />
-            <TriggerButton label="📊 Rebalance Leagues" color="bg-surface-elevated hover:bg-white/10" disabled={loading} onClick={() => requestConfirm('Rebalance Leagues', 'Promote and demote robots?', rebalanceLeagues)} />
-          </div>
-        </details>
-      </div>
+      <SchedulerStatusPanel status={schedulerStatus} onTriggerJob={handleSchedulerJobTrigger} />
 
       {/* Bulk Cycle Testing */}
       <div className="bg-surface rounded-lg p-6">
-        <h2 className="text-xl font-semibold mb-4">Bulk Cycle Testing</h2>
+        <h2 className="text-xl font-semibold mb-2">Bulk Cycle Testing</h2>
         <p className="text-sm text-secondary mb-4">
-          Run multiple game cycles in sequence for testing purposes. This is intended for development/staging environments.
+          Run complete game cycles (all 10 slots in order). Intended for development/staging.
         </p>
-        <div className="mb-4 space-y-3">
-          <label className="block">
-            Number of Cycles (1-100):
-            <input type="number" min="1" max="100" value={bulkCycles} onChange={(e) => setBulkCycles(parseInt(e.target.value) || 1)} className="ml-2 bg-surface-elevated text-white px-3 py-1 rounded w-24" />
-          </label>
-          <label className="flex items-center">
-            <input type="checkbox" checked={includeTournaments} onChange={(e) => setIncludeTournaments(e.target.checked)} className="mr-2" />
-            Include tournament execution
-          </label>
-          <label className="flex items-center">
-            <input type="checkbox" checked={includeKoth} onChange={(e) => setIncludeKoth(e.target.checked)} className="mr-2" />
-            Include King of the Hill battles
-          </label>
-          <label className="flex items-center">
-            <input type="checkbox" checked={includeDailyFinances} onChange={(e) => setIncludeDailyFinances(e.target.checked)} className="mr-2" />
-            Include daily finances processing
-          </label>
-          <label className="flex items-center">
-            <input type="checkbox" checked={generateUsersPerCycle} onChange={(e) => setGenerateUsersPerCycle(e.target.checked)} className="mr-2" />
-            Generate users per cycle
+        <div className="flex items-center gap-4 mb-4">
+          <label className="flex items-center gap-2">
+            <span className="text-sm text-secondary">Cycles:</span>
+            <input type="number" min="1" max="100" value={bulkCycles} onChange={(e) => setBulkCycles(parseInt(e.target.value) || 1)} className="bg-surface-elevated text-white px-3 py-1 rounded w-20" />
           </label>
         </div>
         <button onClick={runBulkCycles} disabled={loading} className="bg-yellow-600 hover:bg-yellow-700 disabled:bg-surface-elevated px-6 py-3 rounded font-semibold transition-colors">
@@ -546,7 +446,48 @@ function CycleControlsPage() {
 /*  Sub-components                                                     */
 /* ------------------------------------------------------------------ */
 
-function SchedulerStatusPanel({ status }: { status: SchedulerState | null }) {
+/* ------------------------------------------------------------------ */
+/*  Scheduler slot map constants                                       */
+/* ------------------------------------------------------------------ */
+
+/** Reserved slot job names — these have no real handler yet */
+const RESERVED_SLOTS = new Set([
+  'team2v2League',
+  'team3v3League',
+  'team2v2Tournament',
+  'team3v3Tournament',
+  'grandMelee',
+]);
+
+/** Human-readable display names for all scheduler jobs */
+const JOB_DISPLAY_NAMES: Record<string, string> = {
+  league: '1v1 League',
+  team2v2League: 'Team 2v2 League',
+  tournament: '1v1 Tournament',
+  tagTeam: 'Tag Team',
+  koth: 'King of the Hill',
+  team3v3League: 'Team 3v3 League',
+  team2v2Tournament: 'Team 2v2 Tournament',
+  grandMelee: 'Grand Melee',
+  team3v3Tournament: 'Team 3v3 Tournament',
+  settlement: 'Settlement',
+};
+
+/** Static slot map defaults — shown when scheduler is inactive (e.g. local dev) */
+const SLOT_MAP_DEFAULTS: Array<{ name: string; schedule: string }> = [
+  { name: 'league', schedule: '0 8 * * *' },
+  { name: 'team2v2League', schedule: '0 9 * * *' },
+  { name: 'tournament', schedule: '0 10 * * *' },
+  { name: 'tagTeam', schedule: '0 11 * * *' },
+  { name: 'koth', schedule: '0 13 * * *' },
+  { name: 'team3v3League', schedule: '0 14 * * *' },
+  { name: 'team2v2Tournament', schedule: '0 15 * * *' },
+  { name: 'grandMelee', schedule: '0 17 * * *' },
+  { name: 'team3v3Tournament', schedule: '0 18 * * *' },
+  { name: 'settlement', schedule: '0 0 * * *' },
+];
+
+function SchedulerStatusPanel({ status, onTriggerJob }: { status: SchedulerState | null; onTriggerJob?: (jobName: string) => void }) {
   if (!status) {
     return (
       <div className="bg-surface rounded-lg p-6">
@@ -556,6 +497,19 @@ function SchedulerStatusPanel({ status }: { status: SchedulerState | null }) {
     );
   }
 
+  // Use live job data if available, otherwise show static slot map defaults
+  const jobs = status.jobs.length > 0
+    ? status.jobs
+    : SLOT_MAP_DEFAULTS.map((slot) => ({
+        name: slot.name,
+        schedule: slot.schedule,
+        lastRunAt: null,
+        lastRunDurationMs: null,
+        lastRunStatus: null as 'success' | 'failed' | null,
+        lastError: null,
+        nextRunAt: null,
+      }));
+
   return (
     <div data-testid="scheduler-status-panel">
       <h2 className="text-xl font-semibold mb-4">Scheduler Status</h2>
@@ -564,23 +518,35 @@ function SchedulerStatusPanel({ status }: { status: SchedulerState | null }) {
         <AdminStatCard label="Running Job" value={status.runningJob || 'None'} color={status.runningJob ? 'warning' : 'info'} icon={<span>⚙️</span>} />
         <AdminStatCard label="Queue" value={status.queue.length} color="info" icon={<span>📋</span>} />
       </div>
-      {status.jobs.length > 0 && (
-        <div className="bg-surface rounded-lg overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-surface-elevated">
-                <th className="px-4 py-3 text-left text-secondary font-semibold">Job</th>
-                <th className="px-4 py-3 text-left text-secondary font-semibold">Schedule</th>
-                <th className="px-4 py-3 text-left text-secondary font-semibold">Last Run</th>
-                <th className="px-4 py-3 text-left text-secondary font-semibold">Status</th>
-                <th className="px-4 py-3 text-left text-secondary font-semibold">Duration</th>
-                <th className="px-4 py-3 text-left text-secondary font-semibold">Next Run</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5">
-              {status.jobs.map((job) => (
-                <tr key={job.name} className="hover:bg-white/5">
-                  <td className="px-4 py-3 text-white font-medium">{job.name}</td>
+      <div className="bg-surface rounded-lg overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-surface-elevated">
+              <th className="px-4 py-3 text-left text-secondary font-semibold">Job</th>
+              <th className="px-4 py-3 text-left text-secondary font-semibold">Schedule</th>
+              <th className="px-4 py-3 text-left text-secondary font-semibold">Last Run</th>
+              <th className="px-4 py-3 text-left text-secondary font-semibold">Status</th>
+              <th className="px-4 py-3 text-left text-secondary font-semibold">Duration</th>
+              <th className="px-4 py-3 text-left text-secondary font-semibold">Next Run</th>
+              <th className="px-4 py-3 text-left text-secondary font-semibold">Action</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-white/5">
+            {jobs.map((job) => {
+              const isReserved = RESERVED_SLOTS.has(job.name);
+              const displayName = JOB_DISPLAY_NAMES[job.name] || job.name;
+              return (
+                <tr key={job.name} className={isReserved ? 'opacity-60' : 'hover:bg-white/5'}>
+                  <td className="px-4 py-3">
+                    <span className={isReserved ? 'text-tertiary font-medium' : 'text-white font-medium'}>
+                      {displayName}
+                    </span>
+                    {isReserved && (
+                      <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-white/10 text-tertiary">
+                        Reserved
+                      </span>
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-secondary font-mono text-xs">{job.schedule}</td>
                   <td className="px-4 py-3 text-secondary">{job.lastRunAt ? new Date(job.lastRunAt).toLocaleString() : '—'}</td>
                   <td className="px-4 py-3">
@@ -599,21 +565,24 @@ function SchedulerStatusPanel({ status }: { status: SchedulerState | null }) {
                   </td>
                   <td className="px-4 py-3 text-secondary">{job.lastRunDurationMs != null ? `${(job.lastRunDurationMs / 1000).toFixed(2)}s` : '—'}</td>
                   <td className="px-4 py-3 text-secondary">{job.nextRunAt ? new Date(job.nextRunAt).toLocaleString() : '—'}</td>
+                  <td className="px-4 py-3">
+                    {!isReserved && onTriggerJob && (
+                      <button
+                        type="button"
+                        onClick={() => onTriggerJob(job.name)}
+                        className="px-3 py-1 text-xs font-medium bg-primary/20 text-primary hover:bg-primary/30 rounded transition-colors"
+                      >
+                        Run
+                      </button>
+                    )}
+                  </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
-  );
-}
-
-function TriggerButton({ label, color, disabled, onClick }: { label: string; color: string; disabled: boolean; onClick: () => void }) {
-  return (
-    <button onClick={onClick} disabled={disabled} className={`${color} disabled:bg-surface-elevated px-6 py-3 rounded font-semibold transition-colors`}>
-      {label}
-    </button>
   );
 }
 

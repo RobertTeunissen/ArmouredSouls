@@ -30,9 +30,10 @@ describe('Notification Service Property Tests', () => {
     /**
      * **Validates: Requirements 1.1, 1.3, 1.5, 1.6**
      *
-     * For any job type in {league, tournament, tag-team (odd cycle), settlement}
+     * For any job type in {league, tournament, tag-team, settlement}
      * and for any non-empty base URL string, buildSuccessMessage should return
      * a non-null string that contains both the job's designated emoji and the base URL.
+     * Tag Team and KotH now run daily — no cycle parity check.
      */
 
     const leagueContextArb: fc.Arbitrary<JobContext> = fc.constant({
@@ -51,9 +52,8 @@ describe('Notification Service Property Tests', () => {
       })
     );
 
-    const tagTeamOddCycleContextArb: fc.Arbitrary<JobContext> = fc.constant({
+    const tagTeamContextArb: fc.Arbitrary<JobContext> = fc.constant({
       jobName: 'tag-team' as JobName,
-      isEvenCycle: false,
     });
 
     const settlementContextArb: fc.Arbitrary<JobContext> = fc.constant({
@@ -63,7 +63,7 @@ describe('Notification Service Property Tests', () => {
     const jobContextArb: fc.Arbitrary<JobContext> = fc.oneof(
       leagueContextArb,
       tournamentContextArb,
-      tagTeamOddCycleContextArb,
+      tagTeamContextArb,
       settlementContextArb
     );
 
@@ -135,36 +135,6 @@ describe('Notification Service Property Tests', () => {
           expect(result).toContain(String(context.tournamentRound));
           expect(result).toContain(String(context.tournamentMaxRounds));
           expect(result).toContain('⚔️');
-        }),
-        { numRuns: NUM_RUNS }
-      );
-    });
-  });
-
-  // =========================================================================
-  // Property 3: Tag team even cycle produces no message
-  // =========================================================================
-  describe('Property 3: Tag team even cycle produces no message', () => {
-    /**
-     * **Validates: Requirements 1.4**
-     *
-     * For any job context where jobName is 'tag-team' and isEvenCycle is true,
-     * and for any base URL, buildSuccessMessage should return null.
-     */
-
-    const tagTeamEvenCycleContext: JobContext = {
-      jobName: 'tag-team' as JobName,
-      isEvenCycle: true,
-    };
-
-    const baseUrlArb = fc.webUrl();
-
-    test('should return null for tag-team job on even cycle', () => {
-      fc.assert(
-        fc.property(baseUrlArb, (baseUrl) => {
-          const result = buildSuccessMessage(tagTeamEvenCycleContext, baseUrl);
-
-          expect(result).toBeNull();
         }),
         { numRuns: NUM_RUNS }
       );

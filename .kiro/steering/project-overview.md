@@ -59,6 +59,7 @@ Browser-based robot combat strategy game with turn-based mechanics, league syste
 11. **Monitoring & Alerting** - Discord webhook alerts for disk/startup/backup/deploy failures, daily health report, UptimeRobot external probes, Scaleway Cockpit metrics (Spec #29)
 12. **League History Tracking** - Persistent tier change tracking for robots and tag teams, admin analytics dashboard with yo-yo detection, player-facing timeline visualizations, achievement data support (Spec #32)
 13. **Booking Office / Event Subscription System** - Per-robot subscription model gating participation in all battle events (league, tournament, tag team, KotH) through a single extensible Event Registry, with facility-level-driven cap curve (3 base + 1 per level), free switching, and per-robot lock-on-queued-battle rule (Spec #35)
+14. **Daily Cron Schedule** - 10-slot daily schedule with heavy-mode spacing (1v1 League 08:00, KotH 13:00), reserved slots for future battle modes, and midnight settlement. All events run daily; subscriptions gate participation. Canonical slot map in `docs/architecture/PRD_SERVICE_DIRECTORY.md` § Cron Schedule (Spec #36)
 
 ## Documentation Organization
 - `docs/architecture/` - System architecture, schema, combat engine, security

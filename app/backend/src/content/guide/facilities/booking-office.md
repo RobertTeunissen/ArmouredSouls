@@ -28,7 +28,7 @@ These are the battle events you can subscribe your robots to:
 |-------|-------------|-------------|
 | **1v1 League** | Daily automated league matches with LP and ELO | Always eligible |
 | **1v1 Tournament** | Multi-cycle bracket competitions with championship titles | Always eligible |
-| **Tag Team** | 2v2 tag team battles on odd cycles | Requires ≥ 2 robots in your Stable |
+| **Tag Team** | 2v2 tag team battles daily | Requires ≥ 2 robots in your Stable |
 | **King of the Hill** | 5-6 robot free-for-all zone control battles | Always eligible |
 
 More event types will be added in future updates. When they are, they'll appear automatically in your subscription options.

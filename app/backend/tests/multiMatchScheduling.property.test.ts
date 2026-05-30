@@ -122,7 +122,7 @@ async function createWeaponForRobot(userId: number, robotId: number): Promise<vo
 describe('Multi-Match Scheduling and Execution - Property Tests', () => {
   beforeAll(async () => {
     await prisma.$connect();
-    // Ensure cycle metadata exists and set to odd cycle
+    // Ensure cycle metadata exists
     await prisma.cycleMetadata.upsert({
       where: { id: 1 },
       update: { totalCycles: 1 },

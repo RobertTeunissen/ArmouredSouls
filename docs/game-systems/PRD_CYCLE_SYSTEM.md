@@ -55,8 +55,8 @@ Data consistency is maintained through the **AuditLog → CycleSnapshot** archit
 
 A **cycle** is the fundamental unit of time in Armoured Souls. Each cycle processes:
 - League battles (1v1)
-- Tag team battles (odd cycles only)
-- KotH battles (Mon/Wed/Fri only)
+- Tag team battles (daily)
+- KotH battles (daily)
 - Tournament matches
 - Passive income and operating costs
 - Robot repairs
@@ -80,14 +80,19 @@ The scheduler registers 5 independent cron jobs, each with its own step sequence
 
 ```
 UTC   Job
-08:00 Tournament Cycle
-12:00 Tag Team Cycle (battles on odd cycles only)
-16:00 KotH Cycle (Mon/Wed/Fri only)
-20:00 League Cycle
-23:00 Settlement (passive income, operating costs, counters, snapshot)
+08:00 1v1 League Cycle
+09:00 Team Battle 2v2 League (reserved)
+10:00 Tournament Cycle
+11:00 Tag Team Cycle (daily)
+13:00 KotH Cycle (daily)
+14:00 Team Battle 3v3 League (reserved)
+15:00 Team Battle 2v2 Tournament (reserved)
+17:00 Grand Melee (reserved)
+18:00 Team Battle 3v3 Tournament (reserved)
+00:00 Settlement (passive income, operating costs, counters, snapshot)
 ```
 
-4-hour gaps between jobs provide ample separation.
+Heavy modes (1v1 League, KotH) are spaced 5 hours apart. Reserved slots are no-op stubs until subsequent specs register real handlers.
 
 ### Key Source Files
 
@@ -123,9 +128,9 @@ UTC   Job
 | Step | Action |
 |------|--------|
 | 1 | Repair all robots |
-| 2 | Execute tag team battles (odd cycles only; skipped on even) |
+| 2 | Execute tag team battles |
 | 3 | Rebalance tag team leagues |
-| 4 | Schedule tag team matchmaking (48h lead time) |
+| 4 | Schedule tag team matchmaking (24h lead time) |
 
 ### KotH Cycle (`executeKothCycle`)
 
@@ -133,7 +138,7 @@ UTC   Job
 |------|--------|
 | 1 | Repair all robots |
 | 2 | Execute scheduled KotH battles |
-| 3 | Schedule KotH matchmaking for next Mon/Wed/Fri at 16:00 UTC |
+| 3 | Schedule KotH matchmaking for next day at 13:00 UTC |
 
 ### Settlement (`executeSettlement`)
 
@@ -151,31 +156,22 @@ UTC   Job
 
 ## 5. Admin Bulk Cycle
 
-The admin bulk endpoint (`POST /api/admin/cycles/bulk`) runs all game phases in a single sequential pass. Step ordering differs from the scheduler — notably, repairs happen *after* battles rather than before.
+The admin bulk endpoint (`POST /api/admin/cycles/bulk`) runs all game phases in a single sequential pass. Each event runs as a self-contained block (repair → execute → rebalance → matchmaking) in slot map order, mirroring the production cron handlers.
 
 ### Step Sequence
 
 | Step | Action | Condition |
 |------|--------|-----------|
-| 1 | Execute league battles (1v1) | Always |
-| 2 | Repair all robots (post-league) | Always |
-| 3 | Execute tag team battles | Odd cycles only |
-| 4 | Repair all robots (post-tag-team) | Always |
-| 4.5 | Execute KotH battles | KotH days + `includeKoth=true` |
-| 4.6 | Repair all robots (post-KotH) | If KotH battles ran |
-| 4.7 | KotH matchmaking | KotH days |
-| 5 | Tournament execution/scheduling | `includeTournaments=true` |
-| 6 | Repair all robots (post-tournament) | Always |
-| 7 | Rebalance leagues | Always |
-| 7.5 | Rebalance tag team leagues | Odd cycles only |
-| 8 | Auto-generate users | `generateUsersPerCycle=true` |
-| 9 | League matchmaking (1v1) | Always |
-| 9.5 | Tag team matchmaking | Odd cycles only |
-| 10 | Finalize cycle counters | Always |
-| 11 | Calculate passive income & operating costs | Always |
-
-KotH day-of-week is simulated during bulk execution:  
-`simulatedDayOfWeek = ((cycleNumber - 1) % 7) + 1` (1=Mon … 7=Sun)
+| 1 | 1v1 League (repair → execute → rebalance → matchmaking 24h lead) | Always |
+| 2 | Team 2v2 League (reserved stub) | Always (no-op log) |
+| 3 | 1v1 Tournament (repair → execute/advance → auto-create) | Always |
+| 4 | Tag Team (repair → execute → rebalance → matchmaking 24h lead) | Always |
+| 5 | KotH (repair → execute → matchmaking 24h lead) | Always |
+| 6 | Team 3v3 League (reserved stub) | Always (no-op log) |
+| 7 | Team 2v2 Tournament (reserved stub) | Always (no-op log) |
+| 8 | Grand Melee (reserved stub) | Always (no-op log) |
+| 9 | Team 3v3 Tournament (reserved stub) | Always (no-op log) |
+| 10 | Settlement (user gen → finances → cycle counters → snapshots → orphan cleanup) | Always |
 
 ---
 

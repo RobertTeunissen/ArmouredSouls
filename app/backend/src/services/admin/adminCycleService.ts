@@ -33,20 +33,27 @@ export interface BulkCycleOptions {
 /** Per-cycle result entry. */
 export interface CycleResult {
   cycle: number;
-  battles?: unknown;
-  repair1?: unknown;
-  tagTeamBattles?: unknown;
-  repair2?: unknown;
-  kothBattles?: unknown;
-  repairPostKoth?: unknown;
-  kothMatchmaking?: unknown;
-  tournaments?: unknown;
-  repair3?: unknown;
-  rebalancing?: unknown;
-  tagTeamRebalancing?: unknown;
-  userGeneration?: unknown;
-  matchmaking?: unknown;
-  tagTeamMatchmaking?: unknown;
+  // Event block results (slot map order)
+  leagueBlock?: { battles: unknown; repair: unknown; rebalancing: unknown; matchmaking: unknown };
+  team2v2LeagueBlock?: { skipped: true; message: string };
+  tournamentBlock?: { repair: unknown; tournaments: unknown };
+  tagTeamBlock?: { repair: unknown; battles: unknown; rebalancing: unknown; matchmaking: unknown };
+  kothBlock?: { repair: unknown; battles: unknown; matchmaking: unknown };
+  team3v3LeagueBlock?: { skipped: true; message: string };
+  team2v2TournamentBlock?: { skipped: true; message: string };
+  grandMeleeBlock?: { skipped: true; message: string };
+  team3v3TournamentBlock?: { skipped: true; message: string };
+  // Settlement results
+  settlement?: {
+    userGeneration: unknown;
+    finances: unknown;
+    cycleCounters: unknown;
+    snapshot: unknown;
+    orphanCleanup: unknown;
+    endOfCycleBalances: unknown;
+  };
+  // Reserved slots that fired this cycle
+  reservedSlotsFired?: string[];
   duration: number;
   error?: string;
 }
@@ -168,9 +175,13 @@ async function executeTournamentStep(): Promise<TournamentStepSummary> {
 /**
  * Execute one or more complete game cycles.
  *
- * Each cycle runs the full orchestration pipeline: league battles → repairs →
- * tag-team battles → KotH → tournaments → rebalancing → user generation →
- * matchmaking → finances → snapshots.
+ * Each cycle runs the full slot map in order. Every battle event is a
+ * self-contained block (repair → execute → rebalance → matchmaking) mirroring
+ * the production cron handlers. Reserved slots log a no-op message.
+ *
+ * Slot map order: 1v1 League → Team 2v2 League (stub) → 1v1 Tournament →
+ * Tag Team → KotH → Team 3v3 League (stub) → Team 2v2 Tournament (stub) →
+ * Grand Melee (stub) → Team 3v3 Tournament (stub) → Settlement.
  */
 export async function executeBulkCycles(options: BulkCycleOptions): Promise<BulkCycleResult> {
   const {
@@ -210,7 +221,7 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
       generateUsersPerCycleEnabled: false,
       totalDuration: duration,
       averageCycleDuration: 0,
-      results: [{ cycle: 0, tournaments: tournamentSummary, duration }],
+      results: [{ cycle: 0, tournamentBlock: { repair: null, tournaments: tournamentSummary }, duration }],
       timestamp: new Date().toISOString(),
     };
   }
@@ -241,127 +252,105 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
       // Log cycle start
       await eventLogger.logCycleStart(currentCycleNumber, 'manual');
 
-      // Step 1: Execute League Battles (1v1)
-      logger.info(`[Admin] Step 1: Execute League Battles (1v1)`);
-      const step1Start = Date.now();
+      let stepNumber = 0;
+      const reservedSlotsFired: string[] = [];
+
+      // ═══════════════════════════════════════════════════════════════════
+      // SLOT 1: 1v1 League (repair → execute → rebalance → matchmaking)
+      // ═══════════════════════════════════════════════════════════════════
+      logger.info(`[Admin] Slot 1: 1v1 League`);
+
+      // 1.1 Repair
+      stepNumber++;
+      logger.info(`[Admin] Step ${stepNumber}: Repair All Robots (pre-league)`);
+      const leagueRepairStart = Date.now();
+      const leagueRepairSummary = await repairAllRobots(true, currentCycleNumber);
+      await eventLogger.logCycleStepComplete(
+        currentCycleNumber,
+        'repair_pre_league',
+        stepNumber,
+        Date.now() - leagueRepairStart,
+        { robotsRepaired: leagueRepairSummary.robotsRepaired, totalCost: leagueRepairSummary.totalFinalCost }
+      );
+
+      // 1.2 Execute battles
+      stepNumber++;
+      logger.info(`[Admin] Step ${stepNumber}: Execute League Battles (1v1)`);
+      const leagueBattleStart = Date.now();
       const battleSummary = await executeScheduledBattles(new Date());
       await eventLogger.logCycleStepComplete(
         currentCycleNumber,
         'execute_league_battles',
-        1,
-        Date.now() - step1Start,
+        stepNumber,
+        Date.now() - leagueBattleStart,
         { battlesExecuted: battleSummary.totalBattles }
       );
 
-      // Step 2: Repair All Robots (post-league)
-      logger.info(`[Admin] Step 2: Repair All Robots (post-league)`);
-      const step2Start = Date.now();
-      const repair1Summary = await repairAllRobots(true, currentCycleNumber);
+      // 1.3 Rebalance leagues
+      stepNumber++;
+      logger.info(`[Admin] Step ${stepNumber}: Rebalance Leagues`);
+      const leagueRebalanceStart = Date.now();
+      const rebalancingSummary = await rebalanceLeagues();
       await eventLogger.logCycleStepComplete(
         currentCycleNumber,
-        'repair_post_league',
-        2,
-        Date.now() - step2Start,
-        { robotsRepaired: repair1Summary.robotsRepaired, totalCost: repair1Summary.totalFinalCost }
+        'rebalance_leagues',
+        stepNumber,
+        Date.now() - leagueRebalanceStart,
+        { promotions: rebalancingSummary.totalPromoted, demotions: rebalancingSummary.totalDemoted }
       );
 
-      // Step 3: Execute Tag Team Battles (odd cycles only)
-      let tagTeamBattleSummary = null;
-      const shouldRunTagTeam = currentCycleNumber % 2 === 1;
-      if (shouldRunTagTeam) {
-        logger.info(`[Admin] Step 3: Execute Tag Team Battles (Cycle ${currentCycleNumber})`);
-        const step3Start = Date.now();
-        tagTeamBattleSummary = await executeScheduledTagTeamBattles(new Date());
-        await eventLogger.logCycleStepComplete(
-          currentCycleNumber,
-          'execute_tag_team_battles',
-          3,
-          Date.now() - step3Start,
-          { battlesExecuted: tagTeamBattleSummary?.totalBattles || 0 }
-        );
-      } else {
-        logger.info(`[Admin] Step 3: Skipping Tag Team Battles (even cycle ${currentCycleNumber})`);
-      }
-
-      // Step 4: Repair All Robots (post-tag-team)
-      logger.info(`[Admin] Step 4: Repair All Robots (post-tag-team)`);
-      const step4Start = Date.now();
-      const repair2Summary = await repairAllRobots(true, currentCycleNumber);
+      // 1.4 Matchmaking (24h lead time)
+      stepNumber++;
+      logger.info(`[Admin] Step ${stepNumber}: Matchmaking for Leagues (1v1)`);
+      const leagueMatchmakingStart = Date.now();
+      const leagueScheduledFor = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      leagueScheduledFor.setMinutes(0, 0, 0);
+      const leagueMatchesCreated = await runMatchmaking(leagueScheduledFor);
       await eventLogger.logCycleStepComplete(
         currentCycleNumber,
-        'repair_post_tag_team',
-        4,
-        Date.now() - step4Start,
-        { robotsRepaired: repair2Summary.robotsRepaired, totalCost: repair2Summary.totalFinalCost }
+        'matchmaking_leagues',
+        stepNumber,
+        Date.now() - leagueMatchmakingStart,
+        { matchesCreated: leagueMatchesCreated }
       );
 
-      // Step 4.5: Execute Scheduled KotH Battles
-      const simulatedDayOfWeek = ((currentCycleNumber - 1) % 7) + 1;
-      const isKothDay = simulatedDayOfWeek === 1 || simulatedDayOfWeek === 3 || simulatedDayOfWeek === 5;
-      let kothBattleSummary = null;
-      if (includeKoth && isKothDay) {
-        logger.info(`[Admin] Step 4.5: Execute Scheduled KotH Battles (simulated day ${simulatedDayOfWeek})`);
-        const step4_5Start = Date.now();
-        kothBattleSummary = await executeScheduledKothBattles(new Date());
-        await eventLogger.logCycleStepComplete(
-          currentCycleNumber,
-          'execute_koth_battles',
-          4.5,
-          Date.now() - step4_5Start,
-          { battlesExecuted: kothBattleSummary.totalMatches }
-        );
-      } else if (includeKoth && !isKothDay) {
-        logger.info(`[Admin] Step 4.5: Skipping KotH Battles (not a KotH day, simulated day ${simulatedDayOfWeek})`);
-      } else {
-        logger.info(`[Admin] Step 4.5: Skipping KotH Battles (includeKoth=false)`);
-      }
+      // ═══════════════════════════════════════════════════════════════════
+      // SLOT 2: Team 2v2 League (reserved stub)
+      // ═══════════════════════════════════════════════════════════════════
+      stepNumber++;
+      logger.info(`[Admin] Step ${stepNumber}: Team 2v2 League — reserved slot, no handler implemented`);
+      await eventLogger.logCycleStepComplete(
+        currentCycleNumber,
+        'team_2v2_league_reserved',
+        stepNumber,
+        0,
+        { reserved: true }
+      );
+      reservedSlotsFired.push('team_2v2_league');
 
-      // Step 4.6: Repair All Robots (post-KotH)
-      let repairKothSummary = null;
-      if (includeKoth && kothBattleSummary && kothBattleSummary.totalMatches > 0) {
-        logger.info(`[Admin] Step 4.6: Repair All Robots (post-KotH)`);
-        const step4_6Start = Date.now();
-        repairKothSummary = await repairAllRobots(true, currentCycleNumber);
-        await eventLogger.logCycleStepComplete(
-          currentCycleNumber,
-          'repair_post_koth',
-          4.6,
-          Date.now() - step4_6Start,
-          { robotsRepaired: repairKothSummary.robotsRepaired, totalCost: repairKothSummary.totalFinalCost }
-        );
-      }
+      // ═══════════════════════════════════════════════════════════════════
+      // SLOT 3: 1v1 Tournament (repair → execute/advance/auto-create)
+      // ═══════════════════════════════════════════════════════════════════
+      logger.info(`[Admin] Slot 3: 1v1 Tournament`);
+      let tournamentSummary: TournamentStepSummary | null = null;
 
-      // Step 4.7: KotH Matchmaking (only on KotH days)
-      let kothMatchmakingSummary = null;
-      if (includeKoth && isKothDay) {
-        logger.info(`[Admin] Step 4.7: KotH Matchmaking (simulated day ${simulatedDayOfWeek})`);
-        const step4_7Start = Date.now();
-        const kothScheduledFor = new Date();
-        kothScheduledFor.setUTCHours(16, 0, 0, 0);
-        const jsDayOfWeek = (simulatedDayOfWeek as number) === 7 ? 0 : simulatedDayOfWeek;
-        const currentJsDay = kothScheduledFor.getUTCDay();
-        let daysUntil = jsDayOfWeek - currentJsDay;
-        if (daysUntil <= 0) daysUntil += 7;
-        kothScheduledFor.setUTCDate(kothScheduledFor.getUTCDate() + daysUntil);
-        const kothMatchesCreated = await runKothMatchmaking(kothScheduledFor);
-        kothMatchmakingSummary = { matchesCreated: kothMatchesCreated };
-        await eventLogger.logCycleStepComplete(
-          currentCycleNumber,
-          'matchmaking_koth',
-          4.7,
-          Date.now() - step4_7Start,
-          { matchesCreated: kothMatchesCreated }
-        );
-      } else if (includeKoth && !isKothDay) {
-        logger.info(`[Admin] Step 4.7: Skipping KotH Matchmaking (not a KotH day, simulated day ${simulatedDayOfWeek})`);
-      } else {
-        logger.info(`[Admin] Step 4.7: Skipping KotH Matchmaking (includeKoth=false)`);
-      }
+      // 3.1 Repair
+      stepNumber++;
+      logger.info(`[Admin] Step ${stepNumber}: Repair All Robots (pre-tournament)`);
+      const tournamentRepairStart = Date.now();
+      const tournamentRepairSummary = await repairAllRobots(true, currentCycleNumber);
+      await eventLogger.logCycleStepComplete(
+        currentCycleNumber,
+        'repair_pre_tournament',
+        stepNumber,
+        Date.now() - tournamentRepairStart,
+        { robotsRepaired: tournamentRepairSummary.robotsRepaired, totalCost: tournamentRepairSummary.totalFinalCost }
+      );
 
-      // Step 5: Tournament Execution / Scheduling
-      logger.info(`[Admin] Step 5: Tournament Execution / Scheduling`);
-      const step5Start = Date.now();
-      let tournamentSummary = null;
+      // 3.2 Execute tournament step
+      stepNumber++;
+      logger.info(`[Admin] Step ${stepNumber}: Tournament Execution / Scheduling`);
+      const tournamentExecStart = Date.now();
       if (includeTournaments) {
         tournamentSummary = await executeTournamentStep();
         logger.info(`[Admin] Tournaments: ${tournamentSummary.tournamentsExecuted || 0} executed, ${tournamentSummary.roundsExecuted || 0} rounds, ${tournamentSummary.matchesExecuted || 0} matches`);
@@ -369,58 +358,201 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
       await eventLogger.logCycleStepComplete(
         currentCycleNumber,
         'tournament_execution',
-        5,
-        Date.now() - step5Start,
+        stepNumber,
+        Date.now() - tournamentExecStart,
         {
           tournamentsExecuted: tournamentSummary?.tournamentsExecuted || 0,
           matchesExecuted: tournamentSummary?.matchesExecuted || 0,
         }
       );
 
-      // Step 6: Repair All Robots (post-tournament)
-      logger.info(`[Admin] Step 6: Repair All Robots (post-tournament)`);
-      const step6Start = Date.now();
-      const repair3Summary = await repairAllRobots(true, currentCycleNumber);
+      // ═══════════════════════════════════════════════════════════════════
+      // SLOT 4: Tag Team (repair → execute → rebalance → matchmaking)
+      // ═══════════════════════════════════════════════════════════════════
+      logger.info(`[Admin] Slot 4: Tag Team`);
+
+      // 4.1 Repair
+      stepNumber++;
+      logger.info(`[Admin] Step ${stepNumber}: Repair All Robots (pre-tag-team)`);
+      const tagTeamRepairStart = Date.now();
+      const tagTeamRepairSummary = await repairAllRobots(true, currentCycleNumber);
       await eventLogger.logCycleStepComplete(
         currentCycleNumber,
-        'repair_post_tournament',
-        6,
-        Date.now() - step6Start,
-        { robotsRepaired: repair3Summary.robotsRepaired, totalCost: repair3Summary.totalFinalCost }
+        'repair_pre_tag_team',
+        stepNumber,
+        Date.now() - tagTeamRepairStart,
+        { robotsRepaired: tagTeamRepairSummary.robotsRepaired, totalCost: tagTeamRepairSummary.totalFinalCost }
       );
 
-      // Step 7: Rebalance Leagues
-      logger.info(`[Admin] Step 7: Rebalance Leagues`);
-      const step7Start = Date.now();
-      const rebalancingSummary = await rebalanceLeagues();
+      // 4.2 Execute tag team battles
+      stepNumber++;
+      logger.info(`[Admin] Step ${stepNumber}: Execute Tag Team Battles`);
+      const tagTeamBattleStart = Date.now();
+      const tagTeamBattleSummary = await executeScheduledTagTeamBattles(new Date());
       await eventLogger.logCycleStepComplete(
         currentCycleNumber,
-        'rebalance_leagues',
-        7,
-        Date.now() - step7Start,
-        { promotions: rebalancingSummary.totalPromoted, demotions: rebalancingSummary.totalDemoted }
+        'execute_tag_team_battles',
+        stepNumber,
+        Date.now() - tagTeamBattleStart,
+        { battlesExecuted: tagTeamBattleSummary?.totalBattles || 0 }
       );
 
-      // Step 7.5: Rebalance Tag Team Leagues (odd cycles only)
-      let tagTeamRebalancingSummary = null;
-      if (shouldRunTagTeam) {
-        logger.info(`[Admin] Step 7.5: Rebalance Tag Team Leagues (Cycle ${currentCycleNumber})`);
-        const step7_5Start = Date.now();
-        tagTeamRebalancingSummary = await rebalanceTagTeamLeagues();
+      // 4.3 Rebalance tag team leagues
+      stepNumber++;
+      logger.info(`[Admin] Step ${stepNumber}: Rebalance Tag Team Leagues`);
+      const tagTeamRebalanceStart = Date.now();
+      const tagTeamRebalancingSummary = await rebalanceTagTeamLeagues();
+      await eventLogger.logCycleStepComplete(
+        currentCycleNumber,
+        'rebalance_tag_team_leagues',
+        stepNumber,
+        Date.now() - tagTeamRebalanceStart,
+        { promotions: tagTeamRebalancingSummary.totalPromoted, demotions: tagTeamRebalancingSummary.totalDemoted }
+      );
+
+      // 4.4 Tag Team matchmaking (24h lead time)
+      stepNumber++;
+      logger.info(`[Admin] Step ${stepNumber}: Matchmaking for Tag Teams`);
+      const tagTeamMatchmakingStart = Date.now();
+      const tagTeamScheduledFor = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      tagTeamScheduledFor.setMinutes(0, 0, 0);
+      const tagTeamMatchesCreated = await runTagTeamMatchmaking(tagTeamScheduledFor);
+      await eventLogger.logCycleStepComplete(
+        currentCycleNumber,
+        'matchmaking_tag_teams',
+        stepNumber,
+        Date.now() - tagTeamMatchmakingStart,
+        { matchesCreated: tagTeamMatchesCreated }
+      );
+
+      // ═══════════════════════════════════════════════════════════════════
+      // SLOT 5: KotH (repair → execute → matchmaking)
+      // ═══════════════════════════════════════════════════════════════════
+      logger.info(`[Admin] Slot 5: KotH`);
+      let kothBattleSummary = null;
+      let kothMatchesCreated = 0;
+      let kothRepairSummary = null;
+
+      if (includeKoth) {
+        // 5.1 Repair
+        stepNumber++;
+        logger.info(`[Admin] Step ${stepNumber}: Repair All Robots (pre-koth)`);
+        const kothRepairStart = Date.now();
+        kothRepairSummary = await repairAllRobots(true, currentCycleNumber);
         await eventLogger.logCycleStepComplete(
           currentCycleNumber,
-          'rebalance_tag_team_leagues',
-          8,
-          Date.now() - step7_5Start,
-          { promotions: tagTeamRebalancingSummary.totalPromoted, demotions: tagTeamRebalancingSummary.totalDemoted }
+          'repair_pre_koth',
+          stepNumber,
+          Date.now() - kothRepairStart,
+          { robotsRepaired: kothRepairSummary.robotsRepaired, totalCost: kothRepairSummary.totalFinalCost }
+        );
+
+        // 5.2 Execute KotH battles
+        stepNumber++;
+        logger.info(`[Admin] Step ${stepNumber}: Execute Scheduled KotH Battles`);
+        const kothBattleStart = Date.now();
+        kothBattleSummary = await executeScheduledKothBattles(new Date());
+        await eventLogger.logCycleStepComplete(
+          currentCycleNumber,
+          'execute_koth_battles',
+          stepNumber,
+          Date.now() - kothBattleStart,
+          { battlesExecuted: kothBattleSummary.totalMatches }
+        );
+
+        // 5.3 KotH matchmaking (24h lead time, pass cycleNumber for zone rotation)
+        stepNumber++;
+        logger.info(`[Admin] Step ${stepNumber}: KotH Matchmaking`);
+        const kothMatchmakingStart = Date.now();
+        const kothScheduledFor = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        kothScheduledFor.setMinutes(0, 0, 0);
+        kothMatchesCreated = await runKothMatchmaking(kothScheduledFor, currentCycleNumber);
+        await eventLogger.logCycleStepComplete(
+          currentCycleNumber,
+          'matchmaking_koth',
+          stepNumber,
+          Date.now() - kothMatchmakingStart,
+          { matchesCreated: kothMatchesCreated }
         );
       } else {
-        logger.info(`[Admin] Step 7.5: Skipping Tag Team Rebalancing (even cycle ${currentCycleNumber})`);
+        stepNumber++;
+        logger.info(`[Admin] Step ${stepNumber}: Skipping KotH (includeKoth=false)`);
+        await eventLogger.logCycleStepComplete(
+          currentCycleNumber,
+          'koth_skipped',
+          stepNumber,
+          0,
+          { skipped: true }
+        );
       }
 
-      // Step 8: Auto Generate New Users (battle ready)
-      logger.info(`[Admin] Step 8: Auto Generate New Users`);
-      const step8Start = Date.now();
+      // ═══════════════════════════════════════════════════════════════════
+      // SLOT 6: Team 3v3 League (reserved stub)
+      // ═══════════════════════════════════════════════════════════════════
+      stepNumber++;
+      logger.info(`[Admin] Step ${stepNumber}: Team 3v3 League — reserved slot, no handler implemented`);
+      await eventLogger.logCycleStepComplete(
+        currentCycleNumber,
+        'team_3v3_league_reserved',
+        stepNumber,
+        0,
+        { reserved: true }
+      );
+      reservedSlotsFired.push('team_3v3_league');
+
+      // ═══════════════════════════════════════════════════════════════════
+      // SLOT 7: Team 2v2 Tournament (reserved stub)
+      // ═══════════════════════════════════════════════════════════════════
+      stepNumber++;
+      logger.info(`[Admin] Step ${stepNumber}: Team 2v2 Tournament — reserved slot, no handler implemented`);
+      await eventLogger.logCycleStepComplete(
+        currentCycleNumber,
+        'team_2v2_tournament_reserved',
+        stepNumber,
+        0,
+        { reserved: true }
+      );
+      reservedSlotsFired.push('team_2v2_tournament');
+
+      // ═══════════════════════════════════════════════════════════════════
+      // SLOT 8: Grand Melee (reserved stub)
+      // ═══════════════════════════════════════════════════════════════════
+      stepNumber++;
+      logger.info(`[Admin] Step ${stepNumber}: Grand Melee — reserved slot, no handler implemented`);
+      await eventLogger.logCycleStepComplete(
+        currentCycleNumber,
+        'grand_melee_reserved',
+        stepNumber,
+        0,
+        { reserved: true }
+      );
+      reservedSlotsFired.push('grand_melee');
+
+      // ═══════════════════════════════════════════════════════════════════
+      // SLOT 9: Team 3v3 Tournament (reserved stub)
+      // ═══════════════════════════════════════════════════════════════════
+      stepNumber++;
+      logger.info(`[Admin] Step ${stepNumber}: Team 3v3 Tournament — reserved slot, no handler implemented`);
+      await eventLogger.logCycleStepComplete(
+        currentCycleNumber,
+        'team_3v3_tournament_reserved',
+        stepNumber,
+        0,
+        { reserved: true }
+      );
+      reservedSlotsFired.push('team_3v3_tournament');
+
+      // ═══════════════════════════════════════════════════════════════════
+      // SLOT 10: Settlement
+      // (user gen → daily finances → cycle counters → snapshot →
+      //  orphan cleanup → end-of-cycle balances)
+      // ═══════════════════════════════════════════════════════════════════
+      logger.info(`[Admin] Slot 10: Settlement`);
+
+      // 10.1 Auto Generate New Users (battle ready)
+      stepNumber++;
+      logger.info(`[Admin] Step ${stepNumber}: Auto Generate New Users`);
+      const userGenStart = Date.now();
       let userGenerationSummary = null;
       if (generateUsersPerCycle) {
         try {
@@ -436,46 +568,140 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
       await eventLogger.logCycleStepComplete(
         currentCycleNumber,
         'auto_generate_users',
-        9,
-        Date.now() - step8Start,
+        stepNumber,
+        Date.now() - userGenStart,
         { usersCreated: userGenerationSummary?.usersCreated || 0 }
       );
 
-      // Step 9: Matchmaking for Leagues (1v1)
-      logger.info(`[Admin] Step 9: Matchmaking for Leagues (1v1)`);
-      const step9Start = Date.now();
-      const scheduledFor = new Date(Date.now() + 1000);
-      const matchesCreated = await runMatchmaking(scheduledFor);
-      const matchmakingSummary = { matchesCreated };
-      await eventLogger.logCycleStepComplete(
-        currentCycleNumber,
-        'matchmaking_leagues',
-        10,
-        Date.now() - step9Start,
-        { matchesCreated }
-      );
+      // 10.2 Calculate and Log Passive Income & Operating Costs
+      stepNumber++;
+      logger.info(`[Admin] Step ${stepNumber}: Calculate Passive Income & Operating Costs`);
+      const financesStart = Date.now();
 
-      // Step 9.5: Matchmaking for Tag Teams (odd cycles only)
-      let tagTeamMatchmakingSummary = null;
-      if (shouldRunTagTeam) {
-        logger.info(`[Admin] Step 9.5: Matchmaking for Tag Teams (Cycle ${currentCycleNumber})`);
-        const step9_5Start = Date.now();
-        const tagTeamMatchesCreated = await runTagTeamMatchmaking(scheduledFor);
-        tagTeamMatchmakingSummary = { matchesCreated: tagTeamMatchesCreated };
-        await eventLogger.logCycleStepComplete(
-          currentCycleNumber,
-          'matchmaking_tag_teams',
-          11,
-          Date.now() - step9_5Start,
-          { matchesCreated: tagTeamMatchesCreated }
-        );
+      let totalPassiveIncome = 0;
+      let totalOperatingCosts = 0;
+      let financesUsersProcessed = 0;
+
+      if (includeDailyFinances) {
+        const { calculateDailyPassiveIncome, calculateFacilityOperatingCost } = await import('../../utils/economyCalculations');
+
+        const allUsers = await prisma.user.findMany({
+          where: { NOT: { username: 'bye_robot_user' } },
+          select: { id: true, prestige: true },
+        });
+        financesUsersProcessed = allUsers.length;
+
+        // Collect all currency updates to batch in a single transaction
+        const currencyUpdates: Array<ReturnType<typeof prisma.user.update>> = [];
+
+        for (const user of allUsers) {
+          const passiveIncome = await calculateDailyPassiveIncome(user.id);
+
+          const facilities = await prisma.facility.findMany({
+            where: { userId: user.id },
+          });
+
+          const userRobots = await prisma.robot.findMany({
+            where: { userId: user.id },
+            select: { totalBattles: true, fame: true },
+          });
+
+          const facilityCosts = facilities.map(f => ({
+            facilityType: f.facilityType,
+            level: f.level,
+            cost: calculateFacilityOperatingCost(f.facilityType, f.level),
+          }));
+
+          let totalCost = facilityCosts.reduce((sum, f) => sum + f.cost, 0);
+
+          if (userRobots.length > 1) {
+            const rosterCost = (userRobots.length - 1) * 500;
+            facilityCosts.push({
+              facilityType: 'roster_expansion',
+              level: 0,
+              cost: rosterCost,
+            });
+            totalCost += rosterCost;
+          }
+
+          const totalBattles = userRobots.reduce((sum, r) => sum + r.totalBattles, 0);
+          const totalFame = userRobots.reduce((sum, r) => sum + r.fame, 0);
+
+          const incomeGenerator = await prisma.facility.findUnique({
+            where: {
+              userId_facilityType: {
+                userId: user.id,
+                facilityType: 'merchandising_hub',
+              },
+            },
+          });
+
+          if (passiveIncome.total > 0) {
+            await eventLogger.logPassiveIncome(
+              currentCycleNumber,
+              user.id,
+              passiveIncome.merchandising,
+              0,
+              incomeGenerator?.level || 0,
+              user.prestige,
+              totalBattles,
+              totalFame
+            );
+
+            totalPassiveIncome += passiveIncome.total;
+          }
+
+          if (totalCost > 0) {
+            await eventLogger.logOperatingCosts(
+              currentCycleNumber,
+              user.id,
+              facilityCosts.filter(f => f.cost > 0),
+              totalCost
+            );
+
+            const facilityList = facilityCosts.filter(f => f.cost > 0).map(f => `${f.facilityType}(L${f.level}): ₡${f.cost}`).join(', ');
+            logger.info(`[OperatingCosts] User ${user.id} | Total: ₡${totalCost.toLocaleString()} | Facilities: ${facilityList}`);
+
+            totalOperatingCosts += totalCost;
+          }
+
+          // Calculate net change (income - costs) and batch the update
+          const netChange = passiveIncome.total - totalCost;
+          if (netChange !== 0) {
+            currencyUpdates.push(prisma.user.update({
+              where: { id: user.id },
+              data: { currency: { increment: netChange } },
+            }));
+          }
+        }
+
+        // Execute all currency updates in a single transaction
+        if (currencyUpdates.length > 0) {
+          await prisma.$transaction(currencyUpdates, { timeout: 30000 });
+        }
+
+        logger.info(`[Admin] Passive income: ₡${totalPassiveIncome.toLocaleString()}, Operating costs: ₡${totalOperatingCosts.toLocaleString()}`);
       } else {
-        logger.info(`[Admin] Step 9.5: Skipping Tag Team Matchmaking (even cycle ${currentCycleNumber})`);
+        logger.info(`[Admin] Skipping daily finances (includeDailyFinances=false)`);
       }
 
-      // Step 10: Finalize Cycle Counters
-      logger.info(`[Admin] Step 10: Finalize Cycle Counters`);
-      const step10Start = Date.now();
+      await eventLogger.logCycleStepComplete(
+        currentCycleNumber,
+        'calculate_passive_income_and_costs',
+        stepNumber,
+        Date.now() - financesStart,
+        {
+          usersProcessed: financesUsersProcessed,
+          totalPassiveIncome,
+          totalOperatingCosts,
+          skipped: !includeDailyFinances,
+        }
+      );
+
+      // 10.3 Finalize Cycle Counters
+      stepNumber++;
+      logger.info(`[Admin] Step ${stepNumber}: Finalize Cycle Counters`);
+      const cycleCountersStart = Date.now();
 
       await prisma.cycleMetadata.update({
         where: { id: 1 },
@@ -493,155 +719,56 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
       await eventLogger.logCycleStepComplete(
         currentCycleNumber,
         'increment_cycle_counters',
-        12,
-        Date.now() - step10Start,
+        stepNumber,
+        Date.now() - cycleCountersStart,
         {}
       );
 
-      // Step 11: Calculate and Log Passive Income & Operating Costs
-      logger.info(`[Admin] Step 11: Calculate Passive Income & Operating Costs`);
-      const step11Start = Date.now();
-
-      let totalPassiveIncome = 0;
-      let totalOperatingCosts = 0;
-      let financesUsersProcessed = 0;
-
-      if (includeDailyFinances) {
-      const { calculateDailyPassiveIncome, calculateFacilityOperatingCost } = await import('../../utils/economyCalculations');
-
-      const allUsers = await prisma.user.findMany({
-        where: { NOT: { username: 'bye_robot_user' } },
-        select: { id: true, prestige: true },
-      });
-      financesUsersProcessed = allUsers.length;
-
-      // Collect all currency updates to batch in a single transaction
-      const currencyUpdates: Array<ReturnType<typeof prisma.user.update>> = [];
-
-      for (const user of allUsers) {
-        const passiveIncome = await calculateDailyPassiveIncome(user.id);
-
-        const facilities = await prisma.facility.findMany({
-          where: { userId: user.id },
-        });
-
-        const userRobots = await prisma.robot.findMany({
-          where: { userId: user.id },
-          select: { totalBattles: true, fame: true },
-        });
-
-        const facilityCosts = facilities.map(f => ({
-          facilityType: f.facilityType,
-          level: f.level,
-          cost: calculateFacilityOperatingCost(f.facilityType, f.level),
-        }));
-
-        let totalCost = facilityCosts.reduce((sum, f) => sum + f.cost, 0);
-
-        if (userRobots.length > 1) {
-          const rosterCost = (userRobots.length - 1) * 500;
-          facilityCosts.push({
-            facilityType: 'roster_expansion',
-            level: 0,
-            cost: rosterCost,
-          });
-          totalCost += rosterCost;
-        }
-
-        const totalBattles = userRobots.reduce((sum, r) => sum + r.totalBattles, 0);
-        const totalFame = userRobots.reduce((sum, r) => sum + r.fame, 0);
-
-        const incomeGenerator = await prisma.facility.findUnique({
-          where: {
-            userId_facilityType: {
-              userId: user.id,
-              facilityType: 'merchandising_hub',
-            },
-          },
-        });
-
-        if (passiveIncome.total > 0) {
-          await eventLogger.logPassiveIncome(
-            currentCycleNumber,
-            user.id,
-            passiveIncome.merchandising,
-            0,
-            incomeGenerator?.level || 0,
-            user.prestige,
-            totalBattles,
-            totalFame
-          );
-
-          totalPassiveIncome += passiveIncome.total;
-        }
-
-        if (totalCost > 0) {
-          await eventLogger.logOperatingCosts(
-            currentCycleNumber,
-            user.id,
-            facilityCosts.filter(f => f.cost > 0),
-            totalCost
-          );
-
-          const facilityList = facilityCosts.filter(f => f.cost > 0).map(f => `${f.facilityType}(L${f.level}): ₡${f.cost}`).join(', ');
-          logger.info(`[OperatingCosts] User ${user.id} | Total: ₡${totalCost.toLocaleString()} | Facilities: ${facilityList}`);
-
-          totalOperatingCosts += totalCost;
-        }
-
-        // Calculate net change (income - costs) and batch the update
-        const netChange = passiveIncome.total - totalCost;
-        if (netChange !== 0) {
-          currencyUpdates.push(prisma.user.update({
-            where: { id: user.id },
-            data: { currency: { increment: netChange } },
-          }));
-        }
+      // 10.4 Create Cycle Snapshot
+      stepNumber++;
+      logger.info(`[Admin] Step ${stepNumber}: Create Cycle Snapshot`);
+      const snapshotStart = Date.now();
+      let snapshotResult = null;
+      try {
+        const { cycleSnapshotService } = await import('../cycle/cycleSnapshotService');
+        await cycleSnapshotService.createSnapshot(currentCycleNumber);
+        logger.info(`[Admin] Cycle snapshot created for cycle ${currentCycleNumber}`);
+        snapshotResult = { created: true };
+        await eventLogger.logCycleStepComplete(
+          currentCycleNumber,
+          'create_cycle_snapshot',
+          stepNumber,
+          Date.now() - snapshotStart,
+          {}
+        );
+      } catch (snapshotError) {
+        logger.error(`[Admin] Failed to create cycle snapshot:`, snapshotError);
+        snapshotResult = { error: snapshotError instanceof Error ? snapshotError.message : String(snapshotError) };
       }
 
-      // Execute all currency updates in a single transaction
-      if (currencyUpdates.length > 0) {
-        await prisma.$transaction(currencyUpdates, { timeout: 30000 });
+      // 10.5 Orphan Image Cleanup
+      stepNumber++;
+      logger.info(`[Admin] Step ${stepNumber}: Orphan Image Cleanup`);
+      const orphanStart = Date.now();
+      let orphanResult = null;
+      try {
+        orphanResult = await runOrphanCleanup();
+        await eventLogger.logCycleStepComplete(
+          currentCycleNumber,
+          'orphan_image_cleanup',
+          stepNumber,
+          Date.now() - orphanStart,
+          { filesDeleted: orphanResult.filesDeleted, bytesReclaimed: orphanResult.bytesReclaimed }
+        );
+      } catch (orphanError) {
+        logger.error(`[Admin] Failed to run orphan image cleanup:`, orphanError);
       }
 
-      logger.info(`[Admin] Passive income: ₡${totalPassiveIncome.toLocaleString()}, Operating costs: ₡${totalOperatingCosts.toLocaleString()}`);
-      } else {
-        logger.info(`[Admin] Step 11: Skipping daily finances (includeDailyFinances=false)`);
-      }
-
-      await eventLogger.logCycleStepComplete(
-        currentCycleNumber,
-        'calculate_passive_income_and_costs',
-        11,
-        Date.now() - step11Start,
-        {
-          usersProcessed: financesUsersProcessed,
-          totalPassiveIncome,
-          totalOperatingCosts,
-          skipped: !includeDailyFinances,
-        }
-      );
-
-      // Step 12: Wait (1.1 second delay)
-      logger.info(`[Admin] Step 12: Wait (1.1 second delay)`);
-      const step12Start = Date.now();
-      await new Promise(resolve => setTimeout(resolve, 1100));
-      await eventLogger.logCycleStepComplete(
-        currentCycleNumber,
-        'wait_delay',
-        12,
-        Date.now() - step12Start,
-        {}
-      );
-
-      // Log cycle complete
-      const cycleDuration = Date.now() - cycleStart;
-      await eventLogger.logCycleComplete(currentCycleNumber, cycleDuration);
-
-      // Step 13: Log End-of-Cycle Balances
-      logger.info(`[Admin] Step 13: Log End-of-Cycle Balances`);
+      // 10.6 Log End-of-Cycle Balances
+      stepNumber++;
+      logger.info(`[Admin] Step ${stepNumber}: Log End-of-Cycle Balances`);
       logger.info(`[Admin] === End of Cycle ${currentCycleNumber} Balances ===`);
-      const step13Start = Date.now();
+      const balancesStart = Date.now();
       const endOfCycleUsers = await prisma.user.findMany({
         where: { NOT: { username: 'bye_robot_user' } },
         select: { id: true, username: true, stableName: true, currency: true },
@@ -663,69 +790,62 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
       await eventLogger.logCycleStepComplete(
         currentCycleNumber,
         'log_end_of_cycle_balances',
-        13,
-        Date.now() - step13Start,
+        stepNumber,
+        Date.now() - balancesStart,
         { usersLogged: endOfCycleUsers.length }
       );
 
-      // Step 14: Create Cycle Snapshot
-      logger.info(`[Admin] Step 14: Create Cycle Snapshot`);
-      const step14Start = Date.now();
-      try {
-        const { cycleSnapshotService } = await import('../cycle/cycleSnapshotService');
-        await cycleSnapshotService.createSnapshot(currentCycleNumber);
-        logger.info(`[Admin] Cycle snapshot created for cycle ${currentCycleNumber}`);
-        await eventLogger.logCycleStepComplete(
-          currentCycleNumber,
-          'create_cycle_snapshot',
-          14,
-          Date.now() - step14Start,
-          {}
-        );
-      } catch (snapshotError) {
-        logger.error(`[Admin] Failed to create cycle snapshot:`, snapshotError);
-      }
-
-      // Step 15: Orphan Image Cleanup
-      logger.info(`[Admin] Step 15: Orphan Image Cleanup`);
-      const step15Start = Date.now();
-      try {
-        const orphanResult = await runOrphanCleanup();
-        await eventLogger.logCycleStepComplete(
-          currentCycleNumber,
-          'orphan_image_cleanup',
-          15,
-          Date.now() - step15Start,
-          { filesDeleted: orphanResult.filesDeleted, bytesReclaimed: orphanResult.bytesReclaimed }
-        );
-      } catch (orphanError) {
-        logger.error(`[Admin] Failed to run orphan image cleanup:`, orphanError);
-      }
+      // Log cycle complete
+      const cycleDuration = Date.now() - cycleStart;
+      await eventLogger.logCycleComplete(currentCycleNumber, cycleDuration);
 
       // Display Cycle Summary
       logger.info(`[Admin] === Cycle ${currentCycleNumber} Summary ===`);
-      logger.info(`[Admin] Battles: ${battleSummary.totalBattles}`);
+      logger.info(`[Admin] 1v1 League Battles: ${battleSummary.totalBattles}`);
+      logger.info(`[Admin] Tag Team Battles: ${tagTeamBattleSummary?.totalBattles || 0}`);
       if (kothBattleSummary) {
         logger.info(`[Admin] KotH Battles: ${kothBattleSummary.totalMatches} (${kothBattleSummary.successfulMatches} successful, ${kothBattleSummary.failedMatches} failed)`);
       }
+      logger.info(`[Admin] Reserved slots fired: ${reservedSlotsFired.join(', ')}`);
       logger.info(`[Admin] ===================================`);
 
       cycleResults.push({
         cycle: currentCycleNumber,
-        battles: battleSummary,
-        repair1: repair1Summary,
-        tagTeamBattles: tagTeamBattleSummary,
-        repair2: repair2Summary,
-        kothBattles: kothBattleSummary,
-        repairPostKoth: repairKothSummary,
-        kothMatchmaking: kothMatchmakingSummary,
-        tournaments: tournamentSummary,
-        repair3: repair3Summary,
-        rebalancing: rebalancingSummary,
-        tagTeamRebalancing: tagTeamRebalancingSummary,
-        userGeneration: userGenerationSummary,
-        matchmaking: matchmakingSummary,
-        tagTeamMatchmaking: tagTeamMatchmakingSummary,
+        leagueBlock: {
+          battles: battleSummary,
+          repair: leagueRepairSummary,
+          rebalancing: rebalancingSummary,
+          matchmaking: { matchesCreated: leagueMatchesCreated },
+        },
+        team2v2LeagueBlock: { skipped: true, message: 'reserved slot, no handler implemented' },
+        tournamentBlock: {
+          repair: tournamentRepairSummary,
+          tournaments: tournamentSummary,
+        },
+        tagTeamBlock: {
+          repair: tagTeamRepairSummary,
+          battles: tagTeamBattleSummary,
+          rebalancing: tagTeamRebalancingSummary,
+          matchmaking: { matchesCreated: tagTeamMatchesCreated },
+        },
+        kothBlock: includeKoth ? {
+          repair: kothRepairSummary,
+          battles: kothBattleSummary,
+          matchmaking: { matchesCreated: kothMatchesCreated },
+        } : undefined,
+        team3v3LeagueBlock: { skipped: true, message: 'reserved slot, no handler implemented' },
+        team2v2TournamentBlock: { skipped: true, message: 'reserved slot, no handler implemented' },
+        grandMeleeBlock: { skipped: true, message: 'reserved slot, no handler implemented' },
+        team3v3TournamentBlock: { skipped: true, message: 'reserved slot, no handler implemented' },
+        settlement: {
+          userGeneration: userGenerationSummary,
+          finances: { totalPassiveIncome, totalOperatingCosts, usersProcessed: financesUsersProcessed, skipped: !includeDailyFinances },
+          cycleCounters: { updated: true },
+          snapshot: snapshotResult,
+          orphanCleanup: orphanResult,
+          endOfCycleBalances: { usersLogged: endOfCycleUsers.length },
+        },
+        reservedSlotsFired,
         duration: Date.now() - cycleStart,
       });
 

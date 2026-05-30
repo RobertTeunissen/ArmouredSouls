@@ -25,10 +25,10 @@ describe('Tag Team Multi-Match Cycle Integration Test', () => {
   beforeAll(async () => {
     await prisma.$connect();
 
-    // Initialize cycle metadata to odd cycle (so tag team matchmaking runs)
+    // Initialize cycle metadata (tag team runs daily, no parity check needed)
     await prisma.cycleMetadata.upsert({
       where: { id: 1 },
-      update: { totalCycles: 5 }, // Odd cycle
+      update: { totalCycles: 5 },
       create: {
         id: 1,
         totalCycles: 5,

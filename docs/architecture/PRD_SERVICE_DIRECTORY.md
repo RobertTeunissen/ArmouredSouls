@@ -228,6 +228,31 @@ Event Subscription System — per-robot subscription model gating participation 
 
 ---
 
+## Cron Schedule
+
+The production scheduler (`cycleScheduler.ts`) fires 10 independent cron jobs daily. Each job acquires an in-memory mutex lock before executing, preventing overlap. Settlement at 00:00 UTC closes the cycle.
+
+| UTC | Event | Env Var | Handler Status |
+|------|-------|---------|----------------|
+| 08:00 | 1v1 League | `LEAGUE_SCHEDULE` | Live |
+| 09:00 | Team Battle 2v2 League | `TEAM_2V2_LEAGUE_SCHEDULE` | Reserved |
+| 10:00 | 1v1 Tournament | `TOURNAMENT_SCHEDULE` | Live |
+| 11:00 | Tag Team | `TAGTEAM_SCHEDULE` | Live |
+| 13:00 | KotH | `KOTH_SCHEDULE` | Live |
+| 14:00 | Team Battle 3v3 League | `TEAM_3V3_LEAGUE_SCHEDULE` | Reserved |
+| 15:00 | Team Battle 2v2 Tournament | `TEAM_2V2_TOURNAMENT_SCHEDULE` | Reserved |
+| 17:00 | Grand Melee | `GRAND_MELEE_SCHEDULE` | Reserved |
+| 18:00 | Team Battle 3v3 Tournament | `TEAM_3V3_TOURNAMENT_SCHEDULE` | Reserved |
+| 00:00 | Settlement | `SETTLEMENT_SCHEDULE` | Live |
+
+**Spacing rationale**: Heavy modes (1v1 League at 08:00, KotH at 13:00) are 5 hours apart. Light/reserved modes interleave. Gaps at 12:00, 16:00, 19:00–23:00 provide ops intervention windows.
+
+**Reserved slots**: Stubs log a no-op message and return without error. Subsequent specs register real handlers into these slots without modifying `env.ts` or the slot map.
+
+All schedule env vars are overridable via `.env` for rollback or per-environment tuning.
+
+---
+
 ## Supporting Directories
 
 | Directory | Purpose |

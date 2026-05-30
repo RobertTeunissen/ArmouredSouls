@@ -111,19 +111,24 @@ describe('Preservation — Existing Behavior Unchanged', () => {
     }
 
     const schedulerDefaults: SchedulerDefault[] = [
-      { envVar: 'LEAGUE_SCHEDULE', defaultValue: '0 20 * * *' },
-      { envVar: 'TOURNAMENT_SCHEDULE', defaultValue: '0 8 * * *' },
-      { envVar: 'TAGTEAM_SCHEDULE', defaultValue: '0 12 * * *' },
-      { envVar: 'SETTLEMENT_SCHEDULE', defaultValue: '0 23 * * *' },
-      { envVar: 'KOTH_SCHEDULE', defaultValue: '0 16 * * 1,3,5' },
+      { envVar: 'LEAGUE_SCHEDULE', defaultValue: '0 8 * * *' },
+      { envVar: 'TOURNAMENT_SCHEDULE', defaultValue: '0 10 * * *' },
+      { envVar: 'TAGTEAM_SCHEDULE', defaultValue: '0 11 * * *' },
+      { envVar: 'SETTLEMENT_SCHEDULE', defaultValue: '0 0 * * *' },
+      { envVar: 'KOTH_SCHEDULE', defaultValue: '0 13 * * *' },
+      { envVar: 'TEAM_2V2_LEAGUE_SCHEDULE', defaultValue: '0 9 * * *' },
+      { envVar: 'TEAM_3V3_LEAGUE_SCHEDULE', defaultValue: '0 14 * * *' },
+      { envVar: 'TEAM_2V2_TOURNAMENT_SCHEDULE', defaultValue: '0 15 * * *' },
+      { envVar: 'TEAM_3V3_TOURNAMENT_SCHEDULE', defaultValue: '0 18 * * *' },
+      { envVar: 'GRAND_MELEE_SCHEDULE', defaultValue: '0 17 * * *' },
     ];
 
     fc.assert(
       fc.property(
         fc.constantFrom(...schedulerDefaults),
         (sched: SchedulerDefault) => {
-          // Verify the default value appears in the env.ts source
-          const pattern = `process.env.${sched.envVar} || '${sched.defaultValue}'`;
+          // Verify the default value appears in the env.ts source (Zod schema pattern)
+          const pattern = `${sched.envVar}: z.string().default('${sched.defaultValue}')`;
           expect(envTs).toContain(pattern);
         },
       ),
@@ -208,7 +213,7 @@ describe('Preservation — Existing Behavior Unchanged', () => {
 
     // Extract the frontend-tests job block
     const frontendJobMatch = ciYml.match(
-      /frontend-tests:[\s\S]*?(?=\n  \w[\w-]*:|$)/,
+      /frontend-tests:[\s\S]*?(?=\n {2}\w[\w-]*:|$)/,
     );
     expect(frontendJobMatch).not.toBeNull();
 

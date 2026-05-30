@@ -24,6 +24,7 @@
 
 import { z } from 'zod';
 import { config as loadDotenv } from 'dotenv';
+import cron from 'node-cron';
 
 // ---------------------------------------------------------------------------
 // dotenv side-effect
@@ -119,16 +120,21 @@ const EnvSchema = z
 
     // ── Scheduler ─────────────────────────────────────────────────────
     SCHEDULER_ENABLED: boolFlag,
-    LEAGUE_SCHEDULE: z.string().default('0 20 * * *'),
-    TOURNAMENT_SCHEDULE: z.string().default('0 8 * * *'),
-    TAGTEAM_SCHEDULE: z.string().default('0 12 * * *'),
-    SETTLEMENT_SCHEDULE: z.string().default('0 23 * * *'),
-    KOTH_SCHEDULE: z.string().default('0 16 * * 1,3,5'),
+    LEAGUE_SCHEDULE: z.string().default('0 8 * * *'),
+    TOURNAMENT_SCHEDULE: z.string().default('0 10 * * *'),
+    TAGTEAM_SCHEDULE: z.string().default('0 11 * * *'),
+    SETTLEMENT_SCHEDULE: z.string().default('0 0 * * *'),
+    KOTH_SCHEDULE: z.string().default('0 13 * * *'),
+    TEAM_2V2_LEAGUE_SCHEDULE: z.string().default('0 9 * * *'),
+    TEAM_3V3_LEAGUE_SCHEDULE: z.string().default('0 14 * * *'),
+    TEAM_2V2_TOURNAMENT_SCHEDULE: z.string().default('0 15 * * *'),
+    TEAM_3V3_TOURNAMENT_SCHEDULE: z.string().default('0 18 * * *'),
+    GRAND_MELEE_SCHEDULE: z.string().default('0 17 * * *'),
 
     // ── Monitoring & alerts ──────────────────────────────────────────
     MONITORING_DISCORD_WEBHOOK: z.string().optional(),
     DISCORD_WEBHOOK_URL: z.string().optional(),
-    DAILY_REPORT_SCHEDULE: z.string().default('0 8 * * *'),
+    DAILY_REPORT_SCHEDULE: z.string().default('30 0 * * *'),
 
     // ── Optional integrations ────────────────────────────────────────
     CHANGELOG_DEPLOY_TOKEN: z.string().optional(),
@@ -191,6 +197,11 @@ export interface EnvConfig {
   tagTeamSchedule: string;
   settlementSchedule: string;
   kothSchedule: string;
+  team2v2LeagueSchedule: string;
+  team3v3LeagueSchedule: string;
+  team2v2TournamentSchedule: string;
+  team3v3TournamentSchedule: string;
+  grandMeleeSchedule: string;
   /** Discord webhook URL for ops alerts. Falls back to DISCORD_WEBHOOK_URL. */
   monitoringDiscordWebhook: string | undefined;
   /** Generic Discord webhook for player notifications. */
@@ -230,6 +241,11 @@ const toEnvConfig = (parsed: z.infer<typeof EnvSchema>): EnvConfig => ({
   tagTeamSchedule: parsed.TAGTEAM_SCHEDULE,
   settlementSchedule: parsed.SETTLEMENT_SCHEDULE,
   kothSchedule: parsed.KOTH_SCHEDULE,
+  team2v2LeagueSchedule: parsed.TEAM_2V2_LEAGUE_SCHEDULE,
+  team3v3LeagueSchedule: parsed.TEAM_3V3_LEAGUE_SCHEDULE,
+  team2v2TournamentSchedule: parsed.TEAM_2V2_TOURNAMENT_SCHEDULE,
+  team3v3TournamentSchedule: parsed.TEAM_3V3_TOURNAMENT_SCHEDULE,
+  grandMeleeSchedule: parsed.GRAND_MELEE_SCHEDULE,
   monitoringDiscordWebhook: parsed.MONITORING_DISCORD_WEBHOOK || undefined,
   discordWebhookUrl: parsed.DISCORD_WEBHOOK_URL || undefined,
   dailyReportSchedule: parsed.DAILY_REPORT_SCHEDULE,
@@ -252,6 +268,39 @@ const formatIssues = (issues: z.ZodIssue[]): string =>
     .join('\n');
 
 /**
+ * Validate all cron schedule expressions using node-cron. Called after Zod
+ * parse succeeds to catch syntactically invalid cron strings that Zod (a
+ * plain string check) cannot detect.
+ *
+ * On failure: writes to stderr identifying the offending env var and exits
+ * with code 1 — the application must not start with an invalid schedule.
+ */
+function validateCronExpressions(config: EnvConfig): void {
+  const cronFields: Array<[string, string]> = [
+    ['LEAGUE_SCHEDULE', config.leagueSchedule],
+    ['TOURNAMENT_SCHEDULE', config.tournamentSchedule],
+    ['TAGTEAM_SCHEDULE', config.tagTeamSchedule],
+    ['KOTH_SCHEDULE', config.kothSchedule],
+    ['SETTLEMENT_SCHEDULE', config.settlementSchedule],
+    ['TEAM_2V2_LEAGUE_SCHEDULE', config.team2v2LeagueSchedule],
+    ['TEAM_3V3_LEAGUE_SCHEDULE', config.team3v3LeagueSchedule],
+    ['TEAM_2V2_TOURNAMENT_SCHEDULE', config.team2v2TournamentSchedule],
+    ['TEAM_3V3_TOURNAMENT_SCHEDULE', config.team3v3TournamentSchedule],
+    ['GRAND_MELEE_SCHEDULE', config.grandMeleeSchedule],
+    ['DAILY_REPORT_SCHEDULE', config.dailyReportSchedule],
+  ];
+
+  for (const [envVar, expression] of cronFields) {
+    if (!cron.validate(expression)) {
+      process.stderr.write(
+        `\nFATAL: Invalid cron expression for ${envVar}: "${expression}"\n`,
+      );
+      process.exit(1);
+    }
+  }
+}
+
+/**
  * Validate `process.env` against `EnvSchema`. On failure, write all issues
  * to stderr and exit with code 1. On success, return the typed config.
  *
@@ -268,7 +317,9 @@ export function loadEnvConfig(): EnvConfig {
     process.exit(1);
   }
 
-  return toEnvConfig(result.data);
+  const config = toEnvConfig(result.data);
+  validateCronExpressions(config);
+  return config;
 }
 
 // ---------------------------------------------------------------------------

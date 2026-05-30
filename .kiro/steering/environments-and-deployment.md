@@ -185,11 +185,12 @@ CORS_ORIGIN=https://acc.armouredsouls.com
 SCHEDULER_ENABLED=true
 LOG_LEVEL=info
 JWT_SECRET=GENERATED_WITH_OPENSSL
-# Scheduler times (UTC)
-LEAGUE_SCHEDULE=0 20 * * *      # 8 PM daily
-TOURNAMENT_SCHEDULE=0 8 * * *   # 8 AM daily
-TAGTEAM_SCHEDULE=0 12 * * *     # 12 PM daily
-SETTLEMENT_SCHEDULE=0 23 * * *  # 11 PM daily
+# Scheduler times (UTC) — defaults match the canonical slot map
+LEAGUE_SCHEDULE=0 8 * * *       # 8 AM daily
+TOURNAMENT_SCHEDULE=0 10 * * *  # 10 AM daily
+TAGTEAM_SCHEDULE=0 11 * * *    # 11 AM daily
+KOTH_SCHEDULE=0 13 * * *       # 1 PM daily
+SETTLEMENT_SCHEDULE=0 0 * * *  # Midnight daily
 ```
 
 ### PRD (.env on VPS)
@@ -206,11 +207,18 @@ The game does NOT run "complete cycles" as a single monolithic operation. Instea
 
 | Job | Schedule (UTC) | What it does |
 |-----|---------------|--------------|
-| League | 8 PM | Matchmaking → Battle execution → League rebalancing |
-| Tournament | 8 AM | Tournament bracket advancement |
-| Tag Team | 12 PM | Tag team matchmaking → battles → rebalancing |
-| KotH | Mon/Wed/Fri | KotH matchmaking → battles |
-| Settlement | 11 PM | Passive income → Operating costs → Cycle counter increment → Snapshot |
+| 1v1 League | 8:00 AM | Matchmaking → Battle execution → League rebalancing |
+| Team 2v2 League | 9:00 AM | Reserved slot (no handler yet) |
+| Tournament | 10:00 AM | Tournament bracket advancement |
+| Tag Team | 11:00 AM | Tag team matchmaking → battles → rebalancing |
+| KotH | 1:00 PM | KotH matchmaking → battles |
+| Team 3v3 League | 2:00 PM | Reserved slot (no handler yet) |
+| Team 2v2 Tournament | 3:00 PM | Reserved slot (no handler yet) |
+| Grand Melee | 5:00 PM | Reserved slot (no handler yet) |
+| Team 3v3 Tournament | 6:00 PM | Reserved slot (no handler yet) |
+| Settlement | Midnight | Passive income → Operating costs → Cycle counter increment → Snapshot |
+
+All battle events run **daily**. Subscription (Spec 35 Booking Office) gates which robots participate in each event.
 
 Each job runs independently. They do NOT share a transaction or execution context. When optimizing or debugging cycle-related code, always consider which specific job is involved — not "the cycle" as a whole.
 

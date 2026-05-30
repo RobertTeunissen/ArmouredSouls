@@ -213,3 +213,42 @@ The `Caddyfile` includes a `handle /uploads/*` block that serves uploaded images
 ### Backup Considerations
 
 The `uploads/user-robots/` directory is not included in the PostgreSQL backup. Consider adding a separate rsync or tar backup for uploaded images if data durability is critical. Orphaned images are cleaned up automatically during the daily settlement cycle (Step 15).
+
+---
+
+## Spec 36 — Cron Schedule Restructure
+
+### Hard Prerequisite: Spec 35 (Booking Office)
+
+Spec 36 (Cron Schedule Restructure) **must not be deployed** until Spec 35 (Booking Office) is live and its `subscription` table migration has been applied. The application enforces this with a startup assertion — if the `subscription` table does not exist, the backend will exit with a FATAL error.
+
+### Rollback Procedure
+
+If a critical defect is discovered after deploying Spec 36, the slot map can be reverted via `.env` overrides without a code rollback:
+
+**Step 1 — Restore previous schedule via env vars:**
+
+```bash
+# In /opt/armouredsouls/backend/.env, set:
+LEAGUE_SCHEDULE='0 20 * * *'
+TAGTEAM_SCHEDULE='0 12 * * *'
+KOTH_SCHEDULE='0 16 * * 1,3,5'
+SETTLEMENT_SCHEDULE='0 23 * * *'
+```
+
+**Step 2 — Restore deleted helpers from git history:**
+
+```bash
+# Restore shouldRunTagTeamMatchmaking (one function + one export line)
+git checkout HEAD~1 -- app/backend/src/services/tag-team/tagTeamMatchmakingService.ts
+# Restore getNextKothScheduledDate's kothDays array (one constant)
+git checkout HEAD~1 -- app/backend/src/services/cycle/cycleScheduler.ts
+```
+
+**Step 3 — Restart the application:**
+
+```bash
+pm2 restart armouredsouls-backend
+```
+
+The scheduler picks up the new env values on restart. No database migration rollback is needed — Spec 36 has no schema changes.

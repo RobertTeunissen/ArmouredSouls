@@ -90,6 +90,7 @@ export async function generateHealthReport(): Promise<string> {
 
   // Get last successful job from scheduler
   let lastJob = '';
+  let eventDurationsSection = '';
   try {
     const state = getSchedulerState();
     const successfulJobs = state.jobs
@@ -97,6 +98,17 @@ export async function generateHealthReport(): Promise<string> {
       .sort((a, b) => (b.lastRunAt!.getTime() - a.lastRunAt!.getTime()));
     if (successfulJobs.length > 0) {
       lastJob = `${successfulJobs[0].name} at ${successfulJobs[0].lastRunAt!.toISOString().replace('T', ' ').slice(0, 19)} UTC`;
+    }
+
+    // Per-event durations and match counts for the just-closed cycle (R7.3)
+    const jobsWithRuns = state.jobs.filter(j => j.lastRunAt !== null);
+    if (jobsWithRuns.length > 0) {
+      const lines = jobsWithRuns.map(j => {
+        const duration = j.lastRunDurationMs != null ? `${j.lastRunDurationMs}ms` : 'N/A';
+        const status = j.lastRunStatus === 'success' ? '✓' : j.lastRunStatus === 'failed' ? '✗' : '?';
+        return `  ${status} ${j.name}: ${duration}`;
+      });
+      eventDurationsSection = `\n📋 Per-Event Durations (last cycle)\n${lines.join('\n')}`;
     }
   } catch {
     lastJob = 'unavailable';
@@ -145,7 +157,8 @@ export async function generateHealthReport(): Promise<string> {
     moduleLine,
     logLine,
     cycleLine,
-  ].join('\n');
+    eventDurationsSection,
+  ].filter(Boolean).join('\n');
 
   return message;
 }

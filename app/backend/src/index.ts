@@ -215,6 +215,21 @@ import { runStartupSelfTest } from './utils/startupSelfTest';
     process.exit(1);
   }
 
+  // Verify Spec 35 (Booking Office) prerequisite — subscription table must exist.
+  // This is a deployment-order safeguard for production. In development, run
+  // `npx prisma migrate dev` or `npx prisma db push` to create the table.
+  if (config.nodeEnv === 'production' || config.nodeEnv === 'acceptance') {
+    const subscriptionTableExists = await prisma.$queryRaw<Array<{ exists: boolean }>>`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables
+        WHERE table_name = 'subscription'
+      )`;
+    if (!subscriptionTableExists[0]?.exists) {
+      logger.error('FATAL: subscription table does not exist. Spec 35 (Booking Office) must be deployed first.');
+      process.exit(1);
+    }
+  }
+
   app.listen(config.port, host, () => {
     logger.info(`Backend server running on http://${host}:${config.port}`);
 
@@ -232,6 +247,11 @@ import { runStartupSelfTest } from './utils/startupSelfTest';
       tagTeamSchedule: config.tagTeamSchedule,
       settlementSchedule: config.settlementSchedule,
       kothSchedule: config.kothSchedule,
+      team2v2LeagueSchedule: config.team2v2LeagueSchedule,
+      team3v3LeagueSchedule: config.team3v3LeagueSchedule,
+      team2v2TournamentSchedule: config.team2v2TournamentSchedule,
+      team3v3TournamentSchedule: config.team3v3TournamentSchedule,
+      grandMeleeSchedule: config.grandMeleeSchedule,
     });
 
     // Initialize daily health report (independent of scheduler)

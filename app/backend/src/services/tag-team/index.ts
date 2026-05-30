@@ -30,7 +30,6 @@ export type {
 } from './tagTeamService';
 
 export {
-  shouldRunTagTeamMatchmaking,
   getEligibleTeams,
   runTagTeamMatchmaking,
 } from './tagTeamMatchmakingService';
