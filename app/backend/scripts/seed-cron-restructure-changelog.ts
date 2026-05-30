@@ -59,7 +59,7 @@ async function main(): Promise<void> {
           'Reserved slots for future battle modes (Team Battles, Grand Melee) are pre-allocated but inactive until those modes ship.',
         ].join('\n'),
         category: 'feature',
-        status: 'published',
+        status: 'draft',
         publishDate: new Date(),
         sourceType: 'spec',
         sourceRef: SOURCE_REF,
