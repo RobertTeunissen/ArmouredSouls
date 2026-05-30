@@ -42,8 +42,13 @@ const defaultSchedulerStatus = {
   runningJob: null,
   queue: [],
   jobs: [
-    { name: 'League Cycle', schedule: '0 0 * * *', lastRunAt: '2025-01-01T00:00:00Z', lastRunDurationMs: 5000, lastRunStatus: 'success' as const, lastError: null, nextRunAt: '2025-01-02T00:00:00Z' },
-    { name: 'Tournament Cycle', schedule: '0 12 * * *', lastRunAt: null, lastRunDurationMs: null, lastRunStatus: null, lastError: null, nextRunAt: '2025-01-01T12:00:00Z' },
+    { name: 'league', schedule: '0 8 * * *', lastRunAt: '2025-01-01T00:00:00Z', lastRunDurationMs: 5000, lastRunStatus: 'success' as const, lastError: null, nextRunAt: '2025-01-02T08:00:00Z' },
+    { name: 'tournament', schedule: '0 10 * * *', lastRunAt: null, lastRunDurationMs: null, lastRunStatus: null, lastError: null, nextRunAt: '2025-01-01T10:00:00Z' },
+    { name: 'tagTeam', schedule: '0 11 * * *', lastRunAt: null, lastRunDurationMs: null, lastRunStatus: null, lastError: null, nextRunAt: '2025-01-01T11:00:00Z' },
+    { name: 'koth', schedule: '0 13 * * *', lastRunAt: null, lastRunDurationMs: null, lastRunStatus: null, lastError: null, nextRunAt: '2025-01-01T13:00:00Z' },
+    { name: 'settlement', schedule: '0 0 * * *', lastRunAt: null, lastRunDurationMs: null, lastRunStatus: null, lastError: null, nextRunAt: '2025-01-02T00:00:00Z' },
+    { name: 'team2v2League', schedule: '0 9 * * *', lastRunAt: null, lastRunDurationMs: null, lastRunStatus: null, lastError: null, nextRunAt: null },
+    { name: 'grandMelee', schedule: '0 17 * * *', lastRunAt: null, lastRunDurationMs: null, lastRunStatus: null, lastError: null, nextRunAt: null },
   ],
 };
 
@@ -87,8 +92,8 @@ describe('CycleControlsPage', () => {
   it('should render scheduler status panel with job details', () => {
     render(<CycleControlsPage />);
     expect(screen.getByTestId('scheduler-status-panel')).toBeInTheDocument();
-    expect(screen.getByText('League Cycle')).toBeInTheDocument();
-    expect(screen.getByText('Tournament Cycle')).toBeInTheDocument();
+    expect(screen.getByText('1v1 League')).toBeInTheDocument();
+    expect(screen.getByText('1v1 Tournament')).toBeInTheDocument();
     expect(screen.getByText('Active')).toBeInTheDocument();
   });
 

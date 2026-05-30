@@ -263,7 +263,12 @@ export async function runKothMatchmaking(scheduledFor: Date, cycleNumber?: numbe
   logger.info(`${LOG_PREFIX} Group sizes after distribution + stable resolution: [${groupSizes.join(', ')}]`);
 
   // 4. Determine zone variant by cycle number (1-in-3 ratio)
-  const resolvedCycleNumber = cycleNumber ?? 0;
+  // If cycleNumber not provided, derive from cycleMetadata to avoid defaulting to 0
+  let resolvedCycleNumber = cycleNumber ?? 0;
+  if (cycleNumber === undefined) {
+    const cycleMetadata = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
+    resolvedCycleNumber = cycleMetadata?.totalCycles ?? 0;
+  }
   const rotatingZone = resolvedCycleNumber % 3 === 0;
 
   // Apply zone variant to all groups

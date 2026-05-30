@@ -672,20 +672,18 @@ export function initScheduler(config: SchedulerConfig): void {
 
   schedulerActive = true;
 
-  // Define all 10 jobs: 5 existing handlers + 5 reserved-slot stubs
+  // Define all 10 jobs in canonical slot map order (R1.1)
   const jobs: Array<{ name: JobState['name']; schedule: string; handler: () => Promise<JobContext> }> = [
-    // Existing live handlers
-    { name: 'league', schedule: config.leagueSchedule, handler: executeLeagueCycle },
-    { name: 'tournament', schedule: config.tournamentSchedule, handler: executeTournamentCycle },
-    { name: 'tagTeam', schedule: config.tagTeamSchedule, handler: executeTagTeamCycle },
-    { name: 'koth', schedule: config.kothSchedule, handler: executeKothCycle },
-    { name: 'settlement', schedule: config.settlementSchedule, handler: executeSettlement },
-    // Reserved-slot stubs for future battle events
-    { name: 'team2v2League', schedule: config.team2v2LeagueSchedule, handler: createReservedSlotHandler('team2v2League') },
-    { name: 'team3v3League', schedule: config.team3v3LeagueSchedule, handler: createReservedSlotHandler('team3v3League') },
-    { name: 'team2v2Tournament', schedule: config.team2v2TournamentSchedule, handler: createReservedSlotHandler('team2v2Tournament') },
-    { name: 'team3v3Tournament', schedule: config.team3v3TournamentSchedule, handler: createReservedSlotHandler('team3v3Tournament') },
-    { name: 'grandMelee', schedule: config.grandMeleeSchedule, handler: createReservedSlotHandler('grandMelee') },
+    { name: 'league', schedule: config.leagueSchedule, handler: executeLeagueCycle },                           // 08:00
+    { name: 'team2v2League', schedule: config.team2v2LeagueSchedule, handler: createReservedSlotHandler('team2v2League') }, // 09:00
+    { name: 'tournament', schedule: config.tournamentSchedule, handler: executeTournamentCycle },                // 10:00
+    { name: 'tagTeam', schedule: config.tagTeamSchedule, handler: executeTagTeamCycle },                        // 11:00
+    { name: 'koth', schedule: config.kothSchedule, handler: executeKothCycle },                                 // 13:00
+    { name: 'team3v3League', schedule: config.team3v3LeagueSchedule, handler: createReservedSlotHandler('team3v3League') }, // 14:00
+    { name: 'team2v2Tournament', schedule: config.team2v2TournamentSchedule, handler: createReservedSlotHandler('team2v2Tournament') }, // 15:00
+    { name: 'grandMelee', schedule: config.grandMeleeSchedule, handler: createReservedSlotHandler('grandMelee') },         // 17:00
+    { name: 'team3v3Tournament', schedule: config.team3v3TournamentSchedule, handler: createReservedSlotHandler('team3v3Tournament') }, // 18:00
+    { name: 'settlement', schedule: config.settlementSchedule, handler: executeSettlement },                     // 00:00
   ];
 
   for (const job of jobs) {

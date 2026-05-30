@@ -304,6 +304,7 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
       logger.info(`[Admin] Step ${stepNumber}: Matchmaking for Leagues (1v1)`);
       const leagueMatchmakingStart = Date.now();
       const leagueScheduledFor = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      leagueScheduledFor.setMinutes(0, 0, 0);
       const leagueMatchesCreated = await runMatchmaking(leagueScheduledFor);
       await eventLogger.logCycleStepComplete(
         currentCycleNumber,
@@ -414,6 +415,7 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
       logger.info(`[Admin] Step ${stepNumber}: Matchmaking for Tag Teams`);
       const tagTeamMatchmakingStart = Date.now();
       const tagTeamScheduledFor = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      tagTeamScheduledFor.setMinutes(0, 0, 0);
       const tagTeamMatchesCreated = await runTagTeamMatchmaking(tagTeamScheduledFor);
       await eventLogger.logCycleStepComplete(
         currentCycleNumber,
@@ -429,13 +431,14 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
       logger.info(`[Admin] Slot 5: KotH`);
       let kothBattleSummary = null;
       let kothMatchesCreated = 0;
+      let kothRepairSummary = null;
 
       if (includeKoth) {
         // 5.1 Repair
         stepNumber++;
         logger.info(`[Admin] Step ${stepNumber}: Repair All Robots (pre-koth)`);
         const kothRepairStart = Date.now();
-        const kothRepairSummary = await repairAllRobots(true, currentCycleNumber);
+        kothRepairSummary = await repairAllRobots(true, currentCycleNumber);
         await eventLogger.logCycleStepComplete(
           currentCycleNumber,
           'repair_pre_koth',
@@ -462,7 +465,8 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
         logger.info(`[Admin] Step ${stepNumber}: KotH Matchmaking`);
         const kothMatchmakingStart = Date.now();
         const kothScheduledFor = new Date(Date.now() + 24 * 60 * 60 * 1000);
-        kothMatchesCreated = await runKothMatchmaking(kothScheduledFor);
+        kothScheduledFor.setMinutes(0, 0, 0);
+        kothMatchesCreated = await runKothMatchmaking(kothScheduledFor, currentCycleNumber);
         await eventLogger.logCycleStepComplete(
           currentCycleNumber,
           'matchmaking_koth',
@@ -825,7 +829,7 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
           matchmaking: { matchesCreated: tagTeamMatchesCreated },
         },
         kothBlock: includeKoth ? {
-          repair: null,
+          repair: kothRepairSummary,
           battles: kothBattleSummary,
           matchmaking: { matchesCreated: kothMatchesCreated },
         } : undefined,
