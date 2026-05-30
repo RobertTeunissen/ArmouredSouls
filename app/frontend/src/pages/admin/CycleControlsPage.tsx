@@ -102,10 +102,6 @@ function CycleControlsPage() {
 
   // Bulk cycle state
   const [bulkCycles, setBulkCycles] = useState(1);
-  const [includeTournaments, setIncludeTournaments] = useState(true);
-  const [includeKoth, setIncludeKoth] = useState(true);
-  const [includeDailyFinances, setIncludeDailyFinances] = useState(true);
-  const [generateUsersPerCycle, setGenerateUsersPerCycle] = useState(true);
    
   const [bulkResults, setBulkResults] = useState<BulkCyclesResponse | null>(null);
 
@@ -119,72 +115,6 @@ function CycleControlsPage() {
   };
 
   /* ---------- Individual cycle operations ---------- */
-
-  const runMatchmaking = async (): Promise<void> => {
-    setLoading(true);
-    try {
-      const data = await api.post<MatchmakingResponse>('/api/admin/matchmaking/run', {});
-      const exclusionNote = data.subscriptionExclusions ? ` (${data.subscriptionExclusions} excluded by subscription)` : '';
-      addSessionLog('success', `Matchmaking completed! Created ${data.matchesCreated} matches${exclusionNote}`);
-      showMessage('success', `Matchmaking completed! Created ${data.matchesCreated} matches${exclusionNote}`);
-    } catch (error: unknown) {
-      const msg = errorMessage(error, 'Matchmaking failed');
-      addSessionLog('error', `Matchmaking failed: ${msg}`);
-      showMessage('error', msg);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const executeBattles = async (): Promise<void> => {
-    setLoading(true);
-    try {
-      const data = await api.post<BattlesResponse>('/api/admin/battles/run', {});
-      const summary = data.summary;
-      const text = `Battles executed! Total: ${summary.totalBattles}, Success: ${summary.successfulBattles}, Failed: ${summary.failedBattles}`;
-      addSessionLog('success', text);
-      showMessage('success', text);
-    } catch (error: unknown) {
-      const msg = errorMessage(error, 'Battle execution failed');
-      addSessionLog('error', `Battle execution failed: ${msg}`);
-      showMessage('error', msg);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const rebalanceLeagues = async (): Promise<void> => {
-    setLoading(true);
-    try {
-      const data = await api.post<RebalanceResponse>('/api/admin/leagues/rebalance', {});
-      const summary = data.summary;
-      const text = `League rebalancing completed! Promoted: ${summary.totalPromoted}, Demoted: ${summary.totalDemoted}`;
-      addSessionLog('success', text);
-      showMessage('success', text);
-    } catch (error: unknown) {
-      const msg = errorMessage(error, 'League rebalancing failed');
-      addSessionLog('error', `League rebalancing failed: ${msg}`);
-      showMessage('error', msg);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const repairAllRobots = async (): Promise<void> => {
-    setLoading(true);
-    try {
-      const data = await api.post<RepairResponse>('/api/admin/repair/all', { deductCosts: true });
-      const text = `Repaired ${data.robotsRepaired} robots`;
-      addSessionLog('success', text);
-      showMessage('success', text);
-    } catch (error: unknown) {
-      const msg = errorMessage(error, 'Repair failed');
-      addSessionLog('error', `Repair failed: ${msg}`);
-      showMessage('error', msg);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const processDailyFinances = async (): Promise<void> => {
     setLoading(true);
@@ -301,15 +231,11 @@ function CycleControlsPage() {
     }
     setLoading(true);
     setBulkResults(null);
-    addSessionLog('info', `Starting bulk cycle run: ${bulkCycles} cycle(s)`, { includeTournaments, generateUsersPerCycle });
+    addSessionLog('info', `Starting bulk cycle run: ${bulkCycles} cycle(s)`);
 
     try {
       const data = await api.post<BulkCyclesResponse>('/api/admin/cycles/bulk', {
         cycles: bulkCycles,
-        includeTournaments,
-        generateUsersPerCycle,
-        includeKoth,
-        includeDailyFinances,
       });
       setBulkResults(data);
 
@@ -340,7 +266,7 @@ function CycleControlsPage() {
     } finally {
       setLoading(false);
     }
-  }, [bulkCycles, includeTournaments, includeKoth, includeDailyFinances, generateUsersPerCycle, addSessionLog, refreshUser]);
+  }, [bulkCycles, addSessionLog, refreshUser]);
 
   /* ---------- Confirmation dialog handler ---------- */
 
@@ -657,14 +583,6 @@ function SchedulerStatusPanel({ status, onTriggerJob }: { status: SchedulerState
         </table>
       </div>
     </div>
-  );
-}
-
-function TriggerButton({ label, color, disabled, onClick }: { label: string; color: string; disabled: boolean; onClick: () => void }) {
-  return (
-    <button onClick={onClick} disabled={disabled} className={`${color} disabled:bg-surface-elevated px-6 py-3 rounded font-semibold transition-colors`}>
-      {label}
-    </button>
   );
 }
 

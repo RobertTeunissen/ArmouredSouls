@@ -146,8 +146,8 @@ describe('KotH daily execution (R2.3, R2.4)', () => {
   });
 
   test('getNextKothScheduledDate no longer exists in cycleScheduler', () => {
-    
-    expect(scheduler.getNextKothScheduledDate).toBeUndefined();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect((scheduler as any).getNextKothScheduledDate).toBeUndefined();
   });
 
   test('KotH runs regardless of weekday (no Mon/Wed/Fri check)', () => {
@@ -240,7 +240,8 @@ describe('KotH daily execution (R2.3, R2.4)', () => {
     // Verify by checking the scheduler source doesn't reference day-of-week for KotH
     
     // getNextKothScheduledDate (which used kothDays weekday array) is gone
-    expect(scheduler.getNextKothScheduledDate).toBeUndefined();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect((scheduler as any).getNextKothScheduledDate).toBeUndefined();
   });
 
   test('zone rotation: cycle 0 → rotatingZone true (0 % 3 === 0)', () => {
