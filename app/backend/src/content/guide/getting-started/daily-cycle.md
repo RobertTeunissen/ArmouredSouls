@@ -11,50 +11,30 @@ relatedArticles:
 
 ## Overview
 
-The daily cycle is the heartbeat of Armoured Souls. Rather than one big event, each day is split into four scheduled jobs that run at fixed times (UTC). Each job handles a different part of the game — tournaments in the morning, tag team battles at midday, league battles in the evening, and financial processing at night.
+The daily cycle is the heartbeat of Armoured Souls. Rather than one big event, each day is split into scheduled jobs that run at fixed times (UTC). Each job handles a different part of the game — league battles in the morning, tag team and KotH at midday, tournaments mid-morning, and financial processing at midnight.
 
 You don't need to be online when any of these run. Make your strategic decisions beforehand, and the system handles the rest.
 
-## The Four Daily Jobs
+## The Daily Jobs
 
 Here's what runs each day and when:
 
 ```mermaid
 graph LR
-    A["🏆 08:00 UTC\nTournaments"] --> B["👥 12:00 UTC\nTag Team"]
-    B --> C["⚔️ 20:00 UTC\nLeague Battles"]
-    C --> D["💰 23:00 UTC\nFinancials"]
-    style A fill:#6a040f,stroke:#9d0208,color:#fff
+    A["⚔️ 08:00 UTC\nLeague"] --> B["🏆 10:00 UTC\nTournaments"]
+    B --> C["👥 11:00 UTC\nTag Team"]
+    C --> D["🏔️ 13:00 UTC\nKotH"]
+    D --> E["💰 00:00 UTC\nSettlement"]
+    style A fill:#2d6a4f,stroke:#40916c,color:#fff
     style B fill:#6a040f,stroke:#9d0208,color:#fff
-    style C fill:#2d6a4f,stroke:#40916c,color:#fff
-    style D fill:#003566,stroke:#0077b6,color:#fff
+    style C fill:#6a040f,stroke:#9d0208,color:#fff
+    style D fill:#6a040f,stroke:#9d0208,color:#fff
+    style E fill:#003566,stroke:#0077b6,color:#fff
 ```
 
 Only one job can run at a time. If two jobs overlap, the second one waits in a queue until the first finishes.
 
-### 08:00 UTC — Tournament Matches
-
-The day starts with tournaments.
-
-1. **Repair all robots** — Every robot is fully repaired before tournament fights begin. Repair costs are deducted from the owner's balance.
-2. **Execute tournament matches** — The current round of every active tournament is played. Winners advance to the next round.
-3. **Auto-create tournaments** — If no active tournament exists, a new one is automatically created so there's always a tournament running.
-
-### 12:00 UTC — Tag Team Matches
-
-Tag team battles run at midday, but only on odd-numbered cycles (cycle 1, 3, 5, etc.). 
-
-On odd cycles:
-1. **Repair all robots** — Full repair pass with costs deducted.
-2. **Execute tag team battles** — All scheduled tag team matches are fought.
-3. **Rebalance tag team leagues** — Promotions and demotions are processed for tag team standings.
-4. **Tag team matchmaking** — New tag team matches are scheduled for the next odd cycle (48-hour lead time).
-
-On even cycles:
-1. **Repair all robots** — Repairs still run (robots may have been damaged in the tournament job earlier).
-2. **Skip** — No tag team battles, rebalancing, or matchmaking.
-
-### 20:00 UTC — League Battle Matches
+### 08:00 UTC — League Battle Matches
 
 This is the main event — your 1v1 league battles.
 
@@ -67,7 +47,30 @@ This is the main event — your 1v1 league battles.
 Matchmaking runs at the end of the league job, not the beginning. Any changes you make to your robots between cycles — upgrading attributes, swapping weapons, changing stance — will be in effect for the matches scheduled here.
 ```
 
-### 23:00 UTC — Financial Processing
+### 10:00 UTC — Tournament Matches
+
+1. **Repair all robots** — Every robot is fully repaired before tournament fights begin. Repair costs are deducted from the owner's balance.
+2. **Execute tournament matches** — The current round of every active tournament is played. Winners advance to the next round.
+3. **Auto-create tournaments** — If no active tournament exists, a new one is automatically created so there's always a tournament running.
+
+### 11:00 UTC — Tag Team Matches
+
+Tag team battles run daily.
+
+1. **Repair all robots** — Full repair pass with costs deducted.
+2. **Execute tag team battles** — All scheduled tag team matches are fought.
+3. **Rebalance tag team leagues** — Promotions and demotions are processed for tag team standings.
+4. **Tag team matchmaking** — New tag team matches are scheduled for the next cycle (24-hour lead time).
+
+### 13:00 UTC — King of the Hill
+
+KotH battles run daily.
+
+1. **Repair all robots** — Full repair pass with costs deducted.
+2. **Execute KotH battles** — All scheduled KotH matches are fought. Placement-based rewards are distributed.
+3. **KotH matchmaking** — New KotH groups are formed for the next day.
+
+### 00:00 UTC — Settlement (Financial Processing)
 
 The day closes with financial processing.
 
@@ -88,16 +91,17 @@ Here's how a full day plays out:
 
 | Time (UTC) | What Happens | What You See |
 |---|---|---|
-| 08:00 | Robots repaired, tournament round played | Tournament results and bracket updates |
-| 12:00 | Robots repaired, tag team battles (odd cycles) | Tag team results (every other day) |
-| 20:00 | Robots repaired, league battles fought, leagues rebalanced, new matches scheduled | League battle results, LP/ELO changes, promotion/demotion notices, upcoming match preview |
-| 23:00 | Income credited, costs deducted, cycle advances | Updated balance, financial summary, cycle snapshot |
+| 08:00 | Robots repaired, league battles fought, leagues rebalanced, new matches scheduled | League battle results, LP/ELO changes, promotion/demotion notices, upcoming match preview |
+| 10:00 | Robots repaired, tournament round played | Tournament results and bracket updates |
+| 11:00 | Robots repaired, tag team battles | Tag team results |
+| 13:00 | Robots repaired, KotH battles | KotH placement results |
+| 00:00 | Income credited, costs deducted, cycle advances | Updated balance, financial summary, cycle snapshot |
 
 ## When Should I Make Changes?
 
-The best window for adjustments is between the financial processing job (23:00 UTC) and the next day's tournament job (08:00 UTC). During this window, the cycle has advanced and no jobs are running, so your changes will be in effect for all of the next day's battles.
+The best window for adjustments is between the settlement job (00:00 UTC) and the next day's league job (08:00 UTC). During this window, the cycle has advanced and no jobs are running, so your changes will be in effect for all of the next day's battles.
 
-That said, changes made at any point before a specific job runs will take effect for that job. For example, if you swap weapons at 15:00 UTC, your robots will use the new weapons in the league battles at 20:00 UTC.
+That said, changes made at any point before a specific job runs will take effect for that job. For example, if you swap weapons at 09:00 UTC, your robots will use the new weapons in the tag team battles at 11:00 UTC.
 
 ```callout-tip
 A typical session takes 15–30 minutes. Log in, review your results from the last cycle, make adjustments, and you're set for the next day.
@@ -105,7 +109,7 @@ A typical session takes 15–30 minutes. Log in, review your results from the la
 
 ## What Should I Check After Each Day?
 
-After the financial processing job completes (after 23:00 UTC), review:
+After the settlement job completes (after 00:00 UTC), review:
 
 - **[Battle results](/guide/combat/battle-flow)** — Detailed logs from league, tag team, and tournament battles
 - **[Financial summary](/guide/economy/credits-and-income)** — Income earned, costs deducted, and net change

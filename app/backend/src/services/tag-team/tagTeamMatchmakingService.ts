@@ -18,27 +18,6 @@ export interface TagTeamMatchPair {
 }
 
 /**
- * Check if tag team matchmaking should run for the current cycle
- * Requirements 2.7, 2.8: Run on odd cycles (1, 3, 5, etc.), skip on even cycles
- */
-export async function shouldRunTagTeamMatchmaking(): Promise<boolean> {
-  const cycleMetadata = await prisma.cycleMetadata.findUnique({
-    where: { id: 1 },
-  });
-
-  if (!cycleMetadata) {
-    logger.warn('[TagTeamMatchmaking] No cycle metadata found, defaulting to cycle 0');
-    return false; // Even cycle, skip
-  }
-
-  const currentCycle = cycleMetadata.totalCycles;
-  const shouldRun = currentCycle % 2 === 1; // Odd cycles only
-
-  logger.info(`[TagTeamMatchmaking] Current cycle: ${currentCycle}, should run: ${shouldRun}`);
-  return shouldRun;
-}
-
-/**
  * Get eligible teams for matchmaking
  * Requirement 8.4: Exclude teams with unready robots and teams already scheduled
  */

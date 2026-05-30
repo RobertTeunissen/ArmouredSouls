@@ -224,13 +224,13 @@ export function resolveStableConflicts(groups: KothMatchGroup[]): void {
  *  - groupCount = ceil(eligible / 6)
  *  - All robots participate; most groups get 6, at most one gets 5
  *
- * Zone variant by day of week of scheduledFor:
- *  - Monday (1), Friday (5) → rotatingZone: false
- *  - Wednesday (3) → rotatingZone: true
+ * Zone variant by cycle number (preserving 1-in-3 ratio):
+ *  - cycleNumber % 3 === 0 → rotatingZone: true
+ *  - otherwise → rotatingZone: false
  *
  * Returns number of matches created.
  */
-export async function runKothMatchmaking(scheduledFor: Date): Promise<number> {
+export async function runKothMatchmaking(scheduledFor: Date, cycleNumber?: number): Promise<number> {
   logger.info(`${LOG_PREFIX} Starting matchmaking run for ${scheduledFor.toISOString()}`);
 
   // 1. Get eligible robots
@@ -262,11 +262,9 @@ export async function runKothMatchmaking(scheduledFor: Date): Promise<number> {
   const groupSizes = groups.map(g => g.robots.length);
   logger.info(`${LOG_PREFIX} Group sizes after distribution + stable resolution: [${groupSizes.join(', ')}]`);
 
-  // 4. Determine zone variant by day of week
-  const dayOfWeek = scheduledFor.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
-  // getDay() returns 0-6 but getUTCDay() would be more predictable;
-  // we use getDay() to match the scheduledFor's local interpretation
-  const rotatingZone = dayOfWeek === 3; // Wednesday
+  // 4. Determine zone variant by cycle number (1-in-3 ratio)
+  const resolvedCycleNumber = cycleNumber ?? 0;
+  const rotatingZone = resolvedCycleNumber % 3 === 0;
 
   // Apply zone variant to all groups
   for (const group of groups) {

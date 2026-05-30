@@ -25,11 +25,9 @@ If a user has more robots than there are groups, some conflicts may remain — b
 
 ## Schedule
 
-KotH events run **Monday, Wednesday, and Friday at 4:00 PM UTC**.
+KotH events run **daily at 1:00 PM UTC**.
 
-- Monday: Fixed zone
-- Wednesday: Rotating zone
-- Friday: Fixed zone
+Zone rotation is determined by cycle number (modulo-based), providing variety across fixed and rotating zone types.
 
 ## Matchmaking
 

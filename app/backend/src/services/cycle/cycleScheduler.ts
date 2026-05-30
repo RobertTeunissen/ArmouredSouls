@@ -30,15 +30,31 @@ const eventLogger = new EventLogger();
 
 export interface SchedulerConfig {
   enabled: boolean;
-  leagueSchedule: string;      // cron: default '0 20 * * *'
-  tournamentSchedule: string;   // cron: default '0 8 * * *'
-  tagTeamSchedule: string;      // cron: default '0 12 * * *'
-  settlementSchedule: string;   // cron: default '0 23 * * *'
-  kothSchedule: string;          // cron: default '0 16 * * 1,3,5'
+  leagueSchedule: string;      // cron: default '0 8 * * *'
+  tournamentSchedule: string;   // cron: default '0 10 * * *'
+  tagTeamSchedule: string;      // cron: default '0 11 * * *'
+  settlementSchedule: string;   // cron: default '0 0 * * *'
+  kothSchedule: string;          // cron: default '0 13 * * *'
+  // Reserved slots for future battle events
+  team2v2LeagueSchedule: string;       // cron: default '0 9 * * *'
+  team3v3LeagueSchedule: string;       // cron: default '0 14 * * *'
+  team2v2TournamentSchedule: string;   // cron: default '0 15 * * *'
+  team3v3TournamentSchedule: string;   // cron: default '0 18 * * *'
+  grandMeleeSchedule: string;          // cron: default '0 17 * * *'
 }
 
 export interface JobState {
-  name: 'league' | 'tournament' | 'tagTeam' | 'settlement' | 'koth';
+  name:
+    | 'league'
+    | 'tournament'
+    | 'tagTeam'
+    | 'settlement'
+    | 'koth'
+    | 'team2v2League'
+    | 'team3v3League'
+    | 'team2v2Tournament'
+    | 'team3v3Tournament'
+    | 'grandMelee';
   schedule: string;
   lastRunAt: Date | null;
   lastRunDurationMs: number | null;
@@ -216,25 +232,8 @@ async function executeTagTeamCycle(): Promise<JobContext> {
   logger.info('Tag Team Cycle: Step 1 — Repairing all robots');
   await repairAllRobots(true);
 
-  // Get current cycle number from cycleMetadata to determine odd/even
-  let cycleMetadata = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
-  if (!cycleMetadata) {
-    cycleMetadata = await prisma.cycleMetadata.create({
-      data: { id: 1, totalCycles: 0 },
-    });
-  }
-  const currentCycleNumber = cycleMetadata.totalCycles;
-  const isOddCycle = currentCycleNumber % 2 === 1;
-
-  if (!isOddCycle) {
-    // Even cycle — skip battle execution (Requirement 24.9)
-    logger.info(`Tag Team Cycle: Skipping battles on even cycle ${currentCycleNumber} — tag team battles only execute on odd cycles`);
-    return { jobName: 'tag-team', isEvenCycle: true };
-  }
-
-  // Odd cycle — execute full tag team cycle (Requirement 24.8)
-  // Step 2: Execute tag team battles
-  logger.info(`Tag Team Cycle: Step 2 — Executing tag team battles (odd cycle ${currentCycleNumber})`);
+  // Step 2: Execute tag team battles (daily cadence — no parity check)
+  logger.info('Tag Team Cycle: Step 2 — Executing tag team battles');
   const battleSummary = await executeScheduledTagTeamBattles(new Date());
   logger.info(`Tag Team Cycle: ${battleSummary.totalBattles} tag team battles executed`);
 
@@ -243,15 +242,15 @@ async function executeTagTeamCycle(): Promise<JobContext> {
   const rebalanceSummary = await rebalanceTagTeamLeagues();
   logger.info(`Tag Team Cycle: Rebalanced — ${rebalanceSummary.totalPromoted} promoted, ${rebalanceSummary.totalDemoted} demoted`);
 
-  // Step 4: Schedule tag team matchmaking with 48h lead time
+  // Step 4: Schedule tag team matchmaking with 24h lead time (daily cadence)
   // Round scheduledFor to the top of the hour to avoid millisecond race conditions
-  logger.info('Tag Team Cycle: Step 4 — Scheduling tag team matchmaking (48h lead)');
-  const scheduledFor = new Date(Date.now() + 48 * 60 * 60 * 1000);
+  logger.info('Tag Team Cycle: Step 4 — Scheduling tag team matchmaking (24h lead)');
+  const scheduledFor = new Date(Date.now() + 24 * 60 * 60 * 1000);
   scheduledFor.setMinutes(0, 0, 0);
   const matchesCreated = await runTagTeamMatchmaking(scheduledFor);
   logger.info(`Tag Team Cycle: ${matchesCreated} tag team matches scheduled for ${scheduledFor.toISOString()}`);
 
-  return { jobName: 'tag-team', isEvenCycle: !isOddCycle };
+  return { jobName: 'tag-team' };
 }
 
 async function executeSettlement(): Promise<JobContext> {
@@ -525,25 +524,6 @@ async function executeSettlement(): Promise<JobContext> {
 
 // --- KotH cycle handler ---
 
-function getNextKothScheduledDate(): Date {
-  const now = new Date();
-  const kothDays = [1, 3, 5]; // Monday, Wednesday, Friday
-
-  for (let daysAhead = 1; daysAhead <= 7; daysAhead++) {
-    const candidate = new Date(now);
-    candidate.setUTCDate(candidate.getUTCDate() + daysAhead);
-    candidate.setUTCHours(16, 0, 0, 0);
-    if (kothDays.includes(candidate.getUTCDay())) {
-      return candidate;
-    }
-  }
-  // Fallback (should never reach here)
-  const fallback = new Date(now);
-  fallback.setUTCDate(fallback.getUTCDate() + 2);
-  fallback.setUTCHours(16, 0, 0, 0);
-  return fallback;
-}
-
 async function executeKothCycle(): Promise<JobContext> {
   // Step 1: Repair all robots (always first - players can do manual repair with discount beforehand)
   logger.info('KotH Cycle: Step 1 — Repairing all robots');
@@ -554,13 +534,42 @@ async function executeKothCycle(): Promise<JobContext> {
   const battleSummary = await executeScheduledKothBattles(new Date());
   logger.info(`KotH Cycle: ${battleSummary.successfulMatches} KotH matches executed (${battleSummary.failedMatches} failed)`);
 
-  // Step 3: Schedule KotH matchmaking for next Mon/Wed/Fri at 16:00 UTC
+  // Step 3: Schedule KotH matchmaking for next day (24h from now, rounded to the hour)
   logger.info('KotH Cycle: Step 3 — Scheduling KotH matchmaking');
-  const scheduledFor = getNextKothScheduledDate();
-  const matchesCreated = await runKothMatchmaking(scheduledFor);
+  const scheduledFor = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  scheduledFor.setMinutes(0, 0, 0);
+
+  // Get current cycle number for zone rotation (cycle % 3 === 0 → rotatingZone)
+  const cycleMetadata = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
+  const cycleNumber = cycleMetadata?.totalCycles ?? 0;
+
+  const matchesCreated = await runKothMatchmaking(scheduledFor, cycleNumber);
   logger.info(`KotH Cycle: ${matchesCreated} KotH matches scheduled for ${scheduledFor.toISOString()}`);
 
   return { jobName: 'koth', matchesCompleted: battleSummary.successfulMatches };
+}
+
+// --- Reserved-slot stub handler factory ---
+
+/**
+ * Creates a no-op handler for a reserved cron slot.
+ * The stub logs an info message with the event name and cycle number,
+ * then returns successfully. It does NOT trigger monitoring alerts or
+ * count as a failure — the notification system only dispatches for
+ * known JobName values, so unknown names fall through silently.
+ *
+ * Future specs (e.g. Spec 37 for Team Battles) replace these stubs
+ * with real handlers without modifying env.ts or the slot map.
+ */
+export function createReservedSlotHandler(eventName: string): () => Promise<JobContext> {
+  return async (): Promise<JobContext> => {
+    const cycleMetadata = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
+    const cycleNumber = cycleMetadata?.totalCycles ?? 0;
+    logger.info(
+      `Scheduler: reserved slot "${eventName}" fired (cycle ${cycleNumber}) — reserved slot, no handler implemented yet`
+    );
+    return { jobName: eventName as JobContext['jobName'] };
+  };
 }
 
 // --- Job runner with concurrency lock, logging, and error handling ---
@@ -587,6 +596,16 @@ export async function runJob(jobName: JobState['name'], handler: () => Promise<J
     }
 
     logger.info(`Scheduler: job "${jobName}" completed at ${endTime.toISOString()} (duration: ${durationMs}ms)`);
+
+    // Structured log entry for telemetry (R7.1)
+    logger.info({
+      event: 'battle_event_complete',
+      eventName: jobName,
+      startTimestamp: startTime.toISOString(),
+      durationMs,
+      matchesProcessed: jobContext?.matchesCompleted ?? 0,
+      failures: 0,
+    });
 
     // Dispatch success notification
     try {
@@ -615,6 +634,17 @@ export async function runJob(jobName: JobState['name'], handler: () => Promise<J
 
     logger.error(`Scheduler: job "${jobName}" failed at ${endTime.toISOString()} (duration: ${durationMs}ms) — ${errorMessage}`);
 
+    // Structured log entry for telemetry (R7.1, R7.4)
+    logger.info({
+      event: 'battle_event_complete',
+      eventName: jobName,
+      startTimestamp: startTime.toISOString(),
+      durationMs,
+      matchesProcessed: 0,
+      failures: 1,
+      error: errorMessage,
+    });
+
     // Dispatch error notification
     try {
       const appBaseUrl = getConfig().appBaseUrl ?? '';
@@ -642,13 +672,20 @@ export function initScheduler(config: SchedulerConfig): void {
 
   schedulerActive = true;
 
-  // Define the 4 jobs with their schedules and handlers
+  // Define all 10 jobs: 5 existing handlers + 5 reserved-slot stubs
   const jobs: Array<{ name: JobState['name']; schedule: string; handler: () => Promise<JobContext> }> = [
+    // Existing live handlers
     { name: 'league', schedule: config.leagueSchedule, handler: executeLeagueCycle },
     { name: 'tournament', schedule: config.tournamentSchedule, handler: executeTournamentCycle },
     { name: 'tagTeam', schedule: config.tagTeamSchedule, handler: executeTagTeamCycle },
-    { name: 'settlement', schedule: config.settlementSchedule, handler: executeSettlement },
     { name: 'koth', schedule: config.kothSchedule, handler: executeKothCycle },
+    { name: 'settlement', schedule: config.settlementSchedule, handler: executeSettlement },
+    // Reserved-slot stubs for future battle events
+    { name: 'team2v2League', schedule: config.team2v2LeagueSchedule, handler: createReservedSlotHandler('team2v2League') },
+    { name: 'team3v3League', schedule: config.team3v3LeagueSchedule, handler: createReservedSlotHandler('team3v3League') },
+    { name: 'team2v2Tournament', schedule: config.team2v2TournamentSchedule, handler: createReservedSlotHandler('team2v2Tournament') },
+    { name: 'team3v3Tournament', schedule: config.team3v3TournamentSchedule, handler: createReservedSlotHandler('team3v3Tournament') },
+    { name: 'grandMelee', schedule: config.grandMeleeSchedule, handler: createReservedSlotHandler('grandMelee') },
   ];
 
   for (const job of jobs) {
@@ -676,7 +713,7 @@ export function initScheduler(config: SchedulerConfig): void {
     logger.info(`Scheduler: registered "${job.name}" job with schedule "${job.schedule}" (UTC)`);
   }
 
-  logger.info('Scheduler: all 5 jobs registered and active');
+  logger.info('Scheduler: all 10 jobs registered and active');
 }
 
 // --- State query ---

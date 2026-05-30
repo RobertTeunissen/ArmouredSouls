@@ -218,7 +218,7 @@ export async function demoteTeam(team: TagTeam): Promise<void> {
 
 /**
  * Rebalance all tag team league tiers
- * This should be called every other cycle (odd cycles only)
+ * This is called every cycle (daily cadence)
  */
 export async function rebalanceTagTeamLeagues(): Promise<FullTagTeamRebalancingSummary> {
   const result = await rebalanceAllTiers(TAG_TEAM_LEAGUE_CONFIG, tagTeamAdapter);

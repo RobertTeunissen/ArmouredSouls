@@ -111,7 +111,7 @@ describe('Bug Condition Exploration — Project Quality Audit', () => {
     // Extract the frontend-tests job block (from "frontend-tests:" to the next
     // top-level job or end of file)
     const frontendJobMatch = ciYml.match(
-      /frontend-tests:[\s\S]*?(?=\n  \w[\w-]*:|$)/,
+      /frontend-tests:[\s\S]*?(?=\n {2}\w[\w-]*:|$)/,
     );
     expect(frontendJobMatch).not.toBeNull();
 
@@ -146,6 +146,11 @@ describe('Bug Condition Exploration — Project Quality Audit', () => {
       'TAGTEAM_SCHEDULE',
       'SETTLEMENT_SCHEDULE',
       'KOTH_SCHEDULE',
+      'TEAM_2V2_LEAGUE_SCHEDULE',
+      'TEAM_3V3_LEAGUE_SCHEDULE',
+      'TEAM_2V2_TOURNAMENT_SCHEDULE',
+      'TEAM_3V3_TOURNAMENT_SCHEDULE',
+      'GRAND_MELEE_SCHEDULE',
     ];
 
     fc.assert(

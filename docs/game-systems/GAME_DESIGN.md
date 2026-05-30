@@ -40,10 +40,10 @@ Battles are not real-time and not turn-based. Players configure their robots ahe
 
 | Mode | Format | Schedule | Details |
 |---|---|---|---|
-| League | 1v1 ranked | Daily (20:00 UTC) | ELO-based matchmaking, 6-tier league system, draws allowed |
-| Tournament | 1v1 bracket | Daily (08:00 UTC) | Single elimination, no draws (HP tiebreaker), round-based rewards |
-| Tag Team | 2v2 | Daily (12:00 UTC) | Active + reserve robot per team, tag-out on yield/destruction, 48h cadence |
-| King of the Hill | 5-6 robot FFA | Mon/Wed/Fri (16:00 UTC) | Zone control scoring, placement-based rewards, no ELO impact |
+| League | 1v1 ranked | Daily (08:00 UTC) | ELO-based matchmaking, 6-tier league system, draws allowed |
+| Tournament | 1v1 bracket | Daily (10:00 UTC) | Single elimination, no draws (HP tiebreaker), round-based rewards |
+| Tag Team | 2v2 | Daily (11:00 UTC) | Active + reserve robot per team, tag-out on yield/destruction |
+| King of the Hill | 5-6 robot FFA | Daily (13:00 UTC) | Zone control scoring, placement-based rewards, no ELO impact |
 
 ### Combat Engine
 

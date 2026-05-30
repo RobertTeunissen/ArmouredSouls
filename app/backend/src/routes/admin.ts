@@ -1082,5 +1082,56 @@ router.get('/league-history/yo-yo', authenticateToken, requireAdmin, validateReq
   res.json(result);
 });
 
+// --- Reserved slot trigger endpoints (Spec 36) ---
+
+/**
+ * POST /api/admin/team-2v2-league/trigger
+ * Reserved slot trigger for Team 2v2 League — no handler implemented yet.
+ */
+router.post('/team-2v2-league/trigger', authenticateToken, requireAdmin, validateRequest({}), async (req: Request, res: Response) => {
+  const authReq = req as AuthRequest;
+  recordAuditAction(authReq.user!.userId, 'reserved_slot_trigger', 'success', { event: 'team_2v2_league', outcome: 'no-op' });
+  res.json({ message: 'reserved slot, no handler implemented', event: 'team_2v2_league' });
+});
+
+/**
+ * POST /api/admin/team-3v3-league/trigger
+ * Reserved slot trigger for Team 3v3 League — no handler implemented yet.
+ */
+router.post('/team-3v3-league/trigger', authenticateToken, requireAdmin, validateRequest({}), async (req: Request, res: Response) => {
+  const authReq = req as AuthRequest;
+  recordAuditAction(authReq.user!.userId, 'reserved_slot_trigger', 'success', { event: 'team_3v3_league', outcome: 'no-op' });
+  res.json({ message: 'reserved slot, no handler implemented', event: 'team_3v3_league' });
+});
+
+/**
+ * POST /api/admin/team-2v2-tournament/trigger
+ * Reserved slot trigger for Team 2v2 Tournament — no handler implemented yet.
+ */
+router.post('/team-2v2-tournament/trigger', authenticateToken, requireAdmin, validateRequest({}), async (req: Request, res: Response) => {
+  const authReq = req as AuthRequest;
+  recordAuditAction(authReq.user!.userId, 'reserved_slot_trigger', 'success', { event: 'team_2v2_tournament', outcome: 'no-op' });
+  res.json({ message: 'reserved slot, no handler implemented', event: 'team_2v2_tournament' });
+});
+
+/**
+ * POST /api/admin/team-3v3-tournament/trigger
+ * Reserved slot trigger for Team 3v3 Tournament — no handler implemented yet.
+ */
+router.post('/team-3v3-tournament/trigger', authenticateToken, requireAdmin, validateRequest({}), async (req: Request, res: Response) => {
+  const authReq = req as AuthRequest;
+  recordAuditAction(authReq.user!.userId, 'reserved_slot_trigger', 'success', { event: 'team_3v3_tournament', outcome: 'no-op' });
+  res.json({ message: 'reserved slot, no handler implemented', event: 'team_3v3_tournament' });
+});
+
+/**
+ * POST /api/admin/grand-melee/trigger
+ * Reserved slot trigger for Grand Melee — no handler implemented yet.
+ */
+router.post('/grand-melee/trigger', authenticateToken, requireAdmin, validateRequest({}), async (req: Request, res: Response) => {
+  const authReq = req as AuthRequest;
+  recordAuditAction(authReq.user!.userId, 'reserved_slot_trigger', 'success', { event: 'grand_melee', outcome: 'no-op' });
+  res.json({ message: 'reserved slot, no handler implemented', event: 'grand_melee' });
+});
 
 export default router;

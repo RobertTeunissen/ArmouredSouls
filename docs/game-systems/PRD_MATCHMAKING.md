@@ -2794,7 +2794,7 @@ The Armoured Souls matchmaking system is **fully implemented and operational** a
 
 ### Schedule
 
-KotH matchmaking runs as part of the KotH cycle on **Monday, Wednesday, and Friday at 16:00 UTC** (`0 16 * * 1,3,5`). After executing the current day's scheduled KotH battles, the system runs matchmaking to create groups for the next scheduled KotH event.
+KotH matchmaking runs as part of the KotH cycle **daily at 13:00 UTC** (`0 13 * * *`). After executing the current day's scheduled KotH battles, the system runs matchmaking to create groups for the next day's KotH event.
 
 ### Eligibility Requirements
 

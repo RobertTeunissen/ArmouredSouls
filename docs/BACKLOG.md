@@ -54,6 +54,7 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 | Item | # | Spec | Status |
 |------|---|------|--------|
 | Team Battles 2v2 and 3v3 (League) | 31 | [Spec 37 team-battles-2v2-3v3](/.kiro/specs/to-do/37-team-battles-2v2-3v3/) | In progress (not yet completed) — delivers the league piece; tournaments split out as #54 and subscription facility as #55 |
+| Cron Schedule Restructure — Daily-Everything Slot Map | 56 | [Spec 36 cron-schedule-restructure](/.kiro/specs/to-do/36-cron-schedule-restructure/) | In progress — restructures cron layout to daily 10-slot map with heavy-mode spacing, reserved slots for future battle modes, and midnight settlement |
 
 ### Recently Completed (removed from backlog)
 
