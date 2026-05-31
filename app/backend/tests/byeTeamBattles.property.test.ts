@@ -13,7 +13,7 @@ const NUM_RUNS = 10;
 
 // Helper to create a test robot
 function createTestRobot(overrides: Partial<Robot> = {}): Robot {
-  return {
+  return ({
     id: Math.floor(Math.random() * 10000),
     userId: 1,
     name: `Test Robot ${Math.random()}`,
@@ -76,6 +76,12 @@ function createTestRobot(overrides: Partial<Robot> = {}): Robot {
     totalTagTeamDraws: 0,
     timesTaggedIn: 0,
     timesTaggedOut: 0,
+    // League Battle Statistics
+    totalLeague1v1Wins: 0,
+    totalLeague1v1Losses: 0,
+    totalLeague1v1Draws: 0,
+    totalLeague2v2Wins: 0,
+    totalLeague3v3Wins: 0,
     // KOTH Statistics
     kothWins: 0,
     kothMatches: 0,
@@ -101,7 +107,7 @@ function createTestRobot(overrides: Partial<Robot> = {}): Robot {
     createdAt: new Date(),
     updatedAt: new Date(),
     ...overrides,
-  };
+  }) as Robot;
 }
 
 describe('Bye-Team Battles - Property Tests', () => {

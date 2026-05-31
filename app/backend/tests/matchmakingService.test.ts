@@ -47,6 +47,9 @@ describe('Matchmaking Service', () => {
   afterEach(async () => {
     // Cleanup in correct order after each test
     if (testRobotIds.length > 0) {
+      await prisma.subscription.deleteMany({
+        where: { robotId: { in: testRobotIds } },
+      });
       await prisma.scheduledLeagueMatch.deleteMany({
         where: {
           OR: [
@@ -491,6 +494,10 @@ describe('Matchmaking Service', () => {
             mainWeaponId: weaponInv.id,
           },
         });
+        // Create league_1v1 subscription (required for matchmaking eligibility)
+        await prisma.subscription.create({
+          data: { robotId: robot.id, eventType: 'league_1v1', status: 'active' },
+        });
         robots.push(robot);
       }
 
@@ -596,6 +603,7 @@ describe('Matchmaking Service', () => {
             mainWeaponId: weaponInv.id,
           },
         });
+        await prisma.subscription.create({ data: { robotId: robot.id, eventType: 'league_1v1', status: 'active' } });
         robots.push(robot);
       }
 
@@ -669,6 +677,7 @@ describe('Matchmaking Service', () => {
             mainWeaponId: weaponInv.id,
           },
         });
+        await prisma.subscription.create({ data: { robotId: robot.id, eventType: 'league_1v1', status: 'active' } });
         robots.push(robot);
       }
 
@@ -806,6 +815,7 @@ describe('Matchmaking Service', () => {
             mainWeaponId: weaponInv.id,
           },
         });
+        await prisma.subscription.create({ data: { robotId: robot.id, eventType: 'league_1v1', status: 'active' } });
         robots.push(robot);
       }
 
@@ -874,6 +884,7 @@ describe('Matchmaking Service', () => {
               mainWeaponId: weaponInv.id,
             },
           });
+          await prisma.subscription.create({ data: { robotId: robot.id, eventType: 'league_1v1', status: 'active' } });
           allRobots.push(robot);
         }
       }
