@@ -65,7 +65,7 @@ import {
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
-const V1_EVENTS: SubscribableEventType[] = ['league', 'tournament', 'tag_team', 'koth'];
+const V1_EVENTS: SubscribableEventType[] = ['league_1v1', 'tournament_1v1', 'tag_team', 'koth'];
 
 function setupRegistry(): void {
   _clearRegistryForTesting();
