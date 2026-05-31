@@ -452,7 +452,7 @@ export interface TeamBattleLog {
   isByeMatch: boolean;
   durationSeconds: number;
   participants: TeamBattleParticipantResult[];
-  events: unknown[];
+  events: BattleLogEvent[];
   detailedCombatEvents?: BattleLogEvent[];
   focusFireEvents: TeamBattleFocusFireEvent[];
   focusFireMetrics: TeamMetricPair;
