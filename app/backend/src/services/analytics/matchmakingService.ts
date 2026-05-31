@@ -2,14 +2,15 @@ import { Robot } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import { getInstancesForTier, LeagueTier, LEAGUE_TIERS } from '../league/leagueInstanceService';
 import logger from '../../config/logger';
-
-
-// Matchmaking configuration
-export const LP_MATCH_IDEAL = 10;        // ±10 LP ideal range (PRIMARY)
-export const LP_MATCH_FALLBACK = 20;     // ±20 LP fallback range (PRIMARY)
-export const ELO_MATCH_IDEAL = 150;      // ±150 ELO ideal (SECONDARY)
-export const ELO_MATCH_FALLBACK = 300;   // ±300 ELO max (SECONDARY)
-export const RECENT_OPPONENT_LIMIT = 5;  // Number of recent opponents to track
+import {
+  calculateMatchScore,
+  MatchScoreInput,
+  LP_MATCH_IDEAL,
+  LP_MATCH_FALLBACK,
+  ELO_MATCH_IDEAL,
+  ELO_MATCH_FALLBACK,
+  RECENT_OPPONENT_LIMIT,
+} from '../matchmaking/teamMatchmakingUtils';
 
 // Bye-robot identifier
 export const BYE_ROBOT_NAME = 'Bye Robot';
@@ -133,58 +134,9 @@ async function getRecentOpponentsBatch(robotIds: number[], limit: number = RECEN
 }
 
 /**
- * Calculate match quality score (lower is better)
- * CHANGED: LP-primary matching with ELO as secondary quality check
- */
-function calculateMatchScore(
-  robot1: Robot,
-  robot2: Robot,
-  recentOpponents1: number[],
-  recentOpponents2: number[]
-): number {
-  let score = 0;
-  
-  // LP difference (PRIMARY factor)
-  const lpDiff = Math.abs(robot1.leaguePoints - robot2.leaguePoints);
-  
-  // LP scoring: heavily penalize outside ideal/fallback ranges
-  if (lpDiff <= LP_MATCH_IDEAL) {
-    score += lpDiff * 1;  // Ideal range (±10 LP): minimal penalty
-  } else if (lpDiff <= LP_MATCH_FALLBACK) {
-    score += lpDiff * 5;  // Fallback range (±20 LP): moderate penalty
-  } else {
-    score += lpDiff * 20; // Outside range: heavy penalty
-  }
-  
-  // ELO difference (SECONDARY factor - quality check)
-  const eloDiff = Math.abs(robot1.elo - robot2.elo);
-  
-  if (eloDiff <= ELO_MATCH_IDEAL) {
-    score += eloDiff * 0.1;  // Ideal ELO (±150): minimal penalty
-  } else if (eloDiff <= ELO_MATCH_FALLBACK) {
-    score += eloDiff * 0.5;  // Fallback ELO (±300): moderate penalty
-  } else {
-    score += 1000;  // Outside ELO range (>300): reject match
-  }
-  
-  // Recent opponent penalty (soft deprioritize)
-  if (recentOpponents1.includes(robot2.id)) {
-    score += 200; // Add penalty if they fought recently
-  }
-  if (recentOpponents2.includes(robot1.id)) {
-    score += 200;
-  }
-  
-  // Same stable penalty (strongly deprioritize)
-  if (robot1.userId === robot2.userId) {
-    score += 500; // Heavy penalty for same-stable matches
-  }
-  
-  return score;
-}
-
-/**
- * Find best opponent for a robot from available pool
+ * Find best opponent for a robot from available pool.
+ * Uses the shared calculateMatchScore from teamMatchmakingUtils.ts
+ * with LP-primary scoring and ELO as a soft secondary factor (no hard reject).
  */
 function findBestOpponent(
   robot: Robot,
@@ -197,10 +149,22 @@ function findBestOpponent(
   
   const robotRecentOpponents = recentOpponentsMap.get(robot.id) || [];
   
-  // Score all potential opponents
+  // Score all potential opponents using the shared formula
   const scoredOpponents = availableRobots.map(opponent => {
     const opponentRecentOpponents = recentOpponentsMap.get(opponent.id) || [];
-    const score = calculateMatchScore(robot, opponent, robotRecentOpponents, opponentRecentOpponents);
+    const input: MatchScoreInput = {
+      entity1LP: robot.leaguePoints,
+      entity2LP: opponent.leaguePoints,
+      entity1ELO: robot.elo,
+      entity2ELO: opponent.elo,
+      recentOpponents1: robotRecentOpponents,
+      recentOpponents2: opponentRecentOpponents,
+      entity1Id: robot.id,
+      entity2Id: opponent.id,
+      entity1StableId: robot.userId,
+      entity2StableId: opponent.userId,
+    };
+    const score = calculateMatchScore(input);
     return { opponent, score };
   });
   
@@ -236,11 +200,11 @@ async function buildMatchmakingQueue(leagueId: string): Promise<Robot[]> {
   
   // Activate pending subscriptions for robots that have room under cap
   const { batchActivatePendingSubscriptions } = await import('../subscription/subscriptionService');
-  await batchActivatePendingSubscriptions(readyRobots.map(r => r.id), 'league');
+  await batchActivatePendingSubscriptions(readyRobots.map(r => r.id), 'league_1v1');
 
   // Filter by league subscription — only active subscriptions (batch query for efficiency)
   const subscribedRobotIds = await prisma.subscription.findMany({
-    where: { eventType: 'league', robotId: { in: readyRobots.map(r => r.id) }, status: 'active' },
+    where: { eventType: 'league_1v1', robotId: { in: readyRobots.map(r => r.id) }, status: 'active' },
     select: { robotId: true },
   });
   const subscribedSet = new Set(subscribedRobotIds.map(s => s.robotId));

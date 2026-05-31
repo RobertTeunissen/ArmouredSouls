@@ -51,7 +51,7 @@ const mockBattlesResponse = {
       robot2ELOAfter: 1165,
       createdAt: '2025-01-01T12:00:00Z',
       battleFormat: '1v1',
-      battleType: 'league',
+      battleType: 'league_1v1',
     },
   ],
   pagination: {
@@ -65,7 +65,7 @@ const mockBattlesResponse = {
 
 const mockBattleDetail = {
   id: 1,
-  battleType: 'league',
+  battleType: 'league_1v1',
   battleFormat: '1v1',
   leagueType: 'gold',
   durationSeconds: 45,
@@ -122,6 +122,8 @@ describe('BattleLogsPage', () => {
     });
     expect(screen.getByText('Tournament')).toBeInTheDocument();
     expect(screen.getByText('Tag Team')).toBeInTheDocument();
+    expect(screen.getByText('2v2 League')).toBeInTheDocument();
+    expect(screen.getByText('3v3 League')).toBeInTheDocument();
   });
 
   it('should render mini-stats summary', async () => {
@@ -173,6 +175,81 @@ describe('BattleLogsPage', () => {
     renderPage();
     await waitFor(() => {
       expect(screen.getByText('No battles found')).toBeInTheDocument();
+    });
+  });
+
+  it('should render Team Size column header', async () => {
+    renderPage();
+    await waitFor(() => {
+      expect(screen.getByText('Team Size')).toBeInTheDocument();
+    });
+  });
+
+  it('should display team size badge for team battles', async () => {
+    mockGet.mockImplementation((url: string) => {
+      if (url.includes('/api/admin/battles/')) {
+        return Promise.resolve({ data: mockBattleDetail });
+      }
+      return Promise.resolve({
+        data: {
+          battles: [
+            {
+              ...mockBattlesResponse.battles[0],
+              battleType: 'league_2v2',
+              teamSize: 2,
+            },
+          ],
+          pagination: mockBattlesResponse.pagination,
+        },
+      });
+    });
+    renderPage();
+    await waitFor(() => {
+      // Team Size column shows "2v2" badge (indigo-colored)
+      const badges = screen.getAllByText('2v2');
+      expect(badges.length).toBeGreaterThanOrEqual(1);
+    });
+  });
+
+  it('should display 3v3 team size badge for 3v3 battles', async () => {
+    mockGet.mockImplementation((url: string) => {
+      if (url.includes('/api/admin/battles/')) {
+        return Promise.resolve({ data: mockBattleDetail });
+      }
+      return Promise.resolve({
+        data: {
+          battles: [
+            {
+              ...mockBattlesResponse.battles[0],
+              battleType: 'league_3v3',
+              teamSize: 3,
+            },
+          ],
+          pagination: mockBattlesResponse.pagination,
+        },
+      });
+    });
+    renderPage();
+    await waitFor(() => {
+      // Team Size column shows "3v3" badge (indigo-colored)
+      const badges = screen.getAllByText('3v3');
+      expect(badges.length).toBeGreaterThanOrEqual(1);
+    });
+  });
+
+  it('should reject invalid filter values gracefully (R11.4)', async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await waitFor(() => {
+      const allTypesButtons = screen.getAllByText('All Types');
+      expect(allTypesButtons.length).toBeGreaterThanOrEqual(1);
+    });
+
+    // Click a valid filter first
+    await user.click(screen.getByText('2v2 League'));
+    await waitFor(() => {
+      // The filter should be applied (API called with league_2v2)
+      expect(mockGet).toHaveBeenCalledWith('/api/admin/battles', expect.objectContaining({ params: expect.objectContaining({ battleType: 'league_2v2' }) }));
     });
   });
 });

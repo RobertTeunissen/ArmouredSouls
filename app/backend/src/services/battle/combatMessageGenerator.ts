@@ -659,7 +659,7 @@ export class CombatMessageGenerator {
   // ── Individual Message Generators (kept for standalone use) ────────────
 
   static generateBattleStart(event: BattleStartEvent & {
-    battleType?: 'league' | 'tournament' | 'tag_team' | 'koth';
+    battleType?: 'league_1v1' | 'tournament_1v1' | 'tag_team' | 'koth';
     team1Name?: string;
     team2Name?: string;
     robot3Name?: string;
@@ -667,13 +667,13 @@ export class CombatMessageGenerator {
   }): string {
     let messages: string[];
     switch (event.battleType) {
-      case 'tournament':
+      case 'tournament_1v1':
         messages = this.battleStartMessagesTournament;
         break;
       case 'tag_team':
         messages = this.battleStartMessagesTagTeam;
         break;
-      case 'league':
+      case 'league_1v1':
         messages = this.battleStartMessagesLeague;
         break;
       default:
@@ -934,7 +934,7 @@ export class CombatMessageGenerator {
       robot1ELO: number;
       robot2ELO: number;
       leagueType: string;
-      battleType?: 'league' | 'tournament' | 'tag_team' | 'koth';
+      battleType?: 'league_1v1' | 'tournament_1v1' | 'tag_team' | 'koth';
       // Tag team fields
       team1Name?: string;
       team2Name?: string;
@@ -1548,7 +1548,7 @@ export class CombatMessageGenerator {
     robot2Stance?: string;
     robot1MaxHP?: number;
     robot2MaxHP?: number;
-    battleType?: 'league' | 'tournament' | 'tag_team' | 'koth';
+    battleType?: 'league_1v1' | 'tournament_1v1' | 'tag_team' | 'koth';
   }): NarrativeEvent[] {
     // If real simulator events are provided, convert them
     if (battleData.simulatorEvents && battleData.simulatorEvents.length > 0) {

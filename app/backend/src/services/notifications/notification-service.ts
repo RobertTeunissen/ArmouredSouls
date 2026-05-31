@@ -22,6 +22,12 @@ export function buildSuccessMessage(context: JobContext, appBaseUrl: string): st
     case 'koth':
       if (!context.matchesCompleted || context.matchesCompleted === 0) return null;
       return `King of the Hill: ${context.matchesCompleted} matches completed! 👑 Click here to see the results! ${link}`;
+    case 'team2v2League':
+      if (!context.matchesCompleted || context.matchesCompleted === 0) return null;
+      return `⚔️ 2v2 League: ${context.matchesCompleted} team battles completed. [View results](${link}/team-battles)`;
+    case 'team3v3League':
+      if (!context.matchesCompleted || context.matchesCompleted === 0) return null;
+      return `⚔️ 3v3 League: ${context.matchesCompleted} team battles completed. [View results](${link}/team-battles)`;
   }
 }
 

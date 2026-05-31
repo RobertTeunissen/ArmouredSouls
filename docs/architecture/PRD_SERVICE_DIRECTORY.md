@@ -2,13 +2,14 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: v1.0  
-**Last Updated**: April 9, 2026  
+**Version**: v1.1  
+**Last Updated**: June 2026  
 **Status**: ✅ Implemented  
 **Owner**: Robert Teunissen
 
 **Revision History**:
 
+v1.1 (Jun 2026): Added `matchmaking/` and `team-battle/` domains (Spec 37 — Team Battles 2v2 and 3v3). Updated cron schedule: 2v2 League (09:00) and 3v3 League (14:00) now Live.
 v1.0 (Apr 9, 2026): Initial version — extracted from MODULE_STRUCTURE.md, verified against current codebase (18 domains, 80+ service files)
 
 ---
@@ -21,7 +22,7 @@ v1.0 (Apr 9, 2026): Initial version — extracted from MODULE_STRUCTURE.md, veri
 
 ## Overview
 
-The backend is organized into 18 domain directories under `app/backend/src/services/`. Each domain has a barrel `index.ts` that defines its public API. This structure was established in Spec 3 (Backend Service Consolidation, April 2026), replacing the original flat directory of 41 service files.
+The backend is organized into 20 domain directories under `app/backend/src/services/`. Each domain has a barrel `index.ts` that defines its public API. This structure was established in Spec 3 (Backend Service Consolidation, April 2026), replacing the original flat directory of 41 service files. Spec 37 (Team Battles 2v2 and 3v3) added the `matchmaking/` and `team-battle/` domains.
 
 ---
 
@@ -197,16 +198,36 @@ Security monitoring and logging.
 | `securityMonitor` | Singleton — tracks rate limit violations, auth failures, spending anomalies |
 | `securityLogger` | Dedicated security log file writer |
 
+### matchmaking/
+Shared matchmaking utilities consumed by all league matchmakers and tag team.
+
+| Service | Purpose |
+|---------|---------|
+| `teamMatchmakingUtils` | Shared LP-primary scoring formula (`calculateMatchScore`), bye-team factory (`createByeTeam`), recent-opponent batch query (`getRecentOpponentsBatch`) — imported by 1v1, 2v2, 3v3, and tag team matchmakers |
+
 ### tag-team/
 2v2 tag team mode — battles, matchmaking, and league management.
 
 | Service | Purpose |
 |---------|---------|
 | `tagTeamBattleOrchestrator` | Tag team match execution (multi-phase combat, tag-out mechanics, 4-robot rewards) |
-| `tagTeamMatchmakingService` | Tag team pairing (snake-draft, ELO-balanced, bye-team handling) |
+| `tagTeamMatchmakingService` | Tag team pairing (snake-draft, ELO-balanced, bye-team handling); imports shared utilities from `matchmaking/teamMatchmakingUtils` |
 | `tagTeamService` | Tag team CRUD, readiness checks, combined ELO calculation |
 | `tagTeamLeagueInstanceService` | Tag team league instance management (max 50 teams per instance) |
 | `tagTeamLeagueRebalancingService` | Tag team promotions/demotions (mirrors 1v1 logic) |
+
+### team-battle/
+2v2 and 3v3 simultaneous team battle mode — all robots active in the arena at the same time. Distinct from Tag Team (phased combat). Added by Spec 37.
+
+| Service | Purpose |
+|---------|---------|
+| `teamBattleService` | Team CRUD — register, swap member, rename, disband. Persistent teams with LP/ELO/tier. |
+| `teamBattleMatchmakingService` | 2v2/3v3 matchmaking orchestration per league instance. Subscription-gated eligibility. |
+| `teamBattleOrchestrator` | Battle execution — fetch scheduled matches, invoke engine, persist results, distribute rewards. |
+| `teamBattleEngine` | N-vs-N simulation wrapper around `combatSimulator`. All 2N robots active simultaneously. |
+| `teamBattleRewardService` | Reward calculation and distribution (N× multiplier of 1v1 rewards per robot). |
+| `teamBattleAdapter` | `LeagueAdapter<TeamBattle>` for `leagueEngine.ts` — promotion/demotion with same config as 1v1. |
+| `teamCoordinationEffects` | Ally-targeted formulas for `syncProtocols` (focus fire bonus), `supportSystems` (ally shield regen), `formationTactics` (formation damage reduction). |
 
 ### tournament/
 Tournament system — bracket management and battle execution.
@@ -235,11 +256,11 @@ The production scheduler (`cycleScheduler.ts`) fires 10 independent cron jobs da
 | UTC | Event | Env Var | Handler Status |
 |------|-------|---------|----------------|
 | 08:00 | 1v1 League | `LEAGUE_SCHEDULE` | Live |
-| 09:00 | Team Battle 2v2 League | `TEAM_2V2_LEAGUE_SCHEDULE` | Reserved |
+| 09:00 | Team Battle 2v2 League | `TEAM_2V2_LEAGUE_SCHEDULE` | Live |
 | 10:00 | 1v1 Tournament | `TOURNAMENT_SCHEDULE` | Live |
 | 11:00 | Tag Team | `TAGTEAM_SCHEDULE` | Live |
 | 13:00 | KotH | `KOTH_SCHEDULE` | Live |
-| 14:00 | Team Battle 3v3 League | `TEAM_3V3_LEAGUE_SCHEDULE` | Reserved |
+| 14:00 | Team Battle 3v3 League | `TEAM_3V3_LEAGUE_SCHEDULE` | Live |
 | 15:00 | Team Battle 2v2 Tournament | `TEAM_2V2_TOURNAMENT_SCHEDULE` | Reserved |
 | 17:00 | Grand Melee | `GRAND_MELEE_SCHEDULE` | Reserved |
 | 18:00 | Team Battle 3v3 Tournament | `TEAM_3V3_TOURNAMENT_SCHEDULE` | Reserved |
@@ -247,7 +268,7 @@ The production scheduler (`cycleScheduler.ts`) fires 10 independent cron jobs da
 
 **Spacing rationale**: Heavy modes (1v1 League at 08:00, KotH at 13:00) are 5 hours apart. Light/reserved modes interleave. Gaps at 12:00, 16:00, 19:00–23:00 provide ops intervention windows.
 
-**Reserved slots**: Stubs log a no-op message and return without error. Subsequent specs register real handlers into these slots without modifying `env.ts` or the slot map.
+**Reserved slots**: Stubs log a no-op message and return without error. Subsequent specs register real handlers into these slots without modifying `env.ts` or the slot map. Currently reserved: 2v2 Tournament (15:00), Grand Melee (17:00), 3v3 Tournament (18:00).
 
 All schedule env vars are overridable via `.env` for rollback or per-environment tuning.
 

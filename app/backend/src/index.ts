@@ -25,6 +25,7 @@ import changelogRoutes from './routes/changelog';
 import tuningAllocationRoutes from './routes/tuningAllocation';
 import achievementsRoutes from './routes/achievements';
 import subscriptionsRoutes from './routes/subscriptions';
+import teamBattlesRoutes from './routes/teamBattles';
 import { loadEnvConfig } from './config/env';
 import { initScheduler } from './services/cycle/cycleScheduler';
 import { registerSubscribableEvent } from './services/subscription/eventRegistry';
@@ -33,6 +34,8 @@ import {
   tournamentLockingPredicate,
   tagTeamLockingPredicate,
   kothLockingPredicate,
+  league2v2LockingPredicate,
+  league3v3LockingPredicate,
 } from './services/subscription/lockingPredicates';
 import { contentModerationService } from './services/moderation';
 import { getDiskUsage, getMemoryUsage, checkCriticalModules } from './utils/systemHealth';
@@ -171,6 +174,7 @@ app.use('/api/changelog', changelogRoutes);
 app.use('/api/robots', tuningAllocationRoutes);
 app.use('/api/achievements', achievementsRoutes);
 app.use('/api/subscriptions', subscriptionsRoutes);
+app.use('/api/team-battles', teamBattlesRoutes);
 
 // Serve uploaded images as static files (in production, Caddy handles this)
 import path from 'path';
@@ -223,10 +227,12 @@ import { runStartupSelfTest } from './utils/startupSelfTest';
     logger.info(`Backend server running on http://${host}:${config.port}`);
 
     // Register v1 subscribable events (must happen before cycleScheduler.init())
-    registerSubscribableEvent({ type: 'league', label: '1v1 League', lockingPredicate: leagueLockingPredicate });
-    registerSubscribableEvent({ type: 'tournament', label: '1v1 Tournament', lockingPredicate: tournamentLockingPredicate });
+    registerSubscribableEvent({ type: 'league_1v1', label: '1v1 League', lockingPredicate: leagueLockingPredicate });
+    registerSubscribableEvent({ type: 'tournament_1v1', label: '1v1 Tournament', lockingPredicate: tournamentLockingPredicate });
     registerSubscribableEvent({ type: 'tag_team', label: 'Tag Team', lockingPredicate: tagTeamLockingPredicate });
     registerSubscribableEvent({ type: 'koth', label: 'King of the Hill', lockingPredicate: kothLockingPredicate });
+    registerSubscribableEvent({ type: 'league_2v2', label: '2v2 League', lockingPredicate: league2v2LockingPredicate });
+    registerSubscribableEvent({ type: 'league_3v3', label: '3v3 League', lockingPredicate: league3v3LockingPredicate });
 
     // Initialize the cycle scheduler after the server is listening
     initScheduler({

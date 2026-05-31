@@ -33,6 +33,7 @@ import RobotPerformanceAnalytics from '../components/RobotPerformanceAnalytics';
 import TuningPoolEditor from '../components/TuningPoolEditor';
 import LeagueTimeline from '../components/LeagueTimeline';
 import type { LeagueHistoryEntry } from '../components/LeagueTimeline';
+import TeamBattleLeagueHistory from '../components/TeamBattleLeagueHistory';
 import { getMatchHistory, BattleHistory } from '../utils/matchmakingApi';
 import type { RobotWithAttributes } from '../types/robot';
 import { createLogger } from '../utils/logger';
@@ -713,7 +714,10 @@ function RobotDetailPage() {
           )}
 
           {activeTab === 'league-history' && (
-            <LeagueHistoryTab robotId={robot.id} currentTier={robot.currentLeague} />
+            <div className="space-y-6">
+              <LeagueHistoryTab robotId={robot.id} currentTier={robot.currentLeague} currentLp={robot.leaguePoints} robotName={robot.name} />
+              <TeamBattleLeagueHistory robotId={robot.id} />
+            </div>
           )}
 
           {/* Non-Owner View for owner-only tabs */}
@@ -764,7 +768,7 @@ export default RobotDetailPage;
 /*  League History Tab                                                  */
 /* ------------------------------------------------------------------ */
 
-function LeagueHistoryTab({ robotId, currentTier }: { robotId: number; currentTier: string }) {
+function LeagueHistoryTab({ robotId, currentTier, currentLp, robotName }: { robotId: number; currentTier: string; currentLp: number; robotName: string }) {
   const [history, setHistory] = useState<LeagueHistoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -804,11 +808,16 @@ function LeagueHistoryTab({ robotId, currentTier }: { robotId: number; currentTi
 
   return (
     <div className="bg-surface p-6 rounded-lg" data-testid="league-history-tab">
-      <h3 className="text-lg font-semibold text-white mb-4">League History</h3>
+      <h3 className="text-lg font-semibold text-white mb-4">1v1 League History</h3>
+      <div className="mb-4 text-sm text-secondary">
+        <span className="font-medium text-white">{robotName}</span>
+        {' '}is currently in <span className="capitalize font-medium text-white">{currentTier}</span> league
+        {' • LP: '}<span className="font-medium text-warning">{currentLp}</span>
+      </div>
       <LeagueTimeline
         history={history}
         currentTier={currentTier}
-        emptyMessage="No tier changes recorded yet for this robot."
+        emptyMessage={`${robotName} is currently in ${currentTier} league. No tier changes recorded yet.`}
       />
     </div>
   );

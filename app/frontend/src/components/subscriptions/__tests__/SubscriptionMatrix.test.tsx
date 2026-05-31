@@ -15,12 +15,12 @@ const mockUnsubscribe = vi.fn().mockResolvedValue({ success: true, message: 'Uns
 
 const defaultOverviewData: useSubscriptionsModule.StableOverview = {
   robots: [
-    { robotId: 1, robotName: 'Iron Fist', subscriptions: [{ eventType: 'league', status: 'active' }, { eventType: 'tournament', status: 'active' }], cap: 3 },
-    { robotId: 2, robotName: 'Steel Claw', subscriptions: [{ eventType: 'league', status: 'active' }, { eventType: 'koth', status: 'active' }, { eventType: 'tag_team', status: 'active' }], cap: 3 },
+    { robotId: 1, robotName: 'Iron Fist', subscriptions: [{ eventType: 'league_1v1', status: 'active' }, { eventType: 'tournament_1v1', status: 'active' }], cap: 3 },
+    { robotId: 2, robotName: 'Steel Claw', subscriptions: [{ eventType: 'league_1v1', status: 'active' }, { eventType: 'koth', status: 'active' }, { eventType: 'tag_team', status: 'active' }], cap: 3 },
   ],
   registeredEvents: [
-    { type: 'league', label: '1v1 League' },
-    { type: 'tournament', label: '1v1 Tournament' },
+    { type: 'league_1v1', label: '1v1 League' },
+    { type: 'tournament_1v1', label: '1v1 Tournament' },
     { type: 'tag_team', label: 'Tag Team' },
     { type: 'koth', label: 'King of the Hill' },
   ],
@@ -106,7 +106,7 @@ describe('SubscriptionMatrix', () => {
       fireEvent.click(unsubscribeButtons[0]);
 
       await waitFor(() => {
-        expect(mockUnsubscribe).toHaveBeenCalledWith('league');
+        expect(mockUnsubscribe).toHaveBeenCalledWith('league_1v1');
       });
     });
 

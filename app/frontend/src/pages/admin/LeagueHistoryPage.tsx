@@ -243,6 +243,7 @@ function LeagueHistoryPage(): React.ReactElement {
             <option value="">All</option>
             <option value="robot">Robots</option>
             <option value="tag_team">Tag Teams</option>
+            <option value="team_battle">Team Battles</option>
           </select>
         </div>
         <button

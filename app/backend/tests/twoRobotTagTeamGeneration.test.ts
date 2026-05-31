@@ -31,6 +31,31 @@ async function cleanupAutoUsers(): Promise<void> {
   const robotIds = robots.map((r) => r.id);
 
   if (robotIds.length > 0) {
+    // Delete team battle members and teams before robots
+    const teamBattleIds = (
+      await prisma.teamBattle.findMany({
+        where: { stableId: { in: userIds } },
+        select: { id: true },
+      })
+    ).map((t) => t.id);
+
+    if (teamBattleIds.length > 0) {
+      await prisma.scheduledTeamBattleMatch.deleteMany({
+        where: {
+          OR: [
+            { team1Id: { in: teamBattleIds } },
+            { team2Id: { in: teamBattleIds } },
+          ],
+        },
+      });
+      await prisma.teamBattleMember.deleteMany({
+        where: { teamId: { in: teamBattleIds } },
+      });
+      await prisma.teamBattle.deleteMany({
+        where: { id: { in: teamBattleIds } },
+      });
+    }
+
     const tagTeamIds = (
       await prisma.tagTeam.findMany({
         where: {
@@ -80,6 +105,10 @@ async function cleanupAutoUsers(): Promise<void> {
           { robot2Id: { in: robotIds } },
         ],
       },
+    });
+    // Delete subscriptions before robots
+    await prisma.subscription.deleteMany({
+      where: { robotId: { in: robotIds } },
     });
   }
 

@@ -6,6 +6,7 @@ import RobotImage from '../components/RobotImage';
 import ConfirmationModal from '../components/ConfirmationModal';
 import ViewModeToggle from '../components/ViewModeToggle';
 import EventBadge from '../components/subscriptions/EventBadge';
+import TeamMembershipChips from '../components/TeamMembershipChips';
 import { api } from '../utils/api';
 import { repairAllRobots } from '../utils/robotApi';
 import { useRobotStore } from '../stores';
@@ -553,7 +554,12 @@ function RobotsPage() {
                                   robotName={robot.name}
                                   size="small"
                                 />
-                                <span className="font-semibold">{robot.name}</span>
+                                <div className="flex flex-col gap-0.5">
+                                  <span className="font-semibold">{robot.name}</span>
+                                  {robot.teamBattleMembers && robot.teamBattleMembers.length > 0 && (
+                                    <TeamMembershipChips memberships={robot.teamBattleMembers} />
+                                  )}
+                                </div>
                               </div>
                             </td>
                             

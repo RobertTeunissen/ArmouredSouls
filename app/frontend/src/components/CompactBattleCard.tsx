@@ -37,9 +37,10 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
   onClick,
 }) => {
   const totalCredits = reward + (streamingRevenue ?? 0);
-  const isTournament = battle.battleType === 'tournament';
+  const isTournament = battle.battleType === 'tournament_1v1';
   const isTagTeam = battle.battleType === 'tag_team';
   const isKoth = battle.battleType === 'koth';
+  const isTeamBattle = battle.battleType === 'league_2v2' || battle.battleType === 'league_3v3';
   
   const getBattleTypeIcon = (): string => {
     if (isKoth) return '👑';
@@ -221,11 +222,37 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
               </div>
             </div>
           </>
+        ) : isTeamBattle ? (
+          /* Team Battle Layout (2v2/3v3) */
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-0.5">
+              <span className={`text-xs px-1.5 py-0.5 rounded font-semibold ${
+                battle.battleType === 'league_2v2'
+                  ? 'bg-emerald-400/20 text-emerald-400'
+                  : 'bg-violet-400/20 text-violet-400'
+              }`}>
+                {battle.battleType === 'league_2v2' ? '2v2' : '3v3'}
+              </span>
+              <div className="text-xs text-[#8b949e]">
+                {getBattleTypeText()}
+              </div>
+            </div>
+            <div className="font-medium text-xs truncate">
+              <span className="text-[#58a6ff]">{(battle as unknown as { team1TeamName?: string }).team1TeamName || myRobot.name}</span>
+              <span className="text-[#57606a] mx-1.5">vs</span>
+              <span className="text-[#e6edf3]">{(battle as unknown as { team2TeamName?: string }).team2TeamName || opponent.name}</span>
+            </div>
+          </div>
         ) : (
           /* Standard 1v1 Layout */
           <div className="flex-1 min-w-0">
-            <div className="text-xs text-[#8b949e] mb-0.5">
-              {getBattleTypeText()}
+            <div className="flex items-center gap-2 mb-0.5">
+              <span className="text-xs px-1.5 py-0.5 bg-blue-400/20 rounded text-blue-400 font-semibold">
+                1v1
+              </span>
+              <div className="text-xs text-[#8b949e]">
+                {getBattleTypeText()}
+              </div>
             </div>
             <div className="font-medium text-xs truncate">
               <span className="text-[#58a6ff]">{myRobot.name}</span>
@@ -301,6 +328,20 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
                 2v2
               </span>
             )}
+            {isTeamBattle && (
+              <span className={`text-xs px-1.5 py-0.5 rounded font-semibold ${
+                battle.battleType === 'league_2v2'
+                  ? 'bg-emerald-400/20 text-emerald-400'
+                  : 'bg-violet-400/20 text-violet-400'
+              }`}>
+                {battle.battleType === 'league_2v2' ? '2v2' : '3v3'}
+              </span>
+            )}
+            {!isKoth && !isTagTeam && !isTeamBattle && (
+              <span className="text-xs px-1.5 py-0.5 bg-blue-400/20 rounded text-blue-400 font-semibold">
+                1v1
+              </span>
+            )}
           </div>
           <div className="text-xs text-[#8b949e]">
             {formatDateTime(battle.createdAt)}
@@ -327,6 +368,12 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
                 <span className="text-[#e6edf3]">{opponentTeamRobots}</span>
               </div>
             </>
+          ) : isTeamBattle ? (
+            <div className="text-sm font-medium">
+              <span className="text-[#58a6ff]">{(battle as unknown as { team1TeamName?: string }).team1TeamName || myRobot.name}</span>
+              <span className="text-[#57606a] mx-1.5">vs</span>
+              <span className="text-[#e6edf3]">{(battle as unknown as { team2TeamName?: string }).team2TeamName || opponent.name}</span>
+            </div>
           ) : (
             <div className="text-sm font-medium">
               <span className="text-[#58a6ff]">{myRobot.name}</span>

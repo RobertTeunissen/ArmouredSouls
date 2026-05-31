@@ -24,7 +24,7 @@ import { Robot, Prisma } from '../../generated/prisma';
 // ── Mock Robot Factory ──────────────────────────────────────────────
 
 function createMockRobot(overrides?: Partial<Robot>): Robot {
-  return {
+  return ({
     id: 1,
     userId: 1,
     name: 'TestBot',
@@ -105,7 +105,7 @@ function createMockRobot(overrides?: Partial<Robot>): Robot {
     createdAt: new Date(),
     updatedAt: new Date(),
     ...overrides,
-  };
+  }) as Robot;
 }
 
 // ── Tests ────────────────────────────────────────────────────────────

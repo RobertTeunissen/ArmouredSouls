@@ -9,6 +9,8 @@ import logger from '../config/logger';
 import { rebalanceTagTeamLeagues } from '../services/tag-team/tagTeamLeagueRebalancingService';
 import { runTagTeamMatchmaking } from '../services/tag-team/tagTeamMatchmakingService';
 import { executeScheduledTagTeamBattles } from '../services/tag-team/tagTeamBattleOrchestrator';
+import { runTeamBattleMatchmaking } from '../services/team-battle/teamBattleMatchmakingService';
+import { executeScheduledTeamBattles } from '../services/team-battle/teamBattleOrchestrator';
 import { processAllDailyFinances } from '../utils/economyCalculations';
 import tournamentRoutes from './adminTournaments';
 import { getSchedulerState } from '../services/cycle/cycleScheduler';
@@ -36,6 +38,7 @@ import {
   getEngagementPlayers,
   getEconomyOverview,
   getLeagueHealth,
+  getTeamBattleLeagueHealth,
   getWeaponAnalytics,
   getAchievementAnalytics,
   getTuningAdoption,
@@ -69,6 +72,10 @@ const battleIdParamsSchema = z.object({
 
 const scheduledForBodySchema = z.object({
   scheduledFor: z.string().optional(),
+});
+
+const teamBattleBodySchema = z.object({
+  teamSize: z.union([z.literal(2), z.literal(3)]),
 });
 
 const repairAllBodySchema = z.object({
@@ -443,7 +450,7 @@ router.get('/users/at-risk', authenticateToken, requireAdmin, validateRequest({}
 /**
  * GET /api/admin/battles
  * Get paginated list of battles with filtering and search.
- * Supports battleType: 'all' | 'league' | 'tournament' | 'tagteam'
+ * Supports battleType: 'all' | 'league' | 'tournament' | 'tagteam' | 'koth'
  * Returns battleFormat ('1v1' | '2v2') on each record.
  */
 router.get('/battles', authenticateToken, requireAdmin, validateRequest({ query: battlesQuerySchema }), async (req: Request, res: Response) => {
@@ -588,6 +595,64 @@ router.post('/tag-teams/rebalance', authenticateToken, requireAdmin, validateReq
     logger.error('[Admin] Tag team rebalancing error:', error);
     res.status(500).json({
       error: 'Failed to rebalance tag team leagues',
+    });
+  }
+});
+
+/**
+ * POST /api/admin/team-battles/matchmaking
+ * Manually trigger team battle matchmaking for a given team size (2 or 3).
+ */
+router.post('/team-battles/matchmaking', authenticateToken, requireAdmin, validateRequest({ body: teamBattleBodySchema }), async (req: Request, res: Response) => {
+  const authReq = req as AuthRequest;
+  try {
+    const { teamSize } = req.body;
+
+    logger.info(`[Admin] Triggering ${teamSize}v${teamSize} team battle matchmaking...`);
+    const totalMatches = await runTeamBattleMatchmaking(teamSize);
+
+    recordAuditAction(authReq.user!.userId, 'team_battle_matchmaking', 'success', { teamSize, matchesCreated: totalMatches });
+
+    res.json({
+      success: true,
+      matchesCreated: totalMatches,
+      teamSize,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    recordAuditAction(authReq.user!.userId, 'team_battle_matchmaking', 'failure', { teamSize: req.body.teamSize, error: error instanceof Error ? error.message : String(error) });
+    logger.error('[Admin] Team battle matchmaking error:', error);
+    res.status(500).json({
+      error: 'Failed to run team battle matchmaking',
+    });
+  }
+});
+
+/**
+ * POST /api/admin/team-battles/battles
+ * Manually execute scheduled team battles for a given team size (2 or 3).
+ */
+router.post('/team-battles/battles', authenticateToken, requireAdmin, validateRequest({ body: teamBattleBodySchema }), async (req: Request, res: Response) => {
+  const authReq = req as AuthRequest;
+  try {
+    const { teamSize } = req.body;
+
+    logger.info(`[Admin] Executing ${teamSize}v${teamSize} team battles...`);
+    const summary = await executeScheduledTeamBattles(teamSize);
+
+    recordAuditAction(authReq.user!.userId, 'team_battle_execution', 'success', { teamSize, summary });
+
+    res.json({
+      success: true,
+      summary,
+      teamSize,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    recordAuditAction(authReq.user!.userId, 'team_battle_execution', 'failure', { teamSize: req.body.teamSize, error: error instanceof Error ? error.message : String(error) });
+    logger.error('[Admin] Team battle execution error:', error);
+    res.status(500).json({
+      error: 'Failed to execute team battles',
     });
   }
 });
@@ -965,6 +1030,15 @@ router.get('/league-health', authenticateToken, requireAdmin, validateRequest({}
 });
 
 /**
+ * GET /api/admin/team-battle-league-health
+ * Get team battle (2v2 and 3v3) league health metrics.
+ */
+router.get('/team-battle-league-health', authenticateToken, requireAdmin, validateRequest({}), async (_req: Request, res: Response) => {
+  const result = await getTeamBattleLeagueHealth();
+  res.json(result);
+});
+
+/**
  * GET /api/admin/weapons/analytics
  * Get weapon analytics data.
  */
@@ -1082,26 +1156,179 @@ router.get('/league-history/yo-yo', authenticateToken, requireAdmin, validateReq
   res.json(result);
 });
 
+// --- Team Battle manual-trigger endpoints (Spec 37) ---
+
+const teamBattleMatchmakingBodySchema = z.object({
+  teamSize: z.union([z.literal(2), z.literal(3)]),
+  scheduledFor: z.string().optional(),
+});
+
+const teamBattleBattlesBodySchema = z.object({
+  teamSize: z.union([z.literal(2), z.literal(3)]),
+});
+
+/**
+ * POST /api/admin/team-battles/matchmaking
+ * Manually trigger Team Battle matchmaking for a given team size (2v2 or 3v3).
+ * Requirements: R14.3, R14.4
+ */
+router.post('/team-battles/matchmaking', authenticateToken, requireAdmin, validateRequest({ body: teamBattleMatchmakingBodySchema }), async (req: Request, res: Response) => {
+  const authReq = req as AuthRequest;
+  try {
+    const { teamSize, scheduledFor } = req.body;
+    const targetTime = scheduledFor ? new Date(scheduledFor) : new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    logger.info(`[Admin] Triggering ${teamSize}v${teamSize} team battle matchmaking...`);
+    const { runTeamBattleMatchmaking } = await import('../services/team-battle/teamBattleMatchmakingService');
+    const totalMatches = await runTeamBattleMatchmaking(teamSize, targetTime);
+
+    recordAuditAction(authReq.user!.userId, 'team_battle', 'success', { action: 'matchmaking', teamSize, matchesCreated: totalMatches, scheduledFor: targetTime.toISOString() });
+
+    res.json({
+      success: true,
+      teamSize,
+      matchesCreated: totalMatches,
+      scheduledFor: targetTime.toISOString(),
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    recordAuditAction(authReq.user!.userId, 'team_battle', 'failure', { action: 'matchmaking', teamSize: req.body.teamSize, error: error instanceof Error ? error.message : String(error) });
+    logger.error('[Admin] Team battle matchmaking error:', error);
+    res.status(500).json({
+      error: 'Failed to run team battle matchmaking',
+    });
+  }
+});
+
+/**
+ * POST /api/admin/team-battles/battles
+ * Manually execute scheduled Team Battle matches for a given team size (2v2 or 3v3).
+ * Requirements: R14.4, R14.5
+ */
+router.post('/team-battles/battles', authenticateToken, requireAdmin, validateRequest({ body: teamBattleBattlesBodySchema }), async (req: Request, res: Response) => {
+  const authReq = req as AuthRequest;
+  try {
+    const { teamSize } = req.body;
+
+    logger.info(`[Admin] Executing ${teamSize}v${teamSize} team battles...`);
+    const { executeScheduledTeamBattles } = await import('../services/team-battle/teamBattleOrchestrator');
+    const summary = await executeScheduledTeamBattles(teamSize);
+
+    recordAuditAction(authReq.user!.userId, 'team_battle', 'success', { action: 'battles_run', teamSize, matchesCompleted: summary.matchesCompleted, matchesCancelled: summary.matchesCancelled });
+
+    res.json({
+      success: true,
+      teamSize,
+      summary,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    recordAuditAction(authReq.user!.userId, 'team_battle', 'failure', { action: 'battles_run', teamSize: req.body.teamSize, error: error instanceof Error ? error.message : String(error) });
+    logger.error('[Admin] Team battle execution error:', error);
+    res.status(500).json({
+      error: 'Failed to execute team battles',
+    });
+  }
+});
+
+/**
+ * POST /api/admin/team-battles/rebalance
+ * Manually trigger Team Battle league rebalancing for all tiers.
+ * Requirements: R14.5
+ */
+router.post('/team-battles/rebalance', authenticateToken, requireAdmin, validateRequest({}), async (req: Request, res: Response) => {
+  const authReq = req as AuthRequest;
+  try {
+    logger.info('[Admin] Triggering team battle league rebalancing...');
+    const { rebalanceTeamBattleLeagues } = await import('../services/team-battle/teamBattleAdapter');
+    const summary = await rebalanceTeamBattleLeagues();
+
+    recordAuditAction(authReq.user!.userId, 'team_battle', 'success', { action: 'rebalance', summary });
+
+    res.json({
+      success: true,
+      summary,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    recordAuditAction(authReq.user!.userId, 'team_battle', 'failure', { action: 'rebalance', error: error instanceof Error ? error.message : String(error) });
+    logger.error('[Admin] Team battle rebalancing error:', error);
+    res.status(500).json({
+      error: 'Failed to rebalance team battle leagues',
+    });
+  }
+});
+
 // --- Reserved slot trigger endpoints (Spec 36) ---
 
 /**
  * POST /api/admin/team-2v2-league/trigger
- * Reserved slot trigger for Team 2v2 League — no handler implemented yet.
+ * Trigger Team 2v2 League cycle: execute battles → rebalance → matchmaking.
  */
 router.post('/team-2v2-league/trigger', authenticateToken, requireAdmin, validateRequest({}), async (req: Request, res: Response) => {
   const authReq = req as AuthRequest;
-  recordAuditAction(authReq.user!.userId, 'reserved_slot_trigger', 'success', { event: 'team_2v2_league', outcome: 'no-op' });
-  res.json({ message: 'reserved slot, no handler implemented', event: 'team_2v2_league' });
+  try {
+    logger.info('[Admin] Triggering Team 2v2 League cycle...');
+    const { executeScheduledTeamBattles } = await import('../services/team-battle/teamBattleOrchestrator');
+    const { rebalanceTeamBattleLeagues } = await import('../services/team-battle/teamBattleAdapter');
+    const { runTeamBattleMatchmaking } = await import('../services/team-battle/teamBattleMatchmakingService');
+
+    const execResult = await executeScheduledTeamBattles(2);
+    const rebalanceSummary = await rebalanceTeamBattleLeagues();
+    const matchesCreated = await runTeamBattleMatchmaking(2);
+
+    recordAuditAction(authReq.user!.userId, 'team_battle', 'success', { action: 'trigger_cycle', teamSize: 2, matchesCompleted: execResult.matchesCompleted, matchesCreated });
+
+    res.json({
+      success: true,
+      event: 'team_2v2_league',
+      execution: { matchesCompleted: execResult.matchesCompleted, matchesCancelled: execResult.matchesCancelled },
+      rebalance: rebalanceSummary,
+      matchmaking: { matchesCreated },
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    recordAuditAction(authReq.user!.userId, 'team_battle', 'failure', { action: 'trigger_cycle', teamSize: 2, error: error instanceof Error ? error.message : String(error) });
+    logger.error('[Admin] Team 2v2 League trigger error:', error);
+    res.status(500).json({
+      error: 'Failed to trigger Team 2v2 League cycle',
+    });
+  }
 });
 
 /**
  * POST /api/admin/team-3v3-league/trigger
- * Reserved slot trigger for Team 3v3 League — no handler implemented yet.
+ * Trigger Team 3v3 League cycle: execute battles → rebalance → matchmaking.
  */
 router.post('/team-3v3-league/trigger', authenticateToken, requireAdmin, validateRequest({}), async (req: Request, res: Response) => {
   const authReq = req as AuthRequest;
-  recordAuditAction(authReq.user!.userId, 'reserved_slot_trigger', 'success', { event: 'team_3v3_league', outcome: 'no-op' });
-  res.json({ message: 'reserved slot, no handler implemented', event: 'team_3v3_league' });
+  try {
+    logger.info('[Admin] Triggering Team 3v3 League cycle...');
+    const { executeScheduledTeamBattles } = await import('../services/team-battle/teamBattleOrchestrator');
+    const { rebalanceTeamBattleLeagues } = await import('../services/team-battle/teamBattleAdapter');
+    const { runTeamBattleMatchmaking } = await import('../services/team-battle/teamBattleMatchmakingService');
+
+    const execResult = await executeScheduledTeamBattles(3);
+    const rebalanceSummary = await rebalanceTeamBattleLeagues();
+    const matchesCreated = await runTeamBattleMatchmaking(3);
+
+    recordAuditAction(authReq.user!.userId, 'team_battle', 'success', { action: 'trigger_cycle', teamSize: 3, matchesCompleted: execResult.matchesCompleted, matchesCreated });
+
+    res.json({
+      success: true,
+      event: 'team_3v3_league',
+      execution: { matchesCompleted: execResult.matchesCompleted, matchesCancelled: execResult.matchesCancelled },
+      rebalance: rebalanceSummary,
+      matchmaking: { matchesCreated },
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    recordAuditAction(authReq.user!.userId, 'team_battle', 'failure', { action: 'trigger_cycle', teamSize: 3, error: error instanceof Error ? error.message : String(error) });
+    logger.error('[Admin] Team 3v3 League trigger error:', error);
+    res.status(500).json({
+      error: 'Failed to trigger Team 3v3 League cycle',
+    });
+  }
 });
 
 /**

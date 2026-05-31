@@ -36,6 +36,8 @@ interface CycleResult {
   finances?: { usersProcessed: number; totalCostsDeducted: number; bankruptUsers: number };
   rebalancing?: { summary: { totalPromoted: number; totalDemoted: number } };
   subscriptionExclusions?: { league: number; tournament: number; tagTeam: number; koth: number };
+  team2v2LeagueBlock?: { battles: { matchesCompleted: number; matchesCancelled: number }; rebalancing: { totalPromoted: number; totalDemoted: number }; matchmaking: { matchesCreated: number } } | { error: string };
+  team3v3LeagueBlock?: { battles: { matchesCompleted: number; matchesCancelled: number }; rebalancing: { totalPromoted: number; totalDemoted: number }; matchmaking: { matchesCreated: number } } | { error: string };
   duration: number;
   error?: string;
 }
@@ -57,6 +59,14 @@ interface RepairResponse { robotsRepaired: number }
 interface DailyFinancesResponse { summary: { usersProcessed: number; totalCostsDeducted: number; bankruptUsers: number } }
 interface KothResponse { message?: string }
 interface TagTeamBattlesResponse { summary: { totalBattles: number } }
+interface TeamBattleTriggerResponse {
+  success: boolean;
+  event: string;
+  execution: { matchesCompleted: number; matchesCancelled: number };
+  rebalance: { totalPromoted: number; totalDemoted: number };
+  matchmaking: { matchesCreated: number };
+  timestamp: string;
+}
 interface BulkCyclesResponse {
   cyclesCompleted: number;
   totalDuration: number;
@@ -222,6 +232,42 @@ function CycleControlsPage() {
     }
   };
 
+  const triggerTeam2v2LeagueCycle = async (): Promise<void> => {
+    setLoading(true);
+    addSessionLog('info', 'Starting 2v2 League cycle: Battles → Rebalance → Matchmaking');
+    try {
+      const data = await api.post<TeamBattleTriggerResponse>('/api/admin/team-2v2-league/trigger', {});
+      addSessionLog('success', `Step 1: ${data.execution.matchesCompleted} 2v2 team battles executed${data.execution.matchesCancelled > 0 ? ` (${data.execution.matchesCancelled} cancelled)` : ''}`);
+      addSessionLog('success', `Step 2: ${data.rebalance.totalPromoted} promoted, ${data.rebalance.totalDemoted} demoted`);
+      addSessionLog('success', `Step 3: ${data.matchmaking.matchesCreated} 2v2 matches scheduled`);
+      showMessage('success', `2v2 League cycle complete: ${data.execution.matchesCompleted} battles, ${data.matchmaking.matchesCreated} matches scheduled`);
+    } catch (error: unknown) {
+      const msg = errorMessage(error, '2v2 League cycle failed');
+      addSessionLog('error', `2v2 League cycle failed: ${msg}`);
+      showMessage('error', msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const triggerTeam3v3LeagueCycle = async (): Promise<void> => {
+    setLoading(true);
+    addSessionLog('info', 'Starting 3v3 League cycle: Battles → Rebalance → Matchmaking');
+    try {
+      const data = await api.post<TeamBattleTriggerResponse>('/api/admin/team-3v3-league/trigger', {});
+      addSessionLog('success', `Step 1: ${data.execution.matchesCompleted} 3v3 team battles executed${data.execution.matchesCancelled > 0 ? ` (${data.execution.matchesCancelled} cancelled)` : ''}`);
+      addSessionLog('success', `Step 2: ${data.rebalance.totalPromoted} promoted, ${data.rebalance.totalDemoted} demoted`);
+      addSessionLog('success', `Step 3: ${data.matchmaking.matchesCreated} 3v3 matches scheduled`);
+      showMessage('success', `3v3 League cycle complete: ${data.execution.matchesCompleted} battles, ${data.matchmaking.matchesCreated} matches scheduled`);
+    } catch (error: unknown) {
+      const msg = errorMessage(error, '3v3 League cycle failed');
+      addSessionLog('error', `3v3 League cycle failed: ${msg}`);
+      showMessage('error', msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   /* ---------- Bulk cycle runner ---------- */
 
   const runBulkCycles = useCallback(async (): Promise<void> => {
@@ -236,6 +282,7 @@ function CycleControlsPage() {
     try {
       const data = await api.post<BulkCyclesResponse>('/api/admin/cycles/bulk', {
         cycles: bulkCycles,
+        generateUsersPerCycle: true,
       });
       setBulkResults(data);
 
@@ -247,6 +294,28 @@ function CycleControlsPage() {
               failedBattles > 0 ? 'warning' : 'success',
               `Cycle ${result.cycle}: ${totalBattles} battle(s) (${successfulBattles} successful, ${failedBattles} failed)`,
             );
+          }
+          if (result.team2v2LeagueBlock) {
+            if ('error' in result.team2v2LeagueBlock) {
+              addSessionLog('error', `Cycle ${result.cycle}: 2v2 League failed: ${result.team2v2LeagueBlock.error}`);
+            } else {
+              const { matchesCompleted, matchesCancelled } = result.team2v2LeagueBlock.battles;
+              addSessionLog(
+                matchesCancelled > 0 ? 'warning' : 'success',
+                `Cycle ${result.cycle}: 2v2 League: ${matchesCompleted} match(es)${matchesCancelled > 0 ? ` (${matchesCancelled} cancelled)` : ''}`,
+              );
+            }
+          }
+          if (result.team3v3LeagueBlock) {
+            if ('error' in result.team3v3LeagueBlock) {
+              addSessionLog('error', `Cycle ${result.cycle}: 3v3 League failed: ${result.team3v3LeagueBlock.error}`);
+            } else {
+              const { matchesCompleted, matchesCancelled } = result.team3v3LeagueBlock.battles;
+              addSessionLog(
+                matchesCancelled > 0 ? 'warning' : 'success',
+                `Cycle ${result.cycle}: 3v3 League: ${matchesCompleted} match(es)${matchesCancelled > 0 ? ` (${matchesCancelled} cancelled)` : ''}`,
+              );
+            }
           }
           if (result.rebalancing?.summary) {
             const { totalPromoted, totalDemoted } = result.rebalancing.summary;
@@ -290,6 +359,8 @@ function CycleControlsPage() {
       tagTeam: { label: 'Run Tag Team Cycle', description: 'Repair → Execute battles → Rebalance → Matchmaking. Continue?', handler: triggerTagTeamCycle },
       koth: { label: 'Run KotH Cycle', description: 'Execute KotH battles → Matchmaking for next round. Continue?', handler: triggerKothCycle },
       settlement: { label: 'Run Settlement', description: 'User generation → Passive income → Operating costs → Cycle counter → Snapshot. Continue?', handler: processDailyFinances },
+      team2v2League: { label: 'Run 2v2 League Cycle', description: 'Execute 2v2 battles → Rebalance → Matchmaking. Continue?', handler: triggerTeam2v2LeagueCycle },
+      team3v3League: { label: 'Run 3v3 League Cycle', description: 'Execute 3v3 battles → Rebalance → Matchmaking. Continue?', handler: triggerTeam3v3LeagueCycle },
     };
     const action = triggerMap[jobName];
     if (action) {
@@ -388,6 +459,71 @@ function CycleControlsPage() {
                 <p className="text-xs text-tertiary mt-2">Robots excluded from matchmaking due to missing event subscriptions</p>
               </div>
             )}
+
+            {/* Team Battle Results Summary */}
+            {bulkResults.results && bulkResults.results.some(r => r.team2v2LeagueBlock || r.team3v3LeagueBlock) && (
+              <div className="mt-3 border-t border-white/10 pt-3">
+                <h4 className="text-sm font-semibold text-secondary mb-2">⚔️ Team Battle Results</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {(() => {
+                    let team2v2Matches = 0;
+                    let team2v2Cancelled = 0;
+                    let team2v2Errors = 0;
+                    let team3v3Matches = 0;
+                    let team3v3Cancelled = 0;
+                    let team3v3Errors = 0;
+                    bulkResults.results?.forEach(r => {
+                      if (r.team2v2LeagueBlock) {
+                        if ('error' in r.team2v2LeagueBlock) {
+                          team2v2Errors++;
+                        } else {
+                          team2v2Matches += r.team2v2LeagueBlock.battles.matchesCompleted;
+                          team2v2Cancelled += r.team2v2LeagueBlock.battles.matchesCancelled;
+                        }
+                      }
+                      if (r.team3v3LeagueBlock) {
+                        if ('error' in r.team3v3LeagueBlock) {
+                          team3v3Errors++;
+                        } else {
+                          team3v3Matches += r.team3v3LeagueBlock.battles.matchesCompleted;
+                          team3v3Cancelled += r.team3v3LeagueBlock.battles.matchesCancelled;
+                        }
+                      }
+                    });
+                    return (
+                      <>
+                        <div className="bg-surface rounded p-3">
+                          <p className="text-sm font-semibold text-white mb-1">2v2 League</p>
+                          <p className="text-sm">
+                            <span className="text-success font-bold">{team2v2Matches}</span>
+                            <span className="text-secondary"> matches completed</span>
+                          </p>
+                          {team2v2Cancelled > 0 && (
+                            <p className="text-xs text-warning">{team2v2Cancelled} cancelled</p>
+                          )}
+                          {team2v2Errors > 0 && (
+                            <p className="text-xs text-error">{team2v2Errors} cycle(s) failed</p>
+                          )}
+                        </div>
+                        <div className="bg-surface rounded p-3">
+                          <p className="text-sm font-semibold text-white mb-1">3v3 League</p>
+                          <p className="text-sm">
+                            <span className="text-success font-bold">{team3v3Matches}</span>
+                            <span className="text-secondary"> matches completed</span>
+                          </p>
+                          {team3v3Cancelled > 0 && (
+                            <p className="text-xs text-warning">{team3v3Cancelled} cancelled</p>
+                          )}
+                          {team3v3Errors > 0 && (
+                            <p className="text-xs text-error">{team3v3Errors} cycle(s) failed</p>
+                          )}
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -452,8 +588,6 @@ function CycleControlsPage() {
 
 /** Reserved slot job names — these have no real handler yet */
 const RESERVED_SLOTS = new Set([
-  'team2v2League',
-  'team3v3League',
   'team2v2Tournament',
   'team3v3Tournament',
   'grandMelee',

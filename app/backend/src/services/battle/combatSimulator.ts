@@ -1667,8 +1667,13 @@ export function simulateBattleMulti(
         if (weaponLike && !canAttack(weaponLike, dist) && !forceAttack && n > 2) {
           let nearestDist = Infinity;
           let nearestState: SpatialRobotCombatState | undefined;
+          const teamOfMap = gameModeState?.customData?.teamOf as Record<number, number> | undefined;
           for (const s of states) {
-            if (s === state || !s.isAlive || s.teamIndex === state.teamIndex) continue;
+            if (s === state || !s.isAlive) continue;
+            // Skip teammates in team modes
+            if (teamOfMap && teamOfMap[s.teamIndex] === teamOfMap[state.teamIndex]) continue;
+            // Fallback for non-team modes: skip same teamIndex (self only)
+            if (!teamOfMap && s.teamIndex === state.teamIndex) continue;
             const d = euclideanDistance(state.position, s.position);
             if (canAttack(weaponLike, d) && d < nearestDist) {
               nearestDist = d;
@@ -1733,8 +1738,13 @@ export function simulateBattleMulti(
         if (!canAttack(offWeaponLike, offDist) && !(state.patienceTimer >= patienceLimit) && n > 2) {
           let nearestDist = Infinity;
           let nearestState: SpatialRobotCombatState | undefined;
+          const teamOfMap = gameModeState?.customData?.teamOf as Record<number, number> | undefined;
           for (const s of states) {
-            if (s === state || !s.isAlive || s.teamIndex === state.teamIndex) continue;
+            if (s === state || !s.isAlive) continue;
+            // Skip teammates in team modes
+            if (teamOfMap && teamOfMap[s.teamIndex] === teamOfMap[state.teamIndex]) continue;
+            // Fallback for non-team modes: skip same teamIndex (self only)
+            if (!teamOfMap && s.teamIndex === state.teamIndex) continue;
             const d = euclideanDistance(state.position, s.position);
             if (canAttack(offWeaponLike, d) && d < nearestDist) {
               nearestDist = d;

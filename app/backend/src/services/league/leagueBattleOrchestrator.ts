@@ -266,7 +266,7 @@ async function createBattleRecord(
     robot2Stance: robot2.stance,
     robot1MaxHP: robot1.maxHP,
     robot2MaxHP: robot2.maxHP,
-    battleType: 'league',
+    battleType: 'league_1v1',
   });
   
   // Add financial reward details to battle log
@@ -343,7 +343,7 @@ async function createBattleRecord(
       robot1Id: robot1.id,
       robot2Id: robot2.id,
       winnerId: result.winnerId,
-      battleType: 'league', // Phase 1 only has league battles
+      battleType: 'league_1v1',
       leagueType: scheduledMatch.leagueType,
       leagueInstanceId: robot1.leagueId, // Snapshot instance at time of battle
       
@@ -463,13 +463,31 @@ async function updateRobotStats(
     leaguePointsChange,
     currentLeaguePoints: robot.leaguePoints,
     fameIncrement: isWinner ? fameAwarded : 0,
-    battleType: 'league',
+    battleType: 'league_1v1',
     stance: robot.stance,
     loadoutType: robot.loadoutType,
     extraData: {
       repairCost: 0, // Repair costs calculated by RepairService
     },
   });
+
+  // Increment 1v1 league win/loss/draw counters
+  if (isWinner) {
+    await prisma.robot.update({
+      where: { id: robot.id },
+      data: { totalLeague1v1Wins: { increment: 1 } },
+    });
+  } else if (isDraw) {
+    await prisma.robot.update({
+      where: { id: robot.id },
+      data: { totalLeague1v1Draws: { increment: 1 } },
+    });
+  } else {
+    await prisma.robot.update({
+      where: { id: robot.id },
+      data: { totalLeague1v1Losses: { increment: 1 } },
+    });
+  }
   
   // Update BattleParticipant with prestige and fame
   await prisma.battleParticipant.updateMany({
@@ -682,7 +700,7 @@ export async function processBattle(scheduledMatch: ScheduledLeagueMatch): Promi
         yieldThreshold: robot1.yieldThreshold,
         hasTuning: Object.values(tuningMap.get(robot1.id) ?? {}).some(v => v !== undefined && v > 0),
         hasMainWeapon: robot1.mainWeaponId !== null,
-        battleType: 'league',
+        battleType: 'league_1v1',
         battleDurationSeconds: result.durationSeconds,
       }),
       checkAndAwardAchievements(robot2.userId, robot2.id, {
@@ -701,7 +719,7 @@ export async function processBattle(scheduledMatch: ScheduledLeagueMatch): Promi
         yieldThreshold: robot2.yieldThreshold,
         hasTuning: Object.values(tuningMap.get(robot2.id) ?? {}).some(v => v !== undefined && v > 0),
         hasMainWeapon: robot2.mainWeaponId !== null,
-        battleType: 'league',
+        battleType: 'league_1v1',
         battleDurationSeconds: result.durationSeconds,
       }),
     ]);

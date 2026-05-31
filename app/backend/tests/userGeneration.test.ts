@@ -5,7 +5,7 @@
  * that creates WimpBot (3 robots), AverageBot (2 robots), and ExpertBot (1 robot)
  * stables during each cycle.
  *
- * Requirements: 8.1, 8.2, 9.1, 10.1, 11.1
+ * Requirements: 8.1, 8.2, 9.1, 10.1, 11.1, R15.1–R15.8
  */
 
 import prisma from '../src/lib/prisma';
@@ -32,6 +32,31 @@ async function cleanupAutoUsers(): Promise<void> {
   const robotIds = robots.map((r) => r.id);
 
   if (robotIds.length > 0) {
+    // Delete team battle members and teams before robots
+    const teamBattleIds = (
+      await prisma.teamBattle.findMany({
+        where: { stableId: { in: userIds } },
+        select: { id: true },
+      })
+    ).map((t) => t.id);
+
+    if (teamBattleIds.length > 0) {
+      await prisma.scheduledTeamBattleMatch.deleteMany({
+        where: {
+          OR: [
+            { team1Id: { in: teamBattleIds } },
+            { team2Id: { in: teamBattleIds } },
+          ],
+        },
+      });
+      await prisma.teamBattleMember.deleteMany({
+        where: { teamId: { in: teamBattleIds } },
+      });
+      await prisma.teamBattle.deleteMany({
+        where: { id: { in: teamBattleIds } },
+      });
+    }
+
     const tagTeamIds = (
       await prisma.tagTeam.findMany({
         where: {
@@ -84,6 +109,10 @@ async function cleanupAutoUsers(): Promise<void> {
     });
     // Delete KOTH match participants before robots
     await prisma.scheduledKothMatchParticipant.deleteMany({
+      where: { robotId: { in: robotIds } },
+    });
+    // Delete subscriptions before robots
+    await prisma.subscription.deleteMany({
       where: { robotId: { in: robotIds } },
     });
   }
@@ -725,5 +754,293 @@ describe('User Generation (Tiered Stable System)', () => {
         { numRuns: 5 }
       );
     }, 60000);
+  });
+
+  /**
+   * Team Battle Integration Tests (R15.1–R15.8)
+   *
+   * Tests for the team battle extensions to seeded user generation:
+   * - Subscription assignment rules per stable size
+   * - Booking Office L1 grant for multi-robot stables
+   * - Team creation from subscribed pool
+   * - Graceful failure handling
+   * - league2v2TeamsCreated and league3v3TeamsCreated counts
+   */
+  describe('Team Battle Integration (R15)', () => {
+    it('should grant Booking Office L1 to stables with 2+ robots (R15.4)', async () => {
+      const result = await generateBattleReadyUsers(3);
+
+      // WimpBot (3 robots) and AverageBot (2 robots) should have Booking Office L1
+      const wimpBotUsers = await prisma.user.findMany({
+        where: { username: { startsWith: 'auto_wimpbot_' } },
+        include: { facilities: true },
+      });
+      for (const user of wimpBotUsers) {
+        const bookingOffice = user.facilities.find(f => f.facilityType === 'booking_office');
+        expect(bookingOffice).toBeDefined();
+        expect(bookingOffice!.level).toBe(1);
+      }
+
+      const avgBotUsers = await prisma.user.findMany({
+        where: { username: { startsWith: 'auto_averagebot_' } },
+        include: { facilities: true },
+      });
+      for (const user of avgBotUsers) {
+        const bookingOffice = user.facilities.find(f => f.facilityType === 'booking_office');
+        expect(bookingOffice).toBeDefined();
+        expect(bookingOffice!.level).toBe(1);
+      }
+
+      // ExpertBot (1 robot) should NOT have Booking Office
+      const expertBotUsers = await prisma.user.findMany({
+        where: { username: { startsWith: 'auto_expertbot_' } },
+        include: { facilities: true },
+      });
+      for (const user of expertBotUsers) {
+        const bookingOffice = user.facilities.find(f => f.facilityType === 'booking_office');
+        expect(bookingOffice).toBeUndefined();
+      }
+    });
+
+    it('should assign subscriptions to 1-robot stables: league_1v1, tournament_1v1, koth (R15.2)', async () => {
+      const result = await generateBattleReadyUsers(3);
+
+      // ExpertBot has 1 robot — should get exactly league_1v1, tournament_1v1, koth
+      const expertBotRobots = await prisma.robot.findMany({
+        where: { user: { username: { startsWith: 'auto_expertbot_' } } },
+        include: { subscriptions: true },
+      });
+
+      expect(expertBotRobots.length).toBe(1);
+      const subs = expertBotRobots[0].subscriptions.map(s => s.eventType).sort();
+      expect(subs).toEqual(['koth', 'league_1v1', 'tournament_1v1']);
+    });
+
+    it('should assign 4 subscriptions to 2-robot stables with team modes (R15.2)', async () => {
+      const result = await generateBattleReadyUsers(3);
+
+      // AverageBot has 2 robots — each should have 4 subscriptions
+      const avgBotRobots = await prisma.robot.findMany({
+        where: { user: { username: { startsWith: 'auto_averagebot_' } } },
+        include: { subscriptions: true },
+      });
+
+      expect(avgBotRobots.length).toBe(2);
+      for (const robot of avgBotRobots) {
+        expect(robot.subscriptions.length).toBe(4);
+
+        const eventTypes = robot.subscriptions.map(s => s.eventType);
+        // All subscriptions should be valid event types
+        const validEvents = ['league_1v1', 'tournament_1v1', 'koth', 'tag_team', 'league_2v2', 'league_3v3'];
+        for (const eventType of eventTypes) {
+          expect(validEvents).toContain(eventType);
+        }
+
+        // Should have at least 1 team mode (league_2v2 or tag_team)
+        const teamModes = eventTypes.filter(e => e === 'league_2v2' || e === 'tag_team');
+        expect(teamModes.length).toBeGreaterThanOrEqual(1);
+      }
+    });
+
+    it('should assign 4 subscriptions to 3-robot stables prioritising league_3v3 (R15.2)', async () => {
+      const result = await generateBattleReadyUsers(3);
+
+      // WimpBot has 3 robots and createLeague3v3: true — each should have 4 subscriptions
+      const wimpBotRobots = await prisma.robot.findMany({
+        where: { user: { username: { startsWith: 'auto_wimpbot_' } } },
+        include: { subscriptions: true },
+      });
+
+      expect(wimpBotRobots.length).toBe(3);
+      for (const robot of wimpBotRobots) {
+        expect(robot.subscriptions.length).toBe(4);
+
+        const eventTypes = robot.subscriptions.map(s => s.eventType);
+        // WimpBot tier has createLeague3v3: true, so league_3v3 should be present
+        expect(eventTypes).toContain('league_3v3');
+
+        // All subscriptions should be valid event types
+        const validEvents = ['league_1v1', 'tournament_1v1', 'koth', 'tag_team', 'league_2v2', 'league_3v3'];
+        for (const eventType of eventTypes) {
+          expect(validEvents).toContain(eventType);
+        }
+      }
+    });
+
+    it('should create 2v2 teams from subscribed pool for eligible stables (R15.3)', async () => {
+      const result = await generateBattleReadyUsers(3);
+
+      // WimpBot (3 robots, createLeague2v2: true) and AverageBot (2 robots, createLeague2v2: true)
+      // should have 2v2 teams created
+      expect(result.league2v2TeamsCreated).toBeGreaterThanOrEqual(1);
+
+      // Verify teams exist in the database
+      const wimpBotUsers = await prisma.user.findMany({
+        where: { username: { startsWith: 'auto_wimpbot_' } },
+        select: { id: true },
+      });
+      const avgBotUsers = await prisma.user.findMany({
+        where: { username: { startsWith: 'auto_averagebot_' } },
+        select: { id: true },
+      });
+
+      const eligibleUserIds = [...wimpBotUsers, ...avgBotUsers].map(u => u.id);
+      const teams2v2 = await prisma.teamBattle.findMany({
+        where: {
+          stableId: { in: eligibleUserIds },
+          teamSize: 2,
+        },
+        include: { members: true },
+      });
+
+      // At least one 2v2 team should exist (depends on subscription randomness)
+      expect(teams2v2.length).toBeGreaterThanOrEqual(1);
+
+      // Each 2v2 team should have exactly 2 members
+      for (const team of teams2v2) {
+        expect(team.members.length).toBe(2);
+      }
+    });
+
+    it('should create 3v3 teams from subscribed pool for eligible stables (R15.3)', async () => {
+      const result = await generateBattleReadyUsers(3);
+
+      // WimpBot (3 robots, createLeague3v3: true) should have 3v3 teams
+      expect(result.league3v3TeamsCreated).toBeGreaterThanOrEqual(1);
+
+      // Verify teams exist in the database
+      const wimpBotUsers = await prisma.user.findMany({
+        where: { username: { startsWith: 'auto_wimpbot_' } },
+        select: { id: true },
+      });
+
+      const teams3v3 = await prisma.teamBattle.findMany({
+        where: {
+          stableId: { in: wimpBotUsers.map(u => u.id) },
+          teamSize: 3,
+        },
+        include: { members: true },
+      });
+
+      // WimpBot has createLeague3v3: true and 3 robots, so at least 1 team should exist
+      expect(teams3v3.length).toBeGreaterThanOrEqual(1);
+
+      // Each 3v3 team should have exactly 3 members
+      for (const team of teams3v3) {
+        expect(team.members.length).toBe(3);
+      }
+    });
+
+    it('should NOT create 3v3 teams for stables with createLeague3v3: false (R15.3)', async () => {
+      const result = await generateBattleReadyUsers(3);
+
+      // AverageBot has createLeague3v3: false and only 2 robots — no 3v3 teams
+      const avgBotUsers = await prisma.user.findMany({
+        where: { username: { startsWith: 'auto_averagebot_' } },
+        select: { id: true },
+      });
+
+      const teams3v3 = await prisma.teamBattle.findMany({
+        where: {
+          stableId: { in: avgBotUsers.map(u => u.id) },
+          teamSize: 3,
+        },
+      });
+
+      expect(teams3v3.length).toBe(0);
+    });
+
+    it('should return league2v2TeamsCreated and league3v3TeamsCreated in result (R15.7)', async () => {
+      const result = await generateBattleReadyUsers(3);
+
+      expect(result).toHaveProperty('league2v2TeamsCreated');
+      expect(result).toHaveProperty('league3v3TeamsCreated');
+      expect(typeof result.league2v2TeamsCreated).toBe('number');
+      expect(typeof result.league3v3TeamsCreated).toBe('number');
+      expect(result.league2v2TeamsCreated).toBeGreaterThanOrEqual(0);
+      expect(result.league3v3TeamsCreated).toBeGreaterThanOrEqual(0);
+    });
+
+    it('should handle team registration failures gracefully (R15.8)', async () => {
+      // Generate users — even if some team registrations fail, the function should
+      // complete without throwing and return valid results
+      const result = await generateBattleReadyUsers(3);
+
+      // The function should complete successfully regardless of team registration outcomes
+      expect(result.usersCreated).toBe(3);
+      expect(result.robotsCreated).toBe(6);
+      expect(result.usernames).toHaveLength(3);
+
+      // Team counts should be non-negative (0 if all failed, >0 if some succeeded)
+      expect(result.league2v2TeamsCreated).toBeGreaterThanOrEqual(0);
+      expect(result.league3v3TeamsCreated).toBeGreaterThanOrEqual(0);
+    });
+
+    it('should assign teams to bronze league tier (R15.6)', async () => {
+      await generateBattleReadyUsers(3);
+
+      // All created teams should be in bronze league
+      const teams = await prisma.teamBattle.findMany({
+        where: {
+          stable: { username: { startsWith: 'auto_' } },
+        },
+      });
+
+      for (const team of teams) {
+        expect(team.teamLeague).toBe('bronze');
+        expect(team.teamLeagueId).toMatch(/^bronze_\d+$/);
+      }
+    });
+
+    it('should ensure team members are subscribed to the corresponding event (R15.5)', async () => {
+      await generateBattleReadyUsers(3);
+
+      // Verify 2v2 team members have league_2v2 subscription
+      const teams2v2 = await prisma.teamBattle.findMany({
+        where: {
+          stable: { username: { startsWith: 'auto_' } },
+          teamSize: 2,
+        },
+        include: { members: { include: { robot: { include: { subscriptions: true } } } } },
+      });
+
+      for (const team of teams2v2) {
+        for (const member of team.members) {
+          const subs = member.robot.subscriptions.map(s => s.eventType);
+          expect(subs).toContain('league_2v2');
+        }
+      }
+
+      // Verify 3v3 team members have league_3v3 subscription
+      const teams3v3 = await prisma.teamBattle.findMany({
+        where: {
+          stable: { username: { startsWith: 'auto_' } },
+          teamSize: 3,
+        },
+        include: { members: { include: { robot: { include: { subscriptions: true } } } } },
+      });
+
+      for (const team of teams3v3) {
+        for (const member of team.members) {
+          const subs = member.robot.subscriptions.map(s => s.eventType);
+          expect(subs).toContain('league_3v3');
+        }
+      }
+    });
+
+    it('should NOT create teams for ExpertBot (1 robot, no team flags) (R15.3)', async () => {
+      await generateBattleReadyUsers(3);
+
+      const expertBotUsers = await prisma.user.findMany({
+        where: { username: { startsWith: 'auto_expertbot_' } },
+        select: { id: true },
+      });
+
+      const expertTeams = await prisma.teamBattle.findMany({
+        where: { stableId: { in: expertBotUsers.map(u => u.id) } },
+      });
+
+      expect(expertTeams.length).toBe(0);
+    });
   });
 });

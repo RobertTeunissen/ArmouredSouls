@@ -2,16 +2,17 @@
 title: "The Daily Cycle"
 description: "How the daily cycle works, what gets processed, and when your battles happen."
 order: 2
-lastUpdated: "2026-03-12"
+lastUpdated: "2026-06-15"
 relatedArticles:
   - getting-started/core-game-loop
   - economy/credits-and-income
   - leagues/league-tiers
+  - team-battles/overview
 ---
 
 ## Overview
 
-The daily cycle is the heartbeat of Armoured Souls. Rather than one big event, each day is split into scheduled jobs that run at fixed times (UTC). Each job handles a different part of the game — league battles in the morning, tag team and KotH at midday, tournaments mid-morning, and financial processing at midnight.
+The daily cycle is the heartbeat of Armoured Souls. Rather than one big event, each day is split into scheduled jobs that run at fixed times (UTC). Each job handles a different part of the game — 1v1 league battles in the morning, team battles and tag team at midday, tournaments mid-morning, KotH in the afternoon, and financial processing at midnight.
 
 You don't need to be online when any of these run. Make your strategic decisions beforehand, and the system handles the rest.
 
@@ -21,20 +22,24 @@ Here's what runs each day and when:
 
 ```mermaid
 graph LR
-    A["⚔️ 08:00 UTC\nLeague"] --> B["🏆 10:00 UTC\nTournaments"]
-    B --> C["👥 11:00 UTC\nTag Team"]
-    C --> D["🏔️ 13:00 UTC\nKotH"]
-    D --> E["💰 00:00 UTC\nSettlement"]
+    A["⚔️ 08:00 UTC\n1v1 League"] --> B["⚔️ 09:00 UTC\n2v2 League"]
+    B --> C["🏆 10:00 UTC\nTournaments"]
+    C --> D["👥 11:00 UTC\nTag Team"]
+    D --> E["🏔️ 13:00 UTC\nKotH"]
+    E --> F["⚔️ 14:00 UTC\n3v3 League"]
+    F --> G["💰 00:00 UTC\nSettlement"]
     style A fill:#2d6a4f,stroke:#40916c,color:#fff
-    style B fill:#6a040f,stroke:#9d0208,color:#fff
+    style B fill:#2d6a4f,stroke:#40916c,color:#fff
     style C fill:#6a040f,stroke:#9d0208,color:#fff
     style D fill:#6a040f,stroke:#9d0208,color:#fff
-    style E fill:#003566,stroke:#0077b6,color:#fff
+    style E fill:#6a040f,stroke:#9d0208,color:#fff
+    style F fill:#2d6a4f,stroke:#40916c,color:#fff
+    style G fill:#003566,stroke:#0077b6,color:#fff
 ```
 
 Only one job can run at a time. If two jobs overlap, the second one waits in a queue until the first finishes.
 
-### 08:00 UTC — League Battle Matches
+### 08:00 UTC — 1v1 League Battle Matches
 
 This is the main event — your 1v1 league battles.
 
@@ -46,6 +51,14 @@ This is the main event — your 1v1 league battles.
 ```callout-tip
 Matchmaking runs at the end of the league job, not the beginning. Any changes you make to your robots between cycles — upgrading attributes, swapping weapons, changing stance — will be in effect for the matches scheduled here.
 ```
+
+### 09:00 UTC — 2v2 League Matches
+
+2v2 team battles run daily. Both robots on each team fight simultaneously in the arena.
+
+1. **Execute 2v2 battles** — All scheduled 2v2 team matches are fought. Both robots on each side are active at the same time, with Team Coordination Attributes (syncProtocols, supportSystems, formationTactics) driving ally-targeted effects.
+2. **Rebalance 2v2 leagues** — Promotions and demotions are processed for 2v2 team standings.
+3. **2v2 matchmaking** — New 2v2 team matches are scheduled for the next cycle. Teams are paired primarily by Team LP within their league instance.
 
 ### 10:00 UTC — Tournament Matches
 
@@ -70,6 +83,14 @@ KotH battles run daily.
 2. **Execute KotH battles** — All scheduled KotH matches are fought. Placement-based rewards are distributed.
 3. **KotH matchmaking** — New KotH groups are formed for the next day.
 
+### 14:00 UTC — 3v3 League Matches
+
+3v3 team battles run daily. All three robots on each team fight simultaneously in the arena.
+
+1. **Execute 3v3 battles** — All scheduled 3v3 team matches are fought. All three robots on each side are active at the same time, with Team Coordination Attributes driving ally-targeted effects across the larger team.
+2. **Rebalance 3v3 leagues** — Promotions and demotions are processed for 3v3 team standings.
+3. **3v3 matchmaking** — New 3v3 team matches are scheduled for the next cycle. Teams are paired primarily by Team LP within their league instance.
+
 ### 00:00 UTC — Settlement (Financial Processing)
 
 The day closes with financial processing.
@@ -91,10 +112,12 @@ Here's how a full day plays out:
 
 | Time (UTC) | What Happens | What You See |
 |---|---|---|
-| 08:00 | Robots repaired, league battles fought, leagues rebalanced, new matches scheduled | League battle results, LP/ELO changes, promotion/demotion notices, upcoming match preview |
+| 08:00 | Robots repaired, 1v1 league battles fought, leagues rebalanced, new matches scheduled | League battle results, LP/ELO changes, promotion/demotion notices, upcoming match preview |
+| 09:00 | 2v2 team battles fought, 2v2 leagues rebalanced, new 2v2 matches scheduled | 2v2 team battle results, Team LP changes, team promotions/demotions |
 | 10:00 | Robots repaired, tournament round played | Tournament results and bracket updates |
 | 11:00 | Robots repaired, tag team battles | Tag team results |
 | 13:00 | Robots repaired, KotH battles | KotH placement results |
+| 14:00 | 3v3 team battles fought, 3v3 leagues rebalanced, new 3v3 matches scheduled | 3v3 team battle results, Team LP changes, team promotions/demotions |
 | 00:00 | Income credited, costs deducted, cycle advances | Updated balance, financial summary, cycle snapshot |
 
 ## When Should I Make Changes?
@@ -111,7 +134,7 @@ A typical session takes 15–30 minutes. Log in, review your results from the la
 
 After the settlement job completes (after 00:00 UTC), review:
 
-- **[Battle results](/guide/combat/battle-flow)** — Detailed logs from league, tag team, and tournament battles
+- **[Battle results](/guide/combat/battle-flow)** — Detailed logs from 1v1 league, team battles, tag team, and tournament battles
 - **[Financial summary](/guide/economy/credits-and-income)** — Income earned, costs deducted, and net change
 - **[League standings](/guide/leagues/league-tiers)** — Check for promotions, demotions, or robots close to thresholds
 - **Upcoming matches** — See who your robots are matched against for tomorrow's battles

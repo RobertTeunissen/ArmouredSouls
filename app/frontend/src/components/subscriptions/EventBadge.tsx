@@ -24,7 +24,27 @@ const EVENT_BADGE_CONFIG: Record<string, EventBadgeConfig> = {
     bgColor: 'bg-blue-500/20',
     textColor: 'text-blue-300',
   },
+  league_1v1: {
+    label: '1v1 League',
+    bgColor: 'bg-blue-500/20',
+    textColor: 'text-blue-300',
+  },
+  league_2v2: {
+    label: '2v2 League',
+    bgColor: 'bg-cyan-500/20',
+    textColor: 'text-cyan-300',
+  },
+  league_3v3: {
+    label: '3v3 League',
+    bgColor: 'bg-teal-500/20',
+    textColor: 'text-teal-300',
+  },
   tournament: {
+    label: 'Tournament',
+    bgColor: 'bg-purple-500/20',
+    textColor: 'text-purple-300',
+  },
+  tournament_1v1: {
     label: 'Tournament',
     bgColor: 'bg-purple-500/20',
     textColor: 'text-purple-300',

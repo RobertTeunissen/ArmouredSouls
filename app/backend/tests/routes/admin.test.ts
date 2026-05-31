@@ -63,6 +63,7 @@ jest.mock('../../src/services/admin/adminStatsService', () => ({
   getEngagementPlayers: jest.fn(),
   getEconomyOverview: jest.fn(),
   getLeagueHealth: jest.fn(),
+  getTeamBattleLeagueHealth: jest.fn(),
   getWeaponAnalytics: jest.fn(),
   getAchievementAnalytics: jest.fn(),
   getTuningAdoption: jest.fn(),
@@ -115,6 +116,25 @@ jest.mock('../../src/services/tag-team/tagTeamMatchmakingService', () => ({
 jest.mock('../../src/services/tag-team/tagTeamBattleOrchestrator', () => ({
   __esModule: true,
   executeScheduledTagTeamBattles: jest.fn(),
+}));
+
+// Mock team battle services
+const mockRunTeamBattleMatchmaking = jest.fn();
+jest.mock('../../src/services/team-battle/teamBattleMatchmakingService', () => ({
+  __esModule: true,
+  runTeamBattleMatchmaking: (...args: unknown[]) => mockRunTeamBattleMatchmaking(...args),
+}));
+
+const mockExecuteScheduledTeamBattles = jest.fn();
+jest.mock('../../src/services/team-battle/teamBattleOrchestrator', () => ({
+  __esModule: true,
+  executeScheduledTeamBattles: (...args: unknown[]) => mockExecuteScheduledTeamBattles(...args),
+}));
+
+const mockRebalanceTeamBattleLeagues = jest.fn();
+jest.mock('../../src/services/team-battle/teamBattleAdapter', () => ({
+  __esModule: true,
+  rebalanceTeamBattleLeagues: (...args: unknown[]) => mockRebalanceTeamBattleLeagues(...args),
 }));
 
 jest.mock('../../src/utils/economyCalculations', () => ({
@@ -189,8 +209,6 @@ describe('Admin reserved-slot trigger endpoints (R6.3, R8.2, R8.3)', () => {
   });
 
   const reservedSlotEndpoints = [
-    { path: '/api/admin/team-2v2-league/trigger', event: 'team_2v2_league' },
-    { path: '/api/admin/team-3v3-league/trigger', event: 'team_3v3_league' },
     { path: '/api/admin/team-2v2-tournament/trigger', event: 'team_2v2_tournament' },
     { path: '/api/admin/team-3v3-tournament/trigger', event: 'team_3v3_tournament' },
     { path: '/api/admin/grand-melee/trigger', event: 'grand_melee' },
@@ -232,6 +250,355 @@ describe('Admin reserved-slot trigger endpoints (R6.3, R8.2, R8.3)', () => {
       const res = await request(app).post(path).send({});
 
       expect(res.status).toBe(403);
+    });
+  });
+});
+
+describe('Admin team-league trigger endpoints (R14.3, R14.4, R14.5)', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUser = { userId: 1, username: 'admin', role: 'admin' };
+    mockExecuteScheduledTeamBattles.mockResolvedValue({ matchesCompleted: 2, matchesCancelled: 0, results: [] });
+    mockRebalanceTeamBattleLeagues.mockResolvedValue({ promoted: 0, demoted: 0 });
+    mockRunTeamBattleMatchmaking.mockResolvedValue(3);
+  });
+
+  describe('POST /api/admin/team-2v2-league/trigger', () => {
+    test('should return HTTP 200 with execution, rebalance, and matchmaking results', async () => {
+      const res = await request(app).post('/api/admin/team-2v2-league/trigger').send({});
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.event).toBe('team_2v2_league');
+      expect(res.body.execution).toEqual({ matchesCompleted: 2, matchesCancelled: 0 });
+      expect(res.body.matchmaking).toEqual({ matchesCreated: 3 });
+      expect(res.body.timestamp).toBeDefined();
+      expect(mockExecuteScheduledTeamBattles).toHaveBeenCalledWith(2);
+      expect(mockRunTeamBattleMatchmaking).toHaveBeenCalledWith(2);
+    });
+
+    test('should emit audit log on success', async () => {
+      await request(app).post('/api/admin/team-2v2-league/trigger').send({});
+
+      expect(mockRecordAction).toHaveBeenCalledWith(
+        1,
+        'team_battle',
+        'success',
+        expect.objectContaining({ action: 'trigger_cycle', teamSize: 2 }),
+      );
+    });
+
+    test('should require authentication (401 without token)', async () => {
+      mockUser = null;
+      const res = await request(app).post('/api/admin/team-2v2-league/trigger').send({});
+      expect(res.status).toBe(401);
+    });
+
+    test('should require admin role (403 for non-admin)', async () => {
+      mockUser = { userId: 2, username: 'player', role: 'user' };
+      const res = await request(app).post('/api/admin/team-2v2-league/trigger').send({});
+      expect(res.status).toBe(403);
+    });
+
+    test('should return 500 and emit failure audit log on error', async () => {
+      mockExecuteScheduledTeamBattles.mockRejectedValue(new Error('DB error'));
+
+      const res = await request(app).post('/api/admin/team-2v2-league/trigger').send({});
+
+      expect(res.status).toBe(500);
+      expect(res.body.error).toBe('Failed to trigger Team 2v2 League cycle');
+      expect(mockRecordAction).toHaveBeenCalledWith(
+        1,
+        'team_battle',
+        'failure',
+        expect.objectContaining({ action: 'trigger_cycle', teamSize: 2, error: 'DB error' }),
+      );
+    });
+  });
+
+  describe('POST /api/admin/team-3v3-league/trigger', () => {
+    test('should return HTTP 200 with execution, rebalance, and matchmaking results', async () => {
+      const res = await request(app).post('/api/admin/team-3v3-league/trigger').send({});
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.event).toBe('team_3v3_league');
+      expect(res.body.execution).toEqual({ matchesCompleted: 2, matchesCancelled: 0 });
+      expect(res.body.matchmaking).toEqual({ matchesCreated: 3 });
+      expect(mockExecuteScheduledTeamBattles).toHaveBeenCalledWith(3);
+      expect(mockRunTeamBattleMatchmaking).toHaveBeenCalledWith(3);
+    });
+
+    test('should emit audit log on success', async () => {
+      await request(app).post('/api/admin/team-3v3-league/trigger').send({});
+
+      expect(mockRecordAction).toHaveBeenCalledWith(
+        1,
+        'team_battle',
+        'success',
+        expect.objectContaining({ action: 'trigger_cycle', teamSize: 3 }),
+      );
+    });
+
+    test('should require authentication (401 without token)', async () => {
+      mockUser = null;
+      const res = await request(app).post('/api/admin/team-3v3-league/trigger').send({});
+      expect(res.status).toBe(401);
+    });
+
+    test('should require admin role (403 for non-admin)', async () => {
+      mockUser = { userId: 2, username: 'player', role: 'user' };
+      const res = await request(app).post('/api/admin/team-3v3-league/trigger').send({});
+      expect(res.status).toBe(403);
+    });
+
+    test('should return 500 and emit failure audit log on error', async () => {
+      mockExecuteScheduledTeamBattles.mockRejectedValue(new Error('Timeout'));
+
+      const res = await request(app).post('/api/admin/team-3v3-league/trigger').send({});
+
+      expect(res.status).toBe(500);
+      expect(res.body.error).toBe('Failed to trigger Team 3v3 League cycle');
+      expect(mockRecordAction).toHaveBeenCalledWith(
+        1,
+        'team_battle',
+        'failure',
+        expect.objectContaining({ action: 'trigger_cycle', teamSize: 3, error: 'Timeout' }),
+      );
+    });
+  });
+});
+
+describe('Admin team battle endpoints (R14.3, R14.4, R14.5)', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUser = { userId: 1, username: 'admin', role: 'admin' };
+  });
+
+  describe('POST /api/admin/team-battles/matchmaking', () => {
+    test('should invoke matchmaking for teamSize 2 and return success', async () => {
+      mockRunTeamBattleMatchmaking.mockResolvedValue(5);
+
+      const res = await request(app)
+        .post('/api/admin/team-battles/matchmaking')
+        .send({ teamSize: 2 });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.matchesCreated).toBe(5);
+      expect(res.body.teamSize).toBe(2);
+      expect(res.body.timestamp).toBeDefined();
+      expect(mockRunTeamBattleMatchmaking).toHaveBeenCalledWith(2);
+    });
+
+    test('should invoke matchmaking for teamSize 3 and return success', async () => {
+      mockRunTeamBattleMatchmaking.mockResolvedValue(3);
+
+      const res = await request(app)
+        .post('/api/admin/team-battles/matchmaking')
+        .send({ teamSize: 3 });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.matchesCreated).toBe(3);
+      expect(res.body.teamSize).toBe(3);
+      expect(mockRunTeamBattleMatchmaking).toHaveBeenCalledWith(3);
+    });
+
+    test('should emit audit log on success', async () => {
+      mockRunTeamBattleMatchmaking.mockResolvedValue(4);
+
+      await request(app)
+        .post('/api/admin/team-battles/matchmaking')
+        .send({ teamSize: 2 });
+
+      expect(mockRecordAction).toHaveBeenCalledWith(
+        1,
+        'team_battle_matchmaking',
+        'success',
+        expect.objectContaining({ teamSize: 2, matchesCreated: 4 }),
+      );
+    });
+
+    test('should emit audit log on failure', async () => {
+      mockRunTeamBattleMatchmaking.mockRejectedValue(new Error('DB connection lost'));
+
+      const res = await request(app)
+        .post('/api/admin/team-battles/matchmaking')
+        .send({ teamSize: 2 });
+
+      expect(res.status).toBe(500);
+      expect(res.body.error).toBe('Failed to run team battle matchmaking');
+      expect(mockRecordAction).toHaveBeenCalledWith(
+        1,
+        'team_battle_matchmaking',
+        'failure',
+        expect.objectContaining({ error: 'DB connection lost' }),
+      );
+    });
+
+    test('should require authentication (401 without token)', async () => {
+      mockUser = null;
+
+      const res = await request(app)
+        .post('/api/admin/team-battles/matchmaking')
+        .send({ teamSize: 2 });
+
+      expect(res.status).toBe(401);
+      expect(mockRunTeamBattleMatchmaking).not.toHaveBeenCalled();
+    });
+
+    test('should require admin role (403 for non-admin)', async () => {
+      mockUser = { userId: 2, username: 'player', role: 'user' };
+
+      const res = await request(app)
+        .post('/api/admin/team-battles/matchmaking')
+        .send({ teamSize: 2 });
+
+      expect(res.status).toBe(403);
+      expect(mockRunTeamBattleMatchmaking).not.toHaveBeenCalled();
+    });
+
+    test('should reject invalid teamSize via Zod validation', async () => {
+      const res = await request(app)
+        .post('/api/admin/team-battles/matchmaking')
+        .send({ teamSize: 4 });
+
+      expect(res.status).toBe(400);
+      expect(mockRunTeamBattleMatchmaking).not.toHaveBeenCalled();
+    });
+
+    test('should reject missing teamSize via Zod validation', async () => {
+      const res = await request(app)
+        .post('/api/admin/team-battles/matchmaking')
+        .send({});
+
+      expect(res.status).toBe(400);
+      expect(mockRunTeamBattleMatchmaking).not.toHaveBeenCalled();
+    });
+
+    test('should reject non-numeric teamSize via Zod validation', async () => {
+      const res = await request(app)
+        .post('/api/admin/team-battles/matchmaking')
+        .send({ teamSize: 'two' });
+
+      expect(res.status).toBe(400);
+      expect(mockRunTeamBattleMatchmaking).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('POST /api/admin/team-battles/battles', () => {
+    const mockSummary = { matchesCompleted: 3, matchesCancelled: 0, results: [] };
+
+    test('should invoke battle execution for teamSize 2 and return success', async () => {
+      mockExecuteScheduledTeamBattles.mockResolvedValue(mockSummary);
+
+      const res = await request(app)
+        .post('/api/admin/team-battles/battles')
+        .send({ teamSize: 2 });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.summary).toEqual(mockSummary);
+      expect(res.body.teamSize).toBe(2);
+      expect(res.body.timestamp).toBeDefined();
+      expect(mockExecuteScheduledTeamBattles).toHaveBeenCalledWith(2);
+    });
+
+    test('should invoke battle execution for teamSize 3 and return success', async () => {
+      const summary3v3 = { matchesCompleted: 2, matchesCancelled: 1, results: [] };
+      mockExecuteScheduledTeamBattles.mockResolvedValue(summary3v3);
+
+      const res = await request(app)
+        .post('/api/admin/team-battles/battles')
+        .send({ teamSize: 3 });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.summary).toEqual(summary3v3);
+      expect(res.body.teamSize).toBe(3);
+      expect(mockExecuteScheduledTeamBattles).toHaveBeenCalledWith(3);
+    });
+
+    test('should emit audit log on success', async () => {
+      mockExecuteScheduledTeamBattles.mockResolvedValue(mockSummary);
+
+      await request(app)
+        .post('/api/admin/team-battles/battles')
+        .send({ teamSize: 3 });
+
+      expect(mockRecordAction).toHaveBeenCalledWith(
+        1,
+        'team_battle_execution',
+        'success',
+        expect.objectContaining({ teamSize: 3, summary: mockSummary }),
+      );
+    });
+
+    test('should emit audit log on failure', async () => {
+      mockExecuteScheduledTeamBattles.mockRejectedValue(new Error('Simulation timeout'));
+
+      const res = await request(app)
+        .post('/api/admin/team-battles/battles')
+        .send({ teamSize: 2 });
+
+      expect(res.status).toBe(500);
+      expect(res.body.error).toBe('Failed to execute team battles');
+      expect(mockRecordAction).toHaveBeenCalledWith(
+        1,
+        'team_battle_execution',
+        'failure',
+        expect.objectContaining({ error: 'Simulation timeout' }),
+      );
+    });
+
+    test('should require authentication (401 without token)', async () => {
+      mockUser = null;
+
+      const res = await request(app)
+        .post('/api/admin/team-battles/battles')
+        .send({ teamSize: 2 });
+
+      expect(res.status).toBe(401);
+      expect(mockExecuteScheduledTeamBattles).not.toHaveBeenCalled();
+    });
+
+    test('should require admin role (403 for non-admin)', async () => {
+      mockUser = { userId: 2, username: 'player', role: 'user' };
+
+      const res = await request(app)
+        .post('/api/admin/team-battles/battles')
+        .send({ teamSize: 3 });
+
+      expect(res.status).toBe(403);
+      expect(mockExecuteScheduledTeamBattles).not.toHaveBeenCalled();
+    });
+
+    test('should reject invalid teamSize via Zod validation', async () => {
+      const res = await request(app)
+        .post('/api/admin/team-battles/battles')
+        .send({ teamSize: 1 });
+
+      expect(res.status).toBe(400);
+      expect(mockExecuteScheduledTeamBattles).not.toHaveBeenCalled();
+    });
+
+    test('should reject missing teamSize via Zod validation', async () => {
+      const res = await request(app)
+        .post('/api/admin/team-battles/battles')
+        .send({});
+
+      expect(res.status).toBe(400);
+      expect(mockExecuteScheduledTeamBattles).not.toHaveBeenCalled();
+    });
+
+    test('should reject non-numeric teamSize via Zod validation', async () => {
+      const res = await request(app)
+        .post('/api/admin/team-battles/battles')
+        .send({ teamSize: 'three' });
+
+      expect(res.status).toBe(400);
+      expect(mockExecuteScheduledTeamBattles).not.toHaveBeenCalled();
     });
   });
 });

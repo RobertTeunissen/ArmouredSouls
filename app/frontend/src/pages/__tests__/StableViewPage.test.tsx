@@ -77,6 +77,9 @@ function buildStableResponse(overrides: Record<string, unknown> = {}) {
       winRate: 66.7,
       highestElo: 1500,
       activeRobots: 1,
+      totalTeamBattles: 12,
+      teamBattleWins: 8,
+      teamBattleWinRate: 75.0,
     },
     ...overrides,
   };
@@ -183,6 +186,9 @@ describe('StableViewPage', () => {
     expect(screen.getByText('Win Rate')).toBeInTheDocument();
     expect(screen.getByText('Highest ELO')).toBeInTheDocument();
     expect(screen.getByText('Active Robots')).toBeInTheDocument();
+    expect(screen.getByText('Team Battles')).toBeInTheDocument();
+    expect(screen.getByText('Team Battle Wins')).toBeInTheDocument();
+    expect(screen.getByText('Team Battle Win Rate')).toBeInTheDocument();
 
     // Verify stat values by checking the value next to each label
     // Use the stat card structure: label div followed by value div
@@ -192,6 +198,11 @@ describe('StableViewPage', () => {
     // Win rate and highest ELO are unique enough to check directly
     expect(screen.getByText('66.7%')).toBeInTheDocument();
     expect(screen.getByText('1,500')).toBeInTheDocument();
+    // Team battle stats - verify labels are present (values may conflict with robot stats)
+    expect(screen.getByText('Team Battles')).toBeInTheDocument();
+    expect(screen.getByText('Team Battle Wins')).toBeInTheDocument();
+    expect(screen.getByText('Team Battle Win Rate')).toBeInTheDocument();
+    expect(screen.getByText('75%')).toBeInTheDocument(); // team battle win rate
   });
 
   // Requirements 3.2, 3.3, 3.4 — facility groups with level progress

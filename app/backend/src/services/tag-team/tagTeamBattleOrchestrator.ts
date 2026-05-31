@@ -168,6 +168,12 @@ function createByeTeamForBattle(league: string, leagueId: string): TagTeamWithRo
     totalTagTeamDraws: 0,
     timesTaggedIn: 0,
     timesTaggedOut: 0,
+    // Team Battle Statistics
+    totalLeague1v1Wins: 0,
+    totalLeague1v1Losses: 0,
+    totalLeague1v1Draws: 0,
+    totalLeague2v2Wins: 0,
+    totalLeague3v3Wins: 0,
     // Economic
     repairCost: 0,
     battleReadiness: 100,
@@ -237,6 +243,15 @@ function createByeTeamForBattle(league: string, leagueId: string): TagTeamWithRo
  * Requirement 12.3: Execute normal battle against bye-team
  */
 export async function executeTagTeamBattle(match: ScheduledTagTeamMatch): Promise<TagTeamBattleResult> {
+  // R1.8: Reject payloads with team battle league types
+  if (match.tagTeamLeague === 'league_2v2' || match.tagTeamLeague === 'league_3v3') {
+    throw new TagTeamError(
+      TagTeamErrorCode.INVALID_TEAM_COMPOSITION,
+      'Tag Team Orchestrator cannot process league_2v2 or league_3v3 battle types',
+      400,
+    );
+  }
+
   // Check if this is a bye-team match
   const _isByeMatch = match.team2Id === null;
   

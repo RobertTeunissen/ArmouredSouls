@@ -14,7 +14,7 @@ import { AppError } from '../../errors';
 
 // --- Types ---
 
-export type EntityType = 'robot' | 'tag_team';
+export type EntityType = 'robot' | 'tag_team' | 'team_battle';
 export type ChangeType = 'promotion' | 'demotion';
 
 export interface RecordTierChangeParams {

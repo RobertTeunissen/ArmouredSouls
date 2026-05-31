@@ -74,7 +74,7 @@ async function main(): Promise<void> {
             yieldThreshold: 10,
             hasTuning: false,
             hasMainWeapon: true,
-            battleType: 'league',
+            battleType: 'league_1v1',
             battleDurationSeconds: 60,
           },
         });
@@ -106,7 +106,7 @@ async function main(): Promise<void> {
           yieldThreshold: 10,
           hasTuning: false,
           hasMainWeapon: true,
-          battleType: 'league',
+          battleType: 'league_1v1',
           battleDurationSeconds: 60,
         },
       });

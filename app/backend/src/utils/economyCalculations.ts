@@ -770,7 +770,7 @@ export async function generatePerRobotFinancialReport(userId: number): Promise<{
           isWinner,
           reward,
           repairCost: 0, // Repair costs tracked on robot, not battle
-          battleType: battle.battleType || 'league', // Default to league if not set
+          battleType: battle.battleType || 'league_1v1', // Default to league if not set
           createdAt: battle.createdAt,
         });
       }

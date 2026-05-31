@@ -27,6 +27,7 @@ export {
   getEngagementPlayers,
   getEconomyOverview,
   getLeagueHealth,
+  getTeamBattleLeagueHealth,
   getWeaponAnalytics,
   getAchievementAnalytics,
   getTuningAdoption,

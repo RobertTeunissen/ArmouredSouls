@@ -58,6 +58,18 @@ jest.mock('../../../src/services/tag-team/tagTeamBattleOrchestrator', () => ({
   executeScheduledTagTeamBattles: jest.fn().mockResolvedValue({ totalBattles: 0 }),
 }));
 
+jest.mock('../../../src/services/team-battle/teamBattleOrchestrator', () => ({
+  executeScheduledTeamBattles: jest.fn().mockResolvedValue({ matchesCompleted: 0, matchesCancelled: 0, results: [] }),
+}));
+
+jest.mock('../../../src/services/team-battle/teamBattleAdapter', () => ({
+  rebalanceTeamBattleLeagues: jest.fn().mockResolvedValue({ totalTeams: 0, totalPromoted: 0, totalDemoted: 0, tierSummaries: [], errors: [] }),
+}));
+
+jest.mock('../../../src/services/team-battle/teamBattleMatchmakingService', () => ({
+  runTeamBattleMatchmaking: jest.fn().mockResolvedValue(0),
+}));
+
 jest.mock('../../../src/services/tournament/tournamentService', () => ({
   getActiveTournaments: jest.fn().mockResolvedValue([]),
   getCurrentRoundMatches: jest.fn().mockResolvedValue([]),
@@ -157,25 +169,24 @@ describe('Admin Cycle Service — executeBulkCycles', () => {
       const result = await executeBulkCycles({ cycles: 1 });
       const cycleResult = result.results[0];
 
-      // All reserved slots should have skipped: true
-      expect(cycleResult.team2v2LeagueBlock).toEqual({ skipped: true, message: 'reserved slot, no handler implemented' });
-      expect(cycleResult.team3v3LeagueBlock).toEqual({ skipped: true, message: 'reserved slot, no handler implemented' });
+      // Only remaining reserved slots should have skipped: true
       expect(cycleResult.team2v2TournamentBlock).toEqual({ skipped: true, message: 'reserved slot, no handler implemented' });
       expect(cycleResult.grandMeleeBlock).toEqual({ skipped: true, message: 'reserved slot, no handler implemented' });
       expect(cycleResult.team3v3TournamentBlock).toEqual({ skipped: true, message: 'reserved slot, no handler implemented' });
     });
 
-    it('should fire all 5 reserved slots and record them', async () => {
+    it('should fire only 3 reserved slots and record them (team 2v2/3v3 league are now active)', async () => {
       const result = await executeBulkCycles({ cycles: 1 });
       const cycleResult = result.results[0];
 
       expect(cycleResult.reservedSlotsFired).toBeDefined();
-      expect(cycleResult.reservedSlotsFired).toContain('team_2v2_league');
-      expect(cycleResult.reservedSlotsFired).toContain('team_3v3_league');
       expect(cycleResult.reservedSlotsFired).toContain('team_2v2_tournament');
       expect(cycleResult.reservedSlotsFired).toContain('grand_melee');
       expect(cycleResult.reservedSlotsFired).toContain('team_3v3_tournament');
-      expect(cycleResult.reservedSlotsFired).toHaveLength(5);
+      expect(cycleResult.reservedSlotsFired).toHaveLength(3);
+      // team_2v2_league and team_3v3_league are no longer reserved
+      expect(cycleResult.reservedSlotsFired).not.toContain('team_2v2_league');
+      expect(cycleResult.reservedSlotsFired).not.toContain('team_3v3_league');
     });
   });
 
@@ -258,7 +269,7 @@ describe('Admin Cycle Service — executeBulkCycles', () => {
         expect(cycleResult.leagueBlock).toBeDefined();
         expect(cycleResult.tagTeamBlock).toBeDefined();
         expect(cycleResult.settlement).toBeDefined();
-        expect(cycleResult.reservedSlotsFired).toHaveLength(5);
+        expect(cycleResult.reservedSlotsFired).toHaveLength(3);
       }
     });
   });

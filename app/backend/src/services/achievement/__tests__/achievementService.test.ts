@@ -356,7 +356,7 @@ describe('AchievementService trigger evaluation', () => {
 
     const event: AchievementEvent = {
       type: 'battle_complete',
-      data: { won: true, eloDiff: 200, battleType: 'league' },
+      data: { won: true, eloDiff: 200, battleType: 'league_1v1' },
     };
 
     const result = await achievementService.checkAndAward(1, 1, event);

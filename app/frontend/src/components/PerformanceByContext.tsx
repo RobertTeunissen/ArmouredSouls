@@ -47,6 +47,8 @@ function PerformanceByContext({ robotId }: PerformanceByContextProps) {
   const [leagues, setLeagues] = useState<LeaguePerformance[]>([]);
   const [tournaments, setTournaments] = useState<TournamentPerformance[]>([]);
   const [tagTeam, setTagTeam] = useState<TagTeamPerformance | null>(null);
+  const [league2v2, setLeague2v2] = useState<TagTeamPerformance | null>(null);
+  const [league3v3, setLeague3v3] = useState<TagTeamPerformance | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -59,6 +61,8 @@ function PerformanceByContext({ robotId }: PerformanceByContextProps) {
         setLeagues(data.leagues as LeaguePerformance[]);
         setTournaments(data.tournaments as TournamentPerformance[]);
         setTagTeam(data.tagTeam as TagTeamPerformance | null);
+        setLeague2v2((data as unknown as { league2v2?: TagTeamPerformance }).league2v2 ?? null);
+        setLeague3v3((data as unknown as { league3v3?: TagTeamPerformance }).league3v3 ?? null);
       } catch (err) {
         setError('Failed to load performance data');
         log.error('Performance context fetch error', { err });
@@ -256,6 +260,96 @@ function PerformanceByContext({ robotId }: PerformanceByContextProps) {
                     width: `${(tagTeam.damageTaken / (tagTeam.damageDealt + tagTeam.damageTaken)) * 100}%`,
                   }}
                   title={`Taken: ${tagTeam.damageTaken.toLocaleString()}`}
+                ></div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* 2v2 League Section */}
+        <div>
+          <div className="flex items-center gap-1.5 mb-1">
+            <span className="text-base">⚔️</span>
+            <h4 className="text-xs font-semibold text-secondary">2v2 League</h4>
+            {(!league2v2 || league2v2.totalBattles === 0) && <span className="text-xs text-tertiary">No battles yet</span>}
+          </div>
+          
+          {league2v2 && league2v2.totalBattles > 0 && (
+            <div className="ml-5">
+              <div className="flex items-center justify-between mb-0.5">
+                <span className="text-xs text-secondary">{league2v2.totalBattles} battles</span>
+                <div className="text-xs">
+                  <span className="text-success">{league2v2.wins}W</span>
+                  <span className="text-tertiary mx-0.5">-</span>
+                  <span className="text-error">{league2v2.losses}L</span>
+                  {league2v2.draws > 0 && (
+                    <>
+                      <span className="text-tertiary mx-0.5">-</span>
+                      <span className="text-amber-400">{league2v2.draws}D</span>
+                    </>
+                  )}
+                  <span className="text-tertiary ml-1">({league2v2.winRate}%)</span>
+                </div>
+              </div>
+              <div className="flex gap-0.5 h-1.5">
+                <div
+                  className="bg-green-500 rounded"
+                  style={{
+                    width: `${league2v2.damageDealt > 0 ? (league2v2.damageDealt / (league2v2.damageDealt + league2v2.damageTaken)) * 100 : 50}%`,
+                  }}
+                  title={`Dealt: ${league2v2.damageDealt.toLocaleString()}`}
+                ></div>
+                <div
+                  className="bg-red-500 rounded"
+                  style={{
+                    width: `${league2v2.damageTaken > 0 ? (league2v2.damageTaken / (league2v2.damageDealt + league2v2.damageTaken)) * 100 : 50}%`,
+                  }}
+                  title={`Taken: ${league2v2.damageTaken.toLocaleString()}`}
+                ></div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* 3v3 League Section */}
+        <div>
+          <div className="flex items-center gap-1.5 mb-1">
+            <span className="text-base">🗡️</span>
+            <h4 className="text-xs font-semibold text-secondary">3v3 League</h4>
+            {(!league3v3 || league3v3.totalBattles === 0) && <span className="text-xs text-tertiary">No battles yet</span>}
+          </div>
+          
+          {league3v3 && league3v3.totalBattles > 0 && (
+            <div className="ml-5">
+              <div className="flex items-center justify-between mb-0.5">
+                <span className="text-xs text-secondary">{league3v3.totalBattles} battles</span>
+                <div className="text-xs">
+                  <span className="text-success">{league3v3.wins}W</span>
+                  <span className="text-tertiary mx-0.5">-</span>
+                  <span className="text-error">{league3v3.losses}L</span>
+                  {league3v3.draws > 0 && (
+                    <>
+                      <span className="text-tertiary mx-0.5">-</span>
+                      <span className="text-amber-400">{league3v3.draws}D</span>
+                    </>
+                  )}
+                  <span className="text-tertiary ml-1">({league3v3.winRate}%)</span>
+                </div>
+              </div>
+              <div className="flex gap-0.5 h-1.5">
+                <div
+                  className="bg-green-500 rounded"
+                  style={{
+                    width: `${league3v3.damageDealt > 0 ? (league3v3.damageDealt / (league3v3.damageDealt + league3v3.damageTaken)) * 100 : 50}%`,
+                  }}
+                  title={`Dealt: ${league3v3.damageDealt.toLocaleString()}`}
+                ></div>
+                <div
+                  className="bg-red-500 rounded"
+                  style={{
+                    width: `${league3v3.damageTaken > 0 ? (league3v3.damageTaken / (league3v3.damageDealt + league3v3.damageTaken)) * 100 : 50}%`,
+                  }}
+                  title={`Taken: ${league3v3.damageTaken.toLocaleString()}`}
                 ></div>
               </div>
             </div>

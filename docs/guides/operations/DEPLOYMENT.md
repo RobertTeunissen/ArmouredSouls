@@ -252,3 +252,69 @@ pm2 restart armouredsouls-backend
 ```
 
 The scheduler picks up the new env values on restart. No database migration rollback is needed — Spec 36 has no schema changes.
+
+
+---
+
+## Spec 37 — Team Battles (2v2 and 3v3)
+
+### Hard Prerequisites: Spec 35 → Spec 36 → Spec 37
+
+Spec 37 (Team Battles) **must not be deployed** until both Spec 35 (Booking Office) and Spec 36 (Cron Schedule Restructure) are live. The dependency chain is:
+
+1. **Spec 35 (Booking Office)** — provides the `subscriptions` table, `eventRegistry`, `isRobotSubscribedTo`, and locking predicates. Team Battle matchmaking calls `isRobotSubscribedTo` to gate pool inclusion.
+2. **Spec 36 (Cron Schedule Restructure)** — provides the 10-slot daily cron map with reserved stubs for `team_2v2_league` (09:00 UTC) and `team_3v3_league` (14:00 UTC). Spec 37 replaces those stubs with real handlers.
+3. **Spec 37 (Team Battles)** — registers `league_2v2` and `league_3v3` as subscribable events, adds the `TeamBattle`, `TeamBattleMember`, and `ScheduledTeamBattleMatch` tables, and activates the 2v2/3v3 cron handlers.
+
+### Deploy Steps
+
+After merging Spec 37 to `main`:
+
+1. CI/CD deploys to ACC automatically (standard pipeline)
+2. The Prisma migration creates `team_battle`, `team_battle_member`, and `scheduled_team_battle_match` tables, adds `totalLeague2v2Wins`/`totalLeague3v3Wins` to `Robot`, and renames event types (`league` → `league_1v1`, `tournament` → `tournament_1v1`) in `subscriptions` and `battles` tables
+3. On startup, the backend registers `league_2v2` and `league_3v3` in the Event Registry and replaces the reserved-slot stubs with real handlers
+4. The next daily cycle at 09:00 UTC (2v2) and 14:00 UTC (3v3) will execute Team Battle matchmaking and battles
+
+### Verification After Deploy
+
+```bash
+# Verify migration applied
+cd /opt/armouredsouls/backend && npx prisma migrate status
+
+# Verify new tables exist
+psql -c "SELECT COUNT(*) FROM team_battle;" $DATABASE_URL
+psql -c "SELECT COUNT(*) FROM team_battle_member;" $DATABASE_URL
+psql -c "SELECT COUNT(*) FROM scheduled_team_battle_match;" $DATABASE_URL
+
+# Verify event type rename completed
+psql -c "SELECT COUNT(*) FROM subscriptions WHERE event_type IN ('league', 'tournament');" $DATABASE_URL
+# Should return 0
+
+# Verify health endpoint
+curl -sf https://acc.armouredsouls.com/api/health
+```
+
+### Rollback Procedure
+
+If a critical defect is discovered after deploying Spec 37:
+
+**Option A — Disable Team Battle cron slots via env vars (no code rollback):**
+
+```bash
+# In /opt/armouredsouls/backend/.env, override schedules to never fire:
+TEAM_2V2_LEAGUE_SCHEDULE='0 0 30 2 *'
+TEAM_3V3_LEAGUE_SCHEDULE='0 0 30 2 *'
+```
+
+Restart PM2. The slots will not fire (Feb 30 never occurs). Existing teams and data remain intact but no new battles are scheduled.
+
+**Option B — Full code rollback:**
+
+```bash
+# Revert to pre-Spec-37 commit
+git checkout <pre-spec-37-sha> -- app/backend/src/services/team-battle/
+git checkout <pre-spec-37-sha> -- app/backend/src/services/cycle/cycleScheduler.ts
+pm2 restart armouredsouls-backend
+```
+
+Note: The database migration (new tables, renamed event types) is forward-only. The new tables are harmless if unused. The event type rename (`league` → `league_1v1`) is consumed by all code paths after Spec 37 — a full rollback would need to also revert the migration or update code to handle both old and new names.

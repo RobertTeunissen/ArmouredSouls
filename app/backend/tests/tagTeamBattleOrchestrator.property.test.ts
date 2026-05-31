@@ -8,7 +8,7 @@ const NUM_RUNS = 10;
 
 // Helper to create a test robot
 function createTestRobot(overrides: Partial<Robot> = {}): Robot {
-  return {
+  return ({
     id: Math.floor(Math.random() * 10000),
     userId: 1,
     name: `Test Robot ${Math.random()}`,
@@ -96,7 +96,7 @@ function createTestRobot(overrides: Partial<Robot> = {}): Robot {
     createdAt: new Date(),
     updatedAt: new Date(),
     ...overrides,
-  };
+  }) as Robot;
 }
 
 describe('Tag Team Battle Orchestrator - Property Tests', () => {

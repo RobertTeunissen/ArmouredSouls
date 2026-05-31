@@ -26,8 +26,7 @@ export const implementedPages = new Set([
   '/league-standings',
   '/koth-standings',
   '/tournaments',
-  '/tag-teams',
-  '/tag-teams/standings',
+  '/team-battles',
   '/admin',
   '/leaderboards/fame',
   '/leaderboards/prestige',
@@ -57,7 +56,6 @@ export const allPages: Record<string, NavCategory> = {
       { path: '/battle-history', label: 'Battle History' },
       { path: '/league-standings', label: 'League Standings' },
       { path: '/koth-standings', label: 'King of the Hill Standings' },
-      { path: '/tag-teams/standings', label: 'Tag Team Standings' },
       { path: '/tournaments', label: 'Tournament Hub' },
       { path: '---', label: '' },
       { path: '/practice-arena', label: '🧪 Combat Simulator' },
@@ -68,8 +66,8 @@ export const allPages: Record<string, NavCategory> = {
     items: [
       { path: '/facilities', label: 'Facilities' },
       { path: '/booking-office', label: '📋 Booking Office' },
+      { path: '/team-battles', label: 'Team Management' },
       { path: '/weapon-shop', label: 'Weapon Shop' },
-      { path: '/tag-teams', label: 'Tag Team Management' },
       { path: '/income', label: 'Income Dashboard' },
       { path: '/cycle-summary', label: 'Cycle Summary' },
     ]

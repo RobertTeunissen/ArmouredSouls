@@ -17,15 +17,15 @@ vi.mock('../../utils/api', () => ({
 }));
 
 const defaultRegistryEvents: useSubscriptionsModule.EligibleEvent[] = [
-  { type: 'league', label: '1v1 League', eligible: true },
-  { type: 'tournament', label: '1v1 Tournament', eligible: true },
+  { type: 'league_1v1', label: '1v1 League', eligible: true },
+  { type: 'tournament_1v1', label: '1v1 Tournament', eligible: true },
   { type: 'koth', label: 'King of the Hill', eligible: true },
   { type: 'tag_team', label: 'Tag Team', eligible: false, reason: 'Tag Team requires 2 or more robots' },
 ];
 
 const multiRobotRegistryEvents: useSubscriptionsModule.EligibleEvent[] = [
-  { type: 'league', label: '1v1 League', eligible: true },
-  { type: 'tournament', label: '1v1 Tournament', eligible: true },
+  { type: 'league_1v1', label: '1v1 League', eligible: true },
+  { type: 'tournament_1v1', label: '1v1 Tournament', eligible: true },
   { type: 'koth', label: 'King of the Hill', eligible: true },
   { type: 'tag_team', label: 'Tag Team', eligible: true },
 ];
@@ -242,8 +242,8 @@ describe('OnboardingSubscriptionPicker', () => {
       fireEvent.click(confirmButton);
 
       await waitFor(() => {
-        expect(api.post).toHaveBeenCalledWith('/api/subscriptions/robot/42/subscribe', { eventType: 'league' });
-        expect(api.post).toHaveBeenCalledWith('/api/subscriptions/robot/42/subscribe', { eventType: 'tournament' });
+        expect(api.post).toHaveBeenCalledWith('/api/subscriptions/robot/42/subscribe', { eventType: 'league_1v1' });
+        expect(api.post).toHaveBeenCalledWith('/api/subscriptions/robot/42/subscribe', { eventType: 'tournament_1v1' });
         expect(api.post).toHaveBeenCalledWith('/api/subscriptions/robot/42/subscribe', { eventType: 'koth' });
       });
     });

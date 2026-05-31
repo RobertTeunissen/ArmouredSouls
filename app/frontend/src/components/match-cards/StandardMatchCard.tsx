@@ -10,7 +10,7 @@ interface StandardMatchCardProps {
 
 function StandardMatchCard({ match, myRobot, opponent, getRoundName }: StandardMatchCardProps) {
   const navigate = useNavigate();
-  const isTournament = match.matchType === 'tournament';
+  const isTournament = match.matchType === 'tournament_1v1';
 
   const tierColor = isTournament ? 'text-[#d29922]' : getLeagueTierColor(match.leagueType);
   const tierName = isTournament

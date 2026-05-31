@@ -3,6 +3,8 @@ import prisma from '../lib/prisma';
 import logger from '../config/logger';
 import { assignLeagueInstance } from '../services/league/leagueInstanceService';
 import { assignTagTeamLeagueInstance } from '../services/tag-team/tagTeamLeagueInstanceService';
+import { registerTeam } from '../services/team-battle/teamBattleService';
+import { assignTeamBattleLeagueInstance } from '../services/team-battle/teamBattleAdapter';
 import {
   TIER_CONFIGS,
   TierConfig,
@@ -13,7 +15,6 @@ import {
 } from './tierConfig';
 import { generateStableName } from './stableNameGenerator';
 import { selectWeapon, selectShield, WeaponRecord } from './weaponSelection';
-import { getEligibleEvents } from '../services/subscription/rosterEligibilityFilter';
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -87,6 +88,8 @@ export async function generateBattleReadyUsers(
       usersCreated: 0,
       robotsCreated: 0,
       tagTeamsCreated: 0,
+      league2v2TeamsCreated: 0,
+      league3v3TeamsCreated: 0,
       usernames: [],
       tierBreakdown: { wimpBot: 0, averageBot: 0, expertBot: 0 },
     };
@@ -134,6 +137,8 @@ export async function generateBattleReadyUsers(
   const usernames: string[] = [];
   let totalRobotsCreated = 0;
   let totalTagTeamsCreated = 0;
+  let totalLeague2v2TeamsCreated = 0;
+  let totalLeague3v3TeamsCreated = 0;
 
   for (const { tier, count } of stablePlan) {
     for (let i = 0; i < count; i++) {
@@ -142,8 +147,13 @@ export async function generateBattleReadyUsers(
       const seqNum = userCountsByTier[tier.name];
       const username = `${tierPrefix(tier.name)}_${String(seqNum).padStart(4, '0')}`;
 
+      // Track data needed for team registration after transaction
+      let userIdForTeams = 0;
+      let stableNameForTeams = '';
+      let createdRobotsForTeams: { id: number; subscriptions: string[] }[] = [];
+
       try {
-        await prisma.$transaction(async (tx) => {
+        const txResult = await prisma.$transaction(async (tx) => {
           // ── Create user ──────────────────────────────────────
           const stableName = generateStableName(existingStableNames);
           existingStableNames.add(stableName);
@@ -161,6 +171,7 @@ export async function generateBattleReadyUsers(
 
           // ── Create robots ────────────────────────────────────
           const createdRobots: { id: number }[] = [];
+          const robotsWithSubscriptions: { id: number; subscriptions: string[] }[] = [];
 
           for (let r = 0; r < tier.robotCount; r++) {
             const loadoutType = randomElement(LOADOUT_TYPES);
@@ -260,6 +271,17 @@ export async function generateBattleReadyUsers(
             totalRobotsCreated++;
           }
 
+          // ── Booking Office L1 for multi-robot stables ──────
+          if (createdRobots.length >= 2) {
+            await tx.facility.create({
+              data: {
+                userId: user.id,
+                facilityType: 'booking_office',
+                level: 1,
+              },
+            });
+          }
+
           // ── Tag team for multi-robot stables ─────────────────
           if (tier.createTagTeam && createdRobots.length >= 2) {
             const tagTeamLeagueId = await assignTagTeamLeagueInstance('bronze');
@@ -277,22 +299,60 @@ export async function generateBattleReadyUsers(
           }
 
           // ── Subscriptions for each robot ─────────────────────
-          const eligibleEvents = getEligibleEvents(createdRobots.length);
-          const eligibleTypes = eligibleEvents.filter(e => e.eligible).map(e => e.type);
+          // Subscription assignment rules per stable size (R15.2):
+          // - 1-robot stables (L0, cap 3): league_1v1, tournament_1v1, koth
+          // - 2-robot stables (L1, cap 4): pick 2 from {league_2v2, tag_team} + pick 2 from {koth, league_1v1, tournament_1v1}
+          // - 3-robot stables (L1, cap 4): slot 1-2: league_3v3 (if flag), slot 3: pick 1 from {league_2v2, tag_team}, slot 4: pick 1 from {league_1v1, koth, tournament_1v1}
 
           for (const robot of createdRobots) {
             let robotSubscriptions: string[];
 
-            if (tier.createTagTeam && createdRobots.length >= 2 &&
-                (robot.id === createdRobots[0].id || robot.id === createdRobots[1].id)) {
-              // Robots on the TagTeam get tag_team unconditionally + 2 random from remaining
-              const remaining = eligibleTypes.filter(t => t !== 'tag_team');
-              const shuffled = remaining.sort(() => Math.random() - 0.5);
-              robotSubscriptions = ['tag_team', ...shuffled.slice(0, 2)];
+            if (createdRobots.length === 1) {
+              // 1-robot stables: L0, cap 3 — subscribe to league_1v1, tournament_1v1, koth
+              robotSubscriptions = ['league_1v1', 'tournament_1v1', 'koth'];
+            } else if (createdRobots.length === 2) {
+              // 2-robot stables: L1, cap 4 — pick 2 from team modes + pick 2 from solo modes
+              const teamModes: string[] = [];
+              if (tier.createLeague2v2) teamModes.push('league_2v2');
+              if (tier.createTagTeam) teamModes.push('tag_team');
+              const shuffledTeamModes = teamModes.sort(() => Math.random() - 0.5);
+              const teamPicks = shuffledTeamModes.slice(0, 2);
+
+              const soloModes = ['koth', 'league_1v1', 'tournament_1v1'];
+              const shuffledSoloModes = soloModes.sort(() => Math.random() - 0.5);
+              const soloPicks = shuffledSoloModes.slice(0, 2);
+
+              robotSubscriptions = [...teamPicks, ...soloPicks];
             } else {
-              // Pick 3 random from eligible set (or fewer if eligible < 3)
-              const shuffled = [...eligibleTypes].sort(() => Math.random() - 0.5);
-              robotSubscriptions = shuffled.slice(0, 3);
+              // 3-robot stables: L1, cap 4
+              const subs: string[] = [];
+
+              // Slot 1-2: league_3v3 if flag is true (counts as 1 subscription)
+              if (tier.createLeague3v3) {
+                subs.push('league_3v3');
+              }
+
+              // Slot 3: pick 1 from {league_2v2, tag_team}
+              const teamModes: string[] = [];
+              if (tier.createLeague2v2) teamModes.push('league_2v2');
+              if (tier.createTagTeam) teamModes.push('tag_team');
+              if (teamModes.length > 0) {
+                subs.push(teamModes[Math.floor(Math.random() * teamModes.length)]);
+              }
+
+              // Slot 4: pick 1 from {league_1v1, koth, tournament_1v1}
+              const soloModes = ['league_1v1', 'koth', 'tournament_1v1'];
+              subs.push(soloModes[Math.floor(Math.random() * soloModes.length)]);
+
+              // Fill remaining slots up to cap 4
+              const allEvents = ['league_1v1', 'tournament_1v1', 'koth', 'tag_team', 'league_2v2', 'league_3v3'];
+              const remaining = allEvents.filter(e => !subs.includes(e));
+              const shuffledRemaining = remaining.sort(() => Math.random() - 0.5);
+              while (subs.length < 4 && shuffledRemaining.length > 0) {
+                subs.push(shuffledRemaining.shift()!);
+              }
+
+              robotSubscriptions = subs;
             }
 
             await tx.subscription.createMany({
@@ -303,10 +363,88 @@ export async function generateBattleReadyUsers(
               })),
               skipDuplicates: true,
             });
+
+            robotsWithSubscriptions.push({ id: robot.id, subscriptions: robotSubscriptions });
           }
+
+          return { userId: user.id, stableName, robotsWithSubscriptions };
         });
 
+        userIdForTeams = txResult.userId;
+        stableNameForTeams = txResult.stableName;
+        createdRobotsForTeams = txResult.robotsWithSubscriptions;
+
         usernames.push(username);
+
+        // ── Team Battle registration (outside transaction — uses own transaction per R15.5) ──
+        // Register teams from subscribed pool using same validation path as player-initiated registration
+        if (tier.createLeague2v2 && createdRobotsForTeams.length >= 2) {
+          try {
+            // Find robots subscribed to league_2v2
+            const subscribedTo2v2 = createdRobotsForTeams.filter(r =>
+              r.subscriptions.includes('league_2v2')
+            );
+            if (subscribedTo2v2.length >= 2) {
+              const teamRobotIds = subscribedTo2v2.slice(0, 2).map(r => r.id);
+              const teamName = `${stableNameForTeams} 2v2`;
+              await registerTeam(userIdForTeams, teamRobotIds, teamName, 2, userIdForTeams);
+
+              // Assign to initial league tier instance (R15.6)
+              const leagueId = await assignTeamBattleLeagueInstance('bronze');
+              const createdTeam = await prisma.teamBattle.findFirst({
+                where: { stableId: userIdForTeams, teamSize: 2 },
+                orderBy: { createdAt: 'desc' },
+              });
+              if (createdTeam && createdTeam.teamLeagueId !== leagueId) {
+                await prisma.teamBattle.update({
+                  where: { id: createdTeam.id },
+                  data: { teamLeagueId: leagueId },
+                });
+              }
+
+              totalLeague2v2TeamsCreated++;
+              logger.info(`[UserGeneration] Created 2v2 team for ${username}`);
+            }
+          } catch (teamError) {
+            // R15.8: log and skip, continue
+            const errorCode = (teamError as { code?: string }).code || 'UNKNOWN';
+            logger.warn(`[UserGeneration] Failed to create 2v2 team for ${username}: ${errorCode} - ${teamError}`);
+          }
+        }
+
+        if (tier.createLeague3v3 && createdRobotsForTeams.length >= 3) {
+          try {
+            // Find robots subscribed to league_3v3
+            const subscribedTo3v3 = createdRobotsForTeams.filter(r =>
+              r.subscriptions.includes('league_3v3')
+            );
+            if (subscribedTo3v3.length >= 3) {
+              const teamRobotIds = subscribedTo3v3.slice(0, 3).map(r => r.id);
+              const teamName = `${stableNameForTeams} 3v3`;
+              await registerTeam(userIdForTeams, teamRobotIds, teamName, 3, userIdForTeams);
+
+              // Assign to initial league tier instance (R15.6)
+              const leagueId = await assignTeamBattleLeagueInstance('bronze');
+              const createdTeam = await prisma.teamBattle.findFirst({
+                where: { stableId: userIdForTeams, teamSize: 3 },
+                orderBy: { createdAt: 'desc' },
+              });
+              if (createdTeam && createdTeam.teamLeagueId !== leagueId) {
+                await prisma.teamBattle.update({
+                  where: { id: createdTeam.id },
+                  data: { teamLeagueId: leagueId },
+                });
+              }
+
+              totalLeague3v3TeamsCreated++;
+              logger.info(`[UserGeneration] Created 3v3 team for ${username}`);
+            }
+          } catch (teamError) {
+            // R15.8: log and skip, continue
+            const errorCode = (teamError as { code?: string }).code || 'UNKNOWN';
+            logger.warn(`[UserGeneration] Failed to create 3v3 team for ${username}: ${errorCode} - ${teamError}`);
+          }
+        }
       } catch (error) {
         logger.error(`[UserGeneration] Failed to create stable ${username}:`, error);
         // Continue to next stable — transaction rolled back automatically
@@ -333,13 +471,16 @@ export async function generateBattleReadyUsers(
   const duration = Date.now() - startTime;
   logger.info(
     `[UserGeneration] ✅ Created ${usernames.length} stables, ` +
-    `${totalRobotsCreated} robots, ${totalTagTeamsCreated} tag teams in ${duration}ms`,
+    `${totalRobotsCreated} robots, ${totalTagTeamsCreated} tag teams, ` +
+    `${totalLeague2v2TeamsCreated} 2v2 teams, ${totalLeague3v3TeamsCreated} 3v3 teams in ${duration}ms`,
   );
 
   return {
     usersCreated: usernames.length,
     robotsCreated: totalRobotsCreated,
     tagTeamsCreated: totalTagTeamsCreated,
+    league2v2TeamsCreated: totalLeague2v2TeamsCreated,
+    league3v3TeamsCreated: totalLeague3v3TeamsCreated,
     usernames,
     tierBreakdown,
   };

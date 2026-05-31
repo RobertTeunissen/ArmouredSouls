@@ -12,7 +12,6 @@ import CreateRobotPage from './pages/CreateRobotPage';
 import RobotDetailPage from './pages/RobotDetailPage';
 import WeaponShopPage from './pages/WeaponShopPage';
 import LeagueStandingsPage from './pages/LeagueStandingsPage';
-import TagTeamManagementPage from './pages/TagTeamManagementPage';
 import TournamentsPage from './pages/TournamentsPage';
 import OnboardingPage from './pages/OnboardingPage';
 import { useAchievementToasts } from './hooks/useAchievementToasts';
@@ -30,7 +29,7 @@ const CycleSummaryPage = React.lazy(() => import('./pages/CycleSummaryPage'));
 const FinancialReportPage = React.lazy(() => import('./pages/FinancialReportPage'));
 const StableViewPage = React.lazy(() => import('./pages/StableViewPage'));
 const KothStandingsPage = React.lazy(() => import('./pages/KothStandingsPage'));
-const TagTeamStandingsPage = React.lazy(() => import('./pages/TagTeamStandingsPage'));
+const TeamBattlesPage = React.lazy(() => import('./pages/TeamBattlesPage'));
 const LeaderboardsFamePage = React.lazy(() => import('./pages/LeaderboardsFamePage'));
 const LeaderboardsLossesPage = React.lazy(() => import('./pages/LeaderboardsLossesPage'));
 const LeaderboardsPrestigePage = React.lazy(() => import('./pages/LeaderboardsPrestigePage'));
@@ -118,8 +117,9 @@ function AppRoutes() {
       <Route path="/hall-of-records" element={<ProtectedRoute><HallOfRecordsPage /></ProtectedRoute>} />
       <Route path="/tournaments" element={<ProtectedRoute><TournamentsPage /></ProtectedRoute>} />
       <Route path="/tournaments/:id" element={<ProtectedRoute><TournamentDetailPage /></ProtectedRoute>} />
-      <Route path="/tag-teams" element={<ProtectedRoute><TagTeamManagementPage /></ProtectedRoute>} />
-      <Route path="/tag-teams/standings" element={<ProtectedRoute><TagTeamStandingsPage /></ProtectedRoute>} />
+      <Route path="/tag-teams" element={<Navigate to="/team-battles?tab=tag-team" replace />} />
+      <Route path="/tag-teams/standings" element={<Navigate to="/team-battles?tab=tag-team" replace />} />
+      <Route path="/team-battles" element={<ProtectedRoute><TeamBattlesPage /></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
       <Route path="/cycle-summary" element={<ProtectedRoute><CycleSummaryPage /></ProtectedRoute>} />
       <Route path="/achievements" element={<ProtectedRoute><AchievementsPage /></ProtectedRoute>} />

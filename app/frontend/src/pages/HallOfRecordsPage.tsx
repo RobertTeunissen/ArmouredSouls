@@ -11,6 +11,7 @@ import {
   EconomicRecords,
   PrestigeRecords,
   KothRecords,
+  TeamBattleRecords,
 } from '../components/hall-of-records';
 
 const log = createLogger('HallOfRecordsPage');
@@ -69,6 +70,7 @@ function HallOfRecordsPage() {
     { key: 'economic' as CategoryKey, label: 'Economic', icon: '💰' },
     { key: 'prestige' as CategoryKey, label: 'Prestige', icon: '👑' },
     { key: 'koth' as CategoryKey, label: 'King of the Hill', icon: '⛰️' },
+    { key: 'teamBattle' as CategoryKey, label: 'Team Battles', icon: '🤝' },
   ];
 
   if (!user) {
@@ -147,6 +149,9 @@ function HallOfRecordsPage() {
             )}
             {activeCategory === 'koth' && (
               <KothRecords records={records} formatDuration={formatDuration} />
+            )}
+            {activeCategory === 'teamBattle' && (
+              <TeamBattleRecords records={records} formatDuration={formatDuration} formatDate={formatDate} onBattleClick={handleBattleClick} />
             )}
           </div>
         )}

@@ -3,7 +3,7 @@ import { api } from './api';
 // Types
 export interface ScheduledMatch {
   id: number | string; // Can be number for league or "tournament-X" string for tournaments or "tag-team-X" for tag teams
-  matchType?: 'league' | 'tournament' | 'tag_team' | 'koth';
+  matchType?: 'league_1v1' | 'tournament_1v1' | 'tag_team' | 'koth' | 'league_2v2' | 'league_3v3';
   tournamentId?: number;
   tournamentName?: string;
   tournamentRound?: number;
@@ -96,6 +96,27 @@ export interface ScheduledMatch {
   kothParticipantCount?: number;
   kothRotatingZone?: boolean;
   kothParticipants?: Array<{ id: number; name: string; elo: number; userId?: number; user?: { username: string } }>;
+  // Team Battle specific fields
+  teamSize?: number;
+  teamBattleLeague?: string;
+  teamBattleTeam1?: {
+    id: number;
+    teamName: string;
+    teamSize: number;
+    teamLp: number;
+    teamLeague: string;
+    members: Array<{ robotId: number; robotName: string; robotElo: number; userId: number; user: { username: string } }>;
+    combinedELO: number;
+  };
+  teamBattleTeam2?: {
+    id: number;
+    teamName: string;
+    teamSize: number;
+    teamLp: number;
+    teamLeague: string;
+    members: Array<{ robotId: number; robotName: string; robotElo: number; userId: number; user: { username: string } }>;
+    combinedELO: number;
+  } | null;
 }
 
 export interface BattleHistory {
@@ -113,7 +134,7 @@ export interface BattleHistory {
   robot2FinalHP: number;
   winnerReward: number;
   loserReward: number;
-  battleType?: string; // "league", "tournament", or "tag_team"
+  battleType?: string; // "league_1v1", "tournament_1v1", "tag_team", or "koth"
   leagueType?: string; // League at time of battle: "bronze", "silver", "gold", etc.
   tournamentId?: number | null;
   tournamentRound?: number | null;
@@ -234,7 +255,7 @@ export const getUpcomingMatches = async (robotId?: number): Promise<ScheduledMat
 export const getMatchHistory = async (
   page: number = 1,
   pageSize: number = 10,
-  battleType?: 'overall' | 'league' | 'tournament' | 'tag_team' | 'koth',
+  battleType?: 'overall' | 'league' | 'tournament' | 'tag_team' | 'koth' | 'league_2v2' | 'league_3v3',
   robotId?: number
 ): Promise<PaginatedResponse<BattleHistory>> => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -290,6 +311,24 @@ export const getBattleOutcome = (battle: BattleHistory, robotId: number): 'win' 
       return battle.winnerId === battle.team2Id ? 'win' : 'loss';
     }
   }
+
+  // For team battles (2v2/3v3), winnerId is the team ID
+  if ((battle.battleType === 'league_2v2' || battle.battleType === 'league_3v3') && battle.team1Id && battle.team2Id) {
+    const isTeam1Robot = battle.robot1Id === robotId;
+    const isTeam2Robot = battle.robot2Id === robotId;
+
+    if (isTeam1Robot) {
+      return battle.winnerId === battle.team1Id ? 'win' : 'loss';
+    } else if (isTeam2Robot) {
+      return battle.winnerId === battle.team2Id ? 'win' : 'loss';
+    }
+    // Robot might be a participant but not robot1/robot2 — check participants
+    const participant = (battle as unknown as { participants?: { robotId: number; team: number }[] }).participants?.find(p => p.robotId === robotId);
+    if (participant) {
+      const myTeamId = participant.team === 1 ? battle.team1Id : battle.team2Id;
+      return battle.winnerId === myTeamId ? 'win' : 'loss';
+    }
+  }
   
   // For 1v1 battles, winnerId is the robot ID
   return battle.winnerId === robotId ? 'win' : 'loss';
@@ -343,6 +382,23 @@ export const getBattleReward = (battle: BattleHistory, robotId: number): number 
       return battle.winnerId === battle.team2Id ? battle.winnerReward : battle.loserReward;
     }
   }
+
+  // For team battles (2v2/3v3), winnerId is the team ID — use team IDs to determine outcome
+  if ((battle.battleType === 'league_2v2' || battle.battleType === 'league_3v3') && battle.team1Id && battle.team2Id) {
+    const isTeam1Robot = battle.robot1Id === robotId;
+    const isTeam2Robot = battle.robot2Id === robotId;
+    // Check participants for team membership
+    const participant = (battle as unknown as { participants?: { robotId: number; team: number }[] }).participants?.find(p => p.robotId === robotId);
+
+    let myTeamId: number | null = null;
+    if (isTeam1Robot) myTeamId = battle.team1Id;
+    else if (isTeam2Robot) myTeamId = battle.team2Id;
+    else if (participant) myTeamId = participant.team === 1 ? battle.team1Id : battle.team2Id;
+
+    if (myTeamId !== null) {
+      return battle.winnerId === myTeamId ? battle.winnerReward : battle.loserReward;
+    }
+  }
   
   // For 1v1 battles, winnerId is the robot ID
   return battle.winnerId === robotId ? battle.winnerReward : battle.loserReward;
@@ -355,6 +411,66 @@ export interface BattleLogEvent {
   message: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
+}
+
+// ── Team Battle Log Types ─────────────────────────────────────────────
+
+/** Per-team aggregated metric (team1 vs team2). */
+export interface TeamMetricPair {
+  team1: number;
+  team2: number;
+}
+
+/** Individual robot performance within a Team Battle. */
+export interface TeamBattleParticipantResult {
+  robotId: number;
+  team: 1 | 2;
+  damageDealt: number;
+  damageTaken: number;
+  finalHP: number;
+  survivalSeconds: number;
+}
+
+/** Focus fire event aggregated for metrics. */
+export interface TeamBattleFocusFireEvent {
+  tick: number;
+  targetRobotId: number;
+  contributorRobotIds: number[];
+  contributorCount: number;
+  bonusApplied: number;
+}
+
+/**
+ * Team Battle log structure stored in `battleLog` field when
+ * `battleType === 'league_2v2'` or `battleType === 'league_3v3'`.
+ */
+export interface TeamBattleLog {
+  teamBattle: true;
+  teamSize: 2 | 3;
+  winningSide: 1 | 2 | null;
+  isDraw: boolean;
+  isByeMatch: boolean;
+  durationSeconds: number;
+  participants: TeamBattleParticipantResult[];
+  events: BattleLogEvent[];
+  detailedCombatEvents?: BattleLogEvent[];
+  focusFireEvents: TeamBattleFocusFireEvent[];
+  focusFireMetrics: TeamMetricPair;
+  allySupportMetrics: TeamMetricPair;
+  formationDefenceMetrics: TeamMetricPair;
+  arenaRadius?: number;
+  startingPositions?: Record<string, { x: number; y: number }>;
+  endingPositions?: Record<string, { x: number; y: number }>;
+}
+
+/** Type guard to check if a battle log is a team battle log. */
+export function isTeamBattleLog(log: BattleLogResponse['battleLog']): log is TeamBattleLog {
+  return (log as TeamBattleLog)?.teamBattle === true;
+}
+
+/** Check if a battle type is a team battle type. */
+export function isTeamBattleType(battleType?: string): boolean {
+  return battleType === 'league_2v2' || battleType === 'league_3v3';
 }
 
 /** Unified participant record — same shape for all battle types (1v1, tag team, KotH) */

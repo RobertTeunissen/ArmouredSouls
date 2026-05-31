@@ -21,8 +21,7 @@
     "test:heavy": "jest --config jest.config.heavy.js --forceExit",
     "test:all": "npm run test && npm run test:heavy",
     "test:matchmaking": "tsx scripts/testMatchmaking.ts",
-    "test:robot-stats": "tsx scripts/testRobotStats.ts",
-    "migrate:booking-office": "ts-node src/scripts/migrate-booking-office.ts"
+    "test:robot-stats": "tsx scripts/testRobotStats.ts"
   },
   "keywords": [
     "game",

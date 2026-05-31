@@ -1203,8 +1203,176 @@ If uncontestedScore / totalScore > 0.75:
 // totalScore = robot's total zone score (uncontested + kill bonuses)
 ```
 
+## Team Battle Engine (2v2 and 3v3)
+
+**Added**: Spec 37 (Team Battles 2v2 and 3v3)  
+**Status**: ✅ Implemented  
+**File**: `app/backend/src/services/team-battle/teamBattleEngine.ts`
+
+### Overview
+
+The Team Battle Engine extends the existing `combatSimulator.ts` to support N-vs-N simultaneous combat. All robots on both sides are active in the arena at the same time — this is distinct from Tag Team (phased, one active robot per side). The engine supports 2v2 (4 robots total) and 3v3 (6 robots total).
+
+### Arena Setup
+
+Arena dimensions scale with team size via `arenaLayout.createArena([teamSize, teamSize])`. Spawn positions are computed by `calculateSpawnPositions` — teams spawn on opposite sides of the arena.
+
+### Combat Loop
+
+Each tick, every robot with `hp > 0`:
+1. Selects one target from the opposing side (alive robots only)
+2. Executes its attack via the standard combat resolution pipeline (hit → crit → damage → shield/armor)
+3. Team Coordination Effects are applied (see below)
+
+**Target-of-opportunity fallback**: When a robot's primary target is out of range, the engine falls back to the nearest valid target. This fallback respects team membership via `gameModeState.customData.teamOf` — robots will never select a teammate as a fallback target.
+
+**Victory condition**: One side has 0 robots with `hp > 0`.  
+**Draw condition**: 300 seconds of simulated combat elapsed without victory.
+
+### Team Coordination Effects
+
+**File**: `app/backend/src/services/team-battle/teamCoordinationEffects.ts`
+
+Three robot attributes — `syncProtocols`, `supportSystems`, `formationTactics` — produce ally-targeted effects in Team Battle Mode. These effects are **in addition to** the existing 1v1 self-bonuses (which remain unchanged in `teamCoordination.ts`).
+
+All formulas scale with `√(attribute / 50)` for diminishing returns. The attribute cap is 50.
+
+#### syncProtocols → Focus Fire Damage Bonus
+
+**Trigger**: 2+ allied robots target the same enemy in the same tick.
+
+```
+Bonus = 0.25 × √(avgSyncProtocols / 50) × (contributors / teamSize)
+```
+
+- `avgSyncProtocols`: average syncProtocols across all contributing robots
+- `contributors`: number of robots targeting the same enemy this tick (≥ 2)
+- `teamSize`: N (2 or 3)
+- **Max bonus**: 25% (all N robots focus-fire with syncProtocols = 50)
+- **Effect**: Each contributor's damage is multiplied by `(1 + bonus)`
+
+| Attribute | 2v2 (2/2 focus) | 3v3 (2/3 focus) | 3v3 (3/3 focus) |
+|-----------|----------------|----------------|----------------|
+| 5 | 7.9% | 5.3% | 7.9% |
+| 15 | 13.7% | 9.1% | 13.7% |
+| 25 | 17.7% | 11.8% | 17.7% |
+| 50 | 25.0% | 16.7% | 25.0% |
+
+#### supportSystems → Ally Shield Regeneration
+
+**Trigger**: Always active. Each robot passively regenerates shields on all allies.
+
+```
+Regen per ally per second = 0.8 × √(supportSystems / 50) × dt
+```
+
+- `supportSystems`: the supporting robot's supportSystems value
+- `dt`: time delta in seconds (combat tick interval)
+- **Max bonus**: 0.80 shield/sec per ally (when supportSystems = 50)
+- **Effect**: Per-supporter, so a 3v3 team with 3 high-support robots each regenerates shields on 2 allies
+
+| Attribute | Shield/sec per ally |
+|-----------|-------------------|
+| 5 | 0.25 |
+| 15 | 0.44 |
+| 25 | 0.57 |
+| 50 | 0.80 |
+
+#### formationTactics → Formation Damage Reduction
+
+**Trigger**: Allies within 8 grid units of the defending robot.
+
+```
+Reduction = 0.20 × √(avgFormationTactics / 50) × (alliesInRange / (teamSize - 1))
+```
+
+- `avgFormationTactics`: average formationTactics of all allies within range
+- `alliesInRange`: count of allies within 8 grid units
+- `teamSize`: N (2 or 3)
+- `FORMATION_RANGE = 8` grid units
+- **Max bonus**: 20% damage reduction (all allies in range with formationTactics = 50)
+- **Effect**: Incoming damage to the robot is multiplied by `(1 - reduction)`
+
+| Attribute | 2v2 (1/1 ally in range) | 3v3 (1/2 allies) | 3v3 (2/2 allies) |
+|-----------|------------------------|------------------|------------------|
+| 5 | 6.3% | 3.2% | 6.3% |
+| 15 | 11.0% | 5.5% | 11.0% |
+| 25 | 14.1% | 7.1% | 14.1% |
+| 50 | 20.0% | 10.0% | 20.0% |
+
+### Focus Fire Detection
+
+A focus fire event is logged when 2+ allied robots target the same opposing robot in the same combat tick. The event records:
+- Which robots contributed
+- Which target was focused
+- The bonus damage applied
+
+Focus fire is probabilistic — it depends on the AI targeting logic independently selecting the same target. `syncProtocols` does not force focus fire; it rewards it when it naturally occurs.
+
+### Battle Result Structure
+
+```typescript
+interface TeamBattleResult {
+  winningSide: 1 | 2 | null;       // null = draw
+  winnerRobotId: number | null;
+  isDraw: boolean;
+  isByeMatch: boolean;
+  durationSeconds: number;
+  participants: TeamBattleParticipantResult[];
+  battleLog: TeamBattleCombatEvent[];
+  focusFireEvents: FocusFireEvent[];
+}
+
+interface TeamBattleParticipantResult {
+  robotId: number;
+  team: 1 | 2;
+  damageDealt: number;
+  damageTaken: number;
+  finalHP: number;
+  survivalSeconds: number;
+}
+```
+
+### Reward Formula
+
+Team Battle uses an N× multiplier of the 1v1 win + participation reward:
+
+```
+Winner reward (per robot) = (1v1 win reward + 1v1 participation reward) × teamSize
+Loser/Draw reward (per robot) = Winner reward × 0.20
+```
+
+Each robot on the winning team earns the full multiplied amount. Fame and prestige are not split — each robot earns the full tier-appropriate amount.
+
+### ELO Updates
+
+```
+Team ELO = Σ(member robot ELOs)
+ELO delta = calculateELOChange(team1SumELO, team2SumELO, isDraw)
+Each member robot receives the same ELO delta applied to their individual elo field.
+```
+
+### Relationship to Existing Systems
+
+| System | Relationship |
+|--------|-------------|
+| `combatSimulator.ts` | Extended to accept N-vs-N rosters |
+| `arenaLayout.ts` | Used directly via `createArena([teamSize, teamSize])` |
+| `teamCoordination.ts` | 1v1 self-bonuses unchanged; new ally effects in separate file |
+| `kothEngine.ts` | Referenced for prior art on multi-robot arena state; not modified |
+| `tagTeamBattleOrchestrator.ts` | Completely separate system (phased combat); not modified |
+| `leagueEngine.ts` | Consumed via new `teamBattleAdapter` for promotion/demotion |
+
+---
+
 ## Version History
 
+- **2026-06-XX:** Added Team Battle Engine section (Spec 37 — Team Battles 2v2 and 3v3)
+  - Team Coordination Effects formulas (syncProtocols, supportSystems, formationTactics)
+  - Focus fire detection mechanics
+  - N-vs-N combat loop description
+  - Reward formula and ELO update rules
+  - Target-of-opportunity fallback respects team membership via `gameModeState.customData.teamOf` (friendly fire fix)
 - **2026-03-25:** Added Target Stickiness formula (1.5s lock duration, early break on target death/yield)
 - **2026-03-18:** Added King of the Hill Zone Scoring Formulas (zone scoring, kill bonus, anti-passive penalties, zone dominance bonus)
 - **2026-03-16:** Added 2D Arena Spatial Formulas section (Movement, Range, Hydraulic, Backstab, Flanking, Patience, Adaptation, Pressure, Threat Score, Turn Speed, Counter Range)

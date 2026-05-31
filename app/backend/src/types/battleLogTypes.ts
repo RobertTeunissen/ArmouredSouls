@@ -69,7 +69,7 @@ export interface ArenaPosition {
 
 /**
  * Battle log JSON for a standard league battle.
- * Stored in `Battle.battleLog` when `battleType === 'league'`.
+ * Stored in `Battle.battleLog` when `battleType === 'league_1v1'`.
  */
 export interface LeagueBattleLogData {
   events: NarrativeEvent[];
@@ -82,7 +82,7 @@ export interface LeagueBattleLogData {
 
 /**
  * Battle log JSON for a tournament battle.
- * Stored in `Battle.battleLog` when `battleType === 'tournament'`.
+ * Stored in `Battle.battleLog` when `battleType === 'tournament_1v1'`.
  */
 export interface TournamentBattleLogData {
   events: NarrativeEvent[];
@@ -137,4 +137,11 @@ export type BattleLogData =
   | LeagueBattleLogData
   | TournamentBattleLogData
   | TagTeamBattleLogData
-  | KothBattleLogData;
+  | KothBattleLogData
+  | TeamBattleLogData;
+
+/**
+ * Re-export placeholder for TeamBattleLog to keep the union complete.
+ * The full type is defined in `teamBattleLogTypes.ts`.
+ */
+export type TeamBattleLogData = import('./teamBattleLogTypes').TeamBattleLog;

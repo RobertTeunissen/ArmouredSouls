@@ -87,7 +87,7 @@ describe('RobotStatsViewService', () => {
           winnerReward: 100,
           loserReward: 50,
           durationSeconds: 60,
-          battleType: 'league',
+          battleType: 'league_1v1',
           leagueType: 'bronze',
           battleLog: {},
           participants: {
@@ -114,7 +114,7 @@ describe('RobotStatsViewService', () => {
         winnerReward: 100,
         loserReward: 50,
         durationSeconds: 60,
-        battleType: 'league',
+        battleType: 'league_1v1',
         leagueType: 'bronze',
         battleLog: {},
         participants: {
