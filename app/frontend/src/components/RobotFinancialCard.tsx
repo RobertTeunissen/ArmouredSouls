@@ -161,7 +161,7 @@ function RobotFinancialCard({ robot, rank }: RobotFinancialCardProps) {
                         {battle.isWinner ? '✓ WIN' : '✗ LOSS'}
                       </span>
                       <span className="text-secondary ml-2">
-                        {battle.battleType === 'tournament' ? '🏆 Tournament' : '⚔️ League'}
+                        {battle.battleType === 'tournament_1v1' ? '🏆 Tournament' : '⚔️ League'}
                       </span>
                     </div>
                     <span className="text-tertiary">

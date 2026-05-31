@@ -34,6 +34,8 @@ export interface BattleSummaryStats {
   tournamentStats: BattleTypeStats;
   tagTeamStats: BattleTypeStats;
   kothStats: KothStats;
+  league2v2Stats: BattleTypeStats;
+  league3v3Stats: BattleTypeStats;
 }
 
 const EMPTY_TYPE_STATS: BattleTypeStats = { battles: 0, wins: 0, losses: 0, draws: 0, winRate: 0, avgELOChange: 0 };
@@ -45,6 +47,8 @@ export const EMPTY_SUMMARY: BattleSummaryStats = {
   tournamentStats: { ...EMPTY_TYPE_STATS },
   tagTeamStats: { ...EMPTY_TYPE_STATS },
   kothStats: { ...EMPTY_KOTH_STATS },
+  league2v2Stats: { ...EMPTY_TYPE_STATS },
+  league3v3Stats: { ...EMPTY_TYPE_STATS },
 };
 
 /**
@@ -73,6 +77,8 @@ export function computeBattleSummary(
   let kothWins = 0, kothLosses = 0, kothDraws = 0, kothELO = 0, kothBattles = 0;
   let kothTotalZoneScore = 0, kothTotalCredits = 0, kothTotalKills = 0;
   let kothFirst = 0, kothSecond = 0, kothThird = 0, kothOther = 0;
+  let league2v2Wins = 0, league2v2Losses = 0, league2v2Draws = 0, league2v2ELO = 0, league2v2Battles = 0;
+  let league3v3Wins = 0, league3v3Losses = 0, league3v3Draws = 0, league3v3ELO = 0, league3v3Battles = 0;
 
   battles.forEach((battle, index) => {
     const isKoth = battle.battleType === 'koth';
@@ -90,26 +96,34 @@ export function computeBattleSummary(
       : getBattleOutcome(battle, myRobotId);
     const eloChange = getELOChange(battle, myRobotId);
     const reward = getBattleReward(battle, myRobotId);
-    const isTournament = battle.battleType === 'tournament';
+    const isTournament = battle.battleType === 'tournament_1v1';
     const isTagTeam = battle.battleType === 'tag_team';
+    const isLeague2v2 = battle.battleType === 'league_2v2';
+    const isLeague3v3 = battle.battleType === 'league_3v3';
 
     if (outcome === 'win') {
       wins++;
       if (isTournament) tournamentWins++;
       else if (isTagTeam) tagTeamWins++;
       else if (isKoth) kothWins++;
+      else if (isLeague2v2) league2v2Wins++;
+      else if (isLeague3v3) league3v3Wins++;
       else leagueWins++;
     } else if (outcome === 'loss') {
       losses++;
       if (isTournament) tournamentLosses++;
       else if (isTagTeam) tagTeamLosses++;
       else if (isKoth) kothLosses++;
+      else if (isLeague2v2) league2v2Losses++;
+      else if (isLeague3v3) league3v3Losses++;
       else leagueLosses++;
     } else if (outcome === 'draw') {
       draws++;
       if (isTournament) tournamentDraws++;
       else if (isTagTeam) tagTeamDraws++;
       else if (isKoth) kothDraws++;
+      else if (isLeague2v2) league2v2Draws++;
+      else if (isLeague3v3) league3v3Draws++;
       else leagueDraws++;
     }
 
@@ -133,6 +147,12 @@ export function computeBattleSummary(
       else if (placement === 2) kothSecond++;
       else if (placement === 3) kothThird++;
       else if (placement != null) kothOther++;
+    } else if (isLeague2v2) {
+      league2v2Battles++;
+      league2v2ELO += eloChange;
+    } else if (isLeague3v3) {
+      league3v3Battles++;
+      league3v3ELO += eloChange;
     } else {
       leagueBattles++;
       leagueELO += eloChange;
@@ -179,5 +199,7 @@ export function computeBattleSummary(
       totalKills: kothTotalKills,
       placements: { first: kothFirst, second: kothSecond, third: kothThird, other: kothOther },
     },
+    league2v2Stats: buildTypeStats(league2v2Battles, league2v2Wins, league2v2Losses, league2v2Draws, league2v2ELO),
+    league3v3Stats: buildTypeStats(league3v3Battles, league3v3Wins, league3v3Losses, league3v3Draws, league3v3ELO),
   };
 }

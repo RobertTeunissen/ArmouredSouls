@@ -30,7 +30,7 @@ vi.mock('../../utils/tagTeamApi', () => ({
 function makeLeagueBattle(overrides: Partial<BattleHistory> = {}): BattleHistory {
   return {
     id: 200,
-    battleType: 'league',
+    battleType: 'league_1v1',
     createdAt: '2026-04-10T12:00:00Z',
     winnerId: 10,
     robot1Id: 10,

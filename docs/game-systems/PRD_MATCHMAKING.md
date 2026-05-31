@@ -2834,3 +2834,108 @@ The variant is stored in the `ScheduledKothMatch.rotatingZone` field.
 - **Fewer than 5 eligible robots**: Skip matchmaking, log `"insufficient eligible robots for KotH"`, no matches created
 - **One-per-stable enforcement**: If a user has multiple robots, only the highest-ELO robot is selected; others are excluded
 - **Odd remainder < 5**: Distributed into existing groups rather than forming an undersized group
+
+
+---
+
+## Team Battle Matchmaking (2v2 and 3v3 League)
+
+**Added**: Spec 37 (Team Battles 2v2 and 3v3)  
+**Status**: ✅ Implemented
+
+### Overview
+
+Team Battle matchmaking pairs persistent Teams (2v2 or 3v3) within league instances for daily scheduled battles. Both sizes share the same matchmaking algorithm — only the team size parameter differs. Matchmaking runs daily in reserved cron slots: 2v2 at 09:00 UTC, 3v3 at 14:00 UTC.
+
+### Shared Matchmaking Formula
+
+All league matchmaking (1v1, 2v2, 3v3, and tag team) uses a single shared scoring formula from `services/matchmaking/teamMatchmakingUtils.ts`:
+
+```
+calculateMatchScore(input: MatchScoreInput): number
+```
+
+**Scoring factors (lower score = better match):**
+
+| Factor | Weight | Description |
+|--------|--------|-------------|
+| LP difference (PRIMARY) | ×1 (≤10), ×5 (≤20), ×20 (>20) | League Points are the primary pairing criterion |
+| ELO difference (SECONDARY) | ×0.1 (≤150), ×0.5 (≤300), ×1.0 (>300) | Soft factor — no hard reject |
+| Recent opponent penalty | +400 per direction | Forces variety (last 5 opponents tracked) |
+| Same-stable penalty | +10,000 | Effectively blocks unless no other option |
+
+**Constants:**
+- `LP_MATCH_IDEAL = 10`
+- `LP_MATCH_FALLBACK = 20`
+- `ELO_MATCH_IDEAL = 150`
+- `ELO_MATCH_FALLBACK = 300`
+- `RECENT_OPPONENT_PENALTY = 400`
+- `SAME_STABLE_PENALTY = 10000`
+- `RECENT_OPPONENT_LIMIT = 5`
+
+### Team ELO Computation
+
+Team ELO is computed at matchmaking time as the **sum of member robots' individual ELOs**. It is not a persisted field — it is derived fresh each cycle.
+
+```
+Team ELO = Σ(member robot ELOs)
+```
+
+After a team battle, ELO changes are applied equally to each member robot's individual `robot.elo` field.
+
+### Eligibility Requirements
+
+A team is eligible for matchmaking when ALL of the following are true:
+
+1. **All members subscribed** — every robot in the team holds a `league_2v2` or `league_3v3` subscription (checked via `isRobotSubscribedTo`)
+2. **All members Robot_Ready** — every robot is alive (`hp > 0`), not under irreversible damage, not flagged unavailable
+3. **Team not already scheduled** — no existing `ScheduledTeamBattleMatch` with status `'scheduled'` for this team
+4. **Team eligibility = ELIGIBLE** — team has exactly N members (incomplete rosters are INELIGIBLE)
+
+### Pairing Algorithm
+
+For each league tier → for each league instance:
+
+1. Collect all eligible teams in the instance
+2. Compute team ELO for each
+3. Batch-fetch recent opponents via `getRecentOpponentsBatch`
+4. Sort teams by LP (descending) for stable ordering
+5. Greedy pairing: for each unpaired team, find the unpaired team with the lowest `calculateMatchScore`
+6. **Guarantee**: never assign a bye when real opponents exist
+7. If odd count: last unpaired team receives a bye match via `createByeTeam`
+8. Persist `ScheduledTeamBattleMatch` records with `scheduledFor` set to next cycle execution time
+
+### Bye Team Handling
+
+When an odd number of eligible teams exist in a league instance, the last unpaired team is matched against a synthetic bye team. The bye team has neutral stats (ELO 1000 equivalent). The matched team receives full rewards as if it won against a real opponent at the bye rating.
+
+### Fallback: All Opponents Excluded
+
+If all potential opponents for a team are excluded by the recent-opponent rule (last 5), the system falls back to pairing with the closest-ELO team from the excluded set. This prevents a team from being permanently unmatched in small instances.
+
+### Error Handling
+
+- Per-team errors are logged and skipped — matchmaking continues with remaining teams
+- A single team's failure does not block the entire instance or tier
+- Cancelled matches are recorded with a `cancelReason` for admin visibility
+
+### Differences from 1v1 Matchmaking
+
+| Aspect | 1v1 League | Team Battle (2v2/3v3) |
+|--------|-----------|----------------------|
+| Entity | Individual robot | Persistent Team |
+| ELO source | Robot's `elo` field | Sum of member robot ELOs |
+| LP source | Robot's `leaguePoints` | Team's `teamLp` |
+| Subscription gate | `league_1v1` | `league_2v2` or `league_3v3` |
+| Instance size | 100 robots | 50 teams |
+| Scoring formula | Shared (`calculateMatchScore`) | Shared (`calculateMatchScore`) |
+| Bye handling | Bye-robot (id: -1) | `createByeTeam` factory |
+
+### File References
+
+| File | Purpose |
+|------|---------|
+| `services/matchmaking/teamMatchmakingUtils.ts` | Shared scoring formula, bye-team factory, recent-opponent batch query |
+| `services/team-battle/teamBattleMatchmakingService.ts` | 2v2/3v3 matchmaking orchestration per league instance |
+| `services/tag-team/tagTeamMatchmakingService.ts` | Tag team matchmaking (imports from shared module) |
+| `services/analytics/matchmakingService.ts` | 1v1 matchmaking (imports from shared module) |

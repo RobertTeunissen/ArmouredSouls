@@ -9,7 +9,7 @@ export interface Integration {
   send(message: string): Promise<NotificationResult>;
 }
 
-export type JobName = 'league' | 'tournament' | 'tag-team' | 'settlement' | 'koth';
+export type JobName = 'league' | 'tournament' | 'tag-team' | 'settlement' | 'koth' | 'team2v2League' | 'team3v3League';
 
 export interface JobContext {
   jobName: JobName;

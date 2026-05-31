@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { formatDuration } from '../../utils/matchmakingApi';
 import { getLeagueTierName, getLeagueTierIcon } from '../../utils/matchmakingApi';
 import { getTournamentRoundName } from '../../utils/matchmakingApi';
+import { isTeamBattleType } from '../../utils/matchmakingApi';
 import RobotImage from '../RobotImage';
 import type { BattleResultBannerProps } from './types';
 import type { BattleLogResponse, BattleLogParticipant } from '../../utils/matchmakingApi';
@@ -60,7 +61,7 @@ function getEndMethod(participants: BattleLogParticipant[], winnerId: number | n
   const hasWinner = winnerId !== null || winningTeam !== null;
   if (!hasWinner && battleType !== 'koth') return 'by Time Limit';
   if (battleType === 'koth') return 'by Zone Score';
-  if (battleType === 'tournament') {
+  if (battleType === 'tournament_1v1') {
     const destroyed = participants.find(p => p.destroyed);
     if (destroyed) return 'by Destruction';
     const yielded = participants.find(p => p.yielded);
@@ -100,13 +101,22 @@ function BattleContextLine({ battleLog }: { battleLog: BattleLogResponse }) {
     const count = battleLog.participants?.length || battleLog.kothParticipants?.length || 0;
     return <span><Link to="/koth-standings" className="text-primary hover:text-white transition-colors">⛰️ King of the Hill</Link>{` • ${count} Participants • Duration: ${duration}`}</span>;
   }
-  if (battleLog.battleType === 'tournament' || battleLog.battleLog.isTournament) {
+  if (battleLog.battleType === 'tournament_1v1' || battleLog.battleLog.isTournament) {
     const round = battleLog.battleLog.round;
     const maxRounds = battleLog.battleLog.maxRounds;
     const roundText = round && maxRounds ? getTournamentRoundName(round, maxRounds) : `Round ${round || '?'}/${maxRounds || '?'}`;
     const finals = battleLog.battleLog.isFinals ? ' (Finals)' : '';
     const link = battleLog.tournamentId ? `/tournaments/${battleLog.tournamentId}` : '/tournaments';
     return <span><Link to={link} className="text-primary hover:text-white transition-colors">🏆 Tournament {roundText}{finals}</Link>{` • Duration: ${duration}`}</span>;
+  }
+  if (isTeamBattleType(battleLog.battleType)) {
+    const teamSize = battleLog.battleType === 'league_2v2' ? '2v2' : '3v3';
+    const tierIcon = getLeagueTierIcon(battleLog.leagueType);
+    const tierName = getLeagueTierName(battleLog.leagueType);
+    const leagueLink = battleLog.leagueInstanceId
+      ? `/league-standings?mode=${teamSize}&tier=${battleLog.leagueType}&instance=${battleLog.leagueInstanceId}`
+      : `/league-standings?mode=${teamSize}&tier=${battleLog.leagueType}`;
+    return <span><Link to={leagueLink} className="text-primary hover:text-white transition-colors">{tierIcon} {tierName} {teamSize} League</Link>{` • Duration: ${duration}`}</span>;
   }
   const tierIcon = getLeagueTierIcon(battleLog.leagueType);
   const tierName = getLeagueTierName(battleLog.leagueType);
@@ -172,7 +182,7 @@ export function BattleResultBanner({ battleLog, userId, isMobile }: BattleResult
 
   // For tag team, winning is by team — all robots on the winning team won
   const winningTeam = (() => {
-    if (battleLog.battleType !== 'tag_team') return null;
+    if (battleLog.battleType !== 'tag_team' && !isTeamBattleType(battleLog.battleType)) return null;
     if (battleLog.winner === 'robot1') return 1;
     if (battleLog.winner === 'robot2') return 2;
     return null;
@@ -227,7 +237,11 @@ export function BattleResultBanner({ battleLog, userId, isMobile }: BattleResult
         <div className="flex items-center justify-center gap-4 mt-2 flex-wrap">
           {participants.map((p, i) => {
             const prevTeam = i > 0 ? participants[i - 1].team : null;
-            const showVs = i > 0 && !isKoth && (battleLog.battleType !== 'tag_team' || p.team !== prevTeam);
+            const showVs = i > 0 && !isKoth && (
+              battleLog.battleType !== 'tag_team' && !isTeamBattleType(battleLog.battleType)
+                ? true
+                : p.team !== prevTeam
+            );
 
             return (
               <div key={p.robotId} className="flex items-center gap-4">
@@ -268,9 +282,9 @@ function MobileVsLayout({
   winningTeam: number | null;
   isKoth: boolean;
 }) {
-  // Group by team for tag team, or treat each robot as its own group for 1v1
+  // Group by team for tag team and team battles, or treat each robot as its own group for 1v1
   const groups: BattleLogParticipant[][] = [];
-  if (battleType === 'tag_team') {
+  if (battleType === 'tag_team' || isTeamBattleType(battleType)) {
     const teams = new Map<number, BattleLogParticipant[]>();
     for (const p of participants) {
       const team = teams.get(p.team) ?? [];

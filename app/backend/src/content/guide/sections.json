@@ -42,39 +42,45 @@
     "order": 7
   },
   {
+    "slug": "team-battles",
+    "title": "Team Battles (2v2 & 3v3)",
+    "description": "Simultaneous team combat with coordination effects, team registration, and dedicated leagues",
+    "order": 8
+  },
+  {
     "slug": "economy",
     "title": "Economy & Finances",
     "description": "Credits, income, expenses, and financial management",
-    "order": 8
+    "order": 9
   },
   {
     "slug": "facilities",
     "title": "Stable & Facilities",
     "description": "Facility types, upgrades, and investment strategy",
-    "order": 9
+    "order": 10
   },
   {
     "slug": "prestige-fame",
     "title": "Prestige & Fame",
     "description": "Reputation systems and progression rewards",
-    "order": 10
+    "order": 11
   },
   {
     "slug": "achievements",
     "title": "Achievements",
     "description": "Milestones, badges, rewards, and progression tracking",
-    "order": 11
+    "order": 12
   },
   {
     "slug": "strategy",
     "title": "Strategy Guides",
     "description": "Build archetypes, budget allocation, and advanced tactics",
-    "order": 12
+    "order": 13
   },
   {
     "slug": "integrations",
     "title": "Integrations & API",
     "description": "Webhooks, notifications, and community integrations",
-    "order": 13
+    "order": 14
   }
 ]

@@ -109,7 +109,7 @@ export interface ExtraParticipantFields {
  * The BattleProcessor calls these methods in order during process().
  */
 export interface BattleStrategy<TMatch = unknown> {
-  /** Unique battle type identifier (e.g., 'league', 'tournament', 'koth') */
+  /** Unique battle type identifier (e.g., 'league_1v1', 'tournament_1v1', 'koth') */
   readonly battleType: string;
 
   /** League type for the battle record (e.g., 'bronze', 'tournament', 'koth') */

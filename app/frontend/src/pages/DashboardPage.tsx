@@ -10,6 +10,8 @@ import RobotDashboardCard from '../components/RobotDashboardCard';
 import StableStatistics from '../components/StableStatistics';
 import TagTeamReadinessWarning from '../components/TagTeamReadinessWarning';
 import TagTeamSubscriptionDashboardWarning from '../components/TagTeamSubscriptionDashboardWarning';
+import TeamBattleReadinessWarning from '../components/TeamBattleReadinessWarning';
+import LeagueStandingsSummary from '../components/LeagueStandingsSummary';
 import DashboardWelcome from '../components/DashboardWelcome';
 import DashboardOnboardingBanner from '../components/DashboardOnboardingBanner';
 import ChangelogModal from '../components/ChangelogModal';
@@ -110,6 +112,9 @@ function DashboardPage() {
           {/* Tag Team Readiness Warning */}
           <TagTeamReadinessWarning compact={true} />
 
+          {/* Team Battle Readiness Warning */}
+          <TeamBattleReadinessWarning compact={true} />
+
           {/* Tag Team Subscription Mismatch Warning */}
           <TagTeamSubscriptionDashboardWarning />
           
@@ -169,6 +174,13 @@ function DashboardPage() {
           <div className="space-y-6 mb-8">
             <RecentMatches />
             <UpcomingMatches />
+          </div>
+        )}
+
+        {/* Team Battle Standings */}
+        {robots.length >= 2 && (
+          <div className="space-y-6 mb-8">
+            <LeagueStandingsSummary />
           </div>
         )}
 

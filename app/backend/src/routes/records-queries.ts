@@ -27,6 +27,7 @@ interface ParticipantWithRobot {
   finalHP: number;
   destroyed: boolean;
   yielded: boolean;
+  team: number;
   robot: { id: number; name: string; user: { username: string; stableName?: string | null } };
 }
 
@@ -61,7 +62,7 @@ const battleWithParticipantsInclude = {
 export async function fetchCombatRecords() {
   // Combat records only consider 1v1 battles (league/tournament) to avoid
   // multi-participant ambiguity in winner/loser assignment
-  const oneVsOneFilter = { winnerId: { not: null }, battleType: { in: ['league', 'tournament'] } };
+  const oneVsOneFilter = { winnerId: { not: null }, battleType: { in: ['league_1v1', 'tournament_1v1'] } };
 
   const fastestVictories = await prisma.battle.findMany({
     where: { ...oneVsOneFilter, durationSeconds: { gt: 0 } },
@@ -79,7 +80,7 @@ export async function fetchCombatRecords() {
 
   // Most Damage in Single Battle (1v1 only for clean opponent display)
   const battleParticipants = await prisma.battleParticipant.findMany({
-    where: { battle: { battleType: { in: ['league', 'tournament'] } } },
+    where: { battle: { battleType: { in: ['league_1v1', 'tournament_1v1'] } } },
     orderBy: { damageDealt: 'desc' },
     take: 10,
     include: {
@@ -108,7 +109,7 @@ export async function fetchCombatRecords() {
   const narrowWinners = await prisma.battleParticipant.findMany({
     where: {
       finalHP: { gt: 0 },
-      battle: { winnerId: { not: null }, battleType: { in: ['league', 'tournament'] } },
+      battle: { winnerId: { not: null }, battleType: { in: ['league_1v1', 'tournament_1v1'] } },
     },
     orderBy: { finalHP: 'asc' },
     take: 50, // Fetch extra to filter for actual winners
@@ -176,7 +177,7 @@ export async function fetchUpsetRecords() {
     JOIN "battles" b ON b.id = w."battle_id"
     WHERE b."winner_id" = w."robot_id"
       AND w."elo_before" < l."elo_before"
-      AND b."battle_type" IN ('league', 'tournament')
+      AND b."battle_type" IN ('league_1v1', 'tournament_1v1')
     ORDER BY upset_diff DESC
     LIMIT 10
   `;
@@ -473,5 +474,162 @@ export async function fetchKothRecords(): Promise<Record<string, unknown> | unde
     mostZoneTime: mostZoneTime.map(r => ({ ...mapRobot(r), totalZoneTime: r.kothTotalZoneTime, kothMatches: r.kothMatches })),
     bestPlacement: bestKothPlacement.map(r => ({ ...mapRobot(r), bestPlacement: r.kothBestPlacement, kothMatches: r.kothMatches })),
     zoneDominator: zoneDominators.map(r => ({ ...mapRobot(r), totalZoneScore: r.kothTotalZoneScore, kothMatches: r.kothMatches })),
+  };
+}
+
+// ─── Team Battle Records ────────────────────────────────────────────
+
+interface TeamBattleSurvivalRow {
+  battle_id: number;
+  robot_id: number;
+  survival_seconds: number;
+  battle_type: string;
+  created_at: Date;
+  robot_name: string;
+  username: string;
+  stable_name: string | null;
+}
+
+interface TeamBattleDecisiveRow {
+  battle_id: number;
+  hp_difference: number;
+  battle_type: string;
+  created_at: Date;
+}
+
+async function fetchTeamBattleRecordsForSize(battleType: 'league_2v2' | 'league_3v3') {
+  // 1. Fastest victory (lowest durationSeconds for non-draw battles)
+  const fastestVictories = await prisma.battle.findMany({
+    where: { battleType, winnerId: { not: null }, durationSeconds: { gt: 0 } },
+    orderBy: { durationSeconds: 'asc' },
+    take: 10,
+    include: battleWithParticipantsInclude,
+  });
+
+  // 2. Longest survival by a single robot (from battleLog JSON)
+  const survivalRows = await prisma.$queryRaw<TeamBattleSurvivalRow[]>`
+    SELECT
+      b.id AS battle_id,
+      (p.value->>'robotId')::int AS robot_id,
+      (p.value->>'survivalSeconds')::float AS survival_seconds,
+      b.battle_type,
+      b.created_at,
+      r.name AS robot_name,
+      u.username,
+      u.stable_name
+    FROM battles b,
+      jsonb_array_elements(b.battle_log->'participants') AS p(value)
+    JOIN robots r ON r.id = (p.value->>'robotId')::int
+    JOIN users u ON u.id = r.user_id
+    WHERE b.battle_type = ${battleType}
+      AND (p.value->>'survivalSeconds')::float > 0
+    ORDER BY survival_seconds DESC
+    LIMIT 10
+  `;
+
+  // 3. Most damage dealt by a single robot (from BattleParticipant table)
+  const mostDamageParticipants = await prisma.battleParticipant.findMany({
+    where: { battle: { battleType } },
+    orderBy: { damageDealt: 'desc' },
+    take: 10,
+    include: {
+      robot: { include: { user: { select: userSelect } } },
+      battle: { select: { id: true, durationSeconds: true, createdAt: true, battleType: true } },
+    },
+  });
+
+  // 4. Most decisive victory (largest HP difference between winning and losing side)
+  const decisiveRows = await prisma.$queryRaw<TeamBattleDecisiveRow[]>`
+    SELECT
+      b.id AS battle_id,
+      ABS(
+        COALESCE((SELECT SUM(bp.final_hp) FROM battle_participants bp WHERE bp.battle_id = b.id AND bp.team = 1), 0) -
+        COALESCE((SELECT SUM(bp.final_hp) FROM battle_participants bp WHERE bp.battle_id = b.id AND bp.team = 2), 0)
+      ) AS hp_difference,
+      b.battle_type,
+      b.created_at
+    FROM battles b
+    WHERE b.battle_type = ${battleType}
+      AND b.winner_id IS NOT NULL
+    ORDER BY hp_difference DESC
+    LIMIT 10
+  `;
+
+  // Fetch battle details for decisive victories
+  const decisiveBattleIds = decisiveRows.map(r => r.battle_id);
+  const decisiveBattles = decisiveBattleIds.length > 0
+    ? await prisma.battle.findMany({
+        where: { id: { in: decisiveBattleIds } },
+        include: battleWithParticipantsInclude,
+      })
+    : [];
+  const decisiveBattleMap = new Map(decisiveBattles.map(b => [b.id, b]));
+
+  // 5. Longest non-draw battle (highest durationSeconds for non-draw battles)
+  const longestBattles = await prisma.battle.findMany({
+    where: { battleType, winnerId: { not: null } },
+    orderBy: { durationSeconds: 'desc' },
+    take: 10,
+    include: battleWithParticipantsInclude,
+  });
+
+  // Map results
+  const mapTeamBattleParticipants = (battle: BattleWithParticipants) => {
+    const team1 = battle.participants.filter(p => p.team === 1);
+    const team2 = battle.participants.filter(p => p.team === 2);
+    return {
+      team1: team1.map(mapParticipantDisplay),
+      team2: team2.map(mapParticipantDisplay),
+    };
+  };
+
+  return {
+    fastestVictory: fastestVictories.map(battle => ({
+      battleId: battle.id,
+      durationSeconds: battle.durationSeconds,
+      ...mapTeamBattleParticipants(battle),
+      date: battle.createdAt,
+    })),
+    longestSurvival: survivalRows.map(row => ({
+      battleId: row.battle_id,
+      survivalSeconds: row.survival_seconds,
+      robot: { id: row.robot_id, name: row.robot_name, username: row.stable_name || row.username },
+      date: row.created_at,
+    })),
+    mostDamageDealt: mostDamageParticipants.map(p => ({
+      battleId: p.battle.id,
+      damageDealt: p.damageDealt,
+      robot: { id: p.robot.id, name: p.robot.name, username: getUserDisplayName(p.robot.user) },
+      durationSeconds: p.battle.durationSeconds,
+      date: p.battle.createdAt,
+    })),
+    mostDecisiveVictory: decisiveRows.map(row => {
+      const battle = decisiveBattleMap.get(row.battle_id);
+      const teams = battle ? mapTeamBattleParticipants(battle) : { team1: [], team2: [] };
+      return {
+        battleId: row.battle_id,
+        hpDifference: Number(row.hp_difference),
+        ...teams,
+        date: row.created_at,
+      };
+    }),
+    longestNonDrawBattle: longestBattles.map(battle => ({
+      battleId: battle.id,
+      durationSeconds: battle.durationSeconds,
+      ...mapTeamBattleParticipants(battle),
+      date: battle.createdAt,
+    })),
+  };
+}
+
+export async function fetchTeamBattleRecords() {
+  const [records2v2, records3v3] = await Promise.all([
+    fetchTeamBattleRecordsForSize('league_2v2'),
+    fetchTeamBattleRecordsForSize('league_3v3'),
+  ]);
+
+  return {
+    '2v2': records2v2,
+    '3v3': records3v3,
   };
 }

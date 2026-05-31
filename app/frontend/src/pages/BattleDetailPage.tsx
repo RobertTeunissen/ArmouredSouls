@@ -7,6 +7,7 @@ import AchievementBadge from '../components/AchievementBadge';
 import {
   getBattleLog,
   formatDateTime,
+  isTeamBattleType,
 } from '../utils/matchmakingApi';
 import type { BattleLogResponse, BattleLogParticipant } from '../utils/matchmakingApi';
 import { BattlePlaybackViewer } from '../components/BattlePlaybackViewer/BattlePlaybackViewer';
@@ -22,6 +23,7 @@ import {
   DamageFlowDiagram,
   TabLayout,
   useBattlePlaybackData,
+  TeamBattleMetrics,
 } from '../components/battle-detail';
 import { RobotSelector } from '../components/battle-detail/RobotSelector';
 
@@ -107,6 +109,7 @@ function BattleDetailPage() {
  *
  * - KotH: sorted by placement (1st, 2nd, 3rd…)
  * - Tag team: winning team first, then losing team (active before reserve within each team)
+ * - Team battle (2v2/3v3): winning team first, grouped by team
  * - 1v1 / tournament: winner first, loser second. Draw keeps API order.
  */
 function orderParticipants(battleLog: BattleLogResponse): BattleLogParticipant[] {
@@ -116,6 +119,27 @@ function orderParticipants(battleLog: BattleLogResponse): BattleLogParticipant[]
   // KotH: placement is the natural order (1st = winner)
   if (battleLog.battleType === 'koth') {
     return [...participants].sort((a, b) => (a.placement ?? 99) - (b.placement ?? 99));
+  }
+
+  // Team battles (2v2/3v3): group by team, winning team first
+  if (isTeamBattleType(battleLog.battleType)) {
+    const winningSide = (() => {
+      if (battleLog.winner === 'robot1') return 1;
+      if (battleLog.winner === 'robot2') return 2;
+      return null;
+    })();
+
+    return [...participants].sort((a, b) => {
+      // Winning team first
+      if (winningSide !== null) {
+        const aWin = a.team === winningSide ? 0 : 1;
+        const bWin = b.team === winningSide ? 0 : 1;
+        if (aWin !== bWin) return aWin - bWin;
+      }
+      // Within same team, sort by team number then keep API order
+      if (a.team !== b.team) return a.team - b.team;
+      return 0;
+    });
   }
 
   // Determine winning team/robot
@@ -204,6 +228,15 @@ function BattleDetailContent({ battleLog: rawBattleLog, userId }: { battleLog: B
       tagTeamInfo = { team1Robots, team2Robots };
     }
 
+    // For team battles, build tagTeamInfo-like structure from participants
+    if (isTeamBattleType(battleLog.battleType) && !tagTeamInfo) {
+      const team1Robots = (battleLog.participants ?? []).filter(p => p.team === 1).map(p => p.robotName);
+      const team2Robots = (battleLog.participants ?? []).filter(p => p.team === 2).map(p => p.robotName);
+      if (team1Robots.length > 0 && team2Robots.length > 0) {
+        tagTeamInfo = { team1Robots, team2Robots };
+      }
+    }
+
     // Build robotMaxHP map
     const robotMaxHP: Record<string, number> = {};
     if (battleLog.robot1?.maxHP) robotMaxHP[battleLog.robot1.name] = battleLog.robot1.maxHP;
@@ -220,6 +253,12 @@ function BattleDetailContent({ battleLog: rawBattleLog, userId }: { battleLog: B
       }
       if (battleLog.tagTeam.team2.reserveRobot?.maxHP) {
         robotMaxHP[battleLog.tagTeam.team2.reserveRobot.name] = battleLog.tagTeam.team2.reserveRobot.maxHP;
+      }
+    }
+    // For team battles, build maxHP from participants array
+    if (isTeamBattleType(battleLog.battleType)) {
+      for (const p of (battleLog.participants ?? [])) {
+        if (p.maxHP > 0) robotMaxHP[p.robotName] = p.maxHP;
       }
     }
     if (battleLog.kothParticipants) {
@@ -256,6 +295,10 @@ function BattleDetailContent({ battleLog: rawBattleLog, userId }: { battleLog: B
         battleLog={battleLog}
         selectedRobotIndex={isMobile ? selectedRobotIndex : undefined}
       />
+      {/* Team Battle specific metrics (2v2/3v3) — per-robot stats + coordination */}
+      {isTeamBattleType(battleLog.battleType) && (
+        <TeamBattleMetrics battleLog={battleLog} isMobile={isMobile} />
+      )}
       <StableRewards battleLog={battleLog} selectedRobotIndex={isMobile ? selectedRobotIndex : undefined} />
       {/* Achievement unlocks from this battle */}
       {battleLog.achievementUnlocks && battleLog.achievementUnlocks.length > 0 && (

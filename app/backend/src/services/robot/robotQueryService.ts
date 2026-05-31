@@ -69,7 +69,16 @@ export async function findAllRobots(page = 1, perPage = 100) {
 export async function findUserRobots(userId: number) {
   return prisma.robot.findMany({
     where: { userId },
-    include: WEAPON_INCLUDE,
+    include: {
+      ...WEAPON_INCLUDE,
+      teamBattleMembers: {
+        include: {
+          team: {
+            select: { id: true, teamSize: true, teamName: true },
+          },
+        },
+      },
+    },
     orderBy: { createdAt: 'desc' },
   });
 }
@@ -278,7 +287,7 @@ export async function getUpcomingMatches(robotId: number, robot: { currentHP: nu
         opponentName: opponent.name,
         opponentPortrait: opponent.imageUrl || '/src/assets/robots/robot-1.png',
         scheduledTime: match.scheduledFor.toISOString(),
-        battleType: 'league' as const,
+        battleType: 'league_1v1' as const,
         leagueContext: match.leagueType,
       };
     }),
@@ -289,7 +298,7 @@ export async function getUpcomingMatches(robotId: number, robot: { currentHP: nu
         opponentName: opponent?.name || 'TBD',
         opponentPortrait: opponent?.imageUrl || '/src/assets/robots/robot-1.png',
         scheduledTime: getNextCronOccurrence(getConfig().tournamentSchedule).toISOString(),
-        battleType: 'tournament' as const,
+        battleType: 'tournament_1v1' as const,
         tournamentContext: match.tournament.name,
       };
     }),
@@ -375,17 +384,10 @@ function getBattleStats(battle: BattleWithParticipants, robotId: number) {
 }
 
 export async function getPerformanceContext(robotId: number) {
-  // Get all battles for this robot (including tag team)
+  // Get all battles for this robot (including tag team and team battles via participants)
   const battles: BattleWithParticipants[] = await prisma.battle.findMany({
     where: {
-      OR: [
-        { robot1Id: robotId },
-        { robot2Id: robotId },
-        { team1ActiveRobotId: robotId },
-        { team1ReserveRobotId: robotId },
-        { team2ActiveRobotId: robotId },
-        { team2ReserveRobotId: robotId },
-      ],
+      participants: { some: { robotId } },
     },
     select: {
       id: true,
@@ -400,6 +402,7 @@ export async function getPerformanceContext(robotId: number) {
       team2ActiveRobotId: true,
       team2ReserveRobotId: true,
       createdAt: true,
+      battleLog: true,
       participants: true,
       tournament: { select: { id: true, name: true, totalParticipants: true } },
     },
@@ -407,7 +410,7 @@ export async function getPerformanceContext(robotId: number) {
   });
 
   // ── League stats ───────────────────────────────────────────────────
-  const leagueBattles = battles.filter(b => b.battleType === 'league');
+  const leagueBattles = battles.filter(b => b.battleType === 'league_1v1');
   const leagueStatsMap = new Map<string, {
     leagueName: string;
     leagueIcon: string;
@@ -442,7 +445,7 @@ export async function getPerformanceContext(robotId: number) {
   }));
 
   // ── Tournament stats ───────────────────────────────────────────────
-  const tournamentBattles = battles.filter(b => b.battleType === 'tournament' && b.tournamentId);
+  const tournamentBattles = battles.filter(b => b.battleType === 'tournament_1v1' && b.tournamentId);
   const tournamentStatsMap = new Map<number, {
     tournamentId: number; tournamentName: string; tournamentDate: Date;
     totalParticipants: number; wins: number; losses: number;
@@ -519,6 +522,44 @@ export async function getPerformanceContext(robotId: number) {
     tagTeamStats.damageTaken += bs.damageTaken;
   });
 
+  // ── 2v2 League stats ────────────────────────────────────────────────
+  const league2v2Battles = battles.filter(b => b.battleType === 'league_2v2');
+  const league2v2Stats = {
+    totalBattles: league2v2Battles.length,
+    wins: 0, losses: 0, draws: 0,
+    damageDealt: 0, damageTaken: 0,
+  };
+
+  league2v2Battles.forEach(battle => {
+    const battleLog = battle.battleLog as unknown as { winningSide?: 1 | 2 | null };
+    const participant = battle.participants.find(p => p.robotId === robotId);
+    if (!participant) return;
+    const myTeam = participant.team;
+    if (battleLog?.winningSide === null) league2v2Stats.draws++;
+    else if (battleLog?.winningSide === myTeam) league2v2Stats.wins++;
+    else league2v2Stats.losses++;
+    league2v2Stats.damageDealt += participant.damageDealt ?? 0;
+  });
+
+  // ── 3v3 League stats ────────────────────────────────────────────────
+  const league3v3Battles = battles.filter(b => b.battleType === 'league_3v3');
+  const league3v3Stats = {
+    totalBattles: league3v3Battles.length,
+    wins: 0, losses: 0, draws: 0,
+    damageDealt: 0, damageTaken: 0,
+  };
+
+  league3v3Battles.forEach(battle => {
+    const battleLog = battle.battleLog as unknown as { winningSide?: 1 | 2 | null };
+    const participant = battle.participants.find(p => p.robotId === robotId);
+    if (!participant) return;
+    const myTeam = participant.team;
+    if (battleLog?.winningSide === null) league3v3Stats.draws++;
+    else if (battleLog?.winningSide === myTeam) league3v3Stats.wins++;
+    else league3v3Stats.losses++;
+    league3v3Stats.damageDealt += participant.damageDealt ?? 0;
+  });
+
   return {
     leagues: leagueStats,
     tournaments: tournamentStats,
@@ -526,6 +567,18 @@ export async function getPerformanceContext(robotId: number) {
       ...tagTeamStats,
       winRate: tagTeamStats.totalBattles > 0
         ? ((tagTeamStats.wins / tagTeamStats.totalBattles) * 100).toFixed(1)
+        : '0.0',
+    },
+    league2v2: {
+      ...league2v2Stats,
+      winRate: league2v2Stats.totalBattles > 0
+        ? ((league2v2Stats.wins / league2v2Stats.totalBattles) * 100).toFixed(1)
+        : '0.0',
+    },
+    league3v3: {
+      ...league3v3Stats,
+      winRate: league3v3Stats.totalBattles > 0
+        ? ((league3v3Stats.wins / league3v3Stats.totalBattles) * 100).toFixed(1)
         : '0.0',
     },
   };

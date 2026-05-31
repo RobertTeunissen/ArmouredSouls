@@ -6,6 +6,9 @@ import { rebalanceLeagues } from '../league/leagueRebalancingService';
 import { rebalanceTagTeamLeagues } from '../tag-team/tagTeamLeagueRebalancingService';
 import { runTagTeamMatchmaking } from '../tag-team/tagTeamMatchmakingService';
 import { executeScheduledTagTeamBattles } from '../tag-team/tagTeamBattleOrchestrator';
+import { executeScheduledTeamBattles } from '../team-battle/teamBattleOrchestrator';
+import { rebalanceTeamBattleLeagues } from '../team-battle/teamBattleAdapter';
+import { runTeamBattleMatchmaking } from '../team-battle/teamBattleMatchmakingService';
 import { generateBattleReadyUsers } from '../../utils/userGeneration';
 import { repairAllRobots } from '../economy/repairService';
 import {
@@ -35,11 +38,11 @@ export interface CycleResult {
   cycle: number;
   // Event block results (slot map order)
   leagueBlock?: { battles: unknown; repair: unknown; rebalancing: unknown; matchmaking: unknown };
-  team2v2LeagueBlock?: { skipped: true; message: string };
+  team2v2LeagueBlock?: { battles: unknown; rebalancing: unknown; matchmaking: unknown } | { error: string };
   tournamentBlock?: { repair: unknown; tournaments: unknown };
   tagTeamBlock?: { repair: unknown; battles: unknown; rebalancing: unknown; matchmaking: unknown };
   kothBlock?: { repair: unknown; battles: unknown; matchmaking: unknown };
-  team3v3LeagueBlock?: { skipped: true; message: string };
+  team3v3LeagueBlock?: { battles: unknown; rebalancing: unknown; matchmaking: unknown } | { error: string };
   team2v2TournamentBlock?: { skipped: true; message: string };
   grandMeleeBlock?: { skipped: true; message: string };
   team3v3TournamentBlock?: { skipped: true; message: string };
@@ -179,8 +182,8 @@ async function executeTournamentStep(): Promise<TournamentStepSummary> {
  * self-contained block (repair → execute → rebalance → matchmaking) mirroring
  * the production cron handlers. Reserved slots log a no-op message.
  *
- * Slot map order: 1v1 League → Team 2v2 League (stub) → 1v1 Tournament →
- * Tag Team → KotH → Team 3v3 League (stub) → Team 2v2 Tournament (stub) →
+ * Slot map order: 1v1 League → Team 2v2 League → 1v1 Tournament →
+ * Tag Team → KotH → Team 3v3 League → Team 2v2 Tournament (stub) →
  * Grand Melee (stub) → Team 3v3 Tournament (stub) → Settlement.
  */
 export async function executeBulkCycles(options: BulkCycleOptions): Promise<BulkCycleResult> {
@@ -315,18 +318,60 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
       );
 
       // ═══════════════════════════════════════════════════════════════════
-      // SLOT 2: Team 2v2 League (reserved stub)
+      // SLOT 2: Team 2v2 League (execute → rebalance → matchmaking)
       // ═══════════════════════════════════════════════════════════════════
-      stepNumber++;
-      logger.info(`[Admin] Step ${stepNumber}: Team 2v2 League — reserved slot, no handler implemented`);
-      await eventLogger.logCycleStepComplete(
-        currentCycleNumber,
-        'team_2v2_league_reserved',
-        stepNumber,
-        0,
-        { reserved: true }
-      );
-      reservedSlotsFired.push('team_2v2_league');
+      logger.info(`[Admin] Slot 2: Team 2v2 League`);
+      let team2v2BattleSummary = null;
+      let team2v2RebalancingSummary = null;
+      let team2v2MatchesCreated = 0;
+      let team2v2Error: string | undefined;
+
+      try {
+        // 2.1 Execute scheduled 2v2 battles
+        stepNumber++;
+        logger.info(`[Admin] Step ${stepNumber}: Execute Team 2v2 League Battles`);
+        const team2v2BattleStart = Date.now();
+        team2v2BattleSummary = await executeScheduledTeamBattles(2);
+        await eventLogger.logCycleStepComplete(
+          currentCycleNumber,
+          'execute_team_2v2_battles',
+          stepNumber,
+          Date.now() - team2v2BattleStart,
+          { matchesCompleted: team2v2BattleSummary.matchesCompleted, matchesCancelled: team2v2BattleSummary.matchesCancelled }
+        );
+
+        // 2.2 Rebalance 2v2 league tiers
+        stepNumber++;
+        logger.info(`[Admin] Step ${stepNumber}: Rebalance Team 2v2 Leagues`);
+        const team2v2RebalanceStart = Date.now();
+        team2v2RebalancingSummary = await rebalanceTeamBattleLeagues();
+        await eventLogger.logCycleStepComplete(
+          currentCycleNumber,
+          'rebalance_team_2v2_leagues',
+          stepNumber,
+          Date.now() - team2v2RebalanceStart,
+          { promotions: team2v2RebalancingSummary.totalPromoted, demotions: team2v2RebalancingSummary.totalDemoted }
+        );
+
+        // 2.3 Run 2v2 matchmaking (24h lead time)
+        stepNumber++;
+        logger.info(`[Admin] Step ${stepNumber}: Matchmaking for Team 2v2 League`);
+        const team2v2MatchmakingStart = Date.now();
+        const team2v2ScheduledFor = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        team2v2ScheduledFor.setMinutes(0, 0, 0);
+        team2v2MatchesCreated = await runTeamBattleMatchmaking(2, team2v2ScheduledFor);
+        await eventLogger.logCycleStepComplete(
+          currentCycleNumber,
+          'matchmaking_team_2v2',
+          stepNumber,
+          Date.now() - team2v2MatchmakingStart,
+          { matchesCreated: team2v2MatchesCreated }
+        );
+      } catch (team2v2Err) {
+        // R14.7: Record failure, continue remaining steps and iterations
+        team2v2Error = team2v2Err instanceof Error ? team2v2Err.message : String(team2v2Err);
+        logger.error(`[Admin] Team 2v2 League block failed:`, team2v2Err);
+      }
 
       // ═══════════════════════════════════════════════════════════════════
       // SLOT 3: 1v1 Tournament (repair → execute/advance/auto-create)
@@ -487,18 +532,60 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
       }
 
       // ═══════════════════════════════════════════════════════════════════
-      // SLOT 6: Team 3v3 League (reserved stub)
+      // SLOT 6: Team 3v3 League (execute → rebalance → matchmaking)
       // ═══════════════════════════════════════════════════════════════════
-      stepNumber++;
-      logger.info(`[Admin] Step ${stepNumber}: Team 3v3 League — reserved slot, no handler implemented`);
-      await eventLogger.logCycleStepComplete(
-        currentCycleNumber,
-        'team_3v3_league_reserved',
-        stepNumber,
-        0,
-        { reserved: true }
-      );
-      reservedSlotsFired.push('team_3v3_league');
+      logger.info(`[Admin] Slot 6: Team 3v3 League`);
+      let team3v3BattleSummary = null;
+      let team3v3RebalancingSummary = null;
+      let team3v3MatchesCreated = 0;
+      let team3v3Error: string | undefined;
+
+      try {
+        // 6.1 Execute scheduled 3v3 battles
+        stepNumber++;
+        logger.info(`[Admin] Step ${stepNumber}: Execute Team 3v3 League Battles`);
+        const team3v3BattleStart = Date.now();
+        team3v3BattleSummary = await executeScheduledTeamBattles(3);
+        await eventLogger.logCycleStepComplete(
+          currentCycleNumber,
+          'execute_team_3v3_battles',
+          stepNumber,
+          Date.now() - team3v3BattleStart,
+          { matchesCompleted: team3v3BattleSummary.matchesCompleted, matchesCancelled: team3v3BattleSummary.matchesCancelled }
+        );
+
+        // 6.2 Rebalance 3v3 league tiers
+        stepNumber++;
+        logger.info(`[Admin] Step ${stepNumber}: Rebalance Team 3v3 Leagues`);
+        const team3v3RebalanceStart = Date.now();
+        team3v3RebalancingSummary = await rebalanceTeamBattleLeagues();
+        await eventLogger.logCycleStepComplete(
+          currentCycleNumber,
+          'rebalance_team_3v3_leagues',
+          stepNumber,
+          Date.now() - team3v3RebalanceStart,
+          { promotions: team3v3RebalancingSummary.totalPromoted, demotions: team3v3RebalancingSummary.totalDemoted }
+        );
+
+        // 6.3 Run 3v3 matchmaking (24h lead time)
+        stepNumber++;
+        logger.info(`[Admin] Step ${stepNumber}: Matchmaking for Team 3v3 League`);
+        const team3v3MatchmakingStart = Date.now();
+        const team3v3ScheduledFor = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        team3v3ScheduledFor.setMinutes(0, 0, 0);
+        team3v3MatchesCreated = await runTeamBattleMatchmaking(3, team3v3ScheduledFor);
+        await eventLogger.logCycleStepComplete(
+          currentCycleNumber,
+          'matchmaking_team_3v3',
+          stepNumber,
+          Date.now() - team3v3MatchmakingStart,
+          { matchesCreated: team3v3MatchesCreated }
+        );
+      } catch (team3v3Err) {
+        // R14.7: Record failure, continue remaining steps and iterations
+        team3v3Error = team3v3Err instanceof Error ? team3v3Err.message : String(team3v3Err);
+        logger.error(`[Admin] Team 3v3 League block failed:`, team3v3Err);
+      }
 
       // ═══════════════════════════════════════════════════════════════════
       // SLOT 7: Team 2v2 Tournament (reserved stub)
@@ -802,10 +889,12 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
       // Display Cycle Summary
       logger.info(`[Admin] === Cycle ${currentCycleNumber} Summary ===`);
       logger.info(`[Admin] 1v1 League Battles: ${battleSummary.totalBattles}`);
+      logger.info(`[Admin] Team 2v2 League Battles: ${team2v2BattleSummary?.matchesCompleted ?? 0}${team2v2Error ? ' (ERROR)' : ''}`);
       logger.info(`[Admin] Tag Team Battles: ${tagTeamBattleSummary?.totalBattles || 0}`);
       if (kothBattleSummary) {
         logger.info(`[Admin] KotH Battles: ${kothBattleSummary.totalMatches} (${kothBattleSummary.successfulMatches} successful, ${kothBattleSummary.failedMatches} failed)`);
       }
+      logger.info(`[Admin] Team 3v3 League Battles: ${team3v3BattleSummary?.matchesCompleted ?? 0}${team3v3Error ? ' (ERROR)' : ''}`);
       logger.info(`[Admin] Reserved slots fired: ${reservedSlotsFired.join(', ')}`);
       logger.info(`[Admin] ===================================`);
 
@@ -817,7 +906,9 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
           rebalancing: rebalancingSummary,
           matchmaking: { matchesCreated: leagueMatchesCreated },
         },
-        team2v2LeagueBlock: { skipped: true, message: 'reserved slot, no handler implemented' },
+        team2v2LeagueBlock: team2v2Error
+          ? { error: team2v2Error }
+          : { battles: team2v2BattleSummary, rebalancing: team2v2RebalancingSummary, matchmaking: { matchesCreated: team2v2MatchesCreated } },
         tournamentBlock: {
           repair: tournamentRepairSummary,
           tournaments: tournamentSummary,
@@ -833,7 +924,9 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
           battles: kothBattleSummary,
           matchmaking: { matchesCreated: kothMatchesCreated },
         } : undefined,
-        team3v3LeagueBlock: { skipped: true, message: 'reserved slot, no handler implemented' },
+        team3v3LeagueBlock: team3v3Error
+          ? { error: team3v3Error }
+          : { battles: team3v3BattleSummary, rebalancing: team3v3RebalancingSummary, matchmaking: { matchesCreated: team3v3MatchesCreated } },
         team2v2TournamentBlock: { skipped: true, message: 'reserved slot, no handler implemented' },
         grandMeleeBlock: { skipped: true, message: 'reserved slot, no handler implemented' },
         team3v3TournamentBlock: { skipped: true, message: 'reserved slot, no handler implemented' },

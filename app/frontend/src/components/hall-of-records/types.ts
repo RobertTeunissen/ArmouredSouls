@@ -41,6 +41,10 @@ export interface RecordsData {
     bestPlacement: KothBestPlacement[];
     zoneDominator: KothZoneDominator[];
   };
+  teamBattle: {
+    '2v2': TeamBattleSizeRecords;
+    '3v3': TeamBattleSizeRecords;
+  };
   timestamp: string;
 }
 
@@ -257,4 +261,59 @@ export interface KothZoneDominator {
   totalZoneScore: number;
 }
 
-export type CategoryKey = 'combat' | 'upsets' | 'career' | 'economic' | 'prestige' | 'koth';
+export type CategoryKey = 'combat' | 'upsets' | 'career' | 'economic' | 'prestige' | 'koth' | 'teamBattle';
+
+// ─── Team Battle Records ────────────────────────────────────────────
+
+export interface TeamBattleSizeRecords {
+  fastestVictory: TeamBattleFastestVictory[];
+  longestSurvival: TeamBattleLongestSurvival[];
+  mostDamageDealt: TeamBattleMostDamage[];
+  mostDecisiveVictory: TeamBattleDecisiveVictory[];
+  longestNonDrawBattle: TeamBattleLongestBattle[];
+}
+
+export interface TeamBattleParticipantDisplay {
+  id: number;
+  name: string;
+  username: string;
+}
+
+export interface TeamBattleFastestVictory {
+  battleId: number;
+  durationSeconds: number;
+  team1: TeamBattleParticipantDisplay[];
+  team2: TeamBattleParticipantDisplay[];
+  date: string;
+}
+
+export interface TeamBattleLongestSurvival {
+  battleId: number;
+  survivalSeconds: number;
+  robot: { id: number; name: string; username: string };
+  date: string;
+}
+
+export interface TeamBattleMostDamage {
+  battleId: number;
+  damageDealt: number;
+  robot: { id: number; name: string; username: string };
+  durationSeconds: number;
+  date: string;
+}
+
+export interface TeamBattleDecisiveVictory {
+  battleId: number;
+  hpDifference: number;
+  team1: TeamBattleParticipantDisplay[];
+  team2: TeamBattleParticipantDisplay[];
+  date: string;
+}
+
+export interface TeamBattleLongestBattle {
+  battleId: number;
+  durationSeconds: number;
+  team1: TeamBattleParticipantDisplay[];
+  team2: TeamBattleParticipantDisplay[];
+  date: string;
+}

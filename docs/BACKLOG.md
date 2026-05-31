@@ -53,13 +53,13 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 
 | Item | # | Spec | Status |
 |------|---|------|--------|
-| Team Battles 2v2 and 3v3 (League) | 31 | [Spec 37 team-battles-2v2-3v3](/.kiro/specs/to-do/37-team-battles-2v2-3v3/) | In progress (not yet completed) — delivers the league piece; tournaments split out as #54 and subscription facility as #55 |
 | Cron Schedule Restructure — Daily-Everything Slot Map | 56 | [Spec 36 cron-schedule-restructure](/.kiro/specs/to-do/36-cron-schedule-restructure/) | In progress — restructures cron layout to daily 10-slot map with heavy-mode spacing, reserved slots for future battle modes, and midnight settlement |
 
 ### Recently Completed (removed from backlog)
 
 | Item | # | Spec | Completed |
 |------|---|------|-----------|
+| Team Battles 2v2 and 3v3 (League) | 31 | [Spec #37](/.kiro/specs/to-do/37-team-battles-2v2-3v3/) | June 2026 |
 | Untrack Generated Prisma Client (68K lines out of git) | — | — (direct implementation) | May 2026 |
 | HTTP Client Consolidation (typed `api` wrapper everywhere) | — | — (direct implementation) | May 2026 |
 | Console → Structured Logger Migration (FE + BE) | — | — (direct implementation) | May 2026 |
@@ -228,11 +228,11 @@ Custom weapon design at Workshop Level 6+. Pricing formula already supports it.
 ### #30 — Free-for-All / Battle Royale Mode
 Large-scale elimination (8–100 robots). [Design analysis](analysis/FREE_FOR_ALL_BATTLE_ROYALE_MODE.md) exists.
 
-### #31 — Team Battles 2v2 and 3v3 (League) — IN PROGRESS
+### #31 — ~~Team Battles 2v2 and 3v3 (League)~~ ✅ COMPLETED
 **Source**: Backlog triage; expanded into spec  
-**Priority**: In progress — see [Spec 37 team-battles-2v2-3v3](/.kiro/specs/to-do/37-team-battles-2v2-3v3/)
+**Priority**: ✅ Completed — see [Spec #37 team-battles-2v2-3v3](/.kiro/specs/to-do/37-team-battles-2v2-3v3/)
 
-Active spec covering 2v2 and 3v3 league battles, persistent Teams per size, Team Coordination ally effects, daily 2v2/3v3 alternation, unified `/team-battles` UI, achievement integration, seeded-stable enrolment, and admin manual triggers. Tournaments are explicitly out of scope and tracked separately as #54 below.
+Delivered 2v2 and 3v3 league battles with persistent Teams per size, Team Coordination ally effects (syncProtocols → focus fire bonus, supportSystems → ally shield regen, formationTactics → formation damage reduction), daily cadence (2v2 at 09:00 UTC, 3v3 at 14:00 UTC), shared LP-primary matchmaking, N× reward multiplier, unified `/team-battles` UI, achievement integration, seeded-stable enrolment, and admin manual triggers. Tournaments are explicitly out of scope and tracked separately as #54.
 
 ### #32 — Conditional Battle Triggers / Robot AI Scripting
 Player-defined robot behaviors: "switch stance when HP < 30%", "target weakest in KotH".
@@ -353,6 +353,26 @@ A collection of saved weapon blueprints for the crafting system. Players save su
 
 **Dependencies**: Weapon Crafting System (#29).
 
+### #55 — Tag Team System Unification
+**Source**: Spec 37 review — UX inconsistencies between Tag Team and 2v2/3v3 Team Battle systems  
+**Priority**: Medium — reduces player confusion, aligns all team modes
+
+Tag Team was built before the Team Battle system (Spec 37) and uses different patterns:
+- No member swap support (must disband and recreate to change members)
+- No league instances (single flat league per tier, unlike 2v2/3v3 which use instances)
+- Different card layout on the Team Management page (Active/Reserve labels vs generic member list)
+- No ineligibility reason feedback (unlike 2v2/3v3 which now show why a team can't fight)
+- Different API shape (`/api/tag-teams` vs `/api/team-battles`)
+
+**Scope:**
+1. Add member swap endpoint to tag teams (swap active or reserve robot)
+2. Add league instances to tag team (max 50 teams per instance, same as 2v2/3v3)
+3. Unify the Team Management card layout — all team types show members the same way with swap buttons
+4. Add ineligibility reason to tag team API response (same pattern as 2v2/3v3)
+5. Consider migrating tag team to use the same `team_battle` table with `teamSize: 2` and a `mode: 'tag_team'` discriminator (larger refactor, evaluate in spec)
+
+**Dependencies**: None blocking. Can be done independently of #54 (Team Battle Tournaments).
+
 ### #54 — Team Battle Tournaments (2v2 / 3v3)
 **Source**: Spec discussion during team-battles-2v2-3v3 review (May 2026)  
 **Priority**: Medium — natural follow-up once league Team Battles ship
@@ -396,6 +416,9 @@ The existing `Tournament`, `ScheduledTournamentMatch`, and `processTournamentBat
 - #31 (Team Battles league) must ship first — establishes Team registration, Team_ELO, Team Battle Engine, achievement triggers, unified `/team-battles` UI.
 - Decision on #55 (battle subscription facility) preferred but not blocking — gating can fall back to direct facility/prestige checks.
 - #49 (Mega-Orchestrator Refactor) is not a hard dependency but the tournament refactor is similar in shape; coordinate ordering.
+
+**Bundled UX improvement (from Spec 37 review):**
+- The `/robots` page card view should show per-robot subscription chips with small stats (W/L per mode, tournament round/eliminated status). Currently the robot API doesn't return subscription data or tournament status per robot. This requires: (1) new API field `subscriptions: { eventType, stats }[]` on the robot response, (2) tournament status lookup per robot, (3) frontend chip rendering. Deferred to this spec since it naturally pairs with the tournament generalisation work.
 
 **Scope estimate:** Medium-to-large. Schema migration + data backfill + dual-orchestrator dispatch + UI updates (admin tournament creation flow gains type selector, tournament detail page renders team brackets, results screen handles N robots per side) + championship-title semantics + achievement wiring. Do not start until #31 has been live on ACC for at least one cycle to validate the league mode.
 

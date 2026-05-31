@@ -38,8 +38,8 @@ function shouldIncludeKothRecords(totalEvents: number): boolean {
 }
 
 function buildHistoryWhereClause(battleType: string | undefined): Record<string, string> {
-  if (battleType === 'league') return { battleTypeFilter: 'notIn:tournament,tag_team' };
-  if (battleType === 'tournament') return { battleType: 'tournament' };
+  if (battleType === 'league') return { battleTypeFilter: 'notIn:tournament_1v1,tag_team' };
+  if (battleType === 'tournament') return { battleType: 'tournament_1v1' };
   if (battleType === 'tag_team') return { battleType: 'tag_team' };
   if (battleType === 'koth') return { battleType: 'koth' };
   return {};
@@ -163,12 +163,12 @@ describe('KotH API Unit Tests', () => {
 
     it('should produce league filter', () => {
       const clause = buildHistoryWhereClause('league');
-      expect(clause).toEqual({ battleTypeFilter: 'notIn:tournament,tag_team' });
+      expect(clause).toEqual({ battleTypeFilter: 'notIn:tournament_1v1,tag_team' });
     });
 
     it('should produce tournament filter', () => {
       const clause = buildHistoryWhereClause('tournament');
-      expect(clause).toEqual({ battleType: 'tournament' });
+      expect(clause).toEqual({ battleType: 'tournament_1v1' });
     });
 
     it('should produce tag_team filter', () => {

@@ -208,11 +208,11 @@ The game does NOT run "complete cycles" as a single monolithic operation. Instea
 | Job | Schedule (UTC) | What it does |
 |-----|---------------|--------------|
 | 1v1 League | 8:00 AM | Matchmaking → Battle execution → League rebalancing |
-| Team 2v2 League | 9:00 AM | Reserved slot (no handler yet) |
+| Team 2v2 League | 9:00 AM | Matchmaking → Battle execution → League rebalancing |
 | Tournament | 10:00 AM | Tournament bracket advancement |
 | Tag Team | 11:00 AM | Tag team matchmaking → battles → rebalancing |
 | KotH | 1:00 PM | KotH matchmaking → battles |
-| Team 3v3 League | 2:00 PM | Reserved slot (no handler yet) |
+| Team 3v3 League | 2:00 PM | Matchmaking → Battle execution → League rebalancing |
 | Team 2v2 Tournament | 3:00 PM | Reserved slot (no handler yet) |
 | Grand Melee | 5:00 PM | Reserved slot (no handler yet) |
 | Team 3v3 Tournament | 6:00 PM | Reserved slot (no handler yet) |

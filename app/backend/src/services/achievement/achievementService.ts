@@ -141,6 +141,7 @@ const EVENT_TRIGGER_MAP: Record<AchievementEventType, AchievementTriggerType[]> 
     'prestige', 'fame', 'streaming_revenue',
     'lifetime_earnings', 'currency',
     'league_promotion',
+    'league_2v2_wins', 'league_3v3_wins',
   ],
   league_promotion: ['league_promotion'],
   weapon_purchased: ['weapon_count', 'weapon_type'],
@@ -388,6 +389,12 @@ class AchievementService implements IAchievementService {
       case 'tag_team_wins':
         return this.checkRobotStatCached(cachedRobot, 'totalTagTeamWins', triggerThreshold);
 
+      case 'league_2v2_wins':
+        return this.checkRobotStatCached(cachedRobot, 'totalLeague2v2Wins', triggerThreshold);
+
+      case 'league_3v3_wins':
+        return this.checkRobotStatCached(cachedRobot, 'totalLeague3v3Wins', triggerThreshold);
+
       // ── Cumulative User Stats (from cached user) ───────────────
       case 'prestige':
         return this.checkUserStatCached(cachedUser, 'prestige', triggerThreshold);
@@ -415,7 +422,7 @@ class AchievementService implements IAchievementService {
         return (
           Boolean(data.won) &&
           Number(data.eloDiff) >= minEloDiff &&
-          ['league', 'tournament'].includes(battleType)
+          ['league_1v1', 'tournament_1v1'].includes(battleType)
         );
       }
 
@@ -916,17 +923,20 @@ class AchievementService implements IAchievementService {
   }
 
   private async checkAllModesWin(userId: number): Promise<boolean> {
-    // Check if user has wins in league, koth, tag_team, and tournament
+    // Check if user has wins in 4 categories: any league (1v1/2v2/3v3), tag team, any tournament, KotH
     const robots = await prisma.robot.findMany({
       where: { userId, name: { not: 'Bye Robot' } },
       select: {
         wins: true,
         kothWins: true,
         totalTagTeamWins: true,
+        totalLeague2v2Wins: true,
+        totalLeague3v3Wins: true,
       },
     });
 
-    const hasLeagueWin = robots.some((r) => r.wins > 0);
+    // Any league win (1v1, 2v2, or 3v3 all satisfy the "league" category)
+    const hasLeagueWin = robots.some((r) => r.wins > 0 || r.totalLeague2v2Wins > 0 || r.totalLeague3v3Wins > 0);
     const hasKothWin = robots.some((r) => r.kothWins > 0);
     const hasTagTeamWin = robots.some((r) => r.totalTagTeamWins > 0);
 
@@ -1215,6 +1225,8 @@ class AchievementService implements IAchievementService {
         totalBattles: true,
         kothWins: true,
         totalTagTeamWins: true,
+        totalLeague2v2Wins: true,
+        totalLeague3v3Wins: true,
         currentWinStreak: true,
         currentLoseStreak: true,
         offensiveWins: true,
@@ -1490,7 +1502,8 @@ class AchievementService implements IAchievementService {
     robots: Array<{
       id: number; name: string; wins: number; losses: number; kills: number;
       elo: number; fame: number; totalBattles: number; kothWins: number;
-      totalTagTeamWins: number; currentWinStreak: number; currentLoseStreak: number;
+      totalTagTeamWins: number; totalLeague2v2Wins: number; totalLeague3v3Wins: number;
+      currentWinStreak: number; currentLoseStreak: number;
       offensiveWins: number; defensiveWins: number; balancedWins: number;
       dualWieldWins: number;
     }>,
@@ -1511,7 +1524,8 @@ class AchievementService implements IAchievementService {
     // Helper to find best robot for a given field
     const bestRobotFor = (
       field: 'wins' | 'losses' | 'kills' | 'elo' | 'fame' | 'totalBattles' |
-        'kothWins' | 'totalTagTeamWins' | 'currentWinStreak' | 'currentLoseStreak' |
+        'kothWins' | 'totalTagTeamWins' | 'totalLeague2v2Wins' | 'totalLeague3v3Wins' |
+        'currentWinStreak' | 'currentLoseStreak' |
         'offensiveWins' | 'defensiveWins' | 'balancedWins' | 'dualWieldWins',
     ): { current: number; bestRobotName?: string } => {
       if (robots.length === 0) return { current: 0 };
@@ -1564,6 +1578,14 @@ class AchievementService implements IAchievementService {
       }
       case 'tag_team_wins': {
         const result = bestRobotFor('totalTagTeamWins');
+        return { current: result.current, target, label, bestRobotName: result.bestRobotName };
+      }
+      case 'league_2v2_wins': {
+        const result = bestRobotFor('totalLeague2v2Wins');
+        return { current: result.current, target, label, bestRobotName: result.bestRobotName };
+      }
+      case 'league_3v3_wins': {
+        const result = bestRobotFor('totalLeague3v3Wins');
         return { current: result.current, target, label, bestRobotName: result.bestRobotName };
       }
 

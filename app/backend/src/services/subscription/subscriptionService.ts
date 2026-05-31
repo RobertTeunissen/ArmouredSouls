@@ -57,6 +57,18 @@ export async function isRobotSubscribedTo(robotId: number, eventType: string): P
 }
 
 /**
+ * Check if a robot holds a subscription to a specific event type (active OR pending).
+ * Used by team registration — a player who subscribed should be able to form a team
+ * immediately, without waiting for the matchmaker to activate the subscription.
+ */
+export async function hasSubscription(robotId: number, eventType: string): Promise<boolean> {
+  const count = await prisma.subscription.count({
+    where: { robotId, eventType, status: { in: ['active', 'pending'] } },
+  });
+  return count > 0;
+}
+
+/**
  * Subscribe a robot to an event type.
  * New subscriptions start as 'pending'. The matchmaker activates them when the robot
  * has room under the active subscription cap.
@@ -180,7 +192,7 @@ export async function unsubscribeRobot(
     }
 
     // 3. Only tournament has a lock — you can't drop mid-bracket
-    if (eventType === 'tournament') {
+    if (eventType === 'tournament_1v1') {
       const isLocked = await tournamentLockingPredicate(robotId);
       if (isLocked) {
         throw new SubscriptionError(

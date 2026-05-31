@@ -15,8 +15,8 @@ const mockUnsubscribe = vi.fn().mockResolvedValue({ success: true, message: 'Uns
 const defaultRobotSubscriptions: useSubscriptionsModule.UseRobotSubscriptionsReturn = {
   data: {
     subscriptions: [
-      { id: 1, robotId: 1, eventType: 'league', status: 'active', createdAt: '2026-01-01' },
-      { id: 2, robotId: 1, eventType: 'tournament', status: 'active', createdAt: '2026-01-01' },
+      { id: 1, robotId: 1, eventType: 'league_1v1', status: 'active', createdAt: '2026-01-01' },
+      { id: 2, robotId: 1, eventType: 'tournament_1v1', status: 'active', createdAt: '2026-01-01' },
     ],
     cap: 3,
     level: 0,
@@ -30,8 +30,8 @@ const defaultRobotSubscriptions: useSubscriptionsModule.UseRobotSubscriptionsRet
 };
 
 const defaultRegistryEvents: useSubscriptionsModule.EligibleEvent[] = [
-  { type: 'league', label: '1v1 League', eligible: true },
-  { type: 'tournament', label: '1v1 Tournament', eligible: true },
+  { type: 'league_1v1', label: '1v1 League', eligible: true },
+  { type: 'tournament_1v1', label: '1v1 Tournament', eligible: true },
   { type: 'tag_team', label: 'Tag Team', eligible: false, reason: 'Tag Team requires 2 or more robots' },
   { type: 'koth', label: 'King of the Hill', eligible: true },
 ];
@@ -62,8 +62,8 @@ describe('SubscriptionManager', () => {
       ...defaultRobotSubscriptions,
       data: {
         subscriptions: [
-          { id: 1, robotId: 1, eventType: 'league', createdAt: '2026-01-01' },
-          { id: 2, robotId: 1, eventType: 'tournament', createdAt: '2026-01-01' },
+          { id: 1, robotId: 1, eventType: 'league_1v1', createdAt: '2026-01-01' },
+          { id: 2, robotId: 1, eventType: 'tournament_1v1', createdAt: '2026-01-01' },
           { id: 3, robotId: 1, eventType: 'koth', createdAt: '2026-01-01' },
         ],
         cap: 3,
@@ -80,8 +80,8 @@ describe('SubscriptionManager', () => {
       ...defaultRobotSubscriptions,
       data: {
         subscriptions: [
-          { id: 1, robotId: 1, eventType: 'league', createdAt: '2026-01-01' },
-          { id: 2, robotId: 1, eventType: 'tournament', createdAt: '2026-01-01' },
+          { id: 1, robotId: 1, eventType: 'league_1v1', createdAt: '2026-01-01' },
+          { id: 2, robotId: 1, eventType: 'tournament_1v1', createdAt: '2026-01-01' },
           { id: 3, robotId: 1, eventType: 'koth', createdAt: '2026-01-01' },
         ],
         cap: 3,
@@ -103,8 +103,8 @@ describe('SubscriptionManager', () => {
       ...defaultRobotSubscriptions,
       data: {
         subscriptions: [
-          { id: 1, robotId: 1, eventType: 'league', status: 'active', createdAt: '2026-01-01' },
-          { id: 2, robotId: 1, eventType: 'tournament', status: 'active', createdAt: '2026-01-01' },
+          { id: 1, robotId: 1, eventType: 'league_1v1', status: 'active', createdAt: '2026-01-01' },
+          { id: 2, robotId: 1, eventType: 'tournament_1v1', status: 'active', createdAt: '2026-01-01' },
         ],
         cap: 3,
         level: 0,
@@ -112,7 +112,7 @@ describe('SubscriptionManager', () => {
     });
 
     const lockStates = {
-      tournament: { isLocked: true, scheduledCycle: 59 },
+      tournament_1v1: { isLocked: true, scheduledCycle: 59 },
     };
 
     render(<SubscriptionManager robotId={1} lockStates={lockStates} />);
@@ -126,8 +126,8 @@ describe('SubscriptionManager', () => {
       ...defaultRobotSubscriptions,
       data: {
         subscriptions: [
-          { id: 1, robotId: 1, eventType: 'league', status: 'active', createdAt: '2026-01-01' },
-          { id: 2, robotId: 1, eventType: 'tournament', status: 'active', createdAt: '2026-01-01' },
+          { id: 1, robotId: 1, eventType: 'league_1v1', status: 'active', createdAt: '2026-01-01' },
+          { id: 2, robotId: 1, eventType: 'tournament_1v1', status: 'active', createdAt: '2026-01-01' },
         ],
         cap: 3,
         level: 0,
@@ -135,7 +135,7 @@ describe('SubscriptionManager', () => {
     });
 
     const lockStates = {
-      tournament: { isLocked: true, scheduledCycle: 59 },
+      tournament_1v1: { isLocked: true, scheduledCycle: 59 },
     };
 
     render(<SubscriptionManager robotId={1} lockStates={lockStates} />);
@@ -147,8 +147,8 @@ describe('SubscriptionManager', () => {
       ...defaultRobotSubscriptions,
       data: {
         subscriptions: [
-          { id: 1, robotId: 1, eventType: 'league', status: 'active', createdAt: '2026-01-01' },
-          { id: 2, robotId: 1, eventType: 'tournament', status: 'active', createdAt: '2026-01-01' },
+          { id: 1, robotId: 1, eventType: 'league_1v1', status: 'active', createdAt: '2026-01-01' },
+          { id: 2, robotId: 1, eventType: 'tournament_1v1', status: 'active', createdAt: '2026-01-01' },
         ],
         cap: 3,
         level: 0,
@@ -156,7 +156,7 @@ describe('SubscriptionManager', () => {
     });
 
     const lockStates = {
-      tournament: { isLocked: true, scheduledCycle: 59 },
+      tournament_1v1: { isLocked: true, scheduledCycle: 59 },
     };
 
     render(<SubscriptionManager robotId={1} lockStates={lockStates} />);
@@ -166,7 +166,7 @@ describe('SubscriptionManager', () => {
 
   it('should NOT show lock indicator for non-tournament events even if lockStates provided', () => {
     const lockStates = {
-      league: { isLocked: true, scheduledCycle: 59 },
+      league_1v1: { isLocked: true, scheduledCycle: 59 },
     };
 
     render(<SubscriptionManager robotId={1} lockStates={lockStates} />);
@@ -215,7 +215,7 @@ describe('SubscriptionManager', () => {
     fireEvent.click(removeButton);
 
     await waitFor(() => {
-      expect(mockUnsubscribe).toHaveBeenCalledWith('league');
+      expect(mockUnsubscribe).toHaveBeenCalledWith('league_1v1');
     });
   });
 
@@ -244,7 +244,7 @@ describe('SubscriptionManager', () => {
       ...defaultRobotSubscriptions,
       data: {
         subscriptions: [
-          { id: 1, robotId: 1, eventType: 'league', createdAt: '2026-01-01' },
+          { id: 1, robotId: 1, eventType: 'league_1v1', createdAt: '2026-01-01' },
         ],
         cap: 4,
         level: 1,

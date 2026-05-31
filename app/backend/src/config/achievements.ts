@@ -63,7 +63,9 @@ export type AchievementTriggerType =
   | 'weapons_refined_credits_spent'
   | 'owns_legendary_weapon'
   | 'owns_legendary_starter_weapon'
-  | 'owns_max_dps_weapon';
+  | 'owns_max_dps_weapon'
+  | 'league_2v2_wins'
+  | 'league_3v3_wins';
 
 export interface AchievementDefinition {
   id: string;
@@ -383,7 +385,7 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
   {
     id: 'C18',
     name: 'Autobots, Roll Out!',
-    description: 'Win at least one battle in each mode: league, KotH, tag team, and tournament',
+    description: 'Win at least one battle in each category: any league (1v1/2v2/3v3), tag team, any tournament, and KotH',
     reference: 'Optimus Prime, Transformers',
     category: 'combat',
     tier: 'hard',
@@ -562,6 +564,74 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     progressType: 'numeric',
     progressLabel: 'tag team wins',
     badgeIconFile: 'achievement-l9',
+  },
+  {
+    id: 'L18',
+    name: 'Daft Punk',
+    description: 'Win your first 2v2 League battle',
+    reference: 'Daft Punk',
+    category: 'league',
+    tier: 'easy',
+    scope: 'robot',
+    rewardCredits: TIER_REWARDS.easy.credits,
+    rewardPrestige: TIER_REWARDS.easy.prestige,
+    hidden: false,
+    triggerType: 'league_2v2_wins',
+    triggerThreshold: 1,
+    progressType: 'numeric',
+    progressLabel: '2v2 league wins',
+    badgeIconFile: 'achievement-l18',
+  },
+  {
+    id: 'L19',
+    name: 'Twins!',
+    description: 'Win 25 2v2 League battles',
+    reference: 'The Matrix Reloaded',
+    category: 'league',
+    tier: 'hard',
+    scope: 'robot',
+    rewardCredits: TIER_REWARDS.hard.credits,
+    rewardPrestige: TIER_REWARDS.hard.prestige,
+    hidden: false,
+    triggerType: 'league_2v2_wins',
+    triggerThreshold: 25,
+    progressType: 'numeric',
+    progressLabel: '2v2 league wins',
+    badgeIconFile: 'achievement-l19',
+  },
+  {
+    id: 'L20',
+    name: 'Three Laws Safe',
+    description: 'Win your first 3v3 League battle',
+    reference: 'Asimov, I Robot',
+    category: 'league',
+    tier: 'easy',
+    scope: 'robot',
+    rewardCredits: TIER_REWARDS.easy.credits,
+    rewardPrestige: TIER_REWARDS.easy.prestige,
+    hidden: false,
+    triggerType: 'league_3v3_wins',
+    triggerThreshold: 1,
+    progressType: 'numeric',
+    progressLabel: '3v3 league wins',
+    badgeIconFile: 'achievement-l20',
+  },
+  {
+    id: 'L21',
+    name: 'Voltron',
+    description: 'Win 25 3v3 League battles',
+    reference: 'Voltron',
+    category: 'league',
+    tier: 'hard',
+    scope: 'robot',
+    rewardCredits: TIER_REWARDS.hard.credits,
+    rewardPrestige: TIER_REWARDS.hard.prestige,
+    hidden: false,
+    triggerType: 'league_3v3_wins',
+    triggerThreshold: 25,
+    progressType: 'numeric',
+    progressLabel: '3v3 league wins',
+    badgeIconFile: 'achievement-l21',
   },
   {
     id: 'L10',

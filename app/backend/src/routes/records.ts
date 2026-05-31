@@ -8,6 +8,7 @@ import {
   fetchEconomicRecords,
   fetchPrestigeRecords,
   fetchKothRecords,
+  fetchTeamBattleRecords,
 } from './records-queries';
 
 const router = express.Router();
@@ -26,13 +27,14 @@ router.get('/', validateRequest({}), async (req: Request, res: Response) => {
     return;
   }
 
-  const [combat, upsets, career, economic, prestige, kothRecords] = await Promise.all([
+  const [combat, upsets, career, economic, prestige, kothRecords, teamBattleRecords] = await Promise.all([
     fetchCombatRecords(),
     fetchUpsetRecords(),
     fetchCareerRecords(),
     fetchEconomicRecords(),
     fetchPrestigeRecords(),
     fetchKothRecords(),
+    fetchTeamBattleRecords(),
   ]);
 
   const result = {
@@ -42,6 +44,7 @@ router.get('/', validateRequest({}), async (req: Request, res: Response) => {
     economic,
     prestige,
     koth: kothRecords ?? { mostWins: [], highestAvgZoneScore: [], mostKillsCareer: [], longestWinStreak: [], mostZoneTime: [], bestPlacement: [], zoneDominator: [] },
+    teamBattle: teamBattleRecords,
     timestamp: new Date().toISOString(),
   };
 

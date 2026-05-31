@@ -5,7 +5,7 @@
  * robot count, returns whether a robot in that Stable can participate in that event.
  *
  * v1 rules:
- * - `league` and `tournament` always eligible (minRobots: 1)
+ * - `league_1v1` and `tournament_1v1` always eligible (minRobots: 1)
  * - `koth` always eligible (minRobots: 1)
  * - `tag_team` requires the Stable to own ≥ 2 robots
  *
@@ -37,10 +37,12 @@ export interface EligibleEvent {
 // ── Rules ────────────────────────────────────────────────────────────
 
 const ELIGIBILITY_RULES: EligibilityRule[] = [
-  { eventType: 'league', minRobots: 1, reason: '' },
-  { eventType: 'tournament', minRobots: 1, reason: '' },
+  { eventType: 'league_1v1', minRobots: 1, reason: '' },
+  { eventType: 'tournament_1v1', minRobots: 1, reason: '' },
   { eventType: 'koth', minRobots: 1, reason: '' },
   { eventType: 'tag_team', minRobots: 2, reason: 'Tag Team requires 2 or more robots in your Stable' },
+  { eventType: 'league_2v2', minRobots: 2, reason: '2v2 League requires 2 or more robots in your Stable' },
+  { eventType: 'league_3v3', minRobots: 3, reason: '3v3 League requires 3 or more robots in your Stable' },
 ];
 
 // ── Public API ───────────────────────────────────────────────────────

@@ -17,8 +17,9 @@ export function useBattlePlaybackData(battleLog: BattleLogResponse): BattlePlayb
   const hasSpatialData = !!battleLog.battleLog.arenaRadius && battleLog.battleLog.arenaRadius > 0;
   const isTagTeam = battleLog.battleType === 'tag_team';
   const isKoth = battleLog.battleType === 'koth';
-  const is1v1 = !isTagTeam && !isKoth && !!battleLog.robot1 && !!battleLog.robot2;
-  const showPlaybackViewer = hasSpatialData && (is1v1 || isTagTeam || isKoth);
+  const isTeamBattle = battleLog.battleType === 'league_2v2' || battleLog.battleType === 'league_3v3';
+  const is1v1 = !isTagTeam && !isKoth && !isTeamBattle && !!battleLog.robot1 && !!battleLog.robot2;
+  const showPlaybackViewer = hasSpatialData && (is1v1 || isTagTeam || isKoth || isTeamBattle);
 
   const spatialEvents = battleLog.battleLog.detailedCombatEvents ?? battleLog.battleLog.events;
 
@@ -57,7 +58,7 @@ export function useBattlePlaybackData(battleLog: BattleLogResponse): BattlePlayb
     endingPositions: battleLog.battleLog.endingPositions,
   } : null;
 
-  const narrativePlaybackEvents = showPlaybackViewer ? battleLog.battleLog.events.map((e: BattleLogEvent) => ({
+  const narrativePlaybackEvents = showPlaybackViewer ? (battleLog.battleLog.detailedCombatEvents ?? battleLog.battleLog.events).map((e: BattleLogEvent) => ({
     timestamp: e.timestamp,
     type: e.type,
     attacker: e.attacker,
@@ -97,6 +98,13 @@ export function useBattlePlaybackData(battleLog: BattleLogResponse): BattlePlayb
       const p = battleLog.kothParticipants[0];
       return { name: p.robotName, teamIndex: 0, maxHP: kothStartingHP[p.robotName] ?? 100, maxShield: kothStartingShield[p.robotName] ?? 0 };
     }
+    if (isTeamBattle && battleLog.participants?.length) {
+      const team1 = battleLog.participants.filter(p => p.team === 1);
+      if (team1.length > 0) {
+        const p = team1[0];
+        return { name: p.robotName, teamIndex: 0, maxHP: p.maxHP ?? 100, maxShield: p.maxShield ?? 0 };
+      }
+    }
     if (isTagTeam && battleLog.tagTeam?.team1.activeRobot) {
       const r = battleLog.tagTeam.team1.activeRobot;
       return { name: r.name, teamIndex: 0, maxHP: startingRobot1HP ?? r.maxHP ?? 100, maxShield: startingRobot1Shield ?? r.maxShield ?? 0 };
@@ -112,6 +120,13 @@ export function useBattlePlaybackData(battleLog: BattleLogResponse): BattlePlayb
     if (isKoth && battleLog.kothParticipants?.length && battleLog.kothParticipants.length >= 2) {
       const p = battleLog.kothParticipants[1];
       return { name: p.robotName, teamIndex: 1, maxHP: kothStartingHP[p.robotName] ?? 100, maxShield: kothStartingShield[p.robotName] ?? 0 };
+    }
+    if (isTeamBattle && battleLog.participants?.length) {
+      const team2 = battleLog.participants.filter(p => p.team === 2);
+      if (team2.length > 0) {
+        const p = team2[0];
+        return { name: p.robotName, teamIndex: 1, maxHP: p.maxHP ?? 100, maxShield: p.maxShield ?? 0 };
+      }
     }
     if (isTagTeam && battleLog.tagTeam?.team2.activeRobot) {
       const r = battleLog.tagTeam.team2.activeRobot;
@@ -132,6 +147,20 @@ export function useBattlePlaybackData(battleLog: BattleLogResponse): BattlePlayb
         maxHP: kothStartingHP[p.robotName] ?? 100,
         maxShield: kothStartingShield[p.robotName] ?? 0,
       }));
+    }
+    if (isTeamBattle && battleLog.participants?.length) {
+      const team1 = battleLog.participants.filter(p => p.team === 1);
+      const team2 = battleLog.participants.filter(p => p.team === 2);
+      const extras: PlaybackRobotInfo[] = [];
+      // Add remaining team 1 robots (skip first, already in robot1PlaybackInfo)
+      for (let i = 1; i < team1.length; i++) {
+        extras.push({ name: team1[i].robotName, teamIndex: 0, maxHP: team1[i].maxHP ?? 100, maxShield: team1[i].maxShield ?? 0 });
+      }
+      // Add remaining team 2 robots (skip first, already in robot2PlaybackInfo)
+      for (let i = 1; i < team2.length; i++) {
+        extras.push({ name: team2[i].robotName, teamIndex: 1, maxHP: team2[i].maxHP ?? 100, maxShield: team2[i].maxShield ?? 0 });
+      }
+      return extras.length > 0 ? extras : undefined;
     }
     if (!isTagTeam || !battleLog.tagTeam) return undefined;
     const extras: PlaybackRobotInfo[] = [];

@@ -3,12 +3,13 @@ import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { checkTeamSchedulingReadiness, TagTeamWithRobots } from './tagTeamService';
 import { TAG_TEAM_LEAGUE_TIERS } from './tagTeamLeagueInstanceService';
-
-
-// Matchmaking configuration
-export const TAG_TEAM_ELO_MATCH_IDEAL = 300; // Ideal combined ELO difference
-export const TAG_TEAM_ELO_MATCH_FALLBACK = 600; // Fallback combined ELO difference
-export const TAG_TEAM_RECENT_OPPONENT_LIMIT = 5; // Number of recent opponents to track
+import {
+  calculateMatchScore as sharedCalculateMatchScore,
+  createByeTeam as sharedCreateByeTeam,
+  getRecentOpponentsBatch as sharedGetRecentOpponentsBatch,
+  MatchScoreInput,
+  RECENT_OPPONENT_LIMIT,
+} from '../matchmaking/teamMatchmakingUtils';
 
 export interface TagTeamMatchPair {
   team1: TagTeamWithRobots;
@@ -102,53 +103,55 @@ export async function getEligibleTeams(
 }
 
 /**
- * Batch-fetch recent opponents for all teams in a single query.
- * Mirrors the pattern from league matchmaking's getRecentOpponentsBatch.
- *
- * NOTE: With skewed match volume, some teams may get fewer than `limit` recent opponents.
- * This is acceptable for matchmaking — recent opponent avoidance is a soft preference,
- * not a hard constraint. The penalty score still works correctly with partial data.
+ * Batch-fetch recent opponents for all teams using the shared utility.
+ * Passes a query function that queries ScheduledTagTeamMatch for tag team opponents.
  */
 async function getRecentOpponentsBatch(
   teamIds: number[],
-  limit: number = TAG_TEAM_RECENT_OPPONENT_LIMIT
+  limit: number = RECENT_OPPONENT_LIMIT
 ): Promise<Map<number, number[]>> {
-  if (teamIds.length === 0) return new Map();
+  return sharedGetRecentOpponentsBatch(
+    teamIds,
+    async (ids: number[], queryLimit: number): Promise<Map<number, number[]>> => {
+      if (ids.length === 0) return new Map();
 
-  // Single query to get recent completed matches for all teams
-  const recentMatches = await prisma.scheduledTagTeamMatch.findMany({
-    where: {
-      status: 'completed',
-      OR: [
-        { team1Id: { in: teamIds } },
-        { team2Id: { in: teamIds } },
-      ],
-    },
-    orderBy: { createdAt: 'desc' },
-    // Fetch enough matches to cover all teams (worst case: each team has `limit` unique matches)
-    take: teamIds.length * limit,
-    select: {
-      team1Id: true,
-      team2Id: true,
-    },
-  });
+      // Single query to get recent completed matches for all teams
+      const recentMatches = await prisma.scheduledTagTeamMatch.findMany({
+        where: {
+          status: 'completed',
+          OR: [
+            { team1Id: { in: ids } },
+            { team2Id: { in: ids } },
+          ],
+        },
+        orderBy: { createdAt: 'desc' },
+        // Fetch enough matches to cover all teams (worst case: each team has `limit` unique matches)
+        take: ids.length * queryLimit,
+        select: {
+          team1Id: true,
+          team2Id: true,
+        },
+      });
 
-  // Build per-team opponent lists from the batch result
-  const map = new Map<number, number[]>();
-  for (const teamId of teamIds) {
-    const opponents: number[] = [];
-    for (const match of recentMatches) {
-      if (opponents.length >= limit) break;
-      if (match.team1Id === teamId && match.team2Id !== null) {
-        opponents.push(match.team2Id);
-      } else if (match.team2Id === teamId) {
-        opponents.push(match.team1Id);
+      // Build per-team opponent lists from the batch result
+      const map = new Map<number, number[]>();
+      for (const teamId of ids) {
+        const opponents: number[] = [];
+        for (const match of recentMatches) {
+          if (opponents.length >= queryLimit) break;
+          if (match.team1Id === teamId && match.team2Id !== null) {
+            opponents.push(match.team2Id);
+          } else if (match.team2Id === teamId) {
+            opponents.push(match.team1Id);
+          }
+        }
+        map.set(teamId, opponents);
       }
-    }
-    map.set(teamId, opponents);
-  }
 
-  return map;
+      return map;
+    },
+    limit
+  );
 }
 
 /**
@@ -160,37 +163,34 @@ function calculateCombinedELOFromTeam(team: TagTeamWithRobots): number {
 }
 
 /**
- * Calculate match quality score (lower is better)
- * Requirements 2.2, 2.4, 2.6: ELO matching, recent opponent deprioritization, same-stable exclusion
+ * Calculate match quality score using the shared LP-primary formula.
+ * Maps tag team fields to the MatchScoreInput interface:
+ *   - LP = tagTeamLeaguePoints
+ *   - ELO = combined robot ELO (active + reserve)
+ *
+ * Requirements 2.2, 2.4, 2.6: LP matching (primary), ELO (secondary), recent opponent deprioritization, same-stable exclusion
  */
-async function calculateMatchScore(
+function calculateMatchScoreForTagTeam(
   team1: TagTeamWithRobots,
   team2: TagTeamWithRobots,
   team1CombinedELO: number,
   team2CombinedELO: number,
   recentOpponents1: number[],
   recentOpponents2: number[]
-): Promise<number> {
-  let score = 0;
-
-  // Combined ELO difference (primary factor)
-  const eloDiff = Math.abs(team1CombinedELO - team2CombinedELO);
-  score += eloDiff;
-
-  // Recent opponent penalty (Requirement 2.4: deprioritize recent opponents)
-  if (recentOpponents1.includes(team2.id)) {
-    score += 400; // Add penalty if they fought recently
-  }
-  if (recentOpponents2.includes(team1.id)) {
-    score += 400;
-  }
-
-  // Same stable penalty (Requirement 2.6: exclude same-stable matchups)
-  if (team1.stableId === team2.stableId) {
-    score += 10000; // Heavy penalty for same-stable matches
-  }
-
-  return score;
+): number {
+  const input: MatchScoreInput = {
+    entity1LP: team1.tagTeamLeaguePoints,
+    entity2LP: team2.tagTeamLeaguePoints,
+    entity1ELO: team1CombinedELO,
+    entity2ELO: team2CombinedELO,
+    recentOpponents1,
+    recentOpponents2,
+    entity1Id: team1.id,
+    entity2Id: team2.id,
+    entity1StableId: team1.stableId,
+    entity2StableId: team2.stableId,
+  };
+  return sharedCalculateMatchScore(input);
 }
 
 /**
@@ -210,21 +210,19 @@ async function findBestOpponent(
   const teamRecentOpponents = recentOpponentsMap.get(team.id) || [];
 
   // Score all potential opponents
-  const scoredOpponents = await Promise.all(
-    availableTeams.map(async opponent => {
-      const opponentCombinedELO = combinedELOMap.get(opponent.id)!;
-      const opponentRecentOpponents = recentOpponentsMap.get(opponent.id) || [];
-      const score = await calculateMatchScore(
-        team,
-        opponent,
-        teamCombinedELO,
-        opponentCombinedELO,
-        teamRecentOpponents,
-        opponentRecentOpponents
-      );
-      return { opponent, score };
-    })
-  );
+  const scoredOpponents = availableTeams.map(opponent => {
+    const opponentCombinedELO = combinedELOMap.get(opponent.id)!;
+    const opponentRecentOpponents = recentOpponentsMap.get(opponent.id) || [];
+    const score = calculateMatchScoreForTagTeam(
+      team,
+      opponent,
+      teamCombinedELO,
+      opponentCombinedELO,
+      teamRecentOpponents,
+      opponentRecentOpponents
+    );
+    return { opponent, score };
+  });
 
   // Sort by score (lower is better) and return best match
   scoredOpponents.sort((a, b) => a.score - b.score);
@@ -232,130 +230,140 @@ async function findBestOpponent(
 }
 
 /**
- * Create a bye-team for odd number of teams
+ * Create a bye-team for odd number of teams using the shared factory.
  * Requirement 2.5: Match with bye-team when no suitable opponent exists
  */
 function createByeTeam(league: string, leagueId: string): TagTeamWithRobots {
-  // Create bye robots with ELO 1000 each (combined 2000)
-  const byeRobot1: Robot = {
-    id: -1,
-    userId: -1,
-    name: 'Bye Robot 1',
-    frameId: 1,
-    paintJob: null,
-    imageUrl: null,
-    // Combat Systems
-    combatPower: new Prisma.Decimal(10),
-    targetingSystems: new Prisma.Decimal(10),
-    criticalSystems: new Prisma.Decimal(10),
-    penetration: new Prisma.Decimal(10),
-    weaponControl: new Prisma.Decimal(10),
-    attackSpeed: new Prisma.Decimal(10),
-    // Defensive Systems
-    armorPlating: new Prisma.Decimal(10),
-    shieldCapacity: new Prisma.Decimal(10),
-    evasionThrusters: new Prisma.Decimal(10),
-    damageDampeners: new Prisma.Decimal(10),
-    counterProtocols: new Prisma.Decimal(10),
-    // Chassis & Mobility
-    hullIntegrity: new Prisma.Decimal(10),
-    servoMotors: new Prisma.Decimal(10),
-    gyroStabilizers: new Prisma.Decimal(10),
-    hydraulicSystems: new Prisma.Decimal(10),
-    powerCore: new Prisma.Decimal(10),
-    // AI Processing
-    combatAlgorithms: new Prisma.Decimal(10),
-    threatAnalysis: new Prisma.Decimal(10),
-    adaptiveAI: new Prisma.Decimal(10),
-    logicCores: new Prisma.Decimal(10),
-    // Team Coordination
-    syncProtocols: new Prisma.Decimal(10),
-    supportSystems: new Prisma.Decimal(10),
-    formationTactics: new Prisma.Decimal(10),
-    // Combat State
-    currentHP: 100,
-    maxHP: 100,
-    currentShield: 20,
-    maxShield: 20,
-    damageTaken: 0,
-    // Performance
-    elo: 1000,
-    totalBattles: 0,
-    wins: 0,
-    draws: 0,
-    losses: 0,
-    damageDealtLifetime: 0,
-    damageTakenLifetime: 0,
-    kills: 0,
-    // League & Fame
-    currentLeague: 'bronze',
-    leagueId: 'bronze_1',
-    leaguePoints: 0,
-    cyclesInCurrentLeague: 0,
-    fame: 0,
-    titles: null,
-    // Tag Team Statistics
-    totalTagTeamBattles: 0,
-    totalTagTeamWins: 0,
-    totalTagTeamLosses: 0,
-    totalTagTeamDraws: 0,
-    timesTaggedIn: 0,
-    timesTaggedOut: 0,
-    // Economic
-    repairCost: 0,
-    battleReadiness: 100,
-    totalRepairsPaid: 0,
-    // Configuration
-    yieldThreshold: 10,
-    loadoutType: 'single',
-    stance: 'balanced',
-    // KotH Statistics
-    kothWins: 0,
-    kothMatches: 0,
-    kothTotalZoneScore: 0,
-    kothTotalZoneTime: 0,
-    kothKills: 0,
-    kothBestPlacement: null,
-    kothCurrentWinStreak: 0,
-    kothBestWinStreak: 0,
-    // League Win/Lose Streak
-    currentWinStreak: 0,
-    bestWinStreak: 0,
-    currentLoseStreak: 0,
-    // Stance/Loadout Win Counters
-    offensiveWins: 0,
-    defensiveWins: 0,
-    balancedWins: 0,
-    dualWieldWins: 0,
-    // Equipment
-    mainWeaponId: null,
-    offhandWeaponId: null,
-    // Timestamps
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
+  return sharedCreateByeTeam(
+    (byeLeague: string, byeLeagueId: string): TagTeamWithRobots => {
+      // Create bye robots with ELO 1000 each (combined 2000)
+      const byeRobot1: Robot = {
+        id: -1,
+        userId: -1,
+        name: 'Bye Robot 1',
+        frameId: 1,
+        paintJob: null,
+        imageUrl: null,
+        // Combat Systems
+        combatPower: new Prisma.Decimal(10),
+        targetingSystems: new Prisma.Decimal(10),
+        criticalSystems: new Prisma.Decimal(10),
+        penetration: new Prisma.Decimal(10),
+        weaponControl: new Prisma.Decimal(10),
+        attackSpeed: new Prisma.Decimal(10),
+        // Defensive Systems
+        armorPlating: new Prisma.Decimal(10),
+        shieldCapacity: new Prisma.Decimal(10),
+        evasionThrusters: new Prisma.Decimal(10),
+        damageDampeners: new Prisma.Decimal(10),
+        counterProtocols: new Prisma.Decimal(10),
+        // Chassis & Mobility
+        hullIntegrity: new Prisma.Decimal(10),
+        servoMotors: new Prisma.Decimal(10),
+        gyroStabilizers: new Prisma.Decimal(10),
+        hydraulicSystems: new Prisma.Decimal(10),
+        powerCore: new Prisma.Decimal(10),
+        // AI Processing
+        combatAlgorithms: new Prisma.Decimal(10),
+        threatAnalysis: new Prisma.Decimal(10),
+        adaptiveAI: new Prisma.Decimal(10),
+        logicCores: new Prisma.Decimal(10),
+        // Team Coordination
+        syncProtocols: new Prisma.Decimal(10),
+        supportSystems: new Prisma.Decimal(10),
+        formationTactics: new Prisma.Decimal(10),
+        // Combat State
+        currentHP: 100,
+        maxHP: 100,
+        currentShield: 20,
+        maxShield: 20,
+        damageTaken: 0,
+        // Performance
+        elo: 1000,
+        totalBattles: 0,
+        wins: 0,
+        draws: 0,
+        losses: 0,
+        damageDealtLifetime: 0,
+        damageTakenLifetime: 0,
+        kills: 0,
+        // League & Fame
+        currentLeague: 'bronze',
+        leagueId: 'bronze_1',
+        leaguePoints: 0,
+        cyclesInCurrentLeague: 0,
+        fame: 0,
+        titles: null,
+        // Tag Team Statistics
+        totalTagTeamBattles: 0,
+        totalTagTeamWins: 0,
+        totalTagTeamLosses: 0,
+        totalTagTeamDraws: 0,
+        timesTaggedIn: 0,
+        timesTaggedOut: 0,
+        // Team Battle Statistics
+        totalLeague1v1Wins: 0,
+    totalLeague1v1Losses: 0,
+    totalLeague1v1Draws: 0,
+    totalLeague2v2Wins: 0,
+        totalLeague3v3Wins: 0,
+        // Economic
+        repairCost: 0,
+        battleReadiness: 100,
+        totalRepairsPaid: 0,
+        // Configuration
+        yieldThreshold: 10,
+        loadoutType: 'single',
+        stance: 'balanced',
+        // KotH Statistics
+        kothWins: 0,
+        kothMatches: 0,
+        kothTotalZoneScore: 0,
+        kothTotalZoneTime: 0,
+        kothKills: 0,
+        kothBestPlacement: null,
+        kothCurrentWinStreak: 0,
+        kothBestWinStreak: 0,
+        // League Win/Lose Streak
+        currentWinStreak: 0,
+        bestWinStreak: 0,
+        currentLoseStreak: 0,
+        // Stance/Loadout Win Counters
+        offensiveWins: 0,
+        defensiveWins: 0,
+        balancedWins: 0,
+        dualWieldWins: 0,
+        // Equipment
+        mainWeaponId: null,
+        offhandWeaponId: null,
+        // Timestamps
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
 
-  const byeRobot2: Robot = { ...byeRobot1, id: -2, name: 'Bye Robot 2' };
+      const byeRobot2: Robot = { ...byeRobot1, id: -2, name: 'Bye Robot 2' };
 
-  const byeTeam: TagTeamWithRobots = {
-    id: -1,
-    stableId: -1,
-    activeRobotId: -1,
-    reserveRobotId: -2,
-    tagTeamLeague: league,
-    tagTeamLeagueId: leagueId,
-    tagTeamLeaguePoints: 0,
-    cyclesInTagTeamLeague: 0,
-    totalTagTeamWins: 0,
-    totalTagTeamLosses: 0,
-    totalTagTeamDraws: 0,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    activeRobot: byeRobot1,
-    reserveRobot: byeRobot2,
-  };
-
-  return byeTeam;
+      return {
+        id: -1,
+        stableId: -1,
+        activeRobotId: -1,
+        reserveRobotId: -2,
+        tagTeamLeague: byeLeague,
+        tagTeamLeagueId: byeLeagueId,
+        tagTeamLeaguePoints: 0,
+        cyclesInTagTeamLeague: 0,
+        totalTagTeamWins: 0,
+        totalTagTeamLosses: 0,
+        totalTagTeamDraws: 0,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        activeRobot: byeRobot1,
+        reserveRobot: byeRobot2,
+      };
+    },
+    league,
+    leagueId
+  );
 }
 
 /**

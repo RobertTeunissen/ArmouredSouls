@@ -1,9 +1,10 @@
 /**
- * LeagueHealthPage — Robots per tier, ELO distribution.
+ * LeagueHealthPage — Robots/Teams per tier, ELO distribution.
  *
- * Fetches from GET /api/admin/league-health.
+ * Fetches from GET /api/admin/league-health (1v1) and
+ * GET /api/admin/team-battle-league-health (2v2/3v3).
  *
- * Requirements: 15.1, 15.2, 15.3, 15.4
+ * Requirements: 15.1, 15.2, 15.3, 15.4, R11.6
  */
 import { useState, useEffect, useCallback } from 'react';
 import {
@@ -32,12 +33,33 @@ interface LeagueHealthData {
   totalRobots: number;
 }
 
+interface TeamBattleLeagueTier {
+  league: string;
+  teamCount: number;
+  averageElo: number;
+  instances: number;
+  instanceDetails: { id: string; teamCount: number }[];
+  needsRebalancing: boolean;
+  [key: string]: unknown;
+}
+
+interface TeamBattleLeagueData {
+  leagues: TeamBattleLeagueTier[];
+  totalTeams: number;
+}
+
+interface TeamBattleLeagueHealthData {
+  league2v2: TeamBattleLeagueData;
+  league3v3: TeamBattleLeagueData;
+}
+
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
 function LeagueHealthPage() {
   const [data, setData] = useState<LeagueHealthData | null>(null);
+  const [teamBattleData, setTeamBattleData] = useState<TeamBattleLeagueHealthData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -45,8 +67,12 @@ function LeagueHealthPage() {
     setLoading(true);
     setError(null);
     try {
-      const data = await api.get<LeagueHealthData>('/api/admin/league-health');
-      setData(data);
+      const [leagueData, tbData] = await Promise.all([
+        api.get<LeagueHealthData>('/api/admin/league-health'),
+        api.get<TeamBattleLeagueHealthData>('/api/admin/team-battle-league-health'),
+      ]);
+      setData(leagueData);
+      setTeamBattleData(tbData);
     } catch (err: unknown) {
       const msg = (err instanceof ApiError && err.message) || 'Failed to load league health data';
       setError(msg);
@@ -63,6 +89,9 @@ function LeagueHealthPage() {
   const totalRobots = data?.totalRobots ?? 0;
   const emptyTiers = leagues.filter((l) => l.robotCount === 0).length;
   const activeTiers = leagues.filter((l) => l.robotCount > 0).length;
+
+  const league2v2 = teamBattleData?.league2v2;
+  const league3v3 = teamBattleData?.league3v3;
 
   return (
     <div data-testid="league-health-page" className="space-y-6">
@@ -94,9 +123,9 @@ function LeagueHealthPage() {
         <AdminStatCard label="Empty Tiers" value={emptyTiers} color={emptyTiers > 0 ? 'warning' : 'success'} icon={<span>📭</span>} />
       </div>
 
-      {/* League Tiers Table */}
+      {/* 1v1 League Tiers Table */}
       <div className="bg-surface rounded-lg p-6">
-        <h3 className="text-lg font-semibold mb-3">League Tiers</h3>
+        <h3 className="text-lg font-semibold mb-3">1v1 League Tiers</h3>
         <AdminDataTable<LeagueTier>
           columns={[
             {
@@ -125,6 +154,128 @@ function LeagueHealthPage() {
           data={leagues}
           loading={loading}
           emptyMessage="No league data available"
+        />
+      </div>
+
+      {/* 2v2 League Tiers Table */}
+      <div className="bg-surface rounded-lg p-6" data-testid="league-health-2v2">
+        <h3 className="text-lg font-semibold mb-3">2v2 League Tiers</h3>
+        {league2v2 && (
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+            <AdminStatCard label="Total Teams" value={league2v2.totalTeams} color="primary" icon={<span>👥</span>} />
+            <AdminStatCard
+              label="Active Tiers"
+              value={league2v2.leagues.filter((l) => l.teamCount > 0).length}
+              color="success"
+              icon={<span>🏆</span>}
+            />
+            <AdminStatCard
+              label="Needs Rebalancing"
+              value={league2v2.leagues.filter((l) => l.needsRebalancing).length}
+              color={league2v2.leagues.some((l) => l.needsRebalancing) ? 'warning' : 'success'}
+              icon={<span>⚖️</span>}
+            />
+          </div>
+        )}
+        <AdminDataTable<TeamBattleLeagueTier>
+          columns={[
+            {
+              key: 'league',
+              label: 'Tier',
+              render: (row) => <span className="capitalize font-medium">{row.league}</span>,
+            },
+            { key: 'teamCount', label: 'Teams', align: 'right' },
+            {
+              key: 'instances',
+              label: 'Instances',
+              align: 'right',
+              render: (row) => row.instances > 0 ? (
+                <span title={row.instanceDetails.map((i: { id: string; teamCount: number }) => `${i.id}: ${i.teamCount}`).join(', ')}>
+                  {row.instances}
+                </span>
+              ) : '—',
+            },
+            {
+              key: 'averageElo',
+              label: 'Avg ELO',
+              align: 'right',
+              render: (row) => row.teamCount > 0 ? row.averageElo.toLocaleString() : '—',
+            },
+            {
+              key: 'needsRebalancing',
+              label: 'Rebalancing',
+              align: 'center',
+              render: (row) => row.needsRebalancing ? (
+                <span className="text-yellow-400" title="Needs rebalancing">⚠️</span>
+              ) : (
+                <span className="text-green-400" title="Balanced">✓</span>
+              ),
+            },
+          ]}
+          data={league2v2?.leagues ?? []}
+          loading={loading}
+          emptyMessage="No 2v2 league data available"
+        />
+      </div>
+
+      {/* 3v3 League Tiers Table */}
+      <div className="bg-surface rounded-lg p-6" data-testid="league-health-3v3">
+        <h3 className="text-lg font-semibold mb-3">3v3 League Tiers</h3>
+        {league3v3 && (
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+            <AdminStatCard label="Total Teams" value={league3v3.totalTeams} color="primary" icon={<span>👥</span>} />
+            <AdminStatCard
+              label="Active Tiers"
+              value={league3v3.leagues.filter((l) => l.teamCount > 0).length}
+              color="success"
+              icon={<span>🏆</span>}
+            />
+            <AdminStatCard
+              label="Needs Rebalancing"
+              value={league3v3.leagues.filter((l) => l.needsRebalancing).length}
+              color={league3v3.leagues.some((l) => l.needsRebalancing) ? 'warning' : 'success'}
+              icon={<span>⚖️</span>}
+            />
+          </div>
+        )}
+        <AdminDataTable<TeamBattleLeagueTier>
+          columns={[
+            {
+              key: 'league',
+              label: 'Tier',
+              render: (row) => <span className="capitalize font-medium">{row.league}</span>,
+            },
+            { key: 'teamCount', label: 'Teams', align: 'right' },
+            {
+              key: 'instances',
+              label: 'Instances',
+              align: 'right',
+              render: (row) => row.instances > 0 ? (
+                <span title={row.instanceDetails.map((i: { id: string; teamCount: number }) => `${i.id}: ${i.teamCount}`).join(', ')}>
+                  {row.instances}
+                </span>
+              ) : '—',
+            },
+            {
+              key: 'averageElo',
+              label: 'Avg ELO',
+              align: 'right',
+              render: (row) => row.teamCount > 0 ? row.averageElo.toLocaleString() : '—',
+            },
+            {
+              key: 'needsRebalancing',
+              label: 'Rebalancing',
+              align: 'center',
+              render: (row) => row.needsRebalancing ? (
+                <span className="text-yellow-400" title="Needs rebalancing">⚠️</span>
+              ) : (
+                <span className="text-green-400" title="Balanced">✓</span>
+              ),
+            },
+          ]}
+          data={league3v3?.leagues ?? []}
+          loading={loading}
+          emptyMessage="No 3v3 league data available"
         />
       </div>
     </div>

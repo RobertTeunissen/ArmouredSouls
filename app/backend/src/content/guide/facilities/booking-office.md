@@ -2,22 +2,23 @@
 title: "Booking Office"
 description: "How the Booking Office facility works — event subscriptions, per-robot caps, switching behaviour, lock rules, and how to manage which battle events your robots participate in."
 order: 7
-lastUpdated: "2026-06-01"
+lastUpdated: "2026-06-15"
 relatedArticles:
   - facilities/facility-overview
   - facilities/facility-progression
   - leagues/matchmaking
   - tournaments/eligibility
+  - team-battles/overview
 ---
 
 ## Overview
 
-The **Booking Office** controls which battle events each of your robots participates in. Instead of every robot being auto-enrolled in every event, you choose per robot — subscribe a duelist to 1v1 League and Tournament, subscribe a tank to Tag Team and KotH, or mix and match however you like.
+The **Booking Office** controls which battle events each of your robots participates in. Instead of every robot being auto-enrolled in every event, you choose per robot — subscribe a duelist to 1v1 League and 1v1 Tournament, subscribe a team player to 2v2 League and 3v3 League, or mix and match however you like.
 
 Every robot gets **3 free subscriptions** at Booking Office Level 0 (no facility purchase required). Each Booking Office level adds one more subscription slot per robot, up to 13 at Level 10.
 
 ```callout-tip
-You don't need to buy the Booking Office to start playing. Every robot gets 3 subscriptions for free — enough for League + Tournament + KotH. The facility just lets you add more events per robot as new modes become available.
+You don't need to buy the Booking Office to start playing. Every robot gets 3 subscriptions for free — enough for 1v1 League + 1v1 Tournament + KotH. The facility just lets you add more events per robot as new modes become available. With 6 events now available, upgrading the Booking Office lets your robots participate in more modes simultaneously.
 ```
 
 ## Subscribable Events
@@ -28,10 +29,12 @@ These are the battle events you can subscribe your robots to:
 |-------|-------------|-------------|
 | **1v1 League** | Daily automated league matches with LP and ELO | Always eligible |
 | **1v1 Tournament** | Multi-cycle bracket competitions with championship titles | Always eligible |
-| **Tag Team** | 2v2 tag team battles daily | Requires ≥ 2 robots in your Stable |
+| **Tag Team** | 2v2 tag team battles daily (phased — one active robot per side at a time) | Requires ≥ 2 robots in your Stable |
 | **King of the Hill** | 5-6 robot free-for-all zone control battles | Always eligible |
+| **2v2 League** | Daily 2v2 team battles — both robots fight simultaneously | Requires ≥ 2 robots in your Stable |
+| **3v3 League** | Daily 3v3 team battles — all three robots fight simultaneously | Requires ≥ 3 robots in your Stable |
 
-More event types will be added in future updates. When they are, they'll appear automatically in your subscription options.
+With 6 events available and a base cap of 3 subscriptions, choosing which events each robot participates in is a meaningful strategic decision. Upgrading the Booking Office unlocks more slots so your robots can participate in more modes.
 
 ## Subscription Cap Per Level
 
@@ -64,7 +67,7 @@ There's no credit cost to subscribe or unsubscribe. Change your mind as often as
 
 ### During Onboarding
 
-When you create your first robot, you'll pick 3 subscriptions from the available events. The defaults are League, Tournament, and KotH (Tag Team isn't available until you own a second robot).
+When you create your first robot, you'll pick 3 subscriptions from the available events. The defaults are 1v1 League, 1v1 Tournament, and KotH (Tag Team and the team league modes aren't available until you own additional robots).
 
 If you want a 4th subscription right away, you can purchase Booking Office Level 1 during onboarding — but only if you have enough credits and there's a 4th event available to you.
 
@@ -84,8 +87,9 @@ The lock is **per robot only**. Other robots in your Stable can change their sub
 
 Per-robot subscriptions let you build specialised robots:
 
-- **The Duelist** — subscribed to League + Tournament only. Tuned for 1v1 combat.
-- **The Team Player** — subscribed to Tag Team + KotH. Built for multi-robot scenarios.
+- **The Duelist** — subscribed to 1v1 League + 1v1 Tournament only. Tuned for solo combat.
+- **The Team Player** — subscribed to Tag Team + 2v2 League + 3v3 League. Built for multi-robot scenarios where Team Coordination Attributes shine.
+- **The Brawler** — subscribed to KotH + 2v2 League. Thrives in chaotic multi-robot fights.
 - **The All-Rounder** — subscribed to everything the cap allows. Versatile but spread thin.
 
 This is entirely optional — you can subscribe every robot to the same events if you prefer.
@@ -96,3 +100,4 @@ This is entirely optional — you can subscribe every robot to the same events i
 - [Facility Progression](/guide/facilities/facility-progression) — Understand upgrade costs and prestige requirements
 - [Matchmaking](/guide/leagues/matchmaking) — How subscription affects which battles your robot gets
 - [Tournament Eligibility](/guide/tournaments/eligibility) — How subscription interacts with tournament entry
+- [Team Battles](/guide/team-battles/overview) — Learn about 2v2 and 3v3 League modes

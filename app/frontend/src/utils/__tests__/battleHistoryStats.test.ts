@@ -134,7 +134,7 @@ describe('computeBattleSummary — battle type categorization', () => {
   });
 
   it('should categorize tournament battles correctly', () => {
-    const battle = makeBattle({ battleType: 'tournament' });
+    const battle = makeBattle({ battleType: 'tournament_1v1' });
     mockedGetBattleOutcome.mockReturnValue('win');
     mockedGetELOChange.mockReturnValue(15);
     mockedGetBattleReward.mockReturnValue(75);

@@ -6,3 +6,4 @@ export { BattleStatisticsSummary } from './BattleStatisticsSummary';
 export { DamageFlowDiagram } from './DamageFlowDiagram';
 export { TabLayout } from './TabLayout';
 export { useBattlePlaybackData } from './useBattlePlaybackData';
+export { TeamBattleMetrics } from './TeamBattleMetrics';

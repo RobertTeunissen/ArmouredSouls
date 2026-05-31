@@ -307,8 +307,8 @@ export async function getSystemStats(userFilter: Prisma.UserWhereInput = {}) {
   }
 
   const battlesByType = {
-    league: computeTypeStats('league'),
-    tournament: computeTypeStats('tournament'),
+    league: computeTypeStats('league_1v1'),
+    tournament: computeTypeStats('tournament_1v1'),
     tagTeam: computeTypeStats('tag_team'),
     koth: computeTypeStats('koth'),
   };
@@ -1303,6 +1303,107 @@ export async function getLeagueHealth(userFilter: Prisma.UserWhereInput = {}) {
   return {
     leagues: leagueData,
     totalRobots,
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
+ * Get team battle league health metrics for 2v2 and 3v3 leagues.
+ * Returns per-tier team counts, instance counts, avg ELO, and needs-rebalancing indicators.
+ */
+export async function getTeamBattleLeagueHealth() {
+  const leagues = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'];
+  const MAX_TEAMS_PER_INSTANCE = 50;
+  const REBALANCE_THRESHOLD = 10;
+
+  async function getLeagueDataForSize(teamSize: 2 | 3) {
+    // Get team counts per tier
+    const teamsByLeague = await prisma.teamBattle.groupBy({
+      by: ['teamLeague'],
+      where: { teamSize },
+      _count: { id: true },
+    });
+
+    // Get instance details per tier
+    const instancesByLeague = await prisma.teamBattle.groupBy({
+      by: ['teamLeague', 'teamLeagueId'],
+      where: { teamSize },
+      _count: { id: true },
+    });
+
+    // Get average ELO per tier (computed from member robots)
+    // We need to join through TeamBattleMember to Robot to get ELO
+    const teamsWithMembers = await prisma.teamBattle.findMany({
+      where: { teamSize },
+      select: {
+        id: true,
+        teamLeague: true,
+        members: {
+          select: {
+            robot: {
+              select: { elo: true },
+            },
+          },
+        },
+      },
+    });
+
+    // Compute average team ELO per tier
+    const eloByTier: Record<string, { totalElo: number; teamCount: number }> = {};
+    for (const team of teamsWithMembers) {
+      const teamElo = team.members.reduce((sum, m) => sum + m.robot.elo, 0);
+      if (!eloByTier[team.teamLeague]) {
+        eloByTier[team.teamLeague] = { totalElo: 0, teamCount: 0 };
+      }
+      eloByTier[team.teamLeague].totalElo += teamElo;
+      eloByTier[team.teamLeague].teamCount += 1;
+    }
+
+    const leagueData = leagues.map((league) => {
+      const data = teamsByLeague.find((r) => r.teamLeague === league);
+      const instances = instancesByLeague.filter((r) => r.teamLeague === league);
+      const teamCount = data?._count.id ?? 0;
+      const eloData = eloByTier[league];
+      const averageElo = eloData && eloData.teamCount > 0
+        ? Math.round(eloData.totalElo / eloData.teamCount)
+        : 0;
+
+      // Determine needs-rebalancing: overflow or imbalance
+      const instanceCounts = instances.map((i) => i._count.id);
+      const hasOverflow = instanceCounts.some((c) => c > MAX_TEAMS_PER_INSTANCE);
+      const totalInInstances = instanceCounts.reduce((sum, c) => sum + c, 0);
+      const targetPerInstance = instances.length > 0 ? Math.ceil(totalInInstances / instances.length) : 0;
+      const hasImbalance = instances.length >= 2 && instanceCounts.some((c) =>
+        Math.abs(c - targetPerInstance) > REBALANCE_THRESHOLD
+      );
+      const needsRebalancing = hasOverflow || hasImbalance;
+
+      return {
+        league,
+        teamCount,
+        averageElo,
+        instances: instances.length,
+        instanceDetails: instances.map((i) => ({
+          id: i.teamLeagueId,
+          teamCount: i._count.id,
+        })),
+        needsRebalancing,
+      };
+    });
+
+    const totalTeams = leagueData.reduce((sum, l) => sum + l.teamCount, 0);
+
+    return { leagues: leagueData, totalTeams };
+  }
+
+  const [league2v2, league3v3] = await Promise.all([
+    getLeagueDataForSize(2),
+    getLeagueDataForSize(3),
+  ]);
+
+  return {
+    league2v2,
+    league3v3,
     timestamp: new Date().toISOString(),
   };
 }

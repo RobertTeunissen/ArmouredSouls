@@ -102,6 +102,8 @@ export function mapBattleRecord(battle: BattleWithDetails, battleFormat: '1v1' |
     robot2ELOAfter: robot2Participant?.eloAfter || 0,
     createdAt: battle.createdAt,
     battleFormat,
+    battleType: battle.battleType,
+    teamSize: battle.battleType === 'league_2v2' ? 2 : battle.battleType === 'league_3v3' ? 3 : undefined,
   };
 }
 
@@ -284,7 +286,11 @@ export async function getAdminBattleList(params: {
       where.battleType = { not: 'tag_team' };
     } else if (battleType === 'league') {
       where.tournamentId = null;
-      where.battleType = { not: 'tag_team' };
+      where.battleType = { notIn: ['tag_team', 'tournament_1v1'] };
+    } else if (battleType === 'league_2v2') {
+      where.battleType = 'league_2v2';
+    } else if (battleType === 'league_3v3') {
+      where.battleType = 'league_3v3';
     }
   }
 
@@ -340,7 +346,10 @@ export async function getAdminBattleList(params: {
       }),
     ]);
 
-    const mappedOneVOne = oneVOneBattles.map(battle => mapBattleRecord(battle, '1v1'));
+    const mappedOneVOne = oneVOneBattles.map(battle => {
+      const format = battle.battleType === 'league_2v2' || battle.battleType === 'league_3v3' ? '2v2' : '1v1';
+      return mapBattleRecord(battle, format as '1v1' | '2v2');
+    });
     const mappedTagTeam = tagTeamMatches
       .filter(m => m.battle !== null)
       .map(m => mapTagTeamRecord(m));
@@ -378,7 +387,10 @@ export async function getAdminBattleList(params: {
   ]);
 
   return {
-    battles: battles.map(battle => mapBattleRecord(battle, '1v1')),
+    battles: battles.map(battle => {
+      const format = battle.battleType === 'league_2v2' || battle.battleType === 'league_3v3' ? '2v2' : '1v1';
+      return mapBattleRecord(battle, format as '1v1' | '2v2');
+    }),
     pagination: {
       page,
       limit,

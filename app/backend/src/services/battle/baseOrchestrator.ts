@@ -17,7 +17,7 @@ import logger from '../../config/logger';
 /** Minimal context every battle mode needs before simulation. */
 export interface BattleContext {
   /** The mode identifier stored in the Battle record. */
-  battleType: 'league' | 'tournament' | 'tag_team' | 'koth';
+  battleType: 'league_1v1' | 'tournament_1v1' | 'tag_team' | 'koth';
   /** League tier (e.g. 'bronze', 'silver') or mode name for non-league modes. */
   leagueType: string;
   /** Arbitrary mode-specific metadata. */

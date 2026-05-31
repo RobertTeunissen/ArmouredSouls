@@ -51,6 +51,9 @@ interface StableStats {
   winRate: number;
   highestElo: number;
   activeRobots: number;
+  totalTeamBattles: number;
+  teamBattleWins: number;
+  teamBattleWinRate: number;
 }
 
 interface StableData {
@@ -246,6 +249,9 @@ function StableViewPage() {
             <StatCard label="Win Rate" value={`${stats.winRate}%`} color="text-primary" />
             <StatCard label="Highest ELO" value={stats.highestElo.toLocaleString()} color="text-primary" />
             <StatCard label="Active Robots" value={String(stats.activeRobots)} />
+            <StatCard label="Team Battles" value={stats.totalTeamBattles.toLocaleString()} />
+            <StatCard label="Team Battle Wins" value={stats.teamBattleWins.toLocaleString()} color="text-success" />
+            <StatCard label="Team Battle Win Rate" value={`${stats.teamBattleWinRate}%`} color="text-primary" />
           </div>
         </div>
 

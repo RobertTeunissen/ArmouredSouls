@@ -54,6 +54,24 @@ interface BattleLogData {
   participantCount?: number;
   placements?: Array<{ robotId: number; robotName: string; placement: number; zoneScore: number; kills: number; destroyed: boolean }>;
   kothData?: { participantCount: number; scoreThreshold: number };
+  /** Team Battle specific fields */
+  teamBattle?: boolean;
+  teamSize?: 2 | 3;
+  winningSide?: 1 | 2 | null;
+  participants?: TeamBattleParticipant[];
+  focusFireEvents?: Array<{ tick: number; targetRobotId: number; contributorRobotIds: number[]; bonusApplied: number }>;
+  focusFireMetrics?: { team1: number; team2: number };
+  allyShieldRegenMetrics?: { team1: number; team2: number };
+  formationDefenceMetrics?: { team1: number; team2: number };
+}
+
+interface TeamBattleParticipant {
+  robotId: number;
+  team: 1 | 2;
+  damageDealt: number;
+  damageTaken: number;
+  finalHP: number;
+  survivalSeconds: number;
 }
 
 interface RobotDetail {
@@ -145,6 +163,11 @@ function BattleLogsPage() {
   };
 
   const handleFilterToggle = (key: string) => {
+    const validFilters = ['all', 'league', 'tournament', 'tagteam', 'koth', 'league_2v2', 'league_3v3'];
+    if (!validFilters.includes(key)) {
+      // R11.4: Reject invalid filter values gracefully, preserve previous state
+      return;
+    }
     setBattleTypeFilter(key);
     filterRef.current = key;
     fetchBattles(1);
@@ -185,6 +208,8 @@ function BattleLogsPage() {
           { key: 'tournament', label: 'Tournament', active: battleTypeFilter === 'tournament' },
           { key: 'tagteam', label: 'Tag Team', active: battleTypeFilter === 'tagteam' },
           { key: 'koth', label: 'KotH', active: battleTypeFilter === 'koth' },
+          { key: 'league_2v2', label: '2v2 League', active: battleTypeFilter === 'league_2v2' },
+          { key: 'league_3v3', label: '3v3 League', active: battleTypeFilter === 'league_3v3' },
         ]}
         onFilterToggle={handleFilterToggle}
       >
@@ -217,6 +242,7 @@ function BattleLogsPage() {
               <tr>
                 <th className="p-3 text-left text-secondary">ID</th>
                 <th className="p-3 text-left text-secondary">Format</th>
+                <th className="p-3 text-left text-secondary">Team Size</th>
                 <th className="p-3 text-left text-secondary">Robot 1</th>
                 <th className="p-3 text-left text-secondary">Robot 2</th>
                 <th className="p-3 text-left text-secondary">Winner</th>
@@ -229,15 +255,25 @@ function BattleLogsPage() {
               {battles.map((battle) => {
                 const outcome = getBattleOutcome(battle);
                 const highlight = getBattleHighlight(battle);
-                const format = battle.battleType === 'koth' ? 'koth' : battle.battleFormat === '2v2' ? '2v2' : '1v1';
+                const format = battle.battleType === 'koth' ? 'koth' : battle.battleType === 'league_2v2' ? '2v2' : battle.battleType === 'league_3v3' ? '3v3' : battle.battleFormat === '2v2' ? '2v2' : '1v1';
+                const teamSize = battle.teamSize ?? (battle.battleType === 'league_2v2' ? 2 : battle.battleType === 'league_3v3' ? 3 : null);
 
                 return (
                   <tr key={battle.id} className={`border-t border-white/10 hover:bg-surface-elevated cursor-pointer ${highlight}`} onClick={() => handleViewBattle(battle.id)}>
                     <td className="p-3">#{battle.id}</td>
                     <td className="p-3">
-                      <span className={`px-2 py-1 rounded text-xs font-semibold ${format === 'koth' ? 'bg-orange-600/30 text-orange-300' : format === '2v2' ? 'bg-purple-600/30 text-purple-300' : 'bg-blue-600/30 text-blue-300'}`}>
+                      <span className={`px-2 py-1 rounded text-xs font-semibold ${format === 'koth' ? 'bg-orange-600/30 text-orange-300' : format === '3v3' ? 'bg-emerald-600/30 text-emerald-300' : format === '2v2' ? 'bg-purple-600/30 text-purple-300' : 'bg-blue-600/30 text-blue-300'}`}>
                         {format === 'koth' ? '👑 KotH' : format}
                       </span>
+                    </td>
+                    <td className="p-3">
+                      {teamSize ? (
+                        <span className="px-2 py-1 rounded text-xs font-semibold bg-indigo-600/30 text-indigo-300">
+                          {teamSize}v{teamSize}
+                        </span>
+                      ) : (
+                        <span className="text-tertiary text-xs">—</span>
+                      )}
                     </td>
                     <td className="p-3">
                       <Link to={`/robots/${battle.robot1.id}`} className="text-primary hover:underline" onClick={(e) => e.stopPropagation()}>
@@ -402,6 +438,11 @@ function BattleDetailPanel({ battle }: { battle: BattleDetail }) {
         </div>
       )}
 
+      {/* Team Battle Info */}
+      {log?.teamBattle && log.participants && (
+        <TeamBattleLogPanel log={log} />
+      )}
+
       {/* Participant Stats */}
       <div className="bg-surface-elevated rounded-lg p-4">
         <h4 className="text-sm font-semibold text-secondary mb-3">📊 Participant Stats</h4>
@@ -550,6 +591,95 @@ function BattleDetailPanel({ battle }: { battle: BattleDetail }) {
             combat logs with formula breakdowns are only available for battles
             fought with the new combat simulator.
           </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Team Battle Log Panel                                              */
+/* ------------------------------------------------------------------ */
+
+function TeamBattleLogPanel({ log }: { log: BattleLogData }) {
+  const [expanded, setExpanded] = useState(false);
+  const participants = log.participants ?? [];
+  const team1 = participants.filter(p => p.team === 1);
+  const team2 = participants.filter(p => p.team === 2);
+  const teamSize = log.teamSize ?? Math.max(team1.length, team2.length);
+
+  return (
+    <div className="bg-surface-elevated rounded-lg p-4">
+      <h4 className="text-sm font-semibold text-secondary mb-3">⚔️ Team Battle ({teamSize}v{teamSize})</h4>
+
+      {/* Team Metrics Summary */}
+      <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className="bg-surface rounded p-3">
+          <p className="font-semibold text-primary text-sm mb-2">Team 1 {log.winningSide === 1 && <span className="text-success">🏆</span>}</p>
+          {team1.map(p => (
+            <div key={p.robotId} className="text-xs text-secondary flex justify-between py-0.5">
+              <span>Robot #{p.robotId}</span>
+              <span>{p.damageDealt} dmg · {p.finalHP}HP · {p.survivalSeconds.toFixed(1)}s</span>
+            </div>
+          ))}
+        </div>
+        <div className="bg-surface rounded p-3">
+          <p className="font-semibold text-purple-400 text-sm mb-2">Team 2 {log.winningSide === 2 && <span className="text-success">🏆</span>}</p>
+          {team2.map(p => (
+            <div key={p.robotId} className="text-xs text-secondary flex justify-between py-0.5">
+              <span>Robot #{p.robotId}</span>
+              <span>{p.damageDealt} dmg · {p.finalHP}HP · {p.survivalSeconds.toFixed(1)}s</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Team-level Metrics */}
+      {(log.focusFireMetrics || log.allyShieldRegenMetrics || log.formationDefenceMetrics) && (
+        <div className="grid grid-cols-3 gap-2 mb-4 text-xs">
+          {log.focusFireMetrics && (
+            <div className="bg-surface rounded p-2 text-center">
+              <div className="text-secondary">Focus Fire</div>
+              <div className="text-primary">{log.focusFireMetrics.team1.toFixed(1)}</div>
+              <div className="text-purple-400">{log.focusFireMetrics.team2.toFixed(1)}</div>
+            </div>
+          )}
+          {log.allyShieldRegenMetrics && (
+            <div className="bg-surface rounded p-2 text-center">
+              <div className="text-secondary">Shield Regen</div>
+              <div className="text-primary">{log.allyShieldRegenMetrics.team1.toFixed(1)}</div>
+              <div className="text-purple-400">{log.allyShieldRegenMetrics.team2.toFixed(1)}</div>
+            </div>
+          )}
+          {log.formationDefenceMetrics && (
+            <div className="bg-surface rounded p-2 text-center">
+              <div className="text-secondary">Formation Def</div>
+              <div className="text-primary">{log.formationDefenceMetrics.team1.toFixed(1)}</div>
+              <div className="text-purple-400">{log.formationDefenceMetrics.team2.toFixed(1)}</div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Expandable Combat Events */}
+      {log.events && log.events.length > 0 && (
+        <div>
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className="text-xs text-primary hover:text-blue-300 transition-colors"
+          >
+            {expanded ? '▼ Hide' : '▶ Show'} Combat Events ({log.events.length})
+          </button>
+          {expanded && (
+            <div className="mt-2 space-y-1 max-h-96 overflow-y-auto">
+              {log.events.map((event, idx) => (
+                <div key={idx} className="bg-surface rounded px-3 py-1.5 text-xs">
+                  <span className="text-secondary">[{event.timestamp.toFixed(1)}s]</span>{' '}
+                  <span>{event.message}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

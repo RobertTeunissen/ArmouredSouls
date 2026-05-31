@@ -84,6 +84,15 @@ const unitTestFiles = [
   'leagueHistoryPublic\\.test\\.ts',
   'bookingOfficeMigration\\.test\\.ts',
   'subscriptionProperties\\.test\\.ts',
+  'teamCoordination\\.property\\.test\\.ts',
+  'teamCoordinationEffects\\.test\\.ts',
+  'lockingPredicates\\.test\\.ts',
+  'rosterEligibilityFilter\\.test\\.ts',
+  'teamBattleEngine\\.test\\.ts',
+  'teamBattleMatchmakingService\\.test\\.ts',
+  'teamBattleOrchestrator\\.test\\.ts',
+  'notification-service\\.test\\.ts',
+  'achievementTeamBattle\\.test\\.ts',
 ];
 
 module.exports = {

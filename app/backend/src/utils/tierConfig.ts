@@ -7,6 +7,8 @@ export interface TierConfig {
   attributeLevel: number;
   priceTier: { min: number; max: number };
   createTagTeam: boolean;
+  createLeague2v2: boolean;
+  createLeague3v3: boolean;
 }
 
 export const TIER_CONFIGS: TierConfig[] = [
@@ -16,6 +18,8 @@ export const TIER_CONFIGS: TierConfig[] = [
     attributeLevel: 1.0,
     priceTier: { min: 0, max: 99999 },
     createTagTeam: true,
+    createLeague2v2: true,
+    createLeague3v3: true,
   },
   {
     name: 'AverageBot',
@@ -23,6 +27,8 @@ export const TIER_CONFIGS: TierConfig[] = [
     attributeLevel: 5.0,
     priceTier: { min: 100000, max: 250000 },
     createTagTeam: true,
+    createLeague2v2: true,
+    createLeague3v3: false,
   },
   {
     name: 'ExpertBot',
@@ -30,6 +36,8 @@ export const TIER_CONFIGS: TierConfig[] = [
     attributeLevel: 10.0,
     priceTier: { min: 250000, max: 400000 },
     createTagTeam: false,
+    createLeague2v2: false,
+    createLeague3v3: false,
   },
 ];
 
@@ -132,6 +140,8 @@ export interface TieredGenerationResult {
   usersCreated: number;
   robotsCreated: number;
   tagTeamsCreated: number;
+  league2v2TeamsCreated: number;
+  league3v3TeamsCreated: number;
   usernames: string[];
   tierBreakdown: {
     wimpBot: number;

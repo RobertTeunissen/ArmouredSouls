@@ -53,6 +53,13 @@ export async function getStableProfile(userId: number) {
           maxLevel: true,
         },
       },
+      teamBattles: {
+        select: {
+          totalWins: true,
+          totalLosses: true,
+          totalDraws: true,
+        },
+      },
     },
   });
 
@@ -64,6 +71,15 @@ export async function getStableProfile(userId: number) {
   const totalDraws = user.robots.reduce((sum, r) => sum + r.draws, 0);
   const highestElo = user.robots.length > 0 ? Math.max(...user.robots.map((r) => r.elo)) : 0;
   const winRate = totalBattles > 0 ? Number(((totalWins / totalBattles) * 100).toFixed(1)) : 0;
+
+  // Team battle stats derived from stable's teams' win/loss/draw records
+  const teamBattleWins = user.teamBattles.reduce((sum, t) => sum + t.totalWins, 0);
+  const teamBattleLosses = user.teamBattles.reduce((sum, t) => sum + t.totalLosses, 0);
+  const teamBattleDraws = user.teamBattles.reduce((sum, t) => sum + t.totalDraws, 0);
+  const totalTeamBattles = teamBattleWins + teamBattleLosses + teamBattleDraws;
+  const teamBattleWinRate = totalTeamBattles > 0
+    ? Number(((teamBattleWins / totalTeamBattles) * 100).toFixed(1))
+    : 0;
 
   const facilities = user.facilities.map((f) => ({
     type: f.facilityType,
@@ -93,6 +109,9 @@ export async function getStableProfile(userId: number) {
       winRate,
       highestElo,
       activeRobots: user.robots.length,
+      totalTeamBattles,
+      teamBattleWins,
+      teamBattleWinRate,
     },
     achievements,
   };

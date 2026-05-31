@@ -71,7 +71,7 @@ function makeBattle(overrides: Record<string, unknown> = {}): Record<string, unk
     robot1Id: 10,
     robot2Id: 20,
     winnerId: 10,
-    battleType: 'league',
+    battleType: 'league_1v1',
     leagueType: 'bronze',
     tournamentId: null,
     tournamentRound: null,
@@ -209,7 +209,7 @@ describe('formatBattleHistoryEntry — economic fields', () => {
     expect(result).toHaveProperty('robot1Id', 10);
     expect(result).toHaveProperty('robot2Id', 20);
     expect(result).toHaveProperty('winnerId', 10);
-    expect(result).toHaveProperty('battleType', 'league');
+    expect(result).toHaveProperty('battleType', 'league_1v1');
     expect(result).toHaveProperty('robot1');
     expect(result).toHaveProperty('robot2');
 

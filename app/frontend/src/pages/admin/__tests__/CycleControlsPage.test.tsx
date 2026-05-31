@@ -48,6 +48,7 @@ const defaultSchedulerStatus = {
     { name: 'koth', schedule: '0 13 * * *', lastRunAt: null, lastRunDurationMs: null, lastRunStatus: null, lastError: null, nextRunAt: '2025-01-01T13:00:00Z' },
     { name: 'settlement', schedule: '0 0 * * *', lastRunAt: null, lastRunDurationMs: null, lastRunStatus: null, lastError: null, nextRunAt: '2025-01-02T00:00:00Z' },
     { name: 'team2v2League', schedule: '0 9 * * *', lastRunAt: null, lastRunDurationMs: null, lastRunStatus: null, lastError: null, nextRunAt: null },
+    { name: 'team3v3League', schedule: '0 14 * * *', lastRunAt: null, lastRunDurationMs: null, lastRunStatus: null, lastError: null, nextRunAt: null },
     { name: 'grandMelee', schedule: '0 17 * * *', lastRunAt: null, lastRunDurationMs: null, lastRunStatus: null, lastError: null, nextRunAt: null },
   ],
 };
@@ -170,5 +171,67 @@ describe('CycleControlsPage', () => {
     mockStoreState = { ...mockStoreState, schedulerStatus: null as unknown as typeof defaultSchedulerStatus };
     render(<CycleControlsPage />);
     expect(screen.getByText('Loading scheduler status...')).toBeInTheDocument();
+  });
+
+  // Team 2v2/3v3 League active buttons tests (R11.2–R11.9)
+  it('should show Team 2v2 League as active with Run button (not reserved badge)', () => {
+    render(<CycleControlsPage />);
+    expect(screen.getByText('Team 2v2 League')).toBeInTheDocument();
+    // The row for team2v2League should NOT have a "Reserved" badge
+    const team2v2Row = screen.getByText('Team 2v2 League').closest('tr');
+    expect(team2v2Row).not.toBeNull();
+    expect(team2v2Row!.textContent).not.toContain('Reserved');
+    // It should have a Run button
+    const runButton = team2v2Row!.querySelector('button');
+    expect(runButton).not.toBeNull();
+    expect(runButton!.textContent).toBe('Run');
+  });
+
+  it('should show Team 3v3 League as active with Run button (not reserved badge)', () => {
+    render(<CycleControlsPage />);
+    expect(screen.getByText('Team 3v3 League')).toBeInTheDocument();
+    // The row for team3v3League should NOT have a "Reserved" badge
+    const team3v3Row = screen.getByText('Team 3v3 League').closest('tr');
+    expect(team3v3Row).not.toBeNull();
+    expect(team3v3Row!.textContent).not.toContain('Reserved');
+    // It should have a Run button
+    const runButton = team3v3Row!.querySelector('button');
+    expect(runButton).not.toBeNull();
+    expect(runButton!.textContent).toBe('Run');
+  });
+
+  it('should show confirmation dialog for 2v2 League Run button', async () => {
+    const user = userEvent.setup();
+    render(<CycleControlsPage />);
+
+    const team2v2Row = screen.getByText('Team 2v2 League').closest('tr');
+    const runButton = team2v2Row!.querySelector('button')!;
+    await user.click(runButton);
+
+    expect(screen.getByText('Run 2v2 League Cycle')).toBeInTheDocument();
+    expect(screen.getByText('Execute 2v2 battles → Rebalance → Matchmaking. Continue?')).toBeInTheDocument();
+  });
+
+  it('should show confirmation dialog for 3v3 League Run button', async () => {
+    const user = userEvent.setup();
+    render(<CycleControlsPage />);
+
+    const team3v3Row = screen.getByText('Team 3v3 League').closest('tr');
+    const runButton = team3v3Row!.querySelector('button')!;
+    await user.click(runButton);
+
+    expect(screen.getByText('Run 3v3 League Cycle')).toBeInTheDocument();
+    expect(screen.getByText('Execute 3v3 battles → Rebalance → Matchmaking. Continue?')).toBeInTheDocument();
+  });
+
+  it('should still show Reserved badge for grandMelee slot', () => {
+    render(<CycleControlsPage />);
+    expect(screen.getByText('Grand Melee')).toBeInTheDocument();
+    const grandMeleeRow = screen.getByText('Grand Melee').closest('tr');
+    expect(grandMeleeRow).not.toBeNull();
+    expect(grandMeleeRow!.textContent).toContain('Reserved');
+    // No Run button for reserved slots
+    const runButton = grandMeleeRow!.querySelector('button');
+    expect(runButton).toBeNull();
   });
 });

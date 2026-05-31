@@ -18,6 +18,7 @@ vi.mock('../../utils/apiClient', () => ({
 vi.mock('../../utils/robotApi', () => ({
   fetchRobotById: vi.fn(),
   fetchRobotLeagueHistory: vi.fn(),
+  fetchRobotTeamBattleLeagueHistory: vi.fn().mockResolvedValue({ teams: [] }),
   fetchMyRobots: vi.fn().mockResolvedValue([]),
   updateAppearance: vi.fn(),
   commitUpgrades: vi.fn(),
@@ -97,7 +98,7 @@ vi.mock('../../components/Toast', () => ({
   default: () => null,
 }));
 vi.mock('../../utils/matchmakingApi', () => ({
-  getMatchHistory: vi.fn().mockResolvedValue({ data: [] }),
+  getMatchHistory: vi.fn().mockResolvedValue({ data: [], pagination: { page: 1, pageSize: 50, total: 0, totalPages: 0 } }),
   BattleHistory: {},
 }));
 

@@ -1,6 +1,6 @@
 ---
 inclusion: fileMatch
-fileMatchPattern: "**/game-engine/**,**/services/battle*,**/services/combat*,**/services/matchmaking*,**/services/league*,**/services/cycle*,**/services/economy*,**/services/fame*,**/services/facility*,**/services/tournament*"
+fileMatchPattern: "**/game-engine/**,**/services/battle*,**/services/combat*,**/services/matchmaking*,**/services/league*,**/services/cycle*,**/services/economy*,**/services/fame*,**/services/facility*,**/services/tournament*,**/services/team-battle*"
 ---
 
 # Game Mechanics Quick Reference
@@ -55,7 +55,7 @@ fileMatchPattern: "**/game-engine/**,**/services/battle*,**/services/combat*,**/
 ### Event Subscription System (Booking Office)
 - The Booking Office facility gates robot participation in all battle event modes
 - Every matchmaker calls `isRobotSubscribedTo(robotId, eventType)` before pairing or pool inclusion
-- Subscribable events at v1: `league`, `tournament`, `tag_team`, `koth`
+- Subscribable events: `league_1v1`, `tournament_1v1`, `tag_team`, `koth`, `league_2v2`, `league_3v3`
 - Per-robot Max_Events_Per_Robot: L0=3, L1=4, L2=5, L3=6, L4=7, L5=8, L6=9, L7=10, L8=11, L9=12, L10=13
 - Formula: `maxSubscriptions = 3 + bookingOfficeLevel`
 - Subscriptions are per-robot, not per-Stable — enables robot specialisation
@@ -88,6 +88,29 @@ fileMatchPattern: "**/game-engine/**,**/services/battle*,**/services/combat*,**/
 - Bracket-style competition
 - Enhanced rewards
 - See: `docs/game-systems/PRD_TOURNAMENT_SYSTEM.md`
+
+### Team Battles (2v2 and 3v3 League)
+- Simultaneous N-vs-N combat: all robots on both sides active in the arena at the same time
+- Two sizes: 2v2 League (4 robots in arena) and 3v3 League (6 robots in arena)
+- Distinct from Tag Team (phased mode with one active robot per side at a time)
+- Persistent Teams per size, owned by a single stable
+- Team registration uses `hasSubscription()` (checks both active AND pending subscriptions), not `isRobotSubscribedTo()` (active only) — players can form teams immediately after subscribing
+- Team Coordination Attributes (`syncProtocols`, `supportSystems`, `formationTactics`) drive ally-targeted effects:
+  - `syncProtocols` → Focus Fire damage bonus (max 25%) when 2+ allies target same enemy
+  - `supportSystems` → Ally shield regeneration (max 0.80 shield/sec)
+  - `formationTactics` → Formation damage reduction (max 20%) for allies within 8 grid units
+- Team_LP and Team_ELO per team (independent of robot LP and tag-team LP)
+- Team ELO = sum of member robot ELOs (computed at matchmaking time, not persisted)
+- Credit distribution: even split across all team members (no survivor/destroyed weighting) — all credits go to the stable anyway
+- Rewards: N× multiplier of 1v1 win+participation reward (2× for 2v2, 3× for 3v3)
+- Daily cadence: 2v2 at 09:00 UTC, 3v3 at 14:00 UTC
+- Participation gated by Event Subscription System (Booking Office)
+- Uses shared matchmaking formula from `teamMatchmakingUtils.ts` (LP-primary, ELO-secondary)
+- League promotion/demotion via `leagueEngine.ts` with `teamBattleAdapter`
+- `winnerId` in team battles stores the **team ID** (not robot ID); API uses `battleLog.winningSide` to determine winner
+- Robot model includes `totalLeague1v1Wins`, `totalLeague1v1Losses`, `totalLeague1v1Draws` for 1v1-specific league standings
+- API returns `ineligibilityReason` and `ineligibilityDetail` for INELIGIBLE teams (shown on Dashboard and Team Management page)
+- See: `docs/game-systems/PRD_MATCHMAKING.md` (Team Battle Matchmaking section)
 
 ## Important Game Balance Considerations
 

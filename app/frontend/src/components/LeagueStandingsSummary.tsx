@@ -1,0 +1,263 @@
+import { useEffect, useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { getMyTeamBattles, TeamBattle } from '../utils/teamBattleApi';
+import { getLeagueTierColor, getLeagueTierName } from '../utils/matchmakingApi';
+import { useRobotStore } from '../stores';
+import axios from 'axios';
+
+function LeagueStandingsSummary() {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+  const robots = useRobotStore(state => state.robots);
+  const [teams, setTeams] = useState<TeamBattle[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchTeams();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const fetchTeams = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const token = localStorage.getItem('token');
+      if (!token) {
+        logout();
+        navigate('/login');
+        return;
+      }
+
+      const data = await getMyTeamBattles();
+      setTeams(data);
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err) && err.response?.status === 401) {
+        logout();
+        navigate('/login');
+        return;
+      }
+      setError('Failed to load team standings');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="bg-surface p-4 rounded-lg border border-white/10">
+        <h3 className="text-base font-semibold mb-3">League Standings</h3>
+        <p className="text-sm text-secondary">Loading...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-surface p-4 rounded-lg border border-white/10">
+        <h3 className="text-base font-semibold mb-3">League Standings</h3>
+        <p className="text-sm text-error">{error}</p>
+      </div>
+    );
+  }
+
+  if (teams.length === 0 && robots.length === 0) {
+    return (
+      <div className="bg-surface p-4 rounded-lg border border-white/10">
+        <h3 className="text-base font-semibold mb-3">League Standings</h3>
+        <p className="text-sm text-secondary">No league data yet.</p>
+      </div>
+    );
+  }
+
+  const teams2v2 = teams.filter(t => t.teamSize === 2);
+  const teams3v3 = teams.filter(t => t.teamSize === 3);
+
+  return (
+    <div className="bg-surface p-4 rounded-lg border border-white/10">
+      <div className="flex justify-between items-center mb-3">
+        <h3 className="text-base font-semibold">League Standings</h3>
+        <button
+          onClick={() => navigate('/league-standings')}
+          className="text-primary hover:text-primary-light text-xs font-semibold"
+        >
+          Full Standings →
+        </button>
+      </div>
+
+      <div className="space-y-3">
+        {/* 1v1 League — per robot */}
+        {robots.length > 0 && (
+          <div>
+            <div className="text-xs text-secondary font-semibold mb-1.5 flex items-center gap-1.5">
+              <span className="text-xs px-1.5 py-0.5 bg-blue-400/20 rounded text-blue-400 font-semibold">1v1</span>
+              League
+            </div>
+            <div className="space-y-1.5">
+              {robots.map(robot => (
+                <RobotStandingCard key={robot.id} robot={robot} />
+              ))}
+            </div>
+          </div>
+        )}
+        {/* 2v2 Teams */}
+        {teams2v2.length > 0 && (
+          <div>
+            <div className="text-xs text-secondary font-semibold mb-1.5 flex items-center gap-1.5">
+              <span className="text-xs px-1.5 py-0.5 bg-emerald-400/20 rounded text-emerald-400 font-semibold">2v2</span>
+              League
+            </div>
+            <div className="space-y-1.5">
+              {teams2v2.map(team => (
+                <TeamStandingCard key={team.id} team={team} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 3v3 Teams */}
+        {teams3v3.length > 0 && (
+          <div>
+            <div className="text-xs text-secondary font-semibold mb-1.5 flex items-center gap-1.5">
+              <span className="text-xs px-1.5 py-0.5 bg-violet-400/20 rounded text-violet-400 font-semibold">3v3</span>
+              League
+            </div>
+            <div className="space-y-1.5">
+              {teams3v3.map(team => (
+                <TeamStandingCard key={team.id} team={team} />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+interface RobotStandingCardProps {
+  robot: { id: number; name: string; currentLeague: string; leaguePoints: number; totalLeague1v1Wins: number; totalLeague1v1Losses: number; totalLeague1v1Draws: number };
+}
+
+function RobotStandingCard({ robot }: RobotStandingCardProps) {
+  const tierColor = getLeagueTierColor(robot.currentLeague);
+  const tierName = getLeagueTierName(robot.currentLeague);
+  const totalMatches = robot.totalLeague1v1Wins + robot.totalLeague1v1Losses + robot.totalLeague1v1Draws;
+
+  return (
+    <div className="bg-[#252b38] border border-white/10 rounded-lg p-2.5">
+      {/* Desktop */}
+      <div className="hidden md:flex items-center gap-3">
+        <div className="flex-1 min-w-0">
+          <div className="font-medium text-sm text-[#e6edf3] truncate">{robot.name}</div>
+          <div className="flex items-center gap-2 mt-0.5">
+            <span className={`text-xs ${tierColor}`}>{tierName}</span>
+            <span className="text-xs text-secondary">•</span>
+            <span className="text-xs text-secondary">{robot.leaguePoints} LP</span>
+          </div>
+        </div>
+        <div className="flex-shrink-0 text-xs text-secondary">
+          <span className="text-[#3fb950]">{robot.totalLeague1v1Wins}W</span>
+          <span className="mx-1">/</span>
+          <span className="text-[#f85149]">{robot.totalLeague1v1Losses}L</span>
+          <span className="mx-1">/</span>
+          <span className="text-[#d29922]">{robot.totalLeague1v1Draws}D</span>
+          {totalMatches > 0 && (
+            <span className="ml-2 text-secondary">({totalMatches})</span>
+          )}
+        </div>
+      </div>
+
+      {/* Mobile */}
+      <div className="md:hidden">
+        <div className="flex items-center justify-between mb-1">
+          <div className="font-medium text-sm text-[#e6edf3] truncate">{robot.name}</div>
+        </div>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className={`text-xs ${tierColor}`}>{tierName}</span>
+            <span className="text-xs text-secondary">{robot.leaguePoints} LP</span>
+          </div>
+          <div className="text-xs text-secondary">
+            <span className="text-[#3fb950]">{robot.totalLeague1v1Wins}W</span>
+            <span className="mx-0.5">/</span>
+            <span className="text-[#f85149]">{robot.totalLeague1v1Losses}L</span>
+            <span className="mx-0.5">/</span>
+            <span className="text-[#d29922]">{robot.totalLeague1v1Draws}D</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface TeamStandingCardProps {
+  team: TeamBattle;
+}
+
+function TeamStandingCard({ team }: TeamStandingCardProps) {
+  const tierColor = getLeagueTierColor(team.teamLeague);
+  const tierName = getLeagueTierName(team.teamLeague);
+  const totalMatches = team.totalWins + team.totalLosses + team.totalDraws;
+
+  return (
+    <div className="bg-[#252b38] border border-white/10 rounded-lg p-2.5">
+      {/* Desktop */}
+      <div className="hidden md:flex items-center gap-3">
+        <div className="flex-1 min-w-0">
+          <div className="font-medium text-sm text-[#e6edf3] truncate">{team.teamName}</div>
+          <div className="flex items-center gap-2 mt-0.5">
+            <span className={`text-xs ${tierColor}`}>{tierName}</span>
+            <span className="text-xs text-secondary">•</span>
+            <span className="text-xs text-secondary">{team.teamLp} LP</span>
+          </div>
+        </div>
+        <div className="flex-shrink-0 text-xs text-secondary">
+          <span className="text-[#3fb950]">{team.totalWins}W</span>
+          <span className="mx-1">/</span>
+          <span className="text-[#f85149]">{team.totalLosses}L</span>
+          <span className="mx-1">/</span>
+          <span className="text-[#d29922]">{team.totalDraws}D</span>
+          {totalMatches > 0 && (
+            <span className="ml-2 text-secondary">({totalMatches})</span>
+          )}
+        </div>
+        <div className="flex-shrink-0">
+          <span className={`text-xs px-1.5 py-0.5 rounded ${
+            team.eligibility === 'ELIGIBLE' ? 'bg-[#3fb950]/20 text-[#3fb950]' : 'bg-[#f85149]/20 text-[#f85149]'
+          }`}>
+            {team.eligibility === 'ELIGIBLE' ? '✓ Ready' : '✗ Ineligible'}
+          </span>
+        </div>
+      </div>
+
+      {/* Mobile */}
+      <div className="md:hidden">
+        <div className="flex items-center justify-between mb-1">
+          <div className="font-medium text-sm text-[#e6edf3] truncate">{team.teamName}</div>
+          <span className={`text-xs px-1.5 py-0.5 rounded ${
+            team.eligibility === 'ELIGIBLE' ? 'bg-[#3fb950]/20 text-[#3fb950]' : 'bg-[#f85149]/20 text-[#f85149]'
+          }`}>
+            {team.eligibility === 'ELIGIBLE' ? '✓' : '✗'}
+          </span>
+        </div>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className={`text-xs ${tierColor}`}>{tierName}</span>
+            <span className="text-xs text-secondary">{team.teamLp} LP</span>
+          </div>
+          <div className="text-xs text-secondary">
+            <span className="text-[#3fb950]">{team.totalWins}W</span>
+            <span className="mx-0.5">/</span>
+            <span className="text-[#f85149]">{team.totalLosses}L</span>
+            <span className="mx-0.5">/</span>
+            <span className="text-[#d29922]">{team.totalDraws}D</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default LeagueStandingsSummary;

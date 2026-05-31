@@ -177,7 +177,7 @@ export interface RobotStatUpdateOptions {
   fameIncrement?: number;
   /** Additional fields for type-specific stat updates */
   extraData?: Record<string, unknown>;
-  /** Battle type for streak tracking (only 'league' battles affect league streaks) */
+  /** Battle type for streak tracking (only 'league_1v1' battles affect league streaks) */
   battleType?: string;
   /** Robot's stance at battle time (for stance win counters) */
   stance?: string;
@@ -212,7 +212,7 @@ export async function updateRobotCombatStats(opts: RobotStatUpdateOptions): Prom
   }
 
   // ── League Win/Lose Streak Tracking ──
-  if (opts.battleType === 'league') {
+  if (opts.battleType === 'league_1v1') {
     if (opts.isWinner) {
       // Win: increment win streak, reset lose streak
       data.currentWinStreak = { increment: 1 };
@@ -259,7 +259,7 @@ export async function updateRobotCombatStats(opts: RobotStatUpdateOptions): Prom
   });
 
   // Update bestWinStreak if currentWinStreak exceeds it (only for league wins)
-  if (opts.battleType === 'league' && opts.isWinner) {
+  if (opts.battleType === 'league_1v1' && opts.isWinner) {
     await prisma.$executeRawUnsafe(
       `UPDATE robots SET best_win_streak = current_win_streak WHERE id = $1 AND current_win_streak > best_win_streak`,
       opts.robotId,

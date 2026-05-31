@@ -63,7 +63,7 @@ describe('Financial Report - Streaming Revenue Integration', () => {
         robot1Id,
         robot2Id,
         winnerId,
-        battleType: 'league',
+        battleType: 'league_1v1',
         leagueType: 'bronze',
         battleLog: {},
         durationSeconds: 60,

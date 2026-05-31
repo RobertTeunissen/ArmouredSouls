@@ -1058,7 +1058,7 @@ async function seedWimpBotUsers(weapons: { id: number; name: string }[]) {
 
       const weaponInv = await ensureWeaponInventory(user.id, weapon.id);
 
-      await upsertRobot({
+      const robot = await upsertRobot({
         userId: user.id,
         name: robotName,
         frameId: 1,
@@ -1078,6 +1078,16 @@ async function seedWimpBotUsers(weapons: { id: number; name: string }[]) {
         yieldThreshold: 10,
         imageUrl: '/assets/robots/wimpbot_512x512.webp',
       });
+
+      // Create default subscriptions (L0 cap = 3): league_1v1, tournament_1v1, koth
+      const defaultSubscriptions = ['league_1v1', 'tournament_1v1', 'koth'];
+      for (const eventType of defaultSubscriptions) {
+        await prisma.subscription.upsert({
+          where: { subscription_robot_event: { robotId: robot.id, eventType } },
+          update: {},
+          create: { robotId: robot.id, eventType, status: 'active' },
+        });
+      }
     }
     console.log(`   Created league bronze_${leagueNum} (${MAX_ROBOTS_PER_LEAGUE} robots, mixed weapons)`);
   }

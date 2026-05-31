@@ -32,7 +32,7 @@ function RecentMatches() {
       }
 
       log.debug('Fetching recent matches');
-      const data = await getMatchHistory(1, 5); // Get last 5 matches
+      const data = await getMatchHistory(1, 20); // Get last 24h of matches
       
       setMatches(data.data);
       setError(null);

@@ -3,7 +3,7 @@
  *
  * Onboarding subscription picker for new Stables.
  * Renders event list from registry filtered by Roster_Eligibility_Filter.
- * Pre-selects `league`, `tournament`, `koth` for 1-robot Stables.
+ * Pre-selects `league_1v1`, `tournament_1v1`, `koth` for 1-robot Stables.
  * Allows toggling up to cap (3 at L0).
  * Inline "Buy Booking Office L1" affordance: hidden for 1-robot Stables,
  * disabled if insufficient credits/prestige.
@@ -36,7 +36,7 @@ interface SubscriptionPickerProps {
 }
 
 /** Default pre-selected events for 1-robot Stables */
-const DEFAULT_SELECTIONS_1_ROBOT = ['league', 'tournament', 'koth'];
+const DEFAULT_SELECTIONS_1_ROBOT = ['league_1v1', 'tournament_1v1', 'koth'];
 
 /** Booking Office L1 cost (matches backend config) */
 const BOOKING_OFFICE_L1_COST = 75000;

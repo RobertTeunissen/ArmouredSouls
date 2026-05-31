@@ -129,9 +129,9 @@ export interface LeagueAdapter<T extends LeagueEntityBase> {
   getEntityDisplayName(entity: T): string;
 
   /**
-   * Entity type for league history recording ('robot' | 'tag_team').
+   * Entity type for league history recording ('robot' | 'tag_team' | 'team_battle').
    */
-  entityType: 'robot' | 'tag_team';
+  entityType: 'robot' | 'tag_team' | 'team_battle';
 
   /**
    * Optional: Called after a successful promotion (e.g., for achievement checks).

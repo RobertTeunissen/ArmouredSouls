@@ -46,9 +46,25 @@ interface SummaryStats {
     totalKills: number;
     placements: { first: number; second: number; third: number; other: number };
   };
+  league2v2Stats: {
+    battles: number;
+    wins: number;
+    losses: number;
+    draws: number;
+    winRate: number;
+    avgELOChange: number;
+  };
+  league3v3Stats: {
+    battles: number;
+    wins: number;
+    losses: number;
+    draws: number;
+    winRate: number;
+    avgELOChange: number;
+  };
 }
 
-type BattleFilterView = 'overall' | 'league' | 'tournament' | 'tag_team' | 'koth';
+type BattleFilterView = 'overall' | 'league' | 'tournament' | 'tag_team' | 'koth' | 'league_2v2' | 'league_3v3';
 
 interface BattleHistorySummaryProps {
   stats: SummaryStats;
@@ -99,6 +115,26 @@ const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view
         avgELOChange: stats.kothStats.avgELOChange,
       };
     }
+    if (view === 'league_2v2') {
+      return {
+        battles: stats.league2v2Stats.battles,
+        wins: stats.league2v2Stats.wins,
+        losses: stats.league2v2Stats.losses,
+        draws: stats.league2v2Stats.draws,
+        winRate: stats.league2v2Stats.winRate,
+        avgELOChange: stats.league2v2Stats.avgELOChange,
+      };
+    }
+    if (view === 'league_3v3') {
+      return {
+        battles: stats.league3v3Stats.battles,
+        wins: stats.league3v3Stats.wins,
+        losses: stats.league3v3Stats.losses,
+        draws: stats.league3v3Stats.draws,
+        winRate: stats.league3v3Stats.winRate,
+        avgELOChange: stats.league3v3Stats.avgELOChange,
+      };
+    }
     // Overall
     return {
       battles: stats.totalBattles,
@@ -135,7 +171,27 @@ const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view
               : 'bg-[#1a1f29] text-[#8b949e] hover:bg-[#252b38]'
           }`}
         >
-          ⚔️ League
+          ⚔️ 1v1 League
+        </button>
+        <button
+          onClick={() => onViewChange('league_2v2')}
+          className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+            view === 'league_2v2' 
+              ? 'bg-[#58a6ff] text-white' 
+              : 'bg-[#1a1f29] text-[#8b949e] hover:bg-[#252b38]'
+          }`}
+        >
+          ⚔️ 2v2 League
+        </button>
+        <button
+          onClick={() => onViewChange('league_3v3')}
+          className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+            view === 'league_3v3' 
+              ? 'bg-[#58a6ff] text-white' 
+              : 'bg-[#1a1f29] text-[#8b949e] hover:bg-[#252b38]'
+          }`}
+        >
+          ⚔️ 3v3 League
         </button>
         <button
           onClick={() => onViewChange('tournament')}
@@ -177,6 +233,8 @@ const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view
              view === 'league' ? 'League Battles' : 
              view === 'tournament' ? 'Tournament Battles' : 
              view === 'tag_team' ? 'Tag Team Battles' :
+             view === 'league_2v2' ? '2v2 League Battles' :
+             view === 'league_3v3' ? '3v3 League Battles' :
              'KotH Battles'}
           </div>
           <div className="text-2xl font-bold text-[#58a6ff]">{displayStats.battles}</div>

@@ -93,7 +93,7 @@ async function createBattleWithStreamingRevenue(
       winnerReward: 1000,
       loserReward: 500,
       durationSeconds: 30,
-      battleType: 'league',
+      battleType: 'league_1v1',
       leagueType: 'bronze',
       battleLog: { events: [] },
       eloChange: 10,

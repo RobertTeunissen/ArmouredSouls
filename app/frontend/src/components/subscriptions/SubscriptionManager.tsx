@@ -164,7 +164,7 @@ function SubscriptionManager({ robotId, lockStates = {}, isOnTagTeam = false }: 
             event={event}
             isSubscribed={subscribedTypes.has(event.type)}
             subscriptionStatus={subscriptionStatusMap.get(event.type)}
-            isLocked={event.type === 'tournament' && (lockStates[event.type]?.isLocked ?? false)}
+            isLocked={event.type === 'tournament_1v1' && (lockStates[event.type]?.isLocked ?? false)}
             scheduledCycle={lockStates[event.type]?.scheduledCycle}
             atCap={atCap}
             mutating={mutating}

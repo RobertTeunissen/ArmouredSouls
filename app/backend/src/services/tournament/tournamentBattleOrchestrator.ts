@@ -224,7 +224,7 @@ export async function processTournamentBattle(
         eloBefore: robot1Participant.eloBefore,
         eloAfter: robot1Participant.eloAfter,
       },
-      { id: battle.id, battleType: 'tournament', leagueType: 'tournament', durationSeconds: battle.durationSeconds, eloChange: battle.eloChange },
+      { id: battle.id, battleType: 'tournament_1v1', leagueType: 'tournament', durationSeconds: battle.durationSeconds, eloChange: battle.eloChange },
       robot2.id,
       streamingRevenue1?.totalRevenue || 0,
       false,
@@ -250,7 +250,7 @@ export async function processTournamentBattle(
         eloBefore: robot2Participant.eloBefore,
         eloAfter: robot2Participant.eloAfter,
       },
-      { id: battle.id, battleType: 'tournament', leagueType: 'tournament', durationSeconds: battle.durationSeconds, eloChange: battle.eloChange },
+      { id: battle.id, battleType: 'tournament_1v1', leagueType: 'tournament', durationSeconds: battle.durationSeconds, eloChange: battle.eloChange },
       robot1.id,
       streamingRevenue2?.totalRevenue || 0,
       false,
@@ -296,7 +296,7 @@ export async function processTournamentBattle(
         yieldThreshold: robot1.yieldThreshold,
         hasTuning: false,
         hasMainWeapon: robot1.mainWeaponId !== null,
-        battleType: 'tournament',
+        battleType: 'tournament_1v1',
         battleDurationSeconds: combatResult.durationSeconds,
       }),
       checkAndAwardAchievements(robot2.userId, robot2.id, {
@@ -315,7 +315,7 @@ export async function processTournamentBattle(
         yieldThreshold: robot2.yieldThreshold,
         hasTuning: false,
         hasMainWeapon: robot2.mainWeaponId !== null,
-        battleType: 'tournament',
+        battleType: 'tournament_1v1',
         battleDurationSeconds: combatResult.durationSeconds,
       }),
     ]);
@@ -423,7 +423,7 @@ async function createTournamentBattleRecord(
     robot2Stance: robot2.stance,
     robot1MaxHP: robot1.maxHP,
     robot2MaxHP: robot2.maxHP,
-    battleType: 'tournament',
+    battleType: 'tournament_1v1',
   });
 
   // Add tournament reward breakdown to battle log
@@ -449,7 +449,7 @@ async function createTournamentBattleRecord(
       robot1Id: robot1.id,
       robot2Id: robot2.id,
       winnerId: combatResult.winnerId,
-      battleType: 'tournament',
+      battleType: 'tournament_1v1',
       leagueType: 'tournament', // Tournament battles use special league type
       tournamentId: tournamentMatch.tournamentId,
       tournamentRound: round,
@@ -581,7 +581,7 @@ async function updateRobotStatsForTournament(
     opponentDestroyed: opponentParticipant?.destroyed || false,
     // No league points for tournament battles
     fameIncrement: isWinner ? fameAwarded : 0,
-    battleType: 'tournament',
+    battleType: 'tournament_1v1',
     stance: robot.stance,
     loadoutType: robot.loadoutType,
   });

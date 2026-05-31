@@ -69,6 +69,22 @@ export interface Robot {
   adaptiveAI: number;
   logicCores: number;
   syncProtocols: number;
+  // Team Battle Statistics
+  totalLeague1v1Wins: number;
+  totalLeague1v1Losses: number;
+  totalLeague1v1Draws: number;
+  totalLeague2v2Wins: number;
+  totalLeague3v3Wins: number;
+  // Team memberships (included from teamBattleMembers relation)
+  teamBattleMembers?: Array<{
+    id: number;
+    teamId: number;
+    team: {
+      id: number;
+      teamSize: number;
+      teamName: string;
+    };
+  }>;
   // Weapons (optional includes)
   mainWeapon?: WeaponSlot | null;
   offhandWeapon?: WeaponSlot | null;
@@ -119,6 +135,23 @@ export const fetchRobotById = async (robotId: number): Promise<Robot> => {
  */
 export const fetchRobotLeagueHistory = async (robotId: number): Promise<{ data: LeagueHistoryEntry[] }> => {
   return api.get<{ data: LeagueHistoryEntry[] }>(`/api/robots/${robotId}/league-history`);
+};
+
+/**
+ * Fetch team battle league history for all teams a robot belongs to.
+ */
+export interface TeamBattleLeagueHistoryEntry {
+  teamId: number;
+  teamSize: number;
+  teamName: string;
+  currentLeague: string;
+  currentLeagueId: string;
+  currentLp: number;
+  history: LeagueHistoryEntry[];
+}
+
+export const fetchRobotTeamBattleLeagueHistory = async (robotId: number): Promise<{ teams: TeamBattleLeagueHistoryEntry[] }> => {
+  return api.get<{ teams: TeamBattleLeagueHistoryEntry[] }>(`/api/team-battles/robot/${robotId}/league-history`);
 };
 
 /**
