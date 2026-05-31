@@ -35,6 +35,7 @@ type BattleWithParticipants = Prisma.BattleGetPayload<{
     team2ActiveRobotId: true;
     team2ReserveRobotId: true;
     createdAt: true;
+    battleLog: true;
     participants: true;
     tournament: {
       select: {

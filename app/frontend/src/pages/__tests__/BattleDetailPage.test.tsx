@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 
@@ -47,18 +47,8 @@ vi.mock('../../utils/matchmakingApi', () => ({
 
 import { getBattleLog } from '../../utils/matchmakingApi';
 
-// Since BattleDetailPage has an internal TDZ issue with `participants` in useMemo,
-// we test the page shell behavior by mocking the page itself for the success cases
-// and testing error/loading states directly.
-
-function MockBattleDetailPage() {
-  // Simplified version that tests the page shell
-  const { useParams } = require('react-router-dom');
-  const { id } = useParams();
-  const [loading, setLoading] = vi.importActual<typeof import('react')>('react').then ? null : null;
-
-  return <div>Mock</div>;
-}
+// Since BattleDetailPage has complex internal state, we test the page shell behavior
+// by testing error/loading states directly.
 
 // For error/loading tests, we import the real page but catch the error
 import BattleDetailPage from '../BattleDetailPage';
