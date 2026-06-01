@@ -159,6 +159,7 @@ async function executeTournamentCycle(): Promise<JobContext> {
   // Step 1: Repair all robots (always first per Requirement 24.24)
   logger.info('Tournament Cycle: Step 1 — Repairing all robots');
   await repairAllRobots(true);
+  logger.info('Tournament Cycle: Step 1 complete');
 
   // Step 2: Execute/schedule tournament matches
   logger.info('Tournament Cycle: Step 2 — Executing tournament matches');
@@ -171,11 +172,17 @@ async function executeTournamentCycle(): Promise<JobContext> {
 
   for (const tournament of activeTournaments) {
     const currentRoundMatches = await getCurrentRoundMatches(tournament.id);
+    logger.info(`Tournament Cycle: Tournament ${tournament.id} — ${currentRoundMatches.length} matches in round ${tournament.currentRound}`);
 
     if (currentRoundMatches.length > 0) {
       for (const match of currentRoundMatches) {
-        await processTournamentBattle(match);
-        totalMatchesExecuted++;
+        try {
+          await processTournamentBattle(match);
+          totalMatchesExecuted++;
+        } catch (error) {
+          logger.error(`Tournament Cycle: Match ${match.id} failed (robot1=${match.robot1Id}, robot2=${match.robot2Id}): ${error instanceof Error ? error.stack || error.message : String(error)}`);
+          throw error;
+        }
       }
 
       // Step 3: Advance winners to next round
