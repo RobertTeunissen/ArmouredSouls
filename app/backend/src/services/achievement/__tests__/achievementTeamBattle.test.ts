@@ -347,7 +347,7 @@ describe('Achievement Team Battle: C18 "Autobots, Roll Out!" updated logic', () 
 
     // User with tournament win
     mockPrisma.user.findUnique.mockResolvedValue({
-      championshipTitles: 1,
+      championshipTitles: 1, championshipTitles1v1: 1, championshipTitles2v2: 0, championshipTitles3v3: 0,
       prestige: 0,
       currency: 0,
     });
@@ -398,7 +398,7 @@ describe('Achievement Team Battle: C18 "Autobots, Roll Out!" updated logic', () 
     ]);
 
     mockPrisma.user.findUnique.mockResolvedValue({
-      championshipTitles: 1,
+      championshipTitles: 1, championshipTitles1v1: 1, championshipTitles2v2: 0, championshipTitles3v3: 0,
       prestige: 0,
       currency: 0,
     });
@@ -448,7 +448,7 @@ describe('Achievement Team Battle: C18 "Autobots, Roll Out!" updated logic', () 
     ]);
 
     mockPrisma.user.findUnique.mockResolvedValue({
-      championshipTitles: 1,
+      championshipTitles: 1, championshipTitles1v1: 1, championshipTitles2v2: 0, championshipTitles3v3: 0,
       prestige: 0,
       currency: 0,
     });
@@ -498,7 +498,7 @@ describe('Achievement Team Battle: C18 "Autobots, Roll Out!" updated logic', () 
     ]);
 
     mockPrisma.user.findUnique.mockResolvedValue({
-      championshipTitles: 1,
+      championshipTitles: 1, championshipTitles1v1: 1, championshipTitles2v2: 0, championshipTitles3v3: 0,
       prestige: 0,
       currency: 0,
     });
@@ -548,7 +548,7 @@ describe('Achievement Team Battle: C18 "Autobots, Roll Out!" updated logic', () 
     ]);
 
     mockPrisma.user.findUnique.mockResolvedValue({
-      championshipTitles: 1,
+      championshipTitles: 1, championshipTitles1v1: 1, championshipTitles2v2: 0, championshipTitles3v3: 0,
       prestige: 0,
       currency: 0,
     });
@@ -599,7 +599,7 @@ describe('Achievement Team Battle: C18 "Autobots, Roll Out!" updated logic', () 
 
     // User with NO tournament wins
     mockPrisma.user.findUnique.mockResolvedValue({
-      championshipTitles: 0,
+      championshipTitles: 0, championshipTitles1v1: 0, championshipTitles2v2: 0, championshipTitles3v3: 0,
       prestige: 0,
       currency: 0,
     });
@@ -649,7 +649,7 @@ describe('Achievement Team Battle: C18 "Autobots, Roll Out!" updated logic', () 
     ]);
 
     mockPrisma.user.findUnique.mockResolvedValue({
-      championshipTitles: 1,
+      championshipTitles: 1, championshipTitles1v1: 1, championshipTitles2v2: 0, championshipTitles3v3: 0,
       prestige: 0,
       currency: 0,
     });

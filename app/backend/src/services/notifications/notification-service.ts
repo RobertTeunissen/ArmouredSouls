@@ -28,6 +28,18 @@ export function buildSuccessMessage(context: JobContext, appBaseUrl: string): st
     case 'team3v3League':
       if (!context.matchesCompleted || context.matchesCompleted === 0) return null;
       return `⚔️ 3v3 League: ${context.matchesCompleted} team battles completed. [View results](${link}/team-battles)`;
+    case 'team2v2Tournament':
+      if (context.tournamentScheduled) {
+        return `⚔️ 2v2 Tournament: ${context.tournamentName} has been created! [View](${link}/tournaments)`;
+      }
+      if (!context.matchesCompleted || context.matchesCompleted === 0) return null;
+      return `⚔️ 2v2 Tournament: Round ${context.tournamentRound}/${context.tournamentMaxRounds} — ${context.matchesCompleted} matches. [View](${link}/tournaments)`;
+    case 'team3v3Tournament':
+      if (context.tournamentScheduled) {
+        return `⚔️ 3v3 Tournament: ${context.tournamentName} has been created! [View](${link}/tournaments)`;
+      }
+      if (!context.matchesCompleted || context.matchesCompleted === 0) return null;
+      return `⚔️ 3v3 Tournament: Round ${context.tournamentRound}/${context.tournamentMaxRounds} — ${context.matchesCompleted} matches. [View](${link}/tournaments)`;
   }
 }
 

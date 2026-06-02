@@ -59,9 +59,10 @@ describe('lockingPredicates', () => {
       expect(result).toBe(true);
       expect(mockPrisma.scheduledTournamentMatch.count).toHaveBeenCalledWith({
         where: {
+          participantType: 'robot',
           status: { in: ['pending', 'scheduled'] },
           tournament: { status: 'active' },
-          OR: [{ robot1Id: 7 }, { robot2Id: 7 }],
+          OR: [{ participant1Id: 7 }, { participant2Id: 7 }],
           winnerId: null,
         },
       });

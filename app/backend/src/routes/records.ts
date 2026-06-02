@@ -9,6 +9,7 @@ import {
   fetchPrestigeRecords,
   fetchKothRecords,
   fetchTeamBattleRecords,
+  fetchTournamentChampions,
 } from './records-queries';
 
 const router = express.Router();
@@ -27,7 +28,7 @@ router.get('/', validateRequest({}), async (req: Request, res: Response) => {
     return;
   }
 
-  const [combat, upsets, career, economic, prestige, kothRecords, teamBattleRecords] = await Promise.all([
+  const [combat, upsets, career, economic, prestige, kothRecords, teamBattleRecords, tournamentChampions] = await Promise.all([
     fetchCombatRecords(),
     fetchUpsetRecords(),
     fetchCareerRecords(),
@@ -35,9 +36,10 @@ router.get('/', validateRequest({}), async (req: Request, res: Response) => {
     fetchPrestigeRecords(),
     fetchKothRecords(),
     fetchTeamBattleRecords(),
+    fetchTournamentChampions(),
   ]);
 
-  const result = {
+  const result: Record<string, unknown> = {
     combat,
     upsets,
     career,
@@ -47,6 +49,17 @@ router.get('/', validateRequest({}), async (req: Request, res: Response) => {
     teamBattle: teamBattleRecords,
     timestamp: new Date().toISOString(),
   };
+
+  // Include tournament champions sections only if data exists (R15.4)
+  if (tournamentChampions.champions1v1.length > 0) {
+    result.tournamentChampions1v1 = tournamentChampions.champions1v1;
+  }
+  if (tournamentChampions.champions2v2.length > 0) {
+    result.tournamentChampions2v2 = tournamentChampions.champions2v2;
+  }
+  if (tournamentChampions.champions3v3.length > 0) {
+    result.tournamentChampions3v3 = tournamentChampions.champions3v3;
+  }
 
   recordsCache.set(result);
   res.json(result);

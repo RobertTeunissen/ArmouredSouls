@@ -27,7 +27,7 @@ describe('eventRegistry', () => {
 
       expect(() =>
         registerSubscribableEvent({
-          type: 'league',
+          type: 'league_1v1',
           label: '1v1 League',
           lockingPredicate: predicate,
         }),
@@ -38,14 +38,14 @@ describe('eventRegistry', () => {
       const predicate = jest.fn().mockResolvedValue(false);
 
       registerSubscribableEvent({
-        type: 'league',
+        type: 'league_1v1',
         label: '1v1 League',
         lockingPredicate: predicate,
       });
 
       expect(() =>
         registerSubscribableEvent({
-          type: 'league',
+          type: 'league_1v1',
           label: '1v1 League Duplicate',
           lockingPredicate: predicate,
         }),
@@ -57,15 +57,15 @@ describe('eventRegistry', () => {
     it('should return all registered events', () => {
       const predicate = jest.fn().mockResolvedValue(false);
 
-      registerSubscribableEvent({ type: 'league', label: '1v1 League', lockingPredicate: predicate });
-      registerSubscribableEvent({ type: 'tournament', label: '1v1 Tournament', lockingPredicate: predicate });
+      registerSubscribableEvent({ type: 'league_1v1', label: '1v1 League', lockingPredicate: predicate });
+      registerSubscribableEvent({ type: 'tournament_1v1', label: '1v1 Tournament', lockingPredicate: predicate });
       registerSubscribableEvent({ type: 'koth', label: 'King of the Hill', lockingPredicate: predicate });
 
       const events = getRegisteredEvents();
 
       expect(events).toHaveLength(3);
       expect(events.map((e) => e.type)).toEqual(
-        expect.arrayContaining(['league', 'tournament', 'koth']),
+        expect.arrayContaining(['league_1v1', 'tournament_1v1', 'koth']),
       );
     });
 
@@ -79,15 +79,15 @@ describe('eventRegistry', () => {
       const predicate = jest.fn().mockResolvedValue(true);
 
       registerSubscribableEvent({
-        type: 'tournament',
+        type: 'tournament_1v1',
         label: '1v1 Tournament',
         lockingPredicate: predicate,
       });
 
-      const def = getEventDefinition('tournament');
+      const def = getEventDefinition('tournament_1v1');
 
       expect(def).toBeDefined();
-      expect(def!.type).toBe('tournament');
+      expect(def!.type).toBe('tournament_1v1');
       expect(def!.label).toBe('1v1 Tournament');
       expect(def!.lockingPredicate).toBe(predicate);
     });

@@ -30,8 +30,9 @@ function makeMatch(
 ): TournamentMatchWithRobots {
   return {
     tournamentId: 1,
-    robot1Id: null,
-    robot2Id: null,
+    participantType: 'robot',
+    participant1Id: null,
+    participant2Id: null,
     winnerId: null,
     battleId: null,
     status: 'pending',
@@ -60,7 +61,7 @@ describe('MatchCard', () => {
     it('should render "TBD" for both slots when no robots are assigned', () => {
       const match = makeMatch({ id: 1, round: 2, matchNumber: 1 });
       const { container } = render(
-        <MatchCard match={match} seedMap={emptySeedMap} userRobotIds={emptyUserIds} isUserFuturePath={false} />,
+        <MatchCard match={match} seedMap={emptySeedMap} userParticipantIds={emptyUserIds} isUserFuturePath={false} />,
       );
       const tbdElements = container.querySelectorAll('.italic');
       expect(tbdElements.length).toBe(2);
@@ -71,7 +72,7 @@ describe('MatchCard', () => {
     it('should use gray border for placeholder matches', () => {
       const match = makeMatch({ id: 2, round: 2, matchNumber: 1 });
       const { container } = render(
-        <MatchCard match={match} seedMap={emptySeedMap} userRobotIds={emptyUserIds} isUserFuturePath={false} />,
+        <MatchCard match={match} seedMap={emptySeedMap} userParticipantIds={emptyUserIds} isUserFuturePath={false} />,
       );
       const card = container.querySelector('[data-testid="match-card-2"]');
       expect(card?.className).toContain('border-white/10');
@@ -84,11 +85,11 @@ describe('MatchCard', () => {
     it('should render BYE badge with yellow styling', () => {
       const match = makeMatch({
         id: 3, round: 1, matchNumber: 1,
-        robot1Id: 10, robot1: { id: 10, name: 'AlphaBot', elo: 1500 },
+        participant1Id: 10, robot1: { id: 10, name: 'AlphaBot', elo: 1500 },
         isByeMatch: true, status: 'completed', winnerId: 10,
       });
       render(
-        <MatchCard match={match} seedMap={emptySeedMap} userRobotIds={emptyUserIds} isUserFuturePath={false} />,
+        <MatchCard match={match} seedMap={emptySeedMap} userParticipantIds={emptyUserIds} isUserFuturePath={false} />,
       );
       const byeBadge = screen.getByText('BYE');
       expect(byeBadge).toBeTruthy();
@@ -99,11 +100,11 @@ describe('MatchCard', () => {
     it('should show the advancing robot name in the first slot', () => {
       const match = makeMatch({
         id: 4, round: 1, matchNumber: 1,
-        robot1Id: 10, robot1: { id: 10, name: 'AlphaBot', elo: 1500 },
+        participant1Id: 10, robot1: { id: 10, name: 'AlphaBot', elo: 1500 },
         isByeMatch: true, status: 'completed', winnerId: 10,
       });
       render(
-        <MatchCard match={match} seedMap={emptySeedMap} userRobotIds={emptyUserIds} isUserFuturePath={false} />,
+        <MatchCard match={match} seedMap={emptySeedMap} userParticipantIds={emptyUserIds} isUserFuturePath={false} />,
       );
       expect(screen.getByText('AlphaBot')).toBeTruthy();
     });
@@ -111,11 +112,11 @@ describe('MatchCard', () => {
     it('should not render TBD for the second slot in a bye match', () => {
       const match = makeMatch({
         id: 5, round: 1, matchNumber: 1,
-        robot1Id: 10, robot1: { id: 10, name: 'AlphaBot', elo: 1500 },
+        participant1Id: 10, robot1: { id: 10, name: 'AlphaBot', elo: 1500 },
         isByeMatch: true, status: 'completed', winnerId: 10,
       });
       const { container } = render(
-        <MatchCard match={match} seedMap={emptySeedMap} userRobotIds={emptyUserIds} isUserFuturePath={false} />,
+        <MatchCard match={match} seedMap={emptySeedMap} userParticipantIds={emptyUserIds} isUserFuturePath={false} />,
       );
       // The second slot should show BYE, not TBD
       const italicElements = container.querySelectorAll('.italic');
@@ -126,11 +127,11 @@ describe('MatchCard', () => {
     it('should use yellow border for bye matches without user robot', () => {
       const match = makeMatch({
         id: 6, round: 1, matchNumber: 1,
-        robot1Id: 10, robot1: { id: 10, name: 'AlphaBot', elo: 1500 },
+        participant1Id: 10, robot1: { id: 10, name: 'AlphaBot', elo: 1500 },
         isByeMatch: true, status: 'completed', winnerId: 10,
       });
       const { container } = render(
-        <MatchCard match={match} seedMap={emptySeedMap} userRobotIds={emptyUserIds} isUserFuturePath={false} />,
+        <MatchCard match={match} seedMap={emptySeedMap} userParticipantIds={emptyUserIds} isUserFuturePath={false} />,
       );
       const card = container.querySelector('[data-testid="match-card-6"]');
       expect(card?.className).toContain('border-yellow-600/40');
@@ -143,12 +144,12 @@ describe('MatchCard', () => {
     it('should render both robot names', () => {
       const match = makeMatch({
         id: 7, round: 1, matchNumber: 1,
-        robot1Id: 10, robot1: { id: 10, name: 'AlphaBot', elo: 1500 },
-        robot2Id: 20, robot2: { id: 20, name: 'BetaBot', elo: 1400 },
+        participant1Id: 10, robot1: { id: 10, name: 'AlphaBot', elo: 1500 },
+        participant2Id: 20, robot2: { id: 20, name: 'BetaBot', elo: 1400 },
         status: 'pending',
       });
       render(
-        <MatchCard match={match} seedMap={emptySeedMap} userRobotIds={emptyUserIds} isUserFuturePath={false} />,
+        <MatchCard match={match} seedMap={emptySeedMap} userParticipantIds={emptyUserIds} isUserFuturePath={false} />,
       );
       expect(screen.getByText('AlphaBot')).toBeTruthy();
       expect(screen.getByText('BetaBot')).toBeTruthy();
@@ -157,12 +158,12 @@ describe('MatchCard', () => {
     it('should not show any "Pending" text indicator', () => {
       const match = makeMatch({
         id: 8, round: 1, matchNumber: 1,
-        robot1Id: 10, robot1: { id: 10, name: 'AlphaBot', elo: 1500 },
-        robot2Id: 20, robot2: { id: 20, name: 'BetaBot', elo: 1400 },
+        participant1Id: 10, robot1: { id: 10, name: 'AlphaBot', elo: 1500 },
+        participant2Id: 20, robot2: { id: 20, name: 'BetaBot', elo: 1400 },
         status: 'pending',
       });
       render(
-        <MatchCard match={match} seedMap={emptySeedMap} userRobotIds={emptyUserIds} isUserFuturePath={false} />,
+        <MatchCard match={match} seedMap={emptySeedMap} userParticipantIds={emptyUserIds} isUserFuturePath={false} />,
       );
       expect(screen.queryByText('Pending')).toBeNull();
     });
@@ -174,13 +175,13 @@ describe('MatchCard', () => {
     it('should show winner in green and loser with line-through', () => {
       const match = makeMatch({
         id: 9, round: 1, matchNumber: 1,
-        robot1Id: 10, robot1: { id: 10, name: 'AlphaBot', elo: 1500 },
-        robot2Id: 20, robot2: { id: 20, name: 'BetaBot', elo: 1400 },
+        participant1Id: 10, robot1: { id: 10, name: 'AlphaBot', elo: 1500 },
+        participant2Id: 20, robot2: { id: 20, name: 'BetaBot', elo: 1400 },
         status: 'completed', winnerId: 10,
         winner: { id: 10, name: 'AlphaBot' },
       });
       render(
-        <MatchCard match={match} seedMap={emptySeedMap} userRobotIds={emptyUserIds} isUserFuturePath={false} />,
+        <MatchCard match={match} seedMap={emptySeedMap} userParticipantIds={emptyUserIds} isUserFuturePath={false} />,
       );
       const alpha = screen.getByText('AlphaBot');
       expect(alpha.className).toContain('text-success');
@@ -198,13 +199,13 @@ describe('MatchCard', () => {
     it('should render seed number in yellow for seeds ≤ 32', () => {
       const match = makeMatch({
         id: 10, round: 1, matchNumber: 1,
-        robot1Id: 10, robot1: { id: 10, name: 'AlphaBot', elo: 1500 },
-        robot2Id: 20, robot2: { id: 20, name: 'BetaBot', elo: 1400 },
+        participant1Id: 10, robot1: { id: 10, name: 'AlphaBot', elo: 1500 },
+        participant2Id: 20, robot2: { id: 20, name: 'BetaBot', elo: 1400 },
         status: 'pending',
       });
       const seedMap = new Map<number, number>([[10, 1], [20, 16]]);
       const { container } = render(
-        <MatchCard match={match} seedMap={seedMap} userRobotIds={emptyUserIds} isUserFuturePath={false} />,
+        <MatchCard match={match} seedMap={seedMap} userParticipantIds={emptyUserIds} isUserFuturePath={false} />,
       );
       const seedSpans = container.querySelectorAll('.text-warning.font-mono');
       expect(seedSpans.length).toBe(2);
@@ -215,13 +216,13 @@ describe('MatchCard', () => {
     it('should not render seed number for seeds > 32', () => {
       const match = makeMatch({
         id: 11, round: 1, matchNumber: 1,
-        robot1Id: 10, robot1: { id: 10, name: 'AlphaBot', elo: 1500 },
-        robot2Id: 20, robot2: { id: 20, name: 'BetaBot', elo: 1400 },
+        participant1Id: 10, robot1: { id: 10, name: 'AlphaBot', elo: 1500 },
+        participant2Id: 20, robot2: { id: 20, name: 'BetaBot', elo: 1400 },
         status: 'pending',
       });
       const seedMap = new Map<number, number>([[10, 33], [20, 64]]);
       const { container } = render(
-        <MatchCard match={match} seedMap={seedMap} userRobotIds={emptyUserIds} isUserFuturePath={false} />,
+        <MatchCard match={match} seedMap={seedMap} userParticipantIds={emptyUserIds} isUserFuturePath={false} />,
       );
       const seedSpans = container.querySelectorAll('.text-warning.font-mono');
       expect(seedSpans.length).toBe(0);
@@ -234,13 +235,13 @@ describe('MatchCard', () => {
     it('should apply blue border and ring when match contains user robot', () => {
       const match = makeMatch({
         id: 12, round: 1, matchNumber: 1,
-        robot1Id: 10, robot1: { id: 10, name: 'AlphaBot', elo: 1500 },
-        robot2Id: 20, robot2: { id: 20, name: 'BetaBot', elo: 1400 },
+        participant1Id: 10, robot1: { id: 10, name: 'AlphaBot', elo: 1500 },
+        participant2Id: 20, robot2: { id: 20, name: 'BetaBot', elo: 1400 },
         status: 'pending',
       });
       const userIds = new Set([10]);
       const { container } = render(
-        <MatchCard match={match} seedMap={emptySeedMap} userRobotIds={userIds} isUserFuturePath={false} />,
+        <MatchCard match={match} seedMap={emptySeedMap} userParticipantIds={userIds} isUserFuturePath={false} />,
       );
       const card = container.querySelector('[data-testid="match-card-12"]');
       expect(card?.className).toContain('border-blue-500');
@@ -251,13 +252,13 @@ describe('MatchCard', () => {
     it('should render YOU badge next to user robot name', () => {
       const match = makeMatch({
         id: 13, round: 1, matchNumber: 1,
-        robot1Id: 10, robot1: { id: 10, name: 'AlphaBot', elo: 1500 },
-        robot2Id: 20, robot2: { id: 20, name: 'BetaBot', elo: 1400 },
+        participant1Id: 10, robot1: { id: 10, name: 'AlphaBot', elo: 1500 },
+        participant2Id: 20, robot2: { id: 20, name: 'BetaBot', elo: 1400 },
         status: 'pending',
       });
       const userIds = new Set([10]);
       render(
-        <MatchCard match={match} seedMap={emptySeedMap} userRobotIds={userIds} isUserFuturePath={false} />,
+        <MatchCard match={match} seedMap={emptySeedMap} userParticipantIds={userIds} isUserFuturePath={false} />,
       );
       expect(screen.getByText('YOU')).toBeTruthy();
     });
@@ -265,13 +266,13 @@ describe('MatchCard', () => {
     it('should render user robot name in blue', () => {
       const match = makeMatch({
         id: 14, round: 1, matchNumber: 1,
-        robot1Id: 10, robot1: { id: 10, name: 'AlphaBot', elo: 1500 },
-        robot2Id: 20, robot2: { id: 20, name: 'BetaBot', elo: 1400 },
+        participant1Id: 10, robot1: { id: 10, name: 'AlphaBot', elo: 1500 },
+        participant2Id: 20, robot2: { id: 20, name: 'BetaBot', elo: 1400 },
         status: 'pending',
       });
       const userIds = new Set([10]);
       render(
-        <MatchCard match={match} seedMap={emptySeedMap} userRobotIds={userIds} isUserFuturePath={false} />,
+        <MatchCard match={match} seedMap={emptySeedMap} userParticipantIds={userIds} isUserFuturePath={false} />,
       );
       const alpha = screen.getByText('AlphaBot');
       expect(alpha.className).toContain('text-blue-300');
@@ -284,11 +285,11 @@ describe('MatchCard', () => {
     it('should apply opacity-25 when dimmed', () => {
       const match = makeMatch({
         id: 15, round: 1, matchNumber: 1,
-        robot1Id: 10, robot1: { id: 10, name: 'AlphaBot', elo: 1500 },
-        robot2Id: 20, robot2: { id: 20, name: 'BetaBot', elo: 1400 },
+        participant1Id: 10, robot1: { id: 10, name: 'AlphaBot', elo: 1500 },
+        participant2Id: 20, robot2: { id: 20, name: 'BetaBot', elo: 1400 },
       });
       const { container } = render(
-        <MatchCard match={match} seedMap={emptySeedMap} userRobotIds={emptyUserIds}
+        <MatchCard match={match} seedMap={emptySeedMap} userParticipantIds={emptyUserIds}
           isUserFuturePath={false} dimmed={true} />,
       );
       const card = container.querySelector('[data-testid="match-card-15"]');
@@ -298,11 +299,11 @@ describe('MatchCard', () => {
     it('should apply yellow border and ring when highlighted', () => {
       const match = makeMatch({
         id: 16, round: 1, matchNumber: 1,
-        robot1Id: 10, robot1: { id: 10, name: 'AlphaBot', elo: 1500 },
-        robot2Id: 20, robot2: { id: 20, name: 'BetaBot', elo: 1400 },
+        participant1Id: 10, robot1: { id: 10, name: 'AlphaBot', elo: 1500 },
+        participant2Id: 20, robot2: { id: 20, name: 'BetaBot', elo: 1400 },
       });
       const { container } = render(
-        <MatchCard match={match} seedMap={emptySeedMap} userRobotIds={emptyUserIds}
+        <MatchCard match={match} seedMap={emptySeedMap} userParticipantIds={emptyUserIds}
           isUserFuturePath={false} highlighted={true} />,
       );
       const card = container.querySelector('[data-testid="match-card-16"]');
@@ -315,18 +316,18 @@ describe('MatchCard', () => {
   // ── data attributes for DOM querying ──
 
   describe('data attributes', () => {
-    it('should set data-robot1-id and data-robot2-id attributes', () => {
+    it('should set data-participant1-id and data-participant2-id attributes', () => {
       const match = makeMatch({
         id: 17, round: 1, matchNumber: 1,
-        robot1Id: 10, robot1: { id: 10, name: 'AlphaBot', elo: 1500 },
-        robot2Id: 20, robot2: { id: 20, name: 'BetaBot', elo: 1400 },
+        participant1Id: 10, robot1: { id: 10, name: 'AlphaBot', elo: 1500 },
+        participant2Id: 20, robot2: { id: 20, name: 'BetaBot', elo: 1400 },
       });
       const { container } = render(
-        <MatchCard match={match} seedMap={emptySeedMap} userRobotIds={emptyUserIds} isUserFuturePath={false} />,
+        <MatchCard match={match} seedMap={emptySeedMap} userParticipantIds={emptyUserIds} isUserFuturePath={false} />,
       );
       const card = container.querySelector('[data-testid="match-card-17"]');
-      expect(card?.getAttribute('data-robot1-id')).toBe('10');
-      expect(card?.getAttribute('data-robot2-id')).toBe('20');
+      expect(card?.getAttribute('data-participant1-id')).toBe('10');
+      expect(card?.getAttribute('data-participant2-id')).toBe('20');
     });
   });
 });
@@ -527,6 +528,7 @@ describe('TournamentDetailPage', () => {
         id: 1,
         name: 'Test Tournament',
         tournamentType: 'single_elimination',
+        participantType: 'robot',
         status: 'completed',
         currentRound: 3,
         maxRounds: 3,
@@ -570,6 +572,7 @@ describe('TournamentDetailPage', () => {
         id: 1,
         name: 'Recovered Tournament',
         tournamentType: 'single_elimination',
+        participantType: 'robot',
         status: 'active',
         currentRound: 1,
         maxRounds: 3,
@@ -599,6 +602,7 @@ describe('TournamentDetailPage', () => {
         id: 1,
         name: 'Grand Championship',
         tournamentType: 'single_elimination',
+        participantType: 'robot',
         status: 'active',
         currentRound: 2,
         maxRounds: 4,

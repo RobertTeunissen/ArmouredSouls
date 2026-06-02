@@ -45,6 +45,9 @@ export interface RecordsData {
     '2v2': TeamBattleSizeRecords;
     '3v3': TeamBattleSizeRecords;
   };
+  tournamentChampions1v1?: TournamentChampionRecord[];
+  tournamentChampions2v2?: TournamentChampionRecord[];
+  tournamentChampions3v3?: TournamentChampionRecord[];
   timestamp: string;
 }
 
@@ -261,7 +264,7 @@ export interface KothZoneDominator {
   totalZoneScore: number;
 }
 
-export type CategoryKey = 'combat' | 'upsets' | 'career' | 'economic' | 'prestige' | 'koth' | 'teamBattle';
+export type CategoryKey = 'combat' | 'upsets' | 'career' | 'economic' | 'prestige' | 'koth' | 'teamBattle' | 'tournaments';
 
 // ─── Team Battle Records ────────────────────────────────────────────
 
@@ -316,4 +319,17 @@ export interface TeamBattleLongestBattle {
   team1: TeamBattleParticipantDisplay[];
   team2: TeamBattleParticipantDisplay[];
   date: string;
+}
+
+
+// ─── Tournament Champions ───────────────────────────────────────────
+
+export interface TournamentChampionRecord {
+  tournamentId: number;
+  tournamentName: string;
+  championName: string; // Robot name for 1v1, team name for 2v2/3v3
+  memberRobots?: string[]; // Only for team tournaments
+  ownerStableName: string;
+  completedAt: string;
+  participantType: string;
 }

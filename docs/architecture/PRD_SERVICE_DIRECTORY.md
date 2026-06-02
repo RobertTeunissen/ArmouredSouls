@@ -9,6 +9,7 @@
 
 **Revision History**:
 
+v1.2 (Jun 2026): Team tournament slots (15:00, 18:00) now Live with real handlers (Spec 38 — Team Battle Tournaments). Added `teamTournamentBattleOrchestrator`, `teamTournamentService`, `tournamentParticipantResolver` to tournament domain.
 v1.1 (Jun 2026): Added `matchmaking/` and `team-battle/` domains (Spec 37 — Team Battles 2v2 and 3v3). Updated cron schedule: 2v2 League (09:00) and 3v3 League (14:00) now Live.
 v1.0 (Apr 9, 2026): Initial version — extracted from MODULE_STRUCTURE.md, verified against current codebase (18 domains, 80+ service files)
 
@@ -234,8 +235,11 @@ Tournament system — bracket management and battle execution.
 
 | Service | Purpose |
 |---------|---------|
-| `tournamentBattleOrchestrator` | Tournament match execution (HP tiebreaker, round-based rewards, championship titles) |
-| `tournamentService` | Tournament CRUD, bracket generation (ELO seeding), round advancement, auto-creation |
+| `tournamentBattleOrchestrator` | 1v1 tournament match execution (HP tiebreaker, round-based rewards, championship titles) |
+| `tournamentService` | Tournament CRUD, entity-agnostic bracket generation (ELO seeding), round advancement, auto-creation |
+| `teamTournamentBattleOrchestrator` | Team tournament match execution — dispatches to Team Battle Engine, draw tiebreaking, N× rewards |
+| `teamTournamentService` | Team eligibility checks, tournament creation, combined-ELO seeding |
+| `tournamentParticipantResolver` | Resolves participant details by type (robot name for 1v1, team name + members for 2v2/3v3) |
 
 ### subscription/
 Event Subscription System — per-robot subscription model gating participation in all battle events through a single, extensible Event Registry.
@@ -261,14 +265,16 @@ The production scheduler (`cycleScheduler.ts`) fires 10 independent cron jobs da
 | 11:00 | Tag Team | `TAGTEAM_SCHEDULE` | Live |
 | 13:00 | KotH | `KOTH_SCHEDULE` | Live |
 | 14:00 | Team Battle 3v3 League | `TEAM_3V3_LEAGUE_SCHEDULE` | Live |
-| 15:00 | Team Battle 2v2 Tournament | `TEAM_2V2_TOURNAMENT_SCHEDULE` | Reserved |
+| 15:00 | Team Battle 2v2 Tournament | `TEAM_2V2_TOURNAMENT_SCHEDULE` | Live |
 | 17:00 | Grand Melee | `GRAND_MELEE_SCHEDULE` | Reserved |
-| 18:00 | Team Battle 3v3 Tournament | `TEAM_3V3_TOURNAMENT_SCHEDULE` | Reserved |
+| 18:00 | Team Battle 3v3 Tournament | `TEAM_3V3_TOURNAMENT_SCHEDULE` | Live |
 | 00:00 | Settlement | `SETTLEMENT_SCHEDULE` | Live |
 
 **Spacing rationale**: Heavy modes (1v1 League at 08:00, KotH at 13:00) are 5 hours apart. Light/reserved modes interleave. Gaps at 12:00, 16:00, 19:00–23:00 provide ops intervention windows.
 
-**Reserved slots**: Stubs log a no-op message and return without error. Subsequent specs register real handlers into these slots without modifying `env.ts` or the slot map. Currently reserved: 2v2 Tournament (15:00), Grand Melee (17:00), 3v3 Tournament (18:00).
+**Team tournament handlers** (15:00 and 18:00): Execute team tournament rounds, advance brackets, and auto-create new tournaments when the previous one completes and ≥ 4 eligible teams exist. Each handler runs one round per cycle.
+
+**Reserved slots**: Stubs log a no-op message and return without error. Subsequent specs register real handlers into these slots without modifying `env.ts` or the slot map. Currently reserved: Grand Melee (17:00).
 
 All schedule env vars are overridable via `.env` for rollback or per-environment tuning.
 

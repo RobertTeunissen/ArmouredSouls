@@ -382,6 +382,46 @@ function TeamBattleCard({ team, onDisband, onRename, onSwap }: TeamBattleCardPro
           <div className="text-lg font-semibold text-white">{totalMatches}</div>
         </div>
       </div>
+
+      {/* Mode Eligibility */}
+      <div className="pt-3 mt-3 border-t border-white/10">
+        <div className="text-xs text-secondary mb-2">Subscribed Modes</div>
+        <div className="flex flex-col gap-2">
+          <ModeEligibilityBadge
+            label={`${team.teamSize}v${team.teamSize} League`}
+            eligible={team.members.every(m => m.robot.subscriptions?.some((s: { eventType: string; status: string }) => s.eventType === `league_${team.teamSize}v${team.teamSize}` && (s.status === 'active' || s.status === 'pending')))}
+            missingMembers={team.members.filter(m => !m.robot.subscriptions?.some((s: { eventType: string; status: string }) => s.eventType === `league_${team.teamSize}v${team.teamSize}` && (s.status === 'active' || s.status === 'pending'))).map(m => m.robot.name)}
+          />
+          <ModeEligibilityBadge
+            label={`${team.teamSize}v${team.teamSize} Tournament`}
+            eligible={team.members.every(m => m.robot.subscriptions?.some((s: { eventType: string; status: string }) => s.eventType === `tournament_${team.teamSize}v${team.teamSize}` && (s.status === 'active' || s.status === 'pending')))}
+            missingMembers={team.members.filter(m => !m.robot.subscriptions?.some((s: { eventType: string; status: string }) => s.eventType === `tournament_${team.teamSize}v${team.teamSize}` && (s.status === 'active' || s.status === 'pending'))).map(m => m.robot.name)}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Mode Eligibility Badge                                              */
+/* ------------------------------------------------------------------ */
+
+function ModeEligibilityBadge({ label, eligible, missingMembers }: { label: string; eligible: boolean; missingMembers?: string[] }) {
+  return (
+    <div
+      className={`flex items-center gap-2 text-xs px-3 py-1.5 rounded-lg ${
+        eligible
+          ? 'bg-success/10 text-success border border-success/30'
+          : 'bg-error/5 text-secondary border border-white/10'
+      }`}
+    >
+      <span className="shrink-0">{eligible ? '✅' : '❌'}</span>
+      <span className="font-medium">{label}</span>
+      {eligible && <span className="text-success/70 ml-auto">(all members subscribed)</span>}
+      {!eligible && missingMembers && missingMembers.length > 0 && (
+        <span className="text-error/80 ml-auto">({missingMembers.join(', ')} not subscribed)</span>
+      )}
     </div>
   );
 }

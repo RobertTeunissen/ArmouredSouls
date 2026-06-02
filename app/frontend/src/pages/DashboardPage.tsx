@@ -12,6 +12,7 @@ import TagTeamReadinessWarning from '../components/TagTeamReadinessWarning';
 import TagTeamSubscriptionDashboardWarning from '../components/TagTeamSubscriptionDashboardWarning';
 import TeamBattleReadinessWarning from '../components/TeamBattleReadinessWarning';
 import LeagueStandingsSummary from '../components/LeagueStandingsSummary';
+import ActiveTournamentCard from '../components/ActiveTournamentCard';
 import DashboardWelcome from '../components/DashboardWelcome';
 import DashboardOnboardingBanner from '../components/DashboardOnboardingBanner';
 import ChangelogModal from '../components/ChangelogModal';
@@ -147,7 +148,7 @@ function DashboardPage() {
                 <button
                   onClick={notif.action}
                   className={`
-                    px-4 py-2 rounded font-semibold text-sm transition-colors
+                    px-4 py-2 rounded font-semibold text-sm transition-colors min-h-[44px]
                     ${notif.type === 'danger' ? 'bg-error hover:bg-error/90 text-white' : ''}
                     ${notif.type === 'warning' ? 'bg-warning hover:bg-warning/90 text-background' : ''}
                     ${notif.type === 'info' ? 'bg-primary hover:bg-primary/90 text-white' : ''}
@@ -174,6 +175,13 @@ function DashboardPage() {
           <div className="space-y-6 mb-8">
             <RecentMatches />
             <UpcomingMatches />
+          </div>
+        )}
+
+        {/* Active Tournament Status */}
+        {robots.length >= 2 && (
+          <div className="mb-8">
+            <ActiveTournamentCard />
           </div>
         )}
 

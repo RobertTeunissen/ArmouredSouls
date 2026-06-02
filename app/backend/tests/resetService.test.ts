@@ -81,7 +81,7 @@ describe('ResetService', () => {
   afterEach(async () => {
     // Clean up in reverse order of foreign key dependencies
     await prisma.scheduledLeagueMatch.deleteMany({ where: { OR: [{ robot1Id: testRobotId }, { robot2Id: testRobotId }] } });
-    await prisma.scheduledTournamentMatch.deleteMany({ where: { OR: [{ robot1Id: testRobotId }, { robot2Id: testRobotId }] } });
+    await prisma.scheduledTournamentMatch.deleteMany({ where: { OR: [{ participant1Id: testRobotId }, { participant2Id: testRobotId }] } });
     await prisma.resetLog.deleteMany({ where: { userId: testUserId } });
     await prisma.facility.deleteMany({ where: { userId: testUserId } });
     await prisma.weaponInventory.deleteMany({ where: { userId: testUserId } });
@@ -173,8 +173,8 @@ describe('ResetService', () => {
           tournamentId: tournament.id,
           round: 1,
           matchNumber: 1,
-          robot1Id: testRobotId,
-          robot2Id: opponent.id,
+          participant1Id: testRobotId,
+          participant2Id: opponent.id,
           status: 'pending',
         },
       });
@@ -317,8 +317,8 @@ describe('ResetService', () => {
           tournamentId: tournament.id,
           round: 1,
           matchNumber: 1,
-          robot1Id: testRobotId,
-          robot2Id: opponent.id,
+          participant1Id: testRobotId,
+          participant2Id: opponent.id,
           status: 'pending',
         },
       });

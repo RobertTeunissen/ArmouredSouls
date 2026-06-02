@@ -52,21 +52,6 @@ interface ConfirmAction {
 /*  Response shapes                                                    */
 /* ------------------------------------------------------------------ */
 
-interface MatchmakingResponse { matchesCreated: number; subscriptionExclusions?: number }
-interface BattlesResponse { summary: { totalBattles: number; successfulBattles: number; failedBattles: number } }
-interface RebalanceResponse { summary: { totalPromoted: number; totalDemoted: number } }
-interface RepairResponse { robotsRepaired: number }
-interface DailyFinancesResponse { summary: { usersProcessed: number; totalCostsDeducted: number; bankruptUsers: number } }
-interface KothResponse { message?: string }
-interface TagTeamBattlesResponse { summary: { totalBattles: number } }
-interface TeamBattleTriggerResponse {
-  success: boolean;
-  event: string;
-  execution: { matchesCompleted: number; matchesCancelled: number };
-  rebalance: { totalPromoted: number; totalDemoted: number };
-  matchmaking: { matchesCreated: number };
-  timestamp: string;
-}
 interface BulkCyclesResponse {
   cyclesCompleted: number;
   totalDuration: number;
@@ -122,150 +107,6 @@ function CycleControlsPage() {
   const showMessage = (type: 'success' | 'error', text: string): void => {
     setMessage({ type, text });
     setTimeout(() => setMessage(null), 5000);
-  };
-
-  /* ---------- Individual cycle operations ---------- */
-
-  const processDailyFinances = async (): Promise<void> => {
-    setLoading(true);
-    try {
-      const data = await api.post<DailyFinancesResponse>('/api/admin/daily-finances/process', {});
-      const summary = data.summary;
-      const text = `Daily finances processed! ${summary.usersProcessed} users, ₡${summary.totalCostsDeducted.toLocaleString()} deducted${summary.bankruptUsers > 0 ? `, ${summary.bankruptUsers} bankruptcies` : ''}`;
-      addSessionLog('success', text);
-      showMessage('success', text);
-      await refreshUser();
-    } catch (error: unknown) {
-      const msg = errorMessage(error, 'Daily finances failed');
-      addSessionLog('error', `Daily finances failed: ${msg}`);
-      showMessage('error', msg);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const triggerKothCycle = async (): Promise<void> => {
-    setLoading(true);
-    try {
-      const data = await api.post<KothResponse>('/api/admin/koth/trigger', {});
-      const text = `KotH cycle triggered successfully!${data.message ? ` ${data.message}` : ''}`;
-      addSessionLog('success', text);
-      showMessage('success', text);
-    } catch (error: unknown) {
-      const msg = errorMessage(error, 'KotH cycle trigger failed');
-      addSessionLog('error', `KotH cycle trigger failed: ${msg}`);
-      showMessage('error', msg);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const triggerLeagueCycle = async (): Promise<void> => {
-    setLoading(true);
-    addSessionLog('info', 'Starting league cycle: Repair → Battles → Rebalance → Matchmaking');
-    try {
-      const repair = await api.post<RepairResponse>('/api/admin/repair/all', { deductCosts: true });
-      addSessionLog('info', `Step 1: Repaired ${repair.robotsRepaired} robots`);
-      const battles = await api.post<BattlesResponse>('/api/admin/battles/run', {});
-      const bs = battles.summary;
-      addSessionLog(bs.failedBattles > 0 ? 'warning' : 'success', `Step 2: ${bs.successfulBattles}/${bs.totalBattles} battles executed`);
-      const rebal = await api.post<RebalanceResponse>('/api/admin/leagues/rebalance', {});
-      const rs = rebal.summary;
-      addSessionLog('success', `Step 3: ${rs.totalPromoted} promoted, ${rs.totalDemoted} demoted`);
-      const match = await api.post<MatchmakingResponse>('/api/admin/matchmaking/run', {});
-      addSessionLog('success', `Step 4: ${match.matchesCreated} matches scheduled`);
-      showMessage('success', `League cycle complete: ${bs.successfulBattles} battles, ${match.matchesCreated} matches scheduled`);
-    } catch (error: unknown) {
-      const msg = errorMessage(error, 'League cycle failed');
-      addSessionLog('error', `League cycle failed: ${msg}`);
-      showMessage('error', msg);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const triggerTournamentCycle = async (): Promise<void> => {
-    setLoading(true);
-    addSessionLog('info', 'Starting tournament cycle');
-    try {
-      const data = await api.post<BulkCyclesResponse>('/api/admin/cycles/bulk', { cycles: 0, includeTournaments: true, includeKoth: false, generateUsersPerCycle: false });
-      const results = data.results?.[0]?.tournaments;
-      const details = results ? [
-        results.tournamentsExecuted ? `${results.tournamentsExecuted} tournament(s)` : null,
-        results.roundsExecuted ? `${results.roundsExecuted} round(s)` : null,
-        results.matchesExecuted ? `${results.matchesExecuted} match(es)` : null,
-        results.tournamentsCompleted ? `${results.tournamentsCompleted} completed` : null,
-        results.tournamentsCreated ? `${results.tournamentsCreated} created` : null,
-      ].filter(Boolean).join(', ') : 'completed';
-      addSessionLog('success', `Tournament cycle: ${details}`);
-      showMessage('success', `Tournament cycle: ${details}`);
-    } catch (error: unknown) {
-      const msg = errorMessage(error, 'Tournament cycle failed');
-      addSessionLog('error', `Tournament cycle failed: ${msg}`);
-      showMessage('error', msg);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const triggerTagTeamCycle = async (): Promise<void> => {
-    setLoading(true);
-    addSessionLog('info', 'Starting tag team cycle: Repair → Battles → Rebalance → Matchmaking');
-    try {
-      const repair = await api.post<RepairResponse>('/api/admin/repair/all', { deductCosts: true });
-      addSessionLog('info', `Step 1: Repaired ${repair.robotsRepaired} robots`);
-      const battles = await api.post<TagTeamBattlesResponse>('/api/admin/tag-teams/battles', {});
-      const bs = battles.summary;
-      addSessionLog('success', `Step 2: ${bs.totalBattles} tag team battles executed`);
-      const rebal = await api.post<RebalanceResponse>('/api/admin/tag-teams/rebalance', {});
-      const rs = rebal.summary;
-      addSessionLog('success', `Step 3: ${rs.totalPromoted} promoted, ${rs.totalDemoted} demoted`);
-      const match = await api.post<MatchmakingResponse>('/api/admin/tag-teams/matchmaking', {});
-      addSessionLog('success', `Step 4: ${match.matchesCreated} tag team matches scheduled`);
-      showMessage('success', `Tag team cycle complete: ${bs.totalBattles} battles, ${match.matchesCreated} matches scheduled`);
-    } catch (error: unknown) {
-      const msg = errorMessage(error, 'Tag team cycle failed');
-      addSessionLog('error', `Tag team cycle failed: ${msg}`);
-      showMessage('error', msg);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const triggerTeam2v2LeagueCycle = async (): Promise<void> => {
-    setLoading(true);
-    addSessionLog('info', 'Starting 2v2 League cycle: Battles → Rebalance → Matchmaking');
-    try {
-      const data = await api.post<TeamBattleTriggerResponse>('/api/admin/team-2v2-league/trigger', {});
-      addSessionLog('success', `Step 1: ${data.execution.matchesCompleted} 2v2 team battles executed${data.execution.matchesCancelled > 0 ? ` (${data.execution.matchesCancelled} cancelled)` : ''}`);
-      addSessionLog('success', `Step 2: ${data.rebalance.totalPromoted} promoted, ${data.rebalance.totalDemoted} demoted`);
-      addSessionLog('success', `Step 3: ${data.matchmaking.matchesCreated} 2v2 matches scheduled`);
-      showMessage('success', `2v2 League cycle complete: ${data.execution.matchesCompleted} battles, ${data.matchmaking.matchesCreated} matches scheduled`);
-    } catch (error: unknown) {
-      const msg = errorMessage(error, '2v2 League cycle failed');
-      addSessionLog('error', `2v2 League cycle failed: ${msg}`);
-      showMessage('error', msg);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const triggerTeam3v3LeagueCycle = async (): Promise<void> => {
-    setLoading(true);
-    addSessionLog('info', 'Starting 3v3 League cycle: Battles → Rebalance → Matchmaking');
-    try {
-      const data = await api.post<TeamBattleTriggerResponse>('/api/admin/team-3v3-league/trigger', {});
-      addSessionLog('success', `Step 1: ${data.execution.matchesCompleted} 3v3 team battles executed${data.execution.matchesCancelled > 0 ? ` (${data.execution.matchesCancelled} cancelled)` : ''}`);
-      addSessionLog('success', `Step 2: ${data.rebalance.totalPromoted} promoted, ${data.rebalance.totalDemoted} demoted`);
-      addSessionLog('success', `Step 3: ${data.matchmaking.matchesCreated} 3v3 matches scheduled`);
-      showMessage('success', `3v3 League cycle complete: ${data.execution.matchesCompleted} battles, ${data.matchmaking.matchesCreated} matches scheduled`);
-    } catch (error: unknown) {
-      const msg = errorMessage(error, '3v3 League cycle failed');
-      addSessionLog('error', `3v3 League cycle failed: ${msg}`);
-      showMessage('error', msg);
-    } finally {
-      setLoading(false);
-    }
   };
 
   /* ---------- Bulk cycle runner ---------- */
@@ -353,18 +194,34 @@ function CycleControlsPage() {
   /* ---------- Scheduler panel "Run" button handler ---------- */
 
   const handleSchedulerJobTrigger = (jobName: string): void => {
-    const triggerMap: Record<string, { label: string; description: string; handler: () => Promise<void> }> = {
-      league: { label: 'Run League Cycle', description: 'Repair → Execute battles → Rebalance → Matchmaking. Continue?', handler: triggerLeagueCycle },
-      tournament: { label: 'Run Tournament Cycle', description: 'Repair → Execute rounds → Advance winners → Auto-create. Continue?', handler: triggerTournamentCycle },
-      tagTeam: { label: 'Run Tag Team Cycle', description: 'Repair → Execute battles → Rebalance → Matchmaking. Continue?', handler: triggerTagTeamCycle },
-      koth: { label: 'Run KotH Cycle', description: 'Execute KotH battles → Matchmaking for next round. Continue?', handler: triggerKothCycle },
-      settlement: { label: 'Run Settlement', description: 'User generation → Passive income → Operating costs → Cycle counter → Snapshot. Continue?', handler: processDailyFinances },
-      team2v2League: { label: 'Run 2v2 League Cycle', description: 'Execute 2v2 battles → Rebalance → Matchmaking. Continue?', handler: triggerTeam2v2LeagueCycle },
-      team3v3League: { label: 'Run 3v3 League Cycle', description: 'Execute 3v3 battles → Rebalance → Matchmaking. Continue?', handler: triggerTeam3v3LeagueCycle },
+    const triggerMap: Record<string, { label: string; description: string }> = {
+      league: { label: 'Run League Cycle', description: 'Repair → Battles → Rebalance → Matchmaking (same as cron). Continue?' },
+      tournament: { label: 'Run Tournament Cycle', description: 'Repair → Execute rounds → Advance winners → Auto-create (same as cron). Continue?' },
+      tagTeam: { label: 'Run Tag Team Cycle', description: 'Repair → Battles → Rebalance → Matchmaking (same as cron). Continue?' },
+      koth: { label: 'Run KotH Cycle', description: 'Repair → Battles → Matchmaking (same as cron). Continue?' },
+      settlement: { label: 'Run Settlement', description: 'User generation → Passive income → Operating costs → Cycle counter → Snapshot (same as cron). Continue?' },
+      team2v2League: { label: 'Run 2v2 League Cycle', description: 'Repair → Battles → Rebalance → Matchmaking (same as cron). Continue?' },
+      team3v3League: { label: 'Run 3v3 League Cycle', description: 'Repair → Battles → Rebalance → Matchmaking (same as cron). Continue?' },
+      team2v2Tournament: { label: 'Run 2v2 Tournament Cycle', description: 'Repair → Execute round → Advance winners (same as cron). Continue?' },
+      team3v3Tournament: { label: 'Run 3v3 Tournament Cycle', description: 'Repair → Execute round → Advance winners (same as cron). Continue?' },
     };
     const action = triggerMap[jobName];
     if (action) {
-      requestConfirm(action.label, action.description, action.handler);
+      requestConfirm(action.label, action.description, async () => {
+        setLoading(true);
+        addSessionLog('info', `Triggering ${jobName} cycle...`);
+        try {
+          await api.post(`/api/admin/scheduler/trigger/${jobName}`, {});
+          addSessionLog('success', `${jobName} cycle completed successfully`);
+          showMessage('success', `${jobName} cycle completed`);
+        } catch (error: unknown) {
+          const msg = errorMessage(error, `${jobName} cycle failed`);
+          addSessionLog('error', msg);
+          showMessage('error', msg);
+        } finally {
+          setLoading(false);
+        }
+      });
     }
   };
 
@@ -588,8 +445,6 @@ function CycleControlsPage() {
 
 /** Reserved slot job names — these have no real handler yet */
 const RESERVED_SLOTS = new Set([
-  'team2v2Tournament',
-  'team3v3Tournament',
   'grandMelee',
 ]);
 

@@ -12,6 +12,7 @@ import {
   PrestigeRecords,
   KothRecords,
   TeamBattleRecords,
+  TournamentChampionsRecords,
 } from '../components/hall-of-records';
 
 const log = createLogger('HallOfRecordsPage');
@@ -71,6 +72,7 @@ function HallOfRecordsPage() {
     { key: 'prestige' as CategoryKey, label: 'Prestige', icon: '👑' },
     { key: 'koth' as CategoryKey, label: 'King of the Hill', icon: '⛰️' },
     { key: 'teamBattle' as CategoryKey, label: 'Team Battles', icon: '🤝' },
+    { key: 'tournaments' as CategoryKey, label: 'Tournaments', icon: '🏆' },
   ];
 
   if (!user) {
@@ -97,7 +99,7 @@ function HallOfRecordsPage() {
             <button
               key={category.key}
               onClick={() => setActiveCategory(category.key)}
-              className={`px-6 py-3 rounded-lg font-medium whitespace-nowrap transition-colors ${
+              className={`px-6 py-3 rounded-lg font-medium whitespace-nowrap transition-colors min-h-[44px] ${
                 activeCategory === category.key
                   ? 'bg-yellow-500 text-gray-900'
                   : 'bg-surface text-secondary hover:bg-surface-elevated'
@@ -122,7 +124,7 @@ function HallOfRecordsPage() {
             <p className="text-error">{error}</p>
             <button
               onClick={fetchRecords}
-              className="mt-4 px-6 py-2 bg-red-600 hover:bg-red-700 rounded-lg"
+              className="mt-4 px-6 py-2 bg-red-600 hover:bg-red-700 rounded-lg min-h-[44px]"
             >
               Retry
             </button>
@@ -152,6 +154,9 @@ function HallOfRecordsPage() {
             )}
             {activeCategory === 'teamBattle' && (
               <TeamBattleRecords records={records} formatDuration={formatDuration} formatDate={formatDate} onBattleClick={handleBattleClick} />
+            )}
+            {activeCategory === 'tournaments' && (
+              <TournamentChampionsRecords records={records} formatDate={formatDate} />
             )}
           </div>
         )}

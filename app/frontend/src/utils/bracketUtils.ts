@@ -3,14 +3,17 @@
  * Extracted from TournamentsPage.tsx and extended per the bracket seeding design.
  */
 
-/** Match data with robot relations, as returned by the tournament detail API */
+import type { ParticipantType } from './tournamentApi';
+
+/** Match data with participant relations, as returned by the tournament detail API */
 export interface TournamentMatchWithRobots {
   id: number;
   tournamentId: number;
   round: number;
   matchNumber: number;
-  robot1Id: number | null;
-  robot2Id: number | null;
+  participantType: ParticipantType;
+  participant1Id: number | null;
+  participant2Id: number | null;
   winnerId: number | null;
   battleId: number | null;
   status: string;
@@ -19,6 +22,10 @@ export interface TournamentMatchWithRobots {
   robot1: { id: number; name: string; elo: number } | null;
   robot2: { id: number; name: string; elo: number } | null;
   winner: { id: number; name: string } | null;
+  /** @deprecated Use participant1Id */
+  robot1Id?: number | null;
+  /** @deprecated Use participant2Id */
+  robot2Id?: number | null;
 }
 
 /**
@@ -82,7 +89,7 @@ export function formatSeedDisplay(seed: number, robotName: string): string {
 }
 
 /**
- * Computes the set of future match IDs the user's robot would play
+ * Computes the set of future match IDs the user's participant would play
  * if it keeps winning from its current position.
  *
  * Algorithm:
@@ -95,12 +102,12 @@ export function formatSeedDisplay(seed: number, robotName: string): string {
  */
 export function getUserFuturePath(
   matches: TournamentMatchWithRobots[],
-  userRobotIds: Set<number>,
+  userParticipantIds: Set<number>,
   maxRounds: number
 ): Set<number> {
   const futureMatchIds = new Set<number>();
 
-  if (userRobotIds.size === 0 || matches.length === 0) {
+  if (userParticipantIds.size === 0 || matches.length === 0) {
     return futureMatchIds;
   }
 
@@ -110,29 +117,29 @@ export function getUserFuturePath(
     matchLookup.set(`${match.round}-${match.matchNumber}`, match);
   }
 
-  // Find all matches the user's robots are in
+  // Find all matches the user's participants are in
   const userMatches = matches.filter(
     (m) =>
-      (m.robot1Id !== null && userRobotIds.has(m.robot1Id)) ||
-      (m.robot2Id !== null && userRobotIds.has(m.robot2Id))
+      (m.participant1Id !== null && userParticipantIds.has(m.participant1Id)) ||
+      (m.participant2Id !== null && userParticipantIds.has(m.participant2Id))
   );
 
   if (userMatches.length === 0) {
     return futureMatchIds;
   }
 
-  // For each user robot, find their latest match and trace the future path
+  // For each user participant, find their latest match and trace the future path
   for (const userMatch of userMatches) {
     // Only trace forward from matches that haven't been lost
-    const userRobotId = userRobotIds.has(userMatch.robot1Id ?? -1)
-      ? userMatch.robot1Id
-      : userMatch.robot2Id;
+    const userParticipantId = userParticipantIds.has(userMatch.participant1Id ?? -1)
+      ? userMatch.participant1Id
+      : userMatch.participant2Id;
 
-    // If the match is completed and the user's robot lost, skip
+    // If the match is completed and the user's participant lost, skip
     if (
       userMatch.status === 'completed' &&
       userMatch.winnerId !== null &&
-      userMatch.winnerId !== userRobotId
+      userMatch.winnerId !== userParticipantId
     ) {
       continue;
     }
@@ -147,11 +154,11 @@ export function getUserFuturePath(
       const nextMatch = matchLookup.get(`${nextRound}-${nextMatchNumber}`);
 
       if (nextMatch) {
-        // Only add if the user's robot isn't already assigned to this match
+        // Only add if the user's participant isn't already assigned to this match
         // (if they are, it's a current match, not a future one)
         const alreadyAssigned =
-          (nextMatch.robot1Id !== null && userRobotIds.has(nextMatch.robot1Id)) ||
-          (nextMatch.robot2Id !== null && userRobotIds.has(nextMatch.robot2Id));
+          (nextMatch.participant1Id !== null && userParticipantIds.has(nextMatch.participant1Id)) ||
+          (nextMatch.participant2Id !== null && userParticipantIds.has(nextMatch.participant2Id));
 
         if (!alreadyAssigned) {
           futureMatchIds.add(nextMatch.id);

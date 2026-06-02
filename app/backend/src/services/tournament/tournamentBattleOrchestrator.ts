@@ -58,7 +58,7 @@ export interface TournamentBattleResult {
 export async function processTournamentBattle(
   tournamentMatch: ScheduledTournamentMatch
 ): Promise<TournamentBattleResult> {
-  if (!tournamentMatch.robot1Id || !tournamentMatch.robot2Id) {
+  if (!tournamentMatch.participant1Id || !tournamentMatch.participant2Id) {
     throw new TournamentError(
       TournamentErrorCode.MATCH_MISSING_ROBOTS,
       `Tournament match ${tournamentMatch.id} missing robots`,
@@ -77,10 +77,11 @@ export async function processTournamentBattle(
   }
 
   // Load both robots with weapons
+  // For 1v1 tournaments (participantType='robot'), participant IDs ARE robot IDs
   // Spec #34: include refinements so prepareRobotForCombat can fold them
   // into the weapon's effective stats before the simulator reads them.
   const robot1 = await prisma.robot.findUnique({
-    where: { id: tournamentMatch.robot1Id },
+    where: { id: tournamentMatch.participant1Id },
     include: {
       mainWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
       offhandWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
@@ -88,7 +89,7 @@ export async function processTournamentBattle(
   });
 
   const robot2 = await prisma.robot.findUnique({
-    where: { id: tournamentMatch.robot2Id },
+    where: { id: tournamentMatch.participant2Id },
     include: {
       mainWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
       offhandWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
@@ -100,7 +101,7 @@ export async function processTournamentBattle(
       TournamentErrorCode.MATCH_MISSING_ROBOTS,
       `Robots not found for tournament match ${tournamentMatch.id}`,
       404,
-      { matchId: tournamentMatch.id, robot1Id: tournamentMatch.robot1Id, robot2Id: tournamentMatch.robot2Id }
+      { matchId: tournamentMatch.id, participant1Id: tournamentMatch.participant1Id, participant2Id: tournamentMatch.participant2Id }
     );
   }
 

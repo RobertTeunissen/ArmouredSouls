@@ -19,7 +19,7 @@ const mockPrisma = {
   robot: { findMany: jest.fn() },
   facility: { findMany: jest.fn() },
   tagTeam: { updateMany: jest.fn() },
-  tournament: { findUnique: jest.fn() },
+  tournament: { findUnique: jest.fn(), findFirst: jest.fn() },
   scheduledKothMatchParticipant: { findMany: jest.fn() },
   $queryRaw: jest.fn(),
   $transaction: jest.fn(),
@@ -167,6 +167,25 @@ jest.mock('../../src/services/league/leagueHistoryService', () => ({
   detectYoYoCandidates: jest.fn(),
 }));
 
+// Mock team tournament services (used by dynamic imports in trigger endpoints)
+const mockExecuteTeamTournamentRound = jest.fn();
+jest.mock('../../src/services/tournament/teamTournamentBattleOrchestrator', () => ({
+  __esModule: true,
+  executeTeamTournamentRound: (...args: unknown[]) => mockExecuteTeamTournamentRound(...args),
+}));
+
+const mockAdvanceWinnersToNextRound = jest.fn();
+jest.mock('../../src/services/tournament/tournamentService', () => ({
+  __esModule: true,
+  advanceWinnersToNextRound: (...args: unknown[]) => mockAdvanceWinnersToNextRound(...args),
+  createSingleEliminationTournament: jest.fn(),
+  getActiveTournaments: jest.fn().mockResolvedValue([]),
+  getTournamentById: jest.fn(),
+  getCurrentRoundMatches: jest.fn().mockResolvedValue([]),
+  autoCreateNextTournament: jest.fn(),
+  getEligibleRobotsForTournament: jest.fn().mockResolvedValue([]),
+}));
+
 // Mock auth middleware — control authentication per test
 let mockUser: { userId: number; username: string; role: string } | null = null;
 jest.mock('../../src/middleware/auth', () => ({
@@ -209,8 +228,6 @@ describe('Admin reserved-slot trigger endpoints (R6.3, R8.2, R8.3)', () => {
   });
 
   const reservedSlotEndpoints = [
-    { path: '/api/admin/team-2v2-tournament/trigger', event: 'team_2v2_tournament' },
-    { path: '/api/admin/team-3v3-tournament/trigger', event: 'team_3v3_tournament' },
     { path: '/api/admin/grand-melee/trigger', event: 'grand_melee' },
   ];
 
@@ -599,6 +616,211 @@ describe('Admin team battle endpoints (R14.3, R14.4, R14.5)', () => {
 
       expect(res.status).toBe(400);
       expect(mockExecuteScheduledTeamBattles).not.toHaveBeenCalled();
+    });
+  });
+});
+
+describe('Admin team-tournament trigger endpoints (R8.3, R8.5, R8.7, R8.8)', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUser = { userId: 1, username: 'admin', role: 'admin' };
+    mockExecuteTeamTournamentRound.mockResolvedValue({ matchesExecuted: 3, matchesFailed: 0 });
+    mockAdvanceWinnersToNextRound.mockResolvedValue(undefined);
+  });
+
+  describe('POST /api/admin/team-2v2-tournament/trigger', () => {
+    test('should return 404 when no active 2v2 tournament exists (R8.7)', async () => {
+      mockPrisma.tournament.findFirst = jest.fn().mockResolvedValue(null);
+
+      const res = await request(app).post('/api/admin/team-2v2-tournament/trigger').send({});
+
+      expect(res.status).toBe(404);
+      expect(res.body.error).toBe('No active 2v2 tournament available');
+    });
+
+    test('should execute round and return results when active tournament exists (R8.3)', async () => {
+      mockPrisma.tournament.findFirst = jest.fn().mockResolvedValue({
+        id: 10,
+        name: '2v2 Tournament #1',
+        participantType: 'team_2v2',
+        status: 'active',
+      });
+      mockPrisma.tournament.findUnique = jest.fn().mockResolvedValue({
+        id: 10,
+        status: 'active',
+        winnerId: null,
+      });
+
+      const res = await request(app).post('/api/admin/team-2v2-tournament/trigger').send({});
+
+      expect(res.status).toBe(200);
+      expect(res.body).toEqual({
+        matchesExecuted: 3,
+        matchesFailed: 0,
+        tournamentComplete: false,
+        championTeamId: null,
+      });
+      expect(mockExecuteTeamTournamentRound).toHaveBeenCalledWith(10, 2);
+      expect(mockAdvanceWinnersToNextRound).toHaveBeenCalledWith(10);
+    });
+
+    test('should return tournamentComplete=true and championTeamId when tournament completes', async () => {
+      mockPrisma.tournament.findFirst = jest.fn().mockResolvedValue({
+        id: 10,
+        name: '2v2 Tournament #1',
+        participantType: 'team_2v2',
+        status: 'active',
+      });
+      mockPrisma.tournament.findUnique = jest.fn().mockResolvedValue({
+        id: 10,
+        status: 'completed',
+        winnerId: 42,
+      });
+
+      const res = await request(app).post('/api/admin/team-2v2-tournament/trigger').send({});
+
+      expect(res.status).toBe(200);
+      expect(res.body.tournamentComplete).toBe(true);
+      expect(res.body.championTeamId).toBe(42);
+    });
+
+    test('should record audit trail entry on success (R8.8)', async () => {
+      mockPrisma.tournament.findFirst = jest.fn().mockResolvedValue({
+        id: 10,
+        name: '2v2 Tournament #1',
+        participantType: 'team_2v2',
+        status: 'active',
+      });
+      mockPrisma.tournament.findUnique = jest.fn().mockResolvedValue({
+        id: 10,
+        status: 'active',
+        winnerId: null,
+      });
+
+      await request(app).post('/api/admin/team-2v2-tournament/trigger').send({});
+
+      expect(mockRecordAction).toHaveBeenCalledWith(
+        1,
+        'team_tournament_trigger',
+        'success',
+        expect.objectContaining({
+          tournamentType: '2v2',
+          tournamentId: 10,
+          tournamentName: '2v2 Tournament #1',
+          matchesExecuted: 3,
+          matchesFailed: 0,
+        }),
+      );
+    });
+
+    test('should require authentication (401 without token)', async () => {
+      mockUser = null;
+      const res = await request(app).post('/api/admin/team-2v2-tournament/trigger').send({});
+      expect(res.status).toBe(401);
+    });
+
+    test('should require admin role (403 for non-admin)', async () => {
+      mockUser = { userId: 2, username: 'player', role: 'user' };
+      const res = await request(app).post('/api/admin/team-2v2-tournament/trigger').send({});
+      expect(res.status).toBe(403);
+    });
+  });
+
+  describe('POST /api/admin/team-3v3-tournament/trigger', () => {
+    test('should return 404 when no active 3v3 tournament exists (R8.7)', async () => {
+      mockPrisma.tournament.findFirst = jest.fn().mockResolvedValue(null);
+
+      const res = await request(app).post('/api/admin/team-3v3-tournament/trigger').send({});
+
+      expect(res.status).toBe(404);
+      expect(res.body.error).toBe('No active 3v3 tournament available');
+    });
+
+    test('should execute round and return results when active tournament exists (R8.3)', async () => {
+      mockPrisma.tournament.findFirst = jest.fn().mockResolvedValue({
+        id: 20,
+        name: '3v3 Tournament #1',
+        participantType: 'team_3v3',
+        status: 'active',
+      });
+      mockPrisma.tournament.findUnique = jest.fn().mockResolvedValue({
+        id: 20,
+        status: 'active',
+        winnerId: null,
+      });
+
+      const res = await request(app).post('/api/admin/team-3v3-tournament/trigger').send({});
+
+      expect(res.status).toBe(200);
+      expect(res.body).toEqual({
+        matchesExecuted: 3,
+        matchesFailed: 0,
+        tournamentComplete: false,
+        championTeamId: null,
+      });
+      expect(mockExecuteTeamTournamentRound).toHaveBeenCalledWith(20, 3);
+      expect(mockAdvanceWinnersToNextRound).toHaveBeenCalledWith(20);
+    });
+
+    test('should return tournamentComplete=true and championTeamId when tournament completes', async () => {
+      mockPrisma.tournament.findFirst = jest.fn().mockResolvedValue({
+        id: 20,
+        name: '3v3 Tournament #1',
+        participantType: 'team_3v3',
+        status: 'active',
+      });
+      mockPrisma.tournament.findUnique = jest.fn().mockResolvedValue({
+        id: 20,
+        status: 'completed',
+        winnerId: 99,
+      });
+
+      const res = await request(app).post('/api/admin/team-3v3-tournament/trigger').send({});
+
+      expect(res.status).toBe(200);
+      expect(res.body.tournamentComplete).toBe(true);
+      expect(res.body.championTeamId).toBe(99);
+    });
+
+    test('should record audit trail entry on success (R8.8)', async () => {
+      mockPrisma.tournament.findFirst = jest.fn().mockResolvedValue({
+        id: 20,
+        name: '3v3 Tournament #1',
+        participantType: 'team_3v3',
+        status: 'active',
+      });
+      mockPrisma.tournament.findUnique = jest.fn().mockResolvedValue({
+        id: 20,
+        status: 'active',
+        winnerId: null,
+      });
+
+      await request(app).post('/api/admin/team-3v3-tournament/trigger').send({});
+
+      expect(mockRecordAction).toHaveBeenCalledWith(
+        1,
+        'team_tournament_trigger',
+        'success',
+        expect.objectContaining({
+          tournamentType: '3v3',
+          tournamentId: 20,
+          tournamentName: '3v3 Tournament #1',
+          matchesExecuted: 3,
+          matchesFailed: 0,
+        }),
+      );
+    });
+
+    test('should require authentication (401 without token)', async () => {
+      mockUser = null;
+      const res = await request(app).post('/api/admin/team-3v3-tournament/trigger').send({});
+      expect(res.status).toBe(401);
+    });
+
+    test('should require admin role (403 for non-admin)', async () => {
+      mockUser = { userId: 2, username: 'player', role: 'user' };
+      const res = await request(app).post('/api/admin/team-3v3-tournament/trigger').send({});
+      expect(res.status).toBe(403);
     });
   });
 });

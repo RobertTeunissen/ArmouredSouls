@@ -4,6 +4,7 @@ import {
   getRoundLabel,
   buildBracketTree,
 } from '../../utils/bracketUtils';
+import type { ParticipantType, ResolvedParticipant } from '../../utils/tournamentApi';
 import MatchCard from './MatchCard';
 
 interface MobileBracketProps {
@@ -12,8 +13,10 @@ interface MobileBracketProps {
   currentRound: number;
   status: string;
   seedMap: Map<number, number>;
-  userRobotIds: Set<number>;
+  userParticipantIds: Set<number>;
   futurePathMatchIds: Set<number>;
+  resolvedParticipants?: Record<number, ResolvedParticipant>;
+  participantType: ParticipantType;
 }
 
 type ViewMode = 'myPath' | 'roundList';
@@ -31,13 +34,15 @@ const MobileBracket: React.FC<MobileBracketProps> = ({
   currentRound,
   status,
   seedMap,
-  userRobotIds,
+  userParticipantIds,
   futurePathMatchIds,
+  resolvedParticipants,
+  participantType,
 }) => {
-  const hasUserRobot = userRobotIds.size > 0;
+  const hasUserParticipant = userParticipantIds.size > 0;
 
   const [viewMode, setViewMode] = useState<ViewMode>(
-    hasUserRobot ? 'myPath' : 'roundList',
+    hasUserParticipant ? 'myPath' : 'roundList',
   );
 
   return (
@@ -45,7 +50,7 @@ const MobileBracket: React.FC<MobileBracketProps> = ({
       {/* View mode toggle */}
       <div className="flex rounded-lg overflow-hidden border border-white/10">
         <button
-          className={`flex-1 px-3 py-2 text-sm font-medium transition-colors ${
+          className={`flex-1 px-3 py-2 text-sm font-medium transition-colors min-h-[44px] ${
             viewMode === 'myPath'
               ? 'bg-primary text-white'
               : 'bg-surface text-secondary hover:text-gray-200'
@@ -55,7 +60,7 @@ const MobileBracket: React.FC<MobileBracketProps> = ({
           My Path
         </button>
         <button
-          className={`flex-1 px-3 py-2 text-sm font-medium transition-colors ${
+          className={`flex-1 px-3 py-2 text-sm font-medium transition-colors min-h-[44px] ${
             viewMode === 'roundList'
               ? 'bg-primary text-white'
               : 'bg-surface text-secondary hover:text-gray-200'
@@ -71,8 +76,10 @@ const MobileBracket: React.FC<MobileBracketProps> = ({
           matches={matches}
           maxRounds={maxRounds}
           seedMap={seedMap}
-          userRobotIds={userRobotIds}
+          userParticipantIds={userParticipantIds}
           futurePathMatchIds={futurePathMatchIds}
+          resolvedParticipants={resolvedParticipants}
+          participantType={participantType}
         />
       ) : (
         <RoundListView
@@ -81,8 +88,10 @@ const MobileBracket: React.FC<MobileBracketProps> = ({
           currentRound={currentRound}
           status={status}
           seedMap={seedMap}
-          userRobotIds={userRobotIds}
+          userParticipantIds={userParticipantIds}
           futurePathMatchIds={futurePathMatchIds}
+          resolvedParticipants={resolvedParticipants}
+          participantType={participantType}
         />
       )}
     </div>
@@ -97,12 +106,14 @@ interface MyPathViewProps {
   matches: TournamentMatchWithRobots[];
   maxRounds: number;
   seedMap: Map<number, number>;
-  userRobotIds: Set<number>;
+  userParticipantIds: Set<number>;
   futurePathMatchIds: Set<number>;
+  resolvedParticipants?: Record<number, ResolvedParticipant>;
+  participantType: ParticipantType;
 }
 
 /**
- * Shows only matches involving the user's robot(s) plus connected
+ * Shows only matches involving the user's participant(s) plus connected
  * future-path matches, rendered as a vertical timeline grouped by round.
  *
  * Validates: Requirement 9.2
@@ -111,27 +122,29 @@ const MyPathView: React.FC<MyPathViewProps> = ({
   matches,
   maxRounds,
   seedMap,
-  userRobotIds,
+  userParticipantIds,
   futurePathMatchIds,
+  resolvedParticipants,
+  participantType,
 }) => {
   const pathMatches = useMemo(() => {
     const filtered = matches.filter((m) => {
       const hasUser =
-        (m.robot1Id !== null && userRobotIds.has(m.robot1Id)) ||
-        (m.robot2Id !== null && userRobotIds.has(m.robot2Id));
+        (m.participant1Id !== null && userParticipantIds.has(m.participant1Id)) ||
+        (m.participant2Id !== null && userParticipantIds.has(m.participant2Id));
       return hasUser || futurePathMatchIds.has(m.id);
     });
     // Sort by round ascending, then matchNumber ascending
     return filtered.sort(
       (a, b) => a.round - b.round || a.matchNumber - b.matchNumber,
     );
-  }, [matches, userRobotIds, futurePathMatchIds]);
+  }, [matches, userParticipantIds, futurePathMatchIds]);
 
   if (pathMatches.length === 0) {
     return (
       <div className="bg-surface rounded-lg border border-white/10 p-6 text-center">
         <p className="text-tertiary text-sm">
-          No matches found for your robots. Switch to Round List to browse all matches.
+          No matches found for your {participantType === 'robot' ? 'robots' : 'teams'}. Switch to Round List to browse all matches.
         </p>
       </div>
     );
@@ -156,8 +169,9 @@ const MyPathView: React.FC<MyPathViewProps> = ({
             <MatchCard
               match={match}
               seedMap={seedMap}
-              userRobotIds={userRobotIds}
+              userParticipantIds={userParticipantIds}
               isUserFuturePath={futurePathMatchIds.has(match.id)}
+              resolvedParticipants={resolvedParticipants}
             />
           </React.Fragment>
         );
@@ -176,8 +190,10 @@ interface RoundListViewProps {
   currentRound: number;
   status: string;
   seedMap: Map<number, number>;
-  userRobotIds: Set<number>;
+  userParticipantIds: Set<number>;
   futurePathMatchIds: Set<number>;
+  resolvedParticipants?: Record<number, ResolvedParticipant>;
+  participantType: ParticipantType;
 }
 
 /**
@@ -192,8 +208,10 @@ const RoundListView: React.FC<RoundListViewProps> = ({
   currentRound,
   status,
   seedMap,
-  userRobotIds,
+  userParticipantIds,
   futurePathMatchIds,
+  resolvedParticipants,
+  participantType: _participantType,
 }) => {
   const [selectedRound, setSelectedRound] = useState<number>(currentRound);
   const [collapsedRounds, setCollapsedRounds] = useState<Set<number>>(
@@ -227,7 +245,7 @@ const RoundListView: React.FC<RoundListViewProps> = ({
       {/* Round navigation */}
       <div className="flex items-center justify-between bg-surface rounded-lg border border-white/10 px-3 py-2">
         <button
-          className="text-secondary hover:text-white disabled:opacity-30 disabled:cursor-not-allowed p-1"
+          className="text-secondary hover:text-white disabled:opacity-30 disabled:cursor-not-allowed p-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
           disabled={selectedRound <= 1}
           onClick={() => setSelectedRound((r) => Math.max(1, r - 1))}
           aria-label="Previous round"
@@ -248,7 +266,7 @@ const RoundListView: React.FC<RoundListViewProps> = ({
         </button>
 
         <button
-          className="flex items-center gap-2 text-sm font-medium"
+          className="flex items-center gap-2 text-sm font-medium min-h-[44px]"
           onClick={() => toggleCollapse(selectedRound)}
         >
           <span
@@ -281,7 +299,7 @@ const RoundListView: React.FC<RoundListViewProps> = ({
         </button>
 
         <button
-          className="text-secondary hover:text-white disabled:opacity-30 disabled:cursor-not-allowed p-1"
+          className="text-secondary hover:text-white disabled:opacity-30 disabled:cursor-not-allowed p-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
           disabled={selectedRound >= maxRounds}
           onClick={() =>
             setSelectedRound((r) => Math.min(maxRounds, r + 1))
@@ -317,8 +335,9 @@ const RoundListView: React.FC<RoundListViewProps> = ({
                 key={match.id}
                 match={match}
                 seedMap={seedMap}
-                userRobotIds={userRobotIds}
+                userParticipantIds={userParticipantIds}
                 isUserFuturePath={futurePathMatchIds.has(match.id)}
+                resolvedParticipants={resolvedParticipants}
               />
             ))
           )}

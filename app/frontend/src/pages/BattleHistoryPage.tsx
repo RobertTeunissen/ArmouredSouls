@@ -15,11 +15,11 @@ import {
 } from '../utils/matchmakingApi';
 import { computeBattleSummary, EMPTY_SUMMARY } from '../utils/battleHistoryStats';
 
-type BattleFilterType = 'overall' | 'league' | 'tournament' | 'tag_team' | 'koth' | 'league_2v2' | 'league_3v3';
+type BattleFilterType = 'overall' | 'league' | 'tournament' | 'tag_team' | 'koth' | 'league_2v2' | 'league_3v3' | 'tournament_2v2' | 'tournament_3v3';
 type OutcomeFilterType = 'all' | 'win' | 'loss' | 'draw';
 type SortByType = 'date-desc' | 'date-asc' | 'elo-desc' | 'elo-asc' | 'reward-desc' | 'reward-asc';
 
-const VALID_BATTLE_FILTERS: BattleFilterType[] = ['overall', 'league', 'tournament', 'tag_team', 'koth', 'league_2v2', 'league_3v3'];
+const VALID_BATTLE_FILTERS: BattleFilterType[] = ['overall', 'league', 'tournament', 'tag_team', 'koth', 'league_2v2', 'league_3v3', 'tournament_2v2', 'tournament_3v3'];
 const VALID_OUTCOME_FILTERS: OutcomeFilterType[] = ['all', 'win', 'loss', 'draw'];
 const VALID_SORT_OPTIONS: SortByType[] = ['date-desc', 'date-asc', 'elo-desc', 'elo-asc', 'reward-desc', 'reward-asc'];
 const VALID_PAGE_SIZES = [20, 50, 100];

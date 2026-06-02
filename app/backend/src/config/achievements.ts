@@ -65,7 +65,9 @@ export type AchievementTriggerType =
   | 'owns_legendary_starter_weapon'
   | 'owns_max_dps_weapon'
   | 'league_2v2_wins'
-  | 'league_3v3_wins';
+  | 'league_3v3_wins'
+  | 'tournament_2v2_wins'
+  | 'tournament_3v3_wins';
 
 export interface AchievementDefinition {
   id: string;
@@ -632,6 +634,74 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     progressType: 'numeric',
     progressLabel: '3v3 league wins',
     badgeIconFile: 'achievement-l21',
+  },
+  {
+    id: 'L22',
+    name: 'R2-D2 & C-3PO',
+    description: 'Win a 2v2 Tournament',
+    reference: 'Star Wars',
+    category: 'league',
+    tier: 'easy',
+    scope: 'user',
+    rewardCredits: TIER_REWARDS.easy.credits,
+    rewardPrestige: TIER_REWARDS.easy.prestige,
+    hidden: false,
+    triggerType: 'tournament_2v2_wins',
+    triggerThreshold: 1,
+    progressType: 'numeric',
+    progressLabel: '2v2 tournament wins',
+    badgeIconFile: 'achievement-l22',
+  },
+  {
+    id: 'L23',
+    name: 'Jaeger Pilots',
+    description: 'Win 3 different 2v2 Tournaments',
+    reference: 'Pacific Rim',
+    category: 'league',
+    tier: 'hard',
+    scope: 'user',
+    rewardCredits: TIER_REWARDS.hard.credits,
+    rewardPrestige: TIER_REWARDS.hard.prestige,
+    hidden: false,
+    triggerType: 'tournament_2v2_wins',
+    triggerThreshold: 3,
+    progressType: 'numeric',
+    progressLabel: '2v2 tournament wins',
+    badgeIconFile: 'achievement-l23',
+  },
+  {
+    id: 'L24',
+    name: 'Triforce',
+    description: 'Win a 3v3 Tournament',
+    reference: 'Legend of Zelda',
+    category: 'league',
+    tier: 'easy',
+    scope: 'user',
+    rewardCredits: TIER_REWARDS.easy.credits,
+    rewardPrestige: TIER_REWARDS.easy.prestige,
+    hidden: false,
+    triggerType: 'tournament_3v3_wins',
+    triggerThreshold: 1,
+    progressType: 'numeric',
+    progressLabel: '3v3 tournament wins',
+    badgeIconFile: 'achievement-l24',
+  },
+  {
+    id: 'L25',
+    name: 'Devastator',
+    description: 'Win 3 different 3v3 Tournaments',
+    reference: 'Transformers',
+    category: 'league',
+    tier: 'hard',
+    scope: 'user',
+    rewardCredits: TIER_REWARDS.hard.credits,
+    rewardPrestige: TIER_REWARDS.hard.prestige,
+    hidden: false,
+    triggerType: 'tournament_3v3_wins',
+    triggerThreshold: 3,
+    progressType: 'numeric',
+    progressLabel: '3v3 tournament wins',
+    badgeIconFile: 'achievement-l25',
   },
   {
     id: 'L10',

@@ -8,10 +8,12 @@ import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { checkSchedulingReadiness } from '../analytics/matchmakingService';
 import { TournamentError, TournamentErrorCode } from '../../errors/tournamentErrors';
+import { ParticipantType } from './tournamentParticipantResolver';
 
 // Tournament configuration constants
 const MIN_TOURNAMENT_PARTICIPANTS = 4; // Minimum robots needed to start a tournament
 const AUTO_START_THRESHOLD = 8; // Minimum robots for auto-tournament creation
+const MAX_BRACKET_SIZE = 64; // Maximum participants in a single bracket
 
 export interface TournamentCreationResult {
   tournament: Tournament;
@@ -94,6 +96,237 @@ export async function getEligibleRobotsForTournament(): Promise<Robot[]> {
  */
 export function seedRobotsByELO(robots: Robot[]): Robot[] {
   return [...robots].sort((a, b) => b.elo - a.elo);
+}
+
+// ─── Entity-Agnostic Tournament Interfaces ───────────────────────────────────
+
+/**
+ * Generic tournament participant used for entity-agnostic bracket generation.
+ * Both robots and teams can be represented as TournamentParticipant.
+ */
+export interface TournamentParticipant {
+  id: number;
+  displayName: string;
+  elo: number;
+  createdAt: Date;
+}
+
+/**
+ * Options for creating an entity-agnostic tournament.
+ */
+export interface CreateTournamentOptions {
+  participantType: ParticipantType;
+  participants: TournamentParticipant[];
+  namePrefix?: string; // "Tournament", "2v2 Tournament", "3v3 Tournament"
+}
+
+/**
+ * Seed participants by ELO rating (highest to lowest).
+ * Tie-break: older participant first (earlier createdAt).
+ */
+export function seedParticipantsByELO(participants: TournamentParticipant[]): TournamentParticipant[] {
+  return [...participants].sort((a, b) => {
+    if (b.elo !== a.elo) return b.elo - a.elo;
+    return a.createdAt.getTime() - b.createdAt.getTime(); // Older first as tie-breaker
+  });
+}
+
+/**
+ * Generate bracket pairs for single elimination tournament (entity-agnostic).
+ * Same algorithm as generateBracketPairs but accepts TournamentParticipant[]
+ * and sets participantType on all match records.
+ *
+ * Enforces MAX_BRACKET_SIZE cap — participants beyond 64 are excluded.
+ */
+function generateBracketPairsGeneric(
+  seededParticipants: TournamentParticipant[],
+  maxRounds: number,
+  participantType: ParticipantType,
+): ScheduledTournamentMatch[] {
+  const matches: ScheduledTournamentMatch[] = [];
+  const bracketSize = Math.pow(2, maxRounds); // Next power of 2
+
+  // Create bracket slots (some will be byes)
+  const bracketSlots: (TournamentParticipant | null)[] = new Array(bracketSize).fill(null);
+
+  // Fill bracket using standard tournament seeding order
+  const seedOrder = generateStandardSeedOrder(bracketSize);
+
+  for (let i = 0; i < seededParticipants.length; i++) {
+    const bracketPosition = seedOrder[i] - 1; // Convert 1-based seed to 0-based position
+    bracketSlots[bracketPosition] = seededParticipants[i];
+  }
+
+  // Create first round matches from bracket slots
+  let matchNumber = 1;
+  for (let i = 0; i < bracketSize; i += 2) {
+    let p1 = bracketSlots[i];
+    let p2 = bracketSlots[i + 1];
+
+    if (p1 === null && p2 === null) {
+      // Both slots empty - shouldn't happen but skip if it does
+      continue;
+    }
+
+    // Normalize bye matches: ensure the actual participant is always in participant1
+    if (p1 === null && p2 !== null) {
+      p1 = p2;
+      p2 = null;
+    }
+
+    const isByeMatch = p1 !== null && p2 === null;
+
+    matches.push({
+      id: 0, // Will be set by database
+      tournamentId: 0, // Will be set when creating
+      round: 1,
+      matchNumber: matchNumber++,
+      participantType,
+      participant1Id: p1?.id || null,
+      participant2Id: p2?.id || null,
+      winnerId: null,
+      battleId: null,
+      status: 'pending',
+      isByeMatch: isByeMatch,
+      createdAt: new Date(),
+      completedAt: null,
+    });
+  }
+
+  // Create placeholder matches for future rounds
+  for (let round = 2; round <= maxRounds; round++) {
+    const matchesInRound = Math.pow(2, maxRounds - round);
+
+    for (let i = 1; i <= matchesInRound; i++) {
+      matches.push({
+        id: 0,
+        tournamentId: 0,
+        round,
+        matchNumber: i,
+        participantType,
+        participant1Id: null,
+        participant2Id: null,
+        winnerId: null,
+        battleId: null,
+        status: 'pending',
+        isByeMatch: false,
+        createdAt: new Date(),
+        completedAt: null,
+      });
+    }
+  }
+
+  return matches;
+}
+
+/**
+ * Create a new entity-agnostic single-elimination tournament.
+ * Handles bracket generation, bye-match auto-completion, sequential naming per type,
+ * and sets the tournament to 'active' with startedAt.
+ *
+ * @param options - participantType, participants array, optional namePrefix
+ * @returns Created tournament with bracket and participant count
+ */
+export async function createTournament(options: CreateTournamentOptions): Promise<TournamentCreationResult> {
+  const { participantType, participants, namePrefix } = options;
+
+  // Cap at MAX_BRACKET_SIZE participants
+  const cappedParticipants = participants.slice(0, MAX_BRACKET_SIZE);
+
+  if (cappedParticipants.length < MIN_TOURNAMENT_PARTICIPANTS) {
+    throw new TournamentError(
+      TournamentErrorCode.INSUFFICIENT_PARTICIPANTS,
+      `Insufficient participants for tournament. Need at least ${MIN_TOURNAMENT_PARTICIPANTS}, found ${cappedParticipants.length}`,
+      400,
+      { required: MIN_TOURNAMENT_PARTICIPANTS, found: cappedParticipants.length }
+    );
+  }
+
+  // Seed by ELO (tie-break by createdAt)
+  const seeded = seedParticipantsByELO(cappedParticipants);
+
+  // Calculate rounds
+  const maxRounds = calculateMaxRounds(seeded.length);
+
+  // Generate bracket with participantType
+  const bracketTemplate = generateBracketPairsGeneric(seeded, maxRounds, participantType);
+
+  // Sequential naming per type: count existing tournaments of same participantType + 1
+  const prefix = namePrefix ?? 'Tournament';
+  const tournamentCountForType = await prisma.tournament.count({
+    where: { participantType },
+  });
+  const tournamentName = `${prefix} #${tournamentCountForType + 1}`;
+
+  // Create tournament record with participantType
+  const tournament = await prisma.tournament.create({
+    data: {
+      name: tournamentName,
+      tournamentType: 'single_elimination',
+      participantType,
+      status: 'pending',
+      currentRound: 1,
+      maxRounds,
+      totalParticipants: seeded.length,
+      startedAt: null,
+      completedAt: null,
+      winnerId: null,
+    },
+  });
+
+  // Create match records — all use same participantType as parent Tournament (R1.10)
+  const bracketData = bracketTemplate.map(match => ({
+    tournamentId: tournament.id,
+    round: match.round,
+    matchNumber: match.matchNumber,
+    participantType,
+    participant1Id: match.participant1Id,
+    participant2Id: match.participant2Id,
+    winnerId: match.winnerId,
+    battleId: match.battleId,
+    status: match.status,
+    isByeMatch: match.isByeMatch,
+  }));
+
+  await prisma.scheduledTournamentMatch.createMany({
+    data: bracketData,
+  });
+
+  // Fetch created matches for return
+  const bracket = await prisma.scheduledTournamentMatch.findMany({
+    where: { tournamentId: tournament.id },
+    orderBy: [{ round: 'asc' }, { matchNumber: 'asc' }],
+  });
+
+  // Auto-complete bye matches
+  const byeMatches = bracket.filter(match => match.isByeMatch && match.round === 1);
+  for (const byeMatch of byeMatches) {
+    await prisma.scheduledTournamentMatch.update({
+      where: { id: byeMatch.id },
+      data: {
+        winnerId: byeMatch.participant1Id,
+        status: 'completed',
+        completedAt: new Date(),
+      },
+    });
+  }
+
+  // Set status to 'active', record startedAt
+  await prisma.tournament.update({
+    where: { id: tournament.id },
+    data: {
+      status: 'active',
+      startedAt: new Date(),
+    },
+  });
+
+  logger.info(`[Tournament] Created ${tournamentName} with ${seeded.length} participants (${maxRounds} rounds, type: ${participantType})`);
+
+  return {
+    tournament,
+    bracket,
+    participantCount: seeded.length,
+  };
 }
 
 /**
@@ -208,9 +441,10 @@ function generateBracketPairs(seededRobots: Robot[], maxRounds: number): Schedul
       tournamentId: 0, // Will be set when creating
       round: 1,
       matchNumber: matchNumber++,
-      robot1Id: robot1?.id || null,
-      robot2Id: robot2?.id || null,
-      winnerId: null, // Will be set to robot1Id for bye matches
+      participantType: 'robot',
+      participant1Id: robot1?.id || null,
+      participant2Id: robot2?.id || null,
+      winnerId: null, // Will be set to participant1Id for bye matches
       battleId: null,
       status: 'pending',
       isByeMatch: isByeMatch,
@@ -229,8 +463,9 @@ function generateBracketPairs(seededRobots: Robot[], maxRounds: number): Schedul
         tournamentId: 0,
         round,
         matchNumber: i,
-        robot1Id: null, // Will be populated when previous round completes
-        robot2Id: null,
+        participantType: 'robot',
+        participant1Id: null, // Will be populated when previous round completes
+        participant2Id: null,
         winnerId: null,
         battleId: null,
         status: 'pending',
@@ -305,8 +540,8 @@ export interface SeedEntry {
  */
 export interface Round1Match {
   matchNumber: number;
-  robot1Id: number | null;
-  robot2Id: number | null;
+  participant1Id: number | null;
+  participant2Id: number | null;
   robot1: { id: number; name: string; elo: number } | null;
   robot2: { id: number; name: string; elo: number } | null;
 }
@@ -316,8 +551,8 @@ export interface Round1Match {
  */
 export interface CompletedMatch {
   winnerId: number | null;
-  robot1Id: number | null;
-  robot2Id: number | null;
+  participant1Id: number | null;
+  participant2Id: number | null;
   status: string;
 }
 
@@ -354,11 +589,11 @@ export function computeSeedings(
   const eliminatedIds = new Set<number>();
   for (const match of completedMatches) {
     if (match.status === 'completed' && match.winnerId !== null) {
-      if (match.robot1Id !== null && match.robot1Id !== match.winnerId) {
-        eliminatedIds.add(match.robot1Id);
+      if (match.participant1Id !== null && match.participant1Id !== match.winnerId) {
+        eliminatedIds.add(match.participant1Id);
       }
-      if (match.robot2Id !== null && match.robot2Id !== match.winnerId) {
-        eliminatedIds.add(match.robot2Id);
+      if (match.participant2Id !== null && match.participant2Id !== match.winnerId) {
+        eliminatedIds.add(match.participant2Id);
       }
     }
   }
@@ -367,12 +602,12 @@ export function computeSeedings(
 
   for (let i = 0; i < round1Matches.length; i++) {
     const match = round1Matches[i];
-    const slot0 = 2 * i;     // bracket slot for robot1
-    const slot1 = 2 * i + 1; // bracket slot for robot2
+    const slot0 = 2 * i;     // bracket slot for participant1
+    const slot1 = 2 * i + 1; // bracket slot for participant2
 
     const isByeMatch = match.robot1 !== null && match.robot2 === null;
 
-    if (isByeMatch && match.robot1 !== null && match.robot1Id !== null) {
+    if (isByeMatch && match.robot1 !== null && match.participant1Id !== null) {
       // Bye match: robot may have been normalized from either slot.
       // Assign the lower (better) seed number of the two slots.
       const seed = Math.min(slotToSeed.get(slot0) ?? bracketSize, slotToSeed.get(slot1) ?? bracketSize);
@@ -385,7 +620,7 @@ export function computeSeedings(
       });
     } else {
       // Normal match with two robots
-      if (match.robot1 !== null && match.robot1Id !== null) {
+      if (match.robot1 !== null && match.participant1Id !== null) {
         seedings.push({
           seed: slotToSeed.get(slot0) ?? 0,
           robotId: match.robot1.id,
@@ -395,7 +630,7 @@ export function computeSeedings(
         });
       }
 
-      if (match.robot2 !== null && match.robot2Id !== null) {
+      if (match.robot2 !== null && match.participant2Id !== null) {
         seedings.push({
           seed: slotToSeed.get(slot1) ?? 0,
           robotId: match.robot2.id,
@@ -414,8 +649,8 @@ export function computeSeedings(
 }
 
 /**
- * Create a new single elimination tournament
- * Returns tournament with generated bracket
+ * Create a new single elimination tournament (1v1 robots)
+ * Thin wrapper around createTournament for backward compatibility.
  * All eligible robots participate (can be in multiple tournaments)
  */
 export async function createSingleEliminationTournament(): Promise<TournamentCreationResult> {
@@ -431,98 +666,28 @@ export async function createSingleEliminationTournament(): Promise<TournamentCre
     );
   }
 
-  // Seed robots by ELO
-  const seededRobots = seedRobotsByELO(eligibleRobots);
-  
-  // Calculate rounds
-  const maxRounds = calculateMaxRounds(seededRobots.length);
-  
-  // Generate bracket
-  const bracketTemplate = generateBracketPairs(seededRobots, maxRounds);
-  
-  // Get tournament count for naming
-  const tournamentCount = await prisma.tournament.count();
-  const tournamentName = `Tournament #${tournamentCount + 1}`;
-
-  // Create tournament record
-  const tournament = await prisma.tournament.create({
-    data: {
-      name: tournamentName,
-      tournamentType: 'single_elimination',
-      status: 'pending',
-      currentRound: 1,
-      maxRounds,
-      totalParticipants: seededRobots.length,
-      startedAt: null,
-      completedAt: null,
-      winnerId: null,
-    },
-  });
-
-  // Create tournament matches with tournament ID
-  const bracketData = bracketTemplate.map(match => ({
-    tournamentId: tournament.id,
-    round: match.round,
-    matchNumber: match.matchNumber,
-    robot1Id: match.robot1Id,
-    robot2Id: match.robot2Id,
-    winnerId: match.winnerId,
-    battleId: match.battleId,
-    status: match.status,
-    isByeMatch: match.isByeMatch,
+  // Map robots to generic TournamentParticipant interface
+  const participants: TournamentParticipant[] = eligibleRobots.map(r => ({
+    id: r.id,
+    displayName: r.name,
+    elo: r.elo,
+    createdAt: r.createdAt,
   }));
 
-  await prisma.scheduledTournamentMatch.createMany({
-    data: bracketData,
-  });
-
-  // Fetch created matches for return
-  const bracket = await prisma.scheduledTournamentMatch.findMany({
-    where: { tournamentId: tournament.id },
-    orderBy: [{ round: 'asc' }, { matchNumber: 'asc' }],
-  });
-
-  // Automatically complete bye matches
-  const byeMatches = bracket.filter(match => match.isByeMatch && match.round === 1);
-  for (const byeMatch of byeMatches) {
-    await prisma.scheduledTournamentMatch.update({
-      where: { id: byeMatch.id },
-      data: {
-        winnerId: byeMatch.robot1Id,
-        status: 'completed',
-        completedAt: new Date(),
-      },
-    });
-  }
-
-  // Set tournament to active
-  await prisma.tournament.update({
-    where: { id: tournament.id },
-    data: {
-      status: 'active',
-      startedAt: new Date(),
-    },
-  });
-
-  logger.info(`[Tournament] Created ${tournamentName} with ${seededRobots.length} participants (${maxRounds} rounds)`);
-
-  return {
-    tournament,
-    bracket,
-    participantCount: seededRobots.length,
-  };
+  return createTournament({ participantType: 'robot', participants, namePrefix: '1v1 Tournament' });
 }
 
 /**
- * Get active tournaments
+ * Get active tournaments (1v1 robot tournaments only).
+ * Team tournaments are handled by their own dedicated handlers.
  */
 export async function getActiveTournaments(): Promise<Tournament[]> {
   return prisma.tournament.findMany({
     where: {
+      participantType: 'robot',
       status: { in: ['pending', 'active'] },
     },
     include: {
-      winner: true,
       matches: {
         orderBy: [{ round: 'asc' }, { matchNumber: 'asc' }],
       },
@@ -537,13 +702,9 @@ export async function getTournamentById(tournamentId: number): Promise<Tournamen
   return prisma.tournament.findUnique({
     where: { id: tournamentId },
     include: {
-      winner: true,
       matches: {
         orderBy: [{ round: 'asc' }, { matchNumber: 'asc' }],
         include: {
-          robot1: true,
-          robot2: true,
-          winner: true,
           battle: true,
         },
       },
@@ -575,24 +736,11 @@ export async function getCurrentRoundMatches(tournamentId: number): Promise<Sche
       status: { in: ['pending', 'scheduled'] },
     },
     include: {
-      robot1: {
-        include: {
-          user: {
-            select: {
-              id: true,
-              username: true,
-            },
-          },
-        },
-      },
-      robot2: {
-        include: {
-          user: {
-            select: {
-              id: true,
-              username: true,
-            },
-          },
+      tournament: {
+        select: {
+          id: true,
+          name: true,
+          participantType: true,
         },
       },
     },
@@ -622,7 +770,7 @@ export async function advanceWinnersToNextRound(tournamentId: number): Promise<v
     where: {
       tournamentId,
       round: tournament.currentRound,
-      status: 'completed',
+      status: { in: ['completed', 'forfeit'] },
     },
     orderBy: { matchNumber: 'asc' },
   });
@@ -635,7 +783,7 @@ export async function advanceWinnersToNextRound(tournamentId: number): Promise<v
     },
   });
 
-  const allCompleted = allMatches.every(match => match.status === 'completed');
+  const allCompleted = allMatches.every(match => match.status === 'completed' || match.status === 'forfeit');
   if (!allCompleted) {
     logger.info(`[Tournament] Round ${tournament.currentRound} not yet complete. Waiting for all matches.`);
     return;
@@ -674,14 +822,14 @@ export async function advanceWinnersToNextRound(tournamentId: number): Promise<v
   // Populate next round matches with winners
   // Winners are paired: match 1 & 2 → next match 1, match 3 & 4 → next match 2, etc.
   for (let i = 0; i < nextRoundMatches.length; i++) {
-    const robot1Id = winners[i * 2] ?? null;
-    const robot2Id = winners[i * 2 + 1] ?? null;
+    const participant1Id = winners[i * 2] ?? null;
+    const participant2Id = winners[i * 2 + 1] ?? null;
 
     await prisma.scheduledTournamentMatch.update({
       where: { id: nextRoundMatches[i].id },
       data: {
-        robot1Id,
-        robot2Id,
+        participant1Id,
+        participant2Id,
         status: 'pending',
       },
     });
@@ -695,30 +843,30 @@ export async function advanceWinnersToNextRound(tournamentId: number): Promise<v
   });
 
   for (const match of updatedNextRoundMatches) {
-    if (match.robot1Id !== null && match.robot2Id === null) {
+    if (match.participant1Id !== null && match.participant2Id === null) {
       await prisma.scheduledTournamentMatch.update({
         where: { id: match.id },
         data: {
-          winnerId: match.robot1Id,
+          winnerId: match.participant1Id,
           status: 'completed',
           isByeMatch: true,
           completedAt: new Date(),
         },
       });
-      logger.info(`[Tournament] Auto-completed bye match ${match.id} in round ${nextRound} (winner: robot ${match.robot1Id})`);
-    } else if (match.robot1Id === null && match.robot2Id !== null) {
-      // Reverse bye: robot2 has no opponent due to missing winner upstream
+      logger.info(`[Tournament] Auto-completed bye match ${match.id} in round ${nextRound} (winner: participant ${match.participant1Id})`);
+    } else if (match.participant1Id === null && match.participant2Id !== null) {
+      // Reverse bye: participant2 has no opponent due to missing winner upstream
       await prisma.scheduledTournamentMatch.update({
         where: { id: match.id },
         data: {
-          winnerId: match.robot2Id,
+          winnerId: match.participant2Id,
           status: 'completed',
           isByeMatch: true,
           completedAt: new Date(),
         },
       });
-      logger.info(`[Tournament] Auto-completed reverse bye match ${match.id} in round ${nextRound} (winner: robot ${match.robot2Id})`);
-    } else if (match.robot1Id === null && match.robot2Id === null) {
+      logger.info(`[Tournament] Auto-completed reverse bye match ${match.id} in round ${nextRound} (winner: participant ${match.participant2Id})`);
+    } else if (match.participant1Id === null && match.participant2Id === null) {
       // Both slots empty — no winners fed into this match; mark completed with no winner
       await prisma.scheduledTournamentMatch.update({
         where: { id: match.id },
@@ -728,7 +876,7 @@ export async function advanceWinnersToNextRound(tournamentId: number): Promise<v
           completedAt: new Date(),
         },
       });
-      logger.warn(`[Tournament] Empty match ${match.id} in round ${nextRound} — no robots assigned, auto-completed`);
+      logger.warn(`[Tournament] Empty match ${match.id} in round ${nextRound} — no participants assigned, auto-completed`);
     }
   }
 
@@ -758,9 +906,24 @@ export async function advanceWinnersToNextRound(tournamentId: number): Promise<v
 }
 
 /**
- * Complete tournament and award championship
+ * Complete tournament and award championship based on participantType.
+ * Awards both the unified championshipTitles counter and the per-type counter.
  */
 async function completeTournament(tournamentId: number, winnerId: number): Promise<void> {
+  // Fetch tournament to determine participantType
+  const tournament = await prisma.tournament.findUnique({
+    where: { id: tournamentId },
+  });
+
+  if (!tournament) {
+    throw new TournamentError(
+      TournamentErrorCode.TOURNAMENT_NOT_FOUND,
+      `Tournament ${tournamentId} not found`,
+      404,
+      { tournamentId }
+    );
+  }
+
   // Update tournament status
   await prisma.tournament.update({
     where: { id: tournamentId },
@@ -771,36 +934,118 @@ async function completeTournament(tournamentId: number, winnerId: number): Promi
     },
   });
 
-  // Award championship title to winner's user
-  const winnerRobot = await prisma.robot.findUnique({
-    where: { id: winnerId },
-    include: { user: true },
-  });
-
-  if (winnerRobot) {
-    await prisma.user.update({
-      where: { id: winnerRobot.userId },
-      data: {
-        championshipTitles: { increment: 1 },
-      },
+  // Award championship title based on participantType
+  if (tournament.participantType === 'robot') {
+    // 1v1 robot tournament — award to robot's owner
+    const robot = await prisma.robot.findUnique({
+      where: { id: winnerId },
+      include: { user: true },
     });
 
-    logger.info(`[Tournament] Tournament ${tournamentId} completed! Winner: ${winnerRobot.name} (User: ${winnerRobot.user.username})`);
-    logger.info(`[Tournament] Championship title awarded to ${winnerRobot.user.username} (total: ${winnerRobot.user.championshipTitles + 1})`);
+    if (robot) {
+      await prisma.user.update({
+        where: { id: robot.userId },
+        data: {
+          championshipTitles: { increment: 1 },
+          championshipTitles1v1: { increment: 1 },
+        },
+      });
+
+      // Fire tournament_complete achievement event for the winner's owner
+      try {
+        const { achievementService } = await import('../achievement');
+        await achievementService.checkAndAward(robot.userId, robot.id, {
+          type: 'tournament_complete',
+          data: { battleType: 'tournament_1v1' },
+        });
+      } catch (achievementError) {
+        logger.error(`[Tournament] Achievement check failed for tournament ${tournamentId} winner: ${achievementError}`);
+      }
+
+      logger.info(`[Tournament] Tournament ${tournamentId} completed! Winner: ${robot.name} (User: ${robot.user.username})`);
+      logger.info(`[Tournament] Championship title (1v1) awarded to ${robot.user.username}`);
+    }
+  } else {
+    // Team tournament — award to team's stable owner
+    const team = await prisma.teamBattle.findUnique({
+      where: { id: winnerId },
+      include: { stable: true },
+    });
+
+    if (team) {
+      const field = tournament.participantType === 'team_2v2' ? 'championshipTitles2v2' : 'championshipTitles3v3';
+      await prisma.user.update({
+        where: { id: team.stableId },
+        data: {
+          championshipTitles: { increment: 1 },
+          [field]: { increment: 1 },
+        },
+      });
+
+      // Fire tournament_complete achievement event for the team owner
+      try {
+        const { achievementService } = await import('../achievement');
+        await achievementService.checkAndAward(team.stableId, null, {
+          type: 'tournament_complete',
+          data: { battleType: tournament.participantType === 'team_2v2' ? 'tournament_2v2' : 'tournament_3v3' },
+        });
+      } catch (achievementError) {
+        logger.error(`[Tournament] Achievement check failed for tournament ${tournamentId} winner: ${achievementError}`);
+      }
+
+      logger.info(`[Tournament] Tournament ${tournamentId} completed! Winner: ${team.teamName} (Stable: ${team.stable.stableName || team.stable.username})`);
+      logger.info(`[Tournament] Championship title (${tournament.participantType}) awarded to ${team.stable.stableName || team.stable.username}`);
+    }
+  }
+
+  // Dispatch Discord notification for tournament completion (team tournaments)
+  if (tournament.participantType === 'team_2v2' || tournament.participantType === 'team_3v3') {
+    try {
+      const { dispatchNotification, getActiveIntegrations } = await import('../notifications/notification-service');
+      const { getConfig } = await import('../../config/env');
+      const appUrl = getConfig().appBaseUrl || 'http://localhost:5173';
+
+      const typeLabel = tournament.participantType === 'team_2v2' ? '2v2' : '3v3';
+
+      // Resolve champion name and owner
+      const team = await prisma.teamBattle.findUnique({
+        where: { id: winnerId },
+        include: { stable: true },
+      });
+      const robot = await prisma.robot.findUnique({
+        where: { id: winnerId },
+        include: { user: true },
+      });
+
+      const championName = team ? team.teamName : robot ? robot.name : 'Unknown';
+      const ownerName = team ? (team.stable.stableName || team.stable.username) : (robot ? robot.user.username : 'Unknown');
+
+      const message = `🏆 ${typeLabel} Tournament Champion: "${championName}" (${ownerName})! [View results](${appUrl}/tournaments/${tournamentId})`;
+      await dispatchNotification(message, getActiveIntegrations());
+    } catch (notificationError) {
+      // R12.4: Log error, don't interrupt tournament completion
+      logger.error(`[Tournament] Discord notification failed for tournament ${tournamentId}: ${notificationError}`);
+    }
   }
 }
 
 /**
- * Check if a new tournament should be auto-created
+ * Check if a new 1v1 tournament should be auto-created
  * Creates tournament if:
- * - No active tournaments exist
+ * - No active 1v1 tournaments exist (scoped by participantType: 'robot')
  * - Sufficient eligible robots (≥ AUTO_START_THRESHOLD)
  */
 export async function autoCreateNextTournament(): Promise<Tournament | null> {
-  // Check for active tournaments
-  const activeTournaments = await getActiveTournaments();
-  if (activeTournaments.length > 0) {
-    logger.info(`[Tournament] Active tournament exists. Skipping auto-creation.`);
+  // Check for active 1v1 tournaments only (team tournaments have their own handlers)
+  const activeTournament = await prisma.tournament.findFirst({
+    where: {
+      participantType: 'robot',
+      status: { in: ['pending', 'active'] },
+    },
+  });
+
+  if (activeTournament) {
+    logger.info(`[Tournament] Active 1v1 tournament exists (${activeTournament.name}). Skipping auto-creation.`);
     return null;
   }
 

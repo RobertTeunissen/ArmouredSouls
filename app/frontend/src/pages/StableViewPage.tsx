@@ -17,6 +17,9 @@ interface StableUser {
   prestige: number;
   prestigeRank: string;
   championshipTitles: number;
+  championshipTitles1v1: number;
+  championshipTitles2v2: number;
+  championshipTitles3v3: number;
 }
 
 interface PublicRobot {
@@ -237,6 +240,48 @@ function StableViewPage() {
             )}
           </div>
         </div>
+
+        {/* Championship Titles (per-type) */}
+        {user.championshipTitles > 0 && (
+          <div className="bg-surface border border-white/10 rounded-lg p-6 mb-8">
+            <h3 className="text-xl font-semibold mb-4">Championship Titles</h3>
+            <div className="flex flex-wrap gap-4">
+              {user.championshipTitles1v1 > 0 && (
+                <div className="flex items-center gap-2 bg-surface-elevated rounded-lg px-4 py-3">
+                  <span className="text-2xl" aria-hidden="true">🤖</span>
+                  <div>
+                    <div className="text-xs text-secondary">1v1 Tournaments</div>
+                    <div className="text-lg font-bold text-amber-400">
+                      🏆 {user.championshipTitles1v1}
+                    </div>
+                  </div>
+                </div>
+              )}
+              {user.championshipTitles2v2 > 0 && (
+                <div className="flex items-center gap-2 bg-surface-elevated rounded-lg px-4 py-3">
+                  <span className="text-2xl" aria-hidden="true">⚔️</span>
+                  <div>
+                    <div className="text-xs text-secondary">2v2 Tournaments</div>
+                    <div className="text-lg font-bold text-emerald-400">
+                      🏆 {user.championshipTitles2v2}
+                    </div>
+                  </div>
+                </div>
+              )}
+              {user.championshipTitles3v3 > 0 && (
+                <div className="flex items-center gap-2 bg-surface-elevated rounded-lg px-4 py-3">
+                  <span className="text-2xl" aria-hidden="true">🗡️</span>
+                  <div>
+                    <div className="text-xs text-secondary">3v3 Tournaments</div>
+                    <div className="text-lg font-bold text-violet-400">
+                      🏆 {user.championshipTitles3v3}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Stable Statistics */}
         <div className="bg-surface border border-white/10 rounded-lg p-6 mb-8">

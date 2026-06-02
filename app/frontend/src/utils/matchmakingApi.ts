@@ -3,7 +3,7 @@ import { api } from './api';
 // Types
 export interface ScheduledMatch {
   id: number | string; // Can be number for league or "tournament-X" string for tournaments or "tag-team-X" for tag teams
-  matchType?: 'league_1v1' | 'tournament_1v1' | 'tag_team' | 'koth' | 'league_2v2' | 'league_3v3';
+  matchType?: 'league_1v1' | 'tournament_1v1' | 'tag_team' | 'koth' | 'league_2v2' | 'league_3v3' | 'tournament_2v2' | 'tournament_3v3';
   tournamentId?: number;
   tournamentName?: string;
   tournamentRound?: number;
@@ -255,7 +255,7 @@ export const getUpcomingMatches = async (robotId?: number): Promise<ScheduledMat
 export const getMatchHistory = async (
   page: number = 1,
   pageSize: number = 10,
-  battleType?: 'overall' | 'league' | 'tournament' | 'tag_team' | 'koth' | 'league_2v2' | 'league_3v3',
+  battleType?: 'overall' | 'league' | 'tournament' | 'tag_team' | 'koth' | 'league_2v2' | 'league_3v3' | 'tournament_2v2' | 'tournament_3v3',
   robotId?: number
 ): Promise<PaginatedResponse<BattleHistory>> => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -470,7 +470,7 @@ export function isTeamBattleLog(log: BattleLogResponse['battleLog']): log is Tea
 
 /** Check if a battle type is a team battle type. */
 export function isTeamBattleType(battleType?: string): boolean {
-  return battleType === 'league_2v2' || battleType === 'league_3v3';
+  return battleType === 'league_2v2' || battleType === 'league_3v3' || battleType === 'tournament_2v2' || battleType === 'tournament_3v3';
 }
 
 /** Unified participant record — same shape for all battle types (1v1, tag team, KotH) */

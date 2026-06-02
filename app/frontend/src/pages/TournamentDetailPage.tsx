@@ -1,8 +1,8 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
-import { getTournamentDetails, TournamentDetails, SeedEntry } from '../utils/tournamentApi';
+import { getTournamentDetails, TournamentDetails, SeedEntry, ParticipantType } from '../utils/tournamentApi';
 import { useRobotStore } from '../stores';
 import BracketView from '../components/tournament/BracketView';
 
@@ -10,7 +10,7 @@ import BracketView from '../components/tournament/BracketView';
  * Tournament Detail Page — displays full tournament info and bracket visualization.
  * Route: /tournaments/:id
  *
- * Validates: Requirements 8.1, 8.2, 8.3, 8.4, 8.5, 8.6
+ * Validates: Requirements 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 9.5, 9.6, 9.7, 9.8, 9.9
  */
 function TournamentDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -25,8 +25,28 @@ function TournamentDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
 
-  // Derive userRobotIds from store
-  const userRobotIds = new Set(storeRobots.map((r) => r.id));
+  // Derive userParticipantIds based on tournament type
+  // For 1v1: user's robot IDs
+  // For team tournaments: user's team IDs (teams where user is the stable owner)
+  const userParticipantIds = useMemo(() => {
+    if (!tournament) return new Set<number>();
+
+    if (tournament.participantType === 'robot') {
+      // 1v1: use robot IDs
+      return new Set(storeRobots.map((r) => r.id));
+    }
+
+    // Team tournaments: find teams owned by the user from resolvedParticipants
+    const teamIds = new Set<number>();
+    if (tournament.resolvedParticipants && user) {
+      for (const [idStr, participant] of Object.entries(tournament.resolvedParticipants)) {
+        if (participant.ownerId === user.id) {
+          teamIds.add(Number(idStr));
+        }
+      }
+    }
+    return teamIds;
+  }, [tournament, storeRobots, user]);
 
   const fetchTournament = useCallback(async () => {
     if (!id) return;
@@ -124,13 +144,13 @@ function TournamentDetailPage() {
             <div className="flex gap-3">
               <button
                 onClick={fetchTournament}
-                className="px-4 py-2 bg-red-700 hover:bg-red-600 rounded text-white"
+                className="px-4 py-2 bg-red-700 hover:bg-red-600 rounded text-white min-h-[44px]"
               >
                 Retry
               </button>
               <Link
                 to="/tournaments"
-                className="px-4 py-2 bg-surface-elevated hover:bg-surface-elevated/80 rounded text-white"
+                className="px-4 py-2 bg-surface-elevated hover:bg-surface-elevated/80 rounded text-white min-h-[44px] flex items-center"
               >
                 Back to Tournaments
               </Link>
@@ -140,6 +160,9 @@ function TournamentDetailPage() {
       </div>
     );
   }
+
+  const isTeamTournament = tournament.participantType === 'team_2v2' || tournament.participantType === 'team_3v3';
+  const typeLabel = tournament.participantType === 'team_2v2' ? '2v2' : tournament.participantType === 'team_3v3' ? '3v3' : '1v1';
 
   return (
     <div className="min-h-screen bg-background text-white">
@@ -157,6 +180,7 @@ function TournamentDetailPage() {
         <div className="mb-6">
           <div className="flex items-center gap-3 flex-wrap mb-2">
             <h1 className="text-2xl font-bold">{tournament.name}</h1>
+            <TypeBadge participantType={tournament.participantType} />
             <StatusBadge status={tournament.status} />
           </div>
 
@@ -165,7 +189,7 @@ function TournamentDetailPage() {
               Round {tournament.currentRound} / {tournament.maxRounds}
             </span>
             <span>•</span>
-            <span>{tournament.totalParticipants} participants</span>
+            <span>{tournament.totalParticipants} {isTeamTournament ? 'teams' : 'participants'}</span>
             <span>•</span>
             <span>Created {new Date(tournament.createdAt).toLocaleDateString()}</span>
           </div>
@@ -179,7 +203,14 @@ function TournamentDetailPage() {
               <p className="text-warning font-semibold text-lg">
                 Champion: {tournament.winner.name}
               </p>
-              <p className="text-yellow-600 text-sm">Tournament Winner</p>
+              {isTeamTournament && tournament.winner.user && (
+                <p className="text-yellow-600 text-sm">
+                  {typeLabel} Team · Owned by {tournament.winner.user.stableName || tournament.winner.user.username}
+                </p>
+              )}
+              {!isTeamTournament && (
+                <p className="text-yellow-600 text-sm">Tournament Winner</p>
+              )}
             </div>
           </div>
         )}
@@ -192,11 +223,34 @@ function TournamentDetailPage() {
           maxRounds={tournament.maxRounds}
           currentRound={tournament.currentRound}
           status={tournament.status}
-          userRobotIds={userRobotIds}
+          participantType={tournament.participantType}
+          userParticipantIds={userParticipantIds}
+          resolvedParticipants={tournament.resolvedParticipants}
         />
         </div>
       </div>
     </div>
+  );
+}
+
+/** Type badge for tournament participant type */
+function TypeBadge({ participantType }: { participantType: ParticipantType }) {
+  const styles: Record<ParticipantType, string> = {
+    robot: 'bg-blue-900/50 text-blue-300',
+    team_2v2: 'bg-purple-900/50 text-purple-300',
+    team_3v3: 'bg-orange-900/50 text-orange-300',
+  };
+
+  const labels: Record<ParticipantType, string> = {
+    robot: '1v1',
+    team_2v2: '2v2',
+    team_3v3: '3v3',
+  };
+
+  return (
+    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${styles[participantType]}`}>
+      {labels[participantType]}
+    </span>
   );
 }
 

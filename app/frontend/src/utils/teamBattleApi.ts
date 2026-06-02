@@ -23,6 +23,7 @@ export interface TeamBattleRobot {
   maxHP: number;
   currentShield: number | null;
   maxShield: number | null;
+  subscriptions?: { eventType: string; status: string }[];
 }
 
 export interface TeamBattleMember {

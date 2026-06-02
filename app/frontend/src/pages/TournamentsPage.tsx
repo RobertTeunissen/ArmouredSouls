@@ -3,8 +3,21 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Navigation from '../components/Navigation';
-import { listTournaments, Tournament } from '../utils/tournamentApi';
+import { listTournaments, Tournament, ParticipantType } from '../utils/tournamentApi';
 import { getRoundLabel } from '../utils/bracketUtils';
+
+type TypeFilter = 'all' | 'robot' | 'team_2v2' | 'team_3v3';
+
+function getTypeBadge(participantType: ParticipantType) {
+  switch (participantType) {
+    case 'team_2v2':
+      return <span className="px-2 py-0.5 bg-purple-900/50 text-purple-300 rounded-full text-xs font-semibold">2v2</span>;
+    case 'team_3v3':
+      return <span className="px-2 py-0.5 bg-orange-900/50 text-orange-300 rounded-full text-xs font-semibold">3v3</span>;
+    default:
+      return <span className="px-2 py-0.5 bg-blue-900/50 text-blue-300 rounded-full text-xs font-semibold">1v1</span>;
+  }
+}
 
 function TournamentsPage() {
   const { user, logout } = useAuth();
@@ -13,11 +26,12 @@ function TournamentsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'active' | 'completed'>('all');
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
 
   useEffect(() => {
     fetchTournaments();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [typeFilter]);
 
   const fetchTournaments = async () => {
     try {
@@ -29,7 +43,8 @@ function TournamentsPage() {
         return;
       }
 
-      const data = await listTournaments();
+      const participantType = typeFilter === 'all' ? undefined : typeFilter as ParticipantType;
+      const data = await listTournaments(participantType);
       setTournaments(data.tournaments || []);
       setError(null);
     } catch (err: unknown) {
@@ -77,6 +92,8 @@ function TournamentsPage() {
   const activeTournaments = tournaments.filter(t => t.status === 'active');
   const completedTournaments = tournaments.filter(t => t.status === 'completed');
 
+  const typeFilterLabel = typeFilter === 'all' ? '' : typeFilter === 'robot' ? '1v1 ' : typeFilter === 'team_2v2' ? '2v2 ' : '3v3 ';
+
   return (
     <div className="min-h-screen bg-background text-white">
       <Navigation />
@@ -95,19 +112,41 @@ function TournamentsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
           <div className="bg-surface p-6 rounded-lg border border-white/10">
             <div className="text-3xl font-bold text-success">{activeTournaments.length}</div>
-            <div className="text-secondary text-sm">Active Tournaments</div>
+            <div className="text-secondary text-sm">{typeFilterLabel}Active Tournaments</div>
           </div>
           <div className="bg-surface p-6 rounded-lg border border-white/10">
             <div className="text-3xl font-bold text-secondary">{completedTournaments.length}</div>
-            <div className="text-secondary text-sm">Completed</div>
+            <div className="text-secondary text-sm">{typeFilterLabel}Completed</div>
           </div>
         </div>
 
-        {/* Filter Tabs */}
+        {/* Type Filter Row */}
+        <div className="flex gap-2 mb-4 flex-wrap">
+          {([
+            { value: 'all', label: 'All' },
+            { value: 'robot', label: '1v1' },
+            { value: 'team_2v2', label: '2v2' },
+            { value: 'team_3v3', label: '3v3' },
+          ] as const).map(({ value, label }) => (
+            <button
+              key={value}
+              onClick={() => setTypeFilter(value)}
+              className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors min-h-[44px] ${
+                typeFilter === value
+                  ? 'bg-primary text-white'
+                  : 'bg-surface border border-white/10 text-secondary hover:text-white hover:border-white/30'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* Status Filter Tabs */}
         <div className="flex gap-2 mb-6 border-b border-white/10">
           <button
             onClick={() => setFilter('all')}
-            className={`px-4 py-2 font-semibold transition-colors ${
+            className={`px-4 py-2 font-semibold transition-colors min-h-[44px] ${
               filter === 'all'
                 ? 'text-primary border-b-2 border-blue-400'
                 : 'text-secondary hover:text-secondary'
@@ -117,7 +156,7 @@ function TournamentsPage() {
           </button>
           <button
             onClick={() => setFilter('active')}
-            className={`px-4 py-2 font-semibold transition-colors ${
+            className={`px-4 py-2 font-semibold transition-colors min-h-[44px] ${
               filter === 'active'
                 ? 'text-primary border-b-2 border-blue-400'
                 : 'text-secondary hover:text-secondary'
@@ -127,7 +166,7 @@ function TournamentsPage() {
           </button>
           <button
             onClick={() => setFilter('completed')}
-            className={`px-4 py-2 font-semibold transition-colors ${
+            className={`px-4 py-2 font-semibold transition-colors min-h-[44px] ${
               filter === 'completed'
                 ? 'text-primary border-b-2 border-blue-400'
                 : 'text-secondary hover:text-secondary'
@@ -150,7 +189,7 @@ function TournamentsPage() {
             <p className="text-error">{error}</p>
             <button
               onClick={fetchTournaments}
-              className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 rounded transition-colors"
+              className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 rounded transition-colors min-h-[44px]"
             >
               Retry
             </button>
@@ -178,8 +217,9 @@ function TournamentsPage() {
               >
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
+                    <div className="flex items-center gap-3 mb-2 flex-wrap">
                       <h3 className="text-2xl font-bold text-warning">{tournament.name}</h3>
+                      {getTypeBadge(tournament.participantType)}
                       {getStatusBadge(tournament.status)}
                     </div>
                     <p className="text-secondary text-sm">Tournament #{tournament.id}</p>
@@ -222,7 +262,7 @@ function TournamentsPage() {
                         <div className="text-sm text-warning font-semibold">Champion</div>
                         <div className="text-xl font-bold">{tournament.winner.name}</div>
                         <div className="text-sm text-secondary">
-                          Owned by {(tournament.winner as { user?: { stableName?: string; username?: string } }).user?.stableName || (tournament.winner as { user?: { username?: string } }).user?.username || 'Unknown'}
+                          Owned by {tournament.winner.user?.stableName || tournament.winner.user?.username || 'Unknown'}
                         </div>
                       </div>
                     </div>
@@ -251,7 +291,7 @@ function TournamentsPage() {
                 <div className="mt-4">
                   <button
                     onClick={() => navigate(`/tournaments/${tournament.id}`)}
-                    className="w-full px-4 py-2 bg-primary hover:bg-blue-700 rounded transition-colors font-semibold"
+                    className="w-full px-4 py-2 bg-primary hover:bg-blue-700 rounded transition-colors font-semibold min-h-[44px]"
                   >
                     View Tournament Details
                   </button>

@@ -7,8 +7,8 @@ type TeamBattlesTab = 'tag-team' | '2v2' | '3v3';
 
 const TABS: { id: TeamBattlesTab; label: string; icon: string }[] = [
   { id: 'tag-team', label: 'Tag Team', icon: '🏷️' },
-  { id: '2v2', label: '2v2 League', icon: '⚔️' },
-  { id: '3v3', label: '3v3 League', icon: '🗡️' },
+  { id: '2v2', label: '2v2 Teams', icon: '⚔️' },
+  { id: '3v3', label: '3v3 Teams', icon: '🗡️' },
 ];
 
 function isValidTab(value: string | null): value is TeamBattlesTab {

@@ -96,7 +96,7 @@ export function computeBattleSummary(
       : getBattleOutcome(battle, myRobotId);
     const eloChange = getELOChange(battle, myRobotId);
     const reward = getBattleReward(battle, myRobotId);
-    const isTournament = battle.battleType === 'tournament_1v1';
+    const isTournament = battle.battleType === 'tournament_1v1' || battle.battleType === 'tournament_2v2' || battle.battleType === 'tournament_3v3';
     const isTagTeam = battle.battleType === 'tag_team';
     const isLeague2v2 = battle.battleType === 'league_2v2';
     const isLeague3v3 = battle.battleType === 'league_3v3';

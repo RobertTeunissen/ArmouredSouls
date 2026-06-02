@@ -43,6 +43,8 @@ const ELIGIBILITY_RULES: EligibilityRule[] = [
   { eventType: 'tag_team', minRobots: 2, reason: 'Tag Team requires 2 or more robots in your Stable' },
   { eventType: 'league_2v2', minRobots: 2, reason: '2v2 League requires 2 or more robots in your Stable' },
   { eventType: 'league_3v3', minRobots: 3, reason: '3v3 League requires 3 or more robots in your Stable' },
+  { eventType: 'tournament_2v2', minRobots: 2, reason: '2v2 Tournament requires 2 or more robots in your Stable' },
+  { eventType: 'tournament_3v3', minRobots: 3, reason: '3v3 Tournament requires 3 or more robots in your Stable' },
 ];
 
 // ── Public API ───────────────────────────────────────────────────────

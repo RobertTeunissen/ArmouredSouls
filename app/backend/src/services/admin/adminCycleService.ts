@@ -18,6 +18,8 @@ import {
   advanceWinnersToNextRound,
 } from '../tournament/tournamentService';
 import { processTournamentBattle } from '../tournament/tournamentBattleOrchestrator';
+import { executeTeamTournamentRound } from '../tournament/teamTournamentBattleOrchestrator';
+import { autoCreateNextTeamTournament } from '../tournament/teamTournamentService';
 import { runOrphanCleanup } from '../moderation/orphanCleanupJob';
 import { EventLogger } from '../common/eventLogger';
 import { cycleLogger } from '../../utils/cycleLogger';
@@ -43,9 +45,9 @@ export interface CycleResult {
   tagTeamBlock?: { repair: unknown; battles: unknown; rebalancing: unknown; matchmaking: unknown };
   kothBlock?: { repair: unknown; battles: unknown; matchmaking: unknown };
   team3v3LeagueBlock?: { battles: unknown; rebalancing: unknown; matchmaking: unknown } | { error: string };
-  team2v2TournamentBlock?: { skipped: true; message: string };
+  team2v2TournamentBlock?: { skipped: true; message: string } | { repair: unknown; matchesExecuted: number; matchesFailed: number; tournamentName?: string; tournamentRound?: number; tournamentMaxRounds?: number; tournamentCreated?: boolean; skippedReason?: string };
   grandMeleeBlock?: { skipped: true; message: string };
-  team3v3TournamentBlock?: { skipped: true; message: string };
+  team3v3TournamentBlock?: { skipped: true; message: string } | { repair: unknown; matchesExecuted: number; matchesFailed: number; tournamentName?: string; tournamentRound?: number; tournamentMaxRounds?: number; tournamentCreated?: boolean; skippedReason?: string };
   // Settlement results
   settlement?: {
     userGeneration: unknown;
@@ -110,11 +112,11 @@ async function executeTournamentStep(): Promise<TournamentStepSummary> {
 
         if (currentRoundMatches.length > 0) {
           for (const match of currentRoundMatches) {
-            if (match.robot1Id && !match.robot2Id) {
+            if (match.participant1Id && !match.participant2Id) {
               await prisma.scheduledTournamentMatch.update({
                 where: { id: match.id },
                 data: {
-                  winnerId: match.robot1Id,
+                  winnerId: match.participant1Id,
                   status: 'completed',
                   isByeMatch: true,
                   completedAt: new Date(),
@@ -125,7 +127,7 @@ async function executeTournamentStep(): Promise<TournamentStepSummary> {
               continue;
             }
 
-            if (!match.robot1Id && !match.robot2Id) {
+            if (!match.participant1Id && !match.participant2Id) {
               summary.errors!.push(`Tournament ${tournament.id} Match ${match.id}: No robots assigned`);
               continue;
             }
@@ -211,6 +213,7 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
   // cycles=0 means "run only the tournament step without a full cycle"
   if (cycleCount === 0 && includeTournaments) {
     logger.info('[Admin] Running tournament-only execution (cycles=0)...');
+    await repairAllRobots(true, cycleMetadata.totalCycles);
     const tournamentSummary = await executeTournamentStep();
     const duration = Date.now() - startTime;
 
@@ -588,18 +591,84 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
       }
 
       // ═══════════════════════════════════════════════════════════════════
-      // SLOT 7: Team 2v2 Tournament (reserved stub)
+      // SLOT 7: Team 2v2 Tournament (repair → execute/advance/auto-create)
       // ═══════════════════════════════════════════════════════════════════
+      logger.info(`[Admin] Slot 7: Team 2v2 Tournament`);
+      let team2v2TournamentResult: CycleResult['team2v2TournamentBlock'] = undefined;
+
       stepNumber++;
-      logger.info(`[Admin] Step ${stepNumber}: Team 2v2 Tournament — reserved slot, no handler implemented`);
+      logger.info(`[Admin] Step ${stepNumber}: Repair All Robots (pre-team-2v2-tournament)`);
+      const team2v2TournamentRepairStart = Date.now();
+      const team2v2TournamentRepairSummary = await repairAllRobots(true, currentCycleNumber);
       await eventLogger.logCycleStepComplete(
         currentCycleNumber,
-        'team_2v2_tournament_reserved',
+        'repair_pre_team_2v2_tournament',
         stepNumber,
-        0,
-        { reserved: true }
+        Date.now() - team2v2TournamentRepairStart,
+        { robotsRepaired: team2v2TournamentRepairSummary.robotsRepaired, totalCost: team2v2TournamentRepairSummary.totalFinalCost }
       );
-      reservedSlotsFired.push('team_2v2_tournament');
+
+      stepNumber++;
+      logger.info(`[Admin] Step ${stepNumber}: Execute Team 2v2 Tournament`);
+      const team2v2TournamentExecStart = Date.now();
+
+      try {
+        const active2v2Tournament = await prisma.tournament.findFirst({
+          where: { participantType: 'team_2v2', status: 'active' },
+        });
+
+        if (active2v2Tournament) {
+          logger.info(`[Admin] Executing round ${active2v2Tournament.currentRound} of "${active2v2Tournament.name}"`);
+          const roundResult = await executeTeamTournamentRound(active2v2Tournament.id, 2);
+          await advanceWinnersToNextRound(active2v2Tournament.id);
+
+          team2v2TournamentResult = {
+            repair: team2v2TournamentRepairSummary,
+            matchesExecuted: roundResult.matchesExecuted,
+            matchesFailed: roundResult.matchesFailed,
+            tournamentName: active2v2Tournament.name,
+            tournamentRound: active2v2Tournament.currentRound,
+            tournamentMaxRounds: active2v2Tournament.maxRounds,
+          };
+        } else {
+          // No active tournament — try to create one
+          const newTournament = await autoCreateNextTeamTournament(2);
+          if (newTournament) {
+            logger.info(`[Admin] Auto-created team 2v2 tournament: "${newTournament.name}"`);
+            team2v2TournamentResult = {
+              repair: team2v2TournamentRepairSummary,
+              matchesExecuted: 0,
+              matchesFailed: 0,
+              tournamentName: newTournament.name,
+              tournamentCreated: true,
+            };
+          } else {
+            logger.info(`[Admin] Team 2v2 Tournament: Skipped — insufficient eligible teams`);
+            team2v2TournamentResult = {
+              repair: team2v2TournamentRepairSummary,
+              matchesExecuted: 0,
+              matchesFailed: 0,
+              skippedReason: 'insufficient eligible teams',
+            };
+          }
+        }
+      } catch (team2v2TournamentErr) {
+        logger.error(`[Admin] Team 2v2 Tournament block failed:`, team2v2TournamentErr);
+        team2v2TournamentResult = {
+          repair: team2v2TournamentRepairSummary,
+          matchesExecuted: 0,
+          matchesFailed: 0,
+          skippedReason: team2v2TournamentErr instanceof Error ? team2v2TournamentErr.message : String(team2v2TournamentErr),
+        };
+      }
+
+      await eventLogger.logCycleStepComplete(
+        currentCycleNumber,
+        'team_2v2_tournament_execution',
+        stepNumber,
+        Date.now() - team2v2TournamentExecStart,
+        { matchesExecuted: (team2v2TournamentResult && 'matchesExecuted' in team2v2TournamentResult) ? team2v2TournamentResult.matchesExecuted : 0 }
+      );
 
       // ═══════════════════════════════════════════════════════════════════
       // SLOT 8: Grand Melee (reserved stub)
@@ -616,18 +685,84 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
       reservedSlotsFired.push('grand_melee');
 
       // ═══════════════════════════════════════════════════════════════════
-      // SLOT 9: Team 3v3 Tournament (reserved stub)
+      // SLOT 9: Team 3v3 Tournament (repair → execute/advance/auto-create)
       // ═══════════════════════════════════════════════════════════════════
+      logger.info(`[Admin] Slot 9: Team 3v3 Tournament`);
+      let team3v3TournamentResult: CycleResult['team3v3TournamentBlock'] = undefined;
+
       stepNumber++;
-      logger.info(`[Admin] Step ${stepNumber}: Team 3v3 Tournament — reserved slot, no handler implemented`);
+      logger.info(`[Admin] Step ${stepNumber}: Repair All Robots (pre-team-3v3-tournament)`);
+      const team3v3TournamentRepairStart = Date.now();
+      const team3v3TournamentRepairSummary = await repairAllRobots(true, currentCycleNumber);
       await eventLogger.logCycleStepComplete(
         currentCycleNumber,
-        'team_3v3_tournament_reserved',
+        'repair_pre_team_3v3_tournament',
         stepNumber,
-        0,
-        { reserved: true }
+        Date.now() - team3v3TournamentRepairStart,
+        { robotsRepaired: team3v3TournamentRepairSummary.robotsRepaired, totalCost: team3v3TournamentRepairSummary.totalFinalCost }
       );
-      reservedSlotsFired.push('team_3v3_tournament');
+
+      stepNumber++;
+      logger.info(`[Admin] Step ${stepNumber}: Execute Team 3v3 Tournament`);
+      const team3v3TournamentExecStart = Date.now();
+
+      try {
+        const active3v3Tournament = await prisma.tournament.findFirst({
+          where: { participantType: 'team_3v3', status: 'active' },
+        });
+
+        if (active3v3Tournament) {
+          logger.info(`[Admin] Executing round ${active3v3Tournament.currentRound} of "${active3v3Tournament.name}"`);
+          const roundResult = await executeTeamTournamentRound(active3v3Tournament.id, 3);
+          await advanceWinnersToNextRound(active3v3Tournament.id);
+
+          team3v3TournamentResult = {
+            repair: team3v3TournamentRepairSummary,
+            matchesExecuted: roundResult.matchesExecuted,
+            matchesFailed: roundResult.matchesFailed,
+            tournamentName: active3v3Tournament.name,
+            tournamentRound: active3v3Tournament.currentRound,
+            tournamentMaxRounds: active3v3Tournament.maxRounds,
+          };
+        } else {
+          // No active tournament — try to create one
+          const newTournament = await autoCreateNextTeamTournament(3);
+          if (newTournament) {
+            logger.info(`[Admin] Auto-created team 3v3 tournament: "${newTournament.name}"`);
+            team3v3TournamentResult = {
+              repair: team3v3TournamentRepairSummary,
+              matchesExecuted: 0,
+              matchesFailed: 0,
+              tournamentName: newTournament.name,
+              tournamentCreated: true,
+            };
+          } else {
+            logger.info(`[Admin] Team 3v3 Tournament: Skipped — insufficient eligible teams`);
+            team3v3TournamentResult = {
+              repair: team3v3TournamentRepairSummary,
+              matchesExecuted: 0,
+              matchesFailed: 0,
+              skippedReason: 'insufficient eligible teams',
+            };
+          }
+        }
+      } catch (team3v3TournamentErr) {
+        logger.error(`[Admin] Team 3v3 Tournament block failed:`, team3v3TournamentErr);
+        team3v3TournamentResult = {
+          repair: team3v3TournamentRepairSummary,
+          matchesExecuted: 0,
+          matchesFailed: 0,
+          skippedReason: team3v3TournamentErr instanceof Error ? team3v3TournamentErr.message : String(team3v3TournamentErr),
+        };
+      }
+
+      await eventLogger.logCycleStepComplete(
+        currentCycleNumber,
+        'team_3v3_tournament_execution',
+        stepNumber,
+        Date.now() - team3v3TournamentExecStart,
+        { matchesExecuted: (team3v3TournamentResult && 'matchesExecuted' in team3v3TournamentResult) ? team3v3TournamentResult.matchesExecuted : 0 }
+      );
 
       // ═══════════════════════════════════════════════════════════════════
       // SLOT 10: Settlement
@@ -895,7 +1030,13 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
         logger.info(`[Admin] KotH Battles: ${kothBattleSummary.totalMatches} (${kothBattleSummary.successfulMatches} successful, ${kothBattleSummary.failedMatches} failed)`);
       }
       logger.info(`[Admin] Team 3v3 League Battles: ${team3v3BattleSummary?.matchesCompleted ?? 0}${team3v3Error ? ' (ERROR)' : ''}`);
-      logger.info(`[Admin] Reserved slots fired: ${reservedSlotsFired.join(', ')}`);
+      if (team2v2TournamentResult && 'matchesExecuted' in team2v2TournamentResult) {
+        logger.info(`[Admin] Team 2v2 Tournament: ${team2v2TournamentResult.matchesExecuted} matches executed${team2v2TournamentResult.tournamentCreated ? ' (new tournament created)' : ''}${team2v2TournamentResult.skippedReason ? ` (skipped: ${team2v2TournamentResult.skippedReason})` : ''}`);
+      }
+      if (team3v3TournamentResult && 'matchesExecuted' in team3v3TournamentResult) {
+        logger.info(`[Admin] Team 3v3 Tournament: ${team3v3TournamentResult.matchesExecuted} matches executed${team3v3TournamentResult.tournamentCreated ? ' (new tournament created)' : ''}${team3v3TournamentResult.skippedReason ? ` (skipped: ${team3v3TournamentResult.skippedReason})` : ''}`);
+      }
+      logger.info(`[Admin] Reserved slots fired: ${reservedSlotsFired.join(', ') || 'none'}`);
       logger.info(`[Admin] ===================================`);
 
       cycleResults.push({
@@ -927,9 +1068,9 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
         team3v3LeagueBlock: team3v3Error
           ? { error: team3v3Error }
           : { battles: team3v3BattleSummary, rebalancing: team3v3RebalancingSummary, matchmaking: { matchesCreated: team3v3MatchesCreated } },
-        team2v2TournamentBlock: { skipped: true, message: 'reserved slot, no handler implemented' },
+        team2v2TournamentBlock: team2v2TournamentResult,
         grandMeleeBlock: { skipped: true, message: 'reserved slot, no handler implemented' },
-        team3v3TournamentBlock: { skipped: true, message: 'reserved slot, no handler implemented' },
+        team3v3TournamentBlock: team3v3TournamentResult,
         settlement: {
           userGeneration: userGenerationSummary,
           finances: { totalPassiveIncome, totalOperatingCosts, usersProcessed: financesUsersProcessed, skipped: !includeDailyFinances },

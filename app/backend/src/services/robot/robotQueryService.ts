@@ -241,12 +241,11 @@ export async function getUpcomingMatches(robotId: number, robot: { currentHP: nu
   // Fetch upcoming tournament matches
   const tournamentMatches = await prisma.scheduledTournamentMatch.findMany({
     where: {
-      OR: [{ robot1Id: robotId }, { robot2Id: robotId }],
+      participantType: 'robot',
+      OR: [{ participant1Id: robotId }, { participant2Id: robotId }],
       status: 'scheduled',
     },
     include: {
-      robot1: { select: { id: true, name: true, imageUrl: true } },
-      robot2: { select: { id: true, name: true, imageUrl: true } },
       tournament: { select: { id: true, name: true, status: true } },
     },
     orderBy: { createdAt: 'asc' },
@@ -293,14 +292,16 @@ export async function getUpcomingMatches(robotId: number, robot: { currentHP: nu
       };
     }),
     ...tournamentMatches.map(match => {
-      const opponent = match.robot1Id === robotId ? match.robot2 : match.robot1;
+      // For 1v1 tournaments, resolve opponent by loading robot data separately
+      const opponentId = match.participant1Id === robotId ? match.participant2Id : match.participant1Id;
       return {
         matchId: match.id,
-        opponentName: opponent?.name || 'TBD',
-        opponentPortrait: opponent?.imageUrl || '/src/assets/robots/robot-1.png',
+        opponentName: 'TBD', // Opponent name resolved separately since robot relations removed
+        opponentPortrait: '/src/assets/robots/robot-1.png',
         scheduledTime: getNextCronOccurrence(getConfig().tournamentSchedule).toISOString(),
         battleType: 'tournament_1v1' as const,
         tournamentContext: match.tournament.name,
+        opponentId,
       };
     }),
     ...tagTeamMatches.filter(match => match.team1 && match.team2).map(match => {
@@ -479,7 +480,8 @@ export async function getPerformanceContext(robotId: number) {
       const tournamentMatches = await prisma.scheduledTournamentMatch.findMany({
         where: {
           tournamentId: stats.tournamentId,
-          OR: [{ robot1Id: robotId }, { robot2Id: robotId }],
+          participantType: 'robot',
+          OR: [{ participant1Id: robotId }, { participant2Id: robotId }],
         },
         orderBy: { round: 'desc' },
       });

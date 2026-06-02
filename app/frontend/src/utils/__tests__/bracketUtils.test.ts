@@ -11,8 +11,9 @@ import {
 function makeMatch(overrides: Partial<TournamentMatchWithRobots> & { id: number; round: number; matchNumber: number }): TournamentMatchWithRobots {
   return {
     tournamentId: 1,
-    robot1Id: null,
-    robot2Id: null,
+    participantType: 'robot',
+    participant1Id: null,
+    participant2Id: null,
     winnerId: null,
     battleId: null,
     status: 'pending',
@@ -141,7 +142,7 @@ describe('getUserFuturePath', () => {
 
   it('should return empty set when user robot is not in any match', () => {
     const matches = [
-      makeMatch({ id: 1, round: 1, matchNumber: 1, robot1Id: 10, robot2Id: 20 }),
+      makeMatch({ id: 1, round: 1, matchNumber: 1, participant1Id: 10, participant2Id: 20 }),
     ];
     const result = getUserFuturePath(matches, new Set([99]), 2);
     expect(result.size).toBe(0);
@@ -150,10 +151,10 @@ describe('getUserFuturePath', () => {
   it('should compute future path for a robot in round 1 of a 3-round bracket', () => {
     // 4-match round 1, 2-match round 2, 1-match round 3
     const matches = [
-      makeMatch({ id: 1, round: 1, matchNumber: 1, robot1Id: 10, robot2Id: 20, status: 'pending' }),
-      makeMatch({ id: 2, round: 1, matchNumber: 2, robot1Id: 30, robot2Id: 40, status: 'pending' }),
-      makeMatch({ id: 3, round: 1, matchNumber: 3, robot1Id: 50, robot2Id: 60, status: 'pending' }),
-      makeMatch({ id: 4, round: 1, matchNumber: 4, robot1Id: 70, robot2Id: 80, status: 'pending' }),
+      makeMatch({ id: 1, round: 1, matchNumber: 1, participant1Id: 10, participant2Id: 20, status: 'pending' }),
+      makeMatch({ id: 2, round: 1, matchNumber: 2, participant1Id: 30, participant2Id: 40, status: 'pending' }),
+      makeMatch({ id: 3, round: 1, matchNumber: 3, participant1Id: 50, participant2Id: 60, status: 'pending' }),
+      makeMatch({ id: 4, round: 1, matchNumber: 4, participant1Id: 70, participant2Id: 80, status: 'pending' }),
       makeMatch({ id: 5, round: 2, matchNumber: 1 }), // winner of match 1 vs winner of match 2
       makeMatch({ id: 6, round: 2, matchNumber: 2 }), // winner of match 3 vs winner of match 4
       makeMatch({ id: 7, round: 3, matchNumber: 1 }), // finals
@@ -168,8 +169,8 @@ describe('getUserFuturePath', () => {
 
   it('should not include future matches for an eliminated robot', () => {
     const matches = [
-      makeMatch({ id: 1, round: 1, matchNumber: 1, robot1Id: 10, robot2Id: 20, winnerId: 20, status: 'completed' }),
-      makeMatch({ id: 2, round: 1, matchNumber: 2, robot1Id: 30, robot2Id: 40, status: 'pending' }),
+      makeMatch({ id: 1, round: 1, matchNumber: 1, participant1Id: 10, participant2Id: 20, winnerId: 20, status: 'completed' }),
+      makeMatch({ id: 2, round: 1, matchNumber: 2, participant1Id: 30, participant2Id: 40, status: 'pending' }),
       makeMatch({ id: 3, round: 2, matchNumber: 1 }),
     ];
 
@@ -180,11 +181,11 @@ describe('getUserFuturePath', () => {
 
   it('should trace from the current match when robot has already advanced', () => {
     const matches = [
-      makeMatch({ id: 1, round: 1, matchNumber: 1, robot1Id: 10, robot2Id: 20, winnerId: 10, status: 'completed' }),
-      makeMatch({ id: 2, round: 1, matchNumber: 2, robot1Id: 30, robot2Id: 40, winnerId: 30, status: 'completed' }),
-      makeMatch({ id: 3, round: 2, matchNumber: 1, robot1Id: 10, robot2Id: 30, status: 'pending' }),
-      makeMatch({ id: 4, round: 1, matchNumber: 3, robot1Id: 50, robot2Id: 60, status: 'pending' }),
-      makeMatch({ id: 5, round: 1, matchNumber: 4, robot1Id: 70, robot2Id: 80, status: 'pending' }),
+      makeMatch({ id: 1, round: 1, matchNumber: 1, participant1Id: 10, participant2Id: 20, winnerId: 10, status: 'completed' }),
+      makeMatch({ id: 2, round: 1, matchNumber: 2, participant1Id: 30, participant2Id: 40, winnerId: 30, status: 'completed' }),
+      makeMatch({ id: 3, round: 2, matchNumber: 1, participant1Id: 10, participant2Id: 30, status: 'pending' }),
+      makeMatch({ id: 4, round: 1, matchNumber: 3, participant1Id: 50, participant2Id: 60, status: 'pending' }),
+      makeMatch({ id: 5, round: 1, matchNumber: 4, participant1Id: 70, participant2Id: 80, status: 'pending' }),
       makeMatch({ id: 6, round: 2, matchNumber: 2 }),
       makeMatch({ id: 7, round: 3, matchNumber: 1 }),
     ];
@@ -198,8 +199,8 @@ describe('getUserFuturePath', () => {
 
   it('should handle multiple user robots', () => {
     const matches = [
-      makeMatch({ id: 1, round: 1, matchNumber: 1, robot1Id: 10, robot2Id: 20, status: 'pending' }),
-      makeMatch({ id: 2, round: 1, matchNumber: 2, robot1Id: 30, robot2Id: 40, status: 'pending' }),
+      makeMatch({ id: 1, round: 1, matchNumber: 1, participant1Id: 10, participant2Id: 20, status: 'pending' }),
+      makeMatch({ id: 2, round: 1, matchNumber: 2, participant1Id: 30, participant2Id: 40, status: 'pending' }),
       makeMatch({ id: 3, round: 2, matchNumber: 1 }),
     ];
 

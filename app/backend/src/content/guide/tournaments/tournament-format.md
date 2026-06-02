@@ -7,12 +7,20 @@ relatedArticles:
   - tournaments/eligibility
   - tournaments/rewards
   - tournaments/bye-matches
+  - tournaments/team-tournaments
   - leagues/league-tiers
 ---
 
 ## Overview
 
-Tournaments are the ultimate test of your robots. Unlike regular league battles where you fight one opponent per cycle, tournaments pit the best robots against each other in a **single elimination bracket** — lose once and you're out. Win every round and you claim the championship title.
+Tournaments are the ultimate test of your robots. Unlike regular league battles where you fight one opponent per cycle, tournaments pit the best competitors against each other in a **single elimination bracket** — lose once and you're out. Win every round and you claim the championship title.
+
+Tournaments now support three formats: **1v1** (individual robot participants), **2v2** (team participants), and **3v3** (team participants). All three use the same single-elimination bracket system described below, with team tournaments covered in detail in the [Team Tournaments](/guide/tournaments/team-tournaments) article.
+
+The daily tournament cadence runs at staggered times:
+- **1v1 Tournament** — 10:00 UTC
+- **2v2 Tournament** — 15:00 UTC
+- **3v3 Tournament** — 18:00 UTC
 
 Tournaments run alongside the regular league system as a separate competitive track. They offer unique rewards, prestige, and bragging rights that can't be earned through league play alone.
 

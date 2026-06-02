@@ -1095,6 +1095,270 @@ async function seedWimpBotUsers(weapons: { id: number; name: string }[]) {
   console.log('✅ 200 WimpBot test users upserted (2 leagues × 100 robots, 25 per weapon type per league)');
 }
 
+// ===== TEAM TOURNAMENT SEEDING =====
+
+/**
+ * Seeds team tournament data using existing teams from the team league seed.
+ * Adds tournament subscriptions to member robots and creates completed/active tournaments.
+ *
+ * Uses upsert semantics — safe to re-run without duplicates.
+ *
+ * Requirements: R14.1–R14.7
+ */
+async function seedTeamTournaments(_weapons: { id: number; name: string }[]) {
+  console.log('Creating team tournament seed data...');
+
+  // Helper: ensure subscription exists for a robot
+  async function ensureSubscription(robotId: number, eventType: string): Promise<void> {
+    await prisma.subscription.upsert({
+      where: { subscription_robot_event: { robotId, eventType } },
+      update: {},
+      create: { robotId, eventType, status: 'active' },
+    });
+  }
+
+  // Step 1: Find existing teams and subscribe their members
+  const existing2v2Teams = await prisma.teamBattle.findMany({
+    where: { teamSize: 2, eligibility: 'ELIGIBLE' },
+    include: { members: { select: { robotId: true } } },
+    take: 8,
+    orderBy: { createdAt: 'asc' },
+  });
+
+  const existing3v3Teams = await prisma.teamBattle.findMany({
+    where: { teamSize: 3, eligibility: 'ELIGIBLE' },
+    include: { members: { select: { robotId: true } } },
+    take: 8,
+    orderBy: { createdAt: 'asc' },
+  });
+
+  if (existing2v2Teams.length < 4 || existing3v3Teams.length < 4) {
+    console.log(`   ⚠️ Not enough existing teams for tournament seeding (2v2: ${existing2v2Teams.length}, 3v3: ${existing3v3Teams.length}). Need at least 4 each. Skipping.`);
+    return;
+  }
+
+  // Subscribe all member robots to tournament events
+  for (const team of existing2v2Teams) {
+    for (const member of team.members) {
+      await ensureSubscription(member.robotId, 'tournament_2v2');
+    }
+  }
+  for (const team of existing3v3Teams) {
+    for (const member of team.members) {
+      await ensureSubscription(member.robotId, 'tournament_3v3');
+    }
+  }
+
+  console.log(`   ✅ Tournament subscriptions added (${existing2v2Teams.length}× 2v2 teams, ${existing3v3Teams.length}× 3v3 teams)`);
+
+  // Step 2: Create completed tournaments
+  const team2v2Ids = existing2v2Teams.map(t => t.id);
+  const team3v3Ids = existing3v3Teams.map(t => t.id);
+
+  await seedCompletedTournament('team_2v2', '2v2 Tournament', team2v2Ids.slice(0, 4));
+  await seedCompletedTournament('team_3v3', '3v3 Tournament', team3v3Ids.slice(0, 4));
+
+  console.log('   ✅ Completed tournaments created (1× 2v2, 1× 3v3)');
+
+  // Step 3: Create active tournaments
+  await seedActiveTournament('team_2v2', '2v2 Tournament', team2v2Ids.slice(0, 4));
+  await seedActiveTournament('team_3v3', '3v3 Tournament', team3v3Ids.slice(0, 4));
+
+  console.log('   ✅ Active tournaments created (1× 2v2, 1× 3v3)');
+
+  console.log('✅ Team tournament seed data complete');
+}
+
+/**
+ * Creates a completed tournament with full bracket history.
+ * Uses upsert semantics — checks if a seeded completed tournament already exists.
+ */
+async function seedCompletedTournament(
+  participantType: string,
+  namePrefix: string,
+  teamIds: number[],
+): Promise<void> {
+  // Check if a seeded completed tournament already exists
+  const existingCompleted = await prisma.tournament.findFirst({
+    where: {
+      participantType,
+      status: 'completed',
+      name: { startsWith: `[Seed] ${namePrefix}` },
+    },
+  });
+  if (existingCompleted) return;
+
+  // Use first 4 teams for a clean 4-team bracket (2 rounds)
+  const participants = teamIds.slice(0, 4);
+  const maxRounds = 2; // 4 teams = 2 rounds
+  const now = new Date();
+  const completedAt = new Date(now.getTime() - 24 * 60 * 60 * 1000); // 1 day ago
+
+  // Count existing tournaments of this type for sequential naming
+  const existingCount = await prisma.tournament.count({ where: { participantType } });
+  const tournamentName = `[Seed] ${namePrefix} #${existingCount + 1}`;
+
+  const tournament = await prisma.tournament.create({
+    data: {
+      name: tournamentName,
+      tournamentType: 'single_elimination',
+      participantType,
+      status: 'completed',
+      currentRound: maxRounds,
+      maxRounds,
+      totalParticipants: 4,
+      winnerId: participants[0], // First team wins
+      startedAt: new Date(completedAt.getTime() - 2 * 24 * 60 * 60 * 1000),
+      completedAt,
+    },
+  });
+
+  // Create round 1 matches (2 matches: [1 vs 4] and [2 vs 3])
+  // Standard seeding: 1v4, 2v3
+  await prisma.scheduledTournamentMatch.createMany({
+    data: [
+      {
+        tournamentId: tournament.id,
+        round: 1,
+        matchNumber: 1,
+        participantType,
+        participant1Id: participants[0], // Seed 1
+        participant2Id: participants[3], // Seed 4
+        winnerId: participants[0],
+        status: 'completed',
+        isByeMatch: false,
+        completedAt: new Date(completedAt.getTime() - 24 * 60 * 60 * 1000),
+      },
+      {
+        tournamentId: tournament.id,
+        round: 1,
+        matchNumber: 2,
+        participantType,
+        participant1Id: participants[1], // Seed 2
+        participant2Id: participants[2], // Seed 3
+        winnerId: participants[1],
+        status: 'completed',
+        isByeMatch: false,
+        completedAt: new Date(completedAt.getTime() - 24 * 60 * 60 * 1000),
+      },
+      // Round 2 (Finals): winner of match 1 vs winner of match 2
+      {
+        tournamentId: tournament.id,
+        round: 2,
+        matchNumber: 1,
+        participantType,
+        participant1Id: participants[0], // Winner of match 1
+        participant2Id: participants[1], // Winner of match 2
+        winnerId: participants[0], // Champion
+        status: 'completed',
+        isByeMatch: false,
+        completedAt,
+      },
+    ],
+  });
+
+  // Award championship title to the winning team's owner
+  const winningTeam = await prisma.teamBattle.findUnique({
+    where: { id: participants[0] },
+  });
+  if (winningTeam) {
+    const field = participantType === 'team_2v2' ? 'championshipTitles2v2' : 'championshipTitles3v3';
+    await prisma.user.update({
+      where: { id: winningTeam.stableId },
+      data: {
+        championshipTitles: { increment: 1 },
+        [field]: { increment: 1 },
+      },
+    });
+  }
+}
+
+/**
+ * Creates an active tournament with partial progress (round 1 completed, round 2 pending).
+ * Uses upsert semantics — checks if a seeded active tournament already exists.
+ */
+async function seedActiveTournament(
+  participantType: string,
+  namePrefix: string,
+  teamIds: number[],
+): Promise<void> {
+  // Check if a seeded active tournament already exists
+  const existingActive = await prisma.tournament.findFirst({
+    where: {
+      participantType,
+      status: 'active',
+      name: { startsWith: `[Seed] ${namePrefix}` },
+    },
+  });
+  if (existingActive) return;
+
+  // Use first 4 teams for a clean 4-team bracket (2 rounds)
+  const participants = teamIds.slice(0, 4);
+  const maxRounds = 2;
+  const now = new Date();
+
+  // Count existing tournaments of this type for sequential naming
+  const existingCount = await prisma.tournament.count({ where: { participantType } });
+  const tournamentName = `[Seed] ${namePrefix} #${existingCount + 1}`;
+
+  const tournament = await prisma.tournament.create({
+    data: {
+      name: tournamentName,
+      tournamentType: 'single_elimination',
+      participantType,
+      status: 'active',
+      currentRound: 2, // Advanced to round 2
+      maxRounds,
+      totalParticipants: 4,
+      winnerId: null,
+      startedAt: new Date(now.getTime() - 24 * 60 * 60 * 1000),
+      completedAt: null,
+    },
+  });
+
+  // Round 1: completed (2 matches)
+  await prisma.scheduledTournamentMatch.createMany({
+    data: [
+      {
+        tournamentId: tournament.id,
+        round: 1,
+        matchNumber: 1,
+        participantType,
+        participant1Id: participants[0],
+        participant2Id: participants[3],
+        winnerId: participants[0],
+        status: 'completed',
+        isByeMatch: false,
+        completedAt: new Date(now.getTime() - 24 * 60 * 60 * 1000),
+      },
+      {
+        tournamentId: tournament.id,
+        round: 1,
+        matchNumber: 2,
+        participantType,
+        participant1Id: participants[1],
+        participant2Id: participants[2],
+        winnerId: participants[2], // Upset: seed 3 beats seed 2
+        status: 'completed',
+        isByeMatch: false,
+        completedAt: new Date(now.getTime() - 24 * 60 * 60 * 1000),
+      },
+      // Round 2 (Finals): pending — winners populated but not yet played
+      {
+        tournamentId: tournament.id,
+        round: 2,
+        matchNumber: 1,
+        participantType,
+        participant1Id: participants[0],
+        participant2Id: participants[2],
+        winnerId: null,
+        status: 'pending',
+        isByeMatch: false,
+      },
+    ],
+  });
+}
+
 // ===== MAIN =====
 
 async function main() {
@@ -1118,6 +1382,7 @@ async function main() {
   if (seedMode === 'acceptance' || seedMode === 'development') {
     await seedAdminAccount();
     await seedWimpBotUsers(weapons);
+    await seedTeamTournaments(weapons);
   }
 
   // --- Summary ---
@@ -1138,6 +1403,7 @@ async function main() {
     console.log('   🤖 Bye-Robot for matchmaking');
     console.log('   👤 Admin account (₡3,000,000)');
     console.log('   👤 200 WimpBot test users (50 per weapon type)');
+    console.log('   🏆 Team tournament data (subscriptions added to existing league teams, 2 completed + 2 active tournaments)');
   }
 
   console.log('');

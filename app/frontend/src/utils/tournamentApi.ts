@@ -3,6 +3,8 @@ import type { TournamentMatchWithRobots } from './bracketUtils';
 
 // Types
 
+export type ParticipantType = 'robot' | 'team_2v2' | 'team_3v3';
+
 export interface SeedEntry {
   seed: number;
   robotId: number;
@@ -11,10 +13,21 @@ export interface SeedEntry {
   eliminated: boolean;
 }
 
+export interface ResolvedParticipant {
+  id: number;
+  displayName: string;
+  leagueTier: string;
+  elo: number;
+  ownerId: number;
+  ownerStableName?: string;
+  members?: { robotId: number; robotName: string; elo: number }[];
+}
+
 export interface Tournament {
   id: number;
   name: string;
   tournamentType: string;
+  participantType: ParticipantType;
   status: 'pending' | 'active' | 'completed';
   currentRound: number;
   maxRounds: number;
@@ -26,6 +39,7 @@ export interface Tournament {
   winner?: {
     id: number;
     name: string;
+    user?: { id: number; username: string; stableName: string | null };
   };
 }
 
@@ -34,15 +48,18 @@ export interface TournamentDetails extends Tournament {
   currentRoundMatches: TournamentMatchWithRobots[];
   participantCount: number;
   seedings: SeedEntry[];
+  resolvedParticipants?: Record<number, ResolvedParticipant>;
 }
 
 // API Functions
 
 /**
  * List all tournaments (public endpoint for all authenticated users)
+ * Supports optional participantType filter.
  */
-export const listTournaments = async (): Promise<{ tournaments: Tournament[] }> => {
-  return api.get<{ tournaments: Tournament[] }>('/api/tournaments');
+export const listTournaments = async (participantType?: ParticipantType): Promise<{ tournaments: Tournament[] }> => {
+  const params = participantType ? `?participantType=${participantType}` : '';
+  return api.get<{ tournaments: Tournament[] }>(`/api/tournaments${params}`);
 };
 
 /**
@@ -51,7 +68,7 @@ export const listTournaments = async (): Promise<{ tournaments: Tournament[] }> 
 export const getTournamentDetails = async (
   tournamentId: number
 ): Promise<{ tournament: TournamentDetails; seedings: SeedEntry[] }> => {
-  const data = await api.get<{ tournament: Tournament & { matches?: TournamentMatchWithRobots[] }; seedings: SeedEntry[] }>(
+  const data = await api.get<{ tournament: Tournament & { matches?: TournamentMatchWithRobots[]; resolvedParticipants?: Record<number, ResolvedParticipant> }; seedings: SeedEntry[] }>(
     `/api/tournaments/${tournamentId}`
   );
 
@@ -63,6 +80,7 @@ export const getTournamentDetails = async (
       currentRoundMatches: tournament.matches?.filter((m: TournamentMatchWithRobots) => m.round === tournament.currentRound) || [],
       participantCount: tournament.totalParticipants,
       seedings,
+      resolvedParticipants: tournament.resolvedParticipants,
     } as TournamentDetails,
     seedings,
   };

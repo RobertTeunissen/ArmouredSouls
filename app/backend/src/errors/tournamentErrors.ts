@@ -21,6 +21,7 @@ export const TournamentErrorCode = {
   MATCH_MISSING_ROBOTS: 'MATCH_MISSING_ROBOTS',
   INVALID_MATCH_STATE: 'INVALID_MATCH_STATE',
   BATTLE_RECORD_FAILED: 'BATTLE_RECORD_FAILED',
+  INVALID_PARTICIPANT_TYPE: 'INVALID_PARTICIPANT_TYPE',
 } as const;
 
 export type TournamentErrorCodeType = typeof TournamentErrorCode[keyof typeof TournamentErrorCode];

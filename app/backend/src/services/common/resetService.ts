@@ -98,9 +98,10 @@ export async function validateResetEligibility(userId: number): Promise<ResetEli
   // Check for active tournament participation
   const activeTournamentMatches = await prisma.scheduledTournamentMatch.count({
     where: {
+      participantType: 'robot',
       OR: [
-        { robot1Id: { in: robotIds } },
-        { robot2Id: { in: robotIds } },
+        { participant1Id: { in: robotIds } },
+        { participant2Id: { in: robotIds } },
       ],
       status: { in: ['pending', 'scheduled'] },
     },

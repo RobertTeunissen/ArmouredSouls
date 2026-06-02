@@ -2,6 +2,7 @@ import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { TournamentMatchWithRobots, getRoundLabel } from '../../utils/bracketUtils';
 import { useBracketLayout, CARD_HEIGHT, COLUMN_GAP, COLUMN_WIDTH, LABEL_HEIGHT } from '../../hooks/useBracketLayout';
 import { useZoomPan } from '../../hooks/useZoomPan';
+import type { ParticipantType, ResolvedParticipant } from '../../utils/tournamentApi';
 import MatchCard from './MatchCard';
 
 interface DesktopBracketProps {
@@ -10,18 +11,20 @@ interface DesktopBracketProps {
   currentRound: number;
   status: string;
   seedMap: Map<number, number>;
-  userRobotIds: Set<number>;
+  userParticipantIds: Set<number>;
   futurePathMatchIds: Set<number>;
-  focusRobotId: number | null;
-  showOnlyMyBots: boolean;
+  focusParticipantId: number | null;
+  showOnlyMyParticipants: boolean;
   startRound: number;
   endRound: number;
+  resolvedParticipants?: Record<number, ResolvedParticipant>;
+  participantType: ParticipantType;
 }
 
 const DesktopBracket: React.FC<DesktopBracketProps> = ({
   matches, maxRounds, currentRound, status, seedMap,
-  userRobotIds, futurePathMatchIds, focusRobotId, showOnlyMyBots,
-  startRound, endRound,
+  userParticipantIds, futurePathMatchIds, focusParticipantId, showOnlyMyParticipants,
+  startRound, endRound, resolvedParticipants,
 }) => {
   const {
     bracketTree, visibleRounds, matchPositions,
@@ -33,11 +36,11 @@ const DesktopBracket: React.FC<DesktopBracketProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const [highlightedMatchId, setHighlightedMatchId] = useState<number | null>(null);
 
-  // Scroll to focused robot
+  // Scroll to focused participant
   useEffect(() => {
-    if (focusRobotId === null || !containerRef.current) return;
+    if (focusParticipantId === null || !containerRef.current) return;
     const card = containerRef.current.querySelector(
-      `[data-robot1-id="${focusRobotId}"], [data-robot2-id="${focusRobotId}"]`
+      `[data-participant1-id="${focusParticipantId}"], [data-participant2-id="${focusParticipantId}"]`
     ) as HTMLElement | null;
     if (!card) return;
     const testId = card.getAttribute('data-testid') ?? '';
@@ -46,15 +49,15 @@ const DesktopBracket: React.FC<DesktopBracketProps> = ({
     setHighlightedMatchId(matchId);
     const timer = setTimeout(() => setHighlightedMatchId(null), 2000);
     return () => clearTimeout(timer);
-  }, [focusRobotId]);
+  }, [focusParticipantId]);
 
   const isUserRelated = useCallback((match: TournamentMatchWithRobots): boolean => {
     return (
-      (match.robot1Id !== null && userRobotIds.has(match.robot1Id)) ||
-      (match.robot2Id !== null && userRobotIds.has(match.robot2Id)) ||
+      (match.participant1Id !== null && userParticipantIds.has(match.participant1Id)) ||
+      (match.participant2Id !== null && userParticipantIds.has(match.participant2Id)) ||
       futurePathMatchIds.has(match.id)
     );
-  }, [userRobotIds, futurePathMatchIds]);
+  }, [userParticipantIds, futurePathMatchIds]);
 
   return (
     <div
@@ -115,15 +118,16 @@ const DesktopBracket: React.FC<DesktopBracketProps> = ({
               {roundMatches.map((match) => {
                 const yCenter = matchPositions.get(match.id) ?? 0;
                 const yTop = yCenter - CARD_HEIGHT / 2 + LABEL_HEIGHT;
-                const isDimmed = showOnlyMyBots && !isUserRelated(match);
+                const isDimmed = showOnlyMyParticipants && !isUserRelated(match);
 
                 return (
                   <div key={match.id} className="absolute"
                     style={{ left: `${x}px`, top: `${yTop}px` }}>
                     <MatchCard
-                      match={match} seedMap={seedMap} userRobotIds={userRobotIds}
+                      match={match} seedMap={seedMap} userParticipantIds={userParticipantIds}
                       isUserFuturePath={futurePathMatchIds.has(match.id)}
                       dimmed={isDimmed} highlighted={highlightedMatchId === match.id}
+                      resolvedParticipants={resolvedParticipants}
                     />
                   </div>
                 );

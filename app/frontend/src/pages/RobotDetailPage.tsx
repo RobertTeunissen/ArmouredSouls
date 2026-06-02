@@ -35,6 +35,7 @@ import LeagueTimeline from '../components/LeagueTimeline';
 import type { LeagueHistoryEntry } from '../components/LeagueTimeline';
 import TeamBattleLeagueHistory from '../components/TeamBattleLeagueHistory';
 import { getMatchHistory, BattleHistory } from '../utils/matchmakingApi';
+import { getProfile } from '../utils/userApi';
 import type { RobotWithAttributes } from '../types/robot';
 import { createLogger } from '../utils/logger';
 
@@ -717,6 +718,7 @@ function RobotDetailPage() {
             <div className="space-y-6">
               <LeagueHistoryTab robotId={robot.id} currentTier={robot.currentLeague} currentLp={robot.leaguePoints} robotName={robot.name} />
               <TeamBattleLeagueHistory robotId={robot.id} />
+              <ChampionshipWinsSection userId={robot.userId} />
             </div>
           )}
 
@@ -819,6 +821,94 @@ function LeagueHistoryTab({ robotId, currentTier, currentLp, robotName }: { robo
         currentTier={currentTier}
         emptyMessage={`${robotName} is currently in ${currentTier} league. No tier changes recorded yet.`}
       />
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Championship Wins Section                                          */
+/* ------------------------------------------------------------------ */
+
+function ChampionshipWinsSection({ userId }: { userId: number }) {
+  const { user } = useAuth();
+  const [titles, setTitles] = useState<{ titles1v1: number; titles2v2: number; titles3v3: number } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Only fetch if viewing own robot (profile endpoint returns own data)
+    if (!user || user.id !== userId) {
+      setLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setLoading(true);
+
+    getProfile()
+      .then((profile) => {
+        if (!cancelled) {
+          setTitles({
+            titles1v1: profile.championshipTitles1v1 ?? 0,
+            titles2v2: profile.championshipTitles2v2 ?? 0,
+            titles3v3: profile.championshipTitles3v3 ?? 0,
+          });
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setTitles(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => { cancelled = true; };
+  }, [user, userId]);
+
+  if (loading) {
+    return null;
+  }
+
+  if (!titles) {
+    return null;
+  }
+
+  const totalTitles = titles.titles1v1 + titles.titles2v2 + titles.titles3v3;
+  if (totalTitles === 0) {
+    return null;
+  }
+
+  return (
+    <div className="bg-surface rounded-lg p-6" data-testid="championship-wins-section">
+      <h3 className="text-lg font-semibold text-white mb-4">🏆 Championship Titles</h3>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {titles.titles1v1 > 0 && (
+          <div className="bg-surface-elevated rounded-lg p-4 flex items-center gap-3 min-h-[44px]">
+            <span className="text-2xl" aria-hidden="true">🥇</span>
+            <div>
+              <div className="text-white font-semibold">{titles.titles1v1}× 1v1 🏆</div>
+              <div className="text-xs text-secondary">Tournament Champion</div>
+            </div>
+          </div>
+        )}
+        {titles.titles2v2 > 0 && (
+          <div className="bg-surface-elevated rounded-lg p-4 flex items-center gap-3 min-h-[44px]">
+            <span className="text-2xl" aria-hidden="true">🥇</span>
+            <div>
+              <div className="text-white font-semibold">{titles.titles2v2}× 2v2 🏆</div>
+              <div className="text-xs text-secondary">Team Tournament Champion</div>
+            </div>
+          </div>
+        )}
+        {titles.titles3v3 > 0 && (
+          <div className="bg-surface-elevated rounded-lg p-4 flex items-center gap-3 min-h-[44px]">
+            <span className="text-2xl" aria-hidden="true">🥇</span>
+            <div>
+              <div className="text-white font-semibold">{titles.titles3v3}× 3v3 🏆</div>
+              <div className="text-xs text-secondary">Team Tournament Champion</div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -86,6 +86,9 @@ router.get(
                 maxHP: true,
                 currentShield: true,
                 maxShield: true,
+                subscriptions: {
+                  select: { eventType: true, status: true },
+                },
               },
             },
           },

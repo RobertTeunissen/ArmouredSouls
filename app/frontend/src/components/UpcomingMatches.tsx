@@ -148,8 +148,8 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
       return <KothMatchCard key={match.id} match={match} myUserId={user?.id} />;
     }
 
-    // Team Battle matches (2v2 / 3v3 League)
-    if (match.matchType === 'league_2v2' || match.matchType === 'league_3v3') {
+    // Team Battle matches (2v2 / 3v3 League) and Team Tournament matches
+    if (match.matchType === 'league_2v2' || match.matchType === 'league_3v3' || match.matchType === 'tournament_2v2' || match.matchType === 'tournament_3v3') {
       return <TeamBattleMatchCard key={match.id} match={match} myUserId={user?.id} />;
     }
 
