@@ -209,7 +209,7 @@ describe('CycleControlsPage', () => {
     await user.click(runButton);
 
     expect(screen.getByText('Run 2v2 League Cycle')).toBeInTheDocument();
-    expect(screen.getByText('Execute 2v2 battles → Rebalance → Matchmaking. Continue?')).toBeInTheDocument();
+    expect(screen.getByText('Repair → Battles → Rebalance → Matchmaking (same as cron). Continue?')).toBeInTheDocument();
   });
 
   it('should show confirmation dialog for 3v3 League Run button', async () => {
@@ -221,7 +221,7 @@ describe('CycleControlsPage', () => {
     await user.click(runButton);
 
     expect(screen.getByText('Run 3v3 League Cycle')).toBeInTheDocument();
-    expect(screen.getByText('Execute 3v3 battles → Rebalance → Matchmaking. Continue?')).toBeInTheDocument();
+    expect(screen.getByText('Repair → Battles → Rebalance → Matchmaking (same as cron). Continue?')).toBeInTheDocument();
   });
 
   it('should still show Reserved badge for grandMelee slot', () => {
