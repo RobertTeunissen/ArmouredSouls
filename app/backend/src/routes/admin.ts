@@ -6,6 +6,7 @@ import { executeScheduledBattles } from '../services/league/leagueBattleOrchestr
 import { runMatchmaking } from '../services/analytics/matchmakingService';
 import { rebalanceLeagues } from '../services/league/leagueRebalancingService';
 import logger from '../config/logger';
+import { repairAllRobots } from '../services/economy/repairService';
 import { rebalanceTagTeamLeagues } from '../services/tag-team/tagTeamLeagueRebalancingService';
 import { runTagTeamMatchmaking } from '../services/tag-team/tagTeamMatchmakingService';
 import { executeScheduledTagTeamBattles } from '../services/tag-team/tagTeamBattleOrchestrator';
@@ -256,6 +257,7 @@ router.post('/battles/run', authenticateToken, requireAdmin, validateRequest({ b
     const targetTime = scheduledFor ? new Date(scheduledFor) : undefined;
 
     logger.info('[Admin] Executing battles...');
+    await repairAllRobots(true);
     const summary = await executeScheduledBattles(targetTime);
 
     recordAuditAction(authReq.user!.userId, 'battles_run', 'success', { summary });
@@ -555,6 +557,7 @@ router.post('/tag-teams/battles', authenticateToken, requireAdmin, validateReque
     const targetTime = scheduledFor ? new Date(scheduledFor) : undefined;
 
     logger.info('[Admin] Executing tag team battles...');
+    await repairAllRobots(true);
     const summary = await executeScheduledTagTeamBattles(targetTime);
 
     recordAuditAction(authReq.user!.userId, 'tag_team_battles_run', 'success', { summary });
@@ -702,6 +705,26 @@ router.get('/scheduler/status', authenticateToken, requireAdmin, validateRequest
 });
 
 /**
+ * POST /api/admin/scheduler/trigger/:jobName
+ * Manually trigger a scheduler job by name. Runs the exact same code path as the cron:
+ * repair → execute → notify → track state. Uses the scheduler's mutex lock.
+ */
+router.post('/scheduler/trigger/:jobName', authenticateToken, requireAdmin, validateRequest({}), async (req: Request, res: Response) => {
+  const authReq = req as AuthRequest;
+  const { jobName } = req.params;
+  try {
+    const { triggerJob } = await import('../services/cycle/cycleScheduler');
+    await triggerJob(jobName as Parameters<typeof triggerJob>[0]);
+    recordAuditAction(authReq.user!.userId, 'scheduler_trigger', 'success', { jobName });
+    res.json({ success: true, jobName, timestamp: new Date().toISOString() });
+  } catch (error) {
+    recordAuditAction(authReq.user!.userId, 'scheduler_trigger', 'failure', { jobName, error: error instanceof Error ? error.message : String(error) });
+    logger.error(`[Admin] Scheduler trigger error for "${jobName}":`, error);
+    res.status(500).json({ error: `Failed to trigger job "${jobName}"`, details: error instanceof Error ? error.message : String(error) });
+  }
+});
+
+/**
  * POST /api/admin/koth/trigger
  * Manually trigger a KotH cycle execution (admin-only)
  */
@@ -715,6 +738,7 @@ router.post('/koth/trigger', authenticateToken, requireAdmin, validateRequest({}
     logger.info('[Admin] Manually triggering KotH cycle...');
 
     await runJob('koth', async () => {
+      await repairAllRobots(true);
       const battleSummary = await executeScheduledKothBattles(new Date());
       const scheduledFor = new Date(Date.now() + 48 * 60 * 60 * 1000); // 48h ahead
       const matchesCreated = await runKothMatchmaking(scheduledFor);
@@ -1273,6 +1297,7 @@ router.post('/team-2v2-league/trigger', authenticateToken, requireAdmin, validat
     const { rebalanceTeamBattleLeagues } = await import('../services/team-battle/teamBattleAdapter');
     const { runTeamBattleMatchmaking } = await import('../services/team-battle/teamBattleMatchmakingService');
 
+    await repairAllRobots(true);
     const execResult = await executeScheduledTeamBattles(2);
     const rebalanceSummary = await rebalanceTeamBattleLeagues();
     const matchesCreated = await runTeamBattleMatchmaking(2);
@@ -1308,6 +1333,7 @@ router.post('/team-3v3-league/trigger', authenticateToken, requireAdmin, validat
     const { rebalanceTeamBattleLeagues } = await import('../services/team-battle/teamBattleAdapter');
     const { runTeamBattleMatchmaking } = await import('../services/team-battle/teamBattleMatchmakingService');
 
+    await repairAllRobots(true);
     const execResult = await executeScheduledTeamBattles(3);
     const rebalanceSummary = await rebalanceTeamBattleLeagues();
     const matchesCreated = await runTeamBattleMatchmaking(3);
@@ -1333,22 +1359,106 @@ router.post('/team-3v3-league/trigger', authenticateToken, requireAdmin, validat
 
 /**
  * POST /api/admin/team-2v2-tournament/trigger
- * Reserved slot trigger for Team 2v2 Tournament — no handler implemented yet.
+ * Execute pending matches in the active 2v2 team tournament's current round,
+ * advance winners, and return execution summary.
  */
 router.post('/team-2v2-tournament/trigger', authenticateToken, requireAdmin, validateRequest({}), async (req: Request, res: Response) => {
   const authReq = req as AuthRequest;
-  recordAuditAction(authReq.user!.userId, 'reserved_slot_trigger', 'success', { event: 'team_2v2_tournament', outcome: 'no-op' });
-  res.json({ message: 'reserved slot, no handler implemented', event: 'team_2v2_tournament' });
+  try {
+    const { executeTeamTournamentRound } = await import('../services/tournament/teamTournamentBattleOrchestrator');
+    const { advanceWinnersToNextRound } = await import('../services/tournament/tournamentService');
+
+    const activeTournament = await prisma.tournament.findFirst({
+      where: { participantType: 'team_2v2', status: 'active' },
+    });
+
+    if (!activeTournament) {
+      return res.status(404).json({ error: 'No active 2v2 tournament available' });
+    }
+
+    await repairAllRobots(true);
+    const roundResult = await executeTeamTournamentRound(activeTournament.id, 2);
+    await advanceWinnersToNextRound(activeTournament.id);
+
+    const updatedTournament = await prisma.tournament.findUnique({ where: { id: activeTournament.id } });
+    const tournamentComplete = updatedTournament?.status === 'completed';
+    const championTeamId = tournamentComplete ? (updatedTournament?.winnerId ?? null) : null;
+
+    recordAuditAction(authReq.user!.userId, 'team_tournament_trigger', 'success', {
+      tournamentType: '2v2',
+      tournamentId: activeTournament.id,
+      tournamentName: activeTournament.name,
+      matchesExecuted: roundResult.matchesExecuted,
+      matchesFailed: roundResult.matchesFailed,
+      tournamentComplete,
+      championTeamId,
+    });
+
+    res.json({
+      matchesExecuted: roundResult.matchesExecuted,
+      matchesFailed: roundResult.matchesFailed,
+      tournamentComplete,
+      championTeamId,
+    });
+  } catch (error) {
+    recordAuditAction(authReq.user!.userId, 'team_tournament_trigger', 'failure', { tournamentType: '2v2', error: error instanceof Error ? error.message : String(error) });
+    logger.error('[Admin] Team 2v2 Tournament trigger error:', error);
+    res.status(500).json({
+      error: 'Failed to trigger Team 2v2 Tournament round',
+    });
+  }
 });
 
 /**
  * POST /api/admin/team-3v3-tournament/trigger
- * Reserved slot trigger for Team 3v3 Tournament — no handler implemented yet.
+ * Execute pending matches in the active 3v3 team tournament's current round,
+ * advance winners, and return execution summary.
  */
 router.post('/team-3v3-tournament/trigger', authenticateToken, requireAdmin, validateRequest({}), async (req: Request, res: Response) => {
   const authReq = req as AuthRequest;
-  recordAuditAction(authReq.user!.userId, 'reserved_slot_trigger', 'success', { event: 'team_3v3_tournament', outcome: 'no-op' });
-  res.json({ message: 'reserved slot, no handler implemented', event: 'team_3v3_tournament' });
+  try {
+    const { executeTeamTournamentRound } = await import('../services/tournament/teamTournamentBattleOrchestrator');
+    const { advanceWinnersToNextRound } = await import('../services/tournament/tournamentService');
+
+    const activeTournament = await prisma.tournament.findFirst({
+      where: { participantType: 'team_3v3', status: 'active' },
+    });
+
+    if (!activeTournament) {
+      return res.status(404).json({ error: 'No active 3v3 tournament available' });
+    }
+
+    await repairAllRobots(true);
+    const roundResult = await executeTeamTournamentRound(activeTournament.id, 3);
+    await advanceWinnersToNextRound(activeTournament.id);
+
+    const updatedTournament = await prisma.tournament.findUnique({ where: { id: activeTournament.id } });
+    const tournamentComplete = updatedTournament?.status === 'completed';
+    const championTeamId = tournamentComplete ? (updatedTournament?.winnerId ?? null) : null;
+
+    recordAuditAction(authReq.user!.userId, 'team_tournament_trigger', 'success', {
+      tournamentType: '3v3',
+      tournamentId: activeTournament.id,
+      tournamentName: activeTournament.name,
+      matchesExecuted: roundResult.matchesExecuted,
+      matchesFailed: roundResult.matchesFailed,
+      tournamentComplete,
+      championTeamId,
+    });
+
+    res.json({
+      matchesExecuted: roundResult.matchesExecuted,
+      matchesFailed: roundResult.matchesFailed,
+      tournamentComplete,
+      championTeamId,
+    });
+  } catch (error) {
+    recordAuditAction(authReq.user!.userId, 'team_tournament_trigger', 'failure', { tournamentType: '3v3', error: error instanceof Error ? error.message : String(error) });
+    logger.error('[Admin] Team 3v3 Tournament trigger error:', error);
+    res.status(500).json({
+      error: 'Failed to trigger Team 3v3 Tournament round',
+    });
+  }
 });
 
 /**

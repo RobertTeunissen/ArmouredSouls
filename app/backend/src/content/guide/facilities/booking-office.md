@@ -18,12 +18,12 @@ The **Booking Office** controls which battle events each of your robots particip
 Every robot gets **3 free subscriptions** at Booking Office Level 0 (no facility purchase required). Each Booking Office level adds one more subscription slot per robot, up to 13 at Level 10.
 
 ```callout-tip
-You don't need to buy the Booking Office to start playing. Every robot gets 3 subscriptions for free — enough for 1v1 League + 1v1 Tournament + KotH. The facility just lets you add more events per robot as new modes become available. With 6 events now available, upgrading the Booking Office lets your robots participate in more modes simultaneously.
+You don't need to buy the Booking Office to start playing. Every robot gets 3 subscriptions for free — enough for 1v1 League + 1v1 Tournament + KotH. The facility just lets you add more events per robot as new modes become available. With 8 events now available, upgrading the Booking Office lets your robots participate in more modes simultaneously.
 ```
 
 ## Subscribable Events
 
-These are the battle events you can subscribe your robots to:
+These are the 8 battle events you can subscribe your robots to:
 
 | Event | Description | Eligibility |
 |-------|-------------|-------------|
@@ -33,8 +33,10 @@ These are the battle events you can subscribe your robots to:
 | **King of the Hill** | 5-6 robot free-for-all zone control battles | Always eligible |
 | **2v2 League** | Daily 2v2 team battles — both robots fight simultaneously | Requires ≥ 2 robots in your Stable |
 | **3v3 League** | Daily 3v3 team battles — all three robots fight simultaneously | Requires ≥ 3 robots in your Stable |
+| **2v2 Tournament** | Single-elimination team tournament brackets (2-robot teams) | Requires ≥ 2 robots in your Stable |
+| **3v3 Tournament** | Single-elimination team tournament brackets (3-robot teams) | Requires ≥ 3 robots in your Stable |
 
-With 6 events available and a base cap of 3 subscriptions, choosing which events each robot participates in is a meaningful strategic decision. Upgrading the Booking Office unlocks more slots so your robots can participate in more modes.
+With 8 events available and a base cap of 3 subscriptions, choosing which events each robot participates in is a meaningful strategic decision. The Booking Office level becomes especially important for players who want to participate in multiple modes — upgrading unlocks more slots so your robots can compete across league, tournament, and special event formats simultaneously.
 
 ## Subscription Cap Per Level
 

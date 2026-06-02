@@ -161,7 +161,7 @@ const EVENT_TRIGGER_MAP: Record<AchievementEventType, AchievementTriggerType[]> 
   stance_changed: ['effective_stat'],
   onboarding_complete: ['onboarding'],
   practice_battle: ['practice_battles'],
-  tournament_complete: ['tournament_wins'],
+  tournament_complete: ['tournament_wins', 'tournament_2v2_wins', 'tournament_3v3_wins'],
   daily_finances: ['bankrupt'],
 };
 
@@ -550,6 +550,12 @@ class AchievementService implements IAchievementService {
 
       case 'tournament_wins':
         return (Number((cachedUser as Record<string, unknown>)?.championshipTitles ?? 0)) >= (triggerThreshold ?? 0);
+
+      case 'tournament_2v2_wins':
+        return (Number((cachedUser as Record<string, unknown>)?.championshipTitles2v2 ?? 0)) >= (triggerThreshold ?? 0);
+
+      case 'tournament_3v3_wins':
+        return (Number((cachedUser as Record<string, unknown>)?.championshipTitles3v3 ?? 0)) >= (triggerThreshold ?? 0);
 
       // ── Tuning Triggers ───────────────────────────────────────
       case 'tuning_allocated':
@@ -940,12 +946,13 @@ class AchievementService implements IAchievementService {
     const hasKothWin = robots.some((r) => r.kothWins > 0);
     const hasTagTeamWin = robots.some((r) => r.totalTagTeamWins > 0);
 
-    // Check tournament wins via user's championship titles
+    // Check tournament wins via sum of all per-type championship counters (R10.3)
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { championshipTitles: true },
+      select: { championshipTitles1v1: true, championshipTitles2v2: true, championshipTitles3v3: true },
     });
-    const hasTournamentWin = (user?.championshipTitles ?? 0) > 0;
+    const totalChampionships = (user?.championshipTitles1v1 ?? 0) + (user?.championshipTitles2v2 ?? 0) + (user?.championshipTitles3v3 ?? 0);
+    const hasTournamentWin = totalChampionships >= 1;
 
     return hasLeagueWin && hasKothWin && hasTagTeamWin && hasTournamentWin;
   }
@@ -1192,6 +1199,8 @@ class AchievementService implements IAchievementService {
         hasCompletedOnboarding: true,
         totalPracticeBattles: true,
         championshipTitles: true,
+        championshipTitles2v2: true,
+        championshipTitles3v3: true,
         pinnedAchievements: true,
       },
     });
@@ -1498,7 +1507,7 @@ class AchievementService implements IAchievementService {
    */
   private computeProgress(
     achievement: AchievementDefinition,
-    user: { prestige: number; currency: number; totalPracticeBattles: number; championshipTitles: number },
+    user: { prestige: number; currency: number; totalPracticeBattles: number; championshipTitles: number; championshipTitles2v2: number; championshipTitles3v3: number },
     robots: Array<{
       id: number; name: string; wins: number; losses: number; kills: number;
       elo: number; fame: number; totalBattles: number; kothWins: number;
@@ -1602,6 +1611,10 @@ class AchievementService implements IAchievementService {
         return { current: user.totalPracticeBattles, target, label };
       case 'tournament_wins':
         return { current: user.championshipTitles, target, label };
+      case 'tournament_2v2_wins':
+        return { current: user.championshipTitles2v2, target, label };
+      case 'tournament_3v3_wins':
+        return { current: user.championshipTitles3v3, target, label };
 
       // ── Count-based stats ─────────────────────────────────────
       case 'weapon_count':

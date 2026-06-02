@@ -36,6 +36,8 @@ import {
   kothLockingPredicate,
   league2v2LockingPredicate,
   league3v3LockingPredicate,
+  tournament2v2LockingPredicate,
+  tournament3v3LockingPredicate,
 } from './services/subscription/lockingPredicates';
 import { contentModerationService } from './services/moderation';
 import { getDiskUsage, getMemoryUsage, checkCriticalModules } from './utils/systemHealth';
@@ -233,6 +235,8 @@ import { runStartupSelfTest } from './utils/startupSelfTest';
     registerSubscribableEvent({ type: 'koth', label: 'King of the Hill', lockingPredicate: kothLockingPredicate });
     registerSubscribableEvent({ type: 'league_2v2', label: '2v2 League', lockingPredicate: league2v2LockingPredicate });
     registerSubscribableEvent({ type: 'league_3v3', label: '3v3 League', lockingPredicate: league3v3LockingPredicate });
+    registerSubscribableEvent({ type: 'tournament_2v2', label: '2v2 Tournament', lockingPredicate: tournament2v2LockingPredicate });
+    registerSubscribableEvent({ type: 'tournament_3v3', label: '3v3 Tournament', lockingPredicate: tournament3v3LockingPredicate });
 
     // Initialize the cycle scheduler after the server is listening
     initScheduler({

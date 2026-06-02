@@ -24,6 +24,11 @@ model User {
   // ===== STABLE STATISTICS (Aggregated from robots) =====
   championshipTitles Int @default(0) @map("championship_titles") // Tournament victories
 
+  // ===== PER-TYPE CHAMPIONSHIP COUNTERS =====
+  championshipTitles1v1 Int @default(0) @map("championship_titles_1v1") // 1v1 tournament victories
+  championshipTitles2v2 Int @default(0) @map("championship_titles_2v2") // 2v2 tournament victories
+  championshipTitles3v3 Int @default(0) @map("championship_titles_3v3") // 3v3 tournament victories
+
   // ===== PROFILE FIELDS =====
   stableName          String? @unique @map("stable_name") @db.VarChar(30)
   profileVisibility   String  @default("public") @map("profile_visibility") @db.VarChar(10)
@@ -221,10 +226,6 @@ model Robot {
   battlesAsRobot2           Battle[]                        @relation("Robot2")
   scheduledMatchesAsRobot1  ScheduledLeagueMatch[]          @relation("ScheduledRobot1")
   scheduledMatchesAsRobot2  ScheduledLeagueMatch[]          @relation("ScheduledRobot2")
-  tournamentsWon            Tournament[]                    @relation("TournamentWinner")
-  tournamentMatchesAsRobot1 ScheduledTournamentMatch[]      @relation("TournamentRobot1")
-  tournamentMatchesAsRobot2 ScheduledTournamentMatch[]      @relation("TournamentRobot2")
-  tournamentMatchesWon      ScheduledTournamentMatch[]      @relation("TournamentMatchWinner")
   tagTeamsAsActive          TagTeam[]                       @relation("TagTeamActiveRobot")
   tagTeamsAsReserve         TagTeam[]                       @relation("TagTeamReserveRobot")
   battleParticipations      BattleParticipant[]
@@ -556,18 +557,19 @@ model CycleSnapshot {
 
 // Tournament model for tracking competitive elimination events
 model Tournament {
-  id             Int    @id @default(autoincrement())
-  name           String @db.VarChar(100) // "Tournament #1", "Grand Championship"
-  tournamentType String @map("tournament_type") @db.VarChar(50) // "single_elimination", "double_elimination", "swiss"
-  status         String @default("pending") @db.VarChar(20) // "pending", "active", "completed"
+  id              Int    @id @default(autoincrement())
+  name            String @db.VarChar(100) // "Tournament #1", "Grand Championship"
+  tournamentType  String @map("tournament_type") @db.VarChar(50) // "single_elimination", "double_elimination", "swiss"
+  participantType String @default("robot") @map("participant_type") @db.VarChar(20) // "robot", "team_2v2", "team_3v3"
+  status          String @default("pending") @db.VarChar(20) // "pending", "active", "completed"
 
   // Progression tracking
   currentRound      Int @default(1) @map("current_round") // Current round number (1-based)
   maxRounds         Int @map("max_rounds") // Total rounds (calculated from participants)
-  totalParticipants Int @map("total_participants") // Number of robots at start
+  totalParticipants Int @map("total_participants") // Number of participants at start
 
   // Winner tracking
-  winnerId Int? @map("winner_id") // Winner's robot ID (null until completed)
+  winnerId Int? @map("winner_id") // Winner's participant ID (null until completed, no FK constraint)
 
   // Timestamps
   createdAt   DateTime  @default(now()) @map("created_at")
@@ -575,12 +577,11 @@ model Tournament {
   completedAt DateTime? @map("completed_at") // When tournament finished
 
   // Relations
-  winner  Robot?                     @relation("TournamentWinner", fields: [winnerId], references: [id])
   matches ScheduledTournamentMatch[]
   battles Battle[]                   @relation("TournamentBattles")
 
   @@index([status])
-  @@index([winnerId])
+  @@index([participantType, status])
   @@map("tournaments")
 }
 
@@ -591,15 +592,18 @@ model ScheduledTournamentMatch {
   round        Int // Round number (1 = first round, 2 = quarter-finals, etc.)
   matchNumber  Int @map("match_number") // Position in round (1, 2, 3, ...)
 
-  // Participants
-  robot1Id Int? @map("robot1_id") // Null for placeholder matches
-  robot2Id Int? @map("robot2_id") // Null for bye matches or placeholders
+  // Participant type discriminator
+  participantType String @default("robot") @map("participant_type") @db.VarChar(20) // "robot", "team_2v2", "team_3v3"
+
+  // Participants (entity-agnostic IDs, no FK constraint)
+  participant1Id Int? @map("participant1_id") // Null for placeholder matches
+  participant2Id Int? @map("participant2_id") // Null for bye matches or placeholders
 
   // Result
-  winnerId   Int?    @map("winner_id") // Winner's robot ID (null until completed)
+  winnerId   Int?    @map("winner_id") // Winner's participant ID (null until completed, no FK constraint)
   battleId   Int?    @unique @map("battle_id") // Links to Battle record
   status     String  @default("pending") @db.VarChar(20) // "pending", "scheduled", "completed"
-  isByeMatch Boolean @default(false) @map("is_bye_match") // True if robot advances without battle
+  isByeMatch Boolean @default(false) @map("is_bye_match") // True if participant advances without battle
 
   // Timestamps
   createdAt   DateTime  @default(now()) @map("created_at")
@@ -607,15 +611,12 @@ model ScheduledTournamentMatch {
 
   // Relations
   tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
-  robot1     Robot?     @relation("TournamentRobot1", fields: [robot1Id], references: [id])
-  robot2     Robot?     @relation("TournamentRobot2", fields: [robot2Id], references: [id])
-  winner     Robot?     @relation("TournamentMatchWinner", fields: [winnerId], references: [id])
   battle     Battle?    @relation(fields: [battleId], references: [id])
 
   @@index([tournamentId, round])
   @@index([status])
-  @@index([robot1Id])
-  @@index([robot2Id])
+  @@index([participant1Id])
+  @@index([participant2Id])
   @@map("tournament_matches")
 }
 

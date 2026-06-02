@@ -25,8 +25,9 @@ function makeMatch(
 ): TournamentMatchWithRobots {
   return {
     tournamentId: 1,
-    robot1Id: null,
-    robot2Id: null,
+    participantType: 'robot',
+    participant1Id: null,
+    participant2Id: null,
     winnerId: null,
     battleId: null,
     status: 'pending',
@@ -40,61 +41,61 @@ function makeMatch(
 }
 
 /**
- * Feature: tournament-bracket-seeding, Property 8: User robot match highlighting
+ * Feature: tournament-bracket-seeding, Property 8: User participant match highlighting
  *
- * For any tournament and any set of user-owned robot IDs, every MatchCard where
- * robot1Id or robot2Id is in the user's robot set SHALL have the border-blue-500
- * CSS class applied, and every MatchCard where neither robot belongs to the user
- * SHALL have border-gray-700 instead.
+ * For any tournament and any set of user-owned participant IDs, every MatchCard where
+ * participant1Id or participant2Id is in the user's participant set SHALL have the border-blue-500
+ * CSS class applied, and every MatchCard where neither participant belongs to the user
+ * SHALL have border-white/10 instead.
  *
  * **Validates: Requirements 6.1, 6.2, 6.4**
  */
-describe('Property 8: User robot match highlighting', () => {
-  /** Arbitrary for a positive robot ID */
-  const robotIdArb = fc.integer({ min: 1, max: 10000 });
+describe('Property 8: User participant match highlighting', () => {
+  /** Arbitrary for a positive participant ID */
+  const participantIdArb = fc.integer({ min: 1, max: 10000 });
 
   /** Arbitrary for a robot name */
   const robotNameArb = fc.stringMatching(/^[A-Za-z][A-Za-z0-9 ]{0,14}$/).filter(
     (s) => s.trim().length > 0
   );
 
-  /** Arbitrary that generates a match with random robot IDs and a set of user robot IDs */
-  const matchAndUserRobotsArb = fc
+  /** Arbitrary that generates a match with random participant IDs and a set of user participant IDs */
+  const matchAndUserParticipantsArb = fc
     .tuple(
       fc.integer({ min: 1, max: 1000 }), // match id
-      fc.option(robotIdArb, { nil: undefined }), // robot1Id (possibly absent)
-      fc.option(robotIdArb, { nil: undefined }), // robot2Id (possibly absent)
+      fc.option(participantIdArb, { nil: undefined }), // participant1Id (possibly absent)
+      fc.option(participantIdArb, { nil: undefined }), // participant2Id (possibly absent)
       robotNameArb, // robot1 name
       robotNameArb, // robot2 name
-      fc.uniqueArray(robotIdArb, { minLength: 0, maxLength: 5 }) // user robot IDs
+      fc.uniqueArray(participantIdArb, { minLength: 0, maxLength: 5 }) // user participant IDs
     )
-    .map(([matchId, r1Id, r2Id, r1Name, r2Name, userIds]) => {
-      const robot1Id = r1Id ?? null;
-      const robot2Id = r2Id ?? null;
+    .map(([matchId, p1Id, p2Id, r1Name, r2Name, userIds]) => {
+      const participant1Id = p1Id ?? null;
+      const participant2Id = p2Id ?? null;
 
       const match = makeMatch({
         id: matchId,
         round: 1,
         matchNumber: 1,
-        robot1Id,
-        robot2Id,
-        robot1: robot1Id !== null ? { id: robot1Id, name: r1Name, elo: 1500 } : null,
-        robot2: robot2Id !== null ? { id: robot2Id, name: r2Name, elo: 1400 } : null,
+        participant1Id,
+        participant2Id,
+        robot1: participant1Id !== null ? { id: participant1Id, name: r1Name, elo: 1500 } : null,
+        robot2: participant2Id !== null ? { id: participant2Id, name: r2Name, elo: 1400 } : null,
         status: 'pending',
       });
 
-      const userRobotIds = new Set(userIds);
-      return { match, userRobotIds };
+      const userParticipantIds = new Set(userIds);
+      return { match, userParticipantIds };
     });
 
-  it('should apply border-blue-500 if and only if the match contains a user robot', () => {
+  it('should apply border-blue-500 if and only if the match contains a user participant', () => {
     fc.assert(
-      fc.property(matchAndUserRobotsArb, ({ match, userRobotIds }) => {
+      fc.property(matchAndUserParticipantsArb, ({ match, userParticipantIds }) => {
         const { container } = render(
           React.createElement(MatchCard, {
             match,
             seedMap: new Map(),
-            userRobotIds,
+            userParticipantIds,
             isUserFuturePath: false,
           })
         );
@@ -104,11 +105,11 @@ describe('Property 8: User robot match highlighting', () => {
 
         const classList = card!.className;
 
-        const hasUserRobot =
-          (match.robot1Id !== null && userRobotIds.has(match.robot1Id)) ||
-          (match.robot2Id !== null && userRobotIds.has(match.robot2Id));
+        const hasUserParticipant =
+          (match.participant1Id !== null && userParticipantIds.has(match.participant1Id)) ||
+          (match.participant2Id !== null && userParticipantIds.has(match.participant2Id));
 
-        if (hasUserRobot) {
+        if (hasUserParticipant) {
           expect(classList).toContain('border-blue-500');
           expect(classList).not.toContain('border-white/10');
         } else {

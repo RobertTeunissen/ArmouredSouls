@@ -10,8 +10,10 @@ export type {
 export {
   getEligibleRobotsForTournament,
   seedRobotsByELO,
+  seedParticipantsByELO,
   generateStandardSeedOrder,
   computeSeedings,
+  createTournament,
   createSingleEliminationTournament,
   getActiveTournaments,
   getTournamentById,
@@ -25,4 +27,21 @@ export type {
   SeedEntry,
   Round1Match,
   CompletedMatch,
+  TournamentParticipant,
+  CreateTournamentOptions,
 } from './tournamentService';
+
+export {
+  getEligibleTeamsForTournament,
+  createTeamTournament,
+  autoCreateNextTeamTournament,
+} from './teamTournamentService';
+
+export {
+  processTeamTournamentBattle,
+  executeTeamTournamentRound,
+} from './teamTournamentBattleOrchestrator';
+export type {
+  TeamTournamentBattleResult,
+  RoundExecutionResult,
+} from './teamTournamentBattleOrchestrator';

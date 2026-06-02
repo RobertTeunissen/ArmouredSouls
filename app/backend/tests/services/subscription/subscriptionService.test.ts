@@ -47,18 +47,16 @@ jest.mock('../../../src/config/logger', () => ({
 
 // Mock the event registry — we control what's registered
 const mockIsRegisteredEvent = jest.fn();
+const mockGetLockingPredicate = jest.fn();
 jest.mock('../../../src/services/subscription/eventRegistry', () => ({
   __esModule: true,
   isRegisteredEvent: (...args: unknown[]) => mockIsRegisteredEvent(...args),
   getRegisteredEvents: jest.fn(() => []),
+  getLockingPredicate: (...args: unknown[]) => mockGetLockingPredicate(...args),
 }));
 
-// Mock the tournament locking predicate (the only lock that still applies)
-const mockTournamentLockingPredicate = jest.fn();
-jest.mock('../../../src/services/subscription/lockingPredicates', () => ({
-  __esModule: true,
-  tournamentLockingPredicate: (...args: unknown[]) => mockTournamentLockingPredicate(...args),
-}));
+// Mock locking predicate function returned by getLockingPredicate
+const mockLockingPredicate = jest.fn();
 
 import {
   isRobotSubscribedTo,
@@ -73,7 +71,8 @@ describe('subscriptionService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockIsRegisteredEvent.mockReturnValue(true);
-    mockTournamentLockingPredicate.mockResolvedValue(false);
+    mockLockingPredicate.mockResolvedValue(false);
+    mockGetLockingPredicate.mockReturnValue(mockLockingPredicate);
     mockTx.auditLog.findFirst.mockResolvedValue(null);
     mockTx.auditLog.create.mockResolvedValue({});
   });
@@ -84,22 +83,22 @@ describe('subscriptionService', () => {
     it('should return true when active subscription exists', async () => {
       mockPrisma.subscription.count.mockResolvedValue(1);
 
-      const result = await isRobotSubscribedTo(1, 'league');
+      const result = await isRobotSubscribedTo(1, 'league_1v1');
 
       expect(result).toBe(true);
       expect(mockPrisma.subscription.count).toHaveBeenCalledWith({
-        where: { robotId: 1, eventType: 'league', status: 'active' },
+        where: { robotId: 1, eventType: 'league_1v1', status: 'active' },
       });
     });
 
     it('should return false when subscription does not exist', async () => {
       mockPrisma.subscription.count.mockResolvedValue(0);
 
-      const result = await isRobotSubscribedTo(1, 'tournament');
+      const result = await isRobotSubscribedTo(1, 'tournament_1v1');
 
       expect(result).toBe(false);
       expect(mockPrisma.subscription.count).toHaveBeenCalledWith({
-        where: { robotId: 1, eventType: 'tournament', status: 'active' },
+        where: { robotId: 1, eventType: 'tournament_1v1', status: 'active' },
       });
     });
 
@@ -107,7 +106,7 @@ describe('subscriptionService', () => {
       // A pending subscription should not make the robot eligible
       mockPrisma.subscription.count.mockResolvedValue(0);
 
-      const result = await isRobotSubscribedTo(1, 'league');
+      const result = await isRobotSubscribedTo(1, 'league_1v1');
 
       expect(result).toBe(false);
     });
@@ -119,8 +118,8 @@ describe('subscriptionService', () => {
     it('should throw ACCESS_DENIED when robot is owned by different user', async () => {
       mockTx.robot.findUnique.mockResolvedValue({ id: 1, userId: 99 });
 
-      await expect(subscribeRobot(1, 'league', 42)).rejects.toThrow(SubscriptionError);
-      await expect(subscribeRobot(1, 'league', 42)).rejects.toMatchObject({
+      await expect(subscribeRobot(1, 'league_1v1', 42)).rejects.toThrow(SubscriptionError);
+      await expect(subscribeRobot(1, 'league_1v1', 42)).rejects.toMatchObject({
         code: SubscriptionErrorCode.ACCESS_DENIED,
         statusCode: 403,
       });
@@ -129,7 +128,7 @@ describe('subscriptionService', () => {
     it('should throw ACCESS_DENIED when robot does not exist', async () => {
       mockTx.robot.findUnique.mockResolvedValue(null);
 
-      await expect(subscribeRobot(999, 'league', 1)).rejects.toMatchObject({
+      await expect(subscribeRobot(999, 'league_1v1', 1)).rejects.toMatchObject({
         code: SubscriptionErrorCode.ACCESS_DENIED,
       });
     });
@@ -146,10 +145,10 @@ describe('subscriptionService', () => {
 
     it('should throw SUBSCRIPTION_DUPLICATE when already subscribed', async () => {
       mockTx.robot.findUnique.mockResolvedValue({ id: 1, userId: 1 });
-      mockTx.subscription.findUnique.mockResolvedValue({ id: 1, robotId: 1, eventType: 'league' });
+      mockTx.subscription.findUnique.mockResolvedValue({ id: 1, robotId: 1, eventType: 'league_1v1' });
 
-      await expect(subscribeRobot(1, 'league', 1)).rejects.toThrow(SubscriptionError);
-      await expect(subscribeRobot(1, 'league', 1)).rejects.toMatchObject({
+      await expect(subscribeRobot(1, 'league_1v1', 1)).rejects.toThrow(SubscriptionError);
+      await expect(subscribeRobot(1, 'league_1v1', 1)).rejects.toMatchObject({
         code: SubscriptionErrorCode.SUBSCRIPTION_DUPLICATE,
       });
     });
@@ -160,8 +159,8 @@ describe('subscriptionService', () => {
       mockTx.subscription.count.mockResolvedValue(3); // already at cap for L0
       mockTx.facility.findUnique.mockResolvedValue(null); // L0
 
-      await expect(subscribeRobot(1, 'league', 1)).rejects.toThrow(SubscriptionError);
-      await expect(subscribeRobot(1, 'league', 1)).rejects.toMatchObject({
+      await expect(subscribeRobot(1, 'league_1v1', 1)).rejects.toThrow(SubscriptionError);
+      await expect(subscribeRobot(1, 'league_1v1', 1)).rejects.toMatchObject({
         code: SubscriptionErrorCode.SUBSCRIPTION_CAP_EXCEEDED,
       });
     });
@@ -171,12 +170,12 @@ describe('subscriptionService', () => {
       mockTx.subscription.findUnique.mockResolvedValue(null);
       mockTx.subscription.count.mockResolvedValue(2); // below cap
       mockTx.facility.findUnique.mockResolvedValue({ level: 1 }); // cap = 4
-      mockTx.subscription.create.mockResolvedValue({ id: 10, robotId: 1, eventType: 'league', status: 'pending' });
+      mockTx.subscription.create.mockResolvedValue({ id: 10, robotId: 1, eventType: 'league_1v1', status: 'pending' });
 
-      await subscribeRobot(1, 'league', 1);
+      await subscribeRobot(1, 'league_1v1', 1);
 
       expect(mockTx.subscription.create).toHaveBeenCalledWith({
-        data: { robotId: 1, eventType: 'league', status: 'pending' },
+        data: { robotId: 1, eventType: 'league_1v1', status: 'pending' },
       });
       expect(mockTx.auditLog.create).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -196,7 +195,7 @@ describe('subscriptionService', () => {
       mockTx.facility.findUnique.mockResolvedValue({ level: 0 }); // cap = 3
       mockTx.subscription.create.mockResolvedValue({});
 
-      await expect(subscribeRobot(1, 'tournament', 1)).resolves.toBeUndefined();
+      await expect(subscribeRobot(1, 'tournament_1v1', 1)).resolves.toBeUndefined();
     });
   });
 
@@ -206,7 +205,7 @@ describe('subscriptionService', () => {
     it('should throw ACCESS_DENIED when robot is owned by different user', async () => {
       mockTx.robot.findUnique.mockResolvedValue({ id: 1, userId: 99 });
 
-      await expect(unsubscribeRobot(1, 'league', 42)).rejects.toMatchObject({
+      await expect(unsubscribeRobot(1, 'league_1v1', 42)).rejects.toMatchObject({
         code: SubscriptionErrorCode.ACCESS_DENIED,
         statusCode: 403,
       });
@@ -214,11 +213,11 @@ describe('subscriptionService', () => {
 
     it('should throw EVENT_SUBSCRIPTION_LOCKED when tournament robot is alive in bracket', async () => {
       mockTx.robot.findUnique.mockResolvedValue({ id: 1, userId: 1 });
-      mockTx.subscription.findUnique.mockResolvedValue({ id: 1, robotId: 1, eventType: 'tournament' });
-      mockTournamentLockingPredicate.mockResolvedValue(true);
+      mockTx.subscription.findUnique.mockResolvedValue({ id: 1, robotId: 1, eventType: 'tournament_1v1' });
+      mockLockingPredicate.mockResolvedValue(true);
 
-      await expect(unsubscribeRobot(1, 'tournament', 1)).rejects.toThrow(SubscriptionError);
-      await expect(unsubscribeRobot(1, 'tournament', 1)).rejects.toMatchObject({
+      await expect(unsubscribeRobot(1, 'tournament_1v1', 1)).rejects.toThrow(SubscriptionError);
+      await expect(unsubscribeRobot(1, 'tournament_1v1', 1)).rejects.toMatchObject({
         code: SubscriptionErrorCode.EVENT_SUBSCRIPTION_LOCKED,
         statusCode: 409,
       });
@@ -226,37 +225,37 @@ describe('subscriptionService', () => {
 
     it('should permit unsubscribe from league without any lock check', async () => {
       mockTx.robot.findUnique.mockResolvedValue({ id: 1, userId: 1 });
-      mockTx.subscription.findUnique.mockResolvedValue({ id: 1, robotId: 1, eventType: 'league' });
+      mockTx.subscription.findUnique.mockResolvedValue({ id: 1, robotId: 1, eventType: 'league_1v1' });
+      mockLockingPredicate.mockResolvedValue(false);
       mockTx.subscription.delete.mockResolvedValue({});
       mockTx.subscription.count.mockResolvedValue(2);
 
-      await expect(unsubscribeRobot(1, 'league', 1)).resolves.toBeUndefined();
+      await expect(unsubscribeRobot(1, 'league_1v1', 1)).resolves.toBeUndefined();
       expect(mockTx.subscription.delete).toHaveBeenCalled();
-      // Tournament lock should NOT be called for league events
-      expect(mockTournamentLockingPredicate).not.toHaveBeenCalled();
     });
 
     it('should permit unsubscribe from tournament when not alive in bracket', async () => {
       mockTx.robot.findUnique.mockResolvedValue({ id: 1, userId: 1 });
-      mockTx.subscription.findUnique.mockResolvedValue({ id: 1, robotId: 1, eventType: 'tournament' });
-      mockTournamentLockingPredicate.mockResolvedValue(false);
+      mockTx.subscription.findUnique.mockResolvedValue({ id: 1, robotId: 1, eventType: 'tournament_1v1' });
+      mockLockingPredicate.mockResolvedValue(false);
       mockTx.subscription.delete.mockResolvedValue({});
       mockTx.subscription.count.mockResolvedValue(1);
 
-      await expect(unsubscribeRobot(1, 'tournament', 1)).resolves.toBeUndefined();
-      expect(mockTournamentLockingPredicate).toHaveBeenCalledWith(1);
+      await expect(unsubscribeRobot(1, 'tournament_1v1', 1)).resolves.toBeUndefined();
+      expect(mockLockingPredicate).toHaveBeenCalledWith(1);
     });
 
     it('should delete subscription row and create audit log on success', async () => {
       mockTx.robot.findUnique.mockResolvedValue({ id: 1, userId: 1 });
-      mockTx.subscription.findUnique.mockResolvedValue({ id: 1, robotId: 1, eventType: 'league' });
+      mockTx.subscription.findUnique.mockResolvedValue({ id: 1, robotId: 1, eventType: 'league_1v1' });
+      mockLockingPredicate.mockResolvedValue(false);
       mockTx.subscription.delete.mockResolvedValue({});
       mockTx.subscription.count.mockResolvedValue(1);
 
-      await unsubscribeRobot(1, 'league', 1);
+      await unsubscribeRobot(1, 'league_1v1', 1);
 
       expect(mockTx.subscription.delete).toHaveBeenCalledWith({
-        where: { subscription_robot_event: { robotId: 1, eventType: 'league' } },
+        where: { subscription_robot_event: { robotId: 1, eventType: 'league_1v1' } },
       });
       expect(mockTx.auditLog.create).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -273,7 +272,7 @@ describe('subscriptionService', () => {
       mockTx.robot.findUnique.mockResolvedValue({ id: 1, userId: 1 });
       mockTx.subscription.findUnique.mockResolvedValue(null);
 
-      await expect(unsubscribeRobot(1, 'league', 1)).rejects.toMatchObject({
+      await expect(unsubscribeRobot(1, 'league_1v1', 1)).rejects.toMatchObject({
         code: SubscriptionErrorCode.SUBSCRIPTION_NOT_FOUND,
         statusCode: 404,
       });

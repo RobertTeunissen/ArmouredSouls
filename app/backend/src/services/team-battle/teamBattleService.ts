@@ -27,10 +27,13 @@ const INITIAL_LP = 0;
 // ── Helpers ──────────────────────────────────────────────────────────
 
 /**
- * Returns the event type for a given team size.
+ * Returns the event types that allow team formation for a given team size.
+ * A robot can form a team if it's subscribed to EITHER the league OR the tournament event.
  */
-function getEventTypeForSize(teamSize: 2 | 3): string {
-  return teamSize === 2 ? 'league_2v2' : 'league_3v3';
+function getEventTypesForSize(teamSize: 2 | 3): string[] {
+  return teamSize === 2
+    ? ['league_2v2', 'tournament_2v2']
+    : ['league_3v3', 'tournament_3v3'];
 }
 
 /**
@@ -80,7 +83,7 @@ async function isTeamLockedForBattle(teamId: number, tx: typeof prisma): Promise
  * - Team size is 2 or 3
  * - Exactly N distinct robot IDs provided
  * - All robots owned by the stable
- * - All robots subscribed to the corresponding event (league_2v2 or league_3v3)
+ * - All robots subscribed to at least one corresponding team event (league_2v2/tournament_2v2 or league_3v3/tournament_3v3)
  * - No robot already on another team of the same size
  * - Team name passes safeName validation (3-32 chars)
  * - Stable has ≥ N robots
@@ -116,7 +119,7 @@ export async function registerTeam(
   // Validate team name
   validateTeamName(teamName);
 
-  const eventType = getEventTypeForSize(teamSize);
+  const eventTypes = getEventTypesForSize(teamSize);
 
   const team = await prisma.$transaction(async (tx) => {
     // Acquire advisory locks on robot IDs in sorted order to prevent deadlocks.
@@ -161,15 +164,17 @@ export async function registerTeam(
       );
     }
 
-    // Validate all robots are subscribed to the corresponding event
-    const eventLabel = teamSize === 2 ? '2v2 League' : '3v3 League';
+    // Validate all robots are subscribed to at least one corresponding event (league or tournament)
+    const eventLabel = teamSize === 2 ? '2v2' : '3v3';
     for (const robotId of uniqueRobotIds) {
-      const subscribed = await hasSubscription(robotId, eventType);
-      if (!subscribed) {
+      const hasAnySubscription = await Promise.any(
+        eventTypes.map(et => hasSubscription(robotId, et).then(r => r ? true : Promise.reject()))
+      ).catch(() => false);
+      if (!hasAnySubscription) {
         const robot = robots.find(r => r.id === robotId);
         throw new TeamBattleError(
           TeamBattleErrorCode.TEAM_INVALID_COMPOSITION,
-          `"${robot?.name ?? `Robot #${robotId}`}" is not subscribed to ${eventLabel}. Subscribe via the Booking Office first.`,
+          `"${robot?.name ?? `Robot #${robotId}`}" is not subscribed to any ${eventLabel} mode (League or Tournament). Subscribe via the Booking Office first.`,
           400,
         );
       }
@@ -305,10 +310,13 @@ export async function swapTeamMember(
       );
     }
 
-    // Validate new robot is subscribed to the corresponding event
-    const eventType = getEventTypeForSize(team.teamSize as 2 | 3);
-    const eventLabel = team.teamSize === 2 ? '2v2 League' : '3v3 League';
-    const subscribed = await hasSubscription(newRobotId, eventType);
+    // Validate new robot is subscribed to at least one team event for this size
+    const eventTypes = getEventTypesForSize(team.teamSize as 2 | 3);
+    const eventLabel = team.teamSize === 2 ? '2v2 League or 2v2 Tournament' : '3v3 League or 3v3 Tournament';
+    let subscribed = false;
+    for (const et of eventTypes) {
+      if (await hasSubscription(newRobotId, et)) { subscribed = true; break; }
+    }
     if (!subscribed) {
       throw new TeamBattleError(
         TeamBattleErrorCode.TEAM_INVALID_COMPOSITION,
@@ -339,16 +347,20 @@ export async function swapTeamMember(
       data: { robotId: newRobotId },
     });
 
-    // Recalculate eligibility: check all members are still subscribed
+    // Recalculate eligibility: check all members are subscribed to at least one team event
     const updatedMembers = await tx.teamBattleMember.findMany({
       where: { teamId },
     });
 
     let eligible = updatedMembers.length === team.teamSize;
     if (eligible) {
+      const eligEventTypes = getEventTypesForSize(team.teamSize as 2 | 3);
       for (const member of updatedMembers) {
-        const isSubscribed = await hasSubscription(member.robotId, eventType);
-        if (!isSubscribed) {
+        let memberSubscribed = false;
+        for (const et of eligEventTypes) {
+          if (await hasSubscription(member.robotId, et)) { memberSubscribed = true; break; }
+        }
+        if (!memberSubscribed) {
           eligible = false;
           break;
         }
@@ -503,10 +515,13 @@ export async function addTeamMember(
       );
     }
 
-    // Validate robot is subscribed to the corresponding event
-    const eventType = getEventTypeForSize(team.teamSize as 2 | 3);
-    const eventLabel = team.teamSize === 2 ? '2v2 League' : '3v3 League';
-    const subscribed = await hasSubscription(robotId, eventType);
+    // Validate robot is subscribed to at least one team event for this size
+    const eventTypes = getEventTypesForSize(team.teamSize as 2 | 3);
+    const eventLabel = team.teamSize === 2 ? '2v2 League or 2v2 Tournament' : '3v3 League or 3v3 Tournament';
+    let subscribed = false;
+    for (const et of eventTypes) {
+      if (await hasSubscription(robotId, et)) { subscribed = true; break; }
+    }
     if (!subscribed) {
       throw new TeamBattleError(
         TeamBattleErrorCode.TEAM_INVALID_COMPOSITION,
@@ -549,12 +564,16 @@ export async function addTeamMember(
     // If team now has N members, set eligibility to ELIGIBLE
     const newMemberCount = team.members.length + 1;
     if (newMemberCount === team.teamSize) {
-      // Verify all members are subscribed before marking eligible
+      // Verify all members are subscribed to at least one team event before marking eligible
       const allMembers = [...team.members.map((m) => m.robotId), robotId];
+      const eligEventTypes = getEventTypesForSize(team.teamSize as 2 | 3);
       let allSubscribed = true;
       for (const memberId of allMembers) {
-        const isSubscribed = await hasSubscription(memberId, eventType);
-        if (!isSubscribed) {
+        let memberSubscribed = false;
+        for (const et of eligEventTypes) {
+          if (await hasSubscription(memberId, et)) { memberSubscribed = true; break; }
+        }
+        if (!memberSubscribed) {
           allSubscribed = false;
           break;
         }

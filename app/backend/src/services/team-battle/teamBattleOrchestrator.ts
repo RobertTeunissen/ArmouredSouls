@@ -325,16 +325,25 @@ async function executeSingleTeamBattle(
     }
 
     // Update individual robot ELOs and team battle win counters (R16.2)
+    // Also persist currentHP from battle result so damage carries over to next cycle
     const winField = teamSize === 2 ? 'totalLeague2v2Wins' : 'totalLeague3v3Wins';
 
     for (const robot of team1Robots) {
       const robotCredits = team1Credits.find(c => c.robotId === robot.id);
+      const participant = battleResult.participants.find(p => p.robotId === robot.id);
       await tx.robot.update({
         where: { id: robot.id },
         data: {
+          currentHP: Math.round(participant?.finalHP ?? robot.currentHP),
           elo: { increment: eloChanges.team1Change },
           fame: team1Won ? { increment: fame } : undefined,
           [winField]: team1Won ? { increment: 1 } : undefined,
+          totalBattles: { increment: 1 },
+          wins: team1Won ? { increment: 1 } : undefined,
+          draws: isDraw ? { increment: 1 } : undefined,
+          losses: (!team1Won && !isDraw) ? { increment: 1 } : undefined,
+          kills: (participant?.finalHP === 0) ? undefined : undefined, // kills tracked per opponent
+          damageDealtLifetime: { increment: Math.round(participant?.damageDealt ?? 0) },
         },
       });
       // Update BattleParticipant with final values
@@ -352,12 +361,19 @@ async function executeSingleTeamBattle(
     if (!isByeMatch) {
       for (const robot of team2Robots) {
         const robotCredits = team2Credits.find(c => c.robotId === robot.id);
+        const participant = battleResult.participants.find(p => p.robotId === robot.id);
         await tx.robot.update({
           where: { id: robot.id },
           data: {
+            currentHP: Math.round(participant?.finalHP ?? robot.currentHP),
             elo: { increment: eloChanges.team2Change },
             fame: team2Won ? { increment: fame } : undefined,
             [winField]: team2Won ? { increment: 1 } : undefined,
+            totalBattles: { increment: 1 },
+            wins: team2Won ? { increment: 1 } : undefined,
+            draws: isDraw ? { increment: 1 } : undefined,
+            losses: (!team2Won && !isDraw) ? { increment: 1 } : undefined,
+            damageDealtLifetime: { increment: Math.round(participant?.damageDealt ?? 0) },
           },
         });
         // Update BattleParticipant with final values

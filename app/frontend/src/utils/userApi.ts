@@ -45,6 +45,9 @@ export interface ProfileData {
   totalWins: number;
   highestELO: number;
   championshipTitles: number;
+  championshipTitles1v1: number;
+  championshipTitles2v2: number;
+  championshipTitles3v3: number;
   createdAt: string; // ISO 8601
   stableName: string | null;
   profileVisibility: "public" | "private";

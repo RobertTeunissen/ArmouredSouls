@@ -38,13 +38,14 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
 }) => {
   const totalCredits = reward + (streamingRevenue ?? 0);
   const isTournament = battle.battleType === 'tournament_1v1';
+  const isTeamTournament = battle.battleType === 'tournament_2v2' || battle.battleType === 'tournament_3v3';
   const isTagTeam = battle.battleType === 'tag_team';
   const isKoth = battle.battleType === 'koth';
   const isTeamBattle = battle.battleType === 'league_2v2' || battle.battleType === 'league_3v3';
   
   const getBattleTypeIcon = (): string => {
     if (isKoth) return '👑';
-    if (isTournament) return '🏆';
+    if (isTournament || isTeamTournament) return '🏆';
     if (isTagTeam) return '🤝';
     return '⚔️'; // League match
   };
@@ -54,7 +55,7 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
       const variant = battle.kothRotatingZone ? 'Rotating Zone' : 'Fixed Zone';
       return `King of the Hill • ${variant}`;
     }
-    if (isTournament && battle.tournamentName) {
+    if ((isTournament || isTeamTournament) && battle.tournamentName) {
       const roundName = battle.tournamentRound && battle.tournamentMaxRounds 
         ? getTournamentRoundName(battle.tournamentRound, battle.tournamentMaxRounds)
         : '';
@@ -65,6 +66,13 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
         ? getTournamentRoundName(battle.tournamentRound, battle.tournamentMaxRounds)
         : '';
       return `Tournament${roundName ? ` • ${roundName}` : ''}`;
+    }
+    if (isTeamTournament) {
+      const roundName = battle.tournamentRound && battle.tournamentMaxRounds 
+        ? getTournamentRoundName(battle.tournamentRound, battle.tournamentMaxRounds)
+        : '';
+      const sizeLabel = battle.battleType === 'tournament_2v2' ? '2v2' : '3v3';
+      return `${sizeLabel} Tournament${roundName ? ` • ${roundName}` : ''}`;
     }
     if (isTagTeam) {
       // For tag team matches, show league tier from battle record
@@ -88,7 +96,7 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
     // KotH battles get orange border
     if (isKoth) return 'border-l-orange-500';
     // Tournament battles get yellow border regardless of outcome
-    if (isTournament) return 'border-l-[#d29922]';
+    if (isTournament || isTeamTournament) return 'border-l-[#d29922]';
     // Tag team battles get cyan border regardless of outcome
     if (isTagTeam) return 'border-l-cyan-400';
     // League battles use outcome color
@@ -243,6 +251,27 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
               <span className="text-[#e6edf3]">{(battle as unknown as { team2TeamName?: string }).team2TeamName || opponent.name}</span>
             </div>
           </div>
+        ) : isTeamTournament ? (
+          /* Team Tournament Layout (2v2/3v3 🏆) */
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-0.5">
+              <span className={`text-xs px-1.5 py-0.5 rounded font-semibold ${
+                battle.battleType === 'tournament_2v2'
+                  ? 'bg-amber-400/20 text-amber-400'
+                  : 'bg-amber-500/20 text-amber-500'
+              }`}>
+                {battle.battleType === 'tournament_2v2' ? '2v2 🏆' : '3v3 🏆'}
+              </span>
+              <div className="text-xs text-[#8b949e]">
+                {getBattleTypeText()}
+              </div>
+            </div>
+            <div className="font-medium text-xs truncate">
+              <span className="text-[#58a6ff]">{(battle as unknown as { team1TeamName?: string }).team1TeamName || myRobot.name}</span>
+              <span className="text-[#57606a] mx-1.5">vs</span>
+              <span className="text-[#e6edf3]">{(battle as unknown as { team2TeamName?: string }).team2TeamName || opponent.name}</span>
+            </div>
+          </div>
         ) : (
           /* Standard 1v1 Layout */
           <div className="flex-1 min-w-0">
@@ -337,7 +366,16 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
                 {battle.battleType === 'league_2v2' ? '2v2' : '3v3'}
               </span>
             )}
-            {!isKoth && !isTagTeam && !isTeamBattle && (
+            {isTeamTournament && (
+              <span className={`text-xs px-1.5 py-0.5 rounded font-semibold ${
+                battle.battleType === 'tournament_2v2'
+                  ? 'bg-amber-400/20 text-amber-400'
+                  : 'bg-amber-500/20 text-amber-500'
+              }`}>
+                {battle.battleType === 'tournament_2v2' ? '2v2 🏆' : '3v3 🏆'}
+              </span>
+            )}
+            {!isKoth && !isTagTeam && !isTeamBattle && !isTeamTournament && (
               <span className="text-xs px-1.5 py-0.5 bg-blue-400/20 rounded text-blue-400 font-semibold">
                 1v1
               </span>
@@ -369,6 +407,12 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
               </div>
             </>
           ) : isTeamBattle ? (
+            <div className="text-sm font-medium">
+              <span className="text-[#58a6ff]">{(battle as unknown as { team1TeamName?: string }).team1TeamName || myRobot.name}</span>
+              <span className="text-[#57606a] mx-1.5">vs</span>
+              <span className="text-[#e6edf3]">{(battle as unknown as { team2TeamName?: string }).team2TeamName || opponent.name}</span>
+            </div>
+          ) : isTeamTournament ? (
             <div className="text-sm font-medium">
               <span className="text-[#58a6ff]">{(battle as unknown as { team1TeamName?: string }).team1TeamName || myRobot.name}</span>
               <span className="text-[#57606a] mx-1.5">vs</span>

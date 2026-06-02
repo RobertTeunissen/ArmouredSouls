@@ -100,8 +100,8 @@ describe('Feature: tournament-bracket-seeding', () => {
 
               round1Matches.push({
                 matchNumber: matchNumber++,
-                robot1Id: robot1?.id ?? null,
-                robot2Id: robot2?.id ?? null,
+                participant1Id: robot1?.id ?? null,
+                participant2Id: robot2?.id ?? null,
                 robot1: robot1
                   ? { id: robot1.id, name: robot1.name, elo: robot1.elo }
                   : null,

@@ -633,3 +633,73 @@ export async function fetchTeamBattleRecords() {
     '3v3': records3v3,
   };
 }
+
+// ─── Tournament Champions ───────────────────────────────────────────
+
+export interface TournamentChampionEntry {
+  tournamentId: number;
+  tournamentName: string;
+  championName: string; // Robot name for 1v1, team name for 2v2/3v3
+  memberRobots?: string[]; // Only for team tournaments
+  ownerStableName: string;
+  completedAt: Date;
+  participantType: string;
+}
+
+async function fetchChampionsByType(participantType: string): Promise<TournamentChampionEntry[]> {
+  const tournaments = await prisma.tournament.findMany({
+    where: { participantType, status: 'completed', winnerId: { not: null } },
+    orderBy: { completedAt: 'desc' },
+    take: 10,
+  });
+
+  if (tournaments.length === 0) return [];
+
+  return Promise.all(tournaments.map(async (t) => {
+    if (participantType === 'robot') {
+      const robot = await prisma.robot.findUnique({
+        where: { id: t.winnerId! },
+        include: { user: { select: { stableName: true, username: true } } },
+      });
+      return {
+        tournamentId: t.id,
+        tournamentName: t.name,
+        championName: robot?.name ?? 'Unknown',
+        ownerStableName: robot?.user ? getUserDisplayName(robot.user) : 'Unknown',
+        completedAt: t.completedAt!,
+        participantType,
+      };
+    } else {
+      const team = await prisma.teamBattle.findUnique({
+        where: { id: t.winnerId! },
+        include: {
+          members: { include: { robot: { select: { name: true } } }, orderBy: { slotIndex: 'asc' } },
+          stable: { select: { stableName: true, username: true } },
+        },
+      });
+      return {
+        tournamentId: t.id,
+        tournamentName: t.name,
+        championName: team?.teamName ?? 'Unknown',
+        memberRobots: team?.members.map(m => m.robot.name) ?? [],
+        ownerStableName: team?.stable ? getUserDisplayName(team.stable) : 'Unknown',
+        completedAt: t.completedAt!,
+        participantType,
+      };
+    }
+  }));
+}
+
+export async function fetchTournamentChampions(): Promise<{
+  champions1v1: TournamentChampionEntry[];
+  champions2v2: TournamentChampionEntry[];
+  champions3v3: TournamentChampionEntry[];
+}> {
+  const [champions1v1, champions2v2, champions3v3] = await Promise.all([
+    fetchChampionsByType('robot'),
+    fetchChampionsByType('team_2v2'),
+    fetchChampionsByType('team_3v3'),
+  ]);
+
+  return { champions1v1, champions2v2, champions3v3 };
+}

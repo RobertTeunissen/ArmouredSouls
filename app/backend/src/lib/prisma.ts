@@ -17,6 +17,9 @@ function createPrismaClient(): PrismaClient {
     throw new Error('DATABASE_URL environment variable is not set');
   }
 
+  // Increase pool size from default 10 to 20 to handle heavy batch workloads
+  // (e.g. tournament rounds with 2000+ matches doing ~15 DB ops each).
+  // Configurable via DB_POOL_MAX env var for per-environment tuning.
   const poolMax = parseInt(process.env.DB_POOL_MAX || '20', 10);
   const adapter = new PrismaPg({
     connectionString: databaseUrl,

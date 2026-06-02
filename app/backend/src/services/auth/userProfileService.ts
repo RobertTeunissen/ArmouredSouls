@@ -34,6 +34,10 @@ export async function getUserProfile(userId: number) {
       notificationsBattle: true,
       notificationsLeague: true,
       themePreference: true,
+      championshipTitles: true,
+      championshipTitles1v1: true,
+      championshipTitles2v2: true,
+      championshipTitles3v3: true,
     },
   });
 

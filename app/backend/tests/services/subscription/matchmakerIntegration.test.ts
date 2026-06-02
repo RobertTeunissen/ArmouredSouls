@@ -110,7 +110,7 @@ describe('Matchmaker Subscription Integration', () => {
       expect(mockPrisma.subscription.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            eventType: 'league',
+            eventType: 'league_1v1',
             robotId: { in: expect.arrayContaining([1, 2, 3]) },
           }),
           select: { robotId: true },
@@ -163,7 +163,7 @@ describe('Matchmaker Subscription Integration', () => {
       expect(mockPrisma.subscription.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            eventType: 'tournament',
+            eventType: 'tournament_1v1',
             robotId: { in: expect.arrayContaining([1, 2, 3]) },
           }),
           select: { robotId: true },

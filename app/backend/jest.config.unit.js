@@ -93,6 +93,8 @@ const unitTestFiles = [
   'teamBattleOrchestrator\\.test\\.ts',
   'notification-service\\.test\\.ts',
   'achievementTeamBattle\\.test\\.ts',
+  'teamTournamentBattleOrchestrator\\.test\\.ts',
+  'teamTournamentBattleOrchestrator\\.property\\.test\\.ts',
 ];
 
 module.exports = {

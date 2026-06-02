@@ -15,9 +15,9 @@ import { getSubscriptionCap } from '../../config/subscriptions';
 import {
   isRegisteredEvent,
   getRegisteredEvents,
+  getLockingPredicate,
   SubscribableEventType,
 } from './eventRegistry';
-import { tournamentLockingPredicate } from './lockingPredicates';
 import { SubscriptionError, SubscriptionErrorCode } from '../../errors/subscriptionErrors';
 import logger from '../../config/logger';
 
@@ -191,16 +191,15 @@ export async function unsubscribeRobot(
       );
     }
 
-    // 3. Only tournament has a lock — you can't drop mid-bracket
-    if (eventType === 'tournament_1v1') {
-      const isLocked = await tournamentLockingPredicate(robotId);
-      if (isLocked) {
-        throw new SubscriptionError(
-          SubscriptionErrorCode.EVENT_SUBSCRIPTION_LOCKED,
-          'Cannot unsubscribe from tournament while alive in a bracket',
-          409,
-        );
-      }
+    // 3. Check locking predicate from the event registry
+    const lockingPredicate = getLockingPredicate(eventType as SubscribableEventType);
+    const isLocked = await lockingPredicate(robotId);
+    if (isLocked) {
+      throw new SubscriptionError(
+        SubscriptionErrorCode.EVENT_SUBSCRIPTION_LOCKED,
+        `Cannot unsubscribe from ${eventType} while locked by an active obligation`,
+        409,
+      );
     }
 
     // 4. Delete subscription row

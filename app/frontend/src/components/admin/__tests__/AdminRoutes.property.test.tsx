@@ -104,6 +104,7 @@ const adminSubPaths = [
   'robot-stats',
   'league-health',
   'weapons',
+  'tournaments',
   'security',
   'engagement',
   'economy',

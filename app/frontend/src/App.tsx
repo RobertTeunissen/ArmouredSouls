@@ -58,6 +58,7 @@ const AdminRepairLogPage = React.lazy(() => import('./pages/admin/RepairLogPage'
 const AdminAuditLogPage = React.lazy(() => import('./pages/admin/AuditLogPage'));
 const AdminLeagueHistoryPage = React.lazy(() => import('./pages/admin/LeagueHistoryPage'));
 const AdminSubscriptionAnalyticsPage = React.lazy(() => import('./pages/admin/SubscriptionAnalyticsPage'));
+const AdminTournamentsPage = React.lazy(() => import('./pages/admin/TournamentsPage'));
 
 // Loading fallback for lazy-loaded player pages
 function PageLoader() {
@@ -150,6 +151,7 @@ function AppRoutes() {
           <Route path="audit-log" element={<AdminAuditLogPage />} />
           <Route path="league-history" element={<AdminLeagueHistoryPage />} />
           <Route path="subscriptions" element={<AdminSubscriptionAnalyticsPage />} />
+          <Route path="tournaments" element={<AdminTournamentsPage />} />
           <Route path="*" element={<Navigate to="dashboard" replace />} />
         </Route>
       )}

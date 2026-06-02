@@ -21,6 +21,8 @@ import { runKothMatchmaking } from '../koth/kothMatchmakingService';
 import { executeScheduledTeamBattles } from '../team-battle/teamBattleOrchestrator';
 import { rebalanceTeamBattleLeagues } from '../team-battle/teamBattleAdapter';
 import { runTeamBattleMatchmaking } from '../team-battle/teamBattleMatchmakingService';
+import { executeTeamTournamentRound } from '../tournament/teamTournamentBattleOrchestrator';
+import { autoCreateNextTeamTournament } from '../tournament/teamTournamentService';
 import prisma from '../../lib/prisma';
 import { practiceArenaMetrics } from '../practice-arena/practiceArenaMetrics';
 import { EventLogger, EventType } from '../common/eventLogger';
@@ -78,6 +80,7 @@ export interface SchedulerState {
 let schedulerActive = false;
 
 const jobStates: Map<JobState['name'], JobState> = new Map();
+const jobHandlers: Map<JobState['name'], () => Promise<JobContext>> = new Map();
 
 let runningJob: string | null = null;
 const jobQueue: string[] = [];
@@ -180,8 +183,8 @@ async function executeTournamentCycle(): Promise<JobContext> {
           await processTournamentBattle(match);
           totalMatchesExecuted++;
         } catch (error) {
-          logger.error(`Tournament Cycle: Match ${match.id} failed (robot1=${match.robot1Id}, robot2=${match.robot2Id}): ${error instanceof Error ? error.stack || error.message : String(error)}`);
-          throw error;
+          logger.error(`Tournament Cycle: Match ${match.id} failed (participant1=${match.participant1Id}, participant2=${match.participant2Id}): ${error instanceof Error ? error.stack || error.message : String(error)}`);
+          throw error; // Re-throw to fail the job
         }
       }
 
@@ -566,18 +569,22 @@ async function executeKothCycle(): Promise<JobContext> {
 // --- Team Battle cycle handlers ---
 
 async function executeTeam2v2LeagueCycle(): Promise<JobContext> {
-  // Step 1: Execute scheduled 2v2 team battles
-  logger.info('Team 2v2 League Cycle: Step 1 — Executing scheduled 2v2 team battles');
+  // Step 1: Repair all robots (always first per Requirement 24.24)
+  logger.info('Team 2v2 League Cycle: Step 1 — Repairing all robots');
+  await repairAllRobots(true);
+
+  // Step 2: Execute scheduled 2v2 team battles
+  logger.info('Team 2v2 League Cycle: Step 2 — Executing scheduled 2v2 team battles');
   const execResult = await executeScheduledTeamBattles(2);
   logger.info(`Team 2v2 League Cycle: ${execResult.matchesCompleted} team battles executed (${execResult.matchesCancelled} cancelled)`);
 
-  // Step 2: Rebalance 2v2 league tiers
-  logger.info('Team 2v2 League Cycle: Step 2 — Rebalancing 2v2 league tiers');
+  // Step 3: Rebalance 2v2 league tiers
+  logger.info('Team 2v2 League Cycle: Step 3 — Rebalancing 2v2 league tiers');
   const rebalanceSummary = await rebalanceTeamBattleLeagues();
   logger.info(`Team 2v2 League Cycle: Rebalanced — ${rebalanceSummary.totalPromoted} promoted, ${rebalanceSummary.totalDemoted} demoted`);
 
-  // Step 3: Run 2v2 matchmaking for next cycle (24h lead time, rounded to the hour)
-  logger.info('Team 2v2 League Cycle: Step 3 — Scheduling 2v2 matchmaking (24h lead)');
+  // Step 4: Run 2v2 matchmaking for next cycle (24h lead time, rounded to the hour)
+  logger.info('Team 2v2 League Cycle: Step 4 — Scheduling 2v2 matchmaking (24h lead)');
   const scheduledFor = new Date(Date.now() + 24 * 60 * 60 * 1000);
   scheduledFor.setMinutes(0, 0, 0);
   const matchesCreated = await runTeamBattleMatchmaking(2, scheduledFor);
@@ -587,24 +594,118 @@ async function executeTeam2v2LeagueCycle(): Promise<JobContext> {
 }
 
 async function executeTeam3v3LeagueCycle(): Promise<JobContext> {
-  // Step 1: Execute scheduled 3v3 team battles
-  logger.info('Team 3v3 League Cycle: Step 1 — Executing scheduled 3v3 team battles');
+  // Step 1: Repair all robots (always first per Requirement 24.24)
+  logger.info('Team 3v3 League Cycle: Step 1 — Repairing all robots');
+  await repairAllRobots(true);
+
+  // Step 2: Execute scheduled 3v3 team battles
+  logger.info('Team 3v3 League Cycle: Step 2 — Executing scheduled 3v3 team battles');
   const execResult = await executeScheduledTeamBattles(3);
   logger.info(`Team 3v3 League Cycle: ${execResult.matchesCompleted} team battles executed (${execResult.matchesCancelled} cancelled)`);
 
-  // Step 2: Rebalance 3v3 league tiers
-  logger.info('Team 3v3 League Cycle: Step 2 — Rebalancing 3v3 league tiers');
+  // Step 3: Rebalance 3v3 league tiers
+  logger.info('Team 3v3 League Cycle: Step 3 — Rebalancing 3v3 league tiers');
   const rebalanceSummary = await rebalanceTeamBattleLeagues();
   logger.info(`Team 3v3 League Cycle: Rebalanced — ${rebalanceSummary.totalPromoted} promoted, ${rebalanceSummary.totalDemoted} demoted`);
 
-  // Step 3: Run 3v3 matchmaking for next cycle (24h lead time, rounded to the hour)
-  logger.info('Team 3v3 League Cycle: Step 3 — Scheduling 3v3 matchmaking (24h lead)');
+  // Step 4: Run 3v3 matchmaking for next cycle (24h lead time, rounded to the hour)
+  logger.info('Team 3v3 League Cycle: Step 4 — Scheduling 3v3 matchmaking (24h lead)');
   const scheduledFor = new Date(Date.now() + 24 * 60 * 60 * 1000);
   scheduledFor.setMinutes(0, 0, 0);
   const matchesCreated = await runTeamBattleMatchmaking(3, scheduledFor);
   logger.info(`Team 3v3 League Cycle: ${matchesCreated} matches scheduled for ${scheduledFor.toISOString()}`);
 
   return { jobName: 'team3v3League', matchesCompleted: execResult.matchesCompleted };
+}
+
+// --- Team Tournament cycle handlers ---
+
+async function executeTeam2v2TournamentCycle(): Promise<JobContext> {
+  // Step 1: Repair all robots (pre-match repair)
+  logger.info('Team 2v2 Tournament Cycle: Step 1 — Repairing all robots');
+  await repairAllRobots(true);
+
+  // Step 2: Check for active 2v2 tournament
+  const activeTournament = await prisma.tournament.findFirst({
+    where: { participantType: 'team_2v2', status: 'active' },
+  });
+
+  if (activeTournament) {
+    // Execute current round matches
+    logger.info(`Team 2v2 Tournament Cycle: Step 2 — Executing round ${activeTournament.currentRound}`);
+    const roundResult = await executeTeamTournamentRound(activeTournament.id, 2);
+
+    // Advance winners to next round (handles completion detection internally)
+    await advanceWinnersToNextRound(activeTournament.id);
+
+    return {
+      jobName: 'team2v2Tournament',
+      matchesCompleted: roundResult.matchesExecuted,
+      tournamentName: activeTournament.name,
+      tournamentRound: activeTournament.currentRound,
+      tournamentMaxRounds: activeTournament.maxRounds,
+    };
+  }
+
+  // Step 3: No active tournament — try to create one
+  logger.info('Team 2v2 Tournament Cycle: Step 3 — Attempting auto-creation');
+  const newTournament = await autoCreateNextTeamTournament(2);
+
+  if (newTournament) {
+    logger.info(`Team 2v2 Tournament Cycle: Created "${newTournament.name}"`);
+    return {
+      jobName: 'team2v2Tournament',
+      tournamentName: newTournament.name,
+      tournamentScheduled: true,
+    };
+  }
+
+  logger.info('Team 2v2 Tournament Cycle: Skipped — insufficient eligible teams');
+  return { jobName: 'team2v2Tournament' };
+}
+
+async function executeTeam3v3TournamentCycle(): Promise<JobContext> {
+  // Step 1: Repair all robots (pre-match repair)
+  logger.info('Team 3v3 Tournament Cycle: Step 1 — Repairing all robots');
+  await repairAllRobots(true);
+
+  // Step 2: Check for active 3v3 tournament
+  const activeTournament = await prisma.tournament.findFirst({
+    where: { participantType: 'team_3v3', status: 'active' },
+  });
+
+  if (activeTournament) {
+    // Execute current round matches
+    logger.info(`Team 3v3 Tournament Cycle: Step 2 — Executing round ${activeTournament.currentRound}`);
+    const roundResult = await executeTeamTournamentRound(activeTournament.id, 3);
+
+    // Advance winners to next round (handles completion detection internally)
+    await advanceWinnersToNextRound(activeTournament.id);
+
+    return {
+      jobName: 'team3v3Tournament',
+      matchesCompleted: roundResult.matchesExecuted,
+      tournamentName: activeTournament.name,
+      tournamentRound: activeTournament.currentRound,
+      tournamentMaxRounds: activeTournament.maxRounds,
+    };
+  }
+
+  // Step 3: No active tournament — try to create one
+  logger.info('Team 3v3 Tournament Cycle: Step 3 — Attempting auto-creation');
+  const newTournament = await autoCreateNextTeamTournament(3);
+
+  if (newTournament) {
+    logger.info(`Team 3v3 Tournament Cycle: Created "${newTournament.name}"`);
+    return {
+      jobName: 'team3v3Tournament',
+      tournamentName: newTournament.name,
+      tournamentScheduled: true,
+    };
+  }
+
+  logger.info('Team 3v3 Tournament Cycle: Skipped — insufficient eligible teams');
+  return { jobName: 'team3v3Tournament' };
 }
 
 // --- Reserved-slot stub handler factory ---
@@ -738,9 +839,9 @@ export function initScheduler(config: SchedulerConfig): void {
     { name: 'tagTeam', schedule: config.tagTeamSchedule, handler: executeTagTeamCycle },                        // 11:00
     { name: 'koth', schedule: config.kothSchedule, handler: executeKothCycle },                                 // 13:00
     { name: 'team3v3League', schedule: config.team3v3LeagueSchedule, handler: executeTeam3v3LeagueCycle }, // 14:00
-    { name: 'team2v2Tournament', schedule: config.team2v2TournamentSchedule, handler: createReservedSlotHandler('team2v2Tournament') }, // 15:00
+    { name: 'team2v2Tournament', schedule: config.team2v2TournamentSchedule, handler: executeTeam2v2TournamentCycle }, // 15:00
     { name: 'grandMelee', schedule: config.grandMeleeSchedule, handler: createReservedSlotHandler('grandMelee') },         // 17:00
-    { name: 'team3v3Tournament', schedule: config.team3v3TournamentSchedule, handler: createReservedSlotHandler('team3v3Tournament') }, // 18:00
+    { name: 'team3v3Tournament', schedule: config.team3v3TournamentSchedule, handler: executeTeam3v3TournamentCycle }, // 18:00
     { name: 'settlement', schedule: config.settlementSchedule, handler: executeSettlement },                     // 00:00
   ];
 
@@ -755,6 +856,9 @@ export function initScheduler(config: SchedulerConfig): void {
       lastError: null,
       nextRunAt: null,
     });
+
+    // Store handler for manual triggering via triggerJob()
+    jobHandlers.set(job.name, job.handler);
 
     // Register cron job (UTC timezone)
     const task = cron.schedule(job.schedule, () => {
@@ -788,6 +892,25 @@ export function getSchedulerState(): SchedulerState {
     jobs,
   };
 }
+
+// --- Manual trigger (same path as cron: repair, execute, notify, track state) ---
+
+/**
+ * Trigger a job by name, using the same handler as the cron scheduler.
+ * Runs through runJob() so it gets: mutex lock, state tracking, notifications, error handling.
+ * Throws if the job name is not registered.
+ */
+export async function triggerJob(jobName: JobState['name']): Promise<void> {
+  const handler = jobHandlers.get(jobName);
+  if (!handler) {
+    throw new Error(`Unknown job name: ${jobName}. Scheduler may not be initialized.`);
+  }
+  await runJob(jobName, handler);
+}
+
+// --- Exported for testing ---
+
+export { executeTeam2v2TournamentCycle, executeTeam3v3TournamentCycle };
 
 // --- Reset (for testing) ---
 

@@ -17,7 +17,7 @@ export function useBattlePlaybackData(battleLog: BattleLogResponse): BattlePlayb
   const hasSpatialData = !!battleLog.battleLog.arenaRadius && battleLog.battleLog.arenaRadius > 0;
   const isTagTeam = battleLog.battleType === 'tag_team';
   const isKoth = battleLog.battleType === 'koth';
-  const isTeamBattle = battleLog.battleType === 'league_2v2' || battleLog.battleType === 'league_3v3';
+  const isTeamBattle = battleLog.battleType === 'league_2v2' || battleLog.battleType === 'league_3v3' || battleLog.battleType === 'tournament_2v2' || battleLog.battleType === 'tournament_3v3';
   const is1v1 = !isTagTeam && !isKoth && !isTeamBattle && !!battleLog.robot1 && !!battleLog.robot2;
   const showPlaybackViewer = hasSpatialData && (is1v1 || isTagTeam || isKoth || isTeamBattle);
 
