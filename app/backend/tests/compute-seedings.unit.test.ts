@@ -51,8 +51,8 @@ describe('computeSeedings — known 8-robot tournament', () => {
     const r2 = bracketSlots[i + 1];
     round1Matches.push({
       matchNumber: matchNum++,
-      robot1Id: r1?.id ?? null,
-      robot2Id: r2?.id ?? null,
+      participant1Id: r1?.id ?? null,
+      participant2Id: r2?.id ?? null,
       robot1: r1 ? { id: r1.id, name: r1.name, elo: r1.elo } : null,
       robot2: r2 ? { id: r2.id, name: r2.name, elo: r2.elo } : null,
     });
@@ -94,7 +94,7 @@ describe('computeSeedings — known 8-robot tournament', () => {
   it('should mark losers as eliminated when completed matches are provided', () => {
     // Alpha (id=1) beats Hotel (id=8) in match 1
     const completedMatches: CompletedMatch[] = [
-      { robot1Id: 1, robot2Id: 8, winnerId: 1, status: 'completed' },
+      { participant1Id: 1, participant2Id: 8, winnerId: 1, status: 'completed' },
     ];
     const seedings = computeSeedings(round1Matches, bracketSize, completedMatches);
 
@@ -141,8 +141,8 @@ describe('computeSeedings — 5 robots in 8-slot bracket (bye matches)', () => {
 
     round1Matches.push({
       matchNumber: matchNum++,
-      robot1Id: r1?.id ?? null,
-      robot2Id: r2?.id ?? null,
+      participant1Id: r1?.id ?? null,
+      participant2Id: r2?.id ?? null,
       robot1: r1 ? { id: r1.id, name: r1.name, elo: r1.elo } : null,
       robot2: r2 ? { id: r2.id, name: r2.name, elo: r2.elo } : null,
     });

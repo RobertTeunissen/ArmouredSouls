@@ -10,6 +10,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../utils/api';
+import { useAuth } from '../contexts/AuthContext';
 import { createLogger } from '../utils/logger';
 
 const log = createLogger('ActiveTournamentCard');
@@ -42,6 +43,7 @@ function ActiveTournamentCard() {
   const [tournaments, setTournaments] = useState<ActiveTournamentInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchActiveTournaments();
@@ -53,7 +55,7 @@ function ActiveTournamentCard() {
       setError(null);
 
       // Use the upcoming matches endpoint which already returns tournament matches
-      const data = await api.get<UpcomingMatchResponse>('/api/matchmaking/upcoming');
+      const data = await api.get<UpcomingMatchResponse>('/api/matches/upcoming');
 
       // Filter for team tournament matches
       const tournamentMatches = data.matches.filter(
@@ -68,9 +70,13 @@ function ActiveTournamentCard() {
         if (!match.tournamentId || seen.has(match.tournamentId)) continue;
         seen.add(match.tournamentId);
 
-        // Determine opponent name
+        // Determine opponent name — figure out which team is ours first
         let nextOpponentName: string | undefined;
-        if (match.teamBattleTeam2) {
+        const myUserId = user?.id;
+        if (myUserId && match.teamBattleTeam1 && match.teamBattleTeam2) {
+          const isMyTeam1 = match.teamBattleTeam1.members.some(m => m.userId === myUserId);
+          nextOpponentName = isMyTeam1 ? match.teamBattleTeam2.teamName : match.teamBattleTeam1.teamName;
+        } else if (match.teamBattleTeam2) {
           nextOpponentName = match.teamBattleTeam2.teamName;
         }
 
@@ -94,10 +100,6 @@ function ActiveTournamentCard() {
     }
   };
 
-  if (loading || tournaments.length === 0) {
-    return null;
-  }
-
   if (error) {
     return (
       <div className="bg-surface border border-white/10 rounded-lg p-4">
@@ -112,6 +114,10 @@ function ActiveTournamentCard() {
         </div>
       </div>
     );
+  }
+
+  if (loading || tournaments.length === 0) {
+    return null;
   }
 
   return (

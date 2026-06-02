@@ -342,7 +342,6 @@ async function executeSingleTeamBattle(
           wins: team1Won ? { increment: 1 } : undefined,
           draws: isDraw ? { increment: 1 } : undefined,
           losses: (!team1Won && !isDraw) ? { increment: 1 } : undefined,
-          kills: (participant?.finalHP === 0) ? undefined : undefined, // kills tracked per opponent
           damageDealtLifetime: { increment: Math.round(participant?.damageDealt ?? 0) },
         },
       });
