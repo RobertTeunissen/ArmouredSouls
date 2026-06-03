@@ -289,9 +289,19 @@ router.get(
     });
 
     // Compute team ELO (sum of member robot ELOs) and format response
+    // Batch-check subscription status: all members must be subscribed to the league event
+    const eventType = teamSize === 2 ? 'league_2v2' : 'league_3v3';
+    const allMemberRobotIds = teams.flatMap(t => t.members.map(m => m.robot.id));
+    const activeTeamSubs = await prisma.subscription.findMany({
+      where: { robotId: { in: allMemberRobotIds }, eventType, status: 'active' },
+      select: { robotId: true },
+    });
+    const subscribedMemberIds = new Set(activeTeamSubs.map(s => s.robotId));
+
     const standings = teams.map((team, index) => {
       const teamELO = team.members.reduce((sum, m) => sum + m.robot.elo, 0);
       const rank = (page - 1) * perPage + index + 1;
+      const isSubscribed = team.members.every(m => subscribedMemberIds.has(m.robot.id));
       return {
         rank,
         teamId: team.id,
@@ -309,6 +319,7 @@ router.get(
         totalMatches: team.totalWins + team.totalLosses + team.totalDraws,
         eligibility: team.eligibility,
         cyclesInLeague: team.cyclesInLeague,
+        isSubscribed,
         members: team.members.map((m) => ({
           robotId: m.robot.id,
           robotName: m.robot.name,
