@@ -95,7 +95,7 @@ export async function registerTeam(
   robotIds: number[],
   teamName: string,
   teamSize: 2 | 3,
-  userId: number,
+  _userId: number,
 ): Promise<TeamBattle> {
   // Validate team size
   if (!VALID_TEAM_SIZES.includes(teamSize)) {

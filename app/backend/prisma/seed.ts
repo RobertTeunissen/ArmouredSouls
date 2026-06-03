@@ -1108,26 +1108,42 @@ async function seedWimpBotUsers(weapons: { id: number; name: string }[]) {
 async function seedTeamTournaments(_weapons: { id: number; name: string }[]) {
   console.log('Creating team tournament seed data...');
 
-  // Helper: ensure subscription exists for a robot
-  async function ensureSubscription(robotId: number, eventType: string): Promise<void> {
-    await prisma.subscription.upsert({
+  // Helper: ensure subscription exists for a robot, respecting Booking Office cap
+  // Pre-fetch cap data for all test users to avoid N+1 queries
+  const testUserFacilities = await prisma.facility.findMany({
+    where: { facilityType: 'booking_office', user: { username: { startsWith: 'test_user_' } } },
+    select: { userId: true, level: true },
+  });
+  const facilityLevelMap = new Map(testUserFacilities.map(f => [f.userId, f.level]));
+
+  async function ensureSubscription(robotId: number, robotUserId: number, eventType: string): Promise<void> {
+    const existing = await prisma.subscription.findUnique({
       where: { subscription_robot_event: { robotId, eventType } },
-      update: {},
-      create: { robotId, eventType, status: 'active' },
+    });
+    if (existing) return;
+
+    const { getSubscriptionCap } = await import('../src/config/subscriptions');
+    const level = facilityLevelMap.get(robotUserId) ?? 0;
+    const cap = getSubscriptionCap(level);
+    const currentCount = await prisma.subscription.count({ where: { robotId } });
+    if (currentCount >= cap) return;
+
+    await prisma.subscription.create({
+      data: { robotId, eventType, status: 'active' },
     });
   }
 
-  // Step 1: Find existing teams and subscribe their members
+  // Step 1: Find existing teams owned by generated users and subscribe their members
   const existing2v2Teams = await prisma.teamBattle.findMany({
-    where: { teamSize: 2, eligibility: 'ELIGIBLE' },
-    include: { members: { select: { robotId: true } } },
+    where: { teamSize: 2, eligibility: 'ELIGIBLE', stable: { username: { startsWith: 'test_user_' } } },
+    include: { members: { select: { robotId: true, robot: { select: { userId: true } } } } },
     take: 8,
     orderBy: { createdAt: 'asc' },
   });
 
   const existing3v3Teams = await prisma.teamBattle.findMany({
-    where: { teamSize: 3, eligibility: 'ELIGIBLE' },
-    include: { members: { select: { robotId: true } } },
+    where: { teamSize: 3, eligibility: 'ELIGIBLE', stable: { username: { startsWith: 'test_user_' } } },
+    include: { members: { select: { robotId: true, robot: { select: { userId: true } } } } },
     take: 8,
     orderBy: { createdAt: 'asc' },
   });
@@ -1137,15 +1153,15 @@ async function seedTeamTournaments(_weapons: { id: number; name: string }[]) {
     return;
   }
 
-  // Subscribe all member robots to tournament events
+  // Subscribe all member robots to tournament events (only if they have cap room)
   for (const team of existing2v2Teams) {
     for (const member of team.members) {
-      await ensureSubscription(member.robotId, 'tournament_2v2');
+      await ensureSubscription(member.robotId, member.robot.userId, 'tournament_2v2');
     }
   }
   for (const team of existing3v3Teams) {
     for (const member of team.members) {
-      await ensureSubscription(member.robotId, 'tournament_3v3');
+      await ensureSubscription(member.robotId, member.robot.userId, 'tournament_3v3');
     }
   }
 

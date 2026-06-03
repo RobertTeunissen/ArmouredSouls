@@ -399,7 +399,7 @@ export async function processTeamTournamentBattle(
  */
 export async function executeTeamTournamentRound(
   tournamentId: number,
-  teamSize: 2 | 3,
+  _teamSize: 2 | 3,
 ): Promise<RoundExecutionResult> {
   // 1. Load tournament
   const tournament = await prisma.tournament.findUnique({

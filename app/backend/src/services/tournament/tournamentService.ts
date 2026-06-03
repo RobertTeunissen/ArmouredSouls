@@ -399,8 +399,10 @@ export async function createTournament(options: CreateTournamentOptions): Promis
  * - Top half of bracket: Seeds 1, 8, 5, 4, 3, 6, 7, 2 (for 8-slot)
  * - Seeds are distributed to ensure top seeds only meet in later rounds
  * - Sequential winner advancement maintains bracket structure
+ *
+ * @deprecated Superseded by generateBracketPairsGeneric — retained for reference.
  */
-function generateBracketPairs(seededRobots: Robot[], maxRounds: number): ScheduledTournamentMatch[] {
+function _generateBracketPairs(seededRobots: Robot[], maxRounds: number): ScheduledTournamentMatch[] {
   const matches: ScheduledTournamentMatch[] = [];
   const bracketSize = Math.pow(2, maxRounds); // Next power of 2
   
