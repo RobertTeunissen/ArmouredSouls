@@ -499,13 +499,16 @@ function SchedulerStatusPanel({ status, onTriggerJob }: { status: SchedulerState
         nextRunAt: null,
       }));
 
+  // Count jobs that have a next scheduled run
+  const upcomingCount = jobs.filter((j) => j.nextRunAt !== null).length;
+
   return (
     <div data-testid="scheduler-status-panel">
       <h2 className="text-xl font-semibold mb-4">Scheduler Status</h2>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
         <AdminStatCard label="Scheduler" value={status.active ? 'Active' : 'Inactive'} color={status.active ? 'success' : 'error'} icon={<span>{status.active ? '🟢' : '🔴'}</span>} />
         <AdminStatCard label="Running Job" value={status.runningJob || 'None'} color={status.runningJob ? 'warning' : 'info'} icon={<span>⚙️</span>} />
-        <AdminStatCard label="Queue" value={status.queue.length} color="info" icon={<span>📋</span>} />
+        <AdminStatCard label="Scheduled Jobs" value={upcomingCount} color="info" icon={<span>📋</span>} />
       </div>
       <div className="bg-surface rounded-lg overflow-x-auto">
         <table className="w-full text-sm">
