@@ -228,7 +228,7 @@ async function fetchScheduledLeagueMatches(robotIds: number[]) {
 }
 
 async function fetchScheduledTournamentMatches(robotIds: number[]) {
-  return prisma.scheduledTournamentMatch.findMany({
+  const matches = await prisma.scheduledTournamentMatch.findMany({
     where: {
       participantType: 'robot',
       status: { in: ['pending', 'scheduled'] },
@@ -239,6 +239,19 @@ async function fetchScheduledTournamentMatches(robotIds: number[]) {
     },
     orderBy: { round: 'asc' },
   });
+
+  // Resolve participant robots
+  const allParticipantIds = [...new Set(matches.flatMap(m => [m.participant1Id, m.participant2Id]).filter((id): id is number => id !== null))];
+  const robots = allParticipantIds.length > 0
+    ? await prisma.robot.findMany({ where: { id: { in: allParticipantIds } }, include: { user: robotUserSelect } })
+    : [];
+  const robotMap = new Map(robots.map(r => [r.id, r]));
+
+  return matches.map(m => ({
+    ...m,
+    resolvedRobot1: m.participant1Id ? robotMap.get(m.participant1Id) ?? null : null,
+    resolvedRobot2: m.participant2Id ? robotMap.get(m.participant2Id) ?? null : null,
+  }));
 }
 
 async function fetchScheduledTagTeamMatches(teamIds: number[]) {
@@ -350,7 +363,7 @@ function formatLeagueMatches(matches: ScheduledLeagueMatchWithRobots[]) {
   }));
 }
 
-function formatTournamentMatches(matches: ScheduledTournamentMatchWithRobots[]) {
+function formatTournamentMatches(matches: Awaited<ReturnType<typeof fetchScheduledTournamentMatches>>) {
   return matches.map(match => ({
     id: `tournament-${match.id}`,
     matchType: 'tournament_1v1' as const,
@@ -365,8 +378,8 @@ function formatTournamentMatches(matches: ScheduledTournamentMatchWithRobots[]) 
     leagueType: 'tournament' as const,
     scheduledFor: getNextCronOccurrence(getConfig().tournamentSchedule).toISOString(),
     status: match.status,
-    robot1: null, // Participant details resolved separately
-    robot2: null,
+    robot1: match.resolvedRobot1 ? formatRobotSummary(match.resolvedRobot1 as RobotWithUser) : null,
+    robot2: match.resolvedRobot2 ? formatRobotSummary(match.resolvedRobot2 as RobotWithUser) : null,
   }));
 }
 

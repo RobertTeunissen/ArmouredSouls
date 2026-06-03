@@ -136,6 +136,7 @@ export interface TeamBattleStanding {
   totalMatches: number;
   eligibility: string;
   cyclesInLeague: number;
+  isSubscribed?: boolean;
   members: TeamBattleStandingMember[];
 }
 

@@ -48,6 +48,10 @@
   - WimpBot: 3 robots per stable, budget weapons, tag team from first 2 robots
   - AverageBot: 2 robots per stable, mid-tier weapons, tag team from both robots
   - ExpertBot: 1 robot per stable, premium weapons, no tag team
+- **Subscription Assignment Rules** (R15.2):
+  - 1-robot stables (L0, cap 3): Fixed `league_1v1`, `tournament_1v1`, `koth`
+  - 2-robot stables (L1, cap 4): Pick 2 from `{league_2v2, tag_team, tournament_2v2}` + pick 2 from `{koth, league_1v1, tournament_1v1}`
+  - 3-robot stables (L1, cap 4): Slot 1: `league_3v3` or `tournament_3v3`. Slot 2: pick 1 from `{league_2v2, tag_team, tournament_2v2}`. Slots 3-4: pick from remaining pool of all 8 events.
 
 ---
 

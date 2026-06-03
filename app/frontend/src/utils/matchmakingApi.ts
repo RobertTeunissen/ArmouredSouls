@@ -201,6 +201,7 @@ export interface LeagueRobot {
   userId: number;
   cyclesInCurrentLeague: number;
   eligible: boolean;
+  isSubscribed?: boolean;
   user: {
     username: string;
     stableName: string | null;

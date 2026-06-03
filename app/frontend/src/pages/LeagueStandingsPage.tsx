@@ -438,6 +438,10 @@ function LeagueStandingsPage() {
                   <span className="w-3 h-3 rounded-sm bg-white/30 inline-block"></span>
                   <span className="text-secondary">Faded = not yet eligible (&lt;{zoneMeta.minCycles} cycles)</span>
                 </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] bg-white/10 text-tertiary px-1.5 py-0.5 rounded font-medium">INACTIVE</span>
+                  <span className="text-secondary">Not subscribed to this league</span>
+                </div>
                 {!zoneMeta.hasEnoughRobots && (
                   <div className="flex items-center gap-2 text-warning">
                     <span>⚠️</span>
@@ -472,6 +476,7 @@ function LeagueStandingsPage() {
                       const rank = (pagination.page - 1) * pagination.pageSize + index + 1;
                       const rankColor = getRankColor(rank);
                       const isMyBot = isMyRobot(robot.userId);
+                      const isInactive = robot.isSubscribed === false;
                       const winRate =
                         robot.totalBattles > 0
                           ? ((robot.wins / robot.totalBattles) * 100).toFixed(1)
@@ -483,7 +488,7 @@ function LeagueStandingsPage() {
                           ? 'border-l-4 border-l-red-500 bg-red-900/10'
                           : '';
 
-                      const eligibilityClass = !robot.eligible ? 'opacity-50' : '';
+                      const eligibilityClass = !robot.eligible ? 'opacity-50' : isInactive ? 'opacity-40' : '';
 
                       return (
                         <tr
@@ -496,11 +501,18 @@ function LeagueStandingsPage() {
                             #{rank}
                           </td>
                           <td className="px-1.5 lg:px-4 py-3">
-                            <div 
-                              className={`font-semibold text-sm lg:text-base truncate max-w-[100px] lg:max-w-none cursor-pointer hover:underline transition-colors ${isMyBot ? 'text-primary hover:text-blue-300' : 'hover:text-[#58a6ff]'}`}
-                              onClick={() => navigate(`/robots/${robot.id}`)}
-                            >
-                              {robot.name}
+                            <div className="flex items-center gap-1.5">
+                              <div 
+                                className={`font-semibold text-sm lg:text-base truncate max-w-[100px] lg:max-w-none cursor-pointer hover:underline transition-colors ${isMyBot ? 'text-primary hover:text-blue-300' : 'hover:text-[#58a6ff]'}`}
+                                onClick={() => navigate(`/robots/${robot.id}`)}
+                              >
+                                {robot.name}
+                              </div>
+                              {isInactive && (
+                                <span className="shrink-0 text-[10px] bg-white/10 text-tertiary px-1.5 py-0.5 rounded font-medium">
+                                  INACTIVE
+                                </span>
+                              )}
                             </div>
                           </td>
                           <td className="px-1.5 lg:px-4 py-3 text-secondary text-sm lg:text-base">
@@ -594,6 +606,7 @@ function LeagueStandingsPage() {
                     {teamStandings.map((team) => {
                       const rankColor = getRankColor(team.rank);
                       const isMyTeam = user && team.stableId === user.id;
+                      const isInactive = team.isSubscribed === false;
                       const winRate =
                         team.totalMatches > 0
                           ? ((team.wins / team.totalMatches) * 100).toFixed(1)
@@ -602,7 +615,7 @@ function LeagueStandingsPage() {
                       return (
                         <tr
                           key={team.teamId}
-                          className={`border-b border-white/10 ${
+                          className={`border-b border-white/10 ${isInactive ? 'opacity-40' : ''} ${
                             isMyTeam ? 'bg-blue-900 bg-opacity-30' : 'hover:bg-surface-elevated'
                           } transition-colors`}
                         >
@@ -611,8 +624,15 @@ function LeagueStandingsPage() {
                           </td>
                           <td className="px-1.5 lg:px-4 py-3">
                             <div className="space-y-0.5">
-                              <div className={`font-semibold text-sm lg:text-base truncate max-w-[120px] lg:max-w-none ${isMyTeam ? 'text-primary' : 'text-white'}`}>
-                                {team.teamName}
+                              <div className={`flex items-center gap-1.5`}>
+                                <span className={`font-semibold text-sm lg:text-base truncate max-w-[120px] lg:max-w-none ${isMyTeam ? 'text-primary' : 'text-white'}`}>
+                                  {team.teamName}
+                                </span>
+                                {isInactive && (
+                                  <span className="shrink-0 text-[10px] bg-white/10 text-tertiary px-1.5 py-0.5 rounded font-medium">
+                                    INACTIVE
+                                  </span>
+                                )}
                               </div>
                               <div className="text-xs text-tertiary hidden lg:block">
                                 {team.members.map((m) => m.robotName).join(', ')}

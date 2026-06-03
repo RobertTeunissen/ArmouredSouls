@@ -301,8 +301,8 @@ export async function generateBattleReadyUsers(
           // ── Subscriptions for each robot ─────────────────────
           // Subscription assignment rules per stable size (R15.2):
           // - 1-robot stables (L0, cap 3): league_1v1, tournament_1v1, koth
-          // - 2-robot stables (L1, cap 4): pick 2 from {league_2v2, tag_team} + pick 2 from {koth, league_1v1, tournament_1v1}
-          // - 3-robot stables (L1, cap 4): slot 1-2: league_3v3 (if flag), slot 3: pick 1 from {league_2v2, tag_team}, slot 4: pick 1 from {league_1v1, koth, tournament_1v1}
+          // - 2-robot stables (L1, cap 4): pick 2 from {league_2v2, tag_team, tournament_2v2} + pick 2 from {koth, league_1v1, tournament_1v1}
+          // - 3-robot stables (L1, cap 4): slot 1: league_3v3 or tournament_3v3. slot 2: pick 1 from {league_2v2, tag_team, tournament_2v2}. slots 3-4: pick from remaining pool.
 
           for (const robot of createdRobots) {
             let robotSubscriptions: string[];
@@ -315,6 +315,7 @@ export async function generateBattleReadyUsers(
               const teamModes: string[] = [];
               if (tier.createLeague2v2) teamModes.push('league_2v2');
               if (tier.createTagTeam) teamModes.push('tag_team');
+              teamModes.push('tournament_2v2');
               const shuffledTeamModes = teamModes.sort(() => Math.random() - 0.5);
               const teamPicks = shuffledTeamModes.slice(0, 2);
 
@@ -327,25 +328,25 @@ export async function generateBattleReadyUsers(
               // 3-robot stables: L1, cap 4
               const subs: string[] = [];
 
-              // Slot 1-2: league_3v3 if flag is true (counts as 1 subscription)
+              // Slot 1: league_3v3 or tournament_3v3 (random pick)
+              // Always include league_3v3 when tier.createLeague3v3 is true (needed for team creation)
               if (tier.createLeague3v3) {
                 subs.push('league_3v3');
+              } else {
+                subs.push('tournament_3v3');
               }
 
-              // Slot 3: pick 1 from {league_2v2, tag_team}
+              // Slot 2: pick 1 from {league_2v2, tag_team, tournament_2v2}
               const teamModes: string[] = [];
               if (tier.createLeague2v2) teamModes.push('league_2v2');
               if (tier.createTagTeam) teamModes.push('tag_team');
+              teamModes.push('tournament_2v2');
               if (teamModes.length > 0) {
                 subs.push(teamModes[Math.floor(Math.random() * teamModes.length)]);
               }
 
-              // Slot 4: pick 1 from {league_1v1, koth, tournament_1v1}
-              const soloModes = ['league_1v1', 'koth', 'tournament_1v1'];
-              subs.push(soloModes[Math.floor(Math.random() * soloModes.length)]);
-
-              // Fill remaining slots up to cap 4
-              const allEvents = ['league_1v1', 'tournament_1v1', 'koth', 'tag_team', 'league_2v2', 'league_3v3'];
+              // Slots 3-4: pick from remaining pool
+              const allEvents = ['league_1v1', 'tournament_1v1', 'koth', 'tag_team', 'league_2v2', 'league_3v3', 'tournament_2v2', 'tournament_3v3'];
               const remaining = allEvents.filter(e => !subs.includes(e));
               const shuffledRemaining = remaining.sort(() => Math.random() - 0.5);
               while (subs.length < 4 && shuffledRemaining.length > 0) {

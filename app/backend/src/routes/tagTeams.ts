@@ -189,6 +189,14 @@ router.get('/leagues/:tier/standings', authenticateToken, validateRequest({ para
   const endIndex = startIndex + perPage;
   const paginatedStandings = allStandings.slice(startIndex, endIndex);
 
+  // Batch-check subscription status: both active and reserve robots must be subscribed to tag_team
+  const allRobotIds = paginatedStandings.flatMap(t => [t.activeRobot.id, t.reserveRobot.id]);
+  const activeTagTeamSubs = await prisma.subscription.findMany({
+    where: { robotId: { in: allRobotIds }, eventType: 'tag_team', status: 'active' },
+    select: { robotId: true },
+  });
+  const subscribedRobotIds = new Set(activeTagTeamSubs.map(s => s.robotId));
+
   const formattedStandings = paginatedStandings.map(team => ({
     rank: team.rank,
     teamId: team.id,
@@ -201,6 +209,7 @@ router.get('/leagues/:tier/standings', authenticateToken, validateRequest({ para
     draws: team.totalTagTeamDraws,
     totalMatches: team.totalTagTeamWins + team.totalTagTeamLosses + team.totalTagTeamDraws,
     stableName: team.stable?.stableName || null,
+    isSubscribed: subscribedRobotIds.has(team.activeRobot.id) && subscribedRobotIds.has(team.reserveRobot.id),
     activeRobot: {
       id: team.activeRobot.id,
       name: team.activeRobot.name,

@@ -181,6 +181,7 @@ function TagTeamStandingsContent() {
                 <tbody className="divide-y divide-gray-700">
                   {standings.map((team) => {
                     const isMyTeamRow = isMyTeam(team.stableId);
+                    const isInactive = team.isSubscribed === false;
                     const winRate = team.totalMatches > 0
                       ? ((team.wins / team.totalMatches) * 100).toFixed(0)
                       : '0';
@@ -190,6 +191,7 @@ function TagTeamStandingsContent() {
                         key={team.teamId}
                         className={`
                           hover:bg-surface transition-colors
+                          ${isInactive ? 'opacity-40' : ''}
                           ${isMyTeamRow ? 'bg-primary/5 border-l-4 border-l-primary' : ''}
                         `}
                       >
@@ -210,8 +212,15 @@ function TagTeamStandingsContent() {
                         {/* Team */}
                         <td className="px-4 py-3">
                           <div className="space-y-1">
-                            <div className="font-semibold text-base">
-                              <OwnerNameLink userId={team.stableId} displayName={getTeamName(team)} />
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-semibold text-base">
+                                <OwnerNameLink userId={team.stableId} displayName={getTeamName(team)} />
+                              </span>
+                              {isInactive && (
+                                <span className="shrink-0 text-[10px] bg-white/10 text-tertiary px-1.5 py-0.5 rounded font-medium">
+                                  INACTIVE
+                                </span>
+                              )}
                             </div>
                             <div className="flex items-center gap-2 text-sm">
                               <span className="text-primary">{team.activeRobot.name}</span>

@@ -139,6 +139,14 @@ router.get('/:tier/standings', validateRequest({ params: leagueTierParamsSchema 
     hasEnoughRobots = eligibleCount >= MIN_ROBOTS_FOR_REBALANCING;
   }
 
+  // Batch-check subscription status for all robots on this page
+  const robotIds = robots.map(r => r.id);
+  const activeSubscriptions = await prisma.subscription.findMany({
+    where: { robotId: { in: robotIds }, eventType: 'league_1v1', status: 'active' },
+    select: { robotId: true },
+  });
+  const subscribedRobotIds = new Set(activeSubscriptions.map(s => s.robotId));
+
   const standings = robots.map((robot) => ({
     id: robot.id,
     name: robot.name,
@@ -154,6 +162,7 @@ router.get('/:tier/standings', validateRequest({ params: leagueTierParamsSchema 
     userId: robot.user.id,
     cyclesInCurrentLeague: robot.cyclesInCurrentLeague,
     eligible: robot.cyclesInCurrentLeague >= MIN_CYCLES_IN_LEAGUE,
+    isSubscribed: subscribedRobotIds.has(robot.id),
     user: {
       username: robot.user.username,
       stableName: robot.user.stableName,
