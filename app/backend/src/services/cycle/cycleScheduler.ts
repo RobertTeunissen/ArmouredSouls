@@ -580,7 +580,7 @@ async function executeTeam2v2LeagueCycle(): Promise<JobContext> {
 
   // Step 3: Rebalance 2v2 league tiers
   logger.info('Team 2v2 League Cycle: Step 3 — Rebalancing 2v2 league tiers');
-  const rebalanceSummary = await rebalanceTeamBattleLeagues();
+  const rebalanceSummary = await rebalanceTeamBattleLeagues(2);
   logger.info(`Team 2v2 League Cycle: Rebalanced — ${rebalanceSummary.totalPromoted} promoted, ${rebalanceSummary.totalDemoted} demoted`);
 
   // Step 4: Run 2v2 matchmaking for next cycle (24h lead time, rounded to the hour)
@@ -605,7 +605,7 @@ async function executeTeam3v3LeagueCycle(): Promise<JobContext> {
 
   // Step 3: Rebalance 3v3 league tiers
   logger.info('Team 3v3 League Cycle: Step 3 — Rebalancing 3v3 league tiers');
-  const rebalanceSummary = await rebalanceTeamBattleLeagues();
+  const rebalanceSummary = await rebalanceTeamBattleLeagues(3);
   logger.info(`Team 3v3 League Cycle: Rebalanced — ${rebalanceSummary.totalPromoted} promoted, ${rebalanceSummary.totalDemoted} demoted`);
 
   // Step 4: Run 3v3 matchmaking for next cycle (24h lead time, rounded to the hour)

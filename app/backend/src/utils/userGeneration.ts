@@ -391,7 +391,7 @@ export async function generateBattleReadyUsers(
               await registerTeam(userIdForTeams, teamRobotIds, teamName, 2, userIdForTeams);
 
               // Assign to initial league tier instance (R15.6)
-              const leagueId = await assignTeamBattleLeagueInstance('bronze');
+              const leagueId = await assignTeamBattleLeagueInstance('bronze', 2);
               const createdTeam = await prisma.teamBattle.findFirst({
                 where: { stableId: userIdForTeams, teamSize: 2 },
                 orderBy: { createdAt: 'desc' },
@@ -425,7 +425,7 @@ export async function generateBattleReadyUsers(
               await registerTeam(userIdForTeams, teamRobotIds, teamName, 3, userIdForTeams);
 
               // Assign to initial league tier instance (R15.6)
-              const leagueId = await assignTeamBattleLeagueInstance('bronze');
+              const leagueId = await assignTeamBattleLeagueInstance('bronze', 3);
               const createdTeam = await prisma.teamBattle.findFirst({
                 where: { stableId: userIdForTeams, teamSize: 3 },
                 orderBy: { createdAt: 'desc' },

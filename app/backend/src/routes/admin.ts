@@ -1265,7 +1265,9 @@ router.post('/team-battles/rebalance', authenticateToken, requireAdmin, validate
   try {
     logger.info('[Admin] Triggering team battle league rebalancing...');
     const { rebalanceTeamBattleLeagues } = await import('../services/team-battle/teamBattleAdapter');
-    const summary = await rebalanceTeamBattleLeagues();
+    const summary2v2 = await rebalanceTeamBattleLeagues(2);
+    const summary3v3 = await rebalanceTeamBattleLeagues(3);
+    const summary = { '2v2': summary2v2, '3v3': summary3v3 };
 
     recordAuditAction(authReq.user!.userId, 'team_battle', 'success', { action: 'rebalance', summary });
 
@@ -1299,7 +1301,7 @@ router.post('/team-2v2-league/trigger', authenticateToken, requireAdmin, validat
 
     await repairAllRobots(true);
     const execResult = await executeScheduledTeamBattles(2);
-    const rebalanceSummary = await rebalanceTeamBattleLeagues();
+    const rebalanceSummary = await rebalanceTeamBattleLeagues(2);
     const matchesCreated = await runTeamBattleMatchmaking(2);
 
     recordAuditAction(authReq.user!.userId, 'team_battle', 'success', { action: 'trigger_cycle', teamSize: 2, matchesCompleted: execResult.matchesCompleted, matchesCreated });
@@ -1335,7 +1337,7 @@ router.post('/team-3v3-league/trigger', authenticateToken, requireAdmin, validat
 
     await repairAllRobots(true);
     const execResult = await executeScheduledTeamBattles(3);
-    const rebalanceSummary = await rebalanceTeamBattleLeagues();
+    const rebalanceSummary = await rebalanceTeamBattleLeagues(3);
     const matchesCreated = await runTeamBattleMatchmaking(3);
 
     recordAuditAction(authReq.user!.userId, 'team_battle', 'success', { action: 'trigger_cycle', teamSize: 3, matchesCompleted: execResult.matchesCompleted, matchesCreated });
