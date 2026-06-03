@@ -439,7 +439,7 @@ function LeagueStandingsPage() {
                   <span className="text-secondary">Faded = not yet eligible (&lt;{zoneMeta.minCycles} cycles)</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] bg-gray-600/40 text-gray-400 px-1.5 py-0.5 rounded font-medium">INACTIVE</span>
+                  <span className="text-[10px] bg-white/10 text-tertiary px-1.5 py-0.5 rounded font-medium">INACTIVE</span>
                   <span className="text-secondary">Not subscribed to this league</span>
                 </div>
                 {!zoneMeta.hasEnoughRobots && (
@@ -509,7 +509,7 @@ function LeagueStandingsPage() {
                                 {robot.name}
                               </div>
                               {isInactive && (
-                                <span className="shrink-0 text-[10px] bg-gray-600/40 text-gray-400 px-1.5 py-0.5 rounded font-medium">
+                                <span className="shrink-0 text-[10px] bg-white/10 text-tertiary px-1.5 py-0.5 rounded font-medium">
                                   INACTIVE
                                 </span>
                               )}
@@ -629,7 +629,7 @@ function LeagueStandingsPage() {
                                   {team.teamName}
                                 </span>
                                 {isInactive && (
-                                  <span className="shrink-0 text-[10px] bg-gray-600/40 text-gray-400 px-1.5 py-0.5 rounded font-medium">
+                                  <span className="shrink-0 text-[10px] bg-white/10 text-tertiary px-1.5 py-0.5 rounded font-medium">
                                     INACTIVE
                                   </span>
                                 )}

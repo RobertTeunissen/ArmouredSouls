@@ -217,7 +217,7 @@ function TagTeamStandingsContent() {
                                 <OwnerNameLink userId={team.stableId} displayName={getTeamName(team)} />
                               </span>
                               {isInactive && (
-                                <span className="shrink-0 text-[10px] bg-gray-600/40 text-gray-400 px-1.5 py-0.5 rounded font-medium">
+                                <span className="shrink-0 text-[10px] bg-white/10 text-tertiary px-1.5 py-0.5 rounded font-medium">
                                   INACTIVE
                                 </span>
                               )}
