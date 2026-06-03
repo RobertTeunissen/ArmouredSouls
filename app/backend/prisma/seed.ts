@@ -1098,15 +1098,16 @@ async function seedWimpBotUsers(weapons: { id: number; name: string }[]) {
 // ===== TEAM TOURNAMENT SEEDING =====
 
 /**
- * Seeds team tournament data using existing teams from the team league seed.
- * Adds tournament subscriptions to member robots and creates completed/active tournaments.
+ * Seeds team tournament subscriptions for existing test_user teams.
+ * Subscribes member robots to tournament_2v2/tournament_3v3 (respecting cap).
+ * Tournaments are created organically by the cron scheduler — no seeded brackets.
  *
  * Uses upsert semantics — safe to re-run without duplicates.
  *
  * Requirements: R14.1–R14.7
  */
 async function seedTeamTournaments(_weapons: { id: number; name: string }[]) {
-  console.log('Creating team tournament seed data...');
+  console.log('Adding team tournament subscriptions...');
 
   // Helper: ensure subscription exists for a robot, respecting Booking Office cap
   // Pre-fetch cap data for all test users to avoid N+1 queries

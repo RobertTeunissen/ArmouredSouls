@@ -162,11 +162,12 @@ function KothStandingsPage() {
                     {robots.map((robot) => {
                       const rankColor = getRankColor(robot.rank);
                       const isMyBot = isMyRobot(robot.ownerId);
+                      const isInactive = robot.isSubscribed === false;
 
                       return (
                         <tr
                           key={robot.robotId}
-                          className={`border-b border-white/10 ${
+                          className={`border-b border-white/10 ${isInactive ? 'opacity-40' : ''} ${
                             isMyBot ? 'bg-blue-900 bg-opacity-30' : 'hover:bg-surface-elevated'
                           } transition-colors`}
                         >
@@ -174,11 +175,18 @@ function KothStandingsPage() {
                             #{robot.rank}
                           </td>
                           <td className="px-1.5 lg:px-4 py-3">
-                            <div
-                              className={`font-semibold text-sm lg:text-base truncate max-w-[100px] lg:max-w-none cursor-pointer hover:underline transition-colors ${isMyBot ? 'text-primary hover:text-blue-300' : 'hover:text-[#58a6ff]'}`}
-                              onClick={() => navigate(`/robots/${robot.robotId}`)}
-                            >
-                              {robot.robotName}
+                            <div className="flex items-center gap-1.5">
+                              <div
+                                className={`font-semibold text-sm lg:text-base truncate max-w-[100px] lg:max-w-none cursor-pointer hover:underline transition-colors ${isMyBot ? 'text-primary hover:text-blue-300' : 'hover:text-[#58a6ff]'}`}
+                                onClick={() => navigate(`/robots/${robot.robotId}`)}
+                              >
+                                {robot.robotName}
+                              </div>
+                              {isInactive && (
+                                <span className="shrink-0 text-[10px] bg-gray-600/40 text-gray-400 px-1.5 py-0.5 rounded font-medium">
+                                  INACTIVE
+                                </span>
+                              )}
                             </div>
                           </td>
                           <td className="px-1.5 lg:px-4 py-3 text-secondary text-sm lg:text-base">

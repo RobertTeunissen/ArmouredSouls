@@ -6,6 +6,7 @@ export interface KothStandingRobot {
   robotName: string;
   ownerName: string;
   ownerId: number;
+  isSubscribed?: boolean;
   kothWins: number;
   kothMatches: number;
   winRate: number;
@@ -82,6 +83,7 @@ export const getKothStandings = async (
       avgZoneScore: r.avgZoneScore,
       kothKills: r.kothKills,
       bestWinStreak: r.bestStreak ?? r.bestWinStreak,
+      isSubscribed: r.isSubscribed,
     })) as KothStandingRobot[],
     summary: {
       totalEvents: raw.summary?.totalEvents ?? 0,

@@ -241,7 +241,7 @@ async function fetchScheduledTournamentMatches(robotIds: number[]) {
   });
 
   // Resolve participant robots
-  const allParticipantIds = matches.flatMap(m => [m.participant1Id, m.participant2Id]).filter((id): id is number => id !== null);
+  const allParticipantIds = [...new Set(matches.flatMap(m => [m.participant1Id, m.participant2Id]).filter((id): id is number => id !== null))];
   const robots = allParticipantIds.length > 0
     ? await prisma.robot.findMany({ where: { id: { in: allParticipantIds } }, include: { user: robotUserSelect } })
     : [];

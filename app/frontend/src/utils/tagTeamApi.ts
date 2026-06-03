@@ -59,6 +59,7 @@ export interface TagTeamStanding {
   draws: number;
   totalMatches: number;
   stableName: string | null;
+  isSubscribed?: boolean;
   activeRobot: {
     id: number;
     name: string;

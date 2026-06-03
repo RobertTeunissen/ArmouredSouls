@@ -37,12 +37,21 @@ async function getKothStandingsAllTime({ page, limit }: { page: number; limit: n
 
   const topRobot = robots.length > 0 ? robots[0] : null;
 
+  // Batch-check KotH subscription status
+  const robotIds = robots.map(r => r.id);
+  const kothSubs = await prisma.subscription.findMany({
+    where: { robotId: { in: robotIds }, eventType: 'koth', status: 'active' },
+    select: { robotId: true },
+  });
+  const subscribedKothRobotIds = new Set(kothSubs.map(s => s.robotId));
+
   const standings = robots.map((robot, index) => ({
     rank: (page - 1) * limit + index + 1,
     robotId: robot.id,
     robotName: robot.name,
     owner: robot.user.stableName || robot.user.username,
     ownerId: robot.user.id,
+    isSubscribed: subscribedKothRobotIds.has(robot.id),
     kothWins: robot.kothWins,
     kothMatches: robot.kothMatches,
     winRate: robot.kothMatches > 0 ? Number((robot.kothWins / robot.kothMatches * 100).toFixed(1)) : 0,
@@ -150,6 +159,13 @@ async function getKothStandingsLast10({ page, limit }: { page: number; limit: nu
   });
   const ownerMap = new Map(robots.map(r => [r.id, r.user]));
 
+  // Batch-check KotH subscription status
+  const kothSubsLast10 = await prisma.subscription.findMany({
+    where: { robotId: { in: robotIdsToFetch }, eventType: 'koth', status: 'active' },
+    select: { robotId: true },
+  });
+  const subscribedKothIds = new Set(kothSubsLast10.map(s => s.robotId));
+
   const uniqueParticipants = allRobotStats.length;
   const topRobotOwner = topRobotStats ? ownerMap.get(topRobotStats.robotId) : null;
 
@@ -161,6 +177,7 @@ async function getKothStandingsLast10({ page, limit }: { page: number; limit: nu
       robotName: stats.robotName,
       owner: owner ? (owner.stableName || owner.username) : 'Unknown',
       ownerId: owner?.id ?? 0,
+      isSubscribed: subscribedKothIds.has(stats.robotId),
       kothWins: stats.wins,
       kothMatches: stats.matches,
       winRate: stats.matches > 0 ? Number((stats.wins / stats.matches * 100).toFixed(1)) : 0,

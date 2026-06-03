@@ -329,8 +329,9 @@ export async function generateBattleReadyUsers(
               const subs: string[] = [];
 
               // Slot 1: league_3v3 or tournament_3v3 (random pick)
+              // Always include league_3v3 when tier.createLeague3v3 is true (needed for team creation)
               if (tier.createLeague3v3) {
-                subs.push(Math.random() < 0.5 ? 'league_3v3' : 'tournament_3v3');
+                subs.push('league_3v3');
               } else {
                 subs.push('tournament_3v3');
               }
