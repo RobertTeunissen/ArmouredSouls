@@ -831,18 +831,18 @@ describe('User Generation (Tiered Stable System)', () => {
 
         const eventTypes = robot.subscriptions.map(s => s.eventType);
         // All subscriptions should be valid event types
-        const validEvents = ['league_1v1', 'tournament_1v1', 'koth', 'tag_team', 'league_2v2', 'league_3v3'];
+        const validEvents = ['league_1v1', 'tournament_1v1', 'koth', 'tag_team', 'league_2v2', 'league_3v3', 'tournament_2v2', 'tournament_3v3'];
         for (const eventType of eventTypes) {
           expect(validEvents).toContain(eventType);
         }
 
-        // Should have at least 1 team mode (league_2v2 or tag_team)
-        const teamModes = eventTypes.filter(e => e === 'league_2v2' || e === 'tag_team');
+        // Should have at least 1 team mode (league_2v2, tag_team, or tournament_2v2)
+        const teamModes = eventTypes.filter(e => e === 'league_2v2' || e === 'tag_team' || e === 'tournament_2v2');
         expect(teamModes.length).toBeGreaterThanOrEqual(1);
       }
     });
 
-    it('should assign 4 subscriptions to 3-robot stables prioritising league_3v3 (R15.2)', async () => {
+    it('should assign 4 subscriptions to 3-robot stables prioritising 3v3 modes (R15.2)', async () => {
       const result = await generateBattleReadyUsers(3);
 
       // WimpBot has 3 robots and createLeague3v3: true — each should have 4 subscriptions
@@ -856,11 +856,12 @@ describe('User Generation (Tiered Stable System)', () => {
         expect(robot.subscriptions.length).toBe(4);
 
         const eventTypes = robot.subscriptions.map(s => s.eventType);
-        // WimpBot tier has createLeague3v3: true, so league_3v3 should be present
-        expect(eventTypes).toContain('league_3v3');
+        // WimpBot tier has createLeague3v3: true, so league_3v3 or tournament_3v3 should be present
+        const has3v3 = eventTypes.includes('league_3v3') || eventTypes.includes('tournament_3v3');
+        expect(has3v3).toBe(true);
 
         // All subscriptions should be valid event types
-        const validEvents = ['league_1v1', 'tournament_1v1', 'koth', 'tag_team', 'league_2v2', 'league_3v3'];
+        const validEvents = ['league_1v1', 'tournament_1v1', 'koth', 'tag_team', 'league_2v2', 'league_3v3', 'tournament_2v2', 'tournament_3v3'];
         for (const eventType of eventTypes) {
           expect(validEvents).toContain(eventType);
         }
