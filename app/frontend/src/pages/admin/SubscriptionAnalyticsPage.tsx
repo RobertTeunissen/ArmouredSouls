@@ -6,7 +6,7 @@
  *
  * Requirements: R11.5
  */
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   AdminPageHeader,
   AdminStatCard,
@@ -58,6 +58,11 @@ function SubscriptionAnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Per-Stable Breakdown filters
+  const [stableFilter, setStableFilter] = useState('');
+  const [eventFilter, setEventFilter] = useState<string>('all');
+  const [sortState, setSortState] = useState<{ key: string; direction: 'asc' | 'desc' }>({ key: 'robotCount', direction: 'desc' });
+
   const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -79,6 +84,45 @@ function SubscriptionAnalyticsPage() {
   const averageSubscriptionsPerRobot = data && data.totalRobots > 0
     ? (data.totalSubscriptions / data.totalRobots).toFixed(1)
     : '0';
+
+  // Unique event types from the breakdown for the filter dropdown
+  const uniqueEventTypes = useMemo(() => {
+    if (!data?.stableBreakdown) return [];
+    return [...new Set(data.stableBreakdown.map((r) => r.eventType))].sort();
+  }, [data?.stableBreakdown]);
+
+  // Filtered and sorted stable breakdown
+  const filteredStableBreakdown = useMemo(() => {
+    if (!data?.stableBreakdown) return [];
+    let result = data.stableBreakdown;
+    if (stableFilter.trim()) {
+      const query = stableFilter.trim().toLowerCase();
+      result = result.filter((r) => r.stableName.toLowerCase().includes(query));
+    }
+    if (eventFilter !== 'all') {
+      result = result.filter((r) => r.eventType === eventFilter);
+    }
+    // Sort
+    const { key, direction } = sortState;
+    const sorted = [...result].sort((a, b) => {
+      const aVal = a[key as keyof StableBreakdown];
+      const bVal = b[key as keyof StableBreakdown];
+      if (typeof aVal === 'number' && typeof bVal === 'number') {
+        return direction === 'asc' ? aVal - bVal : bVal - aVal;
+      }
+      const aStr = String(aVal).toLowerCase();
+      const bStr = String(bVal).toLowerCase();
+      return direction === 'asc' ? aStr.localeCompare(bStr) : bStr.localeCompare(aStr);
+    });
+    return sorted;
+  }, [data?.stableBreakdown, stableFilter, eventFilter, sortState]);
+
+  const handleSort = (key: string) => {
+    setSortState((prev) => ({
+      key,
+      direction: prev.key === key && prev.direction === 'desc' ? 'asc' : 'desc',
+    }));
+  };
 
   return (
     <div data-testid="subscription-analytics-page" className="space-y-6">
@@ -211,16 +255,40 @@ function SubscriptionAnalyticsPage() {
       <div className="bg-surface rounded-lg p-6">
         <h3 className="text-lg font-semibold mb-3">Per-Stable Breakdown</h3>
         <p className="text-sm text-secondary mb-4">How many robots each Stable has subscribed per event</p>
+
+        {/* Filters */}
+        <div className="flex flex-wrap gap-3 mb-4">
+          <input
+            type="text"
+            value={stableFilter}
+            onChange={(e) => setStableFilter(e.target.value)}
+            placeholder="Search stable…"
+            className="bg-surface-elevated text-white px-3 py-2 rounded w-48 text-sm"
+          />
+          <select
+            value={eventFilter}
+            onChange={(e) => setEventFilter(e.target.value)}
+            className="bg-surface-elevated text-white px-3 py-2 rounded text-sm"
+          >
+            <option value="all">All Events</option>
+            {uniqueEventTypes.map((et) => (
+              <option key={et} value={et}>{et.replace(/_/g, ' ')}</option>
+            ))}
+          </select>
+        </div>
+
         <AdminDataTable<StableBreakdown>
           columns={[
             {
               key: 'stableName',
               label: 'Stable',
+              sortable: true,
               render: (row) => row.stableName || `Stable #${row.stableId}`,
             },
             {
               key: 'eventType',
               label: 'Event',
+              sortable: true,
               render: (row) => (
                 <span className="capitalize">{row.eventType.replace(/_/g, ' ')}</span>
               ),
@@ -228,13 +296,16 @@ function SubscriptionAnalyticsPage() {
             {
               key: 'robotCount',
               label: 'Robots',
+              sortable: true,
               align: 'right',
               render: (row) => row.robotCount.toString(),
             },
           ]}
-          data={data?.stableBreakdown ?? []}
+          data={filteredStableBreakdown}
           loading={loading}
-          emptyMessage="No per-Stable data available"
+          emptyMessage="No matching data — try adjusting filters"
+          sortState={sortState}
+          onSort={handleSort}
         />
       </div>
     </div>
