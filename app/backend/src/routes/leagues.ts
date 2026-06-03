@@ -6,6 +6,7 @@ import prisma from '../lib/prisma';
 import type { Prisma } from '../../generated/prisma';
 import { LeagueError, LeagueErrorCode } from '../errors';
 import { validateRequest } from '../middleware/schemaValidator';
+import { authenticateToken, AuthRequest } from '../middleware/auth';
 
 // Constants matching leagueRebalancingService.ts
 const PROMOTION_PERCENTAGE = 0.10;
@@ -216,6 +217,80 @@ router.get('/:tier/instances', validateRequest({ params: leagueTierParamsSchema 
     currentRobots: instance.currentRobots,
     maxRobots: instance.maxRobots,
   })));
+});
+
+/**
+ * GET /api/leagues/tier-changes/unseen
+ * Returns league tier changes (promotions/demotions) for the current user's robots
+ * that occurred since their previous login. Used for dashboard notifications.
+ */
+router.get('/tier-changes/unseen', authenticateToken, validateRequest({}), async (req: Request, res: Response) => {
+  const authReq = req as AuthRequest;
+  const userId = authReq.user!.userId;
+
+  // Get user's lastLoginAt (set at the START of the current session, so changes
+  // since then are "unseen"). Fall back to 24h ago if never logged in.
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { lastLoginAt: true },
+  });
+
+  const since = user?.lastLoginAt ?? new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+  const changes = await prisma.leagueHistory.findMany({
+    where: {
+      userId,
+      createdAt: { gt: since },
+    },
+    orderBy: { createdAt: 'desc' },
+    take: 20,
+  });
+
+  // Enrich with robot/team names
+  const robotIds = changes.filter(c => c.entityType === 'robot').map(c => c.entityId);
+  const tagTeamIds = changes.filter(c => c.entityType === 'tag_team').map(c => c.entityId);
+  const teamBattleIds = changes.filter(c => c.entityType === 'team_battle').map(c => c.entityId);
+
+  const [robots, tagTeams, teamBattles] = await Promise.all([
+    robotIds.length > 0
+      ? prisma.robot.findMany({ where: { id: { in: robotIds } }, select: { id: true, name: true } })
+      : [],
+    tagTeamIds.length > 0
+      ? prisma.tagTeam.findMany({
+          where: { id: { in: tagTeamIds } },
+          select: { id: true, activeRobot: { select: { name: true } }, reserveRobot: { select: { name: true } } },
+        })
+      : [],
+    teamBattleIds.length > 0
+      ? prisma.teamBattle.findMany({ where: { id: { in: teamBattleIds } }, select: { id: true, teamName: true, teamSize: true } })
+      : [],
+  ]);
+
+  const robotMap = new Map(robots.map(r => [r.id, r.name]));
+  const tagTeamMap = new Map(tagTeams.map(t => [t.id, `${t.activeRobot.name} & ${t.reserveRobot.name}`]));
+  const teamBattleMap = new Map(teamBattles.map(t => [t.id, { name: t.teamName, size: t.teamSize }]));
+
+  function getEntityName(c: { entityType: string; entityId: number }): string {
+    if (c.entityType === 'robot') return robotMap.get(c.entityId) ?? `Robot #${c.entityId}`;
+    if (c.entityType === 'tag_team') return tagTeamMap.get(c.entityId) ?? `Tag Team #${c.entityId}`;
+    const tb = teamBattleMap.get(c.entityId);
+    if (tb) return `${tb.name} (${tb.size}v${tb.size})`;
+    return `Team #${c.entityId}`;
+  }
+
+  const result = changes.map(c => ({
+    id: c.id,
+    entityType: c.entityType,
+    entityId: c.entityId,
+    entityName: getEntityName(c),
+    changeType: c.changeType,
+    sourceTier: c.sourceTier,
+    destinationTier: c.destinationTier,
+    leaguePoints: c.leaguePoints,
+    createdAt: c.createdAt.toISOString(),
+  }));
+
+  res.json({ changes: result });
 });
 
 export default router;
