@@ -19,6 +19,7 @@ import {
   SubscribableEventType,
 } from './eventRegistry';
 import { SubscriptionError, SubscriptionErrorCode } from '../../errors/subscriptionErrors';
+import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
 import logger from '../../config/logger';
 
 // ── Types ────────────────────────────────────────────────────────────
@@ -126,9 +127,10 @@ export async function subscribeRobot(
     // 5. Create subscription row with 'pending' status
     await tx.subscription.create({ data: { robotId, eventType, status: 'pending' } });
 
-    // 6. Audit log — use SELECT FOR UPDATE pattern to avoid sequence conflicts
+    // 6. Audit log — use current cycle number for trend tracking
+    const cycleNumber = await getCurrentCycleNumber();
     const lastEntry = await tx.auditLog.findFirst({
-      where: { cycleNumber: 0 },
+      where: { cycleNumber },
       orderBy: { sequenceNumber: 'desc' },
       select: { sequenceNumber: true },
     });
@@ -136,7 +138,7 @@ export async function subscribeRobot(
 
     await tx.auditLog.create({
       data: {
-        cycleNumber: 0,
+        cycleNumber,
         eventType: 'subscription_create',
         sequenceNumber,
         userId: requestingUserId,
@@ -207,10 +209,11 @@ export async function unsubscribeRobot(
       where: { subscription_robot_event: { robotId, eventType } },
     });
 
-    // 5. Audit log
+    // 5. Audit log — use current cycle number for trend tracking
     const currentCount = await tx.subscription.count({ where: { robotId } });
+    const cycleNumber = await getCurrentCycleNumber();
     const lastEntry = await tx.auditLog.findFirst({
-      where: { cycleNumber: 0 },
+      where: { cycleNumber },
       orderBy: { sequenceNumber: 'desc' },
       select: { sequenceNumber: true },
     });
@@ -218,7 +221,7 @@ export async function unsubscribeRobot(
 
     await tx.auditLog.create({
       data: {
-        cycleNumber: 0,
+        cycleNumber,
         eventType: 'subscription_remove',
         sequenceNumber,
         userId: requestingUserId,
