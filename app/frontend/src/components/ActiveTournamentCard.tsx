@@ -7,7 +7,7 @@
  * Requirements: R9.18, R9.19
  */
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -45,11 +45,7 @@ function ActiveTournamentCard() {
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
 
-  useEffect(() => {
-    fetchActiveTournaments();
-  }, []);
-
-  const fetchActiveTournaments = async () => {
+  const fetchActiveTournaments = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -98,7 +94,11 @@ function ActiveTournamentCard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id]);
+
+  useEffect(() => {
+    fetchActiveTournaments();
+  }, [fetchActiveTournaments]);
 
   if (error) {
     return (

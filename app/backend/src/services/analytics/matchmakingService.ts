@@ -5,10 +5,6 @@ import logger from '../../config/logger';
 import {
   calculateMatchScore,
   MatchScoreInput,
-  LP_MATCH_IDEAL,
-  LP_MATCH_FALLBACK,
-  ELO_MATCH_IDEAL,
-  ELO_MATCH_FALLBACK,
   RECENT_OPPONENT_LIMIT,
 } from '../matchmaking/teamMatchmakingUtils';
 

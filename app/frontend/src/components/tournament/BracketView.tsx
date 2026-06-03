@@ -31,7 +31,10 @@ const BracketView: React.FC<BracketViewProps> = ({
   const [endRound, setEndRound] = useState(maxRounds);
 
   // Support legacy userRobotIds prop for backward compatibility
-  const effectiveUserParticipantIds = userParticipantIds ?? userRobotIds ?? new Set<number>();
+  const effectiveUserParticipantIds = useMemo(
+    () => userParticipantIds ?? userRobotIds ?? new Set<number>(),
+    [userParticipantIds, userRobotIds],
+  );
 
   const isTeamTournament = participantType === 'team_2v2' || participantType === 'team_3v3';
 
