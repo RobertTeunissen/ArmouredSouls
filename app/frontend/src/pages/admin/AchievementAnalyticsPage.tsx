@@ -21,6 +21,10 @@ import { ApiError } from '../../utils/ApiError';
 
 interface AchievementEntry {
   achievementId: string;
+  name: string;
+  description: string;
+  category: string;
+  tier: string;
   unlockCount: number;
   unlockRate: number;
   [key: string]: unknown;
@@ -150,7 +154,19 @@ function AchievementAnalyticsPage() {
       {/* Achievements Table */}
       <AdminDataTable<AchievementEntry>
         columns={[
-          { key: 'achievementId', label: 'Achievement ID' },
+          { key: 'achievementId', label: 'ID' },
+          { key: 'name', label: 'Name', render: (row) => (
+            <div>
+              <span className="font-medium text-white">{row.name}</span>
+              <span className="block text-xs text-secondary truncate max-w-[300px]">{row.description}</span>
+            </div>
+          )},
+          { key: 'category', label: 'Category', render: (row) => (
+            <span className="capitalize text-secondary">{row.category}</span>
+          )},
+          { key: 'tier', label: 'Tier', render: (row) => (
+            <span className="capitalize">{row.tier}</span>
+          )},
           { key: 'unlockCount', label: 'Unlocks', align: 'right' },
           {
             key: 'unlockRate',
