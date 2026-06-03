@@ -110,6 +110,8 @@ const repairAuditQuerySchema = z.object({
   repairType: z.enum(['manual', 'automatic']).optional(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
+  stableName: z.string().max(100).optional(),
+  robotName: z.string().max(100).optional(),
 });
 
 const securityEventsQuerySchema = z.object({
@@ -683,6 +685,8 @@ router.get('/audit-log/repairs', authenticateToken, requireAdmin, validateReques
   const repairType = req.query.repairType as string | undefined;
   const startDate = req.query.startDate as string | undefined;
   const endDate = req.query.endDate as string | undefined;
+  const stableName = req.query.stableName as string | undefined;
+  const robotName = req.query.robotName as string | undefined;
   const page = Math.max(1, parseInt(req.query.page as string) || 1);
   const limit = Math.min(Math.max(1, parseInt(req.query.limit as string) || 25), 100);
 
@@ -691,7 +695,7 @@ router.get('/audit-log/repairs', authenticateToken, requireAdmin, validateReques
     throw new AppError('INVALID_REPAIR_TYPE', "Invalid repairType. Must be 'manual' or 'automatic'", 400);
   }
 
-  const result = await getRepairAuditLog({ repairType, startDate, endDate, page, limit });
+  const result = await getRepairAuditLog({ repairType, startDate, endDate, stableName, robotName, page, limit });
   res.json(result);
 });
 

@@ -945,10 +945,12 @@ export async function getRepairAuditLog(params: {
   repairType?: string;
   startDate?: string;
   endDate?: string;
+  stableName?: string;
+  robotName?: string;
   page: number;
   limit: number;
 }) {
-  const { repairType, startDate, endDate, page, limit } = params;
+  const { repairType, startDate, endDate, stableName, robotName, page, limit } = params;
   const skip = (page - 1) * limit;
 
   // Build where clause for audit log query
@@ -973,6 +975,31 @@ export async function getRepairAuditLog(params: {
       path: ['repairType'],
       equals: repairType,
     };
+  }
+
+  // Filter by stable name (case-insensitive partial match)
+  if (stableName) {
+    const matchingUsers = await prisma.user.findMany({
+      where: {
+        OR: [
+          { stableName: { contains: stableName, mode: 'insensitive' } },
+          { username: { contains: stableName, mode: 'insensitive' } },
+        ],
+      },
+      select: { id: true },
+    });
+    where.userId = { in: matchingUsers.map(u => u.id) };
+  }
+
+  // Filter by robot name (case-insensitive partial match)
+  if (robotName) {
+    const matchingRobots = await prisma.robot.findMany({
+      where: {
+        name: { contains: robotName, mode: 'insensitive' },
+      },
+      select: { id: true },
+    });
+    where.robotId = { in: matchingRobots.map(r => r.id) };
   }
 
   // Get total count for pagination
