@@ -13,7 +13,6 @@ import { ParticipantType } from './tournamentParticipantResolver';
 // Tournament configuration constants
 const MIN_TOURNAMENT_PARTICIPANTS = 4; // Minimum robots needed to start a tournament
 const AUTO_START_THRESHOLD = 8; // Minimum robots for auto-tournament creation
-const MAX_BRACKET_SIZE = 64; // Maximum participants in a single bracket
 
 export interface TournamentCreationResult {
   tournament: Tournament;
@@ -135,8 +134,6 @@ export function seedParticipantsByELO(participants: TournamentParticipant[]): To
  * Generate bracket pairs for single elimination tournament (entity-agnostic).
  * Same algorithm as generateBracketPairs but accepts TournamentParticipant[]
  * and sets participantType on all match records.
- *
- * Enforces MAX_BRACKET_SIZE cap — participants beyond 64 are excluded.
  */
 function generateBracketPairsGeneric(
   seededParticipants: TournamentParticipant[],
@@ -230,20 +227,17 @@ function generateBracketPairsGeneric(
 export async function createTournament(options: CreateTournamentOptions): Promise<TournamentCreationResult> {
   const { participantType, participants, namePrefix } = options;
 
-  // Cap at MAX_BRACKET_SIZE participants
-  const cappedParticipants = participants.slice(0, MAX_BRACKET_SIZE);
-
-  if (cappedParticipants.length < MIN_TOURNAMENT_PARTICIPANTS) {
+  if (participants.length < MIN_TOURNAMENT_PARTICIPANTS) {
     throw new TournamentError(
       TournamentErrorCode.INSUFFICIENT_PARTICIPANTS,
-      `Insufficient participants for tournament. Need at least ${MIN_TOURNAMENT_PARTICIPANTS}, found ${cappedParticipants.length}`,
+      `Insufficient participants for tournament. Need at least ${MIN_TOURNAMENT_PARTICIPANTS}, found ${participants.length}`,
       400,
-      { required: MIN_TOURNAMENT_PARTICIPANTS, found: cappedParticipants.length }
+      { required: MIN_TOURNAMENT_PARTICIPANTS, found: participants.length }
     );
   }
 
   // Seed by ELO (tie-break by createdAt)
-  const seeded = seedParticipantsByELO(cappedParticipants);
+  const seeded = seedParticipantsByELO(participants);
 
   // Calculate rounds
   const maxRounds = calculateMaxRounds(seeded.length);
