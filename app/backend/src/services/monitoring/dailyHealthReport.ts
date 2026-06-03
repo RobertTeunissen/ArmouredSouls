@@ -32,6 +32,18 @@ function formatUptime(seconds: number): string {
 }
 
 /**
+ * Format a duration in milliseconds into a human-readable string (e.g., "10m 11s").
+ */
+function formatDuration(ms: number): string {
+  if (ms < 1000) return `${ms}ms`;
+  const totalSeconds = Math.round(ms / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  if (minutes === 0) return `${seconds}s`;
+  return `${minutes}m ${seconds}s`;
+}
+
+/**
  * Check if logging is functional by verifying the PM2 log file was recently modified.
  */
 function checkLoggingHealth(): { status: 'active' | 'stale' | 'unknown'; lastWriteAgo: string } {
@@ -53,6 +65,38 @@ function checkLoggingHealth(): { status: 'active' | 'stale' | 'unknown'; lastWri
 }
 
 /**
+ * Check the most recent database backup file.
+ * Returns age and status.
+ */
+function checkBackupHealth(): { status: 'ok' | 'stale' | 'missing'; lastBackupAgo: string } {
+  const BACKUP_DIR = '/opt/armouredsouls/backups/daily';
+  const STALE_THRESHOLD_MS = 26 * 60 * 60 * 1000; // 26 hours (daily backup with margin)
+
+  try {
+    const files = fs.readdirSync(BACKUP_DIR)
+      .filter(f => f.endsWith('.dump') || f.endsWith('.sql.gz'))
+      .map(f => ({ name: f, mtime: fs.statSync(`${BACKUP_DIR}/${f}`).mtime.getTime() }))
+      .sort((a, b) => b.mtime - a.mtime);
+
+    if (files.length === 0) {
+      return { status: 'missing', lastBackupAgo: 'none found' };
+    }
+
+    const ageMs = Date.now() - files[0].mtime;
+    const hoursAgo = Math.round(ageMs / (60 * 60 * 1000));
+
+    if (ageMs > STALE_THRESHOLD_MS) {
+      return { status: 'stale', lastBackupAgo: `${hoursAgo}h ago` };
+    }
+
+    return { status: 'ok', lastBackupAgo: `${hoursAgo}h ago` };
+  } catch {
+    // Directory doesn't exist (dev environment)
+    return { status: 'missing', lastBackupAgo: 'N/A (dev)' };
+  }
+}
+
+/**
  * Generate and send the daily health report.
  */
 export async function generateHealthReport(): Promise<string> {
@@ -64,6 +108,7 @@ export async function generateHealthReport(): Promise<string> {
   const modules = checkCriticalModules();
   // Check logging AFTER the write so the mtime reflects the verification entry
   const logging = checkLoggingHealth();
+  const backup = checkBackupHealth();
   const uptime = formatUptime(process.uptime());
 
   // Check database connectivity
@@ -104,7 +149,7 @@ export async function generateHealthReport(): Promise<string> {
     const jobsWithRuns = state.jobs.filter(j => j.lastRunAt !== null);
     if (jobsWithRuns.length > 0) {
       const lines = jobsWithRuns.map(j => {
-        const duration = j.lastRunDurationMs != null ? `${j.lastRunDurationMs}ms` : 'N/A';
+        const duration = j.lastRunDurationMs != null ? formatDuration(j.lastRunDurationMs) : 'N/A';
         const status = j.lastRunStatus === 'success' ? '✓' : j.lastRunStatus === 'failed' ? '✗' : '?';
         return `  ${status} ${j.name}: ${duration}`;
       });
@@ -119,7 +164,8 @@ export async function generateHealthReport(): Promise<string> {
     disk.status !== 'ok' ||
     !dbConnected ||
     modules.status !== 'ok' ||
-    logging.status === 'stale';
+    logging.status === 'stale' ||
+    backup.status === 'stale';
 
   const now = new Date().toUTCString().slice(17, 22); // HH:MM
   const header = isDegraded
@@ -146,6 +192,12 @@ export async function generateHealthReport(): Promise<string> {
     ? `• Last cycle job: ${lastJob} (${cycleInfo})`
     : `• Cycle: ${cycleInfo}`;
 
+  const backupLine = backup.status === 'ok'
+    ? `• Backups: OK (last ${backup.lastBackupAgo})`
+    : backup.status === 'stale'
+      ? `• Backups: ⚠️ STALE (last ${backup.lastBackupAgo})`
+      : `• Backups: ${backup.lastBackupAgo}`;
+
   const message = [
     header,
     '',
@@ -156,6 +208,7 @@ export async function generateHealthReport(): Promise<string> {
     dbLine,
     moduleLine,
     logLine,
+    backupLine,
     cycleLine,
     eventDurationsSection,
   ].filter(Boolean).join('\n');
