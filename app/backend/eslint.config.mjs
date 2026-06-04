@@ -13,6 +13,7 @@ export default tseslint.config(
     // doesn't block CI. Address findings incrementally.
     rules: {
       'no-useless-assignment': 'warn',
+      'preserve-caught-error': 'warn',
     },
   },
   {
