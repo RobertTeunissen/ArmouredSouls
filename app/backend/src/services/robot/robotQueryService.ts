@@ -367,7 +367,7 @@ function getBattleStats(battle: BattleWithParticipants, robotId: number) {
     return { damageDealt: 0, damageTaken: 0, eloChange: 0 };
   }
 
-  let damageTaken = 0;
+  let damageTaken: number;
   if (battle.battleType === 'tag_team') {
     const opponentTeam = participant.team === 1 ? 2 : 1;
     damageTaken = battle.participants

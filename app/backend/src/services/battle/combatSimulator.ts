@@ -469,7 +469,7 @@ export function applyDamage(
   }
 
   if (remainingDamage > 0) {
-    let damageMultiplier = 1.0;
+    let damageMultiplier: number;
 
     if (effectivePenetration <= effectiveArmorPlating) {
       const armorReductionPercent = (effectiveArmorPlating - effectivePenetration) * ARMOR_EFFECTIVENESS;

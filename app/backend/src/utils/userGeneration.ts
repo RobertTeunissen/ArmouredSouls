@@ -147,9 +147,9 @@ export async function generateBattleReadyUsers(
       const username = `${tierPrefix(tier.name)}_${String(seqNum).padStart(4, '0')}`;
 
       // Track data needed for team registration after transaction
-      let userIdForTeams = 0;
-      let stableNameForTeams = '';
-      let createdRobotsForTeams: { id: number; subscriptions: string[] }[] = [];
+      let userIdForTeams: number;
+      let stableNameForTeams: string;
+      let createdRobotsForTeams: { id: number; subscriptions: string[] }[];
 
       try {
         const txResult = await prisma.$transaction(async (tx) => {

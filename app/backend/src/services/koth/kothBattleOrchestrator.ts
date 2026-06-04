@@ -604,7 +604,7 @@ export async function executeScheduledKothBattles(_scheduledFor?: Date): Promise
       logger.info(`[KotH Orchestrator] Super-batch cooldown after ${processed} matches (mem: ${Math.round(memBefore / 1024 / 1024)}MB) - waiting ${SUPER_BATCH_COOLDOWN_MS / 1000}s for GC`);
       
       // Clear any references we can
-      match = null as unknown as typeof match;
+      // (match will be re-fetched after the pause)
       
       // Force GC if available (run with --expose-gc flag)
       if (global.gc) {
@@ -665,8 +665,7 @@ export async function executeScheduledKothBattles(_scheduledFor?: Date): Promise
       }).catch(() => {});
     }
 
-    // Clear match reference to help GC
-    match = null as unknown as typeof match;
+    // End of match processing
     processed++;
   }
 

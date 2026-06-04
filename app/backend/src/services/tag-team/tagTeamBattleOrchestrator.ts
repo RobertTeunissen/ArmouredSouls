@@ -371,7 +371,7 @@ async function simulateTagTeamBattle(
   let team2ReserveUsed = false;
   let team1TagOutTime: number | undefined;
   let team2TagOutTime: number | undefined;
-  let currentTime = 0;
+  let currentTime: number;
   const maxTime = BATTLE_TIME_LIMIT;
 
   // Track damage dealt and survival time for each robot
@@ -383,7 +383,7 @@ async function simulateTagTeamBattle(
   let team1ReserveSurvivalTime = 0;
   let team2ActiveSurvivalTime = 0;
   let team2ReserveSurvivalTime = 0;
-  let lastPhaseWasDraw = false; // Track if the final phase ended in a time-expired draw
+  let lastPhaseWasDraw: boolean; // Track if the final phase ended in a time-expired draw
 
   // Phase 1: Active robots fight
   const phase1Result = simulateBattle(team1CurrentRobot, team2CurrentRobot);

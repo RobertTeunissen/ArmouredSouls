@@ -9,6 +9,13 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
+    // Rules added in @eslint/js v10 — promoted to error after fixing all findings.
+    rules: {
+      'no-useless-assignment': 'error',
+      'preserve-caught-error': 'error',
+    },
+  },
+  {
     files: ['**/*.ts'],
     plugins: {
       security,

@@ -9,6 +9,13 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
+    // Rules added in @eslint/js v10 — promoted to error after fixing all findings.
+    rules: {
+      'no-useless-assignment': 'error',
+      'preserve-caught-error': 'error',
+    },
+  },
+  {
     files: ['**/*.{ts,tsx}'],
     plugins: {
       'react-hooks': reactHooks,
@@ -24,7 +31,11 @@ export default tseslint.config(
       },
     },
     rules: {
-      ...reactHooks.configs.recommended.rules,
+      // Use only the classic hooks rules — the v7 `recommended` preset now
+      // bundles React Compiler lint rules which require the compiler to be
+      // enabled. We'll adopt those when/if we add the compiler.
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/explicit-function-return-type': 'off',

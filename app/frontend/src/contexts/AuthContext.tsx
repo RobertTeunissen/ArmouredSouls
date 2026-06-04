@@ -211,9 +211,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       // shape). The original message — typically the server's
       // 'Invalid credentials' string — is preserved.
       if (error instanceof ApiError) {
-        throw new Error(error.message || 'Login failed');
+        throw new Error(error.message || 'Login failed', { cause: error });
       }
-      throw new Error('Login failed');
+      throw new Error('Login failed', { cause: error });
     }
   };
 

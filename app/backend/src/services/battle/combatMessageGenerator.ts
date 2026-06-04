@@ -1322,7 +1322,6 @@ export class CombatMessageGenerator {
     const lastEvent = simulatorEvents[simulatorEvents.length - 1];
     const lastNarrative = narrativeEvents[narrativeEvents.length - 1];
     if (lastEvent && lastEvent.type === 'yield' && lastNarrative && lastNarrative.type === 'yield' && !battleEndEmitted) {
-      battleEndEmitted = true;
       // Use robotHP map to determine who yielded (correct source, not legacy fields)
       const r1HP = this.getHPFromEvent(lastEvent, context.robot1Name, context);
       const r2HP = this.getHPFromEvent(lastEvent, context.robot2Name, context);

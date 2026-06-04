@@ -70,8 +70,8 @@ router.get('/:tier/standings', validateRequest({ params: leagueTierParamsSchema 
   const isBronze = tier === 'bronze';
   const isSingleInstance = instance !== undefined;
 
-  let eligibleCount = 0;
-  let hasEnoughRobots = false;
+  let eligibleCount: number;
+  let hasEnoughRobots: boolean;
   let promotionCount = 0;
   let demotionCount = 0;
   let promotionRobotIds: Set<number> = new Set();

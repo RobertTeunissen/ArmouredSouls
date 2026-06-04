@@ -432,7 +432,7 @@ async function updateRobotStats(
   const newELO = participant.eloAfter;
   
   // Calculate league points change
-  let leaguePointsChange = 0;
+  let leaguePointsChange: number;
   if (isDraw) {
     leaguePointsChange = LEAGUE_POINTS_DRAW;
   } else if (isWinner) {
