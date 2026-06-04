@@ -149,8 +149,6 @@ export class FacilityRecommendationService {
     });
 
     let totalRepairCost = 0;
-    let totalUpgradeCost = 0;
-    let totalWeaponCost = 0;
     let totalBattles = 0;
 
     // Extract user-specific data from stableMetrics JSON
@@ -178,7 +176,7 @@ export class FacilityRecommendationService {
       },
     });
 
-    totalUpgradeCost = upgradeEvents.reduce(
+    const totalUpgradeCost = upgradeEvents.reduce(
       (sum, e) => sum + ((e.payload as unknown as Record<string, unknown>).cost as number || 0),
       0
     );
@@ -193,7 +191,7 @@ export class FacilityRecommendationService {
       },
     });
 
-    totalWeaponCost = weaponEvents.reduce(
+    const totalWeaponCost = weaponEvents.reduce(
       (sum, e) => sum + ((e.payload as unknown as Record<string, unknown>).cost as number || 0),
       0
     );

@@ -242,21 +242,8 @@ describe('PerformanceByContext - Property-Based Tests', () => {
 
           const text = container.textContent || '';
 
-          // Check for "No battles yet" message when appropriate
-          // The component shows "No battles yet" when arrays are empty
-          // Count how many "No battles yet" messages should appear
-          let _expectedEmptyStates = 0;
-          if (!hasLeagues) _expectedEmptyStates++;
-          if (!hasTournaments) _expectedEmptyStates++;
-          if (!hasTagTeam) _expectedEmptyStates++;
-
-          // Count actual "No battles yet" occurrences
-          const matches = text.match(/No battles yet/g);
-          const _actualEmptyStates = matches ? matches.length : 0;
-
-          // The component should show "No battles yet" for each empty context
-          // Note: This assumes sections are expanded by default or we expand them
-          // For now, just verify the component renders without error
+          // Count actual "No battles yet" occurrences — component should render
+          // one for each empty context section. For now, just verify renders OK.
           expect(container).toBeTruthy();
         }
       ),

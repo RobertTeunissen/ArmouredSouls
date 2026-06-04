@@ -34,7 +34,7 @@ export function checkBattleReadiness(robot: Robot): BattleReadinessCheck {
   const reasons: string[] = [];
 
   // Weapon Check: Must have all required weapons equipped based on loadout type
-  let weaponCheck = false;
+  let weaponCheck: boolean;
 
   switch (robot.loadoutType) {
     case 'single':

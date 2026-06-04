@@ -272,7 +272,7 @@ export async function processTournamentBattle(
   });
 
   // Check and award achievements for both robots (battle_complete + tournament_complete for winner)
-  let achievementUnlocks: UnlockedAchievement[] = [];
+  let achievementUnlocks: UnlockedAchievement[];
   {
     // Look up whether each robot lost their previous battle (for C15 "I Didn't Hear No Bell")
     const [robot1PrevLost, robot2PrevLost] = await Promise.all([

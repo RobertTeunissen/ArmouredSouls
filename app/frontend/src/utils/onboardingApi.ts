@@ -93,9 +93,9 @@ export async function getTutorialState(): Promise<TutorialState> {
 
     // Re-throw ApiError as-is, wrap others
     if (error instanceof ApiError) {
-      throw new Error(error.message || 'Failed to get tutorial state');
+      throw new Error(error.message || 'Failed to get tutorial state', { cause: error });
     }
-    throw new Error('Failed to get tutorial state');
+    throw new Error('Failed to get tutorial state', { cause: error });
   }
 }
 
@@ -122,12 +122,12 @@ export async function skipTutorial(): Promise<void> {
     }
   } catch (error: unknown) {
     if (error instanceof ApiError) {
-      throw new Error(error.message || 'Failed to skip tutorial');
+      throw new Error(error.message || 'Failed to skip tutorial', { cause: error });
     }
     if (error instanceof Error) {
       throw error;
     }
-    throw new Error('Failed to skip tutorial');
+    throw new Error('Failed to skip tutorial', { cause: error });
   }
 }
 
@@ -158,11 +158,11 @@ export async function replayTutorial(): Promise<TutorialState> {
     return response.data;
   } catch (error: unknown) {
     if (error instanceof ApiError) {
-      throw new Error(error.message || 'Failed to replay tutorial');
+      throw new Error(error.message || 'Failed to replay tutorial', { cause: error });
     }
     if (error instanceof Error) {
       throw error;
     }
-    throw new Error('Failed to replay tutorial');
+    throw new Error('Failed to replay tutorial', { cause: error });
   }
 }

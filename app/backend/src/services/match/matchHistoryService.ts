@@ -785,7 +785,7 @@ async function formatTeamBattleHistoryEntry(battle: BattleWithFullRelations, bas
   let team2Name: string | null = null;
   let team1Id: number | null = null;
   let team2Id: number | null = null;
-  let isByeMatch = false;
+  let isByeMatch: boolean;
   let team1LpDelta = 0;
   let team2LpDelta = 0;
 
