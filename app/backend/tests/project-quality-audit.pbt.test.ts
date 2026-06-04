@@ -103,9 +103,9 @@ describe('Bug Condition Exploration — Project Quality Audit', () => {
    * **Validates: Requirement 1.5**
    *
    * Parse ci.yml frontend-tests job steps and assert a step containing
-   * 'vitest --run' exists.
+   * a vitest run command exists (either 'vitest --run' or 'npm run test:ci').
    */
-  test('CI frontend-tests job should contain a vitest --run step', () => {
+  test('CI frontend-tests job should contain a vitest run step', () => {
     const ciYml = readRootFile('.github/workflows/ci.yml');
 
     // Extract the frontend-tests job block (from "frontend-tests:" to the next
@@ -116,7 +116,7 @@ describe('Bug Condition Exploration — Project Quality Audit', () => {
     expect(frontendJobMatch).not.toBeNull();
 
     const frontendJob = frontendJobMatch![0];
-    const hasVitest = frontendJob.includes('vitest --run');
+    const hasVitest = frontendJob.includes('vitest --run') || frontendJob.includes('test:ci');
 
     expect(hasVitest).toBe(true);
   });

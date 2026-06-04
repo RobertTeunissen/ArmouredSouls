@@ -8,8 +8,8 @@
  */
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { InvestmentOverviewTab } from '../../components/facilities/InvestmentOverviewTab';
-import type { UnifiedFacilityROI, FacilityRecommendation } from '../../components/facilities/types';
+import { InvestmentOverviewTab } from '../facilities/InvestmentOverviewTab';
+import type { UnifiedFacilityROI, FacilityRecommendation } from '../facilities/types';
 
 const mockGetFacilityDisplayName = (type: string): string => {
   const names: Record<string, string> = {

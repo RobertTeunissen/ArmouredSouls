@@ -90,11 +90,47 @@ const unitTestFiles = [
   'rosterEligibilityFilter\\.test\\.ts',
   'teamBattleEngine\\.test\\.ts',
   'teamBattleMatchmakingService\\.test\\.ts',
-  'teamBattleOrchestrator\\.test\\.ts',
   'notification-service\\.test\\.ts',
   'achievementTeamBattle\\.test\\.ts',
   'teamTournamentBattleOrchestrator\\.test\\.ts',
   'teamTournamentBattleOrchestrator\\.property\\.test\\.ts',
+  // Arena / spatial (pure math, no DB)
+  'adaptationTracker\\.property\\.test\\.ts',
+  'arenaLayout\\.property\\.test\\.ts',
+  'arenaLayout\\.test\\.ts',
+  'positionTracker\\.property\\.test\\.ts',
+  'positionTracker\\.test\\.ts',
+  'pressureSystem\\.property\\.test\\.ts',
+  'servoStrain\\.property\\.test\\.ts',
+  'servoStrain\\.test\\.ts',
+  'vector2d\\.property\\.test\\.ts',
+  'vector2d\\.test\\.ts',
+  // Route validation (schema-only, no DB)
+  'adminRouteValidation\\.test\\.ts',
+  'analyticsRouteValidation\\.test\\.ts',
+  'financesRouteValidation\\.test\\.ts',
+  'leaderboardsRouteValidation\\.test\\.ts',
+  'onboardingRouteValidation\\.test\\.ts',
+  // Config / errors / utilities (no DB)
+  'env\\.test\\.ts',
+  'cronValidation\\.test\\.ts',
+  'AppError\\.test\\.ts',
+  'domainErrors\\.test\\.ts',
+  'paginationQuery\\.test\\.ts',
+  'sharedFormulas\\.test\\.ts',
+  // KotH engine (mocked, no DB)
+  'kothEngine\\.property\\.test\\.ts',
+  'kothEngine\\.test\\.ts',
+  // Services (mocked, no DB)
+  'eventRegistry\\.test\\.ts',
+  'teamBattleRewardService\\.test\\.ts',
+  'teamMatchmakingUtils\\.test\\.ts',
+  'tournamentService\\.property\\.test\\.ts',
+  'achievementC18\\.property\\.test\\.ts',
+  // Prestige / weapon refinement (mocked, no DB)
+  'prestigeFeatures\\.integration\\.test\\.ts',
+  'weaponRefinement\\.property\\.test\\.ts',
+  'weaponRefinement\\.test\\.ts',
 ];
 
 module.exports = {

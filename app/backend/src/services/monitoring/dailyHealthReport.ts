@@ -90,9 +90,15 @@ function checkBackupHealth(): { status: 'ok' | 'stale' | 'missing'; lastBackupAg
     }
 
     return { status: 'ok', lastBackupAgo: `${hoursAgo}h ago` };
-  } catch {
-    // Directory doesn't exist (dev environment)
-    return { status: 'missing', lastBackupAgo: 'N/A (dev)' };
+  } catch (err) {
+    // If backup directory doesn't exist, likely dev environment.
+    // But log the error so real production issues aren't silently masked.
+    const isENOENT = err instanceof Error && 'code' in err && (err as NodeJS.ErrnoException).code === 'ENOENT';
+    if (isENOENT) {
+      return { status: 'missing', lastBackupAgo: 'N/A (dev)' };
+    }
+    logger.warn('[health-report] Backup health check failed', { error: err instanceof Error ? err.message : String(err) });
+    return { status: 'missing', lastBackupAgo: 'error checking backups' };
   }
 }
 

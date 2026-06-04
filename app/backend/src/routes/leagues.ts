@@ -228,14 +228,10 @@ router.get('/tier-changes/unseen', authenticateToken, validateRequest({}), async
   const authReq = req as AuthRequest;
   const userId = authReq.user!.userId;
 
-  // Get user's lastLoginAt (set at the START of the current session, so changes
-  // since then are "unseen"). Fall back to 24h ago if never logged in.
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { lastLoginAt: true },
-  });
-
-  const since = user?.lastLoginAt ?? new Date(Date.now() - 24 * 60 * 60 * 1000);
+  // Show tier changes from the last 24 hours. Using a fixed window avoids the
+  // race where lastLoginAt is updated at login time (before the dashboard loads),
+  // which would cause the endpoint to return no results on the current session.
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
   const changes = await prisma.leagueHistory.findMany({
     where: {

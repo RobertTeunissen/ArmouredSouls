@@ -4,7 +4,6 @@ import logger from '../config/logger';
 import { assignLeagueInstance } from '../services/league/leagueInstanceService';
 import { assignTagTeamLeagueInstance } from '../services/tag-team/tagTeamLeagueInstanceService';
 import { registerTeam } from '../services/team-battle/teamBattleService';
-import { assignTeamBattleLeagueInstance } from '../services/team-battle/teamBattleAdapter';
 import {
   TIER_CONFIGS,
   TierConfig,
@@ -390,19 +389,6 @@ export async function generateBattleReadyUsers(
               const teamName = `${stableNameForTeams} 2v2`;
               await registerTeam(userIdForTeams, teamRobotIds, teamName, 2, userIdForTeams);
 
-              // Assign to initial league tier instance (R15.6)
-              const leagueId = await assignTeamBattleLeagueInstance('bronze', 2);
-              const createdTeam = await prisma.teamBattle.findFirst({
-                where: { stableId: userIdForTeams, teamSize: 2 },
-                orderBy: { createdAt: 'desc' },
-              });
-              if (createdTeam && createdTeam.teamLeagueId !== leagueId) {
-                await prisma.teamBattle.update({
-                  where: { id: createdTeam.id },
-                  data: { teamLeagueId: leagueId },
-                });
-              }
-
               totalLeague2v2TeamsCreated++;
               logger.info(`[UserGeneration] Created 2v2 team for ${username}`);
             }
@@ -423,19 +409,6 @@ export async function generateBattleReadyUsers(
               const teamRobotIds = subscribedTo3v3.slice(0, 3).map(r => r.id);
               const teamName = `${stableNameForTeams} 3v3`;
               await registerTeam(userIdForTeams, teamRobotIds, teamName, 3, userIdForTeams);
-
-              // Assign to initial league tier instance (R15.6)
-              const leagueId = await assignTeamBattleLeagueInstance('bronze', 3);
-              const createdTeam = await prisma.teamBattle.findFirst({
-                where: { stableId: userIdForTeams, teamSize: 3 },
-                orderBy: { createdAt: 'desc' },
-              });
-              if (createdTeam && createdTeam.teamLeagueId !== leagueId) {
-                await prisma.teamBattle.update({
-                  where: { id: createdTeam.id },
-                  data: { teamLeagueId: leagueId },
-                });
-              }
 
               totalLeague3v3TeamsCreated++;
               logger.info(`[UserGeneration] Created 3v3 team for ${username}`);

@@ -309,7 +309,7 @@ export const teamBattle2v2Adapter: LeagueAdapter<TeamBattle> = createTeamBattleA
 export const teamBattle3v3Adapter: LeagueAdapter<TeamBattle> = createTeamBattleAdapter(3);
 
 /**
- * Legacy adapter — defaults to combined view (no teamSize filter).
+ * Legacy adapter — aliases to teamBattle2v2Adapter (filters by teamSize=2).
  * @deprecated Use teamBattle2v2Adapter or teamBattle3v3Adapter instead.
  */
 export const teamBattleAdapter: LeagueAdapter<TeamBattle> = teamBattle2v2Adapter;

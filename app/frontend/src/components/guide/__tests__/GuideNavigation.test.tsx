@@ -2,8 +2,8 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
-import GuideNavigation from '../../components/guide/GuideNavigation';
-import { GuideSection } from '../../utils/guideApi';
+import GuideNavigation from '../GuideNavigation';
+import { GuideSection } from '../../../utils/guideApi';
 
 const mockSections: GuideSection[] = [
   {

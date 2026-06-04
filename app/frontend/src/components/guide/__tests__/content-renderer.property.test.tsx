@@ -5,7 +5,7 @@ import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { render } from '@testing-library/react';
 import * as fc from 'fast-check';
-import ContentRenderer from '../../components/guide/ContentRenderer';
+import ContentRenderer from '../ContentRenderer';
 
 // Mock react-router-dom
 vi.mock('react-router-dom', () => ({

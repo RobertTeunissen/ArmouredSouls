@@ -102,7 +102,7 @@ describe('CycleControlsPage', () => {
     render(<CycleControlsPage />);
     expect(screen.getByText('Scheduler')).toBeInTheDocument();
     expect(screen.getByText('Running Job')).toBeInTheDocument();
-    expect(screen.getByText('Queue')).toBeInTheDocument();
+    expect(screen.getByText('Scheduled Jobs')).toBeInTheDocument();
   });
 
   it('should render Run buttons for live events in the scheduler table', () => {

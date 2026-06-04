@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import ContentRenderer from '../../components/guide/ContentRenderer';
+import ContentRenderer from '../ContentRenderer';
 
 // Mock mermaid
 vi.mock('mermaid', () => ({
