@@ -9,6 +9,13 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
+    // New rules added in @eslint/js v10 — downgrade to warn so existing code
+    // doesn't block CI. Address findings incrementally.
+    rules: {
+      'no-useless-assignment': 'warn',
+    },
+  },
+  {
     files: ['**/*.ts'],
     plugins: {
       security,
