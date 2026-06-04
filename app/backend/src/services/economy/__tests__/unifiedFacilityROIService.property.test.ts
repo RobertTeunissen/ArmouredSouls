@@ -27,9 +27,6 @@ const NON_ECONOMIC_FACILITY_TYPES = [
   'defense_training_academy',
   'mobility_training_academy',
   'ai_training_academy',
-  'research_lab',
-  'medical_bay',
-  'coaching_staff',
   'booking_office',
   'tuning_bay',
 ] as const;

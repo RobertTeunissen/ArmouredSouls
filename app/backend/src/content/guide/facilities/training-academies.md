@@ -99,8 +99,7 @@ See the [Strategy Guides](/guide/strategy/build-archetypes) for full build recom
 
 ## What's Next?
 
-- [Facility Overview](/guide/facilities/facility-overview) — All 15 facility types at a glance
+- [Facility Overview](/guide/facilities/facility-overview) — All 13 facility types at a glance
 - [Facility Progression & ROI](/guide/facilities/facility-progression) — Full cost tables for every facility
-- [Coaching Staff](/guide/facilities/coaching-staff) — Stable-wide attribute bonuses from coaches
 - [Investment Strategy](/guide/facilities/investment-strategy) — When to buy which facilities
 - [Robot Attributes](/guide/robots/attributes-overview) — The 23 attributes academies unlock

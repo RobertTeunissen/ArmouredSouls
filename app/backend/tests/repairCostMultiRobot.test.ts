@@ -54,24 +54,6 @@ describe('calculateRepairCost - Multi-Robot Discount', () => {
     });
   });
 
-  describe('Medical Bay Integration', () => {
-    it('should apply Medical Bay reduction with multi-robot discount', () => {
-      // Medical Bay 3: 2.0 * (1 - 0.3) = 1.4 multiplier
-      // Repair Bay 5 with 7 robots: 5 × (5 + 7) = 60% discount
-      // Cost: 23,000 * 1.0 * 1.4 * 0.40 = 12,880
-      const cost = calculateRepairCost(sumOfAllAttributes, 100, 0, 5, 3, 7);
-      expect(cost).toBe(12880);
-    });
-
-    it('should preserve Medical Bay logic for destroyed robots', () => {
-      // Medical Bay 5: 2.0 * (1 - 0.5) = 1.0 multiplier
-      // Repair Bay 3 with 2 robots: 3 × (5 + 2) = 21% discount
-      // Cost: 23,000 * 1.0 * 1.0 * 0.79 = 18,170
-      const cost = calculateRepairCost(sumOfAllAttributes, 100, 0, 3, 5, 2);
-      expect(cost).toBe(18170);
-    });
-  });
-
   describe('Edge Cases', () => {
     it('should handle 0 robots (backward compatible)', () => {
       // Level 5 with 0 robots: 5 × (5 + 0) = 25%

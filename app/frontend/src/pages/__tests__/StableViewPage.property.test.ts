@@ -18,9 +18,6 @@ const ALL_FACILITY_TYPES = [
   'mobility_training_academy',
   'ai_training_academy',
   'tuning_bay',
-  'research_lab',
-  'medical_bay',
-  'coaching_staff',
   'booking_office',
 ] as const;
 

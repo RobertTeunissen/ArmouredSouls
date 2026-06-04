@@ -87,10 +87,10 @@ const VALID_PROGRESSION_METRICS = ['elo', 'fame', 'damageDealt', 'damageReceived
 const VALID_METRIC_NAMES = ['elo', 'fame', 'damageDealt', 'damageReceived', 'wins', 'losses', 'draws', 'kills', 'creditsEarned'];
 const VALID_FACILITY_TYPES = [
   'repair_bay', 'training_facility', 'weapons_workshop', 'streaming_studio',
-  'research_lab', 'medical_bay', 'roster_expansion', 'storage_facility',
-  'coaching_staff', 'booking_office', 'combat_training_academy',
+  'roster_expansion', 'storage_facility',
+  'booking_office', 'combat_training_academy',
   'defense_training_academy', 'mobility_training_academy', 'ai_training_academy',
-  'merchandising_hub',
+  'merchandising_hub', 'tuning_bay',
 ];
 
 // --- Route handlers ---

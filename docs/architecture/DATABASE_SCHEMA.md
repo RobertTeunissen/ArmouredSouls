@@ -389,22 +389,21 @@ model Facility {
 }
 ```
 
-**14 Facility Types** (from STABLE_SYSTEM.md):
+**13 Facility Types** (from STABLE_SYSTEM.md):
 
 1. **repair_bay** - Reduces repair costs
 2. **training_facility** - Reduces attribute upgrade costs
 3. **weapons_workshop** - Weapon purchase discounts
-4. **research_lab** - Battle analytics, loadout presets
-5. **medical_bay** - Critical damage cost reduction
-6. **roster_expansion** - Robot roster slots (Level 0-9, maxLevel=9)
-7. **storage_facility** - Weapon storage capacity
-8. **coaching_staff** - Hire coaches for stable-wide bonuses
-9. **booking_office** - Tournament access tiers
-10. **combat_training_academy** - Combat Systems attribute caps
-11. **defense_training_academy** - Defensive Systems attribute caps
-12. **mobility_training_academy** - Chassis & Mobility attribute caps
-13. **ai_training_academy** - AI Processing + Team Coordination attribute caps
-14. **merchandising_hub** - Merchandising revenue (scales with prestige)
+4. **roster_expansion** - Robot roster slots (Level 0-9, maxLevel=9)
+5. **storage_facility** - Weapon storage capacity
+6. **booking_office** - Event subscription access
+7. **combat_training_academy** - Combat Systems attribute caps
+8. **defense_training_academy** - Defensive Systems attribute caps
+9. **mobility_training_academy** - Chassis & Mobility attribute caps
+10. **ai_training_academy** - AI Processing + Team Coordination attribute caps
+11. **merchandising_hub** - Merchandising revenue (scales with prestige)
+12. **streaming_studio** - Streaming revenue multiplier
+13. **tuning_bay** - Bonus attribute points for tactical tuning
 
 ---
 
@@ -956,8 +955,7 @@ These are calculated in application code:
 **Facility**:
 - `upgradeCost`: Based on facility type and current level (see STABLE_SYSTEM.md)
 - `operatingCost`: Based on facility type and level
-- `discountPercentage`: For repair_bay, training_facility, weapons_workshop, medical_bay
-- `bonusPercentage`: For coaching_staff bonuses
+- `discountPercentage`: For repair_bay, training_facility, weapons_workshop
 
 ---
 

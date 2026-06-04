@@ -21,7 +21,6 @@
 - v1.1 - Review comments processed (February 7, 2026)
   - Corrected implementation status: Repair Bay and Merchandising Hub are implemented (10 of 14 total)
   - Recategorized Merchandising Hub from Advanced to Economy category
-  - Clarified Medical Bay purpose (critical damage vs regular damage)
   - Removed Stable Overview Dashboard section (not priority)
   - Specified image storage path (frontend/src/assets/facilities/)
   - Clarified navigation bar purpose and open questions
@@ -114,17 +113,11 @@ The Facilities Page (`/facilities`) is a critical economic and progression inter
 10. ✅ **Merchandising Hub** - Passive income streams (merchandising, scales with prestige)
 11. ✅ **Booking Office** - Event Subscription System — per-robot subscription model gating battle event participation (Spec #35)
 
-**Not Yet Implemented (3 facilities):**
-1. ❌ **Research Lab** - Unlock analytics, loadout presets, battle simulation
-2. ❌ **Medical Bay** - Critical damage repair cost reduction (15%-100%)
-   - *Note: Medical Bay handles critical/permanent damage, while Repair Bay handles regular battle damage. Different systems.*
-3. ❌ **Coaching Staff** - Stable-wide stat bonuses (coaches for offense/defense/tactics)
-
 #### 🚧 **Current UI Limitations**
 
 **Organization & Clarity:**
-- ⚠️ **No logical grouping**: All 14 facilities shown in flat 2-column grid without categories
-- ⚠️ **No visual hierarchy**: Equal visual weight given to implemented vs. not-implemented facilities
+- ⚠️ **No logical grouping**: All 13 facilities shown in flat 2-column grid without categories
+- ⚠️ **No visual hierarchy**: Equal visual weight given to all facilities
 - ⚠️ **No facility icons**: Text-only cards, no visual differentiation between facility types
 - ⚠️ **Limited context**: No explanation of facility categories or strategic importance
 - ⚠️ **No overview**: Cannot see total investment or progression at a glance
@@ -133,10 +126,8 @@ The Facilities Page (`/facilities`) is a critical economic and progression inter
 - ⚠️ **Basic styling**: Standard gray cards without distinctive visual identity
 - ⚠️ **No imagery**: No facility illustrations, icons, or visual themes
 - ⚠️ **Repetitive layout**: All cards look identical except for text content
-- ⚠️ **Small badge**: "Effect not yet implemented" badge is small and easy to miss
 
 **Information Architecture:**
-- ⚠️ **Mixed priorities**: Critical facilities (Roster Expansion) mixed with future features (Coaching Staff)
 - ⚠️ **No guidance**: No indication of which facilities are most important to upgrade first
 - ⚠️ **No relationships**: Cannot see dependencies or synergies between facilities
 
@@ -253,10 +244,8 @@ The Facilities Page (`/facilities`) is a critical economic and progression inter
 - **Purpose**: Unlock special features and advanced gameplay mechanics
 - **Strategic Value**: Late-game enhancements, not required for basic progression
 - **Facilities**:
-  1. Research Lab (❌ Not Implemented) - Analytics, loadout presets, battle simulation
-  2. Medical Bay (❌ Not Implemented) - Critical damage repair reduction (different from Repair Bay's regular damage)
-  3. Coaching Staff (❌ Not Implemented) - Stable-wide stat bonuses
-  4. Booking Office (✅ Implemented) - Event Subscription System — per-robot battle event gating
+  1. Booking Office (✅ Implemented) - Event Subscription System — per-robot battle event gating
+  2. Tuning Bay (✅ Implemented) - Per-robot tactical attribute tuning
 
 #### 1.2 Category Display Requirements
 
@@ -302,11 +291,8 @@ The Facilities Page (`/facilities`) is a critical economic and progression inter
 4. Mobility Training Academy
 
 **Advanced Features** (by strategic value):
-1. Research Lab (analytics & planning tools)
-2. Coaching Staff (stable-wide bonuses)
-3. Booking Office (event subscriptions)
-4. Merchandising Hub (passive income)
-5. Medical Bay (critical damage handling)
+1. Booking Office (event subscriptions)
+2. Tuning Bay (tactical attribute tuning)
 
 ### 2. Implementation Status Clarity
 
@@ -401,15 +387,12 @@ No icon / image on the Visual Example?
 1. **Training Facility** - Icon showing robot training/exercise equipment
 2. **Weapons Workshop** - Icon showing weapons on workbench or forge
 3. **Repair Bay** - Icon showing robot repair tools or maintenance area
-4. **Research Lab** - Icon showing computers, screens, data analytics
-5. **Medical Bay** - Icon showing medical cross, healing equipment
-6. **Roster Expansion** - Icon showing multiple robot silhouettes or hangar
-7. **Storage Facility** - Icon showing weapon racks or storage containers
-8. **Coaching Staff** - Icon showing coach clipboard or tactical board
-9. **Booking Office** - Icon showing trophy, tournament bracket, or schedule
-10. **Combat Training Academy** - Icon showing weapon targeting or combat practice
-11. **Defense Training Academy** - Icon showing shield or defensive barrier
-12. **Mobility Training Academy** - Icon showing robot legs, chassis, or movement
+4. **Roster Expansion** - Icon showing multiple robot silhouettes or hangar
+5. **Storage Facility** - Icon showing weapon racks or storage containers
+6. **Booking Office** - Icon showing trophy, tournament bracket, or schedule
+7. **Combat Training Academy** - Icon showing weapon targeting or combat practice
+8. **Defense Training Academy** - Icon showing shield or defensive barrier
+9. **Mobility Training Academy** - Icon showing robot legs, chassis, or movement
 13. **AI Training Academy** - Icon showing circuit board, AI chip, or neural network
 14. **Merchandising Hub** - Icon showing currency symbol, merchandising, or media
 
@@ -551,24 +534,9 @@ Many facility levels require prestige thresholds to unlock. Players must earn pr
 - Level 7: 5,000 prestige
 - Level 9: 10,000 prestige
 
-**Research Lab:**
-- Level 4: 2,000 prestige
-- Level 7: 7,500 prestige
-- Level 9: 15,000 prestige
-
-**Medical Bay:**
-- Level 4: 2,000 prestige
-- Level 7: 7,500 prestige
-- Level 9: 15,000 prestige
-
 **Roster Expansion:**
 - Level 4: 1,000 prestige
 - Level 7: 5,000 prestige
-- Level 9: 10,000 prestige
-
-**Coaching Staff:**
-- Level 3: 2,000 prestige
-- Level 6: 5,000 prestige
 - Level 9: 10,000 prestige
 
 **Booking Office:**
@@ -1280,30 +1248,6 @@ const FacilityIcon: React.FC<FacilityIconProps> = ({ facilityType, alt, classNam
 
 ### Advanced Features (Category 4)
 
-#### Research Lab (❌ Not Implemented)
-- **Type**: `research_lab`
-- **Max Level**: 10
-- **Cost Range**: ₡400K - ₡5M (total: ₡25.1M)
-- **Benefits**: Unlocks advanced analytics, loadout presets, battle simulation, predictive AI, robot cloning
-- **Strategic Value**: Advanced - Quality of life features, not required for core gameplay
-- **Implementation Status**: Not yet implemented (Phase 2+ feature)
-
-#### Medical Bay (❌ Not Implemented)
-- **Type**: `medical_bay`
-- **Max Level**: 10
-- **Cost Range**: ₡350K - ₡4.5M (total: ₡21.6M)
-- **Benefits**: 15% - 100% reduction on critical damage repair costs, prevents permanent damage
-- **Strategic Value**: Advanced - Handles critical/permanent damage (different from Repair Bay's regular damage)
-- **Implementation Status**: Not yet implemented (requires critical damage system separate from regular battle damage)
-
-#### Coaching Staff (❌ Not Implemented)
-- **Type**: `coaching_staff`
-- **Max Level**: 10
-- **Cost Range**: ₡500K - ₡3.5M (total: ₡16.5M)
-- **Benefits**: Hire coaches for stable-wide stat bonuses (+3-7% to combat, defense, tactics)
-- **Strategic Value**: Advanced - Passive bonuses across all robots
-- **Implementation Status**: Not yet implemented (Phase 2+ feature)
-
 #### Booking Office (✅ Implemented — Spec #35)
 - **Type**: `booking_office`
 - **Max Level**: 10
@@ -1316,7 +1260,7 @@ const FacilityIcon: React.FC<FacilityIconProps> = ({ facilityType, alt, classNam
 
 ## Appendix B: Image Asset Specifications
 
-### Facility Icons (14 assets - Dual Format)
+### Facility Icons (11 assets - Dual Format)
 
 **Primary Format: WebP**
 
@@ -1358,19 +1302,16 @@ const FacilityIcon: React.FC<FacilityIconProps> = ({ facilityType, alt, classNam
 1. `facility-training-facility-icon.webp` + `.svg` - Robot exercising/training equipment
 2. `facility-weapons-workshop-icon.webp` + `.svg` - Weapons on workbench, forge imagery
 3. `facility-repair-bay-icon.webp` + `.svg` - Repair tools, wrench, maintenance equipment
-4. `facility-research-lab-icon.webp` + `.svg` - Computer screens, data analytics, graphs
-5. `facility-medical-bay-icon.webp` + `.svg` - Medical cross, healing beams
-6. `facility-roster-expansion-icon.webp` + `.svg` - Multiple robot silhouettes, hangar door
-7. `facility-storage-facility-icon.webp` + `.svg` - Weapon racks, storage containers
-8. `facility-coaching-staff-icon.webp` + `.svg` - Coach clipboard, tactical whiteboard
-9. `facility-booking-office-icon.webp` + `.svg` - Trophy, tournament bracket, schedule
-10. `facility-combat-training-academy-icon.webp` + `.svg` - Weapon targeting reticle
-11. `facility-defense-training-academy-icon.webp` + `.svg` - Shield, defensive barrier
-12. `facility-mobility-training-academy-icon.webp` + `.svg` - Robot legs, movement trails
-13. `facility-ai-training-academy-icon.webp` + `.svg` - Circuit board, neural network
-14. `facility-merchandising-hub-icon.webp` + `.svg` - Currency symbol, media/merchandise
+4. `facility-roster-expansion-icon.webp` + `.svg` - Multiple robot silhouettes, hangar door
+5. `facility-storage-facility-icon.webp` + `.svg` - Weapon racks, storage containers
+6. `facility-booking-office-icon.webp` + `.svg` - Trophy, tournament bracket, schedule
+7. `facility-combat-training-academy-icon.webp` + `.svg` - Weapon targeting reticle
+8. `facility-defense-training-academy-icon.webp` + `.svg` - Shield, defensive barrier
+9. `facility-mobility-training-academy-icon.webp` + `.svg` - Robot legs, movement trails
+10. `facility-ai-training-academy-icon.webp` + `.svg` - Circuit board, neural network
+11. `facility-merchandising-hub-icon.webp` + `.svg` - Currency symbol, media/merchandise
 
-**Total Assets Required**: 28 files (14 WebP + 14 SVG)
+**Total Assets Required**: 22 files (11 WebP + 11 SVG)
 
 **WebP Format Benefits:**
 - **Superior Quality**: 256×256px resolution provides crisp, detailed visuals at all display sizes
@@ -1413,11 +1354,8 @@ const facilityEmojis = {
   training_facility: '🏋️',
   weapons_workshop: '🔧',
   repair_bay: '🔩',
-  research_lab: '🔬',
-  medical_bay: '⚕️',
   roster_expansion: '🏭',
   storage_facility: '📦',
-  coaching_staff: '📋',
   booking_office: '🏆',
   combat_training_academy: '⚔️',
   defense_training_academy: '🛡️',
@@ -1610,7 +1548,7 @@ The Facilities page uses a 2-tab layout:
 - ~~Investment Advisor~~ — merged into Investment Overview
 
 ### Why Only 5 Economic Facilities?
-Non-economic facilities (academies, roster expansion, storage, research lab, medical bay, coaching staff, booking office, tuning bay) provide capability unlocks without direct financial returns. They have no meaningful ROI to track and are excluded from the investment view.
+Non-economic facilities (academies, roster expansion, storage, booking office, tuning bay) provide capability unlocks without direct financial returns. They have no meaningful ROI to track and are excluded from the investment view.
 
 ---
 

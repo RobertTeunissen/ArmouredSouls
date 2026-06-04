@@ -329,11 +329,11 @@ After all tasks are complete, the following automatable checks confirm the spec 
 
 **R9.1** THE Facilities page SHALL render the Booking Office row identically to other implemented facilities (level, cost-to-next-level, prestige requirement, benefits) using the existing facility-card component, AND THE Booking Office card SHALL include a link to the Booking Office overview surface (R9.10).
 
-**R9.1.1** THE Facilities page SHALL hide every facility row whose `implemented: false` flag is set in `app/backend/src/config/facilities.ts`. At delivery time of this spec, that means Research Lab, Medical Bay, and Coaching Staff rows SHALL NOT appear on the Facilities page. Implementation: filter at the API boundary (the `/api/facilities` route returns only implemented rows) and at the UI boundary (the Facilities page does not render unimplemented rows even if returned by the API).
+**R9.1.1** THE Facilities page SHALL hide every facility row whose `implemented: false` flag is set in `app/backend/src/config/facilities.ts`. Implementation: filter at the API boundary (the `/api/facilities` route returns only implemented rows) and at the UI boundary (the Facilities page does not render unimplemented rows even if returned by the API).
 
 **R9.1.2** THE filter in R9.1.1 SHALL be config-driven (reading `implemented: true` from `facilities.ts`) so that future facilities flip from hidden to visible by setting their flag, with no UI code changes required.
 
-**R9.1.3** THE existing `Facility` rows in the database for any facility whose `implemented: false` flag is set SHALL be left untouched by this spec. If a player previously purchased an unimplemented facility (e.g. Research Lab L1), the row stays in the database but is invisible in the UI; the existing facility purchase route SHALL continue to reject new purchases for unimplemented facilities (existing behaviour, no change).
+**R9.1.3** THE existing `Facility` rows in the database for any facility whose `implemented: false` flag is set SHALL be left untouched by this spec. If a player previously purchased an unimplemented facility, the row stays in the database but is invisible in the UI; the existing facility purchase route SHALL continue to reject new purchases for unimplemented facilities (existing behaviour, no change).
 
 **R9.2** THE Robot Detail page SHALL include a subscription management section showing: the robot's current Subscriptions, the current Max_Events_Per_Robot derived from the owning Stable's Booking Office level, and the list of available unsubscribed Subscribable Events read from the Event_Registry filtered by the Roster_Eligibility_Filter. The player SHALL be able to subscribe and unsubscribe the robot from this section.
 

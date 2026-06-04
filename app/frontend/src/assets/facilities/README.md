@@ -25,7 +25,7 @@ Example:
 - `facility-training-facility-icon.webp`
 - `facility-training-facility-icon.svg`
 
-## Required Icons (14 facilities)
+## Required Icons (11 facilities)
 
 1. **training_facility** - Training Facility (robot training/exercise equipment)
 2. **weapons_workshop** - Weapons Workshop (weapons on workbench/forge)
@@ -37,10 +37,7 @@ Example:
 8. **defense_training_academy** - Defense Training Academy (shield, barrier)
 9. **mobility_training_academy** - Mobility Training Academy (robot legs, movement)
 10. **ai_training_academy** - AI Training Academy (circuit board, neural network)
-11. **research_lab** - Research Lab (computers, analytics, graphs)
-12. **medical_bay** - Medical Bay (medical cross, healing beams)
-13. **coaching_staff** - Coaching Staff (coach clipboard, tactical board)
-14. **booking_office** - Booking Office (trophy, tournament bracket)
+11. **booking_office** - Booking Office (trophy, tournament bracket)
 
 ## Creating New Icons
 

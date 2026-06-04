@@ -21,7 +21,7 @@ function RobotFinancialCard({ robot, rank }: RobotFinancialCardProps) {
   if (robot.metrics.repairCostPercentage > 50) {
     recommendations.push({
       type: 'warning',
-      message: `High repair costs (${robot.metrics.repairCostPercentage}% of revenue). Consider upgrading Medical Bay or avoiding risky battles.`,
+      message: `High repair costs (${robot.metrics.repairCostPercentage}% of revenue). Consider upgrading Repair Bay or avoiding risky battles.`,
     });
   }
   if (robot.netIncome < 0) {

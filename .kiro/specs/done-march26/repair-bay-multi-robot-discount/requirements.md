@@ -45,8 +45,7 @@ The Repair Bay facility currently provides a flat discount based solely on facil
 
 1. THE Repair_Cost_Calculator SHALL accept activeRobotCount as a new parameter
 2. WHEN activeRobotCount is not provided, THE Repair_Cost_Calculator SHALL default to 0 for backward compatibility
-3. THE Repair_Cost_Calculator SHALL maintain all existing parameters (sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel, medicalBayLevel)
-4. THE Repair_Cost_Calculator SHALL continue to apply Medical Bay reductions to the critical damage multiplier
+3. THE Repair_Cost_Calculator SHALL maintain all existing parameters (sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel)
 
 ### Requirement 4: Discount Formula Examples
 
@@ -111,8 +110,7 @@ The Repair Bay facility currently provides a flat discount based solely on facil
 1. THE System SHALL use a single canonical repair cost calculation function for all repair cost calculations
 2. THE Canonical_Function SHALL be located in robotCalculations.ts
 3. THE Canonical_Function SHALL use the attribute-sum formula: baseRepairCost × (damagePercent / 100) × multiplier × (1 - repairBayDiscount)
-4. THE Canonical_Function SHALL support Medical Bay reduction for critical damage multiplier
-5. THE Canonical_Function SHALL accept activeRobotCount parameter for multi-robot discount
+4. THE Canonical_Function SHALL accept activeRobotCount parameter for multi-robot discount
 6. WHEN calculating repair costs in tag team battles, THE System SHALL use the canonical function from robotCalculations.ts
 7. WHEN calculating repair costs in league battles, THE System SHALL use the canonical function from robotCalculations.ts
 8. WHEN calculating repair costs in tournament battles, THE System SHALL use the canonical function from robotCalculations.ts

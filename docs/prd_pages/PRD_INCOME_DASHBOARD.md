@@ -1931,7 +1931,7 @@ The existing `/finances` route (`FinancialReportPage.tsx`) provides:
 
 - **Recommendation Engine** (per robot)
   - "Thunder is highly profitable - consider entering tournaments"
-  - "Blitz has high repair costs - visit Medical Bay for discounts"
+  - "Blitz has high repair costs - consider upgrading Repair Bay for discounts"
   - "Nova has low battle frequency - increase training to maximize streaming revenue"
 
 ### Tab 3: Investments & Spending
@@ -2030,12 +2030,12 @@ The existing `/finances` route (`FinancialReportPage.tsx`) provides:
      - Message: "Your daily expenses exceed your income. Consider disabling expensive facilities or winning more battles."
   
   3. **Unprofitable Facilities** (⚠️ Warning)
-     - Trigger: Facility operating cost > benefit (e.g., coach cost exceeds training value)
-     - Message: "Coaching Staff (₡3,000/day) may not be providing sufficient value. Consider disabling until you have more robots."
+     - Trigger: Facility operating cost > benefit
+     - Message: "A facility's operating cost may exceed its benefit at this stage. Consider whether it's worth maintaining."
   
   4. **High Repair Costs** (⚠️ Warning)
      - Trigger: Repairs > 50% of daily income
-     - Message: "Repair costs are consuming 65% of your income. Consider upgrading Medical Bay or avoiding risky battles."
+     - Message: "Repair costs are consuming 65% of your income. Consider upgrading Repair Bay or avoiding risky battles."
   
   5. **Investment Opportunity** (✅ Info)
      - Trigger: Can afford beneficial facility upgrade with positive ROI
@@ -3201,14 +3201,14 @@ The Income Dashboard is fully functional, refined, and production-ready:
       "type": "HIGH_REPAIR_COSTS",
       "severity": "warning",
       "title": "High Repair Costs",
-      "message": "Repair costs are consuming 65% of your income. Consider upgrading Medical Bay or avoiding risky battles.",
+      "message": "Repair costs are consuming 65% of your income. Consider upgrading Repair Bay or avoiding risky battles.",
       "recommendations": [
-        "Upgrade Medical Bay for repair cost discounts",
+        "Upgrade Repair Bay for repair cost discounts",
         "Focus on winning battles with higher-HP robots",
         "Avoid battles with significantly stronger opponents"
       ],
       "actionLinks": [
-        { "label": "Upgrade Medical Bay", "path": "/facilities" },
+        { "label": "Upgrade Repair Bay", "path": "/facilities" },
         { "label": "View Robot Health", "path": "/robots" }
       ]
     },
@@ -3364,7 +3364,7 @@ The Income Dashboard is fully functional, refined, and production-ready:
 ║ ║ ROI:                   46.8%                                      ║ ║
 ║ ║                                                                   ║ ║
 ║ ║ ⚠️ Warning: Blitz has high repair costs (35.9% of revenue).       ║ ║
-║ ║    Consider upgrading Medical Bay for repair discounts.           ║ ║
+║ ║    Consider upgrading Repair Bay for repair discounts.            ║ ║
 ║ ╚═══════════════════════════════════════════════════════════════════╝ ║
 ║                                                                       ║
 ║ *Facilities costs split evenly across 2 active robots                ║

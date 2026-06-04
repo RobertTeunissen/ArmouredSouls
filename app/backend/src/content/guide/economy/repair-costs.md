@@ -33,10 +33,8 @@ For the complete facility-by-facility breakdown of operating costs at every leve
 | Storage Facility | ₡500/day | ₡2,750/day | Implemented |
 | Roster Expansion | ₡500/day per extra robot | — | Implemented |
 | All 4 Academies | ₡250/day each | ₡2,500/day each | Implemented |
-| Research Lab | — | — | Not yet implemented |
-| Medical Bay | — | — | Not yet implemented |
-| Coaching Staff | — | — | Not yet implemented |
-| Booking Office | — | — | Not yet implemented |
+| Booking Office | ₡0 | ₡0 | Implemented |
+| Tuning Bay | ₡300/day | ₡3,000/day | Implemented |
 
 ```callout-warning
 Facility costs add up fast. If you own 5 facilities at mid-level, you could be paying ₡5,000–₡15,000 per cycle just in operating costs. Only invest in facilities that provide clear value for your current strategy.

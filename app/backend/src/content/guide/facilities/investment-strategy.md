@@ -7,14 +7,13 @@ relatedArticles:
   - facilities/facility-overview
   - facilities/facility-progression
   - facilities/training-academies
-  - facilities/coaching-staff
   - economy/credits-and-income
   - getting-started/starting-budget
 ---
 
 ## Overview
 
-With 15 facilities to choose from and a limited budget, knowing what to buy and when is critical. This guide provides a recommended investment roadmap for each stage of the game, based on ROI analysis and strategic value.
+With 13 facilities to choose from and a limited budget, knowing what to buy and when is critical. This guide provides a recommended investment roadmap for each stage of the game, based on ROI analysis and strategic value.
 
 ![Investment priority roadmap](/images/guide/facilities/investment-priority-roadmap.png)
 
@@ -114,24 +113,16 @@ Income is no longer a constraint. Focus on maximizing power and unlocking endgam
 
 - **Why**: Attribute caps of 42–50 are essential for competing in Diamond and Champion leagues. The difference between level 35 and level 50 attributes is enormous.
 
-### Priority 9: Coaching Staff (Not Yet Implemented)
-
-- **Why**: When implemented, a +5–7% bonus across all your robots' key attributes will provide a meaningful competitive edge. The flat ₡3,000/day operating cost is trivial at this income level.
-
-### Priority 10: Research Lab (Not Yet Implemented)
-
-- **Why**: When implemented, battle simulation and AI customization tools will help optimize your builds for the tightest competition. Expensive to operate, but the strategic value will be high.
-
-### Priority 11: Weapons Workshop (Level 5+)
+### Priority 9: Weapons Workshop (Level 5+)
 
 - **Why**: Weapon modifications and custom designs unlock at higher levels. The 50%+ discount also saves significant Credits when equipping a large roster.
 
-### Priority 12: Booking Office
+### Priority 10: Booking Office
 
-- **Why**: Not yet implemented. Planned to unlock tiered tournaments and enhanced tournament rewards. Heavily prestige-gated but has zero operating cost. Currently all tournaments are open to every eligible robot.
+- **Why**: Unlocks event subscriptions for your robots with facility-level-driven cap curve. Heavily prestige-gated but has zero operating cost.
 
 ```callout-warning
-Late game facilities like the Research Lab and Medical Bay have planned operating costs of ₡6,000–₡11,000/day at higher levels. These facilities are not yet implemented. Even with Champion-tier income, running every facility at max level will be expensive. Prioritize the facilities that match your competitive goals.
+Late game facilities like the Tuning Bay have operating costs of ₡3,000/day at Level 10. Even with Champion-tier income, running every facility at max level will be expensive. Prioritize the facilities that match your competitive goals.
 ```
 
 ## Facilities to Skip or Delay
@@ -140,11 +131,8 @@ Not every facility is worth investing in at every stage:
 
 | Facility | When to Skip | When to Buy |
 |----------|-------------|-------------|
-| Medical Bay | Not yet implemented | When the feature is released |
 | Storage Facility | Until you run out of weapon slots | When you have 4+ robots with multiple loadout options |
-| Booking Office | Not yet implemented | When the feature is released |
-| Coaching Staff | Not yet implemented | When the feature is released |
-| Research Lab | Not yet implemented | When the feature is released |
+| Booking Office | Until you need more event subscriptions | When you want to subscribe robots to multiple battle events |
 
 ## General Investment Principles
 
@@ -160,7 +148,7 @@ Check your Financial Report regularly. If your total facility operating costs ar
 
 ## What's Next?
 
-- [Facility Overview](/guide/facilities/facility-overview) — All 15 facility types at a glance
+- [Facility Overview](/guide/facilities/facility-overview) — All 13 facility types at a glance
 - [Facility Progression & ROI](/guide/facilities/facility-progression) — Detailed cost tables for every facility
 - [Starting Budget](/guide/getting-started/starting-budget) — How to allocate your initial ₡3,000,000
 - [Credits & Income Sources](/guide/economy/credits-and-income) — Understanding your revenue streams

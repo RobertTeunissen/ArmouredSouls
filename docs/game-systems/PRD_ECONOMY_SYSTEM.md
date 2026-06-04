@@ -57,7 +57,6 @@
   - Winner and loser rewards separately
 
 **Facility Discounts:**
-- ✅ Medical Bay: Reduces critical damage multiplier (HP=0) by 10%-100%
 - ✅ Repair Bay: Multi-robot discount formula (Level × (5 + Active Robots), capped at 90%)
 
 **Daily Financial System:**
@@ -102,7 +101,7 @@
    - Shows costs deducted, users processed, bankruptcies
 
 5. `app/backend/src/utils/robotCalculations.ts` (modified)
-   - Medical Bay support for repair costs
+   - Repair cost calculations with multi-robot discount
 
 6. `app/backend/tests/economyCalculations.test.ts` (215 lines, 27 tests ✅)
 
@@ -538,7 +537,7 @@ This section tracks the chronological evolution of the economy system implementa
 - Economic calculation utilities (`economyCalculations.ts`)
 - Financial API endpoints (`/api/finances/*`)
 - Battle reward system with league-based rewards
-- Repair cost system with Medical Bay support
+- Repair cost system with Repair Bay multi-robot discount
 - Comprehensive unit tests (27 tests passing)
 - Daily financial processing system
 - Reward calculation details in battle logs
@@ -626,7 +625,7 @@ This PRD defines the complete economy system for Armoured Souls, covering all co
 - ✅ Complete facility system with costs in STABLE_SYSTEM.md
 - ✅ Weapon catalog with prices in WEAPONS_AND_LOADOUT.md
 - ✅ Robot attribute upgrade costs in ROBOT_ATTRIBUTES.md
-- ✅ Repair cost formulas with Medical Bay support
+- ✅ Repair cost formulas with Repair Bay multi-robot discount
 - ✅ Database schema for all economic tracking (DATABASE_SCHEMA.md)
 - ✅ **Economic calculation utilities** (`app/backend/src/utils/economyCalculations.ts`)
   - Facility operating costs (all 14 facilities)
@@ -800,18 +799,15 @@ total_max_cost = 23 × 1,274,000 = ₡29,302,000
 | 1. Repair Bay | ₡100 |
 | 2. Training Facility | ₡250/level |
 | 3. Weapons Workshop | ₡1,000 |
-| 4. Research Lab | ₡2,000 |
-| 5. Medical Bay | ₡2,000 |
-| 6. Roster Expansion | ₡500/slot |
-| 7. Storage Facility | ₡500 |
-| 8. Coaching Staff | ₡3,000 when active |
-| 9. Booking Office | ₡0 (generates prestige) |
-| 10. Combat Training Academy | ₡250/level |
-| 11. Defense Training Academy | ₡250/level |
-| 12. Mobility Training Academy | ₡250/level |
-| 13. AI Training Academy | ₡250/level |
-| 14. Merchandising Hub | ₡150,000 | ₡200/level |
-| 15. Streaming Studio | ₡100,000 | ₡100/level |
+| 4. Roster Expansion | ₡500/slot |
+| 5. Storage Facility | ₡500 |
+| 6. Booking Office | ₡0 (generates prestige) |
+| 7. Combat Training Academy | ₡250/level |
+| 8. Defense Training Academy | ₡250/level |
+| 9. Mobility Training Academy | ₡250/level |
+| 10. AI Training Academy | ₡250/level |
+| 11. Merchandising Hub | ₡150,000 | ₡200/level |
+| 12. Streaming Studio | ₡100,000 | ₡100/level |
 
 **Total Cost to Purchase All Facilities (Level 1)**: ₡5,550,000
 
@@ -1023,11 +1019,6 @@ repair_cost_before_discounts = base_repair × damage_percentage × multiplier
      - Level 6 + 10 robots: 90% discount (6 × (5 + 10), capped)
      - Level 10 + 10 robots: 90% discount (10 × (5 + 10) = 150%, capped at 90%)
 
-2. **Medical Bay** (critical damage only, HP = 0):
-   - Reduces critical damage multiplier (2.0x) by 10%-100%
-   - Formula: `effective_multiplier = 2.0 × (1 - medical_bay_level × 0.1)`
-   - Level 10: Eliminates critical damage penalty entirely
-
 **Repair Bay ROI Analysis with Multi-Robot Discount**:
 - Average robot (230 total attributes): Base repair cost = ₡23,000
 - Average damage per battle: 40-60% HP (₡9,200-₡13,800 repair cost)
@@ -1089,13 +1080,7 @@ Once you reach 90% discount, further Repair Bay or Roster Expansion investment p
 base_repair = sum_of_attributes × 100
 repair_before_discounts = base_repair × damage_percentage × condition_multiplier
 
-// Step 2: Apply Medical Bay if critical damage
-if HP = 0 AND medical_bay_level > 0:
-    medical_reduction = medical_bay_level × 0.1
-    effective_multiplier = 2.0 × (1 - medical_reduction)
-    repair_before_discounts = base_repair × damage_percentage × effective_multiplier
-
-// Step 3: Apply Repair Bay multi-robot discount
+// Step 2: Apply Repair Bay multi-robot discount
 raw_discount = repair_bay_level × (5 + active_robot_count)
 repair_bay_discount = Math.min(raw_discount, 90) / 100  // Cap at 90%
 final_repair_cost = repair_before_discounts × (1 - repair_bay_discount)
@@ -1105,42 +1090,41 @@ final_repair_cost = repair_before_discounts × (1 - repair_bay_discount)
 - Robot with 230 total attributes (sum of all 23)
 - Started battle with 100 HP
 - Took 100 damage during battle (reduced to 0 HP = destroyed)
-- Repair Bay Level 5, Medical Bay Level 3, 1 robot (active_robot_count = 0)
+- Repair Bay Level 5, 1 robot (active_robot_count = 0)
 
 ```
 base_repair = 230 × 100 = ₡23,000
 damage_percentage = 100/100 = 1.0  // 100% damage (complete destruction)
 
-// Critical damage multiplier with Medical Bay
-medical_reduction = 3 × 0.1 = 0.3
-effective_multiplier = 2.0 × (1 - 0.3) = 1.4
+// Critical damage multiplier (HP = 0)
+condition_multiplier = 2.0
 
-repair_before_discount = 23,000 × 1.0 × 1.4 = ₡32,200
+repair_before_discount = 23,000 × 1.0 × 2.0 = ₡46,000
 
 // Repair Bay multi-robot discount
 raw_discount = 5 × (5 + 0) = 25%
 repair_bay_discount = Math.min(25, 90) / 100 = 0.25
-final_repair_cost = 32,200 × (1 - 0.25) = ₡24,150
+final_repair_cost = 46,000 × (1 - 0.25) = ₡34,500
 ```
 
 **Example (Multiple Robots)**:
 - Same robot with 230 total attributes
 - Same damage scenario (destroyed, 0 HP)
-- Repair Bay Level 5, Medical Bay Level 3, 7 robots total (active_robot_count = 7)
+- Repair Bay Level 5, 7 robots total (active_robot_count = 7)
 
 ```
 base_repair = 230 × 100 = ₡23,000
 damage_percentage = 1.0
-effective_multiplier = 1.4 (with Medical Bay Level 3)
+condition_multiplier = 2.0 (destroyed)
 
-repair_before_discount = 23,000 × 1.0 × 1.4 = ₡32,200
+repair_before_discount = 23,000 × 1.0 × 2.0 = ₡46,000
 
 // Repair Bay multi-robot discount
 raw_discount = 5 × (5 + 7) = 60%
 repair_bay_discount = Math.min(60, 90) / 100 = 0.60
-final_repair_cost = 32,200 × (1 - 0.60) = ₡12,880
+final_repair_cost = 46,000 × (1 - 0.60) = ₡18,400
 
-// Savings vs single robot: ₡24,150 - ₡12,880 = ₡11,270 (47% additional savings)
+// Savings vs single robot: ₡34,500 - ₡18,400 = ₡16,100 (47% additional savings)
 ```
 
 **Repair Timing**:
@@ -1177,7 +1161,6 @@ operating_cost = base_cost + (additional_cost × level)
 // Examples:
 Repair Bay: ₡100 × level
 Training Facility: ₡1,500 + (₡750 × level)
-Research Lab: ₡2,000 + (₡1,000 × level)
 ```
 
 **Special Cases**:
@@ -1186,7 +1169,6 @@ Research Lab: ₡2,000 + (₡1,000 × level)
   - Level 1: 2 robot slots (₡500/day total - ₡500 for the 2nd slot)
   - Level 2: 3 robot slots (₡1,000/day total - ₡500 each for 2nd and 3rd slots)
   - Formula: `operating_cost = (current_roster_size - 1) × ₡500/day`
-- **Coaching Staff**: ₡3,000/day when coach is active (only if Coaching Staff facility purchased)
 - **Booking Office**: ₡0/day (generates prestige instead)
 
 **Typical Daily Operating Costs by Game Stage**:
@@ -1195,12 +1177,6 @@ Research Lab: ₡2,000 + (₡1,000 × level)
 - **Late Game** (6-10 robots, 10+ facilities): ₡40,000-₡60,000/day
 
 **Note**: Early game players should prioritize attribute upgrades over multiple facilities. With only 1 robot, Storage Facility and Roster Expansion provide no benefit. **Recommended early facilities**: Repair Bay (long-term savings) and optionally one Academy (if pushing past level 10 cap). 
-
-### 7. Coach Switching Cost
-
-- **One-time cost**: ₡100,000 to switch active coach
-- Only applies if Coaching Staff facility is purchased
-- Coach daily operating cost: ₡3,000/day while active
 
 ### 8. Total Startup Costs
 
@@ -1638,7 +1614,6 @@ Prestige unlocks higher facility levels (see [STABLE_SYSTEM.md](STABLE_SYSTEM.md
 - Repair Bay Level 4: Requires 1,000 prestige
 - Repair Bay Level 7: Requires 5,000 prestige
 - Repair Bay Level 9: Requires 10,000 prestige
-- Research Lab Level 9: Requires 15,000 prestige
 - Booking Office Level 7: Requires 25,000 prestige
 
 **2. Income Multipliers**:
@@ -1717,10 +1692,7 @@ OPERATING COSTS:
   Repair Bay (Lvl 5):      ₡3,500
   Training Facility (Lvl 4): ₡4,500
   Weapons Workshop (Lvl 3): ₡2,000
-  Research Lab (Lvl 2):    ₡3,000
-  Medical Bay (Lvl 2):     ₡3,000
   Roster Expansion (4):    ₡1,500
-  Coaching Staff (active): ₡3,000
   Combat Academy (Lvl 3):  ₡1,600
   Defense Academy (Lvl 2): ₡1,200
   Mobility Academy (Lvl 2): ₡1,200
@@ -1728,7 +1700,7 @@ OPERATING COSTS:
   Merchandising Hub (Lvl 5): ₡1,000
   Streaming Studio (Lvl 5): ₡500
   ─────────────────────────────────
-  Total Operating Costs:   ₡29,500
+  Total Operating Costs:   ₡18,500
 
 REPAIRS:
   Robot "Thunder":         ₡8,500
@@ -1737,7 +1709,7 @@ REPAIRS:
   Total Repair Costs:      ₡20,500
 
 ═══════════════════════════════════════
-NET INCOME:                ₡56,500
+NET INCOME:                ₡67,500
 CURRENT BALANCE:           ₡1,904,000
 ═══════════════════════════════════════
 
@@ -1987,7 +1959,7 @@ The unified service extracts per-facility returns from the `StableMetric` fields
 **Payback Period Examples** (Revised with correct battle frequency):
 
 1. **Repair Bay Level 1** (₡50,000):
-   > **For complete repair cost formulas, facility discounts, and ROI analysis**: See **Section 5 "Repair Costs"** in the Cost Centers section above. Includes detailed payback calculations for single and multi-robot scenarios, Medical Bay integration, and worked examples.
+   > **For complete repair cost formulas, facility discounts, and ROI analysis**: See **Section 5 "Repair Costs"** in the Cost Centers section above. Includes detailed payback calculations for single and multi-robot scenarios and worked examples.
   
 2. **Training Facility Level 1**: See [STABLE_SYSTEM.md](STABLE_SYSTEM.md) for pricing
    - Saves 5% on upgrades (varies: ₡2K-₡50K saved depending on level)
@@ -2180,12 +2152,6 @@ facility_cost = [defined per facility level];
 base_repair = sum_of_attributes * 100;
 damage_pct = damage_taken / max_hp;
 condition_multiplier = (hp === 0) ? 2.0 : (hp < max_hp * 0.1) ? 1.5 : 1.0;
-
-// Apply Medical Bay to critical multiplier
-if (hp === 0 && medical_bay_level > 0) {
-    medical_reduction = medical_bay_level * 0.1;
-    condition_multiplier = 2.0 * (1 - medical_reduction);
-}
 
 repair_before_discount = base_repair * damage_pct * condition_multiplier;
 

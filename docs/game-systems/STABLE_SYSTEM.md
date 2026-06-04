@@ -67,23 +67,20 @@ Statistics are captured at both stable-level and robot-level for comprehensive t
 
 Players invest Credits in facility upgrades that provide stable-wide benefits. All facilities have **10 levels** (Level 0 = not purchased, Levels 1-10 = upgrades). Some facility levels require prestige thresholds to unlock.
 
-### Complete Facility List (16 Total)
+### Complete Facility List (13 Total)
 1. **Repair Bay** - Repair cost discounts
 2. **Training Facility** - Attribute upgrade discounts
 3. **Weapons Workshop** - Weapon purchase discounts, crafting
-4. **Research Lab** - Analytics, loadout presets
-5. **Medical Bay** - Critical damage cost reduction
-6. **Roster Expansion** - Robot roster slots (1→10)
-7. **Storage Facility** - Weapon storage capacity
-8. **Coaching Staff** - Hire coaches for stable-wide bonuses
-9. **Booking Office** - Tournament and prestige event access
-10. **Combat Training Academy** - Combat Systems attribute caps
-11. **Defense Training Academy** - Defensive Systems attribute caps
-12. **Mobility Training Academy** - Chassis & Mobility attribute caps
-13. **AI Training Academy** - AI Processing + Team Coordination attribute caps
-14. **Merchandising Hub** - Merchandising revenue (scales with prestige)
-15. **Streaming Studio** - Increases streaming revenue per battle
-16. **Tuning Bay** - Bonus attribute points for tactical per-battle tuning
+4. **Roster Expansion** - Robot roster slots (1→10)
+5. **Storage Facility** - Weapon storage capacity
+6. **Booking Office** - Event subscription access
+7. **Combat Training Academy** - Combat Systems attribute caps
+8. **Defense Training Academy** - Defensive Systems attribute caps
+9. **Mobility Training Academy** - Chassis & Mobility attribute caps
+10. **AI Training Academy** - AI Processing + Team Coordination attribute caps
+11. **Merchandising Hub** - Merchandising revenue (scales with prestige)
+12. **Streaming Studio** - Increases streaming revenue per battle
+13. **Tuning Bay** - Bonus attribute points for tactical per-battle tuning
 
 ### Facility Upgrades
 
@@ -160,31 +157,7 @@ Resale value is computed as `pricePaid × resaleRate(workshopLevel)`, where `pri
 
 **For complete weapon details, see [WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md)**
 
-**4. Research Lab** (Operating Cost: ₡2,000/day at Level 1, +₡1,000/day per level)
-- **Level 1** (₡200,000): Unlock advanced battle analytics
-- **Level 2** (₡400,000): Unlock loadout presets (save 3 configurations per robot)
-- **Level 3** (₡600,000): Unlock AI behavior customization
-- **Level 4** (₡800,000, requires 2,000 prestige): Unlock 5 loadout presets per robot
-- **Level 5** (₡1,000,000): Unlock battle simulation (test matchups without cost)
-- **Level 6** (₡1,250,000): Unlock advanced statistics dashboard
-- **Level 7** (₡1,500,000, requires 7,500 prestige): Unlock predictive AI (opponent analysis)
-- **Level 8** (₡1,750,000): Unlock 8 loadout presets per robot
-- **Level 9** (₡2,000,000, requires 15,000 prestige): Unlock experimental technology
-- **Level 10** (₡2,500,000): Unlock robot cloning
-
-**5. Medical Bay** (Operating Cost: ₡2,000/day at Level 1, +₡1,000/day per level)
-- **Level 1** (₡175,000): 15% reduction on critical damage repair costs (0 HP)
-- **Level 2** (₡350,000): 25% reduction on critical damage repair costs
-- **Level 3** (₡525,000): 35% reduction on critical damage repair costs
-- **Level 4** (₡700,000, requires 2,000 prestige): 45% reduction on critical damage repair costs
-- **Level 5** (₡875,000): 55% reduction on critical damage repair costs
-- **Level 6** (₡1,050,000): 65% reduction on critical damage repair costs, faster recovery protocols
-- **Level 7** (₡1,250,000, requires 7,500 prestige): 75% reduction on critical damage repair costs
-- **Level 8** (₡1,500,000): 85% reduction on critical damage repair costs
-- **Level 9** (₡1,750,000, requires 15,000 prestige): 95% reduction on critical damage repair costs, prevent permanent damage
-- **Level 10** (₡2,250,000): Eliminate critical damage penalties entirely
-
-**6. Roster Expansion** (Operating Cost: ₡500/day per robot slot beyond first)
+**4. Roster Expansion** (Operating Cost: ₡500/day per robot slot beyond first)
 - **Level 0**: 1 robot slot (free, no operating cost)
 - **Level 1** (₡150,000): 2 robot slots
 - **Level 2** (₡300,000): 3 robot slots
@@ -216,38 +189,7 @@ Resale value is computed as `pricePaid × resaleRate(workshopLevel)`, where `pri
 
 **For weapon inventory management details, see [WEAPONS_AND_LOADOUT.md](WEAPONS_AND_LOADOUT.md)**
 
-**8. Coaching Staff** (Operating Cost: ₡3,000/day when coach active)
-- **Level 0**: No coach available
-- **Level 1** (₡250,000): Unlock Offensive Coach (+3% Combat Power for all robots)
-- **Level 2** (₡350,000): Unlock Defensive Coach (+3% Armor Plating for all robots)
-- **Level 3** (₡450,000, requires 2,000 prestige): Unlock Tactical Coach (+5% Threat Analysis for all robots)
-- **Level 4** (₡600,000): Improve Offensive Coach (+5% Combat Power)
-- **Level 5** (₡750,000): Improve Defensive Coach (+5% Armor Plating)
-- **Level 6** (₡900,000, requires 5,000 prestige): Improve Tactical Coach (+8% Threat Analysis)
-- **Level 7** (₡1,100,000): Unlock Team Coach (+5% team coordination bonuses for arena battles)
-- **Level 8** (₡1,300,000): Improve Offensive Coach (+7% Combat Power)
-- **Level 9** (₡1,500,000, requires 10,000 prestige): Improve Defensive Coach (+7% Armor Plating)
-- **Level 10** (₡1,750,000): Master Coach (combine two coach bonuses at 75% effectiveness)
-
-**Note**: Only one coach can be active at a time. Switching coaches costs ₡100,000.
-
-**Bonus Stacking**: Coaching Staff bonuses are **additive** with Loadout and Stance percentage modifiers. See [ROBOT_ATTRIBUTES.md](ROBOT_ATTRIBUTES.md#effective-stat-calculation) for the complete formula:
-```
-effective_attribute = (base + weapon_bonuses) × (1 + loadout% + stance% + coach%)
-
-Example:
-  Combat Power base: 20
-  Weapon bonuses: +5
-  Two-Handed loadout: +25%
-  Offensive stance: +15%
-  Offensive Coach (Level 8): +7%
-  
-  effective = (20 + 5) × (1 + 0.25 + 0.15 + 0.07)
-           = 25 × 1.47
-           = 36.75 → 37 (rounded)
-```
-
-**9. Booking Office** (Operating Cost: None - generates prestige instead)
+**5. Booking Office** (Operating Cost: None - generates prestige instead)
 - **Level 0**: Bronze league access only
 - **Level 1** (₡250,000, requires 1,000 prestige): Unlock Silver league tournaments
 - **Level 2** (₡500,000, requires 2,500 prestige): Unlock Gold league tournaments, custom paint jobs
@@ -260,7 +202,7 @@ Example:
 - **Level 9** (₡2,250,000, requires 45,000 prestige): Enhanced tournament rewards (+40%)
 - **Level 10** (₡2,500,000, requires 50,000 prestige): Access to World Championship, custom arena design
 
-**10. Combat Training Academy** (Operating Cost: ₡250/day per level)
+**6. Combat Training Academy** (Operating Cost: ₡250/day per level)
 - **Level 0**: Combat Systems attributes (6) capped at level 10
 - **Level 1** (₡100,000): Unlock Combat Systems cap to level 15
 - **Level 2** (₡200,000): Unlock Combat Systems cap to level 20
@@ -273,7 +215,7 @@ Example:
 - **Level 9** (₡900,000, requires 10,000 prestige): Unlock Combat Systems cap to level 48
 - **Level 10** (₡1,000,000, requires 15,000 prestige): Unlock Combat Systems cap to level 50 (maximum)
 
-**11. Defense Training Academy** (Operating Cost: ₡250/day per level)
+**7. Defense Training Academy** (Operating Cost: ₡250/day per level)
 - **Level 0**: Defensive Systems attributes (5) capped at level 10
 - **Level 1** (₡100,000): Unlock Defensive Systems cap to level 15
 - **Level 2** (₡200,000): Unlock Defensive Systems cap to level 20
@@ -286,7 +228,7 @@ Example:
 - **Level 9** (₡900,000, requires 10,000 prestige): Unlock Defensive Systems cap to level 48
 - **Level 10** (₡1,000,000, requires 15,000 prestige): Unlock Defensive Systems cap to level 50 (maximum)
 
-**12. Mobility Training Academy** (Operating Cost: ₡250/day per level)
+**8. Mobility Training Academy** (Operating Cost: ₡250/day per level)
 - **Level 0**: Chassis & Mobility attributes (5) capped at level 10
 - **Level 1** (₡100,000): Unlock Chassis & Mobility cap to level 15
 - **Level 2** (₡200,000): Unlock Chassis & Mobility cap to level 20
@@ -299,7 +241,7 @@ Example:
 - **Level 9** (₡900,000, requires 10,000 prestige): Unlock Chassis & Mobility cap to level 48
 - **Level 10** (₡1,000,000, requires 15,000 prestige): Unlock Chassis & Mobility cap to level 50 (maximum)
 
-**13. AI Training Academy** (Operating Cost: ₡250/day per level)
+**9. AI Training Academy** (Operating Cost: ₡250/day per level)
 - **Level 0**: AI Processing + Team Coordination attributes (7) capped at level 10
 - **Level 1** (₡100,000): Unlock AI & Team cap to level 15
 - **Level 2** (₡200,000): Unlock AI & Team cap to level 20
@@ -312,7 +254,7 @@ Example:
 - **Level 9** (₡900,000, requires 10,000 prestige): Unlock AI & Team cap to level 48
 - **Level 10** (₡1,000,000, requires 15,000 prestige): Unlock AI & Team cap to level 50 (maximum)
 
-**14. Merchandising Hub** (Operating Cost: ₡200/day per level)
+**10. Merchandising Hub** (Operating Cost: ₡200/day per level)
 - **Level 0**: No merchandising income
 - **Level 1** (₡150,000): Unlock Merchandising (₡5,000/day base, scales with prestige)
 - **Level 2** (₡300,000): Improve Merchandising (₡10,000/day base)
@@ -339,7 +281,7 @@ merchandising_income = (level × ₡5,000) × (1 + prestige / 10,000)
 
 **Note**: Streaming revenue is awarded per battle. See Streaming Studio facility.
 
-**15. Streaming Studio** (Operating Cost: ₡100/day per level)
+**11. Streaming Studio** (Operating Cost: ₡100/day per level)
 - **Level 0**: No streaming revenue bonus (base 1.0× multiplier)
 - **Level 1** (₡100,000): Double streaming revenue per battle (2.0× multiplier, ₡100/day operating cost)
 - **Level 2** (₡200,000): Triple streaming revenue per battle (3.0× multiplier, ₡200/day operating cost)
@@ -386,7 +328,7 @@ Where:
 - For Tag Team matches, uses highest battles and highest fame from each team
 - Each level adds 100% to the multiplier (L1 = 2×, L2 = 3×, L3 = 4×, etc.)
 
-**16. Tuning Bay** (Operating Cost: ₡300/day per level)
+**12. Tuning Bay** (Operating Cost: ₡300/day per level)
 - **Level 0**: 10 free tuning points per robot (no facility required)
 - **Level 1** (₡200,000): 20 tuning points per robot (₡300/day operating cost)
 - **Level 2** (₡400,000): 30 tuning points per robot (₡600/day operating cost)
@@ -521,10 +463,6 @@ Example:
 - Repair costs based on damage taken and attribute total (see ROBOT_ATTRIBUTES.md)
 - Not a daily cost - only after battles
 
-**Coach Costs**:
-- Active coach costs ₡3,000/day (if Coaching Staff facility upgraded)
-- Switching coaches costs ₡100,000 one-time
-
 ### Daily Summary Presentation
 
 - See **[PRD_INCOME_DASHBOARD.md](PRD_INCOME_DASHBOARD.md)** for the implementation of the income system and daily financial summary
@@ -548,9 +486,7 @@ OPERATING COSTS:
   Repair Bay (Lvl 5):      ₡3,500
   Training Facility (Lvl 4): ₡4,500
   Weapons Workshop (Lvl 3): ₡2,000
-  Research Lab (Lvl 2):    ₡3,000
   Roster Expansion (4 robots): ₡1,500
-  Coaching Staff (active): ₡3,000
   Combat Academy (Lvl 3):  ₡1,600
   Defense Academy (Lvl 2): ₡1,200
   Mobility Academy (Lvl 2): ₡1,200
@@ -558,7 +494,7 @@ OPERATING COSTS:
   Merchandising Hub (Lvl 5): ₡3,500
   Streaming Studio (Lvl 5): ₡500
   ─────────────────────────────────
-  Total Operating Costs:   ₡26,500
+  Total Operating Costs:   ₡20,500
 
 REPAIRS:
   Robot "Thunder":         ₡8,500
@@ -567,7 +503,7 @@ REPAIRS:
   Total Repair Costs:      ₡20,500
 
 ═══════════════════════════════════════
-NET INCOME:                ₡59,500
+NET INCOME:                ₡65,500
 CURRENT BALANCE:           ₡1,847,000
 ═══════════════════════════════════════
 ```
@@ -605,7 +541,6 @@ CURRENT BALANCE:           ₡1,847,000
 - Purchase/upgrade facilities
 - View bonuses and benefits
 - View daily operating costs
-- Manage coaches (if Coaching Staff unlocked)
 
 ### Workshop Tab
 - View owned weapons
@@ -674,7 +609,7 @@ CURRENT BALANCE:           ₡1,847,000
 - Multiple active robots multiply the benefit across all battles
 
 ### Late Game (₡20M+ total earned)
-1. Max out critical facilities (Repair Bay, Medical Bay, all 4 Training Academies)
+1. Max out critical facilities (Repair Bay, all 4 Training Academies)
 2. Upgrade Streaming Studio to Level 10 for 11× streaming revenue multiplier
 3. Build specialized arena teams
 4. Invest in prestige-locked content (high-tier tournaments)

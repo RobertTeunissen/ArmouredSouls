@@ -50,7 +50,7 @@ resaleRate(level) = level × 10   // capped at 100%
 
 **Why level × 10:**
 
-1. **Matches the project's incremental convention.** Every other facility in the game uses a single linear slope (Workshop purchase discount 10%/level, Training Facility 10%/level, Medical Bay 10%/level, Repair Bay 5%/level, Streaming Studio 100%/level). Resale rate follows the same pattern.
+1. **Matches the project's incremental convention.** Every other facility in the game uses a single linear slope (Workshop purchase discount 10%/level, Training Facility 10%/level, Repair Bay 5%/level, Streaming Studio 100%/level). Resale rate follows the same pattern.
 
 2. **Same slope as the Workshop purchase discount.** Clean dual-purpose teaching: "Workshop level rewards you 10% on both buying and selling." One number to remember, no asymmetric formula to explain.
 

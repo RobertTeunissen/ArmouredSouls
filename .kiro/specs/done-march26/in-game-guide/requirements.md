@@ -150,11 +150,10 @@ Armoured Souls is a complex robot combat strategy game with many interconnected 
 
 #### Acceptance Criteria
 
-1. THE Guide SHALL include an article listing all 15 facility types with their purpose, cost range, operating costs, and key benefits
+1. THE Guide SHALL include an article listing all facility types with their purpose, cost range, operating costs, and key benefits
 2. THE Guide SHALL include articles for each facility explaining level progression, prestige requirements, and ROI analysis
 3. THE Guide SHALL include an article explaining the Training Academy system and how the four academies (Combat, Defense, Mobility, AI) control attribute caps from level 10 to level 50
-4. THE Guide SHALL include an article explaining the Coaching Staff system including coach types, bonuses, switching costs, and the one-active-coach limitation
-5. THE Guide SHALL include a recommended facility investment order for early, mid, and late game stages
+4. THE Guide SHALL include a recommended facility investment order for early, mid, and late game stages
 
 ### Requirement 12: Prestige & Fame Guide
 

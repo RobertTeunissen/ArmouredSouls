@@ -1,29 +1,13 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { api } from '../utils/api';
-import {
-  fetchRobotById,
-  fetchRobotLeagueHistory,
-  updateAppearance,
-  commitUpgrades,
-  equipMainWeapon,
-  equipOffhandWeapon,
-  unequipMainWeapon,
-  unequipOffhandWeapon,
-} from '../utils/robotApi';
-import { ApiError } from '../utils/ApiError';
-import { useRobotStore } from '../stores';
 import { useAuth } from '../contexts/AuthContext';
+import { fetchRobotLeagueHistory } from '../utils/robotApi';
 import Navigation from '../components/Navigation';
 import TabNavigation from '../components/TabNavigation';
-import type { TabId } from '../components/TabNavigation';
 import BattleConfigTab from '../components/BattleConfigTab';
 import EffectiveStatsDisplay from '../components/EffectiveStatsDisplay';
-import { RangeBand } from '../utils/weaponRange';
 import RobotImage from '../components/RobotImage';
 import RobotImageSelector from '../components/RobotImageSelector';
 import StatisticalRankings from '../components/StatisticalRankings';
-import type { Facility } from '../components/facilities/types';
 import PerformanceByContext from '../components/PerformanceByContext';
 import RecentBattles from '../components/RecentBattles';
 import UpcomingMatches from '../components/UpcomingMatches';
@@ -34,412 +18,41 @@ import TuningPoolEditor from '../components/TuningPoolEditor';
 import LeagueTimeline from '../components/LeagueTimeline';
 import type { LeagueHistoryEntry } from '../components/LeagueTimeline';
 import TeamBattleLeagueHistory from '../components/TeamBattleLeagueHistory';
-import { getMatchHistory, BattleHistory } from '../utils/matchmakingApi';
+import type { BattleHistory } from '../utils/matchmakingApi';
 import { getProfile } from '../utils/userApi';
 import type { RobotWithAttributes } from '../types/robot';
-import { createLogger } from '../utils/logger';
-
-const log = createLogger('RobotDetailPage');
-
-interface Robot {
-  id: number;
-  name: string;
-  userId: number;
-  imageUrl: string | null;
-  elo: number;
-  currentLeague: string;
-  leagueId: string;
-  leaguePoints: number;
-  fame: number;
-  mainWeaponId: number | null;
-  offhandWeaponId: number | null;
-  loadoutType: string;
-  stance: string;
-  yieldThreshold: number;
-  mainWeapon: WeaponInventory | null;
-  offhandWeapon: WeaponInventory | null;
-  user?: {
-    username: string;
-    stableName: string | null;
-  };
-  // 23 Core Attributes
-  combatPower: number;
-  targetingSystems: number;
-  criticalSystems: number;
-  penetration: number;
-  weaponControl: number;
-  attackSpeed: number;
-  armorPlating: number;
-  shieldCapacity: number;
-  evasionThrusters: number;
-  damageDampeners: number;
-  counterProtocols: number;
-  hullIntegrity: number;
-  servoMotors: number;
-  gyroStabilizers: number;
-  hydraulicSystems: number;
-  powerCore: number;
-  combatAlgorithms: number;
-  threatAnalysis: number;
-  adaptiveAI: number;
-  logicCores: number;
-  syncProtocols: number;
-  supportSystems: number;
-  formationTactics: number;
-  // Combat State
-  currentHP: number;
-  maxHP: number;
-  currentShield: number;
-  maxShield: number;
-  battleReadiness: number;
-  repairCost: number;
-  // Performance Tracking
-  totalBattles: number;
-  wins: number;
-  draws: number;
-  losses: number;
-  damageDealtLifetime: number;
-  damageTakenLifetime: number;
-  kills: number;
-  totalRepairsPaid: number;
-  titles: string | null;
-}
-
-interface WeaponInventory {
-  id: number;
-  weapon: Weapon;
-}
-
-interface Weapon {
-  id: number;
-  name: string;
-  weaponType: string;
-  loadoutType: string;
-  handsRequired: string;
-  rangeBand: RangeBand;
-  description: string | null;
-  baseDamage: number;
-  cooldown: number;
-  cost: number;
-  combatPowerBonus: number;
-  targetingSystemsBonus: number;
-  criticalSystemsBonus: number;
-  penetrationBonus: number;
-  weaponControlBonus: number;
-  attackSpeedBonus: number;
-  armorPlatingBonus: number;
-  shieldCapacityBonus: number;
-  evasionThrustersBonus: number;
-  counterProtocolsBonus: number;
-  servoMotorsBonus: number;
-  gyroStabilizersBonus: number;
-  hydraulicSystemsBonus: number;
-  powerCoreBonus: number;
-  threatAnalysisBonus: number;
-}
+import { useRobotDetail } from '../hooks/useRobotDetail';
 
 function RobotDetailPage() {
-  const { id } = useParams();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const isOnboarding = searchParams.get('onboarding') === 'true';
-  const [robot, setRobot] = useState<Robot | null>(null);
-  const [weapons, setWeapons] = useState<WeaponInventory[]>([]);
-  const [currency, setCurrency] = useState(0);
-  const [trainingLevel, setTrainingLevel] = useState(0);
-  const [repairBayLevel, setRepairBayLevel] = useState(0);
-  const [activeRobotCount, setActiveRobotCount] = useState(1);
-  const [academyLevels, setAcademyLevels] = useState({
-    combat_training_academy: 0,
-    defense_training_academy: 0,
-    mobility_training_academy: 0,
-    ai_training_academy: 0,
-  });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
-  const [showImageSelector, setShowImageSelector] = useState(false);
-  const [recentBattles, setRecentBattles] = useState<unknown[]>([]);
-  const [battleReadiness, setBattleReadiness] = useState<{ isReady: boolean; warnings: string[] }>({ isReady: true, warnings: [] });
-  const [leagueRank, setLeagueRank] = useState<{ rank: number; total: number; percentile: number } | null>(null);
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
-  const { user, logout, refreshUser } = useAuth();
-  const navigate = useNavigate();
-
-  // Tab state management from URL
-  const tabParam = searchParams.get('tab') as TabId | null;
-  const activeTab = tabParam || 'overview';
-
-  const handleTabChange = (tab: TabId) => {
-    const params: Record<string, string> = { tab };
-    if (isOnboarding) {
-      params.onboarding = 'true';
-    }
-    setSearchParams(params);
-  };
-
-  // Max attribute level cap (from STABLE_SYSTEM.md)
-  // const MAX_ATTRIBUTE_LEVEL = 50;
-
-  // getCapForLevel and calculateBaseCost are now in shared/utils/ — import from there if needed.
-
-  useEffect(() => {
-    let isFetching = false;
-    let fetchTimeout: ReturnType<typeof setTimeout> | null = null;
-
-    const debouncedFetch = () => {
-      // Clear any pending fetch
-      if (fetchTimeout) {
-        clearTimeout(fetchTimeout);
-      }
-
-      // Prevent multiple simultaneous fetches
-      if (isFetching) {
-        return;
-      }
-
-      // Debounce: wait 100ms to see if another event fires
-      fetchTimeout = setTimeout(() => {
-        isFetching = true;
-        fetchRobotAndWeapons().finally(() => {
-          isFetching = false;
-        });
-      }, 100);
-    };
-
-    // Initial fetch on mount
-    debouncedFetch();
-
-    // Re-fetch when page becomes visible (e.g., returning from Facilities page)
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        debouncedFetch();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    return () => {
-      if (fetchTimeout) {
-        clearTimeout(fetchTimeout);
-      }
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]); // Re-fetch when robot ID changes (not on tab/location changes)
-
-  useEffect(() => {
-    if (user) {
-      setCurrency(user.currency);
-    }
-     
-  }, [user]);
-
-  const fetchRobotAndWeapons = async () => {
-    try {
-      // Fetch robot details
-      const robotData = await fetchRobotById(parseInt(id!));
-      setRobot(robotData as unknown as Robot);
-
-      // Fetch league rank for this robot
-      try {
-        const leagueData = await api.get<{ data?: Array<{ id: number }> } | Array<{ id: number }>>(
-          `/api/leagues/${robotData.currentLeague}/standings`,
-          { params: { instance: robotData.leagueId } },
-        );
-        const standings = Array.isArray(leagueData) ? leagueData : (leagueData.data ?? []);
-        const robotIndex = standings.findIndex((r: { id: number }) => r.id === parseInt(id!));
-
-        if (robotIndex !== -1) {
-          const rank = robotIndex + 1;
-          const total = standings.length;
-          const percentile = total > 0 ? ((total - rank) / total) * 100 : 0;
-          setLeagueRank({ rank, total, percentile });
-        }
-      } catch (leagueError) {
-        log.error('Failed to fetch league rank', { error: leagueError });
-        // Don't fail the entire page if league rank fails
-      }
-
-      // Fetch weapon inventory
-      try {
-        const weaponsData = await api.get<WeaponInventory[]>('/api/weapon-inventory');
-        setWeapons(weaponsData);
-      } catch (err) {
-        log.error('Failed to fetch weapons', { err });
-      }
-
-      // Fetch training facility level
-      try {
-        const data = await api.get<{ facilities?: Facility[] } | Facility[]>('/api/facilities');
-        const facilities = Array.isArray(data) ? data : (data.facilities ?? []);
-        
-        // Always set training level (even if 0)
-        const trainingFacility = facilities.find((f: Facility) => f.type === 'training_facility');
-        setTrainingLevel(trainingFacility?.currentLevel || 0);
-
-        // Set repair bay level
-        const repairBay = facilities.find((f: Facility) => f.type === 'repair_bay');
-        setRepairBayLevel(repairBay?.currentLevel || 0);
-
-        // Always set academy levels (even if 0)
-        const newAcademyLevels = {
-          combat_training_academy: facilities.find((f: Facility) => f.type === 'combat_training_academy')?.currentLevel || 0,
-          defense_training_academy: facilities.find((f: Facility) => f.type === 'defense_training_academy')?.currentLevel || 0,
-          mobility_training_academy: facilities.find((f: Facility) => f.type === 'mobility_training_academy')?.currentLevel || 0,
-          ai_training_academy: facilities.find((f: Facility) => f.type === 'ai_training_academy')?.currentLevel || 0,
-        };
-        setAcademyLevels(newAcademyLevels);
-
-        // Fetch active robot count for repair cost calculation via store
-        try {
-          const storeState = useRobotStore.getState();
-          // Ensure robots are loaded
-          if (storeState.robots.length === 0) {
-            await storeState.fetchRobots();
-          }
-          const robotsData = useRobotStore.getState().robots;
-          const activeCount = robotsData.filter((r) => r.name !== 'Bye Robot').length;
-          setActiveRobotCount(activeCount);
-        } catch (err) {
-          log.error('Failed to fetch robots count', { err });
-        }
-      } catch (err) {
-        log.error('Failed to fetch facilities', { err });
-      }
-
-      // Fetch recent battles for this specific robot via API
-      try {
-        const recentBattlesData = await getMatchHistory(1, 10, undefined, parseInt(id!));
-        setRecentBattles(recentBattlesData.data);
-      } catch (err) {
-        log.error('Failed to fetch recent battles', { err });
-        // Don't fail the entire page if battle history fails
-      }
-
-      // Calculate battle readiness
-      const hpPercentage = (robotData.currentHP / robotData.maxHP) * 100;
-      const hasWeapons = robotData.mainWeaponId !== null;
-      const isReady = hpPercentage >= 50 && hasWeapons;
-      const warnings: string[] = [];
-      
-      if (hpPercentage < 50) {
-        warnings.push('HP below 50%');
-      }
-      if (!hasWeapons) {
-        warnings.push('No weapons equipped');
-      }
-      
-      setBattleReadiness({ isReady, warnings });
-    } catch (err: unknown) {
-      if (err instanceof ApiError) {
-        if (err.statusCode === 401) {
-          logout();
-          navigate('/login');
-          return;
-        }
-        if (err.statusCode === 404) {
-          setError(`Robot with ID ${id} not found. It may have been deleted or you may not have permission to view it.`);
-          setLoading(false);
-          return;
-        }
-      }
-      setError('Failed to load robot details');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  /* handleUpgrade and handleLoadoutChange are kept commented out for future use
-     when the inline upgrade/loadout UI is re-enabled. Currently handled by
-     CompactUpgradeSection and BattleConfigTab respectively. */
-
-  const handleAppearanceChange = async (imageUrl: string) => {
-    if (!robot) return;
-
-    setError('');
-    setSuccessMessage('');
-
-    // If the imageUrl starts with /uploads/, it was set by the upload confirm handler
-    // which already updated the robot in the database — just refresh local state
-    if (imageUrl.startsWith('/uploads/')) {
-      setRobot({ ...robot, imageUrl });
-      setSuccessMessage('Robot image updated successfully!');
-      setTimeout(() => setSuccessMessage(''), 3000);
-      return;
-    }
-
-    try {
-      const result = await updateAppearance(parseInt(id!), imageUrl);
-
-      setRobot(result.robot as unknown as Robot);
-      setSuccessMessage('Robot image updated successfully!');
-      setTimeout(() => setSuccessMessage(''), 3000);
-    } catch (err: unknown) {
-      const message = err instanceof ApiError ? err.message : undefined;
-      setError(message || 'Failed to update robot image');
-    }
-  };
-
-  const handleCommitUpgrades = async (upgradePlan: Record<string, { currentLevel: number; plannedLevel: number; cost: number; baseCost: number }>) => {
-    if (!robot) return;
-
-    setError('');
-    setSuccessMessage('');
-
-    // Store original robot state for rollback
-    const originalRobot = { ...robot };
-
-    try {
-      // Optimistic UI update: immediately apply upgrades to robot state
-      const optimisticRobot = { ...robot };
-      for (const [attribute, plan] of Object.entries(upgradePlan)) {
-        const { plannedLevel } = plan;
-        (optimisticRobot as Record<string, unknown>)[attribute] = plannedLevel;
-      }
-      setRobot(optimisticRobot);
-
-      // Call bulk upgrades endpoint
-      const result = await commitUpgrades(parseInt(id!), upgradePlan);
-
-      // Update state with actual robot data from server
-      setRobot(result.robot as unknown as Robot);
-      await refreshUser();
-      
-      const upgradeCount = Object.keys(upgradePlan).length;
-      setToast({
-        message: `Successfully upgraded ${upgradeCount} attribute${upgradeCount > 1 ? 's' : ''}!`,
-        type: 'success',
-      });
-    } catch (err: unknown) {
-      // Rollback optimistic update
-      setRobot(originalRobot);
-      
-      let errorMessage = 'Failed to commit upgrades';
-      let errorDetails = '';
-      if (err instanceof ApiError) {
-        errorMessage = err.message || errorMessage;
-        if (err.details && typeof err.details === 'object' && 'required' in err.details) {
-          const details = err.details as { required: number; current: number };
-          errorDetails = ` (Required: ₡${details.required.toLocaleString()}, Current: ₡${details.current.toLocaleString()})`;
-        }
-      } else if (err instanceof Error) {
-        errorMessage = err.message;
-      }
-      
-      setToast({
-        message: errorMessage + errorDetails,
-        type: 'error',
-      });
-      
-      // Refresh robot data to ensure consistency
-      await fetchRobotAndWeapons();
-      
-      // Re-throw error so UpgradePlanner knows the commit failed
-      throw err;
-    }
-  };
-
-
+  const {
+    robot,
+    weapons,
+    currency,
+    loading,
+    error,
+    successMessage,
+    trainingLevel,
+    repairBayLevel,
+    activeRobotCount,
+    academyLevels,
+    recentBattles,
+    battleReadiness,
+    leagueRank,
+    activeTab,
+    handleTabChange,
+    showImageSelector,
+    setShowImageSelector,
+    handleAppearanceChange,
+    handleCommitUpgrades,
+    handleEquipWeapon,
+    handleUnequipWeapon,
+    handleRobotUpdate,
+    toast,
+    setToast,
+    isOwner,
+    isOnboarding,
+    navigate,
+  } = useRobotDetail();
 
   if (loading) {
     return (
@@ -464,9 +77,6 @@ function RobotDetailPage() {
       </div>
     );
   }
-
-  // Check if user owns this robot
-  const isOwner = user && robot.userId === user.id;
 
   return (
     <div className="min-h-screen bg-background text-white">
@@ -502,7 +112,7 @@ function RobotDetailPage() {
           </div>
         )}
 
-        {/* Robot Header - Visible to All Users */}
+        {/* Robot Header */}
         <div className="mb-8">
           <div className="mb-4">
             <button
@@ -516,7 +126,6 @@ function RobotDetailPage() {
           {/* Robot Header Card */}
           <div className="bg-surface p-4 sm:p-6 rounded-lg">
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
-              {/* Robot Image with Edit Button */}
               <RobotImage
                 imageUrl={robot.imageUrl}
                 robotName={robot.name}
@@ -525,7 +134,6 @@ function RobotDetailPage() {
                 onEditClick={() => setShowImageSelector(true)}
               />
               
-              {/* Robot Info - Compact Layout */}
               <div className="flex-1 w-full min-w-0">
                 <div className="flex flex-col sm:flex-row items-center sm:items-start sm:justify-between mb-3 gap-1">
                   <h1 className="text-2xl sm:text-3xl font-bold text-center sm:text-left">{robot.name}</h1>
@@ -569,7 +177,7 @@ function RobotDetailPage() {
                   </div>
                 </div>
 
-                {/* Performance Stats - Compact Grid */}
+                {/* Performance Stats */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                   <div className="bg-surface-elevated p-2 rounded">
                     <div className="text-secondary mb-1">League Points</div>
@@ -664,29 +272,9 @@ function RobotDetailPage() {
               weapons={weapons}
               repairBayLevel={repairBayLevel}
               activeRobotCount={activeRobotCount}
-              onRobotUpdate={(updates) => {
-                setRobot({ ...robot, ...updates } as Robot);
-                setSuccessMessage('Configuration updated successfully!');
-                setTimeout(() => setSuccessMessage(''), 3000);
-              }}
-              onEquipWeapon={async (slot, weaponInventoryId) => {
-                const result = slot === 'main'
-                  ? await equipMainWeapon(parseInt(id!), weaponInventoryId)
-                  : await equipOffhandWeapon(parseInt(id!), weaponInventoryId);
-
-                setRobot(result.robot as unknown as Robot);
-                setSuccessMessage('Weapon equipped successfully!');
-                setTimeout(() => setSuccessMessage(''), 3000);
-              }}
-              onUnequipWeapon={async (slot) => {
-                const result = slot === 'main'
-                  ? await unequipMainWeapon(parseInt(id!))
-                  : await unequipOffhandWeapon(parseInt(id!));
-
-                setRobot(result.robot as unknown as Robot);
-                setSuccessMessage('Weapon unequipped!');
-                setTimeout(() => setSuccessMessage(''), 3000);
-              }}
+              onRobotUpdate={handleRobotUpdate}
+              onEquipWeapon={handleEquipWeapon}
+              onUnequipWeapon={handleUnequipWeapon}
             />
           )}
 
@@ -835,7 +423,6 @@ function ChampionshipWinsSection({ userId }: { userId: number }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Only fetch if viewing own robot (profile endpoint returns own data)
     if (!user || user.id !== userId) {
       setLoading(false);
       return;

@@ -25,10 +25,10 @@ describe('Prestige Features Integration', () => {
       const bookingReq = bookingConfig?.prestigeRequirements?.[2]; // Level 3
       expect(userPrestige >= (bookingReq || 0)).toBe(true);
       
-      // Research Lab Level 7 requires 7500 prestige - should fail
-      const researchConfig = getFacilityConfig('research_lab');
-      const researchReq = researchConfig?.prestigeRequirements?.[6]; // Level 7
-      expect(userPrestige >= (researchReq || 0)).toBe(false);
+      // Combat Training Academy Level 7 requires 7000 prestige - should fail
+      const combatConfig = getFacilityConfig('combat_training_academy');
+      const combatReq = combatConfig?.prestigeRequirements?.[6]; // Level 7
+      expect(userPrestige >= (combatReq || 0)).toBe(false);
     });
 
     test('should correctly determine upgrade eligibility', () => {

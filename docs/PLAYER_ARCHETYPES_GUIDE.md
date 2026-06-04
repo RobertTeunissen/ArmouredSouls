@@ -9421,8 +9421,6 @@ This appendix lists all 14 facilities with costs, benefits, operating costs, and
 | Facility | Level 1 Cost | Operating Cost (Daily) | Benefit | Prestige Required | Best For |
 |----------|--------------|------------------------|---------|-------------------|----------|
 | Booking Office | ₡400,000 | ₡2,000 | Tournament access (bonus prestige) | 2,000 | Prestige Rusher archetype, Gold+ league |
-| Medical Bay | ₡350,000 | ₡1,500 | Faster robot recovery, condition improvement | 2,000 | Multi-robot stables, high battle frequency |
-| Research Lab | ₡600,000 | ₡3,000 | Unlock experimental upgrades | 8,000 | Late-game (Month 12+), experimental builds |
 | Broadcasting Studio | ₡500,000 | ₡2,500 | Streaming revenue (fame-dependent) | 5,000 | High-fame robots, late-game (Month 9+) |
 
 ---

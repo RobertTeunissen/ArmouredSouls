@@ -166,43 +166,7 @@ Storage capacity counts all weapons you own — both equipped and unequipped. Yo
 
 ## Advanced Facilities
 
-### Research Lab Progression (Not Yet Implemented)
-
-| Level | Cost | Prestige Required | Unlock | Operating Cost/Day |
-|-------|------|-------------------|--------|-------------------|
-| 1 | ₡200,000 | — | Advanced battle analytics | ₡2,000 |
-| 2 | ₡400,000 | — | 3 loadout presets per robot | ₡3,000 |
-| 3 | ₡600,000 | — | AI behavior customization | ₡4,000 |
-| 4 | ₡800,000 | 2,000 | 5 loadout presets per robot | ₡5,000 |
-| 5 | ₡1,000,000 | — | Battle simulation (free test matchups) | ₡6,000 |
-| 6 | ₡1,250,000 | — | Advanced statistics dashboard | ₡7,000 |
-| 7 | ₡1,500,000 | 7,500 | Predictive AI (opponent analysis) | ₡8,000 |
-| 8 | ₡1,750,000 | — | 8 loadout presets per robot | ₡9,000 |
-| 9 | ₡2,000,000 | 15,000 | Experimental technology | ₡10,000 |
-| 10 | ₡2,500,000 | — | Robot cloning | ₡11,000 |
-
-```callout-warning
-The Research Lab has the highest operating costs in the game. At Level 10, you'd be paying ₡11,000/day just to keep it running. This facility is not yet implemented — the costs and unlocks shown here are planned values.
-```
-
-### Medical Bay Progression (Not Yet Implemented)
-
-| Level | Cost | Prestige Required | Critical Damage Reduction | Operating Cost/Day |
-|-------|------|-------------------|--------------------------|-------------------|
-| 1 | ₡175,000 | — | 15% | ₡2,000 |
-| 2 | ₡350,000 | — | 25% | ₡3,000 |
-| 3 | ₡525,000 | — | 35% | ₡4,000 |
-| 4 | ₡700,000 | 2,000 | 45% | ₡5,000 |
-| 5 | ₡875,000 | — | 55% | ₡6,000 |
-| 6 | ₡1,050,000 | — | 65% + faster recovery | ₡7,000 |
-| 7 | ₡1,250,000 | 7,500 | 75% | ₡8,000 |
-| 8 | ₡1,500,000 | — | 85% | ₡9,000 |
-| 9 | ₡1,750,000 | 15,000 | 95% + prevent permanent damage | ₡10,000 |
-| 10 | ₡2,250,000 | — | 100% (eliminate critical penalties) | ₡11,000 |
-
-The Medical Bay handles **critical damage** (when HP hits 0), which is separate from regular battle damage handled by the Repair Bay. This facility is not yet implemented — the costs and reductions shown here are planned values.
-
-### Booking Office Progression (Not Yet Implemented)
+### Booking Office Progression
 
 | Level | Cost | Prestige Required | Unlock |
 |-------|------|-------------------|--------|
@@ -228,15 +192,15 @@ Here's a quick reference for all prestige gates across facilities:
 | Prestige Threshold | Facilities Unlocked |
 |-------------------|-------------------|
 | 1,000 | Repair Bay L4, Training Facility L4, Roster Expansion L4, Weapons Workshop L4, Booking Office L1, Streaming Studio L4 |
-| 2,000 | Research Lab L4, Medical Bay L4, Coaching Staff L3, All 4 Academies L3 |
+| 2,000 | All 4 Academies L3 |
 | 2,500 | Booking Office L2, Streaming Studio L5 |
 | 3,000 | Merchandising Hub L4 |
 | 4,000 | All 4 Academies L5 |
-| 5,000 | Repair Bay L7, Training Facility L7, Weapons Workshop L7, Coaching Staff L6, Booking Office L3, Roster Expansion L7, Streaming Studio L6 |
+| 5,000 | Repair Bay L7, Training Facility L7, Weapons Workshop L7, Booking Office L3, Roster Expansion L7, Streaming Studio L6 |
 | 7,000 | All 4 Academies L7 |
-| 7,500 | Research Lab L7, Medical Bay L7, Merchandising Hub L7 |
-| 10,000 | Repair Bay L9, Training Facility L9, Weapons Workshop L9, Coaching Staff L9, Booking Office L4, Roster Expansion L9, All 4 Academies L9, Streaming Studio L7 |
-| 15,000 | Research Lab L9, Medical Bay L9, All 4 Academies L10, Booking Office L5, Merchandising Hub L9, Streaming Studio L8 |
+| 7,500 | Merchandising Hub L7 |
+| 10,000 | Repair Bay L9, Training Facility L9, Weapons Workshop L9, Booking Office L4, Roster Expansion L9, All 4 Academies L9, Streaming Studio L7 |
+| 15,000 | All 4 Academies L10, Booking Office L5, Merchandising Hub L9, Streaming Studio L8 |
 | 25,000 | Booking Office L7, Streaming Studio L9 |
 | 50,000 | Booking Office L10, Streaming Studio L10 |
 

@@ -15,10 +15,9 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 | 1 | Game Loop Audit | 6 | 3 🗳️ | 3 | 4 | 5 | 2 | **6.0** |
 | 2 | Feature Flags | 15 | 1 🗳️ | 2 | 2 | 4 | 2 | **4.0** |
 | 3 | Landing Page | 4 | 0 🗳️ | 3 | 2 | 1 | 2 | **3.0** |
-| 4 | Weapon Experimentation Problem | 5 | 1 🗳️ | 4 | 3 | 4 | 4 | **2.8** |
+| 4 | Practice Arena Catalog Access | 57 | 0 🗳️ | 2 | 1 | 1 | 1 | **4.0** |
 | 5 | Robot Comparison Tool | 42 | 0 🗳️ | 2 | 1 | 1 | 2 | **2.0** |
 | 6 | Dashboard Enhancements | 24 | 0 🗳️ | 2 | 1 | 1 | 2 | **2.0** |
-| 7 | Frontend Page Hook Extraction (RobotsPage, RobotDetailPage) | 50 | 0 🗳️ | 1 | 1 | 2 | 2 | **2.0** |
 | 8 | Weapon Special Properties | 11 | 1 🗳️ | 3 | 2 | 2 | 4 | **1.8** |
 | 9 | Season System (100-Cycle Seasons) | 41 | 0 🗳️ | 4 | 1 | 2 | 4 | **1.8** |
 | 10 | Mega-Orchestrator Refactor (combat-critical files) | 49 | 0 🗳️ | 3 | 2 | 4 | 5 | **1.8** |
@@ -42,13 +41,15 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 | 28 | Social Features (Friends, Guilds, Chat) | 45 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
 | 29 | Prestige Store | 47 | 0 🗳️ | 2 | 1 | 1 | 4 | **1.0** |
 | 30 | Blueprint Library | 48 | 0 🗳️ | 1 | 1 | 1 | 3 | **1.0** |
-| 31 | Unimplemented Facilities | 7 | 0 🗳️ | 2 | 1 | 1 | 4 | **1.0** |
-| 32 | Cosmetic Customization System | 46 | 0 🗳️ | 2 | 1 | 1 | 5 | **0.8** |
+| 31 | Cosmetic Customization System | 46 | 0 🗳️ | 2 | 1 | 1 | 5 | **0.8** |
+| 32 | Matchup-Dependent Weapon Effectiveness | 58 | 0 🗳️ | 3 | 1 | 2 | 5 | **1.2** |
 
 ### Recently Completed (removed from backlog)
 
 | Item | # | Spec | Completed |
 |------|---|------|-----------|
+| Unimplemented Facilities Removal (Research Lab, Medical Bay, Coaching Staff) | 7 | — (direct implementation) | June 2026 |
+| Frontend Page Hook Extraction (RobotsPage, RobotDetailPage) | 50 | — (direct implementation) | June 2026 |
 | Team Battle Tournaments (2v2 / 3v3) | 54 | [Spec #38](/.kiro/specs/done-june26/38-team-battle-tournaments/) | June 2026 |
 | Cron Schedule Restructure — Daily-Everything Slot Map | 56 | [Spec #36](/.kiro/specs/done-may26/36-cron-schedule-restructure/) | June 2026 |
 | Vitest Performance Tuning (CI scripts, dot reporter, coverage gitignore) | 52 | — (direct implementation) | June 2026 |
@@ -89,49 +90,14 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 
 The current front page is just a login and registration module. New visitors have no idea what the game is, how it plays, or why they should sign up. Needs: game concept pitch, screenshots or gameplay preview, feature highlights (4 battle modes, 47 weapons, league system), call-to-action to register.
 
-### #5 — Weapon Experimentation Problem — Players Never Switch Weapons
-**Source**: Observed player behavior  
-**Priority**: High — core gameplay loop stagnation  
-**Progress**: baseDamage dominance identified as root cause. DPS rebalance specced — see [Spec #31](/.kiro/specs/to-do/31-weapon-dps-rebalance/). Weapon resale and weapon upgrades identified as follow-up features after the rebalance lands.
-
-Players buy one weapon set and never change. The investment is too high and too permanent — there's no way to sell weapons back, no way to try before you buy, and no partial recovery on a bad purchase. This kills experimentation and makes the 47-weapon catalog feel like a 1-weapon catalog per player.
-
-**Root cause — baseDamage dominance in the damage formula:**
-
-The damage formula is `baseDamage × (1 + combatPower × 1.5 / 100) × loadout × weaponControl × stance`. Because `baseDamage` is a flat multiplier and attributes are percentage modifiers, weapon baseDamage is the single most important combat variable — far more impactful than any attribute investment or tuning. The DPS spread between cheapest and most expensive 1H weapon is 3.0× (2.0 DPS to 6.0 DPS). Attributes can only provide ~1.5× multiplier at high investment. The weapon always wins.
-
-**Analysis findings (May 2026):**
-- Five top-tier 1H weapons (Vibro Mace, Volt Sabre, Nova Caster, Particle Lance, all at 18 dmg/3s = 6.0 DPS, ₡425K) are identical in the only thing that matters (DPS). Their attribute bonuses differ but are drowned out by the baseDamage gap.
-- Dual wielding two top weapons (~₡850K) produces ~2.5× the DPS of a single weapon — making it the only viable strategy.
-- Shield builds (Weapon + Aegis Bulwark) lose decisively because fights end too fast for defensive mechanics to matter (avg 33.8s, 42.9% kill rate).
-- A robot with all attributes at 1 and a Volt Sabre beats a robot with all attributes at 15 and a Practice Sword by 127%.
-- With ₡3M starting budget, players can afford both top weapons AND good attributes — the weapon is still the obvious first buy.
-
-**Solution — DPS Rebalance (Spec #31):**
-- Compress baseDamage spread from 3.0× to 2.0× (top 1H goes from 18 to 12 baseDamage)
-- Increase pricing formula DPS multiplier from M=3 to M=6 so prices stay within ±1%
-- No HP/shield/cooldown/attribute changes — battles get ~33% longer (~45s avg), giving defensive builds time to work
-- After rebalance: all four loadout types (DW, 2H, single, shield) are within 15% of each other on effective combat power
-- After rebalance: attribute-heavy builds with cheap weapons can compete with weapon-heavy builds (DPS×EHP favors the attribute player at equal budget)
-
-**Follow-up features (to spec after rebalance lands):**
-
-1. ~~**Weapon resale** — Sell weapons back at Workshop-level-dependent rates (40–75%). Quality-of-life improvement that reduces switching cost. Workshop gets a second meaningful purpose beyond purchase discounts.~~ ✅ **Shipped May 22, 2026** as [Spec #33](/.kiro/specs/done-may26/33-weapon-resale/) — final formula was `level × 10` (0% at L0, 100% at L10), mirroring the purchase discount slope.
-
-2. ~~**Weapon upgrades** — Level individual weapon instances over time (reliability, attribute bonuses, minor damage, unique passives at thresholds). Creates attachment and identity. A fully upgraded cheap weapon could match a stock expensive weapon. Ongoing credit sink that solves late-game economic stagnation.~~ ✅ **Shipped May 23, 2026** as [Spec #34](/.kiro/specs/done-may26/34-weapon-refinement/) — branded **Weapon Refinement** (kept "Tuning" reserved for the Tuning Pool). Four tiers (Hone / Augment / Sharpen / Forge), 5-slot cap, Workshop-gated, refinement spend folds into `pricePaid` so resale partially recovers it. Identity-first: rank prefixes, custom names, slot bar visible everywhere a weapon is displayed.
-
-3. **Practice Arena catalog access** — Let players test any weapon from the shop in practice battles (not just owned weapons). The What-If system already supports weapon overrides for owned weapons — extending to unowned is a small change.
-
-4. **Matchup-dependent effectiveness** — Energy weapons bypass armor but shields resist them; ballistic shreds shields but armor blocks. Creates rock-paper-scissors requiring multiple weapons. Large scope, future spec.
-
 ### #6 — Game Loop Audit — Structural Design Flaws
 **Source**: Design review  
 **Priority**: High — foundational issues that limit long-term retention  
-**Progress**: Loop 1 explored in depth — see [Game Loop 1 Core Loop Exploration](analysis/GAME_LOOP_1_CORE_LOOP_EXPLORATION.md). The Tuning Pool (spec #25) addressed the thin "Adjust" step. The DPS Rebalance (spec #31) addresses baseDamage dominance, making weapon choice and attribute investment both meaningful. Weapon resale and weapon upgrades are identified as the remaining follow-ups for Loop 1. Loops 2–6 and missing loops still need exploration.
+**Progress**: Loop 1 explored in depth — see [Game Loop 1 Core Loop Exploration](analysis/GAME_LOOP_1_CORE_LOOP_EXPLORATION.md). The Tuning Pool (spec #25) addressed the thin "Adjust" step. The DPS Rebalance (spec #31) addresses baseDamage dominance. Weapon Resale (spec #33) and Weapon Refinement (spec #34) shipped. Loop 1 is complete. Loops 2–6 and missing loops still need exploration.
 
 The game has six identifiable loops, most of which degrade or stall at some point in the player lifecycle.
 
-**Loop 1: Core Loop (Configure → Battle → Results → Adjust)** — ✅ Mostly addressed. The Tuning Pool (spec #25) enriches the "Adjust" step. The DPS Rebalance (spec #31) makes all four loadout types viable and ensures attribute investment competes with weapon purchases. Remaining gaps: weapon resale (reduce switching cost) and weapon upgrades (create attachment and ongoing progression). See exploration doc for full analysis.
+**Loop 1: Core Loop (Configure → Battle → Results → Adjust)** — ✅ Addressed. The Tuning Pool (spec #25) enriches the "Adjust" step. The DPS Rebalance (spec #31) makes all four loadout types viable and ensures attribute investment competes with weapon purchases. Weapon Resale (spec #33) and Weapon Refinement (spec #34) shipped. See exploration doc for full analysis.
 
 **Loop 2: Economic Loop (Earn → Invest → Earn More)** — Not explored yet. Breaks in late game — credits accumulate with no meaningful sink once facilities and attributes are maxed. Weapon upgrades (identified in #5 discussion) would serve as an ongoing credit sink. Season System (#41) would reset the economy entirely.
 
@@ -145,14 +111,7 @@ The game has six identifiable loops, most of which degrade or stall at some poin
 
 **Missing loops**: experimentation, social/rivalry, collection/completion, seasonal/event, recovery/comeback.
 
-### #7 — Unimplemented Facilities (3 remaining)
-**Source**: PRD_FACILITIES_PAGE.md  
-**Priority**: Medium — players can buy them but they do nothing
 
-3 of 14 facility types exist in the schema but have no gameplay effect:
-- Research Lab — analytics, loadout presets, battle simulation
-- Medical Bay — critical damage repair cost reduction (separate from Repair Bay)
-- Coaching Staff — stable-wide stat bonuses via hired coaches
 
 ### #11 — Weapon Special Properties
 **Source**: PRD_WEAPON_ECONOMY.md, PRD_WEAPONS_LOADOUT.md  
@@ -422,45 +381,6 @@ These came out of the May 2026 codebase audit. They're internal-quality-of-life 
 
 ---
 
-### #50 — Frontend Page Hook Extraction (RobotsPage, RobotDetailPage)
-**Source**: Codebase audit (May 2026) — original audit item #8
-**Priority**: Low — natural follow-on to the HTTP client migration
-
-**Problem.** Two player-facing pages still mix data fetching, business logic, and rendering in single 800-line components:
-
-| File | Lines |
-|------|-------|
-| `app/frontend/src/pages/RobotsPage.tsx` | 818 |
-| `app/frontend/src/pages/RobotDetailPage.tsx` | 815 |
-
-Both pages own:
-- API calls for robots + facilities + weapons + league standings + battle history
-- Complex state (sort, filters, view mode, selected robot, repair confirmation, image selector, toast, league rank)
-- Business logic (repair cost calculation, readiness assessment, sort comparators)
-- Rendering of multiple sections (header, stats, tabs, modals)
-
-This was tolerable before the HTTP client consolidation. After that work, every fetch in these files is now one line of `await api.get(...)` — which makes the data-fetching layer easy to extract cleanly.
-
-**Strategy.**
-1. **Create `useRobotsList(userId)`** — owns the GET + filter + sort state + repair-all action. Returns `{ robots, loading, error, repairAll, sortBy, setSortBy, filters, setFilters }`. RobotsPage becomes a presentational shell consuming this hook. Pattern matches existing `useWeaponShop`, `useFacilities`, `usePracticeArena`.
-
-2. **Create `useRobotDetail(robotId)`** — owns the per-robot GET + weapon/facility/league fetches + tab state + image selector state. Returns the same shape. RobotDetailPage becomes a presentational shell.
-
-3. **Extract section components.** Each page has clear visual sections (header card, stats row, tabs, action bar). Pull each into its own component once the hook abstraction is in place. Target ~150 lines per page after the split.
-
-**Why this is low-priority.** It's a code-organization win, not a correctness or performance win. The current pages work. But:
-- They're hard to test as units.
-- Onboarding to "how do I add a tab to RobotDetailPage" is hard.
-- The summary in TASK 3 even noted that an old `useRobotDetail` hook had been started and abandoned — someone clearly tried this once and got distracted.
-
-**Note on the `useRobotDetail` hook deletion.** The audit summary mentions a `useRobotDetail` hook was deleted as part of dead-code cleanup because nothing used it. Do not assume that hook was the right shape — it was abandoned, not feature-complete. Start fresh and use `useWeaponShop` as the reference pattern.
-
-**Scope estimate.** ~1 day per page with tests. Total ~2 days. Mostly mechanical after the migration we just shipped.
-
-**Dependencies.** None. Could be picked up at any time.
-
----
-
 ### #53 — Battle Log Retention / TOAST Trim
 **Source**: Disk-pressure investigation, May 25, 2026 (ACC deploy timeout)
 **Priority**: Medium — non-urgent after disk resize, but real growth on a finite budget
@@ -514,3 +434,15 @@ The seven battles indexes are healthy and seeing real query traffic — none are
 - **Replay regression.** Anyone clicking "view battle" on an N+1 day battle gets a degraded experience. Mitigation: clear UI affordance ("battle log archived") and ideally extend the retention window if players complain.
 - **Vacuum lock.** `VACUUM FULL battles` takes an exclusive lock and could lock out battle inserts for the duration. Either use `pg_repack` (no lock, requires extension) or run during a quiet maintenance window. Probably the latter for v1, the former once `pg_repack` is installed.
 - **One-time vs ongoing.** The first cleanup will reclaim ~4 GB; subsequent daily runs will reclaim ~85 MB/day. Confirm cron actually runs and the alert if it doesn't.
+
+### #57 — Practice Arena Catalog Access (Try Before You Buy)
+**Source**: Weapon Experimentation Problem (#5), follow-up item 3  
+**Priority**: Low — QoL, small scope
+
+Let players test any weapon from the shop in practice battles, not just owned weapons. The What-If system already supports weapon overrides for owned weapons — extending to unowned weapons is a small change. Reduces purchase anxiety and encourages experimentation.
+
+### #58 — Matchup-Dependent Weapon Effectiveness (Rock-Paper-Scissors)
+**Source**: Weapon Experimentation Problem (#5), follow-up item 4  
+**Priority**: Not scoped — large combat system change
+
+Energy weapons bypass armor but shields resist them; ballistic shreds shields but armor blocks. Creates rock-paper-scissors dynamics that require owning multiple weapon types. Large scope — needs its own spec, careful balance work, and UI changes to communicate effectiveness. Synergizes with Arena Modifiers (#12) for meta variation.

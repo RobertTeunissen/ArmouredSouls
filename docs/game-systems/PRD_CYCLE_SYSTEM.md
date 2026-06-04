@@ -441,4 +441,4 @@ multiplier  = 2.0 (destroyed) | 1.5 (HP < 10%) | 1.0 (normal)
 final_cost  = base_repair × damage_pct × multiplier × (1 - repair_bay_discount)
 ```
 
-Repair Bay discount: 5% per level, max 50%. Medical Bay reduces the 2.0× critical multiplier.
+Repair Bay discount: Level × (5 + Active Robot Count), capped at 90%.
