@@ -13,11 +13,8 @@ const FACILITY_DISPLAY_NAMES: Record<string, string> = {
   repair_bay: 'Repair Bay',
   training_facility: 'Training Facility',
   weapons_workshop: 'Weapons Workshop',
-  research_lab: 'Research Lab',
-  medical_bay: 'Medical Bay',
   roster_expansion: 'Roster Expansion',
   storage_facility: 'Storage Facility',
-  coaching_staff: 'Coaching Staff',
   booking_office: 'Booking Office',
   combat_training_academy: 'Combat Training Academy',
   defense_training_academy: 'Defense Training Academy',
@@ -25,6 +22,7 @@ const FACILITY_DISPLAY_NAMES: Record<string, string> = {
   ai_training_academy: 'AI Training Academy',
   merchandising_hub: 'Merchandising Hub',
   streaming_studio: 'Streaming Studio',
+  tuning_bay: 'Tuning Bay',
 };
 
 export async function getStableProfile(userId: number) {

@@ -137,7 +137,7 @@ Facilities are grouped into 4 categories, each showing facility name and "Level 
 | Economy & Discounts | repair_bay, training_facility, weapons_workshop, merchandising_hub, streaming_studio |
 | Capacity & Storage | roster_expansion, storage_facility |
 | Training Academies | combat_training_academy, defense_training_academy, mobility_training_academy, ai_training_academy |
-| Advanced Features | research_lab, medical_bay, coaching_staff, booking_office |
+| Advanced Features | booking_office, tuning_bay |
 
 The facilities section is read-only — no upgrade costs, operating costs, or upgrade buttons are shown.
 

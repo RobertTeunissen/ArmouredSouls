@@ -81,21 +81,15 @@ export async function repairAllRobotsAdmin(deductCosts: boolean): Promise<AdminR
   }
 
   for (const [userId, userRobots] of robotsByUser.entries()) {
-    // Get repair bay and medical bay facilities for discounts
-    const facilities = await prisma.facility.findMany({
+    // Get repair bay facility for discounts
+    const repairBay = await prisma.facility.findFirst({
       where: {
         userId,
-        facilityType: {
-          in: ['repair_bay', 'medical_bay'],
-        },
+        facilityType: 'repair_bay',
       },
     });
 
-    const repairBay = facilities.find(f => f.facilityType === 'repair_bay');
-    const medicalBay = facilities.find(f => f.facilityType === 'medical_bay');
-
     const repairBayLevel = repairBay?.level || 0;
-    const medicalBayLevel = medicalBay?.level || 0;
 
     // Query active robot count for multi-robot discount
     const activeRobotCount = await prisma.robot.count({
@@ -126,7 +120,7 @@ export async function repairAllRobotsAdmin(deductCosts: boolean): Promise<AdminR
         damagePercent,
         hpPercent,
         repairBayLevel,
-        medicalBayLevel,
+        0,
         activeRobotCount,
       );
 

@@ -1,315 +1,43 @@
-import { useState, useEffect, useMemo } from 'react';
-import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import Navigation from '../components/Navigation';
 import RobotImage from '../components/RobotImage';
 import ConfirmationModal from '../components/ConfirmationModal';
 import ViewModeToggle from '../components/ViewModeToggle';
 import EventBadge from '../components/subscriptions/EventBadge';
 import TeamMembershipChips from '../components/TeamMembershipChips';
-import { api } from '../utils/api';
-import { repairAllRobots } from '../utils/robotApi';
-import { useRobotStore } from '../stores';
-import { useStableOverview } from '../hooks/useSubscriptions';
-import type { Facility } from '../components/facilities/types';
-// Utility functions
-const getHPColor = (currentHP: number, maxHP: number): string => {
-  const percentage = (currentHP / maxHP) * 100;
-  if (percentage >= 70) return 'bg-green-500'; // Success color
-  if (percentage >= 30) return 'bg-yellow-500'; // Warning color
-  return 'bg-red-500'; // Error color
-};
-
-const calculateWinRate = (wins: number, totalBattles: number): string => {
-  if (totalBattles === 0) return '0.0';
-  return ((wins / totalBattles) * 100).toFixed(1);
-};
-
-const calculateReadiness = (currentHP: number, maxHP: number): number => {
-  // Battle readiness is based on HP only
-  // Shields regenerate automatically between battles and don't cost credits
-  // Therefore shield capacity should NOT affect battle readiness
-  const hpPercent = (currentHP / maxHP) * 100;
-  return Math.round(hpPercent);
-};
-
-// Check if loadout is complete based on loadout type
-const isLoadoutComplete = (
-  loadoutType: string,
-  mainWeaponId: number | null,
-  offhandWeaponId: number | null,
-  offhandWeapon: { weapon: { weaponType: string } } | null
-): { complete: boolean; reason: string } => {
-  // Main weapon always required
-  if (!mainWeaponId) {
-    return { complete: false, reason: 'No Main Weapon' };
-  }
-
-  // Check based on loadout type
-  switch (loadoutType) {
-    case 'single':
-      // Only main weapon required
-      return { complete: true, reason: '' };
-      
-    case 'two_handed':
-      // Only main weapon required (two-handed weapons use main slot)
-      return { complete: true, reason: '' };
-      
-    case 'dual_wield':
-      // Main weapon AND offhand weapon required
-      if (!offhandWeaponId) {
-        return { complete: false, reason: 'Missing Offhand Weapon' };
-      }
-      return { complete: true, reason: '' };
-      
-    case 'weapon_shield':
-      // Main weapon AND shield required
-      if (!offhandWeaponId) {
-        return { complete: false, reason: 'Missing Shield' };
-      }
-      // Verify offhand is actually a shield
-      if (offhandWeapon && offhandWeapon.weapon.weaponType !== 'shield') {
-        return { complete: false, reason: 'Offhand Must Be Shield' };
-      }
-      return { complete: true, reason: '' };
-      
-    default:
-      // Unknown loadout type - treat as incomplete
-      return { complete: false, reason: 'Invalid Loadout Type' };
-  }
-};
-
-const getReadinessStatus = (
-  currentHP: number, 
-  maxHP: number,
-  loadoutType: string,
-  mainWeaponId: number | null,
-  offhandWeaponId: number | null,
-  offhandWeapon: { weapon: { weaponType: string } } | null
-): { text: string; color: string; reason: string } => {
-  // Battle readiness is based on HP and loadout only
-  // Shields regenerate automatically and don't affect readiness
-  const readiness = calculateReadiness(currentHP, maxHP);
-  const hpPercent = (currentHP / maxHP) * 100;
-  
-  // Check loadout completeness first - critical for battle
-  const loadoutCheck = isLoadoutComplete(loadoutType, mainWeaponId, offhandWeaponId, offhandWeapon);
-  if (!loadoutCheck.complete) {
-    return { text: 'Not Ready', color: 'text-red-500', reason: loadoutCheck.reason };
-  }
-  
-  if (readiness >= 80) {
-    return { text: 'Battle Ready', color: 'text-green-500', reason: '' };
-  }
-  
-  // Determine reason for not being battle ready (HP only - shields regenerate)
-  let reason = '';
-  if (hpPercent < 80) {
-    reason = 'Low HP';
-  }
-  
-  if (readiness >= 50) {
-    return { text: 'Damaged', color: 'text-yellow-500', reason };
-  }
-  
-  return { text: 'Critical', color: 'text-red-500', reason };
-};
+import {
+  useRobotsList,
+  getHPColor,
+  calculateWinRate,
+  calculateReadiness,
+  getReadinessStatus,
+} from '../hooks/useRobotsList';
 
 function RobotsPage() {
-  const storeRobots = useRobotStore(state => state.robots);
-  const storeLoading = useRobotStore(state => state.loading);
-  const storeError = useRobotStore(state => state.error);
-  const fetchRobots = useRobotStore(state => state.fetchRobots);
-  const [repairBayLevel, setRepairBayLevel] = useState(0);
-  const [rosterLevel, setRosterLevel] = useState(0);
-  const [showRepairConfirmation, setShowRepairConfirmation] = useState(false);
-  const [repairCostInfo, setRepairCostInfo] = useState({ discountedCost: 0, discount: 0, totalBaseCost: 0 });
-  const [viewMode, setViewMode] = useState<'card' | 'table'>(() => {
-    const saved = localStorage.getItem('robotsViewMode');
-    return (saved as 'card' | 'table') || 'card';
-  });
-  const [sortColumn, setSortColumn] = useState<string>('elo');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
-  const { refreshUser } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
-  const [searchParams] = useSearchParams();
-
-  // Fetch subscription data for all robots (for EventBadge display)
-  const { data: subscriptionOverview } = useStableOverview();
-  const subscriptionsByRobotId = useMemo(() => {
-    const map: Record<number, string[]> = {};
-    if (subscriptionOverview?.robots) {
-      for (const robot of subscriptionOverview.robots) {
-        map[robot.robotId] = robot.subscriptions.map(s => s.eventType);
-      }
-    }
-    return map;
-  }, [subscriptionOverview]);
-
-  // Sort robots by ELO (highest first) as default
-  const robots = useMemo(() => {
-    return [...storeRobots].sort((a, b) => b.elo - a.elo);
-  }, [storeRobots]);
-
-  const loading = storeLoading;
-  const error = storeError;
-
-  const isOnboarding = searchParams.get('onboarding') === 'true';
-  useEffect(() => {
-    fetchRobots();
-    fetchFacilities();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location]); // Refetch when navigating to this page
-
-  // Refetch facilities when page becomes visible (after navigating back from facility upgrades)
-  useEffect(() => {
-    const handleFocus = () => {
-      fetchFacilities();
-    };
-    
-    window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
-  }, []);
-
-  const fetchFacilities = async () => {
-    try {
-      const data = await api.get<{ facilities?: Facility[] } | Facility[]>('/api/facilities');
-      const facilities = Array.isArray(data) ? data : (data.facilities ?? []);
-      const repairBay = facilities.find((f: Facility) => f.type === 'repair_bay');
-      if (repairBay) {
-        setRepairBayLevel(repairBay.currentLevel || 0);
-      }
-      const rosterExpansion = facilities.find((f: Facility) => f.type === 'roster_expansion');
-      if (rosterExpansion) {
-        setRosterLevel(rosterExpansion.currentLevel || 0);
-      }
-    } catch {
-      // Silently fail - facilities are optional
-    }
-  };
-
-  const calculateTotalRepairCost = () => {
-    const REPAIR_COST_PER_HP = 50; // 50 credits per HP (matches backend)
-    
-    // Calculate repair cost for each robot
-    const totalBaseCost = robots.reduce((sum, robot) => {
-      // If repairCost is set by backend, use it
-      if (robot.repairCost && robot.repairCost > 0) {
-        return sum + robot.repairCost;
-      }
-      
-      // Otherwise, calculate based on HP damage
-      const hpDamage = robot.maxHP - robot.currentHP;
-      if (hpDamage > 0) {
-        return sum + (hpDamage * REPAIR_COST_PER_HP);
-      }
-      
-      return sum;
-    }, 0);
-    
-    // New formula: discount = repairBayLevel × (5 + activeRobotCount), capped at 90%
-    const activeRobotCount = robots.filter(r => r.name !== 'Bye Robot').length;
-    const discount = Math.min(90, repairBayLevel * (5 + activeRobotCount));
-    const costAfterRepairBay = Math.floor(totalBaseCost * (1 - discount / 100));
-    
-    // Apply 50% manual repair discount on top of Repair Bay discount
-    const MANUAL_REPAIR_DISCOUNT = 0.5;
-    const discountedCost = Math.floor(costAfterRepairBay * MANUAL_REPAIR_DISCOUNT);
-    
-    return { totalBaseCost, discountedCost, discount };
-  };
-
-  const handleRepairAll = async () => {
-    const { totalBaseCost, discountedCost, discount } = calculateTotalRepairCost();
-    
-    if (discountedCost === 0) {
-      alert('No robots need repair!');
-      return;
-    }
-
-    // Store cost info and show confirmation modal
-    setRepairCostInfo({ discountedCost, discount, totalBaseCost });
-    setShowRepairConfirmation(true);
-  };
-
-  const confirmRepairAll = async () => {
-    try {
-      await repairAllRobots();
-
-      // Close modal and refresh
-      setShowRepairConfirmation(false);
-      
-      // Refresh robots list to show updated status and user credits
-      await Promise.all([fetchRobots(), refreshUser()]);
-    } catch {
-      alert('Failed to repair robots. Please try again.');
-      setShowRepairConfirmation(false);
-    }
-  };
-
-  const handleSort = (column: string) => {
-    if (sortColumn === column) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortColumn(column);
-      setSortDirection('desc');
-    }
-  };
-
-  const getSortedRobots = () => {
-    const sorted = [...robots];
-    
-    sorted.sort((a, b) => {
-      let aValue: string | number;
-      let bValue: string | number;
-
-      switch (sortColumn) {
-        case 'name':
-          aValue = a.name.toLowerCase();
-          bValue = b.name.toLowerCase();
-          break;
-        case 'elo':
-          aValue = a.elo;
-          bValue = b.elo;
-          break;
-        case 'fame':
-          aValue = a.fame;
-          bValue = b.fame;
-          break;
-        case 'league':
-          aValue = a.leaguePoints;
-          bValue = b.leaguePoints;
-          break;
-        case 'winRate':
-          aValue = a.totalBattles > 0 ? (a.wins / a.totalBattles) : 0;
-          bValue = b.totalBattles > 0 ? (b.wins / b.totalBattles) : 0;
-          break;
-        case 'hp':
-          aValue = (a.currentHP / a.maxHP);
-          bValue = (b.currentHP / b.maxHP);
-          break;
-        case 'shield':
-          aValue = a.maxShield > 0 ? (a.currentShield / a.maxShield) : 0;
-          bValue = b.maxShield > 0 ? (b.currentShield / b.maxShield) : 0;
-          break;
-        case 'readiness':
-          aValue = calculateReadiness(a.currentHP, a.maxHP);
-          bValue = calculateReadiness(b.currentHP, b.maxHP);
-          break;
-        default:
-          return 0;
-      }
-
-      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
-      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
-      return 0;
-    });
-
-    return sorted;
-  };
-
-  const displayedRobots = viewMode === 'table' ? getSortedRobots() : robots;
+  const {
+    robots,
+    displayedRobots,
+    loading,
+    error,
+    subscriptionsByRobotId,
+    maxRobots,
+    atCapacity,
+    viewMode,
+    handleViewModeChange,
+    sortColumn,
+    sortDirection,
+    handleSort,
+    needsRepair,
+    discountedCost,
+    discount,
+    showRepairConfirmation,
+    repairCostInfo,
+    handleRepairAll,
+    confirmRepairAll,
+    setShowRepairConfirmation,
+    isOnboarding,
+  } = useRobotsList();
 
   if (loading) {
     return (
@@ -318,11 +46,6 @@ function RobotsPage() {
       </div>
     );
   }
-
-  const { discountedCost, discount } = calculateTotalRepairCost();
-  const needsRepair = discountedCost > 0;
-  const maxRobots = rosterLevel + 1;
-  const atCapacity = robots.length >= maxRobots;
 
   return (
     <div className="min-h-screen bg-[#0a0e14] text-white">
@@ -397,10 +120,7 @@ function RobotsPage() {
           <div className="flex justify-end mb-6">
             <ViewModeToggle 
               viewMode={viewMode} 
-              onViewModeChange={(mode) => {
-                setViewMode(mode);
-                localStorage.setItem('robotsViewMode', mode);
-              }} 
+              onViewModeChange={handleViewModeChange} 
             />
           </div>
         )}
@@ -670,139 +390,136 @@ function RobotsPage() {
 
             {/* Card View */}
             {viewMode === 'card' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {displayedRobots.map((robot) => {
-              const hpPercentage = Math.round((robot.currentHP / robot.maxHP) * 100);
-              const shieldPercentage = robot.maxShield > 0 
-                ? Math.round((robot.currentShield / robot.maxShield) * 100)
-                : 0;
-              const winRate = calculateWinRate(robot.wins, robot.totalBattles);
-              const actualReadiness = calculateReadiness(robot.currentHP, robot.maxHP);
-              const readinessStatus = getReadinessStatus(
-                robot.currentHP, 
-                robot.maxHP,
-                robot.loadoutType,
-                robot.mainWeaponId,
-                robot.offhandWeaponId,
-                robot.offhandWeapon ?? null
-              );
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {displayedRobots.map((robot) => {
+                  const hpPercentage = Math.round((robot.currentHP / robot.maxHP) * 100);
+                  const shieldPercentage = robot.maxShield > 0 
+                    ? Math.round((robot.currentShield / robot.maxShield) * 100)
+                    : 0;
+                  const winRate = calculateWinRate(robot.wins, robot.totalBattles);
+                  const actualReadiness = calculateReadiness(robot.currentHP, robot.maxHP);
+                  const readinessStatus = getReadinessStatus(
+                    robot.currentHP, 
+                    robot.maxHP,
+                    robot.loadoutType,
+                    robot.mainWeaponId,
+                    robot.offhandWeaponId,
+                    robot.offhandWeapon ?? null
+                  );
 
-              return (
-                <div
-                  key={robot.id}
-                  className={`bg-[#252b38] p-6 rounded-lg border-2 border-[#3d444d] hover:border-[#58a6ff] transition-colors cursor-pointer${isOnboarding && displayedRobots.indexOf(robot) === 0 ? ' robot-card-first' : ''}${isOnboarding ? ' onboarding-robot-card' : ''}`}
-                  onClick={() => navigate(`/robots/${robot.id}${isOnboarding ? '?onboarding=true' : ''}`)}
-                >
-                  {/* Robot Portrait */}
-                  <div className="flex justify-center mb-4">
-                    <RobotImage
-                      imageUrl={robot.imageUrl ?? null}
-                      robotName={robot.name}
-                      size="medium"
-                    />
-                  </div>
-
-                  {/* Robot Info */}
-                  <h3 className="text-xl font-bold mb-2 text-center">{robot.name}</h3>
-                  
-                  <div className="space-y-2 text-sm mb-4">
-                    {/* ELO, League, League Points */}
-                    <div className="flex justify-between items-center">
-                      <span className="text-secondary">ELO:</span>
-                      <span className="font-semibold text-[#58a6ff]">{robot.elo}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-secondary">Fame:</span>
-                      <span className="font-semibold text-[#ffd700]">{robot.fame}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-secondary">League:</span>
-                      <span className="font-semibold capitalize">{robot.currentLeague} │ LP: {robot.leaguePoints}</span>
-                    </div>
-                    
-                    {/* Win/Loss/Draw Record */}
-                    <div className="flex justify-between">
-                      <span className="text-secondary">Record:</span>
-                      <span className="font-semibold">
-                        {robot.wins}W-{robot.losses}L-{robot.draws}D ({winRate}%)
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* HP Bar */}
-                  <div className="space-y-2 mb-3">
-                    <div className="flex justify-between text-xs text-secondary">
-                      <span>HP</span>
-                      <span>{hpPercentage}%</span>
-                    </div>
-                    <div className="w-full h-6 bg-[#1a1f29] rounded-full overflow-hidden">
-                      <div
-                        className={`h-full transition-all duration-300 ${getHPColor(robot.currentHP, robot.maxHP)}`}
-                        style={{ width: `${hpPercentage}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Shield Bar */}
-                  {robot.maxShield > 0 && (
-                    <div className="space-y-2 mb-3">
-                      <div className="flex justify-between text-xs text-secondary">
-                        <span>Shield</span>
-                        <span>{shieldPercentage}%</span>
-                      </div>
-                      <div className="w-full h-5 bg-[#1a1f29] rounded-full overflow-hidden">
-                        <div
-                          className="h-full transition-all duration-300 bg-[#58a6ff]"
-                          style={{ width: `${shieldPercentage}%` }}
+                  return (
+                    <div
+                      key={robot.id}
+                      className={`bg-[#252b38] p-6 rounded-lg border-2 border-[#3d444d] hover:border-[#58a6ff] transition-colors cursor-pointer${isOnboarding && displayedRobots.indexOf(robot) === 0 ? ' robot-card-first' : ''}${isOnboarding ? ' onboarding-robot-card' : ''}`}
+                      onClick={() => navigate(`/robots/${robot.id}${isOnboarding ? '?onboarding=true' : ''}`)}
+                    >
+                      {/* Robot Portrait */}
+                      <div className="flex justify-center mb-4">
+                        <RobotImage
+                          imageUrl={robot.imageUrl ?? null}
+                          robotName={robot.name}
+                          size="medium"
                         />
                       </div>
-                    </div>
-                  )}
 
-                  {/* Weapon & Readiness */}
-                  <div className="space-y-2 text-sm mb-4">
-                    <div className="flex justify-between">
-                      <span className="text-secondary">Weapon:</span>
-                      <span className="font-semibold">
-                        {robot.mainWeapon ? robot.mainWeapon.weapon.name : 'None'}
-                        {robot.offhandWeapon && ` + ${robot.offhandWeapon.weapon.name}`}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-secondary">Readiness:</span>
-                      <span className={`font-semibold ${readinessStatus.color}`}>
-                        {actualReadiness}% │ {readinessStatus.text}
-                        {readinessStatus.reason && ` (${readinessStatus.reason})`}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Event Subscriptions */}
-                  {subscriptionsByRobotId[robot.id] && subscriptionsByRobotId[robot.id].length > 0 && (
-                    <div className="mb-4">
-                      <div className="text-xs text-secondary mb-1.5">Subscriptions</div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {subscriptionsByRobotId[robot.id].map((eventType) => (
-                          <EventBadge key={eventType} eventType={eventType} />
-                        ))}
+                      {/* Robot Info */}
+                      <h3 className="text-xl font-bold mb-2 text-center">{robot.name}</h3>
+                      
+                      <div className="space-y-2 text-sm mb-4">
+                        <div className="flex justify-between items-center">
+                          <span className="text-secondary">ELO:</span>
+                          <span className="font-semibold text-[#58a6ff]">{robot.elo}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-secondary">Fame:</span>
+                          <span className="font-semibold text-[#ffd700]">{robot.fame}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-secondary">League:</span>
+                          <span className="font-semibold capitalize">{robot.currentLeague} │ LP: {robot.leaguePoints}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-secondary">Record:</span>
+                          <span className="font-semibold">
+                            {robot.wins}W-{robot.losses}L-{robot.draws}D ({winRate}%)
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  )}
 
-                  {/* View Details Button */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/robots/${robot.id}${isOnboarding ? '?onboarding=true' : ''}`);
-                    }}
-                    className="mt-4 w-full border border-[#58a6ff] text-[#58a6ff] hover:bg-[#58a6ff] hover:bg-opacity-10 px-4 py-2 rounded transition-colors"
-                  >
-                    View Details →
-                  </button>
-                </div>
-              );
-            })}
-          </div>
+                      {/* HP Bar */}
+                      <div className="space-y-2 mb-3">
+                        <div className="flex justify-between text-xs text-secondary">
+                          <span>HP</span>
+                          <span>{hpPercentage}%</span>
+                        </div>
+                        <div className="w-full h-6 bg-[#1a1f29] rounded-full overflow-hidden">
+                          <div
+                            className={`h-full transition-all duration-300 ${getHPColor(robot.currentHP, robot.maxHP)}`}
+                            style={{ width: `${hpPercentage}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Shield Bar */}
+                      {robot.maxShield > 0 && (
+                        <div className="space-y-2 mb-3">
+                          <div className="flex justify-between text-xs text-secondary">
+                            <span>Shield</span>
+                            <span>{shieldPercentage}%</span>
+                          </div>
+                          <div className="w-full h-5 bg-[#1a1f29] rounded-full overflow-hidden">
+                            <div
+                              className="h-full transition-all duration-300 bg-[#58a6ff]"
+                              style={{ width: `${shieldPercentage}%` }}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Weapon & Readiness */}
+                      <div className="space-y-2 text-sm mb-4">
+                        <div className="flex justify-between">
+                          <span className="text-secondary">Weapon:</span>
+                          <span className="font-semibold">
+                            {robot.mainWeapon ? robot.mainWeapon.weapon.name : 'None'}
+                            {robot.offhandWeapon && ` + ${robot.offhandWeapon.weapon.name}`}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-secondary">Readiness:</span>
+                          <span className={`font-semibold ${readinessStatus.color}`}>
+                            {actualReadiness}% │ {readinessStatus.text}
+                            {readinessStatus.reason && ` (${readinessStatus.reason})`}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Event Subscriptions */}
+                      {subscriptionsByRobotId[robot.id] && subscriptionsByRobotId[robot.id].length > 0 && (
+                        <div className="mb-4">
+                          <div className="text-xs text-secondary mb-1.5">Subscriptions</div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {subscriptionsByRobotId[robot.id].map((eventType) => (
+                              <EventBadge key={eventType} eventType={eventType} />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* View Details Button */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/robots/${robot.id}${isOnboarding ? '?onboarding=true' : ''}`);
+                        }}
+                        className="mt-4 w-full border border-[#58a6ff] text-[#58a6ff] hover:bg-[#58a6ff] hover:bg-opacity-10 px-4 py-2 rounded transition-colors"
+                      >
+                        View Details →
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </>
         )}

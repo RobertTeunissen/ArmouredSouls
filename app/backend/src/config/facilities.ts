@@ -82,48 +82,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
     implemented: true,
     prestigeRequirements: [0, 0, 0, 1500, 0, 0, 5000, 0, 10000, 0], // L4: 1500, L7: 5000, L9: 10000
   },
-  {
-    type: 'research_lab',
-    name: 'Research Lab',
-    description: 'Unlock advanced analytics and loadout features',
-    maxLevel: 10,
-    costs: [200000, 400000, 600000, 800000, 1000000, 1250000, 1500000, 1750000, 2000000, 2500000],
-    benefits: [
-      'Unlock advanced battle analytics',
-      'Unlock loadout presets (save 3 configurations per robot)',
-      'Unlock AI behavior customization',
-      'Unlock 5 loadout presets per robot',
-      'Unlock battle simulation (test matchups without cost)',
-      'Unlock advanced statistics dashboard',
-      'Unlock predictive AI (opponent analysis)',
-      'Unlock 8 loadout presets per robot',
-      'Unlock experimental technology',
-      'Unlock robot cloning',
-    ],
-    implemented: false,
-    prestigeRequirements: [0, 0, 0, 2000, 0, 0, 7500, 0, 15000, 0], // L4: 2000, L7: 7500, L9: 15000
-  },
-  {
-    type: 'medical_bay',
-    name: 'Medical Bay',
-    description: 'Reduces critical damage repair costs',
-    maxLevel: 10,
-    costs: [175000, 350000, 525000, 700000, 875000, 1050000, 1250000, 1500000, 1750000, 2250000],
-    benefits: [
-      '15% reduction on critical damage repair costs',
-      '25% reduction on critical damage repair costs',
-      '35% reduction on critical damage repair costs',
-      '45% reduction on critical damage repair costs',
-      '55% reduction on critical damage repair costs',
-      '65% reduction on critical damage repair costs, faster recovery protocols',
-      '75% reduction on critical damage repair costs',
-      '85% reduction on critical damage repair costs',
-      '95% reduction on critical damage repair costs, prevent permanent damage',
-      'Eliminate critical damage penalties entirely',
-    ],
-    implemented: false,
-    prestigeRequirements: [0, 0, 0, 2000, 0, 0, 7500, 0, 15000, 0], // L4: 2000, L7: 7500, L9: 15000
-  },
+
   {
     type: 'roster_expansion',
     name: 'Roster Expansion',
@@ -165,27 +124,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
     implemented: true,
     // No prestige requirements for Storage Facility
   },
-  {
-    type: 'coaching_staff',
-    name: 'Coaching Staff',
-    description: 'Hire coaches for stable-wide bonuses',
-    maxLevel: 10,
-    costs: [250000, 350000, 450000, 600000, 750000, 900000, 1100000, 1300000, 1500000, 1750000],
-    benefits: [
-      'Unlock Offensive Coach (+3% Combat Power for all robots)',
-      'Unlock Defensive Coach (+3% Armor Plating for all robots)',
-      'Unlock Tactical Coach (+5% Threat Analysis for all robots)',
-      'Improve Offensive Coach (+5% Combat Power)',
-      'Improve Defensive Coach (+5% Armor Plating)',
-      'Improve Tactical Coach (+8% Threat Analysis)',
-      'Unlock Team Coach (+5% team coordination bonuses for arena battles)',
-      'Improve Offensive Coach (+7% Combat Power)',
-      'Improve Defensive Coach (+7% Armor Plating)',
-      'Master Coach (combine two coach bonuses at 75% effectiveness)',
-    ],
-    implemented: false,
-    prestigeRequirements: [0, 0, 2000, 0, 0, 5000, 0, 0, 10000, 0], // L3: 2000, L6: 5000, L9: 10000
-  },
+
   {
     type: 'booking_office',
     name: 'Booking Office',

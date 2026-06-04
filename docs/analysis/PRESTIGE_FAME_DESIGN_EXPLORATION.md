@@ -62,7 +62,7 @@ The ability to issue challenges to specific players. Creates the social/rivalry 
 **Revised thinking**: This shouldn't be hidden behind a high prestige barrier. If anything, rivalries are most interesting in the mid-game when players are competitive with each other. Could be available early or even from the start — prestige could enhance it (higher-prestige challenges get featured on a public board, or carry bonus rewards) rather than gate it.
 
 #### ❌ Opponent Scouting (rejected)
-Players can already view opponent battle history (it's public). The actionable advantage is minimal — you can't drastically change strategy between battles since weapon switching is costly and there's 4+ hours between battles in the cron schedule. Better suited as a facility feature (Research Lab) if implemented at all.
+Players can already view opponent battle history (it's public). The actionable advantage is minimal — you can't drastically change strategy between battles since weapon switching is costly and there's 4+ hours between battles in the cron schedule. Not worth implementing as a standalone feature.
 
 #### ❌ Loadout Presets (rejected)
 Players equip robots with a deliberate strategy. Switching is costly by design. With 4+ hours between battles, there's already time to manually adjust. This doesn't solve a real problem.

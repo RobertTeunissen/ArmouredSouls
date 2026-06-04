@@ -10,7 +10,7 @@ The change touches four layers:
 3. **Audit logging** — Distinguish manual vs automatic repairs with a `repairType` field and log the manual discount metadata
 4. **Admin frontend** — New "Repair Log" tab in the Admin Portal to view, filter, and summarize manual vs automatic repair activity
 
-The discount is applied as a final multiplier after Repair Bay and Medical Bay discounts, ensuring it stacks cleanly with the existing discount pipeline.
+The discount is applied as a final multiplier after Repair Bay discounts, ensuring it stacks cleanly with the existing discount pipeline.
 
 ## Architecture
 
@@ -37,7 +37,7 @@ flowchart TD
 
 ### Key Design Decision: Where to Apply the Discount
 
-The manual repair endpoint (`POST /api/robots/repair-all` in `robots.ts`) uses a simpler `REPAIR_COST_PER_HP = 50` formula, while the automatic repair path (`repairAllRobots()` in `repairService.ts`) uses the full `calculateRepairCost()` formula with attribute sums, damage multipliers, and Medical Bay reductions.
+The manual repair endpoint (`POST /api/robots/repair-all` in `robots.ts`) uses a simpler `REPAIR_COST_PER_HP = 50` formula, while the automatic repair path (`repairAllRobots()` in `repairService.ts`) uses the full `calculateRepairCost()` formula with attribute sums, damage multipliers, and Repair Bay reductions.
 
 The 50% manual discount is applied in the endpoint handler (`robots.ts`) after the existing Repair Bay discount calculation, not inside `calculateRepairCost()`. This keeps the shared utility function unchanged and avoids any risk to the automatic repair path.
 
@@ -308,7 +308,7 @@ The following properties were derived from the acceptance criteria prework analy
 
 ### Property 2: Automatic repair cost unchanged
 
-*For any* valid attribute sum (positive), damage percentage (0–100), HP percentage (0–100), Repair Bay level (0–10), Medical Bay level (0–10), and active robot count (1–20), the automatic repair cost shall equal the result of `calculateRepairCost(sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel, medicalBayLevel, activeRobotCount)` with no additional multiplier applied.
+*For any* valid attribute sum (positive), damage percentage (0–100), HP percentage (0–100), Repair Bay level (0–10), and active robot count (1–20), the automatic repair cost shall equal the result of `calculateRepairCost(sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel, activeRobotCount)` with no additional multiplier applied.
 
 **Validates: Requirements 2.1, 2.2, 2.3**
 

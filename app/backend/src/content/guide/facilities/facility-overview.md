@@ -1,12 +1,11 @@
 ---
-title: "All 16 Facility Types"
+title: "All 13 Facility Types"
 description: "A complete overview of every facility in Armoured Souls — what each one does, what it costs, and why it matters for your stable."
 order: 1
 lastUpdated: "2026-04-16"
 relatedArticles:
   - facilities/facility-progression
   - facilities/training-academies
-  - facilities/coaching-staff
   - facilities/investment-strategy
   - facilities/tuning-bay
   - economy/credits-and-income
@@ -14,14 +13,14 @@ relatedArticles:
 
 ## Overview
 
-Your stable can house up to **16 different facilities**, each providing a unique benefit — from slashing repair bills to unlocking higher attribute caps. Every facility has up to 10 upgrade levels (except Roster Expansion, which caps at 9), and each level increases both the benefit and the daily operating cost.
+Your stable can house up to **13 different facilities**, each providing a unique benefit — from slashing repair bills to unlocking higher attribute caps. Every facility has up to 10 upgrade levels (except Roster Expansion, which caps at 9), and each level increases both the benefit and the daily operating cost.
 
 Facilities are your long-term investments. Unlike one-time purchases like weapons or attribute upgrades, facilities generate ongoing value every single cycle — but they also charge ongoing operating costs. Choosing which facilities to invest in, and when, is one of the most important strategic decisions in the game.
 
 ![Facility overview grid](/images/guide/facilities/facility-overview-grid.png)
 
 ```callout-info
-Facilities are grouped into four categories: Economy & Discounts, Capacity & Storage, Training Academies, and Tactical & Advanced. This guide covers all 16 at a glance — see the individual articles for deep dives on level progression and ROI.
+Facilities are grouped into four categories: Economy & Discounts, Capacity & Storage, Training Academies, and Tactical & Advanced. This guide covers all 13 at a glance — see the individual articles for deep dives on level progression and ROI.
 ```
 
 ## Economy & Discount Facilities
@@ -129,10 +128,7 @@ These facilities unlock special features and late-game mechanics. Some are not y
 | Facility | Purpose | Level 1 Cost | Operating Cost | Key Benefit |
 |----------|---------|-------------|----------------|-------------|
 | Tuning Bay | Per-robot tactical attribute tuning | ₡200,000 | level × ₡300/day | 10–110 bonus attribute points per robot |
-| Research Lab | Analytics & tools | ₡200,000 | ₡2,000 + ₡1,000/level | Not yet implemented |
-| Medical Bay | Critical damage reduction | ₡175,000 | ₡2,000 + ₡1,000/level | Not yet implemented |
-| Coaching Staff | Stable-wide stat bonuses | ₡250,000 | ₡3,000/day when active | Not yet implemented |
-| Booking Office | Tournament access & rewards | ₡250,000 | None | Not yet implemented |
+| Booking Office | Tournament access & rewards | ₡250,000 | None | Event subscription access |
 
 ### Tuning Bay
 
@@ -142,21 +138,9 @@ The Tuning Bay provides a pool of bonus attribute points that can be freely allo
 
 See the [Tuning Bay Guide](/guide/facilities/tuning-bay) for the full level table and the [Tactical Tuning Guide](/guide/strategy/tactical-tuning) for allocation strategies.
 
-### Research Lab
-
-Unlocks analytical tools: battle analytics (Level 1), loadout presets (Level 2), AI behavior customization (Level 3), battle simulation (Level 5), and more. Expensive to operate but invaluable for optimizing your strategy at higher tiers. This facility is not yet implemented.
-
-### Medical Bay
-
-Reduces repair costs specifically for **critical damage** — when a robot's HP hits zero. This is separate from the Repair Bay, which handles regular battle damage. At Level 10, critical damage penalties are eliminated entirely. This facility is not yet implemented.
-
-### Coaching Staff
-
-Lets you hire coaches that provide stable-wide attribute bonuses. See the [Coaching Staff Guide](/guide/facilities/coaching-staff) for the planned system breakdown. This facility is not yet implemented.
-
 ### Booking Office
 
-Planned to unlock access to tiered tournaments and enhanced tournament rewards. Currently all tournaments are open to every eligible robot regardless of Prestige level. This facility is not yet implemented and has no operating cost.
+Unlocks access to battle events through the subscription system. Each Booking Office level increases your per-robot event subscription cap. See the [Booking Office](/guide/facilities/booking-office) article for the full breakdown.
 
 ## Operating Cost Summary
 
@@ -176,9 +160,6 @@ Here's what you'll pay daily for each facility at various levels:
 | Mobility Academy | ₡250 | ₡1,250 | ₡2,500 |
 | AI Academy | ₡250 | ₡1,250 | ₡2,500 |
 | Tuning Bay | ₡300 | ₡1,500 | ₡3,000 |
-| Research Lab | ₡2,000 | ₡6,000 | ₡11,000 |
-| Medical Bay | ₡2,000 | ₡6,000 | ₡11,000 |
-| Coaching Staff | ₡3,000 | ₡3,000 | ₡3,000 |
 | Booking Office | ₡0 | ₡0 | ₡0 |
 
 ```callout-warning
@@ -189,5 +170,4 @@ Facility costs add up fast. If you own 5 facilities at mid-level, you could easi
 
 - [Facility Progression & ROI](/guide/facilities/facility-progression) — Level-by-level costs, prestige gates, and return on investment
 - [Training Academies](/guide/facilities/training-academies) — How the four academies control attribute caps
-- [Coaching Staff](/guide/facilities/coaching-staff) — Coach types, bonuses, and switching mechanics
 - [Investment Strategy](/guide/facilities/investment-strategy) — Recommended facility order for early, mid, and late game

@@ -51,7 +51,7 @@ After all tasks are complete, run these checks:
 
 2.5 WHEN the user views facility financial data THEN the existing "Investments & ROI" and "Investment Advisor" tabs SHALL be removed and replaced with a single new tab that has a clean, overhauled layout showing a lifetime overview per facility — total investment, total returns, whether it's paid off, and if not, projected payoff — with no cycle-range selectors or period filters
 
-2.6 WHEN the new consolidated tab displays facility ROI data THEN it SHALL only show facilities that have economic components (Merchandising Hub, Streaming Studio, Repair Bay, Training Facility, Weapons Workshop) — facilities that provide capability unlocks without direct financial returns (academies, roster expansion, storage, research lab, medical bay, coaching staff, booking office, tuning bay) SHALL NOT appear in the ROI/investment view
+2.6 WHEN the new consolidated tab displays facility ROI data THEN it SHALL only show facilities that have economic components (Merchandising Hub, Streaming Studio, Repair Bay, Training Facility, Weapons Workshop) — facilities that provide capability unlocks without direct financial returns (academies, roster expansion, storage, booking office, tuning bay) SHALL NOT appear in the ROI/investment view
 
 ### Unchanged Behavior (Regression Prevention)
 

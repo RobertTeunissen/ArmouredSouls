@@ -213,7 +213,7 @@ Each class carries typed error codes. Express 5 automatically forwards rejected 
 |---|---|
 | `User` | Player accounts — currency, prestige, onboarding state, profile settings |
 | `Robot` | 23 core attributes, combat state, league/fame tracking |
-| `Facility` | 14 facility types with levels 0–10, coaching staff |
+| `Facility` | 13 facility types with levels 0–10 |
 | `Weapon` | Weapon definitions — damage, cooldown, attribute bonuses |
 | `WeaponInventory` | Player weapon ownership |
 | `Battle` | Battle records with time-based combat logs (JSON) |

@@ -20,9 +20,6 @@ const EMOJI_FALLBACKS: Record<string, string> = {
   defense_training_academy: '🛡️',
   mobility_training_academy: '🦿',
   ai_training_academy: '🤖',
-  research_lab: '🔬',
-  medical_bay: '⚕️',
-  coaching_staff: '📋',
   booking_office: '🏆',
   tuning_bay: '⚙️',
 };

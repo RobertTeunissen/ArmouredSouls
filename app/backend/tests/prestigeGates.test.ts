@@ -31,28 +31,10 @@ describe('Prestige Gates', () => {
       expect(config?.prestigeRequirements).toEqual([0, 0, 0, 1500, 0, 0, 5000, 0, 10000, 0]);
     });
 
-    test('Research Lab has correct prestige requirements', () => {
-      const config = getFacilityConfig('research_lab');
-      expect(config).toBeDefined();
-      expect(config?.prestigeRequirements).toEqual([0, 0, 0, 2000, 0, 0, 7500, 0, 15000, 0]);
-    });
-
-    test('Medical Bay has correct prestige requirements', () => {
-      const config = getFacilityConfig('medical_bay');
-      expect(config).toBeDefined();
-      expect(config?.prestigeRequirements).toEqual([0, 0, 0, 2000, 0, 0, 7500, 0, 15000, 0]);
-    });
-
     test('Roster Expansion has correct prestige requirements', () => {
       const config = getFacilityConfig('roster_expansion');
       expect(config).toBeDefined();
       expect(config?.prestigeRequirements).toEqual([0, 0, 0, 1000, 0, 0, 5000, 0, 10000]);
-    });
-
-    test('Coaching Staff has correct prestige requirements', () => {
-      const config = getFacilityConfig('coaching_staff');
-      expect(config).toBeDefined();
-      expect(config?.prestigeRequirements).toEqual([0, 0, 2000, 0, 0, 5000, 0, 0, 10000, 0]);
     });
 
     test('Booking Office has prestige requirements for all levels', () => {

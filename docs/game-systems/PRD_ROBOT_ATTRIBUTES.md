@@ -445,24 +445,6 @@ else:
     final_repair = base_repair × damage_percentage
 ```
 
-**Medical Bay Facility Interaction:**
-
-The **Medical Bay** facility (see [STABLE_SYSTEM.md](STABLE_SYSTEM.md#5-medical-bay)) provides an **additional reduction** to the critical damage multiplier:
-
-```
-// Medical Bay reduces critical damage multiplier (0 HP only)
-if robot_destroyed (HP = 0) AND medical_bay_level > 0:
-    medical_bay_reduction = medical_bay_level × 0.1  // 10% per level
-    effective_multiplier = 2.0 × (1 - medical_bay_reduction)
-    
-    // Examples:
-    // Level 1: 2.0 × (1 - 0.1) = 1.8x multiplier (10% reduction)
-    // Level 5: 2.0 × (1 - 0.5) = 1.0x multiplier (50% reduction, normal cost)
-    // Level 10: 2.0 × (1 - 1.0) = 0.0x penalty eliminated
-
-    final_repair = base_repair × damage_percentage × effective_multiplier
-```
-
 **Repair Bay Facility Interaction:**
 
 The **Repair Bay** facility (see [STABLE_SYSTEM.md](STABLE_SYSTEM.md#1-repair-bay)) provides a **discount** on ALL repair costs (applied after multipliers):
@@ -476,18 +458,17 @@ final_cost = final_repair × (1 - repair_bay_discount)
 **Combined Example:**
 - Robot with 230 total attributes: base_repair = ₡23,000
 - Destroyed (0 HP, 100% damage)
-- Medical Bay Level 5 (50% reduction on 2.0x multiplier)
 - Repair Bay Level 5 (25% discount on all repairs)
 
 ```
 Step 1: Base calculation
-  final_repair = ₡23,000 × 1.0 × 1.0 = ₡23,000  // Medical Bay reduces 2.0x to 1.0x
+  final_repair = ₡23,000 × 1.0 × 2.0 = ₡46,000  // critical damage multiplier
 
 Step 2: Apply Repair Bay discount
-  final_cost = ₡23,000 × (1 - 0.25) = ₡17,250
+  final_cost = ₡46,000 × (1 - 0.25) = ₡34,500
 
 Without facilities: ₡46,000
-With both facilities: ₡17,250 (62.5% total savings)
+With Repair Bay: ₡34,500 (25% savings)
 ```
 
 **Example:**

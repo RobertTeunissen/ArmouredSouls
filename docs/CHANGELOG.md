@@ -30,7 +30,7 @@ Phase 1 delivered a fully functional game with 4 battle modes, 15 facilities, 47
 |---|---|
 | Authentication | JWT-based auth, admin/user roles, protected routes |
 | Robot Management | 23 attributes (Decimal), 4 loadout types, 3 stances, yield threshold |
-| Stable & Facilities | 14 facility types, 10 levels each, operating costs, coaching staff |
+| Stable & Facilities | 13 facility types, 10 levels each, operating costs |
 | Weapons & Loadout | 47 weapons (41 weapons + 6 shields), 4 range bands, inventory system |
 | Matchmaking | LP-primary matching, ELO fallback, bye-robot system, same-stable deprioritization |
 | Battle Engine | Tick-based combat simulation (100ms ticks, 120s max), deterministic, batch processing |

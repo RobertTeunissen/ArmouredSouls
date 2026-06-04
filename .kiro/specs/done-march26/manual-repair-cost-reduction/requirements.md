@@ -9,7 +9,7 @@ This feature reduces the cost of all manual robot repairs by 50%. When a player 
 - **Manual_Repair**: A repair initiated by the player via the "Repair All" button on the robots page, calling the `POST /api/robots/repair-all` endpoint.
 - **Automatic_Repair**: A repair triggered by the cycle scheduler before league, tag team, or tournament battles via `repairAllRobots(true)` in `cycleScheduler.ts`.
 - **Repair_Cost_System**: The backend system that calculates repair costs using base attribute sums, damage percentages, HP-based multipliers, and Repair Bay discounts.
-- **Manual_Repair_Discount**: A fixed 50% reduction applied to the final cost of manual repairs, applied after all other discounts (Repair Bay, Medical Bay).
+- **Manual_Repair_Discount**: A fixed 50% reduction applied to the final cost of manual repairs, applied after all other discounts (Repair Bay).
 - **Repair_Bay**: A player facility that provides a percentage discount on repair costs. Discount formula: `Level × (5 + activeRobotCount)`, capped at 90%.
 - **Frontend_Cost_Display**: The cost shown to the player on the "Repair All" button and in the repair confirmation modal on the robots page.
 - **Test_Suite**: The Jest test suite with fast-check property-based testing library used to verify backend repair cost calculations and discount logic.
@@ -25,7 +25,7 @@ This feature reduces the cost of all manual robot repairs by 50%. When a player 
 #### Acceptance Criteria
 
 1. WHEN a player triggers a manual repair via the `POST /api/robots/repair-all` endpoint, THE Repair_Cost_System SHALL multiply the final cost (after Repair Bay discount) by 0.5 and round down to the nearest integer.
-2. WHEN a player triggers a manual repair, THE Repair_Cost_System SHALL apply the Manual_Repair_Discount after all existing discounts (Repair Bay discount, Medical Bay multiplier reduction).
+2. WHEN a player triggers a manual repair, THE Repair_Cost_System SHALL apply the Manual_Repair_Discount after all existing discounts (Repair Bay discount).
 3. WHEN a player triggers a manual repair with a Repair Bay discount of 0%, THE Repair_Cost_System SHALL still apply the 50% Manual_Repair_Discount to the base cost.
 4. THE `POST /api/robots/repair-all` endpoint SHALL return the Manual_Repair_Discount percentage in its response payload alongside the existing `discount` and `finalCost` fields.
 
@@ -75,7 +75,7 @@ This feature reduces the cost of all manual robot repairs by 50%. When a player 
 
 #### Acceptance Criteria
 
-1. THE Test_Suite SHALL include unit tests that verify the 50% Manual_Repair_Discount is applied to the final cost after all existing discounts (Repair Bay, Medical Bay).
+1. THE Test_Suite SHALL include unit tests that verify the 50% Manual_Repair_Discount is applied to the final cost after all existing discounts (Repair Bay).
 2. THE Test_Suite SHALL include unit tests that verify `Math.floor` rounding is applied to the discounted cost for odd-valued inputs.
 3. THE Test_Suite SHALL include regression tests that verify Automatic_Repair costs produced by `repairAllRobots(true)` remain identical to the current implementation without any Manual_Repair_Discount applied.
 4. THE Test_Suite SHALL include property-based tests using fast-check that verify FOR ALL valid attribute sums, damage percentages, and Repair Bay levels, the manual repair cost equals `Math.floor(automaticRepairCost * 0.5)`.

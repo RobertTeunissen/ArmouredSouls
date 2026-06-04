@@ -34,12 +34,6 @@ export function calculateFacilityOperatingCost(facilityType: string, level: numb
     case 'weapons_workshop':
       return 100 * level;
     
-    case 'research_lab':
-      return 2000 + (level - 1) * 1000;
-    
-    case 'medical_bay':
-      return 2000 + (level - 1) * 1000;
-    
     case 'roster_expansion':
       // Special case: ₡500/day per robot slot beyond first
       // This is calculated separately based on actual roster size
@@ -47,11 +41,6 @@ export function calculateFacilityOperatingCost(facilityType: string, level: numb
     
     case 'storage_facility':
       return 500 + (level - 1) * 250;
-    
-    case 'coaching_staff':
-      // ₡3,000/day when coach is active
-      // This requires checking if activeCoach is set
-      return 0; // Handled separately
     
     case 'booking_office':
       return 0; // No operating cost (generates prestige)
@@ -127,17 +116,6 @@ export async function calculateTotalDailyOperatingCosts(userId: number): Promise
       cost: rosterCost,
     });
     total += rosterCost;
-  }
-
-  // Coaching Staff: ₡3,000/day if active coach is set
-  const coachingStaff = facilities.find((f) => f.facilityType === 'coaching_staff');
-  if (coachingStaff && coachingStaff.activeCoach) {
-    breakdown.push({
-      facilityType: 'coaching_staff',
-      facilityName: 'Coaching Staff (Active)',
-      cost: 3000,
-    });
-    total += 3000;
   }
 
   return { total, breakdown };
@@ -407,11 +385,8 @@ function getFacilityName(type: string): string {
     repair_bay: 'Repair Bay',
     training_facility: 'Training Facility',
     weapons_workshop: 'Weapons Workshop',
-    research_lab: 'Research Lab',
-    medical_bay: 'Medical Bay',
     roster_expansion: 'Roster Expansion',
     storage_facility: 'Storage Facility',
-    coaching_staff: 'Coaching Staff',
     booking_office: 'Booking Office',
     combat_training_academy: 'Combat Training Academy',
     defense_training_academy: 'Defense Training Academy',
@@ -419,6 +394,7 @@ function getFacilityName(type: string): string {
     ai_training_academy: 'AI Training Academy',
     merchandising_hub: 'Merchandising Hub',
     streaming_studio: 'Streaming Studio',
+    tuning_bay: 'Tuning Bay',
   };
   return names[type] || type;
 }

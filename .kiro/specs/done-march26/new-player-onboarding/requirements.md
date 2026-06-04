@@ -319,10 +319,9 @@ The onboarding system will use a step-by-step guided flow with strategic decisio
 5. THE Onboarding_System SHALL explain that shields DO regenerate automatically (no cost)
 6. THE Onboarding_System SHALL explain battle readiness requirements (HP >0, weapon equipped)
 7. THE Onboarding_System SHALL explain Repair Bay facility reduces repair costs by 5-55%
-8. THE Onboarding_System SHALL explain Medical Bay facility reduces critical damage repair costs
-9. FOR multi-robot strategies, THE Onboarding_System SHALL explain repair costs multiply with more robots
-10. THE Onboarding_System SHALL calculate projected weekly repair costs based on Roster_Strategy
-11. WHEN player acknowledges understanding, THE Onboarding_System SHALL advance to completion
+8. FOR multi-robot strategies, THE Onboarding_System SHALL explain repair costs multiply with more robots
+9. THE Onboarding_System SHALL calculate projected weekly repair costs based on Roster_Strategy
+10. WHEN player acknowledges understanding, THE Onboarding_System SHALL advance to completion
 
 ### Requirement 13: Personalized Strategy Recommendations
 

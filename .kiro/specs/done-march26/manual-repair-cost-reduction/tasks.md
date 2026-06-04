@@ -133,4 +133,4 @@ Apply a 50% discount to manual robot repairs while preserving automatic repair c
 - Checkpoints ensure incremental validation
 - Property tests validate universal correctness properties from the design document
 - Unit tests validate specific examples and edge cases
-- The discount is applied as a final multiplier after all existing discounts (Repair Bay, Medical Bay)
+- The discount is applied as a final multiplier after all existing discounts (Repair Bay)

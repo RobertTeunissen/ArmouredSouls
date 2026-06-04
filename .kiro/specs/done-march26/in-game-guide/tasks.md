@@ -219,7 +219,7 @@ Build a read-only encyclopedia feature for Armoured Souls. Backend serves Markdo
     - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 10.6_
 
   - [x] 7.8 Create Stable & Facilities section articles
-    - All 15 facility types overview, individual facility articles with level progression and ROI, Training Academy system (4 academies, caps 10-50), Coaching Staff system, recommended investment order by game stage
+    - All facility types overview, individual facility articles with level progression and ROI, Training Academy system (4 academies, caps 10-50), recommended investment order by game stage
     - _Requirements: 11.1, 11.2, 11.3, 11.4, 11.5_
 
   - [x] 7.9 Create Prestige & Fame section articles

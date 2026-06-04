@@ -144,14 +144,14 @@ describe('Manual Repair Discount — Unit Tests', () => {
       expect(result).toBe(5000);
     });
 
-    it('should return 7000 for attributeSum=200, damagePercent=100, hpPercent=0, repairBayLevel=5, medicalBayLevel=3, robotCount=10', () => {
+    it('should return 10000 for attributeSum=200, damagePercent=100, hpPercent=0, repairBayLevel=5, robotCount=10', () => {
       // baseRepairCost = 200 * 100 = 20000
-      // hpPercent=0, medicalBayLevel=3 → medicalReduction = 0.3, multiplier = 2.0 * 0.7 = 1.4
-      // rawCost = 20000 * 1.0 * 1.4 = 28000
+      // hpPercent=0 → multiplier = 2.0
+      // rawCost = 20000 * 1.0 * 2.0 = 40000
       // rawDiscount = 5 * (5 + 10) = 75, repairBayDiscount = 0.75
-      // finalCost = Math.round(28000 * 0.25) = 7000
-      const result = calculateRepairCost(200, 100, 0, 5, 3, 10);
-      expect(result).toBe(7000);
+      // finalCost = Math.round(40000 * 0.25) = 10000
+      const result = calculateRepairCost(200, 100, 0, 5, 0, 10);
+      expect(result).toBe(10000);
     });
   });
 

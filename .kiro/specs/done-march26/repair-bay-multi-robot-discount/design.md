@@ -46,7 +46,7 @@ This change affects:
 ### Consolidation Strategy
 
 **Problem**: Three different repair cost calculation functions exist:
-1. `robotCalculations.ts::calculateRepairCost` - Attribute-sum formula with Medical Bay support
+1. `robotCalculations.ts::calculateRepairCost` - Attribute-sum formula
 2. `economyCalculations.ts::calculateRepairCostWithDiscounts` - Duplicate of #1
 3. `tagTeamBattleOrchestrator.ts::calculateRepairCost` - Different formula (HP-based)
 
@@ -54,7 +54,6 @@ This change affects:
 
 **Rationale**:
 - The attribute-sum formula is more accurate (scales with robot power)
-- Medical Bay integration is already implemented
 - Most of the codebase already uses this function
 - The HP-based formula in tagTeamBattleOrchestrator is simpler but less accurate
 
@@ -99,8 +98,7 @@ export function calculateRepairCost(
   sumOfAllAttributes: number,
   damagePercent: number,
   hpPercent: number,
-  repairBayLevel: number = 0,
-  medicalBayLevel: number = 0
+  repairBayLevel: number = 0
 ): number
 ```
 
@@ -111,7 +109,6 @@ export function calculateRepairCost(
   damagePercent: number,
   hpPercent: number,
   repairBayLevel: number = 0,
-  medicalBayLevel: number = 0,
   activeRobotCount: number = 0  // NEW PARAMETER
 ): number
 ```
@@ -149,7 +146,6 @@ const repairCost = calculateRepairCost(
   damagePercent,
   hpPercent,
   repairBayLevel,
-  medicalBayLevel,
   activeRobotCount  // NEW
 );
 
@@ -206,7 +202,6 @@ const repairCost = calculateRepairCost(
   damagePercent,
   hpPercent,
   repairBayLevel,
-  medicalBayLevel,
   activeRobotCount
 );
 ```
@@ -268,9 +263,9 @@ The existing database schema already supports this feature:
 
 **Validates: Requirements 2.1, 2.2, 2.3**
 
-### Property 3: Medical Bay Reduction Preserved
+### Property 3: Repair Bay Discount Preserved
 
-*For any* robot with HP = 0 (destroyed), the repair cost multiplier should be reduced by Medical Bay level × 10%, maintaining the existing Medical Bay functionality.
+*For any* robot with HP = 0 (destroyed), the repair cost should be reduced by the Repair Bay discount formula, maintaining the existing Repair Bay functionality.
 
 **Validates: Requirements 3.4, 8.4**
 
@@ -321,7 +316,7 @@ The existing database schema already supports this feature:
 - Continue with repair calculation
 
 **Facility Query Fails**:
-- Fallback: Use `repairBayLevel = 0` and `medicalBayLevel = 0`
+- Fallback: Use `repairBayLevel = 0`
 - Log error for monitoring
 - Continue with repair calculation (no discount)
 
@@ -341,10 +336,6 @@ The existing database schema already supports this feature:
 - Zero repair bay level: Discount = 0
 - Maximum discount scenarios (verify 90% cap)
 - Backward compatibility (missing activeRobotCount parameter)
-
-**Medical Bay Integration**:
-- Verify Medical Bay reduction still applies to critical damage multiplier
-- Test combinations of Repair Bay and Medical Bay discounts
 
 ### Property-Based Tests
 
@@ -370,7 +361,6 @@ fc.assert(
         100,   // damagePercent
         50,    // hpPercent
         repairBayLevel,
-        0,     // medicalBayLevel
         activeRobotCount
       );
       
@@ -419,16 +409,14 @@ fc.assert(
     fc.integer({ min: 0, max: 100 }),   // damagePercent
     fc.integer({ min: 0, max: 100 }),   // hpPercent
     fc.integer({ min: 0, max: 10 }),    // repairBayLevel
-    fc.integer({ min: 0, max: 10 }),    // medicalBayLevel
     fc.integer({ min: 0, max: 10 }),    // activeRobotCount
-    (sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel, medicalBayLevel, activeRobotCount) => {
+    (sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel, activeRobotCount) => {
       // Calculate repair cost using canonical function
       const cost1 = calculateRepairCost(
         sumOfAllAttributes,
         damagePercent,
         hpPercent,
         repairBayLevel,
-        medicalBayLevel,
         activeRobotCount
       );
       
@@ -438,7 +426,6 @@ fc.assert(
         damagePercent,
         hpPercent,
         repairBayLevel,
-        medicalBayLevel,
         activeRobotCount
       );
       

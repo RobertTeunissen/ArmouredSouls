@@ -27,8 +27,7 @@ describe('Repair Cost Multi-Robot Discount - Property Tests', () => {
           fc.integer({ min: 1, max: 23000 }), // sumOfAllAttributes
           fc.integer({ min: 0, max: 100 }), // damagePercent
           fc.integer({ min: 0, max: 100 }), // hpPercent
-          fc.integer({ min: 0, max: 10 }), // medicalBayLevel
-          (repairBayLevel, activeRobotCount, sumOfAllAttributes, damagePercent, hpPercent, medicalBayLevel) => {
+          (repairBayLevel, activeRobotCount, sumOfAllAttributes, damagePercent, hpPercent) => {
             // Calculate expected discount
             const rawDiscount = repairBayLevel * (5 + activeRobotCount);
             const expectedDiscount = Math.min(rawDiscount, 90);
@@ -39,7 +38,7 @@ describe('Repair Cost Multi-Robot Discount - Property Tests', () => {
               damagePercent,
               hpPercent,
               repairBayLevel,
-              medicalBayLevel,
+              0,
               activeRobotCount
             );
             
@@ -49,13 +48,7 @@ describe('Repair Cost Multi-Robot Discount - Property Tests', () => {
             // Determine multiplier based on HP percentage
             let multiplier = 1.0;
             if (hpPercent === 0) {
-              // Total destruction - apply Medical Bay reduction to 2.0x multiplier
-              if (medicalBayLevel > 0) {
-                const medicalReduction = medicalBayLevel * 0.1;
-                multiplier = 2.0 * (1 - medicalReduction);
-              } else {
-                multiplier = 2.0;
-              }
+              multiplier = 2.0;
             } else if (hpPercent < 10) {
               // Heavily damaged
               multiplier = 1.5;
@@ -190,208 +183,6 @@ describe('Repair Cost Multi-Robot Discount - Property Tests', () => {
     });
   });
 
-  describe('Property 3: Medical Bay Reduction Preserved', () => {
-    /**
-     * **Validates: Requirements 3.4, 8.4**
-     * For any robot with HP = 0 (destroyed), the repair cost multiplier should be reduced
-     * by Medical Bay level × 10%, maintaining the existing Medical Bay functionality.
-     */
-    test('Medical Bay reduces destruction multiplier for destroyed robots', () => {
-      fc.assert(
-        fc.property(
-          fc.integer({ min: 0, max: 10 }), // medicalBayLevel
-          fc.integer({ min: 0, max: 10 }), // repairBayLevel
-          fc.integer({ min: 0, max: 10 }), // activeRobotCount
-          fc.integer({ min: 1, max: 23000 }), // sumOfAllAttributes
-          fc.integer({ min: 1, max: 100 }), // damagePercent (at least 1% to ensure cost > 0)
-          (medicalBayLevel, repairBayLevel, activeRobotCount, sumOfAllAttributes, damagePercent) => {
-            // Calculate repair cost for destroyed robot (HP = 0)
-            const repairCost = calculateRepairCost(
-              sumOfAllAttributes,
-              damagePercent,
-              0, // hpPercent = 0 (destroyed)
-              repairBayLevel,
-              medicalBayLevel,
-              activeRobotCount
-            );
-            
-            // Calculate expected multiplier with Medical Bay reduction
-            let expectedMultiplier = 2.0;
-            if (medicalBayLevel > 0) {
-              const medicalReduction = medicalBayLevel * 0.1;
-              expectedMultiplier = 2.0 * (1 - medicalReduction);
-            }
-            
-            // Calculate expected cost
-            const baseRepairCost = sumOfAllAttributes * 100;
-            const rawCost = baseRepairCost * (damagePercent / 100) * expectedMultiplier;
-            
-            // Apply Repair Bay discount
-            const rawDiscount = repairBayLevel * (5 + activeRobotCount);
-            const repairBayDiscount = Math.min(rawDiscount, 90) / 100;
-            const expectedCost = Math.round(rawCost * (1 - repairBayDiscount));
-            
-            // Verify the repair cost matches expected calculation
-            expect(repairCost).toBe(expectedCost);
-            
-            // Verify Medical Bay reduction is applied correctly
-            expect(expectedMultiplier).toBeLessThanOrEqual(2.0);
-            expect(expectedMultiplier).toBeGreaterThanOrEqual(0.0);
-            
-            // Verify Medical Bay reduction formula
-            if (medicalBayLevel > 0) {
-              const expectedReduction = medicalBayLevel * 0.1;
-              expect(expectedMultiplier).toBe(2.0 * (1 - expectedReduction));
-            } else {
-              expect(expectedMultiplier).toBe(2.0);
-            }
-          }
-        ),
-        { numRuns: NUM_RUNS }
-      );
-    });
-
-    test('Medical Bay reduction only applies to destroyed robots (HP = 0)', () => {
-      fc.assert(
-        fc.property(
-          fc.integer({ min: 1, max: 10 }), // medicalBayLevel (at least 1 to test reduction)
-          fc.integer({ min: 0, max: 10 }), // repairBayLevel
-          fc.integer({ min: 0, max: 10 }), // activeRobotCount
-          fc.integer({ min: 1000, max: 23000 }), // sumOfAllAttributes
-          fc.integer({ min: 50, max: 100 }), // damagePercent
-          fc.integer({ min: 1, max: 100 }), // hpPercent (not destroyed)
-          (medicalBayLevel, repairBayLevel, activeRobotCount, sumOfAllAttributes, damagePercent, hpPercent) => {
-            // Calculate cost for non-destroyed robot
-            const costNonDestroyed = calculateRepairCost(
-              sumOfAllAttributes,
-              damagePercent,
-              hpPercent,
-              repairBayLevel,
-              medicalBayLevel,
-              activeRobotCount
-            );
-            
-            // Calculate cost for destroyed robot
-            const costDestroyed = calculateRepairCost(
-              sumOfAllAttributes,
-              damagePercent,
-              0, // hpPercent = 0 (destroyed)
-              repairBayLevel,
-              medicalBayLevel,
-              activeRobotCount
-            );
-            
-            // For non-destroyed robots, multiplier should be 1.0 or 1.5 (not affected by Medical Bay)
-            // For destroyed robots, multiplier should be 2.0 * (1 - medicalBayLevel * 0.1)
-            const baseRepairCost = sumOfAllAttributes * 100;
-            const rawDiscount = repairBayLevel * (5 + activeRobotCount);
-            const repairBayDiscount = Math.min(rawDiscount, 90) / 100;
-            
-            // Calculate expected cost for non-destroyed (Medical Bay should NOT apply)
-            let multiplierNonDestroyed = 1.0;
-            if (hpPercent < 10) {
-              multiplierNonDestroyed = 1.5;
-            }
-            const expectedCostNonDestroyed = Math.round(
-              baseRepairCost * (damagePercent / 100) * multiplierNonDestroyed * (1 - repairBayDiscount)
-            );
-            
-            // Calculate expected cost for destroyed (Medical Bay SHOULD apply)
-            const medicalReduction = medicalBayLevel * 0.1;
-            const multiplierDestroyed = 2.0 * (1 - medicalReduction);
-            const expectedCostDestroyed = Math.round(
-              baseRepairCost * (damagePercent / 100) * multiplierDestroyed * (1 - repairBayDiscount)
-            );
-            
-            // Verify costs match expectations
-            expect(costNonDestroyed).toBe(expectedCostNonDestroyed);
-            expect(costDestroyed).toBe(expectedCostDestroyed);
-            
-            // Verify destroyed robot has lower cost due to Medical Bay reduction
-            // (unless Medical Bay level is 0, in which case multipliers are 2.0 vs 1.0/1.5)
-            if (medicalBayLevel > 0) {
-              // With Medical Bay, destroyed multiplier is reduced
-              expect(multiplierDestroyed).toBeLessThan(2.0);
-            }
-          }
-        ),
-        { numRuns: NUM_RUNS }
-      );
-    });
-
-    test('Medical Bay reduction scales linearly with level', () => {
-      fc.assert(
-        fc.property(
-          fc.integer({ min: 0, max: 9 }), // medicalBayLevel (0-9 to allow increment)
-          fc.integer({ min: 0, max: 10 }), // repairBayLevel
-          fc.integer({ min: 0, max: 10 }), // activeRobotCount
-          fc.integer({ min: 1000, max: 23000 }), // sumOfAllAttributes
-          fc.integer({ min: 50, max: 100 }), // damagePercent
-          (medicalBayLevel, repairBayLevel, activeRobotCount, sumOfAllAttributes, damagePercent) => {
-            // Calculate cost at current Medical Bay level
-            const cost1 = calculateRepairCost(
-              sumOfAllAttributes,
-              damagePercent,
-              0, // hpPercent = 0 (destroyed)
-              repairBayLevel,
-              medicalBayLevel,
-              activeRobotCount
-            );
-            
-            // Calculate cost at next Medical Bay level
-            const cost2 = calculateRepairCost(
-              sumOfAllAttributes,
-              damagePercent,
-              0, // hpPercent = 0 (destroyed)
-              repairBayLevel,
-              medicalBayLevel + 1,
-              activeRobotCount
-            );
-            
-            // Higher Medical Bay level should result in lower or equal cost
-            // (equal only if Repair Bay discount is already at 90% cap and cost is 0)
-            expect(cost2).toBeLessThanOrEqual(cost1);
-            
-            // Verify the reduction is exactly 10% per level (with floating-point tolerance)
-            const multiplier1 = medicalBayLevel > 0 ? 2.0 * (1 - medicalBayLevel * 0.1) : 2.0;
-            const multiplier2 = 2.0 * (1 - (medicalBayLevel + 1) * 0.1);
-            
-            // Use toBeCloseTo for floating-point comparison (within 0.0001)
-            expect(multiplier2).toBeCloseTo(multiplier1 - 0.2, 4);
-          }
-        ),
-        { numRuns: NUM_RUNS }
-      );
-    });
-
-    test('Medical Bay at level 10 reduces destruction multiplier to 0', () => {
-      fc.assert(
-        fc.property(
-          fc.integer({ min: 0, max: 10 }), // repairBayLevel
-          fc.integer({ min: 0, max: 10 }), // activeRobotCount
-          fc.integer({ min: 1000, max: 23000 }), // sumOfAllAttributes
-          fc.integer({ min: 1, max: 100 }), // damagePercent
-          (repairBayLevel, activeRobotCount, sumOfAllAttributes, damagePercent) => {
-            // Calculate cost with Medical Bay level 10
-            const cost = calculateRepairCost(
-              sumOfAllAttributes,
-              damagePercent,
-              0, // hpPercent = 0 (destroyed)
-              repairBayLevel,
-              10, // medicalBayLevel = 10 (max)
-              activeRobotCount
-            );
-            
-            // At Medical Bay level 10, multiplier should be 2.0 * (1 - 1.0) = 0
-            // This means repair cost should be 0 regardless of other factors
-            expect(cost).toBe(0);
-          }
-        ),
-        { numRuns: NUM_RUNS }
-      );
-    });
-  });
-
   describe('Property 4: Attribute-Sum Formula Consistency', () => {
     /**
      * **Validates: Requirements 8.3**
@@ -406,16 +197,15 @@ describe('Repair Cost Multi-Robot Discount - Property Tests', () => {
           fc.integer({ min: 0, max: 100 }), // damagePercent
           fc.integer({ min: 0, max: 100 }), // hpPercent
           fc.integer({ min: 0, max: 10 }), // repairBayLevel
-          fc.integer({ min: 0, max: 10 }), // medicalBayLevel
           fc.integer({ min: 0, max: 10 }), // activeRobotCount
-          (sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel, medicalBayLevel, activeRobotCount) => {
+          (sumOfAllAttributes, damagePercent, hpPercent, repairBayLevel, activeRobotCount) => {
             // Calculate repair cost using the function
             const repairCost = calculateRepairCost(
               sumOfAllAttributes,
               damagePercent,
               hpPercent,
               repairBayLevel,
-              medicalBayLevel,
+              0,
               activeRobotCount
             );
             
@@ -425,13 +215,7 @@ describe('Repair Cost Multi-Robot Discount - Property Tests', () => {
             // Determine multiplier based on HP percentage
             let multiplier = 1.0;
             if (hpPercent === 0) {
-              // Total destruction - apply Medical Bay reduction to 2.0x multiplier
-              if (medicalBayLevel > 0) {
-                const medicalReduction = medicalBayLevel * 0.1;
-                multiplier = 2.0 * (1 - medicalReduction);
-              } else {
-                multiplier = 2.0;
-              }
+              multiplier = 2.0;
             } else if (hpPercent < 10) {
               // Heavily damaged
               multiplier = 1.5;
@@ -461,13 +245,13 @@ describe('Repair Cost Multi-Robot Discount - Property Tests', () => {
           fc.integer({ min: 0, max: 10 }), // repairBayLevel
           fc.integer({ min: 0, max: 10 }), // activeRobotCount
           (sumOfAllAttributes, damagePercent, repairBayLevel, activeRobotCount) => {
-            // Calculate cost for destroyed robot (HP = 0, no Medical Bay)
+            // Calculate cost for destroyed robot (HP = 0)
             const repairCost = calculateRepairCost(
               sumOfAllAttributes,
               damagePercent,
               0, // hpPercent = 0 (destroyed)
               repairBayLevel,
-              0, // medicalBayLevel = 0 (no Medical Bay)
+              0, // medicalBayLevel (legacy parameter, always 0)
               activeRobotCount
             );
             
@@ -1140,13 +924,7 @@ describe('Repair Cost Multi-Robot Discount - Property Tests', () => {
             // Determine multiplier based on HP percentage
             let multiplier = 1.0;
             if (hpPercent === 0) {
-              // Total destruction - apply Medical Bay reduction
-              if (medicalBayLevel > 0) {
-                const medicalReduction = medicalBayLevel * 0.1;
-                multiplier = 2.0 * (1 - medicalReduction);
-              } else {
-                multiplier = 2.0;
-              }
+              multiplier = 2.0;
             } else if (hpPercent < 10) {
               // Heavily damaged
               multiplier = 1.5;
@@ -1389,51 +1167,5 @@ describe('Repair Cost Multi-Robot Discount - Property Tests', () => {
       );
     });
 
-    test('repair costs with Medical Bay are consistent across battle types', () => {
-      fc.assert(
-        fc.property(
-          fc.integer({ min: 1000, max: 23000 }), // sumOfAllAttributes
-          fc.integer({ min: 50, max: 100 }), // damagePercent
-          fc.integer({ min: 0, max: 10 }), // repairBayLevel
-          fc.integer({ min: 1, max: 10 }), // medicalBayLevel (at least 1 to test Medical Bay)
-          fc.integer({ min: 0, max: 10 }), // activeRobotCount
-          (sumOfAllAttributes, damagePercent, repairBayLevel, medicalBayLevel, activeRobotCount) => {
-            // Calculate cost for destroyed robot (Medical Bay applies)
-            const destroyedCost1 = calculateRepairCost(
-              sumOfAllAttributes,
-              damagePercent,
-              0, // hpPercent = 0 (destroyed)
-              repairBayLevel,
-              medicalBayLevel,
-              activeRobotCount
-            );
-            
-            // Calculate again (simulating different battle type)
-            const destroyedCost2 = calculateRepairCost(
-              sumOfAllAttributes,
-              damagePercent,
-              0, // hpPercent = 0 (destroyed)
-              repairBayLevel,
-              medicalBayLevel,
-              activeRobotCount
-            );
-            
-            // Costs should be identical
-            expect(destroyedCost1).toBe(destroyedCost2);
-            
-            // Verify Medical Bay reduction is applied
-            const expectedMultiplier = 2.0 * (1 - medicalBayLevel * 0.1);
-            const baseRepairCost = sumOfAllAttributes * 100;
-            const rawCost = baseRepairCost * (damagePercent / 100) * expectedMultiplier;
-            const rawDiscount = repairBayLevel * (5 + activeRobotCount);
-            const repairBayDiscount = Math.min(rawDiscount, 90) / 100;
-            const expectedCost = Math.round(rawCost * (1 - repairBayDiscount));
-            
-            expect(destroyedCost1).toBe(expectedCost);
-          }
-        ),
-        { numRuns: NUM_RUNS }
-      );
-    });
   });
 });

@@ -68,7 +68,7 @@ export async function repairAllRobots(deductCosts: boolean = true, cycleNumber?:
     prisma.facility.findMany({
       where: {
         userId: { in: affectedUserIds },
-        facilityType: { in: ['repair_bay', 'medical_bay'] },
+        facilityType: 'repair_bay',
       },
     }),
     prisma.robot.groupBy({
@@ -109,10 +109,8 @@ export async function repairAllRobots(deductCosts: boolean = true, cycleNumber?:
     const facilities = facilitiesByUser.get(userId) || [];
 
     const repairBay = facilities.find(f => f.facilityType === 'repair_bay');
-    const medicalBay = facilities.find(f => f.facilityType === 'medical_bay');
     
     const repairBayLevel = repairBay?.level || 0;
-    const medicalBayLevel = medicalBay?.level || 0;
     const activeRobotCount = robotCountByUser.get(userId) || 0;
     
     // Calculate discount using new formula: repairBayLevel × (5 + activeRobotCount), capped at 90%
@@ -139,7 +137,7 @@ export async function repairAllRobots(deductCosts: boolean = true, cycleNumber?:
         damagePercent,
         hpPercent,
         repairBayLevel,
-        medicalBayLevel,
+        0,
         activeRobotCount
       );
       

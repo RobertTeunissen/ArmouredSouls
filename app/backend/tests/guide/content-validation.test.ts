@@ -248,7 +248,6 @@ describe('Content Validation — required articles per section', () => {
       'facility-overview',
       'facility-progression',
       'training-academies',
-      'coaching-staff',
       'investment-strategy',
     ];
     it.each(required.map((a) => [a]))('should contain "%s" article', (slug) => {

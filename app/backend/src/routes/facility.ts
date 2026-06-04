@@ -106,9 +106,6 @@ router.get('/', authenticateToken, validateRequest({}), async (req: AuthRequest,
       } else if (config.type === 'combat_training_academy' || config.type === 'defense_training_academy' || config.type === 'mobility_training_academy' || config.type === 'ai_training_academy') {
         currentOperatingCost = currentLevel * 250;
         nextOperatingCost = nextLevel * 250;
-      } else if (config.type === 'research_lab' || config.type === 'medical_bay') {
-        currentOperatingCost = currentLevel > 0 ? 2000 + (currentLevel - 1) * 1000 : 0;
-        nextOperatingCost = nextLevel > 0 ? 2000 + (nextLevel - 1) * 1000 : 0;
       } else if (config.type === 'roster_expansion') {
         // Roster Expansion costs ₡500/day per robot slot beyond the first.
         // robotCount is already fetched above.

@@ -70,13 +70,13 @@ Key Prestige gates:
 
 | Prestige Threshold | What It Unlocks |
 |-------------------|----------------|
-| 1,000 | Several facilities at Level 4, Booking Office Level 1 (not yet implemented) |
-| 2,000 | Training Academies Level 3, Research Lab Level 4 |
-| 5,000 | Multiple facilities at Level 7, Booking Office Level 3 (not yet implemented) |
-| 10,000 | Multiple facilities at Level 9, Booking Office Level 4 (not yet implemented) |
-| 15,000 | Training Academies Level 10, Research Lab Level 9 |
-| 25,000 | Booking Office Level 7 (not yet implemented), Hall of Fame access |
-| 50,000 | Booking Office Level 10 (not yet implemented) |
+| 1,000 | Several facilities at Level 4, Booking Office Level 1, Streaming Studio Level 4 |
+| 2,000 | Training Academies Level 3 |
+| 5,000 | Multiple facilities at Level 7, Booking Office Level 3 |
+| 10,000 | Multiple facilities at Level 9, Booking Office Level 4 |
+| 15,000 | Training Academies Level 10, Merchandising Hub Level 9 |
+| 25,000 | Booking Office Level 7, Hall of Fame access |
+| 50,000 | Booking Office Level 10 |
 
 See [Facility Progression & ROI](/guide/facilities/facility-progression) for the complete prestige gate reference.
 

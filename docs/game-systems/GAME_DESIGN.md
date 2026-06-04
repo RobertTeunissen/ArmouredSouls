@@ -135,7 +135,7 @@ Configurable 0–50% HP threshold where the robot surrenders instead of fighting
 
 Players manage a stable of 1–10 robots (expandable via Roster Expansion facility). Each robot competes independently in leagues and earns its own fame.
 
-### 14 Facilities
+### 13 Facilities
 
 Stable-wide upgrades with 10 levels each (except Roster Expansion: 9 levels):
 
@@ -144,17 +144,16 @@ Stable-wide upgrades with 10 levels each (except Roster Expansion: 9 levels):
 | Repair Bay | Reduces repair costs |
 | Training Facility | Reduces attribute upgrade costs |
 | Weapons Workshop | Weapon purchase discounts |
-| Research Lab | Battle analytics, loadout presets |
-| Medical Bay | Critical damage cost reduction |
 | Roster Expansion | Robot slots (1 → 10) |
 | Storage Facility | Weapon storage capacity |
-| Coaching Staff | Stable-wide attribute bonuses |
-| Booking Office | Tournament access tiers |
+| Booking Office | Event subscription access |
 | Combat Training Academy | Combat Systems attribute cap (10 → 50) |
 | Defense Training Academy | Defensive Systems attribute cap (10 → 50) |
 | Mobility Training Academy | Chassis & Mobility attribute cap (10 → 50) |
 | AI Training Academy | AI Processing + Team Coordination cap (10 → 50) |
 | Merchandising Hub | Passive income (scales with prestige) |
+| Streaming Studio | Increases streaming revenue per battle |
+| Tuning Bay | Bonus attribute points for tactical tuning |
 
 Each facility has investment costs and daily operating costs. The economic tension between facility investment and robot upgrades is a core strategic decision.
 

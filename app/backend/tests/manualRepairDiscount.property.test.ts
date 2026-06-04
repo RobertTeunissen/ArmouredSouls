@@ -103,8 +103,7 @@ describe('Manual Repair Discount - Property Tests', () => {
      * manual discount applied — i.e., the function itself has no 0.5 multiplier.
      * The result is a non-negative number equal to the expected formula:
      *   baseRepairCost = sumOfAllAttributes * 100
-     *   multiplier = 2.0 (with Medical Bay reduction) if hpPercent === 0,
-     *                1.5 if hpPercent < 10, else 1.0
+     *   multiplier = 2.0 if hpPercent === 0, 1.5 if hpPercent < 10, else 1.0
      *   rawCost = baseRepairCost * (damagePercent / 100) * multiplier
      *   repairBayDiscount = min(repairBayLevel * (5 + robotCount), 90) / 100
      *   finalCost = Math.round(rawCost * (1 - repairBayDiscount))
@@ -116,9 +115,8 @@ describe('Manual Repair Discount - Property Tests', () => {
           fc.float({ min: 0, max: 100 }),          // damagePercent
           fc.float({ min: 0, max: 100 }),          // hpPercent
           fc.integer({ min: 0, max: 10 }),         // repairBayLevel
-          fc.integer({ min: 0, max: 10 }),         // medicalBayLevel
           fc.integer({ min: 1, max: 20 }),         // robotCount
-          (attributeSum, damagePercent, hpPercent, repairBayLevel, medicalBayLevel, robotCount) => {
+          (attributeSum, damagePercent, hpPercent, repairBayLevel, robotCount) => {
             // Skip NaN-producing floats
             if (!Number.isFinite(damagePercent) || !Number.isFinite(hpPercent)) return;
 
@@ -127,7 +125,7 @@ describe('Manual Repair Discount - Property Tests', () => {
               damagePercent,
               hpPercent,
               repairBayLevel,
-              medicalBayLevel,
+              0,
               robotCount
             );
 
@@ -139,12 +137,7 @@ describe('Manual Repair Discount - Property Tests', () => {
 
             let multiplier = 1.0;
             if (hpPercent === 0) {
-              if (medicalBayLevel > 0) {
-                const medicalReduction = medicalBayLevel * 0.1;
-                multiplier = 2.0 * (1 - medicalReduction);
-              } else {
-                multiplier = 2.0;
-              }
+              multiplier = 2.0;
             } else if (hpPercent < 10) {
               multiplier = 1.5;
             }

@@ -11,15 +11,14 @@ This implementation updates the Repair Bay discount formula to include a multi-r
     - Add new parameter with default value of 0 for backward compatibility
     - Update discount calculation to use new formula: `repairBayLevel × (5 + activeRobotCount)`
     - Apply 90% cap to the calculated discount
-    - Ensure Medical Bay reduction logic remains unchanged
     - _Requirements: 1.1, 1.2, 1.3, 3.1, 3.2, 3.4_
 
   - [x] 1.2 Write property test for multi-robot discount formula with cap
     - **Property 1: Multi-Robot Discount Formula with Cap**
     - **Validates: Requirements 1.1, 1.2, 1.3**
 
-  - [x] 1.3 Write property test for Medical Bay reduction preservation
-    - **Property 3: Medical Bay Reduction Preserved**
+  - [x] 1.3 Write property test for Repair Bay discount preservation
+    - **Property 3: Repair Bay Discount Preserved**
     - **Validates: Requirements 3.4, 8.4**
 
   - [x] 1.4 Write property test for attribute-sum formula consistency

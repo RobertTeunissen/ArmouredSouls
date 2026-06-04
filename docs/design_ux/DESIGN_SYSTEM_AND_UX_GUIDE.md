@@ -599,21 +599,20 @@ The Robot Detail Page has **tiered visibility** to allow browsing other players'
 - **Category Headers**: Economic, Progression, Combat Effectiveness
 
 #### Visual Elements Required
-- [ ] **Facility Illustrations** (256×256px each, 14 unique)
+- [ ] **Facility Illustrations** (256×256px each, 13 unique)
   1. Repair Bay - repair docks
   2. Training Facility - workout/training area
   3. Weapons Workshop - forge/crafting
-  4. Research Lab - computers/screens
-  5. Medical Bay - medical cross
-  6. Roster Expansion - hangar/slots
-  7. Storage Facility - warehouse
-  8. Coaching Staff - office/trainers
-  9. Booking Office - tournament desk
-  10. Combat Training Academy - combat room
-  11. Defense Training Academy - shield training
-  12. Mobility Training Academy - agility course
-  13. AI Training Academy - AI processors
-  14. Income Generator - money/resources
+  4. Roster Expansion - hangar/slots
+  5. Storage Facility - warehouse
+  6. Booking Office - tournament desk
+  7. Combat Training Academy - combat room
+  8. Defense Training Academy - shield training
+  9. Mobility Training Academy - agility course
+  10. AI Training Academy - AI processors
+  11. Income Generator - money/resources
+  12. Streaming Studio - streaming setup
+  13. Tuning Bay - tuning equipment
 - [ ] **Level Indicator** (progress bar or badge, 0-10 scale)
 - [ ] **Prestige Lock Icon** (if level requires prestige)
 - [ ] **Cost Badge** (₡ icon + upgrade cost)
@@ -1612,21 +1611,20 @@ weapon-practice-sword-full.webp
 
 ### Facility Asset Specifications
 
-**14 Facilities** (based on STABLE_SYSTEM.md):
+**13 Facilities** (based on STABLE_SYSTEM.md):
 1. **Repair Bay** - Repair cost discounts
 2. **Training Facility** - Attribute upgrade discounts
 3. **Weapons Workshop** - Weapon purchase discounts
-4. **Research Lab** - Analytics and loadout presets
-5. **Medical Bay** - Critical damage cost reduction
-6. **Roster Expansion** - Additional robot slots
-7. **Storage Facility** - Weapon storage capacity
-8. **Coaching Staff** - Stable-wide bonuses
-9. **Booking Office** - Tournament access
-10. **Combat Training Academy** - Combat Systems caps
-11. **Defense Training Academy** - Defensive Systems caps
-12. **Mobility Training Academy** - Chassis & Mobility caps
-13. **AI Training Academy** - AI Processing caps
-14. **Income Generator** - Additional revenue streams
+4. **Roster Expansion** - Additional robot slots
+5. **Storage Facility** - Weapon storage capacity
+6. **Booking Office** - Event subscription access
+7. **Combat Training Academy** - Combat Systems caps
+8. **Defense Training Academy** - Defensive Systems caps
+9. **Mobility Training Academy** - Chassis & Mobility caps
+10. **AI Training Academy** - AI Processing caps
+11. **Merchandising Hub** - Passive income (scales with prestige)
+12. **Streaming Studio** - Streaming revenue multiplier
+13. **Tuning Bay** - Bonus attribute tuning points
 
 **Technical Specs**:
 - Format: WEBP
@@ -1641,11 +1639,8 @@ weapon-practice-sword-full.webp
 facility-repair-bay.webp
 facility-training-facility.webp
 facility-weapons-workshop.webp
-facility-research-lab.webp
-facility-medical-bay.webp
 facility-roster-expansion.webp
 facility-storage-facility.webp
-facility-coaching-staff.webp
 facility-booking-office.webp
 facility-combat-training-academy.webp
 facility-defense-training-academy.webp

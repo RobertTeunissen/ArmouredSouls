@@ -422,11 +422,6 @@ describe('UnifiedFacilityROIService', () => {
       const result = await service.calculateFacilityROI(1, 'tuning_bay');
       expect(result).toBeNull();
     });
-
-    it('should return null for research_lab', async () => {
-      const result = await service.calculateFacilityROI(1, 'research_lab');
-      expect(result).toBeNull();
-    });
   });
 
   describe('calculateAllEconomicROIs', () => {
