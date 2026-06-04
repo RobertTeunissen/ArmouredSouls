@@ -69,17 +69,20 @@ export const TEAM_BATTLE_LEAGUE_CONFIG: LeagueEngineConfig = {
  * Assign a team battle to an appropriate league instance.
  * Places team in instance with most free spots. Creates new instance when all are full.
  * Uses PostgreSQL advisory locks to prevent race conditions.
+ *
+ * Instances are scoped per teamSize — 2v2 and 3v3 teams occupy separate instances.
  */
-export async function assignTeamBattleLeagueInstance(tier: TeamBattleLeagueTier): Promise<string> {
+export async function assignTeamBattleLeagueInstance(tier: TeamBattleLeagueTier, teamSize: 2 | 3 = 2): Promise<string> {
   return await prisma.$transaction(async (tx) => {
-    // Acquire advisory lock for this tier (offset by 1000000 to avoid collision with tag team locks)
-    const lockId = hashTierName(`team_battle_${tier}`);
+    // Acquire advisory lock scoped to tier + teamSize to avoid collision
+    const lockId = hashTierName(`team_battle_${tier}_${teamSize}v${teamSize}`);
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(${lockId})`;
 
     const instances = await tx.teamBattle.groupBy({
       by: ['teamLeagueId'],
       where: {
         teamLeague: tier,
+        teamSize,
       },
       _count: {
         id: true,
@@ -127,11 +130,13 @@ function hashTierName(tier: string): number {
 /**
  * Rebalance team battles across instances in a tier.
  * Redistributes teams evenly using round-robin (sorted by LP desc for competitive balance).
+ * Scoped per teamSize — 2v2 and 3v3 are rebalanced independently.
  */
-export async function rebalanceTeamBattleInstances(tier: TeamBattleLeagueTier): Promise<void> {
+export async function rebalanceTeamBattleInstances(tier: TeamBattleLeagueTier, teamSize: 2 | 3 = 2): Promise<void> {
   const allTeams = await prisma.teamBattle.findMany({
     where: {
       teamLeague: tier,
+      teamSize,
     },
     orderBy: [
       { teamLp: 'desc' },
@@ -140,13 +145,13 @@ export async function rebalanceTeamBattleInstances(tier: TeamBattleLeagueTier): 
   });
 
   if (allTeams.length === 0) {
-    logger.info(`[TeamBattleLeagueInstance] ${tier}: No teams, skipping`);
+    logger.info(`[TeamBattleLeagueInstance] ${tier} ${teamSize}v${teamSize}: No teams, skipping`);
     return;
   }
 
   const targetInstanceCount = Math.ceil(allTeams.length / MAX_TEAMS_PER_INSTANCE);
 
-  logger.info(`[TeamBattleLeagueInstance] Rebalancing ${tier}: ${allTeams.length} teams across ${targetInstanceCount} instances`);
+  logger.info(`[TeamBattleLeagueInstance] Rebalancing ${tier} ${teamSize}v${teamSize}: ${allTeams.length} teams across ${targetInstanceCount} instances`);
 
   const updates: Promise<unknown>[] = [];
 
@@ -167,126 +172,147 @@ export async function rebalanceTeamBattleInstances(tier: TeamBattleLeagueTier): 
 
   if (updates.length > 0) {
     await Promise.all(updates);
-    logger.info(`[TeamBattleLeagueInstance] ${tier}: Moved ${updates.length} teams`);
+    logger.info(`[TeamBattleLeagueInstance] ${tier} ${teamSize}v${teamSize}: Moved ${updates.length} teams`);
   } else {
-    logger.info(`[TeamBattleLeagueInstance] ${tier}: Already balanced`);
+    logger.info(`[TeamBattleLeagueInstance] ${tier} ${teamSize}v${teamSize}: Already balanced`);
   }
 }
 
 // ─── Team Battle Adapter ─────────────────────────────────────────────────────
 
-export const teamBattleAdapter: LeagueAdapter<TeamBattle> = {
-  entityType: 'team_battle',
+/**
+ * Creates a teamSize-scoped league adapter.
+ * 2v2 and 3v3 teams are managed independently — separate instances per size.
+ */
+function createTeamBattleAdapter(teamSize: 2 | 3): LeagueAdapter<TeamBattle> {
+  return {
+    entityType: 'team_battle',
 
-  async getEntitiesWithMinPoints(instanceId, minLP, minCycles, excludeIds) {
-    return prisma.teamBattle.findMany({
-      where: {
-        teamLeagueId: instanceId,
-        cyclesInLeague: { gte: minCycles },
-        teamLp: { gte: minLP },
-        NOT: {
-          id: { in: Array.from(excludeIds) },
+    async getEntitiesWithMinPoints(instanceId, minLP, minCycles, excludeIds) {
+      return prisma.teamBattle.findMany({
+        where: {
+          teamLeagueId: instanceId,
+          teamSize,
+          cyclesInLeague: { gte: minCycles },
+          teamLp: { gte: minLP },
+          NOT: {
+            id: { in: Array.from(excludeIds) },
+          },
         },
-      },
-      orderBy: [
-        { teamLp: 'desc' },
-        { id: 'asc' },
-      ],
-    });
-  },
+        orderBy: [
+          { teamLp: 'desc' },
+          { id: 'asc' },
+        ],
+      });
+    },
 
-  async countEligibleInInstance(instanceId, minCycles, excludeIds) {
-    return prisma.teamBattle.count({
-      where: {
-        teamLeagueId: instanceId,
-        cyclesInLeague: { gte: minCycles },
-        NOT: {
-          id: { in: Array.from(excludeIds) },
+    async countEligibleInInstance(instanceId, minCycles, excludeIds) {
+      return prisma.teamBattle.count({
+        where: {
+          teamLeagueId: instanceId,
+          teamSize,
+          cyclesInLeague: { gte: minCycles },
+          NOT: {
+            id: { in: Array.from(excludeIds) },
+          },
         },
-      },
-    });
-  },
+      });
+    },
 
-  async getEntitiesForDemotion(instanceId, minCycles, excludeIds) {
-    return prisma.teamBattle.findMany({
-      where: {
-        teamLeagueId: instanceId,
-        cyclesInLeague: { gte: minCycles },
-        NOT: {
-          id: { in: Array.from(excludeIds) },
+    async getEntitiesForDemotion(instanceId, minCycles, excludeIds) {
+      return prisma.teamBattle.findMany({
+        where: {
+          teamLeagueId: instanceId,
+          teamSize,
+          cyclesInLeague: { gte: minCycles },
+          NOT: {
+            id: { in: Array.from(excludeIds) },
+          },
         },
-      },
-      orderBy: [
-        { teamLp: 'asc' },
-        { id: 'asc' },
-      ],
-    });
-  },
+        orderBy: [
+          { teamLp: 'asc' },
+          { id: 'asc' },
+        ],
+      });
+    },
 
-  async getInstancesForTier(tier): Promise<InstanceInfo[]> {
-    const instances = await prisma.teamBattle.findMany({
-      where: { teamLeague: tier },
-      select: { teamLeagueId: true },
-      distinct: ['teamLeagueId'],
-    });
-    return instances.map(i => ({ leagueId: i.teamLeagueId }));
-  },
+    async getInstancesForTier(tier): Promise<InstanceInfo[]> {
+      const instances = await prisma.teamBattle.findMany({
+        where: { teamLeague: tier, teamSize },
+        select: { teamLeagueId: true },
+        distinct: ['teamLeagueId'],
+      });
+      return instances.map(i => ({ leagueId: i.teamLeagueId }));
+    },
 
-  async countEntitiesInTier(tier) {
-    return prisma.teamBattle.count({
-      where: { teamLeague: tier },
-    });
-  },
+    async countEntitiesInTier(tier) {
+      return prisma.teamBattle.count({
+        where: { teamLeague: tier, teamSize },
+      });
+    },
 
-  async countEntitiesInDestinationTier(tier) {
-    return prisma.teamBattle.count({
-      where: { teamLeague: tier },
-    });
-  },
+    async countEntitiesInDestinationTier(tier) {
+      return prisma.teamBattle.count({
+        where: { teamLeague: tier, teamSize },
+      });
+    },
 
-  async assignInstance(tier) {
-    return assignTeamBattleLeagueInstance(tier as TeamBattleLeagueTier);
-  },
+    async assignInstance(tier) {
+      return assignTeamBattleLeagueInstance(tier as TeamBattleLeagueTier, teamSize);
+    },
 
-  async updateEntityLeague(entityId, newTier, newLeagueId) {
-    await prisma.teamBattle.update({
-      where: { id: entityId },
-      data: {
-        teamLeague: newTier,
-        teamLeagueId: newLeagueId,
-        cyclesInLeague: 0,
-      },
-    });
-  },
+    async updateEntityLeague(entityId, newTier, newLeagueId) {
+      await prisma.teamBattle.update({
+        where: { id: entityId },
+        data: {
+          teamLeague: newTier,
+          teamLeagueId: newLeagueId,
+          cyclesInLeague: 0,
+        },
+      });
+    },
 
-  getEntityCurrentTier(entity) {
-    return entity.teamLeague;
-  },
+    getEntityCurrentTier(entity) {
+      return entity.teamLeague;
+    },
 
-  getEntityLeagueId(entity) {
-    return entity.teamLeagueId;
-  },
+    getEntityLeagueId(entity) {
+      return entity.teamLeagueId;
+    },
 
-  getEntityLeaguePoints(entity) {
-    return entity.teamLp;
-  },
+    getEntityLeaguePoints(entity) {
+      return entity.teamLp;
+    },
 
-  getEntityOwnerId(entity) {
-    return entity.stableId;
-  },
+    getEntityOwnerId(entity) {
+      return entity.stableId;
+    },
 
-  getEntityDisplayName(entity) {
-    return `Team "${entity.teamName}" (${entity.id})`;
-  },
+    getEntityDisplayName(entity) {
+      return `Team "${entity.teamName}" (${entity.id})`;
+    },
 
-  async rebalanceInstances(tier) {
-    await rebalanceTeamBattleInstances(tier as TeamBattleLeagueTier);
-  },
+    async rebalanceInstances(tier) {
+      await rebalanceTeamBattleInstances(tier as TeamBattleLeagueTier, teamSize);
+    },
 
-  async countAllEntities() {
-    return prisma.teamBattle.count();
-  },
-};
+    async countAllEntities() {
+      return prisma.teamBattle.count({ where: { teamSize } });
+    },
+  };
+}
+
+/** Adapter for 2v2 team battle leagues */
+export const teamBattle2v2Adapter: LeagueAdapter<TeamBattle> = createTeamBattleAdapter(2);
+
+/** Adapter for 3v3 team battle leagues */
+export const teamBattle3v3Adapter: LeagueAdapter<TeamBattle> = createTeamBattleAdapter(3);
+
+/**
+ * Legacy adapter — aliases to teamBattle2v2Adapter (filters by teamSize=2).
+ * @deprecated Use teamBattle2v2Adapter or teamBattle3v3Adapter instead.
+ */
+export const teamBattleAdapter: LeagueAdapter<TeamBattle> = teamBattle2v2Adapter;
 
 // ─── Public API ──────────────────────────────────────────────────────────────
 
@@ -345,12 +371,13 @@ export async function demoteTeamBattle(team: TeamBattle): Promise<void> {
 }
 
 /**
- * Rebalance all team battle league tiers.
+ * Rebalance all team battle league tiers for a specific team size.
  * Called every cycle (daily cadence) after team battles are executed.
  * Requirements: R8.1–R8.8
  */
-export async function rebalanceTeamBattleLeagues(): Promise<FullTeamBattleRebalancingSummary> {
-  const result = await rebalanceAllTiers(TEAM_BATTLE_LEAGUE_CONFIG, teamBattleAdapter);
+export async function rebalanceTeamBattleLeagues(teamSize: 2 | 3 = 2): Promise<FullTeamBattleRebalancingSummary> {
+  const adapter = teamSize === 2 ? teamBattle2v2Adapter : teamBattle3v3Adapter;
+  const result = await rebalanceAllTiers(TEAM_BATTLE_LEAGUE_CONFIG, adapter);
 
   return {
     totalTeams: result.totalEntities,

@@ -16,8 +16,8 @@ import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
-import type { TournamentMatchWithRobots } from '../utils/bracketUtils';
-import type { SeedEntry } from '../utils/tournamentApi';
+import type { TournamentMatchWithRobots } from '../../../utils/bracketUtils';
+import type { SeedEntry } from '../../../utils/tournamentApi';
 
 // ── Helpers ──────────────────────────────────────────────────
 
@@ -49,7 +49,7 @@ function makeMatch(
 //  MatchCard Tests
 // ══════════════════════════════════════════════════════════════
 
-import MatchCard from '../components/tournament/MatchCard';
+import MatchCard from '../MatchCard';
 
 describe('MatchCard', () => {
   const emptySeedMap = new Map<number, number>();
@@ -337,7 +337,7 @@ describe('MatchCard', () => {
 //  SeedingList Tests
 // ══════════════════════════════════════════════════════════════
 
-import SeedingList from '../components/tournament/SeedingList';
+import SeedingList from '../SeedingList';
 
 describe('SeedingList', () => {
   const emptyUserIds = new Set<number>();
@@ -446,15 +446,15 @@ describe('SeedingList', () => {
 // ══════════════════════════════════════════════════════════════
 
 // Mock modules before importing the component
-vi.mock('../utils/tournamentApi', () => ({
+vi.mock('../../../utils/tournamentApi', () => ({
   getTournamentDetails: vi.fn(),
 }));
 
-vi.mock('../utils/robotApi', () => ({
+vi.mock('../../../utils/robotApi', () => ({
   fetchMyRobots: vi.fn().mockResolvedValue([]),
 }));
 
-vi.mock('../contexts/AuthContext', () => ({
+vi.mock('../../../contexts/AuthContext', () => ({
   useAuth: vi.fn().mockReturnValue({
     user: { id: 1, username: 'testuser', email: 'test@example.com', role: 'player', currency: 1000, prestige: 0 },
     token: 'mock-token',
@@ -465,12 +465,12 @@ vi.mock('../contexts/AuthContext', () => ({
   }),
 }));
 
-vi.mock('../components/Navigation', () => ({
+vi.mock('../../Navigation', () => ({
   default: () => React.createElement('nav', { 'data-testid': 'nav' }, 'Nav'),
 }));
 
-import TournamentDetailPage from '../pages/TournamentDetailPage';
-import { getTournamentDetails } from '../utils/tournamentApi';
+import TournamentDetailPage from '../../../pages/TournamentDetailPage';
+import { getTournamentDetails } from '../../../utils/tournamentApi';
 
 const mockGetTournamentDetails = vi.mocked(getTournamentDetails);
 

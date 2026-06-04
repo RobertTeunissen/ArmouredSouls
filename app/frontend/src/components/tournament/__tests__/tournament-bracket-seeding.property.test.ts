@@ -2,11 +2,11 @@ import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
 import { render } from '@testing-library/react';
 import React from 'react';
-import MatchCard from '../components/tournament/MatchCard';
+import MatchCard from '../MatchCard';
 import {
   buildBracketTree,
   TournamentMatchWithRobots,
-} from '../utils/bracketUtils';
+} from '../../../utils/bracketUtils';
 
 /**
  * Property-based tests for tournament bracket seeding (frontend)

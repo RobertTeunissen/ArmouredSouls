@@ -28,37 +28,32 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 | 14 | Battle Table Denormalization Cleanup | 18 | 0 🗳️ | 1 | 1 | 1 | 2 | **1.5** |
 | 15 | Tag Team Battle Time Limit Enforcement | 19 | 0 🗳️ | 1 | 1 | 1 | 2 | **1.5** |
 | 16 | Historical Financial Tracking | 23 | 0 🗳️ | 1 | 1 | 1 | 2 | **1.5** |
-| 17 | Test Setup Convention Cleanup | 51 | 0 🗳️ | 1 | 1 | 1 | 2 | **1.5** |
-| 18 | Vitest Performance Tuning | 52 | 0 🗳️ | 1 | 1 | 1 | 2 | **1.5** |
-| 19 | Modular Package Extraction | 35 | 0 🗳️ | 1 | 1 | 2 | 3 | **1.3** |
-| 20 | Robot Detail Page Split | 37 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
-| 21 | Achievement Persistence Across Seasons | 40 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
-| 22 | Events Calendar | 43 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
-| 23 | Universal Search / Command Palette | 27 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
-| 24 | Progressive Feature Disclosure | 28 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
-| 25 | ~~Battle Subscription Facility~~ | ~~55~~ | 0 🗳️ | ~~2~~ | ~~1~~ | ~~1~~ | ~~3~~ | ~~**1.3**~~ | ✅ Completed |
-| 26 | Weapon Crafting System | 29 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
-| 27 | Free-for-All / Battle Royale Mode | 30 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
-| 28 | Conditional Battle Triggers / AI Scripting | 32 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
-| 29 | Future Revenue Streams | 33 | 0 🗳️ | 2 | 1 | 1 | 4 | **1.0** |
-| 30 | Player Marketplace | 44 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
-| 31 | Social Features (Friends, Guilds, Chat) | 45 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
-| 32 | Prestige Store | 47 | 0 🗳️ | 2 | 1 | 1 | 4 | **1.0** |
-| 33 | Blueprint Library | 48 | 0 🗳️ | 1 | 1 | 1 | 3 | **1.0** |
-| 34 | Team Battle Tournaments (2v2 / 3v3) | 54 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
-| 35 | Unimplemented Facilities | 7 | 0 🗳️ | 2 | 1 | 1 | 4 | **1.0** |
-| 36 | Cosmetic Customization System | 46 | 0 🗳️ | 2 | 1 | 1 | 5 | **0.8** |
-
-### In Progress
-
-| Item | # | Spec | Status |
-|------|---|------|--------|
-| Cron Schedule Restructure — Daily-Everything Slot Map | 56 | [Spec 36 cron-schedule-restructure](/.kiro/specs/to-do/36-cron-schedule-restructure/) | In progress — restructures cron layout to daily 10-slot map with heavy-mode spacing, reserved slots for future battle modes, and midnight settlement |
+| 17 | Modular Package Extraction | 35 | 0 🗳️ | 1 | 1 | 2 | 3 | **1.3** |
+| 18 | Robot Detail Page Split | 37 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
+| 19 | Achievement Persistence Across Seasons | 40 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
+| 20 | Events Calendar | 43 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
+| 21 | Universal Search / Command Palette | 27 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
+| 22 | Progressive Feature Disclosure | 28 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
+| 23 | Weapon Crafting System | 29 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
+| 24 | Free-for-All / Battle Royale Mode | 30 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
+| 25 | Conditional Battle Triggers / AI Scripting | 32 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
+| 26 | Future Revenue Streams | 33 | 0 🗳️ | 2 | 1 | 1 | 4 | **1.0** |
+| 27 | Player Marketplace | 44 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
+| 28 | Social Features (Friends, Guilds, Chat) | 45 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
+| 29 | Prestige Store | 47 | 0 🗳️ | 2 | 1 | 1 | 4 | **1.0** |
+| 30 | Blueprint Library | 48 | 0 🗳️ | 1 | 1 | 1 | 3 | **1.0** |
+| 31 | Unimplemented Facilities | 7 | 0 🗳️ | 2 | 1 | 1 | 4 | **1.0** |
+| 32 | Cosmetic Customization System | 46 | 0 🗳️ | 2 | 1 | 1 | 5 | **0.8** |
 
 ### Recently Completed (removed from backlog)
 
 | Item | # | Spec | Completed |
 |------|---|------|-----------|
+| Team Battle Tournaments (2v2 / 3v3) | 54 | [Spec #38](/.kiro/specs/done-june26/38-team-battle-tournaments/) | June 2026 |
+| Cron Schedule Restructure — Daily-Everything Slot Map | 56 | [Spec #36](/.kiro/specs/done-may26/36-cron-schedule-restructure/) | June 2026 |
+| Vitest Performance Tuning (CI scripts, dot reporter, coverage gitignore) | 52 | — (direct implementation) | June 2026 |
+| Test Setup Convention Cleanup (co-located `__tests__/`, eliminated centralized sprawl) | 51 | — (direct implementation) | June 2026 |
+| Backend Test Reclassification (66 no-DB tests → unit runner, zero overlap, ~2min CI savings) | — | — (direct implementation) | June 2026 |
 | Team Battles 2v2 and 3v3 (League) | 31 | [Spec #37](/.kiro/specs/to-do/37-team-battles-2v2-3v3/) | June 2026 |
 | Untrack Generated Prisma Client (68K lines out of git) | — | — (direct implementation) | May 2026 |
 | HTTP Client Consolidation (typed `api` wrapper everywhere) | — | — (direct implementation) | May 2026 |
@@ -205,7 +200,8 @@ Dedicated financial trend tracking beyond what CycleSnapshot provides.
 
 ### #24 — Dashboard Enhancements
 **Source**: PRD_DASHBOARD_PAGE.md  
-**Priority**: Low — cosmetic improvements
+**Priority**: Low — cosmetic improvements  
+**Progress**: Promotion/demotion notifications on the dashboard shipped June 2026 (PR #337).
 
 Tournament wins/trophy display, loading skeletons, notification toasts. If fame cosmetics (titles, visual indicators) are implemented via #8, the dashboard should display them.
 
@@ -227,12 +223,6 @@ Custom weapon design at Workshop Level 6+. Pricing formula already supports it.
 
 ### #30 — Free-for-All / Battle Royale Mode
 Large-scale elimination (8–100 robots). [Design analysis](analysis/FREE_FOR_ALL_BATTLE_ROYALE_MODE.md) exists.
-
-### #31 — ~~Team Battles 2v2 and 3v3 (League)~~ ✅ COMPLETED
-**Source**: Backlog triage; expanded into spec  
-**Priority**: ✅ Completed — see [Spec #37 team-battles-2v2-3v3](/.kiro/specs/to-do/37-team-battles-2v2-3v3/)
-
-Delivered 2v2 and 3v3 league battles with persistent Teams per size, Team Coordination ally effects (syncProtocols → focus fire bonus, supportSystems → ally shield regen, formationTactics → formation damage reduction), daily cadence (2v2 at 09:00 UTC, 3v3 at 14:00 UTC), shared LP-primary matchmaking, N× reward multiplier, unified `/team-battles` UI, achievement integration, seeded-stable enrolment, and admin manual triggers. Tournaments are explicitly out of scope and tracked separately as #54.
 
 ### #32 — Conditional Battle Triggers / Robot AI Scripting
 Player-defined robot behaviors: "switch stance when HP < 30%", "target weakest in KotH".
@@ -373,63 +363,6 @@ Tag Team was built before the Team Battle system (Spec 37) and uses different pa
 
 **Dependencies**: None blocking. Can be done independently of #54 (Team Battle Tournaments).
 
-### #54 — Team Battle Tournaments (2v2 / 3v3)
-**Source**: Spec discussion during team-battles-2v2-3v3 review (May 2026)  
-**Priority**: Medium — natural follow-up once league Team Battles ship
-
-Bracketed tournament play for 2v2 and 3v3 Team Battles. Depends on the Team Battle league spec (#31) shipping first because it reuses Team registration, Team_ELO, the Team Battle Engine, and the unified `/team-battles` UI.
-
-**Approach (decided): Option B — generalise the existing tournament system.**
-
-The existing `Tournament`, `ScheduledTournamentMatch`, and `processTournamentBattle` are robot-keyed (`robot1Id`, `robot2Id`, `winnerId` referencing `Robot`, with `tournamentMatchesAsRobot1`/`tournamentMatchesAsRobot2` relations on the Robot model). Adding parallel `TeamTournament`/`ScheduledTeamTournamentMatch` tables would double the surface and split tournament code paths. Instead, the agreed direction is to **refactor the tournament schema and code to be entity-keyed (Robot OR Team)**, so a single tournament system serves 1v1, 2v2, and 3v3 brackets.
-
-**Why this is its own spec:**
-- The schema change is a Mega-Orchestrator Refactor-class change — Backlog #49 explicitly flags this kind of work as needing its own spec.
-- Bundling it into the league Team Battles spec would put two large efforts in motion simultaneously, making regressions hard to attribute.
-- The tournament system has 3+ cycles of historical data and championship titles tied to `User.championshipTitles` — the migration needs careful staging.
-
-**Schema refactor scope:**
-- Add `participantType` (`'robot'` | `'team_2v2'` | `'team_3v3'`) and `participantId` to `Tournament` and `ScheduledTournamentMatch`. The existing `robot1Id`/`robot2Id`/`winnerId` columns either become nullable and dual-populated during migration, or are renamed to `participant1Id`/`participant2Id` with the type discriminator.
-- Migrate existing rows: `participantType = 'robot'`, `participantId = robotId`.
-- `generateBracketPairs` accepts `seededParticipants` (Robot[] or Team[]) instead of `seededRobots`.
-- `processTournamentBattle` dispatches to either the existing 1v1 orchestrator or the Team Battle Engine based on `participantType`.
-- `advanceWinnersToNextRound` is participant-type-agnostic.
-- `autoCreateNextTournament` gains a `tournamentType` parameter so admins can create per-type tournaments.
-
-**Tournament-specific design questions for the spec to answer:**
-- **Championship title accounting.** Currently winning a tournament increments `User.championshipTitles`. For team tournaments: increment for each member's owner (all the same User in this spec since teams are single-stable), or only once per tournament regardless of team size? Or introduce `User.teamChampionshipTitles2v2` and `User.teamChampionshipTitles3v3`?
-- **C18 "Autobots, Roll Out!" achievement** is already being expanded to require all six modes (league + KotH + tag-team + tournament + team_2v2 + team_3v3) in the league spec. Tournaments piggyback on `User.championshipTitles > 0` — does that include team tournament wins, or do team tournaments need a separate counter?
-- **Cadence and scheduling.** Tournaments span multiple cycles (one round per cycle). The 2v2/3v3 daily alternation rule for league mode does not translate. Options: alternate per tournament (one tournament is 2v2, next is 3v3), run them in parallel (2v2 and 3v3 tournaments active simultaneously with separate brackets), or schedule per type (2v2 tournaments every Monday, 3v3 every Thursday). Decide in spec.
-- **Eligibility.** Top N teams per tier per size? Open to all eligible teams? Stable-snapshot at create time? What happens when a team is dissolved mid-tournament — does the team forfeit, do remaining members forfeit, or does the team auto-substitute?
-- **Reward shape.** Does the team-tournament prize pot match 1v1 tournament prizes, scale by team size, scale by team mode popularity? Distributed across team members per the existing R7.4-style contribution split?
-- **Bracket size.** Existing 1v1 tournaments use power-of-2 brackets via `generateBracketPairs`. Team tournaments likely smaller pool (fewer registered teams than robots) — minimum viable bracket size needs a sensible floor.
-- **Eligibility gating.** Should team tournaments require a facility (Booking Office, currently unimplemented per Backlog #7) or a prestige threshold? See gating discussion below.
-- **Manual matchmaking / friendlies.** Out of scope for the league spec; should team tournaments support admin-triggered exhibition brackets? See also #55 — battle subscription facility — which would feed both league and tournament event sign-ups.
-
-**Gating discussion (decision needed in spec):**
-- **Facility-based gating.** Booking Office (Backlog #7) is the existing-but-unimplemented facility whose description already references "Unlock Silver/Gold/Platinum/Diamond league tournaments". Implementing it for team tournaments aligns its purpose. Levels would gate which league tier is allowed to enter.
-- **Subscription-facility gating** (#55). The new battle subscription facility is the more general gating mechanism. If it lands first, team tournament entry could go through it.
-- **Prestige threshold.** Simpler, no schema; risk is invisible gating.
-- **No gating.** Open to all eligible teams. Cleanest for early adoption.
-
-**Dependencies:**
-- #31 (Team Battles league) must ship first — establishes Team registration, Team_ELO, Team Battle Engine, achievement triggers, unified `/team-battles` UI.
-- Decision on #55 (battle subscription facility) preferred but not blocking — gating can fall back to direct facility/prestige checks.
-- #49 (Mega-Orchestrator Refactor) is not a hard dependency but the tournament refactor is similar in shape; coordinate ordering.
-
-**Bundled UX improvement (from Spec 37 review):**
-- The `/robots` page card view should show per-robot subscription chips with small stats (W/L per mode, tournament round/eliminated status). Currently the robot API doesn't return subscription data or tournament status per robot. This requires: (1) new API field `subscriptions: { eventType, stats }[]` on the robot response, (2) tournament status lookup per robot, (3) frontend chip rendering. Deferred to this spec since it naturally pairs with the tournament generalisation work.
-
-**Scope estimate:** Medium-to-large. Schema migration + data backfill + dual-orchestrator dispatch + UI updates (admin tournament creation flow gains type selector, tournament detail page renders team brackets, results screen handles N robots per side) + championship-title semantics + achievement wiring. Do not start until #31 has been live on ACC for at least one cycle to validate the league mode.
-
-### #55 — Battle Subscription Facility — ✅ COMPLETED
-**Source**: Spec discussion during team-battles-2v2-3v3 review (May 2026)  
-**Priority**: ~~Medium~~ → Completed  
-**Spec**: [Spec #35 — Booking Office Facility](/.kiro/specs/to-do/35-booking-office-facility/)
-
-Implemented as the **Booking Office** facility with event-subscription semantics. The system introduces a per-robot subscription model gating participation in all battle events (1v1 League, 1v1 Tournament, Tag Team, KotH) through a single, extensible Event Registry. The Booking Office facility level determines how many concurrent event subscriptions each robot may hold (3 at L0, +1 per level up to 13 at L10). Free switching with next-cycle effect, per-robot lock-on-queued-battle rule, onboarding subscription picker, and migration granting existing players free L1 + all four subscriptions per robot.
-
-
 ---
 
 ## Engineering Maintenance Items
@@ -527,51 +460,6 @@ This was tolerable before the HTTP client consolidation. After that work, every 
 **Dependencies.** None. Could be picked up at any time.
 
 ---
-
-### #51 — Test Setup Convention Cleanup
-**Source**: Codebase audit (May 2026) — original audit item #9
-**Priority**: Low — works correctly, just inconsistent
-
-**Problem.** Test files live in two conventions in the same repo:
-
-- **Co-located** — `src/components/foo/__tests__/Foo.test.tsx` (sibling of source)
-- **Centralized** — `src/__tests__/SomePage/...` (separate from source)
-
-Multiple `accessibility.test.tsx`, multiple `setupTests`-like patterns, scattered helpers. Vitest runs all of them so nothing's broken, but it makes "where do I add a test for X" ambiguous and means similar tests can drift out of sync.
-
-**Strategy.**
-1. Audit the centralized `src/__tests__/` tree and decide per directory whether the tests belong with their source file or are genuinely cross-cutting (e.g. integration-style tests spanning multiple modules).
-2. Move co-locatable tests to `__tests__/` folders next to their source, following the dominant pattern.
-3. Keep cross-cutting / integration-style tests in a dedicated `src/__tests__/integration/` folder.
-4. Document the convention in `CONTRIBUTING.md` so it doesn't drift again.
-
-**Scope estimate.** ~½ day. No code changes, just file moves + import path updates. Safe behind the test suite.
-
-**Dependencies.** None.
-
----
-
-### #52 — Vitest Performance Tuning
-**Source**: Codebase audit (May 2026) — original audit item #10
-**Priority**: Low — current 13s for 1568 tests is fine, but there are easy wins
-
-**Problem.** Frontend test runs:
-- 1,568 tests in ~13 seconds (acceptable but not optimized)
-- Default reporter produces a lot of output dots
-- Coverage is not collected by default
-- Vitest caching/sharding likely not configured
-
-**Strategy.**
-1. **Reporter:** switch to `--reporter=verbose` for development, `--reporter=dot` only in CI logs where parsing-friendly output matters.
-2. **Coverage default:** add `npm run test:coverage` as a separate script using `@vitest/coverage-v8`. Don't make it the default — slows iteration.
-3. **Caching:** Vitest auto-caches dependencies; verify the cache directory is excluded from `git clean` and CI doesn't `rm -rf` it.
-4. **Sharding:** for CI, consider `--shard=1/4` etc. across parallel jobs if test time becomes a bottleneck. Not urgent at 13s.
-5. **Watch mode hygiene:** confirm `--watch` doesn't re-run unrelated suites on every change.
-
-**Scope estimate.** ~½ day. Most of it is profiling current behavior to confirm what's actually slow vs. what just looks slow.
-
-**Dependencies.** None.
-
 
 ### #53 — Battle Log Retention / TOAST Trim
 **Source**: Disk-pressure investigation, May 25, 2026 (ACC deploy timeout)

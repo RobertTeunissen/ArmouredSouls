@@ -37,9 +37,9 @@ describe('Preservation — Existing Behavior Unchanged', () => {
   test('CONTRIBUTING.md link in README resolves to an existing file', () => {
     const readme = readRootFile('README.md');
 
-    // Extract the CONTRIBUTING.md link
+    // Extract the CONTRIBUTING.md link (any markdown link pointing to CONTRIBUTING.md)
     const contributingLinkMatch = readme.match(
-      /\[CONTRIBUTING\.md\]\(([^)]+)\)/,
+      /\[[^\]]*\]\((CONTRIBUTING\.md)\)/,
     );
     expect(contributingLinkMatch).not.toBeNull();
 

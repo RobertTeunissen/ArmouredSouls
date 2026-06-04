@@ -2,12 +2,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
-import GuideSearch from '../../components/guide/GuideSearch';
-import { filterAndRankResults } from '../../utils/guideSearchUtils';
-import * as guideApi from '../../utils/guideApi';
+import GuideSearch from '../GuideSearch';
+import { filterAndRankResults } from '../../../utils/guideSearchUtils';
+import * as guideApi from '../../../utils/guideApi';
 
-vi.mock('../../utils/guideApi', async () => {
-  const actual = await vi.importActual<typeof guideApi>('../../utils/guideApi');
+vi.mock('../../../utils/guideApi', async () => {
+  const actual = await vi.importActual<typeof guideApi>('../../../utils/guideApi');
   return {
     ...actual,
     fetchSearchIndex: vi.fn(),

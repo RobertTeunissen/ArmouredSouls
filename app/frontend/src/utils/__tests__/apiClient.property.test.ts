@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import fc from 'fast-check';
 import MockAdapter from 'axios-mock-adapter';
-import apiClient from '../utils/apiClient';
+import apiClient from '../apiClient';
 
 /**
  * Property-based tests for API client interceptors

@@ -1,29 +1,14 @@
-// Integration tests: everything that needs a database or supertest
+// Integration tests: everything that needs a real database or supertest
 // Runs with limited parallelism to avoid DB conflicts
 const base = require('./jest.config');
 
-// Unit test files to exclude (must match full path segments)
-const unitTestPatterns = [
-  '/backup\\.property\\.test\\.ts$',
-  '/combatMessageGenerator\\.test\\.ts$',
-  '/compute-seedings\\.unit\\.test\\.ts$',
-  '/cors\\.property\\.test\\.ts$',
-  '/damageDampeners\\.test\\.ts$',
-  '/economyCalculations\\.test\\.ts$',
-  '/envConfig\\.property\\.test\\.ts$',
-  '/jwtService\\.test\\.ts$',
-  '/notifications\\.property\\.test\\.ts$',
-  '/onboardingAnalyticsService\\.test\\.ts$',
-  '/passwordHashing\\.property\\.test\\.ts$',
-  '/passwordService\\.test\\.ts$',
-  '/recommendationEngine\\.test\\.ts$',
-  '/repairCostMultiRobot\\.test\\.ts$',
-  '/storageCalculations\\.test\\.ts$',
-  '/streamingStudioOperatingCost\\.property\\.test\\.ts$',
-  '/streamingStudioUpgradeCosts\\.property\\.test\\.ts$',
-  '/tournament-bracket-seeding\\.property\\.test\\.ts$',
-  '/validation\\.property\\.test\\.ts$',
-];
+// Dynamically derive unit test patterns from the unit config's testRegex
+// so we never accidentally run a unit test sequentially here.
+const unitConfig = require('./jest.config.unit.js');
+const unitPatterns = unitConfig.testRegex
+  .slice(1, -2) // strip leading '(' and trailing ')$'
+  .split('|')
+  .map((p) => `/${p}$`);
 
 // Heavy integration tests to exclude (run separately with jest.config.heavy.js)
 const heavyTestPatterns = [
@@ -47,7 +32,7 @@ module.exports = {
   ...base,
   testPathIgnorePatterns: [
     '/node_modules/',
-    ...unitTestPatterns,
+    ...unitPatterns,
     ...heavyTestPatterns,
   ],
   maxWorkers: 1,

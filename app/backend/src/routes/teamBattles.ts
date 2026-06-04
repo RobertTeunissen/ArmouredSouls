@@ -26,6 +26,7 @@ import {
   renameTeam,
   disbandTeam,
 } from '../services/team-battle/teamBattleService';
+import { MAX_TEAMS_PER_INSTANCE } from '../services/team-battle/teamBattleAdapter';
 import { getEntityHistory } from '../services/league/leagueHistoryService';
 import { hasSubscription } from '../services/subscription/subscriptionService';
 
@@ -364,7 +365,7 @@ router.get(
       leagueId: inst.teamLeagueId,
       leagueTier: tier,
       currentTeams: inst._count,
-      maxTeams: 50, // Instance size target from design doc
+      maxTeams: MAX_TEAMS_PER_INSTANCE,
     }));
 
     res.json(formatted);

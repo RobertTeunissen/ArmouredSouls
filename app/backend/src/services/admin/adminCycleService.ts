@@ -347,7 +347,7 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
         stepNumber++;
         logger.info(`[Admin] Step ${stepNumber}: Rebalance Team 2v2 Leagues`);
         const team2v2RebalanceStart = Date.now();
-        team2v2RebalancingSummary = await rebalanceTeamBattleLeagues();
+        team2v2RebalancingSummary = await rebalanceTeamBattleLeagues(2);
         await eventLogger.logCycleStepComplete(
           currentCycleNumber,
           'rebalance_team_2v2_leagues',
@@ -561,7 +561,7 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
         stepNumber++;
         logger.info(`[Admin] Step ${stepNumber}: Rebalance Team 3v3 Leagues`);
         const team3v3RebalanceStart = Date.now();
-        team3v3RebalancingSummary = await rebalanceTeamBattleLeagues();
+        team3v3RebalancingSummary = await rebalanceTeamBattleLeagues(3);
         await eventLogger.logCycleStepComplete(
           currentCycleNumber,
           'rebalance_team_3v3_leagues',

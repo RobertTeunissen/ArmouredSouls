@@ -1,17 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import GuidePage from '../../pages/GuidePage';
-import * as guideApi from '../../utils/guideApi';
+import GuidePage from '../../../pages/GuidePage';
+import * as guideApi from '../../../utils/guideApi';
 
 // Mock Navigation to avoid complex auth/routing dependencies
-vi.mock('../../components/Navigation', () => ({
+vi.mock('../../Navigation', () => ({
   default: () => <div data-testid="navigation">Nav</div>,
 }));
 
 // Mock guideApi
-vi.mock('../../utils/guideApi', async () => {
-  const actual = await vi.importActual<typeof guideApi>('../../utils/guideApi');
+vi.mock('../../../utils/guideApi', async () => {
+  const actual = await vi.importActual<typeof guideApi>('../../../utils/guideApi');
   return {
     ...actual,
     fetchGuideSections: vi.fn(),

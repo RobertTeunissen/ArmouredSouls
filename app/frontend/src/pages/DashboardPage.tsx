@@ -2,6 +2,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { getTutorialState, TutorialState } from '../utils/onboardingApi';
+import { api } from '../utils/api';
 import Navigation from '../components/Navigation';
 import UpcomingMatches from '../components/UpcomingMatches';
 import RecentMatches from '../components/RecentMatches';
@@ -25,6 +26,16 @@ interface Notification {
   actionLabel?: string;
 }
 
+interface TierChange {
+  id: number;
+  entityType: string;
+  entityId: number;
+  entityName: string;
+  changeType: 'promotion' | 'demotion';
+  sourceTier: string;
+  destinationTier: string;
+}
+
 function DashboardPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -33,6 +44,7 @@ function DashboardPage() {
   const currency = useStableStore(state => state.currency);
   const fetchStableData = useStableStore(state => state.fetchStableData);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [tierChanges, setTierChanges] = useState<TierChange[]>([]);
   const [onboardingState, setOnboardingState] = useState<TutorialState | null>(null);
 
   useEffect(() => {
@@ -42,6 +54,10 @@ function DashboardPage() {
       getTutorialState()
         .then(setOnboardingState)
         .catch(() => setOnboardingState(null));
+      // Fetch unseen tier changes
+      api.get<{ changes: TierChange[] }>('/api/leagues/tier-changes/unseen')
+        .then((data) => setTierChanges(data.changes))
+        .catch(() => { /* silent */ });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
@@ -118,6 +134,25 @@ function DashboardPage() {
 
           {/* Tag Team Subscription Mismatch Warning */}
           <TagTeamSubscriptionDashboardWarning />
+
+          {/* League Tier Change Notifications */}
+          {tierChanges.map((change) => (
+            <div
+              key={change.id}
+              className={`p-4 rounded-lg border-l-4 flex items-center justify-between ${
+                change.changeType === 'promotion'
+                  ? 'bg-green-900/20 border-green-500'
+                  : 'bg-red-900/20 border-red-500'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">{change.changeType === 'promotion' ? '🏆' : '📉'}</span>
+                <span className={`font-semibold ${change.changeType === 'promotion' ? 'text-green-400' : 'text-red-400'}`}>
+                  {change.entityName} was {change.changeType === 'promotion' ? 'promoted' : 'demoted'} from {change.sourceTier} to {change.destinationTier}!
+                </span>
+              </div>
+            </div>
+          ))}
           
           {/* Other Notifications */}
           {notifications.length > 0 && notifications.map((notif, idx) => (

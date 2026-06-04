@@ -815,6 +815,7 @@ describe('teamBattleAdapter', () => {
       expect(mockPrisma.teamBattle.findMany).toHaveBeenCalledWith({
         where: {
           teamLeagueId: 'bronze_1',
+          teamSize: 2,
           cyclesInLeague: { gte: 5 },
           teamLp: { gte: 50 },
           NOT: { id: { in: [99] } },
@@ -834,6 +835,7 @@ describe('teamBattleAdapter', () => {
       expect(mockPrisma.teamBattle.count).toHaveBeenCalledWith({
         where: {
           teamLeagueId: 'silver_1',
+          teamSize: 2,
           cyclesInLeague: { gte: 5 },
           NOT: { id: { in: [1, 2] } },
         },
@@ -855,6 +857,7 @@ describe('teamBattleAdapter', () => {
       expect(mockPrisma.teamBattle.findMany).toHaveBeenCalledWith({
         where: {
           teamLeagueId: 'gold_1',
+          teamSize: 2,
           cyclesInLeague: { gte: 5 },
           NOT: { id: { in: [] } },
         },
@@ -872,7 +875,7 @@ describe('teamBattleAdapter', () => {
       const result = await teamBattleAdapter.getInstancesForTier('bronze');
 
       expect(mockPrisma.teamBattle.findMany).toHaveBeenCalledWith({
-        where: { teamLeague: 'bronze' },
+        where: { teamLeague: 'bronze', teamSize: 2 },
         select: { teamLeagueId: true },
         distinct: ['teamLeagueId'],
       });
@@ -888,7 +891,7 @@ describe('teamBattleAdapter', () => {
       const result = await teamBattleAdapter.countEntitiesInTier('diamond');
 
       expect(mockPrisma.teamBattle.count).toHaveBeenCalledWith({
-        where: { teamLeague: 'diamond' },
+        where: { teamLeague: 'diamond', teamSize: 2 },
       });
       expect(result).toBe(45);
     });

@@ -3,6 +3,9 @@ dist
 .env.local
 *.log
 
+# Vitest
+/coverage/
+
 # Playwright
 /test-results/
 /playwright-report/

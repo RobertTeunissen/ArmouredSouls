@@ -37,7 +37,22 @@ function RepairLogPage() {
   const [repairType, setRepairType] = useState<'all' | 'manual' | 'automatic'>('all');
   const [startDate, setStartDate] = useState(defaultStartDate);
   const [endDate, setEndDate] = useState(defaultEndDate);
+  const [stableName, setStableName] = useState('');
+  const [robotName, setRobotName] = useState('');
+  const [debouncedStableName, setDebouncedStableName] = useState('');
+  const [debouncedRobotName, setDebouncedRobotName] = useState('');
   const [page, setPage] = useState(1);
+
+  // Debounce text filters (400ms)
+  useEffect(() => {
+    const timer = setTimeout(() => { setDebouncedStableName(stableName); setPage(1); }, 400);
+    return () => clearTimeout(timer);
+  }, [stableName]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => { setDebouncedRobotName(robotName); setPage(1); }, 400);
+    return () => clearTimeout(timer);
+  }, [robotName]);
 
   const fetchRepairLog = useCallback(async () => {
     setLoading(true);
@@ -52,6 +67,8 @@ function RepairLogPage() {
         nextDay.setDate(nextDay.getDate() + 1);
         params.endDate = nextDay.toISOString().split('T')[0];
       }
+      if (debouncedStableName.trim()) params.stableName = debouncedStableName.trim();
+      if (debouncedRobotName.trim()) params.robotName = debouncedRobotName.trim();
 
       const response = await api.get<RepairLogResponse>('/api/admin/audit-log/repairs', { params });
       setData(response);
@@ -61,7 +78,7 @@ function RepairLogPage() {
     } finally {
       setLoading(false);
     }
-  }, [repairType, startDate, endDate, page]);
+  }, [repairType, startDate, endDate, debouncedStableName, debouncedRobotName, page]);
 
   useEffect(() => {
     fetchRepairLog();
@@ -126,7 +143,15 @@ function RepairLogPage() {
           ]}
           onFilterToggle={handleRepairTypeToggle}
         >
-          <div className="flex gap-3 items-end">
+          <div className="flex gap-3 items-end flex-wrap">
+            <div>
+              <label className="block text-sm text-secondary mb-1">Stable</label>
+              <input type="text" value={stableName} onChange={(e) => setStableName(e.target.value)} placeholder="Filter by stable…" className="bg-surface-elevated text-white px-3 py-2 rounded w-40" />
+            </div>
+            <div>
+              <label className="block text-sm text-secondary mb-1">Robot</label>
+              <input type="text" value={robotName} onChange={(e) => setRobotName(e.target.value)} placeholder="Filter by robot…" className="bg-surface-elevated text-white px-3 py-2 rounded w-40" />
+            </div>
             <div>
               <label className="block text-sm text-secondary mb-1">Start Date</label>
               <input type="date" value={startDate} onChange={(e) => { setStartDate(e.target.value); setPage(1); }} className="bg-surface-elevated text-white px-3 py-2 rounded" />

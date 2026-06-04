@@ -35,6 +35,8 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: app/backend/package-lock.json
 
       - name: Install backend dependencies
         working-directory: ./app/backend
@@ -89,6 +91,8 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: app/backend/package-lock.json
 
       - name: Install backend dependencies
         working-directory: ./app/backend

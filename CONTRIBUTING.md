@@ -205,6 +205,19 @@ E2E tests run in the CI pipeline via the `e2e-tests` job, which provisions a Pos
 
 ### Writing Tests
 
+#### Test File Location
+
+Place test files in a `__tests__/` folder next to the source they test:
+
+```
+src/components/guide/__tests__/GuidePage.test.tsx    ← tests GuidePage component
+src/utils/__tests__/formatters.test.ts              ← tests formatters utility
+src/pages/__tests__/DashboardPage.test.tsx          ← tests DashboardPage
+src/stores/__tests__/adminStore.test.ts             ← tests adminStore
+```
+
+Only genuinely cross-cutting tests (multi-module integration, meta-quality checks) belong in `src/__tests__/`.
+
 #### Unit Tests
 
 ```typescript
@@ -237,17 +250,23 @@ describe('RobotService', () => {
 ### Running Tests
 
 ```bash
-# Run all tests
+# Watch mode (default — reruns on changes, for TDD)
 npm test
+
+# Single run (no watch)
+npm run test:run
+
+# CI mode (dot reporter, bail after 5 failures)
+npm run test:ci
 
 # Run specific test file
 npm test robot.test.ts
 
-# Run with coverage
-npm test -- --coverage
+# Run with coverage report
+npm run test:coverage
 
-# Watch mode (for TDD)
-npm test -- --watch
+# Interactive UI
+npm run test:ui
 ```
 
 ---
