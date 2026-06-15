@@ -14,8 +14,8 @@ jest.mock('../src/config/logger', () => ({
 }));
 
 const EMOJI_MAP: Record<string, string> = {
-  league: '🏆',
-  tournament: '⚔️',
+  league: '⚔️',
+  tournament: '🏆',
   'tag-team': '🤝',
   settlement: '💰',
 };
@@ -125,7 +125,7 @@ describe('Notification Service Property Tests', () => {
 
     const baseUrlArb = fc.webUrl();
 
-    test('should return non-null string containing tournament name, round, maxRounds, and ⚔️ emoji', () => {
+    test('should return non-null string containing tournament name, round, maxRounds, and 🏆 emoji', () => {
       fc.assert(
         fc.property(tournamentContextArb, baseUrlArb, (context, baseUrl) => {
           const result = buildSuccessMessage(context, baseUrl);
@@ -134,7 +134,7 @@ describe('Notification Service Property Tests', () => {
           expect(result).toContain(context.tournamentName);
           expect(result).toContain(String(context.tournamentRound));
           expect(result).toContain(String(context.tournamentMaxRounds));
-          expect(result).toContain('⚔️');
+          expect(result).toContain('🏆');
         }),
         { numRuns: NUM_RUNS }
       );
