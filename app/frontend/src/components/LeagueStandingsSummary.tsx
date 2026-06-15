@@ -300,9 +300,9 @@ function TeamStandingCard({ team }: TeamStandingCardProps) {
 }
 
 function TagTeamStandingCard({ team }: TeamStandingCardProps) {
-  const tierColor = getLeagueTierColor(team.tagTeamLeague);
-  const tierName = getLeagueTierName(team.tagTeamLeague);
-  const totalMatches = team.totalTagTeamWins + team.totalTagTeamLosses + team.totalTagTeamDraws;
+  const tierColor = getLeagueTierColor(team.tagTeamLeague || 'bronze');
+  const tierName = getLeagueTierName(team.tagTeamLeague || 'bronze');
+  const totalMatches = (team.totalTagTeamWins || 0) + (team.totalTagTeamLosses || 0) + (team.totalTagTeamDraws || 0);
 
   return (
     <div className="bg-[#252b38] border border-white/10 rounded-lg p-2.5">
@@ -313,15 +313,15 @@ function TagTeamStandingCard({ team }: TeamStandingCardProps) {
           <div className="flex items-center gap-2 mt-0.5">
             <span className={`text-xs ${tierColor}`}>{tierName}</span>
             <span className="text-xs text-secondary">•</span>
-            <span className="text-xs text-secondary">{team.tagTeamLp} LP</span>
+            <span className="text-xs text-secondary">{team.tagTeamLp || 0} LP</span>
           </div>
         </div>
         <div className="flex-shrink-0 text-xs text-secondary">
-          <span className="text-[#3fb950]">{team.totalTagTeamWins}W</span>
+          <span className="text-[#3fb950]">{team.totalTagTeamWins || 0}W</span>
           <span className="mx-1">/</span>
-          <span className="text-[#f85149]">{team.totalTagTeamLosses}L</span>
+          <span className="text-[#f85149]">{team.totalTagTeamLosses || 0}L</span>
           <span className="mx-1">/</span>
-          <span className="text-[#d29922]">{team.totalTagTeamDraws}D</span>
+          <span className="text-[#d29922]">{team.totalTagTeamDraws || 0}D</span>
           {totalMatches > 0 && (
             <span className="ml-2 text-secondary">({totalMatches})</span>
           )}
@@ -348,14 +348,14 @@ function TagTeamStandingCard({ team }: TeamStandingCardProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className={`text-xs ${tierColor}`}>{tierName}</span>
-            <span className="text-xs text-secondary">{team.tagTeamLp} LP</span>
+            <span className="text-xs text-secondary">{team.tagTeamLp || 0} LP</span>
           </div>
           <div className="text-xs text-secondary">
-            <span className="text-[#3fb950]">{team.totalTagTeamWins}W</span>
+            <span className="text-[#3fb950]">{team.totalTagTeamWins || 0}W</span>
             <span className="mx-0.5">/</span>
-            <span className="text-[#f85149]">{team.totalTagTeamLosses}L</span>
+            <span className="text-[#f85149]">{team.totalTagTeamLosses || 0}L</span>
             <span className="mx-0.5">/</span>
-            <span className="text-[#d29922]">{team.totalTagTeamDraws}D</span>
+            <span className="text-[#d29922]">{team.totalTagTeamDraws || 0}D</span>
           </div>
         </div>
       </div>

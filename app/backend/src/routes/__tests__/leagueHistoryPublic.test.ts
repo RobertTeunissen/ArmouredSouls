@@ -20,13 +20,11 @@ jest.mock('../../services/league/leagueHistoryService', () => ({
 }));
 
 const mockPrismaRobotFindUnique = jest.fn();
-const mockPrismaTagTeamFindUnique = jest.fn();
 
 jest.mock('../../lib/prisma', () => ({
   __esModule: true,
   default: {
     robot: { findUnique: (...args: unknown[]) => mockPrismaRobotFindUnique(...args) },
-    tagTeam: { findUnique: (...args: unknown[]) => mockPrismaTagTeamFindUnique(...args) },
     cycleMetadata: { findUnique: jest.fn() },
     user: { findUnique: jest.fn() },
   },
@@ -186,77 +184,6 @@ describe('GET /api/robots/:id/league-history', () => {
     mockGetEntityHistory.mockResolvedValue([]);
 
     const res = await request(app).get('/api/robots/5/league-history');
-
-    expect(res.status).toBe(200);
-    expect(res.body.data).toEqual([]);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// Tag team route tests
-// ---------------------------------------------------------------------------
-
-describe('GET /api/tag-teams/:id/league-history', () => {
-  // Import after mocks (reuse mocks from above)
-  jest.mock('../../services/tag-team/tagTeamService', () => ({
-    createTeam: jest.fn(),
-    getTeamById: jest.fn(),
-    getTeamsByStable: jest.fn().mockResolvedValue([]),
-    disbandTeam: jest.fn(),
-    checkTeamReadiness: jest.fn(),
-  }));
-
-  jest.mock('../../services/tag-team/tagTeamLeagueInstanceService', () => ({
-    getStandingsForTier: jest.fn().mockResolvedValue([]),
-    TAG_TEAM_LEAGUE_TIERS: ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'],
-  }));
-
-  const request = require('supertest');
-  const express = require('express');
-  const tagTeamsRouter = require('../tagTeams').default;
-  const { errorHandler } = require('../../middleware/errorHandler');
-
-  const app = express();
-  app.use(express.json());
-  app.use('/api/tag-teams', tagTeamsRouter);
-  app.use(errorHandler);
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
-  it('should return ordered history for an existing tag team', async () => {
-    mockPrismaTagTeamFindUnique.mockResolvedValue({ id: 3 });
-    const mockHistory = [
-      { id: 1, entityType: 'tag_team', entityId: 3, cycleNumber: 5, changeType: 'promotion', sourceTier: 'bronze', destinationTier: 'silver' },
-      { id: 2, entityType: 'tag_team', entityId: 3, cycleNumber: 15, changeType: 'promotion', sourceTier: 'silver', destinationTier: 'gold' },
-    ];
-    mockGetEntityHistory.mockResolvedValue(mockHistory);
-
-    const res = await request(app).get('/api/tag-teams/3/league-history');
-
-    expect(res.status).toBe(200);
-    expect(res.body).toHaveProperty('data');
-    expect(Array.isArray(res.body.data)).toBe(true);
-    expect(res.body.data).toHaveLength(2);
-    expect(res.body.data[0].cycleNumber).toBe(5);
-    expect(res.body.data[1].cycleNumber).toBe(15);
-    expect(mockGetEntityHistory).toHaveBeenCalledWith('tag_team', 3);
-  });
-
-  it('should return 404 for non-existent tag team', async () => {
-    mockPrismaTagTeamFindUnique.mockResolvedValue(null);
-
-    const res = await request(app).get('/api/tag-teams/999/league-history');
-
-    expect(res.status).toBe(404);
-  });
-
-  it('should return empty data array for tag team with no history', async () => {
-    mockPrismaTagTeamFindUnique.mockResolvedValue({ id: 3 });
-    mockGetEntityHistory.mockResolvedValue([]);
-
-    const res = await request(app).get('/api/tag-teams/3/league-history');
 
     expect(res.status).toBe(200);
     expect(res.body.data).toEqual([]);

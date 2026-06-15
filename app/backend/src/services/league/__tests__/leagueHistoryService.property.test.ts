@@ -32,6 +32,10 @@ const mockPrisma = {
     }),
     findMany: jest.fn().mockResolvedValue([]),
   },
+  teamBattle: {
+    findUnique: jest.fn().mockResolvedValue({ id: 1, teamName: 'Test Team' }),
+    findMany: jest.fn().mockResolvedValue([]),
+  },
   user: {
     findMany: jest.fn().mockResolvedValue([]),
   },

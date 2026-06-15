@@ -26,6 +26,9 @@ const mockPrisma = {
   tagTeam: {
     findMany: jest.fn(),
   },
+  teamBattle: {
+    findMany: jest.fn(),
+  },
   user: {
     findMany: jest.fn(),
   },
