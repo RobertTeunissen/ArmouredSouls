@@ -323,9 +323,9 @@ describe('Team Battle Complete Cycle Integration Test', () => {
     expect(lpChanged).toBe(true);
 
     // Verify win/loss counters updated — each test team should have participated in at least one battle
-    const totalWins = updatedTeams.reduce((sum, t) => sum + t.totalWins, 0);
-    const totalLosses = updatedTeams.reduce((sum, t) => sum + t.totalLosses, 0);
-    const totalDraws = updatedTeams.reduce((sum, t) => sum + t.totalDraws, 0);
+    const totalWins = updatedTeams.reduce((sum, t) => sum + t.totalLeagueWins, 0);
+    const totalLosses = updatedTeams.reduce((sum, t) => sum + t.totalLeagueLosses, 0);
+    const totalDraws = updatedTeams.reduce((sum, t) => sum + t.totalLeagueDraws, 0);
     // Each test team should have at least one result (win, loss, or draw)
     expect(totalWins + totalLosses + totalDraws).toBeGreaterThanOrEqual(testTeamIds.length);
 
@@ -513,9 +513,11 @@ describe('Team Battle Complete Cycle Integration Test', () => {
       expect(sampleTagTeamBattle!.team1ActiveRobotId).toBeDefined();
     }
 
-    // Verify tag team scheduled matches table is independent
-    const tagTeamScheduledCount = await prisma.scheduledTagTeamMatch.count();
-    // Just verify the table is accessible and not corrupted
+    // Verify tag team scheduled matches table is independent (now uses scheduledTeamBattleMatch with matchMode='tag_team')
+    const tagTeamScheduledCount = await prisma.scheduledTeamBattleMatch.count({
+      where: { matchMode: 'tag_team' },
+    });
+    // Just verify the query is accessible and not corrupted
     expect(tagTeamScheduledCount).toBeGreaterThanOrEqual(0);
 
     console.log('[Test] ✓ Tag team mode verified unaffected');

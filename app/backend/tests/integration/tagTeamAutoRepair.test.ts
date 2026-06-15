@@ -12,8 +12,40 @@
  */
 
 import prisma from '../../src/lib/prisma';
-import { createTeam } from '../../src/services/tag-team/tagTeamService';
 import { executeScheduledTagTeamBattles } from '../../src/services/tag-team/tagTeamBattleOrchestrator';
+
+/** Helper: Create a 2v2 TeamBattle with members (slot 0 = active, slot 1 = reserve) */
+async function createTagTeamFixture(stableId: number, activeRobotId: number, reserveRobotId: number) {
+  return prisma.teamBattle.create({
+    data: {
+      stableId,
+      teamSize: 2,
+      teamName: `Test_Team_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+      teamLp: 0,
+      teamLeague: 'bronze',
+      teamLeagueId: 'bronze_1',
+      cyclesInLeague: 0,
+      totalLeagueWins: 0,
+      totalLeagueLosses: 0,
+      totalLeagueDraws: 0,
+      tagTeamLp: 0,
+      tagTeamLeague: 'bronze',
+      tagTeamLeagueId: 'bronze_1',
+      cyclesInTagTeamLeague: 0,
+      totalTagTeamWins: 0,
+      totalTagTeamLosses: 0,
+      totalTagTeamDraws: 0,
+      eligibility: 'ELIGIBLE',
+      members: {
+        create: [
+          { robotId: activeRobotId, slotIndex: 0 },
+          { robotId: reserveRobotId, slotIndex: 1 },
+        ],
+      },
+    },
+    include: { members: true },
+  });
+}
 
 
 describe('Tag Team Auto-Repair Integration Test', () => {
@@ -49,15 +81,19 @@ describe('Tag Team Auto-Repair Integration Test', () => {
     }
 
     if (testTeamIds.length > 0) {
-      await prisma.scheduledTagTeamMatch.deleteMany({
+      await prisma.scheduledTeamBattleMatch.deleteMany({
         where: {
+          matchMode: 'tag_team',
           OR: [
             { team1Id: { in: testTeamIds } },
             { team2Id: { in: testTeamIds } },
           ],
         },
       });
-      await prisma.tagTeam.deleteMany({
+      await prisma.teamBattleMember.deleteMany({
+        where: { teamId: { in: testTeamIds } },
+      });
+      await prisma.teamBattle.deleteMany({
         where: { id: { in: testTeamIds } },
       });
     }
@@ -154,20 +190,18 @@ describe('Tag Team Auto-Repair Integration Test', () => {
 
     console.log('[Test] Step 2: Creating tag teams...');
     
-    const team1Result = await createTeam(
+    const team1Result = await createTagTeamFixture(
       testUsers[0].id,
       testRobots[0].id,
       testRobots[1].id
     );
-    const team2Result = await createTeam(
+    const team2Result = await createTagTeamFixture(
       testUsers[1].id,
       testRobots[2].id,
       testRobots[3].id
     );
 
-    expect(team1Result.success).toBe(true);
-    expect(team2Result.success).toBe(true);
-    testTeamIds.push(team1Result.team!.id, team2Result.team!.id);
+    testTeamIds.push(team1Result.id, team2Result.id);
 
     console.log('[Test] Step 3: Damaging robots...');
     
@@ -213,11 +247,14 @@ describe('Tag Team Auto-Repair Integration Test', () => {
 
     console.log('[Test] Step 4: Scheduling tag team match...');
     
-    const match = await prisma.scheduledTagTeamMatch.create({
+    const match = await prisma.scheduledTeamBattleMatch.create({
       data: {
-        team1Id: team1Result.team!.id,
-        team2Id: team2Result.team!.id,
-        tagTeamLeague: 'bronze',
+        team1Id: team1Result.id,
+        team2Id: team2Result.id,
+        teamSize: 2,
+        matchMode: 'tag_team',
+        teamBattleLeague: 'bronze',
+        teamBattleLeagueId: 'bronze_1',
         scheduledFor: new Date(),
         status: 'scheduled',
       },
@@ -309,19 +346,16 @@ describe('Tag Team Auto-Repair Integration Test', () => {
       poorRobots.push(robot);
     }
 
-    const poorTeam1Result = await createTeam(
+    const poorTeam1Result = await createTagTeamFixture(
       poorUser1.id,
       poorRobots[0].id,
       poorRobots[1].id
     );
-    const poorTeam2Result = await createTeam(
+    const poorTeam2Result = await createTagTeamFixture(
       poorUser2.id,
       poorRobots[2].id,
       poorRobots[3].id
     );
-
-    expect(poorTeam1Result.success).toBe(true);
-    expect(poorTeam2Result.success).toBe(true);
 
     // Now damage the robots (after team creation)
     console.log('[Test] Damaging robots...');
@@ -334,11 +368,14 @@ describe('Tag Team Auto-Repair Integration Test', () => {
 
     console.log('[Test] Step 2: Scheduling match with insufficient funds...');
     
-    const match = await prisma.scheduledTagTeamMatch.create({
+    const match = await prisma.scheduledTeamBattleMatch.create({
       data: {
-        team1Id: poorTeam1Result.team!.id,
-        team2Id: poorTeam2Result.team!.id,
-        tagTeamLeague: 'bronze',
+        team1Id: poorTeam1Result.id,
+        team2Id: poorTeam2Result.id,
+        teamSize: 2,
+        matchMode: 'tag_team',
+        teamBattleLeague: 'bronze',
+        teamBattleLeagueId: 'bronze_1',
         scheduledFor: new Date(),
         status: 'scheduled',
       },
@@ -374,12 +411,15 @@ describe('Tag Team Auto-Repair Integration Test', () => {
         robot1Id: { in: poorRobots.map(r => r.id) },
       },
     });
-    await prisma.scheduledTagTeamMatch.deleteMany({
+    await prisma.scheduledTeamBattleMatch.deleteMany({
       where: { id: match.id },
     });
-    await prisma.tagTeam.deleteMany({
+    await prisma.teamBattleMember.deleteMany({
+      where: { teamId: { in: [poorTeam1Result.id, poorTeam2Result.id] } },
+    });
+    await prisma.teamBattle.deleteMany({
       where: {
-        id: { in: [poorTeam1Result.team!.id, poorTeam2Result.team!.id] },
+        id: { in: [poorTeam1Result.id, poorTeam2Result.id] },
       },
     });
     await prisma.robot.deleteMany({

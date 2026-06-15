@@ -10,6 +10,7 @@ import { api } from '../../../utils/api';
 import { ApiError } from '../../../utils/ApiError';
 import { fetchMyRobots, fetchRobotById, commitUpgrades } from '../../../utils/robotApi';
 import { calculateDiscountedUpgradeCost } from '../../../../../shared/utils/upgradeCosts';
+import { registerTeamBattle } from '../../../utils/teamBattleApi';
 
 interface Robot { id: number; name: string; imageUrl: string | null; [key: string]: unknown }
 type Focus = 'combat' | 'defense' | 'mobility' | 'ai';
@@ -236,10 +237,11 @@ const Step8 = memo(({ onPrevious: _p }: { onNext?: () => void; onPrevious?: () =
               if (!activeBot || !reserveBot) return;
               try {
                 setBusy(true); setErr(null);
-                await api.post('/api/tag-teams', { activeRobotId: activeBot, reserveRobotId: reserveBot });
+                const stableName = robots[0]?.name?.split(' ')[0] || 'My';
+                await registerTeamBattle([activeBot, reserveBot], `${stableName} 2v2`, 2);
                 await onFinish();
               } catch (e: unknown) {
-                setErr((e instanceof ApiError && e.message) || 'Failed to create tag team.');
+                setErr((e instanceof ApiError && e.message) || 'Failed to create team.');
               } finally { setBusy(false); }
             }} disabled={!activeBot || !reserveBot || busy}
               className={`px-8 py-3 rounded-lg font-semibold text-lg transition-all duration-200 min-h-[44px]

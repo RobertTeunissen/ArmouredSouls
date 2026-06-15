@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { ScheduledMatch, formatDateTime, getLeagueTierColor, getLeagueTierName } from '../../utils/matchmakingApi';
+import { getModeConfig } from '../../utils/battleModeConfig';
 
 interface StandardMatchCardProps {
   match: ScheduledMatch;
@@ -11,6 +12,7 @@ interface StandardMatchCardProps {
 function StandardMatchCard({ match, myRobot, opponent, getRoundName }: StandardMatchCardProps) {
   const navigate = useNavigate();
   const isTournament = match.matchType === 'tournament_1v1';
+  const modeConfig = getModeConfig(match.matchType);
 
   const tierColor = isTournament ? 'text-[#d29922]' : getLeagueTierColor(match.leagueType);
   const tierName = isTournament
@@ -19,13 +21,11 @@ function StandardMatchCard({ match, myRobot, opponent, getRoundName }: StandardM
         : match.tournamentName || 'Tournament')
     : `${getLeagueTierName(match.leagueType)} League`;
 
-  const borderColor = isTournament ? 'border-l-[#d29922]' : 'border-l-[#58a6ff]';
-
   return (
     <div
       className={`
         bg-[#252b38] border border-white/10 rounded-lg p-2 mb-1.5
-        border-l-4 ${borderColor}
+        border-l-4 ${modeConfig.borderColor}
         hover:bg-[#1a1f29] hover:border-[#58a6ff]/50
         transition-all duration-150 ease-out
         hover:-translate-y-0.5
@@ -34,7 +34,7 @@ function StandardMatchCard({ match, myRobot, opponent, getRoundName }: StandardM
       {/* Desktop Layout */}
       <div className="hidden md:flex items-center gap-3">
         <div className="flex-shrink-0 w-6 text-center text-base">
-          {isTournament ? '🏆' : '⚔️'}
+          {modeConfig.icon}
         </div>
         <div className="flex-shrink-0 w-16">
           <div className="text-xs font-bold px-1.5 py-0.5 rounded text-center bg-primary-dark/20 text-primary">
@@ -69,7 +69,7 @@ function StandardMatchCard({ match, myRobot, opponent, getRoundName }: StandardM
       <div className="md:hidden">
         <div className="flex items-center justify-between mb-1.5">
           <div className="flex items-center gap-1.5">
-            <span className="text-base">{isTournament ? '🏆' : '⚔️'}</span>
+            <span className="text-base">{modeConfig.icon}</span>
             <div className="text-xs font-bold px-1.5 py-0.5 rounded bg-primary-dark/20 text-primary">
               PENDING
             </div>

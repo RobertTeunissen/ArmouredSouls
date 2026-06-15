@@ -29,7 +29,7 @@ These are the 8 battle events you can subscribe your robots to:
 |-------|-------------|-------------|
 | **1v1 League** | Daily automated league matches with LP and ELO | Always eligible |
 | **1v1 Tournament** | Multi-cycle bracket competitions with championship titles | Always eligible |
-| **Tag Team** | 2v2 tag team battles daily (phased — one active robot per side at a time) | Requires ≥ 2 robots in your Stable |
+| **Tag Team** | 2v2 tag team battles daily (phased — one active robot per side at a time). Your existing 2v2 team participates when both members are subscribed. | Requires membership in a 2v2 team |
 | **King of the Hill** | 5-6 robot free-for-all zone control battles | Always eligible |
 | **2v2 League** | Daily 2v2 team battles — both robots fight simultaneously | Requires ≥ 2 robots in your Stable |
 | **3v3 League** | Daily 3v3 team battles — all three robots fight simultaneously | Requires ≥ 3 robots in your Stable |
@@ -37,6 +37,16 @@ These are the 8 battle events you can subscribe your robots to:
 | **3v3 Tournament** | Single-elimination team tournament brackets (3-robot teams) | Requires ≥ 3 robots in your Stable |
 
 With 8 events available and a base cap of 3 subscriptions, choosing which events each robot participates in is a meaningful strategic decision. The Booking Office level becomes especially important for players who want to participate in multiple modes — upgrading unlocks more slots so your robots can compete across league, tournament, and special event formats simultaneously.
+
+### Tag Team Mode
+
+Tag Team is a **combat mode** that any 2v2 team can participate in — it's not a separate team type. Your existing 2v2 team IS your tag team. To enter tag team matchmaking, subscribe both team members to the `tag_team` event via the Booking Office.
+
+The slot order on your 2v2 team determines tag team roles:
+- **Slot 1** (first member) = Active robot — starts the fight
+- **Slot 2** (second member) = Reserve robot — tags in when the active robot yields or is destroyed
+
+Tag team combat is **phased**: one active robot per side fights at a time, rather than both robots fighting simultaneously like in 2v2 League. This means the same 2v2 team can participate in both modes — simultaneous combat in 2v2 League and sequential combat in Tag Team — depending on which events the members are subscribed to.
 
 ## Subscription Cap Per Level
 
@@ -69,7 +79,7 @@ There's no credit cost to subscribe or unsubscribe. Change your mind as often as
 
 ### During Onboarding
 
-When you create your first robot, you'll pick 3 subscriptions from the available events. The defaults are 1v1 League, 1v1 Tournament, and KotH (Tag Team and the team league modes aren't available until you own additional robots).
+When you create your first robot, you'll pick 3 subscriptions from the available events. The defaults are 1v1 League, 1v1 Tournament, and KotH (team modes like 2v2 League and Tag Team aren't available until you form a 2v2 team).
 
 If you want a 4th subscription right away, you can purchase Booking Office Level 1 during onboarding — but only if you have enough credits and there's a 4th event available to you.
 
@@ -78,9 +88,9 @@ If you want a 4th subscription right away, you can purchase Booking Office Level
 You **cannot unsubscribe** a robot from an event while that robot has a queued battle for that event. This prevents disruption to already-scheduled matchups.
 
 For example:
-- Your robot has a Tag Team match scheduled for next cycle
+- Your robot is on a 2v2 team that has a Tag Team battle scheduled for next cycle
 - You try to unsubscribe it from Tag Team → **blocked** (error: `EVENT_SUBSCRIPTION_LOCKED`)
-- The match executes next cycle → lock released
+- The battle executes next cycle → lock released
 - Now you can freely unsubscribe
 
 The lock is **per robot only**. Other robots in your Stable can change their subscriptions freely, even if one robot is locked.
@@ -90,7 +100,7 @@ The lock is **per robot only**. Other robots in your Stable can change their sub
 Per-robot subscriptions let you build specialised robots:
 
 - **The Duelist** — subscribed to 1v1 League + 1v1 Tournament only. Tuned for solo combat.
-- **The Team Player** — subscribed to Tag Team + 2v2 League + 3v3 League. Built for multi-robot scenarios where Team Coordination Attributes shine.
+- **The Team Player** — subscribed to Tag Team + 2v2 League + 3v3 League. Built for multi-robot scenarios where Team Coordination Attributes shine. The same 2v2 team competes in both simultaneous (2v2 League) and phased (Tag Team) combat.
 - **The Brawler** — subscribed to KotH + 2v2 League. Thrives in chaotic multi-robot fights.
 - **The All-Rounder** — subscribed to everything the cap allows. Versatile but spread thin.
 

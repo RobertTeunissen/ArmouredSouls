@@ -251,7 +251,7 @@ const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view
               : 'bg-[#1a1f29] text-[#8b949e] hover:bg-[#252b38]'
           }`}
         >
-          🤝 Tag Team
+          🏷️ Tag Team
         </button>
         <button
           onClick={() => onViewChange('koth')}

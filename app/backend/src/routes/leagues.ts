@@ -252,9 +252,9 @@ router.get('/tier-changes/unseen', authenticateToken, validateRequest({}), async
       ? prisma.robot.findMany({ where: { id: { in: robotIds } }, select: { id: true, name: true } })
       : [],
     tagTeamIds.length > 0
-      ? prisma.tagTeam.findMany({
+      ? prisma.teamBattle.findMany({
           where: { id: { in: tagTeamIds } },
-          select: { id: true, activeRobot: { select: { name: true } }, reserveRobot: { select: { name: true } } },
+          select: { id: true, teamName: true },
         })
       : [],
     teamBattleIds.length > 0
@@ -263,7 +263,7 @@ router.get('/tier-changes/unseen', authenticateToken, validateRequest({}), async
   ]);
 
   const robotMap = new Map(robots.map(r => [r.id, r.name]));
-  const tagTeamMap = new Map(tagTeams.map(t => [t.id, `${t.activeRobot.name} & ${t.reserveRobot.name}`]));
+  const tagTeamMap = new Map(tagTeams.map(t => [t.id, t.teamName]));
   const teamBattleMap = new Map(teamBattles.map(t => [t.id, { name: t.teamName, size: t.teamSize }]));
 
   function getEntityName(c: { entityType: string; entityId: number }): string {

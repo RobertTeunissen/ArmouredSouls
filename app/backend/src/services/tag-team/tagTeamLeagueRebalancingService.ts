@@ -1,16 +1,12 @@
-import { TagTeam } from '../../../generated/prisma';
-import prisma from '../../lib/prisma';
+import { TeamBattle } from '../../../generated/prisma';
 
-import { 
-  assignTagTeamLeagueInstance, 
-  rebalanceTagTeamInstances,
-  TAG_TEAM_LEAGUE_TIERS,
-  TagTeamLeagueTier 
-} from './tagTeamLeagueInstanceService';
 import {
-  LeagueAdapter,
+  TEAM_BATTLE_LEAGUE_TIERS,
+  TeamBattleLeagueTier,
+  tagTeamLeagueAdapter,
+} from '../team-battle/teamBattleAdapter';
+import {
   LeagueEngineConfig,
-  InstanceInfo,
   rebalanceAllTiers,
   determinePromotionsForInstance,
   determineDemotionsForInstance,
@@ -21,8 +17,9 @@ import {
 // Re-export for consumers that need the helper
 export { getMinLPForPromotion } from '../league/leaguePromotionThresholds';
 
-// Re-export from instance service for convenience
-export { TAG_TEAM_LEAGUE_TIERS, TagTeamLeagueTier };
+// Re-export tiers with tag-team-specific names for backward compatibility
+export const TAG_TEAM_LEAGUE_TIERS = TEAM_BATTLE_LEAGUE_TIERS;
+export type TagTeamLeagueTier = TeamBattleLeagueTier;
 
 // ─── Configuration ───────────────────────────────────────────────────────────
 
@@ -41,123 +38,6 @@ const TAG_TEAM_LEAGUE_CONFIG: LeagueEngineConfig = {
   logPrefix: 'TagTeamRebalancing',
   tiers: TAG_TEAM_LEAGUE_TIERS,
   entityLabel: 'team',
-};
-
-// ─── Tag Team Adapter ────────────────────────────────────────────────────────
-
-const tagTeamAdapter: LeagueAdapter<TagTeam> = {
-  entityType: 'tag_team',
-
-  async getEntitiesWithMinPoints(instanceId, minLP, minCycles, excludeIds) {
-    return prisma.tagTeam.findMany({
-      where: {
-        tagTeamLeagueId: instanceId,
-        cyclesInTagTeamLeague: { gte: minCycles },
-        tagTeamLeaguePoints: { gte: minLP },
-        NOT: {
-          id: { in: Array.from(excludeIds) },
-        },
-      },
-      orderBy: [
-        { tagTeamLeaguePoints: 'desc' },
-        { id: 'asc' },
-      ],
-    });
-  },
-
-  async countEligibleInInstance(instanceId, minCycles, excludeIds) {
-    return prisma.tagTeam.count({
-      where: {
-        tagTeamLeagueId: instanceId,
-        cyclesInTagTeamLeague: { gte: minCycles },
-        NOT: {
-          id: { in: Array.from(excludeIds) },
-        },
-      },
-    });
-  },
-
-  async getEntitiesForDemotion(instanceId, minCycles, excludeIds) {
-    return prisma.tagTeam.findMany({
-      where: {
-        tagTeamLeagueId: instanceId,
-        cyclesInTagTeamLeague: { gte: minCycles },
-        NOT: {
-          id: { in: Array.from(excludeIds) },
-        },
-      },
-      orderBy: [
-        { tagTeamLeaguePoints: 'asc' },
-        { id: 'asc' },
-      ],
-    });
-  },
-
-  async getInstancesForTier(tier): Promise<InstanceInfo[]> {
-    const instances = await prisma.tagTeam.findMany({
-      where: { tagTeamLeague: tier },
-      select: { tagTeamLeagueId: true },
-      distinct: ['tagTeamLeagueId'],
-    });
-    return instances.map(i => ({ leagueId: i.tagTeamLeagueId }));
-  },
-
-  async countEntitiesInTier(tier) {
-    return prisma.tagTeam.count({
-      where: { tagTeamLeague: tier },
-    });
-  },
-
-  async countEntitiesInDestinationTier(tier) {
-    return prisma.tagTeam.count({
-      where: { tagTeamLeague: tier },
-    });
-  },
-
-  async assignInstance(tier) {
-    return assignTagTeamLeagueInstance(tier as TagTeamLeagueTier);
-  },
-
-  async updateEntityLeague(entityId, newTier, newLeagueId) {
-    await prisma.tagTeam.update({
-      where: { id: entityId },
-      data: {
-        tagTeamLeague: newTier,
-        tagTeamLeagueId: newLeagueId,
-        cyclesInTagTeamLeague: 0,
-      },
-    });
-  },
-
-  getEntityCurrentTier(entity) {
-    return entity.tagTeamLeague;
-  },
-
-  getEntityLeagueId(entity) {
-    return entity.tagTeamLeagueId;
-  },
-
-  getEntityLeaguePoints(entity) {
-    return entity.tagTeamLeaguePoints;
-  },
-
-  getEntityOwnerId(entity) {
-    return entity.stableId;
-  },
-
-  getEntityDisplayName(entity) {
-    return `Team ${entity.id}`;
-  },
-
-  // No achievement hook for tag teams
-
-  async rebalanceInstances(tier) {
-    await rebalanceTagTeamInstances(tier as TagTeamLeagueTier);
-  },
-
-  async countAllEntities() {
-    return prisma.tagTeam.count();
-  },
 };
 
 // ─── Public API (unchanged signatures) ──────────────────────────────────────
@@ -185,8 +65,8 @@ export interface FullTagTeamRebalancingSummary {
 export async function determinePromotions(
   instanceId: string,
   excludeTeamIds: Set<number> = new Set()
-): Promise<TagTeam[]> {
-  return determinePromotionsForInstance(instanceId, TAG_TEAM_LEAGUE_CONFIG, tagTeamAdapter, excludeTeamIds);
+): Promise<TeamBattle[]> {
+  return determinePromotionsForInstance(instanceId, TAG_TEAM_LEAGUE_CONFIG, tagTeamLeagueAdapter, excludeTeamIds);
 }
 
 /**
@@ -196,24 +76,24 @@ export async function determinePromotions(
 export async function determineDemotions(
   instanceId: string,
   excludeTeamIds: Set<number> = new Set()
-): Promise<TagTeam[]> {
-  return determineDemotionsForInstance(instanceId, TAG_TEAM_LEAGUE_CONFIG, tagTeamAdapter, excludeTeamIds);
+): Promise<TeamBattle[]> {
+  return determineDemotionsForInstance(instanceId, TAG_TEAM_LEAGUE_CONFIG, tagTeamLeagueAdapter, excludeTeamIds);
 }
 
 /**
  * Promote a team to the next tier
  * LP retention - league points are NOT reset to 0
  */
-export async function promoteTeam(team: TagTeam): Promise<void> {
-  return promoteEntity(team, TAG_TEAM_LEAGUE_CONFIG, tagTeamAdapter);
+export async function promoteTeam(team: TeamBattle): Promise<void> {
+  return promoteEntity(team, TAG_TEAM_LEAGUE_CONFIG, tagTeamLeagueAdapter);
 }
 
 /**
  * Demote a team to the previous tier
  * LP retention - league points are NOT reset to 0
  */
-export async function demoteTeam(team: TagTeam): Promise<void> {
-  return demoteEntity(team, TAG_TEAM_LEAGUE_CONFIG, tagTeamAdapter);
+export async function demoteTeam(team: TeamBattle): Promise<void> {
+  return demoteEntity(team, TAG_TEAM_LEAGUE_CONFIG, tagTeamLeagueAdapter);
 }
 
 /**
@@ -221,7 +101,7 @@ export async function demoteTeam(team: TagTeam): Promise<void> {
  * This is called every cycle (daily cadence)
  */
 export async function rebalanceTagTeamLeagues(): Promise<FullTagTeamRebalancingSummary> {
-  const result = await rebalanceAllTiers(TAG_TEAM_LEAGUE_CONFIG, tagTeamAdapter);
+  const result = await rebalanceAllTiers(TAG_TEAM_LEAGUE_CONFIG, tagTeamLeagueAdapter);
 
   // Map engine result to the existing public interface
   return {

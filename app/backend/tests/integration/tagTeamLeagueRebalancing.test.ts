@@ -1,7 +1,7 @@
 /**
  * Integration Test: Tag Team League Rebalancing
  * 
- * Tests league rebalancing with varying league points
+ * Tests league rebalancing with varying league points using the TeamBattle model.
  * 
  * This test verifies:
  * - Top 10% of teams are promoted (minimum 5 cycles in tier)
@@ -74,10 +74,11 @@ describe('Tag Team League Rebalancing Integration Test', () => {
   afterEach(async () => {
     // Clean up teams after each test
     if (testTeams.length > 0) {
-      await prisma.tagTeam.deleteMany({
-        where: {
-          id: { in: testTeams.map(t => t.id) },
-        },
+      await prisma.teamBattleMember.deleteMany({
+        where: { teamId: { in: testTeams.map(t => t.id) } },
+      });
+      await prisma.teamBattle.deleteMany({
+        where: { id: { in: testTeams.map(t => t.id) } },
       });
       testTeams = [];
     }
@@ -85,31 +86,28 @@ describe('Tag Team League Rebalancing Integration Test', () => {
 
   afterAll(async () => {
     // Clean up in correct dependency order
-    await prisma.tagTeam.deleteMany({
-      where: {
-        id: { in: testTeams.map(t => t.id) },
-      },
-    });
+    if (testTeams.length > 0) {
+      await prisma.teamBattleMember.deleteMany({
+        where: { teamId: { in: testTeams.map(t => t.id) } },
+      });
+      await prisma.teamBattle.deleteMany({
+        where: { id: { in: testTeams.map(t => t.id) } },
+      });
+    }
     await prisma.robot.deleteMany({
-      where: {
-        id: { in: testRobots.map(r => r.id) },
-      },
+      where: { id: { in: testRobots.map(r => r.id) } },
     });
     await prisma.weaponInventory.deleteMany({
-      where: {
-        userId: { in: testUsers.map(u => u.id) },
-      },
+      where: { userId: { in: testUsers.map(u => u.id) } },
     });
     await prisma.user.deleteMany({
-      where: {
-        id: { in: testUsers.map(u => u.id) },
-      },
+      where: { id: { in: testUsers.map(u => u.id) } },
     });
     await prisma.$disconnect();
   });
 
   it('should promote top 10% and demote bottom 10% with varying league points', async () => {
-    // Step 1: Create teams with varying league points
+    // Step 1: Create teams with varying league points using TeamBattle model
     console.log('[Test] Step 1: Creating teams with varying league points...');
     
     for (let i = 0; i < testUsers.length; i++) {
@@ -117,19 +115,25 @@ describe('Tag Team League Rebalancing Integration Test', () => {
       const robot1 = testRobots[i * 2];
       const robot2 = testRobots[i * 2 + 1];
 
-      // Create team with varying league points (0-100)
-      const team = await prisma.tagTeam.create({
+      // Create TeamBattle with tag team fields
+      const team = await prisma.teamBattle.create({
         data: {
           stableId: user.id,
-          activeRobotId: robot1.id,
-          reserveRobotId: robot2.id,
+          teamSize: 2,
+          teamName: `Rebalance Team ${i}`,
           tagTeamLeague: 'bronze',
           tagTeamLeagueId: 'bronze_1',
-          tagTeamLeaguePoints: i * 5, // 0, 5, 10, 15, ..., 95
+          tagTeamLp: i * 5, // 0, 5, 10, 15, ..., 95
           cyclesInTagTeamLeague: 10, // All eligible for promotion/demotion
           totalTagTeamWins: 0,
           totalTagTeamLosses: 0,
           totalTagTeamDraws: 0,
+          members: {
+            create: [
+              { robotId: robot1.id, slotIndex: 0 },
+              { robotId: robot2.id, slotIndex: 1 },
+            ],
+          },
         },
       });
       testTeams.push(team);
@@ -141,7 +145,7 @@ describe('Tag Team League Rebalancing Integration Test', () => {
     // Verify initial state
     testTeams.forEach((team, index) => {
       expect(team.tagTeamLeague).toBe('bronze');
-      expect(team.tagTeamLeaguePoints).toBe(index * 5);
+      expect(team.tagTeamLp).toBe(index * 5);
       expect(team.cyclesInTagTeamLeague).toBe(10);
     });
 
@@ -158,18 +162,15 @@ describe('Tag Team League Rebalancing Integration Test', () => {
     console.log('[Test] Step 3: Verifying promotions...');
     
     // Top 10% of 20 = 2 teams, but only from those with ≥25 points
-    // Teams 5-19 have ≥25 points (15 teams), top 2 are teams with 95 and 90 points
     const expectedPromotions = 2;
     expect(rebalanceResult.totalPromoted).toBe(expectedPromotions);
 
-    const promotedTeams = await prisma.tagTeam.findMany({
+    const promotedTeams = await prisma.teamBattle.findMany({
       where: {
         id: { in: testTeams.map(t => t.id) },
         tagTeamLeague: 'silver',
       },
-      orderBy: {
-        id: 'asc',
-      },
+      orderBy: { id: 'asc' },
     });
 
     expect(promotedTeams.length).toBe(expectedPromotions);
@@ -179,7 +180,7 @@ describe('Tag Team League Rebalancing Integration Test', () => {
       expect(team.tagTeamLeague).toBe('silver');
       expect(team.tagTeamLeagueId).toBe('silver_1');
       // LP is retained across promotions, not reset
-      expect(team.tagTeamLeaguePoints).toBeGreaterThanOrEqual(25); // Must have had ≥25 to be promoted
+      expect(team.tagTeamLp).toBeGreaterThanOrEqual(25);
       expect(team.cyclesInTagTeamLeague).toBe(0); // Reset to 0
     });
 
@@ -192,7 +193,7 @@ describe('Tag Team League Rebalancing Integration Test', () => {
     // Step 5: Verify teams that stayed in Bronze
     console.log('[Test] Step 5: Verifying teams that stayed in Bronze...');
     
-    const remainingBronzeTeams = await prisma.tagTeam.findMany({
+    const remainingBronzeTeams = await prisma.teamBattle.findMany({
       where: {
         id: { in: testTeams.map(t => t.id) },
         tagTeamLeague: 'bronze',
@@ -204,7 +205,7 @@ describe('Tag Team League Rebalancing Integration Test', () => {
     // Verify remaining teams kept their points and cycles
     remainingBronzeTeams.forEach(team => {
       expect(team.tagTeamLeague).toBe('bronze');
-      expect(team.tagTeamLeaguePoints).toBeGreaterThanOrEqual(0);
+      expect(team.tagTeamLp).toBeGreaterThanOrEqual(0);
       expect(team.cyclesInTagTeamLeague).toBe(10); // Unchanged
     });
 
@@ -252,18 +253,24 @@ describe('Tag Team League Rebalancing Integration Test', () => {
     }
 
     // Create team with high points but only 3 cycles
-    const newTeam = await prisma.tagTeam.create({
+    const newTeam = await prisma.teamBattle.create({
       data: {
         stableId: user.id,
-        activeRobotId: robots[0].id,
-        reserveRobotId: robots[1].id,
+        teamSize: 2,
+        teamName: 'New Team Test',
         tagTeamLeague: 'bronze',
         tagTeamLeagueId: 'bronze_1',
-        tagTeamLeaguePoints: 1000, // Very high points
+        tagTeamLp: 1000, // Very high points
         cyclesInTagTeamLeague: 3, // Not eligible (< 5)
         totalTagTeamWins: 0,
         totalTagTeamLosses: 0,
         totalTagTeamDraws: 0,
+        members: {
+          create: [
+            { robotId: robots[0].id, slotIndex: 0 },
+            { robotId: robots[1].id, slotIndex: 1 },
+          ],
+        },
       },
     });
 
@@ -271,19 +278,20 @@ describe('Tag Team League Rebalancing Integration Test', () => {
     await rebalanceTagTeamLeagues();
 
     // Verify team was not promoted
-    const teamAfter = await prisma.tagTeam.findUnique({
+    const teamAfter = await prisma.teamBattle.findUnique({
       where: { id: newTeam.id },
     });
 
     expect(teamAfter).toBeDefined();
     expect(teamAfter!.tagTeamLeague).toBe('bronze'); // Still in bronze
-    expect(teamAfter!.tagTeamLeaguePoints).toBe(1000); // Points unchanged
+    expect(teamAfter!.tagTeamLp).toBe(1000); // Points unchanged
     expect(teamAfter!.cyclesInTagTeamLeague).toBe(3); // Cycles unchanged
 
     console.log('[Test] ✓ Teams with < 5 cycles correctly excluded from rebalancing');
 
     // Clean up
-    await prisma.tagTeam.deleteMany({ where: { id: newTeam.id } });
+    await prisma.teamBattleMember.deleteMany({ where: { teamId: newTeam.id } });
+    await prisma.teamBattle.deleteMany({ where: { id: newTeam.id } });
     await prisma.robot.deleteMany({
       where: { id: { in: robots.map(r => r.id) } },
     });
@@ -297,8 +305,8 @@ describe('Tag Team League Rebalancing Integration Test', () => {
     // Create teams in silver league with low points
     const weapon = await prisma.weapon.findFirst();
     const users = [];
-    const robots = [];
-    const teams = [];
+    const robots: any[] = [];
+    const teams: any[] = [];
 
     for (let i = 0; i < 10; i++) {
       const user = await prisma.user.create({
@@ -339,18 +347,24 @@ describe('Tag Team League Rebalancing Integration Test', () => {
       }
 
       // Create team in silver with varying points
-      const team = await prisma.tagTeam.create({
+      const team = await prisma.teamBattle.create({
         data: {
           stableId: user.id,
-          activeRobotId: robots[i * 2].id,
-          reserveRobotId: robots[i * 2 + 1].id,
+          teamSize: 2,
+          teamName: `Silver Team ${i}`,
           tagTeamLeague: 'silver',
           tagTeamLeagueId: 'silver_1',
-          tagTeamLeaguePoints: i * 10, // 0, 10, 20, ..., 90
+          tagTeamLp: i * 10, // 0, 10, 20, ..., 90
           cyclesInTagTeamLeague: 10, // All eligible
           totalTagTeamWins: 0,
           totalTagTeamLosses: 0,
           totalTagTeamDraws: 0,
+          members: {
+            create: [
+              { robotId: robots[i * 2].id, slotIndex: 0 },
+              { robotId: robots[i * 2 + 1].id, slotIndex: 1 },
+            ],
+          },
         },
       });
       teams.push(team);
@@ -362,7 +376,7 @@ describe('Tag Team League Rebalancing Integration Test', () => {
     // Verify demotions (bottom 10% = 1 team)
     const expectedDemotions = Math.floor(teams.length * 0.1);
     
-    const demotedTeams = await prisma.tagTeam.findMany({
+    const demotedTeams = await prisma.teamBattle.findMany({
       where: {
         id: { in: teams.map(t => t.id) },
         tagTeamLeague: 'bronze',
@@ -375,14 +389,17 @@ describe('Tag Team League Rebalancing Integration Test', () => {
     demotedTeams.forEach(team => {
       expect(team.tagTeamLeague).toBe('bronze');
       expect(team.tagTeamLeagueId).toBe('bronze_1');
-      expect(team.tagTeamLeaguePoints).toBe(0); // Reset to 0
+      expect(team.tagTeamLp).toBe(0); // Reset to 0
       expect(team.cyclesInTagTeamLeague).toBe(0); // Reset to 0
     });
 
     console.log(`[Test] ✓ Demoted ${demotedTeams.length} teams from silver to bronze`);
 
     // Clean up
-    await prisma.tagTeam.deleteMany({
+    await prisma.teamBattleMember.deleteMany({
+      where: { teamId: { in: teams.map(t => t.id) } },
+    });
+    await prisma.teamBattle.deleteMany({
       where: { id: { in: teams.map(t => t.id) } },
     });
     await prisma.robot.deleteMany({
@@ -400,8 +417,8 @@ describe('Tag Team League Rebalancing Integration Test', () => {
     // Create only 5 teams in gold league
     const weapon = await prisma.weapon.findFirst();
     const users = [];
-    const robots = [];
-    const teams = [];
+    const robots: any[] = [];
+    const teams: any[] = [];
 
     for (let i = 0; i < 5; i++) {
       const user = await prisma.user.create({
@@ -441,18 +458,24 @@ describe('Tag Team League Rebalancing Integration Test', () => {
         robots.push(robot);
       }
 
-      const team = await prisma.tagTeam.create({
+      const team = await prisma.teamBattle.create({
         data: {
           stableId: user.id,
-          activeRobotId: robots[i * 2].id,
-          reserveRobotId: robots[i * 2 + 1].id,
+          teamSize: 2,
+          teamName: `Gold Team ${i}`,
           tagTeamLeague: 'gold',
           tagTeamLeagueId: 'gold_1',
-          tagTeamLeaguePoints: i * 10,
+          tagTeamLp: i * 10,
           cyclesInTagTeamLeague: 10,
           totalTagTeamWins: 0,
           totalTagTeamLosses: 0,
           totalTagTeamDraws: 0,
+          members: {
+            create: [
+              { robotId: robots[i * 2].id, slotIndex: 0 },
+              { robotId: robots[i * 2 + 1].id, slotIndex: 1 },
+            ],
+          },
         },
       });
       teams.push(team);
@@ -463,14 +486,14 @@ describe('Tag Team League Rebalancing Integration Test', () => {
 
     // With < 10 teams, rebalancing should still work but percentages may be 0
     // 10% of 5 = 0.5, which floors to 0
-    const promotedCount = await prisma.tagTeam.count({
+    const promotedCount = await prisma.teamBattle.count({
       where: {
         id: { in: teams.map(t => t.id) },
         tagTeamLeague: 'platinum',
       },
     });
 
-    const demotedCount = await prisma.tagTeam.count({
+    const demotedCount = await prisma.teamBattle.count({
       where: {
         id: { in: teams.map(t => t.id) },
         tagTeamLeague: 'silver',
@@ -484,7 +507,10 @@ describe('Tag Team League Rebalancing Integration Test', () => {
     console.log('[Test] ✓ Rebalancing with < 10 teams handled correctly');
 
     // Clean up
-    await prisma.tagTeam.deleteMany({
+    await prisma.teamBattleMember.deleteMany({
+      where: { teamId: { in: teams.map(t => t.id) } },
+    });
+    await prisma.teamBattle.deleteMany({
       where: { id: { in: teams.map(t => t.id) } },
     });
     await prisma.robot.deleteMany({

@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt';
 import prisma from '../lib/prisma';
 import logger from '../config/logger';
 import { assignLeagueInstance } from '../services/league/leagueInstanceService';
-import { assignTagTeamLeagueInstance } from '../services/tag-team/tagTeamLeagueInstanceService';
+import { assignTagTeamLeagueInstanceOnTeamBattle as assignTagTeamLeagueInstance } from '../services/team-battle/teamBattleAdapter';
 import { registerTeam } from '../services/team-battle/teamBattleService';
 import {
   TIER_CONFIGS,
@@ -169,7 +169,7 @@ export async function generateBattleReadyUsers(
           });
 
           // ── Create robots ────────────────────────────────────
-          const createdRobots: { id: number }[] = [];
+          const createdRobots: { id: number; name: string }[] = [];
           const robotsWithSubscriptions: { id: number; subscriptions: string[] }[] = [];
 
           for (let r = 0; r < tier.robotCount; r++) {
@@ -282,17 +282,37 @@ export async function generateBattleReadyUsers(
           }
 
           // ── Tag team for multi-robot stables ─────────────────
+          // Legacy: TagTeam model removed. New 2v2 teams created via registerTeam
+          // already get tag team league defaults (bronze, bronze_1). The separate
+          // tag team entity is no longer needed — 2v2 teams participate in tag team
+          // mode via the tag_team subscription.
           if (tier.createTagTeam && createdRobots.length >= 2) {
-            const tagTeamLeagueId = await assignTagTeamLeagueInstance('bronze');
-            await tx.tagTeam.create({
-              data: {
-                stableId: user.id,
-                activeRobotId: createdRobots[0].id,
-                reserveRobotId: createdRobots[1].id,
-                tagTeamLeague: 'bronze',
-                tagTeamLeagueId,
-              },
+            // A 2v2 team was already created above if both robots have league_2v2 subscription.
+            // If not already created, create one now for tag team mode.
+            const existingTeam = await tx.teamBattle.findFirst({
+              where: { stableId: user.id, teamSize: 2 },
             });
+            if (!existingTeam) {
+              const tagTeamLeagueId = await assignTagTeamLeagueInstance('bronze');
+              const teamName = `${stableName} 2v2`.slice(0, 32);
+              await tx.teamBattle.create({
+                data: {
+                  stableId: user.id,
+                  teamSize: 2,
+                  teamName,
+                  teamLeague: 'bronze',
+                  teamLeagueId: 'bronze_1',
+                  tagTeamLeague: 'bronze',
+                  tagTeamLeagueId,
+                  members: {
+                    create: [
+                      { robotId: createdRobots[0].id, slotIndex: 0 },
+                      { robotId: createdRobots[1].id, slotIndex: 1 },
+                    ],
+                  },
+                },
+              });
+            }
             totalTagTeamsCreated++;
             logger.info(`[UserGeneration] Created tag team for ${username}`);
           }
@@ -311,10 +331,7 @@ export async function generateBattleReadyUsers(
               robotSubscriptions = ['league_1v1', 'tournament_1v1', 'koth'];
             } else if (createdRobots.length === 2) {
               // 2-robot stables: L1, cap 4 — pick 2 from team modes + pick 2 from solo modes
-              const teamModes: string[] = [];
-              if (tier.createLeague2v2) teamModes.push('league_2v2');
-              if (tier.createTagTeam) teamModes.push('tag_team');
-              teamModes.push('tournament_2v2');
+              const teamModes: string[] = ['league_2v2', 'tag_team', 'tournament_2v2'];
               const shuffledTeamModes = teamModes.sort(() => Math.random() - 0.5);
               const teamPicks = shuffledTeamModes.slice(0, 2);
 

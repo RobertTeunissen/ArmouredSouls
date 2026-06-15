@@ -18,7 +18,6 @@ const mockPrisma = {
   user: { findMany: jest.fn(), findUnique: jest.fn() },
   robot: { findMany: jest.fn() },
   facility: { findMany: jest.fn() },
-  tagTeam: { updateMany: jest.fn() },
   tournament: { findUnique: jest.fn(), findFirst: jest.fn() },
   scheduledKothMatchParticipant: { findMany: jest.fn() },
   $queryRaw: jest.fn(),

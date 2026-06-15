@@ -1,7 +1,8 @@
 import React from 'react';
 import { BattleHistory, getTournamentRoundName, getLeagueTierName, getLeagueTierColor } from '../utils/matchmakingApi';
-import { getTeamNameFromMatch } from '../utils/tagTeamApi';
+import { getTeamNameFromMatch } from '../utils/teamBattleApi';
 import { formatDateTime } from '../utils/matchmakingApi';
+import { getModeConfig, OUTCOME_BADGE_CONFIG } from '../utils/battleModeConfig';
 
 interface BattleRobot {
   name: string;
@@ -43,11 +44,11 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
   const isKoth = battle.battleType === 'koth';
   const isTeamBattle = battle.battleType === 'league_2v2' || battle.battleType === 'league_3v3';
   
+  // Use shared mode config for consistent icon/badge/color across all views
+  const modeConfig = getModeConfig(battle.battleType);
+  
   const getBattleTypeIcon = (): string => {
-    if (isKoth) return '👑';
-    if (isTournament || isTeamTournament) return '🏆';
-    if (isTagTeam) return '🤝';
-    return '⚔️'; // League match
+    return modeConfig.icon;
   };
   
   const getBattleTypeText = (): React.ReactNode => {
@@ -75,13 +76,13 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
       return `${sizeLabel} Tournament${roundName ? ` • ${roundName}` : ''}`;
     }
     if (isTagTeam) {
-      // For tag team matches, show league tier from battle record
+      // For tag team matches, show league tier with "League" suffix (not "Tag Team")
       const leagueAtBattleTime = battle.leagueType || 'bronze';
       const tierColor = getLeagueTierColor(leagueAtBattleTime);
       const tierName = getLeagueTierName(leagueAtBattleTime);
       return (
         <span className={tierColor}>
-          {tierName} Tag Team
+          {tierName} League
         </span>
       );
     }
@@ -93,13 +94,15 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
   };
   
   const getBorderColor = (): string => {
-    // KotH battles get orange border
-    if (isKoth) return 'border-l-orange-500';
-    // Tournament battles get yellow border regardless of outcome
-    if (isTournament || isTeamTournament) return 'border-l-[#d29922]';
-    // Tag team battles get cyan border regardless of outcome
-    if (isTagTeam) return 'border-l-cyan-400';
-    // League battles use outcome color
+    // KotH battles get orange border (from config)
+    if (isKoth) return modeConfig.borderColor;
+    // Tournament battles get golden border (from config)
+    if (isTournament || isTeamTournament) return modeConfig.borderColor;
+    // Tag team battles get amber border (from config)
+    if (isTagTeam) return modeConfig.borderColor;
+    // Team league battles get their mode color
+    if (isTeamBattle) return modeConfig.borderColor;
+    // 1v1 League battles use outcome color
     switch (outcome) {
       case 'win': return 'border-l-[#3fb950]';
       case 'loss': return 'border-l-[#f85149]';
@@ -124,12 +127,8 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
   };
   
   const getOutcomeBadgeClass = () => {
-    switch (outcome) {
-      case 'win': return 'bg-[#3fb950]/20 text-[#3fb950]';
-      case 'loss': return 'bg-[#f85149]/20 text-[#f85149]';
-      case 'draw': return 'bg-[#57606a]/20 text-[#57606a]';
-      default: return 'bg-surface-elevated text-secondary';
-    }
+    const config = OUTCOME_BADGE_CONFIG[outcome as keyof typeof OUTCOME_BADGE_CONFIG];
+    return config?.badgeColor || 'bg-surface-elevated text-secondary';
   };
 
   // For tag team battles, determine team names and robot names
@@ -216,8 +215,8 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
           <>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-0.5">
-                <span className="text-xs px-1.5 py-0.5 bg-cyan-400/20 rounded text-cyan-400 font-semibold">
-                  2v2
+                <span className={`text-xs px-1.5 py-0.5 rounded font-semibold ${modeConfig.badgeColor}`}>
+                  {modeConfig.label}
                 </span>
                 <div className="text-xs text-[#8b949e]">
                   {getBattleTypeText()}
@@ -234,12 +233,8 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
           /* Team Battle Layout (2v2/3v3) */
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-0.5">
-              <span className={`text-xs px-1.5 py-0.5 rounded font-semibold ${
-                battle.battleType === 'league_2v2'
-                  ? 'bg-emerald-400/20 text-emerald-400'
-                  : 'bg-violet-400/20 text-violet-400'
-              }`}>
-                {battle.battleType === 'league_2v2' ? '2v2' : '3v3'}
+              <span className={`text-xs px-1.5 py-0.5 rounded font-semibold ${modeConfig.badgeColor}`}>
+                {modeConfig.label}
               </span>
               <div className="text-xs text-[#8b949e]">
                 {getBattleTypeText()}
@@ -255,12 +250,8 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
           /* Team Tournament Layout (2v2/3v3 🏆) */
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-0.5">
-              <span className={`text-xs px-1.5 py-0.5 rounded font-semibold ${
-                battle.battleType === 'tournament_2v2'
-                  ? 'bg-amber-400/20 text-amber-400'
-                  : 'bg-amber-500/20 text-amber-500'
-              }`}>
-                {battle.battleType === 'tournament_2v2' ? '2v2 🏆' : '3v3 🏆'}
+              <span className={`text-xs px-1.5 py-0.5 rounded font-semibold ${modeConfig.badgeColor}`}>
+                {modeConfig.label}
               </span>
               <div className="text-xs text-[#8b949e]">
                 {getBattleTypeText()}
@@ -276,8 +267,8 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
           /* Standard 1v1 Layout */
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-0.5">
-              <span className="text-xs px-1.5 py-0.5 bg-blue-400/20 rounded text-blue-400 font-semibold">
-                1v1
+              <span className={`text-xs px-1.5 py-0.5 rounded font-semibold ${modeConfig.badgeColor}`}>
+                {modeConfig.label}
               </span>
               <div className="text-xs text-[#8b949e]">
                 {getBattleTypeText()}
@@ -353,31 +344,23 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
               </span>
             )}
             {isTagTeam && (
-              <span className="text-xs px-1.5 py-0.5 bg-cyan-400/20 rounded text-cyan-400 font-semibold">
-                2v2
+              <span className={`text-xs px-1.5 py-0.5 rounded font-semibold ${modeConfig.badgeColor}`}>
+                {modeConfig.label}
               </span>
             )}
             {isTeamBattle && (
-              <span className={`text-xs px-1.5 py-0.5 rounded font-semibold ${
-                battle.battleType === 'league_2v2'
-                  ? 'bg-emerald-400/20 text-emerald-400'
-                  : 'bg-violet-400/20 text-violet-400'
-              }`}>
-                {battle.battleType === 'league_2v2' ? '2v2' : '3v3'}
+              <span className={`text-xs px-1.5 py-0.5 rounded font-semibold ${modeConfig.badgeColor}`}>
+                {modeConfig.label}
               </span>
             )}
             {isTeamTournament && (
-              <span className={`text-xs px-1.5 py-0.5 rounded font-semibold ${
-                battle.battleType === 'tournament_2v2'
-                  ? 'bg-amber-400/20 text-amber-400'
-                  : 'bg-amber-500/20 text-amber-500'
-              }`}>
-                {battle.battleType === 'tournament_2v2' ? '2v2 🏆' : '3v3 🏆'}
+              <span className={`text-xs px-1.5 py-0.5 rounded font-semibold ${modeConfig.badgeColor}`}>
+                {modeConfig.label}
               </span>
             )}
             {!isKoth && !isTagTeam && !isTeamBattle && !isTeamTournament && (
-              <span className="text-xs px-1.5 py-0.5 bg-blue-400/20 rounded text-blue-400 font-semibold">
-                1v1
+              <span className={`text-xs px-1.5 py-0.5 rounded font-semibold ${modeConfig.badgeColor}`}>
+                {modeConfig.label}
               </span>
             )}
           </div>

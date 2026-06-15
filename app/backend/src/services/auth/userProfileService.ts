@@ -81,8 +81,8 @@ export async function getStableStats(userId: number) {
     },
   });
 
-  const tagTeams = await prisma.tagTeam.findMany({
-    where: { stableId: userId },
+  const tagTeams = await prisma.teamBattle.findMany({
+    where: { stableId: userId, teamSize: 2 },
     select: { tagTeamLeague: true },
   });
 

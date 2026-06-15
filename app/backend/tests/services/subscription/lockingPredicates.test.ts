@@ -5,7 +5,8 @@
  * - Tournament: real lock (can't unsubscribe while alive in bracket)
  * - League 2v2: locked when robot's team has a scheduled 2v2 match
  * - League 3v3: locked when robot's team has a scheduled 3v3 match
- * - League 1v1, Tag Team, KotH: no lock (always return false, unsubscribe is instant)
+ * - Tag Team: locked when robot's team has a scheduled tag_team match (matchMode='tag_team')
+ * - League 1v1, KotH: no lock (always return false, unsubscribe is instant)
  *
  * _Requirements: R5.7, R3.7, R3.8, R3.9_
  */
@@ -15,6 +16,7 @@
 const mockPrisma = {
   scheduledTournamentMatch: { count: jest.fn() },
   scheduledTeamBattleMatch: { count: jest.fn() },
+  teamBattleMember: { findFirst: jest.fn(), findMany: jest.fn() },
 };
 
 jest.mock('../../../src/lib/prisma', () => ({
@@ -78,14 +80,41 @@ describe('lockingPredicates', () => {
   });
 
   describe('tagTeamLockingPredicate', () => {
-    it('should always return false (no lock for tag team)', async () => {
+    it('should return true when robot is on a team with a scheduled tag_team match', async () => {
+      mockPrisma.teamBattleMember.findFirst.mockResolvedValue({ teamId: 100 });
+      mockPrisma.scheduledTeamBattleMatch.count.mockResolvedValue(1);
+
       const result = await tagTeamLockingPredicate(15);
-      expect(result).toBe(false);
+
+      expect(result).toBe(true);
+      expect(mockPrisma.teamBattleMember.findFirst).toHaveBeenCalledWith({
+        where: { robotId: 15, team: { teamSize: 2 } },
+      });
+      expect(mockPrisma.scheduledTeamBattleMatch.count).toHaveBeenCalledWith({
+        where: {
+          matchMode: 'tag_team',
+          status: 'scheduled',
+          OR: [{ team1Id: 100 }, { team2Id: 100 }],
+        },
+      });
     });
 
-    it('should not query the database', async () => {
-      await tagTeamLockingPredicate(15);
-      expect(mockPrisma.scheduledTournamentMatch.count).not.toHaveBeenCalled();
+    it('should return false when robot is not a member of any teamSize=2 team', async () => {
+      mockPrisma.teamBattleMember.findFirst.mockResolvedValue(null);
+
+      const result = await tagTeamLockingPredicate(15);
+
+      expect(result).toBe(false);
+      expect(mockPrisma.scheduledTeamBattleMatch.count).not.toHaveBeenCalled();
+    });
+
+    it('should return false when robot is on a team but no scheduled tag_team match exists', async () => {
+      mockPrisma.teamBattleMember.findFirst.mockResolvedValue({ teamId: 200 });
+      mockPrisma.scheduledTeamBattleMatch.count.mockResolvedValue(0);
+
+      const result = await tagTeamLockingPredicate(15);
+
+      expect(result).toBe(false);
     });
   });
 

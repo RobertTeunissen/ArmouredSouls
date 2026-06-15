@@ -119,8 +119,6 @@ export async function registerTeam(
   // Validate team name
   validateTeamName(teamName);
 
-  const eventTypes = getEventTypesForSize(teamSize);
-
   const team = await prisma.$transaction(async (tx) => {
     // Acquire advisory locks on robot IDs in sorted order to prevent deadlocks.
     // Namespace 2 is reserved for team-battle robot membership checks.
@@ -164,22 +162,6 @@ export async function registerTeam(
       );
     }
 
-    // Validate all robots are subscribed to at least one corresponding event (league or tournament)
-    const eventLabel = teamSize === 2 ? '2v2' : '3v3';
-    for (const robotId of uniqueRobotIds) {
-      const hasAnySubscription = await Promise.any(
-        eventTypes.map(et => hasSubscription(robotId, et).then(r => r ? true : Promise.reject()))
-      ).catch(() => false);
-      if (!hasAnySubscription) {
-        const robot = robots.find(r => r.id === robotId);
-        throw new TeamBattleError(
-          TeamBattleErrorCode.TEAM_INVALID_COMPOSITION,
-          `"${robot?.name ?? `Robot #${robotId}`}" is not subscribed to any ${eventLabel} mode (League or Tournament). Subscribe via the Booking Office first.`,
-          400,
-        );
-      }
-    }
-
     // Validate no robot is already on another team of the same size
     const existingMembers = await tx.teamBattleMember.findMany({
       where: {
@@ -211,9 +193,9 @@ export async function registerTeam(
         teamLeague: INITIAL_LEAGUE,
         teamLeagueId: leagueId,
         cyclesInLeague: 0,
-        totalWins: 0,
-        totalLosses: 0,
-        totalDraws: 0,
+        totalLeagueWins: 0,
+        totalLeagueLosses: 0,
+        totalLeagueDraws: 0,
         eligibility: 'ELIGIBLE',
         members: {
           create: uniqueRobotIds.map((robotId, index) => ({
@@ -377,6 +359,88 @@ export async function swapTeamMember(
   });
 
   logger.info(`[TeamBattle] Swapped robot ${oldRobotId} → ${newRobotId} on team ${teamId}`);
+}
+
+/**
+ * Swap positions of the two members on a 2v2 team (Active ↔ Reserve).
+ *
+ * Swaps the slotIndex values: slot 0 becomes slot 1 and vice versa.
+ * Rejects if team is locked for battle or team is not teamSize=2.
+ */
+export async function swapPositions(
+  teamId: number,
+  userId: number,
+): Promise<void> {
+  await prisma.$transaction(async (tx) => {
+    const team = await tx.teamBattle.findUnique({
+      where: { id: teamId },
+      include: { members: { orderBy: { slotIndex: 'asc' } } },
+    });
+
+    if (!team) {
+      throw new TeamBattleError(
+        TeamBattleErrorCode.TEAM_NOT_FOUND,
+        'Team not found',
+        404,
+      );
+    }
+
+    if (team.stableId !== userId) {
+      throw new TeamBattleError(
+        TeamBattleErrorCode.TEAM_OWNERSHIP_VIOLATION,
+        'Access denied',
+        403,
+      );
+    }
+
+    if (team.teamSize !== 2) {
+      throw new TeamBattleError(
+        TeamBattleErrorCode.TEAM_INVALID_COMPOSITION,
+        'Position swap is only available for 2v2 teams',
+        400,
+      );
+    }
+
+    if (team.members.length !== 2) {
+      throw new TeamBattleError(
+        TeamBattleErrorCode.TEAM_INVALID_COMPOSITION,
+        'Team must have exactly 2 members to swap positions',
+        400,
+      );
+    }
+
+    if (await isTeamLockedForBattle(teamId, tx as unknown as typeof prisma)) {
+      throw new TeamBattleError(
+        TeamBattleErrorCode.TEAM_LOCKED_FOR_BATTLE,
+        'Cannot modify team while a battle is scheduled',
+        409,
+      );
+    }
+
+    // Swap slot indices: use a temp value to avoid unique constraint violation
+    const member0 = team.members[0]; // slotIndex 0
+    const member1 = team.members[1]; // slotIndex 1
+
+    // Set member0 to a temp slot (99) to avoid unique constraint on [teamId, slotIndex]
+    await tx.teamBattleMember.update({
+      where: { id: member0.id },
+      data: { slotIndex: 99 },
+    });
+
+    // Move member1 to slot 0
+    await tx.teamBattleMember.update({
+      where: { id: member1.id },
+      data: { slotIndex: 0 },
+    });
+
+    // Move member0 to slot 1
+    await tx.teamBattleMember.update({
+      where: { id: member0.id },
+      data: { slotIndex: 1 },
+    });
+  });
+
+  logger.info(`[TeamBattle] Swapped positions on team ${teamId}`);
 }
 
 /**

@@ -12,30 +12,9 @@ export type BattleWithDetails = Prisma.BattleGetPayload<{
   };
 }>;
 
-// Typed query result for tag team matches with battle, team, and robot includes
-export type TagTeamMatchWithBattle = Prisma.ScheduledTagTeamMatchGetPayload<{
-  include: {
-    battle: {
-      include: {
-        robot1: { select: { id: true; name: true; userId: true } };
-        robot2: { select: { id: true; name: true; userId: true } };
-        participants: true;
-      };
-    };
-    team1: {
-      include: {
-        activeRobot: { select: { id: true; name: true } };
-        reserveRobot: { select: { id: true; name: true } };
-      };
-    };
-    team2: {
-      include: {
-        activeRobot: { select: { id: true; name: true } };
-        reserveRobot: { select: { id: true; name: true } };
-      };
-    };
-  };
-}>;
+// Note: TagTeamMatchWithBattle type and mapTagTeamRecord function removed.
+// Tag team battles are now queried directly from the Battle table (battleType='tag_team')
+// and mapped using mapBattleRecord. Team data resolved via TeamBattle members.
 
 export interface BattleQueryParams {
   page: number;
@@ -46,24 +25,21 @@ export interface BattleQueryParams {
 }
 
 /**
- * Build a Prisma where clause for TagTeamMatch queries with optional search/league filters.
+ * Build a Prisma where clause for tag team battle queries on the Battle table.
  */
-export function buildTagTeamWhere(search?: string, leagueType?: string): Prisma.ScheduledTagTeamMatchWhereInput {
-  const where: Prisma.ScheduledTagTeamMatchWhereInput = {
-    status: 'completed',
-    battleId: { not: null },
+export function buildTagTeamWhere(search?: string, leagueType?: string): Prisma.BattleWhereInput {
+  const where: Prisma.BattleWhereInput = {
+    battleType: 'tag_team',
   };
 
   if (leagueType && leagueType !== 'all') {
-    where.tagTeamLeague = leagueType;
+    where.leagueType = leagueType;
   }
 
   if (search) {
     where.OR = [
-      { team1: { activeRobot: { name: { contains: search, mode: 'insensitive' } } } },
-      { team1: { reserveRobot: { name: { contains: search, mode: 'insensitive' } } } },
-      { team2: { activeRobot: { name: { contains: search, mode: 'insensitive' } } } },
-      { team2: { reserveRobot: { name: { contains: search, mode: 'insensitive' } } } },
+      { robot1: { name: { contains: search, mode: 'insensitive' } } },
+      { robot2: { name: { contains: search, mode: 'insensitive' } } },
     ];
   }
 
@@ -108,95 +84,26 @@ export function mapBattleRecord(battle: BattleWithDetails, battleFormat: '1v1' |
 }
 
 /**
- * Map a TagTeamMatch (with included battle and team data) to the API response shape.
- * Includes team robot names for display in admin portal (Requirements 2.6, 3.8).
- */
-export function mapTagTeamRecord(match: TagTeamMatchWithBattle) {
-  const battle = match.battle!;
-  const base = mapBattleRecord(battle, '2v2');
-
-  // Determine winner name for tag team battles (should be team name, not robot name)
-  // winnerId in tag team battles should be team1.id or team2.id (after fix in Task 3)
-  let winnerName = base.winnerName;
-  if (battle.winnerId === match.team1.id) {
-    winnerName = 'Team 1';
-  } else if (match.team2 && battle.winnerId === match.team2.id) {
-    winnerName = 'Team 2';
-  } else if (battle.winnerId === null) {
-    winnerName = 'Draw';
-  }
-
-  return {
-    ...base,
-    winnerName,
-    // Include team robot names for display (Requirements 2.6)
-    team1ActiveName: match.team1.activeRobot?.name,
-    team1ReserveName: match.team1.reserveRobot?.name,
-    team2ActiveName: match.team2?.activeRobot?.name,
-    team2ReserveName: match.team2?.reserveRobot?.name,
-    // Include team IDs for winner determination
-    team1Id: match.team1.id,
-    team2Id: match.team2?.id,
-    teams: {
-      team1: {
-        id: match.team1.id,
-        activeRobot: match.team1.activeRobot,
-        reserveRobot: match.team1.reserveRobot,
-        stableId: match.team1.stableId,
-        league: match.tagTeamLeague,
-      },
-      team2: match.team2
-        ? {
-            id: match.team2.id,
-            activeRobot: match.team2.activeRobot,
-            reserveRobot: match.team2.reserveRobot,
-            stableId: match.team2.stableId,
-            league: match.tagTeamLeague,
-          }
-        : null,
-    },
-  };
-}
-
-/**
  * Fetch tag team battles with pagination, search, and league filtering.
  */
 export async function fetchTagTeamBattles({ page, limit, skip, search, leagueType }: BattleQueryParams) {
   const where = buildTagTeamWhere(search, leagueType);
 
-  const totalBattles = await prisma.scheduledTagTeamMatch.count({ where });
+  const totalBattles = await prisma.battle.count({ where });
 
-  const tagTeamMatches = await prisma.scheduledTagTeamMatch.findMany({
+  const tagTeamBattles = await prisma.battle.findMany({
     where,
     skip,
     take: limit,
     orderBy: { createdAt: 'desc' },
     include: {
-      battle: {
-        include: {
-          robot1: { select: { id: true, name: true, userId: true } },
-          robot2: { select: { id: true, name: true, userId: true } },
-          participants: true,
-        },
-      },
-      team1: {
-        include: {
-          activeRobot: { select: { id: true, name: true } },
-          reserveRobot: { select: { id: true, name: true } },
-        },
-      },
-      team2: {
-        include: {
-          activeRobot: { select: { id: true, name: true } },
-          reserveRobot: { select: { id: true, name: true } },
-        },
-      },
+      robot1: { select: { id: true, name: true, userId: true } },
+      robot2: { select: { id: true, name: true, userId: true } },
+      participants: true,
     },
   });
 
-  const battles = tagTeamMatches
-    .filter(m => m.battle !== null)
-    .map(m => mapTagTeamRecord(m));
+  const battles = tagTeamBattles.map(battle => mapBattleRecord(battle, '2v2'));
 
   return {
     battles,
@@ -299,13 +206,11 @@ export async function getAdminBattleList(params: {
     const oneVOneWhere = { ...where, battleType: { not: 'tag_team' } };
     const [oneVOneCount, tagTeamCount] = await Promise.all([
       prisma.battle.count({ where: oneVOneWhere }),
-      prisma.scheduledTagTeamMatch.count({
-        where: buildTagTeamWhere(search, leagueType),
-      }),
+      prisma.battle.count({ where: buildTagTeamWhere(search, leagueType) }),
     ]);
     const totalBattles = oneVOneCount + tagTeamCount;
 
-    const [oneVOneBattles, tagTeamMatches] = await Promise.all([
+    const [oneVOneBattles, tagTeamBattles] = await Promise.all([
       prisma.battle.findMany({
         where: oneVOneWhere,
         skip,
@@ -317,31 +222,15 @@ export async function getAdminBattleList(params: {
           participants: true,
         },
       }),
-      prisma.scheduledTagTeamMatch.findMany({
+      prisma.battle.findMany({
         where: buildTagTeamWhere(search, leagueType),
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
         include: {
-          battle: {
-            include: {
-              robot1: { select: { id: true, name: true, userId: true } },
-              robot2: { select: { id: true, name: true, userId: true } },
-              participants: true,
-            },
-          },
-          team1: {
-            include: {
-              activeRobot: { select: { id: true, name: true } },
-              reserveRobot: { select: { id: true, name: true } },
-            },
-          },
-          team2: {
-            include: {
-              activeRobot: { select: { id: true, name: true } },
-              reserveRobot: { select: { id: true, name: true } },
-            },
-          },
+          robot1: { select: { id: true, name: true, userId: true } },
+          robot2: { select: { id: true, name: true, userId: true } },
+          participants: true,
         },
       }),
     ]);
@@ -350,9 +239,7 @@ export async function getAdminBattleList(params: {
       const format = battle.battleType === 'league_2v2' || battle.battleType === 'league_3v3' ? '2v2' : '1v1';
       return mapBattleRecord(battle, format as '1v1' | '2v2');
     });
-    const mappedTagTeam = tagTeamMatches
-      .filter(m => m.battle !== null)
-      .map(m => mapTagTeamRecord(m));
+    const mappedTagTeam = tagTeamBattles.map(battle => mapBattleRecord(battle, '2v2'));
 
     const allBattles = [...mappedOneVOne, ...mappedTagTeam]
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -419,26 +306,64 @@ export async function getAdminBattleDetail(battleId: number) {
     throw new BattleError(BattleErrorCode.BATTLE_NOT_FOUND, 'Battle not found', 404);
   }
 
-  // Check if this battle has an associated TagTeamMatch record
-  const tagTeamMatch = await prisma.scheduledTagTeamMatch.findFirst({
-    where: { battleId: battle.id },
-    include: {
-      team1: {
-        include: {
-          activeRobot: { select: { id: true, name: true, userId: true } },
-          reserveRobot: { select: { id: true, name: true, userId: true } },
-        },
-      },
-      team2: {
-        include: {
-          activeRobot: { select: { id: true, name: true, userId: true } },
-          reserveRobot: { select: { id: true, name: true, userId: true } },
-        },
-      },
-    },
-  });
+  // Check if this is a tag team battle and resolve team data from TeamBattle
+  const isTagTeam = battle.battleType === 'tag_team';
+  let tagTeamData: { team1: any; team2: any } | null = null;
 
-  const isTagTeam = tagTeamMatch !== null;
+  if (isTagTeam && battle.team1ActiveRobotId) {
+    // Find teams via their member robots
+    const [team1, team2] = await Promise.all([
+      prisma.teamBattle.findFirst({
+        where: {
+          teamSize: 2,
+          members: { some: { robotId: battle.team1ActiveRobotId! } },
+        },
+        include: {
+          members: {
+            include: { robot: { select: { id: true, name: true, userId: true } } },
+            orderBy: { slotIndex: 'asc' },
+          },
+        },
+      }),
+      battle.team2ActiveRobotId
+        ? prisma.teamBattle.findFirst({
+            where: {
+              teamSize: 2,
+              members: { some: { robotId: battle.team2ActiveRobotId! } },
+            },
+            include: {
+              members: {
+                include: { robot: { select: { id: true, name: true, userId: true } } },
+                orderBy: { slotIndex: 'asc' },
+              },
+            },
+          })
+        : null,
+    ]);
+
+    if (team1) {
+      tagTeamData = {
+        team1: {
+          id: team1.id,
+          activeRobot: team1.members[0]?.robot,
+          reserveRobot: team1.members[1]?.robot,
+          stableId: team1.stableId,
+          league: team1.tagTeamLeague,
+        },
+        team2: team2
+          ? {
+              id: team2.id,
+              activeRobot: team2.members[0]?.robot,
+              reserveRobot: team2.members[1]?.robot,
+              stableId: team2.stableId,
+              league: team2.tagTeamLeague,
+            }
+          : null,
+      };
+    }
+  }
+
+  const isTagTeamBattle = isTagTeam && tagTeamData !== null;
 
   // Get participant data from BattleParticipant table
   const participants = await prisma.battleParticipant.findMany({
@@ -467,7 +392,7 @@ export async function getAdminBattleDetail(battleId: number) {
     leagueType: battle.leagueType,
     durationSeconds: battle.durationSeconds,
     createdAt: battle.createdAt,
-    battleFormat: isTagTeam ? '2v2' as const : '1v1' as const,
+    battleFormat: isTagTeamBattle ? '2v2' as const : '1v1' as const,
 
     robot1: {
       id: battle.robot1.id,
@@ -514,27 +439,10 @@ export async function getAdminBattleDetail(battleId: number) {
   };
 
   // Append tag team data when present
-  if (isTagTeam && tagTeamMatch) {
+  if (isTagTeamBattle && tagTeamData) {
     return {
       ...baseResponse,
-      teams: {
-        team1: {
-          id: tagTeamMatch.team1.id,
-          activeRobot: tagTeamMatch.team1.activeRobot,
-          reserveRobot: tagTeamMatch.team1.reserveRobot,
-          stableId: tagTeamMatch.team1.stableId,
-          league: tagTeamMatch.tagTeamLeague,
-        },
-        team2: tagTeamMatch.team2
-          ? {
-              id: tagTeamMatch.team2.id,
-              activeRobot: tagTeamMatch.team2.activeRobot,
-              reserveRobot: tagTeamMatch.team2.reserveRobot,
-              stableId: tagTeamMatch.team2.stableId,
-              league: tagTeamMatch.tagTeamLeague,
-            }
-          : null,
-      },
+      teams: tagTeamData,
     };
   }
 

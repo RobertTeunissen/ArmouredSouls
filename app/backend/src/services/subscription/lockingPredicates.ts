@@ -24,12 +24,23 @@ export async function tournamentLockingPredicate(robotId: number): Promise<boole
 }
 
 /**
- * Tag Team: no lock — unsubscribe is instant.
- * Scheduled tag team matches execute independently of the subscription row.
- * The matchmaker won't re-pair the robot because the subscription is gone.
+ * Tag Team: locked when the robot's team has a scheduled tag_team match.
+ * Prevents unsubscription while a tag team battle is queued.
+ * Checks TeamBattleMember → TeamBattle (teamSize=2) → ScheduledTeamBattleMatch (matchMode='tag_team').
  */
-export async function tagTeamLockingPredicate(_robotId: number): Promise<boolean> {
-  return false;
+export async function tagTeamLockingPredicate(robotId: number): Promise<boolean> {
+  const member = await prisma.teamBattleMember.findFirst({
+    where: { robotId, team: { teamSize: 2 } },
+  });
+  if (!member) return false;
+  const count = await prisma.scheduledTeamBattleMatch.count({
+    where: {
+      matchMode: 'tag_team',
+      status: 'scheduled',
+      OR: [{ team1Id: member.teamId }, { team2Id: member.teamId }],
+    },
+  });
+  return count > 0;
 }
 
 /**

@@ -224,10 +224,8 @@ export async function performAccountReset(userId: number, reason?: string): Prom
       where: { userId },
     });
 
-    // Delete all tag teams (if any)
-    await tx.tagTeam.deleteMany({
-      where: { stableId: userId },
-    });
+    // Delete all tag teams (legacy table dropped — no-op, kept for safety)
+    // Tag team data now lives in TeamBattle (teamSize=2)
 
     // Reset user state
     await tx.user.update({

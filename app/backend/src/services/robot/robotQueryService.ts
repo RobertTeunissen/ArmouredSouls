@@ -251,27 +251,36 @@ export async function getUpcomingMatches(robotId: number, robot: { currentHP: nu
     orderBy: { createdAt: 'asc' },
   });
 
-  // Fetch upcoming tag team matches
-  const tagTeamMatches = await prisma.scheduledTagTeamMatch.findMany({
+  // Fetch upcoming tag team matches from ScheduledTeamBattleMatch
+  const tagTeamMatches = await prisma.scheduledTeamBattleMatch.findMany({
     where: {
-      OR: [
-        { team1: { OR: [{ activeRobotId: robotId }, { reserveRobotId: robotId }] } },
-        { team2: { OR: [{ activeRobotId: robotId }, { reserveRobotId: robotId }] } },
-      ],
+      matchMode: 'tag_team',
       status: 'scheduled',
       scheduledFor: { gte: new Date() },
+      OR: [
+        { team1: { members: { some: { robotId } } } },
+        { team2: { members: { some: { robotId } } } },
+      ],
     },
     include: {
       team1: {
         include: {
-          activeRobot: { select: { id: true, name: true, imageUrl: true } },
-          reserveRobot: { select: { id: true, name: true, imageUrl: true } },
+          members: {
+            include: {
+              robot: { select: { id: true, name: true, imageUrl: true } },
+            },
+            orderBy: { slotIndex: 'asc' },
+          },
         },
       },
       team2: {
         include: {
-          activeRobot: { select: { id: true, name: true, imageUrl: true } },
-          reserveRobot: { select: { id: true, name: true, imageUrl: true } },
+          members: {
+            include: {
+              robot: { select: { id: true, name: true, imageUrl: true } },
+            },
+            orderBy: { slotIndex: 'asc' },
+          },
         },
       },
     },
@@ -305,21 +314,24 @@ export async function getUpcomingMatches(robotId: number, robot: { currentHP: nu
       };
     }),
     ...tagTeamMatches.filter(match => match.team1 && match.team2).map(match => {
-      const isTeam1 = match.team1!.activeRobotId === robotId || match.team1!.reserveRobotId === robotId;
+      const team1Members = match.team1!.members;
+      const team2Members = match.team2!.members;
+      const team1RobotIds = team1Members.map(m => m.robotId);
+      const isTeam1 = team1RobotIds.includes(robotId);
 
       let teammates: string[];
       let opponentTeam: string[];
 
       if (isTeam1) {
-        teammates = [
-          match.team1!.activeRobotId === robotId ? match.team1!.reserveRobot.name : match.team1!.activeRobot.name,
-        ];
-        opponentTeam = [match.team2!.activeRobot.name, match.team2!.reserveRobot.name];
+        teammates = team1Members
+          .filter(m => m.robotId !== robotId)
+          .map(m => m.robot.name);
+        opponentTeam = team2Members.map(m => m.robot.name);
       } else {
-        teammates = [
-          match.team2!.activeRobotId === robotId ? match.team2!.reserveRobot.name : match.team2!.activeRobot.name,
-        ];
-        opponentTeam = [match.team1!.activeRobot.name, match.team1!.reserveRobot.name];
+        teammates = match.team2!.members
+          .filter(m => m.robotId !== robotId)
+          .map(m => m.robot.name);
+        opponentTeam = team1Members.map(m => m.robot.name);
       }
 
       return {
@@ -328,7 +340,7 @@ export async function getUpcomingMatches(robotId: number, robot: { currentHP: nu
         opponentPortrait: '/src/assets/robots/robot-1.png',
         scheduledTime: match.scheduledFor.toISOString(),
         battleType: 'tag_team' as const,
-        leagueContext: match.tagTeamLeague,
+        leagueContext: match.team1!.tagTeamLeague,
         teammates,
         opponentTeam,
       };

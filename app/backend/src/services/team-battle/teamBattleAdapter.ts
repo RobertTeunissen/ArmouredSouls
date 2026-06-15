@@ -393,3 +393,245 @@ export async function rebalanceTeamBattleLeagues(teamSize: 2 | 3 = 2): Promise<F
     errors: result.errors,
   };
 }
+
+// ─── Tag Team League Adapter ─────────────────────────────────────────────────
+
+/**
+ * Configuration for the tag team league adapter.
+ * Unified with team battle leagues: 10% promote, 10% demote, min 5 cycles,
+ * min 4 teams, 50 max per instance.
+ */
+export const TAG_TEAM_LEAGUE_CONFIG: LeagueEngineConfig = {
+  promotionPercentage: 0.10,
+  demotionPercentage: 0.10,
+  minCyclesForRebalancing: 5,
+  minEntitiesForRebalancing: 4,
+  minCohortForNewTier: 3,
+  logPrefix: 'TagTeamLeagueRebalancing',
+  tiers: TEAM_BATTLE_LEAGUE_TIERS,
+  entityLabel: 'team',
+};
+
+/**
+ * Assign a tag team to an appropriate tag team league instance.
+ * Places team in the `tagTeamLeagueId` instance with most free spots.
+ * Creates new instance when all are full.
+ * Uses PostgreSQL advisory locks to prevent race conditions.
+ */
+export async function assignTagTeamLeagueInstanceOnTeamBattle(tier: TeamBattleLeagueTier): Promise<string> {
+  return await prisma.$transaction(async (tx) => {
+    const lockId = hashTierName(`tag_team_league_${tier}`);
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(${lockId})`;
+
+    const instances = await tx.teamBattle.groupBy({
+      by: ['tagTeamLeagueId'],
+      where: {
+        tagTeamLeague: tier,
+        teamSize: 2,
+      },
+      _count: {
+        id: true,
+      },
+    });
+
+    if (instances.length === 0) {
+      return `${tier}_1`;
+    }
+
+    const leagueInstances = instances
+      .map((instance) => {
+        const instanceNumber = parseInt(instance.tagTeamLeagueId.split('_')[1] || '1');
+        return {
+          leagueId: instance.tagTeamLeagueId,
+          instanceNumber,
+          currentTeams: instance._count.id,
+        };
+      })
+      .sort((a, b) => a.currentTeams - b.currentTeams);
+
+    const leastFull = leagueInstances[0];
+
+    if (leastFull.currentTeams >= MAX_TEAMS_PER_INSTANCE) {
+      const nextInstanceNumber = Math.max(...leagueInstances.map((i) => i.instanceNumber)) + 1;
+      return `${tier}_${nextInstanceNumber}`;
+    }
+
+    return leastFull.leagueId;
+  });
+}
+
+/**
+ * Rebalance tag team league instances within a tier.
+ * Redistributes teams evenly using round-robin (sorted by tagTeamLp desc for competitive balance).
+ * Operates on TeamBattle rows where teamSize=2, using tagTeamLeagueId for instance assignment.
+ */
+export async function rebalanceTagTeamLeagueInstances(tier: TeamBattleLeagueTier): Promise<void> {
+  const allTeams = await prisma.teamBattle.findMany({
+    where: {
+      tagTeamLeague: tier,
+      teamSize: 2,
+    },
+    orderBy: [
+      { tagTeamLp: 'desc' },
+      { id: 'asc' },
+    ],
+  });
+
+  if (allTeams.length === 0) {
+    logger.info(`[TagTeamLeagueInstance] ${tier}: No teams, skipping`);
+    return;
+  }
+
+  const targetInstanceCount = Math.ceil(allTeams.length / MAX_TEAMS_PER_INSTANCE);
+
+  logger.info(`[TagTeamLeagueInstance] Rebalancing ${tier}: ${allTeams.length} teams across ${targetInstanceCount} instances`);
+
+  const updates: Promise<unknown>[] = [];
+
+  for (let i = 0; i < allTeams.length; i++) {
+    const team = allTeams[i];
+    const targetInstanceNumber = (i % targetInstanceCount) + 1;
+    const targetLeagueId = `${tier}_${targetInstanceNumber}`;
+
+    if (team.tagTeamLeagueId !== targetLeagueId) {
+      updates.push(
+        prisma.teamBattle.update({
+          where: { id: team.id },
+          data: { tagTeamLeagueId: targetLeagueId },
+        })
+      );
+    }
+  }
+
+  if (updates.length > 0) {
+    await Promise.all(updates);
+    logger.info(`[TagTeamLeagueInstance] ${tier}: Moved ${updates.length} teams`);
+  } else {
+    logger.info(`[TagTeamLeagueInstance] ${tier}: Already balanced`);
+  }
+}
+
+/**
+ * Tag-team-scoped league adapter.
+ *
+ * Uses the same `LeagueAdapter<TeamBattle>` interface but remaps all league fields
+ * to the tag team columns: `tagTeamLp`, `tagTeamLeague`, `tagTeamLeagueId`,
+ * `cyclesInTagTeamLeague`. Filters by `teamSize = 2`.
+ *
+ * This adapter is consumed by `tagTeamLeagueRebalancingService` after rewiring.
+ */
+export const tagTeamLeagueAdapter: LeagueAdapter<TeamBattle> = {
+  entityType: 'tag_team',
+
+  async getEntitiesWithMinPoints(instanceId, minLP, minCycles, excludeIds) {
+    return prisma.teamBattle.findMany({
+      where: {
+        tagTeamLeagueId: instanceId,
+        teamSize: 2,
+        cyclesInTagTeamLeague: { gte: minCycles },
+        tagTeamLp: { gte: minLP },
+        NOT: {
+          id: { in: Array.from(excludeIds) },
+        },
+      },
+      orderBy: [
+        { tagTeamLp: 'desc' },
+        { id: 'asc' },
+      ],
+    });
+  },
+
+  async countEligibleInInstance(instanceId, minCycles, excludeIds) {
+    return prisma.teamBattle.count({
+      where: {
+        tagTeamLeagueId: instanceId,
+        teamSize: 2,
+        cyclesInTagTeamLeague: { gte: minCycles },
+        NOT: {
+          id: { in: Array.from(excludeIds) },
+        },
+      },
+    });
+  },
+
+  async getEntitiesForDemotion(instanceId, minCycles, excludeIds) {
+    return prisma.teamBattle.findMany({
+      where: {
+        tagTeamLeagueId: instanceId,
+        teamSize: 2,
+        cyclesInTagTeamLeague: { gte: minCycles },
+        NOT: {
+          id: { in: Array.from(excludeIds) },
+        },
+      },
+      orderBy: [
+        { tagTeamLp: 'asc' },
+        { id: 'asc' },
+      ],
+    });
+  },
+
+  async getInstancesForTier(tier): Promise<InstanceInfo[]> {
+    const instances = await prisma.teamBattle.findMany({
+      where: { tagTeamLeague: tier, teamSize: 2 },
+      select: { tagTeamLeagueId: true },
+      distinct: ['tagTeamLeagueId'],
+    });
+    return instances.map(i => ({ leagueId: i.tagTeamLeagueId }));
+  },
+
+  async countEntitiesInTier(tier) {
+    return prisma.teamBattle.count({
+      where: { tagTeamLeague: tier, teamSize: 2 },
+    });
+  },
+
+  async countEntitiesInDestinationTier(tier) {
+    return prisma.teamBattle.count({
+      where: { tagTeamLeague: tier, teamSize: 2 },
+    });
+  },
+
+  async assignInstance(tier) {
+    return assignTagTeamLeagueInstanceOnTeamBattle(tier as TeamBattleLeagueTier);
+  },
+
+  async updateEntityLeague(entityId, newTier, newLeagueId) {
+    await prisma.teamBattle.update({
+      where: { id: entityId },
+      data: {
+        tagTeamLeague: newTier,
+        tagTeamLeagueId: newLeagueId,
+        cyclesInTagTeamLeague: 0,
+      },
+    });
+  },
+
+  getEntityCurrentTier(entity) {
+    return entity.tagTeamLeague;
+  },
+
+  getEntityLeagueId(entity) {
+    return entity.tagTeamLeagueId;
+  },
+
+  getEntityLeaguePoints(entity) {
+    return entity.tagTeamLp;
+  },
+
+  getEntityOwnerId(entity) {
+    return entity.stableId;
+  },
+
+  getEntityDisplayName(entity) {
+    return `Team "${entity.teamName}" (${entity.id})`;
+  },
+
+  async rebalanceInstances(tier) {
+    await rebalanceTagTeamLeagueInstances(tier as TeamBattleLeagueTier);
+  },
+
+  async countAllEntities() {
+    return prisma.teamBattle.count({ where: { teamSize: 2 } });
+  },
+};

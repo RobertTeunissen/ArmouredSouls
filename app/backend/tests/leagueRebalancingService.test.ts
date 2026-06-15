@@ -20,8 +20,6 @@ describe('League Rebalancing Service', () => {
     await prisma.scheduledLeagueMatch.deleteMany({});
     await prisma.battleParticipant.deleteMany({});
     await prisma.battle.deleteMany({});
-    await prisma.scheduledTagTeamMatch.deleteMany({});
-    await prisma.tagTeam.deleteMany({});
     await prisma.robot.deleteMany({});
     await prisma.weaponInventory.deleteMany({});
     await prisma.user.deleteMany({});

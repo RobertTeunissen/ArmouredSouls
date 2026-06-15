@@ -1,28 +1,26 @@
 import { useSearchParams } from 'react-router-dom';
 import Navigation from '../components/Navigation';
-import TagTeamManagementContent from '../components/team-battles/TagTeamManagementContent';
 import TeamBattleManagementContent from '../components/team-battles/TeamBattleManagementContent';
 
-type TeamBattlesTab = 'tag-team' | '2v2' | '3v3';
+type TeamBattlesTab = '2v2' | '3v3';
 
 const TABS: { id: TeamBattlesTab; label: string; icon: string }[] = [
-  { id: 'tag-team', label: 'Tag Team', icon: '🏷️' },
   { id: '2v2', label: '2v2 Teams', icon: '⚔️' },
   { id: '3v3', label: '3v3 Teams', icon: '🗡️' },
 ];
 
 function isValidTab(value: string | null): value is TeamBattlesTab {
-  return value === 'tag-team' || value === '2v2' || value === '3v3';
+  return value === '2v2' || value === '3v3';
 }
 
 function TeamBattlesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const rawTab = searchParams.get('tab');
-  const activeTab: TeamBattlesTab = isValidTab(rawTab) ? rawTab : 'tag-team';
+  const activeTab: TeamBattlesTab = isValidTab(rawTab) ? rawTab : '2v2';
 
   const switchTab = (tab: TeamBattlesTab) => {
     const next = new URLSearchParams(searchParams);
-    if (tab === 'tag-team') {
+    if (tab === '2v2') {
       next.delete('tab');
     } else {
       next.set('tab', tab);
@@ -81,9 +79,6 @@ function TeamBattlesPage() {
           id={`team-battles-${activeTab}-panel`}
           aria-labelledby={`team-battles-${activeTab}-tab`}
         >
-          {activeTab === 'tag-team' && (
-            <TagTeamManagementContent />
-          )}
           {activeTab === '2v2' && (
             <TeamBattleManagementContent teamSize={2} />
           )}

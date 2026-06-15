@@ -17,6 +17,5 @@ export interface JobContext {
   tournamentRound?: number;
   tournamentMaxRounds?: number;
   tournamentScheduled?: boolean;
-  isEvenCycle?: boolean;
   matchesCompleted?: number;
 }

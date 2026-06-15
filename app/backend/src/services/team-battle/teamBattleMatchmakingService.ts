@@ -546,9 +546,16 @@ function createByeTeam(league: string, leagueId: string, teamSize: 2 | 3): TeamB
         teamLeague: byeLeague,
         teamLeagueId: byeLeagueId,
         cyclesInLeague: 0,
-        totalWins: 0,
-        totalLosses: 0,
-        totalDraws: 0,
+        totalLeagueWins: 0,
+        totalLeagueLosses: 0,
+        totalLeagueDraws: 0,
+        tagTeamLp: 0,
+        tagTeamLeague: 'bronze',
+        tagTeamLeagueId: 'bronze_1',
+        cyclesInTagTeamLeague: 0,
+        totalTagTeamWins: 0,
+        totalTagTeamLosses: 0,
+        totalTagTeamDraws: 0,
         eligibility: 'ELIGIBLE',
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -577,10 +584,12 @@ export async function scheduleMatches(
 
   // Create regular matches using createMany
   if (regularMatches.length > 0) {
+    const matchMode = teamSize === 2 ? 'league_2v2' : 'league_3v3';
     const regularMatchData = regularMatches.map(match => ({
       team1Id: match.team1.id,
       team2Id: match.team2.id,
       teamSize,
+      matchMode,
       teamBattleLeague: match.teamBattleLeague,
       teamBattleLeagueId: match.teamBattleLeagueId,
       scheduledFor,
@@ -594,11 +603,13 @@ export async function scheduleMatches(
 
   // Create bye-matches individually (team2Id = null for bye-team)
   for (const match of byeMatches) {
+    const matchMode = teamSize === 2 ? 'league_2v2' : 'league_3v3';
     await prisma.scheduledTeamBattleMatch.create({
       data: {
         team1Id: match.team1.id,
         team2Id: null, // Bye-team (no actual team2)
         teamSize,
+        matchMode,
         teamBattleLeague: match.teamBattleLeague,
         teamBattleLeagueId: match.teamBattleLeagueId,
         scheduledFor,

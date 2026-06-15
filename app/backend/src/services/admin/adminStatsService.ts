@@ -233,8 +233,8 @@ export async function getSystemStats(userFilter: Prisma.UserWhereInput = {}) {
     prisma.scheduledLeagueMatch.count({ where: { status: 'completed' } }),
     prisma.scheduledTournamentMatch.count({ where: { status: { in: ['pending', 'scheduled'] } } }),
     prisma.scheduledTournamentMatch.count({ where: { status: 'completed' } }),
-    prisma.scheduledTagTeamMatch.count({ where: { status: 'scheduled' } }),
-    prisma.scheduledTagTeamMatch.count({ where: { status: 'completed' } }),
+    prisma.scheduledTeamBattleMatch.count({ where: { status: 'scheduled', matchMode: 'tag_team' } }),
+    prisma.scheduledTeamBattleMatch.count({ where: { status: 'completed', matchMode: 'tag_team' } }),
     prisma.scheduledKothMatch.count({ where: { status: 'scheduled' } }),
     prisma.scheduledKothMatch.count({ where: { status: 'completed' } }),
   ]);
@@ -1431,6 +1431,74 @@ export async function getTeamBattleLeagueHealth() {
   return {
     league2v2,
     league3v3,
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
+ * Get tag team league health metrics.
+ * Returns per-tier team counts, instance counts, teams per instance (min/max/avg),
+ * and needs-rebalancing indicators for the tag team league (teamSize=2, tagTeamLeague fields).
+ */
+export async function getTagTeamLeagueHealth() {
+  const leagues = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'];
+  const MAX_TEAMS_PER_INSTANCE = 50;
+  const MIN_TEAMS_FOR_TIER = 10;
+
+  // Get team counts per tag team tier
+  const teamsByLeague = await prisma.teamBattle.groupBy({
+    by: ['tagTeamLeague'],
+    where: { teamSize: 2 },
+    _count: { id: true },
+  });
+
+  // Get instance details per tag team tier
+  const instancesByLeague = await prisma.teamBattle.groupBy({
+    by: ['tagTeamLeague', 'tagTeamLeagueId'],
+    where: { teamSize: 2 },
+    _count: { id: true },
+  });
+
+  const leagueData = leagues.map((league) => {
+    const data = teamsByLeague.find((r) => r.tagTeamLeague === league);
+    const instances = instancesByLeague.filter((r) => r.tagTeamLeague === league);
+    const teamCount = data?._count.id ?? 0;
+    const instanceCounts = instances.map((i) => i._count.id);
+
+    // Compute teams per instance stats
+    const teamsPerInstanceMin = instanceCounts.length > 0 ? Math.min(...instanceCounts) : 0;
+    const teamsPerInstanceMax = instanceCounts.length > 0 ? Math.max(...instanceCounts) : 0;
+    const teamsPerInstanceAvg = instanceCounts.length > 0
+      ? Math.round(instanceCounts.reduce((sum, c) => sum + c, 0) / instanceCounts.length)
+      : 0;
+
+    // Determine needs-rebalancing: any instance exceeds 50 teams or team count below minimum threshold (10)
+    const hasOverflow = instanceCounts.some((c) => c > MAX_TEAMS_PER_INSTANCE);
+    const belowMinimum = teamCount > 0 && teamCount < MIN_TEAMS_FOR_TIER;
+    const needsRebalancing = hasOverflow || belowMinimum;
+
+    return {
+      league,
+      teamCount,
+      instances: instances.length,
+      instanceDetails: instances.map((i) => ({
+        id: i.tagTeamLeagueId,
+        teamCount: i._count.id,
+      })),
+      teamsPerInstance: {
+        min: teamsPerInstanceMin,
+        max: teamsPerInstanceMax,
+        avg: teamsPerInstanceAvg,
+      },
+      needsRebalancing,
+    };
+  });
+
+  const totalTeams = leagueData.reduce((sum, l) => sum + l.teamCount, 0);
+
+  return {
+    leagues: leagueData,
+    totalTeams,
     timestamp: new Date().toISOString(),
   };
 }

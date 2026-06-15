@@ -55,6 +55,7 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 | Vitest Performance Tuning (CI scripts, dot reporter, coverage gitignore) | 52 | — (direct implementation) | June 2026 |
 | Test Setup Convention Cleanup (co-located `__tests__/`, eliminated centralized sprawl) | 51 | — (direct implementation) | June 2026 |
 | Backend Test Reclassification (66 no-DB tests → unit runner, zero overlap, ~2min CI savings) | — | — (direct implementation) | June 2026 |
+| Tag Team System Unification | 55 | [Spec](/.kiro/specs/tag-team-system-unification/) | July 2026 |
 | Team Battles 2v2 and 3v3 (League) | 31 | [Spec #37](/.kiro/specs/to-do/37-team-battles-2v2-3v3/) | June 2026 |
 | Untrack Generated Prisma Client (68K lines out of git) | — | — (direct implementation) | May 2026 |
 | HTTP Client Consolidation (typed `api` wrapper everywhere) | — | — (direct implementation) | May 2026 |
@@ -301,26 +302,6 @@ A store where players spend accumulated prestige points on exclusive rewards: co
 A collection of saved weapon blueprints for the crafting system. Players save successful designs, share blueprints with others, and browse community-created weapon configurations. Only relevant once Weapon Crafting (#29) is implemented.
 
 **Dependencies**: Weapon Crafting System (#29).
-
-### #55 — Tag Team System Unification
-**Source**: Spec 37 review — UX inconsistencies between Tag Team and 2v2/3v3 Team Battle systems  
-**Priority**: Medium — reduces player confusion, aligns all team modes
-
-Tag Team was built before the Team Battle system (Spec 37) and uses different patterns:
-- No member swap support (must disband and recreate to change members)
-- No league instances (single flat league per tier, unlike 2v2/3v3 which use instances)
-- Different card layout on the Team Management page (Active/Reserve labels vs generic member list)
-- No ineligibility reason feedback (unlike 2v2/3v3 which now show why a team can't fight)
-- Different API shape (`/api/tag-teams` vs `/api/team-battles`)
-
-**Scope:**
-1. Add member swap endpoint to tag teams (swap active or reserve robot)
-2. Add league instances to tag team (max 50 teams per instance, same as 2v2/3v3)
-3. Unify the Team Management card layout — all team types show members the same way with swap buttons
-4. Add ineligibility reason to tag team API response (same pattern as 2v2/3v3)
-5. Consider migrating tag team to use the same `team_battle` table with `teamSize: 2` and a `mode: 'tag_team'` discriminator (larger refactor, evaluate in spec)
-
-**Dependencies**: None blocking. Can be done independently of #54 (Team Battle Tournaments).
 
 ---
 

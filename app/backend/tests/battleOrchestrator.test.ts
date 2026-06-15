@@ -20,9 +20,7 @@ describe('Battle Orchestrator', () => {
     await prisma.scheduledKothMatchParticipant.deleteMany({});
     await prisma.scheduledKothMatch.deleteMany({});
     await prisma.scheduledLeagueMatch.deleteMany({});
-    await prisma.scheduledTagTeamMatch.deleteMany({}); // Delete tag team matches before tag teams
     await prisma.battle.deleteMany({});
-    await prisma.tagTeam.deleteMany({}); // Delete tag teams before robots
     await prisma.robot.deleteMany({});
     await prisma.weaponInventory.deleteMany({});
     await prisma.user.deleteMany({});
@@ -62,8 +60,6 @@ describe('Battle Orchestrator', () => {
     await prisma.scheduledKothMatchParticipant.deleteMany({});
     await prisma.scheduledKothMatch.deleteMany({});
     await prisma.scheduledLeagueMatch.deleteMany({});
-    await prisma.scheduledTagTeamMatch.deleteMany({});
-    await prisma.tagTeam.deleteMany({});
     await prisma.robot.deleteMany({
       where: { userId: testUser.id },
     });
@@ -85,8 +81,6 @@ describe('Battle Orchestrator', () => {
     await prisma.scheduledKothMatchParticipant.deleteMany({});
     await prisma.scheduledKothMatch.deleteMany({});
     await prisma.scheduledLeagueMatch.deleteMany({});
-    await prisma.scheduledTagTeamMatch.deleteMany({});
-    await prisma.tagTeam.deleteMany({});
     await prisma.robot.deleteMany({});
     await prisma.weaponInventory.deleteMany({});
     await prisma.user.deleteMany({});

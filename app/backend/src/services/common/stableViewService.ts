@@ -56,9 +56,9 @@ export async function getStableProfile(userId: number) {
       },
       teamBattles: {
         select: {
-          totalWins: true,
-          totalLosses: true,
-          totalDraws: true,
+          totalLeagueWins: true,
+          totalLeagueLosses: true,
+          totalLeagueDraws: true,
         },
       },
     },
@@ -74,9 +74,9 @@ export async function getStableProfile(userId: number) {
   const winRate = totalBattles > 0 ? Number(((totalWins / totalBattles) * 100).toFixed(1)) : 0;
 
   // Team battle stats derived from stable's teams' win/loss/draw records
-  const teamBattleWins = user.teamBattles.reduce((sum, t) => sum + t.totalWins, 0);
-  const teamBattleLosses = user.teamBattles.reduce((sum, t) => sum + t.totalLosses, 0);
-  const teamBattleDraws = user.teamBattles.reduce((sum, t) => sum + t.totalDraws, 0);
+  const teamBattleWins = user.teamBattles.reduce((sum, t) => sum + t.totalLeagueWins, 0);
+  const teamBattleLosses = user.teamBattles.reduce((sum, t) => sum + t.totalLeagueLosses, 0);
+  const teamBattleDraws = user.teamBattles.reduce((sum, t) => sum + t.totalLeagueDraws, 0);
   const totalTeamBattles = teamBattleWins + teamBattleLosses + teamBattleDraws;
   const teamBattleWinRate = totalTeamBattles > 0
     ? Number(((teamBattleWins / totalTeamBattles) * 100).toFixed(1))

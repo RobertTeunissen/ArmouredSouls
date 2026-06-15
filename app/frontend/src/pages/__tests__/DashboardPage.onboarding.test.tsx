@@ -81,10 +81,6 @@ vi.mock('../../components/StableStatistics', () => ({
   default: () => <div data-testid="stable-statistics">StableStatistics</div>,
 }));
 
-vi.mock('../../components/TagTeamReadinessWarning', () => ({
-  default: () => <div data-testid="tag-team-warning">TagTeamWarning</div>,
-}));
-
 vi.mock('../../components/DashboardOnboardingBanner', () => ({
   default: () => <div data-testid="onboarding-banner-mock">OnboardingBanner</div>,
 }));

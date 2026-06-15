@@ -207,15 +207,15 @@ Shared matchmaking utilities consumed by all league matchmakers and tag team.
 | `teamMatchmakingUtils` | Shared LP-primary scoring formula (`calculateMatchScore`), bye-team factory (`createByeTeam`), recent-opponent batch query (`getRecentOpponentsBatch`) — imported by 1v1, 2v2, 3v3, and tag team matchmakers |
 
 ### tag-team/
-2v2 tag team mode — battles, matchmaking, and league management.
+2v2 tag team mode — sequential 1v1 combat with tag-out mechanics. All services operate on `TeamBattle` (teamSize=2) + `TeamBattleMember` as the data source. The legacy `TagTeam` model has been removed (Spec: Tag Team System Unification). Scheduled matches use `ScheduledTeamBattleMatch` with `matchMode = 'tag_team'` to discriminate tag team matches from 2v2 League matches on the same table.
 
 | Service | Purpose |
 |---------|---------|
-| `tagTeamBattleOrchestrator` | Tag team match execution (multi-phase combat, tag-out mechanics, 4-robot rewards) |
-| `tagTeamMatchmakingService` | Tag team pairing (snake-draft, ELO-balanced, bye-team handling); imports shared utilities from `matchmaking/teamMatchmakingUtils` |
-| `tagTeamService` | Tag team CRUD, readiness checks, combined ELO calculation |
-| `tagTeamLeagueInstanceService` | Tag team league instance management (max 50 teams per instance) |
-| `tagTeamLeagueRebalancingService` | Tag team promotions/demotions (mirrors 1v1 logic) |
+| `tagTeamBattleOrchestrator` | Tag team match execution — loads teams from `TeamBattle` + `TeamBattleMember` (slot 0 = Active, slot 1 = Reserve), picks up matches from `ScheduledTeamBattleMatch` where `matchMode = 'tag_team'`, multi-phase sequential combat with tag-out mechanics, updates `totalTagTeamWins`/`Losses`/`Draws` and `tagTeamLp` on `TeamBattle` |
+| `tagTeamMatchmakingService` | Tag team pairing — queries `TeamBattle` where `teamSize = 2` filtered by `tagTeamLeague`/`tagTeamLeagueId`, verifies both members have `tag_team` subscriptions, checks `ScheduledTeamBattleMatch` (matchMode = 'tag_team') for already-scheduled teams, creates new `ScheduledTeamBattleMatch` rows with `matchMode = 'tag_team'`; imports shared utilities from `matchmaking/teamMatchmakingUtils` |
+| `tagTeamService` | Tag team readiness checks, combined ELO calculation (operates on `TeamBattle` members) |
+| `tagTeamLeagueInstanceService` | Tag team league instance management (max 50 teams per instance), queries `TeamBattle` by `tagTeamLeagueId` |
+| `tagTeamLeagueRebalancingService` | Tag team promotions/demotions via `tagTeamLeagueAdapter` — updates `tagTeamLeague`/`tagTeamLeagueId`/`cyclesInTagTeamLeague` on `TeamBattle`, records history with `entityType = 'tag_team'` |
 
 ### team-battle/
 2v2 and 3v3 simultaneous team battle mode — all robots active in the arena at the same time. Distinct from Tag Team (phased combat). Added by Spec 37.
@@ -223,11 +223,11 @@ Shared matchmaking utilities consumed by all league matchmakers and tag team.
 | Service | Purpose |
 |---------|---------|
 | `teamBattleService` | Team CRUD — register, swap member, rename, disband. Persistent teams with LP/ELO/tier. |
-| `teamBattleMatchmakingService` | 2v2/3v3 matchmaking orchestration per league instance. Subscription-gated eligibility. |
+| `teamBattleMatchmakingService` | 2v2/3v3 matchmaking orchestration per league instance. Subscription-gated eligibility. Creates `ScheduledTeamBattleMatch` rows with `matchMode` discriminator (`'league_2v2'`, `'league_3v3'`, `'tag_team'`, `'tournament_2v2'`, `'tournament_3v3'`). |
 | `teamBattleOrchestrator` | Battle execution — fetch scheduled matches, invoke engine, persist results, distribute rewards. |
 | `teamBattleEngine` | N-vs-N simulation wrapper around `combatSimulator`. All 2N robots active simultaneously. |
 | `teamBattleRewardService` | Reward calculation and distribution (N× multiplier of 1v1 rewards per robot). |
-| `teamBattleAdapter` | `LeagueAdapter<TeamBattle>` for `leagueEngine.ts` — promotion/demotion with same config as 1v1. |
+| `teamBattleAdapter` | `LeagueAdapter<TeamBattle>` for `leagueEngine.ts` — exports `teamBattle2v2Adapter`, `teamBattle3v3Adapter`, and `tagTeamLeagueAdapter`. The tag team adapter remaps LP/league fields to `tagTeamLp`/`tagTeamLeague`/`tagTeamLeagueId` with `entityType = 'tag_team'`. Promotion/demotion with same config as 1v1. |
 | `teamCoordinationEffects` | Ally-targeted formulas for `syncProtocols` (focus fire bonus), `supportSystems` (ally shield regen), `formationTactics` (formation damage reduction). |
 
 ### tournament/
@@ -262,7 +262,7 @@ The production scheduler (`cycleScheduler.ts`) fires 10 independent cron jobs da
 | 08:00 | 1v1 League | `LEAGUE_SCHEDULE` | Live |
 | 09:00 | Team Battle 2v2 League | `TEAM_2V2_LEAGUE_SCHEDULE` | Live |
 | 10:00 | 1v1 Tournament | `TOURNAMENT_SCHEDULE` | Live |
-| 11:00 | Tag Team | `TAGTEAM_SCHEDULE` | Live |
+| 11:00 | Tag Team | `TAGTEAM_SCHEDULE` | Live — internally queries `TeamBattle` (teamSize=2) and `ScheduledTeamBattleMatch` (matchMode='tag_team') |
 | 13:00 | KotH | `KOTH_SCHEDULE` | Live |
 | 14:00 | Team Battle 3v3 League | `TEAM_3V3_LEAGUE_SCHEDULE` | Live |
 | 15:00 | Team Battle 2v2 Tournament | `TEAM_2V2_TOURNAMENT_SCHEDULE` | Live |

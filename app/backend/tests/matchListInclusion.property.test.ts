@@ -55,7 +55,7 @@ describe('Feature: tag-team-matches, Property 25: Match List Inclusion', () => {
         ],
       },
     });
-    await prisma.scheduledTagTeamMatch.deleteMany({ 
+    await prisma.scheduledTeamBattleMatch.deleteMany({ 
       where: { 
         OR: [
           { team1: { stableId: testUserId } },
@@ -71,7 +71,8 @@ describe('Feature: tag-team-matches, Property 25: Match List Inclusion', () => {
         ],
       },
     });
-    await prisma.tagTeam.deleteMany({ where: { stableId: testUserId } });
+    await prisma.teamBattleMember.deleteMany({ where: { team: { stableId: testUserId } } });
+    await prisma.teamBattle.deleteMany({ where: { stableId: testUserId } });
     await prisma.weaponInventory.deleteMany({ where: { userId: testUserId } });
     await prisma.robot.deleteMany({ where: { userId: testUserId } });
   });
@@ -131,21 +132,27 @@ describe('Feature: tag-team-matches, Property 25: Match List Inclusion', () => {
             robots.push(robot);
           }
 
-          // Create tag teams
+          // Create tag teams (using TeamBattle with teamSize=2)
           const teams = [];
           for (let i = 0; i < Math.min(config.numTeams, Math.floor(robots.length / 2)); i++) {
-            const team = await prisma.tagTeam.create({
+            const team = await prisma.teamBattle.create({
               data: {
                 stableId: testUserId,
-                activeRobotId: robots[i * 2].id,
-                reserveRobotId: robots[i * 2 + 1].id,
+                teamSize: 2,
+                teamName: `Test Tag Team ${i}`,
                 tagTeamLeague: 'bronze',
                 tagTeamLeagueId: 'bronze_1',
-                tagTeamLeaguePoints: 0,
+                tagTeamLp: 0,
                 cyclesInTagTeamLeague: 0,
                 totalTagTeamWins: 0,
                 totalTagTeamLosses: 0,
                 totalTagTeamDraws: 0,
+                members: {
+                  create: [
+                    { robotId: robots[i * 2].id, slotIndex: 0 },
+                    { robotId: robots[i * 2 + 1].id, slotIndex: 1 },
+                  ],
+                },
               },
             });
             teams.push(team);
@@ -170,11 +177,14 @@ describe('Feature: tag-team-matches, Property 25: Match List Inclusion', () => {
           const tagTeamMatches = [];
           if (teams.length >= 2) {
             for (let i = 0; i < Math.min(config.numTagTeamMatches, teams.length - 1); i++) {
-              const match = await prisma.scheduledTagTeamMatch.create({
+              const match = await prisma.scheduledTeamBattleMatch.create({
                 data: {
                   team1Id: teams[i].id,
                   team2Id: teams[i + 1].id,
-                  tagTeamLeague: 'bronze',
+                  teamSize: 2,
+                  matchMode: 'tag_team',
+                  teamBattleLeague: 'bronze',
+                  teamBattleLeagueId: 'bronze_1',
                   scheduledFor: new Date(Date.now() + 1000 * 60 * 60), // 1 hour from now
                   status: 'scheduled',
                 },
@@ -222,13 +232,16 @@ describe('Feature: tag-team-matches, Property 25: Match List Inclusion', () => {
           expect(response.body.tagTeamMatches).toBe(tagTeamMatches.length);
 
           // Clean up
-          await prisma.scheduledTagTeamMatch.deleteMany({
+          await prisma.scheduledTeamBattleMatch.deleteMany({
             where: { id: { in: tagTeamMatches.map(m => m.id) } },
           });
           await prisma.scheduledLeagueMatch.deleteMany({
             where: { id: { in: scheduledMatches.map(m => m.id) } },
           });
-          await prisma.tagTeam.deleteMany({
+          await prisma.teamBattleMember.deleteMany({
+            where: { teamId: { in: teams.map(t => t.id) } },
+          });
+          await prisma.teamBattle.deleteMany({
             where: { id: { in: teams.map(t => t.id) } },
           });
           await prisma.weaponInventory.deleteMany({

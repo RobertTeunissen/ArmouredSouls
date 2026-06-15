@@ -1,10 +1,11 @@
 /**
  * LeagueHealthPage — Robots/Teams per tier, ELO distribution.
  *
- * Fetches from GET /api/admin/league-health (1v1) and
- * GET /api/admin/team-battle-league-health (2v2/3v3).
+ * Fetches from GET /api/admin/league-health (1v1),
+ * GET /api/admin/team-battle-league-health (2v2/3v3), and
+ * GET /api/admin/tag-team-league-health (tag team).
  *
- * Requirements: 15.1, 15.2, 15.3, 15.4, R11.6
+ * Requirements: 15.1, 15.2, 15.3, 15.4, R11.6, 14.1, 14.2, 14.3, 14.4, 14.5, 14.6
  */
 import { useState, useEffect, useCallback } from 'react';
 import {
@@ -53,6 +54,22 @@ interface TeamBattleLeagueHealthData {
   league3v3: TeamBattleLeagueData;
 }
 
+interface TagTeamLeagueTier {
+  league: string;
+  teamCount: number;
+  instances: number;
+  instanceDetails: { id: string; teamCount: number }[];
+  teamsPerInstance: { min: number; max: number; avg: number };
+  needsRebalancing: boolean;
+  [key: string]: unknown;
+}
+
+interface TagTeamLeagueHealthData {
+  leagues: TagTeamLeagueTier[];
+  totalTeams: number;
+  timestamp: string;
+}
+
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
@@ -60,6 +77,7 @@ interface TeamBattleLeagueHealthData {
 function LeagueHealthPage() {
   const [data, setData] = useState<LeagueHealthData | null>(null);
   const [teamBattleData, setTeamBattleData] = useState<TeamBattleLeagueHealthData | null>(null);
+  const [tagTeamData, setTagTeamData] = useState<TagTeamLeagueHealthData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -67,12 +85,14 @@ function LeagueHealthPage() {
     setLoading(true);
     setError(null);
     try {
-      const [leagueData, tbData] = await Promise.all([
+      const [leagueData, tbData, ttData] = await Promise.all([
         api.get<LeagueHealthData>('/api/admin/league-health'),
         api.get<TeamBattleLeagueHealthData>('/api/admin/team-battle-league-health'),
+        api.get<TagTeamLeagueHealthData>('/api/admin/tag-team-league-health'),
       ]);
       setData(leagueData);
       setTeamBattleData(tbData);
+      setTagTeamData(ttData);
     } catch (err: unknown) {
       const msg = (err instanceof ApiError && err.message) || 'Failed to load league health data';
       setError(msg);
@@ -276,6 +296,74 @@ function LeagueHealthPage() {
           data={league3v3?.leagues ?? []}
           loading={loading}
           emptyMessage="No 3v3 league data available"
+        />
+      </div>
+
+      {/* Tag Team League Tiers Table */}
+      <div className="bg-surface rounded-lg p-6" data-testid="league-health-tag-team">
+        <h3 className="text-lg font-semibold mb-3">Tag Team League Tiers</h3>
+        {tagTeamData && (
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+            <AdminStatCard label="Total Teams" value={tagTeamData.totalTeams} color="primary" icon={<span>🏷️</span>} />
+            <AdminStatCard
+              label="Active Tiers"
+              value={tagTeamData.leagues.filter((l) => l.teamCount > 0).length}
+              color="success"
+              icon={<span>🏆</span>}
+            />
+            <AdminStatCard
+              label="Needs Rebalancing"
+              value={tagTeamData.leagues.filter((l) => l.needsRebalancing).length}
+              color={tagTeamData.leagues.some((l) => l.needsRebalancing) ? 'warning' : 'success'}
+              icon={<span>⚖️</span>}
+            />
+          </div>
+        )}
+        <AdminDataTable<TagTeamLeagueTier>
+          columns={[
+            {
+              key: 'league',
+              label: 'Tier',
+              render: (row) => (
+                <span className="capitalize font-medium">
+                  {row.needsRebalancing && <span className="text-yellow-400 mr-1" title="Needs rebalancing">⚠️</span>}
+                  {row.league}
+                </span>
+              ),
+            },
+            { key: 'teamCount', label: 'Teams', align: 'right' },
+            {
+              key: 'instances',
+              label: 'Instances',
+              align: 'right',
+              render: (row) => row.instances > 0 ? (
+                <span title={row.instanceDetails.map((i) => `${i.id}: ${i.teamCount}`).join(', ')}>
+                  {row.instances}
+                </span>
+              ) : '—',
+            },
+            {
+              key: 'teamsPerInstance' as string,
+              label: 'Distribution',
+              align: 'right',
+              render: (row) => row.instances > 0
+                ? `${row.teamsPerInstance.min}/${row.teamsPerInstance.max}/${row.teamsPerInstance.avg}`
+                : '—',
+            },
+            {
+              key: 'needsRebalancing',
+              label: 'Rebalancing',
+              align: 'center',
+              render: (row) => row.needsRebalancing ? (
+                <span className="text-yellow-400" title="Needs rebalancing">⚠️</span>
+              ) : (
+                <span className="text-green-400" title="Balanced">✓</span>
+              ),
+            },
+          ]}
+          data={tagTeamData?.leagues ?? []}
+          loading={loading}
+          emptyMessage="No tag team league data available"
         />
       </div>
     </div>

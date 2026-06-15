@@ -994,34 +994,34 @@ async function completeTournament(tournamentId: number, winnerId: number): Promi
     }
   }
 
-  // Dispatch Discord notification for tournament completion (team tournaments)
-  if (tournament.participantType === 'team_2v2' || tournament.participantType === 'team_3v3') {
-    try {
-      const { dispatchNotification, getActiveIntegrations } = await import('../notifications/notification-service');
-      const { getConfig } = await import('../../config/env');
-      const appUrl = getConfig().appBaseUrl || 'http://localhost:5173';
+  // Dispatch Discord champion announcement for all tournament types
+  try {
+    const { dispatchNotification, getActiveIntegrations } = await import('../notifications/notification-service');
+    const { getConfig } = await import('../../config/env');
+    const appUrl = getConfig().appBaseUrl || 'http://localhost:5173';
 
-      const typeLabel = tournament.participantType === 'team_2v2' ? '2v2' : '3v3';
+    const typeLabel = tournament.participantType === 'team_2v2' ? '2v2'
+      : tournament.participantType === 'team_3v3' ? '3v3'
+      : '1v1';
 
-      // Resolve champion name and owner
-      const team = await prisma.teamBattle.findUnique({
-        where: { id: winnerId },
-        include: { stable: true },
-      });
-      const robot = await prisma.robot.findUnique({
-        where: { id: winnerId },
-        include: { user: true },
-      });
+    // Resolve champion name and owner
+    const team = tournament.participantType !== 'robot'
+      ? await prisma.teamBattle.findUnique({ where: { id: winnerId }, include: { stable: true } })
+      : null;
+    const robot = tournament.participantType === 'robot'
+      ? await prisma.robot.findUnique({ where: { id: winnerId }, include: { user: true } })
+      : null;
 
-      const championName = team ? team.teamName : robot ? robot.name : 'Unknown';
-      const ownerName = team ? (team.stable.stableName || team.stable.username) : (robot ? robot.user.username : 'Unknown');
+    const championName = team ? team.teamName : robot ? robot.name : 'Unknown';
+    const ownerName = team
+      ? (team.stable.stableName || team.stable.username)
+      : (robot ? robot.user.username : 'Unknown');
 
-      const message = `🏆 ${typeLabel} Tournament Champion: "${championName}" (${ownerName})! [View results](${appUrl}/tournaments/${tournamentId})`;
-      await dispatchNotification(message, getActiveIntegrations());
-    } catch (notificationError) {
-      // R12.4: Log error, don't interrupt tournament completion
-      logger.error(`[Tournament] Discord notification failed for tournament ${tournamentId}: ${notificationError}`);
-    }
+    const message = `🏆 ${typeLabel} Tournament Champion: "${championName}" (${ownerName})!\n${appUrl}/tournaments`;
+    await dispatchNotification(message, getActiveIntegrations());
+  } catch (notificationError) {
+    // Log error, don't interrupt tournament completion
+    logger.error(`[Tournament] Discord notification failed for tournament ${tournamentId}: ${notificationError}`);
   }
 }
 

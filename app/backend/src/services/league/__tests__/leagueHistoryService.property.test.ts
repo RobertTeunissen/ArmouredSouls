@@ -96,11 +96,10 @@ beforeEach(() => {
   mockPrisma.cycleMetadata.findUnique.mockResolvedValue({ totalCycles: 100 });
   mockPrisma.robot.findUnique.mockResolvedValue({ name: 'TestBot' });
   mockPrisma.robot.findMany.mockResolvedValue([]);
-  mockPrisma.tagTeam.findUnique.mockResolvedValue({
-    activeRobot: { name: 'Bot1' },
-    reserveRobot: { name: 'Bot2' },
+  mockPrisma.teamBattle.findUnique.mockResolvedValue({
+    teamName: 'Bot1 & Bot2',
   });
-  mockPrisma.tagTeam.findMany.mockResolvedValue([]);
+  mockPrisma.teamBattle.findMany.mockResolvedValue([]);
   mockPrisma.user.findMany.mockResolvedValue([]);
 });
 
@@ -547,8 +546,8 @@ describe('leagueHistoryService Property Tests', () => {
             mockPrisma.robot.findMany.mockResolvedValue(
               robotIds.map(id => ({ id, name: `Robot${id}` }))
             );
-            mockPrisma.tagTeam.findMany.mockResolvedValue(
-              tagTeamIds.map(id => ({ id, activeRobot: { name: `Bot${id}A` }, reserveRobot: { name: `Bot${id}B` } }))
+            mockPrisma.teamBattle.findMany.mockResolvedValue(
+              tagTeamIds.map(id => ({ id, teamName: `Bot${id}A & Bot${id}B` }))
             );
 
             const result = await detectYoYoCandidates(20, minChanges);

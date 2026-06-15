@@ -7,39 +7,47 @@ export function buildSuccessMessage(context: JobContext, appBaseUrl: string): st
   const link = appBaseUrl;
 
   switch (context.jobName) {
+    case 'settlement':
+      return `💰 Daily settlement complete! Check your income and expenses.\n${link}`;
     case 'league':
-      return `League battles have been completed! 🏆 Click here to see the results! ${link}`;
+      if (context.matchesCompleted && context.matchesCompleted > 0) {
+        return `⚔️ 1v1 League: ${context.matchesCompleted} battles completed.\n${link}`;
+      }
+      return `⚔️ 1v1 League battles completed.\n${link}`;
     case 'tournament':
       if (context.tournamentScheduled) {
-        return `${context.tournamentName} has been scheduled! ⚔️ Click here to see the results! ${link}`;
+        return `🏆 1v1 Tournament: ${context.tournamentName} has been created!\n${link}/tournaments`;
       }
-      return `${context.tournamentName} Round ${context.tournamentRound}/${context.tournamentMaxRounds} has been completed! ⚔️ Click here to see the results! ${link}`;
+      if (context.matchesCompleted && context.matchesCompleted > 0) {
+        return `🏆 1v1 Tournament: ${context.tournamentName} — Round ${context.tournamentRound}/${context.tournamentMaxRounds}, ${context.matchesCompleted} matches.\n${link}/tournaments`;
+      }
+      return `🏆 1v1 Tournament: ${context.tournamentName} — Round ${context.tournamentRound}/${context.tournamentMaxRounds} completed.\n${link}/tournaments`;
     case 'tag-team':
-      if (context.isEvenCycle) return null;
-      return `Tag Team battles have been completed! 🤝 Click here to see the results! ${link}`;
-    case 'settlement':
-      return `Daily settlement complete! 💰 Check your income and expenses! ${link}`;
+      if (context.matchesCompleted && context.matchesCompleted > 0) {
+        return `🤝 Tag Team: ${context.matchesCompleted} battles completed.\n${link}/team-battles`;
+      }
+      return `🤝 Tag Team battles completed.\n${link}/team-battles`;
     case 'koth':
       if (!context.matchesCompleted || context.matchesCompleted === 0) return null;
-      return `King of the Hill: ${context.matchesCompleted} matches completed! 👑 Click here to see the results! ${link}`;
+      return `👑 King of the Hill: ${context.matchesCompleted} matches completed.\n${link}`;
     case 'team2v2League':
       if (!context.matchesCompleted || context.matchesCompleted === 0) return null;
-      return `⚔️ 2v2 League: ${context.matchesCompleted} team battles completed. [View results](${link}/team-battles)`;
+      return `⚔️ 2v2 League: ${context.matchesCompleted} team battles completed.\n${link}/team-battles`;
     case 'team3v3League':
       if (!context.matchesCompleted || context.matchesCompleted === 0) return null;
-      return `⚔️ 3v3 League: ${context.matchesCompleted} team battles completed. [View results](${link}/team-battles)`;
+      return `⚔️ 3v3 League: ${context.matchesCompleted} team battles completed.\n${link}/team-battles`;
     case 'team2v2Tournament':
       if (context.tournamentScheduled) {
-        return `⚔️ 2v2 Tournament: ${context.tournamentName} has been created! [View](${link}/tournaments)`;
+        return `🏆 2v2 Tournament: ${context.tournamentName} has been created!\n${link}/tournaments`;
       }
       if (!context.matchesCompleted || context.matchesCompleted === 0) return null;
-      return `⚔️ 2v2 Tournament: Round ${context.tournamentRound}/${context.tournamentMaxRounds} — ${context.matchesCompleted} matches. [View](${link}/tournaments)`;
+      return `🏆 2v2 Tournament: Round ${context.tournamentRound}/${context.tournamentMaxRounds} — ${context.matchesCompleted} matches.\n${link}/tournaments`;
     case 'team3v3Tournament':
       if (context.tournamentScheduled) {
-        return `⚔️ 3v3 Tournament: ${context.tournamentName} has been created! [View](${link}/tournaments)`;
+        return `🏆 3v3 Tournament: ${context.tournamentName} has been created!\n${link}/tournaments`;
       }
       if (!context.matchesCompleted || context.matchesCompleted === 0) return null;
-      return `⚔️ 3v3 Tournament: Round ${context.tournamentRound}/${context.tournamentMaxRounds} — ${context.matchesCompleted} matches. [View](${link}/tournaments)`;
+      return `🏆 3v3 Tournament: Round ${context.tournamentRound}/${context.tournamentMaxRounds} — ${context.matchesCompleted} matches.\n${link}/tournaments`;
   }
 }
 

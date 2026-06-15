@@ -82,11 +82,12 @@ export async function executeScheduledTeamBattles(
   const cycleNumber = await getCurrentCycleNumber();
   const battleType = teamSize === 2 ? 'league_2v2' : 'league_3v3';
 
-  // Fetch all scheduled matches for this team size
+  // Fetch all scheduled matches for this team size (league mode only, not tag_team)
   const scheduledMatches = await prisma.scheduledTeamBattleMatch.findMany({
     where: {
       status: 'scheduled',
       teamSize,
+      matchMode: teamSize === 2 ? 'league_2v2' : 'league_3v3',
     },
     include: {
       team1: { include: { members: { include: { robot: true } }, stable: true } },
@@ -301,9 +302,9 @@ async function executeSingleTeamBattle(
       where: { id: match.team1Id },
       data: {
         teamLp: Math.max(0, (team1Current?.teamLp ?? 0) + team1LPDelta),
-        totalWins: team1Won ? { increment: 1 } : undefined,
-        totalLosses: team2Won ? { increment: 1 } : undefined,
-        totalDraws: isDraw ? { increment: 1 } : undefined,
+        totalLeagueWins: team1Won ? { increment: 1 } : undefined,
+        totalLeagueLosses: team2Won ? { increment: 1 } : undefined,
+        totalLeagueDraws: isDraw ? { increment: 1 } : undefined,
       },
     });
 
@@ -317,9 +318,9 @@ async function executeSingleTeamBattle(
         where: { id: match.team2Id },
         data: {
           teamLp: Math.max(0, (team2Current?.teamLp ?? 0) + team2LPDelta),
-          totalWins: team2Won ? { increment: 1 } : undefined,
-          totalLosses: team1Won ? { increment: 1 } : undefined,
-          totalDraws: isDraw ? { increment: 1 } : undefined,
+          totalLeagueWins: team2Won ? { increment: 1 } : undefined,
+          totalLeagueLosses: team1Won ? { increment: 1 } : undefined,
+          totalLeagueDraws: isDraw ? { increment: 1 } : undefined,
         },
       });
     }

@@ -2,9 +2,9 @@ import prisma from '../../lib/prisma';
 import { Prisma } from '../../../generated/prisma';
 import logger from '../../config/logger';
 
-// NOTE: This service mirrors tagTeamLeagueInstanceService.ts for tag team leagues.
-// Both share similar instance management logic but operate on different Prisma models
-// (Robot vs TagTeam). If you change instance sizing or rebalancing logic here,
+// NOTE: Tag team leagues now use the teamBattleAdapter.ts for instance management.
+// Both share similar instance management logic but operate on different scopes
+// (Robot vs TeamBattle teamSize=2). If you change instance sizing or rebalancing logic here,
 // apply the same change to the tag team version.
 
 // League tiers in order

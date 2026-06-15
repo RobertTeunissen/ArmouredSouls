@@ -935,7 +935,8 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
         data: { cyclesInCurrentLeague: { increment: 1 } },
       });
 
-      await prisma.tagTeam.updateMany({
+      await prisma.teamBattle.updateMany({
+        where: { teamSize: 2 },
         data: { cyclesInTagTeamLeague: { increment: 1 } },
       });
       await eventLogger.logCycleStepComplete(
