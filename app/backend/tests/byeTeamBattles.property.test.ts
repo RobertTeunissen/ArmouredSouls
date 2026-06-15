@@ -1,5 +1,5 @@
 import * as fc from 'fast-check';
-import { Robot, TagTeam, Prisma } from '../generated/prisma';
+import { Robot, Prisma } from '../generated/prisma';
 import prisma from '../src/lib/prisma';
 import {
   calculateTagTeamRewards,

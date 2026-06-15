@@ -991,9 +991,9 @@ describe('Team Battle Property Tests', () => {
           teamLeague: league,
           teamLeagueId: leagueId,
           cyclesInLeague: 0,
-          totalWins: 0,
-          totalLosses: 0,
-          totalDraws: 0,
+          totalLeagueWins: 0,
+          totalLeagueLosses: 0,
+          totalLeagueDraws: 0,
           eligibility: 'ELIGIBLE',
           members: {
             create: robotIds.map((robotId, idx) => ({

@@ -3,7 +3,7 @@ import { getUpcomingMatches, ScheduledMatch } from '../utils/matchmakingApi';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { KothMatchCard, TagTeamMatchCard, ByeMatchCard, StandardMatchCard, TeamBattleMatchCard } from './match-cards';
+import { KothMatchCard, ByeMatchCard, StandardMatchCard, TeamBattleMatchCard } from './match-cards';
 
 interface BattleReadiness {
   isReady: boolean;
@@ -148,26 +148,14 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
       return <KothMatchCard key={match.id} match={match} myUserId={user?.id} />;
     }
 
-    // Team Battle matches (2v2 / 3v3 League) and Team Tournament matches
-    if (match.matchType === 'league_2v2' || match.matchType === 'league_3v3' || match.matchType === 'tournament_2v2' || match.matchType === 'tournament_3v3') {
+    // Team Battle matches (2v2 / 3v3 League, Tag Team, Tournaments)
+    if (match.matchType === 'league_2v2' || match.matchType === 'league_3v3' || match.matchType === 'tag_team' || match.matchType === 'tournament_2v2' || match.matchType === 'tournament_3v3') {
       return <TeamBattleMatchCard key={match.id} match={match} myUserId={user?.id} />;
     }
 
     const matchResult = getMatchResult(match);
     if (!matchResult) {
       return null;
-    }
-
-    // Tag team matches
-    if (matchResult.isTagTeam && matchResult.myTeam && matchResult.opponentTeam) {
-      return (
-        <TagTeamMatchCard
-          key={match.id}
-          match={match}
-          myTeam={matchResult.myTeam}
-          opponentTeam={matchResult.opponentTeam}
-        />
-      );
     }
 
     const { myRobot, opponent } = matchResult as { myRobot: { name: string; id: number; elo: number; userId: number } | null; opponent: { name: string; id: number; elo: number; userId: number } | null; isTagTeam: false; isByeMatch?: boolean };

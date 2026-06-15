@@ -57,37 +57,7 @@ async function cleanupAutoUsers(): Promise<void> {
       });
     }
 
-    const tagTeamIds = (
-      await prisma.tagTeam.findMany({
-        where: {
-          OR: [
-            { activeRobotId: { in: robotIds } },
-            { reserveRobotId: { in: robotIds } },
-          ],
-        },
-        select: { id: true },
-      })
-    ).map((t) => t.id);
 
-    if (tagTeamIds.length > 0) {
-      await prisma.scheduledTagTeamMatch.deleteMany({
-        where: {
-          OR: [
-            { team1Id: { in: tagTeamIds } },
-            { team2Id: { in: tagTeamIds } },
-          ],
-        },
-      });
-    }
-
-    await prisma.tagTeam.deleteMany({
-      where: {
-        OR: [
-          { activeRobotId: { in: robotIds } },
-          { reserveRobotId: { in: robotIds } },
-        ],
-      },
-    });
     await prisma.battleParticipant.deleteMany({
       where: { robotId: { in: robotIds } },
     });

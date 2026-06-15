@@ -26,6 +26,9 @@ const mockPrisma = {
   tagTeam: {
     findMany: jest.fn(),
   },
+  teamBattle: {
+    findMany: jest.fn(),
+  },
   user: {
     findMany: jest.fn(),
   },
@@ -67,7 +70,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockPrisma.leagueHistory.count.mockResolvedValue(0);
   mockPrisma.robot.findMany.mockResolvedValue([]);
-  mockPrisma.tagTeam.findMany.mockResolvedValue([]);
+  mockPrisma.teamBattle.findMany.mockResolvedValue([]);
   mockPrisma.user.findMany.mockResolvedValue([]);
 });
 
@@ -107,16 +110,15 @@ describe('leagueHistoryService — name enrichment', () => {
       expect(result.data[0].stableName).toBe('rob');
     });
 
-    it('renders tag team entityName as "<active> & <reserve>"', async () => {
+    it('renders tag team entityName from teamName', async () => {
       mockPrisma.leagueHistory.findMany.mockResolvedValue([
         { id: 2, entityType: 'tag_team', entityId: 7, userId: 11, ...baseRecord },
       ]);
       mockPrisma.leagueHistory.count.mockResolvedValue(1);
-      mockPrisma.tagTeam.findMany.mockResolvedValue([
+      mockPrisma.teamBattle.findMany.mockResolvedValue([
         {
           id: 7,
-          activeRobot: { name: 'Hammer' },
-          reserveRobot: { name: 'Anvil' },
+          teamName: 'Hammer & Anvil',
         },
       ]);
       mockPrisma.user.findMany.mockResolvedValue([
@@ -141,9 +143,9 @@ describe('leagueHistoryService — name enrichment', () => {
         { id: 5, name: 'Crusher' },
         { id: 6, name: 'Wrecker' },
       ]);
-      mockPrisma.tagTeam.findMany.mockResolvedValue([
-        { id: 7, activeRobot: { name: 'Hammer' }, reserveRobot: { name: 'Anvil' } },
-        { id: 8, activeRobot: { name: 'Spike' }, reserveRobot: { name: 'Coil' } },
+      mockPrisma.teamBattle.findMany.mockResolvedValue([
+        { id: 7, teamName: 'Hammer & Anvil' },
+        { id: 8, teamName: 'Spike & Coil' },
       ]);
       mockPrisma.user.findMany.mockResolvedValue([
         { id: 10, username: 'rob', stableName: 'Iron Stable' },
@@ -154,7 +156,7 @@ describe('leagueHistoryService — name enrichment', () => {
 
       // One call per entity type — no N+1
       expect(mockPrisma.robot.findMany).toHaveBeenCalledTimes(1);
-      expect(mockPrisma.tagTeam.findMany).toHaveBeenCalledTimes(1);
+      expect(mockPrisma.teamBattle.findMany).toHaveBeenCalledTimes(1);
       expect(mockPrisma.user.findMany).toHaveBeenCalledTimes(1);
 
       // findMany was called with the deduped id sets
@@ -163,7 +165,7 @@ describe('leagueHistoryService — name enrichment', () => {
           where: { id: { in: expect.arrayContaining([5, 6]) } },
         }),
       );
-      expect(mockPrisma.tagTeam.findMany).toHaveBeenCalledWith(
+      expect(mockPrisma.teamBattle.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: { in: expect.arrayContaining([7, 8]) } },
         }),
@@ -207,7 +209,7 @@ describe('leagueHistoryService — name enrichment', () => {
 
       expect(result.data).toEqual([]);
       expect(mockPrisma.robot.findMany).not.toHaveBeenCalled();
-      expect(mockPrisma.tagTeam.findMany).not.toHaveBeenCalled();
+      expect(mockPrisma.teamBattle.findMany).not.toHaveBeenCalled();
       expect(mockPrisma.user.findMany).not.toHaveBeenCalled();
     });
   });

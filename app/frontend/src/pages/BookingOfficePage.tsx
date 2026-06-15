@@ -10,20 +10,19 @@
 
 import Navigation from '../components/Navigation';
 import SubscriptionMatrix from '../components/subscriptions/SubscriptionMatrix';
-import TagTeamSubscriptionWarning from '../components/subscriptions/TagTeamSubscriptionWarning';
 import { useStableOverview } from '../hooks/useSubscriptions';
 import { useEffect, useState } from 'react';
-import { getMyTagTeams, TagTeam } from '../utils/tagTeamApi';
+import { getMyTeamBattles, TeamBattle } from '../utils/teamBattleApi';
 
 function BookingOfficePage() {
   const { data } = useStableOverview();
   const bookingOfficeLevel = data?.bookingOfficeLevel ?? 0;
-  const [tagTeams, setTagTeams] = useState<TagTeam[]>([]);
+  const [teams2v2, setTeams2v2] = useState<TeamBattle[]>([]);
 
   useEffect(() => {
-    getMyTagTeams()
-      .then(setTagTeams)
-      .catch(() => setTagTeams([]));
+    getMyTeamBattles(2)
+      .then(setTeams2v2)
+      .catch(() => setTeams2v2([]));
   }, []);
 
   // Build subscription map from stable overview
@@ -34,11 +33,12 @@ function BookingOfficePage() {
     }
   }
 
-  // Find tag teams with subscription mismatches
-  const mismatchedTeams = tagTeams.filter((team) => {
-    const activeEvents = subscriptionMap.get(team.activeRobotId) ?? [];
-    const reserveEvents = subscriptionMap.get(team.reserveRobotId) ?? [];
-    return !activeEvents.includes('tag_team') || !reserveEvents.includes('tag_team');
+  // Find 2v2 teams with tag_team subscription mismatches
+  const mismatchedTeams = teams2v2.filter((team) => {
+    return team.members.some(member => {
+      const events = subscriptionMap.get(member.robotId) ?? [];
+      return !events.includes('tag_team');
+    });
   });
 
   return (
@@ -76,18 +76,25 @@ function BookingOfficePage() {
         {/* Tag Team Subscription Warnings */}
         {mismatchedTeams.length > 0 && (
           <div className="space-y-2 mb-6">
-            {mismatchedTeams.map((team) => (
-              <TagTeamSubscriptionWarning
-                key={team.id}
-                tagTeam={{
-                  activeRobotId: team.activeRobotId,
-                  reserveRobotId: team.reserveRobotId,
-                  activeRobotName: team.activeRobot.name,
-                  reserveRobotName: team.reserveRobot.name,
-                }}
-                subscriptions={subscriptionMap}
-              />
-            ))}
+            {mismatchedTeams.map((team) => {
+              const unsubscribedMembers = team.members.filter(m => {
+                const events = subscriptionMap.get(m.robotId) ?? [];
+                return !events.includes('tag_team');
+              });
+              return (
+                <div
+                  key={team.id}
+                  className="bg-warning/10 border-l-4 border-warning rounded-lg p-4"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-warning text-lg">⚠️</span>
+                    <span className="text-warning font-semibold text-sm">
+                      {team.teamName}: {unsubscribedMembers.map(m => m.robot.name).join(', ')} not subscribed to Tag Team
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
 

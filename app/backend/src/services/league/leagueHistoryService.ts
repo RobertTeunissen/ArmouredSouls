@@ -130,12 +130,11 @@ async function enrichWithNames(
         })
       : Promise.resolve([]),
     tagTeamIds.size > 0
-      ? prisma.tagTeam.findMany({
+      ? prisma.teamBattle.findMany({
           where: { id: { in: Array.from(tagTeamIds) } },
           select: {
             id: true,
-            activeRobot: { select: { name: true } },
-            reserveRobot: { select: { name: true } },
+            teamName: true,
           },
         })
       : Promise.resolve([]),
@@ -149,7 +148,7 @@ async function enrichWithNames(
 
   const robotNameMap = new Map(robots.map(r => [r.id, r.name]));
   const tagTeamNameMap = new Map(
-    tagTeams.map(t => [t.id, `${t.activeRobot.name} & ${t.reserveRobot.name}`]),
+    tagTeams.map(t => [t.id, t.teamName]),
   );
   const stableNameMap = new Map(
     users.map(u => [u.id, u.stableName || u.username]),
@@ -366,15 +365,15 @@ export async function detectYoYoCandidates(cycleWindow = 20, minChanges = 3): Pr
       ? prisma.robot.findMany({ where: { id: { in: robotIds } }, select: { id: true, name: true } })
       : Promise.resolve([]),
     tagTeamIds.length > 0
-      ? prisma.tagTeam.findMany({
+      ? prisma.teamBattle.findMany({
           where: { id: { in: tagTeamIds } },
-          include: { activeRobot: { select: { name: true } }, reserveRobot: { select: { name: true } } },
+          select: { id: true, teamName: true },
         })
       : Promise.resolve([]),
   ]);
 
   const robotNameMap = new Map(robots.map(r => [r.id, r.name]));
-  const tagTeamNameMap = new Map(tagTeams.map(t => [t.id, `${t.activeRobot.name} & ${t.reserveRobot.name}`]));
+  const tagTeamNameMap = new Map(tagTeams.map(t => [t.id, t.teamName]));
 
   const results: YoYoCandidate[] = candidates.map(candidate => ({
     entityType: candidate.entityType,

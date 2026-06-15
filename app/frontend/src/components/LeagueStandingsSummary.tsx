@@ -4,15 +4,25 @@ import { useNavigate } from 'react-router-dom';
 import { getMyTeamBattles, TeamBattle } from '../utils/teamBattleApi';
 import { getLeagueTierColor, getLeagueTierName } from '../utils/matchmakingApi';
 import { useRobotStore } from '../stores';
+import { useStableOverview } from '../hooks/useSubscriptions';
 import axios from 'axios';
 
 function LeagueStandingsSummary() {
   const { logout } = useAuth();
   const navigate = useNavigate();
   const robots = useRobotStore(state => state.robots);
+  const { data: stableOverview } = useStableOverview();
   const [teams, setTeams] = useState<TeamBattle[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Build per-robot subscription lookup
+  const robotSubscriptionMap = new Map<number, string[]>();
+  if (stableOverview) {
+    for (const robot of stableOverview.robots) {
+      robotSubscriptionMap.set(robot.robotId, robot.subscriptions.map(s => s.eventType));
+    }
+  }
 
   useEffect(() => {
     fetchTeams();
@@ -96,9 +106,10 @@ function LeagueStandingsSummary() {
               League
             </div>
             <div className="space-y-1.5">
-              {robots.map(robot => (
-                <RobotStandingCard key={robot.id} robot={robot} />
-              ))}
+              {robots.map(robot => {
+                const isSubscribed = robotSubscriptionMap.get(robot.id)?.includes('league_1v1') ?? false;
+                return <RobotStandingCard key={robot.id} robot={robot} isSubscribed={isSubscribed} />;
+              })}
             </div>
           </div>
         )}
@@ -112,6 +123,21 @@ function LeagueStandingsSummary() {
             <div className="space-y-1.5">
               {teams2v2.map(team => (
                 <TeamStandingCard key={team.id} team={team} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Tag Team League (2v2 teams with tag team stats) */}
+        {teams2v2.length > 0 && (
+          <div>
+            <div className="text-xs text-secondary font-semibold mb-1.5 flex items-center gap-1.5">
+              <span className="text-xs px-1.5 py-0.5 bg-amber-400/20 rounded text-amber-400 font-semibold">Tag Team</span>
+              League
+            </div>
+            <div className="space-y-1.5">
+              {teams2v2.map(team => (
+                <TagTeamStandingCard key={`tt-${team.id}`} team={team} />
               ))}
             </div>
           </div>
@@ -138,9 +164,10 @@ function LeagueStandingsSummary() {
 
 interface RobotStandingCardProps {
   robot: { id: number; name: string; currentLeague: string; leaguePoints: number; totalLeague1v1Wins: number; totalLeague1v1Losses: number; totalLeague1v1Draws: number };
+  isSubscribed: boolean;
 }
 
-function RobotStandingCard({ robot }: RobotStandingCardProps) {
+function RobotStandingCard({ robot, isSubscribed }: RobotStandingCardProps) {
   const tierColor = getLeagueTierColor(robot.currentLeague);
   const tierName = getLeagueTierName(robot.currentLeague);
   const totalMatches = robot.totalLeague1v1Wins + robot.totalLeague1v1Losses + robot.totalLeague1v1Draws;
@@ -167,12 +194,24 @@ function RobotStandingCard({ robot }: RobotStandingCardProps) {
             <span className="ml-2 text-secondary">({totalMatches})</span>
           )}
         </div>
+        <div className="flex-shrink-0">
+          <span className={`text-xs px-1.5 py-0.5 rounded ${
+            isSubscribed ? 'bg-[#3fb950]/20 text-[#3fb950]' : 'bg-[#f85149]/20 text-[#f85149]'
+          }`}>
+            {isSubscribed ? '✓ Ready' : '✗ Not subscribed'}
+          </span>
+        </div>
       </div>
 
       {/* Mobile */}
       <div className="md:hidden">
         <div className="flex items-center justify-between mb-1">
           <div className="font-medium text-sm text-[#e6edf3] truncate">{robot.name}</div>
+          <span className={`text-xs px-1.5 py-0.5 rounded ${
+            isSubscribed ? 'bg-[#3fb950]/20 text-[#3fb950]' : 'bg-[#f85149]/20 text-[#f85149]'
+          }`}>
+            {isSubscribed ? '✓' : '✗'}
+          </span>
         </div>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -199,7 +238,7 @@ interface TeamStandingCardProps {
 function TeamStandingCard({ team }: TeamStandingCardProps) {
   const tierColor = getLeagueTierColor(team.teamLeague);
   const tierName = getLeagueTierName(team.teamLeague);
-  const totalMatches = team.totalWins + team.totalLosses + team.totalDraws;
+  const totalMatches = team.totalLeagueWins + team.totalLeagueLosses + team.totalLeagueDraws;
 
   return (
     <div className="bg-[#252b38] border border-white/10 rounded-lg p-2.5">
@@ -214,11 +253,11 @@ function TeamStandingCard({ team }: TeamStandingCardProps) {
           </div>
         </div>
         <div className="flex-shrink-0 text-xs text-secondary">
-          <span className="text-[#3fb950]">{team.totalWins}W</span>
+          <span className="text-[#3fb950]">{team.totalLeagueWins}W</span>
           <span className="mx-1">/</span>
-          <span className="text-[#f85149]">{team.totalLosses}L</span>
+          <span className="text-[#f85149]">{team.totalLeagueLosses}L</span>
           <span className="mx-1">/</span>
-          <span className="text-[#d29922]">{team.totalDraws}D</span>
+          <span className="text-[#d29922]">{team.totalLeagueDraws}D</span>
           {totalMatches > 0 && (
             <span className="ml-2 text-secondary">({totalMatches})</span>
           )}
@@ -248,11 +287,75 @@ function TeamStandingCard({ team }: TeamStandingCardProps) {
             <span className="text-xs text-secondary">{team.teamLp} LP</span>
           </div>
           <div className="text-xs text-secondary">
-            <span className="text-[#3fb950]">{team.totalWins}W</span>
+            <span className="text-[#3fb950]">{team.totalLeagueWins}W</span>
             <span className="mx-0.5">/</span>
-            <span className="text-[#f85149]">{team.totalLosses}L</span>
+            <span className="text-[#f85149]">{team.totalLeagueLosses}L</span>
             <span className="mx-0.5">/</span>
-            <span className="text-[#d29922]">{team.totalDraws}D</span>
+            <span className="text-[#d29922]">{team.totalLeagueDraws}D</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TagTeamStandingCard({ team }: TeamStandingCardProps) {
+  const tierColor = getLeagueTierColor(team.tagTeamLeague || 'bronze');
+  const tierName = getLeagueTierName(team.tagTeamLeague || 'bronze');
+  const totalMatches = (team.totalTagTeamWins || 0) + (team.totalTagTeamLosses || 0) + (team.totalTagTeamDraws || 0);
+
+  return (
+    <div className="bg-[#252b38] border border-white/10 rounded-lg p-2.5">
+      {/* Desktop */}
+      <div className="hidden md:flex items-center gap-3">
+        <div className="flex-1 min-w-0">
+          <div className="font-medium text-sm text-[#e6edf3] truncate">{team.teamName}</div>
+          <div className="flex items-center gap-2 mt-0.5">
+            <span className={`text-xs ${tierColor}`}>{tierName}</span>
+            <span className="text-xs text-secondary">•</span>
+            <span className="text-xs text-secondary">{team.tagTeamLp || 0} LP</span>
+          </div>
+        </div>
+        <div className="flex-shrink-0 text-xs text-secondary">
+          <span className="text-[#3fb950]">{team.totalTagTeamWins || 0}W</span>
+          <span className="mx-1">/</span>
+          <span className="text-[#f85149]">{team.totalTagTeamLosses || 0}L</span>
+          <span className="mx-1">/</span>
+          <span className="text-[#d29922]">{team.totalTagTeamDraws || 0}D</span>
+          {totalMatches > 0 && (
+            <span className="ml-2 text-secondary">({totalMatches})</span>
+          )}
+        </div>
+        <div className="flex-shrink-0">
+          <span className={`text-xs px-1.5 py-0.5 rounded ${
+            team.eligibility === 'ELIGIBLE' ? 'bg-[#3fb950]/20 text-[#3fb950]' : 'bg-[#f85149]/20 text-[#f85149]'
+          }`}>
+            {team.eligibility === 'ELIGIBLE' ? '✓ Ready' : '✗ Ineligible'}
+          </span>
+        </div>
+      </div>
+
+      {/* Mobile */}
+      <div className="md:hidden">
+        <div className="flex items-center justify-between mb-1">
+          <div className="font-medium text-sm text-[#e6edf3] truncate">{team.teamName}</div>
+          <span className={`text-xs px-1.5 py-0.5 rounded ${
+            team.eligibility === 'ELIGIBLE' ? 'bg-[#3fb950]/20 text-[#3fb950]' : 'bg-[#f85149]/20 text-[#f85149]'
+          }`}>
+            {team.eligibility === 'ELIGIBLE' ? '✓' : '✗'}
+          </span>
+        </div>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className={`text-xs ${tierColor}`}>{tierName}</span>
+            <span className="text-xs text-secondary">{team.tagTeamLp || 0} LP</span>
+          </div>
+          <div className="text-xs text-secondary">
+            <span className="text-[#3fb950]">{team.totalTagTeamWins || 0}W</span>
+            <span className="mx-0.5">/</span>
+            <span className="text-[#f85149]">{team.totalTagTeamLosses || 0}L</span>
+            <span className="mx-0.5">/</span>
+            <span className="text-[#d29922]">{team.totalTagTeamDraws || 0}D</span>
           </div>
         </div>
       </div>

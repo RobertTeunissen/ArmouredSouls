@@ -72,32 +72,6 @@ describe('Admin Cycle Generation Integration Tests', () => {
       const robotIds = robots.map((r) => r.id);
 
       if (robotIds.length > 0) {
-        // Clean up tag teams associated with these robots
-        const tagTeams = await prisma.tagTeam.findMany({
-          where: {
-            OR: [
-              { activeRobotId: { in: robotIds } },
-              { reserveRobotId: { in: robotIds } },
-            ],
-          },
-          select: { id: true },
-        });
-        const tagTeamIds = tagTeams.map((t) => t.id);
-
-        if (tagTeamIds.length > 0) {
-          await prisma.scheduledTagTeamMatch.deleteMany({
-            where: {
-              OR: [
-                { team1Id: { in: tagTeamIds } },
-                { team2Id: { in: tagTeamIds } },
-              ],
-            },
-          });
-          await prisma.tagTeam.deleteMany({
-            where: { id: { in: tagTeamIds } },
-          });
-        }
-
         // Clean up KotH match participants referencing these robots
         await prisma.scheduledKothMatchParticipant.deleteMany({
           where: { robotId: { in: robotIds } },

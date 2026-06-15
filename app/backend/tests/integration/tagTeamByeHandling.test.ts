@@ -13,9 +13,41 @@
  */
 
 import prisma from '../../src/lib/prisma';
-import { createTeam } from '../../src/services/tag-team/tagTeamService';
 import { runTagTeamMatchmaking } from '../../src/services/tag-team/tagTeamMatchmakingService';
 import { executeScheduledTagTeamBattles } from '../../src/services/tag-team/tagTeamBattleOrchestrator';
+
+/** Helper: Create a 2v2 TeamBattle with members (slot 0 = active, slot 1 = reserve) */
+async function createTagTeamFixture(stableId: number, activeRobotId: number, reserveRobotId: number) {
+  return prisma.teamBattle.create({
+    data: {
+      stableId,
+      teamSize: 2,
+      teamName: `Test_Team_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+      teamLp: 0,
+      teamLeague: 'bronze',
+      teamLeagueId: 'bronze_1',
+      cyclesInLeague: 0,
+      totalLeagueWins: 0,
+      totalLeagueLosses: 0,
+      totalLeagueDraws: 0,
+      tagTeamLp: 0,
+      tagTeamLeague: 'bronze',
+      tagTeamLeagueId: 'bronze_1',
+      cyclesInTagTeamLeague: 0,
+      totalTagTeamWins: 0,
+      totalTagTeamLosses: 0,
+      totalTagTeamDraws: 0,
+      eligibility: 'ELIGIBLE',
+      members: {
+        create: [
+          { robotId: activeRobotId, slotIndex: 0 },
+          { robotId: reserveRobotId, slotIndex: 1 },
+        ],
+      },
+    },
+    include: { members: true },
+  });
+}
 
 
 describe('Tag Team Bye-Team Handling Integration Test', () => {
@@ -37,8 +69,9 @@ describe('Tag Team Bye-Team Handling Integration Test', () => {
   afterEach(async () => {
     // Clean up in correct order
     if (testTeamIds.length > 0) {
-      await prisma.scheduledTagTeamMatch.deleteMany({
+      await prisma.scheduledTeamBattleMatch.deleteMany({
         where: {
+          matchMode: 'tag_team',
           OR: [
             { team1Id: { in: testTeamIds } },
             { team2Id: { in: testTeamIds } },
@@ -65,7 +98,10 @@ describe('Tag Team Bye-Team Handling Integration Test', () => {
     }
 
     if (testTeamIds.length > 0) {
-      await prisma.tagTeam.deleteMany({
+      await prisma.teamBattleMember.deleteMany({
+        where: { teamId: { in: testTeamIds } },
+      });
+      await prisma.teamBattle.deleteMany({
         where: { id: { in: testTeamIds } },
       });
     }
@@ -151,10 +187,9 @@ describe('Tag Team Bye-Team Handling Integration Test', () => {
       const robot1 = testRobots[i * 2];
       const robot2 = testRobots[i * 2 + 1];
 
-      const result = await createTeam(user.id, robot1.id, robot2.id);
-      expect(result.success).toBe(true);
-      testTeams.push(result.team!);
-      testTeamIds.push(result.team!.id);
+      const result = await createTagTeamFixture(user.id, robot1.id, robot2.id);
+      testTeams.push(result);
+      testTeamIds.push(result.id);
     }
 
     expect(testTeams.length).toBe(3);
@@ -172,9 +207,10 @@ describe('Tag Team Bye-Team Handling Integration Test', () => {
     // Step 3: Verify bye-team match was created
     console.log('[Test] Step 3: Verifying bye-team match...');
     
-    const byeMatches = await prisma.scheduledTagTeamMatch.findMany({
+    const byeMatches = await prisma.scheduledTeamBattleMatch.findMany({
       where: {
         status: 'scheduled',
+        matchMode: 'tag_team',
         OR: [
           { team1Id: -1 },
           { team2Id: -1 },
@@ -188,7 +224,7 @@ describe('Tag Team Bye-Team Handling Integration Test', () => {
     // Verify bye-team match structure
     const byeMatch = byeMatches[0];
     expect(byeMatch.team1Id === -1 || byeMatch.team2Id === -1).toBe(true);
-    expect(byeMatch.tagTeamLeague).toBe('bronze');
+    expect(byeMatch.matchMode).toBe('tag_team');
     expect(byeMatch.status).toBe('scheduled');
 
     console.log('[Test] ✓ Bye-team match created successfully');

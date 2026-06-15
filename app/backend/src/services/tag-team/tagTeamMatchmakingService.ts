@@ -1,8 +1,21 @@
-import { Robot, Prisma } from '../../../generated/prisma';
+/**
+ * Tag Team Matchmaking Service
+ *
+ * Handles matchmaking for Tag Team mode (2v2 sequential combat).
+ * Queries TeamBattle (teamSize=2) with tag team league fields,
+ * pairs using the shared LP-primary scoring formula, and persists
+ * ScheduledTeamBattleMatch records with matchMode = 'tag_team'.
+ *
+ * Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 6.2, 6.4, 7.3, 7.4, 15.6
+ *
+ * @module services/tag-team/tagTeamMatchmakingService
+ */
+
+import { Robot, Prisma, TeamBattle, TeamBattleMember } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
-import { checkTeamSchedulingReadiness, TagTeamWithRobots } from './tagTeamService';
-import { TAG_TEAM_LEAGUE_TIERS } from './tagTeamLeagueInstanceService';
+import { checkSchedulingReadiness } from '../analytics/matchmakingService';
+import { TEAM_BATTLE_LEAGUE_TIERS as TAG_TEAM_LEAGUE_TIERS } from '../team-battle/teamBattleAdapter';
 import {
   calculateMatchScore as sharedCalculateMatchScore,
   createByeTeam as sharedCreateByeTeam,
@@ -11,49 +24,83 @@ import {
   RECENT_OPPONENT_LIMIT,
 } from '../matchmaking/teamMatchmakingUtils';
 
+// ─── Types ───────────────────────────────────────────────────────────────────
+
+/** TeamBattle with members and their robots loaded (reused from teamBattleMatchmakingService pattern). */
+export interface TeamBattleWithMembers extends TeamBattle {
+  members: (TeamBattleMember & { robot: Robot })[];
+}
+
 export interface TagTeamMatchPair {
-  team1: TagTeamWithRobots;
-  team2: TagTeamWithRobots;
+  team1: TeamBattleWithMembers;
+  team2: TeamBattleWithMembers;
   isByeMatch: boolean;
   tagTeamLeague: string;
 }
 
+// ─── Eligibility ─────────────────────────────────────────────────────────────
+
 /**
- * Get eligible teams for matchmaking
- * Requirement 8.4: Exclude teams with unready robots and teams already scheduled
+ * Get eligible teams for tag team matchmaking within a specific league instance.
+ *
+ * Eligibility criteria:
+ * - Team has teamSize = 2 and matches the target tagTeamLeague + tagTeamLeagueId
+ * - Team has exactly 2 members (slot 0 = Active, slot 1 = Reserve)
+ * - All members pass scheduling readiness (weapon check)
+ * - Both members have active `tag_team` subscriptions
+ * - Team not already scheduled for a pending tag_team match
+ *
+ * Requirements: 3.1, 3.2, 3.6, 6.2
  */
 export async function getEligibleTeams(
   tagTeamLeague: string,
   tagTeamLeagueId: string
-): Promise<TagTeamWithRobots[]> {
-  // Get all teams in this league instance
-  const teams = await prisma.tagTeam.findMany({
+): Promise<TeamBattleWithMembers[]> {
+  // Get all teams in this tag team league instance with members and robots
+  const teams = await prisma.teamBattle.findMany({
     where: {
+      teamSize: 2,
       tagTeamLeague,
       tagTeamLeagueId,
     },
     include: {
-      activeRobot: true,
-      reserveRobot: true,
+      members: {
+        include: {
+          robot: true,
+        },
+      },
     },
   });
 
-  // Filter for scheduling-ready teams (weapons only, HP not checked)
-  const readyTeams: TagTeamWithRobots[] = [];
-  for (const team of teams) {
-    const readiness = await checkTeamSchedulingReadiness(team.id);
-    if (readiness.isReady) {
+  // Requirement 3.6: Exclude teams with fewer than 2 members
+  const fullTeams = teams.filter(team => team.members.length === 2);
+
+  // Filter for scheduling-ready teams (all members have weapons equipped)
+  const readyTeams: TeamBattleWithMembers[] = [];
+  for (const team of fullTeams) {
+    let allReady = true;
+    for (const member of team.members) {
+      const readiness = checkSchedulingReadiness(member.robot);
+      if (!readiness.isReady) {
+        allReady = false;
+        break;
+      }
+    }
+
+    if (allReady) {
       readyTeams.push(team);
     }
   }
 
-  // Get already scheduled team IDs
-  const scheduledMatches = await prisma.scheduledTagTeamMatch.findMany({
+  // Requirement 3.4: Check already-scheduled teams via ScheduledTeamBattleMatch where matchMode = 'tag_team'
+  const readyTeamIds = readyTeams.map(t => t.id);
+  const scheduledMatches = await prisma.scheduledTeamBattleMatch.findMany({
     where: {
       status: 'scheduled',
+      matchMode: 'tag_team',
       OR: [
-        { team1Id: { in: readyTeams.map(t => t.id) } },
-        { team2Id: { in: readyTeams.map(t => t.id) } },
+        { team1Id: { in: readyTeamIds } },
+        { team2Id: { in: readyTeamIds } },
       ],
     },
     select: {
@@ -73,20 +120,22 @@ export async function getEligibleTeams(
   // Filter out already scheduled teams
   const availableTeams = readyTeams.filter(team => !alreadyScheduledIds.has(team.id));
 
-  // Filter by tag_team subscription — BOTH active and reserve robots must be subscribed
-  const allRobotIds = availableTeams.flatMap(t => [t.activeRobotId, t.reserveRobotId]);
+  // Requirement 3.2 / 6.2: Filter by tag_team subscription — BOTH members must be subscribed
+  const allRobotIds = availableTeams.flatMap(t => t.members.map(m => m.robotId));
+
   // Activate pending subscriptions for robots that have room under cap
   const { batchActivatePendingSubscriptions } = await import('../subscription/subscriptionService');
   await batchActivatePendingSubscriptions(allRobotIds, 'tag_team');
 
-  // Filter by tag_team subscription — BOTH active and reserve robots must have active subscription
+  // Check active subscriptions for all robots
   const subscribedRobotIds = await prisma.subscription.findMany({
     where: { eventType: 'tag_team', robotId: { in: allRobotIds }, status: 'active' },
     select: { robotId: true },
   });
   const subscribedSet = new Set(subscribedRobotIds.map(s => s.robotId));
-  const eligibleTeams = availableTeams.filter(t =>
-    subscribedSet.has(t.activeRobotId) && subscribedSet.has(t.reserveRobotId)
+
+  const eligibleTeams = availableTeams.filter(team =>
+    team.members.every(m => subscribedSet.has(m.robotId))
   );
 
   const excludedBySubscription = availableTeams.length - eligibleTeams.length;
@@ -102,9 +151,11 @@ export async function getEligibleTeams(
   return eligibleTeams;
 }
 
+// ─── Recent Opponents ────────────────────────────────────────────────────────
+
 /**
  * Batch-fetch recent opponents for all teams using the shared utility.
- * Passes a query function that queries ScheduledTagTeamMatch for tag team opponents.
+ * Queries ScheduledTeamBattleMatch where matchMode = 'tag_team' for tag team opponents.
  */
 async function getRecentOpponentsBatch(
   teamIds: number[],
@@ -115,10 +166,11 @@ async function getRecentOpponentsBatch(
     async (ids: number[], queryLimit: number): Promise<Map<number, number[]>> => {
       if (ids.length === 0) return new Map();
 
-      // Single query to get recent completed matches for all teams
-      const recentMatches = await prisma.scheduledTagTeamMatch.findMany({
+      // Single query to get recent completed tag_team matches for all teams
+      const recentMatches = await prisma.scheduledTeamBattleMatch.findMany({
         where: {
           status: 'completed',
+          matchMode: 'tag_team',
           OR: [
             { team1Id: { in: ids } },
             { team2Id: { in: ids } },
@@ -154,33 +206,37 @@ async function getRecentOpponentsBatch(
   );
 }
 
+// ─── ELO Computation ─────────────────────────────────────────────────────────
+
 /**
  * Calculate combined ELO from in-memory team data (no DB query needed).
- * The team must already have activeRobot and reserveRobot included.
+ * Sum of member robot ELOs (slot 0 + slot 1).
  */
-function calculateCombinedELOFromTeam(team: TagTeamWithRobots): number {
-  return team.activeRobot.elo + team.reserveRobot.elo;
+function calculateCombinedELOFromTeam(team: TeamBattleWithMembers): number {
+  return team.members.reduce((sum, m) => sum + m.robot.elo, 0);
 }
+
+// ─── Match Scoring ───────────────────────────────────────────────────────────
 
 /**
  * Calculate match quality score using the shared LP-primary formula.
  * Maps tag team fields to the MatchScoreInput interface:
- *   - LP = tagTeamLeaguePoints
- *   - ELO = combined robot ELO (active + reserve)
+ *   - LP = tagTeamLp (tag team league points)
+ *   - ELO = combined robot ELO (sum of member ELOs)
  *
- * Requirements 2.2, 2.4, 2.6: LP matching (primary), ELO (secondary), recent opponent deprioritization, same-stable exclusion
+ * Requirements 3.3, 15.6: LP matching (primary), ELO (secondary), recent opponent deprioritization, same-stable exclusion
  */
 function calculateMatchScoreForTagTeam(
-  team1: TagTeamWithRobots,
-  team2: TagTeamWithRobots,
+  team1: TeamBattleWithMembers,
+  team2: TeamBattleWithMembers,
   team1CombinedELO: number,
   team2CombinedELO: number,
   recentOpponents1: number[],
   recentOpponents2: number[]
 ): number {
   const input: MatchScoreInput = {
-    entity1LP: team1.tagTeamLeaguePoints,
-    entity2LP: team2.tagTeamLeaguePoints,
+    entity1LP: team1.tagTeamLp,
+    entity2LP: team2.tagTeamLp,
     entity1ELO: team1CombinedELO,
     entity2ELO: team2CombinedELO,
     recentOpponents1,
@@ -193,15 +249,17 @@ function calculateMatchScoreForTagTeam(
   return sharedCalculateMatchScore(input);
 }
 
+// ─── Pairing ─────────────────────────────────────────────────────────────────
+
 /**
  * Find best opponent for a team from available pool
  */
 async function findBestOpponent(
-  team: TagTeamWithRobots,
-  availableTeams: TagTeamWithRobots[],
+  team: TeamBattleWithMembers,
+  availableTeams: TeamBattleWithMembers[],
   combinedELOMap: Map<number, number>,
   recentOpponentsMap: Map<number, number[]>
-): Promise<TagTeamWithRobots | null> {
+): Promise<TeamBattleWithMembers | null> {
   if (availableTeams.length === 0) {
     return null;
   }
@@ -231,13 +289,12 @@ async function findBestOpponent(
 
 /**
  * Create a bye-team for odd number of teams using the shared factory.
- * Requirement 2.5: Match with bye-team when no suitable opponent exists
+ * Bye robots have ELO 1000 each (combined 2000).
  */
-function createByeTeam(league: string, leagueId: string): TagTeamWithRobots {
+function createByeTeam(league: string, leagueId: string): TeamBattleWithMembers {
   return sharedCreateByeTeam(
-    (byeLeague: string, byeLeagueId: string): TagTeamWithRobots => {
-      // Create bye robots with ELO 1000 each (combined 2000)
-      const byeRobot1: Robot = {
+    (byeLeague: string, byeLeagueId: string): TeamBattleWithMembers => {
+      const byeRobotBase: Robot = {
         id: -1,
         userId: -1,
         name: 'Bye Robot 1',
@@ -303,9 +360,9 @@ function createByeTeam(league: string, leagueId: string): TagTeamWithRobots {
         timesTaggedOut: 0,
         // Team Battle Statistics
         totalLeague1v1Wins: 0,
-    totalLeague1v1Losses: 0,
-    totalLeague1v1Draws: 0,
-    totalLeague2v2Wins: 0,
+        totalLeague1v1Losses: 0,
+        totalLeague1v1Draws: 0,
+        totalLeague2v2Wins: 0,
         totalLeague3v3Wins: 0,
         // Economic
         repairCost: 0,
@@ -341,24 +398,47 @@ function createByeTeam(league: string, leagueId: string): TagTeamWithRobots {
         updatedAt: new Date(),
       };
 
-      const byeRobot2: Robot = { ...byeRobot1, id: -2, name: 'Bye Robot 2' };
+      // Create 2 bye robots for tag team (slot 0 = active, slot 1 = reserve)
+      const members: (TeamBattleMember & { robot: Robot })[] = [
+        {
+          id: -1,
+          teamId: -1,
+          robotId: -1,
+          slotIndex: 0,
+          robot: { ...byeRobotBase, id: -1, name: 'Bye Robot 1' },
+        },
+        {
+          id: -2,
+          teamId: -1,
+          robotId: -2,
+          slotIndex: 1,
+          robot: { ...byeRobotBase, id: -2, name: 'Bye Robot 2' },
+        },
+      ];
 
       return {
         id: -1,
         stableId: -1,
-        activeRobotId: -1,
-        reserveRobotId: -2,
+        teamSize: 2,
+        teamName: 'Bye Team',
+        teamLp: 0,
+        teamLeague: byeLeague,
+        teamLeagueId: byeLeagueId,
+        cyclesInLeague: 0,
+        totalLeagueWins: 0,
+        totalLeagueLosses: 0,
+        totalLeagueDraws: 0,
+        tagTeamLp: 0,
         tagTeamLeague: byeLeague,
         tagTeamLeagueId: byeLeagueId,
-        tagTeamLeaguePoints: 0,
         cyclesInTagTeamLeague: 0,
         totalTagTeamWins: 0,
         totalTagTeamLosses: 0,
         totalTagTeamDraws: 0,
+        eligibility: 'ELIGIBLE',
         createdAt: new Date(),
         updatedAt: new Date(),
-        activeRobot: byeRobot1,
-        reserveRobot: byeRobot2,
+        members,
       };
     },
     league,
@@ -368,9 +448,9 @@ function createByeTeam(league: string, leagueId: string): TagTeamWithRobots {
 
 /**
  * Pair teams for matches within a league instance
- * Requirements 2.2, 2.3, 2.4, 2.5, 2.6: ELO matching, fallback, recent opponents, bye-team, same-stable exclusion
+ * Requirements 3.3, 15.6: LP matching, ELO matching, recent opponents, bye-team, same-stable exclusion
  */
-export async function pairTeams(teams: TagTeamWithRobots[]): Promise<TagTeamMatchPair[]> {
+export async function pairTeams(teams: TeamBattleWithMembers[]): Promise<TagTeamMatchPair[]> {
   if (teams.length === 0) {
     return [];
   }
@@ -411,7 +491,7 @@ export async function pairTeams(teams: TagTeamWithRobots[]): Promise<TagTeamMatc
     }
   }
 
-  // Handle odd team with bye-match (Requirement 2.5)
+  // Handle odd team with bye-match
   if (availableTeams.length === 1) {
     const lastTeam = availableTeams[0];
     const byeTeam = createByeTeam(lastTeam.tagTeamLeague, lastTeam.tagTeamLeagueId);
@@ -429,9 +509,11 @@ export async function pairTeams(teams: TagTeamWithRobots[]): Promise<TagTeamMatc
   return matches;
 }
 
+// ─── Match Scheduling ────────────────────────────────────────────────────────
+
 /**
- * Schedule matches in the database
- * Requirement 2.7: Create ScheduledTagTeamMatch records with scheduledFor timestamp
+ * Schedule matches in the database.
+ * Requirement 7.3: Create ScheduledTeamBattleMatch records with matchMode = 'tag_team', teamSize = 2
  */
 export async function scheduleMatches(matches: TagTeamMatchPair[], scheduledFor: Date): Promise<void> {
   // Separate bye-matches from regular matches
@@ -443,23 +525,29 @@ export async function scheduleMatches(matches: TagTeamMatchPair[], scheduledFor:
     const regularMatchData = regularMatches.map(match => ({
       team1Id: match.team1.id,
       team2Id: match.team2.id,
-      tagTeamLeague: match.tagTeamLeague,
+      teamSize: 2,
+      matchMode: 'tag_team',
+      teamBattleLeague: match.tagTeamLeague,
+      teamBattleLeagueId: match.team1.tagTeamLeagueId,
       scheduledFor,
       status: 'scheduled' as const,
     }));
 
-    await prisma.scheduledTagTeamMatch.createMany({
+    await prisma.scheduledTeamBattleMatch.createMany({
       data: regularMatchData,
     });
   }
 
   // Create bye-matches individually (team2Id = null for bye-team)
   for (const match of byeMatches) {
-    await prisma.scheduledTagTeamMatch.create({
+    await prisma.scheduledTeamBattleMatch.create({
       data: {
         team1Id: match.team1.id,
         team2Id: null, // Bye-team (no actual team2)
-        tagTeamLeague: match.tagTeamLeague,
+        teamSize: 2,
+        matchMode: 'tag_team',
+        teamBattleLeague: match.tagTeamLeague,
+        teamBattleLeagueId: match.team1.tagTeamLeagueId,
         scheduledFor,
         status: 'scheduled',
       },
@@ -469,10 +557,16 @@ export async function scheduleMatches(matches: TagTeamMatchPair[], scheduledFor:
   logger.info(`[TagTeamMatchmaking] Scheduled ${matches.length} tag team matches`);
 }
 
+// ─── Main Entry Point ────────────────────────────────────────────────────────
+
 /**
- * Run tag team matchmaking for all league tiers
- * Requirements 2.7, 2.8: Run on odd cycles only (checked by caller)
- * Requirement 11.1: Allow robots to be scheduled for both 1v1 and tag team matches
+ * Run tag team matchmaking for all league tiers.
+ *
+ * Iterates tiers → instances (by distinct tagTeamLeagueId on TeamBattle where teamSize=2)
+ * → eligible teams, pairs using calculateMatchScore, and persists
+ * ScheduledTeamBattleMatch records with matchMode = 'tag_team'.
+ *
+ * Requirement 3.5: Advisory lock namespace 1 for tag team matchmaking operations.
  *
  * @param scheduledFor - When the matches should be executed
  * @returns Total number of matches created
@@ -486,9 +580,9 @@ export async function runTagTeamMatchmaking(scheduledFor?: Date): Promise<number
 
   for (const tier of TAG_TEAM_LEAGUE_TIERS) {
     try {
-      // Get all league instances for this tier
-      const instances = await prisma.tagTeam.findMany({
-        where: { tagTeamLeague: tier },
+      // Get all tag team league instances for this tier from TeamBattle (teamSize=2)
+      const instances = await prisma.teamBattle.findMany({
+        where: { teamSize: 2, tagTeamLeague: tier },
         select: { tagTeamLeagueId: true },
         distinct: ['tagTeamLeagueId'],
       });
@@ -523,4 +617,3 @@ export async function runTagTeamMatchmaking(scheduledFor?: Date): Promise<number
   logger.info(`[TagTeamMatchmaking] Complete: ${totalMatches} total matches created`);
   return totalMatches;
 }
-

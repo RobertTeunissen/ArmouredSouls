@@ -12,11 +12,11 @@ import prisma from '../src/lib/prisma';
  * Clean up all test data in the correct order to avoid foreign key constraint violations
  * 
  * Order matters! Delete in reverse dependency order:
- * 1. Scheduled matches (references battles, robots)
+ * 1. Scheduled matches (references battles, robots, teams)
  * 2. Battle participants (references battles, robots)
  * 3. Battles (references robots, tournaments)
- * 4. Tag team matches (references tag teams, battles)
- * 5. Tag teams (references robots)
+ * 4. Team battle members (references team battles, robots)
+ * 5. Team battles (references users)
  * 6. Tournament matches (references tournaments, robots)
  * 7. Tournaments (references users)
  * 8. Weapon inventory (references robots, weapons)
@@ -33,11 +33,12 @@ export async function cleanupTestData() {
     await prisma.scheduledKothMatchParticipant.deleteMany({});
     await prisma.scheduledKothMatch.deleteMany({});
     await prisma.scheduledLeagueMatch.deleteMany({});
+    await prisma.scheduledTeamBattleMatch.deleteMany({});
     await prisma.scheduledTournamentMatch.deleteMany({});
     await prisma.battleParticipant.deleteMany({});
     await prisma.battle.deleteMany({});
-    await prisma.scheduledTagTeamMatch.deleteMany({});
-    await prisma.tagTeam.deleteMany({});
+    await prisma.teamBattleMember.deleteMany({});
+    await prisma.teamBattle.deleteMany({});
     await prisma.tournament.deleteMany({});
     await prisma.weaponInventory.deleteMany({});
     await prisma.robot.deleteMany({});
@@ -92,24 +93,9 @@ export async function cleanupUserTestData(userId: number) {
         },
       });
 
-      await prisma.scheduledTagTeamMatch.deleteMany({
-        where: {
-          OR: [
-            { team1: { activeRobotId: { in: robotIds } } },
-            { team1: { reserveRobotId: { in: robotIds } } },
-            { team2: { activeRobotId: { in: robotIds } } },
-            { team2: { reserveRobotId: { in: robotIds } } },
-          ],
-        },
-      });
-
-      await prisma.tagTeam.deleteMany({
-        where: {
-          OR: [
-            { activeRobotId: { in: robotIds } },
-            { reserveRobotId: { in: robotIds } },
-          ],
-        },
+      // Clean up team battle members and team battles for this user's robots
+      await prisma.teamBattleMember.deleteMany({
+        where: { robotId: { in: robotIds } },
       });
 
       await prisma.weaponInventory.deleteMany({
@@ -117,7 +103,18 @@ export async function cleanupUserTestData(userId: number) {
       });
     }
 
-    await prisma.tournament.deleteMany({ where: { winner: { userId } } });
+    // Clean up team battles owned by this user
+    await prisma.scheduledTeamBattleMatch.deleteMany({
+      where: {
+        OR: [
+          { team1: { stableId: userId } },
+          { team2: { stableId: userId } },
+        ],
+      },
+    });
+    await prisma.teamBattle.deleteMany({ where: { stableId: userId } });
+
+    await prisma.tournament.deleteMany({ where: { winnerId: userId } });
     await prisma.robot.deleteMany({ where: { userId } });
     await prisma.facility.deleteMany({ where: { userId } });
     await prisma.auditLog.deleteMany({ where: { userId } });

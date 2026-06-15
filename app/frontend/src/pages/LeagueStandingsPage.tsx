@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Navigation from '../components/Navigation';
-import TagTeamStandingsContent from '../components/team-battles/TagTeamStandingsContent';
 import { useRobotStore } from '../stores';
 import {
   getLeagueStandings,
@@ -17,6 +16,8 @@ import {
 import {
   getTeamBattleStandings,
   getTeamBattleLeagueInstances,
+  getTagTeamStandingsNew,
+  getTagTeamLeagueInstances,
   getMyTeamBattles,
   TeamBattleStanding,
   TeamBattleLeagueInstance,
@@ -74,6 +75,8 @@ function LeagueStandingsPage() {
     }, { replace: true });
     if (mode === '1v1') {
       fetchLeagueData(tier, 1);
+    } else if (mode === 'tag_team') {
+      fetchTagTeamData(tier, 1);
     } else {
       fetchTeamBattleData(tier, 1);
     }
@@ -98,6 +101,7 @@ function LeagueStandingsPage() {
   const [teamInstances, setTeamInstances] = useState<TeamBattleLeagueInstance[]>([]);
   const [userTeamInstances, setUserTeamInstances] = useState<Set<string>>(new Set());
   const [userTeamTiers, setUserTeamTiers] = useState<Set<string>>(new Set());
+  const [teamZoneMeta, setTeamZoneMeta] = useState<ZoneMeta | null>(null);
   const [teamPagination, setTeamPagination] = useState({
     page: 1,
     pageSize: 50,
@@ -114,8 +118,9 @@ function LeagueStandingsPage() {
       fetchLeagueData(selectedTier, 1, selectedInstance || undefined);
     } else if (mode === '2v2' || mode === '3v3') {
       fetchTeamBattleData(selectedTier, 1, selectedInstance || undefined);
+    } else if (mode === 'tag_team') {
+      fetchTagTeamData(selectedTier, 1, selectedInstance || undefined);
     }
-    // tag_team mode uses its own self-contained component
     fetchStoreRobots();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchStoreRobots, mode]); // Re-fetch on mount and mode change
@@ -160,6 +165,7 @@ function LeagueStandingsPage() {
       ]);
       setTeamStandings(standingsData.standings);
       setTeamPagination(standingsData.pagination);
+      setTeamZoneMeta(standingsData.zoneMeta ? standingsData.zoneMeta as ZoneMeta : null);
       setTeamInstances(instancesData);
       // Build set of instance IDs and tiers where user has teams of this size
       const myTeamsOfSize = myTeams.filter(t => t.teamSize === teamSize);
@@ -175,9 +181,69 @@ function LeagueStandingsPage() {
     }
   };
 
+  const fetchTagTeamData = async (tier: string, page: number, instance?: string) => {
+    try {
+      setLoading(true);
+      const [standingsData, instancesData, myTeams] = await Promise.all([
+        getTagTeamStandingsNew(tier, page, 50, instance),
+        getTagTeamLeagueInstances(tier),
+        getMyTeamBattles(2),
+      ]);
+      // Map tag team response into TeamBattleStanding shape
+      const mapped: TeamBattleStanding[] = standingsData.standings.map(entry => ({
+        rank: entry.rank,
+        teamId: entry.teamId,
+        teamName: entry.teamName,
+        stableId: entry.stableId,
+        stableName: entry.stableName,
+        teamSize: 2,
+        teamLp: entry.tagTeamLp,
+        teamELO: entry.combinedELO,
+        teamLeague: entry.tagTeamLeague,
+        teamLeagueId: entry.tagTeamLeagueId,
+        wins: entry.totalTagTeamWins,
+        losses: entry.totalTagTeamLosses,
+        draws: entry.totalTagTeamDraws,
+        totalMatches: entry.totalTagTeamWins + entry.totalTagTeamLosses + entry.totalTagTeamDraws,
+        eligibility: 'ELIGIBLE',
+        cyclesInLeague: entry.cyclesInTagTeamLeague ?? 0,
+        isSubscribed: undefined,
+        zone: entry.zone,
+        eligible: entry.eligible,
+        members: entry.members.map(m => ({
+          robotId: m.id,
+          robotName: m.name,
+          robotElo: m.elo,
+          slotIndex: m.slotIndex,
+        })),
+      }));
+      setTeamStandings(mapped);
+      setTeamPagination({
+        page: standingsData.pagination.page,
+        pageSize: standingsData.pagination.pageSize,
+        total: standingsData.pagination.total,
+        totalPages: standingsData.pagination.totalPages,
+      });
+      setTeamZoneMeta(standingsData.zoneMeta ? standingsData.zoneMeta as ZoneMeta : null);
+      setTeamInstances(instancesData);
+      // Build user team tier/instance sets from tag team fields
+      const myTierIds = new Set(myTeams.map(t => t.tagTeamLeague));
+      const myInstanceIds = new Set(myTeams.map(t => t.tagTeamLeagueId));
+      setUserTeamTiers(myTierIds);
+      setUserTeamInstances(myInstanceIds);
+      setError(null);
+    } catch {
+      setError('Failed to load tag team standings');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handlePageChange = (newPage: number) => {
     if (mode === '1v1') {
       fetchLeagueData(selectedTier, newPage, selectedInstance || undefined);
+    } else if (mode === 'tag_team') {
+      fetchTagTeamData(selectedTier, newPage, selectedInstance || undefined);
     } else {
       fetchTeamBattleData(selectedTier, newPage, selectedInstance || undefined);
     }
@@ -190,6 +256,8 @@ function LeagueStandingsPage() {
       setSearchParams(prev => { const next = new URLSearchParams(prev); next.delete('instance'); return next; }, { replace: true });
       if (mode === '1v1') {
         fetchLeagueData(selectedTier, 1);
+      } else if (mode === 'tag_team') {
+        fetchTagTeamData(selectedTier, 1);
       } else {
         fetchTeamBattleData(selectedTier, 1);
       }
@@ -198,6 +266,8 @@ function LeagueStandingsPage() {
       setSearchParams(prev => { const next = new URLSearchParams(prev); next.set('instance', instanceId); return next; }, { replace: true });
       if (mode === '1v1') {
         fetchLeagueData(selectedTier, 1, instanceId);
+      } else if (mode === 'tag_team') {
+        fetchTagTeamData(selectedTier, 1, instanceId);
       } else {
         fetchTeamBattleData(selectedTier, 1, instanceId);
       }
@@ -253,8 +323,8 @@ function LeagueStandingsPage() {
           ))}
         </div>
 
-        {/* Tier Tabs — hidden for tag_team (has its own tier selector) */}
-        {mode !== 'tag_team' && <div className="flex flex-wrap gap-2 mb-6">
+        {/* Tier Tabs */}
+        <div className="flex flex-wrap gap-2 mb-6">
           {TIERS.map((tier) => {
             const tierColor = getLeagueTierColor(tier);
             const tierName = getLeagueTierName(tier);
@@ -262,7 +332,7 @@ function LeagueStandingsPage() {
             const isActive = selectedTier === tier;
             const hasUserRobots = mode === '1v1'
               ? userRobotTiers.has(tier)
-              : (mode === '2v2' || mode === '3v3') ? userTeamTiers.has(tier) : false;
+              : userTeamTiers.has(tier);
 
             return (
               <button
@@ -282,7 +352,7 @@ function LeagueStandingsPage() {
               </button>
             );
           })}
-        </div>}
+        </div>
 
         {/* Instance Information — 1v1 mode */}
         {mode === '1v1' && !loading && instances.length > 0 && (
@@ -343,8 +413,8 @@ function LeagueStandingsPage() {
           </div>
         )}
 
-        {/* Instance Information — Team Battle mode (2v2/3v3) */}
-        {(mode === '2v2' || mode === '3v3') && !loading && teamInstances.length > 0 && (
+        {/* Instance Information — Team Battle mode (2v2/3v3/tag_team) */}
+        {(mode === '2v2' || mode === '3v3' || mode === 'tag_team') && !loading && teamInstances.length > 0 && (
           <div className="bg-surface p-4 rounded-lg mb-6">
             <div 
               className="flex items-center justify-between cursor-pointer mb-2"
@@ -579,15 +649,48 @@ function LeagueStandingsPage() {
           </>
         )}
 
-        {/* ── 2v2 / 3v3 Team Battle Standings ── */}
-        {(mode === '2v2' || mode === '3v3') && !loading && !error && teamStandings.length === 0 && (
+        {/* ── 2v2 / 3v3 / Tag Team Standings ── */}
+        {(mode === '2v2' || mode === '3v3' || mode === 'tag_team') && !loading && !error && teamStandings.length === 0 && (
           <div className="bg-surface p-6 rounded-lg">
             <p className="text-secondary">No teams in this tier yet.</p>
           </div>
         )}
 
-        {(mode === '2v2' || mode === '3v3') && !loading && !error && teamStandings.length > 0 && (
+        {(mode === '2v2' || mode === '3v3' || mode === 'tag_team') && !loading && !error && teamStandings.length > 0 && (
           <>
+            {/* Zone Legend & Status */}
+            {teamZoneMeta && (
+              <div className="bg-surface p-4 rounded-lg mb-4 flex flex-wrap items-center gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-sm bg-green-500 inline-block"></span>
+                  <span className="text-secondary">Promotion zone (top 10%, ≥{teamZoneMeta.minLP} LP, ≥{teamZoneMeta.minCycles} cycles)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-sm bg-red-500 inline-block"></span>
+                  <span className="text-secondary">Demotion zone (bottom 10%, ≥{teamZoneMeta.minCycles} cycles)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-sm bg-white/30 inline-block"></span>
+                  <span className="text-secondary">Faded = not yet eligible (&lt;{teamZoneMeta.minCycles} cycles)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] bg-white/10 text-tertiary px-1.5 py-0.5 rounded font-medium">INACTIVE</span>
+                  <span className="text-secondary">Not subscribed to this league</span>
+                </div>
+                {!teamZoneMeta.hasEnoughRobots && (
+                  <div className="flex items-center gap-2 text-warning">
+                    <span>⚠️</span>
+                    <span>Promotion/demotion paused — need {teamZoneMeta.minRobotsRequired} eligible teams, currently {teamZoneMeta.eligibleCount}</span>
+                  </div>
+                )}
+                {teamZoneMeta.isChampion && (
+                  <div className="text-tertiary italic">No promotion from Champion tier</div>
+                )}
+                {teamZoneMeta.isBronze && (
+                  <div className="text-tertiary italic">No demotion from Bronze tier</div>
+                )}
+              </div>
+            )}
             <div className="bg-surface rounded-lg overflow-hidden">
               <div className="overflow-x-auto scrollbar-thin">
                 <table className="w-full">
@@ -612,10 +715,18 @@ function LeagueStandingsPage() {
                           ? ((team.wins / team.totalMatches) * 100).toFixed(1)
                           : '0.0';
 
+                      const zoneClass = team.zone === 'promotion'
+                        ? 'border-l-4 border-l-green-500 bg-green-900/10'
+                        : team.zone === 'demotion'
+                          ? 'border-l-4 border-l-red-500 bg-red-900/10'
+                          : '';
+
+                      const eligibilityClass = team.eligible === false ? 'opacity-50' : isInactive ? 'opacity-40' : '';
+
                       return (
                         <tr
                           key={team.teamId}
-                          className={`border-b border-white/10 ${isInactive ? 'opacity-40' : ''} ${
+                          className={`border-b border-white/10 ${zoneClass} ${eligibilityClass} ${
                             isMyTeam ? 'bg-blue-900 bg-opacity-30' : 'hover:bg-surface-elevated'
                           } transition-colors`}
                         >
@@ -702,10 +813,6 @@ function LeagueStandingsPage() {
           </>
         )}
 
-        {/* ── Tag Team Standings ── */}
-        {mode === 'tag_team' && (
-          <TagTeamStandingsContent />
-        )}
       </div>
     </div>
   );

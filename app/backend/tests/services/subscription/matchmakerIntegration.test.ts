@@ -43,12 +43,6 @@ jest.mock('../../../src/services/league/leagueInstanceService', () => ({
   LEAGUE_TIERS: ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'],
 }));
 
-// Mock tag team service for checkTeamSchedulingReadiness
-jest.mock('../../../src/services/tag-team/tagTeamService', () => ({
-  __esModule: true,
-  checkTeamSchedulingReadiness: jest.fn(),
-}));
-
 // Mock batchActivatePendingSubscriptions — these tests focus on subscription filtering,
 // not the activation logic (which is tested separately in subscriptionService.test.ts)
 jest.mock('../../../src/services/subscription/subscriptionService', () => ({
@@ -58,11 +52,10 @@ jest.mock('../../../src/services/subscription/subscriptionService', () => ({
 
 import logger from '../../../src/config/logger';
 import { getInstancesForTier } from '../../../src/services/league/leagueInstanceService';
-import { checkTeamSchedulingReadiness } from '../../../src/services/tag-team/tagTeamService';
 
 const mockLogger = logger as jest.Mocked<typeof logger>;
 const mockGetInstancesForTier = getInstancesForTier as jest.MockedFunction<typeof getInstancesForTier>;
-const mockCheckTeamSchedulingReadiness = checkTeamSchedulingReadiness as jest.MockedFunction<typeof checkTeamSchedulingReadiness>;
+const mockCheckTeamSchedulingReadiness = jest.fn();
 
 // ── Imports (after mocks) ────────────────────────────────────────────
 

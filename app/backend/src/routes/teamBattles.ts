@@ -23,12 +23,14 @@ import prisma from '../lib/prisma';
 import {
   registerTeam,
   swapTeamMember,
+  swapPositions,
   renameTeam,
   disbandTeam,
 } from '../services/team-battle/teamBattleService';
 import { MAX_TEAMS_PER_INSTANCE } from '../services/team-battle/teamBattleAdapter';
 import { getEntityHistory } from '../services/league/leagueHistoryService';
 import { hasSubscription } from '../services/subscription/subscriptionService';
+import { getMinLPForPromotion } from '../services/league/leaguePromotionThresholds';
 
 const router = express.Router();
 
@@ -196,6 +198,24 @@ router.put(
 );
 
 /**
+ * PUT /api/team-battles/:id/swap-positions
+ * Swap Active ↔ Reserve positions on a 2v2 team.
+ */
+router.put(
+  '/:id/swap-positions',
+  authenticateToken,
+  validateRequest({ params: teamIdParamsSchema }),
+  async (req: AuthRequest, res: Response) => {
+    const teamId = Number(req.params.id);
+    const userId = req.user!.userId;
+
+    await swapPositions(teamId, userId);
+
+    res.json({ message: 'Positions swapped successfully' });
+  },
+);
+
+/**
  * PUT /api/team-battles/:id/rename
  * Rename a team.
  */
@@ -236,6 +256,13 @@ router.delete(
 
 const VALID_TIERS = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'];
 
+// Zone computation constants (matching 1v1 league logic)
+const PROMOTION_PERCENTAGE = 0.10;
+const DEMOTION_PERCENTAGE = 0.10;
+const MIN_CYCLES_IN_LEAGUE = 5;
+const MIN_TEAMS_FOR_REBALANCING_2V2_3V3 = 4;
+const MIN_TEAMS_FOR_REBALANCING_TAG_TEAM = 4;
+
 const standingsParamsSchema = z.object({
   tier: z.string().refine((v) => VALID_TIERS.includes(v), { message: 'Invalid league tier' }),
   teamSize: z.string().refine((v) => v === '2' || v === '3', { message: 'teamSize must be 2 or 3' }),
@@ -271,7 +298,7 @@ router.get(
     // Get paginated standings ordered by LP descending
     const teams = await prisma.teamBattle.findMany({
       where,
-      orderBy: [{ teamLp: 'desc' }, { totalWins: 'desc' }, { createdAt: 'asc' }],
+      orderBy: [{ teamLp: 'desc' }, { totalLeagueWins: 'desc' }, { createdAt: 'asc' }],
       skip: (page - 1) * perPage,
       take: perPage,
       include: {
@@ -289,6 +316,76 @@ router.get(
       },
     });
 
+    // ── Zone computation (promotion/demotion indicators) ──
+    const minLP = getMinLPForPromotion(tier);
+    const isChampion = tier === 'champion';
+    const isBronze = tier === 'bronze';
+    const minEntities = MIN_TEAMS_FOR_REBALANCING_2V2_3V3;
+
+    let eligibleCount: number;
+    let hasEnoughRobots: boolean;
+    let promotionCount = 0;
+    let demotionCount = 0;
+    let promotionTeamIds: Set<number> = new Set();
+    let demotionTeamIds: Set<number> = new Set();
+
+    if (instance) {
+      // Count eligible teams (≥5 cycles) in this specific instance
+      eligibleCount = await prisma.teamBattle.count({
+        where: {
+          teamSize,
+          teamLeagueId: instance,
+          cyclesInLeague: { gte: MIN_CYCLES_IN_LEAGUE },
+        },
+      });
+
+      hasEnoughRobots = eligibleCount >= minEntities;
+      promotionCount = hasEnoughRobots ? Math.floor(eligibleCount * PROMOTION_PERCENTAGE) : 0;
+      demotionCount = hasEnoughRobots ? Math.floor(eligibleCount * DEMOTION_PERCENTAGE) : 0;
+
+      // Demotion zone: bottom 10% of eligible teams by LP
+      if (hasEnoughRobots && demotionCount > 0 && !isBronze) {
+        const demotionTeams = await prisma.teamBattle.findMany({
+          where: {
+            teamSize,
+            teamLeagueId: instance,
+            cyclesInLeague: { gte: MIN_CYCLES_IN_LEAGUE },
+          },
+          orderBy: [{ teamLp: 'asc' }, { totalLeagueWins: 'asc' }],
+          select: { id: true },
+          take: demotionCount,
+        });
+        demotionTeamIds = new Set(demotionTeams.map(t => t.id));
+      }
+
+      // Promotion zone: top 10% of eligible teams that meet minLP
+      if (hasEnoughRobots && promotionCount > 0 && !isChampion) {
+        const promotionTeams = await prisma.teamBattle.findMany({
+          where: {
+            teamSize,
+            teamLeagueId: instance,
+            cyclesInLeague: { gte: MIN_CYCLES_IN_LEAGUE },
+            teamLp: { gte: minLP },
+          },
+          orderBy: [{ teamLp: 'desc' }, { totalLeagueWins: 'desc' }],
+          select: { id: true },
+          take: promotionCount,
+        });
+        promotionTeamIds = new Set(promotionTeams.map(t => t.id));
+      }
+    } else {
+      // Tier-wide eligible count (no per-team zone highlighting without a specific instance)
+      eligibleCount = await prisma.teamBattle.count({
+        where: {
+          teamSize,
+          teamLeague: tier,
+          cyclesInLeague: { gte: MIN_CYCLES_IN_LEAGUE },
+        },
+      });
+
+      hasEnoughRobots = eligibleCount >= minEntities;
+    }
+
     // Compute team ELO (sum of member robot ELOs) and format response
     // Batch-check subscription status: all members must be subscribed to the league event
     const eventType = teamSize === 2 ? 'league_2v2' : 'league_3v3';
@@ -303,6 +400,12 @@ router.get(
       const teamELO = team.members.reduce((sum, m) => sum + m.robot.elo, 0);
       const rank = (page - 1) * perPage + index + 1;
       const isSubscribed = team.members.every(m => subscribedMemberIds.has(m.robot.id));
+      const eligible = team.cyclesInLeague >= MIN_CYCLES_IN_LEAGUE;
+      const zone = promotionTeamIds.has(team.id)
+        ? 'promotion' as const
+        : demotionTeamIds.has(team.id)
+          ? 'demotion' as const
+          : null;
       return {
         rank,
         teamId: team.id,
@@ -314,13 +417,15 @@ router.get(
         teamELO,
         teamLeague: team.teamLeague,
         teamLeagueId: team.teamLeagueId,
-        wins: team.totalWins,
-        losses: team.totalLosses,
-        draws: team.totalDraws,
-        totalMatches: team.totalWins + team.totalLosses + team.totalDraws,
+        wins: team.totalLeagueWins,
+        losses: team.totalLeagueLosses,
+        draws: team.totalLeagueDraws,
+        totalMatches: team.totalLeagueWins + team.totalLeagueLosses + team.totalLeagueDraws,
         eligibility: team.eligibility,
         cyclesInLeague: team.cyclesInLeague,
         isSubscribed,
+        zone,
+        eligible,
         members: team.members.map((m) => ({
           robotId: m.robot.id,
           robotName: m.robot.name,
@@ -335,6 +440,17 @@ router.get(
       pagination: { page, pageSize: perPage, total, totalPages },
       tier,
       teamSize,
+      zoneMeta: {
+        minLP,
+        minCycles: MIN_CYCLES_IN_LEAGUE,
+        hasEnoughRobots,
+        minRobotsRequired: minEntities,
+        eligibleCount,
+        isChampion,
+        isBronze,
+        promotionSlots: promotionCount,
+        demotionSlots: demotionCount,
+      },
     });
   },
 );
@@ -372,6 +488,226 @@ router.get(
   },
 );
 
+// ── Tag Team Instances ───────────────────────────────────────────────
+
+const tagTeamTierParamsSchema = z.object({
+  tier: z.string().refine((v) => VALID_TIERS.includes(v), { message: 'Invalid league tier' }),
+});
+
+/**
+ * GET /api/team-battles/leagues/2/:tier/tag-team-instances
+ * Get tag team league instances for a specific tier (teamSize fixed at 2).
+ */
+router.get(
+  '/leagues/2/:tier/tag-team-instances',
+  authenticateToken,
+  validateRequest({ params: tagTeamTierParamsSchema }),
+  async (req: AuthRequest, res: Response) => {
+    const tier = String(req.params.tier);
+
+    // Group teams by tagTeamLeagueId to get instance counts
+    const instances = await prisma.teamBattle.groupBy({
+      by: ['tagTeamLeagueId'],
+      where: {
+        teamSize: 2,
+        tagTeamLeague: tier,
+      },
+      _count: true,
+    });
+
+    const formatted = instances.map((inst) => ({
+      leagueId: inst.tagTeamLeagueId,
+      leagueTier: tier,
+      currentTeams: inst._count,
+      maxTeams: MAX_TEAMS_PER_INSTANCE,
+    }));
+
+    res.json(formatted);
+  },
+);
+
+// ── Tag Team Standings ────────────────────────────────────────────────
+
+/**
+ * GET /api/team-battles/leagues/2/:tier/tag-team-standings
+ * Get tag team league standings for 2v2 teams in a specific tier.
+ * Query params: page (default 1), perPage (default 50, max 100), instance (optional tagTeamLeagueId)
+ */
+router.get(
+  '/leagues/2/:tier/tag-team-standings',
+  authenticateToken,
+  validateRequest({ params: tagTeamTierParamsSchema }),
+  async (req: AuthRequest, res: Response) => {
+    const tier = String(req.params.tier);
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const perPage = Math.min(100, Math.max(1, parseInt(req.query.perPage as string) || 50));
+    const instance = req.query.instance as string | undefined;
+
+    // Build where clause: teamSize=2, filter by tagTeamLeague tier, optionally by tagTeamLeagueId
+    const where = {
+      teamSize: 2,
+      tagTeamLeague: tier,
+      ...(instance && { tagTeamLeagueId: instance }),
+    };
+
+    // Get total count
+    const total = await prisma.teamBattle.count({ where });
+    const totalPages = Math.ceil(total / perPage);
+
+    // Get paginated standings ordered by tagTeamLp descending
+    const teams = await prisma.teamBattle.findMany({
+      where,
+      orderBy: [{ tagTeamLp: 'desc' }, { totalTagTeamWins: 'desc' }, { createdAt: 'asc' }],
+      skip: (page - 1) * perPage,
+      take: perPage,
+      include: {
+        stable: {
+          select: { stableName: true, username: true },
+        },
+        members: {
+          include: {
+            robot: {
+              select: { id: true, name: true, elo: true },
+            },
+          },
+          orderBy: { slotIndex: 'asc' },
+        },
+      },
+    });
+
+    // ── Zone computation (promotion/demotion indicators) ──
+    const minLP = getMinLPForPromotion(tier);
+    const isChampion = tier === 'champion';
+    const isBronze = tier === 'bronze';
+    const minEntities = MIN_TEAMS_FOR_REBALANCING_TAG_TEAM;
+
+    let eligibleCount: number;
+    let hasEnoughRobots: boolean;
+    let promotionCount = 0;
+    let demotionCount = 0;
+    let promotionTeamIds: Set<number> = new Set();
+    let demotionTeamIds: Set<number> = new Set();
+
+    if (instance) {
+      // Count eligible teams (≥5 cycles) in this specific instance
+      eligibleCount = await prisma.teamBattle.count({
+        where: {
+          teamSize: 2,
+          tagTeamLeagueId: instance,
+          cyclesInTagTeamLeague: { gte: MIN_CYCLES_IN_LEAGUE },
+        },
+      });
+
+      hasEnoughRobots = eligibleCount >= minEntities;
+      promotionCount = hasEnoughRobots ? Math.floor(eligibleCount * PROMOTION_PERCENTAGE) : 0;
+      demotionCount = hasEnoughRobots ? Math.floor(eligibleCount * DEMOTION_PERCENTAGE) : 0;
+
+      // Demotion zone: bottom 10% of eligible teams by tagTeamLp
+      if (hasEnoughRobots && demotionCount > 0 && !isBronze) {
+        const demotionTeams = await prisma.teamBattle.findMany({
+          where: {
+            teamSize: 2,
+            tagTeamLeagueId: instance,
+            cyclesInTagTeamLeague: { gte: MIN_CYCLES_IN_LEAGUE },
+          },
+          orderBy: [{ tagTeamLp: 'asc' }, { totalTagTeamWins: 'asc' }],
+          select: { id: true },
+          take: demotionCount,
+        });
+        demotionTeamIds = new Set(demotionTeams.map(t => t.id));
+      }
+
+      // Promotion zone: top 10% of eligible teams that meet minLP
+      if (hasEnoughRobots && promotionCount > 0 && !isChampion) {
+        const promotionTeams = await prisma.teamBattle.findMany({
+          where: {
+            teamSize: 2,
+            tagTeamLeagueId: instance,
+            cyclesInTagTeamLeague: { gte: MIN_CYCLES_IN_LEAGUE },
+            tagTeamLp: { gte: minLP },
+          },
+          orderBy: [{ tagTeamLp: 'desc' }, { totalTagTeamWins: 'desc' }],
+          select: { id: true },
+          take: promotionCount,
+        });
+        promotionTeamIds = new Set(promotionTeams.map(t => t.id));
+      }
+    } else {
+      // Tier-wide eligible count (no per-team zone highlighting without a specific instance)
+      eligibleCount = await prisma.teamBattle.count({
+        where: {
+          teamSize: 2,
+          tagTeamLeague: tier,
+          cyclesInTagTeamLeague: { gte: MIN_CYCLES_IN_LEAGUE },
+        },
+      });
+
+      hasEnoughRobots = eligibleCount >= minEntities;
+    }
+
+    // Batch-check tag_team subscription status for all members
+    const allMemberRobotIds = teams.flatMap(t => t.members.map(m => m.robot.id));
+    const activeTagTeamSubs = await prisma.subscription.findMany({
+      where: { robotId: { in: allMemberRobotIds }, eventType: 'tag_team', status: 'active' },
+      select: { robotId: true },
+    });
+    const subscribedMemberIds = new Set(activeTagTeamSubs.map(s => s.robotId));
+
+    const standings = teams.map((team, index) => {
+      const combinedELO = team.members.reduce((sum, m) => sum + m.robot.elo, 0);
+      const rank = (page - 1) * perPage + index + 1;
+      const isSubscribed = team.members.every(m => subscribedMemberIds.has(m.robot.id));
+      const eligible = team.cyclesInTagTeamLeague >= MIN_CYCLES_IN_LEAGUE;
+      const zone = promotionTeamIds.has(team.id)
+        ? 'promotion' as const
+        : demotionTeamIds.has(team.id)
+          ? 'demotion' as const
+          : null;
+      return {
+        rank,
+        teamId: team.id,
+        teamName: team.teamName,
+        stableId: team.stableId,
+        stableName: team.stable.stableName || team.stable.username,
+        tagTeamLp: team.tagTeamLp,
+        tagTeamLeague: team.tagTeamLeague,
+        tagTeamLeagueId: team.tagTeamLeagueId,
+        totalTagTeamWins: team.totalTagTeamWins,
+        totalTagTeamLosses: team.totalTagTeamLosses,
+        totalTagTeamDraws: team.totalTagTeamDraws,
+        combinedELO,
+        isSubscribed,
+        cyclesInTagTeamLeague: team.cyclesInTagTeamLeague,
+        zone,
+        eligible,
+        members: team.members.map((m) => ({
+          id: m.robot.id,
+          name: m.robot.name,
+          elo: m.robot.elo,
+          slotIndex: m.slotIndex,
+        })),
+      };
+    });
+
+    res.json({
+      standings,
+      pagination: { page, pageSize: perPage, total, totalPages },
+      tier,
+      zoneMeta: {
+        minLP,
+        minCycles: MIN_CYCLES_IN_LEAGUE,
+        hasEnoughRobots,
+        minRobotsRequired: minEntities,
+        eligibleCount,
+        isChampion,
+        isBronze,
+        promotionSlots: promotionCount,
+        demotionSlots: demotionCount,
+      },
+    });
+  },
+);
+
 // ── League History ───────────────────────────────────────────────────
 
 /**
@@ -396,6 +732,33 @@ router.get(
     }
 
     const data = await getEntityHistory('team_battle', teamId);
+    res.json({ data });
+  },
+);
+
+/**
+ * GET /api/team-battles/:id/tag-team-league-history
+ * Get tag team league history for a specific team battle team.
+ * Returns league history entries where entityType = 'tag_team'.
+ */
+router.get(
+  '/:id/tag-team-league-history',
+  authenticateToken,
+  validateRequest({ params: teamIdParamsSchema }),
+  async (req: AuthRequest, res: Response) => {
+    const teamId = Number(req.params.id);
+
+    const team = await prisma.teamBattle.findUnique({
+      where: { id: teamId },
+      select: { id: true },
+    });
+
+    if (!team) {
+      res.status(404).json({ error: 'Team not found' });
+      return;
+    }
+
+    const data = await getEntityHistory('tag_team', teamId);
     res.json({ data });
   },
 );

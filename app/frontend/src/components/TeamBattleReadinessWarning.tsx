@@ -3,7 +3,6 @@
  *
  * Dashboard-level warning that checks if any of the player's 2v2/3v3 League
  * teams has an ineligible member (not subscribed, not battle-ready, or destroyed).
- * Follows the same pattern as TagTeamReadinessWarning for consistent dashboard UX.
  *
  * Links to /team-battles management page for resolution.
  */

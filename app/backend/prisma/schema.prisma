@@ -64,7 +64,6 @@ model User {
   robots          Robot[]
   facilities      Facility[]
   weaponInventory WeaponInventory[]
-  tagTeams        TagTeam[]
   teamBattles     TeamBattle[]
   achievements    UserAchievement[]
   leagueHistory   LeagueHistory[]
@@ -226,8 +225,7 @@ model Robot {
   battlesAsRobot2           Battle[]                        @relation("Robot2")
   scheduledMatchesAsRobot1  ScheduledLeagueMatch[]          @relation("ScheduledRobot1")
   scheduledMatchesAsRobot2  ScheduledLeagueMatch[]          @relation("ScheduledRobot2")
-  tagTeamsAsActive          TagTeam[]                       @relation("TagTeamActiveRobot")
-  tagTeamsAsReserve         TagTeam[]                       @relation("TagTeamReserveRobot")
+
   battleParticipations      BattleParticipant[]
   kothMatchParticipations   ScheduledKothMatchParticipant[]
   teamBattleMembers         TeamBattleMember[]
@@ -444,7 +442,7 @@ model Battle {
   tournament         Tournament?                @relation("TournamentBattles", fields: [tournamentId], references: [id])
   scheduledMatch     ScheduledLeagueMatch[]
   tournamentMatches  ScheduledTournamentMatch[]
-  tagTeamMatches     ScheduledTagTeamMatch[]    @relation("TagTeamBattle")
+
   participants       BattleParticipant[] // Per-participant battle data (NEW - use this instead of robot1/robot2 columns)
   scheduledKothMatch ScheduledKothMatch[] // KotH match that produced this battle
 
@@ -618,66 +616,6 @@ model ScheduledTournamentMatch {
   @@index([participant1Id])
   @@index([participant2Id])
   @@map("tournament_matches")
-}
-
-// Tag Team model for tracking 2v2 team compositions
-model TagTeam {
-  id             Int @id @default(autoincrement())
-  stableId       Int @map("stable_id") // Owner's user ID
-  activeRobotId  Int @map("active_robot_id") // Robot that starts the match
-  reserveRobotId Int @map("reserve_robot_id") // Robot that tags in
-
-  // League tracking
-  tagTeamLeague         String @default("bronze") @map("tag_team_league") @db.VarChar(20) // bronze/silver/gold/platinum/diamond/champion
-  tagTeamLeagueId       String @default("bronze_1") @map("tag_team_league_id") @db.VarChar(30) // Specific instance: bronze_1, bronze_2, etc.
-  tagTeamLeaguePoints   Int    @default(0) @map("tag_team_league_points") // Points for promotion/demotion
-  cyclesInTagTeamLeague Int    @default(0) @map("cycles_in_tag_team_league") // Number of cycles in current league
-
-  // Performance tracking
-  totalTagTeamWins   Int @default(0) @map("total_tag_team_wins")
-  totalTagTeamLosses Int @default(0) @map("total_tag_team_losses")
-  totalTagTeamDraws  Int @default(0) @map("total_tag_team_draws")
-
-  // Timestamps
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  // Relations
-  stable         User                    @relation(fields: [stableId], references: [id], onDelete: Cascade)
-  activeRobot    Robot                   @relation("TagTeamActiveRobot", fields: [activeRobotId], references: [id])
-  reserveRobot   Robot                   @relation("TagTeamReserveRobot", fields: [reserveRobotId], references: [id])
-  matchesAsTeam1 ScheduledTagTeamMatch[] @relation("Team1")
-  matchesAsTeam2 ScheduledTagTeamMatch[] @relation("Team2")
-
-  @@unique([activeRobotId, reserveRobotId])
-  @@index([stableId])
-  @@index([tagTeamLeague, tagTeamLeagueId])
-  @@index([activeRobotId])
-  @@index([reserveRobotId])
-  @@map("tag_teams")
-}
-
-// Tag Team Match model for tracking scheduled 2v2 battles
-model ScheduledTagTeamMatch {
-  id            Int      @id @default(autoincrement())
-  team1Id       Int      @map("team1_id")
-  team2Id       Int?     @map("team2_id") // Nullable for bye-matches
-  tagTeamLeague String   @map("tag_team_league") @db.VarChar(20) // bronze/silver/gold/platinum/diamond/champion
-  scheduledFor  DateTime @map("scheduled_for") // When the match should be executed
-  status        String   @default("scheduled") @db.VarChar(20) // "scheduled", "completed", "cancelled"
-  battleId      Int?     @map("battle_id") // Links to Battle after completion
-  createdAt     DateTime @default(now()) @map("created_at")
-
-  // Relations
-  team1  TagTeam  @relation("Team1", fields: [team1Id], references: [id])
-  team2  TagTeam? @relation("Team2", fields: [team2Id], references: [id])
-  battle Battle?  @relation("TagTeamBattle", fields: [battleId], references: [id])
-
-  @@index([team1Id])
-  @@index([team2Id])
-  @@index([scheduledFor, status])
-  @@index([status])
-  @@map("tag_team_matches")
 }
 
 // Reset log table for tracking account resets (onboarding feature)
@@ -859,7 +797,7 @@ model AdminAuditLog {
 model LeagueHistory {
   id                  Int      @id @default(autoincrement())
   entityType          String   @map("entity_type") @db.VarChar(20)    // "robot" or "tag_team"
-  entityId            Int      @map("entity_id")                       // Robot ID or TagTeam ID
+  entityId            Int      @map("entity_id")                       // Robot ID or TeamBattle ID
   userId              Int      @map("user_id")                         // Owner (user.id for robots, stableId for tag teams)
   changeType          String   @map("change_type") @db.VarChar(20)    // "promotion" or "demotion"
   sourceTier          String   @map("source_tier") @db.VarChar(20)    // e.g. "bronze"
@@ -905,16 +843,27 @@ model TeamBattle {
   teamSize       Int    @map("team_size") // 2 or 3
   teamName       String @map("team_name") @db.VarChar(32) // Player-chosen team name (3-32 chars)
 
-  // League tracking
+  // League tracking (2v2 League or 3v3 League)
   teamLp         Int    @default(0) @map("team_lp") // Team League Points
   teamLeague     String @default("bronze") @map("team_league") @db.VarChar(20) // bronze/silver/gold/platinum/diamond/champion
   teamLeagueId   String @default("bronze_1") @map("team_league_id") @db.VarChar(30) // Specific instance: bronze_1, bronze_2, etc.
   cyclesInLeague Int    @default(0) @map("cycles_in_league") // Number of cycles in current league
 
-  // Performance tracking
-  totalWins   Int @default(0) @map("total_wins")
-  totalLosses Int @default(0) @map("total_losses")
-  totalDraws  Int @default(0) @map("total_draws")
+  // League performance (2v2 League or 3v3 League results)
+  totalLeagueWins   Int @default(0) @map("total_league_wins")
+  totalLeagueLosses Int @default(0) @map("total_league_losses")
+  totalLeagueDraws  Int @default(0) @map("total_league_draws")
+
+  // Tag Team league tracking (only used when teamSize = 2)
+  tagTeamLp             Int    @default(0) @map("tag_team_lp")
+  tagTeamLeague         String @default("bronze") @map("tag_team_league") @db.VarChar(20)
+  tagTeamLeagueId       String @default("bronze_1") @map("tag_team_league_id") @db.VarChar(30)
+  cyclesInTagTeamLeague Int    @default(0) @map("cycles_in_tag_team_league")
+
+  // Tag Team performance (only used when teamSize = 2)
+  totalTagTeamWins   Int @default(0) @map("total_tag_team_wins")
+  totalTagTeamLosses Int @default(0) @map("total_tag_team_losses")
+  totalTagTeamDraws  Int @default(0) @map("total_tag_team_draws")
 
   // Eligibility
   eligibility String @default("ELIGIBLE") @db.VarChar(20) // "ELIGIBLE" or "INELIGIBLE"
@@ -932,6 +881,7 @@ model TeamBattle {
   @@index([stableId])
   @@index([teamLeagueId])
   @@index([teamSize, teamLeague])
+  @@index([teamSize, tagTeamLeague, tagTeamLeagueId])
   @@map("team_battles")
 }
 
@@ -958,6 +908,7 @@ model ScheduledTeamBattleMatch {
   team1Id             Int      @map("team1_id")
   team2Id             Int?     @map("team2_id") // Nullable for bye-matches
   teamSize            Int      @map("team_size") // 2 or 3
+  matchMode           String   @map("match_mode") @db.VarChar(20) // league_2v2, league_3v3, tag_team, tournament_2v2, tournament_3v3
   teamBattleLeague    String   @map("team_battle_league") @db.VarChar(20) // bronze/silver/gold/platinum/diamond/champion
   teamBattleLeagueId  String   @map("team_battle_league_id") @db.VarChar(30) // Specific instance: bronze_1, bronze_2, etc.
   scheduledFor        DateTime @map("scheduled_for") // When the match should be executed
@@ -970,6 +921,7 @@ model ScheduledTeamBattleMatch {
   team2 TeamBattle? @relation("TeamBattleTeam2", fields: [team2Id], references: [id])
 
   @@index([status, teamSize])
+  @@index([status, matchMode])
   @@index([team1Id])
   @@index([team2Id])
   @@map("scheduled_team_battle_matches")

@@ -1,7 +1,39 @@
 import prisma from '../src/lib/prisma';
 import * as fc from 'fast-check';
-import { createTeam } from '../src/services/tag-team/tagTeamService';
 import { executeTagTeamBattle } from '../src/services/tag-team/tagTeamBattleOrchestrator';
+
+/** Helper: Create a 2v2 TeamBattle with members (slot 0 = active, slot 1 = reserve) */
+async function createTagTeamFixture(stableId: number, activeRobotId: number, reserveRobotId: number) {
+  return prisma.teamBattle.create({
+    data: {
+      stableId,
+      teamSize: 2,
+      teamName: `PBT_Team_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+      teamLp: 0,
+      teamLeague: 'bronze',
+      teamLeagueId: 'bronze_1',
+      cyclesInLeague: 0,
+      totalLeagueWins: 0,
+      totalLeagueLosses: 0,
+      totalLeagueDraws: 0,
+      tagTeamLp: 0,
+      tagTeamLeague: 'bronze',
+      tagTeamLeagueId: 'bronze_1',
+      cyclesInTagTeamLeague: 0,
+      totalTagTeamWins: 0,
+      totalTagTeamLosses: 0,
+      totalTagTeamDraws: 0,
+      eligibility: 'ELIGIBLE',
+      members: {
+        create: [
+          { robotId: activeRobotId, slotIndex: 0 },
+          { robotId: reserveRobotId, slotIndex: 1 },
+        ],
+      },
+    },
+    include: { members: true },
+  });
+}
 
 
 /**
@@ -68,16 +100,20 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
         },
       });
     }
-    await prisma.scheduledTagTeamMatch.deleteMany({
+    await prisma.scheduledTeamBattleMatch.deleteMany({
       where: {
+        matchMode: 'tag_team',
         OR: [
           { team1: { stableId: { in: userIds } } },
           { team2: { stableId: { in: userIds } } },
         ],
       },
     });
-    await prisma.tagTeam.deleteMany({
-      where: { stableId: { in: userIds } },
+    await prisma.teamBattleMember.deleteMany({
+      where: { team: { stableId: { in: userIds }, teamSize: 2 } },
+    });
+    await prisma.teamBattle.deleteMany({
+      where: { stableId: { in: userIds }, teamSize: 2 },
     });
     await prisma.robot.deleteMany({
       where: { userId: { in: userIds } },
@@ -195,21 +231,17 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
           });
 
           // Create tag teams
-          const team1Result = await createTeam(testUserId1, robot1.id, robot2.id);
-          const team2Result = await createTeam(testUserId2, robot3.id, robot4.id);
+          const team1 = await createTagTeamFixture(testUserId1, robot1.id, robot2.id);
+          const team2 = await createTagTeamFixture(testUserId2, robot3.id, robot4.id);
 
-          expect(team1Result.success).toBe(true);
-          expect(team2Result.success).toBe(true);
 
-          const team1 = team1Result.team!;
-          const team2 = team2Result.team!;
 
           // Create a tag team match
-          const match = await prisma.scheduledTagTeamMatch.create({
+          const match = await prisma.scheduledTeamBattleMatch.create({
             data: {
               team1Id: team1.id,
               team2Id: team2.id,
-              tagTeamLeague: 'bronze',
+              teamSize: 2, matchMode: 'tag_team', teamBattleLeague: 'bronze', teamBattleLeagueId: 'bronze_1',
               scheduledFor: new Date(),
               status: 'scheduled',
             },
@@ -239,8 +271,9 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
 
           // Clean up
           await prisma.battle.deleteMany({ where: { id: battle!.id } });
-          await prisma.scheduledTagTeamMatch.deleteMany({ where: { id: match.id } });
-          await prisma.tagTeam.deleteMany({
+          await prisma.scheduledTeamBattleMatch.deleteMany({ where: { id: match.id } });
+          await prisma.teamBattleMember.deleteMany({ where: { teamId: { in: [team1.id, team2.id] } } });
+          await prisma.teamBattle.deleteMany({
             where: { id: { in: [team1.id, team2.id] } },
           });
           await prisma.robot.deleteMany({
@@ -345,21 +378,17 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
           });
 
           // Create tag teams
-          const team1Result = await createTeam(testUserId1, robot1.id, robot2.id);
-          const team2Result = await createTeam(testUserId2, robot3.id, robot4.id);
+          const team1 = await createTagTeamFixture(testUserId1, robot1.id, robot2.id);
+          const team2 = await createTagTeamFixture(testUserId2, robot3.id, robot4.id);
 
-          expect(team1Result.success).toBe(true);
-          expect(team2Result.success).toBe(true);
 
-          const team1 = team1Result.team!;
-          const team2 = team2Result.team!;
 
           // Create a tag team match
-          const match = await prisma.scheduledTagTeamMatch.create({
+          const match = await prisma.scheduledTeamBattleMatch.create({
             data: {
               team1Id: team1.id,
               team2Id: team2.id,
-              tagTeamLeague: 'bronze',
+              teamSize: 2, matchMode: 'tag_team', teamBattleLeague: 'bronze', teamBattleLeagueId: 'bronze_1',
               scheduledFor: new Date(),
               status: 'scheduled',
             },
@@ -395,8 +424,9 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
 
           // Clean up
           await prisma.battle.deleteMany({ where: { id: battle!.id } });
-          await prisma.scheduledTagTeamMatch.deleteMany({ where: { id: match.id } });
-          await prisma.tagTeam.deleteMany({
+          await prisma.scheduledTeamBattleMatch.deleteMany({ where: { id: match.id } });
+          await prisma.teamBattleMember.deleteMany({ where: { teamId: { in: [team1.id, team2.id] } } });
+          await prisma.teamBattle.deleteMany({
             where: { id: { in: [team1.id, team2.id] } },
           });
           await prisma.robot.deleteMany({
@@ -500,21 +530,17 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
           });
 
           // Create tag teams
-          const team1Result = await createTeam(testUserId1, robot1.id, robot2.id);
-          const team2Result = await createTeam(testUserId2, robot3.id, robot4.id);
+          const team1 = await createTagTeamFixture(testUserId1, robot1.id, robot2.id);
+          const team2 = await createTagTeamFixture(testUserId2, robot3.id, robot4.id);
 
-          expect(team1Result.success).toBe(true);
-          expect(team2Result.success).toBe(true);
 
-          const team1 = team1Result.team!;
-          const team2 = team2Result.team!;
 
           // Create a tag team match
-          const match = await prisma.scheduledTagTeamMatch.create({
+          const match = await prisma.scheduledTeamBattleMatch.create({
             data: {
               team1Id: team1.id,
               team2Id: team2.id,
-              tagTeamLeague: 'bronze',
+              teamSize: 2, matchMode: 'tag_team', teamBattleLeague: 'bronze', teamBattleLeagueId: 'bronze_1',
               scheduledFor: new Date(),
               status: 'scheduled',
             },
@@ -551,8 +577,9 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
 
           // Clean up
           await prisma.battle.deleteMany({ where: { id: battle!.id } });
-          await prisma.scheduledTagTeamMatch.deleteMany({ where: { id: match.id } });
-          await prisma.tagTeam.deleteMany({
+          await prisma.scheduledTeamBattleMatch.deleteMany({ where: { id: match.id } });
+          await prisma.teamBattleMember.deleteMany({ where: { teamId: { in: [team1.id, team2.id] } } });
+          await prisma.teamBattle.deleteMany({
             where: { id: { in: [team1.id, team2.id] } },
           });
           await prisma.robot.deleteMany({
@@ -656,21 +683,17 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
           });
 
           // Create tag teams
-          const team1Result = await createTeam(testUserId1, robot1.id, robot2.id);
-          const team2Result = await createTeam(testUserId2, robot3.id, robot4.id);
+          const team1 = await createTagTeamFixture(testUserId1, robot1.id, robot2.id);
+          const team2 = await createTagTeamFixture(testUserId2, robot3.id, robot4.id);
 
-          expect(team1Result.success).toBe(true);
-          expect(team2Result.success).toBe(true);
 
-          const team1 = team1Result.team!;
-          const team2 = team2Result.team!;
 
           // Create a tag team match
-          const match = await prisma.scheduledTagTeamMatch.create({
+          const match = await prisma.scheduledTeamBattleMatch.create({
             data: {
               team1Id: team1.id,
               team2Id: team2.id,
-              tagTeamLeague: 'bronze',
+              teamSize: 2, matchMode: 'tag_team', teamBattleLeague: 'bronze', teamBattleLeagueId: 'bronze_1',
               scheduledFor: new Date(),
               status: 'scheduled',
             },
@@ -706,8 +729,9 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
 
           // Clean up
           await prisma.battle.deleteMany({ where: { id: battle!.id } });
-          await prisma.scheduledTagTeamMatch.deleteMany({ where: { id: match.id } });
-          await prisma.tagTeam.deleteMany({
+          await prisma.scheduledTeamBattleMatch.deleteMany({ where: { id: match.id } });
+          await prisma.teamBattleMember.deleteMany({ where: { teamId: { in: [team1.id, team2.id] } } });
+          await prisma.teamBattle.deleteMany({
             where: { id: { in: [team1.id, team2.id] } },
           });
           await prisma.robot.deleteMany({
@@ -811,21 +835,17 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
           });
 
           // Create tag teams
-          const team1Result = await createTeam(testUserId1, robot1.id, robot2.id);
-          const team2Result = await createTeam(testUserId2, robot3.id, robot4.id);
+          const team1 = await createTagTeamFixture(testUserId1, robot1.id, robot2.id);
+          const team2 = await createTagTeamFixture(testUserId2, robot3.id, robot4.id);
 
-          expect(team1Result.success).toBe(true);
-          expect(team2Result.success).toBe(true);
 
-          const team1 = team1Result.team!;
-          const team2 = team2Result.team!;
 
           // Create a tag team match
-          const match = await prisma.scheduledTagTeamMatch.create({
+          const match = await prisma.scheduledTeamBattleMatch.create({
             data: {
               team1Id: team1.id,
               team2Id: team2.id,
-              tagTeamLeague: 'bronze',
+              teamSize: 2, matchMode: 'tag_team', teamBattleLeague: 'bronze', teamBattleLeagueId: 'bronze_1',
               scheduledFor: new Date(),
               status: 'scheduled',
             },
@@ -863,8 +883,9 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
 
           // Clean up
           await prisma.battle.deleteMany({ where: { id: battle!.id } });
-          await prisma.scheduledTagTeamMatch.deleteMany({ where: { id: match.id } });
-          await prisma.tagTeam.deleteMany({
+          await prisma.scheduledTeamBattleMatch.deleteMany({ where: { id: match.id } });
+          await prisma.teamBattleMember.deleteMany({ where: { teamId: { in: [team1.id, team2.id] } } });
+          await prisma.teamBattle.deleteMany({
             where: { id: { in: [team1.id, team2.id] } },
           });
           await prisma.robot.deleteMany({

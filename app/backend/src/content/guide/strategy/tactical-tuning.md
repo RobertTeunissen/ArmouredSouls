@@ -57,7 +57,7 @@ KotH is a free-for-all with 5–6 robots. You can't tune for one opponent, so sp
 
 ### Tag Team
 
-Both robots in your tag team have independent tuning pools. Tune your active robot for the expected first opponent and your reserve for a different matchup profile — this gives your team tactical flexibility.
+Both robots in your 2v2 team have independent tuning pools. For tag team battles, Slot 1 (Active) fights first and Slot 2 (Reserve) tags in — tune your Active robot for the expected first opponent and your Reserve for a different matchup profile — this gives your team tactical flexibility.
 
 ## Using the Practice Arena
 

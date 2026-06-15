@@ -4,7 +4,7 @@ import { MemoryRouter, Routes, Route, Navigate, useLocation } from 'react-router
 
 /**
  * Tests for routing redirects related to team battles.
- * Verifies that legacy /tag-teams routes redirect to /team-battles.
+ * Verifies that legacy /tag-teams routes redirect to /team-battles (default 2v2 tab).
  *
  * Requirements: R9.12, R9.17
  */
@@ -24,8 +24,8 @@ function TestRoutes({ initialEntry }: { initialEntry: string }) {
   return (
     <MemoryRouter initialEntries={[initialEntry]}>
       <Routes>
-        <Route path="/tag-teams" element={<Navigate to="/team-battles?tab=tag-team" replace />} />
-        <Route path="/tag-teams/standings" element={<Navigate to="/team-battles?tab=tag-team" replace />} />
+        <Route path="/tag-teams" element={<Navigate to="/team-battles" replace />} />
+        <Route path="/tag-teams/standings" element={<Navigate to="/team-battles" replace />} />
         <Route path="/team-battles" element={<LocationDisplay />} />
         <Route path="*" element={<LocationDisplay />} />
       </Routes>
@@ -34,21 +34,21 @@ function TestRoutes({ initialEntry }: { initialEntry: string }) {
 }
 
 describe('Routing Redirects - /tag-teams → /team-battles', () => {
-  it('should redirect /tag-teams to /team-battles?tab=tag-team', async () => {
+  it('should redirect /tag-teams to /team-battles', async () => {
     render(<TestRoutes initialEntry="/tag-teams" />);
 
     await waitFor(() => {
       const locationEl = screen.getByTestId('location-display');
-      expect(locationEl.textContent).toBe('/team-battles?tab=tag-team');
+      expect(locationEl.textContent).toBe('/team-battles');
     });
   });
 
-  it('should redirect /tag-teams/standings to /team-battles?tab=tag-team', async () => {
+  it('should redirect /tag-teams/standings to /team-battles', async () => {
     render(<TestRoutes initialEntry="/tag-teams/standings" />);
 
     await waitFor(() => {
       const locationEl = screen.getByTestId('location-display');
-      expect(locationEl.textContent).toBe('/team-battles?tab=tag-team');
+      expect(locationEl.textContent).toBe('/team-battles');
     });
   });
 
@@ -73,12 +73,14 @@ describe('Routing Redirects - /tag-teams → /team-battles', () => {
     });
   });
 
-  it('should redirect with tab=tag-team query parameter', async () => {
+  it('should redirect legacy /tag-teams to team battles default (2v2) tab', async () => {
     render(<TestRoutes initialEntry="/tag-teams" />);
 
     await waitFor(() => {
       const locationEl = screen.getByTestId('location-display');
-      expect(locationEl.textContent).toContain('tab=tag-team');
+      // No tab=tag-team parameter — the tag-team tab is removed;
+      // team-battles page defaults to 2v2 tab
+      expect(locationEl.textContent).toBe('/team-battles');
     });
   });
 });

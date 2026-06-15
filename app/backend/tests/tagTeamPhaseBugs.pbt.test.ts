@@ -167,6 +167,11 @@ function createWeaponInventory(weaponId: number, name: string, baseDamage: numbe
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type RobotWithWeapon = Robot & { mainWeapon: any; offhandWeapon: any };
 
+/**
+ * Internal representation matching the orchestrator's TagTeamWithRobots interface.
+ * In production, this is loaded from TeamBattle + TeamBattleMember (slot 0 = active, slot 1 = reserve).
+ * For these unit tests, we construct it directly from mock data.
+ */
 interface TagTeamWithRobots {
   id: number;
   activeRobotId: number;
@@ -206,8 +211,8 @@ function createRobotWithWeapon(name: string, hp: number, shield: number, damage:
 }
 
 // ─── Import the function under test ─────────────────────────────────
-// We need to import simulateTagTeamBattle - it's not exported, so we'll test via the module
-// For now, we'll use a dynamic import approach
+// The orchestrator's simulateTagTeamBattle is internal. We replicate its logic
+// here to test bug conditions. Team data is loaded from TeamBattle in production.
 
 // Import the combat simulator to simulate individual phases
 import { simulateBattle, RobotWithWeapons, CombatResult } from '../src/services/battle/combatSimulator';

@@ -43,9 +43,16 @@ export interface TeamBattle {
   teamLeague: string;
   teamLeagueId: string;
   cyclesInLeague: number;
-  totalWins: number;
-  totalLosses: number;
-  totalDraws: number;
+  totalLeagueWins: number;
+  totalLeagueLosses: number;
+  totalLeagueDraws: number;
+  // Tag team fields (only populated when teamSize === 2)
+  tagTeamLp: number;
+  tagTeamLeague: string;
+  tagTeamLeagueId: string;
+  totalTagTeamWins: number;
+  totalTagTeamLosses: number;
+  totalTagTeamDraws: number;
   eligibility: string;
   ineligibilityReason: string | null;
   ineligibilityDetail: string | null;
@@ -97,6 +104,13 @@ export async function swapTeamBattleMember(
 }
 
 /**
+ * Swap Active ↔ Reserve positions on a 2v2 team.
+ */
+export async function swapTeamBattlePositions(teamId: number): Promise<void> {
+  await api.put(`/api/team-battles/${teamId}/swap-positions`);
+}
+
+/**
  * Rename a team.
  */
 export async function renameTeamBattle(teamId: number, teamName: string): Promise<void> {
@@ -137,6 +151,8 @@ export interface TeamBattleStanding {
   eligibility: string;
   cyclesInLeague: number;
   isSubscribed?: boolean;
+  zone?: 'promotion' | 'demotion' | null;
+  eligible?: boolean;
   members: TeamBattleStandingMember[];
 }
 
@@ -150,6 +166,17 @@ export interface TeamBattleStandingsResponse {
   };
   tier: string;
   teamSize: number;
+  zoneMeta?: {
+    minLP: number;
+    minCycles: number;
+    hasEnoughRobots: boolean;
+    minRobotsRequired: number;
+    eligibleCount: number;
+    isChampion: boolean;
+    isBronze: boolean;
+    promotionSlots: number;
+    demotionSlots: number;
+  };
 }
 
 export interface TeamBattleLeagueInstance {
@@ -193,4 +220,101 @@ export async function getTeamBattleLeagueInstances(
   return api.get<TeamBattleLeagueInstance[]>(
     `/api/team-battles/leagues/${teamSize}/${tier}/instances`,
   );
+}
+
+// ── Tag Team Standings Types ─────────────────────────────────────────
+
+export interface TagTeamStandingMember {
+  id: number;
+  name: string;
+  elo: number;
+  slotIndex: number;
+}
+
+export interface TagTeamStandingEntry {
+  rank: number;
+  teamId: number;
+  teamName: string;
+  stableId: number;
+  stableName: string;
+  tagTeamLp: number;
+  tagTeamLeague: string;
+  tagTeamLeagueId: string;
+  totalTagTeamWins: number;
+  totalTagTeamLosses: number;
+  totalTagTeamDraws: number;
+  combinedELO: number;
+  cyclesInTagTeamLeague?: number;
+  zone?: 'promotion' | 'demotion' | null;
+  eligible?: boolean;
+  members: TagTeamStandingMember[];
+}
+
+export interface TagTeamStandingsResponse {
+  standings: TagTeamStandingEntry[];
+  pagination: {
+    page: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
+  };
+  tier: string;
+  zoneMeta?: {
+    minLP: number;
+    minCycles: number;
+    hasEnoughRobots: boolean;
+    minRobotsRequired: number;
+    eligibleCount: number;
+    isChampion: boolean;
+    isBronze: boolean;
+    promotionSlots: number;
+    demotionSlots: number;
+  };
+}
+
+// ── Tag Team Standings API Functions ─────────────────────────────────
+
+/**
+ * Fetch tag team standings for a specific tier, sorted by tagTeamLp descending.
+ */
+export async function getTagTeamStandingsNew(
+  tier: string,
+  page: number = 1,
+  perPage: number = 50,
+  instance?: string,
+): Promise<TagTeamStandingsResponse> {
+  return api.get<TagTeamStandingsResponse>(
+    `/api/team-battles/leagues/2/${tier}/tag-team-standings`,
+    {
+      params: {
+        page,
+        perPage,
+        ...(instance && { instance }),
+      },
+    },
+  );
+}
+
+/**
+ * Fetch tag team league instances for a specific tier.
+ */
+export async function getTagTeamLeagueInstances(
+  tier: string,
+): Promise<TeamBattleLeagueInstance[]> {
+  return api.get<TeamBattleLeagueInstance[]>(
+    `/api/team-battles/leagues/2/${tier}/tag-team-instances`,
+  );
+}
+
+// ── Shared Helpers ───────────────────────────────────────────────────
+
+/**
+ * Generate a team name from match team data.
+ * Used for upcoming/recent matches where we have team info but not full TeamBattle object.
+ */
+export function getTeamNameFromMatch(teamId: number, stableName: string | null): string {
+  if (stableName) {
+    return stableName;
+  }
+  return `Team ${teamId}`;
 }

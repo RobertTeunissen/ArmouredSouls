@@ -1,4 +1,4 @@
-import { Robot, TagTeam, ScheduledTagTeamMatch, Battle, Prisma } from '../../../generated/prisma';
+import { Robot, TeamBattle, ScheduledTeamBattleMatch, Battle, Prisma } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { simulateBattle } from '../battle/combatSimulator';
@@ -28,9 +28,24 @@ const TAG_TEAM_PRESTIGE_MULTIPLIER = 1.6; // Tag team prestige is 1.6x standard
 const _DESTRUCTION_MULTIPLIER = 2; // Destroyed robots have 2x repair cost
 
 // Types
-interface TagTeamWithRobots extends TagTeam {
+interface TagTeamWithRobots {
+  id: number;
+  stableId: number;
+  teamName: string;
+  teamSize: number;
+  activeRobotId: number;
+  reserveRobotId: number;
   activeRobot: RobotWithWeapons;
   reserveRobot: RobotWithWeapons;
+  tagTeamLp: number;
+  tagTeamLeague: string;
+  tagTeamLeagueId: string;
+  cyclesInTagTeamLeague: number;
+  totalTagTeamWins: number;
+  totalTagTeamLosses: number;
+  totalTagTeamDraws: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 interface TagTeamBattleResult {
@@ -219,11 +234,13 @@ function createByeTeamForBattle(league: string, leagueId: string): TagTeamWithRo
   const byeTeam: TagTeamWithRobots = {
     id: -1,
     stableId: -1,
+    teamName: 'Bye Team',
+    teamSize: 2,
     activeRobotId: -1,
     reserveRobotId: -2,
+    tagTeamLp: 0,
     tagTeamLeague: league,
     tagTeamLeagueId: leagueId,
-    tagTeamLeaguePoints: 0,
     cyclesInTagTeamLeague: 0,
     totalTagTeamWins: 0,
     totalTagTeamLosses: 0,
@@ -242,12 +259,12 @@ function createByeTeamForBattle(league: string, leagueId: string): TagTeamWithRo
  * Requirement 3.1: Initialize battle with both teams' active robots
  * Requirement 12.3: Execute normal battle against bye-team
  */
-export async function executeTagTeamBattle(match: ScheduledTagTeamMatch): Promise<TagTeamBattleResult> {
+export async function executeTagTeamBattle(match: ScheduledTeamBattleMatch): Promise<TagTeamBattleResult> {
   // R1.8: Reject payloads with team battle league types
-  if (match.tagTeamLeague === 'league_2v2' || match.tagTeamLeague === 'league_3v3') {
+  if (match.matchMode !== 'tag_team') {
     throw new TagTeamError(
       TagTeamErrorCode.INVALID_TEAM_COMPOSITION,
-      'Tag Team Orchestrator cannot process league_2v2 or league_3v3 battle types',
+      'Tag Team Orchestrator cannot process non-tag_team match modes',
       400,
     );
   }
@@ -257,46 +274,93 @@ export async function executeTagTeamBattle(match: ScheduledTagTeamMatch): Promis
   
   // Spec #34: include refinements so prepareRobotForCombat can fold them
   // into the weapon's effective stats before the simulator reads them.
-  const team1: TagTeamWithRobots | null = await prisma.tagTeam.findUnique({
+  // Load from TeamBattle with members (slotIndex 0 = active, slotIndex 1 = reserve)
+  const team1Raw = await prisma.teamBattle.findUnique({
     where: { id: match.team1Id },
     include: {
-      activeRobot: {
+      members: {
         include: {
-          mainWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
-          offhandWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
+          robot: {
+            include: {
+              mainWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
+              offhandWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
+            },
+          },
         },
-      },
-      reserveRobot: {
-        include: {
-          mainWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
-          offhandWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
-        },
+        orderBy: { slotIndex: 'asc' },
       },
     },
   });
 
+  // Map TeamBattle members to TagTeamWithRobots interface
+  let team1: TagTeamWithRobots | null = null;
+  if (team1Raw && team1Raw.members.length >= 2) {
+    team1 = {
+      id: team1Raw.id,
+      stableId: team1Raw.stableId,
+      teamName: team1Raw.teamName,
+      teamSize: team1Raw.teamSize,
+      activeRobotId: team1Raw.members[0].robotId,
+      reserveRobotId: team1Raw.members[1].robotId,
+      activeRobot: team1Raw.members[0].robot as RobotWithWeapons,
+      reserveRobot: team1Raw.members[1].robot as RobotWithWeapons,
+      tagTeamLp: team1Raw.tagTeamLp,
+      tagTeamLeague: team1Raw.tagTeamLeague,
+      tagTeamLeagueId: team1Raw.tagTeamLeagueId,
+      cyclesInTagTeamLeague: team1Raw.cyclesInTagTeamLeague,
+      totalTagTeamWins: team1Raw.totalTagTeamWins,
+      totalTagTeamLosses: team1Raw.totalTagTeamLosses,
+      totalTagTeamDraws: team1Raw.totalTagTeamDraws,
+      createdAt: team1Raw.createdAt,
+      updatedAt: team1Raw.updatedAt,
+    };
+  }
+
   // Load team2
   let team2: TagTeamWithRobots | null;
   if (match.team2Id === null) {
-    team2 = createByeTeamForBattle(match.tagTeamLeague, match.tagTeamLeague + '_1');
+    team2 = createByeTeamForBattle(match.teamBattleLeague, match.teamBattleLeague + '_1');
   } else {
-    team2 = await prisma.tagTeam.findUnique({
+    const team2Raw = await prisma.teamBattle.findUnique({
       where: { id: match.team2Id },
       include: {
-        activeRobot: {
+        members: {
           include: {
-            mainWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
-            offhandWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
+            robot: {
+              include: {
+                mainWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
+                offhandWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
+              },
+            },
           },
-        },
-        reserveRobot: {
-          include: {
-            mainWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
-            offhandWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
-          },
+          orderBy: { slotIndex: 'asc' },
         },
       },
     });
+
+    if (team2Raw && team2Raw.members.length >= 2) {
+      team2 = {
+        id: team2Raw.id,
+        stableId: team2Raw.stableId,
+        teamName: team2Raw.teamName,
+        teamSize: team2Raw.teamSize,
+        activeRobotId: team2Raw.members[0].robotId,
+        reserveRobotId: team2Raw.members[1].robotId,
+        activeRobot: team2Raw.members[0].robot as RobotWithWeapons,
+        reserveRobot: team2Raw.members[1].robot as RobotWithWeapons,
+        tagTeamLp: team2Raw.tagTeamLp,
+        tagTeamLeague: team2Raw.tagTeamLeague,
+        tagTeamLeagueId: team2Raw.tagTeamLeagueId,
+        cyclesInTagTeamLeague: team2Raw.cyclesInTagTeamLeague,
+        totalTagTeamWins: team2Raw.totalTagTeamWins,
+        totalTagTeamLosses: team2Raw.totalTagTeamLosses,
+        totalTagTeamDraws: team2Raw.totalTagTeamDraws,
+        createdAt: team2Raw.createdAt,
+        updatedAt: team2Raw.updatedAt,
+      };
+    } else {
+      team2 = null;
+    }
   }
 
   if (!team1 || !team2) {
@@ -335,16 +399,15 @@ export async function executeTagTeamBattle(match: ScheduledTagTeamMatch): Promis
   result.battleId = battle.id;
 
   // Update match status
-  await prisma.scheduledTagTeamMatch.update({
+  await prisma.scheduledTeamBattleMatch.update({
     where: { id: match.id },
     data: {
       status: 'completed',
-      battleId: battle.id,
     },
   });
 
   logger.info(
-    `[TagTeamBattle] Completed: Team ${team1.id} vs Team ${team2.id} ` +
+    `[TagTeamBattle] Completed: ${team1.teamName} vs ${team2.teamName} ` +
     `(Winner: ${result.winnerId ? `Team ${result.winnerId}` : 'Draw'})`
   );
 
@@ -475,7 +538,7 @@ async function simulateTagTeamBattle(
       robot1HP: team1TagOutEvent.finalHP,
       message: CombatMessageGenerator.generateTagOut({
         robotName: team1CurrentRobot.name,
-        teamName: `Team ${team1.id}`,
+        teamName: team1.teamName,
         reason: team1TagOutEvent.reason,
         finalHP: team1TagOutEvent.finalHP,
       }),
@@ -490,7 +553,7 @@ async function simulateTagTeamBattle(
       robot2HP: team2TagOutEvent.finalHP,
       message: CombatMessageGenerator.generateTagOut({
         robotName: team2CurrentRobot.name,
-        teamName: `Team ${team2.id}`,
+        teamName: team2.teamName,
         reason: team2TagOutEvent.reason,
         finalHP: team2TagOutEvent.finalHP,
       }),
@@ -529,7 +592,7 @@ async function simulateTagTeamBattle(
       robotId: team1CurrentRobot.id,
       message: CombatMessageGenerator.generateTagIn({
         robotName: team1CurrentRobot.name,
-        teamName: `Team ${team1.id}`,
+        teamName: team1.teamName,
         hp: team1CurrentRobot.currentHP,
       }),
     });
@@ -541,7 +604,7 @@ async function simulateTagTeamBattle(
       robotId: team2CurrentRobot.id,
       message: CombatMessageGenerator.generateTagIn({
         robotName: team2CurrentRobot.name,
-        teamName: `Team ${team2.id}`,
+        teamName: team2.teamName,
         hp: team2CurrentRobot.currentHP,
       }),
     });
@@ -598,7 +661,7 @@ async function simulateTagTeamBattle(
       robot1HP: team1TagOutEvent.finalHP,
       message: CombatMessageGenerator.generateTagOut({
         robotName: team1CurrentRobot.name,
-        teamName: `Team ${team1.id}`,
+        teamName: team1.teamName,
         reason: team1TagOutEvent.reason,
         finalHP: team1TagOutEvent.finalHP,
       }),
@@ -624,7 +687,7 @@ async function simulateTagTeamBattle(
       robotId: team1CurrentRobot.id,
       message: CombatMessageGenerator.generateTagIn({
         robotName: team1CurrentRobot.name,
-        teamName: `Team ${team1.id}`,
+        teamName: team1.teamName,
         hp: team1CurrentRobot.currentHP,
       }),
     });
@@ -681,7 +744,7 @@ async function simulateTagTeamBattle(
           robot2HP: team2TagOutEvent.finalHP,
           message: CombatMessageGenerator.generateTagOut({
             robotName: team2CurrentRobot.name,
-            teamName: `Team ${team2.id}`,
+            teamName: team2.teamName,
             reason: team2TagOutEvent.reason,
             finalHP: team2TagOutEvent.finalHP,
           }),
@@ -707,7 +770,7 @@ async function simulateTagTeamBattle(
           robotId: team2CurrentRobot.id,
           message: CombatMessageGenerator.generateTagIn({
             robotName: team2CurrentRobot.name,
-            teamName: `Team ${team2.id}`,
+            teamName: team2.teamName,
             hp: team2CurrentRobot.currentHP,
           }),
         });
@@ -766,7 +829,7 @@ async function simulateTagTeamBattle(
       robot2HP: team2TagOutEvent.finalHP,
       message: CombatMessageGenerator.generateTagOut({
         robotName: team2CurrentRobot.name,
-        teamName: `Team ${team2.id}`,
+        teamName: team2.teamName,
         reason: team2TagOutEvent.reason,
         finalHP: team2TagOutEvent.finalHP,
       }),
@@ -792,7 +855,7 @@ async function simulateTagTeamBattle(
       robotId: team2CurrentRobot.id,
       message: CombatMessageGenerator.generateTagIn({
         robotName: team2CurrentRobot.name,
-        teamName: `Team ${team2.id}`,
+        teamName: team2.teamName,
         hp: team2CurrentRobot.currentHP,
       }),
     });
@@ -849,7 +912,7 @@ async function simulateTagTeamBattle(
           robot1HP: team1TagOutEvent.finalHP,
           message: CombatMessageGenerator.generateTagOut({
             robotName: team1CurrentRobot.name,
-            teamName: `Team ${team1.id}`,
+            teamName: team1.teamName,
             reason: team1TagOutEvent.reason,
             finalHP: team1TagOutEvent.finalHP,
           }),
@@ -875,7 +938,7 @@ async function simulateTagTeamBattle(
           robotId: team1CurrentRobot.id,
           message: CombatMessageGenerator.generateTagIn({
             robotName: team1CurrentRobot.name,
-            teamName: `Team ${team1.id}`,
+            teamName: team1.teamName,
             hp: team1CurrentRobot.currentHP,
           }),
         });
@@ -1077,8 +1140,8 @@ async function simulateTagTeamBattle(
       }
       return phases;
     })(),
-    team1Name: `Team ${team1.id}`,
-    team2Name: `Team ${team2.id}`,
+    team1Name: team1.teamName,
+    team2Name: team2.teamName,
     team1ReserveName: team1.reserveRobot.name,
     team2ReserveName: team2.reserveRobot.name,
   };
@@ -1113,7 +1176,7 @@ function activateReserveRobot(robot: RobotWithWeapons): RobotWithWeapons {
  * Create a battle record for a tag team match
  */
 async function createTagTeamBattleRecord(
-  match: ScheduledTagTeamMatch,
+  match: ScheduledTeamBattleMatch,
   team1: TagTeamWithRobots,
   team2: TagTeamWithRobots,
   result: TagTeamBattleResult
@@ -1125,7 +1188,7 @@ async function createTagTeamBattleRecord(
       robot2Id: team2.activeRobotId,
       winnerId: result.winnerId,
       battleType: 'tag_team',
-      leagueType: match.tagTeamLeague,
+      leagueType: match.teamBattleLeague,
       leagueInstanceId: team1.tagTeamLeagueId, // Snapshot instance at time of battle
 
       // Tag team specific fields
@@ -1411,23 +1474,30 @@ export async function executeScheduledTagTeamBattles(_scheduledFor?: Date): Prom
   // Query scheduled tag team matches
   // Execute all matches with status 'scheduled' — the cron job controls timing,
   // scheduledFor is informational only (shown to players)
-  const scheduledMatches = await prisma.scheduledTagTeamMatch.findMany({
+  const scheduledMatches = await prisma.scheduledTeamBattleMatch.findMany({
     where: {
       status: 'scheduled',
+      matchMode: 'tag_team',
     },
     include: {
       team1: {
         include: {
-          activeRobot: true,
-          reserveRobot: true,
-          stable: true,
+          members: {
+            include: {
+              robot: true,
+            },
+            orderBy: { slotIndex: 'asc' as const },
+          },
         },
       },
       team2: {
         include: {
-          activeRobot: true,
-          reserveRobot: true,
-          stable: true,
+          members: {
+            include: {
+              robot: true,
+            },
+            orderBy: { slotIndex: 'asc' as const },
+          },
         },
       },
     },
@@ -1462,7 +1532,7 @@ export async function executeScheduledTagTeamBattles(_scheduledFor?: Date): Prom
           );
           
           // Mark match as cancelled
-          await prisma.scheduledTagTeamMatch.update({
+          await prisma.scheduledTeamBattleMatch.update({
             where: { id: match.id },
             data: { status: 'cancelled' },
           });
@@ -1491,7 +1561,7 @@ export async function executeScheduledTagTeamBattles(_scheduledFor?: Date): Prom
       logger.error(`[TagTeamBattles] Error executing match ${match.id}:`, error);
       
       // Mark match as cancelled on error
-      await prisma.scheduledTagTeamMatch.update({
+      await prisma.scheduledTeamBattleMatch.update({
         where: { id: match.id },
         data: { status: 'cancelled' },
       });
@@ -1519,16 +1589,21 @@ export async function executeScheduledTagTeamBattles(_scheduledFor?: Date): Prom
  * Requirement 11.3: Dynamic eligibility checking after earlier matches
  */
 async function checkTeamReadinessForBattle(team: {
-  activeRobot: Robot;
-  reserveRobot: Robot;
-}): Promise<boolean> {
+  members: Array<{ robot: Robot }>;
+} | null): Promise<boolean> {
+  if (!team || team.members.length < 2) return false;
+
+  // slot 0 = active, slot 1 = reserve (members ordered by slotIndex asc)
+  const activeRobot = team.members[0].robot;
+  const reserveRobot = team.members[1].robot;
+
   // Check active robot has weapons
-  if (!team.activeRobot.mainWeaponId) {
+  if (!activeRobot.mainWeaponId) {
     return false;
   }
 
   // Check reserve robot has weapons
-  if (!team.reserveRobot.mainWeaponId) {
+  if (!reserveRobot.mainWeaponId) {
     return false;
   }
 
@@ -1542,9 +1617,9 @@ async function checkTeamReadinessForBattle(team: {
  * Requirements 12.4, 12.5: Full rewards for bye-team wins, normal penalties for losses
  */
 async function updateTagTeamBattleResults(
-  match: ScheduledTagTeamMatch & {
-    team1: (TagTeam & { activeRobot: Robot; reserveRobot: Robot; stable: { id: number; stableName: string | null } | null }) | null;
-    team2: (TagTeam & { activeRobot: Robot; reserveRobot: Robot; stable: { id: number; stableName: string | null } | null }) | null;
+  match: ScheduledTeamBattleMatch & {
+    team1: (TeamBattle & { members: Array<{ robot: Robot; slotIndex: number; robotId: number }> }) | null;
+    team2: (TeamBattle & { members: Array<{ robot: Robot; slotIndex: number; robotId: number }> }) | null;
   },
   result: TagTeamBattleResult
 ): Promise<void> {
@@ -1553,9 +1628,24 @@ async function updateTagTeamBattleResults(
   const team1IsBye = false; // Team 1 is never the bye team (matchmaking always puts real team as team1)
   const team2IsBye = match.team2Id === null;
 
+  // Map teams to the expected shape (slot 0 = active, slot 1 = reserve)
+  const mapTeam = (raw: (TeamBattle & { members: Array<{ robot: Robot; slotIndex: number; robotId: number }> }) | null) => {
+    if (!raw || raw.members.length < 2) return null;
+    const sorted = [...raw.members].sort((a, b) => a.slotIndex - b.slotIndex);
+    return {
+      id: raw.id,
+      stableId: raw.stableId,
+      teamName: raw.teamName,
+      activeRobotId: sorted[0].robotId,
+      reserveRobotId: sorted[1].robotId,
+      activeRobot: sorted[0].robot,
+      reserveRobot: sorted[1].robot,
+    };
+  };
+
   // Use pre-loaded teams from the scheduled match query (no re-fetch needed)
-  const team1 = team1IsBye ? null : match.team1;
-  const team2 = team2IsBye ? null : match.team2;
+  const team1 = team1IsBye ? null : mapTeam(match.team1);
+  const team2 = team2IsBye ? null : mapTeam(match.team2);
 
   // For bye-team matches, only update the real team
   if (isByeMatch) {
@@ -1585,7 +1675,7 @@ async function updateTagTeamBattleResults(
     const realTeamLeaguePoints = calculateTagTeamLeaguePoints(realTeamWon, isDraw);
 
     // Calculate rewards (Requirements 12.4, 12.5: full rewards for wins, normal penalties for losses)
-    const realTeamRewards = calculateTagTeamRewards(match.tagTeamLeague, realTeamWon, isDraw);
+    const realTeamRewards = calculateTagTeamRewards(match.teamBattleLeague, realTeamWon, isDraw);
 
     // Calculate repair costs
     // NOTE: Repair costs are NOT calculated here anymore
@@ -1601,7 +1691,7 @@ async function updateTagTeamBattleResults(
     // This ensures accurate costs based on current damage and facility levels
 
     // Calculate prestige
-    const prestige = calculateTagTeamPrestige(match.tagTeamLeague, realTeamWon, isDraw);
+    const prestige = calculateTagTeamPrestige(match.teamBattleLeague, realTeamWon, isDraw);
 
     // Calculate fame (Requirement 10.7) based on damage dealt and survival time
     const totalBattleTime = result.durationSeconds;
@@ -1663,16 +1753,16 @@ async function updateTagTeamBattleResults(
     });
 
     // Update team (ensure league points don't go below 0)
-    const currentTeamData = await prisma.tagTeam.findUnique({
+    const currentTeamData = await prisma.teamBattle.findUnique({
       where: { id: realTeam.id },
-      select: { tagTeamLeaguePoints: true },
+      select: { tagTeamLp: true },
     });
-    const newLeaguePoints = Math.max(0, (currentTeamData?.tagTeamLeaguePoints || 0) + realTeamLeaguePoints);
+    const newLeaguePoints = Math.max(0, (currentTeamData?.tagTeamLp || 0) + realTeamLeaguePoints);
     
-    await prisma.tagTeam.update({
+    await prisma.teamBattle.update({
       where: { id: realTeam.id },
       data: {
-        tagTeamLeaguePoints: newLeaguePoints,
+        tagTeamLp: newLeaguePoints,
         totalTagTeamWins: realTeamWon ? { increment: 1 } : undefined,
         totalTagTeamLosses: !realTeamWon && !isDraw ? { increment: 1 } : undefined,
         totalTagTeamDraws: isDraw ? { increment: 1 } : undefined,
@@ -1771,8 +1861,8 @@ async function updateTagTeamBattleResults(
   const team2LeaguePoints = calculateTagTeamLeaguePoints(team2Won, isDraw);
 
   // Calculate rewards (Requirements 4.1, 4.2, 4.3)
-  const team1Rewards = calculateTagTeamRewards(match.tagTeamLeague, team1Won, isDraw);
-  const team2Rewards = calculateTagTeamRewards(match.tagTeamLeague, team2Won, isDraw);
+  const team1Rewards = calculateTagTeamRewards(match.teamBattleLeague, team1Won, isDraw);
+  const team2Rewards = calculateTagTeamRewards(match.teamBattleLeague, team2Won, isDraw);
 
   // Calculate repair costs (Requirements 4.4, 4.5, 4.6, 4.7)
   // NOTE: Repair costs are NOT calculated here anymore
@@ -1780,8 +1870,8 @@ async function updateTagTeamBattleResults(
   // This ensures accurate costs based on current damage and facility levels
 
   // Calculate prestige (Requirements 10.1-10.6)
-  const team1Prestige = calculateTagTeamPrestige(match.tagTeamLeague, team1Won, isDraw);
-  const team2Prestige = calculateTagTeamPrestige(match.tagTeamLeague, team2Won, isDraw);
+  const team1Prestige = calculateTagTeamPrestige(match.teamBattleLeague, team1Won, isDraw);
+  const team2Prestige = calculateTagTeamPrestige(match.teamBattleLeague, team2Won, isDraw);
 
   // Calculate fame (Requirement 10.7) based on damage dealt and survival time
   const totalBattleTime = result.durationSeconds;
@@ -1890,32 +1980,32 @@ async function updateTagTeamBattleResults(
 
   // Update teams (league points, win/loss/draw counters)
   // Ensure league points don't go below 0
-  const team1CurrentData = await prisma.tagTeam.findUnique({
+  const team1CurrentData = await prisma.teamBattle.findUnique({
     where: { id: team1.id },
-    select: { tagTeamLeaguePoints: true },
+    select: { tagTeamLp: true },
   });
-  const team2CurrentData = await prisma.tagTeam.findUnique({
+  const team2CurrentData = await prisma.teamBattle.findUnique({
     where: { id: team2.id },
-    select: { tagTeamLeaguePoints: true },
+    select: { tagTeamLp: true },
   });
   
-  const team1NewLeaguePoints = Math.max(0, (team1CurrentData?.tagTeamLeaguePoints || 0) + team1LeaguePoints);
-  const team2NewLeaguePoints = Math.max(0, (team2CurrentData?.tagTeamLeaguePoints || 0) + team2LeaguePoints);
+  const team1NewLeaguePoints = Math.max(0, (team1CurrentData?.tagTeamLp || 0) + team1LeaguePoints);
+  const team2NewLeaguePoints = Math.max(0, (team2CurrentData?.tagTeamLp || 0) + team2LeaguePoints);
   
-  await prisma.tagTeam.update({
+  await prisma.teamBattle.update({
     where: { id: team1.id },
     data: {
-      tagTeamLeaguePoints: team1NewLeaguePoints,
+      tagTeamLp: team1NewLeaguePoints,
       totalTagTeamWins: team1Won ? { increment: 1 } : undefined,
       totalTagTeamLosses: team2Won ? { increment: 1 } : undefined,
       totalTagTeamDraws: isDraw ? { increment: 1 } : undefined,
     },
   });
 
-  await prisma.tagTeam.update({
+  await prisma.teamBattle.update({
     where: { id: team2.id },
     data: {
-      tagTeamLeaguePoints: team2NewLeaguePoints,
+      tagTeamLp: team2NewLeaguePoints,
       totalTagTeamWins: team2Won ? { increment: 1 } : undefined,
       totalTagTeamLosses: team1Won ? { increment: 1 } : undefined,
       totalTagTeamDraws: isDraw ? { increment: 1 } : undefined,
@@ -1952,20 +2042,20 @@ async function updateTagTeamBattleResults(
 
   logger.info(
     `[TagTeamBattles] Updated results for match ${match.id}: ` +
-    `Team ${team1.id} ELO ${eloChanges.team1Change > 0 ? '+' : ''}${eloChanges.team1Change}, ` +
-    `Team ${team2.id} ELO ${eloChanges.team2Change > 0 ? '+' : ''}${eloChanges.team2Change}`
+    `${team1.teamName} ELO ${eloChanges.team1Change > 0 ? '+' : ''}${eloChanges.team1Change}, ` +
+    `${team2.teamName} ELO ${eloChanges.team2Change > 0 ? '+' : ''}${eloChanges.team2Change}`
   );
   
   // Log fame awards
   if (team1ActiveFame > 0 || team1ReserveFame > 0) {
     logger.info(
-      `[TagTeamBattles] Fame awarded - Team ${team1.id}: ` +
+      `[TagTeamBattles] Fame awarded - ${team1.teamName}: ` +
       `${team1.activeRobot.name} +${team1ActiveFame}, ${team1.reserveRobot.name} +${team1ReserveFame}`
     );
   }
   if (team2ActiveFame > 0 || team2ReserveFame > 0) {
     logger.info(
-      `[TagTeamBattles] Fame awarded - Team ${team2.id}: ` +
+      `[TagTeamBattles] Fame awarded - ${team2.teamName}: ` +
       `${team2.activeRobot.name} +${team2ActiveFame}, ${team2.reserveRobot.name} +${team2ReserveFame}`
     );
   }
@@ -1982,11 +2072,11 @@ async function updateTagTeamBattleResults(
 
   // Log streaming revenue
   logger.info(
-    `[Streaming] Team ${team1.id}: ${team1.activeRobot.name} ₡${team1ActiveStreaming?.totalRevenue ?? 0}, ` +
+    `[Streaming] ${team1.teamName}: ${team1.activeRobot.name} ₡${team1ActiveStreaming?.totalRevenue ?? 0}, ` +
     `${team1.reserveRobot.name} ₡${team1ReserveStreaming?.totalRevenue ?? 0}`
   );
   logger.info(
-    `[Streaming] Team ${team2.id}: ${team2.activeRobot.name} ₡${team2ActiveStreaming?.totalRevenue ?? 0}, ` +
+    `[Streaming] ${team2.teamName}: ${team2.activeRobot.name} ₡${team2ActiveStreaming?.totalRevenue ?? 0}, ` +
     `${team2.reserveRobot.name} ₡${team2ReserveStreaming?.totalRevenue ?? 0}`
   );
 

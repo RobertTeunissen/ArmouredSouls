@@ -1,13 +1,11 @@
 export {
   mapBattleRecord,
-  mapTagTeamRecord,
   buildTagTeamWhere,
   fetchTagTeamBattles,
   getAdminBattleList,
   getAdminBattleDetail,
   type BattleQueryParams,
   type BattleWithDetails,
-  type TagTeamMatchWithBattle,
 } from './adminBattleService';
 
 export {
@@ -28,6 +26,7 @@ export {
   getEconomyOverview,
   getLeagueHealth,
   getTeamBattleLeagueHealth,
+  getTagTeamLeagueHealth,
   getWeaponAnalytics,
   getAchievementAnalytics,
   getTuningAdoption,

@@ -9,8 +9,6 @@ import RecentMatches from '../components/RecentMatches';
 import FinancialSummary from '../components/FinancialSummary';
 import RobotDashboardCard from '../components/RobotDashboardCard';
 import StableStatistics from '../components/StableStatistics';
-import TagTeamReadinessWarning from '../components/TagTeamReadinessWarning';
-import TagTeamSubscriptionDashboardWarning from '../components/TagTeamSubscriptionDashboardWarning';
 import TeamBattleReadinessWarning from '../components/TeamBattleReadinessWarning';
 import LeagueStandingsSummary from '../components/LeagueStandingsSummary';
 import ActiveTournamentCard from '../components/ActiveTournamentCard';
@@ -126,14 +124,8 @@ function DashboardPage() {
 
         {/* Critical Notifications/Warnings - All alerts above overview blocks */}
         <div className="mb-6 space-y-3">
-          {/* Tag Team Readiness Warning */}
-          <TagTeamReadinessWarning compact={true} />
-
           {/* Team Battle Readiness Warning */}
           <TeamBattleReadinessWarning compact={true} />
-
-          {/* Tag Team Subscription Mismatch Warning */}
-          <TagTeamSubscriptionDashboardWarning />
 
           {/* League Tier Change Notifications */}
           {tierChanges.map((change) => (

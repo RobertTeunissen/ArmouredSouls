@@ -29,10 +29,14 @@ vi.mock('../../contexts/AuthContext', () => ({
   }),
 }));
 
-// Mock tagTeamApi
-vi.mock('../../utils/tagTeamApi', () => ({
-  getTeamNameFromMatch: vi.fn(() => 'Team Name'),
-}));
+// Mock teamBattleApi
+vi.mock('../../utils/teamBattleApi', async (importOriginal) => {
+  const actual = await importOriginal() as Record<string, unknown>;
+  return {
+    ...actual,
+    getTeamNameFromMatch: vi.fn(() => 'Team Name'),
+  };
+});
 
 // Mock getMatchHistory
 const mockGetMatchHistory = vi.fn();

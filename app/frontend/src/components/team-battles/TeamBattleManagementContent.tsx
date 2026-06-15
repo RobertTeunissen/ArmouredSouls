@@ -37,13 +37,10 @@ function TeamBattleManagementContent({ teamSize }: TeamBattleManagementContentPr
   const [teamToSwap, setTeamToSwap] = useState<{ team: TeamBattle; member: TeamBattleMember } | null>(null);
   const { data: stableOverview, refetch: refetchOverview } = useStableOverview();
 
-  const eventType = teamSize === 2 ? 'league_2v2' : 'league_3v3';
   const modeLabel = `${teamSize}v${teamSize}`;
 
-  // Get robots subscribed to this event type
-  const subscribedRobots = stableOverview?.robots.filter(
-    (r) => r.subscriptions.some((s) => s.eventType === eventType),
-  ) ?? [];
+  // Get all robots in the stable for team registration (subscriptions are independent of team formation)
+  const allRobots = stableOverview?.robots ?? [];
 
   const fetchTeams = useCallback(async () => {
     try {
@@ -115,9 +112,9 @@ function TeamBattleManagementContent({ teamSize }: TeamBattleManagementContentPr
       {/* Section Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-white">{modeLabel} League Teams</h2>
+          <h2 className="text-2xl font-bold text-white">{modeLabel} Teams</h2>
           <p className="text-secondary mt-1">
-            Manage your {modeLabel} battle teams
+            Manage your {modeLabel} teams
           </p>
         </div>
         <button
@@ -148,17 +145,17 @@ function TeamBattleManagementContent({ teamSize }: TeamBattleManagementContentPr
           <div className="max-w-2xl mx-auto">
             <h3 className="text-xl font-bold mb-4">No {modeLabel} Teams Yet</h3>
             <p className="text-secondary mb-6">
-              Register your first {modeLabel} team to compete in {teamSize}-robot simultaneous battles!
-              {subscribedRobots.length < teamSize && (
+              Register your first {modeLabel} team to compete in {teamSize}-robot battles!
+              {allRobots.length < teamSize && (
                 <span className="block mt-2 text-warning">
-                  You need at least {teamSize} robots subscribed to {modeLabel} League via the Booking Office.
-                  Currently subscribed: {subscribedRobots.length}.
+                  You need at least {teamSize} robots in your stable to form a team.
+                  Currently available: {allRobots.length}.
                 </span>
               )}
             </p>
             <button
               onClick={() => setShowRegisterModal(true)}
-              disabled={subscribedRobots.length < teamSize}
+              disabled={allRobots.length < teamSize}
               className="bg-primary hover:bg-primary-dark text-white font-bold py-3 px-8 rounded-lg text-lg transition-colors min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Register Your First Team
@@ -177,6 +174,16 @@ function TeamBattleManagementContent({ teamSize }: TeamBattleManagementContentPr
               onDisband={() => setTeamToDisband(team)}
               onRename={() => setTeamToRename(team)}
               onSwap={(member) => setTeamToSwap({ team, member })}
+              onSwapPositions={async () => {
+                try {
+                  const { swapTeamBattlePositions } = await import('../../utils/teamBattleApi');
+                  await swapTeamBattlePositions(team.id);
+                  fetchTeams();
+                } catch (err: unknown) {
+                  const message = err instanceof ApiError ? err.message : 'Failed to swap positions';
+                  alert(message);
+                }
+              }}
             />
           ))}
         </div>
@@ -186,7 +193,7 @@ function TeamBattleManagementContent({ teamSize }: TeamBattleManagementContentPr
       {showRegisterModal && (
         <RegisterTeamModal
           teamSize={teamSize}
-          subscribedRobots={subscribedRobots}
+          subscribedRobots={allRobots}
           existingTeams={teams}
           onClose={() => setShowRegisterModal(false)}
           onComplete={handleRegisterComplete}
@@ -207,7 +214,7 @@ function TeamBattleManagementContent({ teamSize }: TeamBattleManagementContentPr
         <SwapMemberModal
           team={teamToSwap.team}
           memberToSwap={teamToSwap.member}
-          subscribedRobots={subscribedRobots}
+          subscribedRobots={allRobots}
           existingTeams={teams}
           onClose={() => setTeamToSwap(null)}
           onComplete={handleSwapComplete}
@@ -240,14 +247,12 @@ interface TeamBattleCardProps {
   onDisband: () => void;
   onRename: () => void;
   onSwap: (member: TeamBattleMember) => void;
+  onSwapPositions: () => void;
 }
 
-function TeamBattleCard({ team, onDisband, onRename, onSwap }: TeamBattleCardProps) {
+function TeamBattleCard({ team, onDisband, onRename, onSwap, onSwapPositions }: TeamBattleCardProps) {
   const navigate = useNavigate();
-  const tierColor = getTierColor(team.teamLeague);
-  const tierName = getTierName(team.teamLeague);
-  const tierIcon = getTierIcon(team.teamLeague);
-  const totalMatches = team.totalWins + team.totalLosses + team.totalDraws;
+  const totalMatches = team.totalLeagueWins + team.totalLeagueLosses + team.totalLeagueDraws;
   const combinedELO = team.members.reduce((sum, m) => sum + m.robot.elo, 0);
   const isLocked = team.isLockedForBattle;
 
@@ -257,12 +262,6 @@ function TeamBattleCard({ team, onDisband, onRename, onSwap }: TeamBattleCardPro
       <div className="flex items-start justify-between mb-4 gap-2">
         <div className="min-w-0 flex-1">
           <h3 className="text-xl font-bold text-white mb-1 truncate">{team.teamName}</h3>
-          <div className="flex items-center gap-2">
-            <span className="text-lg">{tierIcon}</span>
-            <span className={`text-sm font-semibold ${tierColor}`}>
-              {tierName} League
-            </span>
-          </div>
         </div>
 
         {/* Action Buttons */}
@@ -326,7 +325,16 @@ function TeamBattleCard({ team, onDisband, onRename, onSwap }: TeamBattleCardPro
               className="cursor-pointer"
               onClick={() => navigate(`/robots/${member.robot.id}`)}
             >
-              <div className="text-xs text-secondary mb-1">Slot {member.slotIndex + 1}</div>
+              <div className="text-xs text-secondary mb-1">
+                {team.teamSize === 2
+                  ? `Slot ${member.slotIndex + 1} · ${member.slotIndex === 0 ? 'Active' : 'Reserve'}`
+                  : `Slot ${member.slotIndex + 1}`}
+              </div>
+              {team.teamSize === 2 && (
+                <div className="text-[10px] text-secondary/70 mb-0.5">
+                  {member.slotIndex === 0 ? 'Active (Tag Team)' : 'Reserve (Tag Team)'}
+                </div>
+              )}
               <div className="font-semibold text-primary mb-2 truncate">{member.robot.name}</div>
               <div className="text-sm text-secondary space-y-1">
                 <div>ELO: {member.robot.elo}</div>
@@ -353,7 +361,7 @@ function TeamBattleCard({ team, onDisband, onRename, onSwap }: TeamBattleCardPro
               onClick={(e) => { e.stopPropagation(); onSwap(member); }}
               disabled={isLocked}
               className="absolute top-2 right-2 text-xs bg-surface-elevated border border-white/20 text-secondary hover:text-white hover:border-primary/50 px-2 py-1 rounded transition-all min-h-[32px] disabled:opacity-50 disabled:cursor-not-allowed"
-              title={isLocked ? 'Cannot swap while battle is scheduled' : 'Swap member'}
+              title={isLocked ? 'Cannot swap while battle is scheduled' : 'Replace member'}
             >
               🔄
             </button>
@@ -361,25 +369,107 @@ function TeamBattleCard({ team, onDisband, onRename, onSwap }: TeamBattleCardPro
         ))}
       </div>
 
+      {/* Swap Positions button (Active ↔ Reserve) — only for 2v2 teams */}
+      {team.teamSize === 2 && team.members.length === 2 && (
+        <div className="flex justify-center mb-4">
+          <button
+            onClick={onSwapPositions}
+            disabled={isLocked}
+            className="text-xs bg-surface border border-white/20 text-secondary hover:text-white hover:border-primary/50 px-3 py-1.5 rounded-lg transition-all min-h-[32px] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+            title={isLocked ? 'Cannot swap while battle is scheduled' : 'Swap Active ↔ Reserve positions'}
+          >
+            <span>⇅</span> Swap Active / Reserve
+          </button>
+        </div>
+      )}
+
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-white/10">
-        <div className="text-center">
-          <div className="text-xs text-secondary mb-1">Combined ELO</div>
-          <div className="text-lg font-semibold text-white">{combinedELO}</div>
-        </div>
-        <div className="text-center">
-          <div className="text-xs text-secondary mb-1">League Points</div>
-          <div className="text-lg font-semibold text-primary">{team.teamLp}</div>
-        </div>
-        <div className="text-center">
-          <div className="text-xs text-secondary mb-1">Record</div>
-          <div className="text-sm font-semibold text-white">
-            {team.totalWins}W-{team.totalLosses}L-{team.totalDraws}D
+      <div className="pt-4 border-t border-white/10">
+        {/* Combined ELO — shared across all modes */}
+        {team.teamSize === 2 && (
+          <div className="mb-4">
+            <div className="text-center">
+              <div className="text-xs text-secondary mb-1">Combined ELO</div>
+              <div className="text-lg font-semibold text-white">{combinedELO}</div>
+            </div>
           </div>
-        </div>
-        <div className="text-center">
-          <div className="text-xs text-secondary mb-1">Matches</div>
-          <div className="text-lg font-semibold text-white">{totalMatches}</div>
+        )}
+
+        {/* Desktop: side-by-side layout for 2v2 teams; Mobile: stacked */}
+        <div className={team.teamSize === 2 ? 'flex flex-col lg:flex-row lg:gap-6' : ''}>
+          {/* 2v2/3v3 League Stats */}
+          <div className={team.teamSize === 2 ? 'flex-1' : ''}>
+            {team.teamSize === 2 ? (
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs text-secondary font-semibold uppercase tracking-wide">{team.teamSize}v{team.teamSize} League</span>
+                <span className="text-sm">{getTierIcon(team.teamLeague)}</span>
+                <span className={`text-xs font-semibold ${getTierColor(team.teamLeague)}`}>
+                  {getTierName(team.teamLeague)}
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs text-secondary font-semibold uppercase tracking-wide">{team.teamSize}v{team.teamSize} League</span>
+                <span className="text-sm">{getTierIcon(team.teamLeague)}</span>
+                <span className={`text-xs font-semibold ${getTierColor(team.teamLeague)}`}>
+                  {getTierName(team.teamLeague)}
+                </span>
+              </div>
+            )}
+            <div className={`grid ${team.teamSize === 2 ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-2 sm:grid-cols-4'} gap-4`}>
+              {team.teamSize !== 2 && (
+                <div className="text-center">
+                  <div className="text-xs text-secondary mb-1">Combined ELO</div>
+                  <div className="text-lg font-semibold text-white">{combinedELO}</div>
+                </div>
+              )}
+              <div className="text-center">
+                <div className="text-xs text-secondary mb-1">League Points</div>
+                <div className="text-lg font-semibold text-primary">{team.teamLp}</div>
+              </div>
+              <div className="text-center">
+                <div className="text-xs text-secondary mb-1">Record</div>
+                <div className="text-sm font-semibold text-white">
+                  {team.totalLeagueWins}W-{team.totalLeagueLosses}L-{team.totalLeagueDraws}D
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="text-xs text-secondary mb-1">Matches</div>
+                <div className="text-lg font-semibold text-white">{totalMatches}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Tag Team Stats (only for 2v2 teams) */}
+          {team.teamSize === 2 && (
+            <div className="flex-1 mt-4 pt-4 border-t border-white/5 lg:mt-0 lg:pt-0 lg:border-t-0 lg:border-l lg:border-white/10 lg:pl-6">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs text-secondary font-semibold uppercase tracking-wide">Tag Team League</span>
+                <span className="text-sm">{getTierIcon(team.tagTeamLeague)}</span>
+                <span className={`text-xs font-semibold ${getTierColor(team.tagTeamLeague)}`}>
+                  {getTierName(team.tagTeamLeague)}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                <div className="text-center">
+                  <div className="text-xs text-secondary mb-1">Tag Team LP</div>
+                  <div className="text-lg font-semibold text-primary">{team.tagTeamLp}</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-xs text-secondary mb-1">Record</div>
+                  <div className="text-sm font-semibold text-white">
+                    {team.totalTagTeamWins}W-{team.totalTagTeamLosses}L-{team.totalTagTeamDraws}D
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-xs text-secondary mb-1">Matches</div>
+                  <div className="text-lg font-semibold text-white">
+                    {team.totalTagTeamWins + team.totalTagTeamLosses + team.totalTagTeamDraws}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -392,6 +482,13 @@ function TeamBattleCard({ team, onDisband, onRename, onSwap }: TeamBattleCardPro
             eligible={team.members.every(m => m.robot.subscriptions?.some((s: { eventType: string; status: string }) => s.eventType === `league_${team.teamSize}v${team.teamSize}` && (s.status === 'active' || s.status === 'pending')))}
             missingMembers={team.members.filter(m => !m.robot.subscriptions?.some((s: { eventType: string; status: string }) => s.eventType === `league_${team.teamSize}v${team.teamSize}` && (s.status === 'active' || s.status === 'pending'))).map(m => m.robot.name)}
           />
+          {team.teamSize === 2 && (
+            <ModeEligibilityBadge
+              label="Tag Team"
+              eligible={team.members.every(m => m.robot.subscriptions?.some((s: { eventType: string; status: string }) => s.eventType === 'tag_team' && (s.status === 'active' || s.status === 'pending')))}
+              missingMembers={team.members.filter(m => !m.robot.subscriptions?.some((s: { eventType: string; status: string }) => s.eventType === 'tag_team' && (s.status === 'active' || s.status === 'pending'))).map(m => m.robot.name)}
+            />
+          )}
           <ModeEligibilityBadge
             label={`${team.teamSize}v${team.teamSize} Tournament`}
             eligible={team.members.every(m => m.robot.subscriptions?.some((s: { eventType: string; status: string }) => s.eventType === `tournament_${team.teamSize}v${team.teamSize}` && (s.status === 'active' || s.status === 'pending')))}
@@ -518,7 +615,7 @@ function RegisterTeamModal({ teamSize, subscribedRobots, existingTeams, onClose,
             </label>
             {availableRobots.length === 0 ? (
               <p className="text-warning text-sm">
-                No available robots subscribed to {modeLabel} League. Subscribe robots via the Booking Office first.
+                No available robots. All your robots are already on a {modeLabel} team, or you need to purchase more robots.
               </p>
             ) : (
               <div className="space-y-2 max-h-60 overflow-y-auto">

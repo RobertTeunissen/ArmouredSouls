@@ -1,4 +1,5 @@
 import { ScheduledMatch, formatDateTime, getLeagueTierColor, getLeagueTierName } from '../../utils/matchmakingApi';
+import { getModeConfig } from '../../utils/battleModeConfig';
 
 interface TeamBattleMatchCardProps {
   match: ScheduledMatch;
@@ -8,10 +9,13 @@ interface TeamBattleMatchCardProps {
 function TeamBattleMatchCard({ match, myUserId }: TeamBattleMatchCardProps) {
   const team1 = match.teamBattleTeam1;
   const team2 = match.teamBattleTeam2;
-  const teamSize = match.teamSize || 2;
-  const sizeLabel = `${teamSize}v${teamSize}`;
+  const isTagTeam = match.matchType === 'tag_team';
   const isTournament = match.matchType === 'tournament_2v2' || match.matchType === 'tournament_3v3';
-  const tierColor = isTournament ? 'text-[#d29922]' : getLeagueTierColor(match.teamBattleLeague || 'bronze');
+  
+  // Use shared mode config for consistent icon/badge/color
+  const modeConfig = getModeConfig(match.matchType);
+  const sizeLabel = modeConfig.label;
+  const tierColor = isTournament ? 'text-[#d29922]' : isTagTeam ? 'text-[#f0a030]' : getLeagueTierColor(match.teamBattleLeague || 'bronze');
 
   const getRoundName = (round: number, maxRounds: number): string => {
     const remainingRounds = maxRounds - round + 1;
@@ -25,7 +29,7 @@ function TeamBattleMatchCard({ match, myUserId }: TeamBattleMatchCardProps) {
     ? (match.tournamentRound && match.maxRounds
         ? `${match.tournamentName || 'Tournament'} • ${getRoundName(match.tournamentRound, match.maxRounds)}`
         : match.tournamentName || 'Tournament')
-    : `${getLeagueTierName(match.teamBattleLeague || 'bronze')} League`;
+    : `${getLeagueTierName(match.teamBattleLeague || 'bronze')} ${modeConfig.tierPrefix}`;
   const isBye = match.isByeMatch || !team2;
 
   // Determine which team is "mine"
@@ -40,7 +44,7 @@ function TeamBattleMatchCard({ match, myUserId }: TeamBattleMatchCardProps) {
     <div
       className={`
         bg-[#252b38] border border-white/10 rounded-lg p-2 mb-1.5
-        border-l-4 ${isTournament ? 'border-l-[#d29922]' : teamSize === 2 ? 'border-l-emerald-400' : 'border-l-violet-400'}
+        border-l-4 ${modeConfig.borderColor}
         hover:bg-[#1a1f29] hover:border-[#58a6ff]/50
         transition-all duration-150 ease-out
         hover:-translate-y-0.5
@@ -49,7 +53,7 @@ function TeamBattleMatchCard({ match, myUserId }: TeamBattleMatchCardProps) {
       {/* Desktop Layout */}
       <div className="hidden md:flex items-center gap-3">
         <div className="flex-shrink-0 w-6 text-center text-base">
-          {isTournament ? '🏆' : teamSize === 2 ? '⚔️' : '🗡️'}
+          {modeConfig.icon}
         </div>
         <div className="flex-shrink-0 w-16">
           <div className="text-xs font-bold px-1.5 py-0.5 rounded text-center bg-primary-dark/20 text-primary">
@@ -58,9 +62,7 @@ function TeamBattleMatchCard({ match, myUserId }: TeamBattleMatchCardProps) {
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5">
-            <span className={`text-xs px-1.5 py-0.5 rounded font-semibold ${
-              teamSize === 2 ? 'bg-emerald-400/20 text-emerald-400' : 'bg-violet-400/20 text-violet-400'
-            }`}>
+            <span className={`text-xs px-1.5 py-0.5 rounded font-semibold ${modeConfig.badgeColor}`}>
               {sizeLabel}
             </span>
             <div className={`text-xs ${tierColor}`}>{tierName}</div>
@@ -88,13 +90,11 @@ function TeamBattleMatchCard({ match, myUserId }: TeamBattleMatchCardProps) {
       <div className="md:hidden">
         <div className="flex items-center justify-between mb-1.5">
           <div className="flex items-center gap-1.5">
-            <span className="text-base">{isTournament ? '🏆' : teamSize === 2 ? '⚔️' : '🗡️'}</span>
+            <span className="text-base">{modeConfig.icon}</span>
             <div className="text-xs font-bold px-1.5 py-0.5 rounded bg-primary-dark/20 text-primary">
               {isBye ? 'BYE' : 'PENDING'}
             </div>
-            <span className={`text-xs px-1.5 py-0.5 rounded font-semibold ${
-              teamSize === 2 ? 'bg-emerald-400/20 text-emerald-400' : 'bg-violet-400/20 text-violet-400'
-            }`}>
+            <span className={`text-xs px-1.5 py-0.5 rounded font-semibold ${modeConfig.badgeColor}`}>
               {sizeLabel}
             </span>
           </div>

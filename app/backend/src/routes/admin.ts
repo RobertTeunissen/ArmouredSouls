@@ -40,6 +40,7 @@ import {
   getEconomyOverview,
   getLeagueHealth,
   getTeamBattleLeagueHealth,
+  getTagTeamLeagueHealth,
   getWeaponAnalytics,
   getAchievementAnalytics,
   getTuningAdoption,
@@ -1063,6 +1064,15 @@ router.get('/league-health', authenticateToken, requireAdmin, validateRequest({}
  */
 router.get('/team-battle-league-health', authenticateToken, requireAdmin, validateRequest({}), async (_req: Request, res: Response) => {
   const result = await getTeamBattleLeagueHealth();
+  res.json(result);
+});
+
+/**
+ * GET /api/admin/tag-team-league-health
+ * Get tag team league health metrics for 2v2 teams.
+ */
+router.get('/tag-team-league-health', authenticateToken, requireAdmin, validateRequest({}), async (_req: Request, res: Response) => {
+  const result = await getTagTeamLeagueHealth();
   res.json(result);
 });
 

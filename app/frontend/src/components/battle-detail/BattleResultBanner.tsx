@@ -93,9 +93,11 @@ function BattleContextLine({ battleLog }: { battleLog: BattleLogResponse }) {
 
   if (battleLog.battleType === 'tag_team') {
     const tagTeamLink = battleLog.leagueInstanceId
-      ? `/tag-teams/standings?tier=${battleLog.leagueType}&instance=${battleLog.leagueInstanceId}`
-      : `/tag-teams/standings?tier=${battleLog.leagueType}`;
-    return <span><Link to={tagTeamLink} className="text-primary hover:text-white transition-colors">🤝 Tag Team Battle</Link>{` • Duration: ${duration}`}</span>;
+      ? `/league-standings?mode=tag_team&tier=${battleLog.leagueType}&instance=${battleLog.leagueInstanceId}`
+      : `/league-standings?mode=tag_team&tier=${battleLog.leagueType}`;
+    const tierIcon = getLeagueTierIcon(battleLog.leagueType);
+    const tierName = getLeagueTierName(battleLog.leagueType);
+    return <span><Link to={tagTeamLink} className="text-primary hover:text-white transition-colors">{tierIcon} {tierName} Tag Team League</Link>{` • Duration: ${duration}`}</span>;
   }
   if (battleLog.battleType === 'koth') {
     const count = battleLog.participants?.length || battleLog.kothParticipants?.length || 0;

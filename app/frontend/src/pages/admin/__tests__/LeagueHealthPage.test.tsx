@@ -3,8 +3,9 @@
  *
  * Tests tier counts render, ELO distribution displays, promo/demo eligibility shows.
  * Tests 2v2 and 3v3 league health sections render with team counts, avg ELO, and rebalancing indicators.
+ * Tests tag team league health section renders with team counts, distribution, and rebalancing indicators.
  *
- * _Requirements: 15.2, 15.3, 15.4, R11.6_
+ * _Requirements: 15.2, 15.3, 15.4, R11.6, 14.1, 14.2, 14.3, 14.4, 14.5, 14.6_
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
@@ -48,6 +49,16 @@ const mockTeamBattleLeagueHealthData = {
   },
 };
 
+const mockTagTeamLeagueHealthData = {
+  leagues: [
+    { league: 'bronze', teamCount: 12, instances: 1, instanceDetails: [{ id: 'bronze_1', teamCount: 12 }], teamsPerInstance: { min: 12, max: 12, avg: 12 }, needsRebalancing: false },
+    { league: 'silver', teamCount: 5, instances: 1, instanceDetails: [{ id: 'silver_1', teamCount: 5 }], teamsPerInstance: { min: 5, max: 5, avg: 5 }, needsRebalancing: true },
+    { league: 'gold', teamCount: 0, instances: 0, instanceDetails: [], teamsPerInstance: { min: 0, max: 0, avg: 0 }, needsRebalancing: false },
+  ],
+  totalTeams: 17,
+  timestamp: '2026-06-01T00:00:00.000Z',
+};
+
 /* ------------------------------------------------------------------ */
 /*  Tests                                                              */
 /* ------------------------------------------------------------------ */
@@ -61,6 +72,9 @@ describe('LeagueHealthPage', () => {
       }
       if (url === '/api/admin/team-battle-league-health') {
         return Promise.resolve({ data: mockTeamBattleLeagueHealthData });
+      }
+      if (url === '/api/admin/tag-team-league-health') {
+        return Promise.resolve({ data: mockTagTeamLeagueHealthData });
       }
       return Promise.reject(new Error(`Unexpected URL: ${url}`));
     });
@@ -128,11 +142,12 @@ describe('LeagueHealthPage', () => {
     });
   });
 
-  it('should fetch from both league-health endpoints', async () => {
+  it('should fetch from all league-health endpoints', async () => {
     renderPage();
     await waitFor(() => {
       expect(mockGet).toHaveBeenCalledWith('/api/admin/league-health');
       expect(mockGet).toHaveBeenCalledWith('/api/admin/team-battle-league-health');
+      expect(mockGet).toHaveBeenCalledWith('/api/admin/tag-team-league-health');
     });
   });
 
@@ -172,7 +187,9 @@ describe('LeagueHealthPage', () => {
   it('should display 3v3 total teams count', async () => {
     renderPage();
     await waitFor(() => {
-      expect(screen.getByText('12')).toBeInTheDocument();
+      const section3v3 = screen.getByTestId('league-health-3v3');
+      // 3v3 total teams = 12
+      expect(section3v3.textContent).toContain('12');
     });
   });
 
@@ -194,19 +211,62 @@ describe('LeagueHealthPage', () => {
     });
   });
 
-  it('should display "Total Teams" stat cards for both 2v2 and 3v3', async () => {
+  it('should display "Total Teams" stat cards for 2v2, 3v3, and tag team', async () => {
     renderPage();
     await waitFor(() => {
       const totalTeamsLabels = screen.getAllByText('Total Teams');
-      expect(totalTeamsLabels).toHaveLength(2); // One for 2v2, one for 3v3
+      expect(totalTeamsLabels).toHaveLength(3); // One for 2v2, one for 3v3, one for tag team
     });
   });
 
-  it('should display "Needs Rebalancing" stat cards for both 2v2 and 3v3', async () => {
+  it('should display "Needs Rebalancing" stat cards for 2v2, 3v3, and tag team', async () => {
     renderPage();
     await waitFor(() => {
       const rebalancingLabels = screen.getAllByText('Needs Rebalancing');
-      expect(rebalancingLabels).toHaveLength(2); // One for 2v2, one for 3v3
+      expect(rebalancingLabels).toHaveLength(3); // One for 2v2, one for 3v3, one for tag team
+    });
+  });
+
+  // Tag Team League section tests
+  it('should render Tag Team League section', async () => {
+    renderPage();
+    await waitFor(() => {
+      expect(screen.getByText('Tag Team League Tiers')).toBeInTheDocument();
+      expect(screen.getByTestId('league-health-tag-team')).toBeInTheDocument();
+    });
+  });
+
+  it('should display tag team total teams count', async () => {
+    renderPage();
+    await waitFor(() => {
+      expect(screen.getByText('17')).toBeInTheDocument();
+    });
+  });
+
+  it('should show needs-rebalancing indicator for tag team silver tier', async () => {
+    renderPage();
+    await waitFor(() => {
+      const sectionTagTeam = screen.getByTestId('league-health-tag-team');
+      // The tag team silver tier has needsRebalancing: true, so there should be a warning indicator
+      expect(sectionTagTeam.querySelector('.text-yellow-400')).toBeInTheDocument();
+    });
+  });
+
+  it('should display distribution column (min/max/avg) in tag team section', async () => {
+    renderPage();
+    await waitFor(() => {
+      const sectionTagTeam = screen.getByTestId('league-health-tag-team');
+      // Bronze tier: min 12, max 12, avg 12
+      expect(sectionTagTeam.textContent).toContain('12/12/12');
+      // Silver tier: min 5, max 5, avg 5
+      expect(sectionTagTeam.textContent).toContain('5/5/5');
+    });
+  });
+
+  it('should fetch from tag-team-league-health endpoint on page load', async () => {
+    renderPage();
+    await waitFor(() => {
+      expect(mockGet).toHaveBeenCalledWith('/api/admin/tag-team-league-health');
     });
   });
 });

@@ -78,33 +78,32 @@ describe('calculateStats', () => {
 describe('buildTagTeamWhere', () => {
   it('should return base where clause with no args', () => {
     const where = buildTagTeamWhere();
-    expect(where.status).toBe('completed');
-    expect(where.battleId).toEqual({ not: null });
-    expect(where.tagTeamLeague).toBeUndefined();
+    expect(where.battleType).toBe('tag_team');
+    expect(where.leagueType).toBeUndefined();
     expect(where.OR).toBeUndefined();
   });
 
-  it('should add tagTeamLeague filter when leagueType is provided', () => {
+  it('should add leagueType filter when leagueType is provided', () => {
     const where = buildTagTeamWhere(undefined, 'gold');
-    expect(where.tagTeamLeague).toBe('gold');
+    expect(where.leagueType).toBe('gold');
   });
 
-  it('should not add tagTeamLeague filter when leagueType is "all"', () => {
+  it('should not add leagueType filter when leagueType is "all"', () => {
     const where = buildTagTeamWhere(undefined, 'all');
-    expect(where.tagTeamLeague).toBeUndefined();
+    expect(where.leagueType).toBeUndefined();
   });
 
   it('should add OR search conditions when search is provided', () => {
     const where = buildTagTeamWhere('Destroyer');
     expect(where.OR).toBeDefined();
-    expect(where.OR).toHaveLength(4);
+    expect(where.OR).toHaveLength(2);
   });
 
   it('should combine search and leagueType filters', () => {
     const where = buildTagTeamWhere('Destroyer', 'silver');
-    expect(where.tagTeamLeague).toBe('silver');
+    expect(where.leagueType).toBe('silver');
     expect(where.OR).toBeDefined();
-    expect(where.OR).toHaveLength(4);
+    expect(where.OR).toHaveLength(2);
   });
 });
 

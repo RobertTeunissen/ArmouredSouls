@@ -12,24 +12,6 @@ export {
 } from './tagTeamBattleOrchestrator';
 
 export {
-  validateTeam,
-  createTeam,
-  getTeamById,
-  getTeamsByStable,
-  disbandTeam,
-  checkTeamReadiness,
-  checkTeamSchedulingReadiness,
-  calculateCombinedELO,
-} from './tagTeamService';
-export type {
-  ValidationResult,
-  TeamCreationResult,
-  RobotReadinessStatus,
-  TeamReadinessResult,
-  TagTeamWithRobots,
-} from './tagTeamService';
-
-export {
   getEligibleTeams,
   runTagTeamMatchmaking,
 } from './tagTeamMatchmakingService';
@@ -38,19 +20,14 @@ export type {
 } from './tagTeamMatchmakingService';
 
 export {
-  getInstancesForTier,
-  assignTagTeamLeagueInstance,
-  createTagTeamWithInstanceAssignment,
-  rebalanceTagTeamInstances,
-  getTeamsInInstance,
-  moveTeamToInstance,
-  getStandingsForInstance,
-  getStandingsForTier,
-  TAG_TEAM_LEAGUE_TIERS,
-} from './tagTeamLeagueInstanceService';
+  assignTagTeamLeagueInstanceOnTeamBattle as assignTagTeamLeagueInstance,
+  rebalanceTagTeamLeagueInstances as rebalanceTagTeamInstances,
+  TEAM_BATTLE_LEAGUE_TIERS as TAG_TEAM_LEAGUE_TIERS,
+  MAX_TEAMS_PER_INSTANCE,
+} from '../team-battle/teamBattleAdapter';
 export type {
-  TagTeamLeagueInstance,
-} from './tagTeamLeagueInstanceService';
+  TeamBattleLeagueTier as TagTeamLeagueTier,
+} from '../team-battle/teamBattleAdapter';
 
 export {
   rebalanceTagTeamLeagues,

@@ -14,9 +14,41 @@
  */
 
 import prisma from '../../src/lib/prisma';
-import { createTeam } from '../../src/services/tag-team/tagTeamService';
 import { runTagTeamMatchmaking } from '../../src/services/tag-team/tagTeamMatchmakingService';
 import { executeScheduledTagTeamBattles } from '../../src/services/tag-team/tagTeamBattleOrchestrator';
+
+/** Helper: Create a 2v2 TeamBattle with members (slot 0 = active, slot 1 = reserve) */
+async function createTagTeamFixture(stableId: number, activeRobotId: number, reserveRobotId: number) {
+  return prisma.teamBattle.create({
+    data: {
+      stableId,
+      teamSize: 2,
+      teamName: `Test_Team_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+      teamLp: 0,
+      teamLeague: 'bronze',
+      teamLeagueId: 'bronze_1',
+      cyclesInLeague: 0,
+      totalLeagueWins: 0,
+      totalLeagueLosses: 0,
+      totalLeagueDraws: 0,
+      tagTeamLp: 0,
+      tagTeamLeague: 'bronze',
+      tagTeamLeagueId: 'bronze_1',
+      cyclesInTagTeamLeague: 0,
+      totalTagTeamWins: 0,
+      totalTagTeamLosses: 0,
+      totalTagTeamDraws: 0,
+      eligibility: 'ELIGIBLE',
+      members: {
+        create: [
+          { robotId: activeRobotId, slotIndex: 0 },
+          { robotId: reserveRobotId, slotIndex: 1 },
+        ],
+      },
+    },
+    include: { members: true },
+  });
+}
 
 
 describe('Tag Team Complete Cycle Integration Test', () => {
@@ -50,15 +82,19 @@ describe('Tag Team Complete Cycle Integration Test', () => {
     }
 
     if (testTeamIds.length > 0) {
-      await prisma.scheduledTagTeamMatch.deleteMany({
+      await prisma.scheduledTeamBattleMatch.deleteMany({
         where: {
+          matchMode: 'tag_team',
           OR: [
             { team1Id: { in: testTeamIds } },
             { team2Id: { in: testTeamIds } },
           ],
         },
       });
-      await prisma.tagTeam.deleteMany({
+      await prisma.teamBattleMember.deleteMany({
+        where: { teamId: { in: testTeamIds } },
+      });
+      await prisma.teamBattle.deleteMany({
         where: { id: { in: testTeamIds } },
       });
     }
@@ -146,11 +182,9 @@ describe('Tag Team Complete Cycle Integration Test', () => {
       const robot1 = testRobots[i * 2];
       const robot2 = testRobots[i * 2 + 1];
 
-      const result = await createTeam(user.id, robot1.id, robot2.id);
-      expect(result.success).toBe(true);
-      expect(result.team).toBeDefined();
-      testTeams.push(result.team!);
-      testTeamIds.push(result.team!.id);
+      const result = await createTagTeamFixture(user.id, robot1.id, robot2.id);
+      testTeams.push(result);
+      testTeamIds.push(result.id);
     }
 
     expect(testTeams.length).toBe(4);
@@ -160,7 +194,7 @@ describe('Tag Team Complete Cycle Integration Test', () => {
     testTeams.forEach(team => {
       expect(team.tagTeamLeague).toBe('bronze');
       expect(team.tagTeamLeagueId).toBe('bronze_1');
-      expect(team.tagTeamLeaguePoints).toBe(0);
+      expect(team.tagTeamLp).toBe(0);
     });
 
     // Step 2: Run matchmaking
@@ -171,9 +205,10 @@ describe('Tag Team Complete Cycle Integration Test', () => {
     console.log(`[Test] Created ${matchmakingResult} matches`);
 
     // Verify matches were created
-    const scheduledMatches = await prisma.scheduledTagTeamMatch.findMany({
+    const scheduledMatches = await prisma.scheduledTeamBattleMatch.findMany({
       where: {
         status: 'scheduled',
+        matchMode: 'tag_team',
         team1Id: { in: testTeams.map(t => t.id) },
       },
     });
@@ -274,20 +309,18 @@ describe('Tag Team Complete Cycle Integration Test', () => {
     }
 
     // Create 2 teams
-    const team1Result = await createTeam(user.id, robots[0].id, robots[1].id);
-    const team2Result = await createTeam(user.id, robots[2].id, robots[3].id);
-
-    expect(team1Result.success).toBe(true);
-    expect(team2Result.success).toBe(true);
+    const team1Result = await createTagTeamFixture(user.id, robots[0].id, robots[1].id);
+    const team2Result = await createTagTeamFixture(user.id, robots[2].id, robots[3].id);
 
     // Verify both teams exist
-    const teams = await prisma.tagTeam.findMany({
-      where: { stableId: user.id },
+    const teams = await prisma.teamBattle.findMany({
+      where: { stableId: user.id, teamSize: 2 },
     });
     expect(teams.length).toBe(2);
 
     // Clean up
-    await prisma.tagTeam.deleteMany({ where: { stableId: user.id } });
+    await prisma.teamBattleMember.deleteMany({ where: { teamId: { in: [team1Result.id, team2Result.id] } } });
+    await prisma.teamBattle.deleteMany({ where: { stableId: user.id, teamSize: 2 } });
     await prisma.robot.deleteMany({ where: { userId: user.id } });
     await prisma.weaponInventory.deleteMany({ where: { userId: user.id } });
     await prisma.user.deleteMany({ where: { id: user.id } });

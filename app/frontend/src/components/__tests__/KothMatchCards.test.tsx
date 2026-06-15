@@ -23,9 +23,13 @@ vi.mock('../../contexts/AuthContext', () => ({
 }));
 
 // Mock getTeamNameFromMatch
-vi.mock('../../utils/tagTeamApi', () => ({
-  getTeamNameFromMatch: vi.fn(() => 'Team Name'),
-}));
+vi.mock('../../utils/teamBattleApi', async (importOriginal) => {
+  const actual = await importOriginal() as Record<string, unknown>;
+  return {
+    ...actual,
+    getTeamNameFromMatch: vi.fn(() => 'Team Name'),
+  };
+});
 
 function makeKothBattle(overrides: Partial<BattleHistory> = {}): BattleHistory {
   return {

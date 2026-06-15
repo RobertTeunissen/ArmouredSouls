@@ -1,7 +1,7 @@
 import * as fc from 'fast-check';
 import { Robot, Prisma } from '../generated/prisma';
 import prisma from '../src/lib/prisma';
-import { createTeam } from '../src/services/tag-team/tagTeamService';
+import { registerTeam } from '../src/services/team-battle/teamBattleService';
 import { runMatchmaking } from '../src/services/analytics/matchmakingService';
 import { runTagTeamMatchmaking } from '../src/services/tag-team/tagTeamMatchmakingService';
 import { executeScheduledBattles } from '../src/services/league/leagueBattleOrchestrator';
@@ -134,9 +134,10 @@ describe('Multi-Match Scheduling and Execution - Property Tests', () => {
     // Clean up database in correct order (respecting foreign keys)
     await prisma.battleParticipant.deleteMany();
     await prisma.battle.deleteMany();
-    await prisma.scheduledTagTeamMatch.deleteMany();
+    await prisma.scheduledTeamBattleMatch.deleteMany();
     await prisma.scheduledLeagueMatch.deleteMany();
-    await prisma.tagTeam.deleteMany();
+    await prisma.teamBattleMember.deleteMany();
+    await prisma.teamBattle.deleteMany();
     await prisma.weaponInventory.deleteMany();
     await prisma.robot.deleteMany();
     await prisma.user.deleteMany();
@@ -192,8 +193,8 @@ describe('Multi-Match Scheduling and Execution - Property Tests', () => {
 
             // Create tag teams (at least 2 robots needed per team)
             if (robotsPerUser >= 2) {
-              await createTeam(user1.id, user1Robots[0].id, user1Robots[1].id);
-              await createTeam(user2.id, user2Robots[0].id, user2Robots[1].id);
+              await registerTeam(user1.id, [user1Robots[0].id, user1Robots[1].id], 'Team1', 2, user1.id);
+              await registerTeam(user2.id, [user2Robots[0].id, user2Robots[1].id], 'Team2', 2, user2.id);
             }
 
             // Run matchmaking for both 1v1 and tag team
@@ -206,8 +207,8 @@ describe('Multi-Match Scheduling and Execution - Property Tests', () => {
               where: { status: 'scheduled' },
             });
 
-            const scheduledTagTeam = await prisma.scheduledTagTeamMatch.findMany({
-              where: { status: 'scheduled' },
+            const scheduledTagTeam = await prisma.scheduledTeamBattleMatch.findMany({
+              where: { status: 'scheduled', matchMode: 'tag_team' },
             });
 
             // Property: Robots can be in both types of matches
@@ -220,20 +221,18 @@ describe('Multi-Match Scheduling and Execution - Property Tests', () => {
 
             const robotsInTagTeam = new Set<number>();
             for (const match of scheduledTagTeam) {
-              const team1 = await prisma.tagTeam.findUnique({
-                where: { id: match.team1Id },
+              const team1Members = await prisma.teamBattleMember.findMany({
+                where: { teamId: match.team1Id },
               });
-              const team2 = match.team2Id ? await prisma.tagTeam.findUnique({
-                where: { id: match.team2Id },
-              }) : null;
+              const team2Members = match.team2Id ? await prisma.teamBattleMember.findMany({
+                where: { teamId: match.team2Id },
+              }) : [];
 
-              if (team1) {
-                robotsInTagTeam.add(team1.activeRobotId);
-                robotsInTagTeam.add(team1.reserveRobotId);
+              for (const member of team1Members) {
+                robotsInTagTeam.add(member.robotId);
               }
-              if (team2) {
-                robotsInTagTeam.add(team2.activeRobotId);
-                robotsInTagTeam.add(team2.reserveRobotId);
+              for (const member of team2Members) {
+                robotsInTagTeam.add(member.robotId);
               }
             }
 
@@ -298,8 +297,8 @@ describe('Multi-Match Scheduling and Execution - Property Tests', () => {
             }
 
             // Create tag teams
-            await createTeam(user1.id, user1Robots[0].id, user1Robots[1].id);
-            await createTeam(user2.id, user2Robots[0].id, user2Robots[1].id);
+            await registerTeam(user1.id, [user1Robots[0].id, user1Robots[1].id], 'Team1', 2, user1.id);
+            await registerTeam(user2.id, [user2Robots[0].id, user2Robots[1].id], 'Team2', 2, user2.id);
 
             // Schedule matches
             const scheduledFor = new Date(Date.now() + 1000);
@@ -419,8 +418,8 @@ describe('Multi-Match Scheduling and Execution - Property Tests', () => {
             }
 
             // Create tag teams using robots 0 and 1
-            await createTeam(user1.id, user1Robots[0].id, user1Robots[1].id);
-            await createTeam(user2.id, user2Robots[0].id, user2Robots[1].id);
+            await registerTeam(user1.id, [user1Robots[0].id, user1Robots[1].id], 'Team1', 2, user1.id);
+            await registerTeam(user2.id, [user2Robots[0].id, user2Robots[1].id], 'Team2', 2, user2.id);
 
             // Schedule matches
             const scheduledFor = new Date(Date.now() + 1000);
@@ -557,15 +556,8 @@ describe('Multi-Match Scheduling and Execution - Property Tests', () => {
             }
 
             // Create tag teams using robots 0 and 1
-            const team1Result = await createTeam(user1.id, user1Robots[0].id, user1Robots[1].id);
-            const team2Result = await createTeam(user2.id, user2Robots[0].id, user2Robots[1].id);
-
-            if (!team1Result.success || !team1Result.team || !team2Result.success || !team2Result.team) {
-              throw new Error('Failed to create teams');
-            }
-
-            const team1 = team1Result.team;
-            const team2 = team2Result.team;
+            const team1 = await registerTeam(user1.id, [user1Robots[0].id, user1Robots[1].id], 'Team1', 2, user1.id);
+            const team2 = await registerTeam(user2.id, [user2Robots[0].id, user2Robots[1].id], 'Team2', 2, user2.id);
 
             // Manually damage robots to simulate 1v1 battle damage
             // Damage robot 0 from each user to below readiness threshold (75%)
@@ -588,11 +580,14 @@ describe('Multi-Match Scheduling and Execution - Property Tests', () => {
 
             // Schedule tag team matches
             const scheduledFor = new Date(Date.now() + 1000);
-            await prisma.scheduledTagTeamMatch.create({
+            await prisma.scheduledTeamBattleMatch.create({
               data: {
                 team1Id: team1.id,
                 team2Id: team2.id,
-                tagTeamLeague: 'bronze',
+                teamSize: 2,
+                matchMode: 'tag_team',
+                teamBattleLeague: 'bronze',
+                teamBattleLeagueId: 'bronze_1',
                 scheduledFor,
                 status: 'scheduled',
               },
@@ -602,10 +597,11 @@ describe('Multi-Match Scheduling and Execution - Property Tests', () => {
             const result = await executeScheduledTagTeamBattles(scheduledFor);
 
             // Check if match was executed
-            const match = await prisma.scheduledTagTeamMatch.findFirst({
+            const match = await prisma.scheduledTeamBattleMatch.findFirst({
               where: {
                 team1Id: team1.id,
                 team2Id: team2.id,
+                matchMode: 'tag_team',
               },
             });
 

@@ -155,7 +155,7 @@ async function executeLeagueCycle(): Promise<JobContext> {
   const matchesCreated = await runMatchmaking(scheduledFor);
   logger.info(`League Cycle: ${matchesCreated} matches scheduled for ${scheduledFor.toISOString()}`);
 
-  return { jobName: 'league' };
+  return { jobName: 'league', matchesCompleted: battleSummary.totalBattles };
 }
 
 async function executeTournamentCycle(): Promise<JobContext> {
@@ -234,6 +234,7 @@ async function executeTournamentCycle(): Promise<JobContext> {
       tournamentName: lastTournament.name,
       tournamentRound: lastTournament.currentRound,
       tournamentMaxRounds: lastTournament.maxRounds,
+      matchesCompleted: totalMatchesExecuted,
     };
   }
 
@@ -263,7 +264,7 @@ async function executeTagTeamCycle(): Promise<JobContext> {
   const matchesCreated = await runTagTeamMatchmaking(scheduledFor);
   logger.info(`Tag Team Cycle: ${matchesCreated} tag team matches scheduled for ${scheduledFor.toISOString()}`);
 
-  return { jobName: 'tag-team' };
+  return { jobName: 'tag-team', matchesCompleted: battleSummary.totalBattles };
 }
 
 async function executeSettlement(): Promise<JobContext> {
@@ -483,7 +484,8 @@ async function executeSettlement(): Promise<JobContext> {
     data: { cyclesInCurrentLeague: { increment: 1 } },
   });
 
-  await prisma.tagTeam.updateMany({
+  await prisma.teamBattle.updateMany({
+    where: { teamSize: 2 },
     data: { cyclesInTagTeamLeague: { increment: 1 } },
   });
 

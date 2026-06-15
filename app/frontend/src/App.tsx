@@ -118,8 +118,8 @@ function AppRoutes() {
       <Route path="/hall-of-records" element={<ProtectedRoute><HallOfRecordsPage /></ProtectedRoute>} />
       <Route path="/tournaments" element={<ProtectedRoute><TournamentsPage /></ProtectedRoute>} />
       <Route path="/tournaments/:id" element={<ProtectedRoute><TournamentDetailPage /></ProtectedRoute>} />
-      <Route path="/tag-teams" element={<Navigate to="/team-battles?tab=tag-team" replace />} />
-      <Route path="/tag-teams/standings" element={<Navigate to="/team-battles?tab=tag-team" replace />} />
+      <Route path="/tag-teams" element={<Navigate to="/team-battles" replace />} />
+      <Route path="/tag-teams/standings" element={<Navigate to="/team-battles" replace />} />
       <Route path="/team-battles" element={<ProtectedRoute><TeamBattlesPage /></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
       <Route path="/cycle-summary" element={<ProtectedRoute><CycleSummaryPage /></ProtectedRoute>} />
