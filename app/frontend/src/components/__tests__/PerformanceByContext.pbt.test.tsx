@@ -240,7 +240,7 @@ describe('PerformanceByContext - Property-Based Tests', () => {
             expect(container.textContent).toContain('Leagues');
           }, { timeout: 5000 });
 
-          const text = container.textContent || '';
+          const _text = container.textContent || '';
 
           // Count actual "No battles yet" occurrences — component should render
           // one for each empty context section. For now, just verify renders OK.
