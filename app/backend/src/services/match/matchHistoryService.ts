@@ -15,7 +15,7 @@ type ScheduledLeagueMatchWithRobots = Prisma.ScheduledLeagueMatchGetPayload<{
   include: { robot1: { include: { user: { select: { id: true; username: true } } } }; robot2: { include: { user: { select: { id: true; username: true } } } } };
 }>;
 
-type ScheduledTournamentMatchWithRobots = Prisma.ScheduledTournamentMatchGetPayload<{
+type _ScheduledTournamentMatchWithRobots = Prisma.ScheduledTournamentMatchGetPayload<{
   include: {
     tournament: { select: { id: true; name: true; currentRound: true; maxRounds: true } };
   };
@@ -28,7 +28,7 @@ type ScheduledTournamentByeMatchWithRobots = Prisma.ScheduledTournamentMatchGetP
 }>;
 
 // Legacy type removed — tag team data now served via TeamBattle
-type TagTeamWithMembers = {
+type _TagTeamWithMembers = {
   id: number;
   stableId: number;
   teamName: string;
@@ -246,7 +246,7 @@ async function fetchScheduledTournamentMatches(robotIds: number[]) {
   }));
 }
 
-async function fetchScheduledTagTeamMatches(teamIds: number[]) {
+async function fetchScheduledTagTeamMatches(_teamIds: number[]) {
   // Tag team matches now live in ScheduledTeamBattleMatch with matchMode='tag_team'
   // teamIds is no longer used (legacy TagTeam IDs); tag team matches are found via teamBattleIds
   return [] as ScheduledTagTeamMatchWithTeams[];
@@ -431,13 +431,13 @@ function formatTagTeamMatches(matches: ScheduledTagTeamMatchWithTeams[]) {
   return matches
     .filter(match => match.team2 !== null)
     .map(match => {
-      const formatTeam = (team: any) => {
-        const members = team.members?.sort((a: any, b: any) => a.slotIndex - b.slotIndex) || [];
-        const activeRobot = members[0]?.robot;
-        const reserveRobot = members[1]?.robot;
+      const formatTeam = (team: Record<string, unknown>) => {
+        const members = ((team.members as Array<{ slotIndex: number; robot: Record<string, unknown> }>) || []).sort((a, b) => a.slotIndex - b.slotIndex);
+        const activeRobot = members[0]?.robot as Record<string, unknown> | undefined;
+        const reserveRobot = members[1]?.robot as Record<string, unknown> | undefined;
         return {
           id: team.id,
-          stableName: team.stable?.stableName || null,
+          stableName: (team.stable as { stableName?: string | null } | undefined)?.stableName || null,
           activeRobot: activeRobot ? {
             id: activeRobot.id,
             name: activeRobot.name,
@@ -445,7 +445,7 @@ function formatTagTeamMatches(matches: ScheduledTagTeamMatchWithTeams[]) {
             currentHP: activeRobot.currentHP,
             maxHP: activeRobot.maxHP,
             userId: activeRobot.userId,
-            user: { username: activeRobot.user?.username },
+            user: { username: (activeRobot.user as { username?: string } | undefined)?.username },
           } : null,
           reserveRobot: reserveRobot ? {
             id: reserveRobot.id,
@@ -454,9 +454,9 @@ function formatTagTeamMatches(matches: ScheduledTagTeamMatchWithTeams[]) {
             currentHP: reserveRobot.currentHP,
             maxHP: reserveRobot.maxHP,
             userId: reserveRobot.userId,
-            user: { username: reserveRobot.user?.username },
+            user: { username: (reserveRobot.user as { username?: string } | undefined)?.username },
           } : null,
-          combinedELO: (activeRobot?.elo || 0) + (reserveRobot?.elo || 0),
+          combinedELO: ((activeRobot?.elo as number) || 0) + ((reserveRobot?.elo as number) || 0),
         };
       };
 
