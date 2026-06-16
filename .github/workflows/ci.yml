@@ -24,38 +24,41 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
-      
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
           node-version: '24'
-          cache: 'npm'
-          cache-dependency-path: app/backend/package-lock.json
+          cache: 'pnpm'
+          cache-dependency-path: app/backend/pnpm-lock.yaml
       
       - name: Install backend dependencies
         working-directory: ./app/backend
-        run: npm ci
+        run: pnpm install --frozen-lockfile
       
       - name: Generate Prisma Client
         working-directory: ./app/backend
         env:
           DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
-        run: npm run prisma:generate
+        run: pnpm run prisma:generate
       
       - name: Lint backend code
         working-directory: ./app/backend
-        run: npm run lint
+        run: pnpm run lint
       
       - name: Build backend
         working-directory: ./app/backend
-        run: npm run build
+        run: pnpm run build
       
       - name: Run unit tests
         working-directory: ./app/backend
         env:
           NODE_ENV: test
           JWT_SECRET: test-secret-key-for-ci
-        run: npm run test:unit -- --silent
+        run: pnpm run test:unit -- --silent
 
   backend-integration-tests:
     name: Backend Integration Tests
@@ -84,29 +87,32 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
-      
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
           node-version: '24'
-          cache: 'npm'
-          cache-dependency-path: app/backend/package-lock.json
+          cache: 'pnpm'
+          cache-dependency-path: app/backend/pnpm-lock.yaml
       
       - name: Install backend dependencies
         working-directory: ./app/backend
-        run: npm ci
+        run: pnpm install --frozen-lockfile
       
       - name: Generate Prisma Client
         working-directory: ./app/backend
         env:
           DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
-        run: npm run prisma:generate
+        run: pnpm run prisma:generate
       
       - name: Run database migrations
         working-directory: ./app/backend
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_test?connection_limit=5
-        run: npx prisma migrate deploy
+        run: pnpm exec prisma migrate deploy
       
       - name: Run integration tests
         working-directory: ./app/backend
@@ -114,7 +120,7 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_test?connection_limit=5
           JWT_SECRET: test-secret-key-for-ci
           NODE_ENV: test
-        run: npm run test:integration -- --silent 2>&1 | tail -n 500
+        run: pnpm run test:integration -- --silent 2>&1 | tail -n 500
 
   frontend-tests:
     name: Frontend Tests & Lint
@@ -127,30 +133,33 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
-      
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
           node-version: '24'
-          cache: 'npm'
-          cache-dependency-path: app/frontend/package-lock.json
+          cache: 'pnpm'
+          cache-dependency-path: app/frontend/pnpm-lock.yaml
       
       - name: Install frontend dependencies
         working-directory: ./app/frontend
-        run: npm ci
+        run: pnpm install --frozen-lockfile
       
       - name: Lint frontend code
         working-directory: ./app/frontend
-        run: npm run lint
+        run: pnpm run lint
       
       - name: Build frontend
         working-directory: ./app/frontend
-        run: npm run build
+        run: pnpm run build
 
       - name: Run frontend unit tests
         working-directory: ./app/frontend
         timeout-minutes: 15
-        run: npm run test:ci
+        run: pnpm run test:ci
 
   e2e-tests:
     name: E2E Tests
@@ -185,40 +194,43 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
           node-version: '24'
-          cache: 'npm'
+          cache: 'pnpm'
           cache-dependency-path: |
-            app/backend/package-lock.json
-            app/frontend/package-lock.json
+            app/backend/pnpm-lock.yaml
+            app/frontend/pnpm-lock.yaml
 
       - name: Install backend dependencies
         working-directory: ./app/backend
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma Client
         working-directory: ./app/backend
         env:
           DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
-        run: npm run prisma:generate
+        run: pnpm run prisma:generate
 
       - name: Run database migrations
         working-directory: ./app/backend
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_e2e?connection_limit=20
-        run: npx prisma migrate deploy
+        run: pnpm exec prisma migrate deploy
 
       - name: Seed database
         working-directory: ./app/backend
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_e2e?connection_limit=20
-        run: npx prisma db seed
+        run: pnpm exec prisma db seed
 
       - name: Build backend
         working-directory: ./app/backend
-        run: npm run build
+        run: pnpm run build
 
       - name: Start backend server
         working-directory: ./app/backend
@@ -248,24 +260,24 @@ jobs:
 
       - name: Install frontend dependencies
         working-directory: ./app/frontend
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Build frontend
         working-directory: ./app/frontend
         env:
           VITE_API_URL: http://localhost:3001
-        run: npm run build
+        run: pnpm run build
 
       - name: Install Playwright browsers
         working-directory: ./app/frontend
-        run: npx playwright install --with-deps chromium
+        run: pnpm exec playwright install --with-deps chromium
 
       - name: Run Playwright tests
         working-directory: ./app/frontend
         env:
           PLAYWRIGHT_BASE_URL: http://localhost:4173
         run: |
-          npx vite preview --port 4173 &
+          pnpm exec vite preview --port 4173 &
           echo "Waiting for frontend preview server to start..."
           for i in $(seq 1 30); do
             if curl -fsS http://localhost:4173/ > /dev/null 2>&1; then
@@ -274,7 +286,7 @@ jobs:
             fi
             sleep 1
           done
-          npx playwright test
+          pnpm exec playwright test
 
       - name: Upload Playwright HTML report
         if: always()
@@ -304,34 +316,37 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
-      
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
           node-version: '24'
-          cache: 'npm'
+          cache: 'pnpm'
           cache-dependency-path: |
-            app/backend/package-lock.json
-            app/frontend/package-lock.json
+            app/backend/pnpm-lock.yaml
+            app/frontend/pnpm-lock.yaml
 
-      # npm audit only reads package-lock.json, so we skip postinstall scripts
+      # pnpm audit reads pnpm-lock.yaml directly, so we skip lifecycle scripts
       # to avoid transient CDN timeouts from native-binary downloads
       # (e.g., onnxruntime-node via gitnexus → @huggingface/transformers).
       - name: Install backend dependencies
         working-directory: ./app/backend
-        run: npm ci --ignore-scripts
+        run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Install frontend dependencies
         working-directory: ./app/frontend
-        run: npm ci --ignore-scripts
+        run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Generate audit report (backend)
         working-directory: ./app/backend
-        run: npm audit --json > audit-report-backend.json || true
+        run: pnpm audit --json > audit-report-backend.json || true
 
       - name: Generate audit report (frontend)
         working-directory: ./app/frontend
-        run: npm audit --json > audit-report-frontend.json || true
+        run: pnpm audit --json > audit-report-frontend.json || true
 
       - name: Upload audit reports
         if: always()
@@ -345,7 +360,7 @@ jobs:
       - name: Check allowlist and audit backend
         working-directory: ./app/backend
         run: |
-          # Run npm audit at high level — fail on high/critical vulnerabilities in production deps only
+          # Run pnpm audit at high level — fail on high/critical vulnerabilities in production deps only
           # Dev dependencies are not deployed and don't affect the production attack surface
           # Known accepted vulnerabilities are documented in .security-audit-allowlist.json
           ALLOWLIST_FILE="../../.security-audit-allowlist.json"
@@ -355,7 +370,7 @@ jobs:
           fi
           
           # Run audit and filter out allowlisted advisories
-          AUDIT_OUTPUT=$(npm audit --json --omit=dev 2>/dev/null || true)
+          AUDIT_OUTPUT=$(pnpm audit --json --prod 2>/dev/null || true)
           
           if [ -f "$ALLOWLIST_FILE" ]; then
             # Extract allowlisted GHSA IDs
@@ -406,13 +421,13 @@ jobs:
             AUDIT_EXIT=$?
             if [ $AUDIT_EXIT -ne 0 ]; then
               echo "Security audit failed — unallowed high/critical vulnerabilities found"
-              npm audit --audit-level=high --omit=dev
+              pnpm audit --prod
               exit 1
             else
               echo "Security audit passed — all high/critical vulnerabilities are allowlisted"
             fi
           else
-            npm audit --audit-level=high --omit=dev
+            pnpm audit --prod
           fi
 
       - name: Check allowlist and audit frontend
@@ -424,4 +439,4 @@ jobs:
             echo "Security audit allowlist found — reviewing accepted vulnerabilities"
             cat "$ALLOWLIST_FILE"
           fi
-          npm audit --audit-level=high --omit=dev
+          pnpm audit --prod

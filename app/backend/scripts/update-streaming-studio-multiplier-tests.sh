@@ -19,6 +19,6 @@ rm -f tests/*.bak
 echo "✓ Test files updated successfully!"
 echo ""
 echo "Next steps:"
-echo "1. Run tests: npm test"
+echo "1. Run tests: pnpm test"
 echo "2. Review any failing tests and update expected values"
 echo "3. Commit changes"

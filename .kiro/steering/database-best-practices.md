@@ -331,7 +331,7 @@ model Robot {
 **Create Migration**:
 ```bash
 cd app/backend
-npx prisma migrate dev --name add_robot_image_url
+pnpm exec prisma migrate dev --name add_robot_image_url
 ```
 
 **Migration Naming**:

@@ -138,7 +138,7 @@ npm --version
 ## 8. Install PM2
 
 ```bash
-npm install -g pm2
+pnpm install -g pm2
 
 # Verify
 pm2 --version

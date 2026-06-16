@@ -17,16 +17,16 @@ docker compose up -d
 # Backend
 cd backend
 cp .env.example .env
-npm install
-npm run prisma:generate
-npm run prisma:migrate
-npx tsx prisma/seed.ts
-npm run dev  # Terminal 1
+pnpm install
+pnpm run prisma:generate
+pnpm run prisma:migrate
+pnpm exec tsx prisma/seed.ts
+pnpm run dev  # Terminal 1
 
 # Frontend (new terminal)
 cd ../frontend
-npm install
-npm run dev  # Terminal 2
+pnpm install
+pnpm run dev  # Terminal 2
 ```
 
 Open http://localhost:3000 — test credentials are in [LOCAL_SETUP.md](docs/guides/operations/LOCAL_SETUP.md).

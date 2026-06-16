@@ -51,7 +51,7 @@ Create a `production` environment in GitHub with required reviewers and branch r
 
 ```bash
 cd /opt/armouredsouls/backend
-NODE_ENV=production npx prisma db seed
+NODE_ENV=production pnpm exec prisma db seed
 ```
 
 This seeds only essential game data (weapons, facilities) — no test accounts.

@@ -13,7 +13,7 @@ Consolidate the `TagTeam` Prisma model into the existing `TeamBattle` model (tea
     - Rename `totalWins` → `totalLeagueWins`, `totalLosses` → `totalLeagueLosses`, `totalDraws` → `totalLeagueDraws`
     - Add composite index on `[teamSize, tagTeamLeague, tagTeamLeagueId]`
     - All changes in a single transaction (Prisma migration default)
-    - Run `npx prisma generate` to regenerate client
+    - Run `pnpm exec prisma generate` to regenerate client
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8_
 
   - [x] 1.2 Create Prisma migration: add matchMode to ScheduledTeamBattleMatch
@@ -27,7 +27,7 @@ Consolidate the `TagTeam` Prisma model into the existing `TeamBattle` model (tea
   - [x] 1.3 Update Prisma schema model definitions
     - Update `TeamBattle` model with all new fields, renamed fields, and new index
     - Update `ScheduledTeamBattleMatch` model with `matchMode` field
-    - Verify schema compiles with `npx prisma validate`
+    - Verify schema compiles with `pnpm exec prisma validate`
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 7.1_
 
   - [x] 1.4 Implement data migration script for TagTeam → TeamBattle
@@ -76,7 +76,7 @@ Consolidate the `TagTeam` Prisma model into the existing `TeamBattle` model (tea
     - Update `app/frontend/src/utils/teamBattleApi.ts` — update TypeScript interface field names
     - Update `TeamBattleManagementContent.tsx` and `TeamBattleCard` — update field references in UI
     - Update test fixtures in affected test files that reference the old column names
-    - Run `npx prisma generate` and verify full compilation (`npx tsc --noEmit`)
+    - Run `pnpm exec prisma generate` and verify full compilation (`pnpm exec tsc --noEmit`)
     - _Requirements: 1.6_
 
 - [x] 2. Checkpoint — Schema and migration verified
@@ -259,7 +259,7 @@ Consolidate the `TagTeam` Prisma model into the existing `TeamBattle` model (tea
   - [x] 12.3 Create Prisma migration to drop legacy tables
     - Drop `tag_teams` table and `tag_team_matches` table
     - Remove `TagTeam` model and `ScheduledTagTeamMatch` model from `schema.prisma`
-    - Run `npx prisma generate`
+    - Run `pnpm exec prisma generate`
     - _Requirements: 12.1, 12.3_
 
   - [x] 12.4 Update achievement references (if applicable)
@@ -320,8 +320,8 @@ Consolidate the `TagTeam` Prisma model into the existing `TeamBattle` model (tea
 
 - [x] 14. Final Verification
   - [x] 14.1 Run full test suite and verification criteria
-    - Run `npm test` in `app/backend` — all tests pass
-    - Run `npm test` in `app/frontend` — all tests pass
+    - Run `pnpm test` in `app/backend` — all tests pass
+    - Run `pnpm test` in `app/frontend` — all tests pass
     - Execute verification criteria from requirements:
       1. `grep -r "model TagTeam" app/backend/prisma/schema.prisma` → zero matches
       2. `grep -r "tag_team" app/backend/src/services/subscription/eventRegistry.ts` → match exists

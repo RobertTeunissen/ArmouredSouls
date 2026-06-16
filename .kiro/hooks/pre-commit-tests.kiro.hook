@@ -12,6 +12,6 @@
   },
   "then": {
     "type": "askAgent",
-    "prompt": "Backend TypeScript files were modified. Run 'cd prototype/backend && npm test' to verify tests still pass before committing."
+    "prompt": "Backend TypeScript files were modified. Run 'cd prototype/backend && pnpm test' to verify tests still pass before committing."
   }
 }

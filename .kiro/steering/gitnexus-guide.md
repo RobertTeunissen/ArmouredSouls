@@ -14,8 +14,8 @@ For any task involving code understanding, debugging, impact analysis, or refact
 2. Match your task to a steering file below and include it via `#`
 3. Follow the workflow and checklist in that file
 
-> If the index is stale, run `npx gitnexus analyze` in the terminal first.
-> Stop `npx gitnexus serve` before using MCP tools — they share a database lock.
+> If the index is stale, run `pnpm exec gitnexus analyze` in the terminal first.
+> Stop `pnpm exec gitnexus serve` before using MCP tools — they share a database lock.
 
 ## Steering Files
 

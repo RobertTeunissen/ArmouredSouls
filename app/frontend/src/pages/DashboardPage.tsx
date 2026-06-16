@@ -206,7 +206,7 @@ function DashboardPage() {
         )}
 
         {/* Active Tournament Status */}
-        {robots.length >= 2 && (
+        {robots.length >= 1 && (
           <div className="mb-8">
             <ActiveTournamentCard />
           </div>

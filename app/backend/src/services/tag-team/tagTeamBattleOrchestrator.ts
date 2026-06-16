@@ -384,6 +384,12 @@ export async function executeTagTeamBattle(match: ScheduledTeamBattleMatch): Pro
   // Simulate the tag team battle
   const result = await simulateTagTeamBattle(team1 as TagTeamWithRobots, team2 as TagTeamWithRobots);
   
+  // Bye matches can never be a draw — the real team always wins on timeout
+  if (_isByeMatch && result.isDraw) {
+    result.isDraw = false;
+    result.winnerId = match.team1Id; // Real team is always team1 for bye matches
+  }
+
   // Map robot winner ID to team winner ID if needed
   if (result.winnerId) {
     // Check which team the winning robot belongs to
@@ -1910,13 +1916,20 @@ async function updateTagTeamBattleResults(
 
   // Update robots (ELO, league points, HP, statistics, fame)
   // Requirement 11.2: Apply cumulative damage
+  // Read stored maxHP values to clamp finalHP (combat uses tuning-inflated maxHP)
+  const storedMaxHPs = await prisma.robot.findMany({
+    where: { id: { in: [team1.activeRobotId, team1.reserveRobotId, team2.activeRobotId, team2.reserveRobotId] } },
+    select: { id: true, maxHP: true },
+  });
+  const maxHPMap = new Map(storedMaxHPs.map(r => [r.id, r.maxHP]));
+
   await prisma.robot.update({
     where: { id: team1.activeRobotId },
     data: {
       elo: { increment: eloChanges.team1Change },
-      currentHP: result.team1ActiveFinalHP,
+      currentHP: Math.min(result.team1ActiveFinalHP, maxHPMap.get(team1.activeRobotId) ?? result.team1ActiveFinalHP),
       repairCost: 0, // Deprecated: repair costs calculated by RepairService
-      damageTaken: { increment: team1.activeRobot.maxHP - result.team1ActiveFinalHP },
+      damageTaken: { increment: (maxHPMap.get(team1.activeRobotId) ?? team1.activeRobot.maxHP) - Math.min(result.team1ActiveFinalHP, maxHPMap.get(team1.activeRobotId) ?? result.team1ActiveFinalHP) },
       fame: { increment: team1ActiveFame },
       totalTagTeamBattles: { increment: 1 },
       totalTagTeamWins: team1Won ? { increment: 1 } : undefined,
@@ -1930,10 +1943,10 @@ async function updateTagTeamBattleResults(
     where: { id: team1.reserveRobotId },
     data: {
       elo: { increment: eloChanges.team1Change },
-      currentHP: result.team1ReserveFinalHP,
+      currentHP: Math.min(result.team1ReserveFinalHP, maxHPMap.get(team1.reserveRobotId) ?? result.team1ReserveFinalHP),
       repairCost: 0, // Deprecated: repair costs calculated by RepairService
       damageTaken: result.team1TagOutTime !== undefined 
-        ? { increment: team1.reserveRobot.maxHP - result.team1ReserveFinalHP }
+        ? { increment: (maxHPMap.get(team1.reserveRobotId) ?? team1.reserveRobot.maxHP) - Math.min(result.team1ReserveFinalHP, maxHPMap.get(team1.reserveRobotId) ?? result.team1ReserveFinalHP) }
         : undefined,
       fame: { increment: team1ReserveFame },
       totalTagTeamBattles: { increment: 1 },
@@ -1948,9 +1961,9 @@ async function updateTagTeamBattleResults(
     where: { id: team2.activeRobotId },
     data: {
       elo: { increment: eloChanges.team2Change },
-      currentHP: result.team2ActiveFinalHP,
+      currentHP: Math.min(result.team2ActiveFinalHP, maxHPMap.get(team2.activeRobotId) ?? result.team2ActiveFinalHP),
       repairCost: 0, // Deprecated: repair costs calculated by RepairService
-      damageTaken: { increment: team2.activeRobot.maxHP - result.team2ActiveFinalHP },
+      damageTaken: { increment: (maxHPMap.get(team2.activeRobotId) ?? team2.activeRobot.maxHP) - Math.min(result.team2ActiveFinalHP, maxHPMap.get(team2.activeRobotId) ?? result.team2ActiveFinalHP) },
       fame: { increment: team2ActiveFame },
       totalTagTeamBattles: { increment: 1 },
       totalTagTeamWins: team2Won ? { increment: 1 } : undefined,
@@ -1964,10 +1977,10 @@ async function updateTagTeamBattleResults(
     where: { id: team2.reserveRobotId },
     data: {
       elo: { increment: eloChanges.team2Change },
-      currentHP: result.team2ReserveFinalHP,
+      currentHP: Math.min(result.team2ReserveFinalHP, maxHPMap.get(team2.reserveRobotId) ?? result.team2ReserveFinalHP),
       repairCost: 0, // Deprecated: repair costs calculated by RepairService
       damageTaken: result.team2TagOutTime !== undefined 
-        ? { increment: team2.reserveRobot.maxHP - result.team2ReserveFinalHP }
+        ? { increment: (maxHPMap.get(team2.reserveRobotId) ?? team2.reserveRobot.maxHP) - Math.min(result.team2ReserveFinalHP, maxHPMap.get(team2.reserveRobotId) ?? result.team2ReserveFinalHP) }
         : undefined,
       fame: { increment: team2ReserveFame },
       totalTagTeamBattles: { increment: 1 },
@@ -2236,6 +2249,13 @@ async function updateTagTeamBattleResults(
     // Check and award achievements for all 4 robots
     for (const r of tagTeamAuditRobots) {
       const prevLost = await didRobotLosePreviousBattle(r.robotId, battle.id);
+
+      // Solo carry: active robot won without tagging out (destroyed both opponents alone)
+      const isSoloCarry = r.isWinner && r.extras.role === 'active' && (
+        (r.robotId === team1.activeRobotId && result.team1TagOutTime === undefined) ||
+        (r.robotId === team2.activeRobotId && result.team2TagOutTime === undefined)
+      );
+
       await checkAndAwardAchievements(r.userId, r.robotId, {
         won: r.isWinner,
         destroyed: r.destroyed,
@@ -2255,7 +2275,7 @@ async function updateTagTeamBattleResults(
         battleType: 'tag_team',
         battleDurationSeconds: battle.durationSeconds,
         taggedIn: r.extras.wasTaggedIn === true,
-        soloCarry: false,
+        soloCarry: isSoloCarry,
       });
     }
   }

@@ -36,9 +36,9 @@ fileMatchPattern: "**/tests/**,**/*.test.ts,**/*.test.tsx,**/*.spec.ts,**/*.prop
 
 ### Test Execution Requirements
 **After completing development**:
-1. Run full test suite: `npm test`
+1. Run full test suite: `pnpm test`
 2. Verify all tests pass
-3. Check coverage report: `npm test -- --coverage`
+3. Check coverage report: `pnpm test -- --coverage`
 4. Ensure coverage meets minimum thresholds (80% general, 90% critical)
 5. Fix any failing tests before committing
 
@@ -89,9 +89,9 @@ fileMatchPattern: "**/tests/**,**/*.test.ts,**/*.test.tsx,**/*.spec.ts,**/*.prop
 
 **Running E2E tests**:
 ```bash
-cd app/frontend && npx playwright test          # Run all E2E tests
-cd app/frontend && npx playwright test --list   # List all test cases
-cd app/frontend && npx playwright test --ui     # Interactive UI mode (local dev)
+cd app/frontend && pnpm exec playwright test          # Run all E2E tests
+cd app/frontend && pnpm exec playwright test --list   # List all test cases
+cd app/frontend && pnpm exec playwright test --ui     # Interactive UI mode (local dev)
 ```
 
 ## Running Tests
@@ -99,29 +99,29 @@ cd app/frontend && npx playwright test --ui     # Interactive UI mode (local dev
 ### Required: Run All Tests After Development
 ```bash
 cd app/backend
-npm test
+pnpm test
 ```
 **Must pass before committing code**
 
 ### Check Coverage (Required)
 ```bash
-npm test -- --coverage
+pnpm test -- --coverage
 ```
 **Verify**: 80% minimum coverage, 90% for critical functionality
 
 ### Specific Test File (Development)
 ```bash
-npm test -- tests/facility.test.ts
+pnpm test -- tests/facility.test.ts
 ```
 
 ### Watch Mode (Local Development)
 ```bash
-npm test -- --watch
+pnpm test -- --watch
 ```
 
 ### Sequential Execution (If Parallel Issues)
 ```bash
-npm test -- --maxWorkers=1
+pnpm test -- --maxWorkers=1
 ```
 
 ### Current Configuration
@@ -137,7 +137,7 @@ npm test -- --maxWorkers=1
 
 **Affected suites**: tagTeamService, queryService, eventLogger, battleOrchestrator, cycleExecution, various property tests
 
-**Workaround**: Run with `npm test -- --maxWorkers=1` for 100% reliability (slower)
+**Workaround**: Run with `pnpm test -- --maxWorkers=1` for 100% reliability (slower)
 
 **Long-term fix**: Implement per-worker database isolation
 
@@ -252,9 +252,9 @@ afterEach(async () => {
 
 ### When Schema Changes
 1. Update Prisma schema
-2. Create migration: `npx prisma migrate dev`
+2. Create migration: `pnpm exec prisma migrate dev`
 3. Update affected test files
-4. Run tests to verify: `npm test`
+4. Run tests to verify: `pnpm test`
 
 ### Common Schema-Related Test Failures
 - **Missing fields**: Add new required fields to test mocks
@@ -329,9 +329,9 @@ it('should always calculate positive damage', () => {
 ## CI/CD Testing
 
 ### GitHub Actions Pipeline
-1. **Install dependencies**: `npm ci`
-2. **Run linter**: `npm run lint`
-3. **Run tests**: `npm test`
+1. **Install dependencies**: `pnpm install --frozen-lockfile`
+2. **Run linter**: `pnpm run lint`
+3. **Run tests**: `pnpm test`
 4. **Check coverage**: Coverage report generated
 5. **Deploy**: Only if all tests pass
 
@@ -366,7 +366,7 @@ it('should always calculate positive damage', () => {
 ## Testing Checklist
 
 ### Before Committing Code
-- [ ] Run tests locally: `npm test`
+- [ ] Run tests locally: `pnpm test`
 - [ ] All tests pass
 - [ ] No compilation errors
 - [ ] Added tests for new features (if requested)
@@ -430,13 +430,13 @@ it('should always calculate positive damage', () => {
 ### Running Frontend Tests
 ```bash
 cd app/frontend
-npx vitest --run                   # Single run (CI-safe)
-npx vitest --run --coverage        # With coverage report
-npx vitest                         # Watch mode (local dev)
+pnpm exec vitest --run                   # Single run (CI-safe)
+pnpm exec vitest --run --coverage        # With coverage report
+pnpm exec vitest                         # Watch mode (local dev)
 ```
 
 ### CI Integration
-Already integrated in `.github/workflows/ci.yml` under the `frontend-tests` job, which runs `npx vitest --run --reporter=verbose`.
+Already integrated in `.github/workflows/ci.yml` under the `frontend-tests` job, which runs `pnpm exec vitest --run --reporter=verbose`.
 
 ### Test File Locations
 - Utility tests: `src/utils/__tests__/*.test.ts`
@@ -449,20 +449,20 @@ Already integrated in `.github/workflows/ci.yml` under the `frontend-tests` job,
 
 ### Run Backend Tests
 ```bash
-npm test                           # All tests
-npm test -- tests/facility.test.ts # Specific file
-npm test -- --watch                # Watch mode
-npm test -- --maxWorkers=1         # Sequential (most stable)
-npm test -- --coverage             # With coverage
+pnpm test                           # All tests
+pnpm test -- tests/facility.test.ts # Specific file
+pnpm test -- --watch                # Watch mode
+pnpm test -- --maxWorkers=1         # Sequential (most stable)
+pnpm test -- --coverage             # With coverage
 ```
 
 ### Debug Backend Tests
 ```bash
 # Run with verbose output
-npm test -- --verbose
+pnpm test -- --verbose
 
 # Run single test
-npm test -- -t "should create facility"
+pnpm test -- -t "should create facility"
 
 # Debug in VS Code
 # Add breakpoint, press F5 with Jest debug config
@@ -477,9 +477,9 @@ npm test -- -t "should create facility"
 ### Run Frontend Tests
 ```bash
 cd app/frontend
-npx vitest --run                   # Single run
-npx vitest --run --coverage        # With coverage
-npx vitest                         # Watch mode
+pnpm exec vitest --run                   # Single run
+pnpm exec vitest --run --coverage        # With coverage
+pnpm exec vitest                         # Watch mode
 ```
 
 ### Frontend Test File Locations

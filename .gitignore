@@ -41,10 +41,7 @@ Thumbs.db
 # Logs
 logs/
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-lerna-debug.log*
+pnpm-debug.log*
 
 # Test outputs
 coverage/
@@ -58,16 +55,16 @@ dist/
 build/
 *.tsbuildinfo
 
-# Prisma 7 generated client — regenerated on `npm install` via the
-# `postinstall: patch-package && prisma generate` script in
+# Prisma 7 generated client — regenerated on `pnpm install` via the
+# `postinstall: prisma generate` script in
 # app/backend/package.json. Kept out of git so PRs and code review aren't
 # polluted by tens of thousands of lines of generated TypeScript.
 app/backend/generated/
 
 # Package managers
-# package-lock.json should be committed for CI/CD
+# pnpm-lock.yaml should be committed for CI/CD
+package-lock.json
 yarn.lock
-pnpm-lock.yaml
 poetry.lock
 
 # Temporary files

@@ -31,7 +31,7 @@ The monitoring system uses lightweight, zero-cost components:
 | Alert | Trigger | Message Format | Response |
 |---|---|---|---|
 | Disk Critical | Usage >= 90% | `🚨 Disk usage CRITICAL: {%}% used ({free} free) on {host}` | Free disk space immediately: remove old backups, vacuum journal, check Docker images |
-| Startup Failed | Missing compiled modules | `🚨 STARTUP FAILED: Missing modules: [list]. Server did not start.` | SSH in, check `dist/` directory, run `npm run build`, restart PM2 |
+| Startup Failed | Missing compiled modules | `🚨 STARTUP FAILED: Missing modules: [list]. Server did not start.` | SSH in, check `dist/` directory, run `pnpm run build`, restart PM2 |
 | Backup Failed | pg_dump non-zero exit | `🚨 Backup FAILED: pg_dump returned error on {host}` | Check DB connectivity, disk space, backup logs |
 | Deploy Failed | Any deploy step fails | `🚨 Deploy to {env} FAILED. Run: {url}` | Check GitHub Actions run, fix the failing step, re-deploy |
 

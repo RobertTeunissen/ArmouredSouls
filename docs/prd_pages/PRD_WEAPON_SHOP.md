@@ -290,16 +290,16 @@ The Weapon Shop (`/weapon-shop`) is the primary economic interface where players
 ```bash
 # Unit Tests
 cd app/frontend
-npm test                    # Run all unit tests
-npm test:coverage          # Generate coverage report
-npm test:ui                # Run with UI
+pnpm test                    # Run all unit tests
+pnpm test:coverage          # Generate coverage report
+pnpm test:ui                # Run with UI
 
 # E2E Tests (requires Playwright browsers)
-npx playwright install     # One-time setup
-npm run test:e2e          # Run all E2E tests
-npm run test:e2e -- weapon-shop.spec.ts  # Run weapon shop tests only
-npm run test:e2e:headed   # Run with visible browser
-npm run test:e2e:debug    # Run in debug mode
+pnpm exec playwright install     # One-time setup
+pnpm run test:e2e          # Run all E2E tests
+pnpm run test:e2e -- weapon-shop.spec.ts  # Run weapon shop tests only
+pnpm run test:e2e:headed   # Run with visible browser
+pnpm run test:e2e:debug    # Run in debug mode
 ```
 
 **Test Coverage Gaps**:

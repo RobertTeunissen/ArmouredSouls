@@ -3,7 +3,9 @@
   "private": true,
   "description": "Repo-level tooling: git hooks via husky + lint-staged. Backend and frontend live under app/.",
   "license": "UNLICENSED",
+  "packageManager": "pnpm@10.12.1",
   "scripts": {
+    "preinstall": "npx only-allow pnpm",
     "prepare": "husky"
   },
   "devDependencies": {
@@ -12,10 +14,10 @@
   },
   "lint-staged": {
     "app/backend/**/*.ts": [
-      "bash -c 'cd app/backend && for f in \"$@\"; do npx eslint --fix --no-warn-ignored \"${f#app/backend/}\" || exit 1; done' --"
+      "bash -c 'cd app/backend && for f in \"$@\"; do pnpm exec eslint --fix --no-warn-ignored \"${f#app/backend/}\" || exit 1; done' --"
     ],
     "app/frontend/**/*.{ts,tsx}": [
-      "bash -c 'cd app/frontend && for f in \"$@\"; do npx eslint --fix --no-warn-ignored \"${f#app/frontend/}\" || exit 1; done' --"
+      "bash -c 'cd app/frontend && for f in \"$@\"; do pnpm exec eslint --fix --no-warn-ignored \"${f#app/frontend/}\" || exit 1; done' --"
     ]
   }
 }

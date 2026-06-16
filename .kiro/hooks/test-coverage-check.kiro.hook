@@ -11,6 +11,6 @@
   },
   "then": {
     "type": "askAgent",
-    "prompt": "Test files modified. Consider running 'npm test -- --coverage' to check if coverage improved or decreased."
+    "prompt": "Test files modified. Consider running 'pnpm test -- --coverage' to check if coverage improved or decreased."
   }
 }

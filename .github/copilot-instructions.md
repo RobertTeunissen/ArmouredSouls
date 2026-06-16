@@ -324,13 +324,13 @@ describe('POST /api/robots', () => {
 ```bash
 # Backend tests
 cd app/backend
-npm test                    # Run all tests
-npm test -- --watch        # Watch mode for TDD
-npm test -- --coverage     # Generate coverage report
+pnpm test                    # Run all tests
+pnpm test -- --watch        # Watch mode for TDD
+pnpm test -- --coverage     # Generate coverage report
 
 # Frontend tests (when added in future)
 cd app/frontend
-npm test
+pnpm test
 ```
 
 ---
@@ -433,13 +433,13 @@ model Robot {
 ```bash
 # 1. Modify prisma/schema.prisma
 # 2. Generate migration
-npm run prisma:migrate -- --name add_robot_attributes
+pnpm run prisma:migrate -- --name add_robot_attributes
 
 # 3. Regenerate Prisma Client
-npm run prisma:generate
+pnpm run prisma:generate
 
 # 4. Test changes locally
-npm run dev
+pnpm run dev
 ```
 
 ### Database Seeding

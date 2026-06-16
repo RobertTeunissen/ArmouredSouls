@@ -6,6 +6,10 @@ set -euo pipefail
 # Configurable retention via env vars (defaults: 2 daily + 0 weekly).
 # Old backups are cleaned BEFORE the disk-full guard so the script can
 # self-recover when disk usage is already above the threshold.
+#
+# Supports two modes:
+#   1. Host pg_dump (if postgresql-client is installed on the VPS)
+#   2. Docker exec fallback (uses pg_dump inside the running container)
 # ============================================================================
 
 BACKUP_DIR="/opt/armouredsouls/backups"
@@ -15,13 +19,10 @@ DAILY_RETAIN="${BACKUP_DAILY_RETAIN:-2}"
 WEEKLY_RETAIN="${BACKUP_WEEKLY_RETAIN:-0}"
 PRE_DEPLOY_RETAIN="${BACKUP_PRE_DEPLOY_RETAIN:-2}"
 DISK_THRESHOLD="${BACKUP_DISK_THRESHOLD:-85}"
+CONTAINER_NAME="${BACKUP_CONTAINER_NAME:-armouredsouls-db-prod}"
 
 # Read a single key from the .env file as plain text. Avoids `source .env`
-# entirely — bash's `source` interprets unquoted values as commands, e.g.
-# `LEAGUE_SCHEDULE=0 20 * * *` makes it try to run `20` and crashes the
-# script with "20: command not found". This helper instead grabs the last
-# line matching `KEY=`, strips the `KEY=` prefix and surrounding quotes,
-# and returns the raw value. Same fix shape as preflight.sh (PR #332).
+# entirely — bash's `source` interprets unquoted values as commands.
 env_get() {
   local key="$1"
   local file="$2"
@@ -34,6 +35,7 @@ DB_USER="${POSTGRES_USER:-$(env_get POSTGRES_USER "$ENV_FILE")}"
 DB_NAME="${POSTGRES_DB:-$(env_get POSTGRES_DB "$ENV_FILE")}"
 DB_HOST="${POSTGRES_HOST:-$(env_get POSTGRES_HOST "$ENV_FILE")}"
 DB_PORT="${POSTGRES_PORT:-$(env_get POSTGRES_PORT "$ENV_FILE")}"
+DB_PASS="${POSTGRES_PASSWORD:-$(env_get POSTGRES_PASSWORD "$ENV_FILE")}"
 MONITORING_DISCORD_WEBHOOK="${MONITORING_DISCORD_WEBHOOK:-$(env_get MONITORING_DISCORD_WEBHOOK "$ENV_FILE")}"
 DISCORD_WEBHOOK_URL="${DISCORD_WEBHOOK_URL:-$(env_get DISCORD_WEBHOOK_URL "$ENV_FILE")}"
 
@@ -42,6 +44,7 @@ DB_USER="${DB_USER:-armouredsouls}"
 DB_NAME="${DB_NAME:-armouredsouls}"
 DB_HOST="${DB_HOST:-127.0.0.1}"
 DB_PORT="${DB_PORT:-5432}"
+DB_PASS="${DB_PASS:-}"
 
 mkdir -p "${BACKUP_DIR}/daily" "${BACKUP_DIR}/weekly"
 
@@ -61,8 +64,21 @@ send_alert() {
   log "$message"
 }
 
-# --- Cleanup old pre-deploy backups (runs BEFORE the disk guard so we can
-#     still reclaim space when disk usage is already over the threshold) ---
+# --- Determine backup method ---
+# Prefer host pg_dump if available; fall back to docker exec.
+use_docker=false
+if ! command -v pg_dump &> /dev/null; then
+  if docker exec "${CONTAINER_NAME}" pg_dump --version &> /dev/null; then
+    use_docker=true
+    log "pg_dump not found on host — using docker exec (container: ${CONTAINER_NAME})"
+  else
+    log "ERROR: pg_dump not available on host or in container ${CONTAINER_NAME}"
+    send_alert "🚨 Backup FAILED on $(hostname): pg_dump not available on host or in Docker container '${CONTAINER_NAME}'."
+    exit 1
+  fi
+fi
+
+# --- Cleanup old pre-deploy backups (runs BEFORE the disk guard) ---
 PRE_DEPLOY_COUNT=$(find "${BACKUP_DIR}" -maxdepth 1 -name "pre_deploy_*.dump" -type f | wc -l)
 if [ "${PRE_DEPLOY_COUNT}" -gt "${PRE_DEPLOY_RETAIN}" ]; then
   DELETE_COUNT=$((PRE_DEPLOY_COUNT - PRE_DEPLOY_RETAIN))
@@ -72,11 +88,7 @@ if [ "${PRE_DEPLOY_COUNT}" -gt "${PRE_DEPLOY_RETAIN}" ]; then
   log "Cleaned up ${DELETE_COUNT} old pre-deploy backup(s)"
 fi
 
-# --- Cleanup old daily backups (also runs BEFORE the disk guard) ---
-# Without this, a single day above the disk threshold causes the script to
-# bail out before the cleanup step at the bottom, leaving old backups on
-# disk forever and making the disk-full state self-reinforcing. We saw this
-# happen on ACC: backups stopped at May 18 with 3.1 GB of files locked up.
+# --- Cleanup old daily backups (runs BEFORE the disk guard) ---
 DAILY_COUNT=$(find "${BACKUP_DIR}/daily" \( -name "*.dump" -o -name "*.sql.gz" \) -type f | wc -l)
 if [ "${DAILY_COUNT}" -gt "${DAILY_RETAIN}" ]; then
   DELETE_COUNT=$((DAILY_COUNT - DAILY_RETAIN))
@@ -86,7 +98,7 @@ if [ "${DAILY_COUNT}" -gt "${DAILY_RETAIN}" ]; then
   log "Cleaned up ${DELETE_COUNT} old daily backup(s)"
 fi
 
-# --- Cleanup old weekly backups (also runs BEFORE the disk guard) ---
+# --- Cleanup old weekly backups (runs BEFORE the disk guard) ---
 WEEKLY_COUNT=$(find "${BACKUP_DIR}/weekly" \( -name "*.dump" -o -name "*.sql.gz" \) -type f | wc -l)
 if [ "${WEEKLY_COUNT}" -gt "${WEEKLY_RETAIN}" ]; then
   DELETE_COUNT=$((WEEKLY_COUNT - WEEKLY_RETAIN))
@@ -108,10 +120,22 @@ fi
 DAILY_FILE="${BACKUP_DIR}/daily/${DB_NAME}_daily_${TIMESTAMP}.dump"
 log "Starting daily backup: ${DAILY_FILE}"
 
-if pg_dump -h "${DB_HOST}" -p "${DB_PORT}" -U "${DB_USER}" -Fc "${DB_NAME}" > "${DAILY_FILE}"; then
+run_pg_dump() {
+  if [ "$use_docker" = true ]; then
+    # Run pg_dump inside the Docker container, stream output to host file
+    docker exec "${CONTAINER_NAME}" pg_dump -U "${DB_USER}" -Fc "${DB_NAME}" > "${DAILY_FILE}"
+  else
+    # Run pg_dump on the host with password via PGPASSWORD
+    PGPASSWORD="${DB_PASS}" pg_dump -h "${DB_HOST}" -p "${DB_PORT}" -U "${DB_USER}" -Fc "${DB_NAME}" > "${DAILY_FILE}"
+  fi
+}
+
+if run_pg_dump; then
   FILE_SIZE=$(du -h "${DAILY_FILE}" | cut -f1)
   log "Daily backup complete: ${DAILY_FILE} (${FILE_SIZE})"
 else
+  # Remove empty/partial dump file on failure
+  rm -f "${DAILY_FILE}"
   log "ERROR: Daily backup failed"
   send_alert "🚨 Backup FAILED: pg_dump returned error on $(hostname). Check backup logs."
   exit 1

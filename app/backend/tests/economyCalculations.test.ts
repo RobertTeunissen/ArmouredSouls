@@ -45,8 +45,13 @@ describe('Economy Calculations', () => {
     });
 
     it('should return 0 for facilities with no operating cost', () => {
-      expect(calculateFacilityOperatingCost('booking_office', 5)).toBe(0);
       expect(calculateFacilityOperatingCost('roster_expansion', 5)).toBe(0); // Handled separately
+    });
+
+    it('should return level × 150 for booking_office', () => {
+      expect(calculateFacilityOperatingCost('booking_office', 1)).toBe(150);
+      expect(calculateFacilityOperatingCost('booking_office', 5)).toBe(750);
+      expect(calculateFacilityOperatingCost('booking_office', 10)).toBe(1500);
     });
   });
 

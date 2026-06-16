@@ -11,6 +11,6 @@
   },
   "then": {
     "type": "askAgent",
-    "prompt": "Prisma schema was modified. Run 'cd prototype/backend && npx prisma format && npx prisma validate' to ensure schema is valid."
+    "prompt": "Prisma schema was modified. Run 'cd prototype/backend && pnpm exec prisma format && pnpm exec prisma validate' to ensure schema is valid."
   }
 }

@@ -13,9 +13,9 @@ Every test in the repository must pass. There is no such thing as a "pre-existin
 2. **If you encounter a flaky test — stabilize it.** Flaky property-based tests, timing-dependent tests, or tests that pass locally but fail in CI must be fixed, not skipped or ignored.
 
 3. **Before pushing any commit**, run the relevant test suites and confirm zero failures:
-   - Backend unit tests: `cd app/backend && npx jest --config jest.config.unit.js --maxWorkers=1 --silent`
-   - Frontend tests: `cd app/frontend && npx vitest run --silent`
-   - If you modified files that integration tests cover: `cd app/backend && npx jest --config jest.config.integration.js --maxWorkers=1 --silent`
+   - Backend unit tests: `cd app/backend && pnpm exec jest --config jest.config.unit.js --maxWorkers=1 --silent`
+   - Frontend tests: `cd app/frontend && pnpm exec vitest run --silent`
+   - If you modified files that integration tests cover: `cd app/backend && pnpm exec jest --config jest.config.integration.js --maxWorkers=1 --silent`
 
 4. **Never dismiss a test failure as "not my problem."** If it's failing in the repo, it's your problem. Fix it in the same commit or a dedicated fix commit before pushing.
 

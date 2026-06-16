@@ -11,7 +11,7 @@ import { checkBackstab, updateFacing, calculateTurnSpeed } from '../arena/positi
 import { updateAdaptation, getEffectiveAdaptation } from '../arena/adaptationTracker';
 import { calculatePressureEffects } from '../arena/pressureSystem';
 import { calculateBaseSpeed, calculateEffectiveSpeed, updateServoStrain } from '../arena/servoStrain';
-import { calculateMovementIntent, applyMovement, getPatienceLimit, RANGE_BAND_MIDPOINTS } from '../arena/movementAI';
+import { calculateMovementIntent, applyMovement, getPatienceLimit, enforceTeamSeparation, RANGE_BAND_MIDPOINTS } from '../arena/movementAI';
 import { checkSyncVolley, getSupportShieldBoost, getFormationDefenseBonus } from '../arena/teamCoordination';
 import { resolveCounter } from '../arena/counterAttack';
 import { selectTarget } from '../arena/threatScoring';
@@ -1485,7 +1485,15 @@ export function simulateBattleMulti(
 
     // ── PHASE 1: MOVEMENT ──
     for (const state of aliveStates) {
-      const opponents = states.filter(s => s !== state && s.isAlive);
+      // Filter opponents: exclude teammates in team modes so movement AI
+      // targets enemies, not allies (prevents clumping on teammates)
+      const teamOfMap = gameModeState?.customData?.teamOf as Record<number, number> | undefined;
+      const opponents = states.filter(s => {
+        if (s === state || !s.isAlive) return false;
+        if (teamOfMap && teamOfMap[s.teamIndex] === teamOfMap[state.teamIndex]) return false;
+        if (!teamOfMap && s.teamIndex === state.teamIndex) return false;
+        return true;
+      });
 
       // No opponents: skip movement unless a game mode modifier can still direct us
       // (e.g. KotH last-standing phase needs the robot to move toward the zone)
@@ -1566,9 +1574,20 @@ export function simulateBattleMulti(
       state.isUsingClosingBonus = isClosingBonus;
 
       // Movement intent (with optional game mode modifier)
-      const intent = calculateMovementIntent(
+      let intent = calculateMovementIntent(
         state, opponents, arena, gameModeConfig?.movementModifier, gameModeState,
       );
+
+      // Enforce team separation: push apart from teammates to prevent clumping
+      if (teamOfMap) {
+        const teammates = aliveStates.filter(s =>
+          s !== state && teamOfMap[s.teamIndex] === teamOfMap[state.teamIndex]
+        );
+        if (teammates.length > 0) {
+          intent = enforceTeamSeparation(intent, state, teammates);
+        }
+      }
+
       state.movementIntent = intent;
 
       // Apply movement

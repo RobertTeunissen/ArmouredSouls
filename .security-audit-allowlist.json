@@ -1,5 +1,5 @@
 {
-  "_description": "Vulnerability allowlist for npm audit. Each entry documents a known vulnerability that has been reviewed and accepted with justification.",
+  "_description": "Vulnerability allowlist for pnpm audit. Each entry documents a known vulnerability that has been reviewed and accepted with justification.",
   "allowlist": [
     {
       "id": "GHSA-92pp-h63x-v22m",

@@ -31,37 +31,40 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
           node-version: '24'
-          cache: 'npm'
-          cache-dependency-path: app/backend/package-lock.json
+          cache: 'pnpm'
+          cache-dependency-path: app/backend/pnpm-lock.yaml
 
       - name: Install backend dependencies
         working-directory: ./app/backend
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma Client
         working-directory: ./app/backend
         env:
           DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
-        run: npm run prisma:generate
+        run: pnpm run prisma:generate
 
       - name: Lint backend code
         working-directory: ./app/backend
-        run: npm run lint || true
+        run: pnpm run lint || true
 
       - name: Build backend
         working-directory: ./app/backend
-        run: npm run build
+        run: pnpm run build
 
       - name: Run unit tests
         working-directory: ./app/backend
         env:
           NODE_ENV: test
           JWT_SECRET: test-secret-key-for-ci
-        run: npm run test:unit -- --silent
+        run: pnpm run test:unit -- --silent
 
   backend-integration-tests:
     name: Backend Integration Tests
@@ -87,28 +90,31 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
           node-version: '24'
-          cache: 'npm'
-          cache-dependency-path: app/backend/package-lock.json
+          cache: 'pnpm'
+          cache-dependency-path: app/backend/pnpm-lock.yaml
 
       - name: Install backend dependencies
         working-directory: ./app/backend
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma Client
         working-directory: ./app/backend
         env:
           DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
-        run: npm run prisma:generate
+        run: pnpm run prisma:generate
 
       - name: Run database migrations
         working-directory: ./app/backend
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_test?connection_limit=5
-        run: npx prisma migrate deploy
+        run: pnpm exec prisma migrate deploy
 
       - name: Run integration tests
         working-directory: ./app/backend
@@ -116,7 +122,7 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_test?connection_limit=5
           JWT_SECRET: test-secret-key-for-ci
           NODE_ENV: test
-        run: npm run test:integration -- --silent 2>&1 | tail -n 500 || true
+        run: pnpm run test:integration -- --silent 2>&1 | tail -n 500 || true
 
   frontend-build:
     name: Frontend Build & Lint
@@ -126,22 +132,27 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
           node-version: '24'
+          cache: 'pnpm'
+          cache-dependency-path: app/frontend/pnpm-lock.yaml
 
       - name: Install frontend dependencies
         working-directory: ./app/frontend
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Lint frontend code
         working-directory: ./app/frontend
-        run: npm run lint || true
+        run: pnpm run lint || true
 
       - name: Build frontend
         working-directory: ./app/frontend
-        run: npm run build
+        run: pnpm run build
 
       - name: Upload frontend build artifacts
         uses: actions/upload-artifact@v6
@@ -182,40 +193,43 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
           node-version: '24'
-          cache: 'npm'
+          cache: 'pnpm'
           cache-dependency-path: |
-            app/backend/package-lock.json
-            app/frontend/package-lock.json
+            app/backend/pnpm-lock.yaml
+            app/frontend/pnpm-lock.yaml
 
       - name: Install backend dependencies
         working-directory: ./app/backend
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma Client
         working-directory: ./app/backend
         env:
           DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
-        run: npm run prisma:generate
+        run: pnpm run prisma:generate
 
       - name: Run database migrations
         working-directory: ./app/backend
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_e2e?connection_limit=20
-        run: npx prisma migrate deploy
+        run: pnpm exec prisma migrate deploy
 
       - name: Seed database
         working-directory: ./app/backend
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_e2e?connection_limit=20
-        run: npx prisma db seed
+        run: pnpm exec prisma db seed
 
       - name: Build backend
         working-directory: ./app/backend
-        run: npm run build
+        run: pnpm run build
 
       - name: Start backend server
         working-directory: ./app/backend
@@ -245,24 +259,24 @@ jobs:
 
       - name: Install frontend dependencies
         working-directory: ./app/frontend
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Build frontend
         working-directory: ./app/frontend
         env:
           VITE_API_URL: http://localhost:3001
-        run: npm run build
+        run: pnpm run build
 
       - name: Install Playwright browsers
         working-directory: ./app/frontend
-        run: npx playwright install --with-deps chromium
+        run: pnpm exec playwright install --with-deps chromium
 
       - name: Run Playwright tests
         working-directory: ./app/frontend
         env:
           PLAYWRIGHT_BASE_URL: http://localhost:4173
         run: |
-          npx vite preview --port 4173 &
+          pnpm exec vite preview --port 4173 &
           echo "Waiting for frontend preview server to start..."
           for i in $(seq 1 30); do
             if curl -fsS http://localhost:4173/ > /dev/null 2>&1; then
@@ -271,7 +285,7 @@ jobs:
             fi
             sleep 1
           done
-          npx playwright test
+          pnpm exec playwright test
 
       - name: Upload Playwright HTML report
         if: always()
@@ -316,10 +330,15 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H ${{ secrets.ACC_VPS_IP }} >> ~/.ssh/known_hosts
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
           node-version: '24'
+          cache: 'pnpm'
+          cache-dependency-path: app/backend/pnpm-lock.yaml
 
       - name: Transfer backend artifacts via rsync
         run: |
@@ -402,9 +421,9 @@ jobs:
       - name: Build backend on CI runner
         working-directory: ./app/backend
         run: |
-          npm ci
-          npx prisma generate
-          npm run build
+          pnpm install --frozen-lockfile
+          pnpm exec prisma generate
+          pnpm run build
         env:
           DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
 
@@ -424,10 +443,20 @@ jobs:
           command_timeout: 2m
           # Trims old pre-deploy / overflow backup dumps and aborts the deploy
           # with a Discord alert if disk usage is still ≥ 90% afterward. Stops
-          # `npm install --prefer-offline` from hitting ENOSPC and timing out
-          # at minute 10 — see app/scripts/preflight.sh for full rationale.
+          # `pnpm install` from hitting ENOSPC and timing out at minute 10 —
+          # see app/scripts/preflight.sh for full rationale.
           script: |
             bash /opt/armouredsouls/scripts/preflight.sh
+
+      - name: Ensure pnpm is available on VPS
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.ACC_VPS_IP }}
+          username: ${{ secrets.ACC_VPS_USER }}
+          key: ${{ secrets.ACC_SSH_KEY }}
+          script: |
+            corepack enable pnpm || true
+            pnpm --version
 
       - name: Install dependencies on VPS
         uses: appleboy/ssh-action@v1
@@ -436,18 +465,12 @@ jobs:
           username: ${{ secrets.ACC_VPS_USER }}
           key: ${{ secrets.ACC_SSH_KEY }}
           command_timeout: 10m
-          # `npm ci` (not `npm install`) so `--omit=dev` is honored even when
-          # an old node_modules is on disk from a previous deploy. With
-          # `npm install` we observed it report "added 893 packages" — the
-          # full dev tree — while reporting success, leaving things in an
-          # inconsistent state that broke the seed step. `npm ci` wipes
-          # node_modules, reinstalls deterministically from the lockfile, and
-          # respects --omit=dev. NODE_ENV=production also tells patch-package
-          # to skip dev-only patches (gitnexus+1.6.5.dev.patch).
+          # `pnpm install --frozen-lockfile` ensures deterministic installs from
+          # the lockfile. `--prod` omits devDependencies.
           script: |
             cd /opt/armouredsouls/backend
-            NODE_ENV=production npm ci --omit=dev --prefer-offline --no-audit --no-fund
-            npx prisma generate
+            NODE_ENV=production pnpm install --frozen-lockfile --prod
+            pnpm exec prisma generate
 
       - name: Create pre-migration database backup
         uses: appleboy/ssh-action@v1
@@ -459,11 +482,17 @@ jobs:
             BACKUP_DIR="/opt/armouredsouls/backups"
             mkdir -p "$BACKUP_DIR"
             TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-            if command -v pg_dump &> /dev/null; then
-              pg_dump -Fc "$DATABASE_URL" > "$BACKUP_DIR/pre_deploy_${TIMESTAMP}.dump"
-              echo "Backup created: pre_deploy_${TIMESTAMP}.dump"
+            ENV_FILE="/opt/armouredsouls/backend/.env"
+            DB_USER=$(grep -E "^POSTGRES_USER=" "$ENV_FILE" | tail -n 1 | cut -d= -f2- | sed -E 's/^"(.*)"$/\1/; s/^'\''(.*)'\''$/\1/')
+            DB_NAME=$(grep -E "^POSTGRES_DB=" "$ENV_FILE" | tail -n 1 | cut -d= -f2- | sed -E 's/^"(.*)"$/\1/; s/^'\''(.*)'\''$/\1/')
+            DB_USER="${DB_USER:-armouredsouls}"
+            DB_NAME="${DB_NAME:-armouredsouls}"
+            CONTAINER="armouredsouls-db-prod"
+            if docker exec "$CONTAINER" pg_dump --version > /dev/null 2>&1; then
+              docker exec "$CONTAINER" pg_dump -U "$DB_USER" -Fc "$DB_NAME" > "$BACKUP_DIR/pre_deploy_${TIMESTAMP}.dump"
+              echo "Backup created: pre_deploy_${TIMESTAMP}.dump ($(du -h "$BACKUP_DIR/pre_deploy_${TIMESTAMP}.dump" | cut -f1))"
             else
-              echo "pg_dump not available, skipping backup (use docker exec for manual backups)"
+              echo "WARNING: Could not run pg_dump in container $CONTAINER — skipping pre-deploy backup"
             fi
 
       - name: Run database migrations
@@ -474,7 +503,7 @@ jobs:
           key: ${{ secrets.ACC_SSH_KEY }}
           script: |
             cd /opt/armouredsouls/backend
-            npx prisma migrate deploy
+            pnpm exec prisma migrate deploy
 
       - name: Seed database (weapons, facilities, essential data)
         uses: appleboy/ssh-action@v1
@@ -484,7 +513,7 @@ jobs:
           key: ${{ secrets.ACC_SSH_KEY }}
           script: |
             cd /opt/armouredsouls/backend
-            NODE_ENV=acceptance npx prisma db seed
+            NODE_ENV=acceptance pnpm exec prisma db seed
 
       - name: Ensure CHANGELOG_DEPLOY_TOKEN in .env
         uses: appleboy/ssh-action@v1
@@ -525,6 +554,25 @@ jobs:
             else
               echo "logrotate config unchanged — skipping"
             fi
+
+      - name: Ensure backup cron job exists
+        continue-on-error: true
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.ACC_VPS_IP }}
+          username: ${{ secrets.ACC_VPS_USER }}
+          key: ${{ secrets.ACC_SSH_KEY }}
+          script: |
+            # Ensure the daily backup cron entry exists
+            CRON_CMD="/opt/armouredsouls/scripts/backup.sh >> /var/log/armouredsouls/backup.log 2>&1"
+            if ! crontab -l 2>/dev/null | grep -qF "backup.sh"; then
+              (crontab -l 2>/dev/null; echo "0 2 * * * ${CRON_CMD}") | crontab -
+              echo "Backup cron job installed (daily at 02:00 UTC)"
+            else
+              echo "Backup cron job already exists"
+            fi
+            chmod +x /opt/armouredsouls/scripts/backup.sh
+            chmod +x /opt/armouredsouls/scripts/restore.sh
 
       - name: Restart backend via PM2
         uses: appleboy/ssh-action@v1
@@ -630,6 +678,9 @@ jobs:
         with:
           node-version: '24'
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
       - name: Setup SSH key
         run: |
           mkdir -p ~/.ssh
@@ -718,9 +769,9 @@ jobs:
       - name: Build backend on CI runner
         working-directory: ./app/backend
         run: |
-          npm ci
-          npx prisma generate
-          npm run build
+          pnpm install --frozen-lockfile
+          pnpm exec prisma generate
+          pnpm run build
         env:
           DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
 
@@ -740,10 +791,20 @@ jobs:
           command_timeout: 2m
           # Trims old pre-deploy / overflow backup dumps and aborts the deploy
           # with a Discord alert if disk usage is still ≥ 90% afterward. Stops
-          # `npm install --prefer-offline` from hitting ENOSPC and timing out
-          # at minute 10 — see app/scripts/preflight.sh for full rationale.
+          # `pnpm install` from hitting ENOSPC and timing out at minute 10 —
+          # see app/scripts/preflight.sh for full rationale.
           script: |
             bash /opt/armouredsouls/scripts/preflight.sh
+
+      - name: Ensure pnpm is available on VPS
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.PRD_VPS_IP }}
+          username: ${{ secrets.PRD_VPS_USER }}
+          key: ${{ secrets.PRD_SSH_KEY }}
+          script: |
+            corepack enable pnpm || true
+            pnpm --version
 
       - name: Install dependencies on VPS
         uses: appleboy/ssh-action@v1
@@ -752,11 +813,12 @@ jobs:
           username: ${{ secrets.PRD_VPS_USER }}
           key: ${{ secrets.PRD_SSH_KEY }}
           command_timeout: 10m
-          # See the deploy-acc job for why this is `npm ci` not `npm install`.
+          # `pnpm install --frozen-lockfile` ensures deterministic installs from
+          # the lockfile. `--prod` omits devDependencies.
           script: |
             cd /opt/armouredsouls/backend
-            NODE_ENV=production npm ci --omit=dev --prefer-offline --no-audit --no-fund
-            npx prisma generate
+            NODE_ENV=production pnpm install --frozen-lockfile --prod
+            pnpm exec prisma generate
 
       - name: Create pre-migration database backup
         uses: appleboy/ssh-action@v1
@@ -768,11 +830,17 @@ jobs:
             BACKUP_DIR="/opt/armouredsouls/backups"
             mkdir -p "$BACKUP_DIR"
             TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-            if command -v pg_dump &> /dev/null; then
-              pg_dump -Fc "$DATABASE_URL" > "$BACKUP_DIR/pre_deploy_${TIMESTAMP}.dump"
-              echo "Backup created: pre_deploy_${TIMESTAMP}.dump"
+            ENV_FILE="/opt/armouredsouls/backend/.env"
+            DB_USER=$(grep -E "^POSTGRES_USER=" "$ENV_FILE" | tail -n 1 | cut -d= -f2- | sed -E 's/^"(.*)"$/\1/; s/^'\''(.*)'\''$/\1/')
+            DB_NAME=$(grep -E "^POSTGRES_DB=" "$ENV_FILE" | tail -n 1 | cut -d= -f2- | sed -E 's/^"(.*)"$/\1/; s/^'\''(.*)'\''$/\1/')
+            DB_USER="${DB_USER:-armouredsouls}"
+            DB_NAME="${DB_NAME:-armouredsouls}"
+            CONTAINER="armouredsouls-db-prod"
+            if docker exec "$CONTAINER" pg_dump --version > /dev/null 2>&1; then
+              docker exec "$CONTAINER" pg_dump -U "$DB_USER" -Fc "$DB_NAME" > "$BACKUP_DIR/pre_deploy_${TIMESTAMP}.dump"
+              echo "Backup created: pre_deploy_${TIMESTAMP}.dump ($(du -h "$BACKUP_DIR/pre_deploy_${TIMESTAMP}.dump" | cut -f1))"
             else
-              echo "pg_dump not available, skipping backup (use docker exec for manual backups)"
+              echo "WARNING: Could not run pg_dump in container $CONTAINER — skipping pre-deploy backup"
             fi
 
       - name: Run database migrations
@@ -783,7 +851,7 @@ jobs:
           key: ${{ secrets.PRD_SSH_KEY }}
           script: |
             cd /opt/armouredsouls/backend
-            npx prisma migrate deploy
+            pnpm exec prisma migrate deploy
 
       - name: Ensure CHANGELOG_DEPLOY_TOKEN in .env
         uses: appleboy/ssh-action@v1
@@ -824,6 +892,25 @@ jobs:
             else
               echo "logrotate config unchanged — skipping"
             fi
+
+      - name: Ensure backup cron job exists
+        continue-on-error: true
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.PRD_VPS_IP }}
+          username: ${{ secrets.PRD_VPS_USER }}
+          key: ${{ secrets.PRD_SSH_KEY }}
+          script: |
+            # Ensure the daily backup cron entry exists
+            CRON_CMD="/opt/armouredsouls/scripts/backup.sh >> /var/log/armouredsouls/backup.log 2>&1"
+            if ! crontab -l 2>/dev/null | grep -qF "backup.sh"; then
+              (crontab -l 2>/dev/null; echo "0 2 * * * ${CRON_CMD}") | crontab -
+              echo "Backup cron job installed (daily at 02:00 UTC)"
+            else
+              echo "Backup cron job already exists"
+            fi
+            chmod +x /opt/armouredsouls/scripts/backup.sh
+            chmod +x /opt/armouredsouls/scripts/restore.sh
 
       - name: Restart backend via PM2
         uses: appleboy/ssh-action@v1
