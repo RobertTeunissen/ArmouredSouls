@@ -455,8 +455,12 @@ jobs:
           username: ${{ secrets.ACC_VPS_USER }}
           key: ${{ secrets.ACC_SSH_KEY }}
           script: |
-            corepack enable pnpm || true
-            pnpm --version
+            if command -v pnpm &> /dev/null; then
+              echo "pnpm already available: $(pnpm --version)"
+            else
+              sudo corepack enable pnpm || npm install -g pnpm@10.12.1
+              pnpm --version
+            fi
 
       - name: Install dependencies on VPS
         uses: appleboy/ssh-action@v1
@@ -803,8 +807,12 @@ jobs:
           username: ${{ secrets.PRD_VPS_USER }}
           key: ${{ secrets.PRD_SSH_KEY }}
           script: |
-            corepack enable pnpm || true
-            pnpm --version
+            if command -v pnpm &> /dev/null; then
+              echo "pnpm already available: $(pnpm --version)"
+            else
+              sudo corepack enable pnpm || npm install -g pnpm@10.12.1
+              pnpm --version
+            fi
 
       - name: Install dependencies on VPS
         uses: appleboy/ssh-action@v1
