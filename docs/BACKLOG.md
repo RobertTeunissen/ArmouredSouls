@@ -55,7 +55,7 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 | Vitest Performance Tuning (CI scripts, dot reporter, coverage gitignore) | 52 | — (direct implementation) | June 2026 |
 | Test Setup Convention Cleanup (co-located `__tests__/`, eliminated centralized sprawl) | 51 | — (direct implementation) | June 2026 |
 | Backend Test Reclassification (66 no-DB tests → unit runner, zero overlap, ~2min CI savings) | — | — (direct implementation) | June 2026 |
-| Tag Team System Unification | 55 | [Spec](/.kiro/specs/tag-team-system-unification/) | July 2026 |
+| Tag Team System Unification | 55 | [Spec](/.kiro/specs/tag-team-system-unification/) | June 2026 |
 | Team Battles 2v2 and 3v3 (League) | 31 | [Spec #37](/.kiro/specs/to-do/37-team-battles-2v2-3v3/) | June 2026 |
 | Untrack Generated Prisma Client (68K lines out of git) | — | — (direct implementation) | May 2026 |
 | HTTP Client Consolidation (typed `api` wrapper everywhere) | — | — (direct implementation) | May 2026 |
