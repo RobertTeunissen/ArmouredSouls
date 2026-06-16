@@ -21,7 +21,7 @@ inclusion: manual
 3. Assess risk and report to user
 ```
 
-> If the index is stale, run `npx gitnexus analyze` in the terminal first.
+> If the index is stale, run `pnpm exec gitnexus analyze` in the terminal first.
 
 ## Checklist
 

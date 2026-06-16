@@ -58,7 +58,7 @@
 
 ## Verification Results
 
-All fixes confirmed working — both frontend and backend compile cleanly (`npx tsc --noEmit` exits 0).
+All fixes confirmed working — both frontend and backend compile cleanly (`pnpm exec tsc --noEmit` exits 0).
 
 ---
 

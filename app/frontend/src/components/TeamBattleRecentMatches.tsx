@@ -52,7 +52,26 @@ function TeamBattleRecentMatches({ teamSize }: TeamBattleRecentMatchesProps) {
   const getOutcome = (battle: BattleHistory): 'win' | 'loss' | 'draw' => {
     if (!battle.winnerId) return 'draw';
     if (!user) return 'draw';
-    // For team battles, check if the winner robot belongs to the user
+
+    // For team battles, winnerId is a team ID (not a robot ID).
+    // Use team1Id/team2Id from the API response to match correctly.
+    const battleAny = battle as BattleHistory & {
+      team1Id?: number | null;
+      team2Id?: number | null;
+      isByeMatch?: boolean;
+    };
+    if (battleAny.team1Id || battleAny.team2Id) {
+      // Determine which team side the user is on
+      const isTeam1Side = battle.robot1.userId === user.id;
+      const myTeamId = isTeam1Side ? battleAny.team1Id : battleAny.team2Id;
+
+      // BYE matches are always a win for the real team
+      if (battleAny.isByeMatch) return 'win';
+
+      return battle.winnerId === myTeamId ? 'win' : 'loss';
+    }
+
+    // Standard 1v1 battles: winnerId is a robot ID
     if (battle.robot1.userId === user.id) {
       return battle.winnerId === battle.robot1Id ? 'win' : 'loss';
     }

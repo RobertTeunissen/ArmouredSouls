@@ -37,7 +37,7 @@ done
 
 echo ""
 echo "Done! Please review the changes and run tests:"
-echo "  npm test"
+echo "  pnpm test"
 echo ""
 echo "If everything looks good, remove backup files:"
 echo "  rm tests/*.bak"

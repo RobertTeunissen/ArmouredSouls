@@ -38,7 +38,7 @@ UPDATE users SET onboarding_step = <nextStep> WHERE id = <userId>;
 Or use Prisma Studio:
 ```bash
 cd app/backend
-npx prisma studio
+pnpm exec prisma studio
 ```
 Navigate to User table → find user → update `onboardingStep`.
 
@@ -196,7 +196,7 @@ curl -X POST http://localhost:3001/api/onboarding/analytics \
 - If it persists, verify the build includes all step component chunks:
 ```bash
 cd app/frontend
-npm run build
+pnpm run build
 ls dist/assets/*.js | wc -l  # Should include step chunks
 ```
 - The `OnboardingErrorBoundary` should catch this and offer a "Retry" button, then a "Skip to Dashboard" fallback
@@ -284,7 +284,7 @@ WHERE user_id = <userId>
 
 ```bash
 cd app/backend
-npx prisma studio
+pnpm exec prisma studio
 ```
 
 Navigate to the **User** table, find the user by ID or username, and edit onboarding fields directly. Changes save immediately.

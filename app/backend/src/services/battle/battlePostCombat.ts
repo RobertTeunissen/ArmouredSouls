@@ -193,8 +193,16 @@ export async function updateRobotCombatStats(opts: RobotStatUpdateOptions): Prom
   const lpChange = opts.leaguePointsChange ?? 0;
   const currentLP = opts.currentLeaguePoints ?? 0;
 
+  // Clamp finalHP to the robot's stored maxHP to prevent currentHP > maxHP
+  // (combat uses tuning-inflated maxHP which can exceed the persisted value)
+  const storedRobot = await prisma.robot.findUnique({
+    where: { id: opts.robotId },
+    select: { maxHP: true },
+  });
+  const clampedHP = storedRobot ? Math.min(opts.finalHP, storedRobot.maxHP) : opts.finalHP;
+
   const data: Record<string, unknown> = {
-    currentHP: opts.finalHP,
+    currentHP: clampedHP,
     elo: opts.newELO,
     totalBattles: { increment: 1 },
     wins: opts.isWinner ? { increment: 1 } : undefined,

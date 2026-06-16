@@ -43,7 +43,9 @@ export function calculateFacilityOperatingCost(facilityType: string, level: numb
       return 500 + (level - 1) * 250;
     
     case 'booking_office':
-      return 0; // No operating cost (generates prestige)
+      // Operating cost: level × 150 credits per day
+      // The Booking Office gates event participation (more subscriptions = more battles = more rewards)
+      return 150 * level;
     
     case 'combat_training_academy':
       return 250 * level;

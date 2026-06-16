@@ -380,13 +380,13 @@ All admin endpoints are implemented and operational:
 **Running Tests**:
 ```bash
 # Run all tests
-npm run test
+pnpm run test
 
 # Run with coverage report
-npm run test:coverage
+pnpm run test:coverage
 
 # Run in UI mode
-npm run test:ui
+pnpm run test:ui
 ```
 
 **Test Coverage Goals**:

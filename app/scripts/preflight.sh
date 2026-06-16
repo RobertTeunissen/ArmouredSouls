@@ -4,7 +4,7 @@ set -euo pipefail
 # ============================================================================
 # Armoured Souls — Deploy Pre-flight Check
 #
-# Runs at the start of every deploy, BEFORE `npm install`. Two jobs:
+# Runs at the start of every deploy, BEFORE `pnpm install`. Two jobs:
 #
 #   1. Free up disk space by trimming old pre-deploy dumps and overflow
 #      daily/weekly backups. Mirrors backup.sh's retention logic so we don't
@@ -12,7 +12,7 @@ set -euo pipefail
 #
 #   2. Abort the deploy with a clear error and a Discord alert if disk usage
 #      is still too high after cleanup. Better to fail fast at second 1 than
-#      have npm install hit ENOSPC and time out at minute 10.
+#      have pnpm install hit ENOSPC and time out at minute 10.
 #
 # Why this is its own script (not inline YAML):
 # - Same logic for ACC + prod — having it in two places in deploy.yml drifts.

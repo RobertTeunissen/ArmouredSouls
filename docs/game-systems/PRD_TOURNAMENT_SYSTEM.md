@@ -1701,29 +1701,29 @@ User
 git pull
 
 # 2. Install dependencies (if needed)
-cd app/backend && npm install
-cd app/frontend && npm install
+cd app/backend && pnpm install
+cd app/frontend && pnpm install
 
 # 3. Reset database
 cd app/backend
-npm run prisma:reset
+pnpm run prisma:reset
 
 # 4. Apply migrations
-npm run prisma:migrate
+pnpm run prisma:migrate
 
 # 5. Seed database (optional - includes test users)
-npm run prisma:seed
+pnpm run prisma:seed
 ```
 
 #### Running the System
 ```bash
 # Terminal 1: Start backend
 cd app/backend
-npm run dev
+pnpm run dev
 
 # Terminal 2: Start frontend
 cd app/frontend
-npm run dev
+pnpm run dev
 
 # Terminal 3: Open browser
 # Navigate to: http://localhost:5173
@@ -1819,7 +1819,7 @@ Cycle 7 (Finals):
 **Setup:**
 ```bash
 cd app/backend
-npm run prisma:seed
+pnpm run prisma:seed
 ```
 
 **Expected State:**
@@ -2204,16 +2204,16 @@ curl -X GET http://localhost:3001/api/admin/tournaments/eligible-robots \
 cd app/backend
 
 # 1. Apply migration
-npx prisma migrate deploy
+pnpm exec prisma migrate deploy
 
 # 2. Regenerate Prisma client
-npx prisma generate
+pnpm exec prisma generate
 
 # 3. Verify migration applied
-npx prisma migrate status
+pnpm exec prisma migrate status
 
 # 4. Restart backend server
-npm run dev
+pnpm run dev
 ```
 
 #### Rollback Procedure (if needed)
@@ -2223,10 +2223,10 @@ npm run dev
 psql -U username -d database_name < backup_YYYYMMDD.sql
 
 # 2. Reset Prisma migrations
-npm run db:reset
+pnpm run db:reset
 
 # 3. Apply migrations up to previous version
-npx prisma migrate deploy
+pnpm exec prisma migrate deploy
 ```
 
 ### Deployment Checklist
@@ -2246,11 +2246,11 @@ npx prisma migrate deploy
 
 1. [ ] Stop backend server
 2. [ ] Pull latest code
-3. [ ] Install dependencies (`npm install`)
+3. [ ] Install dependencies (`pnpm install`)
 4. [ ] Apply database migration
 5. [ ] Regenerate Prisma client
-6. [ ] Build frontend (`npm run build`)
-7. [ ] Build backend (`npm run build`)
+6. [ ] Build frontend (`pnpm run build`)
+7. [ ] Build backend (`pnpm run build`)
 8. [ ] Start backend server
 9. [ ] Verify health check endpoint
 10. [ ] Test tournament creation

@@ -25,6 +25,6 @@ find tests -name "*.bak" -delete
 echo "✅ Pattern fixes complete!"
 echo ""
 echo "Next steps:"
-echo "1. Run: npm test -- --testNamePattern='weapon' to verify weapon fixes"
+echo "1. Run: pnpm test -- --testNamePattern='weapon' to verify weapon fixes"
 echo "2. Manually update tests with cycle number conflicts"
-echo "3. Run full test suite: npm test"
+echo "3. Run full test suite: pnpm test"

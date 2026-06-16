@@ -686,7 +686,7 @@ Examples:
 **Run Command**:
 ```bash
 cd app/backend
-npx prisma db seed
+pnpm exec prisma db seed
 ```
 
 **Prerequisites**:

@@ -45,7 +45,7 @@ inclusion: always
 - Import Prisma client from the project-local `generated/prisma` directory, NOT from `@prisma/client`
 - Example: `import { PrismaClient } from '../generated/prisma'`
 - The generated client lives at `app/backend/generated/prisma/`
-- Run `npx prisma generate` after schema changes to regenerate the client
+- Run `pnpm exec prisma generate` after schema changes to regenerate the client
 - **Driver Adapter Required**: Prisma 7 uses the `client` engine type by default, which requires a driver adapter. Always pass an adapter to the PrismaClient constructor:
   ```typescript
   import { PrismaClient } from '../generated/prisma';
@@ -145,8 +145,8 @@ inclusion: always
 - **Always write tests** for all new code and features
 - **Minimum coverage**: 80% for general code, 90% for critical functionality
 - **Critical functionality**: Combat, economy, matchmaking, leagues, auth, database operations
-- **Run all tests** after completing development: `npm test`
-- **Verify coverage**: `npm test -- --coverage`
+- **Run all tests** after completing development: `pnpm test`
+- **Verify coverage**: `pnpm test -- --coverage`
 
 ### Test Standards
 - Use descriptive test names following pattern: "should [expected behavior] when [condition]"
@@ -156,7 +156,7 @@ inclusion: always
 - Write integration tests for workflows
 - Add regression tests for bug fixes
 - Run with `--maxWorkers=1` if encountering parallel test conflicts
-- Use `npm test -- --silent` in CI/CD pipelines to reduce output verbosity
+- Use `pnpm test -- --silent` in CI/CD pipelines to reduce output verbosity
 
 ### Before Committing
 1. Run full test suite and verify all tests pass
@@ -252,7 +252,7 @@ See `docs/architecture/PRD_SECURITY.md` for comprehensive security strategy cove
 ### ESLint Security Rules (`eslint-plugin-security`)
 - The backend ESLint config includes `eslint-plugin-security` with rules that flag `eval()`, dynamic `require()`, timing attacks, unsafe regex, and deprecated Buffer usage
 - `error`-level rules (`detect-eval-with-expression`, `detect-no-csrf-before-method-override`, `detect-buffer-noassert`, `detect-new-buffer`) block CI
-- Run `npm run lint` before committing to catch security anti-patterns
+- Run `pnpm run lint` before committing to catch security anti-patterns
 
 ### Content Moderation Service Pattern
 - The `ContentModerationService` is a singleton loaded once at application startup via `contentModerationService.initialize()` in `src/index.ts`

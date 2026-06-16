@@ -228,7 +228,7 @@ Accessible at `/admin` → Security tab. Shows:
 | `detect-child-process` | warn | Child process execution |
 | `detect-pseudoRandomBytes` | warn | Non-cryptographic random |
 
-`error`-level rules block CI. Run `npm run lint` to check.
+`error`-level rules block CI. Run `pnpm run lint` to check.
 
 ---
 
@@ -237,7 +237,7 @@ Accessible at `/admin` → Security tab. Shows:
 ### CI/CD Integration
 
 The `security-audit` job in `.github/workflows/ci.yml`:
-- `npm audit --audit-level=high` — fails build on high/critical vulnerabilities
+- `pnpm audit --audit-level=high` — fails build on high/critical vulnerabilities
 - JSON report uploaded as build artifact
 - Runs on every push and PR
 

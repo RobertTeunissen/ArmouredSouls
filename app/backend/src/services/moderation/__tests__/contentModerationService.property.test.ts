@@ -60,7 +60,7 @@ async function createService(): Promise<any> {
 
   jest.isolateModules(() => {
     jest.doMock('nsfwjs', () => ({ load: mockLoad }));
-    jest.doMock('@tensorflow/tfjs', () => ({
+    jest.doMock('@tensorflow/tfjs-node', () => ({
       tensor3d: () => ({ dispose: mockDispose }),
     }));
     jest.doMock('sharp', () => {

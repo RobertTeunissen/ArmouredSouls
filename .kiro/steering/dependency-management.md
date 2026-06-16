@@ -1,6 +1,6 @@
 ---
 inclusion: fileMatch
-fileMatchPattern: "**/package.json,**/package-lock.json,**/.npmrc"
+fileMatchPattern: "**/package.json,**/pnpm-lock.yaml,**/.npmrc"
 ---
 
 # Dependency Management
@@ -23,13 +23,13 @@ fileMatchPattern: "**/package.json,**/package-lock.json,**/.npmrc"
 **Check Package Health**:
 ```bash
 # View package info
-npm info <package-name>
+pnpm info <package-name>
 
 # Check for vulnerabilities
-npm audit
+pnpm audit
 
 # View dependency tree
-npm ls <package-name>
+pnpm ls <package-name>
 ```
 
 **Key Indicators**:
@@ -61,13 +61,13 @@ npm ls <package-name>
 
 ### Production Dependencies
 
-**Install with npm**:
+**Install with pnpm**:
 ```bash
 cd app/backend
-npm install <package-name>
+pnpm add <package-name>
 
 # Or with specific version
-npm install <package-name>@1.2.3
+pnpm add <package-name>@1.2.3
 ```
 
 **Document in Code**:
@@ -81,12 +81,12 @@ import express from 'express'; // Web framework
 
 **Install as devDependency**:
 ```bash
-npm install --save-dev <package-name>
+pnpm add -D <package-name>
 
 # Examples
-npm install --save-dev @types/node
-npm install --save-dev jest
-npm install --save-dev eslint
+pnpm add -D @types/node
+pnpm add -D jest
+pnpm add -D eslint
 ```
 
 ### Peer Dependencies
@@ -110,32 +110,32 @@ npm install --save-dev eslint
 **Check for Updates**:
 ```bash
 # View outdated packages
-npm outdated
+pnpm outdated
 
 # Update all patch and minor versions
-npm update
+pnpm update
 
 # Update specific package
-npm update <package-name>
+pnpm update <package-name>
 ```
 
 **Update Major Versions**:
 ```bash
 # Install specific major version
-npm install <package-name>@latest
+pnpm add <package-name>@latest
 
 # Review changelog
-npm info <package-name> versions
+pnpm info <package-name> versions
 ```
 
 ### Testing After Updates
 
 **Required Testing**:
-1. Run full test suite: `npm test`
-2. Check for TypeScript errors: `npx tsc --noEmit`
+1. Run full test suite: `pnpm test`
+2. Check for TypeScript errors: `pnpm exec tsc --noEmit`
 3. Test critical user flows manually
 4. Check for console errors/warnings
-5. Verify build succeeds: `npm run build`
+5. Verify build succeeds: `pnpm run build`
 
 ### Handling Breaking Changes
 
@@ -154,16 +154,13 @@ npm info <package-name> versions
 **Regular Security Audits**:
 ```bash
 # Check for vulnerabilities
-npm audit
+pnpm audit
 
 # View detailed report
-npm audit --json
+pnpm audit --json
 
 # Fix automatically (if possible)
-npm audit fix
-
-# Fix including breaking changes
-npm audit fix --force
+pnpm audit --fix
 ```
 
 ### Handling Vulnerabilities
@@ -184,17 +181,16 @@ npm audit fix --force
 ### Security Best Practices
 
 **Do's**:
-- Run `npm audit` before every deployment
+- Run `pnpm audit` before every deployment
 - Keep dependencies up to date
 - Use exact versions in package.json for critical packages
 - Review security advisories for used packages
-- Use npm's two-factor authentication
 
 **Don'ts**:
 - Ignore security warnings
 - Use packages with known critical vulnerabilities
 - Install packages from untrusted sources
-- Commit package-lock.json conflicts without resolving
+- Commit pnpm-lock.yaml conflicts without resolving
 
 ## Package.json Management
 
@@ -281,11 +277,11 @@ npm audit fix --force
 **Resolve Version Conflicts**:
 ```bash
 # Clear node_modules and reinstall
-rm -rf node_modules package-lock.json
-npm install
+rm -rf node_modules pnpm-lock.yaml
+pnpm install
 
 # Force resolution (use cautiously)
-npm install --legacy-peer-deps
+pnpm install --no-strict-peer-dependencies
 ```
 
 ### Missing Dependencies
@@ -293,17 +289,17 @@ npm install --legacy-peer-deps
 **Fix Missing Dependencies**:
 ```bash
 # Install all dependencies
-npm install
+pnpm install
 
 # Regenerate lock file
-rm package-lock.json
-npm install
+rm pnpm-lock.yaml
+pnpm install
 ```
 
 ### Build Failures After Update
 
 **Debug Build Issues**:
-1. Check TypeScript errors: `npx tsc --noEmit`
+1. Check TypeScript errors: `pnpm exec tsc --noEmit`
 2. Check for breaking changes in updated packages
 3. Review package changelogs
 4. Revert problematic update if needed
@@ -328,7 +324,7 @@ npm install
 - [ ] Committed updates separately from feature work
 
 ### Regular Maintenance
-- [ ] Run `npm audit` weekly
+- [ ] Run `pnpm audit` weekly
 - [ ] Update patch versions monthly
 - [ ] Review and update minor versions quarterly
 - [ ] Plan major version updates carefully

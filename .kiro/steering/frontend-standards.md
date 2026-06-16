@@ -804,9 +804,9 @@ Place test files in a `__tests__/` subdirectory next to the source files being t
 ### Running Tests
 ```bash
 cd app/frontend
-npx vitest --run          # Single run (CI-safe)
-npx vitest                # Watch mode (local dev)
-npx vitest --run --coverage  # With coverage report
+pnpm exec vitest --run          # Single run (CI-safe)
+pnpm exec vitest                # Watch mode (local dev)
+pnpm exec vitest --run --coverage  # With coverage report
 ```
 
 ## Checklist

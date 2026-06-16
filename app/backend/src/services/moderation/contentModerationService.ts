@@ -1,5 +1,5 @@
 import * as nsfwjs from 'nsfwjs';
-import * as tf from '@tensorflow/tfjs';
+import * as tf from '@tensorflow/tfjs-node';
 import logger from '../../config/logger';
 
 export interface ModerationResult {

@@ -306,10 +306,10 @@ The registration module adds an `email` column to the existing `users` table.
 cd app/backend
 
 # Run Prisma migrations
-npx prisma migrate deploy
+pnpm exec prisma migrate deploy
 
 # (Development only) Generate Prisma client after schema changes
-npx prisma generate
+pnpm exec prisma generate
 ```
 
 The migration performs three steps:
@@ -329,11 +329,11 @@ SELECT id, username, email FROM "User" LIMIT 5;
 ```bash
 # Backend
 cd app/backend
-npm install
+pnpm install
 
 # Frontend
 cd app/frontend
-npm install
+pnpm install
 ```
 
 Key dependencies used by this module:
@@ -350,21 +350,21 @@ Key dependencies used by this module:
 ```bash
 # Backend unit + integration tests
 cd app/backend
-npx vitest --run
+pnpm exec vitest --run
 
 # Frontend component tests
 cd app/frontend
-npx vitest --run
+pnpm exec vitest --run
 ```
 
 ### 5. Start Development Servers
 
 ```bash
 # Backend (from app/backend)
-npm run dev
+pnpm run dev
 
 # Frontend (from app/frontend)
-npm run dev
+pnpm run dev
 ```
 
 ---
@@ -578,11 +578,11 @@ model User {
 2. Generate a new migration:
    ```bash
    cd app/backend
-   npx prisma migrate dev --name change_default_currency
+   pnpm exec prisma migrate dev --name change_default_currency
    ```
 3. Regenerate the Prisma client:
    ```bash
-   npx prisma generate
+   pnpm exec prisma generate
    ```
 
 The `createUser()` function in `app/backend/src/services/auth/userService.ts` does not explicitly set these fields — it relies on the database defaults. This means changing the schema default is the single source of truth for new account values.

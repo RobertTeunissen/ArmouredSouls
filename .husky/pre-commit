@@ -7,4 +7,4 @@
 #  - Fails the commit if remaining errors exist
 #  - Runs only on staged files for speed
 
-npx lint-staged
+pnpm exec lint-staged

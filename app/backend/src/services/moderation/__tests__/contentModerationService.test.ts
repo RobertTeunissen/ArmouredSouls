@@ -51,7 +51,7 @@ async function createService(options?: { failLoad?: boolean }) {
   jest.isolateModules(() => {
     // Set up mocks inside the isolated scope
     jest.doMock('nsfwjs', () => ({ load: mockLoad }));
-    jest.doMock('@tensorflow/tfjs', () => ({
+    jest.doMock('@tensorflow/tfjs-node', () => ({
       tensor3d: () => ({ dispose: mockDispose }),
     }));
     jest.doMock('sharp', () => {

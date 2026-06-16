@@ -165,7 +165,7 @@ git commit -m "feat(economy): add weapon crafting UI"
 ### Before Committing
 
 **Pre-commit Checklist**:
-- [ ] All tests pass: `npm test`
+- [ ] All tests pass: `pnpm test`
 - [ ] No console.log statements
 - [ ] Code follows style guide
 - [ ] Documentation updated
@@ -344,6 +344,7 @@ git cherry-pick <commit-hash>
 # Dependencies
 node_modules/
 package-lock.json
+yarn.lock
 
 # Environment variables
 .env

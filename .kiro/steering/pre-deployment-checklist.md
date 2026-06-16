@@ -11,18 +11,18 @@ inclusion: manual
 ### Required Verifications
 
 1. **Backend Tests Pass Locally**
-   - Run: `cd app/backend && npm test`
+   - Run: `cd app/backend && pnpm test`
    - Verify: All tests pass (no failures allowed)
    - Check: Coverage meets minimum thresholds (80% general, 90% critical)
-   - Run: `npm test -- --coverage` to verify coverage
+   - Run: `pnpm test -- --coverage` to verify coverage
    - Confirm: All new code has accompanying tests
    - **CRITICAL**: Do not push if any backend tests fail
 
 2. **Frontend Tests Pass Locally**
-   - Run: `cd app/frontend && npx vitest --run` (unit/component tests)
+   - Run: `cd app/frontend && pnpm exec vitest --run` (unit/component tests)
    - Verify: All frontend unit tests pass
    - E2E tests: CI now runs a fully provisioned E2E job (`e2e-tests`) that blocks deployment on failure — local E2E runs are optional but recommended before pushing large UI changes
-   - Optional local E2E: `cd app/frontend && npx playwright test`
+   - Optional local E2E: `cd app/frontend && pnpm exec playwright test`
    - **CRITICAL**: CI will block the pipeline if any E2E test fails, so frontend regressions are caught automatically
 
 3. **No Debug Code in Production**
@@ -37,7 +37,7 @@ inclusion: manual
    - Confirm: No secrets committed to repository
 
 5. **Database Migrations Tested**
-   - Run: `npx prisma migrate deploy` locally
+   - Run: `pnpm exec prisma migrate deploy` locally
    - Verify: Migration applies successfully
    - Check: No data loss or breaking changes
    - Update: `docs/prd_core/DATABASE_SCHEMA.md` if schema changed
@@ -49,12 +49,12 @@ inclusion: manual
    - Check: README files current for modified modules
 
 7. **Security Scanning Passes**
-   - Run: `cd app/backend && npm audit --audit-level=high`
+   - Run: `cd app/backend && pnpm audit --audit-level=high`
    - Verify: No high or critical vulnerabilities (or all are in `.security-audit-allowlist.json` with valid justification)
-   - Run: `cd app/backend && npm run lint`
+   - Run: `cd app/backend && pnpm run lint`
    - Verify: No ESLint security rule violations (`eslint-plugin-security` errors block CI)
    - Review: `.security-audit-allowlist.json` — check that all entries have a `nextReviewDate` in the future
-   - Confirm: No new dependencies added without `npm audit` check
+   - Confirm: No new dependencies added without `pnpm audit` check
 
 ## Pre-Push Command Sequence
 
@@ -63,18 +63,18 @@ inclusion: manual
 ```bash
 # 1. Backend tests
 cd app/backend
-npm test
+pnpm test
 
 # 2. Security scanning
-npm audit --audit-level=high
-npm run lint
+pnpm audit --audit-level=high
+pnpm run lint
 
 # 3. Frontend unit tests
 cd ../frontend
-npx vitest --run
+pnpm exec vitest --run
 
 # 4. Optional: E2E tests (CI runs these automatically)
-# npx playwright test
+# pnpm exec playwright test
 
 # 5. If all pass, commit and push
 cd ../..

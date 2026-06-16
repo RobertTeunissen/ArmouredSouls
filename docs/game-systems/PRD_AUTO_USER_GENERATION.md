@@ -273,7 +273,7 @@ interface TieredGenerationResult {
 
 ### Phase 1: Database Schema 
 1. Create `CycleMetadata` model in `schema.prisma`
-2. Run migration: `npm run prisma:migrate -- --name add_cycle_metadata`
+2. Run migration: `pnpm run prisma:migrate -- --name add_cycle_metadata`
 3. Update seed script to initialize `CycleMetadata` record with `totalCycles: 0`
 
 **Files Modified**:
@@ -848,7 +848,7 @@ WHERE u.username LIKE 'auto_user_%';
 
 **Recommended Execution**:
 ```bash
-npm test -- adminCycleGeneration.test.ts
+pnpm test -- adminCycleGeneration.test.ts
 ```
 
 ### 13.7 Testing Recommendations

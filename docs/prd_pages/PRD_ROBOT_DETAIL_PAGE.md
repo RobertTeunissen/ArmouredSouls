@@ -969,7 +969,7 @@ test('page layout shows clear section separation', async ({ page }) => {
 2. **Create Prisma Migration**
    ```bash
    cd app/backend
-   npx prisma migrate dev --name decimal_robot_attributes
+   pnpm exec prisma migrate dev --name decimal_robot_attributes
    ```
 
 3. **Verify Migration**

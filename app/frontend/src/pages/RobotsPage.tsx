@@ -245,7 +245,7 @@ function RobotsPage() {
                     </thead>
                     <tbody>
                       {displayedRobots.map((robot) => {
-                        const hpPercentage = Math.round((robot.currentHP / robot.maxHP) * 100);
+                        const hpPercentage = Math.min(100, Math.round((robot.currentHP / robot.maxHP) * 100));
                         const shieldPercentage = robot.maxShield > 0 
                           ? Math.round((robot.currentShield / robot.maxShield) * 100)
                           : 0;
@@ -392,9 +392,9 @@ function RobotsPage() {
             {viewMode === 'card' && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {displayedRobots.map((robot) => {
-                  const hpPercentage = Math.round((robot.currentHP / robot.maxHP) * 100);
+                  const hpPercentage = Math.min(100, Math.round((robot.currentHP / robot.maxHP) * 100));
                   const shieldPercentage = robot.maxShield > 0 
-                    ? Math.round((robot.currentShield / robot.maxShield) * 100)
+                    ? Math.min(100, Math.round((robot.currentShield / robot.maxShield) * 100))
                     : 0;
                   const winRate = calculateWinRate(robot.wins, robot.totalBattles);
                   const actualReadiness = calculateReadiness(robot.currentHP, robot.maxHP);

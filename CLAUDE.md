@@ -3,7 +3,7 @@
 
 This project is indexed by GitNexus as **ArmouredSouls** (17837 symbols, 28869 relationships, 300 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
-> If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
+> If any GitNexus tool warns the index is stale, run `pnpm exec gitnexus analyze` in terminal first.
 
 ## Always Do
 

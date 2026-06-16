@@ -18,7 +18,7 @@ const log = createLogger('ActiveTournamentCard');
 interface ActiveTournamentInfo {
   tournamentId: number;
   tournamentName: string;
-  participantType: 'tournament_2v2' | 'tournament_3v3';
+  participantType: 'tournament_1v1' | 'tournament_2v2' | 'tournament_3v3';
   currentRound: number;
   maxRounds: number;
   nextOpponentName?: string;
@@ -34,6 +34,8 @@ interface UpcomingMatchResponse {
     currentRound?: number;
     maxRounds?: number;
     scheduledFor: string;
+    robot1?: { name: string; userId: number };
+    robot2?: { name: string; userId: number } | null;
     teamBattleTeam1?: { teamName: string; members: Array<{ userId: number }> };
     teamBattleTeam2?: { teamName: string; members: Array<{ userId: number }> } | null;
   }>;
@@ -53,9 +55,9 @@ function ActiveTournamentCard() {
       // Use the upcoming matches endpoint which already returns tournament matches
       const data = await api.get<UpcomingMatchResponse>('/api/matches/upcoming');
 
-      // Filter for team tournament matches
+      // Filter for all tournament matches (1v1, 2v2, 3v3)
       const tournamentMatches = data.matches.filter(
-        (m) => m.matchType === 'tournament_2v2' || m.matchType === 'tournament_3v3'
+        (m) => m.matchType === 'tournament_1v1' || m.matchType === 'tournament_2v2' || m.matchType === 'tournament_3v3'
       );
 
       // Deduplicate by tournamentId
@@ -66,20 +68,32 @@ function ActiveTournamentCard() {
         if (!match.tournamentId || seen.has(match.tournamentId)) continue;
         seen.add(match.tournamentId);
 
-        // Determine opponent name — figure out which team is ours first
+        // Determine opponent name based on match type
         let nextOpponentName: string | undefined;
         const myUserId = user?.id;
-        if (myUserId && match.teamBattleTeam1 && match.teamBattleTeam2) {
-          const isMyTeam1 = match.teamBattleTeam1.members.some(m => m.userId === myUserId);
-          nextOpponentName = isMyTeam1 ? match.teamBattleTeam2.teamName : match.teamBattleTeam1.teamName;
-        } else if (match.teamBattleTeam2) {
-          nextOpponentName = match.teamBattleTeam2.teamName;
+
+        if (match.matchType === 'tournament_1v1') {
+          // 1v1: opponent is the other robot
+          if (myUserId && match.robot1 && match.robot2) {
+            const isMyRobot1 = match.robot1.userId === myUserId;
+            nextOpponentName = isMyRobot1 ? match.robot2.name : match.robot1.name;
+          } else if (match.robot2) {
+            nextOpponentName = match.robot2.name;
+          }
+        } else {
+          // Team tournaments: opponent is the other team
+          if (myUserId && match.teamBattleTeam1 && match.teamBattleTeam2) {
+            const isMyTeam1 = match.teamBattleTeam1.members.some(m => m.userId === myUserId);
+            nextOpponentName = isMyTeam1 ? match.teamBattleTeam2.teamName : match.teamBattleTeam1.teamName;
+          } else if (match.teamBattleTeam2) {
+            nextOpponentName = match.teamBattleTeam2.teamName;
+          }
         }
 
         activeTournaments.push({
           tournamentId: match.tournamentId,
           tournamentName: match.tournamentName || `Tournament #${match.tournamentId}`,
-          participantType: match.matchType as 'tournament_2v2' | 'tournament_3v3',
+          participantType: match.matchType as 'tournament_1v1' | 'tournament_2v2' | 'tournament_3v3',
           currentRound: match.currentRound || match.tournamentRound || 1,
           maxRounds: match.maxRounds || 1,
           nextOpponentName,
@@ -134,11 +148,13 @@ function ActiveTournamentCard() {
               <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="font-semibold text-white truncate">{tournament.tournamentName}</h3>
                 <span className={`text-xs px-2 py-0.5 rounded font-semibold ${
-                  tournament.participantType === 'tournament_2v2'
+                  tournament.participantType === 'tournament_1v1'
+                    ? 'bg-blue-400/20 text-blue-400'
+                    : tournament.participantType === 'tournament_2v2'
                     ? 'bg-emerald-400/20 text-emerald-400'
                     : 'bg-violet-400/20 text-violet-400'
                 }`}>
-                  {tournament.participantType === 'tournament_2v2' ? '2v2' : '3v3'}
+                  {tournament.participantType === 'tournament_1v1' ? '1v1' : tournament.participantType === 'tournament_2v2' ? '2v2' : '3v3'}
                 </span>
               </div>
               <div className="text-sm text-secondary mt-1">

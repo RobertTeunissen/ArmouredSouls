@@ -13,7 +13,7 @@ Implementation uses TypeScript throughout (backend services, API routes, fronten
     - Add `revertedAt`, `revertedBy`, `replayOfBattleId` fields to Battle model in Prisma schema
     - Add self-relation for replay chain
     - Add indexes for new fields
-    - Run `npx prisma migrate dev` to generate migration
+    - Run `pnpm exec prisma migrate dev` to generate migration
     - _Requirements: 2.7, 3.4_
 
   - [ ] 1.2 Create BattleRevertErrorCode enum

@@ -11,14 +11,14 @@ Common issues and fixes for the VPS deployment.
 
 ### Pipeline fails at "Install production dependencies"
 
-**Symptom**: `npm ci --production` fails on the VPS.
+**Symptom**: `pnpm install --frozen-lockfile --prod` fails on the VPS.
 
 **Fix**: SSH into the VPS and check:
 
 ```bash
 node --version   # Should be v24.x
-npm --version
-ls -la /opt/armouredsouls/backend/package-lock.json  # Must exist
+pnpm --version
+ls -la /opt/armouredsouls/backend/pnpm-lock.yaml  # Must exist
 ```
 
 If `node` isn't found, reload nvm: `source ~/.bashrc`
@@ -27,7 +27,7 @@ If `node` isn't found, reload nvm: `source ~/.bashrc`
 
 **Symptom**: The "Install dependencies on VPS" step in the deploy job stays at `*` (running) for several minutes — typically the step completes in ~30–60 s when healthy. Eventually it hits the 10-min `command_timeout` and the job fails. While it's hung, the public site starts returning **502 from Caddy** and PM2 shows the backend in a `waiting restart` loop with a high restart counter.
 
-**Why this happens.** Since PR #335, the install step uses `npm ci --omit=dev` instead of `npm install`. `npm ci` **wipes `node_modules/` first** then re-extracts from the lockfile. If the install hangs or is killed mid-execution (process killed by OOM, runner timeout, network glitch, manual cancel), `node_modules/` is left empty or partially populated. The running PM2 process then can't `require()` its dependencies on the next restart and crash-loops.
+**Why this happens.** The install step uses `pnpm install --frozen-lockfile --prod`. If the install hangs or is killed mid-execution (process killed by OOM, runner timeout, network glitch, manual cancel), `node_modules/` is left empty or partially populated. The running PM2 process then can't `require()` its dependencies on the next restart and crash-loops.
 
 **Recovery (5 min):**
 
@@ -48,8 +48,8 @@ If `node` isn't found, reload nvm: `source ~/.bashrc`
 
    ```bash
    cd /opt/armouredsouls/backend
-   NODE_ENV=production npm ci --omit=dev --prefer-offline --no-audit --no-fund
-   npx prisma generate
+   NODE_ENV=production pnpm install --frozen-lockfile --prod
+   pnpm exec prisma generate
    pm2 restart armouredsouls-backend
    sleep 5
    pm2 status
@@ -89,7 +89,7 @@ docker ps | grep armouredsouls-db
 
 # Can Prisma connect?
 cd /opt/armouredsouls/backend
-npx prisma migrate status
+pnpm exec prisma migrate status
 
 # Check the DATABASE_URL in .env
 grep DATABASE_URL .env
@@ -221,8 +221,8 @@ The CI/CD pipeline doesn't use symlinks — it rsyncs directly. To roll back, re
 ```bash
 cd /opt/armouredsouls/backend
 git checkout PREVIOUS_COMMIT_SHA -- .
-npm ci --production
-npm run build
+pnpm install --frozen-lockfile --prod
+pnpm run build
 ```
 
 ### 3. Restore database (if migration caused issues)

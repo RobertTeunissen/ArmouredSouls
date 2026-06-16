@@ -65,29 +65,29 @@ cd ArmouredSouls
 
 # Install repo-level tooling (husky pre-commit hook + lint-staged).
 # This is a one-shot at the repo root and sets up the git hook automatically.
-npm install
+pnpm install
 
 # Install backend dependencies (also runs `prisma generate` via postinstall)
-cd app/backend && npm install && cd ../..
+cd app/backend && pnpm install && cd ../..
 
 # Install frontend dependencies
-cd app/frontend && npm install && cd ../..
+cd app/frontend && pnpm install && cd ../..
 
 # Set up local database
 cd app && docker-compose up -d && cd ..
 
 # Run migrations + seed (from app/backend/)
-cd app/backend && npm run db:reset && cd ../..
+cd app/backend && pnpm run db:reset && cd ../..
 
 # Start backend dev server
-cd app/backend && npm run dev
+cd app/backend && pnpm run dev
 
 # In another terminal, start frontend dev server
-cd app/frontend && npm run dev
+cd app/frontend && pnpm run dev
 
 # Run tests
-cd app/backend && npm test
-cd app/frontend && npm test
+cd app/backend && pnpm test
+cd app/frontend && pnpm test
 ```
 
 ### Pre-commit hook
@@ -251,22 +251,22 @@ describe('RobotService', () => {
 
 ```bash
 # Watch mode (default — reruns on changes, for TDD)
-npm test
+pnpm test
 
 # Single run (no watch)
-npm run test:run
+pnpm run test:run
 
 # CI mode (dot reporter, bail after 5 failures)
-npm run test:ci
+pnpm run test:ci
 
 # Run specific test file
-npm test robot.test.ts
+pnpm test robot.test.ts
 
 # Run with coverage report
-npm run test:coverage
+pnpm run test:coverage
 
 # Interactive UI
-npm run test:ui
+pnpm run test:ui
 ```
 
 ---

@@ -21,7 +21,7 @@ inclusion: manual
 4. mcp_gitnexus_detect_changes({scope: "compare", base_ref: "main"}) → For regressions
 ```
 
-> If the index is stale, run `npx gitnexus analyze` in the terminal first.
+> If the index is stale, run `pnpm exec gitnexus analyze` in the terminal first.
 
 ## Checklist
 

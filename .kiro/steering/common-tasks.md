@@ -134,11 +134,11 @@ See `docs/guides/MAINTENANCE.md` for:
 ```bash
 # Development
 cd app/backend
-npm install
-npm run dev
+pnpm install
+pnpm run dev
 
 # Build
-npm run build
+pnpm run build
 
 # Database
 # See .env for connection details
@@ -148,11 +148,11 @@ npm run build
 ```bash
 # Development
 cd app/frontend
-npm install
-npm run dev
+pnpm install
+pnpm run dev
 
 # Build
-npm run build
+pnpm run build
 ```
 
 ## Getting Help

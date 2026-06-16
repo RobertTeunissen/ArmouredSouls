@@ -35,14 +35,14 @@ docker compose up -d
 # Backend
 cd backend
 cp .env.example .env
-npm install
-npx prisma generate
-npx prisma migrate deploy
-npx tsx prisma/seed.ts
+pnpm install
+pnpm exec prisma generate
+pnpm exec prisma migrate deploy
+pnpm exec tsx prisma/seed.ts
 
 # Frontend (new terminal)
 cd ../frontend
-npm install
+pnpm install
 ```
 
 The `.env.example` has sensible defaults for local development. No changes needed unless you want to customize ports or enable the cycle scheduler.
@@ -56,12 +56,12 @@ Two terminals:
 ```bash
 # Terminal 1 — Backend
 cd app/backend
-npm run dev
+pnpm run dev
 # → http://localhost:3001
 
 # Terminal 2 — Frontend
 cd app/frontend
-npm run dev
+pnpm run dev
 # → http://localhost:3000
 ```
 
@@ -74,7 +74,7 @@ Test credentials are in `app/backend/prisma/seed.ts`. Do not commit credentials 
 ### Reset (drop + recreate + migrate + seed)
 ```bash
 cd app/backend
-npm run db:reset
+pnpm run db:reset
 ```
 
 This runs `prisma migrate reset --force` which drops the database, re-applies all migrations, and re-seeds. Use this when you want a clean slate.
@@ -82,27 +82,27 @@ This runs `prisma migrate reset --force` which drops the database, re-applies al
 ### Apply new migrations (after pulling changes)
 ```bash
 cd app/backend
-npx prisma migrate deploy
+pnpm exec prisma migrate deploy
 ```
 
 ### Inspect the database
 ```bash
 cd app/backend
-npx prisma studio
+pnpm exec prisma studio
 # → http://localhost:5555
 ```
 
 ### Create a new migration (after editing schema.prisma)
 ```bash
 cd app/backend
-npx prisma migrate dev --name describe_your_change
+pnpm exec prisma migrate dev --name describe_your_change
 ```
 
 This generates a migration SQL file, applies it, and regenerates the Prisma client.
 
 ### Regenerate Prisma client (after schema changes without migration)
 ```bash
-npx prisma generate
+pnpm exec prisma generate
 ```
 
 ### Prisma 7 Notes
@@ -118,18 +118,18 @@ The generated client lives at `app/backend/generated/prisma/` (not `@prisma/clie
 ### Backend (Jest 30)
 ```bash
 cd app/backend
-npm run test:unit          # Unit tests only
-npm run test:integration   # Integration tests only
-npm run test               # Both
-npm run test:heavy         # Long-running / property-based tests
-npm run test:all           # Everything
+pnpm run test:unit          # Unit tests only
+pnpm run test:integration   # Integration tests only
+pnpm run test               # Both
+pnpm run test:heavy         # Long-running / property-based tests
+pnpm run test:all           # Everything
 ```
 
 ### Frontend (Vitest 4)
 ```bash
 cd app/frontend
-npm run test -- --run      # Single run (no watch mode)
-npm run test:coverage      # With coverage report
+pnpm run test -- --run      # Single run (no watch mode)
+pnpm run test:coverage      # With coverage report
 ```
 
 ### E2E (Playwright)
@@ -143,10 +143,10 @@ Available helpers in `tests/e2e/helpers/`:
 
 ```bash
 cd app/frontend
-npx playwright install     # One-time: install Chromium browser
-npm run test:e2e           # Headless
-npm run test:e2e:headed    # With browser visible
-npm run test:e2e:debug     # Debug mode
+pnpm exec playwright install     # One-time: install Chromium browser
+pnpm run test:e2e           # Headless
+pnpm run test:e2e:headed    # With browser visible
+pnpm run test:e2e:debug     # Debug mode
 ```
 
 Requires the backend running locally with a seeded database (see [Running Locally](#running-locally) above).
@@ -184,11 +184,11 @@ Navigate to the admin page in the UI after logging in with an admin account. The
 ```bash
 # Backend — compiles TypeScript to dist/
 cd app/backend
-npm run build
+pnpm run build
 
 # Frontend — builds to dist/
 cd app/frontend
-npm run build
+pnpm run build
 ```
 
 ---
@@ -228,7 +228,7 @@ lsof -ti:3000 | xargs kill -9   # Frontend
 If you see migration conflicts or "relation does not exist" errors:
 ```bash
 cd app/backend
-npm run db:reset
+pnpm run db:reset
 ```
 
 This drops and recreates the database from scratch. If that doesn't work:
@@ -237,27 +237,27 @@ cd app
 docker compose down -v    # Remove the database volume
 docker compose up -d      # Fresh database
 cd backend
-npx prisma migrate deploy
-npx tsx prisma/seed.ts
+pnpm exec prisma migrate deploy
+pnpm exec tsx prisma/seed.ts
 ```
 
 ### "Prisma Client not generated"
 
 ```bash
 cd app/backend
-npx prisma generate
+pnpm exec prisma generate
 ```
 
 ### Node modules issues
 
 ```bash
 cd app/backend
-rm -rf node_modules package-lock.json
-npm install
+rm -rf node_modules pnpm-lock.yaml
+pnpm install
 
 cd ../frontend
-rm -rf node_modules package-lock.json
-npm install
+rm -rf node_modules pnpm-lock.yaml
+pnpm install
 ```
 
 ---

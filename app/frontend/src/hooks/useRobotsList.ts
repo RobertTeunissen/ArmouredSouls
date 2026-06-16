@@ -28,8 +28,9 @@ export const calculateWinRate = (wins: number, totalBattles: number): string => 
 };
 
 export const calculateReadiness = (currentHP: number, maxHP: number): number => {
+  if (maxHP <= 0) return 0;
   const hpPercent = (currentHP / maxHP) * 100;
-  return Math.round(hpPercent);
+  return Math.min(100, Math.round(hpPercent));
 };
 
 export const isLoadoutComplete = (

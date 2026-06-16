@@ -766,29 +766,37 @@ async function formatTeamBattleHistoryEntry(battle: BattleWithFullRelations, bas
     isByeMatch = tournamentMatch?.isByeMatch ?? false;
     // No LP delta for tournament battles
   } else {
-    // League battles: look up the ScheduledTeamBattleMatch
-    const teamBattleMatch = await prisma.scheduledTeamBattleMatch.findFirst({
-      where: {
-        status: 'completed',
-        teamSize,
-        team1: { members: { some: { robotId: battle.robot1Id } } },
-      },
-      include: {
-        team1: { select: { id: true, teamName: true, stableId: true } },
-        team2: { select: { id: true, teamName: true, stableId: true } },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    // League/tag-team battles: resolve team names from BattleParticipant → TeamBattle
+    // Each participant has a team number (1 or 2) and robotId.
+    // Find which TeamBattle each robot belongs to.
+    const participants = battle.participants || [];
+    const team1Robots = participants.filter(p => p.team === 1).map(p => p.robotId);
+    const team2Robots = participants.filter(p => p.team === 2).map(p => p.robotId);
 
-    team1Id = teamBattleMatch?.team1?.id ?? null;
-    team2Id = teamBattleMatch?.team2?.id ?? null;
-    team1Name = teamBattleMatch?.team1?.teamName ?? null;
-    team2Name = teamBattleMatch?.team2?.teamName ?? null;
-    isByeMatch = teamBattleMatch?.team2Id === null;
+    const [team1Match, team2Match] = await Promise.all([
+      team1Robots.length > 0
+        ? prisma.teamBattle.findFirst({
+            where: { members: { some: { robotId: { in: team1Robots } } }, teamSize },
+            select: { id: true, teamName: true, stableId: true },
+          })
+        : null,
+      team2Robots.length > 0
+        ? prisma.teamBattle.findFirst({
+            where: { members: { some: { robotId: { in: team2Robots } } }, teamSize },
+            select: { id: true, teamName: true, stableId: true },
+          })
+        : null,
+    ]);
 
-    // Calculate LP delta for league battles
-    if (battle.winnerId !== null && teamBattleMatch) {
-      const team1Won = battle.winnerId === teamBattleMatch.team1Id;
+    team1Id = team1Match?.id ?? null;
+    team2Id = team2Match?.id ?? null;
+    team1Name = team1Match?.teamName ?? null;
+    team2Name = team2Match?.teamName ?? null;
+    isByeMatch = team2Robots.length === 0 || team2Match === null;
+
+    // Calculate LP delta for league battles (not tag team)
+    if (!isTagTeam && battle.winnerId !== null && team1Id) {
+      const team1Won = battle.winnerId === team1Id;
       team1LpDelta = team1Won ? 3 : -1;
       team2LpDelta = team1Won ? -1 : 3;
     } else if (battle.winnerId === null) {
@@ -971,17 +979,22 @@ async function buildTagTeamLogResponse(baseResponse: Record<string, unknown>, ba
       : null,
   ]);
 
-  const tagTeamMatch = await prisma.scheduledTeamBattleMatch.findFirst({
-    where: { battleId: battleData.id, matchMode: 'tag_team' },
-    select: { team1Id: true, team2Id: true },
-  });
-
+  // Look up team details from TeamBattle via member robot IDs
+  // (ScheduledTeamBattleMatch doesn't store battleId, so we find teams by their robot composition)
   const [team1Details, team2Details] = await Promise.all([
-    tagTeamMatch?.team1Id
-      ? prisma.teamBattle.findUnique({ where: { id: tagTeamMatch.team1Id }, include: { stable: { select: { stableName: true } } } })
+    battleData.team1ActiveRobotId
+      ? prisma.teamBattle.findFirst({
+          where: { members: { some: { robotId: battleData.team1ActiveRobotId } }, teamSize: 2 },
+          include: { stable: { select: { stableName: true } } },
+          orderBy: { updatedAt: 'desc' },
+        })
       : null,
-    tagTeamMatch?.team2Id
-      ? prisma.teamBattle.findUnique({ where: { id: tagTeamMatch.team2Id }, include: { stable: { select: { stableName: true } } } })
+    battleData.team2ActiveRobotId
+      ? prisma.teamBattle.findFirst({
+          where: { members: { some: { robotId: battleData.team2ActiveRobotId } }, teamSize: 2 },
+          include: { stable: { select: { stableName: true } } },
+          orderBy: { updatedAt: 'desc' },
+        })
       : null,
   ]);
 
@@ -1001,14 +1014,14 @@ async function buildTagTeamLogResponse(baseResponse: Record<string, unknown>, ba
 
   baseResponse.tagTeam = {
     team1: {
-      teamId: tagTeamMatch?.team1Id || null,
+      teamId: team1Details?.id || null,
       stableName: team1Details?.stable?.stableName || null,
       activeRobot: formatTagRobot(team1Active, battleData.team1ActiveDamageDealt, battleData.team1ActiveFameAwarded),
       reserveRobot: formatTagRobot(team1Reserve, battleData.team1ReserveDamageDealt, battleData.team1ReserveFameAwarded),
       tagOutTime: battleData.team1TagOutTime,
     },
     team2: {
-      teamId: tagTeamMatch?.team2Id || null,
+      teamId: team2Details?.id || null,
       stableName: team2Details?.stable?.stableName || null,
       activeRobot: formatTagRobot(team2Active, battleData.team2ActiveDamageDealt, battleData.team2ActiveFameAwarded),
       reserveRobot: formatTagRobot(team2Reserve, battleData.team2ReserveDamageDealt, battleData.team2ReserveFameAwarded),

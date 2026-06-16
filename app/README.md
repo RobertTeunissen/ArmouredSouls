@@ -10,16 +10,16 @@ Quick setup:
 ```bash
 # From app/ directory
 docker compose up -d                    # Start database
-cd backend && npm install && npm run prisma:migrate && npx tsx prisma/seed.ts
-cd ../frontend && npm install           # IMPORTANT: Run this after every git pull
+cd backend && pnpm install && pnpm run prisma:migrate && pnpm exec tsx prisma/seed.ts
+cd ../frontend && pnpm install           # IMPORTANT: Run this after every git pull
 ```
 
-> **⚠️ Important:** Always run `npm install` in both backend/ and frontend/ directories after pulling updates from Git.
+> **⚠️ Important:** Always run `pnpm install` in both backend/ and frontend/ directories after pulling updates from Git.
 
 Run servers:
 ```bash
-cd backend && npm run dev   # Terminal 1 - http://localhost:3001
-cd frontend && npm run dev  # Terminal 2 - http://localhost:3000
+cd backend && pnpm run dev   # Terminal 1 - http://localhost:3001
+cd frontend && pnpm run dev  # Terminal 2 - http://localhost:3000
 ```
 
 > **📘 Having issues?** See [frontend/TROUBLESHOOTING.md](frontend/TROUBLESHOOTING.md) for common problems and solutions.

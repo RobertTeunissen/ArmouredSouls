@@ -160,6 +160,8 @@ export interface BattleHistory {
   team2ReserveRobotName?: string | null;
   team1TagOutTime?: number | null;
   team2TagOutTime?: number | null;
+  // Bye match indicator
+  isByeMatch?: boolean;
   // Economic fields (from BattleParticipant for the requesting user's robot)
   prestigeAwarded?: number;
   fameAwarded?: number;
@@ -299,9 +301,12 @@ export { getTierName as getLeagueTierName, getTierColor as getLeagueTierColor, g
 
 export const getBattleOutcome = (battle: BattleHistory, robotId: number): 'win' | 'loss' | 'draw' => {
   if (!battle.winnerId) return 'draw';
+
+  // BYE matches are always a win for the real team
+  if (battle.isByeMatch) return 'win';
   
   // For tag team battles, winnerId is the team ID, not robot ID
-  if (battle.battleType === 'tag_team' && battle.team1Id && battle.team2Id) {
+  if (battle.battleType === 'tag_team' && battle.team1Id) {
     // Determine which team the robot belongs to
     const isTeam1Robot = battle.robot1Id === robotId;
     const isTeam2Robot = battle.robot2Id === robotId;
@@ -314,7 +319,7 @@ export const getBattleOutcome = (battle: BattleHistory, robotId: number): 'win' 
   }
 
   // For team battles (2v2/3v3), winnerId is the team ID
-  if ((battle.battleType === 'league_2v2' || battle.battleType === 'league_3v3') && battle.team1Id && battle.team2Id) {
+  if ((battle.battleType === 'league_2v2' || battle.battleType === 'league_3v3') && battle.team1Id) {
     const isTeam1Robot = battle.robot1Id === robotId;
     const isTeam2Robot = battle.robot2Id === robotId;
 

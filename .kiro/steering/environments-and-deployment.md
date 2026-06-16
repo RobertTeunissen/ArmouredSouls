@@ -78,27 +78,27 @@ docker compose up -d
 # Backend setup
 cd backend
 cp .env.example .env
-npm install
-npx prisma generate
-npx prisma migrate deploy
-npx prisma db seed
+pnpm install
+pnpm exec prisma generate
+pnpm exec prisma migrate deploy
+pnpm exec prisma db seed
 
 # Frontend setup
 cd ../frontend
-npm install
+pnpm install
 ```
 
 ### Daily Development Workflow
 **Terminal 1 - Backend**:
 ```bash
 cd app/backend
-npm run dev  # Starts on http://localhost:3001
+pnpm run dev  # Starts on http://localhost:3001
 ```
 
 **Terminal 2 - Frontend**:
 ```bash
 cd app/frontend
-npm run dev  # Starts on http://localhost:3000
+pnpm run dev  # Starts on http://localhost:3000
 ```
 
 **Access**: Navigate to http://localhost:3000 in browser
@@ -107,13 +107,13 @@ npm run dev  # Starts on http://localhost:3000
 ```bash
 # Run backend tests
 cd app/backend
-npm test
+pnpm test
 
 # Run specific test file
-npm test -- tests/facility.test.ts
+pnpm test -- tests/facility.test.ts
 
 # Run with coverage
-npm test -- --coverage
+pnpm test -- --coverage
 ```
 
 ## Deployment Pipeline
@@ -134,9 +134,9 @@ npm test -- --coverage
    - 15-minute timeout — failures block the pipeline
 3. **Deploy Stage**
    - rsync artifacts to VPS
-   - `npm ci --production`
+   - `pnpm install --frozen-lockfile --production`
    - Pre-migration database backup
-   - `npx prisma migrate deploy`
+   - `pnpm exec prisma migrate deploy`
    - PM2 restart
 4. **Smoke Tests**
    - Health endpoint check
@@ -284,7 +284,7 @@ pm2 monit                  # Real-time monitoring
 ### Local Database Reset
 ```bash
 cd app/backend
-npm run db:reset  # Drops, recreates, applies migrations, seeds
+pnpm run db:reset  # Drops, recreates, applies migrations, seeds
 ```
 
 ### VPS Database Backup
@@ -304,7 +304,7 @@ ssh deploy@VPS_IP
 ## Monitoring and Logs
 
 ### Local Logs
-- Backend: Terminal output (npm run dev)
+- Backend: Terminal output (pnpm run dev)
 - Frontend: Browser console + terminal
 - Database: `docker compose logs -f`
 
@@ -375,7 +375,7 @@ sudo ufw status
 ### Local Issues
 - Database won't start: `docker compose down -v && docker compose up -d`
 - Port in use: `lsof -ti:3001 | xargs kill -9`
-- Prisma errors: `npx prisma generate && npx prisma migrate deploy`
+- Prisma errors: `pnpm exec prisma generate && pnpm exec prisma migrate deploy`
 
 ### VPS Issues
 - Backend not responding: `pm2 restart armouredsouls-backend`
@@ -395,14 +395,14 @@ sudo ufw status
 ```bash
 # Start everything
 docker compose up -d
-cd backend && npm run dev  # Terminal 1
-cd frontend && npm run dev # Terminal 2
+cd backend && pnpm run dev  # Terminal 1
+cd frontend && pnpm run dev # Terminal 2
 
 # Reset database
-cd backend && npm run db:reset
+cd backend && pnpm run db:reset
 
 # Run tests
-cd backend && npm test
+cd backend && pnpm test
 ```
 
 ### Deployment

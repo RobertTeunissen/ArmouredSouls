@@ -50,8 +50,8 @@ export const RANGE_BAND_MIDPOINTS: Record<RangeBand, number> = {
 const PATIENCE_MAX_SECONDS = 15;
 const PATIENCE_SCORE_FACTOR = 5;
 
-/** Minimum team separation in grid units */
-const MIN_TEAM_SEPARATION = 1;
+/** Minimum team separation in grid units (prevents clumping on same target position) */
+const MIN_TEAM_SEPARATION = 3;
 
 /** Maximum random deviation (degrees) at CA=1; linearly decreases to 5° at CA=50 */
 const DEVIATION_MAX = 30;
@@ -307,11 +307,15 @@ export function calculateMovementIntent(
   let strategy: MovementIntent['strategy'];
 
   // Linear deviation: 30° at CA=1, 5° at CA=50 (every point of CA tightens pathing)
+  // Melee robots get reduced deviation — they need direct paths to reach the
+  // narrow 2-unit melee range window. Deviation at range causes orbiting.
   const ca = state.robot.combatAlgorithms ? Number(state.robot.combatAlgorithms) : 1;
+  const baseDeviation = DEVIATION_MAX - ((ca - 1) / 49) * (DEVIATION_MAX - DEVIATION_MIN);
+  const deviationScale = preferredRange === 'melee' ? 0.3 : preferredRange === 'short' ? 0.6 : 1.0;
   const deviation = deterministicDeviation(
     state.position,
     state.patienceTimer,
-    DEVIATION_MAX - ((ca - 1) / 49) * (DEVIATION_MAX - DEVIATION_MIN),
+    baseDeviation * deviationScale,
   );
 
   // Strategy label for logging (derived from score, no behavioral gates)
@@ -350,7 +354,10 @@ export function calculateMovementIntent(
   }
 
   // Threat-aware avoidance — linear weight: ta/50 (always active, weak at low TA)
-  const avoidanceWeight = ta / 50;
+  // Reduced for melee robots outside weapon range — avoidance prevents closing
+  const currentDistToTarget = euclideanDistance(state.position, target.position);
+  const isMeleeOutOfRange = preferredRange === 'melee' && currentDistToTarget > 2;
+  const avoidanceWeight = isMeleeOutOfRange ? (ta / 50) * 0.2 : ta / 50;
   if (avoidanceWeight > 0.01) {
     targetPos = applyAvoidanceBias(
       targetPos,
@@ -361,7 +368,8 @@ export function calculateMovementIntent(
   }
 
   // Flank approach — linear weight: ta/50, requires speed advantage
-  const flankWeight = ta / 50;
+  // Reduced for melee robots outside range — closing is priority over flanking
+  const flankWeight = isMeleeOutOfRange ? (ta / 50) * 0.2 : ta / 50;
   if (flankWeight > 0.01) {
     const robotSpeed = state.effectiveMovementSpeed;
     const targetSpeed = target.effectiveMovementSpeed;

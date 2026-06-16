@@ -70,16 +70,16 @@ describe('LeagueStandingsPage', () => {
 
 ```bash
 # Run all tests
-npm test
+pnpm test
 
 # Run tests in watch mode
-npm test -- --watch
+pnpm test -- --watch
 
 # Run tests with coverage
-npm test -- --coverage
+pnpm test -- --coverage
 
 # Run specific test file
-npm test -- LeagueStandingsPage/helpers.test.ts
+pnpm test -- LeagueStandingsPage/helpers.test.ts
 ```
 
 ## Coverage Goals

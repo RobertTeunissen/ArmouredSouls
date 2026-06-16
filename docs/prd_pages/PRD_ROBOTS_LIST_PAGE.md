@@ -1015,16 +1015,16 @@ const calculateWinRate = (wins: number, totalBattles: number): string => {
 ```bash
 # Run all tests
 cd app/frontend
-npm test
+pnpm test
 
 # Run with coverage
-npm test -- --coverage
+pnpm test -- --coverage
 
 # Run with UI
-npm test:ui
+pnpm test:ui
 
 # Run specific test file
-npm test -- RobotsPage.utils.test.ts
+pnpm test -- RobotsPage.utils.test.ts
 ```
 
 ### Expected Results

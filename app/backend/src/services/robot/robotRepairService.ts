@@ -2,13 +2,15 @@
  * Robot repair logic.
  *
  * Extracted from the POST /repair-all route handler.
+ * Uses the same formula as automatic repair (PRD_ECONOMY_SYSTEM.md) with
+ * a 50% manual repair discount as incentive for players to repair between cycles.
  */
 
 import prisma from '../../lib/prisma';
 import { lockUserForSpending } from '../../lib/creditGuard';
 import { RobotError, RobotErrorCode } from '../../errors/robotErrors';
+import { calculateRepairCost, calculateAttributeSum } from '../../utils/robotCalculations';
 
-const REPAIR_COST_PER_HP = 50;
 const MANUAL_REPAIR_DISCOUNT = 0.5;
 
 interface RobotNeedingRepair {
@@ -35,7 +37,7 @@ export interface RepairAllResult {
 
 /**
  * Repair all damaged robots for a user.
- * Returns the result data needed for the response and event logging.
+ * Uses the same cost formula as automatic repair (attribute-based) with 50% manual discount.
  */
 export async function repairAllRobots(userId: number): Promise<RepairAllResult> {
   const user = await prisma.user.findUnique({ where: { id: userId } });
@@ -50,17 +52,26 @@ export async function repairAllRobots(userId: number): Promise<RepairAllResult> 
 
   const allRobots = await prisma.robot.findMany({ where: { userId } });
   const activeRobotCount = allRobots.filter(r => r.name !== 'Bye Robot').length;
-  const discount = Math.min(90, repairBayLevel * (5 + activeRobotCount));
 
   const robotsNeedingRepair: RobotNeedingRepair[] = allRobots
+    .filter(robot => robot.currentHP < robot.maxHP)
     .map(robot => {
-      let repairCost = 0;
-      if (robot.repairCost > 0) {
-        repairCost = robot.repairCost;
-      } else if (robot.currentHP < robot.maxHP) {
-        repairCost = (robot.maxHP - robot.currentHP) * REPAIR_COST_PER_HP;
-      }
-      return { ...robot, calculatedRepairCost: repairCost } as RobotNeedingRepair;
+      // Use the same formula as automatic repair: attribute-based cost with repair bay discount
+      const sumOfAllAttributes = calculateAttributeSum(robot);
+      const damageTaken = robot.maxHP - robot.currentHP;
+      const damagePercent = (damageTaken / robot.maxHP) * 100;
+      const hpPercent = (robot.currentHP / robot.maxHP) * 100;
+
+      const autoRepairCost = calculateRepairCost(
+        sumOfAllAttributes,
+        damagePercent,
+        hpPercent,
+        repairBayLevel,
+        0,
+        activeRobotCount
+      );
+
+      return { ...robot, calculatedRepairCost: autoRepairCost } as RobotNeedingRepair;
     })
     .filter(robot => robot.calculatedRepairCost > 0);
 
@@ -68,9 +79,10 @@ export async function repairAllRobots(userId: number): Promise<RepairAllResult> 
     throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'No robots need repair', 400);
   }
 
+  // Total cost before manual discount (same as what automatic repair would charge)
   const totalBaseCost = robotsNeedingRepair.reduce((sum, r) => sum + r.calculatedRepairCost, 0);
-  const costAfterRepairBay = Math.floor(totalBaseCost * (1 - discount / 100));
-  const finalCost = Math.floor(costAfterRepairBay * MANUAL_REPAIR_DISCOUNT);
+  // Apply 50% manual repair discount
+  const finalCost = Math.floor(totalBaseCost * MANUAL_REPAIR_DISCOUNT);
 
   const result = await prisma.$transaction(async (tx) => {
     const lockedUser = await lockUserForSpending(tx, userId);
@@ -91,8 +103,7 @@ export async function repairAllRobots(userId: number): Promise<RepairAllResult> 
 
     await Promise.all(
       robotsNeedingRepair.map(robot => {
-        const perRobotCostAfterRepairBay = Math.floor(robot.calculatedRepairCost * (1 - discount / 100));
-        const perRobotFinalCost = Math.floor(perRobotCostAfterRepairBay * MANUAL_REPAIR_DISCOUNT);
+        const perRobotFinalCost = Math.floor(robot.calculatedRepairCost * MANUAL_REPAIR_DISCOUNT);
         return tx.robot.update({
           where: { id: robot.id },
           data: {
@@ -109,12 +120,15 @@ export async function repairAllRobots(userId: number): Promise<RepairAllResult> 
     return updatedUser;
   });
 
+  // Repair bay discount is already baked into calculatedRepairCost via calculateRepairCost()
+  const repairBayDiscount = Math.min(90, repairBayLevel * (5 + activeRobotCount));
+
   return {
     repairedCount: robotsNeedingRepair.length,
     totalBaseCost,
-    discount,
+    discount: repairBayDiscount,
     manualRepairDiscount: 50,
-    preDiscountCost: costAfterRepairBay,
+    preDiscountCost: totalBaseCost,
     finalCost,
     newCurrency: result.currency,
     robotsNeedingRepair,

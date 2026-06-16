@@ -21,7 +21,7 @@ inclusion: manual
 4. Plan update order: interfaces → implementations → callers → tests
 ```
 
-> If the index is stale, run `npx gitnexus analyze` in the terminal first.
+> If the index is stale, run `pnpm exec gitnexus analyze` in the terminal first.
 
 ## Checklists
 

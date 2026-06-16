@@ -1,6 +1,5 @@
 import React from 'react';
-import { BattleHistory, getTournamentRoundName, getLeagueTierName, getLeagueTierColor } from '../utils/matchmakingApi';
-import { getTeamNameFromMatch } from '../utils/teamBattleApi';
+import { BattleHistory, getTournamentRoundName, getLeagueTierName } from '../utils/matchmakingApi';
 import { formatDateTime } from '../utils/matchmakingApi';
 import { getModeConfig, OUTCOME_BADGE_CONFIG } from '../utils/battleModeConfig';
 
@@ -76,15 +75,10 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
       return `${sizeLabel} Tournament${roundName ? ` • ${roundName}` : ''}`;
     }
     if (isTagTeam) {
-      // For tag team matches, show league tier with "League" suffix (not "Tag Team")
+      // Show league tier with "League" suffix — same as other league modes
       const leagueAtBattleTime = battle.leagueType || 'bronze';
-      const tierColor = getLeagueTierColor(leagueAtBattleTime);
       const tierName = getLeagueTierName(leagueAtBattleTime);
-      return (
-        <span className={tierColor}>
-          {tierName} League
-        </span>
-      );
+      return `${tierName} League`;
     }
     // For league matches, show league tier from battle record
     if (battle.leagueType) {
@@ -131,36 +125,20 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
     return config?.badgeColor || 'bg-surface-elevated text-secondary';
   };
 
-  // For tag team battles, determine team names and robot names
+  // For tag team battles, use team names (consistent with 2v2/3v3 league display)
   let myTeamRobots = myRobot.name;
   let opponentTeamRobots = opponent.name;
   
-  if (isTagTeam && battle.team1Id && battle.team2Id) {
+  if (isTagTeam) {
+    // Use team names from API (same as 2v2/3v3 league)
+    const battleAny = battle as unknown as { team1TeamName?: string; team2TeamName?: string };
     const isTeam1 = battle.team1ActiveRobotId === myRobotId || battle.team1ReserveRobotId === myRobotId;
-    const myTeamId = isTeam1 ? battle.team1Id : battle.team2Id;
-    const myTeamStableName = isTeam1 ? battle.team1StableName : battle.team2StableName;
-    const opponentTeamId = isTeam1 ? battle.team2Id : battle.team1Id;
-    const opponentTeamStableName = isTeam1 ? battle.team2StableName : battle.team1StableName;
-    
-    getTeamNameFromMatch(myTeamId, myTeamStableName ?? null);
-    getTeamNameFromMatch(opponentTeamId, opponentTeamStableName ?? null);
-    
-    // Get both robot names for each team
-    if (isTeam1) {
-      myTeamRobots = battle.team1ActiveRobotName && battle.team1ReserveRobotName
-        ? `${battle.team1ActiveRobotName} & ${battle.team1ReserveRobotName}`
-        : myRobot.name;
-      opponentTeamRobots = battle.team2ActiveRobotName && battle.team2ReserveRobotName
-        ? `${battle.team2ActiveRobotName} & ${battle.team2ReserveRobotName}`
-        : opponent.name;
-    } else {
-      myTeamRobots = battle.team2ActiveRobotName && battle.team2ReserveRobotName
-        ? `${battle.team2ActiveRobotName} & ${battle.team2ReserveRobotName}`
-        : myRobot.name;
-      opponentTeamRobots = battle.team1ActiveRobotName && battle.team1ReserveRobotName
-        ? `${battle.team1ActiveRobotName} & ${battle.team1ReserveRobotName}`
-        : opponent.name;
-    }
+    myTeamRobots = isTeam1
+      ? (battleAny.team1TeamName || myRobot.name)
+      : (battleAny.team2TeamName || myRobot.name);
+    opponentTeamRobots = isTeam1
+      ? (battleAny.team2TeamName || opponent.name)
+      : (battleAny.team1TeamName || opponent.name);
   }
   
   return (
@@ -210,7 +188,7 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
               <span className="text-[#8b949e] mx-1.5">• {battle.kothParticipantCount ?? '?'} robots</span>
             </div>
           </div>
-        ) : isTagTeam && battle.team1Id && battle.team2Id ? (
+        ) : isTagTeam ? (
           /* Tag Team Layout */
           <>
             <div className="flex-1 min-w-0">
@@ -381,7 +359,7 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
               <span className="text-[#58a6ff]">{myRobot.name}</span>
               <span className="text-[#8b949e] mx-1.5">• {battle.kothParticipantCount ?? '?'} robots</span>
             </div>
-          ) : isTagTeam && battle.team1Id && battle.team2Id ? (
+          ) : isTagTeam ? (
             <>
               <div className="text-sm font-medium mb-1">
                 <span className="text-[#58a6ff]">{myTeamRobots}</span>
