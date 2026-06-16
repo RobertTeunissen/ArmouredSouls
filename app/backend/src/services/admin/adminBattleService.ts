@@ -308,7 +308,7 @@ export async function getAdminBattleDetail(battleId: number) {
 
   // Check if this is a tag team battle and resolve team data from TeamBattle
   const isTagTeam = battle.battleType === 'tag_team';
-  let tagTeamData: { team1: any; team2: any } | null = null;
+  let tagTeamData: { team1: unknown; team2: unknown } | null = null;
 
   if (isTagTeam && battle.team1ActiveRobotId) {
     // Find teams via their member robots
