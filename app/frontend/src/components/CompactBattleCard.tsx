@@ -188,7 +188,7 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
               <span className="text-[#8b949e] mx-1.5">• {battle.kothParticipantCount ?? '?'} robots</span>
             </div>
           </div>
-        ) : isTagTeam && battle.team1Id && battle.team2Id ? (
+        ) : isTagTeam ? (
           /* Tag Team Layout */
           <>
             <div className="flex-1 min-w-0">
@@ -359,7 +359,7 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
               <span className="text-[#58a6ff]">{myRobot.name}</span>
               <span className="text-[#8b949e] mx-1.5">• {battle.kothParticipantCount ?? '?'} robots</span>
             </div>
-          ) : isTagTeam && battle.team1Id && battle.team2Id ? (
+          ) : isTagTeam ? (
             <>
               <div className="text-sm font-medium mb-1">
                 <span className="text-[#58a6ff]">{myTeamRobots}</span>

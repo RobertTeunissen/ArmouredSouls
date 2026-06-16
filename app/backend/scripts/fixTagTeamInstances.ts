@@ -6,7 +6,7 @@
  * evenly across instances (max 50 teams per instance).
  *
  * Usage:
- *   npx tsx scripts/fixTagTeamInstances.ts
+ *   pnpm exec tsx scripts/fixTagTeamInstances.ts
  */
 
 import { PrismaClient } from '../generated/prisma';
