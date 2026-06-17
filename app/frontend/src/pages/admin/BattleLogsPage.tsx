@@ -420,7 +420,7 @@ function BattleDetailPanel({ battle }: { battle: BattleDetail }) {
       {/* Tag Team Info */}
       {battle.teams && (
         <div className="bg-surface-elevated rounded-lg p-4">
-          <h4 className="text-sm font-semibold text-secondary mb-2">🏷️ Tag Team</h4>
+          <h4 className="text-sm font-semibold text-secondary mb-2">🤝 Tag Team</h4>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <p className="font-semibold text-primary">Team 1</p>

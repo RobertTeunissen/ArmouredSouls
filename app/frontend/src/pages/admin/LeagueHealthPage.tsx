@@ -304,7 +304,7 @@ function LeagueHealthPage() {
         <h3 className="text-lg font-semibold mb-3">Tag Team League Tiers</h3>
         {tagTeamData && (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
-            <AdminStatCard label="Total Teams" value={tagTeamData.totalTeams} color="primary" icon={<span>🏷️</span>} />
+            <AdminStatCard label="Total Teams" value={tagTeamData.totalTeams} color="primary" icon={<span>🤝</span>} />
             <AdminStatCard
               label="Active Tiers"
               value={tagTeamData.leagues.filter((l) => l.teamCount > 0).length}

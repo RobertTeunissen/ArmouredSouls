@@ -142,7 +142,7 @@ function TeamBattleRecentMatches({ teamSize }: TeamBattleRecentMatchesProps) {
     return (
       <div className="bg-surface p-4 rounded-lg border border-white/10">
         <h3 className="text-base font-semibold mb-3 flex items-center gap-2">
-          <span>{teamSize === 2 ? '⚔️' : '🗡️'}</span>
+          <span>⚔️</span>
           {sizeLabel} League — Recent
         </h3>
         <p className="text-sm text-secondary">Loading...</p>
@@ -154,7 +154,7 @@ function TeamBattleRecentMatches({ teamSize }: TeamBattleRecentMatchesProps) {
     return (
       <div className="bg-surface p-4 rounded-lg border border-white/10">
         <h3 className="text-base font-semibold mb-3 flex items-center gap-2">
-          <span>{teamSize === 2 ? '⚔️' : '🗡️'}</span>
+          <span>⚔️</span>
           {sizeLabel} League — Recent
         </h3>
         <p className="text-sm text-error">{error}</p>
@@ -166,7 +166,7 @@ function TeamBattleRecentMatches({ teamSize }: TeamBattleRecentMatchesProps) {
     return (
       <div className="bg-surface p-4 rounded-lg border border-white/10">
         <h3 className="text-base font-semibold mb-3 flex items-center gap-2">
-          <span>{teamSize === 2 ? '⚔️' : '🗡️'}</span>
+          <span>⚔️</span>
           {sizeLabel} League — Recent
         </h3>
         <p className="text-sm text-secondary">No {sizeLabel} League matches yet. Register a team to get started!</p>
@@ -178,7 +178,7 @@ function TeamBattleRecentMatches({ teamSize }: TeamBattleRecentMatchesProps) {
     <div className="bg-surface p-4 rounded-lg border border-white/10">
       <div className="flex justify-between items-center mb-3">
         <h3 className="text-base font-semibold flex items-center gap-2">
-          <span>{teamSize === 2 ? '⚔️' : '🗡️'}</span>
+          <span>⚔️</span>
           {sizeLabel} League — Recent
         </h3>
         <button
