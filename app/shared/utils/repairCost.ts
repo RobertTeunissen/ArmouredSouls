@@ -16,6 +16,8 @@
  *   finalCost      = round(rawCost × (1 - repairBayDiscount))
  */
 
+import { ROBOT_ATTRIBUTES } from './robotAttributes';
+
 /** Cost multiplier per attribute point */
 const ATTRIBUTE_COST_MULTIPLIER = 100;
 
@@ -32,36 +34,6 @@ const MAX_REPAIR_BAY_DISCOUNT = 90;
 export const MANUAL_REPAIR_DISCOUNT = 0.5;
 
 /**
- * All 23 robot attribute keys used to compute the sum of attributes.
- * Kept in sync with `ROBOT_ATTRIBUTES` from `./robotAttributes.ts`.
- */
-const ATTRIBUTE_KEYS = [
-  'combatPower',
-  'targetingSystems',
-  'criticalSystems',
-  'penetration',
-  'weaponControl',
-  'attackSpeed',
-  'armorPlating',
-  'shieldCapacity',
-  'evasionThrusters',
-  'damageDampeners',
-  'counterProtocols',
-  'hullIntegrity',
-  'servoMotors',
-  'gyroStabilizers',
-  'hydraulicSystems',
-  'powerCore',
-  'combatAlgorithms',
-  'threatAnalysis',
-  'adaptiveAI',
-  'logicCores',
-  'syncProtocols',
-  'supportSystems',
-  'formationTactics',
-] as const;
-
-/**
  * Minimal robot shape needed to compute repair cost.
  * Works with both Prisma model objects and plain API response objects.
  */
@@ -71,30 +43,42 @@ export interface RepairCostRobot {
 }
 
 /**
+ * Round to 2 decimal places — mirrors the backend's `roundToTwo`.
+ */
+function roundToTwo(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
+/**
  * Sum all 23 attribute values on a robot object.
  * Handles both numeric values and Prisma Decimal objects (via `Number()`).
+ * Applies `roundToTwo` to the sum to match the backend's `calculateAttributeSum`.
  */
 export function sumAttributes(robot: RepairCostRobot): number {
   let sum = 0;
   const rec = robot as unknown as Record<string, unknown>;
-  for (const key of ATTRIBUTE_KEYS) {
+  for (const key of ROBOT_ATTRIBUTES) {
     const val = rec[key];
     if (val != null) {
       sum += Number(val);
     }
   }
-  return sum;
+  return roundToTwo(sum);
 }
 
 /**
  * Calculate the automatic repair cost for a single robot.
  * This is the cost before the manual repair discount is applied.
+ *
+ * Signature matches the backend's `calculateRepairCost` in robotCalculations.ts
+ * (including the unused `_medicalBayLevel` placeholder for future use).
  */
 export function calculateRepairCost(
   sumOfAllAttributes: number,
   damagePercent: number,
   hpPercent: number,
   repairBayLevel: number = 0,
+  _medicalBayLevel: number = 0,
   activeRobotCount: number = 0,
 ): number {
   if (damagePercent <= 0) return 0;
@@ -135,7 +119,7 @@ export function calculateRobotRepairCost(
   const hpPercent = (robot.currentHP / robot.maxHP) * 100;
   const attributeSum = sumAttributes(robot);
 
-  return calculateRepairCost(attributeSum, damagePercent, hpPercent, repairBayLevel, activeRobotCount);
+  return calculateRepairCost(attributeSum, damagePercent, hpPercent, repairBayLevel, 0, activeRobotCount);
 }
 
 /**

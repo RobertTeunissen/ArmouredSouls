@@ -34,16 +34,22 @@ ENV_FILE="/opt/armouredsouls/backend/.env"
 
 # --- Parse DATABASE_URL if individual POSTGRES_* vars are absent ---
 # Format: postgresql://user:password@host:port/dbname?params
+# Also handles password-less URLs: postgresql://user@host:port/dbname
 parse_database_url() {
   local url="$1"
   # Strip protocol prefix and query params
   local without_proto="${url#*://}"
   local without_params="${without_proto%%\?*}"
-  # Extract user:password@host:port/dbname
+  # Extract user[:password]@host:port/dbname
   local userinfo="${without_params%%@*}"
   local hostinfo="${without_params#*@}"
   PARSED_USER="${userinfo%%:*}"
-  PARSED_PASS="${userinfo#*:}"
+  # Handle no-password form (user@host vs user:pass@host)
+  if [[ "$userinfo" == *":"* ]]; then
+    PARSED_PASS="${userinfo#*:}"
+  else
+    PARSED_PASS=""
+  fi
   local hostport="${hostinfo%%/*}"
   PARSED_DB="${hostinfo#*/}"
   PARSED_HOST="${hostport%%:*}"
@@ -61,8 +67,8 @@ DB_HOST="${POSTGRES_HOST:-$(env_get POSTGRES_HOST "$ENV_FILE")}"
 DB_PORT="${POSTGRES_PORT:-$(env_get POSTGRES_PORT "$ENV_FILE")}"
 DB_PASS="${POSTGRES_PASSWORD:-$(env_get POSTGRES_PASSWORD "$ENV_FILE")}"
 
-# If DB_USER is still empty, parse from DATABASE_URL
-if [ -z "${DB_USER}" ]; then
+# If DB_USER or DB_NAME is still empty, parse from DATABASE_URL
+if [ -z "${DB_USER}" ] || [ -z "${DB_NAME}" ]; then
   RAW_DATABASE_URL="${DATABASE_URL:-$(env_get DATABASE_URL "$ENV_FILE")}"
   if [ -n "${RAW_DATABASE_URL}" ]; then
     parse_database_url "${RAW_DATABASE_URL}"

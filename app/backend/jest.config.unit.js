@@ -118,6 +118,7 @@ const unitTestFiles = [
   'domainErrors\\.test\\.ts',
   'paginationQuery\\.test\\.ts',
   'sharedFormulas\\.test\\.ts',
+  'sharedRepairCostParity\\.test\\.ts',
   // KotH engine (mocked, no DB)
   'kothEngine\\.property\\.test\\.ts',
   'kothEngine\\.test\\.ts',
