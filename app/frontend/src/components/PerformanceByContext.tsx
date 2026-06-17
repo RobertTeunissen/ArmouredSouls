@@ -314,7 +314,7 @@ function PerformanceByContext({ robotId }: PerformanceByContextProps) {
         {/* 3v3 League Section */}
         <div>
           <div className="flex items-center gap-1.5 mb-1">
-            <span className="text-base">🗡️</span>
+            <span className="text-base">⚔️</span>
             <h4 className="text-xs font-semibold text-secondary">3v3 League</h4>
             {(!league3v3 || league3v3.totalBattles === 0) && <span className="text-xs text-tertiary">No battles yet</span>}
           </div>

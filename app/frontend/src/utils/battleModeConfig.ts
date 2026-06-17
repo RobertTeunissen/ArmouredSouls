@@ -38,14 +38,14 @@ export const BATTLE_MODE_CONFIG: Record<BattleModeType, BattleModeConfig> = {
     tierPrefix: 'League',
   },
   league_3v3: {
-    icon: '🗡️',
+    icon: '⚔️',
     label: '3v3',
     badgeColor: 'bg-violet-400/20 text-violet-400',
     borderColor: 'border-l-violet-400',
     tierPrefix: 'League',
   },
   tag_team: {
-    icon: '🏷️',
+    icon: '🤝',
     label: 'Tag Team',
     badgeColor: 'bg-amber-400/20 text-amber-400',
     borderColor: 'border-l-[#f0a030]',

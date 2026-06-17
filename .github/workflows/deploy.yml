@@ -495,6 +495,18 @@ jobs:
             ENV_FILE="/opt/armouredsouls/backend/.env"
             DB_USER=$(grep -E "^POSTGRES_USER=" "$ENV_FILE" | tail -n 1 | cut -d= -f2- | sed -E 's/^"(.*)"$/\1/; s/^'\''(.*)'\''$/\1/')
             DB_NAME=$(grep -E "^POSTGRES_DB=" "$ENV_FILE" | tail -n 1 | cut -d= -f2- | sed -E 's/^"(.*)"$/\1/; s/^'\''(.*)'\''$/\1/')
+            # Fall back to parsing DATABASE_URL if either var is absent
+            if [ -z "$DB_USER" ] || [ -z "$DB_NAME" ]; then
+              DATABASE_URL=$(grep -E "^DATABASE_URL=" "$ENV_FILE" | tail -n 1 | cut -d= -f2- | sed -E 's/^"(.*)"$/\1/; s/^'\''(.*)'\''$/\1/')
+              if [ -n "$DATABASE_URL" ]; then
+                WITHOUT_PROTO="${DATABASE_URL#*://}"
+                WITHOUT_PARAMS="${WITHOUT_PROTO%%\?*}"
+                USERINFO="${WITHOUT_PARAMS%%@*}"
+                HOSTINFO="${WITHOUT_PARAMS#*@}"
+                DB_USER="${DB_USER:-${USERINFO%%:*}}"
+                DB_NAME="${DB_NAME:-${HOSTINFO#*/}}"
+              fi
+            fi
             DB_USER="${DB_USER:-armouredsouls}"
             DB_NAME="${DB_NAME:-armouredsouls}"
             CONTAINER="armouredsouls-db-prod"
@@ -853,6 +865,18 @@ jobs:
             ENV_FILE="/opt/armouredsouls/backend/.env"
             DB_USER=$(grep -E "^POSTGRES_USER=" "$ENV_FILE" | tail -n 1 | cut -d= -f2- | sed -E 's/^"(.*)"$/\1/; s/^'\''(.*)'\''$/\1/')
             DB_NAME=$(grep -E "^POSTGRES_DB=" "$ENV_FILE" | tail -n 1 | cut -d= -f2- | sed -E 's/^"(.*)"$/\1/; s/^'\''(.*)'\''$/\1/')
+            # Fall back to parsing DATABASE_URL if either var is absent
+            if [ -z "$DB_USER" ] || [ -z "$DB_NAME" ]; then
+              DATABASE_URL=$(grep -E "^DATABASE_URL=" "$ENV_FILE" | tail -n 1 | cut -d= -f2- | sed -E 's/^"(.*)"$/\1/; s/^'\''(.*)'\''$/\1/')
+              if [ -n "$DATABASE_URL" ]; then
+                WITHOUT_PROTO="${DATABASE_URL#*://}"
+                WITHOUT_PARAMS="${WITHOUT_PROTO%%\?*}"
+                USERINFO="${WITHOUT_PARAMS%%@*}"
+                HOSTINFO="${WITHOUT_PARAMS#*@}"
+                DB_USER="${DB_USER:-${USERINFO%%:*}}"
+                DB_NAME="${DB_NAME:-${HOSTINFO#*/}}"
+              fi
+            fi
             DB_USER="${DB_USER:-armouredsouls}"
             DB_NAME="${DB_NAME:-armouredsouls}"
             CONTAINER="armouredsouls-db-prod"

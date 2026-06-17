@@ -31,11 +31,55 @@ env_get() {
 }
 
 ENV_FILE="/opt/armouredsouls/backend/.env"
+
+# --- Parse DATABASE_URL if individual POSTGRES_* vars are absent ---
+# Format: postgresql://user:password@host:port/dbname?params
+# Also handles password-less URLs: postgresql://user@host:port/dbname
+parse_database_url() {
+  local url="$1"
+  # Strip protocol prefix and query params
+  local without_proto="${url#*://}"
+  local without_params="${without_proto%%\?*}"
+  # Extract user[:password]@host:port/dbname
+  local userinfo="${without_params%%@*}"
+  local hostinfo="${without_params#*@}"
+  PARSED_USER="${userinfo%%:*}"
+  # Handle no-password form (user@host vs user:pass@host)
+  if [[ "$userinfo" == *":"* ]]; then
+    PARSED_PASS="${userinfo#*:}"
+  else
+    PARSED_PASS=""
+  fi
+  local hostport="${hostinfo%%/*}"
+  PARSED_DB="${hostinfo#*/}"
+  PARSED_HOST="${hostport%%:*}"
+  PARSED_PORT="${hostport#*:}"
+  # If no port separator was found, default to 5432
+  if [ "$PARSED_PORT" = "$PARSED_HOST" ]; then
+    PARSED_PORT="5432"
+  fi
+}
+
+# Try individual vars first, then fall back to DATABASE_URL parsing
 DB_USER="${POSTGRES_USER:-$(env_get POSTGRES_USER "$ENV_FILE")}"
 DB_NAME="${POSTGRES_DB:-$(env_get POSTGRES_DB "$ENV_FILE")}"
 DB_HOST="${POSTGRES_HOST:-$(env_get POSTGRES_HOST "$ENV_FILE")}"
 DB_PORT="${POSTGRES_PORT:-$(env_get POSTGRES_PORT "$ENV_FILE")}"
 DB_PASS="${POSTGRES_PASSWORD:-$(env_get POSTGRES_PASSWORD "$ENV_FILE")}"
+
+# If DB_USER or DB_NAME is still empty, parse from DATABASE_URL
+if [ -z "${DB_USER}" ] || [ -z "${DB_NAME}" ]; then
+  RAW_DATABASE_URL="${DATABASE_URL:-$(env_get DATABASE_URL "$ENV_FILE")}"
+  if [ -n "${RAW_DATABASE_URL}" ]; then
+    parse_database_url "${RAW_DATABASE_URL}"
+    DB_USER="${DB_USER:-$PARSED_USER}"
+    DB_NAME="${DB_NAME:-$PARSED_DB}"
+    DB_HOST="${DB_HOST:-$PARSED_HOST}"
+    DB_PORT="${DB_PORT:-$PARSED_PORT}"
+    DB_PASS="${DB_PASS:-$PARSED_PASS}"
+  fi
+fi
+
 MONITORING_DISCORD_WEBHOOK="${MONITORING_DISCORD_WEBHOOK:-$(env_get MONITORING_DISCORD_WEBHOOK "$ENV_FILE")}"
 DISCORD_WEBHOOK_URL="${DISCORD_WEBHOOK_URL:-$(env_get DISCORD_WEBHOOK_URL "$ENV_FILE")}"
 

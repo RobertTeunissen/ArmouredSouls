@@ -11,6 +11,7 @@ import { api } from '../utils/api';
 import { repairAllRobots } from '../utils/robotApi';
 import { useRobotStore } from '../stores';
 import { useStableOverview } from './useSubscriptions';
+import { calculateRobotRepairCost, calculateRepairBayDiscount, MANUAL_REPAIR_DISCOUNT } from '../../../shared/utils/repairCost';
 import type { Facility } from '../components/facilities/types';
 
 // ─── Utility functions ───────────────────────────────────────────────────────
@@ -176,24 +177,15 @@ export function useRobotsList() {
   };
 
   const calculateTotalRepairCost = (): { totalBaseCost: number; discountedCost: number; discount: number } => {
-    const REPAIR_COST_PER_HP = 50;
+    const activeRobotCount = robots.filter(r => r.name !== 'Bye Robot').length;
 
     const totalBaseCost = robots.reduce((sum, robot) => {
-      if (robot.repairCost && robot.repairCost > 0) {
-        return sum + robot.repairCost;
-      }
-      const hpDamage = robot.maxHP - robot.currentHP;
-      if (hpDamage > 0) {
-        return sum + (hpDamage * REPAIR_COST_PER_HP);
-      }
-      return sum;
+      const cost = calculateRobotRepairCost(robot, repairBayLevel, activeRobotCount);
+      return sum + cost;
     }, 0);
 
-    const activeRobotCount = robots.filter(r => r.name !== 'Bye Robot').length;
-    const discount = Math.min(90, repairBayLevel * (5 + activeRobotCount));
-    const costAfterRepairBay = Math.floor(totalBaseCost * (1 - discount / 100));
-    const MANUAL_REPAIR_DISCOUNT = 0.5;
-    const discountedCost = Math.floor(costAfterRepairBay * MANUAL_REPAIR_DISCOUNT);
+    const discount = calculateRepairBayDiscount(repairBayLevel, activeRobotCount);
+    const discountedCost = Math.floor(totalBaseCost * MANUAL_REPAIR_DISCOUNT);
 
     return { totalBaseCost, discountedCost, discount };
   };
