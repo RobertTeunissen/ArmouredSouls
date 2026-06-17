@@ -455,16 +455,16 @@ jobs:
           username: ${{ secrets.ACC_VPS_USER }}
           key: ${{ secrets.ACC_SSH_KEY }}
           script: |
-            export PATH="$HOME/bin:$PATH"
+            # Install pnpm to a user-writable location using npm prefix
+            export NPM_CONFIG_PREFIX="$HOME/.npm-global"
+            export PATH="$HOME/.npm-global/bin:$PATH"
             if command -v pnpm &> /dev/null; then
               echo "pnpm already available: $(pnpm --version)"
             else
-              mkdir -p "$HOME/bin"
-              curl -fsSL "https://github.com/pnpm/pnpm/releases/download/v10.12.1/pnpm-linux-x64" -o "$HOME/bin/pnpm"
-              chmod +x "$HOME/bin/pnpm"
-              echo "pnpm installed: $($HOME/bin/pnpm --version)"
-              grep -qF 'HOME/bin' ~/.bashrc || echo 'export PATH="$HOME/bin:$PATH"' >> ~/.bashrc
+              npm install -g pnpm@10.12.1 --prefix "$HOME/.npm-global"
+              echo "pnpm installed: $(pnpm --version)"
             fi
+            grep -qF '.npm-global/bin' ~/.bashrc || echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> ~/.bashrc
 
       - name: Install dependencies on VPS
         uses: appleboy/ssh-action@v1
@@ -512,7 +512,7 @@ jobs:
           username: ${{ secrets.ACC_VPS_USER }}
           key: ${{ secrets.ACC_SSH_KEY }}
           script: |
-            export PATH="$HOME/bin:$PATH"
+            export PATH="$HOME/.npm-global/bin:$PATH"
             cd /opt/armouredsouls/backend
             pnpm exec prisma migrate deploy
 
@@ -523,7 +523,7 @@ jobs:
           username: ${{ secrets.ACC_VPS_USER }}
           key: ${{ secrets.ACC_SSH_KEY }}
           script: |
-            export PATH="$HOME/bin:$PATH"
+            export PATH="$HOME/.npm-global/bin:$PATH"
             cd /opt/armouredsouls/backend
             NODE_ENV=acceptance pnpm exec prisma db seed
 
@@ -815,16 +815,15 @@ jobs:
           username: ${{ secrets.PRD_VPS_USER }}
           key: ${{ secrets.PRD_SSH_KEY }}
           script: |
-            export PATH="$HOME/bin:$PATH"
+            export NPM_CONFIG_PREFIX="$HOME/.npm-global"
+            export PATH="$HOME/.npm-global/bin:$PATH"
             if command -v pnpm &> /dev/null; then
               echo "pnpm already available: $(pnpm --version)"
             else
-              mkdir -p "$HOME/bin"
-              curl -fsSL "https://github.com/pnpm/pnpm/releases/download/v10.12.1/pnpm-linux-x64" -o "$HOME/bin/pnpm"
-              chmod +x "$HOME/bin/pnpm"
-              echo "pnpm installed: $($HOME/bin/pnpm --version)"
-              grep -qF 'HOME/bin' ~/.bashrc || echo 'export PATH="$HOME/bin:$PATH"' >> ~/.bashrc
+              npm install -g pnpm@10.12.1 --prefix "$HOME/.npm-global"
+              echo "pnpm installed: $(pnpm --version)"
             fi
+            grep -qF '.npm-global/bin' ~/.bashrc || echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> ~/.bashrc
 
       - name: Install dependencies on VPS
         uses: appleboy/ssh-action@v1
@@ -836,7 +835,7 @@ jobs:
           # `pnpm install --frozen-lockfile` ensures deterministic installs from
           # the lockfile. `--prod` omits devDependencies.
           script: |
-            export PATH="$HOME/bin:$PATH"
+            export PATH="$HOME/.npm-global/bin:$PATH"
             cd /opt/armouredsouls/backend
             NODE_ENV=production pnpm install --frozen-lockfile --prod
             pnpm exec prisma generate
@@ -871,7 +870,7 @@ jobs:
           username: ${{ secrets.PRD_VPS_USER }}
           key: ${{ secrets.PRD_SSH_KEY }}
           script: |
-            export PATH="$HOME/bin:$PATH"
+            export PATH="$HOME/.npm-global/bin:$PATH"
             cd /opt/armouredsouls/backend
             pnpm exec prisma migrate deploy
 
