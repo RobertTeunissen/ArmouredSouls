@@ -52,22 +52,19 @@ export function createKothScoreState(robotIds: number[]): KothScoreState {
     lastStandingPhase: false,
     lastStandingTimer: 0,
     lastStandingRobotId: null,
+    scoreTickAccumulator: 0,
   };
 }
 
 // ─── Scoring System ─────────────────────────────────────────────────
 
 /**
- * Accumulated game time tracker for score_tick event emission.
- * Tracks fractional seconds so we emit a score_tick every 1s of game time.
+ * Reset the score tick accumulator on a score state (useful for testing).
  */
-let _scoreTickAccumulator: Record<string, number> = {};
-
-/**
- * Reset the score tick accumulator (useful for testing).
- */
-export function resetScoreTickAccumulator(): void {
-  _scoreTickAccumulator = {};
+export function resetScoreTickAccumulator(scoreState?: KothScoreState): void {
+  if (scoreState) {
+    scoreState.scoreTickAccumulator = 0;
+  }
 }
 
 /**
@@ -115,13 +112,12 @@ export function tickScoring(
 
   // Emit score_tick event every 1 second of game time (Req 3.6)
   // Use rounding to avoid IEEE 754 drift (10 × 0.1 ≠ 1.0 exactly)
-  const accKey = 'global';
-  _scoreTickAccumulator[accKey] =
-    Math.round(((_scoreTickAccumulator[accKey] ?? 0) + deltaTime) * 1e6) / 1e6;
+  scoreState.scoreTickAccumulator =
+    Math.round((scoreState.scoreTickAccumulator + deltaTime) * 1e6) / 1e6;
 
-  if (_scoreTickAccumulator[accKey] >= 1.0) {
-    _scoreTickAccumulator[accKey] =
-      Math.round((_scoreTickAccumulator[accKey] - 1.0) * 1e6) / 1e6;
+  if (scoreState.scoreTickAccumulator >= 1.0) {
+    scoreState.scoreTickAccumulator =
+      Math.round((scoreState.scoreTickAccumulator - 1.0) * 1e6) / 1e6;
 
     events.push({
       timestamp: 0, // caller should set the actual game timestamp

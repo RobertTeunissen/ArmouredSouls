@@ -70,6 +70,7 @@ export interface KothScoreState {
   lastStandingPhase: boolean;
   lastStandingTimer: number;
   lastStandingRobotId: number | null;
+  scoreTickAccumulator: number;              // fractional second tracker for score_tick emission
 }
 
 // ─── KotH Combat Event ─────────────────────────────────────────────
