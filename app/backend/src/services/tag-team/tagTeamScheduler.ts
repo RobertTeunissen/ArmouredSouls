@@ -1,11 +1,7 @@
-import { Robot, TeamBattle, ScheduledTeamBattleMatch, Prisma } from '../../../generated/prisma';
+import { ScheduledTeamBattleMatch } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { RobotWithWeapons } from '../battle/combatSimulator';
-import {
-  checkAndAwardAchievements,
-  didRobotLosePreviousBattle,
-} from '../battle/battlePostCombat';
 import { TagTeamError, TagTeamErrorCode } from '../../errors/tagTeamErrors';
 import { prepareRobotForCombat } from '../../utils/robotCalculations';
 import { getTuningBonusesBatch } from '../tuning-pool';

@@ -15,7 +15,6 @@ import type {
   KothMatchConfig,
   KothZoneState,
   KothScoreState,
-  KothCombatEvent,
   KothEnrichedPlacement,
 } from './kothConfig';
 import { KOTH_MATCH_DEFAULTS } from './kothConfig';

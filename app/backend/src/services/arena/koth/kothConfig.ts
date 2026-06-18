@@ -6,9 +6,7 @@
 
 import type { Position } from '../vector2d';
 import type {
-  ArenaZone,
   CombatEvent,
-  RobotCombatState,
 } from '../types';
 
 // ─── KotH Match Configuration ───────────────────────────────────────

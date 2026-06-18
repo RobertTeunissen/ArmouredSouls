@@ -7,10 +7,8 @@
 import prisma from '../../lib/prisma';
 import {
   ACHIEVEMENTS,
-  getAchievementById,
   type AchievementDefinition,
 } from '../../config/achievements';
-import { AchievementError, AchievementErrorCode } from '../../errors/achievementErrors';
 import type {
   AchievementsResponse,
   AchievementWithProgress,
@@ -117,8 +115,8 @@ export function computeProgress(
       const r = bestRobotFor(field);
       return { current: r.current, target, label, bestRobotName: r.bestRobotName };
     }
-    case 'survival_streak': return { current: 0, target, label };
-    case 'yield_forced': return { current: 0, target, label };
+    case 'survival_streak': return null;
+    case 'yield_forced': return null;
     default: return null;
   }
 }

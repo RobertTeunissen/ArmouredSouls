@@ -1,12 +1,9 @@
-import { Robot, Prisma } from '../../../generated/prisma';
 import { RobotWithWeapons } from '../battle/combatSimulator';
 
 // Battle constants
 export const BATTLE_TIME_LIMIT = 300; // 5 minutes in seconds
-export const _REPAIR_COST_PER_HP = 50;
 export const TAG_TEAM_REWARD_MULTIPLIER = 2; // Tag team rewards are 2x standard
 export const TAG_TEAM_PRESTIGE_MULTIPLIER = 1.6; // Tag team prestige is 1.6x standard
-export const _DESTRUCTION_MULTIPLIER = 2; // Destroyed robots have 2x repair cost
 
 // Types
 export interface TagTeamWithRobots {
