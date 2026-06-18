@@ -495,32 +495,5 @@ export function convertSimulatorEvents(
     if (r2Shield.shield !== undefined) prevShields.set(context.robot2Name, r2Shield.shield);
   }
 
-  // If the last simulator event was a yield, add a victory message
-  const lastEvent = simulatorEvents[simulatorEvents.length - 1];
-  const lastNarrative = narrativeEvents[narrativeEvents.length - 1];
-  if (lastEvent && lastEvent.type === 'yield' && lastNarrative && lastNarrative.type === 'yield' && !battleEndEmitted) {
-    const r1HP = getHPFromEvent(lastEvent, context.robot1Name, context);
-    const r2HP = getHPFromEvent(lastEvent, context.robot2Name, context);
-    const robot1HpPct = (r1HP.hp || 0) / context.robot1MaxHP;
-    const robot2HpPct = (r2HP.hp || 0) / context.robot2MaxHP;
-    const isRobot1Yielding = robot1HpPct <= robot2HpPct;
-    const winnerName = isRobot1Yielding ? context.robot2Name : context.robot1Name;
-    const loserName = isRobot1Yielding ? context.robot1Name : context.robot2Name;
-    const winnerHP = isRobot1Yielding ? (r2HP.hp || 0) : (r1HP.hp || 0);
-    const winnerMaxHP = isRobot1Yielding ? context.robot2MaxHP : context.robot1MaxHP;
-
-    narrativeEvents.push({
-      timestamp: lastEvent.timestamp,
-      type: 'battle_end',
-      message: generateBattleEnd({
-        winnerName,
-        loserName,
-        winnerHP,
-        winnerMaxHP,
-        reason: 'yield',
-      }),
-    });
-  }
-
   return narrativeEvents;
 }

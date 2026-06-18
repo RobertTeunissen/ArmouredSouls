@@ -85,15 +85,14 @@ export function convertKothSimulatorEvents(
         });
       }
     } else if (event.type === 'destroyed') {
-      const robotName = event.message?.includes('wins')
-        ? undefined
-        : (event.attacker || event.defender || '');
-      if (robotName) {
-        narrativeEvents.push({
-          ...event,
-          message: generateDestruction(robotName),
-        });
-      }
+      // Skip "X wins!" summary events — KotH has its own end logic
+      if (event.message?.includes('wins')) continue;
+      const robotName = event.attacker || event.defender || '';
+      // Generate narrative even for empty-name edge cases (fallback message)
+      narrativeEvents.push({
+        ...event,
+        message: robotName ? generateDestruction(robotName) : (event.message ?? 'A robot has been destroyed'),
+      });
     } else if (event.type === 'yield') {
       narrativeEvents.push({ ...event } as NarrativeEvent);
     } else if (event.type === 'shield_break') {

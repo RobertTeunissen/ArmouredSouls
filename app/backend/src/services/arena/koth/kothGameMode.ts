@@ -20,7 +20,7 @@ import type {
 } from './kothConfig';
 import { KOTH_MATCH_DEFAULTS } from './kothConfig';
 import { createControlZone, evaluateZoneOccupation, trackZoneTransitions, processZoneRotation } from './kothZone';
-import { createKothScoreState, tickScoring, tickPassivePenalties, awardKillBonus } from './kothScoring';
+import { createKothScoreState, tickScoring, tickPassivePenalties, resetScoreTickAccumulator } from './kothScoring';
 import { handleRobotDestruction, handleRobotYield, calculateFinalPlacements } from './kothElimination';
 import { KothWinConditionEvaluator, KothTargetPriorityStrategy, KothMovementIntentModifier } from './kothStrategies';
 
@@ -123,6 +123,9 @@ export function buildKothTickHook(
   events: CombatEvent[],
   arena: ArenaConfig,
 ) => void {
+  // Reset score tick accumulator to prevent leakage from a previous match
+  resetScoreTickAccumulator();
+
   // Track previous alive set to detect new destructions/yields
   let previousAliveIds: Set<number> | null = null;
 
