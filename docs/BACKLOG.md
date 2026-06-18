@@ -20,8 +20,7 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 | 6 | Dashboard Enhancements | 24 | 0 🗳️ | 2 | 1 | 1 | 2 | **2.0** |
 | 8 | Weapon Special Properties | 11 | 1 🗳️ | 3 | 2 | 2 | 4 | **1.8** |
 | 9 | Season System (100-Cycle Seasons) | 41 | 0 🗳️ | 4 | 1 | 2 | 4 | **1.8** |
-| 10 | Mega-Orchestrator Refactor (combat-critical files) | 49 | 0 🗳️ | 3 | 2 | 4 | 5 | **1.8** |
-| 11 | Daily Login Bonuses & Seasonal Events | 34 | 0 🗳️ | 3 | 1 | 1 | 3 | **1.7** |
+| 10 | Daily Login Bonuses & Seasonal Events | 34 | 0 🗳️ | 3 | 1 | 1 | 3 | **1.7** |
 | 12 | Player Personas / Complexity Modes | 16 | 1 🗳️ | 2 | 1 | 2 | 3 | **1.7** |
 | 13 | Arena / Terrain Modifiers | 12 | 1 🗳️ | 3 | 1 | 2 | 4 | **1.5** |
 | 14 | Battle Table Denormalization Cleanup | 18 | 0 🗳️ | 1 | 1 | 1 | 2 | **1.5** |
@@ -48,6 +47,7 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 
 | Item | # | Spec | Completed |
 |------|---|------|-----------|
+| Mega-Orchestrator Refactor (combat-critical files) | 49 | — (direct implementation) | June 2026 |
 | Unimplemented Facilities Removal (Research Lab, Medical Bay, Coaching Staff) | 7 | — (direct implementation) | June 2026 |
 | Frontend Page Hook Extraction (RobotsPage, RobotDetailPage) | 50 | — (direct implementation) | June 2026 |
 | Team Battle Tournaments (2v2 / 3v3) | 54 | [Spec #38](/.kiro/specs/done-june26/38-team-battle-tournaments/) | June 2026 |
@@ -308,59 +308,6 @@ A collection of saved weapon blueprints for the crafting system. Players save su
 ## Engineering Maintenance Items
 
 These came out of the May 2026 codebase audit. They're internal-quality-of-life items rather than gameplay/UX features, but they affect velocity, reliability, and onboarding for every future change. Listed at the end so the gameplay backlog above stays the primary view.
-
-### #49 — Mega-Orchestrator Refactor (Combat-Critical Files)
-**Source**: Codebase audit (May 2026) — original audit item #1
-**Priority**: Medium — high-impact architectural win, but needs a spec before starting
-
-**Problem.** Five files exceed 1,500 lines, all in combat-critical territory:
-
-| File | Lines | Domain |
-|------|-------|--------|
-| `app/backend/src/services/tag-team/tagTeamBattleOrchestrator.ts` | 2,157 | Tag team battle orchestration |
-| `app/backend/src/services/battle/combatSimulator.ts` | 2,011 | Core combat state machine |
-| `app/backend/src/services/achievement/achievementService.ts` | 1,904 | Achievement evaluation across 77 achievements |
-| `app/backend/src/services/battle/combatMessageGenerator.ts` | 1,847 | Narrative event generation |
-| `app/backend/src/services/arena/kothEngine.ts` | 1,786 | King of the Hill multi-robot battles |
-
-`coding-standards.md` says "Maximum function length: ~50 lines" — these files are orders of magnitude past that as wholes, and almost certainly contain individual functions well past it too.
-
-**Why it matters.**
-- Combat is the single most critical surface in the game. `coding-standards.md` mandates 90% test coverage for it. Mega-files make targeted regression testing harder because everything is coupled.
-- GitNexus impact analysis loses precision when one file contains a dozen logical units — every change shows the whole file as "affected."
-- Onboarding new contributors to combat code is unreasonable when the entry point is a 2,000-line file.
-- Any change has ambiguous blast radius. Bug fixes near the orchestration boundary risk side effects in unrelated handlers in the same file.
-
-**Expected shape after refactor.** The pattern we want is "200-line coordinator delegating to handlers" — same approach the frontend already uses for things like the `WeaponShopPage` (a thin shell that pulls from `useWeaponShop`). For example `combatSimulator.ts` should become:
-
-- A small state-machine driver (~200 lines)
-- Per-phase handler modules (initiative, attack resolution, damage application, status effects, victory check)
-- A clear boundary where each handler can be unit-tested in isolation
-
-`tagTeamBattleOrchestrator.ts` similarly: orchestrate phases (active battle, tag transitions, reserve battle), but delegate per-phase logic to dedicated modules.
-
-**Strategy.** Pick **one file at a time**, in this order (lowest blast-radius first to build confidence):
-
-1. `combatMessageGenerator.ts` (1,847) — pure functions, easy to split by event type, no state
-2. `achievementService.ts` (1,904) — split by achievement category (combat / progression / economy)
-3. `kothEngine.ts` (1,786) — already isolated to KotH battles, lower coupling than 1v1
-4. `combatSimulator.ts` (2,011) — the riskiest; do it last with full regression suite green
-5. `tagTeamBattleOrchestrator.ts` (2,157) — depends on a refactored `combatSimulator`
-
-**Each refactor is its own spec.** Don't try to do all five in one PR. Each should:
-- Run `gitnexus impact` on the target file before starting (record affected processes and modules)
-- Define the new module boundary in the design doc
-- Include a regression test plan (at minimum, all existing combat tests must pass without modification)
-- Land behind a feature flag if possible (parallel implementation, swap on green)
-
-**Scope estimate.** ~3–5 days per file with test suite green throughout. Do not start without:
-1. The DPS Rebalance (#5 follow-up) landing first — combat balance changes during a refactor would muddy regression detection.
-2. A regression test inventory documenting which tests cover which paths.
-3. Agreement on the target module structure (avoid the trap of "split now, decide structure later").
-
-**Dependencies.** None blocking, but don't start during another active spec on combat. Coordinate with weapon refinement / DPS rebalance work.
-
----
 
 ### #53 — Battle Log Retention / TOAST Trim
 **Source**: Disk-pressure investigation, May 25, 2026 (ACC deploy timeout)
