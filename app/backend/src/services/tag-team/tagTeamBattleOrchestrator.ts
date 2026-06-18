@@ -9,3 +9,4 @@ export * from './tagTeamSimulation';
 export * from './tagTeamBattleRecord';
 export * from './tagTeamRewards';
 export * from './tagTeamScheduler';
+export * from './tagTeamResultUpdater';
