@@ -93,6 +93,18 @@ export async function backfillStandings(): Promise<{ robots1v1: number; teams2v2
   }
 
   // 3. Create KotH standings from Robot KotH columns
+  // Calculate LP from battle_participants placements (F1-style point scale)
+  const KOTH_POINT_SCALE = [10, 6, 4, 2, 1, 0];
+  const kothParticipants = await prisma.battleParticipant.findMany({
+    where: { battle: { battleType: 'koth' }, placement: { not: null } },
+    select: { robotId: true, placement: true },
+  });
+  const kothLPMap = new Map<number, number>();
+  for (const p of kothParticipants) {
+    const points = p.placement! <= KOTH_POINT_SCALE.length ? KOTH_POINT_SCALE[p.placement! - 1] : 0;
+    kothLPMap.set(p.robotId, (kothLPMap.get(p.robotId) || 0) + points);
+  }
+
   const kothRobots = await prisma.robot.findMany({
     where: { kothMatches: { gt: 0 } },
     select: { id: true, kothWins: true, kothMatches: true, kothTotalZoneScore: true, kothTotalZoneTime: true, kothKills: true, kothBestPlacement: true, kothCurrentWinStreak: true, kothBestWinStreak: true },
@@ -102,14 +114,14 @@ export async function backfillStandings(): Promise<{ robots1v1: number; teams2v2
   for (const robot of kothRobots) {
     await prisma.standing.upsert({
       where: { entityType_entityId_mode: { entityType: 'robot', entityId: robot.id, mode: 'koth' } },
-      update: {},
+      update: { leaguePoints: kothLPMap.get(robot.id) || 0 },
       create: {
         entityType: 'robot',
         entityId: robot.id,
         mode: 'koth' as any,
         tier: 'bronze', // Initial tier — will be assigned by first rebalancing cycle
-        leagueInstanceId: 'koth_1',
-        leaguePoints: 0, // KotH LP is cumulative from point awards
+        leagueInstanceId: 'bronze_1',
+        leaguePoints: kothLPMap.get(robot.id) || 0,
         cyclesInTier: 0,
         wins: robot.kothWins,
         losses: 0,
