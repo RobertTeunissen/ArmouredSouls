@@ -134,7 +134,7 @@ export async function generateBattleReadyUsers(
 
   const usernames: string[] = [];
   let totalRobotsCreated = 0;
-  let totalTagTeamsCreated = 0;
+  const totalTagTeamsCreated = 0;
   let totalLeague2v2TeamsCreated = 0;
   let totalLeague3v3TeamsCreated = 0;
 

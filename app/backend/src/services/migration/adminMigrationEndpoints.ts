@@ -5,6 +5,7 @@
  * POST /execute - Run full deploy orchestration (backfill + verify)
  */
 import { Router, Response } from 'express';
+import rateLimit from 'express-rate-limit';
 import { authenticateToken, requireAdmin, AuthRequest } from '../../middleware/auth';
 import { validateRequest } from '../../middleware/schemaValidator';
 import { migrationVerificationService } from './migrationVerificationService';
@@ -12,12 +13,19 @@ import { executeDeploy } from './deployOrchestrator';
 
 const router = Router();
 
-router.post('/verify', authenticateToken, requireAdmin, validateRequest({}), async (req: AuthRequest, res: Response) => {
+const adminMigrationLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // limit each IP to 10 requests per window
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+router.post('/verify', authenticateToken, requireAdmin, adminMigrationLimiter, validateRequest({}), async (req: AuthRequest, res: Response) => {
   const report = await migrationVerificationService.generateFullReport();
   res.json(report);
 });
 
-router.post('/execute', authenticateToken, requireAdmin, validateRequest({}), async (req: AuthRequest, res: Response) => {
+router.post('/execute', authenticateToken, requireAdmin, adminMigrationLimiter, validateRequest({}), async (req: AuthRequest, res: Response) => {
   const result = await executeDeploy();
   res.json(result);
 });

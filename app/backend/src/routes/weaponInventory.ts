@@ -346,7 +346,7 @@ router.post('/purchase', authenticateToken, validateRequest({ body: purchaseBody
       description: `Purchased weapon: ${weapon.name}`,
       metadata: { weaponId: weapon.id, weaponName: weapon.name },
     });
-  } catch {}
+  } catch { /* non-blocking */ }
 
   res.status(201).json({
     weaponInventory: result.weaponInventory,
@@ -553,7 +553,7 @@ router.delete(
         description: `Sold weapon: ${result.weaponName}`,
         metadata: { weaponId: result.weaponId },
       });
-    } catch {}
+    } catch { /* non-blocking */ }
 
     // Achievement check (Spec #33 R7.10–R7.11)
     const achievementUnlocks = await (async (): Promise<UnlockedAchievement[]> => {
@@ -875,7 +875,7 @@ router.post(
         description: `Refined weapon slot ${result.newRefinement.slotIndex}`,
         metadata: { weaponInventoryId: inventoryId, slotIndex: result.newRefinement.slotIndex },
       });
-    } catch {}
+    } catch { /* non-blocking */ }
 
     // Achievement check (wired in Task 14; the trigger map already includes
     // 'weapon_refined'). Failures must NOT block the response.

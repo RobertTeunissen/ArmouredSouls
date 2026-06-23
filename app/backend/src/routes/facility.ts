@@ -324,7 +324,7 @@ router.post('/upgrade', authenticateToken, validateRequest({ body: upgradeBodySc
         description: `Upgraded ${facilityType} to level ${targetLevel}`,
         metadata: { facilityType, newLevel: targetLevel },
       });
-    } catch {}
+    } catch { /* non-blocking */ }
 
     res.json({
       facility: result.facility,

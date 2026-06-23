@@ -85,7 +85,7 @@ async function getEligibleTeams(
   });
 
   // Apply custom eligibility filter if provided
-  let filteredTeams = config.eligibilityFilter
+  const filteredTeams = config.eligibilityFilter
     ? (teams as TeamBattleWithMembers[]).filter(config.eligibilityFilter)
     : (teams as TeamBattleWithMembers[]);
 

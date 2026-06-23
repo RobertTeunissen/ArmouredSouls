@@ -399,8 +399,8 @@ router.get(
     const isBronze = tier === 'bronze';
     const minEntities = MIN_TEAMS_FOR_REBALANCING_2V2_3V3;
 
-    let eligibleCount = 0;
-    let hasEnoughRobots = false;
+    let eligibleCount: number;
+    let hasEnoughRobots: boolean;
     let promotionCount = 0;
     let demotionCount = 0;
     const promotionTeamIds = new Set<number>();
@@ -435,6 +435,7 @@ router.get(
         for (const s of promotionStandings) promotionTeamIds.add(s.entityId);
       }
     } else {
+      // Tier-wide count (no per-instance zone highlighting without specific instance)
       eligibleCount = await prisma.standing.count({
         where: { mode: mode as any, tier, cyclesInTier: { gte: MIN_CYCLES_IN_LEAGUE } },
       });
@@ -636,8 +637,8 @@ router.get(
     const isBronze = tier === 'bronze';
     const minEntities = MIN_TEAMS_FOR_REBALANCING_TAG_TEAM;
 
-    let eligibleCount = 0;
-    let hasEnoughRobots = false;
+    let eligibleCount: number;
+    let hasEnoughRobots: boolean;
     let promotionCount = 0;
     let demotionCount = 0;
     const promotionTeamIds = new Set<number>();
@@ -672,6 +673,7 @@ router.get(
         for (const s of promotionStandings) promotionTeamIds.add(s.entityId);
       }
     } else {
+      // Tier-wide count (no per-instance zone highlighting without specific instance)
       eligibleCount = await prisma.standing.count({
         where: { mode: 'tag_team' as any, tier, cyclesInTier: { gte: MIN_CYCLES_IN_LEAGUE } },
       });

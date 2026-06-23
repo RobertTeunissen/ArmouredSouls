@@ -44,7 +44,7 @@ describe('SchedulingService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     // Make $transaction pass the mock prisma as the tx argument to the callback
-    mockPrisma.$transaction.mockImplementation(async (fn: Function) => fn(mockPrisma));
+    mockPrisma.$transaction.mockImplementation(async (fn: (tx: typeof mockPrisma) => Promise<unknown>) => fn(mockPrisma));
   });
 
   describe('createMatch', () => {
@@ -61,7 +61,6 @@ describe('SchedulingService', () => {
         isByeMatch: null,
         leagueType: 'bronze',
         leagueInstanceId: 'bronze_1',
-        rotatingZone: null,
         scoreThreshold: null,
         timeLimit: null,
         zoneRadius: null,
@@ -117,7 +116,6 @@ describe('SchedulingService', () => {
         isByeMatch: null,
         leagueType: null,
         leagueInstanceId: null,
-        rotatingZone: true,
         scoreThreshold: 100,
         timeLimit: 120,
         zoneRadius: 50,
@@ -146,7 +144,6 @@ describe('SchedulingService', () => {
           participantId: 200 + i,
           slot: i + 1,
         })),
-        rotatingZone: true,
         scoreThreshold: 100,
         timeLimit: 120,
         zoneRadius: 50,
@@ -175,7 +172,6 @@ describe('SchedulingService', () => {
         isByeMatch: false,
         leagueType: null,
         leagueInstanceId: null,
-        rotatingZone: null,
         scoreThreshold: null,
         timeLimit: null,
         zoneRadius: null,
@@ -233,7 +229,6 @@ describe('SchedulingService', () => {
         isByeMatch: true,
         leagueType: null,
         leagueInstanceId: null,
-        rotatingZone: null,
         scoreThreshold: null,
         timeLimit: null,
         zoneRadius: null,
@@ -284,7 +279,6 @@ describe('SchedulingService', () => {
         isByeMatch: null,
         leagueType: 'silver',
         leagueInstanceId: 'silver_2',
-        rotatingZone: null,
         scoreThreshold: null,
         timeLimit: null,
         zoneRadius: null,
@@ -340,7 +334,6 @@ describe('SchedulingService', () => {
         isByeMatch: null,
         leagueType: null,
         leagueInstanceId: null,
-        rotatingZone: true,
         scoreThreshold: 150,
         timeLimit: 180,
         zoneRadius: 75,
@@ -366,7 +359,6 @@ describe('SchedulingService', () => {
           { participantType: 'robot', participantId: 701, slot: 1 },
           { participantType: 'robot', participantId: 702, slot: 2 },
         ],
-        rotatingZone: true,
         scoreThreshold: 150,
         timeLimit: 180,
         zoneRadius: 75,
@@ -375,7 +367,6 @@ describe('SchedulingService', () => {
       expect(mockPrisma.scheduledMatch.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           matchType: MatchType.koth,
-          rotatingZone: true,
           scoreThreshold: 150,
           timeLimit: 180,
           zoneRadius: 75,
@@ -399,7 +390,6 @@ describe('SchedulingService', () => {
         isByeMatch: false,
         leagueType: null,
         leagueInstanceId: null,
-        rotatingZone: null,
         scoreThreshold: null,
         timeLimit: null,
         zoneRadius: null,
@@ -440,7 +430,6 @@ describe('SchedulingService', () => {
           isByeMatch: false,
           leagueType: null,
           leagueInstanceId: null,
-          rotatingZone: null,
         }),
       });
     });

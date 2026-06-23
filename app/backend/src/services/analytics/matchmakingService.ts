@@ -1,4 +1,4 @@
-import { Robot, MatchType } from '../../../generated/prisma';
+import { Robot, MatchType, Prisma } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import { LEAGUE_TIERS, LeagueTier } from '../league/leagueInstanceService';
 import logger from '../../config/logger';
@@ -86,7 +86,6 @@ export function checkSchedulingReadiness(robot: Robot): BattleReadinessCheck {
  * The bye robot always loses — no combat simulation is run.
  */
 function createByeRobot(): Robot {
-  const { Prisma } = require('../../../generated/prisma');
   return {
     id: -1,
     userId: -1,

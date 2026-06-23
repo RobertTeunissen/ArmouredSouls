@@ -58,7 +58,7 @@ describe('SchedulingService – Property-Based Tests', () => {
     uniqueId = 1;
 
     // $transaction passes mockPrisma as the tx argument
-    mockPrisma.$transaction.mockImplementation(async (fn: Function) => fn(mockPrisma));
+    mockPrisma.$transaction.mockImplementation(async (fn: (tx: typeof mockPrisma) => Promise<unknown>) => fn(mockPrisma));
 
     // scheduledMatch.create returns a unique id each call
     mockPrisma.scheduledMatch.create.mockImplementation(async (args: any) => ({

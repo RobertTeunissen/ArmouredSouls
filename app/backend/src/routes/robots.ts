@@ -163,7 +163,7 @@ router.post('/', authenticateToken, validateRequest({ body: createRobotBodySchem
       description: `Created robot: ${trimmedName}`,
       metadata: { robotId: result.robot.id, robotName: trimmedName },
     });
-  } catch {}
+  } catch { /* non-blocking */ }
 
   res.status(201).json({
     robot: result.robot,
