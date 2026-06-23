@@ -2,17 +2,13 @@ import prisma from '../../lib/prisma';
 import { Prisma } from '../../../generated/prisma';
 import logger from '../../config/logger';
 
-// NOTE: Tag team leagues now use the teamBattleAdapter.ts for instance management.
-// Both share similar instance management logic but operate on different scopes
-// (Robot vs TeamBattle teamSize=2). If you change instance sizing or rebalancing logic here,
-// apply the same change to the tag team version.
-
 // League tiers in order
 export const LEAGUE_TIERS = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'] as const;
 export type LeagueTier = typeof LEAGUE_TIERS[number];
 
-// Maximum robots per league instance
+// Maximum entities per league instance (unified across all modes)
 export const MAX_ROBOTS_PER_INSTANCE = 100;
+export const MAX_TEAMS_PER_INSTANCE = 100;
 
 // Threshold for triggering instance rebalancing
 export const REBALANCE_THRESHOLD = 20;
@@ -34,18 +30,28 @@ export interface LeagueInstanceStats {
   needsRebalancing: boolean;
 }
 
+/** Options for mode-aware instance management */
+export interface InstanceOptions {
+  mode: string;
+  maxPerInstance: number;
+}
+
+/** Default options for 1v1 league (backward compatible) */
+const DEFAULT_OPTIONS: InstanceOptions = { mode: 'league_1v1', maxPerInstance: MAX_ROBOTS_PER_INSTANCE };
+
 /**
- * Get all instances for a specific league tier
+ * Get all instances for a specific league tier.
+ * Mode-aware: defaults to league_1v1 for backward compatibility.
  */
-export async function getInstancesForTier(tier: LeagueTier): Promise<LeagueInstance[]> {
-  // Query robots grouped by leagueId for this tier
-  const instances = await prisma.robot.groupBy({
-    by: ['leagueId'],
+export async function getInstancesForTier(tier: LeagueTier, options: InstanceOptions = DEFAULT_OPTIONS): Promise<LeagueInstance[]> {
+  const { mode, maxPerInstance } = options;
+
+  // Query from unified standings table (Spec #40)
+  const instances = await prisma.standing.groupBy({
+    by: ['leagueInstanceId'],
     where: {
-      currentLeague: tier,
-      NOT: {
-        leagueId: `${tier}_bye`, // Exclude bye-robot
-      },
+      mode: mode as any,
+      tier,
     },
     _count: {
       id: true,
@@ -54,16 +60,16 @@ export async function getInstancesForTier(tier: LeagueTier): Promise<LeagueInsta
 
   // Parse instance data
   const leagueInstances: LeagueInstance[] = instances.map((instance) => {
-    const instanceNumber = parseInt(instance.leagueId.split('_')[1] || '1');
+    const instanceNumber = parseInt(instance.leagueInstanceId.split('_')[1] || '1');
     const currentRobots = instance._count.id;
 
     return {
-      leagueId: instance.leagueId,
+      leagueId: instance.leagueInstanceId,
       tier,
       instanceNumber,
       currentRobots,
-      maxRobots: MAX_ROBOTS_PER_INSTANCE,
-      isFull: currentRobots >= MAX_ROBOTS_PER_INSTANCE,
+      maxRobots: maxPerInstance,
+      isFull: currentRobots >= maxPerInstance,
     };
   });
 
@@ -74,16 +80,16 @@ export async function getInstancesForTier(tier: LeagueTier): Promise<LeagueInsta
 /**
  * Get statistics for a league tier
  */
-export async function getLeagueInstanceStats(tier: LeagueTier): Promise<LeagueInstanceStats> {
-  const instances = await getInstancesForTier(tier);
+export async function getLeagueInstanceStats(tier: LeagueTier, options: InstanceOptions = DEFAULT_OPTIONS): Promise<LeagueInstanceStats> {
+  const instances = await getInstancesForTier(tier, options);
   const totalRobots = instances.reduce((sum, inst) => sum + inst.currentRobots, 0);
   const averagePerInstance = instances.length > 0 ? totalRobots / instances.length : 0;
 
   // Check if rebalancing is needed:
-  // 1. Any instance exceeds the maximum robot limit
+  // 1. Any instance exceeds the maximum limit
   // 2. Significant imbalance between instances (deviation > threshold from target)
   const hasOverflow = instances.some((inst) => 
-    inst.currentRobots > MAX_ROBOTS_PER_INSTANCE
+    inst.currentRobots > options.maxPerInstance
   );
   const targetPerInstance = instances.length > 0 ? Math.ceil(totalRobots / instances.length) : 0;
   const hasImbalance = instances.length >= 2 && instances.some((inst) =>
@@ -101,11 +107,12 @@ export async function getLeagueInstanceStats(tier: LeagueTier): Promise<LeagueIn
 }
 
 /**
- * Assign a robot to an appropriate league instance
- * Places robot in instance with most free spots
+ * Assign an entity to an appropriate league instance.
+ * Places entity in instance with most free spots.
+ * Mode-aware: defaults to league_1v1 for backward compatibility.
  */
-export async function assignLeagueInstance(tier: LeagueTier): Promise<string> {
-  const instances = await getInstancesForTier(tier);
+export async function assignLeagueInstance(tier: LeagueTier, options: InstanceOptions = DEFAULT_OPTIONS): Promise<string> {
+  const instances = await getInstancesForTier(tier, options);
 
   if (instances.length === 0) {
     // No instances exist yet, create first one
@@ -121,49 +128,109 @@ export async function assignLeagueInstance(tier: LeagueTier): Promise<string> {
 }
 
 /**
- * Rebalance robots across instances in a tier.
- * Always redistributes robots evenly using round-robin.
- * Called after promotions/demotions during league rebalancing.
+ * Assign an entity to a league instance with advisory locking (for concurrent writes).
+ * Used by team creation where multiple teams may be assigned simultaneously.
  */
-export async function rebalanceInstances(tier: LeagueTier): Promise<void> {
-  // Get all robots in this tier (excluding bye-robot)
-  const allRobots = await prisma.robot.findMany({
-    where: {
-      currentLeague: tier,
-      NOT: {
-        leagueId: `${tier}_bye`,
+export async function assignLeagueInstanceWithLock(tier: LeagueTier, options: InstanceOptions): Promise<string> {
+  return await prisma.$transaction(async (tx) => {
+    // Acquire advisory lock scoped to mode + tier to avoid collision
+    const lockId = hashTierName(`${options.mode}_${tier}`);
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(${lockId})`;
+
+    // Group standings by leagueInstanceId
+    const instances = await tx.standing.groupBy({
+      by: ['leagueInstanceId'],
+      where: {
+        mode: options.mode as any,
+        tier,
       },
+      _count: {
+        id: true,
+      },
+    });
+
+    if (instances.length === 0) {
+      return `${tier}_1`;
+    }
+
+    const leagueInstances = instances
+      .map((instance) => {
+        const instanceNumber = parseInt(instance.leagueInstanceId.split('_')[1] || '1');
+        return {
+          leagueId: instance.leagueInstanceId,
+          instanceNumber,
+          currentEntities: instance._count.id,
+        };
+      })
+      .sort((a, b) => a.currentEntities - b.currentEntities);
+
+    const leastFull = leagueInstances[0];
+
+    if (leastFull.currentEntities >= options.maxPerInstance) {
+      const nextInstanceNumber = Math.max(...leagueInstances.map((i) => i.instanceNumber)) + 1;
+      return `${tier}_${nextInstanceNumber}`;
+    }
+
+    return leastFull.leagueId;
+  });
+}
+
+/**
+ * Hash a tier/mode string to a consistent integer for advisory locking.
+ */
+function hashTierName(name: string): number {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = ((hash << 5) - hash) + name.charCodeAt(i);
+    hash = hash & hash;
+  }
+  return Math.abs(hash) % 2147483647;
+}
+
+/**
+ * Rebalance entities across instances in a tier.
+ * Always redistributes entities evenly using round-robin (sorted by LP desc for competitive balance).
+ * Called after promotions/demotions during league rebalancing.
+ * Mode-aware: defaults to league_1v1 for backward compatibility.
+ */
+export async function rebalanceInstances(tier: LeagueTier, options: InstanceOptions = DEFAULT_OPTIONS): Promise<void> {
+  const { mode, maxPerInstance } = options;
+  const logLabel = mode === 'league_1v1' ? 'LeagueInstance' : `LeagueInstance:${mode}`;
+
+  // Get all standings in this tier from unified table (Spec #40)
+  const allStandings = await prisma.standing.findMany({
+    where: {
+      mode: mode as any,
+      tier,
     },
     orderBy: [
       { leaguePoints: 'desc' },
-      { elo: 'desc' },
     ],
   });
 
-  if (allRobots.length === 0) {
-    logger.info(`[LeagueInstance] ${tier}: No robots, skipping`);
+  if (allStandings.length === 0) {
+    logger.info(`[${logLabel}] ${tier}: No entities, skipping`);
     return;
   }
 
   // Calculate how many instances we need
-  const targetInstanceCount = Math.ceil(allRobots.length / MAX_ROBOTS_PER_INSTANCE);
+  const targetInstanceCount = Math.ceil(allStandings.length / maxPerInstance);
 
-  logger.info(`[LeagueInstance] Rebalancing ${tier}: ${allRobots.length} robots across ${targetInstanceCount} instances`);
+  logger.info(`[${logLabel}] Rebalancing ${tier}: ${allStandings.length} entities across ${targetInstanceCount} instances`);
 
-  // Redistribute robots ROUND-ROBIN to maintain competitive balance
-  // This ensures each instance has a mix of high, medium, and low LP robots
+  // Redistribute standings ROUND-ROBIN to maintain competitive balance
   const updates: Promise<unknown>[] = [];
   
-  for (let i = 0; i < allRobots.length; i++) {
-    const robot = allRobots[i];
+  for (let i = 0; i < allStandings.length; i++) {
+    const standing = allStandings[i];
     const targetInstanceNumber = (i % targetInstanceCount) + 1;
     const targetLeagueId = `${tier}_${targetInstanceNumber}`;
 
-    if (robot.leagueId !== targetLeagueId) {
+    if (standing.leagueInstanceId !== targetLeagueId) {
       updates.push(
-        prisma.robot.update({
-          where: { id: robot.id },
-          data: { leagueId: targetLeagueId },
+        prisma.standing.update({
+          where: { id: standing.id },
+          data: { leagueInstanceId: targetLeagueId },
         })
       );
     }
@@ -171,9 +238,9 @@ export async function rebalanceInstances(tier: LeagueTier): Promise<void> {
 
   if (updates.length > 0) {
     await Promise.all(updates);
-    logger.info(`[LeagueInstance] ${tier}: Moved ${updates.length} robots`);
+    logger.info(`[${logLabel}] ${tier}: Moved ${updates.length} entities`);
   } else {
-    logger.info(`[LeagueInstance] ${tier}: Already balanced`);
+    logger.info(`[${logLabel}] ${tier}: Already balanced`);
   }
 }
 

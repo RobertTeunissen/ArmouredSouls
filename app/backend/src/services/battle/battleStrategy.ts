@@ -39,10 +39,11 @@ import {
   awardStreamingRevenueForParticipant,
   logBattleAuditEvent,
   updateRobotCombatStats,
-  awardCreditsToUser,
+  awardCreditsWithLedger,
   awardPrestigeToUser,
   AuditEventExtras,
 } from './battlePostCombat';
+import { getCurrentCycleNumber } from './baseOrchestrator';
 
 // ─── Types ───────────────────────────────────────────────────────────
 
@@ -362,7 +363,15 @@ export class BattleProcessor<TMatch = unknown> {
       });
 
       // Award credits and prestige to user
-      await awardCreditsToUser(p.userId, reward?.credits ?? 0);
+      const cycleNumber = await getCurrentCycleNumber();
+      await awardCreditsWithLedger(
+        p.userId,
+        reward?.credits ?? 0,
+        'battle_income',
+        cycleNumber,
+        'KotH battle reward',
+        p.robot.id,
+      );
       await awardPrestigeToUser(p.userId, reward?.prestige ?? 0);
     }
 

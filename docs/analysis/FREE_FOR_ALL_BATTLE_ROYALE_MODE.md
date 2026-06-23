@@ -141,6 +141,172 @@ The biggest design challenge: passive play (avoiding fights) is the optimal stra
 - Reduce simulation step frequency for distant robots (robots >50 units from any opponent can update at 0.5s instead of 0.1s)
 - Consider a maximum battle duration shorter than the standard 120s for large FFAs
 
+---
+
+## Scaling Architecture Analysis
+
+**Date**: June 2026  
+**Context**: The current production environment is a Scaleway DEV1-S (2 vCPU, 2 GB RAM, 20 GB SSD) running Node.js (PM2), PostgreSQL (Docker), and Caddy on a single box. The combat simulator is a synchronous, CPU-bound pure function (`simulateBattleMulti`) that blocks the event loop during execution. For KotH (5–6 robots) this is imperceptible; for 100-robot Grand Melee it's unviable without architectural changes.
+
+### Current Bottleneck Profile
+
+The simulator is the constraint — not the database, not the network. `simulateBattleMulti` does dense float arithmetic (distances, angles, damage formulas) in a tight loop at 10 ticks/second. For N robots:
+
+- **O(n²) per tick**: 9,900 threat evaluations, 4,950 pairwise distances for 100 robots
+- **No parallelism**: runs single-threaded in the main Node.js event loop
+- **Memory pressure**: 100 combat state objects + growing event array competes with PostgreSQL for the 2 GB RAM budget
+- **GC pauses**: V8 garbage collection can stall 5–50ms mid-simulation on large heaps
+
+Estimated simulation time for 100 robots (150s battle duration, current code, no optimizations): **30–60 seconds of wall-clock time** on the DEV1-S.
+
+### Strategy 1: Algorithmic Optimizations (TypeScript, no infra changes)
+
+Reduce the O(n²) constant before changing languages or infrastructure:
+
+| Optimization | Effect | Effort |
+|--------------|--------|--------|
+| **Spatial partitioning** (grid/quadtree) | Threat evaluation becomes O(n × k) where k ≈ 5–10 nearby robots | ~2 days |
+| **Variable tick rate** | Robots >50 units from any opponent simulate at 0.5s instead of 0.1s | ~1 day |
+| **Threat score caching** | Only recalculate when robot takes significant damage or moves >5 units | ~1 day |
+| **Attack resolution batching** | Process all attacks per tick in one pass instead of per-robot sequential | ~0.5 days |
+
+**Combined estimated improvement**: 5–10× faster. A 100-robot battle drops from ~30–60s to ~5–15s. Sufficient for 32 robots on current hardware; marginal for 100.
+
+### Strategy 2: Worker Thread Isolation (TypeScript, no infra changes)
+
+Move the simulation off the main event loop using Node.js `worker_threads`:
+
+- Main thread posts robot data + config to a Worker
+- Worker runs `simulateBattleMulti` in its own V8 isolate (separate heap, independent GC)
+- Result returned via `postMessage`; main thread persists to DB
+- API stays responsive during heavy battles
+
+**What it solves**: API responsiveness, GC isolation. **What it doesn't solve**: total compute time still limited by 2 vCPU.
+
+**Effort**: ~1–2 days. No infra changes.
+
+### Strategy 3: External Database (free VPS resources for compute)
+
+Move PostgreSQL off the VPS to a managed service. The DB and Node.js currently compete for the same 2 GB RAM.
+
+**What you gain**:
+- All 2 GB RAM + 2 vCPU dedicated to Node.js and combat Workers
+- Docker overhead eliminated (~50 MB RAM + CPU for container runtime)
+- Independent storage scaling (TOAST growth at 85 MB/day becomes the provider's problem)
+- Simplified VPS lifecycle — stateless compute, destroy/recreate without data risk
+- Built-in backups, point-in-time recovery, connection pooling (replaces custom `backup.sh` scripts)
+
+**Latency impact**: Queries go from ~0.1ms (localhost) to ~1–5ms (same-region network). For a typical API request (3–5 queries) this adds 5–25ms — imperceptible. The combat simulation itself never touches the DB, so zero impact on the actual bottleneck.
+
+**Cost comparison**:
+
+| Option | Monthly cost | Notes |
+|--------|-------------|-------|
+| Current (Docker on VPS) | €0 extra | But you own all ops (backups, vacuuming, disk alerts) |
+| Scaleway Managed DB (DB-DEV-S) | ~€8–12 | Same region, auto-backups, 10 GB included |
+| Neon (free tier) | €0 | 0.5 GB storage, autoscaling, cold starts possible |
+| Neon (Scale) | ~€20 | 10 GB storage, always-on compute, branching for dev/staging |
+| Supabase (Pro) | ~€25 | 8 GB storage, daily backups, built-in pooling |
+
+**Risks**:
+- Cold start on serverless DB (Neon free): 300–500ms on first query after idle. Mitigated by game's predictable hourly cron pattern.
+- Advisory locks (`lockUserForSpending`): PgBouncer in transaction mode can break `pg_advisory_xact_lock`. Solution: ensure session mode for advisory lock transactions, or use `SELECT ... FOR UPDATE`.
+
+### Strategy 4: Separate Compute Tier (dedicated battle worker)
+
+Run combat simulation on a different machine than the API/DB:
+
+```
+[VPS: API + Cron + DB]  ──HTTP/Unix socket──▶  [Compute VPS: Battle Workers]
+```
+
+Or combined with Strategy 3:
+
+```
+[Managed DB]  ◀──  [VPS: API + Cron]  ──▶  [Compute VPS: Battles]
+```
+
+- Main VPS dispatches battle jobs (robot data + config) to compute node
+- Compute node runs only the simulator — no Express, no Prisma, no DB connection
+- Results posted back; main VPS persists to DB
+- Compute node is stateless and disposable
+
+**Cost**: A second DEV1-S is ~€4/month. Doubles available compute for pocket change.
+
+**Effort**: ~3–5 days. Extract simulator into standalone Node.js worker app + simple job dispatch layer.
+
+### Strategy 5: Serverless Burst Compute (pay-per-battle)
+
+Package the combat simulator as a serverless function (Scaleway Serverless Functions, AWS Lambda, Cloudflare Workers):
+
+- Cron handler invokes the function with the battle payload
+- Function runs simulation (up to 10 GB memory, 15-minute timeout on Lambda)
+- Returns result; main app persists to DB
+- Pay only for execution time (~€0.01–0.05 per Grand Melee run)
+
+**Why this fits Grand Melee specifically**: It runs once daily at 17:00 UTC. You don't need permanent extra infrastructure for a single daily heavy job.
+
+**Effort**: ~2–3 days. Package simulator, add thin HTTP wrapper, invoke from cron handler.
+
+### Strategy 6: Rust Combat Engine (language-level performance)
+
+The simulator is a pure function (robots in → events out) doing dense float arithmetic in tight loops. This is the exact workload profile where a systems language provides 10–50× improvement over JavaScript:
+
+**Why Rust specifically**:
+- **Zero GC**: No mid-simulation pauses. V8 can stall 5–50ms; Rust never pauses.
+- **SIMD auto-vectorization**: The LLVM backend vectorizes distance calculations across multiple robot pairs simultaneously.
+- **Cache-friendly memory layout**: Robot states packed in a contiguous `Vec<RobotState>` — sequential iteration without pointer-chasing. In JS, each `SpatialRobotCombatState` is a heap-allocated object with indirection on every field access.
+- **Predictable performance**: No JIT warmup, no deoptimization. First battle is as fast as the thousandth.
+
+**Estimated performance**:
+
+| Approach | 100-robot sim time | Notes |
+|----------|-------------------|-------|
+| Current TS (no changes) | 30–60s | Unusable |
+| TS + algorithmic optimizations | 5–15s | Marginal for 100 robots |
+| TS + optimizations + 4 vCPU VPS | 3–8s | Acceptable but expensive |
+| **Rust on current 2 vCPU VPS** | **0.5–1.5s** | Trivially fast |
+| Rust on 4 vCPU VPS | 0.2–0.5s | Overkill |
+
+**Integration options**:
+
+| Pattern | How it works | Overhead | Deployment complexity |
+|---------|-------------|----------|----------------------|
+| **napi-rs native addon** | Rust compiled to `.node` file, called from TS like a function | ~0ms (in-process) | Medium — needs cross-compile for Linux deploy |
+| **Sidecar microservice** | Standalone Rust binary with HTTP/Unix socket | ~1–2ms IPC | Medium — separate process to manage |
+| **Rust → WebAssembly** | Compiled to `.wasm`, loaded inside Node | ~0ms (in-process) | Low — single artifact, but 5–15× not 10–50× |
+
+**Recommended pattern**: napi-rs native addon. The simulator stays in the same Node.js process (no network hop, no serialization cost), runs on a background thread via `napi::Task`, and integrates with the existing codebase as a drop-in replacement for `simulateBattleMulti`.
+
+**Scope of the port**: ~3,500 lines of TypeScript → ~2,500 lines of Rust:
+- `combatSimulator.ts` (core simulation loop, attack resolution, damage formulas)
+- `movementAI.ts` (movement decisions, preferred range, pursuit)
+- `threatScoring.ts` (target selection, weighted scoring)
+- `positionTracker.ts` (facing, backstab/flanking)
+- `servoStrain.ts` (speed degradation)
+- `hydraulicBonus.ts` (melee proximity bonus)
+- `vector2d.ts` (2D math utilities)
+
+The orchestration layer (loading robots from DB, persisting results, LP/ELO updates) stays in TypeScript.
+
+**Effort**: ~2–3 weeks for the port + test parity.
+
+**Alternative — Go**: 3–8× improvement with lower learning curve. Has GC but it's tuned for sub-ms pauses. Less headroom than Rust but viable for 50-robot battles. Not recommended if the goal is 100 robots.
+
+### Recommended Scaling Path
+
+**Phase 1 — Ship Grand Melee at 16–32 robots (current hardware, ~1 week)**:
+1. Implement spatial partitioning + variable tick rate in `simulateBattleMulti`
+2. Run Grand Melee in a Worker Thread
+3. Cap at 32 robots for v1
+
+**Phase 2 — Scale to 50–100 robots (choose one, ~2–3 weeks)**:
+- **Option A (budget-friendly)**: Move DB to Scaleway Managed + add Rust combat engine via napi-rs on existing VPS
+- **Option B (simplest ops)**: Move DB to managed service + use serverless function for Grand Melee specifically
+- **Option C (most headroom)**: Rust combat engine on a dedicated second VPS (€4/month), DB on managed service
+
+**The simulation being a pure function is the key architectural advantage.** It takes robots in, produces events out, needs no database or network during execution. This makes it trivially extractable to any compute target — Worker Thread, separate process, separate machine, serverless function, or native Rust addon.
+
 ## Attribute Value Shifts (vs 1v1)
 
 | Attribute | 1v1 Value | FFA Value | Why |

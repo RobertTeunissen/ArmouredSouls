@@ -169,11 +169,11 @@ model Robot {
   timesTaggedOut      Int @default(0) @map("times_tagged_out") // Number of times robot tagged out (yield or destruction)
 
   // ===== TEAM BATTLE STATISTICS =====
-  totalLeague1v1Wins   Int @default(0) @map("total_league_1v1_wins")   // 1v1 League victory count
+  totalLeague1v1Wins   Int @default(0) @map("total_league_1v1_wins") // 1v1 League victory count
   totalLeague1v1Losses Int @default(0) @map("total_league_1v1_losses") // 1v1 League loss count
-  totalLeague1v1Draws  Int @default(0) @map("total_league_1v1_draws")  // 1v1 League draw count
-  totalLeague2v2Wins   Int @default(0) @map("total_league_2v2_wins")   // 2v2 League victory count
-  totalLeague3v3Wins   Int @default(0) @map("total_league_3v3_wins")   // 3v3 League victory count
+  totalLeague1v1Draws  Int @default(0) @map("total_league_1v1_draws") // 1v1 League draw count
+  totalLeague2v2Wins   Int @default(0) @map("total_league_2v2_wins") // 2v2 League victory count
+  totalLeague3v3Wins   Int @default(0) @map("total_league_3v3_wins") // 3v3 League victory count
 
   // ===== KOTH CUMULATIVE STATISTICS =====
   kothWins             Int   @default(0) @map("koth_wins")
@@ -191,10 +191,10 @@ model Robot {
   currentLoseStreak Int @default(0) @map("current_lose_streak")
 
   // ===== STANCE/LOADOUT WIN COUNTERS =====
-  offensiveWins  Int @default(0) @map("offensive_wins")
-  defensiveWins  Int @default(0) @map("defensive_wins")
-  balancedWins   Int @default(0) @map("balanced_wins")
-  dualWieldWins  Int @default(0) @map("dual_wield_wins")
+  offensiveWins Int @default(0) @map("offensive_wins")
+  defensiveWins Int @default(0) @map("defensive_wins")
+  balancedWins  Int @default(0) @map("balanced_wins")
+  dualWieldWins Int @default(0) @map("dual_wield_wins")
 
   // ===== ECONOMIC STATE =====
   repairCost       Int @default(0) @map("repair_cost") // Cost to fully repair (formula-based)
@@ -218,20 +218,20 @@ model Robot {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   // ===== RELATIONS =====
-  user                      User                            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  mainWeapon                WeaponInventory?                @relation("MainWeapon", fields: [mainWeaponId], references: [id])
-  offhandWeapon             WeaponInventory?                @relation("OffhandWeapon", fields: [offhandWeaponId], references: [id])
-  battlesAsRobot1           Battle[]                        @relation("Robot1")
-  battlesAsRobot2           Battle[]                        @relation("Robot2")
-  scheduledMatchesAsRobot1  ScheduledLeagueMatch[]          @relation("ScheduledRobot1")
-  scheduledMatchesAsRobot2  ScheduledLeagueMatch[]          @relation("ScheduledRobot2")
+  user                     User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mainWeapon               WeaponInventory?       @relation("MainWeapon", fields: [mainWeaponId], references: [id])
+  offhandWeapon            WeaponInventory?       @relation("OffhandWeapon", fields: [offhandWeaponId], references: [id])
+  battlesAsRobot1          Battle[]               @relation("Robot1")
+  battlesAsRobot2          Battle[]               @relation("Robot2")
+  scheduledMatchesAsRobot1 ScheduledLeagueMatch[] @relation("ScheduledRobot1")
+  scheduledMatchesAsRobot2 ScheduledLeagueMatch[] @relation("ScheduledRobot2")
 
-  battleParticipations      BattleParticipant[]
-  kothMatchParticipations   ScheduledKothMatchParticipant[]
-  teamBattleMembers         TeamBattleMember[]
-  tuningAllocation          TuningAllocation?
-  achievements              UserAchievement[]
-  subscriptions             Subscription[]
+  battleParticipations    BattleParticipant[]
+  kothMatchParticipations ScheduledKothMatchParticipant[]
+  teamBattleMembers       TeamBattleMember[]
+  tuningAllocation        TuningAllocation?
+  achievements            UserAchievement[]
+  subscriptions           Subscription[]
 
   @@index([userId])
   @@index([elo])
@@ -349,7 +349,7 @@ model BattleParticipant {
   battleId Int     @map("battle_id")
   robotId  Int     @map("robot_id")
   team     Int // 1 or 2 (team affiliation for 1v1/tournament/tag team)
-  role     String? @db.VarChar(20) // "active" or "reserve" for tag team, null for 1v1
+  role     String? @db.VarChar(20) // "solo" | "active" | "reserve" | "team_member" | "koth_participant"
 
   // KotH placement (null for non-KotH battles)
   placement Int? // 1-6 final placement for KotH battles
@@ -370,6 +370,9 @@ model BattleParticipant {
   yielded     Boolean @default(false)
   destroyed   Boolean @default(false)
 
+  // Tag-team tag-out timestamp (milliseconds)
+  tagOutTimeMs BigInt? @map("tag_out_time_ms")
+
   // Timestamp
   createdAt DateTime @default(now()) @map("created_at")
 
@@ -387,12 +390,12 @@ model BattleParticipant {
 }
 
 model Battle {
-  id         Int    @id @default(autoincrement())
-  robot1Id   Int    @map("robot1_id") // First combatant
-  robot2Id   Int    @map("robot2_id") // Second combatant
-  winnerId   Int?   @map("winner_id") // Winner's robot ID (null if draw)
-  battleType String @map("battle_type") @db.VarChar(20) // "league", "tournament", "tag_team"
-  leagueType String @map("league_type") @db.VarChar(20) // "bronze", "silver", "gold", etc.
+  id               Int     @id @default(autoincrement())
+  robot1Id         Int     @map("robot1_id") // First combatant
+  robot2Id         Int     @map("robot2_id") // Second combatant
+  winnerId         Int?    @map("winner_id") // Winner's robot ID (null if draw)
+  battleType       String  @map("battle_type") @db.VarChar(20) // "league", "tournament", "tag_team"
+  leagueType       String  @map("league_type") @db.VarChar(20) // "bronze", "silver", "gold", etc.
   leagueInstanceId String? @map("league_instance_id") @db.VarChar(20) // "gold_1", "bronze_2", etc. — instance at time of battle
 
   // ===== TOURNAMENT REFERENCE (optional) =====
@@ -437,11 +440,11 @@ model Battle {
   createdAt DateTime @default(now()) @map("created_at")
 
   // ===== RELATIONS =====
-  robot1             Robot                      @relation("Robot1", fields: [robot1Id], references: [id])
-  robot2             Robot                      @relation("Robot2", fields: [robot2Id], references: [id])
-  tournament         Tournament?                @relation("TournamentBattles", fields: [tournamentId], references: [id])
-  scheduledMatch     ScheduledLeagueMatch[]
-  tournamentMatches  ScheduledTournamentMatch[]
+  robot1            Robot                      @relation("Robot1", fields: [robot1Id], references: [id])
+  robot2            Robot                      @relation("Robot2", fields: [robot2Id], references: [id])
+  tournament        Tournament?                @relation("TournamentBattles", fields: [tournamentId], references: [id])
+  scheduledMatch    ScheduledLeagueMatch[]
+  tournamentMatches ScheduledTournamentMatch[]
 
   participants       BattleParticipant[] // Per-participant battle data (NEW - use this instead of robot1/robot2 columns)
   scheduledKothMatch ScheduledKothMatch[] // KotH match that produced this battle
@@ -488,6 +491,9 @@ model CycleMetadata {
   lastCycleAt DateTime? @map("last_cycle_at")
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  // Feature flags for migration rollback safety (Spec #40)
+  featureFlags Json @default("{}") @map("feature_flags")
 
   @@map("cycle_metadata")
 }
@@ -796,24 +802,24 @@ model AdminAuditLog {
 
 model LeagueHistory {
   id                  Int      @id @default(autoincrement())
-  entityType          String   @map("entity_type") @db.VarChar(20)    // "robot" or "tag_team"
-  entityId            Int      @map("entity_id")                       // Robot ID or TeamBattle ID
-  userId              Int      @map("user_id")                         // Owner (user.id for robots, stableId for tag teams)
-  changeType          String   @map("change_type") @db.VarChar(20)    // "promotion" or "demotion"
-  sourceTier          String   @map("source_tier") @db.VarChar(20)    // e.g. "bronze"
+  entityType          String   @map("entity_type") @db.VarChar(20) // "robot" or "tag_team"
+  entityId            Int      @map("entity_id") // Robot ID or TeamBattle ID
+  userId              Int      @map("user_id") // Owner (user.id for robots, stableId for tag teams)
+  changeType          String   @map("change_type") @db.VarChar(20) // "promotion" or "demotion"
+  sourceTier          String   @map("source_tier") @db.VarChar(20) // e.g. "bronze"
   destinationTier     String   @map("destination_tier") @db.VarChar(20) // e.g. "silver"
   sourceLeagueId      String   @map("source_league_id") @db.VarChar(30) // e.g. "bronze_1"
   destinationLeagueId String   @map("destination_league_id") @db.VarChar(30) // e.g. "silver_2"
-  leaguePoints        Int      @map("league_points")                   // LP at moment of change
-  cycleNumber         Int      @map("cycle_number")                    // Game cycle when change occurred
+  leaguePoints        Int      @map("league_points") // LP at moment of change
+  cycleNumber         Int      @map("cycle_number") // Game cycle when change occurred
   createdAt           DateTime @default(now()) @map("created_at")
 
   // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([entityType, entityId])    // Per-entity queries
-  @@index([cycleNumber])             // Cycle-range queries
-  @@index([userId])                  // User's history queries
+  @@index([entityType, entityId]) // Per-entity queries
+  @@index([cycleNumber]) // Cycle-range queries
+  @@index([userId]) // User's history queries
   @@map("league_history")
 }
 
@@ -838,10 +844,10 @@ model Subscription {
 
 // Team Battle model for tracking 2v2 and 3v3 team compositions
 model TeamBattle {
-  id             Int    @id @default(autoincrement())
-  stableId       Int    @map("stable_id") // Owner's user ID
-  teamSize       Int    @map("team_size") // 2 or 3
-  teamName       String @map("team_name") @db.VarChar(32) // Player-chosen team name (3-32 chars)
+  id       Int    @id @default(autoincrement())
+  stableId Int    @map("stable_id") // Owner's user ID
+  teamSize Int    @map("team_size") // 2 or 3
+  teamName String @map("team_name") @db.VarChar(32) // Player-chosen team name (3-32 chars)
 
   // League tracking (2v2 League or 3v3 League)
   teamLp         Int    @default(0) @map("team_lp") // Team League Points
@@ -904,17 +910,17 @@ model TeamBattleMember {
 
 // Scheduled Team Battle Match model for tracking scheduled 2v2/3v3 battles
 model ScheduledTeamBattleMatch {
-  id                  Int      @id @default(autoincrement())
-  team1Id             Int      @map("team1_id")
-  team2Id             Int?     @map("team2_id") // Nullable for bye-matches
-  teamSize            Int      @map("team_size") // 2 or 3
-  matchMode           String   @map("match_mode") @db.VarChar(20) // league_2v2, league_3v3, tag_team, tournament_2v2, tournament_3v3
-  teamBattleLeague    String   @map("team_battle_league") @db.VarChar(20) // bronze/silver/gold/platinum/diamond/champion
-  teamBattleLeagueId  String   @map("team_battle_league_id") @db.VarChar(30) // Specific instance: bronze_1, bronze_2, etc.
-  scheduledFor        DateTime @map("scheduled_for") // When the match should be executed
-  status              String   @default("scheduled") @db.VarChar(20) // "scheduled", "completed", "cancelled"
-  cancelReason        String?  @map("cancel_reason") @db.Text // Reason for cancellation (if cancelled)
-  createdAt           DateTime @default(now()) @map("created_at")
+  id                 Int      @id @default(autoincrement())
+  team1Id            Int      @map("team1_id")
+  team2Id            Int?     @map("team2_id") // Nullable for bye-matches
+  teamSize           Int      @map("team_size") // 2 or 3
+  matchMode          String   @map("match_mode") @db.VarChar(20) // league_2v2, league_3v3, tag_team, tournament_2v2, tournament_3v3
+  teamBattleLeague   String   @map("team_battle_league") @db.VarChar(20) // bronze/silver/gold/platinum/diamond/champion
+  teamBattleLeagueId String   @map("team_battle_league_id") @db.VarChar(30) // Specific instance: bronze_1, bronze_2, etc.
+  scheduledFor       DateTime @map("scheduled_for") // When the match should be executed
+  status             String   @default("scheduled") @db.VarChar(20) // "scheduled", "completed", "cancelled"
+  cancelReason       String?  @map("cancel_reason") @db.Text // Reason for cancellation (if cancelled)
+  createdAt          DateTime @default(now()) @map("created_at")
 
   // Relations
   team1 TeamBattle  @relation("TeamBattleTeam1", fields: [team1Id], references: [id])
@@ -925,4 +931,158 @@ model ScheduledTeamBattleMatch {
   @@index([team1Id])
   @@index([team2Id])
   @@map("scheduled_team_battle_matches")
+}
+
+// ===== DATABASE UNIFICATION (Spec #40) =====
+
+enum MatchType {
+  league_1v1
+  league_2v2
+  league_3v3
+  tag_team
+  koth
+  tournament_1v1
+  tournament_2v2
+  tournament_3v3
+}
+
+// Unified scheduling table replacing: scheduled_matches, scheduled_team_battle_matches,
+// scheduled_koth_matches, scheduled_koth_match_participants, tournament_matches
+model ScheduledMatch {
+  id           Int       @id @default(autoincrement())
+  matchType    MatchType @map("match_type")
+  status       String    @default("scheduled") @db.VarChar(20) // scheduled, completed, cancelled, failed
+  scheduledFor DateTime  @map("scheduled_for")
+  battleId     Int?      @map("battle_id")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  // Tournament-specific (nullable)
+  tournamentId Int?     @map("tournament_id")
+  round        Int?
+  matchNumber  Int?     @map("match_number")
+  isByeMatch   Boolean? @map("is_bye_match")
+
+  // League-specific (nullable)
+  leagueType       String? @map("league_type") @db.VarChar(20)
+  leagueInstanceId String? @map("league_instance_id") @db.VarChar(30)
+
+  // KotH-specific (nullable)
+  scoreThreshold Int?     @map("score_threshold")
+  timeLimit      Int?     @map("time_limit")
+  zoneRadius     Int?     @map("zone_radius")
+
+  // Cancellation
+  cancelReason String? @map("cancel_reason") @db.Text
+
+  // Relations
+  participants ScheduledMatchParticipant[]
+
+  @@index([status, scheduledFor])
+  @@index([matchType, status])
+  @@index([tournamentId, round])
+  @@index([battleId])
+  @@map("scheduled_matches_v2")
+}
+
+model ScheduledMatchParticipant {
+  id               Int      @id @default(autoincrement())
+  scheduledMatchId Int      @map("scheduled_match_id")
+  participantType  String   @map("participant_type") @db.VarChar(10) // "robot" or "team"
+  participantId    Int      @map("participant_id")
+  slot             Int // Position (1-based): 1v1 uses 1,2; KotH uses 1..N
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  // Relations
+  scheduledMatch ScheduledMatch @relation(fields: [scheduledMatchId], references: [id], onDelete: Cascade)
+
+  @@unique([scheduledMatchId, slot])
+  @@index([participantId, participantType])
+  @@index([scheduledMatchId])
+  @@map("scheduled_match_participants")
+}
+
+enum StandingsMode {
+  league_1v1
+  league_2v2
+  league_3v3
+  tag_team
+  koth
+  tournament_1v1
+  tournament_2v2
+  tournament_3v3
+}
+
+// Unified competitive standings table replacing league columns on robots and team_battles
+model Standing {
+  id               Int           @id @default(autoincrement())
+  entityType       String        @map("entity_type") @db.VarChar(10) // "robot" or "team"
+  entityId         Int           @map("entity_id")
+  mode             StandingsMode
+  tier             String        @default("bronze") @db.VarChar(20) // bronze/silver/gold/platinum/diamond/champion
+  leagueInstanceId String        @default("bronze_1") @map("league_instance_id") @db.VarChar(30)
+  leaguePoints     Int           @default(0) @map("league_points")
+  cyclesInTier     Int           @default(0) @map("cycles_in_tier")
+
+  // Win/loss tracking
+  wins   Int @default(0)
+  losses Int @default(0)
+  draws  Int @default(0)
+
+  // Streak tracking
+  currentWinStreak  Int @default(0) @map("current_win_streak")
+  bestWinStreak     Int @default(0) @map("best_win_streak")
+  currentLoseStreak Int @default(0) @map("current_lose_streak")
+
+  // KotH-specific (nullable, only populated when mode = koth)
+  totalMatches   Int?   @map("total_matches")
+  totalKills     Int?   @map("total_kills")
+  totalZoneScore Float? @map("total_zone_score")
+  totalZoneTime  Float? @map("total_zone_time")
+  bestPlacement  Int?   @map("best_placement")
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([entityType, entityId, mode])
+  @@index([mode, tier, leagueInstanceId])
+  @@index([mode, leaguePoints(sort: Desc)])
+  @@index([entityType, entityId])
+  @@map("standings")
+}
+
+// Append-only financial transaction ledger for pre-computed economics
+model FinancialLedger {
+  id              Int      @id @default(autoincrement())
+  cycleNumber     Int      @map("cycle_number")
+  userId          Int      @map("user_id")
+  robotId         Int?     @map("robot_id")
+  transactionType String   @map("transaction_type") @db.VarChar(30)
+  amount          Int // Signed: positive = credit, negative = debit
+  balanceAfter    Int      @map("balance_after")
+  description     String   @db.VarChar(255)
+  metadata        Json? // Optional structured data per transaction type
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@index([userId, cycleNumber])
+  @@index([transactionType, cycleNumber])
+  @@index([robotId])
+  @@index([cycleNumber])
+  @@map("financial_ledger")
+}
+
+// Materialized leaderboard cache refreshed per cycle
+model LeaderboardCache {
+  id         Int      @id @default(autoincrement())
+  category   String   @db.VarChar(30) // fame, prestige, losses, koth_wins, koth_zone_score, career_wins, team_wins
+  rank       Int
+  entityType String   @map("entity_type") @db.VarChar(10) // "robot" or "user"
+  entityId   Int      @map("entity_id")
+  score      Float // The numeric value being ranked
+  generation Int      @default(0) // Swap semantics: readers use current gen, writers use next gen
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@index([category, generation, rank])
+  @@index([entityType, entityId])
+  @@map("leaderboard_cache")
 }

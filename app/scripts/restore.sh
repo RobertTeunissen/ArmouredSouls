@@ -33,7 +33,7 @@ env_get() {
   local key="$1"
   local file="$2"
   [ -f "$file" ] || return 0
-  grep -E "^${key}=" "$file" | tail -n 1 | cut -d= -f2- | sed -E 's/^"(.*)"$/\1/; s/^'\''(.*)'\''$/\1/'
+  grep -E "^${key}=" "$file" | tail -n 1 | cut -d= -f2- | sed -E 's/^"(.*)"$/\1/; s/^'\''(.*)'\''$/\1/' || true
 }
 
 ENV_FILE="/opt/armouredsouls/backend/.env"

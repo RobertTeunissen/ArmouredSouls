@@ -10,8 +10,7 @@ export type {
 
 export {
   getEligibleRobots,
-  distributeIntoGroups,
-  resolveStableConflicts,
+  groupByLPBanding,
   runKothMatchmaking,
 } from './kothMatchmakingService';
 export type {

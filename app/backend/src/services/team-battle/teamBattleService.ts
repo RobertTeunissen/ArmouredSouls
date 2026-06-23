@@ -59,16 +59,17 @@ function validateTeamName(name: string): void {
 }
 
 /**
- * Checks if a team is locked for battle (has a scheduled match with status 'scheduled').
+ * Checks if a team is locked for battle (has a scheduled match in the unified table).
+ * Filters by appropriate match types based on team membership.
  */
 async function isTeamLockedForBattle(teamId: number, tx: typeof prisma): Promise<boolean> {
-  const count = await tx.scheduledTeamBattleMatch.count({
+  const count = await tx.scheduledMatchParticipant.count({
     where: {
-      status: 'scheduled',
-      OR: [
-        { team1Id: teamId },
-        { team2Id: teamId },
-      ],
+      participantType: 'team',
+      participantId: teamId,
+      scheduledMatch: {
+        status: 'scheduled',
+      },
     },
   });
   return count > 0;
@@ -206,6 +207,9 @@ export async function registerTeam(
       },
       include: { members: true },
     });
+
+    // Standing records are created by the caller based on subscriptions.
+    // This avoids creating standings for modes the team isn't subscribed to.
 
     return newTeam;
   });

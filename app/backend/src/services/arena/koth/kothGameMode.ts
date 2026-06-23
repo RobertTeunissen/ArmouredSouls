@@ -18,7 +18,7 @@ import type {
   KothEnrichedPlacement,
 } from './kothConfig';
 import { KOTH_MATCH_DEFAULTS } from './kothConfig';
-import { createControlZone, evaluateZoneOccupation, trackZoneTransitions, processZoneRotation } from './kothZone';
+import { createControlZone, evaluateZoneOccupation, trackZoneTransitions } from './kothZone';
 import { createKothScoreState, tickScoring, tickPassivePenalties } from './kothScoring';
 import { handleRobotDestruction, handleRobotYield, calculateFinalPlacements } from './kothElimination';
 import { KothWinConditionEvaluator, KothTargetPriorityStrategy, KothMovementIntentModifier } from './kothStrategies';
@@ -38,10 +38,7 @@ import { KothWinConditionEvaluator, KothTargetPriorityStrategy, KothMovementInte
  * Requirements: 11.1, 11.2, 11.3, 11.6, 11.7
  */
 export function buildKothGameModeConfig(config: KothMatchConfig): GameModeConfig {
-  const maxDuration = config.timeLimit
-    ?? (config.rotatingZone
-      ? KOTH_MATCH_DEFAULTS.rotatingZoneTimeLimit
-      : KOTH_MATCH_DEFAULTS.timeLimit);
+  const maxDuration = config.timeLimit ?? KOTH_MATCH_DEFAULTS.timeLimit;
 
   return {
     targetPriority: new KothTargetPriorityStrategy(),
@@ -217,21 +214,6 @@ export function buildKothTickHook(
       events.push(e);
     }
 
-    // --- Zone rotation (rotating variant only) ---
-    if (config.rotatingZone) {
-      const rotationEvents = processZoneRotation(
-        zoneState, config.matchId, _arena.radius, deltaTime,
-      );
-      for (const e of rotationEvents) {
-        e.timestamp = currentTime;
-        events.push(e);
-      }
-      // Update arena zone center if it changed
-      if (_arena.zones && _arena.zones.length > 0) {
-        _arena.zones[0].center = { ...zoneState.center };
-      }
-    }
-
     // --- Update lastStanding tracking for win condition evaluator ---
     if (aliveRobots.length <= 1) {
       if (!scoreState.lastStandingPhase) {
@@ -243,9 +225,7 @@ export function buildKothTickHook(
         // Emit last_standing event here (in tick hook) so it appears in
         // chronological order with score_tick events (Req 4.10)
         const survivorId = scoreState.lastStandingRobotId;
-        const lastStandingDuration = config.rotatingZone
-          ? KOTH_MATCH_DEFAULTS.lastStandingDuration
-          : KOTH_MATCH_DEFAULTS.lastStandingDuration;
+        const lastStandingDuration = KOTH_MATCH_DEFAULTS.lastStandingDuration;
         events.push({
           timestamp: currentTime,
           type: 'last_standing' as CombatEvent['type'],

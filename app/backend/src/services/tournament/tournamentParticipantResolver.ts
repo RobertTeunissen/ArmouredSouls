@@ -97,10 +97,16 @@ async function resolveRobotParticipant(robotId: number): Promise<ResolvedPartici
     return null;
   }
 
+  // Read tier from standings (source of truth)
+  const standing = await prisma.standing.findFirst({
+    where: { entityType: 'robot', entityId: robot.id, mode: 'league_1v1' as any },
+    select: { tier: true },
+  });
+
   return {
     id: robot.id,
     displayName: robot.name,
-    leagueTier: robot.currentLeague,
+    leagueTier: standing?.tier ?? robot.currentLeague,
     elo: robot.elo,
     ownerId: robot.userId,
     ownerStableName: robot.user.stableName || robot.user.username,
@@ -117,12 +123,19 @@ async function resolveRobotParticipantsBatch(ids: number[]): Promise<Map<number,
     },
   });
 
+  // Batch fetch tiers from standings
+  const standings = await prisma.standing.findMany({
+    where: { entityType: 'robot', entityId: { in: ids }, mode: 'league_1v1' as any },
+    select: { entityId: true, tier: true },
+  });
+  const tierByRobot = new Map(standings.map(s => [s.entityId, s.tier]));
+
   const result = new Map<number, ResolvedParticipant>();
   for (const robot of robots) {
     result.set(robot.id, {
       id: robot.id,
       displayName: robot.name,
-      leagueTier: robot.currentLeague,
+      leagueTier: tierByRobot.get(robot.id) ?? robot.currentLeague,
       elo: robot.elo,
       ownerId: robot.userId,
       ownerStableName: robot.user.stableName || robot.user.username,
@@ -163,10 +176,17 @@ async function resolveTeamParticipant(teamId: number): Promise<ResolvedParticipa
     elo: m.robot.elo,
   }));
 
+  // Read tier from standings (source of truth)
+  const mode = team.teamSize === 2 ? 'league_2v2' : 'league_3v3';
+  const standing = await prisma.standing.findFirst({
+    where: { entityType: 'team', entityId: team.id, mode: mode as any },
+    select: { tier: true },
+  });
+
   return {
     id: team.id,
     displayName: team.teamName,
-    leagueTier: team.teamLeague,
+    leagueTier: standing?.tier ?? team.teamLeague,
     elo: members.reduce((sum, m) => sum + m.elo, 0),
     ownerId: team.stableId,
     ownerStableName: team.stable.stableName || team.stable.username,
@@ -192,6 +212,13 @@ async function resolveTeamParticipantsBatch(ids: number[]): Promise<Map<number, 
     },
   });
 
+  // Batch fetch tiers from standings (try both 2v2 and 3v3)
+  const standings = await prisma.standing.findMany({
+    where: { entityType: 'team', entityId: { in: ids }, mode: { in: ['league_2v2', 'league_3v3'] as any[] } },
+    select: { entityId: true, tier: true },
+  });
+  const tierByTeam = new Map(standings.map(s => [s.entityId, s.tier]));
+
   const result = new Map<number, ResolvedParticipant>();
   for (const team of teams) {
     const members = team.members.map((m) => ({
@@ -203,7 +230,7 @@ async function resolveTeamParticipantsBatch(ids: number[]): Promise<Map<number, 
     result.set(team.id, {
       id: team.id,
       displayName: team.teamName,
-      leagueTier: team.teamLeague,
+      leagueTier: tierByTeam.get(team.id) ?? team.teamLeague,
       elo: members.reduce((sum, m) => sum + m.elo, 0),
       ownerId: team.stableId,
       ownerStableName: team.stable.stableName || team.stable.username,

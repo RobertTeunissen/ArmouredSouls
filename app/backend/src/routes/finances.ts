@@ -227,4 +227,25 @@ router.post('/roi-calculator', authenticateToken, validateRequest({ body: roiCal
     res.json(roiData);
 });
 
+/**
+ * GET /api/finances/ledger
+ * Get financial history from the unified financial ledger.
+ * Serves pre-aggregated totals grouped by transactionType and cycleNumber.
+ * Query params: ?fromCycle=N&toCycle=M (optional)
+ */
+const ledgerQuerySchema = z.object({
+  fromCycle: z.coerce.number().int().positive().optional(),
+  toCycle: z.coerce.number().int().positive().optional(),
+});
+
+router.get('/ledger', authenticateToken, validateRequest({ query: ledgerQuerySchema }), async (req: AuthRequest, res: Response) => {
+  const userId = req.user!.userId;
+  const { fromCycle, toCycle } = req.query as { fromCycle?: number; toCycle?: number };
+
+  const financialService = (await import('../services/financial/financialService')).default;
+  const report = await financialService.getReport(userId, { fromCycle, toCycle });
+
+  res.json(report);
+});
+
 export default router;

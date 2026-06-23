@@ -101,7 +101,7 @@ function BattleContextLine({ battleLog }: { battleLog: BattleLogResponse }) {
   }
   if (battleLog.battleType === 'koth') {
     const count = battleLog.participants?.length || battleLog.kothParticipants?.length || 0;
-    return <span><Link to="/koth-standings" className="text-primary hover:text-white transition-colors">⛰️ King of the Hill</Link>{` • ${count} Participants • Duration: ${duration}`}</span>;
+    return <span><Link to="/league-standings?mode=koth" className="text-primary hover:text-white transition-colors">⛰️ King of the Hill</Link>{` • ${count} Participants • Duration: ${duration}`}</span>;
   }
   if (battleLog.battleType === 'tournament_1v1' || battleLog.battleLog.isTournament) {
     const round = battleLog.battleLog.round;

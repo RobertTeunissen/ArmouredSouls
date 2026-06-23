@@ -27,7 +27,7 @@ env_get() {
   local key="$1"
   local file="$2"
   [ -f "$file" ] || return 0
-  grep -E "^${key}=" "$file" | tail -n 1 | cut -d= -f2- | sed -E 's/^"(.*)"$/\1/; s/^'\''(.*)'\''$/\1/'
+  grep -E "^${key}=" "$file" | tail -n 1 | cut -d= -f2- | sed -E 's/^"(.*)"$/\1/; s/^'\''(.*)'\''$/\1/' || true
 }
 
 ENV_FILE="/opt/armouredsouls/backend/.env"
@@ -83,6 +83,14 @@ fi
 MONITORING_DISCORD_WEBHOOK="${MONITORING_DISCORD_WEBHOOK:-$(env_get MONITORING_DISCORD_WEBHOOK "$ENV_FILE")}"
 DISCORD_WEBHOOK_URL="${DISCORD_WEBHOOK_URL:-$(env_get DISCORD_WEBHOOK_URL "$ENV_FILE")}"
 
+# Resolve container name from .env if not already set via environment
+if [ "${CONTAINER_NAME}" = "armouredsouls-db-prod" ]; then
+  ENV_CONTAINER="$(env_get BACKUP_CONTAINER_NAME "$ENV_FILE")"
+  if [ -n "${ENV_CONTAINER}" ]; then
+    CONTAINER_NAME="${ENV_CONTAINER}"
+  fi
+fi
+
 # Apply defaults after env resolution
 DB_USER="${DB_USER:-armouredsouls}"
 DB_NAME="${DB_NAME:-armouredsouls}"
@@ -109,12 +117,14 @@ send_alert() {
 }
 
 # --- Determine backup method ---
-# Prefer host pg_dump if available; fall back to docker exec.
+# Prefer host pg_dump if it actually works; fall back to docker exec.
+# Some systems have a pg_dump wrapper that requires a postgresql-client-<version>
+# package — `command -v` finds it but it doesn't actually run.
 use_docker=false
-if ! command -v pg_dump &> /dev/null; then
+if ! pg_dump --version &> /dev/null; then
   if docker exec "${CONTAINER_NAME}" pg_dump --version &> /dev/null; then
     use_docker=true
-    log "pg_dump not found on host — using docker exec (container: ${CONTAINER_NAME})"
+    log "pg_dump not functional on host — using docker exec (container: ${CONTAINER_NAME})"
   else
     log "ERROR: pg_dump not available on host or in container ${CONTAINER_NAME}"
     send_alert "🚨 Backup FAILED on $(hostname): pg_dump not available on host or in Docker container '${CONTAINER_NAME}'."
@@ -161,16 +171,16 @@ if [ "${DISK_USAGE}" -ge "${DISK_THRESHOLD}" ]; then
 fi
 
 # --- Create daily backup ---
-DAILY_FILE="${BACKUP_DIR}/daily/${DB_NAME}_daily_${TIMESTAMP}.dump"
+DAILY_FILE="${BACKUP_DIR}/daily/${DB_NAME}_daily_${TIMESTAMP}.sql.gz"
 log "Starting daily backup: ${DAILY_FILE}"
 
 run_pg_dump() {
   if [ "$use_docker" = true ]; then
-    # Run pg_dump inside the Docker container, stream output to host file
-    docker exec "${CONTAINER_NAME}" pg_dump -U "${DB_USER}" -Fc "${DB_NAME}" > "${DAILY_FILE}"
+    # Run pg_dump inside the Docker container, pipe through gzip to host file
+    docker exec "${CONTAINER_NAME}" pg_dump -U "${DB_USER}" "${DB_NAME}" | gzip > "${DAILY_FILE}"
   else
-    # Run pg_dump on the host with password via PGPASSWORD
-    PGPASSWORD="${DB_PASS}" pg_dump -h "${DB_HOST}" -p "${DB_PORT}" -U "${DB_USER}" -Fc "${DB_NAME}" > "${DAILY_FILE}"
+    # Run pg_dump on the host with password via PGPASSWORD, pipe through gzip
+    PGPASSWORD="${DB_PASS}" pg_dump -h "${DB_HOST}" -p "${DB_PORT}" -U "${DB_USER}" "${DB_NAME}" | gzip > "${DAILY_FILE}"
   fi
 }
 
@@ -187,7 +197,7 @@ fi
 
 # --- Promote Sunday backup to weekly ---
 if [ "${DAY_OF_WEEK}" -eq 7 ]; then
-  WEEKLY_FILE="${BACKUP_DIR}/weekly/${DB_NAME}_weekly_${TIMESTAMP}.dump"
+  WEEKLY_FILE="${BACKUP_DIR}/weekly/${DB_NAME}_weekly_${TIMESTAMP}.sql.gz"
   cp "${DAILY_FILE}" "${WEEKLY_FILE}"
   log "Weekly backup created: ${WEEKLY_FILE}"
 fi

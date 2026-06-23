@@ -148,6 +148,9 @@ export interface TeamBattleLeagueHistoryEntry {
   currentLeagueId: string;
   currentLp: number;
   history: LeagueHistoryEntry[];
+  tagTeamHistory: LeagueHistoryEntry[];
+  tagTeamCurrentLeague: string;
+  tagTeamCurrentLp: number;
 }
 
 export const fetchRobotTeamBattleLeagueHistory = async (robotId: number): Promise<{ teams: TeamBattleLeagueHistoryEntry[] }> => {
@@ -155,14 +158,34 @@ export const fetchRobotTeamBattleLeagueHistory = async (robotId: number): Promis
 };
 
 /**
- * Fetch performance context (leagues, tournaments, tag team) for a robot.
+ * Fetch performance context (leagues, tournaments, tag team, KotH) for a robot.
  */
 export const fetchPerformanceContext = async (robotId: number): Promise<{
   leagues: unknown[];
   tournaments: unknown[];
   tagTeam: unknown | null;
+  koth?: unknown | null;
 }> => {
   return api.get(`/api/robots/${robotId}/performance-context`);
+};
+
+/**
+ * Fetch KotH standing for a robot.
+ */
+export interface KothStandingData {
+  tier: string;
+  leagueInstanceId: string;
+  leaguePoints: number;
+  wins: number;
+  totalMatches: number | null;
+  totalKills: number | null;
+  bestPlacement: number | null;
+  currentWinStreak: number;
+  bestWinStreak: number;
+}
+
+export const fetchRobotKothStanding = async (robotId: number): Promise<{ standing: KothStandingData | null }> => {
+  return api.get<{ standing: KothStandingData | null }>(`/api/robots/${robotId}/koth-standing`);
 };
 
 /**

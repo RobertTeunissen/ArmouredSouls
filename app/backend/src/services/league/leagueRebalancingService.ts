@@ -3,11 +3,14 @@ import prisma from '../../lib/prisma';
 import { achievementService } from '../achievement';
 
 import { 
-  assignLeagueInstance, 
+  assignLeagueInstance,
+  assignLeagueInstanceWithLock,
   rebalanceInstances, 
   LEAGUE_TIERS,
   LeagueTier,
-  getInstancesForTier,
+  MAX_ROBOTS_PER_INSTANCE,
+  MAX_TEAMS_PER_INSTANCE,
+  InstanceOptions,
 } from './leagueInstanceService';
 import {
   LeagueAdapter,
@@ -42,134 +45,12 @@ const ROBOT_LEAGUE_CONFIG: LeagueEngineConfig = {
   entityLabel: 'robot',
 };
 
-// ─── Robot Adapter ───────────────────────────────────────────────────────────
+// ─── Robot Adapter (uses unified factory) ────────────────────────────────────
 
-const robotAdapter: LeagueAdapter<Robot> = {
+const robotAdapter: LeagueAdapter<any> = createStandingsAdapter('league_1v1', {
+  maxPerInstance: MAX_ROBOTS_PER_INSTANCE,
   entityType: 'robot',
-
-  async getEntitiesWithMinPoints(instanceId, minLP, minCycles, excludeIds) {
-    return prisma.robot.findMany({
-      where: {
-        leagueId: instanceId,
-        cyclesInCurrentLeague: { gte: minCycles },
-        leaguePoints: { gte: minLP },
-        NOT: [
-          { name: 'Bye Robot' },
-          { id: { in: Array.from(excludeIds) } },
-        ],
-      },
-      orderBy: [
-        { leaguePoints: 'desc' },
-        { elo: 'desc' },
-      ],
-    });
-  },
-
-  async countEligibleInInstance(instanceId, minCycles, excludeIds) {
-    return prisma.robot.count({
-      where: {
-        leagueId: instanceId,
-        cyclesInCurrentLeague: { gte: minCycles },
-        NOT: [
-          { name: 'Bye Robot' },
-          { id: { in: Array.from(excludeIds) } },
-        ],
-      },
-    });
-  },
-
-  async getEntitiesForDemotion(instanceId, minCycles, excludeIds) {
-    return prisma.robot.findMany({
-      where: {
-        leagueId: instanceId,
-        cyclesInCurrentLeague: { gte: minCycles },
-        NOT: [
-          { name: 'Bye Robot' },
-          { id: { in: Array.from(excludeIds) } },
-        ],
-      },
-      orderBy: [
-        { leaguePoints: 'asc' },
-        { elo: 'asc' },
-      ],
-    });
-  },
-
-  async getInstancesForTier(tier): Promise<InstanceInfo[]> {
-    const instances = await getInstancesForTier(tier as LeagueTier);
-    return instances.map(i => ({ leagueId: i.leagueId }));
-  },
-
-  async countEntitiesInTier(tier) {
-    return prisma.robot.count({
-      where: {
-        currentLeague: tier,
-        NOT: { name: 'Bye Robot' },
-      },
-    });
-  },
-
-  async countEntitiesInDestinationTier(tier) {
-    return prisma.robot.count({
-      where: {
-        currentLeague: tier,
-        NOT: { name: 'Bye Robot' },
-      },
-    });
-  },
-
-  async assignInstance(tier) {
-    return assignLeagueInstance(tier as LeagueTier);
-  },
-
-  async updateEntityLeague(entityId, newTier, newLeagueId) {
-    await prisma.robot.update({
-      where: { id: entityId },
-      data: {
-        currentLeague: newTier,
-        leagueId: newLeagueId,
-        cyclesInCurrentLeague: 0,
-      },
-    });
-  },
-
-  getEntityCurrentTier(entity) {
-    return entity.currentLeague;
-  },
-
-  getEntityLeagueId(entity) {
-    return entity.leagueId;
-  },
-
-  getEntityLeaguePoints(entity) {
-    return entity.leaguePoints;
-  },
-
-  getEntityOwnerId(entity) {
-    return entity.userId;
-  },
-
-  getEntityDisplayName(entity) {
-    return entity.name;
-  },
-
-  async onPromoted(entity, newTier) {
-    await achievementService.checkAndAward(entity.userId, entity.id, {
-      type: 'league_promotion',
-      data: { newLeague: newTier, robotId: entity.id },
-    });
-  },
-
-  async rebalanceInstances(tier) {
-    await rebalanceInstances(tier as LeagueTier);
-  },
-
-  async countAllEntities() {
-    return prisma.robot.count({
-      where: { NOT: { name: 'Bye Robot' } },
-    });
-  },
-};
+});
 
 // ─── Public API (unchanged signatures) ──────────────────────────────────────
 
@@ -227,6 +108,170 @@ export async function rebalanceLeagues(): Promise<FullRebalancingSummary> {
   const result = await rebalanceAllTiers(ROBOT_LEAGUE_CONFIG, robotAdapter);
 
   // Map engine result to the existing public interface
+  return {
+    totalRobots: result.totalEntities,
+    totalPromoted: result.totalPromoted,
+    totalDemoted: result.totalDemoted,
+    tierSummaries: result.tierSummaries.map(s => ({
+      tier: s.tier as LeagueTier,
+      robotsInTier: s.entitiesInTier,
+      promoted: s.promoted,
+      demoted: s.demoted,
+      eligibleRobots: s.eligibleEntities,
+    })),
+    errors: result.errors,
+  };
+}
+
+// ─── KotH Rebalancing (Spec #40) ────────────────────────────────────────────
+
+/**
+ * Create a standings-based adapter for any mode.
+ * Unified factory — all modes (1v1, 2v2, 3v3, tag_team, koth) use this.
+ *
+ * Options:
+ *  - overrideMinLP: KotH uses 0 (no LP threshold for promotion, uses position-based ranking)
+ *  - maxPerInstance: 100 for robots (1v1, koth), 50 for teams (2v2, 3v3, tag_team)
+ *  - entityType: 'robot' | 'tag_team' | 'team_battle' (for league history recording)
+ *  - useLocking: true for team creation (advisory lock on instance assignment)
+ */
+export interface StandingsAdapterOptions {
+  overrideMinLP?: number;
+  maxPerInstance?: number;
+  entityType?: 'robot' | 'tag_team' | 'team_battle';
+  useLocking?: boolean;
+}
+
+export function createStandingsAdapter(mode: string, options: StandingsAdapterOptions | number = {}): LeagueAdapter<any> {
+  // Backward compat: if second arg is a number, treat as overrideMinLP
+  const opts: StandingsAdapterOptions = typeof options === 'number' ? { overrideMinLP: options } : options;
+
+  const maxPerInstance = opts.maxPerInstance ?? MAX_ROBOTS_PER_INSTANCE;
+  const entityType: 'robot' | 'tag_team' | 'team_battle' = opts.entityType ?? 'robot';
+  const useLocking = opts.useLocking ?? false;
+  // For standings queries, map to Prisma entity type ('robot' or 'team')
+  const standingsEntityType = entityType === 'robot' ? 'robot' : 'team';
+
+  const instanceOptions: InstanceOptions = { mode, maxPerInstance };
+
+  return {
+    entityType,
+
+    async getEntitiesWithMinPoints(instanceId, minLP, minCycles, excludeIds) {
+      const effectiveMinLP = opts.overrideMinLP ?? minLP;
+      return prisma.standing.findMany({
+        where: {
+          mode: mode as any,
+          leagueInstanceId: instanceId,
+          cyclesInTier: { gte: minCycles },
+          leaguePoints: { gte: effectiveMinLP },
+          NOT: { entityId: { in: Array.from(excludeIds) } },
+        },
+        orderBy: [{ leaguePoints: 'desc' }],
+      });
+    },
+
+    async countEligibleInInstance(instanceId, minCycles, excludeIds) {
+      return prisma.standing.count({
+        where: {
+          mode: mode as any,
+          leagueInstanceId: instanceId,
+          cyclesInTier: { gte: minCycles },
+          NOT: { entityId: { in: Array.from(excludeIds) } },
+        },
+      });
+    },
+
+    async getEntitiesForDemotion(instanceId, minCycles, excludeIds) {
+      return prisma.standing.findMany({
+        where: {
+          mode: mode as any,
+          leagueInstanceId: instanceId,
+          cyclesInTier: { gte: minCycles },
+          NOT: { entityId: { in: Array.from(excludeIds) } },
+        },
+        orderBy: [{ leaguePoints: 'asc' }],
+      });
+    },
+
+    async getInstancesForTier(tier): Promise<InstanceInfo[]> {
+      const standings = await prisma.standing.findMany({
+        where: { mode: mode as any, tier },
+        distinct: ['leagueInstanceId'],
+        select: { leagueInstanceId: true },
+      });
+      return standings.map(s => ({ leagueId: s.leagueInstanceId }));
+    },
+
+    async countEntitiesInTier(tier) {
+      return prisma.standing.count({ where: { mode: mode as any, tier } });
+    },
+
+    async countEntitiesInDestinationTier(tier) {
+      return prisma.standing.count({ where: { mode: mode as any, tier } });
+    },
+
+    async assignInstance(tier) {
+      if (useLocking) {
+        return assignLeagueInstanceWithLock(tier as LeagueTier, instanceOptions);
+      }
+      return assignLeagueInstance(tier as LeagueTier, instanceOptions);
+    },
+
+    async updateEntityLeague(entityId, newTier, newLeagueId) {
+      await prisma.standing.updateMany({
+        where: { entityType: standingsEntityType, entityId, mode: mode as any },
+        data: { tier: newTier, leagueInstanceId: newLeagueId, cyclesInTier: 0 },
+      });
+    },
+
+    getEntityCurrentTier(entity) { return entity.tier; },
+    getEntityLeagueId(entity) { return entity.leagueInstanceId; },
+    getEntityLeaguePoints(entity) { return entity.leaguePoints; },
+    getEntityOwnerId(entity) { return entity.entityId; },
+    getEntityDisplayName(entity) { return `${standingsEntityType}#${entity.entityId}`; },
+
+    async onPromoted(entity, newTier) {
+      if (entityType === 'robot') {
+        const robot = await prisma.robot.findUnique({ where: { id: entity.entityId }, select: { userId: true } });
+        if (robot) {
+          await achievementService.checkAndAward(robot.userId, entity.entityId, {
+            type: 'league_promotion',
+            data: { newLeague: newTier, robotId: entity.entityId },
+          });
+        }
+      }
+    },
+
+    async rebalanceInstances(tier) {
+      await rebalanceInstances(tier as LeagueTier, instanceOptions);
+    },
+
+    async countAllEntities() {
+      return prisma.standing.count({ where: { mode: mode as any } });
+    },
+  };
+}
+
+/**
+ * Rebalance KotH leagues — uses the same engine as 1v1 but with mode='koth' and no LP threshold.
+ * KotH uses position-based ranking instead of LP thresholds.
+ * Min cycles set to 10 (vs 5 for other leagues) to balance promotion speed,
+ * since KotH points accumulate faster than LP in head-to-head modes.
+ */
+export async function rebalanceKothLeagues(): Promise<FullRebalancingSummary> {
+  const kothConfig: LeagueEngineConfig = {
+    ...ROBOT_LEAGUE_CONFIG,
+    minCyclesForRebalancing: 10,
+    logPrefix: 'KotH Rebalancing',
+  };
+  const kothAdapter = createStandingsAdapter('koth', {
+    overrideMinLP: 0,
+    maxPerInstance: MAX_ROBOTS_PER_INSTANCE,
+    entityType: 'robot',
+  });
+  const result = await rebalanceAllTiers(kothConfig, kothAdapter);
+
   return {
     totalRobots: result.totalEntities,
     totalPromoted: result.totalPromoted,

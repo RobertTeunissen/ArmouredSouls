@@ -894,7 +894,37 @@ export async function upsertRobot(data: Record<string, unknown>) {
     }
   }
 
-  return prisma.robot.create({ data: data as any });
+  const robot = await prisma.robot.create({ data: data as any });
+
+  // Create default standings entries (Spec #40 — unified standings)
+  await prisma.standing.createMany({
+    data: [
+      {
+        entityType: 'robot',
+        entityId: robot.id,
+        mode: 'league_1v1',
+        tier: (data.currentLeague as string) || 'bronze',
+        leagueInstanceId: (data.leagueId as string) || 'bronze_1',
+        leaguePoints: 0,
+        cyclesInTier: 0,
+        wins: 0, losses: 0, draws: 0,
+        currentWinStreak: 0, bestWinStreak: 0, currentLoseStreak: 0,
+      },
+      {
+        entityType: 'robot',
+        entityId: robot.id,
+        mode: 'koth',
+        tier: 'bronze',
+        leagueInstanceId: 'bronze_1',
+        leaguePoints: 0,
+        cyclesInTier: 0,
+        wins: 0, losses: 0, draws: 0,
+        currentWinStreak: 0, bestWinStreak: 0, currentLoseStreak: 0,
+      },
+    ],
+  });
+
+  return robot;
 }
 
 // ===== SEED FUNCTIONS =====
@@ -923,41 +953,8 @@ async function seedCycleMetadata() {
   console.log(`✅ Cycle metadata initialized (current cycle: ${meta?.totalCycles ?? 0})\n`);
 }
 
-/** Seeds the bye-robot user and robot — required in ALL environments */
-async function seedByeRobot(practiceSword: { id: number }) {
-  console.log('Creating Bye-Robot...');
-  const byeUser = await upsertUser({
-    username: 'bye_robot_user',
-    passwordHash: await bcrypt.hash('testpass123', 10),
-    currency: 0,
-    prestige: 0,
-  });
-
-  const byeWeaponInv = await ensureWeaponInventory(byeUser.id, practiceSword.id);
-
-  const byeRobot = await upsertRobot({
-    userId: byeUser.id,
-    name: 'Bye Robot',
-    frameId: 1,
-    ...DEFAULT_ROBOT_ATTRIBUTES,
-    currentHP: 55,
-    maxHP: 55,
-    currentShield: 4,
-    maxShield: 4,
-    elo: 1000,
-    currentLeague: 'bronze',
-    leagueId: 'bronze_bye',
-    leaguePoints: 0,
-    loadoutType: 'single',
-    mainWeaponId: byeWeaponInv.id,
-    stance: 'balanced',
-    battleReadiness: 100,
-    yieldThreshold: 0,
-  });
-
-  console.log(`✅ Bye-Robot upserted (ELO: 1000, ID: ${byeRobot.id})`);
-  return { byeUser, byeRobot };
-}
+// seedByeRobot removed — Spec #41: Bye robot is now fabricated in-memory during matchmaking.
+// The persistent DB record and bye_robot_user are no longer needed.
 
 /** Seeds admin account — acceptance & development only */
 async function seedAdminAccount() {
@@ -1190,8 +1187,7 @@ async function main() {
     throw new Error('Practice Sword weapon not found in seeded weapons array');
   }
 
-  // Bye-Robot is essential game data (needed for odd-number matchmaking)
-  await seedByeRobot(practiceSword);
+  // Bye-Robot no longer seeded (Spec #41 — in-memory fabrication)
 
   // --- Acceptance + development data ---
   if (seedMode === 'acceptance' || seedMode === 'development') {

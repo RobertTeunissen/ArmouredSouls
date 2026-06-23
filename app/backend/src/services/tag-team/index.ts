@@ -21,7 +21,6 @@ export type {
 
 export {
   assignTagTeamLeagueInstanceOnTeamBattle as assignTagTeamLeagueInstance,
-  rebalanceTagTeamLeagueInstances as rebalanceTagTeamInstances,
   TEAM_BATTLE_LEAGUE_TIERS as TAG_TEAM_LEAGUE_TIERS,
   MAX_TEAMS_PER_INSTANCE,
 } from '../team-battle/teamBattleAdapter';

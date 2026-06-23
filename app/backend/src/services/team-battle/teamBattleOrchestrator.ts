@@ -28,7 +28,7 @@ import {
 import { TeamBattleResult, TeamBattleLog } from '../../types/teamBattleLogTypes';
 import {
   logBattleAuditEvent,
-  awardCreditsToUser,
+  awardCreditsWithLedger,
   awardPrestigeToUser,
   awardStreamingRevenueForParticipant,
   checkAndAwardAchievements,
@@ -37,6 +37,7 @@ import {
 import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
 import { prepareRobotForCombat } from '../../utils/robotCalculations';
 import { getTuningBonusesBatch } from '../tuning-pool';
+import standingsService from '../standings/standingsService';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -81,20 +82,53 @@ export async function executeScheduledTeamBattles(
   const startTime = Date.now();
   const cycleNumber = await getCurrentCycleNumber();
   const battleType = teamSize === 2 ? 'league_2v2' : 'league_3v3';
+  const matchType = teamSize === 2 ? 'league_2v2' : 'league_3v3';
 
-  // Fetch all scheduled matches for this team size (league mode only, not tag_team)
-  const scheduledMatches = await prisma.scheduledTeamBattleMatch.findMany({
+  // Fetch all scheduled matches from unified table (Spec #40)
+  const unifiedMatches = await prisma.scheduledMatch.findMany({
     where: {
       status: 'scheduled',
-      teamSize,
-      matchMode: teamSize === 2 ? 'league_2v2' : 'league_3v3',
+      matchType: matchType as any,
     },
-    include: {
-      team1: { include: { members: { include: { robot: true } }, stable: true } },
-      team2: { include: { members: { include: { robot: true } }, stable: true } },
-    },
+    include: { participants: true },
     orderBy: { scheduledFor: 'asc' },
   });
+
+  // Load team data with members+robots for each match
+  const scheduledMatches: ScheduledMatchWithTeams[] = [];
+  for (const um of unifiedMatches) {
+    const p1 = um.participants.find(p => p.slot === 1);
+    const p2 = um.participants.find(p => p.slot === 2);
+    if (!p1) continue;
+
+    const team1 = await prisma.teamBattle.findUnique({
+      where: { id: p1.participantId },
+      include: { members: { include: { robot: true } }, stable: true },
+    });
+    const team2 = p2 ? await prisma.teamBattle.findUnique({
+      where: { id: p2.participantId },
+      include: { members: { include: { robot: true } }, stable: true },
+    }) : null;
+
+    if (!team1) continue;
+
+    // Build a ScheduledMatchWithTeams-compatible object
+    scheduledMatches.push({
+      id: um.id,
+      team1Id: p1.participantId,
+      team2Id: p2?.participantId ?? null,
+      teamSize,
+      matchMode: matchType,
+      teamBattleLeague: um.leagueType ?? 'bronze',
+      teamBattleLeagueId: um.leagueInstanceId ?? 'bronze_1',
+      scheduledFor: um.scheduledFor,
+      status: um.status,
+      cancelReason: um.cancelReason,
+      createdAt: um.createdAt,
+      team1,
+      team2,
+    } as any);
+  }
 
   logger.info(
     `[TeamBattle] Found ${scheduledMatches.length} scheduled ${battleType} matches`,
@@ -188,7 +222,18 @@ async function executeSingleTeamBattle(
   }
 
   // Simulate the battle
-  const battleResult = simulateTeamBattle(team1Robots, team2Robots, teamSize);
+  let battleResult = simulateTeamBattle(team1Robots, team2Robots, teamSize);
+
+  // Bye matches are always an auto-win for team 1 — override simulation result
+  if (isByeMatch) {
+    battleResult = {
+      ...battleResult,
+      winningSide: 1,
+      winnerRobotId: team1Robots[0].id,
+      isDraw: false,
+      isByeMatch: true,
+    };
+  }
 
   // Determine winning team ID
   const team1Won = battleResult.winningSide === 1;
@@ -273,9 +318,9 @@ async function executeSingleTeamBattle(
     const team2Credits = distributeTeamCredits(team2Reward, team2Participants);
 
     // Award credits to stables
-    await awardCreditsToUser(match.team1.stableId, team1Reward);
+    await awardCreditsWithLedger(match.team1.stableId, team1Reward, 'battle_income', cycleNumber, 'Team battle reward');
     if (!isByeMatch && match.team2) {
-      await awardCreditsToUser(match.team2.stableId, team2Reward);
+      await awardCreditsWithLedger(match.team2.stableId, team2Reward, 'battle_income', cycleNumber, 'Team battle reward');
     }
 
     // Calculate fame and prestige
@@ -293,41 +338,31 @@ async function executeSingleTeamBattle(
     const team1LPDelta = calculateTeamBattleLPDelta(team1Won, isDraw);
     const team2LPDelta = calculateTeamBattleLPDelta(team2Won, isDraw);
 
-    // Update team 1: LP + win/loss/draw counters
-    const team1Current = await tx.teamBattle.findUnique({
-      where: { id: match.team1Id },
-      select: { teamLp: true },
-    });
-    await tx.teamBattle.update({
-      where: { id: match.team1Id },
-      data: {
-        teamLp: Math.max(0, (team1Current?.teamLp ?? 0) + team1LPDelta),
-        totalLeagueWins: team1Won ? { increment: 1 } : undefined,
-        totalLeagueLosses: team2Won ? { increment: 1 } : undefined,
-        totalLeagueDraws: isDraw ? { increment: 1 } : undefined,
-      },
+    // Update team 1 standings via unified service
+    const team1Mode = teamSize === 2 ? 'league_2v2' : 'league_3v3';
+    const team1Outcome = isDraw ? 'draw' : team1Won ? 'win' : 'loss';
+    await standingsService.recordBattleResult({
+      entityType: 'team',
+      entityId: match.team1Id,
+      mode: team1Mode as any,
+      outcome: team1Outcome,
+      lpDelta: team1LPDelta,
     });
 
-    // Update team 2: LP + win/loss/draw counters (skip for bye)
+    // Update team 2 standings (skip for bye)
     if (!isByeMatch && match.team2Id) {
-      const team2Current = await tx.teamBattle.findUnique({
-        where: { id: match.team2Id },
-        select: { teamLp: true },
-      });
-      await tx.teamBattle.update({
-        where: { id: match.team2Id },
-        data: {
-          teamLp: Math.max(0, (team2Current?.teamLp ?? 0) + team2LPDelta),
-          totalLeagueWins: team2Won ? { increment: 1 } : undefined,
-          totalLeagueLosses: team1Won ? { increment: 1 } : undefined,
-          totalLeagueDraws: isDraw ? { increment: 1 } : undefined,
-        },
+      const team2Outcome = isDraw ? 'draw' : team2Won ? 'win' : 'loss';
+      await standingsService.recordBattleResult({
+        entityType: 'team',
+        entityId: match.team2Id,
+        mode: team1Mode as any,
+        outcome: team2Outcome,
+        lpDelta: team2LPDelta,
       });
     }
 
     // Update individual robot ELOs and team battle win counters (R16.2)
     // Also persist currentHP from battle result so damage carries over to next cycle
-    const winField = teamSize === 2 ? 'totalLeague2v2Wins' : 'totalLeague3v3Wins';
 
     for (const robot of team1Robots) {
       const robotCredits = team1Credits.find(c => c.robotId === robot.id);
@@ -338,7 +373,6 @@ async function executeSingleTeamBattle(
           currentHP: Math.round(participant?.finalHP ?? robot.currentHP),
           elo: { increment: eloChanges.team1Change },
           fame: team1Won ? { increment: fame } : undefined,
-          [winField]: team1Won ? { increment: 1 } : undefined,
           totalBattles: { increment: 1 },
           wins: team1Won ? { increment: 1 } : undefined,
           draws: isDraw ? { increment: 1 } : undefined,
@@ -368,7 +402,6 @@ async function executeSingleTeamBattle(
             currentHP: Math.round(participant?.finalHP ?? robot.currentHP),
             elo: { increment: eloChanges.team2Change },
             fame: team2Won ? { increment: fame } : undefined,
-            [winField]: team2Won ? { increment: 1 } : undefined,
             totalBattles: { increment: 1 },
             wins: team2Won ? { increment: 1 } : undefined,
             draws: isDraw ? { increment: 1 } : undefined,
@@ -398,8 +431,8 @@ async function executeSingleTeamBattle(
       },
     });
 
-    // Mark match as completed
-    await tx.scheduledTeamBattleMatch.update({
+    // Mark match as completed in unified table
+    await tx.scheduledMatch.update({
       where: { id: match.id },
       data: { status: 'completed' },
     });
@@ -754,7 +787,7 @@ function buildBattleLog(result: TeamBattleResult, teamSize: 2 | 3): TeamBattleLo
  */
 async function markMatchCancelled(matchId: number, error: unknown): Promise<void> {
   const reason = error instanceof Error ? error.message : String(error);
-  await prisma.scheduledTeamBattleMatch.update({
+  await prisma.scheduledMatch.update({
     where: { id: matchId },
     data: {
       status: 'cancelled',

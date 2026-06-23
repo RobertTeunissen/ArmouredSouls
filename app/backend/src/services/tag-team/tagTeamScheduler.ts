@@ -1,4 +1,3 @@
-import { ScheduledTeamBattleMatch } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { RobotWithWeapons } from '../battle/combatSimulator';
@@ -11,12 +10,31 @@ import { simulateTagTeamBattle } from './tagTeamSimulation';
 import { createTagTeamBattleRecord } from './tagTeamBattleRecord';
 import { updateTagTeamBattleResults, checkTeamReadinessForBattle } from './tagTeamResultUpdater';
 
+// ─── Scheduled Match Shape (mapped from unified table) ───────────────────────
+
+/** Shape of a scheduled tag team match as mapped from the unified scheduling table. */
+interface ScheduledTagTeamMatchData {
+  id: number;
+  team1Id: number;
+  team2Id: number | null;
+  teamSize: number;
+  matchMode: string;
+  teamBattleLeague: string;
+  teamBattleLeagueId: string;
+  scheduledFor: Date;
+  status: string;
+  cancelReason: string | null;
+  createdAt: Date;
+  team1: any;
+  team2: any;
+}
+
 /**
  * Execute a tag team battle
  * Requirement 3.1: Initialize battle with both teams' active robots
  * Requirement 12.3: Execute normal battle against bye-team
  */
-export async function executeTagTeamBattle(match: ScheduledTeamBattleMatch): Promise<TagTeamBattleResult> {
+export async function executeTagTeamBattle(match: ScheduledTagTeamMatchData): Promise<TagTeamBattleResult> {
   // R1.8: Reject payloads with team battle league types
   if (match.matchMode !== 'tag_team') {
     throw new TagTeamError(
@@ -52,6 +70,21 @@ export async function executeTagTeamBattle(match: ScheduledTeamBattleMatch): Pro
   // Map TeamBattle members to TagTeamWithRobots interface
   let team1: TagTeamWithRobots | null = null;
   if (team1Raw && team1Raw.members.length >= 2) {
+    // Read league data from standings (source of truth)
+    const team1Standing = await prisma.standing.findFirst({
+      where: { entityType: 'team', entityId: team1Raw.id, mode: 'tag_team' as any },
+    });
+
+    if (!team1Standing) {
+      logger.warn(`[TagTeamBattle] No standing found for team ${team1Raw.id} in tag_team mode — skipping match`);
+      throw new TagTeamError(
+        TagTeamErrorCode.TAG_TEAM_NOT_FOUND,
+        `No tag_team standing for team ${team1Raw.id}`,
+        404,
+        { teamId: team1Raw.id }
+      );
+    }
+
     team1 = {
       id: team1Raw.id,
       stableId: team1Raw.stableId,
@@ -61,13 +94,13 @@ export async function executeTagTeamBattle(match: ScheduledTeamBattleMatch): Pro
       reserveRobotId: team1Raw.members[1].robotId,
       activeRobot: team1Raw.members[0].robot as RobotWithWeapons,
       reserveRobot: team1Raw.members[1].robot as RobotWithWeapons,
-      tagTeamLp: team1Raw.tagTeamLp,
-      tagTeamLeague: team1Raw.tagTeamLeague,
-      tagTeamLeagueId: team1Raw.tagTeamLeagueId,
-      cyclesInTagTeamLeague: team1Raw.cyclesInTagTeamLeague,
-      totalTagTeamWins: team1Raw.totalTagTeamWins,
-      totalTagTeamLosses: team1Raw.totalTagTeamLosses,
-      totalTagTeamDraws: team1Raw.totalTagTeamDraws,
+      tagTeamLp: team1Standing.leaguePoints,
+      tagTeamLeague: team1Standing.tier,
+      tagTeamLeagueId: team1Standing.leagueInstanceId,
+      cyclesInTagTeamLeague: team1Standing.cyclesInTier,
+      totalTagTeamWins: team1Standing.wins,
+      totalTagTeamLosses: team1Standing.losses,
+      totalTagTeamDraws: team1Standing.draws,
       createdAt: team1Raw.createdAt,
       updatedAt: team1Raw.updatedAt,
     };
@@ -96,25 +129,35 @@ export async function executeTagTeamBattle(match: ScheduledTeamBattleMatch): Pro
     });
 
     if (team2Raw && team2Raw.members.length >= 2) {
-      team2 = {
-        id: team2Raw.id,
-        stableId: team2Raw.stableId,
-        teamName: team2Raw.teamName,
-        teamSize: team2Raw.teamSize,
-        activeRobotId: team2Raw.members[0].robotId,
-        reserveRobotId: team2Raw.members[1].robotId,
-        activeRobot: team2Raw.members[0].robot as RobotWithWeapons,
-        reserveRobot: team2Raw.members[1].robot as RobotWithWeapons,
-        tagTeamLp: team2Raw.tagTeamLp,
-        tagTeamLeague: team2Raw.tagTeamLeague,
-        tagTeamLeagueId: team2Raw.tagTeamLeagueId,
-        cyclesInTagTeamLeague: team2Raw.cyclesInTagTeamLeague,
-        totalTagTeamWins: team2Raw.totalTagTeamWins,
-        totalTagTeamLosses: team2Raw.totalTagTeamLosses,
-        totalTagTeamDraws: team2Raw.totalTagTeamDraws,
-        createdAt: team2Raw.createdAt,
-        updatedAt: team2Raw.updatedAt,
-      };
+      // Read league data from standings (source of truth)
+      const team2Standing = await prisma.standing.findFirst({
+        where: { entityType: 'team', entityId: team2Raw.id, mode: 'tag_team' as any },
+      });
+
+      if (!team2Standing) {
+        logger.warn(`[TagTeamBattle] No standing found for team ${team2Raw.id} in tag_team mode — treating as null`);
+        team2 = null;
+      } else {
+        team2 = {
+          id: team2Raw.id,
+          stableId: team2Raw.stableId,
+          teamName: team2Raw.teamName,
+          teamSize: team2Raw.teamSize,
+          activeRobotId: team2Raw.members[0].robotId,
+          reserveRobotId: team2Raw.members[1].robotId,
+          activeRobot: team2Raw.members[0].robot as RobotWithWeapons,
+          reserveRobot: team2Raw.members[1].robot as RobotWithWeapons,
+          tagTeamLp: team2Standing.leaguePoints,
+          tagTeamLeague: team2Standing.tier,
+          tagTeamLeagueId: team2Standing.leagueInstanceId,
+          cyclesInTagTeamLeague: team2Standing.cyclesInTier,
+          totalTagTeamWins: team2Standing.wins,
+          totalTagTeamLosses: team2Standing.losses,
+          totalTagTeamDraws: team2Standing.draws,
+          createdAt: team2Raw.createdAt,
+          updatedAt: team2Raw.updatedAt,
+        };
+      }
     } else {
       team2 = null;
     }
@@ -161,8 +204,8 @@ export async function executeTagTeamBattle(match: ScheduledTeamBattleMatch): Pro
   const battle = await createTagTeamBattleRecord(match, team1 as TagTeamWithRobots, team2 as TagTeamWithRobots, result);
   result.battleId = battle.id;
 
-  // Update match status
-  await prisma.scheduledTeamBattleMatch.update({
+  // Update match status in unified table
+  await prisma.scheduledMatch.update({
     where: { id: match.id },
     data: {
       status: 'completed',
@@ -194,40 +237,50 @@ export async function executeScheduledTagTeamBattles(_scheduledFor?: Date): Prom
   losses: number;
   skippedDueToUnreadyRobots: number;
 }> {
-  // Query scheduled tag team matches
-  // Execute all matches with status 'scheduled' — the cron job controls timing,
-  // scheduledFor is informational only (shown to players)
-  const scheduledMatches = await prisma.scheduledTeamBattleMatch.findMany({
+  // Query scheduled tag team matches from unified table (Spec #40)
+  const unifiedMatches = await prisma.scheduledMatch.findMany({
     where: {
       status: 'scheduled',
-      matchMode: 'tag_team',
+      matchType: 'tag_team',
     },
-    include: {
-      team1: {
-        include: {
-          members: {
-            include: {
-              robot: true,
-            },
-            orderBy: { slotIndex: 'asc' as const },
-          },
-        },
-      },
-      team2: {
-        include: {
-          members: {
-            include: {
-              robot: true,
-            },
-            orderBy: { slotIndex: 'asc' as const },
-          },
-        },
-      },
-    },
-    orderBy: {
-      scheduledFor: 'asc',
-    },
+    include: { participants: true },
+    orderBy: { scheduledFor: 'asc' },
   });
+
+  // Load team data with members+robots for each match
+  const scheduledMatches = [];
+  for (const um of unifiedMatches) {
+    const p1 = um.participants.find(p => p.slot === 1);
+    const p2 = um.participants.find(p => p.slot === 2);
+    if (!p1) continue;
+
+    const team1 = await prisma.teamBattle.findUnique({
+      where: { id: p1.participantId },
+      include: { members: { include: { robot: true }, orderBy: { slotIndex: 'asc' } } },
+    });
+    const team2 = p2 ? await prisma.teamBattle.findUnique({
+      where: { id: p2.participantId },
+      include: { members: { include: { robot: true }, orderBy: { slotIndex: 'asc' } } },
+    }) : null;
+
+    if (!team1) continue;
+
+    scheduledMatches.push({
+      id: um.id,
+      team1Id: p1.participantId,
+      team2Id: p2?.participantId ?? null,
+      teamSize: 2,
+      matchMode: 'tag_team',
+      teamBattleLeague: um.leagueType ?? 'bronze',
+      teamBattleLeagueId: um.leagueInstanceId ?? 'bronze_1',
+      scheduledFor: um.scheduledFor,
+      status: um.status,
+      cancelReason: um.cancelReason ?? null,
+      createdAt: um.createdAt,
+      team1,
+      team2,
+    });
+  }
 
   logger.info(`[TagTeamBattles] Found ${scheduledMatches.length} scheduled tag team matches`);
 
@@ -254,10 +307,10 @@ export async function executeScheduledTagTeamBattles(_scheduledFor?: Date): Prom
             `Team ${match.team1Id} ready: ${team1Ready}, Team ${match.team2Id} ready: ${team2Ready}`
           );
           
-          // Mark match as cancelled
-          await prisma.scheduledTeamBattleMatch.update({
+          // Mark match as cancelled in unified scheduling table
+          await prisma.scheduledMatch.update({
             where: { id: match.id },
-            data: { status: 'cancelled' },
+            data: { status: 'cancelled', cancelReason: 'Team robots not battle-ready' },
           });
           
           skippedDueToUnreadyRobots++;
@@ -283,10 +336,10 @@ export async function executeScheduledTagTeamBattles(_scheduledFor?: Date): Prom
     } catch (error) {
       logger.error(`[TagTeamBattles] Error executing match ${match.id}:`, error);
       
-      // Mark match as cancelled on error
-      await prisma.scheduledTeamBattleMatch.update({
+      // Mark match as cancelled on error (unified table)
+      await prisma.scheduledMatch.update({
         where: { id: match.id },
-        data: { status: 'cancelled' },
+        data: { status: 'cancelled', cancelReason: error instanceof Error ? error.message : String(error) },
       });
     }
   }

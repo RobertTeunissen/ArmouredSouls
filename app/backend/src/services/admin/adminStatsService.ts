@@ -13,7 +13,7 @@ export async function getWeaponStats(userFilter: Prisma.UserWhereInput = {}) {
   });
   const equippedWeapons = await prisma.robot.count({
     where: {
-      NOT: { name: 'Bye Robot' },
+  
       mainWeaponId: { not: null },
       user: userFilter,
     },
@@ -30,7 +30,7 @@ export async function getStanceStats(userFilter: Prisma.UserWhereInput = {}) {
   const stances = await prisma.robot.groupBy({
     by: ['stance'],
     where: {
-      NOT: { name: 'Bye Robot' },
+  
       user: userFilter,
     },
     _count: { id: true },
@@ -47,7 +47,7 @@ export async function getLoadoutStats(userFilter: Prisma.UserWhereInput = {}) {
   const loadouts = await prisma.robot.groupBy({
     by: ['loadoutType'],
     where: {
-      NOT: { name: 'Bye Robot' },
+  
       user: userFilter,
     },
     _count: { id: true },
@@ -64,7 +64,7 @@ export async function getYieldThresholdStats(userFilter: Prisma.UserWhereInput =
   const yieldThresholds = await prisma.robot.groupBy({
     by: ['yieldThreshold'],
     where: {
-      NOT: { name: 'Bye Robot' },
+  
       user: userFilter,
     },
     _count: { id: true },
@@ -196,22 +196,28 @@ export function calculateStats(values: number[]) {
  * Returns the exact shape that the route handler sends as JSON.
  */
 export async function getSystemStats(userFilter: Prisma.UserWhereInput = {}) {
-  // Total robots by tier
-  const robotsByTier = await prisma.robot.groupBy({
-    by: ['currentLeague'],
-    where: { NOT: { name: 'Bye Robot' }, user: userFilter },
+  // Total robots by tier (from unified standings — source of truth)
+  const robotsByTier = await prisma.standing.groupBy({
+    by: ['tier'],
+    where: { mode: 'league_1v1', entityType: 'robot' },
     _count: { id: true },
+  });
+
+  // Also get average ELO per tier from robots
+  const robotEloByTier = await prisma.robot.groupBy({
+    by: ['currentLeague'],
+    where: { user: userFilter },
     _avg: { elo: true },
   });
 
   // Battle readiness
   const totalRobots = await prisma.robot.count({
-    where: { NOT: { name: 'Bye Robot' }, user: userFilter },
+    where: { user: userFilter },
   });
 
   const readyRobots = await prisma.robot.count({
     where: {
-      NOT: { name: 'Bye Robot' },
+  
       currentHP: { gte: prisma.robot.fields.maxHP },
       mainWeaponId: { not: null },
       user: userFilter,
@@ -229,14 +235,14 @@ export async function getSystemStats(userFilter: Prisma.UserWhereInput = {}) {
     kothMatchesScheduled,
     kothMatchesCompleted,
   ] = await Promise.all([
-    prisma.scheduledLeagueMatch.count({ where: { status: 'scheduled' } }),
-    prisma.scheduledLeagueMatch.count({ where: { status: 'completed' } }),
+    prisma.scheduledMatch.count({ where: { matchType: 'league_1v1' as any, status: 'scheduled' } }),
+    prisma.scheduledMatch.count({ where: { matchType: 'league_1v1' as any, status: 'completed' } }),
     prisma.scheduledTournamentMatch.count({ where: { status: { in: ['pending', 'scheduled'] } } }),
     prisma.scheduledTournamentMatch.count({ where: { status: 'completed' } }),
-    prisma.scheduledTeamBattleMatch.count({ where: { status: 'scheduled', matchMode: 'tag_team' } }),
-    prisma.scheduledTeamBattleMatch.count({ where: { status: 'completed', matchMode: 'tag_team' } }),
-    prisma.scheduledKothMatch.count({ where: { status: 'scheduled' } }),
-    prisma.scheduledKothMatch.count({ where: { status: 'completed' } }),
+    prisma.scheduledMatch.count({ where: { matchType: 'tag_team' as any, status: 'scheduled' } }),
+    prisma.scheduledMatch.count({ where: { matchType: 'tag_team' as any, status: 'completed' } }),
+    prisma.scheduledMatch.count({ where: { matchType: 'koth' as any, status: 'scheduled' } }),
+    prisma.scheduledMatch.count({ where: { matchType: 'koth' as any, status: 'completed' } }),
   ]);
 
   // Total scheduled/completed across all types
@@ -351,11 +357,14 @@ export async function getSystemStats(userFilter: Prisma.UserWhereInput = {}) {
   return {
     robots: {
       total: totalRobots,
-      byTier: robotsByTier.map(tier => ({
-        league: tier.currentLeague,
-        count: tier._count.id,
-        averageElo: Math.round(tier._avg.elo || 0),
-      })),
+      byTier: robotsByTier.map(tier => {
+        const eloData = robotEloByTier.find(e => e.currentLeague === tier.tier);
+        return {
+          league: tier.tier,
+          count: tier._count.id,
+          averageElo: Math.round(eloData?._avg?.elo || 0),
+        };
+      }),
       battleReady: readyRobots,
       battleReadyPercentage: totalRobots > 0 ? Math.round((readyRobots / totalRobots) * 100) : 0,
     },
@@ -565,7 +574,7 @@ export async function getAtRiskUsers(bankruptcyThreshold: number = BANKRUPTCY_RI
  */
 export async function getRobotAttributeStats() {
   const robots = await prisma.robot.findMany({
-    where: { NOT: { name: 'Bye Robot' } },
+    where: {},
     select: {
       id: true,
       name: true,
@@ -1124,7 +1133,7 @@ export async function getDashboardKpis(userFilter: Prisma.UserWhereInput = {}) {
   ] = await Promise.all([
     prisma.user.count({ where: userFilter }),
     prisma.user.count({ where: { ...userFilter, createdAt: { gte: sevenDaysAgo } } }),
-    prisma.robot.count({ where: { NOT: { name: 'Bye Robot' }, user: userFilter } }),
+    prisma.robot.count({ where: { user: userFilter } }),
     prisma.battle.count({ where: { createdAt: { gte: oneDayAgo } } }),
     prisma.battle.count(),
     prisma.user.count({
@@ -1298,7 +1307,7 @@ export async function getLeagueHealth(userFilter: Prisma.UserWhereInput = {}) {
 
   const robotsByLeague = await prisma.robot.groupBy({
     by: ['currentLeague'],
-    where: { NOT: { name: 'Bye Robot' }, user: userFilter },
+    where: { user: userFilter },
     _count: { id: true },
     _avg: { elo: true },
   });
@@ -1306,7 +1315,7 @@ export async function getLeagueHealth(userFilter: Prisma.UserWhereInput = {}) {
   // Count distinct league instances per tier
   const instancesByLeague = await prisma.robot.groupBy({
     by: ['currentLeague', 'leagueId'],
-    where: { NOT: { name: 'Bye Robot' }, user: userFilter },
+    where: { user: userFilter },
     _count: { id: true },
   });
 
@@ -1344,27 +1353,27 @@ export async function getTeamBattleLeagueHealth() {
   const REBALANCE_THRESHOLD = 10;
 
   async function getLeagueDataForSize(teamSize: 2 | 3) {
-    // Get team counts per tier
-    const teamsByLeague = await prisma.teamBattle.groupBy({
-      by: ['teamLeague'],
-      where: { teamSize },
+    const mode = teamSize === 2 ? 'league_2v2' : 'league_3v3';
+
+    // Get team counts per tier from standings (source of truth)
+    const teamsByLeague = await prisma.standing.groupBy({
+      by: ['tier'],
+      where: { mode: mode as any, entityType: 'team' },
       _count: { id: true },
     });
 
-    // Get instance details per tier
-    const instancesByLeague = await prisma.teamBattle.groupBy({
-      by: ['teamLeague', 'teamLeagueId'],
-      where: { teamSize },
+    // Get instance details per tier from standings
+    const instancesByLeague = await prisma.standing.groupBy({
+      by: ['tier', 'leagueInstanceId'],
+      where: { mode: mode as any, entityType: 'team' },
       _count: { id: true },
     });
 
     // Get average ELO per tier (computed from member robots)
-    // We need to join through TeamBattleMember to Robot to get ELO
     const teamsWithMembers = await prisma.teamBattle.findMany({
       where: { teamSize },
       select: {
         id: true,
-        teamLeague: true,
         members: {
           select: {
             robot: {
@@ -1375,20 +1384,28 @@ export async function getTeamBattleLeagueHealth() {
       },
     });
 
+    // Get each team's tier from standings
+    const teamStandings = await prisma.standing.findMany({
+      where: { mode: mode as any, entityType: 'team', entityId: { in: teamsWithMembers.map(t => t.id) } },
+      select: { entityId: true, tier: true },
+    });
+    const tierByTeamId = new Map(teamStandings.map(s => [s.entityId, s.tier]));
+
     // Compute average team ELO per tier
     const eloByTier: Record<string, { totalElo: number; teamCount: number }> = {};
     for (const team of teamsWithMembers) {
+      const tier = tierByTeamId.get(team.id) ?? 'bronze';
       const teamElo = team.members.reduce((sum, m) => sum + m.robot.elo, 0);
-      if (!eloByTier[team.teamLeague]) {
-        eloByTier[team.teamLeague] = { totalElo: 0, teamCount: 0 };
+      if (!eloByTier[tier]) {
+        eloByTier[tier] = { totalElo: 0, teamCount: 0 };
       }
-      eloByTier[team.teamLeague].totalElo += teamElo;
-      eloByTier[team.teamLeague].teamCount += 1;
+      eloByTier[tier].totalElo += teamElo;
+      eloByTier[tier].teamCount += 1;
     }
 
     const leagueData = leagues.map((league) => {
-      const data = teamsByLeague.find((r) => r.teamLeague === league);
-      const instances = instancesByLeague.filter((r) => r.teamLeague === league);
+      const data = teamsByLeague.find((r) => r.tier === league);
+      const instances = instancesByLeague.filter((r) => r.tier === league);
       const teamCount = data?._count.id ?? 0;
       const eloData = eloByTier[league];
       const averageElo = eloData && eloData.teamCount > 0
@@ -1411,7 +1428,7 @@ export async function getTeamBattleLeagueHealth() {
         averageElo,
         instances: instances.length,
         instanceDetails: instances.map((i) => ({
-          id: i.teamLeagueId,
+          id: i.leagueInstanceId,
           teamCount: i._count.id,
         })),
         needsRebalancing,
@@ -1445,23 +1462,23 @@ export async function getTagTeamLeagueHealth() {
   const MAX_TEAMS_PER_INSTANCE = 50;
   const MIN_TEAMS_FOR_TIER = 10;
 
-  // Get team counts per tag team tier
-  const teamsByLeague = await prisma.teamBattle.groupBy({
-    by: ['tagTeamLeague'],
-    where: { teamSize: 2 },
+  // Get team counts per tag team tier from standings (source of truth)
+  const teamsByLeague = await prisma.standing.groupBy({
+    by: ['tier'],
+    where: { mode: 'tag_team' as any, entityType: 'team' },
     _count: { id: true },
   });
 
-  // Get instance details per tag team tier
-  const instancesByLeague = await prisma.teamBattle.groupBy({
-    by: ['tagTeamLeague', 'tagTeamLeagueId'],
-    where: { teamSize: 2 },
+  // Get instance details per tag team tier from standings
+  const instancesByLeague = await prisma.standing.groupBy({
+    by: ['tier', 'leagueInstanceId'],
+    where: { mode: 'tag_team' as any, entityType: 'team' },
     _count: { id: true },
   });
 
   const leagueData = leagues.map((league) => {
-    const data = teamsByLeague.find((r) => r.tagTeamLeague === league);
-    const instances = instancesByLeague.filter((r) => r.tagTeamLeague === league);
+    const data = teamsByLeague.find((r) => r.tier === league);
+    const instances = instancesByLeague.filter((r) => r.tier === league);
     const teamCount = data?._count.id ?? 0;
     const instanceCounts = instances.map((i) => i._count.id);
 
@@ -1482,7 +1499,7 @@ export async function getTagTeamLeagueHealth() {
       teamCount,
       instances: instances.length,
       instanceDetails: instances.map((i) => ({
-        id: i.tagTeamLeagueId,
+        id: i.leagueInstanceId,
         teamCount: i._count.id,
       })),
       teamsPerInstance: {
@@ -1609,18 +1626,18 @@ export async function getTuningAdoption(userFilter: Prisma.UserWhereInput = {}) 
   // Count robots with any tuning allocation
   const robotsWithTuning = await prisma.tuningAllocation.count({
     where: {
-      robot: { user: userFilter, NOT: { name: 'Bye Robot' } },
+      robot: { user: userFilter },
     },
   });
 
   const totalRobots = await prisma.robot.count({
-    where: { NOT: { name: 'Bye Robot' }, user: userFilter },
+    where: { user: userFilter },
   });
 
   // Get tuning allocations with details
   const allocations = await prisma.tuningAllocation.findMany({
     where: {
-      robot: { user: userFilter, NOT: { name: 'Bye Robot' } },
+      robot: { user: userFilter },
     },
     select: {
       combatPower: true,
@@ -1721,7 +1738,7 @@ export async function getRefinementAdoption(userFilter: Prisma.UserWhereInput = 
   const scopedUserFilter: Prisma.UserWhereInput = {
     AND: [
       userFilter,
-      { username: { not: 'bye_robot_user' } },
+
     ],
   };
 

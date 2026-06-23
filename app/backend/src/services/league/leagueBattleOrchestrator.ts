@@ -1,4 +1,4 @@
-import { Robot, ScheduledLeagueMatch, Battle, Prisma } from '../../../generated/prisma';
+import { Robot, Battle, Prisma } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { CombatMessageGenerator } from '../battle/combatMessageGenerator';
@@ -16,7 +16,7 @@ import {
   awardStreamingRevenueForParticipant,
   logBattleAuditEvent,
   updateRobotCombatStats,
-  awardCreditsToUser,
+  awardCreditsWithLedger,
   awardPrestigeToUser,
   checkAndAwardAchievements,
   didRobotLosePreviousBattle,
@@ -26,9 +26,26 @@ import { BattleError, BattleErrorCode } from '../../errors/battleErrors';
 import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
 import { prepareRobotForCombat } from '../../utils/robotCalculations';
 import { getTuningBonusesBatch } from '../tuning-pool';
+import standingsService from '../standings/standingsService';
 
 // Re-export so existing consumers don't break
 export { getCurrentCycleNumber };
+
+// ─── Scheduled Match Shape (mapped from unified table) ───────────────────────
+
+/** Shape of a scheduled 1v1 league match as mapped from the unified scheduling table. */
+interface ScheduledLeagueMatchData {
+  id: number;
+  robot1Id: number;
+  robot2Id: number;
+  leagueType: string;
+  leagueInstanceId?: string;
+  scheduledFor: Date;
+  status: string;
+  battleId: number | null;
+  createdAt: Date;
+  _unifiedMatchId?: number;
+}
 
 // League points
 const LEAGUE_POINTS_WIN = 3;
@@ -42,9 +59,6 @@ const _LOSER_DAMAGE_PERCENT = 0.40; // Losers lose 40% HP
 const _MIN_BATTLE_DURATION = 20; // Minimum battle duration in seconds
 const _BATTLE_DURATION_VARIANCE = 25; // Random variance added to duration
 const BYE_BATTLE_DURATION = 15; // Fixed duration for bye battles
-
-// Bye-robot identifier
-const BYE_ROBOT_NAME = 'Bye Robot';
 
 export interface BattleResult {
   battleId: number;
@@ -81,7 +95,7 @@ export interface BattleExecutionSummary {
 /**
  * Calculate prestige award for a battle win
  */
-function calculatePrestigeForBattle(winnerRobot: Robot, isDraw: boolean, isByeMatch: boolean): number {
+function calculatePrestigeForBattle(leagueType: string, isDraw: boolean, isByeMatch: boolean): number {
   if (isDraw || isByeMatch) return 0; // No prestige for draws or bye matches
   
   const prestigeByLeague: Record<string, number> = {
@@ -93,13 +107,14 @@ function calculatePrestigeForBattle(winnerRobot: Robot, isDraw: boolean, isByeMa
     champion: 75,
   };
   
-  return prestigeByLeague[winnerRobot.currentLeague] || 0;
+  return prestigeByLeague[leagueType] || 0;
 }
 
 /**
  * Calculate fame award for a battle win
  */
 function calculateFameForBattle(
+  leagueType: string,
   winnerRobot: Robot,
   winnerFinalHP: number,
   isDraw: boolean,
@@ -117,7 +132,7 @@ function calculateFameForBattle(
     champion: 40,
   };
   
-  let baseFame = fameByLeague[winnerRobot.currentLeague] || 0;
+  let baseFame = fameByLeague[leagueType] || 0;
   
   // Performance bonuses
   const hpPercent = winnerFinalHP / winnerRobot.maxHP;
@@ -183,7 +198,7 @@ function simulateByeBattle(playerRobot: Robot, byeRobot: Robot): BattleResult {
  * Create a Battle record in the database
  */
 async function createBattleRecord(
-  scheduledMatch: ScheduledLeagueMatch,
+  scheduledMatch: ScheduledLeagueMatchData,
   robot1: Robot,
   robot2: Robot,
   result: BattleResult
@@ -345,7 +360,7 @@ async function createBattleRecord(
       winnerId: result.winnerId,
       battleType: 'league_1v1',
       leagueType: scheduledMatch.leagueType,
-      leagueInstanceId: robot1.leagueId, // Snapshot instance at time of battle
+      leagueInstanceId: scheduledMatch.leagueInstanceId, // From scheduled match (standings-derived)
       
       // Battle log with combat messages AND detailed combat events for admin debugging
       battleLog: {
@@ -446,8 +461,8 @@ async function updateRobotStats(
   let fameAwarded = 0;
   
   if (isWinner) {
-    prestigeAwarded = calculatePrestigeForBattle(robot, isDraw, isByeMatch);
-    fameAwarded = calculateFameForBattle(robot, finalHP, isDraw, isByeMatch);
+    prestigeAwarded = calculatePrestigeForBattle(battle.leagueType, isDraw, isByeMatch);
+    fameAwarded = calculateFameForBattle(battle.leagueType, robot, finalHP, isDraw, isByeMatch);
   }
   
   // Update robot combat stats via shared helper
@@ -460,34 +475,24 @@ async function updateRobotStats(
     damageDealt: participant.damageDealt,
     damageTakenByOpponent: opponentParticipant?.damageDealt || 0,
     opponentDestroyed: opponentParticipant?.destroyed || false,
-    leaguePointsChange,
-    currentLeaguePoints: robot.leaguePoints,
     fameIncrement: isWinner ? fameAwarded : 0,
     battleType: 'league_1v1',
     stance: robot.stance,
     loadoutType: robot.loadoutType,
     extraData: {
-      repairCost: 0, // Repair costs calculated by RepairService
+      repairCost: 0,
     },
   });
 
-  // Increment 1v1 league win/loss/draw counters
-  if (isWinner) {
-    await prisma.robot.update({
-      where: { id: robot.id },
-      data: { totalLeague1v1Wins: { increment: 1 } },
-    });
-  } else if (isDraw) {
-    await prisma.robot.update({
-      where: { id: robot.id },
-      data: { totalLeague1v1Draws: { increment: 1 } },
-    });
-  } else {
-    await prisma.robot.update({
-      where: { id: robot.id },
-      data: { totalLeague1v1Losses: { increment: 1 } },
-    });
-  }
+  // Update standings (LP + win/loss/draw counter + streaks) via unified service
+  const outcome = isDraw ? 'draw' : isWinner ? 'win' : 'loss';
+  await standingsService.recordBattleResult({
+    entityType: 'robot',
+    entityId: robot.id,
+    mode: 'league_1v1',
+    outcome,
+    lpDelta: leaguePointsChange,
+  });
   
   // Update BattleParticipant with prestige and fame
   await prisma.battleParticipant.updateMany({
@@ -504,7 +509,15 @@ async function updateRobotStats(
   // Award prestige and credits via shared helpers
   await awardPrestigeToUser(robot.userId, prestigeAwarded);
   const reward = isWinner ? battle.winnerReward : battle.loserReward;
-  await awardCreditsToUser(robot.userId, reward ?? 0);
+  const cycleNumber = await getCurrentCycleNumber();
+  await awardCreditsWithLedger(
+    robot.userId,
+    reward ?? 0,
+    'battle_income',
+    cycleNumber,
+    'League 1v1 battle reward',
+    robot.id,
+  );
   
   return { prestigeAwarded, fameAwarded };
 }
@@ -512,7 +525,7 @@ async function updateRobotStats(
 /**
  * Process a single scheduled battle
  */
-export async function processBattle(scheduledMatch: ScheduledLeagueMatch): Promise<BattleResult & { prestigeAwarded: number; fameAwarded: number; achievementUnlocks: UnlockedAchievement[] }> {
+export async function processBattle(scheduledMatch: ScheduledLeagueMatchData): Promise<BattleResult & { prestigeAwarded: number; fameAwarded: number; achievementUnlocks: UnlockedAchievement[] }> {
   // Load both robots with their weapons
   // Spec #34: include refinements so prepareRobotForCombat can fold them
   // into the weapon's effective stats before the simulator reads them.
@@ -547,18 +560,18 @@ export async function processBattle(scheduledMatch: ScheduledLeagueMatch): Promi
   prepareRobotForCombat(robot1, tuningMap.get(robot1.id) ?? {});
   prepareRobotForCombat(robot2, tuningMap.get(robot2.id) ?? {});
   
-  // Check if this is a bye-robot match
-  const isByeMatch = robot1.name === BYE_ROBOT_NAME || robot2.name === BYE_ROBOT_NAME;
+  // Check if this is a bye-robot match (in-memory fabricated bye has id < 0)
+  const isByeMatch = robot1.id < 0 || robot2.id < 0;
   
   // Simulate battle
   let result: BattleResult;
   if (isByeMatch) {
-    const playerRobot = robot1.name === BYE_ROBOT_NAME ? robot2 : robot1;
-    const byeRobot = robot1.name === BYE_ROBOT_NAME ? robot1 : robot2;
+    const playerRobot = robot1.id < 0 ? robot2 : robot1;
+    const byeRobot = robot1.id < 0 ? robot1 : robot2;
     result = simulateByeBattle(playerRobot, byeRobot);
     
     // Adjust result to match robot order
-    if (robot1.name === BYE_ROBOT_NAME) {
+    if (robot1.id < 0) {
       // Swap the results since bye-robot is robot1
       const temp = result.robot1FinalHP;
       result.robot1FinalHP = result.robot2FinalHP;
@@ -726,8 +739,8 @@ export async function processBattle(scheduledMatch: ScheduledLeagueMatch): Promi
     achievementUnlocks = [...unlocks1, ...unlocks2];
   }
 
-  // Update scheduled match
-  await prisma.scheduledLeagueMatch.update({
+  // Update scheduled match status in unified table
+  await prisma.scheduledMatch.update({
     where: { id: scheduledMatch.id },
     data: {
       status: 'completed',
@@ -761,15 +774,33 @@ export async function processBattle(scheduledMatch: ScheduledLeagueMatch): Promi
 export async function executeScheduledBattles(_scheduledFor?: Date): Promise<BattleExecutionSummary> {
   logger.info('[BattleOrchestrator] Executing all scheduled league battles');
   
-  // Execute all matches with status 'scheduled' — the cron job controls timing,
-  // scheduledFor is informational only (shown to players)
-  const scheduledMatches = await prisma.scheduledLeagueMatch.findMany({
+  // Read from unified scheduled_matches_v2 table (Spec #40)
+  const unifiedMatches = await prisma.scheduledMatch.findMany({
     where: {
+      matchType: 'league_1v1',
       status: 'scheduled',
     },
-    orderBy: {
-      createdAt: 'asc',
-    },
+    include: { participants: true },
+    orderBy: { createdAt: 'asc' },
+  });
+  
+  // Map unified matches to the shape processBattle expects
+  const scheduledMatches = unifiedMatches.map(m => {
+    const p1 = m.participants.find(p => p.slot === 1);
+    const p2 = m.participants.find(p => p.slot === 2);
+    return {
+      id: m.id,
+      robot1Id: p1?.participantId ?? 0,
+      robot2Id: p2?.participantId ?? 0,
+      leagueType: m.leagueType ?? 'bronze',
+      leagueInstanceId: m.leagueInstanceId ?? 'bronze_1',
+      scheduledFor: m.scheduledFor,
+      status: m.status,
+      battleId: m.battleId,
+      createdAt: m.createdAt,
+      // Keep reference to unified match for status update
+      _unifiedMatchId: m.id,
+    };
   });
   
   logger.info(`[BattleOrchestrator] Found ${scheduledMatches.length} matches to execute`);

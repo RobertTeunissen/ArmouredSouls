@@ -31,12 +31,13 @@ import {
 } from '../../utils/tournamentRewards';
 import {
   awardStreamingRevenueForParticipant,
-  awardCreditsToUser,
+  awardCreditsWithLedger,
   awardPrestigeToUser,
   awardFameToRobot,
   checkAndAwardAchievements,
   didRobotLosePreviousBattle,
 } from '../battle/battlePostCombat';
+import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
 
 // ─── Team Tournament Prestige (Stepped Curve) ────────────────────────────────
 
@@ -660,8 +661,9 @@ async function distributeTeamTournamentRewards(
   const loserCreditPerRobot = calculateTournamentParticipationReward(totalParticipants, currentRound, maxRounds) * teamSize;
 
   // Award credits to owners (each robot earns the full amount)
-  await awardCreditsToUser(winnerOwnerId, winnerCreditPerRobot * teamSize);
-  await awardCreditsToUser(loserOwnerId, loserCreditPerRobot * teamSize);
+  const cycleNumber = await getCurrentCycleNumber();
+  await awardCreditsWithLedger(winnerOwnerId, winnerCreditPerRobot * teamSize, 'battle_income', cycleNumber, 'Team tournament reward');
+  await awardCreditsWithLedger(loserOwnerId, loserCreditPerRobot * teamSize, 'battle_income', cycleNumber, 'Team tournament reward');
 
   // ─── Prestige (Stepped Curve — winner only) ────────────────────────
   const winnerPrestige = calculateTeamTournamentPrestige(currentRound, maxRounds);

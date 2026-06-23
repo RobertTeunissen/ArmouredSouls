@@ -26,7 +26,7 @@ export type TagTeamLeagueTier = TeamBattleLeagueTier;
 const PROMOTION_PERCENTAGE = 0.10;
 const DEMOTION_PERCENTAGE = 0.10;
 const MIN_CYCLES_IN_LEAGUE_FOR_REBALANCING = 5;
-const MIN_TEAMS_FOR_REBALANCING = 10;
+const MIN_TEAMS_FOR_REBALANCING = 4;
 const MIN_COHORT_FOR_NEW_TIER = 3;
 
 const TAG_TEAM_LEAGUE_CONFIG: LeagueEngineConfig = {

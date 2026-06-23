@@ -251,7 +251,7 @@ describe('Team Battle Matchmaking Property Tests', () => {
           async (teams) => {
             const K = teams.length;
 
-            const matches = await pairTeams(teams, 2);
+            const matches = await pairTeams(teams, 2, 'bronze', 'bronze_1');
 
             // Count real matches vs bye matches
             const realMatches = matches.filter(m => !m.isByeMatch);
@@ -288,7 +288,7 @@ describe('Team Battle Matchmaking Property Tests', () => {
           async (teams) => {
             const K = teams.length;
 
-            const matches = await pairTeams(teams, 3);
+            const matches = await pairTeams(teams, 3, 'bronze', 'bronze_1');
 
             // Count real matches vs bye matches
             const realMatches = matches.filter(m => !m.isByeMatch);
@@ -329,7 +329,7 @@ describe('Team Battle Matchmaking Property Tests', () => {
               createMockTeam(idx + 1, idx + 1, teamSize, t.teamLp, t.members.map(m => m.robot.elo)),
             );
 
-            const matches = await pairTeams(correctTeams, teamSize);
+            const matches = await pairTeams(correctTeams, teamSize, 'bronze', 'bronze_1');
 
             // Collect all team IDs that appear in matches
             const matchedTeamIds = new Set<number>();
@@ -365,7 +365,7 @@ describe('Team Battle Matchmaking Property Tests', () => {
             );
             const K = correctTeams.length;
 
-            const matches = await pairTeams(correctTeams, teamSize);
+            const matches = await pairTeams(correctTeams, teamSize, 'bronze', 'bronze_1');
 
             // Total matches = ⌈K/2⌉
             expect(matches.length).toBe(Math.ceil(K / 2));

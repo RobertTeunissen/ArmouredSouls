@@ -144,17 +144,31 @@ export async function resolveRobotAndTeamIds(
  * for the given robot/team IDs.
  */
 export async function getUpcomingMatches(robotIds: number[], teamIds: number[], teamBattleIds: number[] = []) {
-  const [leagueMatches, tournamentMatches, activeTournaments, tagTeamMatches, kothMatches, teamBattleMatches, teamTournamentMatches] =
+  // Fetch from unified scheduling table for league, tag_team, koth, team battles (Spec #40)
+  const unifiedMatches = (robotIds.length > 0 || teamBattleIds.length > 0) ? await prisma.scheduledMatch.findMany({
+    where: {
+      status: 'scheduled',
+      participants: {
+        some: {
+          OR: [
+            ...(robotIds.length > 0 ? [{ participantType: 'robot', participantId: { in: robotIds } }] : []),
+            ...(teamBattleIds.length > 0 ? [{ participantType: 'team', participantId: { in: teamBattleIds } }] : []),
+          ],
+        },
+      },
+    },
+    include: { participants: true },
+    orderBy: { scheduledFor: 'asc' },
+  }) : [];
+
+  // Tournaments still use their own table
+  const [tournamentMatches, activeTournaments, teamTournamentMatches] =
     await Promise.all([
-      fetchScheduledLeagueMatches(robotIds),
       fetchScheduledTournamentMatches(robotIds),
       prisma.tournament.findMany({
         where: { status: 'active' },
         select: { id: true, currentRound: true },
       }),
-      fetchScheduledTagTeamMatches(teamIds),
-      fetchScheduledKothMatches(robotIds),
-      fetchScheduledTeamBattleMatches(teamBattleIds),
       fetchScheduledTeamTournamentMatches(teamBattleIds),
     ]);
 
@@ -177,47 +191,41 @@ export async function getUpcomingMatches(robotIds: number[], teamIds: number[], 
       })
     : [];
 
-  const formattedLeague = formatLeagueMatches(leagueMatches);
+  // Format unified matches — resolve robot/team names
+  const formattedUnified = await formatUnifiedMatches(unifiedMatches, robotIds, teamBattleIds);
+
   const formattedTournament = formatTournamentMatches(tournamentMatches);
   const formattedBye = formatByeMatches(tournamentByeMatches);
-  const formattedTagTeam = formatTagTeamMatches(tagTeamMatches);
-  const formattedKoth = formatKothMatches(kothMatches);
-  const formattedTeamBattle = formatTeamBattleMatches(teamBattleMatches);
-  const formattedTeamTournament = formatTeamTournamentMatches(teamTournamentMatches);
+  const formattedTeamTournament = await formatTeamTournamentMatches(teamTournamentMatches);
 
   const allMatches = [
-    ...formattedLeague,
+    ...formattedUnified,
     ...formattedTournament,
     ...formattedBye,
-    ...formattedTagTeam,
-    ...formattedKoth,
-    ...formattedTeamBattle,
     ...formattedTeamTournament,
-  ].sort((a, b) => new Date(a.scheduledFor).getTime() - new Date(b.scheduledFor).getTime());
+  ].sort((a, b) => {
+    const timeA = 'scheduledFor' in a ? (a as any).scheduledFor : '';
+    const timeB = 'scheduledFor' in b ? (b as any).scheduledFor : '';
+    return new Date(timeA).getTime() - new Date(timeB).getTime();
+  });
+
+  const leagueCount = formattedUnified.filter(m => m.matchType === 'league_1v1').length;
+  const tagTeamCount = formattedUnified.filter(m => m.matchType === 'tag_team').length;
+  const kothCount = formattedUnified.filter(m => m.matchType === 'koth').length;
+  const teamBattleCount = formattedUnified.filter(m => m.matchType === 'league_2v2' || m.matchType === 'league_3v3').length;
 
   return {
     matches: allMatches,
     total: allMatches.length,
-    leagueMatches: formattedLeague.length,
+    leagueMatches: leagueCount,
     tournamentMatches: formattedTournament.length + formattedBye.length + formattedTeamTournament.length,
-    tagTeamMatches: formattedTagTeam.length,
-    kothMatches: formattedKoth.length,
-    teamBattleMatches: formattedTeamBattle.length,
+    tagTeamMatches: tagTeamCount,
+    kothMatches: kothCount,
+    teamBattleMatches: teamBattleCount,
   };
 }
 
 // ─── Upcoming: Prisma queries ────────────────────────────────────────
-
-async function fetchScheduledLeagueMatches(robotIds: number[]) {
-  return prisma.scheduledLeagueMatch.findMany({
-    where: {
-      status: 'scheduled',
-      OR: [{ robot1Id: { in: robotIds } }, { robot2Id: { in: robotIds } }],
-    },
-    include: { robot1: robotInclude, robot2: robotInclude },
-    orderBy: { scheduledFor: 'asc' },
-  });
-}
 
 async function fetchScheduledTournamentMatches(robotIds: number[]) {
   const matches = await prisma.scheduledTournamentMatch.findMany({
@@ -253,16 +261,40 @@ async function fetchScheduledTagTeamMatches(_teamIds: number[]) {
 }
 
 async function fetchScheduledKothMatches(robotIds: number[]) {
-  return prisma.scheduledKothMatch.findMany({
+  // Query from unified scheduled_matches_v2 table
+  const matches = await prisma.scheduledMatch.findMany({
     where: {
+      matchType: 'koth' as any,
       status: 'scheduled',
-      participants: { some: { robotId: { in: robotIds } } },
+      participants: { some: { participantType: 'robot', participantId: { in: robotIds } } },
     },
     include: {
-      participants: { include: { robot: { include: { user: robotUserSelect } } } },
+      participants: true,
     },
     orderBy: { scheduledFor: 'asc' },
   });
+
+  // Load robot data for all participants
+  const allRobotIds = matches.flatMap(m => m.participants.map(p => p.participantId));
+  const robots = allRobotIds.length > 0 ? await prisma.robot.findMany({
+    where: { id: { in: allRobotIds } },
+    include: { user: { select: { id: true, username: true } } },
+  }) : [];
+  const robotMap = new Map(robots.map(r => [r.id, r]));
+
+  // Map to the shape formatKothMatches expects
+  return matches.map(m => ({
+    id: m.id,
+    scheduledFor: m.scheduledFor,
+    status: m.status,
+    rotatingZone: false,
+    participants: m.participants.map(p => ({
+      id: p.id,
+      matchId: m.id,
+      robotId: p.participantId,
+      robot: robotMap.get(p.participantId) ?? null,
+    })),
+  }));
 }
 
 async function fetchScheduledTeamBattleMatches(teamBattleIds: number[]) {
@@ -276,13 +308,44 @@ async function fetchScheduledTeamBattleMatches(teamBattleIds: number[]) {
     },
   } as const;
 
-  return prisma.scheduledTeamBattleMatch.findMany({
+  // Query from unified scheduled_matches_v2 table
+  const matches = await prisma.scheduledMatch.findMany({
     where: {
       status: 'scheduled',
-      OR: [{ team1Id: { in: teamBattleIds } }, { team2Id: { in: teamBattleIds } }],
+      matchType: { in: ['league_2v2', 'league_3v3', 'tag_team'] as any },
+      participants: { some: { participantType: 'team', participantId: { in: teamBattleIds } } },
     },
-    include: { team1: teamBattleMemberInclude, team2: teamBattleMemberInclude },
+    include: { participants: true },
     orderBy: { scheduledFor: 'asc' },
+  });
+
+  // Load team data for all participants
+  const allTeamIds = matches.flatMap(m => m.participants.filter(p => p.participantType === 'team').map(p => p.participantId));
+  const teams = allTeamIds.length > 0 ? await prisma.teamBattle.findMany({
+    where: { id: { in: allTeamIds } },
+    ...teamBattleMemberInclude,
+  }) : [];
+  const teamMap = new Map(teams.map(t => [t.id, t]));
+
+  // Map to shape formatTeamBattleMatches expects
+  return matches.map(m => {
+    const p1 = m.participants.find(p => p.slot === 1);
+    const p2 = m.participants.find(p => p.slot === 2);
+    return {
+      id: m.id,
+      team1Id: p1?.participantId ?? 0,
+      team2Id: p2?.participantId ?? null,
+      teamSize: m.matchType === 'league_3v3' ? 3 : 2,
+      matchMode: m.matchType === 'tag_team' ? 'tag_team' : (m.matchType === 'league_3v3' ? 'league_3v3' : 'league_2v2'),
+      teamBattleLeague: m.leagueType ?? 'bronze',
+      teamBattleLeagueId: m.leagueInstanceId ?? 'bronze_1',
+      scheduledFor: m.scheduledFor,
+      status: m.status,
+      cancelReason: m.cancelReason,
+      createdAt: m.createdAt,
+      team1: teamMap.get(p1?.participantId ?? 0) ?? null,
+      team2: p2 ? teamMap.get(p2.participantId) ?? null : null,
+    };
   });
 }
 
@@ -325,6 +388,133 @@ function formatRobotSummary(robot: RobotWithUser) {
     userId: robot.userId,
     user: { username: robot.user.username },
   };
+}
+
+/**
+ * Format unified scheduled matches into the response shape the frontend expects.
+ * Resolves robot/team data to match the ScheduledMatch interface.
+ */
+async function formatUnifiedMatches(
+  matches: Array<{ id: number; matchType: string; scheduledFor: Date; leagueType: string | null; leagueInstanceId: string | null; isByeMatch: boolean | null; participants: Array<{ participantType: string; participantId: number; slot: number }> }>,
+  userRobotIds: number[],
+  userTeamBattleIds: number[],
+) {
+  const formatted = [];
+
+  for (const match of matches) {
+    const p1 = match.participants.find(p => p.slot === 1);
+    const p2 = match.participants.find(p => p.slot === 2);
+
+    const isRobotMatch = p1?.participantType === 'robot';
+    const isKoth = match.matchType === 'koth';
+
+    if (isKoth) {
+      // KotH: FFA — resolve participant robots for the card
+      const robotIds = match.participants.map(p => p.participantId);
+      const robots = await prisma.robot.findMany({
+        where: { id: { in: robotIds } },
+        select: { id: true, name: true, elo: true, userId: true, user: { select: { username: true } } },
+      });
+
+      formatted.push({
+        id: match.id,
+        matchType: match.matchType,
+        scheduledFor: match.scheduledFor.toISOString(),
+        leagueType: match.leagueType ?? 'koth',
+        status: 'scheduled',
+        isByeMatch: false,
+        kothParticipantCount: match.participants.length,
+        kothParticipants: robots.map(r => ({
+          id: r.id,
+          name: r.name,
+          elo: r.elo,
+          userId: r.userId,
+          user: { username: (r as any).user?.username ?? 'Unknown' },
+        })),
+      });
+    } else if (isRobotMatch) {
+      // 1v1 league: resolve robot1 and robot2
+      const robot1 = p1 ? await prisma.robot.findUnique({
+        where: { id: p1.participantId },
+        select: { id: true, name: true, elo: true, currentHP: true, maxHP: true, userId: true },
+        }) : null;
+      const robot2 = p2 ? await prisma.robot.findUnique({
+        where: { id: p2.participantId },
+        select: { id: true, name: true, elo: true, currentHP: true, maxHP: true, userId: true },
+      }) : null;
+
+      const robot1User = robot1 ? await prisma.user.findUnique({ where: { id: robot1.userId }, select: { username: true } }) : null;
+      const robot2User = robot2 ? await prisma.user.findUnique({ where: { id: robot2.userId }, select: { username: true } }) : null;
+
+      formatted.push({
+        id: match.id,
+        matchType: match.matchType,
+        scheduledFor: match.scheduledFor.toISOString(),
+        leagueType: match.leagueType ?? 'bronze',
+        status: 'scheduled',
+        isByeMatch: match.isByeMatch ?? false,
+        robot1Id: robot1?.id,
+        robot2Id: robot2?.id,
+        robot1: robot1 ? { ...robot1, user: { username: robot1User?.username ?? 'Unknown' } } : null,
+        robot2: robot2 ? { ...robot2, user: { username: robot2User?.username ?? 'Unknown' } } : null,
+      });
+    } else {
+      // Team modes (2v2, 3v3, tag_team): resolve team data
+      const team1 = p1 ? await prisma.teamBattle.findUnique({
+        where: { id: p1.participantId },
+        include: { members: { include: { robot: { include: { user: { select: { username: true } } } } }, orderBy: { slotIndex: 'asc' } }, stable: { select: { stableName: true } } },
+      }) : null;
+      const team2 = p2 ? await prisma.teamBattle.findUnique({
+        where: { id: p2.participantId },
+        include: { members: { include: { robot: { include: { user: { select: { username: true } } } } }, orderBy: { slotIndex: 'asc' } }, stable: { select: { stableName: true } } },
+      }) : null;
+
+      // Resolve LP/league from standings (source of truth)
+      const teamIds = [team1?.id, team2?.id].filter((id): id is number => id != null);
+      const mode = match.matchType === 'tag_team' ? 'tag_team' : (match.matchType === 'league_3v3' ? 'league_3v3' : 'league_2v2');
+      const teamStandings = teamIds.length > 0 ? await prisma.standing.findMany({
+        where: { entityType: 'team', entityId: { in: teamIds }, mode: mode as any },
+        select: { entityId: true, leaguePoints: true, tier: true },
+      }) : [];
+      const standingsMap = new Map(teamStandings.map(s => [s.entityId, s]));
+
+      const formatTeamBattle = (team: NonNullable<typeof team1>) => {
+        const standing = standingsMap.get(team.id);
+        return {
+          id: team.id,
+          teamName: team.teamName,
+          teamSize: team.teamSize,
+          teamLp: standing?.leaguePoints ?? team.teamLp,
+          teamLeague: standing?.tier ?? team.teamLeague,
+          members: team.members.map(m => ({
+            robotId: m.robot.id,
+            robotName: m.robot.name,
+            robotElo: m.robot.elo,
+            userId: m.robot.userId,
+            user: { username: m.robot.user?.username ?? 'Unknown' },
+          })),
+          combinedELO: team.members.reduce((sum, m) => sum + m.robot.elo, 0),
+        };
+      };
+
+      formatted.push({
+        id: match.id,
+        matchType: match.matchType,
+        scheduledFor: match.scheduledFor.toISOString(),
+        leagueType: match.leagueType ?? 'bronze',
+        teamBattleLeague: match.leagueType ?? 'bronze',
+        teamSize: team1?.teamSize ?? (match.matchType === 'league_3v3' ? 3 : 2),
+        status: 'scheduled',
+        isByeMatch: match.isByeMatch ?? false,
+        team1Id: team1?.id,
+        team2Id: team2?.id,
+        teamBattleTeam1: team1 ? formatTeamBattle(team1) : undefined,
+        teamBattleTeam2: team2 ? formatTeamBattle(team2) : null,
+      });
+    }
+  }
+
+  return formatted;
 }
 
 function formatLeagueMatches(matches: ScheduledLeagueMatchWithRobots[]) {
@@ -381,7 +571,15 @@ function formatByeMatches(matches: ScheduledTournamentByeMatchWithRobots[]) {
   }));
 }
 
-function formatTeamTournamentMatches(matches: Awaited<ReturnType<typeof fetchScheduledTeamTournamentMatches>>) {
+async function formatTeamTournamentMatches(matches: Awaited<ReturnType<typeof fetchScheduledTeamTournamentMatches>>) {
+  // Batch-fetch standings for all participating teams
+  const teamIds = matches.flatMap(m => [m.resolvedTeam1?.id, m.resolvedTeam2?.id].filter((id): id is number => id != null));
+  const standings = teamIds.length > 0 ? await prisma.standing.findMany({
+    where: { entityType: 'team', entityId: { in: teamIds }, mode: { in: ['league_2v2', 'league_3v3'] as any[] } },
+    select: { entityId: true, leaguePoints: true, tier: true },
+  }) : [];
+  const standingsMap = new Map(standings.map(s => [s.entityId, s]));
+
   return matches.map(match => {
     const participantType = match.tournament.participantType as 'team_2v2' | 'team_3v3';
     const matchType = participantType === 'team_2v2' ? 'tournament_2v2' as const : 'tournament_3v3' as const;
@@ -390,21 +588,24 @@ function formatTeamTournamentMatches(matches: Awaited<ReturnType<typeof fetchSch
       ? getConfig().team2v2TournamentSchedule
       : getConfig().team3v3TournamentSchedule;
 
-    const formatTeam = (team: NonNullable<typeof match.resolvedTeam1>) => ({
-      id: team.id,
-      teamName: team.teamName,
-      teamSize: team.teamSize,
-      teamLp: team.teamLp,
-      teamLeague: team.teamLeague,
-      members: team.members.map(m => ({
-        robotId: m.robot.id,
-        robotName: m.robot.name,
-        robotElo: m.robot.elo,
-        userId: m.robot.userId,
-        user: { username: m.robot.user.username },
-      })),
-      combinedELO: team.members.reduce((sum, m) => sum + m.robot.elo, 0),
-    });
+    const formatTeam = (team: NonNullable<typeof match.resolvedTeam1>) => {
+      const standing = standingsMap.get(team.id);
+      return {
+        id: team.id,
+        teamName: team.teamName,
+        teamSize: team.teamSize,
+        teamLp: standing?.leaguePoints ?? team.teamLp,
+        teamLeague: standing?.tier ?? team.teamLeague,
+        members: team.members.map(m => ({
+          robotId: m.robot.id,
+          robotName: m.robot.name,
+          robotElo: m.robot.elo,
+          userId: m.robot.userId,
+          user: { username: m.robot.user.username },
+        })),
+        combinedELO: team.members.reduce((sum, m) => sum + m.robot.elo, 0),
+      };
+    };
 
     return {
       id: `team-tournament-${match.id}`,
@@ -480,7 +681,6 @@ function formatKothMatches(matches: ScheduledKothMatchWithParticipants[]) {
     matchType: 'koth' as const,
     scheduledFor: match.scheduledFor,
     status: match.status,
-    kothRotatingZone: match.rotatingZone,
     kothParticipantCount: match.participants.length,
     kothParticipants: match.participants.map((p) => ({
       id: p.robot.id,
@@ -683,11 +883,6 @@ async function formatKothHistoryEntry(battle: BattleWithFullRelations, baseData:
   const logPlacements = ((battleLogData as Record<string, unknown>).placements || []) as Array<Pick<KothPlacement, 'robotId' | 'zoneScore'>>;
   const userLogEntry = userParticipant ? logPlacements.find((lp) => lp.robotId === userParticipant.robotId) : null;
 
-  const kothMatch = await prisma.scheduledKothMatch.findFirst({
-    where: { battleId: battle.id },
-    select: { rotatingZone: true },
-  });
-
   const kothData: Record<string, unknown> = {
     ...baseData,
     winnerReward: userParticipant?.credits ?? 0,
@@ -695,7 +890,6 @@ async function formatKothHistoryEntry(battle: BattleWithFullRelations, baseData:
     kothPlacement: userParticipant?.placement ?? null,
     kothParticipantCount: battle.participants.length,
     kothZoneScore: userLogEntry?.zoneScore ?? null,
-    kothRotatingZone: kothMatch?.rotatingZone ?? false,
   };
 
   if (userParticipant && userParticipant.robotId !== battle.robot1Id && userParticipant.robotId !== battle.robot2Id) {

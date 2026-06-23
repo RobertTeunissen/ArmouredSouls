@@ -44,14 +44,8 @@ export class KothWinConditionEvaluator implements WinConditionEvaluator {
   private lastStandingDuration: number;
 
   constructor(config: KothMatchConfig) {
-    this.scoreThreshold = config.scoreThreshold
-      ?? (config.rotatingZone
-        ? KOTH_MATCH_DEFAULTS.rotatingZoneScoreThreshold
-        : KOTH_MATCH_DEFAULTS.scoreThreshold);
-    this.timeLimit = config.timeLimit
-      ?? (config.rotatingZone
-        ? KOTH_MATCH_DEFAULTS.rotatingZoneTimeLimit
-        : KOTH_MATCH_DEFAULTS.timeLimit);
+    this.scoreThreshold = config.scoreThreshold ?? KOTH_MATCH_DEFAULTS.scoreThreshold;
+    this.timeLimit = config.timeLimit ?? KOTH_MATCH_DEFAULTS.timeLimit;
     this.lastStandingDuration = KOTH_MATCH_DEFAULTS.lastStandingDuration;
   }
 

@@ -6,6 +6,7 @@ import {
   getLossesLeaderboard,
   getPrestigeLeaderboard,
 } from '../services/analytics/leaderboardService';
+import { leaderboardService, type LeaderboardCategory } from '../services/leaderboard/leaderboardService';
 
 const router = express.Router();
 
@@ -114,6 +115,32 @@ router.get('/prestige', validateRequest({ query: prestigeQuerySchema }), async (
   const response = { ...result, timestamp: new Date().toISOString() };
   setCache(cacheKey, response);
   res.json(response);
+});
+
+// ─── Unified Leaderboard Cache Endpoint (Spec #40) ───────────────────────────
+
+const cacheQuerySchema = z.object({
+  category: z.enum(['fame', 'prestige', 'losses', 'koth_wins', 'koth_zone_score', 'career_wins', 'team_wins']),
+  page: z.coerce.number().int().positive().optional().default(1),
+  limit: z.coerce.number().int().positive().max(200).optional().default(50),
+});
+
+/**
+ * GET /api/leaderboards/cache
+ * Serves pre-computed leaderboard data from the leaderboard_cache table.
+ * Includes `updatedAt` for cache freshness display on the frontend.
+ * Uses rank-based pagination (offset = (page-1) * limit).
+ */
+router.get('/cache', validateRequest({ query: cacheQuerySchema }), async (req: Request, res: Response) => {
+  const { category, page, limit } = req.query as unknown as { category: LeaderboardCategory; page: number; limit: number };
+
+  const result = await leaderboardService.getLeaderboard(category, page, limit);
+
+  res.json({
+    ...result,
+    category,
+    timestamp: new Date().toISOString(),
+  });
 });
 
 export default router;

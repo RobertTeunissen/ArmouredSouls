@@ -15,7 +15,8 @@ const participantInclude = {
   robot: { include: { user: { select: userSelect } } },
 };
 
-const byeRobotFilter = { NOT: { name: 'Bye Robot' as const } };
+// byeRobotFilter removed — Spec #41 (no persistent Bye Robot)
+const byeRobotFilter = {};
 
 // ─── Participant-based battle helpers ───────────────────────────────
 
@@ -326,7 +327,7 @@ export async function fetchCareerRecords() {
            u.username, u."stable_name"
     FROM "robots" r
     JOIN "users" u ON u.id = r."user_id"
-    WHERE r.name != 'Bye Robot' AND r."total_battles" >= 50
+    WHERE r."total_battles" >= 50
     ORDER BY (r.wins::float / r."total_battles") DESC
     LIMIT 10
   `;

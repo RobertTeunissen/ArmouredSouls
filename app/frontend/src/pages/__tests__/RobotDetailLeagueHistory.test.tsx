@@ -19,6 +19,7 @@ vi.mock('../../utils/robotApi', () => ({
   fetchRobotById: vi.fn(),
   fetchRobotLeagueHistory: vi.fn(),
   fetchRobotTeamBattleLeagueHistory: vi.fn().mockResolvedValue({ teams: [] }),
+  fetchRobotKothStanding: vi.fn().mockResolvedValue({ standing: null }),
   fetchMyRobots: vi.fn().mockResolvedValue([]),
   updateAppearance: vi.fn(),
   commitUpgrades: vi.fn(),

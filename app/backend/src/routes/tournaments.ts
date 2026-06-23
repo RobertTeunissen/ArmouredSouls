@@ -38,7 +38,6 @@ router.get('/', authenticateToken, validateRequest({ query: tournamentListQueryS
       include: {
         matches: {
           orderBy: [{ round: 'asc' }, { matchNumber: 'asc' }],
-          take: 50,
         },
       },
       orderBy: { createdAt: 'desc' },

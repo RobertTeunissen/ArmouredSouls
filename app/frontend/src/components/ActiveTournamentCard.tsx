@@ -1,10 +1,10 @@
 /**
  * ActiveTournamentCard — Shows active tournament participation on the Dashboard.
  *
- * Displays tournament name, current round, next opponent (if known from upcoming matches),
- * and scheduled execution time. Links to the tournament detail page.
- *
- * Requirements: R9.18, R9.19
+ * Shows per-robot/team status within each tournament:
+ * - Active participants with their next opponent
+ * - Eliminated participants
+ * - Links to tournament detail page
  */
 
 import { useCallback, useEffect, useState } from 'react';
@@ -15,29 +15,36 @@ import { createLogger } from '../utils/logger';
 
 const log = createLogger('ActiveTournamentCard');
 
+interface ParticipantStatus {
+  name: string;
+  status: 'active' | 'eliminated' | 'bye';
+  nextOpponent?: string;
+}
+
 interface ActiveTournamentInfo {
   tournamentId: number;
   tournamentName: string;
-  participantType: 'tournament_1v1' | 'tournament_2v2' | 'tournament_3v3';
+  participantType: string;
   currentRound: number;
   maxRounds: number;
-  nextOpponentName?: string;
+  participants: ParticipantStatus[];
   scheduledFor?: string;
 }
 
-interface UpcomingMatchResponse {
+interface TournamentDetailResponse {
+  id: number;
+  name: string;
+  participantType: string;
+  currentRound: number;
+  maxRounds: number;
+  status: string;
   matches: Array<{
-    matchType?: string;
-    tournamentId?: number;
-    tournamentName?: string;
-    tournamentRound?: number;
-    currentRound?: number;
-    maxRounds?: number;
-    scheduledFor: string;
-    robot1?: { name: string; userId: number };
-    robot2?: { name: string; userId: number } | null;
-    teamBattleTeam1?: { teamName: string; members: Array<{ userId: number }> };
-    teamBattleTeam2?: { teamName: string; members: Array<{ userId: number }> } | null;
+    round: number;
+    status: string;
+    participant1Id: number | null;
+    participant2Id: number | null;
+    winnerId: number | null;
+    isByeMatch: boolean;
   }>;
 }
 
@@ -48,67 +55,133 @@ function ActiveTournamentCard() {
   const { user } = useAuth();
 
   const fetchActiveTournaments = useCallback(async () => {
+    if (!user) return;
+
     try {
       setLoading(true);
       setError(null);
 
-      // Use the upcoming matches endpoint which already returns tournament matches
-      const data = await api.get<UpcomingMatchResponse>('/api/matches/upcoming');
+      // Fetch active tournaments
+      const response = await api.get<{ success: boolean; tournaments: TournamentDetailResponse[] }>('/api/tournaments', { params: { status: 'active' } });
+      const activeTournaments = response.tournaments || [];
 
-      // Filter for all tournament matches (1v1, 2v2, 3v3)
-      const tournamentMatches = data.matches.filter(
-        (m) => m.matchType === 'tournament_1v1' || m.matchType === 'tournament_2v2' || m.matchType === 'tournament_3v3'
-      );
+      if (!activeTournaments || activeTournaments.length === 0) {
+        setTournaments([]);
+        return;
+      }
 
-      // Deduplicate by tournamentId
-      const seen = new Set<number>();
-      const activeTournaments: ActiveTournamentInfo[] = [];
+      // Fetch user's robot/team IDs
+      const userRobots = await api.get<Array<{ id: number; name: string }>>('/api/robots');
 
-      for (const match of tournamentMatches) {
-        if (!match.tournamentId || seen.has(match.tournamentId)) continue;
-        seen.add(match.tournamentId);
+      const userRobotIds = new Set(userRobots.map(r => r.id));
+      const userRobotNames = new Map(userRobots.map(r => [r.id, r.name]));
 
-        // Determine opponent name based on match type
-        let nextOpponentName: string | undefined;
-        const myUserId = user?.id;
+      // Collect all participant IDs across tournaments to batch-resolve names
+      const allParticipantIdsSet = new Set<number>();
+      for (const tournament of activeTournaments) {
+        if (tournament.status !== 'active') continue;
+        for (const match of tournament.matches) {
+          if (match.participant1Id) allParticipantIdsSet.add(match.participant1Id);
+          if (match.participant2Id) allParticipantIdsSet.add(match.participant2Id);
+        }
+      }
 
-        if (match.matchType === 'tournament_1v1') {
-          // 1v1: opponent is the other robot
-          if (myUserId && match.robot1 && match.robot2) {
-            const isMyRobot1 = match.robot1.userId === myUserId;
-            nextOpponentName = isMyRobot1 ? match.robot2.name : match.robot1.name;
-          } else if (match.robot2) {
-            nextOpponentName = match.robot2.name;
+      // Batch fetch all robot names (covers opponents too)
+      const allRobotIds = [...allParticipantIdsSet].filter(id => !userRobotNames.has(id));
+      const allRobotNamesMap = new Map(userRobotNames);
+      if (allRobotIds.length > 0) {
+        try {
+          const allRobots = await api.get<Array<{ id: number; name: string }>>('/api/robots/all/robots');
+          for (const r of allRobots) {
+            allRobotNamesMap.set(r.id, r.name);
           }
-        } else {
-          // Team tournaments: opponent is the other team
-          if (myUserId && match.teamBattleTeam1 && match.teamBattleTeam2) {
-            const isMyTeam1 = match.teamBattleTeam1.members.some(m => m.userId === myUserId);
-            nextOpponentName = isMyTeam1 ? match.teamBattleTeam2.teamName : match.teamBattleTeam1.teamName;
-          } else if (match.teamBattleTeam2) {
-            nextOpponentName = match.teamBattleTeam2.teamName;
+        } catch {
+          // Fallback: just use IDs if the endpoint fails
+        }
+      }
+
+      const result: ActiveTournamentInfo[] = [];
+
+      for (const tournament of activeTournaments) {
+        if (tournament.status !== 'active') continue;
+
+        const participants: ParticipantStatus[] = [];
+        const currentRoundMatches = tournament.matches.filter(m => m.round === tournament.currentRound);
+        const allCompletedMatches = tournament.matches.filter(m => m.status === 'completed' || m.status === 'forfeit');
+
+        // Find which of my robots/teams are in this tournament
+        // Check ALL rounds (round 1 always has every participant listed)
+        const allParticipantIds = new Set<number>();
+        for (const match of tournament.matches) {
+          if (match.participant1Id) allParticipantIds.add(match.participant1Id);
+          if (match.participant2Id) allParticipantIds.add(match.participant2Id);
+        }
+
+        // Filter to my participants
+        const myParticipantIds = [...allParticipantIds].filter(id => userRobotIds.has(id));
+
+        if (myParticipantIds.length === 0) continue;
+
+        // Determine eliminated participants (lost a match and didn't advance)
+        const eliminatedIds = new Set<number>();
+        for (const match of allCompletedMatches) {
+          if (match.winnerId && match.participant1Id && match.participant2Id) {
+            const loserId = match.winnerId === match.participant1Id ? match.participant2Id : match.participant1Id;
+            eliminatedIds.add(loserId);
           }
         }
 
-        activeTournaments.push({
-          tournamentId: match.tournamentId,
-          tournamentName: match.tournamentName || `Tournament #${match.tournamentId}`,
-          participantType: match.matchType as 'tournament_1v1' | 'tournament_2v2' | 'tournament_3v3',
-          currentRound: match.currentRound || match.tournamentRound || 1,
-          maxRounds: match.maxRounds || 1,
-          nextOpponentName,
-          scheduledFor: match.scheduledFor,
-        });
+        for (const participantId of myParticipantIds) {
+          const name = userRobotNames.get(participantId) ?? `#${participantId}`;
+
+          if (eliminatedIds.has(participantId)) {
+            participants.push({ name, status: 'eliminated' });
+            continue;
+          }
+
+          // Find their current round match
+          const currentMatch = currentRoundMatches.find(
+            m => m.participant1Id === participantId || m.participant2Id === participantId
+          );
+
+          if (currentMatch) {
+            const opponentId = currentMatch.participant1Id === participantId
+              ? currentMatch.participant2Id
+              : currentMatch.participant1Id;
+
+            if (currentMatch.isByeMatch || !opponentId) {
+              participants.push({ name, status: 'bye', nextOpponent: 'Bye' });
+            } else {
+              // Resolve opponent name
+              const opponentName = allRobotNamesMap.get(opponentId) ?? `Robot #${opponentId}`;
+              participants.push({ name, status: 'active', nextOpponent: opponentName });
+            }
+          } else {
+            // Not yet assigned to a match in current round (waiting for previous round)
+            participants.push({ name, status: 'active', nextOpponent: 'TBD' });
+          }
+        }
+
+        if (participants.length > 0) {
+          result.push({
+            tournamentId: tournament.id,
+            tournamentName: tournament.name,
+            participantType: tournament.participantType,
+            currentRound: tournament.currentRound,
+            maxRounds: tournament.maxRounds,
+            participants,
+          });
+        }
       }
 
-      setTournaments(activeTournaments);
+      setTournaments(result);
     } catch (err) {
       setError('Failed to load tournament status');
       log.error('Active tournament fetch error', { err });
     } finally {
       setLoading(false);
     }
-  }, [user?.id]);
+  }, [user]);
 
   useEffect(() => {
     fetchActiveTournaments();
@@ -136,58 +209,67 @@ function ActiveTournamentCard() {
 
   return (
     <div className="space-y-3">
-      {tournaments.map((tournament) => (
-        <Link
-          key={tournament.tournamentId}
-          to={`/tournaments/${tournament.tournamentId}`}
-          className="block bg-surface border border-white/10 rounded-lg p-4 hover:border-primary/50 transition-colors min-h-[44px]"
-        >
-          <div className="flex items-center gap-3 mb-2">
-            <span className="text-xl" aria-hidden="true">🏆</span>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="font-semibold text-white truncate">{tournament.tournamentName}</h3>
-                <span className={`text-xs px-2 py-0.5 rounded font-semibold ${
-                  tournament.participantType === 'tournament_1v1'
-                    ? 'bg-blue-400/20 text-blue-400'
-                    : tournament.participantType === 'tournament_2v2'
-                    ? 'bg-emerald-400/20 text-emerald-400'
-                    : 'bg-violet-400/20 text-violet-400'
-                }`}>
-                  {tournament.participantType === 'tournament_1v1' ? '1v1' : tournament.participantType === 'tournament_2v2' ? '2v2' : '3v3'}
-                </span>
-              </div>
-              <div className="text-sm text-secondary mt-1">
-                Round {tournament.currentRound} / {tournament.maxRounds}
-              </div>
-            </div>
-            <span className="text-primary text-sm flex-shrink-0">View →</span>
-          </div>
+      {tournaments.map((tournament) => {
+        const activeCount = tournament.participants.filter(p => p.status === 'active' || p.status === 'bye').length;
+        const eliminatedCount = tournament.participants.filter(p => p.status === 'eliminated').length;
 
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-secondary">
-            {tournament.nextOpponentName && (
-              <div>
-                <span className="text-tertiary">Next opponent: </span>
-                <span className="text-white">{tournament.nextOpponentName}</span>
+        return (
+          <Link
+            key={tournament.tournamentId}
+            to={`/tournaments/${tournament.tournamentId}`}
+            className="block bg-surface border border-white/10 rounded-lg p-4 hover:border-primary/50 transition-colors min-h-[44px]"
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <span className="text-xl" aria-hidden="true">🏆</span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="font-semibold text-white truncate">{tournament.tournamentName}</h3>
+                  <span className={`text-xs px-2 py-0.5 rounded font-semibold ${
+                    (tournament.participantType === 'tournament_1v1' || tournament.participantType === 'robot' as string)
+                      ? 'bg-blue-400/20 text-blue-400'
+                      : (tournament.participantType === 'tournament_2v2' || tournament.participantType === 'team_2v2' as string)
+                      ? 'bg-emerald-400/20 text-emerald-400'
+                      : 'bg-violet-400/20 text-violet-400'
+                  }`}>
+                    {(tournament.participantType === 'tournament_1v1' || tournament.participantType === 'robot' as string) ? '1v1' : (tournament.participantType === 'tournament_2v2' || tournament.participantType === 'team_2v2' as string) ? '2v2' : '3v3'}
+                  </span>
+                </div>
+                <div className="text-sm text-secondary mt-1">
+                  Round {tournament.currentRound} / {tournament.maxRounds}
+                  {eliminatedCount > 0 && (
+                    <span className="text-tertiary ml-2">
+                      • {activeCount} active, {eliminatedCount} eliminated
+                    </span>
+                  )}
+                </div>
               </div>
-            )}
-            {!tournament.nextOpponentName && (
-              <div>
-                <span className="text-tertiary">Next opponent: </span>
-                <span className="text-secondary italic">TBD</span>
-              </div>
-            )}
-            {tournament.scheduledFor && (
-              <div>
-                <span className="text-tertiary">Scheduled: </span>
-                <span className="text-white">
-                  {tournament.participantType === 'tournament_2v2' ? '15:00 UTC' : '18:00 UTC'} daily
-                </span>
-              </div>
-            )}
-          </div>
-        </Link>
-      ))}
+              <span className="text-primary text-sm flex-shrink-0">View →</span>
+            </div>
+
+            {/* Per-participant status */}
+            <div className="space-y-1 mt-2">
+              {tournament.participants.map((p) => (
+                <div key={p.name} className="flex items-center gap-2 text-xs">
+                  {p.status === 'eliminated' ? (
+                    <>
+                      <span className="text-red-400">✗</span>
+                      <span className="text-tertiary line-through">{p.name}</span>
+                      <span className="text-tertiary italic">eliminated</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-green-400">⚔</span>
+                      <span className="text-white">{p.name}</span>
+                      <span className="text-tertiary">vs</span>
+                      <span className="text-secondary">{p.nextOpponent ?? 'TBD'}</span>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+          </Link>
+        );
+      })}
     </div>
   );
 }

@@ -17,8 +17,13 @@ const mockPrisma = {
     findMany: jest.fn(),
     update: jest.fn(),
   },
+  scheduledMatch: {
+    findMany: jest.fn(),
+    update: jest.fn(),
+  },
   robot: {
     findMany: jest.fn(),
+    findUnique: jest.fn(),
     update: jest.fn(),
   },
   battle: {
@@ -34,6 +39,13 @@ const mockPrisma = {
     findMany: jest.fn(),
     update: jest.fn(),
     count: jest.fn(),
+    groupBy: jest.fn(),
+  },
+  standing: {
+    findMany: jest.fn(),
+    count: jest.fn(),
+    updateMany: jest.fn(),
+    update: jest.fn(),
     groupBy: jest.fn(),
   },
   $transaction: mockTransaction,
@@ -106,6 +118,15 @@ jest.mock('../../../src/utils/robotCalculations', () => ({
 jest.mock('../../../src/services/tuning-pool', () => ({
   __esModule: true,
   getTuningBonusesBatch: jest.fn().mockResolvedValue(new Map()),
+}));
+
+// Mock standingsService for LP/streak updates (Spec #40 — unified standings)
+const mockRecordBattleResult = jest.fn().mockResolvedValue(undefined);
+jest.mock('../../../src/services/standings/standingsService', () => ({
+  __esModule: true,
+  default: {
+    recordBattleResult: (...args: unknown[]) => mockRecordBattleResult(...args),
+  },
 }));
 
 // Mock leagueEngine for adapter tests
@@ -296,6 +317,52 @@ function setupDefaultMocks(teamSize: 2 | 3 = 2) {
     const ids: number[] = where.id.in;
     return Promise.resolve(ids.map(id => makeRobotWithWeapons(id)));
   });
+
+  // Mock teamBattle.findUnique for unified orchestrator team loading
+  mockPrisma.teamBattle.findUnique.mockImplementation(({ where }: any) => {
+    const teamId = where.id;
+    const memberCount = teamSize;
+    return Promise.resolve({
+      id: teamId,
+      stableId: teamId * 100,
+      teamSize,
+      teamName: `Team ${teamId}`,
+      teamLp: 50,
+      teamLeague: 'bronze',
+      teamLeagueId: 'bronze_1',
+      members: Array.from({ length: memberCount }, (_, i) => ({
+        id: teamId * 100 + i,
+        teamId,
+        robotId: teamId * 10 + i,
+        slotIndex: i,
+        robot: makeRobotWithWeapons(teamId * 10 + i, 1000),
+      })),
+      stable: { id: teamId * 100, stableName: `Stable ${teamId}` },
+    });
+  });
+}
+
+/**
+ * Helper: set up scheduledMatch.findMany mock from old-style match data.
+ * Converts makeScheduledMatch output to the unified format the orchestrator now expects.
+ */
+function mockUnifiedScheduledMatches(matches: ReturnType<typeof makeScheduledMatch>[], teamSize: 2 | 3 = 2) {
+  const unified = matches.map(m => ({
+    id: m.id,
+    matchType: teamSize === 2 ? 'league_2v2' : 'league_3v3',
+    status: 'scheduled',
+    scheduledFor: m.scheduledFor,
+    leagueType: m.teamBattleLeague,
+    leagueInstanceId: m.teamBattleLeagueId,
+    cancelReason: null,
+    createdAt: m.scheduledFor,
+    battleId: null,
+    participants: [
+      { id: 1, participantType: 'team', participantId: m.team1Id, slot: 1 },
+      ...(m.team2Id ? [{ id: 2, participantType: 'team', participantId: m.team2Id, slot: 2 }] : []),
+    ],
+  }));
+  mockPrisma.scheduledMatch.findMany.mockResolvedValue(unified);
 }
 
 // ── Tests: Orchestrator ──────────────────────────────────────────────────────
@@ -309,7 +376,7 @@ describe('teamBattleOrchestrator', () => {
   describe('executeScheduledTeamBattles — full execution flow', () => {
     it('should fetch scheduled matches, simulate, persist, reward, and audit (R1.4)', async () => {
       const match = makeScheduledMatch(1, 2);
-      mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([match]);
+      mockUnifiedScheduledMatches([match]);
 
       // Transaction mock: execute the callback and return a battle record
       mockTransaction.mockImplementation(async (cb: Function) => {
@@ -318,7 +385,7 @@ describe('teamBattleOrchestrator', () => {
           battleParticipant: { createMany: jest.fn(), updateMany: jest.fn() },
           teamBattle: { findUnique: jest.fn().mockResolvedValue({ teamLp: 50 }), update: jest.fn() },
           robot: { update: jest.fn() },
-          scheduledTeamBattleMatch: { update: jest.fn() },
+          scheduledMatch: { update: jest.fn() },
         };
         return cb(tx);
       });
@@ -343,7 +410,7 @@ describe('teamBattleOrchestrator', () => {
 
     it('should set battleType to league_2v2 for 2v2 matches', async () => {
       const match = makeScheduledMatch(1, 2);
-      mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([match]);
+      mockUnifiedScheduledMatches([match]);
 
       let createdBattleData: any = null;
       mockTransaction.mockImplementation(async (cb: Function) => {
@@ -358,7 +425,7 @@ describe('teamBattleOrchestrator', () => {
           battleParticipant: { createMany: jest.fn(), updateMany: jest.fn() },
           teamBattle: { findUnique: jest.fn().mockResolvedValue({ teamLp: 50 }), update: jest.fn() },
           robot: { update: jest.fn() },
-          scheduledTeamBattleMatch: { update: jest.fn() },
+          scheduledMatch: { update: jest.fn() },
         };
         return cb(tx);
       });
@@ -371,7 +438,7 @@ describe('teamBattleOrchestrator', () => {
     it('should set battleType to league_3v3 for 3v3 matches', async () => {
       setupDefaultMocks(3);
       const match = makeScheduledMatch(1, 3);
-      mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([match]);
+      mockUnifiedScheduledMatches([match]);
 
       let createdBattleData: any = null;
       mockTransaction.mockImplementation(async (cb: Function) => {
@@ -386,7 +453,7 @@ describe('teamBattleOrchestrator', () => {
           battleParticipant: { createMany: jest.fn(), updateMany: jest.fn() },
           teamBattle: { findUnique: jest.fn().mockResolvedValue({ teamLp: 50 }), update: jest.fn() },
           robot: { update: jest.fn() },
-          scheduledTeamBattleMatch: { update: jest.fn() },
+          scheduledMatch: { update: jest.fn() },
         };
         return cb(tx);
       });
@@ -398,7 +465,7 @@ describe('teamBattleOrchestrator', () => {
 
     it('should persist exactly 2N BattleParticipant rows (R1.5)', async () => {
       const match = makeScheduledMatch(1, 2);
-      mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([match]);
+      mockUnifiedScheduledMatches([match]);
 
       let participantData: any[] = [];
       mockTransaction.mockImplementation(async (cb: Function) => {
@@ -412,7 +479,7 @@ describe('teamBattleOrchestrator', () => {
           },
           teamBattle: { findUnique: jest.fn().mockResolvedValue({ teamLp: 50 }), update: jest.fn() },
           robot: { update: jest.fn() },
-          scheduledTeamBattleMatch: { update: jest.fn() },
+          scheduledMatch: { update: jest.fn() },
         };
         return cb(tx);
       });
@@ -428,7 +495,7 @@ describe('teamBattleOrchestrator', () => {
     });
 
     it('should return empty results when no scheduled matches exist', async () => {
-      mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([]);
+      mockUnifiedScheduledMatches([]);
 
       const result = await executeScheduledTeamBattles(2);
 
@@ -442,7 +509,7 @@ describe('teamBattleOrchestrator', () => {
     it('should mark failed match as cancelled and continue remaining', async () => {
       const match1 = makeScheduledMatch(1, 2);
       const match2 = makeScheduledMatch(2, 2, { team1Id: 3, team2Id: 4 });
-      mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([match1, match2]);
+      mockUnifiedScheduledMatches([match1, match2]);
 
       let callCount = 0;
       mockTransaction.mockImplementation(async (cb: Function) => {
@@ -455,12 +522,12 @@ describe('teamBattleOrchestrator', () => {
           battleParticipant: { createMany: jest.fn(), updateMany: jest.fn() },
           teamBattle: { findUnique: jest.fn().mockResolvedValue({ teamLp: 50 }), update: jest.fn() },
           robot: { update: jest.fn() },
-          scheduledTeamBattleMatch: { update: jest.fn() },
+          scheduledMatch: { update: jest.fn() },
         };
         return cb(tx);
       });
 
-      mockPrisma.scheduledTeamBattleMatch.update.mockResolvedValue({});
+      mockPrisma.scheduledMatch.update.mockResolvedValue({});
 
       const result = await executeScheduledTeamBattles(2);
 
@@ -471,7 +538,7 @@ describe('teamBattleOrchestrator', () => {
       expect(result.results[1].status).toBe('completed');
 
       // Verify the failed match was marked as cancelled in DB
-      expect(mockPrisma.scheduledTeamBattleMatch.update).toHaveBeenCalledWith({
+      expect(mockPrisma.scheduledMatch.update).toHaveBeenCalledWith({
         where: { id: 1 },
         data: expect.objectContaining({
           status: 'cancelled',
@@ -483,10 +550,10 @@ describe('teamBattleOrchestrator', () => {
     it('should handle all matches failing gracefully', async () => {
       const match1 = makeScheduledMatch(1, 2);
       const match2 = makeScheduledMatch(2, 2, { team1Id: 3, team2Id: 4 });
-      mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([match1, match2]);
+      mockUnifiedScheduledMatches([match1, match2]);
 
       mockTransaction.mockRejectedValue(new Error('DB connection lost'));
-      mockPrisma.scheduledTeamBattleMatch.update.mockResolvedValue({});
+      mockPrisma.scheduledMatch.update.mockResolvedValue({});
 
       const result = await executeScheduledTeamBattles(2);
 
@@ -498,11 +565,11 @@ describe('teamBattleOrchestrator', () => {
   describe('transaction rollback on reward failure (R7.11)', () => {
     it('should rollback entire transaction when reward distribution fails', async () => {
       const match = makeScheduledMatch(1, 2);
-      mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([match]);
+      mockUnifiedScheduledMatches([match]);
 
       // Transaction throws (simulating rollback)
       mockTransaction.mockRejectedValue(new Error('Credit distribution failed'));
-      mockPrisma.scheduledTeamBattleMatch.update.mockResolvedValue({});
+      mockPrisma.scheduledMatch.update.mockResolvedValue({});
 
       const result = await executeScheduledTeamBattles(2);
 
@@ -513,10 +580,10 @@ describe('teamBattleOrchestrator', () => {
 
     it('should not emit audit logs when transaction rolls back', async () => {
       const match = makeScheduledMatch(1, 2);
-      mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([match]);
+      mockUnifiedScheduledMatches([match]);
 
       mockTransaction.mockRejectedValue(new Error('Transaction failed'));
-      mockPrisma.scheduledTeamBattleMatch.update.mockResolvedValue({});
+      mockPrisma.scheduledMatch.update.mockResolvedValue({});
 
       await executeScheduledTeamBattles(2);
 
@@ -528,7 +595,7 @@ describe('teamBattleOrchestrator', () => {
   describe('audit log emission per robot (R10.4)', () => {
     it('should emit one audit log per participating robot in 2v2', async () => {
       const match = makeScheduledMatch(1, 2);
-      mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([match]);
+      mockUnifiedScheduledMatches([match]);
 
       mockTransaction.mockImplementation(async (cb: Function) => {
         const tx = {
@@ -536,7 +603,7 @@ describe('teamBattleOrchestrator', () => {
           battleParticipant: { createMany: jest.fn(), updateMany: jest.fn() },
           teamBattle: { findUnique: jest.fn().mockResolvedValue({ teamLp: 50 }), update: jest.fn() },
           robot: { update: jest.fn() },
-          scheduledTeamBattleMatch: { update: jest.fn() },
+          scheduledMatch: { update: jest.fn() },
         };
         return cb(tx);
       });
@@ -550,7 +617,7 @@ describe('teamBattleOrchestrator', () => {
     it('should emit one audit log per participating robot in 3v3', async () => {
       setupDefaultMocks(3);
       const match = makeScheduledMatch(1, 3);
-      mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([match]);
+      mockUnifiedScheduledMatches([match]);
 
       mockTransaction.mockImplementation(async (cb: Function) => {
         const tx = {
@@ -558,7 +625,7 @@ describe('teamBattleOrchestrator', () => {
           battleParticipant: { createMany: jest.fn(), updateMany: jest.fn() },
           teamBattle: { findUnique: jest.fn().mockResolvedValue({ teamLp: 50 }), update: jest.fn() },
           robot: { update: jest.fn() },
-          scheduledTeamBattleMatch: { update: jest.fn() },
+          scheduledMatch: { update: jest.fn() },
         };
         return cb(tx);
       });
@@ -571,7 +638,7 @@ describe('teamBattleOrchestrator', () => {
 
     it('should include team battle metadata in audit log extras', async () => {
       const match = makeScheduledMatch(1, 2);
-      mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([match]);
+      mockUnifiedScheduledMatches([match]);
 
       mockTransaction.mockImplementation(async (cb: Function) => {
         const tx = {
@@ -579,7 +646,7 @@ describe('teamBattleOrchestrator', () => {
           battleParticipant: { createMany: jest.fn(), updateMany: jest.fn() },
           teamBattle: { findUnique: jest.fn().mockResolvedValue({ teamLp: 50 }), update: jest.fn() },
           robot: { update: jest.fn() },
-          scheduledTeamBattleMatch: { update: jest.fn() },
+          scheduledMatch: { update: jest.fn() },
         };
         return cb(tx);
       });
@@ -598,7 +665,7 @@ describe('teamBattleOrchestrator', () => {
 
     it('should include opponent team name and LP delta in audit log extras (R9.7)', async () => {
       const match = makeScheduledMatch(1, 2);
-      mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([match]);
+      mockUnifiedScheduledMatches([match]);
       mockCalculateTeamBattleLPDelta.mockReturnValue(3);
 
       mockTransaction.mockImplementation(async (cb: Function) => {
@@ -607,7 +674,7 @@ describe('teamBattleOrchestrator', () => {
           battleParticipant: { createMany: jest.fn(), updateMany: jest.fn() },
           teamBattle: { findUnique: jest.fn().mockResolvedValue({ teamLp: 50 }), update: jest.fn() },
           robot: { update: jest.fn() },
-          scheduledTeamBattleMatch: { update: jest.fn() },
+          scheduledMatch: { update: jest.fn() },
         };
         return cb(tx);
       });
@@ -642,7 +709,7 @@ describe('teamBattleOrchestrator', () => {
 
     it('should set opponent team name to "Bye" for bye matches (R9.7)', async () => {
       const match = makeScheduledMatch(1, 2, { isBye: true });
-      mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([match]);
+      mockUnifiedScheduledMatches([match]);
       mockCalculateTeamBattleLPDelta.mockReturnValue(3);
 
       mockTransaction.mockImplementation(async (cb: Function) => {
@@ -651,7 +718,7 @@ describe('teamBattleOrchestrator', () => {
           battleParticipant: { createMany: jest.fn(), updateMany: jest.fn() },
           teamBattle: { findUnique: jest.fn().mockResolvedValue({ teamLp: 50 }), update: jest.fn() },
           robot: { update: jest.fn() },
-          scheduledTeamBattleMatch: { update: jest.fn() },
+          scheduledMatch: { update: jest.fn() },
         };
         return cb(tx);
       });
@@ -669,7 +736,7 @@ describe('teamBattleOrchestrator', () => {
 
     it('should continue execution even if audit log fails for one robot', async () => {
       const match = makeScheduledMatch(1, 2);
-      mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([match]);
+      mockUnifiedScheduledMatches([match]);
 
       mockTransaction.mockImplementation(async (cb: Function) => {
         const tx = {
@@ -677,7 +744,7 @@ describe('teamBattleOrchestrator', () => {
           battleParticipant: { createMany: jest.fn(), updateMany: jest.fn() },
           teamBattle: { findUnique: jest.fn().mockResolvedValue({ teamLp: 50 }), update: jest.fn() },
           robot: { update: jest.fn() },
-          scheduledTeamBattleMatch: { update: jest.fn() },
+          scheduledMatch: { update: jest.fn() },
         };
         return cb(tx);
       });
@@ -700,7 +767,7 @@ describe('teamBattleOrchestrator', () => {
   describe('bye-match handling', () => {
     it('should handle bye matches without team2 robots', async () => {
       const match = makeScheduledMatch(1, 2, { isBye: true });
-      mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([match]);
+      mockUnifiedScheduledMatches([match]);
 
       mockTransaction.mockImplementation(async (cb: Function) => {
         const tx = {
@@ -708,7 +775,7 @@ describe('teamBattleOrchestrator', () => {
           battleParticipant: { createMany: jest.fn(), updateMany: jest.fn() },
           teamBattle: { findUnique: jest.fn().mockResolvedValue({ teamLp: 50 }), update: jest.fn() },
           robot: { update: jest.fn() },
-          scheduledTeamBattleMatch: { update: jest.fn() },
+          scheduledMatch: { update: jest.fn() },
         };
         return cb(tx);
       });
@@ -760,131 +827,122 @@ describe('teamBattleAdapter', () => {
   });
 
   describe('adapter entity accessors', () => {
-    const mockTeam = {
+    // Mock entity as a standings record (unified Spec #40 shape)
+    const mockStanding = {
       id: 1,
-      stableId: 100,
-      teamSize: 2,
-      teamName: 'Test Team',
-      teamLp: 75,
-      teamLeague: 'silver',
-      teamLeagueId: 'silver_2',
-      cyclesInLeague: 10,
-      totalLeagueWins: 5,
-      totalLeagueLosses: 3,
-      totalLeagueDraws: 1,
-      tagTeamLp: 0,
-      tagTeamLeague: 'bronze',
-      tagTeamLeagueId: 'bronze_1',
-      cyclesInTagTeamLeague: 0,
-      totalTagTeamWins: 0,
-      totalTagTeamLosses: 0,
-      totalTagTeamDraws: 0,
-      eligibility: 'ELIGIBLE',
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      entityId: 100,
+      entityType: 'team',
+      mode: 'league_2v2',
+      tier: 'silver',
+      leagueInstanceId: 'silver_2',
+      leaguePoints: 75,
+      cyclesInTier: 10,
+      wins: 5,
+      losses: 3,
+      draws: 1,
     };
 
     it('should return correct current tier', () => {
-      expect(teamBattleAdapter.getEntityCurrentTier(mockTeam as any)).toBe('silver');
+      expect(teamBattleAdapter.getEntityCurrentTier(mockStanding as any)).toBe('silver');
     });
 
     it('should return correct league ID', () => {
-      expect(teamBattleAdapter.getEntityLeagueId(mockTeam as any)).toBe('silver_2');
+      expect(teamBattleAdapter.getEntityLeagueId(mockStanding as any)).toBe('silver_2');
     });
 
     it('should return correct league points', () => {
-      expect(teamBattleAdapter.getEntityLeaguePoints(mockTeam as any)).toBe(75);
+      expect(teamBattleAdapter.getEntityLeaguePoints(mockStanding as any)).toBe(75);
     });
 
-    it('should return correct owner ID (stableId)', () => {
-      expect(teamBattleAdapter.getEntityOwnerId(mockTeam as any)).toBe(100);
+    it('should return correct owner ID (entityId)', () => {
+      expect(teamBattleAdapter.getEntityOwnerId(mockStanding as any)).toBe(100);
     });
 
     it('should return descriptive display name', () => {
-      const name = teamBattleAdapter.getEntityDisplayName(mockTeam as any);
-      expect(name).toContain('Test Team');
-      expect(name).toContain('1');
+      const name = teamBattleAdapter.getEntityDisplayName(mockStanding as any);
+      expect(name).toContain('team');
+      expect(name).toContain('100');
     });
   });
 
   describe('adapter Prisma queries', () => {
     it('should query entities with min points ordered by LP desc', async () => {
-      const teams = [
-        { id: 1, teamLp: 80 },
-        { id: 2, teamLp: 60 },
+      const standings = [
+        { id: 1, entityId: 10, leaguePoints: 80 },
+        { id: 2, entityId: 20, leaguePoints: 60 },
       ];
-      mockPrisma.teamBattle.findMany.mockResolvedValue(teams);
+      mockPrisma.standing.findMany.mockResolvedValue(standings);
 
       const result = await teamBattleAdapter.getEntitiesWithMinPoints(
         'bronze_1', 50, 5, new Set([99]),
       );
 
-      expect(mockPrisma.teamBattle.findMany).toHaveBeenCalledWith({
+      expect(mockPrisma.standing.findMany).toHaveBeenCalledWith({
         where: {
-          teamLeagueId: 'bronze_1',
-          teamSize: 2,
-          cyclesInLeague: { gte: 5 },
-          teamLp: { gte: 50 },
-          NOT: { id: { in: [99] } },
+          mode: 'league_2v2',
+          leagueInstanceId: 'bronze_1',
+          cyclesInTier: { gte: 5 },
+          leaguePoints: { gte: 50 },
+          NOT: { entityId: { in: [99] } },
         },
-        orderBy: [{ teamLp: 'desc' }, { id: 'asc' }],
+        orderBy: [{ leaguePoints: 'desc' }],
       });
-      expect(result).toEqual(teams);
+      expect(result).toEqual(standings);
     });
 
     it('should count eligible entities in instance', async () => {
-      mockPrisma.teamBattle.count.mockResolvedValue(12);
+      mockPrisma.standing.count.mockResolvedValue(12);
 
       const result = await teamBattleAdapter.countEligibleInInstance(
         'silver_1', 5, new Set([1, 2]),
       );
 
-      expect(mockPrisma.teamBattle.count).toHaveBeenCalledWith({
+      expect(mockPrisma.standing.count).toHaveBeenCalledWith({
         where: {
-          teamLeagueId: 'silver_1',
-          teamSize: 2,
-          cyclesInLeague: { gte: 5 },
-          NOT: { id: { in: [1, 2] } },
+          mode: 'league_2v2',
+          leagueInstanceId: 'silver_1',
+          cyclesInTier: { gte: 5 },
+          NOT: { entityId: { in: [1, 2] } },
         },
       });
       expect(result).toBe(12);
     });
 
     it('should query entities for demotion ordered by LP asc', async () => {
-      const teams = [
-        { id: 3, teamLp: 10 },
-        { id: 4, teamLp: 20 },
+      const standings = [
+        { id: 3, entityId: 30, leaguePoints: 10 },
+        { id: 4, entityId: 40, leaguePoints: 20 },
       ];
-      mockPrisma.teamBattle.findMany.mockResolvedValue(teams);
+      mockPrisma.standing.findMany.mockResolvedValue(standings);
 
       const result = await teamBattleAdapter.getEntitiesForDemotion(
         'gold_1', 5, new Set(),
       );
 
-      expect(mockPrisma.teamBattle.findMany).toHaveBeenCalledWith({
+      expect(mockPrisma.standing.findMany).toHaveBeenCalledWith({
         where: {
-          teamLeagueId: 'gold_1',
-          teamSize: 2,
-          cyclesInLeague: { gte: 5 },
-          NOT: { id: { in: [] } },
+          mode: 'league_2v2',
+          leagueInstanceId: 'gold_1',
+          cyclesInTier: { gte: 5 },
+          NOT: { entityId: { in: [] } },
         },
-        orderBy: [{ teamLp: 'asc' }, { id: 'asc' }],
+        orderBy: [{ leaguePoints: 'asc' }],
       });
-      expect(result).toEqual(teams);
+      expect(result).toEqual(standings);
     });
 
     it('should get instances for a tier', async () => {
-      mockPrisma.teamBattle.findMany.mockResolvedValue([
-        { teamLeagueId: 'bronze_1' },
-        { teamLeagueId: 'bronze_2' },
+      mockPrisma.standing.findMany.mockResolvedValue([
+        { leagueInstanceId: 'bronze_1' },
+        { leagueInstanceId: 'bronze_2' },
       ]);
 
       const result = await teamBattleAdapter.getInstancesForTier('bronze');
 
-      expect(mockPrisma.teamBattle.findMany).toHaveBeenCalledWith({
-        where: { teamLeague: 'bronze', teamSize: 2 },
-        select: { teamLeagueId: true },
-        distinct: ['teamLeagueId'],
+      expect(mockPrisma.standing.findMany).toHaveBeenCalledWith({
+        where: { mode: 'league_2v2', tier: 'bronze' },
+        distinct: ['leagueInstanceId'],
+        select: { leagueInstanceId: true },
       });
       expect(result).toEqual([
         { leagueId: 'bronze_1' },
@@ -893,27 +951,27 @@ describe('teamBattleAdapter', () => {
     });
 
     it('should count entities in tier', async () => {
-      mockPrisma.teamBattle.count.mockResolvedValue(45);
+      mockPrisma.standing.count.mockResolvedValue(45);
 
       const result = await teamBattleAdapter.countEntitiesInTier('diamond');
 
-      expect(mockPrisma.teamBattle.count).toHaveBeenCalledWith({
-        where: { teamLeague: 'diamond', teamSize: 2 },
+      expect(mockPrisma.standing.count).toHaveBeenCalledWith({
+        where: { mode: 'league_2v2', tier: 'diamond' },
       });
       expect(result).toBe(45);
     });
 
     it('should update entity league on promotion/demotion', async () => {
-      mockPrisma.teamBattle.update.mockResolvedValue({});
+      mockPrisma.standing.updateMany.mockResolvedValue({ count: 1 });
 
       await teamBattleAdapter.updateEntityLeague(5, 'gold', 'gold_1');
 
-      expect(mockPrisma.teamBattle.update).toHaveBeenCalledWith({
-        where: { id: 5 },
+      expect(mockPrisma.standing.updateMany).toHaveBeenCalledWith({
+        where: { entityType: 'team', entityId: 5, mode: 'league_2v2' },
         data: {
-          teamLeague: 'gold',
-          teamLeagueId: 'gold_1',
-          cyclesInLeague: 0,
+          tier: 'gold',
+          leagueInstanceId: 'gold_1',
+          cyclesInTier: 0,
         },
       });
     });
@@ -1040,7 +1098,7 @@ describe('teamBattleAdapter', () => {
       mockTransaction.mockImplementation(async (cb: Function) => {
         const tx = {
           $executeRaw: jest.fn(),
-          teamBattle: {
+          standing: {
             groupBy: jest.fn().mockResolvedValue([]),
           },
         };
@@ -1056,10 +1114,10 @@ describe('teamBattleAdapter', () => {
       mockTransaction.mockImplementation(async (cb: Function) => {
         const tx = {
           $executeRaw: jest.fn(),
-          teamBattle: {
+          standing: {
             groupBy: jest.fn().mockResolvedValue([
-              { teamLeagueId: 'bronze_1', _count: { id: 40 } },
-              { teamLeagueId: 'bronze_2', _count: { id: 20 } },
+              { leagueInstanceId: 'bronze_1', _count: { id: 40 } },
+              { leagueInstanceId: 'bronze_2', _count: { id: 20 } },
             ]),
           },
         };
@@ -1075,10 +1133,10 @@ describe('teamBattleAdapter', () => {
       mockTransaction.mockImplementation(async (cb: Function) => {
         const tx = {
           $executeRaw: jest.fn(),
-          teamBattle: {
+          standing: {
             groupBy: jest.fn().mockResolvedValue([
-              { teamLeagueId: 'bronze_1', _count: { id: 50 } },
-              { teamLeagueId: 'bronze_2', _count: { id: 50 } },
+              { leagueInstanceId: 'bronze_1', _count: { id: 50 } },
+              { leagueInstanceId: 'bronze_2', _count: { id: 50 } },
             ]),
           },
         };

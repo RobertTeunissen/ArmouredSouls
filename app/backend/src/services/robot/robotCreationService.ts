@@ -129,6 +129,35 @@ export async function createRobotTransaction(userId: number, trimmedName: string
       },
     });
 
+    // Create default standings entries (Spec #40 — unified standings)
+    // Without these, the robot would be invisible to rebalancing/matchmaking
+    await tx.standing.createMany({
+      data: [
+        {
+          entityType: 'robot',
+          entityId: robot.id,
+          mode: 'league_1v1',
+          tier: 'bronze',
+          leagueInstanceId: bronzeLeagueId,
+          leaguePoints: 0,
+          cyclesInTier: 0,
+          wins: 0, losses: 0, draws: 0,
+          currentWinStreak: 0, bestWinStreak: 0, currentLoseStreak: 0,
+        },
+        {
+          entityType: 'robot',
+          entityId: robot.id,
+          mode: 'koth',
+          tier: 'bronze',
+          leagueInstanceId: 'bronze_1',
+          leaguePoints: 0,
+          cyclesInTier: 0,
+          wins: 0, losses: 0, draws: 0,
+          currentWinStreak: 0, bestWinStreak: 0, currentLoseStreak: 0,
+        },
+      ],
+    });
+
     return { user: updatedUser, robot };
   });
 }

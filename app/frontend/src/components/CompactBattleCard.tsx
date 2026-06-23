@@ -52,8 +52,7 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
   
   const getBattleTypeText = (): React.ReactNode => {
     if (isKoth) {
-      const variant = battle.kothRotatingZone ? 'Rotating Zone' : 'Fixed Zone';
-      return `King of the Hill • ${variant}`;
+      return 'King of the Hill';
     }
     if ((isTournament || isTeamTournament) && battle.tournamentName) {
       const roundName = battle.tournamentRound && battle.tournamentMaxRounds 

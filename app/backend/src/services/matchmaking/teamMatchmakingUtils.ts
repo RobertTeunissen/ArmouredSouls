@@ -150,3 +150,93 @@ export function createByeTeam<T>(
 ): T {
   return factory(league, leagueId);
 }
+
+// ─── Unified Recent-Opponent Query Factory ───────────────────────────────────
+
+import { MatchType } from '../../../generated/prisma';
+
+/**
+ * Factory that creates a recent-opponent query function for a specific MatchType.
+ *
+ * The returned function queries `scheduled_matches_v2` for completed matches of the
+ * given type, then extracts all other participants as "recent opponents" for each
+ * entity in the input set.
+ *
+ * For paired modes (1v1, 2v2, 3v3, Tag Team): the other participant is the recent opponent.
+ * For KotH (multi-participant): ALL other participants in the same match group are recent opponents.
+ *
+ * @param matchType - The MatchType to filter completed matches by
+ * @param participantType - 'robot' for 1v1/KotH, 'team' for 2v2/3v3/Tag Team
+ * @returns An async query function compatible with `getRecentOpponentsBatch`
+ */
+export function createRecentOpponentQueryFn(
+  matchType: MatchType,
+  participantType: 'robot' | 'team',
+): (entityIds: number[], limit: number) => Promise<Map<number, number[]>> {
+  return async (entityIds: number[], limit: number): Promise<Map<number, number[]>> => {
+    if (entityIds.length === 0) return new Map();
+
+    // Lazy import to avoid triggering Prisma initialization at module load time
+    const prismaModule = await import('../../lib/prisma');
+    const prismaClient = prismaModule.default;
+
+    // Single query to get recent completed matches involving any of the entities
+    const completedMatches = await prismaClient.scheduledMatch.findMany({
+      where: {
+        matchType,
+        status: 'completed',
+        participants: {
+          some: {
+            participantType,
+            participantId: { in: entityIds },
+          },
+        },
+      },
+      include: {
+        participants: {
+          select: { participantId: true, participantType: true },
+        },
+      },
+      orderBy: { scheduledFor: 'desc' },
+      take: entityIds.length * limit,
+    });
+
+    // Build per-entity opponent lists
+    const map = new Map<number, number[]>();
+    for (const entityId of entityIds) {
+      const opponents: number[] = [];
+      for (const match of completedMatches) {
+        if (opponents.length >= limit) break;
+        const participantIds = match.participants
+          .filter((p) => p.participantType === participantType)
+          .map((p) => p.participantId);
+        if (participantIds.includes(entityId)) {
+          // All other participants of the same type in this match are recent opponents
+          for (const opId of participantIds) {
+            if (opId !== entityId && !opponents.includes(opId)) {
+              opponents.push(opId);
+              if (opponents.length >= limit) break;
+            }
+          }
+        }
+      }
+      map.set(entityId, opponents);
+    }
+
+    return map;
+  };
+}
+
+// ─── Default ScheduledFor Computation ────────────────────────────────────────
+
+/**
+ * Compute the default scheduledFor value: 24 hours from now, rounded down to the nearest hour.
+ * Minutes, seconds, and milliseconds are zeroed.
+ *
+ * Used by all matchmaking services when no explicit scheduledFor is provided.
+ */
+export function defaultScheduledFor(): Date {
+  const d = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  d.setMinutes(0, 0, 0);
+  return d;
+}

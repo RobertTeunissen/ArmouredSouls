@@ -2,7 +2,6 @@ import bcrypt from 'bcrypt';
 import prisma from '../lib/prisma';
 import logger from '../config/logger';
 import { assignLeagueInstance } from '../services/league/leagueInstanceService';
-import { assignTagTeamLeagueInstanceOnTeamBattle as assignTagTeamLeagueInstance } from '../services/team-battle/teamBattleAdapter';
 import { registerTeam } from '../services/team-battle/teamBattleService';
 import {
   TIER_CONFIGS,
@@ -135,7 +134,7 @@ export async function generateBattleReadyUsers(
 
   const usernames: string[] = [];
   let totalRobotsCreated = 0;
-  let totalTagTeamsCreated = 0;
+  const totalTagTeamsCreated = 0;
   let totalLeague2v2TeamsCreated = 0;
   let totalLeague3v3TeamsCreated = 0;
 
@@ -281,99 +280,70 @@ export async function generateBattleReadyUsers(
             });
           }
 
-          // ── Tag team for multi-robot stables ─────────────────
-          // Legacy: TagTeam model removed. New 2v2 teams created via registerTeam
-          // already get tag team league defaults (bronze, bronze_1). The separate
-          // tag team entity is no longer needed — 2v2 teams participate in tag team
-          // mode via the tag_team subscription.
-          if (tier.createTagTeam && createdRobots.length >= 2) {
-            // A 2v2 team was already created above if both robots have league_2v2 subscription.
-            // If not already created, create one now for tag team mode.
-            const existingTeam = await tx.teamBattle.findFirst({
-              where: { stableId: user.id, teamSize: 2 },
-            });
-            if (!existingTeam) {
-              const tagTeamLeagueId = await assignTagTeamLeagueInstance('bronze');
-              const teamName = `${stableName} 2v2`.slice(0, 32);
-              await tx.teamBattle.create({
-                data: {
-                  stableId: user.id,
-                  teamSize: 2,
-                  teamName,
-                  teamLeague: 'bronze',
-                  teamLeagueId: 'bronze_1',
-                  tagTeamLeague: 'bronze',
-                  tagTeamLeagueId,
-                  members: {
-                    create: [
-                      { robotId: createdRobots[0].id, slotIndex: 0 },
-                      { robotId: createdRobots[1].id, slotIndex: 1 },
-                    ],
-                  },
-                },
-              });
-            }
-            totalTagTeamsCreated++;
-            logger.info(`[UserGeneration] Created tag team for ${username}`);
-          }
+          // ── Team creation moved to AFTER subscriptions (outside transaction) ──
+          // 2v2 teams participate in both league_2v2 and tag_team via subscriptions.
+          // A single TeamBattle entity handles both modes. Created via registerTeam below.
 
           // ── Subscriptions for each robot ─────────────────────
           // Subscription assignment rules per stable size (R15.2):
           // - 1-robot stables (L0, cap 3): league_1v1, tournament_1v1, koth
           // - 2-robot stables (L1, cap 4): pick 2 from {league_2v2, tag_team, tournament_2v2} + pick 2 from {koth, league_1v1, tournament_1v1}
           // - 3-robot stables (L1, cap 4): slot 1: league_3v3 or tournament_3v3. slot 2: pick 1 from {league_2v2, tag_team, tournament_2v2}. slots 3-4: pick from remaining pool.
+          //
+          // IMPORTANT: Randomization is per-STABLE, not per-robot. All robots in a stable get the same set.
 
-          for (const robot of createdRobots) {
-            let robotSubscriptions: string[];
+          let stableSubscriptions: string[];
 
-            if (createdRobots.length === 1) {
-              // 1-robot stables: L0, cap 3 — subscribe to league_1v1, tournament_1v1, koth
-              robotSubscriptions = ['league_1v1', 'tournament_1v1', 'koth'];
-            } else if (createdRobots.length === 2) {
-              // 2-robot stables: L1, cap 4 — pick 2 from team modes + pick 2 from solo modes
-              const teamModes: string[] = ['league_2v2', 'tag_team', 'tournament_2v2'];
-              const shuffledTeamModes = teamModes.sort(() => Math.random() - 0.5);
-              const teamPicks = shuffledTeamModes.slice(0, 2);
+          if (createdRobots.length === 1) {
+            // 1-robot stables: L0, cap 3 — subscribe to league_1v1, tournament_1v1, koth
+            stableSubscriptions = ['league_1v1', 'tournament_1v1', 'koth'];
+          } else if (createdRobots.length === 2) {
+            // 2-robot stables: L1, cap 4 — pick 2 from team modes + pick 2 from solo modes
+            const teamModes: string[] = ['league_2v2', 'tag_team', 'tournament_2v2'];
+            const shuffledTeamModes = [...teamModes].sort(() => Math.random() - 0.5);
+            const teamPicks = shuffledTeamModes.slice(0, 2);
 
-              const soloModes = ['koth', 'league_1v1', 'tournament_1v1'];
-              const shuffledSoloModes = soloModes.sort(() => Math.random() - 0.5);
-              const soloPicks = shuffledSoloModes.slice(0, 2);
+            const soloModes = ['koth', 'league_1v1', 'tournament_1v1'];
+            const shuffledSoloModes = [...soloModes].sort(() => Math.random() - 0.5);
+            const soloPicks = shuffledSoloModes.slice(0, 2);
 
-              robotSubscriptions = [...teamPicks, ...soloPicks];
+            stableSubscriptions = [...teamPicks, ...soloPicks];
+          } else {
+            // 3-robot stables: L1, cap 4
+            const subs: string[] = [];
+
+            // Slot 1: league_3v3 or tournament_3v3 (random pick)
+            // Always include league_3v3 when tier.createLeague3v3 is true (needed for team creation)
+            if (tier.createLeague3v3) {
+              subs.push('league_3v3');
             } else {
-              // 3-robot stables: L1, cap 4
-              const subs: string[] = [];
-
-              // Slot 1: league_3v3 or tournament_3v3 (random pick)
-              // Always include league_3v3 when tier.createLeague3v3 is true (needed for team creation)
-              if (tier.createLeague3v3) {
-                subs.push('league_3v3');
-              } else {
-                subs.push('tournament_3v3');
-              }
-
-              // Slot 2: pick 1 from {league_2v2, tag_team, tournament_2v2}
-              const teamModes: string[] = [];
-              if (tier.createLeague2v2) teamModes.push('league_2v2');
-              if (tier.createTagTeam) teamModes.push('tag_team');
-              teamModes.push('tournament_2v2');
-              if (teamModes.length > 0) {
-                subs.push(teamModes[Math.floor(Math.random() * teamModes.length)]);
-              }
-
-              // Slots 3-4: pick from remaining pool
-              const allEvents = ['league_1v1', 'tournament_1v1', 'koth', 'tag_team', 'league_2v2', 'league_3v3', 'tournament_2v2', 'tournament_3v3'];
-              const remaining = allEvents.filter(e => !subs.includes(e));
-              const shuffledRemaining = remaining.sort(() => Math.random() - 0.5);
-              while (subs.length < 4 && shuffledRemaining.length > 0) {
-                subs.push(shuffledRemaining.shift()!);
-              }
-
-              robotSubscriptions = subs;
+              subs.push('tournament_3v3');
             }
 
+            // Slot 2: pick 1 from {league_2v2, tag_team, tournament_2v2}
+            const teamModes: string[] = [];
+            if (tier.createLeague2v2) teamModes.push('league_2v2');
+            if (tier.createTagTeam) teamModes.push('tag_team');
+            teamModes.push('tournament_2v2');
+            if (teamModes.length > 0) {
+              subs.push(teamModes[Math.floor(Math.random() * teamModes.length)]);
+            }
+
+            // Slots 3-4: pick from remaining pool
+            const allEvents = ['league_1v1', 'tournament_1v1', 'koth', 'tag_team', 'league_2v2', 'league_3v3', 'tournament_2v2', 'tournament_3v3'];
+            const remaining = allEvents.filter(e => !subs.includes(e));
+            const shuffledRemaining = [...remaining].sort(() => Math.random() - 0.5);
+            while (subs.length < 4 && shuffledRemaining.length > 0) {
+              subs.push(shuffledRemaining.shift()!);
+            }
+
+            stableSubscriptions = subs;
+          }
+
+          // Apply the same subscription set to ALL robots in this stable
+          for (const robot of createdRobots) {
             await tx.subscription.createMany({
-              data: robotSubscriptions.map(eventType => ({
+              data: stableSubscriptions.map(eventType => ({
                 robotId: robot.id,
                 eventType,
                 status: 'active',
@@ -381,7 +351,28 @@ export async function generateBattleReadyUsers(
               skipDuplicates: true,
             });
 
-            robotsWithSubscriptions.push({ id: robot.id, subscriptions: robotSubscriptions });
+            // Create standings ONLY for subscribed league modes (no inactive inflation)
+            const robotStandingModes: string[] = [];
+            if (stableSubscriptions.includes('league_1v1')) robotStandingModes.push('league_1v1');
+            if (stableSubscriptions.includes('koth')) robotStandingModes.push('koth');
+
+            if (robotStandingModes.length > 0) {
+              await tx.standing.createMany({
+                data: robotStandingModes.map(mode => ({
+                  entityType: 'robot',
+                  entityId: robot.id,
+                  mode: mode as any,
+                  tier: 'bronze',
+                  leagueInstanceId: 'bronze_1',
+                  leaguePoints: 0,
+                  cyclesInTier: 0,
+                  wins: 0, losses: 0, draws: 0,
+                  currentWinStreak: 0, bestWinStreak: 0, currentLoseStreak: 0,
+                })),
+              });
+            }
+
+            robotsWithSubscriptions.push({ id: robot.id, subscriptions: stableSubscriptions });
           }
 
           return { userId: user.id, stableName, robotsWithSubscriptions };
@@ -395,16 +386,53 @@ export async function generateBattleReadyUsers(
 
         // ── Team Battle registration (outside transaction — uses own transaction per R15.5) ──
         // Register teams from subscribed pool using same validation path as player-initiated registration
+        // A single 2v2 TeamBattle entity participates in all team-2 modes (league_2v2, tag_team, tournament_2v2)
         if (tier.createLeague2v2 && createdRobotsForTeams.length >= 2) {
           try {
-            // Find robots subscribed to league_2v2
-            const subscribedTo2v2 = createdRobotsForTeams.filter(r =>
-              r.subscriptions.includes('league_2v2')
+            // Create 2v2 team if stable has ANY 2v2-mode subscription
+            const has2v2Mode = createdRobotsForTeams[0]?.subscriptions.some(s =>
+              ['league_2v2', 'tag_team', 'tournament_2v2'].includes(s)
             );
-            if (subscribedTo2v2.length >= 2) {
-              const teamRobotIds = subscribedTo2v2.slice(0, 2).map(r => r.id);
+            if (has2v2Mode) {
+              const teamRobotIds = createdRobotsForTeams.slice(0, 2).map(r => r.id);
               const teamName = `${stableNameForTeams} 2v2`;
-              await registerTeam(userIdForTeams, teamRobotIds, teamName, 2, userIdForTeams);
+              const team = await registerTeam(userIdForTeams, teamRobotIds, teamName, 2, userIdForTeams);
+
+              // Create standings for subscribed modes only
+              const { assignTagTeamLeagueInstanceOnTeamBattle } = await import('../services/team-battle/teamBattleAdapter');
+
+              if (createdRobotsForTeams[0]?.subscriptions.includes('league_2v2')) {
+                await prisma.standing.create({
+                  data: {
+                    entityType: 'team',
+                    entityId: team.id,
+                    mode: 'league_2v2' as any,
+                    tier: 'bronze',
+                    leagueInstanceId: 'bronze_1',
+                    leaguePoints: 0,
+                    cyclesInTier: 0,
+                    wins: 0, losses: 0, draws: 0,
+                    currentWinStreak: 0, bestWinStreak: 0, currentLoseStreak: 0,
+                  },
+                });
+              }
+
+              if (createdRobotsForTeams[0]?.subscriptions.includes('tag_team')) {
+                const tagTeamLeagueId = await assignTagTeamLeagueInstanceOnTeamBattle('bronze');
+                await prisma.standing.create({
+                  data: {
+                    entityType: 'team',
+                    entityId: team.id,
+                    mode: 'tag_team' as any,
+                    tier: 'bronze',
+                    leagueInstanceId: tagTeamLeagueId,
+                    leaguePoints: 0,
+                    cyclesInTier: 0,
+                    wins: 0, losses: 0, draws: 0,
+                    currentWinStreak: 0, bestWinStreak: 0, currentLoseStreak: 0,
+                  },
+                });
+              }
 
               totalLeague2v2TeamsCreated++;
               logger.info(`[UserGeneration] Created 2v2 team for ${username}`);
@@ -425,7 +453,22 @@ export async function generateBattleReadyUsers(
             if (subscribedTo3v3.length >= 3) {
               const teamRobotIds = subscribedTo3v3.slice(0, 3).map(r => r.id);
               const teamName = `${stableNameForTeams} 3v3`;
-              await registerTeam(userIdForTeams, teamRobotIds, teamName, 3, userIdForTeams);
+              const team = await registerTeam(userIdForTeams, teamRobotIds, teamName, 3, userIdForTeams);
+
+              // Create league_3v3 standing
+              await prisma.standing.create({
+                data: {
+                  entityType: 'team',
+                  entityId: team.id,
+                  mode: 'league_3v3' as any,
+                  tier: 'bronze',
+                  leagueInstanceId: 'bronze_1',
+                  leaguePoints: 0,
+                  cyclesInTier: 0,
+                  wins: 0, losses: 0, draws: 0,
+                  currentWinStreak: 0, bestWinStreak: 0, currentLoseStreak: 0,
+                },
+              });
 
               totalLeague3v3TeamsCreated++;
               logger.info(`[UserGeneration] Created 3v3 team for ${username}`);

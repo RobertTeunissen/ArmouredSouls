@@ -81,11 +81,11 @@ describe('Admin Cycle Generation Integration Tests', () => {
         await prisma.scheduledTournamentMatch.updateMany({
           where: {
             OR: [
-              { robot1Id: { in: robotIds } },
-              { robot2Id: { in: robotIds } },
+              { participant1Id: { in: robotIds } },
+              { participant2Id: { in: robotIds } },
             ],
           },
-          data: { robot1Id: null, robot2Id: null },
+          data: { participant1Id: null, participant2Id: null },
         });
 
         // Clean up audit logs referencing these robots

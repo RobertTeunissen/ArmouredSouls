@@ -6,9 +6,8 @@
  */
 
 import prisma from '../../lib/prisma';
+import schedulingService from '../scheduling/schedulingService';
 import type { BattleParticipant, Prisma } from '../../../generated/prisma';
-import { getNextCronOccurrence } from '../../utils/scheduleUtils';
-import { getConfig } from '../../config/env';
 
 // ── Shared include fragments ─────────────────────────────────────────
 
@@ -68,7 +67,7 @@ export async function findAllRobots(page = 1, perPage = 100) {
 // ── GET / (user's robots) ────────────────────────────────────────────
 
 export async function findUserRobots(userId: number) {
-  return prisma.robot.findMany({
+  const robots = await prisma.robot.findMany({
     where: { userId },
     include: {
       ...WEAPON_INCLUDE,
@@ -82,18 +81,73 @@ export async function findUserRobots(userId: number) {
     },
     orderBy: { createdAt: 'desc' },
   });
+
+  // Enrich with standings data (Spec #40 — LP, wins/losses/draws now live in standings table)
+  const robotIds = robots.map(r => r.id);
+  const standings = await prisma.standing.findMany({
+    where: { entityType: 'robot', entityId: { in: robotIds }, mode: 'league_1v1' },
+    select: { entityId: true, leaguePoints: true, wins: true, losses: true, draws: true, tier: true, leagueInstanceId: true, cyclesInTier: true, currentWinStreak: true, bestWinStreak: true, currentLoseStreak: true },
+  });
+
+  const standingsMap = new Map(standings.map(s => [s.entityId, s]));
+
+  return robots.map(robot => {
+    const standing = standingsMap.get(robot.id);
+    if (standing) {
+      return {
+        ...robot,
+        leaguePoints: standing.leaguePoints,
+        currentLeague: standing.tier,
+        leagueId: standing.leagueInstanceId,
+        cyclesInCurrentLeague: standing.cyclesInTier,
+        totalLeague1v1Wins: standing.wins,
+        totalLeague1v1Losses: standing.losses,
+        totalLeague1v1Draws: standing.draws,
+        currentWinStreak: standing.currentWinStreak,
+        bestWinStreak: standing.bestWinStreak,
+        currentLoseStreak: standing.currentLoseStreak,
+      };
+    }
+    return robot;
+  });
 }
 
 // ── GET /:id ─────────────────────────────────────────────────────────
 
 export async function findRobotById(robotId: number) {
-  return prisma.robot.findUnique({
+  const robot = await prisma.robot.findUnique({
     where: { id: robotId },
     include: {
       ...WEAPON_INCLUDE,
       user: { select: { username: true, stableName: true } },
     },
   });
+
+  if (!robot) return null;
+
+  // Enrich with standings data (Spec #40 — LP, wins/losses now live in standings table)
+  const standing = await prisma.standing.findFirst({
+    where: { entityType: 'robot', entityId: robot.id, mode: 'league_1v1' },
+    select: { leaguePoints: true, wins: true, losses: true, draws: true, tier: true, leagueInstanceId: true, cyclesInTier: true, currentWinStreak: true, bestWinStreak: true, currentLoseStreak: true },
+  });
+
+  if (standing) {
+    return {
+      ...robot,
+      leaguePoints: standing.leaguePoints,
+      currentLeague: standing.tier,
+      leagueId: standing.leagueInstanceId,
+      cyclesInCurrentLeague: standing.cyclesInTier,
+      totalLeague1v1Wins: standing.wins,
+      totalLeague1v1Losses: standing.losses,
+      totalLeague1v1Draws: standing.draws,
+      currentWinStreak: standing.currentWinStreak,
+      bestWinStreak: standing.bestWinStreak,
+      currentLoseStreak: standing.currentLoseStreak,
+    };
+  }
+
+  return robot;
 }
 
 // ── GET /:id/matches (paginated battle history) ──────────────────────
@@ -177,24 +231,27 @@ export async function getMatchHistory(
 // ── GET /:id/upcoming ────────────────────────────────────────────────
 
 export async function getUpcomingScheduledMatches(robotId: number, robotName: string) {
-  const matches = await prisma.scheduledLeagueMatch.findMany({
-    where: {
-      status: 'scheduled',
-      OR: [{ robot1Id: robotId }, { robot2Id: robotId }],
-    },
-    include: {
-      robot1: { include: { user: { select: { id: true, username: true } } } },
-      robot2: { include: { user: { select: { id: true, username: true } } } },
-    },
-    orderBy: { scheduledFor: 'asc' },
-  });
+  // Single query via unified scheduling service (replaces 4-table fan-out)
+  const upcoming = await schedulingService.getUpcomingForRobot(robotId);
 
-  const formattedMatches = matches.map(match => {
-    const isRobot1 = match.robot1Id === robotId;
-    const opponent = isRobot1 ? match.robot2 : match.robot1;
-    return {
+  // Fetch opponent robot details for each match
+  const formattedMatches = [];
+  for (const match of upcoming) {
+    const opponentParticipant = match.participants.find(
+      (p) => p.participantId !== robotId && p.participantType === 'robot'
+    );
+    if (!opponentParticipant) continue;
+
+    const opponent = await prisma.robot.findUnique({
+      where: { id: opponentParticipant.participantId },
+      include: { user: { select: { id: true, username: true } } },
+    });
+    if (!opponent) continue;
+
+    formattedMatches.push({
       matchId: match.id,
       scheduledFor: match.scheduledFor,
+      matchType: match.matchType,
       leagueType: match.leagueType,
       opponent: {
         id: opponent.id,
@@ -202,8 +259,8 @@ export async function getUpcomingScheduledMatches(robotId: number, robotName: st
         elo: opponent.elo,
         owner: opponent.user.username,
       },
-    };
-  });
+    });
+  }
 
   return {
     matches: formattedMatches,
@@ -224,128 +281,42 @@ export async function getUpcomingMatches(robotId: number, robot: { currentHP: nu
   if (hpPercentage < 50) warnings.push('HP below 50%');
   if (!hasWeapons) warnings.push('No weapons equipped');
 
-  // Fetch scheduled league matches
-  const scheduledMatches = await prisma.scheduledLeagueMatch.findMany({
-    where: {
-      OR: [{ robot1Id: robotId }, { robot2Id: robotId }],
-      status: 'scheduled',
-      scheduledFor: { gte: new Date() },
-    },
-    include: {
-      robot1: { select: { id: true, name: true, imageUrl: true } },
-      robot2: { select: { id: true, name: true, imageUrl: true } },
-    },
-    orderBy: { scheduledFor: 'asc' },
-  });
+  // Single unified query via SchedulingService (replaces 4-table fan-out)
+  const upcoming = await schedulingService.getUpcomingForRobot(robotId);
 
-  // Fetch upcoming tournament matches
-  const tournamentMatches = await prisma.scheduledTournamentMatch.findMany({
-    where: {
-      participantType: 'robot',
-      OR: [{ participant1Id: robotId }, { participant2Id: robotId }],
-      status: 'scheduled',
-    },
-    include: {
-      tournament: { select: { id: true, name: true, status: true } },
-    },
-    orderBy: { createdAt: 'asc' },
-  });
+  // Resolve opponent info for each match
+  const formattedMatches = [];
+  for (const match of upcoming) {
+    const opponentParticipant = match.participants.find(
+      (p) => p.participantId !== robotId
+    );
 
-  // Fetch upcoming tag team matches from ScheduledTeamBattleMatch
-  const tagTeamMatches = await prisma.scheduledTeamBattleMatch.findMany({
-    where: {
-      matchMode: 'tag_team',
-      status: 'scheduled',
-      scheduledFor: { gte: new Date() },
-      OR: [
-        { team1: { members: { some: { robotId } } } },
-        { team2: { members: { some: { robotId } } } },
-      ],
-    },
-    include: {
-      team1: {
-        include: {
-          members: {
-            include: {
-              robot: { select: { id: true, name: true, imageUrl: true } },
-            },
-            orderBy: { slotIndex: 'asc' },
-          },
-        },
-      },
-      team2: {
-        include: {
-          members: {
-            include: {
-              robot: { select: { id: true, name: true, imageUrl: true } },
-            },
-            orderBy: { slotIndex: 'asc' },
-          },
-        },
-      },
-    },
-    orderBy: { scheduledFor: 'asc' },
-  });
+    let opponentName = 'TBD';
+    let opponentPortrait = '/src/assets/robots/robot-1.png';
 
-  // Format matches for response
-  const formattedMatches = [
-    ...scheduledMatches.map(match => {
-      const opponent = match.robot1Id === robotId ? match.robot2 : match.robot1;
-      return {
-        matchId: match.id,
-        opponentName: opponent.name,
-        opponentPortrait: opponent.imageUrl || '/src/assets/robots/robot-1.png',
-        scheduledTime: match.scheduledFor.toISOString(),
-        battleType: 'league_1v1' as const,
-        leagueContext: match.leagueType,
-      };
-    }),
-    ...tournamentMatches.map(match => {
-      // For 1v1 tournaments, resolve opponent by loading robot data separately
-      const opponentId = match.participant1Id === robotId ? match.participant2Id : match.participant1Id;
-      return {
-        matchId: match.id,
-        opponentName: 'TBD', // Opponent name resolved separately since robot relations removed
-        opponentPortrait: '/src/assets/robots/robot-1.png',
-        scheduledTime: getNextCronOccurrence(getConfig().tournamentSchedule).toISOString(),
-        battleType: 'tournament_1v1' as const,
-        tournamentContext: match.tournament.name,
-        opponentId,
-      };
-    }),
-    ...tagTeamMatches.filter(match => match.team1 && match.team2).map(match => {
-      const team1Members = match.team1!.members;
-      const team2Members = match.team2!.members;
-      const team1RobotIds = team1Members.map(m => m.robotId);
-      const isTeam1 = team1RobotIds.includes(robotId);
-
-      let teammates: string[];
-      let opponentTeam: string[];
-
-      if (isTeam1) {
-        teammates = team1Members
-          .filter(m => m.robotId !== robotId)
-          .map(m => m.robot.name);
-        opponentTeam = team2Members.map(m => m.robot.name);
-      } else {
-        teammates = match.team2!.members
-          .filter(m => m.robotId !== robotId)
-          .map(m => m.robot.name);
-        opponentTeam = team1Members.map(m => m.robot.name);
+    if (opponentParticipant && opponentParticipant.participantType === 'robot') {
+      const opponent = await prisma.robot.findUnique({
+        where: { id: opponentParticipant.participantId },
+        select: { id: true, name: true, imageUrl: true },
+      });
+      if (opponent) {
+        opponentName = opponent.name;
+        opponentPortrait = opponent.imageUrl || opponentPortrait;
       }
+    }
 
-      return {
-        matchId: match.id,
-        opponentName: opponentTeam[0],
-        opponentPortrait: '/src/assets/robots/robot-1.png',
-        scheduledTime: match.scheduledFor.toISOString(),
-        battleType: 'tag_team' as const,
-        leagueContext: match.team1!.tagTeamLeague,
-        teammates,
-        opponentTeam,
-      };
-    }),
-  ].sort((a, b) => new Date(a.scheduledTime).getTime() - new Date(b.scheduledTime).getTime());
+    formattedMatches.push({
+      matchId: match.id,
+      opponentName,
+      opponentPortrait,
+      scheduledTime: match.scheduledFor.toISOString(),
+      battleType: match.matchType,
+      leagueContext: match.leagueType,
+    });
+  }
+
+  // Sort by scheduled time
+  formattedMatches.sort((a, b) => new Date(a.scheduledTime).getTime() - new Date(b.scheduledTime).getTime());
 
   return {
     matches: formattedMatches,
@@ -459,11 +430,15 @@ export async function getPerformanceContext(robotId: number) {
   }));
 
   // ── Tournament stats ───────────────────────────────────────────────
-  const tournamentBattles = battles.filter(b => b.battleType === 'tournament_1v1' && b.tournamentId);
+  const tournamentBattles = battles.filter(b =>
+    (b.battleType === 'tournament_1v1' || b.battleType === 'tournament_2v2' || b.battleType === 'tournament_3v3')
+    && b.tournamentId
+  );
   const tournamentStatsMap = new Map<number, {
     tournamentId: number; tournamentName: string; tournamentDate: Date;
     totalParticipants: number; wins: number; losses: number;
     damageDealt: number; damageTaken: number; placement: number | null;
+    battleType: string; participantType: string;
   }>();
 
   tournamentBattles.forEach(battle => {
@@ -475,25 +450,61 @@ export async function getPerformanceContext(robotId: number) {
         tournamentDate: battle.createdAt,
         totalParticipants: battle.tournament?.totalParticipants || 0,
         wins: 0, losses: 0, damageDealt: 0, damageTaken: 0, placement: null,
+        battleType: battle.battleType,
+        participantType: battle.battleType === 'tournament_1v1' ? 'robot'
+          : battle.battleType === 'tournament_2v2' ? 'team_2v2' : 'team_3v3',
       });
     }
     const stats = tournamentStatsMap.get(tournamentId)!;
-    const result = getBattleResult(battle, robotId);
-    const bs = getBattleStats(battle, robotId);
-    if (result === 'win') stats.wins++;
-    else if (result === 'loss') stats.losses++;
-    stats.damageDealt += bs.damageDealt;
-    stats.damageTaken += bs.damageTaken;
+    // For team tournaments, determine win/loss from participant's team side
+    if (battle.battleType === 'tournament_2v2' || battle.battleType === 'tournament_3v3') {
+      const battleLog = battle.battleLog as unknown as { winningSide?: 1 | 2 | null };
+      const participant = battle.participants.find(p => p.robotId === robotId);
+      if (participant) {
+        if (battleLog?.winningSide === null) { /* draw - no W/L */ }
+        else if (battleLog?.winningSide === participant.team) stats.wins++;
+        else stats.losses++;
+        stats.damageDealt += participant.damageDealt ?? 0;
+      }
+    } else {
+      const result = getBattleResult(battle, robotId);
+      const bs = getBattleStats(battle, robotId);
+      if (result === 'win') stats.wins++;
+      else if (result === 'loss') stats.losses++;
+      stats.damageDealt += bs.damageDealt;
+      stats.damageTaken += bs.damageTaken;
+    }
   });
 
   // Calculate tournament placements
+  // For team tournaments, look up the team ID to query placement
+  const teamMemberships = await prisma.teamBattleMember.findMany({
+    where: { robotId },
+    select: { team: { select: { id: true, teamSize: true } } },
+  });
+  const teamIdBySize = new Map<number, number>();
+  for (const m of teamMemberships) {
+    teamIdBySize.set(m.team.teamSize, m.team.id);
+  }
+
   const tournamentStats = await Promise.all(
     Array.from(tournamentStatsMap.values()).map(async (stats) => {
+      // Determine the participant ID and type for match lookup
+      let participantId = robotId;
+      let participantType = 'robot';
+      if (stats.battleType === 'tournament_2v2') {
+        participantId = teamIdBySize.get(2) ?? robotId;
+        participantType = 'team_2v2';
+      } else if (stats.battleType === 'tournament_3v3') {
+        participantId = teamIdBySize.get(3) ?? robotId;
+        participantType = 'team_3v3';
+      }
+
       const tournamentMatches = await prisma.scheduledTournamentMatch.findMany({
         where: {
           tournamentId: stats.tournamentId,
-          participantType: 'robot',
-          OR: [{ participant1Id: robotId }, { participant2Id: robotId }],
+          participantType,
+          OR: [{ participant1Id: participantId }, { participant2Id: participantId }],
         },
         orderBy: { round: 'desc' },
       });
@@ -501,7 +512,7 @@ export async function getPerformanceContext(robotId: number) {
       let placement = stats.totalParticipants;
       if (tournamentMatches.length > 0) {
         const highestRound = tournamentMatches[0].round;
-        const wonFinal = tournamentMatches.some(m => m.winnerId === robotId && m.round === highestRound);
+        const wonFinal = tournamentMatches.some(m => m.winnerId === participantId && m.round === highestRound);
         const maxRounds = Math.ceil(Math.log2(stats.totalParticipants));
 
         if (wonFinal && highestRound === maxRounds) {
@@ -575,6 +586,36 @@ export async function getPerformanceContext(robotId: number) {
     league3v3Stats.damageDealt += participant.damageDealt ?? 0;
   });
 
+  // ── KotH stats ──────────────────────────────────────────────────────
+  const kothBattles = battles.filter(b => b.battleType === 'koth');
+  const kothStats = {
+    totalBattles: kothBattles.length,
+    wins: 0, // 1st place finishes
+    topThree: 0,
+    totalPoints: 0,
+    bestPlacement: null as number | null,
+    damageDealt: 0,
+    damageTaken: 0,
+  };
+
+  kothBattles.forEach(battle => {
+    const participant = battle.participants.find(p => p.robotId === robotId);
+    if (!participant) return;
+    const placement = participant.placement ?? 6;
+    if (placement === 1) kothStats.wins++;
+    if (placement <= 3) kothStats.topThree++;
+    // F1-style points: [10, 6, 4, 2, 1, 0]
+    const pointScale = [10, 6, 4, 2, 1, 0];
+    kothStats.totalPoints += placement <= pointScale.length ? pointScale[placement - 1] : 0;
+    if (kothStats.bestPlacement === null || placement < kothStats.bestPlacement) {
+      kothStats.bestPlacement = placement;
+    }
+    kothStats.damageDealt += participant.damageDealt ?? 0;
+    // Damage taken = sum of all other participants' damageDealt
+    const otherParticipants = battle.participants.filter(p => p.robotId !== robotId);
+    kothStats.damageTaken += otherParticipants.reduce((sum, p) => sum + (p.damageDealt ?? 0), 0);
+  });
+
   return {
     leagues: leagueStats,
     tournaments: tournamentStats,
@@ -594,6 +635,12 @@ export async function getPerformanceContext(robotId: number) {
       ...league3v3Stats,
       winRate: league3v3Stats.totalBattles > 0
         ? ((league3v3Stats.wins / league3v3Stats.totalBattles) * 100).toFixed(1)
+        : '0.0',
+    },
+    koth: {
+      ...kothStats,
+      winRate: kothStats.totalBattles > 0
+        ? ((kothStats.wins / kothStats.totalBattles) * 100).toFixed(1)
         : '0.0',
     },
   };

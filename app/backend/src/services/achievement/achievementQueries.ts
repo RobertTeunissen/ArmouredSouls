@@ -175,7 +175,7 @@ export async function refreshRarityCache(cache: AchievementRarityCache): Promise
        FROM robots r
        JOIN users u ON u.id = r.user_id
        WHERE r.total_battles > 0
-         AND r.name != 'Bye Robot'
+         
          AND u.username NOT LIKE 'auto\\_%'
          AND u.username NOT LIKE 'test\\_user\\_%'`
     );

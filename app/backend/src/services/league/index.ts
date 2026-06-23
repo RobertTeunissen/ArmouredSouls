@@ -15,17 +15,20 @@ export {
   getInstancesForTier,
   getLeagueInstanceStats,
   assignLeagueInstance,
+  assignLeagueInstanceWithLock,
   rebalanceInstances,
   getRobotsInInstance,
   moveRobotToInstance,
   LEAGUE_TIERS,
   MAX_ROBOTS_PER_INSTANCE,
+  MAX_TEAMS_PER_INSTANCE,
   REBALANCE_THRESHOLD,
 } from './leagueInstanceService';
 export type {
   LeagueTier,
   LeagueInstance,
   LeagueInstanceStats,
+  InstanceOptions,
 } from './leagueInstanceService';
 
 // League rebalancing (promotions/demotions)

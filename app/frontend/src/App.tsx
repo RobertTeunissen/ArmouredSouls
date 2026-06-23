@@ -28,7 +28,6 @@ const PracticeArenaPage = React.lazy(() => import('./pages/PracticeArenaPage'));
 const CycleSummaryPage = React.lazy(() => import('./pages/CycleSummaryPage'));
 const FinancialReportPage = React.lazy(() => import('./pages/FinancialReportPage'));
 const StableViewPage = React.lazy(() => import('./pages/StableViewPage'));
-const KothStandingsPage = React.lazy(() => import('./pages/KothStandingsPage'));
 const TeamBattlesPage = React.lazy(() => import('./pages/TeamBattlesPage'));
 const LeaderboardsFamePage = React.lazy(() => import('./pages/LeaderboardsFamePage'));
 const LeaderboardsLossesPage = React.lazy(() => import('./pages/LeaderboardsLossesPage'));
@@ -109,7 +108,6 @@ function AppRoutes() {
       <Route path="/battle/:id" element={<ProtectedRoute><BattleDetailPage /></ProtectedRoute>} />
       <Route path="/practice-arena" element={<ProtectedRoute><PracticeArenaPage /></ProtectedRoute>} />
       <Route path="/league-standings" element={<ProtectedRoute><LeagueStandingsPage /></ProtectedRoute>} />
-      <Route path="/koth-standings" element={<ProtectedRoute><KothStandingsPage /></ProtectedRoute>} />
       <Route path="/leaderboards/fame" element={<ProtectedRoute><LeaderboardsFamePage /></ProtectedRoute>} />
       <Route path="/leaderboards/prestige" element={<ProtectedRoute><LeaderboardsPrestigePage /></ProtectedRoute>} />
       <Route path="/leaderboards/losses" element={<ProtectedRoute><LeaderboardsLossesPage /></ProtectedRoute>} />

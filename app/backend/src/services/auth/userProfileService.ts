@@ -74,7 +74,6 @@ export async function getStableStats(userId: number) {
       totalTagTeamWins: true,
       totalTagTeamLosses: true,
       totalTagTeamDraws: true,
-      currentLeague: true,
       currentHP: true,
       maxHP: true,
       mainWeapon: true,
@@ -83,8 +82,14 @@ export async function getStableStats(userId: number) {
 
   const tagTeams = await prisma.teamBattle.findMany({
     where: { stableId: userId, teamSize: 2 },
-    select: { tagTeamLeague: true },
+    select: { id: true },
   });
+
+  // Read highest tag team league from standings
+  const tagTeamStandings = tagTeams.length > 0 ? await prisma.standing.findMany({
+    where: { entityType: 'team', entityId: { in: tagTeams.map(t => t.id) }, mode: 'tag_team' as any },
+    select: { tier: true },
+  }) : [];
 
   const cycleChanges = await computeCycleChanges(userId, robots);
 
@@ -112,14 +117,20 @@ export async function getStableStats(userId: number) {
   const winRate = totalBattles > 0 ? (wins / totalBattles) * 100 : 0;
   const highestELO = Math.max(...robots.map(r => r.elo));
 
-  const highestLeague = robots
-    .map(r => r.currentLeague)
-    .filter((league): league is string => league !== null)
-    .sort((a, b) => LEAGUE_HIERARCHY.indexOf(b) - LEAGUE_HIERARCHY.indexOf(a))[0] || null;
+  // Read highest league from standings (source of truth)
+  const robotStandings = await prisma.standing.findMany({
+    where: { entityType: 'robot', entityId: { in: robots.map(r => r.id) }, mode: 'league_1v1' as any },
+    select: { tier: true },
+  });
+  const highestLeague = robotStandings.length > 0
+    ? robotStandings
+        .map(s => s.tier)
+        .sort((a, b) => LEAGUE_HIERARCHY.indexOf(b) - LEAGUE_HIERARCHY.indexOf(a))[0]
+    : null;
 
-  const highestTagTeamLeague = tagTeams.length > 0
-    ? tagTeams
-        .map(t => t.tagTeamLeague)
+  const highestTagTeamLeague = tagTeamStandings.length > 0
+    ? tagTeamStandings
+        .map(t => t.tier)
         .sort((a, b) => LEAGUE_HIERARCHY.indexOf(b) - LEAGUE_HIERARCHY.indexOf(a))[0]
     : null;
 

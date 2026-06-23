@@ -76,14 +76,12 @@ export async function validateResetEligibility(userId: number): Promise<ResetEli
     return { eligible: true, blockers: [] };
   }
 
-  // Check for scheduled matches
-  const scheduledMatches = await prisma.scheduledLeagueMatch.count({
+  // Check for scheduled matches (unified scheduling table)
+  const scheduledMatches = await prisma.scheduledMatchParticipant.count({
     where: {
-      OR: [
-        { robot1Id: { in: robotIds } },
-        { robot2Id: { in: robotIds } },
-      ],
-      status: 'scheduled',
+      participantType: 'robot',
+      participantId: { in: robotIds },
+      scheduledMatch: { status: 'scheduled' },
     },
   });
 
@@ -207,6 +205,20 @@ export async function performAccountReset(userId: number, reason?: string): Prom
       if (robot.imageUrl) {
         await fileStorageService.deleteImage(robot.imageUrl);
       }
+    }
+
+    // Delete standings for all user's robots (Spec #40 — must happen before robot deletion)
+    const userRobotIds = await tx.robot.findMany({
+      where: { userId },
+      select: { id: true },
+    });
+    if (userRobotIds.length > 0) {
+      await tx.standing.deleteMany({
+        where: {
+          entityType: 'robot',
+          entityId: { in: userRobotIds.map(r => r.id) },
+        },
+      });
     }
 
     // Delete all robots (cascade will handle battle history)

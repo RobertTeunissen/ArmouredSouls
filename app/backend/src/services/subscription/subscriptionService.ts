@@ -124,8 +124,31 @@ export async function subscribeRobot(
       );
     }
 
-    // 5. Create subscription row with 'pending' status
-    await tx.subscription.create({ data: { robotId, eventType, status: 'pending' } });
+    // 5. Create subscription row — active immediately (within cap)
+    await tx.subscription.create({ data: { robotId, eventType, status: 'active' } });
+
+    // 6. Recalculate team eligibility for any team this robot is on
+    const teamMemberships = await tx.teamBattleMember.findMany({
+      where: { robotId },
+      include: { team: { include: { members: true } } },
+    });
+    for (const membership of teamMemberships) {
+      const team = membership.team;
+      if (team.members.length === team.teamSize) {
+        // Check if all members now have the required subscription
+        const requiredEvent = team.teamSize === 2 ? 'league_2v2' : 'league_3v3';
+        let allSubscribed = true;
+        for (const member of team.members) {
+          const hasSub = await tx.subscription.count({
+            where: { robotId: member.robotId, eventType: requiredEvent, status: { in: ['active', 'pending'] } },
+          });
+          if (hasSub === 0) { allSubscribed = false; break; }
+        }
+        if (allSubscribed && team.eligibility === 'INELIGIBLE') {
+          await tx.teamBattle.update({ where: { id: team.id }, data: { eligibility: 'ELIGIBLE' } });
+        }
+      }
+    }
 
     // 6. Audit log — use current cycle number for trend tracking
     const cycleNumber = await getCurrentCycleNumber();
@@ -145,7 +168,7 @@ export async function subscribeRobot(
         robotId,
         payload: {
           eventType,
-          status: 'pending',
+          status: 'active',
           newCount: currentCount + 1,
           bookingOfficeLevel: level,
         } satisfies Prisma.JsonObject,
@@ -285,6 +308,29 @@ export async function activatePendingSubscriptions(robotId: number): Promise<voi
       activated: toActivate.length,
       eventTypes: toActivate.map(s => s.eventType),
     });
+
+    // Recalculate team eligibility for any team this robot is on
+    const teamMemberships = await prisma.teamBattleMember.findMany({
+      where: { robotId },
+      include: { team: { include: { members: true } } },
+    });
+    for (const membership of teamMemberships) {
+      const team = membership.team;
+      if (team.members.length === team.teamSize && team.eligibility === 'INELIGIBLE') {
+        const requiredEvent = team.teamSize === 2 ? 'league_2v2' : 'league_3v3';
+        let allSubscribed = true;
+        for (const member of team.members) {
+          const hasSub = await prisma.subscription.count({
+            where: { robotId: member.robotId, eventType: requiredEvent, status: { in: ['active', 'pending'] } },
+          });
+          if (hasSub === 0) { allSubscribed = false; break; }
+        }
+        if (allSubscribed) {
+          await prisma.teamBattle.update({ where: { id: team.id }, data: { eligibility: 'ELIGIBLE' } });
+          logger.info('[Subscription] Team eligibility restored', { teamId: team.id, teamName: team.teamName });
+        }
+      }
+    }
   }
 }
 

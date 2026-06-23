@@ -21,7 +21,7 @@ import {
   awardStreamingRevenueForParticipant,
   logBattleAuditEvent,
   updateRobotCombatStats,
-  awardCreditsToUser,
+  awardCreditsWithLedger,
   awardPrestigeToUser,
   checkAndAwardAchievements,
   didRobotLosePreviousBattle,
@@ -30,6 +30,7 @@ import {
 import { TournamentError, TournamentErrorCode } from '../../errors/tournamentErrors';
 import { prepareRobotForCombat } from '../../utils/robotCalculations';
 import { getTuningBonusesBatch } from '../tuning-pool';
+import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
 
 // Economic constants
 const _REPAIR_COST_PER_HP = 50; // Cost to repair 1 HP
@@ -590,7 +591,15 @@ async function updateRobotStatsForTournament(
   // Award prestige and credits via shared helpers
   await awardPrestigeToUser(robot.userId, isWinner ? prestigeAwarded : 0);
   const reward = isWinner ? battle.winnerReward : battle.loserReward;
-  await awardCreditsToUser(robot.userId, reward ?? 0);
+  const cycleNumber = await getCurrentCycleNumber();
+  await awardCreditsWithLedger(
+    robot.userId,
+    reward ?? 0,
+    'battle_income',
+    cycleNumber,
+    'Tournament battle reward',
+    robot.id,
+  );
 
   return { prestigeAwarded, fameAwarded };
 }

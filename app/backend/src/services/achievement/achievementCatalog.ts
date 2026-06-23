@@ -160,18 +160,56 @@ export async function getPlayerAchievements(
 
   // (b) Load robots
   const robots = await prisma.robot.findMany({
-    where: { userId, name: { not: 'Bye Robot' } },
+    where: { userId },
     select: {
       id: true, name: true, wins: true, losses: true, kills: true,
-      elo: true, fame: true, totalBattles: true, kothWins: true,
-      totalTagTeamWins: true, totalLeague2v2Wins: true, totalLeague3v3Wins: true,
-      currentWinStreak: true, currentLoseStreak: true,
+      elo: true, fame: true, totalBattles: true,
       offensiveWins: true, defensiveWins: true, balancedWins: true, dualWieldWins: true,
     },
   });
 
   const robotIds = robots.map((r) => r.id);
   const robotCount = robots.length;
+
+  // Load standings data for per-mode counters (koth wins, tag team wins, league wins, streaks)
+  const allStandings = await prisma.standing.findMany({
+    where: {
+      entityType: 'robot',
+      entityId: { in: robotIds },
+    },
+    select: {
+      entityId: true, mode: true, wins: true,
+      currentWinStreak: true, currentLoseStreak: true, bestWinStreak: true,
+    },
+  });
+
+  // Build per-robot standings maps
+  const standingsByRobot = new Map<number, typeof allStandings>();
+  for (const s of allStandings) {
+    const arr = standingsByRobot.get(s.entityId) ?? [];
+    arr.push(s);
+    standingsByRobot.set(s.entityId, arr);
+  }
+
+  // Merge robot base data with standings-derived per-mode counters
+  const robotsWithStandings = robots.map(r => {
+    const standings = standingsByRobot.get(r.id) ?? [];
+    const kothStanding = standings.find(s => s.mode === 'koth');
+    const tagTeamStanding = standings.find(s => s.mode === 'tag_team');
+    const league2v2Standing = standings.find(s => s.mode === 'league_2v2');
+    const league3v3Standing = standings.find(s => s.mode === 'league_3v3');
+    const league1v1Standing = standings.find(s => s.mode === 'league_1v1');
+
+    return {
+      ...r,
+      kothWins: kothStanding?.wins ?? 0,
+      totalTagTeamWins: tagTeamStanding?.wins ?? 0,
+      totalLeague2v2Wins: league2v2Standing?.wins ?? 0,
+      totalLeague3v3Wins: league3v3Standing?.wins ?? 0,
+      currentWinStreak: league1v1Standing?.currentWinStreak ?? 0,
+      currentLoseStreak: league1v1Standing?.currentLoseStreak ?? 0,
+    };
+  });
 
   // (c) Run ALL remaining queries in parallel
   const [
@@ -266,7 +304,7 @@ export async function getPlayerAchievements(
     let progress: AchievementWithProgress['progress'] = null;
     if (achievement.progressType === 'numeric' && achievement.triggerThreshold !== undefined) {
       progress = computeProgress(
-        achievement, user, robots, weaponCount, robotCount, facilityCounts,
+        achievement, user, robotsWithStandings, weaponCount, robotCount, facilityCounts,
         tuningByRobot, lifetimeEarnings, streamingRevenue,
         weaponsSoldCount, weaponsSoldCredits, weaponsRefinedCount, weaponsRefinedCreditsSpent,
       );

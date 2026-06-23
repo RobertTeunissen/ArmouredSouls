@@ -24,7 +24,6 @@ export const implementedPages = new Set([
   '/weapon-shop',
   '/battle-history',
   '/league-standings',
-  '/koth-standings',
   '/tournaments',
   '/team-battles',
   '/admin',
@@ -55,7 +54,6 @@ export const allPages: Record<string, NavCategory> = {
     items: [
       { path: '/battle-history', label: 'Battle History' },
       { path: '/league-standings', label: 'League Standings' },
-      { path: '/koth-standings', label: 'King of the Hill Standings' },
       { path: '/tournaments', label: 'Tournament Hub' },
       { path: '---', label: '' },
       { path: '/practice-arena', label: '🧪 Combat Simulator' },

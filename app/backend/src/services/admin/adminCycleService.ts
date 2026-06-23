@@ -330,6 +330,19 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
       let team2v2Error: string | undefined;
 
       try {
+        // 2.0 Repair (Spec #41 — was missing, must match cron behavior)
+        stepNumber++;
+        logger.info(`[Admin] Step ${stepNumber}: Repair All Robots (pre-team-2v2-league)`);
+        const team2v2RepairStart = Date.now();
+        await repairAllRobots(true, currentCycleNumber);
+        await eventLogger.logCycleStepComplete(
+          currentCycleNumber,
+          'repair_pre_team_2v2_league',
+          stepNumber,
+          Date.now() - team2v2RepairStart,
+          {}
+        );
+
         // 2.1 Execute scheduled 2v2 battles
         stepNumber++;
         logger.info(`[Admin] Step ${stepNumber}: Execute Team 2v2 League Battles`);
@@ -508,13 +521,27 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
           { battlesExecuted: kothBattleSummary.totalMatches }
         );
 
-        // 5.3 KotH matchmaking (24h lead time, pass cycleNumber for zone rotation)
+        // 5.2b Rebalance KotH leagues (Spec #41 — was missing, must match cron behavior)
+        stepNumber++;
+        logger.info(`[Admin] Step ${stepNumber}: Rebalance KotH Leagues`);
+        const kothRebalanceStart = Date.now();
+        const { rebalanceKothLeagues } = await import('../league/leagueRebalancingService');
+        const kothRebalanceSummary = await rebalanceKothLeagues();
+        await eventLogger.logCycleStepComplete(
+          currentCycleNumber,
+          'rebalance_koth_leagues',
+          stepNumber,
+          Date.now() - kothRebalanceStart,
+          { promotions: kothRebalanceSummary.totalPromoted, demotions: kothRebalanceSummary.totalDemoted }
+        );
+
+        // 5.3 KotH matchmaking (24h lead time)
         stepNumber++;
         logger.info(`[Admin] Step ${stepNumber}: KotH Matchmaking`);
         const kothMatchmakingStart = Date.now();
         const kothScheduledFor = new Date(Date.now() + 24 * 60 * 60 * 1000);
         kothScheduledFor.setMinutes(0, 0, 0);
-        kothMatchesCreated = await runKothMatchmaking(kothScheduledFor, currentCycleNumber);
+        kothMatchesCreated = await runKothMatchmaking(kothScheduledFor);
         await eventLogger.logCycleStepComplete(
           currentCycleNumber,
           'matchmaking_koth',
@@ -544,6 +571,19 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
       let team3v3Error: string | undefined;
 
       try {
+        // 6.0 Repair (Spec #41 — was missing, must match cron behavior)
+        stepNumber++;
+        logger.info(`[Admin] Step ${stepNumber}: Repair All Robots (pre-team-3v3-league)`);
+        const team3v3RepairStart = Date.now();
+        await repairAllRobots(true, currentCycleNumber);
+        await eventLogger.logCycleStepComplete(
+          currentCycleNumber,
+          'repair_pre_team_3v3_league',
+          stepNumber,
+          Date.now() - team3v3RepairStart,
+          {}
+        );
+
         // 6.1 Execute scheduled 3v3 battles
         stepNumber++;
         logger.info(`[Admin] Step ${stepNumber}: Execute Team 3v3 League Battles`);
@@ -808,7 +848,7 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
         const { calculateDailyPassiveIncome, calculateFacilityOperatingCost } = await import('../../utils/economyCalculations');
 
         const allUsers = await prisma.user.findMany({
-          where: { NOT: { username: 'bye_robot_user' } },
+          where: {},
           select: { id: true, prestige: true },
         });
         financesUsersProcessed = allUsers.length;
@@ -930,14 +970,10 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
         data: { lastCycleAt: new Date() },
       });
 
-      await prisma.robot.updateMany({
-        where: { NOT: { name: 'Bye Robot' } },
-        data: { cyclesInCurrentLeague: { increment: 1 } },
-      });
-
-      await prisma.teamBattle.updateMany({
-        where: { teamSize: 2 },
-        data: { cyclesInTagTeamLeague: { increment: 1 } },
+      // Increment cyclesInTier on all standings (Spec #40 — unified standings)
+      await prisma.standing.updateMany({
+        where: {},
+        data: { cyclesInTier: { increment: 1 } },
       });
       await eventLogger.logCycleStepComplete(
         currentCycleNumber,
@@ -993,7 +1029,7 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
       logger.info(`[Admin] === End of Cycle ${currentCycleNumber} Balances ===`);
       const balancesStart = Date.now();
       const endOfCycleUsers = await prisma.user.findMany({
-        where: { NOT: { username: 'bye_robot_user' } },
+        where: {},
         select: { id: true, username: true, stableName: true, currency: true },
         orderBy: { id: 'asc' },
       });

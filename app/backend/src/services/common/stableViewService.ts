@@ -38,7 +38,7 @@ export async function getStableProfile(userId: number) {
       championshipTitles2v2: true,
       championshipTitles3v3: true,
       robots: {
-        where: { NOT: { name: 'Bye Robot' } },
+        where: {},
         orderBy: { elo: 'desc' },
         include: {
           // Spec #34: include refinements so the public stable view can

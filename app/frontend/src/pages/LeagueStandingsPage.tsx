@@ -24,13 +24,14 @@ import {
 } from '../utils/teamBattleApi';
 import OwnerNameLink from '../components/OwnerNameLink';
 
-type LeagueMode = '1v1' | '2v2' | '3v3' | 'tag_team';
+type LeagueMode = '1v1' | '2v2' | '3v3' | 'tag_team' | 'koth';
 
-const MODES: { value: LeagueMode; label: string }[] = [
-  { value: '1v1', label: '1v1 League' },
-  { value: '2v2', label: '2v2 League' },
-  { value: '3v3', label: '3v3 League' },
-  { value: 'tag_team', label: 'Tag Team' },
+const MODES: { value: LeagueMode; label: string; shortLabel: string }[] = [
+  { value: '1v1', label: '1v1 League', shortLabel: '1v1' },
+  { value: '2v2', label: '2v2 League', shortLabel: '2v2' },
+  { value: '3v3', label: '3v3 League', shortLabel: '3v3' },
+  { value: 'tag_team', label: 'Tag Team', shortLabel: 'Tag' },
+  { value: 'koth', label: 'King of the Hill', shortLabel: 'KotH' },
 ];
 
 const TIERS = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'];
@@ -77,6 +78,8 @@ function LeagueStandingsPage() {
       fetchLeagueData(tier, 1);
     } else if (mode === 'tag_team') {
       fetchTagTeamData(tier, 1);
+    } else if (mode === 'koth') {
+      fetchLeagueData(tier, 1);
     } else {
       fetchTeamBattleData(tier, 1);
     }
@@ -110,6 +113,8 @@ function LeagueStandingsPage() {
   });
   const [showTeamInstancesList, setShowTeamInstancesList] = useState(false);
 
+  // KotH now uses the same state as 1v1 (robots, instances, pagination) via fetchLeagueData
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -120,6 +125,8 @@ function LeagueStandingsPage() {
       fetchTeamBattleData(selectedTier, 1, selectedInstance || undefined);
     } else if (mode === 'tag_team') {
       fetchTagTeamData(selectedTier, 1, selectedInstance || undefined);
+    } else if (mode === 'koth') {
+      fetchLeagueData(selectedTier, 1, selectedInstance || undefined);
     }
     fetchStoreRobots();
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -138,9 +145,10 @@ function LeagueStandingsPage() {
   const fetchLeagueData = async (tier: string, page: number, instance?: string) => {
     try {
       setLoading(true);
+      const leagueMode = mode === 'koth' ? 'koth' : undefined; // undefined = default league_1v1
       const [standingsData, instancesData] = await Promise.all([
-        getLeagueStandings(tier, page, 50, instance),
-        getLeagueInstances(tier),
+        getLeagueStandings(tier, page, 50, instance, leagueMode),
+        getLeagueInstances(tier, leagueMode),
       ]);
       setRobots(standingsData.data);
       setPagination(standingsData.pagination);
@@ -244,6 +252,8 @@ function LeagueStandingsPage() {
       fetchLeagueData(selectedTier, newPage, selectedInstance || undefined);
     } else if (mode === 'tag_team') {
       fetchTagTeamData(selectedTier, newPage, selectedInstance || undefined);
+    } else if (mode === 'koth') {
+      fetchLeagueData(selectedTier, newPage, selectedInstance || undefined);
     } else {
       fetchTeamBattleData(selectedTier, newPage, selectedInstance || undefined);
     }
@@ -258,6 +268,8 @@ function LeagueStandingsPage() {
         fetchLeagueData(selectedTier, 1);
       } else if (mode === 'tag_team') {
         fetchTagTeamData(selectedTier, 1);
+      } else if (mode === 'koth') {
+        fetchLeagueData(selectedTier, 1);
       } else {
         fetchTeamBattleData(selectedTier, 1);
       }
@@ -268,6 +280,8 @@ function LeagueStandingsPage() {
         fetchLeagueData(selectedTier, 1, instanceId);
       } else if (mode === 'tag_team') {
         fetchTagTeamData(selectedTier, 1, instanceId);
+      } else if (mode === 'koth') {
+        fetchLeagueData(selectedTier, 1, instanceId);
       } else {
         fetchTeamBattleData(selectedTier, 1, instanceId);
       }
@@ -307,18 +321,19 @@ function LeagueStandingsPage() {
         <h1 className="text-4xl font-bold mb-6">League Standings</h1>
 
         {/* Mode Selector */}
-        <div className="flex gap-2 mb-6 border-b border-white/10 pb-4">
+        <div className="flex gap-1.5 lg:gap-2 mb-6 border-b border-white/10 pb-4 overflow-x-auto scrollbar-none">
           {MODES.map((m) => (
             <button
               key={m.value}
               onClick={() => setMode(m.value)}
-              className={`px-5 py-2.5 rounded-lg font-semibold transition-colors min-h-[44px] ${
+              className={`px-3 lg:px-5 py-2 lg:py-2.5 rounded-lg font-semibold transition-colors min-h-[40px] lg:min-h-[44px] text-sm lg:text-base whitespace-nowrap shrink-0 ${
                 mode === m.value
                   ? 'bg-primary text-white'
                   : 'bg-surface text-secondary hover:bg-surface-elevated hover:text-white'
               }`}
             >
-              {m.label}
+              <span className="hidden lg:inline">{m.label}</span>
+              <span className="lg:hidden">{m.shortLabel}</span>
             </button>
           ))}
         </div>
@@ -355,7 +370,7 @@ function LeagueStandingsPage() {
         </div>
 
         {/* Instance Information — 1v1 mode */}
-        {mode === '1v1' && !loading && instances.length > 0 && (
+        {(mode === '1v1' || mode === 'koth') && !loading && instances.length > 0 && (
           <div className="bg-surface p-4 rounded-lg mb-6">
             <div 
               className="flex items-center justify-between cursor-pointer mb-2"
@@ -485,13 +500,13 @@ function LeagueStandingsPage() {
         )}
 
         {/* ── 1v1 League Standings ── */}
-        {mode === '1v1' && !loading && !error && robots.length === 0 && (
+        {(mode === '1v1' || mode === 'koth') && !loading && !error && robots.length === 0 && (
           <div className="bg-surface p-6 rounded-lg">
             <p className="text-secondary">No robots in this tier yet.</p>
           </div>
         )}
 
-        {mode === '1v1' && !loading && !error && robots.length > 0 && (
+        {(mode === '1v1' || mode === 'koth') && !loading && !error && robots.length > 0 && (
           <>
             {/* Zone Legend & Status */}
             {zoneMeta && (
@@ -505,8 +520,8 @@ function LeagueStandingsPage() {
                   <span className="text-secondary">Demotion zone (bottom 10%, ≥{zoneMeta.minCycles} cycles)</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-sm bg-white/30 inline-block"></span>
-                  <span className="text-secondary">Faded = not yet eligible (&lt;{zoneMeta.minCycles} cycles)</span>
+                  <span className="w-3 h-3 rounded-sm bg-white inline-block"></span>
+                  <span className="text-secondary">Eligible for promotion/demotion (≥{zoneMeta.minCycles} cycles)</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] bg-white/10 text-tertiary px-1.5 py-0.5 rounded font-medium">INACTIVE</span>
@@ -537,7 +552,7 @@ function LeagueStandingsPage() {
                       <th className="px-1.5 lg:px-4 py-3 text-center font-semibold text-sm lg:text-base">LP</th>
                       <th className="px-1.5 lg:px-4 py-3 text-center font-semibold text-sm lg:text-base">ELO</th>
                       <th className="hidden lg:table-cell px-4 py-3 text-center font-semibold">Fame</th>
-                      <th className="hidden lg:table-cell px-4 py-3 text-center font-semibold">W-D-L</th>
+                      <th className="hidden lg:table-cell px-4 py-3 text-center font-semibold">{mode === 'koth' ? 'Wins / Matches' : 'W-D-L'}</th>
                       <th className="hidden lg:table-cell px-4 py-3 text-center font-semibold">Win Rate</th>
                     </tr>
                   </thead>
@@ -558,12 +573,14 @@ function LeagueStandingsPage() {
                           ? 'border-l-4 border-l-red-500 bg-red-900/10'
                           : '';
 
-                      const eligibilityClass = !robot.eligible ? 'opacity-50' : isInactive ? 'opacity-40' : '';
+                      const eligibilityClass = isInactive ? 'opacity-40' : '';
 
                       return (
                         <tr
                           key={robot.id}
                           className={`border-b border-white/10 ${zoneClass} ${eligibilityClass} ${
+                            robot.eligible ? (robot.zone === 'promotion' ? 'border-l-2 border-l-green-500' : 'border-l-2 border-l-white') : ''
+                          } ${
                             isMyBot ? 'bg-blue-900 bg-opacity-30' : 'hover:bg-surface-elevated'
                           } transition-colors`}
                         >
@@ -607,11 +624,17 @@ function LeagueStandingsPage() {
                             {robot.fame}
                           </td>
                           <td className="hidden lg:table-cell px-4 py-3 text-center font-mono">
-                            <span className="text-success">{robot.wins}</span>
-                            <span className="text-tertiary"> - </span>
-                            <span className="text-warning">{robot.draws}</span>
-                            <span className="text-tertiary"> - </span>
-                            <span className="text-error">{robot.losses}</span>
+                            {mode === 'koth' ? (
+                              <><span className="text-success">{robot.wins}</span><span className="text-tertiary"> / </span><span>{robot.totalBattles}</span></>
+                            ) : (
+                              <>
+                                <span className="text-success">{robot.wins}</span>
+                                <span className="text-tertiary"> - </span>
+                                <span className="text-warning">{robot.draws}</span>
+                                <span className="text-tertiary"> - </span>
+                                <span className="text-error">{robot.losses}</span>
+                              </>
+                            )}
                           </td>
                           <td className="hidden lg:table-cell px-4 py-3 text-center font-mono">{winRate}%</td>
                         </tr>
@@ -670,8 +693,8 @@ function LeagueStandingsPage() {
                   <span className="text-secondary">Demotion zone (bottom 10%, ≥{teamZoneMeta.minCycles} cycles)</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-sm bg-white/30 inline-block"></span>
-                  <span className="text-secondary">Faded = not yet eligible (&lt;{teamZoneMeta.minCycles} cycles)</span>
+                  <span className="w-3 h-3 rounded-sm bg-white inline-block"></span>
+                  <span className="text-secondary">Eligible for promotion/demotion (≥{teamZoneMeta.minCycles} cycles)</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] bg-white/10 text-tertiary px-1.5 py-0.5 rounded font-medium">INACTIVE</span>
@@ -721,12 +744,14 @@ function LeagueStandingsPage() {
                           ? 'border-l-4 border-l-red-500 bg-red-900/10'
                           : '';
 
-                      const eligibilityClass = team.eligible === false ? 'opacity-50' : isInactive ? 'opacity-40' : '';
+                      const eligibilityClass = isInactive ? 'opacity-40' : '';
 
                       return (
                         <tr
                           key={team.teamId}
                           className={`border-b border-white/10 ${zoneClass} ${eligibilityClass} ${
+                            team.eligible ? (team.zone === 'promotion' ? 'border-l-2 border-l-green-500' : 'border-l-2 border-l-white') : ''
+                          } ${
                             isMyTeam ? 'bg-blue-900 bg-opacity-30' : 'hover:bg-surface-elevated'
                           } transition-colors`}
                         >
@@ -812,6 +837,7 @@ function LeagueStandingsPage() {
             )}
           </>
         )}
+
 
       </div>
     </div>

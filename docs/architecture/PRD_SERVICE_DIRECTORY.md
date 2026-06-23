@@ -114,7 +114,7 @@ Automated game loop — the scheduler and analytics snapshot system.
 
 | Service | Purpose |
 |---------|---------|
-| `cycleScheduler` | 5 independent cron jobs (league, tournament, tagTeam, koth, settlement) |
+| `cycleScheduler` | 10 independent cron jobs (league, team2v2League, tournament, tagTeam, koth, team3v3League, team2v2Tournament, grandMelee, team3v3Tournament, settlement) — all league modes use unified matchmaking pipeline |
 | `cycleSnapshotService` | Aggregates AuditLog events into CycleSnapshot for fast analytics |
 | `cycleCsvExportService` | Exports cycle data to CSV files |
 | `cyclePerformanceMonitoringService` | Detects step duration degradation across cycles |
@@ -136,7 +136,7 @@ King of the Hill mode — orchestration and matchmaking.
 | Service | Purpose |
 |---------|---------|
 | `kothBattleOrchestrator` | KotH match execution (placement rewards, zone scoring, no ELO changes) |
-| `kothMatchmakingService` | KotH group formation (5-6 robots, ELO snake-draft, one per stable) |
+| `kothMatchmakingService` | KotH group formation (5-6 robots, LP-banding within tier/instance, same-stable swaps, recent-opponent swaps — unified pipeline per Spec #41) |
 
 ### league/
 1v1 league system — battles, instances, and promotions.

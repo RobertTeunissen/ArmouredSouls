@@ -67,6 +67,7 @@ function createMockRobot(overrides?: Partial<RobotWithWeapons>): RobotWithWeapon
     damageDealtLifetime: 0,
     damageTakenLifetime: 0,
     kills: 0,
+    // Legacy fields (moving to standings table in Spec #40, retained on Robot type until migration 14.6)
     currentLeague: 'bronze',
     leagueId: 'bronze_1',
     leaguePoints: 0,
@@ -82,12 +83,19 @@ function createMockRobot(overrides?: Partial<RobotWithWeapons>): RobotWithWeapon
     offhandWeaponId: null,
     imageUrl: null,
     cyclesInCurrentLeague: 0,
+    // Legacy tag-team/KotH fields (moving to standings table in Spec #40)
     totalTagTeamBattles: 0,
     totalTagTeamWins: 0,
     totalTagTeamLosses: 0,
     totalTagTeamDraws: 0,
     timesTaggedIn: 0,
     timesTaggedOut: 0,
+    // Legacy league win counters (moving to standings table in Spec #40)
+    totalLeague1v1Wins: 0,
+    totalLeague1v1Losses: 0,
+    totalLeague1v1Draws: 0,
+    totalLeague2v2Wins: 0,
+    totalLeague3v3Wins: 0,
     kothWins: 0,
     kothMatches: 0,
     kothTotalZoneScore: 0,
@@ -96,6 +104,15 @@ function createMockRobot(overrides?: Partial<RobotWithWeapons>): RobotWithWeapon
     kothBestPlacement: null,
     kothCurrentWinStreak: 0,
     kothBestWinStreak: 0,
+    // Streak fields (moving to standings table in Spec #40)
+    currentWinStreak: 0,
+    bestWinStreak: 0,
+    currentLoseStreak: 0,
+    // Stance/loadout win counters
+    offensiveWins: 0,
+    defensiveWins: 0,
+    balancedWins: 0,
+    dualWieldWins: 0,
     createdAt: new Date('2025-01-01'),
     updatedAt: new Date('2025-01-01'),
     mainWeapon: null,

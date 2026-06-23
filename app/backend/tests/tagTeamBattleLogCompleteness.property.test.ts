@@ -88,17 +88,21 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
     const robotIds = robots.map(r => r.id);
 
     if (robotIds.length > 0) {
+      // Find battles through participants (not legacy robot1Id/robot2Id columns)
+      const participantBattleIds = await prisma.battleParticipant.findMany({
+        where: { robotId: { in: robotIds } },
+        select: { battleId: true },
+      });
+      const battleIds = [...new Set(participantBattleIds.map(p => p.battleId))];
+
       await prisma.battleParticipant.deleteMany({
         where: { robotId: { in: robotIds } },
       });
-      await prisma.battle.deleteMany({
-        where: {
-          OR: [
-            { robot1Id: { in: robotIds } },
-            { robot2Id: { in: robotIds } },
-          ],
-        },
-      });
+      if (battleIds.length > 0) {
+        await prisma.battle.deleteMany({
+          where: { id: { in: battleIds } },
+        });
+      }
     }
     await prisma.scheduledTeamBattleMatch.deleteMany({
       where: {

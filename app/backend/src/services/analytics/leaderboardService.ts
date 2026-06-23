@@ -101,7 +101,7 @@ export async function getFameLeaderboard(params: FameLeaderboardParams): Promise
   const skip = (page - 1) * limit;
 
   const where: Prisma.RobotWhereInput = {
-    NOT: { name: 'Bye Robot' },
+
     totalBattles: { gte: minBattles },
   };
 
@@ -172,7 +172,7 @@ export async function getLossesLeaderboard(params: LossesLeaderboardParams): Pro
   const skip = (page - 1) * limit;
 
   const where: Prisma.RobotWhereInput = {
-    NOT: { name: 'Bye Robot' },
+
   };
 
   if (league && league !== 'all') {
@@ -262,7 +262,7 @@ export async function getPrestigeLeaderboard(params: PrestigeLeaderboardParams):
     prisma.$queryRaw<[{ count: bigint }]>`
       SELECT COUNT(*)::bigint AS count FROM (
         SELECT u.id FROM "users" u
-        LEFT JOIN "robots" r ON r."user_id" = u.id AND r.name != 'Bye Robot'
+        LEFT JOIN "robots" r ON r."user_id" = u.id
         GROUP BY u.id
         HAVING COUNT(r.id) >= ${minRobots}
       ) sub
@@ -281,7 +281,7 @@ export async function getPrestigeLeaderboard(params: PrestigeLeaderboardParams):
         COALESCE(SUM(r.losses), 0)::bigint AS total_losses,
         COALESCE(SUM(r.draws), 0)::bigint AS total_draws
       FROM "users" u
-      LEFT JOIN "robots" r ON r."user_id" = u.id AND r.name != 'Bye Robot'
+      LEFT JOIN "robots" r ON r."user_id" = u.id
       GROUP BY u.id
       HAVING COUNT(r.id) >= ${minRobots}
       ORDER BY u.prestige DESC
