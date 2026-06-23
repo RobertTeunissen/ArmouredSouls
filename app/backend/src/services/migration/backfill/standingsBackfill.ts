@@ -122,7 +122,7 @@ export async function backfillStandings(): Promise<{ robots1v1: number; teams2v2
         tier: 'bronze', // Initial tier — will be assigned by first rebalancing cycle
         leagueInstanceId: 'bronze_1',
         leaguePoints: kothLPMap.get(robot.id) || 0,
-        cyclesInTier: 0,
+        cyclesInTier: robot.kothMatches, // Use match count as proxy for cycles spent
         wins: robot.kothWins,
         losses: 0,
         draws: 0,
