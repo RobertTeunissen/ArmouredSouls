@@ -342,13 +342,19 @@ export async function getAdminBattleDetail(battleId: number) {
     ]);
 
     if (team1) {
+      // Read league from standings
+      const [team1Standing, team2Standing] = await Promise.all([
+        prisma.standing.findFirst({ where: { entityType: 'team', entityId: team1.id, mode: 'tag_team' as any }, select: { tier: true } }),
+        team2 ? prisma.standing.findFirst({ where: { entityType: 'team', entityId: team2.id, mode: 'tag_team' as any }, select: { tier: true } }) : null,
+      ]);
+
       tagTeamData = {
         team1: {
           id: team1.id,
           activeRobot: team1.members[0]?.robot,
           reserveRobot: team1.members[1]?.robot,
           stableId: team1.stableId,
-          league: team1.tagTeamLeague,
+          league: team1Standing?.tier ?? team1.tagTeamLeague,
         },
         team2: team2
           ? {
@@ -356,7 +362,7 @@ export async function getAdminBattleDetail(battleId: number) {
               activeRobot: team2.members[0]?.robot,
               reserveRobot: team2.members[1]?.robot,
               stableId: team2.stableId,
-              league: team2.tagTeamLeague,
+              league: team2Standing?.tier ?? team2.tagTeamLeague,
             }
           : null,
       };

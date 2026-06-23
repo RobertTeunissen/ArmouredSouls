@@ -152,6 +152,19 @@ router.post('/', authenticateToken, validateRequest({ body: createRobotBodySchem
     logger.error('Failed to log robot creation event:', logError);
   }
 
+  // Record financial ledger entry (non-blocking)
+  try {
+    const { getCurrentCycleNumber } = await import('../services/battle/baseOrchestrator');
+    const financialService = (await import('../services/financial/financialService')).default;
+    const cycleNumber = await getCurrentCycleNumber();
+    await financialService.recordTransaction({
+      cycleNumber, userId, transactionType: 'robot_creation',
+      amount: -ROBOT_CREATION_COST, balanceAfter: result.user.currency,
+      description: `Created robot: ${trimmedName}`,
+      metadata: { robotId: result.robot.id, robotName: trimmedName },
+    });
+  } catch {}
+
   res.status(201).json({
     robot: result.robot,
     currency: result.user.currency,
@@ -629,6 +642,47 @@ router.get('/:id/league-history', authenticateToken, validateRequest({ params: r
 
   const data = await getEntityHistory('robot', robotId);
   res.json({ data });
+});
+
+// Get KotH standing for a robot (current tier, LP, stats)
+router.get('/:id/koth-standing', authenticateToken, validateRequest({ params: robotIdParamsSchema }), async (req: AuthRequest, res: Response) => {
+  const robotId = parseInt(String(req.params.id));
+
+  if (isNaN(robotId)) {
+    throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Invalid robot ID', 400);
+  }
+
+  const robot = await prisma.robot.findUnique({
+    where: { id: robotId },
+    select: { id: true, name: true },
+  });
+
+  if (!robot) {
+    throw new RobotError(RobotErrorCode.ROBOT_NOT_FOUND, 'Robot not found', 404);
+  }
+
+  const standing = await prisma.standing.findFirst({
+    where: { entityType: 'robot', entityId: robotId, mode: 'koth' as any },
+  });
+
+  if (!standing) {
+    res.json({ standing: null });
+    return;
+  }
+
+  res.json({
+    standing: {
+      tier: standing.tier,
+      leagueInstanceId: standing.leagueInstanceId,
+      leaguePoints: standing.leaguePoints,
+      wins: standing.wins,
+      totalMatches: standing.totalMatches,
+      totalKills: standing.totalKills,
+      bestPlacement: standing.bestPlacement,
+      currentWinStreak: standing.currentWinStreak,
+      bestWinStreak: standing.bestWinStreak,
+    },
+  });
 });
 
 export default router;

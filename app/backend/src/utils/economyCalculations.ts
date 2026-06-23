@@ -473,9 +473,6 @@ export async function processDailyFinances(userId: number): Promise<DailyFinanci
       currentHP: {
         lt: prisma.robot.fields.maxHP,
       },
-      NOT: {
-        name: 'Bye Robot',
-      },
     },
     select: {
       id: true,

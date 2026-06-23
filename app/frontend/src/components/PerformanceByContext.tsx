@@ -39,6 +39,17 @@ interface TagTeamPerformance {
   damageTaken: number;
 }
 
+interface KothPerformance {
+  totalBattles: number;
+  wins: number;
+  topThree: number;
+  totalPoints: number;
+  bestPlacement: number | null;
+  winRate: string;
+  damageDealt: number;
+  damageTaken: number;
+}
+
 interface PerformanceByContextProps {
   robotId: number;
 }
@@ -49,6 +60,7 @@ function PerformanceByContext({ robotId }: PerformanceByContextProps) {
   const [tagTeam, setTagTeam] = useState<TagTeamPerformance | null>(null);
   const [league2v2, setLeague2v2] = useState<TagTeamPerformance | null>(null);
   const [league3v3, setLeague3v3] = useState<TagTeamPerformance | null>(null);
+  const [koth, setKoth] = useState<KothPerformance | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -63,6 +75,7 @@ function PerformanceByContext({ robotId }: PerformanceByContextProps) {
         setTagTeam(data.tagTeam as TagTeamPerformance | null);
         setLeague2v2((data as unknown as { league2v2?: TagTeamPerformance }).league2v2 ?? null);
         setLeague3v3((data as unknown as { league3v3?: TagTeamPerformance }).league3v3 ?? null);
+        setKoth((data as unknown as { koth?: KothPerformance }).koth ?? null);
       } catch (err) {
         setError('Failed to load performance data');
         log.error('Performance context fetch error', { err });
@@ -350,6 +363,52 @@ function PerformanceByContext({ robotId }: PerformanceByContextProps) {
                     width: `${league3v3.damageTaken > 0 ? (league3v3.damageTaken / (league3v3.damageDealt + league3v3.damageTaken)) * 100 : 50}%`,
                   }}
                   title={`Taken: ${league3v3.damageTaken.toLocaleString()}`}
+                ></div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* KotH Section */}
+        <div>
+          <div className="flex items-center gap-1.5 mb-1">
+            <span className="text-base">👑</span>
+            <h4 className="text-xs font-semibold text-secondary">King of the Hill</h4>
+            {(!koth || koth.totalBattles === 0) && <span className="text-xs text-tertiary">No battles yet</span>}
+          </div>
+          
+          {koth && koth.totalBattles > 0 && (
+            <div className="ml-5">
+              <div className="flex items-center justify-between mb-0.5">
+                <span className="text-xs text-secondary">{koth.totalBattles} battles</span>
+                <div className="text-xs">
+                  <span className="text-warning">{koth.wins}🥇</span>
+                  <span className="text-tertiary mx-0.5">·</span>
+                  <span className="text-amber-400">{koth.topThree} top 3</span>
+                  <span className="text-tertiary mx-0.5">·</span>
+                  <span className="text-purple-400">{koth.totalPoints} pts</span>
+                </div>
+              </div>
+              {koth.bestPlacement && (
+                <div className="text-[10px] text-tertiary mb-0.5">
+                  Best: {koth.bestPlacement === 1 ? '🥇' : koth.bestPlacement === 2 ? '🥈' : koth.bestPlacement === 3 ? '🥉' : `#${koth.bestPlacement}`}
+                  {' · Win rate: '}{koth.winRate}%
+                </div>
+              )}
+              <div className="flex gap-0.5 h-1.5">
+                <div
+                  className="bg-green-500 rounded"
+                  style={{
+                    width: `${koth.damageDealt > 0 ? (koth.damageDealt / (koth.damageDealt + koth.damageTaken)) * 100 : 50}%`,
+                  }}
+                  title={`Dealt: ${koth.damageDealt.toLocaleString()}`}
+                ></div>
+                <div
+                  className="bg-red-500 rounded"
+                  style={{
+                    width: `${koth.damageTaken > 0 ? (koth.damageTaken / (koth.damageDealt + koth.damageTaken)) * 100 : 50}%`,
+                  }}
+                  title={`Taken: ${koth.damageTaken.toLocaleString()}`}
                 ></div>
               </div>
             </div>

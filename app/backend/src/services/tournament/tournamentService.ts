@@ -52,9 +52,6 @@ export async function getEligibleRobotsForTournament(): Promise<Robot[]> {
   // Get all robots except bye robot
   const allRobots = await prisma.robot.findMany({
     where: {
-      NOT: {
-        name: 'Bye Robot',
-      },
     },
     include: {
       mainWeapon: { include: { weapon: true } },

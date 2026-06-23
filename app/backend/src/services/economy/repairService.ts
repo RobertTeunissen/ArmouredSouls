@@ -37,9 +37,6 @@ export async function repairAllRobots(deductCosts: boolean = true, cycleNumber?:
       currentHP: {
         lt: prisma.robot.fields.maxHP,
       },
-      NOT: {
-        name: 'Bye Robot',
-      },
     },
   });
 
@@ -75,7 +72,7 @@ export async function repairAllRobots(deductCosts: boolean = true, cycleNumber?:
       by: ['userId'],
       where: {
         userId: { in: affectedUserIds },
-        NOT: { name: 'Bye Robot' },
+
       },
       _count: { id: true },
     }),

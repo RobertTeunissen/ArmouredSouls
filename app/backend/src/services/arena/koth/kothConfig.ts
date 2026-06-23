@@ -16,9 +16,8 @@ export interface KothMatchConfig {
   scoreThreshold?: number;    // default 30, range [15, 90]
   timeLimit?: number;         // default 150s, range [60, 300]
   zoneRadius?: number;        // default 5, range [3, 8]
-  rotatingZone?: boolean;     // default false
   participantCount: number;   // 5 or 6
-  matchId: number;            // for deterministic zone rotation seed
+  matchId: number;            // for deterministic seed
 }
 
 // ─── KotH Zone State ────────────────────────────────────────────────
@@ -119,9 +118,6 @@ export const KOTH_MATCH_DEFAULTS = {
   zoneRadius: 5,
   arenaRadius: 14,
   killBonus: 5,
-  rotatingZoneScoreThreshold: 45,
-  rotatingZoneTimeLimit: 210,
-  rotatingZoneInterval: 30,
   zoneTransitionDuration: 3,
   zoneWarningTime: 5,
   lastStandingDuration: 10,

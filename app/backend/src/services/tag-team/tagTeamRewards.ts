@@ -101,6 +101,7 @@ export function calculateTagTeamPrestige(
  * Fame is only awarded to robots on the WINNING team
  */
 export function calculateTagTeamFame(
+  leagueType: string,
   robot: Robot,
   damageDealt: number,
   survivalTime: number,
@@ -123,7 +124,7 @@ export function calculateTagTeamFame(
     champion: 40,
   };
 
-  const baseFame = baseFameByLeague[robot.currentLeague] || 0;
+  const baseFame = baseFameByLeague[leagueType] || 0;
 
   // If robot didn't participate (0 survival time), they still get base fame as part of winning team
   if (survivalTime === 0) {

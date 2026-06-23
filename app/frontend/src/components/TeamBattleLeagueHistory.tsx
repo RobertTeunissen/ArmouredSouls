@@ -80,6 +80,28 @@ function TeamBattleLeagueHistory({ robotId }: TeamBattleLeagueHistoryProps) {
         </div>
       )}
 
+      {/* Tag Team League History (from 2v2 teams) */}
+      {teams2v2.some((t) => t.tagTeamHistory && t.tagTeamHistory.length > 0) && (
+        <div className="bg-surface rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-white mb-1">Tag Team League History</h3>
+          {teams2v2
+            .filter((t) => t.tagTeamHistory && t.tagTeamHistory.length > 0)
+            .map((team) => (
+              <TagTeamLeagueSection key={`tag-${team.teamId}`} team={team} />
+            ))}
+        </div>
+      )}
+
+      {/* Show tag team current standing even without history */}
+      {teams2v2.length > 0 && !teams2v2.some((t) => t.tagTeamHistory && t.tagTeamHistory.length > 0) && (
+        <div className="bg-surface rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-white mb-1">Tag Team League History</h3>
+          {teams2v2.map((team) => (
+            <TagTeamLeagueSection key={`tag-${team.teamId}`} team={team} />
+          ))}
+        </div>
+      )}
+
       {teams3v3.length > 0 && (
         <div className="bg-surface rounded-lg p-6">
           <h3 className="text-lg font-semibold text-white mb-1">3v3 League History</h3>
@@ -108,14 +130,47 @@ function TeamLeagueSection({ team }: { team: TeamBattleLeagueHistoryEntry }) {
     <div className="mt-4">
       <div className="flex items-center gap-3 mb-3">
         <span className="text-white font-medium text-sm">{team.teamName}</span>
-        <span className="text-xs text-secondary capitalize">
-          {team.currentLeague} • LP: {team.currentLp}
+        <span className="text-xs text-secondary">
+          <span className="font-medium text-white">{team.teamName}</span>
+          {' '}is currently in <span className="capitalize font-medium text-white">{team.currentLeague}</span> league
+          {' • LP: '}<span className="font-medium text-warning">{team.currentLp}</span>
         </span>
       </div>
       <LeagueTimeline
         history={historyEntries}
         currentTier={team.currentLeague}
         emptyMessage={`${team.teamName} is currently in ${team.currentLeague} league. No tier changes recorded yet.`}
+      />
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Tag Team League Section                                            */
+/* ------------------------------------------------------------------ */
+
+function TagTeamLeagueSection({ team }: { team: TeamBattleLeagueHistoryEntry }) {
+  const historyEntries: LeagueHistoryEntry[] = (team.tagTeamHistory || []).map((h) => ({
+    cycleNumber: h.cycleNumber,
+    destinationTier: h.destinationTier,
+    changeType: h.changeType as 'promotion' | 'demotion',
+    leaguePoints: h.leaguePoints,
+  }));
+
+  return (
+    <div className="mt-4">
+      <div className="flex items-center gap-3 mb-3">
+        <span className="text-white font-medium text-sm">{team.teamName}</span>
+        <span className="text-xs text-secondary">
+          <span className="font-medium text-white">{team.teamName}</span>
+          {' '}is currently in <span className="capitalize font-medium text-white">{team.tagTeamCurrentLeague}</span> league
+          {' • LP: '}<span className="font-medium text-warning">{team.tagTeamCurrentLp}</span>
+        </span>
+      </div>
+      <LeagueTimeline
+        history={historyEntries}
+        currentTier={team.tagTeamCurrentLeague}
+        emptyMessage={`${team.teamName} is currently in ${team.tagTeamCurrentLeague} tag team league. No tier changes recorded yet.`}
       />
     </div>
   );

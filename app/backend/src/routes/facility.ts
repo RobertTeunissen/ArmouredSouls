@@ -41,10 +41,7 @@ router.get('/', authenticateToken, validateRequest({}), async (req: AuthRequest,
 
     // Get robot count for repair bay discount calculation
     const robotCount = await prisma.robot.count({
-      where: { 
-        userId,
-        name: { not: 'Bye Robot' } // Exclude system robots
-      },
+      where: { userId },
     });
 
     // Create a map of facility types to levels
@@ -315,6 +312,19 @@ router.post('/upgrade', authenticateToken, validateRequest({ body: upgradeBodySc
       logger.error('Failed to log facility transaction event:', logError);
       // Don't fail the request if logging fails
     }
+
+    // Record financial ledger entry (non-blocking)
+    try {
+      const { getCurrentCycleNumber } = await import('../services/battle/baseOrchestrator');
+      const financialService = (await import('../services/financial/financialService')).default;
+      const cycleNumber = await getCurrentCycleNumber();
+      await financialService.recordTransaction({
+        cycleNumber, userId, transactionType: 'facility_upgrade',
+        amount: -upgradeCost, balanceAfter: result.user.currency,
+        description: `Upgraded ${facilityType} to level ${targetLevel}`,
+        metadata: { facilityType, newLevel: targetLevel },
+      });
+    } catch {}
 
     res.json({
       facility: result.facility,

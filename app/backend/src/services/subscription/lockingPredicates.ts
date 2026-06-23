@@ -1,4 +1,6 @@
 import prisma from '../../lib/prisma';
+import schedulingService from '../scheduling/schedulingService';
+import { MatchType } from '../../../generated/prisma';
 
 /**
  * League: no lock — unsubscribe is instant.
@@ -26,21 +28,15 @@ export async function tournamentLockingPredicate(robotId: number): Promise<boole
 /**
  * Tag Team: locked when the robot's team has a scheduled tag_team match.
  * Prevents unsubscription while a tag team battle is queued.
- * Checks TeamBattleMember → TeamBattle (teamSize=2) → ScheduledTeamBattleMatch (matchMode='tag_team').
+ * Uses unified scheduled_matches_v2 via schedulingService.
  */
 export async function tagTeamLockingPredicate(robotId: number): Promise<boolean> {
   const member = await prisma.teamBattleMember.findFirst({
     where: { robotId, team: { teamSize: 2 } },
   });
   if (!member) return false;
-  const count = await prisma.scheduledTeamBattleMatch.count({
-    where: {
-      matchMode: 'tag_team',
-      status: 'scheduled',
-      OR: [{ team1Id: member.teamId }, { team2Id: member.teamId }],
-    },
-  });
-  return count > 0;
+  const upcoming = await schedulingService.getUpcomingForTeam(member.teamId, [MatchType.tag_team]);
+  return upcoming.length > 0;
 }
 
 /**
@@ -53,39 +49,31 @@ export async function kothLockingPredicate(_robotId: number): Promise<boolean> {
 }
 
 /**
- * 2v2 League: locked when the robot's team has a scheduled match.
+ * 2v2 League: locked when the robot's team has a scheduled 2v2 league match.
  * Prevents unsubscription while a team battle is queued.
+ * Uses unified scheduled_matches_v2 via schedulingService.
  */
 export async function league2v2LockingPredicate(robotId: number): Promise<boolean> {
-  const count = await prisma.scheduledTeamBattleMatch.count({
-    where: {
-      status: 'scheduled',
-      teamSize: 2,
-      OR: [
-        { team1: { members: { some: { robotId } } } },
-        { team2: { members: { some: { robotId } } } },
-      ],
-    },
+  const member = await prisma.teamBattleMember.findFirst({
+    where: { robotId, team: { teamSize: 2 } },
   });
-  return count > 0;
+  if (!member) return false;
+  const upcoming = await schedulingService.getUpcomingForTeam(member.teamId, [MatchType.league_2v2]);
+  return upcoming.length > 0;
 }
 
 /**
- * 3v3 League: locked when the robot's team has a scheduled match.
+ * 3v3 League: locked when the robot's team has a scheduled 3v3 league match.
  * Prevents unsubscription while a team battle is queued.
+ * Uses unified scheduled_matches_v2 via schedulingService.
  */
 export async function league3v3LockingPredicate(robotId: number): Promise<boolean> {
-  const count = await prisma.scheduledTeamBattleMatch.count({
-    where: {
-      status: 'scheduled',
-      teamSize: 3,
-      OR: [
-        { team1: { members: { some: { robotId } } } },
-        { team2: { members: { some: { robotId } } } },
-      ],
-    },
+  const member = await prisma.teamBattleMember.findFirst({
+    where: { robotId, team: { teamSize: 3 } },
   });
-  return count > 0;
+  if (!member) return false;
+  const upcoming = await schedulingService.getUpcomingForTeam(member.teamId, [MatchType.league_3v3]);
+  return upcoming.length > 0;
 }
 
 /**

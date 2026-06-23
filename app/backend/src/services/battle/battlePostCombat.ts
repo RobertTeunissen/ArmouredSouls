@@ -169,15 +169,11 @@ export interface RobotStatUpdateOptions {
   damageDealt: number;
   damageTakenByOpponent: number;
   opponentDestroyed: boolean;
-  /** League points change (0 for tournament/KotH) */
-  leaguePointsChange?: number;
-  /** Current league points on the robot (needed for min-0 clamping) */
-  currentLeaguePoints?: number;
   /** Fame to increment (0 if not winner or no fame) */
   fameIncrement?: number;
   /** Additional fields for type-specific stat updates */
   extraData?: Record<string, unknown>;
-  /** Battle type for streak tracking (only 'league_1v1' battles affect league streaks) */
+  /** Battle type (retained for logging/context) */
   battleType?: string;
   /** Robot's stance at battle time (for stance win counters) */
   stance?: string;
@@ -187,12 +183,10 @@ export interface RobotStatUpdateOptions {
 
 /**
  * Update a robot's combat stats after a battle.
- * Handles wins/losses/draws/kills/damage lifetime counters + ELO + HP + LP.
+ * Handles wins/losses/draws/kills/damage lifetime counters + ELO + HP.
+ * LP and streaks are now managed by the standings service.
  */
 export async function updateRobotCombatStats(opts: RobotStatUpdateOptions): Promise<void> {
-  const lpChange = opts.leaguePointsChange ?? 0;
-  const currentLP = opts.currentLeaguePoints ?? 0;
-
   // Clamp finalHP to the robot's stored maxHP to prevent currentHP > maxHP
   // (combat uses tuning-inflated maxHP which can exceed the persisted value)
   const storedRobot = await prisma.robot.findUnique({
@@ -213,28 +207,6 @@ export async function updateRobotCombatStats(opts: RobotStatUpdateOptions): Prom
     damageTakenLifetime: { increment: opts.damageTakenByOpponent },
     fame: (opts.fameIncrement && opts.fameIncrement > 0) ? { increment: opts.fameIncrement } : undefined,
   };
-
-  // Apply league points if applicable
-  if (lpChange !== 0) {
-    data.leaguePoints = Math.max(0, currentLP + lpChange);
-  }
-
-  // ── League Win/Lose Streak Tracking ──
-  if (opts.battleType === 'league_1v1') {
-    if (opts.isWinner) {
-      // Win: increment win streak, reset lose streak
-      data.currentWinStreak = { increment: 1 };
-      data.currentLoseStreak = 0;
-    } else if (opts.isDraw) {
-      // Draw: reset both streaks
-      data.currentWinStreak = 0;
-      data.currentLoseStreak = 0;
-    } else {
-      // Loss: reset win streak, increment lose streak
-      data.currentWinStreak = 0;
-      data.currentLoseStreak = { increment: 1 };
-    }
-  }
 
   // ── Stance/Loadout Win Counters ──
   if (opts.isWinner) {
@@ -265,14 +237,6 @@ export async function updateRobotCombatStats(opts: RobotStatUpdateOptions): Prom
     where: { id: opts.robotId },
     data,
   });
-
-  // Update bestWinStreak if currentWinStreak exceeds it (only for league wins)
-  if (opts.battleType === 'league_1v1' && opts.isWinner) {
-    await prisma.$executeRawUnsafe(
-      `UPDATE robots SET best_win_streak = current_win_streak WHERE id = $1 AND current_win_streak > best_win_streak`,
-      opts.robotId,
-    );
-  }
 }
 
 // ─── 4–6. Simple Currency / Prestige / Fame Awards ──────────────────
@@ -284,6 +248,46 @@ export async function awardCreditsToUser(userId: number, amount: number): Promis
     where: { id: userId },
     data: { currency: { increment: amount } },
   });
+}
+
+/**
+ * Award credits to a user with financial ledger recording.
+ * Use this when you know the transactionType and cycleNumber.
+ */
+export async function awardCreditsWithLedger(
+  userId: number,
+  amount: number,
+  transactionType: string,
+  cycleNumber: number,
+  description: string,
+  robotId?: number,
+  metadata?: Record<string, unknown>,
+): Promise<void> {
+  if (amount <= 0) return;
+  const updated = await prisma.user.update({
+    where: { id: userId },
+    data: { currency: { increment: amount } },
+    select: { currency: true },
+  });
+
+  // Record to financial ledger (non-blocking — never crash a battle for ledger failure)
+  try {
+    const financialService = (await import('../financial/financialService')).default;
+    await financialService.recordTransaction({
+      cycleNumber,
+      userId,
+      robotId,
+      transactionType: transactionType as any,
+      amount,
+      balanceAfter: updated.currency,
+      description,
+      metadata,
+    });
+  } catch (err) {
+    // Ledger recording failure must never block gameplay
+    const logger = (await import('../../config/logger')).default;
+    logger.error(`[BattlePostCombat] Financial ledger record failed for user ${userId}: ${err}`);
+  }
 }
 
 /** Award prestige to a user */

@@ -1,14 +1,30 @@
 /**
  * KotH Matchmaking Service
  *
- * Distributes eligible robots into ELO-balanced groups of 5-6 for
- * King of the Hill matches using snake-draft ordering.
+ * Groups eligible robots into LP-banded groups of 5-6 for King of the Hill
+ * matches within each tier/instance. Uses the same unified pipeline as all
+ * other matchmaking services: tier→instance iteration from Standing records,
+ * checkSchedulingReadiness, subscription gating, LP-primary grouping,
+ * same-stable swaps, recent-opponent swaps, and persistence via schedulingService.
  *
- * Requirements: 16.1-16.7, 17.1-17.4, 18.7, 18.8
+ * Spec #41: Unified Match Scheduling
+ * Requirements: 1.1–1.4, 2.1–2.4, 3.1–3.6, 4.1–4.4, 8.4, 23.1–23.3
  */
 
+import { Robot, MatchType } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
+import schedulingService from '../scheduling/schedulingService';
+import { checkSchedulingReadiness } from '../analytics/matchmakingService';
+import { TEAM_BATTLE_LEAGUE_TIERS as KOTH_LEAGUE_TIERS } from '../team-battle/teamBattleAdapter';
+import {
+  calculateMatchScore,
+  MatchScoreInput,
+  RECENT_OPPONENT_LIMIT,
+  createRecentOpponentQueryFn,
+  getRecentOpponentsBatch,
+  defaultScheduledFor,
+} from '../matchmaking/teamMatchmakingUtils';
 
 // ─── Interfaces ──────────────────────────────────────────────────────────────
 
@@ -17,12 +33,11 @@ export interface EligibleRobot {
   userId: number;
   elo: number;
   name: string;
+  createdAt: Date;
 }
 
 export interface KothMatchGroup {
   robots: EligibleRobot[];
-  totalElo: number;
-  rotatingZone: boolean;
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -31,141 +46,162 @@ const MIN_GROUP_SIZE = 5;
 const IDEAL_GROUP_SIZE = 6;
 const LOG_PREFIX = '[KotH Matchmaking]';
 
-// ─── Functions ───────────────────────────────────────────────────────────────
+// ─── Eligibility ─────────────────────────────────────────────────────────────
 
 /**
- * Query all robots eligible for KotH matchmaking.
+ * Get eligible robots for KotH matchmaking within a specific tier instance.
  *
  * Eligibility criteria:
- *  - Has at least one weapon equipped (mainWeaponId IS NOT NULL)
- *  - Not already scheduled for a KotH match (status = 'scheduled')
+ *  - Has a Standing record in the given tier/instance with mode='koth'
+ *  - Passes checkSchedulingReadiness (weapon check per loadout type)
+ *  - Has an active 'koth' subscription
+ *  - Not already scheduled for a pending KotH match
  *
- * All eligible robots participate. Multiple robots from the same stable (user)
- * are allowed, but will be separated into different groups by the post-draft
- * stable-conflict resolution step.
- *
- * Returns sorted by ELO descending.
+ * Requirements: 1.2, 2.1, 2.2, 2.3, 2.4
  */
-export async function getEligibleRobots(): Promise<EligibleRobot[]> {
-  // Find robot IDs already scheduled for a KotH match
-  const scheduledParticipants = await prisma.scheduledKothMatchParticipant.findMany({
-    where: {
-      match: { status: 'scheduled' },
-    },
-    select: { robotId: true },
+export async function getEligibleRobots(tier: string, leagueInstanceId: string): Promise<EligibleRobot[]> {
+  // Get robot IDs in this instance from standings (source of truth)
+  const standingsInInstance = await prisma.standing.findMany({
+    where: { mode: 'koth' as any, leagueInstanceId },
+    select: { entityId: true },
   });
-  const alreadyScheduledIds = new Set(scheduledParticipants.map((p) => p.robotId));
+  const robotIdsInInstance = standingsInInstance.map(s => s.entityId);
 
-  // Fetch all weapon-ready robots (exclude system Bye Robot)
-  const robots = await prisma.robot.findMany({
-    where: {
-      mainWeaponId: { not: null },
-      name: { not: 'Bye Robot' },
-    },
-    select: {
-      id: true,
-      userId: true,
-      elo: true,
-      name: true,
-    },
-    orderBy: { elo: 'desc' },
-  });
-
-  // Exclude already-scheduled robots
-  const eligible = robots
-    .filter((r) => !alreadyScheduledIds.has(r.id))
-    .map((r) => ({ id: r.id, userId: r.userId, elo: r.elo, name: r.name }));
-
-  // Activate pending subscriptions for robots that have room under cap
-  const { batchActivatePendingSubscriptions } = await import('../subscription/subscriptionService');
-  await batchActivatePendingSubscriptions(eligible.map(r => r.id), 'koth');
-
-  // Filter by koth subscription — only active subscriptions (batch query for efficiency)
-  const subscribedRobotIds = await prisma.subscription.findMany({
-    where: { eventType: 'koth', robotId: { in: eligible.map(r => r.id) }, status: 'active' },
-    select: { robotId: true },
-  });
-  const subscribedSet = new Set(subscribedRobotIds.map(s => s.robotId));
-  const subscribedEligible = eligible.filter(r => subscribedSet.has(r.id));
-
-  const excludedBySubscription = eligible.length - subscribedEligible.length;
-  if (excludedBySubscription > 0) {
-    logger.info(
-      `${LOG_PREFIX} Excluded ${excludedBySubscription} robots without koth subscription`
-    );
-  }
-
-  logger.info(
-    `${LOG_PREFIX} ${subscribedEligible.length} eligible robots (${robots.length} weapon-ready, ${alreadyScheduledIds.size} already scheduled, ${excludedBySubscription} unsubscribed)`
-  );
-
-  return subscribedEligible;
-}
-
-/**
- * Distribute robots into ELO-balanced groups using snake-draft ordering.
- *
- * This is a PURE function (no DB access) — exported for testing.
- *
- * Snake-draft:
- *  - Sort by ELO descending
- *  - Round 1 (L→R): robot[0]→group[0], robot[1]→group[1], ..., robot[N-1]→group[N-1]
- *  - Round 2 (R→L): robot[N]→group[N-1], robot[N+1]→group[N-2], ..., robot[2N-1]→group[0]
- *  - Repeat until all robots assigned
- */
-export function distributeIntoGroups(
-  robots: EligibleRobot[],
-  groupCount: number
-): KothMatchGroup[] {
-  if (groupCount <= 0) {
+  if (robotIdsInInstance.length === 0) {
     return [];
   }
 
-  // Sort by ELO descending (copy to avoid mutating input)
-  const sorted = [...robots].sort((a, b) => b.elo - a.elo);
+  // Load robots by those IDs
+  const robots = await prisma.robot.findMany({
+    where: { id: { in: robotIdsInInstance } },
+    orderBy: { elo: 'desc' },
+  });
 
-  // Initialise empty groups
-  const groups: KothMatchGroup[] = Array.from({ length: groupCount }, () => ({
-    robots: [],
-    totalElo: 0,
-    rotatingZone: false,
-  }));
+  // Filter for scheduling-ready robots (weapon check per loadout type)
+  const readyRobots = robots.filter(robot => {
+    const readiness = checkSchedulingReadiness(robot);
+    return readiness.isReady;
+  });
 
-  // Snake-draft distribution
-  // Pass 1 (L→R): groups 0,1,2,...,N-1
-  // Pass 2 (R→L): groups N-2,N-3,...,0  (skip boundary — already got one)
-  // Pass 3 (L→R): groups 1,2,...,N-1    (skip boundary — already got one)
-  // This ensures even distribution across all groups.
-  let groupIndex = 0;
-  let direction = 1; // 1 = left-to-right, -1 = right-to-left
+  // Activate pending subscriptions for robots that have room under cap
+  const { batchActivatePendingSubscriptions } = await import('../subscription/subscriptionService');
+  await batchActivatePendingSubscriptions(readyRobots.map(r => r.id), 'koth');
 
-  for (const robot of sorted) {
-    groups[groupIndex].robots.push(robot);
-    groups[groupIndex].totalElo += robot.elo;
+  // Filter by koth subscription — only active subscriptions
+  const subscribedRobotIds = await prisma.subscription.findMany({
+    where: { eventType: 'koth', robotId: { in: readyRobots.map(r => r.id) }, status: 'active' },
+    select: { robotId: true },
+  });
+  const subscribedSet = new Set(subscribedRobotIds.map(s => s.robotId));
+  const subscribedRobots = readyRobots.filter(r => subscribedSet.has(r.id));
 
-    // Advance index; reverse direction at boundaries
-    const nextIndex = groupIndex + direction;
-    if (nextIndex >= groupCount || nextIndex < 0) {
-      direction *= -1;
-    } else {
-      groupIndex = nextIndex;
+  const excludedBySubscription = readyRobots.length - subscribedRobots.length;
+  if (excludedBySubscription > 0) {
+    logger.info(`${LOG_PREFIX} Excluded ${excludedBySubscription} robots without koth subscription`, { leagueInstanceId });
+  }
+
+  // Check if robots are already scheduled for a KotH match (via unified scheduling table)
+  const alreadyScheduledIds = new Set<number>();
+  for (const r of subscribedRobots) {
+    const upcoming = await schedulingService.getUpcomingForRobot(r.id, [MatchType.koth]);
+    if (upcoming.length > 0) {
+      alreadyScheduledIds.add(r.id);
     }
   }
+
+  // Filter out already scheduled robots
+  const availableRobots = subscribedRobots.filter(robot => !alreadyScheduledIds.has(robot.id));
+
+  logger.info(
+    `${LOG_PREFIX} ${leagueInstanceId}: ${availableRobots.length} eligible robots ` +
+    `(${robots.length} total, ${readyRobots.length} ready, ${alreadyScheduledIds.size} already scheduled)`
+  );
+
+  return availableRobots.map(r => ({
+    id: r.id,
+    userId: r.userId,
+    elo: r.elo,
+    name: r.name,
+    createdAt: r.createdAt,
+  }));
+}
+
+// ─── LP-Banding Grouping ─────────────────────────────────────────────────────
+
+/**
+ * Group robots into LP-banded groups of 5-6.
+ *
+ * Algorithm:
+ * 1. Sort by LP descending (from standings)
+ * 2. Divide into contiguous bands (groupCount = ceil(count / 6))
+ * 3. Apply same-stable swaps (no two robots from same user in one group)
+ * 4. Apply recent-opponent swaps (avoid recently-grouped robots together)
+ *
+ * This is a PURE function (no DB access) — exported for testing.
+ *
+ * Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6
+ */
+export function groupByLPBanding(
+  robots: EligibleRobot[],
+  standingsLPMap: Map<number, number>,
+  recentOpponentsMap: Map<number, number[]>,
+): KothMatchGroup[] {
+  if (robots.length < MIN_GROUP_SIZE) {
+    return [];
+  }
+
+  // 1. Sort by LP descending
+  const sorted = [...robots].sort((a, b) => {
+    const lpDiff = (standingsLPMap.get(b.id) ?? 0) - (standingsLPMap.get(a.id) ?? 0);
+    if (lpDiff !== 0) return lpDiff;
+    return a.createdAt.getTime() - b.createdAt.getTime(); // tie-break by createdAt
+  });
+
+  // 2. Calculate group count and divide into contiguous bands
+  // Use ceil(count / 6) to ensure no group exceeds 6 when possible.
+  // Then verify the smallest group is still >= 5. If not, reduce groupCount.
+  let groupCount = Math.ceil(sorted.length / IDEAL_GROUP_SIZE);
+  // Ensure no group is smaller than MIN_GROUP_SIZE
+  while (groupCount > 1 && Math.floor(sorted.length / groupCount) < MIN_GROUP_SIZE) {
+    groupCount--;
+  }
+
+  const groups: KothMatchGroup[] = Array.from({ length: groupCount }, () => ({
+    robots: [],
+  }));
+
+  // Distribute robots into groups as evenly as possible (contiguous bands)
+  const baseSize = Math.floor(sorted.length / groupCount);
+  const remainder = sorted.length % groupCount;
+  let offset = 0;
+  for (let gi = 0; gi < groupCount; gi++) {
+    // First `remainder` groups get baseSize+1, rest get baseSize
+    const size = baseSize + (gi < remainder ? 1 : 0);
+    for (let i = 0; i < size; i++) {
+      groups[gi].robots.push(sorted[offset + i]);
+    }
+    offset += size;
+  }
+
+  // 3. Apply same-stable swaps
+  resolveStableConflicts(groups, standingsLPMap);
+
+  // 4. Apply recent-opponent swaps
+  resolveRecentOpponentConflicts(groups, recentOpponentsMap, standingsLPMap);
 
   return groups;
 }
 
 /**
  * Resolve stable conflicts: ensure no two robots from the same user (stable)
- * share a group. When a conflict is found, swap the duplicate with a robot
- * from another group that doesn't create a new conflict.
+ * share a group. When a conflict is found, swap the lower-LP robot with the
+ * highest-LP robot from the adjacent band that doesn't create a new conflict.
  *
- * This is a PURE function — exported for testing.
- * Mutates the groups in place. Best-effort: if a swap is impossible
- * (e.g. a user has more robots than groups), the conflict remains.
+ * Best-effort: if a swap is impossible (e.g., a user has more robots than groups),
+ * the conflict remains.
  */
-export function resolveStableConflicts(groups: KothMatchGroup[]): void {
-  const maxPasses = groups.length * 2; // safety limit
+function resolveStableConflicts(groups: KothMatchGroup[], standingsLPMap: Map<number, number>): void {
+  const maxPasses = groups.length * 2;
   for (let pass = 0; pass < maxPasses; pass++) {
     let swapped = false;
 
@@ -188,8 +224,6 @@ export function resolveStableConflicts(groups: KothMatchGroup[]): void {
 
           for (let oj = 0; oj < otherGroup.robots.length; oj++) {
             const candidate = otherGroup.robots[oj];
-            // candidate must not share userId with current group (after swap)
-            // and robot must not share userId with otherGroup (after swap)
             const candidateConflictsHere = seenUsers.has(candidate.userId);
             const robotConflictsThere = otherGroup.robots.some(
               (r, idx) => idx !== oj && r.userId === robot.userId,
@@ -199,9 +233,6 @@ export function resolveStableConflicts(groups: KothMatchGroup[]): void {
               // Swap
               group.robots[ri] = candidate;
               otherGroup.robots[oj] = robot;
-              // Update totalElo
-              group.totalElo += candidate.elo - robot.elo;
-              otherGroup.totalElo += robot.elo - candidate.elo;
               seenUsers.add(candidate.userId);
               resolved = true;
               swapped = true;
@@ -212,99 +243,180 @@ export function resolveStableConflicts(groups: KothMatchGroup[]): void {
       }
     }
 
-    if (!swapped) break; // No more conflicts
+    if (!swapped) break;
   }
 }
 
 /**
- * Orchestrate KotH matchmaking: eligibility → grouping → DB record creation.
- *
- * Group count calculation (no sit-outs):
- *  - eligible < 5 → skip
- *  - groupCount = ceil(eligible / 6)
- *  - All robots participate; most groups get 6, at most one gets 5
- *
- * Zone variant by cycle number (preserving 1-in-3 ratio):
- *  - cycleNumber % 3 === 0 → rotatingZone: true
- *  - otherwise → rotatingZone: false
- *
- * Returns number of matches created.
+ * Resolve recent-opponent conflicts: if two robots that recently fought in KotH
+ * are in the same band, swap the lower-LP one with a non-conflicting robot from
+ * an adjacent band. Only swap if it doesn't degrade group LP-variance significantly.
  */
-export async function runKothMatchmaking(scheduledFor: Date, cycleNumber?: number): Promise<number> {
-  logger.info(`${LOG_PREFIX} Starting matchmaking run for ${scheduledFor.toISOString()}`);
+function resolveRecentOpponentConflicts(
+  groups: KothMatchGroup[],
+  recentOpponentsMap: Map<number, number[]>,
+  standingsLPMap: Map<number, number>,
+): void {
+  const maxPasses = groups.length * 2;
+  for (let pass = 0; pass < maxPasses; pass++) {
+    let swapped = false;
 
-  // 1. Get eligible robots
-  const eligible = await getEligibleRobots();
+    for (let gi = 0; gi < groups.length; gi++) {
+      const group = groups[gi];
 
-  if (eligible.length < MIN_GROUP_SIZE) {
-    logger.info(
-      `${LOG_PREFIX} Insufficient eligible robots (${eligible.length}/${MIN_GROUP_SIZE} required) — skipping`
-    );
-    return 0;
-  }
+      for (let ri = 0; ri < group.robots.length; ri++) {
+        const robot = group.robots[ri];
+        const robotRecent = recentOpponentsMap.get(robot.id) || [];
 
-  // 2. Calculate group count — no sit-outs, every eligible robot plays.
-  // Target 6 robots per group. Use ceil(eligible / 6) groups.
-  // Snake draft distributes evenly: most groups get 6, at most one gets 5.
-  const groupCount = Math.ceil(eligible.length / IDEAL_GROUP_SIZE);
+        // Check if this robot has a recent opponent in the same group
+        const conflictInGroup = group.robots.some(
+          (other, idx) => idx !== ri && robotRecent.includes(other.id),
+        );
 
-  logger.info(
-    `${LOG_PREFIX} ${eligible.length} robots → ${groupCount} groups (target ${IDEAL_GROUP_SIZE}/group, sizes: ${groupCount > 0 ? `${Math.floor(eligible.length / groupCount)}-${Math.ceil(eligible.length / groupCount)}` : '0'})`
-  );
+        if (!conflictInGroup) continue;
 
-  // 3. Distribute into groups
-  const groups = distributeIntoGroups(eligible, groupCount);
+        // Find a swap partner in an adjacent group
+        let resolved = false;
+        const adjacentIndices = [gi + 1, gi - 1].filter(i => i >= 0 && i < groups.length);
 
-  // 3b. Resolve stable conflicts — no two robots from the same user in one group
-  resolveStableConflicts(groups);
+        for (const oi of adjacentIndices) {
+          if (resolved) break;
+          const otherGroup = groups[oi];
 
-  // Log actual group sizes
-  const groupSizes = groups.map(g => g.robots.length);
-  logger.info(`${LOG_PREFIX} Group sizes after distribution + stable resolution: [${groupSizes.join(', ')}]`);
+          for (let oj = 0; oj < otherGroup.robots.length; oj++) {
+            const candidate = otherGroup.robots[oj];
+            const candidateRecent = recentOpponentsMap.get(candidate.id) || [];
 
-  // 4. Determine zone variant by cycle number (1-in-3 ratio)
-  // If cycleNumber not provided, derive from cycleMetadata to avoid defaulting to 0
-  let resolvedCycleNumber = cycleNumber ?? 0;
-  if (cycleNumber === undefined) {
-    const cycleMetadata = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
-    resolvedCycleNumber = cycleMetadata?.totalCycles ?? 0;
-  }
-  const rotatingZone = resolvedCycleNumber % 3 === 0;
+            // Check swap doesn't create new conflict in target group
+            const candidateConflictsHere = group.robots.some(
+              (other, idx) => idx !== ri && candidateRecent.includes(other.id),
+            );
+            const robotConflictsThere = otherGroup.robots.some(
+              (other, idx) => idx !== oj && (recentOpponentsMap.get(other.id) || []).includes(robot.id),
+            );
 
-  // Apply zone variant to all groups
-  for (const group of groups) {
-    group.rotatingZone = rotatingZone;
-  }
+            // Check same-stable constraint isn't violated
+            const candidateStableConflict = group.robots.some(
+              (other, idx) => idx !== ri && other.userId === candidate.userId,
+            );
+            const robotStableConflict = otherGroup.robots.some(
+              (other, idx) => idx !== oj && other.userId === robot.userId,
+            );
 
-  // 5. Create DB records in a transaction
-  const matchesCreated = await prisma.$transaction(async (tx) => {
-    let created = 0;
-
-    for (const group of groups) {
-      const match = await tx.scheduledKothMatch.create({
-        data: {
-          scheduledFor,
-          status: 'scheduled',
-          rotatingZone: group.rotatingZone,
-        },
-      });
-
-      await tx.scheduledKothMatchParticipant.createMany({
-        data: group.robots.map((robot) => ({
-          matchId: match.id,
-          robotId: robot.id,
-        })),
-      });
-
-      created += 1;
+            if (!candidateConflictsHere && !robotConflictsThere && !candidateStableConflict && !robotStableConflict) {
+              // Evaluate LP-variance impact — only swap if it doesn't make things much worse
+              const currentLPDiff = Math.abs(
+                (standingsLPMap.get(robot.id) ?? 0) - (standingsLPMap.get(candidate.id) ?? 0)
+              );
+              // Allow swaps with up to 30 LP difference between the swapped robots
+              if (currentLPDiff <= 30) {
+                group.robots[ri] = candidate;
+                otherGroup.robots[oj] = robot;
+                resolved = true;
+                swapped = true;
+                break;
+              }
+            }
+          }
+        }
+      }
     }
 
-    return created;
-  });
+    if (!swapped) break;
+  }
+}
+
+// ─── Main Entry Point ────────────────────────────────────────────────────────
+
+/**
+ * Run KotH matchmaking for all tier/instances.
+ *
+ * Iterates tier → instance (from Standing where mode='koth'), gets eligible
+ * robots, groups using LP-banding, and persists via schedulingService.
+ *
+ * Requirements: 1.1, 4.1, 4.2, 4.3, 4.4, 11.1
+ *
+ * @param scheduledFor - When the matches should be executed (default: 24h from now, rounded to hour)
+ * @returns Total number of matches created
+ */
+export async function runKothMatchmaking(scheduledFor?: Date): Promise<number> {
+  const matchTime = scheduledFor ?? defaultScheduledFor();
+  let totalMatches = 0;
+
+  logger.info(`${LOG_PREFIX} Starting matchmaking for all tiers (scheduledFor: ${matchTime.toISOString()})...`);
+
+  for (const tier of KOTH_LEAGUE_TIERS) {
+    try {
+      // Get all KotH league instances for this tier from standings
+      const instances = await prisma.standing.findMany({
+        where: { mode: 'koth' as any, tier },
+        select: { leagueInstanceId: true },
+        distinct: ['leagueInstanceId'],
+      });
+
+      const instanceIds = instances.map(i => i.leagueInstanceId);
+
+      for (const instanceId of instanceIds) {
+        try {
+          // Get eligible robots for this instance
+          const eligible = await getEligibleRobots(tier, instanceId);
+
+          if (eligible.length < MIN_GROUP_SIZE) {
+            logger.info(`${LOG_PREFIX} ${instanceId}: Insufficient eligible robots (${eligible.length}/${MIN_GROUP_SIZE}) — skipping`);
+            continue;
+          }
+
+          // Build LP lookup map from standings
+          const standingsLPMap = new Map(
+            (await prisma.standing.findMany({
+              where: { mode: 'koth' as any, entityId: { in: eligible.map(r => r.id) } },
+              select: { entityId: true, leaguePoints: true },
+            })).map(s => [s.entityId, s.leaguePoints])
+          );
+
+          // Batch-fetch recent opponents using unified query
+          const recentOpponentQueryFn = createRecentOpponentQueryFn(MatchType.koth, 'robot');
+          const recentOpponentsMap = await getRecentOpponentsBatch(
+            eligible.map(r => r.id),
+            recentOpponentQueryFn,
+          );
+
+          // Group robots using LP-banding
+          const groups = groupByLPBanding(eligible, standingsLPMap, recentOpponentsMap);
+
+          // Persist each group as a scheduled match
+          for (const group of groups) {
+            await schedulingService.createMatch({
+              matchType: MatchType.koth,
+              scheduledFor: matchTime,
+              leagueType: tier,
+              leagueInstanceId: instanceId,
+              participants: group.robots.map((robot, index) => ({
+                participantType: 'robot' as const,
+                participantId: robot.id,
+                slot: index + 1,
+              })),
+            });
+            totalMatches++;
+          }
+
+          if (groups.length > 0) {
+            logger.info(`${LOG_PREFIX} ${instanceId}: Created ${groups.length} matches (${eligible.length} robots)`);
+          }
+        } catch (instanceError) {
+          // Per-instance error isolation — log and continue
+          logger.error(`${LOG_PREFIX} Error in instance ${instanceId}:`, instanceError);
+        }
+      }
+    } catch (tierError) {
+      // Per-tier error isolation — log and continue
+      logger.error(`${LOG_PREFIX} Error in ${tier} tier:`, tierError);
+    }
+  }
 
   logger.info(`${LOG_PREFIX} ========================================`);
-  logger.info(`${LOG_PREFIX} COMPLETE: ${matchesCreated} KotH matches created`);
+  logger.info(`${LOG_PREFIX} COMPLETE: ${totalMatches} KotH matches created`);
   logger.info(`${LOG_PREFIX} ========================================`);
 
-  return matchesCreated;
+  return totalMatches;
 }

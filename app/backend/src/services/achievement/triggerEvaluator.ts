@@ -194,7 +194,7 @@ export async function checkRobotCount(
 ): Promise<boolean> {
   if (threshold === undefined) return false;
   const count = await prisma.robot.count({
-    where: { userId, name: { not: 'Bye Robot' } },
+    where: { userId },
   });
   return count >= threshold;
 }
@@ -259,19 +259,20 @@ export async function checkStanceWins(
 
 export async function checkAllModesWin(userId: number): Promise<boolean> {
   const robots = await prisma.robot.findMany({
-    where: { userId, name: { not: 'Bye Robot' } },
-    select: {
-      wins: true,
-      kothWins: true,
-      totalTagTeamWins: true,
-      totalLeague2v2Wins: true,
-      totalLeague3v3Wins: true,
-    },
+    where: { userId },
+    select: { id: true, wins: true },
   });
 
-  const hasLeagueWin = robots.some((r) => r.wins > 0 || r.totalLeague2v2Wins > 0 || r.totalLeague3v3Wins > 0);
-  const hasKothWin = robots.some((r) => r.kothWins > 0);
-  const hasTagTeamWin = robots.some((r) => r.totalTagTeamWins > 0);
+  const robotIds = robots.map(r => r.id);
+  const standings = await prisma.standing.findMany({
+    where: { entityType: 'robot', entityId: { in: robotIds } },
+    select: { entityId: true, mode: true, wins: true },
+  });
+
+  const hasLeagueWin = robots.some(r => r.wins > 0) ||
+    standings.some(s => (s.mode === 'league_2v2' || s.mode === 'league_3v3') && s.wins > 0);
+  const hasKothWin = standings.some(s => s.mode === 'koth' && s.wins > 0);
+  const hasTagTeamWin = standings.some(s => s.mode === 'tag_team' && s.wins > 0);
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -285,7 +286,7 @@ export async function checkAllModesWin(userId: number): Promise<boolean> {
 
 export async function checkTuningAllocated(userId: number): Promise<boolean> {
   const robots = await prisma.robot.findMany({
-    where: { userId, name: { not: 'Bye Robot' } },
+    where: { userId },
     select: { id: true },
   });
   const robotIds = robots.map((r) => r.id);
@@ -303,7 +304,7 @@ export async function checkTuningFull(
   if (threshold === undefined) return false;
 
   const robots = await prisma.robot.findMany({
-    where: { userId, name: { not: 'Bye Robot' } },
+    where: { userId },
     select: { id: true },
   });
   const robotIds = robots.map((r) => r.id);
@@ -339,7 +340,7 @@ export async function checkEffectiveStat(
   if (threshold === undefined) return false;
 
   const robots = await prisma.robot.findMany({
-    where: { userId, name: { not: 'Bye Robot' } },
+    where: { userId },
     include: {
       mainWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
       offhandWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },
@@ -396,7 +397,7 @@ export async function checkYieldsForcedCumulative(
   threshold: number,
 ): Promise<boolean> {
   const robots = await prisma.robot.findMany({
-    where: { userId, name: { not: 'Bye Robot' } },
+    where: { userId },
     select: { id: true },
   });
   const robotIds = robots.map((r) => r.id);
@@ -420,7 +421,7 @@ export async function checkLifetimeEarnings(
 ): Promise<boolean> {
   if (threshold === undefined) return false;
   const robots = await prisma.robot.findMany({
-    where: { userId, name: { not: 'Bye Robot' } },
+    where: { userId },
     select: { id: true },
   });
   const robotIds = robots.map((r) => r.id);
@@ -439,7 +440,7 @@ export async function checkStreamingRevenue(
 ): Promise<boolean> {
   if (threshold === undefined) return false;
   const robots = await prisma.robot.findMany({
-    where: { userId, name: { not: 'Bye Robot' } },
+    where: { userId },
     select: { id: true },
   });
   const robotIds = robots.map((r) => r.id);

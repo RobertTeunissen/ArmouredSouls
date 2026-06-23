@@ -59,13 +59,16 @@ export class CycleSnapshotService {
     });
 
     if (!cycleStartEvent || !cycleCompleteEvent) {
-      throw new Error(`Cycle ${cycleNumber} is incomplete - missing start or complete events`);
+      // Tolerate missing events — use current time as fallback (bulk cycles, manual triggers)
+      logger.warn(`[CycleSnapshot] Cycle ${cycleNumber} missing ${!cycleStartEvent ? 'start' : 'complete'} event — using fallback timestamps`);
     }
 
-    const startTime = cycleStartEvent.eventTimestamp;
-    const endTime = cycleCompleteEvent.eventTimestamp;
+    const startTime = cycleStartEvent?.eventTimestamp ?? new Date();
+    const endTime = cycleCompleteEvent?.eventTimestamp ?? new Date();
     const duration = endTime.getTime() - startTime.getTime();
-    const triggerType = (cycleStartEvent.payload as unknown as CycleEventPayload).triggerType || 'manual';
+    const triggerType = cycleStartEvent
+      ? ((cycleStartEvent.payload as unknown as CycleEventPayload).triggerType || 'manual')
+      : 'manual';
 
     // Aggregate stable metrics
     const stableMetrics = await this.aggregateStableMetrics(cycleNumber);

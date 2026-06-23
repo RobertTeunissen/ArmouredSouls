@@ -60,7 +60,7 @@ router.post(
     const robotId = Number(req.params.robotId);
     const { eventType } = req.body;
     await subscribeRobot(robotId, eventType, req.user!.userId);
-    res.json({ success: true, message: `Subscribed to ${eventType}. Takes effect next cycle.` });
+    res.json({ success: true, message: `Subscribed to ${eventType}.` });
   },
 );
 

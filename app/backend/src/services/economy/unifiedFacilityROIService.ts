@@ -224,7 +224,7 @@ export class UnifiedFacilityROIService {
 
     // Fetch robot count once (needed for repair bay)
     const robots = await prisma.robot.findMany({
-      where: { userId, NOT: { name: 'Bye Robot' } },
+      where: { userId },
       select: { id: true },
     });
     const robotCount = robots.length || 1;
@@ -657,7 +657,7 @@ export class UnifiedFacilityROIService {
 
     // Fetch actual robot count for accurate discount calculation
     const robots = await prisma.robot.findMany({
-      where: { userId, NOT: { name: 'Bye Robot' } },
+      where: { userId },
       select: { id: true },
     });
     const robotCount = robots.length || 1;
@@ -746,7 +746,7 @@ export class UnifiedFacilityROIService {
       case 'repair_bay': {
         // Estimate: average repair spending × discount percentage × cycles
         const robots = await prisma.robot.findMany({
-          where: { userId, NOT: { name: 'Bye Robot' } },
+          where: { userId },
           select: { id: true },
         });
         const robotCount = robots.length || 1;

@@ -13,6 +13,7 @@ const mockPrisma = {
   },
   robot: {
     update: jest.fn().mockResolvedValue({}),
+    findUnique: jest.fn().mockResolvedValue({ maxHP: 250 }),
   },
   user: {
     update: jest.fn().mockResolvedValue({}),
@@ -286,42 +287,8 @@ describe('updateRobotCombatStats', () => {
     expect(call.data.losses).toBeUndefined();
   });
 
-  it('should apply league points change with min-0 clamping', async () => {
-    await updateRobotCombatStats({
-      robotId: 1,
-      finalHP: 0,
-      newELO: 1184,
-      isWinner: false,
-      isDraw: false,
-      damageDealt: 100,
-      damageTakenByOpponent: 200,
-      opponentDestroyed: false,
-      leaguePointsChange: -5,
-      currentLeaguePoints: 3,
-    });
-
-    const call = mockPrisma.robot.update.mock.calls[0][0];
-    // max(0, 3 + (-5)) = max(0, -2) = 0
-    expect(call.data.leaguePoints).toBe(0);
-  });
-
-  it('should apply positive league points change', async () => {
-    await updateRobotCombatStats({
-      robotId: 1,
-      finalHP: 80,
-      newELO: 1216,
-      isWinner: true,
-      isDraw: false,
-      damageDealt: 250,
-      damageTakenByOpponent: 120,
-      opponentDestroyed: false,
-      leaguePointsChange: 3,
-      currentLeaguePoints: 10,
-    });
-
-    const call = mockPrisma.robot.update.mock.calls[0][0];
-    expect(call.data.leaguePoints).toBe(13);
-  });
+  // NOTE: leaguePoints changes are now managed by StandingsService (Spec #40).
+  // updateRobotCombatStats no longer writes leaguePoints to the Robot model.
 
   it('should apply fame increment when provided', async () => {
     await updateRobotCombatStats({
@@ -357,23 +324,8 @@ describe('updateRobotCombatStats', () => {
     expect(call.data.fame).toBeUndefined();
   });
 
-  it('should not set leaguePoints when leaguePointsChange is 0', async () => {
-    await updateRobotCombatStats({
-      robotId: 1,
-      finalHP: 80,
-      newELO: 1216,
-      isWinner: true,
-      isDraw: false,
-      damageDealt: 250,
-      damageTakenByOpponent: 120,
-      opponentDestroyed: false,
-      leaguePointsChange: 0,
-      currentLeaguePoints: 10,
-    });
-
-    const call = mockPrisma.robot.update.mock.calls[0][0];
-    expect(call.data.leaguePoints).toBeUndefined();
-  });
+  // NOTE: leaguePoints and streak changes are now managed by StandingsService (Spec #40).
+  // updateRobotCombatStats no longer writes leaguePoints to the Robot model.
 
   it('should merge extraData into the update', async () => {
     await updateRobotCombatStats({
@@ -393,8 +345,12 @@ describe('updateRobotCombatStats', () => {
   });
 
   // ── League Win/Lose Streak Tests ──
+  // NOTE: Win/lose streaks are now tracked in the standings table by StandingsService (Spec #40).
+  // updateRobotCombatStats no longer writes streak fields to the Robot model.
+  // These tests are retained for the battleType parameter handling but streak
+  // assertions validate that NO streak data is written to robot.update.
 
-  it('should increment currentWinStreak and reset currentLoseStreak on league win', async () => {
+  it('should not write streak fields to robot update on league win (managed by standings)', async () => {
     await updateRobotCombatStats({
       robotId: 1,
       finalHP: 80,
@@ -408,11 +364,11 @@ describe('updateRobotCombatStats', () => {
     });
 
     const call = mockPrisma.robot.update.mock.calls[0][0];
-    expect(call.data.currentWinStreak).toEqual({ increment: 1 });
-    expect(call.data.currentLoseStreak).toBe(0);
+    expect(call.data.currentWinStreak).toBeUndefined();
+    expect(call.data.currentLoseStreak).toBeUndefined();
   });
 
-  it('should update bestWinStreak via raw SQL on league win', async () => {
+  it('should not update bestWinStreak via raw SQL (managed by standings)', async () => {
     await updateRobotCombatStats({
       robotId: 42,
       finalHP: 80,
@@ -425,13 +381,10 @@ describe('updateRobotCombatStats', () => {
       battleType: 'league',
     });
 
-    expect(mockPrisma.$executeRawUnsafe).toHaveBeenCalledWith(
-      `UPDATE robots SET best_win_streak = current_win_streak WHERE id = $1 AND current_win_streak > best_win_streak`,
-      42,
-    );
+    expect(mockPrisma.$executeRawUnsafe).not.toHaveBeenCalled();
   });
 
-  it('should reset currentWinStreak and increment currentLoseStreak on league loss', async () => {
+  it('should not write streak fields to robot update on league loss (managed by standings)', async () => {
     await updateRobotCombatStats({
       robotId: 1,
       finalHP: 0,
@@ -445,12 +398,12 @@ describe('updateRobotCombatStats', () => {
     });
 
     const call = mockPrisma.robot.update.mock.calls[0][0];
-    expect(call.data.currentWinStreak).toBe(0);
-    expect(call.data.currentLoseStreak).toEqual({ increment: 1 });
+    expect(call.data.currentWinStreak).toBeUndefined();
+    expect(call.data.currentLoseStreak).toBeUndefined();
     expect(mockPrisma.$executeRawUnsafe).not.toHaveBeenCalled();
   });
 
-  it('should reset both streaks on league draw', async () => {
+  it('should not write streak fields to robot update on league draw (managed by standings)', async () => {
     await updateRobotCombatStats({
       robotId: 1,
       finalHP: 50,
@@ -464,8 +417,8 @@ describe('updateRobotCombatStats', () => {
     });
 
     const call = mockPrisma.robot.update.mock.calls[0][0];
-    expect(call.data.currentWinStreak).toBe(0);
-    expect(call.data.currentLoseStreak).toBe(0);
+    expect(call.data.currentWinStreak).toBeUndefined();
+    expect(call.data.currentLoseStreak).toBeUndefined();
     expect(mockPrisma.$executeRawUnsafe).not.toHaveBeenCalled();
   });
 
@@ -636,14 +589,14 @@ describe('updateRobotCombatStats', () => {
     });
 
     const call = mockPrisma.robot.update.mock.calls[0][0];
-    // Streak fields
-    expect(call.data.currentWinStreak).toEqual({ increment: 1 });
-    expect(call.data.currentLoseStreak).toBe(0);
+    // Streak fields no longer written to Robot (managed by standings)
+    expect(call.data.currentWinStreak).toBeUndefined();
+    expect(call.data.currentLoseStreak).toBeUndefined();
     // Stance/loadout counters
     expect(call.data.offensiveWins).toEqual({ increment: 1 });
     expect(call.data.dualWieldWins).toEqual({ increment: 1 });
-    // bestWinStreak raw SQL
-    expect(mockPrisma.$executeRawUnsafe).toHaveBeenCalledTimes(1);
+    // bestWinStreak raw SQL no longer called
+    expect(mockPrisma.$executeRawUnsafe).not.toHaveBeenCalled();
   });
 });
 

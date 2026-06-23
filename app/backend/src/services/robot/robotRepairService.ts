@@ -51,7 +51,7 @@ export async function repairAllRobots(userId: number): Promise<RepairAllResult> 
   const repairBayLevel = repairBay?.level || 0;
 
   const allRobots = await prisma.robot.findMany({ where: { userId } });
-  const activeRobotCount = allRobots.filter(r => r.name !== 'Bye Robot').length;
+  const activeRobotCount = allRobots.length;
 
   const robotsNeedingRepair: RobotNeedingRepair[] = allRobots
     .filter(robot => robot.currentHP < robot.maxHP)

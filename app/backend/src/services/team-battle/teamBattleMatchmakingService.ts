@@ -13,9 +13,10 @@
  * @module services/team-battle/teamBattleMatchmakingService
  */
 
-import { Robot, Prisma, TeamBattle, TeamBattleMember } from '../../../generated/prisma';
+import { Robot, Prisma, TeamBattle, TeamBattleMember, MatchType } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
+import schedulingService from '../scheduling/schedulingService';
 import { checkSchedulingReadiness } from '../analytics/matchmakingService';
 import { TEAM_BATTLE_LEAGUE_TIERS } from './teamBattleAdapter';
 import {
@@ -24,6 +25,7 @@ import {
   getRecentOpponentsBatch as sharedGetRecentOpponentsBatch,
   MatchScoreInput,
   RECENT_OPPONENT_LIMIT,
+  defaultScheduledFor,
 } from '../matchmaking/teamMatchmakingUtils';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -60,12 +62,23 @@ export async function getEligibleTeams(
   teamSize: 2 | 3,
 ): Promise<TeamBattleWithMembers[]> {
   const eventType = teamSize === 2 ? 'league_2v2' : 'league_3v3';
+  const mode = teamSize === 2 ? 'league_2v2' : 'league_3v3';
 
-  // Get all ELIGIBLE teams in this league instance with members and robots
+  // Get team IDs in this instance from standings (source of truth for league placement)
+  const standingsInInstance = await prisma.standing.findMany({
+    where: { mode: mode as any, leagueInstanceId: teamBattleLeagueId },
+    select: { entityId: true },
+  });
+  const teamIdsInInstance = standingsInInstance.map(s => s.entityId);
+
+  if (teamIdsInInstance.length === 0) {
+    return [];
+  }
+
+  // Get all ELIGIBLE teams by standings-derived IDs with members and robots
   const teams = await prisma.teamBattle.findMany({
     where: {
-      teamLeague: teamBattleLeague,
-      teamLeagueId: teamBattleLeagueId,
+      id: { in: teamIdsInInstance },
       teamSize,
       eligibility: 'ELIGIBLE',
     },
@@ -100,30 +113,15 @@ export async function getEligibleTeams(
     }
   }
 
-  // Get already scheduled team IDs
-  const readyTeamIds = readyTeams.map(t => t.id);
-  const scheduledMatches = await prisma.scheduledTeamBattleMatch.findMany({
-    where: {
-      status: 'scheduled',
-      teamSize,
-      OR: [
-        { team1Id: { in: readyTeamIds } },
-        { team2Id: { in: readyTeamIds } },
-      ],
-    },
-    select: {
-      team1Id: true,
-      team2Id: true,
-    },
-  });
-
+  // Get already scheduled team IDs via unified schedulingService
+  const matchType = teamSize === 2 ? MatchType.league_2v2 : MatchType.league_3v3;
   const alreadyScheduledIds = new Set<number>();
-  scheduledMatches.forEach(match => {
-    alreadyScheduledIds.add(match.team1Id);
-    if (match.team2Id !== null) {
-      alreadyScheduledIds.add(match.team2Id);
+  for (const team of readyTeams) {
+    const upcoming = await schedulingService.getUpcomingForTeam(team.id, [matchType]);
+    if (upcoming.length > 0) {
+      alreadyScheduledIds.add(team.id);
     }
-  });
+  }
 
   // Filter out already scheduled teams
   const availableTeams = readyTeams.filter(team => !alreadyScheduledIds.has(team.id));
@@ -162,57 +160,18 @@ export async function getEligibleTeams(
 // ─── Recent Opponents ────────────────────────────────────────────────────────
 
 /**
- * Batch-fetch recent opponents for all teams using the shared utility.
- * Queries ScheduledTeamBattleMatch for completed team battle opponents.
+ * Batch-fetch recent opponents for all teams using unified scheduled_matches_v2.
+ * Queries completed league matches only (mode-specific: league_2v2 or league_3v3).
  */
 async function getRecentOpponentsBatch(
   teamIds: number[],
   teamSize: 2 | 3,
   limit: number = RECENT_OPPONENT_LIMIT,
 ): Promise<Map<number, number[]>> {
-  return sharedGetRecentOpponentsBatch(
-    teamIds,
-    async (ids: number[], queryLimit: number): Promise<Map<number, number[]>> => {
-      if (ids.length === 0) return new Map();
-
-      // Single query to get recent completed matches for all teams
-      const recentMatches = await prisma.scheduledTeamBattleMatch.findMany({
-        where: {
-          status: 'completed',
-          teamSize,
-          OR: [
-            { team1Id: { in: ids } },
-            { team2Id: { in: ids } },
-          ],
-        },
-        orderBy: { createdAt: 'desc' },
-        // Fetch enough matches to cover all teams
-        take: ids.length * queryLimit,
-        select: {
-          team1Id: true,
-          team2Id: true,
-        },
-      });
-
-      // Build per-team opponent lists from the batch result
-      const map = new Map<number, number[]>();
-      for (const teamId of ids) {
-        const opponents: number[] = [];
-        for (const match of recentMatches) {
-          if (opponents.length >= queryLimit) break;
-          if (match.team1Id === teamId && match.team2Id !== null) {
-            opponents.push(match.team2Id);
-          } else if (match.team2Id === teamId) {
-            opponents.push(match.team1Id);
-          }
-        }
-        map.set(teamId, opponents);
-      }
-
-      return map;
-    },
-    limit,
-  );
+  const { createRecentOpponentQueryFn } = await import('../matchmaking/teamMatchmakingUtils');
+  const matchType = teamSize === 2 ? MatchType.league_2v2 : MatchType.league_3v3;
+  const queryFn = createRecentOpponentQueryFn(matchType, 'team');
+  return queryFn(teamIds, limit);
 }
 
 // ─── ELO Computation ─────────────────────────────────────────────────────────
@@ -230,6 +189,7 @@ function computeTeamELO(team: TeamBattleWithMembers): number {
 /**
  * Calculate match quality score using the shared LP-primary formula.
  * Maps team battle fields to the MatchScoreInput interface.
+ * Uses LP from standings map (source of truth) instead of stale model fields.
  */
 function calculateMatchScoreForTeamBattle(
   team1: TeamBattleWithMembers,
@@ -238,10 +198,11 @@ function calculateMatchScoreForTeamBattle(
   team2ELO: number,
   recentOpponents1: number[],
   recentOpponents2: number[],
+  standingsLPMap: Map<number, number>,
 ): number {
   const input: MatchScoreInput = {
-    entity1LP: team1.teamLp,
-    entity2LP: team2.teamLp,
+    entity1LP: standingsLPMap.get(team1.id) ?? 0,
+    entity2LP: standingsLPMap.get(team2.id) ?? 0,
     entity1ELO: team1ELO,
     entity2ELO: team2ELO,
     recentOpponents1,
@@ -270,6 +231,7 @@ function findBestOpponent(
   availableTeams: TeamBattleWithMembers[],
   combinedELOMap: Map<number, number>,
   recentOpponentsMap: Map<number, number[]>,
+  standingsLPMap: Map<number, number>,
 ): TeamBattleWithMembers | null {
   if (availableTeams.length === 0) {
     return null;
@@ -289,6 +251,7 @@ function findBestOpponent(
       opponentELO,
       teamRecentOpponents,
       opponentRecentOpponents,
+      standingsLPMap,
     );
     return { opponent, score };
   });
@@ -351,6 +314,8 @@ function findBestOpponent(
 export async function pairTeams(
   teams: TeamBattleWithMembers[],
   teamSize: 2 | 3,
+  teamBattleLeague: string,
+  teamBattleLeagueId: string,
 ): Promise<TeamBattleMatchPair[]> {
   if (teams.length === 0) {
     return [];
@@ -368,23 +333,32 @@ export async function pairTeams(
   // Batch-fetch recent opponents for all teams in a single query
   const recentOpponentsMap = await getRecentOpponentsBatch(teams.map(t => t.id), teamSize);
 
+  // Build LP lookup map from standings (source of truth)
+  const mode = teamSize === 2 ? 'league_2v2' : 'league_3v3';
+  const standingsLPMap = new Map(
+    (await prisma.standing.findMany({
+      where: { mode: mode as any, entityId: { in: teams.map(t => t.id) } },
+      select: { entityId: true, leaguePoints: true },
+    })).map(s => [s.entityId, s.leaguePoints])
+  );
+
   // Pair teams using greedy algorithm
   while (availableTeams.length > 1) {
     const team1 = availableTeams.shift()!;
-    const opponent = findBestOpponent(team1, availableTeams, combinedELOMap, recentOpponentsMap);
+    const opponent = findBestOpponent(team1, availableTeams, combinedELOMap, recentOpponentsMap, standingsLPMap);
 
     if (opponent) {
       // Remove opponent from available pool
       const opponentIndex = availableTeams.indexOf(opponent);
       availableTeams.splice(opponentIndex, 1);
 
-      // Create match pair
+      // Create match pair — use league/instance from function context (standings-derived)
       matches.push({
         team1,
         team2: opponent,
         isByeMatch: false,
-        teamBattleLeague: team1.teamLeague,
-        teamBattleLeagueId: team1.teamLeagueId,
+        teamBattleLeague,
+        teamBattleLeagueId,
       });
     } else {
       // No suitable opponent found, put team back for bye-match
@@ -396,14 +370,14 @@ export async function pairTeams(
   // Handle odd team with bye-match — only when no real opponents exist
   if (availableTeams.length === 1) {
     const lastTeam = availableTeams[0];
-    const byeTeam = createByeTeam(lastTeam.teamLeague, lastTeam.teamLeagueId, teamSize);
+    const byeTeam = createByeTeam(teamBattleLeague, teamBattleLeagueId, teamSize);
 
     matches.push({
       team1: lastTeam,
       team2: byeTeam,
       isByeMatch: true,
-      teamBattleLeague: lastTeam.teamLeague,
-      teamBattleLeagueId: lastTeam.teamLeagueId,
+      teamBattleLeague,
+      teamBattleLeagueId,
     });
 
     logger.info(`[TeamBattleMatchmaking] Bye-match created for team ${lastTeam.id}`);
@@ -570,51 +544,31 @@ function createByeTeam(league: string, leagueId: string, teamSize: 2 | 3): TeamB
 // ─── Match Scheduling ────────────────────────────────────────────────────────
 
 /**
- * Schedule matches in the database.
- * Persists ScheduledTeamBattleMatch records for paired teams.
+ * Schedule matches using the unified SchedulingService.
+ * Creates ScheduledMatch records with team participants.
  */
 export async function scheduleMatches(
   matches: TeamBattleMatchPair[],
   scheduledFor: Date,
   teamSize: 2 | 3,
 ): Promise<void> {
-  // Separate bye-matches from regular matches
-  const regularMatches = matches.filter(m => !m.isByeMatch);
-  const byeMatches = matches.filter(m => m.isByeMatch);
+  const matchType = teamSize === 2 ? MatchType.league_2v2 : MatchType.league_3v3;
 
-  // Create regular matches using createMany
-  if (regularMatches.length > 0) {
-    const matchMode = teamSize === 2 ? 'league_2v2' : 'league_3v3';
-    const regularMatchData = regularMatches.map(match => ({
-      team1Id: match.team1.id,
-      team2Id: match.team2.id,
-      teamSize,
-      matchMode,
-      teamBattleLeague: match.teamBattleLeague,
-      teamBattleLeagueId: match.teamBattleLeagueId,
+  for (const match of matches) {
+    const participants = [
+      { participantType: 'team' as const, participantId: match.team1.id, slot: 1 },
+    ];
+    if (!match.isByeMatch && match.team2) {
+      participants.push({ participantType: 'team' as const, participantId: match.team2.id, slot: 2 });
+    }
+
+    await schedulingService.createMatch({
+      matchType,
       scheduledFor,
-      status: 'scheduled' as const,
-    }));
-
-    await prisma.scheduledTeamBattleMatch.createMany({
-      data: regularMatchData,
-    });
-  }
-
-  // Create bye-matches individually (team2Id = null for bye-team)
-  for (const match of byeMatches) {
-    const matchMode = teamSize === 2 ? 'league_2v2' : 'league_3v3';
-    await prisma.scheduledTeamBattleMatch.create({
-      data: {
-        team1Id: match.team1.id,
-        team2Id: null, // Bye-team (no actual team2)
-        teamSize,
-        matchMode,
-        teamBattleLeague: match.teamBattleLeague,
-        teamBattleLeagueId: match.teamBattleLeagueId,
-        scheduledFor,
-        status: 'scheduled',
-      },
+      leagueType: match.teamBattleLeague,
+      leagueInstanceId: match.teamBattleLeagueId,
+      isByeMatch: match.isByeMatch,
+      participants,
     });
   }
 
@@ -638,7 +592,7 @@ export async function scheduleMatches(
  * Requirements: R3.3, R3.4, R4.1–R4.7
  */
 export async function runTeamBattleMatchmaking(teamSize: 2 | 3, scheduledFor?: Date): Promise<number> {
-  const matchTime = scheduledFor || new Date(Date.now() + 24 * 60 * 60 * 1000);
+  const matchTime = scheduledFor ?? defaultScheduledFor();
   const label = `${teamSize}v${teamSize}`;
 
   let totalMatches = 0;
@@ -647,14 +601,15 @@ export async function runTeamBattleMatchmaking(teamSize: 2 | 3, scheduledFor?: D
 
   for (const tier of TEAM_BATTLE_LEAGUE_TIERS) {
     try {
-      // Get all league instances for this tier
-      const instances = await prisma.teamBattle.findMany({
-        where: { teamLeague: tier, teamSize },
-        select: { teamLeagueId: true },
-        distinct: ['teamLeagueId'],
+      // Get all league instances for this tier from standings (source of truth)
+      const mode = teamSize === 2 ? 'league_2v2' : 'league_3v3';
+      const instances = await prisma.standing.findMany({
+        where: { mode: mode as any, tier },
+        select: { leagueInstanceId: true },
+        distinct: ['leagueInstanceId'],
       });
 
-      const instanceIds = instances.map(i => i.teamLeagueId);
+      const instanceIds = instances.map(i => i.leagueInstanceId);
 
       for (const instanceId of instanceIds) {
         try {
@@ -666,8 +621,8 @@ export async function runTeamBattleMatchmaking(teamSize: 2 | 3, scheduledFor?: D
             continue;
           }
 
-          // Pair teams
-          const matches = await pairTeams(eligibleTeams, teamSize);
+          // Pair teams — pass tier and instanceId from context
+          const matches = await pairTeams(eligibleTeams, teamSize, tier, instanceId);
 
           if (matches.length > 0) {
             // Schedule matches

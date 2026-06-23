@@ -146,14 +146,10 @@ async function executeLeagueCycle(): Promise<JobContext> {
   const rebalanceSummary = await rebalanceLeagues();
   logger.info(`League Cycle: Rebalanced — ${rebalanceSummary.totalPromoted} promoted, ${rebalanceSummary.totalDemoted} demoted`);
 
-  // Step 4: Schedule matchmaking with 24h lead time
-  // Round scheduledFor to the top of the hour to avoid millisecond race conditions
-  // where executeScheduledBattles' lte filter misses matches by a few ms
-  logger.info('League Cycle: Step 4 — Scheduling league matchmaking (24h lead)');
-  const scheduledFor = new Date(Date.now() + 24 * 60 * 60 * 1000);
-  scheduledFor.setMinutes(0, 0, 0);
-  const matchesCreated = await runMatchmaking(scheduledFor);
-  logger.info(`League Cycle: ${matchesCreated} matches scheduled for ${scheduledFor.toISOString()}`);
+  // Step 4: Schedule matchmaking (service handles 24h + rounding internally)
+  logger.info('League Cycle: Step 4 — Scheduling league matchmaking');
+  const matchesCreated = await runMatchmaking();
+  logger.info(`League Cycle: ${matchesCreated} matches scheduled`);
 
   return { jobName: 'league', matchesCompleted: battleSummary.totalBattles };
 }
@@ -256,18 +252,15 @@ async function executeTagTeamCycle(): Promise<JobContext> {
   const rebalanceSummary = await rebalanceTagTeamLeagues();
   logger.info(`Tag Team Cycle: Rebalanced — ${rebalanceSummary.totalPromoted} promoted, ${rebalanceSummary.totalDemoted} demoted`);
 
-  // Step 4: Schedule tag team matchmaking with 24h lead time (daily cadence)
-  // Round scheduledFor to the top of the hour to avoid millisecond race conditions
-  logger.info('Tag Team Cycle: Step 4 — Scheduling tag team matchmaking (24h lead)');
-  const scheduledFor = new Date(Date.now() + 24 * 60 * 60 * 1000);
-  scheduledFor.setMinutes(0, 0, 0);
-  const matchesCreated = await runTagTeamMatchmaking(scheduledFor);
-  logger.info(`Tag Team Cycle: ${matchesCreated} tag team matches scheduled for ${scheduledFor.toISOString()}`);
+  // Step 4: Schedule tag team matchmaking (service handles 24h + rounding internally)
+  logger.info('Tag Team Cycle: Step 4 — Scheduling tag team matchmaking');
+  const matchesCreated = await runTagTeamMatchmaking();
+  logger.info(`Tag Team Cycle: ${matchesCreated} tag team matches scheduled`);
 
   return { jobName: 'tag-team', matchesCompleted: battleSummary.totalBattles };
 }
 
-async function executeSettlement(): Promise<JobContext> {
+export async function executeSettlement(): Promise<JobContext> {
   const settlementStart = Date.now();
 
   // Get or create cycle metadata (singleton pattern)
@@ -287,7 +280,7 @@ async function executeSettlement(): Promise<JobContext> {
   const { calculateMerchandisingIncome, calculateFacilityOperatingCost } = await import('../../utils/economyCalculations');
 
   const allUsers = await prisma.user.findMany({
-    where: { NOT: { username: 'bye_robot_user' } },
+    where: {},
     select: { id: true, prestige: true },
   });
 
@@ -426,7 +419,6 @@ async function executeSettlement(): Promise<JobContext> {
     const { achievementService } = await import('../achievement');
     const bankruptUsers = await prisma.user.findMany({
       where: {
-        NOT: { username: 'bye_robot_user' },
         currency: { lt: 0 },
       },
       select: { id: true },
@@ -448,7 +440,7 @@ async function executeSettlement(): Promise<JobContext> {
   // Step 3: Log end-of-cycle balances for all users (batch insert)
   logger.info('Daily Settlement: Step 3 — Logging end-of-cycle balances');
   const endOfCycleUsers = await prisma.user.findMany({
-    where: { NOT: { username: 'bye_robot_user' } },
+    where: {},
     select: { id: true, username: true, stableName: true, currency: true },
     orderBy: { id: 'asc' },
   });
@@ -479,19 +471,12 @@ async function executeSettlement(): Promise<JobContext> {
     },
   });
 
-  await prisma.robot.updateMany({
-    where: { NOT: { name: 'Bye Robot' } },
-    data: { cyclesInCurrentLeague: { increment: 1 } },
+  // Increment cyclesInTier on all standings (Spec #40 — unified standings)
+  await prisma.standing.updateMany({
+    where: {},
+    data: { cyclesInTier: { increment: 1 } },
   });
 
-  await prisma.teamBattle.updateMany({
-    where: { teamSize: 2 },
-    data: { cyclesInTagTeamLeague: { increment: 1 } },
-  });
-
-  await prisma.teamBattle.updateMany({
-    data: { cyclesInLeague: { increment: 1 } },
-  });
   logger.info(`Daily Settlement: Cycle counters incremented — now at cycle ${newCycleNumber}`);
 
   // Step 5: Create analytics snapshot
@@ -538,6 +523,16 @@ async function executeSettlement(): Promise<JobContext> {
     logger.error(`Daily Settlement: Failed to refresh achievement rarity cache — ${err instanceof Error ? err.message : String(err)}`);
   }
 
+  // Step 8: Refresh leaderboard cache (Spec #40)
+  // Runs after all battle results and standings updates are complete
+  try {
+    const { leaderboardService } = await import('../leaderboard/leaderboardService');
+    await leaderboardService.refreshAll();
+    logger.info('Daily Settlement: Leaderboard cache refreshed');
+  } catch (err) {
+    logger.error(`Daily Settlement: Failed to refresh leaderboard cache — ${err instanceof Error ? err.message : String(err)}`);
+  }
+
   return { jobName: 'settlement' };
 }
 
@@ -553,17 +548,16 @@ async function executeKothCycle(): Promise<JobContext> {
   const battleSummary = await executeScheduledKothBattles(new Date());
   logger.info(`KotH Cycle: ${battleSummary.successfulMatches} KotH matches executed (${battleSummary.failedMatches} failed)`);
 
-  // Step 3: Schedule KotH matchmaking for next day (24h from now, rounded to the hour)
-  logger.info('KotH Cycle: Step 3 — Scheduling KotH matchmaking');
-  const scheduledFor = new Date(Date.now() + 24 * 60 * 60 * 1000);
-  scheduledFor.setMinutes(0, 0, 0);
+  // Step 3: Rebalance KotH leagues (same system as other leagues — top 10% promoted, bottom 10% demoted)
+  logger.info('KotH Cycle: Step 3 — Rebalancing KotH leagues');
+  const { rebalanceKothLeagues } = await import('../league/leagueRebalancingService');
+  const rebalanceSummary = await rebalanceKothLeagues();
+  logger.info(`KotH Cycle: Rebalanced — ${rebalanceSummary.totalPromoted} promoted, ${rebalanceSummary.totalDemoted} demoted`);
 
-  // Get current cycle number for zone rotation (cycle % 3 === 0 → rotatingZone)
-  const cycleMetadata = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
-  const cycleNumber = cycleMetadata?.totalCycles ?? 0;
-
-  const matchesCreated = await runKothMatchmaking(scheduledFor, cycleNumber);
-  logger.info(`KotH Cycle: ${matchesCreated} KotH matches scheduled for ${scheduledFor.toISOString()}`);
+  // Step 4: Schedule KotH matchmaking (service handles 24h + rounding internally)
+  logger.info('KotH Cycle: Step 4 — Scheduling KotH matchmaking');
+  const matchesCreated = await runKothMatchmaking();
+  logger.info(`KotH Cycle: ${matchesCreated} KotH matches scheduled`);
 
   return { jobName: 'koth', matchesCompleted: battleSummary.successfulMatches };
 }
@@ -585,12 +579,10 @@ async function executeTeam2v2LeagueCycle(): Promise<JobContext> {
   const rebalanceSummary = await rebalanceTeamBattleLeagues(2);
   logger.info(`Team 2v2 League Cycle: Rebalanced — ${rebalanceSummary.totalPromoted} promoted, ${rebalanceSummary.totalDemoted} demoted`);
 
-  // Step 4: Run 2v2 matchmaking for next cycle (24h lead time, rounded to the hour)
-  logger.info('Team 2v2 League Cycle: Step 4 — Scheduling 2v2 matchmaking (24h lead)');
-  const scheduledFor = new Date(Date.now() + 24 * 60 * 60 * 1000);
-  scheduledFor.setMinutes(0, 0, 0);
-  const matchesCreated = await runTeamBattleMatchmaking(2, scheduledFor);
-  logger.info(`Team 2v2 League Cycle: ${matchesCreated} matches scheduled for ${scheduledFor.toISOString()}`);
+  // Step 4: Run 2v2 matchmaking (service handles 24h + rounding internally)
+  logger.info('Team 2v2 League Cycle: Step 4 — Scheduling 2v2 matchmaking');
+  const matchesCreated = await runTeamBattleMatchmaking(2);
+  logger.info(`Team 2v2 League Cycle: ${matchesCreated} matches scheduled`);
 
   return { jobName: 'team2v2League', matchesCompleted: execResult.matchesCompleted };
 }
@@ -610,12 +602,10 @@ async function executeTeam3v3LeagueCycle(): Promise<JobContext> {
   const rebalanceSummary = await rebalanceTeamBattleLeagues(3);
   logger.info(`Team 3v3 League Cycle: Rebalanced — ${rebalanceSummary.totalPromoted} promoted, ${rebalanceSummary.totalDemoted} demoted`);
 
-  // Step 4: Run 3v3 matchmaking for next cycle (24h lead time, rounded to the hour)
-  logger.info('Team 3v3 League Cycle: Step 4 — Scheduling 3v3 matchmaking (24h lead)');
-  const scheduledFor = new Date(Date.now() + 24 * 60 * 60 * 1000);
-  scheduledFor.setMinutes(0, 0, 0);
-  const matchesCreated = await runTeamBattleMatchmaking(3, scheduledFor);
-  logger.info(`Team 3v3 League Cycle: ${matchesCreated} matches scheduled for ${scheduledFor.toISOString()}`);
+  // Step 4: Run 3v3 matchmaking (service handles 24h + rounding internally)
+  logger.info('Team 3v3 League Cycle: Step 4 — Scheduling 3v3 matchmaking');
+  const matchesCreated = await runTeamBattleMatchmaking(3);
+  logger.info(`Team 3v3 League Cycle: ${matchesCreated} matches scheduled`);
 
   return { jobName: 'team3v3League', matchesCompleted: execResult.matchesCompleted };
 }

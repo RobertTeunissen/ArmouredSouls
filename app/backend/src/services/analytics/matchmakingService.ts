@@ -1,15 +1,14 @@
-import { Robot } from '../../../generated/prisma';
+import { Robot, MatchType } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
-import { getInstancesForTier, LeagueTier, LEAGUE_TIERS } from '../league/leagueInstanceService';
+import { LEAGUE_TIERS, LeagueTier } from '../league/leagueInstanceService';
 import logger from '../../config/logger';
+import schedulingService from '../scheduling/schedulingService';
 import {
   calculateMatchScore,
   MatchScoreInput,
   RECENT_OPPONENT_LIMIT,
+  defaultScheduledFor,
 } from '../matchmaking/teamMatchmakingUtils';
-
-// Bye-robot identifier
-export const BYE_ROBOT_NAME = 'Bye Robot';
 
 export interface BattleReadinessCheck {
   isReady: boolean;
@@ -82,51 +81,110 @@ export function checkSchedulingReadiness(robot: Robot): BattleReadinessCheck {
 }
 
 /**
- * Get recent opponents for multiple robots in a single query (batch version).
- * Returns a map of robotId → array of recent opponent IDs.
- *
- * NOTE: Uses a global `take` limit which is an approximation — if one robot
- * has many more recent battles than others, some robots may get incomplete
- * opponent lists. This is an acceptable tradeoff for matchmaking quality vs
- * query count (1 query instead of N). The soft deprioritization of recent
- * opponents means an occasional repeat match is not game-breaking.
+ * Create an in-memory fabricated bye robot for 1v1 matchmaking.
+ * Used when a tier instance has an odd number of eligible robots.
+ * The bye robot always loses — no combat simulation is run.
+ */
+function createByeRobot(): Robot {
+  const { Prisma } = require('../../../generated/prisma');
+  return {
+    id: -1,
+    userId: -1,
+    name: 'Bye Robot',
+    frameId: 1,
+    paintJob: null,
+    imageUrl: null,
+    combatPower: new Prisma.Decimal(10),
+    targetingSystems: new Prisma.Decimal(10),
+    criticalSystems: new Prisma.Decimal(10),
+    penetration: new Prisma.Decimal(10),
+    weaponControl: new Prisma.Decimal(10),
+    attackSpeed: new Prisma.Decimal(10),
+    armorPlating: new Prisma.Decimal(10),
+    shieldCapacity: new Prisma.Decimal(10),
+    evasionThrusters: new Prisma.Decimal(10),
+    damageDampeners: new Prisma.Decimal(10),
+    counterProtocols: new Prisma.Decimal(10),
+    hullIntegrity: new Prisma.Decimal(10),
+    servoMotors: new Prisma.Decimal(10),
+    gyroStabilizers: new Prisma.Decimal(10),
+    hydraulicSystems: new Prisma.Decimal(10),
+    powerCore: new Prisma.Decimal(10),
+    combatAlgorithms: new Prisma.Decimal(10),
+    threatAnalysis: new Prisma.Decimal(10),
+    adaptiveAI: new Prisma.Decimal(10),
+    logicCores: new Prisma.Decimal(10),
+    syncProtocols: new Prisma.Decimal(10),
+    supportSystems: new Prisma.Decimal(10),
+    formationTactics: new Prisma.Decimal(10),
+    currentHP: 100,
+    maxHP: 100,
+    currentShield: 20,
+    maxShield: 20,
+    damageTaken: 0,
+    elo: 1000,
+    totalBattles: 0,
+    wins: 0,
+    draws: 0,
+    losses: 0,
+    damageDealtLifetime: 0,
+    damageTakenLifetime: 0,
+    kills: 0,
+    currentLeague: 'bronze',
+    leagueId: 'bronze_1',
+    leaguePoints: 0,
+    cyclesInCurrentLeague: 0,
+    fame: 0,
+    titles: null,
+    totalTagTeamBattles: 0,
+    totalTagTeamWins: 0,
+    totalTagTeamLosses: 0,
+    totalTagTeamDraws: 0,
+    timesTaggedIn: 0,
+    timesTaggedOut: 0,
+    totalLeague1v1Wins: 0,
+    totalLeague1v1Losses: 0,
+    totalLeague1v1Draws: 0,
+    totalLeague2v2Wins: 0,
+    totalLeague3v3Wins: 0,
+    repairCost: 0,
+    battleReadiness: 100,
+    totalRepairsPaid: 0,
+    yieldThreshold: 10,
+    loadoutType: 'single',
+    stance: 'balanced',
+    kothWins: 0,
+    kothMatches: 0,
+    kothTotalZoneScore: 0,
+    kothTotalZoneTime: 0,
+    kothKills: 0,
+    kothBestPlacement: null,
+    kothCurrentWinStreak: 0,
+    kothBestWinStreak: 0,
+    currentWinStreak: 0,
+    bestWinStreak: 0,
+    currentLoseStreak: 0,
+    offensiveWins: 0,
+    defensiveWins: 0,
+    balancedWins: 0,
+    dualWieldWins: 0,
+    mainWeaponId: null,
+    offhandWeaponId: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  } as Robot;
+}
+
+/**
+ * Get recent opponents for multiple robots using unified scheduled_matches_v2.
+ * Queries completed 1v1 league matches only (mode-specific).
  */
 async function getRecentOpponentsBatch(robotIds: number[], limit: number = RECENT_OPPONENT_LIMIT): Promise<Map<number, number[]>> {
   if (robotIds.length === 0) return new Map();
-
-  // Single query to get recent battles for all robots in the set
-  const recentBattles = await prisma.battle.findMany({
-    where: {
-      OR: [
-        { robot1Id: { in: robotIds } },
-        { robot2Id: { in: robotIds } },
-      ],
-    },
-    orderBy: { createdAt: 'desc' },
-    // Fetch enough battles to cover all robots (worst case: each robot has `limit` unique battles)
-    take: robotIds.length * limit,
-    select: {
-      robot1Id: true,
-      robot2Id: true,
-    },
-  });
-
-  // Build per-robot opponent lists from the batch result
-  const map = new Map<number, number[]>();
-  for (const robotId of robotIds) {
-    const opponents: number[] = [];
-    for (const battle of recentBattles) {
-      if (opponents.length >= limit) break;
-      if (battle.robot1Id === robotId) {
-        opponents.push(battle.robot2Id);
-      } else if (battle.robot2Id === robotId) {
-        opponents.push(battle.robot1Id);
-      }
-    }
-    map.set(robotId, opponents);
-  }
-
-  return map;
+  const { createRecentOpponentQueryFn } = await import('../matchmaking/teamMatchmakingUtils');
+  const { MatchType } = await import('../../../generated/prisma');
+  const queryFn = createRecentOpponentQueryFn(MatchType.league_1v1, 'robot');
+  return queryFn(robotIds, limit);
 }
 
 /**
@@ -137,7 +195,8 @@ async function getRecentOpponentsBatch(robotIds: number[], limit: number = RECEN
 function findBestOpponent(
   robot: Robot,
   availableRobots: Robot[],
-  recentOpponentsMap: Map<number, number[]>
+  recentOpponentsMap: Map<number, number[]>,
+  standingsLPMap: Map<number, number>
 ): Robot | null {
   if (availableRobots.length === 0) {
     return null;
@@ -149,8 +208,8 @@ function findBestOpponent(
   const scoredOpponents = availableRobots.map(opponent => {
     const opponentRecentOpponents = recentOpponentsMap.get(opponent.id) || [];
     const input: MatchScoreInput = {
-      entity1LP: robot.leaguePoints,
-      entity2LP: opponent.leaguePoints,
+      entity1LP: standingsLPMap.get(robot.id) ?? 0,
+      entity2LP: standingsLPMap.get(opponent.id) ?? 0,
       entity1ELO: robot.elo,
       entity2ELO: opponent.elo,
       recentOpponents1: robotRecentOpponents,
@@ -164,25 +223,63 @@ function findBestOpponent(
     return { opponent, score };
   });
   
-  // Sort by score (lower is better) and return best match
-  scoredOpponents.sort((a, b) => a.score - b.score);
-  return scoredOpponents[0].opponent;
+  // Sort by score (lower is better), tie-break by createdAt (deterministic)
+  scoredOpponents.sort((a, b) => {
+    if (a.score !== b.score) return a.score - b.score;
+    return a.opponent.createdAt.getTime() - b.opponent.createdAt.getTime();
+  });
+
+  // R4.7: If the best match is a recent opponent, check if ANY non-recent exists
+  const bestMatch = scoredOpponents[0];
+  const bestIsRecentOpponent =
+    robotRecentOpponents.includes(bestMatch.opponent.id) ||
+    (recentOpponentsMap.get(bestMatch.opponent.id) || []).includes(robot.id);
+
+  if (bestIsRecentOpponent) {
+    const nonRecentOpponent = scoredOpponents.find(so => {
+      const oppRecent = recentOpponentsMap.get(so.opponent.id) || [];
+      return !robotRecentOpponents.includes(so.opponent.id) && !oppRecent.includes(robot.id);
+    });
+
+    if (nonRecentOpponent) {
+      // Non-recent opponent exists — normal scoring handles it (best score wins)
+      return bestMatch.opponent;
+    }
+
+    // R4.7 fallback: ALL opponents are recent — select closest-ELO
+    const closestELO = [...scoredOpponents].sort((a, b) => {
+      const diffA = Math.abs(a.opponent.elo - robot.elo);
+      const diffB = Math.abs(b.opponent.elo - robot.elo);
+      if (diffA !== diffB) return diffA - diffB;
+      return a.opponent.createdAt.getTime() - b.opponent.createdAt.getTime();
+    });
+    return closestELO[0].opponent;
+  }
+
+  return bestMatch.opponent;
 }
 
 /**
  * Build matchmaking queue for a league instance
  */
 async function buildMatchmakingQueue(leagueId: string): Promise<Robot[]> {
-  // Get all robots in this instance
+  // Get robot IDs in this instance from standings (source of truth for league placement)
+  const standingsInInstance = await prisma.standing.findMany({
+    where: { mode: 'league_1v1', leagueInstanceId: leagueId },
+    select: { entityId: true },
+  });
+  const robotIdsInInstance = standingsInInstance.map(s => s.entityId);
+
+  if (robotIdsInInstance.length === 0) {
+    return [];
+  }
+
+  // Load robots by those IDs
   const robots = await prisma.robot.findMany({
     where: {
-      leagueId,
-      NOT: {
-        name: BYE_ROBOT_NAME, // Exclude bye-robot from queue
-      },
+      id: { in: robotIdsInInstance },
     },
     orderBy: [
-      { leaguePoints: 'desc' },
       { elo: 'desc' },
     ],
   });
@@ -211,26 +308,14 @@ async function buildMatchmakingQueue(leagueId: string): Promise<Robot[]> {
     logger.info(`[Matchmaking] Excluded ${excludedBySubscription} robots without league subscription`, { leagueId });
   }
 
-  // Check if robots are already scheduled for a match
-  const scheduledRobotIds2 = await prisma.scheduledLeagueMatch.findMany({
-    where: {
-      status: 'scheduled',
-      OR: [
-        { robot1Id: { in: subscribedRobots.map(r => r.id) } },
-        { robot2Id: { in: subscribedRobots.map(r => r.id) } },
-      ],
-    },
-    select: {
-      robot1Id: true,
-      robot2Id: true,
-    },
-  });
-  
+  // Check if robots are already scheduled for a match (via unified scheduling table)
   const alreadyScheduledIds = new Set<number>();
-  scheduledRobotIds2.forEach(match => {
-    alreadyScheduledIds.add(match.robot1Id);
-    alreadyScheduledIds.add(match.robot2Id);
-  });
+  for (const r of subscribedRobots) {
+    const upcoming = await schedulingService.getUpcomingForRobot(r.id, [MatchType.league_1v1]);
+    if (upcoming.length > 0) {
+      alreadyScheduledIds.add(r.id);
+    }
+  }
   
   // Filter out already scheduled robots
   const availableRobots = subscribedRobots.filter(robot => !alreadyScheduledIds.has(robot.id));
@@ -243,7 +328,7 @@ async function buildMatchmakingQueue(leagueId: string): Promise<Robot[]> {
 /**
  * Pair robots for matches within an instance
  */
-async function pairRobots(robots: Robot[]): Promise<MatchPair[]> {
+async function pairRobots(robots: Robot[], leagueId: string): Promise<MatchPair[]> {
   if (robots.length === 0) {
     return [];
   }
@@ -253,11 +338,22 @@ async function pairRobots(robots: Robot[]): Promise<MatchPair[]> {
   
   // Pre-fetch recent opponents for all robots in a single batch query
   const recentOpponentsMap = await getRecentOpponentsBatch(robots.map(r => r.id));
+
+  // Build LP lookup map from standings (source of truth)
+  const standingsLPMap = new Map(
+    (await prisma.standing.findMany({
+      where: { mode: 'league_1v1', entityId: { in: robots.map(r => r.id) } },
+      select: { entityId: true, leaguePoints: true },
+    })).map(s => [s.entityId, s.leaguePoints])
+  );
+
+  // Derive tier from leagueId (e.g., 'bronze_1' → 'bronze')
+  const leagueType = leagueId.split('_')[0];
   
   // Pair robots using greedy algorithm
   while (availableRobots.length > 1) {
     const robot1 = availableRobots.shift()!;
-    const opponent = findBestOpponent(robot1, availableRobots, recentOpponentsMap);
+    const opponent = findBestOpponent(robot1, availableRobots, recentOpponentsMap, standingsLPMap);
     
     if (opponent) {
       // Remove opponent from available pool
@@ -269,7 +365,7 @@ async function pairRobots(robots: Robot[]): Promise<MatchPair[]> {
         robot1,
         robot2: opponent,
         isByeMatch: false,
-        leagueType: robot1.currentLeague,
+        leagueType,
       });
     } else {
       // No suitable opponent found, put robot back for bye-match
@@ -281,42 +377,39 @@ async function pairRobots(robots: Robot[]): Promise<MatchPair[]> {
   // Handle odd robot with bye-match
   if (availableRobots.length === 1) {
     const lastRobot = availableRobots[0];
-    const byeRobot = await prisma.robot.findFirst({
-      where: { name: BYE_ROBOT_NAME },
+    const byeRobot = createByeRobot();
+    
+    matches.push({
+      robot1: lastRobot,
+      robot2: byeRobot,
+      isByeMatch: true,
+      leagueType,
     });
     
-    if (byeRobot) {
-      matches.push({
-        robot1: lastRobot,
-        robot2: byeRobot,
-        isByeMatch: true,
-        leagueType: lastRobot.currentLeague,
-      });
-      
-      logger.info(`[Matchmaking] Bye-match created for ${lastRobot.name}`);
-    } else {
-      logger.warn(`[Matchmaking] No ${BYE_ROBOT_NAME} found for ${lastRobot.name}`);
-    }
+    logger.info(`[Matchmaking] Bye-match created for ${lastRobot.name}`);
   }
   
   return matches;
 }
 
 /**
- * Create scheduled matches in database
+ * Create scheduled matches using the unified SchedulingService.
+ * Each match creates one row in `scheduled_matches_v2` with participant rows.
  */
-async function createScheduledMatches(matches: MatchPair[], scheduledFor: Date): Promise<void> {
-  const matchData = matches.map(match => ({
-    robot1Id: match.robot1.id,
-    robot2Id: match.robot2.id,
-    leagueType: match.leagueType,
-    scheduledFor,
-    status: 'scheduled',
-  }));
-  
-  await prisma.scheduledLeagueMatch.createMany({
-    data: matchData,
-  });
+async function createScheduledMatches(matches: MatchPair[], scheduledFor: Date, leagueId: string): Promise<void> {
+  for (const match of matches) {
+    await schedulingService.createMatch({
+      matchType: MatchType.league_1v1,
+      scheduledFor,
+      leagueType: match.leagueType,
+      leagueInstanceId: leagueId,
+      isByeMatch: match.isByeMatch,
+      participants: [
+        { participantType: 'robot', participantId: match.robot1.id, slot: 1 },
+        { participantType: 'robot', participantId: match.robot2.id, slot: 2 },
+      ],
+    });
+  }
   
   logger.info(`[Matchmaking] Created ${matches.length} scheduled matches`);
 }
@@ -327,30 +420,36 @@ async function createScheduledMatches(matches: MatchPair[], scheduledFor: Date):
 export async function runMatchmakingForTier(tier: LeagueTier, scheduledFor: Date): Promise<number> {
   logger.info(`[Matchmaking] Running matchmaking for ${tier.toUpperCase()} league...`);
   
-  const instances = await getInstancesForTier(tier);
+  // Discover instances from Standing records (unified pattern — same as 2v2/3v3/tag team/KotH)
+  const instanceRecords = await prisma.standing.findMany({
+    where: { mode: 'league_1v1' as any, tier },
+    select: { leagueInstanceId: true },
+    distinct: ['leagueInstanceId'],
+  });
+  const instanceIds = instanceRecords.map(i => i.leagueInstanceId);
   let totalMatches = 0;
   
-  for (const instance of instances) {
-    logger.info(`[Matchmaking] Processing ${instance.leagueId}...`);
+  for (const leagueId of instanceIds) {
+    logger.info(`[Matchmaking] Processing ${leagueId}...`);
     
     // Build queue for this instance
-    const queue = await buildMatchmakingQueue(instance.leagueId);
+    const queue = await buildMatchmakingQueue(leagueId);
     
     if (queue.length < 2) {
-      logger.info(`[Matchmaking] ${instance.leagueId}: Not enough robots for matches (${queue.length} available)`);
+      logger.info(`[Matchmaking] ${leagueId}: Not enough robots for matches (${queue.length} available)`);
       continue;
     }
     
     // Pair robots
-    const matches = await pairRobots(queue);
+    const matches = await pairRobots(queue, leagueId);
     
     // Create scheduled matches
-    await createScheduledMatches(matches, scheduledFor);
+    await createScheduledMatches(matches, scheduledFor, leagueId);
     
     totalMatches += matches.length;
   }
   
-  logger.info(`[Matchmaking] ${tier.toUpperCase()}: Created ${totalMatches} matches across ${instances.length} instances`);
+  logger.info(`[Matchmaking] ${tier.toUpperCase()}: Created ${totalMatches} matches across ${instanceIds.length} instances`);
   return totalMatches;
 }
 
@@ -358,7 +457,7 @@ export async function runMatchmakingForTier(tier: LeagueTier, scheduledFor: Date
  * Run matchmaking for all league tiers
  */
 export async function runMatchmaking(scheduledFor?: Date): Promise<number> {
-  const matchTime = scheduledFor || new Date(Date.now() + 24 * 60 * 60 * 1000); // Default: 24 hours from now
+  const matchTime = scheduledFor ?? defaultScheduledFor();
   
   logger.info(`[Matchmaking] Starting matchmaking run...`);
   logger.info(`[Matchmaking] Matches scheduled for: ${matchTime.toISOString()}`);

@@ -9,7 +9,7 @@ import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import {
   logBattleAuditEvent,
-  awardCreditsToUser,
+  awardCreditsWithLedger,
   awardPrestigeToUser,
   awardStreamingRevenueForParticipant,
   checkAndAwardAchievements,
@@ -24,6 +24,8 @@ import {
   calculateTagTeamPrestige,
   calculateTagTeamFame,
 } from './tagTeamRewards';
+import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
+import standingsService from '../standings/standingsService';
 
 /**
  * Check if a team is ready for battle
@@ -128,6 +130,7 @@ export async function updateTagTeamBattleResults(
     const reserveSurvivalTime = team1IsBye ? result.team2ReserveSurvivalTime : result.team1ReserveSurvivalTime;
 
     const activeFame = calculateTagTeamFame(
+      match.teamBattleLeague,
       realTeam.activeRobot,
       activeDamageDealt,
       activeSurvivalTime,
@@ -136,6 +139,7 @@ export async function updateTagTeamBattleResults(
       isDraw
     );
     const reserveFame = calculateTagTeamFame(
+      match.teamBattleLeague,
       realTeam.reserveRobot,
       reserveDamageDealt,
       reserveSurvivalTime,
@@ -153,11 +157,6 @@ export async function updateTagTeamBattleResults(
         repairCost: 0, // Deprecated: repair costs calculated by RepairService
         damageTaken: { increment: realTeam.activeRobot.maxHP - activeFinalHP },
         fame: { increment: activeFame },
-        totalTagTeamBattles: { increment: 1 },
-        totalTagTeamWins: realTeamWon ? { increment: 1 } : undefined,
-        totalTagTeamLosses: !realTeamWon && !isDraw ? { increment: 1 } : undefined,
-        totalTagTeamDraws: isDraw ? { increment: 1 } : undefined,
-        timesTaggedOut: tagOutTime !== undefined ? { increment: 1 } : undefined,
       },
     });
 
@@ -171,34 +170,23 @@ export async function updateTagTeamBattleResults(
           ? { increment: realTeam.reserveRobot.maxHP - reserveFinalHP }
           : undefined,
         fame: { increment: reserveFame },
-        totalTagTeamBattles: { increment: 1 },
-        totalTagTeamWins: realTeamWon ? { increment: 1 } : undefined,
-        totalTagTeamLosses: !realTeamWon && !isDraw ? { increment: 1 } : undefined,
-        totalTagTeamDraws: isDraw ? { increment: 1 } : undefined,
-        timesTaggedIn: tagOutTime !== undefined ? { increment: 1 } : undefined,
       },
     });
 
-    // Update team (ensure league points don't go below 0)
-    const currentTeamData = await prisma.teamBattle.findUnique({
-      where: { id: realTeam.id },
-      select: { tagTeamLp: true },
-    });
-    const newLeaguePoints = Math.max(0, (currentTeamData?.tagTeamLp || 0) + realTeamLeaguePoints);
-    
-    await prisma.teamBattle.update({
-      where: { id: realTeam.id },
-      data: {
-        tagTeamLp: newLeaguePoints,
-        totalTagTeamWins: realTeamWon ? { increment: 1 } : undefined,
-        totalTagTeamLosses: !realTeamWon && !isDraw ? { increment: 1 } : undefined,
-        totalTagTeamDraws: isDraw ? { increment: 1 } : undefined,
-      },
+    // Update team standings via standingsService
+    const byeTeamOutcome = isDraw ? 'draw' : realTeamWon ? 'win' : 'loss';
+    await standingsService.recordBattleResult({
+      entityType: 'team',
+      entityId: realTeam.id,
+      mode: 'tag_team',
+      outcome: byeTeamOutcome,
+      lpDelta: realTeamLeaguePoints,
     });
 
     // Update stable via shared helpers
     // Note: Repair costs are deducted separately by RepairService, not here
-    await awardCreditsToUser(realTeam.stableId, realTeamRewards);
+    const cycleNumber = await getCurrentCycleNumber();
+    await awardCreditsWithLedger(realTeam.stableId, realTeamRewards, 'battle_income', cycleNumber, 'Tag team battle reward');
     await awardPrestigeToUser(realTeam.stableId, prestige);
 
     // Update battle record with actual values
@@ -303,6 +291,7 @@ export async function updateTagTeamBattleResults(
   // Calculate fame (Requirement 10.7) based on damage dealt and survival time
   const totalBattleTime = result.durationSeconds;
   const team1ActiveFame = calculateTagTeamFame(
+    match.teamBattleLeague,
     team1.activeRobot,
     result.team1ActiveDamageDealt,
     result.team1ActiveSurvivalTime,
@@ -311,6 +300,7 @@ export async function updateTagTeamBattleResults(
     isDraw
   );
   const team1ReserveFame = calculateTagTeamFame(
+    match.teamBattleLeague,
     team1.reserveRobot,
     result.team1ReserveDamageDealt,
     result.team1ReserveSurvivalTime,
@@ -319,6 +309,7 @@ export async function updateTagTeamBattleResults(
     isDraw
   );
   const team2ActiveFame = calculateTagTeamFame(
+    match.teamBattleLeague,
     team2.activeRobot,
     result.team2ActiveDamageDealt,
     result.team2ActiveSurvivalTime,
@@ -327,6 +318,7 @@ export async function updateTagTeamBattleResults(
     isDraw
   );
   const team2ReserveFame = calculateTagTeamFame(
+    match.teamBattleLeague,
     team2.reserveRobot,
     result.team2ReserveDamageDealt,
     result.team2ReserveSurvivalTime,
@@ -352,11 +344,6 @@ export async function updateTagTeamBattleResults(
       repairCost: 0, // Deprecated: repair costs calculated by RepairService
       damageTaken: { increment: (maxHPMap.get(team1.activeRobotId) ?? team1.activeRobot.maxHP) - Math.min(result.team1ActiveFinalHP, maxHPMap.get(team1.activeRobotId) ?? result.team1ActiveFinalHP) },
       fame: { increment: team1ActiveFame },
-      totalTagTeamBattles: { increment: 1 },
-      totalTagTeamWins: team1Won ? { increment: 1 } : undefined,
-      totalTagTeamLosses: team2Won ? { increment: 1 } : undefined,
-      totalTagTeamDraws: isDraw ? { increment: 1 } : undefined,
-      timesTaggedOut: result.team1TagOutTime !== undefined ? { increment: 1 } : undefined,
     },
   });
 
@@ -370,11 +357,6 @@ export async function updateTagTeamBattleResults(
         ? { increment: (maxHPMap.get(team1.reserveRobotId) ?? team1.reserveRobot.maxHP) - Math.min(result.team1ReserveFinalHP, maxHPMap.get(team1.reserveRobotId) ?? result.team1ReserveFinalHP) }
         : undefined,
       fame: { increment: team1ReserveFame },
-      totalTagTeamBattles: { increment: 1 },
-      totalTagTeamWins: team1Won ? { increment: 1 } : undefined,
-      totalTagTeamLosses: team2Won ? { increment: 1 } : undefined,
-      totalTagTeamDraws: isDraw ? { increment: 1 } : undefined,
-      timesTaggedIn: result.team1TagOutTime !== undefined ? { increment: 1 } : undefined,
     },
   });
 
@@ -386,11 +368,6 @@ export async function updateTagTeamBattleResults(
       repairCost: 0, // Deprecated: repair costs calculated by RepairService
       damageTaken: { increment: (maxHPMap.get(team2.activeRobotId) ?? team2.activeRobot.maxHP) - Math.min(result.team2ActiveFinalHP, maxHPMap.get(team2.activeRobotId) ?? result.team2ActiveFinalHP) },
       fame: { increment: team2ActiveFame },
-      totalTagTeamBattles: { increment: 1 },
-      totalTagTeamWins: team2Won ? { increment: 1 } : undefined,
-      totalTagTeamLosses: team1Won ? { increment: 1 } : undefined,
-      totalTagTeamDraws: isDraw ? { increment: 1 } : undefined,
-      timesTaggedOut: result.team2TagOutTime !== undefined ? { increment: 1 } : undefined,
     },
   });
 
@@ -404,53 +381,34 @@ export async function updateTagTeamBattleResults(
         ? { increment: (maxHPMap.get(team2.reserveRobotId) ?? team2.reserveRobot.maxHP) - Math.min(result.team2ReserveFinalHP, maxHPMap.get(team2.reserveRobotId) ?? result.team2ReserveFinalHP) }
         : undefined,
       fame: { increment: team2ReserveFame },
-      totalTagTeamBattles: { increment: 1 },
-      totalTagTeamWins: team2Won ? { increment: 1 } : undefined,
-      totalTagTeamLosses: team1Won ? { increment: 1 } : undefined,
-      totalTagTeamDraws: isDraw ? { increment: 1 } : undefined,
-      timesTaggedIn: result.team2TagOutTime !== undefined ? { increment: 1 } : undefined,
     },
   });
 
-  // Update teams (league points, win/loss/draw counters)
-  // Ensure league points don't go below 0
-  const team1CurrentData = await prisma.teamBattle.findUnique({
-    where: { id: team1.id },
-    select: { tagTeamLp: true },
-  });
-  const team2CurrentData = await prisma.teamBattle.findUnique({
-    where: { id: team2.id },
-    select: { tagTeamLp: true },
-  });
-  
-  const team1NewLeaguePoints = Math.max(0, (team1CurrentData?.tagTeamLp || 0) + team1LeaguePoints);
-  const team2NewLeaguePoints = Math.max(0, (team2CurrentData?.tagTeamLp || 0) + team2LeaguePoints);
-  
-  await prisma.teamBattle.update({
-    where: { id: team1.id },
-    data: {
-      tagTeamLp: team1NewLeaguePoints,
-      totalTagTeamWins: team1Won ? { increment: 1 } : undefined,
-      totalTagTeamLosses: team2Won ? { increment: 1 } : undefined,
-      totalTagTeamDraws: isDraw ? { increment: 1 } : undefined,
-    },
+  // Update teams standings via standingsService
+  const team1Outcome = isDraw ? 'draw' : team1Won ? 'win' : 'loss';
+  await standingsService.recordBattleResult({
+    entityType: 'team',
+    entityId: team1.id,
+    mode: 'tag_team',
+    outcome: team1Outcome,
+    lpDelta: team1LeaguePoints,
   });
 
-  await prisma.teamBattle.update({
-    where: { id: team2.id },
-    data: {
-      tagTeamLp: team2NewLeaguePoints,
-      totalTagTeamWins: team2Won ? { increment: 1 } : undefined,
-      totalTagTeamLosses: team1Won ? { increment: 1 } : undefined,
-      totalTagTeamDraws: isDraw ? { increment: 1 } : undefined,
-    },
+  const team2Outcome = isDraw ? 'draw' : team2Won ? 'win' : 'loss';
+  await standingsService.recordBattleResult({
+    entityType: 'team',
+    entityId: team2.id,
+    mode: 'tag_team',
+    outcome: team2Outcome,
+    lpDelta: team2LeaguePoints,
   });
 
   // Update stables (currency, prestige) via shared helpers
   // Note: Repair costs are deducted separately by RepairService, not here
-  await awardCreditsToUser(team1.stableId, team1Rewards);
+  const cycleNumber = await getCurrentCycleNumber();
+  await awardCreditsWithLedger(team1.stableId, team1Rewards, 'battle_income', cycleNumber, 'Tag team battle reward');
   await awardPrestigeToUser(team1.stableId, team1Prestige);
-  await awardCreditsToUser(team2.stableId, team2Rewards);
+  await awardCreditsWithLedger(team2.stableId, team2Rewards, 'battle_income', cycleNumber, 'Tag team battle reward');
   await awardPrestigeToUser(team2.stableId, team2Prestige);
 
   // Update battle record with actual values

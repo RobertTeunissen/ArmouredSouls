@@ -199,7 +199,7 @@ export class FacilityRecommendationService {
 
     // Get robot count
     const robots = await prisma.robot.findMany({
-      where: { userId, NOT: { name: 'Bye Robot' } },
+      where: { userId },
     });
 
     return {
@@ -403,11 +403,10 @@ export class FacilityRecommendationService {
     userId: number,
     currentStudioLevel: number
   ): Promise<number> {
-    // Get all user's robots (excluding bye robots)
+    // Get all user's robots
     const robots = await prisma.robot.findMany({
       where: {
         userId,
-        NOT: { name: 'Bye Robot' },
       },
       select: {
         id: true,

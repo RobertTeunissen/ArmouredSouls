@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { fetchRobotLeagueHistory } from '../utils/robotApi';
+import { fetchRobotLeagueHistory, fetchRobotKothStanding, KothStandingData } from '../utils/robotApi';
 import Navigation from '../components/Navigation';
 import TabNavigation from '../components/TabNavigation';
 import BattleConfigTab from '../components/BattleConfigTab';
@@ -306,6 +306,7 @@ function RobotDetailPage() {
             <div className="space-y-6">
               <LeagueHistoryTab robotId={robot.id} currentTier={robot.currentLeague} currentLp={robot.leaguePoints} robotName={robot.name} />
               <TeamBattleLeagueHistory robotId={robot.id} />
+              <KothLeagueHistorySection robotId={robot.id} robotName={robot.name} />
               <ChampionshipWinsSection userId={robot.userId} />
             </div>
           )}
@@ -409,6 +410,98 @@ function LeagueHistoryTab({ robotId, currentTier, currentLp, robotName }: { robo
         currentTier={currentTier}
         emptyMessage={`${robotName} is currently in ${currentTier} league. No tier changes recorded yet.`}
       />
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  KotH League History Section                                        */
+/* ------------------------------------------------------------------ */
+
+function KothLeagueHistorySection({ robotId, robotName }: { robotId: number; robotName: string }) {
+  const [standing, setStanding] = useState<KothStandingData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    fetchRobotKothStanding(robotId)
+      .then((res) => {
+        if (!cancelled) setStanding(res.standing);
+      })
+      .catch(() => {
+        if (!cancelled) setStanding(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [robotId]);
+
+  if (loading) {
+    return (
+      <div className="bg-surface rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-white mb-4">KotH League Standing</h3>
+        <div className="flex items-center justify-center py-8 text-secondary">
+          Loading KotH standing...
+        </div>
+      </div>
+    );
+  }
+
+  if (!standing) {
+    return (
+      <div className="bg-surface rounded-lg p-6" data-testid="koth-league-history-empty">
+        <h3 className="text-lg font-semibold text-white mb-4">KotH League Standing</h3>
+        <div className="flex flex-col items-center justify-center py-12 text-secondary">
+          <span className="text-3xl mb-3" aria-hidden="true">👑</span>
+          <p className="text-center">No KotH standing available.</p>
+          <p className="text-center text-sm mt-1">
+            Subscribe to KotH to start competing in King of the Hill battles.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-surface rounded-lg p-6" data-testid="koth-league-history">
+      <h3 className="text-lg font-semibold text-white mb-4">KotH League Standing</h3>
+      <div className="mb-4 text-sm text-secondary">
+        <span className="font-medium text-white">{robotName}</span>
+        {' '}is currently in <span className="capitalize font-medium text-white">{standing.tier}</span> league
+        {' • LP: '}<span className="font-medium text-warning">{standing.leaguePoints}</span>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="bg-surface-elevated rounded-lg p-3 text-center">
+          <div className="text-lg font-bold text-white">{standing.wins}</div>
+          <div className="text-xs text-secondary">1st Place</div>
+        </div>
+        <div className="bg-surface-elevated rounded-lg p-3 text-center">
+          <div className="text-lg font-bold text-white">{standing.totalMatches ?? 0}</div>
+          <div className="text-xs text-secondary">Matches</div>
+        </div>
+        <div className="bg-surface-elevated rounded-lg p-3 text-center">
+          <div className="text-lg font-bold text-white">{standing.totalKills ?? 0}</div>
+          <div className="text-xs text-secondary">Total Kills</div>
+        </div>
+        <div className="bg-surface-elevated rounded-lg p-3 text-center">
+          <div className="text-lg font-bold text-white">
+            {standing.bestPlacement ? (standing.bestPlacement === 1 ? '🥇' : standing.bestPlacement === 2 ? '🥈' : standing.bestPlacement === 3 ? '🥉' : `#${standing.bestPlacement}`) : '-'}
+          </div>
+          <div className="text-xs text-secondary">Best Placement</div>
+        </div>
+      </div>
+      {(standing.currentWinStreak > 0 || standing.bestWinStreak > 0) && (
+        <div className="mt-3 flex gap-4 text-xs text-secondary">
+          {standing.currentWinStreak > 0 && (
+            <span>🔥 Current streak: <span className="text-warning font-medium">{standing.currentWinStreak}</span></span>
+          )}
+          {standing.bestWinStreak > 0 && (
+            <span>⭐ Best streak: <span className="text-white font-medium">{standing.bestWinStreak}</span></span>
+          )}
+        </div>
+      )}
     </div>
   );
 }

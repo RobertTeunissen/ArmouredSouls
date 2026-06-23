@@ -39,8 +39,6 @@ function makeRobotWithUser(overrides: Record<string, unknown> = {}) {
     id: 10,
     name: 'TestBot',
     userId: 1,
-    currentLeague: 'bronze',
-    leagueId: 1,
     elo: 1200,
     currentHP: 100,
     maxHP: 100,
@@ -56,6 +54,10 @@ function makeRobotWithUser(overrides: Record<string, unknown> = {}) {
  * Creates a mock league battle with full relations.
  * For league battles, formatBattleHistoryEntry returns baseData directly
  * without additional Prisma queries, making this safe for unit testing.
+ *
+ * NOTE: The service still reads battle.robot1 / battle.robot2 for backward compatibility
+ * during the transition. These are populated via Prisma relation includes.
+ * Once the service is fully refactored to use participants.robot, these can be removed.
  */
 function makeBattle(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   const robot1 = makeRobotWithUser({ id: 10, name: 'Bot-Alpha', userId: 1 });
@@ -68,43 +70,32 @@ function makeBattle(overrides: Record<string, unknown> = {}): Record<string, unk
 
   return {
     id: 100,
-    robot1Id: 10,
-    robot2Id: 20,
     winnerId: 10,
     battleType: 'league_1v1',
     leagueType: 'bronze',
+    leagueInstanceId: 'bronze_1',
     tournamentId: null,
     tournamentRound: null,
-    team1ActiveRobotId: null,
-    team1ReserveRobotId: null,
-    team2ActiveRobotId: null,
-    team2ReserveRobotId: null,
-    team1TagOutTime: null,
-    team2TagOutTime: null,
     battleLog: { events: [] },
     durationSeconds: 120,
     winnerReward: 500,
     loserReward: 100,
-    team1ActiveDamageDealt: 0,
-    team1ReserveDamageDealt: 0,
-    team2ActiveDamageDealt: 0,
-    team2ReserveDamageDealt: 0,
-    team1ActiveFameAwarded: 0,
-    team1ReserveFameAwarded: 0,
-    team2ActiveFameAwarded: 0,
-    team2ReserveFameAwarded: 0,
-    robot1ELOBefore: 1200,
-    robot2ELOBefore: 1180,
-    robot1ELOAfter: 1220,
-    robot2ELOAfter: 1160,
-    eloChange: 20,
     createdAt: new Date('2026-04-01T12:00:00Z'),
+    // Retained for backward compat during transition (service still reads these)
+    robot1Id: 10,
+    robot2Id: 20,
     robot1,
     robot2,
     tournament: null,
     participants: [
-      makeBattleParticipant({ id: 1, robotId: 10, team: 1, credits: 500, eloBefore: 1200, eloAfter: 1220, finalHP: 80 }),
-      makeBattleParticipant({ id: 2, robotId: 20, team: 2, credits: 100, eloBefore: 1180, eloAfter: 1160, finalHP: 0, destroyed: true }),
+      {
+        ...makeBattleParticipant({ id: 1, robotId: 10, team: 1, role: 'solo', credits: 500, eloBefore: 1200, eloAfter: 1220, finalHP: 80 }),
+        robot: robot1,
+      },
+      {
+        ...makeBattleParticipant({ id: 2, robotId: 20, team: 2, role: 'solo', credits: 100, eloBefore: 1180, eloAfter: 1160, finalHP: 0, destroyed: true }),
+        robot: robot2,
+      },
     ],
     ...overrides,
   };
@@ -206,14 +197,12 @@ describe('formatBattleHistoryEntry — economic fields', () => {
 
     // Standard fields still present
     expect(result).toHaveProperty('id', 100);
-    expect(result).toHaveProperty('robot1Id', 10);
-    expect(result).toHaveProperty('robot2Id', 20);
     expect(result).toHaveProperty('winnerId', 10);
     expect(result).toHaveProperty('battleType', 'league_1v1');
     expect(result).toHaveProperty('robot1');
     expect(result).toHaveProperty('robot2');
 
-    // Economic fields present
+    // Economic fields present (sourced from battle_participants)
     expect(result).toHaveProperty('prestigeAwarded');
     expect(result).toHaveProperty('fameAwarded');
     expect(result).toHaveProperty('streamingRevenue');

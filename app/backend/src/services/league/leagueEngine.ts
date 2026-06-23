@@ -11,6 +11,7 @@
  */
 
 import logger from '../../config/logger';
+import prisma from '../../lib/prisma';
 import { LeagueError, LeagueErrorCode } from '../../errors/leagueErrors';
 import { getMinLPForPromotion } from './leaguePromotionThresholds';
 import { recordTierChange, getCurrentCycleNumber } from './leagueHistoryService';
@@ -316,7 +317,7 @@ export async function promoteEntity<T extends LeagueEntityBase>(
   }
 
   const newLeagueId = await adapter.assignInstance(nextTier);
-  await adapter.updateEntityLeague(entity.id, nextTier, newLeagueId);
+  await adapter.updateEntityLeague(adapter.getEntityOwnerId(entity), nextTier, newLeagueId);
 
   const lp = adapter.getEntityLeaguePoints(entity);
   logger.info(
@@ -326,10 +327,19 @@ export async function promoteEntity<T extends LeagueEntityBase>(
   // Record league history (non-blocking)
   try {
     const cycleNumber = await getCurrentCycleNumber();
+    // Resolve actual owner: for robots → userId, for teams → stableId
+    let resolvedUserId = adapter.getEntityOwnerId(entity);
+    if (adapter.entityType === 'robot') {
+      const robot = await prisma.robot.findUnique({ where: { id: adapter.getEntityOwnerId(entity) }, select: { userId: true } });
+      if (robot) resolvedUserId = robot.userId;
+    } else {
+      const team = await prisma.teamBattle.findUnique({ where: { id: adapter.getEntityOwnerId(entity) }, select: { stableId: true } });
+      if (team) resolvedUserId = team.stableId;
+    }
     await recordTierChange({
       entityType: adapter.entityType,
-      entityId: entity.id,
-      userId: adapter.getEntityOwnerId(entity),
+      entityId: adapter.getEntityOwnerId(entity),
+      userId: resolvedUserId,
       changeType: 'promotion',
       sourceTier: currentTier,
       destinationTier: nextTier,
@@ -374,7 +384,7 @@ export async function demoteEntity<T extends LeagueEntityBase>(
   }
 
   const newLeagueId = await adapter.assignInstance(previousTier);
-  await adapter.updateEntityLeague(entity.id, previousTier, newLeagueId);
+  await adapter.updateEntityLeague(adapter.getEntityOwnerId(entity), previousTier, newLeagueId);
 
   const lp = adapter.getEntityLeaguePoints(entity);
   logger.info(
@@ -384,10 +394,19 @@ export async function demoteEntity<T extends LeagueEntityBase>(
   // Record league history (non-blocking)
   try {
     const cycleNumber = await getCurrentCycleNumber();
+    // Resolve actual owner: for robots → userId, for teams → stableId
+    let resolvedUserId = adapter.getEntityOwnerId(entity);
+    if (adapter.entityType === 'robot') {
+      const robot = await prisma.robot.findUnique({ where: { id: adapter.getEntityOwnerId(entity) }, select: { userId: true } });
+      if (robot) resolvedUserId = robot.userId;
+    } else {
+      const team = await prisma.teamBattle.findUnique({ where: { id: adapter.getEntityOwnerId(entity) }, select: { stableId: true } });
+      if (team) resolvedUserId = team.stableId;
+    }
     await recordTierChange({
       entityType: adapter.entityType,
-      entityId: entity.id,
-      userId: adapter.getEntityOwnerId(entity),
+      entityId: adapter.getEntityOwnerId(entity),
+      userId: resolvedUserId,
       changeType: 'demotion',
       sourceTier: currentTier,
       destinationTier: previousTier,
@@ -397,7 +416,7 @@ export async function demoteEntity<T extends LeagueEntityBase>(
       cycleNumber,
     });
   } catch (error) {
-    logger.error(`[${config.logPrefix}] Failed to record demotion history for ${adapter.entityType} ${entity.id}: ${error}`);
+    logger.error(`[${config.logPrefix}] Failed to record demotion history for ${adapter.entityType} ${adapter.getEntityOwnerId(entity)}: ${error}`);
   }
 }
 
@@ -473,23 +492,23 @@ async function rebalanceTier<T extends LeagueEntityBase>(
     for (const entity of allPromotionCandidates) {
       try {
         await promoteEntity(entity, config, adapter);
-        excludeIds.add(entity.id);
+        excludeIds.add(adapter.getEntityOwnerId(entity));
         summary.promoted++;
       } catch (error) {
-        logger.error(`[${config.logPrefix}] Error promoting entity ${entity.id}:`, error);
+        logger.error(`[${config.logPrefix}] Error promoting entity ${adapter.getEntityOwnerId(entity)}:`, error);
       }
     }
   }
 
   // Execute demotions (always — not affected by cohort logic)
   for (const entity of allDemotionCandidates) {
-    if (excludeIds.has(entity.id)) continue;
+    if (excludeIds.has(adapter.getEntityOwnerId(entity))) continue;
     try {
       await demoteEntity(entity, config, adapter);
-      excludeIds.add(entity.id);
+      excludeIds.add(adapter.getEntityOwnerId(entity));
       summary.demoted++;
     } catch (error) {
-      logger.error(`[${config.logPrefix}] Error demoting entity ${entity.id}:`, error);
+      logger.error(`[${config.logPrefix}] Error demoting entity ${adapter.getEntityOwnerId(entity)}:`, error);
     }
   }
 

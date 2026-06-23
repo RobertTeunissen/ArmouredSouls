@@ -8,16 +8,16 @@ import { KothError, KothErrorCode } from '../../errors/kothErrors';
 /** Yield the event loop so Express can serve requests between heavy DB work */
 const throttle = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
 
-/** Delay between processing each KotH match (ms) - reduced from 2000ms */
-const MATCH_THROTTLE_MS = 500;
+/** Delay between processing each KotH match (ms) - 0 locally, 500 on server */
+const MATCH_THROTTLE_MS = process.env.NODE_ENV === 'production' ? 500 : 0;
 /** Number of matches to process before a longer cooldown pause */
 const BATCH_SIZE = 10;
 /** Cooldown pause between batches to allow GC and free memory (ms) */
-const BATCH_COOLDOWN_MS = 5000;
+const BATCH_COOLDOWN_MS = process.env.NODE_ENV === 'production' ? 5000 : 0;
 /** Number of matches before a super-batch pause for heavy GC (memory safety) */
 const SUPER_BATCH_SIZE = 20;
 /** Long pause between super-batches to ensure memory is reclaimed (ms) */
-const SUPER_BATCH_COOLDOWN_MS = 30000;
+const SUPER_BATCH_COOLDOWN_MS = process.env.NODE_ENV === 'production' ? 30000 : 0;
 import { simulateBattleMulti, RobotWithWeapons, BattleConfig } from '../battle/combatSimulator';
 import {
   buildKothGameModeConfig,
@@ -34,6 +34,7 @@ import {
   logBattleAuditEvent,
   checkAndAwardAchievements,
 } from '../battle/battlePostCombat';
+import standingsService from '../standings/standingsService';
 import { CombatMessageGenerator } from '../battle/combatMessageGenerator';
 import { calculateStreamingRevenueBatch } from '../economy/streamingRevenueService';
 import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
@@ -70,52 +71,68 @@ export interface KothBattleExecutionSummary {
 }
 
 /**
- * Calculate KotH rewards based on placement, zone score, and uncontested time.
+ * Calculate KotH rewards based on placement, zone score, uncontested time, and tier.
  *
- * Per Requirement 14:
- *  - Credits: 1st ₡50,000 / 2nd ₡35,000 / 3rd ₡20,000 / 4th+ ₡10,000
- *  - Fame: 1st = 8 / 2nd = 5 / 3rd = 3 (winner gets performance multiplier)
- *  - Prestige: 1st = 15 / 2nd = 8 / 3rd = 3 / 4th+ = 0
- *  - Zone dominance bonus: +25% to all rewards when winner got >75% of
- *    points from uncontested zone control (vs kill bonuses)
+ * Tier-scaled reward formula:
+ *  - Credits: tierBaseReward × placementMultiplier
+ *  - Fame: baseFame × tierFactor
+ *  - Prestige: basePrestige × tierFactor
+ *  - Zone dominance bonus: +25% to all rewards when >75% of points from uncontested zone control
+ *  - Performance multiplier for winner's fame (HP-based)
  */
 export function calculateKothRewards(
   placement: number,
   zoneScore: number,
   uncontestedScore: number,
+  tier: string,
   winnerHPPercent?: number,
 ): { credits: number; prestige: number; fame: number; zoneDominanceBonus: boolean } {
-  // Base credits by placement (Req 14.1)
-  const creditsByPlacement: Record<number, number> = {
-    1: 25000, 2: 17500, 3: 10000,
+  // Tier-based credit base (same as getLeagueWinReward)
+  const TIER_CREDIT_BASE: Record<string, number> = {
+    bronze: 7500, silver: 15000, gold: 30000,
+    platinum: 60000, diamond: 115000, champion: 225000,
   };
-  let credits = creditsByPlacement[placement] ?? 5000;
 
-  // Base fame by placement (Req 14.3)
-  const fameByPlacement: Record<number, number> = {
-    1: 8, 2: 5, 3: 3,
+  // Placement multipliers for credits
+  const PLACEMENT_CREDIT_MULTIPLIER: Record<number, number> = {
+    1: 1.0, 2: 0.7, 3: 0.5, 4: 0.35, 5: 0.25, 6: 0.2,
   };
-  let fame = fameByPlacement[placement] ?? 0;
 
-  // Performance multiplier for winner's fame (Req 14.3)
+  // Base fame by placement
+  const BASE_FAME: Record<number, number> = {
+    1: 8, 2: 5, 3: 3, 4: 1, 5: 1, 6: 1,
+  };
+
+  // Base prestige by placement
+  const BASE_PRESTIGE: Record<number, number> = {
+    1: 15, 2: 8, 3: 3, 4: 0, 5: 0, 6: 0,
+  };
+
+  // Tier factor for fame/prestige scaling
+  const TIER_FACTOR: Record<string, number> = {
+    bronze: 1.0, silver: 1.5, gold: 2.0,
+    platinum: 3.0, diamond: 4.5, champion: 7.0,
+  };
+
+  const creditBase = TIER_CREDIT_BASE[tier.toLowerCase()] ?? TIER_CREDIT_BASE.bronze;
+  const creditMultiplier = PLACEMENT_CREDIT_MULTIPLIER[placement] ?? 0.2;
+  const tierFactor = TIER_FACTOR[tier.toLowerCase()] ?? 1.0;
+
+  let credits = Math.floor(creditBase * creditMultiplier);
+  let fame = Math.floor((BASE_FAME[placement] ?? 1) * tierFactor);
+  let prestige = Math.floor((BASE_PRESTIGE[placement] ?? 0) * tierFactor);
+
+  // Performance multiplier for winner's fame
   if (placement === 1 && winnerHPPercent !== undefined) {
     let fameMultiplier = 1.0;
-    if (winnerHPPercent >= 100) fameMultiplier = 2.0;       // Perfect Victory
-    else if (winnerHPPercent > 80) fameMultiplier = 1.5;    // Dominating
-    else if (winnerHPPercent < 20) fameMultiplier = 1.25;   // Comeback
+    if (winnerHPPercent >= 100) fameMultiplier = 2.0;
+    else if (winnerHPPercent > 80) fameMultiplier = 1.5;
+    else if (winnerHPPercent < 20) fameMultiplier = 1.25;
     fame = Math.round(fame * fameMultiplier);
   }
 
-  // Prestige by placement (Req 14.4)
-  const prestigeByPlacement: Record<number, number> = {
-    1: 15, 2: 8, 3: 3,
-  };
-  let prestige = prestigeByPlacement[placement] ?? 0;
-
-  // Zone dominance bonus: +25% when >75% of points from uncontested zone
-  // control (as opposed to kill bonuses) (Req 14.2)
+  // Zone dominance bonus: +25% when >75% of points from uncontested zone control
   const zoneDominanceBonus = zoneScore > 0 && (uncontestedScore / zoneScore) > 0.75;
-
   if (zoneDominanceBonus) {
     credits = Math.floor(credits * 1.25);
     fame = Math.floor(fame * 1.25);
@@ -126,56 +143,33 @@ export function calculateKothRewards(
 }
 
 /**
- * Batch update cumulative KotH stats for all robots in a match.
- * Uses a single transaction with raw SQL for optimal performance.
+ * Batch update KotH robot stats: persist HP damage and delegate standings to unified service.
  */
 async function batchUpdateKothRobotStats(
   participants: PreparedParticipant[],
 ): Promise<void> {
-  // Pre-fetch all robots in a single query to get current streak values
-  const robotIds = participants.map(p => p.robot.id);
-  const robots = await prisma.robot.findMany({
-    where: { id: { in: robotIds } },
-    select: {
-      id: true,
-      kothBestPlacement: true,
-      kothCurrentWinStreak: true,
-      kothBestWinStreak: true,
-    },
-  });
-  const robotMap = new Map(robots.map(r => [r.id, r]));
-
-  // Build all updates and execute in a single transaction
-  const updates = participants.map(p => {
-    const robot = robotMap.get(p.robot.id);
-    const currentBest = robot?.kothBestPlacement ?? null;
-    const newBestPlacement = currentBest === null || currentBest === 0
-      ? p.placement
-      : Math.min(currentBest, p.placement);
-
-    const currentStreak = robot?.kothCurrentWinStreak ?? 0;
-    const currentBestStreak = robot?.kothBestWinStreak ?? 0;
-    const newWinStreak = p.isWinner ? currentStreak + 1 : 0;
-    const newBestStreak = Math.max(currentBestStreak, newWinStreak);
-
-    return prisma.robot.update({
+  // 1. Update robot HP (battle damage persistence) in a transaction
+  const hpUpdates = participants.map(p =>
+    prisma.robot.update({
       where: { id: p.robot.id },
       data: {
-        // Persist battle damage to database (HP only - shields recharge between battles)
         currentHP: Math.max(0, p.finalHP),
-        kothMatches: { increment: 1 },
-        kothWins: p.isWinner ? { increment: 1 } : undefined,
-        kothTotalZoneScore: { increment: p.zoneScore },
-        kothTotalZoneTime: { increment: p.zoneTime },
-        kothKills: { increment: p.kills },
-        kothBestPlacement: newBestPlacement,
-        kothCurrentWinStreak: newWinStreak,
-        kothBestWinStreak: newBestStreak,
       },
-    });
-  });
+    })
+  );
+  await prisma.$transaction(hpUpdates);
 
-  await prisma.$transaction(updates);
+  // 2. Award KotH points and update standings via unified service
+  for (const p of participants) {
+    await standingsService.awardKothPoints({
+      robotId: p.robot.id,
+      placement: p.placement,
+      totalParticipants: participants.length,
+      kills: p.kills,
+      zoneScore: p.zoneScore,
+      zoneTime: p.zoneTime,
+    });
+  }
 }
 
 /**
@@ -195,7 +189,6 @@ async function batchUpdateKothRobotStats(
 async function processKothBattle(
   match: {
     id: number;
-    rotatingZone: boolean;
     scoreThreshold: number | null;
     timeLimit: number | null;
     zoneRadius: number | null;
@@ -232,13 +225,9 @@ async function processKothBattle(
     prepareRobotForCombat(robot, tuningBonusesMap.get(robot.id) ?? {});
   }
 
-  // 2. Resolve config values
-  const scoreThreshold = match.scoreThreshold ?? (match.rotatingZone
-    ? KOTH_MATCH_DEFAULTS.rotatingZoneScoreThreshold
-    : KOTH_MATCH_DEFAULTS.scoreThreshold);
-  const timeLimit = match.timeLimit ?? (match.rotatingZone
-    ? KOTH_MATCH_DEFAULTS.rotatingZoneTimeLimit
-    : KOTH_MATCH_DEFAULTS.timeLimit);
+  // 2. Resolve config values (zone rotation removed — Spec #41)
+  const scoreThreshold = match.scoreThreshold ?? KOTH_MATCH_DEFAULTS.scoreThreshold;
+  const timeLimit = match.timeLimit ?? KOTH_MATCH_DEFAULTS.timeLimit;
   const zoneRadius = match.zoneRadius ?? KOTH_MATCH_DEFAULTS.zoneRadius;
   const arenaRadius = KOTH_MATCH_DEFAULTS.arenaRadius;
 
@@ -247,7 +236,6 @@ async function processKothBattle(
     scoreThreshold,
     timeLimit,
     zoneRadius,
-    rotatingZone: match.rotatingZone,
     participantCount: robots.length,
     matchId: match.id,
   };
@@ -326,13 +314,25 @@ async function processKothBattle(
     },
   });
 
-  // 8. Prepare all participant data for batched operations
+  // 8. Look up each robot's KotH tier from standings for tier-scaled rewards
+  const robotStandings = await prisma.standing.findMany({
+    where: {
+      mode: 'koth',
+      entityType: 'robot',
+      entityId: { in: robotIds },
+    },
+    select: { entityId: true, tier: true },
+  });
+  const tierByRobot = new Map(robotStandings.map(s => [s.entityId, s.tier]));
+
+  // 9. Prepare all participant data for batched operations
   const preparedParticipants: PreparedParticipant[] = enrichedPlacements.map(p => {
     const robot = robots.find(r => r.id === p.robotId)!;
     const isWinner = robot.id === winnerId;
     const hpPercent = robot.maxHP > 0 ? (p.finalHP / robot.maxHP) * 100 : 0;
+    const robotTier = tierByRobot.get(robot.id) ?? 'bronze';
     const rewards = calculateKothRewards(
-      p.placement, p.zoneScore, p.uncontestedScore,
+      p.placement, p.zoneScore, p.uncontestedScore, robotTier,
       isWinner ? hpPercent : undefined,
     );
     return {
@@ -538,7 +538,7 @@ async function processKothBattle(
   });
 
   // 15. Mark match completed
-  await prisma.scheduledKothMatch.update({
+  await prisma.scheduledMatch.update({
     where: { id: match.id },
     data: { status: 'completed', battleId: battle.id },
   });
@@ -570,8 +570,8 @@ async function processKothBattle(
 export async function executeScheduledKothBattles(_scheduledFor?: Date): Promise<KothBattleExecutionSummary> {
   logger.info('[KotH Orchestrator] Executing scheduled KotH battles');
 
-  // Count total scheduled matches without loading them all into memory
-  const totalCount = await prisma.scheduledKothMatch.count({ where: { status: 'scheduled' } });
+  // Count total scheduled KotH matches from unified table (Spec #40)
+  const totalCount = await prisma.scheduledMatch.count({ where: { matchType: 'koth', status: 'scheduled' } });
   logger.info(`[KotH Orchestrator] Found ${totalCount} KotH matches to execute`);
 
   const summary: KothBattleExecutionSummary = {
@@ -586,49 +586,67 @@ export async function executeScheduledKothBattles(_scheduledFor?: Date): Promise
   let processed = 0;
 
   // Process one match at a time: fetch → execute → release memory → repeat
-  // This prevents accumulating all match data in memory simultaneously
   while (processed < totalCount) {
-    // Fetch the next single scheduled match
-    let match = await prisma.scheduledKothMatch.findFirst({
-      where: { status: 'scheduled' },
+    // Fetch the next single scheduled match from unified table
+    let unifiedMatch = await prisma.scheduledMatch.findFirst({
+      where: { matchType: 'koth', status: 'scheduled' },
       include: { participants: true },
       orderBy: { createdAt: 'asc' },
     });
 
-    if (!match) break; // No more scheduled matches
+    if (!unifiedMatch) break;
+
+    // Map to the shape the KotH battle executor expects
+    let match = {
+      id: unifiedMatch.id,
+      scheduledFor: unifiedMatch.scheduledFor,
+      status: unifiedMatch.status,
+      battleId: unifiedMatch.battleId,
+      scoreThreshold: unifiedMatch.scoreThreshold,
+      timeLimit: unifiedMatch.timeLimit,
+      zoneRadius: unifiedMatch.zoneRadius,
+      createdAt: unifiedMatch.createdAt,
+      participants: unifiedMatch.participants.map(p => ({
+        id: p.id,
+        matchId: unifiedMatch!.id,
+        robotId: p.participantId,
+      })),
+    };
 
     // SUPER-BATCH: Every 20 matches, take a long pause for memory reclamation
-    // This is critical for 200+ match runs on limited RAM
     if (processed > 0 && processed % SUPER_BATCH_SIZE === 0) {
       const memBefore = process.memoryUsage().heapUsed;
       logger.info(`[KotH Orchestrator] Super-batch cooldown after ${processed} matches (mem: ${Math.round(memBefore / 1024 / 1024)}MB) - waiting ${SUPER_BATCH_COOLDOWN_MS / 1000}s for GC`);
       
-      // Clear any references we can
-      // (match will be re-fetched after the pause)
-      
-      // Force GC if available (run with --expose-gc flag)
-      if (global.gc) {
-        global.gc();
-      }
-      
-      // Long pause to let GC complete and memory be returned to OS
+      if (global.gc) global.gc();
       await throttle(SUPER_BATCH_COOLDOWN_MS);
-      
-      // Try GC again after pause
-      if (global.gc) {
-        global.gc();
-      }
+      if (global.gc) global.gc();
       
       const memAfter = process.memoryUsage().heapUsed;
       logger.info(`[KotH Orchestrator] Super-batch resumed (mem: ${Math.round(memAfter / 1024 / 1024)}MB, freed: ${Math.round((memBefore - memAfter) / 1024 / 1024)}MB)`);
       
-      // Re-fetch the match since we nullified it
-      match = await prisma.scheduledKothMatch.findFirst({
-        where: { status: 'scheduled' },
+      // Re-fetch
+      unifiedMatch = await prisma.scheduledMatch.findFirst({
+        where: { matchType: 'koth', status: 'scheduled' },
         include: { participants: true },
         orderBy: { createdAt: 'asc' },
       });
-      if (!match) break;
+      if (!unifiedMatch) break;
+      match = {
+        id: unifiedMatch.id,
+        scheduledFor: unifiedMatch.scheduledFor,
+        status: unifiedMatch.status,
+        battleId: unifiedMatch.battleId,
+        scoreThreshold: unifiedMatch.scoreThreshold,
+        timeLimit: unifiedMatch.timeLimit,
+        zoneRadius: unifiedMatch.zoneRadius,
+        createdAt: unifiedMatch.createdAt,
+        participants: unifiedMatch.participants.map(p => ({
+          id: p.id,
+          matchId: unifiedMatch!.id,
+          robotId: p.participantId,
+        })),
+      };
     }
     // REGULAR BATCH: Every 10 matches, short pause for GC opportunity
     else if (processed > 0 && processed % BATCH_SIZE === 0) {
@@ -659,7 +677,7 @@ export async function executeScheduledKothBattles(_scheduledFor?: Date): Promise
       logger.error(`[KotH Orchestrator] Failed to process match ${matchId}:`, error);
 
       // Mark as error so the while loop doesn't re-fetch it in this run
-      await prisma.scheduledKothMatch.update({
+      await prisma.scheduledMatch.update({
         where: { id: matchId },
         data: { status: 'error' },
       }).catch(() => {});
@@ -671,8 +689,8 @@ export async function executeScheduledKothBattles(_scheduledFor?: Date): Promise
 
   // Reset any matches marked 'error' during this run back to 'scheduled' for retry next cycle
   if (summary.failedMatches > 0) {
-    await prisma.scheduledKothMatch.updateMany({
-      where: { status: 'error' },
+    await prisma.scheduledMatch.updateMany({
+      where: { matchType: 'koth', status: 'error' },
       data: { status: 'scheduled' },
     });
     logger.info(`[KotH Orchestrator] Reset ${summary.failedMatches} failed matches back to 'scheduled' for retry`);

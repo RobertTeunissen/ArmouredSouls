@@ -294,6 +294,7 @@ describe('Team Battle Race Condition Stress Test', () => {
         data: {
           team1Id: team.id,
           teamSize: 2,
+          matchMode: 'league_2v2',
           teamBattleLeague: 'bronze',
           teamBattleLeagueId: 'bronze_1',
           scheduledFor: new Date(Date.now() + 86400000),
@@ -515,6 +516,7 @@ describe('Team Battle Race Condition Stress Test', () => {
         data: {
           team1Id: team.id,
           teamSize: 2,
+          matchMode: 'league_2v2',
           teamBattleLeague: 'bronze',
           teamBattleLeagueId: 'bronze_1',
           scheduledFor: new Date(Date.now() + 86400000),

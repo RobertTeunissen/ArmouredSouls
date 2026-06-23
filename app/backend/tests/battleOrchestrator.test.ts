@@ -177,13 +177,21 @@ describe('Battle Orchestrator', () => {
       expect(result.battleId).toBeGreaterThan(0);
       expect(result.winnerId).toBeDefined();
 
-      // Verify battle record exists
+      // Verify battle record exists with participants
       const battle = await prisma.battle.findUnique({
         where: { id: result.battleId },
+        include: { participants: true },
       });
       expect(battle).toBeDefined();
-      expect(battle?.robot1Id).toBe(robot1.id);
-      expect(battle?.robot2Id).toBe(robot2.id);
+
+      // Verify participants reference the correct robots with solo role
+      const participantRobotIds = battle!.participants.map(p => p.robotId).sort();
+      expect(participantRobotIds).toEqual([robot1.id, robot2.id].sort());
+      battle!.participants.forEach(p => {
+        expect(p.role).toBe('solo');
+        expect(p.team).toBeGreaterThanOrEqual(1);
+        expect(p.team).toBeLessThanOrEqual(2);
+      });
 
       // Verify scheduled match was marked completed
       const updatedMatch = await prisma.scheduledLeagueMatch.findUnique({

@@ -140,7 +140,7 @@ router.get('/eligible-robots', authenticateToken, requireAdmin, validateRequest(
   try {
     const eligibleRobots = await getEligibleRobotsForTournament();
     const totalRobots = await prisma.robot.count({
-      where: { NOT: { name: 'Bye Robot' } },
+      where: {},
     });
 
     res.json({

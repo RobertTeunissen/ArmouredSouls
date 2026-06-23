@@ -94,7 +94,6 @@ export interface ScheduledMatch {
   };
   // KotH specific fields
   kothParticipantCount?: number;
-  kothRotatingZone?: boolean;
   kothParticipants?: Array<{ id: number; name: string; elo: number; userId?: number; user?: { username: string } }>;
   // Team Battle specific fields
   teamSize?: number;
@@ -144,7 +143,6 @@ export interface BattleHistory {
   kothPlacement?: number;
   kothParticipantCount?: number;
   kothZoneScore?: number;
-  kothRotatingZone?: boolean;
   // Tag team specific fields
   team1Id?: number | null;
   team2Id?: number | null;
@@ -281,19 +279,23 @@ export const getLeagueStandings = async (
   tier: string,
   page: number = 1,
   pageSize: number = 50,
-  instance?: string
+  instance?: string,
+  mode?: string
 ): Promise<LeagueStandingsResponse> => {
   return api.get<LeagueStandingsResponse>(`/api/leagues/${tier}/standings`, {
     params: {
       page,
       perPage: pageSize,
       ...(instance && { instance }),
+      ...(mode && { mode }),
     },
   });
 };
 
-export const getLeagueInstances = async (tier: string): Promise<LeagueInstance[]> => {
-  return api.get<LeagueInstance[]>(`/api/leagues/${tier}/instances`);
+export const getLeagueInstances = async (tier: string, mode?: string): Promise<LeagueInstance[]> => {
+  return api.get<LeagueInstance[]>(`/api/leagues/${tier}/instances`, {
+    params: { ...(mode && { mode }) },
+  });
 };
 
 // Re-export tier helpers from single source of truth

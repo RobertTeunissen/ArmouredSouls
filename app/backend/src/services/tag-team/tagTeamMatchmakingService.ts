@@ -11,9 +11,10 @@
  * @module services/tag-team/tagTeamMatchmakingService
  */
 
-import { Robot, Prisma, TeamBattle, TeamBattleMember } from '../../../generated/prisma';
+import { Robot, Prisma, TeamBattle, TeamBattleMember, MatchType } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
+import schedulingService from '../scheduling/schedulingService';
 import { checkSchedulingReadiness } from '../analytics/matchmakingService';
 import { TEAM_BATTLE_LEAGUE_TIERS as TAG_TEAM_LEAGUE_TIERS } from '../team-battle/teamBattleAdapter';
 import {
@@ -22,6 +23,7 @@ import {
   getRecentOpponentsBatch as sharedGetRecentOpponentsBatch,
   MatchScoreInput,
   RECENT_OPPONENT_LIMIT,
+  defaultScheduledFor,
 } from '../matchmaking/teamMatchmakingUtils';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -36,6 +38,7 @@ export interface TagTeamMatchPair {
   team2: TeamBattleWithMembers;
   isByeMatch: boolean;
   tagTeamLeague: string;
+  tagTeamLeagueId: string;
 }
 
 // ─── Eligibility ─────────────────────────────────────────────────────────────
@@ -56,12 +59,22 @@ export async function getEligibleTeams(
   tagTeamLeague: string,
   tagTeamLeagueId: string
 ): Promise<TeamBattleWithMembers[]> {
-  // Get all teams in this tag team league instance with members and robots
+  // Get team IDs in this instance from standings (source of truth for league placement)
+  const standingsInInstance = await prisma.standing.findMany({
+    where: { mode: 'tag_team' as any, leagueInstanceId: tagTeamLeagueId },
+    select: { entityId: true },
+  });
+  const teamIdsInInstance = standingsInInstance.map(s => s.entityId);
+
+  if (teamIdsInInstance.length === 0) {
+    return [];
+  }
+
+  // Get all teams by standings-derived IDs with members and robots
   const teams = await prisma.teamBattle.findMany({
     where: {
+      id: { in: teamIdsInInstance },
       teamSize: 2,
-      tagTeamLeague,
-      tagTeamLeagueId,
     },
     include: {
       members: {
@@ -92,30 +105,14 @@ export async function getEligibleTeams(
     }
   }
 
-  // Requirement 3.4: Check already-scheduled teams via ScheduledTeamBattleMatch where matchMode = 'tag_team'
-  const readyTeamIds = readyTeams.map(t => t.id);
-  const scheduledMatches = await prisma.scheduledTeamBattleMatch.findMany({
-    where: {
-      status: 'scheduled',
-      matchMode: 'tag_team',
-      OR: [
-        { team1Id: { in: readyTeamIds } },
-        { team2Id: { in: readyTeamIds } },
-      ],
-    },
-    select: {
-      team1Id: true,
-      team2Id: true,
-    },
-  });
-
+  // Requirement 3.4: Check already-scheduled teams via unified schedulingService
   const alreadyScheduledIds = new Set<number>();
-  scheduledMatches.forEach(match => {
-    alreadyScheduledIds.add(match.team1Id);
-    if (match.team2Id !== null) {
-      alreadyScheduledIds.add(match.team2Id);
+  for (const team of readyTeams) {
+    const upcoming = await schedulingService.getUpcomingForTeam(team.id, [MatchType.tag_team]);
+    if (upcoming.length > 0) {
+      alreadyScheduledIds.add(team.id);
     }
-  });
+  }
 
   // Filter out already scheduled teams
   const availableTeams = readyTeams.filter(team => !alreadyScheduledIds.has(team.id));
@@ -154,56 +151,16 @@ export async function getEligibleTeams(
 // ─── Recent Opponents ────────────────────────────────────────────────────────
 
 /**
- * Batch-fetch recent opponents for all teams using the shared utility.
- * Queries ScheduledTeamBattleMatch where matchMode = 'tag_team' for tag team opponents.
+ * Batch-fetch recent opponents for all teams using unified scheduled_matches_v2.
+ * Queries completed tag_team matches only (mode-specific).
  */
 async function getRecentOpponentsBatch(
   teamIds: number[],
   limit: number = RECENT_OPPONENT_LIMIT
 ): Promise<Map<number, number[]>> {
-  return sharedGetRecentOpponentsBatch(
-    teamIds,
-    async (ids: number[], queryLimit: number): Promise<Map<number, number[]>> => {
-      if (ids.length === 0) return new Map();
-
-      // Single query to get recent completed tag_team matches for all teams
-      const recentMatches = await prisma.scheduledTeamBattleMatch.findMany({
-        where: {
-          status: 'completed',
-          matchMode: 'tag_team',
-          OR: [
-            { team1Id: { in: ids } },
-            { team2Id: { in: ids } },
-          ],
-        },
-        orderBy: { createdAt: 'desc' },
-        // Fetch enough matches to cover all teams (worst case: each team has `limit` unique matches)
-        take: ids.length * queryLimit,
-        select: {
-          team1Id: true,
-          team2Id: true,
-        },
-      });
-
-      // Build per-team opponent lists from the batch result
-      const map = new Map<number, number[]>();
-      for (const teamId of ids) {
-        const opponents: number[] = [];
-        for (const match of recentMatches) {
-          if (opponents.length >= queryLimit) break;
-          if (match.team1Id === teamId && match.team2Id !== null) {
-            opponents.push(match.team2Id);
-          } else if (match.team2Id === teamId) {
-            opponents.push(match.team1Id);
-          }
-        }
-        map.set(teamId, opponents);
-      }
-
-      return map;
-    },
-    limit
-  );
+  const { createRecentOpponentQueryFn } = await import('../matchmaking/teamMatchmakingUtils');
+  const queryFn = createRecentOpponentQueryFn(MatchType.tag_team, 'team');
+  return queryFn(teamIds, limit);
 }
 
 // ─── ELO Computation ─────────────────────────────────────────────────────────
@@ -221,7 +178,7 @@ function calculateCombinedELOFromTeam(team: TeamBattleWithMembers): number {
 /**
  * Calculate match quality score using the shared LP-primary formula.
  * Maps tag team fields to the MatchScoreInput interface:
- *   - LP = tagTeamLp (tag team league points)
+ *   - LP = from standings map (source of truth)
  *   - ELO = combined robot ELO (sum of member ELOs)
  *
  * Requirements 3.3, 15.6: LP matching (primary), ELO (secondary), recent opponent deprioritization, same-stable exclusion
@@ -232,11 +189,12 @@ function calculateMatchScoreForTagTeam(
   team1CombinedELO: number,
   team2CombinedELO: number,
   recentOpponents1: number[],
-  recentOpponents2: number[]
+  recentOpponents2: number[],
+  standingsLPMap: Map<number, number>
 ): number {
   const input: MatchScoreInput = {
-    entity1LP: team1.tagTeamLp,
-    entity2LP: team2.tagTeamLp,
+    entity1LP: standingsLPMap.get(team1.id) ?? 0,
+    entity2LP: standingsLPMap.get(team2.id) ?? 0,
     entity1ELO: team1CombinedELO,
     entity2ELO: team2CombinedELO,
     recentOpponents1,
@@ -258,7 +216,8 @@ async function findBestOpponent(
   team: TeamBattleWithMembers,
   availableTeams: TeamBattleWithMembers[],
   combinedELOMap: Map<number, number>,
-  recentOpponentsMap: Map<number, number[]>
+  recentOpponentsMap: Map<number, number[]>,
+  standingsLPMap: Map<number, number>
 ): Promise<TeamBattleWithMembers | null> {
   if (availableTeams.length === 0) {
     return null;
@@ -277,14 +236,45 @@ async function findBestOpponent(
       teamCombinedELO,
       opponentCombinedELO,
       teamRecentOpponents,
-      opponentRecentOpponents
+      opponentRecentOpponents,
+      standingsLPMap
     );
     return { opponent, score };
   });
 
-  // Sort by score (lower is better) and return best match
-  scoredOpponents.sort((a, b) => a.score - b.score);
-  return scoredOpponents[0].opponent;
+  // Sort by score (lower is better), tie-break by createdAt (deterministic)
+  scoredOpponents.sort((a, b) => {
+    if (a.score !== b.score) return a.score - b.score;
+    return a.opponent.createdAt.getTime() - b.opponent.createdAt.getTime();
+  });
+
+  // R4.7: If the best match is a recent opponent, check if ANY non-recent exists
+  const bestMatch = scoredOpponents[0];
+  const bestIsRecentOpponent =
+    teamRecentOpponents.includes(bestMatch.opponent.id) ||
+    (recentOpponentsMap.get(bestMatch.opponent.id) || []).includes(team.id);
+
+  if (bestIsRecentOpponent) {
+    const nonRecentOpponent = scoredOpponents.find(so => {
+      const oppRecent = recentOpponentsMap.get(so.opponent.id) || [];
+      return !teamRecentOpponents.includes(so.opponent.id) && !oppRecent.includes(team.id);
+    });
+
+    if (nonRecentOpponent) {
+      return bestMatch.opponent;
+    }
+
+    // R4.7 fallback: ALL opponents are recent — select closest-ELO
+    const closestELO = [...scoredOpponents].sort((a, b) => {
+      const eloDiffA = Math.abs(combinedELOMap.get(a.opponent.id)! - teamCombinedELO);
+      const eloDiffB = Math.abs(combinedELOMap.get(b.opponent.id)! - teamCombinedELO);
+      if (eloDiffA !== eloDiffB) return eloDiffA - eloDiffB;
+      return a.opponent.createdAt.getTime() - b.opponent.createdAt.getTime();
+    });
+    return closestELO[0].opponent;
+  }
+
+  return bestMatch.opponent;
 }
 
 /**
@@ -450,7 +440,7 @@ function createByeTeam(league: string, leagueId: string): TeamBattleWithMembers 
  * Pair teams for matches within a league instance
  * Requirements 3.3, 15.6: LP matching, ELO matching, recent opponents, bye-team, same-stable exclusion
  */
-export async function pairTeams(teams: TeamBattleWithMembers[]): Promise<TagTeamMatchPair[]> {
+export async function pairTeams(teams: TeamBattleWithMembers[], tagTeamLeague: string, tagTeamLeagueId: string): Promise<TagTeamMatchPair[]> {
   if (teams.length === 0) {
     return [];
   }
@@ -467,22 +457,31 @@ export async function pairTeams(teams: TeamBattleWithMembers[]): Promise<TagTeam
   // Batch-fetch recent opponents for all teams in a single query
   const recentOpponentsMap = await getRecentOpponentsBatch(teams.map(t => t.id));
 
+  // Build LP lookup map from standings (source of truth)
+  const standingsLPMap = new Map(
+    (await prisma.standing.findMany({
+      where: { mode: 'tag_team' as any, entityId: { in: teams.map(t => t.id) } },
+      select: { entityId: true, leaguePoints: true },
+    })).map(s => [s.entityId, s.leaguePoints])
+  );
+
   // Pair teams using greedy algorithm
   while (availableTeams.length > 1) {
     const team1 = availableTeams.shift()!;
-    const opponent = await findBestOpponent(team1, availableTeams, combinedELOMap, recentOpponentsMap);
+    const opponent = await findBestOpponent(team1, availableTeams, combinedELOMap, recentOpponentsMap, standingsLPMap);
 
     if (opponent) {
       // Remove opponent from available pool
       const opponentIndex = availableTeams.indexOf(opponent);
       availableTeams.splice(opponentIndex, 1);
 
-      // Create match pair
+      // Create match pair — use league from context (standings-derived)
       matches.push({
         team1,
         team2: opponent,
         isByeMatch: false,
-        tagTeamLeague: team1.tagTeamLeague,
+        tagTeamLeague,
+        tagTeamLeagueId,
       });
     } else {
       // No suitable opponent found, put team back for bye-match
@@ -494,13 +493,14 @@ export async function pairTeams(teams: TeamBattleWithMembers[]): Promise<TagTeam
   // Handle odd team with bye-match
   if (availableTeams.length === 1) {
     const lastTeam = availableTeams[0];
-    const byeTeam = createByeTeam(lastTeam.tagTeamLeague, lastTeam.tagTeamLeagueId);
+    const byeTeam = createByeTeam(tagTeamLeague, tagTeamLeagueId);
 
     matches.push({
       team1: lastTeam,
       team2: byeTeam,
       isByeMatch: true,
-      tagTeamLeague: lastTeam.tagTeamLeague,
+      tagTeamLeague,
+      tagTeamLeagueId,
     });
 
     logger.info(`[TagTeamMatchmaking] Bye-match created for team ${lastTeam.id}`);
@@ -512,49 +512,29 @@ export async function pairTeams(teams: TeamBattleWithMembers[]): Promise<TagTeam
 // ─── Match Scheduling ────────────────────────────────────────────────────────
 
 /**
- * Schedule matches in the database.
- * Requirement 7.3: Create ScheduledTeamBattleMatch records with matchMode = 'tag_team', teamSize = 2
+ * Schedule matches using the unified SchedulingService.
+ * Requirement 7.3: Create scheduled matches with matchType = 'tag_team'
  */
 export async function scheduleMatches(matches: TagTeamMatchPair[], scheduledFor: Date): Promise<void> {
-  // Separate bye-matches from regular matches
-  const regularMatches = matches.filter(m => !m.isByeMatch);
-  const byeMatches = matches.filter(m => m.isByeMatch);
+  for (const match of matches) {
+    const participants = [
+      { participantType: 'team' as const, participantId: match.team1.id, slot: 1 },
+    ];
+    if (!match.isByeMatch && match.team2) {
+      participants.push({ participantType: 'team' as const, participantId: match.team2.id, slot: 2 });
+    }
 
-  // Create regular matches using createMany
-  if (regularMatches.length > 0) {
-    const regularMatchData = regularMatches.map(match => ({
-      team1Id: match.team1.id,
-      team2Id: match.team2.id,
-      teamSize: 2,
-      matchMode: 'tag_team',
-      teamBattleLeague: match.tagTeamLeague,
-      teamBattleLeagueId: match.team1.tagTeamLeagueId,
+    await schedulingService.createMatch({
+      matchType: MatchType.tag_team,
       scheduledFor,
-      status: 'scheduled' as const,
-    }));
-
-    await prisma.scheduledTeamBattleMatch.createMany({
-      data: regularMatchData,
+      leagueType: match.tagTeamLeague,
+      leagueInstanceId: match.tagTeamLeagueId,
+      isByeMatch: match.isByeMatch,
+      participants,
     });
   }
 
-  // Create bye-matches individually (team2Id = null for bye-team)
-  for (const match of byeMatches) {
-    await prisma.scheduledTeamBattleMatch.create({
-      data: {
-        team1Id: match.team1.id,
-        team2Id: null, // Bye-team (no actual team2)
-        teamSize: 2,
-        matchMode: 'tag_team',
-        teamBattleLeague: match.tagTeamLeague,
-        teamBattleLeagueId: match.team1.tagTeamLeagueId,
-        scheduledFor,
-        status: 'scheduled',
-      },
-    });
-  }
-
-  logger.info(`[TagTeamMatchmaking] Scheduled ${matches.length} tag team matches`);
+  logger.info(`[TagTeamMatchmaking] Scheduled ${matches.length} tag team matches via SchedulingService`);
 }
 
 // ─── Main Entry Point ────────────────────────────────────────────────────────
@@ -562,7 +542,7 @@ export async function scheduleMatches(matches: TagTeamMatchPair[], scheduledFor:
 /**
  * Run tag team matchmaking for all league tiers.
  *
- * Iterates tiers → instances (by distinct tagTeamLeagueId on TeamBattle where teamSize=2)
+ * Iterates tiers → instances (from standings where mode='tag_team')
  * → eligible teams, pairs using calculateMatchScore, and persists
  * ScheduledTeamBattleMatch records with matchMode = 'tag_team'.
  *
@@ -572,7 +552,7 @@ export async function scheduleMatches(matches: TagTeamMatchPair[], scheduledFor:
  * @returns Total number of matches created
  */
 export async function runTagTeamMatchmaking(scheduledFor?: Date): Promise<number> {
-  const matchTime = scheduledFor || new Date(Date.now() + 24 * 60 * 60 * 1000); // Default: 24 hours from now
+  const matchTime = scheduledFor ?? defaultScheduledFor();
 
   let totalMatches = 0;
 
@@ -580,14 +560,14 @@ export async function runTagTeamMatchmaking(scheduledFor?: Date): Promise<number
 
   for (const tier of TAG_TEAM_LEAGUE_TIERS) {
     try {
-      // Get all tag team league instances for this tier from TeamBattle (teamSize=2)
-      const instances = await prisma.teamBattle.findMany({
-        where: { teamSize: 2, tagTeamLeague: tier },
-        select: { tagTeamLeagueId: true },
-        distinct: ['tagTeamLeagueId'],
+      // Get all tag team league instances for this tier from standings (source of truth)
+      const instances = await prisma.standing.findMany({
+        where: { mode: 'tag_team' as any, tier },
+        select: { leagueInstanceId: true },
+        distinct: ['leagueInstanceId'],
       });
 
-      const instanceIds = instances.map(i => i.tagTeamLeagueId);
+      const instanceIds = instances.map(i => i.leagueInstanceId);
 
       for (const instanceId of instanceIds) {
         // Get eligible teams for this instance
@@ -598,8 +578,8 @@ export async function runTagTeamMatchmaking(scheduledFor?: Date): Promise<number
           continue;
         }
 
-        // Pair teams
-        const matches = await pairTeams(eligibleTeams);
+        // Pair teams — pass tier and instanceId from context
+        const matches = await pairTeams(eligibleTeams, tier, instanceId);
 
         if (matches.length > 0) {
           // Schedule matches

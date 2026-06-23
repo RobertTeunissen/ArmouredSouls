@@ -119,6 +119,26 @@ jest.mock('../src/services/league/leagueBattleOrchestrator', () => ({
 
 jest.mock('../src/services/league/leagueRebalancingService', () => ({
   rebalanceLeagues: jest.fn(),
+  rebalanceKothLeagues: jest.fn().mockResolvedValue({ totalPromoted: 0, totalDemoted: 0 }),
+  createStandingsAdapter: jest.fn().mockReturnValue({
+    entityType: 'robot',
+    getEntitiesWithMinPoints: jest.fn().mockResolvedValue([]),
+    countEligibleInInstance: jest.fn().mockResolvedValue(0),
+    getEntitiesForDemotion: jest.fn().mockResolvedValue([]),
+    getInstancesForTier: jest.fn().mockResolvedValue([]),
+    countEntitiesInTier: jest.fn().mockResolvedValue(0),
+    countEntitiesInDestinationTier: jest.fn().mockResolvedValue(0),
+    assignInstance: jest.fn().mockResolvedValue('bronze_1'),
+    updateEntityLeague: jest.fn().mockResolvedValue(undefined),
+    getEntityCurrentTier: jest.fn().mockReturnValue('bronze'),
+    getEntityLeagueId: jest.fn().mockReturnValue('bronze_1'),
+    getEntityLeaguePoints: jest.fn().mockReturnValue(0),
+    getEntityOwnerId: jest.fn().mockReturnValue(1),
+    getEntityDisplayName: jest.fn().mockReturnValue('entity#1'),
+    onPromoted: jest.fn().mockResolvedValue(undefined),
+    rebalanceInstances: jest.fn().mockResolvedValue(undefined),
+    countAllEntities: jest.fn().mockResolvedValue(0),
+  }),
 }));
 
 jest.mock('../src/services/analytics/matchmakingService', () => ({

@@ -212,22 +212,25 @@ describe('ELO Progression Property-Based Tests', () => {
             const totalChange = eloChanges.reduce((sum, change) => sum + change, 0);
             expect(progression.totalChange).toBe(totalChange);
 
-            // Property: ELO continuity - each battle's "before" should equal previous battle's "after"
+            // Property: ELO continuity - each battle's participant "before" should equal previous battle's participant "after"
+            // ELO is now read from battle_participants, not legacy Battle columns
             for (let i = 1; i < battles.length; i++) {
-              const prevBattle = battles[i - 1];
-              const currBattle = battles[i];
+              const prevParticipants = await prisma.battleParticipant.findMany({ where: { battleId: battles[i - 1].id, robotId } });
+              const currParticipants = await prisma.battleParticipant.findMany({ where: { battleId: battles[i].id, robotId } });
 
-              expect(currBattle.robot1ELOBefore).toBe(prevBattle.robot1ELOAfter);
+              expect(currParticipants[0].eloBefore).toBe(prevParticipants[0].eloAfter);
             }
 
-            // Property: First battle's "before" should equal starting ELO
+            // Property: First battle's participant "before" should equal starting ELO
             if (battles.length > 0) {
-              expect(battles[0].robot1ELOBefore).toBe(startingELO);
+              const firstParticipant = await prisma.battleParticipant.findFirst({ where: { battleId: battles[0].id, robotId } });
+              expect(firstParticipant!.eloBefore).toBe(startingELO);
             }
 
-            // Property: Last battle's "after" should equal ending ELO
+            // Property: Last battle's participant "after" should equal ending ELO
             if (battles.length > 0) {
-              expect(battles[battles.length - 1].robot1ELOAfter).toBe(expectedEndELO);
+              const lastParticipant = await prisma.battleParticipant.findFirst({ where: { battleId: battles[battles.length - 1].id, robotId } });
+              expect(lastParticipant!.eloAfter).toBe(expectedEndELO);
             }
           }
         ),
@@ -368,30 +371,38 @@ describe('ELO Progression Property-Based Tests', () => {
                   robot2ELOAfter: eloAfter,
                   eloChange: Math.abs(eloChange),
                   createdAt: battleTime,
+                  participants: {
+                    create: [
+                      { robotId: opponentId, team: 1, role: 'solo', eloBefore: 1500, eloAfter: 1500 - eloChange, credits: 0, damageDealt: 0, finalHP: 100, fameAwarded: 0, prestigeAwarded: 0, streamingRevenue: 0, yielded: false, destroyed: false },
+                      { robotId, team: 2, role: 'solo', eloBefore, eloAfter, credits: 0, damageDealt: 0, finalHP: 100, fameAwarded: 0, prestigeAwarded: 0, streamingRevenue: 0, yielded: false, destroyed: false },
+                    ],
+                  },
                 },
               });
 
               battles.push(battle);
             }
 
-            // Verify: Check ELO continuity for robot2
+            // Verify: Check ELO continuity for robot2 from participants
             for (let i = 1; i < battles.length; i++) {
-              const prevBattle = battles[i - 1];
-              const currBattle = battles[i];
+              const prevParticipant = await prisma.battleParticipant.findFirst({ where: { battleId: battles[i - 1].id, robotId } });
+              const currParticipant = await prisma.battleParticipant.findFirst({ where: { battleId: battles[i].id, robotId } });
 
-              // Property: Current battle's "before" should equal previous battle's "after"
-              expect(currBattle.robot2ELOBefore).toBe(prevBattle.robot2ELOAfter);
+              // Property: Current battle's participant "before" should equal previous battle's participant "after"
+              expect(currParticipant!.eloBefore).toBe(prevParticipant!.eloAfter);
             }
 
-            // Property: First battle's "before" should equal starting ELO
+            // Property: First battle's participant "before" should equal starting ELO
             if (battles.length > 0) {
-              expect(battles[0].robot2ELOBefore).toBe(startingELO);
+              const firstParticipant = await prisma.battleParticipant.findFirst({ where: { battleId: battles[0].id, robotId } });
+              expect(firstParticipant!.eloBefore).toBe(startingELO);
             }
 
-            // Property: Last battle's "after" should equal expected ending ELO
+            // Property: Last battle's participant "after" should equal expected ending ELO
             if (battles.length > 0) {
               const expectedEndELO = startingELO + eloChanges.reduce((sum, change) => sum + change, 0);
-              expect(battles[battles.length - 1].robot2ELOAfter).toBe(expectedEndELO);
+              const lastParticipant = await prisma.battleParticipant.findFirst({ where: { battleId: battles[battles.length - 1].id, robotId } });
+              expect(lastParticipant!.eloAfter).toBe(expectedEndELO);
             }
           }
         ),
@@ -536,6 +547,12 @@ describe('ELO Progression Property-Based Tests', () => {
                   robot2ELOAfter: 1500 - eloChange,
                   eloChange: Math.abs(eloChange),
                   createdAt: battleTime,
+                  participants: {
+                    create: [
+                      { robotId, team: 1, role: 'solo', eloBefore, eloAfter, credits: 0, damageDealt: 0, finalHP: 100, fameAwarded: 0, prestigeAwarded: 0, streamingRevenue: 0, yielded: false, destroyed: false },
+                      { robotId: opponentId, team: 2, role: 'solo', eloBefore: 1500, eloAfter: 1500 - eloChange, credits: 0, damageDealt: 0, finalHP: 100, fameAwarded: 0, prestigeAwarded: 0, streamingRevenue: 0, yielded: false, destroyed: false },
+                    ],
+                  },
                 },
               });
 
@@ -543,12 +560,13 @@ describe('ELO Progression Property-Based Tests', () => {
             }
 
             // Verify: ELO continuity across all battles (even across cycle boundaries)
+            // ELO read from participants, not legacy Battle columns
             for (let i = 1; i < battles.length; i++) {
-              const prevBattle = battles[i - 1];
-              const currBattle = battles[i];
+              const prevParticipant = await prisma.battleParticipant.findFirst({ where: { battleId: battles[i - 1].id, robotId } });
+              const currParticipant = await prisma.battleParticipant.findFirst({ where: { battleId: battles[i].id, robotId } });
 
               // Property: ELO continuity must hold even when crossing cycle boundaries
-              expect(currBattle.robot1ELOBefore).toBe(prevBattle.robot1ELOAfter);
+              expect(currParticipant!.eloBefore).toBe(prevParticipant!.eloAfter);
             }
 
             // Property: Total ELO change should equal sum of all changes
@@ -556,7 +574,8 @@ describe('ELO Progression Property-Based Tests', () => {
             const expectedEndELO = startingELO + totalChange;
             
             if (battles.length > 0) {
-              expect(battles[battles.length - 1].robot1ELOAfter).toBe(expectedEndELO);
+              const lastParticipant = await prisma.battleParticipant.findFirst({ where: { battleId: battles[battles.length - 1].id, robotId } });
+              expect(lastParticipant!.eloAfter).toBe(expectedEndELO);
             }
           }
         ),
@@ -680,15 +699,22 @@ describe('ELO Progression Property-Based Tests', () => {
                 robot2ELOAfter: 1500 - eloChange,
                 eloChange: Math.abs(eloChange),
                 createdAt: new Date(cycleStart.getTime() + 60000),
+                participants: {
+                  create: [
+                    { robotId, team: 1, role: 'solo', eloBefore, eloAfter, credits: 0, damageDealt: 0, finalHP: 100, fameAwarded: 0, prestigeAwarded: 0, streamingRevenue: 0, yielded: false, destroyed: false },
+                    { robotId: opponentId, team: 2, role: 'solo', eloBefore: 1500, eloAfter: 1500 - eloChange, credits: 0, damageDealt: 0, finalHP: 100, fameAwarded: 0, prestigeAwarded: 0, streamingRevenue: 0, yielded: false, destroyed: false },
+                  ],
+                },
               },
             });
 
-            // Verify: Single battle is trivially continuous
+            // Verify: Single battle is trivially continuous (read from participants)
+            const participant = await prisma.battleParticipant.findFirst({ where: { battleId: battle.id, robotId } });
             // Property: Before value should equal starting ELO
-            expect(battle.robot1ELOBefore).toBe(startingELO);
+            expect(participant!.eloBefore).toBe(startingELO);
 
             // Property: After value should equal before + change
-            expect(battle.robot1ELOAfter).toBe(startingELO + eloChange);
+            expect(participant!.eloAfter).toBe(startingELO + eloChange);
 
             // Property: ELO change should be consistent
             const actualChange = battle.robot1ELOAfter - battle.robot1ELOBefore;

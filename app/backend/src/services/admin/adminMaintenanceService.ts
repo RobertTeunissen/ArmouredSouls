@@ -55,9 +55,6 @@ export async function repairAllRobotsAdmin(deductCosts: boolean): Promise<AdminR
       currentHP: {
         lt: prisma.robot.fields.maxHP,
       },
-      NOT: {
-        name: 'Bye Robot',
-      },
     },
     select: {
       id: true,
@@ -95,7 +92,7 @@ export async function repairAllRobotsAdmin(deductCosts: boolean): Promise<AdminR
     const activeRobotCount = await prisma.robot.count({
       where: {
         userId,
-        NOT: { name: 'Bye Robot' },
+
       },
     });
 

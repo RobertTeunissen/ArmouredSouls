@@ -8,7 +8,7 @@ interface KothMatchCardProps {
 
 function KothMatchCard({ match, myUserId }: KothMatchCardProps) {
   const modeConfig = getModeConfig('koth');
-  const kothLabel = match.kothRotatingZone ? 'KotH — Rotating Zone' : 'King of the Hill';
+  const kothLabel = 'King of the Hill';
   const participants = match.kothParticipants || [];
   const participantCount = match.kothParticipantCount ?? participants.length;
 

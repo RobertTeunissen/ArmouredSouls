@@ -94,6 +94,8 @@ const unitTestFiles = [
   'achievementTeamBattle\\.test\\.ts',
   'teamTournamentBattleOrchestrator\\.test\\.ts',
   'teamTournamentBattleOrchestrator\\.property\\.test\\.ts',
+  // Scheduling (mocked, no DB)
+  'schedulingService\\.test\\.ts',
   // Arena / spatial (pure math, no DB)
   'adaptationTracker\\.property\\.test\\.ts',
   'arenaLayout\\.property\\.test\\.ts',

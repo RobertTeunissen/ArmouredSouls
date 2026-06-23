@@ -24,156 +24,134 @@ const leagueTierParamsSchema = z.object({
 
 /**
  * GET /api/leagues/:tier/standings
- * Get league standings for a specific tier and instance
+ * Get league standings for a specific tier and instance.
+ * Supports mode=koth to serve KotH standings through the same unified path.
  */
 router.get('/:tier/standings', validateRequest({ params: leagueTierParamsSchema }), async (req: Request, res: Response) => {
   const tier = req.params.tier as LeagueTier;
   const instance = req.query.instance as string | undefined;
   const page = Math.max(1, parseInt(req.query.page as string) || 1);
   const perPage = Math.min(100, Math.max(1, parseInt(req.query.perPage as string) || 50));
+  const mode = (req.query.mode as string) || 'league_1v1';
+  const subscriptionEvent = mode === 'koth' ? 'koth' : 'league_1v1';
+  // KotH has no LP threshold for promotion (position-based)
+  const useMinLP = mode !== 'koth';
+  // KotH requires 10 min cycles (vs 5 for other leagues) to balance promotion speed
+  const minCyclesForMode = mode === 'koth' ? 10 : MIN_CYCLES_IN_LEAGUE;
 
   if (!LEAGUE_TIERS.includes(tier)) {
     throw new LeagueError(LeagueErrorCode.INVALID_LEAGUE_TIER, 'Invalid tier', 400, { validTiers: LEAGUE_TIERS });
   }
 
-  let leagueIds: string[];
-  if (instance) {
-    leagueIds = [instance];
-  } else {
-    const instances = await getInstancesForTier(tier);
-    leagueIds = instances.map(i => i.leagueId);
-  }
-
-  const whereClause: Prisma.RobotWhereInput = {
-    leagueId: { in: leagueIds },
-    NOT: { name: 'Bye Robot' },
+  // Query from unified standings table (Spec #40)
+  const standingsWhere: Prisma.StandingWhereInput = {
+    mode: mode as any,
+    tier,
+    ...(instance ? { leagueInstanceId: instance } : {}),
   };
 
-  const total = await prisma.robot.count({ where: whereClause });
+  const total = await prisma.standing.count({ where: standingsWhere });
 
-  const robots = await prisma.robot.findMany({
-    where: whereClause,
-    include: {
-      user: { select: { id: true, username: true, stableName: true } },
-    },
+  const standingRows = await prisma.standing.findMany({
+    where: standingsWhere,
     orderBy: [
       { leaguePoints: 'desc' },
-      { elo: 'desc' },
     ],
     skip: (page - 1) * perPage,
     take: perPage,
   });
 
-  // Calculate promotion/demotion zone metadata
-  const minLP = getMinLPForPromotion(tier);
+  // Batch-fetch robot data for these standings
+  const robotIds = standingRows.map(s => s.entityId);
+  const robots = await prisma.robot.findMany({
+    where: { id: { in: robotIds } },
+    include: { user: { select: { id: true, username: true, stableName: true } } },
+  });
+  const robotMap = new Map(robots.map(r => [r.id, r]));
+
+  // Batch-check subscription status
+  const activeSubscriptions = await prisma.subscription.findMany({
+    where: { robotId: { in: robotIds }, eventType: subscriptionEvent, status: 'active' },
+    select: { robotId: true },
+  });
+  const subscribedRobotIds = new Set(activeSubscriptions.map(s => s.robotId));
+
+  // Calculate promotion/demotion zones
+  const minLP = useMinLP ? getMinLPForPromotion(tier) : 0;
   const isChampion = tier === 'champion';
   const isBronze = tier === 'bronze';
-  const isSingleInstance = instance !== undefined;
 
-  let eligibleCount: number;
-  let hasEnoughRobots: boolean;
+  let eligibleCount = 0;
+  let hasEnoughRobots = false;
   let promotionCount = 0;
   let demotionCount = 0;
-  let promotionRobotIds: Set<number> = new Set();
-  let demotionRobotIds: Set<number> = new Set();
+  const promotionRobotIds = new Set<number>();
+  const demotionRobotIds = new Set<number>();
 
-  if (isSingleInstance) {
-    // Count eligible robots (≥5 cycles) in this specific instance
-    eligibleCount = await prisma.robot.count({
-      where: {
-        leagueId: instance,
-        cyclesInCurrentLeague: { gte: MIN_CYCLES_IN_LEAGUE },
-        NOT: { name: 'Bye Robot' },
-      },
+  if (instance) {
+    eligibleCount = await prisma.standing.count({
+      where: { mode: mode as any, leagueInstanceId: instance, cyclesInTier: { gte: minCyclesForMode } },
     });
 
     hasEnoughRobots = eligibleCount >= MIN_ROBOTS_FOR_REBALANCING;
     promotionCount = hasEnoughRobots ? Math.floor(eligibleCount * PROMOTION_PERCENTAGE) : 0;
     demotionCount = hasEnoughRobots ? Math.floor(eligibleCount * DEMOTION_PERCENTAGE) : 0;
 
-    // For demotion zone, get the IDs of robots in the bottom 10% of eligible robots
     if (hasEnoughRobots && demotionCount > 0 && !isBronze) {
-      const demotionRobots = await prisma.robot.findMany({
-        where: {
-          leagueId: instance,
-          cyclesInCurrentLeague: { gte: MIN_CYCLES_IN_LEAGUE },
-          NOT: { name: 'Bye Robot' },
-        },
-        orderBy: [
-          { leaguePoints: 'asc' },
-          { elo: 'asc' },
-        ],
-        select: { id: true },
+      const demotionStandings = await prisma.standing.findMany({
+        where: { mode: mode as any, leagueInstanceId: instance, cyclesInTier: { gte: minCyclesForMode } },
+        orderBy: [{ leaguePoints: 'asc' }],
+        select: { entityId: true },
         take: demotionCount,
       });
-      demotionRobotIds = new Set(demotionRobots.map(r => r.id));
+      for (const s of demotionStandings) demotionRobotIds.add(s.entityId);
     }
 
-    // For promotion zone, get the IDs of robots that meet ALL criteria
     if (hasEnoughRobots && promotionCount > 0 && !isChampion) {
-      const promotionRobots = await prisma.robot.findMany({
-        where: {
-          leagueId: instance,
-          cyclesInCurrentLeague: { gte: MIN_CYCLES_IN_LEAGUE },
-          leaguePoints: { gte: minLP },
-          NOT: { name: 'Bye Robot' },
-        },
-        orderBy: [
-          { leaguePoints: 'desc' },
-          { elo: 'desc' },
-        ],
-        select: { id: true },
+      const promotionStandings = await prisma.standing.findMany({
+        where: { mode: mode as any, leagueInstanceId: instance, cyclesInTier: { gte: minCyclesForMode }, ...(useMinLP ? { leaguePoints: { gte: minLP } } : {}) },
+        orderBy: [{ leaguePoints: 'desc' }],
+        select: { entityId: true },
         take: promotionCount,
       });
-      promotionRobotIds = new Set(promotionRobots.map(r => r.id));
+      for (const s of promotionStandings) promotionRobotIds.add(s.entityId);
     }
   } else {
-    // Tier-wide eligible count (no per-robot zone highlighting without a specific instance)
-    eligibleCount = await prisma.robot.count({
-      where: {
-        leagueId: { in: leagueIds },
-        cyclesInCurrentLeague: { gte: MIN_CYCLES_IN_LEAGUE },
-        NOT: { name: 'Bye Robot' },
-      },
+    eligibleCount = await prisma.standing.count({
+      where: { mode: mode as any, tier, cyclesInTier: { gte: minCyclesForMode } },
     });
-
     hasEnoughRobots = eligibleCount >= MIN_ROBOTS_FOR_REBALANCING;
   }
 
-  // Batch-check subscription status for all robots on this page
-  const robotIds = robots.map(r => r.id);
-  const activeSubscriptions = await prisma.subscription.findMany({
-    where: { robotId: { in: robotIds }, eventType: 'league_1v1', status: 'active' },
-    select: { robotId: true },
+  const standings = standingRows.map((s) => {
+    const robot = robotMap.get(s.entityId);
+    return {
+      id: s.entityId,
+      name: robot?.name ?? `Robot #${s.entityId}`,
+      elo: robot?.elo ?? 0,
+      leaguePoints: s.leaguePoints,
+      wins: s.wins,
+      draws: s.draws,
+      losses: s.losses,
+      totalBattles: (s.totalMatches ?? null) !== null ? s.totalMatches! : (s.wins + s.losses + s.draws),
+      currentHP: robot?.currentHP ?? 0,
+      maxHP: robot?.maxHP ?? 100,
+      fame: robot?.fame ?? 0,
+      userId: robot?.user?.id ?? 0,
+      cyclesInCurrentLeague: s.cyclesInTier,
+      eligible: s.cyclesInTier >= minCyclesForMode,
+      isSubscribed: subscribedRobotIds.has(s.entityId),
+      user: {
+        username: robot?.user?.username ?? 'Unknown',
+        stableName: robot?.user?.stableName ?? null,
+      },
+      zone: promotionRobotIds.has(s.entityId)
+        ? 'promotion' as const
+        : demotionRobotIds.has(s.entityId)
+          ? 'demotion' as const
+          : null,
+    };
   });
-  const subscribedRobotIds = new Set(activeSubscriptions.map(s => s.robotId));
-
-  const standings = robots.map((robot) => ({
-    id: robot.id,
-    name: robot.name,
-    elo: robot.elo,
-    leaguePoints: robot.leaguePoints,
-    wins: robot.totalLeague1v1Wins,
-    draws: robot.totalLeague1v1Draws,
-    losses: robot.totalLeague1v1Losses,
-    totalBattles: robot.totalLeague1v1Wins + robot.totalLeague1v1Losses + robot.totalLeague1v1Draws,
-    currentHP: robot.currentHP,
-    maxHP: robot.maxHP,
-    fame: robot.fame,
-    userId: robot.user.id,
-    cyclesInCurrentLeague: robot.cyclesInCurrentLeague,
-    eligible: robot.cyclesInCurrentLeague >= MIN_CYCLES_IN_LEAGUE,
-    isSubscribed: subscribedRobotIds.has(robot.id),
-    user: {
-      username: robot.user.username,
-      stableName: robot.user.stableName,
-    },
-    zone: promotionRobotIds.has(robot.id)
-      ? 'promotion' as const
-      : demotionRobotIds.has(robot.id)
-        ? 'demotion' as const
-        : null,
-  }));
 
   res.json({
     data: standings,
@@ -186,7 +164,7 @@ router.get('/:tier/standings', validateRequest({ params: leagueTierParamsSchema 
     zoneMeta: {
       tier,
       minLP,
-      minCycles: MIN_CYCLES_IN_LEAGUE,
+      minCycles: minCyclesForMode,
       minRobotsRequired: MIN_ROBOTS_FOR_REBALANCING,
       eligibleCount,
       hasEnoughRobots,
@@ -200,16 +178,18 @@ router.get('/:tier/standings', validateRequest({ params: leagueTierParamsSchema 
 
 /**
  * GET /api/leagues/:tier/instances
- * Get all instances for a tier
+ * Get all instances for a tier. Supports mode=koth for KotH instances.
  */
 router.get('/:tier/instances', validateRequest({ params: leagueTierParamsSchema }), async (req: Request, res: Response) => {
   const tier = req.params.tier as LeagueTier;
+  const mode = (req.query.mode as string) || 'league_1v1';
+  const maxPerInstance = mode === 'koth' ? 100 : 100; // same for now
 
   if (!LEAGUE_TIERS.includes(tier)) {
     throw new LeagueError(LeagueErrorCode.INVALID_LEAGUE_TIER, 'Invalid tier', 400, { validTiers: LEAGUE_TIERS });
   }
 
-  const instances = await getInstancesForTier(tier);
+  const instances = await getInstancesForTier(tier, { mode, maxPerInstance });
 
   res.json(instances.map(instance => ({
     leagueId: instance.leagueId,

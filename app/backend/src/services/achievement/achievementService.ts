@@ -93,10 +93,25 @@ class AchievementService implements IAchievementService {
       if (unevaluated.length === 0) return [];
 
       // Pre-fetch robot and user data once
-      const [cachedRobot, cachedUser] = await Promise.all([
+      const [rawRobot, cachedUser, robotStandings] = await Promise.all([
         robotId ? prisma.robot.findUnique({ where: { id: robotId } }) : Promise.resolve(null),
         prisma.user.findUnique({ where: { id: userId } }),
+        robotId ? prisma.standing.findMany({
+          where: { entityType: 'robot', entityId: robotId },
+          select: { mode: true, wins: true, currentWinStreak: true, currentLoseStreak: true },
+        }) : Promise.resolve([]),
       ]);
+
+      // Enrich robot with standings-derived per-mode counters
+      const cachedRobot = rawRobot ? {
+        ...rawRobot,
+        kothWins: robotStandings.find(s => s.mode === 'koth')?.wins ?? 0,
+        totalTagTeamWins: robotStandings.find(s => s.mode === 'tag_team')?.wins ?? 0,
+        totalLeague2v2Wins: robotStandings.find(s => s.mode === 'league_2v2')?.wins ?? 0,
+        totalLeague3v3Wins: robotStandings.find(s => s.mode === 'league_3v3')?.wins ?? 0,
+        currentWinStreak: robotStandings.find(s => s.mode === 'league_1v1')?.currentWinStreak ?? 0,
+        currentLoseStreak: robotStandings.find(s => s.mode === 'league_1v1')?.currentLoseStreak ?? 0,
+      } : null;
 
       // Evaluate each candidate
       const newlyUnlocked: UnlockedAchievement[] = [];

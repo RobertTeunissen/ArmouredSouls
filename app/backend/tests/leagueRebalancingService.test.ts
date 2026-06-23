@@ -11,10 +11,11 @@ import {
 
 describe('League Rebalancing Service', () => {
   let testUser: any;
-  let practiceSword: any;
 
   beforeAll(async () => {
     // Clean up in correct order
+    await prisma.standing.deleteMany({});
+    await prisma.leagueHistory.deleteMany({});
     await prisma.scheduledKothMatchParticipant.deleteMany({});
     await prisma.scheduledKothMatch.deleteMany({});
     await prisma.scheduledLeagueMatch.deleteMany({});
@@ -33,589 +34,340 @@ describe('League Rebalancing Service', () => {
         currency: 1000000,
       },
     });
-
-    // Create practice sword
-    practiceSword = await prisma.weapon.create({
-      data: {
-        name: 'Test Sword',
-        weaponType: 'melee',
-        baseDamage: 5,
-        cooldown: 3,
-        cost: 0,
-        handsRequired: 'one',
-        damageType: 'melee',
-        loadoutType: 'single',
-        rangeBand: 'melee',
-      },
-    });
   });
 
   afterEach(async () => {
-    // Clean up after each test to prevent pollution
-    // Only delete robots and their dependencies, keep testUser and practiceSword
-    await prisma.scheduledKothMatchParticipant.deleteMany({});
-    await prisma.scheduledKothMatch.deleteMany({});
-    await prisma.scheduledLeagueMatch.deleteMany({});
-    await prisma.battleParticipant.deleteMany({});
-    await prisma.battle.deleteMany({});
-    await prisma.weaponInventory.deleteMany({});
+    // Clean up standings and related data between tests
+    await prisma.leagueHistory.deleteMany({});
+    await prisma.standing.deleteMany({});
     await prisma.robot.deleteMany({});
-    await prisma.facility.deleteMany({});
   });
 
   afterAll(async () => {
+    await prisma.user.deleteMany({});
     await prisma.$disconnect();
   });
 
-  describe('determinePromotions', () => {
-    it('should return top 10% of robots with ≥5 cycles AND per-tier LP threshold', async () => {
-      // Create 20 robots in bronze league with varying league points
-      const robots = [];
-      for (let i = 0; i < 20; i++) {
-        const weaponInv = await prisma.weaponInventory.create({
-          data: { userId: testUser.id, weaponId: practiceSword.id, pricePaid: 0 },
-        });
-
-        const robot = await prisma.robot.create({
-          data: {
-            userId: testUser.id,
-            name: `Bronze Robot ${i}`,
-            leagueId: 'bronze_1',
-            currentLeague: 'bronze',
-            currentHP: 10,
-            maxHP: 10,
-            currentShield: 2,
-            maxShield: 2,
-            elo: 1200,
-            leaguePoints: i * 5, // 0, 5, 10, ..., 95 (robots 5+ have ≥25 points — bronze threshold)
-            totalBattles: 10,
-            cyclesInCurrentLeague: 10, // All have enough cycles in current league
-            loadoutType: 'single',
-            mainWeaponId: weaponInv.id,
-          },
-        });
-        robots.push(robot);
-      }
-
-      const toPromote = await determinePromotions('bronze_1'); // Changed to instance ID
-
-      // Should get top 10% of 20 = 2 robots, but only from those with ≥25 points (bronze threshold)
-      // Robots 5-19 have ≥25 points (15 robots), top 2 are robots 19 and 18
-      expect(toPromote.length).toBe(2);
-      expect(toPromote[0].name).toBe('Bronze Robot 19'); // 95 points
-      expect(toPromote[1].name).toBe('Bronze Robot 18'); // 90 points
-      expect(toPromote[0].leaguePoints).toBeGreaterThanOrEqual(25);
-      expect(toPromote[1].leaguePoints).toBeGreaterThanOrEqual(25);
-
-      // Clean up
-      for (const robot of robots) {
-        await prisma.robot.deleteMany({ where: { id: robot.id } });
-      }
-      await prisma.weaponInventory.deleteMany({ where: { userId: testUser.id } });
+  /**
+   * Helper to create a robot AND its corresponding standings row.
+   * The rebalancing service reads from the standings table, not the Robot model.
+   */
+  async function createRobotWithStanding(opts: {
+    name: string;
+    tier: string;
+    leagueInstanceId: string;
+    leaguePoints: number;
+    cyclesInTier: number;
+    elo?: number;
+  }) {
+    const robot = await prisma.robot.create({
+      data: {
+        userId: testUser.id,
+        name: opts.name,
+        currentLeague: opts.tier,
+        leagueId: opts.leagueInstanceId,
+        currentHP: 10,
+        maxHP: 10,
+        currentShield: 2,
+        maxShield: 2,
+        elo: opts.elo ?? 1200,
+        leaguePoints: opts.leaguePoints,
+        totalBattles: 10,
+        cyclesInCurrentLeague: opts.cyclesInTier,
+        loadoutType: 'single',
+      },
     });
 
-    it('should skip robots with <5 cycles in current league', async () => {
-      const robots = [];
+    const standing = await prisma.standing.create({
+      data: {
+        entityType: 'robot',
+        entityId: robot.id,
+        mode: 'league_1v1',
+        tier: opts.tier,
+        leagueInstanceId: opts.leagueInstanceId,
+        leaguePoints: opts.leaguePoints,
+        cyclesInTier: opts.cyclesInTier,
+        wins: 0,
+        losses: 0,
+        draws: 0,
+        currentWinStreak: 0,
+        bestWinStreak: 0,
+        currentLoseStreak: 0,
+      },
+    });
+
+    return { robot, standing };
+  }
+
+  describe('determinePromotions', () => {
+    it('should return top 10% of standings with ≥5 cycles AND per-tier LP threshold', async () => {
+      // Create 20 robots in bronze with corresponding standings
       for (let i = 0; i < 20; i++) {
-        const weaponInv = await prisma.weaponInventory.create({
-          data: { userId: testUser.id, weaponId: practiceSword.id, pricePaid: 0 },
+        await createRobotWithStanding({
+          name: `Bronze Robot ${i}`,
+          tier: 'bronze',
+          leagueInstanceId: 'bronze_1',
+          leaguePoints: i * 5, // 0, 5, 10, ..., 95
+          cyclesInTier: 10,
         });
-
-        const robot = await prisma.robot.create({
-          data: {
-            userId: testUser.id,
-            name: `Bronze Robot ${i}`,
-            leagueId: 'bronze_1',
-            currentLeague: 'bronze',
-            currentHP: 10,
-            maxHP: 10,
-            currentShield: 2,
-            maxShield: 2,
-            elo: 1200,
-            leaguePoints: i * 5, // 0, 5, 10, ..., 95
-            totalBattles: 10,
-            cyclesInCurrentLeague: i < 10 ? 3 : 10, // First 10 have too few cycles in league
-            loadoutType: 'single',
-            mainWeaponId: weaponInv.id,
-          },
-        });
-        robots.push(robot);
       }
 
-      const toPromote = await determinePromotions('bronze_1'); // Changed to instance ID
+      const toPromote = await determinePromotions('bronze_1');
 
-      // Should only consider robots with ≥5 cycles in current league (last 10 robots)
-      // 10% of 10 = 1 robot, and must have ≥25 points (bronze threshold)
-      // Robots 10-19 have ≥5 cycles, robots 5-19 have ≥25 points
-      // So robots 10-19 meet both criteria (10 robots), top 10% = 1 robot
-      expect(toPromote.length).toBe(1);
-      expect(toPromote[0].cyclesInCurrentLeague).toBeGreaterThanOrEqual(5);
+      // Top 10% of 20 eligible = 2, only those with ≥25 LP (bronze threshold)
+      // Robots 5-19 have ≥25 LP (15 robots), top 2 are entityIds for robots 19 and 18
+      expect(toPromote.length).toBe(2);
       expect(toPromote[0].leaguePoints).toBeGreaterThanOrEqual(25);
+      expect(toPromote[1].leaguePoints).toBeGreaterThanOrEqual(25);
+      // Results ordered by LP desc
+      expect(toPromote[0].leaguePoints).toBeGreaterThanOrEqual(toPromote[1].leaguePoints);
+    });
 
-      // Clean up
-      for (const robot of robots) {
-        await prisma.robot.deleteMany({ where: { id: robot.id } });
+    it('should skip standings with <5 cycles in current tier', async () => {
+      for (let i = 0; i < 20; i++) {
+        await createRobotWithStanding({
+          name: `Bronze Robot ${i}`,
+          tier: 'bronze',
+          leagueInstanceId: 'bronze_1',
+          leaguePoints: i * 5, // 0-95
+          cyclesInTier: i < 10 ? 3 : 10, // First 10 have too few cycles
+        });
       }
-      await prisma.weaponInventory.deleteMany({ where: { userId: testUser.id } });
+
+      const toPromote = await determinePromotions('bronze_1');
+
+      // Only robots 10-19 have ≥5 cycles (10 entities eligible)
+      // Of those, only robots 5-19 have ≥25 LP. Intersection: robots 10-19 (10 entities)
+      // Top 10% of 10 = 1 entity
+      expect(toPromote.length).toBe(1);
+      expect(toPromote[0].cyclesInTier).toBeGreaterThanOrEqual(5);
+      expect(toPromote[0].leaguePoints).toBeGreaterThanOrEqual(25);
     });
 
     it('should return empty array for champion tier', async () => {
-      const toPromote = await determinePromotions('champion_1'); // Changed to instance ID
+      const toPromote = await determinePromotions('champion_1');
       expect(toPromote).toEqual([]);
     });
 
-    it('should return empty array when no robots meet per-tier LP threshold', async () => {
-      // Create 20 robots but none with ≥25 league points (bronze threshold)
-      const robots = [];
+    it('should return empty array when no standings meet per-tier LP threshold', async () => {
       for (let i = 0; i < 20; i++) {
-        const weaponInv = await prisma.weaponInventory.create({
-          data: { userId: testUser.id, weaponId: practiceSword.id, pricePaid: 0 },
+        await createRobotWithStanding({
+          name: `Low Points Robot ${i}`,
+          tier: 'bronze',
+          leagueInstanceId: 'bronze_1',
+          leaguePoints: i, // 0-19, all below bronze threshold of 25
+          cyclesInTier: 10,
         });
-
-        const robot = await prisma.robot.create({
-          data: {
-            userId: testUser.id,
-            name: `Low Points Robot ${i}`,
-            leagueId: 'bronze_1',
-            currentLeague: 'bronze',
-            currentHP: 10,
-            maxHP: 10,
-            currentShield: 2,
-            maxShield: 2,
-            elo: 1200,
-            leaguePoints: i, // 0-19 points, all below 25
-            totalBattles: 10,
-            cyclesInCurrentLeague: 10,
-            loadoutType: 'single',
-            mainWeaponId: weaponInv.id,
-          },
-        });
-        robots.push(robot);
       }
 
-      const toPromote = await determinePromotions('bronze_1'); // Changed to instance ID
+      const toPromote = await determinePromotions('bronze_1');
       expect(toPromote).toEqual([]);
-
-      // Clean up
-      for (const robot of robots) {
-        await prisma.robot.deleteMany({ where: { id: robot.id } });
-      }
-      await prisma.weaponInventory.deleteMany({ where: { userId: testUser.id } });
     });
 
     it('should use higher LP threshold for silver tier (50 LP for Silver→Gold)', async () => {
-      // Create 20 robots in silver league
-      const robots = [];
       for (let i = 0; i < 20; i++) {
-        const weaponInv = await prisma.weaponInventory.create({
-          data: { userId: testUser.id, weaponId: practiceSword.id, pricePaid: 0 },
+        await createRobotWithStanding({
+          name: `Silver Threshold Robot ${i}`,
+          tier: 'silver',
+          leagueInstanceId: 'silver_1',
+          leaguePoints: i * 5, // 0-95. ≥50 LP: robots 10-19
+          cyclesInTier: 10,
         });
-
-        const robot = await prisma.robot.create({
-          data: {
-            userId: testUser.id,
-            name: `Silver Threshold Robot ${i}`,
-            leagueId: 'silver_1',
-            currentLeague: 'silver',
-            currentHP: 10,
-            maxHP: 10,
-            currentShield: 2,
-            maxShield: 2,
-            elo: 1200,
-            // LP: 0, 5, 10, ..., 95. Only robots with ≥50 LP should be promotion candidates
-            // That's robots 10-19 (50, 55, 60, ..., 95) = 10 robots meet threshold
-            leaguePoints: i * 5,
-            totalBattles: 10,
-            cyclesInCurrentLeague: 10,
-            loadoutType: 'single',
-            mainWeaponId: weaponInv.id,
-          },
-        });
-        robots.push(robot);
       }
 
       const toPromote = await determinePromotions('silver_1');
 
-      // Top 10% of 20 eligible = 2 slots, but only robots with ≥50 LP qualify (silver threshold)
-      // Robots 10-19 have ≥50 LP, top 2 are robots 19 (95) and 18 (90)
+      // Top 10% of 20 = 2 slots, only robots with ≥50 LP qualify
       expect(toPromote.length).toBe(2);
       expect(toPromote[0].leaguePoints).toBeGreaterThanOrEqual(50);
       expect(toPromote[1].leaguePoints).toBeGreaterThanOrEqual(50);
     });
 
-    it('should not promote silver robots with 25-49 LP (below silver threshold)', async () => {
-      // Create 20 robots in silver league, all with LP between 25-49
-      const robots = [];
+    it('should not promote silver standings with 25-49 LP (below silver threshold)', async () => {
       for (let i = 0; i < 20; i++) {
-        const weaponInv = await prisma.weaponInventory.create({
-          data: { userId: testUser.id, weaponId: practiceSword.id, pricePaid: 0 },
+        await createRobotWithStanding({
+          name: `Silver Below Threshold ${i}`,
+          tier: 'silver',
+          leagueInstanceId: 'silver_1',
+          leaguePoints: 25 + i, // 25-44, all below silver threshold of 50
+          cyclesInTier: 10,
         });
-
-        const robot = await prisma.robot.create({
-          data: {
-            userId: testUser.id,
-            name: `Silver Below Threshold ${i}`,
-            leagueId: 'silver_1',
-            currentLeague: 'silver',
-            currentHP: 10,
-            maxHP: 10,
-            currentShield: 2,
-            maxShield: 2,
-            elo: 1200,
-            leaguePoints: 25 + i, // 25-44, all below silver threshold of 50
-            totalBattles: 10,
-            cyclesInCurrentLeague: 10,
-            loadoutType: 'single',
-            mainWeaponId: weaponInv.id,
-          },
-        });
-        robots.push(robot);
       }
 
       const toPromote = await determinePromotions('silver_1');
-
-      // No robots meet the 50 LP threshold for silver, so no promotions
       expect(toPromote).toEqual([]);
     });
 
-    it('should return empty array when too few robots', async () => {
-      // Create only 5 robots (< 10 minimum)
-      const robots = [];
+    it('should return empty array when too few entities (< min for rebalancing)', async () => {
       for (let i = 0; i < 5; i++) {
-        const weaponInv = await prisma.weaponInventory.create({
-          data: { userId: testUser.id, weaponId: practiceSword.id, pricePaid: 0 },
+        await createRobotWithStanding({
+          name: `Small League Robot ${i}`,
+          tier: 'gold',
+          leagueInstanceId: 'gold_1',
+          leaguePoints: i * 10,
+          cyclesInTier: 10,
         });
-
-        const robot = await prisma.robot.create({
-          data: {
-            userId: testUser.id,
-            name: `Small League Robot ${i}`,
-            leagueId: 'gold_1',
-            currentLeague: 'gold',
-            currentHP: 10,
-            maxHP: 10,
-            currentShield: 2,
-            maxShield: 2,
-            elo: 1200,
-            leaguePoints: i * 10,
-            totalBattles: 10,
-            cyclesInCurrentLeague: 10,
-            loadoutType: 'single',
-            mainWeaponId: weaponInv.id,
-          },
-        });
-        robots.push(robot);
       }
 
-      const toPromote = await determinePromotions('gold_1'); // Changed to instance ID
+      const toPromote = await determinePromotions('gold_1');
       expect(toPromote).toEqual([]);
-
-      // Clean up
-      for (const robot of robots) {
-        await prisma.robot.deleteMany({ where: { id: robot.id } });
-      }
-      await prisma.weaponInventory.deleteMany({ where: { userId: testUser.id } });
     });
   });
 
   describe('determineDemotions', () => {
-    it('should return bottom 10% of robots with ≥5 cycles in current league', async () => {
-      const robots = [];
+    it('should return bottom 10% of standings with ≥5 cycles in tier', async () => {
       for (let i = 0; i < 20; i++) {
-        const weaponInv = await prisma.weaponInventory.create({
-          data: { userId: testUser.id, weaponId: practiceSword.id, pricePaid: 0 },
+        await createRobotWithStanding({
+          name: `Silver Robot ${i}`,
+          tier: 'silver',
+          leagueInstanceId: 'silver_1',
+          leaguePoints: i * 10, // 0, 10, 20, ..., 190
+          cyclesInTier: 10,
         });
-
-        const robot = await prisma.robot.create({
-          data: {
-            userId: testUser.id,
-            name: `Silver Robot ${i}`,
-            leagueId: 'silver_1',
-            currentLeague: 'silver',
-            currentHP: 10,
-            maxHP: 10,
-            currentShield: 2,
-            maxShield: 2,
-            elo: 1200,
-            leaguePoints: i * 10, // 0, 10, 20, ..., 190
-            totalBattles: 10,
-            cyclesInCurrentLeague: 10,
-            loadoutType: 'single',
-            mainWeaponId: weaponInv.id,
-          },
-        });
-        robots.push(robot);
       }
 
-      const toDemote = await determineDemotions('silver_1'); // Changed to instance ID
+      const toDemote = await determineDemotions('silver_1');
 
-      // Should get bottom 10% = 2 robots (with lowest league points)
+      // Bottom 10% = 2 entities (lowest LP)
       expect(toDemote.length).toBe(2);
-      expect(toDemote[0].name).toBe('Silver Robot 0'); // 0 points
-      expect(toDemote[1].name).toBe('Silver Robot 1'); // 10 points
-
-      // Clean up
-      for (const robot of robots) {
-        await prisma.robot.deleteMany({ where: { id: robot.id } });
-      }
-      await prisma.weaponInventory.deleteMany({ where: { userId: testUser.id } });
+      expect(toDemote[0].leaguePoints).toBeLessThanOrEqual(toDemote[1].leaguePoints);
     });
 
     it('should return empty array for bronze tier', async () => {
-      const toDemote = await determineDemotions('bronze_1'); // Changed to instance ID
+      const toDemote = await determineDemotions('bronze_1');
       expect(toDemote).toEqual([]);
     });
   });
 
   describe('promoteRobot', () => {
-    it('should move robot to next tier and reset league points and cycles', async () => {
-      const weaponInv = await prisma.weaponInventory.create({
-        data: { userId: testUser.id, weaponId: practiceSword.id, pricePaid: 0 },
+    it('should move standing to next tier, assign new instance, and reset cyclesInTier', async () => {
+      const { robot, standing } = await createRobotWithStanding({
+        name: 'Promotion Test Robot',
+        tier: 'bronze',
+        leagueInstanceId: 'bronze_1',
+        leaguePoints: 50,
+        cyclesInTier: 10,
+        elo: 1300,
       });
 
-      const robot = await prisma.robot.create({
-        data: {
-          userId: testUser.id,
-          name: 'Promotion Test Robot',
-          leagueId: 'bronze_1',
-          currentLeague: 'bronze',
-          currentHP: 10,
-          maxHP: 10,
-          currentShield: 2,
-          maxShield: 2,
-          elo: 1300,
-          leaguePoints: 50,
-          cyclesInCurrentLeague: 10,
-          loadoutType: 'single',
-          mainWeaponId: weaponInv.id,
-        },
+      // promoteRobot takes the standing entity (returned from determinePromotions)
+      await promoteRobot(standing as any);
+
+      // Verify standings row was updated
+      const updatedStanding = await prisma.standing.findFirst({
+        where: { entityType: 'robot', entityId: robot.id, mode: 'league_1v1' },
       });
-
-      await promoteRobot(robot);
-
-      const updated = await prisma.robot.findUnique({ where: { id: robot.id } });
-      expect(updated?.currentLeague).toBe('silver');
-      expect(updated?.leagueId).toMatch(/^silver_\d+$/);
-      expect(updated?.leaguePoints).toBe(50); // LP retained on promotion (v1.2 behavior)
-      expect(updated?.cyclesInCurrentLeague).toBe(0); // Should reset cycles counter
-      expect(updated?.elo).toBe(1300); // ELO should not change
-
-      // Clean up
-      await prisma.robot.deleteMany({ where: { id: robot.id } });
-      await prisma.weaponInventory.deleteMany({ where: { id: weaponInv.id } });
+      expect(updatedStanding?.tier).toBe('silver');
+      expect(updatedStanding?.leagueInstanceId).toMatch(/^silver_\d+$/);
+      expect(updatedStanding?.cyclesInTier).toBe(0);
+      // LP retained on promotion
+      expect(updatedStanding?.leaguePoints).toBe(50);
     });
 
     it('should throw error when trying to promote from champion', async () => {
-      const weaponInv = await prisma.weaponInventory.create({
-        data: { userId: testUser.id, weaponId: practiceSword.id, pricePaid: 0 },
+      const { standing } = await createRobotWithStanding({
+        name: 'Champion Robot',
+        tier: 'champion',
+        leagueInstanceId: 'champion_1',
+        leaguePoints: 100,
+        cyclesInTier: 10,
+        elo: 1800,
       });
 
-      const robot = await prisma.robot.create({
-        data: {
-          userId: testUser.id,
-          name: 'Champion Robot',
-          leagueId: 'champion_1',
-          currentLeague: 'champion',
-          currentHP: 10,
-          maxHP: 10,
-          currentShield: 2,
-          maxShield: 2,
-          elo: 1800,
-          leaguePoints: 100,
-          loadoutType: 'single',
-          mainWeaponId: weaponInv.id,
-        },
-      });
-
-      await expect(promoteRobot(robot)).rejects.toThrow();
-
-      // Clean up
-      await prisma.robot.deleteMany({ where: { id: robot.id } });
-      await prisma.weaponInventory.deleteMany({ where: { id: weaponInv.id } });
+      await expect(promoteRobot(standing as any)).rejects.toThrow();
     });
   });
 
   describe('demoteRobot', () => {
-    it('should move robot to previous tier and reset league points', async () => {
-      const weaponInv = await prisma.weaponInventory.create({
-        data: { userId: testUser.id, weaponId: practiceSword.id, pricePaid: 0 },
+    it('should move standing to previous tier and reset cyclesInTier', async () => {
+      const { robot, standing } = await createRobotWithStanding({
+        name: 'Demotion Test Robot',
+        tier: 'silver',
+        leagueInstanceId: 'silver_1',
+        leaguePoints: 5,
+        cyclesInTier: 10,
+        elo: 1100,
       });
 
-      const robot = await prisma.robot.create({
-        data: {
-          userId: testUser.id,
-          name: 'Demotion Test Robot',
-          leagueId: 'silver_1',
-          currentLeague: 'silver',
-          currentHP: 10,
-          maxHP: 10,
-          currentShield: 2,
-          maxShield: 2,
-          elo: 1100,
-          leaguePoints: 5,
-          loadoutType: 'single',
-          mainWeaponId: weaponInv.id,
-        },
+      await demoteRobot(standing as any);
+
+      const updatedStanding = await prisma.standing.findFirst({
+        where: { entityType: 'robot', entityId: robot.id, mode: 'league_1v1' },
       });
-
-      await demoteRobot(robot);
-
-      const updated = await prisma.robot.findUnique({ where: { id: robot.id } });
-      expect(updated?.currentLeague).toBe('bronze');
-      expect(updated?.leagueId).toMatch(/^bronze_\d+$/);
-      expect(updated?.leaguePoints).toBe(5); // LP retained on demotion (v1.2 behavior)
-      expect(updated?.elo).toBe(1100); // ELO should not change
-
-      // Clean up
-      await prisma.robot.deleteMany({ where: { id: robot.id } });
-      await prisma.weaponInventory.deleteMany({ where: { id: weaponInv.id } });
+      expect(updatedStanding?.tier).toBe('bronze');
+      expect(updatedStanding?.leagueInstanceId).toMatch(/^bronze_\d+$/);
+      expect(updatedStanding?.cyclesInTier).toBe(0);
+      // LP retained on demotion
+      expect(updatedStanding?.leaguePoints).toBe(5);
     });
 
     it('should throw error when trying to demote from bronze', async () => {
-      const weaponInv = await prisma.weaponInventory.create({
-        data: { userId: testUser.id, weaponId: practiceSword.id, pricePaid: 0 },
+      const { standing } = await createRobotWithStanding({
+        name: 'Bronze Robot',
+        tier: 'bronze',
+        leagueInstanceId: 'bronze_1',
+        leaguePoints: 0,
+        cyclesInTier: 10,
+        elo: 1000,
       });
 
-      const robot = await prisma.robot.create({
-        data: {
-          userId: testUser.id,
-          name: 'Bronze Robot',
-          leagueId: 'bronze_1',
-          currentLeague: 'bronze',
-          currentHP: 10,
-          maxHP: 10,
-          currentShield: 2,
-          maxShield: 2,
-          elo: 1000,
-          leaguePoints: 0,
-          loadoutType: 'single',
-          mainWeaponId: weaponInv.id,
-        },
-      });
-
-      await expect(demoteRobot(robot)).rejects.toThrow();
-
-      // Clean up
-      await prisma.robot.deleteMany({ where: { id: robot.id } });
-      await prisma.weaponInventory.deleteMany({ where: { id: weaponInv.id } });
+      await expect(demoteRobot(standing as any)).rejects.toThrow();
     });
   });
 
   describe('rebalanceLeagues', () => {
     it('should process all tiers and return summary', async () => {
-      // Create robots across multiple tiers
-      const robots = [];
-      
-      // 20 bronze robots
+      // Create 20 bronze standings with enough LP for some promotions
       for (let i = 0; i < 20; i++) {
-        const weaponInv = await prisma.weaponInventory.create({
-          data: { userId: testUser.id, weaponId: practiceSword.id, pricePaid: 0 },
+        await createRobotWithStanding({
+          name: `Bronze ${i}`,
+          tier: 'bronze',
+          leagueInstanceId: 'bronze_1',
+          leaguePoints: i * 10, // 0-190
+          cyclesInTier: 10,
         });
-        const robot = await prisma.robot.create({
-          data: {
-            userId: testUser.id,
-            name: `Bronze ${i}`,
-            leagueId: 'bronze_1',
-            currentLeague: 'bronze',
-            currentHP: 10,
-            maxHP: 10,
-            currentShield: 2,
-            maxShield: 2,
-            elo: 1200,
-            leaguePoints: i * 10,
-            totalBattles: 10,
-            cyclesInCurrentLeague: 10,
-            loadoutType: 'single',
-            mainWeaponId: weaponInv.id,
-          },
-        });
-        robots.push(robot);
       }
 
       const summary = await rebalanceLeagues();
 
-      expect(summary.totalRobots).toBeGreaterThanOrEqual(20); // At least the 20 we created
-      expect(summary.totalPromoted).toBeGreaterThan(0); // At least some promoted
+      expect(summary.totalRobots).toBeGreaterThanOrEqual(20);
+      expect(summary.totalPromoted).toBeGreaterThan(0);
       expect(summary.tierSummaries.length).toBe(6); // All 6 tiers
     });
 
-    it('should not promote or demote robots multiple times in same cycle', async () => {
-      // Scenario from the issue: Robot promoted from bronze to silver, 
-      // then should NOT be eligible for promotion/demotion in silver tier
-
-      const robots = [];
-      
-      // Create 100 bronze robots (to trigger promotion)
+    it('should not promote or demote entities multiple times in same cycle', async () => {
+      // Create 100 bronze standings to trigger promotion
       for (let i = 0; i < 100; i++) {
-        const weaponInv = await prisma.weaponInventory.create({
-          data: { userId: testUser.id, weaponId: practiceSword.id, pricePaid: 0 },
+        await createRobotWithStanding({
+          name: `Robot ${i}`,
+          tier: 'bronze',
+          leagueInstanceId: 'bronze_1',
+          leaguePoints: i * 10, // 0-990
+          cyclesInTier: 10,
+          elo: 1200 + i,
         });
-        const robot = await prisma.robot.create({
-          data: {
-            userId: testUser.id,
-            name: `Robot ${i}`,
-            leagueId: 'bronze_1',
-            currentLeague: 'bronze',
-            currentHP: 10,
-            maxHP: 10,
-            currentShield: 2,
-            maxShield: 2,
-            elo: 1200 + i, // Varying ELO to create order
-            leaguePoints: i * 10, // 0 to 990 points
-            totalBattles: 10,
-            cyclesInCurrentLeague: 10,
-            loadoutType: 'single',
-            mainWeaponId: weaponInv.id,
-          },
-        });
-        robots.push(robot);
       }
 
-      // Run rebalancing
       const summary = await rebalanceLeagues();
 
-      // 10% of 100 bronze robots = 10 promoted to silver
+      // 10% of 100 bronze = 10 promoted to silver
       expect(summary.tierSummaries[0].promoted).toBe(10);
       expect(summary.tierSummaries[0].demoted).toBe(0);
 
-      // Silver tier should have 0 promotions and 0 demotions
-      // because only 10 robots would be in silver (all just promoted)
-      // and they should be excluded from processing
+      // Silver tier should have 0 promotions (newly promoted, excluded)
       expect(summary.tierSummaries[1].promoted).toBe(0);
       expect(summary.tierSummaries[1].demoted).toBe(0);
 
-      // Verify no robot was moved twice
-      // Get all robots and check their final positions
-      const finalRobots = await prisma.robot.findMany({
-        where: {
-          id: { in: robots.map(r => r.id) },
-        },
+      // Verify standings distribution
+      const bronzeCount = await prisma.standing.count({
+        where: { mode: 'league_1v1', tier: 'bronze' },
+      });
+      const silverCount = await prisma.standing.count({
+        where: { mode: 'league_1v1', tier: 'silver' },
       });
 
-      // Count robots in each tier
-      const tierCounts = {
-        bronze: 0,
-        silver: 0,
-        gold: 0,
-      };
-
-      for (const robot of finalRobots) {
-        if (robot.currentLeague === 'bronze') tierCounts.bronze++;
-        if (robot.currentLeague === 'silver') tierCounts.silver++;
-        if (robot.currentLeague === 'gold') tierCounts.gold++;
-      }
-
-      // Expect: 90 in bronze, 10 in silver, 0 in gold
-      // (not 89 in bronze, 9 in silver, 1 in gold if double promotion occurred)
-      expect(tierCounts.bronze).toBe(90);
-      expect(tierCounts.silver).toBe(10);
-      expect(tierCounts.gold).toBe(0);
-
-      // Clean up
-      for (const robot of robots) {
-        await prisma.robot.deleteMany({ where: { id: robot.id } });
-      }
-      await prisma.weaponInventory.deleteMany({ where: { userId: testUser.id } });
+      expect(bronzeCount).toBe(90);
+      expect(silverCount).toBe(10);
     });
   });
 

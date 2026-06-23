@@ -5,66 +5,90 @@ interface KothStandingsParams {
   view: string;
   page: number;
   limit: number;
+  tier?: string;
+  instance?: string;
 }
 
-export async function getKothStandings({ view, page, limit }: KothStandingsParams) {
+export async function getKothStandings({ view, page, limit, tier, instance }: KothStandingsParams) {
   if (view === 'last_10') {
     return getKothStandingsLast10({ page, limit });
   }
-  return getKothStandingsAllTime({ page, limit });
+  return getKothStandingsAllTime({ page, limit, tier, instance });
 }
 
-async function getKothStandingsAllTime({ page, limit }: { page: number; limit: number }) {
-  const kothRobotWhere = { kothMatches: { gt: 0 }, NOT: { name: 'Bye Robot' as const } };
+async function getKothStandingsAllTime({ page, limit, tier, instance }: { page: number; limit: number; tier?: string; instance?: string }) {
+  const kothWhere = {
+    mode: 'koth' as const,
+    entityType: 'robot',
+    ...(tier && { tier }),
+    ...(instance && { leagueInstanceId: instance }),
+  };
 
-  const [totalEvents, uniqueParticipants, robots, total] = await Promise.all([
-    prisma.scheduledKothMatch.count({ where: { status: 'completed' } }),
-    prisma.robot.count({ where: kothRobotWhere }),
-    prisma.robot.findMany({
-      where: kothRobotWhere,
-      include: {
-        user: { select: { id: true, username: true, stableName: true } },
-      },
+  const [totalEvents, total, standings_rows] = await Promise.all([
+    prisma.scheduledMatch.count({ where: { matchType: 'koth' as any, status: 'completed' } }),
+    prisma.standing.count({ where: kothWhere }),
+    prisma.standing.findMany({
+      where: kothWhere,
       orderBy: [
-        { kothWins: 'desc' },
-        { kothTotalZoneScore: 'desc' },
+        { leaguePoints: 'desc' },
+        { totalZoneScore: 'desc' },
       ],
       skip: (page - 1) * limit,
       take: limit,
     }),
-    prisma.robot.count({ where: kothRobotWhere }),
   ]);
 
-  const topRobot = robots.length > 0 ? robots[0] : null;
+  // Fetch robot names and owner info for the standings
+  const robotIds = standings_rows.map(s => s.entityId);
+  const robots = await prisma.robot.findMany({
+    where: { id: { in: robotIds } },
+    select: {
+      id: true,
+      name: true,
+      user: { select: { id: true, username: true, stableName: true } },
+    },
+  });
+  const robotMap = new Map(robots.map(r => [r.id, r]));
 
   // Batch-check KotH subscription status
-  const robotIds = robots.map(r => r.id);
   const kothSubs = await prisma.subscription.findMany({
     where: { robotId: { in: robotIds }, eventType: 'koth', status: 'active' },
     select: { robotId: true },
   });
   const subscribedKothRobotIds = new Set(kothSubs.map(s => s.robotId));
 
-  const standings = robots.map((robot, index) => ({
-    rank: (page - 1) * limit + index + 1,
-    robotId: robot.id,
-    robotName: robot.name,
-    owner: robot.user.stableName || robot.user.username,
-    ownerId: robot.user.id,
-    isSubscribed: subscribedKothRobotIds.has(robot.id),
-    kothWins: robot.kothWins,
-    kothMatches: robot.kothMatches,
-    winRate: robot.kothMatches > 0 ? Number((robot.kothWins / robot.kothMatches * 100).toFixed(1)) : 0,
-    totalZoneScore: robot.kothTotalZoneScore,
-    avgZoneScore: robot.kothMatches > 0 ? Number((robot.kothTotalZoneScore / robot.kothMatches).toFixed(1)) : 0,
-    kothKills: robot.kothKills,
-    bestStreak: robot.kothBestWinStreak,
-  }));
+  const topStanding = standings_rows.length > 0 ? standings_rows[0] : null;
+  const topRobot = topStanding ? robotMap.get(topStanding.entityId) : null;
+
+  const standings = standings_rows.map((standing, index) => {
+    const robot = robotMap.get(standing.entityId);
+    const kothMatches = standing.totalMatches ?? 0;
+    const kothWins = standing.wins;
+    return {
+      rank: (page - 1) * limit + index + 1,
+      robotId: standing.entityId,
+      robotName: robot?.name ?? `Robot #${standing.entityId}`,
+      owner: robot?.user ? (robot.user.stableName || robot.user.username) : 'Unknown',
+      ownerId: robot?.user?.id ?? 0,
+      isSubscribed: subscribedKothRobotIds.has(standing.entityId),
+      kothWins,
+      kothMatches,
+      kothPoints: standing.leaguePoints,
+      tier: standing.tier,
+      leagueInstanceId: standing.leagueInstanceId,
+      winRate: kothMatches > 0 ? Number((kothWins / kothMatches * 100).toFixed(1)) : 0,
+      totalZoneScore: standing.totalZoneScore ?? 0,
+      avgZoneScore: kothMatches > 0 ? Number(((standing.totalZoneScore ?? 0) / kothMatches).toFixed(1)) : 0,
+      kothKills: standing.totalKills ?? 0,
+      bestStreak: standing.bestWinStreak,
+      bestPlacement: standing.bestPlacement,
+    };
+  });
 
   return {
     summary: {
       totalEvents,
-      uniqueParticipants,
+      uniqueParticipants: total,
       topRobot: topRobot
         ? { id: topRobot.id, name: topRobot.name, owner: topRobot.user.stableName || topRobot.user.username }
         : null,
@@ -76,21 +100,26 @@ async function getKothStandingsAllTime({ page, limit }: { page: number; limit: n
 }
 
 async function getKothStandingsLast10({ page, limit }: { page: number; limit: number }) {
-  // Get the last 10 completed KotH matches with their battle logs
-  const recentMatches = await prisma.scheduledKothMatch.findMany({
-    where: { status: 'completed', battleId: { not: null } },
+  // Get the last 10 completed KotH matches with their battle logs (unified table)
+  const recentMatches = await prisma.scheduledMatch.findMany({
+    where: { matchType: 'koth' as any, status: 'completed', battleId: { not: null } },
     orderBy: { scheduledFor: 'desc' },
     take: 10,
     select: {
       id: true,
-      battle: {
-        select: {
-          id: true,
-          battleLog: true,
-        },
-      },
+      battleId: true,
     },
   });
+
+  // Load battle logs for completed matches
+  const battleIds = recentMatches.map(m => m.battleId).filter((id): id is number => id !== null);
+  const battles = battleIds.length > 0
+    ? await prisma.battle.findMany({
+        where: { id: { in: battleIds } },
+        select: { id: true, battleLog: true },
+      })
+    : [];
+  const battleMap = new Map(battles.map(b => [b.id, b]));
 
   // Aggregate per-robot stats from battle log placements
   const robotStats = new Map<number, {
@@ -108,9 +137,10 @@ async function getKothStandingsLast10({ page, limit }: { page: number; limit: nu
   const chronologicalMatches = [...recentMatches].reverse();
 
   for (const match of chronologicalMatches) {
-    if (!match.battle?.battleLog) continue;
+    const battle = match.battleId ? battleMap.get(match.battleId) : null;
+    if (!battle?.battleLog) continue;
 
-    const log = match.battle.battleLog as unknown as { placements?: KothPlacement[] };
+    const log = battle.battleLog as unknown as { placements?: KothPlacement[] };
     if (!log.placements) continue;
 
     for (const placement of log.placements) {

@@ -234,6 +234,8 @@ router.post('/matchmaking/run', authenticateToken, requireAdmin, validateRequest
 
     res.json({
       success: true,
+      deprecated: true,
+      deprecationWarning: 'Use POST /api/admin/scheduler/trigger/league instead. This endpoint will be removed in a future release.',
       matchesCreated: totalMatches,
       scheduledFor: targetTime.toISOString(),
       timestamp: new Date().toISOString(),
@@ -267,6 +269,8 @@ router.post('/battles/run', authenticateToken, requireAdmin, validateRequest({ b
 
     res.json({
       success: true,
+      deprecated: true,
+      deprecationWarning: 'Use POST /api/admin/scheduler/trigger/league instead. This endpoint will be removed in a future release.',
       summary,
       timestamp: new Date().toISOString(),
     });
@@ -293,6 +297,8 @@ router.post('/leagues/rebalance', authenticateToken, requireAdmin, validateReque
 
     res.json({
       success: true,
+      deprecated: true,
+      deprecationWarning: 'Use POST /api/admin/scheduler/trigger/league instead. This endpoint will be removed in a future release.',
       summary,
       timestamp: new Date().toISOString(),
     });
@@ -536,6 +542,8 @@ router.post('/tag-teams/matchmaking', authenticateToken, requireAdmin, validateR
 
     res.json({
       success: true,
+      deprecated: true,
+      deprecationWarning: 'Use POST /api/admin/scheduler/trigger/tagTeam instead. This endpoint will be removed in a future release.',
       matchesCreated: totalMatches,
       scheduledFor: targetTime.toISOString(),
       timestamp: new Date().toISOString(),
@@ -567,6 +575,8 @@ router.post('/tag-teams/battles', authenticateToken, requireAdmin, validateReque
 
     res.json({
       success: true,
+      deprecated: true,
+      deprecationWarning: 'Use POST /api/admin/scheduler/trigger/tagTeam instead. This endpoint will be removed in a future release.',
       summary,
       timestamp: new Date().toISOString(),
     });
@@ -593,6 +603,8 @@ router.post('/tag-teams/rebalance', authenticateToken, requireAdmin, validateReq
 
     res.json({
       success: true,
+      deprecated: true,
+      deprecationWarning: 'Use POST /api/admin/scheduler/trigger/tagTeam instead. This endpoint will be removed in a future release.',
       summary,
       timestamp: new Date().toISOString(),
     });
@@ -621,6 +633,8 @@ router.post('/team-battles/matchmaking', authenticateToken, requireAdmin, valida
 
     res.json({
       success: true,
+      deprecated: true,
+      deprecationWarning: 'Use POST /api/admin/scheduler/trigger/team2v2League or team3v3League instead. This endpoint will be removed in a future release.',
       matchesCreated: totalMatches,
       teamSize,
       timestamp: new Date().toISOString(),
@@ -650,6 +664,8 @@ router.post('/team-battles/battles', authenticateToken, requireAdmin, validateRe
 
     res.json({
       success: true,
+      deprecated: true,
+      deprecationWarning: 'Use POST /api/admin/scheduler/trigger/team2v2League or team3v3League instead. This endpoint will be removed in a future release.',
       summary,
       teamSize,
       timestamp: new Date().toISOString(),
@@ -731,34 +747,23 @@ router.post('/scheduler/trigger/:jobName', authenticateToken, requireAdmin, vali
 
 /**
  * POST /api/admin/koth/trigger
- * Manually trigger a KotH cycle execution (admin-only)
+ * @deprecated Use POST /api/admin/scheduler/trigger/koth instead.
+ * Delegates to the unified KotH cycle handler (same as cron).
  */
 router.post('/koth/trigger', authenticateToken, requireAdmin, validateRequest({}), async (_req: Request, res: Response) => {
   const authReq = _req as AuthRequest;
   try {
-    const { runJob } = await import('../services/cycle/cycleScheduler');
-    const { executeScheduledKothBattles } = await import('../services/koth/kothBattleOrchestrator');
-    const { runKothMatchmaking } = await import('../services/koth/kothMatchmakingService');
+    const { triggerJob } = await import('../services/cycle/cycleScheduler');
 
-    logger.info('[Admin] Manually triggering KotH cycle...');
+    logger.info('[Admin] KotH trigger (deprecated endpoint) — delegating to triggerJob("koth")');
+    await triggerJob('koth');
 
-    await runJob('koth', async () => {
-      await repairAllRobots(true);
-      const battleSummary = await executeScheduledKothBattles(new Date());
-      const scheduledFor = new Date(Date.now() + 48 * 60 * 60 * 1000); // 48h ahead
-      const matchesCreated = await runKothMatchmaking(scheduledFor);
-
-      return {
-        jobName: 'koth' as const,
-        matchesCompleted: battleSummary.successfulMatches,
-        matchesScheduled: matchesCreated,
-      };
-    });
-
-    recordAuditAction(authReq.user!.userId, 'koth_trigger', 'success', { message: 'KotH cycle triggered' });
+    recordAuditAction(authReq.user!.userId, 'koth_trigger', 'success', { message: 'KotH cycle triggered (deprecated endpoint)' });
 
     res.json({
       success: true,
+      deprecated: true,
+      deprecationWarning: 'Use POST /api/admin/scheduler/trigger/koth instead. This endpoint will be removed in a future release.',
       message: 'KotH cycle triggered successfully',
       timestamp: new Date().toISOString(),
     });
@@ -915,7 +920,7 @@ router.get('/users/:id', authenticateToken, requireAdmin, validateRequest({ para
       hasCompletedOnboarding: true,
       onboardingStep: true,
       robots: {
-        where: { NOT: { name: 'Bye Robot' } },
+        where: {},
         select: {
           id: true,
           name: true,
