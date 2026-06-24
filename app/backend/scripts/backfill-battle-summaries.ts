@@ -355,8 +355,8 @@ function computeSummaryFromEvents(
 
 // ─── Main backfill logic ─────────────────────────────────────────────
 
-const BATCH_SIZE = 200;
-const SLEEP_MS = 50;
+const BATCH_SIZE = parseInt(process.env.BACKFILL_BATCH_SIZE || '50', 10);
+const SLEEP_MS = parseInt(process.env.BACKFILL_SLEEP_MS || '100', 10);
 
 async function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
