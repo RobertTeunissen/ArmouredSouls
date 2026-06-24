@@ -79,3 +79,4 @@ Browser-based robot combat strategy game with turn-based mechanics, league syste
 - Security-first approach (see docs/architecture/PRD_SECURITY.md)
 - Database-driven game state management
 - RESTful API design
+- **Unified post-battle robot updates**: All battle orchestrators (1v1 league, 1v1 tournament, 2v2/3v3 league, team tournament, tag team, KotH) call `updateRobotCombatStats()` from `src/services/battle/battlePostCombat.ts` to persist combat stats. No inline `prisma.robot.update` for HP/ELO/counters — see `docs/architecture/PRD_BATTLE_DATA_ARCHITECTURE.md` § Post-Battle Robot State Update

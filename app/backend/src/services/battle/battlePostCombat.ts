@@ -159,32 +159,56 @@ export async function logBattleAuditEvent(
 
 // ─── 3. Robot Combat Stats ───────────────────────────────────────────
 
-/** Options for updateRobotCombatStats — covers all orchestrator variations */
+/**
+ * Options for updateRobotCombatStats — the SINGLE canonical function
+ * that all orchestrators call after a robot participates in any battle.
+ *
+ * Every orchestrator (1v1 league, 1v1 tournament, 2v2/3v3 league,
+ * 2v2/3v3 tournament, tag team, KotH) MUST call this function for
+ * each participating robot. This ensures uniform stat tracking.
+ */
 export interface RobotStatUpdateOptions {
   robotId: number;
+  /** Robot's HP at end of battle. Clamped to stored maxHP internally. */
   finalHP: number;
+  /** New absolute ELO value. Pass current ELO if no change (e.g. KotH). */
   newELO: number;
+  /** Whether this robot was on the winning side */
   isWinner: boolean;
+  /** Whether the battle ended in a draw */
   isDraw: boolean;
+  /** Total damage this robot dealt during the battle */
   damageDealt: number;
+  /** Total damage this robot received during the battle */
   damageTakenByOpponent: number;
+  /** Whether this robot's opponent was destroyed (HP=0) */
   opponentDestroyed: boolean;
   /** Fame to increment (0 if not winner or no fame) */
   fameIncrement?: number;
-  /** Additional fields for type-specific stat updates */
-  extraData?: Record<string, unknown>;
-  /** Battle type (retained for logging/context) */
+  /** Battle type for context (league_1v1, league_2v2, tag_team, koth, etc.) */
   battleType?: string;
   /** Robot's stance at battle time (for stance win counters) */
   stance?: string;
   /** Robot's loadout type at battle time (for loadout win counters) */
   loadoutType?: string;
+  /**
+   * If true, skip totalBattles/wins/losses/draws increment.
+   * Used by KotH where placement determines outcome, not win/loss.
+   */
+  skipBattleCounters?: boolean;
 }
 
 /**
  * Update a robot's combat stats after a battle.
- * Handles wins/losses/draws/kills/damage lifetime counters + ELO + HP.
- * LP and streaks are now managed by the standings service.
+ *
+ * This is the SINGLE source of truth for post-battle robot updates.
+ * All orchestrators must use this function — no inline prisma.robot.update
+ * for combat stat persistence.
+ *
+ * Handles: currentHP, ELO, totalBattles, wins/losses/draws, kills,
+ * damageDealtLifetime, damageTakenLifetime, fame, stance/loadout win counters.
+ *
+ * LP and streaks are managed separately by the standings service.
  */
 export async function updateRobotCombatStats(opts: RobotStatUpdateOptions): Promise<void> {
   // Clamp finalHP to the robot's stored maxHP to prevent currentHP > maxHP
@@ -198,18 +222,22 @@ export async function updateRobotCombatStats(opts: RobotStatUpdateOptions): Prom
   const data: Record<string, unknown> = {
     currentHP: clampedHP,
     elo: opts.newELO,
-    totalBattles: { increment: 1 },
-    wins: opts.isWinner ? { increment: 1 } : undefined,
-    draws: opts.isDraw ? { increment: 1 } : undefined,
-    losses: (!opts.isWinner && !opts.isDraw) ? { increment: 1 } : undefined,
-    kills: opts.opponentDestroyed ? { increment: 1 } : undefined,
     damageDealtLifetime: { increment: opts.damageDealt },
     damageTakenLifetime: { increment: opts.damageTakenByOpponent },
     fame: (opts.fameIncrement && opts.fameIncrement > 0) ? { increment: opts.fameIncrement } : undefined,
   };
 
+  // Battle counters (skipped for KotH which uses placement, not win/loss)
+  if (!opts.skipBattleCounters) {
+    data.totalBattles = { increment: 1 };
+    data.wins = opts.isWinner ? { increment: 1 } : undefined;
+    data.draws = opts.isDraw ? { increment: 1 } : undefined;
+    data.losses = (!opts.isWinner && !opts.isDraw) ? { increment: 1 } : undefined;
+    data.kills = opts.opponentDestroyed ? { increment: 1 } : undefined;
+  }
+
   // ── Stance/Loadout Win Counters ──
-  if (opts.isWinner) {
+  if (opts.isWinner && !opts.skipBattleCounters) {
     if (opts.stance === 'offensive') {
       data.offensiveWins = { increment: 1 };
     } else if (opts.stance === 'defensive') {
@@ -221,11 +249,6 @@ export async function updateRobotCombatStats(opts: RobotStatUpdateOptions): Prom
     if (opts.loadoutType === 'dual_wield') {
       data.dualWieldWins = { increment: 1 };
     }
-  }
-
-  // Merge any type-specific extra fields
-  if (opts.extraData) {
-    Object.assign(data, opts.extraData);
   }
 
   // Clean undefined values so Prisma doesn't complain

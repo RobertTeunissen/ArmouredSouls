@@ -33,6 +33,7 @@ import {
 import {
   logBattleAuditEvent,
   checkAndAwardAchievements,
+  updateRobotCombatStats,
 } from '../battle/battlePostCombat';
 import standingsService from '../standings/standingsService';
 import { CombatMessageGenerator } from '../battle/combatMessageGenerator';
@@ -148,16 +149,24 @@ export function calculateKothRewards(
 async function batchUpdateKothRobotStats(
   participants: PreparedParticipant[],
 ): Promise<void> {
-  // 1. Update robot HP (battle damage persistence) in a transaction
-  const hpUpdates = participants.map(p =>
-    prisma.robot.update({
-      where: { id: p.robot.id },
-      data: {
-        currentHP: Math.max(0, p.finalHP),
-      },
-    })
-  );
-  await prisma.$transaction(hpUpdates);
+  // 1. Update robot combat stats via unified function (skipBattleCounters for KotH)
+  for (const p of participants) {
+    await updateRobotCombatStats({
+      robotId: p.robot.id,
+      finalHP: p.finalHP,
+      newELO: p.robot.elo, // KotH doesn't use ELO
+      isWinner: p.isWinner,
+      isDraw: false, // KotH never draws
+      damageDealt: p.damageDealt,
+      damageTakenByOpponent: p.robot.maxHP - p.finalHP,
+      opponentDestroyed: p.kills > 0,
+      fameIncrement: 0, // Fame handled separately in reward distribution
+      battleType: 'koth',
+      stance: p.robot.stance,
+      loadoutType: p.robot.loadoutType,
+      skipBattleCounters: true,
+    });
+  }
 
   // 2. Award KotH points and update standings via unified service
   for (const p of participants) {

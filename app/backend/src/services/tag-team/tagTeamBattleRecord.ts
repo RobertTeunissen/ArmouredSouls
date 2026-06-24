@@ -13,10 +13,12 @@ export async function createTagTeamBattleRecord(
   result: TagTeamBattleResult
 ): Promise<Battle> {
   // Create battle record with tag team fields
+  // For bye matches, use team1's active robot for both FK slots (same pattern as team battles)
+  const isByeMatch = team2.activeRobotId < 0;
   const battle = await prisma.battle.create({
     data: {
       robot1Id: team1.activeRobotId,
-      robot2Id: team2.activeRobotId,
+      robot2Id: isByeMatch ? team1.activeRobotId : team2.activeRobotId,
       winnerId: result.winnerId,
       battleType: 'tag_team',
       leagueType: match.teamBattleLeague,
@@ -25,8 +27,8 @@ export async function createTagTeamBattleRecord(
       // Tag team specific fields
       team1ActiveRobotId: team1.activeRobotId,
       team1ReserveRobotId: team1.reserveRobotId,
-      team2ActiveRobotId: team2.activeRobotId,
-      team2ReserveRobotId: team2.reserveRobotId,
+      team2ActiveRobotId: isByeMatch ? null : team2.activeRobotId,
+      team2ReserveRobotId: isByeMatch ? null : team2.reserveRobotId,
       team1TagOutTime: result.team1TagOutTime ? BigInt(Math.round(result.team1TagOutTime * 1000)) : null,
       team2TagOutTime: result.team2TagOutTime ? BigInt(Math.round(result.team2TagOutTime * 1000)) : null,
 
@@ -65,80 +67,81 @@ export async function createTagTeamBattleRecord(
     },
   });
 
-  // Create BattleParticipant records for all 4 robots
+  // Create BattleParticipant records for real robots only
   // Note: Credits, prestige, and fame will be updated later in updateTagTeamStats
-  await prisma.battleParticipant.createMany({
-    data: [
-      // Team 1 Active
-      {
-        battleId: battle.id,
-        robotId: team1.activeRobotId,
-        team: 1,
-        role: 'active',
-        credits: 0, // Will be updated later
-        streamingRevenue: 0,
-        eloBefore: team1.activeRobot.elo,
-        eloAfter: team1.activeRobot.elo, // Will be updated later
-        prestigeAwarded: 0, // Will be updated later
-        fameAwarded: 0, // Will be updated later
-        damageDealt: result.team1ActiveDamageDealt || 0,
-        finalHP: result.team1ActiveFinalHP,
-        yielded: false,
-        destroyed: result.team1ActiveFinalHP === 0,
-      },
-      // Team 1 Reserve
-      {
-        battleId: battle.id,
-        robotId: team1.reserveRobotId,
-        team: 1,
-        role: 'reserve',
-        credits: 0, // Will be updated later
-        streamingRevenue: 0,
-        eloBefore: team1.reserveRobot.elo,
-        eloAfter: team1.reserveRobot.elo, // Will be updated later
-        prestigeAwarded: 0, // Will be updated later
-        fameAwarded: 0, // Will be updated later
-        damageDealt: result.team1ReserveDamageDealt || 0,
-        finalHP: result.team1ReserveFinalHP,
-        yielded: false,
-        destroyed: result.team1ReserveFinalHP === 0,
-      },
-      // Team 2 Active
-      {
-        battleId: battle.id,
-        robotId: team2.activeRobotId,
-        team: 2,
-        role: 'active',
-        credits: 0, // Will be updated later
-        streamingRevenue: 0,
-        eloBefore: team2.activeRobot.elo,
-        eloAfter: team2.activeRobot.elo, // Will be updated later
-        prestigeAwarded: 0, // Will be updated later
-        fameAwarded: 0, // Will be updated later
-        damageDealt: result.team2ActiveDamageDealt || 0,
-        finalHP: result.team2ActiveFinalHP,
-        yielded: false,
-        destroyed: result.team2ActiveFinalHP === 0,
-      },
-      // Team 2 Reserve
-      {
-        battleId: battle.id,
-        robotId: team2.reserveRobotId,
-        team: 2,
-        role: 'reserve',
-        credits: 0, // Will be updated later
-        streamingRevenue: 0,
-        eloBefore: team2.reserveRobot.elo,
-        eloAfter: team2.reserveRobot.elo, // Will be updated later
-        prestigeAwarded: 0, // Will be updated later
-        fameAwarded: 0, // Will be updated later
-        damageDealt: result.team2ReserveDamageDealt || 0,
-        finalHP: result.team2ReserveFinalHP,
-        yielded: false,
-        destroyed: result.team2ReserveFinalHP === 0,
-      },
-    ],
-  });
+  // Skip bye robots (negative IDs) — they don't exist in the robots table (same pattern as teamBattleOrchestrator)
+  const participantRows = [
+    // Team 1 Active
+    {
+      battleId: battle.id,
+      robotId: team1.activeRobotId,
+      team: 1,
+      role: 'active' as string | null,
+      credits: 0, // Will be updated later
+      streamingRevenue: 0,
+      eloBefore: team1.activeRobot.elo,
+      eloAfter: team1.activeRobot.elo, // Will be updated later
+      prestigeAwarded: 0, // Will be updated later
+      fameAwarded: 0, // Will be updated later
+      damageDealt: result.team1ActiveDamageDealt || 0,
+      finalHP: result.team1ActiveFinalHP,
+      yielded: false,
+      destroyed: result.team1ActiveFinalHP === 0,
+    },
+    // Team 1 Reserve
+    {
+      battleId: battle.id,
+      robotId: team1.reserveRobotId,
+      team: 1,
+      role: 'reserve' as string | null,
+      credits: 0, // Will be updated later
+      streamingRevenue: 0,
+      eloBefore: team1.reserveRobot.elo,
+      eloAfter: team1.reserveRobot.elo, // Will be updated later
+      prestigeAwarded: 0, // Will be updated later
+      fameAwarded: 0, // Will be updated later
+      damageDealt: result.team1ReserveDamageDealt || 0,
+      finalHP: result.team1ReserveFinalHP,
+      yielded: false,
+      destroyed: result.team1ReserveFinalHP === 0,
+    },
+    // Team 2 Active
+    {
+      battleId: battle.id,
+      robotId: team2.activeRobotId,
+      team: 2,
+      role: 'active' as string | null,
+      credits: 0, // Will be updated later
+      streamingRevenue: 0,
+      eloBefore: team2.activeRobot.elo,
+      eloAfter: team2.activeRobot.elo, // Will be updated later
+      prestigeAwarded: 0, // Will be updated later
+      fameAwarded: 0, // Will be updated later
+      damageDealt: result.team2ActiveDamageDealt || 0,
+      finalHP: result.team2ActiveFinalHP,
+      yielded: false,
+      destroyed: result.team2ActiveFinalHP === 0,
+    },
+    // Team 2 Reserve
+    {
+      battleId: battle.id,
+      robotId: team2.reserveRobotId,
+      team: 2,
+      role: 'reserve' as string | null,
+      credits: 0, // Will be updated later
+      streamingRevenue: 0,
+      eloBefore: team2.reserveRobot.elo,
+      eloAfter: team2.reserveRobot.elo, // Will be updated later
+      prestigeAwarded: 0, // Will be updated later
+      fameAwarded: 0, // Will be updated later
+      damageDealt: result.team2ReserveDamageDealt || 0,
+      finalHP: result.team2ReserveFinalHP,
+      yielded: false,
+      destroyed: result.team2ReserveFinalHP === 0,
+    },
+  ].filter(p => p.robotId > 0); // Skip bye robots (negative IDs)
+
+  await prisma.battleParticipant.createMany({ data: participantRows });
 
   return battle;
 }

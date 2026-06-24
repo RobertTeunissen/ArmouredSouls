@@ -176,21 +176,138 @@ function simulateBattleWrapper(robot1: Robot, robot2: Robot): BattleResult {
 }
 
 /**
- * Simulate a bye-robot battle (player always wins easily)
+ * Process a bye-match using the same pattern as team battles:
+ * - Real robot's ID fills both FK slots on the Battle record
+ * - Only one BattleParticipant is created (for the real robot)
+ * - Stats, LP, credits, and ELO are awarded normally for the winner
+ * - No prestige/fame/streaming/achievements for bye matches
  */
-function simulateByeBattle(playerRobot: Robot, byeRobot: Robot): BattleResult {
-  // Player wins unscathed — bye matches exist to ensure all battle-ready
-  // robots get scheduled when there's an odd count. No damage penalty.
+async function processByeBattle(scheduledMatch: ScheduledLeagueMatchData): Promise<BattleResult & { prestigeAwarded: number; fameAwarded: number; achievementUnlocks: UnlockedAchievement[] }> {
+  const realRobotId = scheduledMatch.robot1Id < 0 ? scheduledMatch.robot2Id : scheduledMatch.robot1Id;
+
+  const robot = await prisma.robot.findUnique({
+    where: { id: realRobotId },
+  });
+
+  if (!robot) {
+    throw new BattleError(
+      BattleErrorCode.ROBOT_NOT_ELIGIBLE,
+      `Real robot not found for bye match ${scheduledMatch.id}`,
+      404,
+      { matchId: scheduledMatch.id, robotId: realRobotId }
+    );
+  }
+
+  // ELO change: player always wins vs bye robot (ELO 1000)
+  const byeElo = 1000;
+  const eloChanges = calculateELOChange(robot.elo, byeElo, false);
+  const newElo = robot.elo + eloChanges.winnerChange;
+
+  // Participation reward only (no win bonus for bye matches)
+  const participationReward = getParticipationReward(scheduledMatch.leagueType);
+
+  // Create Battle record — real robot ID fills both FK slots (same pattern as team battles)
+  const battle = await prisma.battle.create({
+    data: {
+      robot1Id: robot.id,
+      robot2Id: robot.id, // Self-reference avoids FK violation for fabricated bye robot
+      winnerId: robot.id,
+      battleType: 'league_1v1',
+      leagueType: scheduledMatch.leagueType,
+      leagueInstanceId: scheduledMatch.leagueInstanceId,
+      battleLog: {
+        events: [{ timestamp: 0, type: 'bye_match', message: `${robot.name} wins by walkover (bye)` }],
+        isByeMatch: true,
+        detailedCombatEvents: [],
+      } as unknown as Prisma.InputJsonValue,
+      durationSeconds: BYE_BATTLE_DURATION,
+      winnerReward: participationReward,
+      loserReward: 0,
+      robot1ELOBefore: robot.elo,
+      robot2ELOBefore: byeElo,
+      robot1ELOAfter: newElo,
+      robot2ELOAfter: byeElo,
+      eloChange: Math.abs(eloChanges.winnerChange),
+    },
+  });
+
+  // Single BattleParticipant for the real robot only (skip bye robot — same as team battles)
+  await prisma.battleParticipant.create({
+    data: {
+      battleId: battle.id,
+      robotId: robot.id,
+      team: 1,
+      role: null,
+      credits: participationReward,
+      streamingRevenue: 0,
+      eloBefore: robot.elo,
+      eloAfter: newElo,
+      prestigeAwarded: 0,
+      fameAwarded: 0,
+      damageDealt: 0,
+      finalHP: robot.currentHP,
+      yielded: false,
+      destroyed: false,
+    },
+  });
+
+  // Update robot combat stats (ELO, win counters)
+  await updateRobotCombatStats({
+    robotId: robot.id,
+    finalHP: robot.currentHP,
+    newELO: newElo,
+    isWinner: true,
+    isDraw: false,
+    damageDealt: 0,
+    damageTakenByOpponent: 0,
+    opponentDestroyed: false,
+    fameIncrement: 0,
+    battleType: 'league_1v1',
+    stance: robot.stance,
+    loadoutType: robot.loadoutType,
+  });
+
+  // Update standings (LP +3 for a win) via unified service
+  await standingsService.recordBattleResult({
+    entityType: 'robot',
+    entityId: robot.id,
+    mode: 'league_1v1',
+    outcome: 'win',
+    lpDelta: LEAGUE_POINTS_WIN,
+  });
+
+  // Award participation credits
+  const cycleNumber = await getCurrentCycleNumber();
+  await awardCreditsWithLedger(
+    robot.userId,
+    participationReward,
+    'battle_income',
+    cycleNumber,
+    'League 1v1 bye-match participation',
+    robot.id,
+  );
+
+  // Mark the scheduled match as completed with the battle reference
+  await prisma.scheduledMatch.update({
+    where: { id: scheduledMatch.id },
+    data: { status: 'completed', battleId: battle.id },
+  });
+
+  logger.info(`[Battle] Bye-match: ${robot.name} (User ${robot.userId}) auto-win | LP +${LEAGUE_POINTS_WIN} | ELO ${robot.elo} → ${newElo} | ₡${participationReward}`);
+
   return {
-    battleId: 0,
-    winnerId: playerRobot.id,
-    robot1FinalHP: playerRobot.currentHP,
+    battleId: battle.id,
+    winnerId: robot.id,
+    robot1FinalHP: robot.currentHP,
     robot2FinalHP: 0,
     robot1Damage: 0,
-    robot2Damage: byeRobot.currentHP,
+    robot2Damage: 0,
     durationSeconds: BYE_BATTLE_DURATION,
     isDraw: false,
     isByeMatch: true,
+    prestigeAwarded: 0,
+    fameAwarded: 0,
+    achievementUnlocks: [],
   };
 }
 
@@ -479,9 +596,6 @@ async function updateRobotStats(
     battleType: 'league_1v1',
     stance: robot.stance,
     loadoutType: robot.loadoutType,
-    extraData: {
-      repairCost: 0,
-    },
   });
 
   // Update standings (LP + win/loss/draw counter + streaks) via unified service
@@ -526,6 +640,13 @@ async function updateRobotStats(
  * Process a single scheduled battle
  */
 export async function processBattle(scheduledMatch: ScheduledLeagueMatchData): Promise<BattleResult & { prestigeAwarded: number; fameAwarded: number; achievementUnlocks: UnlockedAchievement[] }> {
+  // Detect bye match BEFORE DB lookup — bye robots are in-memory fabrications (id < 0)
+  // and don't exist in the database (Spec #41).
+  const isByeMatch = scheduledMatch.robot1Id < 0 || scheduledMatch.robot2Id < 0;
+  if (isByeMatch) {
+    return processByeBattle(scheduledMatch);
+  }
+
   // Load both robots with their weapons
   // Spec #34: include refinements so prepareRobotForCombat can fold them
   // into the weapon's effective stats before the simulator reads them.
@@ -560,29 +681,8 @@ export async function processBattle(scheduledMatch: ScheduledLeagueMatchData): P
   prepareRobotForCombat(robot1, tuningMap.get(robot1.id) ?? {});
   prepareRobotForCombat(robot2, tuningMap.get(robot2.id) ?? {});
   
-  // Check if this is a bye-robot match (in-memory fabricated bye has id < 0)
-  const isByeMatch = robot1.id < 0 || robot2.id < 0;
-  
-  // Simulate battle
-  let result: BattleResult;
-  if (isByeMatch) {
-    const playerRobot = robot1.id < 0 ? robot2 : robot1;
-    const byeRobot = robot1.id < 0 ? robot1 : robot2;
-    result = simulateByeBattle(playerRobot, byeRobot);
-    
-    // Adjust result to match robot order
-    if (robot1.id < 0) {
-      // Swap the results since bye-robot is robot1
-      const temp = result.robot1FinalHP;
-      result.robot1FinalHP = result.robot2FinalHP;
-      result.robot2FinalHP = temp;
-      const tempDamage = result.robot1Damage;
-      result.robot1Damage = result.robot2Damage;
-      result.robot2Damage = tempDamage;
-    }
-  } else {
-    result = simulateBattleWrapper(robot1, robot2);
-  }
+  // Normal (non-bye) battle — simulate combat
+  const result = simulateBattleWrapper(robot1, robot2);
   
   // Create battle record
   const battle = await createBattleRecord(scheduledMatch, robot1, robot2, result);
@@ -605,28 +705,23 @@ export async function processBattle(scheduledMatch: ScheduledLeagueMatchData): P
   }
   
   // Update robot stats and award prestige/fame (pass pre-fetched participants)
-  const stats1 = await updateRobotStats(robot1, battle, robot1Participant, robot2Participant, isByeMatch);
-  const stats2 = await updateRobotStats(robot2, battle, robot2Participant, robot1Participant, isByeMatch);
+  const stats1 = await updateRobotStats(robot1, battle, robot1Participant, robot2Participant, false);
+  const stats2 = await updateRobotStats(robot2, battle, robot2Participant, robot1Participant, false);
   
   const totalPrestige = stats1.prestigeAwarded + stats2.prestigeAwarded;
   const totalFame = stats1.fameAwarded + stats2.fameAwarded;
   
   // Calculate and award streaming revenue (parallel — independent per robot)
-  let streamingRevenue1 = null;
-  let streamingRevenue2 = null;
+  const [streamingRevenue1, streamingRevenue2] = await Promise.all([
+    awardStreamingRevenueForParticipant(robot1.id, robot1.userId, battle.id, false),
+    awardStreamingRevenueForParticipant(robot2.id, robot2.userId, battle.id, false),
+  ]);
   
-  if (!isByeMatch) {
-    [streamingRevenue1, streamingRevenue2] = await Promise.all([
-      awardStreamingRevenueForParticipant(robot1.id, robot1.userId, battle.id, false),
-      awardStreamingRevenueForParticipant(robot2.id, robot2.userId, battle.id, false),
-    ]);
-    
-    if (streamingRevenue1) {
-      logger.info(`[Streaming] ${robot1.name} earned ₡${streamingRevenue1.totalRevenue.toLocaleString()} from Battle #${battle.id}`);
-    }
-    if (streamingRevenue2) {
-      logger.info(`[Streaming] ${robot2.name} earned ₡${streamingRevenue2.totalRevenue.toLocaleString()} from Battle #${battle.id}`);
-    }
+  if (streamingRevenue1) {
+    logger.info(`[Streaming] ${robot1.name} earned ₡${streamingRevenue1.totalRevenue.toLocaleString()} from Battle #${battle.id}`);
+  }
+  if (streamingRevenue2) {
+    logger.info(`[Streaming] ${robot2.name} earned ₡${streamingRevenue2.totalRevenue.toLocaleString()} from Battle #${battle.id}`);
   }
   
   // Determine results for each robot (participants already fetched above)
@@ -656,7 +751,7 @@ export async function processBattle(scheduledMatch: ScheduledLeagueMatchData): P
         { id: battle.id, battleType: battle.battleType, leagueType: battle.leagueType, durationSeconds: battle.durationSeconds, eloChange: battle.eloChange },
         robot2.id,
         streamingRevenue1?.totalRevenue || 0,
-        result.isByeMatch,
+        false,
       ),
       logBattleAuditEvent(
         {
@@ -677,7 +772,7 @@ export async function processBattle(scheduledMatch: ScheduledLeagueMatchData): P
         { id: battle.id, battleType: battle.battleType, leagueType: battle.leagueType, durationSeconds: battle.durationSeconds, eloChange: battle.eloChange },
         robot1.id,
         streamingRevenue2?.totalRevenue || 0,
-        result.isByeMatch,
+        false,
       ),
     ]);
   } catch (auditError) {
@@ -688,13 +783,11 @@ export async function processBattle(scheduledMatch: ScheduledLeagueMatchData): P
   // No need to update Battle table
   
   // Check and award achievements for both robots
-  let achievementUnlocks: UnlockedAchievement[] = [];
-  if (!result.isByeMatch) {
-    // Look up whether each robot lost their previous battle (for C15 "I Didn't Hear No Bell")
-    const [robot1PrevLost, robot2PrevLost] = await Promise.all([
-      didRobotLosePreviousBattle(robot1.id, battle.id),
-      didRobotLosePreviousBattle(robot2.id, battle.id),
-    ]);
+  // Look up whether each robot lost their previous battle (for C15 "I Didn't Hear No Bell")
+  const [robot1PrevLost, robot2PrevLost] = await Promise.all([
+    didRobotLosePreviousBattle(robot1.id, battle.id),
+    didRobotLosePreviousBattle(robot2.id, battle.id),
+  ]);
 
     const [unlocks1, unlocks2] = await Promise.all([
       checkAndAwardAchievements(robot1.userId, robot1.id, {
@@ -736,8 +829,7 @@ export async function processBattle(scheduledMatch: ScheduledLeagueMatchData): P
         battleDurationSeconds: result.durationSeconds,
       }),
     ]);
-    achievementUnlocks = [...unlocks1, ...unlocks2];
-  }
+    const achievementUnlocks = [...unlocks1, ...unlocks2];
 
   // Update scheduled match status in unified table
   await prisma.scheduledMatch.update({

@@ -1,14 +1,15 @@
 # Product Requirements Document: Battle Data Architecture
 
-**Last Updated**: April 2, 2026  
+**Last Updated**: June 25, 2026  
 **Status**: ✅ Implemented  
 **Owner**: Robert Teunissen  
 **Epic**: Battle System — Data Architecture  
-**Version**: 2.0
+**Version**: 3.0
 
 ---
 
 ## Version History
+- v3.0 (June 25, 2026) — Added "Post-Battle Robot State Update (Unified)" section documenting `updateRobotCombatStats()` as the single source of truth for all orchestrators. Added bye-match handling patterns. Updated implementation files table to include team battle and team tournament orchestrators.
 - v2.0 (April 2, 2026) — Full audit against Prisma schema. Fixed BattleParticipant model (removed non-existent `userId` field/relation/index, added `createdAt`, added table mapping). Corrected Battle model documentation (it still has robot1Id/robot2Id, tag team fields, ELO tracking — not the "simplified" version the old doc claimed). Fixed battleType values (`"league"` not `"1v1"`). Updated file paths for backend service consolidation. Removed incorrect "26+ columns removed" claim.
 - v1.0 (February 23, 2026) — Initial document
 
@@ -173,10 +174,54 @@ All paths relative to `app/backend/src/`.
 | File | Responsibility |
 |---|---|
 | `services/league/leagueBattleOrchestrator.ts` | Creates Battle + 2 BattleParticipant records for league 1v1 |
-| `services/tournament/tournamentBattleOrchestrator.ts` | Creates Battle + 2 BattleParticipant records for tournaments |
-| `services/tag-team/tagTeamBattleOrchestrator.ts` | Creates Battle + 4 BattleParticipant records for tag team |
+| `services/tournament/tournamentBattleOrchestrator.ts` | Creates Battle + 2 BattleParticipant records for 1v1 tournaments |
+| `services/tournament/teamTournamentBattleOrchestrator.ts` | Creates Battle + 2N BattleParticipant records for team tournaments |
+| `services/team-battle/teamBattleOrchestrator.ts` | Creates Battle + 2N BattleParticipant records for 2v2/3v3 league |
+| `services/tag-team/tagTeamScheduler.ts` + `tagTeamBattleRecord.ts` | Creates Battle + 2–4 BattleParticipant records for tag team |
 | `services/koth/kothBattleOrchestrator.ts` | Creates Battle + 5-6 BattleParticipant records for KotH |
-| `services/battle/battlePostCombat.ts` | Shared helpers: `awardStreamingRevenueForParticipant()`, `logBattleAuditEvent()`, `updateRobotCombatStats()` |
+| `services/battle/battlePostCombat.ts` | Shared helpers: `updateRobotCombatStats()`, `awardStreamingRevenueForParticipant()`, `logBattleAuditEvent()`, `awardCreditsWithLedger()`, `awardPrestigeToUser()` |
+
+---
+
+## Post-Battle Robot State Update (Unified)
+
+Every orchestrator calls `updateRobotCombatStats()` from `battlePostCombat.ts` for each participating robot after a battle. This is the SINGLE function responsible for persisting combat outcome to the `robots` table. No orchestrator uses inline `prisma.robot.update` for combat stats.
+
+### Fields written by `updateRobotCombatStats`
+
+| Field | Description | KotH exception |
+|---|---|---|
+| `currentHP` | Final HP clamped to stored `maxHP` | ✅ Written |
+| `elo` | New absolute ELO value | Passes unchanged value |
+| `totalBattles` | Lifetime battle counter | Skipped (`skipBattleCounters`) |
+| `wins` / `losses` / `draws` | Lifetime outcome counters | Skipped |
+| `kills` | Lifetime kill counter | Skipped |
+| `damageDealtLifetime` | Cumulative damage dealt | ✅ Written |
+| `damageTakenLifetime` | Cumulative damage received | ✅ Written |
+| `fame` | Incremented by `fameIncrement` param | ✅ Written (0 for KotH, handled separately) |
+| `offensiveWins` / `defensiveWins` / `balancedWins` | Stance win counters (winner only) | Skipped |
+| `dualWieldWins` | Loadout win counter (winner only) | Skipped |
+
+### What lives outside `updateRobotCombatStats` (per-mode logic)
+
+| Concern | Where | Why separate |
+|---|---|---|
+| Credits / prestige | `awardCreditsWithLedger()`, `awardPrestigeToUser()` | Reward formulas differ per mode and per tier |
+| LP / streaks / tier | `standingsService.recordBattleResult()` | Per-mode standings in unified `standings` table |
+| Achievements | `checkAndAwardAchievements()` | Context differs per mode (placement, previous battle, etc.) |
+| Streaming revenue | `awardStreamingRevenueForParticipant()` | Mode-specific eligibility rules |
+| KotH points | `standingsService.awardKothPoints()` | Placement-based scoring unique to KotH |
+
+### Bye-match handling
+
+All orchestrators fabricate bye opponents in-memory (id < 0). They never exist in the database.
+
+| Mode | Bye detection | Battle record FK | BattleParticipant |
+|---|---|---|---|
+| 1v1 League | `scheduledMatch.robot1Id < 0 \|\| robot2Id < 0` | `robot2Id = realRobot.id` (self-ref) | Only real robot |
+| 2v2/3v3 League | `match.team2Id === null` | `robot2Id = team1Robots[0].id` | `.filter(p => p.robotId > 0)` |
+| Tag Team | `match.team2Id === null` | `robot2Id = team1.activeRobotId`, team2 fields = null | `.filter(p => p.robotId > 0)` |
+| Team Tournament | Bye = no match scheduled (bracket logic) | N/A | N/A |
 
 ---
 
