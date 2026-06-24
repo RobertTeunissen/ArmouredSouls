@@ -3,6 +3,7 @@
 import prisma from '../../lib/prisma';
 import { Prisma } from '../../../generated/prisma';
 import logger from '../../config/logger';
+import { computeBattleSummary } from '../battle/battleSummaryComputer';
 import { KothError, KothErrorCode } from '../../errors/kothErrors';
 
 /** Yield the event loop so Express can serve requests between heavy DB work */
@@ -379,6 +380,40 @@ async function processKothBattle(
       destroyed: p.destroyed,
     })),
   });
+
+  // Write pre-computed battle summary (Spec #39)
+  const robotMaxHP: Record<string, number> = {};
+  const robotNameToId: Record<string, number> = {};
+  const robotNameToTeam: Record<string, number> = {};
+  for (const robot of robots) {
+    robotMaxHP[robot.name] = robot.maxHP;
+    robotNameToId[robot.name] = robot.id;
+    robotNameToTeam[robot.name] = 1; // KotH has no teams — all on side 1
+  }
+  const kothPlacementsForSummary = enrichedPlacements.map(p => ({
+    robotId: p.robotId, robotName: p.robotName, placement: p.placement,
+    zoneScore: p.zoneScore, zoneTime: p.zoneTime, kills: p.kills, destroyed: p.destroyed,
+  }));
+  const summaryData = computeBattleSummary({
+    events: (simResult.events || []) as unknown as import('../../shared/utils/battleStatistics').BattleLogEvent[],
+    duration: simResult.durationSeconds,
+    battleType: 'koth',
+    robotMaxHP,
+    robotNameToId,
+    robotNameToTeam,
+    kothPlacements: kothPlacementsForSummary,
+    kothData: { participantCount: robots.length, scoreThreshold },
+    startingPositions: startPosRecord as Record<string, { x: number; y: number }>,
+    endingPositions: endPosRecord as Record<string, { x: number; y: number }>,
+    arenaRadius,
+  });
+  if (summaryData) {
+    await prisma.battleSummary.create({
+      data: { battleId: battle.id, ...summaryData },
+    }).catch((err: unknown) => {
+      logger.warn('[koth-orchestrator] Failed to write battle summary', { battleId: battle.id, error: err instanceof Error ? err.message : String(err) });
+    });
+  }
 
   // 10. BATCHED: Calculate streaming revenue with single batch query (2 queries instead of 2N)
   const _cycleNumber = await getCurrentCycleNumber();

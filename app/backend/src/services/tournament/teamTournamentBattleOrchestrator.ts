@@ -16,6 +16,7 @@
 
 import { Tournament, ScheduledTournamentMatch, Prisma } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
+import { computeBattleSummary } from '../battle/battleSummaryComputer';
 import logger from '../../config/logger';
 import { RobotWithWeapons } from '../battle/combatSimulator';
 import { simulateTeamBattle } from '../team-battle/teamBattleEngine';
@@ -268,6 +269,40 @@ export async function processTeamTournamentBattle(
   });
 
   await prisma.battleParticipant.createMany({ data: participantRecords });
+
+  // Write pre-computed battle summary (Spec #39)
+  await prisma.battle.update({ where: { id: battle.id }, data: { winningSide } }).catch(() => {});
+  const allRobots = [...team1Robots, ...team2Robots];
+  const robotMaxHP: Record<string, number> = {};
+  const robotNameToId: Record<string, number> = {};
+  const robotNameToTeam: Record<string, number> = {};
+  for (const r of allRobots) {
+    robotMaxHP[r.name] = r.maxHP;
+    robotNameToId[r.name] = r.id;
+    robotNameToTeam[r.name] = battleResult.participants.find(p => p.robotId === r.id)?.team ?? 1;
+  }
+  const summaryData = computeBattleSummary({
+    events: (battleResult.detailedCombatEvents || []) as unknown as import('../../shared/utils/battleStatistics').BattleLogEvent[],
+    duration: Math.round(battleResult.durationSeconds),
+    battleType,
+    robotMaxHP,
+    robotNameToId,
+    robotNameToTeam,
+    tagTeamInfo: {
+      team1Robots: team1Robots.map(r => r.name),
+      team2Robots: team2Robots.map(r => r.name),
+    },
+    startingPositions: battleResult.startingPositions as Record<string, { x: number; y: number }> | undefined,
+    endingPositions: battleResult.endingPositions as Record<string, { x: number; y: number }> | undefined,
+    arenaRadius: battleResult.arenaRadius,
+  });
+  if (summaryData) {
+    await prisma.battleSummary.create({
+      data: { battleId: battle.id, ...summaryData },
+    }).catch((err: unknown) => {
+      logger.warn('[team-tournament] Failed to write battle summary', { battleId: battle.id, error: err instanceof Error ? err.message : String(err) });
+    });
+  }
 
   // Update robot combat stats via shared helper (HP, ELO, counters, damage lifetime)
   for (const robot of team1Robots) {

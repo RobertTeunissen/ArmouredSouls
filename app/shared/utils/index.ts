@@ -27,3 +27,15 @@ export {
   type WeaponLike,
   type ValidatorResult,
 } from './weaponRefinement';
+export {
+  computeBattleStatistics,
+  createRobotStats,
+  type BattleLogEvent,
+  type BattleStatistics,
+  type RobotCombatStats,
+  type TeamCombatStats,
+  type DamageFlow,
+  type HandStats,
+  type CounterStats,
+  type HitGrades,
+} from './battleStatistics';

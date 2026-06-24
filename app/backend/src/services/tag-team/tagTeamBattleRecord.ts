@@ -1,6 +1,8 @@
 import { ScheduledTeamBattleMatch, Battle, Prisma } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
+import logger from '../../config/logger';
 import { CombatMessageGenerator } from '../battle/combatMessageGenerator';
+import { computeBattleSummary } from '../battle/battleSummaryComputer';
 import { TagTeamWithRobots, TagTeamBattleResult } from './tagTeamTypes';
 
 /**
@@ -142,6 +144,51 @@ export async function createTagTeamBattleRecord(
   ].filter(p => p.robotId > 0); // Skip bye robots (negative IDs)
 
   await prisma.battleParticipant.createMany({ data: participantRows });
+
+  // Write pre-computed battle summary (Spec #39)
+  // Determine winning side for tag team (team entity ID based)
+  const winningSide = result.winnerId === team1.id ? 1 : result.winnerId === team2.id ? 2 : null;
+  if (winningSide !== null) {
+    await prisma.battle.update({ where: { id: battle.id }, data: { winningSide } });
+  }
+
+  const summaryData = computeBattleSummary({
+    events: (result.battleLog || []) as unknown as import('../../shared/utils/battleStatistics').BattleLogEvent[],
+    duration: result.durationSeconds,
+    battleType: 'tag_team',
+    robotMaxHP: {
+      [team1.activeRobot.name]: team1.activeRobot.maxHP,
+      [team1.reserveRobot.name]: team1.reserveRobot.maxHP,
+      ...(team2.activeRobotId > 0 ? { [team2.activeRobot.name]: team2.activeRobot.maxHP } : {}),
+      ...(team2.reserveRobotId > 0 ? { [team2.reserveRobot.name]: team2.reserveRobot.maxHP } : {}),
+    },
+    robotNameToId: {
+      [team1.activeRobot.name]: team1.activeRobotId,
+      [team1.reserveRobot.name]: team1.reserveRobotId,
+      ...(team2.activeRobotId > 0 ? { [team2.activeRobot.name]: team2.activeRobotId } : {}),
+      ...(team2.reserveRobotId > 0 ? { [team2.reserveRobot.name]: team2.reserveRobotId } : {}),
+    },
+    robotNameToTeam: {
+      [team1.activeRobot.name]: 1,
+      [team1.reserveRobot.name]: 1,
+      ...(team2.activeRobotId > 0 ? { [team2.activeRobot.name]: 2 } : {}),
+      ...(team2.reserveRobotId > 0 ? { [team2.reserveRobot.name]: 2 } : {}),
+    },
+    tagTeamInfo: {
+      team1Robots: [team1.activeRobot.name, team1.reserveRobot.name],
+      team2Robots: team2.activeRobotId > 0 ? [team2.activeRobot.name, team2.reserveRobot.name] : [],
+    },
+    startingPositions: result.startingPositions as Record<string, { x: number; y: number }> | undefined,
+    endingPositions: result.endingPositions as Record<string, { x: number; y: number }> | undefined,
+    arenaRadius: result.arenaRadius,
+  });
+  if (summaryData) {
+    await prisma.battleSummary.create({
+      data: { battleId: battle.id, ...summaryData },
+    }).catch((err: unknown) => {
+      logger.warn('[tag-team] Failed to write battle summary', { battleId: battle.id, error: err instanceof Error ? err.message : String(err) });
+    });
+  }
 
   return battle;
 }

@@ -16,6 +16,7 @@ import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { RobotWithWeapons } from '../battle/combatSimulator';
 import { simulateTeamBattle } from './teamBattleEngine';
+import { computeBattleSummary } from '../battle/battleSummaryComputer';
 import {
   calculateTeamBattleReward,
   distributeTeamCredits,
@@ -413,6 +414,45 @@ async function executeSingleTeamBattle(
 
     return battleRecord;
   }); // End transaction (R7.11: rollback on failure)
+
+  // Write pre-computed battle summary (Spec #39 — outside transaction, non-blocking)
+  const winningSide = team1Won ? 1 : team2Won ? 2 : null;
+  if (winningSide !== null) {
+    await prisma.battle.update({ where: { id: battle.id }, data: { winningSide } }).catch(() => {});
+  }
+  const allRobots = [...team1Robots, ...(isByeMatch ? [] : team2Robots)];
+  const robotMaxHP: Record<string, number> = {};
+  const robotNameToId: Record<string, number> = {};
+  const robotNameToTeam: Record<string, number> = {};
+  for (const r of allRobots) {
+    if (r.id > 0) {
+      robotMaxHP[r.name] = r.maxHP;
+      robotNameToId[r.name] = r.id;
+      robotNameToTeam[r.name] = battleResult.participants.find(p => p.robotId === r.id)?.team ?? 1;
+    }
+  }
+  const summaryData = computeBattleSummary({
+    events: (battleResult.detailedCombatEvents || []) as unknown as import('../../shared/utils/battleStatistics').BattleLogEvent[],
+    duration: Math.round(battleResult.durationSeconds),
+    battleType,
+    robotMaxHP,
+    robotNameToId,
+    robotNameToTeam,
+    tagTeamInfo: {
+      team1Robots: team1Robots.filter(r => r.id > 0).map(r => r.name),
+      team2Robots: isByeMatch ? [] : team2Robots.filter(r => r.id > 0).map(r => r.name),
+    },
+    startingPositions: battleResult.startingPositions as Record<string, { x: number; y: number }> | undefined,
+    endingPositions: battleResult.endingPositions as Record<string, { x: number; y: number }> | undefined,
+    arenaRadius: battleResult.arenaRadius,
+  });
+  if (summaryData) {
+    await prisma.battleSummary.create({
+      data: { battleId: battle.id, ...summaryData },
+    }).catch((err: unknown) => {
+      logger.warn('[TeamBattle] Failed to write battle summary', { battleId: battle.id, error: err instanceof Error ? err.message : String(err) });
+    });
+  }
 
   // ── Post-transaction: robot combat stat updates via unified function ──
   const battleTypeLabel = teamSize === 2 ? 'league_2v2' : 'league_3v3';

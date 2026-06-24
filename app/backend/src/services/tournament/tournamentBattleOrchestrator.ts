@@ -12,6 +12,7 @@ import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { simulateBattle, CombatResult } from '../battle/combatSimulator';
 import { CombatMessageGenerator } from '../battle/combatMessageGenerator';
+import { computeBattleSummary } from '../battle/battleSummaryComputer';
 import { calculateELOChange } from '../../utils/battleMath';
 import {
   calculateTournamentBattleRewards,
@@ -521,6 +522,26 @@ async function createTournamentBattleRecord(
       },
     ],
   });
+
+  // Write pre-computed battle summary (Spec #39)
+  const summaryData = computeBattleSummary({
+    events: (combatResult.events || []) as unknown as import('../../shared/utils/battleStatistics').BattleLogEvent[],
+    duration: combatResult.durationSeconds,
+    battleType: 'tournament_1v1',
+    robotMaxHP: { [robot1.name]: robot1.maxHP, [robot2.name]: robot2.maxHP },
+    robotNameToId: { [robot1.name]: robot1.id, [robot2.name]: robot2.id },
+    robotNameToTeam: { [robot1.name]: 1, [robot2.name]: 2 },
+    startingPositions: combatResult.startingPositions as Record<string, { x: number; y: number }> | undefined,
+    endingPositions: combatResult.endingPositions as Record<string, { x: number; y: number }> | undefined,
+    arenaRadius: combatResult.arenaRadius,
+  });
+  if (summaryData) {
+    await prisma.battleSummary.create({
+      data: { battleId: battle.id, ...summaryData },
+    }).catch((err: unknown) => {
+      logger.warn('[tournament-orchestrator] Failed to write battle summary', { battleId: battle.id, error: err instanceof Error ? err.message : String(err) });
+    });
+  }
 
   return battle;
 }
