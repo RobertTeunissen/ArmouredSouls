@@ -14,6 +14,7 @@ import {
   awardStreamingRevenueForParticipant,
   checkAndAwardAchievements,
   didRobotLosePreviousBattle,
+  updateRobotCombatStats,
 } from '../battle/battlePostCombat';
 import { TagTeamError, TagTeamErrorCode } from '../../errors/tagTeamErrors';
 import { TagTeamBattleResult } from './tagTeamTypes';
@@ -148,29 +149,37 @@ export async function updateTagTeamBattleResults(
       isDraw
     );
 
-    // Update robots
-    await prisma.robot.update({
-      where: { id: realTeam.activeRobotId },
-      data: {
-        elo: { increment: realTeamELOChange },
-        currentHP: activeFinalHP,
-        repairCost: 0, // Deprecated: repair costs calculated by RepairService
-        damageTaken: { increment: realTeam.activeRobot.maxHP - activeFinalHP },
-        fame: { increment: activeFame },
-      },
+    // Update robots via unified combat stats function
+    await updateRobotCombatStats({
+      robotId: realTeam.activeRobotId,
+      finalHP: activeFinalHP,
+      newELO: realTeam.activeRobot.elo + realTeamELOChange,
+      isWinner: realTeamWon,
+      isDraw,
+      damageDealt: Math.round(activeDamageDealt),
+      damageTakenByOpponent: realTeam.activeRobot.maxHP - activeFinalHP,
+      opponentDestroyed: false, // Bye opponent is virtual
+      fameIncrement: activeFame,
+      battleType: 'tag_team',
+      stance: realTeam.activeRobot.stance,
+      loadoutType: realTeam.activeRobot.loadoutType,
     });
 
-    await prisma.robot.update({
-      where: { id: realTeam.reserveRobotId },
-      data: {
-        elo: { increment: realTeamELOChange },
-        currentHP: reserveFinalHP,
-        repairCost: 0, // Deprecated: repair costs calculated by RepairService
-        damageTaken: tagOutTime !== undefined 
-          ? { increment: realTeam.reserveRobot.maxHP - reserveFinalHP }
-          : undefined,
-        fame: { increment: reserveFame },
-      },
+    await updateRobotCombatStats({
+      robotId: realTeam.reserveRobotId,
+      finalHP: reserveFinalHP,
+      newELO: realTeam.reserveRobot.elo + realTeamELOChange,
+      isWinner: realTeamWon,
+      isDraw,
+      damageDealt: Math.round(reserveDamageDealt),
+      damageTakenByOpponent: tagOutTime !== undefined
+        ? realTeam.reserveRobot.maxHP - reserveFinalHP
+        : 0,
+      opponentDestroyed: false, // Bye opponent is virtual
+      fameIncrement: reserveFame,
+      battleType: 'tag_team',
+      stance: realTeam.reserveRobot.stance,
+      loadoutType: realTeam.reserveRobot.loadoutType,
     });
 
     // Update team standings via standingsService
@@ -327,61 +336,67 @@ export async function updateTagTeamBattleResults(
     isDraw
   );
 
-  // Update robots (ELO, league points, HP, statistics, fame)
-  // Requirement 11.2: Apply cumulative damage
-  // Read stored maxHP values to clamp finalHP (combat uses tuning-inflated maxHP)
-  const storedMaxHPs = await prisma.robot.findMany({
-    where: { id: { in: [team1.activeRobotId, team1.reserveRobotId, team2.activeRobotId, team2.reserveRobotId] } },
-    select: { id: true, maxHP: true },
-  });
-  const maxHPMap = new Map(storedMaxHPs.map(r => [r.id, r.maxHP]));
+  // Update robots (ELO, HP, statistics, fame) via unified combat stats function
+  // updateRobotCombatStats handles maxHP clamping internally
 
-  await prisma.robot.update({
-    where: { id: team1.activeRobotId },
-    data: {
-      elo: { increment: eloChanges.team1Change },
-      currentHP: Math.min(result.team1ActiveFinalHP, maxHPMap.get(team1.activeRobotId) ?? result.team1ActiveFinalHP),
-      repairCost: 0, // Deprecated: repair costs calculated by RepairService
-      damageTaken: { increment: (maxHPMap.get(team1.activeRobotId) ?? team1.activeRobot.maxHP) - Math.min(result.team1ActiveFinalHP, maxHPMap.get(team1.activeRobotId) ?? result.team1ActiveFinalHP) },
-      fame: { increment: team1ActiveFame },
-    },
+  await updateRobotCombatStats({
+    robotId: team1.activeRobotId,
+    finalHP: result.team1ActiveFinalHP,
+    newELO: team1.activeRobot.elo + eloChanges.team1Change,
+    isWinner: team1Won,
+    isDraw,
+    damageDealt: Math.round(result.team1ActiveDamageDealt),
+    damageTakenByOpponent: Math.round((result.team2ActiveDamageDealt + result.team2ReserveDamageDealt) / 2),
+    opponentDestroyed: result.team2ActiveFinalHP === 0 || result.team2ReserveFinalHP === 0,
+    fameIncrement: team1ActiveFame,
+    battleType: 'tag_team',
+    stance: team1.activeRobot.stance,
+    loadoutType: team1.activeRobot.loadoutType,
   });
 
-  await prisma.robot.update({
-    where: { id: team1.reserveRobotId },
-    data: {
-      elo: { increment: eloChanges.team1Change },
-      currentHP: Math.min(result.team1ReserveFinalHP, maxHPMap.get(team1.reserveRobotId) ?? result.team1ReserveFinalHP),
-      repairCost: 0, // Deprecated: repair costs calculated by RepairService
-      damageTaken: result.team1TagOutTime !== undefined 
-        ? { increment: (maxHPMap.get(team1.reserveRobotId) ?? team1.reserveRobot.maxHP) - Math.min(result.team1ReserveFinalHP, maxHPMap.get(team1.reserveRobotId) ?? result.team1ReserveFinalHP) }
-        : undefined,
-      fame: { increment: team1ReserveFame },
-    },
+  await updateRobotCombatStats({
+    robotId: team1.reserveRobotId,
+    finalHP: result.team1ReserveFinalHP,
+    newELO: team1.reserveRobot.elo + eloChanges.team1Change,
+    isWinner: team1Won,
+    isDraw,
+    damageDealt: Math.round(result.team1ReserveDamageDealt),
+    damageTakenByOpponent: Math.round((result.team2ActiveDamageDealt + result.team2ReserveDamageDealt) / 2),
+    opponentDestroyed: result.team2ActiveFinalHP === 0 || result.team2ReserveFinalHP === 0,
+    fameIncrement: team1ReserveFame,
+    battleType: 'tag_team',
+    stance: team1.reserveRobot.stance,
+    loadoutType: team1.reserveRobot.loadoutType,
   });
 
-  await prisma.robot.update({
-    where: { id: team2.activeRobotId },
-    data: {
-      elo: { increment: eloChanges.team2Change },
-      currentHP: Math.min(result.team2ActiveFinalHP, maxHPMap.get(team2.activeRobotId) ?? result.team2ActiveFinalHP),
-      repairCost: 0, // Deprecated: repair costs calculated by RepairService
-      damageTaken: { increment: (maxHPMap.get(team2.activeRobotId) ?? team2.activeRobot.maxHP) - Math.min(result.team2ActiveFinalHP, maxHPMap.get(team2.activeRobotId) ?? result.team2ActiveFinalHP) },
-      fame: { increment: team2ActiveFame },
-    },
+  await updateRobotCombatStats({
+    robotId: team2.activeRobotId,
+    finalHP: result.team2ActiveFinalHP,
+    newELO: team2.activeRobot.elo + eloChanges.team2Change,
+    isWinner: team2Won,
+    isDraw,
+    damageDealt: Math.round(result.team2ActiveDamageDealt),
+    damageTakenByOpponent: Math.round((result.team1ActiveDamageDealt + result.team1ReserveDamageDealt) / 2),
+    opponentDestroyed: result.team1ActiveFinalHP === 0 || result.team1ReserveFinalHP === 0,
+    fameIncrement: team2ActiveFame,
+    battleType: 'tag_team',
+    stance: team2.activeRobot.stance,
+    loadoutType: team2.activeRobot.loadoutType,
   });
 
-  await prisma.robot.update({
-    where: { id: team2.reserveRobotId },
-    data: {
-      elo: { increment: eloChanges.team2Change },
-      currentHP: Math.min(result.team2ReserveFinalHP, maxHPMap.get(team2.reserveRobotId) ?? result.team2ReserveFinalHP),
-      repairCost: 0, // Deprecated: repair costs calculated by RepairService
-      damageTaken: result.team2TagOutTime !== undefined 
-        ? { increment: (maxHPMap.get(team2.reserveRobotId) ?? team2.reserveRobot.maxHP) - Math.min(result.team2ReserveFinalHP, maxHPMap.get(team2.reserveRobotId) ?? result.team2ReserveFinalHP) }
-        : undefined,
-      fame: { increment: team2ReserveFame },
-    },
+  await updateRobotCombatStats({
+    robotId: team2.reserveRobotId,
+    finalHP: result.team2ReserveFinalHP,
+    newELO: team2.reserveRobot.elo + eloChanges.team2Change,
+    isWinner: team2Won,
+    isDraw,
+    damageDealt: Math.round(result.team2ReserveDamageDealt),
+    damageTakenByOpponent: Math.round((result.team1ActiveDamageDealt + result.team1ReserveDamageDealt) / 2),
+    opponentDestroyed: result.team1ActiveFinalHP === 0 || result.team1ReserveFinalHP === 0,
+    fameIncrement: team2ReserveFame,
+    battleType: 'tag_team',
+    stance: team2.reserveRobot.stance,
+    loadoutType: team2.reserveRobot.loadoutType,
   });
 
   // Update teams standings via standingsService

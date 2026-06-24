@@ -33,6 +33,7 @@ import {
   awardStreamingRevenueForParticipant,
   checkAndAwardAchievements,
   didRobotLosePreviousBattle,
+  updateRobotCombatStats,
 } from '../battle/battlePostCombat';
 import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
 import { prepareRobotForCombat } from '../../utils/robotCalculations';
@@ -363,23 +364,10 @@ async function executeSingleTeamBattle(
 
     // Update individual robot ELOs and team battle win counters (R16.2)
     // Also persist currentHP from battle result so damage carries over to next cycle
+    // NOTE: Robot combat stats are now updated AFTER the transaction via updateRobotCombatStats
 
     for (const robot of team1Robots) {
       const robotCredits = team1Credits.find(c => c.robotId === robot.id);
-      const participant = battleResult.participants.find(p => p.robotId === robot.id);
-      await tx.robot.update({
-        where: { id: robot.id },
-        data: {
-          currentHP: Math.round(participant?.finalHP ?? robot.currentHP),
-          elo: { increment: eloChanges.team1Change },
-          fame: team1Won ? { increment: fame } : undefined,
-          totalBattles: { increment: 1 },
-          wins: team1Won ? { increment: 1 } : undefined,
-          draws: isDraw ? { increment: 1 } : undefined,
-          losses: (!team1Won && !isDraw) ? { increment: 1 } : undefined,
-          damageDealtLifetime: { increment: Math.round(participant?.damageDealt ?? 0) },
-        },
-      });
       // Update BattleParticipant with final values
       await tx.battleParticipant.updateMany({
         where: { battleId: battleRecord.id, robotId: robot.id },
@@ -395,20 +383,6 @@ async function executeSingleTeamBattle(
     if (!isByeMatch) {
       for (const robot of team2Robots) {
         const robotCredits = team2Credits.find(c => c.robotId === robot.id);
-        const participant = battleResult.participants.find(p => p.robotId === robot.id);
-        await tx.robot.update({
-          where: { id: robot.id },
-          data: {
-            currentHP: Math.round(participant?.finalHP ?? robot.currentHP),
-            elo: { increment: eloChanges.team2Change },
-            fame: team2Won ? { increment: fame } : undefined,
-            totalBattles: { increment: 1 },
-            wins: team2Won ? { increment: 1 } : undefined,
-            draws: isDraw ? { increment: 1 } : undefined,
-            losses: (!team2Won && !isDraw) ? { increment: 1 } : undefined,
-            damageDealtLifetime: { increment: Math.round(participant?.damageDealt ?? 0) },
-          },
-        });
         // Update BattleParticipant with final values
         await tx.battleParticipant.updateMany({
           where: { battleId: battleRecord.id, robotId: robot.id },
@@ -439,6 +413,62 @@ async function executeSingleTeamBattle(
 
     return battleRecord;
   }); // End transaction (R7.11: rollback on failure)
+
+  // ── Post-transaction: robot combat stat updates via unified function ──
+  const battleTypeLabel = teamSize === 2 ? 'league_2v2' : 'league_3v3';
+  const postTxFame = calculateTeamBattleFame(match.teamBattleLeague);
+  const team2TotalDamage = battleResult.participants
+    .filter(p => p.team === 2)
+    .reduce((sum, p) => sum + (p.damageDealt ?? 0), 0);
+  const team1TotalDamage = battleResult.participants
+    .filter(p => p.team === 1)
+    .reduce((sum, p) => sum + (p.damageDealt ?? 0), 0);
+  const team2HasDestroyed = battleResult.participants
+    .filter(p => p.team === 2)
+    .some(p => p.finalHP === 0);
+  const team1HasDestroyed = battleResult.participants
+    .filter(p => p.team === 1)
+    .some(p => p.finalHP === 0);
+
+  for (const robot of team1Robots) {
+    if (robot.id < 0) continue; // Skip bye robots
+    const participant = battleResult.participants.find(p => p.robotId === robot.id);
+    await updateRobotCombatStats({
+      robotId: robot.id,
+      finalHP: Math.round(participant?.finalHP ?? robot.currentHP),
+      newELO: robot.elo + eloChanges.team1Change,
+      isWinner: team1Won,
+      isDraw,
+      damageDealt: Math.round(participant?.damageDealt ?? 0),
+      damageTakenByOpponent: Math.round(team2TotalDamage / teamSize),
+      opponentDestroyed: team2HasDestroyed,
+      fameIncrement: team1Won ? postTxFame : 0,
+      battleType: battleTypeLabel,
+      stance: robot.stance,
+      loadoutType: robot.loadoutType,
+    });
+  }
+
+  if (!isByeMatch) {
+    for (const robot of team2Robots) {
+      if (robot.id < 0) continue; // Skip bye robots
+      const participant = battleResult.participants.find(p => p.robotId === robot.id);
+      await updateRobotCombatStats({
+        robotId: robot.id,
+        finalHP: Math.round(participant?.finalHP ?? robot.currentHP),
+        newELO: robot.elo + eloChanges.team2Change,
+        isWinner: team2Won,
+        isDraw,
+        damageDealt: Math.round(participant?.damageDealt ?? 0),
+        damageTakenByOpponent: Math.round(team1TotalDamage / teamSize),
+        opponentDestroyed: team1HasDestroyed,
+        fameIncrement: team2Won ? postTxFame : 0,
+        battleType: battleTypeLabel,
+        stance: robot.stance,
+        loadoutType: robot.loadoutType,
+      });
+    }
+  }
 
   // ── Post-transaction: streaming revenue + audit logs (non-blocking) ──
 

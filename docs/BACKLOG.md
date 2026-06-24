@@ -25,8 +25,7 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 | 13 | Arena / Terrain Modifiers | 12 | 1 🗳️ | 3 | 1 | 2 | 4 | **1.5** |
 | 14 | Battle Table Denormalization Cleanup | 18 | 0 🗳️ | 1 | 1 | 1 | 2 | **1.5** |
 | 15 | Tag Team Battle Time Limit Enforcement | 19 | 0 🗳️ | 1 | 1 | 1 | 2 | **1.5** |
-| 16 | Historical Financial Tracking | 23 | 0 🗳️ | 1 | 1 | 1 | 2 | **1.5** |
-| 17 | Modular Package Extraction | 35 | 0 🗳️ | 1 | 1 | 2 | 3 | **1.3** |
+| 16 | Modular Package Extraction | 35 | 0 🗳️ | 1 | 1 | 2 | 3 | **1.3** |
 | 18 | Robot Detail Page Split | 37 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
 | 19 | Achievement Persistence Across Seasons | 40 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
 | 20 | Events Calendar | 43 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
@@ -47,6 +46,10 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 
 | Item | # | Spec | Completed |
 |------|---|------|-----------|
+| Database Unification (unified standings, financial ledger, leaderboard cache) | — | [Spec #40](/.kiro/specs/done-june26/40-database-unification/) | June 2026 |
+| Unified Match Scheduling (single scheduling table, shared matchmaking pipeline) | — | [Spec #41](/.kiro/specs/done-june26/41-unified-match-scheduling/) | June 2026 |
+| Tag Team System Unification | 55 | [Spec #42](/.kiro/specs/done-june26/42-tag-team-system-unification/) | June 2026 |
+| Historical Financial Tracking | 23 | [Spec #40](/.kiro/specs/done-june26/40-database-unification/) | June 2026 |
 | Mega-Orchestrator Refactor (combat-critical files) | 49 | — (direct implementation) | June 2026 |
 | Unimplemented Facilities Removal (Research Lab, Medical Bay, Coaching Staff) | 7 | — (direct implementation) | June 2026 |
 | Frontend Page Hook Extraction (RobotsPage, RobotDetailPage) | 50 | — (direct implementation) | June 2026 |
@@ -55,8 +58,8 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 | Vitest Performance Tuning (CI scripts, dot reporter, coverage gitignore) | 52 | — (direct implementation) | June 2026 |
 | Test Setup Convention Cleanup (co-located `__tests__/`, eliminated centralized sprawl) | 51 | — (direct implementation) | June 2026 |
 | Backend Test Reclassification (66 no-DB tests → unit runner, zero overlap, ~2min CI savings) | — | — (direct implementation) | June 2026 |
-| Tag Team System Unification | 55 | [Spec](/.kiro/specs/tag-team-system-unification/) | June 2026 |
-| Team Battles 2v2 and 3v3 (League) | 31 | [Spec #37](/.kiro/specs/to-do/37-team-battles-2v2-3v3/) | June 2026 |
+| Tag Team System Unification | 55 | [Spec #42](/.kiro/specs/done-june26/42-tag-team-system-unification/) | June 2026 |
+| Team Battles 2v2 and 3v3 (League) | 31 | [Spec #37](/.kiro/specs/done-may26/37-team-battles-2v2-3v3/) | June 2026 |
 | Untrack Generated Prisma Client (68K lines out of git) | — | — (direct implementation) | May 2026 |
 | HTTP Client Consolidation (typed `api` wrapper everywhere) | — | — (direct implementation) | May 2026 |
 | Console → Structured Logger Migration (FE + BE) | — | — (direct implementation) | May 2026 |
@@ -65,16 +68,16 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 | Dead Code Audit (knip Pass A + B, ~30 files removed) | — | — (direct implementation) | May 2026 |
 | Backend `any` Eliminated from Production Source | — | — (direct implementation) | May 2026 |
 | Weapon Refinement (per-instance permanent upgrades, 4 tiers, 5-slot cap) | 5 (partial) | [Spec #34](/.kiro/specs/done-may26/34-weapon-refinement/) | May 2026 |
-| Battle Subscription Facility (Booking Office event-subscription semantics) | 55 | [Spec #35](/.kiro/specs/to-do/35-booking-office-facility/) | June 2026 |
-| Weapon Resale (Workshop-level-dependent rate, ₡0–100% recovery) | 5 (partial) | [Spec #33](/.kiro/specs/to-do/33-weapon-resale/) | May 2026 |
+| Battle Subscription Facility (Booking Office event-subscription semantics) | 55 | [Spec #35](/.kiro/specs/done-may26/35-booking-office-facility/) | June 2026 |
+| Weapon Resale (Workshop-level-dependent rate, ₡0–100% recovery) | 5 (partial) | [Spec #33](/.kiro/specs/done-may26/33-weapon-resale/) | May 2026 |
 | Performance Optimization | 20 | — (direct implementation) | May 2026 |
-| Promotion/Demotion History Tracking | 22 | [Spec #32](/.kiro/specs/to-do/32-league-history-tracking/) | May 2026 |
+| Promotion/Demotion History Tracking | 22 | [Spec #32](/.kiro/specs/done-may26/32-league-history-tracking/) | May 2026 |
 | Battle History URL State Persistence | 25 | — (direct implementation) | May 2026 |
 | Hall of Records Performance Caching | 26 | — (direct implementation) | May 2026 |
 | League & Tag Team Instance Deep Linking | 39 | — (direct implementation) | May 2026 |
-| Facility Investment Advisor | 1 | [Spec #30](/.kiro/specs/to-do/30-fix-investment-advisor/) | May 2026 |
+| Facility Investment Advisor | 1 | [Spec #30](/.kiro/specs/done-may26/30-fix-investment-advisor/) | May 2026 |
 | Smooth Prestige Multiplier Scaling | 36 | — (direct implementation) | May 2026 |
-| Monitoring and Alerting | 3 | [Spec #29](/.kiro/specs/to-do/29-monitoring-and-alerting/) | May 2026 |
+| Monitoring and Alerting | 3 | [Spec #29](/.kiro/specs/done-may26/29-monitoring-and-alerting/) | May 2026 |
 | Admin Portal Redesign | 13 | [Spec #28](/.kiro/specs/done-april26/28-admin-portal-redesign/) | April 2026 |
 | Admin Tuning Adoption Dashboard | 38 | [Spec #28](/.kiro/specs/done-april26/28-admin-portal-redesign/) | April 2026 |
 | Achievement / Milestone System | 8 | [Spec #27](/.kiro/specs/done-april26/27-achievement-system/) | April 2026 |
@@ -152,12 +155,6 @@ The `Battle` table dual-writes per-robot columns alongside `BattleParticipant`. 
 
 Tag team battles can theoretically exceed 300s because each phase has its own 120s cap.
 
-### #23 — Historical Financial Tracking
-**Source**: PRD_ECONOMY_SYSTEM.md  
-**Priority**: Low — cycle snapshots provide basic history already
-
-Dedicated financial trend tracking beyond what CycleSnapshot provides.
-
 ### #24 — Dashboard Enhancements
 **Source**: PRD_DASHBOARD_PAGE.md  
 **Priority**: Low — cosmetic improvements  
@@ -198,8 +195,9 @@ npm workspace extraction. Only relevant when multiple consumers need shared back
 
 ### #37 — Robot Detail Page Split: Review vs Prepare / Stable Preparation Dashboard
 **Source**: Tuning Pool spec discussion (spec #25)  
+**Analysis**: [Robot Detail Page Split Analysis](analysis/ROBOT_DETAIL_PAGE_SPLIT_ANALYSIS.md) (June 2026)
 
-The Robot Detail page serves two distinct intents (Review: Overview/Matches/Analytics vs Prepare: Upgrades/Tuning/Battle Config/Stats). With 7 tabs, consider visual tab grouping or a Stable Preparation Dashboard for managing all robots from one view.
+The Robot Detail page serves two distinct intents (Review: Overview/Matches/Analytics vs Prepare: Upgrades/Tuning/Battle Config/Stats). With 8 tabs, the page conflates retrospective analysis with prospective preparation — neither context gets appropriate density or layout. Analysis recommends splitting into two pages: a public Robot Profile (`/robots/:id`) as a scrollable career narrative, and an owner-only Workshop (`/robots/:id/prepare`) with collapsible accordion sections, a robot switcher for multi-robot workflows, and a persistent status strip. The "Stable Preparation Dashboard" concept is absorbed into the Workshop via the robot switcher rather than a separate page.
 
 ### #41 — Season System (100-Cycle Competitive Seasons)
 **Source**: Game Loop Audit (#6) — Loop 3 (Competitive Loop) has no resets, meta shifts, or seasonal structure  
@@ -362,6 +360,23 @@ The seven battles indexes are healthy and seeing real query traffic — none are
 - **Replay regression.** Anyone clicking "view battle" on an N+1 day battle gets a degraded experience. Mitigation: clear UI affordance ("battle log archived") and ideally extend the retention window if players complain.
 - **Vacuum lock.** `VACUUM FULL battles` takes an exclusive lock and could lock out battle inserts for the duration. Either use `pg_repack` (no lock, requires extension) or run during a quiet maintenance window. Probably the latter for v1, the former once `pg_repack` is installed.
 - **One-time vs ongoing.** The first cleanup will reclaim ~4 GB; subsequent daily runs will reclaim ~85 MB/day. Confirm cron actually runs and the alert if it doesn't.
+
+### #59 — Spec #40 Legacy Column Drop (Phase 2)
+**Source**: [Spec #40 Legacy Column Audit](analysis/SPEC40_LEGACY_COLUMN_AUDIT.md), June 24, 2026  
+**Priority**: Medium — unified tables are operational but legacy columns accumulate tech debt and confusion
+
+Spec #40 delivered the unified tables (`standings`, `scheduled_matches_v2`, `battle_participants`, `financial_ledger`, `leaderboard_cache`) and migrated all write paths. However, the planned column/table drops were never executed. An audit found **60+ production-code references** to legacy columns across 25+ files — all reads or dual-writes.
+
+**Current state:**
+- 3 old scheduling tables are dead (zero reads/writes) — safe to drop after type cleanup
+- `tournament_matches` is still the primary for tournament scheduling — NOT migrated
+- `robot1Id`/`robot2Id` on Battle are still written in every battle creation + read in match history
+- Robot league/KotH/counter columns have zero writes but 6+ active read consumers
+- TeamBattle league columns have zero writes but `stableViewService` still reads directly
+
+**Scope:** The audit identifies a 5-phase plan (see audit doc). Phases 1–2 (dead table drops + read migrations) are medium effort. Phase 3 (battle column dual-write removal) is high effort. Phase 4 (tournament migration) is a separate spec-sized effort.
+
+**Audit document:** [docs/analysis/SPEC40_LEGACY_COLUMN_AUDIT.md](analysis/SPEC40_LEGACY_COLUMN_AUDIT.md)
 
 ### #57 — Practice Arena Catalog Access (Try Before You Buy)
 **Source**: Weapon Experimentation Problem (#5), follow-up item 3  

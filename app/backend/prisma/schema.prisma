@@ -411,8 +411,9 @@ model Battle {
   team2TagOutTime     BigInt? @map("team2_tag_out_time") // Timestamp when team 2 tagged out (milliseconds)
 
   // ===== TIME-BASED COMBAT DATA =====
-  battleLog       Json @map("battle_log") // Complete time-based combat simulation (events with timestamps)
-  durationSeconds Int  @map("duration_seconds") // Battle length in seconds
+  battleLog       Json? @map("battle_log") // Nullable: NULLed after 7-day retention window
+  winningSide     Int?  @map("winning_side") @db.SmallInt // 1 = team 1 won, 2 = team 2 won, NULL = draw or 1v1
+  durationSeconds Int   @map("duration_seconds") // Battle length in seconds
 
   // ===== ECONOMIC DATA =====
   winnerReward Int? @map("winner_reward") // Credits awarded to winner
@@ -448,6 +449,7 @@ model Battle {
 
   participants       BattleParticipant[] // Per-participant battle data (NEW - use this instead of robot1/robot2 columns)
   scheduledKothMatch ScheduledKothMatch[] // KotH match that produced this battle
+  summary            BattleSummary?       // Pre-computed battle statistics (permanent)
 
   @@index([robot1Id])
   @@index([robot2Id])
@@ -457,6 +459,28 @@ model Battle {
   @@index([leagueInstanceId])
   @@index([winnerId])
   @@map("battles")
+}
+
+model BattleSummary {
+  id               Int      @id @default(autoincrement())
+  battleId         Int      @unique @map("battle_id")
+  perRobot         Json     @map("per_robot")         // RobotSummaryStats[] — per-robot combat statistics
+  perTeam          Json?    @map("per_team")           // TeamSummaryStats[] | null — team aggregates
+  damageFlows      Json     @map("damage_flows")       // DamageFlow[] — source→target damage edges
+  participants     Json                                 // ParticipantSummary[] — robotId, team, survivalSeconds
+  kothPlacements   Json?    @map("koth_placements")    // KothPlacementSummary[] — KotH placement data
+  kothData         Json?    @map("koth_data")           // { participantCount, scoreThreshold }
+  startingPositions Json?   @map("starting_positions")  // Record<robotName, {x, y}>
+  endingPositions  Json?    @map("ending_positions")    // Record<robotName, {x, y}>
+  arenaRadius      Float?   @map("arena_radius")
+  battleDuration   Int      @map("battle_duration")     // seconds
+  totalEvents      Int      @map("total_events")
+  hasData          Boolean  @default(true) @map("has_data")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  battle Battle @relation(fields: [battleId], references: [id], onDelete: Cascade)
+
+  @@map("battle_summaries")
 }
 
 model ScheduledLeagueMatch {

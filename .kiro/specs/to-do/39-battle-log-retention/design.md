@@ -13,6 +13,17 @@ This design introduces a **`BattleSummary` table** (written at battle creation t
 3. **No special rules per battle type** — a battle is a battle. Same retention, same schema, same logic.
 4. **All metadata migrates out of `battle_log`** — `winningSide`, `placements`, `kothData`, `participants.survivalSeconds` all move to the summary or proper columns.
 
+### Context: Recent Schema Changes (Specs #40, #41, #42)
+
+This spec builds on top of the database unification (spec #40), unified match scheduling (spec #41), and tag team system unification (spec #42). Key changes from those specs that affect this design:
+
+- **`standings` table exists** — KotH aggregate stats (wins, matches, zoneScore, etc.) now live in a unified standings table. The KotH "All Time" view already reads from `standings`, NOT from `battle_log`. No impact on retention.
+- **`scheduled_matches_v2` table exists** — All scheduling uses the unified table. The KotH "Last 10" view queries `scheduled_matches_v2` to find recent matches, but still loads `battle_log.placements` from the `battles` table for per-match placement data.
+- **`BattleParticipant.role` expanded** — Includes `solo`, `active`, `reserve`, `team_member`, `koth_participant`. Also has `tagOutTimeMs`. The retention design uses this enhanced participant data.
+- **Legacy scheduling tables still in schema** — `ScheduledLeagueMatch`, `ScheduledKothMatch`, etc. still exist (cleanup phase pending) but code has moved to `scheduled_matches_v2`.
+- **`battles.battle_log` still NOT nullable** — Schema still requires this field. This spec's migration will make it nullable.
+- **`winningSide` NOT yet extracted** — Still buried in `battle_log` JSON. This spec extracts it to a proper column.
+
 
 ## Architecture
 
@@ -51,10 +62,10 @@ Before designing the solution, we audited every page and component that displays
 
 | Page | Route | Notes |
 |------|-------|-------|
-| League Standings | `/league-standings` | Reads from `robots` table (LP, ELO, wins/losses) and `team_battles` table. No `battle_log` access. |
-| KotH Standings ("All Time" view) | `/koth-standings?view=all_time` | Reads from `robots` table aggregate fields (`kothWins`, `kothMatches`, etc.). No `battle_log`. |
-| Tournament Bracket/Detail | `/tournaments/:id` | Reads `tournaments` + `scheduled_tournament_matches`. No `battle_log`. |
-| Team Battles Management | `/team-battles` | Reads `team_battles` + `team_battle_members` + `subscriptions`. No `battle_log`. |
+| League Standings (all modes) | `/league-standings` (modes: 1v1, 2v2, 3v3, tag_team, koth) | Reads from unified `standings` table (spec #40). No `battle_log` access. |
+| KotH Standings ("All Time" view) | `/league-standings?mode=koth` | Reads from `standings` table (KotH fields: totalMatches, totalKills, totalZoneScore, totalZoneTime, bestPlacement). No `battle_log`. |
+| Tournament Bracket/Detail | `/tournaments/:id` | Reads `tournaments` + `scheduled_matches_v2` (spec #41). No `battle_log`. |
+| Team Battles Management | `/team-battles` | Reads `team_battles` + `team_battle_members` + `subscriptions`. Tag teams unified into TeamBattle (spec #42). No `battle_log`. |
 | Practice Arena | `/practice-arena` | Generates battle log in-memory, returns to frontend in real-time. Never reads persisted `battle_log`. |
 | Achievements | `/achievements` | Reads `user_achievements`. No `battle_log`. |
 | Facilities | `/facilities` | Reads `facilities`. No relation to battles. |
@@ -73,7 +84,7 @@ Before designing the solution, we audited every page and component that displays
 | 4 | **Robot Detail — Overview tab** (Performance By Context) | `/robots/:id` | `robotQueryService.ts` → `getPerformanceContext()` | **`winningSide`** to determine win/loss for 2v2/3v3 battles | **All 2v2/3v3 battles older than 7 days counted as draws** | **CRITICAL** |
 | 5 | **Battle Report — Overview tab** | `/battle/:id` | `matchHistoryService.ts` → `getBattleLog()` | Full `battleLog` JSON: computes stats client-side, determines team winner, renders positions | Overview stats gone, team battle winner wrong, arena summary gone | **CRITICAL** |
 | 6 | **Battle Report — Playback tab** | `/battle/:id` | Same as #5 | `detailedCombatEvents`, spatial positions | 2D replay unavailable | EXPECTED |
-| 7 | **KotH Standings ("Last 10" view)** | `/koth-standings?view=last_10` | `kothStandingsService.ts` → `getKothStandingsLast10()` | `placements[]` — full array per match (robotId, robotName, zoneScore, kills, placement) | If all 10 most recent KotH events are > 7 days old, stats are all zeros | **MODERATE** |
+| 7 | **KotH Standings ("Last 10" view)** | `/league-standings?mode=koth&view=last_10` | `kothStandingsService.ts` → `getKothStandingsLast10()` | `placements[]` — full array per match (robotId, robotName, zoneScore, kills, placement). Queries `scheduled_matches_v2` for recent matches, then loads `battles.battle_log` for each. | If all 10 most recent KotH events are > 7 days old, stats are all zeros | **MODERATE** |
 | 8 | **Hall of Records** (Team Battle section) | `/hall-of-records` | `records-queries.ts` → `fetchTeamBattleRecordsForSize()` | `battle_log->'participants'->>'survivalSeconds'` | "Longest Survival" records gradually disappear | **MODERATE** |
 | 9 | **Admin — Battle Logs** | `/admin/battles` | `adminBattleService.ts` → `getAdminBattleDetail()` | Full `battleLog` JSON (combat events, formula breakdowns, team metrics) | Admin can't review combat details for battles > 7 days | EXPECTED |
 

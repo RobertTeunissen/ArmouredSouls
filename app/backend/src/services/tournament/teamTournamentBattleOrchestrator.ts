@@ -36,6 +36,7 @@ import {
   awardFameToRobot,
   checkAndAwardAchievements,
   didRobotLosePreviousBattle,
+  updateRobotCombatStats,
 } from '../battle/battlePostCombat';
 import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
 
@@ -268,17 +269,47 @@ export async function processTeamTournamentBattle(
 
   await prisma.battleParticipant.createMany({ data: participantRecords });
 
-  // Update robot ELOs
+  // Update robot combat stats via shared helper (HP, ELO, counters, damage lifetime)
   for (const robot of team1Robots) {
-    await prisma.robot.update({
-      where: { id: robot.id },
-      data: { elo: { increment: eloChanges.team1Change } },
+    const participant = battleResult.participants.find(p => p.robotId === robot.id);
+    await updateRobotCombatStats({
+      robotId: robot.id,
+      finalHP: Math.round(participant?.finalHP ?? robot.currentHP),
+      newELO: robot.elo + eloChanges.team1Change,
+      isWinner: winningSide === 1,
+      isDraw,
+      damageDealt: Math.round(participant?.damageDealt ?? 0),
+      damageTakenByOpponent: Math.round(
+        battleResult.participants
+          .filter(p => p.team === 2)
+          .reduce((sum, p) => sum + p.damageDealt, 0) / teamSize
+      ),
+      opponentDestroyed: (participant?.finalHP ?? 0) === 0 ? false : battleResult.participants.filter(p => p.team === 2).some(p => p.finalHP === 0),
+      fameIncrement: 0, // Fame handled in distributeTeamTournamentRewards
+      battleType: `tournament_${teamSize}v${teamSize}`,
+      stance: robot.stance,
+      loadoutType: robot.loadoutType,
     });
   }
   for (const robot of team2Robots) {
-    await prisma.robot.update({
-      where: { id: robot.id },
-      data: { elo: { increment: eloChanges.team2Change } },
+    const participant = battleResult.participants.find(p => p.robotId === robot.id);
+    await updateRobotCombatStats({
+      robotId: robot.id,
+      finalHP: Math.round(participant?.finalHP ?? robot.currentHP),
+      newELO: robot.elo + eloChanges.team2Change,
+      isWinner: winningSide === 2,
+      isDraw,
+      damageDealt: Math.round(participant?.damageDealt ?? 0),
+      damageTakenByOpponent: Math.round(
+        battleResult.participants
+          .filter(p => p.team === 1)
+          .reduce((sum, p) => sum + p.damageDealt, 0) / teamSize
+      ),
+      opponentDestroyed: (participant?.finalHP ?? 0) === 0 ? false : battleResult.participants.filter(p => p.team === 1).some(p => p.finalHP === 0),
+      fameIncrement: 0, // Fame handled in distributeTeamTournamentRewards
+      battleType: `tournament_${teamSize}v${teamSize}`,
+      stance: robot.stance,
+      loadoutType: robot.loadoutType,
     });
   }
 
