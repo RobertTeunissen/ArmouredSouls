@@ -200,6 +200,36 @@ The report includes: uptime, disk usage, memory usage, database connectivity, mo
 
 ---
 
+## Battle Log Retention (Spec #39)
+
+### Schedule
+
+Runs at 01:30 UTC daily (after settlement, before backup). Hardcoded in `battleLogRetentionService.ts`.
+
+### Behavior
+
+- NULLs `battle_log` for all battles older than 7 days (configurable via `BATTLE_LOG_RETENTION_DAYS` env var)
+- Processes in batches of 1000 with 100ms sleep between batches
+- Idempotent — already-NULLed rows are skipped
+- Pre-computed `battle_summaries` table preserves overview data permanently
+
+### Logs
+
+```bash
+grep "retention" /var/log/armouredsouls/backend-out.log | tail -5
+```
+
+### Manual Retention + VACUUM
+
+If disk pressure requires immediate action:
+
+```bash
+docker exec armouredsouls-postgres-1 psql -U as_acc -d armouredsouls_acc -c "UPDATE battles SET battle_log = NULL WHERE created_at < NOW() - INTERVAL '7 days' AND battle_log IS NOT NULL;"
+docker exec armouredsouls-postgres-1 psql -U as_acc -d armouredsouls_acc -c "VACUUM FULL battles;"
+```
+
+---
+
 ## Deploy Notifications
 
 ### How They Work

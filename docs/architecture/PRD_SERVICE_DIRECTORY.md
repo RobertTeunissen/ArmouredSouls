@@ -269,8 +269,11 @@ The production scheduler (`cycleScheduler.ts`) fires 10 independent cron jobs da
 | 17:00 | Grand Melee | `GRAND_MELEE_SCHEDULE` | Reserved |
 | 18:00 | Team Battle 3v3 Tournament | `TEAM_3V3_TOURNAMENT_SCHEDULE` | Live |
 | 00:00 | Settlement | `SETTLEMENT_SCHEDULE` | Live |
+| 00:30 | Daily Health Report | `DAILY_REPORT_SCHEDULE` | Live |
+| 01:30 | Battle Log Retention | hardcoded | Live |
+| 02:00 | Database Backup | crontab (system) | Live |
 
-**Spacing rationale**: Heavy modes (1v1 League at 08:00, KotH at 13:00) are 5 hours apart. Light/reserved modes interleave. Gaps at 12:00, 16:00, 19:00–23:00 provide ops intervention windows.
+**Spacing rationale**: Heavy modes (1v1 League at 08:00, KotH at 13:00) are 5 hours apart. Light/reserved modes interleave. Gaps at 12:00, 16:00, 19:00–23:00 provide ops intervention windows. Infrastructure jobs (retention, backup) run between 01:00–03:00 after settlement completes.
 
 **Team tournament handlers** (15:00 and 18:00): Execute team tournament rounds, advance brackets, and auto-create new tournaments when the previous one completes and ≥ 4 eligible teams exist. Each handler runs one round per cycle.
 

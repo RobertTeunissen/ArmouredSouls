@@ -148,17 +148,17 @@
   - Added "Battle Data Architecture (Spec #39)" section with rules for battle_log, winning_side, shared computation
   - _Requirements: 6.1_
 
-- [ ] 7.3 Update `docs/architecture/PRD_SERVICE_DIRECTORY.md`
-  - Add retention cron to the daily schedule at 01:30 UTC
+- [x] 7.3 Update `docs/architecture/PRD_SERVICE_DIRECTORY.md`
+  - Added retention cron (01:30), daily health report (00:30), and backup (02:00) to the schedule table
   - _Requirements: 6.1_
 
-- [ ] 7.4 Update `docs/guides/operations/MONITORING.md` and `MAINTENANCE.md`
-  - Document retention job: schedule, behavior, monitoring alerts
-  - Document manual VACUUM procedure after large retention runs
+- [x] 7.4 Update `docs/guides/operations/MONITORING.md` and `MAINTENANCE.md`
+  - Added "Battle Log Retention" section with schedule, behavior, logs, manual procedure
   - _Requirements: 6.1_
 
-- [ ] 7.5 Update `docs/BACKLOG.md`
-  - Move item #53 (Battle Log Retention / TOAST Trim) to "Recently Completed"
+- [x] 7.5 Update `docs/BACKLOG.md`
+  - Moved item #53 to "Recently Completed" table
+  - Removed the detailed #53 section from Engineering Maintenance Items
   - _Requirements: 6.1_
 
 ## Task Group 8: Verification
