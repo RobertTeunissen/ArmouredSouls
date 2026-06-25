@@ -218,7 +218,9 @@ function BattleDetailContent({ battleLog: rawBattleLog, userId }: { battleLog: B
         perRobot: battleLog.summary.perRobot,
         perTeam: battleLog.summary.perTeam?.map(t => ({
           ...t,
-          robots: t.robots.map(name => battleLog.summary!.perRobot.find(r => r.robotName === name)!).filter(Boolean),
+          robots: t.robots
+            .map(name => battleLog.summary!.perRobot.find(r => r.robotName === name))
+            .filter((r): r is NonNullable<typeof r> => r != null),
         })) ?? null,
         damageFlows: battleLog.summary.damageFlows,
         battleDuration: battleLog.summary.battleDuration,

@@ -788,6 +788,7 @@ export async function getMatchHistory(params: HistoryParams) {
         robot2: { include: { user: { select: { id: true, username: true, stableName: true } } } },
         tournament: { select: { id: true, name: true, maxRounds: true } },
         participants: true,
+        summary: { select: { kothPlacements: true } },
       },
       orderBy: { createdAt: 'desc' },
       skip: (page - 1) * perPage,
@@ -877,12 +878,9 @@ export async function formatBattleHistoryEntry(battle: BattleWithFullRelations, 
 async function formatKothHistoryEntry(battle: BattleWithFullRelations, baseData: Record<string, unknown>, targetRobotIds: number[]) {
   const userParticipant = battle.participants.find((p) => targetRobotIds.includes(p.robotId));
 
-  // Read zone score from battle_summaries (Spec #39), fallback to battle_log for pre-migration battles
+  // Read zone score from eager-loaded summary (Spec #39), fallback to battle_log for pre-migration battles
   let userZoneScore: number | null = null;
-  const summary = await prisma.battleSummary.findUnique({
-    where: { battleId: battle.id },
-    select: { kothPlacements: true },
-  });
+  const summary = (battle as unknown as { summary?: { kothPlacements: unknown } | null }).summary;
   if (summary?.kothPlacements && userParticipant) {
     const placements = summary.kothPlacements as Array<{ robotId: number; zoneScore: number }>;
     const entry = placements.find(p => p.robotId === userParticipant.robotId);

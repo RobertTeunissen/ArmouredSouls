@@ -149,7 +149,7 @@ export async function createTagTeamBattleRecord(
   // Determine winning side for tag team (team entity ID based)
   const winningSide = result.winnerId === team1.id ? 1 : result.winnerId === team2.id ? 2 : null;
   if (winningSide !== null) {
-    await prisma.battle.update({ where: { id: battle.id }, data: { winningSide } });
+    await prisma.battle.update({ where: { id: battle.id }, data: { winningSide } }).catch(() => {});
   }
 
   const summaryData = computeBattleSummary({

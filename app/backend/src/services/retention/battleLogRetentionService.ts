@@ -29,7 +29,8 @@ function sleep(ms: number): Promise<void> {
  * Idempotent — already-NULLed battles are skipped by the WHERE clause.
  */
 export async function runBattleLogRetention(): Promise<RetentionResult> {
-  const retentionDays = parseInt(process.env.BATTLE_LOG_RETENTION_DAYS || '7', 10);
+  const rawDays = parseInt(process.env.BATTLE_LOG_RETENTION_DAYS || '7', 10);
+  const retentionDays = Number.isFinite(rawDays) && rawDays >= 1 ? rawDays : 7;
   const cutoff = new Date(Date.now() - retentionDays * 86400000);
   const startTime = Date.now();
   let totalProcessed = 0;

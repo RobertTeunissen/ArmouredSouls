@@ -117,7 +117,7 @@ async function main(): Promise<void> {
             robotId: p.robot_id,
             team: p.team,
             survivalSeconds: (p.destroyed || p.yielded)
-              ? (robotStats?.exitTime ?? battle.duration_seconds)
+              ? (robotStats?.activeDuration ?? battle.duration_seconds)
               : battle.duration_seconds,
           };
         });
@@ -160,9 +160,6 @@ async function main(): Promise<void> {
         }
 
         totalWritten++;
-
-        // Explicitly null out the large objects to help GC
-        (logRow as unknown) = null;
       } catch (err) {
         totalErrors++;
         if (totalErrors <= 10) {
