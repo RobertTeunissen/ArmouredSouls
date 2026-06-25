@@ -249,11 +249,28 @@ type RobotWithUser = Prisma.RobotGetPayload<{
 }>;
 
 /**
- * Get all robots in a specific instance
+ * Get all robots in a specific instance (via standings table)
  */
 export async function getRobotsInInstance(leagueId: string): Promise<RobotWithUser[]> {
+  // Look up robot IDs from the standings table
+  const standings = await prisma.standing.findMany({
+    where: {
+      mode: 'league_1v1',
+      entityType: 'robot',
+      leagueInstanceId: leagueId,
+    },
+    orderBy: [
+      { leaguePoints: 'desc' },
+    ],
+    select: { entityId: true },
+  });
+
+  if (standings.length === 0) return [];
+
+  const robotIds = standings.map(s => s.entityId);
+
   return prisma.robot.findMany({
-    where: { leagueId },
+    where: { id: { in: robotIds } },
     include: {
       user: {
         select: {
@@ -263,23 +280,27 @@ export async function getRobotsInInstance(leagueId: string): Promise<RobotWithUs
       },
     },
     orderBy: [
-      { leaguePoints: 'desc' },
       { elo: 'desc' },
     ],
   });
 }
 
 /**
- * Move robot to a different instance (used during promotion/demotion)
+ * Move robot to a different instance (used during promotion/demotion).
+ * Updates the standing record for this robot.
  */
 export async function moveRobotToInstance(robotId: number, newTier: LeagueTier): Promise<void> {
   const targetLeagueId = await assignLeagueInstance(newTier);
   
-  await prisma.robot.update({
-    where: { id: robotId },
+  await prisma.standing.updateMany({
+    where: {
+      entityType: 'robot',
+      entityId: robotId,
+      mode: 'league_1v1',
+    },
     data: {
-      currentLeague: newTier,
-      leagueId: targetLeagueId,
+      tier: newTier,
+      leagueInstanceId: targetLeagueId,
     },
   });
 }

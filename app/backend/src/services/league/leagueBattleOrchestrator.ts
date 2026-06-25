@@ -224,11 +224,7 @@ async function processByeBattle(scheduledMatch: ScheduledLeagueMatchData): Promi
       durationSeconds: BYE_BATTLE_DURATION,
       winnerReward: participationReward,
       loserReward: 0,
-      robot1ELOBefore: robot.elo,
-      robot2ELOBefore: byeElo,
-      robot1ELOAfter: newElo,
-      robot2ELOAfter: byeElo,
-      eloChange: Math.abs(eloChanges.winnerChange),
+
     },
   });
 
@@ -496,12 +492,7 @@ async function createBattleRecord(
       winnerReward: isRobot1Winner ? robot1Reward : robot2Reward,
       loserReward: isRobot1Winner ? robot2Reward : robot1Reward,
       
-      // ELO tracking
-      robot1ELOBefore,
-      robot2ELOBefore,
-      robot1ELOAfter,
-      robot2ELOAfter,
-      eloChange,
+
     },
   });
   
@@ -769,7 +760,7 @@ export async function processBattle(scheduledMatch: ScheduledLeagueMatchData): P
           eloBefore: robot1Participant.eloBefore,
           eloAfter: robot1Participant.eloAfter,
         },
-        { id: battle.id, battleType: battle.battleType, leagueType: battle.leagueType, durationSeconds: battle.durationSeconds, eloChange: battle.eloChange },
+        { id: battle.id, battleType: battle.battleType, leagueType: battle.leagueType, durationSeconds: battle.durationSeconds, eloChange: battle.eloChange ?? 0 },
         robot2.id,
         streamingRevenue1?.totalRevenue || 0,
         false,
@@ -790,7 +781,7 @@ export async function processBattle(scheduledMatch: ScheduledLeagueMatchData): P
           eloBefore: robot2Participant.eloBefore,
           eloAfter: robot2Participant.eloAfter,
         },
-        { id: battle.id, battleType: battle.battleType, leagueType: battle.leagueType, durationSeconds: battle.durationSeconds, eloChange: battle.eloChange },
+        { id: battle.id, battleType: battle.battleType, leagueType: battle.leagueType, durationSeconds: battle.durationSeconds, eloChange: battle.eloChange ?? 0 },
         robot1.id,
         streamingRevenue2?.totalRevenue || 0,
         false,

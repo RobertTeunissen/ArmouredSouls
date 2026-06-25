@@ -318,22 +318,24 @@ export async function fetchCareerRecords() {
     wins: number;
     total_battles: number;
     elo: number;
-    current_league: string;
+    tier: string | null;
     username: string;
     stable_name: string | null;
   }
   const winRateRows = await prisma.$queryRaw<WinRateRow[]>`
-    SELECT r.id, r.name, r.wins, r."total_battles", r.elo, r."current_league",
+    SELECT r.id, r.name, r.wins, r."total_battles", r.elo,
+           s."tier",
            u.username, u."stable_name"
     FROM "robots" r
     JOIN "users" u ON u.id = r."user_id"
+    LEFT JOIN "standings" s ON s."entity_type" = 'robot' AND s."entity_id" = r.id AND s."mode" = 'league_1v1'
     WHERE r."total_battles" >= 50
     ORDER BY (r.wins::float / r."total_battles") DESC
     LIMIT 10
   `;
   const robotsWithWinRate = winRateRows.map(r => ({
     id: r.id, name: r.name, wins: r.wins, totalBattles: r.total_battles,
-    elo: r.elo, currentLeague: r.current_league,
+    elo: r.elo, league: r.tier ?? 'bronze',
     winRate: r.wins / r.total_battles,
     user: { username: r.username, stableName: r.stable_name },
   }));
@@ -361,7 +363,7 @@ export async function fetchCareerRecords() {
       robotId: robot.id, robotName: robot.name, username: getUserDisplayName(robot.user),
       totalBattles: robot.totalBattles, wins: robot.wins,
       winRate: Number((robot.winRate * 100).toFixed(1)),
-      elo: robot.elo, league: robot.currentLeague,
+      elo: robot.elo, league: robot.league,
     })),
     mostLifetimeDamage: mostLifetimeDamageRobots.map(robot => ({
       robotId: robot.id, robotName: robot.name, username: getUserDisplayName(robot.user),
@@ -370,7 +372,7 @@ export async function fetchCareerRecords() {
     })),
     highestElo: highestEloRobots.map(robot => ({
       robotId: robot.id, robotName: robot.name, username: getUserDisplayName(robot.user),
-      elo: robot.elo, league: robot.currentLeague, wins: robot.wins, losses: robot.losses, draws: robot.draws,
+      elo: robot.elo, wins: robot.wins, losses: robot.losses, draws: robot.draws,
     })),
     mostKills: mostKillsRobots.map(robot => ({
       robotId: robot.id, robotName: robot.name, username: getUserDisplayName(robot.user),
@@ -401,7 +403,7 @@ export async function fetchEconomicRecords() {
     mostExpensiveBattle: [],
     highestFame: highestFameRobots.map(robot => ({
       robotId: robot.id, robotName: robot.name, username: getUserDisplayName(robot.user),
-      fame: robot.fame, league: robot.currentLeague, elo: robot.elo,
+      fame: robot.fame, elo: robot.elo,
     })),
     richestStables: richestStables.map(stable => ({
       userId: stable.id, username: getUserDisplayName(stable),
@@ -442,39 +444,57 @@ export async function fetchPrestigeRecords() {
 // ─── KotH Records ───────────────────────────────────────────────────
 
 export async function fetchKothRecords(): Promise<Record<string, unknown> | undefined> {
-  const robotUserInclude = { user: { select: userSelect } };
-  const kothWhere = { kothMatches: { gt: 0 }, ...byeRobotFilter };
+  // Query standings for KotH records (source of truth since Spec #40)
+  const kothFilter = { mode: 'koth' as const, totalMatches: { gt: 0 } };
 
-  const [mostKothWins, highestAvgZoneScore, mostKothKills, longestKothWinStreak, mostZoneTime, bestKothPlacement, zoneDominators] =
+  const [mostWinsStandings, highestZoneScoreStandings, mostKillsStandings, longestStreakStandings, mostZoneTimeStandings, bestPlacementStandings, zoneDominatorStandings] =
     await Promise.all([
-      prisma.robot.findMany({ where: kothWhere, orderBy: { kothWins: 'desc' }, take: 10, include: robotUserInclude }),
-      prisma.robot.findMany({ where: kothWhere, orderBy: { kothTotalZoneScore: 'desc' }, take: 10, include: robotUserInclude }),
-      prisma.robot.findMany({ where: kothWhere, orderBy: { kothKills: 'desc' }, take: 10, include: robotUserInclude }),
-      prisma.robot.findMany({ where: kothWhere, orderBy: { kothBestWinStreak: 'desc' }, take: 10, include: robotUserInclude }),
-      prisma.robot.findMany({ where: kothWhere, orderBy: { kothTotalZoneTime: 'desc' }, take: 10, include: robotUserInclude }),
-      prisma.robot.findMany({ where: { ...kothWhere, kothBestPlacement: { not: null } }, orderBy: { kothBestPlacement: 'asc' }, take: 10, include: robotUserInclude }),
-      prisma.robot.findMany({ where: kothWhere, orderBy: { kothTotalZoneScore: 'desc' }, take: 10, include: robotUserInclude }),
+      prisma.standing.findMany({ where: { ...kothFilter, entityType: 'robot' }, orderBy: { wins: 'desc' }, take: 10 }),
+      prisma.standing.findMany({ where: { ...kothFilter, entityType: 'robot' }, orderBy: { totalZoneScore: 'desc' }, take: 10 }),
+      prisma.standing.findMany({ where: { ...kothFilter, entityType: 'robot' }, orderBy: { totalKills: 'desc' }, take: 10 }),
+      prisma.standing.findMany({ where: { ...kothFilter, entityType: 'robot' }, orderBy: { bestWinStreak: 'desc' }, take: 10 }),
+      prisma.standing.findMany({ where: { ...kothFilter, entityType: 'robot' }, orderBy: { totalZoneTime: 'desc' }, take: 10 }),
+      prisma.standing.findMany({ where: { ...kothFilter, entityType: 'robot', bestPlacement: { not: null } }, orderBy: { bestPlacement: 'asc' }, take: 10 }),
+      prisma.standing.findMany({ where: { ...kothFilter, entityType: 'robot' }, orderBy: { totalZoneScore: 'desc' }, take: 10 }),
     ]);
 
-  const mapRobot = (robot: typeof mostKothWins[number]) => ({
-    robotId: robot.id, robotName: robot.name, username: getUserDisplayName(robot.user),
-  });
+  // Collect all unique robot IDs across all categories
+  const allStandings = [mostWinsStandings, highestZoneScoreStandings, mostKillsStandings, longestStreakStandings, mostZoneTimeStandings, bestPlacementStandings, zoneDominatorStandings];
+  const allRobotIds = [...new Set(allStandings.flat().map(s => s.entityId))];
+
+  // Fetch robot details (name + user) in one query
+  const robots = allRobotIds.length > 0
+    ? await prisma.robot.findMany({
+        where: { id: { in: allRobotIds } },
+        include: { user: { select: userSelect } },
+      })
+    : [];
+  const robotMap = new Map(robots.map(r => [r.id, r]));
+
+  const mapStanding = (s: typeof mostWinsStandings[number]) => {
+    const robot = robotMap.get(s.entityId);
+    return {
+      robotId: s.entityId,
+      robotName: robot?.name ?? 'Unknown',
+      username: robot ? getUserDisplayName(robot.user) : '',
+    };
+  };
 
   return {
-    mostWins: mostKothWins.map(r => ({
-      ...mapRobot(r), kothWins: r.kothWins, kothMatches: r.kothMatches,
-      winRate: r.kothMatches > 0 ? Number((r.kothWins / r.kothMatches * 100).toFixed(1)) : 0,
+    mostWins: mostWinsStandings.map(s => ({
+      ...mapStanding(s), kothWins: s.wins, kothMatches: s.totalMatches ?? 0,
+      winRate: (s.totalMatches ?? 0) > 0 ? Number((s.wins / (s.totalMatches ?? 1) * 100).toFixed(1)) : 0,
     })),
-    highestAvgZoneScore: highestAvgZoneScore.map(r => ({
-      ...mapRobot(r),
-      avgZoneScore: r.kothMatches > 0 ? Number((r.kothTotalZoneScore / r.kothMatches).toFixed(1)) : 0,
-      kothMatches: r.kothMatches,
+    highestAvgZoneScore: highestZoneScoreStandings.map(s => ({
+      ...mapStanding(s),
+      avgZoneScore: (s.totalMatches ?? 0) > 0 ? Number(((s.totalZoneScore ?? 0) / (s.totalMatches ?? 1)).toFixed(1)) : 0,
+      kothMatches: s.totalMatches ?? 0,
     })),
-    mostKillsCareer: mostKothKills.map(r => ({ ...mapRobot(r), kothKills: r.kothKills, kothMatches: r.kothMatches })),
-    longestWinStreak: longestKothWinStreak.map(r => ({ ...mapRobot(r), bestWinStreak: r.kothBestWinStreak, kothWins: r.kothWins })),
-    mostZoneTime: mostZoneTime.map(r => ({ ...mapRobot(r), totalZoneTime: r.kothTotalZoneTime, kothMatches: r.kothMatches })),
-    bestPlacement: bestKothPlacement.map(r => ({ ...mapRobot(r), bestPlacement: r.kothBestPlacement, kothMatches: r.kothMatches })),
-    zoneDominator: zoneDominators.map(r => ({ ...mapRobot(r), totalZoneScore: r.kothTotalZoneScore, kothMatches: r.kothMatches })),
+    mostKillsCareer: mostKillsStandings.map(s => ({ ...mapStanding(s), kothKills: s.totalKills ?? 0, kothMatches: s.totalMatches ?? 0 })),
+    longestWinStreak: longestStreakStandings.map(s => ({ ...mapStanding(s), bestWinStreak: s.bestWinStreak, kothWins: s.wins })),
+    mostZoneTime: mostZoneTimeStandings.map(s => ({ ...mapStanding(s), totalZoneTime: s.totalZoneTime ?? 0, kothMatches: s.totalMatches ?? 0 })),
+    bestPlacement: bestPlacementStandings.map(s => ({ ...mapStanding(s), bestPlacement: s.bestPlacement, kothMatches: s.totalMatches ?? 0 })),
+    zoneDominator: zoneDominatorStandings.map(s => ({ ...mapStanding(s), totalZoneScore: s.totalZoneScore ?? 0, kothMatches: s.totalMatches ?? 0 })),
   };
 }
 

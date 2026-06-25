@@ -1,7 +1,8 @@
 /**
  * KotH (King of the Hill) Analytics Service
  *
- * Retrieves cumulative KotH performance stats for a robot.
+ * Retrieves cumulative KotH performance stats for a robot
+ * from the unified standings table (mode = 'koth').
  */
 
 import prisma from '../../lib/prisma';
@@ -22,46 +23,43 @@ export interface KothPerformance {
 
 /**
  * Get KotH performance stats for a robot.
- * Returns null if the robot has no KotH data.
+ * Reads from the unified standings table (Spec #40).
+ * Returns null if the robot has no KotH standings entry or zero matches.
  */
 export async function getKothPerformance(robotId: number): Promise<KothPerformance | null> {
-  const robot = await prisma.robot.findUnique({
-    where: { id: robotId },
-    select: {
-      id: true,
-      name: true,
-      kothMatches: true,
-      kothWins: true,
-      kothTotalZoneScore: true,
-      kothTotalZoneTime: true,
-      kothKills: true,
-      kothBestPlacement: true,
-      kothCurrentWinStreak: true,
-      kothBestWinStreak: true,
-    },
-  });
+  const [robot, standing] = await Promise.all([
+    prisma.robot.findUnique({
+      where: { id: robotId },
+      select: { id: true, name: true },
+    }),
+    prisma.standing.findUnique({
+      where: { entityType_entityId_mode: { entityType: 'robot', entityId: robotId, mode: 'koth' } },
+    }),
+  ]);
 
-  if (!robot || robot.kothMatches === 0) {
+  if (!robot || !standing || (standing.totalMatches ?? 0) === 0) {
     return null;
   }
+
+  const totalMatches = standing.totalMatches ?? 0;
 
   return {
     robotId: robot.id,
     robotName: robot.name,
-    kothMatches: robot.kothMatches,
-    kothWins: robot.kothWins,
+    kothMatches: totalMatches,
+    kothWins: standing.wins,
     podiumRate:
-      robot.kothMatches > 0
-        ? Number(((robot.kothWins / robot.kothMatches) * 100).toFixed(1))
+      totalMatches > 0
+        ? Number(((standing.wins / totalMatches) * 100).toFixed(1))
         : 0,
     avgZoneScore:
-      robot.kothMatches > 0
-        ? Number((robot.kothTotalZoneScore / robot.kothMatches).toFixed(1))
+      totalMatches > 0
+        ? Number(((standing.totalZoneScore ?? 0) / totalMatches).toFixed(1))
         : 0,
-    kothTotalZoneTime: robot.kothTotalZoneTime,
-    kothKills: robot.kothKills,
-    kothBestPlacement: robot.kothBestPlacement,
-    kothCurrentWinStreak: robot.kothCurrentWinStreak,
-    kothBestWinStreak: robot.kothBestWinStreak,
+    kothTotalZoneTime: standing.totalZoneTime ?? 0,
+    kothKills: standing.totalKills ?? 0,
+    kothBestPlacement: standing.bestPlacement,
+    kothCurrentWinStreak: standing.currentWinStreak,
+    kothBestWinStreak: standing.bestWinStreak,
   };
 }

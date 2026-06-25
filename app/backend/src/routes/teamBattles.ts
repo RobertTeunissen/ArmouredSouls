@@ -214,6 +214,8 @@ router.post(
 
     // Always create league standings on team creation (matchmaking handles eligibility separately)
     const leagueMode = teamSize === 2 ? 'league_2v2' : 'league_3v3';
+    const { assignTeamBattleLeagueInstance } = await import('../services/team-battle/teamBattleAdapter');
+    const leagueInstanceId = await assignTeamBattleLeagueInstance('bronze', teamSize);
     await prisma.standing.upsert({
       where: { entityType_entityId_mode: { entityType: 'team', entityId: team.id, mode: leagueMode as any } },
       update: {},
@@ -222,7 +224,7 @@ router.post(
         entityId: team.id,
         mode: leagueMode as any,
         tier: 'bronze',
-        leagueInstanceId: team.teamLeagueId,
+        leagueInstanceId,
         leaguePoints: 0,
         cyclesInTier: 0,
         wins: 0, losses: 0, draws: 0,
@@ -820,9 +822,6 @@ router.get(
             id: true,
             teamSize: true,
             teamName: true,
-            teamLeague: true,
-            teamLeagueId: true,
-            teamLp: true,
           },
         },
       },
@@ -869,9 +868,9 @@ router.get(
         teamId: membership.team.id,
         teamSize: membership.team.teamSize,
         teamName: membership.team.teamName,
-        currentLeague: standing?.tier ?? membership.team.teamLeague,
-        currentLeagueId: standing?.leagueInstanceId ?? membership.team.teamLeagueId,
-        currentLp: standing?.leaguePoints ?? membership.team.teamLp,
+        currentLeague: standing?.tier ?? 'bronze',
+        currentLeagueId: standing?.leagueInstanceId ?? 'bronze_1',
+        currentLp: standing?.leaguePoints ?? 0,
         history,
         tagTeamHistory,
         tagTeamCurrentLeague,

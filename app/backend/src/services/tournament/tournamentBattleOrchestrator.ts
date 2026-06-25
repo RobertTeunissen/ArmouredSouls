@@ -227,7 +227,7 @@ export async function processTournamentBattle(
         eloBefore: robot1Participant.eloBefore,
         eloAfter: robot1Participant.eloAfter,
       },
-      { id: battle.id, battleType: 'tournament_1v1', leagueType: 'tournament', durationSeconds: battle.durationSeconds, eloChange: battle.eloChange },
+      { id: battle.id, battleType: 'tournament_1v1', leagueType: 'tournament', durationSeconds: battle.durationSeconds, eloChange: battle.eloChange ?? 0 },
       robot2.id,
       streamingRevenue1?.totalRevenue || 0,
       false,
@@ -253,7 +253,7 @@ export async function processTournamentBattle(
         eloBefore: robot2Participant.eloBefore,
         eloAfter: robot2Participant.eloAfter,
       },
-      { id: battle.id, battleType: 'tournament_1v1', leagueType: 'tournament', durationSeconds: battle.durationSeconds, eloChange: battle.eloChange },
+      { id: battle.id, battleType: 'tournament_1v1', leagueType: 'tournament', durationSeconds: battle.durationSeconds, eloChange: battle.eloChange ?? 0 },
       robot1.id,
       streamingRevenue2?.totalRevenue || 0,
       false,
@@ -418,7 +418,7 @@ async function createTournamentBattleRecord(
     loserFinalHP: isRobot1Winner ? combatResult.robot2FinalHP : combatResult.robot1FinalHP,
     robot1DamageDealt: combatResult.robot2Damage,
     robot2DamageDealt: combatResult.robot1Damage,
-    leagueType: robot1.currentLeague,
+    leagueType: 'tournament',
     durationSeconds: combatResult.durationSeconds,
     // Pass real simulator events + context for narrative conversion
     simulatorEvents: combatResult.events,
@@ -476,12 +476,7 @@ async function createTournamentBattleRecord(
       winnerReward: rewards.winnerReward,
       loserReward: rewards.loserReward,
 
-      // ELO tracking
-      robot1ELOBefore,
-      robot2ELOBefore,
-      robot1ELOAfter,
-      robot2ELOAfter,
-      eloChange,
+
     },
   });
 

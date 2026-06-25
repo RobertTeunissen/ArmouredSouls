@@ -291,11 +291,6 @@ export class BattleProcessor<TMatch = unknown> {
         durationSeconds: simResult.durationSeconds,
         winnerReward,
         loserReward,
-        robot1ELOBefore: firstElo.before,
-        robot2ELOBefore: secondElo.before,
-        robot1ELOAfter: firstElo.after,
-        robot2ELOAfter: secondElo.after,
-        eloChange: Math.abs(firstElo.after - firstElo.before),
         ...extraBattleFields,
       },
     });

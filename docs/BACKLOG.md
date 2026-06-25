@@ -46,6 +46,7 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 
 | Item | # | Spec | Completed |
 |------|---|------|-----------|
+| Spec #40 Legacy Column Drop (Phase 2) | 59 | [Spec #43](/.kiro/specs/to-do/43-legacy-column-drop/) | June 2026 |
 | Battle Log Retention / TOAST Trim (pre-computed summaries, 7-day retention, nightly cron) | 53 | [Spec #39](/.kiro/specs/to-do/39-battle-log-retention/) | June 2026 |
 | Database Unification (unified standings, financial ledger, leaderboard cache) | — | [Spec #40](/.kiro/specs/done-june26/40-database-unification/) | June 2026 |
 | Unified Match Scheduling (single scheduling table, shared matchmaking pipeline) | — | [Spec #41](/.kiro/specs/done-june26/41-unified-match-scheduling/) | June 2026 |
@@ -308,22 +309,7 @@ A collection of saved weapon blueprints for the crafting system. Players save su
 
 These came out of the May 2026 codebase audit. They're internal-quality-of-life items rather than gameplay/UX features, but they affect velocity, reliability, and onboarding for every future change. Listed at the end so the gameplay backlog above stays the primary view.
 
-### #59 — Spec #40 Legacy Column Drop (Phase 2)
-**Source**: [Spec #40 Legacy Column Audit](analysis/SPEC40_LEGACY_COLUMN_AUDIT.md), June 24, 2026  
-**Priority**: Medium — unified tables are operational but legacy columns accumulate tech debt and confusion
-
-Spec #40 delivered the unified tables (`standings`, `scheduled_matches_v2`, `battle_participants`, `financial_ledger`, `leaderboard_cache`) and migrated all write paths. However, the planned column/table drops were never executed. An audit found **60+ production-code references** to legacy columns across 25+ files — all reads or dual-writes.
-
-**Current state:**
-- 3 old scheduling tables are dead (zero reads/writes) — safe to drop after type cleanup
-- `tournament_matches` is still the primary for tournament scheduling — NOT migrated
-- `robot1Id`/`robot2Id` on Battle are still written in every battle creation + read in match history
-- Robot league/KotH/counter columns have zero writes but 6+ active read consumers
-- TeamBattle league columns have zero writes but `stableViewService` still reads directly
-
-**Scope:** The audit identifies a 5-phase plan (see audit doc). Phases 1–2 (dead table drops + read migrations) are medium effort. Phase 3 (battle column dual-write removal) is high effort. Phase 4 (tournament migration) is a separate spec-sized effort.
-
-**Audit document:** [docs/analysis/SPEC40_LEGACY_COLUMN_AUDIT.md](analysis/SPEC40_LEGACY_COLUMN_AUDIT.md)
+### ~~#59 — Spec #40 Legacy Column Drop (Phase 2)~~ ✅ Completed — [Spec #43](/.kiro/specs/to-do/43-legacy-column-drop/) (June 2026)
 
 ### #57 — Practice Arena Catalog Access (Try Before You Buy)
 **Source**: Weapon Experimentation Problem (#5), follow-up item 3  

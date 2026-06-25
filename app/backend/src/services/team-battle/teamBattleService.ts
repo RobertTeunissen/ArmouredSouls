@@ -14,15 +14,12 @@ import logger from '../../config/logger';
 import { safeName } from '../../utils/securityValidation';
 import { hasSubscription } from '../subscription/subscriptionService';
 import { TeamBattleError, TeamBattleErrorCode } from '../../errors/teamBattleErrors';
-import { assignTeamBattleLeagueInstance } from './teamBattleAdapter';
 
 // ── Constants ────────────────────────────────────────────────────────
 
 const VALID_TEAM_SIZES = [2, 3] as const;
 const TEAM_NAME_MIN_LENGTH = 3;
 const TEAM_NAME_MAX_LENGTH = 32;
-const INITIAL_LEAGUE = 'bronze';
-const INITIAL_LP = 0;
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -181,22 +178,12 @@ export async function registerTeam(
       );
     }
 
-    // Assign to proper league instance (scoped by teamSize)
-    const leagueId = await assignTeamBattleLeagueInstance(INITIAL_LEAGUE as 'bronze', teamSize);
-
     // Create the team
     const newTeam = await tx.teamBattle.create({
       data: {
         stableId,
         teamSize,
         teamName,
-        teamLp: INITIAL_LP,
-        teamLeague: INITIAL_LEAGUE,
-        teamLeagueId: leagueId,
-        cyclesInLeague: 0,
-        totalLeagueWins: 0,
-        totalLeagueLosses: 0,
-        totalLeagueDraws: 0,
         eligibility: 'ELIGIBLE',
         members: {
           create: uniqueRobotIds.map((robotId, index) => ({

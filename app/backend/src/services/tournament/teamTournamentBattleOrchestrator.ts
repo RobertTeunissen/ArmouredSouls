@@ -232,11 +232,7 @@ export async function processTeamTournamentBattle(
       durationSeconds: Math.round(battleResult.durationSeconds),
       winnerReward: 0, // Rewards handled in Task 5.3
       loserReward: 0,
-      robot1ELOBefore: team1SumELO,
-      robot2ELOBefore: team2SumELO,
-      robot1ELOAfter: team1SumELO + eloChanges.team1Change,
-      robot2ELOAfter: team2SumELO + eloChanges.team2Change,
-      eloChange: Math.abs(eloChanges.team1Change),
+
       battleLog: buildTeamTournamentBattleLog(battleResult, teamSize, tournament) as unknown as Prisma.InputJsonValue,
     },
   });

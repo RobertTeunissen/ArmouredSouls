@@ -354,7 +354,7 @@ export async function getAdminBattleDetail(battleId: number) {
           activeRobot: team1.members[0]?.robot,
           reserveRobot: team1.members[1]?.robot,
           stableId: team1.stableId,
-          league: team1Standing?.tier ?? team1.tagTeamLeague,
+          league: team1Standing?.tier ?? 'bronze',
         },
         team2: team2
           ? {
@@ -362,7 +362,7 @@ export async function getAdminBattleDetail(battleId: number) {
               activeRobot: team2.members[0]?.robot,
               reserveRobot: team2.members[1]?.robot,
               stableId: team2.stableId,
-              league: team2Standing?.tier ?? team2.tagTeamLeague,
+              league: team2Standing?.tier ?? 'bronze',
             }
           : null,
       };

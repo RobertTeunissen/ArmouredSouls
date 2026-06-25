@@ -635,7 +635,6 @@ export async function generatePerRobotFinancialReport(userId: number): Promise<{
     select: {
       id: true,
       name: true,
-      currentLeague: true,
       elo: true,
       fame: true,
       totalBattles: true,
@@ -661,6 +660,14 @@ export async function generatePerRobotFinancialReport(userId: number): Promise<{
   // Get total operating costs
   const operatingCosts = await calculateTotalDailyOperatingCosts(userId);
   const allocatedFacilityCostPerRobot = operatingCosts.total / robots.length;
+
+  // Get league tiers from standings for the response
+  const robotIds = robots.map(r => r.id);
+  const leagueStandings = await prisma.standing.findMany({
+    where: { entityType: 'robot', entityId: { in: robotIds }, mode: 'league_1v1' as any },
+    select: { entityId: true, tier: true },
+  });
+  const leagueMap = new Map(leagueStandings.map(s => [s.entityId, s.tier]));
 
   // Get Merchandising Hub level for passive income calculations
   const merchandisingHub = await prisma.facility.findUnique({
@@ -781,7 +788,7 @@ export async function generatePerRobotFinancialReport(userId: number): Promise<{
       return {
         id: robot.id,
         name: robot.name,
-        currentLeague: robot.currentLeague,
+        currentLeague: leagueMap.get(robot.id) ?? 'bronze',
         elo: robot.elo,
         revenue: {
           battleWinnings,

@@ -91,11 +91,8 @@ router.get('/revenue-streams', authenticateToken, validateRequest({}), async (re
 
     const passiveIncome = await calculateDailyPassiveIncome(userId);
 
-    // Get user's robots to determine average league
-    const robots = await prisma.robot.findMany({
-      where: { userId },
-      select: { currentLeague: true },
-    });
+    // Get user's robot count
+    const robotCount = await prisma.robot.count({ where: { userId } });
 
     const prestigeMultiplier = getPrestigeMultiplier(user.prestige);
 
@@ -109,7 +106,7 @@ router.get('/revenue-streams', authenticateToken, validateRequest({}), async (re
         prestigeMultiplier,
         prestigeBonus: Math.round((prestigeMultiplier - 1) * 100), // Percentage
       },
-      robotCount: robots.length,
+      robotCount,
       prestige: user.prestige,
     });
 });

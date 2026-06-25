@@ -15,13 +15,6 @@ export interface TagTeamWithRobots {
   reserveRobotId: number;
   activeRobot: RobotWithWeapons;
   reserveRobot: RobotWithWeapons;
-  tagTeamLp: number;
-  tagTeamLeague: string;
-  tagTeamLeagueId: string;
-  cyclesInTagTeamLeague: number;
-  totalTagTeamWins: number;
-  totalTagTeamLosses: number;
-  totalTagTeamDraws: number;
   createdAt: Date;
   updatedAt: Date;
 }

@@ -94,13 +94,6 @@ export async function executeTagTeamBattle(match: ScheduledTagTeamMatchData): Pr
       reserveRobotId: team1Raw.members[1].robotId,
       activeRobot: team1Raw.members[0].robot as RobotWithWeapons,
       reserveRobot: team1Raw.members[1].robot as RobotWithWeapons,
-      tagTeamLp: team1Standing.leaguePoints,
-      tagTeamLeague: team1Standing.tier,
-      tagTeamLeagueId: team1Standing.leagueInstanceId,
-      cyclesInTagTeamLeague: team1Standing.cyclesInTier,
-      totalTagTeamWins: team1Standing.wins,
-      totalTagTeamLosses: team1Standing.losses,
-      totalTagTeamDraws: team1Standing.draws,
       createdAt: team1Raw.createdAt,
       updatedAt: team1Raw.updatedAt,
     };
@@ -109,7 +102,7 @@ export async function executeTagTeamBattle(match: ScheduledTagTeamMatchData): Pr
   // Load team2
   let team2: TagTeamWithRobots | null;
   if (match.team2Id === null) {
-    team2 = createByeTeamForBattle(match.teamBattleLeague, match.teamBattleLeague + '_1');
+    team2 = createByeTeamForBattle();
   } else {
     const team2Raw = await prisma.teamBattle.findUnique({
       where: { id: match.team2Id },
@@ -147,13 +140,6 @@ export async function executeTagTeamBattle(match: ScheduledTagTeamMatchData): Pr
           reserveRobotId: team2Raw.members[1].robotId,
           activeRobot: team2Raw.members[0].robot as RobotWithWeapons,
           reserveRobot: team2Raw.members[1].robot as RobotWithWeapons,
-          tagTeamLp: team2Standing.leaguePoints,
-          tagTeamLeague: team2Standing.tier,
-          tagTeamLeagueId: team2Standing.leagueInstanceId,
-          cyclesInTagTeamLeague: team2Standing.cyclesInTier,
-          totalTagTeamWins: team2Standing.wins,
-          totalTagTeamLosses: team2Standing.losses,
-          totalTagTeamDraws: team2Standing.draws,
           createdAt: team2Raw.createdAt,
           updatedAt: team2Raw.updatedAt,
         };
