@@ -1,15 +1,20 @@
 import type { ArenaSummaryProps } from './types';
 
 export function ArenaSummary({ battleLog }: ArenaSummaryProps) {
-  if (!battleLog.battleLog.arenaRadius) return null;
-
+  // Read arena data from battleLog (recent battles) or summary (pruned battles)
   const bl = battleLog.battleLog;
-  const spatialEvts = bl.detailedCombatEvents ?? bl.events ?? [];
+  const summary = battleLog.summary;
+  const arenaRadius = bl?.arenaRadius ?? summary?.arenaRadius;
+  if (!arenaRadius) return null;
+
+  const startingPositions = bl?.startingPositions ?? summary?.startingPositions;
+  const endingPositions = bl?.endingPositions ?? summary?.endingPositions;
+  const spatialEvts = bl?.detailedCombatEvents ?? bl?.events ?? [];
 
   // Collect ALL robot names from startingPositions AND all events' positions
   const robotNameSet = new Set<string>();
-  if (bl.startingPositions) {
-    for (const name of Object.keys(bl.startingPositions)) {
+  if (startingPositions) {
+    for (const name of Object.keys(startingPositions)) {
       robotNameSet.add(name);
     }
   }
@@ -26,20 +31,20 @@ export function ArenaSummary({ battleLog }: ArenaSummaryProps) {
   const totalDistance: Record<string, number> = {};
   const lastPos: Record<string, { x: number; y: number }> = {};
 
-  if (bl.startingPositions) {
-    for (const name of Object.keys(bl.startingPositions)) {
+  if (startingPositions) {
+    for (const name of Object.keys(startingPositions)) {
       totalDistance[name] = 0;
-      lastPos[name] = bl.startingPositions[name];
+      lastPos[name] = startingPositions[name];
     }
   }
 
   const firstKnownPos: Record<string, { x: number; y: number }> = {};
   const lastKnownPos: Record<string, { x: number; y: number }> = {};
 
-  if (bl.startingPositions) {
-    for (const name of Object.keys(bl.startingPositions)) {
-      firstKnownPos[name] = bl.startingPositions[name];
-      lastKnownPos[name] = bl.startingPositions[name];
+  if (startingPositions) {
+    for (const name of Object.keys(startingPositions)) {
+      firstKnownPos[name] = startingPositions[name];
+      lastKnownPos[name] = startingPositions[name];
     }
   }
 
@@ -65,9 +70,9 @@ export function ArenaSummary({ battleLog }: ArenaSummaryProps) {
     }
   }
 
-  if (bl.endingPositions) {
-    for (const name of Object.keys(bl.endingPositions)) {
-      lastKnownPos[name] = bl.endingPositions[name];
+  if (endingPositions) {
+    for (const name of Object.keys(endingPositions)) {
+      lastKnownPos[name] = endingPositions[name];
     }
   }
 
@@ -95,11 +100,11 @@ export function ArenaSummary({ battleLog }: ArenaSummaryProps) {
         <div className="space-y-1">
           <div className="flex justify-between bg-background rounded px-2 py-1">
             <span className="text-secondary">Arena Radius</span>
-            <span>{bl.arenaRadius} units</span>
+            <span>{arenaRadius} units</span>
           </div>
           <div className="flex justify-between bg-background rounded px-2 py-1">
             <span className="text-secondary">Arena Diameter</span>
-            <span>{bl.arenaRadius! * 2} units</span>
+            <span>{arenaRadius! * 2} units</span>
           </div>
         </div>
         <div className="space-y-1">

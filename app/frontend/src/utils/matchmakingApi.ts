@@ -523,6 +523,23 @@ export interface BattleLogResponse {
   leagueInstanceId?: string | null;
   tournamentId?: number | null;
   duration: number;
+  /** Whether the full battle_log (playback events) is still available (pruned after 7 days) */
+  playbackAvailable?: boolean;
+  /** Pre-computed battle statistics from battle_summaries table (Spec #39) */
+  summary?: {
+    perRobot: import('../../../shared/utils/battleStatistics').RobotCombatStats[];
+    perTeam: { teamName: string; robots: string[]; totalDamageDealt: number; totalDamageReceived: number; totalHits: number; totalMisses: number; totalCriticals: number }[] | null;
+    damageFlows: import('../../../shared/utils/battleStatistics').DamageFlow[];
+    participants: { robotId: number; team: number; survivalSeconds: number }[];
+    kothPlacements?: unknown[];
+    kothData?: { participantCount: number; scoreThreshold: number };
+    startingPositions?: Record<string, { x: number; y: number }>;
+    endingPositions?: Record<string, { x: number; y: number }>;
+    arenaRadius?: number;
+    battleDuration: number;
+    totalEvents: number;
+    hasData: boolean;
+  };
   /** Unified participants array — single source of truth for all battle types */
   participants?: BattleLogParticipant[];
   robot1?: {
