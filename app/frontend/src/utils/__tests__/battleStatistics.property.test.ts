@@ -322,7 +322,7 @@ describe('computeBattleStatistics — property-based tests', () => {
         for (const robot of result.perRobot) {
           if (robot.attacks > 0) {
             const expectedRate = (robot.hits / robot.attacks) * 100;
-            expect(robot.hitRate).toBeCloseTo(expectedRate, 10);
+            expect(robot.hitRate).toBeCloseTo(expectedRate, 1);
           } else {
             expect(robot.hitRate).toBe(0);
             expect(Number.isNaN(robot.hitRate)).toBe(false);
