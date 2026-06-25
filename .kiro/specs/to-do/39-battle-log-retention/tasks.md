@@ -127,27 +127,25 @@
 
 ## Task Group 6: Backfill Completion
 
-- [ ] 6.1 Rewrite backfill script for memory safety
-  - Rewrite `scripts/backfill-battle-summaries.ts` to process ONE battle at a time (cursor-based, no batch loading of battle_log)
-  - Use `prisma.$queryRaw` to fetch a single battle's `battle_log` and immediately compute + write + release
-  - Or: use a PostgreSQL PL/pgSQL function that does the computation server-side (avoiding Node memory entirely)
-  - Target: runs at ~50 battles/second without exceeding 256MB Node heap
+- [x] 6.1 Rewrite backfill script for memory safety
+  - Rewritten to process one battle at a time via raw SQL (no batch loading of battle_log into Node)
+  - Uses `ON CONFLICT DO NOTHING` for idempotency
+  - Configurable via BACKFILL_BATCH_SIZE, BACKFILL_SLEEP_MS, BACKFILL_START_ID env vars
   - _Requirements: 5.1_
 
 - [ ] 6.2 Run backfill for remaining battles
-  - Execute the rewritten script on ACC to fill the ~25K missing summaries
+  - Execute on ACC to fill remaining ~25K missing summaries
   - Verify: `SELECT count(*) FROM battles WHERE battle_log IS NOT NULL AND NOT EXISTS (SELECT 1 FROM battle_summaries WHERE battle_id = battles.id)` = 0
   - _Requirements: 5.1_
 
 ## Task Group 7: Documentation Updates
 
-- [ ] 7.1 Update `.kiro/steering/project-overview.md`
-  - Add "Battle Summary & Retention" to Key Systems section
-  - Mention 7-day retention window, `battle_summaries` table, nightly cron
+- [x] 7.1 Update `.kiro/steering/project-overview.md`
+  - Added "Battle Summary & Retention" as Key System #17
   - _Requirements: 6.1_
 
-- [ ] 7.2 Update `.kiro/steering/coding-standards.md`
-  - Add section: "Battle Data Architecture" — write summaries at battle creation, never read `battle_log` for permanent data, `winning_side` column for team battles
+- [x] 7.2 Update `.kiro/steering/coding-standards.md`
+  - Added "Battle Data Architecture (Spec #39)" section with rules for battle_log, winning_side, shared computation
   - _Requirements: 6.1_
 
 - [ ] 7.3 Update `docs/architecture/PRD_SERVICE_DIRECTORY.md`

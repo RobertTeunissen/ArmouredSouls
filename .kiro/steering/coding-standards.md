@@ -88,6 +88,12 @@ inclusion: always
 - Use transactions for multi-step operations
 - Include proper indexes for performance
 
+### Battle Data Architecture (Spec #39)
+- **Never read `battle_log` for permanent data.** The `battle_log` column is ephemeral — NULLed after 7 days. All persistent battle data lives in `battle_summaries` (pre-computed stats) or proper columns (`battles.winning_side`).
+- **Always write a `BattleSummary` at battle creation.** Every orchestrator must call `computeBattleSummary()` and insert a row in `battle_summaries` alongside the battle creation. Wrap in try/catch — never fail a battle because the summary fails.
+- **Use `battles.winning_side` for team battle winner detection**, not `battleLog.winningSide`. The column survives retention and is indexable.
+- **The shared computation lives in `app/shared/utils/battleStatistics.ts`.** Both frontend and backend import from here — no duplicate implementations.
+
 ### Shell Scripts (operations / deploy / cron)
 - **Never `source .env` directly.** Bash interprets unquoted values as commands. With a line like `LEAGUE_SCHEDULE=0 20 * * *` in `.env`, `source` parses the assignment as `LEAGUE_SCHEDULE=0` and tries to execute `20 * * *` as a command, crashing the script with `20: command not found`. We've hit this bug twice (PR #332 in `preflight.sh`, PR #336 in `backup.sh`).
 - **Use the `env_get` helper pattern instead.** Read keys as plain text via `grep + cut + sed`, never letting the shell evaluate values:
