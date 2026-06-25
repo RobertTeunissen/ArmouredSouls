@@ -876,12 +876,27 @@ export async function formatBattleHistoryEntry(battle: BattleWithFullRelations, 
 
 async function formatKothHistoryEntry(battle: BattleWithFullRelations, baseData: Record<string, unknown>, targetRobotIds: number[]) {
   const userParticipant = battle.participants.find((p) => targetRobotIds.includes(p.robotId));
-  const battleLogData =
-    battle.battleLog !== null && typeof battle.battleLog === 'object'
+
+  // Read zone score from battle_summaries (Spec #39), fallback to battle_log for pre-migration battles
+  let userZoneScore: number | null = null;
+  const summary = await prisma.battleSummary.findUnique({
+    where: { battleId: battle.id },
+    select: { kothPlacements: true },
+  });
+  if (summary?.kothPlacements && userParticipant) {
+    const placements = summary.kothPlacements as Array<{ robotId: number; zoneScore: number }>;
+    const entry = placements.find(p => p.robotId === userParticipant.robotId);
+    if (entry) userZoneScore = entry.zoneScore;
+  }
+  // Fallback to battle_log if no summary exists
+  if (userZoneScore === null && userParticipant) {
+    const battleLogData = battle.battleLog !== null && typeof battle.battleLog === 'object'
       ? battle.battleLog as Record<string, unknown>
       : {};
-  const logPlacements = ((battleLogData as Record<string, unknown>).placements || []) as Array<Pick<KothPlacement, 'robotId' | 'zoneScore'>>;
-  const userLogEntry = userParticipant ? logPlacements.find((lp) => lp.robotId === userParticipant.robotId) : null;
+    const logPlacements = ((battleLogData).placements || []) as Array<{ robotId: number; zoneScore: number }>;
+    const logEntry = logPlacements.find(lp => lp.robotId === userParticipant.robotId);
+    if (logEntry) userZoneScore = logEntry.zoneScore;
+  }
 
   const kothData: Record<string, unknown> = {
     ...baseData,
@@ -889,7 +904,7 @@ async function formatKothHistoryEntry(battle: BattleWithFullRelations, baseData:
     loserReward: userParticipant?.credits ?? 0,
     kothPlacement: userParticipant?.placement ?? null,
     kothParticipantCount: battle.participants.length,
-    kothZoneScore: userLogEntry?.zoneScore ?? null,
+    kothZoneScore: userZoneScore,
   };
 
   if (userParticipant && userParticipant.robotId !== battle.robot1Id && userParticipant.robotId !== battle.robot2Id) {
@@ -1075,6 +1090,7 @@ export async function getBattleLog(battleId: number) {
     leagueInstanceId: battleData.leagueInstanceId ?? null,
     tournamentId: battleData.tournamentId ?? null,
     duration: battleData.durationSeconds,
+    playbackAvailable: battleData.battleLog !== null,
     battleLog:
       typeof battleData.battleLog === 'object' && battleData.battleLog !== null
         ? JSON.parse(
@@ -1084,6 +1100,25 @@ export async function getBattleLog(battleId: number) {
           )
         : battleData.battleLog,
   };
+
+  // Include pre-computed summary if available (Spec #39)
+  const summary = await prisma.battleSummary.findUnique({ where: { battleId: battleData.id } });
+  if (summary) {
+    baseResponse.summary = {
+      perRobot: summary.perRobot,
+      perTeam: summary.perTeam,
+      damageFlows: summary.damageFlows,
+      participants: summary.participants,
+      kothPlacements: summary.kothPlacements,
+      kothData: summary.kothData,
+      startingPositions: summary.startingPositions,
+      endingPositions: summary.endingPositions,
+      arenaRadius: summary.arenaRadius,
+      battleDuration: summary.battleDuration,
+      totalEvents: summary.totalEvents,
+      hasData: summary.hasData,
+    };
+  }
 
   // Build unified participants array from BattleParticipant records
   // This is the single source of truth — same shape for all battle types
@@ -1140,11 +1175,14 @@ export async function getBattleLog(battleId: number) {
     baseResponse.winner = battleData.winnerId === team1Id ? 'robot1' : battleData.winnerId === team2Id ? 'robot2' : null;
   } else if (battleData.battleType === 'league_2v2' || battleData.battleType === 'league_3v3' || battleData.battleType === 'tournament_2v2' || battleData.battleType === 'tournament_3v3') {
     // For team battles, winnerId stores the winning team ID (not a robot ID).
-    // Use the battleLog.winningSide field to determine winner: side 1 = 'robot1', side 2 = 'robot2'.
-    const teamBattleLog = battleData.battleLog as unknown as { winningSide?: 1 | 2 | null };
-    if (teamBattleLog?.winningSide === 1) {
+    // Use the winning_side column (populated at battle creation) to determine winner.
+    // Falls back to battleLog.winningSide for battles created before Spec #39.
+    const winningSide = battleData.winningSide
+      ?? (battleData.battleLog as unknown as { winningSide?: 1 | 2 | null })?.winningSide
+      ?? null;
+    if (winningSide === 1) {
       baseResponse.winner = 'robot1';
-    } else if (teamBattleLog?.winningSide === 2) {
+    } else if (winningSide === 2) {
       baseResponse.winner = 'robot2';
     } else {
       baseResponse.winner = null;

@@ -2,20 +2,20 @@
 
 ## Task Group 1: Shared Statistics Module
 
-- [ ] 1.1 Extract `computeBattleStatistics` to `app/shared/utils/battleStatistics.ts`
+- [x] 1.1 Extract `computeBattleStatistics` to `app/shared/utils/battleStatistics.ts`
   - Copy from `app/frontend/src/utils/battleStatistics.ts`
   - Remove React/frontend-specific imports (there should be none — it's pure computation)
   - Export all interfaces (`BattleStatistics`, `RobotCombatStats`, `DamageFlow`, etc.)
   - Add to `app/shared/utils/index.ts` barrel export
   - _Requirements: 1.2_
 
-- [ ] 1.2 Update frontend to import from shared
+- [x] 1.2 Update frontend to import from shared
   - Change `app/frontend/src/utils/battleStatistics.ts` to re-export from `../../shared/utils/battleStatistics`
   - Or update all import paths directly (grep for `from '../utils/battleStatistics'` and `from '../../utils/battleStatistics'`)
   - Verify all existing frontend tests pass (`pnpm test --run` in `app/frontend`)
   - _Requirements: 1.2_
 
-- [ ] 1.3 Create backend summary computer service
+- [x] 1.3 Create backend summary computer service
   - Create `app/backend/src/services/battle/battleSummaryComputer.ts`
   - Import `computeBattleStatistics` from shared
   - Add wrapper that resolves robot IDs, positions, KotH data, and returns the full summary shape matching the `BattleSummary` Prisma model
@@ -23,63 +23,60 @@
 
 ## Task Group 2: Orchestrator Integration (Write Path)
 
-- [ ] 2.1 League 1v1 orchestrator writes summary
+- [x] 2.1 League 1v1 orchestrator writes summary
   - In `leagueBattleOrchestrator.ts`: after battle creation, call `battleSummaryComputer` and insert `BattleSummary` row
   - Set `battles.winning_side = NULL` (1v1 doesn't use it — winner is in `winner_id`)
   - Wrap in try/catch: if summary fails, log error but don't fail the battle
   - _Requirements: 1.1_
 
-- [ ] 2.2 Tournament 1v1 orchestrator writes summary
+- [x] 2.2 Tournament 1v1 orchestrator writes summary
   - In `tournamentBattleOrchestrator.ts`: same pattern as 2.1
   - _Requirements: 1.1_
 
-- [ ] 2.3 Tag team orchestrator writes summary
+- [x] 2.3 Tag team orchestrator writes summary
   - In `tagTeamBattleRecord.ts`: write summary + set `winning_side`
   - _Requirements: 1.1_
 
-- [ ] 2.4 Team battle orchestrator writes summary (2v2/3v3 league)
+- [x] 2.4 Team battle orchestrator writes summary (2v2/3v3 league)
   - In `teamBattleOrchestrator.ts`: write summary + set `winning_side`
   - _Requirements: 1.1_
 
-- [ ] 2.5 Team tournament orchestrator writes summary (2v2/3v3 tournament)
+- [x] 2.5 Team tournament orchestrator writes summary (2v2/3v3 tournament)
   - In `teamTournamentBattleOrchestrator.ts`: write summary + set `winning_side`
   - _Requirements: 1.1_
 
-- [ ] 2.6 KotH orchestrator writes summary
+- [x] 2.6 KotH orchestrator writes summary
   - In `kothBattleOrchestrator.ts`: write summary with `koth_placements` and `koth_data`
   - `winning_side` = NULL for KotH (no "sides" — it's FFA)
   - _Requirements: 1.1_
 
 ## Task Group 3: Backend Reader Refactors
 
-- [ ] 3.1 Refactor `getBattleLog()` — team battle winner from column
-  - In `matchHistoryService.ts`: replace `battleLog.winningSide` read with `battle.winningSide` column
+- [x] 3.1 Refactor `getBattleLog()` — team battle winner from column
+  - In `matchHistoryService.ts`: replace `battleLog.winningSide` read with `battle.winningSide` column (with JSON fallback for pre-migration battles)
   - Add `playbackAvailable: boolean` to response (true if `battle_log IS NOT NULL`)
   - Include `summary` in response (JOIN `battle_summaries` by `battle_id`)
   - Handle NULL `battle_log` gracefully (don't crash, return summary-only response)
   - _Requirements: 2.1, 2.2, 2.3_
 
-- [ ] 3.2 Refactor `getPerformanceContext()` — winning_side from column
-  - In `robotQueryService.ts`: replace all `battleLog.winningSide` reads with `battle.winningSide`
-  - Remove `battleLog: true` from the select (no longer needed for this query)
+- [x] 3.2 Refactor `getPerformanceContext()` — winning_side from column
+  - In `robotQueryService.ts`: replace all `battleLog.winningSide` reads with `battle.winningSide` (with JSON fallback)
   - _Requirements: 2.3_
 
-- [ ] 3.3 Refactor `formatKothHistoryEntry()` — zone scores from summary
-  - In `matchHistoryService.ts`: JOIN `battle_summaries` and read `koth_placements` for zone score
-  - Remove `battleLog` access from this function
+- [x] 3.3 Refactor `formatKothHistoryEntry()` — zone scores from summary
+  - In `matchHistoryService.ts`: read `koth_placements` from `battle_summaries`, fallback to battle_log for pre-migration battles
   - _Requirements: 3.1_
 
-- [ ] 3.4 Refactor `getKothStandingsLast10()` — placements from summary
-  - In `kothStandingsService.ts`: instead of loading `battle.battleLog`, JOIN `battle_summaries` and read `koth_placements`
-  - Remove all `battleLog` access from this service
+- [x] 3.4 Remove dead `getKothStandingsLast10()` function
+  - In `kothStandingsService.ts`: removed entirely (no frontend consumer exists)
   - _Requirements: 3.2_
 
-- [ ] 3.5 Refactor Hall of Records survival query
-  - In `records-queries.ts`: replace `jsonb_array_elements(b.battle_log->'participants')` with `jsonb_array_elements(bs.participants)` joining `battle_summaries bs`
+- [x] 3.5 Refactor Hall of Records survival query
+  - In `records-queries.ts`: replaced `jsonb_array_elements(b.battle_log->'participants')` with `jsonb_array_elements(bs.participants)` joining `battle_summaries bs`
   - _Requirements: 3.3_
 
-- [ ] 3.6 Refactor admin battle detail
-  - In `adminBattleService.ts`: return `battle_log` if present, otherwise `{ pruned: true, prunedAt: battle.createdAt + 7 days }`
+- [x] 3.6 Refactor admin battle detail
+  - In `adminBattleService.ts`: returns `{ pruned: true }` when `battle_log` is NULL
   - _Requirements: 3.4_
 
 
