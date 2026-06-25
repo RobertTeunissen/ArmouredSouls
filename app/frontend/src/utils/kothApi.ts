@@ -62,11 +62,10 @@ interface KothStandingsBackendResponse {
 }
 
 export const getKothStandings = async (
-  view: 'all_time' | 'last_10' = 'all_time',
   page: number = 1,
   limit: number = 50,
 ): Promise<KothStandingsResponse> => {
-  const raw = await api.get<KothStandingsBackendResponse>('/api/koth/standings', { params: { view, page, limit } });
+  const raw = await api.get<KothStandingsBackendResponse>('/api/koth/standings', { params: { view: 'all_time', page, limit } });
 
   // Map backend shape to frontend interface
   return {
