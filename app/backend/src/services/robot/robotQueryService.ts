@@ -458,11 +458,13 @@ export async function getPerformanceContext(robotId: number) {
     const stats = tournamentStatsMap.get(tournamentId)!;
     // For team tournaments, determine win/loss from participant's team side
     if (battle.battleType === 'tournament_2v2' || battle.battleType === 'tournament_3v3') {
-      const battleLog = battle.battleLog as unknown as { winningSide?: 1 | 2 | null };
+      const winningSide = (battle as unknown as { winningSide?: number | null }).winningSide
+        ?? (battle.battleLog as unknown as { winningSide?: 1 | 2 | null })?.winningSide
+        ?? null;
       const participant = battle.participants.find(p => p.robotId === robotId);
       if (participant) {
-        if (battleLog?.winningSide === null) { /* draw - no W/L */ }
-        else if (battleLog?.winningSide === participant.team) stats.wins++;
+        if (winningSide === null) { /* draw - no W/L */ }
+        else if (winningSide === participant.team) stats.wins++;
         else stats.losses++;
         stats.damageDealt += participant.damageDealt ?? 0;
       }
@@ -557,12 +559,14 @@ export async function getPerformanceContext(robotId: number) {
   };
 
   league2v2Battles.forEach(battle => {
-    const battleLog = battle.battleLog as unknown as { winningSide?: 1 | 2 | null };
+    const winningSide = (battle as unknown as { winningSide?: number | null }).winningSide
+      ?? (battle.battleLog as unknown as { winningSide?: 1 | 2 | null })?.winningSide
+      ?? null;
     const participant = battle.participants.find(p => p.robotId === robotId);
     if (!participant) return;
     const myTeam = participant.team;
-    if (battleLog?.winningSide === null) league2v2Stats.draws++;
-    else if (battleLog?.winningSide === myTeam) league2v2Stats.wins++;
+    if (winningSide === null) league2v2Stats.draws++;
+    else if (winningSide === myTeam) league2v2Stats.wins++;
     else league2v2Stats.losses++;
     league2v2Stats.damageDealt += participant.damageDealt ?? 0;
   });
@@ -576,12 +580,14 @@ export async function getPerformanceContext(robotId: number) {
   };
 
   league3v3Battles.forEach(battle => {
-    const battleLog = battle.battleLog as unknown as { winningSide?: 1 | 2 | null };
+    const winningSide = (battle as unknown as { winningSide?: number | null }).winningSide
+      ?? (battle.battleLog as unknown as { winningSide?: 1 | 2 | null })?.winningSide
+      ?? null;
     const participant = battle.participants.find(p => p.robotId === robotId);
     if (!participant) return;
     const myTeam = participant.team;
-    if (battleLog?.winningSide === null) league3v3Stats.draws++;
-    else if (battleLog?.winningSide === myTeam) league3v3Stats.wins++;
+    if (winningSide === null) league3v3Stats.draws++;
+    else if (winningSide === myTeam) league3v3Stats.wins++;
     else league3v3Stats.losses++;
     league3v3Stats.damageDealt += participant.damageDealt ?? 0;
   });

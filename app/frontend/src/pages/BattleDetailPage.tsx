@@ -25,6 +25,7 @@ import {
   useBattlePlaybackData,
   TeamBattleMetrics,
 } from '../components/battle-detail';
+import { PlaybackUnavailableNotice } from '../components/battle-detail/PlaybackUnavailableNotice';
 import { RobotSelector } from '../components/battle-detail/RobotSelector';
 
 function BattleDetailPage() {
@@ -205,16 +206,37 @@ function BattleDetailContent({ battleLog: rawBattleLog, userId }: { battleLog: B
     kothPlaybackData,
   } = useBattlePlaybackData(battleLog);
 
-  // Determine if playback is available — use the hook's determination as source of truth
-  const hasPlayback = showPlaybackViewer && !!playbackResult;
+  // Determine if playback is available — API flag takes precedence, then hook detection
+  const hasPlayback = (battleLog.playbackAvailable !== false) && showPlaybackViewer && !!playbackResult;
 
-  // Compute battle statistics once from detailed combat events (raw simulator output).
-  // The narrative `events` array strips hit/damage/hand fields for standard battles,
-  // so we must use `detailedCombatEvents` which preserves all combat data fields.
+  // Use pre-computed summary from backend if available (Spec #39).
+  // Falls back to client-side computation from events for battles without summaries.
   const statistics = useMemo(() => {
-    const events = battleLog.battleLog.detailedCombatEvents?.length
+    // If summary is available from the API, use it directly (fast path — no client computation)
+    if (battleLog.summary?.hasData) {
+      return {
+        perRobot: battleLog.summary.perRobot,
+        perTeam: battleLog.summary.perTeam?.map(t => ({
+          ...t,
+          robots: t.robots
+            .map(name => battleLog.summary!.perRobot.find(r => r.robotName === name))
+            .filter((r): r is NonNullable<typeof r> => r != null),
+        })) ?? null,
+        damageFlows: battleLog.summary.damageFlows,
+        battleDuration: battleLog.summary.battleDuration,
+        totalEvents: battleLog.summary.totalEvents,
+        hasData: battleLog.summary.hasData,
+      };
+    }
+
+    // Fallback: compute from events (for battles without summaries or recent battles still in transition)
+    const events = battleLog.battleLog?.detailedCombatEvents?.length
       ? battleLog.battleLog.detailedCombatEvents
-      : battleLog.battleLog.events;
+      : battleLog.battleLog?.events ?? [];
+
+    if (events.length === 0) {
+      return { perRobot: [], perTeam: null, damageFlows: [], battleDuration: battleLog.duration, totalEvents: 0, hasData: false };
+    }
 
     // Build tagTeamInfo if applicable
     let tagTeamInfo: { team1Robots: string[]; team2Robots: string[] } | undefined;
@@ -228,7 +250,6 @@ function BattleDetailContent({ battleLog: rawBattleLog, userId }: { battleLog: B
       tagTeamInfo = { team1Robots, team2Robots };
     }
 
-    // For team battles, build tagTeamInfo-like structure from participants
     if (isTeamBattleType(battleLog.battleType) && !tagTeamInfo) {
       const team1Robots = (battleLog.participants ?? []).filter(p => p.team === 1).map(p => p.robotName);
       const team2Robots = (battleLog.participants ?? []).filter(p => p.team === 2).map(p => p.robotName);
@@ -237,33 +258,19 @@ function BattleDetailContent({ battleLog: rawBattleLog, userId }: { battleLog: B
       }
     }
 
-    // Build robotMaxHP map
     const robotMaxHP: Record<string, number> = {};
     if (battleLog.robot1?.maxHP) robotMaxHP[battleLog.robot1.name] = battleLog.robot1.maxHP;
     if (battleLog.robot2?.maxHP) robotMaxHP[battleLog.robot2.name] = battleLog.robot2.maxHP;
     if (battleLog.tagTeam) {
-      if (battleLog.tagTeam.team1.activeRobot?.maxHP) {
-        robotMaxHP[battleLog.tagTeam.team1.activeRobot.name] = battleLog.tagTeam.team1.activeRobot.maxHP;
-      }
-      if (battleLog.tagTeam.team1.reserveRobot?.maxHP) {
-        robotMaxHP[battleLog.tagTeam.team1.reserveRobot.name] = battleLog.tagTeam.team1.reserveRobot.maxHP;
-      }
-      if (battleLog.tagTeam.team2.activeRobot?.maxHP) {
-        robotMaxHP[battleLog.tagTeam.team2.activeRobot.name] = battleLog.tagTeam.team2.activeRobot.maxHP;
-      }
-      if (battleLog.tagTeam.team2.reserveRobot?.maxHP) {
-        robotMaxHP[battleLog.tagTeam.team2.reserveRobot.name] = battleLog.tagTeam.team2.reserveRobot.maxHP;
-      }
+      if (battleLog.tagTeam.team1.activeRobot?.maxHP) robotMaxHP[battleLog.tagTeam.team1.activeRobot.name] = battleLog.tagTeam.team1.activeRobot.maxHP;
+      if (battleLog.tagTeam.team1.reserveRobot?.maxHP) robotMaxHP[battleLog.tagTeam.team1.reserveRobot.name] = battleLog.tagTeam.team1.reserveRobot.maxHP;
+      if (battleLog.tagTeam.team2.activeRobot?.maxHP) robotMaxHP[battleLog.tagTeam.team2.activeRobot.name] = battleLog.tagTeam.team2.activeRobot.maxHP;
+      if (battleLog.tagTeam.team2.reserveRobot?.maxHP) robotMaxHP[battleLog.tagTeam.team2.reserveRobot.name] = battleLog.tagTeam.team2.reserveRobot.maxHP;
     }
-    // For team battles, build maxHP from participants array
     if (isTeamBattleType(battleLog.battleType)) {
       for (const p of (battleLog.participants ?? [])) {
         if (p.maxHP > 0) robotMaxHP[p.robotName] = p.maxHP;
       }
-    }
-    if (battleLog.kothParticipants) {
-      // KotH participants don't have maxHP directly, but we can use robotHP from first event
-      // The computeBattleStatistics function handles missing maxHP gracefully
     }
 
     return computeBattleStatistics(
@@ -343,6 +350,10 @@ function BattleDetailContent({ battleLog: rawBattleLog, userId }: { battleLog: B
         isTagTeam={isTagTeam}
         kothData={kothPlaybackData}
       />
+    </div>
+  ) : battleLog.playbackAvailable === false ? (
+    <div className="mb-3">
+      <PlaybackUnavailableNotice />
     </div>
   ) : null;
 

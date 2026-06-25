@@ -507,7 +507,8 @@ async function fetchTeamBattleRecordsForSize(battleType: 'league_2v2' | 'league_
     include: battleWithParticipantsInclude,
   });
 
-  // 2. Longest survival by a single robot (from battleLog JSON)
+  // 2. Longest survival by a single robot (from battle_summaries — Spec #39)
+  // Falls back to battle_log->'participants' for battles without summaries
   const survivalRows = await prisma.$queryRaw<TeamBattleSurvivalRow[]>`
     SELECT
       b.id AS battle_id,
@@ -518,8 +519,9 @@ async function fetchTeamBattleRecordsForSize(battleType: 'league_2v2' | 'league_
       r.name AS robot_name,
       u.username,
       u.stable_name
-    FROM battles b,
-      jsonb_array_elements(b.battle_log->'participants') AS p(value)
+    FROM battles b
+    JOIN battle_summaries bs ON bs.battle_id = b.id,
+      jsonb_array_elements(bs.participants) AS p(value)
     JOIN robots r ON r.id = (p.value->>'robotId')::int
     JOIN users u ON u.id = r.user_id
     WHERE b.battle_type = ${battleType}

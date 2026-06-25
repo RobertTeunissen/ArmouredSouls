@@ -441,7 +441,7 @@ export async function getAdminBattleDetail(battleId: number) {
     team1TagOutTime: battle.team1TagOutTime ? Number(battle.team1TagOutTime) / 1000 : null,
     team2TagOutTime: battle.team2TagOutTime ? Number(battle.team2TagOutTime) / 1000 : null,
 
-    battleLog: battle.battleLog,
+    battleLog: battle.battleLog ?? { pruned: true },
   };
 
   // Append tag team data when present

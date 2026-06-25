@@ -46,6 +46,7 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 
 | Item | # | Spec | Completed |
 |------|---|------|-----------|
+| Battle Log Retention / TOAST Trim (pre-computed summaries, 7-day retention, nightly cron) | 53 | [Spec #39](/.kiro/specs/to-do/39-battle-log-retention/) | June 2026 |
 | Database Unification (unified standings, financial ledger, leaderboard cache) | — | [Spec #40](/.kiro/specs/done-june26/40-database-unification/) | June 2026 |
 | Unified Match Scheduling (single scheduling table, shared matchmaking pipeline) | — | [Spec #41](/.kiro/specs/done-june26/41-unified-match-scheduling/) | June 2026 |
 | Tag Team System Unification | 55 | [Spec #42](/.kiro/specs/done-june26/42-tag-team-system-unification/) | June 2026 |
@@ -306,60 +307,6 @@ A collection of saved weapon blueprints for the crafting system. Players save su
 ## Engineering Maintenance Items
 
 These came out of the May 2026 codebase audit. They're internal-quality-of-life items rather than gameplay/UX features, but they affect velocity, reliability, and onboarding for every future change. Listed at the end so the gameplay backlog above stays the primary view.
-
-### #53 — Battle Log Retention / TOAST Trim
-**Source**: Disk-pressure investigation, May 25, 2026 (ACC deploy timeout)
-**Priority**: Medium — non-urgent after disk resize, but real growth on a finite budget
-
-The `battle_log` JSON column on the `battles` table accumulates indefinitely. As of cycle #56 with ~49,341 battles on ACC, the column's TOAST storage was **4.6 GB** (≈98 KB per battle on average). At ~880 battles per cycle that's roughly **85 MB/day** of new TOAST. With a 25 GB disk and the rest of the system holding around 10 GB steady-state, we have ~6 months of runway before disk pressure returns. Not urgent now, but bounded.
-
-**The data being accumulated:**
-- `battleLog.events` — narrative event stream rendered in the battle report
-- `battleLog.detailedCombatEvents` — per-tick combat resolution with formula breakdowns, used by the BattleDetailsModal "View Details" expansion in the admin tools
-- `battleLog.placements` (KotH) — per-robot zone scoring and placement
-- `battleLog.kothData` — KotH match config
-
-The only consumers of these payloads are:
-1. The player-facing battle report (`/battles/:id` style routes via `RecentBattles`, `RobotDetailPage`, etc.)
-2. The admin BattleDetailsModal's combat-event expansion
-3. The Hall of Records cache (which extracts a few summary fields from `battleLog`)
-
-99% of "view this battle" interactions happen within hours of the battle finishing. After a few days the full event stream is essentially never read.
-
-**Investigation findings:**
-
-| Metric | Value |
-|--------|-------|
-| Total battles | 49,341 |
-| Heap size | 9 MB |
-| Index size (7 indexes, all in active use) | 4.8 MB |
-| TOAST size | **4,620 MB** |
-| Avg TOAST per battle | ~98 KB |
-
-The seven battles indexes are healthy and seeing real query traffic — none are candidates for dropping. The size is purely TOAST.
-
-**Three remediation options, ordered by safety:**
-
-1. **Strip `battleLog` from old battles (recommended).** `UPDATE battles SET battle_log = NULL WHERE created_at < NOW() - INTERVAL '<retention>'` followed by `pg_repack` or `VACUUM FULL battles`. Keeps row, participants, ELO, winner, rewards — drops only the heavy JSON. Reclaims most of the TOAST.
-2. **Compress more aggressively (Postgres 14+).** Switch the column to `lz4` compression (`ALTER TABLE battles ALTER COLUMN battle_log SET COMPRESSION lz4`). Only affects new rows, so it complements #1 rather than replacing it.
-3. **Hard delete old battles entirely.** Faster recovery, but cascades to `BattleParticipant` and risks anything that aggregates from the `battles` table. Lifetime stats already live on `Robot` directly so leaderboards are fine, but recent-battles lists, hall-of-records, and tournament history would lose data. Riskier.
-
-**Open design questions for the spec:**
-
-- **Retention window.** A blanket 7 days is the simplest answer. A smarter policy could keep the full log for tournament finals indefinitely, KotH for 30 days, and league for 7 — but that complexity needs justification.
-- **Retention vs feature visibility.** The "View Details" expansion in the admin BattleDetailsModal currently goes silent on battles with no detailed events. Does it need to render a "log no longer available" placeholder, or is silent-empty acceptable?
-- **Should the strip be application-side or DB-side?** A nightly cron in `app/scripts/` is simpler. A periodic Prisma-side maintenance task is more discoverable from the codebase. A native Postgres `pg_cron` job is most reliable but adds operational surface area.
-- **Hall of Records caching.** The Hall of Records pulls summary fields from `battleLog` for several record types. Verify the cache has already extracted everything it needs from old battles before we strip them.
-- **Should we also do the compression switch as a same-PR change?** Almost certainly yes — it gives us both immediate reclamation and slower future growth.
-
-**Scope estimate.** ~½ day for a v1 (single retention window, single cron job, manual one-shot for first cleanup) plus ~½ day for verification + monitoring. Larger if we go for differentiated retention.
-
-**Dependencies.** None blocking. Hall of Records caching would benefit from being verified before we strip historical battle logs (#26 is already shipped, but worth a sanity check).
-
-**Risks to address:**
-- **Replay regression.** Anyone clicking "view battle" on an N+1 day battle gets a degraded experience. Mitigation: clear UI affordance ("battle log archived") and ideally extend the retention window if players complain.
-- **Vacuum lock.** `VACUUM FULL battles` takes an exclusive lock and could lock out battle inserts for the duration. Either use `pg_repack` (no lock, requires extension) or run during a quiet maintenance window. Probably the latter for v1, the former once `pg_repack` is installed.
-- **One-time vs ongoing.** The first cleanup will reclaim ~4 GB; subsequent daily runs will reclaim ~85 MB/day. Confirm cron actually runs and the alert if it doesn't.
 
 ### #59 — Spec #40 Legacy Column Drop (Phase 2)
 **Source**: [Spec #40 Legacy Column Audit](analysis/SPEC40_LEGACY_COLUMN_AUDIT.md), June 24, 2026  

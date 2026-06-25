@@ -42,6 +42,7 @@ import { contentModerationService } from './services/moderation';
 import { getDiskUsage, getMemoryUsage, checkCriticalModules } from './utils/systemHealth';
 import { sendMonitoringAlert } from './utils/monitoringWebhook';
 import { initDailyHealthReport } from './services/monitoring/dailyHealthReport';
+import { initBattleLogRetention } from './services/retention/battleLogRetentionService';
 import os from 'os';
 import { createGeneralLimiter, createAuthLimiter, createLoginLimiter } from './middleware/rateLimiter';
 import { createUserEconomicLimiter } from './middleware/userRateLimiter';
@@ -253,5 +254,8 @@ import { runStartupSelfTest } from './utils/startupSelfTest';
 
     // Initialize daily health report (independent of scheduler)
     initDailyHealthReport();
+
+    // Initialize battle log retention cron (Spec #39 — 01:30 UTC daily)
+    initBattleLogRetention();
   });
 })();
