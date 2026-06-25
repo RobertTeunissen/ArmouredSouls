@@ -1,15 +1,24 @@
-import { ScheduledTeamBattleMatch, Battle, Prisma } from '../../../generated/prisma';
+import { Battle, Prisma } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { CombatMessageGenerator } from '../battle/combatMessageGenerator';
 import { computeBattleSummary } from '../battle/battleSummaryComputer';
 import { TagTeamWithRobots, TagTeamBattleResult } from './tagTeamTypes';
 
+/** Minimal shape of a scheduled tag-team match as passed from the orchestrator. */
+interface TagTeamMatchInput {
+  id: number;
+  team1Id: number;
+  team2Id: number | null;
+  teamBattleLeague: string;
+  teamBattleLeagueId: string;
+}
+
 /**
  * Create a battle record for a tag team match
  */
 export async function createTagTeamBattleRecord(
-  match: ScheduledTeamBattleMatch,
+  match: TagTeamMatchInput,
   team1: TagTeamWithRobots,
   team2: TagTeamWithRobots,
   result: TagTeamBattleResult
@@ -24,15 +33,7 @@ export async function createTagTeamBattleRecord(
       winnerId: result.winnerId,
       battleType: 'tag_team',
       leagueType: match.teamBattleLeague,
-      leagueInstanceId: team1.tagTeamLeagueId, // Snapshot instance at time of battle
-
-      // Tag team specific fields
-      team1ActiveRobotId: team1.activeRobotId,
-      team1ReserveRobotId: team1.reserveRobotId,
-      team2ActiveRobotId: isByeMatch ? null : team2.activeRobotId,
-      team2ReserveRobotId: isByeMatch ? null : team2.reserveRobotId,
-      team1TagOutTime: result.team1TagOutTime ? BigInt(Math.round(result.team1TagOutTime * 1000)) : null,
-      team2TagOutTime: result.team2TagOutTime ? BigInt(Math.round(result.team2TagOutTime * 1000)) : null,
+      leagueInstanceId: match.teamBattleLeagueId, // Snapshot instance at time of battle
 
       // Battle log with all combat events, tag-out, and tag-in events (Requirement 7.1)
       // Convert raw simulator events + tag events into narrative messages

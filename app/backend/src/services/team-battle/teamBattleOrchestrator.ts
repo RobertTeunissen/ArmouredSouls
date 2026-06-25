@@ -58,12 +58,36 @@ export interface TeamBattleExecutionResult {
 
 // ─── Scheduled match type with includes ──────────────────────────────────────
 
-type ScheduledMatchWithTeams = Prisma.ScheduledTeamBattleMatchGetPayload<{
-  include: {
-    team1: { include: { members: { include: { robot: true } }; stable: true } };
-    team2: { include: { members: { include: { robot: true } }; stable: true } };
+/** Shape of a scheduled team match as mapped from unified scheduling table with team includes. */
+interface ScheduledMatchWithTeams {
+  id: number;
+  team1Id: number;
+  team2Id: number | null;
+  teamSize: number;
+  matchMode: string;
+  teamBattleLeague: string;
+  teamBattleLeagueId: string;
+  scheduledFor: Date;
+  status: string;
+  cancelReason: string | null;
+  createdAt: Date;
+  team1: {
+    id: number;
+    stableId: number;
+    teamName: string;
+    teamSize: number;
+    members: Array<{ robot: any; slotIndex: number; robotId: number }>;
+    stable: { id: number; username: string; stableName: string | null };
   };
-}>;
+  team2: {
+    id: number;
+    stableId: number;
+    teamName: string;
+    teamSize: number;
+    members: Array<{ robot: any; slotIndex: number; robotId: number }>;
+    stable: { id: number; username: string; stableName: string | null };
+  } | null;
+}
 
 // ─── Main Export ─────────────────────────────────────────────────────────────
 
@@ -271,11 +295,7 @@ async function executeSingleTeamBattle(
         durationSeconds: Math.round(battleResult.durationSeconds),
         winnerReward: 0, // Updated below
         loserReward: 0,  // Updated below
-        robot1ELOBefore: team1SumELO,
-        robot2ELOBefore: team2SumELO,
-        robot1ELOAfter: team1SumELO + eloChanges.team1Change,
-        robot2ELOAfter: team2SumELO + eloChanges.team2Change,
-        eloChange: Math.abs(eloChanges.team1Change),
+
         battleLog: buildBattleLog(battleResult, teamSize) as unknown as Prisma.InputJsonValue,
       },
     });

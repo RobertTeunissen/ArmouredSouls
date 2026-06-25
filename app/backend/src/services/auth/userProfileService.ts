@@ -70,10 +70,6 @@ export async function getStableStats(userId: number) {
       wins: true,
       losses: true,
       draws: true,
-      totalTagTeamBattles: true,
-      totalTagTeamWins: true,
-      totalTagTeamLosses: true,
-      totalTagTeamDraws: true,
       currentHP: true,
       maxHP: true,
       mainWeapon: true,
@@ -85,10 +81,10 @@ export async function getStableStats(userId: number) {
     select: { id: true },
   });
 
-  // Read highest tag team league from standings
+  // Read tag team stats from standings (source of truth since Spec #40)
   const tagTeamStandings = tagTeams.length > 0 ? await prisma.standing.findMany({
     where: { entityType: 'team', entityId: { in: tagTeams.map(t => t.id) }, mode: 'tag_team' as any },
-    select: { tier: true },
+    select: { tier: true, wins: true, losses: true, draws: true },
   }) : [];
 
   const cycleChanges = await computeCycleChanges(userId, robots);
@@ -110,10 +106,15 @@ export async function getStableStats(userId: number) {
     };
   }
 
-  const totalBattles = robots.reduce((sum, r) => sum + r.totalBattles + r.totalTagTeamBattles, 0);
-  const wins = robots.reduce((sum, r) => sum + r.wins + r.totalTagTeamWins, 0);
-  const losses = robots.reduce((sum, r) => sum + r.losses + r.totalTagTeamLosses, 0);
-  const draws = robots.reduce((sum, r) => sum + r.draws + r.totalTagTeamDraws, 0);
+  const totalTagTeamWins = tagTeamStandings.reduce((sum, s) => sum + s.wins, 0);
+  const totalTagTeamLosses = tagTeamStandings.reduce((sum, s) => sum + s.losses, 0);
+  const totalTagTeamDraws = tagTeamStandings.reduce((sum, s) => sum + s.draws, 0);
+  const totalTagTeamBattles = totalTagTeamWins + totalTagTeamLosses + totalTagTeamDraws;
+
+  const totalBattles = robots.reduce((sum, r) => sum + r.totalBattles, 0) + totalTagTeamBattles;
+  const wins = robots.reduce((sum, r) => sum + r.wins, 0) + totalTagTeamWins;
+  const losses = robots.reduce((sum, r) => sum + r.losses, 0) + totalTagTeamLosses;
+  const draws = robots.reduce((sum, r) => sum + r.draws, 0) + totalTagTeamDraws;
   const winRate = totalBattles > 0 ? (wins / totalBattles) * 100 : 0;
   const highestELO = Math.max(...robots.map(r => r.elo));
 

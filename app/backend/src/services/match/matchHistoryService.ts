@@ -11,9 +11,18 @@ const robotInclude = { include: { user: robotUserSelect } } as const;
 
 type RobotWithUser = Prisma.RobotGetPayload<{ include: { user: { select: { id: true; username: true } } } }>;
 
-type ScheduledLeagueMatchWithRobots = Prisma.ScheduledLeagueMatchGetPayload<{
-  include: { robot1: { include: { user: { select: { id: true; username: true } } } }; robot2: { include: { user: { select: { id: true; username: true } } } } };
-}>;
+type ScheduledLeagueMatchWithRobots = {
+  id: number;
+  robot1Id: number;
+  robot2Id: number;
+  leagueType: string;
+  scheduledFor: Date;
+  status: string;
+  battleId: number | null;
+  createdAt: Date;
+  robot1: RobotWithUser;
+  robot2: RobotWithUser;
+};
 
 type _ScheduledTournamentMatchWithRobots = Prisma.ScheduledTournamentMatchGetPayload<{
   include: {
@@ -36,17 +45,42 @@ type _TagTeamWithMembers = {
   stable?: { stableName: string | null };
 };
 
-// Legacy type replaced — tag team scheduled matches now use ScheduledTeamBattleMatch with matchMode='tag_team'
-type ScheduledTagTeamMatchWithTeams = Prisma.ScheduledTeamBattleMatchGetPayload<{
-  include: {
-    team1: { include: { members: { include: { robot: { include: { user: { select: { id: true; username: true } } } } } }; stable: { select: { stableName: true } } } };
-    team2: { include: { members: { include: { robot: { include: { user: { select: { id: true; username: true } } } } } }; stable: { select: { stableName: true } } } };
+// Legacy type replaced — tag team scheduled matches now use unified scheduling
+type ScheduledTagTeamMatchWithTeams = {
+  id: number;
+  team1Id: number;
+  team2Id: number | null;
+  teamSize: number;
+  matchMode: string;
+  teamBattleLeague: string;
+  teamBattleLeagueId: string;
+  scheduledFor: Date;
+  status: string;
+  createdAt: Date;
+  team1: {
+    id: number;
+    stableId: number;
+    teamName: string;
+    members: Array<{ slotIndex: number; robot: { id: number; name: string; user: { id: number; username: string } } }>;
+    stable: { stableName: string | null };
   };
-}>;
+  team2: {
+    id: number;
+    stableId: number;
+    teamName: string;
+    members: Array<{ slotIndex: number; robot: { id: number; name: string; user: { id: number; username: string } } }>;
+    stable: { stableName: string | null };
+  } | null;
+};
 
-type ScheduledKothMatchWithParticipants = Prisma.ScheduledKothMatchGetPayload<{
-  include: { participants: { include: { robot: { include: { user: { select: { id: true; username: true } } } } } } };
-}>;
+type ScheduledKothMatchWithParticipants = {
+  id: number;
+  scheduledFor: Date;
+  status: string;
+  battleId: number | null;
+  createdAt: Date;
+  participants: Array<{ robotId: number; robot: { id: number; name: string; userId: number; user: { id: number; username: string } } }>;
+};
 
 type TeamBattleWithMembers = Prisma.TeamBattleGetPayload<{
   include: {
@@ -56,12 +90,20 @@ type TeamBattleWithMembers = Prisma.TeamBattleGetPayload<{
   };
 }>;
 
-type ScheduledTeamBattleMatchWithTeams = Prisma.ScheduledTeamBattleMatchGetPayload<{
-  include: {
-    team1: { include: { members: { include: { robot: { include: { user: { select: { id: true; username: true } } } } } } } };
-    team2: { include: { members: { include: { robot: { include: { user: { select: { id: true; username: true } } } } } } } };
-  };
-}>;
+type ScheduledTeamBattleMatchWithTeams = {
+  id: number;
+  team1Id: number;
+  team2Id: number | null;
+  teamSize: number;
+  matchMode: string;
+  teamBattleLeague: string;
+  teamBattleLeagueId: string;
+  scheduledFor: Date;
+  status: string;
+  createdAt: Date;
+  team1: TeamBattleWithMembers;
+  team2: TeamBattleWithMembers | null;
+};
 
 type BattleWithFullRelations = Prisma.BattleGetPayload<{
   include: {
@@ -484,8 +526,8 @@ async function formatUnifiedMatches(
           id: team.id,
           teamName: team.teamName,
           teamSize: team.teamSize,
-          teamLp: standing?.leaguePoints ?? team.teamLp,
-          teamLeague: standing?.tier ?? team.teamLeague,
+          teamLp: standing?.leaguePoints ?? 0,
+          teamLeague: standing?.tier ?? 'bronze',
           members: team.members.map(m => ({
             robotId: m.robot.id,
             robotName: m.robot.name,
@@ -594,8 +636,8 @@ async function formatTeamTournamentMatches(matches: Awaited<ReturnType<typeof fe
         id: team.id,
         teamName: team.teamName,
         teamSize: team.teamSize,
-        teamLp: standing?.leaguePoints ?? team.teamLp,
-        teamLeague: standing?.tier ?? team.teamLeague,
+        teamLp: standing?.leaguePoints ?? 0,
+        teamLeague: standing?.tier ?? 'bronze',
         members: team.members.map(m => ({
           robotId: m.robot.id,
           robotName: m.robot.name,
@@ -666,7 +708,7 @@ function formatTagTeamMatches(matches: ScheduledTagTeamMatchWithTeams[]) {
         matchType: 'tag_team' as const,
         team1Id: match.team1Id,
         team2Id: match.team2Id,
-        tagTeamLeague: match.team1?.tagTeamLeague || 'bronze',
+        tagTeamLeague: match.teamBattleLeague || 'bronze',
         scheduledFor: match.scheduledFor,
         status: match.status,
         team1: formatTeam(match.team1),
@@ -698,8 +740,8 @@ function formatTeamBattleMatches(matches: ScheduledTeamBattleMatchWithTeams[]) {
       id: team.id,
       teamName: team.teamName,
       teamSize: team.teamSize,
-      teamLp: team.teamLp,
-      teamLeague: team.teamLeague,
+      teamLp: 0,
+      teamLeague: match.teamBattleLeague,
       members: team.members.map(m => ({
         robotId: m.robot.id,
         robotName: m.robot.name,
@@ -846,16 +888,12 @@ export async function formatBattleHistoryEntry(battle: BattleWithFullRelations, 
       id: battle.robot1.id,
       name: battle.robot1.name,
       userId: battle.robot1.userId,
-      currentLeague: battle.robot1.currentLeague,
-      leagueId: battle.robot1.leagueId,
       user: { username: battle.robot1.user.stableName || battle.robot1.user.username },
     },
     robot2: {
       id: battle.robot2.id,
       name: battle.robot2.name,
       userId: battle.robot2.userId,
-      currentLeague: battle.robot2.currentLeague,
-      leagueId: battle.robot2.leagueId,
       user: { username: battle.robot2.user.stableName || battle.robot2.user.username },
     },
   };
@@ -916,8 +954,6 @@ async function formatKothHistoryEntry(battle: BattleWithFullRelations, baseData:
         id: userRobot.id,
         name: userRobot.name,
         userId: userRobot.userId,
-        currentLeague: userRobot.currentLeague,
-        leagueId: userRobot.leagueId,
         user: { username: userRobot.user.stableName || userRobot.user.username },
       };
     }
@@ -1246,15 +1282,15 @@ async function buildTagTeamLogResponse(baseResponse: Record<string, unknown>, ba
     team1: {
       teamId: team1Details?.id || null,
       stableName: team1Details?.stable?.stableName || null,
-      activeRobot: formatTagRobot(team1Active, battleData.team1ActiveDamageDealt, battleData.team1ActiveFameAwarded),
-      reserveRobot: formatTagRobot(team1Reserve, battleData.team1ReserveDamageDealt, battleData.team1ReserveFameAwarded),
+      activeRobot: formatTagRobot(team1Active, battleData.team1ActiveDamageDealt ?? 0, battleData.team1ActiveFameAwarded ?? 0),
+      reserveRobot: formatTagRobot(team1Reserve, battleData.team1ReserveDamageDealt ?? 0, battleData.team1ReserveFameAwarded ?? 0),
       tagOutTime: battleData.team1TagOutTime,
     },
     team2: {
       teamId: team2Details?.id || null,
       stableName: team2Details?.stable?.stableName || null,
-      activeRobot: formatTagRobot(team2Active, battleData.team2ActiveDamageDealt, battleData.team2ActiveFameAwarded),
-      reserveRobot: formatTagRobot(team2Reserve, battleData.team2ReserveDamageDealt, battleData.team2ReserveFameAwarded),
+      activeRobot: formatTagRobot(team2Active, battleData.team2ActiveDamageDealt ?? 0, battleData.team2ActiveFameAwarded ?? 0),
+      reserveRobot: formatTagRobot(team2Reserve, battleData.team2ReserveDamageDealt ?? 0, battleData.team2ReserveFameAwarded ?? 0),
       tagOutTime: battleData.team2TagOutTime,
     },
   };

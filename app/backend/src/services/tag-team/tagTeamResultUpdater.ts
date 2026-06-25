@@ -4,7 +4,7 @@
  * streaming revenue, audit logs, and achievements after a tag team battle.
  */
 
-import { Robot, TeamBattle, ScheduledTeamBattleMatch } from '../../../generated/prisma';
+import { Robot, TeamBattle } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import {
@@ -46,11 +46,19 @@ export async function checkTeamReadinessForBattle(team: {
 
   return true;
 }
+/** Minimal shape of a scheduled tag-team match passed from the orchestrator. */
+interface TagTeamMatchWithTeams {
+  id: number;
+  team1Id: number;
+  team2Id: number | null;
+  teamBattleLeague: string;
+  teamBattleLeagueId: string;
+  team1: (TeamBattle & { members: Array<{ robot: Robot; slotIndex: number; robotId: number }> }) | null;
+  team2: (TeamBattle & { members: Array<{ robot: Robot; slotIndex: number; robotId: number }> }) | null;
+}
+
 export async function updateTagTeamBattleResults(
-  match: ScheduledTeamBattleMatch & {
-    team1: (TeamBattle & { members: Array<{ robot: Robot; slotIndex: number; robotId: number }> }) | null;
-    team2: (TeamBattle & { members: Array<{ robot: Robot; slotIndex: number; robotId: number }> }) | null;
-  },
+  match: TagTeamMatchWithTeams,
   result: TagTeamBattleResult
 ): Promise<void> {
   // Check if this is a bye-team match (bye matches have team2Id = null in the DB)
@@ -207,9 +215,7 @@ export async function updateTagTeamBattleResults(
       data: {
         winnerReward,
         loserReward,
-        robot1ELOAfter: team1IsBye ? 1000 : realTeam.activeRobot.elo + realTeamELOChange,
-        robot2ELOAfter: team2IsBye ? 1000 : realTeam.activeRobot.elo + realTeamELOChange,
-        eloChange: Math.abs(realTeamELOChange),
+
       },
     });
 
@@ -432,18 +438,6 @@ export async function updateTagTeamBattleResults(
     data: {
       winnerReward: team1Won ? team1Rewards : team2Won ? team2Rewards : 0,
       loserReward: team1Won ? team2Rewards : team2Won ? team1Rewards : (isDraw ? team1Rewards : 0),
-      robot1ELOAfter: team1.activeRobot.elo + eloChanges.team1Change,
-      robot2ELOAfter: team2.activeRobot.elo + eloChanges.team2Change,
-      eloChange: Math.abs(eloChanges.team1Change),
-      // Per-robot stats for tag team battles
-      team1ActiveDamageDealt: result.team1ActiveDamageDealt,
-      team1ReserveDamageDealt: result.team1ReserveDamageDealt,
-      team2ActiveDamageDealt: result.team2ActiveDamageDealt,
-      team2ReserveDamageDealt: result.team2ReserveDamageDealt,
-      team1ActiveFameAwarded: team1ActiveFame,
-      team1ReserveFameAwarded: team1ReserveFame,
-      team2ActiveFameAwarded: team2ActiveFame,
-      team2ReserveFameAwarded: team2ReserveFame,
     },
   });
 
@@ -567,7 +561,7 @@ export async function updateTagTeamBattleResults(
         damageDealt: result.team1ActiveDamageDealt, finalHP: result.team1ActiveFinalHP,
         yielded: result.team1TagOutTime !== undefined, destroyed: result.team1ActiveFinalHP === 0,
         credits: team1CreditsPerRobot, prestige: auditTeam1PrestigePerRobot, fame: team1ActiveFame,
-        eloBefore: battle.robot1ELOBefore, eloAfter: battle.robot1ELOAfter,
+        eloBefore: battle.robot1ELOBefore ?? team1.activeRobot.elo, eloAfter: battle.robot1ELOAfter ?? team1.activeRobot.elo,
         streamingRevenue: team1ActiveStreaming?.totalRevenue ?? 0,
         extras: { isTagTeam: true, role: 'active', opponentTeam: team2.id, partnerRobotId: team1.reserveRobotId,
           survivalTime: result.team1ActiveSurvivalTime },
@@ -591,7 +585,7 @@ export async function updateTagTeamBattleResults(
         damageDealt: result.team2ActiveDamageDealt, finalHP: result.team2ActiveFinalHP,
         yielded: result.team2TagOutTime !== undefined, destroyed: result.team2ActiveFinalHP === 0,
         credits: team2CreditsPerRobot, prestige: auditTeam2PrestigePerRobot, fame: team2ActiveFame,
-        eloBefore: battle.robot2ELOBefore, eloAfter: battle.robot2ELOAfter,
+        eloBefore: battle.robot2ELOBefore ?? team2.activeRobot.elo, eloAfter: battle.robot2ELOAfter ?? team2.activeRobot.elo,
         streamingRevenue: team2ActiveStreaming?.totalRevenue ?? 0,
         extras: { isTagTeam: true, role: 'active', opponentTeam: team1.id, partnerRobotId: team2.reserveRobotId,
           survivalTime: result.team2ActiveSurvivalTime },
@@ -623,7 +617,7 @@ export async function updateTagTeamBattleResults(
             credits: r.credits, prestige: r.prestige, fame: r.fame,
             eloBefore: r.eloBefore, eloAfter: r.eloAfter,
           },
-          { id: battle.id, battleType: 'tag_team', leagueType: battle.leagueType, durationSeconds: battle.durationSeconds, eloChange: battle.eloChange },
+          { id: battle.id, battleType: 'tag_team', leagueType: battle.leagueType, durationSeconds: battle.durationSeconds, eloChange: battle.eloChange ?? 0 },
           null, // Tag team has no single opponent
           r.streamingRevenue,
           false,

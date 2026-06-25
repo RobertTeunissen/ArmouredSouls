@@ -87,6 +87,7 @@ inclusion: always
 - Handle database errors gracefully
 - Use transactions for multi-step operations
 - Include proper indexes for performance
+- Never read league, KotH, or tag-team competitive stats from the Robot or TeamBattle models — the `standings` table is the single source of truth for all competitive ranking data. Use `prisma.standing.findUnique({ where: { entityType_entityId_mode: { entityType: 'robot', entityId: robotId, mode: 'league_1v1' } } })` for per-entity lookups.
 
 ### Battle Data Architecture (Spec #39)
 - **Never read `battle_log` for permanent data.** The `battle_log` column is ephemeral — NULLed after 7 days. All persistent battle data lives in `battle_summaries` (pre-computed stats) or proper columns (`battles.winning_side`).

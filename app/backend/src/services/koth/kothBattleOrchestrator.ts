@@ -316,11 +316,7 @@ async function processKothBattle(
       durationSeconds: simResult.durationSeconds,
       winnerReward: 0,
       loserReward: 0,
-      robot1ELOBefore: winnerRobot.elo,
-      robot2ELOBefore: secondRobot.elo,
-      robot1ELOAfter: winnerRobot.elo,
-      robot2ELOAfter: secondRobot.elo,
-      eloChange: 0,
+
     },
   });
 

@@ -55,11 +55,7 @@ export async function getStableProfile(userId: number) {
         },
       },
       teamBattles: {
-        select: {
-          totalLeagueWins: true,
-          totalLeagueLosses: true,
-          totalLeagueDraws: true,
-        },
+        select: { id: true },
       },
     },
   });
@@ -73,10 +69,21 @@ export async function getStableProfile(userId: number) {
   const highestElo = user.robots.length > 0 ? Math.max(...user.robots.map((r) => r.elo)) : 0;
   const winRate = totalBattles > 0 ? Number(((totalWins / totalBattles) * 100).toFixed(1)) : 0;
 
-  // Team battle stats derived from stable's teams' win/loss/draw records
-  const teamBattleWins = user.teamBattles.reduce((sum, t) => sum + t.totalLeagueWins, 0);
-  const teamBattleLosses = user.teamBattles.reduce((sum, t) => sum + t.totalLeagueLosses, 0);
-  const teamBattleDraws = user.teamBattles.reduce((sum, t) => sum + t.totalLeagueDraws, 0);
+  // Team battle stats from standings (source of truth since Spec #40)
+  const teamIds = user.teamBattles.map(t => t.id);
+  const teamStandings = teamIds.length > 0
+    ? await prisma.standing.findMany({
+        where: {
+          entityType: 'team',
+          entityId: { in: teamIds },
+          mode: { in: ['league_2v2', 'league_3v3'] as any[] },
+        },
+        select: { wins: true, losses: true, draws: true },
+      })
+    : [];
+  const teamBattleWins = teamStandings.reduce((sum, s) => sum + s.wins, 0);
+  const teamBattleLosses = teamStandings.reduce((sum, s) => sum + s.losses, 0);
+  const teamBattleDraws = teamStandings.reduce((sum, s) => sum + s.draws, 0);
   const totalTeamBattles = teamBattleWins + teamBattleLosses + teamBattleDraws;
   const teamBattleWinRate = totalTeamBattles > 0
     ? Number(((teamBattleWins / totalTeamBattles) * 100).toFixed(1))

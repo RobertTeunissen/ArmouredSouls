@@ -1,3 +1,5 @@
+> ✅ **Completed — Spec #43** (June 2026). All items in this audit have been addressed. Dead tables dropped, read paths migrated, dual-writes removed, Robot/TeamBattle columns dropped. See [Spec #43](/.kiro/specs/to-do/43-legacy-column-drop/) for implementation details.
+
 # Spec #40 Legacy Column Audit
 
 **Date:** 2026-06-24  

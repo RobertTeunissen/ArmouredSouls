@@ -106,7 +106,12 @@ export async function getFameLeaderboard(params: FameLeaderboardParams): Promise
   };
 
   if (league && league !== 'all') {
-    where.currentLeague = league;
+    // Filter by league tier from standings (source of truth since Spec #40)
+    const leagueRobotIds = await prisma.standing.findMany({
+      where: { mode: 'league_1v1', tier: league, entityType: 'robot' },
+      select: { entityId: true },
+    });
+    where.id = { in: leagueRobotIds.map(s => s.entityId) };
   }
 
   const totalRobots = await prisma.robot.count({ where });
@@ -121,6 +126,16 @@ export async function getFameLeaderboard(params: FameLeaderboardParams): Promise
     },
   });
 
+  // Fetch league tiers from standings for the response
+  const robotIds = robots.map(r => r.id);
+  const standings = robotIds.length > 0
+    ? await prisma.standing.findMany({
+        where: { entityType: 'robot', entityId: { in: robotIds }, mode: 'league_1v1' },
+        select: { entityId: true, tier: true },
+      })
+    : [];
+  const leagueMap = new Map(standings.map(s => [s.entityId, s.tier]));
+
   const leaderboard: FameLeaderboardEntry[] = robots.map((robot, index) => ({
     rank: skip + index + 1,
     robotId: robot.id,
@@ -129,7 +144,7 @@ export async function getFameLeaderboard(params: FameLeaderboardParams): Promise
     fameTier: getFameTier(robot.fame),
     stableId: robot.userId,
     stableName: robot.user.stableName || robot.user.username,
-    currentLeague: robot.currentLeague,
+    currentLeague: leagueMap.get(robot.id) ?? 'bronze',
     elo: robot.elo,
     totalBattles: robot.totalBattles,
     wins: robot.wins,
@@ -176,7 +191,12 @@ export async function getLossesLeaderboard(params: LossesLeaderboardParams): Pro
   };
 
   if (league && league !== 'all') {
-    where.currentLeague = league;
+    // Filter by league tier from standings (source of truth since Spec #40)
+    const leagueRobotIds = await prisma.standing.findMany({
+      where: { mode: 'league_1v1', tier: league, entityType: 'robot' },
+      select: { entityId: true },
+    });
+    where.id = { in: leagueRobotIds.map(s => s.entityId) };
   }
 
   const totalRobots = await prisma.robot.count({ where });
@@ -191,6 +211,16 @@ export async function getLossesLeaderboard(params: LossesLeaderboardParams): Pro
     },
   });
 
+  // Fetch league tiers from standings for the response
+  const robotIds = robots.map(r => r.id);
+  const standings = robotIds.length > 0
+    ? await prisma.standing.findMany({
+        where: { entityType: 'robot', entityId: { in: robotIds }, mode: 'league_1v1' },
+        select: { entityId: true, tier: true },
+      })
+    : [];
+  const leagueMap = new Map(standings.map(s => [s.entityId, s.tier]));
+
   const leaderboard: LossesLeaderboardEntry[] = robots.map((robot, index) => ({
     rank: skip + index + 1,
     robotId: robot.id,
@@ -198,7 +228,7 @@ export async function getLossesLeaderboard(params: LossesLeaderboardParams): Pro
     totalLosses: robot.kills,
     stableId: robot.userId,
     stableName: robot.user.stableName || robot.user.username,
-    currentLeague: robot.currentLeague,
+    currentLeague: leagueMap.get(robot.id) ?? 'bronze',
     elo: robot.elo,
     totalBattles: robot.totalBattles,
     wins: robot.wins,

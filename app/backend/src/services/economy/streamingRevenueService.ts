@@ -71,8 +71,6 @@ export async function calculateStreamingRevenue(
       id: true,
       name: true,
       totalBattles: true,
-      totalTagTeamBattles: true,
-      kothMatches: true,
       fame: true,
     },
   });
@@ -84,10 +82,17 @@ export async function calculateStreamingRevenue(
   // Get Streaming Studio level
   const studioLevel = await getStreamingStudioLevel(userId);
 
+  // Get KotH match count from standings (totalBattles on Robot excludes KotH)
+  const kothStanding = await prisma.standing.findUnique({
+    where: { entityType_entityId_mode: { entityType: 'robot', entityId: robotId, mode: 'koth' } },
+    select: { totalMatches: true },
+  });
+  const kothMatches = kothStanding?.totalMatches ?? 0;
+
   // Calculate total battles including all battle types
-  // A battle is a battle — all modes count toward the streaming battle multiplier
-  // In schema: totalBattles = 1v1 + Tournament, totalTagTeamBattles = Tag Team, kothMatches = KotH
-  const totalBattleCount = robot.totalBattles + robot.totalTagTeamBattles + robot.kothMatches;
+  // robot.totalBattles includes 1v1, tournament, 2v2, 3v3, and tag-team (all non-KotH modes)
+  // KotH matches come from standings since Robot no longer stores kothMatches
+  const totalBattleCount = robot.totalBattles + kothMatches;
 
   // Calculate multipliers
   const baseAmount = 1000;
@@ -156,15 +161,13 @@ export async function calculateStreamingRevenueBatch(
   const userIds = [...new Set(participants.map(p => p.userId))];
 
   // Batch fetch: 1 query for all robots, 1 query for all facilities
-  const [robots, facilities] = await Promise.all([
+  const [robots, facilities, kothStandings] = await Promise.all([
     prisma.robot.findMany({
       where: { id: { in: robotIds } },
       select: {
         id: true,
         name: true,
         totalBattles: true,
-        totalTagTeamBattles: true,
-        kothMatches: true,
         fame: true,
       },
     }),
@@ -175,10 +178,15 @@ export async function calculateStreamingRevenueBatch(
       },
       select: { userId: true, level: true },
     }),
+    prisma.standing.findMany({
+      where: { entityType: 'robot', entityId: { in: robotIds }, mode: 'koth' },
+      select: { entityId: true, totalMatches: true },
+    }),
   ]);
 
   const robotMap = new Map(robots.map(r => [r.id, r]));
   const facilityMap = new Map(facilities.map(f => [f.userId, f.level]));
+  const kothMatchMap = new Map(kothStandings.map(s => [s.entityId, s.totalMatches ?? 0]));
 
   const result = new Map<number, StreamingRevenueCalculation | null>();
 
@@ -190,7 +198,7 @@ export async function calculateStreamingRevenueBatch(
     }
 
     const studioLevel = facilityMap.get(userId) ?? 0;
-    const totalBattleCount = robot.totalBattles + robot.totalTagTeamBattles + robot.kothMatches;
+    const totalBattleCount = robot.totalBattles + (kothMatchMap.get(robotId) ?? 0);
 
     const baseAmount = 1000;
     const battleMultiplier = 1 + (totalBattleCount / 1000);

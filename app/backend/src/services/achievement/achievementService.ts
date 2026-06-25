@@ -98,13 +98,15 @@ class AchievementService implements IAchievementService {
         prisma.user.findUnique({ where: { id: userId } }),
         robotId ? prisma.standing.findMany({
           where: { entityType: 'robot', entityId: robotId },
-          select: { mode: true, wins: true, currentWinStreak: true, currentLoseStreak: true },
+          select: { mode: true, tier: true, wins: true, currentWinStreak: true, currentLoseStreak: true },
         }) : Promise.resolve([]),
       ]);
 
       // Enrich robot with standings-derived per-mode counters
+      const leagueTier = robotStandings.find(s => s.mode === 'league_1v1')?.tier ?? 'bronze';
       const cachedRobot = rawRobot ? {
         ...rawRobot,
+        currentLeague: leagueTier,
         kothWins: robotStandings.find(s => s.mode === 'koth')?.wins ?? 0,
         totalTagTeamWins: robotStandings.find(s => s.mode === 'tag_team')?.wins ?? 0,
         totalLeague2v2Wins: robotStandings.find(s => s.mode === 'league_2v2')?.wins ?? 0,

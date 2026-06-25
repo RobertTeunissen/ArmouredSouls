@@ -203,12 +203,14 @@ export async function getSystemStats(userFilter: Prisma.UserWhereInput = {}) {
     _count: { id: true },
   });
 
-  // Also get average ELO per tier from robots
-  const robotEloByTier = await prisma.robot.groupBy({
-    by: ['currentLeague'],
-    where: { user: userFilter },
-    _avg: { elo: true },
-  });
+  // Also get average ELO per tier from standings + robots
+  const robotEloByTier = await prisma.$queryRaw<Array<{ tier: string; avg_elo: number | null }>>`
+    SELECT s."tier", AVG(r.elo) as avg_elo
+    FROM "standings" s
+    JOIN "robots" r ON r.id = s."entity_id"
+    WHERE s."entity_type" = 'robot' AND s."mode" = 'league_1v1'
+    GROUP BY s."tier"
+  `;
 
   // Battle readiness
   const totalRobots = await prisma.robot.count({
@@ -358,11 +360,11 @@ export async function getSystemStats(userFilter: Prisma.UserWhereInput = {}) {
     robots: {
       total: totalRobots,
       byTier: robotsByTier.map(tier => {
-        const eloData = robotEloByTier.find(e => e.currentLeague === tier.tier);
+        const eloData = robotEloByTier.find(e => e.tier === tier.tier);
         return {
           league: tier.tier,
           count: tier._count.id,
-          averageElo: Math.round(eloData?._avg?.elo || 0),
+          averageElo: Math.round(eloData?.avg_elo || 0),
         };
       }),
       battleReady: readyRobots,
@@ -1305,30 +1307,40 @@ export async function getEconomyOverview(userFilter: Prisma.UserWhereInput = {})
 export async function getLeagueHealth(userFilter: Prisma.UserWhereInput = {}) {
   const leagues = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'];
 
-  const robotsByLeague = await prisma.robot.groupBy({
-    by: ['currentLeague'],
-    where: { user: userFilter },
+  // Use standings table for league health (source of truth)
+  const robotsByLeague = await prisma.standing.groupBy({
+    by: ['tier'],
+    where: { mode: 'league_1v1', entityType: 'robot' },
     _count: { id: true },
-    _avg: { elo: true },
   });
 
-  // Count distinct league instances per tier
-  const instancesByLeague = await prisma.robot.groupBy({
-    by: ['currentLeague', 'leagueId'],
-    where: { user: userFilter },
+  // Get average ELO per tier via raw query joining standings → robots
+  const eloByTier = await prisma.$queryRaw<Array<{ tier: string; avg_elo: number | null }>>`
+    SELECT s."tier", AVG(r.elo) as avg_elo
+    FROM "standings" s
+    JOIN "robots" r ON r.id = s."entity_id"
+    WHERE s."entity_type" = 'robot' AND s."mode" = 'league_1v1'
+    GROUP BY s."tier"
+  `;
+
+  // Count distinct league instances per tier from standings
+  const instancesByLeague = await prisma.standing.groupBy({
+    by: ['tier', 'leagueInstanceId'],
+    where: { mode: 'league_1v1', entityType: 'robot' },
     _count: { id: true },
   });
 
   const leagueData = leagues.map((league) => {
-    const data = robotsByLeague.find((r) => r.currentLeague === league);
-    const instances = instancesByLeague.filter((r) => r.currentLeague === league);
+    const data = robotsByLeague.find((r) => r.tier === league);
+    const eloData = eloByTier.find((e) => e.tier === league);
+    const instances = instancesByLeague.filter((r) => r.tier === league);
     return {
       league,
       robotCount: data?._count.id ?? 0,
-      averageElo: Math.round(data?._avg.elo ?? 0),
+      averageElo: Math.round(eloData?.avg_elo ?? 0),
       instances: instances.length,
       instanceDetails: instances.map((i) => ({
-        id: i.leagueId,
+        id: i.leagueInstanceId,
         robotCount: i._count.id,
       })),
     };
