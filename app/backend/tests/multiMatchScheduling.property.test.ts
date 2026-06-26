@@ -62,10 +62,6 @@ async function createTestRobot(userId: number, name: string, elo: number = 1200)
       damageTakenLifetime: 0,
       kills: 0,
       // League & Fame
-      currentLeague: 'bronze',
-      leagueId: 'bronze_1',
-      leaguePoints: 0,
-      cyclesInCurrentLeague: 0,
       fame: 0,
       // Economic
       repairCost: 0,
@@ -135,7 +131,7 @@ describe('Multi-Match Scheduling and Execution - Property Tests', () => {
     await prisma.battleParticipant.deleteMany();
     await prisma.battle.deleteMany();
     await prisma.scheduledTeamBattleMatch.deleteMany();
-    await prisma.scheduledLeagueMatch.deleteMany();
+    await prisma.scheduledMatch.deleteMany();
     await prisma.teamBattleMember.deleteMany();
     await prisma.teamBattle.deleteMany();
     await prisma.weaponInventory.deleteMany();
@@ -203,7 +199,7 @@ describe('Multi-Match Scheduling and Execution - Property Tests', () => {
             const tagTeamMatches = await runTagTeamMatchmaking(scheduledFor);
 
             // Check scheduled matches
-            const scheduledOneVOne = await prisma.scheduledLeagueMatch.findMany({
+            const scheduledOneVOne = await prisma.scheduledMatch.findMany({
               where: { status: 'scheduled' },
             });
 

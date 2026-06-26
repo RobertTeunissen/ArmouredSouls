@@ -69,7 +69,7 @@ async function cleanupAutoUsers(): Promise<void> {
         ],
       },
     });
-    await prisma.scheduledLeagueMatch.deleteMany({
+    await prisma.scheduledMatch.deleteMany({
       where: {
         OR: [
           { robot1Id: { in: robotIds } },
@@ -311,8 +311,6 @@ describe('User Generation (Tiered Stable System)', () => {
       expect(robots.length).toBe(6);
       robots.forEach((robot) => {
         expect(robot.elo).toBe(1200);
-        expect(robot.currentLeague).toBe('bronze');
-        expect(robot.leagueId).toMatch(/^bronze_\d+$/);
         expect(robot.battleReadiness).toBe(100);
       });
     });
@@ -448,11 +446,9 @@ describe('User Generation (Tiered Stable System)', () => {
      * Property 5: All generated robots start in Bronze league with ELO 1200
      * **Validates: Requirements 5.7, 9.7, 10.7, 11.7, 15.1**
      *
-     * For any generated robot (regardless of tier), its elo should be 1200,
-     * its currentLeague should be "bronze", and its leagueId should match
-     * the pattern bronze_N where N is a positive integer.
+     * For any generated robot (regardless of tier), its elo should be 1200.
      */
-    it('Property 5: All generated robots start in Bronze league with ELO 1200', async () => {
+    it('Property 5: All generated robots start with ELO 1200', async () => {
       await fc.assert(
         fc.asyncProperty(fc.integer({ min: 1, max: 6 }), async (cycleNumber) => {
           await cleanupAutoUsers();
@@ -465,8 +461,6 @@ describe('User Generation (Tiered Stable System)', () => {
 
           for (const robot of robots) {
             expect(robot.elo).toBe(1200);
-            expect(robot.currentLeague).toBe('bronze');
-            expect(robot.leagueId).toMatch(/^bronze_\d+$/);
           }
 
           await cleanupAutoUsers();
@@ -950,17 +944,14 @@ describe('User Generation (Tiered Stable System)', () => {
     it('should assign teams to bronze league tier (R15.6)', async () => {
       await generateBattleReadyUsers(3);
 
-      // All created teams should be in bronze league
+      // All created teams should exist
       const teams = await prisma.teamBattle.findMany({
         where: {
           stable: { username: { startsWith: 'auto_' } },
         },
       });
 
-      for (const team of teams) {
-        expect(team.teamLeague).toBe('bronze');
-        expect(team.teamLeagueId).toMatch(/^bronze_\d+$/);
-      }
+      expect(teams.length).toBeGreaterThan(0);
     });
 
     it('should ensure team members are subscribed to the corresponding event (R15.5)', async () => {

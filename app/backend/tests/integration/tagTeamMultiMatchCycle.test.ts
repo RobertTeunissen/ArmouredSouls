@@ -21,20 +21,6 @@ async function createTagTeamFixture(stableId: number, activeRobotId: number, res
       stableId,
       teamSize: 2,
       teamName: `Test_Team_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-      teamLp: 0,
-      teamLeague: 'bronze',
-      teamLeagueId: 'bronze_1',
-      cyclesInLeague: 0,
-      totalLeagueWins: 0,
-      totalLeagueLosses: 0,
-      totalLeagueDraws: 0,
-      tagTeamLp: 0,
-      tagTeamLeague: 'bronze',
-      tagTeamLeagueId: 'bronze_1',
-      cyclesInTagTeamLeague: 0,
-      totalTagTeamWins: 0,
-      totalTagTeamLosses: 0,
-      totalTagTeamDraws: 0,
       eligibility: 'ELIGIBLE',
       members: {
         create: [
@@ -107,7 +93,7 @@ describe('Tag Team Multi-Match Cycle Integration Test', () => {
     }
 
     if (testRobotIds.length > 0) {
-      await prisma.scheduledLeagueMatch.deleteMany({
+      await prisma.scheduledMatch.deleteMany({
         where: {
           robot1Id: { in: testRobotIds },
         },
@@ -177,10 +163,6 @@ describe('Tag Team Multi-Match Cycle Integration Test', () => {
             yieldThreshold: 20,
             loadoutType: 'single',
             mainWeaponId: weaponInv.id,
-            currentLeague: 'bronze',
-            leagueId: 'bronze_1',
-            leaguePoints: 0,
-            cyclesInCurrentLeague: 0,
           },
         });
         testRobots.push(robot);
@@ -207,7 +189,7 @@ describe('Tag Team Multi-Match Cycle Integration Test', () => {
     // Step 2: Schedule a 1v1 match for one of the robots
     console.log('[Test] Step 2: Scheduling 1v1 match...');
     
-    const scheduledMatch = await prisma.scheduledLeagueMatch.create({
+    const scheduledMatch = await prisma.scheduledMatch.create({
       data: {
         robot1Id: testRobots[0].id,
         robot2Id: testRobots[2].id,
@@ -238,7 +220,7 @@ describe('Tag Team Multi-Match Cycle Integration Test', () => {
     });
 
     // Mark 1v1 match as completed
-    await prisma.scheduledLeagueMatch.update({
+    await prisma.scheduledMatch.update({
       where: { id: scheduledMatch.id },
       data: { status: 'completed' },
     });
@@ -324,8 +306,6 @@ describe('Tag Team Multi-Match Cycle Integration Test', () => {
           yieldThreshold: 20,
           loadoutType: 'single',
           mainWeaponId: weaponInv.id,
-          currentLeague: 'bronze',
-          leagueId: 'bronze_1',
         },
       });
       robots.push(robot);
@@ -431,8 +411,6 @@ describe('Tag Team Multi-Match Cycle Integration Test', () => {
             yieldThreshold: 20,
             loadoutType: 'single',
             mainWeaponId: weaponInv.id,
-            currentLeague: 'bronze',
-            leagueId: 'bronze_1',
           },
         });
         robots.push(robot);
@@ -444,7 +422,7 @@ describe('Tag Team Multi-Match Cycle Integration Test', () => {
     }
 
     // Schedule 1v1 match
-    const oneVOneMatch = await prisma.scheduledLeagueMatch.create({
+    const oneVOneMatch = await prisma.scheduledMatch.create({
       data: {
         robot1Id: robots[0].id,
         robot2Id: robots[2].id,
@@ -484,7 +462,7 @@ describe('Tag Team Multi-Match Cycle Integration Test', () => {
         OR: teams.map(t => ({ team1Id: t.id })),
       },
     });
-    await prisma.scheduledLeagueMatch.deleteMany({ where: { id: oneVOneMatch.id } });
+    await prisma.scheduledMatch.deleteMany({ where: { id: oneVOneMatch.id } });
     await prisma.teamBattleMember.deleteMany({
       where: { teamId: { in: teams.map(t => t.id) } },
     });

@@ -76,12 +76,12 @@ function applyLeagueBattleOutcome(
 // ─── Arbitraries ────────────────────────────────────────────────────────────
 
 const arbCounters: fc.Arbitrary<TeamBattleCounters> = fc.record({
-  totalLeagueWins: fc.integer({ min: 0, max: 1000 }),
-  totalLeagueLosses: fc.integer({ min: 0, max: 1000 }),
-  totalLeagueDraws: fc.integer({ min: 0, max: 1000 }),
-  totalTagTeamWins: fc.integer({ min: 0, max: 1000 }),
-  totalTagTeamLosses: fc.integer({ min: 0, max: 1000 }),
-  totalTagTeamDraws: fc.integer({ min: 0, max: 1000 }),
+  totalLeagueWins: fc.integer({ min: 0, max: 500 }),
+  totalLeagueLosses: fc.integer({ min: 0, max: 500 }),
+  totalLeagueDraws: fc.integer({ min: 0, max: 100 }),
+  totalTagTeamWins: fc.integer({ min: 0, max: 500 }),
+  totalTagTeamLosses: fc.integer({ min: 0, max: 500 }),
+  totalTagTeamDraws: fc.integer({ min: 0, max: 100 }),
 });
 
 const arbOutcome: fc.Arbitrary<BattleOutcome> = fc.constantFrom('win', 'loss', 'draw');

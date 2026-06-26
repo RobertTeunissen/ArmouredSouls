@@ -18,7 +18,7 @@ describe('League Rebalancing Service', () => {
     await prisma.leagueHistory.deleteMany({});
     await prisma.scheduledKothMatchParticipant.deleteMany({});
     await prisma.scheduledKothMatch.deleteMany({});
-    await prisma.scheduledLeagueMatch.deleteMany({});
+    await prisma.scheduledMatch.deleteMany({});
     await prisma.battleParticipant.deleteMany({});
     await prisma.battle.deleteMany({});
     await prisma.robot.deleteMany({});
@@ -56,7 +56,6 @@ describe('League Rebalancing Service', () => {
     name: string;
     tier: string;
     leagueInstanceId: string;
-    leaguePoints: number;
     cyclesInTier: number;
     elo?: number;
   }) {
@@ -64,16 +63,12 @@ describe('League Rebalancing Service', () => {
       data: {
         userId: testUser.id,
         name: opts.name,
-        currentLeague: opts.tier,
-        leagueId: opts.leagueInstanceId,
         currentHP: 10,
         maxHP: 10,
         currentShield: 2,
         maxShield: 2,
         elo: opts.elo ?? 1200,
-        leaguePoints: opts.leaguePoints,
         totalBattles: 10,
-        cyclesInCurrentLeague: opts.cyclesInTier,
         loadoutType: 'single',
       },
     });
@@ -85,14 +80,10 @@ describe('League Rebalancing Service', () => {
         mode: 'league_1v1',
         tier: opts.tier,
         leagueInstanceId: opts.leagueInstanceId,
-        leaguePoints: opts.leaguePoints,
         cyclesInTier: opts.cyclesInTier,
         wins: 0,
         losses: 0,
         draws: 0,
-        currentWinStreak: 0,
-        bestWinStreak: 0,
-        currentLoseStreak: 0,
       },
     });
 
@@ -107,12 +98,11 @@ describe('League Rebalancing Service', () => {
           name: `Bronze Robot ${i}`,
           tier: 'bronze',
           leagueInstanceId: 'bronze_1',
-          leaguePoints: i * 5, // 0, 5, 10, ..., 95
           cyclesInTier: 10,
         });
       }
 
-      const toPromote = await determinePromotions('bronze_1');
+      const toPromote: any[] = await determinePromotions('bronze_1');
 
       // Top 10% of 20 eligible = 2, only those with ≥25 LP (bronze threshold)
       // Robots 5-19 have ≥25 LP (15 robots), top 2 are entityIds for robots 19 and 18
@@ -129,12 +119,11 @@ describe('League Rebalancing Service', () => {
           name: `Bronze Robot ${i}`,
           tier: 'bronze',
           leagueInstanceId: 'bronze_1',
-          leaguePoints: i * 5, // 0-95
           cyclesInTier: i < 10 ? 3 : 10, // First 10 have too few cycles
         });
       }
 
-      const toPromote = await determinePromotions('bronze_1');
+      const toPromote: any[] = await determinePromotions('bronze_1');
 
       // Only robots 10-19 have ≥5 cycles (10 entities eligible)
       // Of those, only robots 5-19 have ≥25 LP. Intersection: robots 10-19 (10 entities)
@@ -145,7 +134,7 @@ describe('League Rebalancing Service', () => {
     });
 
     it('should return empty array for champion tier', async () => {
-      const toPromote = await determinePromotions('champion_1');
+      const toPromote: any[] = await determinePromotions('champion_1');
       expect(toPromote).toEqual([]);
     });
 
@@ -155,12 +144,11 @@ describe('League Rebalancing Service', () => {
           name: `Low Points Robot ${i}`,
           tier: 'bronze',
           leagueInstanceId: 'bronze_1',
-          leaguePoints: i, // 0-19, all below bronze threshold of 25
           cyclesInTier: 10,
         });
       }
 
-      const toPromote = await determinePromotions('bronze_1');
+      const toPromote: any[] = await determinePromotions('bronze_1');
       expect(toPromote).toEqual([]);
     });
 
@@ -170,12 +158,11 @@ describe('League Rebalancing Service', () => {
           name: `Silver Threshold Robot ${i}`,
           tier: 'silver',
           leagueInstanceId: 'silver_1',
-          leaguePoints: i * 5, // 0-95. ≥50 LP: robots 10-19
           cyclesInTier: 10,
         });
       }
 
-      const toPromote = await determinePromotions('silver_1');
+      const toPromote: any[] = await determinePromotions('silver_1');
 
       // Top 10% of 20 = 2 slots, only robots with ≥50 LP qualify
       expect(toPromote.length).toBe(2);
@@ -189,12 +176,11 @@ describe('League Rebalancing Service', () => {
           name: `Silver Below Threshold ${i}`,
           tier: 'silver',
           leagueInstanceId: 'silver_1',
-          leaguePoints: 25 + i, // 25-44, all below silver threshold of 50
           cyclesInTier: 10,
         });
       }
 
-      const toPromote = await determinePromotions('silver_1');
+      const toPromote: any[] = await determinePromotions('silver_1');
       expect(toPromote).toEqual([]);
     });
 
@@ -204,12 +190,11 @@ describe('League Rebalancing Service', () => {
           name: `Small League Robot ${i}`,
           tier: 'gold',
           leagueInstanceId: 'gold_1',
-          leaguePoints: i * 10,
           cyclesInTier: 10,
         });
       }
 
-      const toPromote = await determinePromotions('gold_1');
+      const toPromote: any[] = await determinePromotions('gold_1');
       expect(toPromote).toEqual([]);
     });
   });
@@ -221,12 +206,11 @@ describe('League Rebalancing Service', () => {
           name: `Silver Robot ${i}`,
           tier: 'silver',
           leagueInstanceId: 'silver_1',
-          leaguePoints: i * 10, // 0, 10, 20, ..., 190
           cyclesInTier: 10,
         });
       }
 
-      const toDemote = await determineDemotions('silver_1');
+      const toDemote: any[] = await determineDemotions('silver_1');
 
       // Bottom 10% = 2 entities (lowest LP)
       expect(toDemote.length).toBe(2);
@@ -234,7 +218,7 @@ describe('League Rebalancing Service', () => {
     });
 
     it('should return empty array for bronze tier', async () => {
-      const toDemote = await determineDemotions('bronze_1');
+      const toDemote: any[] = await determineDemotions('bronze_1');
       expect(toDemote).toEqual([]);
     });
   });
@@ -245,7 +229,6 @@ describe('League Rebalancing Service', () => {
         name: 'Promotion Test Robot',
         tier: 'bronze',
         leagueInstanceId: 'bronze_1',
-        leaguePoints: 50,
         cyclesInTier: 10,
         elo: 1300,
       });
@@ -269,7 +252,6 @@ describe('League Rebalancing Service', () => {
         name: 'Champion Robot',
         tier: 'champion',
         leagueInstanceId: 'champion_1',
-        leaguePoints: 100,
         cyclesInTier: 10,
         elo: 1800,
       });
@@ -284,7 +266,6 @@ describe('League Rebalancing Service', () => {
         name: 'Demotion Test Robot',
         tier: 'silver',
         leagueInstanceId: 'silver_1',
-        leaguePoints: 5,
         cyclesInTier: 10,
         elo: 1100,
       });
@@ -306,7 +287,6 @@ describe('League Rebalancing Service', () => {
         name: 'Bronze Robot',
         tier: 'bronze',
         leagueInstanceId: 'bronze_1',
-        leaguePoints: 0,
         cyclesInTier: 10,
         elo: 1000,
       });
@@ -323,7 +303,6 @@ describe('League Rebalancing Service', () => {
           name: `Bronze ${i}`,
           tier: 'bronze',
           leagueInstanceId: 'bronze_1',
-          leaguePoints: i * 10, // 0-190
           cyclesInTier: 10,
         });
       }
@@ -342,7 +321,6 @@ describe('League Rebalancing Service', () => {
           name: `Robot ${i}`,
           tier: 'bronze',
           leagueInstanceId: 'bronze_1',
-          leaguePoints: i * 10, // 0-990
           cyclesInTier: 10,
           elo: 1200 + i,
         });

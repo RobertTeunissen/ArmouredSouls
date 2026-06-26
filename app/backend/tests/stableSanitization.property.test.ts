@@ -24,8 +24,6 @@ describe('Stable Sanitization - Property Tests', () => {
         kills: fc.nat({ max: 200 }),
         damageDealtLifetime: fc.nat({ max: 100000 }),
         damageTakenLifetime: fc.nat({ max: 100000 }),
-        currentLeague: fc.constantFrom('Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond'),
-        leaguePoints: fc.integer({ min: 0, max: 100 }),
         imageUrl: fc.option(fc.webUrl(), { nil: null }),
         // Sensitive fields that must be stripped
         combatPower: fc.nat({ max: 50 }),

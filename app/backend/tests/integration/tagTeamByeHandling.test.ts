@@ -23,20 +23,6 @@ async function createTagTeamFixture(stableId: number, activeRobotId: number, res
       stableId,
       teamSize: 2,
       teamName: `Test_Team_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-      teamLp: 0,
-      teamLeague: 'bronze',
-      teamLeagueId: 'bronze_1',
-      cyclesInLeague: 0,
-      totalLeagueWins: 0,
-      totalLeagueLosses: 0,
-      totalLeagueDraws: 0,
-      tagTeamLp: 0,
-      tagTeamLeague: 'bronze',
-      tagTeamLeagueId: 'bronze_1',
-      cyclesInTagTeamLeague: 0,
-      totalTagTeamWins: 0,
-      totalTagTeamLosses: 0,
-      totalTagTeamDraws: 0,
       eligibility: 'ELIGIBLE',
       members: {
         create: [
@@ -173,8 +159,6 @@ describe('Tag Team Bye-Team Handling Integration Test', () => {
             yieldThreshold: 20,
             loadoutType: 'single',
             mainWeaponId: weaponInv.id,
-            currentLeague: 'bronze',
-            leagueId: 'bronze_1',
           },
         });
         testRobots.push(robot);
@@ -275,12 +259,7 @@ describe('Tag Team Bye-Team Handling Integration Test', () => {
     });
 
     expect(realRobot).toBeDefined();
-    expect(realRobot!.totalTagTeamBattles).toBeGreaterThan(0);
-
-    // Verify ELO changed (Requirements 12.4, 12.5: full rewards/penalties)
-    // Note: We can't compare to original since we only track IDs
-    // Just verify the robot has participated in battles
-    expect(realRobot!.elo).toBeDefined();
+    expect(realRobot!.totalBattles).toBeGreaterThan(0);
 
     // Verify user currency changed
     const user = await prisma.user.findUnique({
@@ -327,7 +306,7 @@ describe('Tag Team Bye-Team Handling Integration Test', () => {
     // The ELO change should be calculated against combined ELO of 2000
     // We can't verify the exact calculation here, but we can verify
     // that the battle was executed and ELO changed
-    expect(realRobot!.totalTagTeamBattles).toBeGreaterThan(0);
+    expect(realRobot!.totalBattles).toBeGreaterThan(0);
 
     console.log('[Test] ✓ Bye-team ELO verification complete');
   });

@@ -76,7 +76,6 @@ async function ensureTestRobot(robotId: number, userId: number) {
         maxShield: 100,
         elo: 1500,
         fame: 100,
-        currentLeague: 'bronze',
       },
     });
     testRobots.set(robotId, robot);
@@ -91,7 +90,7 @@ describe('CycleSnapshotService Property-Based Tests', () => {
     await prisma.cycleSnapshot.deleteMany({});
     await prisma.auditLog.deleteMany({});
     await prisma.battle.deleteMany({});
-    await prisma.scheduledLeagueMatch.deleteMany({});
+    await prisma.scheduledMatch.deleteMany({});
     await prisma.robot.deleteMany({});
     await prisma.weaponInventory.deleteMany({});
     await prisma.user.deleteMany({});
@@ -236,9 +235,7 @@ describe('CycleSnapshotService Property-Based Tests', () => {
               userId: fc.integer({ min: 1, max: 10 }),
               robot1DamageDealt: fc.integer({ min: 0, max: 1000 }),
               robot2DamageDealt: fc.integer({ min: 0, max: 1000 }),
-              robot1ELOBefore: fc.integer({ min: 1000, max: 2000 }),
               robot1ELOChange: fc.integer({ min: -50, max: 50 }),
-              robot2ELOBefore: fc.integer({ min: 1000, max: 2000 }),
               robot2ELOChange: fc.integer({ min: -50, max: 50 }),
               robot1FameAwarded: fc.integer({ min: 0, max: 100 }),
               robot2FameAwarded: fc.integer({ min: 0, max: 100 }),
@@ -282,11 +279,6 @@ describe('CycleSnapshotService Property-Based Tests', () => {
                   robot1: { connect: { id: robot1.id } },
                   robot2: { connect: { id: robot2.id } },
                   winnerId,
-                  robot1ELOBefore: battle.robot1ELOBefore,
-                  robot1ELOAfter: battle.robot1ELOBefore + battle.robot1ELOChange,
-                  robot2ELOBefore: battle.robot2ELOBefore,
-                  robot2ELOAfter: battle.robot2ELOBefore + battle.robot2ELOChange,
-                  eloChange: Math.abs(battle.robot1ELOChange),
                   winnerReward: battle.winnerReward,
                   loserReward: battle.loserReward,
                   battleLog: {},
@@ -295,8 +287,8 @@ describe('CycleSnapshotService Property-Based Tests', () => {
                   leagueType: 'bronze',
                   participants: {
                     create: [
-                      { robotId: robot1.id, team: 1, credits: battle.winnerReward || 0, eloBefore: battle.robot1ELOBefore, eloAfter: battle.robot1ELOBefore + battle.robot1ELOChange, finalHP: 50 },
-                      { robotId: robot2.id, team: 2, credits: battle.loserReward || 0, eloBefore: battle.robot2ELOBefore, eloAfter: battle.robot2ELOBefore + battle.robot2ELOChange, finalHP: 0 },
+                      { robotId: robot1.id, team: 1, credits: battle.winnerReward || 0, eloBefore: 1200, eloAfter: 1200 + battle.robot1ELOChange, finalHP: 50 },
+                      { robotId: robot2.id, team: 2, credits: battle.loserReward || 0, eloBefore: 1200, eloAfter: 1200 + battle.robot2ELOChange, finalHP: 0 },
                     ],
                   },
                 },
@@ -322,8 +314,8 @@ describe('CycleSnapshotService Property-Based Tests', () => {
               damageDealt: number;
               damageReceived: number;
               creditsEarned: number;
-              eloChange: number;
               fameChange: number;
+              eloChange: number;
             }>();
 
             const initMetric = () => ({
@@ -334,8 +326,8 @@ describe('CycleSnapshotService Property-Based Tests', () => {
               damageDealt: 0,
               damageReceived: 0,
               creditsEarned: 0,
-              eloChange: 0,
               fameChange: 0,
+              eloChange: 0,
             });
 
             for (const createdBattle of createdBattles) {
@@ -354,7 +346,7 @@ describe('CycleSnapshotService Property-Based Tests', () => {
               robot1Metric.battlesParticipated++;
               robot1Metric.damageDealt += robot1DamageDealt;
               robot1Metric.damageReceived += robot2DamageDealt;
-              robot1Metric.eloChange += createdBattle.robot1ELOAfter - createdBattle.robot1ELOBefore;
+              robot1Metric.eloChange += (createdBattle.robot1ELOAfter ?? 0) - (createdBattle.robot1ELOBefore ?? 0);
               robot1Metric.fameChange += robot1FameAwarded;
               
               if (createdBattle.winnerId === createdBattle.robot1Id) {
@@ -376,7 +368,7 @@ describe('CycleSnapshotService Property-Based Tests', () => {
               robot2Metric.battlesParticipated++;
               robot2Metric.damageDealt += robot2DamageDealt;
               robot2Metric.damageReceived += robot1DamageDealt;
-              robot2Metric.eloChange += createdBattle.robot2ELOAfter - createdBattle.robot2ELOBefore;
+              robot2Metric.eloChange += (createdBattle.robot2ELOAfter ?? 0) - (createdBattle.robot2ELOBefore ?? 0);
               robot2Metric.fameChange += robot2FameAwarded;
               
               if (createdBattle.winnerId === createdBattle.robot2Id) {
@@ -524,11 +516,6 @@ describe('CycleSnapshotService Property-Based Tests', () => {
                   robot1: { connect: { id: robot1.id } },
                   robot2: { connect: { id: robot2.id } },
                   winnerId: robot1.id, // Robot 1 always wins for simplicity
-                  robot1ELOBefore: 1500,
-                  robot1ELOAfter: 1520,
-                  robot2ELOBefore: 1500,
-                  robot2ELOAfter: 1480,
-                  eloChange: 20,
                   winnerReward: battle.winnerReward,
                   loserReward: battle.loserReward,
                   battleLog: {},
@@ -652,11 +639,6 @@ describe('CycleSnapshotService Property-Based Tests', () => {
                 robot1: { connect: { id: robot1.id } },
                 robot2: { connect: { id: robot2.id } },
                 winnerId: robot1.id,
-                robot1ELOBefore: 1500,
-                robot1ELOAfter: 1520,
-                robot2ELOBefore: 1500,
-                robot2ELOAfter: 1480,
-                eloChange: 20,
                 winnerReward: data.battleCredits,
                 loserReward: 0,
                 battleLog: {},

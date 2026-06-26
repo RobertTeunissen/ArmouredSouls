@@ -109,10 +109,10 @@ export function convertTagTeamEvents(
 export interface BattleEventData {
   robot1Name: string;
   robot2Name: string;
-  robot1ELOBefore: number;
-  robot2ELOBefore: number;
-  robot1ELOAfter: number;
-  robot2ELOAfter: number;
+  robot1ELOBefore?: number;
+  robot2ELOBefore?: number;
+  robot1ELOAfter?: number;
+  robot2ELOAfter?: number;
   winnerName: string;
   loserName: string;
   winnerFinalHP: number;
@@ -152,8 +152,8 @@ export function convertBattleEvents(battleData: BattleEventData): NarrativeEvent
       robot2Stance: battleData.robot2Stance || 'balanced',
       robot1MaxHP: battleData.robot1MaxHP || battleData.winnerMaxHP,
       robot2MaxHP: battleData.robot2MaxHP || battleData.winnerMaxHP,
-      robot1ELO: battleData.robot1ELOBefore,
-      robot2ELO: battleData.robot2ELOBefore,
+      robot1ELO: battleData.robot1ELOBefore ?? 0,
+      robot2ELO: battleData.robot2ELOBefore ?? 0,
       leagueType: battleData.leagueType,
       battleType: battleData.battleType,
     });
@@ -167,8 +167,8 @@ export function convertBattleEvents(battleData: BattleEventData): NarrativeEvent
     message: generateBattleStart({
       robot1Name: battleData.robot1Name,
       robot2Name: battleData.robot2Name,
-      robot1ELO: battleData.robot1ELOBefore,
-      robot2ELO: battleData.robot2ELOBefore,
+      robot1ELO: battleData.robot1ELOBefore ?? 0,
+      robot2ELO: battleData.robot2ELOBefore ?? 0,
       leagueType: battleData.leagueType,
       battleType: battleData.battleType,
     } as BattleStartEvent & { battleType?: 'league_1v1' | 'tournament_1v1' | 'tag_team' | 'koth' }),

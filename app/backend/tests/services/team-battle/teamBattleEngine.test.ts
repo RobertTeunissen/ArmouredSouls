@@ -147,38 +147,12 @@ function createMockRobot(
     damageTakenLifetime: 0,
     kills: 0,
     // League & Fame
-    currentLeague: 'bronze',
-    leagueId: 'bronze_1',
-    leaguePoints: 0,
-    cyclesInCurrentLeague: 0,
     fame: 0,
     titles: null,
     // Tag Team Statistics
-    totalTagTeamBattles: 0,
-    totalTagTeamWins: 0,
-    totalTagTeamLosses: 0,
-    totalTagTeamDraws: 0,
-    timesTaggedIn: 0,
-    timesTaggedOut: 0,
     // Team Battle Statistics
-    totalLeague1v1Wins: 0,
-    totalLeague1v1Losses: 0,
-    totalLeague1v1Draws: 0,
-    totalLeague2v2Wins: 0,
-    totalLeague3v3Wins: 0,
     // KotH Statistics
-    kothWins: 0,
-    kothMatches: 0,
-    kothTotalZoneScore: 0,
-    kothTotalZoneTime: 0,
-    kothKills: 0,
-    kothBestPlacement: null,
-    kothCurrentWinStreak: 0,
-    kothBestWinStreak: 0,
     // Streaks
-    currentWinStreak: 0,
-    bestWinStreak: 0,
-    currentLoseStreak: 0,
     // Stance/Loadout Wins
     offensiveWins: 0,
     defensiveWins: 0,

@@ -61,7 +61,6 @@ describe('Feature: team-battle-tournaments, Property 3: For any valid participan
             mockRobotFindUnique.mockResolvedValue({
               id,
               name: robotName,
-              currentLeague: leagueTier,
               elo,
               userId: 1,
               user: { id: 1, stableName: 'TestStable', username: 'testuser' },
@@ -70,7 +69,6 @@ describe('Feature: team-battle-tournaments, Property 3: For any valid participan
             mockTeamBattleFindUnique.mockResolvedValue({
               id,
               teamName,
-              teamLeague: leagueTier,
               stableId: 1,
               members: [
                 { robot: { id: 100, name: 'Member1', elo }, slotIndex: 0 },

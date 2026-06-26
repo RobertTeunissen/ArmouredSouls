@@ -29,7 +29,6 @@ async function createTestRobot(
       name: `TestRobot_${Date.now()}_${Math.random()}`,
       frameId: 1,
       totalBattles: battles,
-      totalTagTeamBattles: tagTeamBattles,
       fame,
       // Combat Systems
       combatPower: new Prisma.Decimal(10),
@@ -74,10 +73,6 @@ async function createTestRobot(
       damageTakenLifetime: 0,
       kills: 0,
       // League & Fame
-      currentLeague: 'bronze',
-      leagueId: 'bronze_1',
-      leaguePoints: 0,
-      cyclesInCurrentLeague: 0,
       // Economic
       repairCost: 0,
       battleReadiness: 100,

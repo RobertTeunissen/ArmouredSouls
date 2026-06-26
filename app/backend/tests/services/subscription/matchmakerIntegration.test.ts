@@ -16,7 +16,7 @@
 const mockPrisma = {
   robot: { findMany: jest.fn() },
   subscription: { findMany: jest.fn() },
-  scheduledLeagueMatch: { findMany: jest.fn(), create: jest.fn(), createMany: jest.fn() },
+  scheduledMatch: { findMany: jest.fn(), create: jest.fn(), createMany: jest.fn() },
   scheduledTournamentMatch: { findMany: jest.fn() },
   scheduledTagTeamMatch: { findMany: jest.fn(), create: jest.fn() },
   scheduledKothMatchParticipant: { findMany: jest.fn() },
@@ -91,8 +91,8 @@ describe('Matchmaker Subscription Integration', () => {
       ]);
 
       // No already-scheduled matches
-      mockPrisma.scheduledLeagueMatch.findMany.mockResolvedValue([]);
-      mockPrisma.scheduledLeagueMatch.create.mockResolvedValue({});
+      mockPrisma.scheduledMatch.findMany.mockResolvedValue([]);
+      mockPrisma.scheduledMatch.create.mockResolvedValue({});
 
       // No recent battles (for pairing algorithm)
       mockPrisma.battle.findMany.mockResolvedValue([]);
@@ -122,7 +122,7 @@ describe('Matchmaker Subscription Integration', () => {
 
       // Only robot 10 is subscribed
       mockPrisma.subscription.findMany.mockResolvedValue([{ robotId: 10 }]);
-      mockPrisma.scheduledLeagueMatch.findMany.mockResolvedValue([]);
+      mockPrisma.scheduledMatch.findMany.mockResolvedValue([]);
 
       await runMatchmakingForTier('bronze' as any, new Date());
 

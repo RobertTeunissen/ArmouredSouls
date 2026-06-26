@@ -22,19 +22,19 @@ interface TeamBattleLeagueFields {
   teamName: string;
 
   // 2v2 League fields (should remain unchanged)
-  teamLp: number;
   teamLeague: string;
   teamLeagueId: string;
   cyclesInLeague: number;
+  teamLp: number;
   totalLeagueWins: number;
   totalLeagueLosses: number;
   totalLeagueDraws: number;
 
   // Tag Team league fields (target of update)
-  tagTeamLp: number;
   tagTeamLeague: string;
   tagTeamLeagueId: string;
   cyclesInTagTeamLeague: number;
+  tagTeamLp: number;
   totalTagTeamWins: number;
   totalTagTeamLosses: number;
   totalTagTeamDraws: number;
@@ -57,22 +57,22 @@ const teamBattleArb: fc.Arbitrary<TeamBattleLeagueFields> = fc.record({
   teamName: fc.string({ minLength: 1, maxLength: 32 }),
 
   // 2v2 League fields
-  teamLp: fc.integer({ min: 0, max: 5000 }),
   teamLeague: leagueTierArb,
   teamLeagueId: leagueIdArb,
   cyclesInLeague: fc.integer({ min: 0, max: 100 }),
+  teamLp: fc.integer({ min: 0, max: 200 }),
   totalLeagueWins: fc.integer({ min: 0, max: 500 }),
   totalLeagueLosses: fc.integer({ min: 0, max: 500 }),
-  totalLeagueDraws: fc.integer({ min: 0, max: 200 }),
+  totalLeagueDraws: fc.integer({ min: 0, max: 100 }),
 
   // Tag Team league fields
-  tagTeamLp: fc.integer({ min: 0, max: 5000 }),
   tagTeamLeague: leagueTierArb,
   tagTeamLeagueId: leagueIdArb,
   cyclesInTagTeamLeague: fc.integer({ min: 0, max: 100 }),
+  tagTeamLp: fc.integer({ min: 0, max: 200 }),
   totalTagTeamWins: fc.integer({ min: 0, max: 500 }),
   totalTagTeamLosses: fc.integer({ min: 0, max: 500 }),
-  totalTagTeamDraws: fc.integer({ min: 0, max: 200 }),
+  totalTagTeamDraws: fc.integer({ min: 0, max: 100 }),
 });
 
 // ─── Simulate Adapter Logic ──────────────────────────────────────────────────

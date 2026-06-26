@@ -32,7 +32,7 @@ export async function cleanupTestData() {
     // Delete in dependency order
     await prisma.scheduledKothMatchParticipant.deleteMany({});
     await prisma.scheduledKothMatch.deleteMany({});
-    await prisma.scheduledLeagueMatch.deleteMany({});
+    await prisma.scheduledMatch.deleteMany({});
     await prisma.scheduledTeamBattleMatch.deleteMany({});
     await prisma.scheduledTournamentMatch.deleteMany({});
     await prisma.battleParticipant.deleteMany({});
@@ -71,7 +71,7 @@ export async function cleanupUserTestData(userId: number) {
         where: { robotId: { in: robotIds } },
       });
 
-      await prisma.scheduledLeagueMatch.deleteMany({
+      await prisma.scheduledMatch.deleteMany({
         where: {
           OR: [
             { robot1Id: { in: robotIds } },

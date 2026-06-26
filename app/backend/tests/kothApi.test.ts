@@ -6,12 +6,12 @@
 // --- Standings sort logic (mirrors koth.ts route logic) ---
 
 interface KothStanding {
+  name: string;
   kothWins: number;
   kothMatches: number;
   kothTotalZoneScore: number;
   kothKills: number;
   kothBestWinStreak: number;
-  name: string;
 }
 
 function sortStandings(standings: KothStanding[]): KothStanding[] {

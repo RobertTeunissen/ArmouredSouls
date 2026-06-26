@@ -72,7 +72,6 @@ describe('EventLogger Property-Based Tests', () => {
                 robotId: fc.option(fc.integer({ min: 1, max: 1000 })),
                 userId: fc.option(fc.integer({ min: 1, max: 100 })),
                 damage: fc.option(fc.integer({ min: 0, max: 10000 })),
-                eloChange: fc.option(fc.integer({ min: -100, max: 100 })),
                 fameChange: fc.option(fc.integer({ min: 0, max: 1000 })),
               }),
               userId: fc.option(fc.integer({ min: 1, max: 100 }), { nil: null }),

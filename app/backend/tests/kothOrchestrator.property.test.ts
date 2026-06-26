@@ -264,8 +264,8 @@ describe('Property 25: KotH battles do not modify ELO', () => {
 // ─── Property 28: Cumulative KotH stats are correctly updated ───────
 
 interface KothRobotStats {
-  kothMatches: number;
   kothWins: number;
+  kothMatches: number;
   kothTotalZoneScore: number;
   kothTotalZoneTime: number;
   kothKills: number;
@@ -291,8 +291,8 @@ function applyKothStatsUpdate(
     : Math.min(current.kothBestPlacement, placement);
 
   return {
-    kothMatches: current.kothMatches + 1,
     kothWins: current.kothWins + (isWinner ? 1 : 0),
+    kothMatches: current.kothMatches + 1,
     kothTotalZoneScore: current.kothTotalZoneScore + zoneScore,
     kothTotalZoneTime: current.kothTotalZoneTime + zoneTime,
     kothKills: current.kothKills + kills,
@@ -305,14 +305,14 @@ function applyKothStatsUpdate(
 /** Arbitrary for generating valid KothRobotStats */
 function kothStatsArb(): fc.Arbitrary<KothRobotStats> {
   return fc.record({
-    kothMatches: fc.integer({ min: 0, max: 1000 }),
-    kothWins: fc.integer({ min: 0, max: 500 }),
-    kothTotalZoneScore: fc.integer({ min: 0, max: 100_000 }),
-    kothTotalZoneTime: fc.integer({ min: 0, max: 100_000 }),
-    kothKills: fc.integer({ min: 0, max: 5000 }),
-    kothBestPlacement: fc.oneof(fc.constant(null), fc.integer({ min: 1, max: 6 })),
-    kothCurrentWinStreak: fc.integer({ min: 0, max: 100 }),
-    kothBestWinStreak: fc.integer({ min: 0, max: 100 }),
+    kothWins: fc.nat(1000),
+    kothMatches: fc.nat(1000),
+    kothTotalZoneScore: fc.nat(100000),
+    kothTotalZoneTime: fc.nat(100000),
+    kothKills: fc.nat(1000),
+    kothBestPlacement: fc.option(fc.integer({ min: 1, max: 6 }), { nil: null }),
+    kothCurrentWinStreak: fc.nat(100),
+    kothBestWinStreak: fc.nat(100),
   });
 }
 

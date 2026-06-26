@@ -104,7 +104,7 @@ describe('Admin Cycle Generation Integration Tests', () => {
             ],
           },
         });
-        await prisma.scheduledLeagueMatch.deleteMany({
+        await prisma.scheduledMatch.deleteMany({
           where: {
             OR: [
               { robot1Id: { in: robotIds } },

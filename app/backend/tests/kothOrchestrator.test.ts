@@ -10,8 +10,8 @@ import { calculateKothRewards } from '../src/services/koth/kothBattleOrchestrato
 // ─── Pure helper replicating updateKothRobotStats logic ─────────────
 
 interface KothRobotStats {
-  kothMatches: number;
   kothWins: number;
+  kothMatches: number;
   kothTotalZoneScore: number;
   kothTotalZoneTime: number;
   kothKills: number;
@@ -37,8 +37,8 @@ function applyKothStatsUpdate(
     : Math.min(current.kothBestPlacement, placement);
 
   return {
-    kothMatches: current.kothMatches + 1,
     kothWins: current.kothWins + (isWinner ? 1 : 0),
+    kothMatches: current.kothMatches + 1,
     kothTotalZoneScore: current.kothTotalZoneScore + zoneScore,
     kothTotalZoneTime: current.kothTotalZoneTime + zoneTime,
     kothKills: current.kothKills + kills,
@@ -51,8 +51,8 @@ function applyKothStatsUpdate(
 // ─── Default stats for stat-tracking tests ──────────────────────────
 
 const FRESH_STATS: KothRobotStats = {
-  kothMatches: 0,
   kothWins: 0,
+  kothMatches: 0,
   kothTotalZoneScore: 0,
   kothTotalZoneTime: 0,
   kothKills: 0,

@@ -108,18 +108,12 @@ describe('Achievement Team Battle: league_2v2_wins trigger', () => {
 
     // Robot with 1 totalLeague2v2Wins
     mockPrisma.robot.findUnique.mockResolvedValue({
-      totalLeague2v2Wins: 1,
-      totalLeague3v3Wins: 0,
       wins: 0,
       losses: 0,
       totalBattles: 0,
       kills: 0,
       elo: 1200,
       fame: 0,
-      kothWins: 0,
-      totalTagTeamWins: 0,
-      currentWinStreak: 0,
-      currentLoseStreak: 0,
       name: 'TestBot',
     });
 
@@ -143,18 +137,12 @@ describe('Achievement Team Battle: league_2v2_wins trigger', () => {
     mockPrisma.userAchievement.findMany.mockResolvedValueOnce(allExceptL19);
 
     mockPrisma.robot.findUnique.mockResolvedValue({
-      totalLeague2v2Wins: 25,
-      totalLeague3v3Wins: 0,
       wins: 0,
       losses: 0,
       totalBattles: 0,
       kills: 0,
       elo: 1200,
       fame: 0,
-      kothWins: 0,
-      totalTagTeamWins: 0,
-      currentWinStreak: 0,
-      currentLoseStreak: 0,
       name: 'TestBot',
     });
 
@@ -177,18 +165,12 @@ describe('Achievement Team Battle: league_2v2_wins trigger', () => {
     mockPrisma.userAchievement.findMany.mockResolvedValueOnce(allExceptL18);
 
     mockPrisma.robot.findUnique.mockResolvedValue({
-      totalLeague2v2Wins: 0,
-      totalLeague3v3Wins: 0,
       wins: 0,
       losses: 0,
       totalBattles: 0,
       kills: 0,
       elo: 1200,
       fame: 0,
-      kothWins: 0,
-      totalTagTeamWins: 0,
-      currentWinStreak: 0,
-      currentLoseStreak: 0,
       name: 'TestBot',
     });
 
@@ -212,18 +194,12 @@ describe('Achievement Team Battle: league_3v3_wins trigger', () => {
     mockPrisma.userAchievement.findMany.mockResolvedValueOnce(allExceptL20);
 
     mockPrisma.robot.findUnique.mockResolvedValue({
-      totalLeague2v2Wins: 0,
-      totalLeague3v3Wins: 1,
       wins: 0,
       losses: 0,
       totalBattles: 0,
       kills: 0,
       elo: 1200,
       fame: 0,
-      kothWins: 0,
-      totalTagTeamWins: 0,
-      currentWinStreak: 0,
-      currentLoseStreak: 0,
       name: 'TestBot',
     });
 
@@ -246,18 +222,12 @@ describe('Achievement Team Battle: league_3v3_wins trigger', () => {
     mockPrisma.userAchievement.findMany.mockResolvedValueOnce(allExceptL21);
 
     mockPrisma.robot.findUnique.mockResolvedValue({
-      totalLeague2v2Wins: 0,
-      totalLeague3v3Wins: 25,
       wins: 0,
       losses: 0,
       totalBattles: 0,
       kills: 0,
       elo: 1200,
       fame: 0,
-      kothWins: 0,
-      totalTagTeamWins: 0,
-      currentWinStreak: 0,
-      currentLoseStreak: 0,
       name: 'TestBot',
     });
 
@@ -280,18 +250,12 @@ describe('Achievement Team Battle: league_3v3_wins trigger', () => {
     mockPrisma.userAchievement.findMany.mockResolvedValueOnce(allExceptL20);
 
     mockPrisma.robot.findUnique.mockResolvedValue({
-      totalLeague2v2Wins: 0,
-      totalLeague3v3Wins: 0,
       wins: 0,
       losses: 0,
       totalBattles: 0,
       kills: 0,
       elo: 1200,
       fame: 0,
-      kothWins: 0,
-      totalTagTeamWins: 0,
-      currentWinStreak: 0,
-      currentLoseStreak: 0,
       name: 'TestBot',
     });
 
@@ -320,17 +284,11 @@ describe('Achievement Team Battle: C18 "Autobots, Roll Out!" updated logic', () 
     // Robot with wins in all categories (league via 2v2 wins)
     mockPrisma.robot.findUnique.mockResolvedValue({
       wins: 0,
-      totalLeague2v2Wins: 1,
-      totalLeague3v3Wins: 0,
-      kothWins: 1,
-      totalTagTeamWins: 1,
       losses: 0,
       totalBattles: 10,
       kills: 0,
       elo: 1200,
       fame: 0,
-      currentWinStreak: 0,
-      currentLoseStreak: 0,
       name: 'TestBot',
     });
 
@@ -338,10 +296,6 @@ describe('Achievement Team Battle: C18 "Autobots, Roll Out!" updated logic', () 
     mockPrisma.robot.findMany.mockResolvedValue([
       {
         wins: 0,
-        kothWins: 1,
-        totalTagTeamWins: 1,
-        totalLeague2v2Wins: 1,
-        totalLeague3v3Wins: 0,
       },
     ]);
 
@@ -372,17 +326,11 @@ describe('Achievement Team Battle: C18 "Autobots, Roll Out!" updated logic', () 
 
     mockPrisma.robot.findUnique.mockResolvedValue({
       wins: 0,
-      totalLeague2v2Wins: 0,
-      totalLeague3v3Wins: 1,
-      kothWins: 1,
-      totalTagTeamWins: 1,
       losses: 0,
       totalBattles: 10,
       kills: 0,
       elo: 1200,
       fame: 0,
-      currentWinStreak: 0,
-      currentLoseStreak: 0,
       name: 'TestBot',
     });
 
@@ -390,10 +338,6 @@ describe('Achievement Team Battle: C18 "Autobots, Roll Out!" updated logic', () 
     mockPrisma.robot.findMany.mockResolvedValue([
       {
         wins: 0,
-        kothWins: 1,
-        totalTagTeamWins: 1,
-        totalLeague2v2Wins: 0,
-        totalLeague3v3Wins: 1,
       },
     ]);
 
@@ -422,17 +366,11 @@ describe('Achievement Team Battle: C18 "Autobots, Roll Out!" updated logic', () 
 
     mockPrisma.robot.findUnique.mockResolvedValue({
       wins: 1,
-      totalLeague2v2Wins: 0,
-      totalLeague3v3Wins: 0,
-      kothWins: 1,
-      totalTagTeamWins: 1,
       losses: 0,
       totalBattles: 10,
       kills: 0,
       elo: 1200,
       fame: 0,
-      currentWinStreak: 0,
-      currentLoseStreak: 0,
       name: 'TestBot',
     });
 
@@ -440,10 +378,6 @@ describe('Achievement Team Battle: C18 "Autobots, Roll Out!" updated logic', () 
     mockPrisma.robot.findMany.mockResolvedValue([
       {
         wins: 1,
-        kothWins: 1,
-        totalTagTeamWins: 1,
-        totalLeague2v2Wins: 0,
-        totalLeague3v3Wins: 0,
       },
     ]);
 
@@ -472,17 +406,11 @@ describe('Achievement Team Battle: C18 "Autobots, Roll Out!" updated logic', () 
 
     mockPrisma.robot.findUnique.mockResolvedValue({
       wins: 1,
-      totalLeague2v2Wins: 1,
-      totalLeague3v3Wins: 1,
-      kothWins: 0,
-      totalTagTeamWins: 1,
       losses: 0,
       totalBattles: 10,
       kills: 0,
       elo: 1200,
       fame: 0,
-      currentWinStreak: 0,
-      currentLoseStreak: 0,
       name: 'TestBot',
     });
 
@@ -490,10 +418,6 @@ describe('Achievement Team Battle: C18 "Autobots, Roll Out!" updated logic', () 
     mockPrisma.robot.findMany.mockResolvedValue([
       {
         wins: 1,
-        kothWins: 0,
-        totalTagTeamWins: 1,
-        totalLeague2v2Wins: 1,
-        totalLeague3v3Wins: 1,
       },
     ]);
 
@@ -522,17 +446,11 @@ describe('Achievement Team Battle: C18 "Autobots, Roll Out!" updated logic', () 
 
     mockPrisma.robot.findUnique.mockResolvedValue({
       wins: 1,
-      totalLeague2v2Wins: 1,
-      totalLeague3v3Wins: 1,
-      kothWins: 1,
-      totalTagTeamWins: 0,
       losses: 0,
       totalBattles: 10,
       kills: 0,
       elo: 1200,
       fame: 0,
-      currentWinStreak: 0,
-      currentLoseStreak: 0,
       name: 'TestBot',
     });
 
@@ -540,10 +458,6 @@ describe('Achievement Team Battle: C18 "Autobots, Roll Out!" updated logic', () 
     mockPrisma.robot.findMany.mockResolvedValue([
       {
         wins: 1,
-        kothWins: 1,
-        totalTagTeamWins: 0,
-        totalLeague2v2Wins: 1,
-        totalLeague3v3Wins: 1,
       },
     ]);
 
@@ -572,17 +486,11 @@ describe('Achievement Team Battle: C18 "Autobots, Roll Out!" updated logic', () 
 
     mockPrisma.robot.findUnique.mockResolvedValue({
       wins: 1,
-      totalLeague2v2Wins: 1,
-      totalLeague3v3Wins: 1,
-      kothWins: 1,
-      totalTagTeamWins: 1,
       losses: 0,
       totalBattles: 10,
       kills: 0,
       elo: 1200,
       fame: 0,
-      currentWinStreak: 0,
-      currentLoseStreak: 0,
       name: 'TestBot',
     });
 
@@ -590,10 +498,6 @@ describe('Achievement Team Battle: C18 "Autobots, Roll Out!" updated logic', () 
     mockPrisma.robot.findMany.mockResolvedValue([
       {
         wins: 1,
-        kothWins: 1,
-        totalTagTeamWins: 1,
-        totalLeague2v2Wins: 1,
-        totalLeague3v3Wins: 1,
       },
     ]);
 
@@ -623,17 +527,11 @@ describe('Achievement Team Battle: C18 "Autobots, Roll Out!" updated logic', () 
 
     mockPrisma.robot.findUnique.mockResolvedValue({
       wins: 0,
-      totalLeague2v2Wins: 0,
-      totalLeague3v3Wins: 0,
-      kothWins: 1,
-      totalTagTeamWins: 1,
       losses: 0,
       totalBattles: 10,
       kills: 0,
       elo: 1200,
       fame: 0,
-      currentWinStreak: 0,
-      currentLoseStreak: 0,
       name: 'TestBot',
     });
 
@@ -641,10 +539,6 @@ describe('Achievement Team Battle: C18 "Autobots, Roll Out!" updated logic', () 
     mockPrisma.robot.findMany.mockResolvedValue([
       {
         wins: 0,
-        kothWins: 1,
-        totalTagTeamWins: 1,
-        totalLeague2v2Wins: 0,
-        totalLeague3v3Wins: 0,
       },
     ]);
 
@@ -677,17 +571,11 @@ describe('Achievement Team Battle: C18 existing holders retention', () => {
 
     mockPrisma.robot.findUnique.mockResolvedValue({
       wins: 1,
-      totalLeague2v2Wins: 0,
-      totalLeague3v3Wins: 0,
-      kothWins: 0,
-      totalTagTeamWins: 0,
       losses: 0,
       totalBattles: 5,
       kills: 0,
       elo: 1200,
       fame: 0,
-      currentWinStreak: 0,
-      currentLoseStreak: 0,
       name: 'TestBot',
     });
 
@@ -721,17 +609,11 @@ describe('Achievement Team Battle: C18 existing holders retention', () => {
     // Robot that would NOT qualify under new rules (missing KotH)
     mockPrisma.robot.findUnique.mockResolvedValue({
       wins: 1,
-      totalLeague2v2Wins: 0,
-      totalLeague3v3Wins: 0,
-      kothWins: 0,
-      totalTagTeamWins: 0,
       losses: 0,
       totalBattles: 5,
       kills: 0,
       elo: 1200,
       fame: 0,
-      currentWinStreak: 0,
-      currentLoseStreak: 0,
       name: 'TestBot',
     });
 

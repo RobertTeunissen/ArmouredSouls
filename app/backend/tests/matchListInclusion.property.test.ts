@@ -63,7 +63,7 @@ describe('Feature: tag-team-matches, Property 25: Match List Inclusion', () => {
         ],
       },
     });
-    await prisma.scheduledLeagueMatch.deleteMany({
+    await prisma.scheduledMatch.deleteMany({
       where: {
         OR: [
           { robot1: { userId: testUserId } },
@@ -140,13 +140,6 @@ describe('Feature: tag-team-matches, Property 25: Match List Inclusion', () => {
                 stableId: testUserId,
                 teamSize: 2,
                 teamName: `Test Tag Team ${i}`,
-                tagTeamLeague: 'bronze',
-                tagTeamLeagueId: 'bronze_1',
-                tagTeamLp: 0,
-                cyclesInTagTeamLeague: 0,
-                totalTagTeamWins: 0,
-                totalTagTeamLosses: 0,
-                totalTagTeamDraws: 0,
                 members: {
                   create: [
                     { robotId: robots[i * 2].id, slotIndex: 0 },
@@ -161,7 +154,7 @@ describe('Feature: tag-team-matches, Property 25: Match List Inclusion', () => {
           // Create 1v1 scheduled matches
           const scheduledMatches = [];
           for (let i = 0; i < Math.min(config.num1v1Matches, robots.length - 1); i++) {
-            const match = await prisma.scheduledLeagueMatch.create({
+            const match = await prisma.scheduledMatch.create({
               data: {
                 robot1Id: robots[i].id,
                 robot2Id: robots[i + 1].id,
@@ -235,7 +228,7 @@ describe('Feature: tag-team-matches, Property 25: Match List Inclusion', () => {
           await prisma.scheduledTeamBattleMatch.deleteMany({
             where: { id: { in: tagTeamMatches.map(m => m.id) } },
           });
-          await prisma.scheduledLeagueMatch.deleteMany({
+          await prisma.scheduledMatch.deleteMany({
             where: { id: { in: scheduledMatches.map(m => m.id) } },
           });
           await prisma.teamBattleMember.deleteMany({
@@ -315,11 +308,6 @@ describe('Feature: tag-team-matches, Property 25: Match List Inclusion', () => {
                 leagueType: 'bronze',
                 battleType: 'league',
                 durationSeconds: 30,
-                robot1ELOBefore: 1200,
-                robot1ELOAfter: 1216,
-                robot2ELOBefore: 1200,
-                robot2ELOAfter: 1184,
-                eloChange: 16,
                 winnerReward: 1000,
                 loserReward: 500,
                 battleLog: {},
@@ -349,11 +337,6 @@ describe('Feature: tag-team-matches, Property 25: Match List Inclusion', () => {
                 team2ActiveRobotId: robots[i * 4 + 2].id,
                 team2ReserveRobotId: robots[i * 4 + 3].id,
                 durationSeconds: 45,
-                robot1ELOBefore: 1200,
-                robot1ELOAfter: 1216,
-                robot2ELOBefore: 1200,
-                robot2ELOAfter: 1184,
-                eloChange: 16,
                 winnerReward: 2000,
                 loserReward: 1000,
                 battleLog: {},

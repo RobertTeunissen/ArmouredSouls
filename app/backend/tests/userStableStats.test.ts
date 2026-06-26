@@ -42,10 +42,6 @@ describe('GET /api/user/stats - Stable Overview', () => {
         wins: 6,
         losses: 3,
         draws: 1,
-        totalTagTeamBattles: 5,
-        totalTagTeamWins: 3,
-        totalTagTeamLosses: 1,
-        totalTagTeamDraws: 1,
       },
     });
 
@@ -57,10 +53,6 @@ describe('GET /api/user/stats - Stable Overview', () => {
         wins: 4,
         losses: 4,
         draws: 0,
-        totalTagTeamBattles: 3,
-        totalTagTeamWins: 2,
-        totalTagTeamLosses: 1,
-        totalTagTeamDraws: 0,
       },
     });
   });

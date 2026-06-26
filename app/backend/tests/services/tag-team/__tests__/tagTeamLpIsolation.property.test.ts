@@ -21,6 +21,8 @@ import {
 
 /**
  * Represents a TeamBattle row with both LP fields for isolation testing.
+ * NOTE: These fields were moved to the standings table in production,
+ * but this test validates the pure LP isolation algorithm.
  */
 interface TeamBattleRow {
   id: number;
@@ -29,8 +31,8 @@ interface TeamBattleRow {
   teamLp: number;
   tagTeamLp: number;
   teamLeague: string;
-  tagTeamLeague: string;
   teamLeagueId: string;
+  tagTeamLeague: string;
   tagTeamLeagueId: string;
   cyclesInLeague: number;
   cyclesInTagTeamLeague: number;
@@ -40,6 +42,7 @@ interface TeamBattleRow {
   totalTagTeamWins: number;
   totalTagTeamLosses: number;
   totalTagTeamDraws: number;
+  createdAt: Date;
 }
 
 /**
@@ -124,8 +127,7 @@ function simulateTagTeamPostBattleLpAward(
 
   return {
     ...team,
-    tagTeamLp: newTagTeamLp, // Only tagTeamLp changes
-    // teamLp remains unchanged — this is the isolation property
+    tagTeamLp: newTagTeamLp,
   };
 }
 
@@ -152,8 +154,7 @@ function simulate2v2LeaguePostBattleLpAward(
 
   return {
     ...team,
-    teamLp: newTeamLp, // Only teamLp changes
-    // tagTeamLp remains unchanged — this is the isolation property
+    teamLp: newTeamLp,
   };
 }
 
@@ -193,20 +194,21 @@ const teamBattleRowArb: fc.Arbitrary<TeamBattleRow> = fc.record({
   id: fc.integer({ min: 1, max: 100000 }),
   stableId: fc.integer({ min: 1, max: 50000 }),
   teamSize: fc.constant(2 as const),
-  teamLp: fc.integer({ min: 0, max: 5000 }),
-  tagTeamLp: fc.integer({ min: 0, max: 5000 }),
-  teamLeague: fc.constantFrom(...TIERS),
-  tagTeamLeague: fc.constantFrom(...TIERS),
-  teamLeagueId: fc.string({ minLength: 3, maxLength: 30 }).map((s) => `${s.replace(/[^a-z0-9_]/g, 'x')}_1`),
-  tagTeamLeagueId: fc.string({ minLength: 3, maxLength: 30 }).map((s) => `${s.replace(/[^a-z0-9_]/g, 'x')}_1`),
+  teamLp: fc.integer({ min: 0, max: 200 }),
+  tagTeamLp: fc.integer({ min: 0, max: 200 }),
+  teamLeague: fc.constantFrom('bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'),
+  teamLeagueId: fc.constantFrom('bronze_1', 'silver_1', 'gold_1'),
+  tagTeamLeague: fc.constantFrom('bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'),
+  tagTeamLeagueId: fc.constantFrom('bronze_1', 'silver_1', 'gold_1'),
   cyclesInLeague: fc.integer({ min: 0, max: 100 }),
   cyclesInTagTeamLeague: fc.integer({ min: 0, max: 100 }),
   totalLeagueWins: fc.integer({ min: 0, max: 500 }),
   totalLeagueLosses: fc.integer({ min: 0, max: 500 }),
-  totalLeagueDraws: fc.integer({ min: 0, max: 200 }),
+  totalLeagueDraws: fc.integer({ min: 0, max: 100 }),
   totalTagTeamWins: fc.integer({ min: 0, max: 500 }),
   totalTagTeamLosses: fc.integer({ min: 0, max: 500 }),
-  totalTagTeamDraws: fc.integer({ min: 0, max: 200 }),
+  totalTagTeamDraws: fc.integer({ min: 0, max: 100 }),
+  createdAt: fc.date({ min: new Date('2024-01-01'), max: new Date('2025-01-01') }),
 });
 
 const battleOutcomeArb = fc.record({

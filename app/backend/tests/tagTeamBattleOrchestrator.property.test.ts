@@ -59,19 +59,9 @@ function createTestRobot(overrides: Partial<Robot> = {}): Robot {
     damageTakenLifetime: 0,
     kills: 0,
     // League & Fame
-    currentLeague: 'bronze',
-    leagueId: 'bronze_1',
-    leaguePoints: 0,
-    cyclesInCurrentLeague: 0,
     fame: 0,
     titles: null,
     // Tag Team Statistics
-    totalTagTeamBattles: 0,
-    totalTagTeamWins: 0,
-    totalTagTeamLosses: 0,
-    totalTagTeamDraws: 0,
-    timesTaggedIn: 0,
-    timesTaggedOut: 0,
     // Economic
     repairCost: 0,
     battleReadiness: 100,
@@ -81,14 +71,6 @@ function createTestRobot(overrides: Partial<Robot> = {}): Robot {
     loadoutType: 'single',
     stance: 'balanced',
     // KotH Statistics
-    kothWins: 0,
-    kothMatches: 0,
-    kothTotalZoneScore: 0,
-    kothTotalZoneTime: 0,
-    kothKills: 0,
-    kothBestPlacement: null,
-    kothCurrentWinStreak: 0,
-    kothBestWinStreak: 0,
     // Equipment
     mainWeaponId: null,
     offhandWeaponId: null,

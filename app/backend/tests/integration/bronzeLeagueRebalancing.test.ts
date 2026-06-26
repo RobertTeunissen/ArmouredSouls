@@ -17,7 +17,7 @@ import {
 describe('Bronze League Rebalancing - Integration Test', () => {
   beforeAll(async () => {
     // Clean up test data
-    await prisma.scheduledLeagueMatch.deleteMany({});
+    await prisma.scheduledMatch.deleteMany({});
     await prisma.battle.deleteMany({});
     await prisma.robot.deleteMany({});
     await prisma.weaponInventory.deleteMany({});
@@ -46,11 +46,7 @@ describe('Bronze League Rebalancing - Integration Test', () => {
       robots.push({
         userId: user.id,
         name: `Robot ${i}`,
-        leagueId: 'bronze_1',
-        currentLeague: 'bronze' as const,
-        leaguePoints: Math.floor(Math.random() * 100), // Random points for realistic distribution
         elo: 1000 + Math.floor(Math.random() * 500), // Random ELO
-        cyclesInCurrentLeague: 10, // All have been in bronze for 10 cycles (issue scenario)
         currentHP: 10,
         maxHP: 10,
         currentShield: 2,
@@ -126,11 +122,7 @@ describe('Bronze League Rebalancing - Integration Test', () => {
       initialRobots.push({
         userId: user.id,
         name: `Initial Robot ${i}`,
-        leagueId: 'bronze_1',
-        currentLeague: 'bronze' as const,
-        leaguePoints: 50,
         elo: 1200,
-        cyclesInCurrentLeague: 10,
         currentHP: 10,
         maxHP: 10,
         currentShield: 2,
@@ -146,11 +138,7 @@ describe('Bronze League Rebalancing - Integration Test', () => {
       newRobots.push({
         userId: user.id,
         name: `New Robot ${i}`,
-        leagueId: 'bronze_1',
-        currentLeague: 'bronze' as const,
-        leaguePoints: 25,
         elo: 1100,
-        cyclesInCurrentLeague: 3, // Not eligible for promotion yet
         currentHP: 10,
         maxHP: 10,
         currentShield: 2,
