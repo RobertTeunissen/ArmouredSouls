@@ -102,7 +102,7 @@ describe('League Rebalancing Service', () => {
         });
       }
 
-      const toPromote: any[] = await determinePromotions('bronze_1');
+      const toPromote = await determinePromotions('bronze_1');
 
       // Top 10% of 20 eligible = 2, only those with ≥25 LP (bronze threshold)
       // Robots 5-19 have ≥25 LP (15 robots), top 2 are entityIds for robots 19 and 18
@@ -123,7 +123,7 @@ describe('League Rebalancing Service', () => {
         });
       }
 
-      const toPromote: any[] = await determinePromotions('bronze_1');
+      const toPromote = await determinePromotions('bronze_1');
 
       // Only robots 10-19 have ≥5 cycles (10 entities eligible)
       // Of those, only robots 5-19 have ≥25 LP. Intersection: robots 10-19 (10 entities)
@@ -134,7 +134,7 @@ describe('League Rebalancing Service', () => {
     });
 
     it('should return empty array for champion tier', async () => {
-      const toPromote: any[] = await determinePromotions('champion_1');
+      const toPromote = await determinePromotions('champion_1');
       expect(toPromote).toEqual([]);
     });
 
@@ -148,7 +148,7 @@ describe('League Rebalancing Service', () => {
         });
       }
 
-      const toPromote: any[] = await determinePromotions('bronze_1');
+      const toPromote = await determinePromotions('bronze_1');
       expect(toPromote).toEqual([]);
     });
 
@@ -162,7 +162,7 @@ describe('League Rebalancing Service', () => {
         });
       }
 
-      const toPromote: any[] = await determinePromotions('silver_1');
+      const toPromote = await determinePromotions('silver_1');
 
       // Top 10% of 20 = 2 slots, only robots with ≥50 LP qualify
       expect(toPromote.length).toBe(2);
@@ -180,7 +180,7 @@ describe('League Rebalancing Service', () => {
         });
       }
 
-      const toPromote: any[] = await determinePromotions('silver_1');
+      const toPromote = await determinePromotions('silver_1');
       expect(toPromote).toEqual([]);
     });
 
@@ -194,7 +194,7 @@ describe('League Rebalancing Service', () => {
         });
       }
 
-      const toPromote: any[] = await determinePromotions('gold_1');
+      const toPromote = await determinePromotions('gold_1');
       expect(toPromote).toEqual([]);
     });
   });
@@ -210,7 +210,7 @@ describe('League Rebalancing Service', () => {
         });
       }
 
-      const toDemote: any[] = await determineDemotions('silver_1');
+      const toDemote = await determineDemotions('silver_1');
 
       // Bottom 10% = 2 entities (lowest LP)
       expect(toDemote.length).toBe(2);
@@ -218,7 +218,7 @@ describe('League Rebalancing Service', () => {
     });
 
     it('should return empty array for bronze tier', async () => {
-      const toDemote: any[] = await determineDemotions('bronze_1');
+      const toDemote = await determineDemotions('bronze_1');
       expect(toDemote).toEqual([]);
     });
   });
