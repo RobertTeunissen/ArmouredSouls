@@ -108,40 +108,14 @@ function makeRobot(id: number, elo: number = 1000, userId: number = 100): Robot 
     damageDealtLifetime: 0,
     damageTakenLifetime: 0,
     kills: 0,
-    currentLeague: 'bronze',
-    leagueId: 'bronze_1',
-    leaguePoints: 0,
-    cyclesInCurrentLeague: 0,
     fame: 0,
     titles: null,
-    totalTagTeamBattles: 0,
-    totalTagTeamWins: 0,
-    totalTagTeamLosses: 0,
-    totalTagTeamDraws: 0,
-    timesTaggedIn: 0,
-    timesTaggedOut: 0,
-    totalLeague1v1Wins: 0,
-    totalLeague1v1Losses: 0,
-    totalLeague1v1Draws: 0,
-    totalLeague2v2Wins: 0,
-    totalLeague3v3Wins: 0,
     repairCost: 0,
     battleReadiness: 100,
     totalRepairsPaid: 0,
     yieldThreshold: 10,
     loadoutType: 'single',
     stance: 'balanced',
-    kothWins: 0,
-    kothMatches: 0,
-    kothTotalZoneScore: 0,
-    kothTotalZoneTime: 0,
-    kothKills: 0,
-    kothBestPlacement: null,
-    kothCurrentWinStreak: 0,
-    kothBestWinStreak: 0,
-    currentWinStreak: 0,
-    bestWinStreak: 0,
-    currentLoseStreak: 0,
     offensiveWins: 0,
     defensiveWins: 0,
     balancedWins: 0,
@@ -158,9 +132,6 @@ function makeTeam(
   teamSize: 2 | 3 = 2,
   overrides: Partial<{
     stableId: number;
-    teamLp: number;
-    teamLeague: string;
-    teamLeagueId: string;
     eligibility: string;
     robotElos: number[];
     createdAt: Date;
@@ -181,20 +152,6 @@ function makeTeam(
     stableId,
     teamSize,
     teamName: `Team ${id}`,
-    teamLp: overrides.teamLp ?? 50,
-    teamLeague: overrides.teamLeague ?? 'bronze',
-    teamLeagueId: overrides.teamLeagueId ?? 'bronze_1',
-    cyclesInLeague: 5,
-    totalLeagueWins: 0,
-    totalLeagueLosses: 0,
-    totalLeagueDraws: 0,
-    tagTeamLp: 0,
-    tagTeamLeague: 'bronze',
-    tagTeamLeagueId: 'bronze_1',
-    cyclesInTagTeamLeague: 0,
-    totalTagTeamWins: 0,
-    totalTagTeamLosses: 0,
-    totalTagTeamDraws: 0,
     eligibility: overrides.eligibility ?? 'ELIGIBLE',
     createdAt: overrides.createdAt ?? new Date('2024-01-01'),
     updatedAt: new Date('2024-01-01'),
@@ -401,9 +358,9 @@ describe('teamBattleMatchmakingService', () => {
     });
 
     it('should prefer closer LP opponents over distant ones', async () => {
-      const team1 = makeTeam(1, 2, { teamLp: 50, stableId: 100 });
-      const team2 = makeTeam(2, 2, { teamLp: 55, stableId: 200 }); // close LP
-      const team3 = makeTeam(3, 2, { teamLp: 100, stableId: 300 }); // far LP
+      const team1 = makeTeam(1, 2, { stableId: 100 });
+      const team2 = makeTeam(2, 2, { stableId: 200 }); // close LP
+      const team3 = makeTeam(3, 2, { stableId: 300 }); // far LP
 
       mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([]);
 
@@ -417,9 +374,9 @@ describe('teamBattleMatchmakingService', () => {
     });
 
     it('should apply recent-opponent penalty (R4.5)', async () => {
-      const team1 = makeTeam(1, 2, { teamLp: 50, stableId: 100 });
-      const team2 = makeTeam(2, 2, { teamLp: 50, stableId: 200 }); // same LP, recent opponent
-      const team3 = makeTeam(3, 2, { teamLp: 55, stableId: 300 }); // slightly worse LP, not recent
+      const team1 = makeTeam(1, 2, { stableId: 100 });
+      const team2 = makeTeam(2, 2, { stableId: 200 }); // same LP, recent opponent
+      const team3 = makeTeam(3, 2, { stableId: 300 }); // slightly worse LP, not recent
 
       // team1 recently fought team2
       mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([
@@ -435,9 +392,9 @@ describe('teamBattleMatchmakingService', () => {
     });
 
     it('should fall back to closest-ELO when all opponents are recent (R4.7)', async () => {
-      const team1 = makeTeam(1, 2, { teamLp: 50, stableId: 100, robotElos: [1000, 1000] });
-      const team2 = makeTeam(2, 2, { teamLp: 50, stableId: 200, robotElos: [1100, 1100] }); // ELO diff = 200
-      const team3 = makeTeam(3, 2, { teamLp: 50, stableId: 300, robotElos: [900, 900] }); // ELO diff = 200
+      const team1 = makeTeam(1, 2, { stableId: 100, robotElos: [1000, 1000] });
+      const team2 = makeTeam(2, 2, { stableId: 200, robotElos: [1100, 1100] }); // ELO diff = 200
+      const team3 = makeTeam(3, 2, { stableId: 300, robotElos: [900, 900] }); // ELO diff = 200
 
       // All opponents are recent for team1
       mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([
@@ -456,9 +413,9 @@ describe('teamBattleMatchmakingService', () => {
 
     it('should apply same-stable penalty to avoid self-matching', async () => {
       // Two teams from same stable, one from different
-      const team1 = makeTeam(1, 2, { teamLp: 50, stableId: 100 });
-      const team2 = makeTeam(2, 2, { teamLp: 50, stableId: 100 }); // same stable
-      const team3 = makeTeam(3, 2, { teamLp: 55, stableId: 200 }); // different stable
+      const team1 = makeTeam(1, 2, { stableId: 100 });
+      const team2 = makeTeam(2, 2, { stableId: 100 }); // same stable
+      const team3 = makeTeam(3, 2, { stableId: 200 }); // different stable
 
       mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([]);
 
@@ -471,8 +428,8 @@ describe('teamBattleMatchmakingService', () => {
     });
 
     it('should set correct league info on match pairs', async () => {
-      const team1 = makeTeam(1, 2, { teamLeague: 'silver', teamLeagueId: 'silver_2' });
-      const team2 = makeTeam(2, 2, { teamLeague: 'silver', teamLeagueId: 'silver_2', stableId: 200 });
+      const team1 = makeTeam(1, 2);
+      const team2 = makeTeam(2, 2, { stableId: 200 });
 
       mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([]);
 
@@ -483,13 +440,11 @@ describe('teamBattleMatchmakingService', () => {
     });
 
     it('should tie-break by earliest creation timestamp', async () => {
-      const team1 = makeTeam(1, 2, { teamLp: 50, stableId: 100 });
+      const team1 = makeTeam(1, 2, { stableId: 100 });
       const team2 = makeTeam(2, 2, {
-        teamLp: 50, stableId: 200, robotElos: [1000, 1000],
         createdAt: new Date('2024-06-01'),
       });
       const team3 = makeTeam(3, 2, {
-        teamLp: 50, stableId: 300, robotElos: [1000, 1000],
         createdAt: new Date('2024-01-01'), // earlier
       });
 
@@ -615,7 +570,7 @@ describe('teamBattleMatchmakingService', () => {
     it('should iterate all tiers and create matches', async () => {
       // Only bronze has instances
       mockPrisma.teamBattle.findMany
-        .mockResolvedValueOnce([{ teamLeagueId: 'bronze_1' }]) // instances for bronze
+        .mockResolvedValueOnce([{ leagueInstanceId: 'bronze_1' }]) // instances for bronze
         .mockResolvedValueOnce([makeTeam(1), makeTeam(2, 2, { stableId: 200 })]) // eligible teams
         .mockResolvedValueOnce([]) // instances for silver
         .mockResolvedValueOnce([]) // instances for gold
@@ -639,8 +594,8 @@ describe('teamBattleMatchmakingService', () => {
       // Bronze has two instances, first one throws
       mockPrisma.teamBattle.findMany
         .mockResolvedValueOnce([
-          { teamLeagueId: 'bronze_1' },
-          { teamLeagueId: 'bronze_2' },
+          { leagueInstanceId: 'bronze_1' },
+          { leagueInstanceId: 'bronze_2' },
         ]) // instances for bronze
         .mockRejectedValueOnce(new Error('DB error')) // getEligibleTeams for bronze_1 fails
         .mockResolvedValueOnce([makeTeam(3), makeTeam(4, 2, { stableId: 200 })]) // eligible teams for bronze_2
@@ -667,8 +622,8 @@ describe('teamBattleMatchmakingService', () => {
       // Bronze tier throws entirely
       mockPrisma.teamBattle.findMany
         .mockRejectedValueOnce(new Error('Tier error')) // instances query for bronze fails
-        .mockResolvedValueOnce([{ teamLeagueId: 'silver_1' }]) // instances for silver
-        .mockResolvedValueOnce([makeTeam(1, 2, { teamLeague: 'silver', teamLeagueId: 'silver_1' }), makeTeam(2, 2, { stableId: 200, teamLeague: 'silver', teamLeagueId: 'silver_1' })]) // eligible teams for silver_1
+        .mockResolvedValueOnce([{ leagueInstanceId: 'silver_1' }]) // instances for silver
+        .mockResolvedValueOnce([makeTeam(1, 2), makeTeam(2, 2, { stableId: 200 })]) // eligible teams for silver_1
         .mockResolvedValueOnce([]) // instances for gold
         .mockResolvedValueOnce([]) // instances for platinum
         .mockResolvedValueOnce([]) // instances for diamond
@@ -689,7 +644,7 @@ describe('teamBattleMatchmakingService', () => {
 
     it('should skip instances with fewer than 1 eligible team', async () => {
       mockPrisma.teamBattle.findMany
-        .mockResolvedValueOnce([{ teamLeagueId: 'bronze_1' }]) // instances for bronze
+        .mockResolvedValueOnce([{ leagueInstanceId: 'bronze_1' }]) // instances for bronze
         .mockResolvedValueOnce([]) // no eligible teams in bronze_1
         .mockResolvedValueOnce([]) // instances for silver
         .mockResolvedValueOnce([]) // instances for gold
@@ -710,7 +665,7 @@ describe('teamBattleMatchmakingService', () => {
       const customDate = new Date('2024-12-25T09:00:00Z');
 
       mockPrisma.teamBattle.findMany
-        .mockResolvedValueOnce([{ teamLeagueId: 'bronze_1' }]) // instances for bronze
+        .mockResolvedValueOnce([{ leagueInstanceId: 'bronze_1' }]) // instances for bronze
         .mockResolvedValueOnce([makeTeam(1), makeTeam(2, 2, { stableId: 200 })]) // eligible teams
         .mockResolvedValueOnce([]) // instances for silver
         .mockResolvedValueOnce([]) // instances for gold

@@ -16,8 +16,8 @@ describe('Property 30: KotH standings sorted by wins then zone score', () => {
   it('should sort by kothWins descending first', () => {
     fc.assert(fc.property(
       fc.array(fc.record({
-        kothWins: fc.integer({ min: 0, max: 100 }),
-        kothTotalZoneScore: fc.integer({ min: 0, max: 10000 }),
+        kothWins: fc.nat(100),
+        kothTotalZoneScore: fc.nat(10000),
       }), { minLength: 2, maxLength: 50 }),
       (standings) => {
         const sorted = sortStandings(standings);
@@ -33,8 +33,8 @@ describe('Property 30: KotH standings sorted by wins then zone score', () => {
   it('should sort by kothTotalZoneScore descending when wins are equal', () => {
     fc.assert(fc.property(
       fc.array(fc.record({
-        kothWins: fc.integer({ min: 0, max: 100 }),
-        kothTotalZoneScore: fc.integer({ min: 0, max: 10000 }),
+        kothWins: fc.nat(100),
+        kothTotalZoneScore: fc.nat(10000),
       }), { minLength: 2, maxLength: 50 }),
       (standings) => {
         const sorted = sortStandings(standings);
@@ -50,8 +50,8 @@ describe('Property 30: KotH standings sorted by wins then zone score', () => {
   it('should preserve all elements (no data loss)', () => {
     fc.assert(fc.property(
       fc.array(fc.record({
-        kothWins: fc.integer({ min: 0, max: 100 }),
-        kothTotalZoneScore: fc.integer({ min: 0, max: 10000 }),
+        kothWins: fc.nat(100),
+        kothTotalZoneScore: fc.nat(10000),
       }), { minLength: 0, maxLength: 50 }),
       (standings) => {
         const sorted = sortStandings(standings);

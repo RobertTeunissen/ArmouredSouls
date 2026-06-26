@@ -193,7 +193,7 @@ describe('KotH Orchestrator Throttling', () => {
     mockPrisma.robot.findMany.mockResolvedValue(robots);
     mockPrisma.robot.findUnique.mockImplementation(({ where }: { where: { id: number } }) => {
       const r = robots.find(r => r.id === where.id);
-      return Promise.resolve(r ? { ...r, kothBestPlacement: null, kothCurrentWinStreak: 0, kothBestWinStreak: 0 } : null);
+      return Promise.resolve(r ?? null);
     });
     mockPrisma.battle.create.mockResolvedValue({ id: 100 });
   });

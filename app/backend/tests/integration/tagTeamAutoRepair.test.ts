@@ -21,20 +21,6 @@ async function createTagTeamFixture(stableId: number, activeRobotId: number, res
       stableId,
       teamSize: 2,
       teamName: `Test_Team_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-      teamLp: 0,
-      teamLeague: 'bronze',
-      teamLeagueId: 'bronze_1',
-      cyclesInLeague: 0,
-      totalLeagueWins: 0,
-      totalLeagueLosses: 0,
-      totalLeagueDraws: 0,
-      tagTeamLp: 0,
-      tagTeamLeague: 'bronze',
-      tagTeamLeagueId: 'bronze_1',
-      cyclesInTagTeamLeague: 0,
-      totalTagTeamWins: 0,
-      totalTagTeamLosses: 0,
-      totalTagTeamDraws: 0,
       eligibility: 'ELIGIBLE',
       members: {
         create: [
@@ -177,10 +163,6 @@ describe('Tag Team Auto-Repair Integration Test', () => {
             yieldThreshold: 20,
             loadoutType: 'single',
             mainWeaponId: weaponInv.id,
-            currentLeague: 'bronze',
-            leagueId: 'bronze_1',
-            leaguePoints: 0,
-            cyclesInCurrentLeague: 0,
           },
         });
         testRobots.push(robot);
@@ -337,10 +319,6 @@ describe('Tag Team Auto-Repair Integration Test', () => {
           yieldThreshold: 20,
           loadoutType: 'single',
           mainWeaponId: weaponInv.id,
-          currentLeague: 'bronze',
-          leagueId: 'bronze_1',
-          leaguePoints: 0,
-          cyclesInCurrentLeague: 0,
         },
       });
       poorRobots.push(robot);

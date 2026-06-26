@@ -85,7 +85,7 @@ describe('Stables API - GET /api/stables/:userId', () => {
         await prisma.battle.deleteMany({
           where: { OR: [{ robot1Id: { in: robotIds } }, { robot2Id: { in: robotIds } }] },
         });
-        await prisma.scheduledLeagueMatch.deleteMany({
+        await prisma.scheduledMatch.deleteMany({
           where: { OR: [{ robot1Id: { in: robotIds } }, { robot2Id: { in: robotIds } }] },
         });
       }

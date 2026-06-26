@@ -69,10 +69,6 @@ async function createTestRobot(userId: number, battles: number, fame: number) {
       damageTakenLifetime: 0,
       kills: 0,
       // League & Fame
-      currentLeague: 'bronze',
-      leagueId: 'bronze_1',
-      leaguePoints: 0,
-      cyclesInCurrentLeague: 0,
       // Economic
       repairCost: 0,
       battleReadiness: 100,
@@ -412,7 +408,6 @@ describe('Property 4: Battle Count Includes All Battle Types', () => {
           await prisma.robot.update({
             where: { id: robot.id },
             data: {
-              totalTagTeamBattles: tagTeamBattles,
             },
           });
 
@@ -507,7 +502,6 @@ describe('Property 4: Battle Count Includes All Battle Types', () => {
           await prisma.robot.update({
             where: { id: robot.id },
             data: {
-              totalTagTeamBattles: tagTeamBattles,
             },
           });
 
@@ -558,19 +552,11 @@ describe('Property 4: Battle Count Includes All Battle Types', () => {
 
           // Create first robot with lower battle count
           const robot1 = await createTestRobot(testUserId, oneVOneBattles1, fame);
-          await prisma.robot.update({
-            where: { id: robot1.id },
-            data: { totalTagTeamBattles: tagTeamBattles1 },
-          });
           const result1 = await calculateStreamingRevenue(robot1.id, testUserId, false);
 
           // Create second robot with higher battle count
-          // Add the increase to tag team battles
-          const robot2 = await createTestRobot(testUserId, oneVOneBattles1, fame);
-          await prisma.robot.update({
-            where: { id: robot2.id },
-            data: { totalTagTeamBattles: tagTeamBattles1 + battleIncrease },
-          });
+          // Add the increase to total battles
+          const robot2 = await createTestRobot(testUserId, oneVOneBattles1 + battleIncrease, fame);
           const result2 = await calculateStreamingRevenue(robot2.id, testUserId, false);
 
           // Property: More battles should result in higher or equal revenue

@@ -217,7 +217,6 @@ describe('Admin League History Endpoints', () => {
             destinationTier: 'silver',
             sourceLeagueId: 'bronze_1',
             destinationLeagueId: 'silver_1',
-            leaguePoints: 100,
             cycleNumber: 10,
             createdAt: new Date().toISOString(),
           },

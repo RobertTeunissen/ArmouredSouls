@@ -352,11 +352,6 @@ describe('Metric Progression Property-Based Tests', () => {
                 durationSeconds: 30,
                 winnerReward: 1000,
                 loserReward: 500,
-                robot1ELOBefore: eloBefore,
-                robot1ELOAfter: eloAfter,
-                robot2ELOBefore: 1500,
-                robot2ELOAfter: 1500 - eloChange,
-                eloChange: Math.abs(eloChange),
                 createdAt: new Date(cycleStart.getTime() + 60000),
                 participants: {
                   create: [
@@ -455,7 +450,6 @@ async function setupTestData(
       currentShield: 50,
       elo: startingELO,
       fame: 100,
-      currentLeague: 'bronze',
     },
   });
 
@@ -473,7 +467,6 @@ async function setupTestData(
       currentShield: 50,
       elo: 1500,
       fame: 100,
-      currentLeague: 'bronze',
     },
   });
 
@@ -572,11 +565,6 @@ async function createBattlesWithELOChanges(
         durationSeconds: 30,
         winnerReward: 1000,
         loserReward: 500,
-        robot1ELOBefore: eloBefore,
-        robot1ELOAfter: eloAfter,
-        robot2ELOBefore: 1500,
-        robot2ELOAfter: 1500 - eloChange,
-        eloChange: Math.abs(eloChange),
         createdAt: battleTime,
         participants: {
           create: [
@@ -619,11 +607,6 @@ async function createBattlesWithFameAwards(
         durationSeconds: 30,
         winnerReward: 1000,
         loserReward: 500,
-        robot1ELOBefore: 1500,
-        robot1ELOAfter: 1520,
-        robot2ELOBefore: 1500,
-        robot2ELOAfter: 1480,
-        eloChange: 20,
         createdAt: battleTime,
         participants: {
           create: [
@@ -666,11 +649,6 @@ async function createBattlesWithDamage(
         durationSeconds: 30,
         winnerReward: 1000,
         loserReward: 500,
-        robot1ELOBefore: 1500,
-        robot1ELOAfter: 1520,
-        robot2ELOBefore: 1500,
-        robot2ELOAfter: 1480,
-        eloChange: 20,
         createdAt: battleTime,
         participants: {
           create: [
@@ -713,11 +691,6 @@ async function createBattlesWithOutcomes(
         durationSeconds: 30,
         winnerReward: 1000,
         loserReward: 500,
-        robot1ELOBefore: 1500,
-        robot1ELOAfter: isWin ? 1520 : 1480,
-        robot2ELOBefore: 1500,
-        robot2ELOAfter: isWin ? 1480 : 1520,
-        eloChange: 20,
         createdAt: battleTime,
         participants: {
           create: [
@@ -760,11 +733,6 @@ async function createBattlesWithCredits(
         durationSeconds: 30,
         winnerReward: credits,
         loserReward: Math.floor(credits / 2),
-        robot1ELOBefore: 1500,
-        robot1ELOAfter: 1520,
-        robot2ELOBefore: 1500,
-        robot2ELOAfter: 1480,
-        eloChange: 20,
         createdAt: battleTime,
         participants: {
           create: [

@@ -233,7 +233,6 @@ function makeScheduledMatch(
       stableId: 100,
       teamSize,
       teamName: `Team ${team1Id}`,
-      teamLp: 50,
       members: team1Members,
       stable: { id: 100 },
     },
@@ -243,7 +242,6 @@ function makeScheduledMatch(
           stableId: 200,
           teamSize,
           teamName: `Team ${team2Id}`,
-          teamLp: 45,
           members: team2Members,
           stable: { id: 200 },
         }
@@ -327,9 +325,6 @@ function setupDefaultMocks(teamSize: 2 | 3 = 2) {
       stableId: teamId * 100,
       teamSize,
       teamName: `Team ${teamId}`,
-      teamLp: 50,
-      teamLeague: 'bronze',
-      teamLeagueId: 'bronze_1',
       members: Array.from({ length: memberCount }, (_, i) => ({
         id: teamId * 100 + i,
         teamId,
@@ -383,7 +378,6 @@ describe('teamBattleOrchestrator', () => {
         const tx = {
           battle: { create: jest.fn().mockResolvedValue({ id: 99 }), update: jest.fn() },
           battleParticipant: { createMany: jest.fn(), updateMany: jest.fn() },
-          teamBattle: { findUnique: jest.fn().mockResolvedValue({ teamLp: 50 }), update: jest.fn() },
           robot: { update: jest.fn() },
           scheduledMatch: { update: jest.fn() },
         };
@@ -423,7 +417,6 @@ describe('teamBattleOrchestrator', () => {
             update: jest.fn(),
           },
           battleParticipant: { createMany: jest.fn(), updateMany: jest.fn() },
-          teamBattle: { findUnique: jest.fn().mockResolvedValue({ teamLp: 50 }), update: jest.fn() },
           robot: { update: jest.fn() },
           scheduledMatch: { update: jest.fn() },
         };
@@ -451,7 +444,6 @@ describe('teamBattleOrchestrator', () => {
             update: jest.fn(),
           },
           battleParticipant: { createMany: jest.fn(), updateMany: jest.fn() },
-          teamBattle: { findUnique: jest.fn().mockResolvedValue({ teamLp: 50 }), update: jest.fn() },
           robot: { update: jest.fn() },
           scheduledMatch: { update: jest.fn() },
         };
@@ -477,7 +469,6 @@ describe('teamBattleOrchestrator', () => {
             }),
             updateMany: jest.fn(),
           },
-          teamBattle: { findUnique: jest.fn().mockResolvedValue({ teamLp: 50 }), update: jest.fn() },
           robot: { update: jest.fn() },
           scheduledMatch: { update: jest.fn() },
         };
@@ -520,7 +511,6 @@ describe('teamBattleOrchestrator', () => {
         const tx = {
           battle: { create: jest.fn().mockResolvedValue({ id: 100 }), update: jest.fn() },
           battleParticipant: { createMany: jest.fn(), updateMany: jest.fn() },
-          teamBattle: { findUnique: jest.fn().mockResolvedValue({ teamLp: 50 }), update: jest.fn() },
           robot: { update: jest.fn() },
           scheduledMatch: { update: jest.fn() },
         };
@@ -601,7 +591,6 @@ describe('teamBattleOrchestrator', () => {
         const tx = {
           battle: { create: jest.fn().mockResolvedValue({ id: 99 }), update: jest.fn() },
           battleParticipant: { createMany: jest.fn(), updateMany: jest.fn() },
-          teamBattle: { findUnique: jest.fn().mockResolvedValue({ teamLp: 50 }), update: jest.fn() },
           robot: { update: jest.fn() },
           scheduledMatch: { update: jest.fn() },
         };
@@ -623,7 +612,6 @@ describe('teamBattleOrchestrator', () => {
         const tx = {
           battle: { create: jest.fn().mockResolvedValue({ id: 99 }), update: jest.fn() },
           battleParticipant: { createMany: jest.fn(), updateMany: jest.fn() },
-          teamBattle: { findUnique: jest.fn().mockResolvedValue({ teamLp: 50 }), update: jest.fn() },
           robot: { update: jest.fn() },
           scheduledMatch: { update: jest.fn() },
         };
@@ -644,7 +632,6 @@ describe('teamBattleOrchestrator', () => {
         const tx = {
           battle: { create: jest.fn().mockResolvedValue({ id: 99 }), update: jest.fn() },
           battleParticipant: { createMany: jest.fn(), updateMany: jest.fn() },
-          teamBattle: { findUnique: jest.fn().mockResolvedValue({ teamLp: 50 }), update: jest.fn() },
           robot: { update: jest.fn() },
           scheduledMatch: { update: jest.fn() },
         };
@@ -672,7 +659,6 @@ describe('teamBattleOrchestrator', () => {
         const tx = {
           battle: { create: jest.fn().mockResolvedValue({ id: 99 }), update: jest.fn() },
           battleParticipant: { createMany: jest.fn(), updateMany: jest.fn() },
-          teamBattle: { findUnique: jest.fn().mockResolvedValue({ teamLp: 50 }), update: jest.fn() },
           robot: { update: jest.fn() },
           scheduledMatch: { update: jest.fn() },
         };
@@ -716,7 +702,6 @@ describe('teamBattleOrchestrator', () => {
         const tx = {
           battle: { create: jest.fn().mockResolvedValue({ id: 99 }), update: jest.fn() },
           battleParticipant: { createMany: jest.fn(), updateMany: jest.fn() },
-          teamBattle: { findUnique: jest.fn().mockResolvedValue({ teamLp: 50 }), update: jest.fn() },
           robot: { update: jest.fn() },
           scheduledMatch: { update: jest.fn() },
         };
@@ -742,7 +727,6 @@ describe('teamBattleOrchestrator', () => {
         const tx = {
           battle: { create: jest.fn().mockResolvedValue({ id: 99 }), update: jest.fn() },
           battleParticipant: { createMany: jest.fn(), updateMany: jest.fn() },
-          teamBattle: { findUnique: jest.fn().mockResolvedValue({ teamLp: 50 }), update: jest.fn() },
           robot: { update: jest.fn() },
           scheduledMatch: { update: jest.fn() },
         };
@@ -773,7 +757,6 @@ describe('teamBattleOrchestrator', () => {
         const tx = {
           battle: { create: jest.fn().mockResolvedValue({ id: 99 }), update: jest.fn() },
           battleParticipant: { createMany: jest.fn(), updateMany: jest.fn() },
-          teamBattle: { findUnique: jest.fn().mockResolvedValue({ teamLp: 50 }), update: jest.fn() },
           robot: { update: jest.fn() },
           scheduledMatch: { update: jest.fn() },
         };
@@ -835,7 +818,6 @@ describe('teamBattleAdapter', () => {
       mode: 'league_2v2',
       tier: 'silver',
       leagueInstanceId: 'silver_2',
-      leaguePoints: 75,
       cyclesInTier: 10,
       wins: 5,
       losses: 3,
@@ -882,7 +864,6 @@ describe('teamBattleAdapter', () => {
           mode: 'league_2v2',
           leagueInstanceId: 'bronze_1',
           cyclesInTier: { gte: 5 },
-          leaguePoints: { gte: 50 },
           NOT: { entityId: { in: [99] } },
         },
         orderBy: [{ leaguePoints: 'desc' }],
@@ -979,7 +960,7 @@ describe('teamBattleAdapter', () => {
 
   describe('promotion/demotion logic (R8.2–R8.8)', () => {
     it('should delegate promotions to leagueEngine determinePromotionsForInstance', async () => {
-      const promotedTeams = [{ id: 1, teamLp: 100 }];
+      const promotedTeams = [{ id: 1 }];
       mockDeterminePromotionsForInstance.mockResolvedValue(promotedTeams);
 
       const result = await determineTeamBattlePromotions('bronze_1');
@@ -994,7 +975,7 @@ describe('teamBattleAdapter', () => {
     });
 
     it('should delegate demotions to leagueEngine determineDemotionsForInstance', async () => {
-      const demotedTeams = [{ id: 2, teamLp: 5 }];
+      const demotedTeams = [{ id: 2 }];
       mockDetermineDemotionsForInstance.mockResolvedValue(demotedTeams);
 
       const result = await determineTeamBattleDemotions('silver_1');
@@ -1023,7 +1004,7 @@ describe('teamBattleAdapter', () => {
     });
 
     it('should delegate promoteTeamBattle to leagueEngine promoteEntity', async () => {
-      const team = { id: 1, teamLeague: 'bronze', teamLeagueId: 'bronze_1', teamLp: 100 };
+      const team = { id: 1 };
       mockPromoteEntity.mockResolvedValue(undefined);
 
       await promoteTeamBattle(team as any);
@@ -1036,7 +1017,7 @@ describe('teamBattleAdapter', () => {
     });
 
     it('should delegate demoteTeamBattle to leagueEngine demoteEntity', async () => {
-      const team = { id: 2, teamLeague: 'silver', teamLeagueId: 'silver_1', teamLp: 5 };
+      const team = { id: 2 };
       mockDemoteEntity.mockResolvedValue(undefined);
 
       await demoteTeamBattle(team as any);

@@ -24,7 +24,7 @@ async function createTestRobot(
 ) {
   return await prisma.robot.create({
     data: {
-      userId, name, frameId: 1, totalBattles: battles, fame, currentLeague: league,
+      userId, name, frameId: 1, totalBattles: battles, fame,
       combatPower: new Prisma.Decimal(10), targetingSystems: new Prisma.Decimal(10),
       criticalSystems: new Prisma.Decimal(10), penetration: new Prisma.Decimal(10),
       weaponControl: new Prisma.Decimal(10), attackSpeed: new Prisma.Decimal(10),
@@ -41,7 +41,6 @@ async function createTestRobot(
       currentHP: 100, maxHP: 100, currentShield: 20, maxShield: 20, damageTaken: 0,
       elo: 1200, wins: 0, draws: 0, losses: 0,
       damageDealtLifetime: 0, damageTakenLifetime: 0, kills: 0,
-      leagueId: `${league}_1`, leaguePoints: 0, cyclesInCurrentLeague: 0,
       repairCost: 0, battleReadiness: 100, totalRepairsPaid: 0,
       yieldThreshold: 10, loadoutType: 'single', stance: 'balanced', mainWeaponId: null,
     },
@@ -49,7 +48,7 @@ async function createTestRobot(
 }
 
 async function createScheduledMatch(robot1Id: number, robot2Id: number, leagueType: string = 'bronze') {
-  return await prisma.scheduledLeagueMatch.create({
+  return await prisma.scheduledMatch.create({
     data: { robot1Id, robot2Id, leagueType, scheduledFor: new Date(), status: 'scheduled' },
   });
 }
@@ -85,7 +84,7 @@ describe('Property 5: Stats Updated Before Streaming Revenue Calculation', () =>
         ],
       },
     });
-    await prisma.scheduledLeagueMatch.deleteMany({
+    await prisma.scheduledMatch.deleteMany({
       where: {
         OR: [
           { robot1: { userId: testUser1Id } }, { robot2: { userId: testUser1Id } },
@@ -212,7 +211,7 @@ describe('Property 5: Stats Updated Before Streaming Revenue Calculation', () =>
           await prisma.battle.deleteMany({
             where: { OR: [{ robot1Id: robot1.id }, { robot2Id: robot1.id }, { robot1Id: robot2.id }, { robot2Id: robot2.id }] },
           });
-          await prisma.scheduledLeagueMatch.deleteMany({ where: { id: scheduledMatch.id } });
+          await prisma.scheduledMatch.deleteMany({ where: { id: scheduledMatch.id } });
           await prisma.robot.deleteMany({ where: { id: robot1.id } });
           await prisma.robot.deleteMany({ where: { id: robot2.id } });
         }
@@ -250,7 +249,7 @@ describe('Property 5: Stats Updated Before Streaming Revenue Calculation', () =>
           await prisma.battle.deleteMany({
             where: { OR: [{ robot1Id: robot1.id }, { robot2Id: robot1.id }, { robot1Id: robot2.id }, { robot2Id: robot2.id }] },
           });
-          await prisma.scheduledLeagueMatch.deleteMany({ where: { id: scheduledMatch.id } });
+          await prisma.scheduledMatch.deleteMany({ where: { id: scheduledMatch.id } });
           await prisma.robot.deleteMany({ where: { id: robot1.id } });
           await prisma.robot.deleteMany({ where: { id: robot2.id } });
         }
@@ -304,7 +303,7 @@ describe('Property 5: Stats Updated Before Streaming Revenue Calculation', () =>
           await prisma.battle.deleteMany({
             where: { OR: [{ robot1Id: robot1.id }, { robot2Id: robot1.id }, { robot1Id: robot2.id }, { robot2Id: robot2.id }] },
           });
-          await prisma.scheduledLeagueMatch.deleteMany({ where: { id: scheduledMatch.id } });
+          await prisma.scheduledMatch.deleteMany({ where: { id: scheduledMatch.id } });
           await prisma.robot.deleteMany({ where: { id: robot1.id } });
           await prisma.robot.deleteMany({ where: { id: robot2.id } });
         }
@@ -365,7 +364,7 @@ describe('Property 5: Stats Updated Before Streaming Revenue Calculation', () =>
           await prisma.battle.deleteMany({
             where: { OR: [{ robot1Id: robot1.id }, { robot2Id: robot1.id }, { robot1Id: robot2.id }, { robot2Id: robot2.id }] },
           });
-          await prisma.scheduledLeagueMatch.deleteMany({ where: { id: scheduledMatch.id } });
+          await prisma.scheduledMatch.deleteMany({ where: { id: scheduledMatch.id } });
           await prisma.robot.deleteMany({ where: { id: robot1.id } });
           await prisma.robot.deleteMany({ where: { id: robot2.id } });
         }

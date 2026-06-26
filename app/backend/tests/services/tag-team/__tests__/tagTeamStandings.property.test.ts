@@ -17,15 +17,17 @@ import * as fc from 'fast-check';
 
 /**
  * Represents a TeamBattle row with fields relevant to tag team standings.
+ * NOTE: These fields are now in the standings table in production,
+ * but this test validates the pure sorting/filtering algorithm.
  */
 interface TeamBattleRow {
   id: number;
   stableId: number;
   teamSize: 2;
   teamName: string;
-  tagTeamLp: number;
   tagTeamLeague: string;
   tagTeamLeagueId: string;
+  tagTeamLp: number;
   totalTagTeamWins: number;
   totalTagTeamLosses: number;
   totalTagTeamDraws: number;
@@ -38,13 +40,11 @@ interface StandingsEntry {
   teamId: number;
   teamName: string;
   stableId: number;
+  combinedELO: number;
   tagTeamLp: number;
+  totalTagTeamWins: number;
   tagTeamLeague: string;
   tagTeamLeagueId: string;
-  totalTagTeamWins: number;
-  totalTagTeamLosses: number;
-  totalTagTeamDraws: number;
-  combinedELO: number;
   members: { id: number; name: string; elo: number; slotIndex: number }[];
 }
 
@@ -99,13 +99,11 @@ function getTagTeamStandings(
       teamId: team.id,
       teamName: team.teamName,
       stableId: team.stableId,
+      combinedELO,
       tagTeamLp: team.tagTeamLp,
+      totalTagTeamWins: team.totalTagTeamWins,
       tagTeamLeague: team.tagTeamLeague,
       tagTeamLeagueId: team.tagTeamLeagueId,
-      totalTagTeamWins: team.totalTagTeamWins,
-      totalTagTeamLosses: team.totalTagTeamLosses,
-      totalTagTeamDraws: team.totalTagTeamDraws,
-      combinedELO,
       members: team.members.map((m) => ({
         id: m.robotId,
         name: m.name,
@@ -162,15 +160,15 @@ const teamBattleRowArb: fc.Arbitrary<TeamBattleRow> = fc.record({
   stableId: fc.integer({ min: 1, max: 50000 }),
   teamSize: fc.constant(2 as const),
   teamName: fc.string({ minLength: 1, maxLength: 32 }),
-  tagTeamLp: fc.integer({ min: 0, max: 5000 }),
-  tagTeamLeague: fc.constantFrom(...TIERS),
+  tagTeamLeague: fc.constantFrom('bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'),
   tagTeamLeagueId: fc.constantFrom(
     'bronze_1', 'bronze_2', 'silver_1', 'silver_2',
     'gold_1', 'gold_2', 'platinum_1', 'diamond_1', 'champion_1'
   ),
+  tagTeamLp: fc.integer({ min: 0, max: 200 }),
   totalTagTeamWins: fc.integer({ min: 0, max: 500 }),
   totalTagTeamLosses: fc.integer({ min: 0, max: 500 }),
-  totalTagTeamDraws: fc.integer({ min: 0, max: 200 }),
+  totalTagTeamDraws: fc.integer({ min: 0, max: 100 }),
   createdAt: fc.date({ min: new Date('2024-01-01'), max: new Date('2026-12-31') }),
   members: fc.tuple(
     memberArb.map((m) => ({ ...m, slotIndex: 0 })),

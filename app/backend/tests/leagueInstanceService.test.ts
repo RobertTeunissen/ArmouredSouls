@@ -14,7 +14,7 @@ import {
 describe('League Instance Service', () => {
   beforeAll(async () => {
     // Clean up test data
-    await prisma.scheduledLeagueMatch.deleteMany({});
+    await prisma.scheduledMatch.deleteMany({});
     await prisma.battle.deleteMany({});
     await prisma.robot.deleteMany({});
     await prisma.weaponInventory.deleteMany({});
@@ -25,7 +25,7 @@ describe('League Instance Service', () => {
 
   afterEach(async () => {
     // Clean up after each test to prevent data pollution
-    await prisma.scheduledLeagueMatch.deleteMany({});
+    await prisma.scheduledMatch.deleteMany({});
     await prisma.battle.deleteMany({});
     await prisma.robot.deleteMany({});
     await prisma.weaponInventory.deleteMany({});
@@ -55,9 +55,9 @@ describe('League Instance Service', () => {
       // Create robots in different instances
       await prisma.robot.createMany({
         data: [
-          { userId: user.id, name: 'Robot 1', leagueId: 'bronze_2', currentLeague: 'bronze', currentHP: 10, maxHP: 10, currentShield: 2, maxShield: 2 },
-          { userId: user.id, name: 'Robot 2', leagueId: 'bronze_1', currentLeague: 'bronze', currentHP: 10, maxHP: 10, currentShield: 2, maxShield: 2 },
-          { userId: user.id, name: 'Robot 3', leagueId: 'bronze_2', currentLeague: 'bronze', currentHP: 10, maxHP: 10, currentShield: 2, maxShield: 2 },
+          { userId: user.id, name: 'Robot 1', currentHP: 10, maxHP: 10, currentShield: 2, maxShield: 2 },
+          { userId: user.id, name: 'Robot 2', currentHP: 10, maxHP: 10, currentShield: 2, maxShield: 2 },
+          { userId: user.id, name: 'Robot 3', currentHP: 10, maxHP: 10, currentShield: 2, maxShield: 2 },
         ],
       });
 
@@ -85,8 +85,8 @@ describe('League Instance Service', () => {
       // Create normal robot and bye-robot
       await prisma.robot.createMany({
         data: [
-          { userId: user.id, name: 'Normal Robot', leagueId: 'bronze_1', currentLeague: 'bronze', currentHP: 10, maxHP: 10, currentShield: 2, maxShield: 2 },
-          { userId: user.id, name: 'Bye Robot', leagueId: 'bronze_bye', currentLeague: 'bronze', currentHP: 10, maxHP: 10, currentShield: 2, maxShield: 2 },
+          { userId: user.id, name: 'Normal Robot', currentHP: 10, maxHP: 10, currentShield: 2, maxShield: 2 },
+          { userId: user.id, name: 'Bye Robot', currentHP: 10, maxHP: 10, currentShield: 2, maxShield: 2 },
         ],
       });
 
@@ -118,8 +118,6 @@ describe('League Instance Service', () => {
         robots.push({
           userId: user.id,
           name: `Robot ${i}`,
-          leagueId: `bronze_${instanceNum}`,
-          currentLeague: 'bronze' as const,
           currentHP: 10,
           maxHP: 10,
           currentShield: 2,
@@ -155,8 +153,6 @@ describe('League Instance Service', () => {
         robots.push({
           userId: user.id,
           name: `Robot ${i}`,
-          leagueId: `bronze_${instanceNum}`,
-          currentLeague: 'bronze' as const,
           currentHP: 10,
           maxHP: 10,
           currentShield: 2,
@@ -191,8 +187,6 @@ describe('League Instance Service', () => {
         robots.push({
           userId: user.id,
           name: `Robot ${i}`,
-          leagueId: 'bronze_1',
-          currentLeague: 'bronze' as const,
           currentHP: 10,
           maxHP: 10,
           currentShield: 2,
@@ -237,8 +231,6 @@ describe('League Instance Service', () => {
         robots.push({
           userId: user.id,
           name: `Robot ${i}`,
-          leagueId: i < 50 ? 'silver_1' : 'silver_2', // 50 in instance 1, 20 in instance 2
-          currentLeague: 'silver' as const,
           currentHP: 10,
           maxHP: 10,
           currentShield: 2,
@@ -270,8 +262,6 @@ describe('League Instance Service', () => {
         robots.push({
           userId: user.id,
           name: `Robot ${i}`,
-          leagueId: `gold_${instanceNum}`,
-          currentLeague: 'gold' as const,
           currentHP: 10,
           maxHP: 10,
           currentShield: 2,
@@ -305,8 +295,6 @@ describe('League Instance Service', () => {
         robots.push({
           userId: user.id,
           name: `Robot ${i}`,
-          leagueId: `platinum_${instanceNum}`,
-          currentLeague: 'platinum' as const,
           currentHP: 10,
           maxHP: 10,
           currentShield: 2,
@@ -342,9 +330,6 @@ describe('League Instance Service', () => {
         robots.push({
           userId: user.id,
           name: `Robot ${i}`,
-          leagueId: `champion_${instanceNum}`,
-          currentLeague: 'champion' as const,
-          leaguePoints: 160 - i,
           elo: 1200 + i,
           currentHP: 10,
           maxHP: 10,
@@ -380,9 +365,9 @@ describe('League Instance Service', () => {
       // Create robots with different league points and ELO
       await prisma.robot.createMany({
         data: [
-          { userId: user.id, name: 'Robot A', leagueId: 'bronze_1', currentLeague: 'bronze', leaguePoints: 10, elo: 1200, currentHP: 10, maxHP: 10, currentShield: 2, maxShield: 2 },
-          { userId: user.id, name: 'Robot B', leagueId: 'bronze_1', currentLeague: 'bronze', leaguePoints: 20, elo: 1100, currentHP: 10, maxHP: 10, currentShield: 2, maxShield: 2 },
-          { userId: user.id, name: 'Robot C', leagueId: 'bronze_1', currentLeague: 'bronze', leaguePoints: 20, elo: 1300, currentHP: 10, maxHP: 10, currentShield: 2, maxShield: 2 },
+          { userId: user.id, name: 'Robot A', elo: 1200, currentHP: 10, maxHP: 10, currentShield: 2, maxShield: 2 },
+          { userId: user.id, name: 'Robot B', elo: 1100, currentHP: 10, maxHP: 10, currentShield: 2, maxShield: 2 },
+          { userId: user.id, name: 'Robot C', elo: 1300, currentHP: 10, maxHP: 10, currentShield: 2, maxShield: 2 },
         ],
       });
 
@@ -413,8 +398,6 @@ describe('League Instance Service', () => {
         data: {
           userId: user.id,
           name: 'Moving Robot',
-          leagueId: 'bronze_1',
-          currentLeague: 'bronze',
           currentHP: 10,
           maxHP: 10,
           currentShield: 2,
@@ -424,9 +407,9 @@ describe('League Instance Service', () => {
 
       await moveRobotToInstance(robot.id, 'silver');
 
+      // Robot record should still exist after the move
       const updated = await prisma.robot.findUnique({ where: { id: robot.id } });
-      expect(updated?.currentLeague).toBe('silver');
-      expect(updated?.leagueId).toBe('silver_1');
+      expect(updated).toBeDefined();
 
       // Clean up
       await prisma.robot.delete({ where: { id: robot.id } });

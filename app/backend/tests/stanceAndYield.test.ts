@@ -53,10 +53,6 @@ const createMockRobot = (overrides?: Partial<Robot>): Robot => ({
   damageTakenLifetime: 0,
   kills: 0,
   // Legacy fields (moving to standings table in Spec #40, retained on Robot type until migration 14.6)
-  currentLeague: 'bronze',
-  leagueId: 'bronze_1',
-  leaguePoints: 0,
-  cyclesInCurrentLeague: 0,
   fame: 0,
   titles: null,
   repairCost: 0,
@@ -69,31 +65,9 @@ const createMockRobot = (overrides?: Partial<Robot>): Robot => ({
   offhandWeaponId: null,
   imageUrl: null,
   // Legacy tag-team fields (moving to standings table in Spec #40)
-  totalTagTeamBattles: 0,
-  totalTagTeamWins: 0,
-  totalTagTeamLosses: 0,
-  totalTagTeamDraws: 0,
-  timesTaggedIn: 0,
-  timesTaggedOut: 0,
   // Legacy league win counters (moving to standings table in Spec #40)
-  totalLeague1v1Wins: 0,
-  totalLeague1v1Losses: 0,
-  totalLeague1v1Draws: 0,
-  totalLeague2v2Wins: 0,
-  totalLeague3v3Wins: 0,
   // Legacy KotH fields (moving to standings table in Spec #40)
-  kothWins: 0,
-  kothMatches: 0,
-  kothTotalZoneScore: 0,
-  kothTotalZoneTime: 0,
-  kothKills: 0,
-  kothBestPlacement: null,
-  kothCurrentWinStreak: 0,
-  kothBestWinStreak: 0,
   // Streak fields (moving to standings table in Spec #40)
-  currentWinStreak: 0,
-  bestWinStreak: 0,
-  currentLoseStreak: 0,
   // Stance/loadout win counters
   offensiveWins: 0,
   defensiveWins: 0,

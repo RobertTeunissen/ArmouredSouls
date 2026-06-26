@@ -61,7 +61,6 @@ const baseRecord = {
   destinationTier: 'silver',
   sourceLeagueId: 'bronze_1',
   destinationLeagueId: 'silver_1',
-  leaguePoints: 100,
   cycleNumber: 10,
   createdAt: new Date('2026-01-01T00:00:00Z'),
 };

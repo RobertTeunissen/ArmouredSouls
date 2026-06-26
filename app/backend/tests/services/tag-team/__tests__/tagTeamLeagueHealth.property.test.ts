@@ -119,7 +119,7 @@ const arbLeagueId = fc.tuple(arbLeague, fc.integer({ min: 1, max: 5 })).map(
 const arbTagTeamTeam: fc.Arbitrary<TeamBattleRow> = fc.record({
   id: fc.integer({ min: 1, max: 10000 }),
   teamSize: fc.constant(2),
-  tagTeamLeague: arbLeague as fc.Arbitrary<string>,
+  tagTeamLeague: arbLeague,
   tagTeamLeagueId: arbLeagueId,
 });
 
@@ -134,7 +134,7 @@ const arbMixedTeam: fc.Arbitrary<TeamBattleRow> = fc.oneof(
     arbitrary: fc.record({
       id: fc.integer({ min: 1, max: 10000 }),
       teamSize: fc.constant(3),
-      tagTeamLeague: arbLeague as fc.Arbitrary<string>,
+      tagTeamLeague: arbLeague,
       tagTeamLeagueId: arbLeagueId,
     }),
   }
@@ -155,7 +155,7 @@ const arbOverflowScenario: fc.Arbitrary<TeamBattleRow[]> = fc
     return Array.from({ length: count }, (_, i) => ({
       id: i + 1,
       teamSize: 2,
-      tagTeamLeague: league as string,
+      tagTeamLeague: league,
       tagTeamLeagueId: leagueId,
     }));
   });
@@ -169,7 +169,7 @@ const arbBelowMinimumScenario: fc.Arbitrary<TeamBattleRow[]> = fc
     Array.from({ length: count }, (_, i) => ({
       id: i + 1,
       teamSize: 2,
-      tagTeamLeague: league as string,
+      tagTeamLeague: league,
       tagTeamLeagueId: `${league}_1`,
     }))
   );
@@ -363,7 +363,7 @@ describe('Feature: tag-team-system-unification, Property 12: Tag Team League Hea
             const teams: TeamBattleRow[] = Array.from({ length: count }, (_, i) => ({
               id: i + 1,
               teamSize: 2,
-              tagTeamLeague: league as string,
+              tagTeamLeague: league,
               tagTeamLeagueId: `${league}_1`,
             }));
 
@@ -422,7 +422,7 @@ describe('Feature: tag-team-system-unification, Property 12: Tag Team League Hea
             const teams: TeamBattleRow[] = Array.from({ length: count }, (_, i) => ({
               id: i + 1,
               teamSize: 2,
-              tagTeamLeague: league as string,
+              tagTeamLeague: league,
               tagTeamLeagueId: `${league}_1`,
             }));
 

@@ -74,7 +74,7 @@ describe('Robot Name Uniqueness', () => {
           ],
         },
       });
-      await prisma.scheduledLeagueMatch.deleteMany({
+      await prisma.scheduledMatch.deleteMany({
         where: {
           OR: [
             { robot1Id: { in: testRobotIds } },

@@ -58,7 +58,6 @@ describe('recordBattleResult', () => {
       expect.objectContaining({
         update: expect.objectContaining({
           wins: 4,
-          currentWinStreak: 3,
         }),
       }),
     );
@@ -141,7 +140,6 @@ describe('recordBattleResult', () => {
       expect.objectContaining({
         update: expect.objectContaining({
           losses: 3,
-          currentLoseStreak: 2,
         }),
       }),
     );
@@ -184,8 +182,6 @@ describe('recordBattleResult', () => {
       expect.objectContaining({
         update: expect.objectContaining({
           draws: 2,
-          currentWinStreak: 0,
-          currentLoseStreak: 0,
         }),
       }),
     );
@@ -235,7 +231,6 @@ describe('recordBattleResult', () => {
           mode: 'league_1v1',
           tier: 'bronze',
           leagueInstanceId: 'bronze_1',
-          leaguePoints: 0,
         }),
       }),
     );

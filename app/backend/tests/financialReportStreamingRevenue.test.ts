@@ -69,11 +69,6 @@ describe('Financial Report - Streaming Revenue Integration', () => {
         durationSeconds: 60,
         winnerReward: 7500,
         loserReward: 1500,
-        robot1ELOBefore: 1200,
-        robot2ELOBefore: 1200,
-        robot1ELOAfter: 1210,
-        robot2ELOAfter: 1190,
-        eloChange: 10,
       },
     });
     testBattleIds.push(battle.id);
@@ -123,7 +118,6 @@ describe('Financial Report - Streaming Revenue Integration', () => {
       data: {
         name: `TestRobot_${Date.now()}_${Math.random().toString(36).substring(7)}`,
         userId: user.id,
-        currentLeague: 'bronze',
         elo: 1200,
         maxHP: 100,
         currentHP: 100,
@@ -142,7 +136,6 @@ describe('Financial Report - Streaming Revenue Integration', () => {
       data: {
         name: `Opponent_${Date.now()}`,
         userId: user.id, // same user for simplicity
-        currentLeague: 'bronze',
         elo: 1200,
         maxHP: 100,
         currentHP: 100,
@@ -210,7 +203,6 @@ describe('Financial Report - Streaming Revenue Integration', () => {
       data: {
         name: `TestRobot_own_${Date.now()}_${Math.random().toString(36).substring(7)}`,
         userId: testUser.id,
-        currentLeague: 'bronze',
         elo: 1200,
         maxHP: 100,
         currentHP: 100,
@@ -228,7 +220,6 @@ describe('Financial Report - Streaming Revenue Integration', () => {
       data: {
         name: `OtherRobot_${Date.now()}_${Math.random().toString(36).substring(7)}`,
         userId: otherUser.id,
-        currentLeague: 'bronze',
         elo: 1200,
         maxHP: 100,
         currentHP: 100,

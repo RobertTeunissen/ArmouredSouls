@@ -113,7 +113,6 @@ describe('sanitizeRobotForPublic', () => {
       id: 1,
       name: 'TestBot',
       elo: 1200,
-      currentLeague: 'gold',
       wins: 10,
       losses: 5,
       combatPower: 25,
@@ -125,7 +124,6 @@ describe('sanitizeRobotForPublic', () => {
     expect(sanitized.id).toBe(1);
     expect(sanitized.name).toBe('TestBot');
     expect(sanitized.elo).toBe(1200);
-    expect(sanitized.currentLeague).toBe('gold');
     expect(sanitized.wins).toBe(10);
     expect(sanitized.losses).toBe(5);
   });

@@ -137,10 +137,6 @@ describe('CombatMessageGenerator', () => {
       const log = CombatMessageGenerator.convertBattleEvents({
         robot1Name: 'Iron Gladiator',
         robot2Name: 'Steel Warrior',
-        robot1ELOBefore: 1200,
-        robot2ELOBefore: 1200,
-        robot1ELOAfter: 1216,
-        robot2ELOAfter: 1184,
         winnerName: 'Iron Gladiator',
         loserName: 'Steel Warrior',
         winnerFinalHP: 9,
@@ -174,10 +170,6 @@ describe('CombatMessageGenerator', () => {
       const log = CombatMessageGenerator.convertBattleEvents({
         robot1Name: 'Iron Gladiator',
         robot2Name: 'Steel Warrior',
-        robot1ELOBefore: 1200,
-        robot2ELOBefore: 1200,
-        robot1ELOAfter: 1216,
-        robot2ELOAfter: 1184,
         winnerName: 'Iron Gladiator',
         loserName: 'Steel Warrior',
         winnerFinalHP: 9,

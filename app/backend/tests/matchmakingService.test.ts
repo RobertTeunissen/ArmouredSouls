@@ -50,7 +50,7 @@ describe('Matchmaking Service', () => {
       await prisma.subscription.deleteMany({
         where: { robotId: { in: testRobotIds } },
       });
-      await prisma.scheduledLeagueMatch.deleteMany({
+      await prisma.scheduledMatch.deleteMany({
         where: {
           OR: [
             { robot1Id: { in: testRobotIds } },
@@ -101,7 +101,7 @@ describe('Matchmaking Service', () => {
       const robotIds = robots.map(r => r.id);
 
       if (robotIds.length > 0) {
-        await prisma.scheduledLeagueMatch.deleteMany({
+        await prisma.scheduledMatch.deleteMany({
           where: {
             OR: [
               { robot1Id: { in: robotIds } },
@@ -162,8 +162,6 @@ describe('Matchmaking Service', () => {
         data: {
           userId: testUser.id,
           name: `Ready Robot ${Date.now()}`,
-          leagueId: 'bronze_1',
-          currentLeague: 'bronze',
           currentHP: 10,
           maxHP: 10,
           currentShield: 2,
@@ -199,8 +197,6 @@ describe('Matchmaking Service', () => {
         data: {
           userId: testUser.id,
           name: 'Low HP Robot',
-          leagueId: 'bronze_1',
-          currentLeague: 'bronze',
           currentHP: 7, // 70% HP — no longer matters, repairs run before battles
           maxHP: 10,
           currentShield: 2,
@@ -235,8 +231,6 @@ describe('Matchmaking Service', () => {
         data: {
           userId: testUser.id,
           name: 'Yield Threshold Robot',
-          leagueId: 'bronze_1',
-          currentLeague: 'bronze',
           currentHP: 8, // 80% HP
           maxHP: 10,
           currentShield: 2,
@@ -263,8 +257,6 @@ describe('Matchmaking Service', () => {
         data: {
           userId: testUser.id,
           name: 'No Weapon Robot',
-          leagueId: 'bronze_1',
-          currentLeague: 'bronze',
           currentHP: 10,
           maxHP: 10,
           currentShield: 2,
@@ -297,8 +289,6 @@ describe('Matchmaking Service', () => {
         data: {
           userId: testUser.id,
           name: 'Dual Wield Robot',
-          leagueId: 'bronze_1',
-          currentLeague: 'bronze',
           currentHP: 10,
           maxHP: 10,
           currentShield: 2,
@@ -335,8 +325,6 @@ describe('Matchmaking Service', () => {
         data: {
           userId: testUser.id,
           name: `Low HP Scheduled ${Date.now()}`,
-          leagueId: 'bronze_1',
-          currentLeague: 'bronze',
           currentHP: 1, // Very low HP — would fail checkBattleReadiness
           maxHP: 10,
           currentShield: 0,
@@ -364,8 +352,6 @@ describe('Matchmaking Service', () => {
         data: {
           userId: testUser.id,
           name: `No Weapon Scheduled ${Date.now()}`,
-          leagueId: 'bronze_1',
-          currentLeague: 'bronze',
           currentHP: 10,
           maxHP: 10,
           currentShield: 2,
@@ -399,8 +385,6 @@ describe('Matchmaking Service', () => {
         data: {
           userId: testUser.id,
           name: `Dual Scheduled ${Date.now()}`,
-          leagueId: 'bronze_1',
-          currentLeague: 'bronze',
           currentHP: 2, // Low HP — irrelevant for scheduling
           maxHP: 10,
           currentShield: 0,
@@ -436,8 +420,6 @@ describe('Matchmaking Service', () => {
         data: {
           userId: testUser.id,
           name: `Diff Check ${Date.now()}`,
-          leagueId: 'bronze_1',
-          currentLeague: 'bronze',
           currentHP: 3, // 30% HP — fails battle readiness but passes scheduling
           maxHP: 10,
           currentShield: 0,
@@ -483,8 +465,6 @@ describe('Matchmaking Service', () => {
           data: {
             userId: testUser.id,
             name: `Match Robot ${i}`,
-            leagueId: 'bronze_1',
-            currentLeague: 'bronze',
             currentHP: 10,
             maxHP: 10,
             currentShield: 2,
@@ -509,7 +489,7 @@ describe('Matchmaking Service', () => {
 
       // Verify our robots got scheduled
       const robotIds = robots.map(r => r.id);
-      const scheduledMatches = await prisma.scheduledLeagueMatch.findMany({
+      const scheduledMatches = await prisma.scheduledMatch.findMany({
         where: {
           OR: [
             { robot1Id: { in: robotIds } },
@@ -521,7 +501,7 @@ describe('Matchmaking Service', () => {
       expect(scheduledMatches.length).toBeGreaterThanOrEqual(2);
 
       // Clean up
-      await prisma.scheduledLeagueMatch.deleteMany({
+      await prisma.scheduledMatch.deleteMany({
         where: {
           OR: [
             { robot1Id: { in: robotIds } },
@@ -564,8 +544,6 @@ describe('Matchmaking Service', () => {
           data: {
             userId: byeUser.id,
             name: 'Bye Robot',
-            leagueId: 'bronze_bye',
-            currentLeague: 'bronze',
             currentHP: 10,
             maxHP: 10,
             currentShield: 2,
@@ -592,8 +570,6 @@ describe('Matchmaking Service', () => {
           data: {
             userId: testUser.id,
             name: `Odd Robot ${i}`,
-            leagueId: 'bronze_1',
-            currentLeague: 'bronze',
             currentHP: 10,
             maxHP: 10,
             currentShield: 2,
@@ -615,7 +591,7 @@ describe('Matchmaking Service', () => {
 
       // Check if any of our robots got a bye-match (matched against the bye robot)
       const robotIds = robots.map(r => r.id);
-      const ourMatches = await prisma.scheduledLeagueMatch.findMany({
+      const ourMatches = await prisma.scheduledMatch.findMany({
         where: {
           OR: [
             { robot1Id: { in: robotIds } },
@@ -628,7 +604,7 @@ describe('Matchmaking Service', () => {
       expect(ourMatches.length).toBeGreaterThanOrEqual(1);
 
       // Clean up
-      await prisma.scheduledLeagueMatch.deleteMany({
+      await prisma.scheduledMatch.deleteMany({
         where: {
           OR: [
             { robot1Id: { in: robots.map(r => r.id) } },
@@ -666,8 +642,6 @@ describe('Matchmaking Service', () => {
           data: {
             userId: testUser.id,
             name: `Dup Robot ${i}`,
-            leagueId: 'bronze_1',
-            currentLeague: 'bronze',
             currentHP: 10,
             maxHP: 10,
             currentShield: 2,
@@ -686,7 +660,7 @@ describe('Matchmaking Service', () => {
       await runMatchmakingForTier('bronze', scheduledFor);
 
       const robotIds = robots.map(r => r.id);
-      const firstMatchCount = await prisma.scheduledLeagueMatch.count({
+      const firstMatchCount = await prisma.scheduledMatch.count({
         where: {
           OR: [
             { robot1Id: { in: robotIds } },
@@ -699,7 +673,7 @@ describe('Matchmaking Service', () => {
       // Run matchmaking again - should not create duplicates
       await runMatchmakingForTier('bronze', scheduledFor);
 
-      const secondMatchCount = await prisma.scheduledLeagueMatch.count({
+      const secondMatchCount = await prisma.scheduledMatch.count({
         where: {
           OR: [
             { robot1Id: { in: robotIds } },
@@ -710,7 +684,7 @@ describe('Matchmaking Service', () => {
       expect(secondMatchCount).toBe(firstMatchCount); // Same count, no duplicates
 
       // Clean up
-      await prisma.scheduledLeagueMatch.deleteMany({
+      await prisma.scheduledMatch.deleteMany({
         where: {
           OR: [
             { robot1Id: { in: robotIds } },
@@ -738,8 +712,6 @@ describe('Matchmaking Service', () => {
         data: {
           userId: testUser.id,
           name: 'Ready',
-          leagueId: 'platinum_1',
-          currentLeague: 'platinum',
           currentHP: 10,
           maxHP: 10,
           currentShield: 2,
@@ -754,8 +726,6 @@ describe('Matchmaking Service', () => {
         data: {
           userId: testUser.id,
           name: 'Not Ready',
-          leagueId: 'platinum_1',
-          currentLeague: 'platinum',
           currentHP: 5, // Low HP
           maxHP: 10,
           currentShield: 2,
@@ -773,7 +743,7 @@ describe('Matchmaking Service', () => {
       expect(matchCount).toBe(0);
 
       // Clean up
-      await prisma.scheduledLeagueMatch.deleteMany({
+      await prisma.scheduledMatch.deleteMany({
         where: {
           OR: [
             { robot1Id: readyRobot.id },
@@ -804,8 +774,6 @@ describe('Matchmaking Service', () => {
           data: {
             userId: testUser.id,
             name: `Low HP Match ${i} ${Date.now()}`,
-            leagueId: 'platinum_1',
-            currentLeague: 'platinum',
             currentHP: 2, // 20% HP — would fail old battle readiness check
             maxHP: 10,
             currentShield: 0,
@@ -827,7 +795,7 @@ describe('Matchmaking Service', () => {
 
       // Verify our robots got scheduled
       const robotIds = robots.map(r => r.id);
-      const scheduledMatches = await prisma.scheduledLeagueMatch.findMany({
+      const scheduledMatches = await prisma.scheduledMatch.findMany({
         where: {
           OR: [
             { robot1Id: { in: robotIds } },
@@ -838,7 +806,7 @@ describe('Matchmaking Service', () => {
       expect(scheduledMatches.length).toBeGreaterThanOrEqual(1);
 
       // Clean up
-      await prisma.scheduledLeagueMatch.deleteMany({
+      await prisma.scheduledMatch.deleteMany({
         where: {
           OR: [
             { robot1Id: { in: robotIds } },
@@ -873,8 +841,6 @@ describe('Matchmaking Service', () => {
             data: {
               userId: testUser.id,
               name: `${tier} Robot ${i}`,
-              leagueId: `${tier}_1`,
-              currentLeague: tier,
               currentHP: 10,
               maxHP: 10,
               currentShield: 2,
@@ -898,7 +864,7 @@ describe('Matchmaking Service', () => {
 
       // Clean up
       const allRobotIds = allRobots.map(r => r.id);
-      await prisma.scheduledLeagueMatch.deleteMany({
+      await prisma.scheduledMatch.deleteMany({
         where: {
           OR: [
             { robot1Id: { in: allRobotIds } },

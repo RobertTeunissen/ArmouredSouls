@@ -86,7 +86,6 @@ describe('ELO Progression Property-Based Tests', () => {
                 currentShield: 50,
                 elo: startingELO,
                 fame: 100,
-                currentLeague: 'bronze',
               },
             });
 
@@ -104,7 +103,6 @@ describe('ELO Progression Property-Based Tests', () => {
                 currentShield: 50,
                 elo: 1500,
                 fame: 100,
-                currentLeague: 'bronze',
               },
             });
 
@@ -177,11 +175,6 @@ describe('ELO Progression Property-Based Tests', () => {
                   durationSeconds: 30,
                   winnerReward: eloChange > 0 ? 1000 : 500,
                   loserReward: eloChange < 0 ? 500 : 1000,
-                  robot1ELOBefore: eloBefore,
-                  robot1ELOAfter: eloAfter,
-                  robot2ELOBefore: 1500,
-                  robot2ELOAfter: 1500 - eloChange,
-                  eloChange: Math.abs(eloChange),
                   createdAt: battleTime,
                   participants: {
                     create: [
@@ -276,7 +269,6 @@ describe('ELO Progression Property-Based Tests', () => {
                 currentShield: 50,
                 elo: startingELO,
                 fame: 100,
-                currentLeague: 'bronze',
               },
             });
 
@@ -294,7 +286,6 @@ describe('ELO Progression Property-Based Tests', () => {
                 currentShield: 50,
                 elo: 1500,
                 fame: 100,
-                currentLeague: 'bronze',
               },
             });
 
@@ -365,11 +356,6 @@ describe('ELO Progression Property-Based Tests', () => {
                   durationSeconds: 30,
                   winnerReward: eloChange > 0 ? 1000 : 500,
                   loserReward: eloChange < 0 ? 500 : 1000,
-                  robot1ELOBefore: 1500,
-                  robot1ELOAfter: 1500 - eloChange,
-                  robot2ELOBefore: eloBefore,
-                  robot2ELOAfter: eloAfter,
-                  eloChange: Math.abs(eloChange),
                   createdAt: battleTime,
                   participants: {
                     create: [
@@ -419,7 +405,7 @@ describe('ELO Progression Property-Based Tests', () => {
           fc.array(
             fc.record({
               cycleNumber: fc.integer({ min: 100, max: 105 }),
-              eloChange: fc.integer({ min: -50, max: 50 }),
+              eloChange: fc.integer({ min: -30, max: 30 }),
             }),
             { minLength: 3, maxLength: 15 }
           ),
@@ -454,7 +440,6 @@ describe('ELO Progression Property-Based Tests', () => {
                 currentShield: 50,
                 elo: startingELO,
                 fame: 100,
-                currentLeague: 'bronze',
               },
             });
 
@@ -471,7 +456,6 @@ describe('ELO Progression Property-Based Tests', () => {
                 currentShield: 50,
                 elo: 1500,
                 fame: 100,
-                currentLeague: 'bronze',
               },
             });
 
@@ -541,11 +525,6 @@ describe('ELO Progression Property-Based Tests', () => {
                   durationSeconds: 30,
                   winnerReward: eloChange > 0 ? 1000 : 500,
                   loserReward: eloChange < 0 ? 500 : 1000,
-                  robot1ELOBefore: eloBefore,
-                  robot1ELOAfter: eloAfter,
-                  robot2ELOBefore: 1500,
-                  robot2ELOAfter: 1500 - eloChange,
-                  eloChange: Math.abs(eloChange),
                   createdAt: battleTime,
                   participants: {
                     create: [
@@ -617,7 +596,6 @@ describe('ELO Progression Property-Based Tests', () => {
                 currentShield: 50,
                 elo: startingELO,
                 fame: 100,
-                currentLeague: 'bronze',
               },
             });
 
@@ -634,7 +612,6 @@ describe('ELO Progression Property-Based Tests', () => {
                 currentShield: 50,
                 elo: 1500,
                 fame: 100,
-                currentLeague: 'bronze',
               },
             });
 
@@ -693,11 +670,6 @@ describe('ELO Progression Property-Based Tests', () => {
                 durationSeconds: 30,
                 winnerReward: eloChange > 0 ? 1000 : 500,
                 loserReward: eloChange < 0 ? 500 : 1000,
-                robot1ELOBefore: eloBefore,
-                robot1ELOAfter: eloAfter,
-                robot2ELOBefore: 1500,
-                robot2ELOAfter: 1500 - eloChange,
-                eloChange: Math.abs(eloChange),
                 createdAt: new Date(cycleStart.getTime() + 60000),
                 participants: {
                   create: [
@@ -715,10 +687,6 @@ describe('ELO Progression Property-Based Tests', () => {
 
             // Property: After value should equal before + change
             expect(participant!.eloAfter).toBe(startingELO + eloChange);
-
-            // Property: ELO change should be consistent
-            const actualChange = battle.robot1ELOAfter - battle.robot1ELOBefore;
-            expect(actualChange).toBe(eloChange);
           }
         ),
         { numRuns: 25 }

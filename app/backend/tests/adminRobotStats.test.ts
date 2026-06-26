@@ -58,7 +58,6 @@ describe('Admin Robot Statistics Endpoint', () => {
         targetingSystems: 20.00,
         hullIntegrity: 15.00,
         elo: 1500,
-        currentLeague: 'gold',
       },
       {
         name: `LowCombatPower_${Date.now()}`,
@@ -66,7 +65,6 @@ describe('Admin Robot Statistics Endpoint', () => {
         targetingSystems: 10.00,
         hullIntegrity: 10.00,
         elo: 1000,
-        currentLeague: 'bronze',
       },
       {
         name: `AverageRobot1_${Date.now()}`,
@@ -74,7 +72,6 @@ describe('Admin Robot Statistics Endpoint', () => {
         targetingSystems: 15.00,
         hullIntegrity: 15.00,
         elo: 1200,
-        currentLeague: 'silver',
       },
       {
         name: `AverageRobot2_${Date.now()}`,
@@ -82,7 +79,6 @@ describe('Admin Robot Statistics Endpoint', () => {
         targetingSystems: 16.00,
         hullIntegrity: 14.00,
         elo: 1250,
-        currentLeague: 'silver',
       },
       {
         name: `WinnerRobot_${Date.now()}`,
@@ -90,7 +86,6 @@ describe('Admin Robot Statistics Endpoint', () => {
         targetingSystems: 25.00,
         hullIntegrity: 20.00,
         elo: 1600,
-        currentLeague: 'platinum',
         totalBattles: 10,
         wins: 8,
         losses: 2,
@@ -110,7 +105,6 @@ describe('Admin Robot Statistics Endpoint', () => {
           currentShield: 0,
           maxShield: 0,
           elo: data.elo,
-          currentLeague: data.currentLeague,
           totalBattles: data.totalBattles || 0,
           wins: data.wins || 0,
           losses: data.losses || 0,

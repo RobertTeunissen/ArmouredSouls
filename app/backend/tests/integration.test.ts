@@ -24,7 +24,7 @@ describe('Integration Test: Complete Daily Cycle', () => {
 
   it('should execute complete daily cycle successfully', async () => {
     // Step 1: Clear existing scheduled matches
-    await prisma.scheduledLeagueMatch.deleteMany({
+    await prisma.scheduledMatch.deleteMany({
       where: { status: 'scheduled' },
     });
 
@@ -38,7 +38,6 @@ describe('Integration Test: Complete Daily Cycle', () => {
         name: true,
         elo: true,
         currentHP: true,
-        leaguePoints: true,
         totalBattles: true,
       },
       take: 10,
@@ -56,7 +55,7 @@ describe('Integration Test: Complete Daily Cycle', () => {
     console.log(`Matches created: ${matchesCreated}`);
 
     // Verify scheduled matches were created
-    const scheduledMatches = await prisma.scheduledLeagueMatch.findMany({
+    const scheduledMatches = await prisma.scheduledMatch.findMany({
       where: { status: 'scheduled' },
     });
     expect(scheduledMatches.length).toBeGreaterThan(0);
@@ -81,7 +80,7 @@ describe('Integration Test: Complete Daily Cycle', () => {
     expect(battles.length).toBeGreaterThan(0);
 
     // Verify scheduled matches were marked completed
-    const completedMatches = await prisma.scheduledLeagueMatch.findMany({
+    const completedMatches = await prisma.scheduledMatch.findMany({
       where: {
         status: 'completed',
         battleId: { not: null },
@@ -102,7 +101,6 @@ describe('Integration Test: Complete Daily Cycle', () => {
         name: true,
         elo: true,
         currentHP: true,
-        leaguePoints: true,
         totalBattles: true,
         wins: true,
         losses: true,
@@ -180,7 +178,7 @@ describe('Integration Test: Complete Daily Cycle', () => {
 
   it('should handle odd number of robots with bye-robot', async () => {
     // Clear scheduled matches
-    await prisma.scheduledLeagueMatch.deleteMany({
+    await prisma.scheduledMatch.deleteMany({
       where: { status: 'scheduled' },
     });
 
@@ -199,7 +197,7 @@ describe('Integration Test: Complete Daily Cycle', () => {
     const matchesCreated = await runMatchmaking(scheduledFor);
 
     // Check if any matches involve bye-robot
-    const byeMatches = await prisma.scheduledLeagueMatch.findMany({
+    const byeMatches = await prisma.scheduledMatch.findMany({
       where: {
         OR: [
           { robot1Id: byeRobot.id },
@@ -249,7 +247,7 @@ describe('Integration Test: Complete Daily Cycle', () => {
 
   it('should maintain data consistency after cycle', async () => {
     // Verify all completed scheduled matches have corresponding battles
-    const completedMatches = await prisma.scheduledLeagueMatch.findMany({
+    const completedMatches = await prisma.scheduledMatch.findMany({
       where: {
         status: 'completed',
         battleId: null, // Should not exist - all completed matches should have battleId

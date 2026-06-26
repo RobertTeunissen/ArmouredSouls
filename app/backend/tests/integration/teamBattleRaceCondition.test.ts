@@ -60,10 +60,6 @@ async function createTestStableWithRobots(
         yieldThreshold: 20,
         loadoutType: 'single',
         mainWeaponId: weaponInv.id,
-        currentLeague: options?.league ?? 'bronze',
-        leagueId: options?.leagueId ?? 'bronze_1',
-        leaguePoints: 0,
-        cyclesInCurrentLeague: 0,
       },
     });
     robotIds.push(robot.id);
@@ -341,7 +337,6 @@ describe('Team Battle Race Condition Stress Test', () => {
         const stable = await createTestStableWithRobots(2, {
           elo: 1000 + i * 50,
           league: 'bronze',
-          leagueId: 'bronze_1',
         });
         stables.push(stable);
         await subscribeRobots(stable.robotIds, 'league_2v2');
@@ -435,7 +430,6 @@ describe('Team Battle Race Condition Stress Test', () => {
         const stable = await createTestStableWithRobots(2, {
           elo: 1000,
           league: 'bronze',
-          leagueId: 'bronze_1',
         });
         stables.push(stable);
         await subscribeRobots(stable.robotIds, 'league_2v2');

@@ -109,40 +109,14 @@ function createMockRobot(id: number, elo: number = 1000): Robot {
     damageDealtLifetime: 0,
     damageTakenLifetime: 0,
     kills: 0,
-    currentLeague: 'bronze',
-    leagueId: 'bronze_1',
-    leaguePoints: 0,
-    cyclesInCurrentLeague: 0,
     fame: 0,
     titles: null,
-    totalTagTeamBattles: 0,
-    totalTagTeamWins: 0,
-    totalTagTeamLosses: 0,
-    totalTagTeamDraws: 0,
-    timesTaggedIn: 0,
-    timesTaggedOut: 0,
-    totalLeague1v1Wins: 0,
-    totalLeague1v1Losses: 0,
-    totalLeague1v1Draws: 0,
-    totalLeague2v2Wins: 0,
-    totalLeague3v3Wins: 0,
     repairCost: 0,
     battleReadiness: 100,
     totalRepairsPaid: 0,
     yieldThreshold: 10,
     loadoutType: 'single',
     stance: 'balanced',
-    kothWins: 0,
-    kothMatches: 0,
-    kothTotalZoneScore: 0,
-    kothTotalZoneTime: 0,
-    kothKills: 0,
-    kothBestPlacement: null,
-    kothCurrentWinStreak: 0,
-    kothBestWinStreak: 0,
-    currentWinStreak: 0,
-    bestWinStreak: 0,
-    currentLoseStreak: 0,
     offensiveWins: 0,
     defensiveWins: 0,
     balancedWins: 0,
@@ -177,20 +151,6 @@ function createMockTeam(
     stableId,
     teamSize,
     teamName: `Team-${teamId}`,
-    teamLp: lp,
-    teamLeague: 'bronze',
-    teamLeagueId: 'bronze_1',
-    cyclesInLeague: 1,
-    totalLeagueWins: 0,
-    totalLeagueLosses: 0,
-    totalLeagueDraws: 0,
-    tagTeamLp: 0,
-    tagTeamLeague: 'bronze',
-    tagTeamLeagueId: 'bronze_1',
-    cyclesInTagTeamLeague: 0,
-    totalTagTeamWins: 0,
-    totalTagTeamLosses: 0,
-    totalTagTeamDraws: 0,
     eligibility: 'ELIGIBLE',
     createdAt: new Date(Date.now() - teamId * 1000), // Unique creation timestamps for tie-breaking
     updatedAt: new Date(),
@@ -326,7 +286,7 @@ describe('Team Battle Matchmaking Property Tests', () => {
           async (teamSize, teams) => {
             // Regenerate teams with correct teamSize to match the parameter
             const correctTeams = teams.map((t, idx) =>
-              createMockTeam(idx + 1, idx + 1, teamSize, t.teamLp, t.members.map(m => m.robot.elo)),
+              createMockTeam(idx + 1, idx + 1, teamSize, 0, t.members.map(m => m.robot.elo)),
             );
 
             const matches = await pairTeams(correctTeams, teamSize, 'bronze', 'bronze_1');
@@ -361,7 +321,7 @@ describe('Team Battle Matchmaking Property Tests', () => {
           fc.oneof(teamArrayArbitrary(2), teamArrayArbitrary(3)),
           async (teamSize, teams) => {
             const correctTeams = teams.map((t, idx) =>
-              createMockTeam(idx + 1, idx + 1, teamSize, t.teamLp, t.members.map(m => m.robot.elo)),
+              createMockTeam(idx + 1, idx + 1, teamSize, 0, t.members.map(m => m.robot.elo)),
             );
             const K = correctTeams.length;
 

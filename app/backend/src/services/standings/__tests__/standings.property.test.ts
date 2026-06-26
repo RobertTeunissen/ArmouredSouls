@@ -72,10 +72,6 @@ describe('Property 4: Unified Promotion/Demotion Algorithm', () => {
         async (modeA, modeB, initialLP, lpDelta, outcome, winStreak, loseStreak, bestWinStreak) => {
           // Create two standings with identical state but different modes
           const baseStanding = {
-            leaguePoints: initialLP,
-            currentWinStreak: winStreak,
-            currentLoseStreak: loseStreak,
-            bestWinStreak: Math.max(bestWinStreak, winStreak),
             wins: 10,
             losses: 5,
             draws: 3,
@@ -155,10 +151,6 @@ describe('Property 5: Battle Completion Updates Standings', () => {
           initialDraws,
         ) => {
           const existing = createStanding({
-            leaguePoints: initialLP,
-            currentWinStreak: initialWinStreak,
-            currentLoseStreak: initialLoseStreak,
-            bestWinStreak: Math.max(bestWinStreak, initialWinStreak),
             wins: initialWins,
             losses: initialLosses,
             draws: initialDraws,
@@ -278,15 +270,11 @@ describe('Property 6: KotH Point Award by Placement', () => {
         async (placement, initialLP, kills, zoneScore, zoneTime) => {
           const existing = createStanding({
             mode: 'koth' as any,
-            leaguePoints: initialLP,
             totalMatches: 5,
             totalKills: 10,
             totalZoneScore: 40,
             totalZoneTime: 200,
             bestPlacement: 3,
-            currentWinStreak: 1,
-            bestWinStreak: 2,
-            currentLoseStreak: 0,
             wins: 3,
           });
 
@@ -357,7 +345,6 @@ describe('Property 7: KotH Standings Ordering', () => {
               id: i + 1,
               mode: 'koth' as any,
               leagueInstanceId: 'koth_1',
-              leaguePoints: lp,
               entityId: 1000 + i,
             }),
           );

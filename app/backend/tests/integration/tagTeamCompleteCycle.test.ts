@@ -24,20 +24,6 @@ async function createTagTeamFixture(stableId: number, activeRobotId: number, res
       stableId,
       teamSize: 2,
       teamName: `Test_Team_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-      teamLp: 0,
-      teamLeague: 'bronze',
-      teamLeagueId: 'bronze_1',
-      cyclesInLeague: 0,
-      totalLeagueWins: 0,
-      totalLeagueLosses: 0,
-      totalLeagueDraws: 0,
-      tagTeamLp: 0,
-      tagTeamLeague: 'bronze',
-      tagTeamLeagueId: 'bronze_1',
-      cyclesInTagTeamLeague: 0,
-      totalTagTeamWins: 0,
-      totalTagTeamLosses: 0,
-      totalTagTeamDraws: 0,
       eligibility: 'ELIGIBLE',
       members: {
         create: [
@@ -166,10 +152,6 @@ describe('Tag Team Complete Cycle Integration Test', () => {
             yieldThreshold: 20,
             loadoutType: 'single',
             mainWeaponId: weaponInv.id,
-            currentLeague: 'bronze',
-            leagueId: 'bronze_1',
-            leaguePoints: 0,
-            cyclesInCurrentLeague: 0,
           },
         });
         testRobots.push(robot);
@@ -190,11 +172,9 @@ describe('Tag Team Complete Cycle Integration Test', () => {
     expect(testTeams.length).toBe(4);
     console.log(`[Test] Created ${testTeams.length} teams`);
 
-    // Verify teams are in Bronze league
+    // Verify teams exist
     testTeams.forEach(team => {
-      expect(team.tagTeamLeague).toBe('bronze');
-      expect(team.tagTeamLeagueId).toBe('bronze_1');
-      expect(team.tagTeamLp).toBe(0);
+      expect(team.teamSize).toBe(2);
     });
 
     // Step 2: Run matchmaking
@@ -256,13 +236,8 @@ describe('Tag Team Complete Cycle Integration Test', () => {
       // ELO should be a valid number
       expect(typeof robot.elo).toBe('number');
       
-      // Tag team statistics should be updated
-      expect(robot.totalTagTeamBattles).toBeGreaterThan(0);
-      
-      // Win/loss/draw counters should be non-negative
-      expect(robot.totalTagTeamWins).toBeGreaterThanOrEqual(0);
-      expect(robot.totalTagTeamLosses).toBeGreaterThanOrEqual(0);
-      expect(robot.totalTagTeamDraws).toBeGreaterThanOrEqual(0);
+      // Total battles should be updated
+      expect(robot.totalBattles).toBeGreaterThan(0);
     });
 
     console.log('[Test] ✓ Complete tag team cycle verified successfully');
@@ -301,8 +276,6 @@ describe('Tag Team Complete Cycle Integration Test', () => {
           yieldThreshold: 20,
           loadoutType: 'single',
           mainWeaponId: weaponInv.id,
-          currentLeague: 'bronze',
-          leagueId: 'bronze_1',
         },
       });
       robots.push(robot);
