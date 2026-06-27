@@ -4,8 +4,10 @@
 
 -- Backfill tagOutTimeMs from battleLog JSON for historical tag-team battles
 -- (Only battles that still have battle_log — within 7-day retention window)
+-- Note: battleLog stores tag-out times in seconds (potentially fractional),
+-- while tag_out_time_ms stores milliseconds as bigint.
 UPDATE "battle_participants" bp
-SET "tag_out_time_ms" = (b."battle_log"->>'team1TagOutTime')::bigint
+SET "tag_out_time_ms" = ROUND((b."battle_log"->>'team1TagOutTime')::numeric * 1000)::bigint
 FROM "battles" b
 WHERE bp."battle_id" = b."id"
   AND b."battle_type" = 'tag_team'
@@ -16,7 +18,7 @@ WHERE bp."battle_id" = b."id"
   AND b."battle_log"->>'team1TagOutTime' IS NOT NULL;
 
 UPDATE "battle_participants" bp
-SET "tag_out_time_ms" = (b."battle_log"->>'team2TagOutTime')::bigint
+SET "tag_out_time_ms" = ROUND((b."battle_log"->>'team2TagOutTime')::numeric * 1000)::bigint
 FROM "battles" b
 WHERE bp."battle_id" = b."id"
   AND b."battle_type" = 'tag_team'

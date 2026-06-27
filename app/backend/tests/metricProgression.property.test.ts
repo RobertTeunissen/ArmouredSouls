@@ -75,9 +75,11 @@ describe('Metric Progression Property-Based Tests', () => {
               const currBattle = battles[i];
 
               // Property: Current battle's "before" should equal previous battle's "after"
-              const prevPart = prevBattle.participants.find((p: any) => p.robotId === robotId)!;
-              const currPart = currBattle.participants.find((p: any) => p.robotId === robotId)!;
-              expect(currPart.eloBefore).toBe(prevPart.eloAfter);
+              const prevPart = prevBattle.participants.find(p => p.robotId === robotId);
+              const currPart = currBattle.participants.find(p => p.robotId === robotId);
+              expect(prevPart).toBeDefined();
+              expect(currPart).toBeDefined();
+              expect(currPart!.eloBefore).toBe(prevPart!.eloAfter);
             }
 
             // Verify using service

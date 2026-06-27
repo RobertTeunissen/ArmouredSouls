@@ -83,7 +83,7 @@ export async function createTagTeamBattleRecord(
       finalHP: result.team1ActiveFinalHP,
       yielded: false,
       destroyed: result.team1ActiveFinalHP === 0,
-      tagOutTimeMs: result.team1TagOutTime != null ? BigInt(result.team1TagOutTime) : null,
+      tagOutTimeMs: result.team1TagOutTime != null ? BigInt(Math.round(result.team1TagOutTime * 1000)) : null,
     },
     // Team 1 Reserve
     {
@@ -119,7 +119,7 @@ export async function createTagTeamBattleRecord(
       finalHP: result.team2ActiveFinalHP,
       yielded: false,
       destroyed: result.team2ActiveFinalHP === 0,
-      tagOutTimeMs: result.team2TagOutTime != null ? BigInt(result.team2TagOutTime) : null,
+      tagOutTimeMs: result.team2TagOutTime != null ? BigInt(Math.round(result.team2TagOutTime * 1000)) : null,
     },
     // Team 2 Reserve
     {

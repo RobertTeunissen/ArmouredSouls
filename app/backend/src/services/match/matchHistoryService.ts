@@ -1287,7 +1287,7 @@ async function buildTagTeamLogResponse(baseResponse: Record<string, unknown>, ba
   // fall back to battleLog JSON for historical data (pre-migration battles have NULL tagOutTimeMs)
   const battleLogData = battleData.battleLog as unknown as { team1TagOutTime?: number; team2TagOutTime?: number } | null;
   const getTagOutTime = (participant: typeof team1ActivePart, team: 1 | 2): number | null => {
-    if (participant?.tagOutTimeMs) return Number(participant.tagOutTimeMs) / 1000;
+    if (participant?.tagOutTimeMs != null) return Number(participant.tagOutTimeMs) / 1000;
     // Fallback: read from battleLog JSON (for historical battles before tagOutTimeMs was populated)
     if (battleLogData) {
       const logTime = team === 1 ? battleLogData.team1TagOutTime : battleLogData.team2TagOutTime;

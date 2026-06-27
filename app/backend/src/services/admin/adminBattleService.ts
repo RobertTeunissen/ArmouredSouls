@@ -449,12 +449,12 @@ export async function getAdminBattleDetail(battleId: number) {
     team1ReserveRobotId: team1ReserveParticipant?.robotId ?? null,
     team2ActiveRobotId: team2ActiveParticipant?.robotId ?? null,
     team2ReserveRobotId: team2ReserveParticipant?.robotId ?? null,
-    team1TagOutTime: team1ActiveParticipant?.tagOutTimeMs
+    team1TagOutTime: team1ActiveParticipant?.tagOutTimeMs != null
       ? Number(team1ActiveParticipant.tagOutTimeMs) / 1000
       : ((battle.battleLog as unknown as { team1TagOutTime?: number } | null)?.team1TagOutTime ?? null) != null
         ? (battle.battleLog as unknown as { team1TagOutTime: number }).team1TagOutTime / 1000
         : null,
-    team2TagOutTime: team2ActiveParticipant?.tagOutTimeMs
+    team2TagOutTime: team2ActiveParticipant?.tagOutTimeMs != null
       ? Number(team2ActiveParticipant.tagOutTimeMs) / 1000
       : ((battle.battleLog as unknown as { team2TagOutTime?: number } | null)?.team2TagOutTime ?? null) != null
         ? (battle.battleLog as unknown as { team2TagOutTime: number }).team2TagOutTime / 1000
