@@ -64,16 +64,6 @@ vi.mock('../../../hooks/useBattleReadiness', () => ({
   }),
 }));
 
-vi.mock('../../../hooks/useCreditValidation', () => ({
-  useCreditValidation: vi.fn().mockReturnValue({
-    canAfford: true,
-    isLowReserve: false,
-    isCriticalBudget: false,
-    remainingAfterPurchase: 500000,
-  }),
-  CREDIT_THRESHOLDS: { LOW_RESERVE: 50000, CRITICAL_BUDGET: 600000 },
-}));
-
 vi.mock('../../../utils/formatters', () => ({
   formatCurrency: (val: number) => `₡${(val ?? 0).toLocaleString()}`,
 }));

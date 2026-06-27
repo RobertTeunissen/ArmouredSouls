@@ -14,10 +14,24 @@ import logger from '../../config/logger';
 
 // ─── Shared Types ────────────────────────────────────────────────────
 
+/** All supported battle mode identifiers. */
+export const ALL_BATTLE_TYPES = [
+  'league_1v1',
+  'tournament_1v1',
+  'tag_team',
+  'koth',
+  'league_2v2',
+  'league_3v3',
+  'tournament_2v2',
+  'tournament_3v3',
+] as const;
+
+export type BattleType = typeof ALL_BATTLE_TYPES[number];
+
 /** Minimal context every battle mode needs before simulation. */
 export interface BattleContext {
   /** The mode identifier stored in the Battle record. */
-  battleType: 'league_1v1' | 'tournament_1v1' | 'tag_team' | 'koth';
+  battleType: BattleType;
   /** League tier (e.g. 'bronze', 'silver') or mode name for non-league modes. */
   leagueType: string;
   /** Arbitrary mode-specific metadata. */

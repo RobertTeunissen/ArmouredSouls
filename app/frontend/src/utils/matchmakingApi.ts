@@ -1,5 +1,17 @@
 import { api } from './api';
 
+// Re-export formatters from their new home for backwards compatibility.
+// New code should import directly from './battleFormatters'.
+export {
+  getBattleOutcome,
+  getELOChange,
+  formatDateTime,
+  formatDuration,
+  getTournamentRoundName,
+  getBattleReward,
+  isTeamBattleType,
+} from './battleFormatters';
+
 // Types
 export interface ScheduledMatch {
   id: number | string; // Can be number for league or "tournament-X" string for tournaments or "tag-team-X" for tag teams
@@ -301,117 +313,6 @@ export const getLeagueInstances = async (tier: string, mode?: string): Promise<L
 // Re-export tier helpers from single source of truth
 export { getTierName as getLeagueTierName, getTierColor as getLeagueTierColor, getTierIcon as getLeagueTierIcon } from './tierHelpers';
 
-export const getBattleOutcome = (battle: BattleHistory, robotId: number): 'win' | 'loss' | 'draw' => {
-  if (!battle.winnerId) return 'draw';
-
-  // BYE matches are always a win for the real team
-  if (battle.isByeMatch) return 'win';
-  
-  // For tag team battles, winnerId is the team ID, not robot ID
-  if (battle.battleType === 'tag_team' && battle.team1Id) {
-    // Determine which team the robot belongs to
-    const isTeam1Robot = battle.robot1Id === robotId;
-    const isTeam2Robot = battle.robot2Id === robotId;
-    
-    if (isTeam1Robot) {
-      return battle.winnerId === battle.team1Id ? 'win' : 'loss';
-    } else if (isTeam2Robot) {
-      return battle.winnerId === battle.team2Id ? 'win' : 'loss';
-    }
-  }
-
-  // For team battles (2v2/3v3), winnerId is the team ID
-  if ((battle.battleType === 'league_2v2' || battle.battleType === 'league_3v3') && battle.team1Id) {
-    const isTeam1Robot = battle.robot1Id === robotId;
-    const isTeam2Robot = battle.robot2Id === robotId;
-
-    if (isTeam1Robot) {
-      return battle.winnerId === battle.team1Id ? 'win' : 'loss';
-    } else if (isTeam2Robot) {
-      return battle.winnerId === battle.team2Id ? 'win' : 'loss';
-    }
-    // Robot might be a participant but not robot1/robot2 — check participants
-    const participant = (battle as unknown as { participants?: { robotId: number; team: number }[] }).participants?.find(p => p.robotId === robotId);
-    if (participant) {
-      const myTeamId = participant.team === 1 ? battle.team1Id : battle.team2Id;
-      return battle.winnerId === myTeamId ? 'win' : 'loss';
-    }
-  }
-  
-  // For 1v1 battles, winnerId is the robot ID
-  return battle.winnerId === robotId ? 'win' : 'loss';
-};
-
-export const getELOChange = (battle: BattleHistory, robotId: number): number => {
-  if (battle.robot1Id === robotId) {
-    return battle.robot1ELOAfter - battle.robot1ELOBefore;
-  } else {
-    return battle.robot2ELOAfter - battle.robot2ELOBefore;
-  }
-};
-
-export const formatDateTime = (dateString: string): string => {
-  const date = new Date(dateString);
-  return date.toLocaleString();
-};
-
-export const formatDuration = (seconds: number): string => {
-  if (seconds < 60) {
-    return `${seconds}s`;
-  }
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = seconds % 60;
-  return `${minutes}m ${remainingSeconds}s`;
-};
-
-export const getTournamentRoundName = (currentRound: number, maxRounds: number): string => {
-  const roundsFromEnd = maxRounds - currentRound;
-  
-  if (roundsFromEnd === 0) return 'Finals';
-  if (roundsFromEnd === 1) return 'Semi-finals';
-  if (roundsFromEnd === 2) return 'Quarter-finals';
-  
-  return `Round ${currentRound}/${maxRounds}`;
-};
-
-/**
- * Get the reward amount for a specific robot in a battle.
- * Handles both 1v1 and tag team battle types.
- */
-export const getBattleReward = (battle: BattleHistory, robotId: number): number => {
-  // For tag team battles, determine reward based on team winner
-  if (battle.battleType === 'tag_team' && battle.team1Id && battle.team2Id) {
-    const isTeam1Robot = battle.robot1Id === robotId;
-    const isTeam2Robot = battle.robot2Id === robotId;
-    
-    if (isTeam1Robot) {
-      return battle.winnerId === battle.team1Id ? battle.winnerReward : battle.loserReward;
-    } else if (isTeam2Robot) {
-      return battle.winnerId === battle.team2Id ? battle.winnerReward : battle.loserReward;
-    }
-  }
-
-  // For team battles (2v2/3v3), winnerId is the team ID — use team IDs to determine outcome
-  if ((battle.battleType === 'league_2v2' || battle.battleType === 'league_3v3') && battle.team1Id && battle.team2Id) {
-    const isTeam1Robot = battle.robot1Id === robotId;
-    const isTeam2Robot = battle.robot2Id === robotId;
-    // Check participants for team membership
-    const participant = (battle as unknown as { participants?: { robotId: number; team: number }[] }).participants?.find(p => p.robotId === robotId);
-
-    let myTeamId: number | null = null;
-    if (isTeam1Robot) myTeamId = battle.team1Id;
-    else if (isTeam2Robot) myTeamId = battle.team2Id;
-    else if (participant) myTeamId = participant.team === 1 ? battle.team1Id : battle.team2Id;
-
-    if (myTeamId !== null) {
-      return battle.winnerId === myTeamId ? battle.winnerReward : battle.loserReward;
-    }
-  }
-  
-  // For 1v1 battles, winnerId is the robot ID
-  return battle.winnerId === robotId ? battle.winnerReward : battle.loserReward;
-};
-
 // Battle Log Types
 export interface BattleLogEvent {
   timestamp: number;
@@ -474,11 +375,6 @@ export interface TeamBattleLog {
 /** Type guard to check if a battle log is a team battle log. */
 export function isTeamBattleLog(log: BattleLogResponse['battleLog']): log is TeamBattleLog {
   return (log as TeamBattleLog)?.teamBattle === true;
-}
-
-/** Check if a battle type is a team battle type. */
-export function isTeamBattleType(battleType?: string): boolean {
-  return battleType === 'league_2v2' || battleType === 'league_3v3' || battleType === 'tournament_2v2' || battleType === 'tournament_3v3';
 }
 
 /** Unified participant record — same shape for all battle types (1v1, tag team, KotH) */

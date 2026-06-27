@@ -799,22 +799,20 @@ export async function getMatchHistory(params: HistoryParams) {
 
   const whereClause: Prisma.BattleWhereInput = {};
 
-  if (battleType === 'league') {
-    whereClause.battleType = 'league_1v1';
-  } else if (battleType === 'tournament') {
-    whereClause.battleType = 'tournament_1v1';
-  } else if (battleType === 'tournament_2v2') {
-    whereClause.battleType = 'tournament_2v2';
-  } else if (battleType === 'tournament_3v3') {
-    whereClause.battleType = 'tournament_3v3';
-  } else if (battleType === 'tag_team') {
-    whereClause.battleType = 'tag_team';
-  } else if (battleType === 'koth') {
-    whereClause.battleType = 'koth';
-  } else if (battleType === 'league_2v2') {
-    whereClause.battleType = 'league_2v2';
-  } else if (battleType === 'league_3v3') {
-    whereClause.battleType = 'league_3v3';
+  // Map frontend filter names to database battleType values
+  const BATTLE_TYPE_FILTER_MAP: Record<string, string> = {
+    league: 'league_1v1',
+    tournament: 'tournament_1v1',
+    tournament_2v2: 'tournament_2v2',
+    tournament_3v3: 'tournament_3v3',
+    tag_team: 'tag_team',
+    koth: 'koth',
+    league_2v2: 'league_2v2',
+    league_3v3: 'league_3v3',
+  };
+
+  if (battleType && battleType in BATTLE_TYPE_FILTER_MAP) {
+    whereClause.battleType = BATTLE_TYPE_FILTER_MAP[battleType];
   }
 
   // Always use BattleParticipant to find the user's battles — works for all modes

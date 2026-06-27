@@ -1,132 +1,43 @@
 // Unit tests only: pure functions, no database, no supertest
 // Runs with full parallelism for speed
+//
+// Convention: any test file matching the patterns below is a unit test.
+// Integration tests live in tests/integration/ or tests/services/ and
+// require the full jest.config.integration.js (with DB setup).
 const base = require('./jest.config');
-
-const unitTestFiles = [
-  'backup\\.property\\.test\\.ts',
-  'combatMessageGenerator\\.test\\.ts',
-  'compute-seedings\\.unit\\.test\\.ts',
-  'cors\\.property\\.test\\.ts',
-  'damageDampeners\\.test\\.ts',
-  'discounts\\.test\\.ts',
-  'distributeTiers\\.test\\.ts',
-  'economyCalculations\\.test\\.ts',
-  'stableNameGenerator\\.test\\.ts',
-  'weaponSelection\\.test\\.ts',
-  'envConfig\\.property\\.test\\.ts',
-  'jwtService\\.test\\.ts',
-  'notifications\\.property\\.test\\.ts',
-  'onboardingAnalyticsService\\.test\\.ts',
-  'passwordHashing\\.property\\.test\\.ts',
-  'passwordService\\.test\\.ts',
-  'manualRepairDiscount\\.property\\.test\\.ts',
-  'manualRepairDiscount\\.test\\.ts',
-  'repairCostMultiRobot\\.test\\.ts',
-  'storageCalculations\\.test\\.ts',
-  'streamingStudioOperatingCost\\.property\\.test\\.ts',
-  'streamingStudioUpgradeCosts\\.property\\.test\\.ts',
-  'tournament-bracket-seeding\\.property\\.test\\.ts',
-  'validation\\.property\\.test\\.ts',
-  'weapon-bonus-rebalance\\.test\\.ts',
-  'kothNotification\\.property\\.test\\.ts',
-  'kothStandings\\.property\\.test\\.ts',
-  'kothApi\\.test\\.ts',
-  'weaponProperties\\.test\\.ts',
-  'weaponStatValidation\\.property\\.test\\.ts',
-  'rangeBands\\.test\\.ts',
-  'weaponEquipValidation\\.test\\.ts',
-  'dependency-upgrade-invariants\\.property\\.test\\.ts',
-  'securityValidation\\.property\\.test\\.ts',
-  'schemaValidator\\.property\\.test\\.ts',
-  'tokenVersion\\.property\\.test\\.ts',
-  'jwtExpiration\\.property\\.test\\.ts',
-  'ownership\\.property\\.test\\.ts',
-  'robotSanitization\\.property\\.test\\.ts',
-  'securityMonitor\\.property\\.test\\.ts',
-  'securityHeaders\\.property\\.test\\.ts',
-  'errorHandler\\.property\\.test\\.ts',
-  'currencyConstraint\\.property\\.test\\.ts',
-  'prestigeUtils\\.property\\.test\\.ts',
-  'stableSanitization\\.property\\.test\\.ts',
-  'adminServices\\.test\\.ts',
-  'robotServices\\.test\\.ts',
-  'fileValidationService\\.test\\.ts',
-  'fileValidationService\\.property\\.test\\.ts',
-  'imageProcessingService\\.test\\.ts',
-  'imageProcessingService\\.property\\.test\\.ts',
-  'fileStorageService\\.test\\.ts',
-  'fileStorageService\\.property\\.test\\.ts',
-  'pendingUploadCache\\.test\\.ts',
-  'pendingUploadCache\\.property\\.test\\.ts',
-  'imageUploadHandlers\\.test\\.ts',
-  'imageUploadHandlers\\.property\\.test\\.ts',
-  'orphanCleanupJob\\.test\\.ts',
-  'orphanCleanupJob\\.property\\.test\\.ts',
-  'adminUploadsHandler\\.test\\.ts',
-  'adminUploadsHandler\\.property\\.test\\.ts',
-  'changelogImageService\\.test\\.ts',
-  'changelogImageService\\.property\\.test\\.ts',
-  'generate-changelog-drafts\\.test\\.ts',
-  'generate-changelog-drafts\\.property\\.test\\.ts',
-  'tuningPoolConfig\\.test\\.ts',
-  'tuningPoolService\\.test\\.ts',
-  'tuningCombatIntegration\\.test\\.ts',
-  'tuningPracticeArena\\.test\\.ts',
-  'leagueHistoryService\\.property\\.test\\.ts',
-  'leagueHistoryEnrichment\\.test\\.ts',
-  'leagueHistoryPublic\\.test\\.ts',
-  'bookingOfficeMigration\\.test\\.ts',
-  'teamCoordination\\.property\\.test\\.ts',
-  'teamCoordinationEffects\\.test\\.ts',
-  'rosterEligibilityFilter\\.test\\.ts',
-  'teamBattleEngine\\.test\\.ts',
-  'notification-service\\.test\\.ts',
-  'teamTournamentBattleOrchestrator\\.test\\.ts',
-  'teamTournamentBattleOrchestrator\\.property\\.test\\.ts',
-  // Scheduling (mocked, no DB)
-  'schedulingService\\.test\\.ts',
-  // Arena / spatial (pure math, no DB)
-  'adaptationTracker\\.property\\.test\\.ts',
-  'arenaLayout\\.property\\.test\\.ts',
-  'arenaLayout\\.test\\.ts',
-  'positionTracker\\.property\\.test\\.ts',
-  'positionTracker\\.test\\.ts',
-  'pressureSystem\\.property\\.test\\.ts',
-  'servoStrain\\.property\\.test\\.ts',
-  'servoStrain\\.test\\.ts',
-  'vector2d\\.property\\.test\\.ts',
-  'vector2d\\.test\\.ts',
-  // Route validation (schema-only, no DB)
-  'adminRouteValidation\\.test\\.ts',
-  'analyticsRouteValidation\\.test\\.ts',
-  'financesRouteValidation\\.test\\.ts',
-  'leaderboardsRouteValidation\\.test\\.ts',
-  'onboardingRouteValidation\\.test\\.ts',
-  // Config / errors / utilities (no DB)
-  'env\\.test\\.ts',
-  'cronValidation\\.test\\.ts',
-  'AppError\\.test\\.ts',
-  'domainErrors\\.test\\.ts',
-  'paginationQuery\\.test\\.ts',
-  'sharedFormulas\\.test\\.ts',
-  'sharedRepairCostParity\\.test\\.ts',
-  // Services (mocked, no DB)
-  'eventRegistry\\.test\\.ts',
-  'teamBattleRewardService\\.test\\.ts',
-  'teamMatchmakingUtils\\.test\\.ts',
-  'tournamentService\\.property\\.test\\.ts',
-  'achievementC18\\.property\\.test\\.ts',
-  // Prestige / weapon refinement (mocked, no DB)
-  'prestigeFeatures\\.integration\\.test\\.ts',
-  'weaponRefinement\\.property\\.test\\.ts',
-  'weaponRefinement\\.test\\.ts',
-];
 
 module.exports = {
   ...base,
   setupFilesAfterEnv: ['<rootDir>/tests/setup.unit.ts'],
   testMatch: undefined,
-  testRegex: `(${unitTestFiles.join('|')})$`,
+  // Match unit tests by location and naming convention:
+  // - tests/unit/**         → explicit unit test directory
+  // - tests/arena/**        → pure spatial/math tests
+  // - tests/config/**       → environment/config tests
+  // - tests/errors/**       → error class tests
+  // - tests/middleware/**   → middleware tests (mocked)
+  // - tests/routes/**       → route validation tests (schema-only)
+  // - tests/utils/**        → utility tests
+  // - tests/factories/**    → factory tests
+  // - tests/guide/**        → content validation
+  // - *.property.test.ts    → property-based tests (pure, no DB)
+  // - *.unit.test.ts        → explicitly named unit tests
+  // Plus legacy flat-directory tests that are known pure (no DB).
+  testRegex: [
+    'tests/(unit|arena|config|errors|middleware|routes|utils|factories|guide)/.+\\.test\\.ts$',
+    'tests/[^/]+\\.(property|unit)\\.test\\.ts$',
+    'tests/(adminRouteValidation|analyticsRouteValidation|financesRouteValidation|leaderboardsRouteValidation|onboardingRouteValidation)\\.test\\.ts$',
+    'tests/(combatMessageGenerator|compute-seedings\\.unit|damageDampeners|discounts|distributeTiers|economyCalculations|stableNameGenerator|weaponSelection)\\.test\\.ts$',
+    'tests/(jwtService|passwordService|notifications|onboardingAnalyticsService|storageCalculations|weaponProperties|rangeBands|weaponEquipValidation|weapon-bonus-rebalance)\\.test\\.ts$',
+    'tests/(adminServices|robotServices|paginationQuery|sharedFormulas|sharedRepairCostParity|cronValidation|AppError|domainErrors|env)\\.test\\.ts$',
+    'tests/(manualRepairDiscount|repairCostMultiRobot|kothApi)\\.test\\.ts$',
+    'tests/(fileValidationService|imageProcessingService|fileStorageService|pendingUploadCache|imageUploadHandlers|orphanCleanupJob|adminUploadsHandler|changelogImageService)\\.test\\.ts$',
+    'tests/(generate-changelog-drafts|tuningPoolConfig|tuningPoolService|tuningCombatIntegration|tuningPracticeArena)\\.test\\.ts$',
+    'tests/(leagueHistoryEnrichment|leagueHistoryPublic|bookingOfficeMigration|teamCoordinationEffects|rosterEligibilityFilter|teamBattleEngine)\\.test\\.ts$',
+    'tests/(notification-service|teamTournamentBattleOrchestrator|schedulingService)\\.test\\.ts$',
+    'tests/(arenaLayout|positionTracker|servoStrain|vector2d)\\.test\\.ts$',
+    'tests/(eventRegistry|teamBattleRewardService|teamMatchmakingUtils|prestigeFeatures\\.integration|weaponRefinement)\\.test\\.ts$',
+  ],
   maxWorkers: '75%',
   testTimeout: 30000,
 };

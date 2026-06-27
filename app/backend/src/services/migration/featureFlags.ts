@@ -7,30 +7,48 @@ import prisma from '../../lib/prisma';
  * and control which subsystems use the new unified schema vs legacy tables.
  * All flags default to `false` (legacy behavior) so a failed read is always
  * safe — the system falls back to the pre-migration code paths.
+ *
+ * Flags are cached in-memory for 60 seconds to avoid hitting the database on
+ * every request (leaderboard + financial service check flags per call).
  */
 export interface MigrationFeatureFlags {
   /** When true, credit/debit flows write to the new financial ledger table. */
   financial_ledger_active: boolean;
   /** When true, leaderboard queries read from the materialized cache table. */
   leaderboard_cache_active: boolean;
-  /** When true, legacy tables have been dropped and migration is complete. */
-  legacy_tables_dropped: boolean;
 }
 
 /** Fail-safe defaults — all flags off means legacy behavior. */
 const DEFAULT_FLAGS: MigrationFeatureFlags = {
   financial_ledger_active: false,
   leaderboard_cache_active: false,
-  legacy_tables_dropped: false,
 };
+
+// ─── In-memory cache (60s TTL) ──────────────────────────────────────────────
+
+const CACHE_TTL_MS = 60_000;
+let cachedFlags: MigrationFeatureFlags | null = null;
+let cacheExpiresAt = 0;
+
+/** Invalidate the in-memory cache (useful in tests or after setFlag). */
+export function invalidateFlagCache(): void {
+  cachedFlags = null;
+  cacheExpiresAt = 0;
+}
 
 /**
  * Read the current migration feature flags from `cycle_metadata` (id=1).
  *
- * On any failure (missing row, malformed JSON, DB error) the function
- * returns the default flags so the system stays on the legacy path.
+ * Results are cached in-memory for 60 seconds. On any failure (missing row,
+ * malformed JSON, DB error) the function returns the default flags so the
+ * system stays on the legacy path.
  */
 export async function getFlags(): Promise<MigrationFeatureFlags> {
+  const now = Date.now();
+  if (cachedFlags && now < cacheExpiresAt) {
+    return cachedFlags;
+  }
+
   try {
     const row = await prisma.cycleMetadata.findUnique({
       where: { id: 1 },
@@ -38,15 +56,14 @@ export async function getFlags(): Promise<MigrationFeatureFlags> {
     });
 
     if (!row) {
-      return { ...DEFAULT_FLAGS };
+      cachedFlags = { ...DEFAULT_FLAGS };
+    } else {
+      const stored = row.featureFlags as unknown as Partial<MigrationFeatureFlags>;
+      cachedFlags = { ...DEFAULT_FLAGS, ...stored };
     }
 
-    const stored = row.featureFlags as unknown as Partial<MigrationFeatureFlags>;
-
-    return {
-      ...DEFAULT_FLAGS,
-      ...stored,
-    };
+    cacheExpiresAt = now + CACHE_TTL_MS;
+    return cachedFlags;
   } catch {
     // Fail-safe: any read error falls back to legacy behavior.
     return { ...DEFAULT_FLAGS };
@@ -57,6 +74,7 @@ export async function getFlags(): Promise<MigrationFeatureFlags> {
  * Update a single migration feature flag in `cycle_metadata` (id=1).
  *
  * Uses an upsert so the row is created if it doesn't exist yet.
+ * Invalidates the in-memory cache after writing.
  *
  * @param flag  - The flag key to update.
  * @param value - The new boolean value for the flag.
@@ -76,6 +94,9 @@ export async function setFlag(
       featureFlags: updated as unknown as Parameters<typeof prisma.cycleMetadata.create>[0]['data']['featureFlags'],
     },
   });
+
+  // Invalidate cache so next read picks up the new value immediately
+  invalidateFlagCache();
 }
 
 /**
