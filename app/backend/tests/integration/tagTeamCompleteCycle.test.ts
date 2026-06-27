@@ -216,14 +216,15 @@ describe('Tag Team Complete Cycle Integration Test', () => {
     });
     expect(battles.length).toBeGreaterThan(0);
 
-    // Verify battle records have tag team fields
-    battles.forEach(battle => {
+    // Verify battle records have tag team participants with correct roles
+    for (const battle of battles) {
       expect(battle.battleType).toBe('tag_team');
-      expect(battle.team1ActiveRobotId).toBeDefined();
-      expect(battle.team1ReserveRobotId).toBeDefined();
-      expect(battle.team2ActiveRobotId).toBeDefined();
-      expect(battle.team2ReserveRobotId).toBeDefined();
-    });
+      const participants = await prisma.battleParticipant.findMany({ where: { battleId: battle.id } });
+      expect(participants.some(p => p.team === 1 && p.role === 'active')).toBe(true);
+      expect(participants.some(p => p.team === 1 && p.role === 'reserve')).toBe(true);
+      expect(participants.some(p => p.team === 2 && p.role === 'active')).toBe(true);
+      expect(participants.some(p => p.team === 2 && p.role === 'reserve')).toBe(true);
+    }
 
     // Verify ELO changes for all robots
     const updatedRobots = await prisma.robot.findMany({
@@ -321,8 +322,8 @@ describe('Tag Team Complete Cycle Integration Test', () => {
     expect(battleLog.events).toBeDefined();
     expect(Array.isArray(battleLog.events)).toBe(true);
 
-    // Check for tag events if any tag-outs occurred
-    if (battle.team1TagOutTime || battle.team2TagOutTime) {
+    // Check for tag events if any tag-outs occurred (check battleLog JSON for tag-out times)
+    if (battleLog.team1TagOutTime || battleLog.team2TagOutTime) {
       const tagOutEvents = battleLog.events.filter((e: any) => e.type === 'tag_out');
       const tagInEvents = battleLog.events.filter((e: any) => e.type === 'tag_in');
       

@@ -346,7 +346,7 @@ describe('CycleSnapshotService Property-Based Tests', () => {
               robot1Metric.battlesParticipated++;
               robot1Metric.damageDealt += robot1DamageDealt;
               robot1Metric.damageReceived += robot2DamageDealt;
-              robot1Metric.eloChange += (createdBattle.robot1ELOAfter ?? 0) - (createdBattle.robot1ELOBefore ?? 0);
+              robot1Metric.eloChange += (p1?.eloAfter ?? 0) - (p1?.eloBefore ?? 0);
               robot1Metric.fameChange += robot1FameAwarded;
               
               if (createdBattle.winnerId === createdBattle.robot1Id) {
@@ -368,7 +368,7 @@ describe('CycleSnapshotService Property-Based Tests', () => {
               robot2Metric.battlesParticipated++;
               robot2Metric.damageDealt += robot2DamageDealt;
               robot2Metric.damageReceived += robot1DamageDealt;
-              robot2Metric.eloChange += (createdBattle.robot2ELOAfter ?? 0) - (createdBattle.robot2ELOBefore ?? 0);
+              robot2Metric.eloChange += (p2?.eloAfter ?? 0) - (p2?.eloBefore ?? 0);
               robot2Metric.fameChange += robot2FameAwarded;
               
               if (createdBattle.winnerId === createdBattle.robot2Id) {

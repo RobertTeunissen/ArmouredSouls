@@ -23,7 +23,6 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 | 10 | Daily Login Bonuses & Seasonal Events | 34 | 0 🗳️ | 3 | 1 | 1 | 3 | **1.7** |
 | 12 | Player Personas / Complexity Modes | 16 | 1 🗳️ | 2 | 1 | 2 | 3 | **1.7** |
 | 13 | Arena / Terrain Modifiers | 12 | 1 🗳️ | 3 | 1 | 2 | 4 | **1.5** |
-| 14 | Battle Table Denormalization Cleanup | 18 | 0 🗳️ | 1 | 1 | 1 | 2 | **1.5** |
 | 15 | Tag Team Battle Time Limit Enforcement | 19 | 0 🗳️ | 1 | 1 | 1 | 2 | **1.5** |
 | 16 | Modular Package Extraction | 35 | 0 🗳️ | 1 | 1 | 2 | 3 | **1.3** |
 | 18 | Robot Detail Page Split | 37 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
@@ -46,6 +45,7 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 
 | Item | # | Spec | Completed |
 |------|---|------|-----------|
+| Battle Table Denormalization Cleanup (19 deprecated columns dropped) | 18 | — (direct implementation, completes Spec #43 Task 6.4) | June 2026 |
 | Spec #40 Legacy Column Drop (Phase 2) | 59 | [Spec #43](/.kiro/specs/to-do/43-legacy-column-drop/) | June 2026 |
 | Battle Log Retention / TOAST Trim (pre-computed summaries, 7-day retention, nightly cron) | 53 | [Spec #39](/.kiro/specs/to-do/39-battle-log-retention/) | June 2026 |
 | Database Unification (unified standings, financial ledger, leaderboard cache) | — | [Spec #40](/.kiro/specs/done-june26/40-database-unification/) | June 2026 |
@@ -147,9 +147,10 @@ Two archetypes: "just let me fight" vs "show me everything." Per the [Prestige &
 
 ### #18 — Battle Table Denormalization Cleanup
 **Source**: [Battle Execution Audit](analysis/BATTLE_EXECUTION_AUDIT.md)  
-**Priority**: Low — works correctly, just redundant data
+**Priority**: ✅ Resolved  
+**Completion**: June 2026
 
-The `Battle` table dual-writes per-robot columns alongside `BattleParticipant`. Consider a migration to drop legacy columns.
+19 deprecated columns (5 ELO, 6 tag-team IDs/times, 8 tag-team stats) dropped from the Battle table. All read paths migrated to BattleParticipant data. Only `robot1Id`/`robot2Id` remain (actively used FK columns, not duplication). See migration `20260626120000_drop_battle_legacy_columns`.
 
 ### #19 — Tag Team Battle Time Limit Enforcement
 **Source**: [Battle Execution Audit](analysis/BATTLE_EXECUTION_AUDIT.md)  
@@ -308,8 +309,6 @@ A collection of saved weapon blueprints for the crafting system. Players save su
 ## Engineering Maintenance Items
 
 These came out of the May 2026 codebase audit. They're internal-quality-of-life items rather than gameplay/UX features, but they affect velocity, reliability, and onboarding for every future change. Listed at the end so the gameplay backlog above stays the primary view.
-
-### ~~#59 — Spec #40 Legacy Column Drop (Phase 2)~~ ✅ Completed — [Spec #43](/.kiro/specs/to-do/43-legacy-column-drop/) (June 2026)
 
 ### #57 — Practice Arena Catalog Access (Try Before You Buy)
 **Source**: Weapon Experimentation Problem (#5), follow-up item 3  

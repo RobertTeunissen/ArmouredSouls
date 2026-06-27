@@ -306,17 +306,44 @@ export async function getAdminBattleDetail(battleId: number) {
     throw new BattleError(BattleErrorCode.BATTLE_NOT_FOUND, 'Battle not found', 404);
   }
 
-  // Check if this is a tag team battle and resolve team data from TeamBattle
+  // Check if this is a tag team battle and resolve team data from participants
   const isTagTeam = battle.battleType === 'tag_team';
   let tagTeamData: { team1: unknown; team2: unknown } | null = null;
 
-  if (isTagTeam && battle.team1ActiveRobotId) {
+  // Get participant data from BattleParticipant table
+  const participants = await prisma.battleParticipant.findMany({
+    where: { battleId: battle.id },
+    select: {
+      robotId: true,
+      team: true,
+      role: true,
+      credits: true,
+      streamingRevenue: true,
+      eloBefore: true,
+      eloAfter: true,
+      prestigeAwarded: true,
+      fameAwarded: true,
+      damageDealt: true,
+      finalHP: true,
+      yielded: true,
+      destroyed: true,
+      tagOutTimeMs: true,
+    },
+  });
+
+  // Derive tag-team robot IDs from participants (replaces deprecated Battle columns)
+  const team1ActiveParticipant = participants.find(p => p.team === 1 && p.role === 'active');
+  const team1ReserveParticipant = participants.find(p => p.team === 1 && p.role === 'reserve');
+  const team2ActiveParticipant = participants.find(p => p.team === 2 && p.role === 'active');
+  const team2ReserveParticipant = participants.find(p => p.team === 2 && p.role === 'reserve');
+
+  if (isTagTeam && team1ActiveParticipant) {
     // Find teams via their member robots
     const [team1, team2] = await Promise.all([
       prisma.teamBattle.findFirst({
         where: {
           teamSize: 2,
-          members: { some: { robotId: battle.team1ActiveRobotId! } },
+          members: { some: { robotId: team1ActiveParticipant.robotId } },
         },
         include: {
           members: {
@@ -325,11 +352,11 @@ export async function getAdminBattleDetail(battleId: number) {
           },
         },
       }),
-      battle.team2ActiveRobotId
+      team2ActiveParticipant
         ? prisma.teamBattle.findFirst({
             where: {
               teamSize: 2,
-              members: { some: { robotId: battle.team2ActiveRobotId! } },
+              members: { some: { robotId: team2ActiveParticipant.robotId } },
             },
             include: {
               members: {
@@ -371,25 +398,9 @@ export async function getAdminBattleDetail(battleId: number) {
 
   const isTagTeamBattle = isTagTeam && tagTeamData !== null;
 
-  // Get participant data from BattleParticipant table
-  const participants = await prisma.battleParticipant.findMany({
-    where: { battleId: battle.id },
-    select: {
-      robotId: true,
-      team: true,
-      role: true,
-      credits: true,
-      streamingRevenue: true,
-      eloBefore: true,
-      eloAfter: true,
-      prestigeAwarded: true,
-      fameAwarded: true,
-      damageDealt: true,
-      finalHP: true,
-      yielded: true,
-      destroyed: true,
-    },
-  });
+  // Derive ELO data from participants (replaces deprecated Battle ELO columns)
+  const robot1Participant = participants.find(p => p.robotId === battle.robot1Id);
+  const robot2Participant = participants.find(p => p.robotId === battle.robot2Id);
 
   // Build base response (shared between 1v1 and 2v2)
   const baseResponse = {
@@ -425,21 +436,29 @@ export async function getAdminBattleDetail(battleId: number) {
 
     winnerId: battle.winnerId,
 
-    robot1ELOBefore: battle.robot1ELOBefore,
-    robot2ELOBefore: battle.robot2ELOBefore,
-    robot1ELOAfter: battle.robot1ELOAfter,
-    robot2ELOAfter: battle.robot2ELOAfter,
-    eloChange: battle.eloChange,
+    robot1ELOBefore: robot1Participant?.eloBefore ?? 0,
+    robot2ELOBefore: robot2Participant?.eloBefore ?? 0,
+    robot1ELOAfter: robot1Participant?.eloAfter ?? 0,
+    robot2ELOAfter: robot2Participant?.eloAfter ?? 0,
+    eloChange: robot1Participant ? Math.abs(robot1Participant.eloAfter - robot1Participant.eloBefore) : 0,
 
     winnerReward: battle.winnerReward,
     loserReward: battle.loserReward,
 
-    team1ActiveRobotId: battle.team1ActiveRobotId,
-    team1ReserveRobotId: battle.team1ReserveRobotId,
-    team2ActiveRobotId: battle.team2ActiveRobotId,
-    team2ReserveRobotId: battle.team2ReserveRobotId,
-    team1TagOutTime: battle.team1TagOutTime ? Number(battle.team1TagOutTime) / 1000 : null,
-    team2TagOutTime: battle.team2TagOutTime ? Number(battle.team2TagOutTime) / 1000 : null,
+    team1ActiveRobotId: team1ActiveParticipant?.robotId ?? null,
+    team1ReserveRobotId: team1ReserveParticipant?.robotId ?? null,
+    team2ActiveRobotId: team2ActiveParticipant?.robotId ?? null,
+    team2ReserveRobotId: team2ReserveParticipant?.robotId ?? null,
+    team1TagOutTime: team1ActiveParticipant?.tagOutTimeMs != null
+      ? Number(team1ActiveParticipant.tagOutTimeMs) / 1000
+      : ((battle.battleLog as unknown as { team1TagOutTime?: number } | null)?.team1TagOutTime ?? null) != null
+        ? (battle.battleLog as unknown as { team1TagOutTime: number }).team1TagOutTime / 1000
+        : null,
+    team2TagOutTime: team2ActiveParticipant?.tagOutTimeMs != null
+      ? Number(team2ActiveParticipant.tagOutTimeMs) / 1000
+      : ((battle.battleLog as unknown as { team2TagOutTime?: number } | null)?.team2TagOutTime ?? null) != null
+        ? (battle.battleLog as unknown as { team2TagOutTime: number }).team2TagOutTime / 1000
+        : null,
 
     battleLog: battle.battleLog ?? { pruned: true },
   };

@@ -29,10 +29,6 @@ type BattleWithParticipants = Prisma.BattleGetPayload<{
     robot1Id: true;
     robot2Id: true;
     winnerId: true;
-    team1ActiveRobotId: true;
-    team1ReserveRobotId: true;
-    team2ActiveRobotId: true;
-    team2ReserveRobotId: true;
     createdAt: true;
     battleLog: true;
     participants: true;
@@ -382,10 +378,6 @@ export async function getPerformanceContext(robotId: number) {
       robot1Id: true,
       robot2Id: true,
       winnerId: true,
-      team1ActiveRobotId: true,
-      team1ReserveRobotId: true,
-      team2ActiveRobotId: true,
-      team2ReserveRobotId: true,
       createdAt: true,
       battleLog: true,
       participants: true,

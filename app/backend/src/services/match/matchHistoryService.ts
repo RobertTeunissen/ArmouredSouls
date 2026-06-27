@@ -128,11 +128,8 @@ type BattleWithRobotsAndWeapons = Prisma.BattleGetPayload<{
   };
 }>;
 
-/** battleData in getBattleLog — bigint tag-out times converted to number */
-type BattleDataForLog = Omit<BattleWithRobotsAndWeapons, 'team1TagOutTime' | 'team2TagOutTime'> & {
-  team1TagOutTime: number | null;
-  team2TagOutTime: number | null;
-};
+/** battleData in getBattleLog — full battle with robot includes */
+type BattleDataForLog = BattleWithRobotsAndWeapons;
 
 type TagTeamRobot = Prisma.RobotGetPayload<{
   include: { user: { select: { id: true; username: true; stableName: true } } };
@@ -1092,8 +1089,6 @@ export async function getBattleLog(battleId: number) {
 
   const battleData = {
     ...battle,
-    team1TagOutTime: battle.team1TagOutTime ? Number(battle.team1TagOutTime) / 1000 : null,
-    team2TagOutTime: battle.team2TagOutTime ? Number(battle.team2TagOutTime) / 1000 : null,
   };
 
   const battleParticipants = await prisma.battleParticipant.findMany({
@@ -1189,8 +1184,13 @@ export async function getBattleLog(battleId: number) {
     offhandWeaponRangeBand: p.robot.offhandWeapon?.weapon?.rangeBand ?? null,
   }));
 
-  if (battleData.battleType === 'tag_team' && battleData.team1ActiveRobotId && battleData.team2ActiveRobotId) {
-    await buildTagTeamLogResponse(baseResponse, battleData, battleParticipants);
+  if (battleData.battleType === 'tag_team') {
+    // Derive tag-team robot IDs from BattleParticipant records (replaces deprecated Battle columns)
+    const team1Active = battleParticipants.find(p => p.team === 1 && p.role === 'active');
+    const team2Active = battleParticipants.find(p => p.team === 2 && p.role === 'active');
+    if (team1Active && team2Active) {
+      await buildTagTeamLogResponse(baseResponse, battleData, battleParticipants);
+    }
   } else if (battleData.battleType === 'koth') {
     await buildKothLogResponse(baseResponse, battleData, battleId, battleParticipants);
   } else {
@@ -1229,42 +1229,47 @@ export async function getBattleLog(battleId: number) {
 }
 
 async function buildTagTeamLogResponse(baseResponse: Record<string, unknown>, battleData: BattleDataForLog, battleParticipants: BattleParticipant[]) {
+  // Derive robot IDs from BattleParticipant records (replaces deprecated Battle columns)
+  const team1ActivePart = battleParticipants.find(p => p.team === 1 && p.role === 'active');
+  const team1ReservePart = battleParticipants.find(p => p.team === 1 && p.role === 'reserve');
+  const team2ActivePart = battleParticipants.find(p => p.team === 2 && p.role === 'active');
+  const team2ReservePart = battleParticipants.find(p => p.team === 2 && p.role === 'reserve');
+
   const tagTeamUserSelect = { select: { id: true, username: true, stableName: true } };
   const [team1Active, team1Reserve, team2Active, team2Reserve] = await Promise.all([
-    battleData.team1ActiveRobotId
-      ? prisma.robot.findUnique({ where: { id: battleData.team1ActiveRobotId }, include: { user: tagTeamUserSelect } })
+    team1ActivePart
+      ? prisma.robot.findUnique({ where: { id: team1ActivePart.robotId }, include: { user: tagTeamUserSelect } })
       : null,
-    battleData.team1ReserveRobotId
-      ? prisma.robot.findUnique({ where: { id: battleData.team1ReserveRobotId }, include: { user: tagTeamUserSelect } })
+    team1ReservePart
+      ? prisma.robot.findUnique({ where: { id: team1ReservePart.robotId }, include: { user: tagTeamUserSelect } })
       : null,
-    battleData.team2ActiveRobotId
-      ? prisma.robot.findUnique({ where: { id: battleData.team2ActiveRobotId }, include: { user: tagTeamUserSelect } })
+    team2ActivePart
+      ? prisma.robot.findUnique({ where: { id: team2ActivePart.robotId }, include: { user: tagTeamUserSelect } })
       : null,
-    battleData.team2ReserveRobotId
-      ? prisma.robot.findUnique({ where: { id: battleData.team2ReserveRobotId }, include: { user: tagTeamUserSelect } })
+    team2ReservePart
+      ? prisma.robot.findUnique({ where: { id: team2ReservePart.robotId }, include: { user: tagTeamUserSelect } })
       : null,
   ]);
 
   // Look up team details from TeamBattle via member robot IDs
-  // (ScheduledTeamBattleMatch doesn't store battleId, so we find teams by their robot composition)
   const [team1Details, team2Details] = await Promise.all([
-    battleData.team1ActiveRobotId
+    team1ActivePart
       ? prisma.teamBattle.findFirst({
-          where: { members: { some: { robotId: battleData.team1ActiveRobotId } }, teamSize: 2 },
+          where: { members: { some: { robotId: team1ActivePart.robotId } }, teamSize: 2 },
           include: { stable: { select: { stableName: true } } },
           orderBy: { updatedAt: 'desc' },
         })
       : null,
-    battleData.team2ActiveRobotId
+    team2ActivePart
       ? prisma.teamBattle.findFirst({
-          where: { members: { some: { robotId: battleData.team2ActiveRobotId } }, teamSize: 2 },
+          where: { members: { some: { robotId: team2ActivePart.robotId } }, teamSize: 2 },
           include: { stable: { select: { stableName: true } } },
           orderBy: { updatedAt: 'desc' },
         })
       : null,
   ]);
 
-  const formatTagRobot = (robot: TagTeamRobot, damageDealt: number, fameAwarded: number) =>
+  const formatTagRobot = (robot: TagTeamRobot, participant: typeof team1ActivePart) =>
     robot
       ? {
           id: robot.id,
@@ -1272,26 +1277,39 @@ async function buildTagTeamLogResponse(baseResponse: Record<string, unknown>, ba
           owner: robot.user.stableName || robot.user.username,
           maxHP: robot.maxHP,
           maxShield: robot.maxShield,
-          damageDealt,
-          fameAwarded,
+          damageDealt: participant?.damageDealt ?? 0,
+          fameAwarded: participant?.fameAwarded ?? 0,
           imageUrl: robot.imageUrl ?? null,
         }
       : null;
+
+  // Tag-out times: read from BattleParticipant.tagOutTimeMs (populated for new battles),
+  // fall back to battleLog JSON for historical data (pre-migration battles have NULL tagOutTimeMs)
+  const battleLogData = battleData.battleLog as unknown as { team1TagOutTime?: number; team2TagOutTime?: number } | null;
+  const getTagOutTime = (participant: typeof team1ActivePart, team: 1 | 2): number | null => {
+    if (participant?.tagOutTimeMs != null) return Number(participant.tagOutTimeMs) / 1000;
+    // Fallback: read from battleLog JSON (for historical battles before tagOutTimeMs was populated)
+    if (battleLogData) {
+      const logTime = team === 1 ? battleLogData.team1TagOutTime : battleLogData.team2TagOutTime;
+      if (logTime != null) return logTime / 1000;
+    }
+    return null;
+  };
 
   baseResponse.tagTeam = {
     team1: {
       teamId: team1Details?.id || null,
       stableName: team1Details?.stable?.stableName || null,
-      activeRobot: formatTagRobot(team1Active, battleData.team1ActiveDamageDealt ?? 0, battleData.team1ActiveFameAwarded ?? 0),
-      reserveRobot: formatTagRobot(team1Reserve, battleData.team1ReserveDamageDealt ?? 0, battleData.team1ReserveFameAwarded ?? 0),
-      tagOutTime: battleData.team1TagOutTime,
+      activeRobot: formatTagRobot(team1Active, team1ActivePart),
+      reserveRobot: formatTagRobot(team1Reserve, team1ReservePart),
+      tagOutTime: getTagOutTime(team1ActivePart, 1),
     },
     team2: {
       teamId: team2Details?.id || null,
       stableName: team2Details?.stable?.stableName || null,
-      activeRobot: formatTagRobot(team2Active, battleData.team2ActiveDamageDealt ?? 0, battleData.team2ActiveFameAwarded ?? 0),
-      reserveRobot: formatTagRobot(team2Reserve, battleData.team2ReserveDamageDealt ?? 0, battleData.team2ReserveFameAwarded ?? 0),
-      tagOutTime: battleData.team2TagOutTime,
+      activeRobot: formatTagRobot(team2Active, team2ActivePart),
+      reserveRobot: formatTagRobot(team2Reserve, team2ReservePart),
+      tagOutTime: getTagOutTime(team2ActivePart, 2),
     },
   };
 

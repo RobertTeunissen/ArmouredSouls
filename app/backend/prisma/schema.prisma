@@ -363,14 +363,6 @@ model Battle {
   tournamentId    Int? @map("tournament_id") // Links to tournament if this is a tournament battle
   tournamentRound Int? @map("tournament_round") // Round number in tournament
 
-  // ===== TAG TEAM FIELDS (optional) =====
-  team1ActiveRobotId  Int?    @map("team1_active_robot_id") // Team 1's active robot
-  team1ReserveRobotId Int?    @map("team1_reserve_robot_id") // Team 1's reserve robot
-  team2ActiveRobotId  Int?    @map("team2_active_robot_id") // Team 2's active robot
-  team2ReserveRobotId Int?    @map("team2_reserve_robot_id") // Team 2's reserve robot
-  team1TagOutTime     BigInt? @map("team1_tag_out_time") // Timestamp when team 1 tagged out (milliseconds)
-  team2TagOutTime     BigInt? @map("team2_tag_out_time") // Timestamp when team 2 tagged out (milliseconds)
-
   // ===== TIME-BASED COMBAT DATA =====
   battleLog       Json? @map("battle_log") // Nullable: NULLed after 7-day retention window
   winningSide     Int?  @map("winning_side") @db.SmallInt // 1 = team 1 won, 2 = team 2 won, NULL = draw or 1v1
@@ -379,23 +371,6 @@ model Battle {
   // ===== ECONOMIC DATA =====
   winnerReward Int? @map("winner_reward") // Credits awarded to winner
   loserReward  Int? @map("loser_reward") // Credits awarded to loser (can earn on loss)
-
-  // ===== TAG TEAM PER-ROBOT STATS (deprecated — canonical data lives in battle_participants) =====
-  team1ActiveDamageDealt  Int? @default(0) @map("team1_active_damage_dealt")
-  team1ReserveDamageDealt Int? @default(0) @map("team1_reserve_damage_dealt")
-  team2ActiveDamageDealt  Int? @default(0) @map("team2_active_damage_dealt")
-  team2ReserveDamageDealt Int? @default(0) @map("team2_reserve_damage_dealt")
-  team1ActiveFameAwarded  Int? @default(0) @map("team1_active_fame_awarded")
-  team1ReserveFameAwarded Int? @default(0) @map("team1_reserve_fame_awarded")
-  team2ActiveFameAwarded  Int? @default(0) @map("team2_active_fame_awarded")
-  team2ReserveFameAwarded Int? @default(0) @map("team2_reserve_fame_awarded")
-
-  // ===== ELO TRACKING (deprecated — canonical data lives in battle_participants) =====
-  robot1ELOBefore Int? @map("robot1_elo_before") // ELO before battle
-  robot2ELOBefore Int? @map("robot2_elo_before") // ELO before battle
-  robot1ELOAfter  Int? @map("robot1_elo_after") // ELO after battle
-  robot2ELOAfter  Int? @map("robot2_elo_after") // ELO after battle
-  eloChange       Int? @map("elo_change") // ELO delta (winner's perspective)
 
   // ===== TIMESTAMPS =====
   createdAt DateTime @default(now()) @map("created_at")
