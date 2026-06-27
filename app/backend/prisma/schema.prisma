@@ -187,8 +187,6 @@ model Robot {
   user                     User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
   mainWeapon               WeaponInventory?       @relation("MainWeapon", fields: [mainWeaponId], references: [id])
   offhandWeapon            WeaponInventory?       @relation("OffhandWeapon", fields: [offhandWeaponId], references: [id])
-  battlesAsRobot1          Battle[]               @relation("Robot1")
-  battlesAsRobot2          Battle[]               @relation("Robot2")
 
   battleParticipations    BattleParticipant[]
   teamBattleMembers       TeamBattleMember[]
@@ -352,8 +350,6 @@ model BattleParticipant {
 
 model Battle {
   id               Int     @id @default(autoincrement())
-  robot1Id         Int     @map("robot1_id") // First combatant
-  robot2Id         Int     @map("robot2_id") // Second combatant
   winnerId         Int?    @map("winner_id") // Winner's robot ID (null if draw)
   battleType       String  @map("battle_type") @db.VarChar(20) // "league", "tournament", "tag_team"
   leagueType       String  @map("league_type") @db.VarChar(20) // "bronze", "silver", "gold", etc.
@@ -376,16 +372,12 @@ model Battle {
   createdAt DateTime @default(now()) @map("created_at")
 
   // ===== RELATIONS =====
-  robot1            Robot                      @relation("Robot1", fields: [robot1Id], references: [id])
-  robot2            Robot                      @relation("Robot2", fields: [robot2Id], references: [id])
   tournament        Tournament?                @relation("TournamentBattles", fields: [tournamentId], references: [id])
   tournamentMatches ScheduledTournamentMatch[]
 
-  participants       BattleParticipant[] // Per-participant battle data (NEW - use this instead of robot1/robot2 columns)
+  participants       BattleParticipant[] // Per-participant battle data (single source of truth for combatants)
   summary            BattleSummary?       // Pre-computed battle statistics (permanent)
 
-  @@index([robot1Id])
-  @@index([robot2Id])
   @@index([createdAt])
   @@index([tournamentId])
   @@index([battleType])

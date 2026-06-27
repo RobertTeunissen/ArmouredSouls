@@ -290,8 +290,6 @@ async function processKothBattle(
   // 7. Create Battle record with full spatial data
   const battle = await prisma.battle.create({
     data: {
-      robot1Id: winnerRobot.id,
-      robot2Id: secondRobot.id,
       winnerId: winnerRobot.id,
       battleType: 'koth',
       leagueType: 'koth',

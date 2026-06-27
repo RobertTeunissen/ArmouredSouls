@@ -93,17 +93,18 @@ describe('buildTagTeamWhere', () => {
     expect(where.leagueType).toBeUndefined();
   });
 
-  it('should add OR search conditions when search is provided', () => {
+  it('should add search condition when search is provided', () => {
     const where = buildTagTeamWhere('Destroyer');
     expect(where.OR).toBeDefined();
-    expect(where.OR).toHaveLength(2);
+    expect(where.OR).toHaveLength(1);
+    expect((where.OR as any)[0].participants.some.robot.name.contains).toBe('Destroyer');
   });
 
   it('should combine search and leagueType filters', () => {
     const where = buildTagTeamWhere('Destroyer', 'silver');
     expect(where.leagueType).toBe('silver');
     expect(where.OR).toBeDefined();
-    expect(where.OR).toHaveLength(2);
+    expect((where.OR as any)[0].participants.some.robot.name.contains).toBe('Destroyer');
   });
 });
 
@@ -112,17 +113,14 @@ describe('buildTagTeamWhere', () => {
 describe('mapBattleRecord', () => {
   const mockBattle: BattleWithDetails = {
     id: 42,
-    robot1Id: 1,
-    robot2Id: 2,
-    robot1: { id: 1, name: 'Alpha', userId: 10 },
-    robot2: { id: 2, name: 'Beta', userId: 20 },
     winnerId: 1,
     leagueType: 'gold',
+    battleType: 'league_1v1',
     durationSeconds: 120,
     createdAt: new Date('2025-01-15T12:00:00Z'),
     participants: [
-      { robotId: 1, finalHP: 50, eloBefore: 1200, eloAfter: 1220 } as any,
-      { robotId: 2, finalHP: 0, eloBefore: 1180, eloAfter: 1160 } as any,
+      { robotId: 1, team: 1, role: null, robot: { id: 1, name: 'Alpha', userId: 10 }, finalHP: 50, eloBefore: 1200, eloAfter: 1220 } as any,
+      { robotId: 2, team: 2, role: null, robot: { id: 2, name: 'Beta', userId: 20 }, finalHP: 0, eloBefore: 1180, eloAfter: 1160 } as any,
     ],
   } as any;
 

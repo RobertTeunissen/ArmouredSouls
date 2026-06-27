@@ -145,13 +145,6 @@ Add a feature toggle system manageable from the admin portal. Flags can be globa
 
 Two archetypes: "just let me fight" vs "show me everything." Per the [Prestige & Fame Design Exploration](analysis/PRESTIGE_FAME_DESIGN_EXPLORATION.md): gating depth by prestige doesn't work — a preference toggle may be the right approach.
 
-### #18 — Battle Table Denormalization Cleanup
-**Source**: [Battle Execution Audit](analysis/BATTLE_EXECUTION_AUDIT.md)  
-**Priority**: ✅ Resolved  
-**Completion**: June 2026
-
-19 deprecated columns (5 ELO, 6 tag-team IDs/times, 8 tag-team stats) dropped from the Battle table. All read paths migrated to BattleParticipant data. Only `robot1Id`/`robot2Id` remain (actively used FK columns, not duplication). See migration `20260626120000_drop_battle_legacy_columns`.
-
 ### #19 — Tag Team Battle Time Limit Enforcement
 **Source**: [Battle Execution Audit](analysis/BATTLE_EXECUTION_AUDIT.md)  
 **Priority**: Low — stored duration is correct, only simulation overruns

@@ -1,14 +1,14 @@
 import prisma from '../../lib/prisma';
-import type { BattleParticipant, Prisma } from '../../../generated/prisma';
+import type { Prisma } from '../../../generated/prisma';
 import { BattleError, BattleErrorCode } from '../../errors';
 import { mapRobotAttributes } from './adminStatsService';
 
 // Typed query result for battles with robot selects and participants (used in admin battle listing)
 export type BattleWithDetails = Prisma.BattleGetPayload<{
   include: {
-    robot1: { select: { id: true; name: true; userId: true } };
-    robot2: { select: { id: true; name: true; userId: true } };
-    participants: true;
+    participants: {
+      include: { robot: { select: { id: true; name: true; userId: true } } };
+    };
   };
 }>;
 
@@ -38,8 +38,7 @@ export function buildTagTeamWhere(search?: string, leagueType?: string): Prisma.
 
   if (search) {
     where.OR = [
-      { robot1: { name: { contains: search, mode: 'insensitive' } } },
-      { robot2: { name: { contains: search, mode: 'insensitive' } } },
+      { participants: { some: { robot: { name: { contains: search, mode: 'insensitive' } } } } },
     ];
   }
 
@@ -50,23 +49,25 @@ export function buildTagTeamWhere(search?: string, leagueType?: string): Prisma.
  * Map a standard Battle record to the API response shape with battleFormat.
  */
 export function mapBattleRecord(battle: BattleWithDetails, battleFormat: '1v1' | '2v2') {
-  const robot1Participant = battle.participants?.find(
-    (p: BattleParticipant) => p.robotId === battle.robot1Id
-  );
-  const robot2Participant = battle.participants?.find(
-    (p: BattleParticipant) => p.robotId === battle.robot2Id
-  );
+  // Prefer active/solo participants over reserve for stable ordering
+  const team1Parts = battle.participants?.filter(p => p.team === 1) ?? [];
+  const team2Parts = battle.participants?.filter(p => p.team === 2) ?? [];
+  const robot1Participant = team1Parts.find(p => p.role === 'active' || p.role === null || p.role === 'solo') ?? team1Parts[0];
+  const robot2Participant = team2Parts.find(p => p.role === 'active' || p.role === null || p.role === 'solo') ?? team2Parts[0];
+
+  const robot1 = robot1Participant?.robot;
+  const robot2 = robot2Participant?.robot;
 
   return {
     id: battle.id,
-    robot1: battle.robot1,
-    robot2: battle.robot2,
+    robot1: robot1 ?? null,
+    robot2: robot2 ?? null,
     winnerId: battle.winnerId,
     winnerName:
-      battle.winnerId === battle.robot1.id
-        ? battle.robot1.name
-        : battle.winnerId === battle.robot2.id
-        ? battle.robot2.name
+      battle.winnerId === robot1?.id
+        ? robot1?.name
+        : battle.winnerId === robot2?.id
+        ? robot2?.name
         : 'Draw',
     leagueType: battle.leagueType,
     durationSeconds: battle.durationSeconds,
@@ -97,9 +98,9 @@ export async function fetchTagTeamBattles({ page, limit, skip, search, leagueTyp
     take: limit,
     orderBy: { createdAt: 'desc' },
     include: {
-      robot1: { select: { id: true, name: true, userId: true } },
-      robot2: { select: { id: true, name: true, userId: true } },
-      participants: true,
+      participants: {
+        include: { robot: { select: { id: true, name: true, userId: true } } },
+      },
     },
   });
 
@@ -141,8 +142,7 @@ export async function getAdminBattleList(params: {
     const kothWhere: Prisma.BattleWhereInput = { battleType: 'koth' };
     if (search) {
       kothWhere.OR = [
-        { robot1: { name: { contains: search, mode: 'insensitive' } } },
-        { robot2: { name: { contains: search, mode: 'insensitive' } } },
+        { participants: { some: { robot: { name: { contains: search, mode: 'insensitive' } } } } },
       ];
     }
 
@@ -154,9 +154,9 @@ export async function getAdminBattleList(params: {
         take: limit,
         orderBy: { createdAt: 'desc' },
         include: {
-          robot1: { select: { id: true, name: true, userId: true } },
-          robot2: { select: { id: true, name: true, userId: true } },
-          participants: true,
+          participants: {
+            include: { robot: { select: { id: true, name: true, userId: true } } },
+          },
         },
       }),
     ]);
@@ -178,8 +178,7 @@ export async function getAdminBattleList(params: {
 
   if (search) {
     where.OR = [
-      { robot1: { name: { contains: search, mode: 'insensitive' } } },
-      { robot2: { name: { contains: search, mode: 'insensitive' } } },
+      { participants: { some: { robot: { name: { contains: search, mode: 'insensitive' } } } } },
     ];
   }
 
@@ -217,9 +216,9 @@ export async function getAdminBattleList(params: {
         take: limit,
         orderBy: { createdAt: 'desc' },
         include: {
-          robot1: { select: { id: true, name: true, userId: true } },
-          robot2: { select: { id: true, name: true, userId: true } },
-          participants: true,
+          participants: {
+            include: { robot: { select: { id: true, name: true, userId: true } } },
+          },
         },
       }),
       prisma.battle.findMany({
@@ -228,9 +227,9 @@ export async function getAdminBattleList(params: {
         take: limit,
         orderBy: { createdAt: 'desc' },
         include: {
-          robot1: { select: { id: true, name: true, userId: true } },
-          robot2: { select: { id: true, name: true, userId: true } },
-          participants: true,
+          participants: {
+            include: { robot: { select: { id: true, name: true, userId: true } } },
+          },
         },
       }),
     ]);
@@ -266,9 +265,9 @@ export async function getAdminBattleList(params: {
       take: limit,
       orderBy: { createdAt: 'desc' },
       include: {
-        robot1: { select: { id: true, name: true, userId: true } },
-        robot2: { select: { id: true, name: true, userId: true } },
-        participants: true,
+        participants: {
+          include: { robot: { select: { id: true, name: true, userId: true } } },
+        },
       },
     }),
   ]);
@@ -297,8 +296,9 @@ export async function getAdminBattleDetail(battleId: number) {
   const battle = await prisma.battle.findUnique({
     where: { id: battleId },
     include: {
-      robot1: true,
-      robot2: true,
+      participants: {
+        include: { robot: true },
+      },
     },
   });
 
@@ -310,26 +310,23 @@ export async function getAdminBattleDetail(battleId: number) {
   const isTagTeam = battle.battleType === 'tag_team';
   let tagTeamData: { team1: unknown; team2: unknown } | null = null;
 
-  // Get participant data from BattleParticipant table
-  const participants = await prisma.battleParticipant.findMany({
-    where: { battleId: battle.id },
-    select: {
-      robotId: true,
-      team: true,
-      role: true,
-      credits: true,
-      streamingRevenue: true,
-      eloBefore: true,
-      eloAfter: true,
-      prestigeAwarded: true,
-      fameAwarded: true,
-      damageDealt: true,
-      finalHP: true,
-      yielded: true,
-      destroyed: true,
-      tagOutTimeMs: true,
-    },
-  });
+  // Use already-loaded participants
+  const participants = battle.participants.map(p => ({
+    robotId: p.robotId,
+    team: p.team,
+    role: p.role,
+    credits: p.credits,
+    streamingRevenue: p.streamingRevenue,
+    eloBefore: p.eloBefore,
+    eloAfter: p.eloAfter,
+    prestigeAwarded: p.prestigeAwarded,
+    fameAwarded: p.fameAwarded,
+    damageDealt: p.damageDealt,
+    finalHP: p.finalHP,
+    yielded: p.yielded,
+    destroyed: p.destroyed,
+    tagOutTimeMs: p.tagOutTimeMs,
+  }));
 
   // Derive tag-team robot IDs from participants (replaces deprecated Battle columns)
   const team1ActiveParticipant = participants.find(p => p.team === 1 && p.role === 'active');
@@ -398,9 +395,13 @@ export async function getAdminBattleDetail(battleId: number) {
 
   const isTagTeamBattle = isTagTeam && tagTeamData !== null;
 
-  // Derive ELO data from participants (replaces deprecated Battle ELO columns)
-  const robot1Participant = participants.find(p => p.robotId === battle.robot1Id);
-  const robot2Participant = participants.find(p => p.robotId === battle.robot2Id);
+  // Derive robot data from participants
+  const robot1Participant = participants.find(p => p.team === 1 && (p.role === null || p.role === 'active'));
+  const robot2Participant = participants.find(p => p.team === 2 && (p.role === null || p.role === 'active'));
+
+  // Get the full robot objects from the loaded participants
+  const robot1Full = battle.participants.find(p => p.team === 1 && (p.role === null || p.role === 'active'))?.robot;
+  const robot2Full = battle.participants.find(p => p.team === 2 && (p.role === null || p.role === 'active'))?.robot;
 
   // Build base response (shared between 1v1 and 2v2)
   const baseResponse = {
@@ -411,26 +412,26 @@ export async function getAdminBattleDetail(battleId: number) {
     createdAt: battle.createdAt,
     battleFormat: isTagTeamBattle ? '2v2' as const : '1v1' as const,
 
-    robot1: {
-      id: battle.robot1.id,
-      name: battle.robot1.name,
-      userId: battle.robot1.userId,
-      maxHP: battle.robot1.maxHP,
-      maxShield: battle.robot1.maxShield,
-      attributes: mapRobotAttributes(battle.robot1),
-      loadout: battle.robot1.loadoutType,
-      stance: battle.robot1.stance,
-    },
-    robot2: {
-      id: battle.robot2.id,
-      name: battle.robot2.name,
-      userId: battle.robot2.userId,
-      maxHP: battle.robot2.maxHP,
-      maxShield: battle.robot2.maxShield,
-      attributes: mapRobotAttributes(battle.robot2),
-      loadout: battle.robot2.loadoutType,
-      stance: battle.robot2.stance,
-    },
+    robot1: robot1Full ? {
+      id: robot1Full.id,
+      name: robot1Full.name,
+      userId: robot1Full.userId,
+      maxHP: robot1Full.maxHP,
+      maxShield: robot1Full.maxShield,
+      attributes: mapRobotAttributes(robot1Full),
+      loadout: robot1Full.loadoutType,
+      stance: robot1Full.stance,
+    } : null,
+    robot2: robot2Full ? {
+      id: robot2Full.id,
+      name: robot2Full.name,
+      userId: robot2Full.userId,
+      maxHP: robot2Full.maxHP,
+      maxShield: robot2Full.maxShield,
+      attributes: mapRobotAttributes(robot2Full),
+      loadout: robot2Full.loadoutType,
+      stance: robot2Full.stance,
+    } : null,
 
     participants,
 

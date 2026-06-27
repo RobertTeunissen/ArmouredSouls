@@ -107,24 +107,26 @@ type ScheduledTeamBattleMatchWithTeams = {
 
 type BattleWithFullRelations = Prisma.BattleGetPayload<{
   include: {
-    robot1: { include: { user: { select: { id: true; username: true; stableName: true } } } };
-    robot2: { include: { user: { select: { id: true; username: true; stableName: true } } } };
+    participants: {
+      include: { robot: { include: { user: { select: { id: true; username: true; stableName: true } } } } };
+    };
     tournament: { select: { id: true; name: true; maxRounds: true } };
-    participants: true;
   };
 }>;
 
 type _BattleWithRobotsAndUsers = Prisma.BattleGetPayload<{
   include: {
-    robot1: { include: { user: { select: { id: true; username: true; stableName: true } } } };
-    robot2: { include: { user: { select: { id: true; username: true; stableName: true } } } };
+    participants: {
+      include: { robot: { include: { user: { select: { id: true; username: true; stableName: true } } } } };
+    };
   };
 }>;
 
 type BattleWithRobotsAndWeapons = Prisma.BattleGetPayload<{
   include: {
-    robot1: { include: { user: { select: { id: true; username: true; stableName: true } }; mainWeapon: { include: { weapon: { select: { name: true; rangeBand: true } } } }; offhandWeapon: { include: { weapon: { select: { name: true; rangeBand: true } } } } } };
-    robot2: { include: { user: { select: { id: true; username: true; stableName: true } }; mainWeapon: { include: { weapon: { select: { name: true; rangeBand: true } } } }; offhandWeapon: { include: { weapon: { select: { name: true; rangeBand: true } } } } } };
+    participants: {
+      include: { robot: { include: { user: { select: { id: true; username: true; stableName: true } }; mainWeapon: { include: { weapon: { select: { name: true; rangeBand: true } } } }; offhandWeapon: { include: { weapon: { select: { name: true; rangeBand: true } } } } } } };
+    };
   };
 }>;
 
@@ -823,10 +825,10 @@ export async function getMatchHistory(params: HistoryParams) {
     prisma.battle.findMany({
       where: whereClause,
       include: {
-        robot1: { include: { user: { select: { id: true, username: true, stableName: true } } } },
-        robot2: { include: { user: { select: { id: true, username: true, stableName: true } } } },
+        participants: {
+          include: { robot: { include: { user: { select: { id: true, username: true, stableName: true } } } } },
+        },
         tournament: { select: { id: true, name: true, maxRounds: true } },
-        participants: true,
         summary: { select: { kothPlacements: true } },
       },
       orderBy: { createdAt: 'desc' },
@@ -851,25 +853,33 @@ export async function getMatchHistory(params: HistoryParams) {
 }
 
 export async function formatBattleHistoryEntry(battle: BattleWithFullRelations, targetRobotIds: number[]) {
-  const robot1Participant = battle.participants.find((p) => p.robotId === battle.robot1Id);
-  const robot2Participant = battle.participants.find((p) => p.robotId === battle.robot2Id);
+  // Derive robot1/robot2 from participants by team.
+  // Prefer active/solo participants over reserve for stable ordering in tag-team battles.
+  const team1Participants = battle.participants.filter(p => p.team === 1);
+  const team2Participants = battle.participants.filter(p => p.team === 2);
+  const robot1Part = team1Participants.find(p => p.role === 'active' || p.role === null || p.role === 'solo') ?? team1Participants[0];
+  const robot2Part = team2Participants.find(p => p.role === 'active' || p.role === null || p.role === 'solo') ?? team2Participants[0];
+  const robot1 = robot1Part?.robot;
+  const robot2 = robot2Part?.robot;
+  const robot1Id = robot1Part?.robotId ?? 0;
+  const robot2Id = robot2Part?.robotId ?? 0;
 
   // Find the requesting user's participant for economic fields
   const userParticipant = battle.participants.find((p) => targetRobotIds.includes(p.robotId));
 
   const baseData = {
     id: battle.id,
-    robot1Id: battle.robot1Id,
-    robot2Id: battle.robot2Id,
+    robot1Id,
+    robot2Id,
     winnerId: battle.winnerId,
     createdAt: battle.createdAt,
     durationSeconds: battle.durationSeconds,
-    robot1ELOBefore: robot1Participant?.eloBefore || 0,
-    robot1ELOAfter: robot1Participant?.eloAfter || 0,
-    robot2ELOBefore: robot2Participant?.eloBefore || 0,
-    robot2ELOAfter: robot2Participant?.eloAfter || 0,
-    robot1FinalHP: robot1Participant?.finalHP || 0,
-    robot2FinalHP: robot2Participant?.finalHP || 0,
+    robot1ELOBefore: robot1Part?.eloBefore || 0,
+    robot1ELOAfter: robot1Part?.eloAfter || 0,
+    robot2ELOBefore: robot2Part?.eloBefore || 0,
+    robot2ELOAfter: robot2Part?.eloAfter || 0,
+    robot1FinalHP: robot1Part?.finalHP || 0,
+    robot2FinalHP: robot2Part?.finalHP || 0,
     winnerReward: battle.winnerReward,
     loserReward: battle.loserReward,
     battleType: battle.battleType,
@@ -881,18 +891,18 @@ export async function formatBattleHistoryEntry(battle: BattleWithFullRelations, 
     prestigeAwarded: userParticipant?.prestigeAwarded ?? 0,
     fameAwarded: userParticipant?.fameAwarded ?? 0,
     streamingRevenue: userParticipant?.streamingRevenue ?? 0,
-    robot1: {
-      id: battle.robot1.id,
-      name: battle.robot1.name,
-      userId: battle.robot1.userId,
-      user: { username: battle.robot1.user.stableName || battle.robot1.user.username },
-    },
-    robot2: {
-      id: battle.robot2.id,
-      name: battle.robot2.name,
-      userId: battle.robot2.userId,
-      user: { username: battle.robot2.user.stableName || battle.robot2.user.username },
-    },
+    robot1: robot1 ? {
+      id: robot1.id,
+      name: robot1.name,
+      userId: robot1.userId,
+      user: { username: robot1.user.stableName || robot1.user.username },
+    } : { id: 0, name: 'Unknown', userId: 0, user: { username: 'Unknown' } },
+    robot2: robot2 ? {
+      id: robot2.id,
+      name: robot2.name,
+      userId: robot2.userId,
+      user: { username: robot2.user.stableName || robot2.user.username },
+    } : { id: 0, name: 'Unknown', userId: 0, user: { username: 'Unknown' } },
   };
 
   if (battle.battleType === 'koth') {
@@ -940,7 +950,7 @@ async function formatKothHistoryEntry(battle: BattleWithFullRelations, baseData:
     kothZoneScore: userZoneScore,
   };
 
-  if (userParticipant && userParticipant.robotId !== battle.robot1Id && userParticipant.robotId !== battle.robot2Id) {
+  if (userParticipant && userParticipant.robotId !== (battle.participants.find(p => p.team === 1)?.robotId) && userParticipant.robotId !== (battle.participants.find(p => p.team === 2)?.robotId)) {
     const userRobot = await prisma.robot.findUnique({
       where: { id: userParticipant.robotId },
       include: { user: { select: { id: true, username: true, stableName: true } } },
@@ -1068,18 +1078,15 @@ export async function getBattleLog(battleId: number) {
   const battle = await prisma.battle.findUnique({
     where: { id: battleId },
     include: {
-      robot1: {
+      participants: {
         include: {
-          user: { select: { id: true, username: true, stableName: true } },
-          mainWeapon: { include: { weapon: { select: { name: true, rangeBand: true } } } },
-          offhandWeapon: { include: { weapon: { select: { name: true, rangeBand: true } } } },
-        },
-      },
-      robot2: {
-        include: {
-          user: { select: { id: true, username: true, stableName: true } },
-          mainWeapon: { include: { weapon: { select: { name: true, rangeBand: true } } } },
-          offhandWeapon: { include: { weapon: { select: { name: true, rangeBand: true } } } },
+          robot: {
+            include: {
+              user: { select: { id: true, username: true, stableName: true } },
+              mainWeapon: { include: { weapon: { select: { name: true, rangeBand: true } } } },
+              offhandWeapon: { include: { weapon: { select: { name: true, rangeBand: true } } } },
+            },
+          },
         },
       },
     },
@@ -1087,29 +1094,28 @@ export async function getBattleLog(battleId: number) {
 
   if (!battle) return null;
 
+  // Derive robot1/robot2 from participants (prefer active/solo over reserve)
+  const team1Parts = battle.participants.filter(p => p.team === 1);
+  const team2Parts = battle.participants.filter(p => p.team === 2);
+  const robot1Participant = team1Parts.find(p => p.role === null || p.role === 'active' || p.role === 'solo') ?? team1Parts[0];
+  const robot2Participant = team2Parts.find(p => p.role === null || p.role === 'active' || p.role === 'solo') ?? team2Parts[0]
+    // KotH/bye fallback: use second participant if no team 2 exists
+    ?? battle.participants.find(p => p.robotId !== robot1Participant?.robotId);
+
   const battleData = {
     ...battle,
+    robot1: robot1Participant?.robot ?? null,
+    robot2: robot2Participant?.robot ?? null,
   };
 
-  const battleParticipants = await prisma.battleParticipant.findMany({
-    where: { battleId },
-    include: {
-      robot: {
-        include: {
-          user: { select: { id: true, username: true, stableName: true } },
-          mainWeapon: { include: { weapon: { select: { name: true, rangeBand: true } } } },
-          offhandWeapon: { include: { weapon: { select: { name: true, rangeBand: true } } } },
-        },
-      },
-    },
-  });
+  const battleParticipants = battle.participants;
 
   const participantMap = new Map(battleParticipants.map(p => [p.robotId, p]));
-  const robot1Participant = participantMap.get(battle.robot1Id);
-  const robot2Participant = participantMap.get(battle.robot2Id);
+  const robot1Part = participantMap.get(robot1Participant?.robotId ?? 0);
+  const robot2Part = participantMap.get(robot2Participant?.robotId ?? 0);
 
-  const streamingRevenue1 = robot1Participant?.streamingRevenue || 0;
-  const streamingRevenue2 = robot2Participant?.streamingRevenue || 0;
+  const streamingRevenue1 = robot1Part?.streamingRevenue || 0;
+  const streamingRevenue2 = robot2Part?.streamingRevenue || 0;
 
   const baseResponse: Record<string, unknown> = {
     battleId: battleData.id,
@@ -1194,13 +1200,15 @@ export async function getBattleLog(battleId: number) {
   } else if (battleData.battleType === 'koth') {
     await buildKothLogResponse(baseResponse, battleData, battleId, battleParticipants);
   } else {
-    buildStandardLogResponse(baseResponse, battleData, robot1Participant, robot2Participant, streamingRevenue1, streamingRevenue2);
+    buildStandardLogResponse(baseResponse, battleData, robot1Part, robot2Part, streamingRevenue1, streamingRevenue2);
   }
 
   // Determine winner
+  const derivedRobot1Id = robot1Participant?.robotId ?? 0;
+  const derivedRobot2Id = robot2Participant?.robotId ?? 0;
   if (battleData.battleType === 'koth') {
     if (baseResponse.winner === undefined) {
-      baseResponse.winner = battleData.winnerId === battleData.robot1Id ? 'robot1' : null;
+      baseResponse.winner = battleData.winnerId === derivedRobot1Id ? 'robot1' : null;
     }
   } else if (battleData.battleType === 'tag_team' && baseResponse.tagTeam) {
     const tagTeam = baseResponse.tagTeam as { team1: { teamId: number | null }; team2: { teamId: number | null } };
@@ -1222,13 +1230,13 @@ export async function getBattleLog(battleId: number) {
       baseResponse.winner = null;
     }
   } else {
-    baseResponse.winner = battleData.winnerId === battleData.robot1Id ? 'robot1' : battleData.winnerId === battleData.robot2Id ? 'robot2' : null;
+    baseResponse.winner = battleData.winnerId === derivedRobot1Id ? 'robot1' : battleData.winnerId === derivedRobot2Id ? 'robot2' : null;
   }
 
   return baseResponse;
 }
 
-async function buildTagTeamLogResponse(baseResponse: Record<string, unknown>, battleData: BattleDataForLog, battleParticipants: BattleParticipant[]) {
+async function buildTagTeamLogResponse(baseResponse: Record<string, unknown>, battleData: { battleLog: unknown; winnerId: number | null }, battleParticipants: BattleParticipant[]) {
   // Derive robot IDs from BattleParticipant records (replaces deprecated Battle columns)
   const team1ActivePart = battleParticipants.find(p => p.team === 1 && p.role === 'active');
   const team1ReservePart = battleParticipants.find(p => p.team === 1 && p.role === 'reserve');
@@ -1336,7 +1344,7 @@ async function buildTagTeamLogResponse(baseResponse: Record<string, unknown>, ba
   };
 }
 
-async function buildKothLogResponse(baseResponse: Record<string, unknown>, battleData: BattleDataForLog, battleId: number, _battleParticipants: BattleParticipant[]) {
+async function buildKothLogResponse(baseResponse: Record<string, unknown>, battleData: { battleLog: unknown; winnerId: number | null }, battleId: number, _battleParticipants: BattleParticipant[]) {
   const allParticipants = await prisma.battleParticipant.findMany({
     where: { battleId },
     include: {
@@ -1372,14 +1380,28 @@ async function buildKothLogResponse(baseResponse: Record<string, unknown>, battl
     };
   });
 
-  baseResponse.winner = battleData.winnerId === battleData.robot1Id ? 'robot1' : null;
+  baseResponse.winner = battleData.winnerId === allParticipants[0]?.robotId ? 'robot1' : null;
 
   if (battleLogData.kothData) {
     baseResponse.kothData = battleLogData.kothData;
   }
 }
 
-function buildStandardLogResponse(baseResponse: Record<string, unknown>, battleData: BattleDataForLog, robot1Participant: BattleParticipant | undefined, robot2Participant: BattleParticipant | undefined, streamingRevenue1: number, streamingRevenue2: number) {
+/** Robot data shape expected by buildStandardLogResponse */
+interface RobotForLog {
+  id: number;
+  name: string;
+  user: { id: number; username: string; stableName: string | null };
+  maxHP: number;
+  maxShield: number;
+  imageUrl: string | null;
+  loadoutType: string;
+  stance: string;
+  mainWeapon: { weapon: { name: string; rangeBand: string } | null } | null;
+  offhandWeapon: { weapon: { name: string; rangeBand: string } | null } | null;
+}
+
+function buildStandardLogResponse(baseResponse: Record<string, unknown>, battleData: { robot1: RobotForLog; robot2: RobotForLog }, robot1Participant: BattleParticipant | undefined, robot2Participant: BattleParticipant | undefined, streamingRevenue1: number, streamingRevenue2: number) {
   baseResponse.robot1 = {
     id: battleData.robot1.id,
     name: battleData.robot1.name,

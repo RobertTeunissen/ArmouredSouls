@@ -117,10 +117,7 @@ export async function validateResetEligibility(userId: number): Promise<ResetEli
   // This is a safety check - in normal operation, battles are processed immediately
   const pendingBattles = await prisma.battle.count({
     where: {
-      OR: [
-        { robot1Id: { in: robotIds } },
-        { robot2Id: { in: robotIds } },
-      ],
+      participants: { some: { robotId: { in: robotIds } } },
       // Check if battle was created very recently (within last 5 minutes)
       createdAt: {
         gte: new Date(Date.now() - 5 * 60 * 1000),
