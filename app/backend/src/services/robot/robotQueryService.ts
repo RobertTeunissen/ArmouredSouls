@@ -26,8 +26,6 @@ type BattleWithParticipants = Prisma.BattleGetPayload<{
     battleType: true;
     leagueType: true;
     tournamentId: true;
-    robot1Id: true;
-    robot2Id: true;
     winnerId: true;
     createdAt: true;
     battleLog: true;
@@ -168,15 +166,15 @@ export async function getMatchHistory(
   perPage: number,
 ): Promise<PaginatedMatchesResult> {
   const total = await prisma.battle.count({
-    where: { OR: [{ robot1Id: robotId }, { robot2Id: robotId }] },
+    where: { participants: { some: { robotId: robotId } } },
   });
 
   const battles = await prisma.battle.findMany({
-    where: { OR: [{ robot1Id: robotId }, { robot2Id: robotId }] },
+    where: { participants: { some: { robotId: robotId } } },
     include: {
-      robot1: { include: { user: { select: { id: true, username: true } } } },
-      robot2: { include: { user: { select: { id: true, username: true } } } },
-      participants: true,
+      participants: {
+        include: { robot: { include: { user: { select: { id: true, username: true } } } } },
+      },
     },
     orderBy: { createdAt: 'desc' },
     skip: (page - 1) * perPage,
@@ -184,13 +182,10 @@ export async function getMatchHistory(
   });
 
   const data = battles.map(battle => {
-    const isRobot1 = battle.robot1Id === robotId;
-    const opponent = isRobot1 ? battle.robot2 : battle.robot1;
-    const won = battle.winnerId === robotId;
-
     const thisParticipant = battle.participants.find(p => p.robotId === robotId);
-    const opponentId = isRobot1 ? battle.robot2Id : battle.robot1Id;
-    const opponentParticipant = battle.participants.find(p => p.robotId === opponentId);
+    const opponentParticipant = battle.participants.find(p => p.robotId !== robotId);
+    const opponent = opponentParticipant?.robot;
+    const won = battle.winnerId === robotId;
 
     return {
       battleId: battle.id,
@@ -208,9 +203,9 @@ export async function getMatchHistory(
         eloAfter: thisParticipant?.eloAfter || 0,
       },
       opponent: {
-        id: opponent.id,
-        name: opponent.name,
-        owner: opponent.user.username,
+        id: opponent?.id || 0,
+        name: opponent?.name || 'Unknown',
+        owner: opponent?.user?.username || 'Unknown',
         finalHP: opponentParticipant?.finalHP || 0,
         damageDealt: opponentParticipant?.damageDealt || 0,
       },
@@ -375,8 +370,6 @@ export async function getPerformanceContext(robotId: number) {
       battleType: true,
       leagueType: true,
       tournamentId: true,
-      robot1Id: true,
-      robot2Id: true,
       winnerId: true,
       createdAt: true,
       battleLog: true,

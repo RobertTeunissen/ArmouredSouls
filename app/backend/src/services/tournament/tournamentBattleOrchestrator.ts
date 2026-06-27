@@ -449,8 +449,6 @@ async function createTournamentBattleRecord(
   // Create battle record
   const battle = await prisma.battle.create({
     data: {
-      robot1Id: robot1.id,
-      robot2Id: robot2.id,
       winnerId: combatResult.winnerId,
       battleType: 'tournament_1v1',
       leagueType: 'tournament', // Tournament battles use special league type
@@ -577,13 +575,10 @@ async function updateRobotStatsForTournament(
   const fameAwarded = participant.fameAwarded;
 
   // Get opponent's participant data to check if destroyed
-  const opponentId = isRobot1 ? battle.robot2Id : battle.robot1Id;
-  const opponentParticipant = await prisma.battleParticipant.findUnique({
+  const opponentParticipant = await prisma.battleParticipant.findFirst({
     where: {
-      battleId_robotId: {
-        battleId: battle.id,
-        robotId: opponentId,
-      },
+      battleId: battle.id,
+      robotId: { not: robot.id },
     },
   });
 

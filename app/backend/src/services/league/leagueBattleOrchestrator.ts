@@ -210,8 +210,6 @@ async function processByeBattle(scheduledMatch: ScheduledLeagueMatchData): Promi
   // Create Battle record — real robot ID fills both FK slots (same pattern as team battles)
   const battle = await prisma.battle.create({
     data: {
-      robot1Id: robot.id,
-      robot2Id: robot.id, // Self-reference avoids FK violation for fabricated bye robot
       winnerId: robot.id,
       battleType: 'league_1v1',
       leagueType: scheduledMatch.leagueType,
@@ -469,8 +467,6 @@ async function createBattleRecord(
   // Create battle record
   const battle = await prisma.battle.create({
     data: {
-      robot1Id: robot1.id,
-      robot2Id: robot2.id,
       winnerId: result.winnerId,
       battleType: 'league_1v1',
       leagueType: scheduledMatch.leagueType,

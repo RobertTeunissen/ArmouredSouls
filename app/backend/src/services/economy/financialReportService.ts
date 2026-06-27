@@ -48,20 +48,22 @@ export async function getDailyFinancialReport(userId: number) {
     const battles = await prisma.battle.findMany({
       where: {
         createdAt: { gte: sevenDaysAgo },
-        OR: [
-          { robot1Id: { in: robotIds } },
-          { robot2Id: { in: robotIds } },
-        ],
+        participants: { some: { robotId: { in: robotIds } } },
+      },
+      include: {
+        participants: { where: { robotId: { in: robotIds } }, select: { robotId: true } },
       },
     });
 
     for (const battle of battles) {
       if (battle.winnerId && robotIds.includes(battle.winnerId)) {
         recentBattleWinnings += battle.winnerReward || 0;
-      }
-      const loserId = battle.winnerId === battle.robot1Id ? battle.robot2Id : battle.robot1Id;
-      if (robotIds.includes(loserId)) {
-        recentBattleWinnings += battle.loserReward || 0;
+      } else {
+        // If the user's robot is not the winner, they're the loser
+        const userParticipant = battle.participants.find(p => robotIds.includes(p.robotId));
+        if (userParticipant && battle.winnerId !== userParticipant.robotId) {
+          recentBattleWinnings += battle.loserReward || 0;
+        }
       }
     }
   }

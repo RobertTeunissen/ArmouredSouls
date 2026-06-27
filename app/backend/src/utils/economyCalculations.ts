@@ -703,10 +703,7 @@ export async function generatePerRobotFinancialReport(userId: number): Promise<{
       // Calculate battle winnings from recent battles
       const recentBattles = await prisma.battle.findMany({
         where: {
-          OR: [
-            { robot1Id: robot.id },
-            { robot2Id: robot.id },
-          ],
+          participants: { some: { robotId: robot.id } },
           createdAt: {
             gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Last 7 days
           },
@@ -716,8 +713,6 @@ export async function generatePerRobotFinancialReport(userId: number): Promise<{
           winnerId: true,
           winnerReward: true,
           loserReward: true,
-          robot1Id: true,
-          robot2Id: true,
           battleType: true,
           createdAt: true,
           participants: {

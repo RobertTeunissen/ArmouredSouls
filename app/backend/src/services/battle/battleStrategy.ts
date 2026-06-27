@@ -275,8 +275,6 @@ export class BattleProcessor<TMatch = unknown> {
 
     const battle = await prisma.battle.create({
       data: {
-        robot1Id: firstRobot.id,
-        robot2Id: secondRobot.id,
         winnerId: simResult.winnerId,
         battleType: strategy.battleType,
         leagueType: strategy.leagueType,

@@ -24,12 +24,9 @@ export async function createTagTeamBattleRecord(
   result: TagTeamBattleResult
 ): Promise<Battle> {
   // Create battle record with tag team fields
-  // For bye matches, use team1's active robot for both FK slots (same pattern as team battles)
   const isByeMatch = team2.activeRobotId < 0;
   const battle = await prisma.battle.create({
     data: {
-      robot1Id: team1.activeRobotId,
-      robot2Id: isByeMatch ? team1.activeRobotId : team2.activeRobotId,
       winnerId: result.winnerId,
       battleType: 'tag_team',
       leagueType: match.teamBattleLeague,

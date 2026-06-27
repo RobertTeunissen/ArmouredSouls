@@ -286,8 +286,6 @@ async function executeSingleTeamBattle(
     // Create Battle record
     const battleRecord = await tx.battle.create({
       data: {
-        robot1Id: team1Robots[0].id,
-        robot2Id: isByeMatch ? team1Robots[0].id : team2Robots[0].id,
         winnerId: winnerTeamId,
         battleType,
         leagueType: match.teamBattleLeague,
