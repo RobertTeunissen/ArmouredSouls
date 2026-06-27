@@ -853,9 +853,12 @@ export async function getMatchHistory(params: HistoryParams) {
 }
 
 export async function formatBattleHistoryEntry(battle: BattleWithFullRelations, targetRobotIds: number[]) {
-  // Derive robot1/robot2 from participants by team
-  const robot1Part = battle.participants.find((p) => p.team === 1);
-  const robot2Part = battle.participants.find((p) => p.team === 2);
+  // Derive robot1/robot2 from participants by team.
+  // Prefer active/solo participants over reserve for stable ordering in tag-team battles.
+  const team1Participants = battle.participants.filter(p => p.team === 1);
+  const team2Participants = battle.participants.filter(p => p.team === 2);
+  const robot1Part = team1Participants.find(p => p.role === 'active' || p.role === null || p.role === 'solo') ?? team1Participants[0];
+  const robot2Part = team2Participants.find(p => p.role === 'active' || p.role === null || p.role === 'solo') ?? team2Participants[0];
   const robot1 = robot1Part?.robot;
   const robot2 = robot2Part?.robot;
   const robot1Id = robot1Part?.robotId ?? 0;
@@ -1091,14 +1094,18 @@ export async function getBattleLog(battleId: number) {
 
   if (!battle) return null;
 
-  // Derive robot1/robot2 from participants
-  const robot1Participant = battle.participants.find(p => p.team === 1 && (p.role === null || p.role === 'active'));
-  const robot2Participant = battle.participants.find(p => p.team === 2 && (p.role === null || p.role === 'active'));
+  // Derive robot1/robot2 from participants (prefer active/solo over reserve)
+  const team1Parts = battle.participants.filter(p => p.team === 1);
+  const team2Parts = battle.participants.filter(p => p.team === 2);
+  const robot1Participant = team1Parts.find(p => p.role === null || p.role === 'active' || p.role === 'solo') ?? team1Parts[0];
+  const robot2Participant = team2Parts.find(p => p.role === null || p.role === 'active' || p.role === 'solo') ?? team2Parts[0]
+    // KotH/bye fallback: use second participant if no team 2 exists
+    ?? battle.participants.find(p => p.robotId !== robot1Participant?.robotId);
 
   const battleData = {
     ...battle,
-    robot1: robot1Participant!.robot,
-    robot2: robot2Participant!.robot,
+    robot1: robot1Participant?.robot ?? null,
+    robot2: robot2Participant?.robot ?? null,
   };
 
   const battleParticipants = battle.participants;

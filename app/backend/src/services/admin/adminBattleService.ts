@@ -49,12 +49,11 @@ export function buildTagTeamWhere(search?: string, leagueType?: string): Prisma.
  * Map a standard Battle record to the API response shape with battleFormat.
  */
 export function mapBattleRecord(battle: BattleWithDetails, battleFormat: '1v1' | '2v2') {
-  const robot1Participant = battle.participants?.find(
-    (p) => p.team === 1
-  );
-  const robot2Participant = battle.participants?.find(
-    (p) => p.team === 2
-  );
+  // Prefer active/solo participants over reserve for stable ordering
+  const team1Parts = battle.participants?.filter(p => p.team === 1) ?? [];
+  const team2Parts = battle.participants?.filter(p => p.team === 2) ?? [];
+  const robot1Participant = team1Parts.find(p => p.role === 'active' || p.role === null || p.role === 'solo') ?? team1Parts[0];
+  const robot2Participant = team2Parts.find(p => p.role === 'active' || p.role === null || p.role === 'solo') ?? team2Parts[0];
 
   const robot1 = robot1Participant?.robot;
   const robot2 = robot2Participant?.robot;

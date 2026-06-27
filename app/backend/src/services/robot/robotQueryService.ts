@@ -183,7 +183,10 @@ export async function getMatchHistory(
 
   const data = battles.map(battle => {
     const thisParticipant = battle.participants.find(p => p.robotId === robotId);
-    const opponentParticipant = battle.participants.find(p => p.robotId !== robotId);
+    // Find opponent: pick the primary participant on the opposing team (active/solo preferred)
+    const myTeam = thisParticipant?.team ?? 1;
+    const opponents = battle.participants.filter(p => p.team !== myTeam);
+    const opponentParticipant = opponents.find(p => p.role === 'active' || p.role === null || p.role === 'solo') ?? opponents[0];
     const opponent = opponentParticipant?.robot;
     const won = battle.winnerId === robotId;
 

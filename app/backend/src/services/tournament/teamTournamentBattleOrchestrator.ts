@@ -222,9 +222,7 @@ export async function processTeamTournamentBattle(
   // 6. Create Battle record with tournament context
   const battle = await prisma.battle.create({
     data: {
-      robot1Id: team1Robots[0].id, // First robot of team 1 (backward compat)
-      robot2Id: team2Robots[0].id, // First robot of team 2 (backward compat)
-      winnerId: winningSide === 1 ? team1Robots[0].id : team2Robots[0].id, // Winning team's first robot (backward compat)
+      winnerId: winningTeamId,
       battleType,
       leagueType: 'tournament',
       tournamentId: tournament.id,
