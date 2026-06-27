@@ -29,7 +29,7 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
   opponent,
   outcome,
   eloChange,
-  myRobotId,
+  myRobotId: _myRobotId,
   reward,
   prestige,
   fame,
@@ -130,8 +130,10 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
   
   if (isTagTeam) {
     // Use team names from API (same as 2v2/3v3 league)
+    // In tag-team battles, both robots on a team belong to the same stable (userId).
+    // robot1 is always team 1's active robot, so check userId match to determine team.
     const battleAny = battle as unknown as { team1TeamName?: string; team2TeamName?: string };
-    const isTeam1 = battle.team1ActiveRobotId === myRobotId || battle.team1ReserveRobotId === myRobotId;
+    const isTeam1 = battle.robot1.userId === myRobot.userId;
     myTeamRobots = isTeam1
       ? (battleAny.team1TeamName || myRobot.name)
       : (battleAny.team2TeamName || myRobot.name);

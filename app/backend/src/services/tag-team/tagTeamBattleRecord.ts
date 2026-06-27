@@ -60,13 +60,6 @@ export async function createTagTeamBattleRecord(
       // Economic data (placeholder)
       winnerReward: 0,
       loserReward: 0,
-
-      // ELO tracking (placeholder)
-      robot1ELOBefore: team1.activeRobot.elo,
-      robot2ELOBefore: team2.activeRobot.elo,
-      robot1ELOAfter: team1.activeRobot.elo,
-      robot2ELOAfter: team2.activeRobot.elo,
-      eloChange: 0,
     },
   });
 
@@ -90,6 +83,7 @@ export async function createTagTeamBattleRecord(
       finalHP: result.team1ActiveFinalHP,
       yielded: false,
       destroyed: result.team1ActiveFinalHP === 0,
+      tagOutTimeMs: result.team1TagOutTime != null ? BigInt(result.team1TagOutTime) : null,
     },
     // Team 1 Reserve
     {
@@ -107,6 +101,7 @@ export async function createTagTeamBattleRecord(
       finalHP: result.team1ReserveFinalHP,
       yielded: false,
       destroyed: result.team1ReserveFinalHP === 0,
+      tagOutTimeMs: null,
     },
     // Team 2 Active
     {
@@ -124,6 +119,7 @@ export async function createTagTeamBattleRecord(
       finalHP: result.team2ActiveFinalHP,
       yielded: false,
       destroyed: result.team2ActiveFinalHP === 0,
+      tagOutTimeMs: result.team2TagOutTime != null ? BigInt(result.team2TagOutTime) : null,
     },
     // Team 2 Reserve
     {
@@ -141,6 +137,7 @@ export async function createTagTeamBattleRecord(
       finalHP: result.team2ReserveFinalHP,
       yielded: false,
       destroyed: result.team2ReserveFinalHP === 0,
+      tagOutTimeMs: null,
     },
   ].filter(p => p.robotId > 0); // Skip bye robots (negative IDs)
 

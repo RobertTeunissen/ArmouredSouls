@@ -75,7 +75,9 @@ describe('Metric Progression Property-Based Tests', () => {
               const currBattle = battles[i];
 
               // Property: Current battle's "before" should equal previous battle's "after"
-              expect(currBattle.robot1ELOBefore).toBe(prevBattle.robot1ELOAfter);
+              const prevPart = prevBattle.participants.find((p: any) => p.robotId === robotId)!;
+              const currPart = currBattle.participants.find((p: any) => p.robotId === robotId)!;
+              expect(currPart.eloBefore).toBe(prevPart.eloAfter);
             }
 
             // Verify using service
@@ -360,11 +362,13 @@ describe('Metric Progression Property-Based Tests', () => {
                   ],
                 },
               },
+              include: { participants: true },
             });
 
-            // Verify ELO continuity for single battle
-            expect(battle.robot1ELOBefore).toBe(startingELO);
-            expect(battle.robot1ELOAfter).toBe(startingELO + eloChange);
+            // Verify ELO continuity for single battle (from participant records)
+            const robot1Part = battle.participants.find(p => p.robotId === robotId)!;
+            expect(robot1Part.eloBefore).toBe(startingELO);
+            expect(robot1Part.eloAfter).toBe(startingELO + eloChange);
 
             // Verify using service
             const progression = await robotPerformanceService.getRobotMetricProgression(
@@ -573,6 +577,7 @@ async function createBattlesWithELOChanges(
           ],
         },
       },
+      include: { participants: true },
     });
 
     battles.push(battle);

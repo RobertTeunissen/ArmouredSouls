@@ -88,12 +88,6 @@ export interface ParticipantReward {
 export interface ExtraBattleFields {
   tournamentId?: number;
   tournamentRound?: number;
-  team1ActiveRobotId?: number;
-  team1ReserveRobotId?: number;
-  team2ActiveRobotId?: number;
-  team2ReserveRobotId?: number;
-  team1TagOutTime?: bigint | null;
-  team2TagOutTime?: bigint | null;
   [key: string]: unknown;
 }
 
