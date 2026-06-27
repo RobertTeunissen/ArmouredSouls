@@ -3,76 +3,38 @@
  * Based on PRD_ECONOMY_SYSTEM.md specifications
  */
 
-import { Prisma } from '../../generated/prisma';
 import prisma from '../lib/prisma';
 import logger from '../config/logger';
 
-/**
- * Convert Prisma Decimal to JavaScript number for calculations
- */
-function _toNumber(value: number | Prisma.Decimal): number {
-  if (typeof value === 'number') return value;
-  return value.toNumber();
-}
-
 // ==================== OPERATING COSTS ====================
+
+/** Named constants for facility operating costs (credits/day per level). */
+const FACILITY_OPERATING_COSTS: Record<string, (level: number) => number> = {
+  repair_bay: (level) => 1000 + (level - 1) * 500,
+  training_facility: (level) => 250 * level,
+  weapons_workshop: (level) => 100 * level,
+  roster_expansion: () => 0, // Calculated separately based on actual roster size
+  storage_facility: (level) => 500 + (level - 1) * 250,
+  booking_office: (level) => 150 * level,
+  combat_training_academy: (level) => 250 * level,
+  defense_training_academy: (level) => 250 * level,
+  mobility_training_academy: (level) => 250 * level,
+  ai_training_academy: (level) => 250 * level,
+  merchandising_hub: (level) => 200 * level,
+  streaming_studio: (level) => 100 * level,
+  tuning_bay: (level) => 300 * level,
+};
 
 /**
  * Calculate daily operating cost for a single facility
  * Formula varies by facility type as specified in PRD
  */
 export function calculateFacilityOperatingCost(facilityType: string, level: number): number {
-  if (level === 0) return 0; // Not purchased
-
-  switch (facilityType) {
-    case 'repair_bay':
-      return 1000 + (level - 1) * 500;
-    
-    case 'training_facility':
-      return 250 * level;
-    
-    case 'weapons_workshop':
-      return 100 * level;
-    
-    case 'roster_expansion':
-      // Special case: ₡500/day per robot slot beyond first
-      // This is calculated separately based on actual roster size
-      return 0;
-    
-    case 'storage_facility':
-      return 500 + (level - 1) * 250;
-    
-    case 'booking_office':
-      // Operating cost: level × 150 credits per day
-      // The Booking Office gates event participation (more subscriptions = more battles = more rewards)
-      return 150 * level;
-    
-    case 'combat_training_academy':
-      return 250 * level;
-    
-    case 'defense_training_academy':
-      return 250 * level;
-    
-    case 'mobility_training_academy':
-      return 250 * level;
-    
-    case 'ai_training_academy':
-      return 250 * level;
-    
-    case 'merchandising_hub':
-      return 200 * level;
-    
-    case 'streaming_studio':
-      // Operating cost: level × 100 credits per day
-      return level * 100;
-    
-    case 'tuning_bay':
-      // Operating cost: level × 300 credits per day
-      return level * 300;
-    
-    default:
-      return 0;
-  }
+  if (level === 0) return 0;
+  const calculator = Object.hasOwn(FACILITY_OPERATING_COSTS, facilityType)
+    ? FACILITY_OPERATING_COSTS[facilityType]
+    : undefined;
+  return calculator ? calculator(level) : 0;
 }
 
 /**
@@ -682,7 +644,6 @@ export async function generatePerRobotFinancialReport(userId: number): Promise<{
 
   // Calculate totals for distribution calculations
   const totalFame = robots.reduce((sum, r) => sum + r.fame, 0);
-  const _totalBattles = robots.reduce((sum, r) => sum + r.totalBattles, 0);
 
   // Get user for prestige
   const user = await prisma.user.findUnique({

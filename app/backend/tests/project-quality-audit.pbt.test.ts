@@ -73,9 +73,9 @@ describe('Bug Condition Exploration — Project Quality Audit', () => {
   /**
    * **Validates: Requirement 1.4**
    *
-   * Parse .github/workflows/ci.yml and assert all node-version values are '20'.
+   * Parse .github/workflows/ci.yml and assert all node-version values are '24'.
    */
-  test('all CI node-version values should be 20', () => {
+  test('all CI node-version values should be 24', () => {
     const ciYml = readRootFile('.github/workflows/ci.yml');
 
     const nodeVersionRegex = /node-version:\s*'(\d+)'/g;

@@ -13,6 +13,7 @@ class CycleLogger {
   private currentCycle: number | null = null;
   private logs: LogEntry[] = [];
   private logsDir: string;
+  private static readonly MAX_LOG_FILES = 30;
 
   constructor() {
     this.logsDir = path.join(process.cwd(), 'cycle_logs');
@@ -85,8 +86,36 @@ class CycleLogger {
     try {
       fs.writeFileSync(filename, header + rows, 'utf-8');
       logger.info(`[CycleLogger] Saved ${this.logs.length} log entries to ${filename}`);
+      this.rotateOldLogs();
     } catch (error) {
       logger.error(`[CycleLogger] Error saving logs:`, error);
+    }
+  }
+
+  /**
+   * Remove old cycle log files beyond MAX_LOG_FILES retention.
+   * Keeps the most recent files sorted by modification time.
+   */
+  private rotateOldLogs(): void {
+    try {
+      const files = fs.readdirSync(this.logsDir)
+        .filter(f => f.startsWith('cycle') && f.endsWith('.csv'))
+        .map(f => ({
+          name: f,
+          path: path.join(this.logsDir, f),
+          mtime: fs.statSync(path.join(this.logsDir, f)).mtimeMs,
+        }))
+        .sort((a, b) => b.mtime - a.mtime);
+
+      if (files.length > CycleLogger.MAX_LOG_FILES) {
+        const toDelete = files.slice(CycleLogger.MAX_LOG_FILES);
+        for (const file of toDelete) {
+          fs.unlinkSync(file.path);
+        }
+        logger.info(`[CycleLogger] Rotated ${toDelete.length} old log files (keeping last ${CycleLogger.MAX_LOG_FILES})`);
+      }
+    } catch (error) {
+      logger.error(`[CycleLogger] Error rotating logs:`, error);
     }
   }
 

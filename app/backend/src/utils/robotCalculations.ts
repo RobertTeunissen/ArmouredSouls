@@ -1,6 +1,7 @@
 // Robot stat calculations including weapon bonuses, loadout modifiers, and stance modifiers
 
 import { Robot, WeaponInventory, Weapon, Prisma } from '../../generated/prisma';
+import { toNumber } from '../lib/prismaHelpers';
 import { ROBOT_ATTRIBUTES } from '../services/tuning-pool/tuningPoolConfig';
 import type { TuningAttributeMap } from '../services/tuning-pool';
 import {
@@ -8,14 +9,6 @@ import {
   type RefinementRow,
   type RefinementTier,
 } from '../shared/utils/weaponRefinement';
-
-/**
- * Convert Prisma Decimal to JavaScript number for calculations
- */
-function toNumber(value: number | Prisma.Decimal): number {
-  if (typeof value === 'number') return value;
-  return value.toNumber();
-}
 
 /**
  * Round to 2 decimal places
