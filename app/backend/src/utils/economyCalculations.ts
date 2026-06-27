@@ -31,7 +31,9 @@ const FACILITY_OPERATING_COSTS: Record<string, (level: number) => number> = {
  */
 export function calculateFacilityOperatingCost(facilityType: string, level: number): number {
   if (level === 0) return 0;
-  const calculator = FACILITY_OPERATING_COSTS[facilityType];
+  const calculator = Object.hasOwn(FACILITY_OPERATING_COSTS, facilityType)
+    ? FACILITY_OPERATING_COSTS[facilityType]
+    : undefined;
   return calculator ? calculator(level) : 0;
 }
 

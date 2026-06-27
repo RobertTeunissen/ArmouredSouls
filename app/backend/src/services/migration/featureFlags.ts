@@ -66,7 +66,10 @@ export async function getFlags(): Promise<MigrationFeatureFlags> {
     return cachedFlags;
   } catch {
     // Fail-safe: any read error falls back to legacy behavior.
-    return { ...DEFAULT_FLAGS };
+    // Cache the default so we don't hammer the DB on persistent failures.
+    cachedFlags = { ...DEFAULT_FLAGS };
+    cacheExpiresAt = now + CACHE_TTL_MS;
+    return cachedFlags;
   }
 }
 

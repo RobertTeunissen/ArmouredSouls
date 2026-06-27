@@ -811,7 +811,7 @@ export async function getMatchHistory(params: HistoryParams) {
     league_3v3: 'league_3v3',
   };
 
-  if (battleType && battleType in BATTLE_TYPE_FILTER_MAP) {
+  if (battleType && Object.hasOwn(BATTLE_TYPE_FILTER_MAP, battleType)) {
     whereClause.battleType = BATTLE_TYPE_FILTER_MAP[battleType];
   }
 
