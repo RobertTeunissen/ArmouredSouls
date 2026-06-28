@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { getInstancesForTier, LeagueTier, LEAGUE_TIERS } from '../services/league/leagueInstanceService';
 import { getMinLPForPromotion } from '../services/league/leaguePromotionThresholds';
 import prisma from '../lib/prisma';
-import type { Prisma } from '../../generated/prisma';
+import type { Prisma, StandingsMode } from '../../generated/prisma';
 import { LeagueError, LeagueErrorCode } from '../errors';
 import { validateRequest } from '../middleware/schemaValidator';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
@@ -45,7 +45,7 @@ router.get('/:tier/standings', validateRequest({ params: leagueTierParamsSchema 
 
   // Query from unified standings table (Spec #40)
   const standingsWhere: Prisma.StandingWhereInput = {
-    mode: mode as any,
+    mode: mode as StandingsMode,
     tier,
     ...(instance ? { leagueInstanceId: instance } : {}),
   };
@@ -90,7 +90,7 @@ router.get('/:tier/standings', validateRequest({ params: leagueTierParamsSchema 
 
   if (instance) {
     eligibleCount = await prisma.standing.count({
-      where: { mode: mode as any, leagueInstanceId: instance, cyclesInTier: { gte: minCyclesForMode } },
+      where: { mode: mode as StandingsMode, leagueInstanceId: instance, cyclesInTier: { gte: minCyclesForMode } },
     });
 
     hasEnoughRobots = eligibleCount >= MIN_ROBOTS_FOR_REBALANCING;
@@ -99,7 +99,7 @@ router.get('/:tier/standings', validateRequest({ params: leagueTierParamsSchema 
 
     if (hasEnoughRobots && demotionCount > 0 && !isBronze) {
       const demotionStandings = await prisma.standing.findMany({
-        where: { mode: mode as any, leagueInstanceId: instance, cyclesInTier: { gte: minCyclesForMode } },
+        where: { mode: mode as StandingsMode, leagueInstanceId: instance, cyclesInTier: { gte: minCyclesForMode } },
         orderBy: [{ leaguePoints: 'asc' }],
         select: { entityId: true },
         take: demotionCount,
@@ -109,7 +109,7 @@ router.get('/:tier/standings', validateRequest({ params: leagueTierParamsSchema 
 
     if (hasEnoughRobots && promotionCount > 0 && !isChampion) {
       const promotionStandings = await prisma.standing.findMany({
-        where: { mode: mode as any, leagueInstanceId: instance, cyclesInTier: { gte: minCyclesForMode }, ...(useMinLP ? { leaguePoints: { gte: minLP } } : {}) },
+        where: { mode: mode as StandingsMode, leagueInstanceId: instance, cyclesInTier: { gte: minCyclesForMode }, ...(useMinLP ? { leaguePoints: { gte: minLP } } : {}) },
         orderBy: [{ leaguePoints: 'desc' }],
         select: { entityId: true },
         take: promotionCount,
@@ -118,7 +118,7 @@ router.get('/:tier/standings', validateRequest({ params: leagueTierParamsSchema 
     }
   } else {
     eligibleCount = await prisma.standing.count({
-      where: { mode: mode as any, tier, cyclesInTier: { gte: minCyclesForMode } },
+      where: { mode: mode as StandingsMode, tier, cyclesInTier: { gte: minCyclesForMode } },
     });
     hasEnoughRobots = eligibleCount >= MIN_ROBOTS_FOR_REBALANCING;
   }

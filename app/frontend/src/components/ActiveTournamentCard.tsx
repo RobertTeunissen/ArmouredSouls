@@ -17,7 +17,7 @@ const log = createLogger('ActiveTournamentCard');
 
 interface ParticipantStatus {
   name: string;
-  status: 'active' | 'eliminated' | 'bye';
+  status: 'active' | 'eliminated' | 'bye' | 'not_registered';
   nextOpponent?: string;
 }
 
@@ -62,8 +62,9 @@ function ActiveTournamentCard() {
       setError(null);
 
       // Fetch active tournaments
-      const response = await api.get<{ success: boolean; tournaments: TournamentDetailResponse[] }>('/api/tournaments', { params: { status: 'active' } });
+      const response = await api.get<{ success: boolean; tournaments: TournamentDetailResponse[]; participantNames?: Record<number, string> }>('/api/tournaments', { params: { status: 'active' } });
       const activeTournaments = response.tournaments || [];
+      const participantNamesFromApi: Record<number, string> = response.participantNames ?? {};
 
       if (!activeTournaments || activeTournaments.length === 0) {
         setTournaments([]);
@@ -76,27 +77,12 @@ function ActiveTournamentCard() {
       const userRobotIds = new Set(userRobots.map(r => r.id));
       const userRobotNames = new Map(userRobots.map(r => [r.id, r.name]));
 
-      // Collect all participant IDs across tournaments to batch-resolve names
-      const allParticipantIdsSet = new Set<number>();
-      for (const tournament of activeTournaments) {
-        if (tournament.status !== 'active') continue;
-        for (const match of tournament.matches) {
-          if (match.participant1Id) allParticipantIdsSet.add(match.participant1Id);
-          if (match.participant2Id) allParticipantIdsSet.add(match.participant2Id);
-        }
-      }
-
-      // Batch fetch all robot names (covers opponents too)
-      const allRobotIds = [...allParticipantIdsSet].filter(id => !userRobotNames.has(id));
+      // Build a combined name map from API response + user robots
       const allRobotNamesMap = new Map(userRobotNames);
-      if (allRobotIds.length > 0) {
-        try {
-          const allRobots = await api.get<Array<{ id: number; name: string }>>('/api/robots/all/robots');
-          for (const r of allRobots) {
-            allRobotNamesMap.set(r.id, r.name);
-          }
-        } catch {
-          // Fallback: just use IDs if the endpoint fails
+      for (const [idStr, name] of Object.entries(participantNamesFromApi)) {
+        const id = Number(idStr);
+        if (!allRobotNamesMap.has(id)) {
+          allRobotNamesMap.set(id, name);
         }
       }
 
@@ -120,6 +106,7 @@ function ActiveTournamentCard() {
         // Filter to my participants
         const myParticipantIds = [...allParticipantIds].filter(id => userRobotIds.has(id));
 
+        // Only show this tournament if at least one of my robots is registered
         if (myParticipantIds.length === 0) continue;
 
         // Determine eliminated participants (lost a match and didn't advance)
@@ -130,6 +117,8 @@ function ActiveTournamentCard() {
             eliminatedIds.add(loserId);
           }
         }
+
+        const myParticipantIdSet = new Set(myParticipantIds);
 
         for (const participantId of myParticipantIds) {
           const name = userRobotNames.get(participantId) ?? `#${participantId}`;
@@ -159,6 +148,15 @@ function ActiveTournamentCard() {
           } else {
             // Not yet assigned to a match in current round (waiting for previous round)
             participants.push({ name, status: 'active', nextOpponent: 'TBD' });
+          }
+        }
+
+        // Show robots that are NOT registered in this tournament (for 1v1 robot tournaments)
+        if (tournament.participantType === 'robot') {
+          for (const [robotId, robotName] of userRobotNames) {
+            if (!myParticipantIdSet.has(robotId)) {
+              participants.push({ name: robotName, status: 'not_registered' });
+            }
           }
         }
 
@@ -255,6 +253,12 @@ function ActiveTournamentCard() {
                       <span className="text-red-400">✗</span>
                       <span className="text-tertiary line-through">{p.name}</span>
                       <span className="text-tertiary italic">eliminated</span>
+                    </>
+                  ) : p.status === 'not_registered' ? (
+                    <>
+                      <span className="text-tertiary">—</span>
+                      <span className="text-tertiary">{p.name}</span>
+                      <span className="text-tertiary italic">not registered</span>
                     </>
                   ) : (
                     <>

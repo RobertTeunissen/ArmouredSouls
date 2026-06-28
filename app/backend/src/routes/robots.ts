@@ -3,6 +3,7 @@ import { z } from 'zod';
 import multer from 'multer';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import prisma from '../lib/prisma';
+import type { StandingsMode } from '../../generated/prisma';
 import { eventLogger } from '../services/common/eventLogger';
 import { trackSpending } from '../services/economy/spendingTracker';
 import logger from '../config/logger';
@@ -662,7 +663,7 @@ router.get('/:id/koth-standing', authenticateToken, validateRequest({ params: ro
   }
 
   const standing = await prisma.standing.findFirst({
-    where: { entityType: 'robot', entityId: robotId, mode: 'koth' as any },
+    where: { entityType: 'robot', entityId: robotId, mode: 'koth' as StandingsMode },
   });
 
   if (!standing) {

@@ -94,9 +94,53 @@ router.get('/', authenticateToken, validateRequest({ query: tournamentListQueryS
     })
   );
 
+  // Collect all participant IDs to batch-resolve names
+  const allParticipantIds = new Set<number>();
+  for (const tournament of tournamentsWithWinners) {
+    for (const match of tournament.matches) {
+      if (match.participant1Id) allParticipantIds.add(match.participant1Id);
+      if (match.participant2Id) allParticipantIds.add(match.participant2Id);
+    }
+  }
+
+  // Batch-resolve participant names (robots or teams depending on participantType)
+  const participantNames: Record<number, string> = {};
+  const idsToResolve = [...allParticipantIds];
+
+  if (idsToResolve.length > 0) {
+    // Check if any tournament is team-based
+    const hasTeamTournaments = tournamentsWithWinners.some(
+      t => t.participantType === 'team_2v2' || t.participantType === 'team_3v3'
+    );
+    const hasRobotTournaments = tournamentsWithWinners.some(
+      t => t.participantType === 'robot'
+    );
+
+    if (hasRobotTournaments) {
+      const robots = await prisma.robot.findMany({
+        where: { id: { in: idsToResolve } },
+        select: { id: true, name: true },
+      });
+      for (const r of robots) {
+        participantNames[r.id] = r.name;
+      }
+    }
+
+    if (hasTeamTournaments) {
+      const teams = await prisma.teamBattle.findMany({
+        where: { id: { in: idsToResolve } },
+        select: { id: true, teamName: true },
+      });
+      for (const t of teams) {
+        participantNames[t.id] = t.teamName;
+      }
+    }
+  }
+
   res.json({
     success: true,
     tournaments: tournamentsWithWinners,
+    participantNames,
     count: tournamentsWithWinners.length,
     timestamp: new Date().toISOString(),
   });

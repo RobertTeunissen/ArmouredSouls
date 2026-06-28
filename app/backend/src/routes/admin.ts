@@ -925,7 +925,6 @@ router.get('/users/:id', authenticateToken, requireAdmin, validateRequest({ para
           id: true,
           name: true,
           elo: true,
-          currentLeague: true,
           wins: true,
           losses: true,
           draws: true,
@@ -946,6 +945,14 @@ router.get('/users/:id', authenticateToken, requireAdmin, validateRequest({ para
     throw new AppError('USER_NOT_FOUND', 'User not found', 404);
   }
 
+  // Enrich robots with league tier from standings table (source of truth since Spec #40)
+  const robotIds = user.robots.map(r => r.id);
+  const standings = await prisma.standing.findMany({
+    where: { entityType: 'robot', entityId: { in: robotIds }, mode: 'league_1v1' },
+    select: { entityId: true, tier: true },
+  });
+  const leagueMap = new Map(standings.map(s => [s.entityId, s.tier]));
+
   res.json({
     id: user.id,
     username: user.username,
@@ -962,7 +969,7 @@ router.get('/users/:id', authenticateToken, requireAdmin, validateRequest({ para
       id: r.id,
       name: r.name,
       elo: r.elo,
-      league: r.currentLeague,
+      league: leagueMap.get(r.id) ?? 'bronze',
       wins: r.wins,
       losses: r.losses,
       draws: r.draws,
