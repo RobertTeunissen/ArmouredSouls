@@ -16,6 +16,7 @@ import { createLogger } from '../utils/logger';
 const log = createLogger('ActiveTournamentCard');
 
 interface ParticipantStatus {
+  id: number;
   name: string;
   status: 'active' | 'eliminated' | 'bye' | 'not_registered';
   nextOpponent?: string;
@@ -62,9 +63,9 @@ function ActiveTournamentCard() {
       setError(null);
 
       // Fetch active tournaments
-      const response = await api.get<{ success: boolean; tournaments: TournamentDetailResponse[]; participantNames?: Record<number, string> }>('/api/tournaments', { params: { status: 'active' } });
+      const response = await api.get<{ success: boolean; tournaments: TournamentDetailResponse[]; participantNames?: Record<string, string> }>('/api/tournaments', { params: { status: 'active' } });
       const activeTournaments = response.tournaments || [];
-      const participantNamesFromApi: Record<number, string> = response.participantNames ?? {};
+      const participantNamesFromApi: Record<string, string> = response.participantNames ?? {};
 
       if (!activeTournaments || activeTournaments.length === 0) {
         setTournaments([]);
@@ -78,10 +79,11 @@ function ActiveTournamentCard() {
       const userRobotNames = new Map(userRobots.map(r => [r.id, r.name]));
 
       // Build a combined name map from API response + user robots
+      // Keys from API are namespaced as "robot:<id>" or "team:<id>" to avoid collisions
       const allRobotNamesMap = new Map(userRobotNames);
-      for (const [idStr, name] of Object.entries(participantNamesFromApi)) {
-        const id = Number(idStr);
-        if (!allRobotNamesMap.has(id)) {
+      for (const [key, name] of Object.entries(participantNamesFromApi)) {
+        const id = Number(key.split(':')[1]);
+        if (!isNaN(id) && !allRobotNamesMap.has(id)) {
           allRobotNamesMap.set(id, name);
         }
       }
@@ -124,7 +126,7 @@ function ActiveTournamentCard() {
           const name = userRobotNames.get(participantId) ?? `#${participantId}`;
 
           if (eliminatedIds.has(participantId)) {
-            participants.push({ name, status: 'eliminated' });
+            participants.push({ id: participantId, name, status: 'eliminated' });
             continue;
           }
 
@@ -139,15 +141,15 @@ function ActiveTournamentCard() {
               : currentMatch.participant1Id;
 
             if (currentMatch.isByeMatch || !opponentId) {
-              participants.push({ name, status: 'bye', nextOpponent: 'Bye' });
+              participants.push({ id: participantId, name, status: 'bye', nextOpponent: 'Bye' });
             } else {
               // Resolve opponent name
               const opponentName = allRobotNamesMap.get(opponentId) ?? `Robot #${opponentId}`;
-              participants.push({ name, status: 'active', nextOpponent: opponentName });
+              participants.push({ id: participantId, name, status: 'active', nextOpponent: opponentName });
             }
           } else {
             // Not yet assigned to a match in current round (waiting for previous round)
-            participants.push({ name, status: 'active', nextOpponent: 'TBD' });
+            participants.push({ id: participantId, name, status: 'active', nextOpponent: 'TBD' });
           }
         }
 
@@ -155,7 +157,7 @@ function ActiveTournamentCard() {
         if (tournament.participantType === 'robot') {
           for (const [robotId, robotName] of userRobotNames) {
             if (!myParticipantIdSet.has(robotId)) {
-              participants.push({ name: robotName, status: 'not_registered' });
+              participants.push({ id: robotId, name: robotName, status: 'not_registered' });
             }
           }
         }
@@ -247,7 +249,7 @@ function ActiveTournamentCard() {
             {/* Per-participant status */}
             <div className="space-y-1 mt-2">
               {tournament.participants.map((p) => (
-                <div key={p.name} className="flex items-center gap-2 text-xs">
+                <div key={p.id} className="flex items-center gap-2 text-xs">
                   {p.status === 'eliminated' ? (
                     <>
                       <span className="text-red-400">✗</span>

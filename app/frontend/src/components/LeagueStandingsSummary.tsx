@@ -39,7 +39,7 @@ function LeagueStandingsSummary() {
   useEffect(() => {
     fetchTeams();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [robots.length]);
 
   const fetchTeams = async () => {
     try {

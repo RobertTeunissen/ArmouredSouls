@@ -103,8 +103,8 @@ router.get('/', authenticateToken, validateRequest({ query: tournamentListQueryS
     }
   }
 
-  // Batch-resolve participant names (robots or teams depending on participantType)
-  const participantNames: Record<number, string> = {};
+  // Batch-resolve participant names per tournament type to avoid ID collisions between robots and teams
+  const participantNames: Record<string, string> = {};
   const idsToResolve = [...allParticipantIds];
 
   if (idsToResolve.length > 0) {
@@ -122,7 +122,7 @@ router.get('/', authenticateToken, validateRequest({ query: tournamentListQueryS
         select: { id: true, name: true },
       });
       for (const r of robots) {
-        participantNames[r.id] = r.name;
+        participantNames[`robot:${r.id}`] = r.name;
       }
     }
 
@@ -132,7 +132,7 @@ router.get('/', authenticateToken, validateRequest({ query: tournamentListQueryS
         select: { id: true, teamName: true },
       });
       for (const t of teams) {
-        participantNames[t.id] = t.teamName;
+        participantNames[`team:${t.id}`] = t.teamName;
       }
     }
   }

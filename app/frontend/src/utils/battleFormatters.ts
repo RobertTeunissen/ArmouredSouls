@@ -45,12 +45,7 @@ export const getBattleOutcome = (battle: BattleHistory, robotId: number): 'win' 
       const myTeamId = participant.team === 1 ? battle.team1Id : battle.team2Id;
       return battle.winnerId === myTeamId ? 'win' : 'loss';
     }
-    // Fallback: if we can't determine team membership but this is a team battle,
-    // check if robot belongs to robot1's user (same stable = same team)
-    if (battle.robot1.userId === battle.robot2.userId) {
-      // Shouldn't happen, but guard against it
-      return battle.winnerId === battle.team1Id ? 'win' : 'loss';
-    }
+    // Fallback: can't determine team membership — return draw to avoid incorrect win/loss
   }
   
   // For 1v1 battles, winnerId is the robot ID
