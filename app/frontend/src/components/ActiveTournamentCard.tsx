@@ -16,8 +16,9 @@ import { createLogger } from '../utils/logger';
 const log = createLogger('ActiveTournamentCard');
 
 interface ParticipantStatus {
+  id: number;
   name: string;
-  status: 'active' | 'eliminated' | 'bye';
+  status: 'active' | 'eliminated' | 'bye' | 'not_registered';
   nextOpponent?: string;
 }
 
@@ -62,8 +63,9 @@ function ActiveTournamentCard() {
       setError(null);
 
       // Fetch active tournaments
-      const response = await api.get<{ success: boolean; tournaments: TournamentDetailResponse[] }>('/api/tournaments', { params: { status: 'active' } });
+      const response = await api.get<{ success: boolean; tournaments: TournamentDetailResponse[]; participantNames?: Record<string, string> }>('/api/tournaments', { params: { status: 'active' } });
       const activeTournaments = response.tournaments || [];
+      const participantNamesFromApi: Record<string, string> = response.participantNames ?? {};
 
       if (!activeTournaments || activeTournaments.length === 0) {
         setTournaments([]);
@@ -76,27 +78,13 @@ function ActiveTournamentCard() {
       const userRobotIds = new Set(userRobots.map(r => r.id));
       const userRobotNames = new Map(userRobots.map(r => [r.id, r.name]));
 
-      // Collect all participant IDs across tournaments to batch-resolve names
-      const allParticipantIdsSet = new Set<number>();
-      for (const tournament of activeTournaments) {
-        if (tournament.status !== 'active') continue;
-        for (const match of tournament.matches) {
-          if (match.participant1Id) allParticipantIdsSet.add(match.participant1Id);
-          if (match.participant2Id) allParticipantIdsSet.add(match.participant2Id);
-        }
-      }
-
-      // Batch fetch all robot names (covers opponents too)
-      const allRobotIds = [...allParticipantIdsSet].filter(id => !userRobotNames.has(id));
+      // Build a combined name map from API response + user robots
+      // Keys from API are namespaced as "robot:<id>" or "team:<id>" to avoid collisions
       const allRobotNamesMap = new Map(userRobotNames);
-      if (allRobotIds.length > 0) {
-        try {
-          const allRobots = await api.get<Array<{ id: number; name: string }>>('/api/robots/all/robots');
-          for (const r of allRobots) {
-            allRobotNamesMap.set(r.id, r.name);
-          }
-        } catch {
-          // Fallback: just use IDs if the endpoint fails
+      for (const [key, name] of Object.entries(participantNamesFromApi)) {
+        const id = Number(key.split(':')[1]);
+        if (!isNaN(id) && !allRobotNamesMap.has(id)) {
+          allRobotNamesMap.set(id, name);
         }
       }
 
@@ -120,6 +108,7 @@ function ActiveTournamentCard() {
         // Filter to my participants
         const myParticipantIds = [...allParticipantIds].filter(id => userRobotIds.has(id));
 
+        // Only show this tournament if at least one of my robots is registered
         if (myParticipantIds.length === 0) continue;
 
         // Determine eliminated participants (lost a match and didn't advance)
@@ -131,11 +120,13 @@ function ActiveTournamentCard() {
           }
         }
 
+        const myParticipantIdSet = new Set(myParticipantIds);
+
         for (const participantId of myParticipantIds) {
           const name = userRobotNames.get(participantId) ?? `#${participantId}`;
 
           if (eliminatedIds.has(participantId)) {
-            participants.push({ name, status: 'eliminated' });
+            participants.push({ id: participantId, name, status: 'eliminated' });
             continue;
           }
 
@@ -150,15 +141,24 @@ function ActiveTournamentCard() {
               : currentMatch.participant1Id;
 
             if (currentMatch.isByeMatch || !opponentId) {
-              participants.push({ name, status: 'bye', nextOpponent: 'Bye' });
+              participants.push({ id: participantId, name, status: 'bye', nextOpponent: 'Bye' });
             } else {
               // Resolve opponent name
               const opponentName = allRobotNamesMap.get(opponentId) ?? `Robot #${opponentId}`;
-              participants.push({ name, status: 'active', nextOpponent: opponentName });
+              participants.push({ id: participantId, name, status: 'active', nextOpponent: opponentName });
             }
           } else {
             // Not yet assigned to a match in current round (waiting for previous round)
-            participants.push({ name, status: 'active', nextOpponent: 'TBD' });
+            participants.push({ id: participantId, name, status: 'active', nextOpponent: 'TBD' });
+          }
+        }
+
+        // Show robots that are NOT registered in this tournament (for 1v1 robot tournaments)
+        if (tournament.participantType === 'robot') {
+          for (const [robotId, robotName] of userRobotNames) {
+            if (!myParticipantIdSet.has(robotId)) {
+              participants.push({ id: robotId, name: robotName, status: 'not_registered' });
+            }
           }
         }
 
@@ -249,12 +249,18 @@ function ActiveTournamentCard() {
             {/* Per-participant status */}
             <div className="space-y-1 mt-2">
               {tournament.participants.map((p) => (
-                <div key={p.name} className="flex items-center gap-2 text-xs">
+                <div key={p.id} className="flex items-center gap-2 text-xs">
                   {p.status === 'eliminated' ? (
                     <>
                       <span className="text-red-400">✗</span>
                       <span className="text-tertiary line-through">{p.name}</span>
                       <span className="text-tertiary italic">eliminated</span>
+                    </>
+                  ) : p.status === 'not_registered' ? (
+                    <>
+                      <span className="text-tertiary">—</span>
+                      <span className="text-tertiary">{p.name}</span>
+                      <span className="text-tertiary italic">not registered</span>
                     </>
                   ) : (
                     <>

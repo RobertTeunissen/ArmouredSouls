@@ -61,7 +61,10 @@ function TeamBattleRecentMatches({ teamSize }: TeamBattleRecentMatchesProps) {
       isByeMatch?: boolean;
     };
     if (battleAny.team1Id || battleAny.team2Id) {
-      // Determine which team side the user is on
+      // Determine which team side the user is on.
+      // All robots on a team belong to the same stable (userId), so checking
+      // robot1.userId is sufficient. If neither matches (shouldn't happen),
+      // fall through to standard logic.
       const isTeam1Side = battle.robot1.userId === user.id;
       const myTeamId = isTeam1Side ? battleAny.team1Id : battleAny.team2Id;
 

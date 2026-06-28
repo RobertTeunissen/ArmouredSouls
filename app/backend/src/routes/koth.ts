@@ -4,6 +4,7 @@ import { AuthRequest, authenticateToken } from '../middleware/auth';
 import { validateRequest } from '../middleware/schemaValidator';
 import { getKothStandings } from '../services/koth/kothStandingsService';
 import prisma from '../lib/prisma';
+import type { StandingsMode } from '../../generated/prisma';
 
 const router = express.Router();
 
@@ -44,7 +45,7 @@ router.get('/:tier/instances', authenticateToken, validateRequest({ params: koth
   // Query distinct instances from standings
   const instances = await prisma.standing.groupBy({
     by: ['leagueInstanceId'],
-    where: { mode: 'koth' as any, tier: String(tier), entityType: 'robot' },
+    where: { mode: 'koth' as StandingsMode, tier: String(tier), entityType: 'robot' },
     _count: { _all: true },
   });
 

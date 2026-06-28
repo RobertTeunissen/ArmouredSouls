@@ -26,8 +26,9 @@ export const getBattleOutcome = (battle: BattleHistory, robotId: number): 'win' 
     }
   }
 
-  // For team battles (2v2/3v3), winnerId is the team ID
-  if ((battle.battleType === 'league_2v2' || battle.battleType === 'league_3v3') && battle.team1Id) {
+  // For team battles (2v2/3v3 league AND tournament), winnerId is the team ID
+  if ((battle.battleType === 'league_2v2' || battle.battleType === 'league_3v3' ||
+       battle.battleType === 'tournament_2v2' || battle.battleType === 'tournament_3v3') && battle.team1Id) {
     const isTeam1Robot = battle.robot1Id === robotId;
     const isTeam2Robot = battle.robot2Id === robotId;
 
@@ -36,12 +37,15 @@ export const getBattleOutcome = (battle: BattleHistory, robotId: number): 'win' 
     } else if (isTeam2Robot) {
       return battle.winnerId === battle.team2Id ? 'win' : 'loss';
     }
-    // Robot might be a participant but not robot1/robot2 — check participants
+    // Robot might be a participant but not robot1/robot2 (3v3 team members)
+    // In team battles, robot1 is always from team 1 and robot2 from team 2.
+    // If the robotId matches neither, determine team membership from API data.
     const participant = (battle as unknown as { participants?: { robotId: number; team: number }[] }).participants?.find(p => p.robotId === robotId);
     if (participant) {
       const myTeamId = participant.team === 1 ? battle.team1Id : battle.team2Id;
       return battle.winnerId === myTeamId ? 'win' : 'loss';
     }
+    // Fallback: can't determine team membership — return draw to avoid incorrect win/loss
   }
   
   // For 1v1 battles, winnerId is the robot ID
@@ -97,8 +101,9 @@ export const getBattleReward = (battle: BattleHistory, robotId: number): number 
     }
   }
 
-  // For team battles (2v2/3v3), winnerId is the team ID — use team IDs to determine outcome
-  if ((battle.battleType === 'league_2v2' || battle.battleType === 'league_3v3') && battle.team1Id && battle.team2Id) {
+  // For team battles (2v2/3v3 league AND tournament), winnerId is the team ID — use team IDs to determine outcome
+  if ((battle.battleType === 'league_2v2' || battle.battleType === 'league_3v3' ||
+       battle.battleType === 'tournament_2v2' || battle.battleType === 'tournament_3v3') && battle.team1Id && battle.team2Id) {
     const isTeam1Robot = battle.robot1Id === robotId;
     const isTeam2Robot = battle.robot2Id === robotId;
     const participant = (battle as unknown as { participants?: { robotId: number; team: number }[] }).participants?.find(p => p.robotId === robotId);

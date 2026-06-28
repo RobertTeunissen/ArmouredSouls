@@ -5,7 +5,18 @@ import { getMyTeamBattles, TeamBattle } from '../utils/teamBattleApi';
 import { getLeagueTierColor, getLeagueTierName } from '../utils/matchmakingApi';
 import { useRobotStore } from '../stores';
 import { useStableOverview } from '../hooks/useSubscriptions';
+import { api } from '../utils/api';
 import axios from 'axios';
+
+interface KothStanding {
+  robotId: number;
+  robotName: string;
+  tier: string;
+  leaguePoints: number;
+  wins: number;
+  totalMatches: number;
+  bestPlacement: number | null;
+}
 
 function LeagueStandingsSummary() {
   const { logout } = useAuth();
@@ -13,6 +24,7 @@ function LeagueStandingsSummary() {
   const robots = useRobotStore(state => state.robots);
   const { data: stableOverview } = useStableOverview();
   const [teams, setTeams] = useState<TeamBattle[]>([]);
+  const [kothStandings, setKothStandings] = useState<KothStanding[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,7 +39,7 @@ function LeagueStandingsSummary() {
   useEffect(() => {
     fetchTeams();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [robots.length]);
 
   const fetchTeams = async () => {
     try {
@@ -43,6 +55,32 @@ function LeagueStandingsSummary() {
 
       const data = await getMyTeamBattles();
       setTeams(data);
+
+      // Fetch KotH standings for all robots
+      if (robots.length > 0) {
+        const kothResults = await Promise.all(
+          robots.map(async (robot) => {
+            try {
+              const result = await api.get<{ standing: { tier: string; leaguePoints: number; wins: number; totalMatches: number | null; bestPlacement: number | null } | null }>(`/api/robots/${robot.id}/koth-standing`);
+              if (result.standing) {
+                return {
+                  robotId: robot.id,
+                  robotName: robot.name,
+                  tier: result.standing.tier,
+                  leaguePoints: result.standing.leaguePoints,
+                  wins: result.standing.wins,
+                  totalMatches: result.standing.totalMatches ?? 0,
+                  bestPlacement: result.standing.bestPlacement,
+                };
+              }
+              return null;
+            } catch {
+              return null;
+            }
+          })
+        );
+        setKothStandings(kothResults.filter((r): r is KothStanding => r !== null));
+      }
     } catch (err: unknown) {
       if (axios.isAxiosError(err) && err.response?.status === 401) {
         logout();
@@ -153,6 +191,21 @@ function LeagueStandingsSummary() {
             <div className="space-y-1.5">
               {teams3v3.map(team => (
                 <TeamStandingCard key={team.id} team={team} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* KotH — per robot */}
+        {kothStandings.length > 0 && (
+          <div>
+            <div className="text-xs text-secondary font-semibold mb-1.5 flex items-center gap-1.5">
+              <span className="text-xs px-1.5 py-0.5 bg-orange-400/20 rounded text-orange-400 font-semibold">KotH</span>
+              King of the Hill
+            </div>
+            <div className="space-y-1.5">
+              {kothStandings.map(standing => (
+                <KothStandingCard key={standing.robotId} standing={standing} isSubscribed={robotSubscriptionMap.get(standing.robotId)?.includes('koth') ?? false} />
               ))}
             </div>
           </div>
@@ -356,6 +409,76 @@ function TagTeamStandingCard({ team }: TeamStandingCardProps) {
             <span className="text-[#f85149]">{team.totalTagTeamLosses || 0}L</span>
             <span className="mx-0.5">/</span>
             <span className="text-[#d29922]">{team.totalTagTeamDraws || 0}D</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface KothStandingCardProps {
+  standing: KothStanding;
+  isSubscribed: boolean;
+}
+
+function KothStandingCard({ standing, isSubscribed }: KothStandingCardProps) {
+  const tierColor = getLeagueTierColor(standing.tier);
+  const tierName = getLeagueTierName(standing.tier);
+
+  return (
+    <div className="bg-[#252b38] border border-white/10 rounded-lg p-2.5">
+      {/* Desktop */}
+      <div className="hidden md:flex items-center gap-3">
+        <div className="flex-1 min-w-0">
+          <div className="font-medium text-sm text-[#e6edf3] truncate">{standing.robotName}</div>
+          <div className="flex items-center gap-2 mt-0.5">
+            <span className={`text-xs ${tierColor}`}>{tierName}</span>
+            <span className="text-xs text-secondary">•</span>
+            <span className="text-xs text-secondary">{standing.leaguePoints} LP</span>
+            {standing.bestPlacement && (
+              <>
+                <span className="text-xs text-secondary">•</span>
+                <span className="text-xs text-secondary">Best: #{standing.bestPlacement}</span>
+              </>
+            )}
+          </div>
+        </div>
+        <div className="flex-shrink-0 text-xs text-secondary">
+          <span className="text-[#3fb950]">{standing.wins}W</span>
+          <span className="mx-1">/</span>
+          <span className="text-secondary">{standing.totalMatches} matches</span>
+        </div>
+        <div className="flex-shrink-0">
+          <span className={`text-xs px-1.5 py-0.5 rounded ${
+            isSubscribed ? 'bg-[#3fb950]/20 text-[#3fb950]' : 'bg-[#f85149]/20 text-[#f85149]'
+          }`}>
+            {isSubscribed ? '✓ Ready' : '✗ Not subscribed'}
+          </span>
+        </div>
+      </div>
+
+      {/* Mobile */}
+      <div className="md:hidden">
+        <div className="flex items-center justify-between mb-1">
+          <div className="font-medium text-sm text-[#e6edf3] truncate">{standing.robotName}</div>
+          <span className={`text-xs px-1.5 py-0.5 rounded ${
+            isSubscribed ? 'bg-[#3fb950]/20 text-[#3fb950]' : 'bg-[#f85149]/20 text-[#f85149]'
+          }`}>
+            {isSubscribed ? '✓' : '✗'}
+          </span>
+        </div>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className={`text-xs ${tierColor}`}>{tierName}</span>
+            <span className="text-xs text-secondary">{standing.leaguePoints} LP</span>
+            {standing.bestPlacement && (
+              <span className="text-xs text-secondary">Best #{standing.bestPlacement}</span>
+            )}
+          </div>
+          <div className="text-xs text-secondary">
+            <span className="text-[#3fb950]">{standing.wins}W</span>
+            <span className="mx-0.5">/</span>
+            <span>{standing.totalMatches} matches</span>
           </div>
         </div>
       </div>
