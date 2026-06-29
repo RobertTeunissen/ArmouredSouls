@@ -9,7 +9,7 @@
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
 
-const mockPrisma = {
+const mockPrisma: any = {
   teamBattle: {
     findMany: jest.fn(),
   },
@@ -21,7 +21,22 @@ const mockPrisma = {
   subscription: {
     findMany: jest.fn(),
   },
+  scheduledMatchParticipant: {
+    findMany: jest.fn().mockResolvedValue([]),
+    createMany: jest.fn().mockResolvedValue({ count: 0 }),
+  },
+  standing: {
+    findFirst: jest.fn().mockResolvedValue(null),
+    findMany: jest.fn().mockResolvedValue([]),
+  },
+  scheduledMatch: {
+    create: jest.fn(),
+    findMany: jest.fn().mockResolvedValue([]),
+    findUniqueOrThrow: jest.fn(),
+  },
+  $transaction: jest.fn(),
 };
+mockPrisma.$transaction.mockImplementation((fn: (tx: any) => Promise<unknown>) => fn(mockPrisma));
 
 jest.mock('../../../src/lib/prisma', () => ({
   __esModule: true,
@@ -124,6 +139,8 @@ function makeRobot(id: number, elo: number = 1000, userId: number = 100): Robot 
     offhandWeaponId: null,
     createdAt: new Date('2024-01-01'),
     updatedAt: new Date('2024-01-01'),
+    grandMeleeWins: 0,
+    grandMeleeTop3: 0,
   };
 }
 
@@ -174,6 +191,7 @@ describe('teamBattleMatchmakingService', () => {
       const team1 = makeTeam(1);
       const team2 = makeTeam(2);
 
+      mockPrisma.standing.findMany.mockResolvedValue([{ entityId: 1 }, { entityId: 2 }]);
       mockPrisma.teamBattle.findMany.mockResolvedValue([team1, team2]);
       mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([]);
       // All robots subscribed
@@ -192,6 +210,7 @@ describe('teamBattleMatchmakingService', () => {
       const team1 = makeTeam(1); // robots 10, 11
       const team2 = makeTeam(2); // robots 20, 21
 
+      mockPrisma.standing.findMany.mockResolvedValue([{ entityId: 1 }, { entityId: 2 }]);
       mockPrisma.teamBattle.findMany.mockResolvedValue([team1, team2]);
       mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([]);
       // Only team1 robots subscribed, team2 robot 21 missing
@@ -210,6 +229,7 @@ describe('teamBattleMatchmakingService', () => {
       const team1 = makeTeam(1);
       const team2 = makeTeam(2);
 
+      mockPrisma.standing.findMany.mockResolvedValue([{ entityId: 1 }, { entityId: 2 }]);
       mockPrisma.teamBattle.findMany.mockResolvedValue([team1, team2]);
       mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([]);
       mockPrisma.subscription.findMany.mockResolvedValue([
@@ -233,12 +253,18 @@ describe('teamBattleMatchmakingService', () => {
       const team1 = makeTeam(1);
       const team2 = makeTeam(2);
 
+      mockPrisma.standing.findMany.mockResolvedValue([{ entityId: 1 }, { entityId: 2 }]);
       mockPrisma.teamBattle.findMany.mockResolvedValue([team1, team2]);
-      // Team1 already has a scheduled match
-      mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([
-        { team1Id: 1, team2Id: 3 },
-      ]);
+      mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([]);
+      // Team1 already has a scheduled match (via scheduledMatchParticipant)
+      mockPrisma.scheduledMatchParticipant.findMany.mockImplementation((args: any) => {
+        if (args?.where?.participantId === 1) {
+          return Promise.resolve([{ scheduledMatch: { id: 99, matchType: 'league_2v2', status: 'scheduled', scheduledFor: new Date(), participants: [] } }]);
+        }
+        return Promise.resolve([]);
+      });
       mockPrisma.subscription.findMany.mockResolvedValue([
+        { robotId: 10 }, { robotId: 11 },
         { robotId: 20 }, { robotId: 21 },
       ]);
 
@@ -252,6 +278,7 @@ describe('teamBattleMatchmakingService', () => {
       const incompleteTeam = makeTeam(1);
       incompleteTeam.members = incompleteTeam.members.slice(0, 1); // only 1 member for 2v2
 
+      mockPrisma.standing.findMany.mockResolvedValue([{ entityId: 1 }]);
       mockPrisma.teamBattle.findMany.mockResolvedValue([incompleteTeam]);
       mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([]);
       mockPrisma.subscription.findMany.mockResolvedValue([]);
@@ -264,6 +291,7 @@ describe('teamBattleMatchmakingService', () => {
     it('should use league_3v3 event type for 3v3 teams', async () => {
       const team1 = makeTeam(1, 3);
 
+      mockPrisma.standing.findMany.mockResolvedValue([{ entityId: 1 }]);
       mockPrisma.teamBattle.findMany.mockResolvedValue([team1]);
       mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([]);
       mockPrisma.subscription.findMany.mockResolvedValue([
@@ -281,6 +309,7 @@ describe('teamBattleMatchmakingService', () => {
     });
 
     it('should return empty array when no teams exist', async () => {
+      mockPrisma.standing.findMany.mockResolvedValue([]);
       mockPrisma.teamBattle.findMany.mockResolvedValue([]);
       mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([]);
       mockPrisma.subscription.findMany.mockResolvedValue([]);
@@ -301,7 +330,7 @@ describe('teamBattleMatchmakingService', () => {
       // Mock recent opponents query (no recent opponents)
       mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([]);
 
-      const result = await pairTeams([team1, team2], 2);
+      const result = await pairTeams([team1, team2], 2, 'silver', 'silver_2');
 
       expect(result).toHaveLength(1);
       expect(result[0].isByeMatch).toBe(false);
@@ -316,7 +345,7 @@ describe('teamBattleMatchmakingService', () => {
 
       mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([]);
 
-      const result = await pairTeams([team1, team2, team3], 2);
+      const result = await pairTeams([team1, team2, team3], 2, 'silver', 'silver_2');
 
       expect(result).toHaveLength(2);
       const byeMatches = result.filter(m => m.isByeMatch);
@@ -333,7 +362,7 @@ describe('teamBattleMatchmakingService', () => {
 
       mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([]);
 
-      const result = await pairTeams([team1, team2, team3, team4], 2);
+      const result = await pairTeams([team1, team2, team3, team4], 2, 'silver', 'silver_2');
 
       expect(result).toHaveLength(2);
       const byeMatches = result.filter(m => m.isByeMatch);
@@ -341,7 +370,7 @@ describe('teamBattleMatchmakingService', () => {
     });
 
     it('should return empty array for zero teams', async () => {
-      const result = await pairTeams([], 2);
+      const result = await pairTeams([], 2, 'silver', 'silver_2');
       expect(result).toHaveLength(0);
     });
 
@@ -350,7 +379,7 @@ describe('teamBattleMatchmakingService', () => {
 
       mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([]);
 
-      const result = await pairTeams([team1], 2);
+      const result = await pairTeams([team1], 2, 'silver', 'silver_2');
 
       expect(result).toHaveLength(1);
       expect(result[0].isByeMatch).toBe(true);
@@ -364,7 +393,7 @@ describe('teamBattleMatchmakingService', () => {
 
       mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([]);
 
-      const result = await pairTeams([team1, team2, team3], 2);
+      const result = await pairTeams([team1, team2, team3], 2, 'silver', 'silver_2');
 
       // team1 should be paired with team2 (closer LP)
       const team1Match = result.find(m => m.team1.id === 1 || m.team2.id === 1);
@@ -378,14 +407,30 @@ describe('teamBattleMatchmakingService', () => {
       const team2 = makeTeam(2, 2, { stableId: 200 }); // same LP, recent opponent
       const team3 = makeTeam(3, 2, { stableId: 300 }); // slightly worse LP, not recent
 
-      // team1 recently fought team2
-      mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([
-        { team1Id: 1, team2Id: 2 },
+      // team1 recently fought team2 (via scheduledMatch with participants)
+      mockPrisma.scheduledMatch.findMany.mockResolvedValue([
+        {
+          id: 99,
+          matchType: 'league_2v2',
+          status: 'completed',
+          scheduledFor: new Date(),
+          participants: [
+            { participantId: 1, participantType: 'team' },
+            { participantId: 2, participantType: 'team' },
+          ],
+        },
       ]);
 
-      const result = await pairTeams([team1, team2, team3], 2);
+      // LP standings for scoring
+      mockPrisma.standing.findMany.mockResolvedValue([
+        { entityId: 1, leaguePoints: 50 },
+        { entityId: 2, leaguePoints: 50 },
+        { entityId: 3, leaguePoints: 50 },
+      ]);
 
-      // team1 should prefer team3 (not recent) over team2 (recent, +400 penalty)
+      const result = await pairTeams([team1, team2, team3], 2, 'silver', 'silver_2');
+
+      // team1 should prefer team3 (not recent) over team2 (recent, penalty)
       const team1Match = result.find(m => m.team1.id === 1);
       expect(team1Match).toBeDefined();
       expect(team1Match!.team2.id).toBe(3);
@@ -402,7 +447,7 @@ describe('teamBattleMatchmakingService', () => {
         { team1Id: 1, team2Id: 3 },
       ]);
 
-      const result = await pairTeams([team1, team2, team3], 2);
+      const result = await pairTeams([team1, team2, team3], 2, 'silver', 'silver_2');
 
       // Should still produce matches (fallback to closest ELO)
       expect(result.length).toBeGreaterThan(0);
@@ -419,7 +464,7 @@ describe('teamBattleMatchmakingService', () => {
 
       mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([]);
 
-      const result = await pairTeams([team1, team2, team3], 2);
+      const result = await pairTeams([team1, team2, team3], 2, 'silver', 'silver_2');
 
       // team1 should prefer team3 (different stable) over team2 (same stable, +10000 penalty)
       const team1Match = result.find(m => m.team1.id === 1);
@@ -433,7 +478,7 @@ describe('teamBattleMatchmakingService', () => {
 
       mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([]);
 
-      const result = await pairTeams([team1, team2], 2);
+      const result = await pairTeams([team1, team2], 2, 'silver', 'silver_2');
 
       expect(result[0].teamBattleLeague).toBe('silver');
       expect(result[0].teamBattleLeagueId).toBe('silver_2');
@@ -450,7 +495,7 @@ describe('teamBattleMatchmakingService', () => {
 
       mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([]);
 
-      const result = await pairTeams([team1, team2, team3], 2);
+      const result = await pairTeams([team1, team2, team3], 2, 'silver', 'silver_2');
 
       // With identical scores, team3 (earlier creation) should be preferred
       const team1Match = result.find(m => m.team1.id === 1);
@@ -462,7 +507,13 @@ describe('teamBattleMatchmakingService', () => {
   // ── scheduleMatches ──────────────────────────────────────────────────
 
   describe('scheduleMatches', () => {
-    it('should persist regular matches via createMany', async () => {
+    beforeEach(() => {
+      mockPrisma.scheduledMatch.create.mockResolvedValue({ id: 1 });
+      mockPrisma.scheduledMatch.findUniqueOrThrow.mockResolvedValue({ id: 1, participants: [] });
+      mockPrisma.scheduledMatchParticipant.createMany.mockResolvedValue({ count: 2 });
+    });
+
+    it('should persist regular matches via schedulingService', async () => {
       const team1 = makeTeam(1);
       const team2 = makeTeam(2, 2, { stableId: 200 });
       const matches: TeamBattleMatchPair[] = [{
@@ -474,25 +525,26 @@ describe('teamBattleMatchmakingService', () => {
       }];
       const scheduledFor = new Date('2024-06-15T09:00:00Z');
 
-      mockPrisma.scheduledTeamBattleMatch.createMany.mockResolvedValue({ count: 1 });
-
       await scheduleMatches(matches, scheduledFor, 2);
 
-      expect(mockPrisma.scheduledTeamBattleMatch.createMany).toHaveBeenCalledWith({
-        data: [{
-          team1Id: 1,
-          team2Id: 2,
-          teamSize: 2,
-          teamBattleLeague: 'bronze',
-          teamBattleLeagueId: 'bronze_1',
-          matchMode: 'league_2v2',
+      expect(mockPrisma.scheduledMatch.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          matchType: 'league_2v2',
           scheduledFor,
           status: 'scheduled',
-        }],
+          leagueType: 'bronze',
+          leagueInstanceId: 'bronze_1',
+        }),
+      });
+      expect(mockPrisma.scheduledMatchParticipant.createMany).toHaveBeenCalledWith({
+        data: expect.arrayContaining([
+          expect.objectContaining({ participantType: 'team', participantId: 1, slot: 1 }),
+          expect.objectContaining({ participantType: 'team', participantId: 2, slot: 2 }),
+        ]),
       });
     });
 
-    it('should persist bye-matches with team2Id = null', async () => {
+    it('should persist bye-matches with only one participant', async () => {
       const team1 = makeTeam(1);
       const byeTeam = makeTeam(-1, 2, { stableId: -1 });
       byeTeam.id = -1;
@@ -505,21 +557,21 @@ describe('teamBattleMatchmakingService', () => {
       }];
       const scheduledFor = new Date('2024-06-15T09:00:00Z');
 
-      mockPrisma.scheduledTeamBattleMatch.create.mockResolvedValue({});
-
       await scheduleMatches(matches, scheduledFor, 2);
 
-      expect(mockPrisma.scheduledTeamBattleMatch.create).toHaveBeenCalledWith({
-        data: {
-          team1Id: 1,
-          team2Id: null,
-          teamSize: 2,
-          teamBattleLeague: 'bronze',
-          teamBattleLeagueId: 'bronze_1',
-          matchMode: 'league_2v2',
+      expect(mockPrisma.scheduledMatch.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          matchType: 'league_2v2',
           scheduledFor,
           status: 'scheduled',
-        },
+          isByeMatch: true,
+        }),
+      });
+      // Bye match should only have 1 participant (team1)
+      expect(mockPrisma.scheduledMatchParticipant.createMany).toHaveBeenCalledWith({
+        data: [
+          expect.objectContaining({ participantType: 'team', participantId: 1, slot: 1 }),
+        ],
       });
     });
 
@@ -536,54 +588,48 @@ describe('teamBattleMatchmakingService', () => {
       ];
       const scheduledFor = new Date('2024-06-15T09:00:00Z');
 
-      mockPrisma.scheduledTeamBattleMatch.createMany.mockResolvedValue({ count: 1 });
-      mockPrisma.scheduledTeamBattleMatch.create.mockResolvedValue({});
-
       await scheduleMatches(matches, scheduledFor, 2);
 
-      expect(mockPrisma.scheduledTeamBattleMatch.createMany).toHaveBeenCalledTimes(1);
-      expect(mockPrisma.scheduledTeamBattleMatch.create).toHaveBeenCalledTimes(1);
+      // Should call $transaction twice (once per match)
+      expect(mockPrisma.$transaction).toHaveBeenCalledTimes(2);
     });
 
-    it('should not call createMany when no regular matches', async () => {
-      const team1 = makeTeam(1);
-      const byeTeam = makeTeam(-1, 2, { stableId: -1 });
-      byeTeam.id = -1;
-
-      const matches: TeamBattleMatchPair[] = [
-        { team1, team2: byeTeam, isByeMatch: true, teamBattleLeague: 'bronze', teamBattleLeagueId: 'bronze_1' },
-      ];
+    it('should not call $transaction when no matches', async () => {
+      const matches: TeamBattleMatchPair[] = [];
       const scheduledFor = new Date('2024-06-15T09:00:00Z');
-
-      mockPrisma.scheduledTeamBattleMatch.create.mockResolvedValue({});
 
       await scheduleMatches(matches, scheduledFor, 2);
 
-      expect(mockPrisma.scheduledTeamBattleMatch.createMany).not.toHaveBeenCalled();
-      expect(mockPrisma.scheduledTeamBattleMatch.create).toHaveBeenCalledTimes(1);
+      expect(mockPrisma.$transaction).not.toHaveBeenCalled();
     });
   });
 
   // ── runTeamBattleMatchmaking ─────────────────────────────────────────
 
   describe('runTeamBattleMatchmaking', () => {
+    beforeEach(() => {
+      mockPrisma.scheduledMatch.create.mockResolvedValue({ id: 1 });
+      mockPrisma.scheduledMatch.findUniqueOrThrow.mockResolvedValue({ id: 1, participants: [] });
+      mockPrisma.scheduledMatchParticipant.createMany.mockResolvedValue({ count: 2 });
+    });
+
     it('should iterate all tiers and create matches', async () => {
-      // Only bronze has instances
-      mockPrisma.teamBattle.findMany
-        .mockResolvedValueOnce([{ leagueInstanceId: 'bronze_1' }]) // instances for bronze
-        .mockResolvedValueOnce([makeTeam(1), makeTeam(2, 2, { stableId: 200 })]) // eligible teams
+      // standing.findMany: first call returns instance for bronze, rest return empty (per tier)
+      mockPrisma.standing.findMany
+        .mockResolvedValueOnce([{ leagueInstanceId: 'bronze_1' }]) // distinct instances for bronze
+        .mockResolvedValueOnce([{ entityId: 1 }, { entityId: 2 }]) // teams in bronze_1
         .mockResolvedValueOnce([]) // instances for silver
         .mockResolvedValueOnce([]) // instances for gold
         .mockResolvedValueOnce([]) // instances for platinum
         .mockResolvedValueOnce([]) // instances for diamond
         .mockResolvedValueOnce([]); // instances for champion
 
+      mockPrisma.teamBattle.findMany.mockResolvedValue([makeTeam(1), makeTeam(2, 2, { stableId: 200 })]);
       mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([]);
       mockPrisma.subscription.findMany.mockResolvedValue([
         { robotId: 10 }, { robotId: 11 },
         { robotId: 20 }, { robotId: 21 },
       ]);
-      mockPrisma.scheduledTeamBattleMatch.createMany.mockResolvedValue({ count: 1 });
 
       const result = await runTeamBattleMatchmaking(2);
 
@@ -592,25 +638,22 @@ describe('teamBattleMatchmakingService', () => {
 
     it('should continue on per-instance errors (R4.6)', async () => {
       // Bronze has two instances, first one throws
-      mockPrisma.teamBattle.findMany
-        .mockResolvedValueOnce([
-          { leagueInstanceId: 'bronze_1' },
-          { leagueInstanceId: 'bronze_2' },
-        ]) // instances for bronze
-        .mockRejectedValueOnce(new Error('DB error')) // getEligibleTeams for bronze_1 fails
-        .mockResolvedValueOnce([makeTeam(3), makeTeam(4, 2, { stableId: 200 })]) // eligible teams for bronze_2
+      mockPrisma.standing.findMany
+        .mockResolvedValueOnce([{ leagueInstanceId: 'bronze_1' }, { leagueInstanceId: 'bronze_2' }]) // instances for bronze
+        .mockRejectedValueOnce(new Error('DB error')) // getEligibleTeams for bronze_1 fails at standing query
+        .mockResolvedValueOnce([{ entityId: 3 }, { entityId: 4 }]) // teams in bronze_2
         .mockResolvedValueOnce([]) // instances for silver
         .mockResolvedValueOnce([]) // instances for gold
         .mockResolvedValueOnce([]) // instances for platinum
         .mockResolvedValueOnce([]) // instances for diamond
         .mockResolvedValueOnce([]); // instances for champion
 
+      mockPrisma.teamBattle.findMany.mockResolvedValue([makeTeam(3, 2, { stableId: 300 }), makeTeam(4, 2, { stableId: 400 })]);
       mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([]);
       mockPrisma.subscription.findMany.mockResolvedValue([
         { robotId: 30 }, { robotId: 31 },
         { robotId: 40 }, { robotId: 41 },
       ]);
-      mockPrisma.scheduledTeamBattleMatch.createMany.mockResolvedValue({ count: 1 });
 
       // Should not throw — continues with remaining instances
       const result = await runTeamBattleMatchmaking(2);
@@ -620,21 +663,21 @@ describe('teamBattleMatchmakingService', () => {
 
     it('should continue on per-tier errors (R4.6)', async () => {
       // Bronze tier throws entirely
-      mockPrisma.teamBattle.findMany
+      mockPrisma.standing.findMany
         .mockRejectedValueOnce(new Error('Tier error')) // instances query for bronze fails
         .mockResolvedValueOnce([{ leagueInstanceId: 'silver_1' }]) // instances for silver
-        .mockResolvedValueOnce([makeTeam(1, 2), makeTeam(2, 2, { stableId: 200 })]) // eligible teams for silver_1
+        .mockResolvedValueOnce([{ entityId: 1 }, { entityId: 2 }]) // teams in silver_1
         .mockResolvedValueOnce([]) // instances for gold
         .mockResolvedValueOnce([]) // instances for platinum
         .mockResolvedValueOnce([]) // instances for diamond
         .mockResolvedValueOnce([]); // instances for champion
 
+      mockPrisma.teamBattle.findMany.mockResolvedValue([makeTeam(1, 2), makeTeam(2, 2, { stableId: 200 })]);
       mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([]);
       mockPrisma.subscription.findMany.mockResolvedValue([
         { robotId: 10 }, { robotId: 11 },
         { robotId: 20 }, { robotId: 21 },
       ]);
-      mockPrisma.scheduledTeamBattleMatch.createMany.mockResolvedValue({ count: 1 });
 
       // Should not throw — continues with remaining tiers
       const result = await runTeamBattleMatchmaking(2);
@@ -643,55 +686,54 @@ describe('teamBattleMatchmakingService', () => {
     });
 
     it('should skip instances with fewer than 1 eligible team', async () => {
-      mockPrisma.teamBattle.findMany
+      mockPrisma.standing.findMany
         .mockResolvedValueOnce([{ leagueInstanceId: 'bronze_1' }]) // instances for bronze
-        .mockResolvedValueOnce([]) // no eligible teams in bronze_1
+        .mockResolvedValueOnce([{ entityId: 1 }]) // one team in standings
         .mockResolvedValueOnce([]) // instances for silver
         .mockResolvedValueOnce([]) // instances for gold
         .mockResolvedValueOnce([]) // instances for platinum
         .mockResolvedValueOnce([]) // instances for diamond
         .mockResolvedValueOnce([]); // instances for champion
 
+      // Team has no weapon (not scheduling-ready)
+      mockPrisma.teamBattle.findMany.mockResolvedValue([]);
       mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([]);
       mockPrisma.subscription.findMany.mockResolvedValue([]);
 
       const result = await runTeamBattleMatchmaking(2);
 
       expect(result).toBe(0);
-      expect(mockPrisma.scheduledTeamBattleMatch.createMany).not.toHaveBeenCalled();
     });
 
     it('should use custom scheduledFor date when provided', async () => {
       const customDate = new Date('2024-12-25T09:00:00Z');
 
-      mockPrisma.teamBattle.findMany
+      mockPrisma.standing.findMany
         .mockResolvedValueOnce([{ leagueInstanceId: 'bronze_1' }]) // instances for bronze
-        .mockResolvedValueOnce([makeTeam(1), makeTeam(2, 2, { stableId: 200 })]) // eligible teams
+        .mockResolvedValueOnce([{ entityId: 1 }, { entityId: 2 }]) // teams in bronze_1
         .mockResolvedValueOnce([]) // instances for silver
         .mockResolvedValueOnce([]) // instances for gold
         .mockResolvedValueOnce([]) // instances for platinum
         .mockResolvedValueOnce([]) // instances for diamond
         .mockResolvedValueOnce([]); // instances for champion
 
+      mockPrisma.teamBattle.findMany.mockResolvedValue([makeTeam(1), makeTeam(2, 2, { stableId: 200 })]);
       mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([]);
       mockPrisma.subscription.findMany.mockResolvedValue([
         { robotId: 10 }, { robotId: 11 },
         { robotId: 20 }, { robotId: 21 },
       ]);
-      mockPrisma.scheduledTeamBattleMatch.createMany.mockResolvedValue({ count: 1 });
 
       await runTeamBattleMatchmaking(2, customDate);
 
-      expect(mockPrisma.scheduledTeamBattleMatch.createMany).toHaveBeenCalledWith({
-        data: expect.arrayContaining([
-          expect.objectContaining({ scheduledFor: customDate }),
-        ]),
+      expect(mockPrisma.scheduledMatch.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({ scheduledFor: customDate }),
       });
     });
 
     it('should return 0 when no tiers have instances', async () => {
       // All tiers return empty instances
-      mockPrisma.teamBattle.findMany.mockResolvedValue([]);
+      mockPrisma.standing.findMany.mockResolvedValue([]);
 
       const result = await runTeamBattleMatchmaking(3);
 

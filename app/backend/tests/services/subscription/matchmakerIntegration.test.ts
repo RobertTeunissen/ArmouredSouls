@@ -24,6 +24,8 @@ const mockPrisma = {
   league: { findMany: jest.fn() },
   leagueInstance: { findMany: jest.fn() },
   battle: { findMany: jest.fn() },
+  scheduledMatchParticipant: { findMany: jest.fn().mockResolvedValue([]) },
+  standing: { findFirst: jest.fn().mockResolvedValue(null), findMany: jest.fn().mockResolvedValue([]) },
 };
 
 jest.mock('../../../src/lib/prisma', () => ({
@@ -346,7 +348,7 @@ describe('Matchmaker Subscription Integration', () => {
         { robotId: 2 },
       ]);
 
-      const result = await getEligibleRobots();
+      const result = await getEligibleRobots('bronze', 'bronze_1');
 
       // Verify subscription batch query was called with correct event type
       expect(mockPrisma.subscription.findMany).toHaveBeenCalledWith(
@@ -378,7 +380,7 @@ describe('Matchmaker Subscription Integration', () => {
       // Only robot 40 is subscribed
       mockPrisma.subscription.findMany.mockResolvedValue([{ robotId: 40 }]);
 
-      const result = await getEligibleRobots();
+      const result = await getEligibleRobots('bronze', 'bronze_1');
 
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe(40);
@@ -400,7 +402,7 @@ describe('Matchmaker Subscription Integration', () => {
       // No robots subscribed
       mockPrisma.subscription.findMany.mockResolvedValue([]);
 
-      const result = await getEligibleRobots();
+      const result = await getEligibleRobots('bronze', 'bronze_1');
 
       expect(result).toHaveLength(0);
 

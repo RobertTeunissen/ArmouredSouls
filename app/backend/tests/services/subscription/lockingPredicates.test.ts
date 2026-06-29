@@ -17,6 +17,8 @@ const mockPrisma = {
   scheduledTournamentMatch: { count: jest.fn() },
   scheduledTeamBattleMatch: { count: jest.fn() },
   teamBattleMember: { findFirst: jest.fn(), findMany: jest.fn() },
+  scheduledMatchParticipant: { findMany: jest.fn().mockResolvedValue([]) },
+  standing: { findFirst: jest.fn().mockResolvedValue(null), findMany: jest.fn().mockResolvedValue([]) },
 };
 
 jest.mock('../../../src/lib/prisma', () => ({
@@ -82,20 +84,16 @@ describe('lockingPredicates', () => {
   describe('tagTeamLockingPredicate', () => {
     it('should return true when robot is on a team with a scheduled tag_team match', async () => {
       mockPrisma.teamBattleMember.findFirst.mockResolvedValue({ teamId: 100 });
-      mockPrisma.scheduledTeamBattleMatch.count.mockResolvedValue(1);
+      // schedulingService.getUpcomingForTeam queries scheduledMatchParticipant.findMany
+      mockPrisma.scheduledMatchParticipant.findMany.mockResolvedValue([
+        { scheduledMatch: { id: 1, matchType: 'tag_team', status: 'scheduled', scheduledFor: new Date(), participants: [] } },
+      ]);
 
       const result = await tagTeamLockingPredicate(15);
 
       expect(result).toBe(true);
       expect(mockPrisma.teamBattleMember.findFirst).toHaveBeenCalledWith({
         where: { robotId: 15, team: { teamSize: 2 } },
-      });
-      expect(mockPrisma.scheduledTeamBattleMatch.count).toHaveBeenCalledWith({
-        where: {
-          matchMode: 'tag_team',
-          status: 'scheduled',
-          OR: [{ team1Id: 100 }, { team2Id: 100 }],
-        },
       });
     });
 
@@ -105,12 +103,11 @@ describe('lockingPredicates', () => {
       const result = await tagTeamLockingPredicate(15);
 
       expect(result).toBe(false);
-      expect(mockPrisma.scheduledTeamBattleMatch.count).not.toHaveBeenCalled();
     });
 
     it('should return false when robot is on a team but no scheduled tag_team match exists', async () => {
       mockPrisma.teamBattleMember.findFirst.mockResolvedValue({ teamId: 200 });
-      mockPrisma.scheduledTeamBattleMatch.count.mockResolvedValue(0);
+      mockPrisma.scheduledMatchParticipant.findMany.mockResolvedValue([]);
 
       const result = await tagTeamLockingPredicate(15);
 
@@ -132,75 +129,61 @@ describe('lockingPredicates', () => {
 
   describe('league2v2LockingPredicate', () => {
     it('should return true when robot has a scheduled 2v2 match', async () => {
-      mockPrisma.scheduledTeamBattleMatch.count.mockResolvedValue(1);
+      mockPrisma.teamBattleMember.findFirst.mockResolvedValue({ teamId: 10 });
+      mockPrisma.scheduledMatchParticipant.findMany.mockResolvedValue([
+        { scheduledMatch: { id: 1, matchType: 'league_2v2', status: 'scheduled', scheduledFor: new Date(), participants: [] } },
+      ]);
 
       const result = await league2v2LockingPredicate(10);
 
       expect(result).toBe(true);
-      expect(mockPrisma.scheduledTeamBattleMatch.count).toHaveBeenCalledWith({
-        where: {
-          status: 'scheduled',
-          teamSize: 2,
-          OR: [
-            { team1: { members: { some: { robotId: 10 } } } },
-            { team2: { members: { some: { robotId: 10 } } } },
-          ],
-        },
-      });
     });
 
     it('should return false when robot has no scheduled 2v2 match', async () => {
-      mockPrisma.scheduledTeamBattleMatch.count.mockResolvedValue(0);
+      mockPrisma.teamBattleMember.findFirst.mockResolvedValue({ teamId: 10 });
+      mockPrisma.scheduledMatchParticipant.findMany.mockResolvedValue([]);
 
       const result = await league2v2LockingPredicate(10);
 
       expect(result).toBe(false);
     });
 
-    it('should query with teamSize 2 (not 3)', async () => {
-      mockPrisma.scheduledTeamBattleMatch.count.mockResolvedValue(0);
+    it('should return false when robot is not a member of any team', async () => {
+      mockPrisma.teamBattleMember.findFirst.mockResolvedValue(null);
 
-      await league2v2LockingPredicate(5);
+      const result = await league2v2LockingPredicate(5);
 
-      const callArgs = mockPrisma.scheduledTeamBattleMatch.count.mock.calls[0][0];
-      expect(callArgs.where.teamSize).toBe(2);
+      expect(result).toBe(false);
     });
   });
 
   describe('league3v3LockingPredicate', () => {
     it('should return true when robot has a scheduled 3v3 match', async () => {
-      mockPrisma.scheduledTeamBattleMatch.count.mockResolvedValue(1);
+      mockPrisma.teamBattleMember.findFirst.mockResolvedValue({ teamId: 20 });
+      mockPrisma.scheduledMatchParticipant.findMany.mockResolvedValue([
+        { scheduledMatch: { id: 2, matchType: 'league_3v3', status: 'scheduled', scheduledFor: new Date(), participants: [] } },
+      ]);
 
       const result = await league3v3LockingPredicate(20);
 
       expect(result).toBe(true);
-      expect(mockPrisma.scheduledTeamBattleMatch.count).toHaveBeenCalledWith({
-        where: {
-          status: 'scheduled',
-          teamSize: 3,
-          OR: [
-            { team1: { members: { some: { robotId: 20 } } } },
-            { team2: { members: { some: { robotId: 20 } } } },
-          ],
-        },
-      });
     });
 
     it('should return false when robot has no scheduled 3v3 match', async () => {
-      mockPrisma.scheduledTeamBattleMatch.count.mockResolvedValue(0);
+      mockPrisma.teamBattleMember.findFirst.mockResolvedValue({ teamId: 20 });
+      mockPrisma.scheduledMatchParticipant.findMany.mockResolvedValue([]);
 
       const result = await league3v3LockingPredicate(20);
 
       expect(result).toBe(false);
     });
 
-    it('should query with teamSize 3 (not 2)', async () => {
-      mockPrisma.scheduledTeamBattleMatch.count.mockResolvedValue(0);
+    it('should return false when robot is not a member of any team', async () => {
+      mockPrisma.teamBattleMember.findFirst.mockResolvedValue(null);
 
-      await league3v3LockingPredicate(8);
+      const result = await league3v3LockingPredicate(8);
 
-      const callArgs = mockPrisma.scheduledTeamBattleMatch.count.mock.calls[0][0];
-      expect(callArgs.where.teamSize).toBe(3);
+      expect(result).toBe(false);
     });
   });
 });

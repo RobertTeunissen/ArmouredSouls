@@ -48,6 +48,9 @@ const mockPrisma = {
     update: jest.fn(),
     groupBy: jest.fn(),
   },
+  scheduledMatchParticipant: {
+    findMany: jest.fn().mockResolvedValue([]),
+  },
   $transaction: mockTransaction,
   $executeRaw: jest.fn(),
 };
@@ -170,7 +173,6 @@ import {
   rebalanceTeamBattleLeagues,
 } from '../../../src/services/team-battle/teamBattleAdapter';
 import { TeamBattleResult } from '../../../src/types/teamBattleLogTypes';
-import { Prisma } from '../../../generated/prisma';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -374,7 +376,7 @@ describe('teamBattleOrchestrator', () => {
       mockUnifiedScheduledMatches([match]);
 
       // Transaction mock: execute the callback and return a battle record
-      mockTransaction.mockImplementation(async (cb: Function) => {
+      mockTransaction.mockImplementation(async (cb: (...args: unknown[]) => unknown) => {
         const tx = {
           battle: { create: jest.fn().mockResolvedValue({ id: 99 }), update: jest.fn() },
           battleParticipant: { createMany: jest.fn(), updateMany: jest.fn() },
@@ -407,7 +409,7 @@ describe('teamBattleOrchestrator', () => {
       mockUnifiedScheduledMatches([match]);
 
       let createdBattleData: any = null;
-      mockTransaction.mockImplementation(async (cb: Function) => {
+      mockTransaction.mockImplementation(async (cb: (...args: unknown[]) => unknown) => {
         const tx = {
           battle: {
             create: jest.fn().mockImplementation(({ data }) => {
@@ -434,7 +436,7 @@ describe('teamBattleOrchestrator', () => {
       mockUnifiedScheduledMatches([match]);
 
       let createdBattleData: any = null;
-      mockTransaction.mockImplementation(async (cb: Function) => {
+      mockTransaction.mockImplementation(async (cb: (...args: unknown[]) => unknown) => {
         const tx = {
           battle: {
             create: jest.fn().mockImplementation(({ data }) => {
@@ -460,7 +462,7 @@ describe('teamBattleOrchestrator', () => {
       mockUnifiedScheduledMatches([match]);
 
       let participantData: any[] = [];
-      mockTransaction.mockImplementation(async (cb: Function) => {
+      mockTransaction.mockImplementation(async (cb: (...args: unknown[]) => unknown) => {
         const tx = {
           battle: { create: jest.fn().mockResolvedValue({ id: 99 }), update: jest.fn() },
           battleParticipant: {
@@ -503,7 +505,7 @@ describe('teamBattleOrchestrator', () => {
       mockUnifiedScheduledMatches([match1, match2]);
 
       let callCount = 0;
-      mockTransaction.mockImplementation(async (cb: Function) => {
+      mockTransaction.mockImplementation(async (cb: (...args: unknown[]) => unknown) => {
         callCount++;
         if (callCount === 1) {
           throw new Error('Simulation failed for match 1');
@@ -587,7 +589,7 @@ describe('teamBattleOrchestrator', () => {
       const match = makeScheduledMatch(1, 2);
       mockUnifiedScheduledMatches([match]);
 
-      mockTransaction.mockImplementation(async (cb: Function) => {
+      mockTransaction.mockImplementation(async (cb: (...args: unknown[]) => unknown) => {
         const tx = {
           battle: { create: jest.fn().mockResolvedValue({ id: 99 }), update: jest.fn() },
           battleParticipant: { createMany: jest.fn(), updateMany: jest.fn() },
@@ -608,7 +610,7 @@ describe('teamBattleOrchestrator', () => {
       const match = makeScheduledMatch(1, 3);
       mockUnifiedScheduledMatches([match]);
 
-      mockTransaction.mockImplementation(async (cb: Function) => {
+      mockTransaction.mockImplementation(async (cb: (...args: unknown[]) => unknown) => {
         const tx = {
           battle: { create: jest.fn().mockResolvedValue({ id: 99 }), update: jest.fn() },
           battleParticipant: { createMany: jest.fn(), updateMany: jest.fn() },
@@ -628,7 +630,7 @@ describe('teamBattleOrchestrator', () => {
       const match = makeScheduledMatch(1, 2);
       mockUnifiedScheduledMatches([match]);
 
-      mockTransaction.mockImplementation(async (cb: Function) => {
+      mockTransaction.mockImplementation(async (cb: (...args: unknown[]) => unknown) => {
         const tx = {
           battle: { create: jest.fn().mockResolvedValue({ id: 99 }), update: jest.fn() },
           battleParticipant: { createMany: jest.fn(), updateMany: jest.fn() },
@@ -655,7 +657,7 @@ describe('teamBattleOrchestrator', () => {
       mockUnifiedScheduledMatches([match]);
       mockCalculateTeamBattleLPDelta.mockReturnValue(3);
 
-      mockTransaction.mockImplementation(async (cb: Function) => {
+      mockTransaction.mockImplementation(async (cb: (...args: unknown[]) => unknown) => {
         const tx = {
           battle: { create: jest.fn().mockResolvedValue({ id: 99 }), update: jest.fn() },
           battleParticipant: { createMany: jest.fn(), updateMany: jest.fn() },
@@ -698,7 +700,7 @@ describe('teamBattleOrchestrator', () => {
       mockUnifiedScheduledMatches([match]);
       mockCalculateTeamBattleLPDelta.mockReturnValue(3);
 
-      mockTransaction.mockImplementation(async (cb: Function) => {
+      mockTransaction.mockImplementation(async (cb: (...args: unknown[]) => unknown) => {
         const tx = {
           battle: { create: jest.fn().mockResolvedValue({ id: 99 }), update: jest.fn() },
           battleParticipant: { createMany: jest.fn(), updateMany: jest.fn() },
@@ -723,7 +725,7 @@ describe('teamBattleOrchestrator', () => {
       const match = makeScheduledMatch(1, 2);
       mockUnifiedScheduledMatches([match]);
 
-      mockTransaction.mockImplementation(async (cb: Function) => {
+      mockTransaction.mockImplementation(async (cb: (...args: unknown[]) => unknown) => {
         const tx = {
           battle: { create: jest.fn().mockResolvedValue({ id: 99 }), update: jest.fn() },
           battleParticipant: { createMany: jest.fn(), updateMany: jest.fn() },
@@ -753,7 +755,7 @@ describe('teamBattleOrchestrator', () => {
       const match = makeScheduledMatch(1, 2, { isBye: true });
       mockUnifiedScheduledMatches([match]);
 
-      mockTransaction.mockImplementation(async (cb: Function) => {
+      mockTransaction.mockImplementation(async (cb: (...args: unknown[]) => unknown) => {
         const tx = {
           battle: { create: jest.fn().mockResolvedValue({ id: 99 }), update: jest.fn() },
           battleParticipant: { createMany: jest.fn(), updateMany: jest.fn() },
@@ -1076,7 +1078,7 @@ describe('teamBattleAdapter', () => {
 
   describe('instance assignment', () => {
     it('should assign to first instance when tier is empty', async () => {
-      mockTransaction.mockImplementation(async (cb: Function) => {
+      mockTransaction.mockImplementation(async (cb: (...args: unknown[]) => unknown) => {
         const tx = {
           $executeRaw: jest.fn(),
           standing: {
@@ -1092,7 +1094,7 @@ describe('teamBattleAdapter', () => {
     });
 
     it('should assign to least-full instance when space available', async () => {
-      mockTransaction.mockImplementation(async (cb: Function) => {
+      mockTransaction.mockImplementation(async (cb: (...args: unknown[]) => unknown) => {
         const tx = {
           $executeRaw: jest.fn(),
           standing: {
@@ -1111,7 +1113,7 @@ describe('teamBattleAdapter', () => {
     });
 
     it('should create new instance when all are full (50 teams)', async () => {
-      mockTransaction.mockImplementation(async (cb: Function) => {
+      mockTransaction.mockImplementation(async (cb: (...args: unknown[]) => unknown) => {
         const tx = {
           $executeRaw: jest.fn(),
           standing: {

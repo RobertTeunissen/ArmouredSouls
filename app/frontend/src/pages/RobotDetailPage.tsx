@@ -304,7 +304,7 @@ function RobotDetailPage() {
           )}
 
           {activeTab === 'league-history' && (
-            <div className="space-y-6">
+            <div className="space-y-6" data-testid="league-history-tab">
               <LeagueHistoryTab robotId={robot.id} currentTier={robot.currentLeague} currentLp={robot.leaguePoints} robotName={robot.name} />
               <TeamBattleLeagueHistory robotId={robot.id} />
               <ChampionshipWinsSection userId={robot.userId} />

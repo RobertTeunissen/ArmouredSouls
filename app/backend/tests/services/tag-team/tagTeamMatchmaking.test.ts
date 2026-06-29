@@ -39,6 +39,8 @@ jest.mock('../../../src/config/logger', () => ({
 
 const mockPrisma = {
   cycleMetadata: { findUnique: jest.fn().mockResolvedValue({ id: 1, totalCycles: 42 }) },
+  scheduledMatchParticipant: { findMany: jest.fn().mockResolvedValue([]) },
+  standing: { findFirst: jest.fn().mockResolvedValue(null), findMany: jest.fn().mockResolvedValue([]) },
 };
 jest.mock('../../../src/lib/prisma', () => ({
   __esModule: true,

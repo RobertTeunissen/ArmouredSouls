@@ -202,6 +202,9 @@ describe('RobotDetailPage - League History Tab', () => {
       if (url === '/api/facilities') {
         return Promise.resolve({ data: { facilities: [] } });
       }
+      if (url.includes('/grand-melee-standing')) {
+        return Promise.resolve({ data: { standing: null } });
+      }
       return Promise.resolve({ data: [] });
     });
   });
@@ -235,6 +238,9 @@ describe('RobotDetailPage - League History Tab', () => {
       }
       if (url === '/api/facilities') {
         return Promise.resolve({ data: { facilities: [] } });
+      }
+      if (url.includes('/grand-melee-standing')) {
+        return Promise.resolve({ data: { standing: null } });
       }
       return Promise.resolve({ data: [] });
     });

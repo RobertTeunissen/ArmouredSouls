@@ -11,7 +11,7 @@ import fc from 'fast-check';
 import { BOOKING_OFFICE_MAX_EVENTS_PER_ROBOT, getSubscriptionCap } from '../../../src/config/subscriptions';
 import {
   registerSubscribableEvent,
-  isRegisteredEvent,
+
   _clearRegistryForTesting,
   SubscribableEventType,
 } from '../../../src/services/subscription/eventRegistry';
@@ -37,11 +37,23 @@ const mockTx = {
     create: jest.fn(),
   },
   user: { findUnique: jest.fn() },
+  teamBattleMember: {
+    findMany: jest.fn().mockResolvedValue([]),
+  },
+  teamBattle: {
+    update: jest.fn().mockResolvedValue(undefined),
+  },
+  standing: {
+    findUnique: jest.fn().mockResolvedValue(null),
+    create: jest.fn().mockResolvedValue(undefined),
+  },
 };
 
 const mockPrisma = {
   subscription: { count: jest.fn() },
   user: { findUnique: jest.fn() },
+  scheduledMatchParticipant: { findMany: jest.fn().mockResolvedValue([]) },
+  standing: { findFirst: jest.fn().mockResolvedValue(null), findMany: jest.fn().mockResolvedValue([]) },
   $transaction: jest.fn((fn: (tx: typeof mockTx) => Promise<void>) => fn(mockTx)),
 };
 

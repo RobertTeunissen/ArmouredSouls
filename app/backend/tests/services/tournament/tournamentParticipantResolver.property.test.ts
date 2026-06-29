@@ -17,6 +17,8 @@ jest.mock('../../../src/lib/prisma', () => ({
   default: {
     robot: { findUnique: (...args: unknown[]) => mockRobotFindUnique(...args) },
     teamBattle: { findUnique: (...args: unknown[]) => mockTeamBattleFindUnique(...args) },
+    scheduledMatchParticipant: { findMany: jest.fn().mockResolvedValue([]) },
+    standing: { findFirst: jest.fn().mockResolvedValue(null), findMany: jest.fn().mockResolvedValue([]) },
   },
 }));
 

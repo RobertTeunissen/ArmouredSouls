@@ -37,6 +37,7 @@ jest.mock('../../../src/services/koth/kothBattleOrchestrator', () => ({
 jest.mock('../../../src/services/league/leagueRebalancingService', () => ({
   rebalanceLeagues: jest.fn().mockResolvedValue({ totalPromoted: 0, totalDemoted: 0 }),
   rebalanceKothLeagues: jest.fn().mockResolvedValue({ totalPromoted: 0, totalDemoted: 0 }),
+  rebalanceGrandMeleeLeagues: jest.fn().mockResolvedValue({ totalPromoted: 0, totalDemoted: 0 }),
   createStandingsAdapter: jest.fn().mockReturnValue({
     entityType: 'robot',
     getEntitiesWithMinPoints: jest.fn().mockResolvedValue([]),
@@ -88,6 +89,14 @@ jest.mock('../../../src/services/team-battle/teamBattleAdapter', () => ({
 
 jest.mock('../../../src/services/team-battle/teamBattleMatchmakingService', () => ({
   runTeamBattleMatchmaking: jest.fn().mockResolvedValue(0),
+}));
+
+jest.mock('../../../src/services/grand-melee/grandMeleeBattleOrchestrator', () => ({
+  executeScheduledGrandMeleeBattles: jest.fn().mockResolvedValue({ totalMatches: 0, successfulMatches: 0, failedMatches: 0 }),
+}));
+
+jest.mock('../../../src/services/grand-melee/grandMeleeMatchmakingService', () => ({
+  runGrandMeleeMatchmaking: jest.fn().mockResolvedValue(0),
 }));
 
 jest.mock('../../../src/services/tournament/tournamentService', () => ({
@@ -155,6 +164,11 @@ jest.mock('../../../src/lib/prisma', () => ({
     },
     standing: {
       updateMany: jest.fn().mockResolvedValue({ count: 0 }),
+      findFirst: jest.fn().mockResolvedValue(null),
+      findMany: jest.fn().mockResolvedValue([]),
+    },
+    scheduledMatchParticipant: {
+      findMany: jest.fn().mockResolvedValue([]),
     },
     facility: {
       findMany: jest.fn().mockResolvedValue([]),
@@ -191,28 +205,13 @@ describe('Admin Cycle Service — executeBulkCycles', () => {
       expect(cycleResult.settlement).toBeDefined();
     });
 
-    it('should mark reserved slots as skipped with correct message', async () => {
+    it('should not have any reserved slots (all modes are now active)', async () => {
       const result = await executeBulkCycles({ cycles: 1 });
       const cycleResult = result.results[0];
 
-      // Only remaining reserved slots should have skipped: true
-      expect(cycleResult.team2v2TournamentBlock).toEqual({ skipped: true, message: 'reserved slot, no handler implemented' });
-      expect(cycleResult.grandMeleeBlock).toEqual({ skipped: true, message: 'reserved slot, no handler implemented' });
-      expect(cycleResult.team3v3TournamentBlock).toEqual({ skipped: true, message: 'reserved slot, no handler implemented' });
-    });
-
-    it('should fire only 3 reserved slots and record them (team 2v2/3v3 league are now active)', async () => {
-      const result = await executeBulkCycles({ cycles: 1 });
-      const cycleResult = result.results[0];
-
+      // All slots are now active — no reserved slots
       expect(cycleResult.reservedSlotsFired).toBeDefined();
-      expect(cycleResult.reservedSlotsFired).toContain('team_2v2_tournament');
-      expect(cycleResult.reservedSlotsFired).toContain('grand_melee');
-      expect(cycleResult.reservedSlotsFired).toContain('team_3v3_tournament');
-      expect(cycleResult.reservedSlotsFired).toHaveLength(3);
-      // team_2v2_league and team_3v3_league are no longer reserved
-      expect(cycleResult.reservedSlotsFired).not.toContain('team_2v2_league');
-      expect(cycleResult.reservedSlotsFired).not.toContain('team_3v3_league');
+      expect(cycleResult.reservedSlotsFired).toHaveLength(0);
     });
   });
 
@@ -295,7 +294,7 @@ describe('Admin Cycle Service — executeBulkCycles', () => {
         expect(cycleResult.leagueBlock).toBeDefined();
         expect(cycleResult.tagTeamBlock).toBeDefined();
         expect(cycleResult.settlement).toBeDefined();
-        expect(cycleResult.reservedSlotsFired).toHaveLength(3);
+        expect(cycleResult.reservedSlotsFired).toHaveLength(0);
       }
     });
   });

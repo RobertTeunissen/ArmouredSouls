@@ -32,6 +32,14 @@ const mockTx = {
   scheduledTeamBattleMatch: {
     count: jest.fn(),
   },
+  scheduledMatchParticipant: {
+    findMany: jest.fn().mockResolvedValue([]),
+    count: jest.fn().mockResolvedValue(0),
+  },
+  standing: {
+    findFirst: jest.fn().mockResolvedValue(null),
+    findMany: jest.fn().mockResolvedValue([]),
+  },
 };
 
 const mockPrisma = {
@@ -39,6 +47,14 @@ const mockPrisma = {
   teamBattle: {
     findUnique: jest.fn(),
     update: jest.fn(),
+  },
+  scheduledMatchParticipant: {
+    findMany: jest.fn().mockResolvedValue([]),
+    count: jest.fn().mockResolvedValue(0),
+  },
+  standing: {
+    findFirst: jest.fn().mockResolvedValue(null),
+    findMany: jest.fn().mockResolvedValue([]),
   },
 };
 

@@ -26,11 +26,28 @@ const mockTx = {
     findFirst: jest.fn(),
     create: jest.fn(),
   },
+  teamBattleMember: {
+    findMany: jest.fn().mockResolvedValue([]),
+  },
+  teamBattle: {
+    update: jest.fn().mockResolvedValue(undefined),
+  },
+  standing: {
+    findUnique: jest.fn().mockResolvedValue(null),
+    create: jest.fn().mockResolvedValue(undefined),
+  },
 };
 
 const mockPrisma = {
   subscription: {
     count: jest.fn(),
+  },
+  scheduledMatchParticipant: {
+    findMany: jest.fn().mockResolvedValue([]),
+  },
+  standing: {
+    findFirst: jest.fn().mockResolvedValue(null),
+    findMany: jest.fn().mockResolvedValue([]),
   },
   $transaction: jest.fn((fn: (tx: typeof mockTx) => Promise<void>) => fn(mockTx)),
 };
@@ -170,12 +187,12 @@ describe('subscriptionService', () => {
       mockTx.subscription.findUnique.mockResolvedValue(null);
       mockTx.subscription.count.mockResolvedValue(2); // below cap
       mockTx.facility.findUnique.mockResolvedValue({ level: 1 }); // cap = 4
-      mockTx.subscription.create.mockResolvedValue({ id: 10, robotId: 1, eventType: 'league_1v1', status: 'pending' });
+      mockTx.subscription.create.mockResolvedValue({ id: 10, robotId: 1, eventType: 'league_1v1', status: 'active' });
 
       await subscribeRobot(1, 'league_1v1', 1);
 
       expect(mockTx.subscription.create).toHaveBeenCalledWith({
-        data: { robotId: 1, eventType: 'league_1v1', status: 'pending' },
+        data: { robotId: 1, eventType: 'league_1v1', status: 'active' },
       });
       expect(mockTx.auditLog.create).toHaveBeenCalledWith(
         expect.objectContaining({
