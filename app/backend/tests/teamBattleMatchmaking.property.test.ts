@@ -22,12 +22,26 @@ const mockPrisma = {
     createMany: jest.fn().mockResolvedValue({ count: 0 }),
     create: jest.fn().mockResolvedValue({}),
   },
+  scheduledMatch: {
+    findMany: jest.fn().mockResolvedValue([]),
+    create: jest.fn().mockResolvedValue({ id: 1 }),
+    findUniqueOrThrow: jest.fn().mockResolvedValue({ id: 1, participants: [] }),
+  },
+  scheduledMatchParticipant: {
+    findMany: jest.fn().mockResolvedValue([]),
+    createMany: jest.fn().mockResolvedValue({ count: 0 }),
+  },
+  standing: {
+    findFirst: jest.fn().mockResolvedValue(null),
+    findMany: jest.fn().mockResolvedValue([]),
+  },
   teamBattle: {
     findMany: jest.fn().mockResolvedValue([]),
   },
   subscription: {
     findMany: jest.fn().mockResolvedValue([]),
   },
+  $transaction: jest.fn().mockImplementation((fn: (tx: unknown) => Promise<unknown>) => fn(mockPrisma)),
 };
 
 jest.mock('../src/lib/prisma', () => ({
@@ -121,6 +135,8 @@ function createMockRobot(id: number, elo: number = 1000): Robot {
     defensiveWins: 0,
     balancedWins: 0,
     dualWieldWins: 0,
+    grandMeleeWins: 0,
+    grandMeleeTop3: 0,
     mainWeaponId: 1,
     offhandWeaponId: null,
     createdAt: new Date('2025-01-01'),

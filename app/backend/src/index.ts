@@ -37,6 +37,7 @@ import {
   league3v3LockingPredicate,
   tournament2v2LockingPredicate,
   tournament3v3LockingPredicate,
+  grandMeleeLockingPredicate,
 } from './services/subscription/lockingPredicates';
 import { contentModerationService } from './services/moderation';
 import { getDiskUsage, getMemoryUsage, checkCriticalModules } from './utils/systemHealth';
@@ -236,6 +237,7 @@ import { runStartupSelfTest } from './utils/startupSelfTest';
     registerSubscribableEvent({ type: 'league_3v3', label: '3v3 League', lockingPredicate: league3v3LockingPredicate });
     registerSubscribableEvent({ type: 'tournament_2v2', label: '2v2 Tournament', lockingPredicate: tournament2v2LockingPredicate });
     registerSubscribableEvent({ type: 'tournament_3v3', label: '3v3 Tournament', lockingPredicate: tournament3v3LockingPredicate });
+    registerSubscribableEvent({ type: 'grand_melee', label: 'Grand Melee', lockingPredicate: grandMeleeLockingPredicate });
 
     // Initialize the cycle scheduler after the server is listening
     initScheduler({

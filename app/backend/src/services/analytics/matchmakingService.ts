@@ -167,6 +167,8 @@ function createByeRobot(): Robot {
     defensiveWins: 0,
     balancedWins: 0,
     dualWieldWins: 0,
+    grandMeleeWins: 0,
+    grandMeleeTop3: 0,
     mainWeaponId: null,
     offhandWeaponId: null,
     createdAt: new Date(),

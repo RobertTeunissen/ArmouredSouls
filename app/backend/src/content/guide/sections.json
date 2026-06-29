@@ -48,39 +48,45 @@
     "order": 8
   },
   {
+    "slug": "grand-melee",
+    "title": "Grand Melee",
+    "description": "Free-for-all elimination battles with 20 robots",
+    "order": 9
+  },
+  {
     "slug": "economy",
     "title": "Economy & Finances",
     "description": "Credits, income, expenses, and financial management",
-    "order": 9
+    "order": 10
   },
   {
     "slug": "facilities",
     "title": "Stable & Facilities",
     "description": "Facility types, upgrades, and investment strategy",
-    "order": 10
+    "order": 11
   },
   {
     "slug": "prestige-fame",
     "title": "Prestige & Fame",
     "description": "Reputation systems and progression rewards",
-    "order": 11
+    "order": 12
   },
   {
     "slug": "achievements",
     "title": "Achievements",
     "description": "Milestones, badges, rewards, and progression tracking",
-    "order": 12
+    "order": 13
   },
   {
     "slug": "strategy",
     "title": "Strategy Guides",
     "description": "Build archetypes, budget allocation, and advanced tactics",
-    "order": 13
+    "order": 14
   },
   {
     "slug": "integrations",
     "title": "Integrations & API",
     "description": "Webhooks, notifications, and community integrations",
-    "order": 14
+    "order": 15
   }
 ]

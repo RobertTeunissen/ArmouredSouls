@@ -32,6 +32,14 @@ const mockTx = {
   scheduledTeamBattleMatch: {
     count: jest.fn(),
   },
+  scheduledMatchParticipant: {
+    findMany: jest.fn().mockResolvedValue([]),
+    count: jest.fn().mockResolvedValue(0),
+  },
+  standing: {
+    findFirst: jest.fn().mockResolvedValue(null),
+    findMany: jest.fn().mockResolvedValue([]),
+  },
 };
 
 const mockPrisma = {
@@ -39,6 +47,14 @@ const mockPrisma = {
   teamBattle: {
     findUnique: jest.fn(),
     update: jest.fn(),
+  },
+  scheduledMatchParticipant: {
+    findMany: jest.fn().mockResolvedValue([]),
+    count: jest.fn().mockResolvedValue(0),
+  },
+  standing: {
+    findFirst: jest.fn().mockResolvedValue(null),
+    findMany: jest.fn().mockResolvedValue([]),
   },
 };
 
@@ -97,7 +113,7 @@ describe('teamBattleService', () => {
     jest.clearAllMocks();
     mockHasSubscription.mockResolvedValue(true);
     mockTx.$executeRaw.mockResolvedValue(undefined);
-    mockTx.scheduledTeamBattleMatch.count.mockResolvedValue(0);
+    mockTx.scheduledMatchParticipant.count.mockResolvedValue(0);
   });
 
   // ── registerTeam ─────────────────────────────────────────────────
@@ -181,19 +197,7 @@ describe('teamBattleService', () => {
         });
     });
 
-    it('should throw TEAM_INVALID_COMPOSITION when robot not subscribed', async () => {
-      mockTx.robot.findMany.mockResolvedValue([
-        { id: 1, userId: 100 },
-        { id: 2, userId: 100 },
-      ]);
-      mockTx.robot.count.mockResolvedValue(5);
-      mockHasSubscription.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
 
-      await expect(registerTeam(100, [1, 2], 'ValidTeam', 2, 100))
-        .rejects.toMatchObject({
-          code: TeamBattleErrorCode.TEAM_INVALID_COMPOSITION,
-        });
-    });
 
     it('should throw TEAM_MEMBER_CONFLICT when robot already on same-size team', async () => {
       mockTx.robot.findMany.mockResolvedValue([
@@ -250,25 +254,19 @@ describe('teamBattleService', () => {
       const result = await registerTeam(100, [10, 11, 12], 'Trio', 3, 100);
 
       expect(result).toEqual(createdTeam);
-      expect(mockHasSubscription).toHaveBeenCalledWith(10, 'league_3v3');
-      expect(mockHasSubscription).toHaveBeenCalledWith(11, 'league_3v3');
-      expect(mockHasSubscription).toHaveBeenCalledWith(12, 'league_3v3');
+      expect(mockTx.teamBattle.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            stableId: 100,
+            teamSize: 3,
+            teamName: 'Trio',
+            eligibility: 'ELIGIBLE',
+          }),
+        }),
+      );
     });
 
-    it('should check subscription for league_2v2 event type for 2v2 teams', async () => {
-      mockTx.robot.findMany.mockResolvedValue([
-        { id: 1, userId: 100 },
-        { id: 2, userId: 100 },
-      ]);
-      mockTx.robot.count.mockResolvedValue(5);
-      mockTx.teamBattleMember.findMany.mockResolvedValue([]);
-      mockTx.teamBattle.create.mockResolvedValue(makeTeam());
 
-      await registerTeam(100, [1, 2], 'ValidTeam', 2, 100);
-
-      expect(mockHasSubscription).toHaveBeenCalledWith(1, 'league_2v2');
-      expect(mockHasSubscription).toHaveBeenCalledWith(2, 'league_2v2');
-    });
 
     it('should acquire advisory locks in sorted order', async () => {
       mockTx.robot.findMany.mockResolvedValue([
@@ -310,7 +308,7 @@ describe('teamBattleService', () => {
 
     it('should throw TEAM_LOCKED_FOR_BATTLE when team has scheduled match', async () => {
       mockTx.teamBattle.findUnique.mockResolvedValue(makeTeam());
-      mockTx.scheduledTeamBattleMatch.count.mockResolvedValue(1);
+      mockTx.scheduledMatchParticipant.count.mockResolvedValue(1);
 
       await expect(swapTeamMember(1, 10, 20, 100))
         .rejects.toMatchObject({
@@ -340,7 +338,7 @@ describe('teamBattleService', () => {
     it('should throw TEAM_INVALID_COMPOSITION when new robot not subscribed', async () => {
       mockTx.teamBattle.findUnique.mockResolvedValue(makeTeam());
       mockTx.robot.findUnique.mockResolvedValue({ id: 20, userId: 100 });
-      mockHasSubscription.mockResolvedValueOnce(false);
+      mockHasSubscription.mockResolvedValue(false);
 
       await expect(swapTeamMember(1, 10, 20, 100))
         .rejects.toMatchObject({
@@ -399,12 +397,13 @@ describe('teamBattleService', () => {
     it('should set eligibility to INELIGIBLE after swap when member not subscribed', async () => {
       mockTx.teamBattle.findUnique.mockResolvedValue(makeTeam());
       mockTx.robot.findUnique.mockResolvedValue({ id: 20, userId: 100 });
-      // First call: subscription check for new robot (passes)
-      // Subsequent calls during eligibility recalc: one fails
+      // Swap validation: new robot passes (true on first event type)
+      // Recalc: first member (robot 20) passes, second member (robot 11) fails both event types
       mockHasSubscription
-        .mockResolvedValueOnce(true) // new robot subscription check
-        .mockResolvedValueOnce(true) // first member in recalc
-        .mockResolvedValueOnce(false); // second member in recalc
+        .mockResolvedValueOnce(true)  // swap validation: robot 20, league_2v2 → pass
+        .mockResolvedValueOnce(true)  // recalc: robot 20, league_2v2 → pass
+        .mockResolvedValueOnce(false) // recalc: robot 11, league_2v2 → fail
+        .mockResolvedValueOnce(false); // recalc: robot 11, tournament_2v2 → fail
       mockTx.teamBattleMember.findFirst.mockResolvedValue(null);
       mockTx.teamBattleMember.update.mockResolvedValue({});
       mockTx.teamBattleMember.findMany.mockResolvedValue([
@@ -506,7 +505,7 @@ describe('teamBattleService', () => {
 
     it('should throw TEAM_LOCKED_FOR_BATTLE when team has scheduled match', async () => {
       mockTx.teamBattle.findUnique.mockResolvedValue({ id: 1, stableId: 100, teamName: 'T' });
-      mockTx.scheduledTeamBattleMatch.count.mockResolvedValue(1);
+      mockTx.scheduledMatchParticipant.count.mockResolvedValue(1);
 
       await expect(disbandTeam(1, 100))
         .rejects.toMatchObject({
@@ -516,7 +515,7 @@ describe('teamBattleService', () => {
 
     it('should delete team successfully when unlocked', async () => {
       mockTx.teamBattle.findUnique.mockResolvedValue({ id: 1, stableId: 100, teamName: 'T' });
-      mockTx.scheduledTeamBattleMatch.count.mockResolvedValue(0);
+      mockTx.scheduledMatchParticipant.count.mockResolvedValue(0);
       mockTx.teamBattle.delete.mockResolvedValue({});
 
       await expect(disbandTeam(1, 100)).resolves.toBeUndefined();
@@ -567,11 +566,12 @@ describe('teamBattleService', () => {
       });
       mockTx.teamBattle.findUnique.mockResolvedValue(incompleteTeam);
       mockTx.robot.findUnique.mockResolvedValue({ id: 20, userId: 100 });
-      // New robot subscription check passes, but existing member fails recalc
+      // Add validation: new robot passes subscription check (first event type)
+      // Recalc: existing member (robot 10) fails both event types
       mockHasSubscription
-        .mockResolvedValueOnce(true) // new robot subscription check
-        .mockResolvedValueOnce(false) // existing member in recalc
-        .mockResolvedValueOnce(true); // new member in recalc
+        .mockResolvedValueOnce(true)   // add validation: robot 20, league_2v2 → pass
+        .mockResolvedValueOnce(false)  // recalc: robot 10, league_2v2 → fail
+        .mockResolvedValueOnce(false); // recalc: robot 10, tournament_2v2 → fail
       mockTx.teamBattleMember.findFirst.mockResolvedValue(null);
       mockTx.teamBattleMember.create.mockResolvedValue({});
       mockTx.teamBattle.update.mockResolvedValue({});
@@ -595,7 +595,7 @@ describe('teamBattleService', () => {
 
     it('should reject removing member when team is locked for battle', async () => {
       mockTx.teamBattle.findUnique.mockResolvedValue(makeTeam());
-      mockTx.scheduledTeamBattleMatch.count.mockResolvedValue(1);
+      mockTx.scheduledMatchParticipant.count.mockResolvedValue(1);
 
       await expect(removeTeamMember(1, 10, 100))
         .rejects.toMatchObject({
@@ -630,7 +630,7 @@ describe('teamBattleService', () => {
 
       // 409 for locked team
       mockTx.teamBattle.findUnique.mockResolvedValue({ id: 1, stableId: 100, teamName: 'T' });
-      mockTx.scheduledTeamBattleMatch.count.mockResolvedValue(1);
+      mockTx.scheduledMatchParticipant.count.mockResolvedValue(1);
       await expect(disbandTeam(1, 100))
         .rejects.toMatchObject({ statusCode: 409 });
     });

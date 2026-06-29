@@ -18,6 +18,16 @@ interface KothStanding {
   bestPlacement: number | null;
 }
 
+interface GrandMeleeStanding {
+  robotId: number;
+  robotName: string;
+  tier: string;
+  leaguePoints: number;
+  wins: number;
+  totalMatches: number;
+  bestPlacement: number | null;
+}
+
 function LeagueStandingsSummary() {
   const { logout } = useAuth();
   const navigate = useNavigate();
@@ -25,6 +35,7 @@ function LeagueStandingsSummary() {
   const { data: stableOverview } = useStableOverview();
   const [teams, setTeams] = useState<TeamBattle[]>([]);
   const [kothStandings, setKothStandings] = useState<KothStanding[]>([]);
+  const [grandMeleeStandings, setGrandMeleeStandings] = useState<GrandMeleeStanding[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -80,6 +91,30 @@ function LeagueStandingsSummary() {
           })
         );
         setKothStandings(kothResults.filter((r): r is KothStanding => r !== null));
+
+        // Fetch Grand Melee standings for all robots
+        const grandMeleeResults = await Promise.all(
+          robots.map(async (robot) => {
+            try {
+              const result = await api.get<{ standing: { tier: string; leaguePoints: number; wins: number; totalMatches: number | null; bestPlacement: number | null } | null }>(`/api/robots/${robot.id}/grand-melee-standing`);
+              if (result.standing) {
+                return {
+                  robotId: robot.id,
+                  robotName: robot.name,
+                  tier: result.standing.tier,
+                  leaguePoints: result.standing.leaguePoints,
+                  wins: result.standing.wins,
+                  totalMatches: result.standing.totalMatches ?? 0,
+                  bestPlacement: result.standing.bestPlacement,
+                };
+              }
+              return null;
+            } catch {
+              return null;
+            }
+          })
+        );
+        setGrandMeleeStandings(grandMeleeResults.filter((r): r is GrandMeleeStanding => r !== null));
       }
     } catch (err: unknown) {
       if (axios.isAxiosError(err) && err.response?.status === 401) {
@@ -206,6 +241,21 @@ function LeagueStandingsSummary() {
             <div className="space-y-1.5">
               {kothStandings.map(standing => (
                 <KothStandingCard key={standing.robotId} standing={standing} isSubscribed={robotSubscriptionMap.get(standing.robotId)?.includes('koth') ?? false} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Grand Melee — per robot */}
+        {grandMeleeStandings.length > 0 && (
+          <div>
+            <div className="text-xs text-secondary font-semibold mb-1.5 flex items-center gap-1.5">
+              <span className="text-xs px-1.5 py-0.5 bg-red-400/20 rounded text-red-400 font-semibold">Melee</span>
+              Grand Melee
+            </div>
+            <div className="space-y-1.5">
+              {grandMeleeStandings.map(standing => (
+                <KothStandingCard key={`gm-${standing.robotId}`} standing={standing} isSubscribed={robotSubscriptionMap.get(standing.robotId)?.includes('grand_melee') ?? false} />
               ))}
             </div>
           </div>

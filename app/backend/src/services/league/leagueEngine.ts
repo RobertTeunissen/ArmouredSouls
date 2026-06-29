@@ -135,6 +135,12 @@ export interface LeagueAdapter<T extends LeagueEntityBase> {
   entityType: 'robot' | 'tag_team' | 'team_battle';
 
   /**
+   * Standings mode this adapter operates on (e.g., 'league_1v1', 'koth', 'grand_melee').
+   * Used for league history recording so tier changes can be attributed to the correct mode.
+   */
+  mode: string;
+
+  /**
    * Optional: Called after a successful promotion (e.g., for achievement checks).
    * Errors thrown here are caught and logged, never blocking the promotion.
    */
@@ -347,6 +353,7 @@ export async function promoteEntity<T extends LeagueEntityBase>(
       destinationLeagueId: newLeagueId,
       leaguePoints: lp,
       cycleNumber,
+      mode: adapter.mode,
     });
   } catch (error) {
     logger.error(`[${config.logPrefix}] Failed to record promotion history for ${adapter.entityType} ${entity.id}: ${error}`);
@@ -414,6 +421,7 @@ export async function demoteEntity<T extends LeagueEntityBase>(
       destinationLeagueId: newLeagueId,
       leaguePoints: lp,
       cycleNumber,
+      mode: adapter.mode,
     });
   } catch (error) {
     logger.error(`[${config.logPrefix}] Failed to record demotion history for ${adapter.entityType} ${adapter.getEntityOwnerId(entity)}: ${error}`);

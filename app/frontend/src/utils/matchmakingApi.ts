@@ -145,7 +145,7 @@ export interface BattleHistory {
   robot2FinalHP: number;
   winnerReward: number;
   loserReward: number;
-  battleType?: string; // "league_1v1", "tournament_1v1", "tag_team", or "koth"
+  battleType?: string; // "league_1v1", "tournament_1v1", "tag_team", "koth", or "grand_melee"
   leagueType?: string; // League at time of battle: "bronze", "silver", "gold", etc.
   tournamentId?: number | null;
   tournamentRound?: number | null;
@@ -268,7 +268,7 @@ export const getUpcomingMatches = async (robotId?: number): Promise<ScheduledMat
 export const getMatchHistory = async (
   page: number = 1,
   pageSize: number = 10,
-  battleType?: 'overall' | 'league' | 'tournament' | 'tag_team' | 'koth' | 'league_2v2' | 'league_3v3' | 'tournament_2v2' | 'tournament_3v3',
+  battleType?: 'overall' | 'league' | 'tournament' | 'tag_team' | 'koth' | 'grand_melee' | 'league_2v2' | 'league_3v3' | 'tournament_2v2' | 'tournament_3v3',
   robotId?: number
 ): Promise<PaginatedResponse<BattleHistory>> => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

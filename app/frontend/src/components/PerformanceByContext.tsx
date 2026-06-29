@@ -50,6 +50,17 @@ interface KothPerformance {
   damageTaken: number;
 }
 
+interface GrandMeleePerformance {
+  totalBattles: number;
+  wins: number;
+  topThree: number;
+  totalPoints: number;
+  bestPlacement: number | null;
+  winRate: string;
+  damageDealt: number;
+  damageTaken: number;
+}
+
 interface PerformanceByContextProps {
   robotId: number;
 }
@@ -61,6 +72,7 @@ function PerformanceByContext({ robotId }: PerformanceByContextProps) {
   const [league2v2, setLeague2v2] = useState<TagTeamPerformance | null>(null);
   const [league3v3, setLeague3v3] = useState<TagTeamPerformance | null>(null);
   const [koth, setKoth] = useState<KothPerformance | null>(null);
+  const [grandMelee, setGrandMelee] = useState<GrandMeleePerformance | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -76,6 +88,7 @@ function PerformanceByContext({ robotId }: PerformanceByContextProps) {
         setLeague2v2((data as unknown as { league2v2?: TagTeamPerformance }).league2v2 ?? null);
         setLeague3v3((data as unknown as { league3v3?: TagTeamPerformance }).league3v3 ?? null);
         setKoth((data as unknown as { koth?: KothPerformance }).koth ?? null);
+        setGrandMelee((data as unknown as { grandMelee?: GrandMeleePerformance }).grandMelee ?? null);
       } catch (err) {
         setError('Failed to load performance data');
         log.error('Performance context fetch error', { err });
@@ -409,6 +422,52 @@ function PerformanceByContext({ robotId }: PerformanceByContextProps) {
                     width: `${koth.damageTaken > 0 ? (koth.damageTaken / (koth.damageDealt + koth.damageTaken)) * 100 : 50}%`,
                   }}
                   title={`Taken: ${koth.damageTaken.toLocaleString()}`}
+                ></div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Grand Melee Section */}
+        <div>
+          <div className="flex items-center gap-1.5 mb-1">
+            <span className="text-base">💀</span>
+            <h4 className="text-xs font-semibold text-secondary">Grand Melee</h4>
+            {(!grandMelee || grandMelee.totalBattles === 0) && <span className="text-xs text-tertiary">No battles yet</span>}
+          </div>
+          
+          {grandMelee && grandMelee.totalBattles > 0 && (
+            <div className="ml-5">
+              <div className="flex items-center justify-between mb-0.5">
+                <span className="text-xs text-secondary">{grandMelee.totalBattles} battles</span>
+                <div className="text-xs">
+                  <span className="text-warning">{grandMelee.wins}🥇</span>
+                  <span className="text-tertiary mx-0.5">·</span>
+                  <span className="text-amber-400">{grandMelee.topThree} top 3</span>
+                  <span className="text-tertiary mx-0.5">·</span>
+                  <span className="text-purple-400">{grandMelee.totalPoints} pts</span>
+                </div>
+              </div>
+              {grandMelee.bestPlacement && (
+                <div className="text-[10px] text-tertiary mb-0.5">
+                  Best: {grandMelee.bestPlacement === 1 ? '🥇' : grandMelee.bestPlacement === 2 ? '🥈' : grandMelee.bestPlacement === 3 ? '🥉' : `#${grandMelee.bestPlacement}`}
+                  {' · Win rate: '}{grandMelee.winRate}%
+                </div>
+              )}
+              <div className="flex gap-0.5 h-1.5">
+                <div
+                  className="bg-green-500 rounded"
+                  style={{
+                    width: `${grandMelee.damageDealt > 0 ? (grandMelee.damageDealt / (grandMelee.damageDealt + grandMelee.damageTaken)) * 100 : 50}%`,
+                  }}
+                  title={`Dealt: ${grandMelee.damageDealt.toLocaleString()}`}
+                ></div>
+                <div
+                  className="bg-red-500 rounded"
+                  style={{
+                    width: `${grandMelee.damageTaken > 0 ? (grandMelee.damageTaken / (grandMelee.damageDealt + grandMelee.damageTaken)) * 100 : 50}%`,
+                  }}
+                  title={`Taken: ${grandMelee.damageTaken.toLocaleString()}`}
                 ></div>
               </div>
             </div>

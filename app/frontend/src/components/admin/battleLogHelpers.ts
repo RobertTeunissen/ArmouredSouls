@@ -8,6 +8,9 @@ export const getBattleOutcome = (battle: Battle): { icon: string; label: string;
   if (battle.battleType === 'koth') {
     return { icon: '👑', label: 'King of the Hill', color: 'text-orange-400' };
   }
+  if (battle.battleType === 'grand_melee') {
+    return { icon: '⚔️', label: 'Grand Melee', color: 'text-red-400' };
+  }
 
   if (battle.winnerId === null) {
     return { icon: '⚖️', label: 'Draw', color: 'text-secondary' };
@@ -29,6 +32,9 @@ export const getBattleOutcome = (battle: Battle): { icon: string; label: string;
 export const getBattleHighlight = (battle: Battle): string => {
   if (battle.battleType === 'koth') {
     return 'border-l-4 border-orange-500';
+  }
+  if (battle.battleType === 'grand_melee') {
+    return 'border-l-4 border-red-500';
   }
   if (battle.winnerId === null) {
     return 'border-l-4 border-red-500';

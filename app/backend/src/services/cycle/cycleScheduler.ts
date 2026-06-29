@@ -23,6 +23,8 @@ import { rebalanceTeamBattleLeagues } from '../team-battle/teamBattleAdapter';
 import { runTeamBattleMatchmaking } from '../team-battle/teamBattleMatchmakingService';
 import { executeTeamTournamentRound } from '../tournament/teamTournamentBattleOrchestrator';
 import { autoCreateNextTeamTournament } from '../tournament/teamTournamentService';
+import { executeScheduledGrandMeleeBattles } from '../grand-melee/grandMeleeBattleOrchestrator';
+import { runGrandMeleeMatchmaking } from '../grand-melee/grandMeleeMatchmakingService';
 import prisma from '../../lib/prisma';
 import { practiceArenaMetrics } from '../practice-arena/practiceArenaMetrics';
 import { EventLogger, EventType } from '../common/eventLogger';
@@ -562,6 +564,32 @@ async function executeKothCycle(): Promise<JobContext> {
   return { jobName: 'koth', matchesCompleted: battleSummary.successfulMatches };
 }
 
+// --- Grand Melee cycle handler (Spec #44: R7.1–R7.6) ---
+
+async function executeGrandMeleeCycle(): Promise<JobContext> {
+  // Step 1: Repair all robots (same as all other battle modes)
+  logger.info('Grand Melee Cycle: Step 1 — Repairing all robots');
+  await repairAllRobots(true);
+
+  // Step 2: Execute all scheduled Grand Melee battles
+  logger.info('Grand Melee Cycle: Step 2 — Executing scheduled Grand Melee battles');
+  const execResult = await executeScheduledGrandMeleeBattles();
+  logger.info(`Grand Melee Cycle: ${execResult.successfulMatches} matches executed (${execResult.failedMatches} failed)`);
+
+  // Step 3: Rebalance Grand Melee leagues (promotion/demotion)
+  logger.info('Grand Melee Cycle: Step 3 — Rebalancing Grand Melee leagues');
+  const { rebalanceGrandMeleeLeagues } = await import('../league/leagueRebalancingService');
+  const rebalanceSummary = await rebalanceGrandMeleeLeagues();
+  logger.info(`Grand Melee Cycle: Rebalanced — ${rebalanceSummary.totalPromoted} promoted, ${rebalanceSummary.totalDemoted} demoted`);
+
+  // Step 4: Run matchmaking for next cycle
+  logger.info('Grand Melee Cycle: Step 4 — Scheduling Grand Melee matchmaking');
+  const matchesCreated = await runGrandMeleeMatchmaking();
+  logger.info(`Grand Melee Cycle: ${matchesCreated} Grand Melee matches scheduled`);
+
+  return { jobName: 'grandMelee', matchesCompleted: execResult.successfulMatches };
+}
+
 // --- Team Battle cycle handlers ---
 
 async function executeTeam2v2LeagueCycle(): Promise<JobContext> {
@@ -832,7 +860,7 @@ export function initScheduler(config: SchedulerConfig): void {
     { name: 'koth', schedule: config.kothSchedule, handler: executeKothCycle },                                 // 13:00
     { name: 'team3v3League', schedule: config.team3v3LeagueSchedule, handler: executeTeam3v3LeagueCycle }, // 14:00
     { name: 'team2v2Tournament', schedule: config.team2v2TournamentSchedule, handler: executeTeam2v2TournamentCycle }, // 15:00
-    { name: 'grandMelee', schedule: config.grandMeleeSchedule, handler: createReservedSlotHandler('grandMelee') },         // 17:00
+    { name: 'grandMelee', schedule: config.grandMeleeSchedule, handler: executeGrandMeleeCycle },         // 17:00
     { name: 'team3v3Tournament', schedule: config.team3v3TournamentSchedule, handler: executeTeam3v3TournamentCycle }, // 18:00
     { name: 'settlement', schedule: config.settlementSchedule, handler: executeSettlement },                     // 00:00
   ];

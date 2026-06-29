@@ -127,6 +127,17 @@ export function calculateEffectiveSpeed(
     };
   }
 
+  // Melee vs melee mutual closing bonus — weaker than the ranged-opponent
+  // bonus but prevents orbital deadlock when two melee robots are stuck
+  // just outside the narrow 2-unit melee window (distance 2–4).
+  if (state.hasMeleeWeapon && state.distanceToTarget > MELEE_RANGE_MAX && hasMeleeOpponent && state.distanceToTarget <= 4) {
+    const mutualClosingBonus = 1.15; // 15% boost in the final approach zone
+    return {
+      effectiveSpeed: baseSpeed * stanceModifier * mutualClosingBonus,
+      isClosingBonus: true, // Exempt from strain during final approach
+    };
+  }
+
   // Ranged kiting bonus — exempt from strain (mirrors closing bonus for ranged builds)
   // Activates when: ranged weapon, distance < optimal range midpoint, opponent has melee weapon
   if (

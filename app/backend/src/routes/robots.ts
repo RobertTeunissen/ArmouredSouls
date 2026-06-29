@@ -686,4 +686,45 @@ router.get('/:id/koth-standing', authenticateToken, validateRequest({ params: ro
   });
 });
 
+// Get Grand Melee standing for a robot (current tier, LP, stats)
+router.get('/:id/grand-melee-standing', authenticateToken, validateRequest({ params: robotIdParamsSchema }), async (req: AuthRequest, res: Response) => {
+  const robotId = parseInt(String(req.params.id));
+
+  if (isNaN(robotId)) {
+    throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Invalid robot ID', 400);
+  }
+
+  const robot = await prisma.robot.findUnique({
+    where: { id: robotId },
+    select: { id: true, name: true },
+  });
+
+  if (!robot) {
+    throw new RobotError(RobotErrorCode.ROBOT_NOT_FOUND, 'Robot not found', 404);
+  }
+
+  const standing = await prisma.standing.findFirst({
+    where: { entityType: 'robot', entityId: robotId, mode: 'grand_melee' as StandingsMode },
+  });
+
+  if (!standing) {
+    res.json({ standing: null });
+    return;
+  }
+
+  res.json({
+    standing: {
+      tier: standing.tier,
+      leagueInstanceId: standing.leagueInstanceId,
+      leaguePoints: standing.leaguePoints,
+      wins: standing.wins,
+      totalMatches: standing.totalMatches,
+      totalKills: standing.totalKills,
+      bestPlacement: standing.bestPlacement,
+      currentWinStreak: standing.currentWinStreak,
+      bestWinStreak: standing.bestWinStreak,
+    },
+  });
+});
+
 export default router;

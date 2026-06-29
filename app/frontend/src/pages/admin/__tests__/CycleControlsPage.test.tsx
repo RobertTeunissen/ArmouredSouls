@@ -224,14 +224,15 @@ describe('CycleControlsPage', () => {
     expect(screen.getByText('Repair → Battles → Rebalance → Matchmaking (same as cron). Continue?')).toBeInTheDocument();
   });
 
-  it('should still show Reserved badge for grandMelee slot', () => {
+  it('should show Grand Melee as active with Run button (not reserved badge)', () => {
     render(<CycleControlsPage />);
     expect(screen.getByText('Grand Melee')).toBeInTheDocument();
     const grandMeleeRow = screen.getByText('Grand Melee').closest('tr');
     expect(grandMeleeRow).not.toBeNull();
-    expect(grandMeleeRow!.textContent).toContain('Reserved');
-    // No Run button for reserved slots
+    expect(grandMeleeRow!.textContent).not.toContain('Reserved');
+    // It should have a Run button
     const runButton = grandMeleeRow!.querySelector('button');
-    expect(runButton).toBeNull();
+    expect(runButton).not.toBeNull();
+    expect(runButton!.textContent).toBe('Run');
   });
 });

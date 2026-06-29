@@ -133,3 +133,13 @@ export async function tournament3v3LockingPredicate(robotId: number): Promise<bo
   });
   return count > 0;
 }
+
+/**
+ * Grand Melee: locked when the robot has a pending/scheduled Grand Melee match.
+ * Uses unified scheduled_matches_v2 via schedulingService.
+ * Spec #44: R6.1
+ */
+export async function grandMeleeLockingPredicate(robotId: number): Promise<boolean> {
+  const upcoming = await schedulingService.getUpcomingForRobot(robotId, [MatchType.grand_melee]);
+  return upcoming.length > 0;
+}

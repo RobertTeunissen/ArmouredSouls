@@ -726,3 +726,72 @@ export async function fetchTournamentChampions(): Promise<{
 
   return { champions1v1, champions2v2, champions3v3 };
 }
+
+// ─── Grand Melee Records ────────────────────────────────────────────
+
+export async function fetchGrandMeleeRecords(): Promise<Record<string, unknown> | undefined> {
+  const grandMeleeFilter = { mode: 'grand_melee' as const, totalMatches: { gt: 0 } };
+
+  const [mostWinsRobots, highestLpStandings, mostKillsStandings] = await Promise.all([
+    prisma.robot.findMany({
+      where: { grandMeleeWins: { gt: 0 } },
+      orderBy: { grandMeleeWins: 'desc' },
+      take: 10,
+      select: { id: true, name: true, grandMeleeWins: true, user: { select: userSelect } },
+    }),
+    prisma.standing.findMany({
+      where: { ...grandMeleeFilter, entityType: 'robot' },
+      orderBy: { leaguePoints: 'desc' },
+      take: 10,
+    }),
+    prisma.standing.findMany({
+      where: { ...grandMeleeFilter, entityType: 'robot', totalKills: { gt: 0 } },
+      orderBy: { totalKills: 'desc' },
+      take: 10,
+    }),
+  ]);
+
+  // No data at all — return undefined
+  if (mostWinsRobots.length === 0 && highestLpStandings.length === 0 && mostKillsStandings.length === 0) {
+    return undefined;
+  }
+
+  // Batch-resolve robot names for standing-based queries
+  const allStandings = [highestLpStandings, mostKillsStandings];
+  const allRobotIds = [...new Set(allStandings.flat().map(s => s.entityId))];
+
+  const robots = allRobotIds.length > 0
+    ? await prisma.robot.findMany({
+        where: { id: { in: allRobotIds } },
+        include: { user: { select: userSelect } },
+      })
+    : [];
+  const robotMap = new Map(robots.map(r => [r.id, r]));
+
+  const mapStanding = (s: typeof highestLpStandings[number]) => {
+    const robot = robotMap.get(s.entityId);
+    return {
+      robotId: s.entityId,
+      robotName: robot?.name ?? 'Unknown',
+      username: robot ? getUserDisplayName(robot.user) : '',
+    };
+  };
+
+  return {
+    mostWins: mostWinsRobots.map(r => ({
+      robotId: r.id,
+      robotName: r.name,
+      username: getUserDisplayName(r.user),
+      grandMeleeWins: r.grandMeleeWins,
+    })),
+    highestLp: highestLpStandings.map(s => ({
+      ...mapStanding(s),
+      leaguePoints: s.leaguePoints,
+      tier: s.tier,
+    })),
+    mostKillsCareer: mostKillsStandings.map(s => ({
+      ...mapStanding(s),
+      totalKills: s.totalKills ?? 0,
+    })),
+  };
+}

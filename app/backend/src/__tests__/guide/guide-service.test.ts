@@ -118,6 +118,9 @@ describeContent('GuideService — content existence (Req 2.1)', () => {
     'weapons',
     'leagues',
     'tournaments',
+    'king-of-the-hill',
+    'team-battles',
+    'grand-melee',
     'economy',
     'facilities',
     'prestige-fame',
@@ -126,14 +129,14 @@ describeContent('GuideService — content existence (Req 2.1)', () => {
     'integrations',
   ] as const;
 
-  it('should return all 12 required sections', () => {
+  it('should return all 15 required sections', () => {
     const sections = service.getSections();
     const slugs = sections.map((s) => s.slug);
 
     for (const required of REQUIRED_SECTIONS) {
       expect(slugs).toContain(required);
     }
-    expect(sections.length).toBeGreaterThanOrEqual(12);
+    expect(sections.length).toBeGreaterThanOrEqual(15);
   });
 
   // Req 4.1-4.4: Getting Started articles

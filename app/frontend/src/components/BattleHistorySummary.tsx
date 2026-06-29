@@ -62,9 +62,18 @@ interface SummaryStats {
     winRate: number;
     avgELOChange: number;
   };
+  grandMeleeStats: {
+    battles: number;
+    wins: number;
+    losses: number;
+    draws: number;
+    winRate: number;
+    avgELOChange: number;
+    placements: { first: number; second: number; third: number; other: number };
+  };
 }
 
-type BattleFilterView = 'overall' | 'league' | 'tournament' | 'tag_team' | 'koth' | 'league_2v2' | 'league_3v3' | 'tournament_2v2' | 'tournament_3v3';
+type BattleFilterView = 'overall' | 'league' | 'tournament' | 'tag_team' | 'koth' | 'grand_melee' | 'league_2v2' | 'league_3v3' | 'tournament_2v2' | 'tournament_3v3';
 
 interface BattleHistorySummaryProps {
   stats: SummaryStats;
@@ -133,6 +142,16 @@ const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view
         draws: stats.kothStats.draws,
         winRate: stats.kothStats.winRate,
         avgELOChange: stats.kothStats.avgELOChange,
+      };
+    }
+    if (view === 'grand_melee') {
+      return {
+        battles: stats.grandMeleeStats.battles,
+        wins: stats.grandMeleeStats.wins,
+        losses: stats.grandMeleeStats.losses,
+        draws: stats.grandMeleeStats.draws,
+        winRate: stats.grandMeleeStats.winRate,
+        avgELOChange: stats.grandMeleeStats.avgELOChange,
       };
     }
     if (view === 'league_2v2') {
@@ -263,6 +282,16 @@ const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view
         >
           👑 KotH
         </button>
+        <button
+          onClick={() => onViewChange('grand_melee')}
+          className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+            view === 'grand_melee' 
+              ? 'bg-[#58a6ff] text-white' 
+              : 'bg-[#1a1f29] text-[#8b949e] hover:bg-[#252b38]'
+          }`}
+        >
+          💀 Grand Melee
+        </button>
       </div>
       
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -277,6 +306,7 @@ const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view
              view === 'tag_team' ? 'Tag Team Battles' :
              view === 'league_2v2' ? '2v2 League Battles' :
              view === 'league_3v3' ? '3v3 League Battles' :
+             view === 'grand_melee' ? 'Grand Melee Battles' :
              'KotH Battles'}
           </div>
           <div className="text-2xl font-bold text-[#58a6ff]">{displayStats.battles}</div>
@@ -361,6 +391,39 @@ const BattleHistorySummary: React.FC<BattleHistorySummaryProps> = ({ stats, view
             <div>
               <div className="text-sm text-[#8b949e]">Total Kills</div>
               <div className="text-2xl font-bold text-[#f85149]">{stats.kothStats.totalKills}</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Grand Melee Summary Stats */}
+      {view === 'grand_melee' && stats.grandMeleeStats.battles > 0 && (
+        <div className="mt-4 pt-4 border-t border-white/10">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div>
+              <div className="text-sm text-[#8b949e]">Placements</div>
+              <div className="text-sm font-medium">
+                <span className="text-yellow-400">🥇 {stats.grandMeleeStats.placements.first}</span>
+                {' · '}
+                <span className="text-gray-300">🥈 {stats.grandMeleeStats.placements.second}</span>
+                {' · '}
+                <span className="text-orange-500">🥉 {stats.grandMeleeStats.placements.third}</span>
+                {stats.grandMeleeStats.placements.other > 0 && (
+                  <span className="text-[#8b949e]"> · {stats.grandMeleeStats.placements.other} other</span>
+                )}
+              </div>
+            </div>
+            <div>
+              <div className="text-sm text-[#8b949e]">Podium Rate</div>
+              <div className="text-2xl font-bold text-red-400">
+                {stats.grandMeleeStats.battles > 0
+                  ? ((stats.grandMeleeStats.placements.first + stats.grandMeleeStats.placements.second + stats.grandMeleeStats.placements.third) / stats.grandMeleeStats.battles * 100).toFixed(0)
+                  : 0}%
+              </div>
+            </div>
+            <div>
+              <div className="text-sm text-[#8b949e]">Matches</div>
+              <div className="text-2xl font-bold text-[#e6edf3]">{stats.grandMeleeStats.battles}</div>
             </div>
           </div>
         </div>

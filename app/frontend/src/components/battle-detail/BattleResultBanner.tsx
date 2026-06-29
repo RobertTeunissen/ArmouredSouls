@@ -59,8 +59,9 @@ function getHeading(participants: BattleLogParticipant[], winnerId: number | nul
 
 function getEndMethod(participants: BattleLogParticipant[], winnerId: number | null, winningTeam: number | null, battleType?: string): string | null {
   const hasWinner = winnerId !== null || winningTeam !== null;
-  if (!hasWinner && battleType !== 'koth') return 'by Time Limit';
+  if (!hasWinner && battleType !== 'koth' && battleType !== 'grand_melee') return 'by Time Limit';
   if (battleType === 'koth') return 'by Zone Score';
+  if (battleType === 'grand_melee') return 'by Elimination';
   if (battleType === 'tournament_1v1') {
     const destroyed = participants.find(p => p.destroyed);
     if (destroyed) return 'by Destruction';

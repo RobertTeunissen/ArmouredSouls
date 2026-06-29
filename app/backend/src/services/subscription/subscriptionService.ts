@@ -127,6 +127,33 @@ export async function subscribeRobot(
     // 5. Create subscription row — active immediately (within cap)
     await tx.subscription.create({ data: { robotId, eventType, status: 'active' } });
 
+    // 5b. For placement-based modes (koth, grand_melee), ensure a Standing exists
+    // so the robot is visible to the matchmaker on the next cycle. (Spec #44: R6.5)
+    if (eventType === 'grand_melee' || eventType === 'koth') {
+      const standingMode = eventType as 'grand_melee' | 'koth';
+      const existingStanding = await tx.standing.findUnique({
+        where: { entityType_entityId_mode: { entityType: 'robot', entityId: robotId, mode: standingMode } },
+      });
+      if (!existingStanding) {
+        await tx.standing.create({
+          data: {
+            entityType: 'robot',
+            entityId: robotId,
+            mode: standingMode,
+            tier: 'bronze',
+            leagueInstanceId: 'bronze_1',
+            leaguePoints: 0,
+            cyclesInTier: 0,
+            wins: 0,
+            losses: 0,
+            draws: 0,
+            currentWinStreak: 0,
+            bestWinStreak: 0,
+          },
+        });
+      }
+    }
+
     // 6. Recalculate team eligibility for any team this robot is on
     const teamMemberships = await tx.teamBattleMember.findMany({
       where: { robotId },

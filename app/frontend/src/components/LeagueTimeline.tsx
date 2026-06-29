@@ -22,6 +22,7 @@ export interface LeagueHistoryEntry {
   destinationTier: string;
   changeType: 'promotion' | 'demotion';
   leaguePoints: number;
+  mode?: string | null;
 }
 
 interface LeagueTimelineProps {

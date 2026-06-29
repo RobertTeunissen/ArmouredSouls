@@ -1,6 +1,6 @@
 import { Position, AttackIndicator, RangeBand } from './types';
 
-/** Team colors: indexes 0-5 for KotH (6 participants), 0-1 for 1v1/tag team */
+/** Team colors: indexes 0-19 for Grand Melee (20 participants), 0-5 for KotH, 0-1 for 1v1/tag team */
 const TEAM_COLORS = [
   '#3B82F6', // blue
   '#EF4444', // red
@@ -8,6 +8,20 @@ const TEAM_COLORS = [
   '#F97316', // orange
   '#A855F7', // purple
   '#06B6D4', // cyan
+  '#EC4899', // pink
+  '#F59E0B', // amber
+  '#10B981', // emerald
+  '#8B5CF6', // violet
+  '#14B8A6', // teal
+  '#F43F5E', // rose
+  '#84CC16', // lime
+  '#0EA5E9', // sky
+  '#D946EF', // fuchsia
+  '#FB923C', // light orange
+  '#4ADE80', // light green
+  '#38BDF8', // light blue
+  '#C084FC', // light purple
+  '#FBBF24', // yellow
 ] as const;
 
 /** Range band indicator colors */
@@ -32,6 +46,14 @@ const HP_BAR_HEIGHT = 5;
 const SHIELD_BAR_HEIGHT = 4;
 const NAME_OFFSET_Y = -24;
 const HP_BAR_OFFSET_Y = 20;
+
+/** Scale factor for robot visuals based on participant count. Makes large battles feel grander. */
+export function getRobotScale(participantCount: number): number {
+  if (participantCount <= 6) return 1.0;    // KotH: normal size
+  if (participantCount <= 10) return 0.85;  // Medium: slightly smaller
+  if (participantCount <= 15) return 0.7;   // Large: noticeably smaller
+  return 0.6;                                // Grand Melee (16-20): compact
+}
 
 /**
  * Render the arena background with a radial gradient and concentric grid circles.
@@ -148,6 +170,7 @@ export function renderRobot(
   maxHP: number,
   shield: number,
   maxShield: number,
+  scale: number = 1.0,
 ): void {
   const { x, y } = position;
   const color = TEAM_COLORS[teamIndex] ?? TEAM_COLORS[0];
@@ -155,13 +178,22 @@ export function renderRobot(
   // Negate facing angle to account for canvas Y-down vs arena Y-up coordinate system
   const facingRad = (-facingDeg * Math.PI) / 180;
 
+  // Apply scale to all size constants
+  const robotRadius = ROBOT_RADIUS * scale;
+  const hpBarWidth = HP_BAR_WIDTH * scale;
+  const hpBarHeight = HP_BAR_HEIGHT * scale;
+  const shieldBarHeight = SHIELD_BAR_HEIGHT * scale;
+  const nameOffsetY = NAME_OFFSET_Y * scale;
+  const hpBarOffsetY = HP_BAR_OFFSET_Y * scale;
+  const fontSize = Math.round(14 * scale);
+
   ctx.save();
 
   if (isDestroyed) {
     // Destroyed state: dimmed body with red X
     ctx.globalAlpha = 0.4;
     ctx.beginPath();
-    ctx.arc(x, y, ROBOT_RADIUS, 0, Math.PI * 2);
+    ctx.arc(x, y, robotRadius, 0, Math.PI * 2);
     ctx.fillStyle = '#374151';
     ctx.fill();
     ctx.strokeStyle = '#1F2937';
@@ -170,7 +202,7 @@ export function renderRobot(
     ctx.globalAlpha = 1.0;
 
     // Red X over the robot
-    const xSize = ROBOT_RADIUS * 0.7;
+    const xSize = robotRadius * 0.7;
     ctx.strokeStyle = '#EF4444';
     ctx.lineWidth = 3;
     ctx.beginPath();
@@ -181,21 +213,21 @@ export function renderRobot(
     ctx.stroke();
 
     // 💀 label
-    ctx.font = '18px sans-serif';
+    ctx.font = `${fontSize}px sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#EF4444';
-    ctx.fillText('💀', x, y - ROBOT_RADIUS - 8);
+    ctx.fillText('💀', x, y - robotRadius - 8 * scale);
   } else {
     // Render hexagonal robot body in team color
-    renderHexagonalBody(ctx, x, y, ROBOT_RADIUS, facingRad, color, '#1F2937');
+    renderHexagonalBody(ctx, x, y, robotRadius, facingRad, color, '#1F2937');
 
     // Facing direction arrow
-    const arrowLen = ROBOT_RADIUS + 6;
+    const arrowLen = robotRadius + 6 * scale;
     const arrowTipX = x + Math.cos(facingRad) * arrowLen;
     const arrowTipY = y + Math.sin(facingRad) * arrowLen;
     const arrowBaseOffset = Math.PI * 0.85;
-    const arrowBaseLen = ROBOT_RADIUS * 0.6;
+    const arrowBaseLen = robotRadius * 0.6;
 
     ctx.beginPath();
     ctx.moveTo(arrowTipX, arrowTipY);
@@ -213,7 +245,7 @@ export function renderRobot(
   }
 
   // Name label above robot
-  ctx.font = 'bold 14px sans-serif';
+  ctx.font = `bold ${fontSize}px sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'bottom';
   ctx.shadowColor = '#000000';
@@ -221,7 +253,7 @@ export function renderRobot(
   ctx.shadowOffsetX = 1;
   ctx.shadowOffsetY = 1;
   ctx.fillStyle = isDestroyed ? '#6B7280' : '#FFFFFF';
-  ctx.fillText(name, x, y + NAME_OFFSET_Y);
+  ctx.fillText(name, x, y + nameOffsetY);
   ctx.shadowColor = 'transparent';
   ctx.shadowBlur = 0;
   ctx.shadowOffsetX = 0;
@@ -229,29 +261,29 @@ export function renderRobot(
 
   // HP bar below robot
   const hpPercent = maxHP > 0 ? Math.max(0, Math.min(1, hp / maxHP)) : 0;
-  const hpBarX = x - HP_BAR_WIDTH / 2;
-  const hpBarY = y + HP_BAR_OFFSET_Y;
+  const hpBarX = x - hpBarWidth / 2;
+  const hpBarY = y + hpBarOffsetY;
 
   // HP bar background
   ctx.fillStyle = '#374151';
-  ctx.fillRect(hpBarX, hpBarY, HP_BAR_WIDTH, HP_BAR_HEIGHT);
+  ctx.fillRect(hpBarX, hpBarY, hpBarWidth, hpBarHeight);
 
   // HP bar fill
   if (hpPercent > 0) {
     ctx.fillStyle = getHPColor(hpPercent);
-    ctx.fillRect(hpBarX, hpBarY, HP_BAR_WIDTH * hpPercent, HP_BAR_HEIGHT);
+    ctx.fillRect(hpBarX, hpBarY, hpBarWidth * hpPercent, hpBarHeight);
   }
 
   // Shield bar below HP bar (only if shield > 0)
   if (maxShield > 0 && shield > 0) {
     const shieldPercent = Math.max(0, Math.min(1, shield / maxShield));
-    const shieldBarY = hpBarY + HP_BAR_HEIGHT + 1;
+    const shieldBarY = hpBarY + hpBarHeight + 1;
 
     ctx.fillStyle = '#374151';
-    ctx.fillRect(hpBarX, shieldBarY, HP_BAR_WIDTH, SHIELD_BAR_HEIGHT);
+    ctx.fillRect(hpBarX, shieldBarY, hpBarWidth, shieldBarHeight);
 
     ctx.fillStyle = '#60A5FA';
-    ctx.fillRect(hpBarX, shieldBarY, HP_BAR_WIDTH * shieldPercent, SHIELD_BAR_HEIGHT);
+    ctx.fillRect(hpBarX, shieldBarY, hpBarWidth * shieldPercent, shieldBarHeight);
   }
 
   ctx.restore();
@@ -288,7 +320,7 @@ export function renderAttackIndicator(
     const dx = toPx.x - fromPx.x;
     const dy = toPx.y - fromPx.y;
     const angle = Math.atan2(dy, dx);
-    const arcRadius = ROBOT_RADIUS + 8;
+    const arcRadius = ROBOT_RADIUS + 8; // Attack indicators use base size (not scaled)
 
     ctx.beginPath();
     ctx.arc(fromPx.x, fromPx.y, arcRadius, angle - 0.6, angle + 0.6);

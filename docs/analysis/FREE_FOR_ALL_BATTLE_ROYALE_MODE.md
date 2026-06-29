@@ -1,6 +1,6 @@
 # Free-for-All / Battle Royale — Future Game Mode Analysis
 
-**Status**: 📋 FUTURE RELEASE — Design notes only  
+**Status**: ✅ Phase 1 shipped (Spec #44, 20 robots per match, June 2026)  
 **Depends on**: 2D Combat Arena (`.kiro/specs/2d-combat-arena/`)  
 **Date**: March 16, 2026
 

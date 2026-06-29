@@ -45,6 +45,11 @@ export interface RecordsData {
     '2v2': TeamBattleSizeRecords;
     '3v3': TeamBattleSizeRecords;
   };
+  grandMelee: {
+    mostWins: GrandMeleeMostWins[];
+    highestLp: GrandMeleeHighestLp[];
+    mostKillsCareer: GrandMeleeMostKills[];
+  };
   tournamentChampions1v1?: TournamentChampionRecord[];
   tournamentChampions2v2?: TournamentChampionRecord[];
   tournamentChampions3v3?: TournamentChampionRecord[];
@@ -264,7 +269,7 @@ export interface KothZoneDominator {
   totalZoneScore: number;
 }
 
-export type CategoryKey = 'combat' | 'upsets' | 'career' | 'economic' | 'prestige' | 'koth' | 'teamBattle' | 'tournaments';
+export type CategoryKey = 'combat' | 'upsets' | 'career' | 'economic' | 'prestige' | 'koth' | 'teamBattle' | 'tournaments' | 'grandMelee';
 
 // ─── Team Battle Records ────────────────────────────────────────────
 
@@ -321,6 +326,30 @@ export interface TeamBattleLongestBattle {
   date: string;
 }
 
+
+// ─── Grand Melee Records ────────────────────────────────────────────
+
+export interface GrandMeleeMostWins {
+  robotId: number;
+  robotName: string;
+  username: string;
+  grandMeleeWins: number;
+}
+
+export interface GrandMeleeHighestLp {
+  robotId: number;
+  robotName: string;
+  username: string;
+  leaguePoints: number;
+  tier: string;
+}
+
+export interface GrandMeleeMostKills {
+  robotId: number;
+  robotName: string;
+  username: string;
+  totalKills: number;
+}
 
 // ─── Tournament Champions ───────────────────────────────────────────
 

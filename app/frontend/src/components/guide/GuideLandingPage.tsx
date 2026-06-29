@@ -13,9 +13,13 @@ const SECTION_ICONS: Record<string, string> = {
   'weapons': '🔫',
   'leagues': '🏆',
   'tournaments': '🎖️',
+  'king-of-the-hill': '👑',
+  'team-battles': '👥',
+  'grand-melee': '💀',
   'economy': '💰',
   'facilities': '🏭',
   'prestige-fame': '⭐',
+  'achievements': '🏅',
   'strategy': '🧠',
   'integrations': '🔗',
 };

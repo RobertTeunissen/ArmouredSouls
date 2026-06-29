@@ -121,7 +121,6 @@ export async function createRobotTransaction(userId: number, trimmedName: string
         maxHP,
         currentShield: maxShield,
         maxShield,
-        leagueId: bronzeLeagueId,
       },
       include: {
         mainWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } },

@@ -6,5 +6,6 @@ export { PrestigeRecords } from './PrestigeRecords';
 export { KothRecords } from './KothRecords';
 export { TeamBattleRecords } from './TeamBattleRecords';
 export { TournamentChampionsRecords } from './TournamentChampionsRecords';
+export { GrandMeleeRecords } from './GrandMeleeRecords';
 
 export type { RecordsData, CategoryKey } from './types';

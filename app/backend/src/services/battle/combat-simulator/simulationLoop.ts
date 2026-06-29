@@ -11,6 +11,7 @@ import { calculateEffectiveSpeed, updateServoStrain } from '../../arena/servoStr
 import { calculateMovementIntent, applyMovement, getPatienceLimit, enforceTeamSeparation, RANGE_BAND_MIDPOINTS } from '../../arena/movementAI';
 import { getSupportShieldBoost } from '../../arena/teamCoordination';
 import { selectTarget } from '../../arena/threatScoring';
+import { SpatialGrid, computeMaxWeaponRange } from './spatialGrid';
 import {
   RobotWithWeapons,
   CombatEvent,
@@ -113,6 +114,21 @@ export function simulateBattleMulti(
     states.map(s => [s.teamIndex, s])
   );
 
+  // Spatial grid for O(n×k) threat evaluation (Spec #44: R1.1, R1.2, R1.5)
+  // Only used for filtering candidates passed to selectTarget — movement AI still sees all opponents
+  const useSpatialGrid = config.spatialPartitioning !== false && n > 2;
+  const spatialGrid = useSpatialGrid
+    ? new SpatialGrid(computeMaxWeaponRange(robots))
+    : null;
+
+  // Variable tick rate: robots far from all opponents skip AI re-evaluation (Spec #44: R1.3, R1.7)
+  // Only activates for battles with 10+ robots — no impact on KotH (5-6) or 1v1
+  const VARIABLE_TICK_INTERVAL = 0.5; // seconds between full AI evaluations for distant robots
+  const VARIABLE_TICK_DISTANCE = 50; // units — threshold for "far from all opponents"
+  const VARIABLE_TICK_MIN_ROBOTS = 10;
+  const useVariableTick = config.variableTickRate !== false && n >= VARIABLE_TICK_MIN_ROBOTS;
+  const lastAITick: number[] = states.map(() => 0);
+
   // Cached HP/shield snapshot to avoid rebuilding on every event push
   let cachedHPSnapshot: { robotHP: Record<string, number>; robotShield: Record<string, number> } | null = null;
   let hpSnapshotDirty = true;
@@ -201,8 +217,39 @@ export function simulateBattleMulti(
       (gameModeState.customData as Record<string, unknown>).robots = states;
     }
 
+    // Update spatial grid with current positions (Spec #44: R1.1)
+    if (spatialGrid) {
+      spatialGrid.update(states);
+    }
+
     // ── PHASE 1: MOVEMENT ──
     for (const state of aliveStates) {
+      // Variable tick rate: skip full AI evaluation for distant robots (Spec #44: R1.3, R1.7)
+      // Robot keeps moving at constant velocity — only AI decisions are deferred
+      if (useVariableTick) {
+        let nearestDist = Infinity;
+        for (const s of states) {
+          if (s === state || !s.isAlive) continue;
+          const d = euclideanDistance(state.position, s.position);
+          if (d < nearestDist) nearestDist = d;
+        }
+        if (nearestDist > VARIABLE_TICK_DISTANCE && currentTime - lastAITick[state.teamIndex] < VARIABLE_TICK_INTERVAL) {
+          // Not due for AI re-evaluation — apply movement only at constant velocity
+          // Move in current direction using existing velocity (R1.7: no teleporting)
+          state.position.x += state.velocity.x * SIMULATION_TICK;
+          state.position.y += state.velocity.y * SIMULATION_TICK;
+          // Clamp to arena bounds
+          const distFromCenter = euclideanDistance(state.position, arena.center);
+          if (distFromCenter > arena.radius) {
+            const scale = arena.radius / distFromCenter;
+            state.position.x = arena.center.x + (state.position.x - arena.center.x) * scale;
+            state.position.y = arena.center.y + (state.position.y - arena.center.y) * scale;
+          }
+          continue;
+        }
+        lastAITick[state.teamIndex] = currentTime;
+      }
+
       // Filter opponents: exclude teammates in team modes so movement AI
       // targets enemies, not allies (prevents clumping on teammates)
       const teamOfMap = gameModeState?.customData?.teamOf as Record<number, number> | undefined;
@@ -237,7 +284,13 @@ export function simulateBattleMulti(
           newTargetIdx = priorities.length > 0 ? priorities[0] : null;
         }
         if (newTargetIdx === null) {
-          const threat = selectTarget(state, opponents, arena.radius);
+          // Use spatial grid to limit threat evaluation to nearby robots (Spec #44: R1.2)
+          const threatCandidates = spatialGrid
+            ? opponents.filter(o => spatialGrid.getNearby(state.teamIndex).includes(o.teamIndex))
+            : opponents;
+          // Fall back to full opponents if spatial grid returns empty (edge case: all far away)
+          const evalTargets = threatCandidates.length > 0 ? threatCandidates : opponents;
+          const threat = selectTarget(state, evalTargets, arena.radius);
           newTargetIdx = threat?.robotIndex ?? opponents[0].teamIndex;
         }
 

@@ -444,8 +444,7 @@ function CycleControlsPage() {
 /* ------------------------------------------------------------------ */
 
 /** Reserved slot job names — these have no real handler yet */
-const RESERVED_SLOTS = new Set([
-  'grandMelee',
+const RESERVED_SLOTS = new Set<string>([
 ]);
 
 /** Human-readable display names for all scheduler jobs */

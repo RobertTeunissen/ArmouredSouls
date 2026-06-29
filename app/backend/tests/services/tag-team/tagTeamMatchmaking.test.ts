@@ -39,6 +39,8 @@ jest.mock('../../../src/config/logger', () => ({
 
 const mockPrisma = {
   cycleMetadata: { findUnique: jest.fn().mockResolvedValue({ id: 1, totalCycles: 42 }) },
+  scheduledMatchParticipant: { findMany: jest.fn().mockResolvedValue([]) },
+  standing: { findFirst: jest.fn().mockResolvedValue(null), findMany: jest.fn().mockResolvedValue([]) },
 };
 jest.mock('../../../src/lib/prisma', () => ({
   __esModule: true,
@@ -245,22 +247,23 @@ describe('Tag Team daily execution (R2.1, R2.2)', () => {
     const tagTeamCallback = getRegisteredHandler('tagTeam');
     expect(tagTeamCallback).toBeDefined();
 
-    const beforeTime = Date.now();
-
     // Invoke the handler
     await tagTeamCallback!();
 
     // Wait for the async runJob to complete
     await new Promise(resolve => setTimeout(resolve, 50));
 
-    // Verify matchmaking was called
+    // Verify matchmaking was called without arguments
+    // (service uses defaultScheduledFor() internally which computes 24h + rounded to hour)
     expect(mockRunTagTeamMatchmaking).toHaveBeenCalledTimes(1);
+    expect(mockRunTagTeamMatchmaking).toHaveBeenCalledWith();
 
-    // Check the scheduledFor argument passed to runTagTeamMatchmaking
-    const scheduledFor = mockRunTagTeamMatchmaking.mock.calls[0][0] as Date;
+    // Verify defaultScheduledFor() produces correct result by importing it directly
+    const { defaultScheduledFor } = await import('../../../src/services/matchmaking/teamMatchmakingUtils');
+    const beforeTime = Date.now();
+    const scheduledFor = defaultScheduledFor();
 
     // The implementation does: new Date(Date.now() + 24h) then setMinutes(0,0,0)
-    // So we compute the expected value the same way
     const expected = new Date(beforeTime + 24 * 60 * 60 * 1000);
     expected.setMinutes(0, 0, 0);
 

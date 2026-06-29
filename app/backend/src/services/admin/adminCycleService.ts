@@ -46,7 +46,7 @@ export interface CycleResult {
   kothBlock?: { repair: unknown; battles: unknown; matchmaking: unknown };
   team3v3LeagueBlock?: { battles: unknown; rebalancing: unknown; matchmaking: unknown } | { error: string };
   team2v2TournamentBlock?: { skipped: true; message: string } | { repair: unknown; matchesExecuted: number; matchesFailed: number; tournamentName?: string; tournamentRound?: number; tournamentMaxRounds?: number; tournamentCreated?: boolean; skippedReason?: string };
-  grandMeleeBlock?: { skipped: true; message: string };
+  grandMeleeBlock?: { matchesExecuted: number; matchesFailed: number; matchesCreated: number } | { error: string };
   team3v3TournamentBlock?: { skipped: true; message: string } | { repair: unknown; matchesExecuted: number; matchesFailed: number; tournamentName?: string; tournamentRound?: number; tournamentMaxRounds?: number; tournamentCreated?: boolean; skippedReason?: string };
   // Settlement results
   settlement?: {
@@ -711,18 +711,37 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
       );
 
       // ═══════════════════════════════════════════════════════════════════
-      // SLOT 8: Grand Melee (reserved stub)
+      // SLOT 8: Grand Melee (Spec #44: R7.5)
       // ═══════════════════════════════════════════════════════════════════
       stepNumber++;
-      logger.info(`[Admin] Step ${stepNumber}: Grand Melee — reserved slot, no handler implemented`);
+      logger.info(`[Admin] Step ${stepNumber}: Grand Melee — executing cycle (repair → execute → rebalance → matchmake)`);
+      let grandMeleeResult: { matchesExecuted: number; matchesFailed: number; matchesCreated: number } | { error: string };
+      try {
+        const { executeScheduledGrandMeleeBattles } = await import('../grand-melee/grandMeleeBattleOrchestrator');
+        const { runGrandMeleeMatchmaking } = await import('../grand-melee/grandMeleeMatchmakingService');
+        const { rebalanceGrandMeleeLeagues } = await import('../league/leagueRebalancingService');
+
+        await repairAllRobots(true, currentCycleNumber);
+        const execSummary = await executeScheduledGrandMeleeBattles();
+        await rebalanceGrandMeleeLeagues();
+        const matchesCreated = await runGrandMeleeMatchmaking();
+
+        grandMeleeResult = {
+          matchesExecuted: execSummary.successfulMatches,
+          matchesFailed: execSummary.failedMatches,
+          matchesCreated,
+        };
+      } catch (err) {
+        grandMeleeResult = { error: err instanceof Error ? err.message : String(err) };
+        logger.error('[Admin] Grand Melee cycle failed:', err);
+      }
       await eventLogger.logCycleStepComplete(
         currentCycleNumber,
-        'grand_melee_reserved',
+        'grand_melee',
         stepNumber,
         0,
-        { reserved: true }
+        grandMeleeResult
       );
-      reservedSlotsFired.push('grand_melee');
 
       // ═══════════════════════════════════════════════════════════════════
       // SLOT 9: Team 3v3 Tournament (repair → execute/advance/auto-create)
@@ -1106,7 +1125,7 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
           ? { error: team3v3Error }
           : { battles: team3v3BattleSummary, rebalancing: team3v3RebalancingSummary, matchmaking: { matchesCreated: team3v3MatchesCreated } },
         team2v2TournamentBlock: team2v2TournamentResult,
-        grandMeleeBlock: { skipped: true, message: 'reserved slot, no handler implemented' },
+        grandMeleeBlock: grandMeleeResult,
         team3v3TournamentBlock: team3v3TournamentResult,
         settlement: {
           userGeneration: userGenerationSummary,

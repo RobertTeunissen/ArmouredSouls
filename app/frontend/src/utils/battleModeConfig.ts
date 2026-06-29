@@ -20,7 +20,8 @@ export type BattleModeType =
   | 'tournament_1v1'
   | 'tournament_2v2'
   | 'tournament_3v3'
-  | 'koth';
+  | 'koth'
+  | 'grand_melee';
 
 export const BATTLE_MODE_CONFIG: Record<BattleModeType, BattleModeConfig> = {
   league_1v1: {
@@ -79,6 +80,13 @@ export const BATTLE_MODE_CONFIG: Record<BattleModeType, BattleModeConfig> = {
     borderColor: 'border-l-orange-500',
     tierPrefix: '',
   },
+  grand_melee: {
+    icon: '💀',
+    label: 'Melee',
+    badgeColor: 'bg-red-400/20 text-red-400',
+    borderColor: 'border-l-red-500',
+    tierPrefix: '',
+  },
 };
 
 /**
@@ -101,6 +109,7 @@ export function getModeConfig(battleType: string | null | undefined): BattleMode
   }
   if (battleType.includes('tag_team')) return BATTLE_MODE_CONFIG.tag_team;
   if (battleType.includes('koth')) return BATTLE_MODE_CONFIG.koth;
+  if (battleType.includes('grand_melee')) return BATTLE_MODE_CONFIG.grand_melee;
   if (battleType.includes('3v3')) return BATTLE_MODE_CONFIG.league_3v3;
   if (battleType.includes('2v2')) return BATTLE_MODE_CONFIG.league_2v2;
 

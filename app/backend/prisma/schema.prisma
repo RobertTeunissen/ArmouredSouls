@@ -162,6 +162,10 @@ model Robot {
   balancedWins  Int @default(0) @map("balanced_wins")
   dualWieldWins Int @default(0) @map("dual_wield_wins")
 
+  // ===== GRAND MELEE COUNTERS (Spec #44) =====
+  grandMeleeWins Int @default(0) @map("grand_melee_wins")
+  grandMeleeTop3 Int @default(0) @map("grand_melee_top3")
+
   // ===== ECONOMIC STATE =====
   repairCost       Int @default(0) @map("repair_cost") // Cost to fully repair (formula-based)
   battleReadiness  Int @default(100) @map("battle_readiness") // Percentage (100% = full HP, 0% = critical)
@@ -695,6 +699,7 @@ model LeagueHistory {
   entityId            Int      @map("entity_id") // Robot ID or TeamBattle ID
   userId              Int      @map("user_id") // Owner (user.id for robots, stableId for tag teams)
   changeType          String   @map("change_type") @db.VarChar(20) // "promotion" or "demotion"
+  mode                String?  @db.VarChar(30) // Standings mode: league_1v1, koth, grand_melee, etc.
   sourceTier          String   @map("source_tier") @db.VarChar(20) // e.g. "bronze"
   destinationTier     String   @map("destination_tier") @db.VarChar(20) // e.g. "silver"
   sourceLeagueId      String   @map("source_league_id") @db.VarChar(30) // e.g. "bronze_1"
@@ -781,6 +786,7 @@ enum MatchType {
   tournament_1v1
   tournament_2v2
   tournament_3v3
+  grand_melee
 }
 
 // Unified scheduling table replacing: scheduled_matches, scheduled_team_battle_matches,
@@ -847,6 +853,7 @@ enum StandingsMode {
   tournament_1v1
   tournament_2v2
   tournament_3v3
+  grand_melee
 }
 
 // Unified competitive standings table replacing league columns on robots and team_battles
