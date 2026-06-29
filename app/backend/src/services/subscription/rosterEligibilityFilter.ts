@@ -45,7 +45,7 @@ const ELIGIBILITY_RULES: EligibilityRule[] = [
   { eventType: 'league_3v3', minRobots: 3, reason: '3v3 League requires 3 or more robots in your Stable' },
   { eventType: 'tournament_2v2', minRobots: 2, reason: '2v2 Tournament requires 2 or more robots in your Stable' },
   { eventType: 'tournament_3v3', minRobots: 3, reason: '3v3 Tournament requires 3 or more robots in your Stable' },
-  { eventType: 'grand_melee', minRobots: 1, reason: '' },
+  { eventType: 'grand_melee', minRobots: 1, reason: 'Grand Melee requires at least 1 robot in your Stable' },
 ];
 
 // ── Public API ───────────────────────────────────────────────────────

@@ -74,6 +74,9 @@ export function createByeTeamForBattle(): TagTeamWithRobots {
     defensiveWins: 0,
     balancedWins: 0,
     dualWieldWins: 0,
+    // Grand Melee
+    grandMeleeWins: 0,
+    grandMeleeTop3: 0,
     // Equipment
     mainWeaponId: null,
     offhandWeaponId: null,

@@ -138,6 +138,7 @@ function LeagueStandingsPage() {
 
   // Derive user robot tiers/instances from store (1v1) or standings API (koth/grand_melee)
   useEffect(() => {
+    let cancelled = false;
     if (mode === '1v1' && storeRobots.length > 0) {
       const tiers = new Set<string>(storeRobots.map((r) => r.currentLeague));
       const instanceIds = new Set<string>(storeRobots.map((r) => r.leagueId).filter(Boolean) as string[]);
@@ -153,6 +154,7 @@ function LeagueStandingsPage() {
             .catch(() => null)
         )
       ).then(results => {
+        if (cancelled) return;
         const validStandings = results.filter((s): s is { tier: string; leagueInstanceId?: string } => s !== null);
         setUserRobotTiers(new Set(validStandings.map(s => s.tier)));
         setUserRobotInstances(new Set(validStandings.map(s => s.leagueInstanceId).filter(Boolean) as string[]));
@@ -161,6 +163,7 @@ function LeagueStandingsPage() {
       setUserRobotTiers(new Set());
       setUserRobotInstances(new Set());
     }
+    return () => { cancelled = true; };
   }, [storeRobots, mode]);
 
   const fetchLeagueData = async (tier: string, page: number, instance?: string) => {

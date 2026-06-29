@@ -859,7 +859,7 @@ export async function formatBattleHistoryEntry(battle: BattleWithFullRelations, 
   const team1Participants = battle.participants.filter(p => p.team === 1);
   const team2Participants = battle.participants.filter(p => p.team === 2);
 
-  let robot1Part, robot2Part;
+  let robot1Part: (typeof battle.participants)[number] | undefined, robot2Part: (typeof battle.participants)[number] | undefined;
   if (isFFA) {
     // FFA: user's robot as robot1, winner (or first other) as robot2
     robot1Part = battle.participants.find(p => targetRobotIds.includes(p.robotId)) ?? team1Participants[0];

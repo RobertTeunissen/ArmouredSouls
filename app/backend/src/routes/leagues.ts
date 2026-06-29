@@ -293,7 +293,7 @@ router.get('/tier-changes/unseen', authenticateToken, validateRequest({}), async
   // Deduplicate: same entity + same tier change + same mode = show only once
   const seen = new Set<string>();
   const deduped = result.filter(r => {
-    const key = `${r.entityId}-${r.changeType}-${r.sourceTier}-${r.destinationTier}-${r.mode}`;
+    const key = `${r.entityType}-${r.entityId}-${r.changeType}-${r.sourceTier}-${r.destinationTier}-${r.mode}`;
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
