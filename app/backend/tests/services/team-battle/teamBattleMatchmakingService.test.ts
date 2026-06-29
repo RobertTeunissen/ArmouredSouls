@@ -614,15 +614,28 @@ describe('teamBattleMatchmakingService', () => {
     });
 
     it('should iterate all tiers and create matches', async () => {
-      // standing.findMany: first call returns instance for bronze, rest return empty (per tier)
-      mockPrisma.standing.findMany
-        .mockResolvedValueOnce([{ leagueInstanceId: 'bronze_1' }]) // distinct instances for bronze
-        .mockResolvedValueOnce([{ entityId: 1 }, { entityId: 2 }]) // teams in bronze_1
-        .mockResolvedValueOnce([]) // instances for silver
-        .mockResolvedValueOnce([]) // instances for gold
-        .mockResolvedValueOnce([]) // instances for platinum
-        .mockResolvedValueOnce([]) // instances for diamond
-        .mockResolvedValueOnce([]); // instances for champion
+      // Use mockImplementation to handle the variable number of standing.findMany calls
+      mockPrisma.standing.findMany.mockImplementation((args: any) => {
+        // Distinct instances query (has distinct field)
+        if (args?.distinct) {
+          if (args.where?.tier === 'bronze') {
+            return Promise.resolve([{ leagueInstanceId: 'bronze_1' }]);
+          }
+          return Promise.resolve([]);
+        }
+        // Team IDs query in getEligibleTeams (has leagueInstanceId)
+        if (args?.where?.leagueInstanceId === 'bronze_1') {
+          return Promise.resolve([{ entityId: 1 }, { entityId: 2 }]);
+        }
+        // LP lookup in pairTeams (has entityId: { in: [...] })
+        if (args?.where?.entityId) {
+          return Promise.resolve([
+            { entityId: 1, leaguePoints: 50 },
+            { entityId: 2, leaguePoints: 50 },
+          ]);
+        }
+        return Promise.resolve([]);
+      });
 
       mockPrisma.teamBattle.findMany.mockResolvedValue([makeTeam(1), makeTeam(2, 2, { stableId: 200 })]);
       mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([]);
@@ -637,16 +650,34 @@ describe('teamBattleMatchmakingService', () => {
     });
 
     it('should continue on per-instance errors (R4.6)', async () => {
-      // Bronze has two instances, first one throws
-      mockPrisma.standing.findMany
-        .mockResolvedValueOnce([{ leagueInstanceId: 'bronze_1' }, { leagueInstanceId: 'bronze_2' }]) // instances for bronze
-        .mockRejectedValueOnce(new Error('DB error')) // getEligibleTeams for bronze_1 fails at standing query
-        .mockResolvedValueOnce([{ entityId: 3 }, { entityId: 4 }]) // teams in bronze_2
-        .mockResolvedValueOnce([]) // instances for silver
-        .mockResolvedValueOnce([]) // instances for gold
-        .mockResolvedValueOnce([]) // instances for platinum
-        .mockResolvedValueOnce([]) // instances for diamond
-        .mockResolvedValueOnce([]); // instances for champion
+      // Bronze has two instances, first one throws, second succeeds
+      let callCount = 0;
+      mockPrisma.standing.findMany.mockImplementation((args: any) => {
+        callCount++;
+        // Distinct instances query
+        if (args?.distinct) {
+          if (args.where?.tier === 'bronze') {
+            return Promise.resolve([{ leagueInstanceId: 'bronze_1' }, { leagueInstanceId: 'bronze_2' }]);
+          }
+          return Promise.resolve([]);
+        }
+        // Team IDs query for bronze_1 — throw to simulate error
+        if (args?.where?.leagueInstanceId === 'bronze_1') {
+          return Promise.reject(new Error('DB error'));
+        }
+        // Team IDs query for bronze_2
+        if (args?.where?.leagueInstanceId === 'bronze_2') {
+          return Promise.resolve([{ entityId: 3 }, { entityId: 4 }]);
+        }
+        // LP lookup in pairTeams
+        if (args?.where?.entityId) {
+          return Promise.resolve([
+            { entityId: 3, leaguePoints: 50 },
+            { entityId: 4, leaguePoints: 50 },
+          ]);
+        }
+        return Promise.resolve([]);
+      });
 
       mockPrisma.teamBattle.findMany.mockResolvedValue([makeTeam(3, 2, { stableId: 300 }), makeTeam(4, 2, { stableId: 400 })]);
       mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([]);
@@ -662,15 +693,31 @@ describe('teamBattleMatchmakingService', () => {
     });
 
     it('should continue on per-tier errors (R4.6)', async () => {
-      // Bronze tier throws entirely
-      mockPrisma.standing.findMany
-        .mockRejectedValueOnce(new Error('Tier error')) // instances query for bronze fails
-        .mockResolvedValueOnce([{ leagueInstanceId: 'silver_1' }]) // instances for silver
-        .mockResolvedValueOnce([{ entityId: 1 }, { entityId: 2 }]) // teams in silver_1
-        .mockResolvedValueOnce([]) // instances for gold
-        .mockResolvedValueOnce([]) // instances for platinum
-        .mockResolvedValueOnce([]) // instances for diamond
-        .mockResolvedValueOnce([]); // instances for champion
+      // Bronze tier throws entirely, silver succeeds
+      mockPrisma.standing.findMany.mockImplementation((args: any) => {
+        // Distinct instances query
+        if (args?.distinct) {
+          if (args.where?.tier === 'bronze') {
+            return Promise.reject(new Error('Tier error'));
+          }
+          if (args.where?.tier === 'silver') {
+            return Promise.resolve([{ leagueInstanceId: 'silver_1' }]);
+          }
+          return Promise.resolve([]);
+        }
+        // Team IDs query for silver_1
+        if (args?.where?.leagueInstanceId === 'silver_1') {
+          return Promise.resolve([{ entityId: 1 }, { entityId: 2 }]);
+        }
+        // LP lookup in pairTeams
+        if (args?.where?.entityId) {
+          return Promise.resolve([
+            { entityId: 1, leaguePoints: 50 },
+            { entityId: 2, leaguePoints: 50 },
+          ]);
+        }
+        return Promise.resolve([]);
+      });
 
       mockPrisma.teamBattle.findMany.mockResolvedValue([makeTeam(1, 2), makeTeam(2, 2, { stableId: 200 })]);
       mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([]);
