@@ -18,33 +18,38 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 | 4 | Practice Arena Catalog Access | 57 | 0 🗳️ | 2 | 1 | 1 | 1 | **4.0** |
 | 5 | Robot Comparison Tool | 42 | 0 🗳️ | 2 | 1 | 1 | 2 | **2.0** |
 | 6 | Dashboard Enhancements | 24 | 0 🗳️ | 2 | 1 | 1 | 2 | **2.0** |
-| 8 | Weapon Special Properties | 11 | 1 🗳️ | 3 | 2 | 2 | 4 | **1.8** |
-| 9 | Season System (100-Cycle Seasons) | 41 | 0 🗳️ | 4 | 1 | 2 | 4 | **1.8** |
-| 10 | Daily Login Bonuses & Seasonal Events | 34 | 0 🗳️ | 3 | 1 | 1 | 3 | **1.7** |
-| 12 | Player Personas / Complexity Modes | 16 | 1 🗳️ | 2 | 1 | 2 | 3 | **1.7** |
-| 13 | Arena / Terrain Modifiers | 12 | 1 🗳️ | 3 | 1 | 2 | 4 | **1.5** |
-| 15 | Tag Team Battle Time Limit Enforcement | 19 | 0 🗳️ | 1 | 1 | 1 | 2 | **1.5** |
-| 16 | Modular Package Extraction | 35 | 0 🗳️ | 1 | 1 | 2 | 3 | **1.3** |
-| 18 | Robot Detail Page Split | 37 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
-| 19 | Achievement Persistence Across Seasons | 40 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
-| 20 | Events Calendar | 43 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
-| 21 | Universal Search / Command Palette | 27 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
-| 22 | Progressive Feature Disclosure | 28 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
-| 23 | Weapon Crafting System | 29 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
-| 24 | Free-for-All / Battle Royale Mode | 30 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
-| 25 | Conditional Battle Triggers / AI Scripting | 32 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
-| 26 | Future Revenue Streams | 33 | 0 🗳️ | 2 | 1 | 1 | 4 | **1.0** |
-| 27 | Player Marketplace | 44 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
-| 28 | Social Features (Friends, Guilds, Chat) | 45 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
-| 29 | Prestige Store | 47 | 0 🗳️ | 2 | 1 | 1 | 4 | **1.0** |
-| 30 | Blueprint Library | 48 | 0 🗳️ | 1 | 1 | 1 | 3 | **1.0** |
-| 31 | Cosmetic Customization System | 46 | 0 🗳️ | 2 | 1 | 1 | 5 | **0.8** |
-| 32 | Matchup-Dependent Weapon Effectiveness | 58 | 0 🗳️ | 3 | 1 | 2 | 5 | **1.2** |
+| 7 | Weapon Special Properties | 11 | 1 🗳️ | 3 | 2 | 2 | 4 | **1.8** |
+| 8 | Season System (100-Cycle Seasons) | 41 | 0 🗳️ | 4 | 1 | 2 | 4 | **1.8** |
+| 9 | Daily Login Bonuses & Seasonal Events | 34 | 0 🗳️ | 3 | 1 | 1 | 3 | **1.7** |
+| 10 | Player Personas / Complexity Modes | 16 | 1 🗳️ | 2 | 1 | 2 | 3 | **1.7** |
+| 11 | Arena / Terrain Modifiers | 12 | 1 🗳️ | 3 | 1 | 2 | 4 | **1.5** |
+| 12 | Modular Package Extraction | 35 | 0 🗳️ | 1 | 1 | 2 | 3 | **1.3** |
+| 13 | Robot Detail Page Split | 37 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
+| 14 | Universal Search / Command Palette | 27 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
+| 15 | Progressive Feature Disclosure | 28 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
+| 16 | Weapon Crafting System | 29 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
+| 17 | Free-for-All / Battle Royale Mode | 30 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
+| 18 | Conditional Battle Triggers / AI Scripting | 32 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
+| 19 | Future Revenue Streams | 33 | 0 🗳️ | 2 | 1 | 1 | 4 | **1.0** |
+| 20 | Player Marketplace | 44 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
+| 21 | Social Features (Friends, Guilds, Chat) | 45 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
+| 22 | Prestige Store | 47 | 0 🗳️ | 2 | 1 | 1 | 4 | **1.0** |
+| 23 | Blueprint Library | 48 | 0 🗳️ | 1 | 1 | 1 | 3 | **1.0** |
+| 24 | Cosmetic Customization System | 46 | 0 🗳️ | 2 | 1 | 1 | 5 | **0.8** |
+| 25 | Matchup-Dependent Weapon Effectiveness | 58 | 0 🗳️ | 3 | 1 | 2 | 5 | **1.2** |
+
+### #60 — Drop Legacy League Columns from Robot Model
+**Source**: Grand Melee spec implementation (Spec #44) — discovered during frontend unification
+**Priority**: High — technical debt causing inconsistency across league modes
+
+The Robot model still has `currentLeague`, `leagueId`, `leaguePoints`, and `cyclesInCurrentLeague` columns from before the Database Unification (Spec #40). All league data now lives in the `Standing` table, but these stale Robot columns are still read by the frontend robot store, the league standings page (for 1v1 indicators), and various mock data in tests. They should be dropped from the schema and all reads replaced with Standing table queries. Affects: `storeRobots`, `LeagueStandingsPage`, `matchmakingService` bye-robot factory, `practiceArenaService`, `teamBattleOrchestrator` bye-robot factory, seed file, and ~15 test files.
 
 ### Recently Completed (removed from backlog)
 
 | Item | # | Spec | Completed |
 |------|---|------|-----------|
+| Grand Melee Mode (20-robot FFA) | 30 | [Spec #44](/.kiro/specs/to-do/44-grand-melee/) | June 2026 |
+| Tag Team Battle Time Limit Enforcement (closed as working-as-designed, documented in BATTLE_SIMULATION_ARCHITECTURE.md § Tag Team Orchestrator) | 19 | — | June 2026 |
 | Battle Table Denormalization Cleanup (19 deprecated columns dropped) | 18 | — (direct implementation, completes Spec #43 Task 6.4) | June 2026 |
 | Spec #40 Legacy Column Drop (Phase 2) | 59 | [Spec #43](/.kiro/specs/to-do/43-legacy-column-drop/) | June 2026 |
 | Battle Log Retention / TOAST Trim (pre-computed summaries, 7-day retention, nightly cron) | 53 | [Spec #39](/.kiro/specs/to-do/39-battle-log-retention/) | June 2026 |
@@ -117,8 +122,6 @@ The game has six identifiable loops, most of which degrade or stall at some poin
 
 **Missing loops**: experimentation, social/rivalry, collection/completion, seasonal/event, recovery/comeback.
 
-
-
 ### #11 — Weapon Special Properties
 **Source**: PRD_WEAPON_ECONOMY.md, PRD_WEAPONS_LOADOUT.md  
 **Priority**: Medium — would significantly deepen combat strategy
@@ -145,12 +148,6 @@ Add a feature toggle system manageable from the admin portal. Flags can be globa
 
 Two archetypes: "just let me fight" vs "show me everything." Per the [Prestige & Fame Design Exploration](analysis/PRESTIGE_FAME_DESIGN_EXPLORATION.md): gating depth by prestige doesn't work — a preference toggle may be the right approach.
 
-### #19 — Tag Team Battle Time Limit Enforcement
-**Source**: [Battle Execution Audit](analysis/BATTLE_EXECUTION_AUDIT.md)  
-**Priority**: Low — stored duration is correct, only simulation overruns
-
-Tag team battles can theoretically exceed 300s because each phase has its own 120s cap.
-
 ### #24 — Dashboard Enhancements
 **Source**: PRD_DASHBOARD_PAGE.md  
 **Priority**: Low — cosmetic improvements  
@@ -169,7 +166,6 @@ No global search exists. A universal search bar (header or Cmd+K overlay) queryi
 **Priority**: Low — reduces new player overwhelm
 
 Per the [Prestige & Fame Design Exploration](analysis/PRESTIGE_FAME_DESIGN_EXPLORATION.md): prestige-gated feature unlocks were largely rejected. A simple preference toggle (#16) may be more appropriate.
-
 
 ### #29 — Weapon Crafting System
 Custom weapon design at Workshop Level 6+. Pricing formula already supports it.
@@ -241,23 +237,11 @@ At season end, the player's stable is archived (viewable as history) and they st
 
 **Dependencies**: #40 (achievement persistence — confirmed permanent), possibly #12 (arena modifiers as seasonal meta shifts).
 
-### #40 — Achievement Persistence Across Seasons
-**Source**: Achievement System spec (#27) discussion  
-**Priority**: Not scoped — resolved: achievements persist permanently
-
-Achievements persist permanently across seasons (lifetime collection). They are the primary permanent progression layer alongside prestige. The `UserAchievement` table needs no `seasonId` column — achievements are entirely outside the season reset scope. Some achievements may reference seasonal accomplishments (e.g., "reach Diamond in 3 different seasons") but the awards themselves never reset.
-
 ### #42 — Robot Comparison Tool
 **Source**: Removed from navbar — unimplemented page (`/robots/compare`)  
 **Priority**: Low — QoL feature for experienced players
 
 Side-by-side comparison of two or more robots' stats, attributes, weapons, and tuning allocations. Helps players make informed decisions about upgrades and loadout changes. Could include a simulated "who would win" prediction based on current builds.
-
-### #43 — Events Calendar
-**Source**: Removed from navbar — unimplemented page (`/events`)  
-**Priority**: Not scoped — depends on seasonal/event system (#34, #41)
-
-A calendar view showing upcoming tournaments, seasonal events, daily login bonus windows, and cycle milestones. Only useful once time-limited events exist in the game. Depends on Daily Login Bonuses (#34) or Season System (#41) being implemented first.
 
 ### #44 — Player Marketplace
 **Source**: Removed from navbar — unimplemented pages (`/marketplace`, `/marketplace/my-listings`, `/marketplace/history`)  
@@ -296,12 +280,6 @@ A store where players spend accumulated prestige points on exclusive rewards: co
 A collection of saved weapon blueprints for the crafting system. Players save successful designs, share blueprints with others, and browse community-created weapon configurations. Only relevant once Weapon Crafting (#29) is implemented.
 
 **Dependencies**: Weapon Crafting System (#29).
-
----
-
-## Engineering Maintenance Items
-
-These came out of the May 2026 codebase audit. They're internal-quality-of-life items rather than gameplay/UX features, but they affect velocity, reliability, and onboarding for every future change. Listed at the end so the gameplay backlog above stays the primary view.
 
 ### #57 — Practice Arena Catalog Access (Try Before You Buy)
 **Source**: Weapon Experimentation Problem (#5), follow-up item 3  

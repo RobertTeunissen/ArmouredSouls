@@ -17,9 +17,11 @@ export function useBattlePlaybackData(battleLog: BattleLogResponse): BattlePlayb
   const hasSpatialData = !!battleLog.battleLog.arenaRadius && battleLog.battleLog.arenaRadius > 0;
   const isTagTeam = battleLog.battleType === 'tag_team';
   const isKoth = battleLog.battleType === 'koth';
+  const isGrandMelee = battleLog.battleType === 'grand_melee';
+  const isFFA = isKoth || isGrandMelee;
   const isTeamBattle = battleLog.battleType === 'league_2v2' || battleLog.battleType === 'league_3v3' || battleLog.battleType === 'tournament_2v2' || battleLog.battleType === 'tournament_3v3';
-  const is1v1 = !isTagTeam && !isKoth && !isTeamBattle && !!battleLog.robot1 && !!battleLog.robot2;
-  const showPlaybackViewer = hasSpatialData && (is1v1 || isTagTeam || isKoth || isTeamBattle);
+  const is1v1 = !isTagTeam && !isFFA && !isTeamBattle && !!battleLog.robot1 && !!battleLog.robot2;
+  const showPlaybackViewer = hasSpatialData && (is1v1 || isTagTeam || isFFA || isTeamBattle);
 
   const spatialEvents = battleLog.battleLog.detailedCombatEvents ?? battleLog.battleLog.events;
 
@@ -88,13 +90,13 @@ export function useBattlePlaybackData(battleLog: BattleLogResponse): BattlePlayb
   const startingRobot1Shield = firstSpatialEvent?.robot1Shield;
   const startingRobot2Shield = firstSpatialEvent?.robot2Shield;
 
-  const firstKothEvent = isKoth ? spatialEvents.find((e: BattleLogEvent) => e.robotHP) : null;
+  const firstKothEvent = isFFA ? spatialEvents.find((e: BattleLogEvent) => e.robotHP) : null;
   const kothStartingHP: Record<string, number> = firstKothEvent?.robotHP ?? {};
   const kothStartingShield: Record<string, number> = firstKothEvent?.robotShield ?? {};
 
   const robot1PlaybackInfo: PlaybackRobotInfo | null = (() => {
     if (!showPlaybackViewer) return null;
-    if (isKoth && battleLog.kothParticipants?.length) {
+    if (isFFA && battleLog.kothParticipants?.length) {
       const p = battleLog.kothParticipants[0];
       return { name: p.robotName, teamIndex: 0, maxHP: kothStartingHP[p.robotName] ?? 100, maxShield: kothStartingShield[p.robotName] ?? 0 };
     }
@@ -117,7 +119,7 @@ export function useBattlePlaybackData(battleLog: BattleLogResponse): BattlePlayb
 
   const robot2PlaybackInfo: PlaybackRobotInfo | null = (() => {
     if (!showPlaybackViewer) return null;
-    if (isKoth && battleLog.kothParticipants?.length && battleLog.kothParticipants.length >= 2) {
+    if (isFFA && battleLog.kothParticipants?.length && battleLog.kothParticipants.length >= 2) {
       const p = battleLog.kothParticipants[1];
       return { name: p.robotName, teamIndex: 1, maxHP: kothStartingHP[p.robotName] ?? 100, maxShield: kothStartingShield[p.robotName] ?? 0 };
     }
@@ -140,7 +142,7 @@ export function useBattlePlaybackData(battleLog: BattleLogResponse): BattlePlayb
 
   const extraPlaybackRobots: PlaybackRobotInfo[] | undefined = (() => {
     if (!showPlaybackViewer) return undefined;
-    if (isKoth && battleLog.kothParticipants && battleLog.kothParticipants.length > 2) {
+    if (isFFA && battleLog.kothParticipants && battleLog.kothParticipants.length > 2) {
       return battleLog.kothParticipants.slice(2).map((p, i) => ({
         name: p.robotName,
         teamIndex: i + 2,

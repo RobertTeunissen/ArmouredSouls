@@ -24,6 +24,7 @@ export const ALL_BATTLE_TYPES = [
   'league_3v3',
   'tournament_2v2',
   'tournament_3v3',
+  'grand_melee',
 ] as const;
 
 export type BattleType = typeof ALL_BATTLE_TYPES[number];

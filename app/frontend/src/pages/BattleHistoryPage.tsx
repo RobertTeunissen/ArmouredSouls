@@ -15,11 +15,11 @@ import {
 } from '../utils/matchmakingApi';
 import { computeBattleSummary, EMPTY_SUMMARY } from '../utils/battleHistoryStats';
 
-type BattleFilterType = 'overall' | 'league' | 'tournament' | 'tag_team' | 'koth' | 'league_2v2' | 'league_3v3' | 'tournament_2v2' | 'tournament_3v3';
+type BattleFilterType = 'overall' | 'league' | 'tournament' | 'tag_team' | 'koth' | 'grand_melee' | 'league_2v2' | 'league_3v3' | 'tournament_2v2' | 'tournament_3v3';
 type OutcomeFilterType = 'all' | 'win' | 'loss' | 'draw';
 type SortByType = 'date-desc' | 'date-asc' | 'elo-desc' | 'elo-asc' | 'reward-desc' | 'reward-asc';
 
-const VALID_BATTLE_FILTERS: BattleFilterType[] = ['overall', 'league', 'tournament', 'tag_team', 'koth', 'league_2v2', 'league_3v3', 'tournament_2v2', 'tournament_3v3'];
+const VALID_BATTLE_FILTERS: BattleFilterType[] = ['overall', 'league', 'tournament', 'tag_team', 'koth', 'grand_melee', 'league_2v2', 'league_3v3', 'tournament_2v2', 'tournament_3v3'];
 const VALID_OUTCOME_FILTERS: OutcomeFilterType[] = ['all', 'win', 'loss', 'draw'];
 const VALID_SORT_OPTIONS: SortByType[] = ['date-desc', 'date-asc', 'elo-desc', 'elo-asc', 'reward-desc', 'reward-asc'];
 const VALID_PAGE_SIZES = [20, 50, 100];
@@ -135,15 +135,17 @@ function BattleHistoryPage() {
 
   const getMatchData = (battle: BattleHistory) => {
     const isKoth = battle.battleType === 'koth';
+    const isGrandMelee = battle.battleType === 'grand_melee';
+    const isFFA = isKoth || isGrandMelee;
     const isMyRobot1 = isMyRobot(battle.robot1.userId);
 
-    // For KotH, backend ensures user's robot is in robot1 (even for 3rd-6th place)
+    // For KotH/Grand Melee, backend ensures user's robot is in robot1 (even for 3rd-6th place)
     const myRobot = isMyRobot1 ? battle.robot1 : battle.robot2;
     const opponent = isMyRobot1 ? battle.robot2 : battle.robot1;
     const myRobotId = myRobot.id;
 
-    // For KotH, derive outcome from placement (1st = win, rest = loss)
-    const outcome = isKoth
+    // For FFA modes, derive outcome from placement (1st = win, rest = loss)
+    const outcome = isFFA
       ? (battle.kothPlacement === 1 ? 'win' : 'loss')
       : getBattleOutcome(battle, myRobotId);
 

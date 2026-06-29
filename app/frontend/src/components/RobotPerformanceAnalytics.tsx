@@ -61,6 +61,7 @@ function RobotPerformanceAnalytics({ robotId, lastNCycles = 10 }: RobotPerforman
   const [damageProgression, setDamageProgression] = useState<MetricProgression | null>(null);
   const [creditsProgression, setCreditsProgression] = useState<MetricProgression | null>(null);
   const [kothStats, setKothStats] = useState<KothRobotPerformance | null>(null);
+  const [grandMeleeStats, setGrandMeleeStats] = useState<{ wins: number; totalMatches: number; totalKills: number; bestPlacement: number | null; currentWinStreak: number; leaguePoints: number; tier: string } | null>(null);
 
   useEffect(() => {
     fetchAnalytics();
@@ -105,6 +106,26 @@ function RobotPerformanceAnalytics({ robotId, lastNCycles = 10 }: RobotPerforman
         }
       } catch {
         setKothStats(null);
+      }
+
+      // Fetch Grand Melee performance
+      try {
+        const gmResponse = await api.get<{ standing: { wins: number; totalMatches: number | null; totalKills: number | null; bestPlacement: number | null; currentWinStreak: number; leaguePoints: number; tier: string } | null }>(`/api/robots/${robotId}/grand-melee-standing`);
+        if (gmResponse.standing && (gmResponse.standing.totalMatches ?? 0) > 0) {
+          setGrandMeleeStats({
+            wins: gmResponse.standing.wins,
+            totalMatches: gmResponse.standing.totalMatches ?? 0,
+            totalKills: gmResponse.standing.totalKills ?? 0,
+            bestPlacement: gmResponse.standing.bestPlacement,
+            currentWinStreak: gmResponse.standing.currentWinStreak,
+            leaguePoints: gmResponse.standing.leaguePoints,
+            tier: gmResponse.standing.tier,
+          });
+        } else {
+          setGrandMeleeStats(null);
+        }
+      } catch {
+        setGrandMeleeStats(null);
       }
     } catch {
       setError('Failed to load analytics data');
@@ -253,6 +274,47 @@ function RobotPerformanceAnalytics({ robotId, lastNCycles = 10 }: RobotPerforman
             <div className="text-center">
               <div className="text-2xl font-bold font-mono text-orange-500">{kothStats.kothCurrentWinStreak}</div>
               <div className="text-xs text-secondary">Current Win Streak</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Grand Melee Performance */}
+      {grandMeleeStats && grandMeleeStats.totalMatches > 0 && (
+        <div className="bg-surface-elevated rounded-lg p-4 mt-6">
+          <h3 className="text-lg font-semibold mb-4">💀 Grand Melee Performance</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold font-mono text-red-500">{grandMeleeStats.totalMatches}</div>
+              <div className="text-xs text-secondary">Matches</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold font-mono text-red-500">{grandMeleeStats.wins}</div>
+              <div className="text-xs text-secondary">1st Place Finishes</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold font-mono text-red-500">{grandMeleeStats.totalMatches > 0 ? ((grandMeleeStats.wins / grandMeleeStats.totalMatches) * 100).toFixed(1) : '0.0'}%</div>
+              <div className="text-xs text-secondary">Win Rate</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold font-mono text-red-500">{grandMeleeStats.totalKills}</div>
+              <div className="text-xs text-secondary">Total Kills</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold font-mono text-red-500">{grandMeleeStats.bestPlacement ? `#${grandMeleeStats.bestPlacement}` : '—'}</div>
+              <div className="text-xs text-secondary">Best Placement</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold font-mono text-red-500">{grandMeleeStats.currentWinStreak}</div>
+              <div className="text-xs text-secondary">Current Win Streak</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold font-mono text-red-500">{grandMeleeStats.leaguePoints}</div>
+              <div className="text-xs text-secondary">LP</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold font-mono text-red-500 capitalize">{grandMeleeStats.tier}</div>
+              <div className="text-xs text-secondary">Tier</div>
             </div>
           </div>
         </div>

@@ -894,7 +894,10 @@ export async function upsertRobot(data: Record<string, unknown>) {
     }
   }
 
-  const robot = await prisma.robot.create({ data: data as any });
+  // Strip legacy league fields that were moved to Standing table (Spec #40)
+  const { currentLeague, leagueId, leaguePoints, ...robotData } = data;
+
+  const robot = await prisma.robot.create({ data: robotData as any });
 
   // Create default standings entries (Spec #40 — unified standings)
   await prisma.standing.createMany({
@@ -914,6 +917,17 @@ export async function upsertRobot(data: Record<string, unknown>) {
         entityType: 'robot',
         entityId: robot.id,
         mode: 'koth',
+        tier: 'bronze',
+        leagueInstanceId: 'bronze_1',
+        leaguePoints: 0,
+        cyclesInTier: 0,
+        wins: 0, losses: 0, draws: 0,
+        currentWinStreak: 0, bestWinStreak: 0, currentLoseStreak: 0,
+      },
+      {
+        entityType: 'robot',
+        entityId: robot.id,
+        mode: 'grand_melee',
         tier: 'bronze',
         leagueInstanceId: 'bronze_1',
         leaguePoints: 0,
@@ -1076,8 +1090,15 @@ async function seedWimpBotUsers(weapons: { id: number; name: string }[]) {
         imageUrl: '/assets/robots/wimpbot_512x512.webp',
       });
 
-      // Create default subscriptions (L0 cap = 3): league_1v1, tournament_1v1, koth
-      const defaultSubscriptions = ['league_1v1', 'tournament_1v1', 'koth'];
+      // Create Booking Office L1 so WimpBots can have 4 subscriptions (cap = 4)
+      await prisma.facility.upsert({
+        where: { userId_facilityType: { userId: user.id, facilityType: 'booking_office' } },
+        update: { level: 1 },
+        create: { userId: user.id, facilityType: 'booking_office', level: 1 },
+      });
+
+      // Create default subscriptions (L1 cap = 4): league_1v1, tournament_1v1, koth, grand_melee
+      const defaultSubscriptions = ['league_1v1', 'tournament_1v1', 'koth', 'grand_melee'];
       for (const eventType of defaultSubscriptions) {
         await prisma.subscription.upsert({
           where: { subscription_robot_event: { robotId: robot.id, eventType } },

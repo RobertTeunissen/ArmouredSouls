@@ -19,6 +19,7 @@ import {
   renderKothZone,
   renderKothScoreboard,
   renderZoneOccupationIndicator,
+  getRobotScale,
 } from './canvasRenderer';
 import { useContainerSize } from '../../hooks/useContainerSize';
 
@@ -221,6 +222,7 @@ export const ArenaCanvas: React.FC<ArenaCanvasProps> = ({
         robot.maxHP,
         shield,
         robot.maxShield,
+        getRobotScale(robs.length),
       );
     }
 

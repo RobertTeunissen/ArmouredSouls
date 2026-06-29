@@ -28,6 +28,7 @@ export interface RecordTierChangeParams {
   destinationLeagueId: string;
   leaguePoints: number;
   cycleNumber: number;
+  mode?: string;
 }
 
 export interface LeagueHistoryRecord {
@@ -36,6 +37,7 @@ export interface LeagueHistoryRecord {
   entityId: number;
   userId: number;
   changeType: ChangeType;
+  mode?: string | null;
   sourceTier: string;
   destinationTier: string;
   sourceLeagueId: string;
@@ -175,6 +177,7 @@ export async function recordTierChange(params: RecordTierChangeParams): Promise<
         entityId: params.entityId,
         userId: params.userId,
         changeType: params.changeType,
+        mode: params.mode ?? null,
         sourceTier: params.sourceTier,
         destinationTier: params.destinationTier,
         sourceLeagueId: params.sourceLeagueId,

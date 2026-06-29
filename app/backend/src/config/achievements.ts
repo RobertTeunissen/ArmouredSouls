@@ -67,7 +67,10 @@ export type AchievementTriggerType =
   | 'league_2v2_wins'
   | 'league_3v3_wins'
   | 'tournament_2v2_wins'
-  | 'tournament_3v3_wins';
+  | 'tournament_3v3_wins'
+  | 'grand_melee_wins'
+  | 'grand_melee_top3'
+  | 'grand_melee_win_high_hp';
 
 export interface AchievementDefinition {
   id: string;
@@ -1674,6 +1677,94 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     progressType: 'numeric',
     progressLabel: 'consecutive losses',
     badgeIconFile: 'achievement-s14',
+  },
+
+  // ============================================================
+  // GRAND MELEE (L26–L30) — User-level (Spec #44)
+  // ============================================================
+  {
+    id: 'L26',
+    name: 'Real Steel',
+    description: 'Win your first Grand Melee (1st place)',
+    reference: 'Real Steel movie',
+    category: 'league',
+    tier: 'easy',
+    scope: 'user',
+    rewardCredits: TIER_REWARDS.easy.credits,
+    rewardPrestige: TIER_REWARDS.easy.prestige,
+    hidden: false,
+    triggerType: 'grand_melee_wins',
+    triggerThreshold: 1,
+    progressType: 'numeric',
+    progressLabel: 'Grand Melee wins',
+    badgeIconFile: 'achievement-l26',
+  },
+  {
+    id: 'L27',
+    name: 'The Hunger Bots',
+    description: 'Win 5 Grand Melee matches',
+    reference: 'Hunger Games parody',
+    category: 'league',
+    tier: 'medium',
+    scope: 'user',
+    rewardCredits: TIER_REWARDS.medium.credits,
+    rewardPrestige: TIER_REWARDS.medium.prestige,
+    hidden: false,
+    triggerType: 'grand_melee_wins',
+    triggerThreshold: 5,
+    progressType: 'numeric',
+    progressLabel: 'Grand Melee wins',
+    badgeIconFile: 'achievement-l27',
+  },
+  {
+    id: 'L28',
+    name: 'Omega Supreme',
+    description: 'Win 20 Grand Melee matches',
+    reference: 'Transformers (Autobot guardian)',
+    category: 'league',
+    tier: 'hard',
+    scope: 'user',
+    rewardCredits: TIER_REWARDS.hard.credits,
+    rewardPrestige: TIER_REWARDS.hard.prestige,
+    hidden: false,
+    triggerType: 'grand_melee_wins',
+    triggerThreshold: 20,
+    progressType: 'numeric',
+    progressLabel: 'Grand Melee wins',
+    badgeIconFile: 'achievement-l28',
+  },
+  {
+    id: 'L29',
+    name: 'Cockroach Protocol',
+    description: 'Finish in the top 3 in 10 Grand Melee matches',
+    reference: 'Survival AI concept',
+    category: 'league',
+    tier: 'medium',
+    scope: 'user',
+    rewardCredits: TIER_REWARDS.medium.credits,
+    rewardPrestige: TIER_REWARDS.medium.prestige,
+    hidden: false,
+    triggerType: 'grand_melee_top3',
+    triggerThreshold: 10,
+    progressType: 'numeric',
+    progressLabel: 'Grand Melee top-3 finishes',
+    badgeIconFile: 'achievement-l29',
+  },
+  {
+    id: 'L30',
+    name: 'Untouchable',
+    description: 'Win a Grand Melee with more than 75% HP remaining',
+    reference: 'Dominance/invincibility',
+    category: 'league',
+    tier: 'hard',
+    scope: 'user',
+    rewardCredits: TIER_REWARDS.hard.credits,
+    rewardPrestige: TIER_REWARDS.hard.prestige,
+    hidden: false,
+    triggerType: 'grand_melee_win_high_hp',
+    triggerMeta: { minHpPercent: 75 },
+    progressType: 'boolean',
+    badgeIconFile: 'achievement-l30',
   },
 ];
 

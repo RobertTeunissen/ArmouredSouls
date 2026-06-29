@@ -69,6 +69,11 @@ const EVENT_BADGE_CONFIG: Record<string, EventBadgeConfig> = {
     bgColor: 'bg-orange-500/20',
     textColor: 'text-orange-300',
   },
+  grand_melee: {
+    label: 'Grand Melee',
+    bgColor: 'bg-red-500/20',
+    textColor: 'text-red-300',
+  },
 };
 
 const DEFAULT_CONFIG: EventBadgeConfig = {

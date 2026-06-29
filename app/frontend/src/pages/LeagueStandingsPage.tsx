@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Navigation from '../components/Navigation';
 import { useRobotStore } from '../stores';
+import { api } from '../utils/api';
 import {
   getLeagueStandings,
   getLeagueInstances,
@@ -24,7 +25,7 @@ import {
 } from '../utils/teamBattleApi';
 import OwnerNameLink from '../components/OwnerNameLink';
 
-type LeagueMode = '1v1' | '2v2' | '3v3' | 'tag_team' | 'koth';
+type LeagueMode = '1v1' | '2v2' | '3v3' | 'tag_team' | 'koth' | 'grand_melee';
 
 const MODES: { value: LeagueMode; label: string; shortLabel: string }[] = [
   { value: '1v1', label: '1v1 League', shortLabel: '1v1' },
@@ -32,6 +33,7 @@ const MODES: { value: LeagueMode; label: string; shortLabel: string }[] = [
   { value: '3v3', label: '3v3 League', shortLabel: '3v3' },
   { value: 'tag_team', label: 'Tag Team', shortLabel: 'Tag' },
   { value: 'koth', label: 'King of the Hill', shortLabel: 'KotH' },
+  { value: 'grand_melee', label: 'Grand Melee', shortLabel: 'Melee' },
 ];
 
 const TIERS = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'];
@@ -80,6 +82,8 @@ function LeagueStandingsPage() {
       fetchTagTeamData(tier, 1);
     } else if (mode === 'koth') {
       fetchLeagueData(tier, 1);
+    } else if (mode === 'grand_melee') {
+      fetchLeagueData(tier, 1);
     } else {
       fetchTeamBattleData(tier, 1);
     }
@@ -125,27 +129,44 @@ function LeagueStandingsPage() {
       fetchTeamBattleData(selectedTier, 1, selectedInstance || undefined);
     } else if (mode === 'tag_team') {
       fetchTagTeamData(selectedTier, 1, selectedInstance || undefined);
-    } else if (mode === 'koth') {
+    } else if (mode === 'koth' || mode === 'grand_melee') {
       fetchLeagueData(selectedTier, 1, selectedInstance || undefined);
     }
     fetchStoreRobots();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchStoreRobots, mode]); // Re-fetch on mount and mode change
 
-  // Derive user robot tiers/instances from store
+  // Derive user robot tiers/instances from store (1v1) or standings API (koth/grand_melee)
   useEffect(() => {
-    if (storeRobots.length > 0) {
+    if (mode === '1v1' && storeRobots.length > 0) {
       const tiers = new Set<string>(storeRobots.map((r) => r.currentLeague));
       const instanceIds = new Set<string>(storeRobots.map((r) => r.leagueId).filter(Boolean) as string[]);
       setUserRobotTiers(tiers);
       setUserRobotInstances(instanceIds);
+    } else if ((mode === 'koth' || mode === 'grand_melee') && storeRobots.length > 0) {
+      // Fetch each robot's standing for this mode to derive tier/instance indicators
+      const standingEndpoint = mode === 'koth' ? 'koth-standing' : 'grand-melee-standing';
+      Promise.all(
+        storeRobots.map(r =>
+          api.get<{ standing: { tier: string; leagueInstanceId?: string } | null }>(`/api/robots/${r.id}/${standingEndpoint}`)
+            .then(data => data.standing)
+            .catch(() => null)
+        )
+      ).then(results => {
+        const validStandings = results.filter((s): s is { tier: string; leagueInstanceId?: string } => s !== null);
+        setUserRobotTiers(new Set(validStandings.map(s => s.tier)));
+        setUserRobotInstances(new Set(validStandings.map(s => s.leagueInstanceId).filter(Boolean) as string[]));
+      });
+    } else if (mode !== '2v2' && mode !== '3v3' && mode !== 'tag_team') {
+      setUserRobotTiers(new Set());
+      setUserRobotInstances(new Set());
     }
-  }, [storeRobots]);
+  }, [storeRobots, mode]);
 
   const fetchLeagueData = async (tier: string, page: number, instance?: string) => {
     try {
       setLoading(true);
-      const leagueMode = mode === 'koth' ? 'koth' : undefined; // undefined = default league_1v1
+      const leagueMode = mode === 'koth' ? 'koth' : mode === 'grand_melee' ? 'grand_melee' : undefined; // undefined = default league_1v1
       const [standingsData, instancesData] = await Promise.all([
         getLeagueStandings(tier, page, 50, instance, leagueMode),
         getLeagueInstances(tier, leagueMode),
@@ -252,7 +273,7 @@ function LeagueStandingsPage() {
       fetchLeagueData(selectedTier, newPage, selectedInstance || undefined);
     } else if (mode === 'tag_team') {
       fetchTagTeamData(selectedTier, newPage, selectedInstance || undefined);
-    } else if (mode === 'koth') {
+    } else if (mode === 'koth' || mode === 'grand_melee') {
       fetchLeagueData(selectedTier, newPage, selectedInstance || undefined);
     } else {
       fetchTeamBattleData(selectedTier, newPage, selectedInstance || undefined);
@@ -268,7 +289,7 @@ function LeagueStandingsPage() {
         fetchLeagueData(selectedTier, 1);
       } else if (mode === 'tag_team') {
         fetchTagTeamData(selectedTier, 1);
-      } else if (mode === 'koth') {
+      } else if (mode === 'koth' || mode === 'grand_melee') {
         fetchLeagueData(selectedTier, 1);
       } else {
         fetchTeamBattleData(selectedTier, 1);
@@ -280,7 +301,7 @@ function LeagueStandingsPage() {
         fetchLeagueData(selectedTier, 1, instanceId);
       } else if (mode === 'tag_team') {
         fetchTagTeamData(selectedTier, 1, instanceId);
-      } else if (mode === 'koth') {
+      } else if (mode === 'koth' || mode === 'grand_melee') {
         fetchLeagueData(selectedTier, 1, instanceId);
       } else {
         fetchTeamBattleData(selectedTier, 1, instanceId);
@@ -345,7 +366,7 @@ function LeagueStandingsPage() {
             const tierName = getLeagueTierName(tier);
             const tierIcon = getLeagueTierIcon(tier);
             const isActive = selectedTier === tier;
-            const hasUserRobots = mode === '1v1'
+            const hasUserRobots = (mode === '1v1' || mode === 'koth' || mode === 'grand_melee')
               ? userRobotTiers.has(tier)
               : userTeamTiers.has(tier);
 
@@ -370,7 +391,7 @@ function LeagueStandingsPage() {
         </div>
 
         {/* Instance Information — 1v1 mode */}
-        {(mode === '1v1' || mode === 'koth') && !loading && instances.length > 0 && (
+        {(mode === '1v1' || mode === 'koth' || mode === 'grand_melee') && !loading && instances.length > 0 && (
           <div className="bg-surface p-4 rounded-lg mb-6">
             <div 
               className="flex items-center justify-between cursor-pointer mb-2"
@@ -500,13 +521,13 @@ function LeagueStandingsPage() {
         )}
 
         {/* ── 1v1 League Standings ── */}
-        {(mode === '1v1' || mode === 'koth') && !loading && !error && robots.length === 0 && (
+        {(mode === '1v1' || mode === 'koth' || mode === 'grand_melee') && !loading && !error && robots.length === 0 && (
           <div className="bg-surface p-6 rounded-lg">
             <p className="text-secondary">No robots in this tier yet.</p>
           </div>
         )}
 
-        {(mode === '1v1' || mode === 'koth') && !loading && !error && robots.length > 0 && (
+        {(mode === '1v1' || mode === 'koth' || mode === 'grand_melee') && !loading && !error && robots.length > 0 && (
           <>
             {/* Zone Legend & Status */}
             {zoneMeta && (
@@ -552,7 +573,7 @@ function LeagueStandingsPage() {
                       <th className="px-1.5 lg:px-4 py-3 text-center font-semibold text-sm lg:text-base">LP</th>
                       <th className="px-1.5 lg:px-4 py-3 text-center font-semibold text-sm lg:text-base">ELO</th>
                       <th className="hidden lg:table-cell px-4 py-3 text-center font-semibold">Fame</th>
-                      <th className="hidden lg:table-cell px-4 py-3 text-center font-semibold">{mode === 'koth' ? 'Wins / Matches' : 'W-D-L'}</th>
+                      <th className="hidden lg:table-cell px-4 py-3 text-center font-semibold">{mode === 'koth' || mode === 'grand_melee' ? 'Wins / Matches' : 'W-D-L'}</th>
                       <th className="hidden lg:table-cell px-4 py-3 text-center font-semibold">Win Rate</th>
                     </tr>
                   </thead>
@@ -624,7 +645,7 @@ function LeagueStandingsPage() {
                             {robot.fame}
                           </td>
                           <td className="hidden lg:table-cell px-4 py-3 text-center font-mono">
-                            {mode === 'koth' ? (
+                            {mode === 'koth' || mode === 'grand_melee' ? (
                               <><span className="text-success">{robot.wins}</span><span className="text-tertiary"> / </span><span>{robot.totalBattles}</span></>
                             ) : (
                               <>

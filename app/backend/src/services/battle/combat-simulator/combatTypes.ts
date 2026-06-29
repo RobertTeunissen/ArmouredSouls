@@ -198,4 +198,8 @@ export interface BattleConfig {
   gameModeState?: GameModeState;
   /** Optional arena radius override */
   arenaRadius?: number;
+  /** Enable spatial partitioning for O(n×k) threat evaluation. Defaults to true. (Spec #44: R1.6) */
+  spatialPartitioning?: boolean;
+  /** Enable variable tick rate for distant robots (N≥10 only). Defaults to true. (Spec #44: R1.6) */
+  variableTickRate?: boolean;
 }

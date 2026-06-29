@@ -33,11 +33,12 @@ router.get('/:tier/standings', validateRequest({ params: leagueTierParamsSchema 
   const page = Math.max(1, parseInt(req.query.page as string) || 1);
   const perPage = Math.min(100, Math.max(1, parseInt(req.query.perPage as string) || 50));
   const mode = (req.query.mode as string) || 'league_1v1';
-  const subscriptionEvent = mode === 'koth' ? 'koth' : 'league_1v1';
-  // KotH has no LP threshold for promotion (position-based)
-  const useMinLP = mode !== 'koth';
-  // KotH requires 10 min cycles (vs 5 for other leagues) to balance promotion speed
-  const minCyclesForMode = mode === 'koth' ? 10 : MIN_CYCLES_IN_LEAGUE;
+  const isPlacementMode = mode === 'koth' || mode === 'grand_melee';
+  const subscriptionEvent = mode === 'koth' ? 'koth' : mode === 'grand_melee' ? 'grand_melee' : 'league_1v1';
+  // Placement modes (KotH, Grand Melee) have no LP threshold for promotion (position-based)
+  const useMinLP = !isPlacementMode;
+  // Placement modes require 10 min cycles (vs 5 for other leagues) to balance promotion speed
+  const minCyclesForMode = isPlacementMode ? 10 : MIN_CYCLES_IN_LEAGUE;
 
   if (!LEAGUE_TIERS.includes(tier)) {
     throw new LeagueError(LeagueErrorCode.INVALID_LEAGUE_TIER, 'Invalid tier', 400, { validTiers: LEAGUE_TIERS });
@@ -222,10 +223,19 @@ router.get('/tier-changes/unseen', authenticateToken, validateRequest({}), async
     take: 20,
   });
 
-  // Enrich with robot/team names
+  // Enrich with robot/team names and mode
   const robotIds = changes.filter(c => c.entityType === 'robot').map(c => c.entityId);
   const tagTeamIds = changes.filter(c => c.entityType === 'tag_team').map(c => c.entityId);
   const teamBattleIds = changes.filter(c => c.entityType === 'team_battle').map(c => c.entityId);
+
+  // Look up standings to determine which mode each tier change belongs to
+  const allEntityIds = changes.map(c => c.entityId);
+  const standings = allEntityIds.length > 0
+    ? await prisma.standing.findMany({
+        where: { entityId: { in: allEntityIds } },
+        select: { entityId: true, entityType: true, mode: true, tier: true, leagueInstanceId: true },
+      })
+    : [];
 
   const [robots, tagTeams, teamBattles] = await Promise.all([
     robotIds.length > 0
@@ -254,19 +264,42 @@ router.get('/tier-changes/unseen', authenticateToken, validateRequest({}), async
     return `Team #${c.entityId}`;
   }
 
-  const result = changes.map(c => ({
-    id: c.id,
-    entityType: c.entityType,
-    entityId: c.entityId,
-    entityName: getEntityName(c),
-    changeType: c.changeType,
-    sourceTier: c.sourceTier,
-    destinationTier: c.destinationTier,
-    leaguePoints: c.leaguePoints,
-    createdAt: c.createdAt.toISOString(),
-  }));
+  const result = changes.map(c => {
+    // Use mode from the history record (populated since Spec #44).
+    // Falls back to cross-reference for legacy records without mode.
+    let mode = (c as unknown as { mode?: string }).mode;
+    if (!mode) {
+      const entityStandings = standings.filter(s => s.entityId === c.entityId && s.entityType === c.entityType);
+      const freshlyChanged = entityStandings.filter(s => s.tier === c.destinationTier);
+      const exactMatch = freshlyChanged.find(s => s.leagueInstanceId === c.destinationLeagueId);
+      const matchingStanding = exactMatch ?? freshlyChanged[0];
+      mode = matchingStanding?.mode ?? (c.entityType === 'tag_team' ? 'tag_team' : 'league_1v1');
+    }
 
-  res.json({ changes: result });
+    return {
+      id: c.id,
+      entityType: c.entityType,
+      entityId: c.entityId,
+      entityName: getEntityName(c),
+      changeType: c.changeType,
+      sourceTier: c.sourceTier,
+      destinationTier: c.destinationTier,
+      leaguePoints: c.leaguePoints,
+      mode,
+      createdAt: c.createdAt.toISOString(),
+    };
+  });
+
+  // Deduplicate: same entity + same tier change + same mode = show only once
+  const seen = new Set<string>();
+  const deduped = result.filter(r => {
+    const key = `${r.entityId}-${r.changeType}-${r.sourceTier}-${r.destinationTier}-${r.mode}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  res.json({ changes: deduped });
 });
 
 export default router;

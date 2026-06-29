@@ -12,7 +12,7 @@
 // ── Types ────────────────────────────────────────────────────────────
 
 /** Stable string identifiers for all subscribable events. */
-export type SubscribableEventType = 'league_1v1' | 'tournament_1v1' | 'tag_team' | 'koth' | 'league_2v2' | 'league_3v3' | 'tournament_2v2' | 'tournament_3v3';
+export type SubscribableEventType = 'league_1v1' | 'tournament_1v1' | 'tag_team' | 'koth' | 'league_2v2' | 'league_3v3' | 'tournament_2v2' | 'tournament_3v3' | 'grand_melee';
 
 export interface SubscribableEventDefinition {
   type: SubscribableEventType;

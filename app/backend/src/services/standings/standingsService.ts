@@ -329,12 +329,90 @@ async function getEntityStandings(
   });
 }
 
+// --- Grand Melee Point Award ---
+
+export interface AwardGrandMeleePointsParams {
+  robotId: number;
+  placement: number; // 1-10+ (1st place = best)
+  totalParticipants: number;
+  kills: number;
+  damageDealt: number;
+  survivalTime: number;
+}
+
+/** Point scale for Grand Melee placements (1st through 10th, 0 for 11+). */
+export const GRAND_MELEE_POINT_SCALE = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
+
+/**
+ * Awards Grand Melee points to a robot based on their placement using an F1-style point scale.
+ * Updates cumulative stats (kills, damage dealt, survival time, best placement) and streak tracking.
+ * Reuses Standing fields: totalZoneScore for damage dealt, totalZoneTime for survival time.
+ *
+ * @param params - Grand Melee result parameters
+ * @returns The updated Standing record
+ */
+async function awardGrandMeleePoints(params: AwardGrandMeleePointsParams): Promise<Standing> {
+  const { robotId, placement, kills, damageDealt, survivalTime } = params;
+
+  // Determine points from F1-style scale (0 if placement exceeds scale length)
+  const points = placement <= GRAND_MELEE_POINT_SCALE.length ? GRAND_MELEE_POINT_SCALE[placement - 1] : 0;
+
+  // Get or create the Grand Melee standing for this robot
+  const current = await getOrCreateStanding('robot', robotId, 'grand_melee');
+
+  // Compute new cumulative values
+  const newLeaguePoints = current.leaguePoints + points;
+  const newTotalMatches = (current.totalMatches ?? 0) + 1;
+  const newTotalKills = (current.totalKills ?? 0) + kills;
+  const newTotalZoneScore = (current.totalZoneScore ?? 0) + damageDealt;
+  const newTotalZoneTime = (current.totalZoneTime ?? 0) + survivalTime;
+  const newBestPlacement =
+    current.bestPlacement === null ? placement : Math.min(current.bestPlacement, placement);
+
+  // Build update data
+  const updateData: Record<string, number> = {
+    leaguePoints: newLeaguePoints,
+    totalMatches: newTotalMatches,
+    totalKills: newTotalKills,
+    totalZoneScore: newTotalZoneScore,
+    totalZoneTime: newTotalZoneTime,
+    bestPlacement: newBestPlacement,
+  };
+
+  // 1st place counts as a "win" — update wins and streak
+  if (placement === 1) {
+    const newWinStreak = current.currentWinStreak + 1;
+    updateData.wins = current.wins + 1;
+    updateData.currentWinStreak = newWinStreak;
+    updateData.bestWinStreak = Math.max(current.bestWinStreak, newWinStreak);
+    updateData.currentLoseStreak = 0;
+  }
+  // Non-1st placements reset win streak but do NOT increment losses (same as KotH)
+  else {
+    updateData.currentWinStreak = 0;
+  }
+
+  const updated = await prisma.standing.update({
+    where: {
+      entityType_entityId_mode: { entityType: 'robot', entityId: robotId, mode: 'grand_melee' },
+    },
+    data: updateData,
+  });
+
+  logger.debug(
+    `[Standings] Grand Melee award for robot ${robotId}: placement ${placement}, +${points} LP (${current.leaguePoints} → ${updated.leaguePoints})`,
+  );
+
+  return updated;
+}
+
 // --- Exported Singleton ---
 
 const standingsService = {
   recordBattleResult,
   getOrCreateStanding,
   awardKothPoints,
+  awardGrandMeleePoints,
   getStandings,
   getEntityStandings,
 };

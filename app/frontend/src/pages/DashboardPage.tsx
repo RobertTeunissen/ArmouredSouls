@@ -32,6 +32,7 @@ interface TierChange {
   changeType: 'promotion' | 'demotion';
   sourceTier: string;
   destinationTier: string;
+  mode?: string;
 }
 
 function DashboardPage() {
@@ -140,7 +141,8 @@ function DashboardPage() {
               <div className="flex items-center gap-3">
                 <span className="text-2xl">{change.changeType === 'promotion' ? '🏆' : '📉'}</span>
                 <span className={`font-semibold ${change.changeType === 'promotion' ? 'text-green-400' : 'text-red-400'}`}>
-                  {change.entityName} was {change.changeType === 'promotion' ? 'promoted' : 'demoted'} from {change.sourceTier} to {change.destinationTier}!
+                  {change.entityName} was {change.changeType === 'promotion' ? 'promoted' : 'demoted'} from {change.sourceTier} to {change.destinationTier}
+                  {change.mode && ` in ${change.mode === 'league_1v1' ? '1v1 League' : change.mode === 'koth' ? 'KotH' : change.mode === 'grand_melee' ? 'Grand Melee' : change.mode === 'tag_team' ? 'Tag Team' : change.mode === 'league_2v2' ? '2v2 League' : change.mode === 'league_3v3' ? '3v3 League' : change.mode}`}!
                 </span>
               </div>
             </div>
@@ -212,8 +214,8 @@ function DashboardPage() {
           </div>
         )}
 
-        {/* Team Battle Standings */}
-        {robots.length >= 2 && (
+        {/* League Standings */}
+        {robots.length >= 1 && (
           <div className="space-y-6 mb-8">
             <LeagueStandingsSummary />
           </div>

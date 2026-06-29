@@ -239,8 +239,6 @@ export async function generateBattleReadyUsers(
             const maxHP = 50 + Math.floor(tier.attributeLevel * 5);
             const maxShield = Math.floor(tier.attributeLevel * 4);
 
-            const bronzeLeagueId = await assignLeagueInstance('bronze');
-
             const robot = await tx.robot.create({
               data: {
                 userId: user.id,
@@ -252,9 +250,6 @@ export async function generateBattleReadyUsers(
                 currentShield: maxShield,
                 maxShield,
                 elo: 1200,
-                currentLeague: 'bronze',
-                leagueId: bronzeLeagueId,
-                leaguePoints: 0,
                 loadoutType,
                 mainWeaponId: mainInv.id,
                 offhandWeaponId: offhandInvId,
@@ -295,15 +290,17 @@ export async function generateBattleReadyUsers(
           let stableSubscriptions: string[];
 
           if (createdRobots.length === 1) {
-            // 1-robot stables: L0, cap 3 — subscribe to league_1v1, tournament_1v1, koth
-            stableSubscriptions = ['league_1v1', 'tournament_1v1', 'koth'];
+            // 1-robot stables: L0, cap 3 — randomly pick 3 from the 4 solo modes
+            const soloPool = ['league_1v1', 'tournament_1v1', 'koth', 'grand_melee'];
+            const shuffled = [...soloPool].sort(() => Math.random() - 0.5);
+            stableSubscriptions = shuffled.slice(0, 3);
           } else if (createdRobots.length === 2) {
             // 2-robot stables: L1, cap 4 — pick 2 from team modes + pick 2 from solo modes
             const teamModes: string[] = ['league_2v2', 'tag_team', 'tournament_2v2'];
             const shuffledTeamModes = [...teamModes].sort(() => Math.random() - 0.5);
             const teamPicks = shuffledTeamModes.slice(0, 2);
 
-            const soloModes = ['koth', 'league_1v1', 'tournament_1v1'];
+            const soloModes = ['koth', 'league_1v1', 'tournament_1v1', 'grand_melee'];
             const shuffledSoloModes = [...soloModes].sort(() => Math.random() - 0.5);
             const soloPicks = shuffledSoloModes.slice(0, 2);
 
@@ -330,7 +327,7 @@ export async function generateBattleReadyUsers(
             }
 
             // Slots 3-4: pick from remaining pool
-            const allEvents = ['league_1v1', 'tournament_1v1', 'koth', 'tag_team', 'league_2v2', 'league_3v3', 'tournament_2v2', 'tournament_3v3'];
+            const allEvents = ['league_1v1', 'tournament_1v1', 'koth', 'grand_melee', 'tag_team', 'league_2v2', 'league_3v3', 'tournament_2v2', 'tournament_3v3'];
             const remaining = allEvents.filter(e => !subs.includes(e));
             const shuffledRemaining = [...remaining].sort(() => Math.random() - 0.5);
             while (subs.length < 4 && shuffledRemaining.length > 0) {
@@ -355,6 +352,7 @@ export async function generateBattleReadyUsers(
             const robotStandingModes: string[] = [];
             if (stableSubscriptions.includes('league_1v1')) robotStandingModes.push('league_1v1');
             if (stableSubscriptions.includes('koth')) robotStandingModes.push('koth');
+            if (stableSubscriptions.includes('grand_melee')) robotStandingModes.push('grand_melee');
 
             if (robotStandingModes.length > 0) {
               await tx.standing.createMany({

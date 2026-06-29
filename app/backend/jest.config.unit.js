@@ -25,7 +25,7 @@ module.exports = {
   ],
   testRegex: [
     // ── Subdirectory-based matching (all files in these dirs are pure) ──
-    'tests/(unit|arena|config|errors|middleware|routes|utils|factories|guide)/.+\\.test\\.ts$',
+    'tests/(unit|arena|config|errors|middleware|routes|utils|factories|guide|services)/.+\\.test\\.ts$',
 
     // ── Flat root property/unit tests (known pure — no DB) ──
     'tests/(backup|cors|envConfig|notifications|passwordHashing|manualRepairDiscount|streamingStudioOperatingCost|streamingStudioUpgradeCosts|tournament-bracket-seeding|validation|kothNotification|kothStandings|weaponStatValidation|dependency-upgrade-invariants|securityValidation|schemaValidator|tokenVersion|jwtExpiration|ownership|robotSanitization|securityMonitor|securityHeaders|errorHandler|currencyConstraint|prestigeUtils|stableSanitization|fileValidationService|imageProcessingService|fileStorageService|pendingUploadCache|imageUploadHandlers|orphanCleanupJob|adminUploadsHandler|changelogImageService|generate-changelog-drafts|leagueHistoryService|teamCoordination|teamTournamentBattleOrchestrator|achievementC18|weaponRefinement|tournamentService)\\.property\\.test\\.ts$',

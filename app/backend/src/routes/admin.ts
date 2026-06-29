@@ -1491,12 +1491,35 @@ router.post('/team-3v3-tournament/trigger', authenticateToken, requireAdmin, val
 
 /**
  * POST /api/admin/grand-melee/trigger
- * Reserved slot trigger for Grand Melee — no handler implemented yet.
+ * @deprecated Use POST /api/admin/scheduler/trigger/grandMelee instead.
+ * Delegates to the unified Grand Melee cycle handler (same as cron).
+ * Spec #44: R7.7, R10.1
  */
 router.post('/grand-melee/trigger', authenticateToken, requireAdmin, validateRequest({}), async (req: Request, res: Response) => {
   const authReq = req as AuthRequest;
-  recordAuditAction(authReq.user!.userId, 'reserved_slot_trigger', 'success', { event: 'grand_melee', outcome: 'no-op' });
-  res.json({ message: 'reserved slot, no handler implemented', event: 'grand_melee' });
+  try {
+    const { triggerJob } = await import('../services/cycle/cycleScheduler');
+
+    logger.info('[Admin] Grand Melee trigger (deprecated endpoint) — delegating to triggerJob("grandMelee")');
+    await triggerJob('grandMelee');
+
+    recordAuditAction(authReq.user!.userId, 'grand_melee_trigger', 'success', { message: 'Grand Melee cycle triggered (deprecated endpoint)' });
+
+    res.json({
+      success: true,
+      deprecated: true,
+      deprecationWarning: 'Use POST /api/admin/scheduler/trigger/grandMelee instead. This endpoint will be removed in a future release.',
+      message: 'Grand Melee cycle triggered successfully',
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    recordAuditAction(authReq.user!.userId, 'grand_melee_trigger', 'failure', { error: error instanceof Error ? error.message : String(error) });
+    logger.error('[Admin] Grand Melee trigger error:', error);
+    res.status(500).json({
+      error: 'Failed to trigger Grand Melee cycle',
+      details: error instanceof Error ? error.message : String(error),
+    });
+  }
 });
 
 export default router;

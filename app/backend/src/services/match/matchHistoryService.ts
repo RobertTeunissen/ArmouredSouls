@@ -807,6 +807,7 @@ export async function getMatchHistory(params: HistoryParams) {
     tournament_3v3: 'tournament_3v3',
     tag_team: 'tag_team',
     koth: 'koth',
+    grand_melee: 'grand_melee',
     league_2v2: 'league_2v2',
     league_3v3: 'league_3v3',
   };
@@ -852,11 +853,21 @@ export async function getMatchHistory(params: HistoryParams) {
 
 export async function formatBattleHistoryEntry(battle: BattleWithFullRelations, targetRobotIds: number[]) {
   // Derive robot1/robot2 from participants by team.
+  // For FFA modes (KotH, Grand Melee): place user's robot as robot1, winner as robot2
   // Prefer active/solo participants over reserve for stable ordering in tag-team battles.
+  const isFFA = battle.battleType === 'koth' || battle.battleType === 'grand_melee';
   const team1Participants = battle.participants.filter(p => p.team === 1);
   const team2Participants = battle.participants.filter(p => p.team === 2);
-  const robot1Part = team1Participants.find(p => p.role === 'active' || p.role === null || p.role === 'solo') ?? team1Participants[0];
-  const robot2Part = team2Participants.find(p => p.role === 'active' || p.role === null || p.role === 'solo') ?? team2Participants[0];
+
+  let robot1Part, robot2Part;
+  if (isFFA) {
+    // FFA: user's robot as robot1, winner (or first other) as robot2
+    robot1Part = battle.participants.find(p => targetRobotIds.includes(p.robotId)) ?? team1Participants[0];
+    robot2Part = battle.participants.find(p => p.robotId === battle.winnerId && p.robotId !== robot1Part?.robotId) ?? team1Participants.find(p => p.robotId !== robot1Part?.robotId);
+  } else {
+    robot1Part = team1Participants.find(p => p.role === 'active' || p.role === null || p.role === 'solo') ?? team1Participants[0];
+    robot2Part = team2Participants.find(p => p.role === 'active' || p.role === null || p.role === 'solo') ?? team2Participants[0];
+  }
   const robot1 = robot1Part?.robot;
   const robot2 = robot2Part?.robot;
   const robot1Id = robot1Part?.robotId ?? 0;
@@ -903,7 +914,7 @@ export async function formatBattleHistoryEntry(battle: BattleWithFullRelations, 
     } : { id: 0, name: 'Unknown', userId: 0, user: { username: 'Unknown' } },
   };
 
-  if (battle.battleType === 'koth') {
+  if (battle.battleType === 'koth' || battle.battleType === 'grand_melee') {
     return formatKothHistoryEntry(battle, baseData, targetRobotIds);
   }
 
@@ -1195,7 +1206,7 @@ export async function getBattleLog(battleId: number) {
     if (team1Active && team2Active) {
       await buildTagTeamLogResponse(baseResponse, battleData, battleParticipants);
     }
-  } else if (battleData.battleType === 'koth') {
+  } else if (battleData.battleType === 'koth' || battleData.battleType === 'grand_melee') {
     await buildKothLogResponse(baseResponse, battleData, battleId, battleParticipants);
   } else {
     buildStandardLogResponse(baseResponse, battleData, robot1Part, robot2Part, streamingRevenue1, streamingRevenue2);
@@ -1204,7 +1215,7 @@ export async function getBattleLog(battleId: number) {
   // Determine winner
   const derivedRobot1Id = robot1Participant?.robotId ?? 0;
   const derivedRobot2Id = robot2Participant?.robotId ?? 0;
-  if (battleData.battleType === 'koth') {
+  if (battleData.battleType === 'koth' || battleData.battleType === 'grand_melee') {
     if (baseResponse.winner === undefined) {
       baseResponse.winner = battleData.winnerId === derivedRobot1Id ? 'robot1' : null;
     }
@@ -1353,7 +1364,7 @@ async function buildKothLogResponse(baseResponse: Record<string, unknown>, battl
     orderBy: { placement: 'asc' },
   });
 
-  const battleLogData = typeof battleData.battleLog === 'object' ? battleData.battleLog as Record<string, unknown> : {};
+  const battleLogData = (typeof battleData.battleLog === 'object' && battleData.battleLog !== null) ? battleData.battleLog as Record<string, unknown> : {};
   const logPlacements = (battleLogData.placements || []) as Array<{ robotId: number; zoneScore: number; zoneTime: number; kills: number; destroyed: boolean }>;
 
   baseResponse.kothParticipants = allParticipants.map(p => {

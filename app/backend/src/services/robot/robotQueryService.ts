@@ -610,6 +610,36 @@ export async function getPerformanceContext(robotId: number) {
     kothStats.damageTaken += otherParticipants.reduce((sum, p) => sum + (p.damageDealt ?? 0), 0);
   });
 
+  // ── Grand Melee stats ───────────────────────────────────────────────
+  const grandMeleeBattles = battles.filter(b => b.battleType === 'grand_melee');
+  const grandMeleeStats = {
+    totalBattles: grandMeleeBattles.length,
+    wins: 0, // 1st place finishes
+    topThree: 0,
+    totalPoints: 0,
+    bestPlacement: null as number | null,
+    damageDealt: 0,
+    damageTaken: 0,
+  };
+
+  grandMeleeBattles.forEach(battle => {
+    const participant = battle.participants.find(p => p.robotId === robotId);
+    if (!participant) return;
+    const placement = participant.placement ?? 20;
+    if (placement === 1) grandMeleeStats.wins++;
+    if (placement <= 3) grandMeleeStats.topThree++;
+    // F1-style points: [25, 18, 15, 12, 10, 8, 6, 4, 2, 1]
+    const pointScale = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
+    grandMeleeStats.totalPoints += placement <= pointScale.length ? pointScale[placement - 1] : 0;
+    if (grandMeleeStats.bestPlacement === null || placement < grandMeleeStats.bestPlacement) {
+      grandMeleeStats.bestPlacement = placement;
+    }
+    grandMeleeStats.damageDealt += participant.damageDealt ?? 0;
+    // Damage taken = sum of all other participants' damageDealt
+    const otherParticipants = battle.participants.filter(p => p.robotId !== robotId);
+    grandMeleeStats.damageTaken += otherParticipants.reduce((sum, p) => sum + (p.damageDealt ?? 0), 0);
+  });
+
   return {
     leagues: leagueStats,
     tournaments: tournamentStats,
@@ -635,6 +665,12 @@ export async function getPerformanceContext(robotId: number) {
       ...kothStats,
       winRate: kothStats.totalBattles > 0
         ? ((kothStats.wins / kothStats.totalBattles) * 100).toFixed(1)
+        : '0.0',
+    },
+    grandMelee: {
+      ...grandMeleeStats,
+      winRate: grandMeleeStats.totalBattles > 0
+        ? ((grandMeleeStats.wins / grandMeleeStats.totalBattles) * 100).toFixed(1)
         : '0.0',
     },
   };

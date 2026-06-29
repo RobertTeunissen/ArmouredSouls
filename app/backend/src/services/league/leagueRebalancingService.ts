@@ -156,6 +156,7 @@ export function createStandingsAdapter(mode: string, options: StandingsAdapterOp
 
   return {
     entityType,
+    mode,
 
     async getEntitiesWithMinPoints(instanceId, minLP, minCycles, excludeIds) {
       const effectiveMinLP = opts.overrideMinLP ?? minLP;
@@ -271,6 +272,42 @@ export async function rebalanceKothLeagues(): Promise<FullRebalancingSummary> {
     entityType: 'robot',
   });
   const result = await rebalanceAllTiers(kothConfig, kothAdapter);
+
+  return {
+    totalRobots: result.totalEntities,
+    totalPromoted: result.totalPromoted,
+    totalDemoted: result.totalDemoted,
+    tierSummaries: result.tierSummaries.map(s => ({
+      tier: s.tier as LeagueTier,
+      robotsInTier: s.entitiesInTier,
+      promoted: s.promoted,
+      demoted: s.demoted,
+      eligibleRobots: s.eligibleEntities,
+    })),
+    errors: result.errors,
+  };
+}
+
+// ─── Grand Melee Rebalancing (Spec #44) ─────────────────────────────────────
+
+/**
+ * Rebalance Grand Melee leagues — uses the same engine as KotH with mode='grand_melee' and no LP threshold.
+ * Grand Melee uses position-based ranking instead of LP thresholds.
+ * Min cycles set to 10 (same as KotH) to balance promotion speed,
+ * since Grand Melee points accumulate faster than LP in head-to-head modes.
+ */
+export async function rebalanceGrandMeleeLeagues(): Promise<FullRebalancingSummary> {
+  const grandMeleeConfig: LeagueEngineConfig = {
+    ...ROBOT_LEAGUE_CONFIG,
+    minCyclesForRebalancing: 10,
+    logPrefix: 'Grand Melee Rebalancing',
+  };
+  const grandMeleeAdapter = createStandingsAdapter('grand_melee', {
+    overrideMinLP: 0,
+    maxPerInstance: MAX_ROBOTS_PER_INSTANCE,
+    entityType: 'robot',
+  });
+  const result = await rebalanceAllTiers(grandMeleeConfig, grandMeleeAdapter);
 
   return {
     totalRobots: result.totalEntities,

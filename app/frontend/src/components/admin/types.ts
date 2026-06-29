@@ -96,8 +96,8 @@ export interface Battle {
   createdAt: string;
   /** Distinguishes 1v1 from 2v2 battles when returned by the admin battles endpoint */
   battleFormat?: '1v1' | '2v2';
-  /** Battle type: league_1v1, tournament_1v1, tagteam, koth, league_2v2, or league_3v3 */
-  battleType?: 'league' | 'league_1v1' | 'tournament' | 'tournament_1v1' | 'tagteam' | 'koth' | 'league_2v2' | 'league_3v3';
+  /** Battle type: league_1v1, tournament_1v1, tagteam, koth, grand_melee, league_2v2, or league_3v3 */
+  battleType?: 'league' | 'league_1v1' | 'tournament' | 'tournament_1v1' | 'tagteam' | 'koth' | 'grand_melee' | 'league_2v2' | 'league_3v3';
   /** Team size for team battles (2 for 2v2, 3 for 3v3) */
   teamSize?: number;
   /** Team 1 active robot name (for 2v2 tag team battles) */

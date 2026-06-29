@@ -1,5 +1,17 @@
 import matter from 'gray-matter';
+import yaml from 'js-yaml';
 import logger from '../../config/logger';
+
+// gray-matter@4 ships with js-yaml ^3 but npm/pnpm may hoist js-yaml 4 which
+// removed `yaml.safeLoad`. Supply a custom engine so parsing always works.
+const grayMatterOptions: Parameters<typeof matter>[1] = {
+  engines: {
+    yaml: {
+      parse: (str: string) => yaml.load(str) as Record<string, unknown>,
+      stringify: (obj: object) => yaml.dump(obj),
+    },
+  },
+};
 
 /**
  * Represents a heading extracted from Markdown content.
@@ -207,7 +219,7 @@ export function validateFrontmatter(data: Record<string, unknown>): ArticleFront
  */
 export function parseMarkdown(rawContent: string): ParsedArticle | null {
   try {
-    const { data, content } = matter(rawContent);
+    const { data, content } = matter(rawContent, grayMatterOptions);
     const frontmatter = validateFrontmatter(data as Record<string, unknown>);
 
     if (frontmatter === null) {

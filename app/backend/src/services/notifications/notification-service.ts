@@ -48,6 +48,9 @@ export function buildSuccessMessage(context: JobContext, appBaseUrl: string): st
       }
       if (!context.matchesCompleted || context.matchesCompleted === 0) return null;
       return `🏆 3v3 Tournament: Round ${context.tournamentRound}/${context.tournamentMaxRounds} — ${context.matchesCompleted} matches.\n${link}/tournaments`;
+    case 'grandMelee':
+      if (!context.matchesCompleted || context.matchesCompleted === 0) return null;
+      return `⚔️ Grand Melee: ${context.matchesCompleted} matches completed.\n${link}`;
   }
 }
 

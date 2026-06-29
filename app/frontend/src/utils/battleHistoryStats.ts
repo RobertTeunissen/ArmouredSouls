@@ -21,6 +21,10 @@ export interface KothStats extends BattleTypeStats {
   placements: { first: number; second: number; third: number; other: number };
 }
 
+export interface GrandMeleeStats extends BattleTypeStats {
+  placements: { first: number; second: number; third: number; other: number };
+}
+
 export interface BattleSummaryStats {
   totalBattles: number;
   wins: number;
@@ -34,12 +38,14 @@ export interface BattleSummaryStats {
   tournamentStats: BattleTypeStats;
   tagTeamStats: BattleTypeStats;
   kothStats: KothStats;
+  grandMeleeStats: GrandMeleeStats;
   league2v2Stats: BattleTypeStats;
   league3v3Stats: BattleTypeStats;
 }
 
 const EMPTY_TYPE_STATS: BattleTypeStats = { battles: 0, wins: 0, losses: 0, draws: 0, winRate: 0, avgELOChange: 0 };
 const EMPTY_KOTH_STATS: KothStats = { ...EMPTY_TYPE_STATS, avgZoneScore: 0, totalCredits: 0, totalKills: 0, placements: { first: 0, second: 0, third: 0, other: 0 } };
+const EMPTY_GRAND_MELEE_STATS: GrandMeleeStats = { ...EMPTY_TYPE_STATS, placements: { first: 0, second: 0, third: 0, other: 0 } };
 
 export const EMPTY_SUMMARY: BattleSummaryStats = {
   totalBattles: 0, wins: 0, losses: 0, draws: 0, winRate: 0, avgELOChange: 0, totalCreditsEarned: 0,
@@ -47,6 +53,7 @@ export const EMPTY_SUMMARY: BattleSummaryStats = {
   tournamentStats: { ...EMPTY_TYPE_STATS },
   tagTeamStats: { ...EMPTY_TYPE_STATS },
   kothStats: { ...EMPTY_KOTH_STATS },
+  grandMeleeStats: { ...EMPTY_GRAND_MELEE_STATS },
   league2v2Stats: { ...EMPTY_TYPE_STATS },
   league3v3Stats: { ...EMPTY_TYPE_STATS },
 };
@@ -77,12 +84,16 @@ export function computeBattleSummary(
   let kothWins = 0, kothLosses = 0, kothDraws = 0, kothELO = 0, kothBattles = 0;
   let kothTotalZoneScore = 0, kothTotalCredits = 0, kothTotalKills = 0;
   let kothFirst = 0, kothSecond = 0, kothThird = 0, kothOther = 0;
+  let grandMeleeWins = 0, grandMeleeLosses = 0, grandMeleeDraws = 0, grandMeleeELO = 0, grandMeleeBattles = 0;
+  let grandMeleeFirst = 0, grandMeleeSecond = 0, grandMeleeThird = 0, grandMeleeOther = 0;
   let league2v2Wins = 0, league2v2Losses = 0, league2v2Draws = 0, league2v2ELO = 0, league2v2Battles = 0;
   let league3v3Wins = 0, league3v3Losses = 0, league3v3Draws = 0, league3v3ELO = 0, league3v3Battles = 0;
 
   battles.forEach((battle, index) => {
     const isKoth = battle.battleType === 'koth';
-    // For KotH, user's robot may not be robot1 or robot2 (3rd-6th place)
+    const isGrandMelee = battle.battleType === 'grand_melee';
+    const isFFA = isKoth || isGrandMelee;
+    // For KotH/Grand Melee, user's robot may not be robot1 or robot2 (3rd-6th place)
     // Fall back to robot1 if neither matches — stats come from kothPlacement anyway
     const myRobotId = battle.robot1.userId === userId
       ? battle.robot1.id
@@ -90,8 +101,8 @@ export function computeBattleSummary(
         ? battle.robot2.id
         : battle.robot1.id;
     
-    // For KotH, derive outcome from placement instead of winnerId
-    const outcome = isKoth
+    // For FFA modes, derive outcome from placement instead of winnerId
+    const outcome = isFFA
       ? (battle.kothPlacement === 1 ? 'win' : 'loss')
       : getBattleOutcome(battle, myRobotId);
     const eloChange = getELOChange(battle, myRobotId);
@@ -106,6 +117,7 @@ export function computeBattleSummary(
       if (isTournament) tournamentWins++;
       else if (isTagTeam) tagTeamWins++;
       else if (isKoth) kothWins++;
+      else if (isGrandMelee) grandMeleeWins++;
       else if (isLeague2v2) league2v2Wins++;
       else if (isLeague3v3) league3v3Wins++;
       else leagueWins++;
@@ -114,6 +126,7 @@ export function computeBattleSummary(
       if (isTournament) tournamentLosses++;
       else if (isTagTeam) tagTeamLosses++;
       else if (isKoth) kothLosses++;
+      else if (isGrandMelee) grandMeleeLosses++;
       else if (isLeague2v2) league2v2Losses++;
       else if (isLeague3v3) league3v3Losses++;
       else leagueLosses++;
@@ -122,6 +135,7 @@ export function computeBattleSummary(
       if (isTournament) tournamentDraws++;
       else if (isTagTeam) tagTeamDraws++;
       else if (isKoth) kothDraws++;
+      else if (isGrandMelee) grandMeleeDraws++;
       else if (isLeague2v2) league2v2Draws++;
       else if (isLeague3v3) league3v3Draws++;
       else leagueDraws++;
@@ -147,6 +161,14 @@ export function computeBattleSummary(
       else if (placement === 2) kothSecond++;
       else if (placement === 3) kothThird++;
       else if (placement != null) kothOther++;
+    } else if (isGrandMelee) {
+      grandMeleeBattles++;
+      grandMeleeELO += eloChange;
+      const placement = battle.kothPlacement;
+      if (placement === 1) grandMeleeFirst++;
+      else if (placement === 2) grandMeleeSecond++;
+      else if (placement === 3) grandMeleeThird++;
+      else if (placement != null) grandMeleeOther++;
     } else if (isLeague2v2) {
       league2v2Battles++;
       league2v2ELO += eloChange;
@@ -198,6 +220,10 @@ export function computeBattleSummary(
       totalCredits: kothTotalCredits,
       totalKills: kothTotalKills,
       placements: { first: kothFirst, second: kothSecond, third: kothThird, other: kothOther },
+    },
+    grandMeleeStats: {
+      ...buildTypeStats(grandMeleeBattles, grandMeleeWins, grandMeleeLosses, grandMeleeDraws, grandMeleeELO),
+      placements: { first: grandMeleeFirst, second: grandMeleeSecond, third: grandMeleeThird, other: grandMeleeOther },
     },
     league2v2Stats: buildTypeStats(league2v2Battles, league2v2Wins, league2v2Losses, league2v2Draws, league2v2ELO),
     league3v3Stats: buildTypeStats(league3v3Battles, league3v3Wins, league3v3Losses, league3v3Draws, league3v3ELO),

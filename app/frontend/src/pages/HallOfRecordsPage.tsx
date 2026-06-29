@@ -13,6 +13,7 @@ import {
   KothRecords,
   TeamBattleRecords,
   TournamentChampionsRecords,
+  GrandMeleeRecords,
 } from '../components/hall-of-records';
 
 const log = createLogger('HallOfRecordsPage');
@@ -71,6 +72,7 @@ function HallOfRecordsPage() {
     { key: 'economic' as CategoryKey, label: 'Economic', icon: '💰' },
     { key: 'prestige' as CategoryKey, label: 'Prestige', icon: '👑' },
     { key: 'koth' as CategoryKey, label: 'King of the Hill', icon: '⛰️' },
+    { key: 'grandMelee' as CategoryKey, label: 'Grand Melee', icon: '💀' },
     { key: 'teamBattle' as CategoryKey, label: 'Team Battles', icon: '🤝' },
     { key: 'tournaments' as CategoryKey, label: 'Tournaments', icon: '🏆' },
   ];
@@ -151,6 +153,9 @@ function HallOfRecordsPage() {
             )}
             {activeCategory === 'koth' && (
               <KothRecords records={records} formatDuration={formatDuration} />
+            )}
+            {activeCategory === 'grandMelee' && (
+              <GrandMeleeRecords records={records} />
             )}
             {activeCategory === 'teamBattle' && (
               <TeamBattleRecords records={records} formatDuration={formatDuration} formatDate={formatDate} onBattleClick={handleBattleClick} />
