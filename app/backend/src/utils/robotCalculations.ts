@@ -39,6 +39,7 @@ import {
   STANCE_MODIFIERS,
   BASE_HP,
   HP_MULTIPLIER,
+  SHIELD_MULTIPLIER,
 } from '../shared/utils/robotStats';
 
 /**
@@ -131,7 +132,7 @@ export function prepareRobotForCombat(
 
   // Recalculate maxHP and maxShield using the now-effective attribute values
   robot.maxHP = BASE_HP + Number(robot.hullIntegrity) * HP_MULTIPLIER;
-  robot.maxShield = Number(robot.shieldCapacity) * 4;
+  robot.maxShield = Number(robot.shieldCapacity) * SHIELD_MULTIPLIER;
 
   // Set current HP and shield to max (robots enter combat at full health)
   robot.currentHP = robot.maxHP;
@@ -211,7 +212,7 @@ export function calculateMaxHP(robot: RobotWithWeapons, tuningBonuses?: TuningAt
  */
 export function calculateMaxShield(robot: RobotWithWeapons, tuningBonuses?: TuningAttributeMap): number {
   const effectiveStats = calculateEffectiveStats(robot, tuningBonuses);
-  return effectiveStats.shieldCapacity * 4;
+  return effectiveStats.shieldCapacity * SHIELD_MULTIPLIER;
 }
 
 /**

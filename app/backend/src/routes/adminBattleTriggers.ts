@@ -20,7 +20,7 @@ const router = express.Router();
 
 const teamBattleMatchmakingBodySchema = z.object({
   teamSize: z.union([z.literal(2), z.literal(3)]),
-  scheduledFor: z.string().optional(),
+  scheduledFor: z.string().datetime().optional(),
 });
 
 const teamBattleBattlesBodySchema = z.object({

@@ -345,7 +345,7 @@ export function isValidStance(stance: string): boolean {
 }
 
 /**
- * Validate yield threshold value (must be integer 0-50).
+ * Validate yield threshold value (must be a number between 0 and 50 inclusive).
  */
 export function isValidYieldThreshold(threshold: number): boolean {
   return typeof threshold === 'number' && !isNaN(threshold) && isFinite(threshold) && threshold >= 0 && threshold <= 50;
