@@ -115,13 +115,11 @@ export async function getEligibleTeams(
 
   // Get already scheduled team IDs via unified schedulingService
   const matchType = teamSize === 2 ? MatchType.league_2v2 : MatchType.league_3v3;
-  const alreadyScheduledIds = new Set<number>();
-  for (const team of readyTeams) {
-    const upcoming = await schedulingService.getUpcomingForTeam(team.id, [matchType]);
-    if (upcoming.length > 0) {
-      alreadyScheduledIds.add(team.id);
-    }
-  }
+  const alreadyScheduledIds = await schedulingService.getAlreadyScheduledIds(
+    'team',
+    readyTeams.map(t => t.id),
+    [matchType],
+  );
 
   // Filter out already scheduled teams
   const availableTeams = readyTeams.filter(team => !alreadyScheduledIds.has(team.id));

@@ -154,6 +154,7 @@ router.get('/:tier/standings', validateRequest({ params: leagueTierParamsSchema 
     };
   });
 
+  res.set('Cache-Control', 'public, max-age=60');
   res.json({
     data: standings,
     pagination: {

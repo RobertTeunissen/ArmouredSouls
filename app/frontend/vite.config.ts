@@ -14,6 +14,26 @@ export default defineConfig({
       '@shared': path.resolve(__dirname, '../shared'),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id: string) {
+          if (id.includes('node_modules/react-dom') || id.includes('node_modules/react/') || id.includes('node_modules/react-router-dom')) {
+            return 'vendor';
+          }
+          if (id.includes('node_modules/recharts') || id.includes('node_modules/d3-')) {
+            return 'charts';
+          }
+          if (id.includes('node_modules/react-markdown') || id.includes('node_modules/remark-gfm') || id.includes('node_modules/micromark') || id.includes('node_modules/mdast')) {
+            return 'markdown';
+          }
+          if (id.includes('node_modules/zustand')) {
+            return 'state';
+          }
+        },
+      },
+    },
+  },
   server: {
     port: 3000,
     proxy: {

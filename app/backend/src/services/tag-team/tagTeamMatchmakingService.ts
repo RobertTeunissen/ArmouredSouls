@@ -106,13 +106,11 @@ export async function getEligibleTeams(
   }
 
   // Requirement 3.4: Check already-scheduled teams via unified schedulingService
-  const alreadyScheduledIds = new Set<number>();
-  for (const team of readyTeams) {
-    const upcoming = await schedulingService.getUpcomingForTeam(team.id, [MatchType.tag_team]);
-    if (upcoming.length > 0) {
-      alreadyScheduledIds.add(team.id);
-    }
-  }
+  const alreadyScheduledIds = await schedulingService.getAlreadyScheduledIds(
+    'team',
+    readyTeams.map(t => t.id),
+    [MatchType.tag_team],
+  );
 
   // Filter out already scheduled teams
   const availableTeams = readyTeams.filter(team => !alreadyScheduledIds.has(team.id));

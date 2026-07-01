@@ -65,7 +65,7 @@ const prestigeQuerySchema = z.object({
 router.get('/fame', validateRequest({ query: fameQuerySchema }), async (req: Request, res: Response) => {
   const cacheKey = `fame:${req.query.page || 1}:${req.query.limit || 100}:${req.query.league || ''}:${req.query.minBattles || 10}`;
   const cached = getCachedOrNull(cacheKey);
-  if (cached) { res.json(cached); return; }
+  if (cached) { res.set('Cache-Control', 'public, max-age=300'); res.json(cached); return; }
 
   const result = await getFameLeaderboard({
     page: parseInt(req.query.page as string) || 1,
@@ -76,6 +76,7 @@ router.get('/fame', validateRequest({ query: fameQuerySchema }), async (req: Req
 
   const response = { ...result, timestamp: new Date().toISOString() };
   setCache(cacheKey, response);
+  res.set('Cache-Control', 'public, max-age=300');
   res.json(response);
 });
 
@@ -85,7 +86,7 @@ router.get('/fame', validateRequest({ query: fameQuerySchema }), async (req: Req
 router.get('/losses', validateRequest({ query: lossesQuerySchema }), async (req: Request, res: Response) => {
   const cacheKey = `losses:${req.query.page || 1}:${req.query.limit || 100}:${req.query.league || ''}`;
   const cached = getCachedOrNull(cacheKey);
-  if (cached) { res.json(cached); return; }
+  if (cached) { res.set('Cache-Control', 'public, max-age=300'); res.json(cached); return; }
 
   const result = await getLossesLeaderboard({
     page: parseInt(req.query.page as string) || 1,
@@ -95,6 +96,7 @@ router.get('/losses', validateRequest({ query: lossesQuerySchema }), async (req:
 
   const response = { ...result, timestamp: new Date().toISOString() };
   setCache(cacheKey, response);
+  res.set('Cache-Control', 'public, max-age=300');
   res.json(response);
 });
 
@@ -104,7 +106,7 @@ router.get('/losses', validateRequest({ query: lossesQuerySchema }), async (req:
 router.get('/prestige', validateRequest({ query: prestigeQuerySchema }), async (req: Request, res: Response) => {
   const cacheKey = `prestige:${req.query.page || 1}:${req.query.limit || 100}:${req.query.minRobots || 1}`;
   const cached = getCachedOrNull(cacheKey);
-  if (cached) { res.json(cached); return; }
+  if (cached) { res.set('Cache-Control', 'public, max-age=300'); res.json(cached); return; }
 
   const result = await getPrestigeLeaderboard({
     page: parseInt(req.query.page as string) || 1,
@@ -114,6 +116,7 @@ router.get('/prestige', validateRequest({ query: prestigeQuerySchema }), async (
 
   const response = { ...result, timestamp: new Date().toISOString() };
   setCache(cacheKey, response);
+  res.set('Cache-Control', 'public, max-age=300');
   res.json(response);
 });
 
@@ -136,6 +139,7 @@ router.get('/cache', validateRequest({ query: cacheQuerySchema }), async (req: R
 
   const result = await leaderboardService.getLeaderboard(category, page, limit);
 
+  res.set('Cache-Control', 'public, max-age=300');
   res.json({
     ...result,
     category,

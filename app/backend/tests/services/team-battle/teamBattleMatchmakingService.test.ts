@@ -256,10 +256,11 @@ describe('teamBattleMatchmakingService', () => {
       mockPrisma.standing.findMany.mockResolvedValue([{ entityId: 1 }, { entityId: 2 }]);
       mockPrisma.teamBattle.findMany.mockResolvedValue([team1, team2]);
       mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([]);
-      // Team1 already has a scheduled match (via scheduledMatchParticipant)
+      // Team1 already has a scheduled match (via getAlreadyScheduledIds batch query)
       mockPrisma.scheduledMatchParticipant.findMany.mockImplementation((args: any) => {
-        if (args?.where?.participantId === 1) {
-          return Promise.resolve([{ scheduledMatch: { id: 99, matchType: 'league_2v2', status: 'scheduled', scheduledFor: new Date(), participants: [] } }]);
+        // Batch query from getAlreadyScheduledIds uses participantId: { in: [...] }
+        if (args?.where?.participantId?.in) {
+          return Promise.resolve([{ participantId: 1 }]);
         }
         return Promise.resolve([]);
       });

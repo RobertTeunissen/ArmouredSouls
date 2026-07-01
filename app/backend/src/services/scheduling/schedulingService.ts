@@ -236,6 +236,43 @@ async function getUpcomingForTeam(teamId: number, matchTypes?: MatchType[]) {
   return participants.map((p) => p.scheduledMatch);
 }
 
+// ── Batch Query Methods ───────────────────────────────────────────────
+
+/**
+ * Batch-check which participant IDs already have a scheduled match of the given types.
+ * Returns the set of participant IDs that are already scheduled.
+ *
+ * This replaces the N+1 pattern of calling getUpcomingForRobot/getUpcomingForTeam
+ * in a loop — a single query with `IN (...)` replaces N individual queries.
+ *
+ * @param participantType - "robot" or "team"
+ * @param participantIds - Array of IDs to check
+ * @param matchTypes - Match types to filter on
+ * @returns Set of participant IDs that have at least one scheduled match
+ */
+async function getAlreadyScheduledIds(
+  participantType: 'robot' | 'team',
+  participantIds: number[],
+  matchTypes: MatchType[],
+): Promise<Set<number>> {
+  if (participantIds.length === 0) return new Set();
+
+  const rows = await prisma.scheduledMatchParticipant.findMany({
+    where: {
+      participantType,
+      participantId: { in: participantIds },
+      scheduledMatch: {
+        status: 'scheduled',
+        matchType: { in: matchTypes },
+      },
+    },
+    select: { participantId: true },
+    distinct: ['participantId'],
+  });
+
+  return new Set(rows.map((r) => r.participantId));
+}
+
 // ── Singleton Export ─────────────────────────────────────────────────
 
 const schedulingService = {
@@ -244,6 +281,7 @@ const schedulingService = {
   cancelMatch,
   getUpcomingForRobot,
   getUpcomingForTeam,
+  getAlreadyScheduledIds,
 };
 
 export default schedulingService;

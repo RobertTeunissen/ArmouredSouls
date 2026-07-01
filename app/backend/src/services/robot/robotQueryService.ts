@@ -8,6 +8,22 @@
 import prisma from '../../lib/prisma';
 import schedulingService from '../scheduling/schedulingService';
 import type { BattleParticipant, Prisma } from '../../../generated/prisma';
+import { KeyedCache } from '../../lib/keyedCache';
+
+// ── Per-user robot list cache (30s TTL) ──────────────────────────────
+// Eliminates repeated DB hits during normal page navigation.
+// Invalidated by mutations in robot routes (create, upgrade, equip, repair).
+const userRobotsCache = new KeyedCache<unknown[]>(30_000, 500);
+
+/** Invalidate the cached robot list for a user (call after mutations). */
+export function invalidateUserRobotsCache(userId: number): void {
+  userRobotsCache.invalidate(String(userId));
+}
+
+/** Invalidate all user robot caches (call after battles/cycles). */
+export function invalidateAllUserRobotsCaches(): void {
+  userRobotsCache.invalidateAll();
+}
 
 // ── Shared include fragments ─────────────────────────────────────────
 
@@ -47,10 +63,41 @@ export async function findAllRobots(page = 1, perPage = 100) {
   const safePage = Math.max(1, Math.floor(page));
   const safePerPage = Math.min(200, Math.max(1, Math.floor(perPage)));
 
+  // Select only fields used by the public robot list view.
+  // The sanitizer strips 23 attributes + combat state for non-owners anyway,
+  // so fetching them from DB is wasted bandwidth.
   return prisma.robot.findMany({
-    include: {
+    select: {
+      id: true,
+      userId: true,
+      name: true,
+      frameId: true,
+      paintJob: true,
+      elo: true,
+      fame: true,
+      totalBattles: true,
+      wins: true,
+      draws: true,
+      losses: true,
+      kills: true,
+      damageDealtLifetime: true,
+      damageTakenLifetime: true,
+      currentHP: true,
+      maxHP: true,
+      currentShield: true,
+      maxShield: true,
+      battleReadiness: true,
+      loadoutType: true,
+      stance: true,
+      mainWeaponId: true,
+      offhandWeaponId: true,
+      imageUrl: true,
+      createdAt: true,
+      updatedAt: true,
+      // Include weapons and user for display
+      mainWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' as const } } } },
+      offhandWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' as const } } } },
       user: { select: { username: true } },
-      ...WEAPON_INCLUDE,
     },
     orderBy: { elo: 'desc' },
     skip: (safePage - 1) * safePerPage,
@@ -61,6 +108,10 @@ export async function findAllRobots(page = 1, perPage = 100) {
 // ── GET / (user's robots) ────────────────────────────────────────────
 
 export async function findUserRobots(userId: number) {
+  // Check cache first
+  const cached = userRobotsCache.get(String(userId));
+  if (cached) return cached;
+
   const robots = await prisma.robot.findMany({
     where: { userId },
     include: {
@@ -85,7 +136,7 @@ export async function findUserRobots(userId: number) {
 
   const standingsMap = new Map(standings.map(s => [s.entityId, s]));
 
-  return robots.map(robot => {
+  const result = robots.map(robot => {
     const standing = standingsMap.get(robot.id);
     if (standing) {
       return {
@@ -104,6 +155,9 @@ export async function findUserRobots(userId: number) {
     }
     return robot;
   });
+
+  userRobotsCache.set(String(userId), result);
+  return result;
 }
 
 // ── GET /:id ─────────────────────────────────────────────────────────

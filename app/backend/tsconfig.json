@@ -11,6 +11,8 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "moduleResolution": "node",
+    "incremental": true,
+    "tsBuildInfoFile": "./dist/.tsbuildinfo",
     "types": ["node", "jest"],
     "ignoreDeprecations": "6.0"
   },
