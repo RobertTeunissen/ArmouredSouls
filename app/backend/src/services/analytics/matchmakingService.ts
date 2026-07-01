@@ -1,4 +1,4 @@
-import { Robot, MatchType, Prisma } from '../../../generated/prisma';
+import { Robot, MatchType, Prisma, StandingsMode } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import { LEAGUE_TIERS, LeagueTier } from '../league/leagueInstanceService';
 import logger from '../../config/logger';
@@ -423,7 +423,7 @@ export async function runMatchmakingForTier(tier: LeagueTier, scheduledFor: Date
   
   // Discover instances from Standing records (unified pattern — same as 2v2/3v3/tag team/KotH)
   const instanceRecords = await prisma.standing.findMany({
-    where: { mode: 'league_1v1' as any, tier },
+    where: { mode: StandingsMode.league_1v1, tier },
     select: { leagueInstanceId: true },
     distinct: ['leagueInstanceId'],
   });

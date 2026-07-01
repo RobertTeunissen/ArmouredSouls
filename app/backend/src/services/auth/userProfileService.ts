@@ -6,6 +6,7 @@
 
 import prisma from '../../lib/prisma';
 import { AuthError, AuthErrorCode } from '../../errors/authErrors';
+import { StandingsMode } from '../../../generated/prisma';
 import { getPrestigeRank } from '../../utils/prestigeUtils';
 import type { StableMetric, RobotMetric } from '../../types/snapshotTypes';
 
@@ -83,7 +84,7 @@ export async function getStableStats(userId: number) {
 
   // Read tag team stats from standings (source of truth since Spec #40)
   const tagTeamStandings = tagTeams.length > 0 ? await prisma.standing.findMany({
-    where: { entityType: 'team', entityId: { in: tagTeams.map(t => t.id) }, mode: 'tag_team' as any },
+    where: { entityType: 'team', entityId: { in: tagTeams.map(t => t.id) }, mode: StandingsMode.tag_team },
     select: { tier: true, wins: true, losses: true, draws: true },
   }) : [];
 
@@ -120,7 +121,7 @@ export async function getStableStats(userId: number) {
 
   // Read highest league from standings (source of truth)
   const robotStandings = await prisma.standing.findMany({
-    where: { entityType: 'robot', entityId: { in: robots.map(r => r.id) }, mode: 'league_1v1' as any },
+    where: { entityType: 'robot', entityId: { in: robots.map(r => r.id) }, mode: StandingsMode.league_1v1 },
     select: { tier: true },
   });
   const highestLeague = robotStandings.length > 0

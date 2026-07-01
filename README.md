@@ -1,6 +1,6 @@
 # Armoured Souls
 
-A strategy simulation game where players manage a stable of battle robots, competing in automated leagues, tournaments, tag team matches, and King of the Hill events. Inspired by Football Manager — you configure, the engine simulates.
+A strategy simulation game where players manage a stable of battle robots, competing in automated leagues, tournaments, tag team matches, King of the Hill events, and Grand Melee. Inspired by Football Manager — you configure, the engine simulates.
 
 ## Quick Start
 
@@ -35,19 +35,23 @@ If you see "Environment variable not found: DATABASE_URL", you forgot to create 
 
 ## What's Built
 
-Armoured Souls is a fully functional prototype deployed to a production VPS. The core game loop is complete: create robots, configure loadouts, compete in automated daily cycles, view battle replays, and progress through leagues.
+Armoured Souls is deployed to a production VPS with a full game loop: create robots, configure loadouts, compete in automated daily cycles, view battle replays, and progress through leagues.
 
 ### Game Systems
-- 4 battle modes: League (1v1), Tournament (bracket), Tag Team (2v2), King of the Hill (5-6 robot FFA)
+- 6 battle modes: League (1v1), Tournament (bracket), Tag Team (2v2 sequential), Team Battle (2v2/3v3 simultaneous), King of the Hill (5-6 robot FFA), Grand Melee (20-robot elimination)
 - 23 robot attributes across 5 categories, all upgradeable
 - 47 weapons (41 weapons + 6 shields) across 4 range bands
-- 14 stable facilities with 10 levels each
-- 6-tier league system (Bronze → Champion) with ELO-based matchmaking
+- 13 stable facilities with 10 levels each
+- 6-tier league system (Bronze → Champion) with LP-primary matchmaking
 - Economy: credits, prestige (stable-level), fame (robot-level), streaming revenue
+- Tuning Pool system for per-robot tactical attribute allocation
+- 77-achievement progression layer with badges and toast notifications
+- Booking Office event subscription system gating battle participation
 - 5-step new player onboarding tutorial
 - Deterministic tick-based combat engine with battle replay viewer
 - In-game guide system
-- Admin portal with cycle management, battle viewer, and analytics
+- Admin portal with cycle management, battle viewer, analytics, and 6 dashboards
+- Monitoring & alerting via Discord webhooks
 
 ### Tech Stack
 - Backend: Node.js 24, TypeScript 5.8, Express 5, Prisma 7, PostgreSQL 17
@@ -63,16 +67,14 @@ ArmouredSouls/
 │   ├── architecture/        # System architecture, schema, combat engine, security
 │   ├── game-systems/        # Game design, economy, leagues, weapons, onboarding
 │   ├── prd_pages/           # Page-specific requirements
-│   ├── guides/              # Setup, deployment, maintenance, security
+│   ├── guides/              # Setup, deployment, maintenance
 │   ├── design_ux/           # Design system and brand guidelines
 │   ├── balance_changes/     # Game balance modifications
-│   ├── analysis/            # Feature analysis and planning
-│   ├── implementation_notes/# Technical implementation details
-│   ├── migrations/          # Database migration notes
-│   └── troubleshooting/     # Debugging guides
+│   └── analysis/            # Feature analysis and planning
 ├── app/
-│   ├── backend/             # Express 5 API (13 domain service directories)
-│   ├── frontend/            # React 19 SPA (27 pages)
+│   ├── backend/             # Express 5 API (20 domain service directories)
+│   ├── frontend/            # React 19 SPA
+│   ├── shared/              # Shared utilities (game formulas)
 │   ├── docker-compose.yml   # PostgreSQL for local dev
 │   ├── Caddyfile            # Reverse proxy config (production)
 │   └── ecosystem.config.js  # PM2 config (production)
@@ -84,39 +86,26 @@ ArmouredSouls/
 
 ## Documentation
 
+See [docs/README.md](docs/README.md) for the full documentation index.
+
 ### Getting Started
-- [Setup Guide](docs/guides/operations/LOCAL_SETUP.md) — Local development setup, testing, troubleshooting
+- [Setup Guide](docs/guides/operations/LOCAL_SETUP.md) — Local development setup
 - [Architecture](docs/architecture/ARCHITECTURE.md) — System architecture and deployment
 - [Game Design](docs/game-systems/GAME_DESIGN.md) — Core game concept and mechanics
 
 ### Core Systems
-- [Database Schema](docs/architecture/DATABASE_SCHEMA.md) — Complete schema reference (18 models)
-- [Battle Simulation](docs/architecture/BATTLE_SIMULATION_ARCHITECTURE.md) — Combat engine, orchestrators, cycle scheduler
+- [Database Schema](docs/architecture/DATABASE_SCHEMA.md) — Schema reference
+- [Battle Simulation](docs/architecture/BATTLE_SIMULATION_ARCHITECTURE.md) — Combat engine and orchestrators
 - [Combat Formulas](docs/architecture/COMBAT_FORMULAS.md) — Hit chance, damage, crits, counters
 - [Economy System](docs/game-systems/PRD_ECONOMY_SYSTEM.md) — Credits, facilities, rewards
-- [Prestige & Fame](docs/game-systems/PRD_PRESTIGE_AND_FAME.md) — Dual reputation systems
 - [Matchmaking](docs/game-systems/PRD_MATCHMAKING.md) — LP-primary matching algorithm
-- [Weapons & Loadout](docs/game-systems/PRD_WEAPONS_LOADOUT.md) — 47 weapons, 4 loadout types
-- [Onboarding](docs/game-systems/PRD_ONBOARDING_SYSTEM.md) — 5-step tutorial system
-
-### Operations
-- [Deployment Guide](docs/guides/DEPLOYMENT.md) — VPS deployment and maintenance
-- [Security](docs/architecture/PRD_SECURITY.md) — Security strategy and practices
-- [Error Codes](docs/guides/ERROR_CODES.md) — Domain-specific error reference
 - [Service Directory](docs/architecture/PRD_SERVICE_DIRECTORY.md) — Backend service organization
 
-### Development
-- [Roadmap](docs/ROADMAP.md) — Development phases and completed specs
-- [Contributing](CONTRIBUTING.md) — Development guidelines
-
-## Project Status
-
-The prototype is feature-complete and deployed to production. See the [Roadmap](docs/ROADMAP.md) for what's been shipped and what's planned next.
+### Operations
+- [Deployment Guide](docs/guides/operations/DEPLOYMENT.md) — VPS deployment and maintenance
+- [Security](docs/architecture/PRD_SECURITY.md) — Security strategy and practices
+- [Error Codes](docs/guides/ERROR_CODES.md) — Domain-specific error reference
 
 ## License
 
 Unlicensed — proprietary.
-
-## Contact
-
-Robert Teunissen — Project Owner

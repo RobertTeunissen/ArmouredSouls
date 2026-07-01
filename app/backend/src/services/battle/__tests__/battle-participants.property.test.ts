@@ -31,7 +31,7 @@ import * as fc from 'fast-check';
 import prisma from '../../../lib/prisma';
 import { createTagTeamBattleRecord } from '../../tag-team/tagTeamBattleRecord';
 import { TagTeamWithRobots, TagTeamBattleResult } from '../../tag-team/tagTeamTypes';
-import { Prisma, ScheduledTeamBattleMatch } from '../../../../generated/prisma';
+import { ScheduledTeamBattleMatch } from '../../../../generated/prisma';
 
 const mockPrisma = prisma as jest.Mocked<typeof prisma>;
 
@@ -57,7 +57,9 @@ function arbTeam(teamSuffix: string) {
       teamSize: 2,
       activeRobotId: activeRobot.id,
       reserveRobotId: reserveRobot.id,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       activeRobot: activeRobot as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       reserveRobot: reserveRobot as any,
       createdAt: new Date(),
       updatedAt: new Date(),
