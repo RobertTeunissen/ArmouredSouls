@@ -1112,6 +1112,7 @@ async function seedWimpBotUsers(weapons: { id: number; name: string }[]) {
         username,
         passwordHash: testHashedPassword,
         currency: 100000,
+        hasCompletedOnboarding: true,
         stableName,
       });
 
