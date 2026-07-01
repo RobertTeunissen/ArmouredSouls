@@ -126,13 +126,21 @@ test.describe('Onboarding Tutorial Flow', () => {
     // --- Step 5: Completion (subscription picker → congratulations) ---
     await expect(page.getByText('Step 5 of 5', { exact: true })).toBeVisible({ timeout: 20000 });
 
-    // Step 5 phase 1: Subscription picker — select at least one event and confirm
+    // Step 5 has two phases: subscription picker (select events + confirm) then congratulations.
+    // If the API fetch fails, it skips directly to congratulations.
+    const completeTutorialButton = page.getByRole('button', { name: /Complete Tutorial/i });
     const subscriptionHeading = page.getByText('Choose Your Battle Events');
-    const isSubscriptionPhase = await subscriptionHeading.isVisible({ timeout: 10000 }).catch(() => false);
 
-    if (isSubscriptionPhase) {
-      // Click the first available event checkbox/button to select a subscription
-      const eventButtons = page.getByRole('button').filter({ hasText: /1v1|KotH|Melee/i });
+    // Wait for either the subscription picker or the complete button to appear
+    await Promise.race([
+      subscriptionHeading.waitFor({ state: 'visible', timeout: 20000 }).catch(() => {}),
+      completeTutorialButton.waitFor({ state: 'visible', timeout: 20000 }).catch(() => {}),
+    ]);
+
+    // If subscription picker is showing, interact with it
+    if (await subscriptionHeading.isVisible().catch(() => false)) {
+      // Click the first available event to select a subscription
+      const eventButtons = page.getByRole('button', { name: /^Select /i });
       const firstEvent = eventButtons.first();
       await firstEvent.waitFor({ state: 'visible', timeout: 10000 });
       await firstEvent.click();
@@ -143,8 +151,7 @@ test.describe('Onboarding Tutorial Flow', () => {
       await confirmSubs.click();
     }
 
-    // Step 5 phase 2: Congratulations — Complete Tutorial button
-    const completeTutorialButton = page.getByRole('button', { name: /Complete Tutorial/i });
+    // Now the "Complete Tutorial" button should be visible
     await completeTutorialButton.waitFor({ state: 'visible', timeout: 20000 });
     await completeTutorialButton.click();
 
