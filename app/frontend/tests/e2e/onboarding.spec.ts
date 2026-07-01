@@ -38,7 +38,6 @@ test.describe('Onboarding Tutorial Flow', () => {
     await page.getByRole('button', { name: /Create Robot$/i }).click();
 
     // Wait for the robot creation API call to complete before checking step 2
-    await page.waitForLoadState('networkidle');
     await expect(page.getByText('Step 2 of 5', { exact: true })).toBeVisible({ timeout: 30000 });
 
     // Step 2: Skip facility investment
