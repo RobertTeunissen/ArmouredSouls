@@ -1,8 +1,9 @@
 /**
  * Unit and property-based tests for Grand Melee placement computation.
  *
- * The computePlacements function derives placement order from combat simulation
- * results. Exported for testing via the orchestrator module.
+ * computePlacements is an internal (non-exported) function in the orchestrator.
+ * Since it cannot be imported directly, the algorithm is replicated here as a
+ * local function to validate the placement logic in isolation.
  *
  * Properties:
  *   P1: Placements are unique and sequential (1..N, no gaps, no duplicates)
@@ -59,13 +60,10 @@ jest.mock('../../../src/services/scheduling/schedulingService', () => ({
 
 import * as fc from 'fast-check';
 
-// We need to test computePlacements which is not exported directly.
-// Access it by importing the module and using a workaround.
-// Since computePlacements is internal, we test it through its behavior in the orchestrator.
-// But we can import the module source and test the logic via re-export.
-// Let's test the placement logic directly by extracting the algorithm.
-
-// ─── Placement Logic (mirrors grandMeleeBattleOrchestrator.ts) ───────────────
+// ─── Placement Logic (local replica of grandMeleeBattleOrchestrator.ts) ──────
+// computePlacements is internal to the orchestrator and not exported.
+// We replicate the algorithm here to validate its correctness properties
+// without needing to run the full orchestrator with all its DB dependencies.
 
 interface SpatialRobotCombatState {
   robot: { id: number; name: string };

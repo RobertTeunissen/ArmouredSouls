@@ -14,17 +14,9 @@ const unitRegex = Array.isArray(unitConfig.testRegex)
   : [unitConfig.testRegex];
 
 // The unit config excludes certain src/__tests__/ files via testPathIgnorePatterns.
-// Those files match the broad 'src/.+/__tests__/.+\\.test\\.ts$' regex but are
-// NOT run by the unit runner — they belong here in integration.
-// So we exclude the broad src pattern, then DON'T exclude the specific files.
-const unitSrcExclusions = (unitConfig.testPathIgnorePatterns || [])
-  .filter((p) => p.startsWith('src/'));
-
-// Exclude unit patterns, but replace the broad src/__tests__ regex with individual
-// patterns for the files that ARE run by the unit config (i.e., not in its exclusion list).
-// Simpler: exclude all unit regex patterns EXCEPT 'src/.+/__tests__/.+\\.test\\.ts$',
-// then add per-file exclusions for the 49 pure src/__tests__ files.
-// Simplest: don't exclude the src pattern at all — just exclude via the file list below.
+// Those files match the broad src/__tests__ regex but are NOT run by the unit runner —
+// they belong here in integration. The pureSrcTestPatterns list below explicitly excludes
+// only the files the unit runner DOES run, keeping the DB-dependent ones for integration.
 const unitPatternsWithoutSrc = unitRegex.filter((r) => !r.includes('__tests__') || r.startsWith('tests/'));
 
 // Heavy integration tests to exclude (run separately with jest.config.heavy.js)
