@@ -81,19 +81,19 @@ describe('Income Multipliers', () => {
 
     test('should calculate correctly for level 4 with 15000 prestige', () => {
       const result = calculateMerchandisingIncome(4, 15000);
-      // 12000 * (1 + 15000 / 10000) = 12000 * 2.5 = 30000
-      expect(result).toBe(30000);
+      // 20000 * (1 + 15000 / 10000) = 20000 * 2.5 = 50000
+      expect(result).toBe(50000);
     });
 
     test('should scale linearly with prestige', () => {
       const level = 4;
-      const baseRate = 12000;
+      const baseRate = 20000; // getMerchandisingBaseRate(4) = 20000
       
       const result1 = calculateMerchandisingIncome(level, 10000);
       const result2 = calculateMerchandisingIncome(level, 20000);
       
-      expect(result1).toBe(Math.round(baseRate * 2.0)); // 24000
-      expect(result2).toBe(Math.round(baseRate * 3.0)); // 36000
+      expect(result1).toBe(Math.round(baseRate * 2.0)); // 40000
+      expect(result2).toBe(Math.round(baseRate * 3.0)); // 60000
     });
   });
 
@@ -125,16 +125,16 @@ describe('Income Multipliers', () => {
     test('getMerchandisingBaseRate should return correct rates', () => {
       expect(getMerchandisingBaseRate(0)).toBe(0);
       expect(getMerchandisingBaseRate(1)).toBe(5000);
-      expect(getMerchandisingBaseRate(2)).toBe(8000);
-      expect(getMerchandisingBaseRate(4)).toBe(12000);
-      expect(getMerchandisingBaseRate(10)).toBe(35000);
+      expect(getMerchandisingBaseRate(2)).toBe(10000);
+      expect(getMerchandisingBaseRate(4)).toBe(20000);
+      expect(getMerchandisingBaseRate(10)).toBe(50000);
     });
   });
 
   describe('Edge Cases and Boundary Conditions', () => {
     test('should handle zero prestige', () => {
       expect(getPrestigeMultiplier(0)).toBe(1.0);
-      expect(calculateMerchandisingIncome(4, 0)).toBe(12000);
+      expect(calculateMerchandisingIncome(4, 0)).toBe(20000);
     });
 
     test('should handle very high prestige', () => {

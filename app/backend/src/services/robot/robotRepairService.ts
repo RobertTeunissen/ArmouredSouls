@@ -10,8 +10,7 @@ import prisma from '../../lib/prisma';
 import { lockUserForSpending } from '../../lib/creditGuard';
 import { RobotError, RobotErrorCode } from '../../errors/robotErrors';
 import { calculateRepairCost, calculateAttributeSum } from '../../utils/robotCalculations';
-
-const MANUAL_REPAIR_DISCOUNT = 0.5;
+import { MANUAL_REPAIR_DISCOUNT } from '../../shared/utils/repairCost';
 
 interface RobotNeedingRepair {
   id: number;
@@ -85,16 +84,14 @@ export async function repairAllRobots(userId: number): Promise<RepairAllResult> 
   const finalCost = Math.floor(totalBaseCost * MANUAL_REPAIR_DISCOUNT);
 
   const result = await prisma.$transaction(async (tx) => {
-    const lockedUser = await lockUserForSpending(tx, userId);
+    // Acquire row lock to serialize concurrent spending transactions
+    await lockUserForSpending(tx, userId);
 
-    if (lockedUser.currency < finalCost) {
-      throw new RobotError(
-        RobotErrorCode.INVALID_ROBOT_ATTRIBUTES,
-        'Insufficient credits for manual repair',
-        400,
-        { required: finalCost, available: lockedUser.currency },
-      );
-    }
+    // Allow manual repair even if the player cannot fully afford it.
+    // Manual repair grants a 50% discount over automatic end-of-cycle repair,
+    // so blocking it would punish active players by forcing them into the
+    // more expensive auto-repair path. This is the only player action that
+    // may result in a negative credit balance.
 
     const updatedUser = await tx.user.update({
       where: { id: userId },

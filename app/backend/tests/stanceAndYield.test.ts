@@ -73,6 +73,8 @@ const createMockRobot = (overrides?: Partial<Robot>): Robot => ({
   defensiveWins: 0,
   balancedWins: 0,
   dualWieldWins: 0,
+  grandMeleeWins: 0,
+  grandMeleeTop3: 0,
   createdAt: new Date(),
   updatedAt: new Date(),
   ...overrides,

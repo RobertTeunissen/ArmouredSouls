@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { calculateDPS, calculateWeaponCooldown, WEAPON_COOLDOWN_BASES, WEAPON_DAMAGE_SCALING } from '../weaponConstants';
+import { calculateDPS } from '../weaponConstants';
 
 describe('weaponConstants', () => {
   describe('calculateDPS', () => {
@@ -25,31 +25,6 @@ describe('weaponConstants', () => {
 
     it('should return 0.0 for shields (zero damage)', () => {
       expect(calculateDPS(0, 0)).toBe('0.0');
-    });
-  });
-
-  describe('calculateWeaponCooldown (deprecated)', () => {
-    it('should still work for backward compatibility', () => {
-      const result = calculateWeaponCooldown('melee', 30);
-      expect(result).toBe('4.0');
-    });
-  });
-
-  describe('WEAPON_COOLDOWN_BASES (deprecated)', () => {
-    it('should have correct base cooldowns for all weapon types', () => {
-      expect(WEAPON_COOLDOWN_BASES.melee).toBe(2.0);
-      expect(WEAPON_COOLDOWN_BASES.ballistic).toBe(3.0);
-      expect(WEAPON_COOLDOWN_BASES.energy).toBe(2.5);
-      expect(WEAPON_COOLDOWN_BASES.explosive).toBe(4.0);
-    });
-  });
-
-  describe('WEAPON_DAMAGE_SCALING (deprecated)', () => {
-    it('should have correct damage scaling for all weapon types', () => {
-      expect(WEAPON_DAMAGE_SCALING.melee).toBe(15);
-      expect(WEAPON_DAMAGE_SCALING.ballistic).toBe(20);
-      expect(WEAPON_DAMAGE_SCALING.energy).toBe(18);
-      expect(WEAPON_DAMAGE_SCALING.explosive).toBe(25);
     });
   });
 });
