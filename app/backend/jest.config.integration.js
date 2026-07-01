@@ -1,14 +1,31 @@
 // Integration tests: everything that needs a real database or supertest
 // Runs with limited parallelism to avoid DB conflicts
+//
+// Strategy: match all test files, then exclude:
+// 1. Everything the unit config runs (derived from its testRegex)
+// 2. Heavy tests (run separately with jest.config.heavy.js)
+// 3. Files the unit config excludes from src/__tests__/ are kept here (they need DB)
 const base = require('./jest.config');
-
-// Dynamically derive unit test patterns from the unit config's testRegex
-// so we never accidentally run a unit test sequentially here.
 const unitConfig = require('./jest.config.unit.js');
-const unitPatterns = unitConfig.testRegex
-  .slice(1, -2) // strip leading '(' and trailing ')$'
-  .split('|')
-  .map((p) => `/${p}$`);
+
+// Build exclusion patterns from unit config's testRegex (array or string)
+const unitRegex = Array.isArray(unitConfig.testRegex)
+  ? unitConfig.testRegex
+  : [unitConfig.testRegex];
+
+// The unit config excludes certain src/__tests__/ files via testPathIgnorePatterns.
+// Those files match the broad 'src/.+/__tests__/.+\\.test\\.ts$' regex but are
+// NOT run by the unit runner — they belong here in integration.
+// So we exclude the broad src pattern, then DON'T exclude the specific files.
+const unitSrcExclusions = (unitConfig.testPathIgnorePatterns || [])
+  .filter((p) => p.startsWith('src/'));
+
+// Exclude unit patterns, but replace the broad src/__tests__ regex with individual
+// patterns for the files that ARE run by the unit config (i.e., not in its exclusion list).
+// Simpler: exclude all unit regex patterns EXCEPT 'src/.+/__tests__/.+\\.test\\.ts$',
+// then add per-file exclusions for the 49 pure src/__tests__ files.
+// Simplest: don't exclude the src pattern at all — just exclude via the file list below.
+const unitPatternsWithoutSrc = unitRegex.filter((r) => !r.includes('__tests__') || r.startsWith('tests/'));
 
 // Heavy integration tests to exclude (run separately with jest.config.heavy.js)
 const heavyTestPatterns = [
@@ -28,11 +45,65 @@ const heavyTestPatterns = [
   '/leagueInstanceService\\.test\\.ts$',                    // DB-heavy league instance
 ];
 
+// Pure src/__tests__/ files that the unit config runs (exclude from integration)
+const pureSrcTestPatterns = [
+  '/src/__tests__/guide/guide-service\\.property\\.test\\.ts$',
+  '/src/__tests__/guide/guide-service\\.test\\.ts$',
+  '/src/__tests__/guide/markdown-parser\\.test\\.ts$',
+  '/src/middleware/__tests__/authenticateToken\\.property\\.test\\.ts$',
+  '/src/routes/__tests__/achievements\\.test\\.ts$',
+  '/src/routes/__tests__/leagueHistoryPublic\\.test\\.ts$',
+  '/src/services/achievement/__tests__/achievementConfig\\.test\\.ts$',
+  '/src/services/achievement/__tests__/achievementService\\.property\\.test\\.ts$',
+  '/src/services/admin/__tests__/adminAuditLogService\\.test\\.ts$',
+  '/src/services/analytics/__tests__/byeRobotFabrication\\.property\\.test\\.ts$',
+  '/src/services/changelog/__tests__/changelogImageService\\.property\\.test\\.ts$',
+  '/src/services/changelog/__tests__/changelogImageService\\.test\\.ts$',
+  '/src/services/economy/__tests__/unifiedFacilityROI\\.bugcondition\\.property\\.test\\.ts$',
+  '/src/services/economy/__tests__/unifiedFacilityROI\\.integration\\.test\\.ts$',
+  '/src/services/economy/__tests__/unifiedFacilityROI\\.preservation\\.property\\.test\\.ts$',
+  '/src/services/financial/__tests__/financial-ledger\\.property\\.test\\.ts$',
+  '/src/services/financial/__tests__/financialService\\.test\\.ts$',
+  '/src/services/koth/__tests__/kothEligibility\\.property\\.test\\.ts$',
+  '/src/services/koth/__tests__/kothLPBanding\\.property\\.test\\.ts$',
+  '/src/services/koth/__tests__/kothPersistence\\.property\\.test\\.ts$',
+  '/src/services/leaderboard/__tests__/leaderboard-cache\\.property\\.test\\.ts$',
+  '/src/services/leaderboard/__tests__/leaderboardService\\.test\\.ts$',
+  '/src/services/league/__tests__/leagueHistoryEnrichment\\.test\\.ts$',
+  '/src/services/match/__tests__/matchHistoryService\\.test\\.ts$',
+  '/src/services/matchmaking/__tests__/r47Fallback\\.property\\.test\\.ts$',
+  '/src/services/matchmaking/__tests__/recentOpponentIsolation\\.property\\.test\\.ts$',
+  '/src/services/matchmaking/__tests__/scheduledForDefault\\.property\\.test\\.ts$',
+  '/src/services/moderation/__tests__/adminUploadsHandler\\.property\\.test\\.ts$',
+  '/src/services/moderation/__tests__/adminUploadsHandler\\.test\\.ts$',
+  '/src/services/moderation/__tests__/contentModerationService\\.property\\.test\\.ts$',
+  '/src/services/moderation/__tests__/fileStorageService\\.property\\.test\\.ts$',
+  '/src/services/moderation/__tests__/fileStorageService\\.test\\.ts$',
+  '/src/services/moderation/__tests__/fileValidationService\\.property\\.test\\.ts$',
+  '/src/services/moderation/__tests__/fileValidationService\\.test\\.ts$',
+  '/src/services/moderation/__tests__/imageProcessingService\\.property\\.test\\.ts$',
+  '/src/services/moderation/__tests__/imageProcessingService\\.test\\.ts$',
+  '/src/services/moderation/__tests__/imageUploadHandlers\\.property\\.test\\.ts$',
+  '/src/services/moderation/__tests__/imageUploadHandlers\\.test\\.ts$',
+  '/src/services/moderation/__tests__/orphanCleanupJob\\.property\\.test\\.ts$',
+  '/src/services/moderation/__tests__/orphanCleanupJob\\.test\\.ts$',
+  '/src/services/moderation/__tests__/pendingUploadCache\\.property\\.test\\.ts$',
+  '/src/services/moderation/__tests__/pendingUploadCache\\.test\\.ts$',
+  '/src/services/monitoring/__tests__/dailyHealthReport\\.test\\.ts$',
+  '/src/services/scheduling/__tests__/schedulingService\\.test\\.ts$',
+  '/src/utils/__tests__/buildUserFilter\\.property\\.test\\.ts$',
+  '/src/utils/__tests__/buildUserFilter\\.test\\.ts$',
+  '/src/utils/__tests__/monitoringWebhook\\.test\\.ts$',
+  '/src/utils/__tests__/startupSelfTest\\.test\\.ts$',
+  '/src/utils/__tests__/systemHealth\\.test\\.ts$',
+];
+
 module.exports = {
   ...base,
   testPathIgnorePatterns: [
     '/node_modules/',
-    ...unitPatterns,
+    ...unitPatternsWithoutSrc,
+    ...pureSrcTestPatterns,
     ...heavyTestPatterns,
   ],
   maxWorkers: 1,

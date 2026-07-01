@@ -448,9 +448,10 @@ async function formatUnifiedMatches(
 
     const isRobotMatch = p1?.participantType === 'robot';
     const isKoth = match.matchType === 'koth';
+    const isGrandMelee = match.matchType === 'grand_melee';
 
-    if (isKoth) {
-      // KotH: FFA — resolve participant robots for the card
+    if (isKoth || isGrandMelee) {
+      // FFA modes (KotH, Grand Melee): resolve participant robots for the card
       const robotIds = match.participants.map(p => p.participantId);
       const robots = await prisma.robot.findMany({
         where: { id: { in: robotIds } },

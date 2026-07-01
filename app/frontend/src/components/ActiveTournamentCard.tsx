@@ -10,6 +10,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../utils/api';
+import { getMyTeamBattles } from '../utils/teamBattleApi';
 import { useAuth } from '../contexts/AuthContext';
 import { createLogger } from '../utils/logger';
 
@@ -72,19 +73,43 @@ function ActiveTournamentCard() {
         return;
       }
 
-      // Fetch user's robot/team IDs
+      // Fetch user's robots
       const userRobots = await api.get<Array<{ id: number; name: string }>>('/api/robots');
 
       const userRobotIds = new Set(userRobots.map(r => r.id));
       const userRobotNames = new Map(userRobots.map(r => [r.id, r.name]));
 
-      // Build a combined name map from API response + user robots
-      // Keys from API are namespaced as "robot:<id>" or "team:<id>" to avoid collisions
-      const allRobotNamesMap = new Map(userRobotNames);
+      // Fetch user's teams (for team tournaments)
+      const hasTeamTournaments = activeTournaments.some(
+        t => t.participantType === 'team_2v2' || t.participantType === 'team_3v3'
+      );
+      let userTeamIds = new Set<number>();
+      let userTeamNames = new Map<number, string>();
+      if (hasTeamTournaments) {
+        try {
+          const userTeams = await getMyTeamBattles();
+          userTeamIds = new Set(userTeams.map(t => t.id));
+          userTeamNames = new Map(userTeams.map(t => [t.id, t.teamName]));
+        } catch (e) {
+          log.warn('Failed to fetch user teams for tournament card', { e });
+        }
+      }
+
+      // Build participant name lookup maps per type to avoid ID collisions between robots and teams
+      // For opponent name resolution, we need a type-aware approach
+      const robotNamesMap = new Map<number, string>(userRobotNames);
+      const teamNamesMap = new Map<number, string>(userTeamNames);
+
+      // Add API-provided names to the correct type map
       for (const [key, name] of Object.entries(participantNamesFromApi)) {
-        const id = Number(key.split(':')[1]);
-        if (!isNaN(id) && !allRobotNamesMap.has(id)) {
-          allRobotNamesMap.set(id, name);
+        const parts = key.split(':');
+        const type = parts[0]; // 'robot' or 'team'
+        const id = Number(parts[1]);
+        if (isNaN(id)) continue;
+        if (type === 'robot' && !robotNamesMap.has(id)) {
+          robotNamesMap.set(id, name);
+        } else if (type === 'team' && !teamNamesMap.has(id)) {
+          teamNamesMap.set(id, name);
         }
       }
 
@@ -105,10 +130,14 @@ function ActiveTournamentCard() {
           if (match.participant2Id) allParticipantIds.add(match.participant2Id);
         }
 
-        // Filter to my participants
-        const myParticipantIds = [...allParticipantIds].filter(id => userRobotIds.has(id));
+        // Filter to my participants (robot IDs for robot tournaments, team IDs for team tournaments)
+        const isTeamTournament = tournament.participantType === 'team_2v2' || tournament.participantType === 'team_3v3';
+        const myOwnedIds = isTeamTournament ? userTeamIds : userRobotIds;
+        const myNameMap = isTeamTournament ? teamNamesMap : robotNamesMap;
+        const participantNamesForType = isTeamTournament ? teamNamesMap : robotNamesMap;
+        const myParticipantIds = [...allParticipantIds].filter(id => myOwnedIds.has(id));
 
-        // Only show this tournament if at least one of my robots is registered
+        // Only show this tournament if at least one of my robots/teams is registered
         if (myParticipantIds.length === 0) continue;
 
         // Determine eliminated participants (lost a match and didn't advance)
@@ -123,7 +152,7 @@ function ActiveTournamentCard() {
         const myParticipantIdSet = new Set(myParticipantIds);
 
         for (const participantId of myParticipantIds) {
-          const name = userRobotNames.get(participantId) ?? `#${participantId}`;
+          const name = myNameMap.get(participantId) ?? `#${participantId}`;
 
           if (eliminatedIds.has(participantId)) {
             participants.push({ id: participantId, name, status: 'eliminated' });
@@ -144,7 +173,7 @@ function ActiveTournamentCard() {
               participants.push({ id: participantId, name, status: 'bye', nextOpponent: 'Bye' });
             } else {
               // Resolve opponent name
-              const opponentName = allRobotNamesMap.get(opponentId) ?? `Robot #${opponentId}`;
+              const opponentName = participantNamesForType.get(opponentId) ?? (isTeamTournament ? `Team #${opponentId}` : `Robot #${opponentId}`);
               participants.push({ id: participantId, name, status: 'active', nextOpponent: opponentName });
             }
           } else {
