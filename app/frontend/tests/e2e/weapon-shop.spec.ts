@@ -21,7 +21,8 @@ async function navigateToWeaponShop(page: import('@playwright/test').Page) {
     // If the error state is showing, click Retry to re-fetch data
     if (await retryButton.isVisible({ timeout: 500 }).catch(() => false)) {
       await retryButton.click();
-      await page.waitForLoadState('networkidle');
+      // Wait for content to re-render after retry
+      await page.waitForTimeout(2000);
     }
   }
 
@@ -64,9 +65,9 @@ test.describe('Weapon Shop Page', () => {
     });
 
     test('should show storage capacity with current/max display', async ({ page }) => {
-      // Wait for weapon data to load before checking storage capacity
-      await page.waitForLoadState('networkidle');
-      // Storage capacity shows "X / Y" format
+      // Storage capacity section loads with weapon data — wait for the heading first
+      await expect(page.getByRole('heading', { name: 'Storage Capacity' })).toBeVisible({ timeout: 10000 });
+      // Storage capacity shows "X / Y" format (e.g., "3 / 10")
       await expect(page.getByText(/\d+ \/ \d+/)).toBeVisible({ timeout: 15000 });
     });
   });
@@ -187,7 +188,7 @@ test.describe('Weapon Shop Page', () => {
 
       // Reload the page (simpler than re-navigating, avoids auth race conditions)
       await page.reload();
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('load');
 
       // Verify table view is still active after reload
       await expect(page.locator('table')).toBeVisible({ timeout: 10000 });

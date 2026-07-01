@@ -15,7 +15,7 @@ export {
 // Types
 export interface ScheduledMatch {
   id: number | string; // Can be number for league or "tournament-X" string for tournaments or "tag-team-X" for tag teams
-  matchType?: 'league_1v1' | 'tournament_1v1' | 'tag_team' | 'koth' | 'league_2v2' | 'league_3v3' | 'tournament_2v2' | 'tournament_3v3';
+  matchType?: 'league_1v1' | 'tournament_1v1' | 'tag_team' | 'koth' | 'grand_melee' | 'league_2v2' | 'league_3v3' | 'tournament_2v2' | 'tournament_3v3';
   tournamentId?: number;
   tournamentName?: string;
   tournamentRound?: number;

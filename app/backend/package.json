@@ -17,6 +17,7 @@
     "db:reset": "prisma migrate reset --force && prisma db seed",
     "test": "jest --config jest.config.unit.js --forceExit; jest --config jest.config.integration.js --forceExit",
     "test:unit": "jest --config jest.config.unit.js --forceExit",
+    "test:unit:coverage": "jest --config jest.config.unit.js --forceExit --coverage",
     "test:integration": "jest --config jest.config.integration.js --forceExit",
     "test:heavy": "jest --config jest.config.heavy.js --forceExit",
     "test:all": "pnpm run test && pnpm run test:heavy",

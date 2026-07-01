@@ -1,5 +1,6 @@
 import prisma from '../../lib/prisma';
 import type { Prisma } from '../../../generated/prisma';
+import { StandingsMode } from '../../../generated/prisma';
 import { BattleError, BattleErrorCode } from '../../errors';
 import { mapRobotAttributes } from './adminStatsService';
 
@@ -368,8 +369,8 @@ export async function getAdminBattleDetail(battleId: number) {
     if (team1) {
       // Read league from standings
       const [team1Standing, team2Standing] = await Promise.all([
-        prisma.standing.findFirst({ where: { entityType: 'team', entityId: team1.id, mode: 'tag_team' as any }, select: { tier: true } }),
-        team2 ? prisma.standing.findFirst({ where: { entityType: 'team', entityId: team2.id, mode: 'tag_team' as any }, select: { tier: true } }) : null,
+        prisma.standing.findFirst({ where: { entityType: 'team', entityId: team1.id, mode: StandingsMode.tag_team }, select: { tier: true } }),
+        team2 ? prisma.standing.findFirst({ where: { entityType: 'team', entityId: team2.id, mode: StandingsMode.tag_team }, select: { tier: true } }) : null,
       ]);
 
       tagTeamData = {

@@ -38,7 +38,6 @@ test.describe('Onboarding Tutorial Flow', () => {
     await page.getByRole('button', { name: /Create Robot$/i }).click();
 
     // Wait for the robot creation API call to complete before checking step 2
-    await page.waitForLoadState('networkidle');
     await expect(page.getByText('Step 2 of 5', { exact: true })).toBeVisible({ timeout: 30000 });
 
     // Step 2: Skip facility investment
@@ -119,11 +118,39 @@ test.describe('Onboarding Tutorial Flow', () => {
     // --- Step 4: Attribute Upgrades ---
     await expect(page.getByText('Step 4 of 5', { exact: true })).toBeVisible({ timeout: 15000 });
     // Click "Skip — I'll upgrade later" to proceed (not the "Skip Tutorial" header button)
-    await page.getByRole('button', { name: /I'll upgrade later/i }).click();
+    const skipUpgradesButton = page.getByRole('button', { name: /I'll upgrade later/i });
+    await skipUpgradesButton.waitFor({ state: 'visible', timeout: 15000 });
+    await skipUpgradesButton.click();
 
-    // --- Step 5: Completion ---
-    await expect(page.getByText('Step 5 of 5', { exact: true })).toBeVisible({ timeout: 15000 });
-    await page.getByRole('button', { name: /Complete Tutorial/i }).click();
+    // --- Step 5: Completion (subscription picker → congratulations) ---
+    await expect(page.getByText('Step 5 of 5', { exact: true })).toBeVisible({ timeout: 20000 });
+
+    // Step 5 has two phases: subscription picker (select events + confirm) then congratulations.
+    // If the API fetch fails, it skips directly to congratulations.
+    const completeTutorialButton = page.getByRole('button', { name: /Complete Tutorial/i });
+    const subscriptionHeading = page.getByText('Choose Your Battle Events');
+
+    // Wait for either the subscription picker or the complete button to appear
+    await Promise.race([
+      subscriptionHeading.waitFor({ state: 'visible', timeout: 20000 }).catch(() => {}),
+      completeTutorialButton.waitFor({ state: 'visible', timeout: 20000 }).catch(() => {}),
+    ]);
+
+    // If subscription picker is showing, interact with it
+    if (await subscriptionHeading.isVisible().catch(() => false)) {
+      // Events are pre-selected by default (league_1v1, tournament_1v1, koth).
+      // Just click the confirm button to proceed.
+      const confirmSubs = page.getByRole('button', { name: /Confirm.*Subscription/i });
+      await confirmSubs.waitFor({ state: 'visible', timeout: 15000 });
+      await confirmSubs.click();
+
+      // Wait for subscription API calls to complete and phase to transition
+      await page.waitForTimeout(2000);
+    }
+
+    // Now the "Complete Tutorial" button should be visible
+    await completeTutorialButton.waitFor({ state: 'visible', timeout: 20000 });
+    await completeTutorialButton.click();
 
     await expect(page).toHaveURL(/\/(guide|dashboard)/, { timeout: 15000 });
   });

@@ -79,7 +79,8 @@ export async function registerNewUser(
 
   // Wait for redirect to /onboarding or /dashboard
   // If registration fails, the page stays on /login with an error message
-  await page.waitForURL(/\/(onboarding|dashboard)/, { timeout: 30000 });
+  // CI note: bcrypt hashing + DB insert can take >30s under resource pressure
+  await page.waitForURL(/\/(onboarding|dashboard)/, { timeout: 60000 });
 
   return { username, email, password, stableName };
 }

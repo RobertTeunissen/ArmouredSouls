@@ -11,7 +11,8 @@ test.describe('Dashboard Page', () => {
   test.beforeEach(async ({ page }) => {
     // Auth state already loaded — go straight to dashboard
     await page.goto('/dashboard');
-    await page.waitForLoadState('networkidle');
+    // Wait for main content to render instead of networkidle
+    await page.getByRole('heading', { name: 'Command Center' }).waitFor({ state: 'visible', timeout: 15000 });
   });
 
   test('should display dashboard with user profile', async ({ page }) => {

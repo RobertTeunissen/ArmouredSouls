@@ -894,8 +894,56 @@ export async function upsertRobot(data: Record<string, unknown>) {
     }
   }
 
-  // Strip legacy league fields that were moved to Standing table (Spec #40)
-  const { currentLeague, leagueId, leaguePoints, ...robotData } = data;
+  // Build robot creation payload with only known schema fields.
+  // This prevents PrismaClientValidationError when callers pass legacy fields
+  // that have since been removed from the Robot model.
+  const robotData = {
+    userId: data.userId as number,
+    name: data.name as string,
+    frameId: (data.frameId as number) ?? 1,
+    ...(data.paintJob != null && { paintJob: data.paintJob as string }),
+    // 23 core attributes
+    ...(data.combatPower != null && { combatPower: data.combatPower }),
+    ...(data.targetingSystems != null && { targetingSystems: data.targetingSystems }),
+    ...(data.criticalSystems != null && { criticalSystems: data.criticalSystems }),
+    ...(data.penetration != null && { penetration: data.penetration }),
+    ...(data.weaponControl != null && { weaponControl: data.weaponControl }),
+    ...(data.attackSpeed != null && { attackSpeed: data.attackSpeed }),
+    ...(data.armorPlating != null && { armorPlating: data.armorPlating }),
+    ...(data.shieldCapacity != null && { shieldCapacity: data.shieldCapacity }),
+    ...(data.evasionThrusters != null && { evasionThrusters: data.evasionThrusters }),
+    ...(data.damageDampeners != null && { damageDampeners: data.damageDampeners }),
+    ...(data.counterProtocols != null && { counterProtocols: data.counterProtocols }),
+    ...(data.hullIntegrity != null && { hullIntegrity: data.hullIntegrity }),
+    ...(data.servoMotors != null && { servoMotors: data.servoMotors }),
+    ...(data.gyroStabilizers != null && { gyroStabilizers: data.gyroStabilizers }),
+    ...(data.hydraulicSystems != null && { hydraulicSystems: data.hydraulicSystems }),
+    ...(data.powerCore != null && { powerCore: data.powerCore }),
+    ...(data.combatAlgorithms != null && { combatAlgorithms: data.combatAlgorithms }),
+    ...(data.threatAnalysis != null && { threatAnalysis: data.threatAnalysis }),
+    ...(data.adaptiveAI != null && { adaptiveAI: data.adaptiveAI }),
+    ...(data.logicCores != null && { logicCores: data.logicCores }),
+    ...(data.syncProtocols != null && { syncProtocols: data.syncProtocols }),
+    ...(data.supportSystems != null && { supportSystems: data.supportSystems }),
+    ...(data.formationTactics != null && { formationTactics: data.formationTactics }),
+    // Combat state
+    currentHP: data.currentHP as number,
+    maxHP: data.maxHP as number,
+    currentShield: data.currentShield as number,
+    maxShield: data.maxShield as number,
+    // Performance
+    ...(data.elo != null && { elo: data.elo as number }),
+    // Config
+    ...(data.loadoutType != null && { loadoutType: data.loadoutType as string }),
+    ...(data.stance != null && { stance: data.stance as string }),
+    ...(data.battleReadiness != null && { battleReadiness: data.battleReadiness as number }),
+    ...(data.yieldThreshold != null && { yieldThreshold: data.yieldThreshold as number }),
+    // Equipment
+    ...(data.mainWeaponId != null && { mainWeaponId: data.mainWeaponId as number }),
+    ...(data.offhandWeaponId != null && { offhandWeaponId: data.offhandWeaponId as number }),
+    // Appearance
+    ...(data.imageUrl != null && { imageUrl: data.imageUrl as string }),
+  };
 
   const robot = await prisma.robot.create({ data: robotData as any });
 
@@ -1064,6 +1112,7 @@ async function seedWimpBotUsers(weapons: { id: number; name: string }[]) {
         username,
         passwordHash: testHashedPassword,
         currency: 100000,
+        hasCompletedOnboarding: true,
         stableName,
       });
 

@@ -1,5 +1,6 @@
 import prisma from '../../lib/prisma';
 import type { Prisma } from '../../../generated/prisma';
+import { MatchType } from '../../../generated/prisma';
 import { buildUserFilter } from '../../utils/buildUserFilter';
 
 const BANKRUPTCY_RISK_THRESHOLD = 10000; // Credits below which a user is considered at risk
@@ -237,14 +238,14 @@ export async function getSystemStats(userFilter: Prisma.UserWhereInput = {}) {
     kothMatchesScheduled,
     kothMatchesCompleted,
   ] = await Promise.all([
-    prisma.scheduledMatch.count({ where: { matchType: 'league_1v1' as any, status: 'scheduled' } }),
-    prisma.scheduledMatch.count({ where: { matchType: 'league_1v1' as any, status: 'completed' } }),
+    prisma.scheduledMatch.count({ where: { matchType: MatchType.league_1v1, status: 'scheduled' } }),
+    prisma.scheduledMatch.count({ where: { matchType: MatchType.league_1v1, status: 'completed' } }),
     prisma.scheduledTournamentMatch.count({ where: { status: { in: ['pending', 'scheduled'] } } }),
     prisma.scheduledTournamentMatch.count({ where: { status: 'completed' } }),
-    prisma.scheduledMatch.count({ where: { matchType: 'tag_team' as any, status: 'scheduled' } }),
-    prisma.scheduledMatch.count({ where: { matchType: 'tag_team' as any, status: 'completed' } }),
-    prisma.scheduledMatch.count({ where: { matchType: 'koth' as any, status: 'scheduled' } }),
-    prisma.scheduledMatch.count({ where: { matchType: 'koth' as any, status: 'completed' } }),
+    prisma.scheduledMatch.count({ where: { matchType: MatchType.tag_team, status: 'scheduled' } }),
+    prisma.scheduledMatch.count({ where: { matchType: MatchType.tag_team, status: 'completed' } }),
+    prisma.scheduledMatch.count({ where: { matchType: MatchType.koth, status: 'scheduled' } }),
+    prisma.scheduledMatch.count({ where: { matchType: MatchType.koth, status: 'completed' } }),
   ]);
 
   // Total scheduled/completed across all types

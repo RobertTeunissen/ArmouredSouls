@@ -226,7 +226,10 @@ jobs:
         working-directory: ./app/backend
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_e2e?connection_limit=20
-        run: pnpm exec prisma db seed
+        run: |
+          # Type-check seed script before executing to catch schema mismatches early
+          pnpm exec tsc --noEmit --project tsconfig.seed.json
+          pnpm exec prisma db seed
 
       - name: Build backend
         working-directory: ./app/backend
@@ -241,6 +244,7 @@ jobs:
           PORT: 3001
           CORS_ORIGIN: http://localhost:4173
           SCHEDULER_ENABLED: false
+          BCRYPT_SALT_ROUNDS: 4
         run: |
           node dist/index.js &
           echo "Waiting for backend to start..."

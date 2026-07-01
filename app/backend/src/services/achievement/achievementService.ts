@@ -22,11 +22,8 @@ import { getCurrentCycle } from '../analytics/cycleAnalyticsService';
 
 import {
   type AchievementEvent,
-  type AchievementEventType,
   type UnlockedAchievement,
   type AchievementsResponse,
-  type AchievementWithProgress,
-  type PinnedAchievement,
   type StableAchievementData,
   type AchievementRarityCache,
   type IAchievementService,

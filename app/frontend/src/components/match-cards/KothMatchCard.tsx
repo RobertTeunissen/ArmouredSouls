@@ -7,8 +7,8 @@ interface KothMatchCardProps {
 }
 
 function KothMatchCard({ match, myUserId }: KothMatchCardProps) {
-  const modeConfig = getModeConfig('koth');
-  const kothLabel = 'King of the Hill';
+  const modeConfig = getModeConfig(match.matchType ?? 'koth');
+  const modeLabel = match.matchType === 'grand_melee' ? 'Grand Melee' : 'King of the Hill';
   const participants = match.kothParticipants || [];
   const participantCount = match.kothParticipantCount ?? participants.length;
 
@@ -39,7 +39,7 @@ function KothMatchCard({ match, myUserId }: KothMatchCardProps) {
               FFA
             </span>
             <div className="text-xs text-[#8b949e]">
-              {kothLabel}
+              {modeLabel}
             </div>
           </div>
           <div className="font-medium text-xs truncate">
@@ -76,7 +76,7 @@ function KothMatchCard({ match, myUserId }: KothMatchCardProps) {
             {formatDateTime(match.scheduledFor)}
           </div>
         </div>
-        <div className="text-xs text-[#8b949e] mb-1.5">{kothLabel}</div>
+        <div className="text-xs text-[#8b949e] mb-1.5">{modeLabel}</div>
         <div className="mb-1.5">
           {myRobot ? (
             <div className="text-sm font-medium">

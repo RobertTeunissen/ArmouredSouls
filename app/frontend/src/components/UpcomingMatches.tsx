@@ -143,8 +143,8 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
   }
 
   const renderMatchCard = (match: ScheduledMatch) => {
-    // KotH matches
-    if (match.matchType === 'koth') {
+    // FFA matches (KotH, Grand Melee)
+    if (match.matchType === 'koth' || match.matchType === 'grand_melee') {
       return <KothMatchCard key={match.id} match={match} myUserId={user?.id} />;
     }
 
