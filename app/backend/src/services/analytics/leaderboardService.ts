@@ -6,7 +6,7 @@
  */
 
 import prisma from '../../lib/prisma';
-import type { Prisma } from '../../../generated/prisma';
+import { Prisma } from '../../../generated/prisma';
 import { getPrestigeRank, getFameTier } from '../../utils/prestigeUtils';
 import { getPrestigeMultiplier } from '../../utils/economyCalculations';
 
@@ -100,61 +100,75 @@ export async function getFameLeaderboard(params: FameLeaderboardParams): Promise
   const { page, limit, league, minBattles } = params;
   const skip = (page - 1) * limit;
 
-  const where: Prisma.RobotWhereInput = {
-
-    totalBattles: { gte: minBattles },
-  };
-
-  if (league && league !== 'all') {
-    // Filter by league tier from standings (source of truth since Spec #40)
-    const leagueRobotIds = await prisma.standing.findMany({
-      where: { mode: 'league_1v1', tier: league, entityType: 'robot' },
-      select: { entityId: true },
-    });
-    where.id = { in: leagueRobotIds.map(s => s.entityId) };
+  // Single raw SQL query with JOIN replaces the previous 3-4 Prisma calls:
+  // 1) standings filter, 2) robot.count, 3) robot.findMany, 4) standings for tiers
+  interface FameRow {
+    id: number;
+    name: string;
+    fame: number;
+    elo: number;
+    total_battles: number;
+    wins: number;
+    losses: number;
+    draws: number;
+    kills: number;
+    damage_dealt_lifetime: number;
+    user_id: number;
+    username: string;
+    stable_name: string | null;
+    tier: string | null;
+    total_count: bigint;
   }
 
-  const totalRobots = await prisma.robot.count({ where });
+  const hasLeagueFilter = league && league !== 'all';
 
-  const robots = await prisma.robot.findMany({
-    where,
-    orderBy: { fame: 'desc' },
-    skip,
-    take: limit,
-    include: {
-      user: { select: { id: true, username: true, stableName: true } },
-    },
-  });
+  const rows = await prisma.$queryRaw<FameRow[]>`
+    SELECT
+      r.id,
+      r.name,
+      r.fame,
+      r.elo,
+      r."total_battles",
+      r.wins,
+      r.losses,
+      r.draws,
+      r.kills,
+      r."damage_dealt_lifetime",
+      r."user_id",
+      u.username,
+      u."stable_name",
+      s.tier,
+      COUNT(*) OVER() AS total_count
+    FROM "robots" r
+    JOIN "users" u ON u.id = r."user_id"
+    LEFT JOIN "standings" s ON s."entity_type" = 'robot' AND s."entity_id" = r.id AND s.mode = 'league_1v1'
+    WHERE r."total_battles" >= ${minBattles}
+      ${hasLeagueFilter ? Prisma.sql`AND s.tier = ${league}` : Prisma.empty}
+    ORDER BY r.fame DESC
+    LIMIT ${limit} OFFSET ${skip}
+  `;
 
-  // Fetch league tiers from standings for the response
-  const robotIds = robots.map(r => r.id);
-  const standings = robotIds.length > 0
-    ? await prisma.standing.findMany({
-        where: { entityType: 'robot', entityId: { in: robotIds }, mode: 'league_1v1' },
-        select: { entityId: true, tier: true },
-      })
-    : [];
-  const leagueMap = new Map(standings.map(s => [s.entityId, s.tier]));
+  const totalRobots = rows.length > 0 ? Number(rows[0].total_count) : 0;
 
-  const leaderboard: FameLeaderboardEntry[] = robots.map((robot, index) => ({
+  const leaderboard: FameLeaderboardEntry[] = rows.map((row, index) => ({
     rank: skip + index + 1,
-    robotId: robot.id,
-    robotName: robot.name,
-    fame: robot.fame,
-    fameTier: getFameTier(robot.fame),
-    stableId: robot.userId,
-    stableName: robot.user.stableName || robot.user.username,
-    currentLeague: leagueMap.get(robot.id) ?? 'bronze',
-    elo: robot.elo,
-    totalBattles: robot.totalBattles,
-    wins: robot.wins,
-    losses: robot.losses,
-    draws: robot.draws,
-    winRate: robot.totalBattles > 0
-      ? Number((robot.wins / robot.totalBattles * 100).toFixed(1))
+    robotId: row.id,
+    robotName: row.name,
+    fame: row.fame,
+    fameTier: getFameTier(row.fame),
+    stableId: row.user_id,
+    stableName: row.stable_name || row.username,
+    currentLeague: row.tier ?? 'bronze',
+    elo: row.elo,
+    totalBattles: row.total_battles,
+    wins: row.wins,
+    losses: row.losses,
+    draws: row.draws,
+    winRate: row.total_battles > 0
+      ? Number((row.wins / row.total_battles * 100).toFixed(1))
       : 0,
-    kills: robot.kills,
-    damageDealtLifetime: robot.damageDealtLifetime,
+    kills: row.kills,
+    damageDealtLifetime: row.damage_dealt_lifetime,
   }));
 
   return {
@@ -164,7 +178,7 @@ export async function getFameLeaderboard(params: FameLeaderboardParams): Promise
       limit,
       total: totalRobots,
       totalPages: Math.ceil(totalRobots / limit),
-      hasMore: skip + robots.length < totalRobots,
+      hasMore: skip + rows.length < totalRobots,
     },
     filters: { league: league || 'all', minBattles },
   };
@@ -186,61 +200,73 @@ export async function getLossesLeaderboard(params: LossesLeaderboardParams): Pro
   const { page, limit, league } = params;
   const skip = (page - 1) * limit;
 
-  const where: Prisma.RobotWhereInput = {
-
-  };
-
-  if (league && league !== 'all') {
-    // Filter by league tier from standings (source of truth since Spec #40)
-    const leagueRobotIds = await prisma.standing.findMany({
-      where: { mode: 'league_1v1', tier: league, entityType: 'robot' },
-      select: { entityId: true },
-    });
-    where.id = { in: leagueRobotIds.map(s => s.entityId) };
+  // Single raw SQL query with JOIN replaces the previous 3-4 Prisma calls
+  interface LossesRow {
+    id: number;
+    name: string;
+    kills: number;
+    elo: number;
+    total_battles: number;
+    wins: number;
+    losses: number;
+    draws: number;
+    damage_dealt_lifetime: number;
+    user_id: number;
+    username: string;
+    stable_name: string | null;
+    tier: string | null;
+    total_count: bigint;
   }
 
-  const totalRobots = await prisma.robot.count({ where });
+  const hasLeagueFilter = league && league !== 'all';
 
-  const robots = await prisma.robot.findMany({
-    where,
-    orderBy: { kills: 'desc' },
-    skip,
-    take: limit,
-    include: {
-      user: { select: { id: true, username: true, stableName: true } },
-    },
-  });
+  const rows = await prisma.$queryRaw<LossesRow[]>`
+    SELECT
+      r.id,
+      r.name,
+      r.kills,
+      r.elo,
+      r."total_battles",
+      r.wins,
+      r.losses,
+      r.draws,
+      r."damage_dealt_lifetime",
+      r."user_id",
+      u.username,
+      u."stable_name",
+      s.tier,
+      COUNT(*) OVER() AS total_count
+    FROM "robots" r
+    JOIN "users" u ON u.id = r."user_id"
+    LEFT JOIN "standings" s ON s."entity_type" = 'robot' AND s."entity_id" = r.id AND s.mode = 'league_1v1'
+    WHERE 1=1
+      ${hasLeagueFilter ? Prisma.sql`AND s.tier = ${league}` : Prisma.empty}
+    ORDER BY r.kills DESC
+    LIMIT ${limit} OFFSET ${skip}
+  `;
 
-  // Fetch league tiers from standings for the response
-  const robotIds = robots.map(r => r.id);
-  const standings = robotIds.length > 0
-    ? await prisma.standing.findMany({
-        where: { entityType: 'robot', entityId: { in: robotIds }, mode: 'league_1v1' },
-        select: { entityId: true, tier: true },
-      })
-    : [];
-  const leagueMap = new Map(standings.map(s => [s.entityId, s.tier]));
+  const totalRobots = rows.length > 0 ? Number(rows[0].total_count) : 0;
 
-  const leaderboard: LossesLeaderboardEntry[] = robots.map((robot, index) => ({
+  const leaderboard: LossesLeaderboardEntry[] = rows.map((row, index) => ({
     rank: skip + index + 1,
-    robotId: robot.id,
-    robotName: robot.name,
-    totalLosses: robot.kills,
-    stableId: robot.userId,
-    stableName: robot.user.stableName || robot.user.username,
-    currentLeague: leagueMap.get(robot.id) ?? 'bronze',
-    elo: robot.elo,
-    totalBattles: robot.totalBattles,
-    wins: robot.wins,
-    losses: robot.losses,
-    draws: robot.draws,
-    winRate: robot.totalBattles > 0
-      ? Number((robot.wins / robot.totalBattles * 100).toFixed(1))
+    robotId: row.id,
+    robotName: row.name,
+    totalLosses: row.kills,
+    stableId: row.user_id,
+    stableName: row.stable_name || row.username,
+    currentLeague: row.tier ?? 'bronze',
+    elo: row.elo,
+    totalBattles: row.total_battles,
+    wins: row.wins,
+    losses: row.losses,
+    draws: row.draws,
+    winRate: row.total_battles > 0
+      ? Number((row.wins / row.total_battles * 100).toFixed(1))
       : 0,
-    lossRatio: robot.losses > 0
-      ? Number((robot.kills / robot.losses).toFixed(2))
-      : robot.kills,
-    damageDealtLifetime: robot.damageDealtLifetime,
+    lossRatio: row.losses > 0
+      ? Number((row.kills / row.losses).toFixed(2))
+      : row.kills,
+    damageDealtLifetime: row.damage_dealt_lifetime,
   }));
 
   return {
@@ -250,7 +276,7 @@ export async function getLossesLeaderboard(params: LossesLeaderboardParams): Pro
       limit,
       total: totalRobots,
       totalPages: Math.ceil(totalRobots / limit),
-      hasMore: skip + robots.length < totalRobots,
+      hasMore: skip + rows.length < totalRobots,
     },
     filters: { league: league || 'all' },
   };

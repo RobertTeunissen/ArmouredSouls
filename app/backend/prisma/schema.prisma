@@ -449,7 +449,6 @@ model AuditLog {
   metadata Json?
 
   @@unique([cycleNumber, sequenceNumber], name: "audit_logs_cycle_sequence")
-  @@index([cycleNumber])
   @@index([userId])
   @@index([robotId])
   @@index([battleId])

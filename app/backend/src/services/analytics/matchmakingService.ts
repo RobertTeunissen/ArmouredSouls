@@ -276,6 +276,9 @@ async function buildMatchmakingQueue(leagueId: string): Promise<Robot[]> {
   }
 
   // Load robots by those IDs
+  // Note: Full robot rows are needed here because MatchPair.robot flows to the
+  // battle orchestrator which reads all 23 attributes. A select-based approach
+  // would require a two-phase load (slim for matchmaking, full for execution).
   const robots = await prisma.robot.findMany({
     where: {
       id: { in: robotIdsInInstance },
@@ -310,13 +313,11 @@ async function buildMatchmakingQueue(leagueId: string): Promise<Robot[]> {
   }
 
   // Check if robots are already scheduled for a match (via unified scheduling table)
-  const alreadyScheduledIds = new Set<number>();
-  for (const r of subscribedRobots) {
-    const upcoming = await schedulingService.getUpcomingForRobot(r.id, [MatchType.league_1v1]);
-    if (upcoming.length > 0) {
-      alreadyScheduledIds.add(r.id);
-    }
-  }
+  const alreadyScheduledIds = await schedulingService.getAlreadyScheduledIds(
+    'robot',
+    subscribedRobots.map(r => r.id),
+    [MatchType.league_1v1],
+  );
   
   // Filter out already scheduled robots
   const availableRobots = subscribedRobots.filter(robot => !alreadyScheduledIds.has(robot.id));

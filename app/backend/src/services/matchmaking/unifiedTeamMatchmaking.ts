@@ -105,11 +105,11 @@ async function getEligibleTeams(
   }
 
   // Check already-scheduled via unified schedulingService
-  const alreadyScheduledIds = new Set<number>();
-  for (const team of readyTeams) {
-    const upcoming = await schedulingService.getUpcomingForTeam(team.id, [config.matchType]);
-    if (upcoming.length > 0) alreadyScheduledIds.add(team.id);
-  }
+  const alreadyScheduledIds = await schedulingService.getAlreadyScheduledIds(
+    'team',
+    readyTeams.map(t => t.id),
+    [config.matchType],
+  );
   const availableTeams = readyTeams.filter(t => !alreadyScheduledIds.has(t.id));
 
   // Subscription check — ALL members must have active subscription

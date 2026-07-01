@@ -101,13 +101,11 @@ export async function getEligibleRobots(tier: string, leagueInstanceId: string):
   }
 
   // Check if robots are already scheduled for a KotH match (via unified scheduling table)
-  const alreadyScheduledIds = new Set<number>();
-  for (const r of subscribedRobots) {
-    const upcoming = await schedulingService.getUpcomingForRobot(r.id, [MatchType.koth]);
-    if (upcoming.length > 0) {
-      alreadyScheduledIds.add(r.id);
-    }
-  }
+  const alreadyScheduledIds = await schedulingService.getAlreadyScheduledIds(
+    'robot',
+    subscribedRobots.map(r => r.id),
+    [MatchType.koth],
+  );
 
   // Filter out already scheduled robots
   const availableRobots = subscribedRobots.filter(robot => !alreadyScheduledIds.has(robot.id));

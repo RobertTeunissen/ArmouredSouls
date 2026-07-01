@@ -222,36 +222,46 @@ export function useRobotDetail() {
       const robotData = await fetchRobotById(parseInt(id!));
       setRobot(robotData as unknown as RobotDetail);
 
-      // Fetch league rank
-      try {
-        const leagueData = await api.get<{ data?: Array<{ id: number }> } | Array<{ id: number }>>(
+      // Fetch independent data in parallel — these don't depend on each other
+      const [leagueResult, weaponsResult, facilitiesResult, battlesResult] = await Promise.allSettled([
+        // League rank
+        api.get<{ data?: Array<{ id: number }> } | Array<{ id: number }>>(
           `/api/leagues/${robotData.currentLeague}/standings`,
           { params: { instance: robotData.leagueId } },
-        );
+        ),
+        // Weapon inventory
+        api.get<WeaponInventoryItem[]>('/api/weapon-inventory'),
+        // Facilities
+        api.get<{ facilities?: Facility[] } | Facility[]>('/api/facilities'),
+        // Recent battles
+        getMatchHistory(1, 10, undefined, parseInt(id!)),
+      ]);
+
+      // Process league rank
+      if (leagueResult.status === 'fulfilled') {
+        const leagueData = leagueResult.value;
         const standings = Array.isArray(leagueData) ? leagueData : (leagueData.data ?? []);
         const robotIndex = standings.findIndex((r: { id: number }) => r.id === parseInt(id!));
-
         if (robotIndex !== -1) {
           const rank = robotIndex + 1;
           const total = standings.length;
           const percentile = total > 0 ? ((total - rank) / total) * 100 : 0;
           setLeagueRank({ rank, total, percentile });
         }
-      } catch (leagueError) {
-        log.error('Failed to fetch league rank', { error: leagueError });
+      } else {
+        log.error('Failed to fetch league rank', { error: leagueResult.reason });
       }
 
-      // Fetch weapon inventory
-      try {
-        const weaponsData = await api.get<WeaponInventoryItem[]>('/api/weapon-inventory');
-        setWeapons(weaponsData);
-      } catch (err) {
-        log.error('Failed to fetch weapons', { err });
+      // Process weapon inventory
+      if (weaponsResult.status === 'fulfilled') {
+        setWeapons(weaponsResult.value);
+      } else {
+        log.error('Failed to fetch weapons', { err: weaponsResult.reason });
       }
 
-      // Fetch facilities
-      try {
-        const data = await api.get<{ facilities?: Facility[] } | Facility[]>('/api/facilities');
+      // Process facilities
+      if (facilitiesResult.status === 'fulfilled') {
+        const data = facilitiesResult.value;
         const facilities = Array.isArray(data) ? data : (data.facilities ?? []);
 
         const trainingFacility = facilities.find((f: Facility) => f.type === 'training_facility');
@@ -279,16 +289,15 @@ export function useRobotDetail() {
         } catch (err) {
           log.error('Failed to fetch robots count', { err });
         }
-      } catch (err) {
-        log.error('Failed to fetch facilities', { err });
+      } else {
+        log.error('Failed to fetch facilities', { err: facilitiesResult.reason });
       }
 
-      // Fetch recent battles
-      try {
-        const recentBattlesData = await getMatchHistory(1, 10, undefined, parseInt(id!));
-        setRecentBattles(recentBattlesData.data);
-      } catch (err) {
-        log.error('Failed to fetch recent battles', { err });
+      // Process recent battles
+      if (battlesResult.status === 'fulfilled') {
+        setRecentBattles(battlesResult.value.data);
+      } else {
+        log.error('Failed to fetch recent battles', { err: battlesResult.reason });
       }
 
       // Calculate battle readiness

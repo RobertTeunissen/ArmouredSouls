@@ -24,6 +24,7 @@ import {
   getUpcomingScheduledMatches,
   getUpcomingMatches,
   getPerformanceContext,
+  invalidateUserRobotsCache,
 } from '../services/robot/robotQueryService';
 import { getRobotRankings } from '../services/robot/robotRankingService';
 import { executeUpgradeTransaction } from '../services/robot/robotUpgradeService';
@@ -179,6 +180,9 @@ router.post('/', authenticateToken, validateRequest({ body: createRobotBodySchem
       } catch { return []; }
     })(),
   });
+
+  // Invalidate robot list cache after creation
+  invalidateUserRobotsCache(userId);
 });
 
 // Get a specific robot by ID
@@ -216,6 +220,7 @@ router.put('/:id/equip-main-weapon', authenticateToken, validateRequest({ params
   } catch { /* achievement failures don't block */ }
 
   res.json({ robot: finalRobot, message: 'Main weapon equipped successfully', achievementUnlocks });
+  invalidateUserRobotsCache(userId);
 });
 
 // Equip offhand weapon
@@ -437,6 +442,8 @@ router.post('/repair-all', authenticateToken, validateRequest({}), async (req: A
     newCurrency: result.newCurrency,
     message: `Successfully repaired ${result.repairedCount} robot(s) for ₡${result.finalCost.toLocaleString()}`,
   });
+
+  invalidateUserRobotsCache(userId);
 });
 
 // Get robot rankings (public — returns only aggregated category sums, percentiles, and ranks; no raw attributes)

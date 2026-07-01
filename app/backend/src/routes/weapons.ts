@@ -13,6 +13,7 @@ const weaponsCache = new TimedCache<unknown[]>(30 * 60 * 1000);
 router.get('/', authenticateToken, validateRequest({}), async (req: AuthRequest, res: Response) => {
     const cached = weaponsCache.get();
     if (cached) {
+      res.set('Cache-Control', 'public, max-age=1800');
       res.json(cached);
       return;
     }
@@ -22,6 +23,7 @@ router.get('/', authenticateToken, validateRequest({}), async (req: AuthRequest,
     });
 
     weaponsCache.set(weapons);
+    res.set('Cache-Control', 'public, max-age=1800');
     res.json(weapons);
 });
 

@@ -101,15 +101,11 @@ export async function getEligibleRobots(tier: string, leagueInstanceId: string):
   }
 
   // Check if robots are already scheduled for a Grand Melee match (via unified scheduling table)
-  const schedulingResults = await Promise.all(
-    subscribedRobots.map(r => schedulingService.getUpcomingForRobot(r.id, [MatchType.grand_melee]))
+  const alreadyScheduledIds = await schedulingService.getAlreadyScheduledIds(
+    'robot',
+    subscribedRobots.map(r => r.id),
+    [MatchType.grand_melee],
   );
-  const alreadyScheduledIds = new Set<number>();
-  subscribedRobots.forEach((r, i) => {
-    if (schedulingResults[i].length > 0) {
-      alreadyScheduledIds.add(r.id);
-    }
-  });
 
   // Filter out already scheduled robots
   const availableRobots = subscribedRobots.filter(robot => !alreadyScheduledIds.has(robot.id));

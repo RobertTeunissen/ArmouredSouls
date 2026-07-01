@@ -21,10 +21,16 @@ function createPrismaClient(): PrismaClient {
   // (e.g. tournament rounds with 2000+ matches doing ~15 DB ops each).
   // Configurable via DB_POOL_MAX env var for per-environment tuning.
   const poolMax = parseInt(process.env.DB_POOL_MAX || '20', 10);
+
+  // Statement timeout (ms): kills queries that exceed this duration to prevent
+  // pool starvation from runaway queries. Default 30s; configurable via DB_STATEMENT_TIMEOUT_MS.
+  const statementTimeoutMs = parseInt(process.env.DB_STATEMENT_TIMEOUT_MS || '30000', 10);
+
   const adapter = new PrismaPg({
     connectionString: databaseUrl,
     max: poolMax,
     idleTimeoutMillis: 30_000,
+    options: `-c statement_timeout=${statementTimeoutMs}`,
   });
   return new PrismaClient({
     adapter,
