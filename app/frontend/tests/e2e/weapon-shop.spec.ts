@@ -21,7 +21,8 @@ async function navigateToWeaponShop(page: import('@playwright/test').Page) {
     // If the error state is showing, click Retry to re-fetch data
     if (await retryButton.isVisible({ timeout: 500 }).catch(() => false)) {
       await retryButton.click();
-      await page.waitForLoadState('networkidle');
+      // Wait for content to re-render after retry
+      await page.waitForTimeout(2000);
     }
   }
 

@@ -30,5 +30,6 @@ export async function loginAndGoToDashboard(
     await page.waitForURL('**/dashboard', { timeout: 10000 });
   }
 
-  await page.waitForLoadState('networkidle');
+  // Wait for dashboard content to render instead of networkidle
+  await page.getByRole('heading', { name: 'Command Center' }).waitFor({ state: 'visible', timeout: 15000 });
 }

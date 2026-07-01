@@ -9,6 +9,7 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: 1, // Single worker to prevent parallel execution issues
+  timeout: 60000, // 60s per test (override with test.setTimeout for long journeys)
   reporter: [
     ['html', { open: 'never' }],
     ['list'],
@@ -18,6 +19,8 @@ export default defineConfig({
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
+    actionTimeout: 10000,
+    navigationTimeout: 30000,
   },
   projects: [
     // Setup project: logs in once and saves auth state

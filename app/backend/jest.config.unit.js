@@ -18,9 +18,6 @@ module.exports = {
     'tests/routes/admin\\.test\\.ts$',           // requires supertest + full app setup
     'tests/unit/practiceArenaService\\.test\\.ts$', // imports prisma directly
     'tests/unit/practiceArena\\.property\\.test\\.ts$', // imports prisma directly
-    'tests/arena/task7modules\\.property\\.test\\.ts$', // stale RobotCombatState type
-    'tests/arena/threatScoring\\.property\\.test\\.ts$', // stale RobotCombatState type
-    'tests/arena/movementAI\\.property\\.test\\.ts$', // stale RobotCombatState type
     'tests/guide/content-validation\\.test\\.ts$', // requires js-yaml 3 API (removed)
     'tests/middleware/errorHandler\\.test\\.ts$', // imports app with DB dependency
 
@@ -65,8 +62,19 @@ module.exports = {
     'tests/(eventRegistry|teamBattleRewardService|teamMatchmakingUtils|prestigeFeatures\\.integration|weaponRefinement)\\.test\\.ts$',
 
     // ── Route validation tests (schema-only, no DB) ──
-    'tests/(adminRouteValidation|analyticsRouteValidation|financesRouteValidation|leaderboardsRouteValidation|onboardingRouteValidation)\\.test\\.ts$',
+    'tests/(adminRouteValidation|analyticsRouteValidation|authRouteValidation|financesRouteValidation|leaderboardsRouteValidation|onboardingRouteValidation|robotsRouteValidation|subscriptionsRouteValidation|teamBattlesRouteValidation)\\.test\\.ts$',
   ],
   maxWorkers: '75%',
   testTimeout: 30000,
+  // Coverage thresholds — enforce 90% on services that already meet it,
+  // set an achievable global floor to prevent regressions.
+  coverageThreshold: {
+    'src/services/auth/': { lines: 90 },
+    'src/services/battle/combat-simulator/': { lines: 85 },
+    'src/services/financial/': { lines: 95 },
+    'src/services/scheduling/': { lines: 95 },
+    'src/services/standings/': { lines: 95 },
+    'src/services/leaderboard/': { lines: 90 },
+    'src/services/team-battle/': { lines: 90 },
+  },
 };
