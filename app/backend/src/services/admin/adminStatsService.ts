@@ -1,6 +1,6 @@
 import prisma from '../../lib/prisma';
 import type { Prisma } from '../../../generated/prisma';
-import { MatchType } from '../../../generated/prisma';
+import { MatchType, StandingsMode } from '../../../generated/prisma';
 import { buildUserFilter } from '../../utils/buildUserFilter';
 
 const BANKRUPTCY_RISK_THRESHOLD = 10000; // Credits below which a user is considered at risk
@@ -1305,7 +1305,7 @@ export async function getEconomyOverview(userFilter: Prisma.UserWhereInput = {})
 /**
  * Get league health metrics.
  */
-export async function getLeagueHealth(userFilter: Prisma.UserWhereInput = {}) {
+export async function getLeagueHealth(_userFilter: Prisma.UserWhereInput = {}) {
   const leagues = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'];
 
   // Use standings table for league health (source of truth)
@@ -1366,19 +1366,19 @@ export async function getTeamBattleLeagueHealth() {
   const REBALANCE_THRESHOLD = 10;
 
   async function getLeagueDataForSize(teamSize: 2 | 3) {
-    const mode = teamSize === 2 ? 'league_2v2' : 'league_3v3';
+    const mode: StandingsMode = teamSize === 2 ? StandingsMode.league_2v2 : StandingsMode.league_3v3;
 
     // Get team counts per tier from standings (source of truth)
     const teamsByLeague = await prisma.standing.groupBy({
       by: ['tier'],
-      where: { mode: mode as any, entityType: 'team' },
+      where: { mode, entityType: 'team' },
       _count: { id: true },
     });
 
     // Get instance details per tier from standings
     const instancesByLeague = await prisma.standing.groupBy({
       by: ['tier', 'leagueInstanceId'],
-      where: { mode: mode as any, entityType: 'team' },
+      where: { mode, entityType: 'team' },
       _count: { id: true },
     });
 
@@ -1399,7 +1399,7 @@ export async function getTeamBattleLeagueHealth() {
 
     // Get each team's tier from standings
     const teamStandings = await prisma.standing.findMany({
-      where: { mode: mode as any, entityType: 'team', entityId: { in: teamsWithMembers.map(t => t.id) } },
+      where: { mode, entityType: 'team', entityId: { in: teamsWithMembers.map(t => t.id) } },
       select: { entityId: true, tier: true },
     });
     const tierByTeamId = new Map(teamStandings.map(s => [s.entityId, s.tier]));
@@ -1478,14 +1478,14 @@ export async function getTagTeamLeagueHealth() {
   // Get team counts per tag team tier from standings (source of truth)
   const teamsByLeague = await prisma.standing.groupBy({
     by: ['tier'],
-    where: { mode: 'tag_team' as any, entityType: 'team' },
+    where: { mode: StandingsMode.tag_team, entityType: 'team' },
     _count: { id: true },
   });
 
   // Get instance details per tag team tier from standings
   const instancesByLeague = await prisma.standing.groupBy({
     by: ['tier', 'leagueInstanceId'],
-    where: { mode: 'tag_team' as any, entityType: 'team' },
+    where: { mode: StandingsMode.tag_team, entityType: 'team' },
     _count: { id: true },
   });
 
