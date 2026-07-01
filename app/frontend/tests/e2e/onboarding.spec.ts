@@ -139,16 +139,14 @@ test.describe('Onboarding Tutorial Flow', () => {
 
     // If subscription picker is showing, interact with it
     if (await subscriptionHeading.isVisible().catch(() => false)) {
-      // Click the first available event to select a subscription
-      const eventButtons = page.getByRole('button', { name: /^Select /i });
-      const firstEvent = eventButtons.first();
-      await firstEvent.waitFor({ state: 'visible', timeout: 10000 });
-      await firstEvent.click();
-
-      // Click the confirm button (text: "Confirm X Subscription(s)")
+      // Events are pre-selected by default (league_1v1, tournament_1v1, koth).
+      // Just click the confirm button to proceed.
       const confirmSubs = page.getByRole('button', { name: /Confirm.*Subscription/i });
-      await confirmSubs.waitFor({ state: 'visible', timeout: 10000 });
+      await confirmSubs.waitFor({ state: 'visible', timeout: 15000 });
       await confirmSubs.click();
+
+      // Wait for subscription API calls to complete and phase to transition
+      await page.waitForTimeout(2000);
     }
 
     // Now the "Complete Tutorial" button should be visible
