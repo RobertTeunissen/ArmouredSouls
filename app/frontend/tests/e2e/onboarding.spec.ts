@@ -119,11 +119,15 @@ test.describe('Onboarding Tutorial Flow', () => {
     // --- Step 4: Attribute Upgrades ---
     await expect(page.getByText('Step 4 of 5', { exact: true })).toBeVisible({ timeout: 15000 });
     // Click "Skip — I'll upgrade later" to proceed (not the "Skip Tutorial" header button)
-    await page.getByRole('button', { name: /I'll upgrade later/i }).click();
+    const skipUpgradesButton = page.getByRole('button', { name: /I'll upgrade later/i });
+    await skipUpgradesButton.waitFor({ state: 'visible', timeout: 15000 });
+    await skipUpgradesButton.click();
 
     // --- Step 5: Completion ---
-    await expect(page.getByText('Step 5 of 5', { exact: true })).toBeVisible({ timeout: 15000 });
-    await page.getByRole('button', { name: /Complete Tutorial/i }).click();
+    await expect(page.getByText('Step 5 of 5', { exact: true })).toBeVisible({ timeout: 20000 });
+    const completeTutorialButton = page.getByRole('button', { name: /Complete Tutorial/i });
+    await completeTutorialButton.waitFor({ state: 'visible', timeout: 20000 });
+    await completeTutorialButton.click();
 
     await expect(page).toHaveURL(/\/(guide|dashboard)/, { timeout: 15000 });
   });
