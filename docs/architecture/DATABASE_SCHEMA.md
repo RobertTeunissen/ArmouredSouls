@@ -35,7 +35,9 @@ This document defines the **complete database schema** for Armoured Souls, inclu
 - ✅ Tag Team system (tag teams, scheduled tag team matches, per-robot stats)
 - ✅ Audit log and cycle snapshot system for event sourcing and analytics
 
-**This schema represents the CURRENT implementation** as of April 2, 2026.
+**⚠️ Staleness Warning (July 2026):** This document predates several major models added after April 2026, including: `Standing`, `TeamBattle`, `TeamBattleMember`, `ScheduledTeamBattleMatch`, `BattleSummary`, `EventSubscription`, `LeagueHistoryEntry`, `Achievement`, `AchievementProgress`, `ChangelogEntry`, and `GrandMeleeStanding`. Refer to `app/backend/prisma/schema.prisma` for the canonical, up-to-date schema. The models documented below remain accurate for their respective tables.
+
+**This schema represents the implementation** as of April 2, 2026.
 
 ---
 

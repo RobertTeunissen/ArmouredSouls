@@ -266,7 +266,7 @@ The production scheduler (`cycleScheduler.ts`) fires 10 independent cron jobs da
 | 13:00 | KotH | `KOTH_SCHEDULE` | Live |
 | 14:00 | Team Battle 3v3 League | `TEAM_3V3_LEAGUE_SCHEDULE` | Live |
 | 15:00 | Team Battle 2v2 Tournament | `TEAM_2V2_TOURNAMENT_SCHEDULE` | Live |
-| 17:00 | Grand Melee | `GRAND_MELEE_SCHEDULE` | Reserved |
+| 17:00 | Grand Melee | `GRAND_MELEE_SCHEDULE` | Live |
 | 18:00 | Team Battle 3v3 Tournament | `TEAM_3V3_TOURNAMENT_SCHEDULE` | Live |
 | 00:00 | Settlement | `SETTLEMENT_SCHEDULE` | Live |
 | 00:30 | Daily Health Report | `DAILY_REPORT_SCHEDULE` | Live |
@@ -277,7 +277,7 @@ The production scheduler (`cycleScheduler.ts`) fires 10 independent cron jobs da
 
 **Team tournament handlers** (15:00 and 18:00): Execute team tournament rounds, advance brackets, and auto-create new tournaments when the previous one completes and ≥ 4 eligible teams exist. Each handler runs one round per cycle.
 
-**Reserved slots**: Stubs log a no-op message and return without error. Subsequent specs register real handlers into these slots without modifying `env.ts` or the slot map. Currently reserved: Grand Melee (17:00).
+**All slots are live.** No reserved/stub slots remain as of June 2026.
 
 All schedule env vars are overridable via `.env` for rollback or per-environment tuning.
 
