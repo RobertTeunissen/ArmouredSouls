@@ -123,8 +123,27 @@ test.describe('Onboarding Tutorial Flow', () => {
     await skipUpgradesButton.waitFor({ state: 'visible', timeout: 15000 });
     await skipUpgradesButton.click();
 
-    // --- Step 5: Completion ---
+    // --- Step 5: Completion (subscription picker → congratulations) ---
     await expect(page.getByText('Step 5 of 5', { exact: true })).toBeVisible({ timeout: 20000 });
+
+    // Step 5 phase 1: Subscription picker — select at least one event and confirm
+    const subscriptionHeading = page.getByText('Choose Your Battle Events');
+    const isSubscriptionPhase = await subscriptionHeading.isVisible({ timeout: 10000 }).catch(() => false);
+
+    if (isSubscriptionPhase) {
+      // Click the first available event checkbox/button to select a subscription
+      const eventButtons = page.getByRole('button').filter({ hasText: /1v1|KotH|Melee/i });
+      const firstEvent = eventButtons.first();
+      await firstEvent.waitFor({ state: 'visible', timeout: 10000 });
+      await firstEvent.click();
+
+      // Click the confirm button (text: "Confirm X Subscription(s)")
+      const confirmSubs = page.getByRole('button', { name: /Confirm.*Subscription/i });
+      await confirmSubs.waitFor({ state: 'visible', timeout: 10000 });
+      await confirmSubs.click();
+    }
+
+    // Step 5 phase 2: Congratulations — Complete Tutorial button
     const completeTutorialButton = page.getByRole('button', { name: /Complete Tutorial/i });
     await completeTutorialButton.waitFor({ state: 'visible', timeout: 20000 });
     await completeTutorialButton.click();
