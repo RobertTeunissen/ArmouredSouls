@@ -156,6 +156,11 @@ jest.mock('../../src/services/team-battle/teamBattleAdapter', () => ({
   rebalanceTeamBattleLeagues: (...args: unknown[]) => mockRebalanceTeamBattleLeagues(...args),
 }));
 
+jest.mock('../../src/services/economy/repairService', () => ({
+  __esModule: true,
+  repairAllRobots: jest.fn().mockResolvedValue({ robotsRepaired: 0, totalBaseCost: 0, totalFinalCost: 0, costsDeducted: false, repairs: [] }),
+}));
+
 jest.mock('../../src/utils/economyCalculations', () => ({
   __esModule: true,
   processAllDailyFinances: jest.fn(),
@@ -165,6 +170,7 @@ jest.mock('../../src/services/cycle/cycleScheduler', () => ({
   __esModule: true,
   getSchedulerState: jest.fn().mockReturnValue({ active: false, runningJob: null, queue: [], jobs: [] }),
   runJob: jest.fn(),
+  triggerJob: jest.fn().mockResolvedValue(undefined),
 }));
 
 jest.mock('../../src/services/practice-arena/practiceArenaMetrics', () => ({
@@ -255,9 +261,10 @@ describe('Admin reserved-slot trigger endpoints (R6.3, R8.2, R8.3)', () => {
       const res = await request(app).post(path).send({});
 
       expect(res.status).toBe(200);
-      expect(res.body).toEqual({
-        message: 'reserved slot, no handler implemented',
-        event,
+      expect(res.body).toMatchObject({
+        success: true,
+        deprecated: true,
+        message: 'Grand Melee cycle triggered successfully',
       });
     });
 
@@ -266,9 +273,9 @@ describe('Admin reserved-slot trigger endpoints (R6.3, R8.2, R8.3)', () => {
 
       expect(mockRecordAction).toHaveBeenCalledWith(
         1, // userId
-        'reserved_slot_trigger',
+        'grand_melee_trigger',
         'success',
-        expect.objectContaining({ event, outcome: 'no-op' }),
+        expect.objectContaining({ message: 'Grand Melee cycle triggered (deprecated endpoint)' }),
       );
     });
 
@@ -424,7 +431,8 @@ describe('Admin team battle endpoints (R14.3, R14.4, R14.5)', () => {
       expect(res.body.matchesCreated).toBe(5);
       expect(res.body.teamSize).toBe(2);
       expect(res.body.timestamp).toBeDefined();
-      expect(mockRunTeamBattleMatchmaking).toHaveBeenCalledWith(2);
+      expect(res.body.scheduledFor).toBeDefined();
+      expect(mockRunTeamBattleMatchmaking).toHaveBeenCalledWith(2, expect.any(Date));
     });
 
     test('should invoke matchmaking for teamSize 3 and return success', async () => {
@@ -438,7 +446,7 @@ describe('Admin team battle endpoints (R14.3, R14.4, R14.5)', () => {
       expect(res.body.success).toBe(true);
       expect(res.body.matchesCreated).toBe(3);
       expect(res.body.teamSize).toBe(3);
-      expect(mockRunTeamBattleMatchmaking).toHaveBeenCalledWith(3);
+      expect(mockRunTeamBattleMatchmaking).toHaveBeenCalledWith(3, expect.any(Date));
     });
 
     test('should emit audit log on success', async () => {
@@ -450,9 +458,9 @@ describe('Admin team battle endpoints (R14.3, R14.4, R14.5)', () => {
 
       expect(mockRecordAction).toHaveBeenCalledWith(
         1,
-        'team_battle_matchmaking',
+        'team_battle',
         'success',
-        expect.objectContaining({ teamSize: 2, matchesCreated: 4 }),
+        expect.objectContaining({ action: 'matchmaking', teamSize: 2, matchesCreated: 4 }),
       );
     });
 
@@ -467,9 +475,9 @@ describe('Admin team battle endpoints (R14.3, R14.4, R14.5)', () => {
       expect(res.body.error).toBe('Failed to run team battle matchmaking');
       expect(mockRecordAction).toHaveBeenCalledWith(
         1,
-        'team_battle_matchmaking',
+        'team_battle',
         'failure',
-        expect.objectContaining({ error: 'DB connection lost' }),
+        expect.objectContaining({ action: 'matchmaking', error: 'DB connection lost' }),
       );
     });
 
@@ -565,9 +573,9 @@ describe('Admin team battle endpoints (R14.3, R14.4, R14.5)', () => {
 
       expect(mockRecordAction).toHaveBeenCalledWith(
         1,
-        'team_battle_execution',
+        'team_battle',
         'success',
-        expect.objectContaining({ teamSize: 3, summary: mockSummary }),
+        expect.objectContaining({ action: 'battles_run', teamSize: 3, matchesCompleted: mockSummary.matchesCompleted, matchesCancelled: mockSummary.matchesCancelled }),
       );
     });
 
@@ -582,9 +590,9 @@ describe('Admin team battle endpoints (R14.3, R14.4, R14.5)', () => {
       expect(res.body.error).toBe('Failed to execute team battles');
       expect(mockRecordAction).toHaveBeenCalledWith(
         1,
-        'team_battle_execution',
+        'team_battle',
         'failure',
-        expect.objectContaining({ error: 'Simulation timeout' }),
+        expect.objectContaining({ action: 'battles_run', error: 'Simulation timeout' }),
       );
     });
 
