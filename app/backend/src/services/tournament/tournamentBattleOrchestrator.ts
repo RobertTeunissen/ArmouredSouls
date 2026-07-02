@@ -387,8 +387,6 @@ async function createTournamentBattleRecord(
     ? robot2.elo + eloChanges.loserChange
     : robot2.elo + eloChanges.winnerChange;
 
-  const eloChange = Math.abs(eloChanges.winnerChange);
-
   // Calculate tournament rewards (new formula based on tournament size & progression)
   const winnerRobot = isRobot1Winner ? robot1 : robot2;
   const loserRobot = isRobot1Winner ? robot2 : robot1;
@@ -546,7 +544,7 @@ async function createTournamentBattleRecord(
 async function updateRobotStatsForTournament(
   robot: Robot,
   battle: Battle,
-  isRobot1: boolean,
+  _isRobot1: boolean,
   _round: number,
   _maxRounds: number
 ): Promise<{ prestigeAwarded: number; fameAwarded: number }> {

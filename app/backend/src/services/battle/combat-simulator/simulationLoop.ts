@@ -5,7 +5,7 @@
 import { BattleError, BattleErrorCode } from '../../../errors/battleErrors';
 import { euclideanDistance } from '../../arena/vector2d';
 import { createArena } from '../../arena/arenaLayout';
-import { classifyRangeBand, canAttack, getRangePenalty, getWeaponOptimalRange } from '../../arena/rangeBands';
+import { classifyRangeBand, canAttack } from '../../arena/rangeBands';
 import { calculateTurnSpeed, updateFacing } from '../../arena/positionTracker';
 import { calculateEffectiveSpeed, updateServoStrain } from '../../arena/servoStrain';
 import { calculateMovementIntent, applyMovement, getPatienceLimit, enforceTeamSeparation, RANGE_BAND_MIDPOINTS } from '../../arena/movementAI';
@@ -14,7 +14,6 @@ import { selectTarget } from '../../arena/threatScoring';
 import { SpatialGrid, computeMaxWeaponRange } from './spatialGrid';
 import {
   RobotWithWeapons,
-  CombatEvent,
   CombatResult,
   BattleConfig,
   SpatialRobotCombatState,
@@ -22,7 +21,6 @@ import {
   SpatialCombatResult,
   RangeBand,
   ArenaConfig,
-  GameModeState,
   Position,
   WeaponLike,
   MAX_BATTLE_DURATION,

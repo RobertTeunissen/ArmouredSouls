@@ -1,3 +1,4 @@
+import { StandingsMode, Prisma } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { RobotWithWeapons } from '../battle/combatSimulator';
@@ -25,8 +26,8 @@ interface ScheduledTagTeamMatchData {
   status: string;
   cancelReason: string | null;
   createdAt: Date;
-  team1: any;
-  team2: any;
+  team1: Prisma.TeamBattleGetPayload<{ include: { members: { include: { robot: true } } } }>;
+  team2: Prisma.TeamBattleGetPayload<{ include: { members: { include: { robot: true } } } }> | null;
 }
 
 /**
@@ -72,7 +73,7 @@ export async function executeTagTeamBattle(match: ScheduledTagTeamMatchData): Pr
   if (team1Raw && team1Raw.members.length >= 2) {
     // Read league data from standings (source of truth)
     const team1Standing = await prisma.standing.findFirst({
-      where: { entityType: 'team', entityId: team1Raw.id, mode: 'tag_team' as any },
+      where: { entityType: 'team', entityId: team1Raw.id, mode: StandingsMode.tag_team },
     });
 
     if (!team1Standing) {
@@ -124,7 +125,7 @@ export async function executeTagTeamBattle(match: ScheduledTagTeamMatchData): Pr
     if (team2Raw && team2Raw.members.length >= 2) {
       // Read league data from standings (source of truth)
       const team2Standing = await prisma.standing.findFirst({
-        where: { entityType: 'team', entityId: team2Raw.id, mode: 'tag_team' as any },
+        where: { entityType: 'team', entityId: team2Raw.id, mode: StandingsMode.tag_team },
       });
 
       if (!team2Standing) {

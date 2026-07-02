@@ -49,27 +49,22 @@ const tournamentListQuerySchema = z.object({
  * Create a new single elimination tournament
  */
 router.post('/create', authenticateToken, requireAdmin, validateRequest({ body: createTournamentBodySchema }), async (req: Request, res: Response) => {
-  try {
-    const { tournamentType = 'single_elimination' } = req.body;
+  const { tournamentType = 'single_elimination' } = req.body;
 
-    if (tournamentType !== 'single_elimination') {
-      throw new TournamentError(TournamentErrorCode.INVALID_TOURNAMENT_STATE, 'Only single_elimination is supported currently', 400);
-    }
-
-    logger.info('[Admin] Creating tournament...');
-    const result = await createSingleEliminationTournament();
-
-    res.json({
-      success: true,
-      tournament: result.tournament,
-      bracket: result.bracket,
-      participantCount: result.participantCount,
-      timestamp: new Date().toISOString(),
-    });
-  } catch (error) {
-    logger.error('[Admin] Tournament creation error:', error);
-    throw error;
+  if (tournamentType !== 'single_elimination') {
+    throw new TournamentError(TournamentErrorCode.INVALID_TOURNAMENT_STATE, 'Only single_elimination is supported currently', 400);
   }
+
+  logger.info('[Admin] Creating tournament...');
+  const result = await createSingleEliminationTournament();
+
+  res.json({
+    success: true,
+    tournament: result.tournament,
+    bracket: result.bracket,
+    participantCount: result.participantCount,
+    timestamp: new Date().toISOString(),
+  });
 });
 
 /**
@@ -245,51 +240,46 @@ router.get('/history', authenticateToken, requireAdmin, validateRequest({}), asy
  * Get detailed tournament information with resolved participant names.
  */
 router.get('/:id', authenticateToken, requireAdmin, validateRequest({ params: tournamentIdParamsSchema }), async (req: Request, res: Response) => {
-  try {
-    const tournamentId = parseInt(String(req.params.id));
+  const tournamentId = parseInt(String(req.params.id));
 
-    if (isNaN(tournamentId)) {
-      throw new AppError('INVALID_TOURNAMENT_ID', 'Invalid tournament ID', 400);
-    }
-
-    const tournament = await getTournamentById(tournamentId);
-
-    if (!tournament) {
-      throw new TournamentError(TournamentErrorCode.TOURNAMENT_NOT_FOUND, 'Tournament not found', 404);
-    }
-
-    // Get current round matches separately for better structure
-    const currentRoundMatches = await getCurrentRoundMatches(tournamentId);
-
-    // Resolve participant names for bracket display
-    const participantIds = new Set<number>();
-    const tournamentWithMatches = tournament as Tournament & { matches?: Array<{ participant1Id: number | null; participant2Id: number | null }> };
-    if (tournamentWithMatches.matches) {
-      for (const match of tournamentWithMatches.matches) {
-        if (match.participant1Id) participantIds.add(match.participant1Id);
-        if (match.participant2Id) participantIds.add(match.participant2Id);
-      }
-    }
-    if (tournament.winnerId) participantIds.add(tournament.winnerId);
-
-    let resolvedParticipants: Record<number, { id: number; displayName: string; leagueTier: string; elo: number; ownerId: number; ownerStableName?: string; members?: { robotId: number; robotName: string; elo: number }[] }> = {};
-    if (participantIds.size > 0) {
-      const participantType = (tournament.participantType || 'robot') as ParticipantType;
-      const resolved = await resolveParticipantsBatch(Array.from(participantIds), participantType);
-      resolvedParticipants = Object.fromEntries(resolved);
-    }
-
-    res.json({
-      success: true,
-      tournament,
-      currentRoundMatches,
-      resolvedParticipants,
-      timestamp: new Date().toISOString(),
-    });
-  } catch (error) {
-    logger.error('[Admin] Tournament fetch error:', error);
-    throw error;
+  if (isNaN(tournamentId)) {
+    throw new AppError('INVALID_TOURNAMENT_ID', 'Invalid tournament ID', 400);
   }
+
+  const tournament = await getTournamentById(tournamentId);
+
+  if (!tournament) {
+    throw new TournamentError(TournamentErrorCode.TOURNAMENT_NOT_FOUND, 'Tournament not found', 404);
+  }
+
+  // Get current round matches separately for better structure
+  const currentRoundMatches = await getCurrentRoundMatches(tournamentId);
+
+  // Resolve participant names for bracket display
+  const participantIds = new Set<number>();
+  const tournamentWithMatches = tournament as Tournament & { matches?: Array<{ participant1Id: number | null; participant2Id: number | null }> };
+  if (tournamentWithMatches.matches) {
+    for (const match of tournamentWithMatches.matches) {
+      if (match.participant1Id) participantIds.add(match.participant1Id);
+      if (match.participant2Id) participantIds.add(match.participant2Id);
+    }
+  }
+  if (tournament.winnerId) participantIds.add(tournament.winnerId);
+
+  let resolvedParticipants: Record<number, { id: number; displayName: string; leagueTier: string; elo: number; ownerId: number; ownerStableName?: string; members?: { robotId: number; robotName: string; elo: number }[] }> = {};
+  if (participantIds.size > 0) {
+    const participantType = (tournament.participantType || 'robot') as ParticipantType;
+    const resolved = await resolveParticipantsBatch(Array.from(participantIds), participantType);
+    resolvedParticipants = Object.fromEntries(resolved);
+  }
+
+  res.json({
+    success: true,
+    tournament,
+    currentRoundMatches,
+    resolvedParticipants,
+    timestamp: new Date().toISOString(),
+  });
 });
 
 /**

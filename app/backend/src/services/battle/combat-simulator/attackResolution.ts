@@ -5,7 +5,6 @@
 import { updateAdaptation } from '../../arena/adaptationTracker';
 import { resolveCounter } from '../../arena/counterAttack';
 import {
-  RobotWithWeapons,
   CombatEvent,
   SpatialRobotCombatState,
   RangeBand,

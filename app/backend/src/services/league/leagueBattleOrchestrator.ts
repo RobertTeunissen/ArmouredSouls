@@ -333,7 +333,6 @@ async function createBattleRecord(
     ? robot2.elo + eloChanges.loserChange 
     : robot2.elo + eloChanges.winnerChange;
   
-  const eloChange = Math.abs(eloChanges.winnerChange);
   
   // Calculate rewards based on league tier and prestige
   const baseWinRewardAmount = getLeagueWinReward(scheduledMatch.leagueType);

@@ -8,6 +8,7 @@
  * @module services/tournament/tournamentParticipantResolver
  */
 
+import { StandingsMode } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { TournamentError, TournamentErrorCode } from '../../errors/tournamentErrors';
@@ -99,7 +100,7 @@ async function resolveRobotParticipant(robotId: number): Promise<ResolvedPartici
 
   // Read tier from standings (source of truth)
   const standing = await prisma.standing.findFirst({
-    where: { entityType: 'robot', entityId: robot.id, mode: 'league_1v1' as any },
+    where: { entityType: 'robot', entityId: robot.id, mode: StandingsMode.league_1v1 },
     select: { tier: true },
   });
 
@@ -125,7 +126,7 @@ async function resolveRobotParticipantsBatch(ids: number[]): Promise<Map<number,
 
   // Batch fetch tiers from standings
   const standings = await prisma.standing.findMany({
-    where: { entityType: 'robot', entityId: { in: ids }, mode: 'league_1v1' as any },
+    where: { entityType: 'robot', entityId: { in: ids }, mode: StandingsMode.league_1v1 },
     select: { entityId: true, tier: true },
   });
   const tierByRobot = new Map(standings.map(s => [s.entityId, s.tier]));
@@ -179,7 +180,7 @@ async function resolveTeamParticipant(teamId: number): Promise<ResolvedParticipa
   // Read tier from standings (source of truth)
   const mode = team.teamSize === 2 ? 'league_2v2' : 'league_3v3';
   const standing = await prisma.standing.findFirst({
-    where: { entityType: 'team', entityId: team.id, mode: mode as any },
+    where: { entityType: 'team', entityId: team.id, mode: mode as StandingsMode },
     select: { tier: true },
   });
 
@@ -214,7 +215,7 @@ async function resolveTeamParticipantsBatch(ids: number[]): Promise<Map<number, 
 
   // Batch fetch tiers from standings (try both 2v2 and 3v3)
   const standings = await prisma.standing.findMany({
-    where: { entityType: 'team', entityId: { in: ids }, mode: { in: ['league_2v2', 'league_3v3'] as any[] } },
+    where: { entityType: 'team', entityId: { in: ids }, mode: { in: [StandingsMode.league_2v2, StandingsMode.league_3v3] } },
     select: { entityId: true, tier: true },
   });
   const tierByTeam = new Map(standings.map(s => [s.entityId, s.tier]));

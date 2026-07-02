@@ -24,7 +24,6 @@ export async function createTagTeamBattleRecord(
   result: TagTeamBattleResult
 ): Promise<Battle> {
   // Create battle record with tag team fields
-  const isByeMatch = team2.activeRobotId < 0;
   const battle = await prisma.battle.create({
     data: {
       winnerId: result.winnerId,

@@ -9,6 +9,7 @@
 
 import prisma from '../lib/prisma';
 import logger from '../config/logger';
+import { StandingsMode } from '../../generated/prisma';
 
 // Re-export all pure calculation functions for backward compatibility
 export {
@@ -488,7 +489,7 @@ export async function generatePerRobotFinancialReport(userId: number): Promise<{
   // Get league tiers from standings for the response
   const robotIds = robots.map(r => r.id);
   const leagueStandings = await prisma.standing.findMany({
-    where: { entityType: 'robot', entityId: { in: robotIds }, mode: 'league_1v1' as any },
+    where: { entityType: 'robot', entityId: { in: robotIds }, mode: StandingsMode.league_1v1 },
     select: { entityId: true, tier: true },
   });
   const leagueMap = new Map(leagueStandings.map(s => [s.entityId, s.tier]));

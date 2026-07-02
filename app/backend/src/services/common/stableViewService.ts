@@ -4,6 +4,7 @@
  * Provides public stable profile data for the stable view page.
  */
 
+import { StandingsMode } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import { getPrestigeRank } from '../../utils/prestigeUtils';
 import { achievementService } from '../achievement';
@@ -76,7 +77,7 @@ export async function getStableProfile(userId: number) {
         where: {
           entityType: 'team',
           entityId: { in: teamIds },
-          mode: { in: ['league_2v2', 'league_3v3'] as any[] },
+          mode: { in: [StandingsMode.league_2v2, StandingsMode.league_3v3] },
         },
         select: { wins: true, losses: true, draws: true },
       })

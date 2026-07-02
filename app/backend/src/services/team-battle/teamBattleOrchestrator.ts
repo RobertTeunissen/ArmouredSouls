@@ -11,7 +11,7 @@
  * @module services/team-battle/teamBattleOrchestrator
  */
 
-import { Prisma } from '../../../generated/prisma';
+import { Prisma, StandingsMode, MatchType, Robot } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { RobotWithWeapons } from '../battle/combatSimulator';
@@ -76,7 +76,7 @@ interface ScheduledMatchWithTeams {
     stableId: number;
     teamName: string;
     teamSize: number;
-    members: Array<{ robot: any; slotIndex: number; robotId: number }>;
+    members: Array<{ robot: Robot; slotIndex: number; robotId: number }>;
     stable: { id: number; username: string; stableName: string | null };
   };
   team2: {
@@ -84,7 +84,7 @@ interface ScheduledMatchWithTeams {
     stableId: number;
     teamName: string;
     teamSize: number;
-    members: Array<{ robot: any; slotIndex: number; robotId: number }>;
+    members: Array<{ robot: Robot; slotIndex: number; robotId: number }>;
     stable: { id: number; username: string; stableName: string | null };
   } | null;
 }
@@ -114,7 +114,7 @@ export async function executeScheduledTeamBattles(
   const unifiedMatches = await prisma.scheduledMatch.findMany({
     where: {
       status: 'scheduled',
-      matchType: matchType as any,
+      matchType: matchType as MatchType,
     },
     include: { participants: true },
     orderBy: { scheduledFor: 'asc' },
@@ -153,7 +153,7 @@ export async function executeScheduledTeamBattles(
       createdAt: um.createdAt,
       team1,
       team2,
-    } as any);
+    } as unknown as ScheduledMatchWithTeams);
   }
 
   logger.info(
@@ -364,7 +364,7 @@ async function executeSingleTeamBattle(
     await standingsService.recordBattleResult({
       entityType: 'team',
       entityId: match.team1Id,
-      mode: team1Mode as any,
+      mode: team1Mode as StandingsMode,
       outcome: team1Outcome,
       lpDelta: team1LPDelta,
     });
@@ -375,7 +375,7 @@ async function executeSingleTeamBattle(
       await standingsService.recordBattleResult({
         entityType: 'team',
         entityId: match.team2Id,
-        mode: team1Mode as any,
+        mode: team1Mode as StandingsMode,
         outcome: team2Outcome,
         lpDelta: team2LPDelta,
       });
