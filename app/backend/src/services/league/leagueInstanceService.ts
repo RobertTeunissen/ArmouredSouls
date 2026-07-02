@@ -1,5 +1,5 @@
 import prisma from '../../lib/prisma';
-import { Prisma } from '../../../generated/prisma';
+import { Prisma, StandingsMode } from '../../../generated/prisma';
 import logger from '../../config/logger';
 
 // League tiers in order
@@ -50,7 +50,7 @@ export async function getInstancesForTier(tier: LeagueTier, options: InstanceOpt
   const instances = await prisma.standing.groupBy({
     by: ['leagueInstanceId'],
     where: {
-      mode: mode as any,
+      mode: mode as StandingsMode,
       tier,
     },
     _count: {
@@ -141,7 +141,7 @@ export async function assignLeagueInstanceWithLock(tier: LeagueTier, options: In
     const instances = await tx.standing.groupBy({
       by: ['leagueInstanceId'],
       where: {
-        mode: options.mode as any,
+        mode: options.mode as StandingsMode,
         tier,
       },
       _count: {
@@ -200,7 +200,7 @@ export async function rebalanceInstances(tier: LeagueTier, options: InstanceOpti
   // Get all standings in this tier from unified table (Spec #40)
   const allStandings = await prisma.standing.findMany({
     where: {
-      mode: mode as any,
+      mode: mode as StandingsMode,
       tier,
     },
     orderBy: [

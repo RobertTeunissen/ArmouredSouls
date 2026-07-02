@@ -1,7 +1,7 @@
 import bcrypt from 'bcrypt';
 import prisma from '../lib/prisma';
 import logger from '../config/logger';
-import { assignLeagueInstance } from '../services/league/leagueInstanceService';
+import { StandingsMode } from '../../generated/prisma';
 import { registerTeam } from '../services/team-battle/teamBattleService';
 import {
   TIER_CONFIGS,
@@ -359,7 +359,7 @@ export async function generateBattleReadyUsers(
                 data: robotStandingModes.map(mode => ({
                   entityType: 'robot',
                   entityId: robot.id,
-                  mode: mode as any,
+                  mode: mode as StandingsMode,
                   tier: 'bronze',
                   leagueInstanceId: 'bronze_1',
                   leaguePoints: 0,
@@ -404,7 +404,7 @@ export async function generateBattleReadyUsers(
                   data: {
                     entityType: 'team',
                     entityId: team.id,
-                    mode: 'league_2v2' as any,
+                    mode: StandingsMode.league_2v2,
                     tier: 'bronze',
                     leagueInstanceId: 'bronze_1',
                     leaguePoints: 0,
@@ -421,7 +421,7 @@ export async function generateBattleReadyUsers(
                   data: {
                     entityType: 'team',
                     entityId: team.id,
-                    mode: 'tag_team' as any,
+                    mode: StandingsMode.tag_team,
                     tier: 'bronze',
                     leagueInstanceId: tagTeamLeagueId,
                     leaguePoints: 0,
@@ -458,7 +458,7 @@ export async function generateBattleReadyUsers(
                 data: {
                   entityType: 'team',
                   entityId: team.id,
-                  mode: 'league_3v3' as any,
+                  mode: StandingsMode.league_3v3,
                   tier: 'bronze',
                   leagueInstanceId: 'bronze_1',
                   leaguePoints: 0,

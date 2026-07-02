@@ -12,7 +12,7 @@
  * Spec #41: Unified Match Scheduling — Requirement 24
  */
 
-import { Robot, TeamBattle, TeamBattleMember, MatchType, Prisma } from '../../../generated/prisma';
+import { Robot, TeamBattle, TeamBattleMember, MatchType, StandingsMode } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import schedulingService from '../scheduling/schedulingService';
@@ -66,7 +66,7 @@ async function getEligibleTeams(
 ): Promise<TeamBattleWithMembers[]> {
   // Get team IDs from standings (source of truth)
   const standingsInInstance = await prisma.standing.findMany({
-    where: { mode: config.standingsMode as any, leagueInstanceId },
+    where: { mode: config.standingsMode as StandingsMode, leagueInstanceId },
     select: { entityId: true },
   });
   const teamIdsInInstance = standingsInInstance.map(s => s.entityId);
@@ -279,7 +279,7 @@ export async function runTeamMatchmaking(config: TeamMatchmakingConfig, schedule
   for (const tier of TEAM_BATTLE_LEAGUE_TIERS) {
     try {
       const instances = await prisma.standing.findMany({
-        where: { mode: config.standingsMode as any, tier },
+        where: { mode: config.standingsMode as StandingsMode, tier },
         select: { leagueInstanceId: true },
         distinct: ['leagueInstanceId'],
       });
@@ -353,7 +353,7 @@ async function pairTeams(
   // Build LP lookup from standings
   const standingsLPMap = new Map(
     (await prisma.standing.findMany({
-      where: { mode: config.standingsMode as any, entityId: { in: teams.map(t => t.id) } },
+      where: { mode: config.standingsMode as StandingsMode, entityId: { in: teams.map(t => t.id) } },
       select: { entityId: true, leaguePoints: true },
     })).map(s => [s.entityId, s.leaguePoints])
   );

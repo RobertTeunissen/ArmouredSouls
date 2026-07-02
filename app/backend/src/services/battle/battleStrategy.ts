@@ -261,11 +261,6 @@ export class BattleProcessor<TMatch = unknown> {
     const rewardMap = new Map(rewards.map(r => [r.robotId, r]));
 
     // 5. Create Battle record
-    const firstRobot = participants[0]?.robot;
-    const secondRobot = participants[1]?.robot;
-    const firstElo = eloChanges.get(firstRobot.id)!;
-    const secondElo = eloChanges.get(secondRobot.id)!;
-
     const winnerReward = rewards.find(r => r.robotId === simResult.winnerId)?.credits ?? 0;
     const loserRewards = rewards.filter(r => r.robotId !== simResult.winnerId);
     const loserReward = loserRewards.length > 0 ? loserRewards[0].credits : 0;

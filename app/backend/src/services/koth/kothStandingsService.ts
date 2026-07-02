@@ -1,3 +1,4 @@
+import { MatchType } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 
 interface KothStandingsParams {
@@ -8,7 +9,7 @@ interface KothStandingsParams {
   instance?: string;
 }
 
-export async function getKothStandings({ view, page, limit, tier, instance }: KothStandingsParams) {
+export async function getKothStandings({ view: _view, page, limit, tier, instance }: KothStandingsParams) {
   return getKothStandingsAllTime({ page, limit, tier, instance });
 }
 
@@ -21,7 +22,7 @@ async function getKothStandingsAllTime({ page, limit, tier, instance }: { page: 
   };
 
   const [totalEvents, total, standings_rows] = await Promise.all([
-    prisma.scheduledMatch.count({ where: { matchType: 'koth' as any, status: 'completed' } }),
+    prisma.scheduledMatch.count({ where: { matchType: MatchType.koth, status: 'completed' } }),
     prisma.standing.count({ where: kothWhere }),
     prisma.standing.findMany({
       where: kothWhere,

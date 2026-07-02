@@ -1,4 +1,4 @@
-import { Robot } from '../../../generated/prisma';
+import { Robot, StandingsMode } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import { achievementService } from '../achievement';
 
@@ -9,7 +9,6 @@ import {
   LEAGUE_TIERS,
   LeagueTier,
   MAX_ROBOTS_PER_INSTANCE,
-  MAX_TEAMS_PER_INSTANCE,
   InstanceOptions,
 } from './leagueInstanceService';
 import {
@@ -142,6 +141,7 @@ export interface StandingsAdapterOptions {
   useLocking?: boolean;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function createStandingsAdapter(mode: string, options: StandingsAdapterOptions | number = {}): LeagueAdapter<any> {
   // Backward compat: if second arg is a number, treat as overrideMinLP
   const opts: StandingsAdapterOptions = typeof options === 'number' ? { overrideMinLP: options } : options;
@@ -162,7 +162,7 @@ export function createStandingsAdapter(mode: string, options: StandingsAdapterOp
       const effectiveMinLP = opts.overrideMinLP ?? minLP;
       return prisma.standing.findMany({
         where: {
-          mode: mode as any,
+          mode: mode as StandingsMode,
           leagueInstanceId: instanceId,
           cyclesInTier: { gte: minCycles },
           leaguePoints: { gte: effectiveMinLP },
@@ -175,7 +175,7 @@ export function createStandingsAdapter(mode: string, options: StandingsAdapterOp
     async countEligibleInInstance(instanceId, minCycles, excludeIds) {
       return prisma.standing.count({
         where: {
-          mode: mode as any,
+          mode: mode as StandingsMode,
           leagueInstanceId: instanceId,
           cyclesInTier: { gte: minCycles },
           NOT: { entityId: { in: Array.from(excludeIds) } },
@@ -186,7 +186,7 @@ export function createStandingsAdapter(mode: string, options: StandingsAdapterOp
     async getEntitiesForDemotion(instanceId, minCycles, excludeIds) {
       return prisma.standing.findMany({
         where: {
-          mode: mode as any,
+          mode: mode as StandingsMode,
           leagueInstanceId: instanceId,
           cyclesInTier: { gte: minCycles },
           NOT: { entityId: { in: Array.from(excludeIds) } },
@@ -197,7 +197,7 @@ export function createStandingsAdapter(mode: string, options: StandingsAdapterOp
 
     async getInstancesForTier(tier): Promise<InstanceInfo[]> {
       const standings = await prisma.standing.findMany({
-        where: { mode: mode as any, tier },
+        where: { mode: mode as StandingsMode, tier },
         distinct: ['leagueInstanceId'],
         select: { leagueInstanceId: true },
       });
@@ -205,11 +205,11 @@ export function createStandingsAdapter(mode: string, options: StandingsAdapterOp
     },
 
     async countEntitiesInTier(tier) {
-      return prisma.standing.count({ where: { mode: mode as any, tier } });
+      return prisma.standing.count({ where: { mode: mode as StandingsMode, tier } });
     },
 
     async countEntitiesInDestinationTier(tier) {
-      return prisma.standing.count({ where: { mode: mode as any, tier } });
+      return prisma.standing.count({ where: { mode: mode as StandingsMode, tier } });
     },
 
     async assignInstance(tier) {
@@ -221,7 +221,7 @@ export function createStandingsAdapter(mode: string, options: StandingsAdapterOp
 
     async updateEntityLeague(entityId, newTier, newLeagueId) {
       await prisma.standing.updateMany({
-        where: { entityType: standingsEntityType, entityId, mode: mode as any },
+        where: { entityType: standingsEntityType, entityId, mode: mode as StandingsMode },
         data: { tier: newTier, leagueInstanceId: newLeagueId, cyclesInTier: 0 },
       });
     },
@@ -249,7 +249,7 @@ export function createStandingsAdapter(mode: string, options: StandingsAdapterOp
     },
 
     async countAllEntities() {
-      return prisma.standing.count({ where: { mode: mode as any } });
+      return prisma.standing.count({ where: { mode: mode as StandingsMode } });
     },
   };
 }

@@ -13,7 +13,7 @@
  * @module services/team-battle/teamBattleMatchmakingService
  */
 
-import { Robot, Prisma, TeamBattle, TeamBattleMember, MatchType } from '../../../generated/prisma';
+import { Robot, Prisma, TeamBattle, TeamBattleMember, MatchType, StandingsMode } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import schedulingService from '../scheduling/schedulingService';
@@ -22,7 +22,6 @@ import { TEAM_BATTLE_LEAGUE_TIERS } from './teamBattleAdapter';
 import {
   calculateMatchScore as sharedCalculateMatchScore,
   createByeTeam as sharedCreateByeTeam,
-  getRecentOpponentsBatch as sharedGetRecentOpponentsBatch,
   MatchScoreInput,
   RECENT_OPPONENT_LIMIT,
   defaultScheduledFor,
@@ -66,7 +65,7 @@ export async function getEligibleTeams(
 
   // Get team IDs in this instance from standings (source of truth for league placement)
   const standingsInInstance = await prisma.standing.findMany({
-    where: { mode: mode as any, leagueInstanceId: teamBattleLeagueId },
+    where: { mode: mode as StandingsMode, leagueInstanceId: teamBattleLeagueId },
     select: { entityId: true },
   });
   const teamIdsInInstance = standingsInInstance.map(s => s.entityId);
@@ -335,7 +334,7 @@ export async function pairTeams(
   const mode = teamSize === 2 ? 'league_2v2' : 'league_3v3';
   const standingsLPMap = new Map(
     (await prisma.standing.findMany({
-      where: { mode: mode as any, entityId: { in: teams.map(t => t.id) } },
+      where: { mode: mode as StandingsMode, entityId: { in: teams.map(t => t.id) } },
       select: { entityId: true, leaguePoints: true },
     })).map(s => [s.entityId, s.leaguePoints])
   );
@@ -392,7 +391,7 @@ export async function pairTeams(
  */
 function createByeTeam(league: string, leagueId: string, teamSize: 2 | 3): TeamBattleWithMembers {
   return sharedCreateByeTeam(
-    (byeLeague: string, byeLeagueId: string): TeamBattleWithMembers => {
+    (_byeLeague: string, _byeLeagueId: string): TeamBattleWithMembers => {
       const byeRobotBase: Robot = {
         id: -1,
         userId: -1,
@@ -561,7 +560,7 @@ export async function runTeamBattleMatchmaking(teamSize: 2 | 3, scheduledFor?: D
       // Get all league instances for this tier from standings (source of truth)
       const mode = teamSize === 2 ? 'league_2v2' : 'league_3v3';
       const instances = await prisma.standing.findMany({
-        where: { mode: mode as any, tier },
+        where: { mode: mode as StandingsMode, tier },
         select: { leagueInstanceId: true },
         distinct: ['leagueInstanceId'],
       });

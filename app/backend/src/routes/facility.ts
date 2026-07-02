@@ -10,6 +10,7 @@ import logger from '../config/logger';
 import { AuthError, AuthErrorCode } from '../errors/authErrors';
 import { EconomyError, EconomyErrorCode } from '../errors/economyErrors';
 import { validateRequest } from '../middleware/schemaValidator';
+import { recordLedgerEntry } from '../services/financial/recordLedgerEntry';
 import { securityMonitor } from '../services/security/securityMonitor';
 import { achievementService, type UnlockedAchievement } from '../services/achievement';
 
@@ -314,17 +315,12 @@ router.post('/upgrade', authenticateToken, validateRequest({ body: upgradeBodySc
     }
 
     // Record financial ledger entry (non-blocking)
-    try {
-      const { getCurrentCycleNumber } = await import('../services/battle/baseOrchestrator');
-      const financialService = (await import('../services/financial/financialService')).default;
-      const cycleNumber = await getCurrentCycleNumber();
-      await financialService.recordTransaction({
-        cycleNumber, userId, transactionType: 'facility_upgrade',
-        amount: -upgradeCost, balanceAfter: result.user.currency,
-        description: `Upgraded ${facilityType} to level ${targetLevel}`,
-        metadata: { facilityType, newLevel: targetLevel },
-      });
-    } catch { /* non-blocking */ }
+    recordLedgerEntry({
+      userId, transactionType: 'facility_upgrade',
+      amount: -upgradeCost, balanceAfter: result.user.currency,
+      description: `Upgraded ${facilityType} to level ${targetLevel}`,
+      metadata: { facilityType, newLevel: targetLevel },
+    });
 
     res.json({
       facility: result.facility,

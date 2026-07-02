@@ -94,6 +94,7 @@ export async function assignTagTeamLeagueInstanceOnTeamBattle(tier: TeamBattleLe
 // ─── Adapters (all use unified createStandingsAdapter) ───────────────────────
 
 /** Adapter for 2v2 team battle leagues */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const teamBattle2v2Adapter: LeagueAdapter<any> = createStandingsAdapter('league_2v2', {
   maxPerInstance: MAX_TEAMS_PER_INSTANCE,
   entityType: 'team_battle',
@@ -101,6 +102,7 @@ export const teamBattle2v2Adapter: LeagueAdapter<any> = createStandingsAdapter('
 });
 
 /** Adapter for 3v3 team battle leagues */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const teamBattle3v3Adapter: LeagueAdapter<any> = createStandingsAdapter('league_3v3', {
   maxPerInstance: MAX_TEAMS_PER_INSTANCE,
   entityType: 'team_battle',
@@ -108,6 +110,7 @@ export const teamBattle3v3Adapter: LeagueAdapter<any> = createStandingsAdapter('
 });
 
 /** Tag-team-scoped league adapter */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const tagTeamLeagueAdapter: LeagueAdapter<any> = createStandingsAdapter('tag_team', {
   maxPerInstance: MAX_TEAMS_PER_INSTANCE,
   entityType: 'tag_team',

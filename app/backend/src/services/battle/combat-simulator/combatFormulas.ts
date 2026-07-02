@@ -6,11 +6,9 @@ import { Weapon } from '../../../../generated/prisma';
 import { formatWeaponDisplayName } from '../../../shared/utils/weaponRefinement';
 import {
   RobotWithWeapons,
-  CombatEvent,
   FormulaBreakdown,
   ARMOR_EFFECTIVENESS,
   PENETRATION_BONUS,
-  BASE_WEAPON_COOLDOWN,
   SpatialRobotCombatState,
 } from './combatTypes';
 

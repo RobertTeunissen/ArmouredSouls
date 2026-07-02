@@ -1,4 +1,4 @@
-import prisma from '../lib/prisma';
+import prisma from '../../lib/prisma';
 
 // Helper to get display name (stableName or username fallback)
 export const getUserDisplayName = (user: { username: string; stableName?: string | null }): string => {

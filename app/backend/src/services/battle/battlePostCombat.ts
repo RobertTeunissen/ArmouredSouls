@@ -22,6 +22,7 @@ import { calculateStreamingRevenue, awardStreamingRevenue, StreamingRevenueCalcu
 import { eventLogger, EventType } from '../common/eventLogger';
 import { getCurrentCycleNumber } from './baseOrchestrator';
 import { achievementService, type AchievementEvent, type UnlockedAchievement } from '../achievement';
+import type { TransactionType } from '../financial/financialService';
 
 // ─── Shared Types ────────────────────────────────────────────────────
 
@@ -300,7 +301,7 @@ export async function awardCreditsWithLedger(
       cycleNumber,
       userId,
       robotId,
-      transactionType: transactionType as any,
+      transactionType: transactionType as TransactionType,
       amount,
       balanceAfter: updated.currency,
       description,

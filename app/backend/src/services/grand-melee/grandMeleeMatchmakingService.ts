@@ -11,16 +11,13 @@
  * Requirements: 1.1–1.4, 2.1–2.4, 3.1–3.6, 4.1–4.4
  */
 
-import { Robot, MatchType } from '../../../generated/prisma';
+import { MatchType, StandingsMode } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import schedulingService from '../scheduling/schedulingService';
 import { checkSchedulingReadiness } from '../analytics/matchmakingService';
 import { TEAM_BATTLE_LEAGUE_TIERS } from '../team-battle/teamBattleAdapter';
 import {
-  calculateMatchScore,
-  MatchScoreInput,
-  RECENT_OPPONENT_LIMIT,
   createRecentOpponentQueryFn,
   getRecentOpponentsBatch,
   defaultScheduledFor,
@@ -62,7 +59,7 @@ const LOG_PREFIX = '[Grand Melee Matchmaking]';
 export async function getEligibleRobots(tier: string, leagueInstanceId: string): Promise<EligibleRobot[]> {
   // Get robot IDs in this instance from standings (source of truth)
   const standingsInInstance = await prisma.standing.findMany({
-    where: { mode: 'grand_melee' as any, leagueInstanceId },
+    where: { mode: StandingsMode.grand_melee, leagueInstanceId },
     select: { entityId: true },
   });
   const robotIdsInInstance = standingsInInstance.map(s => s.entityId);
@@ -198,7 +195,7 @@ export function groupByLPBanding(
  * Best-effort: if a swap is impossible (e.g., a user has more robots than groups),
  * the conflict remains.
  */
-function resolveStableConflicts(groups: GrandMeleeMatchGroup[], standingsLPMap: Map<number, number>): void {
+function resolveStableConflicts(groups: GrandMeleeMatchGroup[], _standingsLPMap: Map<number, number>): void {
   const maxPasses = groups.length * 2;
   for (let pass = 0; pass < maxPasses; pass++) {
     let swapped = false;
@@ -347,7 +344,7 @@ export async function runGrandMeleeMatchmaking(scheduledFor?: Date): Promise<num
     try {
       // Get all Grand Melee league instances for this tier from standings
       const instances = await prisma.standing.findMany({
-        where: { mode: 'grand_melee' as any, tier },
+        where: { mode: StandingsMode.grand_melee, tier },
         select: { leagueInstanceId: true },
         distinct: ['leagueInstanceId'],
       });
@@ -367,7 +364,7 @@ export async function runGrandMeleeMatchmaking(scheduledFor?: Date): Promise<num
           // Build LP lookup map from standings
           const standingsLPMap = new Map(
             (await prisma.standing.findMany({
-              where: { mode: 'grand_melee' as any, entityId: { in: eligible.map(r => r.id) } },
+              where: { mode: StandingsMode.grand_melee, entityId: { in: eligible.map(r => r.id) } },
               select: { entityId: true, leaguePoints: true },
             })).map(s => [s.entityId, s.leaguePoints])
           );

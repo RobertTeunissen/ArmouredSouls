@@ -25,6 +25,7 @@ import {
 } from '../shared/utils/weaponRefinement';
 import { ROBOT_ATTRIBUTES } from '../shared/utils/robotAttributes';
 import type { Weapon } from '../../generated/prisma';
+import { recordLedgerEntry } from '../services/financial/recordLedgerEntry';
 
 const router = express.Router();
 
@@ -336,17 +337,12 @@ router.post('/purchase', authenticateToken, validateRequest({ body: purchaseBody
   }
 
   // Record financial ledger entry (non-blocking)
-  try {
-    const { getCurrentCycleNumber } = await import('../services/battle/baseOrchestrator');
-    const financialService = (await import('../services/financial/financialService')).default;
-    const cycleNumber = await getCurrentCycleNumber();
-    await financialService.recordTransaction({
-      cycleNumber, userId, transactionType: 'weapon_purchase',
-      amount: -finalCost, balanceAfter: result.user.currency,
-      description: `Purchased weapon: ${weapon.name}`,
-      metadata: { weaponId: weapon.id, weaponName: weapon.name },
-    });
-  } catch { /* non-blocking */ }
+  recordLedgerEntry({
+    userId, transactionType: 'weapon_purchase',
+    amount: -finalCost, balanceAfter: result.user.currency,
+    description: `Purchased weapon: ${weapon.name}`,
+    metadata: { weaponId: weapon.id, weaponName: weapon.name },
+  });
 
   res.status(201).json({
     weaponInventory: result.weaponInventory,
@@ -543,17 +539,12 @@ router.delete(
     }
 
     // Record financial ledger entry (non-blocking)
-    try {
-      const { getCurrentCycleNumber } = await import('../services/battle/baseOrchestrator');
-      const financialService = (await import('../services/financial/financialService')).default;
-      const cycleNumber = await getCurrentCycleNumber();
-      await financialService.recordTransaction({
-        cycleNumber, userId, transactionType: 'weapon_sale',
-        amount: result.salePrice, balanceAfter: result.user.currency,
-        description: `Sold weapon: ${result.weaponName}`,
-        metadata: { weaponId: result.weaponId },
-      });
-    } catch { /* non-blocking */ }
+    recordLedgerEntry({
+      userId, transactionType: 'weapon_sale',
+      amount: result.salePrice, balanceAfter: result.user.currency,
+      description: `Sold weapon: ${result.weaponName}`,
+      metadata: { weaponId: result.weaponId },
+    });
 
     // Achievement check (Spec #33 R7.10–R7.11)
     const achievementUnlocks = await (async (): Promise<UnlockedAchievement[]> => {
@@ -865,17 +856,12 @@ router.post(
     }
 
     // Record financial ledger entry (non-blocking)
-    try {
-      const { getCurrentCycleNumber } = await import('../services/battle/baseOrchestrator');
-      const financialService = (await import('../services/financial/financialService')).default;
-      const cycleNumber = await getCurrentCycleNumber();
-      await financialService.recordTransaction({
-        cycleNumber, userId, transactionType: 'weapon_refinement',
-        amount: -result.cost, balanceAfter: result.user.currency,
-        description: `Refined weapon slot ${result.newRefinement.slotIndex}`,
-        metadata: { weaponInventoryId: inventoryId, slotIndex: result.newRefinement.slotIndex },
-      });
-    } catch { /* non-blocking */ }
+    recordLedgerEntry({
+      userId, transactionType: 'weapon_refinement',
+      amount: -result.cost, balanceAfter: result.user.currency,
+      description: `Refined weapon slot ${result.newRefinement.slotIndex}`,
+      metadata: { weaponInventoryId: inventoryId, slotIndex: result.newRefinement.slotIndex },
+    });
 
     // Achievement check (wired in Task 14; the trigger map already includes
     // 'weapon_refined'). Failures must NOT block the response.

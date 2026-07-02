@@ -11,7 +11,7 @@ import {
   fetchTeamBattleRecords,
   fetchTournamentChampions,
   fetchGrandMeleeRecords,
-} from './records-queries';
+} from '../services/records/recordsQueryService';
 
 const router = express.Router();
 

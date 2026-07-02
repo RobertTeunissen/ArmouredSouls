@@ -13,6 +13,7 @@ import { safeName, positiveIntParam } from '../utils/securityValidation';
 import { verifyRobotOwnership } from '../middleware/ownership';
 import { securityMonitor } from '../services/security/securityMonitor';
 import { handleMulterError } from '../middleware/handleMulterError';
+import { recordLedgerEntry } from '../services/financial/recordLedgerEntry';
 
 // Service imports
 import { sanitizeRobotForPublic, SENSITIVE_ROBOT_FIELDS } from '../services/robot/robotSanitizer';
@@ -155,17 +156,12 @@ router.post('/', authenticateToken, validateRequest({ body: createRobotBodySchem
   }
 
   // Record financial ledger entry (non-blocking)
-  try {
-    const { getCurrentCycleNumber } = await import('../services/battle/baseOrchestrator');
-    const financialService = (await import('../services/financial/financialService')).default;
-    const cycleNumber = await getCurrentCycleNumber();
-    await financialService.recordTransaction({
-      cycleNumber, userId, transactionType: 'robot_creation',
-      amount: -ROBOT_CREATION_COST, balanceAfter: result.user.currency,
-      description: `Created robot: ${trimmedName}`,
-      metadata: { robotId: result.robot.id, robotName: trimmedName },
-    });
-  } catch { /* non-blocking */ }
+  recordLedgerEntry({
+    userId, transactionType: 'robot_creation',
+    amount: -ROBOT_CREATION_COST, balanceAfter: result.user.currency,
+    description: `Created robot: ${trimmedName}`,
+    metadata: { robotId: result.robot.id, robotName: trimmedName },
+  });
 
   res.status(201).json({
     robot: result.robot,

@@ -11,7 +11,7 @@
  * @module services/tag-team/tagTeamMatchmakingService
  */
 
-import { Robot, Prisma, TeamBattle, TeamBattleMember, MatchType } from '../../../generated/prisma';
+import { Robot, Prisma, TeamBattle, TeamBattleMember, MatchType, StandingsMode } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import schedulingService from '../scheduling/schedulingService';
@@ -20,7 +20,6 @@ import { TEAM_BATTLE_LEAGUE_TIERS as TAG_TEAM_LEAGUE_TIERS } from '../team-battl
 import {
   calculateMatchScore as sharedCalculateMatchScore,
   createByeTeam as sharedCreateByeTeam,
-  getRecentOpponentsBatch as sharedGetRecentOpponentsBatch,
   MatchScoreInput,
   RECENT_OPPONENT_LIMIT,
   defaultScheduledFor,
@@ -61,7 +60,7 @@ export async function getEligibleTeams(
 ): Promise<TeamBattleWithMembers[]> {
   // Get team IDs in this instance from standings (source of truth for league placement)
   const standingsInInstance = await prisma.standing.findMany({
-    where: { mode: 'tag_team' as any, leagueInstanceId: tagTeamLeagueId },
+    where: { mode: StandingsMode.tag_team, leagueInstanceId: tagTeamLeagueId },
     select: { entityId: true },
   });
   const teamIdsInInstance = standingsInInstance.map(s => s.entityId);
@@ -281,7 +280,7 @@ async function findBestOpponent(
  */
 function createByeTeam(league: string, leagueId: string): TeamBattleWithMembers {
   return sharedCreateByeTeam(
-    (byeLeague: string, byeLeagueId: string): TeamBattleWithMembers => {
+    (_byeLeague: string, _byeLeagueId: string): TeamBattleWithMembers => {
       const byeRobotBase: Robot = {
         id: -1,
         userId: -1,
@@ -417,7 +416,7 @@ export async function pairTeams(teams: TeamBattleWithMembers[], tagTeamLeague: s
   // Build LP lookup map from standings (source of truth)
   const standingsLPMap = new Map(
     (await prisma.standing.findMany({
-      where: { mode: 'tag_team' as any, entityId: { in: teams.map(t => t.id) } },
+      where: { mode: StandingsMode.tag_team, entityId: { in: teams.map(t => t.id) } },
       select: { entityId: true, leaguePoints: true },
     })).map(s => [s.entityId, s.leaguePoints])
   );
@@ -519,7 +518,7 @@ export async function runTagTeamMatchmaking(scheduledFor?: Date): Promise<number
     try {
       // Get all tag team league instances for this tier from standings (source of truth)
       const instances = await prisma.standing.findMany({
-        where: { mode: 'tag_team' as any, tier },
+        where: { mode: StandingsMode.tag_team, tier },
         select: { leagueInstanceId: true },
         distinct: ['leagueInstanceId'],
       });

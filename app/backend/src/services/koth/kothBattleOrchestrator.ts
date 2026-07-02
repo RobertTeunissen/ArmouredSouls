@@ -279,9 +279,7 @@ async function processKothBattle(
 
   // 6. Determine 1st and 2nd place for Battle record backward compat
   const first = enrichedPlacements[0];
-  const second = enrichedPlacements[1];
   const winnerRobot = robots.find(r => r.id === first.robotId)!;
-  const secondRobot = robots.find(r => r.id === second.robotId)!;
 
   // Pass position records directly (keyed by robot name) to buildKothBattleLog
   const startPosRecord = simResult.startingPositions ?? {};
