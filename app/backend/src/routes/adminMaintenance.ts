@@ -178,9 +178,12 @@ router.post('/scheduler/trigger/:jobName', authenticateToken, requireAdmin, vali
     recordAuditAction(authReq.user!.userId, 'scheduler_trigger', 'success', { jobName });
     res.json({ success: true, jobName, timestamp: new Date().toISOString() });
   } catch (error) {
-    recordAuditAction(authReq.user!.userId, 'scheduler_trigger', 'failure', { jobName, error: error instanceof Error ? error.message : String(error) });
+    const message = error instanceof Error ? error.message : String(error);
+    const isUnknownJob = message.includes('Unknown job name');
+    const statusCode = isUnknownJob ? 400 : 500;
+    recordAuditAction(authReq.user!.userId, 'scheduler_trigger', 'failure', { jobName, error: message });
     logger.error(`[Admin] Scheduler trigger error for "${jobName}":`, error);
-    res.status(500).json({ error: `Failed to trigger job "${jobName}"`, details: error instanceof Error ? error.message : String(error) });
+    res.status(statusCode).json({ error: `Failed to trigger job "${jobName}"`, details: message });
   }
 });
 

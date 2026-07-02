@@ -214,12 +214,12 @@ export async function getTuningAdoption(userFilter: Prisma.UserWhereInput = {}) 
  * adoption stats even if a future filter mode forgets to exclude it.
  */
 export async function getRefinementAdoption(userFilter: Prisma.UserWhereInput = {}) {
-  // Compose the caller's filter with a hard exclusion of the system bye_robot_user.
-  // `AND` lets us layer constraints without overwriting whatever the caller passed.
+  // Compose the caller's filter into a scoped query.
+  // When filter=real, buildUserFilter already excludes system accounts (bye_robot_user, bots).
+  // When filter=all, no exclusions are applied — admins see the full picture.
   const scopedUserFilter: Prisma.UserWhereInput = {
     AND: [
       userFilter,
-
     ],
   };
 
