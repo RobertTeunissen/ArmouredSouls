@@ -27,6 +27,26 @@ Each criterion should be:
 - Something that can be run after the last task is marked done to prove the spec delivered what it promised
 - Not a restatement of acceptance criteria — these verify the aggregate outcome, not individual requirements
 
+### Glossary and Naming Convention
+
+Every `requirements.md` must include a "Glossary" section before the Introduction, defining every domain concept the spec introduces or relies on.
+
+There are exactly two naming registers in a spec document, and every identifier belongs to one of them:
+
+| Register | Format | Use for | Examples |
+|----------|--------|---------|----------|
+| Domain concept | `Pascal_Snake`, unbackticked | Anything the spec itself defines: services, phases, operations, tunable values, UI elements, computed values | `Season_Rollover`, `Preparation_Phase`, `Season_Length_Cycles`, `Instance_Rank`, `Max_Events_Per_Robot` |
+| Code artefact | Backticked, cased exactly as it appears in code | Prisma model fields, database tables and columns, API response fields, enum values, environment variable keys, file paths, function names | `competitiveCyclesCompleted`, `standings`, `battle_log`, `'league_1v1'`, `SEASON_LENGTH_CYCLES`, `cycleScheduler.ts` |
+
+Rules:
+
+- **Every `Pascal_Snake` term must appear in the Glossary.** If it is not worth defining, it is not a domain concept — write it as plain prose instead.
+- **Never invent casing for a code artefact.** Quote it exactly as the code spells it. A Prisma field stays camelCase (`preparationCyclesCompleted`), a table stays snake_case (`scheduled_matches_v2`), an environment variable stays SCREAMING_SNAKE (`SEASON_LENGTH_CYCLES`). This keeps the spec greppable against the codebase.
+- **Never use SCREAMING_SNAKE for a domain concept**, even when the concept is a numeric constant. A tunable is a domain concept (`Countdown_Cycles`); the environment variable that configures it is a code artefact (`COUNTDOWN_CYCLES`). Where a concept has a configuration key, the Glossary entry names that key: "Configured by the environment variable `COUNTDOWN_CYCLES`."
+- **Both registers may appear in the same sentence.** "THE Season_Service SHALL report Season_Cycle as `competitiveCyclesCompleted + 1`" is correct — a concept defined in terms of a real column.
+- **Reuse the term an earlier spec established** rather than coining a synonym. `Cycle_Scheduler`, `Settlement_Job`, `Booking_Office`, and `Standing` are already defined; do not introduce `Scheduler_Service` or `Subscription_Facility` alongside them.
+- The same convention applies to `design.md` and `tasks.md`. A concept named in requirements keeps its exact spelling through design and tasks so that requirement traces stay searchable.
+
 ## Required Coverage in Design
 
 ### Requirements Traceability
@@ -109,3 +129,7 @@ If a spec has zero UI components, this section does not apply.
 - Specs where some acceptance criteria have no corresponding task
 - Verification criteria that just say "all tests pass" without spec-specific checks
 - Tasks marked as optional — if it's in the spec, it gets done
+- A `Pascal_Snake` term used in a requirement but missing from the Glossary
+- SCREAMING_SNAKE used for a domain concept instead of the environment variable that configures it
+- A code artefact re-cased to look like a domain concept (`Competitive_Cycles_Completed` for the `competitiveCyclesCompleted` column), which breaks grep against the codebase
+- A concept renamed between `requirements.md`, `design.md`, and `tasks.md`, which breaks requirement traceability
