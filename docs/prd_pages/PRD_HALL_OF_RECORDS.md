@@ -176,28 +176,17 @@ No data remediation accompanies the fix. The orphaned rows cannot be reconstruct
 
 #### 1. **Combat Records** (Battle Performance) ✅ Implemented
 
-##### 1.1 Fastest Victory ✅
-- **Metric:** Shortest battle duration (in seconds) that resulted in a win
-- **Display:**
-  - Winner robot name and owner
-  - Opponent robot name and owner
-  - Battle duration (e.g., "12.5 seconds")
-  - Date achieved
-  - Link to battle details
-- **Database Query:** `MIN(durationSeconds)` where battle has a winner
-- **Implementation**: Lines 18-30 in `records.ts`
+##### 1.1 Fastest Victory ❌ REMOVED (Spec #46 R4.2)
+- **Status:** Removed July 2026. No longer returned by the API or rendered.
+- **Original metric:** Shortest battle duration (in seconds) that resulted in a win
+- **Why removed:** The top of the ranking was occupied by ~1-second degenerate resolutions rather than by skilful fast wins, so the list measured a suspected combat defect instead of performance. See the Spec #46 disposition table above, and the open observation on ~1-second battles.
+- **Replacement:** None. Any duration-derived metric inherits the same problem.
 
-##### 1.2 Longest Battle ✅
-- **Metric:** Longest battle duration before a winner was determined
-- **Display:**
-  - Both robot names and owners
-  - Battle duration (e.g., "8 minutes 47 seconds")
-  - Winner
-  - Date achieved
-  - Link to battle details
-- **Database Query:** `MAX(durationSeconds)` where battle has a winner
-- **Why It's Cool:** Shows defensive builds and strategic battles of attrition
-- **Implementation**: Lines 32-44 in `records.ts`
+##### 1.2 Longest Battle ❌ REMOVED (Spec #46 R4.1)
+- **Status:** Removed July 2026. No longer returned by the API or rendered.
+- **Original metric:** Longest battle duration before a winner was determined
+- **Why removed:** `MAX_BATTLE_DURATION` forces a draw at 120s, so every entry in the ranking reported an identical 2:00. Distinct performances did not produce distinct ranked values.
+- **Replacement:** None, deliberately. Any duration-derived metric inherits the same ceiling, and a non-duration endurance metric would need a new computation over `battle_summaries`.
 
 ##### 1.3 Most Damage in Single Battle ✅
 - **Metric:** Highest damage dealt by one robot in a single battle
@@ -236,27 +225,15 @@ No data remediation accompanies the fix. The orphaned rows cannot be reconstruct
 - **Why It's Cool:** Shows that strategy beats raw stats, inspires underdogs
 - **Implementation**: Lines 145-189 in `records.ts`
 
-##### 2.2 Biggest ELO Gain ✅
-- **Metric:** Largest single-battle ELO increase
-- **Display:**
-  - Robot name and owner
-  - ELO before and after (e.g., "1450 → 1502 (+52)")
-  - Opponent's ELO
-  - Date achieved
-- **Database Query:** `MAX(eloChange)` from Battle table
-- **Why It's Cool:** Demonstrates what's possible when beating strong opponents
-- **Implementation**: Lines 191-205 in `records.ts`
+##### 2.2 Biggest ELO Gain ❌ REMOVED (Spec #46 R4.8)
+- **Status:** Removed July 2026. No longer returned by the API or rendered.
+- **Original metric:** Largest single-battle ELO increase
+- **Why removed:** `ELO_K_FACTOR` is a fixed 32, so the maximum possible gain is +32 and every entry in the ranking reported the same value.
 
-##### 2.3 Biggest ELO Loss ✅
-- **Metric:** Largest single-battle ELO decrease
-- **Display:**
-  - Robot name (anonymized or with permission)
-  - ELO before and after (e.g., "2150 → 2087 (-63)")
-  - Opponent's ELO
-  - Date achieved
-- **Database Query:** `MIN(eloChange)` from Battle table (where negative)
-- **Why It's Cool:** Shows risk of overconfidence, adds drama
-- **Implementation**: Lines 207-221 in `records.ts` (Note: Currently uses same query as ELO Gain - see Known Issues)
+##### 2.3 Biggest ELO Loss ❌ REMOVED (Spec #46 R4.8)
+- **Status:** Removed July 2026. No longer returned by the API or rendered.
+- **Original metric:** Largest single-battle ELO decrease
+- **Why removed:** Same fixed `ELO_K_FACTOR` of 32 — every entry reported −32. This also retires the recorded Known Issue that it shared a query with Biggest ELO Gain.
 
 #### 3. **Career Records** (Lifetime Stats) ✅ Implemented
 

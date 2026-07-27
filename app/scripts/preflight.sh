@@ -172,8 +172,16 @@ fi
 # entirely. Estimate the incoming dump from the largest existing backup and
 # require 1.5x that much free space (dumps grow between deploys).
 BACKUP_HEADROOM_FACTOR="${BACKUP_HEADROOM_FACTOR:-150}"  # percent
-LARGEST_BACKUP_KB=$(find "${BACKUP_DIR}" -type f \( -name "*.dump" -o -name "*.sql.gz" \) -printf '%s\n' 2>/dev/null \
-  | sort -n | tail -1 | awk '{printf "%d", $1 / 1024}')
+# `find` exits non-zero when BACKUP_DIR does not exist, and under `set -o pipefail`
+# that failure propagates out of the whole pipeline and aborts the deploy before
+# the `:-0` fallback below can run. A host that has never taken a backup — a fresh
+# provision, or the very first deploy — would fail pre-flight for having no
+# backups rather than for being short of disk. `|| true` keeps the probe advisory:
+# no backups simply means no estimate, and the guard below is skipped.
+LARGEST_BACKUP_KB=$(
+  { find "${BACKUP_DIR}" -type f \( -name "*.dump" -o -name "*.sql.gz" \) -printf '%s\n' 2>/dev/null || true; } \
+    | sort -n | tail -1 | awk '{printf "%d", $1 / 1024}'
+)
 LARGEST_BACKUP_KB="${LARGEST_BACKUP_KB:-0}"
 
 if [ "${LARGEST_BACKUP_KB}" -gt 0 ]; then

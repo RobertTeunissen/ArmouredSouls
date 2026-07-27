@@ -5,7 +5,7 @@
  * the maximum attribute level for its category. Level 0 (no academy) caps
  * attributes at 10; each academy level raises the cap per the map below.
  *
- * See docs/prd_core/STABLE_SYSTEM.md for authoritative specification.
+ * See docs/game-systems/STABLE_SYSTEM.md for authoritative specification.
  */
 
 export const ACADEMY_CAP_MAP: Readonly<Record<number, number>> = {

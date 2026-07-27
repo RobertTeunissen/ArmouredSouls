@@ -59,7 +59,7 @@ export const TRAINING_DISCOUNT_MAX = 90;
  * `getRosterCapacity()` from `./rosterCapacity` to derive it from the
  * `roster_expansion` facility level.
  *
- * See docs/prd_core/STABLE_SYSTEM.md for the authoritative specification.
+ * See docs/game-systems/STABLE_SYSTEM.md for the authoritative specification.
  */
 export function calculateTrainingFacilityDiscount(level: number, rosterCapacity: number): number {
   // Clamped rather than allowed to go negative: roster_expansion caps at level 9

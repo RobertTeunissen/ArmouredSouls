@@ -63,7 +63,11 @@ function LeaderboardsPrestigePage() {
 
   useEffect(() => {
     fetchLeaderboard();
-   
+    // Runs once on mount. Spec #46 R5 removed the filter that used to be the sole
+    // dependency here; the fetch now takes no parameters, so there is nothing to
+    // re-run on. react-hooks/exhaustive-deps does not flag this — it reports
+    // nothing for a bare call to a component-scope function — so no suppression
+    // directive is needed, and adding one is itself a lint warning.
   }, []);
 
   const getRankColor = (rank: string) => {

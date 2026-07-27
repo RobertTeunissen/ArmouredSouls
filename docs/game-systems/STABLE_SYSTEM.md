@@ -2,14 +2,14 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Design Document  
-**Version**: v1.0  
-**Last Updated**: April 2, 2026  
+**Version**: v1.3  
+**Last Updated**: July 26, 2026  
 **Status**: ✅ Implemented 
 
 ## Version History
 
+- **v1.3** (July 26, 2026): Training Facility discount is now roster-dependent — `max(0, 10 - Roster_Capacity)` percentage points per level, clamped to 90%. maxLevel raised 9 → 10, since the old flat formula saturated at level 9 and made level 10 worthless (Spec #46 R11).
 - **v1.2** (April 16, 2026): Added Tuning Bay (facility #16) to the facility list with pool size formula, operating costs, prestige requirements, and combat integration summary. Updated facility count from 15 to 16.
-- **v1.2** (July 26, 2026): Training Facility discount is now roster-dependent — `max(0, 10 - Roster_Capacity)` percentage points per level, clamped to 90%. maxLevel raised 9 → 10, since the old flat formula saturated at level 9 and made level 10 worthless (Spec #46 R11).
 - **v1.1** (April 2, 2026): Audit against codebase. Fixed operating cost formulas (Repair Bay, Training Facility). Fixed Training Facility maxLevel (9, not 10). Fixed streaming studio multiplier formula inconsistency. Removed stale User model fields (totalBattles, totalWins, highestELO — computed at query time). Updated facility count to 15 (added Streaming Studio). Updated file path references for backend service consolidation.
 - **v1.0** (Jan 30, 2026): Initial draft
 

@@ -4,7 +4,7 @@
  * Base cost formula: (Math.floor(currentLevel) + 1) × 1500 credits per level.
  * Training Facility discount is applied via calculateTrainingFacilityDiscount.
  *
- * See docs/prd_core/STABLE_SYSTEM.md for authoritative specification.
+ * See docs/game-systems/STABLE_SYSTEM.md for authoritative specification.
  */
 
 import { calculateTrainingFacilityDiscount } from './discounts';
