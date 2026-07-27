@@ -255,8 +255,8 @@ This plan delivers the Grand Melee mode end-to-end. Implementation proceeds in p
     - Touch targets ≥ 44px
     - _Requirements: R15.4, R15.5, R9.13_
 
-- [ ] 10. Achievement integration
-  - [ ] 10.1 Add Grand Melee achievement seed data
+- [x] 10. Achievement integration
+  - [x] 10.1 Add Grand Melee achievement seed data
     - Add 5 achievements to `app/backend/src/config/achievements.ts`:
       - C83 "Real Steel": `grandMeleeWins >= 1`, easy tier, reference: Real Steel movie
       - C84 "The Hunger Bots": `grandMeleeWins >= 5`, medium tier, reference: Hunger Games parody
@@ -266,11 +266,12 @@ This plan delivers the Grand Melee mode end-to-end. Implementation proceeds in p
     - Add icons and descriptions for each
     - _Requirements: R11.1, R11.4_
 
-  - [ ] 10.2 Wire achievement checks for Grand Melee battles
+  - [x] 10.2 Wire achievement checks for Grand Melee battles
     - In `checkAndAwardAchievements`: when `battleType === 'grand_melee'`, evaluate Grand Melee achievement triggers using `robot.grandMeleeWins`, `robot.grandMeleeTop3`
     - For C87 "Untouchable": check `placement === 1 && finalHPPercent > 75` (one-shot boolean, not counter-based)
     - Ensure `updateRobotCombatStats` increments `grandMeleeWins` when placement === 1 and `grandMeleeTop3` when placement <= 3
     - _Requirements: R11.2, R11.3, R11.5_
+    - **Completed under Spec #46 R8 (Cause C).** The seed data in 10.1 shipped as L26-L30 rather than C83-C87, but 10.2 never landed: the three trigger types were absent from `EVENT_TRIGGER_MAP`, had no branch in `evaluateTrigger()`, no entry in the progress resolver, and `updateRobotCombatStats()` never incremented `grandMeleeWins` or `grandMeleeTop3`. All five achievements were therefore unreachable from launch. These boxes being left unchecked in a spec filed as done is how that escaped notice.
 
 - [ ] 11. Hall of Records integration
   - [ ] 11.1 Add `fetchGrandMeleeRecords()` to `records-queries.ts`

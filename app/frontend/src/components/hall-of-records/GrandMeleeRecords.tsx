@@ -44,6 +44,12 @@ export function GrandMeleeRecords({ records }: GrandMeleeRecordsProps) {
               rank={index + 1}
               value={`${record.totalKills} kills`}
               description={`${record.robotName} by ${record.username}`}
+              details={[
+                `Matches: ${record.grandMeleeMatches}`,
+                // Spec #46 R4.17: total kills alone rewards volume, so the rate
+                // sits alongside it.
+                `Kills per match: ${record.killsPerMatch.toFixed(2)}`,
+              ]}
             />
           ))}
         </RecordSection>

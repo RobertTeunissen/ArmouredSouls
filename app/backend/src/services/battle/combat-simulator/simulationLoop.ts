@@ -604,6 +604,12 @@ export function simulateBattleMulti(
         events.push({
           timestamp: roundTime(currentTime),
           type: 'destroyed',
+          // Spec #46 R4.16: the destroyed event previously carried no attacker
+          // or defender, so any consumer counting kills or elimination order by
+          // name — Grand Melee's computePlacements() does both — matched against
+          // undefined and silently produced zeros.
+          attacker: state.lastDamagedBy,
+          defender: state.robot.name,
           message: `💀 ${state.robot.name} destroyed!`,
           robot1HP: states[0]?.currentHP ?? 0,
           robot2HP: states[1]?.currentHP ?? 0,
@@ -625,6 +631,9 @@ export function simulateBattleMulti(
           events.push({
             timestamp: roundTime(currentTime),
             type: 'yield',
+            // `defender` names the yielding robot so multi-robot modes can order
+            // eliminations. A yield is not a kill, so no `attacker` is set.
+            defender: state.robot.name,
             message: `🏳️ ${state.robot.name} yields at ${((state.currentHP / state.maxHP) * 100).toFixed(0)}% HP!`,
             robot1HP: states[0]?.currentHP ?? 0,
             robot2HP: states[1]?.currentHP ?? 0,

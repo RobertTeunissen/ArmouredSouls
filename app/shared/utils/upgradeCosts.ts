@@ -14,10 +14,20 @@ export function calculateBaseCost(currentLevel: number): number {
   return (Math.floor(currentLevel) + 1) * 1500;
 }
 
-/** Discounted cost for a single level upgrade, applying Training Facility discount. */
-export function calculateDiscountedUpgradeCost(currentLevel: number, trainingLevel: number): number {
+/**
+ * Discounted cost for a single level upgrade, applying the Training Facility discount.
+ *
+ * Spec #46 R11: `rosterCapacity` is required because the discount rate now shrinks
+ * as the roster grows. Derive it with `getRosterCapacity()` from
+ * `./rosterCapacity`; a single-robot stable passes 1.
+ */
+export function calculateDiscountedUpgradeCost(
+  currentLevel: number,
+  trainingLevel: number,
+  rosterCapacity: number,
+): number {
   const baseCost = calculateBaseCost(currentLevel);
-  const discountPercent = calculateTrainingFacilityDiscount(trainingLevel);
+  const discountPercent = calculateTrainingFacilityDiscount(trainingLevel, rosterCapacity);
   return Math.floor(baseCost * (100 - discountPercent) / 100);
 }
 

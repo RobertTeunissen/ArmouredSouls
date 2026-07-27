@@ -9,6 +9,7 @@
 ## Version History
 
 - **v1.2** (April 16, 2026): Added Tuning Bay (facility #16) to the facility list with pool size formula, operating costs, prestige requirements, and combat integration summary. Updated facility count from 15 to 16.
+- **v1.2** (July 26, 2026): Training Facility discount is now roster-dependent — `max(0, 10 - Roster_Capacity)` percentage points per level, clamped to 90%. maxLevel raised 9 → 10, since the old flat formula saturated at level 9 and made level 10 worthless (Spec #46 R11).
 - **v1.1** (April 2, 2026): Audit against codebase. Fixed operating cost formulas (Repair Bay, Training Facility). Fixed Training Facility maxLevel (9, not 10). Fixed streaming studio multiplier formula inconsistency. Removed stale User model fields (totalBattles, totalWins, highestELO — computed at query time). Updated facility count to 15 (added Streaming Studio). Updated file path references for backend service consolidation.
 - **v1.0** (Jan 30, 2026): Initial draft
 
@@ -112,29 +113,49 @@ Players invest Credits in facility upgrades that provide stable-wide benefits. A
 - Maximum benefit requires both high Repair Bay level AND large robot roster
 
 **2. Training Facility** (Operating Cost: ₡250/day per level)
-- **Level 1** (₡150,000): 10% discount on attribute upgrade costs (₡250/day operating cost)
-- **Level 2** (₡300,000): 20% discount on attribute upgrade costs (₡500/day operating cost)
-- **Level 3** (₡450,000): 30% discount on attribute upgrade costs (₡750/day operating cost)
-- **Level 4** (₡600,000, requires 1,000 prestige): 40% discount on attribute upgrade costs (₡1,000/day operating cost)
-- **Level 5** (₡750,000): 50% discount on attribute upgrade costs (₡1,250/day operating cost)
-- **Level 6** (₡900,000): 60% discount on attribute upgrade costs (₡1,500/day operating cost)
-- **Level 7** (₡1,050,000, requires 5,000 prestige): 70% discount on attribute upgrade costs (₡1,750/day operating cost)
-- **Level 8** (₡1,200,000): 80% discount on attribute upgrade costs (₡2,000/day operating cost)
-- **Level 9** (₡1,350,000, requires 10,000 prestige): 90% discount on attribute upgrade costs (₡2,250/day operating cost, maximum)
 
-**Discount Formula**: Discount % = Training Facility Level × 10%, capped at 90%
+**Discount Formula** (Spec #46 R11):
+```
+rate_per_level = max(0, 10 - Roster_Capacity)     // percentage points
+discount%      = clamp(rate_per_level × level, 0, 90)
+```
+
+`Roster_Capacity` is the `roster_expansion` facility level + 1 — the number of robot slots the stable has, not a live count of robots. It is derived from the facility level so it is monotonic and cannot be gamed by selling a robot.
+
+**The discount now depends on roster size as well as facility level.** A concentrated stable gets far more from this facility than a wide one, putting it on the same axis as the Merchandising Hub. Worked examples:
+
+| Facility Level | Roster_Capacity | Rate per level | Discount |
+|---|---|---|---|
+| 5 | 4 | 6% | 30% |
+| 8 | 2 | 8% | 64% |
+| 10 | 1 | 9% | **90%** (maximum) |
+| 10 | 10 | 0% | 0% |
+
+A 10-slot roster earns nothing from this facility at any level. That is intentional: a wide stable has ten robots' worth of attributes to fund and should not also get the deepest discount per upgrade.
+
+**Level costs and prestige gates** (₡150,000 × level, ₡250/day per level). The discount column below quotes the **best case** of Roster_Capacity 1 — the Facilities page shows the player's actual figure against their own roster:
+
+| Level | Cost | Prestige Gate | Max Discount (1 slot) | Operating Cost |
+|---|---|---|---|---|
+| 1 | ₡150,000 | — | 9% | ₡250/day |
+| 2 | ₡300,000 | — | 18% | ₡500/day |
+| 3 | ₡450,000 | — | 27% | ₡750/day |
+| 4 | ₡600,000 | 1,000 | 36% | ₡1,000/day |
+| 5 | ₡750,000 | — | 45% | ₡1,250/day |
+| 6 | ₡900,000 | — | 54% | ₡1,500/day |
+| 7 | ₡1,050,000 | 5,000 | 63% | ₡1,750/day |
+| 8 | ₡1,200,000 | — | 72% | ₡2,000/day |
+| 9 | ₡1,350,000 | 10,000 | 81% | ₡2,250/day |
+| 10 | ₡1,500,000 | — | **90%** | ₡2,500/day |
+
+**maxLevel is 10**, raised from 9 under Spec #46 R11. Under the old flat `min(level × 10, 90)` formula the discount saturated at level 9, so level 10 was worth literally nothing and the facility was capped at 9 to reflect that. With a roster-dependent rate, level 10 is the only way a single-robot stable reaches 90%, so the level now earns its place. Level 10 carries no prestige gate.
 
 **Operating Cost Formula**: Operating Cost = Level × ₡250/day
 
-**Break-Even Analysis**:
-- Level 1: Need ₡2,500/day in upgrades to cover operating costs (achievable in Bronze league)
-- Level 2: Need ₡2,500/day in upgrades to cover operating costs (double the discount!)
-- Full ROI: ~150 cycles for single-robot strategy, ~75 cycles for two-robot strategy
-
-**Strategic Value**: 
-- Early game (1 robot): Profitable from day 1 if upgrading regularly (₡2,500+/day)
-- Mid game (2 robots): Highly profitable, essential for competitive progression
-- Late game: Maximum 90% discount dramatically reduces upgrade costs for level 20-50 progression
+**Strategic Value**:
+- A single-robot stable should take this facility to level 10 — it is the deepest upgrade discount in the game
+- Every roster expansion permanently reduces the rate by 1 percentage point per level, so widening the roster and maxing this facility pull against each other
+- At Roster_Capacity 10 the facility is inert; do not buy it for a maximally wide stable
 
 **3. Weapons Workshop** (Operating Cost: ₡100/day per level)
 - **Level 0**: No discount, no resale

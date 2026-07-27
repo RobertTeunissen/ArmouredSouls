@@ -2,6 +2,7 @@ import express, { Response } from 'express';
 import { z } from 'zod';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { FACILITY_TYPES, getFacilityUpgradeCost, getFacilityConfig } from '../config/facilities';
+import { calculateFacilityOperatingCost, getRosterCapacity } from '../utils/economyFormulas';
 import prisma from '../lib/prisma';
 import { lockUserForSpending } from '../lib/creditGuard';
 import { eventLogger } from '../services/common/eventLogger';
@@ -13,6 +14,8 @@ import { validateRequest } from '../middleware/schemaValidator';
 import { recordLedgerEntry } from '../services/financial/recordLedgerEntry';
 import { securityMonitor } from '../services/security/securityMonitor';
 import { achievementService, type UnlockedAchievement } from '../services/achievement';
+// Spec #46 R11: Training Facility discount is roster-dependent.
+import { calculateTrainingFacilityDiscount } from '../shared/utils/discounts';
 
 const router = express.Router();
 
@@ -51,6 +54,11 @@ router.get('/', authenticateToken, validateRequest({}), async (req: AuthRequest,
       return acc;
     }, {} as Record<string, number>);
 
+    // Roster_Capacity and Prestige_Per_Slot for per-slot prestige gates and for
+    // the Booking Office / Merchandising Hub implication displays (Spec #46 R2)
+    const rosterCapacity = getRosterCapacity(facilityLevels['roster_expansion'] ?? 0);
+    const prestigePerSlot = user.prestige / rosterCapacity;
+
     // Filter to only implemented facilities, then combine with user data
     const implementedFacilities = FACILITY_TYPES.filter((f) => f.implemented);
 
@@ -64,6 +72,11 @@ router.get('/', authenticateToken, validateRequest({}), async (req: AuthRequest,
       if (config.prestigeRequirements && nextLevel <= config.maxLevel) {
         nextLevelPrestigeRequired = config.prestigeRequirements[nextLevel - 1] || 0;
       }
+
+      // Facilities flagged `prestigeGateIsPerSlot` gate on Prestige_Per_Slot
+      // rather than raw prestige, matching the quantity their benefit scales
+      // with (Spec #46 R2.11). Only merchandising_hub sets the flag today.
+      const gateValue = config.prestigeGateIsPerSlot ? prestigePerSlot : user.prestige;
 
       // Calculate dynamic benefits for repair bay
       let currentBenefit = config.benefits[currentLevel - 1] || 'No benefit yet';
@@ -79,37 +92,51 @@ router.get('/', authenticateToken, validateRequest({}), async (req: AuthRequest,
         }
       }
 
-      // Calculate operating costs
-      let currentOperatingCost = 0;
-      let nextOperatingCost = 0;
-      
+      // Training Facility discount depends on Roster_Capacity as well as level
+      // (Spec #46 R11), so the static benefit strings — which quote the
+      // single-robot best case — are replaced with the player's actual figure.
+      // Without this a 5-robot stable at L5 would read "up to 45%" while
+      // actually receiving 25%.
       if (config.type === 'training_facility') {
-        currentOperatingCost = currentLevel * 250;
-        nextOperatingCost = nextLevel * 250;
-      } else if (config.type === 'repair_bay') {
-        currentOperatingCost = currentLevel > 0 ? 100 * currentLevel : 0;
-        nextOperatingCost = nextLevel > 0 ? 100 * nextLevel : 0;
-      } else if (config.type === 'weapons_workshop') {
-        currentOperatingCost = currentLevel > 0 ? 100 * currentLevel : 0;
-        nextOperatingCost = nextLevel > 0 ? 100 * nextLevel : 0;
-      } else if (config.type === 'merchandising_hub') {
-        currentOperatingCost = currentLevel * 200;
-        nextOperatingCost = nextLevel * 200;
-      } else if (config.type === 'streaming_studio') {
-        currentOperatingCost = currentLevel * 100;
-        nextOperatingCost = nextLevel * 100;
-      } else if (config.type === 'storage_facility') {
-        currentOperatingCost = currentLevel > 0 ? 500 + (currentLevel - 1) * 250 : 0;
-        nextOperatingCost = nextLevel > 0 ? 500 + (nextLevel - 1) * 250 : 0;
-      } else if (config.type === 'combat_training_academy' || config.type === 'defense_training_academy' || config.type === 'mobility_training_academy' || config.type === 'ai_training_academy') {
-        currentOperatingCost = currentLevel * 250;
-        nextOperatingCost = nextLevel * 250;
-      } else if (config.type === 'roster_expansion') {
-        // Roster Expansion costs ₡500/day per robot slot beyond the first.
-        // robotCount is already fetched above.
-        currentOperatingCost = Math.max(0, (robotCount - 1)) * 500;
-        // Next level adds one more slot — show cost assuming the slot is filled
+        const ratePerLevel = Math.max(0, 10 - rosterCapacity);
+        const slotLabel = `${rosterCapacity} slot${rosterCapacity === 1 ? '' : 's'}`;
+
+        if (currentLevel > 0) {
+          const currentDiscount = calculateTrainingFacilityDiscount(currentLevel, rosterCapacity);
+          currentBenefit = ratePerLevel > 0
+            ? `${currentDiscount}% off attribute upgrades (${ratePerLevel}% per level × ${currentLevel} levels, at ${slotLabel})`
+            : `No discount — a ${slotLabel} roster earns 0% per level. Merge into fewer robots to benefit.`;
+        }
+
+        if (nextLevel <= config.maxLevel) {
+          const nextDiscount = calculateTrainingFacilityDiscount(nextLevel, rosterCapacity);
+          nextBenefit = ratePerLevel > 0
+            ? `${nextDiscount}% off attribute upgrades (${ratePerLevel}% per level × ${nextLevel} levels, at ${slotLabel})`
+            : `Still no discount at ${slotLabel} — upgrading this facility adds nothing until your roster is smaller.`;
+        }
+      }
+
+      // Operating costs come from the single shared formula (Spec #46 R6.1).
+      //
+      // This previously duplicated `calculateFacilityOperatingCost()` as a
+      // per-type if/else chain, and the duplicate had drifted: `booking_office`
+      // and `tuning_bay` were both absent, so the response reported ₡0/day for
+      // two facilities that actually cost ₡150 and ₡300 per level.
+      //
+      // `roster_expansion` keeps its special case because its cost is charged
+      // per *filled robot slot* rather than per facility level, which the
+      // level-only shared formula cannot express — it returns 0 for this type
+      // by design (R6.2).
+      let currentOperatingCost: number;
+      let nextOperatingCost: number;
+
+      if (config.type === 'roster_expansion') {
+        currentOperatingCost = Math.max(0, robotCount - 1) * 500;
+        // Next level adds one more slot — show the cost assuming it gets filled
         nextOperatingCost = robotCount * 500;
+      } else {
+        currentOperatingCost = calculateFacilityOperatingCost(config.type, currentLevel);
+        nextOperatingCost = calculateFacilityOperatingCost(config.type, nextLevel);
       }
 
       return {
@@ -118,7 +145,8 @@ router.get('/', authenticateToken, validateRequest({}), async (req: AuthRequest,
         upgradeCost,
         canUpgrade: currentLevel < config.maxLevel,
         nextLevelPrestigeRequired,
-        hasPrestige: user.prestige >= nextLevelPrestigeRequired,
+        prestigeGateIsPerSlot: config.prestigeGateIsPerSlot ?? false,
+        hasPrestige: gateValue >= nextLevelPrestigeRequired,
         canAfford: user.currency >= upgradeCost,
         currentBenefit,
         nextBenefit,
@@ -132,6 +160,7 @@ router.get('/', authenticateToken, validateRequest({}), async (req: AuthRequest,
       userPrestige: user.prestige,
       userCurrency: user.currency,
       robotCount, // Include for frontend display
+      rosterCapacity, // Drives the Training Facility discount and merchandising (Spec #46)
     });
 });
 
@@ -182,15 +211,35 @@ router.post('/upgrade', authenticateToken, validateRequest({ body: upgradeBodySc
       );
     }
 
-    // Validate prestige requirement
+    // Validate prestige requirement.
+    //
+    // Facilities flagged `prestigeGateIsPerSlot` compare against Prestige_Per_Slot
+    // rather than raw prestige, matching the quantity their benefit scales with
+    // (Spec #46 R2.11). Note this runs only on the upgrade path, so a facility
+    // already owned above its current gate keeps its level and continues
+    // producing income — there is no downgrade or refund path (R2.12).
     if (config.prestigeRequirements && config.prestigeRequirements[targetLevel - 1]) {
       const requiredPrestige = config.prestigeRequirements[targetLevel - 1];
-      if (user.prestige < requiredPrestige) {
+
+      let gateValue = user.prestige;
+      let gateUnit = 'prestige';
+
+      if (config.prestigeGateIsPerSlot) {
+        const rosterExpansion = await prisma.facility.findUnique({
+          where: { userId_facilityType: { userId, facilityType: 'roster_expansion' } },
+          select: { level: true },
+        });
+        const rosterCapacity = getRosterCapacity(rosterExpansion?.level ?? 0);
+        gateValue = user.prestige / rosterCapacity;
+        gateUnit = `prestige per robot slot (you have ${user.prestige.toLocaleString()} prestige across ${rosterCapacity} slot${rosterCapacity === 1 ? '' : 's'})`;
+      }
+
+      if (gateValue < requiredPrestige) {
         throw new AuthError(
           AuthErrorCode.FORBIDDEN,
-          `${config.name} Level ${targetLevel} requires ${requiredPrestige.toLocaleString()} prestige`,
+          `${config.name} Level ${targetLevel} requires ${requiredPrestige.toLocaleString()} ${gateUnit}`,
           403,
-          { required: requiredPrestige, current: user.prestige }
+          { required: requiredPrestige, current: Math.floor(gateValue) }
         );
       }
     }

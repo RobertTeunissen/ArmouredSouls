@@ -40,11 +40,15 @@ function setCache(key: string, data: unknown): void {
 
 // --- Zod schemas ---
 
+// Spec #46 R5: the fame leaderboard no longer accepts `league` or `minBattles`.
+// Both suppressed entrants rather than filtering them — `robots.total_battles`
+// is never incremented for KotH or Grand Melee (both orchestrators pass
+// skipBattleCounters), so a minimum-battles default hid robots whose fame came
+// from those modes, and the league filter joined standings on league_1v1 only.
+// Zod's default .strip() means an old client sending either is ignored, not rejected.
 const fameQuerySchema = z.object({
   page: z.coerce.number().int().positive().optional(),
   limit: z.coerce.number().int().positive().max(100).optional(),
-  league: z.string().max(30).optional(),
-  minBattles: z.coerce.number().int().nonnegative().optional(),
 });
 
 const lossesQuerySchema = z.object({
@@ -53,25 +57,27 @@ const lossesQuerySchema = z.object({
   league: z.string().max(30).optional(),
 });
 
+// Spec #46 R5: the prestige leaderboard no longer accepts `minRobots`, which
+// suppressed single-robot stables from a ranking of stable prestige.
 const prestigeQuerySchema = z.object({
   page: z.coerce.number().int().positive().optional(),
   limit: z.coerce.number().int().positive().max(100).optional(),
-  minRobots: z.coerce.number().int().nonnegative().optional(),
 });
 
 /**
  * GET /api/leaderboards/fame
  */
 router.get('/fame', validateRequest({ query: fameQuerySchema }), async (req: Request, res: Response) => {
-  const cacheKey = `fame:${req.query.page || 1}:${req.query.limit || 100}:${req.query.league || ''}:${req.query.minBattles || 10}`;
+  // Cache key carries only the surviving parameters (Spec #46 R5.15) — a stale
+  // fragment for a removed filter would fragment the cache and could serve a
+  // filtered payload to an unfiltered request.
+  const cacheKey = `fame:${req.query.page || 1}:${req.query.limit || 100}`;
   const cached = getCachedOrNull(cacheKey);
   if (cached) { res.set('Cache-Control', 'public, max-age=300'); res.json(cached); return; }
 
   const result = await getFameLeaderboard({
     page: parseInt(req.query.page as string) || 1,
     limit: Math.min(parseInt(req.query.limit as string) || 100, 100),
-    league: req.query.league as string,
-    minBattles: parseInt(req.query.minBattles as string) || 10,
   });
 
   const response = { ...result, timestamp: new Date().toISOString() };
@@ -104,14 +110,13 @@ router.get('/losses', validateRequest({ query: lossesQuerySchema }), async (req:
  * GET /api/leaderboards/prestige
  */
 router.get('/prestige', validateRequest({ query: prestigeQuerySchema }), async (req: Request, res: Response) => {
-  const cacheKey = `prestige:${req.query.page || 1}:${req.query.limit || 100}:${req.query.minRobots || 1}`;
+  const cacheKey = `prestige:${req.query.page || 1}:${req.query.limit || 100}`;
   const cached = getCachedOrNull(cacheKey);
   if (cached) { res.set('Cache-Control', 'public, max-age=300'); res.json(cached); return; }
 
   const result = await getPrestigeLeaderboard({
     page: parseInt(req.query.page as string) || 1,
     limit: Math.min(parseInt(req.query.limit as string) || 100, 100),
-    minRobots: parseInt(req.query.minRobots as string) || 1,
   });
 
   const response = { ...result, timestamp: new Date().toISOString() };

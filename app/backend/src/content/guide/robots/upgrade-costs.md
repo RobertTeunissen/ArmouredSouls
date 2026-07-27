@@ -49,7 +49,7 @@ Getting one attribute from 1 to 10 costs ₡81,000. Getting it from 1 to 50 cost
 
 ## Training Facility Discount
 
-The **Training Facility** is one of the most impactful facilities you can invest in. Each level provides a **10% discount** on all attribute upgrade costs, stacking up to a maximum of 90% off at the highest levels.
+The **Training Facility** is one of the most impactful facilities you can invest in — if your roster is small. Each level provides a discount of **(10 − your robot slots)%** on all attribute upgrade costs, up to a maximum of 90% off. With 1 robot that is 9% per level, reaching 90% at Level 10. With 4 robots it is 6% per level, so Level 5 gives 30%. With 10 robots the facility gives nothing.
 
 | Training Facility Level | Discount | Effective Cost |
 |------------------------|----------|---------------|
@@ -78,7 +78,7 @@ The Training Facility has a daily operating cost that scales with its level (₡
 - **Levels 6–9**: Late-game optimization. The discount is enormous, but operating costs are higher and some levels require significant Prestige thresholds
 
 ```callout-warning
-Higher Training Facility levels require Prestige thresholds to unlock (Level 4 needs 1,000 Prestige, Level 7 needs 5,000, Level 9 needs 10,000). Plan your Prestige progression alongside your facility investments.
+Higher Training Facility levels require Prestige thresholds to unlock (Level 4 needs 1,000 Prestige, Level 7 needs 5,000, Level 9 needs 10,000; Level 10 is ungated). Plan your Prestige progression alongside your facility investments.
 ```
 
 ### Discount Impact on Total Build Cost

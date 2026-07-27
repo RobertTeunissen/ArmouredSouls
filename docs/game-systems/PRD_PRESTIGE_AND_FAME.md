@@ -174,6 +174,42 @@ Displayed on the fame leaderboard (`/leaderboards/fame`).
 
 ---
 
+## Leaderboard Scope (Spec #46)
+
+Both leaderboards present the ranked value and identifying context only. Neither accepts a filter.
+
+### Fame leaderboard — `/leaderboards/fame`
+
+| | |
+|---|---|
+| Ranks | Individual robots by `robots.fame` descending, tie-broken by `robots.id` |
+| Query parameters | `page`, `limit` only |
+| Columns | Rank, Robot, Fame, Tier, Stable, ELO, Record, Win %, Kills, Damage |
+
+**Every robot is ranked, with no minimum battle count.** The removed `minBattles` filter defaulted to 10 and actively hid entrants, because `robots.total_battles` is never incremented for KotH or Grand Melee — both orchestrators pass `skipBattleCounters: true` to `updateRobotCombatStats()`. A robot earning its fame in those modes reports zero battles, so the default excluded it from a fame ranking despite both modes awarding fame.
+
+The removed `league` filter had the same effect for a different reason: it matched `standings.tier` for `mode = 'league_1v1'` only, so selecting any tier dropped every robot without a 1v1 standing. The `LEFT JOIN` on `standings` is gone entirely, along with the League column it fed — a 1v1-scoped tier is not meaningful beside a value earned across all modes.
+
+### Prestige leaderboard — `/leaderboards/prestige`
+
+| | |
+|---|---|
+| Ranks | Stables by `users.prestige` descending, tie-broken by `users.id` |
+| Query parameters | `page`, `limit` only |
+| Columns | Rank, Stable, Prestige, Rank title, Robots, Record, Win %, Highest ELO, Titles |
+
+**Every stable is ranked, with no minimum robot count.** The removed `minRobots` filter suppressed small stables from a ranking of stable prestige. `totalRobots` is retained as identifying context.
+
+The derived bonus column was removed. It combined the battle-winnings bonus and the merchandising multiplier — neither is a ranked quantity, and both belong on the income dashboard where a player can act on them. Removing it also deleted a third copy of the merchandising multiplier formula, which Spec #46 R2 re-bases to prestige per robot slot.
+
+**Prestige accrues once per winning robot, so a larger roster ranks higher.** This is a property of the metric and is deliberately not normalised. Spec #46 R2 addresses roster scaling only where prestige drives *income*, not where it drives ranking.
+
+### Removed parameters are ignored, not rejected
+
+`fameQuerySchema` and `prestigeQuerySchema` rely on Zod's default `.strip()` behaviour, so a bookmarked URL or an old client sending `league`, `minBattles`, or `minRobots` receives the unfiltered result rather than a validation error. The in-memory cache keys were rebuilt from the surviving parameters only, so no stale key fragment can serve a filtered payload to an unfiltered request.
+
+---
+
 ## Implementation Files
 
 All paths relative to `app/backend/src/`.
@@ -198,8 +234,8 @@ All paths relative to `app/backend/src/`.
 | Page | What it shows |
 |---|---|
 | `DashboardPage.tsx` | Current prestige value |
-| `LeaderboardsPrestigePage.tsx` | Prestige rankings with rank titles, income bonuses |
-| `LeaderboardsFamePage.tsx` | Robot fame rankings with tier colors, league filters |
+| `LeaderboardsPrestigePage.tsx` | Prestige rankings with rank titles (no filters, no derived bonus column — Spec #46) |
+| `LeaderboardsFamePage.tsx` | Robot fame rankings with tier colors (no filters, no League column — Spec #46) |
 | `PerformanceStats.tsx` | Robot fame on detail page |
 | `FacilitiesPage.tsx` | Prestige requirements per facility level, lock/unlock state |
 

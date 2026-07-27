@@ -41,11 +41,8 @@ interface BattleWithParticipants {
   participants: ParticipantWithRobot[];
 }
 
-function getWinnerAndLoser(battle: BattleWithParticipants) {
-  const winner = battle.participants.find(p => p.robotId === battle.winnerId);
-  const loser = battle.participants.find(p => p.robotId !== battle.winnerId);
-  return { winner, loser };
-}
+// `getWinnerAndLoser()` was removed with Spec #46 R4.1/R4.2 — its only callers
+// were the Longest Battle and Fastest Victory mappers.
 
 function mapParticipantDisplay(p: ParticipantWithRobot) {
   return { id: p.robot.id, name: p.robot.name, username: getUserDisplayName(p.robot.user) };
@@ -60,51 +57,82 @@ const battleWithParticipantsInclude = {
 
 // ─── Combat Records ─────────────────────────────────────────────────
 
-export async function fetchCombatRecords() {
-  // Combat records only consider 1v1 battles (league/tournament) to avoid
-  // multi-participant ambiguity in winner/loser assignment
-  const oneVsOneFilter = { winnerId: { not: null }, battleType: { in: ['league_1v1', 'tournament_1v1'] } };
+/**
+ * Battle types Most Damage is scoped by (Spec #46 R4.5).
+ *
+ * A single overall ranking is meaningless: a Grand Melee robot swings at 19
+ * opponents over the same clock a 1v1 robot spends on one, so the top of an
+ * unscoped list is just "which mode has the most targets". Scoping by mode
+ * makes each list a comparison between robots that faced the same conditions.
+ */
+export const DAMAGE_RECORD_MODES = [
+  'league_1v1',
+  'tournament_1v1',
+  'league_2v2',
+  'league_3v3',
+  'koth',
+  'grand_melee',
+] as const;
 
-  const fastestVictories = await prisma.battle.findMany({
-    where: { ...oneVsOneFilter, durationSeconds: { gt: 0 } },
-    orderBy: { durationSeconds: 'asc' },
-    take: 10,
-    include: battleWithParticipantsInclude,
-  });
+export type DamageRecordMode = typeof DAMAGE_RECORD_MODES[number];
 
-  const longestBattles = await prisma.battle.findMany({
-    where: oneVsOneFilter,
-    orderBy: { durationSeconds: 'desc' },
-    take: 10,
-    include: battleWithParticipantsInclude,
-  });
+/** Modes where exactly one opponent exists, so naming them is well defined. */
+const SINGLE_OPPONENT_MODES = new Set<string>(['league_1v1', 'tournament_1v1']);
 
-  // Most Damage in Single Battle (1v1 only for clean opponent display)
-  const battleParticipants = await prisma.battleParticipant.findMany({
-    where: { battle: { battleType: { in: ['league_1v1', 'tournament_1v1'] } } },
+async function fetchMostDamageForMode(battleType: DamageRecordMode) {
+  const rows = await prisma.battleParticipant.findMany({
+    where: { battle: { battleType } },
     orderBy: { damageDealt: 'desc' },
     take: 10,
     include: {
       robot: { include: { user: { select: userSelect } } },
-      battle: {
-        include: battleWithParticipantsInclude,
-      },
+      battle: { include: battleWithParticipantsInclude },
     },
   });
 
-  const mostDamageDataList = battleParticipants.map(participant => {
-    const opponent = participant.battle.participants.find(p => p.robotId !== participant.robotId);
+  const namesOpponent = SINGLE_OPPONENT_MODES.has(battleType);
+
+  return rows.map(participant => {
+    const opponent = namesOpponent
+      ? participant.battle.participants.find(p => p.robotId !== participant.robotId)
+      : undefined;
     return {
       battleId: participant.battle.id,
       damageDealt: participant.damageDealt,
-      robot: { id: participant.robot.id, name: participant.robot.name, username: getUserDisplayName(participant.robot.user) },
-      opponent: opponent
-        ? { id: opponent.robot.id, name: opponent.robot.name, username: getUserDisplayName(opponent.robot.user) }
-        : { id: 0, name: 'Unknown', username: '' },
+      robot: {
+        id: participant.robot.id,
+        name: participant.robot.name,
+        username: getUserDisplayName(participant.robot.user),
+      },
+      // Multi-participant modes omit the opponent entirely rather than picking
+      // an arbitrary one of many.
+      ...(namesOpponent
+        ? {
+            opponent: opponent
+              ? { id: opponent.robot.id, name: opponent.robot.name, username: getUserDisplayName(opponent.robot.user) }
+              : { id: 0, name: 'Unknown', username: '' },
+          }
+        : {}),
       durationSeconds: participant.battle.durationSeconds,
       date: participant.battle.createdAt,
     };
   });
+}
+
+export async function fetchCombatRecords() {
+  // Spec #46 R4.1/R4.2: Longest Battle and Fastest Victory removed. Every
+  // league battle that reaches the MAX_BATTLE_DURATION cap forces a draw at the
+  // same duration, so Longest Battle reported an identical 2:00 for every entry
+  // and any duration-derived replacement inherits the same ceiling.
+
+  // Most Damage in Single Battle, scoped per mode (R4.5)
+  const damageByModeEntries = await Promise.all(
+    DAMAGE_RECORD_MODES.map(async (mode) => [mode, await fetchMostDamageForMode(mode)] as const),
+  );
+  const mostDamageInBattle = Object.fromEntries(damageByModeEntries) as Record<
+    DamageRecordMode,
+    Awaited<ReturnType<typeof fetchMostDamageForMode>>
+  >;
 
   // Narrowest Victory — winners with lowest finalHP (1v1 only)
   const narrowWinners = await prisma.battleParticipant.findMany({
@@ -141,25 +169,7 @@ export async function fetchCombatRecords() {
     });
 
   return {
-    fastestVictory: fastestVictories.map(battle => {
-      const { winner, loser } = getWinnerAndLoser(battle);
-      return {
-        battleId: battle.id, durationSeconds: battle.durationSeconds,
-        winner: winner ? mapParticipantDisplay(winner) : { id: 0, name: 'Unknown', username: '' },
-        loser: loser ? mapParticipantDisplay(loser) : { id: 0, name: 'Unknown', username: '' },
-        date: battle.createdAt,
-      };
-    }),
-    longestBattle: longestBattles.map(battle => {
-      const { winner, loser } = getWinnerAndLoser(battle);
-      return {
-        battleId: battle.id, durationSeconds: battle.durationSeconds,
-        winner: winner ? mapParticipantDisplay(winner) : { id: 0, name: 'Unknown', username: '' },
-        loser: loser ? mapParticipantDisplay(loser) : { id: 0, name: 'Unknown', username: '' },
-        date: battle.createdAt,
-      };
-    }),
-    mostDamageInBattle: mostDamageDataList,
+    mostDamageInBattle,
     narrowestVictory: narrowestVictories,
   };
 }
@@ -167,8 +177,11 @@ export async function fetchCombatRecords() {
 // ─── Upset Records ──────────────────────────────────────────────────
 
 export async function fetchUpsetRecords() {
-  // Find upsets via BattleParticipant: winner had lower eloBefore than loser.
-  // Only considers 1v1 battles (league/tournament) to avoid multi-participant ambiguity.
+  // Spec #46 R4.6: tournament modes only. League matchmaking scores on LP and
+  // scopes to a tier instance, so it deliberately pairs robots of comparable
+  // standing — a "biggest upset" drawn from league battles is measuring the
+  // matchmaker's tolerance, not an underdog result. Tournament brackets are
+  // seeded, so a low-seed win against a high seed is a genuine upset.
   const upsetRows = await prisma.$queryRaw<Array<{ battle_id: number; upset_diff: number }>>`
     SELECT
       w."battle_id",
@@ -178,7 +191,7 @@ export async function fetchUpsetRecords() {
     JOIN "battles" b ON b.id = w."battle_id"
     WHERE b."winner_id" = w."robot_id"
       AND w."elo_before" < l."elo_before"
-      AND b."battle_type" IN ('league_1v1', 'tournament_1v1')
+      AND b."battle_type" = 'tournament_1v1'
     ORDER BY upset_diff DESC
     LIMIT 10
   `;
@@ -215,90 +228,79 @@ export async function fetchUpsetRecords() {
     })
     .filter((u): u is NonNullable<typeof u> => u !== null);
 
-  // Biggest ELO gains — use raw SQL to sort by computed ELO difference
-  const eloGainRows = await prisma.$queryRaw<Array<{ battle_id: number; robot_id: number; elo_gain: number }>>`
-    SELECT "battle_id", "robot_id", ("elo_after" - "elo_before") AS elo_gain
-    FROM "battle_participants"
-    WHERE "elo_after" > "elo_before"
-    ORDER BY elo_gain DESC
+  // Spec #46 R4.7: team tournament upsets, computed from *summed* team ELO
+  // rather than per-robot ELO. `calculateTeamBattleELOChanges()` derives a
+  // team's rating the same way, and summing is what makes a 2v2/3v3 upset
+  // differential larger than a 1v1 one — the gap that has to be overcome is
+  // the sum of two or three rating gaps.
+  const teamUpsetRows = await prisma.$queryRaw<
+    Array<{ battle_id: number; upset_diff: number; winning_team: number; battle_type: string; created_at: Date }>
+  >`
+    WITH team_elo AS (
+      SELECT
+        bp."battle_id",
+        bp."team",
+        SUM(bp."elo_before")::float AS team_elo_before
+      FROM "battle_participants" bp
+      JOIN "battles" b ON b.id = bp."battle_id"
+      WHERE b."battle_type" IN ('tournament_2v2', 'tournament_3v3')
+      GROUP BY bp."battle_id", bp."team"
+    )
+    SELECT
+      w."battle_id",
+      (l.team_elo_before - w.team_elo_before) AS upset_diff,
+      w."team" AS winning_team,
+      b."battle_type",
+      b."created_at"
+    FROM team_elo w
+    JOIN team_elo l ON w."battle_id" = l."battle_id" AND w."team" != l."team"
+    JOIN "battles" b ON b.id = w."battle_id"
+    WHERE b."winning_side" = w."team"
+      AND w.team_elo_before < l.team_elo_before
+    ORDER BY upset_diff DESC
     LIMIT 10
   `;
 
-  const gainBattleIds = eloGainRows.map(r => r.battle_id);
-  const gainBattles = gainBattleIds.length > 0
+  const teamUpsetBattleIds = teamUpsetRows.map(r => r.battle_id);
+  const teamUpsetBattles = teamUpsetBattleIds.length > 0
     ? await prisma.battle.findMany({
-        where: { id: { in: gainBattleIds } },
+        where: { id: { in: teamUpsetBattleIds } },
         include: battleWithParticipantsInclude,
       })
     : [];
-  const gainBattleMap = new Map(gainBattles.map(b => [b.id, b]));
+  const teamUpsetBattleMap = new Map(teamUpsetBattles.map(b => [b.id, b]));
 
-  const biggestEloGain = eloGainRows
+  const biggestTeamUpsets = teamUpsetRows
     .map(row => {
-      const battle = gainBattleMap.get(row.battle_id);
+      const battle = teamUpsetBattleMap.get(row.battle_id);
       if (!battle) return null;
-      const winner = battle.participants.find(p => p.robotId === row.robot_id);
-      const loser = battle.participants.find(p => p.robotId !== row.robot_id);
-      if (!winner) return null;
+      const underdogSide = battle.participants.filter(p => p.team === row.winning_team);
+      const favoriteSide = battle.participants.filter(p => p.team !== row.winning_team);
+      if (underdogSide.length === 0 || favoriteSide.length === 0) return null;
+      const sumElo = (side: typeof underdogSide) => side.reduce((acc, p) => acc + p.eloBefore, 0);
       return {
         battleId: battle.id,
-        eloChange: Number(row.elo_gain),
-        winner: {
-          id: winner.robot.id, name: winner.robot.name, username: getUserDisplayName(winner.robot.user),
-          eloBefore: winner.eloBefore, eloAfter: winner.eloAfter,
+        battleType: row.battle_type,
+        eloDifference: Number(row.upset_diff),
+        underdog: {
+          robots: underdogSide.map(mapParticipantDisplay),
+          teamEloBefore: sumElo(underdogSide),
         },
-        loser: loser
-          ? { id: loser.robot.id, name: loser.robot.name, username: getUserDisplayName(loser.robot.user), eloBefore: loser.eloBefore }
-          : undefined,
+        favorite: {
+          robots: favoriteSide.map(mapParticipantDisplay),
+          teamEloBefore: sumElo(favoriteSide),
+        },
         date: battle.createdAt,
       };
     })
     .filter((u): u is NonNullable<typeof u> => u !== null);
 
-  // Biggest ELO losses
-  const eloLossRows = await prisma.$queryRaw<Array<{ battle_id: number; robot_id: number; elo_loss: number }>>`
-    SELECT "battle_id", "robot_id", ("elo_before" - "elo_after") AS elo_loss
-    FROM "battle_participants"
-    WHERE "elo_after" < "elo_before"
-    ORDER BY elo_loss DESC
-    LIMIT 10
-  `;
-
-  const lossBattleIds = eloLossRows.map(r => r.battle_id);
-  const lossBattles = lossBattleIds.length > 0
-    ? await prisma.battle.findMany({
-        where: { id: { in: lossBattleIds } },
-        include: battleWithParticipantsInclude,
-      })
-    : [];
-  const lossBattleMap = new Map(lossBattles.map(b => [b.id, b]));
-
-  const biggestEloLoss = eloLossRows
-    .map(row => {
-      const battle = lossBattleMap.get(row.battle_id);
-      if (!battle) return null;
-      const loser = battle.participants.find(p => p.robotId === row.robot_id);
-      const winner = battle.participants.find(p => p.robotId !== row.robot_id);
-      if (!loser) return null;
-      return {
-        battleId: battle.id,
-        eloChange: Number(row.elo_loss),
-        loser: {
-          id: loser.robot.id, name: loser.robot.name, username: getUserDisplayName(loser.robot.user),
-          eloBefore: loser.eloBefore, eloAfter: loser.eloAfter,
-        },
-        winner: winner
-          ? { id: winner.robot.id, name: winner.robot.name, username: getUserDisplayName(winner.robot.user) }
-          : undefined,
-        date: battle.createdAt,
-      };
-    })
-    .filter((u): u is NonNullable<typeof u> => u !== null);
-
+  // Spec #46 R4.8: Biggest ELO Gain and Biggest ELO Loss removed. ELO_K_FACTOR
+  // is a fixed 32, so the extreme of both is +32 / -32 for every entry and the
+  // ranking carried no information.
   return {
     biggestUpset: biggestUpsets,
-    biggestEloGain,
-    biggestEloLoss,
+    biggestTeamUpset: biggestTeamUpsets,
   };
 }
 
@@ -443,23 +445,41 @@ export async function fetchPrestigeRecords() {
 
 // ─── KotH Records ───────────────────────────────────────────────────
 
+/**
+ * Round a KotH zone metric to the Zone_Metric_Precision of one decimal.
+ *
+ * `standings.total_zone_score` and `total_zone_time` are `Float` columns
+ * accumulated by repeated `+=` of per-tick contributions, which leaves binary
+ * floating-point residue — `1642.7000000000005` shipped to the Hall of Records
+ * as-is. One decimal is the meaningful resolution: the simulation advances in
+ * 0.1s ticks, so anything finer is noise rather than measurement.
+ *
+ * Rounded here rather than in `KothRecords.tsx` so the API ships display-ready
+ * values and every consumer sees the same number.
+ */
+function roundToZonePrecision(value: number): number {
+  return Math.round(value * 10) / 10;
+}
+
 export async function fetchKothRecords(): Promise<Record<string, unknown> | undefined> {
   // Query standings for KotH records (source of truth since Spec #40)
   const kothFilter = { mode: 'koth' as const, totalMatches: { gt: 0 } };
 
-  const [mostWinsStandings, highestZoneScoreStandings, mostKillsStandings, longestStreakStandings, mostZoneTimeStandings, bestPlacementStandings, zoneDominatorStandings] =
+  // Spec #46 R4.3: Best Placement removed. Any robot that has ever won a KotH
+  // match has a bestPlacement of 1, so the category ranked every winner as
+  // joint first and carried no information.
+  const [mostWinsStandings, highestZoneScoreStandings, mostKillsStandings, longestStreakStandings, mostZoneTimeStandings, zoneDominatorStandings] =
     await Promise.all([
       prisma.standing.findMany({ where: { ...kothFilter, entityType: 'robot' }, orderBy: { wins: 'desc' }, take: 10 }),
       prisma.standing.findMany({ where: { ...kothFilter, entityType: 'robot' }, orderBy: { totalZoneScore: 'desc' }, take: 10 }),
       prisma.standing.findMany({ where: { ...kothFilter, entityType: 'robot' }, orderBy: { totalKills: 'desc' }, take: 10 }),
       prisma.standing.findMany({ where: { ...kothFilter, entityType: 'robot' }, orderBy: { bestWinStreak: 'desc' }, take: 10 }),
       prisma.standing.findMany({ where: { ...kothFilter, entityType: 'robot' }, orderBy: { totalZoneTime: 'desc' }, take: 10 }),
-      prisma.standing.findMany({ where: { ...kothFilter, entityType: 'robot', bestPlacement: { not: null } }, orderBy: { bestPlacement: 'asc' }, take: 10 }),
       prisma.standing.findMany({ where: { ...kothFilter, entityType: 'robot' }, orderBy: { totalZoneScore: 'desc' }, take: 10 }),
     ]);
 
   // Collect all unique robot IDs across all categories
-  const allStandings = [mostWinsStandings, highestZoneScoreStandings, mostKillsStandings, longestStreakStandings, mostZoneTimeStandings, bestPlacementStandings, zoneDominatorStandings];
+  const allStandings = [mostWinsStandings, highestZoneScoreStandings, mostKillsStandings, longestStreakStandings, mostZoneTimeStandings, zoneDominatorStandings];
   const allRobotIds = [...new Set(allStandings.flat().map(s => s.entityId))];
 
   // Fetch robot details (name + user) in one query
@@ -492,9 +512,16 @@ export async function fetchKothRecords(): Promise<Record<string, unknown> | unde
     })),
     mostKillsCareer: mostKillsStandings.map(s => ({ ...mapStanding(s), kothKills: s.totalKills ?? 0, kothMatches: s.totalMatches ?? 0 })),
     longestWinStreak: longestStreakStandings.map(s => ({ ...mapStanding(s), bestWinStreak: s.bestWinStreak, kothWins: s.wins })),
-    mostZoneTime: mostZoneTimeStandings.map(s => ({ ...mapStanding(s), totalZoneTime: s.totalZoneTime ?? 0, kothMatches: s.totalMatches ?? 0 })),
-    bestPlacement: bestPlacementStandings.map(s => ({ ...mapStanding(s), bestPlacement: s.bestPlacement, kothMatches: s.totalMatches ?? 0 })),
-    zoneDominator: zoneDominatorStandings.map(s => ({ ...mapStanding(s), totalZoneScore: s.totalZoneScore ?? 0, kothMatches: s.totalMatches ?? 0 })),
+    mostZoneTime: mostZoneTimeStandings.map(s => ({
+      ...mapStanding(s),
+      totalZoneTime: roundToZonePrecision(s.totalZoneTime ?? 0),
+      kothMatches: s.totalMatches ?? 0,
+    })),
+    zoneDominator: zoneDominatorStandings.map(s => ({
+      ...mapStanding(s),
+      totalZoneScore: roundToZonePrecision(s.totalZoneScore ?? 0),
+      kothMatches: s.totalMatches ?? 0,
+    })),
   };
 }
 
@@ -792,6 +819,121 @@ export async function fetchGrandMeleeRecords(): Promise<Record<string, unknown> 
     mostKillsCareer: mostKillsStandings.map(s => ({
       ...mapStanding(s),
       totalKills: s.totalKills ?? 0,
+      grandMeleeMatches: s.totalMatches ?? 0,
+      // Spec #46 R4.17: total kills alone rewards volume — a robot subscribed
+      // since the mode launched outranks a deadlier robot that joined later.
+      killsPerMatch: (s.totalMatches ?? 0) > 0
+        ? Number(((s.totalKills ?? 0) / (s.totalMatches ?? 1)).toFixed(2))
+        : 0,
     })),
   };
+}
+
+// ─── League Win Streak Records (Spec #46 R7) ────────────────────────
+
+/**
+ * League modes that carry a meaningful win streak.
+ *
+ * The tournament modes are excluded because their orchestrators never call
+ * `recordBattleResult()`, so `standings.best_win_streak` is permanently zero for
+ * them — including them would render four empty lists.
+ *
+ * `grand_melee` is excluded by decision rather than by data: a "win" there is
+ * placement 1 of 20, so a streak of 2 is already exceptional and the numbers
+ * would sit near zero for everyone. Listing them beside a 1v1 league streak of
+ * 15 invites a comparison that means nothing.
+ */
+export const WIN_STREAK_MODES = ['league_1v1', 'league_2v2', 'league_3v3', 'tag_team'] as const;
+
+export type WinStreakMode = typeof WIN_STREAK_MODES[number];
+
+/** Modes whose `standings.entity_id` references a `TeamBattle` rather than a `Robot`. */
+const TEAM_STREAK_MODES = new Set<string>(['league_2v2', 'league_3v3', 'tag_team']);
+
+export interface WinStreakEntry {
+  entityId: number;
+  entityName: string;
+  username: string;
+  bestWinStreak: number;
+  currentWinStreak: number;
+  /** True when the best streak is the one currently running. */
+  isActive: boolean;
+  wins: number;
+}
+
+/**
+ * Longest league win streaks, one list per League_Mode.
+ *
+ * Reads `standings.best_win_streak` directly rather than recomputing from battle
+ * history: `battle_log` is NULLed by the 7-day retention cron (Spec #39), so any
+ * recomputation would silently truncate to the retention window. The streak
+ * columns are maintained counters and survive retention.
+ *
+ * Entity resolution is batched into one `robot.findMany` and one
+ * `teamBattle.findMany` across all four result sets, following the `robotMap`
+ * pattern in `fetchKothRecords()`.
+ */
+export async function fetchWinStreakRecords(): Promise<Record<WinStreakMode, WinStreakEntry[]>> {
+  const standingsByMode = await Promise.all(
+    WIN_STREAK_MODES.map(async (mode) => {
+      const rows = await prisma.standing.findMany({
+        where: { mode, bestWinStreak: { gt: 0 } },
+        // entityId ascending is the deterministic tiebreak, so equal streaks
+        // always render in the same order across requests and cache refreshes.
+        orderBy: [{ bestWinStreak: 'desc' }, { entityId: 'asc' }],
+        take: 10,
+      });
+      return [mode, rows] as const;
+    }),
+  );
+
+  const robotIds = new Set<number>();
+  const teamIds = new Set<number>();
+  for (const [mode, rows] of standingsByMode) {
+    for (const row of rows) {
+      (TEAM_STREAK_MODES.has(mode) ? teamIds : robotIds).add(row.entityId);
+    }
+  }
+
+  const [robots, teams] = await Promise.all([
+    robotIds.size > 0
+      ? prisma.robot.findMany({
+          where: { id: { in: [...robotIds] } },
+          select: { id: true, name: true, wins: true, user: { select: userSelect } },
+        })
+      : Promise.resolve([]),
+    teamIds.size > 0
+      ? prisma.teamBattle.findMany({
+          where: { id: { in: [...teamIds] } },
+          select: { id: true, teamName: true, stable: { select: userSelect } },
+        })
+      : Promise.resolve([]),
+  ]);
+
+  const robotMap = new Map(robots.map(r => [r.id, r]));
+  const teamMap = new Map(teams.map(t => [t.id, t]));
+
+  const result = {} as Record<WinStreakMode, WinStreakEntry[]>;
+  for (const [mode, rows] of standingsByMode) {
+    result[mode] = rows.map((row) => {
+      const isTeamMode = TEAM_STREAK_MODES.has(mode);
+      const team = isTeamMode ? teamMap.get(row.entityId) : undefined;
+      const robot = isTeamMode ? undefined : robotMap.get(row.entityId);
+      return {
+        entityId: row.entityId,
+        entityName: team?.teamName ?? robot?.name ?? 'Unknown',
+        username: team?.stable
+          ? getUserDisplayName(team.stable)
+          : robot?.user
+            ? getUserDisplayName(robot.user)
+            : '',
+        bestWinStreak: row.bestWinStreak,
+        currentWinStreak: row.currentWinStreak,
+        isActive: row.currentWinStreak === row.bestWinStreak,
+        wins: row.wins,
+      };
+    });
+  }
+
+  return result;
 }

@@ -55,28 +55,37 @@ describe('upgradeCosts', () => {
   });
 
   describe('calculateDiscountedUpgradeCost', () => {
+    // Spec #46 R11: the third argument is Roster_Capacity. The discount rate is
+    // (10 - capacity) percentage points per facility level, so these cases pin a
+    // single-robot stable (capacity 1, the best rate at 9pp per level).
     it('should return base cost when training level is 0', () => {
-      expect(calculateDiscountedUpgradeCost(0, 0)).toBe(1500);
-      expect(calculateDiscountedUpgradeCost(9, 0)).toBe(15000);
+      expect(calculateDiscountedUpgradeCost(0, 0, 1)).toBe(1500);
+      expect(calculateDiscountedUpgradeCost(9, 0, 1)).toBe(15000);
     });
 
-    it('should apply 10% discount per training level', () => {
-      // Level 0 base cost = 1500, 10% discount = 1350
-      expect(calculateDiscountedUpgradeCost(0, 1)).toBe(1350);
-      // Level 0 base cost = 1500, 50% discount = 750
-      expect(calculateDiscountedUpgradeCost(0, 5)).toBe(750);
+    it('should apply 9% per level for a single-robot stable', () => {
+      // 1500 - 9% = 1365
+      expect(calculateDiscountedUpgradeCost(0, 1, 1)).toBe(1365);
+      // 1500 - 45% = 825
+      expect(calculateDiscountedUpgradeCost(0, 5, 1)).toBe(825);
     });
 
-    it('should cap discount at 90% (training level 9)', () => {
-      // Level 0 base cost = 1500, 90% discount = 150
-      expect(calculateDiscountedUpgradeCost(0, 9)).toBe(150);
-      // Training level 10 should still cap at 90%
-      expect(calculateDiscountedUpgradeCost(0, 10)).toBe(150);
+    it('should reach the 90% cap at training level 10 with one robot', () => {
+      // 1500 - 90% = 150
+      expect(calculateDiscountedUpgradeCost(0, 10, 1)).toBe(150);
+      // Level 9 is no longer capped: 81% off → 285
+      expect(calculateDiscountedUpgradeCost(0, 9, 1)).toBe(285);
+    });
+
+    it('should charge full price when the roster fills 10 slots', () => {
+      expect(calculateDiscountedUpgradeCost(0, 10, 10)).toBe(1500);
     });
 
     it('should floor the result', () => {
-      // Level 1 base cost = 3000, 10% discount = 2700 (exact)
-      expect(calculateDiscountedUpgradeCost(1, 1)).toBe(2700);
+      // Level 1 base cost = 3000, 30% discount (L5, capacity 4) = 2100 (exact)
+      expect(calculateDiscountedUpgradeCost(1, 5, 4)).toBe(2100);
+      // 3000 - 9% = 2730
+      expect(calculateDiscountedUpgradeCost(1, 1, 1)).toBe(2730);
     });
   });
 

@@ -11,6 +11,7 @@ import {
   fetchTeamBattleRecords,
   fetchTournamentChampions,
   fetchGrandMeleeRecords,
+  fetchWinStreakRecords,
 } from '../services/records/recordsQueryService';
 
 const router = express.Router();
@@ -29,7 +30,7 @@ router.get('/', validateRequest({}), async (req: Request, res: Response) => {
     return;
   }
 
-  const [combat, upsets, career, economic, prestige, kothRecords, teamBattleRecords, tournamentChampions, grandMeleeRecords] = await Promise.all([
+  const [combat, upsets, career, economic, prestige, kothRecords, teamBattleRecords, tournamentChampions, grandMeleeRecords, winStreaks] = await Promise.all([
     fetchCombatRecords(),
     fetchUpsetRecords(),
     fetchCareerRecords(),
@@ -39,6 +40,7 @@ router.get('/', validateRequest({}), async (req: Request, res: Response) => {
     fetchTeamBattleRecords(),
     fetchTournamentChampions(),
     fetchGrandMeleeRecords(),
+    fetchWinStreakRecords(),
   ]);
 
   const result: Record<string, unknown> = {
@@ -47,9 +49,10 @@ router.get('/', validateRequest({}), async (req: Request, res: Response) => {
     career,
     economic,
     prestige,
-    koth: kothRecords ?? { mostWins: [], highestAvgZoneScore: [], mostKillsCareer: [], longestWinStreak: [], mostZoneTime: [], bestPlacement: [], zoneDominator: [] },
+    koth: kothRecords ?? { mostWins: [], highestAvgZoneScore: [], mostKillsCareer: [], longestWinStreak: [], mostZoneTime: [], zoneDominator: [] },
     teamBattle: teamBattleRecords,
     grandMelee: grandMeleeRecords ?? { mostWins: [], highestLp: [], mostKillsCareer: [] },
+    winStreaks,
     timestamp: new Date().toISOString(),
   };
 

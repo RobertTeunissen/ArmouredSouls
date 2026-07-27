@@ -48,7 +48,7 @@ Browser-based robot combat strategy game with turn-based mechanics, league syste
 ## Key Systems
 1. **Combat System** - Turn-based robot battles with weapons, armor, and damage calculations
 2. **League System** - Competitive ranking with promotions/relegations
-3. **Economy** - Credits, facilities, investments, weapon shop
+3. **Economy** - Credits, facilities, investments, weapon shop. The two passive income facilities sit on deliberately different axes: **Merchandising Hub** scales with prestige *per robot slot* (`prestige ÷ Roster_Capacity`, where capacity is `roster_expansion` level + 1), rewarding concentrated rosters; **Streaming Studio** scales per robot per battle via fame, rewarding breadth. Raw stable prestige accrues once per winning robot and so grows with roster size, which is why merchandising normalises by capacity (Spec #46)
 4. **Cycle System** - Automated daily game cycles
 5. **Fame & Prestige** - Player progression 
 6. **Tournament System** - Competitive events

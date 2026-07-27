@@ -3,6 +3,7 @@
  * data fetching, cycle polling, and simulation execution.
  */
 
+import { getRosterCapacity } from '../../../../shared/utils/rosterCapacity';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { usePracticeHistory, type PracticeHistoryEntry } from '../../hooks/usePracticeHistory';
 import { api } from '../../utils/api';
@@ -55,6 +56,8 @@ export interface UsePracticeArenaReturn {
   clearHistory: () => void;
   // Facilities
   trainingLevel: number;
+  /** Roster_Capacity — shrinks the Training Facility discount rate (Spec #46 R11). */
+  rosterCapacity: number;
   academyLevels: {
     combat_training_academy: number;
     defense_training_academy: number;
@@ -92,6 +95,7 @@ export function usePracticeArena(userId: number): UsePracticeArenaReturn {
 
   // Facilities
   const [trainingLevel, setTrainingLevel] = useState(0);
+  const [rosterCapacity, setRosterCapacity] = useState(1);
   const [academyLevels, setAcademyLevels] = useState({
     combat_training_academy: 0,
     defense_training_academy: 0,
@@ -118,6 +122,8 @@ export function usePracticeArena(userId: number): UsePracticeArenaReturn {
         const facilities = Array.isArray(facData) ? facData : (facData.facilities ?? []);
         const tf = facilities.find((f) => f.type === 'training_facility');
         setTrainingLevel(tf?.currentLevel || 0);
+        const rosterExpansion = facilities.find((f) => f.type === 'roster_expansion');
+        setRosterCapacity(getRosterCapacity(rosterExpansion?.currentLevel || 0));
         setAcademyLevels({
           combat_training_academy: facilities.find((f) => f.type === 'combat_training_academy')?.currentLevel || 0,
           defense_training_academy: facilities.find((f) => f.type === 'defense_training_academy')?.currentLevel || 0,
@@ -283,6 +289,6 @@ export function usePracticeArena(userId: number): UsePracticeArenaReturn {
     handleRun, handleReRun,
     battleResult, batchResult, error, cycleOffline, ownedRobotName,
     historyResults, clearHistory,
-    trainingLevel, academyLevels,
+    trainingLevel, rosterCapacity, academyLevels,
   };
 }

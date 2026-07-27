@@ -64,12 +64,29 @@ export interface FinancialReport {
     };
     streaming: {
       baseRate: number;
+      /** Roster mean, not a summed-roster figure (Spec #46 R10). */
       battleMultiplier: number;
+      /** Roster mean, not a summed-roster figure (Spec #46 R10). */
       fameMultiplier: number;
+      studioMultiplier?: number;
+      /** Roster aggregate shown as context; not an input to any multiplier. */
       totalBattles: number;
+      /** Roster aggregate shown as context; not an input to any multiplier. */
       totalFame: number;
+      /** Exact per-robot awards. Streaming is paid per robot per battle. */
+      perRobot?: Array<{
+        robotId: number;
+        robotName: string;
+        battles: number;
+        fame: number;
+        battleMultiplier: number;
+        fameMultiplier: number;
+        revenuePerBattle: number;
+        formula: string;
+      }>;
       total: number;
       formula: string;
+      note?: string;
     };
   };
 }

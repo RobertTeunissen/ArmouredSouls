@@ -29,7 +29,7 @@ These facilities reduce your operating costs or generate passive income. They te
 
 | Facility | Purpose | Level 1 Cost | Operating Cost | Key Benefit |
 |----------|---------|-------------|----------------|-------------|
-| Training Facility | Attribute upgrade discounts | ₡150,000 | level × ₡250/day | 10%–90% discount on attribute upgrades |
+| Training Facility | Attribute upgrade discounts | ₡150,000 | level × ₡250/day | Up to 90% — scales with level *and* shrinks as your roster grows |
 | Weapons Workshop | Weapon purchase discounts and resale rate | ₡75,000 | level × ₡100/day | 10%–100% discount on purchases · 10%–100% resale rate when selling |
 | Repair Bay | Repair cost discounts | ₡50,000 | level × ₡100/day | Scales with level and robot count (up to 90% discount) |
 | Merchandising Hub | Passive merchandising income | ₡150,000 | level × ₡200/day | ₡5,000–₡50,000/day base income, scales with Prestige |
@@ -37,9 +37,23 @@ These facilities reduce your operating costs or generate passive income. They te
 
 ### Training Facility
 
-The Training Facility provides a percentage discount on all attribute upgrade costs. At Level 1 you get 10% off; at Level 9 (the maximum discount level) you get 90% off. Given that maxing all 23 attributes on a single robot costs over ₡29 million at full price, even a modest discount saves enormous amounts over time.
+The Training Facility provides a percentage discount on all attribute upgrade costs — but how much each level is worth depends on how many robot slots you have. Every slot takes one percentage point off the per-level rate.
 
-**Discount formula**: Level × 10%, capped at 90%
+**Discount formula**: Level × (10 − robot slots)%, capped at 90%
+
+A single-robot stable earns 9% per level and reaches the 90% cap at Level 10. A stable with 4 slots earns 6% per level, so Level 5 gives 30%. A stable with all 10 slots earns nothing from this facility at any level.
+
+| Facility Level | 1 slot | 2 slots | 4 slots | 7 slots | 10 slots |
+|---|---|---|---|---|---|
+| 5 | 45% | 40% | 30% | 15% | 0% |
+| 8 | 72% | 64% | 48% | 24% | 0% |
+| 10 | **90%** | 80% | 60% | 30% | 0% |
+
+```callout-warning
+Expanding your roster permanently reduces this discount. Roster Expansion and the Training Facility pull against each other — a wide stable has more attributes to fund *and* pays more per upgrade. Decide which strategy you're playing before sinking credits into either.
+```
+
+Given that maxing all 23 attributes on a single robot costs over ₡29 million at full price, a deep discount on a concentrated roster saves enormous amounts over time.
 
 ### Weapons Workshop
 
@@ -148,7 +162,7 @@ Here's what you'll pay daily for each facility at various levels:
 
 | Facility | Level 1 | Level 5 | Level 10 |
 |----------|---------|---------|----------|
-| Training Facility | ₡250 | ₡1,250 | N/A (max L9) |
+| Training Facility | ₡250 | ₡1,250 | ₡2,500 |
 | Weapons Workshop | ₡100 | ₡500 | ₡1,000 |
 | Repair Bay | ₡100 | ₡500 | ₡1,000 |
 | Merchandising Hub | ₡200 | ₡1,000 | ₡2,000 |

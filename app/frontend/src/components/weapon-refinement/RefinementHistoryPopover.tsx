@@ -16,6 +16,7 @@ import { useEffect, useRef } from 'react';
 import type { WeaponRefinementItem } from '../weapon-shop/types';
 import { TIER_VISUALS } from './tierVisuals';
 import { formatAttributeName } from './attributeFormat';
+import { SHARPEN_EFFECT_LABEL, FORGE_EFFECT_LABEL } from './refinementCopy';
 
 interface RefinementHistoryPopoverProps {
   refinements: WeaponRefinementItem[];
@@ -54,9 +55,9 @@ function describeMagnitude(r: WeaponRefinementItem): string {
       return `+${r.magnitude} ${attr}`.trim();
     }
     case 'sharpen':
-      return '−0.25s cooldown';
+      return SHARPEN_EFFECT_LABEL;
     case 'forge':
-      return '+1.0 base damage';
+      return FORGE_EFFECT_LABEL;
   }
 }
 

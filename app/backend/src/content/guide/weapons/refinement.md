@@ -23,8 +23,12 @@ Each refinement consumes one of five slots on the weapon. You have full control 
 |---|---|---|---|
 | **Hone** | Boost an attribute the weapon already grants | You pick +1 to +5 | L1 |
 | **Augment** | Add a new attribute the weapon didn't grant | You pick +1 to +5 | L3 |
-| **Sharpen** | Reduce base cooldown by 0.25s | Fixed | L5 |
-| **Forge** | Increase base damage by 1.0 | Fixed | L8 |
+| **Sharpen** | Reduce base cooldown by 10% (−20% at the 2-slot cap) | Fixed | L5 |
+| **Forge** | Increase base damage by 8% (+16% at the 2-slot cap) | Fixed | L8 |
+
+```callout-info
+Sharpen and Forge are **proportional**, not flat. A 2.0s weapon and a 6.0s weapon both get 20% faster at the Sharpen cap. Before v1.7 these were flat (−0.25s and +1.0), which handed fast one-handed weapons roughly 4× the value of slow two-handed ones for the same price. Stacking is additive against the catalog value, so two Sharpens land on exactly ×0.80 — not the ×0.81 that compounding would give.
+```
 
 ```callout-tip
 Hone and Augment let you spend more for a bigger one-slot upgrade. A +5 Hone in one slot frees the other four slots for different work — but it costs ₡250K, vs. ₡10K for a +1.
@@ -131,10 +135,10 @@ A maxed-out starter weapon. Practice Sword starts at 6 damage / 3.0s cooldown wi
 | 2 | Hone +5 Combat Power (catalog 0 + augment +5 + hone +5 = +10, exactly at cap) | ₡250,000 |
 | 3 | Augment +5 Attack Speed | ₡500,000 |
 | 4 | Augment +5 Critical Systems | ₡500,000 |
-| 5 | Forge +1.0 base damage | ₡400,000 |
+| 5 | Forge (1st) — base damage 6 → 6.48 (+8%) | ₡400,000 |
 | **Total** | | **₡2,150,000** |
 
-Result: a Legendary Practice Sword with 7 base damage, 3.0s cooldown, +10 Combat Power, +5 Attack Speed, +5 Critical Systems. Won't beat a stock Volt Sabre on raw DPS, but it carries you through situations where the +10 Combat Power and +5 Critical Systems compound into reliable, high-margin victories. And it's *your* weapon — the one you've been using since cycle 5.
+Result: a Legendary Practice Sword with 6.48 base damage, 3.0s cooldown, +10 Combat Power, +5 Attack Speed, +5 Critical Systems. Won't beat a stock Volt Sabre on raw DPS, but it carries you through situations where the +10 Combat Power and +5 Critical Systems compound into reliable, high-margin victories. And it's *your* weapon — the one you've been using since cycle 5.
 
 ### DPS Volt Sabre (whale build)
 
@@ -142,14 +146,14 @@ Maxing the damage levers. Volt Sabre starts at 12 damage / 3.0s cooldown with +5
 
 | Slot | Refinement | Cost |
 |---|---|---|
-| 1 | Sharpen (1st) — cooldown 3.0s → 2.75s | ₡300,000 |
-| 2 | Sharpen (2nd) — cooldown 2.75s → 2.5s | ₡900,000 |
-| 3 | Forge (1st) — base damage 12 → 13 | ₡400,000 |
-| 4 | Forge (2nd) — base damage 13 → 14 | ₡1,200,000 |
+| 1 | Sharpen (1st) — cooldown 3.0s → 2.7s (−10%) | ₡300,000 |
+| 2 | Sharpen (2nd) — cooldown 2.7s → 2.4s (−20% total) | ₡900,000 |
+| 3 | Forge (1st) — base damage 12 → 12.96 (+8%) | ₡400,000 |
+| 4 | Forge (2nd) — base damage 12.96 → 13.92 (+16% total) | ₡1,200,000 |
 | 5 | Hone +5 Combat Power | ₡250,000 |
 | **Total** | | **₡3,050,000** |
 
-Result: a Legendary Volt Sabre with 14 base damage, 2.5s cooldown, +10 Combat Power, +3 Attack Speed. About 40% more DPS than the stock catalog version. At Workshop L10 the entire ₡3.05M is recoverable on resale — at lower Workshop levels, less so.
+Result: a Legendary Volt Sabre with 13.92 base damage, 2.4s cooldown, +10 Combat Power, +3 Attack Speed. About 45% more DPS than the stock catalog version — and because the tiers are proportional, a slow two-handed weapon gets the same 45% for the same price. At Workshop L10 the entire ₡3.05M is recoverable on resale — at lower Workshop levels, less so.
 
 ## How to Refine
 

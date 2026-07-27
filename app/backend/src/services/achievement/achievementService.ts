@@ -31,6 +31,7 @@ import {
 } from './achievementTypes';
 
 import { evaluateTrigger } from './triggerEvaluator';
+import { resolveTeamModeWinsForRobot, emptyTeamModeWins } from './teamModeWins';
 import { getPlayerAchievements as _getPlayerAchievements } from './achievementCatalog';
 import {
   getRecentUnlocks as _getRecentUnlocks,
@@ -90,13 +91,18 @@ class AchievementService implements IAchievementService {
       if (unevaluated.length === 0) return [];
 
       // Pre-fetch robot and user data once
-      const [rawRobot, cachedUser, robotStandings] = await Promise.all([
+      const [rawRobot, cachedUser, robotStandings, teamWins] = await Promise.all([
         robotId ? prisma.robot.findUnique({ where: { id: robotId } }) : Promise.resolve(null),
         prisma.user.findUnique({ where: { id: userId } }),
         robotId ? prisma.standing.findMany({
           where: { entityType: 'robot', entityId: robotId },
           select: { mode: true, tier: true, wins: true, currentWinStreak: true, currentLoseStreak: true },
         }) : Promise.resolve([]),
+        // Spec #46 R8 Cause A: the three team modes only ever write
+        // `entityType: 'team'` standings keyed by TeamBattle.id, so reading them
+        // from the robot-scoped list above always missed and `?? 0` silently
+        // turned the miss into a zero. Resolved through team membership instead.
+        robotId ? resolveTeamModeWinsForRobot(robotId) : Promise.resolve(emptyTeamModeWins()),
       ]);
 
       // Enrich robot with standings-derived per-mode counters
@@ -105,9 +111,9 @@ class AchievementService implements IAchievementService {
         ...rawRobot,
         currentLeague: leagueTier,
         kothWins: robotStandings.find(s => s.mode === 'koth')?.wins ?? 0,
-        totalTagTeamWins: robotStandings.find(s => s.mode === 'tag_team')?.wins ?? 0,
-        totalLeague2v2Wins: robotStandings.find(s => s.mode === 'league_2v2')?.wins ?? 0,
-        totalLeague3v3Wins: robotStandings.find(s => s.mode === 'league_3v3')?.wins ?? 0,
+        totalTagTeamWins: teamWins.tag_team,
+        totalLeague2v2Wins: teamWins.league_2v2,
+        totalLeague3v3Wins: teamWins.league_3v3,
         currentWinStreak: robotStandings.find(s => s.mode === 'league_1v1')?.currentWinStreak ?? 0,
         currentLoseStreak: robotStandings.find(s => s.mode === 'league_1v1')?.currentLoseStreak ?? 0,
       } : null;

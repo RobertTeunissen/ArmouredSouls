@@ -67,33 +67,34 @@ describe('Income Multipliers', () => {
     });
   });
 
-  describe('calculateMerchandisingIncome', () => {
+  describe('calculateMerchandisingIncome (Spec #46 R2)', () => {
     test('should return 0 for level 0', () => {
-      const result = calculateMerchandisingIncome(0, 10000);
-      expect(result).toBe(0);
+      expect(calculateMerchandisingIncome(0, 10000, 1)).toBe(0);
     });
 
     test('should calculate correctly for level 1 with no prestige', () => {
-      const result = calculateMerchandisingIncome(1, 0);
-      const expected = Math.round(5000 * (1 + 0 / 10000)); // 5000 * 1.0
-      expect(result).toBe(expected);
+      // Base rate doubled to ₡10,000/level
+      expect(calculateMerchandisingIncome(1, 0, 1)).toBe(10000);
     });
 
-    test('should calculate correctly for level 4 with 15000 prestige', () => {
-      const result = calculateMerchandisingIncome(4, 15000);
-      // 20000 * (1 + 15000 / 10000) = 20000 * 2.5 = 50000
-      expect(result).toBe(50000);
+    test('should calculate correctly for level 4 with 15000 prestige and one slot', () => {
+      // 40000 * (1 + 15000/1/10000) = 40000 * 2.5 = 100000
+      expect(calculateMerchandisingIncome(4, 15000, 1)).toBe(100000);
     });
 
-    test('should scale linearly with prestige', () => {
+    test('should scale linearly with prestige per slot', () => {
       const level = 4;
-      const baseRate = 20000; // getMerchandisingBaseRate(4) = 20000
-      
-      const result1 = calculateMerchandisingIncome(level, 10000);
-      const result2 = calculateMerchandisingIncome(level, 20000);
-      
-      expect(result1).toBe(Math.round(baseRate * 2.0)); // 40000
-      expect(result2).toBe(Math.round(baseRate * 3.0)); // 60000
+      const baseRate = 40000; // getMerchandisingBaseRate(4)
+
+      expect(calculateMerchandisingIncome(level, 10000, 1)).toBe(Math.round(baseRate * 2.0));
+      expect(calculateMerchandisingIncome(level, 20000, 1)).toBe(Math.round(baseRate * 3.0));
+    });
+
+    test('should be non-increasing as roster capacity rises', () => {
+      const prev = calculateMerchandisingIncome(4, 20000, 1);
+      for (let capacity = 2; capacity <= 10; capacity++) {
+        expect(calculateMerchandisingIncome(4, 20000, capacity)).toBeLessThanOrEqual(prev);
+      }
     });
   });
 
@@ -124,22 +125,22 @@ describe('Income Multipliers', () => {
   describe('Base Rate Functions', () => {
     test('getMerchandisingBaseRate should return correct rates', () => {
       expect(getMerchandisingBaseRate(0)).toBe(0);
-      expect(getMerchandisingBaseRate(1)).toBe(5000);
-      expect(getMerchandisingBaseRate(2)).toBe(10000);
-      expect(getMerchandisingBaseRate(4)).toBe(20000);
-      expect(getMerchandisingBaseRate(10)).toBe(50000);
+      expect(getMerchandisingBaseRate(1)).toBe(10000);
+      expect(getMerchandisingBaseRate(2)).toBe(20000);
+      expect(getMerchandisingBaseRate(4)).toBe(40000);
+      expect(getMerchandisingBaseRate(10)).toBe(100000);
     });
   });
 
   describe('Edge Cases and Boundary Conditions', () => {
     test('should handle zero prestige', () => {
       expect(getPrestigeMultiplier(0)).toBe(1.0);
-      expect(calculateMerchandisingIncome(4, 0)).toBe(20000);
+      expect(calculateMerchandisingIncome(4, 0, 1)).toBe(40000);
     });
 
     test('should handle very high prestige', () => {
       expect(getPrestigeMultiplier(1000000)).toBe(1.50);
-      const result = calculateMerchandisingIncome(4, 1000000);
+      const result = calculateMerchandisingIncome(4, 1000000, 1);
       expect(result).toBeGreaterThan(0);
     });
 
@@ -147,7 +148,7 @@ describe('Income Multipliers', () => {
       const result1 = calculateBattleWinnings(10001, 5000);
       expect(Number.isInteger(result1)).toBe(true);
       
-      const result2 = calculateMerchandisingIncome(4, 15555);
+      const result2 = calculateMerchandisingIncome(4, 15555, 3);
       expect(Number.isInteger(result2)).toBe(true);
     });
   });

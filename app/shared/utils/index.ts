@@ -1,4 +1,5 @@
-export { calculateWeaponWorkshopDiscount, calculateTrainingFacilityDiscount, applyDiscount, calculateWeaponResaleRate, applyResaleRate } from './discounts';
+export { calculateWeaponWorkshopDiscount, calculateTrainingFacilityDiscount, applyDiscount, calculateWeaponResaleRate, applyResaleRate, TRAINING_DISCOUNT_BASE_PER_LEVEL, TRAINING_DISCOUNT_PER_SLOT, TRAINING_DISCOUNT_MAX } from './discounts';
+export { getRosterCapacity } from './rosterCapacity';
 export { getCapForLevel, ACADEMY_CAP_MAP } from './academyCaps';
 export { calculateBaseCost, calculateDiscountedUpgradeCost, calculateUpgradeCostRange } from './upgradeCosts';
 export { ROBOT_ATTRIBUTES, isRobotAttribute, type RobotAttribute } from './robotAttributes';

@@ -693,7 +693,7 @@ This PRD defines the complete economy system for Armoured Souls, covering all co
 - Earned through victories, achievements, milestones, tournaments
 - Never decreases (only increases)
 - Used to unlock facility levels and high-tier content
-- Scales merchandising income
+- Scales merchandising income, divided by roster capacity (Spec #46)
 - Provides battle winnings multiplier
 
 **Tertiary Resource: Fame (Robot-Level)**
@@ -801,7 +801,7 @@ total_max_cost = 23 × 1,274,000 = ₡29,302,000
 | 3. Weapons Workshop | ₡1,000 |
 | 4. Roster Expansion | ₡500/slot |
 | 5. Storage Facility | ₡500 |
-| 6. Booking Office | ₡0 (generates prestige) |
+| 6. Booking Office | ₡150/level |
 | 7. Combat Training Academy | ₡250/level |
 | 8. Defense Training Academy | ₡250/level |
 | 9. Mobility Training Academy | ₡250/level |
@@ -1169,7 +1169,7 @@ Training Facility: ₡1,500 + (₡750 × level)
   - Level 1: 2 robot slots (₡500/day total - ₡500 for the 2nd slot)
   - Level 2: 3 robot slots (₡1,000/day total - ₡500 each for 2nd and 3rd slots)
   - Formula: `operating_cost = (current_roster_size - 1) × ₡500/day`
-- **Booking Office**: ₡0/day (generates prestige instead)
+- **Booking Office**: ₡150/level/day (Spec #46 — previously documented and reported as ₡0/day; `GET /api/facilities` omitted this facility from its operating-cost chain)
 
 **Typical Daily Operating Costs by Game Stage**:
 - **Early Game** (1 robot, 1-2 facilities): ₡2,500-₡5,000/day
@@ -1378,22 +1378,25 @@ final_battle_reward = base_reward × prestige_multiplier
 
 **Note**: The Merchandising Hub has been rebalanced with lower costs and linear scaling. Streaming revenue is awarded per battle via the Streaming Studio facility.
 
-**Base Income by Level**:
-- Level 1: ₡5,000/day
-- Level 2: ₡10,000/day
-- Level 3: ₡15,000/day
-- Level 4: ₡20,000/day
-- Level 5: ₡25,000/day
-- Level 6: ₡30,000/day
-- Level 7: ₡35,000/day
-- Level 8: ₡40,000/day
-- Level 9: ₡45,000/day
-- Level 10: ₡50,000/day
+**Base Income by Level** (Spec #46 — doubled from ₡5,000/level):
+- Level 1: ₡10,000/day
+- Level 2: ₡20,000/day
+- Level 3: ₡30,000/day
+- Level 4: ₡40,000/day
+- Level 5: ₡50,000/day
+- Level 6: ₡60,000/day
+- Level 7: ₡70,000/day
+- Level 8: ₡80,000/day
+- Level 9: ₡90,000/day
+- Level 10: ₡100,000/day
 
-**Scaling Formula**:
+**Scaling Formula** (Spec #46):
 ```
-base_merchandising = level × ₡5,000  // Linear scaling
-prestige_multiplier = 1 + (stable_prestige / 10000)
+roster_capacity     = roster_expansion_level + 1   // minimum 1
+prestige_per_slot   = stable_prestige / roster_capacity
+
+base_merchandising  = level × ₡10,000
+prestige_multiplier = 1 + (prestige_per_slot / 10000)
 
 merchandising_income = base_merchandising × prestige_multiplier
 ```
@@ -1403,37 +1406,64 @@ merchandising_income = base_merchandising × prestige_multiplier
 operating_cost = level × ₡200/day
 ```
 
-**Design Rationale**: Merchandising scales with **stable prestige** (not individual robot fame) because it represents the stable's overall brand value and reputation. Higher prestige stables can charge more for merchandise and attract more fans. The new linear scaling makes progression more predictable.
+### Why prestige per slot, not raw prestige
 
-**Examples**:
-*Early Game (Low Prestige):*
-- Merchandising Hub Level 1: ₡5,000/day base
-- Stable prestige: 1,000
-- Prestige multiplier: 1 + (1000/10000) = 1.1
-- Daily income: ₡5,000 × 1.1 = ₡5,500/day
-- Operating cost: ₡200/day
-- **Net**: ₡5,300/day
-- **Break-even**: ~28 cycles (₡150K investment)
+The Merchandising Hub was designed to scale with prestige while the Streaming Studio scaled with fame, on the assumption that these were independent axes. They are not.
 
-*Mid Game (Moderate Prestige):*
-- Merchandising Hub Level 4: ₡20,000/day base
-- Stable prestige: 15,000
-- Prestige multiplier: 1 + (15000/10000) = 2.5
-- Daily income: ₡20,000 × 2.5 = ₡50,000/day
-- Operating cost: ₡800/day
-- **Net**: ₡49,200/day
+`prestige` is a stable-level counter on `users`, and every battle orchestrator calls `awardPrestigeToUser()` once per winning robot. Raw prestige therefore accrues in proportion to how many robots a stable fields — a 5-robot stable earns roughly 5× the prestige of a 1-robot stable at comparable per-robot strength. Both facilities scaled with roster size, so the game had two breadth facilities and no depth facility.
 
-*Late Game (High Prestige):*
-- Merchandising Hub Level 10: ₡50,000/day base
-- Stable prestige: 50,000
-- Prestige multiplier: 1 + (50000/10000) = 6.0
-- Daily income: ₡50,000 × 6.0 = ₡300,000/day
-- Operating cost: ₡2,000/day
-- **Net**: ₡298,000/day
+Raising the base rate or lowering the purchase cost could not fix this. The ratio between a narrow and a wide stable's merchandising income is:
 
-**Operating Cost**: ₡1,000/day at Level 1, +₡500/day per level
+```
+(1 + P_wide / 10000) / (1 + P_narrow / 10000)
+```
 
-**Design Note**: Prestige-based scaling rewards long-term player engagement and success across all robots in the stable.
+That expression contains neither the base rate nor the cost, so a uniform buff leaves the ratio untouched and widens the absolute gap in the wide stable's favour.
+
+Dividing prestige by **Roster_Capacity** targets the actual cause. A single-robot stable is unaffected. A wide stable no longer gets a free multiplier from simply fielding more robots — and because spreading credits across ten chassis leaves each one weaker and in lower tiers, its prestige per slot lands below a focused stable's in practice.
+
+**Roster_Capacity is derived from the `roster_expansion` facility level plus one, not from a live count of `robots` rows.** Facility levels never decrease, so the divisor is monotonic and cannot be gamed by selling a robot before the nightly settlement.
+
+**Prestige Gates** (Spec #46 — measured in prestige per slot):
+
+| Level | Requirement |
+|---|---|
+| 4 | 2,000 prestige per robot slot |
+| 7 | 5,000 prestige per robot slot |
+| 9 | 9,000 prestige per robot slot |
+
+These replace the previous raw-prestige gates of 3,000 / 7,500 / 15,000. A stable that already owns a level above its current gate keeps that level and continues producing income — the gate is evaluated only on the upgrade path, and there is no downgrade or refund.
+
+**Examples** (all at Roster_Capacity 1 — a single-robot stable):
+
+*Early Game:*
+- Level 1: ₡10,000/day base, prestige 1,000 → multiplier 1.1
+- Daily income: ₡11,000, operating cost ₡200 → **net ₡10,800/day**
+- **Break-even**: ~14 cycles (₡150K investment)
+
+*Mid Game:*
+- Level 4: ₡40,000/day base, prestige 15,000 → multiplier 2.5
+- Daily income: ₡100,000, operating cost ₡800 → **net ₡99,200/day**
+
+*Late Game:*
+- Level 10: ₡100,000/day base, prestige 50,000 → multiplier 6.0
+- Daily income: ₡600,000, operating cost ₡2,000 → **net ₡598,000/day**
+
+*The same prestige spread wider:*
+- Level 4, prestige 15,000, Roster_Capacity 5 → prestige per slot 3,000 → multiplier 1.3
+- Daily income: ₡52,000 rather than ₡100,000
+
+### Payback inside a season
+
+The base rate was doubled because the previous ₡5,000/level could not be recovered inside a 100-cycle season (Spec #45). Net daily income is `level × (base_per_level × multiplier − 200)` and cumulative cost is `₡75,000 × level × (level + 1)`, so payback is:
+
+```
+payback_cycles = 75,000 × (level + 1) / (base_per_level × multiplier − 200)
+```
+
+At zero prestige per slot this is 15 cycles at level 1 and 84 at level 10 — every level recoverable within one season. At the previous rate, level 10 took 172 cycles.
+
+**Design Note**: Merchandising now rewards concentration; the Streaming Studio rewards breadth. The two passive income facilities sit on genuinely different axes.
 
 ### 4. Streaming Revenue (Per-Battle)
 
@@ -1452,6 +1482,24 @@ studio_multiplier = 1 + (streaming_studio_level × 1.0)  // Facility bonus (0-10
 
 streaming_revenue = base_streaming × battle_multiplier × fame_multiplier × studio_multiplier
 ```
+
+Neither the battle multiplier nor the fame multiplier is capped. `robot_battles` counts every mode: `robots.total_battles` excludes KotH, so callers add the KotH `standings.total_matches`.
+
+#### Single source of truth (Spec #46 R10)
+
+The formula above has exactly one implementation: `computeStreamingRevenue(totalBattleCount, fame, studioLevel)` in `app/backend/src/services/economy/streamingRevenueService.ts`. **Every award and display path derives from it.** Do not reimplement or approximate it — a projection that disagrees with the award path is a defect, and there were four of them:
+
+| Consumer | What it did wrong | Effect |
+|---|---|---|
+| `calculateStreamingRevenue()` | Own copy of the arithmetic | None — it happened to agree |
+| `calculateStreamingRevenueBatch()` | Own copy of the arithmetic | None — it happened to agree |
+| `financialReportService.ts` | Capped the battle multiplier at 3.0 and the fame multiplier at 2.0; computed both against **summed roster** battles and fame | Displayed multipliers no individual robot earns, and understated any robot past 2000 battles or 5000 fame. (The divisors were algebraically equivalent — `1 + battles/100 × 0.1` is `1 + battles/1000` — so the caps and the summing were the whole discrepancy.) |
+| `facilityRecommendationService.ts` | Used `1 + level × 0.1` for the Studio Multiplier | A tenth of the real `1 + level`. An L0 → L1 upgrade doubles streaming revenue but was projected as a 10% gain |
+| `unifiedFacilityROIService.ts` | Used `1000 × (1 + level)` | Dropped the battle and fame multipliers entirely, so a veteran robot's streaming was under-reported by their product |
+
+**Streaming is awarded per robot per battle.** The Financial Report therefore presents the formula per robot, with the roster figure labelled as an aggregate of the individual awards rather than as a single computation. Where a path genuinely cannot supply a per-robot battle count and fame — `unifiedFacilityROIService.ts` estimates without them — the figure is labelled an estimate and treated as a floor rather than presented as an award.
+
+`tests/services/streamingRevenueParity.test.ts` asserts that no consumer reintroduces a local copy.
 
 **Design Rationale**: Streaming revenue is awarded **per battle** rather than as daily passive income. This democratizes streaming income by making it available to all players immediately, and rewards active participation. Each robot earns streaming revenue based on their individual battle count and fame, scaled by the stable's Streaming Studio facility. The 100% per level multiplier makes the facility highly effective.
 
@@ -1618,7 +1666,7 @@ Prestige unlocks higher facility levels (see [STABLE_SYSTEM.md](STABLE_SYSTEM.md
 
 **2. Income Multipliers**:
 - **Battle Winnings**: Smooth scaling up to +50% (formula: min(1.50, 1 + prestige/50,000))
-- **Merchandising**: Scales with prestige (see Merchandising Income section above)
+- **Merchandising**: Scales with prestige *per robot slot* (see Merchandising Income section above)
 
 **3. Content Access**:
 - Tournament access via Booking Office facility
@@ -1970,7 +2018,7 @@ The unified service extracts per-facility returns from the `StableMetric` fields
    - **Early game**: Not cost-effective (as calculated in section 1)
    
 3. **Merchandising Hub Level 1** (₡150,000):
-   - **Merchandising**: ₡5,000/day base - ₡200 operating cost = ₡4,800 net/day
+   - **Merchandising**: ₡10,000/day base - ₡200 operating cost = ₡9,800 net/day
    - Scales with prestige: At 10K prestige → ₡5,000 × 2.0 = ₡10,000/day (₡9,800 net)
    - **Base payback**: 31 days (with no prestige scaling)
    - **Realistic payback** (moderate prestige): 15-20 days
@@ -2174,9 +2222,10 @@ prestige_multiplier = (prestige >= 50000) ? 1.20 :
                       (prestige >= 5000) ? 1.05 : 1.0;
 battle_reward = base_reward * prestige_multiplier;
 
-// Merchandising income
-base_merchandising = level × ₡5,000;  // Linear scaling
-prestige_mult = 1 + (prestige / 10000);
+// Merchandising income (Spec #46 — per robot slot)
+roster_capacity = roster_expansion_level + 1;
+base_merchandising = level × ₡10,000;
+prestige_mult = 1 + (prestige / roster_capacity / 10000);
 merchandising_daily = base_merchandising * prestige_mult;
 
 // Streaming income (per battle)

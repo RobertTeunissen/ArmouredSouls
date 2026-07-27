@@ -170,6 +170,14 @@ export function performAttack(
     attackerState.totalDamageDealt += hpDamage + shieldDamage;
     defenderState.totalDamageTaken += hpDamage + shieldDamage;
 
+    // Kill attribution (Spec #46 R4.16). Only HP damage counts — stripping a
+    // shield does not put the defender any closer to destruction on its own, so
+    // crediting a shield-only hit would misattribute the kill to whoever
+    // happened to swing last rather than whoever landed the fatal blow.
+    if (hpDamage > 0) {
+      defenderState.lastDamagedBy = attackerName;
+    }
+
     const totalDamage = hpDamage + shieldDamage;
 
     const formulaParts = [
@@ -344,6 +352,11 @@ export function performAttack(
 
     defenderState.totalDamageDealt += counterHP + counterShield;
     attackerState.totalDamageTaken += counterHP + counterShield;
+
+    // Counters can land the killing blow, so they attribute the same way.
+    if (counterHP > 0) {
+      attackerState.lastDamagedBy = defenderName;
+    }
 
     events.push({
       timestamp: roundTime(currentTime),

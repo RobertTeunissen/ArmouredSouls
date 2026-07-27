@@ -45,6 +45,12 @@ import { TIER_VISUALS } from './tierVisuals';
 import { SlotBar } from './SlotBar';
 import { RankPrefix } from './RankPrefix';
 import { formatAttributeName } from './attributeFormat';
+import {
+  SHARPEN_PCT,
+  FORGE_PCT,
+  PROPORTIONAL_TIER_CAP,
+  formatRefinementStat,
+} from './refinementCopy';
 
 // ── Constants ────────────────────────────────────────────────────────
 
@@ -60,8 +66,8 @@ const TIER_WORKSHOP_REQUIREMENT: Record<RefinementTier, number> = {
 const TIER_DESCRIPTION: Record<RefinementTier, string> = {
   hone: 'Boost an attribute the weapon already grants (+1 to +5).',
   augment: 'Add a brand-new attribute bonus (+1 to +5).',
-  sharpen: 'Reduce base cooldown by 0.25s.',
-  forge: 'Increase base damage by 1.0.',
+  sharpen: `Reduce base cooldown by ${SHARPEN_PCT}% (−${SHARPEN_PCT * PROPORTIONAL_TIER_CAP}% at the cap of ${PROPORTIONAL_TIER_CAP}).`,
+  forge: `Increase base damage by ${FORGE_PCT}% (+${FORGE_PCT * PROPORTIONAL_TIER_CAP}% at the cap of ${PROPORTIONAL_TIER_CAP}).`,
 };
 
 const TIER_COLOR_CLASSES: Record<RefinementTier, { bg: string; border: string; text: string; bgHover: string }> = {
@@ -456,14 +462,23 @@ export function RefinementModal({
               {tier === 'sharpen' && (
                 <p className="text-sm">
                   <span className="text-amber-300 font-semibold">Sharpen</span> reduces base cooldown by{' '}
-                  <span className="text-amber-300">0.25s</span>. Magnitude is fixed.
+                  <span className="text-amber-300">
+                    {SHARPEN_PCT}%
+                  </span>{' '}
+                  per slot, up to{' '}
+                  <span className="text-amber-300">−{SHARPEN_PCT * PROPORTIONAL_TIER_CAP}%</span> at the cap of{' '}
+                  {PROPORTIONAL_TIER_CAP}. The reduction is
+                  proportional, so every weapon gains the same attack rate. Magnitude is fixed.
                 </p>
               )}
 
               {tier === 'forge' && (
                 <p className="text-sm">
                   <span className="text-red-300 font-semibold">Forge</span> increases base damage by{' '}
-                  <span className="text-red-300">1.0</span>. Magnitude is fixed.
+                  <span className="text-red-300">{FORGE_PCT}%</span> per slot, up to{' '}
+                  <span className="text-red-300">+{FORGE_PCT * PROPORTIONAL_TIER_CAP}%</span> at the cap of{' '}
+                  {PROPORTIONAL_TIER_CAP}. The increase is
+                  proportional, so every weapon gains the same damage. Magnitude is fixed.
                 </p>
               )}
             </div>
@@ -479,13 +494,13 @@ export function RefinementModal({
                 label="Base damage"
                 current={currentEffective.effectiveBaseDamage}
                 projected={projectedEffective.effectiveBaseDamage}
-                format={(v) => v.toFixed(1)}
+                format={formatRefinementStat}
               />
               <PreviewRow
                 label="Base cooldown"
                 current={currentEffective.effectiveCooldown}
                 projected={projectedEffective.effectiveCooldown}
-                format={(v) => `${v.toFixed(2)}s`}
+                format={(v) => `${formatRefinementStat(v)}s`}
                 lowerIsBetter
               />
               {(tier === 'hone' || tier === 'augment') && targetAttribute && (

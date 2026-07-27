@@ -211,19 +211,24 @@ async function executeTournamentCycle(): Promise<JobContext> {
   logger.info(`Tournament Cycle: ${activeTournaments.length} tournaments processed, ${totalRoundsExecuted} rounds, ${totalMatchesExecuted} matches executed, ${tournamentsCompleted} completed`);
 
   // Step 4: Auto-create next tournament if none active
-  logger.info('Tournament Cycle: Step 4 — Auto-creating next tournament if needed');
-  const nextTournament = await autoCreateNextTournament();
-  if (nextTournament) {
-    logger.info(`Tournament Cycle: Auto-created tournament "${nextTournament.name}"`);
-    if (!lastTournament) {
-      return {
-        jobName: 'tournament',
-        tournamentName: nextTournament.name,
-        tournamentScheduled: true,
-      };
-    }
+  // Suppressed during a Preparation_Phase for every Participant_Type (Spec #46 R1.8)
+  if (await isPreparationPhase()) {
+    logger.info('Tournament Cycle: Step 4 — Skipped auto-creation (season in preparation phase)');
   } else {
-    logger.info('Tournament Cycle: No new tournament needed (active tournament exists or not enough participants)');
+    logger.info('Tournament Cycle: Step 4 — Auto-creating next tournament if needed');
+    const nextTournament = await autoCreateNextTournament();
+    if (nextTournament) {
+      logger.info(`Tournament Cycle: Auto-created tournament "${nextTournament.name}"`);
+      if (!lastTournament) {
+        return {
+          jobName: 'tournament',
+          tournamentName: nextTournament.name,
+          tournamentScheduled: true,
+        };
+      }
+    } else {
+      logger.info('Tournament Cycle: No new tournament needed (active tournament exists or not enough participants)');
+    }
   }
 
   if (lastTournament) {
@@ -279,7 +284,7 @@ export async function executeSettlement(): Promise<JobContext> {
 
   // Step 1: Calculate and credit passive income for all users
   logger.info('Daily Settlement: Step 1 — Processing passive income');
-  const { calculateMerchandisingIncome, calculateFacilityOperatingCost } = await import('../../utils/economyCalculations');
+  const { calculateMerchandisingIncome, calculateFacilityOperatingCost, getRosterCapacity } = await import('../../utils/economyCalculations');
 
   const allUsers = await prisma.user.findMany({
     where: {},
@@ -324,7 +329,13 @@ export async function executeSettlement(): Promise<JobContext> {
     const merchHub = userFacilities.find(f => f.facilityType === 'merchandising_hub');
     const merchLevel = merchHub?.level || 0;
 
-    const merchandising = calculateMerchandisingIncome(merchLevel, user.prestige);
+    // Roster_Capacity comes from the facility rows already batch-loaded above,
+    // so no per-user query is added (Spec #46 R2.8)
+    const rosterExpansion = userFacilities.find(f => f.facilityType === 'roster_expansion');
+    const rosterCapacity = getRosterCapacity(rosterExpansion?.level ?? 0);
+    const prestigePerSlot = user.prestige / rosterCapacity;
+
+    const merchandising = calculateMerchandisingIncome(merchLevel, user.prestige, rosterCapacity);
 
     if (merchandising > 0) {
       const userRobots = robotsByUser.get(user.id) || [];
@@ -339,6 +350,10 @@ export async function executeSettlement(): Promise<JobContext> {
           totalIncome: merchandising,
           facilityLevel: merchLevel,
           prestige: user.prestige,
+          // Recorded so merchandising income can be reconciled after the fact
+          // without re-deriving capacity from historical facility state (R2.9)
+          rosterCapacity,
+          prestigePerSlot: Number(prestigePerSlot.toFixed(2)),
           totalBattles,
           totalFame,
         },
@@ -640,92 +655,103 @@ async function executeTeam3v3LeagueCycle(): Promise<JobContext> {
 
 // --- Team Tournament cycle handlers ---
 
-async function executeTeam2v2TournamentCycle(): Promise<JobContext> {
+/**
+ * Whether Tournament_Auto_Creation should be suppressed because the current
+ * season is in its Preparation_Phase (Spec #46 R1.8).
+ *
+ * Spec #45 introduces the Season_Service that owns Season_Phase. Until it
+ * ships there is no phase to read, so this returns false and auto-creation
+ * always runs. When Spec #45 lands, replace the body with a Season_Service
+ * lookup returning true while the phase is `preparation`.
+ */
+async function isPreparationPhase(): Promise<boolean> {
+  // Dependency: Spec #45 Season_Service. Intentionally inert until then.
+  return false;
+}
+
+/**
+ * Shared team tournament cycle handler for both 2v2 and 3v3 (Spec #46 R1).
+ *
+ * Control flow mirrors `executeTournamentCycle()` for 1v1: process the active
+ * tournament's round when one exists, then fall through to Tournament_Auto_Creation
+ * on EVERY run. Previously both team handlers returned from inside the
+ * active-tournament branch, so the run that completed a final round never
+ * reached auto-creation and each tournament cost an idle cycle (R1.1, R1.2).
+ *
+ * The active-tournament and participant-shortfall guards live inside
+ * `autoCreateNextTeamTournament()`, so a still-active tournament creates
+ * nothing and a shortfall is logged there (R1.3, R1.4).
+ */
+async function executeTeamTournamentCycle(teamSize: 2 | 3): Promise<JobContext> {
+  const jobName = teamSize === 2 ? 'team2v2Tournament' : 'team3v3Tournament';
+  const label = `Team ${teamSize}v${teamSize} Tournament Cycle`;
+  const participantType = teamSize === 2 ? 'team_2v2' : 'team_3v3';
+
   // Step 1: Repair all robots (pre-match repair)
-  logger.info('Team 2v2 Tournament Cycle: Step 1 — Repairing all robots');
+  logger.info(`${label}: Step 1 — Repairing all robots`);
   await repairAllRobots(true);
 
-  // Step 2: Check for active 2v2 tournament
+  // Step 2: Execute the active tournament's round, if one is active
   const activeTournament = await prisma.tournament.findFirst({
-    where: { participantType: 'team_2v2', status: 'active' },
+    where: { participantType, status: 'active' },
   });
 
+  let processed: { name: string; currentRound: number; maxRounds: number } | null = null;
+  let matchesCompleted = 0;
+
   if (activeTournament) {
-    // Execute current round matches
-    logger.info(`Team 2v2 Tournament Cycle: Step 2 — Executing round ${activeTournament.currentRound}`);
-    const roundResult = await executeTeamTournamentRound(activeTournament.id, 2);
+    logger.info(`${label}: Step 2 — Executing round ${activeTournament.currentRound}`);
+    const roundResult = await executeTeamTournamentRound(activeTournament.id, teamSize);
 
     // Advance winners to next round (handles completion detection internally)
     await advanceWinnersToNextRound(activeTournament.id);
 
-    return {
-      jobName: 'team2v2Tournament',
-      matchesCompleted: roundResult.matchesExecuted,
-      tournamentName: activeTournament.name,
-      tournamentRound: activeTournament.currentRound,
-      tournamentMaxRounds: activeTournament.maxRounds,
+    matchesCompleted = roundResult.matchesExecuted;
+    processed = {
+      name: activeTournament.name,
+      currentRound: activeTournament.currentRound,
+      maxRounds: activeTournament.maxRounds,
     };
   }
 
-  // Step 3: No active tournament — try to create one
-  logger.info('Team 2v2 Tournament Cycle: Step 3 — Attempting auto-creation');
-  const newTournament = await autoCreateNextTeamTournament(2);
+  // Step 3: Attempt auto-creation on every run, including the run that just
+  // completed a final round (R1.1, R1.2, R1.5)
+  if (await isPreparationPhase()) {
+    logger.info(`${label}: Step 3 — Skipped auto-creation (season in preparation phase)`);
+  } else {
+    logger.info(`${label}: Step 3 — Attempting auto-creation`);
+    const newTournament = await autoCreateNextTeamTournament(teamSize);
 
-  if (newTournament) {
-    logger.info(`Team 2v2 Tournament Cycle: Created "${newTournament.name}"`);
+    if (newTournament) {
+      logger.info(`${label}: Created "${newTournament.name}"`);
+      // Only report the new tournament when no round was processed this run,
+      // matching the 1v1 handler's JobContext convention (R1.6)
+      if (!processed) {
+        return { jobName, tournamentName: newTournament.name, tournamentScheduled: true };
+      }
+    }
+  }
+
+  if (processed) {
     return {
-      jobName: 'team2v2Tournament',
-      tournamentName: newTournament.name,
-      tournamentScheduled: true,
+      jobName,
+      matchesCompleted,
+      tournamentName: processed.name,
+      tournamentRound: processed.currentRound,
+      tournamentMaxRounds: processed.maxRounds,
     };
   }
 
-  logger.info('Team 2v2 Tournament Cycle: Skipped — insufficient eligible teams');
-  return { jobName: 'team2v2Tournament' };
+  logger.info(`${label}: Skipped — insufficient eligible teams`);
+  return { jobName };
+}
+
+async function executeTeam2v2TournamentCycle(): Promise<JobContext> {
+  return executeTeamTournamentCycle(2);
 }
 
 async function executeTeam3v3TournamentCycle(): Promise<JobContext> {
-  // Step 1: Repair all robots (pre-match repair)
-  logger.info('Team 3v3 Tournament Cycle: Step 1 — Repairing all robots');
-  await repairAllRobots(true);
-
-  // Step 2: Check for active 3v3 tournament
-  const activeTournament = await prisma.tournament.findFirst({
-    where: { participantType: 'team_3v3', status: 'active' },
-  });
-
-  if (activeTournament) {
-    // Execute current round matches
-    logger.info(`Team 3v3 Tournament Cycle: Step 2 — Executing round ${activeTournament.currentRound}`);
-    const roundResult = await executeTeamTournamentRound(activeTournament.id, 3);
-
-    // Advance winners to next round (handles completion detection internally)
-    await advanceWinnersToNextRound(activeTournament.id);
-
-    return {
-      jobName: 'team3v3Tournament',
-      matchesCompleted: roundResult.matchesExecuted,
-      tournamentName: activeTournament.name,
-      tournamentRound: activeTournament.currentRound,
-      tournamentMaxRounds: activeTournament.maxRounds,
-    };
-  }
-
-  // Step 3: No active tournament — try to create one
-  logger.info('Team 3v3 Tournament Cycle: Step 3 — Attempting auto-creation');
-  const newTournament = await autoCreateNextTeamTournament(3);
-
-  if (newTournament) {
-    logger.info(`Team 3v3 Tournament Cycle: Created "${newTournament.name}"`);
-    return {
-      jobName: 'team3v3Tournament',
-      tournamentName: newTournament.name,
-      tournamentScheduled: true,
-    };
-  }
-
-  logger.info('Team 3v3 Tournament Cycle: Skipped — insufficient eligible teams');
-  return { jobName: 'team3v3Tournament' };
+  return executeTeamTournamentCycle(3);
 }
 
 // --- Reserved-slot stub handler factory ---
@@ -930,7 +956,7 @@ export async function triggerJob(jobName: JobState['name']): Promise<void> {
 
 // --- Exported for testing ---
 
-export { executeTeam2v2TournamentCycle, executeTeam3v3TournamentCycle };
+export { executeTournamentCycle, executeTeam2v2TournamentCycle, executeTeam3v3TournamentCycle };
 
 // --- Reset (for testing) ---
 

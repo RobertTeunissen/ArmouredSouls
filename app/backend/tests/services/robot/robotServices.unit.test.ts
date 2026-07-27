@@ -71,7 +71,7 @@ describe('robotUpgradeService', () => {
       const robot = makeRobot({ combatPower: 3 });
       const upgrades = { combatPower: { currentLevel: 3, plannedLevel: 5 } };
 
-      const result = validateAndCalculateUpgrades(upgrades, robot, 0, defaultAcademyLevels);
+      const result = validateAndCalculateUpgrades(upgrades, robot, 0, defaultAcademyLevels, 1);
 
       expect(result.totalCost).toBeGreaterThan(0);
       expect(result.upgradeOperations).toHaveLength(1);
@@ -89,7 +89,7 @@ describe('robotUpgradeService', () => {
         armorPlating: { currentLevel: 3, plannedLevel: 5 },
       };
 
-      const result = validateAndCalculateUpgrades(upgrades, robot, 0, defaultAcademyLevels);
+      const result = validateAndCalculateUpgrades(upgrades, robot, 0, defaultAcademyLevels, 1);
 
       expect(result.upgradeOperations).toHaveLength(2);
       expect(result.totalCost).toBe(
@@ -101,8 +101,8 @@ describe('robotUpgradeService', () => {
       const robot = makeRobot({ combatPower: 1 });
       const upgrades = { combatPower: { currentLevel: 1, plannedLevel: 3 } };
 
-      const noDiscount = validateAndCalculateUpgrades(upgrades, robot, 0, defaultAcademyLevels);
-      const withDiscount = validateAndCalculateUpgrades(upgrades, robot, 5, defaultAcademyLevels);
+      const noDiscount = validateAndCalculateUpgrades(upgrades, robot, 0, defaultAcademyLevels, 1);
+      const withDiscount = validateAndCalculateUpgrades(upgrades, robot, 5, defaultAcademyLevels, 1);
 
       expect(withDiscount.totalCost).toBeLessThan(noDiscount.totalCost);
     });
@@ -112,7 +112,7 @@ describe('robotUpgradeService', () => {
       const upgrades = { invalidAttr: { currentLevel: 1, plannedLevel: 2 } };
 
       expect(() =>
-        validateAndCalculateUpgrades(upgrades, robot, 0, defaultAcademyLevels),
+        validateAndCalculateUpgrades(upgrades, robot, 0, defaultAcademyLevels, 1),
       ).toThrow(RobotError);
     });
 
@@ -121,7 +121,7 @@ describe('robotUpgradeService', () => {
       const upgrades = { combatPower: { currentLevel: 5, plannedLevel: 5 } };
 
       expect(() =>
-        validateAndCalculateUpgrades(upgrades, robot, 0, defaultAcademyLevels),
+        validateAndCalculateUpgrades(upgrades, robot, 0, defaultAcademyLevels, 1),
       ).toThrow('Planned level must be greater');
     });
 
@@ -130,7 +130,7 @@ describe('robotUpgradeService', () => {
       const upgrades = { combatPower: { currentLevel: 2, plannedLevel: 5 } };
 
       expect(() =>
-        validateAndCalculateUpgrades(upgrades, robot, 0, defaultAcademyLevels, true),
+        validateAndCalculateUpgrades(upgrades, robot, 0, defaultAcademyLevels, 1, true),
       ).toThrow('Current level mismatch');
     });
 
@@ -140,7 +140,7 @@ describe('robotUpgradeService', () => {
       const lowAcademy = { ...defaultAcademyLevels, combat_training_academy: 1 };
 
       expect(() =>
-        validateAndCalculateUpgrades(upgrades, robot, 0, lowAcademy),
+        validateAndCalculateUpgrades(upgrades, robot, 0, lowAcademy, 1),
       ).toThrow('exceeds cap');
     });
 
@@ -149,7 +149,7 @@ describe('robotUpgradeService', () => {
       const upgrades = { combatPower: { currentLevel: 1, plannedLevel: 5 } };
 
       // Should not throw — uses robot's actual level (3) for cost calculation
-      const result = validateAndCalculateUpgrades(upgrades, robot, 0, defaultAcademyLevels, false);
+      const result = validateAndCalculateUpgrades(upgrades, robot, 0, defaultAcademyLevels, 1, false);
       expect(result.upgradeOperations[0].fromLevel).toBe(3);
     });
   });
@@ -159,7 +159,7 @@ describe('robotUpgradeService', () => {
       const freshRobot = makeRobot({ combatPower: 2 });
       const upgrades = { combatPower: { currentLevel: 1, plannedLevel: 4 } };
 
-      const result = validateUpgradesFresh(upgrades, freshRobot, 0, defaultAcademyLevels);
+      const result = validateUpgradesFresh(upgrades, freshRobot, 0, defaultAcademyLevels, 1);
 
       // Should use fresh level 2 as fromLevel, not the request's currentLevel 1
       expect(result.upgradeOperations[0].fromLevel).toBe(2);
@@ -171,7 +171,7 @@ describe('robotUpgradeService', () => {
       const upgrades = { combatPower: { currentLevel: 3, plannedLevel: 5 } };
 
       expect(() =>
-        validateUpgradesFresh(upgrades, freshRobot, 0, defaultAcademyLevels),
+        validateUpgradesFresh(upgrades, freshRobot, 0, defaultAcademyLevels, 1),
       ).toThrow('already at level');
     });
   });
@@ -211,11 +211,11 @@ describe('robotUpgradeService', () => {
 
             const lowResult = validateAndCalculateUpgrades(
               { combatPower: { currentLevel: startLevel, plannedLevel: lowTarget } },
-              robot, 0, academyLevels,
+              robot, 0, academyLevels, 1,
             );
             const highResult = validateAndCalculateUpgrades(
               { combatPower: { currentLevel: startLevel, plannedLevel: highTarget } },
-              robot, 0, academyLevels,
+              robot, 0, academyLevels, 1,
             );
 
             expect(highResult.totalCost).toBeGreaterThan(lowResult.totalCost);

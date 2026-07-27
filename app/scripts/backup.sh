@@ -15,11 +15,6 @@ set -euo pipefail
 BACKUP_DIR="/opt/armouredsouls/backups"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 DAY_OF_WEEK=$(date +%u)  # 1=Monday, 7=Sunday
-DAILY_RETAIN="${BACKUP_DAILY_RETAIN:-2}"
-WEEKLY_RETAIN="${BACKUP_WEEKLY_RETAIN:-0}"
-PRE_DEPLOY_RETAIN="${BACKUP_PRE_DEPLOY_RETAIN:-2}"
-DISK_THRESHOLD="${BACKUP_DISK_THRESHOLD:-85}"
-CONTAINER_NAME="${BACKUP_CONTAINER_NAME:-armouredsouls-db-prod}"
 
 # Read a single key from the .env file as plain text. Avoids `source .env`
 # entirely — bash's `source` interprets unquoted values as commands.
@@ -31,6 +26,23 @@ env_get() {
 }
 
 ENV_FILE="/opt/armouredsouls/backend/.env"
+
+# --- Retention / threshold tunables ---
+# Resolution order: process environment → backend .env → built-in default.
+# The .env fallback matters because the backup runs from cron, which starts
+# with an almost empty environment — before this, setting BACKUP_DAILY_RETAIN
+# in .env silently did nothing.
+DAILY_RETAIN="${BACKUP_DAILY_RETAIN:-$(env_get BACKUP_DAILY_RETAIN "$ENV_FILE")}"
+WEEKLY_RETAIN="${BACKUP_WEEKLY_RETAIN:-$(env_get BACKUP_WEEKLY_RETAIN "$ENV_FILE")}"
+PRE_DEPLOY_RETAIN="${BACKUP_PRE_DEPLOY_RETAIN:-$(env_get BACKUP_PRE_DEPLOY_RETAIN "$ENV_FILE")}"
+DISK_THRESHOLD="${BACKUP_DISK_THRESHOLD:-$(env_get BACKUP_DISK_THRESHOLD "$ENV_FILE")}"
+CONTAINER_NAME="${BACKUP_CONTAINER_NAME:-$(env_get BACKUP_CONTAINER_NAME "$ENV_FILE")}"
+
+DAILY_RETAIN="${DAILY_RETAIN:-2}"
+WEEKLY_RETAIN="${WEEKLY_RETAIN:-0}"
+PRE_DEPLOY_RETAIN="${PRE_DEPLOY_RETAIN:-2}"
+DISK_THRESHOLD="${DISK_THRESHOLD:-85}"
+CONTAINER_NAME="${CONTAINER_NAME:-armouredsouls-db-prod}"
 
 # --- Parse DATABASE_URL if individual POSTGRES_* vars are absent ---
 # Format: postgresql://user:password@host:port/dbname?params
@@ -82,14 +94,6 @@ fi
 
 MONITORING_DISCORD_WEBHOOK="${MONITORING_DISCORD_WEBHOOK:-$(env_get MONITORING_DISCORD_WEBHOOK "$ENV_FILE")}"
 DISCORD_WEBHOOK_URL="${DISCORD_WEBHOOK_URL:-$(env_get DISCORD_WEBHOOK_URL "$ENV_FILE")}"
-
-# Resolve container name from .env if not already set via environment
-if [ "${CONTAINER_NAME}" = "armouredsouls-db-prod" ]; then
-  ENV_CONTAINER="$(env_get BACKUP_CONTAINER_NAME "$ENV_FILE")"
-  if [ -n "${ENV_CONTAINER}" ]; then
-    CONTAINER_NAME="${ENV_CONTAINER}"
-  fi
-fi
 
 # Apply defaults after env resolution
 DB_USER="${DB_USER:-armouredsouls}"
@@ -196,7 +200,12 @@ else
 fi
 
 # --- Promote Sunday backup to weekly ---
-if [ "${DAY_OF_WEEK}" -eq 7 ]; then
+# Skip entirely when WEEKLY_RETAIN is 0. Otherwise every Sunday we'd copy a
+# full dump only for the next run's cleanup to delete it — on ACC that was a
+# wasted 4.5GB duplicate sitting on disk for 24h (July 2026 disk-full incident).
+if [ "${WEEKLY_RETAIN}" -eq 0 ]; then
+  log "Weekly promotion skipped (WEEKLY_RETAIN=0)"
+elif [ "${DAY_OF_WEEK}" -eq 7 ]; then
   WEEKLY_FILE="${BACKUP_DIR}/weekly/${DB_NAME}_weekly_${TIMESTAMP}.sql.gz"
   cp "${DAILY_FILE}" "${WEEKLY_FILE}"
   log "Weekly backup created: ${WEEKLY_FILE}"

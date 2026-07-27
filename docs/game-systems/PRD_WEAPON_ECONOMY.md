@@ -1,7 +1,7 @@
 # Product Requirements Document: Weapon Economy and Starter Weapons Overhaul
 
-**Version**: 1.6  
-**Last Updated**: May 23, 2026  
+**Version**: 1.7  
+**Last Updated**: July 26, 2026  
 **Status**: Implemented with Balance Adjustments  
 **Owner**: Robert Teunissen  
 **Epic**: Weapon System Economy Redesign
@@ -14,6 +14,7 @@
 - **v1.4** (May 8, 2026): DPS rebalance — baseDamage compression (3.0× → 2.0× DPS spread), DPS Cost Multiplier M increased from 3.0 to 6.0, prices unchanged (±1%), big five 1H weapons differentiated via cooldown
 - **v1.5** (May 22, 2026): Weapon resale system — sell weapons back at Workshop-level-dependent rate (0%/L0 → 100%/L10), `pricePaid` anchor prevents free-weapon arbitrage, equipped weapons protected by shared row lock
 - **v1.6** (May 23, 2026): Weapon Refinement system — permanent per-instance upgrades across four tiers (Hone / Augment / Sharpen / Forge), 5-slot cap, Workshop-gated tier unlocks, refinement spend folds into `pricePaid` so resale partially recovers it
+- **v1.7** (Jul 26, 2026): Sharpen and Forge converted from flat to proportional — Sharpen −10% cooldown per instance, Forge +8% base damage per instance, both stacked additively against the catalog value (Spec #46)
 
 ---
 
@@ -89,6 +90,65 @@ Fast weapons benefit more from Attack Speed. Slow weapons benefit more from Crit
 
 ---
 
+## Version 1.7 Updates (July 26, 2026) — Proportional Sharpen and Forge
+
+### Problem Statement
+
+Sharpen subtracted a flat `0.25s` from base cooldown and Forge added a flat `1.0` to base damage. A flat adjustment against a variable base delivers a proportional benefit inversely related to the weapon's catalog stat, so the two cheapest-to-exploit weapon classes got the most value:
+
+| Weapon profile | Catalog cooldown | Old gain at Sharpen cap | Attack rate gain |
+|---|---|---|---|
+| Fast one-handed | 2.0s | 2.0s → 1.5s | **+33.3%** |
+| Mid | 3.0s | 3.0s → 2.5s | +20.0% |
+| Slow two-handed | 6.0s | 6.0s → 5.5s | **+9.1%** |
+
+A 3.7× spread for the same ₡1.2M. Forge carried the same bias — a flat `+2.0` at the cap is +44.4% on a 4.5-damage weapon and +10.8% on an 18.5-damage one, a 4.1× spread. In the catalog the fast weapons are also the low-damage one-handed ones, so both flat bonuses compounded into a single one-handed subsidy that no pricing lever could offset.
+
+### The change
+
+| Tier | Before (v1.6) | After (v1.7) | At the 2-slot cap |
+|---|---|---|---|
+| **Sharpen** | −0.25s base cooldown | −10% base cooldown | ×0.80 |
+| **Forge** | +1.0 base damage | +8% base damage | ×1.16 |
+
+Costs, slot caps, per-tier caps, Workshop gates, and the `pricePaid` resale fold are all unchanged.
+
+Forge is deliberately the smaller percentage. `applyDamage()` applies every mitigation step as a multiplier, so proportional damage and proportional attack rate are equivalent in expected DPS — identical percentages would make the two tiers interchangeable. Forge accepts the lower ceiling in exchange for being the deeper unlock (Workshop L8 vs L5) and the better option against shield-regen builds, since bigger hits strip a regenerating shield in fewer swings.
+
+### Additive stacking
+
+Instances stack **additively against the catalog value**, not multiplicatively:
+
+```
+Effective_Cooldown   = round2(catalogCooldown × (1 − 0.10 × sharpenCount))
+Effective_Base_Damage = round2(catalogBaseDamage × (1 + 0.08 × forgeCount))
+```
+
+Two Sharpens therefore land on exactly ×0.80 and two Forges on exactly ×1.16. Compounding would give ×0.81 and ×1.1664, contradicting the advertised cap. Additive also matches every other stacking discount in the codebase — Weapons Workshop, Training Facility, and Repair Bay are all `n × level`.
+
+### Refinement_Rounding_Precision
+
+Both outputs are rounded to **2 decimals**, matching the `Decimal(5, 2)` convention used for robot attributes. Two decimals are necessary, not cosmetic: a 3.5s weapon with one Sharpen is 3.15s, which one-decimal rounding would distort to 3.2s (a 1.6% error). Rounding inside the shared formula rather than at each call site means the frontend preview and the combat engine cannot diverge through floating-point representation.
+
+### Side effects
+
+- **The unfloored-subtraction hazard is retired.** Spec #34 key decision #7 recorded that a sufficiently fast weapon could have its cooldown driven to zero or below by flat subtraction (`0.5 − 2 × 0.25 = 0`). A multiplier with a floor of ×0.80 cannot reach zero from a positive base, so no clamp is needed.
+- **The gain is invariant across every weapon, every `attackSpeed`, and both hands.** The multiplier lands on the catalog cooldown *before* the offhand penalty and the `attackSpeed` divisor in `calcCooldown()`, so all three transformations compose multiplicatively and the ratio survives them.
+- **No migration.** `weapon_refinement` stores `tier` and `magnitude`, not the computed effect, so every existing refinement is recomputed on deploy.
+
+### Balance impact on live weapons
+
+Fast one-handed builds lose a small amount of Sharpen value; slow two-handed builds gain substantially. A player who Sharpened a 2.0s weapon twice goes from 1.5s to 1.6s; a player who Sharpened a 6.0s weapon twice goes from 5.5s to 4.8s. This is the intended correction, and it applies retroactively because the effect is derived rather than stored.
+
+### Files touched
+
+- `app/shared/utils/weaponRefinement.ts` — the Refinement_Fold, plus the exported `SHARPEN_COOLDOWN_REDUCTION_PER_INSTANCE` and `FORGE_DAMAGE_INCREASE_PER_INSTANCE` constants. Note `app/backend/src/shared/utils` is a committed symlink to `app/shared/utils` (git mode `120000`), so there is one file reachable by two paths.
+- `app/frontend/src/components/weapon-refinement/refinementCopy.ts` — display copy and the trailing-zero-trimming formatter, both derived from the shared constants.
+- `RefinementModal.tsx`, `SlotBar.tsx`, `RefinementHistoryPopover.tsx`, `RefinementAdoptionPage.tsx` — copy.
+- `app/backend/src/content/guide/weapons/refinement.md` — in-game guide, tier table and both worked examples.
+
+---
+
 ## Version 1.6 Updates (May 23, 2026) — Weapon Refinement
 
 ### Problem Statement
@@ -106,8 +166,10 @@ Weapon Refinement adds a per-instance progression layer: players can permanently
 |---|---|---|---|
 | **Hone** | Boost an attribute the weapon already grants | Player picks +1 to +5 | L1 |
 | **Augment** | Add a brand-new attribute bonus | Player picks +1 to +5 | L3 |
-| **Sharpen** | Reduce base cooldown by 0.25s | Fixed | L5 |
-| **Forge** | Increase base damage by 1.0 | Fixed | L8 |
+| **Sharpen** | Reduce base cooldown by 10% of the catalog value (−20% at the 2-slot cap) | Fixed | L5 |
+| **Forge** | Increase base damage by 8% of the catalog value (+16% at the 2-slot cap) | Fixed | L8 |
+
+The Sharpen and Forge effect columns above reflect the v1.7 proportional rework. As originally shipped in v1.6 they were flat: `−0.25s` and `+1.0`. See "Version 1.7 Updates" below.
 
 ### Caps
 

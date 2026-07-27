@@ -2,8 +2,8 @@
 
 **Project**: Armoured Souls  
 **Document Type**: Product Requirements Document (PRD)  
-**Version**: v1.3  
-**Date**: March 18, 2026  
+**Version**: v1.4  
+**Date**: July 26, 2026  
 **Status**: ✅ Implemented 
 
 ---
@@ -13,6 +13,7 @@
 - v1.1 - Review done by Robert Teunissen (February 9, 2026)
 - v1.2 - Implementation verification, added core design references, enhanced future enhancements (February 9, 2026) 
 - v1.3 - Added King of the Hill Records category (7 records), updated category tabs with 👑 KotH tab (March 18, 2026)
+- v1.4 - Spec #46: removed five degenerate Record_Categories, scoped Most Damage per battle mode, restricted Biggest Upset to tournament modes and added summed-team-ELO team upsets, rounded the KotH zone metrics, labelled Career mode coverage, added the 🔥 Win Streaks tab, added kills per match to Grand Melee (July 26, 2026)
 
 ---
 
@@ -105,6 +106,73 @@ The **Hall of Records** is a feature that displays prestigious achievements and 
 ### Records Categories
 
 **Implementation Note**: All records below are ✅ fully implemented in `app/backend/src/routes/records.ts` and displayed in `app/frontend/src/pages/HallOfRecordsPage.tsx`.
+
+---
+
+### Spec #46 category disposition (July 2026)
+
+A record is only worth a leaderboard if distinct performances produce distinct ranked values. Five categories failed that test because their ranking metric was capped, quantised, or otherwise saturated, so every entry reported the same number. Those were removed rather than filtered.
+
+| Record_Category | Tab | Disposition | Reason |
+|---|---|---|---|
+| Fastest Victory | Combat | **Removed** | The top of the list was occupied by ~1s degenerate resolutions |
+| Longest Battle | Combat | **Removed** | `MAX_BATTLE_DURATION` forces a draw at 120s, so every entry read 2:00 |
+| Most Damage in Single Battle | Combat | **Retained, scoped per mode** | A Grand Melee robot swings at 19 opponents over the clock a 1v1 robot spends on one |
+| Narrowest Victory | Combat | Retained unchanged | Not degenerate |
+| Biggest Upset | Upsets | **Retained, tournament modes only** | League matchmaking pairs on LP within a tier instance, so a league "upset" measured matchmaker tolerance |
+| Biggest Upset — Team Tournaments | Upsets | **Added** | Differential computed from *summed* team `elo_before`, matching `calculateTeamBattleELOChanges()` |
+| Biggest ELO Gain | Upsets | **Removed** | `ELO_K_FACTOR` is a fixed 32, so every entry read +32 |
+| Biggest ELO Loss | Upsets | **Removed** | Same, at −32 |
+| Best Placement | KotH | **Removed** | Any robot that has ever won ties at placement 1 |
+| Zone Dominator | KotH | **Retained, rounded** | Raw `Float` accumulation shipped `1642.7000000000005` |
+| Most Zone Time | KotH | **Retained, rounded** | Same defect class |
+| Most Kills (Career) | Grand Melee | **Retained, kills per match added** | Total kills alone ranks match volume over lethality |
+| Longest Win Streak (×4 modes) | Win Streaks | **Added** | See below |
+
+**No Longest Battle replacement was added.** Any duration-derived metric inherits the same `MAX_BATTLE_DURATION` ceiling, and a non-duration endurance metric would need a new computation over `battle_summaries`. Left to a future spec.
+
+#### Most Damage mode scoping
+
+`mostDamageInBattle` is an object keyed by `battles.battle_type`, covering `league_1v1`, `tournament_1v1`, `league_2v2`, `league_3v3`, `koth`, and `grand_melee`. The opponent field is present only for the two 1v1 modes — in the others a single opponent is not well defined, so it is omitted rather than populated with an arbitrary one of many. The UI renders a mode switcher above one list, so narrow viewports get one section rather than six stacked ones.
+
+#### Career tab mode coverage
+
+`updateRobotCombatStats()` is called with `skipBattleCounters: true` by the KotH and Grand Melee orchestrators, because both modes resolve by placement and a "win" is undefined for placements 2 through N. The counters were deliberately **not** widened: doing so would corrupt the win-rate denominator Highest Win Rate ranks on and change `robots.wins` semantics for every other consumer. Instead each Career category states its scope:
+
+| Career category | Coverage |
+|---|---|
+| Most Battles Fought | 1v1 League, 1v1 Tournament, Tag Team, 2v2/3v3 League |
+| Highest Win Rate | 1v1 League, 1v1 Tournament, Tag Team, 2v2/3v3 League |
+| Most Lifetime Damage | Every mode — `damageDealtLifetime` increments regardless of the flag |
+| Highest Current ELO | 1v1 League and 1v1 Tournament — ELO is a 1v1 rating |
+| Most Robot Destructions | 1v1 League, 1v1 Tournament, Tag Team, 2v2/3v3 League |
+
+#### Win Streaks tab (🔥)
+
+One list per League_Mode: `league_1v1`, `league_2v2`, `league_3v3`, `tag_team`. All four render side by side in a single grouped section so streaks can be compared across modes rather than being scattered over the per-mode tabs.
+
+- Read from `standings.best_win_streak` directly. Never recomputed from battle history: `battle_log` is NULLed by the 7-day retention cron (Spec #39), so a recomputation would silently truncate to the retention window.
+- `league_1v1` resolves `standings.entity_id` as a `Robot`; the three team modes resolve it as a `TeamBattle`.
+- Ordered by `best_win_streak` descending with `entity_id` ascending as the deterministic tiebreak, so equal streaks render in a stable order across cache refreshes.
+- `currentWinStreak` and an `isActive` flag (`currentWinStreak === bestWinStreak`) accompany each entry.
+- Cards carry no battle link: a streak spans many battles and no single battle represents it.
+- A mode section with no non-zero streak is omitted entirely.
+
+**Excluded modes.** The three tournament modes are excluded because their orchestrators never call `recordBattleResult()`, so their streak columns are permanently zero — including them would render empty lists. `grand_melee` is excluded by decision: a win there is placement 1 of 20, so streaks would sit near zero for everyone and inviting a comparison against a 1v1 streak of 15 would mislead. `koth` already has its own streak category on the KotH tab.
+
+**Bye-win caveat.** `processByeBattle()` calls `recordBattleResult()` with a `'win'` outcome, so a `league_1v1` streak can be extended by a walkover the robot never fought. This is accepted rather than corrected, because league points already treat a bye as a win — changing it here would put the streak and the LP total into disagreement.
+
+#### Open observation: ~1-second battles
+
+Removing Fastest Victory removes the only surface where ~1-second battle resolutions were visible. It does not remove the cause. A battle resolving in about one second may indicate a combat defect, and this is recorded for separate investigation rather than being treated as closed. The Team Battle tab's own `fastestVictory` and `longestNonDrawBattle` categories share the structural weaknesses that justified removing the Combat tab equivalents, but Spec #46 did not scope them, so they remain.
+
+#### Battle detail resolution
+
+`buildStandardLogResponse()` previously declared `robot1` and `robot2` non-nullable and dereferenced both on its first statement, while its caller passed `?? null`. Migration `20260611120000_drop_legacy_scheduling_tables` deleted `battle_participants` and `battles` rows through two different keys, leaving battles with one participant or none, so opening one of those from the Hall of Records threw a `TypeError` that Express 5 forwarded as a 500. Both sides are now emitted as `null` when unresolvable, and the page renders from `participants` and `battle_summaries` instead. A NULL `battle_log` is unrelated: `playbackAvailable` already reports it and the Overview tab reads from the summary permanently.
+
+No data remediation accompanies the fix. The orphaned rows cannot be reconstructed, and Spec #45 deletes battle history at the season boundary.
+
+---
 
 #### 1. **Combat Records** (Battle Performance) ✅ Implemented
 

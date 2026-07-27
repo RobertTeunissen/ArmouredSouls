@@ -22,6 +22,7 @@ import { useRobotStore } from '../stores';
 import { useAuth } from '../contexts/AuthContext';
 import type { TabId } from '../components/TabNavigation';
 import type { Facility } from '../components/facilities/types';
+import { getRosterCapacity } from '../../../shared/utils/rosterCapacity';
 import type { RangeBand } from '../utils/weaponRange';
 import { getMatchHistory, BattleHistory } from '../utils/matchmakingApi';
 import type { RobotWithAttributes } from '../types/robot';
@@ -142,6 +143,9 @@ export function useRobotDetail() {
   const [currency, setCurrency] = useState(0);
   const [trainingLevel, setTrainingLevel] = useState(0);
   const [repairBayLevel, setRepairBayLevel] = useState(0);
+  // Spec #46 R11: the Training Facility discount rate shrinks 1pp per robot slot,
+  // so the upgrade cost preview needs Roster_Capacity.
+  const [rosterCapacity, setRosterCapacity] = useState(1);
   const [activeRobotCount, setActiveRobotCount] = useState(1);
   const [academyLevels, setAcademyLevels] = useState({
     combat_training_academy: 0,
@@ -269,6 +273,9 @@ export function useRobotDetail() {
 
         const repairBay = facilities.find((f: Facility) => f.type === 'repair_bay');
         setRepairBayLevel(repairBay?.currentLevel || 0);
+
+        const rosterExpansion = facilities.find((f: Facility) => f.type === 'roster_expansion');
+        setRosterCapacity(getRosterCapacity(rosterExpansion?.currentLevel || 0));
 
         setAcademyLevels({
           combat_training_academy: facilities.find((f: Facility) => f.type === 'combat_training_academy')?.currentLevel || 0,
@@ -452,6 +459,7 @@ export function useRobotDetail() {
     // Facilities
     trainingLevel,
     repairBayLevel,
+    rosterCapacity,
     activeRobotCount,
     academyLevels,
 

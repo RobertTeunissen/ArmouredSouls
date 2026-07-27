@@ -9,12 +9,18 @@ import { Request, Response } from 'express';
 import { validateRequest } from '../src/middleware/schemaValidator';
 import { AppError } from '../src/errors/AppError';
 
-// Recreate leaderboard schemas
+// Recreate leaderboard schemas.
+// Spec #46 R5 removed `league` and `minBattles` from fame, and `minRobots`
+// from prestige. Zod's default .strip() means a removed parameter supplied by
+// an old client or a bookmarked URL is ignored, not rejected.
 const fameQuerySchema = z.object({
   page: z.coerce.number().int().positive().optional(),
   limit: z.coerce.number().int().positive().max(100).optional(),
-  league: z.string().max(30).optional(),
-  minBattles: z.coerce.number().int().nonnegative().optional(),
+});
+
+const prestigeQuerySchema = z.object({
+  page: z.coerce.number().int().positive().optional(),
+  limit: z.coerce.number().int().positive().max(100).optional(),
 });
 
 const createTournamentBodySchema = z.object({
@@ -48,14 +54,36 @@ describe('Leaderboards route validation', () => {
       expect(result.success).toBe(false);
     });
 
-    it('should accept league filter', () => {
-      const result = fameQuerySchema.safeParse({ league: 'bronze_1' });
-      expect(result.success).toBe(true);
-    });
-
     it('should accept empty query', () => {
       const result = fameQuerySchema.safeParse({});
       expect(result.success).toBe(true);
+    });
+
+    // Spec #46 R5.16
+    it('should ignore a removed league filter rather than rejecting it', () => {
+      const result = fameQuerySchema.safeParse({ league: 'bronze', page: '2' });
+      expect(result.success).toBe(true);
+      expect(result.success && result.data).toEqual({ page: 2 });
+    });
+
+    it('should ignore a removed minBattles filter rather than rejecting it', () => {
+      const result = fameQuerySchema.safeParse({ minBattles: '50', limit: '10' });
+      expect(result.success).toBe(true);
+      expect(result.success && result.data).toEqual({ limit: 10 });
+    });
+  });
+
+  describe('prestigeQuerySchema (GET /prestige)', () => {
+    it('should accept valid pagination', () => {
+      const result = prestigeQuerySchema.safeParse({ page: '1', limit: '50' });
+      expect(result.success).toBe(true);
+    });
+
+    // Spec #46 R5.16
+    it('should ignore a removed minRobots filter rather than rejecting it', () => {
+      const result = prestigeQuerySchema.safeParse({ minRobots: '5', page: '3' });
+      expect(result.success).toBe(true);
+      expect(result.success && result.data).toEqual({ page: 3 });
     });
   });
 

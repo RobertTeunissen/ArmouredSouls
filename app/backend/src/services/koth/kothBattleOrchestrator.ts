@@ -511,7 +511,7 @@ async function processKothBattle(
           won: p.isWinner,
           destroyed: p.destroyed,
           finalHpPercent: p.robot.maxHP > 0 ? (p.finalHP / p.robot.maxHP) * 100 : 0,
-          eloDiff: 0,
+          eloChange: 0,
           opponentElo: 0,
           yielded: false,
           opponentYielded: false,

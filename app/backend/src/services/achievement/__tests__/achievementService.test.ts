@@ -338,7 +338,8 @@ describe('AchievementService trigger evaluation', () => {
     // elo_upset with koth battleType — should NOT trigger C11
     const event: AchievementEvent = {
       type: 'battle_complete',
-      data: { won: true, eloDiff: 200, battleType: 'koth' },
+      // Spec #46 R8 Cause B: the gap is expressed as pre-battle ratings now.
+      data: { won: true, subjectEloBefore: 1000, opponentEloBefore: 1200, battleType: 'koth' },
     };
 
     const result = await achievementService.checkAndAward(1, 1, event);
@@ -347,7 +348,7 @@ describe('AchievementService trigger evaluation', () => {
     expect(c11).toBeUndefined();
   });
 
-  it('should trigger elo_upset for league battleType with sufficient eloDiff', async () => {
+  it('should trigger elo_upset for league battleType with a sufficient opponent ELO gap', async () => {
     // Pre-unlock all achievements except C11 so only C11 is evaluated
     const allExceptC11 = (await import('../../../config/achievements')).ACHIEVEMENTS
       .filter((a) => a.id !== 'C11')
@@ -356,7 +357,7 @@ describe('AchievementService trigger evaluation', () => {
 
     const event: AchievementEvent = {
       type: 'battle_complete',
-      data: { won: true, eloDiff: 200, battleType: 'league_1v1' },
+      data: { won: true, subjectEloBefore: 1000, opponentEloBefore: 1200, battleType: 'league_1v1' },
     };
 
     const result = await achievementService.checkAndAward(1, 1, event);

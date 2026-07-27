@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { api } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
-import { getLeagueColor } from '../utils/formatters';
 import { createLogger } from '../utils/logger';
 
 const log = createLogger('LeaderboardsFamePage');
@@ -16,7 +15,6 @@ interface FameLeaderboardEntry {
   fameTier: string;
   stableId: number;
   stableName: string;
-  currentLeague: string;
   elo: number;
   totalBattles: number;
   wins: number;
@@ -36,10 +34,6 @@ interface LeaderboardResponse {
     totalPages: number;
     hasMore: boolean;
   };
-  filters: {
-    league: string;
-    minBattles: number;
-  };
   timestamp: string;
 }
 
@@ -48,24 +42,15 @@ function LeaderboardsFamePage() {
   const [leaderboard, setLeaderboard] = useState<FameLeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [leagueFilter, setLeagueFilter] = useState('all');
-  const [minBattles, setMinBattles] = useState(10);
 
   const fetchLeaderboard = async () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const data = await api.get<LeaderboardResponse>(
         '/api/leaderboards/fame',
-        {
-          params: {
-            page: 1,
-            limit: 100,
-            league: leagueFilter,
-            minBattles,
-          },
-        }
+        { params: { page: 1, limit: 100 } }
       );
 
       setLeaderboard(data.leaderboard);
@@ -75,10 +60,12 @@ function LeaderboardsFamePage() {
     } finally {
       setLoading(false);
     }
-  };  useEffect(() => {
+  };
+
+  useEffect(() => {
     fetchLeaderboard();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [leagueFilter, minBattles]);
+   
+  }, []);
 
   const getTierColor = (tier: string) => {
     switch (tier) {
@@ -105,54 +92,20 @@ function LeaderboardsFamePage() {
         </p>
       </div>
 
-      {/* Filters */}
-      <div className="bg-surface-elevated border border-white/10 rounded-lg p-4 mb-6">
-        <div className="flex flex-wrap gap-4 items-center">
-          <div className="flex-1 min-w-[200px]">
-            <label className="block text-sm font-medium text-secondary mb-2">
-              League Filter
-            </label>
-            <select
-              value={leagueFilter}
-              onChange={(e) => setLeagueFilter(e.target.value)}
-              className="w-full bg-surface border border-white/10 rounded-md px-3 py-2 text-primary focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              <option value="all">All Leagues</option>
-              <option value="champion">Champion</option>
-              <option value="diamond">Diamond</option>
-              <option value="platinum">Platinum</option>
-              <option value="gold">Gold</option>
-              <option value="silver">Silver</option>
-              <option value="bronze">Bronze</option>
-            </select>
-          </div>
-
-          <div className="flex-1 min-w-[200px]">
-            <label className="block text-sm font-medium text-secondary mb-2">
-              Minimum Battles
-            </label>
-            <select
-              value={minBattles}
-              onChange={(e) => setMinBattles(parseInt(e.target.value))}
-              className="w-full bg-surface border border-white/10 rounded-md px-3 py-2 text-primary focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              <option value="5">5+ battles</option>
-              <option value="10">10+ battles</option>
-              <option value="25">25+ battles</option>
-              <option value="50">50+ battles</option>
-              <option value="100">100+ battles</option>
-            </select>
-          </div>
-
-          <div className="flex items-end">
-            <button
-              onClick={fetchLeaderboard}
-              className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-hover transition-colors"
-            >
-              Refresh
-            </button>
-          </div>
-        </div>
+      {/*
+        Spec #46 R5: the League Filter and Minimum Battles selects are gone.
+        Both suppressed entrants rather than narrowing a complete list — the
+        minimum-battles default hid robots whose fame came from KotH or Grand
+        Melee (neither increments robots.total_battles), and the league filter
+        excluded robots without a 1v1 standing. Only Refresh remains.
+      */}
+      <div className="mb-6 flex justify-end">
+        <button
+          onClick={fetchLeaderboard}
+          className="min-h-[44px] px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-hover transition-colors"
+        >
+          Refresh
+        </button>
       </div>
 
       {/* Loading State */}
@@ -183,7 +136,6 @@ function LeaderboardsFamePage() {
                   <th className="px-4 py-3 text-left text-xs font-semibold text-tertiary uppercase tracking-wider">Fame</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-tertiary uppercase tracking-wider">Tier</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-tertiary uppercase tracking-wider">Stable</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-tertiary uppercase tracking-wider">League</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-tertiary uppercase tracking-wider">ELO</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-tertiary uppercase tracking-wider">Record</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-tertiary uppercase tracking-wider">Win %</th>
@@ -204,7 +156,6 @@ function LeaderboardsFamePage() {
                       <td className="px-4 py-3 text-primary font-semibold">{entry.fame.toLocaleString()}</td>
                       <td className="px-4 py-3"><span className={`font-medium ${getTierColor(entry.fameTier)}`}>{entry.fameTier}</span></td>
                       <td className="px-4 py-3"><OwnerNameLink userId={entry.stableId} displayName={entry.stableName} /></td>
-                      <td className="px-4 py-3"><span className={`capitalize ${getLeagueColor(entry.currentLeague)}`}>{entry.currentLeague}</span></td>
                       <td className="px-4 py-3 text-primary">{entry.elo}</td>
                       <td className="px-4 py-3 text-secondary text-sm">{entry.wins}W-{entry.losses}L-{entry.draws}D</td>
                       <td className="px-4 py-3"><span className={`font-medium ${entry.winRate >= 60 ? 'text-success' : entry.winRate >= 50 ? 'text-warning' : 'text-orange-400'}`}>{entry.winRate}%</span></td>
@@ -231,7 +182,6 @@ function LeaderboardsFamePage() {
                   </div>
                   <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
                     <div className="flex justify-between"><span className="text-secondary">Tier</span><span className={getTierColor(entry.fameTier)}>{entry.fameTier}</span></div>
-                    <div className="flex justify-between"><span className="text-secondary">League</span><span className={`capitalize ${getLeagueColor(entry.currentLeague)}`}>{entry.currentLeague}</span></div>
                     <div className="flex justify-between"><span className="text-secondary">ELO</span><span className="text-primary">{entry.elo}</span></div>
                     <div className="flex justify-between"><span className="text-secondary">Win %</span><span className={entry.winRate >= 60 ? 'text-success' : entry.winRate >= 50 ? 'text-warning' : 'text-orange-400'}>{entry.winRate}%</span></div>
                     <div className="flex justify-between"><span className="text-secondary">Record</span><span className="text-secondary">{entry.wins}W-{entry.losses}L-{entry.draws}D</span></div>

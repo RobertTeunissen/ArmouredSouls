@@ -9,6 +9,7 @@
 import { getCapForLevel } from '../../shared/utils/academyCaps';
 import { calculateBaseCost } from '../../shared/utils/upgradeCosts';
 import { calculateTrainingFacilityDiscount } from '../../shared/utils/discounts';
+import { getRosterCapacity } from '../../shared/utils/rosterCapacity';
 import { RobotError, RobotErrorCode } from '../../errors/robotErrors';
 
 // ── Valid attribute names ────────────────────────────────────────────
@@ -91,6 +92,7 @@ export const ATTRIBUTE_TO_ACADEMY: Record<string, string> = {
  * @param robot          The robot record (needs attribute fields)
  * @param trainingLevel  Training Facility level (for discount)
  * @param academyLevels  Academy levels per type (for caps)
+ * @param rosterCapacity Roster_Capacity — shrinks the per-level discount rate (Spec #46 R11)
  * @param verifyCurrentLevel  If true, verify currentLevel matches robot data
  */
 export function validateAndCalculateUpgrades(
@@ -98,6 +100,7 @@ export function validateAndCalculateUpgrades(
   robot: Record<string, unknown>,
   trainingLevel: number,
   academyLevels: AcademyLevels,
+  rosterCapacity: number,
   verifyCurrentLevel: boolean = true,
 ): ValidateUpgradesResult {
   let totalCost = 0;
@@ -147,7 +150,7 @@ export function validateAndCalculateUpgrades(
     }
 
     // Calculate cost with Training Facility discount
-    const discountPercent = calculateTrainingFacilityDiscount(trainingLevel);
+    const discountPercent = calculateTrainingFacilityDiscount(trainingLevel, rosterCapacity);
     let attributeCost = 0;
 
     const fromLevel = verifyCurrentLevel ? Math.floor(currentLevel) : robotCurrentLevelInt;
@@ -181,6 +184,7 @@ export function validateUpgradesFresh(
   freshRobot: Record<string, unknown>,
   freshTrainingLevel: number,
   freshAcademyLevels: AcademyLevels,
+  freshRosterCapacity: number,
 ): ValidateUpgradesResult {
   let totalCost = 0;
   const upgradeOperations: UpgradeOperation[] = [];
@@ -218,7 +222,7 @@ export function validateUpgradesFresh(
     }
 
     // Recalculate cost with fresh Training Facility discount
-    const freshDiscountPercent = calculateTrainingFacilityDiscount(freshTrainingLevel);
+    const freshDiscountPercent = calculateTrainingFacilityDiscount(freshTrainingLevel, freshRosterCapacity);
     let attributeCost = 0;
 
     for (let level = freshCurrentLevelInt; level < plannedLevel; level++) {
@@ -284,10 +288,14 @@ export async function executeUpgradeTransaction(
 
   const trainingLevel = user.facilities.find(f => f.facilityType === 'training_facility')?.level || 0;
   const academyLevels = extractAcademyLevels(user.facilities);
+  // Spec #46 R11: the discount rate shrinks 1pp per robot slot.
+  const rosterCapacity = getRosterCapacity(
+    user.facilities.find(f => f.facilityType === 'roster_expansion')?.level || 0,
+  );
 
   // Optimistic check
   let { totalCost, upgradeOperations } = validateAndCalculateUpgrades(
-    upgrades, robot as unknown as Record<string, unknown>, trainingLevel, academyLevels,
+    upgrades, robot as unknown as Record<string, unknown>, trainingLevel, academyLevels, rosterCapacity,
   );
 
   if (user.currency < totalCost) {
@@ -305,9 +313,14 @@ export async function executeUpgradeTransaction(
 
     const freshTrainingLevel = freshFacilities.find(f => f.facilityType === 'training_facility')?.level || 0;
     const freshAcademyLevels = extractAcademyLevels(freshFacilities);
+    // Re-read inside the lock: a concurrent roster_expansion upgrade would change
+    // the discount, so the price must be recomputed against fresh capacity.
+    const freshRosterCapacity = getRosterCapacity(
+      freshFacilities.find(f => f.facilityType === 'roster_expansion')?.level || 0,
+    );
 
     const fresh = validateUpgradesFresh(
-      upgrades, freshRobot as unknown as Record<string, unknown>, freshTrainingLevel, freshAcademyLevels,
+      upgrades, freshRobot as unknown as Record<string, unknown>, freshTrainingLevel, freshAcademyLevels, freshRosterCapacity,
     );
 
     if (lockedUser.currency < fresh.totalCost) {

@@ -99,6 +99,22 @@ export interface RobotCombatState {
   offhandCooldown: number;
   totalDamageDealt: number;
   totalDamageTaken: number;
+  /**
+   * Name of the robot that most recently dealt HP damage to this one.
+   *
+   * Written by `performAttack()` and read only when the destruction check in
+   * the simulation loop emits a `destroyed` event, where it becomes the event's
+   * `attacker` so downstream consumers can attribute the kill. Grand Melee
+   * (Spec #46 R4.16) needs this: it counts kills from elimination events, and
+   * before the field existed the `destroyed` event carried no attribution at
+   * all, so every robot's kill count was zero.
+   *
+   * Undefined when the robot has taken no HP damage — a robot can be destroyed
+   * by shield-piercing chip damage only, or reach zero HP without a clean
+   * attributable source, in which case the kill goes uncredited rather than
+   * being credited to an arbitrary attacker.
+   */
+  lastDamagedBy?: string;
 
   // === Pre-computed numeric attributes (avoids repeated Decimal→number conversion per tick) ===
   numServoMotors: number;
