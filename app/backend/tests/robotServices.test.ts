@@ -155,7 +155,7 @@ describe('validateAndCalculateUpgrades', () => {
     const robot = makeRobot({ combatPower: 5 });
     const upgrades = { combatPower: { currentLevel: 5, plannedLevel: 6 } };
 
-    const result = validateAndCalculateUpgrades(upgrades, robot, 0, baseAcademyLevels);
+    const result = validateAndCalculateUpgrades(upgrades, robot, 0, baseAcademyLevels, 1);
 
     expect(result.totalCost).toBeGreaterThan(0);
     expect(result.upgradeOperations).toHaveLength(1);
@@ -168,10 +168,10 @@ describe('validateAndCalculateUpgrades', () => {
     const robot = makeRobot({ combatPower: 5 });
     const upgrades = { combatPower: { currentLevel: 5, plannedLevel: 6 } };
 
-    const noDisco = validateAndCalculateUpgrades(upgrades, robot, 0, baseAcademyLevels);
-    const withDisco = validateAndCalculateUpgrades(upgrades, robot, 3, baseAcademyLevels);
+    const noDisco = validateAndCalculateUpgrades(upgrades, robot, 0, baseAcademyLevels, 1);
+    const withDisco = validateAndCalculateUpgrades(upgrades, robot, 3, baseAcademyLevels, 1);
 
-    // Training level 3 = 30% discount, so cost should be lower
+    // Training level 3 at capacity 1 = 27% discount, so cost should be lower
     expect(withDisco.totalCost).toBeLessThan(noDisco.totalCost);
   });
 
@@ -180,7 +180,7 @@ describe('validateAndCalculateUpgrades', () => {
     const upgrades = { invalidAttr: { currentLevel: 5, plannedLevel: 6 } };
 
     expect(() =>
-      validateAndCalculateUpgrades(upgrades, robot, 0, baseAcademyLevels),
+      validateAndCalculateUpgrades(upgrades, robot, 0, baseAcademyLevels, 1),
     ).toThrow(RobotError);
   });
 
@@ -190,7 +190,7 @@ describe('validateAndCalculateUpgrades', () => {
     const upgrades = { combatPower: { currentLevel: 3, plannedLevel: 6 } };
 
     expect(() =>
-      validateAndCalculateUpgrades(upgrades, robot, 0, baseAcademyLevels),
+      validateAndCalculateUpgrades(upgrades, robot, 0, baseAcademyLevels, 1),
     ).toThrow(/Current level mismatch/);
   });
 
@@ -206,7 +206,7 @@ describe('validateAndCalculateUpgrades', () => {
     const upgrades = { combatPower: { currentLevel: 5, plannedLevel: 11 } };
 
     expect(() =>
-      validateAndCalculateUpgrades(upgrades, robot, 0, lowAcademy),
+      validateAndCalculateUpgrades(upgrades, robot, 0, lowAcademy, 1),
     ).toThrow(/exceeds cap/);
   });
 
@@ -215,7 +215,7 @@ describe('validateAndCalculateUpgrades', () => {
     const upgrades = { combatPower: { currentLevel: 5, plannedLevel: 5 } };
 
     expect(() =>
-      validateAndCalculateUpgrades(upgrades, robot, 0, baseAcademyLevels),
+      validateAndCalculateUpgrades(upgrades, robot, 0, baseAcademyLevels, 1),
     ).toThrow(/Planned level must be greater/);
   });
 
@@ -224,7 +224,7 @@ describe('validateAndCalculateUpgrades', () => {
     // Upgrade from 5 → 8 (3 levels)
     const upgrades = { combatPower: { currentLevel: 5, plannedLevel: 8 } };
 
-    const result = validateAndCalculateUpgrades(upgrades, robot, 0, baseAcademyLevels);
+    const result = validateAndCalculateUpgrades(upgrades, robot, 0, baseAcademyLevels, 1);
 
     // Cost should be sum of base costs for levels 5, 6, 7
     // calculateBaseCost(5) = 9000, (6) = 10500, (7) = 12000 → total = 31500
@@ -238,7 +238,7 @@ describe('validateAndCalculateUpgrades', () => {
       armorPlating: { currentLevel: 5, plannedLevel: 6 },
     };
 
-    const result = validateAndCalculateUpgrades(upgrades, robot, 0, baseAcademyLevels);
+    const result = validateAndCalculateUpgrades(upgrades, robot, 0, baseAcademyLevels, 1);
 
     expect(result.upgradeOperations).toHaveLength(2);
     // Both attributes at same level → same cost each

@@ -101,7 +101,7 @@ The Facilities Page (`/facilities`) is a critical economic and progression inter
 **Facility Types & Implementation Status:**
 
 **Implemented (11 facilities):**
-1. ✅ **Training Facility** - Discount on attribute upgrades (5%-50%)
+1. ✅ **Training Facility** - Discount on attribute upgrades, up to 90%. Rate is `(10 − Roster_Capacity)%` per level, so it shrinks as the roster grows (Spec #46 R11)
 2. ✅ **Weapons Workshop** - Discount on weapon purchases (10%-100%)
 3. ✅ **Repair Bay** - Discount on repair costs (10%-55%)
 4. ✅ **Roster Expansion** - Increase robot slots (1→10 robots)
@@ -528,6 +528,7 @@ Many facility levels require prestige thresholds to unlock. Players must earn pr
 - Level 4: 1,000 prestige
 - Level 7: 5,000 prestige
 - Level 9: 10,000 prestige
+- Level 10: ungated (added in Spec #46 R11, raising maxLevel from 9 to 10)
 
 **Weapons Workshop:**
 - Level 4: 1,500 prestige
@@ -1156,8 +1157,9 @@ const FacilityIcon: React.FC<FacilityIconProps> = ({ facilityType, alt, classNam
 - **Type**: `training_facility`
 - **Max Level**: 10
 - **Cost Range**: ₡300K - ₡4.5M (total: ₡17.5M)
-- **Benefits**: 5% - 50% discount on attribute upgrades
-- **Strategic Value**: Essential - High ROI for active players who upgrade robots frequently
+- **Benefits**: Up to 90% discount on attribute upgrades. Formula: `clamp(level × max(0, 10 − Roster_Capacity), 0, 90)` where Roster_Capacity is `roster_expansion` level + 1 (Spec #46 R11)
+- **Strategic Value**: Essential for a concentrated roster; **worthless at 10 robot slots**, where the rate is 0% per level. Sits on the same concentration axis as the Merchandising Hub and pulls against Roster Expansion
+- **Display**: The page shows the player's *actual* discount computed against their own Roster_Capacity, not the best-case figure from the static benefit strings
 - **Implementation Status**: Fully implemented, discount applies to robot attribute upgrade costs
 
 #### Weapons Workshop (✅ Implemented)
@@ -1619,9 +1621,45 @@ Not all events are available to all robots:
 - `league`, `tournament`, `koth` — always eligible (requires ≥ 1 robot in Stable)
 - `tag_team` — requires the Stable to own ≥ 2 robots
 
+### Operating Cost
+
+**₡150 per level per day.**
+
+This was previously reported as ₡0 by `GET /api/facilities`. That handler recomputed operating costs with a per-type `if`/`else if` chain duplicating `calculateFacilityOperatingCost()`, and the duplicate omitted both `booking_office` and `tuning_bay`. Spec #46 replaced the chain with the shared formula, so no facility can silently report ₡0. `roster_expansion` keeps a documented special case because its cost is charged per filled robot slot rather than per level.
+
+### Upgrading From the Booking Office Page (Spec #46)
+
+The Booking Office Overview Page carries its own upgrade control, so a player who hits the subscription cap while assigning events can act without navigating to the Facilities page.
+
+Before committing, the **Upgrade Implication Panel** states:
+
+| Figure | Detail |
+|---|---|
+| Cost | Credit cost of the next level |
+| Subscriptions per robot | Current cap → next cap, as `3 + level`. Never a bare level number, because the level is only meaningful through the cap |
+| Daily operating cost | Current → next, at ₡150 per level |
+| Your balance | Current credits |
+| Prestige required | Shown only when the next level is gated, alongside current prestige |
+
+Control states:
+
+- **Insufficient credits** — disabled, states the shortfall in credits
+- **Insufficient prestige** — disabled, states the required and current prestige
+- **Both insufficient** — disabled, states *both* conditions rather than only the first
+- **Level 10** — control replaced by a maximum-level indicator, panel omitted
+- **Request in flight** — disabled, so a double click cannot buy two levels
+
+Every figure comes from `GET /api/facilities`; nothing is recomputed client-side. The mutation calls the existing `POST /api/facilities/upgrade` endpoint, so its `lockUserForSpending` transaction, prestige validation, and max-level validation are inherited unchanged — the disabled states are a usability affordance, not the security boundary.
+
+On success the page refreshes both the Booking Office level and the Subscription Matrix, so the newly unlocked slots are immediately usable without a reload. On failure the endpoint's own error message is surfaced and the displayed level and balance are left untouched.
+
+Upgrading is purely additive: raising the cap cannot invalidate, reassign, or cancel an existing subscription, so there is no over-cap state to reconcile.
+
+The disabled reason renders as text associated with the control via `aria-describedby` rather than being conveyed by colour alone. Below 1024px the implication figures stack vertically and the control goes full-width with a 44px minimum touch target.
+
 ### Related Surfaces
 
 - **Robot Detail Page** — per-robot subscription management section
-- **Booking Office Overview Page** (`/booking-office`) — matrix view of all robots × all events
+- **Booking Office Overview Page** (`/booking-office`) — matrix view of all robots × all events, plus the upgrade control
 - **Onboarding Picker** — new players pick 3 subscriptions for their first robot
 - **Facilities Page** — Booking Office card links to the overview page

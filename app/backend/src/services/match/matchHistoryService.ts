@@ -1097,56 +1097,63 @@ interface RobotForLog {
   offhandWeapon: { weapon: { name: string; rangeBand: string } | null } | null;
 }
 
-function buildStandardLogResponse(baseResponse: Record<string, unknown>, battleData: { robot1: RobotForLog; robot2: RobotForLog }, robot1Participant: BattleParticipant | undefined, robot2Participant: BattleParticipant | undefined, streamingRevenue1: number, streamingRevenue2: number) {
-  baseResponse.robot1 = {
-    id: battleData.robot1.id,
-    name: battleData.robot1.name,
-    owner: battleData.robot1.user.stableName || battleData.robot1.user.username,
-    ownerId: battleData.robot1.user.id,
-    maxHP: battleData.robot1.maxHP,
-    maxShield: battleData.robot1.maxShield,
-    eloBefore: robot1Participant?.eloBefore || 0,
-    eloAfter: robot1Participant?.eloAfter || 0,
-    finalHP: robot1Participant?.finalHP ?? 0,
-    damageDealt: robot1Participant?.damageDealt ?? 0,
-    reward: robot1Participant?.credits ?? 0,
-    prestige: robot1Participant?.prestigeAwarded ?? 0,
-    fame: robot1Participant?.fameAwarded ?? 0,
-    streamingRevenue: streamingRevenue1,
-    yielded: robot1Participant?.yielded ?? false,
-    destroyed: robot1Participant?.destroyed ?? false,
-    imageUrl: battleData.robot1.imageUrl ?? null,
-    loadoutType: battleData.robot1.loadoutType,
-    rangeBand: battleData.robot1.mainWeapon?.weapon?.rangeBand ?? null,
-    stance: battleData.robot1.stance,
-    mainWeaponName: battleData.robot1.mainWeapon?.weapon?.name ?? null,
-    offhandWeaponName: battleData.robot1.offhandWeapon?.weapon?.name ?? null,
-    offhandRangeBand: battleData.robot1.offhandWeapon?.weapon?.rangeBand ?? null,
+/**
+ * Build the `robot1` / `robot2` blocks of a standard (two-participant) battle
+ * log response.
+ *
+ * Spec #46 R4.18: `robot1` and `robot2` are nullable. Migration
+ * `20260611120000_drop_legacy_scheduling_tables` deleted `battle_participants`
+ * rows and `battles` rows through two different keys, which left behind battles
+ * with one participant or none. Every field access here was unguarded, so
+ * opening one of those battles threw and the Hall of Records link appeared
+ * broken. A missing participant now yields `null` for that side, which
+ * `BattleDetailPage.tsx` already handles via optional chaining, so the battle
+ * renders with the resolvable side intact instead of failing outright.
+ *
+ * No data remediation accompanies this: Spec #45 deletes battle history at the
+ * season boundary, and the orphaned rows cannot be reconstructed.
+ */
+function mapRobotForLog(
+  robot: RobotForLog | null,
+  participant: BattleParticipant | undefined,
+  streamingRevenue: number,
+): Record<string, unknown> | null {
+  if (!robot) return null;
+  return {
+    id: robot.id,
+    name: robot.name,
+    owner: robot.user.stableName || robot.user.username,
+    ownerId: robot.user.id,
+    maxHP: robot.maxHP,
+    maxShield: robot.maxShield,
+    eloBefore: participant?.eloBefore || 0,
+    eloAfter: participant?.eloAfter || 0,
+    finalHP: participant?.finalHP ?? 0,
+    damageDealt: participant?.damageDealt ?? 0,
+    reward: participant?.credits ?? 0,
+    prestige: participant?.prestigeAwarded ?? 0,
+    fame: participant?.fameAwarded ?? 0,
+    streamingRevenue,
+    yielded: participant?.yielded ?? false,
+    destroyed: participant?.destroyed ?? false,
+    imageUrl: robot.imageUrl ?? null,
+    loadoutType: robot.loadoutType,
+    rangeBand: robot.mainWeapon?.weapon?.rangeBand ?? null,
+    stance: robot.stance,
+    mainWeaponName: robot.mainWeapon?.weapon?.name ?? null,
+    offhandWeaponName: robot.offhandWeapon?.weapon?.name ?? null,
+    offhandRangeBand: robot.offhandWeapon?.weapon?.rangeBand ?? null,
   };
+}
 
-  baseResponse.robot2 = {
-    id: battleData.robot2.id,
-    name: battleData.robot2.name,
-    owner: battleData.robot2.user.stableName || battleData.robot2.user.username,
-    ownerId: battleData.robot2.user.id,
-    maxHP: battleData.robot2.maxHP,
-    maxShield: battleData.robot2.maxShield,
-    eloBefore: robot2Participant?.eloBefore || 0,
-    eloAfter: robot2Participant?.eloAfter || 0,
-    finalHP: robot2Participant?.finalHP ?? 0,
-    damageDealt: robot2Participant?.damageDealt ?? 0,
-    reward: robot2Participant?.credits ?? 0,
-    prestige: robot2Participant?.prestigeAwarded ?? 0,
-    fame: robot2Participant?.fameAwarded ?? 0,
-    streamingRevenue: streamingRevenue2,
-    yielded: robot2Participant?.yielded ?? false,
-    destroyed: robot2Participant?.destroyed ?? false,
-    imageUrl: battleData.robot2.imageUrl ?? null,
-    loadoutType: battleData.robot2.loadoutType,
-    rangeBand: battleData.robot2.mainWeapon?.weapon?.rangeBand ?? null,
-    stance: battleData.robot2.stance,
-    mainWeaponName: battleData.robot2.mainWeapon?.weapon?.name ?? null,
-    offhandWeaponName: battleData.robot2.offhandWeapon?.weapon?.name ?? null,
-    offhandRangeBand: battleData.robot2.offhandWeapon?.weapon?.rangeBand ?? null,
-  };
+function buildStandardLogResponse(
+  baseResponse: Record<string, unknown>,
+  battleData: { robot1: RobotForLog | null; robot2: RobotForLog | null },
+  robot1Participant: BattleParticipant | undefined,
+  robot2Participant: BattleParticipant | undefined,
+  streamingRevenue1: number,
+  streamingRevenue2: number,
+) {
+  baseResponse.robot1 = mapRobotForLog(battleData.robot1, robot1Participant, streamingRevenue1);
+  baseResponse.robot2 = mapRobotForLog(battleData.robot2, robot2Participant, streamingRevenue2);
 }

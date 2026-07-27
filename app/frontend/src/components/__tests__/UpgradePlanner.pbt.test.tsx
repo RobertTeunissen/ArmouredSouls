@@ -47,6 +47,7 @@ describe('UpgradePlanner - Cost Transparency Properties', () => {
               robot={robot}
               currentCredits={currentCredits}
               trainingLevel={trainingLevel}
+              rosterCapacity={1}
               academyLevels={academyLevels}
               workshopLevel={workshopLevel}
               onCommit={async () => {}}
@@ -57,7 +58,8 @@ describe('UpgradePlanner - Cost Transparency Properties', () => {
           // Check if training discount is displayed when trainingLevel > 0
           // Note: Component only shows Training Facility Discount, not Workshop Discount
           if (trainingLevel > 0) {
-            const trainingDiscountText = `${Math.min(trainingLevel * 10, 90)}%`;
+            // Spec #46 R11: 9pp per level at Roster_Capacity 1 (the helper default).
+            const trainingDiscountText = `${Math.min(trainingLevel * 9, 90)}%`;
             const trainingElements = container.querySelectorAll('*');
             let foundTrainingDiscount = false;
             trainingElements.forEach(el => {
@@ -111,6 +113,7 @@ describe('UpgradePlanner - Cost Transparency Properties', () => {
               robot={robot}
               currentCredits={currentCredits}
               trainingLevel={trainingLevel}
+              rosterCapacity={1}
               academyLevels={academyLevels}
               workshopLevel={workshopLevel}
               onCommit={async () => {}}

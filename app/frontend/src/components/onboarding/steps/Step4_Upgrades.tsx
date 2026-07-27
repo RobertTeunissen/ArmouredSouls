@@ -10,6 +10,7 @@ import { api } from '../../../utils/api';
 import { ApiError } from '../../../utils/ApiError';
 import { fetchMyRobots, fetchRobotById, commitUpgrades } from '../../../utils/robotApi';
 import { calculateDiscountedUpgradeCost } from '../../../../../shared/utils/upgradeCosts';
+import { getRosterCapacity } from '../../../../../shared/utils/rosterCapacity';
 import { registerTeamBattle } from '../../../utils/teamBattleApi';
 
 interface Robot { id: number; name: string; imageUrl: string | null; [key: string]: unknown }
@@ -30,6 +31,10 @@ const Step8 = memo(({ onPrevious: _p }: { onNext?: () => void; onPrevious?: () =
   const [robots, setRobots] = useState<Robot[]>([]);
   const [budget, setBudget] = useState(0);
   const [tfLevel, setTfLevel] = useState(0);
+  // Spec #46 R11: Training Facility discount rate shrinks 1pp per robot slot.
+  // Onboarding stables are at roster_expansion 0, so capacity is 1 unless the
+  // facilities call says otherwise.
+  const [rosterCapacity, setRosterCapacity] = useState(1);
   const [phase, setPhase] = useState<'pick' | 'tagteam'>('pick');
   const [selections, setSelections] = useState<Record<number, Set<Focus>>>({});
   const [activeBot, setActiveBot] = useState<number | null>(null);
@@ -51,6 +56,8 @@ const Step8 = memo(({ onPrevious: _p }: { onNext?: () => void; onPrevious?: () =
         const facs = Array.isArray(facData) ? facData : (facData.facilities ?? []);
         const tf = facs.find((f) => f.type === 'training_facility');
         setTfLevel(tf?.currentLevel || 0);
+        const rosterExpansion = facs.find((f) => f.type === 'roster_expansion');
+        setRosterCapacity(getRosterCapacity(rosterExpansion?.currentLevel || 0));
         const sel: Record<number, Set<Focus>> = {};
         for (const r of bots) sel[r.id] = new Set();
         setSelections(sel);
@@ -103,7 +110,7 @@ const Step8 = memo(({ onPrevious: _p }: { onNext?: () => void; onPrevious?: () =
         for (const r of fresh) {
           if (!robotAttrs[r.id]) continue;
           for (const a of robotAttrs[r.id]) {
-            const cost = calculateDiscountedUpgradeCost(levels[r.id][a], tfLevel);
+            const cost = calculateDiscountedUpgradeCost(levels[r.id][a], tfLevel, rosterCapacity);
             if (cost > 0 && remaining - cost >= RESERVE && levels[r.id][a] < 10) {
               levels[r.id][a]++;
               remaining -= cost;

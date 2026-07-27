@@ -44,6 +44,7 @@ import { getDiskUsage, getMemoryUsage, checkCriticalModules } from './utils/syst
 import { sendMonitoringAlert } from './utils/monitoringWebhook';
 import { initDailyHealthReport } from './services/monitoring/dailyHealthReport';
 import { initBattleLogRetention } from './services/retention/battleLogRetentionService';
+import { initAuditLogRetention } from './services/retention/auditLogRetentionService';
 import os from 'os';
 import { createGeneralLimiter, createAuthLimiter, createLoginLimiter } from './middleware/rateLimiter';
 import { createUserEconomicLimiter } from './middleware/userRateLimiter';
@@ -259,5 +260,9 @@ import { runStartupSelfTest } from './utils/startupSelfTest';
 
     // Initialize battle log retention cron (Spec #39 — 01:30 UTC daily)
     initBattleLogRetention();
+
+    // Initialize audit log retention cron (01:45 UTC daily, opt-in via
+    // AUDIT_LOG_RETENTION_DAYS — no-op when unset)
+    initAuditLogRetention();
   });
 })();

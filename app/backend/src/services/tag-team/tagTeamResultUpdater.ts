@@ -648,7 +648,7 @@ export async function updateTagTeamBattleResults(
         won: r.isWinner,
         destroyed: r.destroyed,
         finalHpPercent: 0,
-        eloDiff: 0,
+        eloChange: 0,
         opponentElo: 0,
         yielded: r.yielded,
         opponentYielded: false,

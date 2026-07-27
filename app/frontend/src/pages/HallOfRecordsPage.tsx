@@ -14,6 +14,7 @@ import {
   TeamBattleRecords,
   TournamentChampionsRecords,
   GrandMeleeRecords,
+  WinStreakRecords,
 } from '../components/hall-of-records';
 
 const log = createLogger('HallOfRecordsPage');
@@ -69,6 +70,7 @@ function HallOfRecordsPage() {
     { key: 'combat' as CategoryKey, label: 'Combat', icon: '⚔️' },
     { key: 'upsets' as CategoryKey, label: 'Upsets', icon: '🎯' },
     { key: 'career' as CategoryKey, label: 'Career', icon: '🏅' },
+    { key: 'winStreaks' as CategoryKey, label: 'Win Streaks', icon: '🔥' },
     { key: 'economic' as CategoryKey, label: 'Economic', icon: '💰' },
     { key: 'prestige' as CategoryKey, label: 'Prestige', icon: '👑' },
     { key: 'koth' as CategoryKey, label: 'King of the Hill', icon: '⛰️' },
@@ -144,6 +146,9 @@ function HallOfRecordsPage() {
             )}
             {activeCategory === 'career' && (
               <CareerRecords records={records} />
+            )}
+            {activeCategory === 'winStreaks' && (
+              <WinStreakRecords records={records} />
             )}
             {activeCategory === 'economic' && (
               <EconomicRecords records={records} />

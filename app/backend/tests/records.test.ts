@@ -40,14 +40,16 @@ describe('Records Routes', () => {
       expect(response.body).toHaveProperty('combat');
       
       const combatRecords = response.body.combat;
-      expect(combatRecords).toHaveProperty('fastestVictory');
-      expect(combatRecords).toHaveProperty('longestBattle');
+      // Spec #46 R4.1/R4.2: fastestVictory and longestBattle removed
+      expect(combatRecords).not.toHaveProperty('fastestVictory');
+      expect(combatRecords).not.toHaveProperty('longestBattle');
       expect(combatRecords).toHaveProperty('mostDamageInBattle');
       
       // Verify arrays
-      expect(Array.isArray(combatRecords.fastestVictory)).toBe(true);
-      expect(Array.isArray(combatRecords.longestBattle)).toBe(true);
-      expect(Array.isArray(combatRecords.mostDamageInBattle)).toBe(true);
+      // mostDamageInBattle is keyed by battle mode (Spec #46 R4.5)
+      expect(Array.isArray(combatRecords.mostDamageInBattle)).toBe(false);
+      expect(typeof combatRecords.mostDamageInBattle).toBe('object');
+      expect(Array.isArray(combatRecords.mostDamageInBattle.league_1v1)).toBe(true);
     });
 
     it('should have career records section', async () => {
@@ -111,13 +113,14 @@ describe('Records Routes', () => {
       
       const upsets = response.body.upsets;
       expect(upsets).toHaveProperty('biggestUpset');
-      expect(upsets).toHaveProperty('biggestEloGain');
-      expect(upsets).toHaveProperty('biggestEloLoss');
+      expect(upsets).toHaveProperty('biggestTeamUpset');
+      // Spec #46 R4.8: removed — ELO_K_FACTOR is fixed at 32
+      expect(upsets).not.toHaveProperty('biggestEloGain');
+      expect(upsets).not.toHaveProperty('biggestEloLoss');
       
       // Verify arrays
       expect(Array.isArray(upsets.biggestUpset)).toBe(true);
-      expect(Array.isArray(upsets.biggestEloGain)).toBe(true);
-      expect(Array.isArray(upsets.biggestEloLoss)).toBe(true);
+      expect(Array.isArray(upsets.biggestTeamUpset)).toBe(true);
     });
 
     it('should handle empty database gracefully', async () => {
@@ -150,14 +153,13 @@ describe('Records Routes', () => {
       // Check that arrays don't exceed 10 items
       const { combat, upsets, career, economic, prestige } = response.body;
       
-      expect(combat.fastestVictory.length).toBeLessThanOrEqual(10);
-      expect(combat.longestBattle.length).toBeLessThanOrEqual(10);
-      expect(combat.mostDamageInBattle.length).toBeLessThanOrEqual(10);
+      for (const entries of Object.values(combat.mostDamageInBattle)) {
+        expect((entries as unknown[]).length).toBeLessThanOrEqual(10);
+      }
       expect(combat.narrowestVictory.length).toBeLessThanOrEqual(10);
       
       expect(upsets.biggestUpset.length).toBeLessThanOrEqual(10);
-      expect(upsets.biggestEloGain.length).toBeLessThanOrEqual(10);
-      expect(upsets.biggestEloLoss.length).toBeLessThanOrEqual(10);
+      expect(upsets.biggestTeamUpset.length).toBeLessThanOrEqual(10);
       
       expect(career.mostBattles.length).toBeLessThanOrEqual(10);
       expect(career.highestWinRate.length).toBeLessThanOrEqual(10);

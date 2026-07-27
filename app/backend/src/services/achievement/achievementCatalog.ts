@@ -14,6 +14,7 @@ import type {
   AchievementWithProgress,
   AchievementRarityCache,
 } from './achievementTypes';
+import { resolveTeamModeWins, emptyTeamModeWins } from './teamModeWins';
 
 // ─── Progress Computation ───────────────────────────────────────────
 
@@ -28,6 +29,7 @@ export function computeProgress(
     id: number; name: string; wins: number; losses: number; kills: number;
     elo: number; fame: number; totalBattles: number; kothWins: number;
     totalTagTeamWins: number; totalLeague2v2Wins: number; totalLeague3v3Wins: number;
+    grandMeleeWins: number; grandMeleeTop3: number;
     currentWinStreak: number; currentLoseStreak: number;
     offensiveWins: number; defensiveWins: number; balancedWins: number;
     dualWieldWins: number;
@@ -49,6 +51,7 @@ export function computeProgress(
   const bestRobotFor = (
     field: 'wins' | 'losses' | 'kills' | 'elo' | 'fame' | 'totalBattles' |
       'kothWins' | 'totalTagTeamWins' | 'totalLeague2v2Wins' | 'totalLeague3v3Wins' |
+      'grandMeleeWins' | 'grandMeleeTop3' |
       'currentWinStreak' | 'currentLoseStreak' |
       'offensiveWins' | 'defensiveWins' | 'balancedWins' | 'dualWieldWins',
   ): { current: number; bestRobotName?: string } => {
@@ -73,6 +76,11 @@ export function computeProgress(
     case 'tag_team_wins': { const r = bestRobotFor('totalTagTeamWins'); return { current: r.current, target, label, bestRobotName: r.bestRobotName }; }
     case 'league_2v2_wins': { const r = bestRobotFor('totalLeague2v2Wins'); return { current: r.current, target, label, bestRobotName: r.bestRobotName }; }
     case 'league_3v3_wins': { const r = bestRobotFor('totalLeague3v3Wins'); return { current: r.current, target, label, bestRobotName: r.bestRobotName }; }
+    // Spec #46 R8 Cause C: L26-L29 declare progressType 'numeric' but had no
+    // resolver entry, so their cards showed no progress bar even before the
+    // trigger registration was fixed. ('grand_melee_win_high_hp' is boolean.)
+    case 'grand_melee_wins': { const r = bestRobotFor('grandMeleeWins'); return { current: r.current, target, label, bestRobotName: r.bestRobotName }; }
+    case 'grand_melee_top3': { const r = bestRobotFor('grandMeleeTop3'); return { current: r.current, target, label, bestRobotName: r.bestRobotName }; }
 
     case 'prestige': return { current: user.prestige, target, label };
     case 'currency': return { current: user.currency, target, label };
@@ -164,6 +172,7 @@ export async function getPlayerAchievements(
     select: {
       id: true, name: true, wins: true, losses: true, kills: true,
       elo: true, fame: true, totalBattles: true,
+      grandMeleeWins: true, grandMeleeTop3: true,
       offensiveWins: true, defensiveWins: true, balancedWins: true, dualWieldWins: true,
     },
   });
@@ -171,17 +180,28 @@ export async function getPlayerAchievements(
   const robotIds = robots.map((r) => r.id);
   const robotCount = robots.length;
 
-  // Load standings data for per-mode counters (koth wins, tag team wins, league wins, streaks)
-  const allStandings = await prisma.standing.findMany({
-    where: {
-      entityType: 'robot',
-      entityId: { in: robotIds },
-    },
-    select: {
-      entityId: true, mode: true, wins: true,
-      currentWinStreak: true, currentLoseStreak: true, bestWinStreak: true,
-    },
-  });
+  // Load standings data for per-mode counters (koth wins, streaks).
+  //
+  // Spec #46 R8 Cause A: the three team modes are NOT here. They only ever write
+  // `entityType: 'team'` standings keyed by `TeamBattle.id`, so looking them up
+  // among robot-scoped rows always missed and `?? 0` turned the miss into a zero
+  // — which is what made Dynamic Duo, Twins!, and Voltron show 0 progress
+  // forever. They are resolved through team membership below, using the same
+  // helper the unlock evaluator uses so displayed progress cannot disagree with
+  // unlock behaviour.
+  const [allStandings, teamWinsByRobot] = await Promise.all([
+    prisma.standing.findMany({
+      where: {
+        entityType: 'robot',
+        entityId: { in: robotIds },
+      },
+      select: {
+        entityId: true, mode: true, wins: true,
+        currentWinStreak: true, currentLoseStreak: true, bestWinStreak: true,
+      },
+    }),
+    resolveTeamModeWins(robotIds),
+  ]);
 
   // Build per-robot standings maps
   const standingsByRobot = new Map<number, typeof allStandings>();
@@ -195,17 +215,15 @@ export async function getPlayerAchievements(
   const robotsWithStandings = robots.map(r => {
     const standings = standingsByRobot.get(r.id) ?? [];
     const kothStanding = standings.find(s => s.mode === 'koth');
-    const tagTeamStanding = standings.find(s => s.mode === 'tag_team');
-    const league2v2Standing = standings.find(s => s.mode === 'league_2v2');
-    const league3v3Standing = standings.find(s => s.mode === 'league_3v3');
     const league1v1Standing = standings.find(s => s.mode === 'league_1v1');
+    const teamWins = teamWinsByRobot.get(r.id) ?? emptyTeamModeWins();
 
     return {
       ...r,
       kothWins: kothStanding?.wins ?? 0,
-      totalTagTeamWins: tagTeamStanding?.wins ?? 0,
-      totalLeague2v2Wins: league2v2Standing?.wins ?? 0,
-      totalLeague3v3Wins: league3v3Standing?.wins ?? 0,
+      totalTagTeamWins: teamWins.tag_team,
+      totalLeague2v2Wins: teamWins.league_2v2,
+      totalLeague3v3Wins: teamWins.league_3v3,
       currentWinStreak: league1v1Standing?.currentWinStreak ?? 0,
       currentLoseStreak: league1v1Standing?.currentLoseStreak ?? 0,
     };

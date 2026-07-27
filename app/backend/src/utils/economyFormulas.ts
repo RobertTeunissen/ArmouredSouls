@@ -68,33 +68,66 @@ export function getNextPrestigeTier(currentPrestige: number): { threshold: numbe
 }
 
 /**
+ * Roster_Capacity — re-exported from the shared module.
+ *
+ * Moved to `app/shared/utils/rosterCapacity.ts` under Spec #46 R11, because the
+ * Training Facility discount now depends on it and the frontend computes that
+ * discount locally for its cost previews. Re-exported here so the many existing
+ * backend imports from `economyFormulas` keep working, and so there remains
+ * exactly one definition.
+ */
+export { getRosterCapacity } from '../shared/utils/rosterCapacity';
+
+/**
  * Get merchandising base rate by Merchandising Hub level.
+ *
+ * Spec #46 R2.5: ₡10,000 per level, doubled from ₡5,000. At the previous rate
+ * cumulative payback ran to 172 cycles at level 10, which cannot be recovered
+ * inside a 100-cycle season once Spec #45 ships.
  */
 export function getMerchandisingBaseRate(merchandisingHubLevel: number): number {
   const rates: Record<number, number> = {
-    1: 5000,
-    2: 10000,
-    3: 15000,
-    4: 20000,
-    5: 25000,
-    6: 30000,
-    7: 35000,
-    8: 40000,
-    9: 45000,
-    10: 50000,
+    1: 10000,
+    2: 20000,
+    3: 30000,
+    4: 40000,
+    5: 50000,
+    6: 60000,
+    7: 70000,
+    8: 80000,
+    9: 90000,
+    10: 100000,
   };
   return rates[merchandisingHubLevel] || 0;
 }
 
 /**
  * Calculate daily merchandising income.
- * Formula: base_rate × (1 + prestige/10000)
+ *
+ * Formula: `base_rate × (1 + Prestige_Per_Slot / 10,000)`
+ * where Prestige_Per_Slot is `prestige / Roster_Capacity`.
+ *
+ * Spec #46 R2.1: the multiplier divides prestige by Roster_Capacity so the
+ * facility rewards concentrated rosters. `prestige` is a stable-level counter
+ * that accrues once per winning robot, so raw prestige scales with roster size
+ * — the Merchandising Hub and the Streaming Studio were therefore both breadth
+ * facilities, and the game had no depth facility. Normalising per slot leaves a
+ * single-robot stable unchanged while removing the wide stable's free ride.
+ *
+ * Roster_Capacity arrives as a parameter rather than being queried, keeping this
+ * module free of database access (R2.2). Callers derive it via
+ * `getRosterCapacity()` from the facility rows they already load.
  */
-export function calculateMerchandisingIncome(merchandisingHubLevel: number, prestige: number): number {
+export function calculateMerchandisingIncome(
+  merchandisingHubLevel: number,
+  prestige: number,
+  rosterCapacity: number,
+): number {
   if (merchandisingHubLevel === 0) return 0;
 
   const baseRate = getMerchandisingBaseRate(merchandisingHubLevel);
-  const prestigeMultiplier = 1 + (prestige / 10000);
+  const prestigePerSlot = prestige / Math.max(1, rosterCapacity);
+  const prestigeMultiplier = 1 + (prestigePerSlot / 10000);
 
   return Math.round(baseRate * prestigeMultiplier);
 }

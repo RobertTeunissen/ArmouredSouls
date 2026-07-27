@@ -236,9 +236,28 @@ describe('executeTeam2v2TournamentCycle (R7.1, R7.3–R7.7)', () => {
       });
     });
 
-    it('should not attempt to create a new tournament', async () => {
+    // Spec #46 R1.2 changed this contract. The handler now attempts
+    // Tournament_Auto_Creation on every run, including a run that processed a
+    // round, so the run completing a final round also creates the replacement.
+    // The active-tournament guard moved into autoCreateNextTeamTournament(),
+    // which returns null while one is `pending` or `active` (R1.3).
+    it('should attempt auto-creation even while a tournament is active', async () => {
       await executeTeam2v2TournamentCycle();
-      expect(mockAutoCreateNextTeamTournament).not.toHaveBeenCalled();
+      expect(mockAutoCreateNextTeamTournament).toHaveBeenCalledWith(2);
+    });
+
+    it('should report the processed tournament, not a newly created one', async () => {
+      mockAutoCreateNextTeamTournament.mockResolvedValue({ id: 99, name: 'Should Not Surface' });
+
+      const result = await executeTeam2v2TournamentCycle();
+
+      expect(result).toEqual({
+        jobName: 'team2v2Tournament',
+        matchesCompleted: 4,
+        tournamentName: '2v2 Tournament #3',
+        tournamentRound: 2,
+        tournamentMaxRounds: 3,
+      });
     });
   });
 

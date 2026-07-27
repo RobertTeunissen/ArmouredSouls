@@ -113,7 +113,7 @@ describe('RefinementAdoptionPage', () => {
       expect(screen.getByText(/\+1 to \+5 to an existing attribute/i)).toBeInTheDocument();
       expect(screen.getByText(/\+1 to \+5 to a new attribute/i)).toBeInTheDocument();
       expect(screen.getByText(/cooldown/i)).toBeInTheDocument();
-      expect(screen.getByText(/\+1\.0 base damage/i)).toBeInTheDocument();
+      expect(screen.getByText(/\+8% base damage/i)).toBeInTheDocument();
     });
   });
 

@@ -65,6 +65,7 @@ describe('UpgradePlanner - Control Properties', () => {
               robot={robot}
               currentCredits={currentCredits}
               trainingLevel={trainingLevel}
+              rosterCapacity={1}
               academyLevels={academyLevels}
               workshopLevel={0}
               onCommit={async () => {}}
@@ -179,6 +180,7 @@ describe('UpgradePlanner - Control Properties', () => {
               robot={robot}
               currentCredits={currentCredits}
               trainingLevel={trainingLevel}
+              rosterCapacity={1}
               academyLevels={academyLevels}
               workshopLevel={0}
               onCommit={async () => {}}
@@ -270,6 +272,7 @@ describe('UpgradePlanner - Control Properties', () => {
               robot={robot}
               currentCredits={currentCredits}
               trainingLevel={trainingLevel}
+              rosterCapacity={1}
               academyLevels={academyLevels}
               workshopLevel={0}
               onCommit={async () => {}}

@@ -19,6 +19,7 @@ export {
   getNextPrestigeTier,
   getMerchandisingBaseRate,
   calculateMerchandisingIncome,
+  getRosterCapacity,
   calculateFinancialHealth,
   getLeagueWinReward,
   getParticipationReward,
@@ -29,6 +30,7 @@ import {
   calculateFacilityOperatingCost,
   getPrestigeMultiplier,
   calculateMerchandisingIncome,
+  getRosterCapacity,
   calculateFinancialHealth,
   getFacilityName,
 } from './economyFormulas';
@@ -99,19 +101,20 @@ export async function calculateDailyPassiveIncome(userId: number): Promise<{
     return { merchandising: 0, total: 0 };
   }
 
-  const merchandisingHub = await prisma.facility.findUnique({
-    where: {
-      userId_facilityType: {
-        userId,
-        facilityType: 'merchandising_hub',
-      },
-    },
+  // Load both facilities in one query — merchandising level for the base rate,
+  // roster_expansion level for Roster_Capacity (Spec #46 R2)
+  const facilities = await prisma.facility.findMany({
+    where: { userId, facilityType: { in: ['merchandising_hub', 'roster_expansion'] } },
+    select: { facilityType: true, level: true },
   });
 
-  const merchandisingHubLevel = merchandisingHub?.level || 0;
+  const merchandisingHubLevel = facilities.find(f => f.facilityType === 'merchandising_hub')?.level ?? 0;
+  const rosterCapacity = getRosterCapacity(
+    facilities.find(f => f.facilityType === 'roster_expansion')?.level ?? 0,
+  );
 
   // Calculate merchandising (available at level 1+)
-  const merchandising = calculateMerchandisingIncome(merchandisingHubLevel, user.prestige);
+  const merchandising = calculateMerchandisingIncome(merchandisingHubLevel, user.prestige, rosterCapacity);
 
   return {
     merchandising,
@@ -494,16 +497,15 @@ export async function generatePerRobotFinancialReport(userId: number): Promise<{
   });
   const leagueMap = new Map(leagueStandings.map(s => [s.entityId, s.tier]));
 
-  // Get Merchandising Hub level for passive income calculations
-  const merchandisingHub = await prisma.facility.findUnique({
-    where: {
-      userId_facilityType: {
-        userId,
-        facilityType: 'merchandising_hub',
-      },
-    },
+  // Get Merchandising Hub level and Roster_Capacity for passive income (Spec #46 R2)
+  const passiveIncomeFacilities = await prisma.facility.findMany({
+    where: { userId, facilityType: { in: ['merchandising_hub', 'roster_expansion'] } },
+    select: { facilityType: true, level: true },
   });
-  const merchandisingHubLevel = merchandisingHub?.level || 0;
+  const merchandisingHubLevel = passiveIncomeFacilities.find(f => f.facilityType === 'merchandising_hub')?.level ?? 0;
+  const rosterCapacity = getRosterCapacity(
+    passiveIncomeFacilities.find(f => f.facilityType === 'roster_expansion')?.level ?? 0,
+  );
 
   // Calculate totals for distribution calculations
   const totalFame = robots.reduce((sum, r) => sum + r.fame, 0);
@@ -518,7 +520,7 @@ export async function generatePerRobotFinancialReport(userId: number): Promise<{
   }
 
   // Calculate total passive income
-  const totalMerchandising = calculateMerchandisingIncome(merchandisingHubLevel, user.prestige);
+  const totalMerchandising = calculateMerchandisingIncome(merchandisingHubLevel, user.prestige, rosterCapacity);
   // Note: Streaming revenue is now awarded per-battle via Streaming Studio facility
 
   // Process each robot

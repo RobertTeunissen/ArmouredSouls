@@ -18,6 +18,10 @@ import {
 } from '../../components/admin/shared';
 import { api } from '../../utils/api';
 import { ApiError } from '../../utils/ApiError';
+import {
+  SHARPEN_EFFECT_LABEL,
+  FORGE_EFFECT_LABEL,
+} from '../../components/weapon-refinement/refinementCopy';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -76,8 +80,8 @@ const TIER_LABELS: Record<TierBreakdownEntry['tier'], string> = {
 const TIER_DESCRIPTIONS: Record<TierBreakdownEntry['tier'], string> = {
   hone: '+1 to +5 to an existing attribute',
   augment: '+1 to +5 to a new attribute',
-  sharpen: '−0.25s cooldown',
-  forge: '+1.0 base damage',
+  sharpen: SHARPEN_EFFECT_LABEL,
+  forge: FORGE_EFFECT_LABEL,
 };
 
 /**

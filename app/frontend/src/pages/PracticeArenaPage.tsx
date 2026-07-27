@@ -36,7 +36,7 @@ function PracticeArenaPage() {
     handleRun, handleReRun,
     battleResult, batchResult, error, cycleOffline, ownedRobotName,
     historyResults, clearHistory,
-    trainingLevel, academyLevels,
+    trainingLevel, rosterCapacity, academyLevels,
   } = usePracticeArena(userId);
 
   if (!user) return null;
@@ -90,6 +90,7 @@ function PracticeArenaPage() {
                   onSlotChange={setSlot1}
                   forceOwned={true}
                   trainingLevel={trainingLevel}
+                  rosterCapacity={rosterCapacity}
                   academyLevels={academyLevels}
                 />
                 <BattleSlotPanel
@@ -99,6 +100,7 @@ function PracticeArenaPage() {
                   sparringDefs={sparringDefs}
                   onSlotChange={setSlot2}
                   trainingLevel={trainingLevel}
+                  rosterCapacity={rosterCapacity}
                   academyLevels={academyLevels}
                 />
               </div>

@@ -197,6 +197,16 @@ export interface RobotStatUpdateOptions {
    * Used by KotH where placement determines outcome, not win/loss.
    */
   skipBattleCounters?: boolean;
+  /**
+   * Finishing position for placement-resolved modes (Grand Melee, KotH).
+   *
+   * Spec #46 R8 Cause C: `robots.grand_melee_wins` and `grand_melee_top3` existed
+   * but nothing ever incremented them, so achievements L26–L30 could not unlock
+   * even once their trigger types were registered. Supplying `placement` here
+   * lets the shared helper own those counters, per the unified post-battle
+   * update rule in `.kiro/steering/project-overview.md`.
+   */
+  placement?: number;
 }
 
 /**
@@ -249,6 +259,21 @@ export async function updateRobotCombatStats(opts: RobotStatUpdateOptions): Prom
 
     if (opts.loadoutType === 'dual_wield') {
       data.dualWieldWins = { increment: 1 };
+    }
+  }
+
+  // ── Grand Melee Mode Counters (Spec #46 R8) ──
+  // Deliberately OUTSIDE the `skipBattleCounters` guard. The Grand Melee
+  // orchestrator passes `skipBattleCounters: true` to keep the mode out of the
+  // Career_Battle_Counters — where a "win" is undefined for placements 2 through
+  // 20 and would corrupt the win-rate denominator — not to opt out of its own
+  // mode counters.
+  if (opts.battleType === 'grand_melee' && opts.placement !== undefined) {
+    if (opts.placement === 1) {
+      data.grandMeleeWins = { increment: 1 };
+    }
+    if (opts.placement <= 3) {
+      data.grandMeleeTop3 = { increment: 1 };
     }
   }
 
@@ -374,7 +399,22 @@ export async function checkAndAwardAchievements(
     won: boolean;
     destroyed: boolean;
     finalHpPercent: number;
-    eloDiff: number;
+    /**
+     * The subject robot's own ELO change for this battle.
+     *
+     * Spec #46 R8 Cause B: this was named `eloDiff`, which the `'elo_upset'`
+     * trigger read as though it were the gap to the opponent. `ELO_K_FACTOR` is
+     * 32, so the value could never clear the 150 threshold and C11 was
+     * unreachable. Renamed so the two cannot be confused again; upset triggers
+     * read `subjectEloBefore` and `opponentEloBefore` instead.
+     */
+    eloChange: number;
+    /** Subject's rating before the battle — the upset comparison baseline. */
+    subjectEloBefore?: number;
+    /** Opponent's rating before the battle. Opponent_Elo_Gap is the difference. */
+    opponentEloBefore?: number;
+    /** Finishing position in placement-resolved modes (Grand Melee, KotH). */
+    placement?: number;
     opponentElo: number;
     yielded: boolean;
     opponentYielded: boolean;

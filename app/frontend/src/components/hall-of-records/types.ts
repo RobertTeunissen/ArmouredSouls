@@ -4,17 +4,77 @@
  * Extracted from HallOfRecordsPage.tsx during component splitting (Spec 18).
  */
 
+/**
+ * Battle modes Most Damage is ranked within (Spec #46 R4.5).
+ *
+ * Kept in declaration order so the UI renders the mode switcher in a stable
+ * sequence.
+ */
+export const DAMAGE_RECORD_MODES = [
+  'league_1v1',
+  'tournament_1v1',
+  'league_2v2',
+  'league_3v3',
+  'koth',
+  'grand_melee',
+] as const;
+
+export type DamageRecordMode = typeof DAMAGE_RECORD_MODES[number];
+
+/** Player-facing label for each Most Damage mode. */
+export const DAMAGE_RECORD_MODE_LABELS: Record<DamageRecordMode, string> = {
+  league_1v1: '1v1 League',
+  tournament_1v1: '1v1 Tournament',
+  league_2v2: '2v2 League',
+  league_3v3: '3v3 League',
+  koth: 'King of the Hill',
+  grand_melee: 'Grand Melee',
+};
+
+/**
+ * League modes with a tracked win streak (Spec #46 R7).
+ *
+ * Tournament modes are absent because their orchestrators never call
+ * `recordBattleResult()`, leaving their streak columns permanently zero.
+ * `grand_melee` is absent by decision: a win there is placement 1 of 20, so
+ * streaks would rank near zero for everyone.
+ */
+export const WIN_STREAK_MODES = ['league_1v1', 'league_2v2', 'league_3v3', 'tag_team'] as const;
+
+export type WinStreakMode = typeof WIN_STREAK_MODES[number];
+
+export const WIN_STREAK_MODE_LABELS: Record<WinStreakMode, string> = {
+  league_1v1: '1v1 League',
+  league_2v2: '2v2 League',
+  league_3v3: '3v3 League',
+  tag_team: 'Tag Team',
+};
+
+export interface WinStreakEntry {
+  entityId: number;
+  /** Robot name for `league_1v1`, team name for the three team modes. */
+  entityName: string;
+  username: string;
+  bestWinStreak: number;
+  currentWinStreak: number;
+  /** True when the best streak is the one currently running. */
+  isActive: boolean;
+  wins: number;
+}
+
 export interface RecordsData {
   combat: {
-    fastestVictory: FastestVictory[];
-    longestBattle: LongestBattle[];
-    mostDamageInBattle: MostDamageInBattle[];
+    // Spec #46 R4.1/R4.2: fastestVictory and longestBattle removed — every
+    // capped battle reports the same MAX_BATTLE_DURATION, so the ranking was
+    // degenerate.
+    mostDamageInBattle: Partial<Record<DamageRecordMode, MostDamageInBattle[]>>;
     narrowestVictory: NarrowestVictory[];
   };
   upsets: {
+    // Spec #46 R4.8: biggestEloGain and biggestEloLoss removed — ELO_K_FACTOR is
+    // a fixed 32, so every entry reported the same ±32.
     biggestUpset: BiggestUpset[];
-    biggestEloGain: BiggestEloGain[];
-    biggestEloLoss: BiggestEloLoss[];
+    biggestTeamUpset: BiggestTeamUpset[];
   };
   career: {
     mostBattles: MostBattles[];
@@ -38,7 +98,8 @@ export interface RecordsData {
     mostKillsCareer: KothMostKillsCareer[];
     longestWinStreak: KothLongestWinStreak[];
     mostZoneTime: KothMostZoneTime[];
-    bestPlacement: KothBestPlacement[];
+    // Spec #46 R4.3: bestPlacement removed — any robot that has won a KotH match
+    // has a best placement of 1, so the whole list tied at first.
     zoneDominator: KothZoneDominator[];
   };
   teamBattle: {
@@ -50,33 +111,23 @@ export interface RecordsData {
     highestLp: GrandMeleeHighestLp[];
     mostKillsCareer: GrandMeleeMostKills[];
   };
+  winStreaks: Partial<Record<WinStreakMode, WinStreakEntry[]>>;
   tournamentChampions1v1?: TournamentChampionRecord[];
   tournamentChampions2v2?: TournamentChampionRecord[];
   tournamentChampions3v3?: TournamentChampionRecord[];
   timestamp: string;
 }
 
-export interface FastestVictory {
-  battleId: number;
-  durationSeconds: number;
-  winner: { id: number; name: string; username: string };
-  loser: { id: number; name: string; username: string };
-  date: string;
-}
-
-export interface LongestBattle {
-  battleId: number;
-  durationSeconds: number;
-  winner: { id: number; name: string; username: string };
-  loser: { id: number; name: string; username: string };
-  date: string;
-}
-
 export interface MostDamageInBattle {
   battleId: number;
   damageDealt: number;
   robot: { id: number; name: string; username: string };
-  opponent: { id: number; name: string; username: string };
+  /**
+   * Present only for the two 1v1 modes. In 2v2, 3v3, KotH, and Grand Melee a
+   * single opponent is not well defined, so the field is omitted rather than
+   * populated with an arbitrary one of many.
+   */
+  opponent?: { id: number; name: string; username: string };
   durationSeconds: number;
   date: string;
 }
@@ -97,19 +148,17 @@ export interface BiggestUpset {
   date: string;
 }
 
-export interface BiggestEloGain {
+/**
+ * Team tournament upset (Spec #46 R4.7). The differential is computed from
+ * *summed* team ELO, so a 2v2 or 3v3 upset naturally reports a larger number
+ * than a 1v1 one — the gap overcome is the sum of two or three rating gaps.
+ */
+export interface BiggestTeamUpset {
   battleId: number;
-  eloChange: number;
-  winner: { id: number; name: string; username: string; eloBefore: number; eloAfter: number };
-  loser: { id: number; name: string; username: string; eloBefore: number };
-  date: string;
-}
-
-export interface BiggestEloLoss {
-  battleId: number;
-  eloChange: number;
-  loser: { id: number; name: string; username: string; eloBefore: number; eloAfter: number };
-  winner: { id: number; name: string; username: string };
+  battleType: string;
+  eloDifference: number;
+  underdog: { robots: { id: number; name: string; username: string }[]; teamEloBefore: number };
+  favorite: { robots: { id: number; name: string; username: string }[]; teamEloBefore: number };
   date: string;
 }
 
@@ -252,14 +301,6 @@ export interface KothMostZoneTime {
   kothMatches: number;
 }
 
-export interface KothBestPlacement {
-  robotId: number;
-  robotName: string;
-  username: string;
-  bestPlacement: number;
-  kothMatches: number;
-}
-
 export interface KothZoneDominator {
   robotId: number;
   robotName: string;
@@ -269,7 +310,7 @@ export interface KothZoneDominator {
   totalZoneScore: number;
 }
 
-export type CategoryKey = 'combat' | 'upsets' | 'career' | 'economic' | 'prestige' | 'koth' | 'teamBattle' | 'tournaments' | 'grandMelee';
+export type CategoryKey = 'combat' | 'upsets' | 'career' | 'winStreaks' | 'economic' | 'prestige' | 'koth' | 'teamBattle' | 'tournaments' | 'grandMelee';
 
 // ─── Team Battle Records ────────────────────────────────────────────
 
@@ -349,6 +390,9 @@ export interface GrandMeleeMostKills {
   robotName: string;
   username: string;
   totalKills: number;
+  grandMeleeMatches: number;
+  /** Spec #46 R4.17 — total kills alone rewards match volume over lethality. */
+  killsPerMatch: number;
 }
 
 // ─── Tournament Champions ───────────────────────────────────────────

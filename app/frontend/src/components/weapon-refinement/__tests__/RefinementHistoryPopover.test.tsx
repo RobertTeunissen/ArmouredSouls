@@ -37,9 +37,9 @@ describe('RefinementHistoryPopover', () => {
     // Hone row shows the formatted attribute
     expect(screen.getByText(/\+3 Combat Power/)).toBeInTheDocument();
     // Sharpen row shows the fixed cooldown text
-    expect(screen.getByText(/−0\.25s cooldown/)).toBeInTheDocument();
+    expect(screen.getByText(/−10% cooldown/)).toBeInTheDocument();
     // Forge row shows the fixed damage text
-    expect(screen.getByText(/\+1\.0 base damage/)).toBeInTheDocument();
+    expect(screen.getByText(/\+8% base damage/)).toBeInTheDocument();
     // Costs are formatted in locale form
     expect(screen.getByText(/₡90,000/)).toBeInTheDocument();
     expect(screen.getByText(/₡300,000/)).toBeInTheDocument();

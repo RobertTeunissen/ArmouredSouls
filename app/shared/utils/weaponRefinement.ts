@@ -20,8 +20,10 @@ import { ROBOT_ATTRIBUTES, type RobotAttribute } from './robotAttributes';
  * The four refinement tiers, gated by Weapons Workshop level:
  *  - hone    (Workshop L1): boost an attribute already on the weapon
  *  - augment (Workshop L3): add a brand-new attribute bonus
- *  - sharpen (Workshop L5): -0.25s base cooldown (max 2 instances)
- *  - forge   (Workshop L8): +1.0 base damage (max 2 instances)
+ *  - sharpen (Workshop L5): -10% base cooldown per instance, -20% at the
+ *                           2-instance cap (Spec #46)
+ *  - forge   (Workshop L8): +8% base damage per instance, +16% at the
+ *                           2-instance cap (Spec #46)
  */
 export type RefinementTier = 'hone' | 'augment' | 'sharpen' | 'forge';
 
@@ -257,15 +259,73 @@ export function validateShieldCompatibility(
   return { ok: true };
 }
 
+
+// ── Proportional DPS tier magnitudes (Spec #46) ─────────────────────
+
+/**
+ * Fraction of a weapon's catalog cooldown removed by one Sharpen instance.
+ * Stacks additively, so the 2-instance cap yields a 20% reduction (x0.80).
+ */
+export const SHARPEN_COOLDOWN_REDUCTION_PER_INSTANCE = 0.10;
+
+/**
+ * Fraction of a weapon's catalog base damage added by one Forge instance.
+ * Stacks additively, so the 2-instance cap yields a 16% increase (x1.16).
+ *
+ * Lower than Sharpen deliberately. `applyDamage()` applies every mitigation
+ * step as a multiplier, so proportional damage and proportional attack rate are
+ * equivalent in expected DPS — identical values would make the two tiers
+ * interchangeable. Forge accepts the lower ceiling in exchange for being the
+ * deeper unlock (Workshop L8 vs L5) and the better option against shield-regen
+ * builds, since bigger hits strip a regenerating shield in fewer swings.
+ */
+export const FORGE_DAMAGE_INCREASE_PER_INSTANCE = 0.08;
+
+/**
+ * Round to the Refinement_Rounding_Precision of 2 decimals.
+ *
+ * Local rather than imported: this module is consumed by frontend code and is
+ * kept dependency-free. Two decimals matches the `Decimal(5, 2)` convention
+ * used for robot attributes.
+ */
+function roundTo2(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
 // ── Effective stats ─────────────────────────────────────────────────
 
 /**
  * Fold all refinements onto the weapon and return its effective stats.
  *
- * - Forge:   +1.0 baseDamage per instance
- * - Sharpen: -0.25 cooldown per instance (no floor — see design.md key
- *            decision #7; the engine's SIMULATION_TICK is the implicit floor)
+ * - Forge:   +8% baseDamage per instance, stacked additively on the catalog
+ *            value (+16% at the 2-instance cap)
+ * - Sharpen: -10% cooldown per instance, stacked additively on the catalog
+ *            value (-20% at the 2-instance cap)
  * - Hone:    +magnitude on `<targetAttribute>Bonus`
+ *
+ * Spec #46: both DPS tiers were flat before (`+1.0` damage, `-0.25s` cooldown),
+ * which delivered a proportional benefit inversely related to the weapon's
+ * catalog stat. Two Sharpens gave a 2.0s one-handed weapon a +33.3% attack rate
+ * against +9.1% for a 6.0s two-handed weapon — a 3.7x spread for the same
+ * ₡1.2M. Forge had the same 4.1x bias, and in the catalog the fast weapons are
+ * also the low-damage one-handed ones, so both flat bonuses compounded into a
+ * single one-handed subsidy.
+ *
+ * Stacking is additive against the catalog value rather than compounding, so
+ * two instances land on exactly x0.80 and x1.16. Compounding would give 0.81
+ * and 1.1664, contradicting the advertised cap. Additive also matches every
+ * other stacking discount in the codebase (Workshop, Training Facility,
+ * Repair Bay are all `n x level`).
+ *
+ * Outputs are rounded to 2 decimals so the frontend preview and the combat
+ * engine cannot diverge through floating-point representation.
+ *
+ * Because the multiplier lands on the catalog cooldown *before* the offhand
+ * penalty and the `attackSpeed` divisor in `calcCooldown()`, the proportional
+ * gain is invariant across every weapon, every `attackSpeed`, and both hands.
+ * The maximum reduction is x0.80, so a positive cooldown cannot reach zero —
+ * this retires the unfloored-subtraction hazard recorded as key decision #7 in
+ * the Spec #34 design.
  * - Augment: +magnitude on `<targetAttribute>Bonus` (treated identically to
  *            Hone in the effective-stat fold; the distinction matters only
  *            for validation)
@@ -289,13 +349,19 @@ export function applyRefinementsToWeapon(
     effectiveAttributeBonuses[field] = readCatalogBonus(weapon, attr);
   }
 
+  // Counting pass: proportional tiers cannot accumulate in the loop, because
+  // additive-percentage stacking multiplies the *catalog* value by a factor
+  // derived from the instance count.
+  let sharpenCount = 0;
+  let forgeCount = 0;
+
   for (const r of refinements) {
     if (r.tier === 'forge') {
-      effectiveBaseDamage += 1.0;
+      forgeCount++;
       continue;
     }
     if (r.tier === 'sharpen') {
-      effectiveCooldown -= 0.25;
+      sharpenCount++;
       continue;
     }
     if (r.tier === 'hone' || r.tier === 'augment') {
@@ -304,6 +370,13 @@ export function applyRefinementsToWeapon(
       effectiveAttributeBonuses[field] = (effectiveAttributeBonuses[field] ?? 0) + r.magnitude;
     }
   }
+
+  effectiveCooldown = roundTo2(
+    weapon.cooldown * (1 - SHARPEN_COOLDOWN_REDUCTION_PER_INSTANCE * sharpenCount),
+  );
+  effectiveBaseDamage = roundTo2(
+    weapon.baseDamage * (1 + FORGE_DAMAGE_INCREASE_PER_INSTANCE * forgeCount),
+  );
 
   return { effectiveBaseDamage, effectiveCooldown, effectiveAttributeBonuses };
 }

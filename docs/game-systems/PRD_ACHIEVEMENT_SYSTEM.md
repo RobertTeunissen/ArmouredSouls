@@ -685,6 +685,52 @@ interface PinnedAchievement {
 
 ## Trigger Mechanism
 
+### Achievement_Trigger_Registration — three places must agree (Spec #46)
+
+An achievement is reachable only if **all three** of the following name its trigger type. Nothing in the type system enforces the agreement, and a gap in any one of them fails silently:
+
+| # | Location | What it does | Failure mode if omitted |
+|---|---|---|---|
+| 1 | `ACHIEVEMENTS` in `src/config/achievements.ts` | Declares the achievement and its `triggerType` | Achievement does not exist |
+| 2 | `EVENT_TRIGGER_MAP` in `services/achievement/achievementTypes.ts` | Selects the trigger type as a candidate for an event | No event ever evaluates it — **silently never unlocks** |
+| 3 | `evaluateTrigger()` in `services/achievement/triggerEvaluator.ts` | Provides a `case` branch | Falls through to `default: return false` — **silently never unlocks** |
+
+Additionally, any achievement with `progressType: 'numeric'` needs an entry in the Achievement_Progress_Resolver in `achievementCatalog.ts`, or its card renders without a progress bar.
+
+Both silent failure modes are indistinguishable from "the player has not met the condition", which is why Spec #46 added `tests/services/achievementRegistration.test.ts`. That suite reads the evaluator and catalog sources and asserts every declared trigger type appears in all applicable registration points. **Add a trigger type and the test fails until every location is updated.**
+
+### Spec #46: nine achievements that could never unlock
+
+Nine achievements had zero unlocks across 40+ cycles. Three independent root causes:
+
+**Cause A — team-mode wins read from the wrong entity type.** L16 Dynamic Duo, L19 Twins!, and L21 Voltron gate on `tag_team`, `league_2v2`, and `league_3v3` win counts. The service read them from `standing.findMany({ entityType: 'robot', entityId: robotId })`, but those three modes only ever write `entityType: 'team'` rows keyed by `TeamBattle.id`. Every lookup missed, and `?? 0` turned the miss into a zero indistinguishable from a genuine zero.
+
+Fixed by `services/achievement/teamModeWins.ts`, which resolves robot → `TeamBattleMember` → `TeamBattle` → team-scoped `Standing` in two batched queries. A size-2 membership maps to **both** `league_2v2` and `tag_team`, since Tag Team is a combat mode on the same `TeamBattle` row. The same helper feeds both the unlock evaluator and the catalog progress display, so displayed progress cannot disagree with unlock behaviour.
+
+**Cause B — the upset trigger compared the wrong quantity.** C11 Never Tell Me the Odds requires beating an opponent 150+ ELO above you. The `'elo_upset'` branch compared `eloDiff`, which was the subject's own ELO *change*. `ELO_K_FACTOR` is 32, so the value could never reach 150 and the achievement was unreachable by arithmetic. It now compares the Opponent_Elo_Gap, `opponentEloBefore - subjectEloBefore`. The context field was renamed `eloDiff` → `eloChange` across every orchestrator so the two cannot be confused again.
+
+**Cause C — the Grand Melee triggers were never registered or incremented.** L26 Real Steel, L27 The Hunger Bots, L28 Omega Supreme, L29 Cockroach Protocol, and L30 Untouchable use `grand_melee_wins`, `grand_melee_top3`, and `grand_melee_win_high_hp`. All three were declared in `AchievementTriggerType` but absent from `EVENT_TRIGGER_MAP`, had no branch in `evaluateTrigger()`, and had no progress resolver entry. Separately, `robots.grand_melee_wins` and `grand_melee_top3` existed but nothing ever incremented them, so even a registered trigger would have read zero. Spec #44 tasks 10.1 and 10.2 covered this work and were left unchecked in a spec filed as done.
+
+All three registration points now include the triggers, and `updateRobotCombatStats()` owns the counters via an optional `placement` option. Those increments sit **outside** the `if (!opts.skipBattleCounters)` guard: the Grand Melee orchestrator passes `skipBattleCounters: true` to stay out of the Career_Battle_Counters, where a "win" is undefined for placements 2 through 20 and would corrupt the win-rate denominator — not to opt out of its own mode counters.
+
+### Threshold reachability
+
+At one match per mode per cycle across a 100-cycle season, with continuous subscription to the mode:
+
+| Achievement | Threshold | Required win rate | Attainable |
+|---|---|---|---|
+| L16 Dynamic Duo | 40 tag team wins | 40% | Yes |
+| L19 Twins! | 25 2v2 league wins | 25% | Yes |
+| L21 Voltron | 25 3v3 league wins | 25% | Yes |
+
+**No threshold was reduced.** All three are attainable within a season; they were unreachable at *any* threshold because of Cause A, so the threshold was never the constraint. The assumption is continuous subscription to the mode through the season — a player who subscribes late has proportionally fewer matches.
+
+### No retroactive awards
+
+Spec #46 performs no backfill and awards nothing retroactively. Spec #45 deletes `user_achievements` and resets the backing counters at the season boundary, so a backfill would be discarded.
+
+One consequence is player-visible: because evaluation is driven by the `battle_complete` event, a player who already holds qualifying Team_Scoped_Standing win counts sees the achievement unlock on their **next qualifying battle**, not at deploy time. The changelog entry states this so the delay is not read as the defect persisting.
+
 ### AchievementService
 
 A centralized `AchievementService` (singleton) with a single entry point:

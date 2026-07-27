@@ -2119,6 +2119,23 @@ curl -X GET http://localhost:3001/api/admin/tournaments/eligible-robots \
 - All pending matches in round execute sequentially
 - Summary shows: tournaments executed, rounds executed, matches executed
 
+#### Creation Cadence Across Participant Types (Spec #46)
+
+**All three participant types create the next bracket in the same run that completes the previous one.** Every tournament job — `tournament` (1v1), `team2v2Tournament`, and `team3v3Tournament` — processes the active tournament's round and then attempts auto-creation unconditionally, on every run.
+
+This matters because the auto-creation attempt is what detects that the previous tournament has just finished. A handler that returns immediately after processing a round cannot create the replacement until its *next* scheduled run, which costs one idle cycle per tournament.
+
+Before Spec #46, `executeTeam2v2TournamentCycle` and `executeTeam3v3TournamentCycle` returned from inside their `if (activeTournament)` branch and so never reached auto-creation on a run that processed a round, while the 1v1 handler always did. Team tournaments were therefore quietly rarer than 1v1 tournaments at equal participant availability. Both team handlers now share `executeTeamTournamentCycle(teamSize)`, which mirrors the 1v1 control flow.
+
+The guards that prevent over-creation live inside `autoCreateNextTeamTournament()` and `autoCreateNextTournament()`, not in the handlers:
+
+- A tournament of that participant type already `pending` or `active` → returns null, logs that it is skipping
+- Eligible participants below the minimum bracket size → returns null, logs the participant type and the shortfall
+
+`JobContext` reporting follows one convention across all three types: when a round was processed, the context describes the processed tournament; the newly created tournament is reported only when no round ran. This keeps the monitoring notifications and the admin scheduler view unchanged.
+
+Auto-creation is suppressed while the season is in its Preparation_Phase (Spec #45). Until that spec ships the check is inert.
+
 ### For Players
 
 #### Viewing Upcoming Tournament Matches

@@ -1,9 +1,12 @@
 import prisma from '../../lib/prisma';
 import { getFacilityConfig } from '../../config/facilities';
 import { StableMetric } from '../../types/snapshotTypes';
+// Spec #46 R10: streaming estimates derive from the award-path formula.
+import { computeStreamingRevenue } from './streamingRevenueService';
 import {
   calculateFacilityOperatingCost,
   calculateMerchandisingIncome,
+  getRosterCapacity,
 } from '../../utils/economyCalculations';
 
 /**
@@ -454,12 +457,18 @@ export class UnifiedFacilityROIService {
     const costAfter = calculateFacilityOperatingCost(facilityType, targetLevel);
     const dailyCostIncrease = costAfter - costBefore;
 
-    // Calculate daily benefit increase
+    // Calculate daily benefit increase. Merchandising scales with
+    // Prestige_Per_Slot, so Roster_Capacity is required (Spec #46 R2).
+    const rosterExpansion = await prisma.facility.findUnique({
+      where: { userId_facilityType: { userId, facilityType: 'roster_expansion' } },
+      select: { level: true },
+    });
     const dailyBenefitIncrease = this.calculateDailyBenefitIncrease(
       facilityType,
       currentLevel,
       targetLevel,
-      user.prestige
+      user.prestige,
+      getRosterCapacity(rosterExpansion?.level ?? 0)
     );
 
     // Calculate net change
@@ -725,22 +734,35 @@ export class UnifiedFacilityROIService {
   ): Promise<number> {
     switch (facilityType) {
       case 'merchandising_hub': {
-        const user = await prisma.user.findUnique({
-          where: { id: userId },
-          select: { prestige: true },
-        });
+        const [user, rosterExpansion] = await Promise.all([
+          prisma.user.findUnique({ where: { id: userId }, select: { prestige: true } }),
+          prisma.facility.findUnique({
+            where: { userId_facilityType: { userId, facilityType: 'roster_expansion' } },
+            select: { level: true },
+          }),
+        ]);
         const prestige = user?.prestige || 0;
-        // Use the actual merchandising income formula: baseRate × (1 + prestige/10000)
-        const dailyIncome = calculateMerchandisingIncome(level, prestige);
+        // Merchandising scales with Prestige_Per_Slot, not raw prestige (Spec #46 R2)
+        const rosterCapacity = getRosterCapacity(rosterExpansion?.level ?? 0);
+        const dailyIncome = calculateMerchandisingIncome(level, prestige, rosterCapacity);
         return dailyIncome * cyclesOwned;
       }
 
       case 'streaming_studio': {
-        // Estimate: average streaming per battle × average battles per cycle × cycles
-        // Use conservative defaults
-        const avgStreamingPerBattle = 1000 * (1 + level); // Base × studio multiplier
+        // Estimate: streaming per battle × average battles per cycle × cycles.
+        //
+        // Spec #46 R10: the local `1000 * (1 + level)` reproduced the base and the
+        // Studio Multiplier but silently dropped the battle and fame multipliers,
+        // so it under-reported a veteran robot's streaming by the product of
+        // those two. Derived from `computeStreamingRevenue()` now.
+        //
+        // This remains an **estimate**, deliberately: the function is called
+        // without a per-robot battle count or fame, so both are passed as zero.
+        // That makes it a floor — the true figure is at least this much — rather
+        // than a projection of what any specific robot earns.
+        const streamingPerBattleFloor = computeStreamingRevenue(0, 0, level).totalRevenue;
         const avgBattlesPerCycle = 3; // Conservative estimate
-        return Math.round(avgStreamingPerBattle * avgBattlesPerCycle * cyclesOwned);
+        return Math.round(streamingPerBattleFloor * avgBattlesPerCycle * cyclesOwned);
       }
 
       case 'repair_bay': {
@@ -782,13 +804,14 @@ export class UnifiedFacilityROIService {
     facilityType: string,
     fromLevel: number,
     toLevel: number,
-    userPrestige: number
+    userPrestige: number,
+    rosterCapacity: number
   ): number {
     if (facilityType === 'merchandising_hub') {
       const incomeBefore = fromLevel > 0
-        ? calculateMerchandisingIncome(fromLevel, userPrestige)
+        ? calculateMerchandisingIncome(fromLevel, userPrestige, rosterCapacity)
         : 0;
-      const incomeAfter = calculateMerchandisingIncome(toLevel, userPrestige);
+      const incomeAfter = calculateMerchandisingIncome(toLevel, userPrestige, rosterCapacity);
       return incomeAfter - incomeBefore;
     }
 

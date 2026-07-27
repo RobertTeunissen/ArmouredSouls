@@ -10,14 +10,23 @@
 
 import Navigation from '../components/Navigation';
 import SubscriptionMatrix from '../components/subscriptions/SubscriptionMatrix';
+import BookingOfficeUpgradePanel from '../components/subscriptions/BookingOfficeUpgradePanel';
 import { useStableOverview } from '../hooks/useSubscriptions';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { getMyTeamBattles, TeamBattle } from '../utils/teamBattleApi';
 
 function BookingOfficePage() {
-  const { data } = useStableOverview();
+  const { data, refetch } = useStableOverview();
   const bookingOfficeLevel = data?.bookingOfficeLevel ?? 0;
   const [teams2v2, setTeams2v2] = useState<TeamBattle[]>([]);
+  // Bumped after an upgrade to force the SubscriptionMatrix to remount and
+  // re-read the new per-robot cap (Spec #46 R6.15)
+  const [matrixKey, setMatrixKey] = useState(0);
+
+  const handleUpgraded = useCallback(() => {
+    refetch();
+    setMatrixKey((k) => k + 1);
+  }, [refetch]);
 
   useEffect(() => {
     getMyTeamBattles(2)
@@ -73,6 +82,9 @@ function BookingOfficePage() {
           </div>
         </div>
 
+        {/* Upgrade control + implication panel (Spec #46 R6) */}
+        <BookingOfficeUpgradePanel onUpgraded={handleUpgraded} />
+
         {/* Tag Team Subscription Warnings */}
         {mismatchedTeams.length > 0 && (
           <div className="space-y-2 mb-6">
@@ -99,7 +111,7 @@ function BookingOfficePage() {
         )}
 
         {/* Subscription Matrix */}
-        <SubscriptionMatrix />
+        <SubscriptionMatrix key={matrixKey} />
       </div>
     </div>
   );

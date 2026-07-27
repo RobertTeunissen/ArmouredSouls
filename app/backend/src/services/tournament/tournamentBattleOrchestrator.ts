@@ -287,7 +287,11 @@ export async function processTournamentBattle(
         won: robot1IsWinner,
         destroyed: robot2Participant.destroyed,
         finalHpPercent: robot1.maxHP > 0 ? (robot1Participant.finalHP / robot1.maxHP) * 100 : 0,
-        eloDiff: robot1Participant.eloAfter - robot1Participant.eloBefore,
+        eloChange: robot1Participant.eloAfter - robot1Participant.eloBefore,
+        // Spec #46 R8 Cause B: upsets compare pre-battle ratings, not the
+        // subject's ELO change, which ELO_K_FACTOR bounds at 32.
+        subjectEloBefore: robot1Participant.eloBefore,
+        opponentEloBefore: robot2Participant.eloBefore,
         opponentElo: robot2.elo,
         yielded: robot1Participant.yielded,
         opponentYielded: robot2Participant.yielded,
@@ -306,7 +310,9 @@ export async function processTournamentBattle(
         won: robot2IsWinner,
         destroyed: robot1Participant.destroyed,
         finalHpPercent: robot2.maxHP > 0 ? (robot2Participant.finalHP / robot2.maxHP) * 100 : 0,
-        eloDiff: robot2Participant.eloAfter - robot2Participant.eloBefore,
+        eloChange: robot2Participant.eloAfter - robot2Participant.eloBefore,
+        subjectEloBefore: robot2Participant.eloBefore,
+        opponentEloBefore: robot1Participant.eloBefore,
         opponentElo: robot1.elo,
         yielded: robot2Participant.yielded,
         opponentYielded: robot1Participant.yielded,

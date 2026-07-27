@@ -81,6 +81,8 @@ export interface WhatIfPanelProps {
   overrides: WhatIfOverrides;
   onChange: (o: WhatIfOverrides) => void;
   trainingLevel: number;
+  /** Roster_Capacity — shrinks the Training Facility discount rate (Spec #46 R11). */
+  rosterCapacity: number;
   academyLevels: AcademyLevels;
   /** Optional tuning allocations for the robot — displayed as read-only context */
   tuningAllocations?: TuningAllocations;
@@ -99,6 +101,7 @@ export function WhatIfPanel({
   overrides,
   onChange,
   trainingLevel,
+  rosterCapacity,
   academyLevels,
   tuningAllocations,
 }: WhatIfPanelProps) {
@@ -110,7 +113,7 @@ export function WhatIfPanel({
     Object.keys(overrides.tuningBonuses || {}).length > 0;
   const hasTuningOverrides = Object.keys(overrides.tuningBonuses || {}).length > 0;
 
-  const trainingDiscountPercent = calculateTrainingFacilityDiscount(trainingLevel);
+  const trainingDiscountPercent = calculateTrainingFacilityDiscount(trainingLevel, rosterCapacity);
   const trainingDiscount = trainingDiscountPercent / 100;
 
   // Academy costs: [100K, 200K, ..., 1M] for levels 1-10

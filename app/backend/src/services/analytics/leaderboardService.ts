@@ -8,7 +8,7 @@
 import prisma from '../../lib/prisma';
 import { Prisma } from '../../../generated/prisma';
 import { getPrestigeRank, getFameTier } from '../../utils/prestigeUtils';
-import { getPrestigeMultiplier } from '../../utils/economyCalculations';
+
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -28,7 +28,6 @@ export interface FameLeaderboardEntry {
   fameTier: string;
   stableId: number;
   stableName: string;
-  currentLeague: string;
   elo: number;
   totalBattles: number;
   wins: number;
@@ -72,15 +71,6 @@ export interface PrestigeLeaderboardEntry {
   winRate: number;
   highestELO: number;
   championshipTitles: number;
-  battleWinningsBonus: number;
-  merchandisingMultiplier: number;
-}
-
-// ── Helpers ──────────────────────────────────────────────────────────
-
-/** Derive battle winnings bonus percentage from the canonical prestige multiplier. */
-export function calculateBattleWinningsBonus(prestige: number): number {
-  return Math.round((getPrestigeMultiplier(prestige) - 1) * 100);
 }
 
 // ── Fame Leaderboard ─────────────────────────────────────────────────
@@ -88,16 +78,23 @@ export function calculateBattleWinningsBonus(prestige: number): number {
 export interface FameLeaderboardParams {
   page: number;
   limit: number;
-  league?: string;
-  minBattles: number;
 }
 
+/**
+ * Rank all robots by `fame` descending.
+ *
+ * Spec #46 R5: no league filter and no minimum-battles threshold. Both
+ * suppressed entrants rather than narrowing a complete list — `robots.total_battles`
+ * is never incremented for KotH or Grand Melee, so a minimum-battles default
+ * excluded robots whose fame came from those modes, and the league filter joined
+ * `standings` on `league_1v1` only. Fame is earned in every mode, so the ranking
+ * covers every robot.
+ */
 export async function getFameLeaderboard(params: FameLeaderboardParams): Promise<{
   leaderboard: FameLeaderboardEntry[];
   pagination: LeaderboardPagination;
-  filters: { league: string; minBattles: number };
 }> {
-  const { page, limit, league, minBattles } = params;
+  const { page, limit } = params;
   const skip = (page - 1) * limit;
 
   // Single raw SQL query with JOIN replaces the previous 3-4 Prisma calls:
@@ -116,12 +113,12 @@ export async function getFameLeaderboard(params: FameLeaderboardParams): Promise
     user_id: number;
     username: string;
     stable_name: string | null;
-    tier: string | null;
     total_count: bigint;
   }
 
-  const hasLeagueFilter = league && league !== 'all';
-
+  // The LEFT JOIN on `standings` is gone with the League column — nothing is
+  // projected from it, and its presence also excluded robots without a
+  // league_1v1 standing whenever a tier filter was applied (Spec #46 R5.4).
   const rows = await prisma.$queryRaw<FameRow[]>`
     SELECT
       r.id,
@@ -137,14 +134,10 @@ export async function getFameLeaderboard(params: FameLeaderboardParams): Promise
       r."user_id",
       u.username,
       u."stable_name",
-      s.tier,
       COUNT(*) OVER() AS total_count
     FROM "robots" r
     JOIN "users" u ON u.id = r."user_id"
-    LEFT JOIN "standings" s ON s."entity_type" = 'robot' AND s."entity_id" = r.id AND s.mode = 'league_1v1'
-    WHERE r."total_battles" >= ${minBattles}
-      ${hasLeagueFilter ? Prisma.sql`AND s.tier = ${league}` : Prisma.empty}
-    ORDER BY r.fame DESC
+    ORDER BY r.fame DESC, r.id ASC
     LIMIT ${limit} OFFSET ${skip}
   `;
 
@@ -158,7 +151,6 @@ export async function getFameLeaderboard(params: FameLeaderboardParams): Promise
     fameTier: getFameTier(row.fame),
     stableId: row.user_id,
     stableName: row.stable_name || row.username,
-    currentLeague: row.tier ?? 'bronze',
     elo: row.elo,
     totalBattles: row.total_battles,
     wins: row.wins,
@@ -180,7 +172,6 @@ export async function getFameLeaderboard(params: FameLeaderboardParams): Promise
       totalPages: Math.ceil(totalRobots / limit),
       hasMore: skip + rows.length < totalRobots,
     },
-    filters: { league: league || 'all', minBattles },
   };
 }
 
@@ -287,18 +278,25 @@ export async function getLossesLeaderboard(params: LossesLeaderboardParams): Pro
 export interface PrestigeLeaderboardParams {
   page: number;
   limit: number;
-  minRobots: number;
 }
 
+/**
+ * Rank all stables by `prestige` descending.
+ *
+ * Spec #46 R5: no minimum-robot-count filter, which suppressed single-robot
+ * stables from a ranking of stable prestige. Note that prestige accrues once
+ * per winning robot, so a larger roster ranks higher; that is a property of
+ * the metric and is deliberately not normalised here. Spec #46 R2 addresses
+ * roster scaling only where prestige drives income.
+ */
 export async function getPrestigeLeaderboard(params: PrestigeLeaderboardParams): Promise<{
   leaderboard: PrestigeLeaderboardEntry[];
   pagination: LeaderboardPagination & { totalStables: number };
-  filters: { minRobots: number };
 }> {
-  const { page, limit, minRobots } = params;
+  const { page, limit } = params;
   const skip = (page - 1) * limit;
 
-  // Use raw SQL to filter by robot count at DB level and paginate efficiently.
+  // Raw SQL to aggregate robot stats per stable and paginate at DB level.
   // This avoids loading all users into memory for large player bases.
   interface UserRow {
     id: number;
@@ -316,12 +314,7 @@ export async function getPrestigeLeaderboard(params: PrestigeLeaderboardParams):
 
   const [countResult, userRows] = await Promise.all([
     prisma.$queryRaw<[{ count: bigint }]>`
-      SELECT COUNT(*)::bigint AS count FROM (
-        SELECT u.id FROM "users" u
-        LEFT JOIN "robots" r ON r."user_id" = u.id
-        GROUP BY u.id
-        HAVING COUNT(r.id) >= ${minRobots}
-      ) sub
+      SELECT COUNT(*)::bigint AS count FROM "users"
     `,
     prisma.$queryRaw<UserRow[]>`
       SELECT
@@ -339,8 +332,7 @@ export async function getPrestigeLeaderboard(params: PrestigeLeaderboardParams):
       FROM "users" u
       LEFT JOIN "robots" r ON r."user_id" = u.id
       GROUP BY u.id
-      HAVING COUNT(r.id) >= ${minRobots}
-      ORDER BY u.prestige DESC
+      ORDER BY u.prestige DESC, u.id ASC
       LIMIT ${limit} OFFSET ${skip}
     `,
   ]);
@@ -370,8 +362,6 @@ export async function getPrestigeLeaderboard(params: PrestigeLeaderboardParams):
       winRate: Number(winRate.toFixed(1)),
       highestELO: user.highest_elo,
       championshipTitles: user.championship_titles,
-      battleWinningsBonus: calculateBattleWinningsBonus(prestige),
-      merchandisingMultiplier: Number((1 + prestige / 10000).toFixed(3)),
     };
   });
 
@@ -385,6 +375,5 @@ export async function getPrestigeLeaderboard(params: PrestigeLeaderboardParams):
       totalPages: Math.ceil(totalStables / limit),
       hasMore: skip + leaderboard.length < totalStables,
     },
-    filters: { minRobots },
   };
 }

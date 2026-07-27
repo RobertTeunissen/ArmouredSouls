@@ -15,6 +15,7 @@ export interface BattleSlotPanelProps {
   onSlotChange: (s: SlotState) => void;
   forceOwned?: boolean;
   trainingLevel?: number;
+  rosterCapacity?: number;
   academyLevels?: AcademyLevels;
 }
 
@@ -26,6 +27,7 @@ export function BattleSlotPanel({
   onSlotChange,
   forceOwned = false,
   trainingLevel = 0,
+  rosterCapacity = 1,
   academyLevels = { combat_training_academy: 0, defense_training_academy: 0, mobility_training_academy: 0, ai_training_academy: 0 },
 }: BattleSlotPanelProps) {
   const selectedRobot = robots.find((r) => r.id === slot.robotId) || null;
@@ -111,6 +113,7 @@ export function BattleSlotPanel({
               overrides={slot.overrides}
               onChange={(o) => onSlotChange({ ...slot, overrides: o })}
               trainingLevel={trainingLevel}
+              rosterCapacity={rosterCapacity}
               academyLevels={academyLevels}
               tuningAllocations={tuningAllocations}
             />

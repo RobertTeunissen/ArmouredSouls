@@ -23,6 +23,7 @@ import type { WeaponRefinementItem } from '../weapon-shop/types';
 import type { RefinementTier } from '../../../../shared/utils/weaponRefinement';
 import { TIER_VISUALS } from './tierVisuals';
 import { formatAttributeName } from './attributeFormat';
+import { SHARPEN_EFFECT_LABEL, FORGE_EFFECT_LABEL } from './refinementCopy';
 
 interface SlotBarProps {
   refinements: WeaponRefinementItem[];
@@ -69,9 +70,9 @@ function describeRefinement(r: WeaponRefinementItem): string {
       return `${label}: +${r.magnitude} ${attr} · ${cost}`;
     }
     case 'sharpen':
-      return `${label}: −0.25s cooldown · ${cost}`;
+      return `${label}: ${SHARPEN_EFFECT_LABEL} · ${cost}`;
     case 'forge':
-      return `${label}: +1.0 base damage · ${cost}`;
+      return `${label}: ${FORGE_EFFECT_LABEL} · ${cost}`;
   }
 }
 

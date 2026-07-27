@@ -135,6 +135,11 @@ export const EVENT_TRIGGER_MAP: Record<AchievementEventType, AchievementTriggerT
     'lifetime_earnings', 'currency',
     'league_promotion',
     'league_2v2_wins', 'league_3v3_wins',
+    // Spec #46 R8 Cause C: these three were declared in AchievementTriggerType
+    // and used by L26–L30, but were never added here, so no event ever selected
+    // them as candidates and all five achievements were unreachable. Spec #44
+    // tasks 10.1/10.2 covered this registration and were left unchecked.
+    'grand_melee_wins', 'grand_melee_top3', 'grand_melee_win_high_hp',
   ],
   league_promotion: ['league_promotion'],
   weapon_purchased: ['weapon_count', 'weapon_type'],

@@ -7,7 +7,9 @@ import {
   calculateDailyPassiveIncome,
   getPrestigeMultiplier,
   generatePerRobotFinancialReport,
+  getRosterCapacity,
 } from '../utils/economyCalculations';
+import { getFacilityUpgradeCost } from '../config/facilities';
 import { unifiedFacilityROIService } from '../services/economy/unifiedFacilityROIService';
 import { AuthError, AuthErrorCode } from '../errors/authErrors';
 import { EconomyError, EconomyErrorCode } from '../errors/economyErrors';
@@ -163,12 +165,38 @@ router.get('/projections', authenticateToken, validateRequest({}), async (req: A
       },
     });
 
+    // Gate the recommendation on the facility's real cost, not a hardcoded
+    // guess. The previous heuristic required ₡800,000 and 1,000 prestige, which
+    // overstated the ₡150,000 level 1 cost by more than 5× and hid the
+    // recommendation from exactly the players it helps most (Spec #46 R2.17).
+    const merchandisingEntryCost = getFacilityUpgradeCost('merchandising_hub', 0);
+    const rosterExpansion = await prisma.facility.findUnique({
+      where: { userId_facilityType: { userId, facilityType: 'roster_expansion' } },
+      select: { level: true },
+    });
+    const rosterCapacity = getRosterCapacity(rosterExpansion?.level ?? 0);
+    const prestigePerSlot = user.prestige / rosterCapacity;
+
     if (!merchandisingHub || merchandisingHub.level === 0) {
-      if (user.currency >= 800000 && user.prestige >= 1000) {
-        recommendations.push('Consider purchasing Merchandising Hub to unlock passive income streams');
+      if (user.currency >= merchandisingEntryCost) {
+        recommendations.push(
+          `Consider purchasing Merchandising Hub (₡${merchandisingEntryCost.toLocaleString()}) to unlock daily passive income`,
+        );
       }
-    } else if (merchandisingHub.level < 5 && user.prestige >= 5000) {
-      recommendations.push('Your prestige is high - upgrading Merchandising Hub would significantly increase merchandising income');
+    } else if (merchandisingHub.level < 5) {
+      const nextUpgradeCost = getFacilityUpgradeCost('merchandising_hub', merchandisingHub.level);
+      if (user.currency >= nextUpgradeCost) {
+        recommendations.push(
+          `Upgrading Merchandising Hub to level ${merchandisingHub.level + 1} (₡${nextUpgradeCost.toLocaleString()}) would raise daily merchandising income`,
+        );
+      }
+      // Merchandising scales with prestige per robot slot, so a wide roster
+      // dilutes the multiplier — surface that rather than raw prestige.
+      if (rosterCapacity > 1 && prestigePerSlot < 2000) {
+        recommendations.push(
+          `Merchandising scales with prestige per robot slot — you have ${Math.floor(prestigePerSlot).toLocaleString()} per slot across ${rosterCapacity} slots`,
+        );
+      }
     }
 
     res.json({

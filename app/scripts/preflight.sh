@@ -165,4 +165,37 @@ Investigate before retrying.")
   exit 1
 fi
 
+# --- 5. Reserve headroom for the pre-migration dump ------------------------------
+# The deploy runs `pg_dump > pre_deploy_<ts>.dump` a few steps after this script.
+# The percentage guard above says nothing about whether that dump actually fits:
+# at exactly 89% on a 45GB disk there's ~5GB free, which a 4.5GB dump consumes
+# entirely. Estimate the incoming dump from the largest existing backup and
+# require 1.5x that much free space (dumps grow between deploys).
+BACKUP_HEADROOM_FACTOR="${BACKUP_HEADROOM_FACTOR:-150}"  # percent
+# `find` exits non-zero when BACKUP_DIR does not exist, and under `set -o pipefail`
+# that failure propagates out of the whole pipeline and aborts the deploy before
+# the `:-0` fallback below can run. A host that has never taken a backup — a fresh
+# provision, or the very first deploy — would fail pre-flight for having no
+# backups rather than for being short of disk. `|| true` keeps the probe advisory:
+# no backups simply means no estimate, and the guard below is skipped.
+LARGEST_BACKUP_KB=$(
+  { find "${BACKUP_DIR}" -type f \( -name "*.dump" -o -name "*.sql.gz" \) -printf '%s\n' 2>/dev/null || true; } \
+    | sort -n | tail -1 | awk '{printf "%d", $1 / 1024}'
+)
+LARGEST_BACKUP_KB="${LARGEST_BACKUP_KB:-0}"
+
+if [ "${LARGEST_BACKUP_KB}" -gt 0 ]; then
+  REQUIRED_KB=$((LARGEST_BACKUP_KB * BACKUP_HEADROOM_FACTOR / 100))
+  AVAIL_KB=$(df -Pk / | awk 'NR==2 {print $4}')
+  REQUIRED_MB=$((REQUIRED_KB / 1024))
+  AVAIL_MB=$((AVAIL_KB / 1024))
+
+  if [ "${AVAIL_KB}" -lt "${REQUIRED_KB}" ]; then
+    log "ERROR: only ${AVAIL_MB}MB free, need ~${REQUIRED_MB}MB for the pre-migration dump"
+    send_alert "🚨 Deploy ABORTED on $(hostname): ${AVAIL_MB}MB free is not enough for the pre-migration pg_dump (needs ~${REQUIRED_MB}MB, ${BACKUP_HEADROOM_FACTOR}% of the largest existing backup). Free space or shrink the database before retrying."
+    exit 1
+  fi
+  log "Dump headroom OK: ${AVAIL_MB}MB free vs ~${REQUIRED_MB}MB required"
+fi
+
 log "Pre-flight check passed"

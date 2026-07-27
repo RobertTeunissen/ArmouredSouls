@@ -23,11 +23,24 @@ describe('calculateWeaponWorkshopDiscount', () => {
 });
 
 describe('calculateTrainingFacilityDiscount', () => {
-  it('returns 10% per level capped at 90%', () => {
-    expect(calculateTrainingFacilityDiscount(0)).toBe(0);
-    expect(calculateTrainingFacilityDiscount(5)).toBe(50);
-    expect(calculateTrainingFacilityDiscount(9)).toBe(90);
-    expect(calculateTrainingFacilityDiscount(10)).toBe(90); // capped
+  // Spec #46 R11: the rate is now (10 - Roster_Capacity) percentage points per
+  // level, so the discount depends on roster size as well as facility level.
+  it('gives (10 - capacity)% per level for a single-robot stable', () => {
+    expect(calculateTrainingFacilityDiscount(0, 1)).toBe(0);
+    expect(calculateTrainingFacilityDiscount(5, 1)).toBe(45);
+    expect(calculateTrainingFacilityDiscount(9, 1)).toBe(81);
+    expect(calculateTrainingFacilityDiscount(10, 1)).toBe(90); // max, now at L10
+  });
+
+  it('shrinks as the roster grows', () => {
+    expect(calculateTrainingFacilityDiscount(5, 4)).toBe(30);
+    expect(calculateTrainingFacilityDiscount(8, 2)).toBe(64);
+    expect(calculateTrainingFacilityDiscount(10, 10)).toBe(0);
+  });
+
+  it('clamps to the 90% ceiling and never goes negative', () => {
+    expect(calculateTrainingFacilityDiscount(50, 1)).toBe(90);
+    expect(calculateTrainingFacilityDiscount(10, 20)).toBe(0);
   });
 });
 

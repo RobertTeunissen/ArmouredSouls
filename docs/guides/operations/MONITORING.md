@@ -153,20 +153,71 @@ Add to the deploy user's crontab:
 crontab -e
 ```
 
-Add this line:
+Add this line — **hourly, and exactly one entry**:
 ```
-*/15 * * * * /opt/armouredsouls/scripts/disk-monitor.sh >> /var/log/armouredsouls/disk-monitor.log 2>&1
+0 * * * * /opt/armouredsouls/scripts/disk-monitor.sh >> /var/log/armouredsouls/disk-monitor.log 2>&1
 ```
+
+### Cadence: hourly check, two-hour cooldown (Spec #46)
+
+| Setting | Value | Where |
+|---|---|---|
+| Check interval | Hourly (`0 * * * *`) | crontab, per host |
+| Disk_Alert_Cooldown | 7200 seconds (2 hours) per severity | `DISK_ALERT_COOLDOWN_SECONDS`, default in the script |
+
+**Why hourly and not every 15 minutes.** Disk consumption on these hosts is driven by the hourly battle and settlement cron jobs — each run writes battles, participants, summaries, and audit events. Usage rises in *steps* at those hourly boundaries and is essentially flat in between, so a 15-minute interval samples the same number four times and buys no earlier detection.
+
+**Why not longer than hourly.** Past one hour, latency on the *first* alert grows with no benefit, because the cooldown already caps the rate for every alert after the first. Hourly detection with a two-hour cooldown gives at most one alert every two hours while the disk stays above a threshold, and still catches the breach within an hour of it happening.
+
+### The July 2026 alert storm on `armouredsouls-acc` — what actually happened
+
+`armouredsouls-acc` was emitting roughly four CRITICAL alerts per hour while the disk sat at 99%. Spec #46 initially attributed this to a duplicate cron entry. **That was wrong**, and the investigation is recorded here so the wrong cause is not chased again.
+
+Diagnosis on the host found:
+
+| Check | Result |
+|---|---|
+| `crontab -l \| grep -c disk-monitor` | `1` — a single entry, no duplicate |
+| Schedule | `*/15 * * * *` — 4 runs per hour |
+| Deployed script | Had cooldown logic, defaulting to 3600s |
+| `/var/lib/armouredsouls` | **Did not exist** |
+| `/var/lib/armouredsouls/disk-alert-*` and `/tmp/disk-alert-*` | **Neither existed** |
+| `disk-monitor.log` | Four `.env: line N: command not found` errors per run |
+
+The actual cause was a chain, not a duplicate:
+
+1. **`/var/lib/armouredsouls` did not exist**, so the script silently fell back to `/tmp`. The old script logged nothing about this, so nobody knew which state directory was in use.
+2. **No cooldown state file was ever present in either location**, so `should_alert()` saw no prior alert and permitted one on every run. A 3600-second cooldown that never persists its timestamp is not a cooldown.
+3. **The 15-minute interval multiplied that by four.** The interval was an amplifier, not the fault.
+4. **`source /opt/armouredsouls/backend/.env` was corrupting the environment on every run.** Bash evaluates unquoted values as commands, so a line like `SOME_SCHEDULE=0 8 * * *` parses as `SOME_SCHEDULE=0` followed by an attempt to execute `8 * * *`. Four such lines failed every run. Any variable after the first failure — including `DISK_ALERT_COOLDOWN_SECONDS` — was unreliable.
+
+Spec #46 addresses 1, 2, and 4 in the script itself: `env_get` replaces `source`, the `/tmp` fallback is logged, and a failed state write logs a warning naming the file. Item 3 is the cron change.
+
+### ⚠️ Still verify exactly one cron entry per host
+
+The duplicate-entry check remains worth running — cron is installed by hand and nothing in the repository prevents a second entry — but note that **acc's storm was not caused by one**, so a count of `1` does not clear the monitor. Work through the "Too Many Disk Alerts" checklist below rather than stopping at the cron count.
+
+Spec #29 recorded a design decision that the disk monitor needs "no deduplication", on the reasoning that the cooldown makes repeat alerts self-limiting. The acc incident shows the real weakness in that reasoning: **the cooldown is only self-limiting if its state actually persists**, and the original script had no way to tell you when it did not. That is now logged rather than silent.
 
 ### Environment Variables
 
-The script sources `/opt/armouredsouls/backend/.env` automatically. Ensure `MONITORING_DISCORD_WEBHOOK` is set there.
+The script reads `/opt/armouredsouls/backend/.env` using the `env_get` helper — it does **not** `source` the file, because bash would evaluate unquoted values as commands (a cron expression like `LEAGUE_SCHEDULE=0 20 * * *` aborts the script). Ensure `MONITORING_DISCORD_WEBHOOK` is set there. `DISK_ALERT_COOLDOWN_SECONDS` is optional and overrides the two-hour default.
 
 ### Verification
 
 ```bash
-# Check cron is registered
+# There must be EXACTLY ONE entry — this must print 1
+crontab -l | grep -c disk-monitor
+
+# Confirm the schedule is hourly, not */15
 crontab -l | grep disk-monitor
+
+# Confirm the deployed script matches the repository version
+diff /opt/armouredsouls/scripts/disk-monitor.sh \
+     /opt/armouredsouls/app/scripts/disk-monitor.sh && echo "in sync"
+
+# Confirm the cooldown default is present in the deployed copy
+grep -c 'COOLDOWN_SECONDS:-7200' /opt/armouredsouls/scripts/disk-monitor.sh
 
 # Run manually to test
 /opt/armouredsouls/scripts/disk-monitor.sh
@@ -174,6 +225,14 @@ crontab -l | grep disk-monitor
 # Check recent log output
 tail -5 /var/log/armouredsouls/disk-monitor.log
 ```
+
+### Local test harness
+
+```bash
+bash app/scripts/__tests__/disk-monitor.test.sh
+```
+
+Stubs `df`, redirects `STATE_DIR` to a temporary directory, and leaves the webhook unset, so it makes no network call and touches no real state. Covers the cooldown gate, the state-write failure path, cooldown clearing on recovery, and the exit status.
 
 ---
 
@@ -315,6 +374,60 @@ curl -s http://localhost:3001/api/health | jq .
 2. **Check cron service**: `sudo systemctl status cron`
 3. **Check log output**: `tail -20 /var/log/armouredsouls/disk-monitor.log`
 4. **Check permissions**: `ls -la /opt/armouredsouls/scripts/disk-monitor.sh` — must be executable
+
+### Too Many Disk Alerts
+
+Symptom: more than one alert per Disk_Alert_Cooldown window while the disk sits above a threshold. Check in this order — **1 and 2 are what actually caused the July 2026 storm on acc**, so start there.
+
+1. **Missing cooldown state.** The most likely cause, and the one that hit acc. If no state file exists, `should_alert()` permits an alert on every single run and the cooldown is inert.
+   ```bash
+   ls -la /var/lib/armouredsouls/disk-alert-* 2>&1     # expect a .last file per active severity
+   ls -la /tmp/disk-alert-* 2>&1                       # check the fallback too
+   ```
+   If neither location has a file while the disk is above a threshold, the cooldown is not persisting. Continue to 2.
+
+2. **State directory missing entirely.** `/var/lib/armouredsouls` is not created by the deploy; it must exist or the script falls back to `/tmp`.
+   ```bash
+   ls -ld /var/lib/armouredsouls 2>&1
+   # If absent:
+   sudo mkdir -p /var/lib/armouredsouls
+   sudo chown "$(whoami)" /var/lib/armouredsouls
+   ```
+   The current script logs the fallback; older copies did so silently.
+   ```bash
+   grep 'using /tmp for cooldown state' /var/log/armouredsouls/disk-monitor.log | tail -5
+   grep 'could not write cooldown state' /var/log/armouredsouls/disk-monitor.log | tail -5
+   ```
+
+3. **`.env` being sourced instead of read.** Look for `command not found` in the log — a sure sign of a script version that still uses `source`, which leaves every variable after the first bad line unreliable.
+   ```bash
+   grep 'command not found' /var/log/armouredsouls/disk-monitor.log | tail -5
+   ```
+   Fix by deploying the current script, which uses the `env_get` helper.
+
+4. **Stale deployed copy.**
+   ```bash
+   grep -c 'COOLDOWN_SECONDS:-7200' /opt/armouredsouls/scripts/disk-monitor.sh   # MUST print 1
+   diff /opt/armouredsouls/scripts/disk-monitor.sh /opt/armouredsouls/app/scripts/disk-monitor.sh
+   ```
+
+5. **Wrong interval.** Confirm the schedule is `0 * * * *` and not `*/15 * * * *`. Note this only multiplies an existing problem — it is not a cause on its own.
+
+6. **Duplicate cron entry.** Worth ruling out, though it was *not* the cause on acc.
+   ```bash
+   crontab -l | grep -c disk-monitor        # expect 1
+   sudo crontab -l | grep -c disk-monitor   # expect 0
+   ls /etc/cron.d/ | grep -i -E 'disk|armoured'
+   ```
+
+### Disk Alerts Went Silent
+
+A disk monitor that stops alerting is worse than one that alerts too often. The script is written to degrade toward noise, so silence points at the emitter rather than the cooldown:
+
+1. `crontab -l | grep -c disk-monitor` — is it still installed?
+2. `tail -20 /var/log/armouredsouls/disk-monitor.log` — is it running and just below threshold?
+3. Verify the webhook: `grep MONITORING_DISCORD_WEBHOOK /opt/armouredsouls/backend/.env` (check the key exists; do not echo the value)
+4. Run it by hand at a forced threshold using the test harness in the repository.
 
 ### Daily Report Not Arriving
 

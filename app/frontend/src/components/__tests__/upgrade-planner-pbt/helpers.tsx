@@ -12,6 +12,9 @@ export interface RenderOptions {
   currentCredits?: number;
   trainingLevel?: number;
   workshopLevel?: number;
+  /** Roster_Capacity (Spec #46 R11). Defaults to 1 — a single-robot stable, which
+   *  earns the best discount rate of 9pp per Training Facility level. */
+  rosterCapacity?: number;
   academyLevels?: {
     combat_training_academy?: number;
     defense_training_academy?: number;
@@ -67,6 +70,7 @@ export function renderUpgradePlanner(options: RenderOptions = {}): ReturnType<ty
       robot={robot}
       currentCredits={options.currentCredits ?? 500000}
       trainingLevel={options.trainingLevel ?? 0}
+      rosterCapacity={options.rosterCapacity ?? 1}
       academyLevels={academyLevels}
       workshopLevel={options.workshopLevel ?? 0}
       onCommit={async () => {}}

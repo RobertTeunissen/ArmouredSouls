@@ -83,19 +83,10 @@ export function KothRecords({ records, formatDuration }: KothRecordsProps) {
         </RecordSection>
       )}
 
-      {records.koth.bestPlacement?.length > 0 && (
-        <RecordSection title="🏆 Best Placement">
-          {records.koth.bestPlacement.map((record, index) => (
-            <RecordCard
-              key={record.robotId}
-              rank={index + 1}
-              value={`#${record.bestPlacement}`}
-              description={`${record.robotName} by ${record.username}`}
-              details={[`Matches: ${record.kothMatches}`]}
-            />
-          ))}
-        </RecordSection>
-      )}
+      {/*
+        Spec #46 R4.3: Best Placement removed. Any robot that has won a KotH
+        match has a best placement of 1, so the entire list tied at first.
+      */}
 
       {records.koth.zoneDominator?.length > 0 && (
         <RecordSection title="🏰 Zone Dominator">

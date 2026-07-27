@@ -328,20 +328,22 @@ describe('applyRefinementsToWeapon', () => {
     expect(result.effectiveAttributeBonuses.attackSpeedBonus).toBe(0);
   });
 
-  it('1× forge: baseDamage +1.0, cooldown unchanged', () => {
+  // Spec #46: Forge is +8% of catalog damage per instance, not a flat +1.0
+  it('1× forge: baseDamage +8%, cooldown unchanged', () => {
     const result = applyRefinementsToWeapon(makeWeapon(), [
       { tier: 'forge', magnitude: 1, targetAttribute: null },
     ]);
-    expect(result.effectiveBaseDamage).toBe(11);
+    expect(result.effectiveBaseDamage).toBe(10.8); // 10 × 1.08
     expect(result.effectiveCooldown).toBe(3);
   });
 
-  it('1× sharpen: cooldown -0.25, baseDamage unchanged', () => {
+  // Spec #46: Sharpen is -10% of catalog cooldown per instance, not a flat -0.25s
+  it('1× sharpen: cooldown -10%, baseDamage unchanged', () => {
     const result = applyRefinementsToWeapon(makeWeapon(), [
       { tier: 'sharpen', magnitude: 1, targetAttribute: null },
     ]);
     expect(result.effectiveBaseDamage).toBe(10);
-    expect(result.effectiveCooldown).toBeCloseTo(2.75, 5);
+    expect(result.effectiveCooldown).toBe(2.7); // 3 × 0.90
   });
 
   it('1× hone +3 combatPower: combatPowerBonus = 5', () => {
@@ -366,8 +368,8 @@ describe('applyRefinementsToWeapon', () => {
       { tier: 'sharpen', magnitude: 1, targetAttribute: null },
       { tier: 'hone', magnitude: 5, targetAttribute: 'combatPower' },
     ]);
-    expect(result.effectiveBaseDamage).toBe(12); // 10 + 2
-    expect(result.effectiveCooldown).toBeCloseTo(2.5, 5); // 3 - 0.5
+    expect(result.effectiveBaseDamage).toBe(11.6); // 10 × 1.16 (additive 2 × 8%)
+    expect(result.effectiveCooldown).toBe(2.4); // 3 × 0.80 (additive 2 × 10%)
     expect(result.effectiveAttributeBonuses.combatPowerBonus).toBe(7); // 2 + 5
   });
 

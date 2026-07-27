@@ -20,7 +20,7 @@ describe('UpgradePlanner - Discount Application Properties', () => {
       fc.property(
         fc.record({
           workshopLevel: fc.integer({ min: 1, max: 5 }),
-          trainingLevel: fc.integer({ min: 1, max: 9 }),
+          trainingLevel: fc.integer({ min: 1, max: 10 }),
           attributeLevel: fc.integer({ min: 1, max: 30 }),
           currentCredits: fc.integer({ min: 100000, max: 1000000 }),
         }),
@@ -32,8 +32,9 @@ describe('UpgradePlanner - Discount Application Properties', () => {
             workshopLevel,
           });
 
-          // Training Facility: 10% per level, capped at 90%
-          const trainingDiscount = Math.min(trainingLevel * 0.10, 0.90);
+          // Spec #46 R11: the rate is (10 - Roster_Capacity) percentage points per
+          // level. The helper renders at capacity 1, so that is 9pp per level.
+          const trainingDiscount = Math.min(trainingLevel * 0.09, 0.90);
           const trainingDiscountText = `${(trainingDiscount * 100).toFixed(0)}%`;
 
           if (trainingLevel > 0) {

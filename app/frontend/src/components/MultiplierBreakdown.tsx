@@ -19,12 +19,27 @@ interface MultiplierBreakdownProps {
     };
     streaming: {
       baseRate: number;
+      /** Roster mean, not a summed-roster figure (Spec #46 R10). */
       battleMultiplier: number;
+      /** Roster mean, not a summed-roster figure (Spec #46 R10). */
       fameMultiplier: number;
+      studioMultiplier?: number;
       totalBattles: number;
       totalFame: number;
+      /** Exact per-robot awards — streaming is paid per robot per battle. */
+      perRobot?: Array<{
+        robotId: number;
+        robotName: string;
+        battles: number;
+        fame: number;
+        battleMultiplier: number;
+        fameMultiplier: number;
+        revenuePerBattle: number;
+        formula: string;
+      }>;
       total: number;
       formula: string;
+      note?: string;
     };
   };
 }
@@ -85,10 +100,33 @@ export default function MultiplierBreakdown({ multiplierData }: MultiplierBreakd
             Formula: {multiplierData.streaming.formula}
           </div>
           <div className="text-xs text-tertiary mt-1">
-            Base × (1 + battles/1,000) × (1 + fame/5,000)
+            Base × (1 + battles/1,000) × (1 + fame/5,000) × (1 + studio level)
           </div>
-          <div className="text-xs text-tertiary">
-            Total Battles: {multiplierData.streaming.totalBattles} | Total Fame: {multiplierData.streaming.totalFame.toLocaleString()}
+          {multiplierData.streaming.note && (
+            <p className="text-xs text-tertiary mt-2">{multiplierData.streaming.note}</p>
+          )}
+          {/*
+            Spec #46 R10: streaming is awarded per robot per battle, so the
+            per-robot rows are the figures that match what each robot is paid.
+            The roster totals below are context only — feeding them into the
+            multipliers is what previously inflated the display.
+          */}
+          {multiplierData.streaming.perRobot && multiplierData.streaming.perRobot.length > 0 && (
+            <ul className="mt-2 space-y-1" data-testid="streaming-per-robot">
+              {multiplierData.streaming.perRobot.map((robot) => (
+                <li key={robot.robotId} className="text-xs text-tertiary">
+                  <span className="text-secondary">{robot.robotName}</span>
+                  {' — '}
+                  ₡{robot.revenuePerBattle.toLocaleString()} per battle
+                  {' ('}
+                  {robot.battles} battles, {robot.fame.toLocaleString()} fame
+                  {')'}
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="text-xs text-tertiary mt-2">
+            Roster totals (context only): {multiplierData.streaming.totalBattles} battles | {multiplierData.streaming.totalFame.toLocaleString()} fame
           </div>
         </div>
       )}

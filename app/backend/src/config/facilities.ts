@@ -17,6 +17,16 @@ export interface FacilityConfig {
    *   - Level 9 requires 10,000 prestige
    */
   prestigeRequirements?: number[];
+  /**
+   * When true, `prestigeRequirements` are compared against Prestige_Per_Slot
+   * (prestige ÷ Roster_Capacity) rather than raw prestige.
+   *
+   * Spec #46 R2.11: only `merchandising_hub` sets this, because its income
+   * formula was re-based to Prestige_Per_Slot and a gate measured in raw
+   * prestige would no longer describe the same quantity the facility rewards.
+   * Every other facility keeps raw-prestige gates.
+   */
+  prestigeGateIsPerSlot?: boolean;
 }
 
 export const FACILITY_TYPES: FacilityConfig[] = [
@@ -44,22 +54,29 @@ export const FACILITY_TYPES: FacilityConfig[] = [
   {
     type: 'training_facility',
     name: 'Training Facility',
-    description: 'Reduces costs for upgrading robot attributes (10% per level, capped at 90%)',
-    maxLevel: 9,
-    costs: [150000, 300000, 450000, 600000, 750000, 900000, 1050000, 1200000, 1350000],
+    // Spec #46 R11: the discount rate per level is `10% − 1% per robot slot`, so a
+    // concentrated stable gets far more out of the facility than a wide one. The
+    // benefit strings below quote the best case (Roster_Capacity 1); the actual
+    // figure is shown live on the Facilities page against the player's own roster.
+    description: 'Reduces costs for upgrading robot attributes. Each level gives 10% off minus 1% per robot slot, so a smaller roster earns a bigger discount (max 90%)',
+    maxLevel: 10,
+    costs: [150000, 300000, 450000, 600000, 750000, 900000, 1050000, 1200000, 1350000, 1500000],
     benefits: [
-      '10% discount on attribute upgrades (₡250/day operating cost)',
-      '20% discount on attribute upgrades (₡500/day operating cost)',
-      '30% discount on attribute upgrades (₡750/day operating cost)',
-      '40% discount on attribute upgrades (₡1,000/day operating cost)',
-      '50% discount on attribute upgrades (₡1,250/day operating cost)',
-      '60% discount on attribute upgrades (₡1,500/day operating cost)',
-      '70% discount on attribute upgrades (₡1,750/day operating cost)',
-      '80% discount on attribute upgrades (₡2,000/day operating cost)',
-      '90% discount on attribute upgrades - maximum (₡2,250/day operating cost)',
+      'Up to 9% off attribute upgrades — 9% per level with 1 robot, less as your roster grows (₡250/day operating cost)',
+      'Up to 18% off attribute upgrades with 1 robot (₡500/day operating cost)',
+      'Up to 27% off attribute upgrades with 1 robot (₡750/day operating cost)',
+      'Up to 36% off attribute upgrades with 1 robot (₡1,000/day operating cost)',
+      'Up to 45% off attribute upgrades with 1 robot (₡1,250/day operating cost)',
+      'Up to 54% off attribute upgrades with 1 robot (₡1,500/day operating cost)',
+      'Up to 63% off attribute upgrades with 1 robot (₡1,750/day operating cost)',
+      'Up to 72% off attribute upgrades with 1 robot (₡2,000/day operating cost)',
+      'Up to 81% off attribute upgrades with 1 robot (₡2,250/day operating cost)',
+      'Up to 90% off attribute upgrades with 1 robot — the maximum (₡2,500/day operating cost)',
     ],
     implemented: true,
-    prestigeRequirements: [0, 0, 0, 1000, 0, 0, 5000, 0, 10000], // L4: 1000, L7: 5000, L9: 10000
+    // L4: 1000, L7: 5000, L9: 10000. L10 is ungated — it was previously unreachable
+    // as a max level and no new gate is introduced here.
+    prestigeRequirements: [0, 0, 0, 1000, 0, 0, 5000, 0, 10000, 0],
   },
   {
     type: 'weapons_workshop',
@@ -233,23 +250,26 @@ export const FACILITY_TYPES: FacilityConfig[] = [
   {
     type: 'merchandising_hub',
     name: 'Merchandising Hub',
-    description: 'Unlocks merchandising revenue from your stable\'s brand. Scales with prestige. Note: Streaming revenue is awarded per battle via Streaming Studio.',
+    description: 'Unlocks merchandising revenue from your stable\'s brand. Income scales with prestige per robot slot, so a larger roster divides the same prestige across more slots. Note: Streaming revenue is awarded per battle via Streaming Studio.',
     maxLevel: 10,
     costs: [150000, 300000, 450000, 600000, 750000, 900000, 1050000, 1200000, 1350000, 1500000],
     benefits: [
-      'Unlock Merchandising (₡5,000/day base, scales with prestige)',
-      'Improve Merchandising (₡10,000/day base)',
-      'Improve Merchandising (₡15,000/day base)',
-      'Improve Merchandising (₡20,000/day base)',
-      'Improve Merchandising (₡25,000/day base)',
-      'Improve Merchandising (₡30,000/day base)',
-      'Improve Merchandising (₡35,000/day base)',
-      'Improve Merchandising (₡40,000/day base)',
-      'Improve Merchandising (₡45,000/day base)',
-      'Master Merchandising (₡50,000/day base)',
+      'Unlock Merchandising (₡10,000/day base, ×prestige per robot slot)',
+      'Improve Merchandising (₡20,000/day base, ×prestige per robot slot)',
+      'Improve Merchandising (₡30,000/day base, ×prestige per robot slot)',
+      'Improve Merchandising (₡40,000/day base, ×prestige per robot slot)',
+      'Improve Merchandising (₡50,000/day base, ×prestige per robot slot)',
+      'Improve Merchandising (₡60,000/day base, ×prestige per robot slot)',
+      'Improve Merchandising (₡70,000/day base, ×prestige per robot slot)',
+      'Improve Merchandising (₡80,000/day base, ×prestige per robot slot)',
+      'Improve Merchandising (₡90,000/day base, ×prestige per robot slot)',
+      'Master Merchandising (₡100,000/day base, ×prestige per robot slot)',
     ],
     implemented: true,
-    prestigeRequirements: [0, 0, 0, 3000, 0, 0, 7500, 0, 15000, 0], // L4: 3000, L7: 7500, L9: 15000
+    // Spec #46 R2.10: thresholds are Prestige_Per_Slot, not raw prestige.
+    // L4: 2000/slot, L7: 5000/slot, L9: 9000/slot (was 3000 / 7500 / 15000 raw)
+    prestigeRequirements: [0, 0, 0, 2000, 0, 0, 5000, 0, 9000, 0],
+    prestigeGateIsPerSlot: true,
   },
   {
     type: 'streaming_studio',

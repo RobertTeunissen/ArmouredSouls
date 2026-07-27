@@ -27,8 +27,8 @@ vi.mock('react-router-dom', async () => {
 });
 
 const mockRecordsWithKoth = {
-  combat: { fastestVictory: [], longestBattle: [], mostDamageInBattle: [], narrowestVictory: [] },
-  upsets: { biggestUpset: [], biggestEloGain: [], biggestEloLoss: [] },
+  combat: { mostDamageInBattle: {}, narrowestVictory: [] },
+  upsets: { biggestUpset: [], biggestTeamUpset: [] },
   career: { mostBattles: [], highestWinRate: [], mostLifetimeDamage: [], highestElo: [], mostKills: [] },
   economic: { mostExpensiveBattle: [], highestFame: [], richestStables: [] },
   prestige: { highestPrestige: [], mostTitles: [] },
@@ -38,21 +38,20 @@ const mockRecordsWithKoth = {
     mostKillsCareer: [{ robotId: 2, robotName: 'Slayer', username: 'player2', kothKills: 25, kothMatches: 12 }],
     longestWinStreak: [{ robotId: 1, robotName: 'ZoneKing', username: 'player1', bestWinStreak: 5, kothWins: 10 }],
     mostZoneTime: [{ robotId: 3, robotName: 'Camper', username: 'player3', totalZoneTime: 120, kothMatches: 10 }],
-    bestPlacement: [{ robotId: 1, robotName: 'ZoneKing', username: 'player1', bestPlacement: 1, kothMatches: 15 }],
     zoneDominator: [{ robotId: 4, robotName: 'Dominator', username: 'player4', totalZoneScore: 570, kothMatches: 20 }],
   },
   timestamp: '2026-03-15T00:00:00Z',
 };
 
 const mockRecordsWithoutKoth = {
-  combat: { fastestVictory: [], longestBattle: [], mostDamageInBattle: [], narrowestVictory: [] },
-  upsets: { biggestUpset: [], biggestEloGain: [], biggestEloLoss: [] },
+  combat: { mostDamageInBattle: {}, narrowestVictory: [] },
+  upsets: { biggestUpset: [], biggestTeamUpset: [] },
   career: { mostBattles: [], highestWinRate: [], mostLifetimeDamage: [], highestElo: [], mostKills: [] },
   economic: { mostExpensiveBattle: [], highestFame: [], richestStables: [] },
   prestige: { highestPrestige: [], mostTitles: [] },
   koth: {
     mostWins: [], highestAvgZoneScore: [], mostKillsCareer: [],
-    longestWinStreak: [], mostZoneTime: [], bestPlacement: [], zoneDominator: [],
+    longestWinStreak: [], mostZoneTime: [], zoneDominator: [],
   },
   timestamp: '2026-03-15T00:00:00Z',
 };
@@ -123,7 +122,6 @@ describe('HallOfRecordsPage - KotH Tab', () => {
     expect(screen.getByText('☠️ Most KotH Kills (Career)')).toBeInTheDocument();
     expect(screen.getByText('🔥 Longest Win Streak')).toBeInTheDocument();
     expect(screen.getByText('⏱️ Most Zone Time (Career)')).toBeInTheDocument();
-    expect(screen.getByText('🏆 Best Placement')).toBeInTheDocument();
     expect(screen.getByText('🏰 Zone Dominator')).toBeInTheDocument();
 
     // Verify record data renders

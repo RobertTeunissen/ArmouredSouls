@@ -4,6 +4,11 @@ import { unifiedFacilityROIService, UnifiedFacilityROI } from './unifiedFacility
 import { AuthError, AuthErrorCode } from '../../errors/authErrors';
 import type { User } from '../../../generated/prisma';
 import type { StableMetric } from '../../types/snapshotTypes';
+// Spec #46 R10: streaming projections derive from the award-path formula.
+import {
+  computeStreamingRevenue,
+  STREAMING_STUDIO_PER_LEVEL,
+} from './streamingRevenueService';
 
 export interface FacilityRecommendation {
   facilityType: string;
@@ -329,9 +334,14 @@ export class FacilityRecommendationService {
       reason = `Increase attribute cap to level ${this.getAcademyCapLevel(nextLevel)}`;
       priority = 'medium';
     } else if (facilityType === 'streaming_studio') {
-      // Streaming Studio increases streaming revenue per battle
-      const currentMultiplier = 1 + (currentLevel * 0.1);
-      const nextMultiplier = 1 + (nextLevel * 0.1);
+      // Streaming Studio increases streaming revenue per battle.
+      //
+      // Spec #46 R10: these were `1 + level × 0.1`, which is a tenth of the
+      // actual Studio Multiplier of `1 + level`. The projection therefore
+      // reported a marginal gain far smaller than the upgrade delivers — going
+      // L0 → L1 doubles streaming revenue, but the old arithmetic showed +10%.
+      const currentMultiplier = 1 + (currentLevel * STREAMING_STUDIO_PER_LEVEL);
+      const nextMultiplier = 1 + (nextLevel * STREAMING_STUDIO_PER_LEVEL);
       const multiplierIncrease = nextMultiplier - currentMultiplier;
       
       // Calculate average streaming revenue per battle based on user's robots
@@ -417,20 +427,18 @@ export class FacilityRecommendationService {
     });
 
     if (robots.length === 0) {
-      // No robots, return base amount with current studio multiplier
-      return 1000 * (1 + currentStudioLevel * 0.1);
+      // Spec #46 R10: this used `1 + level × 0.1`, a tenth of the real Studio
+      // Multiplier, so the no-robot estimate understated a L10 studio by roughly
+      // 5.5×. Delegate to the shared formula instead of approximating it.
+      return computeStreamingRevenue(0, 0, currentStudioLevel).totalRevenue;
     }
 
-    // Calculate streaming revenue for each robot and average
-    const studioMultiplier = 1 + (currentStudioLevel * 1.0); // 100% per level
+    // Average of the per-robot awards, each derived from the same function the
+    // award path calls.
     let totalRevenue = 0;
-
     for (const robot of robots) {
       const totalBattleCount = robot.totalBattles + robot.totalTagTeamBattles;
-      const battleMultiplier = 1 + (totalBattleCount / 1000);
-      const fameMultiplier = 1 + (robot.fame / 5000);
-      const revenue = 1000 * battleMultiplier * fameMultiplier * studioMultiplier;
-      totalRevenue += revenue;
+      totalRevenue += computeStreamingRevenue(totalBattleCount, robot.fame, currentStudioLevel).totalRevenue;
     }
 
     return totalRevenue / robots.length;

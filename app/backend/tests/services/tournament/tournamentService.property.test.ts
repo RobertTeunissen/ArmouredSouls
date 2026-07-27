@@ -184,7 +184,11 @@ describe('Feature: team-battle-tournaments, Property 4: Participants sorted by E
             id: fc.nat(),
             displayName: fc.string(),
             elo: fc.integer({ min: 800, max: 2000 }),
-            createdAt: fc.date(),
+            // fc.date() can emit `Invalid Date`, whose getTime() is NaN — and
+            // `NaN <= NaN` is false, so a createdAt tie-break assertion failed on
+            // roughly one run in twenty. A tournament participant always has a
+            // real createdAt, so exclude invalid dates from the arbitrary.
+            createdAt: fc.date({ noInvalidDate: true }),
           }),
           { minLength: 4, maxLength: 64 }
         ),
@@ -221,7 +225,11 @@ describe('Feature: team-battle-tournaments, Property 4: Participants sorted by E
             id: fc.nat(),
             displayName: fc.string(),
             elo: fc.integer({ min: 800, max: 2000 }),
-            createdAt: fc.date(),
+            // fc.date() can emit `Invalid Date`, whose getTime() is NaN — and
+            // `NaN <= NaN` is false, so a createdAt tie-break assertion failed on
+            // roughly one run in twenty. A tournament participant always has a
+            // real createdAt, so exclude invalid dates from the arbitrary.
+            createdAt: fc.date({ noInvalidDate: true }),
           }),
           { minLength: 4, maxLength: 64 }
         ),

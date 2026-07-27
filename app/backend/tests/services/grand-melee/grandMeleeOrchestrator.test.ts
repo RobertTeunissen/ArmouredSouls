@@ -235,16 +235,31 @@ describe('executeScheduledGrandMeleeBattles', () => {
         isWinner: true,
         battleType: 'grand_melee',
         skipBattleCounters: true,
+        // Spec #46 R8: placement drives the grandMeleeWins/grandMeleeTop3
+        // counters, which the shared helper now owns.
+        placement: 1,
       }),
     );
 
     // Verify match marked as completed
     expect(schedulingService.completeMatch).toHaveBeenCalledWith(1, 100);
 
-    // Verify grandMeleeWins/Top3 counters incremented
-    expect(mockPrisma.robot.update).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { id: 1 }, data: { grandMeleeWins: { increment: 1 } } }),
+    // Spec #46 R8: the mode counters moved out of this orchestrator and into
+    // updateRobotCombatStats(), per the unified post-battle update rule. The
+    // orchestrator must no longer write them directly.
+    expect(mockPrisma.robot.update).not.toHaveBeenCalledWith(
+      expect.objectContaining({ data: { grandMeleeWins: { increment: 1 } } }),
     );
+    expect(mockPrisma.robot.update).not.toHaveBeenCalledWith(
+      expect.objectContaining({ data: { grandMeleeTop3: { increment: 1 } } }),
+    );
+
+    // Every participant's placement is forwarded, so top-3 finishers are counted.
+    for (const placement of [1, 2, 3]) {
+      expect(updateRobotCombatStats).toHaveBeenCalledWith(
+        expect.objectContaining({ battleType: 'grand_melee', placement }),
+      );
+    }
   });
 
   it('should fail gracefully when below minimum participants', async () => {

@@ -28,6 +28,83 @@ export interface StreamingRevenueCalculation {
   studioLevel: number;             // Facility level used
 }
 
+// ─── Streaming_Revenue_Formula — the single source of truth ──────────
+
+/** Base award per battle, before any multiplier. */
+export const STREAMING_BASE_AMOUNT = 1000;
+
+/** Battle count divisor: every 1000 battles adds 100% to the battle multiplier. */
+export const STREAMING_BATTLE_DIVISOR = 1000;
+
+/** Fame divisor: every 5000 fame adds 100% to the fame multiplier. */
+export const STREAMING_FAME_DIVISOR = 5000;
+
+/** Studio Multiplier per level: L1 = ×2, L2 = ×3, L10 = ×11. */
+export const STREAMING_STUDIO_PER_LEVEL = 1.0;
+
+/** The multiplier and total breakdown, with no identity or IO attached. */
+export interface StreamingRevenueBreakdown {
+  baseAmount: number;
+  battleMultiplier: number;
+  fameMultiplier: number;
+  studioMultiplier: number;
+  totalRevenue: number;
+}
+
+/**
+ * The Streaming_Revenue_Formula. Pure — no IO, no side effects.
+ *
+ * ```
+ * 1000 × (1 + battles/1000) × (1 + fame/5000) × (1 + level)
+ * ```
+ *
+ * Spec #46 R10: this used to be written out four more times — in
+ * `calculateStreamingRevenue()`, in `calculateStreamingRevenueBatch()`, in
+ * `financialReportService.ts`, and approximated twice more in the facility ROI
+ * and recommendation services. Each copy disagreed with the award path in a
+ * different way:
+ *
+ * - The financial report applied caps of 3.0 and 2.0 to the battle and fame
+ *   multipliers. The award path applies none, so a robot past 2000 battles or
+ *   5000 fame was shown less than it was paid. (Its divisor arithmetic was
+ *   equivalent — `1 + battles/100 × 0.1` is algebraically `1 + battles/1000` —
+ *   so the caps were the whole discrepancy.)
+ * - `facilityRecommendationService.ts` used `1 + level × 0.1` for the Studio
+ *   Multiplier, a tenth of the real `1 + level`, so an upgrade that doubles
+ *   revenue was projected as a 10% gain.
+ * - `unifiedFacilityROIService.ts` used `1000 × (1 + level)`, dropping the
+ *   battle and fame multipliers entirely.
+ *
+ * Every display path now derives from this function, so a projection cannot
+ * disagree with what a player is actually paid.
+ *
+ * The multipliers are uncapped by design: the caps in the old display code were
+ * invented there and never existed in the award path.
+ *
+ * @param totalBattleCount Battles across every mode. `robots.total_battles`
+ *   excludes KotH, so callers add the KotH `standings.total_matches`.
+ * @param fame Robot fame.
+ * @param studioLevel Streaming Studio facility level (0-10).
+ */
+export function computeStreamingRevenue(
+  totalBattleCount: number,
+  fame: number,
+  studioLevel: number,
+): StreamingRevenueBreakdown {
+  const baseAmount = STREAMING_BASE_AMOUNT;
+  const battleMultiplier = 1 + (totalBattleCount / STREAMING_BATTLE_DIVISOR);
+  const fameMultiplier = 1 + (fame / STREAMING_FAME_DIVISOR);
+  const studioMultiplier = 1 + (studioLevel * STREAMING_STUDIO_PER_LEVEL);
+
+  return {
+    baseAmount,
+    battleMultiplier,
+    fameMultiplier,
+    studioMultiplier,
+    totalRevenue: Math.floor(baseAmount * battleMultiplier * fameMultiplier * studioMultiplier),
+  };
+}
+
 /**
  * Get the Streaming Studio level for a user
  * @param userId - User ID to query
@@ -94,23 +171,11 @@ export async function calculateStreamingRevenue(
   // KotH matches come from standings since Robot no longer stores kothMatches
   const totalBattleCount = robot.totalBattles + kothMatches;
 
-  // Calculate multipliers
-  const baseAmount = 1000;
-  const battleMultiplier = 1 + (totalBattleCount / 1000);
-  const fameMultiplier = 1 + (robot.fame / 5000);
-  const studioMultiplier = 1 + (studioLevel * 1.0); // 100% per level: L1=2×, L2=3×, L3=4×, etc.
-
-  // Calculate total revenue
-  const totalRevenue = Math.floor(
-    baseAmount * battleMultiplier * fameMultiplier * studioMultiplier
-  );
+  // Delegate to the single source of truth (Spec #46 R10)
+  const breakdown = computeStreamingRevenue(totalBattleCount, robot.fame, studioLevel);
 
   return {
-    baseAmount,
-    battleMultiplier,
-    fameMultiplier,
-    studioMultiplier,
-    totalRevenue,
+    ...breakdown,
     robotId: robot.id,
     robotName: robot.name,
     robotBattles: totalBattleCount,
@@ -200,21 +265,11 @@ export async function calculateStreamingRevenueBatch(
     const studioLevel = facilityMap.get(userId) ?? 0;
     const totalBattleCount = robot.totalBattles + (kothMatchMap.get(robotId) ?? 0);
 
-    const baseAmount = 1000;
-    const battleMultiplier = 1 + (totalBattleCount / 1000);
-    const fameMultiplier = 1 + (robot.fame / 5000);
-    const studioMultiplier = 1 + (studioLevel * 1.0);
-
-    const totalRevenue = Math.floor(
-      baseAmount * battleMultiplier * fameMultiplier * studioMultiplier
-    );
+    // Same delegation as the single path, so batch and single cannot diverge.
+    const breakdown = computeStreamingRevenue(totalBattleCount, robot.fame, studioLevel);
 
     result.set(robotId, {
-      baseAmount,
-      battleMultiplier,
-      fameMultiplier,
-      studioMultiplier,
-      totalRevenue,
+      ...breakdown,
       robotId: robot.id,
       robotName: robot.name,
       robotBattles: totalBattleCount,

@@ -95,13 +95,20 @@ function computePlacements(
   states: SpatialRobotCombatState[],
   events: SpatialCombatEvent[],
 ): PlacementEntry[] {
-  // Build elimination time map: robotName → timestamp of elimination
+  // Event types that take a robot out of the match. `yield` counts for ordering
+  // but never for kill credit — the robot removed itself.
+  const ELIMINATION_TYPES = new Set(['destroyed', 'robot_eliminated', 'yield']);
+
+  // Build elimination time map: robotName → timestamp of elimination.
+  //
+  // Spec #46 R4.16: this and the kill map below were both empty in production.
+  // The `destroyed` event emitted by the shared simulation loop carried neither
+  // `attacker` nor `defender`, so every lookup missed: kills came out as zero
+  // for every robot, and elimination ordering silently degraded to a pure
+  // damage-dealt sort. Both fields are now populated at the emission site.
   const eliminationTimeMap = new Map<string, number>();
   for (const event of events) {
-    if (
-      (event.type === 'destroyed' || event.type === 'robot_eliminated') &&
-      event.defender
-    ) {
+    if (ELIMINATION_TYPES.has(event.type) && event.defender) {
       // Use earliest elimination event for each robot
       if (!eliminationTimeMap.has(event.defender)) {
         eliminationTimeMap.set(event.defender, event.timestamp);
@@ -112,10 +119,8 @@ function computePlacements(
   // Count kills per robot from elimination events (attacker field)
   const killCountMap = new Map<string, number>();
   for (const event of events) {
-    if (
-      (event.type === 'destroyed' || event.type === 'robot_eliminated') &&
-      event.attacker
-    ) {
+    if (event.type === 'yield') continue;
+    if (ELIMINATION_TYPES.has(event.type) && event.attacker) {
       killCountMap.set(event.attacker, (killCountMap.get(event.attacker) ?? 0) + 1);
     }
   }
@@ -189,21 +194,11 @@ async function batchUpdateGrandMeleeRobotStats(
       stance: p.robot.stance,
       loadoutType: p.robot.loadoutType,
       skipBattleCounters: true,
+      // Spec #46 R8: the shared helper owns grandMeleeWins/grandMeleeTop3. These
+      // were previously two inline `prisma.robot.update` calls here, which
+      // violated the unified post-battle update rule.
+      placement: p.placement,
     });
-
-    // Increment Grand Melee win/top3 counters
-    if (p.placement === 1) {
-      await prisma.robot.update({
-        where: { id: p.robot.id },
-        data: { grandMeleeWins: { increment: 1 } },
-      });
-    }
-    if (p.placement <= 3) {
-      await prisma.robot.update({
-        where: { id: p.robot.id },
-        data: { grandMeleeTop3: { increment: 1 } },
-      });
-    }
   }
 
   // 2. Award Grand Melee points and update standings via unified service
@@ -515,7 +510,13 @@ async function processGrandMeleeBattle(
           won: p.isWinner,
           destroyed: p.destroyed,
           finalHpPercent: p.robot.maxHP > 0 ? (p.finalHP / p.robot.maxHP) * 100 : 0,
-          eloDiff: 0,
+          // Spec #46 R8: `grand_melee_win_high_hp` (L30 Untouchable) keys on
+          // placement rather than `won`, because Grand Melee resolves by
+          // placement across 20 robots.
+          placement: p.placement,
+          eloChange: 0,
+          subjectEloBefore: p.robot.elo,
+          opponentEloBefore: p.robot.elo,
           opponentElo: 0,
           yielded: false,
           opponentYielded: false,

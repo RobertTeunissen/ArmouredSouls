@@ -33,6 +33,7 @@ function RobotDetailPage() {
     error,
     successMessage,
     trainingLevel,
+    rosterCapacity,
     repairBayLevel,
     activeRobotCount,
     academyLevels,
@@ -284,6 +285,7 @@ function RobotDetailPage() {
               robot={robot as unknown as RobotWithAttributes}
               currentCredits={currency}
               trainingLevel={trainingLevel}
+              rosterCapacity={rosterCapacity}
               academyLevels={academyLevels}
               onCommit={handleCommitUpgrades}
               onNavigateToFacilities={() => navigate('/facilities')}

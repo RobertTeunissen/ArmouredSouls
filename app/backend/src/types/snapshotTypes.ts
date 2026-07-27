@@ -69,6 +69,13 @@ export interface CycleEventPayload {
   repairCost?: number;
   cost?: number;
   merchandising?: number;
+  /**
+   * Roster_Capacity and Prestige_Per_Slot recorded on PASSIVE_INCOME events so
+   * merchandising income can be reconciled after the fact without re-deriving
+   * capacity from historical facility state (Spec #46 R2.9).
+   */
+  rosterCapacity?: number;
+  prestigePerSlot?: number;
   streaming?: number;
   totalCost?: number;
   balance?: number;

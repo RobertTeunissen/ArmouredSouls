@@ -514,6 +514,15 @@ export async function evaluateTrigger(
     case 'league_3v3_wins':
       return checkRobotStatCached(cachedRobot, 'totalLeague3v3Wins', triggerThreshold);
 
+    // ── Grand Melee counters (Spec #46 R8 Cause C) ─────────────
+    // `robots.grand_melee_wins` and `grand_melee_top3` already existed but were
+    // never incremented and never read. Both are now written by
+    // `updateRobotCombatStats()` and follow the `koth_wins` pattern here.
+    case 'grand_melee_wins':
+      return checkRobotStatCached(cachedRobot, 'grandMeleeWins', triggerThreshold);
+    case 'grand_melee_top3':
+      return checkRobotStatCached(cachedRobot, 'grandMeleeTop3', triggerThreshold);
+
     // ── Cumulative User Stats (from cached user) ───────────────
     case 'prestige':
       return checkUserStatCached(cachedUser, 'prestige', triggerThreshold);
@@ -534,12 +543,30 @@ export async function evaluateTrigger(
       return Boolean(data.won) && Number(data.minHpPercent ?? data.finalHpPercent) < maxHpPercent;
     }
 
+    case 'grand_melee_win_high_hp': {
+      // One-shot boolean: placement 1 in a Grand Melee with HP still above the
+      // threshold. Keyed on `placement` rather than `won` because Grand Melee
+      // resolves by placement — 20 robots enter and only placement 1 counts.
+      const minHpPercent = Number(triggerMeta?.minHpPercent ?? 75);
+      return (
+        String(data.battleType ?? '') === 'grand_melee' &&
+        Number(data.placement ?? 0) === 1 &&
+        Number(data.finalHpPercent ?? 0) > minHpPercent
+      );
+    }
+
     case 'elo_upset': {
+      // Spec #46 R8 Cause B: this compared `eloDiff`, which was the subject's own
+      // ELO *change*. `ELO_K_FACTOR` is 32, so the value could never reach the
+      // 150 threshold and "Never Tell Me the Odds" (C11) was unreachable. The
+      // condition is an upset, so what matters is the Opponent_Elo_Gap — how far
+      // above the winner the loser was rated before the battle.
       const minEloDiff = Number(triggerMeta?.minEloDiff ?? 150);
       const battleType = String(data.battleType ?? '');
+      const opponentEloGap = Number(data.opponentEloBefore ?? 0) - Number(data.subjectEloBefore ?? 0);
       return (
         Boolean(data.won) &&
-        Number(data.eloDiff) >= minEloDiff &&
+        opponentEloGap >= minEloDiff &&
         ['league_1v1', 'tournament_1v1'].includes(battleType)
       );
     }

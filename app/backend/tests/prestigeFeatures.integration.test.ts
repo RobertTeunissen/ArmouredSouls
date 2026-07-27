@@ -57,18 +57,19 @@ describe('Prestige Features Integration', () => {
       
       // Calculate all income streams
       const prestigeMultiplier = getPrestigeMultiplier(userPrestige);
-      const merchandising = calculateMerchandisingIncome(incomeGeneratorLevel, userPrestige);
+      const merchandising = calculateMerchandisingIncome(incomeGeneratorLevel, userPrestige, 1);
       const nextTier = getNextPrestigeTier(userPrestige);
       
       // Verify calculations
       // Prestige multiplier: min(1.50, 1 + 15000/50000) = 1.30
-      // baseRate for level 4 = 20000, merchandising multiplier = 1 + 15000/10000 = 2.5
+      // Spec #46 R2: baseRate for level 4 = 40000, merchandising multiplier is
+      // 1 + prestigePerSlot/10000 = 1 + 15000/1/10000 = 2.5
       expect(prestigeMultiplier).toBeCloseTo(1.30, 5); // 30% bonus
-      expect(merchandising).toBe(50000); // 20000 * 2.5
+      expect(merchandising).toBe(100000); // 40000 * 2.5
       expect(nextTier).toEqual({ threshold: 25000, bonus: '+50% (max)' });
       
       const totalPassiveIncome = merchandising;
-      expect(totalPassiveIncome).toBe(50000);
+      expect(totalPassiveIncome).toBe(100000);
     });
 
     test('should show smooth progression of prestige multiplier', () => {
@@ -97,13 +98,14 @@ describe('Prestige Features Integration', () => {
       const userPrestige = 7500;
       const incomeGeneratorLevel = 5;
       
-      const merchandising = calculateMerchandisingIncome(incomeGeneratorLevel, userPrestige);
+      const merchandising = calculateMerchandisingIncome(incomeGeneratorLevel, userPrestige, 1);
       
-      // Expected: baseRate(5) = 25000, multiplier = 1 + 7500/10000 = 1.75 → 25000 * 1.75 = 43750
-      expect(merchandising).toBe(43750);
-      
+      // Expected: baseRate(5) = 50000, multiplier = 1 + 7500/1/10000 = 1.75
+      // → 50000 * 1.75 = 87500
+      expect(merchandising).toBe(87500);
+
       const totalIncome = merchandising;
-      expect(totalIncome).toBe(43750);
+      expect(totalIncome).toBe(87500);
     });
   });
 
@@ -118,18 +120,19 @@ describe('Prestige Features Integration', () => {
       const prestigeReq = config?.prestigeRequirements?.[targetIncomeGenLevel - 1] || 0;
       const canUpgrade = userPrestige >= prestigeReq;
       
-      expect(prestigeReq).toBe(3000);
+      // Spec #46 R2.10: the L4 gate is 2000 Prestige_Per_Slot (was 3000 raw)
+      expect(prestigeReq).toBe(2000);
       expect(canUpgrade).toBe(true);
       
       // Calculate income before and after
-      const incomeBefore = calculateMerchandisingIncome(currentIncomeGenLevel, userPrestige);
-      const incomeAfter = calculateMerchandisingIncome(targetIncomeGenLevel, userPrestige);
+      const incomeBefore = calculateMerchandisingIncome(currentIncomeGenLevel, userPrestige, 1);
+      const incomeAfter = calculateMerchandisingIncome(targetIncomeGenLevel, userPrestige, 1);
       
-      expect(incomeBefore).toBe(19500); // 15000 * 1.3
-      expect(incomeAfter).toBe(26000); // 20000 * 1.3
-      
+      expect(incomeBefore).toBe(39000); // 30000 * 1.3
+      expect(incomeAfter).toBe(52000); // 40000 * 1.3
+
       const incomeIncrease = incomeAfter - incomeBefore;
-      expect(incomeIncrease).toBe(6500);
+      expect(incomeIncrease).toBe(13000);
     });
 
     test('should handle user at max prestige tier', () => {
@@ -138,7 +141,7 @@ describe('Prestige Features Integration', () => {
       
       const prestigeMultiplier = getPrestigeMultiplier(userPrestige);
       const nextTier = getNextPrestigeTier(userPrestige);
-      const merchandising = calculateMerchandisingIncome(incomeGeneratorLevel, userPrestige);
+      const merchandising = calculateMerchandisingIncome(incomeGeneratorLevel, userPrestige, 1);
       
       expect(prestigeMultiplier).toBe(1.50); // Max tier
       expect(nextTier).toBeNull(); // No next tier
