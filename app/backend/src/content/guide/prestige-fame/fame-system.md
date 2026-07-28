@@ -31,7 +31,7 @@ Every time a robot wins a battle, it earns Fame based on the league tier:
 | Diamond | +25 |
 | Champion | +40 |
 
-Only the winning robot earns Fame. Draws and losses award nothing. Fame is tracked per-robot and persists permanently.
+Only the winning robot earns Fame. Draws and losses award nothing. Fame is tracked per-robot for the duration of a season — it dies with the robot at the season boundary, and each robot's final Fame is recorded in your season archive.
 
 ```callout-info
 Fame values are lower than Prestige values because Fame is per-robot while Prestige is per-stable. A stable with 5 robots each earning Fame generates collective streaming revenue that can rival Prestige-based merchandising income.

@@ -47,6 +47,31 @@ export async function handleImagePreview(req: AuthRequest, res: Response): Promi
     return;
   }
 
+  // Spec #45 R30.11: refuse the upload when the stable is already at its
+  // retained-image cap. Checked before moderation so we do not spend CPU
+  // classifying an image we are going to reject. Uploads are never evicted
+  // automatically — the player deletes one through the Image_Library.
+  const { assertUploadCapacity } = await import('./imageLibraryService');
+  const { SeasonError } = await import('../../errors');
+  try {
+    await assertUploadCapacity(userId);
+  } catch (error) {
+    // Only the explicit cap breach blocks the upload. Any other failure (e.g.
+    // the directory count could not be read) fails open — refusing an upload
+    // because a count query hiccuped is worse than letting one extra through.
+    if (error instanceof SeasonError) {
+      res.status(error.statusCode).json({
+        error: error.message,
+        code: error.code,
+        details: error.details,
+      });
+      return;
+    }
+    logger.warn(
+      `[image-upload] Capacity check failed, allowing upload: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+
   // Step 3: Validate file (magic bytes + dimensions)
   const validation = await fileValidationService.validateImage(file.buffer, file.mimetype);
   if (!validation.valid) {

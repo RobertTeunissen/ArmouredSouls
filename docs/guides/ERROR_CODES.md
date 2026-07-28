@@ -283,3 +283,15 @@ try {
   }
 }
 ```
+
+## SeasonErrorCode (Spec #45)
+
+| Code | HTTP | Meaning |
+|---|---|---|
+| `ROLLOVER_IN_PROGRESS` | 409 | A season rollover is already executing; a second cannot start. |
+| `ARCHIVE_VERIFICATION_FAILED` | 500 | Archive row counts did not match the pre-rollover counts. The purge was aborted and no data was deleted. |
+| `CONFIRMATION_REQUIRED` | 400 | A destructive or irreversible action was requested without its confirmation value. |
+| `PREPARATION_PHASE_ACTIVE` | 400 | The action is not permitted while the season is in its preparation phase. |
+| `SEASON_NOT_FOUND` | 404 | No season or stable archive exists for the requested season number. |
+| `IMAGE_LIMIT_REACHED` | 400 | The stable already holds `RETAINED_IMAGES_PER_STABLE` images. Delete one before uploading another. |
+| `IMAGE_NOT_OWNED` | 403 | The image path does not resolve inside the caller's own upload directory. Returned as a generic `Access denied` that does not reveal whether the file exists. |

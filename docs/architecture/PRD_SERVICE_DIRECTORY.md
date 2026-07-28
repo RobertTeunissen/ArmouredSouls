@@ -257,6 +257,22 @@ Event Subscription System — per-robot subscription model gating participation 
 
 The production scheduler (`cycleScheduler.ts`) fires 10 independent cron jobs daily. Each job acquires an in-memory mutex lock before executing, preventing overlap. Settlement at 00:00 UTC closes the cycle.
 
+### Season phase gating (Spec #45)
+
+Every battle event job is gated on the current Season_Phase. The check sits in `runJob` rather than in the nine handlers, so a tenth battle event cannot be added without inheriting it.
+
+**During a Preparation_Phase:**
+
+- All nine battle event jobs (`league`, `tournament`, `tagTeam`, `koth`, `grandMelee`, `team2v2League`, `team3v3League`, `team2v2Tournament`, `team3v3Tournament`) return immediately, recording a successful run with reason `season_preparation`. No matches are scheduled, no battles execute, no tournament brackets are created.
+- The Settlement_Job reads the phase first and returns before step 1, skipping passive income, operating costs, end-of-cycle balances, the `cycle_metadata.total_cycles` increment, `cyclesInTier`, the analytics snapshot, practice arena flush, user generation, achievement rarity refresh, and the leaderboard refresh. Only the preparation counter advances.
+- The global cycle counter is therefore unchanged across a preparation window — preparation cycles are not game cycles.
+- Infrastructure jobs continue normally: daily health report (00:30 UTC), battle log retention (01:30 UTC), database backup (02:00 UTC).
+- Admin manual triggers of a battle event are declined, because `triggerJob` routes through the same gate.
+
+**At the season boundary:** the Settlement_Job runs all its normal steps, then advances the season counter, then invokes the Season_Rollover — so the final cycle of a season settles completely before anything is archived or purged. Season 0 is exempt and never rolls over automatically.
+
+**On competitive cycle 1:** battle jobs find nothing due to execute, because each executes previously scheduled matches before scheduling new ones and preparation created none. Cycle 1 schedules; cycle 2 is the first battle day.
+
 | UTC | Event | Env Var | Handler Status |
 |------|-------|---------|----------------|
 | 08:00 | 1v1 League | `LEAGUE_SCHEDULE` | Live |

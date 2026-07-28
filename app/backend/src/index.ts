@@ -25,6 +25,9 @@ import tuningAllocationRoutes from './routes/tuningAllocation';
 import achievementsRoutes from './routes/achievements';
 import subscriptionsRoutes from './routes/subscriptions';
 import teamBattlesRoutes from './routes/teamBattles';
+import seasonsRoutes from './routes/seasons';
+import imagesRoutes from './routes/images';
+import adminSeasonsRoutes from './routes/adminSeasons';
 import { loadEnvConfig } from './config/env';
 import { initScheduler } from './services/cycle/cycleScheduler';
 import { registerSubscribableEvent } from './services/subscription/eventRegistry';
@@ -160,6 +163,9 @@ app.use('/api/facilities', facilityRoutes);
 app.use('/api/robots', robotRoutes);
 app.use('/api/weapons', weaponRoutes);
 app.use('/api/weapon-inventory', weaponInventoryRoutes);
+// Mount the more specific admin router first so it cannot be shadowed by
+// fall-through ordering in the generic /api/admin router.
+app.use('/api/admin/seasons', adminSeasonsRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/matches', matchesRoutes);
 app.use('/api/leagues', leaguesRoutes);
@@ -178,6 +184,8 @@ app.use('/api/robots', tuningAllocationRoutes);
 app.use('/api/achievements', achievementsRoutes);
 app.use('/api/subscriptions', subscriptionsRoutes);
 app.use('/api/team-battles', teamBattlesRoutes);
+app.use('/api/seasons', seasonsRoutes);
+app.use('/api/images', imagesRoutes);
 
 // Serve uploaded images as static files (in production, Caddy handles this)
 import path from 'path';

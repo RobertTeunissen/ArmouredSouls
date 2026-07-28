@@ -858,3 +858,11 @@ For ACC specifically: with top prestige at ~860 and top fame at ~1,234, most pla
 - [PRD_ECONOMY_SYSTEM.md](PRD_ECONOMY_SYSTEM.md) — Section 6: preliminary achievement reward examples
 - [BACKLOG.md](../BACKLOG.md) — Backlog item #8 (Achievement System) and #6 (Game Loop Audit)
 - [DESIGN_SYSTEM_QUICK_REFERENCE.md](../design_ux/DESIGN_SYSTEM_QUICK_REFERENCE.md) — Color palette, icon sizes, animation guidelines used for badge spec
+
+## Season Reset (Spec #45)
+
+**Achievements reset at each Season_Rollover.** All `user_achievements` rows are deleted and `pinnedAchievements` is emptied.
+
+Each season's unlocked count, the count available at the time, and the full list of unlocked achievement identifiers are recorded in `stable_season_archives`, so the collection becomes a per-season scorecard rather than a lifetime list.
+
+Achievement rewards (credits and prestige) are also season-scoped, since both reset at the boundary.

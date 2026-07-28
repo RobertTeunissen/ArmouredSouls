@@ -4,6 +4,7 @@ description: "What you earn from tournament competition — credits, prestige, f
 order: 3
 lastUpdated: "2026-03-12"
 relatedArticles:
+  - seasons/what-resets
   - tournaments/tournament-format
   - tournaments/eligibility
   - prestige-fame/prestige-ranks
@@ -48,10 +49,10 @@ Performance bonuses affect fame only, not credits or prestige. Fame rewards excl
 
 ### Championship Title
 
-The tournament winner earns a **championship title** — a permanent distinction attached to your robot's record. Championship titles are the most prestigious achievement in Armoured Souls and cannot be earned through any other means.
+The tournament winner earns a **championship title** — a distinction attached to your robot's record for the season. Championship titles are the most prestigious achievement in Armoured Souls and cannot be earned through any other means.
 
 ```callout-tip
-Championship titles are permanent and cumulative. A robot that wins multiple tournaments collects multiple titles. These are visible on your robot's profile and serve as proof of tournament dominance.
+Championship titles accumulate across a season. A robot that wins multiple tournaments collects multiple titles, visible on its profile as proof of tournament dominance. Title counts reset at the season boundary along with the robots that earned them, and each season's totals — overall and per tournament type — are recorded permanently in your season archive.
 ```
 
 ## How Rewards Scale
@@ -122,7 +123,7 @@ You only earn rewards for battles you actually fight and win. If you receive a [
 Winning the final earns everything a normal round win provides (with the full 1.0× progression multiplier), plus:
 
 - A **+500 prestige championship bonus** on top of the normal prestige award
-- A permanent **championship title** attached to your robot's record
+- A **championship title** attached to your robot's record for the season
 
 The championship title includes the tournament identifier, the date, and your robot's name and stable. Championship titles are the most visible mark of tournament success and cannot be earned through any other means.
 

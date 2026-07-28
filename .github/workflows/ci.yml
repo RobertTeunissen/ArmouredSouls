@@ -113,6 +113,20 @@ jobs:
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_test?connection_limit=5
         run: pnpm exec prisma migrate deploy
+
+      # Spec #45: fail the build when the migration history and schema.prisma
+      # disagree. Without this, editing schema.prisma without generating a
+      # migration passes every check and fails only at deploy time.
+      - name: Check for schema drift
+        working-directory: ./app/backend
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_test?connection_limit=5
+        run: |
+          pnpm exec prisma migrate diff \
+            --from-migrations prisma/migrations \
+            --to-schema-datamodel prisma/schema.prisma \
+            --shadow-database-url "postgresql://postgres:postgres@localhost:5432/armouredsouls_drift?connection_limit=5" \
+            --exit-code
       
       - name: Run integration tests
         working-directory: ./app/backend

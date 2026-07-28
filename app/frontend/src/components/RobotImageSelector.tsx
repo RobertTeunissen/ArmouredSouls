@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { ApiError } from '../utils/ApiError';
 import { uploadRobotImage, confirmRobotImage } from '../utils/robotApi';
 import { validateUploadFile } from './robotImageValidation';
+import ImageLibrary from './robots/ImageLibrary';
 
 interface RobotImageSelectorProps {
   isOpen: boolean;
@@ -42,7 +43,7 @@ function formatImageName(filename: string): { name: string; description: string 
 }
 
 // --- Upload state types ---
-type UploadTab = 'presets' | 'upload';
+type UploadTab = 'presets' | 'upload' | 'library';
 
 interface UploadState {
   file: File | null;
@@ -498,6 +499,18 @@ function RobotImageSelector({ isOpen, currentImageUrl, onSelect, onClose, robotI
             >
               Upload Custom Image
             </button>
+            <button
+              role="tab"
+              aria-selected={activeTab === 'library'}
+              onClick={() => setActiveTab('library')}
+              className={`min-h-[44px] px-4 py-3 font-medium transition-colors border-b-2 ${
+                activeTab === 'library'
+                  ? 'border-primary text-white'
+                  : 'border-transparent text-secondary hover:text-white'
+              }`}
+            >
+              My Images
+            </button>
           </div>
         )}
 
@@ -570,12 +583,26 @@ function RobotImageSelector({ isOpen, currentImageUrl, onSelect, onClose, robotI
                 )}
               </div>
             </>
-          ) : (
+          ) : activeTab === 'upload' ? (
             /* Upload Tab */
             <UploadTab
               robotId={robotId!}
               onUploadComplete={handleUploadComplete}
             />
+          ) : (
+            /* My Images — the player's retained uploads (up to 20), selectable
+               without re-uploading and re-moderating. */
+            <div>
+              <p className="mb-4 text-sm text-secondary">
+                Images you have uploaded. They survive the season reset, so you can
+                re-apply the same artwork to a new robot. Selecting one applies it to
+                this robot immediately.
+              </p>
+              <ImageLibrary
+                selectedPath={selectedImageUrl}
+                onSelect={handleUploadComplete}
+              />
+            </div>
           )}
         </div>
 

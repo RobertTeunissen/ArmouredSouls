@@ -922,3 +922,15 @@ describe('POST /api/admin/cycles/bulk with generateUsersPerCycle', () => {
 ---
 
 **End of PRD**
+
+## Season Rollover Behaviour (Spec #45)
+
+Generated stables are **deleted** at each Season_Rollover, not reset. An emptied bot stable would never rebuild, so resetting them would leave the matchmaking pool populated by dead accounts.
+
+Classification uses the explicit `users.is_generated` column, never username prefix matching. `generateBattleReadyUsers` sets it to `true`; the seed script sets it to `true` for `test_user_*` stables and `false` for the `admin` account; the Onboarding_Service leaves it `false` for registered players. The column defaults to `false` so an unclassified account fails safe as a player stable and is never deleted.
+
+Generated stables receive no per-stable or per-robot archive, but their league positions and record placements survive as denormalized text in `season_standing_snapshots` and `season_accolades`, flagged with `is_generated_subject` and a null `user_id`.
+
+Because the global cycle counter resets to 0 at rollover, generation restarts at one stable on cycle 1 and grows with the season — roughly 55 stables by cycle 10 and 210 by cycle 20. Early-season matchmaking pools are consequently thin and rely on the existing in-memory bye robot. This is a known property of the reset, not a defect.
+
+Generated robots reference shared static assets at `/assets/robots/{tier}_512x512.webp`. Nothing in the rollover touches that directory, so newly generated robots in a new season have images with no per-season provisioning.

@@ -55,6 +55,14 @@ model User {
   pinnedAchievements   Json @default("[]") @map("pinned_achievements")
   totalPracticeBattles Int  @default(0) @map("total_practice_battles")
 
+  // ===== SEASON SYSTEM (Spec #45) =====
+  // True for system-created stables: auto-generated bots and seeded test
+  // stables. Defaults to false so an unclassified account fails safe as a
+  // Human_Stable and is never deleted by a Season_Rollover (R29.2).
+  isGenerated          Boolean @default(false) @map("is_generated")
+  // Highest Season_Number whose summary modal this user has dismissed.
+  lastSeenSeasonNumber Int     @default(0) @map("last_seen_season_number")
+
   // ===== TIMESTAMPS =====
   lastLoginAt DateTime? @map("last_login_at")
   createdAt   DateTime  @default(now()) @map("created_at")
@@ -928,4 +936,177 @@ model LeaderboardCache {
   @@index([category, generation, rank])
   @@index([entityType, entityId])
   @@map("leaderboard_cache")
+}
+
+// ===== SEASON SYSTEM (Spec #45) =====
+
+// Season state. Exactly one row has a phase other than "completed".
+// Season_Number 0 is the legacy season created for the pre-season-system
+// timeline — the number itself is the legacy marker, so no flag column exists.
+model Season {
+  id                         Int       @id @default(autoincrement())
+  seasonNumber               Int       @unique @map("season_number")
+  phase                      String    @db.VarChar(20) // "preparation" | "competitive" | "completed"
+  competitiveCyclesCompleted Int       @default(0) @map("competitive_cycles_completed")
+  preparationCyclesCompleted Int       @default(0) @map("preparation_cycles_completed")
+  // Per-season length override set by an admin extension. Null means the
+  // configured Season_Length_Cycles applies. Stored rather than rewinding the
+  // completed counter, which would make the displayed cycle number go backwards
+  // and corrupt the cycle count written to the archive.
+  lengthOverrideCycles       Int?      @map("length_override_cycles")
+  // Captured before Generated_Stables are deleted, so the count is still
+  // reportable after the rows are gone (Spec #45 R29.15).
+  generatedStableCount       Int       @default(0) @map("generated_stable_count")
+  startedAt                  DateTime  @map("started_at")
+  endedAt                    DateTime? @map("ended_at")
+  createdAt                  DateTime  @default(now()) @map("created_at")
+  updatedAt                  DateTime  @updatedAt @map("updated_at")
+
+  stableArchives    StableSeasonArchive[]
+  accolades         SeasonAccolade[]
+  standingSnapshots SeasonStandingSnapshot[]
+
+  @@index([phase])
+  @@map("seasons")
+}
+
+// One row per Human_Stable per completed season. Generated_Stables get none.
+// Every value is a denormalized copy; `userId` is the only foreign key and is
+// deliberately NOT a Prisma relation so the archive survives independently.
+model StableSeasonArchive {
+  id           Int @id @default(autoincrement())
+  seasonNumber Int @map("season_number")
+  userId       Int @map("user_id")
+
+  stableName     String @map("stable_name") @db.VarChar(30)
+  finalCredits   Int    @map("final_credits")
+  prestigeEarned Int    @map("prestige_earned")
+
+  totalBattles Int   @map("total_battles")
+  wins         Int
+  losses       Int
+  draws        Int
+  winRate      Float @map("win_rate")
+
+  highestElo Int @map("highest_elo")
+  totalFame  Int @map("total_fame")
+
+  championshipTitles    Int @map("championship_titles")
+  championshipTitles1v1 Int @map("championship_titles_1v1")
+  championshipTitles2v2 Int @map("championship_titles_2v2")
+  championshipTitles3v3 Int @map("championship_titles_3v3")
+
+  achievementsUnlocked  Int  @map("achievements_unlocked")
+  achievementsAvailable Int  @map("achievements_available")
+  achievementIds        Json @map("achievement_ids") // string[]
+
+  facilities Json // ArchivedFacility[]
+
+  robotCount Int @map("robot_count")
+  teamCount  Int @map("team_count")
+
+  // Number of competitive cycles the season ran (Spec #45 R17.8).
+  competitiveCycles Int @map("competitive_cycles")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  season Season               @relation(fields: [seasonNumber], references: [seasonNumber], onDelete: Cascade)
+  robots RobotSeasonArchive[]
+
+  @@unique([seasonNumber, userId])
+  @@index([userId])
+  @@map("stable_season_archives")
+}
+
+// One row per robot of a Human_Stable per completed season.
+model RobotSeasonArchive {
+  id              Int @id @default(autoincrement())
+  stableArchiveId Int @map("stable_archive_id")
+
+  robotName String  @map("robot_name") @db.VarChar(50)
+  // Nullable: set to NULL when the player deletes the underlying image
+  // from their Image_Library (Spec #45 R30.15).
+  imageUrl  String? @map("image_url") @db.VarChar(255)
+  frameId   Int     @map("frame_id")
+  paintJob  String? @map("paint_job") @db.VarChar(100)
+
+  finalElo            Int @map("final_elo")
+  fame                Int
+  wins                Int
+  losses              Int
+  draws               Int
+  totalBattles        Int @map("total_battles")
+  damageDealtLifetime Int @map("damage_dealt_lifetime")
+  damageTakenLifetime Int @map("damage_taken_lifetime")
+  kills               Int
+
+  mainWeaponName    String? @map("main_weapon_name") @db.VarChar(100)
+  offhandWeaponName String? @map("offhand_weapon_name") @db.VarChar(100)
+
+  standings Json // ArchivedStanding[]
+  teams     Json // ArchivedTeamMembership[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  stableArchive StableSeasonArchive @relation(fields: [stableArchiveId], references: [id], onDelete: Cascade)
+
+  @@index([stableArchiveId])
+  @@map("robot_season_archives")
+}
+
+// A captured Hall of Records placement. Belongs to the season, not to a
+// stable — `userId` is set only when the subject was owned by a Human_Stable.
+model SeasonAccolade {
+  id           Int  @id @default(autoincrement())
+  seasonNumber Int  @map("season_number")
+  userId       Int? @map("user_id")
+
+  category    String  @db.VarChar(60)
+  rank        Int
+  subjectType String  @map("subject_type") @db.VarChar(20) // "robot" | "team" | "stable"
+  subjectName String  @map("subject_name") @db.VarChar(100)
+  stableName  String  @map("stable_name") @db.VarChar(30)
+  value       Float
+  valueLabel  String  @map("value_label") @db.VarChar(40)
+  mode        String? @db.VarChar(20)
+
+  isGeneratedSubject Boolean @default(false) @map("is_generated_subject")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  season Season @relation(fields: [seasonNumber], references: [seasonNumber], onDelete: Cascade)
+
+  @@index([seasonNumber, userId])
+  @@index([seasonNumber, category])
+  @@map("season_accolades")
+}
+
+// Bounded final-standings record per season. Includes Generated_Stable
+// entities so each tier's champion stays identifiable after those stables
+// are deleted. Capped at Accolade_Depth entries per mode/tier/instance.
+model SeasonStandingSnapshot {
+  id           Int @id @default(autoincrement())
+  seasonNumber Int @map("season_number")
+
+  mode             String @db.VarChar(20)
+  tier             String @db.VarChar(20)
+  leagueInstanceId String @map("league_instance_id") @db.VarChar(30)
+  instanceRank     Int    @map("instance_rank")
+
+  entityType   String @map("entity_type") @db.VarChar(10)
+  entityName   String @map("entity_name") @db.VarChar(100)
+  stableName   String @map("stable_name") @db.VarChar(30)
+  leaguePoints Int    @map("league_points")
+  wins         Int
+  losses       Int
+  draws        Int
+
+  isGeneratedSubject Boolean @default(false) @map("is_generated_subject")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  season Season @relation(fields: [seasonNumber], references: [seasonNumber], onDelete: Cascade)
+
+  @@index([seasonNumber, mode, tier, leagueInstanceId])
+  @@map("season_standing_snapshots")
 }

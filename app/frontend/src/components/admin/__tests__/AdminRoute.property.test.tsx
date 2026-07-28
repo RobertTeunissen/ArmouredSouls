@@ -62,6 +62,7 @@ const VALID_ADMIN_ROUTES = [
   'robot-stats',
   'league-health',
   'weapons',
+  'seasons',
   'security',
   'engagement',
   'economy',

@@ -105,6 +105,7 @@ const adminSubPaths = [
   'league-health',
   'weapons',
   'tournaments',
+  'seasons',
   'security',
   'engagement',
   'economy',

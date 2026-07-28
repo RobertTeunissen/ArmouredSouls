@@ -6,87 +6,93 @@
     "order": 1
   },
   {
+    "slug": "seasons",
+    "title": "Seasons",
+    "description": "Season structure, what resets, the preparation window, and your archive",
+    "order": 2
+  },
+  {
     "slug": "robots",
     "title": "Robots",
     "description": "Robot attributes, upgrades, and frame types",
-    "order": 2
+    "order": 3
   },
   {
     "slug": "combat",
     "title": "Combat",
     "description": "Battle mechanics, damage, and strategy",
-    "order": 3
+    "order": 4
   },
   {
     "slug": "weapons",
     "title": "Weapons & Loadouts",
     "description": "Weapon types, loadout configurations, and bonuses",
-    "order": 4
+    "order": 5
   },
   {
     "slug": "leagues",
     "title": "Leagues & Matchmaking",
     "description": "Competitive tiers, LP, ELO, and matchmaking",
-    "order": 5
+    "order": 6
   },
   {
     "slug": "tournaments",
     "title": "Tournaments",
     "description": "Tournament format, eligibility, and rewards",
-    "order": 6
+    "order": 7
   },
   {
     "slug": "king-of-the-hill",
     "title": "King of the Hill",
     "description": "Zone-control battle mode with 5-6 robot free-for-all combat",
-    "order": 7
+    "order": 8
   },
   {
     "slug": "team-battles",
     "title": "Team Battles (2v2 & 3v3)",
     "description": "Simultaneous team combat with coordination effects, team registration, and dedicated leagues",
-    "order": 8
+    "order": 9
   },
   {
     "slug": "grand-melee",
     "title": "Grand Melee",
     "description": "Free-for-all elimination battles with 20 robots",
-    "order": 9
+    "order": 10
   },
   {
     "slug": "economy",
     "title": "Economy & Finances",
     "description": "Credits, income, expenses, and financial management",
-    "order": 10
+    "order": 11
   },
   {
     "slug": "facilities",
     "title": "Stable & Facilities",
     "description": "Facility types, upgrades, and investment strategy",
-    "order": 11
+    "order": 12
   },
   {
     "slug": "prestige-fame",
     "title": "Prestige & Fame",
     "description": "Reputation systems and progression rewards",
-    "order": 12
+    "order": 13
   },
   {
     "slug": "achievements",
     "title": "Achievements",
     "description": "Milestones, badges, rewards, and progression tracking",
-    "order": 13
+    "order": 14
   },
   {
     "slug": "strategy",
     "title": "Strategy Guides",
     "description": "Build archetypes, budget allocation, and advanced tactics",
-    "order": 14
+    "order": 15
   },
   {
     "slug": "integrations",
     "title": "Integrations & API",
     "description": "Webhooks, notifications, and community integrations",
-    "order": 15
+    "order": 16
   }
 ]

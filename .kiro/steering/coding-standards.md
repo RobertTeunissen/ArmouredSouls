@@ -89,6 +89,14 @@ inclusion: always
 - Include proper indexes for performance
 - Never read league, KotH, or tag-team competitive stats from the Robot or TeamBattle models — the `standings` table is the single source of truth for all competitive ranking data. Use `prisma.standing.findUnique({ where: { entityType_entityId_mode: { entityType: 'robot', entityId: robotId, mode: 'league_1v1' } } })` for per-entity lookups.
 
+### Season-Scoped Data (Spec #45)
+
+- **Never assume data older than the current season exists.** A Season_Rollover purges `battles`, `battle_summaries`, `audit_logs`, `cycle_snapshots`, `financial_ledger`, `league_history`, `leaderboard_cache`, and `practice_arena_daily_stats`. Any query that reaches back further than the current season will silently return nothing.
+- **Read cross-season history from the archive tables only**: `stable_season_archives`, `robot_season_archives`, `season_accolades`, `season_standing_snapshots`. These hold denormalized text and numbers with no foreign key to a purged row, so they survive every rollover.
+- **Never re-derive an archived figure from live data.** Archive rows are the record of what happened under the balance rules of their own season; recomputing them under current rules would rewrite history.
+- **Classify system stables by `users.is_generated`, never by username prefix.** The column is authoritative and defaults to `false`, so an unclassified account fails safe as a Human_Stable and is never deleted by a rollover.
+- **Never read `battle_log` for permanent data** — see the Battle Data Architecture section below; the same reasoning applies with a shorter horizon.
+
 ### Battle Data Architecture (Spec #39)
 - **Never read `battle_log` for permanent data.** The `battle_log` column is ephemeral — NULLed after 7 days. All persistent battle data lives in `battle_summaries` (pre-computed stats) or proper columns (`battles.winning_side`).
 - **Always write a `BattleSummary` at battle creation.** Every orchestrator must call `computeBattleSummary()` and insert a row in `battle_summaries` alongside the battle creation. Wrap in try/catch — never fail a battle because the summary fails.

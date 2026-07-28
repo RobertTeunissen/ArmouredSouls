@@ -167,6 +167,21 @@ describe('StableViewPage', () => {
     expect(screen.getByText('3')).toBeInTheDocument(); // championship titles
   });
 
+  // Spec #45 R14 — the season history block must be mounted on the stable page.
+  // Regression guard: the block existed but its presence here was never asserted.
+  it('mounts the season history block on the stable page', async () => {
+    vi.mocked(apiClient.get).mockResolvedValue({
+      data: buildStableResponse(),
+    });
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('Iron Wolves')).toBeInTheDocument();
+    });
+    // The block renders its own heading regardless of whether seasons exist.
+    expect(screen.getByRole('heading', { name: /season history/i })).toBeInTheDocument();
+  });
+
   // Requirements 4.2, 4.3, 4.4 — stable statistics
   it('renders stable statistics (total battles, wins, losses, draws, win rate, highest ELO, active robots)', async () => {
     vi.mocked(apiClient.get).mockResolvedValue({

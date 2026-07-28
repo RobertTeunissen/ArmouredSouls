@@ -20,7 +20,7 @@ test.describe('Guide Page', () => {
     await expect(page.getByRole('heading', { name: 'Game Guide' })).toBeVisible({ timeout: 10000 });
 
     // At least one section link should be visible
-    const sectionLinks = page.getByRole('link').filter({ hasText: /Getting Started|Combat|Economy|Robots|Weapons|Leagues|Facilities|Prestige|Tournaments|Strategy/i });
+    const sectionLinks = page.getByRole('link').filter({ hasText: /Getting Started|Seasons|Combat|Economy|Robots|Weapons|Leagues|Facilities|Prestige|Tournaments|Strategy/i });
     await expect(sectionLinks.first()).toBeVisible({ timeout: 10000 });
   });
 

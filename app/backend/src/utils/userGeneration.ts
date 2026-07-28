@@ -164,6 +164,9 @@ export async function generateBattleReadyUsers(
               currency: 100000,
               role: 'user',
               stableName,
+              // Spec #45: marks this as a Generated_Stable, deleted rather than
+              // reset at each Season_Rollover.
+              isGenerated: true,
             },
           });
 

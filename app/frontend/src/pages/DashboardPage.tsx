@@ -5,6 +5,8 @@ import { getTutorialState, TutorialState } from '../utils/onboardingApi';
 import { api } from '../utils/api';
 import Navigation from '../components/Navigation';
 import UpcomingMatches from '../components/UpcomingMatches';
+import SeasonPhaseCard from '../components/season/SeasonPhaseCard';
+import { useSeasonStore, selectSeason } from '../stores/seasonStore';
 import RecentMatches from '../components/RecentMatches';
 import FinancialSummary from '../components/FinancialSummary';
 import RobotDashboardCard from '../components/RobotDashboardCard';
@@ -39,6 +41,8 @@ function DashboardPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const robots = useRobotStore(state => state.robots);
+  const season = useSeasonStore(selectSeason);
+  const isPreparing = season?.phase === 'preparation';
   const fetchRobots = useRobotStore(state => state.fetchRobots);
   const currency = useStableStore(state => state.currency);
   const fetchStableData = useStableStore(state => state.fetchStableData);
@@ -120,6 +124,9 @@ function DashboardPage() {
           </div>
         </div>
 
+        {/* Season phase card — preparation state, cycle 1 notice, or cycle progress */}
+        <SeasonPhaseCard />
+
         {/* Onboarding Progress Banner - shows for users with incomplete onboarding */}
         <DashboardOnboardingBanner onboardingState={onboardingState} />
 
@@ -199,11 +206,13 @@ function DashboardPage() {
           <FinancialSummary />
         </div>
 
-        {/* Matchmaking Section */}
+        {/* Matchmaking Section. Upcoming matches are omitted during a
+            preparation window — none are scheduled, so an empty list would read
+            as an error rather than as an expected state (Spec #45 R4.5). */}
         {robots.length > 0 && (
           <div className="space-y-6 mb-8">
             <RecentMatches />
-            <UpcomingMatches />
+            {!isPreparing && <UpcomingMatches />}
           </div>
         )}
 

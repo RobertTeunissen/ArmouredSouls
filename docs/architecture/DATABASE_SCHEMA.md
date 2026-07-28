@@ -977,3 +977,49 @@ These are calculated in application code:
 - **[PRD_PRESTIGE_AND_FAME.md](PRD_PRESTIGE_AND_FAME.md)** - Prestige and Fame system specification
 - **[PRD_TOURNAMENT_SYSTEM.md](PRD_TOURNAMENT_SYSTEM.md)** - Tournament bracket system
 - **[PRD_MATCHMAKING.md](PRD_MATCHMAKING.md)** - Matchmaking and cycle system
+
+## Season System Tables (Spec #45)
+
+### `seasons`
+
+One row per season. Exactly one row has a `phase` other than `completed`.
+
+| Column | Type | Notes |
+|---|---|---|
+| `season_number` | int, unique | 0 is the legacy pre-season-system timeline. The number itself is the legacy marker — there is no legacy flag column. |
+| `phase` | varchar(20) | `preparation` \| `competitive` \| `completed`, enforced by a check constraint |
+| `competitive_cycles_completed` | int | Season_Cycle is this + 1 |
+| `preparation_cycles_completed` | int | Preparation day is this + 1 |
+| `generated_stable_count` | int | Stamped before generated stables are deleted, so the figure survives the purge |
+| `started_at` / `ended_at` | timestamp | `ended_at` set when the season completes |
+
+There is deliberately no `scheduled_end_cycles` column: Season 0 closes by explicit admin action only.
+
+### `stable_season_archives`
+
+One row per Human_Stable per completed season, unique on (`season_number`, `user_id`). Holds final credits, prestige, aggregate battle record, win rate, highest ELO, total fame, all four championship counters, achievement counts and the unlocked id list, owned facilities, robot and team counts, and the number of competitive cycles the season ran.
+
+`user_id` is the only foreign key to live data and is deliberately **not** a Prisma relation — a relation would impose an `onDelete` obligation, and the archive must survive independently.
+
+### `robot_season_archives`
+
+One row per robot of a Human_Stable, cascading from the stable archive. Holds identity (name, image path, frame, paint), final combat stats, and equipped weapon **names** as text.
+
+`standings` and `teams` are `Json` arrays (`ArchivedStanding[]`, `ArchivedTeamMembership[]` in `src/types/seasonArchiveTypes.ts`) rather than child tables, because they are read as a block when one season row is expanded and are never queried across rows. If a feature ever needs to filter inside them they become child tables.
+
+`image_url` is nullable: it is set to NULL when the player deletes the underlying image from their library, so history renders a default silhouette rather than a broken reference.
+
+### `season_accolades`
+
+Captured Hall of Records placements. Belongs to the **season**, not to a stable. `user_id` is nullable and set only when the subject was owned by a Human_Stable; bot-held placements are retained with `is_generated_subject = true` and a null `user_id` so that a player's recorded rank is its true rank within the season.
+
+### `season_standing_snapshots`
+
+Top `ACCOLADE_DEPTH` entities per (`mode`, `tier`, `league_instance_id`), including generated stables, as denormalized text. Bounded so the row count does not scale with the bot population.
+
+### `users` additions
+
+| Column | Type | Notes |
+|---|---|---|
+| `is_generated` | boolean, default `false` | True for auto-generated bots and seeded `test_user_*` stables; false for players and the `admin` account. Defaults false so an unclassified account fails safe and is never deleted by a rollover. |
+| `last_seen_season_number` | int, default 0 | Highest season whose summary modal the user dismissed. Survives an account reset. |

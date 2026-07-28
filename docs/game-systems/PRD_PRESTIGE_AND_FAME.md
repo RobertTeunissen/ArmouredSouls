@@ -262,3 +262,13 @@ These are documented design ideas, not current features:
 - [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) — `User.prestige` and `Robot.fame` fields
 - [PRD_ECONOMY_SYSTEM.md](PRD_ECONOMY_SYSTEM.md) — Credit rewards, income streams
 - [BATTLE_SIMULATION_ARCHITECTURE.md](BATTLE_SIMULATION_ARCHITECTURE.md) — How orchestrators award prestige/fame post-combat
+
+## Season Reset (Spec #45)
+
+**Prestige and fame reset at each Season_Rollover.** This supersedes any statement elsewhere in this document that prestige is a permanent or lifetime total.
+
+Prestige gates facility levels, so carrying it forward would let a veteran open every season at facility depths a newer player could not reach, compounding indefinitely. Resetting makes facility depth a mid-season goal that is re-earned each season.
+
+Fame is robot-level and dies with the robot at the boundary.
+
+Each season's final prestige and total fame are recorded permanently in `stable_season_archives`, and each robot's final fame in `robot_season_archives`.

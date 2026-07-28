@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import SeasonHistoryBlock from '../components/season/SeasonHistoryBlock';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import Navigation from '../components/Navigation';
 import RobotDashboardCard from '../components/RobotDashboardCard';
@@ -429,6 +430,13 @@ function StableViewPage() {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Season history — one collapsed row per completed season (Spec #45). */}
+        {userId && (
+          <div className="mt-6">
+            <SeasonHistoryBlock userId={Number(userId)} />
           </div>
         )}
       </div>

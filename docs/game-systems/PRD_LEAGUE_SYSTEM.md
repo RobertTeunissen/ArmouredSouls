@@ -233,3 +233,11 @@ These are design ideas documented for future consideration:
 - [BATTLE_SIMULATION_ARCHITECTURE.md](BATTLE_SIMULATION_ARCHITECTURE.md) — Cycle scheduler and battle orchestration
 - [PRD_ECONOMY_SYSTEM.md](PRD_ECONOMY_SYSTEM.md) — League-tier credit rewards
 - [LEAGUE_SYSTEM_CHANGES_SUMMARY.md](../implementation_notes/LEAGUE_SYSTEM_CHANGES_SUMMARY.md) — Historical change log from February 2026
+
+## Season Reset (Spec #45)
+
+**All competitive standings reset at each Season_Rollover.** Every `standings` row is deleted, so LP, tier, league instance, cycles-in-tier, streaks, and per-mode win/loss records start fresh. Robot ELO resets with the robots themselves.
+
+`league_history` is purged once the archive is written, so promotion and demotion history does not span seasons.
+
+Before the purge, the top `ACCOLADE_DEPTH` entities per mode, tier, and league instance are captured into `season_standing_snapshots` as denormalized text — including system-generated stables, so each tier's champion stays identifiable after those stables are deleted. Per-robot final standings are recorded in `robot_season_archives`, with `Instance_Rank` computed against the full field.

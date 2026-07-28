@@ -1,9 +1,10 @@
 ---
 title: "Prestige System"
-description: "How Prestige works as your stable's permanent reputation score — earning rates by league tier, facility unlock gates, and income multiplier benefits."
+description: "How Prestige works as your stable's reputation score within a season — earning rates by league tier, facility unlock gates, income multiplier benefits, and why it resets at each season boundary."
 order: 1
 lastUpdated: "2026-03-11"
 relatedArticles:
+  - seasons/what-resets
   - prestige-fame/prestige-ranks
   - prestige-fame/prestige-income
   - prestige-fame/fame-system
@@ -13,9 +14,11 @@ relatedArticles:
 
 ## Overview
 
-**Prestige** is your stable's permanent reputation score. It represents your overall success, history, and standing in the Armoured Souls community. Prestige is earned through victories and milestones, never spent, and never decreases. It serves as the unlock threshold for facility upgrades, tournament access, and cosmetic content.
+**Prestige** is your stable's reputation score for the current season. It represents your success and standing within that season. Prestige is earned through victories and milestones, is never spent, and never decreases during a season.
 
-Think of Prestige as your stable's lifetime achievement record. Every win adds to it, and the higher it climbs, the more doors it opens.
+**Prestige resets at each season boundary.** It gates facility levels, so if it carried forward a veteran would open every season able to reach facility depths a newer player could not, and that advantage would compound season after season. Resetting it makes facility depth something you re-earn each season. Each season's final prestige is recorded permanently in your season archive.
+
+Think of Prestige as your standing this season. Every win adds to it, and the higher it climbs, the more doors it opens — until the season ends and the climb starts again.
 
 ![Prestige rank progression](/images/guide/prestige-fame/prestige-rank-progression.png)
 

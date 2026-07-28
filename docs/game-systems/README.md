@@ -11,6 +11,7 @@ Game design and mechanics — what the game does, rules, rewards, progression.
 | `PRD_TOURNAMENT_SYSTEM.md` | Single elimination tournaments, bracket seeding |
 | `PRD_CYCLE_SYSTEM.md` | Cycle execution (scheduler + admin bulk) |
 | `PRD_PRESTIGE_AND_FAME.md` | Prestige and fame progression systems |
+- [PRD_SEASON_SYSTEM.md](PRD_SEASON_SYSTEM.md) — 100-cycle seasons, reset scope, preparation window, and the season archive model
 | `PRD_ROBOT_ATTRIBUTES.md` | 23 robot attributes system |
 | `PRD_WEAPONS_LOADOUT.md` | 4 loadout types, weapon categories |
 | `PRD_WEAPON_ECONOMY.md` | 47-weapon catalog, pricing formula |
