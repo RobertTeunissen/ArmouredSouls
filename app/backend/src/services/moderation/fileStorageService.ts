@@ -49,17 +49,28 @@ class FileStorageService {
    * Throws if the resolved path escapes the upload directory (path traversal protection).
    */
   getAbsolutePath(relativePath: string): string {
-    // Strip leading /uploads/user-robots/ to get the sub-path, then join with UPLOAD_BASE_DIR
+    // Strip the leading /uploads/user-robots/ prefix, then rebuild the path from
+    // validated components so no user-controlled string reaches the filesystem
+    // intact. Stored images live at `{userId}/{filename}`; the directory form
+    // `{userId}` is also accepted (used for listing/cleanup).
     const subPath = relativePath.replace(/^\/uploads\/user-robots\//, '');
+    const segments = subPath.split('/').filter((s) => s.length > 0);
 
-    // Allowlist sanitizer: stored images are always `{userId}/{filename}` with a
-    // single path segment each. Reject anything else — traversal sequences,
-    // absolute paths, extra separators — before it can reach the filesystem.
-    if (!/^[0-9]+\/[A-Za-z0-9._-]+$/.test(subPath)) {
+    // First segment must be a numeric user id; at most a userId and a filename.
+    if (segments.length === 0 || segments.length > 2 || !/^[0-9]+$/.test(segments[0])) {
       throw new Error(`Invalid image path: ${relativePath}`);
     }
 
-    const resolved = path.resolve(UPLOAD_BASE_DIR, subPath);
+    let resolved = path.join(UPLOAD_BASE_DIR, segments[0]);
+    if (segments.length === 2) {
+      // basename() strips any directory component; reject if the filename was
+      // anything other than a plain name (e.g. a traversal token).
+      const filename = path.basename(segments[1]);
+      if (filename !== segments[1] || filename === '..') {
+        throw new Error(`Invalid image path: ${relativePath}`);
+      }
+      resolved = path.join(resolved, filename);
+    }
 
     // Defence in depth: the resolved path must still sit inside the upload dir.
     if (!resolved.startsWith(UPLOAD_BASE_DIR + path.sep) && resolved !== UPLOAD_BASE_DIR) {
