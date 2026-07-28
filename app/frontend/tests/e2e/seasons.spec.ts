@@ -35,10 +35,19 @@ test.describe('Season Archive page', () => {
   test('should be reachable from the navigation', async ({ page }) => {
     await navigateToProtectedPage(page, '/dashboard');
 
-    // The entry lives in the Social category alongside Hall of Records.
-    const seasonLink = page.getByRole('link', { name: /Season Archive/i })
-      .or(page.getByText(/Season Archive/i));
-    await expect(seasonLink.first()).toBeAttached({ timeout: 10000 });
+    // On desktop the entry lives in the "Social" dropdown, which mounts its
+    // items only while open — so hover the trigger before asserting the link.
+    await page.getByRole('button', { name: /^Social/ }).hover();
+
+    const seasonItem = page.getByRole('button', { name: /Season Archive/i });
+    await expect(seasonItem).toBeVisible({ timeout: 10000 });
+
+    // And it actually navigates to the archive.
+    await seasonItem.click();
+    await expect(page).toHaveURL(/\/seasons$/);
+    await expect(page.getByRole('heading', { name: /Season Archive/i })).toBeVisible({
+      timeout: 10000,
+    });
   });
 });
 

@@ -51,9 +51,17 @@ class FileStorageService {
   getAbsolutePath(relativePath: string): string {
     // Strip leading /uploads/user-robots/ to get the sub-path, then join with UPLOAD_BASE_DIR
     const subPath = relativePath.replace(/^\/uploads\/user-robots\//, '');
+
+    // Allowlist sanitizer: stored images are always `{userId}/{filename}` with a
+    // single path segment each. Reject anything else — traversal sequences,
+    // absolute paths, extra separators — before it can reach the filesystem.
+    if (!/^[0-9]+\/[A-Za-z0-9._-]+$/.test(subPath)) {
+      throw new Error(`Invalid image path: ${relativePath}`);
+    }
+
     const resolved = path.resolve(UPLOAD_BASE_DIR, subPath);
 
-    // Ensure resolved path stays within the upload directory
+    // Defence in depth: the resolved path must still sit inside the upload dir.
     if (!resolved.startsWith(UPLOAD_BASE_DIR + path.sep) && resolved !== UPLOAD_BASE_DIR) {
       throw new Error(`Path traversal attempt detected: ${relativePath}`);
     }

@@ -68,9 +68,13 @@ beforeEach(async () => {
     return `${UPLOAD_URL_PREFIX}/${userId}/${filename}`;
   };
 
-  // Override getAbsolutePath to resolve against temp dir
+  // Override getAbsolutePath to resolve against temp dir, mirroring the
+  // production allowlist so the same inputs are rejected.
   service.getAbsolutePath = (relativePath: string): string => {
     const subPath = relativePath.replace(/^\/uploads\/user-robots\//, '');
+    if (!/^[0-9]+\/[A-Za-z0-9._-]+$/.test(subPath)) {
+      throw new Error(`Invalid image path: ${relativePath}`);
+    }
     return path.join(tempDir, subPath);
   };
 
