@@ -121,11 +121,14 @@ jobs:
         working-directory: ./app/backend
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_test?connection_limit=5
+        # The previous step applied every migration to the test database, so the
+        # configured datasource now reflects the migration history. Diffing it
+        # against schema.prisma flags any model change that lacks a migration.
+        # (Prisma 7 dropped --shadow-database-url / --to-schema-datamodel.)
         run: |
           pnpm exec prisma migrate diff \
-            --from-migrations prisma/migrations \
-            --to-schema-datamodel prisma/schema.prisma \
-            --shadow-database-url "postgresql://postgres:postgres@localhost:5432/armouredsouls_drift?connection_limit=5" \
+            --from-config-datasource \
+            --to-schema prisma/schema.prisma \
             --exit-code
       
       - name: Run integration tests

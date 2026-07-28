@@ -17,6 +17,12 @@ export const SeasonErrorCode = {
   ARCHIVE_VERIFICATION_FAILED: 'ARCHIVE_VERIFICATION_FAILED',
   /** A destructive admin action was requested without its confirmation value. */
   CONFIRMATION_REQUIRED: 'CONFIRMATION_REQUIRED',
+  /**
+   * The confirmed season number does not match the current season. Distinct
+   * from CONFIRMATION_REQUIRED so a stale admin tab or wrong-season request is
+   * distinguishable from a missing confirmation. See adminSeasons rollover.
+   */
+  SEASON_NUMBER_MISMATCH: 'SEASON_NUMBER_MISMATCH',
   /** The action is not permitted while the season is in its Preparation_Phase. */
   PREPARATION_PHASE_ACTIVE: 'PREPARATION_PHASE_ACTIVE',
   /** No Season record exists for the requested season number. */

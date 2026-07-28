@@ -78,7 +78,7 @@ router.post(
 
     if (req.body.seasonNumber !== state.seasonNumber) {
       throw new SeasonError(
-        SeasonErrorCode.CONFIRMATION_REQUIRED,
+        SeasonErrorCode.SEASON_NUMBER_MISMATCH,
         `Season number mismatch: the current season is ${state.seasonNumber}`,
         400,
       );

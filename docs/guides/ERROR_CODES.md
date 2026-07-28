@@ -291,6 +291,7 @@ try {
 | `ROLLOVER_IN_PROGRESS` | 409 | A season rollover is already executing; a second cannot start. |
 | `ARCHIVE_VERIFICATION_FAILED` | 500 | Archive row counts did not match the pre-rollover counts. The purge was aborted and no data was deleted. |
 | `CONFIRMATION_REQUIRED` | 400 | A destructive or irreversible action was requested without its confirmation value. |
+| `SEASON_NUMBER_MISMATCH` | 400 | The confirmed season number does not match the current season (e.g. a stale admin tab or wrong-season rollover request). Distinct from `CONFIRMATION_REQUIRED` so clients can tell a missing confirmation from a wrong-season one. |
 | `PREPARATION_PHASE_ACTIVE` | 400 | The action is not permitted while the season is in its preparation phase. |
 | `SEASON_NOT_FOUND` | 404 | No season or stable archive exists for the requested season number. |
 | `IMAGE_LIMIT_REACHED` | 400 | The stable already holds `RETAINED_IMAGES_PER_STABLE` images. Delete one before uploading another. |

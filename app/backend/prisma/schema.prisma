@@ -417,6 +417,9 @@ model BattleSummary {
 
   battle Battle @relation(fields: [battleId], references: [id], onDelete: Cascade)
 
+  // Redundant with the @unique index on battle_id, but present in the deployed
+  // database (migration 20260624120000) — declared here so schema matches DB.
+  @@index([battleId], map: "idx_battle_summaries_battle_id")
   @@map("battle_summaries")
 }
 
@@ -462,6 +465,7 @@ model AuditLog {
   @@index([battleId])
   @@index([eventType])
   @@index([eventTimestamp])
+  @@index([cycleNumber])
   @@index([cycleNumber, userId])
   @@index([cycleNumber, robotId])
   @@index([cycleNumber, battleId])
@@ -1107,6 +1111,6 @@ model SeasonStandingSnapshot {
 
   season Season @relation(fields: [seasonNumber], references: [seasonNumber], onDelete: Cascade)
 
-  @@index([seasonNumber, mode, tier, leagueInstanceId])
+  @@index([seasonNumber, mode, tier, leagueInstanceId], map: "season_standing_snapshots_season_mode_tier_instance_idx")
   @@map("season_standing_snapshots")
 }
