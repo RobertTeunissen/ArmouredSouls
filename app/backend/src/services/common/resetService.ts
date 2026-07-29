@@ -1,7 +1,8 @@
 import prisma from '../../lib/prisma';
 import { OnboardingError, OnboardingErrorCode } from '../../errors/onboardingErrors';
 import { AuthError, AuthErrorCode } from '../../errors/authErrors';
-import { fileStorageService } from '../moderation';
+// Spec #45: uploaded images survive an account reset (Image_Library), so this
+// service no longer deletes files from storage.
 
 /**
  * Reset Service
@@ -193,16 +194,10 @@ export async function performAccountReset(userId: number, reason?: string): Prom
 
   // Perform reset in transaction
   await prisma.$transaction(async (tx) => {
-    // Eager cleanup: delete custom uploaded images for robots being deleted
-    const robotsWithCustomImages = await tx.robot.findMany({
-      where: { userId, imageUrl: { startsWith: '/uploads/' } },
-      select: { imageUrl: true },
-    });
-    for (const robot of robotsWithCustomImages) {
-      if (robot.imageUrl) {
-        await fileStorageService.deleteImage(robot.imageUrl);
-      }
-    }
+    // Spec #45 R4.7 / R30.19: uploaded images are NOT deleted here. They belong
+    // to the player's Image_Library and survive both an account reset and a
+    // Season_Rollover, so the player can re-apply their artwork to new robots.
+    // Archived seasons also reference these paths.
 
     // Delete standings for all user's robots (Spec #40 — must happen before robot deletion)
     const userRobotIds = await tx.robot.findMany({
@@ -233,14 +228,28 @@ export async function performAccountReset(userId: number, reason?: string): Prom
       where: { userId },
     });
 
-    // Delete all tag teams (legacy table dropped — no-op, kept for safety)
-    // Tag team data now lives in TeamBattle (teamSize=2)
+    // Spec #45 R4.10: clear the same competitive state a Season_Rollover clears.
+    // Without this, a mid-season reset would wipe assets while preserving
+    // prestige and achievements — a competitive advantage the player keeps for
+    // free. Teams are removed because their members are gone.
+    await tx.teamBattle.deleteMany({ where: { stableId: userId } });
+    await tx.userAchievement.deleteMany({ where: { userId } });
 
     // Reset user state
     await tx.user.update({
       where: { id: userId },
       data: {
         currency: 3000000, // Reset to starting credits
+        // Season-scoped competitive state (Spec #45 R4.10)
+        prestige: 0,
+        championshipTitles: 0,
+        championshipTitles1v1: 0,
+        championshipTitles2v2: 0,
+        championshipTitles3v3: 0,
+        pinnedAchievements: [],
+        totalPracticeBattles: 0,
+        // Onboarding restart. `lastSeenSeasonNumber` is deliberately untouched
+        // so a reset does not re-show the season summary modal (R4.11).
         hasCompletedOnboarding: false,
         onboardingSkipped: false,
         onboardingStep: 1,

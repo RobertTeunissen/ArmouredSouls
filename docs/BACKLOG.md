@@ -19,7 +19,7 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 | 5 | Robot Comparison Tool | 42 | 0 🗳️ | 2 | 1 | 1 | 2 | **2.0** |
 | 6 | Dashboard Enhancements | 24 | 0 🗳️ | 2 | 1 | 1 | 2 | **2.0** |
 | 7 | Weapon Special Properties | 11 | 1 🗳️ | 3 | 2 | 2 | 4 | **1.8** |
-| 8 | Season System (100-Cycle Seasons) | 41 | 0 🗳️ | 4 | 1 | 2 | 4 | **1.8** |
+| — | Season System (100-Cycle Seasons) | 41 | — | — | — | — | — | **SHIPPED — Spec #45** |
 | 9 | Daily Login Bonuses & Seasonal Events | 34 | 0 🗳️ | 3 | 1 | 1 | 3 | **1.7** |
 | 10 | Player Personas / Complexity Modes | 16 | 1 🗳️ | 2 | 1 | 2 | 3 | **1.7** |
 | 11 | Arena / Terrain Modifiers | 12 | 1 🗳️ | 3 | 1 | 2 | 4 | **1.5** |
@@ -191,51 +191,13 @@ npm workspace extraction. Only relevant when multiple consumers need shared back
 
 The Robot Detail page serves two distinct intents (Review: Overview/Matches/Analytics vs Prepare: Upgrades/Tuning/Battle Config/Stats). With 8 tabs, the page conflates retrospective analysis with prospective preparation — neither context gets appropriate density or layout. Analysis recommends splitting into two pages: a public Robot Profile (`/robots/:id`) as a scrollable career narrative, and an owner-only Workshop (`/robots/:id/prepare`) with collapsible accordion sections, a robot switcher for multi-robot workflows, and a persistent status strip. The "Stable Preparation Dashboard" concept is absorbed into the Workshop via the robot switcher rather than a separate page.
 
-### #41 — Season System (100-Cycle Competitive Seasons)
-**Source**: Game Loop Audit (#6) — Loop 3 (Competitive Loop) has no resets, meta shifts, or seasonal structure  
-**Priority**: Not scoped — planned for after current high-priority items
+### #41 — Season System (100-Cycle Competitive Seasons) — SHIPPED
 
-100-cycle (100-day) seasons with a full reset at season boundary. Forces strategic experimentation every season and permanently solves the late-game economic stagnation (Loop 2) and weapon lock-in (Loop 1).
+**Delivered by [Spec #45](/.kiro/specs/to-do/45-season-system/) (July 2026).** See [PRD_SEASON_SYSTEM.md](game-systems/PRD_SEASON_SYSTEM.md) for the authoritative description.
 
-**Design direction — full reset:**
+The shipped design differs from the direction recorded here in one significant way: **prestige and achievements reset** rather than persisting. Prestige gates facility levels, so carrying it forward would let a veteran open every season at facility depths a newer player could not reach, compounding indefinitely. Both are recorded per season in the archive instead.
 
-At season end, the player's stable is archived (viewable as history) and they start fresh with starting credits, no robots, no weapons, no facilities, no attributes, no league placement. The only things that persist across seasons:
-
-| Persists | Resets |
-|----------|--------|
-| Achievements (permanent collection) | Credits / balance (back to starting amount) |
-| Lifetime prestige (cumulative) | Robots (archived) |
-| Season history / archive | Weapons (gone with robots) |
-| Account / login | Facilities (rebuild each season) |
-| | Attributes (fresh robots = fresh stats) |
-| | Fame (robot-level, dies with robot) |
-| | LP / league tier (fresh standings) |
-| | ELO (reset to 1200) |
-| | Tuning allocations (fresh robots) |
-| | Win/loss record (archived) |
-
-**Why full reset works for this game:**
-- Forces experimentation — can't run the same build, must make new choices with starting resources
-- Levels the playing field — new players joining mid-season aren't months behind
-- Makes every economic decision interesting again (credits are scarce)
-- Solves weapon experimentation (#5) naturally — players try different weapons each season
-- Solves economic loop stagnation (#6 Loop 2) permanently — no late-game credit hoarding
-- Early decisions (which weapon first? which facility?) become interesting every season
-
-**Why prestige persists:**
-- The one number that says "I've been here a while" — visible tenure marker
-- Gates facilities — veterans can access higher facility levels faster (still need to buy them, but not locked out). Fair reward for experience without insurmountable advantage.
-- Battle winnings multiplier gives veterans a slight income edge — rebuild a bit faster, not dominant
-
-**Risks to address in spec:**
-- Loss aversion — players watching 100 days of work vanish. Mitigation: archive is viewable, achievements celebrate accomplishments, prestige carries forward.
-- Grind fatigue — rebuilding from zero could feel like a treadmill. Mitigation: knowledge carries forward (you're better at building), prestige gives a small edge, each season can have a meta modifier to keep it fresh.
-- Early season repetition — first 10–20 days could feel samey. Mitigation: seasonal meta modifiers (weapon category bonuses, arena conditions) change the optimal opening strategy.
-- Achievement system must carry enough weight as the permanent progression layer.
-
-**Player framing:** "Seasons are 100 days. At the end, your stable is archived — you can view your past seasons' history, robots, and final standings. Then you start fresh with new starting credits, a blank slate, and everything you've learned. Your achievements and prestige carry forward. Your legacy grows, but the competition resets."
-
-**Dependencies**: #40 (achievement persistence — confirmed permanent), possibly #12 (arena modifiers as seasonal meta shifts).
+Also shipped beyond the original sketch: a 2-cycle preparation window with all battle events suspended, four archive tables including a bounded standings snapshot that retains bot-held league positions, deletion (not reset) of auto-generated and seeded stables, a browsable Season Archive page, and retention of uploaded robot images across the reset.
 
 ### #42 — Robot Comparison Tool
 **Source**: Removed from navbar — unimplemented page (`/robots/compare`)  

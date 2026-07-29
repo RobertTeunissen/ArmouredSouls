@@ -842,7 +842,7 @@ export async function upsertWeapon(data: Record<string, unknown>) {
  * Upsert a user by username (unique constraint exists).
  * Note: stableName is only set on CREATE, not on UPDATE, to avoid unique constraint violations.
  */
-export async function upsertUser(data: { username: string; passwordHash: string; role?: string; currency?: number; prestige?: number; hasCompletedOnboarding?: boolean; stableName?: string }) {
+export async function upsertUser(data: { username: string; passwordHash: string; role?: string; currency?: number; prestige?: number; hasCompletedOnboarding?: boolean; stableName?: string; isGenerated?: boolean }) {
   const existing = await prisma.user.findUnique({ where: { username: data.username } });
 
   // If the user already exists, leave them untouched — don't reset their
@@ -1018,6 +1018,32 @@ async function seedCycleMetadata() {
 // seedByeRobot removed — Spec #41: Bye robot is now fabricated in-memory during matchmaking.
 // The persistent DB record and bye_robot_user are no longer needed.
 
+/**
+ * Seeds the Season record — required in ALL environments (Spec #45).
+ *
+ * Mirrors the Season_Service lazy-create so a freshly seeded database has the
+ * same shape as a migrated one: Season 0, competitive, cycle counter backfilled.
+ * Idempotent — an existing season row is left untouched.
+ */
+async function seedSeason() {
+  const existing = await prisma.season.findFirst();
+  if (existing) {
+    console.log(`✅ Season ${existing.seasonNumber} already exists (${existing.phase}) — leaving untouched\n`);
+    return;
+  }
+  const meta = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
+  const season = await prisma.season.create({
+    data: {
+      seasonNumber: 0,
+      phase: 'competitive',
+      competitiveCyclesCompleted: meta?.totalCycles ?? 0,
+      preparationCyclesCompleted: 0,
+      startedAt: new Date(),
+    },
+  });
+  console.log(`✅ Created Season ${season.seasonNumber} (legacy) at cycle ${season.competitiveCyclesCompleted}\n`);
+}
+
 /** Seeds admin account — acceptance & development only */
 async function seedAdminAccount() {
   console.log('Creating admin account...');
@@ -1035,6 +1061,8 @@ async function seedAdminAccount() {
 
   const adminUser = await upsertUser({
     username: 'admin',
+    // Spec #45: the admin account is a real login, not a Generated_Stable.
+    isGenerated: false,
     passwordHash: await bcrypt.hash('admin123', 10),
     role: 'admin',
     currency: 3000000,
@@ -1114,6 +1142,9 @@ async function seedWimpBotUsers(weapons: { id: number; name: string }[]) {
         currency: 100000,
         hasCompletedOnboarding: true,
         stableName,
+        // Spec #45: seeded test stables are Generated_Stables — competitive
+        // filler with no player behind them, deleted at each Season_Rollover.
+        isGenerated: true,
       });
 
       const weaponInv = await ensureWeaponInventory(user.id, weapon.id);
@@ -1250,6 +1281,7 @@ async function main() {
 
   // --- Essential data (ALL environments) ---
   await seedCycleMetadata();
+  await seedSeason();
   const weapons = await seedWeapons();
 
   const practiceSword = weapons.find((w) => w.name === 'Practice Sword');

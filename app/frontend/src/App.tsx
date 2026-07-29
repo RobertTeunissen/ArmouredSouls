@@ -20,6 +20,7 @@ import AppErrorBoundary from './components/AppErrorBoundary';
 
 // Lazy-loaded player pages (infrequently visited)
 const HallOfRecordsPage = React.lazy(() => import('./pages/HallOfRecordsPage'));
+const SeasonArchivePage = React.lazy(() => import('./pages/SeasonArchivePage'));
 const TournamentDetailPage = React.lazy(() => import('./pages/TournamentDetailPage'));
 const BattleDetailPage = React.lazy(() => import('./pages/BattleDetailPage'));
 const BattleHistoryPage = React.lazy(() => import('./pages/BattleHistoryPage'));
@@ -58,6 +59,7 @@ const AdminAuditLogPage = React.lazy(() => import('./pages/admin/AuditLogPage'))
 const AdminLeagueHistoryPage = React.lazy(() => import('./pages/admin/LeagueHistoryPage'));
 const AdminSubscriptionAnalyticsPage = React.lazy(() => import('./pages/admin/SubscriptionAnalyticsPage'));
 const AdminTournamentsPage = React.lazy(() => import('./pages/admin/TournamentsPage'));
+const AdminSeasonControlPage = React.lazy(() => import('./pages/admin/SeasonControlPage'));
 
 // Loading fallback for lazy-loaded player pages
 function PageLoader() {
@@ -114,6 +116,7 @@ function AppRoutes() {
       <Route path="/income" element={<ProtectedRoute><FinancialReportPage /></ProtectedRoute>} />
       <Route path="/finances" element={<Navigate to="/income" replace />} />
       <Route path="/hall-of-records" element={<ProtectedRoute><HallOfRecordsPage /></ProtectedRoute>} />
+      <Route path="/seasons" element={<ProtectedRoute><SeasonArchivePage /></ProtectedRoute>} />
       <Route path="/tournaments" element={<ProtectedRoute><TournamentsPage /></ProtectedRoute>} />
       <Route path="/tournaments/:id" element={<ProtectedRoute><TournamentDetailPage /></ProtectedRoute>} />
       <Route path="/tag-teams" element={<Navigate to="/team-battles" replace />} />
@@ -150,6 +153,7 @@ function AppRoutes() {
           <Route path="league-history" element={<AdminLeagueHistoryPage />} />
           <Route path="subscriptions" element={<AdminSubscriptionAnalyticsPage />} />
           <Route path="tournaments" element={<AdminTournamentsPage />} />
+          <Route path="seasons" element={<AdminSeasonControlPage />} />
           <Route path="*" element={<Navigate to="dashboard" replace />} />
         </Route>
       )}

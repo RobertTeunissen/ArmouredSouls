@@ -43,7 +43,7 @@ import {
   checkRosterCapacity,
   createRobotTransaction,
 } from '../services/robot/robotCreationService';
-import { uploadRateLimiter, handleImagePreview, handleImageConfirm, fileStorageService } from '../services/moderation';
+import { uploadRateLimiter, handleImagePreview, handleImageConfirm } from '../services/moderation';
 import { achievementService, type UnlockedAchievement } from '../services/achievement';
 import { getEntityHistory } from '../services/league/leagueHistoryService';
 
@@ -507,11 +507,11 @@ router.put('/:id/appearance', authenticateToken, validateRequest({ params: robot
 
   await verifyRobotOwnership(prisma, robotId, userId);
 
-  // Eager cleanup: if the robot currently has a custom uploaded image and is switching to a preset, delete the old file
-  const currentRobot = await prisma.robot.findUnique({ where: { id: robotId }, select: { imageUrl: true } });
-  if (currentRobot?.imageUrl?.startsWith('/uploads/') && !imageUrl.startsWith('/uploads/')) {
-    await fileStorageService.deleteImage(currentRobot.imageUrl);
-  }
+  // Spec #45 R30: the previous upload is deliberately NOT deleted when a robot
+  // switches to a preset. Uploaded images belong to the player's Image_Library,
+  // survive the season reset, and may be referenced by archived seasons — so
+  // swapping a robot's appearance must not destroy the artwork. Players delete
+  // images explicitly through the Image_Library, which reports what it affects.
 
   logger.info('Updating robot with imageUrl...');
   

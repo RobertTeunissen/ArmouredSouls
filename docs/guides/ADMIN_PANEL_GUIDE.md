@@ -259,3 +259,38 @@ Individual operations can also be triggered manually via the production job butt
 - [Robot Statistics](../../app/backend/docs/ROBOT_STATISTICS.md)
 - [Achievement System](../game-systems/PRD_ACHIEVEMENT_SYSTEM.md)
 - [Tuning Bay System](../game-systems/TUNING_BAY_SYSTEM.md)
+
+## Season Management (Spec #45)
+
+All routes are admin-only and every action writes an `admin_audit_logs` entry.
+
+### Season state — `GET /api/admin/seasons/state`
+
+Current season number, phase, cycles completed and remaining, whether a rollover is running, whether the phase is an appropriate window for balance changes, the auto-created season changelog draft, and the effective configuration.
+
+### Rollover preview — `GET /api/admin/seasons/rollover-preview`
+
+Read-only. Reports player stables and robots that would be archived, generated stables that would be **deleted** (reported separately), rows that would be purged per table, and image files that would be retained versus deleted. Modifies nothing — run this before any rollover.
+
+### Manual rollover — `POST /api/admin/seasons/rollover`
+
+Requires both `confirm: "CONFIRM_ROLLOVER"` and the current `seasonNumber`. A mismatched season number is rejected, so a stale browser tab cannot reset the wrong season.
+
+This is the **only** way to close Season 0, which has no fixed length. It executes immediately rather than waiting for a settlement boundary.
+
+Returns archived counts, generated stables deleted, total rows purged, and per-stage durations. A concurrent rollover returns `409`.
+
+### Extend the current season — `POST /api/admin/seasons/extend`
+
+Defers the boundary for the current season only, leaving `SEASON_LENGTH_CYCLES` authoritative for later seasons.
+
+### Adjust the preparation window — `POST /api/admin/seasons/preparation-cycles`
+
+Sets remaining preparation cycles, 0–7. Rejected when the season is not in its preparation phase.
+
+### Before a rollover
+
+1. Run the preview and check the counts look right.
+2. Confirm a recent database backup exists — the purge is not reversible.
+3. Announce the reset if the countdown banner has not been running.
+4. After it completes, complete and publish the auto-created balance changelog draft during the preparation window.

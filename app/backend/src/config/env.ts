@@ -131,6 +131,13 @@ const EnvSchema = z
     TEAM_3V3_TOURNAMENT_SCHEDULE: z.string().default('0 18 * * *'),
     GRAND_MELEE_SCHEDULE: z.string().default('0 17 * * *'),
 
+    // ── Season System (Spec #45) ──────────────────────────────────────
+    SEASON_LENGTH_CYCLES: numericString(100, { min: 1 }),
+    PREPARATION_LENGTH_CYCLES: numericString(2, { min: 0 }),
+    COUNTDOWN_CYCLES: numericString(7, { min: 0 }),
+    ACCOLADE_DEPTH: numericString(10, { min: 1 }),
+    RETAINED_IMAGES_PER_STABLE: numericString(20, { min: 1 }),
+
     // ── Monitoring & alerts ──────────────────────────────────────────
     MONITORING_DISCORD_WEBHOOK: z.string().optional(),
     DISCORD_WEBHOOK_URL: z.string().optional(),
@@ -202,6 +209,17 @@ export interface EnvConfig {
   team2v2TournamentSchedule: string;
   team3v3TournamentSchedule: string;
   grandMeleeSchedule: string;
+  // ── Season System (Spec #45) ──────────────────────────────────────
+  /** Competitive cycles per season. */
+  seasonLengthCycles: number;
+  /** Preparation cycles before each Competitive_Phase. */
+  preparationLengthCycles: number;
+  /** Trailing competitive cycles during which the countdown banner appears. */
+  countdownCycles: number;
+  /** Top placements captured per Hall of Records category at rollover. */
+  accoladeDepth: number;
+  /** Maximum retained custom robot images per stable. */
+  retainedImagesPerStable: number;
   /** Discord webhook URL for ops alerts. Falls back to DISCORD_WEBHOOK_URL. */
   monitoringDiscordWebhook: string | undefined;
   /** Generic Discord webhook for player notifications. */
@@ -246,6 +264,11 @@ const toEnvConfig = (parsed: z.infer<typeof EnvSchema>): EnvConfig => ({
   team2v2TournamentSchedule: parsed.TEAM_2V2_TOURNAMENT_SCHEDULE,
   team3v3TournamentSchedule: parsed.TEAM_3V3_TOURNAMENT_SCHEDULE,
   grandMeleeSchedule: parsed.GRAND_MELEE_SCHEDULE,
+  seasonLengthCycles: parsed.SEASON_LENGTH_CYCLES,
+  preparationLengthCycles: parsed.PREPARATION_LENGTH_CYCLES,
+  countdownCycles: parsed.COUNTDOWN_CYCLES,
+  accoladeDepth: parsed.ACCOLADE_DEPTH,
+  retainedImagesPerStable: parsed.RETAINED_IMAGES_PER_STABLE,
   monitoringDiscordWebhook: parsed.MONITORING_DISCORD_WEBHOOK || undefined,
   discordWebhookUrl: parsed.DISCORD_WEBHOOK_URL || undefined,
   dailyReportSchedule: parsed.DAILY_REPORT_SCHEDULE,

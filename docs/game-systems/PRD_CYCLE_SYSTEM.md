@@ -442,3 +442,15 @@ final_cost  = base_repair × damage_pct × multiplier × (1 - repair_bay_discoun
 ```
 
 Repair Bay discount: Level × (5 + Active Robot Count), capped at 90%.
+
+## Season Phase Gating (Spec #45)
+
+The Settlement_Job reads the current Season_Phase before any other step.
+
+**During a Preparation_Phase** it advances the preparation counter and returns before step 1, skipping passive income, operating costs, end-of-cycle balance logging, the `cycle_metadata.total_cycles` increment, the `cyclesInTier` increment, analytics snapshot creation, practice arena stat flushing, user auto-generation, achievement rarity refresh, and the leaderboard refresh. The global cycle counter is therefore unchanged across a preparation window — preparation cycles are not game cycles and produce no financial ledger or snapshot rows.
+
+Gating is an early return rather than per-step conditionals, so the skip list cannot drift out of sync as settlement steps are added.
+
+**At the season boundary** settlement runs all its normal steps, then advances the season cycle counter, then invokes the Season_Rollover. The final cycle of a season therefore settles completely — income paid, battles resolved, snapshot written — before anything is archived or purged. Season 0 is exempt and never triggers an automatic rollover regardless of its cycle count.
+
+See `PRD_SEASON_SYSTEM.md` for the rollover stages and reset scope.

@@ -68,10 +68,23 @@ beforeEach(async () => {
     return `${UPLOAD_URL_PREFIX}/${userId}/${filename}`;
   };
 
-  // Override getAbsolutePath to resolve against temp dir
+  // Override getAbsolutePath to resolve against temp dir, mirroring the
+  // production component validation so the same inputs are rejected.
   service.getAbsolutePath = (relativePath: string): string => {
     const subPath = relativePath.replace(/^\/uploads\/user-robots\//, '');
-    return path.join(tempDir, subPath);
+    const segments = subPath.split('/').filter((s: string) => s.length > 0);
+    if (segments.length === 0 || segments.length > 2 || !/^[0-9]+$/.test(segments[0])) {
+      throw new Error(`Invalid image path: ${relativePath}`);
+    }
+    let resolved = path.join(tempDir, segments[0]);
+    if (segments.length === 2) {
+      const filename = path.basename(segments[1]);
+      if (filename !== segments[1] || filename === '..') {
+        throw new Error(`Invalid image path: ${relativePath}`);
+      }
+      resolved = path.join(resolved, filename);
+    }
+    return resolved;
   };
 
   // Override deleteImage to use our getAbsolutePath

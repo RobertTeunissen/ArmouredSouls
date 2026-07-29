@@ -31,6 +31,7 @@ export const implementedPages = new Set([
   '/leaderboards/prestige',
   '/leaderboards/losses',
   '/hall-of-records',
+  '/seasons',
   '/income',
   '/profile',
   '/cycle-summary',
@@ -78,6 +79,7 @@ export const allPages: Record<string, NavCategory> = {
       { path: '/leaderboards/prestige', label: 'Prestige Leaderboard' },
       { path: '/leaderboards/losses', label: 'Total Losses Leaderboard' },
       { path: '/hall-of-records', label: 'Hall of Records' },
+      { path: '/seasons', label: '📜 Season Archive' },
       { path: '/changelog', label: '📰 What\'s New' },
       { path: '/achievements', label: '🏆 Achievements' },
     ]

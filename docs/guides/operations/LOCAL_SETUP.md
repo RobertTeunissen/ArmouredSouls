@@ -271,3 +271,38 @@ For deploying to the Scaleway VPS (acceptance or production), see:
 - [Maintenance Guide](MAINTENANCE.md) — Logs, backups, monitoring
 - [Troubleshooting](TROUBLESHOOTING.md) — Common production issues and rollback
 - [Architecture Decisions](../../architecture/ARCHITECTURE.md) — Project structure rationale and risk register
+
+## Running a Fast Season Locally (Spec #45)
+
+A full 100-cycle season is not something you want to drive by hand. The season lengths are environment-configurable precisely so a whole season fits into a few cycles locally.
+
+Add to `app/backend/.env`:
+
+```
+SEASON_LENGTH_CYCLES=3
+PREPARATION_LENGTH_CYCLES=1
+COUNTDOWN_CYCLES=2
+ACCOLADE_DEPTH=5
+RETAINED_IMAGES_PER_STABLE=20
+```
+
+`SEASON_LENGTH_CYCLES=1` and `PREPARATION_LENGTH_CYCLES=0` are both valid if you want the shortest possible loop.
+
+### Driving a rollover end to end
+
+1. `pnpm exec prisma migrate deploy && pnpm exec prisma db seed` — the seed creates Season 0 and enough stables, robots, teams, and standings for a non-empty archive.
+2. Log in as `admin` / `admin123`.
+3. `GET /api/admin/seasons/state` — confirm Season 0, phase `competitive`.
+4. `GET /api/admin/seasons/rollover-preview` — check what would be archived and deleted.
+5. `POST /api/admin/seasons/rollover` with `{ "confirm": "CONFIRM_ROLLOVER", "seasonNumber": 0 }`.
+6. Season 1 opens in `preparation`. Verify the battle event jobs now skip: trigger one from the admin panel and confirm it is declined.
+7. Trigger settlement once per preparation cycle until the phase flips to `competitive`.
+8. Trigger settlement `SEASON_LENGTH_CYCLES` more times to reach the next boundary, which rolls over automatically.
+
+### What to verify
+
+- `stable_season_archives` and `robot_season_archives` hold rows for player stables only.
+- `season_standing_snapshots` contains rows with `is_generated_subject = true` — bot positions survived their stables' deletion.
+- `SELECT COUNT(*) FROM users WHERE is_generated = true` returns 0 immediately after the rollover, then grows again from the first competitive settlement.
+- `cycle_metadata.total_cycles` is 0 after the rollover and unchanged across preparation cycles.
+- Uploaded images under `app/backend/uploads/user-robots/` still exist after the rollover.

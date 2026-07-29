@@ -2,8 +2,9 @@
 title: "Achievement System"
 description: "How achievements work — difficulty tiers, credit and prestige rewards, progress tracking, and how milestones are earned through gameplay."
 order: 1
-lastUpdated: "2026-04-23"
+lastUpdated: "2026-07-28"
 relatedArticles:
+  - seasons/what-resets
   - achievements/achievement-catalog
   - achievements/badges-and-showcase
   - achievements/tips-and-strategy
@@ -15,7 +16,9 @@ relatedArticles:
 
 **Achievements** are one-time milestones you earn by playing the game. Every achievement awards **Credits** and **Prestige**, plus a collectible hexagonal **badge** that you can display on your stable page. They give you concrete goals to work toward and celebrate your accomplishments along the way.
 
-Achievements cover everything — winning battles, reaching league tiers, building your stable's economy, hitting prestige and fame thresholds, and pulling off specific combat feats. Some are easy to earn in your first session; others take months of dedicated play.
+Achievements cover everything — winning battles, reaching league tiers, building your stable's economy, hitting prestige and fame thresholds, and pulling off specific combat feats. Some are easy to earn in your first session; others take a full season of dedicated play.
+
+**Achievements are per season.** They reset at each season boundary along with everything else, and each season's unlocked count and list are recorded permanently in your season archive. That makes your collection a scorecard for the season you are playing rather than a lifetime list that stops being interesting once the easy ones are gone — and it means the hard ones are worth chasing again each season.
 
 ```callout-info
 Achievements are purely celebratory. They award Credits and Prestige but never grant combat bonuses, unlock gameplay mechanics, or gate access to features. They're trophies, not power-ups.

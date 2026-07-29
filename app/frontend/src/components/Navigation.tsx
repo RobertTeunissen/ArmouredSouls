@@ -9,6 +9,10 @@ import SwordsIcon from '../assets/icons/swords.svg?react';
 import CartIcon from '../assets/icons/cart.svg?react';
 import MenuIcon from '../assets/icons/menu.svg?react';
 import OnboardingNavBanner from './OnboardingNavBanner';
+import SeasonProgressIndicator from './season/SeasonProgressIndicator';
+import SeasonCountdownBanner from './season/SeasonCountdownBanner';
+import SeasonSummaryModal from './season/SeasonSummaryModal';
+import { useSeasonStore } from '../stores/seasonStore';
 import { NavLink, DropdownMenu, MobileTab, MobileDrawer } from './nav';
 import { allPages } from './nav';
 import type { UserRobot } from './nav';
@@ -19,6 +23,13 @@ function Navigation() {
   const { user, logout } = useAuth();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [userRobots, setUserRobots] = useState<UserRobot[]>([]);
+  const fetchSeason = useSeasonStore((s) => s.fetchSeason);
+
+  // Season state drives the progress indicator, countdown banner, and summary
+  // modal. Fetched once here rather than per component.
+  useEffect(() => {
+    void fetchSeason();
+  }, [fetchSeason]);
 
   useEffect(() => {
     const fetchRobots = async () => {
@@ -91,6 +102,7 @@ function Navigation() {
           </div>
 
           <div className="flex items-center gap-4">
+            <SeasonProgressIndicator />
             <div className="flex items-center gap-2 bg-surface border border-white/10 px-3 py-2 rounded-md">
               <span className="text-primary">₡</span>
               <span className="text-primary font-medium">{user.currency.toLocaleString()}</span>
@@ -113,9 +125,12 @@ function Navigation() {
               <LogoB className="w-8 h-8 text-primary" />
               <h1 className="text-lg font-bold text-primary tracking-tight font-header">ARMOURED SOULS</h1>
             </button>
+            <div className="flex items-center gap-2">
+            <SeasonProgressIndicator compact />
             <div className="flex items-center gap-2 bg-surface border border-white/10 px-2 py-1 rounded-md">
               <span className="text-primary text-sm">₡</span>
               <span className="text-primary text-sm font-medium">{user.currency.toLocaleString()}</span>
+            </div>
             </div>
           </div>
         </header>
@@ -141,8 +156,10 @@ function Navigation() {
       </div>
 
       <div className="h-14 lg:h-16" />
+      <SeasonCountdownBanner userId={user.id} />
       <OnboardingNavBanner />
       <div className="h-16 lg:hidden" />
+      <SeasonSummaryModal />
     </>
   );
 }

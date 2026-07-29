@@ -1,5 +1,9 @@
 # Balance Changes
 
+**Balance changes are applied during a season preparation window** (Spec #45). The reset at a season boundary is the effective-date mechanism: at the start of a preparation window every player holds zero robots, weapons, facilities, and attribute levels, so a changed cost curve or damage constant has nothing to act on retroactively. No code path enforces this — it is convention, because the acceptance environment must stay deployable at any point in a season.
+
+Every document below should name the season number in which its changes took effect.
+
 Game balance adjustments documenting what changed, why, and what the old values were. These serve as design history for future balance decisions.
 
 The authoritative weapon catalog and pricing formula lives in [PRD_WEAPON_ECONOMY.md](../game-systems/PRD_WEAPON_ECONOMY.md).

@@ -71,7 +71,6 @@ model Season {
   phase                     String    @db.VarChar(20) // "preparation" | "competitive" | "completed"
   competitiveCyclesCompleted Int      @default(0) @map("competitive_cycles_completed")
   preparationCyclesCompleted Int      @default(0) @map("preparation_cycles_completed")
-  isLegacy                  Boolean   @default(false) @map("is_legacy")
   generatedStableCount      Int       @default(0) @map("generated_stable_count")
   startedAt                 DateTime  @map("started_at")
   endedAt                   DateTime? @map("ended_at")
@@ -87,7 +86,7 @@ model Season {
 }
 ```
 
-`isLegacy` is true only for Season_Zero (R24.7). `generatedStableCount` is stamped before Generated_Stables are deleted so R29.13 can still report it (R29.15). `phase` is a `VarChar` rather than an enum so that adding a phase later does not require a migration on a 2GB VPS; the Zod schema and a check constraint enforce the three values (R1.2).
+There is no legacy flag: `seasonNumber === 0` is the legacy marker, so any derived boolean would be duplicate state to keep in sync (R24.7). `generatedStableCount` is stamped before Generated_Stables are deleted so R29.13 can still report it (R29.15). `phase` is a `VarChar` rather than an enum so that adding a phase later does not require a migration on a 2GB VPS; the Zod schema and a check constraint enforce the three values (R1.2).
 
 There is no `scheduledEndCycles` column — Season_Zero closes by manual action only (R24.5).
 
@@ -120,7 +119,6 @@ model StableSeasonArchive {
   robotCount        Int     @map("robot_count")
   teamCount         Int     @map("team_count")
   competitiveCycles Int     @map("competitive_cycles")
-  isLegacy          Boolean @default(false) @map("is_legacy")
 
   createdAt DateTime @default(now()) @map("created_at")
 
@@ -135,7 +133,7 @@ model StableSeasonArchive {
 
 `userId` is the single permitted foreign key (R6.9) and is intentionally **not** a Prisma relation to `User` — a relation would add an `onDelete` obligation, and the archive must survive independently. `facilities` and `achievementIds` are `Json` because they are display-only lists; per coding standards they get explicit interfaces in `src/types/`.
 
-`competitiveCycles` satisfies R17.8 (history shows how long each season ran). `isLegacy` is denormalized from the season so the Stable_Page can label a row without a join (R24.9).
+`competitiveCycles` satisfies R17.8 (history shows how long each season ran). No legacy flag is stored — the row already carries `seasonNumber`, so the Stable_Page tests `seasonNumber === 0` to apply the legacy label (R24.9) with no join and no duplicate state.
 
 ### `robot_season_archives`
 
@@ -266,6 +264,33 @@ model SeasonStandingSnapshot {
 
 Bounded to Accolade_Depth entries per (mode, tier, instance) triple (R8.14). With 9 modes, 6 tiers, and a handful of instances at depth 10, worst case is low hundreds of rows per season — independent of the Generated_Stable population.
 
+### Migration Strategy
+
+The migration history holds 34 migrations, 42 `ADD COLUMN` against 64 `DROP COLUMN`, and six migrations whose only purpose is removal. That churn came from Specs #40, #41, and #43, which replaced the legacy league and scheduling schema using expand-and-contract: add new structures, migrate reads, drop the old columns in a later spec. Correct for a live database, but it shows up as add-then-remove.
+
+**This spec needs no expand-and-contract.** It replaces nothing and reads nothing differently. Every change is additive:
+
+| Change | Type | Risk to existing data |
+|---|---|---|
+| 5 new tables | `CREATE TABLE` | none |
+| `users.is_generated` | `ADD COLUMN` with `DEFAULT false` | none |
+| `users.last_seen_season_number` | `ADD COLUMN` with `DEFAULT 0` | none |
+| `is_generated` backfill | single `UPDATE` | see below |
+
+Consequences, which are the point of stating this:
+
+- **One migration, no follow-up drop migration.** Nothing in this spec becomes legacy, so no Spec-#43-style cleanup is queued behind it.
+- **No column is altered or removed**, so a rollback is dropping the new tables and columns. Nothing existing has to be restored.
+- **No nullable-then-required two-step.** Both new columns have defaults, so they are populated for every existing row at the moment they are created.
+
+**Season_Zero is created in application code, not in the migration.** Requirement 1.6 already has the Season_Service lazily create it on first read, and Requirement 24.1 asks the migration to do the same thing. Both would use one code path, so the migration does not need to. This keeps the migration pure DDL plus one backfill: no reading `cycle_metadata` from SQL, no one-shot row insert that cannot be rerun, and R24.15's idempotence requirement is satisfied by construction rather than by a guard clause.
+
+**The `is_generated` backfill fails safe.** The column defaults to `false`, and a single `UPDATE ... WHERE username LIKE 'auto_%' OR username LIKE 'test_user_%'` sets the known system accounts to `true`. If an account somehow escapes classification it stays a Human_Stable, which means a stray bot survives a rollover as a dead account. The opposite default would risk deleting a real player. This is the only data-manipulating statement in the migration.
+
+**Json columns are a deliberate bet, with a stated trigger for revisiting.** `standings`, `teams`, `facilities`, and `achievementIds` are `Json` because they are read as a block when a player expands one season row and are never filtered or aggregated across rows. If a future feature needs to query inside them — for example "every robot that reached Diamond in any season" — they become child tables, and that is a new migration plus a backfill. That is the one add-then-remove exposure this spec carries. The trigger to convert is a requirement to filter or aggregate across archived standings; until then Json keeps the row count bounded, which Expected Contribution 4 depends on.
+
+**Drift detection is missing and should be added.** CI has no `prisma migrate diff` or `migrate status` step, so a `schema.prisma` edit that never became a migration would pass every check and fail only on deploy. A `migrate diff --exit-code` comparison between the migration history and `schema.prisma` in the existing CI job catches that class of breakage for every future spec, not just this one. Added as a task in this spec because this spec is the one adding five tables.
+
 ### Column additions
 
 ```prisma
@@ -289,7 +314,6 @@ export interface SeasonState {
   remainingCompetitiveCycles: number;
   preparationDay: number;           // 0 during competitive
   remainingPreparationCycles: number;
-  isLegacy: boolean;
 }
 
 getCurrentSeason(): Promise<SeasonState>
@@ -300,7 +324,7 @@ advancePreparationCycle(): Promise<{ transitionedToCompetitive: boolean }>
 
 `getCurrentSeason()` is called on every job invocation and by every authenticated page load, so it is memoised in-process for 60 seconds with explicit invalidation on any write. The `seasons` table has exactly one non-completed row, so the read is a single indexed lookup — the cache is a courtesy, not a necessity.
 
-Lazy creation (R1.6) delegates to the same code path as the migration (R24.1) to guarantee identical Season_Zero shape: `phase = 'competitive'`, `competitiveCyclesCompleted = cycle_metadata.total_cycles`, `isLegacy = true`.
+Lazy creation (R1.6) delegates to the same code path as the migration (R24.1) to guarantee identical Season_Zero shape: `seasonNumber = 0`, `phase = 'competitive'`, `competitiveCyclesCompleted = cycle_metadata.total_cycles`.
 
 #### Configuration
 
@@ -709,7 +733,7 @@ Requirement 31's 18 criteria map to these files:
 
 **Updates**
 - `docs/architecture/PRD_SERVICE_DIRECTORY.md` — cron schedule notes preparation suspension (R31.1).
-- `docs/architecture/DATABASE_SCHEMA.md` — the five new tables, Season_Zero, the legacy flag, `isGenerated`, Season_Standing_Snapshot (R31.4, R31.8, R31.17).
+- `docs/architecture/DATABASE_SCHEMA.md` — the five new tables, Season_Zero and its `seasonNumber` 0 convention, `isGenerated`, Season_Standing_Snapshot (R31.4, R31.8, R31.17).
 - `docs/game-systems/README.md` — list the new PRD (R31.14).
 - `docs/guides/ADMIN_PANEL_GUIDE.md` — Admin_Season_Portal, preview, manual rollover, phase controls, Season_Zero closure (R31.16).
 - `docs/guides/operations/LOCAL_SETUP.md` — season env vars and the fast-season rollover sequence (R27.5).
@@ -744,7 +768,7 @@ Requirement 31's 18 criteria map to these files:
 | 21 Configuration | Configuration table |
 | 22 Change communication | Stage 4.3; modal and Dashboard links |
 | 23 Balance across boundary | Data model denormalization; no code path |
-| 24 Season_Zero | `isLegacy`; `seasonNumber >= 1` exemption; manual close |
+| 24 Season_Zero | `seasonNumber === 0` as the legacy marker; `seasonNumber >= 1` rollover exemption; manual close |
 | 25 Archive browsing | `SeasonArchivePage`; `/api/seasons` routes |
 | 26 Guide content | Documentation Impact — new and corrections |
 | 27 Local dev + test | Testing Strategy — local fast season |

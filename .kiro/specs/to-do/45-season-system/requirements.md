@@ -79,7 +79,9 @@ This spec addresses backlog item #41 (Season System) and the Loop 2 and Loop 3 f
 
 6. **Operable rollover.** Before — no mechanism exists to end, extend, or rehearse a global reset. After — an admin can preview a rollover, trigger it manually, and extend the current phase, with every action recorded in the admin audit log and announced to Discord. Verifiable by: preview returns counts without mutating data; a manual rollover produces an `admin_audit_logs` row.
 
-7. **Season history readable on a phone.** Before — no season surfaces exist. After — all seven new surfaces (Season_Archive_Page, Stable_Page history block, Season_Summary_Modal, Season_Countdown_Banner, Season_Progress_Indicator, Dashboard preparation state, Admin_Season_Portal) render from 320 to 1920 pixels with no horizontal overflow and 44-pixel touch targets. Verifiable by: frontend tests assert each surface at 320, 375, and 1024 pixels with no element exceeding the viewport width.
+7. **Schema drift detectable in CI.** Before — CI runs `migrate deploy` and the seed but never compares the migration history against `schema.prisma`, so a schema edit that never became a migration passes every check and fails only at deploy time. After — a `migrate diff --exit-code` step fails the build on drift, for this spec and every spec after it. Verifiable by: the drift check exists in `ci.yml` and exits 0 against the current history.
+
+8. **Season history readable on a phone.** Before — no season surfaces exist. After — all seven new surfaces (Season_Archive_Page, Stable_Page history block, Season_Summary_Modal, Season_Countdown_Banner, Season_Progress_Indicator, Dashboard preparation state, Admin_Season_Portal) render from 320 to 1920 pixels with no horizontal overflow and 44-pixel touch targets. Verifiable by: frontend tests assert each surface at 320, 375, and 1024 pixels with no element exceeding the viewport width.
 
 ### Verification Criteria
 
@@ -106,6 +108,8 @@ After all tasks are complete, run these checks to confirm the spec delivered:
 19. `grep -n "isGenerated" app/backend/prisma/schema.prisma app/backend/src/utils/userGeneration.ts` — generated stables carry an explicit flag rather than relying on username prefixes
 20. `psql ... -c "SELECT COUNT(*) FROM users WHERE is_generated = true;"` — returns 0 immediately after a rollover, and grows again from the first competitive settlement
 21. `psql ... -c "SELECT COUNT(*) FROM season_standing_snapshots WHERE is_generated_subject = true;"` — bot league positions survive the deletion of the stables that held them
+22. `cd app/backend && pnpm exec prisma migrate diff --from-migrations prisma/migrations --to-schema-datamodel prisma/schema.prisma --shadow-database-url "$SHADOW_DB" --exit-code` — exits 0, proving the migration history and `schema.prisma` agree with no drift
+23. `grep -n "migrate diff" .github/workflows/ci.yml` — CI carries the drift check, so no future spec can introduce schema drift silently
 
 ## Requirements
 
@@ -443,16 +447,17 @@ After all tasks are complete, run these checks to confirm the spec delivered:
 
 #### Acceptance Criteria
 
-1. WHEN the migration runs against a database that holds no Season record, THE migration SHALL create one Season record with `seasonNumber` 0, `phase` set to `competitive`, `competitiveCyclesCompleted` set to the current Global_Cycle_Counter value, `preparationCyclesCompleted` set to 0, and `endedAt` set to null
+1. WHEN the Season_Service is first read against a database that holds no Season record, THE Season_Service SHALL create one Season record with `seasonNumber` 0, `phase` set to `competitive`, `competitiveCyclesCompleted` set to the current Global_Cycle_Counter value, `preparationCyclesCompleted` set to 0, and `endedAt` set to null
 2. THE Season_Service SHALL treat Season_Zero as having no fixed length and SHALL NOT invoke Season_Rollover for Season_Zero on the basis of the Requirement 2.3 comparison, regardless of how far `competitiveCyclesCompleted` exceeds Season_Length_Cycles
 3. THE Season_Service SHALL leave Season_Zero running indefinitely, SHALL continue to execute every Settlement_Job step and every Battle_Event_Job normally, and SHALL invoke no Season_Rollover until an administrator triggers one
 4. WHILE the current Season_Number is 0, THE Season_Progress_Indicator SHALL state `Season 0 · Cycle {Season_Cycle}` and SHALL omit Season_Length_Cycles and the remaining cycle count
 5. THE only way to close Season_Zero SHALL be the manual Season_Rollover of Requirement 18.3, which executes immediately rather than waiting for a settlement boundary
 6. WHEN Season_Rollover completes for Season_Zero, THE Season_Rollover_Service SHALL create the next Season with `seasonNumber` 1 and `phase` set to `preparation`
-7. THE Stable_Season_Archive of Season_Zero SHALL carry a flag marking it as a legacy archive
+7. THE Season_Number 0 SHALL itself identify a legacy season, and THE Season_Service SHALL store no separate legacy flag on the Season record or on any archive row
 8. WHERE a Stable_Season_Archive or Robot_Season_Archive figure of Season_Zero cannot be scoped to a single season because no season baseline was recorded — prestige earned, aggregate battle record, highest ELO, achievement counts, championship titles — THE Season_Archive_Service SHALL store the career-to-date value
-9. WHERE a season row is flagged as a legacy archive, THE Stable_Page SHALL label it as career totals accumulated before the Season System rather than as a completed fixed-length season
-10. THE migration SHALL be idempotent: WHEN the migration runs against a database that already holds a Season record, THE migration SHALL create no additional Season record
+9. WHERE an archived season's Season_Number is 0, THE Stable_Page and THE Season_Archive_Page SHALL label it as career totals accumulated before the Season System rather than as a completed fixed-length season
+10. THE database migration of this spec SHALL contain only schema changes and the `isGenerated` backfill, and SHALL create no Season record, so that it holds no one-shot data insertion that cannot be rerun
+11. THE Season_Zero creation of Requirement 24.1 SHALL be idempotent: WHERE a Season record already exists, THE Season_Service SHALL create no additional Season record
 
 ### Requirement 25: Season Archive Browsing
 
@@ -461,7 +466,7 @@ After all tasks are complete, run these checks to confirm the spec delivered:
 #### Acceptance Criteria
 
 1. THE Season_Archive_Page SHALL be reachable at the route `/seasons` and SHALL list every completed season ordered by Season_Number descending
-2. THE Season_Archive_Page SHALL display for each completed season the Season_Number, the number of competitive cycles it ran, its start and end dates, the number of participating stables, and whether it is flagged as a legacy archive
+2. THE Season_Archive_Page SHALL display for each completed season the Season_Number, the number of competitive cycles it ran, its start and end dates, the number of participating stables, and, where the Season_Number is 0, that it is the legacy season
 3. WHEN a player selects a completed season, THE Season_Archive_Page SHALL display that season's final standings per mode, its champion stables, and its Season_Accolade entries
 4. THE Season_Archive_Page SHALL render the per-season detail for each competitive mode present in that season's archive, including 1v1 League, 2v2 League, 3v3 League, Tag Team, KotH, Grand Melee, and each tournament type
 5. THE Season_Archive_Page SHALL render every stable name as a link to that stable's Stable_Page season history block
@@ -526,7 +531,7 @@ After all tasks are complete, run these checks to confirm the spec delivered:
 #### Acceptance Criteria
 
 1. THE `users` table SHALL carry an explicit boolean column marking whether a row is a Generated_Stable, set to true by `generateBattleReadyUsers` and by the seed script's test stable creation, and false by the Onboarding_Service and by the seed script's `admin` account creation, so that classification does not depend on username prefix matching
-2. THE migration SHALL backfill the column of Requirement 29.1 to true for every existing user whose username begins with `auto_wimpbot`, `auto_averagebot`, `auto_expertbot`, or `test_user_`, and to false for every other user including `admin`
+2. THE migration SHALL backfill the column of Requirement 29.1 to true for every existing user whose username begins with `auto_wimpbot`, `auto_averagebot`, `auto_expertbot`, or `test_user_`, and SHALL default it to false for every other user including `admin`, so that an unclassified account fails safe as a Human_Stable and is never deleted by a Season_Rollover
 3. WHEN Season_Rollover executes the reset step, THE Season_Rollover_Service SHALL delete every Generated_Stable `users` row along with all of its owned rows, rather than resetting it to Starting_Credits
 4. WHEN Season_Rollover deletes a Generated_Stable, THE Season_Rollover_Service SHALL write no Stable_Season_Archive and no Robot_Season_Archive for that stable
 5. THE archive verification of Requirement 5.2 SHALL count only Human_Stable rows and the robots they own, so that deleting Generated_Stables does not fail verification
@@ -585,7 +590,7 @@ After all tasks are complete, run these checks to confirm the spec delivered:
 3. THE `.kiro/steering/coding-standards.md` SHALL state that season-scoped queries must not assume data older than the current season exists, and that cross-season history must be read from the Season_Archive tables
 4. THE `docs/architecture/DATABASE_SCHEMA.md` SHALL document the `seasons` table and the three Season_Archive tables
 5. THE `docs/BACKLOG.md` entry for item #41 SHALL be replaced by a reference to this spec
-6. THE `docs/architecture/DATABASE_SCHEMA.md` SHALL document Season_Zero and the legacy archive flag
+6. THE `docs/architecture/DATABASE_SCHEMA.md` SHALL document Season_Zero and the convention that Season_Number 0 marks the legacy season
 7. A new `docs/game-systems/PRD_SEASON_SYSTEM.md` SHALL be created as the authoritative description of the season structure, the reset and preservation scope, the Preparation_Phase, the Season_Archive model, and Season_Zero, so that the system is documented outside this spec directory
 8. THE `docs/game-systems/PRD_CYCLE_SYSTEM.md` SHALL document that the Settlement_Job reads the Season_Phase first, skips every economic step during preparation, leaves the Global_Cycle_Counter unchanged during preparation, and invokes Season_Rollover at the season boundary
 9. THE `docs/game-systems/PRD_PRESTIGE_AND_FAME.md` SHALL state that prestige and fame reset at each Season_Rollover, superseding any statement that prestige is a permanent lifetime total

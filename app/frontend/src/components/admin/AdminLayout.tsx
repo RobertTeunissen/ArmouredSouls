@@ -31,6 +31,7 @@ const NAV_GROUPS: NavGroup[] = [
     section: 'Game Operations',
     items: [
       { label: 'Cycle Controls', path: '/admin/cycles', icon: '⚙️' },
+      { label: 'Season Control', path: '/admin/seasons', icon: '🗓️' },
       { label: 'Practice Arena', path: '/admin/practice-arena', icon: '🏟️' },
     ],
   },
@@ -83,6 +84,7 @@ const NAV_GROUPS: NavGroup[] = [
 const PAGE_TITLES: Record<string, string> = {
   '/admin/dashboard': 'Dashboard',
   '/admin/cycles': 'Cycle Controls',
+  '/admin/seasons': 'Season Control',
   '/admin/practice-arena': 'Practice Arena',
   '/admin/battles': 'Battle Logs',
   '/admin/robot-stats': 'Robot Stats',

@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import prisma from '../src/lib/prisma';
 import bcrypt from 'bcrypt';
 
@@ -8,7 +9,7 @@ import bcrypt from 'bcrypt';
 export async function createTestUser(username?: string) {
   return await prisma.user.create({
     data: {
-      username: username || `test_user_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+      username: username || `test_user_${Date.now()}_${randomUUID().slice(0, 8)}`,
       passwordHash: await bcrypt.hash('password123', 10),
       prestige: 1000,
       currency: 10000,
@@ -22,7 +23,7 @@ export async function createTestUser(username?: string) {
 export async function createTestRobot(userId: number, name?: string) {
   return await prisma.robot.create({
     data: {
-      name: name || `TestRobot_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+      name: name || `TestRobot_${Date.now()}_${randomUUID().slice(0, 8)}`,
       userId,
       currentHP: 100,
       maxHP: 100,

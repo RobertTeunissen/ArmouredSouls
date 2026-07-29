@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { Page } from '@playwright/test';
 
 /**
@@ -28,7 +29,7 @@ export interface RegisterResult {
  */
 export function generateUniqueId(): string {
   const ts = Date.now().toString(36).slice(-6);
-  const rand = Math.random().toString(36).slice(2, 4);
+  const rand = randomUUID().replace(/-/g, '').slice(0, 2);
   return `t${ts}${rand}`;
 }
 

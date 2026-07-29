@@ -270,6 +270,29 @@ async function executeTagTeamCycle(): Promise<JobContext> {
 export async function executeSettlement(): Promise<JobContext> {
   const settlementStart = Date.now();
 
+  // Spec #45 R2.1: read the season phase before any other step.
+  //
+  // During a Preparation_Phase the settlement performs phase advancement only
+  // and returns before step 1. Gating by early return rather than by
+  // per-step conditionals is deliberate: R2.4 lists every side-effecting step,
+  // so an early return cannot drift out of sync as steps are added.
+  const { getCurrentSeason, advancePreparationCycle, advanceCompetitiveCycle } =
+    await import('../season/seasonService');
+  const seasonAtStart = await getCurrentSeason();
+
+  if (seasonAtStart.phase === 'preparation') {
+    const advanced = await advancePreparationCycle();
+    logger.info(
+      `Daily Settlement: preparation day ${advanced.preparationCyclesCompleted} complete — ` +
+      `${advanced.remainingPreparationCycles} preparation cycle(s) remaining` +
+      (advanced.transitionedToCompetitive
+        ? ` — Season ${advanced.seasonNumber} now competitive`
+        : ''),
+    );
+    // Global_Cycle_Counter deliberately untouched (R2.6).
+    return { jobName: 'settlement' };
+  }
+
   // Get or create cycle metadata (singleton pattern)
   let cycleMetadata = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
   if (!cycleMetadata) {
@@ -550,6 +573,30 @@ export async function executeSettlement(): Promise<JobContext> {
     logger.error(`Daily Settlement: Failed to refresh leaderboard cache — ${err instanceof Error ? err.message : String(err)}`);
   }
 
+  // Spec #45 R2.2/R2.3: advance the season counter, then roll over if the
+  // season has reached its length. The rollover runs AFTER every settlement
+  // step above, so the final cycle of a season settles normally before
+  // anything is archived or purged. Season_Zero never reports a boundary.
+  const advanced = await advanceCompetitiveCycle();
+  logger.info(
+    `Daily Settlement: Season ${advanced.seasonNumber} cycle ${advanced.competitiveCyclesCompleted} complete`,
+  );
+
+  if (advanced.boundaryReached) {
+    logger.info(
+      `Daily Settlement: Season ${advanced.seasonNumber} reached its length — starting rollover`,
+    );
+    try {
+      const { executeSeasonRollover } = await import('../season/seasonRolloverService');
+      await executeSeasonRollover({ trigger: 'settlement' });
+    } catch (rolloverError) {
+      logger.error(
+        `Daily Settlement: Season rollover failed — ${rolloverError instanceof Error ? rolloverError.stack || rolloverError.message : String(rolloverError)}`,
+      );
+      throw rolloverError;
+    }
+  }
+
   return { jobName: 'settlement' };
 }
 
@@ -779,7 +826,62 @@ export function createReservedSlotHandler(eventName: string): () => Promise<JobC
 
 // --- Job runner with concurrency lock, logging, and error handling ---
 
+/**
+ * Battle_Event_Jobs — the jobs that schedule or execute battles.
+ *
+ * Spec #45: every one of these returns early during a Preparation_Phase. The
+ * gate lives here rather than in the nine handlers so that adding a tenth
+ * battle event cannot accidentally skip it. Infrastructure jobs (settlement,
+ * health report, retention, backup) are deliberately absent from this set.
+ */
+const BATTLE_EVENT_JOBS: ReadonlySet<JobState['name']> = new Set<JobState['name']>([
+  'league',
+  'tournament',
+  'tagTeam',
+  'koth',
+  'grandMelee',
+  'team2v2League',
+  'team3v3League',
+  'team2v2Tournament',
+  'team3v3Tournament',
+]);
+
 export async function runJob(jobName: JobState['name'], handler: () => Promise<JobContext | void>): Promise<void> {
+  // Spec #45 R3.1–R3.3: suspend every battle event during the preparation
+  // window so no player forfeits a battle while rebuilding a stable.
+  if (BATTLE_EVENT_JOBS.has(jobName)) {
+    // Fail open: if the season state cannot be read, run the job. Suspending
+    // every battle event because one read failed would silently stop the game,
+    // which is worse than running a cycle during a preparation window.
+    let season: { phase: string; seasonNumber: number; preparationDay: number;
+      remainingPreparationCycles: number } | null = null;
+    try {
+      const { getCurrentSeason } = await import('../season/seasonService');
+      season = await getCurrentSeason();
+    } catch (error) {
+      logger.error(
+        `Scheduler: could not read season state for "${jobName}" — running anyway. ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+
+    if (season && season.phase === 'preparation') {
+      const state = jobStates.get(jobName);
+      const now = new Date();
+      if (state) {
+        state.lastRunAt = now;
+        state.lastRunDurationMs = 0;
+        state.lastRunStatus = 'success';
+        state.lastError = null;
+      }
+      logger.info(
+        `Scheduler: job "${jobName}" skipped — season_preparation ` +
+        `(Season ${season.seasonNumber}, preparation day ${season.preparationDay}, ` +
+        `${season.remainingPreparationCycles} preparation cycle(s) remaining)`,
+      );
+      return;
+    }
+  }
+
   await acquireLock(jobName);
 
   const state = jobStates.get(jobName);

@@ -32,6 +32,7 @@ const NAVIGATION_SECTIONS = [
 const NAVIGATION_ITEMS = [
   { label: 'Dashboard', path: '/admin/dashboard' },
   { label: 'Cycle Controls', path: '/admin/cycles' },
+  { label: 'Season Control', path: '/admin/seasons' },
   { label: 'Practice Arena', path: '/admin/practice-arena' },
   { label: 'Battle Logs', path: '/admin/battles' },
   { label: 'Robot Stats', path: '/admin/robot-stats' },
@@ -106,8 +107,8 @@ describe('AdminLayout', () => {
       const sidebar = screen.getByRole('complementary', { name: /admin sidebar navigation/i });
       const links = within(sidebar).getAllByRole('link');
 
-      // 18 nav items in the sidebar (Overview 1 + Game Ops 2 + Battle Data 5 + Player Mgmt 2
-      // + Security 2 + Content 4 + Maintenance 2 = 18)
+      // Nav items in the sidebar (Overview 1 + Game Ops 3 + Battle Data 6 + Player Mgmt 2
+      // + Security 2 + Content 5 + Maintenance 2)
       expect(links.length).toBe(NAVIGATION_ITEMS.length);
     });
   });
