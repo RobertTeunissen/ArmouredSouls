@@ -1,4 +1,4 @@
-import { createLedgerEntry, createLedgerEntryForType, TRANSACTION_TYPES, INCOME_TYPES, EXPENSE_TYPES } from '../../../../tests/factories/financialLedgerFactory';
+import { createLedgerEntry, createLedgerEntryForType, TRANSACTION_TYPES } from '../../../../tests/factories/financialLedgerFactory';
 
 jest.mock('../../../lib/prisma', () => ({
   __esModule: true,
@@ -44,7 +44,7 @@ describe('recordTransaction', () => {
       cycleNumber: entry.cycleNumber,
       userId: entry.userId,
       robotId: entry.robotId ?? undefined,
-      transactionType: entry.transactionType as any,
+      transactionType: entry.transactionType as (typeof TRANSACTION_TYPES)[number],
       amount: entry.amount,
       balanceAfter: entry.balanceAfter,
       description: entry.description,

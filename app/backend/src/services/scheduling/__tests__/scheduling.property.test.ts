@@ -61,7 +61,7 @@ describe('SchedulingService – Property-Based Tests', () => {
     mockPrisma.$transaction.mockImplementation(async (fn: (tx: typeof mockPrisma) => Promise<unknown>) => fn(mockPrisma));
 
     // scheduledMatch.create returns a unique id each call
-    mockPrisma.scheduledMatch.create.mockImplementation(async (args: any) => ({
+    mockPrisma.scheduledMatch.create.mockImplementation(async (args: { data: Record<string, unknown> }) => ({
       id: uniqueId++,
       matchType: args.data.matchType,
       status: 'scheduled',
@@ -201,7 +201,7 @@ describe('SchedulingService – Property-Based Tests', () => {
             expect(data).toHaveLength(participantCount);
 
             // Slots form sequential sequence [1, 2, ..., P]
-            const slots = data.map((row: any) => row.slot).sort((a: number, b: number) => a - b);
+            const slots = data.map((row: { slot: number }) => row.slot).sort((a: number, b: number) => a - b);
             const expectedSlots = Array.from({ length: participantCount }, (_, i) => i + 1);
             expect(slots).toEqual(expectedSlots);
 

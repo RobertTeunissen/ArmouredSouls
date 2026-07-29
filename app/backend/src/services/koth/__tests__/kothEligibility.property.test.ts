@@ -23,7 +23,7 @@ describe('KotH Eligibility — Property 10: Filtering Completeness', () => {
             loadoutType: 'dual_wield',
             mainWeaponId: hasMain ? 1 : null,
             offhandWeaponId: null, // always missing offhand
-          } as any;
+          } as unknown as Parameters<typeof checkSchedulingReadiness>[0];
 
           const result = checkSchedulingReadiness(robot);
           expect(result.isReady).toBe(false);
@@ -42,7 +42,7 @@ describe('KotH Eligibility — Property 10: Filtering Completeness', () => {
             loadoutType: 'weapon_shield',
             mainWeaponId: hasMain ? 1 : null,
             offhandWeaponId: null, // always missing shield
-          } as any;
+          } as unknown as Parameters<typeof checkSchedulingReadiness>[0];
 
           const result = checkSchedulingReadiness(robot);
           expect(result.isReady).toBe(false);
@@ -61,7 +61,7 @@ describe('KotH Eligibility — Property 10: Filtering Completeness', () => {
             loadoutType: 'single',
             mainWeaponId: weaponId,
             offhandWeaponId: null,
-          } as any;
+          } as unknown as Parameters<typeof checkSchedulingReadiness>[0];
 
           const result = checkSchedulingReadiness(robot);
           expect(result.isReady).toBe(true);
@@ -80,7 +80,7 @@ describe('KotH Eligibility — Property 10: Filtering Completeness', () => {
             loadoutType: 'two_handed',
             mainWeaponId: weaponId,
             offhandWeaponId: null,
-          } as any;
+          } as unknown as Parameters<typeof checkSchedulingReadiness>[0];
 
           const result = checkSchedulingReadiness(robot);
           expect(result.isReady).toBe(true);
@@ -100,7 +100,7 @@ describe('KotH Eligibility — Property 10: Filtering Completeness', () => {
             loadoutType: 'dual_wield',
             mainWeaponId: mainId,
             offhandWeaponId: offhandId,
-          } as any;
+          } as unknown as Parameters<typeof checkSchedulingReadiness>[0];
 
           const result = checkSchedulingReadiness(robot);
           expect(result.isReady).toBe(true);
@@ -119,7 +119,7 @@ describe('KotH Eligibility — Property 10: Filtering Completeness', () => {
             loadoutType,
             mainWeaponId: null,
             offhandWeaponId: null,
-          } as any;
+          } as unknown as Parameters<typeof checkSchedulingReadiness>[0];
 
           const result = checkSchedulingReadiness(robot);
           expect(result.isReady).toBe(false);
