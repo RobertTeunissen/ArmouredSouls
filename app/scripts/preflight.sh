@@ -25,7 +25,7 @@ set -euo pipefail
 #   only fails if it couldn't free enough.
 #
 # Tunables (override via env vars):
-# - PRE_DEPLOY_RETAIN: how many pre_deploy_*.dump files to keep (default: 2)
+# - PRE_DEPLOY_RETAIN: how many pre_deploy_*.dump files to keep (default: 1)
 # - DAILY_RETAIN:      how many daily backups to keep (default: 2)
 # - WEEKLY_RETAIN:     how many weekly backups to keep (default: 0)
 # - CYCLE_LOGS_RETAIN: how many per-cycle CSV logs to keep (default: 30)
@@ -33,8 +33,13 @@ set -euo pipefail
 # - DISK_HARD_LIMIT:   abort deploy if disk ≥ this percent post-cleanup (default: 90)
 # ============================================================================
 
+# Pre-deploy dumps are a short-term rollback safety net; the daily backups
+# provide history. On a near-full disk each ~5GB dump is expensive, so we keep
+# only the most recent one — this is what lets a deploy on an 88%-full disk
+# reclaim enough space to fit the next pre-migration dump (see the 25 May and
+# 29 Jul ACC incidents where retaining 2 dumps left too little headroom).
 BACKUP_DIR="${BACKUP_DIR:-/opt/armouredsouls/backups}"
-PRE_DEPLOY_RETAIN="${PRE_DEPLOY_RETAIN:-2}"
+PRE_DEPLOY_RETAIN="${PRE_DEPLOY_RETAIN:-1}"
 DAILY_RETAIN="${DAILY_RETAIN:-2}"
 WEEKLY_RETAIN="${WEEKLY_RETAIN:-0}"
 DISK_HARD_LIMIT="${DISK_HARD_LIMIT:-90}"

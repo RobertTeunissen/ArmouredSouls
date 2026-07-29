@@ -27,6 +27,7 @@ jest.mock('../../../config/logger', () => ({
 }));
 
 import prisma from '../../../lib/prisma';
+import { StandingsMode } from '../../../../generated/prisma';
 import standingsService from '../standingsService';
 import { createStanding } from '../../../../tests/factories/standingFactory';
 
@@ -408,7 +409,7 @@ describe('getStandings', () => {
     (mockPrisma.standing.findMany as jest.Mock).mockResolvedValue(standings);
     (mockPrisma.standing.count as jest.Mock).mockResolvedValue(3);
 
-    const result = await standingsService.getStandings('league_1v1' as any, { page: 1, limit: 10 });
+    const result = await standingsService.getStandings('league_1v1' as StandingsMode, { page: 1, limit: 10 });
 
     expect(result.standings).toHaveLength(3);
     expect(result.pagination).toEqual({
@@ -430,7 +431,7 @@ describe('getStandings', () => {
     (mockPrisma.standing.findMany as jest.Mock).mockResolvedValue([]);
     (mockPrisma.standing.count as jest.Mock).mockResolvedValue(0);
 
-    await standingsService.getStandings('league_1v1' as any, { leagueInstanceId: 'gold_1' });
+    await standingsService.getStandings('league_1v1' as StandingsMode, { leagueInstanceId: 'gold_1' });
 
     expect(mockPrisma.standing.findMany).toHaveBeenCalledWith(
       expect.objectContaining({

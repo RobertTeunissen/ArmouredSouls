@@ -8,7 +8,7 @@
  */
 
 import * as fc from 'fast-check';
-import { calculateMatchScore, MatchScoreInput, RECENT_OPPONENT_PENALTY } from '../teamMatchmakingUtils';
+import { calculateMatchScore, MatchScoreInput } from '../teamMatchmakingUtils';
 
 describe('R4.7 Fallback — Property 6: Selects Closest-ELO', () => {
   it('when ALL opponents are recent, the selected opponent has smallest ELO difference', () => {

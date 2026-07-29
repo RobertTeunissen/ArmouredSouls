@@ -69,7 +69,7 @@ describe('Property 4: Unified Promotion/Demotion Algorithm', () => {
         fc.integer({ min: 0, max: 20 }),
         fc.integer({ min: 0, max: 20 }),
         fc.integer({ min: 0, max: 50 }),
-        async (modeA, modeB, initialLP, lpDelta, outcome, winStreak, loseStreak, bestWinStreak) => {
+        async (modeA, modeB, initialLP, lpDelta, outcome, _winStreak, _loseStreak, _bestWinStreak) => {
           // Create two standings with identical state but different modes
           const baseStanding = {
             wins: 10,
@@ -77,14 +77,14 @@ describe('Property 4: Unified Promotion/Demotion Algorithm', () => {
             draws: 3,
           };
 
-          const standingA = createStanding({ ...baseStanding, mode: modeA as any });
-          const standingB = createStanding({ ...baseStanding, mode: modeB as any });
+          const standingA = createStanding({ ...baseStanding, mode: modeA as StandingsMode });
+          const standingB = createStanding({ ...baseStanding, mode: modeB as StandingsMode });
 
           // Track the upsert update data for each mode
           const updateCalls: Record<string, unknown>[] = [];
 
           (mockPrisma.standing.findUnique as jest.Mock).mockResolvedValueOnce(standingA);
-          (mockPrisma.standing.upsert as jest.Mock).mockImplementationOnce((args: any) => {
+          (mockPrisma.standing.upsert as jest.Mock).mockImplementationOnce((args: { update: Record<string, unknown> }) => {
             updateCalls.push(args.update);
             return Promise.resolve({ ...standingA, ...args.update });
           });
@@ -100,7 +100,7 @@ describe('Property 4: Unified Promotion/Demotion Algorithm', () => {
           jest.clearAllMocks();
 
           (mockPrisma.standing.findUnique as jest.Mock).mockResolvedValueOnce(standingB);
-          (mockPrisma.standing.upsert as jest.Mock).mockImplementationOnce((args: any) => {
+          (mockPrisma.standing.upsert as jest.Mock).mockImplementationOnce((args: { update: Record<string, unknown> }) => {
             updateCalls.push(args.update);
             return Promise.resolve({ ...standingB, ...args.update });
           });
@@ -159,7 +159,7 @@ describe('Property 5: Battle Completion Updates Standings', () => {
           let capturedUpdate: Record<string, number> | null = null;
 
           (mockPrisma.standing.findUnique as jest.Mock).mockResolvedValue(existing);
-          (mockPrisma.standing.upsert as jest.Mock).mockImplementation((args: any) => {
+          (mockPrisma.standing.upsert as jest.Mock).mockImplementation((args: { update: Record<string, number> }) => {
             capturedUpdate = args.update;
             return Promise.resolve({ ...existing, ...args.update });
           });
@@ -269,7 +269,7 @@ describe('Property 6: KotH Point Award by Placement', () => {
         fc.integer({ min: 0, max: 500 }),
         async (placement, initialLP, kills, zoneScore, zoneTime) => {
           const existing = createStanding({
-            mode: 'koth' as any,
+            mode: 'koth' as StandingsMode,
             totalMatches: 5,
             totalKills: 10,
             totalZoneScore: 40,
@@ -281,7 +281,7 @@ describe('Property 6: KotH Point Award by Placement', () => {
           let capturedData: Record<string, number> | null = null;
 
           (mockPrisma.standing.findUnique as jest.Mock).mockResolvedValue(existing);
-          (mockPrisma.standing.update as jest.Mock).mockImplementation((args: any) => {
+          (mockPrisma.standing.update as jest.Mock).mockImplementation((args: { data: Record<string, number> }) => {
             capturedData = args.data;
             return Promise.resolve({ ...existing, ...args.data });
           });
@@ -343,7 +343,7 @@ describe('Property 7: KotH Standings Ordering', () => {
           const standings = sortedValues.map((lp, i) =>
             createStanding({
               id: i + 1,
-              mode: 'koth' as any,
+              mode: 'koth' as StandingsMode,
               leagueInstanceId: 'koth_1',
               entityId: 1000 + i,
             }),
