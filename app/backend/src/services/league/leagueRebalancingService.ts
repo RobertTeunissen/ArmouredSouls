@@ -13,7 +13,6 @@ import {
 } from './leagueInstanceService';
 import {
   LeagueAdapter,
-  LeagueEntityBase,
   LeagueEngineConfig,
   InstanceInfo,
   rebalanceAllTiers,
@@ -47,7 +46,8 @@ const ROBOT_LEAGUE_CONFIG: LeagueEngineConfig = {
 
 // ─── Robot Adapter (uses unified factory) ────────────────────────────────────
 
-const robotAdapter: LeagueAdapter<LeagueEntityBase> = createStandingsAdapter('league_1v1', {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- factory returns LeagueAdapter<any>; narrowing breaks callers that expect the full Robot shape
+const robotAdapter: LeagueAdapter<any> = createStandingsAdapter('league_1v1', {
   maxPerInstance: MAX_ROBOTS_PER_INSTANCE,
   entityType: 'robot',
 });
