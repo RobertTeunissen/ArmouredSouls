@@ -182,19 +182,43 @@ export async function resetCompetitiveAndEconomicState(): Promise<{
 export async function purgeHistory(): Promise<Record<string, number>> {
   const rowsDeleted: Record<string, number> = {};
 
-  const del = async (table: string, fn: () => Promise<{ count: number }>): Promise<void> => {
-    const result = await fn();
-    rowsDeleted[table] = result.count;
-  };
+  // Every table here is emptied unconditionally, so TRUNCATE is semantically
+  // identical to `deleteMany({})` but runs in milliseconds instead of scanning
+  // and WAL-logging every row.
+  //
+  // This is not an optimisation, it is a correctness fix: on ACC `audit_logs`
+  // held 1.76M rows and `battles` 363K, and the row-by-row DELETE exceeded the
+  // PostgreSQL `statement_timeout`, aborting the rollover after the earlier
+  // purge stages had already committed. TRUNCATE also reclaims the pages
+  // immediately, so the disk space comes back without waiting for VACUUM.
+  //
+  // Order does not matter under a single multi-table TRUNCATE, and CASCADE
+  // covers the child tables that reference `battles` (battle_participants,
+  // battle_summaries, scheduled_tournament_matches). It cannot reach the
+  // season archive tables — those key off `seasons`, not off any table here.
+  const TRUNCATE_TABLES = [
+    'battle_summaries',
+    'battles',
+    'audit_logs',
+    'cycle_snapshots',
+    'financial_ledger',
+    'league_history',
+    'leaderboard_cache',
+    'practice_arena_daily_stats',
+  ] as const;
 
-  await del('battle_summaries', () => prisma.battleSummary.deleteMany({}));
-  await del('battles', () => prisma.battle.deleteMany({}));
-  await del('audit_logs', () => prisma.auditLog.deleteMany({}));
-  await del('cycle_snapshots', () => prisma.cycleSnapshot.deleteMany({}));
-  await del('financial_ledger', () => prisma.financialLedger.deleteMany({}));
-  await del('league_history', () => prisma.leagueHistory.deleteMany({}));
-  await del('leaderboard_cache', () => prisma.leaderboardCache.deleteMany({}));
-  await del('practice_arena_daily_stats', () => prisma.practiceArenaDailyStats.deleteMany({}));
+  // Capture the counts first so the rollover report stays truthful; TRUNCATE
+  // itself reports nothing.
+  for (const table of TRUNCATE_TABLES) {
+    // Table names come from this fixed literal list, never from user input.
+    const rows = await prisma.$queryRawUnsafe<Array<{ count: bigint }>>(
+      `SELECT count(*)::bigint AS count FROM "${table}"`,
+    );
+    rowsDeleted[table] = Number(rows[0]?.count ?? 0);
+  }
+
+  const quoted = TRUNCATE_TABLES.map((t) => `"${t}"`).join(', ');
+  await prisma.$executeRawUnsafe(`TRUNCATE TABLE ${quoted} CASCADE`);
 
   await prisma.cycleMetadata.update({
     where: { id: 1 },
