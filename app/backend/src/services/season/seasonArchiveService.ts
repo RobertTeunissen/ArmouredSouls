@@ -324,6 +324,8 @@ export async function writeStandingSnapshot(
   }
 
   if (rows.length > 0) {
+    // Idempotency: a prior attempt may have written partial snapshot rows.
+    await prisma.seasonStandingSnapshot.deleteMany({ where: { seasonNumber } });
     await prisma.seasonStandingSnapshot.createMany({ data: rows });
   }
   return rows.length;
@@ -672,6 +674,8 @@ export async function writeAccolades(seasonNumber: number): Promise<number> {
   });
 
   if (rows.length > 0) {
+    // Idempotency: a prior attempt may have written partial accolade rows.
+    await prisma.seasonAccolade.deleteMany({ where: { seasonNumber } });
     await prisma.seasonAccolade.createMany({ data: rows });
   }
   logger.info(`[season-archive] Captured ${rows.length} accolades for season ${seasonNumber}`);

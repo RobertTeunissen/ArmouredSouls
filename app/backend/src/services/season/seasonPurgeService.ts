@@ -19,8 +19,11 @@ import logger from '../../config/logger';
 /** Starting credits granted at the beginning of a Competitive_Phase. */
 export const STARTING_CREDITS = 3_000_000;
 
-/** Users deleted per transaction. Keeps each under about a second. */
-const GENERATED_DELETE_BATCH = 200;
+/** Users deleted per transaction. Each batch clears participant/member/standing
+ *  rows then cascades from users. On a 2 vCPU VPS with thousands of battle
+ *  participant rows per batch, smaller batches keep transactions well within the
+ *  30s timeout. */
+const GENERATED_DELETE_BATCH = 50;
 
 export interface PurgeCounts {
   generatedStablesDeleted: number;
