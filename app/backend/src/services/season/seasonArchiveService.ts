@@ -736,6 +736,11 @@ export async function verifyArchive(seasonNumber: number): Promise<ArchiveVerifi
 
 /** Whether a complete archive already exists — drives rollover idempotence. */
 export async function hasCompleteArchive(seasonNumber: number): Promise<boolean> {
-  const verification = await verifyArchive(seasonNumber);
-  return verification.ok && verification.actualStables > 0;
+  // Just check that at least one stable was archived for this season.
+  // Do NOT call verifyArchive() here — it compares archived counts against
+  // live data, which diverges on retries (duplicated robot rows, new users
+  // registering between attempts). The archive is immutable once written;
+  // its mere existence is the gate.
+  const count = await prisma.stableSeasonArchive.count({ where: { seasonNumber } });
+  return count > 0;
 }
