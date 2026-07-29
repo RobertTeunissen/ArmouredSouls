@@ -137,8 +137,13 @@ export async function writeStableAndRobotArchives(
           level: f.level,
         }));
 
-        const stableArchive = await tx.stableSeasonArchive.create({
-          data: {
+        const stableArchive = await tx.stableSeasonArchive.upsert({
+          where: {
+            // The unique constraint is (season_number, user_id).
+            seasonNumber_userId: { seasonNumber, userId: user.id },
+          },
+          update: {}, // Already archived — keep the existing data.
+          create: {
             seasonNumber,
             userId: user.id,
             stableName: stableDisplayName(user),

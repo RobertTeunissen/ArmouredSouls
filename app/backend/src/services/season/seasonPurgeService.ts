@@ -53,7 +53,8 @@ export async function deleteGeneratedStables(): Promise<number> {
   for (let i = 0; i < generated.length; i += GENERATED_DELETE_BATCH) {
     const batch = generated.slice(i, i + GENERATED_DELETE_BATCH).map((u) => u.id);
 
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(
+      async (tx) => {
       const robotIds = (
         await tx.robot.findMany({ where: { userId: { in: batch } }, select: { id: true } })
       ).map((r) => r.id);
@@ -90,7 +91,11 @@ export async function deleteGeneratedStables(): Promise<number> {
       // The rest cascades from `users` via onDelete: Cascade.
       const result = await tx.user.deleteMany({ where: { id: { in: batch } } });
       deleted += result.count;
-    });
+    },
+    // On a 2 vCPU VPS with thousands of participant rows per batch, the default
+    // 5s interactive-transaction timeout is too tight. 30s gives ample headroom.
+    { timeout: 30_000 },
+    );
   }
 
   logger.info(`[season-purge] Deleted ${deleted} generated stables`);
