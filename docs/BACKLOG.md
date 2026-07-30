@@ -2,7 +2,13 @@
 
 Items identified during audits, reviews, and development. Prioritized by impact on player experience and system reliability.
 
-**Priority scale**: High (should spec soon) · Medium (valuable but not blocking) · Low (nice to have) · Not scoped (future idea only)
+**Priority scale**: Blocker (stops shipping) · High (should spec soon) · Medium (valuable but not blocking) · Low (nice to have) · Not scoped (future idea only)
+
+## 🚫 Blockers
+
+| # | Item | Why it blocks |
+|---|------|---------------|
+| [#64](#64--repair-the-integration-test-suite-90-of-148-suites-failing) | Repair the Integration Test Suite | Every test tier is now mandatory in CI. Integration is 90 of 148 suites red and `typecheck:tests` reports 394 errors, so **main cannot deploy** until it is cleared. |
 
 ---
 
@@ -37,101 +43,6 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 | 23 | Blueprint Library | 48 | 0 🗳️ | 1 | 1 | 1 | 3 | **1.0** |
 | 24 | Cosmetic Customization System | 46 | 0 🗳️ | 2 | 1 | 1 | 5 | **0.8** |
 | 25 | Matchup-Dependent Weapon Effectiveness | 58 | 0 🗳️ | 3 | 1 | 2 | 5 | **1.2** |
-
-### #60 — Drop Legacy League Columns from Robot Model
-**Source**: Grand Melee spec implementation (Spec #44) — discovered during frontend unification
-**Priority**: High — technical debt causing inconsistency across league modes
-
-The Robot model still has `currentLeague`, `leagueId`, `leaguePoints`, and `cyclesInCurrentLeague` columns from before the Database Unification (Spec #40). All league data now lives in the `Standing` table, but these stale Robot columns are still read by the frontend robot store, the league standings page (for 1v1 indicators), and various mock data in tests. They should be dropped from the schema and all reads replaced with Standing table queries. Affects: `storeRobots`, `LeagueStandingsPage`, `matchmakingService` bye-robot factory, `practiceArenaService`, `teamBattleOrchestrator` bye-robot factory, seed file, and ~15 test files.
-
-### #61 — Guided New Robot Setup Workflow
-**Source**: Player experience — a newly created robot is not battle-ready and nothing walks the player through making it so
-**Priority**: Medium — affects every new robot a player creates, including their first
-
-Creating a robot is one step; making it actually compete takes six or seven more, spread across four pages. Nothing guides the player through them, and two of the steps are silent hard gates:
-
-- **No weapon equipped** → `checkSchedulingReadiness()` rejects the robot, so matchmaking skips it. It is never scheduled for anything.
-- **No event subscription** → the Booking Office gates participation in every battle event. Even a fully equipped robot never enters a match.
-
-Either omission leaves a robot sitting idle indefinitely, and the player has no obvious signal why. The other steps are softer but still shape whether the robot performs or bleeds Credits: loadout type, stance, yield threshold (drives repair cost), tuning allocation, and attribute upgrades.
-
-Proposal: a guided flow after robot creation that walks through equip weapon(s) for the chosen loadout → stance → yield threshold → tuning allocation → event subscriptions, with attribute upgrades offered as an optional final step. Skippable at any point, resumable later, and with a persistent "this robot is not battle-ready because…" indicator for anything still outstanding.
-
-Open questions: whether this is a modal wizard, a checklist on the robot page, or an extension of the existing onboarding tour; and whether the same checklist should surface for robots that fall out of readiness later (weapon sold, subscription dropped at a season reset — everything except accounts and onboarding state resets each season, so returning players re-do all of this for every robot).
-
-**Related**: #37 (Robot Detail Page Split) proposes an owner-only "Prepare" workspace covering the same actions — a creation wizard and that page should share components rather than duplicate them. #28 (Progressive Feature Disclosure) and #16 (Player Personas) overlap on how much to show a new player at once.
-
-### #62 — Edge DDoS Protection in Front of ACC
-**Source**: Subscription rate-limit investigation (Booking Office unification)
-**Priority**: Medium — no edge protection exists today; the box is small enough that this matters
-
-There is no protection ahead of the application. `app/Caddyfile` terminates TLS and sets headers and compression, but has no `rate_limit` directive and no connection caps, and there is no CDN or scrubbing layer in front. Everything currently rests on in-process `express-rate-limit` counters, which means every abusive request still costs a Node event-loop turn, a DB round trip in some cases, and TLS termination — on a 2 vCPU / 2 GB DEV1-S.
-
-What exists and is worth keeping in mind: the general limiter is 300 req/min per client IP, register 30/min, login 10/15min, admin 120/min, per-user economic 100/min, body limit 1 MB. `app.set('trust proxy', 1)` is set and PM2 runs a single instance, so the counters are neither pooled into one bucket nor multiplied per worker — they behave as intended. The gap is purely that they are the *only* line of defence.
-
-Options, cheapest first: Caddy's `rate_limit` plugin plus connection limits; Cloudflare in front (free tier covers L3/L4 and basic L7, and hides the origin IP, which also removes direct-to-IP attacks); Scaleway's own edge services. Cloudflare additionally solves the shared-IP fairness problem more cleanly than app-level keys can.
-
-Not urgent while the player base is small and the origin IP is not widely known, but the fix is mostly configuration, so it is cheap to do before it is needed.
-
-### #63 — Tighten the `require-validate-request` ESLint Rule
-**Source**: Zod coverage audit (Booking Office unification)
-**Priority**: Low — closes a blind spot in an otherwise complete control
-
-`eslint-rules/require-validate-request.js` walks the AST of every `router.get/post/put/delete/patch` call in `src/routes/` and fails lint when `validateRequest` is absent. Coverage is genuinely 100% by that measure. The blind spot is that it checks the call *exists*, not that it validates anything: `validateRequest({})` satisfies it while validating nothing.
-
-There are roughly 40 such sites. Most are legitimately input-free (`GET /overview`, `GET /scheduler/status`). The one real hole this hid has been fixed — `POST /api/admin/scheduler/trigger/:jobName` read an unvalidated route param and cast it into `triggerJob` — but nothing stops the next one.
-
-Proposal: have the rule inspect the route path for `:params` and the handler for `req.body` / `req.query` access, and require the corresponding schema key to be present. An explicit opt-out comment for genuinely input-free routes keeps the noise down.
-
-### #64 — Repair the Integration Test Suite (90 of 148 suites failing)
-**Source**: Full-suite run during the Booking Office unification, 30 July 2026
-**Priority**: Blocker — the CI gates are now real, so this blocks every deploy
-
-**Why this was invisible.** Two independent holes, and the failing suites sat in the
-intersection of both. They were never typechecked (`tsconfig.json` excludes tests,
-so `pnpm run build` covers `src/` only) *and* never enforced: `deploy.yml` ran
-`pnpm run test:integration 2>&1 | tail -n 500 || true`, and even without the
-`|| true` the pipe alone discards the exit code because GitHub's default shell has
-no `pipefail`. `deploy-acc` listed the job in `needs:`, so the graph showed a gate
-that could not fire. Also found: `pnpm run lint || true` on both deploy lint steps,
-`continue-on-error` on E2E, no frontend tests in `deploy.yml`, and `test:heavy`
-running in no pipeline at all. All fixed — every tier is now mandatory and blocking,
-which is what makes this item a blocker rather than a cleanup.
-
-`pnpm run test:unit` is fully green (205 suites, 2881 tests). `pnpm run test:integration` reports **90 failed / 58 passed of 148 suites, 180 failed / 1000 passed of 1180 tests**. None of it is recent: the failures are tests that were never updated when earlier specs changed the schema and service surfaces, and TypeScript never caught them because a test that fails to compile simply reports "suite failed to run" and is easy to skim past.
-
-Sampled causes:
-
-| Suite | Cause |
-|---|---|
-| `tests/kothMatchmaking.test.ts` | imports `distributeIntoGroups`, removed by Spec #41 (unified match scheduling) |
-| `tests/kothEngine.test.ts`, `kothEngine.property.test.ts` | reference `rotatingZone`, `processZoneRotation`, `KOTH_MATCH_DEFAULTS.rotatingZoneTimeLimit` — none exist |
-| `tests/teamBattle.property.test.ts`, `tests/userGeneration.test.ts` | reference `prisma.scheduledTeamBattleMatch`, dropped by Spec #41 |
-| `tests/analyticsApi.test.ts`, `tests/userGeneration.test.ts` | reference `battles.robot1Id` / `robot2Id`, dropped by Spec #43 |
-| `tests/userGeneration.test.ts` | references `scheduledKothMatchParticipant`, now `scheduledMatchParticipant` |
-| `tests/duplicateEmail.property.test.ts` and other auth suites | registration returns 400 where the test expects 201 — validation drift |
-| `tests/leagues.test.ts` | expects an `error` key in a 400 body that is now `{}` |
-| `src/services/achievement/__tests__/achievementService.test.ts` | fully mocked yet quarantined out of the unit runner; assertions have rotted |
-
-Two structural problems worth fixing alongside the individual suites:
-
-1. **Compile failures are invisible.** A suite that does not typecheck reports "failed to run" and does not fail loudly enough to have been noticed for months. `tsc --noEmit` covers `src/` but the test tsconfig evidently does not gate CI the same way.
-2. **Suites are quarantined into the integration runner as "requires DB" when they are fully mocked.** The same mistake was found and fixed for four changelog suites, and `achievementService.test.ts` is another instance. A mocked suite parked behind a live-DB setup stops being run in practice, and then rots.
-
-**Progress.** `tsconfig.test.json` + `pnpm run typecheck:tests` now typecheck the
-suites, and that runs in CI as a blocking step. Test compile errors are down from
-454 to 394 across 44 files; nine suites repaired; two orphaned suites deleted
-(they tested `roiCalculatorService`, which no longer exists). Remaining, largest
-first: battle participant migration in the streaming-revenue and orchestrator
-suites (~180), `scheduledTeamBattleMatch` → unified schedule (46), KotH
-`rotatingZone` suites for an abolished feature (15), `WeaponInventory` fixtures
-missing `pricePaid` (14), `Robot.leaguePoints` / `cyclesInTier` now on `Standing`
-(10), and a tail of implicit-`any` parameters.
-
-Expect a second wave of assertion failures once these compile — some suites have not
-executed in months. Two already sampled: auth registration returns 400 where the
-test expects 201, and `leagues.test.ts` expects an `error` key in a 400 body that is
-now `{}`.
 
 ### Recently Completed (removed from backlog)
 
@@ -343,3 +254,98 @@ Let players test any weapon from the shop in practice battles, not just owned we
 **Priority**: Not scoped — large combat system change
 
 Energy weapons bypass armor but shields resist them; ballistic shreds shields but armor blocks. Creates rock-paper-scissors dynamics that require owning multiple weapon types. Large scope — needs its own spec, careful balance work, and UI changes to communicate effectiveness. Synergizes with Arena Modifiers (#12) for meta variation.
+
+### #60 — Drop Legacy League Columns from Robot Model
+**Source**: Grand Melee spec implementation (Spec #44) — discovered during frontend unification
+**Priority**: High — technical debt causing inconsistency across league modes
+
+The Robot model still has `currentLeague`, `leagueId`, `leaguePoints`, and `cyclesInCurrentLeague` columns from before the Database Unification (Spec #40). All league data now lives in the `Standing` table, but these stale Robot columns are still read by the frontend robot store, the league standings page (for 1v1 indicators), and various mock data in tests. They should be dropped from the schema and all reads replaced with Standing table queries. Affects: `storeRobots`, `LeagueStandingsPage`, `matchmakingService` bye-robot factory, `practiceArenaService`, `teamBattleOrchestrator` bye-robot factory, seed file, and ~15 test files.
+
+### #61 — Guided New Robot Setup Workflow
+**Source**: Player experience — a newly created robot is not battle-ready and nothing walks the player through making it so
+**Priority**: Medium — affects every new robot a player creates, including their first
+
+Creating a robot is one step; making it actually compete takes six or seven more, spread across four pages. Nothing guides the player through them, and two of the steps are silent hard gates:
+
+- **No weapon equipped** → `checkSchedulingReadiness()` rejects the robot, so matchmaking skips it. It is never scheduled for anything.
+- **No event subscription** → the Booking Office gates participation in every battle event. Even a fully equipped robot never enters a match.
+
+Either omission leaves a robot sitting idle indefinitely, and the player has no obvious signal why. The other steps are softer but still shape whether the robot performs or bleeds Credits: loadout type, stance, yield threshold (drives repair cost), tuning allocation, and attribute upgrades.
+
+Proposal: a guided flow after robot creation that walks through equip weapon(s) for the chosen loadout → stance → yield threshold → tuning allocation → event subscriptions, with attribute upgrades offered as an optional final step. Skippable at any point, resumable later, and with a persistent "this robot is not battle-ready because…" indicator for anything still outstanding.
+
+Open questions: whether this is a modal wizard, a checklist on the robot page, or an extension of the existing onboarding tour; and whether the same checklist should surface for robots that fall out of readiness later (weapon sold, subscription dropped at a season reset — everything except accounts and onboarding state resets each season, so returning players re-do all of this for every robot).
+
+**Related**: #37 (Robot Detail Page Split) proposes an owner-only "Prepare" workspace covering the same actions — a creation wizard and that page should share components rather than duplicate them. #28 (Progressive Feature Disclosure) and #16 (Player Personas) overlap on how much to show a new player at once.
+
+### #62 — Edge DDoS Protection in Front of ACC
+**Source**: Subscription rate-limit investigation (Booking Office unification)
+**Priority**: Medium — no edge protection exists today; the box is small enough that this matters
+
+There is no protection ahead of the application. `app/Caddyfile` terminates TLS and sets headers and compression, but has no `rate_limit` directive and no connection caps, and there is no CDN or scrubbing layer in front. Everything currently rests on in-process `express-rate-limit` counters, which means every abusive request still costs a Node event-loop turn, a DB round trip in some cases, and TLS termination — on a 2 vCPU / 2 GB DEV1-S.
+
+What exists and is worth keeping in mind: the general limiter is 300 req/min per client IP, register 30/min, login 10/15min, admin 120/min, per-user economic 100/min, body limit 1 MB. `app.set('trust proxy', 1)` is set and PM2 runs a single instance, so the counters are neither pooled into one bucket nor multiplied per worker — they behave as intended. The gap is purely that they are the *only* line of defence.
+
+Options, cheapest first: Caddy's `rate_limit` plugin plus connection limits; Cloudflare in front (free tier covers L3/L4 and basic L7, and hides the origin IP, which also removes direct-to-IP attacks); Scaleway's own edge services. Cloudflare additionally solves the shared-IP fairness problem more cleanly than app-level keys can.
+
+Not urgent while the player base is small and the origin IP is not widely known, but the fix is mostly configuration, so it is cheap to do before it is needed.
+
+### #63 — Tighten the `require-validate-request` ESLint Rule
+**Source**: Zod coverage audit (Booking Office unification)
+**Priority**: Low — closes a blind spot in an otherwise complete control
+
+`eslint-rules/require-validate-request.js` walks the AST of every `router.get/post/put/delete/patch` call in `src/routes/` and fails lint when `validateRequest` is absent. Coverage is genuinely 100% by that measure. The blind spot is that it checks the call *exists*, not that it validates anything: `validateRequest({})` satisfies it while validating nothing.
+
+There are roughly 40 such sites. Most are legitimately input-free (`GET /overview`, `GET /scheduler/status`). The one real hole this hid has been fixed — `POST /api/admin/scheduler/trigger/:jobName` read an unvalidated route param and cast it into `triggerJob` — but nothing stops the next one.
+
+Proposal: have the rule inspect the route path for `:params` and the handler for `req.body` / `req.query` access, and require the corresponding schema key to be present. An explicit opt-out comment for genuinely input-free routes keeps the noise down.
+
+### #64 — Repair the Integration Test Suite (90 of 148 suites failing)
+**Source**: Full-suite run during the Booking Office unification, 30 July 2026
+**Priority**: Blocker — the CI gates are now real, so this blocks every deploy
+
+**Why this was invisible.** Two independent holes, and the failing suites sat in the
+intersection of both. They were never typechecked (`tsconfig.json` excludes tests,
+so `pnpm run build` covers `src/` only) *and* never enforced: `deploy.yml` ran
+`pnpm run test:integration 2>&1 | tail -n 500 || true`, and even without the
+`|| true` the pipe alone discards the exit code because GitHub's default shell has
+no `pipefail`. `deploy-acc` listed the job in `needs:`, so the graph showed a gate
+that could not fire. Also found: `pnpm run lint || true` on both deploy lint steps,
+`continue-on-error` on E2E, no frontend tests in `deploy.yml`, and `test:heavy`
+running in no pipeline at all. All fixed — every tier is now mandatory and blocking,
+which is what makes this item a blocker rather than a cleanup.
+
+`pnpm run test:unit` is fully green (205 suites, 2881 tests). `pnpm run test:integration` reports **90 failed / 58 passed of 148 suites, 180 failed / 1000 passed of 1180 tests**. None of it is recent: the failures are tests that were never updated when earlier specs changed the schema and service surfaces, and TypeScript never caught them because a test that fails to compile simply reports "suite failed to run" and is easy to skim past.
+
+Sampled causes:
+
+| Suite | Cause |
+|---|---|
+| `tests/kothMatchmaking.test.ts` | imports `distributeIntoGroups`, removed by Spec #41 (unified match scheduling) |
+| `tests/kothEngine.test.ts`, `kothEngine.property.test.ts` | reference `rotatingZone`, `processZoneRotation`, `KOTH_MATCH_DEFAULTS.rotatingZoneTimeLimit` — none exist |
+| `tests/teamBattle.property.test.ts`, `tests/userGeneration.test.ts` | reference `prisma.scheduledTeamBattleMatch`, dropped by Spec #41 |
+| `tests/analyticsApi.test.ts`, `tests/userGeneration.test.ts` | reference `battles.robot1Id` / `robot2Id`, dropped by Spec #43 |
+| `tests/userGeneration.test.ts` | references `scheduledKothMatchParticipant`, now `scheduledMatchParticipant` |
+| `tests/duplicateEmail.property.test.ts` and other auth suites | registration returns 400 where the test expects 201 — validation drift |
+| `tests/leagues.test.ts` | expects an `error` key in a 400 body that is now `{}` |
+| `src/services/achievement/__tests__/achievementService.test.ts` | fully mocked yet quarantined out of the unit runner; assertions have rotted |
+
+Two structural problems worth fixing alongside the individual suites:
+
+1. **Compile failures are invisible.** A suite that does not typecheck reports "failed to run" and does not fail loudly enough to have been noticed for months. `tsc --noEmit` covers `src/` but the test tsconfig evidently does not gate CI the same way.
+2. **Suites are quarantined into the integration runner as "requires DB" when they are fully mocked.** The same mistake was found and fixed for four changelog suites, and `achievementService.test.ts` is another instance. A mocked suite parked behind a live-DB setup stops being run in practice, and then rots.
+
+**Progress.** `tsconfig.test.json` + `pnpm run typecheck:tests` now typecheck the
+suites, and that runs in CI as a blocking step. Test compile errors are down from
+454 to 394 across 44 files; nine suites repaired; two orphaned suites deleted
+(they tested `roiCalculatorService`, which no longer exists). Remaining, largest
+first: battle participant migration in the streaming-revenue and orchestrator
+suites (~180), `scheduledTeamBattleMatch` → unified schedule (46), KotH
+`rotatingZone` suites for an abolished feature (15), `WeaponInventory` fixtures
+missing `pricePaid` (14), `Robot.leaguePoints` / `cyclesInTier` now on `Standing`
+(10), and a tail of implicit-`any` parameters.
+
+Expect a second wave of assertion failures once these compile — some suites have not
+executed in months. Two already sampled: auth registration returns 400 where the
+test expects 201, and `leagues.test.ts` expects an `error` key in a 400 body that is
+now `{}`.
