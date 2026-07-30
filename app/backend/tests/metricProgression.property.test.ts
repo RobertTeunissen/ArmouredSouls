@@ -15,10 +15,10 @@ import { cleanupTestData } from './cleanupHelper';
 
 describe('Metric Progression Property-Based Tests', () => {
   afterEach(async () => {
-    // Clean up test data after each test in correct dependency order
-    await prisma.scheduledKothMatchParticipant.deleteMany({});
-    await prisma.scheduledKothMatch.deleteMany({});
-    await prisma.battleParticipant.deleteMany({});
+    // Clean up test data after each test in correct dependency order.
+    // KotH schedules moved into the unified scheduled_matches_v2 (Spec #41), and
+    // participants cascade with their parent, so the parent delete is enough.
+    await prisma.scheduledMatch.deleteMany({});
     await prisma.battle.deleteMany({});
     await prisma.robot.deleteMany({});
     await prisma.user.deleteMany({});

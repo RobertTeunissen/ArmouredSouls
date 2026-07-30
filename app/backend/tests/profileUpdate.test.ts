@@ -18,7 +18,7 @@ app.use(express.json());
 app.use('/api/user', userRoutes);
 
 describe('Profile Update Endpoint', () => {
-  let testUserIds: number[] = [];
+  const testUserIds: number[] = [];
   let testUser: any;
   let authToken: string;
   const testUsername = `testuser_${Date.now()}`;
@@ -57,16 +57,11 @@ describe('Profile Update Endpoint', () => {
       const robotIds = robots.map(r => r.id);
 
       if (robotIds.length > 0) {
-        await prisma.battleParticipant.deleteMany({
-          where: { robotId: { in: robotIds } },
-        });
+        // Combatants live in battle_participants since Spec #43 dropped
+        // battles.robot1_id/robot2_id. Participants and summaries cascade with
+        // the battle, so deleting the battle is enough.
         await prisma.battle.deleteMany({
-          where: {
-            OR: [
-              { robot1Id: { in: robotIds } },
-              { robot2Id: { in: robotIds } },
-            ],
-          },
+          where: { participants: { some: { robotId: { in: robotIds } } } },
         });
       }
 

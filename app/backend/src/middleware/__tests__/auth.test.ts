@@ -48,17 +48,15 @@ jest.mock('express-rate-limit', () => {
 
 import prisma from '../../lib/prisma';
 import { securityMonitor } from '../../services/security/securityMonitor';
-import { authenticateToken, requireAdmin, AuthRequest, invalidateTokenCache } from '../auth';
+import { authenticateToken, requireAdmin, AuthRequest } from '../auth';
 import { Response, NextFunction } from 'express';
 
 const mockedPrisma = prisma as jest.Mocked<typeof prisma>;
 
-// Clear the auth token cache before each test to avoid cross-test contamination
-beforeEach(() => {
-  // Invalidate cache for common test user IDs
-  invalidateTokenCache(1);
-  invalidateTokenCache(42);
-});
+// There is no token cache to clear any more. `authenticateToken` reads the role
+// from the user row on every request, which is what makes a role change take
+// effect immediately, so the `invalidateTokenCache` helper this file used to call
+// in a beforeEach no longer exists.
 
 // ── Helpers ────────────────────────────────────────────────────────────
 
