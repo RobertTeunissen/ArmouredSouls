@@ -45,7 +45,6 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 
 | Item | # | Spec | Completed |
 |------|---|------|-----------|
-| Tighten `require-validate-request` ESLint rule (params + body key enforcement) | 63 | — (direct implementation) | July 2026 |
 | Repair the Integration Test Suite (149→0 compile errors, `typecheck:tests` passes, deleted 3k-line dead test file) | 64 | — (direct implementation) | July 2026 |
 | Grand Melee Mode (20-robot FFA) | 30 | [Spec #44](/.kiro/specs/to-do/44-grand-melee/) | June 2026 |
 | Tag Team Battle Time Limit Enforcement (closed as working-as-designed, documented in BATTLE_SIMULATION_ARCHITECTURE.md § Tag Team Orchestrator) | 19 | — | June 2026 |
@@ -277,9 +276,9 @@ Open questions: whether this is a modal wizard, a checklist on the robot page, o
 
 **Related**: #37 (Robot Detail Page Split) proposes an owner-only "Prepare" workspace covering the same actions — a creation wizard and that page should share components rather than duplicate them. #28 (Progressive Feature Disclosure) and #16 (Player Personas) overlap on how much to show a new player at once.
 
-### #62 — Edge DDoS Protection in Front of ACC
+### #62 — Edge DDoS Protection in Front of ACC — PARTIALLY DONE
 **Source**: Subscription rate-limit investigation (Booking Office unification)
-**Priority**: Medium — no edge protection exists today; the box is small enough that this matters
+**Priority**: ~~Medium~~ — **Caddy hardening shipped July 2026** (timeouts, body size limit, header limit). Full edge protection (Cloudflare or equivalent) documented in `docs/guides/operations/EDGE_PROTECTION.md` but requires DNS/infra changes outside the codebase. Remaining work is operational: add domain to Cloudflare, restrict UFW to CF IPs, update `trust proxy` to 2.
 
 There is no protection ahead of the application. `app/Caddyfile` terminates TLS and sets headers and compression, but has no `rate_limit` directive and no connection caps, and there is no CDN or scrubbing layer in front. Everything currently rests on in-process `express-rate-limit` counters, which means every abusive request still costs a Node event-loop turn, a DB round trip in some cases, and TLS termination — on a 2 vCPU / 2 GB DEV1-S.
 
@@ -288,14 +287,3 @@ What exists and is worth keeping in mind: the general limiter is 300 req/min per
 Options, cheapest first: Caddy's `rate_limit` plugin plus connection limits; Cloudflare in front (free tier covers L3/L4 and basic L7, and hides the origin IP, which also removes direct-to-IP attacks); Scaleway's own edge services. Cloudflare additionally solves the shared-IP fairness problem more cleanly than app-level keys can.
 
 Not urgent while the player base is small and the origin IP is not widely known, but the fix is mostly configuration, so it is cheap to do before it is needed.
-
-### #63 — Tighten the `require-validate-request` ESLint Rule — DONE
-**Source**: Zod coverage audit (Booking Office unification)
-**Priority**: ~~Low~~ — **Resolved July 2026.** The rule now checks that routes with `:params` have a `params` schema key, and handlers accessing `req.body` have a `body` schema key. All existing routes already comply — the rule catches future regressions at lint time.
-
-`eslint-rules/require-validate-request.js` walks the AST of every `router.get/post/put/delete/patch` call in `src/routes/` and fails lint when `validateRequest` is absent. Coverage is genuinely 100% by that measure. The blind spot is that it checks the call *exists*, not that it validates anything: `validateRequest({})` satisfies it while validating nothing.
-
-There are roughly 40 such sites. Most are legitimately input-free (`GET /overview`, `GET /scheduler/status`). The one real hole this hid has been fixed — `POST /api/admin/scheduler/trigger/:jobName` read an unvalidated route param and cast it into `triggerJob` — but nothing stops the next one.
-
-Proposal: have the rule inspect the route path for `:params` and the handler for `req.body` / `req.query` access, and require the corresponding schema key to be present. An explicit opt-out comment for genuinely input-free routes keeps the noise down.
-
