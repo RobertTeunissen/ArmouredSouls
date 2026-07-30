@@ -102,10 +102,7 @@ describe('Facility Advisor - Streaming Studio', () => {
     });
 
     // Execute
-    const result = await facilityRecommendationService.generateRecommendations(
-      user.id,
-      10
-    );
+    const result = await facilityRecommendationService.generateRecommendations(user.id);
 
     // Verify: Streaming Studio should be recommended
     const streamingStudioRec = result.recommendations.find(
@@ -119,7 +116,10 @@ describe('Facility Advisor - Streaming Studio', () => {
       expect(streamingStudioRec.upgradeCost).toBe(100000);
       expect(streamingStudioRec.projectedROI).toBeGreaterThan(0);
       expect(streamingStudioRec.reason).toContain('streaming revenue');
-      expect(streamingStudioRec.reason).toContain('10%');
+      // L0 → L1 doubles streaming revenue, so the increase is 100%. This
+      // asserted '10%' because the advisor used `1 + level × 0.1`, a tenth of
+      // the real Studio Multiplier of `1 + level` — corrected by Spec #46 R10.
+      expect(streamingStudioRec.reason).toContain('100%');
       // projectedPayoffCycles may be null if no battle history
       if (streamingStudioRec.projectedPayoffCycles !== null) {
         expect(streamingStudioRec.projectedPayoffCycles).toBeGreaterThan(0);
@@ -153,10 +153,7 @@ describe('Facility Advisor - Streaming Studio', () => {
     });
 
     // Execute
-    const result = await facilityRecommendationService.generateRecommendations(
-      user.id,
-      10
-    );
+    const result = await facilityRecommendationService.generateRecommendations(user.id);
 
     // Verify: Streaming Studio should be recommended with strategic value
     const streamingStudioRec = result.recommendations.find(
@@ -236,10 +233,7 @@ describe('Facility Advisor - Streaming Studio', () => {
     });
 
     // Execute
-    const result = await facilityRecommendationService.generateRecommendations(
-      user.id,
-      10
-    );
+    const result = await facilityRecommendationService.generateRecommendations(user.id);
 
     // Verify: Streaming Studio upgrade should be recommended
     const streamingStudioRec = result.recommendations.find(
@@ -321,10 +315,7 @@ describe('Facility Advisor - Streaming Studio', () => {
     });
 
     // Execute
-    const result = await facilityRecommendationService.generateRecommendations(
-      user.id,
-      10
-    );
+    const result = await facilityRecommendationService.generateRecommendations(user.id);
 
     // Verify: Streaming Studio should NOT be recommended because battle frequency is too low
     // (operating costs exceed revenue increase)

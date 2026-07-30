@@ -19,10 +19,15 @@
  */
 
 import prisma from '../../src/lib/prisma';
+import { MatchType } from '../../generated/prisma';
 import { registerTeam } from '../../src/services/team-battle/teamBattleService';
 import { runTeamBattleMatchmaking } from '../../src/services/team-battle/teamBattleMatchmakingService';
 import { executeScheduledTeamBattles } from '../../src/services/team-battle/teamBattleOrchestrator';
-import { rebalanceTeamBattleLeagues } from '../../src/services/team-battle/teamBattleAdapter';
+import {
+  createInitialTeamStandings,
+  rebalanceTeamBattleLeagues,
+} from '../../src/services/team-battle/teamBattleAdapter';
+import { battlesForRobots, scheduledMatchesForTeams } from '../cleanupHelper';
 
 describe('Team Battle Complete Cycle Integration Test', () => {
   let testUserIds: number[] = [];
@@ -42,35 +47,21 @@ describe('Team Battle Complete Cycle Integration Test', () => {
   });
 
   afterEach(async () => {
-    // Clean up in reverse dependency order
-    if (testRobotIds.length > 0) {
-      await prisma.battleParticipant.deleteMany({
-        where: { robotId: { in: testRobotIds } },
-      });
-    }
-
-    // Clean up battles created by our test robots
+    // Clean up in reverse dependency order.
+    //
+    // Battle participants are NOT deleted first: they cascade from the battle,
+    // and they are also the only way to find which battles belong to these
+    // robots now that battles.robot1_id / robot2_id are gone (Spec #43).
+    // Removing them up front would orphan the battles and the robot delete
+    // below would then fail on the foreign key.
     if (testTeamIds.length > 0) {
-      await prisma.scheduledTeamBattleMatch.deleteMany({
-        where: {
-          OR: [
-            { team1Id: { in: testTeamIds } },
-            { team2Id: { in: testTeamIds } },
-          ],
-        },
+      await prisma.scheduledMatch.deleteMany({
+        where: scheduledMatchesForTeams(testTeamIds),
       });
     }
 
-    // Delete battles that reference our robots
     if (testRobotIds.length > 0) {
-      await prisma.battle.deleteMany({
-        where: {
-          OR: [
-            { robot1Id: { in: testRobotIds } },
-            { robot2Id: { in: testRobotIds } },
-          ],
-        },
-      });
+      await prisma.battle.deleteMany({ where: battlesForRobots(testRobotIds) });
     }
 
     if (testTeamIds.length > 0) {
@@ -201,6 +192,9 @@ describe('Team Battle Complete Cycle Integration Test', () => {
       );
       teams.push(team);
       testTeamIds.push(team.id);
+      // Matchmaking finds candidates through standings, not through TeamBattle
+      // rows, so a team without a standing is invisible to it.
+      await createInitialTeamStandings(team.id, 2);
     }
 
     expect(teams.length).toBe(4);
@@ -215,9 +209,11 @@ describe('Team Battle Complete Cycle Integration Test', () => {
     // ─── Step 3: Run matchmaking ─────────────────────────────────────────────
     console.log('[Test] Step 3: Running 2v2 matchmaking...');
 
-    // Clean up any pre-existing scheduled 2v2 matches to ensure test isolation
-    await prisma.scheduledTeamBattleMatch.deleteMany({
-      where: { status: 'scheduled', teamSize: 2, teamBattleLeagueId: 'bronze_1' },
+    // Clean up any pre-existing scheduled 2v2 matches to ensure test isolation.
+    // Team size is expressed by matchType in the unified schedule (Spec #41);
+    // teamBattleLeague / teamBattleLeagueId became leagueType / leagueInstanceId.
+    await prisma.scheduledMatch.deleteMany({
+      where: { status: 'scheduled', matchType: MatchType.league_2v2, leagueInstanceId: 'bronze_1' },
     });
 
     const matchCount = await runTeamBattleMatchmaking(2);
@@ -225,29 +221,32 @@ describe('Team Battle Complete Cycle Integration Test', () => {
     console.log(`[Test] Created ${matchCount} scheduled matches`);
 
     // Verify scheduled matches exist
-    const scheduledMatches = await prisma.scheduledTeamBattleMatch.findMany({
+    const scheduledMatches = await prisma.scheduledMatch.findMany({
       where: {
         status: 'scheduled',
-        teamSize: 2,
-        OR: [
-          { team1Id: { in: testTeamIds } },
-          { team2Id: { in: testTeamIds } },
-        ],
+        matchType: MatchType.league_2v2,
+        ...scheduledMatchesForTeams(testTeamIds),
       },
+      include: { participants: true },
     });
     expect(scheduledMatches.length).toBeGreaterThan(0);
 
     // Verify match structure — test teams should have matches scheduled
     for (const match of scheduledMatches) {
-      expect(match.teamSize).toBe(2);
-      expect(match.teamBattleLeague).toBe('bronze');
-      expect(match.teamBattleLeagueId).toBe('bronze_1');
+      expect(match.matchType).toBe('league_2v2');
+      expect(match.leagueType).toBe('bronze');
+      expect(match.leagueInstanceId).toBe('bronze_1');
       expect(match.status).toBe('scheduled');
     }
-    // With other teams in the database, test teams should be paired (no byes for 4+ teams)
-    const testTeamMatches = scheduledMatches.filter(
-      m => (testTeamIds.includes(m.team1Id) || (m.team2Id !== null && testTeamIds.includes(m.team2Id))) && m.team2Id !== null,
-    );
+    // With other teams in the database, test teams should be paired (no byes for
+    // 4+ teams). A bye books a single team participant, so "two teams booked" is
+    // the same statement the old `team2Id !== null` check was making.
+    const testTeamMatches = scheduledMatches.filter((m) => {
+      const bookedTeamIds = m.participants
+        .filter(p => p.participantType === 'team')
+        .map(p => p.participantId);
+      return bookedTeamIds.length === 2 && bookedTeamIds.some(id => testTeamIds.includes(id));
+    });
     expect(testTeamMatches.length).toBeGreaterThan(0);
 
     // ─── Step 4: Execute battles ─────────────────────────────────────────────
@@ -267,10 +266,7 @@ describe('Team Battle Complete Cycle Integration Test', () => {
     const battles = await prisma.battle.findMany({
       where: {
         battleType: 'league_2v2',
-        OR: [
-          { robot1Id: { in: testRobotIds } },
-          { robot2Id: { in: testRobotIds } },
-        ],
+        ...battlesForRobots(testRobotIds),
       },
       include: {
         participants: true,
@@ -368,6 +364,7 @@ describe('Team Battle Complete Cycle Integration Test', () => {
       );
       teams.push(team);
       testTeamIds.push(team.id);
+      await createInitialTeamStandings(team.id, 3);
     }
 
     expect(teams.length).toBe(4);
@@ -376,8 +373,8 @@ describe('Team Battle Complete Cycle Integration Test', () => {
     console.log('[Test] Step 3: Running 3v3 matchmaking...');
 
     // Clean up any pre-existing scheduled 3v3 matches to ensure test isolation
-    await prisma.scheduledTeamBattleMatch.deleteMany({
-      where: { status: 'scheduled', teamSize: 3, teamBattleLeagueId: 'bronze_1' },
+    await prisma.scheduledMatch.deleteMany({
+      where: { status: 'scheduled', matchType: MatchType.league_3v3, leagueInstanceId: 'bronze_1' },
     });
 
     const matchCount = await runTeamBattleMatchmaking(3);
@@ -398,10 +395,7 @@ describe('Team Battle Complete Cycle Integration Test', () => {
     const battles = await prisma.battle.findMany({
       where: {
         battleType: 'league_3v3',
-        OR: [
-          { robot1Id: { in: testRobotIds } },
-          { robot2Id: { in: testRobotIds } },
-        ],
+        ...battlesForRobots(testRobotIds),
       },
       include: {
         participants: true,
@@ -491,13 +485,17 @@ describe('Team Battle Complete Cycle Integration Test', () => {
 
       expect(sampleTagTeamBattle).not.toBeNull();
       expect(sampleTagTeamBattle!.battleType).toBe('tag_team');
-      // Tag team battles should have tag team specific fields
-      expect(sampleTagTeamBattle!.team1ActiveRobotId).toBeDefined();
+      // Tag team's distinguishing feature is the Active/Reserve slot split. That
+      // used to be `battles.team1_active_robot_id`; since Spec #43 it is the
+      // `role` column on each participant, so assert on that instead.
+      const roles = sampleTagTeamBattle!.participants.map(p => p.role);
+      expect(roles).toContain('active');
     }
 
-    // Verify tag team scheduled matches table is independent (now uses scheduledTeamBattleMatch with matchMode='tag_team')
-    const tagTeamScheduledCount = await prisma.scheduledTeamBattleMatch.count({
-      where: { matchMode: 'tag_team' },
+    // Verify tag team scheduled matches are still their own match type in the
+    // unified schedule (Spec #41 folded the per-mode tables into one).
+    const tagTeamScheduledCount = await prisma.scheduledMatch.count({
+      where: { matchType: MatchType.tag_team },
     });
     // Just verify the query is accessible and not corrupted
     expect(tagTeamScheduledCount).toBeGreaterThanOrEqual(0);
@@ -577,6 +575,7 @@ describe('Team Battle Complete Cycle Integration Test', () => {
       );
       teams2v2.push(team);
       testTeamIds.push(team.id);
+      await createInitialTeamStandings(team.id, 2);
     }
 
     // Register 3v3 teams (all 3 robots from each stable)
@@ -592,6 +591,7 @@ describe('Team Battle Complete Cycle Integration Test', () => {
       );
       teams3v3.push(team);
       testTeamIds.push(team.id);
+      await createInitialTeamStandings(team.id, 3);
     }
 
     // ─── Execute 2v2 cycle (simulating 09:00 UTC slot) ───────────────────────
@@ -616,23 +616,11 @@ describe('Team Battle Complete Cycle Integration Test', () => {
     console.log('[Test] Verifying both battle types exist...');
 
     const battles2v2 = await prisma.battle.findMany({
-      where: {
-        battleType: 'league_2v2',
-        OR: [
-          { robot1Id: { in: testRobotIds } },
-          { robot2Id: { in: testRobotIds } },
-        ],
-      },
+      where: { battleType: 'league_2v2', ...battlesForRobots(testRobotIds) },
     });
 
     const battles3v3 = await prisma.battle.findMany({
-      where: {
-        battleType: 'league_3v3',
-        OR: [
-          { robot1Id: { in: testRobotIds } },
-          { robot2Id: { in: testRobotIds } },
-        ],
-      },
+      where: { battleType: 'league_3v3', ...battlesForRobots(testRobotIds) },
     });
 
     expect(battles2v2.length).toBeGreaterThan(0);

@@ -78,10 +78,7 @@ describe('FacilityRecommendationService', () => {
       });
 
       // Execute
-      const result = await facilityRecommendationService.generateRecommendations(
-        user.id,
-        10
-      );
+      const result = await facilityRecommendationService.generateRecommendations(user.id);
 
       // Verify: Should have some recommendations (training academies, roster expansion, storage)
       expect(result.recommendations.length).toBeGreaterThan(0);
@@ -140,10 +137,7 @@ describe('FacilityRecommendationService', () => {
       }
 
       // Execute
-      const result = await facilityRecommendationService.generateRecommendations(
-        user.id,
-        10
-      );
+      const result = await facilityRecommendationService.generateRecommendations(user.id);
 
       // Verify: Repair bay should be recommended
       const repairBayRec = result.recommendations.find(
@@ -213,10 +207,7 @@ describe('FacilityRecommendationService', () => {
       }
 
       // Execute
-      const result = await facilityRecommendationService.generateRecommendations(
-        user.id,
-        10
-      );
+      const result = await facilityRecommendationService.generateRecommendations(user.id);
 
       // Verify: Recommendations should be sorted by ROI (highest first)
       expect(result.recommendations.length).toBeGreaterThan(1);
@@ -256,10 +247,7 @@ describe('FacilityRecommendationService', () => {
       });
 
       // Execute
-      const result = await facilityRecommendationService.generateRecommendations(
-        user.id,
-        10
-      );
+      const result = await facilityRecommendationService.generateRecommendations(user.id);
 
       // Verify: Should not recommend level 4 upgrades (require 1000 prestige)
       const repairBayRec = result.recommendations.find(
@@ -302,10 +290,7 @@ describe('FacilityRecommendationService', () => {
       });
 
       // Execute
-      const result = await facilityRecommendationService.generateRecommendations(
-        user.id,
-        10
-      );
+      const result = await facilityRecommendationService.generateRecommendations(user.id);
 
       // Verify: Should not recommend storage_facility
       const storageRec = result.recommendations.find(
@@ -348,10 +333,7 @@ describe('FacilityRecommendationService', () => {
       await createTestRobot(user.id, 'Robot 3');
 
       // Execute
-      const result = await facilityRecommendationService.generateRecommendations(
-        user.id,
-        10
-      );
+      const result = await facilityRecommendationService.generateRecommendations(user.id);
 
       // Verify: Should recommend roster expansion with high priority
       const rosterRec = result.recommendations.find(
@@ -392,10 +374,7 @@ describe('FacilityRecommendationService', () => {
       });
 
       // Execute
-      const result = await facilityRecommendationService.generateRecommendations(
-        user.id,
-        10
-      );
+      const result = await facilityRecommendationService.generateRecommendations(user.id);
 
       // Verify: Total investment should equal sum of upgrade costs
       const expectedTotal = result.recommendations.reduce(

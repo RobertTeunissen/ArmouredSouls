@@ -213,46 +213,11 @@ router.post(
 
     const team = await registerTeam(userId, robotIds, teamName, teamSize, userId);
 
-    // Always create league standings on team creation (matchmaking handles eligibility separately)
-    const leagueMode = teamSize === 2 ? 'league_2v2' : 'league_3v3';
-    const { assignTeamBattleLeagueInstance } = await import('../services/team-battle/teamBattleAdapter');
-    const leagueInstanceId = await assignTeamBattleLeagueInstance('bronze', teamSize);
-    await prisma.standing.upsert({
-      where: { entityType_entityId_mode: { entityType: 'team', entityId: team.id, mode: leagueMode as StandingsMode } },
-      update: {},
-      create: {
-        entityType: 'team',
-        entityId: team.id,
-        mode: leagueMode as StandingsMode,
-        tier: 'bronze',
-        leagueInstanceId,
-        leaguePoints: 0,
-        cyclesInTier: 0,
-        wins: 0, losses: 0, draws: 0,
-        currentWinStreak: 0, bestWinStreak: 0, currentLoseStreak: 0,
-      },
-    });
-
-    // For 2v2 teams, also create tag_team standing
-    if (teamSize === 2) {
-      const { assignTagTeamLeagueInstanceOnTeamBattle } = await import('../services/team-battle/teamBattleAdapter');
-      const tagTeamLeagueId = await assignTagTeamLeagueInstanceOnTeamBattle('bronze');
-      await prisma.standing.upsert({
-        where: { entityType_entityId_mode: { entityType: 'team', entityId: team.id, mode: 'tag_team' as StandingsMode } },
-        update: {},
-        create: {
-          entityType: 'team',
-          entityId: team.id,
-          mode: 'tag_team' as StandingsMode,
-          tier: 'bronze',
-          leagueInstanceId: tagTeamLeagueId,
-          leaguePoints: 0,
-          cyclesInTier: 0,
-          wins: 0, losses: 0, draws: 0,
-          currentWinStreak: 0, bestWinStreak: 0, currentLoseStreak: 0,
-        },
-      });
-    }
+    // Standings are what matchmaking scopes on, so a team without them is
+    // unmatchable. registerTeam leaves this to the caller; the shared helper
+    // keeps every caller (and the tests) on one implementation.
+    const { createInitialTeamStandings } = await import('../services/team-battle/teamBattleAdapter');
+    await createInitialTeamStandings(team.id, teamSize);
 
     res.status(201).json({ team });
   },

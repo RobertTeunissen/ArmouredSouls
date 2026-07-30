@@ -417,3 +417,38 @@ fixture to have *no* snapshots (`getRobotPerformanceSummary` prefers snapshot
 `robotMetrics`, which are built from `battle_complete` audit events the fixture does
 not emit) while the progression assertion needs snapshots to exist. Having to satisfy
 both in one file is what made the divergence visible.
+
+### #67 — Facility Advisor Recommends Upgrades Its Own ROI Figure Calls a Loss
+**Source**: Integration suite repair (Backlog #64), 30 July 2026
+**Priority**: Low — needs a product decision, not a bug fix
+
+`facilityRecommendationService.evaluateFacility` measures two different horizons
+and then mixes them:
+
+- `projectedROI` is `(savingsPerCycle × 30 − upgradeCost) / upgradeCost` — a
+  30-cycle window.
+- `priority` comes from `projectedPayoffCycles`, which for the training facility
+  and weapons workshop counts `high ≤ 20`, `medium ≤ 40`, else `low`.
+
+The suppression guard at the end is `projectedROI <= 0 && priority === 'low'`. A
+facility that pays back on cycle 40 therefore reports a **negative** 30-cycle ROI
+at `medium` priority and survives the guard, so the advisor shows the player an
+upgrade alongside a figure saying it loses money. A training facility at 3,750
+credits saved per cycle against a 150,000 cost is exactly this case: ROI −0.25,
+payoff 40 cycles, priority medium, recommended.
+
+Either is defensible and it is a product call, which is why this is filed rather
+than fixed:
+
+1. **Treat the guard as authoritative** — drop `&& priority === 'low'`, so nothing
+   with a non-positive projected ROI is ever recommended (bar the repair bay,
+   which is a deliberate exception). Simple, but removes recommendations players
+   get today, and a 40-cycle payback is not obviously a bad investment.
+2. **Treat the horizon as the problem** — report ROI over the same window the
+   priority bands use, or present payoff cycles as the headline number and drop
+   the 30-cycle ROI from the UI. Keeps the recommendations, makes the number match
+   the advice.
+
+Whichever is chosen, `tests/facilityRecommendation.property.test.ts` Property 22.4
+should go back to asserting the stronger invariant; it currently accepts "positive
+ROI **or** pays back at all", with the reasoning noted inline.

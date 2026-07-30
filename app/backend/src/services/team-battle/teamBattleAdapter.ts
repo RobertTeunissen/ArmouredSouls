@@ -17,7 +17,8 @@
  * @module services/team-battle/teamBattleAdapter
  */
 
-import { TeamBattle } from '../../../generated/prisma';
+import { TeamBattle, StandingsMode } from '../../../generated/prisma';
+import prisma from '../../lib/prisma';
 import {
   LeagueAdapter,
   LeagueEngineConfig,
@@ -89,6 +90,57 @@ export async function assignTeamBattleLeagueInstance(tier: TeamBattleLeagueTier,
  */
 export async function assignTagTeamLeagueInstanceOnTeamBattle(tier: TeamBattleLeagueTier): Promise<string> {
   return assignLeagueInstanceWithLock(tier as LeagueTier, { mode: 'tag_team', maxPerInstance: MAX_TEAMS_PER_INSTANCE });
+}
+
+/**
+ * Create the standing rows a freshly registered team needs to be matchable.
+ *
+ * `registerTeam` deliberately does not do this — it leaves placement to the
+ * caller. But matchmaking scopes candidates by `standings.leagueInstanceId`
+ * (the source of truth since Spec #40), so a team with no standing is invisible
+ * to it: `getEligibleTeams` returns early and books nothing. That made the step
+ * mandatory rather than optional, and it was only implemented inline in
+ * `POST /api/team-battles`, so any other caller silently produced unmatchable
+ * teams.
+ *
+ * Idempotent: existing standings are left untouched, so re-registration and
+ * retries cannot reset a team's placement or LP.
+ *
+ * A 2v2 team also gets a `tag_team` standing, because one 2v2 roster competes in
+ * both the simultaneous 2v2 league and sequential tag team, on separate LP
+ * tracks.
+ */
+export async function createInitialTeamStandings(teamId: number, teamSize: 2 | 3): Promise<void> {
+  const leagueMode: StandingsMode = teamSize === 2 ? 'league_2v2' : 'league_3v3';
+
+  const modes: Array<{ mode: StandingsMode; leagueInstanceId: string }> = [
+    { mode: leagueMode, leagueInstanceId: await assignTeamBattleLeagueInstance(STARTING_TIER, teamSize) },
+  ];
+
+  if (teamSize === 2) {
+    modes.push({
+      mode: 'tag_team',
+      leagueInstanceId: await assignTagTeamLeagueInstanceOnTeamBattle(STARTING_TIER),
+    });
+  }
+
+  for (const { mode, leagueInstanceId } of modes) {
+    await prisma.standing.upsert({
+      where: { entityType_entityId_mode: { entityType: 'team', entityId: teamId, mode } },
+      update: {},
+      create: {
+        entityType: 'team',
+        entityId: teamId,
+        mode,
+        tier: STARTING_TIER,
+        leagueInstanceId,
+        leaguePoints: STARTING_LP,
+        cyclesInTier: 0,
+        wins: 0, losses: 0, draws: 0,
+        currentWinStreak: 0, bestWinStreak: 0, currentLoseStreak: 0,
+      },
+    });
+  }
 }
 
 // ─── Adapters (all use unified createStandingsAdapter) ───────────────────────
