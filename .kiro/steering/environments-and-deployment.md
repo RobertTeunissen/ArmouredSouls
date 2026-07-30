@@ -14,6 +14,23 @@ So: when a change needs migrations, a data repair, or any other deployment step,
 the target is ACC. Do not list PRD as a pending action or ask about deploying
 there.
 
+## Migrations apply themselves on deploy
+
+The ACC deploy job runs `pnpm exec prisma migrate deploy` on the VPS
+(`.github/workflows/deploy.yml`), after a pre-migration database backup. A new
+migration directory committed to the branch is applied automatically when that
+branch deploys.
+
+**Do not report pending migrations as a manual follow-up.** Writing the migration
+and committing it *is* the whole task. What still deserves a mention is anything
+the pipeline does not do:
+
+- A one-off data repair or backfill that is not expressible as a migration.
+- A migration that is destructive enough to want a human watching, in which case
+  say what it drops and that a backup precedes it — not that it needs running.
+- Anything requiring a GitHub secret, an env var on the VPS, or an admin action
+  in the running app.
+
 ## Environment Overview
 
 ### Local Development (DEV/TST)
