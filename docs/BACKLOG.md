@@ -44,6 +44,23 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 
 The Robot model still has `currentLeague`, `leagueId`, `leaguePoints`, and `cyclesInCurrentLeague` columns from before the Database Unification (Spec #40). All league data now lives in the `Standing` table, but these stale Robot columns are still read by the frontend robot store, the league standings page (for 1v1 indicators), and various mock data in tests. They should be dropped from the schema and all reads replaced with Standing table queries. Affects: `storeRobots`, `LeagueStandingsPage`, `matchmakingService` bye-robot factory, `practiceArenaService`, `teamBattleOrchestrator` bye-robot factory, seed file, and ~15 test files.
 
+### #61 — Guided New Robot Setup Workflow
+**Source**: Player experience — a newly created robot is not battle-ready and nothing walks the player through making it so
+**Priority**: Medium — affects every new robot a player creates, including their first
+
+Creating a robot is one step; making it actually compete takes six or seven more, spread across four pages. Nothing guides the player through them, and two of the steps are silent hard gates:
+
+- **No weapon equipped** → `checkSchedulingReadiness()` rejects the robot, so matchmaking skips it. It is never scheduled for anything.
+- **No event subscription** → the Booking Office gates participation in every battle event. Even a fully equipped robot never enters a match.
+
+Either omission leaves a robot sitting idle indefinitely, and the player has no obvious signal why. The other steps are softer but still shape whether the robot performs or bleeds Credits: loadout type, stance, yield threshold (drives repair cost), tuning allocation, and attribute upgrades.
+
+Proposal: a guided flow after robot creation that walks through equip weapon(s) for the chosen loadout → stance → yield threshold → tuning allocation → event subscriptions, with attribute upgrades offered as an optional final step. Skippable at any point, resumable later, and with a persistent "this robot is not battle-ready because…" indicator for anything still outstanding.
+
+Open questions: whether this is a modal wizard, a checklist on the robot page, or an extension of the existing onboarding tour; and whether the same checklist should surface for robots that fall out of readiness later (weapon sold, subscription dropped at a season reset — everything except accounts and onboarding state resets each season, so returning players re-do all of this for every robot).
+
+**Related**: #37 (Robot Detail Page Split) proposes an owner-only "Prepare" workspace covering the same actions — a creation wizard and that page should share components rather than duplicate them. #28 (Progressive Feature Disclosure) and #16 (Player Personas) overlap on how much to show a new player at once.
+
 ### Recently Completed (removed from backlog)
 
 | Item | # | Spec | Completed |
