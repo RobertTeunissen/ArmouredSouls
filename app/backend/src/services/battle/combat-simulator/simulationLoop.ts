@@ -127,23 +127,10 @@ export function simulateBattleMulti(
   const useVariableTick = config.variableTickRate !== false && n >= VARIABLE_TICK_MIN_ROBOTS;
   const lastAITick: number[] = states.map(() => 0);
 
-  // Cached HP/shield snapshot to avoid rebuilding on every event push
-  let cachedHPSnapshot: { robotHP: Record<string, number>; robotShield: Record<string, number> } | null = null;
-  let hpSnapshotDirty = true;
-
-  function getHPSnapshot() {
-    if (hpSnapshotDirty || !cachedHPSnapshot) {
-      cachedHPSnapshot = buildHPShieldSnapshot(states);
-      hpSnapshotDirty = false;
-    }
-    return cachedHPSnapshot;
-  }
-
   // Push helper that auto-injects robotHP/robotShield maps on every event.
-  // Uses cached snapshot to avoid rebuilding when HP hasn't changed.
-  // Direct function call is faster than Proxy trap in V8.
+  // Always builds a fresh snapshot from live state to ensure post-damage accuracy.
   function pushEvent(...args: SpatialCombatEvent[]): number {
-    const snapshot = getHPSnapshot();
+    const snapshot = buildHPShieldSnapshot(states);
     for (const evt of args) {
       evt.robotHP = snapshot.robotHP;
       evt.robotShield = snapshot.robotShield;
@@ -200,8 +187,6 @@ export function simulateBattleMulti(
 
   while (currentTime < maxDuration && !battleEnded) {
     currentTime += SIMULATION_TICK;
-    // Mark HP snapshot dirty at start of each tick (attacks may change HP/shield)
-    hpSnapshotDirty = true;
     // Invalidate position snapshot (movement/facing phases will update positions)
     cachedPositionSnapshot = null;
     const aliveStates = states.filter(s => s.isAlive);
