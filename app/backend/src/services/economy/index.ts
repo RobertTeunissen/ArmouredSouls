@@ -2,10 +2,15 @@
 
 export {
   repairAllRobots,
+  repairRobotsForEvent,
 } from './repairService';
 export type {
   RepairSummary,
 } from './repairService';
+
+export {
+  resolveRobotIdsForEvent,
+} from './repairScope';
 
 export {
   calculateStreamingRevenue,

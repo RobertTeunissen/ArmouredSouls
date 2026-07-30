@@ -2,7 +2,7 @@ import cron, { ScheduledTask } from 'node-cron';
 import logger from '../../config/logger';
 import { getConfig } from '../../config/env';
 import { getNextCronOccurrence } from '../../utils/scheduleUtils';
-import { repairAllRobots } from '../economy/repairService';
+import { repairRobotsForEvent } from '../economy/repairService';
 import { executeScheduledBattles } from '../league/leagueBattleOrchestrator';
 import { executeScheduledKothBattles } from '../koth/kothBattleOrchestrator';
 import { rebalanceLeagues } from '../league/leagueRebalancingService';
@@ -134,9 +134,9 @@ function releaseLock(): void {
 // --- Stub job handlers (to be implemented in tasks 9.2–9.5) ---
 
 async function executeLeagueCycle(): Promise<JobContext> {
-  // Step 1: Repair all robots (always first per Requirement 24.24)
-  logger.info('League Cycle: Step 1 — Repairing all robots');
-  await repairAllRobots(true);
+  // Step 1: Repair the robots fighting this slot (always first per Requirement 24.24)
+  logger.info('League Cycle: Step 1 — Repairing robots with a 1v1 match queued');
+  await repairRobotsForEvent('league_1v1');
 
   // Step 2: Execute scheduled league battles (1v1)
   logger.info('League Cycle: Step 2 — Executing scheduled league battles');
@@ -157,9 +157,9 @@ async function executeLeagueCycle(): Promise<JobContext> {
 }
 
 async function executeTournamentCycle(): Promise<JobContext> {
-  // Step 1: Repair all robots (always first per Requirement 24.24)
-  logger.info('Tournament Cycle: Step 1 — Repairing all robots');
-  await repairAllRobots(true);
+  // Step 1: Repair the robots fighting this slot (always first per Requirement 24.24)
+  logger.info('Tournament Cycle: Step 1 — Repairing robots with a tournament match queued');
+  await repairRobotsForEvent('tournament_1v1');
   logger.info('Tournament Cycle: Step 1 complete');
 
   // Step 2: Execute/schedule tournament matches
@@ -245,9 +245,9 @@ async function executeTournamentCycle(): Promise<JobContext> {
 }
 
 async function executeTagTeamCycle(): Promise<JobContext> {
-  // Step 1: Repair all robots (always first per Requirement 24.24)
-  logger.info('Tag Team Cycle: Step 1 — Repairing all robots');
-  await repairAllRobots(true);
+  // Step 1: Repair the robots fighting this slot (always first per Requirement 24.24)
+  logger.info('Tag Team Cycle: Step 1 — Repairing robots with a tag team match queued');
+  await repairRobotsForEvent('tag_team');
 
   // Step 2: Execute tag team battles (daily cadence — no parity check)
   logger.info('Tag Team Cycle: Step 2 — Executing tag team battles');
@@ -603,9 +603,10 @@ export async function executeSettlement(): Promise<JobContext> {
 // --- KotH cycle handler ---
 
 async function executeKothCycle(): Promise<JobContext> {
-  // Step 1: Repair all robots (always first - players can do manual repair with discount beforehand)
-  logger.info('KotH Cycle: Step 1 — Repairing all robots');
-  await repairAllRobots(true);
+  // Step 1: Repair the robots fighting this slot — everyone else keeps the
+  // option of the cheaper manual repair (issue #411)
+  logger.info('KotH Cycle: Step 1 — Repairing robots with a KotH match queued');
+  await repairRobotsForEvent('koth');
 
   // Step 2: Execute scheduled KotH battles
   logger.info('KotH Cycle: Step 2 — Executing scheduled KotH battles');
@@ -629,9 +630,9 @@ async function executeKothCycle(): Promise<JobContext> {
 // --- Grand Melee cycle handler (Spec #44: R7.1–R7.6) ---
 
 async function executeGrandMeleeCycle(): Promise<JobContext> {
-  // Step 1: Repair all robots (same as all other battle modes)
-  logger.info('Grand Melee Cycle: Step 1 — Repairing all robots');
-  await repairAllRobots(true);
+  // Step 1: Repair the robots fighting this slot (same as all other battle modes)
+  logger.info('Grand Melee Cycle: Step 1 — Repairing robots with a Grand Melee match queued');
+  await repairRobotsForEvent('grand_melee');
 
   // Step 2: Execute all scheduled Grand Melee battles
   logger.info('Grand Melee Cycle: Step 2 — Executing scheduled Grand Melee battles');
@@ -655,9 +656,9 @@ async function executeGrandMeleeCycle(): Promise<JobContext> {
 // --- Team Battle cycle handlers ---
 
 async function executeTeam2v2LeagueCycle(): Promise<JobContext> {
-  // Step 1: Repair all robots (always first per Requirement 24.24)
-  logger.info('Team 2v2 League Cycle: Step 1 — Repairing all robots');
-  await repairAllRobots(true);
+  // Step 1: Repair the robots fighting this slot (always first per Requirement 24.24)
+  logger.info('Team 2v2 League Cycle: Step 1 — Repairing robots with a 2v2 match queued');
+  await repairRobotsForEvent('league_2v2');
 
   // Step 2: Execute scheduled 2v2 team battles
   logger.info('Team 2v2 League Cycle: Step 2 — Executing scheduled 2v2 team battles');
@@ -678,9 +679,9 @@ async function executeTeam2v2LeagueCycle(): Promise<JobContext> {
 }
 
 async function executeTeam3v3LeagueCycle(): Promise<JobContext> {
-  // Step 1: Repair all robots (always first per Requirement 24.24)
-  logger.info('Team 3v3 League Cycle: Step 1 — Repairing all robots');
-  await repairAllRobots(true);
+  // Step 1: Repair the robots fighting this slot (always first per Requirement 24.24)
+  logger.info('Team 3v3 League Cycle: Step 1 — Repairing robots with a 3v3 match queued');
+  await repairRobotsForEvent('league_3v3');
 
   // Step 2: Execute scheduled 3v3 team battles
   logger.info('Team 3v3 League Cycle: Step 2 — Executing scheduled 3v3 team battles');
@@ -734,9 +735,9 @@ async function executeTeamTournamentCycle(teamSize: 2 | 3): Promise<JobContext> 
   const label = `Team ${teamSize}v${teamSize} Tournament Cycle`;
   const participantType = teamSize === 2 ? 'team_2v2' : 'team_3v3';
 
-  // Step 1: Repair all robots (pre-match repair)
-  logger.info(`${label}: Step 1 — Repairing all robots`);
-  await repairAllRobots(true);
+  // Step 1: Repair the robots fighting this slot (pre-match repair)
+  logger.info(`${label}: Step 1 — Repairing robots with a ${teamSize}v${teamSize} tournament match queued`);
+  await repairRobotsForEvent(teamSize === 2 ? 'tournament_2v2' : 'tournament_3v3');
 
   // Step 2: Execute the active tournament's round, if one is active
   const activeTournament = await prisma.tournament.findFirst({

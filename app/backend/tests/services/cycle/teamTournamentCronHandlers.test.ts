@@ -63,10 +63,11 @@ jest.mock('../../../src/services/notifications/notification-service', () => ({
   dispatchNotification: jest.fn(),
 }));
 
-// Mock repairAllRobots
-const mockRepairAllRobots = jest.fn().mockResolvedValue(undefined);
+// Mock pre-battle repair. Since issue #411 the crons repair only the robots with
+// a match queued for their own battle type, via repairRobotsForEvent.
+const mockRepairRobotsForEvent = jest.fn().mockResolvedValue(undefined);
 jest.mock('../../../src/services/economy/repairService', () => ({
-  repairAllRobots: (...args: unknown[]) => mockRepairAllRobots(...args),
+  repairRobotsForEvent: (...args: unknown[]) => mockRepairRobotsForEvent(...args),
 }));
 
 // Mock executeTeamTournamentRound
@@ -181,7 +182,7 @@ import {
 describe('executeTeam2v2TournamentCycle (R7.1, R7.3–R7.7)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockRepairAllRobots.mockResolvedValue(undefined);
+    mockRepairRobotsForEvent.mockResolvedValue(undefined);
     mockPrisma.tournament.findFirst.mockResolvedValue(null);
     mockAutoCreateNextTeamTournament.mockResolvedValue(null);
     mockExecuteTeamTournamentRound.mockResolvedValue({ matchesExecuted: 0, matchesFailed: 0 });
@@ -203,9 +204,9 @@ describe('executeTeam2v2TournamentCycle (R7.1, R7.3–R7.7)', () => {
       mockExecuteTeamTournamentRound.mockResolvedValue({ matchesExecuted: 4, matchesFailed: 0 });
     });
 
-    it('should call repairAllRobots before executing', async () => {
+    it('should repair only the robots in the 2v2 bracket before executing', async () => {
       await executeTeam2v2TournamentCycle();
-      expect(mockRepairAllRobots).toHaveBeenCalledWith(true);
+      expect(mockRepairRobotsForEvent).toHaveBeenCalledWith('tournament_2v2');
     });
 
     it('should query for active 2v2 tournament', async () => {
@@ -389,7 +390,7 @@ describe('executeTeam2v2TournamentCycle (R7.1, R7.3–R7.7)', () => {
 describe('executeTeam3v3TournamentCycle (R7.2, R7.3–R7.7)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockRepairAllRobots.mockResolvedValue(undefined);
+    mockRepairRobotsForEvent.mockResolvedValue(undefined);
     mockPrisma.tournament.findFirst.mockResolvedValue(null);
     mockAutoCreateNextTeamTournament.mockResolvedValue(null);
     mockExecuteTeamTournamentRound.mockResolvedValue({ matchesExecuted: 0, matchesFailed: 0 });
@@ -411,9 +412,9 @@ describe('executeTeam3v3TournamentCycle (R7.2, R7.3–R7.7)', () => {
       mockExecuteTeamTournamentRound.mockResolvedValue({ matchesExecuted: 8, matchesFailed: 0 });
     });
 
-    it('should call repairAllRobots before executing', async () => {
+    it('should repair only the robots in the 3v3 bracket before executing', async () => {
       await executeTeam3v3TournamentCycle();
-      expect(mockRepairAllRobots).toHaveBeenCalledWith(true);
+      expect(mockRepairRobotsForEvent).toHaveBeenCalledWith('tournament_3v3');
     });
 
     it('should query for active 3v3 tournament', async () => {

@@ -24,6 +24,7 @@ jest.mock('../../../src/utils/cycleLogger', () => ({
 
 jest.mock('../../../src/services/economy/repairService', () => ({
   repairAllRobots: jest.fn().mockResolvedValue({ robotsRepaired: 0, totalFinalCost: 0 }),
+  repairRobotsForEvent: jest.fn().mockResolvedValue({ robotsRepaired: 0, totalFinalCost: 0 }),
 }));
 
 jest.mock('../../../src/services/league/leagueBattleOrchestrator', () => ({

@@ -66,6 +66,7 @@ jest.mock('../../../src/services/notifications/notification-service', () => ({
 // Mock all service dependencies (same pattern as scheduler.property.test.ts)
 jest.mock('../../../src/services/economy/repairService', () => ({
   repairAllRobots: jest.fn().mockResolvedValue(undefined),
+  repairRobotsForEvent: jest.fn().mockResolvedValue(undefined),
 }));
 jest.mock('../../../src/services/league/leagueBattleOrchestrator', () => ({
   executeScheduledBattles: jest.fn().mockResolvedValue({ totalBattles: 0 }),

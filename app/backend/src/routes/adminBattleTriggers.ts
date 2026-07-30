@@ -10,7 +10,7 @@ import { z } from 'zod';
 import { authenticateToken, requireAdmin, AuthRequest } from '../middleware/auth';
 import { validateRequest } from '../middleware/schemaValidator';
 import logger from '../config/logger';
-import { repairAllRobots } from '../services/economy/repairService';
+import { repairRobotsForEvent } from '../services/economy/repairService';
 import { recordAction as recordAuditAction } from '../services/admin/adminAuditLogService';
 import prisma from '../lib/prisma';
 
@@ -134,7 +134,7 @@ router.post('/team-2v2-league/trigger', authenticateToken, requireAdmin, validat
     const { rebalanceTeamBattleLeagues } = await import('../services/team-battle/teamBattleAdapter');
     const { runTeamBattleMatchmaking } = await import('../services/team-battle/teamBattleMatchmakingService');
 
-    await repairAllRobots(true);
+    await repairRobotsForEvent('league_2v2');
     const execResult = await executeScheduledTeamBattles(2);
     const rebalanceSummary = await rebalanceTeamBattleLeagues(2);
     const matchesCreated = await runTeamBattleMatchmaking(2);
@@ -170,7 +170,7 @@ router.post('/team-3v3-league/trigger', authenticateToken, requireAdmin, validat
     const { rebalanceTeamBattleLeagues } = await import('../services/team-battle/teamBattleAdapter');
     const { runTeamBattleMatchmaking } = await import('../services/team-battle/teamBattleMatchmakingService');
 
-    await repairAllRobots(true);
+    await repairRobotsForEvent('league_3v3');
     const execResult = await executeScheduledTeamBattles(3);
     const rebalanceSummary = await rebalanceTeamBattleLeagues(3);
     const matchesCreated = await runTeamBattleMatchmaking(3);
@@ -212,7 +212,7 @@ router.post('/team-2v2-tournament/trigger', authenticateToken, requireAdmin, val
       return res.status(404).json({ error: 'No active 2v2 tournament available' });
     }
 
-    await repairAllRobots(true);
+    await repairRobotsForEvent('tournament_2v2');
     const roundResult = await executeTeamTournamentRound(activeTournament.id, 2);
     await advanceWinnersToNextRound(activeTournament.id);
 
@@ -263,7 +263,7 @@ router.post('/team-3v3-tournament/trigger', authenticateToken, requireAdmin, val
       return res.status(404).json({ error: 'No active 3v3 tournament available' });
     }
 
-    await repairAllRobots(true);
+    await repairRobotsForEvent('tournament_3v3');
     const roundResult = await executeTeamTournamentRound(activeTournament.id, 3);
     await advanceWinnersToNextRound(activeTournament.id);
 

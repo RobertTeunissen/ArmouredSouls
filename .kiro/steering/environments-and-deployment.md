@@ -4,6 +4,16 @@ inclusion: manual
 
 # Environments and Deployment
 
+## Current status: ACC is the only deployed environment
+
+**There is no PRD environment yet.** The game runs on ACC. The PRD sections below
+describe the intended setup for when it exists — treat them as a plan, not as
+something to act on.
+
+So: when a change needs migrations, a data repair, or any other deployment step,
+the target is ACC. Do not list PRD as a pending action or ask about deploying
+there.
+
 ## Environment Overview
 
 ### Local Development (DEV/TST)

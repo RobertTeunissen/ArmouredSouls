@@ -48,6 +48,7 @@ jest.mock('../../src/config/logger', () => ({
 
 jest.mock('../../src/services/economy/repairService', () => ({
   repairAllRobots: jest.fn().mockResolvedValue(undefined),
+  repairRobotsForEvent: jest.fn().mockResolvedValue(undefined),
 }));
 
 const mockAutoCreateNextTournament = jest.fn().mockResolvedValue(null);

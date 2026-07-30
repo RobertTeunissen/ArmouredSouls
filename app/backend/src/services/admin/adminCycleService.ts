@@ -10,7 +10,7 @@ import { executeScheduledTeamBattles } from '../team-battle/teamBattleOrchestrat
 import { rebalanceTeamBattleLeagues } from '../team-battle/teamBattleAdapter';
 import { runTeamBattleMatchmaking } from '../team-battle/teamBattleMatchmakingService';
 import { generateBattleReadyUsers } from '../../utils/userGeneration';
-import { repairAllRobots } from '../economy/repairService';
+import { repairRobotsForEvent } from '../economy/repairService';
 import {
   getActiveTournaments,
   getCurrentRoundMatches,
@@ -213,7 +213,9 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
   // cycles=0 means "run only the tournament step without a full cycle"
   if (cycleCount === 0 && includeTournaments) {
     logger.info('[Admin] Running tournament-only execution (cycles=0)...');
-    await repairAllRobots(true, cycleMetadata.totalCycles);
+    // executeTournamentStep() covers the 1v1 bracket only; the team brackets
+    // have their own steps further down with their own scoped repair.
+    await repairRobotsForEvent('tournament_1v1', true, cycleMetadata.totalCycles);
     const tournamentSummary = await executeTournamentStep();
     const duration = Date.now() - startTime;
 
@@ -268,9 +270,9 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
 
       // 1.1 Repair
       stepNumber++;
-      logger.info(`[Admin] Step ${stepNumber}: Repair All Robots (pre-league)`);
+      logger.info(`[Admin] Step ${stepNumber}: Repair Scheduled Robots (pre-league)`);
       const leagueRepairStart = Date.now();
-      const leagueRepairSummary = await repairAllRobots(true, currentCycleNumber);
+      const leagueRepairSummary = await repairRobotsForEvent('league_1v1', true, currentCycleNumber);
       await eventLogger.logCycleStepComplete(
         currentCycleNumber,
         'repair_pre_league',
@@ -332,9 +334,9 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
       try {
         // 2.0 Repair (Spec #41 — was missing, must match cron behavior)
         stepNumber++;
-        logger.info(`[Admin] Step ${stepNumber}: Repair All Robots (pre-team-2v2-league)`);
+        logger.info(`[Admin] Step ${stepNumber}: Repair Scheduled Robots (pre-team-2v2-league)`);
         const team2v2RepairStart = Date.now();
-        await repairAllRobots(true, currentCycleNumber);
+        await repairRobotsForEvent('league_2v2', true, currentCycleNumber);
         await eventLogger.logCycleStepComplete(
           currentCycleNumber,
           'repair_pre_team_2v2_league',
@@ -397,9 +399,9 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
 
       // 3.1 Repair
       stepNumber++;
-      logger.info(`[Admin] Step ${stepNumber}: Repair All Robots (pre-tournament)`);
+      logger.info(`[Admin] Step ${stepNumber}: Repair Scheduled Robots (pre-tournament)`);
       const tournamentRepairStart = Date.now();
-      const tournamentRepairSummary = await repairAllRobots(true, currentCycleNumber);
+      const tournamentRepairSummary = await repairRobotsForEvent('tournament_1v1', true, currentCycleNumber);
       await eventLogger.logCycleStepComplete(
         currentCycleNumber,
         'repair_pre_tournament',
@@ -434,9 +436,9 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
 
       // 4.1 Repair
       stepNumber++;
-      logger.info(`[Admin] Step ${stepNumber}: Repair All Robots (pre-tag-team)`);
+      logger.info(`[Admin] Step ${stepNumber}: Repair Scheduled Robots (pre-tag-team)`);
       const tagTeamRepairStart = Date.now();
-      const tagTeamRepairSummary = await repairAllRobots(true, currentCycleNumber);
+      const tagTeamRepairSummary = await repairRobotsForEvent('tag_team', true, currentCycleNumber);
       await eventLogger.logCycleStepComplete(
         currentCycleNumber,
         'repair_pre_tag_team',
@@ -497,9 +499,9 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
       if (includeKoth) {
         // 5.1 Repair
         stepNumber++;
-        logger.info(`[Admin] Step ${stepNumber}: Repair All Robots (pre-koth)`);
+        logger.info(`[Admin] Step ${stepNumber}: Repair Scheduled Robots (pre-koth)`);
         const kothRepairStart = Date.now();
-        kothRepairSummary = await repairAllRobots(true, currentCycleNumber);
+        kothRepairSummary = await repairRobotsForEvent('koth', true, currentCycleNumber);
         await eventLogger.logCycleStepComplete(
           currentCycleNumber,
           'repair_pre_koth',
@@ -573,9 +575,9 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
       try {
         // 6.0 Repair (Spec #41 — was missing, must match cron behavior)
         stepNumber++;
-        logger.info(`[Admin] Step ${stepNumber}: Repair All Robots (pre-team-3v3-league)`);
+        logger.info(`[Admin] Step ${stepNumber}: Repair Scheduled Robots (pre-team-3v3-league)`);
         const team3v3RepairStart = Date.now();
-        await repairAllRobots(true, currentCycleNumber);
+        await repairRobotsForEvent('league_3v3', true, currentCycleNumber);
         await eventLogger.logCycleStepComplete(
           currentCycleNumber,
           'repair_pre_team_3v3_league',
@@ -637,9 +639,9 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
       let team2v2TournamentResult: CycleResult['team2v2TournamentBlock'] = undefined;
 
       stepNumber++;
-      logger.info(`[Admin] Step ${stepNumber}: Repair All Robots (pre-team-2v2-tournament)`);
+      logger.info(`[Admin] Step ${stepNumber}: Repair Scheduled Robots (pre-team-2v2-tournament)`);
       const team2v2TournamentRepairStart = Date.now();
-      const team2v2TournamentRepairSummary = await repairAllRobots(true, currentCycleNumber);
+      const team2v2TournamentRepairSummary = await repairRobotsForEvent('tournament_2v2', true, currentCycleNumber);
       await eventLogger.logCycleStepComplete(
         currentCycleNumber,
         'repair_pre_team_2v2_tournament',
@@ -721,7 +723,7 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
         const { runGrandMeleeMatchmaking } = await import('../grand-melee/grandMeleeMatchmakingService');
         const { rebalanceGrandMeleeLeagues } = await import('../league/leagueRebalancingService');
 
-        await repairAllRobots(true, currentCycleNumber);
+        await repairRobotsForEvent('grand_melee', true, currentCycleNumber);
         const execSummary = await executeScheduledGrandMeleeBattles();
         await rebalanceGrandMeleeLeagues();
         const matchesCreated = await runGrandMeleeMatchmaking();
@@ -750,9 +752,9 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
       let team3v3TournamentResult: CycleResult['team3v3TournamentBlock'] = undefined;
 
       stepNumber++;
-      logger.info(`[Admin] Step ${stepNumber}: Repair All Robots (pre-team-3v3-tournament)`);
+      logger.info(`[Admin] Step ${stepNumber}: Repair Scheduled Robots (pre-team-3v3-tournament)`);
       const team3v3TournamentRepairStart = Date.now();
-      const team3v3TournamentRepairSummary = await repairAllRobots(true, currentCycleNumber);
+      const team3v3TournamentRepairSummary = await repairRobotsForEvent('tournament_3v3', true, currentCycleNumber);
       await eventLogger.logCycleStepComplete(
         currentCycleNumber,
         'repair_pre_team_3v3_tournament',
