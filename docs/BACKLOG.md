@@ -85,7 +85,18 @@ Proposal: have the rule inspect the route path for `:params` and the handler for
 
 ### #64 — Repair the Integration Test Suite (90 of 148 suites failing)
 **Source**: Full-suite run during the Booking Office unification, 30 July 2026
-**Priority**: High — `pnpm test` cannot pass, so the documented pre-commit gate is unachievable
+**Priority**: Blocker — the CI gates are now real, so this blocks every deploy
+
+**Why this was invisible.** Two independent holes, and the failing suites sat in the
+intersection of both. They were never typechecked (`tsconfig.json` excludes tests,
+so `pnpm run build` covers `src/` only) *and* never enforced: `deploy.yml` ran
+`pnpm run test:integration 2>&1 | tail -n 500 || true`, and even without the
+`|| true` the pipe alone discards the exit code because GitHub's default shell has
+no `pipefail`. `deploy-acc` listed the job in `needs:`, so the graph showed a gate
+that could not fire. Also found: `pnpm run lint || true` on both deploy lint steps,
+`continue-on-error` on E2E, no frontend tests in `deploy.yml`, and `test:heavy`
+running in no pipeline at all. All fixed — every tier is now mandatory and blocking,
+which is what makes this item a blocker rather than a cleanup.
 
 `pnpm run test:unit` is fully green (205 suites, 2881 tests). `pnpm run test:integration` reports **90 failed / 58 passed of 148 suites, 180 failed / 1000 passed of 1180 tests**. None of it is recent: the failures are tests that were never updated when earlier specs changed the schema and service surfaces, and TypeScript never caught them because a test that fails to compile simply reports "suite failed to run" and is easy to skim past.
 
@@ -107,7 +118,20 @@ Two structural problems worth fixing alongside the individual suites:
 1. **Compile failures are invisible.** A suite that does not typecheck reports "failed to run" and does not fail loudly enough to have been noticed for months. `tsc --noEmit` covers `src/` but the test tsconfig evidently does not gate CI the same way.
 2. **Suites are quarantined into the integration runner as "requires DB" when they are fully mocked.** The same mistake was found and fixed for four changelog suites, and `achievementService.test.ts` is another instance. A mocked suite parked behind a live-DB setup stops being run in practice, and then rots.
 
-Until this is cleared, `pnpm run test:unit` is the meaningful gate.
+**Progress.** `tsconfig.test.json` + `pnpm run typecheck:tests` now typecheck the
+suites, and that runs in CI as a blocking step. Test compile errors are down from
+454 to 394 across 44 files; nine suites repaired; two orphaned suites deleted
+(they tested `roiCalculatorService`, which no longer exists). Remaining, largest
+first: battle participant migration in the streaming-revenue and orchestrator
+suites (~180), `scheduledTeamBattleMatch` → unified schedule (46), KotH
+`rotatingZone` suites for an abolished feature (15), `WeaponInventory` fixtures
+missing `pricePaid` (14), `Robot.leaguePoints` / `cyclesInTier` now on `Standing`
+(10), and a tail of implicit-`any` parameters.
+
+Expect a second wave of assertion failures once these compile — some suites have not
+executed in months. Two already sampled: auth registration returns 400 where the
+test expects 201, and `leagues.test.ts` expects an `error` key in a 400 body that is
+now `{}`.
 
 ### Recently Completed (removed from backlog)
 
