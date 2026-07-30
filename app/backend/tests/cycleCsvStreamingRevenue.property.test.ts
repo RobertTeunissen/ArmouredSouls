@@ -10,11 +10,13 @@
  */
 
 import fc from 'fast-check';
-import { Prisma } from '../generated/prisma';
+import { Prisma, MatchType } from '../generated/prisma';
 import { executeScheduledBattles } from '../src/services/league/leagueBattleOrchestrator';
 import { exportCycleBattlesToCSV } from '../src/services/cycle/cycleCsvExportService';
 import { clearSequenceCache } from '../src/services/common/eventLogger';
+import schedulingService from '../src/services/scheduling/schedulingService';
 import prisma from '../src/lib/prisma';
+import { battlesForRobots, battlesForUsers, robotIdsForUsers, scheduledMatchesForRobots } from './cleanupHelper';
 
 // Helper function to create a minimal test robot
 async function createTestRobot(userId: number, battles: number, fame: number, name: string) {
@@ -141,26 +143,16 @@ describe('Property 15: Cycle CSV Contains Streaming Revenue Column', () => {
       },
     });
 
+    // Combatants live in battle_participants (Spec #43) and the schedule is
+    // entity-agnostic (Spec #41), so ids are resolved before the robots go.
+    const cleanupRobotIds = await robotIdsForUsers([testUserId1, testUserId2]);
+
     await prisma.battle.deleteMany({
-      where: {
-        OR: [
-          { robot1: { userId: testUserId1 } },
-          { robot2: { userId: testUserId1 } },
-          { robot1: { userId: testUserId2 } },
-          { robot2: { userId: testUserId2 } },
-        ],
-      },
+      where: battlesForUsers([testUserId1, testUserId2]),
     });
 
     await prisma.scheduledMatch.deleteMany({
-      where: {
-        OR: [
-          { robot1: { userId: testUserId1 } },
-          { robot2: { userId: testUserId1 } },
-          { robot1: { userId: testUserId2 } },
-          { robot2: { userId: testUserId2 } },
-        ],
-      },
+      where: scheduledMatchesForRobots(cleanupRobotIds),
     });
 
     await prisma.robot.deleteMany({
@@ -249,16 +241,18 @@ describe('Property 15: Cycle CSV Contains Streaming Revenue Column', () => {
             },
           });
 
-          // Schedule battle
+          // Schedule battle. The unified schedule stores combatants as
+          // participant rows, so go through the service rather than hand-rolling
+          // the row and its participants (Spec #41).
           const scheduledFor = new Date();
-          const match = await prisma.scheduledMatch.create({
-            data: {
-              robot1Id: robot1.id,
-              robot2Id: robot2.id,
-              scheduledFor,
-              status: 'scheduled',
-              leagueType: 'bronze',
-            },
+          const match = await schedulingService.createMatch({
+            matchType: MatchType.league_1v1,
+            scheduledFor,
+            leagueType: 'bronze',
+            participants: [
+              { participantType: 'robot', participantId: robot1.id, slot: 1 },
+              { participantType: 'robot', participantId: robot2.id, slot: 2 },
+            ],
           });
 
           // Execute battle
@@ -279,20 +273,8 @@ describe('Property 15: Cycle CSV Contains Streaming Revenue Column', () => {
           if (!battleEvent) {
             // No battle event found, skip CSV check
             // Cleanup
-            const battles = await prisma.battle.findMany({
-              where: {
-                OR: [
-                  { robot1Id: robot1.id },
-                  { robot2Id: robot1.id },
-                  { robot1Id: robot2.id },
-                  { robot2Id: robot2.id },
-                ],
-              },
-            });
             await prisma.battle.deleteMany({
-              where: {
-                id: { in: battles.map(b => b.id) },
-              },
+              where: battlesForRobots([robot1.id, robot2.id]),
             });
             await prisma.scheduledMatch.deleteMany({ where: { id: match.id } });
             await prisma.robot.deleteMany({ where: { id: robot1.id } });
@@ -331,20 +313,8 @@ describe('Property 15: Cycle CSV Contains Streaming Revenue Column', () => {
           }
 
           // Cleanup - delete in correct order
-          const battles = await prisma.battle.findMany({
-            where: {
-              OR: [
-                { robot1Id: robot1.id },
-                { robot2Id: robot1.id },
-                { robot1Id: robot2.id },
-                { robot2Id: robot2.id },
-              ],
-            },
-          });
           await prisma.battle.deleteMany({
-            where: {
-              id: { in: battles.map(b => b.id) },
-            },
+            where: battlesForRobots([robot1.id, robot2.id]),
           });
           await prisma.scheduledMatch.deleteMany({ where: { id: match.id } });
           await prisma.robot.deleteMany({ where: { id: robot1.id } });
@@ -414,14 +384,14 @@ describe('Property 15: Cycle CSV Contains Streaming Revenue Column', () => {
 
     // Schedule battle with test cycle number
     const scheduledFor = new Date();
-    const match = await prisma.scheduledMatch.create({
-      data: {
-        robot1Id: robot1.id,
-        robot2Id: robot2.id,
-        scheduledFor,
-        status: 'scheduled',
-        leagueType: 'bronze',
-      },
+    const match = await schedulingService.createMatch({
+      matchType: MatchType.league_1v1,
+      scheduledFor,
+      leagueType: 'bronze',
+      participants: [
+        { participantType: 'robot', participantId: robot1.id, slot: 1 },
+        { participantType: 'robot', participantId: robot2.id, slot: 2 },
+      ],
     });
 
     // Update cycle metadata to use test cycle number
@@ -454,12 +424,14 @@ describe('Property 15: Cycle CSV Contains Streaming Revenue Column', () => {
 
     const actualCycleNumber = battleEvent.cycleNumber;
 
-    // Verify battle was created
+    // Verify battle was created. Both robots must be participants — the old
+    // form encoded "either ordering of the two columns", which the participant
+    // model expresses directly as "every one of these robots took part".
     const battle = await prisma.battle.findFirst({
       where: {
-        OR: [
-          { robot1Id: robot1.id, robot2Id: robot2.id },
-          { robot1Id: robot2.id, robot2Id: robot1.id },
+        AND: [
+          { participants: { some: { robotId: robot1.id } } },
+          { participants: { some: { robotId: robot2.id } } },
         ],
       },
       orderBy: { id: 'desc' },
@@ -504,20 +476,8 @@ describe('Property 15: Cycle CSV Contains Streaming Revenue Column', () => {
     expect(robot2StreamingRevenue).toBeGreaterThan(0);
 
     // Cleanup
-    const battles = await prisma.battle.findMany({
-      where: {
-        OR: [
-          { robot1Id: robot1.id },
-          { robot2Id: robot1.id },
-          { robot1Id: robot2.id },
-          { robot2Id: robot2.id },
-        ],
-      },
-    });
     await prisma.battle.deleteMany({
-      where: {
-        id: { in: battles.map(b => b.id) },
-      },
+      where: battlesForRobots([robot1.id, robot2.id]),
     });
     await prisma.scheduledMatch.deleteMany({ where: { id: match.id } });
     await prisma.robot.deleteMany({ where: { id: robot1.id } });

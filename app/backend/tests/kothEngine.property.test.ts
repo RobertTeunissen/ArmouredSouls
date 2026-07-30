@@ -11,6 +11,7 @@ import {
   generateNextZonePosition,
   buildKothGameModeConfig,
   buildKothInitialState,
+  validateKothConfig,
   KOTH_MATCH_DEFAULTS,
   KothZoneState,
   ZoneOccupationResult,
@@ -280,9 +281,6 @@ describe('Property 23: Spawn positions are equidistant and equally spaced', () =
  * valid: false with a descriptive error listing all invalid fields.
  */
 describe('Property 21: Config validation accepts valid ranges and rejects invalid', () => {
-  // Import validateKothConfig
-  const { validateKothConfig } = require('../src/services/arena/kothEngine');
-
   // Arbitraries for valid config values
   const validParticipantCount = fc.constantFrom(5, 6, 7);
   const validScoreThreshold = fc.integer({ min: 15, max: 90 });
@@ -2642,116 +2640,6 @@ describe('Property 18: Zone position generation is deterministic', () => {
 
 // ─── Property 19: Rotating zone adjusts default thresholds ──────────
 
-/**
- * **Validates: Requirements 8.7**
- *
- * Property 19: For any KothMatchConfig with `rotatingZone: true` and no
- * explicit overrides, the effective Score_Threshold must be 45 and the
- * effective Time_Limit must be 210 seconds. With `rotatingZone: false`,
- * defaults are 30 and 150 respectively.
- */
-describe('Property 19: Rotating zone adjusts default thresholds', () => {
-  beforeEach(() => {
-    resetScoreTickAccumulator();
-  });
-
-  it('rotatingZone: false uses scoreThreshold=30 and timeLimit=150', () => {
-    fc.assert(
-      fc.property(
-        fc.integer({ min: 30, max: 44 }), // random score between 30 and 44
-        (score) => {
-          const config: KothMatchConfig = {
-            participantCount: 6,
-            matchId: 1,
-            rotatingZone: false,
-            // NO scoreThreshold or timeLimit — use defaults
-          };
-          const evaluator = new KothWinConditionEvaluator(config);
-
-          const ids = [1, 2, 3, 4, 5, 6];
-          const scoreState = createKothScoreState(ids);
-          scoreState.zoneScores[1] = score; // score in [30, 44], >= default threshold 30
-
-          const teams: RobotCombatState[][] = ids.map((id) => [
-            makeRobot(id, 0, 0, true),
-          ]);
-          const gameState: GameModeState = {
-            mode: 'zone_control',
-            customData: { scoreState },
-          };
-
-          // Score >= 30 (default threshold) should trigger score_threshold end
-          const scoreResult = evaluator.evaluate(teams, 10, gameState);
-          expect(scoreResult).not.toBeNull();
-          expect(scoreResult!.ended).toBe(true);
-          expect(scoreResult!.reason).toBe('score_threshold');
-
-          // Time limit check: at time 155 (> default 150), should trigger time_limit end
-          const scoreState2 = createKothScoreState(ids);
-          // All scores below threshold so score_threshold doesn't fire
-          scoreState2.zoneScores[1] = 5;
-
-          const gameState2: GameModeState = {
-            mode: 'zone_control',
-            customData: { scoreState: scoreState2 },
-          };
-
-          const timeResult = evaluator.evaluate(teams, 155, gameState2);
-          expect(timeResult).not.toBeNull();
-          expect(timeResult!.ended).toBe(true);
-          expect(timeResult!.reason).toBe('time_limit');
-        },
-      ),
-      { numRuns: 100 },
-    );
-  });
-
-  it('rotatingZone: true uses scoreThreshold=45 and timeLimit=210', () => {
-    fc.assert(
-      fc.property(
-        fc.integer({ min: 30, max: 44 }), // random score between 30 and 44
-        (score) => {
-          const config: KothMatchConfig = {
-            participantCount: 6,
-            matchId: 1,
-            rotatingZone: true,
-            // NO scoreThreshold or timeLimit — use defaults
-          };
-          const evaluator = new KothWinConditionEvaluator(config);
-
-          const ids = [1, 2, 3, 4, 5, 6];
-          const scoreState = createKothScoreState(ids);
-          scoreState.zoneScores[1] = score; // score in [30, 44], < rotating threshold 45
-
-          const teams: RobotCombatState[][] = ids.map((id) => [
-            makeRobot(id, 0, 0, true),
-          ]);
-          const gameState: GameModeState = {
-            mode: 'zone_control',
-            customData: { scoreState },
-          };
-
-          // Score < 45 (rotating default threshold) should NOT trigger match end
-          const scoreResult = evaluator.evaluate(teams, 10, gameState);
-          expect(scoreResult).toBeNull();
-
-          // Time limit check: at time 155 (< rotating default 210), should NOT trigger
-          const scoreState2 = createKothScoreState(ids);
-          scoreState2.zoneScores[1] = 5;
-
-          const gameState2: GameModeState = {
-            mode: 'zone_control',
-            customData: { scoreState: scoreState2 },
-          };
-
-          const timeResult = evaluator.evaluate(teams, 155, gameState2);
-          expect(timeResult).toBeNull();
-        },
-      ),
-      { numRuns: 100 },
-    );
-  });
-});
 
 
 // ─── Property 20: Passive penalties scale correctly with time outside zone ─
@@ -3099,15 +2987,13 @@ describe('Property 22: buildKothGameModeConfig produces complete valid config', 
         fc.integer({ min: 15, max: 90 }),
         fc.integer({ min: 60, max: 300 }),
         fc.integer({ min: 3, max: 8 }),
-        fc.boolean(),
-        (participantCount, matchId, scoreThreshold, timeLimit, zoneRadius, rotatingZone) => {
+        (participantCount, matchId, scoreThreshold, timeLimit, zoneRadius) => {
           const config: KothMatchConfig = {
             participantCount,
             matchId,
             scoreThreshold,
             timeLimit,
             zoneRadius,
-            rotatingZone,
           };
           const result = buildKothGameModeConfig(config);
 
@@ -3136,15 +3022,13 @@ describe('Property 22: buildKothGameModeConfig produces complete valid config', 
         fc.integer({ min: 15, max: 90 }),
         fc.integer({ min: 60, max: 300 }),
         fc.integer({ min: 3, max: 8 }),
-        fc.boolean(),
-        (participantCount, matchId, scoreThreshold, timeLimit, zoneRadius, rotatingZone) => {
+        (participantCount, matchId, scoreThreshold, timeLimit, zoneRadius) => {
           const config: KothMatchConfig = {
             participantCount,
             matchId,
             scoreThreshold,
             timeLimit,
             zoneRadius,
-            rotatingZone,
           };
           const result = buildKothGameModeConfig(config);
 
@@ -3157,41 +3041,31 @@ describe('Property 22: buildKothGameModeConfig produces complete valid config', 
     );
   });
 
-  it('maxDuration matches time limit with rotating zone defaults', () => {
+  it('maxDuration honours an explicit time limit and otherwise falls back to the default', () => {
+    // Zone rotation was abolished by Spec #41, so the third case this test used
+    // to cover (rotatingZone true implying a 210s limit) no longer exists.
     fc.assert(
       fc.property(
         fc.constantFrom(5, 6),
         fc.integer({ min: 1, max: 100000 }),
         fc.integer({ min: 60, max: 300 }),
-        fc.boolean(),
-        (participantCount, matchId, timeLimit, rotatingZone) => {
-          // Case 1: explicit timeLimit provided → maxDuration === timeLimit
+        (participantCount, matchId, timeLimit) => {
+          // Explicit timeLimit provided → maxDuration === timeLimit
           const configWithTime: KothMatchConfig = {
             participantCount,
             matchId,
             timeLimit,
-            rotatingZone,
           };
-          const resultWithTime = buildKothGameModeConfig(configWithTime);
-          expect(resultWithTime.maxDuration).toBe(timeLimit);
+          expect(buildKothGameModeConfig(configWithTime).maxDuration).toBe(timeLimit);
 
-          // Case 2: no explicit timeLimit, rotatingZone true → rotatingZoneTimeLimit (210)
-          const configRotating: KothMatchConfig = {
+          // No explicit timeLimit → the configured default
+          const configDefault: KothMatchConfig = {
             participantCount,
             matchId,
-            rotatingZone: true,
           };
-          const resultRotating = buildKothGameModeConfig(configRotating);
-          expect(resultRotating.maxDuration).toBe(KOTH_MATCH_DEFAULTS.rotatingZoneTimeLimit);
-
-          // Case 3: no explicit timeLimit, rotatingZone false → timeLimit default (150)
-          const configFixed: KothMatchConfig = {
-            participantCount,
-            matchId,
-            rotatingZone: false,
-          };
-          const resultFixed = buildKothGameModeConfig(configFixed);
-          expect(resultFixed.maxDuration).toBe(KOTH_MATCH_DEFAULTS.timeLimit);
+          expect(buildKothGameModeConfig(configDefault).maxDuration).toBe(
+            KOTH_MATCH_DEFAULTS.timeLimit,
+          );
         },
       ),
       { numRuns: 100 },
@@ -3206,15 +3080,13 @@ describe('Property 22: buildKothGameModeConfig produces complete valid config', 
         fc.integer({ min: 15, max: 90 }),
         fc.integer({ min: 60, max: 300 }),
         fc.integer({ min: 3, max: 8 }),
-        fc.boolean(),
-        (participantCount, matchId, scoreThreshold, timeLimit, zoneRadius, rotatingZone) => {
+        (participantCount, matchId, scoreThreshold, timeLimit, zoneRadius) => {
           const config: KothMatchConfig = {
             participantCount,
             matchId,
             scoreThreshold,
             timeLimit,
             zoneRadius,
-            rotatingZone,
           };
 
           // Generate unique robotIds

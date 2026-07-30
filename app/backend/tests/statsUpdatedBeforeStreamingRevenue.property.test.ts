@@ -14,9 +14,11 @@
  */
 
 import fc from 'fast-check';
-import { Prisma } from '../generated/prisma';
+import { Prisma, MatchType } from '../generated/prisma';
 import prisma from '../src/lib/prisma';
 import { processBattle } from '../src/services/league/leagueBattleOrchestrator';
+import schedulingService from '../src/services/scheduling/schedulingService';
+import { battlesForRobots, battlesForUsers, robotIdsForUsers, scheduledMatchesForRobots } from './cleanupHelper';
 
 // Helper function to create a minimal test robot
 async function createTestRobot(
@@ -47,10 +49,37 @@ async function createTestRobot(
   });
 }
 
+/**
+ * Create a queued 1v1 match and return it in the shape `processBattle` takes.
+ *
+ * Two things changed under Spec #41. The row is created through the scheduling
+ * service, because combatants are participant rows rather than
+ * `robot1_id`/`robot2_id` columns. And `processBattle` accepts the *mapped* 1v1
+ * view of a unified match — the same object `executeScheduledBattles` assembles
+ * before delegating — so the helper returns that rather than the raw row.
+ */
 async function createScheduledMatch(robot1Id: number, robot2Id: number, leagueType: string = 'bronze') {
-  return await prisma.scheduledMatch.create({
-    data: { robot1Id, robot2Id, leagueType, scheduledFor: new Date(), status: 'scheduled' },
+  const match = await schedulingService.createMatch({
+    matchType: MatchType.league_1v1,
+    scheduledFor: new Date(),
+    leagueType,
+    participants: [
+      { participantType: 'robot', participantId: robot1Id, slot: 1 },
+      { participantType: 'robot', participantId: robot2Id, slot: 2 },
+    ],
   });
+
+  return {
+    id: match.id,
+    robot1Id,
+    robot2Id,
+    leagueType,
+    scheduledFor: match.scheduledFor,
+    status: match.status,
+    battleId: match.battleId,
+    createdAt: match.createdAt,
+    _unifiedMatchId: match.id,
+  };
 }
 
 describe('Property 5: Stats Updated Before Streaming Revenue Calculation', () => {
@@ -73,24 +102,14 @@ describe('Property 5: Stats Updated Before Streaming Revenue Calculation', () =>
     await prisma.auditLog.deleteMany({
       where: { OR: [{ userId: testUser1Id }, { userId: testUser2Id }] },
     });
-    await prisma.battleParticipant.deleteMany({
-      where: { robot: { OR: [{ userId: testUser1Id }, { userId: testUser2Id }] } },
-    });
+    // Resolve robot ids before deleting the robots: the unified schedule has no
+    // robot relation to filter on (entity-agnostic participants, Spec #41).
+    const cleanupRobotIds = await robotIdsForUsers([testUser1Id, testUser2Id]);
     await prisma.battle.deleteMany({
-      where: {
-        OR: [
-          { robot1: { userId: testUser1Id } }, { robot2: { userId: testUser1Id } },
-          { robot1: { userId: testUser2Id } }, { robot2: { userId: testUser2Id } },
-        ],
-      },
+      where: battlesForUsers([testUser1Id, testUser2Id]),
     });
     await prisma.scheduledMatch.deleteMany({
-      where: {
-        OR: [
-          { robot1: { userId: testUser1Id } }, { robot2: { userId: testUser1Id } },
-          { robot1: { userId: testUser2Id } }, { robot2: { userId: testUser2Id } },
-        ],
-      },
+      where: scheduledMatchesForRobots(cleanupRobotIds),
     });
     await prisma.robot.deleteMany({ where: { userId: testUser1Id } });
     await prisma.robot.deleteMany({ where: { userId: testUser2Id } });
@@ -190,7 +209,12 @@ describe('Property 5: Stats Updated Before Streaming Revenue Calculation', () =>
 
           // Verify via BattleParticipant that streaming revenue was stored
           const battle = await prisma.battle.findFirst({
-            where: { robot1Id: robot1.id, robot2Id: robot2.id },
+            where: {
+              AND: [
+                { participants: { some: { robotId: robot1.id } } },
+                { participants: { some: { robotId: robot2.id } } },
+              ],
+            },
             orderBy: { id: 'desc' },
           });
           expect(battle).not.toBeNull();
@@ -209,7 +233,7 @@ describe('Property 5: Stats Updated Before Streaming Revenue Calculation', () =>
 
           // Clean up
           await prisma.battle.deleteMany({
-            where: { OR: [{ robot1Id: robot1.id }, { robot2Id: robot1.id }, { robot1Id: robot2.id }, { robot2Id: robot2.id }] },
+            where: battlesForRobots([robot1.id, robot2.id]),
           });
           await prisma.scheduledMatch.deleteMany({ where: { id: scheduledMatch.id } });
           await prisma.robot.deleteMany({ where: { id: robot1.id } });
@@ -247,7 +271,7 @@ describe('Property 5: Stats Updated Before Streaming Revenue Calculation', () =>
           expect(updatedRobot1!.totalBattles).toBe(initialBattles + 1);
 
           await prisma.battle.deleteMany({
-            where: { OR: [{ robot1Id: robot1.id }, { robot2Id: robot1.id }, { robot1Id: robot2.id }, { robot2Id: robot2.id }] },
+            where: battlesForRobots([robot1.id, robot2.id]),
           });
           await prisma.scheduledMatch.deleteMany({ where: { id: scheduledMatch.id } });
           await prisma.robot.deleteMany({ where: { id: robot1.id } });
@@ -301,7 +325,7 @@ describe('Property 5: Stats Updated Before Streaming Revenue Calculation', () =>
           }
 
           await prisma.battle.deleteMany({
-            where: { OR: [{ robot1Id: robot1.id }, { robot2Id: robot1.id }, { robot1Id: robot2.id }, { robot2Id: robot2.id }] },
+            where: battlesForRobots([robot1.id, robot2.id]),
           });
           await prisma.scheduledMatch.deleteMany({ where: { id: scheduledMatch.id } });
           await prisma.robot.deleteMany({ where: { id: robot1.id } });
@@ -353,7 +377,12 @@ describe('Property 5: Stats Updated Before Streaming Revenue Calculation', () =>
 
           // Property: The streaming revenue in BattleParticipant should match the event
           const battle = await prisma.battle.findFirst({
-            where: { robot1Id: robot1.id, robot2Id: robot2.id },
+            where: {
+              AND: [
+                { participants: { some: { robotId: robot1.id } } },
+                { participants: { some: { robotId: robot2.id } } },
+              ],
+            },
             orderBy: { id: 'desc' },
           });
           const participant = await prisma.battleParticipant.findUnique({
@@ -362,7 +391,7 @@ describe('Property 5: Stats Updated Before Streaming Revenue Calculation', () =>
           expect(participant!.streamingRevenue).toBe(payload.streamingRevenue);
 
           await prisma.battle.deleteMany({
-            where: { OR: [{ robot1Id: robot1.id }, { robot2Id: robot1.id }, { robot1Id: robot2.id }, { robot2Id: robot2.id }] },
+            where: battlesForRobots([robot1.id, robot2.id]),
           });
           await prisma.scheduledMatch.deleteMany({ where: { id: scheduledMatch.id } });
           await prisma.robot.deleteMany({ where: { id: robot1.id } });

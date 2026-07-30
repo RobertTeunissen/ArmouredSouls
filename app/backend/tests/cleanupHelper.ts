@@ -57,6 +57,34 @@ export function scheduledMatchesForTeams(teamIds: number[]): Prisma.ScheduledMat
 }
 
 /**
+ * Battles involving any robot owned by the given users.
+ *
+ * Replaces `{ OR: [{ robot1: { userId } }, { robot2: { userId } }] }`.
+ * `BattleParticipant` has a real `robot` relation, so this filters in one query.
+ */
+export function battlesForUsers(userIds: number[]): Prisma.BattleWhereInput {
+  return { participants: { some: { robot: { userId: { in: userIds } } } } };
+}
+
+/**
+ * Robot ids owned by the given users.
+ *
+ * Needed because the unified schedule cannot be filtered by owner directly:
+ * `ScheduledMatchParticipant` is entity-agnostic (a `participantType` plus a bare
+ * `participantId`, no foreign key), so there is no `robot` relation to traverse.
+ * Resolve ids first, then pass them to `scheduledMatchesForRobots`.
+ *
+ * Call this before deleting the robots themselves, for obvious reasons.
+ */
+export async function robotIdsForUsers(userIds: number[]): Promise<number[]> {
+  const robots = await prisma.robot.findMany({
+    where: { userId: { in: userIds } },
+    select: { id: true },
+  });
+  return robots.map((r) => r.id);
+}
+
+/**
  * Clean up all test data in the correct order to avoid foreign key constraint violations
  *
  * Order matters! Delete in reverse dependency order:
