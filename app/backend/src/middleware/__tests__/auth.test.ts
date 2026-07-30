@@ -174,8 +174,7 @@ describe('authenticateToken — DB role precedence', () => {
     expect(req1.user!.role).toBe('admin');
 
     // Second request (same JWT): DB now says user (role was changed)
-    // In production, role changes would call invalidateTokenCache — simulate that
-    invalidateTokenCache(42);
+    // Role changes take effect immediately since authenticateToken reads from DB on every request
 
     const req2 = createMockRequest({
       headers: { authorization: `Bearer ${token}` },

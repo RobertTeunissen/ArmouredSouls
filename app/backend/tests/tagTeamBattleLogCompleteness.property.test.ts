@@ -90,15 +90,21 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
         });
       }
     }
-    await prisma.scheduledTeamBattleMatch.deleteMany({
-      where: {
-        matchMode: 'tag_team',
-        OR: [
-          { team1: { stableId: { in: userIds } } },
-          { team2: { stableId: { in: userIds } } },
-        ],
-      },
-    });
+    const userTeamIds = (await prisma.teamBattle.findMany({
+      where: { stableId: { in: userIds } },
+      select: { id: true },
+    })).map(t => t.id);
+    if (userTeamIds.length > 0) {
+      await prisma.scheduledMatchParticipant.deleteMany({
+        where: { participantType: 'team', participantId: { in: userTeamIds } },
+      });
+      await prisma.scheduledMatch.deleteMany({
+        where: {
+          matchType: 'tag_team',
+          participants: { some: { participantType: 'team', participantId: { in: userTeamIds } } },
+        },
+      });
+    }
     await prisma.teamBattleMember.deleteMany({
       where: { team: { stableId: { in: userIds }, teamSize: 2 } },
     });
@@ -227,18 +233,22 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
 
 
           // Create a tag team match
-          const match = await prisma.scheduledTeamBattleMatch.create({
+          const match = await prisma.scheduledMatch.create({
             data: {
-              team1Id: team1.id,
-              team2Id: team2.id,
-              teamSize: 2, matchMode: 'tag_team', teamBattleLeague: 'bronze', teamBattleLeagueId: 'bronze_1',
+              matchType: 'tag_team',
+              leagueType: 'bronze', leagueInstanceId: 'bronze_1',
               scheduledFor: new Date(),
-              status: 'scheduled',
+              participants: {
+                create: [
+                  { participantType: 'team', participantId: team1.id, slot: 1 },
+                  { participantType: 'team', participantId: team2.id, slot: 2 },
+                ],
+              },
             },
           });
 
           // Execute the battle
-          const battleResult = await executeTagTeamBattle(match);
+          const battleResult = await executeTagTeamBattle(match as any);
 
           // Retrieve the battle record
           const battle = await prisma.battle.findUnique({
@@ -261,7 +271,8 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
 
           // Clean up
           await prisma.battle.deleteMany({ where: { id: battle!.id } });
-          await prisma.scheduledTeamBattleMatch.deleteMany({ where: { id: match.id } });
+          await prisma.scheduledMatchParticipant.deleteMany({ where: { scheduledMatchId: match.id } });
+          await prisma.scheduledMatch.deleteMany({ where: { id: match.id } });
           await prisma.teamBattleMember.deleteMany({ where: { teamId: { in: [team1.id, team2.id] } } });
           await prisma.teamBattle.deleteMany({
             where: { id: { in: [team1.id, team2.id] } },
@@ -374,18 +385,22 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
 
 
           // Create a tag team match
-          const match = await prisma.scheduledTeamBattleMatch.create({
+          const match = await prisma.scheduledMatch.create({
             data: {
-              team1Id: team1.id,
-              team2Id: team2.id,
-              teamSize: 2, matchMode: 'tag_team', teamBattleLeague: 'bronze', teamBattleLeagueId: 'bronze_1',
+              matchType: 'tag_team',
+              leagueType: 'bronze', leagueInstanceId: 'bronze_1',
               scheduledFor: new Date(),
-              status: 'scheduled',
+              participants: {
+                create: [
+                  { participantType: 'team', participantId: team1.id, slot: 1 },
+                  { participantType: 'team', participantId: team2.id, slot: 2 },
+                ],
+              },
             },
           });
 
           // Execute the battle
-          const battleResult = await executeTagTeamBattle(match);
+          const battleResult = await executeTagTeamBattle(match as any);
 
           // Retrieve the battle record
           const battle = await prisma.battle.findUnique({
@@ -414,7 +429,8 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
 
           // Clean up
           await prisma.battle.deleteMany({ where: { id: battle!.id } });
-          await prisma.scheduledTeamBattleMatch.deleteMany({ where: { id: match.id } });
+          await prisma.scheduledMatchParticipant.deleteMany({ where: { scheduledMatchId: match.id } });
+          await prisma.scheduledMatch.deleteMany({ where: { id: match.id } });
           await prisma.teamBattleMember.deleteMany({ where: { teamId: { in: [team1.id, team2.id] } } });
           await prisma.teamBattle.deleteMany({
             where: { id: { in: [team1.id, team2.id] } },
@@ -526,18 +542,22 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
 
 
           // Create a tag team match
-          const match = await prisma.scheduledTeamBattleMatch.create({
+          const match = await prisma.scheduledMatch.create({
             data: {
-              team1Id: team1.id,
-              team2Id: team2.id,
-              teamSize: 2, matchMode: 'tag_team', teamBattleLeague: 'bronze', teamBattleLeagueId: 'bronze_1',
+              matchType: 'tag_team',
+              leagueType: 'bronze', leagueInstanceId: 'bronze_1',
               scheduledFor: new Date(),
-              status: 'scheduled',
+              participants: {
+                create: [
+                  { participantType: 'team', participantId: team1.id, slot: 1 },
+                  { participantType: 'team', participantId: team2.id, slot: 2 },
+                ],
+              },
             },
           });
 
           // Execute the battle
-          const battleResult = await executeTagTeamBattle(match);
+          const battleResult = await executeTagTeamBattle(match as any);
 
           // Retrieve the battle record
           const battle = await prisma.battle.findUnique({
@@ -567,7 +587,8 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
 
           // Clean up
           await prisma.battle.deleteMany({ where: { id: battle!.id } });
-          await prisma.scheduledTeamBattleMatch.deleteMany({ where: { id: match.id } });
+          await prisma.scheduledMatchParticipant.deleteMany({ where: { scheduledMatchId: match.id } });
+          await prisma.scheduledMatch.deleteMany({ where: { id: match.id } });
           await prisma.teamBattleMember.deleteMany({ where: { teamId: { in: [team1.id, team2.id] } } });
           await prisma.teamBattle.deleteMany({
             where: { id: { in: [team1.id, team2.id] } },
@@ -679,18 +700,22 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
 
 
           // Create a tag team match
-          const match = await prisma.scheduledTeamBattleMatch.create({
+          const match = await prisma.scheduledMatch.create({
             data: {
-              team1Id: team1.id,
-              team2Id: team2.id,
-              teamSize: 2, matchMode: 'tag_team', teamBattleLeague: 'bronze', teamBattleLeagueId: 'bronze_1',
+              matchType: 'tag_team',
+              leagueType: 'bronze', leagueInstanceId: 'bronze_1',
               scheduledFor: new Date(),
-              status: 'scheduled',
+              participants: {
+                create: [
+                  { participantType: 'team', participantId: team1.id, slot: 1 },
+                  { participantType: 'team', participantId: team2.id, slot: 2 },
+                ],
+              },
             },
           });
 
           // Execute the battle
-          const battleResult = await executeTagTeamBattle(match);
+          const battleResult = await executeTagTeamBattle(match as any);
 
           // Retrieve the battle record
           const battle = await prisma.battle.findUnique({
@@ -719,7 +744,8 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
 
           // Clean up
           await prisma.battle.deleteMany({ where: { id: battle!.id } });
-          await prisma.scheduledTeamBattleMatch.deleteMany({ where: { id: match.id } });
+          await prisma.scheduledMatchParticipant.deleteMany({ where: { scheduledMatchId: match.id } });
+          await prisma.scheduledMatch.deleteMany({ where: { id: match.id } });
           await prisma.teamBattleMember.deleteMany({ where: { teamId: { in: [team1.id, team2.id] } } });
           await prisma.teamBattle.deleteMany({
             where: { id: { in: [team1.id, team2.id] } },
@@ -831,18 +857,22 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
 
 
           // Create a tag team match
-          const match = await prisma.scheduledTeamBattleMatch.create({
+          const match = await prisma.scheduledMatch.create({
             data: {
-              team1Id: team1.id,
-              team2Id: team2.id,
-              teamSize: 2, matchMode: 'tag_team', teamBattleLeague: 'bronze', teamBattleLeagueId: 'bronze_1',
+              matchType: 'tag_team',
+              leagueType: 'bronze', leagueInstanceId: 'bronze_1',
               scheduledFor: new Date(),
-              status: 'scheduled',
+              participants: {
+                create: [
+                  { participantType: 'team', participantId: team1.id, slot: 1 },
+                  { participantType: 'team', participantId: team2.id, slot: 2 },
+                ],
+              },
             },
           });
 
           // Execute the battle
-          const battleResult = await executeTagTeamBattle(match);
+          const battleResult = await executeTagTeamBattle(match as any);
 
           // Retrieve the battle record
           const battle = await prisma.battle.findUnique({
@@ -873,7 +903,8 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
 
           // Clean up
           await prisma.battle.deleteMany({ where: { id: battle!.id } });
-          await prisma.scheduledTeamBattleMatch.deleteMany({ where: { id: match.id } });
+          await prisma.scheduledMatchParticipant.deleteMany({ where: { scheduledMatchId: match.id } });
+          await prisma.scheduledMatch.deleteMany({ where: { id: match.id } });
           await prisma.teamBattleMember.deleteMany({ where: { teamId: { in: [team1.id, team2.id] } } });
           await prisma.teamBattle.deleteMany({
             where: { id: { in: [team1.id, team2.id] } },

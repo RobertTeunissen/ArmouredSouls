@@ -101,7 +101,7 @@ describe('RobotPerformanceService', () => {
       where: { robotId: { in: [testRobotId, testRobot2Id] } },
     });
     await prisma.battle.deleteMany({
-      where: { OR: [{ robot1Id: { in: [testRobotId, testRobot2Id] } }, { robot2Id: { in: [testRobotId, testRobot2Id] } }] },
+      where: { participants: { some: { robotId: { in: [testRobotId, testRobot2Id] } } } },
     });
     await prisma.robot.deleteMany({ where: { userId: testUserId } });
     await prisma.user.delete({ where: { id: testUserId } });
@@ -115,7 +115,7 @@ describe('RobotPerformanceService', () => {
       where: { robotId: { in: [testRobotId, testRobot2Id] } },
     });
     await prisma.battle.deleteMany({
-      where: { OR: [{ robot1Id: { in: [testRobotId, testRobot2Id] } }, { robot2Id: { in: [testRobotId, testRobot2Id] } }] },
+      where: { participants: { some: { robotId: { in: [testRobotId, testRobot2Id] } } } },
     });
     await prisma.auditLog.deleteMany({ where: { cycleNumber: { gte: 1000 } } });
     await prisma.cycleSnapshot.deleteMany({ where: { cycleNumber: { gte: 1000 } } });

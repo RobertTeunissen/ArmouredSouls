@@ -31,7 +31,16 @@ import * as fc from 'fast-check';
 import prisma from '../../../lib/prisma';
 import { createTagTeamBattleRecord } from '../../tag-team/tagTeamBattleRecord';
 import { TagTeamWithRobots, TagTeamBattleResult } from '../../tag-team/tagTeamTypes';
-import { ScheduledTeamBattleMatch } from '../../../../generated/prisma';
+
+// Type for the match input used in createTagTeamBattleRecord
+interface MockTagTeamMatch {
+  id: number;
+  team1Id: number;
+  team2Id: number | null;
+  teamBattleLeague: string;
+  teamBattleLeagueId: string;
+  [key: string]: unknown;
+}
 
 const mockPrisma = prisma as jest.Mocked<typeof prisma>;
 
@@ -118,7 +127,7 @@ function arbBattleResult(team1: TagTeamWithRobots, team2: TagTeamWithRobots) {
       team2Name: team2.teamName,
       team1ReserveName: 'Reserve1',
       team2ReserveName: 'Reserve2',
-    })) as fc.Arbitrary<TagTeamBattleResult>;
+    })) as unknown as fc.Arbitrary<TagTeamBattleResult>;
 }
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
@@ -169,7 +178,7 @@ describe('Property 9: Tag-Team Participant Creation', () => {
           matchMode: 'tag_team',
           teamBattleLeagueId: 'bronze_1',
           createdAt: new Date(),
-        } as unknown as ScheduledTeamBattleMatch;
+        } as unknown as MockTagTeamMatch;
 
         capturedParticipants = [];
         await createTagTeamBattleRecord(match, team1, team2, result);
@@ -205,7 +214,7 @@ describe('Property 9: Tag-Team Participant Creation', () => {
           matchMode: 'tag_team',
           teamBattleLeagueId: 'bronze_1',
           createdAt: new Date(),
-        } as unknown as ScheduledTeamBattleMatch;
+        } as unknown as MockTagTeamMatch;
 
         capturedParticipants = [];
         await createTagTeamBattleRecord(match, team1, team2, result);
@@ -256,7 +265,7 @@ describe('Property 9: Tag-Team Participant Creation', () => {
           matchMode: 'tag_team',
           teamBattleLeagueId: 'bronze_1',
           createdAt: new Date(),
-        } as unknown as ScheduledTeamBattleMatch;
+        } as unknown as MockTagTeamMatch;
 
         capturedParticipants = [];
         await createTagTeamBattleRecord(match, team1, team2, result);
@@ -294,7 +303,7 @@ describe('Property 9: Tag-Team Participant Creation', () => {
           matchMode: 'tag_team',
           teamBattleLeagueId: 'bronze_1',
           createdAt: new Date(),
-        } as unknown as ScheduledTeamBattleMatch;
+        } as unknown as MockTagTeamMatch;
 
         capturedParticipants = [];
         await createTagTeamBattleRecord(match, team1, team2, result);
@@ -333,7 +342,7 @@ describe('Property 9: Tag-Team Participant Creation', () => {
           matchMode: 'tag_team',
           teamBattleLeagueId: 'bronze_1',
           createdAt: new Date(),
-        } as unknown as ScheduledTeamBattleMatch;
+        } as unknown as MockTagTeamMatch;
 
         capturedParticipants = [];
         await createTagTeamBattleRecord(match, team1, team2, result);
@@ -385,7 +394,7 @@ describe('Property 9: Tag-Team Participant Creation', () => {
           matchMode: 'tag_team',
           teamBattleLeagueId: 'bronze_1',
           createdAt: new Date(),
-        } as unknown as ScheduledTeamBattleMatch;
+        } as unknown as MockTagTeamMatch;
 
         capturedParticipants = [];
         await createTagTeamBattleRecord(match, team1, team2, result);

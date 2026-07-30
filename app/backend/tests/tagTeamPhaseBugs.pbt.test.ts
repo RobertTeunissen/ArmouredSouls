@@ -16,7 +16,7 @@
  */
 
 import * as fc from 'fast-check';
-import { Robot, Prisma } from '../generated/prisma';
+import { Robot } from '../generated/prisma';
 import prisma from '../src/lib/prisma';
 
 // ─── Test Configuration ─────────────────────────────────────────────
@@ -25,7 +25,7 @@ const NUM_RUNS = 10;
 // ─── Mock Factories ─────────────────────────────────────────────────
 
 function createTestRobot(overrides: Partial<Robot> = {}): Robot {
-  return {
+  return ({
     id: Math.floor(Math.random() * 10000),
     userId: 1,
     name: `TestBot-${Math.random().toString(36).substring(7)}`,
@@ -33,33 +33,33 @@ function createTestRobot(overrides: Partial<Robot> = {}): Robot {
     paintJob: null,
     imageUrl: null,
     // Combat Systems
-    combatPower: new Prisma.Decimal(25),
-    targetingSystems: new Prisma.Decimal(25),
-    criticalSystems: new Prisma.Decimal(15),
-    penetration: new Prisma.Decimal(15),
-    weaponControl: new Prisma.Decimal(20),
-    attackSpeed: new Prisma.Decimal(20),
+    combatPower: 25,
+    targetingSystems: 25,
+    criticalSystems: 15,
+    penetration: 15,
+    weaponControl: 20,
+    attackSpeed: 20,
     // Defensive Systems
-    armorPlating: new Prisma.Decimal(20),
-    shieldCapacity: new Prisma.Decimal(15),
-    evasionThrusters: new Prisma.Decimal(10),
-    damageDampeners: new Prisma.Decimal(10),
-    counterProtocols: new Prisma.Decimal(10),
+    armorPlating: 20,
+    shieldCapacity: 15,
+    evasionThrusters: 10,
+    damageDampeners: 10,
+    counterProtocols: 10,
     // Chassis & Mobility
-    hullIntegrity: new Prisma.Decimal(25),
-    servoMotors: new Prisma.Decimal(20),
-    gyroStabilizers: new Prisma.Decimal(15),
-    hydraulicSystems: new Prisma.Decimal(15),
-    powerCore: new Prisma.Decimal(15),
+    hullIntegrity: 25,
+    servoMotors: 20,
+    gyroStabilizers: 15,
+    hydraulicSystems: 15,
+    powerCore: 15,
     // AI Processing
-    combatAlgorithms: new Prisma.Decimal(20),
-    threatAnalysis: new Prisma.Decimal(15),
-    adaptiveAI: new Prisma.Decimal(10),
-    logicCores: new Prisma.Decimal(15),
+    combatAlgorithms: 20,
+    threatAnalysis: 15,
+    adaptiveAI: 10,
+    logicCores: 15,
     // Team Coordination
-    syncProtocols: new Prisma.Decimal(10),
-    supportSystems: new Prisma.Decimal(10),
-    formationTactics: new Prisma.Decimal(10),
+    syncProtocols: 10,
+    supportSystems: 10,
+    formationTactics: 10,
     // Combat State
     currentHP: 100,
     maxHP: 100,
@@ -95,7 +95,7 @@ function createTestRobot(overrides: Partial<Robot> = {}): Robot {
     createdAt: new Date(),
     updatedAt: new Date(),
     ...overrides,
-  };
+  }) as unknown as Robot;
 }
 
 function createWeaponInventory(weaponId: number, name: string, baseDamage: number) {
@@ -199,7 +199,9 @@ function createRobotWithWeapon(name: string, hp: number, shield: number, damage:
 // Import the combat simulator to simulate individual phases
 import { simulateBattle, RobotWithWeapons, CombatResult } from '../src/services/battle/combatSimulator';
 import { CombatMessageGenerator } from '../src/services/battle/combatMessageGenerator';
-import { shouldTagOut } from '../src/services/tag-team/tagTeamBattleOrchestrator';
+import { shouldTagOut } from '../src/services/tag-team/tagTeamSimulation';
+import { getLeagueWinReward, getParticipationReward } from '../src/utils/economyCalculations';
+import { calculateTagTeamELOChanges } from '../src/services/tag-team/tagTeamRewards';
 
 afterAll(async () => {
   await prisma.$disconnect();
@@ -243,9 +245,9 @@ function simulateTagTeamBattleForTest(
   let team2CurrentRobot = team2.activeRobot;
   let team1ReserveUsed = false;
   let team2ReserveUsed = false;
-  let currentTime = 0;
+  let _currentTime = 0;
   const maxTime = 300;
-  let lastPhaseWasDraw = false;
+  let _lastPhaseWasDraw = false;
   
   const phases: Array<{
     robot1Name: string;
@@ -267,13 +269,13 @@ function simulateTagTeamBattleForTest(
   });
 
   const phase1Result = simulateBattle(team1CurrentRobot as RobotWithWeapons, team2CurrentRobot as RobotWithWeapons);
-  currentTime = phase1Result.durationSeconds;
+  _currentTime = phase1Result.durationSeconds;
   team1CurrentRobot.currentHP = phase1Result.robot1FinalHP;
   team2CurrentRobot.currentHP = phase1Result.robot2FinalHP;
   // FIX: Capture shield state after phase 1 (matches fix in tagTeamBattleOrchestrator.ts)
   team1CurrentRobot.currentShield = phase1Result.robot1FinalShield;
   team2CurrentRobot.currentShield = phase1Result.robot2FinalShield;
-  lastPhaseWasDraw = phase1Result.isDraw;
+  _lastPhaseWasDraw = phase1Result.isDraw;
 
   // Collect phase 1 events
   if (phase1Result.events && Array.isArray(phase1Result.events)) {
@@ -419,7 +421,7 @@ function simulateTagTeamBattleForTest(
       currentTime += phase2Result.durationSeconds;
       team1CurrentRobot.currentHP = phase2Result.robot1FinalHP;
       team2CurrentRobot.currentHP = phase2Result.robot2FinalHP;
-      lastPhaseWasDraw = phase2Result.isDraw;
+      _lastPhaseWasDraw = phase2Result.isDraw;
 
       // Collect phase 2 events with timestamp offset
       if (phase2Result.events && Array.isArray(phase2Result.events)) {
@@ -1494,7 +1496,6 @@ describe('Tag Team Phase Bugs - Preservation Tests', () => {
       isDraw: boolean
     ): number {
       const TAG_TEAM_REWARD_MULTIPLIER = 2;
-      const { getLeagueWinReward, getParticipationReward } = require('../src/utils/economyCalculations');
       
       const baseReward = getLeagueWinReward(league);
       const participationReward = getParticipationReward(league);
@@ -1516,8 +1517,6 @@ describe('Tag Team Phase Bugs - Preservation Tests', () => {
         fc.property(
           fc.constantFrom('bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'),
           (league) => {
-            const { getLeagueWinReward, getParticipationReward } = require('../src/utils/economyCalculations');
-
             const tagTeamWinReward = calculateTagTeamRewards(league, true, false);
             const standardWinReward = getLeagueWinReward(league) + getParticipationReward(league);
 
@@ -1536,7 +1535,6 @@ describe('Tag Team Phase Bugs - Preservation Tests', () => {
         fc.property(
           fc.constantFrom('bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'),
           (league) => {
-            const { getParticipationReward } = require('../src/utils/economyCalculations');
 
             const tagTeamLossReward = calculateTagTeamRewards(league, false, false);
             const standardLossReward = getParticipationReward(league);
@@ -1556,7 +1554,6 @@ describe('Tag Team Phase Bugs - Preservation Tests', () => {
         fc.property(
           fc.constantFrom('bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'),
           (league) => {
-            const { getParticipationReward } = require('../src/utils/economyCalculations');
 
             const tagTeamDrawReward = calculateTagTeamRewards(league, false, true);
             const standardDrawReward = getParticipationReward(league);
@@ -1658,7 +1655,6 @@ describe('Task 3: Winner Determination and Draw Detection', () => {
 
     it('should apply positive ELO change to winner and negative to loser', () => {
       // Test the ELO calculation logic
-      const { calculateTagTeamELOChanges } = require('../src/services/tag-team/tagTeamBattleOrchestrator');
 
       fc.assert(
         fc.property(

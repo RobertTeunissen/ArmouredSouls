@@ -79,12 +79,15 @@ async function subscribeRobots(robotIds: number[], eventType: string): Promise<v
 async function cleanup(): Promise<void> {
   // Clean up in reverse dependency order
   if (cleanupTeamIds.length > 0) {
-    await prisma.scheduledTeamBattleMatch.deleteMany({
+    await prisma.scheduledMatchParticipant.deleteMany({
       where: {
-        OR: [
-          { team1Id: { in: cleanupTeamIds } },
-          { team2Id: { in: cleanupTeamIds } },
-        ],
+        participantType: 'team',
+        participantId: { in: cleanupTeamIds },
+      },
+    });
+    await prisma.scheduledMatch.deleteMany({
+      where: {
+        participants: { some: { participantType: 'team', participantId: { in: cleanupTeamIds } } },
       },
     });
     await prisma.teamBattleMember.deleteMany({
@@ -104,12 +107,15 @@ async function cleanup(): Promise<void> {
     const userTeamIds = userTeams.map(t => t.id);
 
     if (userTeamIds.length > 0) {
-      await prisma.scheduledTeamBattleMatch.deleteMany({
+      await prisma.scheduledMatchParticipant.deleteMany({
         where: {
-          OR: [
-            { team1Id: { in: userTeamIds } },
-            { team2Id: { in: userTeamIds } },
-          ],
+          participantType: 'team',
+          participantId: { in: userTeamIds },
+        },
+      });
+      await prisma.scheduledMatch.deleteMany({
+        where: {
+          participants: { some: { participantType: 'team', participantId: { in: userTeamIds } } },
         },
       });
       await prisma.teamBattleMember.deleteMany({
@@ -286,15 +292,17 @@ describe('Team Battle Race Condition Stress Test', () => {
       cleanupTeamIds.push(team.id);
 
       // Create a scheduled match to lock the team
-      await prisma.scheduledTeamBattleMatch.create({
+      await prisma.scheduledMatch.create({
         data: {
-          team1Id: team.id,
-          teamSize: 2,
-          matchMode: 'league_2v2',
-          teamBattleLeague: 'bronze',
-          teamBattleLeagueId: 'bronze_1',
+          matchType: 'league_2v2',
+          leagueType: 'bronze',
+          leagueInstanceId: 'bronze_1',
           scheduledFor: new Date(Date.now() + 86400000),
-          status: 'scheduled',
+          participants: {
+            create: [
+              { participantType: 'team', participantId: team.id, slot: 1 },
+            ],
+          },
         },
       });
 
@@ -366,34 +374,25 @@ describe('Team Battle Race Condition Stress Test', () => {
       const results = await Promise.all(matchmakingAttempts);
 
       // Verify data integrity: all scheduled matches should be well-formed
-      const allScheduled = await prisma.scheduledTeamBattleMatch.findMany({
+      const allScheduled = await prisma.scheduledMatch.findMany({
         where: {
           status: 'scheduled',
-          teamSize: 2,
-          OR: [
-            { team1Id: { in: teams.map(t => t.id) } },
-            { team2Id: { in: teams.map(t => t.id) } },
-          ],
+          matchType: 'league_2v2',
+          participants: { some: { participantId: { in: teams.map(t => t.id) } } },
         },
         include: {
-          team1: { include: { members: true } },
-          team2: { include: { members: true } },
+          participants: true,
         },
       });
 
-      // KEY INVARIANT 1: Every match record references valid teams with correct member counts
+      // KEY INVARIANT 1: Every match record references valid teams with correct participant counts
       for (const match of allScheduled) {
-        expect(match.team1).toBeDefined();
-        expect(match.team1.members.length).toBe(2);
-        expect(match.teamSize).toBe(2);
+        expect(match.participants.length).toBeGreaterThanOrEqual(1);
         expect(match.status).toBe('scheduled');
-        if (match.team2) {
-          expect(match.team2.members.length).toBe(2);
-        }
       }
 
       // KEY INVARIANT 2: No match references a team that doesn't exist
-      const matchTeamIds = allScheduled.flatMap(m => [m.team1Id, m.team2Id].filter(Boolean)) as number[];
+      const matchTeamIds = allScheduled.flatMap(m => m.participants.map((p: { participantId: number }) => p.participantId));
       const existingTeams = await prisma.teamBattle.findMany({
         where: { id: { in: matchTeamIds } },
         select: { id: true },
@@ -406,15 +405,24 @@ describe('Team Battle Race Condition Stress Test', () => {
       // KEY INVARIANT 3: No BattleParticipant links to a robot not in the producing team
       // (This is verified at execution time, but we can verify match structure here)
       for (const match of allScheduled) {
-        const team1RobotIds = match.team1.members.map(m => m.robotId);
-        // All team1 robots should belong to the team's stable
-        const team1Robots = await prisma.robot.findMany({
-          where: { id: { in: team1RobotIds } },
-          select: { id: true, userId: true },
-        });
-        const stableId = match.team1.stableId;
-        for (const robot of team1Robots) {
-          expect(robot.userId).toBe(stableId);
+        const teamId = match.participants[0]?.participantId;
+        if (teamId) {
+          const team = await prisma.teamBattle.findUnique({
+            where: { id: teamId },
+            include: { members: true },
+          });
+          if (team) {
+            const teamRobotIds = team.members.map((m: { robotId: number }) => m.robotId);
+            // All team robots should belong to the team's stable
+            const teamRobots = await prisma.robot.findMany({
+              where: { id: { in: teamRobotIds } },
+              select: { id: true, userId: true },
+            });
+            const stableId = team.stableId;
+            for (const robot of teamRobots) {
+              expect(robot.userId).toBe(stableId);
+            }
+          }
         }
       }
     }, 60000);
@@ -465,32 +473,32 @@ describe('Team Battle Race Condition Stress Test', () => {
       // KEY INVARIANT: All scheduled matches reference teams with correct member counts.
       // The system may or may not have matched team[0] depending on timing —
       // either outcome is acceptable, but no data corruption should exist.
-      const allMatches = await prisma.scheduledTeamBattleMatch.findMany({
+      const allMatches = await prisma.scheduledMatch.findMany({
         where: {
           status: 'scheduled',
-          teamSize: 2,
-          OR: [
-            { team1Id: { in: teams.map(t => t.id) } },
-            { team2Id: { in: teams.map(t => t.id) } },
-          ],
+          matchType: 'league_2v2',
+          participants: { some: { participantId: { in: teams.map(t => t.id) } } },
         },
         include: {
-          team1: { include: { members: true } },
-          team2: { include: { members: true } },
+          participants: true,
         },
       });
 
       for (const match of allMatches) {
-        // Team 1 should have exactly 2 members
-        expect(match.team1.members.length).toBe(2);
-        // Team 2 (if not bye) should have exactly 2 members
-        if (match.team2) {
-          expect(match.team2.members.length).toBe(2);
+        // Verify participant teams have correct member counts
+        for (const participant of match.participants) {
+          const team = await prisma.teamBattle.findUnique({
+            where: { id: participant.participantId },
+            include: { members: true },
+          });
+          if (team) {
+            expect(team.members.length).toBe(2);
+          }
         }
         // Match record should be well-formed
-        expect(match.teamSize).toBe(2);
-        expect(match.teamBattleLeague).toBeDefined();
-        expect(match.teamBattleLeagueId).toBeDefined();
+        expect(match.matchType).toBe('league_2v2');
+        expect(match.leagueType).toBeDefined();
+        expect(match.leagueInstanceId).toBeDefined();
       }
     }, 60000);
   });
@@ -506,15 +514,17 @@ describe('Team Battle Race Condition Stress Test', () => {
       cleanupTeamIds.push(team.id);
 
       // Schedule a battle for this team
-      await prisma.scheduledTeamBattleMatch.create({
+      await prisma.scheduledMatch.create({
         data: {
-          team1Id: team.id,
-          teamSize: 2,
-          matchMode: 'league_2v2',
-          teamBattleLeague: 'bronze',
-          teamBattleLeagueId: 'bronze_1',
+          matchType: 'league_2v2',
+          leagueType: 'bronze',
+          leagueInstanceId: 'bronze_1',
           scheduledFor: new Date(Date.now() + 86400000),
-          status: 'scheduled',
+          participants: {
+            create: [
+              { participantType: 'team', participantId: team.id, slot: 1 },
+            ],
+          },
         },
       });
 

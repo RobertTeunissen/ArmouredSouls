@@ -18,9 +18,9 @@ app.use(express.json());
 app.use('/api/robots', robotRoutes);
 
 describe('Robot Name Uniqueness', () => {
-  let testUserIds: number[] = [];
-  let testRobotIds: number[] = [];
-  let testFacilityIds: number[] = [];
+  const testUserIds: number[] = [];
+  const testRobotIds: number[] = [];
+  const testFacilityIds: number[] = [];
   let testUser: any;
   let authToken: string;
   const testUsername = `testuser_${Date.now()}`;
@@ -68,18 +68,15 @@ describe('Robot Name Uniqueness', () => {
       });
       await prisma.battle.deleteMany({
         where: {
-          OR: [
-            { robot1Id: { in: testRobotIds } },
-            { robot2Id: { in: testRobotIds } },
-          ],
+          participants: { some: { robotId: { in: testRobotIds } } },
         },
+      });
+      await prisma.scheduledMatchParticipant.deleteMany({
+        where: { participantId: { in: testRobotIds } },
       });
       await prisma.scheduledMatch.deleteMany({
         where: {
-          OR: [
-            { robot1Id: { in: testRobotIds } },
-            { robot2Id: { in: testRobotIds } },
-          ],
+          participants: { some: { participantId: { in: testRobotIds } } },
         },
       });
       await prisma.robot.deleteMany({

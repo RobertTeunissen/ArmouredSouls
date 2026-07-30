@@ -494,14 +494,19 @@ describe('Team Battle Property Tests', () => {
 
     afterAll(async () => {
       // Clean up in correct order (respect FK constraints)
-      await prisma.scheduledTeamBattleMatch.deleteMany({
-        where: {
-          OR: [
-            { team1: { stableId: testUserId } },
-            { team2: { stableId: testUserId } },
-          ],
-        },
+      const userTeams = await prisma.teamBattle.findMany({
+        where: { stableId: testUserId },
+        select: { id: true },
       });
+      const userTeamIds = userTeams.map(t => t.id);
+      if (userTeamIds.length > 0) {
+        await prisma.scheduledMatchParticipant.deleteMany({
+          where: { participantType: 'team', participantId: { in: userTeamIds } },
+        });
+        await prisma.scheduledMatch.deleteMany({
+          where: { participants: { some: { participantType: 'team', participantId: { in: userTeamIds } } } },
+        });
+      }
       await prisma.teamBattleMember.deleteMany({
         where: { team: { stableId: testUserId } },
       });
@@ -522,14 +527,19 @@ describe('Team Battle Property Tests', () => {
 
     afterEach(async () => {
       // Clean up teams and members created during each test
-      await prisma.scheduledTeamBattleMatch.deleteMany({
-        where: {
-          OR: [
-            { team1: { stableId: testUserId } },
-            { team2: { stableId: testUserId } },
-          ],
-        },
+      const userTeams = await prisma.teamBattle.findMany({
+        where: { stableId: testUserId },
+        select: { id: true },
       });
+      const userTeamIds = userTeams.map(t => t.id);
+      if (userTeamIds.length > 0) {
+        await prisma.scheduledMatchParticipant.deleteMany({
+          where: { participantType: 'team', participantId: { in: userTeamIds } },
+        });
+        await prisma.scheduledMatch.deleteMany({
+          where: { participants: { some: { participantType: 'team', participantId: { in: userTeamIds } } } },
+        });
+      }
       await prisma.teamBattleMember.deleteMany({
         where: { team: { stableId: testUserId } },
       });
@@ -851,14 +861,19 @@ describe('Team Battle Property Tests', () => {
     });
 
     afterAll(async () => {
-      await prisma.scheduledTeamBattleMatch.deleteMany({
-        where: {
-          OR: [
-            { team1: { stableId: testUserId } },
-            { team2: { stableId: testUserId } },
-          ],
-        },
+      const userTeams2 = await prisma.teamBattle.findMany({
+        where: { stableId: testUserId },
+        select: { id: true },
       });
+      const userTeamIds2 = userTeams2.map(t => t.id);
+      if (userTeamIds2.length > 0) {
+        await prisma.scheduledMatchParticipant.deleteMany({
+          where: { participantType: 'team', participantId: { in: userTeamIds2 } },
+        });
+        await prisma.scheduledMatch.deleteMany({
+          where: { participants: { some: { participantType: 'team', participantId: { in: userTeamIds2 } } } },
+        });
+      }
       await prisma.teamBattleMember.deleteMany({
         where: { team: { stableId: testUserId } },
       });
@@ -885,14 +900,19 @@ describe('Team Battle Property Tests', () => {
     });
 
     afterEach(async () => {
-      await prisma.scheduledTeamBattleMatch.deleteMany({
-        where: {
-          OR: [
-            { team1: { stableId: testUserId } },
-            { team2: { stableId: testUserId } },
-          ],
-        },
+      const userTeams3 = await prisma.teamBattle.findMany({
+        where: { stableId: testUserId },
+        select: { id: true },
       });
+      const userTeamIds3 = userTeams3.map(t => t.id);
+      if (userTeamIds3.length > 0) {
+        await prisma.scheduledMatchParticipant.deleteMany({
+          where: { participantType: 'team', participantId: { in: userTeamIds3 } },
+        });
+        await prisma.scheduledMatch.deleteMany({
+          where: { participants: { some: { participantType: 'team', participantId: { in: userTeamIds3 } } } },
+        });
+      }
       await prisma.teamBattleMember.deleteMany({
         where: { team: { stableId: testUserId } },
       });

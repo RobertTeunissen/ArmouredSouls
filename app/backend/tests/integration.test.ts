@@ -199,10 +199,7 @@ describe('Integration Test: Complete Daily Cycle', () => {
     // Check if any matches involve bye-robot
     const byeMatches = await prisma.scheduledMatch.findMany({
       where: {
-        OR: [
-          { robot1Id: byeRobot.id },
-          { robot2Id: byeRobot.id },
-        ],
+        participants: { some: { participantId: byeRobot.id } },
         status: 'scheduled',
       },
     });
@@ -216,10 +213,7 @@ describe('Integration Test: Complete Daily Cycle', () => {
       // Find bye-robot battles
       const byeBattles = await prisma.battle.findMany({
         where: {
-          OR: [
-            { robot1Id: byeRobot.id },
-            { robot2Id: byeRobot.id },
-          ],
+          participants: { some: { robotId: byeRobot.id } },
           createdAt: {
             gte: new Date(Date.now() - 60 * 1000),
           },

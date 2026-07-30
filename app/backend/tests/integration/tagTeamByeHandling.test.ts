@@ -55,15 +55,16 @@ describe('Tag Team Bye-Team Handling Integration Test', () => {
   afterEach(async () => {
     // Clean up in correct order
     if (testTeamIds.length > 0) {
-      await prisma.scheduledTeamBattleMatch.deleteMany({
+      await prisma.scheduledMatchParticipant.deleteMany({
         where: {
-          matchMode: 'tag_team',
-          OR: [
-            { team1Id: { in: testTeamIds } },
-            { team2Id: { in: testTeamIds } },
-            { team1Id: -1 },
-            { team2Id: -1 },
-          ],
+          participantType: 'team',
+          participantId: { in: testTeamIds },
+        },
+      });
+      await prisma.scheduledMatch.deleteMany({
+        where: {
+          matchType: 'tag_team',
+          participants: { some: { participantId: { in: testTeamIds } } },
         },
       });
     }
@@ -75,10 +76,7 @@ describe('Tag Team Bye-Team Handling Integration Test', () => {
       await prisma.battle.deleteMany({
         where: {
           battleType: 'tag_team',
-          OR: [
-            { robot1Id: { in: testRobotIds } },
-            { robot1Id: -1 },
-          ],
+          participants: { some: { robotId: { in: testRobotIds } } },
         },
       });
     }
@@ -191,14 +189,11 @@ describe('Tag Team Bye-Team Handling Integration Test', () => {
     // Step 3: Verify bye-team match was created
     console.log('[Test] Step 3: Verifying bye-team match...');
     
-    const byeMatches = await prisma.scheduledTeamBattleMatch.findMany({
+    const byeMatches = await prisma.scheduledMatch.findMany({
       where: {
         status: 'scheduled',
-        matchMode: 'tag_team',
-        OR: [
-          { team1Id: -1 },
-          { team2Id: -1 },
-        ],
+        matchType: 'tag_team',
+        participants: { some: { participantId: -1 } },
       },
     });
 
@@ -207,8 +202,13 @@ describe('Tag Team Bye-Team Handling Integration Test', () => {
 
     // Verify bye-team match structure
     const byeMatch = byeMatches[0];
-    expect(byeMatch.team1Id === -1 || byeMatch.team2Id === -1).toBe(true);
-    expect(byeMatch.matchMode).toBe('tag_team');
+    const byeMatchWithParticipants = await prisma.scheduledMatch.findUnique({
+      where: { id: byeMatch.id },
+      include: { participants: true },
+    });
+    const participantIds = byeMatchWithParticipants!.participants.map(p => p.participantId);
+    expect(participantIds).toContain(-1);
+    expect(byeMatch.matchType).toBe('tag_team');
     expect(byeMatch.status).toBe('scheduled');
 
     console.log('[Test] ✓ Bye-team match created successfully');
@@ -231,11 +231,9 @@ describe('Tag Team Bye-Team Handling Integration Test', () => {
     const byeBattles = await prisma.battle.findMany({
       where: {
         battleType: 'tag_team',
-        OR: [
-          { robot1Id: -1 },
-          { robot2Id: -1 },
-        ],
+        participants: { some: { robotId: -1 } },
       },
+      include: { participants: true },
     });
 
     expect(byeBattles.length).toBeGreaterThan(0);
@@ -244,15 +242,15 @@ describe('Tag Team Bye-Team Handling Integration Test', () => {
     // Verify bye-team battle structure
     const byeBattle = byeBattles[0];
     expect(byeBattle.battleType).toBe('tag_team');
-    expect(byeBattle.robot1Id === -1 || byeBattle.robot2Id === -1).toBe(true);
+    const byeBattleRobotIds = byeBattle.participants.map(p => p.robotId);
+    expect(byeBattleRobotIds).toContain(-1);
 
     // Step 3: Verify rewards were awarded
     console.log('[Test] Step 3: Verifying rewards...');
     
     // Find the real team that fought the bye-team
-    const realTeamId = byeBattle.robot1Id === -1 
-      ? byeBattle.robot2Id 
-      : byeBattle.robot1Id;
+    const realParticipant = byeBattle.participants.find(p => p.robotId !== -1);
+    const realTeamId = realParticipant!.robotId;
     
     const realRobot = await prisma.robot.findUnique({
       where: { id: realTeamId },
@@ -278,11 +276,9 @@ describe('Tag Team Bye-Team Handling Integration Test', () => {
     const byeBattles = await prisma.battle.findMany({
       where: {
         battleType: 'tag_team',
-        OR: [
-          { robot1Id: -1 },
-          { robot2Id: -1 },
-        ],
+        participants: { some: { robotId: -1 } },
       },
+      include: { participants: true },
     });
 
     if (byeBattles.length === 0) {
@@ -293,9 +289,8 @@ describe('Tag Team Bye-Team Handling Integration Test', () => {
     const byeBattle = byeBattles[0];
     
     // Find the real team's robots
-    const realTeamRobotId = byeBattle.robot1Id === -1 
-      ? byeBattle.robot2Id 
-      : byeBattle.robot1Id;
+    const realParticipant = byeBattle.participants.find(p => p.robotId !== -1);
+    const realTeamRobotId = realParticipant!.robotId;
     
     const realRobot = await prisma.robot.findUnique({
       where: { id: realTeamRobotId },

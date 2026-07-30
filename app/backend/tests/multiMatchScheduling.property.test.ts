@@ -95,6 +95,7 @@ async function createWeaponForRobot(userId: number, robotId: number): Promise<vo
         handsRequired: 'one',
         damageType: 'energy',
         loadoutType: 'any',
+        rangeBand: 'mid',
       },
     });
   }
@@ -130,7 +131,7 @@ describe('Multi-Match Scheduling and Execution - Property Tests', () => {
     // Clean up database in correct order (respecting foreign keys)
     await prisma.battleParticipant.deleteMany();
     await prisma.battle.deleteMany();
-    await prisma.scheduledTeamBattleMatch.deleteMany();
+    await prisma.scheduledMatchParticipant.deleteMany();
     await prisma.scheduledMatch.deleteMany();
     await prisma.teamBattleMember.deleteMany();
     await prisma.teamBattle.deleteMany();
@@ -203,32 +204,33 @@ describe('Multi-Match Scheduling and Execution - Property Tests', () => {
               where: { status: 'scheduled' },
             });
 
-            const scheduledTagTeam = await prisma.scheduledTeamBattleMatch.findMany({
-              where: { status: 'scheduled', matchMode: 'tag_team' },
+            const scheduledTagTeam = await prisma.scheduledMatch.findMany({
+              where: { status: 'scheduled', matchType: 'tag_team' },
+              include: { participants: true },
             });
 
             // Property: Robots can be in both types of matches
             // Check if any robot appears in both 1v1 and tag team matches
             const robotsIn1v1 = new Set<number>();
-            scheduledOneVOne.forEach(match => {
-              robotsIn1v1.add(match.robot1Id);
-              robotsIn1v1.add(match.robot2Id);
-            });
+            for (const match of scheduledOneVOne) {
+              const matchWithParticipants = await prisma.scheduledMatch.findUnique({
+                where: { id: match.id },
+                include: { participants: true },
+              });
+              if (matchWithParticipants) {
+                matchWithParticipants.participants.forEach(p => robotsIn1v1.add(p.participantId));
+              }
+            }
 
             const robotsInTagTeam = new Set<number>();
             for (const match of scheduledTagTeam) {
-              const team1Members = await prisma.teamBattleMember.findMany({
-                where: { teamId: match.team1Id },
-              });
-              const team2Members = match.team2Id ? await prisma.teamBattleMember.findMany({
-                where: { teamId: match.team2Id },
-              }) : [];
-
-              for (const member of team1Members) {
-                robotsInTagTeam.add(member.robotId);
-              }
-              for (const member of team2Members) {
-                robotsInTagTeam.add(member.robotId);
+              for (const participant of match.participants) {
+                const teamMembers = await prisma.teamBattleMember.findMany({
+                  where: { teamId: participant.participantId },
+                });
+                for (const member of teamMembers) {
+                  robotsInTagTeam.add(member.robotId);
+                }
               }
             }
 
@@ -576,16 +578,18 @@ describe('Multi-Match Scheduling and Execution - Property Tests', () => {
 
             // Schedule tag team matches
             const scheduledFor = new Date(Date.now() + 1000);
-            await prisma.scheduledTeamBattleMatch.create({
+            await prisma.scheduledMatch.create({
               data: {
-                team1Id: team1.id,
-                team2Id: team2.id,
-                teamSize: 2,
-                matchMode: 'tag_team',
-                teamBattleLeague: 'bronze',
-                teamBattleLeagueId: 'bronze_1',
+                matchType: 'tag_team',
+                leagueType: 'bronze',
+                leagueInstanceId: 'bronze_1',
                 scheduledFor,
-                status: 'scheduled',
+                participants: {
+                  create: [
+                    { participantType: 'team', participantId: team1.id, slot: 1 },
+                    { participantType: 'team', participantId: team2.id, slot: 2 },
+                  ],
+                },
               },
             });
 
@@ -593,11 +597,10 @@ describe('Multi-Match Scheduling and Execution - Property Tests', () => {
             const result = await executeScheduledTagTeamBattles(scheduledFor);
 
             // Check if match was executed
-            const match = await prisma.scheduledTeamBattleMatch.findFirst({
+            const match = await prisma.scheduledMatch.findFirst({
               where: {
-                team1Id: team1.id,
-                team2Id: team2.id,
-                matchMode: 'tag_team',
+                matchType: 'tag_team',
+                participants: { some: { participantId: team1.id } },
               },
             });
 

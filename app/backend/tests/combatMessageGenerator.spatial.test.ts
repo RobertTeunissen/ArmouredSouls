@@ -56,8 +56,8 @@ describe('CombatMessageGenerator — Spatial Messages', () => {
         // First events are battle_start + stances, then the spatial event
         const spatialNarrative = result.find((e: { type: string }) => e.type === eventData.type);
         expect(spatialNarrative).toBeDefined();
-        expect(spatialNarrative.message).toBeTruthy();
-        expect(spatialNarrative.message.length).toBeGreaterThan(0);
+        expect(spatialNarrative!.message).toBeTruthy();
+        expect(spatialNarrative!.message.length).toBeGreaterThan(0);
       },
     );
   });
@@ -82,7 +82,7 @@ describe('CombatMessageGenerator — Spatial Messages', () => {
       const result = CombatMessageGenerator.convertSimulatorEvents(events, defaultContext);
       const attackNarrative = result.find((e: { type: string }) => e.type === 'attack');
       expect(attackNarrative).toBeDefined();
-      expect(attackNarrative.message.length).toBeGreaterThan(0);
+      expect(attackNarrative!.message.length).toBeGreaterThan(0);
     });
 
     it('should produce correct narrative for a miss event', () => {
@@ -98,7 +98,7 @@ describe('CombatMessageGenerator — Spatial Messages', () => {
       const result = CombatMessageGenerator.convertSimulatorEvents(events, defaultContext);
       const missNarrative = result.find((e: { type: string }) => e.type === 'miss');
       expect(missNarrative).toBeDefined();
-      expect(missNarrative.message.length).toBeGreaterThan(0);
+      expect(missNarrative!.message.length).toBeGreaterThan(0);
     });
 
     it('should produce correct narrative for a critical hit event', () => {
@@ -118,7 +118,7 @@ describe('CombatMessageGenerator — Spatial Messages', () => {
       const result = CombatMessageGenerator.convertSimulatorEvents(events, defaultContext);
       const critNarrative = result.find((e: { type: string }) => e.type === 'critical');
       expect(critNarrative).toBeDefined();
-      expect(critNarrative.message.length).toBeGreaterThan(0);
+      expect(critNarrative!.message.length).toBeGreaterThan(0);
     });
   });
 

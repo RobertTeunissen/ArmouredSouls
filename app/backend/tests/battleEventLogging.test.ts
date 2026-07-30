@@ -10,9 +10,9 @@ import { EventType, clearSequenceCache } from '../src/services/common/eventLogge
 
 
 describe('Battle Event Logging Integration', () => {
-  let testUserIds: number[] = [];
-  let testRobotIds: number[] = [];
-  let testMatchIds: number[] = [];
+  const testUserIds: number[] = [];
+  const testRobotIds: number[] = [];
+  const testMatchIds: number[] = [];
   let scheduledMatch: any;
 
   beforeAll(async () => {
@@ -83,11 +83,15 @@ describe('Battle Event Logging Integration', () => {
     // Create scheduled match
     scheduledMatch = await prisma.scheduledMatch.create({
       data: {
-        robot1Id: testRobot1.id,
-        robot2Id: testRobot2.id,
+        matchType: 'league_1v1',
         leagueType: 'bronze',
         scheduledFor: new Date(),
-        status: 'scheduled',
+        participants: {
+          create: [
+            { participantType: 'robot', participantId: testRobot1.id, slot: 1 },
+            { participantType: 'robot', participantId: testRobot2.id, slot: 2 },
+          ],
+        },
       },
     });
     testMatchIds.push(scheduledMatch.id);

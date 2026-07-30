@@ -49,26 +49,30 @@ describe('Feature: tag-team-matches, Property 25: Match List Inclusion', () => {
     });
     await prisma.battle.deleteMany({
       where: {
-        OR: [
-          { robot1: { userId: testUserId } },
-          { robot2: { userId: testUserId } },
-        ],
+        participants: { some: { robot: { userId: testUserId } } },
       },
     });
-    await prisma.scheduledTeamBattleMatch.deleteMany({ 
-      where: { 
-        OR: [
-          { team1: { stableId: testUserId } },
-          { team2: { stableId: testUserId } },
-        ],
-      },
-    });
+    const userTeamIds = (await prisma.teamBattle.findMany({
+      where: { stableId: testUserId },
+      select: { id: true },
+    })).map(t => t.id);
+    if (userTeamIds.length > 0) {
+      await prisma.scheduledMatchParticipant.deleteMany({
+        where: { participantType: 'team', participantId: { in: userTeamIds } },
+      });
+    }
+    const userRobotIds = (await prisma.robot.findMany({
+      where: { userId: testUserId },
+      select: { id: true },
+    })).map(r => r.id);
+    if (userRobotIds.length > 0) {
+      await prisma.scheduledMatchParticipant.deleteMany({
+        where: { participantType: 'robot', participantId: { in: userRobotIds } },
+      });
+    }
     await prisma.scheduledMatch.deleteMany({
       where: {
-        OR: [
-          { robot1: { userId: testUserId } },
-          { robot2: { userId: testUserId } },
-        ],
+        participants: { some: { participantId: { in: [...userTeamIds, ...userRobotIds] } } },
       },
     });
     await prisma.teamBattleMember.deleteMany({ where: { team: { stableId: testUserId } } });
@@ -156,11 +160,15 @@ describe('Feature: tag-team-matches, Property 25: Match List Inclusion', () => {
           for (let i = 0; i < Math.min(config.num1v1Matches, robots.length - 1); i++) {
             const match = await prisma.scheduledMatch.create({
               data: {
-                robot1Id: robots[i].id,
-                robot2Id: robots[i + 1].id,
+                matchType: 'league_1v1',
                 leagueType: 'bronze',
                 scheduledFor: new Date(Date.now() + 1000 * 60 * 60), // 1 hour from now
-                status: 'scheduled',
+                participants: {
+                  create: [
+                    { participantType: 'robot', participantId: robots[i].id, slot: 1 },
+                    { participantType: 'robot', participantId: robots[i + 1].id, slot: 2 },
+                  ],
+                },
               },
             });
             scheduledMatches.push(match);
@@ -170,16 +178,18 @@ describe('Feature: tag-team-matches, Property 25: Match List Inclusion', () => {
           const tagTeamMatches = [];
           if (teams.length >= 2) {
             for (let i = 0; i < Math.min(config.numTagTeamMatches, teams.length - 1); i++) {
-              const match = await prisma.scheduledTeamBattleMatch.create({
+              const match = await prisma.scheduledMatch.create({
                 data: {
-                  team1Id: teams[i].id,
-                  team2Id: teams[i + 1].id,
-                  teamSize: 2,
-                  matchMode: 'tag_team',
-                  teamBattleLeague: 'bronze',
-                  teamBattleLeagueId: 'bronze_1',
+                  matchType: 'tag_team',
+                  leagueType: 'bronze',
+                  leagueInstanceId: 'bronze_1',
                   scheduledFor: new Date(Date.now() + 1000 * 60 * 60), // 1 hour from now
-                  status: 'scheduled',
+                  participants: {
+                    create: [
+                      { participantType: 'team', participantId: teams[i].id, slot: 1 },
+                      { participantType: 'team', participantId: teams[i + 1].id, slot: 2 },
+                    ],
+                  },
                 },
               });
               tagTeamMatches.push(match);
@@ -225,11 +235,11 @@ describe('Feature: tag-team-matches, Property 25: Match List Inclusion', () => {
           expect(response.body.tagTeamMatches).toBe(tagTeamMatches.length);
 
           // Clean up
-          await prisma.scheduledTeamBattleMatch.deleteMany({
-            where: { id: { in: tagTeamMatches.map(m => m.id) } },
+          await prisma.scheduledMatchParticipant.deleteMany({
+            where: { scheduledMatchId: { in: [...tagTeamMatches.map(m => m.id), ...scheduledMatches.map(m => m.id)] } },
           });
           await prisma.scheduledMatch.deleteMany({
-            where: { id: { in: scheduledMatches.map(m => m.id) } },
+            where: { id: { in: [...tagTeamMatches.map(m => m.id), ...scheduledMatches.map(m => m.id)] } },
           });
           await prisma.teamBattleMember.deleteMany({
             where: { teamId: { in: teams.map(t => t.id) } },
