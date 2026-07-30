@@ -1,4 +1,4 @@
-import { Robot, MatchType, Prisma, StandingsMode } from '../../../generated/prisma';
+import { Robot, MatchType, StandingsMode } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import { LEAGUE_TIERS, LeagueTier } from '../league/leagueInstanceService';
 import logger from '../../config/logger';
@@ -9,6 +9,7 @@ import {
   RECENT_OPPONENT_LIMIT,
   defaultScheduledFor,
 } from '../matchmaking/teamMatchmakingUtils';
+import { createByeRobot } from '../battle/byeRobot';
 
 export interface BattleReadinessCheck {
   isReady: boolean;
@@ -80,101 +81,7 @@ export function checkSchedulingReadiness(robot: Robot): BattleReadinessCheck {
   return checkBattleReadiness(robot);
 }
 
-/**
- * Create an in-memory fabricated bye robot for 1v1 matchmaking.
- * Used when a tier instance has an odd number of eligible robots.
- * The bye robot always loses — no combat simulation is run.
- */
-function createByeRobot(): Robot {
-  return {
-    id: -1,
-    userId: -1,
-    name: 'Bye Robot',
-    frameId: 1,
-    paintJob: null,
-    imageUrl: null,
-    combatPower: new Prisma.Decimal(10),
-    targetingSystems: new Prisma.Decimal(10),
-    criticalSystems: new Prisma.Decimal(10),
-    penetration: new Prisma.Decimal(10),
-    weaponControl: new Prisma.Decimal(10),
-    attackSpeed: new Prisma.Decimal(10),
-    armorPlating: new Prisma.Decimal(10),
-    shieldCapacity: new Prisma.Decimal(10),
-    evasionThrusters: new Prisma.Decimal(10),
-    damageDampeners: new Prisma.Decimal(10),
-    counterProtocols: new Prisma.Decimal(10),
-    hullIntegrity: new Prisma.Decimal(10),
-    servoMotors: new Prisma.Decimal(10),
-    gyroStabilizers: new Prisma.Decimal(10),
-    hydraulicSystems: new Prisma.Decimal(10),
-    powerCore: new Prisma.Decimal(10),
-    combatAlgorithms: new Prisma.Decimal(10),
-    threatAnalysis: new Prisma.Decimal(10),
-    adaptiveAI: new Prisma.Decimal(10),
-    logicCores: new Prisma.Decimal(10),
-    syncProtocols: new Prisma.Decimal(10),
-    supportSystems: new Prisma.Decimal(10),
-    formationTactics: new Prisma.Decimal(10),
-    currentHP: 100,
-    maxHP: 100,
-    currentShield: 20,
-    maxShield: 20,
-    damageTaken: 0,
-    elo: 1000,
-    totalBattles: 0,
-    wins: 0,
-    draws: 0,
-    losses: 0,
-    damageDealtLifetime: 0,
-    damageTakenLifetime: 0,
-    kills: 0,
-    currentLeague: 'bronze',
-    leagueId: 'bronze_1',
-    leaguePoints: 0,
-    cyclesInCurrentLeague: 0,
-    fame: 0,
-    titles: null,
-    totalTagTeamBattles: 0,
-    totalTagTeamWins: 0,
-    totalTagTeamLosses: 0,
-    totalTagTeamDraws: 0,
-    timesTaggedIn: 0,
-    timesTaggedOut: 0,
-    totalLeague1v1Wins: 0,
-    totalLeague1v1Losses: 0,
-    totalLeague1v1Draws: 0,
-    totalLeague2v2Wins: 0,
-    totalLeague3v3Wins: 0,
-    repairCost: 0,
-    battleReadiness: 100,
-    totalRepairsPaid: 0,
-    yieldThreshold: 10,
-    loadoutType: 'single',
-    stance: 'balanced',
-    kothWins: 0,
-    kothMatches: 0,
-    kothTotalZoneScore: 0,
-    kothTotalZoneTime: 0,
-    kothKills: 0,
-    kothBestPlacement: null,
-    kothCurrentWinStreak: 0,
-    kothBestWinStreak: 0,
-    currentWinStreak: 0,
-    bestWinStreak: 0,
-    currentLoseStreak: 0,
-    offensiveWins: 0,
-    defensiveWins: 0,
-    balancedWins: 0,
-    dualWieldWins: 0,
-    grandMeleeWins: 0,
-    grandMeleeTop3: 0,
-    mainWeaponId: null,
-    offhandWeaponId: null,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  } as Robot;
-}
+
 
 /**
  * Get recent opponents for multiple robots using unified scheduled_matches_v2.
@@ -376,7 +283,7 @@ async function pairRobots(robots: Robot[], leagueId: string): Promise<MatchPair[
   // Handle odd robot with bye-match
   if (availableRobots.length === 1) {
     const lastRobot = availableRobots[0];
-    const byeRobot = createByeRobot();
+    const byeRobot = createByeRobot(-1);
     
     matches.push({
       robot1: lastRobot,

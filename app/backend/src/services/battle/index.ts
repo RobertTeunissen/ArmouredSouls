@@ -4,6 +4,9 @@
 export { getCurrentCycleNumber } from './baseOrchestrator';
 export type { BattleContext, BattleRecordRef } from './baseOrchestrator';
 
+// Bye robot factory (shared across all modes)
+export { createByeRobot } from './byeRobot';
+
 // Combat simulation
 export {
   simulateBattle,

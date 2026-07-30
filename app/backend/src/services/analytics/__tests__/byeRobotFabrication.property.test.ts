@@ -4,27 +4,14 @@
  * Feature: unified-match-scheduling
  * Property 9: Bye Robot Fabrication for Odd Counts
  *
- * Tests the in-memory bye robot factory used by 1v1 matchmaking
- * when a tier instance has an odd number of eligible robots.
+ * Tests the shared bye robot factory used by all matchmaking modes
+ * when a tier instance has an odd number of eligible participants.
  *
  * Validates: Requirements 6.1
  */
 
 import * as fc from 'fast-check';
-
-// Simulate the createByeRobot factory logic (same as in matchmakingService.ts)
-function createByeRobot() {
-  return {
-    id: -1,
-    userId: -1,
-    name: 'Bye Robot',
-    elo: 1000,
-    loadoutType: 'single',
-    mainWeaponId: null,
-    offhandWeaponId: null,
-    createdAt: new Date(),
-  };
-}
+import { createByeRobot } from '../../battle/byeRobot';
 
 // Simulate the pairing logic: odd-count pools get one bye match
 function simulatePairing(robotCount: number): { totalPairs: number; byeMatches: number; byeRobotId: number | null } {
@@ -34,7 +21,7 @@ function simulatePairing(robotCount: number): { totalPairs: number; byeMatches: 
   const hasOdd = robotCount % 2 === 1;
 
   if (hasOdd) {
-    const bye = createByeRobot();
+    const bye = createByeRobot(-1);
     return { totalPairs: pairs + 1, byeMatches: 1, byeRobotId: bye.id };
   }
 
@@ -53,11 +40,13 @@ describe('Bye Robot Fabrication — Property 9: Odd Counts', () => {
           expect(result.byeRobotId).toBeLessThan(0);
           expect(result.totalPairs).toBe(Math.ceil(robotCount / 2));
 
-          // Verify bye robot properties
-          const bye = createByeRobot();
+          // Verify bye robot properties from the real factory
+          const bye = createByeRobot(-1);
           expect(bye.id).toBe(-1);
           expect(bye.elo).toBe(1000);
           expect(bye.loadoutType).toBe('single');
+          expect(bye.mainWeapon).toBeNull();
+          expect(bye.offhandWeapon).toBeNull();
         },
       ),
       { numRuns: 100 },

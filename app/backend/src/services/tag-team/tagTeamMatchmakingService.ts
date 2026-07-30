@@ -11,7 +11,7 @@
  * @module services/tag-team/tagTeamMatchmakingService
  */
 
-import { Robot, Prisma, TeamBattle, TeamBattleMember, MatchType, StandingsMode } from '../../../generated/prisma';
+import { Robot, TeamBattle, TeamBattleMember, MatchType, StandingsMode } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import schedulingService from '../scheduling/schedulingService';
@@ -24,6 +24,7 @@ import {
   RECENT_OPPONENT_LIMIT,
   defaultScheduledFor,
 } from '../matchmaking/teamMatchmakingUtils';
+import { createByeRobot } from '../battle/byeRobot';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -278,98 +279,20 @@ async function findBestOpponent(
 function createByeTeam(league: string, leagueId: string): TeamBattleWithMembers {
   return sharedCreateByeTeam(
     (_byeLeague: string, _byeLeagueId: string): TeamBattleWithMembers => {
-      const byeRobotBase: Robot = {
-        id: -1,
-        userId: -1,
-        name: 'Bye Robot 1',
-        frameId: 1,
-        paintJob: null,
-        imageUrl: null,
-        // Combat Systems
-        combatPower: new Prisma.Decimal(10),
-        targetingSystems: new Prisma.Decimal(10),
-        criticalSystems: new Prisma.Decimal(10),
-        penetration: new Prisma.Decimal(10),
-        weaponControl: new Prisma.Decimal(10),
-        attackSpeed: new Prisma.Decimal(10),
-        // Defensive Systems
-        armorPlating: new Prisma.Decimal(10),
-        shieldCapacity: new Prisma.Decimal(10),
-        evasionThrusters: new Prisma.Decimal(10),
-        damageDampeners: new Prisma.Decimal(10),
-        counterProtocols: new Prisma.Decimal(10),
-        // Chassis & Mobility
-        hullIntegrity: new Prisma.Decimal(10),
-        servoMotors: new Prisma.Decimal(10),
-        gyroStabilizers: new Prisma.Decimal(10),
-        hydraulicSystems: new Prisma.Decimal(10),
-        powerCore: new Prisma.Decimal(10),
-        // AI Processing
-        combatAlgorithms: new Prisma.Decimal(10),
-        threatAnalysis: new Prisma.Decimal(10),
-        adaptiveAI: new Prisma.Decimal(10),
-        logicCores: new Prisma.Decimal(10),
-        // Team Coordination
-        syncProtocols: new Prisma.Decimal(10),
-        supportSystems: new Prisma.Decimal(10),
-        formationTactics: new Prisma.Decimal(10),
-        // Combat State
-        currentHP: 100,
-        maxHP: 100,
-        currentShield: 20,
-        maxShield: 20,
-        damageTaken: 0,
-        // Performance
-        elo: 1000,
-        totalBattles: 0,
-        wins: 0,
-        draws: 0,
-        losses: 0,
-        damageDealtLifetime: 0,
-        damageTakenLifetime: 0,
-        kills: 0,
-        // Fame
-        fame: 0,
-        titles: null,
-        // Economic
-        repairCost: 0,
-        battleReadiness: 100,
-        totalRepairsPaid: 0,
-        // Configuration
-        yieldThreshold: 10,
-        loadoutType: 'single',
-        stance: 'balanced',
-        // Stance/Loadout Win Counters
-        offensiveWins: 0,
-        defensiveWins: 0,
-        balancedWins: 0,
-        dualWieldWins: 0,
-        // Grand Melee
-        grandMeleeWins: 0,
-        grandMeleeTop3: 0,
-        // Equipment
-        mainWeaponId: null,
-        offhandWeaponId: null,
-        // Timestamps
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      // Create 2 bye robots for tag team (slot 0 = active, slot 1 = reserve)
       const members: (TeamBattleMember & { robot: Robot })[] = [
         {
           id: -1,
           teamId: -1,
           robotId: -1,
           slotIndex: 0,
-          robot: { ...byeRobotBase, id: -1, name: 'Bye Robot 1' },
+          robot: createByeRobot(-1) as unknown as Robot,
         },
         {
           id: -2,
           teamId: -1,
           robotId: -2,
           slotIndex: 1,
-          robot: { ...byeRobotBase, id: -2, name: 'Bye Robot 2' },
+          robot: createByeRobot(-2) as unknown as Robot,
         },
       ];
 
