@@ -1,8 +1,8 @@
 ---
 title: "Booking Office"
-description: "How the Booking Office facility works — event subscriptions, per-robot caps, switching behaviour, lock rules, and how to manage which battle events your robots participate in."
+description: "How the Booking Office facility works — event subscriptions, per-robot slot caps, switching between events, and how to manage which battle events your robots participate in."
 order: 7
-lastUpdated: "2026-06-15"
+lastUpdated: "2026-07-30"
 relatedArticles:
   - facilities/facility-overview
   - facilities/facility-progression
@@ -17,8 +17,16 @@ The **Booking Office** controls which battle events each of your robots particip
 
 Every robot gets **3 free subscriptions** at Booking Office Level 0 (no facility purchase required). Each Booking Office level adds one more subscription slot per robot, up to 13 at Level 10.
 
+### The rule, in three lines
+
+Every one of the nine events behaves identically — there are no special cases to remember:
+
+1. **Enter** an event and it takes one of the robot's slots. It'll be picked up at that event's next scheduling time.
+2. **Leave** any event, any time. This is never refused.
+3. **A match already booked still goes ahead**, and holds its slot until it has been fought.
+
 ```callout-tip
-You don't need to buy the Booking Office to start playing. Every robot gets 3 subscriptions for free — enough for 1v1 League + 1v1 Tournament + KotH. The facility just lets you add more events per robot as new modes become available. With 9 events now available, upgrading the Booking Office lets your robots participate in more modes simultaneously.
+You don't need to buy the Booking Office to start playing. Every robot gets 3 event slots for free — enough for 1v1 League + 1v1 Tournament + KotH. The facility just lets you enter more events per robot. With 9 events available, upgrading the Booking Office lets your robots compete in more formats at once.
 ```
 
 ## Subscribable Events
@@ -49,23 +57,23 @@ The slot order on your 2v2 team determines tag team roles:
 
 Tag team combat is **phased**: one active robot per side fights at a time, rather than both robots fighting simultaneously like in 2v2 League. This means the same 2v2 team can participate in both modes — simultaneous combat in 2v2 League and sequential combat in Tag Team — depending on which events the members are subscribed to.
 
-## Subscription Cap Per Level
+## Event Slots Per Level
 
-| Level | Max Subscriptions Per Robot | Upgrade Cost |
-|-------|----------------------------|-------------|
-| 0 (free) | 3 | — |
-| 1 | 4 | ₡75,000 |
-| 2 | 5 | ₡150,000 |
-| 3 | 6 | ₡225,000 |
-| 4 | 7 | ₡300,000 |
-| 5 | 8 | ₡375,000 |
-| 6 | 9 | ₡450,000 |
-| 7 | 10 | ₡525,000 |
-| 8 | 11 | ₡600,000 |
-| 9 | 12 | ₡675,000 |
-| 10 | 13 (maximum) | ₡750,000 |
+| Level | Event Slots Per Robot | Upgrade Cost | Prestige Required |
+|-------|----------------------|-------------|-------------------|
+| 0 (free) | 3 | — | — |
+| 1 | 4 | ₡75,000 | — |
+| 2 | 5 | ₡150,000 | — |
+| 3 | 6 | ₡225,000 | — |
+| 4 | 7 | ₡300,000 | 1,000 |
+| 5 | 8 | ₡375,000 | — |
+| 6 | 9 | ₡450,000 | — |
+| 7 | 10 | ₡525,000 | 5,000 |
+| 8 | 11 | ₡600,000 | — |
+| 9 | 12 | ₡675,000 | 10,000 |
+| 10 | 13 (maximum) | ₡750,000 | — |
 
-The cap applies **per robot** — every robot in your Stable gets the same cap based on your Booking Office level.
+Slots are counted **per robot** — every robot in your Stable gets the same number, based on your Booking Office level. Operating cost is level × ₡150 per day.
 
 ## How to Subscribe and Switch
 
@@ -76,7 +84,11 @@ You can manage subscriptions in two places:
 
 ### Switching is Free
 
-There's no credit cost to subscribe or unsubscribe. Change your mind as often as you like. Changes take effect at the **next cycle** — the current cycle's matchmaking has already been determined.
+There's no credit cost to subscribe or unsubscribe. Change your mind as often as you like.
+
+On the Booking Office Overview, changes are staged as you tap them and written when you press **Save changes** — so you can rearrange a whole roster and commit it in one go.
+
+Each event books its next matches once a day, at its own time. The overview shows when each one is next due, and that's your deadline: be subscribed before it, and your robot is in.
 
 ### During Onboarding
 
@@ -84,17 +96,23 @@ When you create your first robot, you'll pick 3 subscriptions from the available
 
 If you want a 4th subscription right away, you can purchase Booking Office Level 1 during onboarding — but only if you have enough credits and there's a 4th event available to you.
 
-## The Lock Rule
+## Leaving an Event
 
-You **cannot unsubscribe** a robot from an event while that robot has a queued battle for that event. This prevents disruption to already-scheduled matchups.
+Every event works the same way, and leaving is **always allowed**. There is no event you can get stuck in.
+
+One thing carries over: **a match that has already been booked still goes ahead**, and it keeps its slot until it has been fought. So leaving frees you to stop competing immediately, but the slot itself opens up once the outstanding match has run.
 
 For example:
-- Your robot is on a 2v2 team that has a Tag Team battle scheduled for next cycle
-- You try to unsubscribe it from Tag Team → **blocked** (error: `EVENT_SUBSCRIPTION_LOCKED`)
-- The battle executes next cycle → lock released
-- Now you can freely unsubscribe
+- Your robot is on a 2v2 team with a Tag Team battle already booked
+- You leave Tag Team → **done immediately**, the robot won't be booked for another one
+- The booked battle still goes ahead, and its slot shows as **held** until then
+- Once it has been fought, the slot is free for something else
 
-The lock is **per robot only**. Other robots in your Stable can change their subscriptions freely, even if one robot is locked.
+```callout-tip
+Knocked out early in a long tournament? The moment your robot is eliminated it owes the bracket nothing, so its slot frees up straight away — put it to work in 1v1 League or KotH for the remaining rounds, then re-enter the tournament before the next one is booked. The overview tells you when that is.
+```
+
+Slots are counted **per robot**. Other robots in your Stable are never affected by what one robot is doing.
 
 ## Robot Specialisation
 

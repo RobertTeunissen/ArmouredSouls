@@ -242,6 +242,20 @@ function TeamBattleManagementContent({ teamSize }: TeamBattleManagementContentPr
 /*  Team Battle Card                                                    */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Names of the members not subscribed to the given event.
+ *
+ * A team only fights a mode when every member is entered in it, so both the
+ * badge state and the "who is missing" list come from this one answer. The check
+ * used to be inlined six times, each copy also accepting a `pending` status that
+ * no longer exists — subscriptions have a single state.
+ */
+function membersMissingEvent(team: TeamBattle, eventType: string): string[] {
+  return team.members
+    .filter((m) => !m.robot.subscriptions?.some((s) => s.eventType === eventType))
+    .map((m) => m.robot.name);
+}
+
 interface TeamBattleCardProps {
   team: TeamBattle;
   onDisband: () => void;
@@ -479,20 +493,20 @@ function TeamBattleCard({ team, onDisband, onRename, onSwap, onSwapPositions }: 
         <div className="flex flex-col gap-2">
           <ModeEligibilityBadge
             label={`${team.teamSize}v${team.teamSize} League`}
-            eligible={team.members.every(m => m.robot.subscriptions?.some((s: { eventType: string; status: string }) => s.eventType === `league_${team.teamSize}v${team.teamSize}` && (s.status === 'active' || s.status === 'pending')))}
-            missingMembers={team.members.filter(m => !m.robot.subscriptions?.some((s: { eventType: string; status: string }) => s.eventType === `league_${team.teamSize}v${team.teamSize}` && (s.status === 'active' || s.status === 'pending'))).map(m => m.robot.name)}
+            eligible={membersMissingEvent(team, `league_${team.teamSize}v${team.teamSize}`).length === 0}
+            missingMembers={membersMissingEvent(team, `league_${team.teamSize}v${team.teamSize}`)}
           />
           {team.teamSize === 2 && (
             <ModeEligibilityBadge
               label="Tag Team"
-              eligible={team.members.every(m => m.robot.subscriptions?.some((s: { eventType: string; status: string }) => s.eventType === 'tag_team' && (s.status === 'active' || s.status === 'pending')))}
-              missingMembers={team.members.filter(m => !m.robot.subscriptions?.some((s: { eventType: string; status: string }) => s.eventType === 'tag_team' && (s.status === 'active' || s.status === 'pending'))).map(m => m.robot.name)}
+              eligible={membersMissingEvent(team, 'tag_team').length === 0}
+              missingMembers={membersMissingEvent(team, 'tag_team')}
             />
           )}
           <ModeEligibilityBadge
             label={`${team.teamSize}v${team.teamSize} Tournament`}
-            eligible={team.members.every(m => m.robot.subscriptions?.some((s: { eventType: string; status: string }) => s.eventType === `tournament_${team.teamSize}v${team.teamSize}` && (s.status === 'active' || s.status === 'pending')))}
-            missingMembers={team.members.filter(m => !m.robot.subscriptions?.some((s: { eventType: string; status: string }) => s.eventType === `tournament_${team.teamSize}v${team.teamSize}` && (s.status === 'active' || s.status === 'pending'))).map(m => m.robot.name)}
+            eligible={membersMissingEvent(team, `tournament_${team.teamSize}v${team.teamSize}`).length === 0}
+            missingMembers={membersMissingEvent(team, `tournament_${team.teamSize}v${team.teamSize}`)}
           />
         </div>
       </div>

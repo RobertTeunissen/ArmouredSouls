@@ -49,11 +49,11 @@ jest.mock('../../../src/services/league/leagueInstanceService', () => ({
   LEAGUE_TIERS: ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'],
 }));
 
-// Mock batchActivatePendingSubscriptions — these tests focus on subscription filtering,
-// not the activation logic (which is tested separately in subscriptionService.test.ts)
+// These tests focus on how matchmakers filter by subscription, not on how
+// subscriptions are written (covered in subscriptionService.test.ts).
 jest.mock('../../../src/services/subscription/subscriptionService', () => ({
   __esModule: true,
-  batchActivatePendingSubscriptions: jest.fn().mockResolvedValue(undefined),
+  isRobotSubscribedTo: jest.fn().mockResolvedValue(true),
 }));
 
 import logger from '../../../src/config/logger';

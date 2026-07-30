@@ -246,10 +246,22 @@ Event Subscription System — per-robot subscription model gating participation 
 
 | Service | Purpose |
 |---------|---------|
-| `eventRegistry` | Runtime singleton registry of subscribable events; exposes `registerSubscribableEvent` hook for new event modes, `isRegisteredEvent` type guard, `getRegisteredEvents` for UI rendering |
-| `subscriptionService` | Core CRUD — `subscribe`, `unsubscribe`, `getSubscriptions`, `isRobotSubscribedTo` (the single eligibility helper called by every matchmaker) |
-| `lockingPredicates` | Per-event locking predicate implementations (checks for queued battles per robot before allowing unsubscribe) |
+| `eventRegistry` | `SUBSCRIBABLE_EVENT_TYPES` tuple (source of truth the `SubscribableEventType` union and every Zod schema derive from), plus the runtime singleton registry: `registerSubscribableEvent`, `isRegisteredEvent`, `getRegisteredEvents`. A registration is an identifier and a label — no per-event behaviour hooks |
+| `subscriptionService` | One write path (`applySubscriptionChange`) behind `setSubscriptionsForRobot` (bulk), `subscribeRobot` and `unsubscribeRobot`, so a single toggle and a roster-wide save behave identically. Reads: `getSubscriptionsForRobot`, `getStableOverview`, and `isRobotSubscribedTo` — the single eligibility helper called by every matchmaker |
 | `rosterEligibilityFilter` | Filters the Event Registry by Stable robot count to determine which events a robot can subscribe to (e.g. Tag Team requires ≥ 2 robots) |
+
+**Removed:** `lockingPredicates`. Nine per-event predicates decided whether an
+unsubscribe was permitted and contradicted each other, so players could not predict
+what a click would do. Unsubscribing is now always allowed; a booked match keeps its
+slot until fought. See `scheduling/eventScheduleScope` below and
+`docs/prd_pages/PRD_FACILITIES_PAGE.md` § Switching Behaviour.
+
+### scheduling/ (subscription-related)
+
+| Service | Purpose |
+|---------|---------|
+| `eventScheduleScope` | The single answer to "is there a queued match?", asked from both directions over one `Record<SubscribableEventType, …>` scope map: `resolveRobotIdsForEvent` (who fights event X next — used by pre-battle repair, issue #411) and `resolveOutstandingEventsForRobots` (which events a robot still owes a match to — used by subscription slot accounting). Adding a tenth mode fails to compile until its schedule source is declared |
+| `eventCronSchedule` | `getNextSchedulingMoment(s)` — when each event next books matches, derived from the configured cron slot. Surfaced to players so they know the deadline to be subscribed by |
 
 ---
 

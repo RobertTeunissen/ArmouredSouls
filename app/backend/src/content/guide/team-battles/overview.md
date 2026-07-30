@@ -44,7 +44,7 @@ Both modes run every day. You don't need to be online — make your team decisio
 
 Teams are persistent — once registered, your team keeps its name, LP, league tier, and history across battles. Think of it like an F1 team: the team identity persists even if you swap out a driver.
 
-You can form a team **immediately after subscribing** your robots — there's no need to wait for the next matchmaker cycle. As soon as a robot has a pending or active subscription to the relevant league, it's eligible for team registration.
+You can form a team **immediately after subscribing** your robots — there's no need to wait for the next matchmaker cycle. As soon as a robot is subscribed to the relevant league, it's eligible for team registration.
 
 ### Rules
 

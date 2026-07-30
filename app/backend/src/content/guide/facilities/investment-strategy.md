@@ -119,7 +119,7 @@ Income is no longer a constraint. Focus on maximizing power and unlocking endgam
 
 ### Priority 10: Booking Office
 
-- **Why**: Unlocks event subscriptions for your robots with facility-level-driven cap curve. Heavily prestige-gated but has zero operating cost.
+- **Why**: Adds event slots per robot beyond the 3 every robot gets free, so a robot can compete in more formats at once. Cheap to start (₡75,000 for Level 1, no prestige gate until Level 4), but it does carry an operating cost of level × ₡150/day.
 
 ```callout-warning
 Late game facilities like the Tuning Bay have operating costs of ₡3,000/day at Level 10. Even with Champion-tier income, running every facility at max level will be expensive. Prioritize the facilities that match your competitive goals.

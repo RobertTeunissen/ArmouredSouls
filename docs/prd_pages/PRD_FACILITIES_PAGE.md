@@ -1581,45 +1581,101 @@ The Booking Office facility level determines how many concurrent event subscript
 | 0 (free) | 3 | — | — |
 | 1 | 4 | ₡75,000 | — |
 | 2 | 5 | ₡150,000 | — |
-| 3 | 6 | ₡225,000 | 1,000 |
-| 4 | 7 | ₡300,000 | — |
+| 3 | 6 | ₡225,000 | — |
+| 4 | 7 | ₡300,000 | 1,000 |
 | 5 | 8 | ₡375,000 | — |
-| 6 | 9 | ₡450,000 | 5,000 |
-| 7 | 10 | ₡525,000 | — |
-| 8 | 11 | ₡600,000 | 10,000 |
-| 9 | 12 | ₡675,000 | — |
+| 6 | 9 | ₡450,000 | — |
+| 7 | 10 | ₡525,000 | 5,000 |
+| 8 | 11 | ₡600,000 | — |
+| 9 | 12 | ₡675,000 | 10,000 |
 | 10 | 13 (maximum) | ₡750,000 | — |
+
+Prestige gates come from `prestigeRequirements` in `src/config/facilities.ts`, read as
+`prestigeRequirements[targetLevel - 1]`. This table previously attached them to
+levels 3, 6 and 8 — off by one against the code.
 
 The cap is per robot — every robot owned by the Stable gets the same cap, derived from the Stable's Booking Office level. Formula: `3 + bookingOfficeLevel`.
 
-### Switching Behaviour
+### Switching Behaviour — one rule for all nine events
 
-- Subscribing and unsubscribing is **free** — no credit cost.
-- Changes take effect at the **next cycle boundary** (the next matchmaking run).
-- Players can switch subscriptions at any time between cycles, subject to the lock rule below.
+A subscription is a standing declaration of intent: *this robot wants to be picked
+up by this event's matchmaker.* Three statements cover every event, with no
+per-event exceptions:
 
-### Per-Robot Lock-on-Queued-Battle Rule
+1. **Subscribing** is free and allowed while the robot occupies fewer slots than
+   its cap. It takes effect at the event's next scheduling moment.
+2. **Unsubscribing** is free, immediate and **always allowed**. No event refuses it.
+3. **A match already on the schedule still runs**, and keeps its slot occupied
+   until it has been fought.
 
-A robot **cannot unsubscribe** from an event while that robot has a queued (scheduled) battle for that event. This prevents mid-cycle disruption to already-paired matchups.
+Rule 3 is what makes rule 2 safe. Unsubscribing frees the *intent* at once, but the
+*slot* only when the obligation clears — otherwise a robot could leave a tournament
+mid-bracket, spend the freed slot on a league, and still fight out the bracket, i.e.
+compete in more events at once than its Booking Office pays for.
 
-- The lock is **per robot** — other robots in the same Stable are unaffected.
-- Once the queued battle executes (next cycle), the lock is released and the robot can freely change its subscriptions.
-- Attempting to unsubscribe a locked robot returns error code `EVENT_SUBSCRIPTION_LOCKED`.
+A robot **eliminated** from a bracket has no unresolved match left, so its slot
+frees immediately. That is the case this rule exists to serve: knocked out in round
+2 of a twelve-round tournament, the robot can be put to work in 1v1 League or KotH
+for the remaining rounds, and re-entered before the next tournament books.
 
-### Subscribable Events (v1)
+Each event's **next scheduling moment** is surfaced per event in the API
+(`nextSchedulingMoments`) and in the UI, because "when do I need to be subscribed
+by?" is the only timing question a player actually has. Every mode books its next
+matches in the same cron slot that fights the current ones, so one timestamp per
+event answers it.
 
-| Event Type | Label | Lock Condition |
-|-----------|-------|----------------|
-| `league` | 1v1 League | Robot has a scheduled league match |
-| `tournament` | 1v1 Tournament | Robot is alive in an active tournament bracket |
-| `tag_team` | Tag Team | Robot is on a team with a scheduled tag team match |
-| `koth` | King of the Hill | Robot is a participant in a scheduled KotH match |
+#### What replaced the per-event locks
+
+Nine `lockingPredicate` functions used to decide, per event, whether an
+unsubscribe was permitted — and they disagreed. Grand Melee refused outright while
+its matchmaker re-booked seconds after each battle, making the refusal close to
+permanent. KotH allowed it. Tournaments refused while alive in a bracket. 1v1
+League allowed it. A player could not predict what a click would do. The predicates
+are gone, together with `EVENT_SUBSCRIPTION_LOCKED`.
+
+The one question that remains — *does this robot still owe a match?* — is answered
+by `services/scheduling/eventScheduleScope`, the same module pre-battle repair uses
+to decide who is fighting next. Repair scoping and subscription accounting cannot
+drift apart, because they read one scope map keyed by event type.
+
+### Subscribable Events
+
+| Event Type | Label | Slot held while |
+|-----------|-------|-----------------|
+| `league_1v1` | 1v1 League | Robot has a scheduled league match |
+| `league_2v2` | 2v2 League | Robot's team has a scheduled 2v2 match |
+| `league_3v3` | 3v3 League | Robot's team has a scheduled 3v3 match |
+| `tag_team` | Tag Team | Robot's team has a scheduled tag team match |
+| `koth` | King of the Hill | Robot is in a scheduled KotH match |
+| `grand_melee` | Grand Melee | Robot is in a scheduled Grand Melee |
+| `tournament_1v1` | 1v1 Tournament | Robot is alive in an active bracket |
+| `tournament_2v2` | 2v2 Tournament | Robot's team is alive in an active bracket |
+| `tournament_3v3` | 3v3 Tournament | Robot's team is alive in an active bracket |
+
+The right-hand column is not a permission rule — nothing in it blocks a change. It
+is only when the slot stays occupied after leaving.
 
 ### Roster Eligibility Filter
 
 Not all events are available to all robots:
-- `league`, `tournament`, `koth` — always eligible (requires ≥ 1 robot in Stable)
-- `tag_team` — requires the Stable to own ≥ 2 robots
+- Solo events — always eligible (requires ≥ 1 robot in Stable)
+- `tag_team`, `league_2v2`, `tournament_2v2` — require ≥ 2 robots
+- `league_3v3`, `tournament_3v3` — require ≥ 3 robots
+
+### Editing Subscriptions
+
+The Booking Office matrix edits locally and saves once: tapping cells stages
+changes, and a sticky save bar writes one request per changed robot via
+`PUT /api/subscriptions/robot/:robotId`. Each toggle previously fired its own
+subscribe/unsubscribe plus a full overview refetch, so assigning a full roster cost
+upwards of a hundred requests and routinely tripped the rate limiter.
+
+Saves are all-or-nothing per robot. A robot whose requested set exceeds its cap is
+rejected whole, with `details.heldSlots` naming any event whose slot a booked match
+still occupies, and it stays staged so the player can adjust and retry.
+
+`/api/subscriptions` is covered by the **per-user** rate limiter rather than the
+shared per-IP bucket, so players behind one NAT address cannot throttle each other.
 
 ### Operating Cost
 

@@ -66,7 +66,7 @@ jest.mock('../src/services/analytics/matchmakingService', () => ({
 
 jest.mock('../src/services/subscription/subscriptionService', () => ({
   __esModule: true,
-  batchActivatePendingSubscriptions: jest.fn().mockResolvedValue(undefined),
+  isRobotSubscribedTo: jest.fn().mockResolvedValue(true),
 }));
 
 // ── Import after mocks ───────────────────────────────────────────────────────

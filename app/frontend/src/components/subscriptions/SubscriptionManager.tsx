@@ -1,12 +1,19 @@
 /**
  * SubscriptionManager Component
  *
- * Robot Detail subscription section showing current subscriptions, cap indicator,
- * subscribe/unsubscribe toggles, status indicators, and eligibility filtering.
+ * Robot Detail subscription section: which events this robot is entered in, how
+ * many slots it occupies, and when each event next books matches.
  *
- * Two-state model:
- * - "active" (green) — matchmaker will schedule matches
- * - "pending" (amber) — waiting for slot to open
+ * Presents the same rule as the Booking Office matrix, in the same words:
+ * - Subscribing enters the robot; it counts against the Booking Office cap.
+ * - Unsubscribing is always allowed, for every event.
+ * - An event with a match already booked keeps its slot until that match has been
+ *   fought. Those are marked "slot held" and explained in the row itself, not in
+ *   a hover tooltip — a touch device cannot hover.
+ *
+ * There is no per-event lock and no "pending" state. Both existed here before and
+ * neither survived unification: the locks contradicted each other across events,
+ * and nothing ever wrote a pending subscription.
  *
  * Requirements: R9.2, R9.3, R9.4, R9.5, R9.7, R9.8, R9.9, R9.12
  */
@@ -18,18 +25,29 @@ import {
   type EligibleEvent,
 } from '../../hooks/useSubscriptions';
 import EventBadge from './EventBadge';
-import SubscriptionLockIndicator from './SubscriptionLockIndicator';
 
 interface SubscriptionManagerProps {
   /** The robot ID to manage subscriptions for */
   robotId: number;
-  /** Optional lock state map: eventType → { isLocked, scheduledCycle? } — only tournament uses locks now */
-  lockStates?: Record<string, { isLocked: boolean; scheduledCycle?: number }>;
   /** Whether this robot is on a tag team */
   isOnTagTeam?: boolean;
 }
 
-function SubscriptionManager({ robotId, lockStates = {}, isOnTagTeam = false }: SubscriptionManagerProps) {
+/** How long until the given ISO moment, phrased for a player. */
+function formatCountdown(iso: string | undefined): string | null {
+  if (!iso) return null;
+  const target = new Date(iso).getTime();
+  if (Number.isNaN(target)) return null;
+
+  const minutes = Math.max(0, Math.round((target - Date.now()) / 60_000));
+  if (minutes < 60) return `in ${minutes} min`;
+
+  const hours = Math.floor(minutes / 60);
+  const remainder = minutes % 60;
+  return remainder === 0 ? `in ${hours}h` : `in ${hours}h ${remainder}m`;
+}
+
+function SubscriptionManager({ robotId, isOnTagTeam = false }: SubscriptionManagerProps) {
   const {
     data,
     loading: subsLoading,
@@ -67,44 +85,43 @@ function SubscriptionManager({ robotId, lockStates = {}, isOnTagTeam = false }: 
   }
 
   const subscriptions = data?.subscriptions ?? [];
+  const heldSlots = data?.heldSlots ?? [];
+  const nextSchedulingMoments = data?.nextSchedulingMoments ?? {};
   const cap = data?.cap ?? 3;
   const level = data?.level ?? 0;
-  const currentCount = subscriptions.length;
-  const atCap = currentCount >= cap;
 
-  // Build maps of currently subscribed event types and their statuses
   const subscribedTypes = new Set(subscriptions.map((s) => s.eventType));
-  const subscriptionStatusMap = new Map(subscriptions.map((s) => [s.eventType, s.status]));
+  // A booked match occupies a slot whether or not the robot is still entered.
+  const occupied = new Set([...subscribedTypes, ...heldSlots]);
+  const atCap = occupied.size >= cap;
 
-  // Handle subscribe action
+  const notify = (message: string): void => {
+    setConfirmationMessage(message);
+    setTimeout(() => setConfirmationMessage(null), 4000);
+  };
+
   const handleSubscribe = async (eventType: string) => {
     try {
       const result = await subscribe(eventType);
-      setConfirmationMessage(result.message || 'Subscribed. Takes effect next cycle.');
-      setTimeout(() => setConfirmationMessage(null), 4000);
+      notify(result.message || 'Entered. Takes effect at the next scheduling moment.');
     } catch (err) {
-      setConfirmationMessage(
-        err instanceof Error ? err.message : 'Failed to subscribe',
-      );
-      setTimeout(() => setConfirmationMessage(null), 4000);
+      notify(err instanceof Error ? err.message : 'Failed to subscribe');
     }
   };
 
-  // Handle unsubscribe action
   const handleUnsubscribe = async (eventType: string) => {
     try {
       const result = await unsubscribe(eventType);
-      setConfirmationMessage(result.message || 'Unsubscribed. Takes effect next cycle.');
-      setTimeout(() => setConfirmationMessage(null), 4000);
+      if (result.heldSlots?.includes(eventType)) {
+        notify('Left the event. A match is already booked, so it still goes ahead and holds the slot until fought.');
+      } else {
+        notify(result.message || 'Left the event.');
+      }
     } catch (err) {
-      setConfirmationMessage(
-        err instanceof Error ? err.message : 'Failed to unsubscribe',
-      );
-      setTimeout(() => setConfirmationMessage(null), 4000);
+      notify(err instanceof Error ? err.message : 'Failed to unsubscribe');
     }
   };
 
-  // Empty state
   if (subscriptions.length === 0 && registryEvents.length === 0) {
     return (
       <div className="bg-surface rounded-lg border border-white/10 p-4">
@@ -117,32 +134,37 @@ function SubscriptionManager({ robotId, lockStates = {}, isOnTagTeam = false }: 
     );
   }
 
-  const isSubscribedToTagTeam = subscribedTypes.has('tag_team');
-  const showTagTeamWarning = isOnTagTeam && !isSubscribedToTagTeam;
+  const showTagTeamWarning = isOnTagTeam && !subscribedTypes.has('tag_team');
 
   return (
     <div className="bg-surface rounded-lg border border-white/10 p-4 space-y-4">
-      {/* Header with cap indicator */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h3 className="text-lg font-semibold">Event Subscriptions</h3>
-        <CapIndicator current={currentCount} cap={cap} level={level} />
+        <CapIndicator current={occupied.size} cap={cap} level={level} />
       </div>
 
-      {/* Confirmation message */}
       {confirmationMessage && (
-        <div className="bg-blue-900/30 border border-blue-500/30 text-blue-200 px-3 py-2 rounded text-sm">
+        <div
+          role="status"
+          className="bg-blue-900/30 border border-blue-500/30 text-blue-200 px-3 py-2 rounded text-sm"
+        >
           {confirmationMessage}
         </div>
       )}
 
-      {/* Cap reached upgrade prompt */}
       {atCap && (
         <div className="bg-amber-900/20 border border-amber-500/30 text-amber-200 px-3 py-2 rounded text-sm">
-          Subscription cap reached ({currentCount}/{cap}). Upgrade your Booking Office to add more event subscriptions.
+          All {cap} event slots are in use. Leave an event or upgrade your Booking Office to enter more.
         </div>
       )}
 
-      {/* Tag Team subscription warning */}
+      {heldSlots.length > 0 && (
+        <div className="bg-amber-900/20 border border-amber-500/30 text-amber-200 px-3 py-2 rounded text-sm">
+          A slot is held by a match that has been booked but not yet fought. It frees up once the
+          match has run.
+        </div>
+      )}
+
       {showTagTeamWarning && (
         <div
           className="bg-amber-900/20 border border-amber-500/30 text-amber-200 px-3 py-2 rounded text-sm flex items-start gap-2"
@@ -150,22 +172,20 @@ function SubscriptionManager({ robotId, lockStates = {}, isOnTagTeam = false }: 
         >
           <span className="flex-shrink-0" aria-hidden="true">{'\u26A0\uFE0F'}</span>
           <span>
-            This robot is on a Tag Team but not subscribed to Tag Team events.
-            The team will not be matched until both members are subscribed.
+            This robot is on a Tag Team but not entered in Tag Team events.
+            The team will not be matched until both members are entered.
           </span>
         </div>
       )}
 
-      {/* Event toggles list — mobile responsive vertical layout */}
       <div className="space-y-2">
         {registryEvents.map((event) => (
           <EventToggleRow
             key={event.type}
             event={event}
             isSubscribed={subscribedTypes.has(event.type)}
-            subscriptionStatus={subscriptionStatusMap.get(event.type)}
-            isLocked={event.type === 'tournament_1v1' && (lockStates[event.type]?.isLocked ?? false)}
-            scheduledCycle={lockStates[event.type]?.scheduledCycle}
+            isHeld={heldSlots.includes(event.type)}
+            nextSchedulingMoment={nextSchedulingMoments[event.type]}
             atCap={atCap}
             mutating={mutating}
             onSubscribe={handleSubscribe}
@@ -192,7 +212,7 @@ function CapIndicator({ current, cap, level }: CapIndicatorProps) {
   return (
     <div className="flex items-center gap-2">
       <span className={`text-sm font-medium ${isFull ? 'text-amber-400' : 'text-secondary'}`}>
-        {current}/{cap} subscriptions
+        {current}/{cap} slots
       </span>
       <div className="w-16 h-1.5 bg-white/10 rounded-full overflow-hidden">
         <div
@@ -200,9 +220,7 @@ function CapIndicator({ current, cap, level }: CapIndicatorProps) {
           style={{ width: `${percentage}%` }}
         />
       </div>
-      {level > 0 && (
-        <span className="text-xs text-secondary">L{level}</span>
-      )}
+      {level > 0 && <span className="text-xs text-secondary">L{level}</span>}
     </div>
   );
 }
@@ -210,9 +228,8 @@ function CapIndicator({ current, cap, level }: CapIndicatorProps) {
 interface EventToggleRowProps {
   event: EligibleEvent;
   isSubscribed: boolean;
-  subscriptionStatus?: 'active' | 'pending';
-  isLocked: boolean;
-  scheduledCycle?: number;
+  isHeld: boolean;
+  nextSchedulingMoment?: string;
   atCap: boolean;
   mutating: boolean;
   onSubscribe: (eventType: string) => void;
@@ -222,37 +239,44 @@ interface EventToggleRowProps {
 function EventToggleRow({
   event,
   isSubscribed,
-  subscriptionStatus,
-  isLocked,
-  scheduledCycle,
+  isHeld,
+  nextSchedulingMoment,
   atCap,
   mutating,
   onSubscribe,
   onUnsubscribe,
 }: EventToggleRowProps) {
   const canSubscribe = !atCap && event.eligible && !isSubscribed && !mutating;
-  // Remove button always enabled except for tournament lock
-  const canUnsubscribe = isSubscribed && !isLocked && !mutating;
+  // Leaving is never blocked — that is the whole point of the unified rule.
+  const canUnsubscribe = isSubscribed && !mutating;
+  const countdown = formatCountdown(nextSchedulingMoment);
 
   return (
     <div className="flex items-center justify-between gap-3 p-3 bg-white/5 rounded-lg min-h-[44px]">
-      {/* Left: event badge + status + eligibility info */}
-      <div className="flex items-center gap-2 min-w-0 flex-1">
-        <EventBadge eventType={event.type} />
-        {isSubscribed && subscriptionStatus && (
-          <SubscriptionStatusBadge status={subscriptionStatus} />
-        )}
-        {!event.eligible && (
-          <span className="text-xs text-amber-400 truncate" title={event.reason}>
-            No longer eligible
-          </span>
-        )}
-        {isLocked && (
-          <SubscriptionLockIndicator isLocked={isLocked} scheduledCycle={scheduledCycle} />
+      <div className="flex flex-col gap-1 min-w-0 flex-1">
+        <div className="flex items-center gap-2 min-w-0 flex-wrap">
+          <EventBadge eventType={event.type} />
+          {isSubscribed && (
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-500/20 text-green-300">
+              Entered
+            </span>
+          )}
+          {isHeld && (
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-amber-500/20 text-amber-300">
+              Slot held
+            </span>
+          )}
+          {!event.eligible && (
+            <span className="text-xs text-amber-400 truncate" title={event.reason}>
+              No longer eligible
+            </span>
+          )}
+        </div>
+        {countdown && (
+          <span className="text-xs text-secondary">Books next matches {countdown}</span>
         )}
       </div>
 
-      {/* Right: toggle button */}
       <div className="flex-shrink-0">
         {isSubscribed ? (
           <button
@@ -265,9 +289,9 @@ function EventToggleRow({
                 : 'bg-white/5 text-secondary cursor-not-allowed'
               }
             `}
-            aria-label={`Unsubscribe from ${event.label}`}
+            aria-label={`Leave ${event.label}`}
           >
-            {isLocked ? 'Locked' : 'Remove'}
+            Leave
           </button>
         ) : (
           <button
@@ -280,33 +304,13 @@ function EventToggleRow({
                 : 'bg-white/5 text-secondary cursor-not-allowed'
               }
             `}
-            aria-label={`Subscribe to ${event.label}`}
+            aria-label={`Enter ${event.label}`}
           >
-            Add
+            Enter
           </button>
         )}
       </div>
     </div>
-  );
-}
-
-/** Status badge showing Active (green) or Pending (amber) */
-function SubscriptionStatusBadge({ status }: { status: 'active' | 'pending' }) {
-  if (status === 'active') {
-    return (
-      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-500/20 text-green-300">
-        Active
-      </span>
-    );
-  }
-
-  return (
-    <span
-      className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-amber-500/20 text-amber-300"
-      title="Will activate when a scheduled match completes and frees a slot"
-    >
-      Pending
-    </span>
   );
 }
 

@@ -55,12 +55,16 @@ fileMatchPattern: "**/game-engine/**,**/services/battle*,**/services/combat*,**/
 ### Event Subscription System (Booking Office)
 - The Booking Office facility gates robot participation in all battle event modes
 - Every matchmaker calls `isRobotSubscribedTo(robotId, eventType)` before pairing or pool inclusion
-- Subscribable events: `league_1v1`, `tournament_1v1`, `tag_team`, `koth`, `league_2v2`, `league_3v3`
+- Subscribable events (all nine): `league_1v1`, `league_2v2`, `league_3v3`, `tag_team`, `koth`, `grand_melee`, `tournament_1v1`, `tournament_2v2`, `tournament_3v3` — listed in `SUBSCRIBABLE_EVENT_TYPES`, the tuple the type union and all Zod schemas derive from
 - Per-robot Max_Events_Per_Robot: L0=3, L1=4, L2=5, L3=6, L4=7, L5=8, L6=9, L7=10, L8=11, L9=12, L10=13
 - Formula: `maxSubscriptions = 3 + bookingOfficeLevel`
 - Subscriptions are per-robot, not per-Stable — enables robot specialisation
-- Switching is free, takes effect next cycle
-- Unsubscribe blocked per robot while that robot has a queued battle (locking predicate)
+- **One rule for every event, no exceptions:** subscribing is free and allowed under the cap; **unsubscribing is free, immediate and always allowed**; a match already on the schedule still runs and keeps its slot occupied until fought
+- Slot accounting is therefore `subscriptions ∪ outstanding obligations`. This is what stops a robot leaving a tournament mid-bracket, spending the freed slot elsewhere, and still fighting out the bracket. A robot eliminated from a bracket owes nothing, so its slot frees immediately
+- The per-event `lockingPredicate` hooks and `EVENT_SUBSCRIPTION_LOCKED` are **gone** — they contradicted each other across events. The one remaining question ("does this robot owe a match?") lives in `services/scheduling/eventScheduleScope`, shared with pre-battle repair scoping
+- Changes take effect at the event's next scheduling moment, exposed as `nextSchedulingMoments` (from `services/scheduling/eventCronSchedule`) and shown in the UI
+- All writes funnel through `applySubscriptionChange`, so a single toggle and the bulk `PUT /api/subscriptions/robot/:robotId` behave identically
+- Subscriptions have a single state. `status` is always `'active'`; the old `pending` state was never written and its activation code was unreachable
 - New event modes register via `registerSubscribableEvent` and become subscribable automatically
 - See: `docs/prd_pages/PRD_FACILITIES_PAGE.md` (Booking Office section)
 
@@ -94,7 +98,7 @@ fileMatchPattern: "**/game-engine/**,**/services/battle*,**/services/combat*,**/
 - Two sizes: 2v2 League (4 robots in arena) and 3v3 League (6 robots in arena)
 - Distinct from Tag Team (phased mode with one active robot per side at a time)
 - Persistent Teams per size, owned by a single stable
-- Team registration uses `hasSubscription()` (checks both active AND pending subscriptions), not `isRobotSubscribedTo()` (active only) — players can form teams immediately after subscribing
+- Team registration uses `hasSubscription()`, now an alias of `isRobotSubscribedTo()`. The two used to differ because subscriptions had an active/pending split, but nothing ever wrote `pending`, so both ask the same question and players can form teams immediately after subscribing
 - Team Coordination Attributes (`syncProtocols`, `supportSystems`, `formationTactics`) drive ally-targeted effects:
   - `syncProtocols` → Focus Fire damage bonus (max 25%) when 2+ allies target same enemy
   - `supportSystems` → Ally shield regeneration (max 0.80 shield/sec)

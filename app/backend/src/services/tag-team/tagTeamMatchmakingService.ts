@@ -117,9 +117,6 @@ export async function getEligibleTeams(
   // Requirement 3.2 / 6.2: Filter by tag_team subscription — BOTH members must be subscribed
   const allRobotIds = availableTeams.flatMap(t => t.members.map(m => m.robotId));
 
-  // Activate pending subscriptions for robots that have room under cap
-  const { batchActivatePendingSubscriptions } = await import('../subscription/subscriptionService');
-  await batchActivatePendingSubscriptions(allRobotIds, 'tag_team');
 
   // Check active subscriptions for all robots
   const subscribedRobotIds = await prisma.subscription.findMany({

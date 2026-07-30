@@ -112,10 +112,8 @@ async function getEligibleTeams(
   );
   const availableTeams = readyTeams.filter(t => !alreadyScheduledIds.has(t.id));
 
-  // Subscription check — ALL members must have active subscription
+  // Subscription check — ALL members must be subscribed
   const allRobotIds = availableTeams.flatMap(t => t.members.map(m => m.robotId));
-  const { batchActivatePendingSubscriptions } = await import('../subscription/subscriptionService');
-  await batchActivatePendingSubscriptions(allRobotIds, config.subscriptionEvent);
 
   const subscribedRobotIds = await prisma.subscription.findMany({
     where: { eventType: config.subscriptionEvent, robotId: { in: allRobotIds }, status: 'active' },

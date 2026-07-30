@@ -56,10 +56,7 @@ export async function getEligibleTeamsForTournament(teamSize: 2 | 3): Promise<To
     },
   });
 
-  // Batch-activate pending subscriptions for all member robots
   const allRobotIds = teams.flatMap(t => t.members.map(m => m.robotId));
-  const { batchActivatePendingSubscriptions } = await import('../subscription/subscriptionService');
-  await batchActivatePendingSubscriptions(allRobotIds, eventType);
 
   // Check subscriptions in batch — only active subscriptions count
   const subscriptions = await prisma.subscription.findMany({

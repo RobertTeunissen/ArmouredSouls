@@ -174,10 +174,17 @@ inclusion: always
 - Use `pnpm test -- --silent` in CI/CD pipelines to reduce output verbosity
 
 ### Before Committing
-1. Run full test suite and verify all tests pass
+1. Run the test suite and verify all tests pass
 2. Check coverage meets minimum thresholds
 3. Fix any failing tests
 4. Do not commit untested code
+
+**Current state of the suites (July 2026).** `pnpm run test:unit` is green (205 suites,
+2881 tests) and is the gate that must stay green. `pnpm run test:integration` has
+90 of 148 suites failing for pre-existing reasons — mostly tests that were never
+updated when Specs #41 and #43 dropped schema and service symbols, so they no longer
+compile. See Backlog #64. Do not read those failures as caused by your change, and
+do not "fix" them by weakening the code; check whether the suite ever compiled first.
 
 ## Documentation Requirements
 - Document complex algorithms and business logic
@@ -194,7 +201,8 @@ inclusion: always
 - **Hash passwords** - bcrypt with salt rounds 10-12
 - **Secure JWT tokens** - Strong secrets, short expiration
 - **HTTPS only** - Enforce in production (Caddy handles this)
-- **Rate limiting** - Protect auth endpoints (10 req/15min login, 10 req/15min admin password reset, 300 req/min general, 60 req/min per-user economic, 3 req/hr account reset)
+- **Rate limiting** - Protect auth endpoints (10 req/15min login, 10 req/15min admin password reset, 300 req/min general per-IP, 100 req/min per-user economic, 3 req/hr account reset)
+- Per-user economic limiter covers `/api/weapons`, `/api/weapon-inventory`, `/api/facilities`, `/api/robots`, `/api/subscriptions`. Put any endpoint a player hits repeatedly in one sitting on this limiter rather than the shared per-IP bucket, or players behind one NAT address will throttle each other
 - **CORS configuration** - Whitelist specific origins only
 
 ### Authentication & Authorization

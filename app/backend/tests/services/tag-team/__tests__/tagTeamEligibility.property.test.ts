@@ -76,8 +76,11 @@ function createScheduledTagTeamMatch(
 }
 
 /**
- * Checks if a robot is locked for tag team based on scheduled matches.
- * Mirrors the tagTeamLockingPredicate from lockingPredicates.ts.
+ * Checks whether a robot still owes tag team a match.
+ *
+ * Mirrors the `tag_team` branch of `resolveOutstandingEventsForRobot` in
+ * `services/scheduling/eventScheduleScope`. Unsubscribing is never refused, but
+ * a booked match holds its slot until fought, and this is that question.
  *
  * Returns true IFF the robot's team has a scheduled match where matchMode='tag_team'.
  */

@@ -61,6 +61,54 @@ Open questions: whether this is a modal wizard, a checklist on the robot page, o
 
 **Related**: #37 (Robot Detail Page Split) proposes an owner-only "Prepare" workspace covering the same actions — a creation wizard and that page should share components rather than duplicate them. #28 (Progressive Feature Disclosure) and #16 (Player Personas) overlap on how much to show a new player at once.
 
+### #62 — Edge DDoS Protection in Front of ACC
+**Source**: Subscription rate-limit investigation (Booking Office unification)
+**Priority**: Medium — no edge protection exists today; the box is small enough that this matters
+
+There is no protection ahead of the application. `app/Caddyfile` terminates TLS and sets headers and compression, but has no `rate_limit` directive and no connection caps, and there is no CDN or scrubbing layer in front. Everything currently rests on in-process `express-rate-limit` counters, which means every abusive request still costs a Node event-loop turn, a DB round trip in some cases, and TLS termination — on a 2 vCPU / 2 GB DEV1-S.
+
+What exists and is worth keeping in mind: the general limiter is 300 req/min per client IP, register 30/min, login 10/15min, admin 120/min, per-user economic 100/min, body limit 1 MB. `app.set('trust proxy', 1)` is set and PM2 runs a single instance, so the counters are neither pooled into one bucket nor multiplied per worker — they behave as intended. The gap is purely that they are the *only* line of defence.
+
+Options, cheapest first: Caddy's `rate_limit` plugin plus connection limits; Cloudflare in front (free tier covers L3/L4 and basic L7, and hides the origin IP, which also removes direct-to-IP attacks); Scaleway's own edge services. Cloudflare additionally solves the shared-IP fairness problem more cleanly than app-level keys can.
+
+Not urgent while the player base is small and the origin IP is not widely known, but the fix is mostly configuration, so it is cheap to do before it is needed.
+
+### #63 — Tighten the `require-validate-request` ESLint Rule
+**Source**: Zod coverage audit (Booking Office unification)
+**Priority**: Low — closes a blind spot in an otherwise complete control
+
+`eslint-rules/require-validate-request.js` walks the AST of every `router.get/post/put/delete/patch` call in `src/routes/` and fails lint when `validateRequest` is absent. Coverage is genuinely 100% by that measure. The blind spot is that it checks the call *exists*, not that it validates anything: `validateRequest({})` satisfies it while validating nothing.
+
+There are roughly 40 such sites. Most are legitimately input-free (`GET /overview`, `GET /scheduler/status`). The one real hole this hid has been fixed — `POST /api/admin/scheduler/trigger/:jobName` read an unvalidated route param and cast it into `triggerJob` — but nothing stops the next one.
+
+Proposal: have the rule inspect the route path for `:params` and the handler for `req.body` / `req.query` access, and require the corresponding schema key to be present. An explicit opt-out comment for genuinely input-free routes keeps the noise down.
+
+### #64 — Repair the Integration Test Suite (90 of 148 suites failing)
+**Source**: Full-suite run during the Booking Office unification, 30 July 2026
+**Priority**: High — `pnpm test` cannot pass, so the documented pre-commit gate is unachievable
+
+`pnpm run test:unit` is fully green (205 suites, 2881 tests). `pnpm run test:integration` reports **90 failed / 58 passed of 148 suites, 180 failed / 1000 passed of 1180 tests**. None of it is recent: the failures are tests that were never updated when earlier specs changed the schema and service surfaces, and TypeScript never caught them because a test that fails to compile simply reports "suite failed to run" and is easy to skim past.
+
+Sampled causes:
+
+| Suite | Cause |
+|---|---|
+| `tests/kothMatchmaking.test.ts` | imports `distributeIntoGroups`, removed by Spec #41 (unified match scheduling) |
+| `tests/kothEngine.test.ts`, `kothEngine.property.test.ts` | reference `rotatingZone`, `processZoneRotation`, `KOTH_MATCH_DEFAULTS.rotatingZoneTimeLimit` — none exist |
+| `tests/teamBattle.property.test.ts`, `tests/userGeneration.test.ts` | reference `prisma.scheduledTeamBattleMatch`, dropped by Spec #41 |
+| `tests/analyticsApi.test.ts`, `tests/userGeneration.test.ts` | reference `battles.robot1Id` / `robot2Id`, dropped by Spec #43 |
+| `tests/userGeneration.test.ts` | references `scheduledKothMatchParticipant`, now `scheduledMatchParticipant` |
+| `tests/duplicateEmail.property.test.ts` and other auth suites | registration returns 400 where the test expects 201 — validation drift |
+| `tests/leagues.test.ts` | expects an `error` key in a 400 body that is now `{}` |
+| `src/services/achievement/__tests__/achievementService.test.ts` | fully mocked yet quarantined out of the unit runner; assertions have rotted |
+
+Two structural problems worth fixing alongside the individual suites:
+
+1. **Compile failures are invisible.** A suite that does not typecheck reports "failed to run" and does not fail loudly enough to have been noticed for months. `tsc --noEmit` covers `src/` but the test tsconfig evidently does not gate CI the same way.
+2. **Suites are quarantined into the integration runner as "requires DB" when they are fully mocked.** The same mistake was found and fixed for four changelog suites, and `achievementService.test.ts` is another instance. A mocked suite parked behind a live-DB setup stops being run in practice, and then rots.
+
+Until this is cleared, `pnpm run test:unit` is the meaningful gate.
+
 ### Recently Completed (removed from backlog)
 
 | Item | # | Spec | Completed |

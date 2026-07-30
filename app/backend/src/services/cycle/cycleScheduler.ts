@@ -50,18 +50,31 @@ export interface SchedulerConfig {
   grandMeleeSchedule: string;          // cron: default '0 17 * * *'
 }
 
+/**
+ * Every scheduler job name.
+ *
+ * A tuple rather than a bare union so the admin trigger endpoint can validate
+ * against it with `z.enum`. That endpoint used to read `:jobName` unvalidated and
+ * cast it into `triggerJob`, relying on the handler map to reject anything
+ * unknown — validation by side effect.
+ */
+export const SCHEDULER_JOB_NAMES = [
+  'league',
+  'tournament',
+  'tagTeam',
+  'settlement',
+  'koth',
+  'team2v2League',
+  'team3v3League',
+  'team2v2Tournament',
+  'team3v3Tournament',
+  'grandMelee',
+] as const;
+
+export type SchedulerJobName = (typeof SCHEDULER_JOB_NAMES)[number];
+
 export interface JobState {
-  name:
-    | 'league'
-    | 'tournament'
-    | 'tagTeam'
-    | 'settlement'
-    | 'koth'
-    | 'team2v2League'
-    | 'team3v3League'
-    | 'team2v2Tournament'
-    | 'team3v3Tournament'
-    | 'grandMelee';
+  name: SchedulerJobName;
   schedule: string;
   lastRunAt: Date | null;
   lastRunDurationMs: number | null;

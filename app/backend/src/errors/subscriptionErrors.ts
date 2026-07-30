@@ -15,7 +15,10 @@ export const SubscriptionErrorCode = {
   SUBSCRIPTION_CAP_EXCEEDED: 'SUBSCRIPTION_CAP_EXCEEDED',
   SUBSCRIPTION_DUPLICATE: 'SUBSCRIPTION_DUPLICATE',
   SUBSCRIPTION_UNKNOWN_EVENT: 'SUBSCRIPTION_UNKNOWN_EVENT',
-  EVENT_SUBSCRIPTION_LOCKED: 'EVENT_SUBSCRIPTION_LOCKED',
+  // EVENT_SUBSCRIPTION_LOCKED was removed: unsubscribing is now allowed for every
+  // event, so there is no failure mode left for it to describe. A booked match
+  // holds its slot instead, which surfaces as SUBSCRIPTION_CAP_EXCEEDED with the
+  // held events listed in `details.heldSlots`.
   SUBSCRIPTION_NOT_FOUND: 'SUBSCRIPTION_NOT_FOUND',
   ACCESS_DENIED: 'ACCESS_DENIED',
 } as const;

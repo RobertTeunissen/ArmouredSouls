@@ -732,7 +732,7 @@ model Subscription {
   id        Int      @id @default(autoincrement())
   robotId   Int      @map("robot_id")
   eventType String   @map("event_type") @db.VarChar(30)
-  status    String   @default("pending") @map("status") @db.VarChar(10) // "active" or "pending"
+  status    String   @default("active") @map("status") @db.VarChar(10) // always "active" — see subscriptionService
   createdAt DateTime @default(now()) @map("created_at")
 
   // Relations
