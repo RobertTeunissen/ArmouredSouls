@@ -806,41 +806,8 @@ export class RobotPerformanceService {
    * Get cycle number for a battle timestamp
    */
   private async getCycleNumberForBattle(timestamp: Date): Promise<number> {
-    // Find the cycle that contains this timestamp
-    const snapshot = await prisma.cycleSnapshot.findFirst({
-      where: {
-        startTime: {
-          lte: timestamp,
-        },
-        endTime: {
-          gte: timestamp,
-        },
-      },
-    });
-
-    if (snapshot) {
-      return snapshot.cycleNumber;
-    }
-
-    // Fallback: find from audit log
-    const event = await prisma.auditLog.findFirst({
-      where: {
-        eventType: 'cycle_start',
-        eventTimestamp: {
-          lte: timestamp,
-        },
-      },
-      orderBy: {
-        eventTimestamp: 'desc',
-      },
-    });
-
-    if (event) {
-      return event.cycleNumber;
-    }
-
-    // Last resort: return 1 (assume first cycle)
-    return 1;
+    const result = await this.batchGetCycleNumbers([timestamp]);
+    return result.get(0) ?? 1;
   }
 
   /**
@@ -866,6 +833,7 @@ export class RobotPerformanceService {
 
     // Build a map from timestamp index → cycle number
     const result = new Map<number, number>();
+    const unresolvedIndices: number[] = [];
 
     for (let i = 0; i < timestamps.length; i++) {
       const ts = timestamps[i];
@@ -885,8 +853,33 @@ export class RobotPerformanceService {
         }
       }
       if (!found) {
-        // Fallback: use the closest preceding snapshot (hi points to last element before ts)
-        result.set(i, hi >= 0 ? snapshots[hi].cycleNumber : 1);
+        unresolvedIndices.push(i);
+      }
+    }
+
+    // Fallback: resolve unmatched timestamps from audit log (same as getCycleNumberForBattle)
+    if (unresolvedIndices.length > 0) {
+      const auditEvents = await prisma.auditLog.findMany({
+        where: {
+          eventType: 'cycle_start',
+          eventTimestamp: { lte: maxTime },
+        },
+        select: { cycleNumber: true, eventTimestamp: true },
+        orderBy: { eventTimestamp: 'asc' },
+      });
+
+      for (const i of unresolvedIndices) {
+        const ts = timestamps[i];
+        // Find the latest cycle_start event at or before this timestamp
+        let cycleNumber = 1;
+        for (const event of auditEvents) {
+          if (event.eventTimestamp <= ts) {
+            cycleNumber = event.cycleNumber;
+          } else {
+            break;
+          }
+        }
+        result.set(i, cycleNumber);
       }
     }
 
