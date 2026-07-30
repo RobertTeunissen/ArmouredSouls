@@ -74,7 +74,8 @@ Stage 2 VERIFY   — one stable archive per Human_Stable, robot archive count
 Stage 3 PURGE    — delete generated stables (200 per transaction), reset
                    competitive/economic state, purge history, reset counter,
                    open the next season in preparation.
-Stage 4 POST     — orphan sweep, VACUUM, changelog draft. All non-fatal.
+Stage 4 POST     — orphan sweep, VACUUM, preserved-state achievement
+                   re-award. All non-fatal.
 ```
 
 Stage 3 is batched by user so an interruption leaves whole users done and whole users untouched, never a half-reset stable. Stage 4 is non-transactional because `VACUUM` cannot run inside a transaction block.
@@ -109,7 +110,7 @@ The Preparation_Phase is the window in which balance changes are applied. This i
 
 No mechanism is needed because the reset itself is the effective-date mechanism. At the start of a preparation window every player holds zero robots, weapons, facilities, and attribute levels, so a changed cost curve or damage constant has nothing to act on retroactively. Archives store literal outcomes and are never recomputed, so an archived season stays readable under later balance rules.
 
-A `draft` / `balance` changelog entry is created automatically at rollover for an administrator to complete and publish during the window.
+Announcing the changes is a manual step: an administrator writes a `balance` changelog entry at `/admin/changelog` and publishes it during the window. Nothing is drafted automatically.
 
 ## Uploaded images
 

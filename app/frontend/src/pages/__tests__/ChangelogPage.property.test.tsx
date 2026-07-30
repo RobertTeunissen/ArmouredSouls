@@ -45,8 +45,6 @@ function makeEntry(id: number, category: Category): ChangelogEntry {
     status: 'published',
     imageUrl: null,
     publishDate: new Date(2026, 0, id).toISOString(),
-    sourceType: null,
-    sourceRef: null,
     createdBy: null,
     createdAt: new Date(2026, 0, id).toISOString(),
     updatedAt: new Date(2026, 0, id).toISOString(),

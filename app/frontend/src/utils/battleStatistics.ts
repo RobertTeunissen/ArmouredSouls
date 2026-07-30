@@ -8,6 +8,7 @@
 
 export {
   computeBattleStatistics,
+  countKillsByRobot,
   createRobotStats,
   type BattleLogEvent,
   type BattleStatistics,

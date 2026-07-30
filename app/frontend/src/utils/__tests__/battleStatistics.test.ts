@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   computeBattleStatistics,
+  countKillsByRobot,
   type BattleStatistics,
   type RobotCombatStats,
 } from '../battleStatistics';
@@ -366,5 +367,67 @@ describe('computeBattleStatistics', () => {
       expect(b.hitRate).toBe(0);
       expect(Number.isNaN(b.hitRate)).toBe(false);
     });
+  });
+});
+
+describe('countKillsByRobot', () => {
+  it('should return an empty map for an empty events array', () => {
+    expect(countKillsByRobot([])).toEqual({});
+  });
+
+  it('should credit a destruction to the attacker', () => {
+    const events = [makeEvent({ type: 'destroyed', attacker: 'A', defender: 'B' })];
+
+    expect(countKillsByRobot(events)).toEqual({ A: 1 });
+  });
+
+  // The counter this replaced was a boolean, so a robot that wrecked several
+  // opponents in a Grand Melee or a 3v3 was only ever credited with one.
+  it('should count every destruction a robot causes', () => {
+    const events = [
+      makeEvent({ type: 'destroyed', attacker: 'A', defender: 'B' }),
+      makeEvent({ type: 'destroyed', attacker: 'A', defender: 'C' }),
+      makeEvent({ type: 'robot_eliminated', attacker: 'A', defender: 'D' }),
+    ];
+
+    expect(countKillsByRobot(events)).toEqual({ A: 3 });
+  });
+
+  it('should credit each attacker separately', () => {
+    const events = [
+      makeEvent({ type: 'destroyed', attacker: 'A', defender: 'B' }),
+      makeEvent({ type: 'destroyed', attacker: 'C', defender: 'D' }),
+      makeEvent({ type: 'destroyed', attacker: 'A', defender: 'E' }),
+    ];
+
+    expect(countKillsByRobot(events)).toEqual({ A: 2, C: 1 });
+  });
+
+  it('should not credit a yield to anyone', () => {
+    const events = [
+      makeEvent({ type: 'yield', attacker: 'A', defender: 'B' }),
+      makeEvent({ type: 'destroyed', attacker: 'A', defender: 'C' }),
+    ];
+
+    expect(countKillsByRobot(events)).toEqual({ A: 1 });
+  });
+
+  it('should ignore elimination events with no attacker', () => {
+    const events = [
+      makeEvent({ type: 'destroyed', defender: 'B' }),
+      makeEvent({ type: 'destroyed', attacker: 'A', defender: 'C' }),
+    ];
+
+    expect(countKillsByRobot(events)).toEqual({ A: 1 });
+  });
+
+  it('should ignore non-elimination events', () => {
+    const events = [
+      makeEvent({ type: 'attack', attacker: 'A', defender: 'B', damage: 40 }),
+      makeEvent({ type: 'critical', attacker: 'A', defender: 'B', damage: 90 }),
+      makeEvent({ type: 'tag_out', attacker: 'A', defender: 'B' }),
+    ];
+
+    expect(countKillsByRobot(events)).toEqual({});
   });
 });

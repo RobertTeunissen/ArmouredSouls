@@ -843,8 +843,6 @@ erDiagram
         string status "draft|published"
         string imageUrl
         datetime publishDate
-        string sourceType "spec|commit|manual"
-        string sourceRef
         int createdBy
         datetime createdAt
         datetime updatedAt

@@ -539,25 +539,6 @@ jobs:
             cd /opt/armouredsouls/backend
             NODE_ENV=acceptance pnpm exec prisma db seed
 
-      - name: Ensure CHANGELOG_DEPLOY_TOKEN in .env
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.ACC_VPS_IP }}
-          username: ${{ secrets.ACC_VPS_USER }}
-          key: ${{ secrets.ACC_SSH_KEY }}
-          envs: CHANGELOG_DEPLOY_TOKEN
-          script: |
-            ENV_FILE="/opt/armouredsouls/backend/.env"
-            if ! grep -q '^CHANGELOG_DEPLOY_TOKEN=' "$ENV_FILE" 2>/dev/null; then
-              echo "CHANGELOG_DEPLOY_TOKEN=${CHANGELOG_DEPLOY_TOKEN}" >> "$ENV_FILE"
-              echo "Added CHANGELOG_DEPLOY_TOKEN to .env"
-            else
-              sed -i "s|^CHANGELOG_DEPLOY_TOKEN=.*|CHANGELOG_DEPLOY_TOKEN=${CHANGELOG_DEPLOY_TOKEN}|" "$ENV_FILE"
-              echo "Updated CHANGELOG_DEPLOY_TOKEN in .env"
-            fi
-        env:
-          CHANGELOG_DEPLOY_TOKEN: ${{ secrets.CHANGELOG_DEPLOY_TOKEN }}
-
       - name: Ensure logrotate config
         continue-on-error: true
         uses: appleboy/ssh-action@v1
@@ -657,14 +638,6 @@ jobs:
           curl -s -H "Content-Type: application/json" \
             -d "{\"content\": \"🚨 Deploy to ACC FAILED. Check logs for details. Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}" \
             "${{ secrets.MONITORING_DISCORD_WEBHOOK }}" || true
-
-      - name: Generate changelog drafts
-        continue-on-error: true
-        env:
-          CHANGELOG_API_URL: ${{ secrets.CHANGELOG_API_URL }}
-          CHANGELOG_DEPLOY_TOKEN: ${{ secrets.CHANGELOG_DEPLOY_TOKEN }}
-          DEPLOY_ENV: acc
-        run: bash app/backend/scripts/generate-changelog-drafts.sh
 
       - name: Create deploy tag
         continue-on-error: true
@@ -898,25 +871,6 @@ jobs:
             cd /opt/armouredsouls/backend
             pnpm exec prisma migrate deploy
 
-      - name: Ensure CHANGELOG_DEPLOY_TOKEN in .env
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.PRD_VPS_IP }}
-          username: ${{ secrets.PRD_VPS_USER }}
-          key: ${{ secrets.PRD_SSH_KEY }}
-          envs: CHANGELOG_DEPLOY_TOKEN
-          script: |
-            ENV_FILE="/opt/armouredsouls/backend/.env"
-            if ! grep -q '^CHANGELOG_DEPLOY_TOKEN=' "$ENV_FILE" 2>/dev/null; then
-              echo "CHANGELOG_DEPLOY_TOKEN=${CHANGELOG_DEPLOY_TOKEN}" >> "$ENV_FILE"
-              echo "Added CHANGELOG_DEPLOY_TOKEN to .env"
-            else
-              sed -i "s|^CHANGELOG_DEPLOY_TOKEN=.*|CHANGELOG_DEPLOY_TOKEN=${CHANGELOG_DEPLOY_TOKEN}|" "$ENV_FILE"
-              echo "Updated CHANGELOG_DEPLOY_TOKEN in .env"
-            fi
-        env:
-          CHANGELOG_DEPLOY_TOKEN: ${{ secrets.CHANGELOG_DEPLOY_TOKEN }}
-
       - name: Ensure logrotate config
         continue-on-error: true
         uses: appleboy/ssh-action@v1
@@ -1016,14 +970,6 @@ jobs:
           curl -s -H "Content-Type: application/json" \
             -d "{\"content\": \"🚨 Deploy to PRD FAILED. Check logs for details. Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}" \
             "${{ secrets.MONITORING_DISCORD_WEBHOOK }}" || true
-
-      - name: Generate changelog drafts
-        continue-on-error: true
-        env:
-          CHANGELOG_API_URL: ${{ secrets.CHANGELOG_API_URL }}
-          CHANGELOG_DEPLOY_TOKEN: ${{ secrets.CHANGELOG_DEPLOY_TOKEN }}
-          DEPLOY_ENV: prd
-        run: bash app/backend/scripts/generate-changelog-drafts.sh
 
       - name: Create deploy tag
         continue-on-error: true

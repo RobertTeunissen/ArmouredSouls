@@ -1,71 +1,34 @@
 /**
  * Factory for creating valid Standing objects for testing.
  *
- * Supports all 8 StandingsMode values and all 6 tiers.
- * KotH standings include populated KotH-specific fields.
- *
- * Types defined locally to match the Prisma schema from Spec #40.
- * Once `prisma generate` is run after Tasks 1.1–1.5, these can be
- * replaced with imports from '../../generated/prisma'.
+ * Types come from the generated Prisma client rather than a local copy. The
+ * local copy drifted: it was missing `grand_melee` (added by Spec #44), so any
+ * test passing a real `StandingsMode` into this factory failed to compile, and
+ * it still declared `totalKills`, which moved to `robot_mode_kills`.
  */
 
-export type StandingsMode =
-  | 'league_1v1'
-  | 'league_2v2'
-  | 'league_3v3'
-  | 'tag_team'
-  | 'koth'
-  | 'tournament_1v1'
-  | 'tournament_2v2'
-  | 'tournament_3v3';
+import type { Standing, StandingsMode } from '../../generated/prisma';
+import { StandingsMode as StandingsModeEnum } from '../../generated/prisma';
 
-export interface Standing {
-  id: number;
-  entityType: string;
-  entityId: number;
-  mode: StandingsMode;
-  tier: string;
-  leagueInstanceId: string;
-  leaguePoints: number;
-  cyclesInTier: number;
-  wins: number;
-  losses: number;
-  draws: number;
-  currentWinStreak: number;
-  bestWinStreak: number;
-  currentLoseStreak: number;
-  totalMatches: number | null;
-  totalKills: number | null;
-  totalZoneScore: number | null;
-  totalZoneTime: number | null;
-  bestPlacement: number | null;
-  createdAt: Date;
-  updatedAt: Date;
-}
+export type { Standing, StandingsMode };
 
 let standingIdCounter = 1000;
 
-const STANDINGS_MODES: StandingsMode[] = [
-  'league_1v1',
-  'league_2v2',
-  'league_3v3',
-  'tag_team',
-  'koth',
-  'tournament_1v1',
-  'tournament_2v2',
-  'tournament_3v3',
-];
+const STANDINGS_MODES: StandingsMode[] = Object.values(StandingsModeEnum);
 
 const TIERS = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'] as const;
 
-function getDefaultKothFields(mode: StandingsMode): Pick<
+/**
+ * Placement modes accumulate match, zone and placement stats; the league and
+ * tournament modes leave those columns null.
+ */
+function getDefaultPlacementFields(mode: StandingsMode): Pick<
   Standing,
-  'totalMatches' | 'totalKills' | 'totalZoneScore' | 'totalZoneTime' | 'bestPlacement'
+  'totalMatches' | 'totalZoneScore' | 'totalZoneTime' | 'bestPlacement'
 > {
-  if (mode === 'koth') {
+  if (mode === 'koth' || mode === 'grand_melee') {
     return {
       totalMatches: 0,
-      totalKills: 0,
       totalZoneScore: 0,
       totalZoneTime: 0,
       bestPlacement: null,
@@ -73,7 +36,6 @@ function getDefaultKothFields(mode: StandingsMode): Pick<
   }
   return {
     totalMatches: null,
-    totalKills: null,
     totalZoneScore: null,
     totalZoneTime: null,
     bestPlacement: null,
@@ -103,7 +65,7 @@ export function createStanding(overrides?: Partial<Standing>): Standing {
     currentWinStreak: 0,
     bestWinStreak: 0,
     currentLoseStreak: 0,
-    ...getDefaultKothFields(mode),
+    ...getDefaultPlacementFields(mode),
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -113,7 +75,7 @@ export function createStanding(overrides?: Partial<Standing>): Standing {
 
 /**
  * Creates a Standing pre-configured for a specific mode.
- * KotH standings get their nullable fields populated with zeros.
+ * Placement modes get their nullable fields populated with zeros.
  */
 export function createStandingForMode(
   mode: StandingsMode,

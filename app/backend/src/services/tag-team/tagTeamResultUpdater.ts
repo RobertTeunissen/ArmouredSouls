@@ -17,6 +17,7 @@ import {
   updateRobotCombatStats,
 } from '../battle/battlePostCombat';
 import { TagTeamError, TagTeamErrorCode } from '../../errors/tagTeamErrors';
+import { countKillsByRobot } from '../../shared/utils/battleStatistics';
 import { TagTeamBattleResult } from './tagTeamTypes';
 import {
   calculateTagTeamRewards,
@@ -166,7 +167,7 @@ export async function updateTagTeamBattleResults(
       isDraw,
       damageDealt: Math.round(activeDamageDealt),
       damageTakenByOpponent: realTeam.activeRobot.maxHP - activeFinalHP,
-      opponentDestroyed: false, // Bye opponent is virtual
+      opponentsDestroyed: 0, // Bye opponent is virtual
       fameIncrement: activeFame,
       battleType: 'tag_team',
       stance: realTeam.activeRobot.stance,
@@ -183,7 +184,7 @@ export async function updateTagTeamBattleResults(
       damageTakenByOpponent: tagOutTime !== undefined
         ? realTeam.reserveRobot.maxHP - reserveFinalHP
         : 0,
-      opponentDestroyed: false, // Bye opponent is virtual
+      opponentsDestroyed: 0, // Bye opponent is virtual
       fameIncrement: reserveFame,
       battleType: 'tag_team',
       stance: realTeam.reserveRobot.stance,
@@ -342,6 +343,13 @@ export async function updateTagTeamBattleResults(
     isDraw
   );
 
+  // Per-robot destruction credit. Previously both robots on a side received the
+  // same "did either opponent get wrecked" boolean, so one destruction counted
+  // twice — once for the robot that caused it and once for its partner.
+  const killsByRobot = countKillsByRobot(
+    (result.battleLog || []) as unknown as Parameters<typeof countKillsByRobot>[0],
+  );
+
   // Update robots (ELO, HP, statistics, fame) via unified combat stats function
   // updateRobotCombatStats handles maxHP clamping internally
 
@@ -353,7 +361,7 @@ export async function updateTagTeamBattleResults(
     isDraw,
     damageDealt: Math.round(result.team1ActiveDamageDealt),
     damageTakenByOpponent: Math.round((result.team2ActiveDamageDealt + result.team2ReserveDamageDealt) / 2),
-    opponentDestroyed: result.team2ActiveFinalHP === 0 || result.team2ReserveFinalHP === 0,
+    opponentsDestroyed: killsByRobot[team1.activeRobot.name] ?? 0,
     fameIncrement: team1ActiveFame,
     battleType: 'tag_team',
     stance: team1.activeRobot.stance,
@@ -368,7 +376,7 @@ export async function updateTagTeamBattleResults(
     isDraw,
     damageDealt: Math.round(result.team1ReserveDamageDealt),
     damageTakenByOpponent: Math.round((result.team2ActiveDamageDealt + result.team2ReserveDamageDealt) / 2),
-    opponentDestroyed: result.team2ActiveFinalHP === 0 || result.team2ReserveFinalHP === 0,
+    opponentsDestroyed: killsByRobot[team1.reserveRobot.name] ?? 0,
     fameIncrement: team1ReserveFame,
     battleType: 'tag_team',
     stance: team1.reserveRobot.stance,
@@ -383,7 +391,7 @@ export async function updateTagTeamBattleResults(
     isDraw,
     damageDealt: Math.round(result.team2ActiveDamageDealt),
     damageTakenByOpponent: Math.round((result.team1ActiveDamageDealt + result.team1ReserveDamageDealt) / 2),
-    opponentDestroyed: result.team1ActiveFinalHP === 0 || result.team1ReserveFinalHP === 0,
+    opponentsDestroyed: killsByRobot[team2.activeRobot.name] ?? 0,
     fameIncrement: team2ActiveFame,
     battleType: 'tag_team',
     stance: team2.activeRobot.stance,
@@ -398,7 +406,7 @@ export async function updateTagTeamBattleResults(
     isDraw,
     damageDealt: Math.round(result.team2ReserveDamageDealt),
     damageTakenByOpponent: Math.round((result.team1ActiveDamageDealt + result.team1ReserveDamageDealt) / 2),
-    opponentDestroyed: result.team1ActiveFinalHP === 0 || result.team1ReserveFinalHP === 0,
+    opponentsDestroyed: killsByRobot[team2.reserveRobot.name] ?? 0,
     fameIncrement: team2ReserveFame,
     battleType: 'tag_team',
     stance: team2.reserveRobot.stance,

@@ -226,8 +226,6 @@ describe('ChangelogService property tests', () => {
                 status: e.status,
                 imageUrl: null,
                 publishDate: e.status === 'published' ? e.publishDate : null,
-                sourceType: null,
-                sourceRef: null,
                 createdBy: null,
                 createdAt: new Date(),
                 updatedAt: new Date(),
@@ -295,8 +293,6 @@ describe('ChangelogService property tests', () => {
                 status: 'published',
                 imageUrl: null,
                 publishDate: e.publishDate,
-                sourceType: null,
-                sourceRef: null,
                 createdBy: null,
                 createdAt: new Date(),
                 updatedAt: new Date(),
@@ -322,7 +318,7 @@ describe('ChangelogService property tests', () => {
 
             expect(result.entries.length).toBe(expectedSlice.length);
             expect(result.page).toBe(clampedPage);
-            expect(result.perPage).toBe(clampedPerPage);
+            expect(result.pageSize).toBe(clampedPerPage);
 
             // Verify IDs match the expected slice
             for (let i = 0; i < result.entries.length; i++) {
@@ -371,8 +367,6 @@ describe('ChangelogService property tests', () => {
                 status: 'published',
                 imageUrl: null,
                 publishDate: e.publishDate,
-                sourceType: null,
-                sourceRef: null,
                 createdBy: null,
                 createdAt: new Date(),
                 updatedAt: new Date(),

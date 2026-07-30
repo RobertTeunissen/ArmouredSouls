@@ -54,8 +54,6 @@ function makeEntry(overrides: Record<string, unknown> = {}) {
     status: 'published',
     imageUrl: null,
     publishDate: new Date('2025-06-01T12:00:00Z'),
-    sourceType: null,
-    sourceRef: null,
     createdBy: null,
     createdAt: new Date('2025-06-01T10:00:00Z'),
     updatedAt: new Date('2025-06-01T10:00:00Z'),
@@ -93,7 +91,7 @@ describe('ChangelogService', () => {
       expect(result.entries).toHaveLength(2);
       expect(result.total).toBe(2);
       expect(result.page).toBe(1);
-      expect(result.perPage).toBe(20);
+      expect(result.pageSize).toBe(20);
     });
 
     it('should filter by category when provided', async () => {

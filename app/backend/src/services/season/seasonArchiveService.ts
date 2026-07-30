@@ -371,10 +371,10 @@ interface AccoladeRow {
  *   - Tournament champions per type, ranked by titles won that season
  *   - League win streaks per mode (1v1 robot; 2v2 / 3v3 / tag team by team)
  *
- * Kills are captured per game type wherever the game tracks them per mode
- * (KotH and Grand Melee via `standings.total_kills`) plus the all-mode career
- * total (`robots.kills`). League and tournament modes keep no per-mode kill
- * counter, so they carry no kill accolade.
+ * Kills are captured per game type from `robot_mode_kills`, which tracks every
+ * mode, plus the all-mode career total (`robots.kills`). Only KotH and Grand
+ * Melee currently publish a kill accolade; the remaining modes record the counts
+ * but have no ranked category yet.
  *
  * Ownership is resolved by id, so names are never guessed. Bot-held placements
  * ARE captured, with `userId` null and the generated flag set, so a player's
@@ -572,7 +572,7 @@ export async function writeAccolades(seasonNumber: number): Promise<number> {
       list<KRow & { kothWins: number }>('mostWins').map((e) => ({ subjectName: e.robotName, value: e.kothWins, owner: robotOwner(e.robotId) })));
     pushRanked('kothAvgZoneScore', 'koth', 'avg zone score', 'robot',
       list<KRow & { avgZoneScore: number }>('highestAvgZoneScore').map((e) => ({ subjectName: e.robotName, value: e.avgZoneScore, owner: robotOwner(e.robotId) })));
-    // KotH kills — per-mode kills from standings.total_kills.
+    // KotH kills — per-mode kills from robot_mode_kills.
     pushRanked('kothMostKills', 'koth', 'kills', 'robot',
       list<KRow & { kothKills: number }>('mostKillsCareer').map((e) => ({ subjectName: e.robotName, value: e.kothKills, owner: robotOwner(e.robotId) })));
     pushRanked('kothLongestWinStreak', 'koth', 'consecutive wins', 'robot',
@@ -593,7 +593,7 @@ export async function writeAccolades(seasonNumber: number): Promise<number> {
       list<GRow & { grandMeleeWins: number }>('mostWins').map((e) => ({ subjectName: e.robotName, value: e.grandMeleeWins, owner: robotOwner(e.robotId) })));
     pushRanked('grandMeleeHighestLp', 'grand_melee', 'LP', 'robot',
       list<GRow & { leaguePoints: number }>('highestLp').map((e) => ({ subjectName: e.robotName, value: e.leaguePoints, owner: robotOwner(e.robotId) })));
-    // Grand Melee kills — per-mode kills from standings.total_kills.
+    // Grand Melee kills — per-mode kills from robot_mode_kills.
     pushRanked('grandMeleeMostKills', 'grand_melee', 'kills', 'robot',
       list<GRow & { totalKills: number }>('mostKillsCareer').map((e) => ({ subjectName: e.robotName, value: e.totalKills, owner: robotOwner(e.robotId) })));
   });

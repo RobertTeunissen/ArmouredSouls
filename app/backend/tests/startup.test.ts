@@ -59,7 +59,6 @@ jest.mock('../src/config/env', () => ({
     monitoringDiscordWebhook: undefined,
     discordWebhookUrl: undefined,
     dailyReportSchedule: '30 0 * * *',
-    changelogDeployToken: undefined,
     appBaseUrl: undefined,
     enableModeration: false,
   }),

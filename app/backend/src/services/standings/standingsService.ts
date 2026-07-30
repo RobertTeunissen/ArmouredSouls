@@ -180,7 +180,6 @@ export interface AwardKothPointsParams {
   robotId: number;
   placement: number; // 1-6 (1st place = best)
   totalParticipants: number; // 5 or 6 typically
-  kills: number;
   zoneScore: number;
   zoneTime: number;
 }
@@ -190,13 +189,17 @@ export const KOTH_POINT_SCALE = [10, 6, 4, 2, 1, 0];
 
 /**
  * Awards KotH points to a robot based on their placement using an F1-style point scale.
- * Updates cumulative stats (kills, zone score, zone time, best placement) and streak tracking.
+ * Updates cumulative stats (zone score, zone time, best placement) and streak tracking.
+ *
+ * Destructions are not recorded here. They belong to `robot_mode_kills`, written
+ * by `updateRobotCombatStats()` for every mode, so that a single code path owns
+ * the tally rather than each mode's award function keeping its own copy.
  *
  * @param params - KotH result parameters
  * @returns The updated Standing record
  */
 async function awardKothPoints(params: AwardKothPointsParams): Promise<Standing> {
-  const { robotId, placement, kills, zoneScore, zoneTime } = params;
+  const { robotId, placement, zoneScore, zoneTime } = params;
 
   // Determine points from F1-style scale (0 if placement exceeds scale length)
   const points = placement <= KOTH_POINT_SCALE.length ? KOTH_POINT_SCALE[placement - 1] : 0;
@@ -207,7 +210,6 @@ async function awardKothPoints(params: AwardKothPointsParams): Promise<Standing>
   // Compute new cumulative values
   const newLeaguePoints = current.leaguePoints + points;
   const newTotalMatches = (current.totalMatches ?? 0) + 1;
-  const newTotalKills = (current.totalKills ?? 0) + kills;
   const newTotalZoneScore = (current.totalZoneScore ?? 0) + zoneScore;
   const newTotalZoneTime = (current.totalZoneTime ?? 0) + zoneTime;
   const newBestPlacement =
@@ -217,7 +219,6 @@ async function awardKothPoints(params: AwardKothPointsParams): Promise<Standing>
   const updateData: Record<string, number> = {
     leaguePoints: newLeaguePoints,
     totalMatches: newTotalMatches,
-    totalKills: newTotalKills,
     totalZoneScore: newTotalZoneScore,
     totalZoneTime: newTotalZoneTime,
     bestPlacement: newBestPlacement,
@@ -335,7 +336,6 @@ export interface AwardGrandMeleePointsParams {
   robotId: number;
   placement: number; // 1-10+ (1st place = best)
   totalParticipants: number;
-  kills: number;
   damageDealt: number;
   survivalTime: number;
 }
@@ -345,14 +345,16 @@ export const GRAND_MELEE_POINT_SCALE = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
 
 /**
  * Awards Grand Melee points to a robot based on their placement using an F1-style point scale.
- * Updates cumulative stats (kills, damage dealt, survival time, best placement) and streak tracking.
+ * Updates cumulative stats (damage dealt, survival time, best placement) and streak tracking.
  * Reuses Standing fields: totalZoneScore for damage dealt, totalZoneTime for survival time.
+ *
+ * Destructions are not recorded here — see `awardKothPoints` for the reasoning.
  *
  * @param params - Grand Melee result parameters
  * @returns The updated Standing record
  */
 async function awardGrandMeleePoints(params: AwardGrandMeleePointsParams): Promise<Standing> {
-  const { robotId, placement, kills, damageDealt, survivalTime } = params;
+  const { robotId, placement, damageDealt, survivalTime } = params;
 
   // Determine points from F1-style scale (0 if placement exceeds scale length)
   const points = placement <= GRAND_MELEE_POINT_SCALE.length ? GRAND_MELEE_POINT_SCALE[placement - 1] : 0;
@@ -363,7 +365,6 @@ async function awardGrandMeleePoints(params: AwardGrandMeleePointsParams): Promi
   // Compute new cumulative values
   const newLeaguePoints = current.leaguePoints + points;
   const newTotalMatches = (current.totalMatches ?? 0) + 1;
-  const newTotalKills = (current.totalKills ?? 0) + kills;
   const newTotalZoneScore = (current.totalZoneScore ?? 0) + damageDealt;
   const newTotalZoneTime = (current.totalZoneTime ?? 0) + survivalTime;
   const newBestPlacement =
@@ -373,7 +374,6 @@ async function awardGrandMeleePoints(params: AwardGrandMeleePointsParams): Promi
   const updateData: Record<string, number> = {
     leaguePoints: newLeaguePoints,
     totalMatches: newTotalMatches,
-    totalKills: newTotalKills,
     totalZoneScore: newTotalZoneScore,
     totalZoneTime: newTotalZoneTime,
     bestPlacement: newBestPlacement,

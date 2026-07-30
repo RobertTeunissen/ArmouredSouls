@@ -190,7 +190,14 @@ export async function refreshRarityCache(cache: AchievementRarityCache): Promise
     logger.info(`Achievement rarity cache refreshed: ${counts.size} achievements, ${totalActivePlayers} active players`);
     return newCache;
   } catch (error) {
-    logger.error(`Failed to refresh achievement rarity cache: ${error}`);
+    // Interpolating a PrismaClientKnownRequestError into a template string only
+    // yields the code frame, which makes an unreachable database look like a
+    // malformed query. Log the code and meta explicitly instead.
+    const { code, meta } = error as { code?: string; meta?: unknown };
+    const detail = code ? ` (code: ${code}, meta: ${JSON.stringify(meta)})` : '';
+    logger.error(
+      `Failed to refresh achievement rarity cache: ${error instanceof Error ? error.message.trim() : String(error)}${detail}`,
+    );
     // Keep the existing cache on failure (graceful degradation)
     return cache;
   }

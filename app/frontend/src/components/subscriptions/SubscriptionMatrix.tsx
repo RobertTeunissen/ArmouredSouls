@@ -31,7 +31,11 @@ interface SubscriptionMatrixProps {
 function SubscriptionMatrix({ lockStates = {}, tagTeamRobotIds = new Set() }: SubscriptionMatrixProps) {
   const { data, loading, error, refetch } = useStableOverview();
 
-  if (loading) {
+  // Placeholders are only for the very first load. Once we have data, a refetch
+  // (triggered by every toggle) must keep the matrix mounted — swapping it for a
+  // one-line box collapses the page height, which makes the browser clamp the
+  // scroll position to the top on mobile.
+  if (loading && !data) {
     return (
       <div className="bg-surface rounded-lg border border-white/10 p-6">
         <div className="text-secondary text-sm">Loading subscription matrix...</div>
@@ -39,7 +43,7 @@ function SubscriptionMatrix({ lockStates = {}, tagTeamRobotIds = new Set() }: Su
     );
   }
 
-  if (error) {
+  if (error && !data) {
     return (
       <div className="bg-surface rounded-lg border border-white/10 p-6">
         <div className="text-red-400 text-sm">{error}</div>
@@ -58,7 +62,17 @@ function SubscriptionMatrix({ lockStates = {}, tagTeamRobotIds = new Set() }: Su
   const { robots, registeredEvents } = data;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" aria-busy={loading}>
+      {/* Refresh error — shown inline so the matrix stays in place */}
+      {error && (
+        <div
+          role="alert"
+          className="bg-red-500/10 border-l-4 border-red-500 rounded-lg p-3 text-red-400 text-sm"
+        >
+          {error}
+        </div>
+      )}
+
       {/* Per-event summary bar */}
       <div className="bg-surface rounded-lg border border-white/10 p-4">
         <div className="flex flex-wrap gap-4">
@@ -244,7 +258,10 @@ function ToggleButton({
       title={getTitle()}
     >
       {cellMutating ? (
-        <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+        <>
+          <span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+          <EventBadge eventType={event.type} />
+        </>
       ) : (
         <>
           {isSubscribed && subscriptionStatus === 'active' && (

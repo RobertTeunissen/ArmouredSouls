@@ -92,7 +92,7 @@ Phase 1 delivered a fully functional game with 4 battle modes, 15 facilities, 47
 | 21 | Service Layer Type Safety | Typed service interfaces, strict return types, Prisma payload typing |
 | 22 | Admin Password Reset | Secure admin password reset endpoint with PasswordResetService, session invalidation via token version, rate limiting, audit logging |
 | 23 | E2E Playwright Coverage | 11+ Playwright spec files covering registration, onboarding, robot creation, weapon shop, practice arena, financial flows, and CI blocking gate |
-| 24 | In-Game Changelog | "What's New" modal and dedicated page, auto-generated drafts from deploys, admin review/publish workflow, category badges, optional images |
+| 24 | In-Game Changelog | "What's New" modal and dedicated page, admin authoring with draft/publish workflow, category badges, optional images (deploy-driven draft auto-generation was removed in July 2026) |
 | 25 | Tuning Bay | Per-robot tactical attribute tuning with 23 sliders, facility-gated pool size (10–110 points), combat integration, onboarding auto-allocation |
 | 26 | Battle Report Overhaul | Statistics summary, Sankey damage flow diagram, responsive playback viewer, tabbed layout, design system alignment, CompactBattleCard economic enhancement |
 | 27 | Achievement System | 77-achievement progression layer with badges, progress tracking, rarity, pinned showcase, toast notifications, retroactive awards |

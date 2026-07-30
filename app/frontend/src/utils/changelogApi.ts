@@ -8,8 +8,6 @@ export interface ChangelogEntry {
   status: 'draft' | 'published';
   imageUrl: string | null;
   publishDate: string | null;
-  sourceType: 'spec' | 'commit' | 'manual' | null;
-  sourceRef: string | null;
   createdBy: number | null;
   createdAt: string;
   updatedAt: string;
@@ -57,8 +55,6 @@ export interface CreateChangelogData {
   category: 'balance' | 'feature' | 'bugfix' | 'economy';
   status?: 'draft' | 'published';
   imageUrl?: string | null;
-  sourceType?: 'spec' | 'commit' | 'manual';
-  sourceRef?: string;
 }
 
 export interface UpdateChangelogData {

@@ -7,6 +7,7 @@ const mockStandingFindMany = jest.fn();
 const mockScheduledMatchCount = jest.fn();
 const mockRobotFindMany = jest.fn();
 const mockSubscriptionFindMany = jest.fn();
+const mockRobotModeKillsFindMany = jest.fn();
 
 jest.mock('../../../src/lib/prisma', () => ({
   __esModule: true,
@@ -24,6 +25,10 @@ jest.mock('../../../src/lib/prisma', () => ({
     subscription: {
       findMany: (...args: unknown[]) => mockSubscriptionFindMany(...args),
     },
+    // Destructions come from the per-mode tally, not from the standing.
+    robotModeKills: {
+      findMany: (...args: unknown[]) => mockRobotModeKillsFindMany(...args),
+    },
   },
 }));
 
@@ -36,6 +41,10 @@ import { getKothStandings } from '../../../src/services/koth/kothStandingsServic
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockRobotModeKillsFindMany.mockResolvedValue([
+    { robotId: 1, kills: 5 },
+    { robotId: 2, kills: 2 },
+  ]);
 });
 
 describe('getKothStandings', () => {

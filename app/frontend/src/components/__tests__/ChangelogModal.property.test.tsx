@@ -49,8 +49,6 @@ function makeFullEntry(partial: {
   return {
     id: 1,
     status: 'published',
-    sourceType: null,
-    sourceRef: null,
     createdBy: null,
     createdAt: partial.publishDate,
     updatedAt: partial.publishDate,

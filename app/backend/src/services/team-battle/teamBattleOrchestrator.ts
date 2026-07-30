@@ -17,6 +17,7 @@ import logger from '../../config/logger';
 import { RobotWithWeapons } from '../battle/combatSimulator';
 import { simulateTeamBattle } from './teamBattleEngine';
 import { computeBattleSummary } from '../battle/battleSummaryComputer';
+import { countKillsByRobot } from '../../shared/utils/battleStatistics';
 import {
   calculateTeamBattleReward,
   distributeTeamCredits,
@@ -481,12 +482,13 @@ async function executeSingleTeamBattle(
   const team1TotalDamage = battleResult.participants
     .filter(p => p.team === 1)
     .reduce((sum, p) => sum + (p.damageDealt ?? 0), 0);
-  const team2HasDestroyed = battleResult.participants
-    .filter(p => p.team === 2)
-    .some(p => p.finalHP === 0);
-  const team1HasDestroyed = battleResult.participants
-    .filter(p => p.team === 1)
-    .some(p => p.finalHP === 0);
+  // Per-robot destruction credit. Previously this was one boolean per side
+  // ("did anyone opposite get wrecked"), handed to every robot on the team, so
+  // a single destruction credited two or three robots and a robot that wrecked
+  // two opponents still only counted one.
+  const killsByRobot = countKillsByRobot(
+    (battleResult.detailedCombatEvents || []) as unknown as Parameters<typeof countKillsByRobot>[0],
+  );
 
   for (const robot of team1Robots) {
     if (robot.id < 0) continue; // Skip bye robots
@@ -499,7 +501,7 @@ async function executeSingleTeamBattle(
       isDraw,
       damageDealt: Math.round(participant?.damageDealt ?? 0),
       damageTakenByOpponent: Math.round(team2TotalDamage / teamSize),
-      opponentDestroyed: team2HasDestroyed,
+      opponentsDestroyed: killsByRobot[robot.name] ?? 0,
       fameIncrement: team1Won ? postTxFame : 0,
       battleType: battleTypeLabel,
       stance: robot.stance,
@@ -519,7 +521,7 @@ async function executeSingleTeamBattle(
         isDraw,
         damageDealt: Math.round(participant?.damageDealt ?? 0),
         damageTakenByOpponent: Math.round(team1TotalDamage / teamSize),
-        opponentDestroyed: team1HasDestroyed,
+        opponentsDestroyed: killsByRobot[robot.name] ?? 0,
         fameIncrement: team2Won ? postTxFame : 0,
         battleType: battleTypeLabel,
         stance: robot.stance,

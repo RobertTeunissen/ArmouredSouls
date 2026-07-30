@@ -6,6 +6,7 @@
  */
 
 import prisma from '../../lib/prisma';
+import { getModeKills } from '../battle/modeKillsQueries';
 
 export interface KothPerformance {
   robotId: number;
@@ -27,7 +28,7 @@ export interface KothPerformance {
  * Returns null if the robot has no KotH standings entry or zero matches.
  */
 export async function getKothPerformance(robotId: number): Promise<KothPerformance | null> {
-  const [robot, standing] = await Promise.all([
+  const [robot, standing, kothKills] = await Promise.all([
     prisma.robot.findUnique({
       where: { id: robotId },
       select: { id: true, name: true },
@@ -35,6 +36,7 @@ export async function getKothPerformance(robotId: number): Promise<KothPerforman
     prisma.standing.findUnique({
       where: { entityType_entityId_mode: { entityType: 'robot', entityId: robotId, mode: 'koth' } },
     }),
+    getModeKills(robotId, 'koth'),
   ]);
 
   if (!robot || !standing || (standing.totalMatches ?? 0) === 0) {
@@ -57,7 +59,7 @@ export async function getKothPerformance(robotId: number): Promise<KothPerforman
         ? Number(((standing.totalZoneScore ?? 0) / totalMatches).toFixed(1))
         : 0,
     kothTotalZoneTime: standing.totalZoneTime ?? 0,
-    kothKills: standing.totalKills ?? 0,
+    kothKills,
     kothBestPlacement: standing.bestPlacement,
     kothCurrentWinStreak: standing.currentWinStreak,
     kothBestWinStreak: standing.bestWinStreak,

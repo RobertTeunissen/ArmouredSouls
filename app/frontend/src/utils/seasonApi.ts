@@ -213,8 +213,6 @@ export interface AdminSeasonState extends SeasonState {
   rolloverInProgress: boolean;
   /** True only during a preparation window, when balance changes are appropriate. */
   balanceChangesAppropriate: boolean;
-  /** Draft balance changelog scoped to this season, if one exists. */
-  seasonChangelogDraft: { id: number; title: string } | null;
   config: AdminSeasonConfig;
 }
 

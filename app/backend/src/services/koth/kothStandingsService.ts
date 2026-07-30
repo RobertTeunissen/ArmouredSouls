@@ -1,5 +1,6 @@
 import { MatchType } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
+import { getModeKillsMap } from '../battle/modeKillsQueries';
 
 interface KothStandingsParams {
   view: string;
@@ -54,6 +55,9 @@ async function getKothStandingsAllTime({ page, limit, tier, instance }: { page: 
   });
   const subscribedKothRobotIds = new Set(kothSubs.map(s => s.robotId));
 
+  // Destructions live in the per-mode tally, not on the standing.
+  const kothKillsByRobot = await getModeKillsMap(robotIds, 'koth');
+
   const topStanding = standings_rows.length > 0 ? standings_rows[0] : null;
   const topRobot = topStanding ? robotMap.get(topStanding.entityId) : null;
 
@@ -76,7 +80,7 @@ async function getKothStandingsAllTime({ page, limit, tier, instance }: { page: 
       winRate: kothMatches > 0 ? Number((kothWins / kothMatches * 100).toFixed(1)) : 0,
       totalZoneScore: standing.totalZoneScore ?? 0,
       avgZoneScore: kothMatches > 0 ? Number(((standing.totalZoneScore ?? 0) / kothMatches).toFixed(1)) : 0,
-      kothKills: standing.totalKills ?? 0,
+      kothKills: kothKillsByRobot.get(standing.entityId) ?? 0,
       bestStreak: standing.bestWinStreak,
       bestPlacement: standing.bestPlacement,
     };

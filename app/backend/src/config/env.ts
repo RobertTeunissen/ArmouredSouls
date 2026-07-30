@@ -144,7 +144,6 @@ const EnvSchema = z
     DAILY_REPORT_SCHEDULE: z.string().default('30 0 * * *'),
 
     // ── Optional integrations ────────────────────────────────────────
-    CHANGELOG_DEPLOY_TOKEN: z.string().optional(),
     APP_BASE_URL: z.string().optional(),
     ENABLE_MODERATION: boolFlag,
   })
@@ -225,7 +224,6 @@ export interface EnvConfig {
   /** Generic Discord webhook for player notifications. */
   discordWebhookUrl: string | undefined;
   dailyReportSchedule: string;
-  changelogDeployToken: string | undefined;
   /** Base URL of the deployed app, used in notification links. */
   appBaseUrl: string | undefined;
   /** Force-enable image moderation in non-prod environments. */
@@ -272,7 +270,6 @@ const toEnvConfig = (parsed: z.infer<typeof EnvSchema>): EnvConfig => ({
   monitoringDiscordWebhook: parsed.MONITORING_DISCORD_WEBHOOK || undefined,
   discordWebhookUrl: parsed.DISCORD_WEBHOOK_URL || undefined,
   dailyReportSchedule: parsed.DAILY_REPORT_SCHEDULE,
-  changelogDeployToken: parsed.CHANGELOG_DEPLOY_TOKEN,
   appBaseUrl: parsed.APP_BASE_URL || undefined,
   enableModeration: parsed.ENABLE_MODERATION,
 });

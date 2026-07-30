@@ -160,7 +160,7 @@ async function batchUpdateKothRobotStats(
       isDraw: false, // KotH never draws
       damageDealt: p.damageDealt,
       damageTakenByOpponent: p.robot.maxHP - p.finalHP,
-      opponentDestroyed: p.kills > 0,
+      opponentsDestroyed: p.kills,
       fameIncrement: 0, // Fame handled separately in reward distribution
       battleType: 'koth',
       stance: p.robot.stance,
@@ -175,7 +175,6 @@ async function batchUpdateKothRobotStats(
       robotId: p.robot.id,
       placement: p.placement,
       totalParticipants: participants.length,
-      kills: p.kills,
       zoneScore: p.zoneScore,
       zoneTime: p.zoneTime,
     });

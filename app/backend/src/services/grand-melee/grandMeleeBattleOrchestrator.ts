@@ -4,6 +4,7 @@ import prisma from '../../lib/prisma';
 import { Prisma } from '../../../generated/prisma';
 import logger from '../../config/logger';
 import { computeBattleSummary } from '../battle/battleSummaryComputer';
+import { countKillsByRobot } from '../../shared/utils/battleStatistics';
 import { simulateBattleMulti, RobotWithWeapons, BattleConfig, SpatialCombatResult, SpatialRobotCombatState, SpatialCombatEvent } from '../battle/combatSimulator';
 import { CombatMessageGenerator } from '../battle/combatMessageGenerator';
 import {
@@ -116,14 +117,11 @@ function computePlacements(
     }
   }
 
-  // Count kills per robot from elimination events (attacker field)
-  const killCountMap = new Map<string, number>();
-  for (const event of events) {
-    if (event.type === 'yield') continue;
-    if (ELIMINATION_TYPES.has(event.type) && event.attacker) {
-      killCountMap.set(event.attacker, (killCountMap.get(event.attacker) ?? 0) + 1);
-    }
-  }
+  // Kill credit comes from the shared attribution helper so that every mode
+  // counts a destruction the same way.
+  const killsByRobot = countKillsByRobot(
+    events as unknown as Parameters<typeof countKillsByRobot>[0],
+  );
 
   // Split states into survivors and eliminated
   const survivors: SpatialRobotCombatState[] = [];
@@ -162,7 +160,7 @@ function computePlacements(
     robotId: state.robot.id,
     robotName: state.robot.name,
     placement: index + 1,
-    kills: killCountMap.get(state.robot.name) ?? 0,
+    kills: killsByRobot[state.robot.name] ?? 0,
     damageDealt: state.totalDamageDealt,
     finalHP: Math.max(0, state.currentHP),
     destroyed: !state.isAlive,
@@ -188,7 +186,7 @@ async function batchUpdateGrandMeleeRobotStats(
       isDraw: false, // Grand Melee never draws
       damageDealt: p.damageDealt,
       damageTakenByOpponent: p.robot.maxHP - p.finalHP,
-      opponentDestroyed: p.kills > 0,
+      opponentsDestroyed: p.kills,
       fameIncrement: 0, // Fame handled separately in reward distribution
       battleType: 'grand_melee',
       stance: p.robot.stance,
@@ -207,7 +205,6 @@ async function batchUpdateGrandMeleeRobotStats(
       robotId: p.robot.id,
       placement: p.placement,
       totalParticipants: participants.length,
-      kills: p.kills,
       damageDealt: p.damageDealt,
       survivalTime: durationSeconds,
     });

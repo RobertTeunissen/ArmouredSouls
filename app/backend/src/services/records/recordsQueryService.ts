@@ -1,4 +1,5 @@
 import prisma from '../../lib/prisma';
+import { getTopModeKills } from '../battle/modeKillsQueries';
 
 // Helper to get display name (stableName or username fallback)
 export const getUserDisplayName = (user: { username: string; stableName?: string | null }): string => {
@@ -462,25 +463,42 @@ function roundToZonePrecision(value: number): number {
 }
 
 export async function fetchKothRecords(): Promise<Record<string, unknown> | undefined> {
-  // Query standings for KotH records (source of truth since Spec #40)
+  // Query standings for KotH records (source of truth since Spec #40).
+  // Destructions are the exception — see getTopModeKills.
   const kothFilter = { mode: 'koth' as const, totalMatches: { gt: 0 } };
 
   // Spec #46 R4.3: Best Placement removed. Any robot that has ever won a KotH
   // match has a bestPlacement of 1, so the category ranked every winner as
   // joint first and carried no information.
-  const [mostWinsStandings, highestZoneScoreStandings, mostKillsStandings, longestStreakStandings, mostZoneTimeStandings, zoneDominatorStandings] =
+  // Destructions are ranked from the per-mode tally; every other category still
+  // ranks on a standings column.
+  const [mostWinsStandings, highestZoneScoreStandings, mostKillsTallies, longestStreakStandings, mostZoneTimeStandings, zoneDominatorStandings] =
     await Promise.all([
       prisma.standing.findMany({ where: { ...kothFilter, entityType: 'robot' }, orderBy: { wins: 'desc' }, take: 10 }),
       prisma.standing.findMany({ where: { ...kothFilter, entityType: 'robot' }, orderBy: { totalZoneScore: 'desc' }, take: 10 }),
-      prisma.standing.findMany({ where: { ...kothFilter, entityType: 'robot' }, orderBy: { totalKills: 'desc' }, take: 10 }),
+      getTopModeKills('koth', 10),
       prisma.standing.findMany({ where: { ...kothFilter, entityType: 'robot' }, orderBy: { bestWinStreak: 'desc' }, take: 10 }),
       prisma.standing.findMany({ where: { ...kothFilter, entityType: 'robot' }, orderBy: { totalZoneTime: 'desc' }, take: 10 }),
       prisma.standing.findMany({ where: { ...kothFilter, entityType: 'robot' }, orderBy: { totalZoneScore: 'desc' }, take: 10 }),
     ]);
 
+  // Match counts for the destruction leaders, which the tally does not carry.
+  const killLeaderMatches = new Map(
+    (mostKillsTallies.length > 0
+      ? await prisma.standing.findMany({
+          where: { mode: 'koth', entityType: 'robot', entityId: { in: mostKillsTallies.map(k => k.robotId) } },
+          select: { entityId: true, totalMatches: true },
+        })
+      : []
+    ).map(s => [s.entityId, s.totalMatches ?? 0]),
+  );
+
   // Collect all unique robot IDs across all categories
-  const allStandings = [mostWinsStandings, highestZoneScoreStandings, mostKillsStandings, longestStreakStandings, mostZoneTimeStandings, zoneDominatorStandings];
-  const allRobotIds = [...new Set(allStandings.flat().map(s => s.entityId))];
+  const allStandings = [mostWinsStandings, highestZoneScoreStandings, longestStreakStandings, mostZoneTimeStandings, zoneDominatorStandings];
+  const allRobotIds = [...new Set([
+    ...allStandings.flat().map(s => s.entityId),
+    ...mostKillsTallies.map(k => k.robotId),
+  ])];
 
   // Fetch robot details (name + user) in one query
   const robots = allRobotIds.length > 0
@@ -510,7 +528,16 @@ export async function fetchKothRecords(): Promise<Record<string, unknown> | unde
       avgZoneScore: (s.totalMatches ?? 0) > 0 ? Number(((s.totalZoneScore ?? 0) / (s.totalMatches ?? 1)).toFixed(1)) : 0,
       kothMatches: s.totalMatches ?? 0,
     })),
-    mostKillsCareer: mostKillsStandings.map(s => ({ ...mapStanding(s), kothKills: s.totalKills ?? 0, kothMatches: s.totalMatches ?? 0 })),
+    mostKillsCareer: mostKillsTallies.map(k => {
+      const robot = robotMap.get(k.robotId);
+      return {
+        robotId: k.robotId,
+        robotName: robot?.name ?? 'Unknown',
+        username: robot ? getUserDisplayName(robot.user) : '',
+        kothKills: k.kills,
+        kothMatches: killLeaderMatches.get(k.robotId) ?? 0,
+      };
+    }),
     longestWinStreak: longestStreakStandings.map(s => ({ ...mapStanding(s), bestWinStreak: s.bestWinStreak, kothWins: s.wins })),
     mostZoneTime: mostZoneTimeStandings.map(s => ({
       ...mapStanding(s),
@@ -759,7 +786,7 @@ export async function fetchTournamentChampions(): Promise<{
 export async function fetchGrandMeleeRecords(): Promise<Record<string, unknown> | undefined> {
   const grandMeleeFilter = { mode: 'grand_melee' as const, totalMatches: { gt: 0 } };
 
-  const [mostWinsRobots, highestLpStandings, mostKillsStandings] = await Promise.all([
+  const [mostWinsRobots, highestLpStandings, mostKillsTallies] = await Promise.all([
     prisma.robot.findMany({
       where: { grandMeleeWins: { gt: 0 } },
       orderBy: { grandMeleeWins: 'desc' },
@@ -771,21 +798,30 @@ export async function fetchGrandMeleeRecords(): Promise<Record<string, unknown> 
       orderBy: { leaguePoints: 'desc' },
       take: 10,
     }),
-    prisma.standing.findMany({
-      where: { ...grandMeleeFilter, entityType: 'robot', totalKills: { gt: 0 } },
-      orderBy: { totalKills: 'desc' },
-      take: 10,
-    }),
+    getTopModeKills('grand_melee', 10),
   ]);
 
   // No data at all — return undefined
-  if (mostWinsRobots.length === 0 && highestLpStandings.length === 0 && mostKillsStandings.length === 0) {
+  if (mostWinsRobots.length === 0 && highestLpStandings.length === 0 && mostKillsTallies.length === 0) {
     return undefined;
   }
 
+  // Match counts for the destruction leaders, which the tally does not carry.
+  const killLeaderMatches = new Map(
+    (mostKillsTallies.length > 0
+      ? await prisma.standing.findMany({
+          where: { mode: 'grand_melee', entityType: 'robot', entityId: { in: mostKillsTallies.map(k => k.robotId) } },
+          select: { entityId: true, totalMatches: true },
+        })
+      : []
+    ).map(s => [s.entityId, s.totalMatches ?? 0]),
+  );
+
   // Batch-resolve robot names for standing-based queries
-  const allStandings = [highestLpStandings, mostKillsStandings];
-  const allRobotIds = [...new Set(allStandings.flat().map(s => s.entityId))];
+  const allRobotIds = [...new Set([
+    ...highestLpStandings.map(s => s.entityId),
+    ...mostKillsTallies.map(k => k.robotId),
+  ])];
 
   const robots = allRobotIds.length > 0
     ? await prisma.robot.findMany({
@@ -816,16 +852,20 @@ export async function fetchGrandMeleeRecords(): Promise<Record<string, unknown> 
       leaguePoints: s.leaguePoints,
       tier: s.tier,
     })),
-    mostKillsCareer: mostKillsStandings.map(s => ({
-      ...mapStanding(s),
-      totalKills: s.totalKills ?? 0,
-      grandMeleeMatches: s.totalMatches ?? 0,
-      // Spec #46 R4.17: total kills alone rewards volume — a robot subscribed
-      // since the mode launched outranks a deadlier robot that joined later.
-      killsPerMatch: (s.totalMatches ?? 0) > 0
-        ? Number(((s.totalKills ?? 0) / (s.totalMatches ?? 1)).toFixed(2))
-        : 0,
-    })),
+    mostKillsCareer: mostKillsTallies.map(k => {
+      const robot = robotMap.get(k.robotId);
+      const matches = killLeaderMatches.get(k.robotId) ?? 0;
+      return {
+        robotId: k.robotId,
+        robotName: robot?.name ?? 'Unknown',
+        username: robot ? getUserDisplayName(robot.user) : '',
+        totalKills: k.kills,
+        grandMeleeMatches: matches,
+        // Spec #46 R4.17: total kills alone rewards volume — a robot subscribed
+        // since the mode launched outranks a deadlier robot that joined later.
+        killsPerMatch: matches > 0 ? Number((k.kills / matches).toFixed(2)) : 0,
+      };
+    }),
   };
 }
 

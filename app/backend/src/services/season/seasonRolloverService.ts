@@ -6,7 +6,8 @@
  *   Stage 1 ARCHIVE  — write the permanent record. No destructive writes.
  *   Stage 2 VERIFY   — counts must match, or abort with data intact.
  *   Stage 3 PURGE    — delete and reset, batched by user.
- *   Stage 4 POST     — orphan sweep, reclamation, changelog. Failures non-fatal.
+ *   Stage 4 POST     — orphan sweep, reclamation, preserved-state achievement
+ *                      re-award. Failures non-fatal.
  *
  * The ordering is the whole point: nothing is deleted until the archive exists
  * and has been counted. A crash between stages is safe because Stage 1 is
@@ -75,29 +76,6 @@ export function isRolloverInProgress(): boolean {
 async function notify(message: string): Promise<void> {
   const { sendMonitoringAlert } = await import('../../utils/monitoringWebhook');
   await sendMonitoringAlert(message);
-}
-
-/** Create the balance changelog draft for the new season. Non-fatal on failure. */
-async function createSeasonChangelogDraft(newSeasonNumber: number): Promise<void> {
-  try {
-    await prisma.changelogEntry.create({
-      data: {
-        title: `Season ${newSeasonNumber} balance changes`,
-        body:
-          `Season ${newSeasonNumber} has begun. Describe the balance changes applied ` +
-          `during this preparation window here, then publish.`,
-        category: 'balance',
-        status: 'draft',
-        sourceType: 'manual',
-        sourceRef: `season-${newSeasonNumber}`,
-      },
-    });
-    logger.info(`[season-rollover] Changelog draft created for season ${newSeasonNumber}`);
-  } catch (error) {
-    logger.error(
-      `[season-rollover] Changelog draft failed (non-fatal) — ${error instanceof Error ? error.message : String(error)}`,
-    );
-  }
 }
 
 /** Execute a full Season_Rollover. */
@@ -211,8 +189,26 @@ export async function executeSeasonRollover(options: RolloverOptions): Promise<R
         `[season-rollover] Orphan sweep failed (non-fatal) — ${error instanceof Error ? error.message : String(error)}`,
       );
     }
+    // Re-award achievements whose condition reads state this rollover preserved.
+    // Runs after the `user_achievements` purge and after the next season is open,
+    // so the unlock and its rewards land in the new season (issue #419), and
+    // before the VACUUM below so reclamation sees the final row set.
+    try {
+      const { reawardPreservedStateAchievements } = await import(
+        '../achievement/preservedStateAchievements'
+      );
+      const reawarded = await reawardPreservedStateAchievements();
+      logger.info(
+        `[season-rollover] Preserved-state achievements: ${reawarded.achievementsAwarded} awarded ` +
+        `across ${reawarded.stablesChecked} stables`,
+      );
+    } catch (error) {
+      logger.error(
+        `[season-rollover] Preserved-state achievement re-award failed (non-fatal) — ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+
     await reclaimSpace();
-    await createSeasonChangelogDraft(newSeasonNumber);
     const postMs = Date.now() - postStart;
 
     const totalMs = Date.now() - totalStart;

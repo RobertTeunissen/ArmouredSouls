@@ -43,6 +43,8 @@ jest.mock('../../services/security/securityMonitor', () => ({
   securityMonitor: {
     logValidationFailure: jest.fn(),
     logAuthorizationFailure: jest.fn(),
+    logAdminAccess: jest.fn(),
+    trackRateLimitViolation: jest.fn(),
     setStableName: jest.fn(),
   },
 }));
@@ -91,7 +93,10 @@ function createApp(): express.Express {
   return app;
 }
 
-function adminToken(userId = 1, tokenVersion = 0): string {
+/** `authenticateToken` reads the role from the database row, not the JWT claim. */
+const ADMIN_USER_ID = 1;
+
+function adminToken(userId = ADMIN_USER_ID, tokenVersion = 0): string {
   return jwt.sign(
     { userId, username: 'admin_user', role: 'admin', tokenVersion },
     JWT_SECRET,
@@ -114,10 +119,14 @@ describe('Property 13: API input validation rejects invalid data with field-leve
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockPrismaUser.findUnique.mockResolvedValue({
-      tokenVersion: 0,
-      stableName: 'Test Stable',
-    });
+    mockPrismaUser.findUnique.mockImplementation(
+      ({ where }: { where: { id: number } }) =>
+        Promise.resolve({
+          tokenVersion: 0,
+          stableName: 'Test Stable',
+          role: where.id === ADMIN_USER_ID ? 'admin' : 'user',
+        }),
+    );
     mockChangelogService.create.mockResolvedValue({ id: 1, title: 'x', body: 'x', category: 'feature', status: 'draft' });
     mockChangelogService.update.mockResolvedValue({ id: 1, title: 'x', body: 'x', category: 'feature', status: 'draft' });
   });

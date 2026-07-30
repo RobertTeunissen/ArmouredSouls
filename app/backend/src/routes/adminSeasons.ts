@@ -23,7 +23,6 @@ import {
   executeSeasonRollover,
   isRolloverInProgress,
 } from '../services/season/seasonRolloverService';
-import prisma from '../lib/prisma';
 
 const router = express.Router();
 
@@ -42,17 +41,12 @@ const preparationBodySchema = z.object({ remainingCycles: z.number().int().min(0
 /** Current season state plus whether balance changes are appropriate now. */
 router.get('/state', validateRequest({}), async (_req: AuthRequest, res: Response) => {
   const state = await getCurrentSeason();
-  const draft = await prisma.changelogEntry.findFirst({
-    where: { status: 'draft', category: 'balance', sourceRef: `season-${state.seasonNumber}` },
-    select: { id: true, title: true },
-  });
 
   return res.json({
     ...state,
     rolloverInProgress: isRolloverInProgress(),
     // Balance changes belong in a preparation window (convention, not enforced).
     balanceChangesAppropriate: state.phase === 'preparation',
-    seasonChangelogDraft: draft,
     config: {
       seasonLengthCycles: loadEnvConfig().seasonLengthCycles,
       preparationLengthCycles: loadEnvConfig().preparationLengthCycles,

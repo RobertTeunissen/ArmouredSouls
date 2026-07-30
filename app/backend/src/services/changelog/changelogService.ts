@@ -18,8 +18,6 @@ export interface CreateChangelogInput {
   category: string;
   status?: string;
   imageUrl?: string | null;
-  sourceType?: string | null;
-  sourceRef?: string | null;
   createdBy?: number | null;
 }
 
@@ -125,20 +123,6 @@ class ChangelogService {
   }
 
   /**
-   * List all non-null sourceRefs across all entries.
-   * Used by the deploy endpoint for idempotency checks.
-   */
-  async listAllSourceRefs(): Promise<string[]> {
-    const entries = await prisma.changelogEntry.findMany({
-      where: { sourceRef: { not: null } },
-      select: { sourceRef: true },
-    });
-    return entries
-      .map((e) => e.sourceRef)
-      .filter((ref): ref is string => ref != null);
-  }
-
-  /**
    * List all entries (drafts + published) for admin, ordered by createdAt desc.
    */
   async listAll(
@@ -172,8 +156,6 @@ class ChangelogService {
         status: data.status ?? 'draft',
         imageUrl: data.imageUrl ?? null,
         publishDate: data.status === 'published' ? new Date() : null,
-        sourceType: data.sourceType ?? null,
-        sourceRef: data.sourceRef ?? null,
         createdBy: data.createdBy ?? null,
       },
     });
