@@ -8,7 +8,7 @@ Items identified during audits, reviews, and development. Prioritized by impact 
 
 | # | Item | Why it blocks |
 |---|------|---------------|
-| [#64](#64--repair-the-integration-test-suite-90-of-148-suites-failing) | Repair the Integration Test Suite | Every test tier is now mandatory in CI, so **main cannot deploy** until it is cleared. Test compile errors are down from 454 to 222; see the item for the live count. |
+| [#64](#64--repair-the-integration-test-suite-90-of-148-suites-failing) | Repair the Integration Test Suite | Every test tier is now mandatory in CI, so **main cannot deploy** until it is cleared. Test compile errors are down from 454 to **149 across 26 files**; see the item for the per-suite breakdown and the remaining work. |
 
 ---
 
@@ -335,19 +335,68 @@ Two structural problems worth fixing alongside the individual suites:
 1. **Compile failures are invisible.** A suite that does not typecheck reports "failed to run" and does not fail loudly enough to have been noticed for months. `tsc --noEmit` covers `src/` but the test tsconfig evidently does not gate CI the same way.
 2. **Suites are quarantined into the integration runner as "requires DB" when they are fully mocked.** The same mistake was found and fixed for four changelog suites, and `achievementService.test.ts` is another instance. A mocked suite parked behind a live-DB setup stops being run in practice, and then rots.
 
-**Progress.** `tsconfig.test.json` + `pnpm run typecheck:tests` now typecheck the
-suites, and that runs in CI as a blocking step. Test compile errors are down from
-**454 to 221 across 32 files**; four orphaned suites deleted (they tested
-`roiCalculatorService` and `distributeIntoGroups`, neither of which exists).
-Repaired and verified passing: matchmakingService, profileUpdate,
-stanceAndYieldAPI, finances, adminRobotStats, eloProgression, metricProgression,
-middleware/auth, scheduling.property, the four streaming-revenue suites,
-kothEngine (+property), hpTracking, leagueRebalancingService, resetService, and
-analyticsApi. Remaining, largest first: `teamBattleCompleteCycle` (28),
-`battleOrchestrator` (23), `tagTeamByeHandling` (16),
-`tagTeamBattleLogCompleteness` (11), `onboardingApi` (10),
-`kothOrchestrator.property` (10), `cycleSnapshot.property` (10), then a tail of
-4–8 error files.
+**Progress (as of 30 July 2026).** `tsconfig.test.json` + `pnpm run typecheck:tests`
+now typecheck the suites, and that runs in CI as a blocking step. Test compile errors
+are down from **454 to 149, across 26 files**. Four orphaned suites were deleted
+(they tested `roiCalculatorService` and `distributeIntoGroups`, neither of which
+exists).
+
+Repaired and verified passing: `matchmakingService`, `profileUpdate`,
+`stanceAndYieldAPI`, `finances`, `adminRobotStats`, `eloProgression`,
+`metricProgression`, `middleware/auth`, `scheduling.property`, the four
+streaming-revenue suites, `kothEngine` (+`.property`), `hpTracking`,
+`leagueRebalancingService`, `resetService`, `analyticsApi` (93 tests),
+`battleOrchestrator` (12), `integration/teamBattleCompleteCycle` (5),
+`facilityRecommendationService`, `facilityRecommendation.property`,
+`facilityAdvisorStreamingStudio`, `facilityAdvisorStreamingStudioROI.property`.
+
+**Remaining compile errors, largest first:**
+
+| Errors | Suite | Tier |
+|---|---|---|
+| 16 | `tests/integration/tagTeamByeHandling.test.ts` | heavy |
+| 11 | `tests/tagTeamBattleLogCompleteness.property.test.ts` | integration |
+| 10 | `tests/onboardingApi.test.ts` | integration |
+| 10 | `tests/kothOrchestrator.property.test.ts` | integration |
+| 10 | `tests/cycleSnapshot.property.test.ts` | heavy |
+| 8 | `tests/matchListInclusion.property.test.ts` | integration |
+| 8 | `tests/integration/teamBattleRaceCondition.test.ts` | heavy |
+| 8 | `tests/integration/tagTeamMultiMatchCycle.test.ts` | heavy |
+| 7 | `tests/multiMatchScheduling.property.test.ts` | heavy |
+| 6 | `tests/userGeneration.test.ts` | integration |
+| 6 | `tests/integration/tagTeamAutoRepair.test.ts` | heavy |
+| 5 | `tests/integration/adminCycleGeneration.test.ts` | heavy |
+| 5 | `tests/combatMessageGenerator.spatial.test.ts` | integration |
+| 4 | `teamBattle.property`, `stables`, `scheduler.property`, `robotStatsView`, `robotPerformanceService`, `robotNameUniqueness`, `integration`, `auth` | mixed |
+| ≤2 | `integration/tagTeamCompleteCycle`, `battle-participants.property`, `tagTeamPhaseBugs.pbt`, `battleEventLogging`, `middleware/auth` | mixed |
+
+**Note on which runner to use.** `jest.config.heavy.js` claims `tests/integration/**`,
+`battleOrchestrator`, `cycleSnapshot.property`, `facilityRecommendation.property`,
+`multiMatchScheduling.property` and several others. Running those under
+`jest.config.integration.js` silently matches nothing, which reads as a pass. Check
+the config before concluding a suite is green.
+
+**Warning: `battleOrchestrator.test.ts` truncates the whole database** in its
+`beforeAll` (`user`, `robot`, `weapon`, … `deleteMany({})`), including the weapon
+catalogue other suites need. Re-run `pnpm exec prisma db seed` after it, or run it
+last.
+
+**Production defects found by running the suites** (fixed, in commits `fa8cbbf5` and
+`7c8060ec` — listed here because they are the substantive findings, not test churn):
+
+1. `GET /api/analytics/facility/:userId/recommendations` returned **500 on every
+   call**. `facilityRecommendationService` selected `Robot.totalTagTeamBattles`,
+   dropped by Spec #43, so Prisma rejected the query.
+2. The same service could emit a recommendation with an **empty `reason`** — the
+   repair bay is deliberately exempt from the non-positive-ROI filter, but the
+   no-projected-saving branch never set the string, so the card reached the UI blank.
+3. `leagueRebalancingService.determinePromotions` / `determineDemotions` /
+   `promoteRobot` / `demoteRobot` were declared over `Robot` while the adapter
+   returns `Standing` rows.
+4. A team registered outside `POST /api/team-battles` was **unmatchable**. Matchmaking
+   scopes candidates by `standings.leagueInstanceId`, `registerTeam` leaves standings
+   to its caller, and the only implementation was inline in that one route. Extracted
+   as `createInitialTeamStandings`.
 
 **A third hole, not yet closed.** `"lint": "eslint src"` never lints tests —
 measured at **45 errors and 448 warnings across 304 test files**, mostly
@@ -452,3 +501,98 @@ than fixed:
 Whichever is chosen, `tests/facilityRecommendation.property.test.ts` Property 22.4
 should go back to asserting the stronger invariant; it currently accepts "positive
 ROI **or** pays back at all", with the reasoning noted inline.
+
+### #68 — Bye Robot Fabrication Exists Three Times, Drifted, Behind Casts
+**Source**: Question raised during the #64 repair — "are the tag team suites even
+necessary, I thought we had unified everything?" — 30 July 2026
+**Priority**: Medium — no player-visible symptom today, but it is live combat code
+that the type system has been specifically prevented from checking
+
+This item is **analysis only. No code has been changed for it.**
+
+#### The question, and the answer
+
+Tag team is unified as an **entity** and not as **combat**, and the distinction is
+what makes the tag team test suites non-redundant.
+
+Shared with every other mode: the `TeamBattle` model, `standings` (its own `tag_team`
+mode and `tagTeamLp` track), subscriptions (the `tag_team` event in the Event
+Registry), the unified `scheduled_matches_v2` table, LP-primary matchmaking scoring,
+bye *pairing* via `matchmaking/teamMatchmakingUtils.createByeTeam`, and
+`updateRobotCombatStats` for post-battle persistence.
+
+Not shared, and not shareable: the simulation. Tag team is sequential 1v1 with
+tag-out, a mechanic no other mode has. `services/tag-team/` holds eleven files, and
+the combat-specific ones have no counterpart anywhere:
+
+- `tagTeamSimulation.ts` — two phases, with terminal `yield` / `destroyed` /
+  `battle_end` events stripped from phase 1 when a tag-out means the battle continues
+- `tagTeamTypes.ts` — `TagOutEvent` / `TagInEvent`, which exist nowhere else
+- `battle_participants.role` — tag team is the **only** producer of `'active'` /
+  `'reserve'`; the other six orchestrators all write `null`
+- `battle_participants.tagOutTimeMs` — written only here
+
+Consequently:
+
+- **`tagTeamBattleLogCompleteness.property.test.ts` should be kept.** Four of its five
+  properties cover tag-out/tag-in events and their generated combat messages, which
+  nothing else produces. It is also the only battle-log completeness suite in the
+  repository, so deleting it removes coverage rather than duplication.
+- **`tagTeamByeHandling.test.ts` is the weaker case.** Its "odd number of teams
+  produces a bye" property does duplicate shared pairing logic. But the *execution*
+  path it exercises is not shared, which is the actual finding below.
+
+#### The real duplication
+
+Bye robot fabrication exists three times in production:
+
+| Location | Mode | Termination |
+|---|---|---|
+| `services/analytics/matchmakingService.ts` → `createByeRobot()` | 1v1 | `as Robot` |
+| `services/team-battle/teamBattleOrchestrator.ts` → `createSingleByeRobot(id)` | 2v2 / 3v3 | `as unknown as RobotWithWeapons` |
+| `services/tag-team/tagTeamByeTeam.ts` → `createByeTeamForBattle()` | tag team | no cast |
+
+All three are the same ~60-field literal with the same values: every attribute `10`,
+HP 100, shield 20, ELO 1000, `yieldThreshold` 10, `'single'`, `'balanced'`. There is a
+**fourth** copy inside `services/analytics/__tests__/byeRobotFabrication.property.test.ts`,
+whose comment says "same as in matchmakingService.ts" — a test asserting against its
+own reimplementation of the thing it is testing.
+
+They have drifted, and the casts are why nobody noticed:
+
+- The 1v1 and 2v2/3v3 copies still set `currentLeague`, `leagueId`, `leaguePoints`,
+  `cyclesInCurrentLeague`, `totalTagTeamBattles`, `totalTagTeamWins/Losses/Draws`,
+  `timesTaggedIn/Out`, `totalLeague1v1Wins/Losses/Draws`, `totalLeague2v2Wins`,
+  `totalLeague3v3Wins`, `kothWins`, `kothMatches`, `kothTotalZoneScore`,
+  `kothTotalZoneTime`, `kothKills`, `kothBestPlacement`, `kothCurrentWinStreak` and
+  `kothBestWinStreak` — **roughly twenty fields that are no longer columns.**
+- Only the tag team copy carries `grandMeleeWins` / `grandMeleeTop3`, which do exist.
+- The tag team copy is therefore the only accurate one, and the only one without a
+  cast. That is not a coincidence: `as Robot` and `as unknown as RobotWithWeapons`
+  disable the excess-property check that would have reported the other two.
+
+Harmless at runtime — these objects are thrown away after the walkover — but it means
+three copies of live combat code are exempt from type checking, and a schema change
+touching bye behaviour has to be found by hand in three places.
+
+#### Proposed work
+
+1. One `createByeRobot(id: number)` factory (`services/battle/byeRobot.ts` is the
+   natural home), returning `RobotWithWeapons` with **no cast**, so the field set is
+   checked against the schema. A negative-id guard documents that bye detection is a
+   sign test (`processBattle` decides `isByeMatch` on `robot1Id < 0 || robot2Id < 0`).
+2. Point all three call sites at it and delete the local copies, including the dead
+   columns.
+3. Have `byeRobotFabrication.property.test.ts` import the real factory instead of
+   reimplementing it.
+4. Once done, `tagTeamByeHandling.test.ts` can drop its bye-pairing assertions as
+   genuinely duplicated, keeping only what is tag-team-specific (combined ELO 2000
+   from two bye robots, and the reward path).
+
+Not urgent. But note the ordering: **repairing the tag team suites before this, not
+after, is deliberate** — they are the only coverage of the duplicated execution paths,
+so consolidating with them red would be doing it blind.
+
+**Related**: #60 (Drop Legacy League Columns from Robot Model) names both bye-robot
+factories as affected call sites. Doing #68 first would shrink #60's surface to one
+place instead of three.
