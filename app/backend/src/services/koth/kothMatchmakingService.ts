@@ -80,9 +80,6 @@ export async function getEligibleRobots(tier: string, leagueInstanceId: string):
     return readiness.isReady;
   });
 
-  // Activate pending subscriptions for robots that have room under cap
-  const { batchActivatePendingSubscriptions } = await import('../subscription/subscriptionService');
-  await batchActivatePendingSubscriptions(readyRobots.map(r => r.id), 'koth');
 
   // Filter by koth subscription — only active subscriptions
   const subscribedRobotIds = await prisma.subscription.findMany({

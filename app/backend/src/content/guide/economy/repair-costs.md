@@ -2,7 +2,7 @@
 title: "Operating Costs & Repairs"
 description: "All the ways Credits flow out of your stable — facility daily costs, repair expenses, and how damage severity and robot attributes influence what you pay."
 order: 3
-lastUpdated: "2026-03-16"
+lastUpdated: "2026-07-30"
 relatedArticles:
   - economy/credits-and-income
   - economy/daily-financial-cycle
@@ -77,12 +77,24 @@ Investing in defensive attributes doesn't just help you win battles — it also 
 
 When you manually repair your robots using the **Repair All** button on the Robots page, you receive a **50% discount** on the total repair cost. This discount is applied on top of any Repair Bay savings, so the two stack together for significant savings.
 
-Automatic repairs that happen during the daily cycle do **not** receive this discount — they're charged at the standard rate. This means actively managing your repairs between cycles is one of the most effective ways to save Credits.
+Automatic repairs that happen before a battle do **not** receive this discount — they're charged at the standard rate. This means actively managing your repairs is one of the most effective ways to save Credits.
 
 Manual repairs are also the only action you can take when your balance is negative. Even if you're deep in the red, you can still repair your robots at the discounted rate — your balance will go further negative, but your robots will be battle-ready. This is designed to help struggling players stay active and recover.
 
+### When Automatic Repairs Happen
+
+A robot is only auto-repaired when it has a match about to run. Each event runs at its own time of day, and the repair immediately before it covers just the robots fighting in *that* event.
+
+This is why you will often see damaged robots sitting in your stable, and that is normal — not a bug. A robot that fought its 1v1 league match this morning stays damaged until its next scheduled match, whenever that is. Anything without a match queued is left alone.
+
+The practical effect is that you do not have to log in between every event to benefit from the discount. You have from the end of your robot's last battle until the start of its next one to repair it at half price. If you do not get round to it, the automatic repair runs at full price just before the match, and your robot still fights at full HP either way.
+
 ```callout-tip
-Always repair your robots manually before the next cycle starts. The 50% manual repair discount can save you thousands of Credits per cycle, especially if you're running multiple robots with heavy battle damage. Even if your balance is negative, manual repairs are still available.
+You don't need to catch every cycle. Repair manually any time before your robot's next match and you get the 50% discount — which, across a roster fighting in several events, is usually thousands of Credits per day. Even if your balance is negative, manual repairs are still available.
+```
+
+```callout-info
+A damaged robot is never stuck. Battle readiness only checks that the right weapons are equipped, never HP, so a damaged robot is still matched and scheduled as normal, then repaired just before it fights.
 ```
 
 ### The Repair Bay Facility
@@ -108,7 +120,7 @@ Track your expenses-to-income ratio. If your total daily expenses are consistent
 - Keep facilities minimal — Training Facility and Repair Bay are usually enough
 - Set yield thresholds conservatively (higher %) to limit repair costs
 - Focus on one or two robots to keep total repair bills manageable
-- **Repair manually** between cycles to take advantage of the 50% manual repair discount
+- **Repair manually** before your robot's next match to take advantage of the 50% manual repair discount
 
 ### Mid Game
 

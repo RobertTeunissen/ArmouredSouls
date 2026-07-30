@@ -2,20 +2,37 @@ import { useState, useEffect } from 'react';
 import { api } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 import Navigation from '../components/Navigation';
-import { getLeagueColor } from '../utils/formatters';
 import { createLogger } from '../utils/logger';
 
 const log = createLogger('LeaderboardsLossesPage');
 import OwnerNameLink from '../components/OwnerNameLink';
 
+/**
+ * Battle types broken out as columns, in display order with short headers.
+ * Mirrors KILL_MODES on the backend.
+ */
+const KILL_MODES = [
+  { key: 'league_1v1', label: '1v1' },
+  { key: 'league_2v2', label: '2v2' },
+  { key: 'league_3v3', label: '3v3' },
+  { key: 'tag_team', label: 'Tag' },
+  { key: 'koth', label: 'KotH' },
+  { key: 'grand_melee', label: 'Melee' },
+  { key: 'tournament_1v1', label: 'T 1v1' },
+  { key: 'tournament_2v2', label: 'T 2v2' },
+  { key: 'tournament_3v3', label: 'T 3v3' },
+] as const;
+
+type SortKey = 'total' | (typeof KILL_MODES)[number]['key'];
+
 interface LossesLeaderboardEntry {
   rank: number;
   robotId: number;
   robotName: string;
-  totalLosses: number; // Opponents destroyed
+  totalLosses: number; // Opponents destroyed, all battle types
+  killsByMode: Record<string, number>;
   stableId: number;
   stableName: string;
-  currentLeague: string;
   elo: number;
   totalBattles: number;
   wins: number;
@@ -35,9 +52,7 @@ interface LeaderboardResponse {
     totalPages: number;
     hasMore: boolean;
   };
-  filters: {
-    league: string;
-  };
+  sortBy: SortKey;
   timestamp: string;
 }
 
@@ -46,35 +61,36 @@ function LeaderboardsLossesPage() {
   const [leaderboard, setLeaderboard] = useState<LossesLeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [leagueFilter, setLeagueFilter] = useState('all');
+  const [sortBy, setSortBy] = useState<SortKey>('total');
 
-  const fetchLeaderboard = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const data = await api.get<LeaderboardResponse>(
-        '/api/leaderboards/losses',
-        {
-          params: {
-            page: 1,
-            limit: 100,
-            league: leagueFilter,
-          },
-        }
-      );
+  useEffect(() => {
+    const fetchLeaderboard = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-      setLeaderboard(data.leaderboard);
-    } catch (err) {
-      setError('Failed to load total losses leaderboard');
-      log.error('Total losses leaderboard error', { err });
-    } finally {
-      setLoading(false);
-    }
-  };  useEffect(() => {
+        const data = await api.get<LeaderboardResponse>(
+          '/api/leaderboards/losses',
+          { params: { page: 1, limit: 100, sortBy } },
+        );
+
+        setLeaderboard(data.leaderboard);
+      } catch (err) {
+        setError('Failed to load total losses leaderboard');
+        log.error('Total losses leaderboard error', { err });
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchLeaderboard();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [leagueFilter]);
+  }, [sortBy]);
+
+  /** Ranking is server-side, so a header click just re-requests the ordering. */
+  const sortButtonClass = (key: SortKey): string =>
+    `w-full text-right hover:text-primary transition-colors ${
+      sortBy === key ? 'text-primary' : 'text-tertiary'
+    }`;
 
   return (
     <div className="min-h-screen bg-background">
@@ -86,7 +102,7 @@ function LeaderboardsLossesPage() {
           Total Losses Leaderboard
         </h1>
         <p className="text-secondary">
-          Cumulative lifetime ranking - all robots sorted by total opponents destroyed
+          Season ranking of opponents destroyed, in total and split by battle type
         </p>
         <div className="mt-4 bg-surface border border-white/10 rounded-lg p-4">
           <div className="flex items-start gap-2">
@@ -96,49 +112,42 @@ function LeaderboardsLossesPage() {
             <div className="text-sm text-secondary">
               <p className="font-semibold text-primary mb-1">About Total Losses</p>
               <p>
-                &quot;Total Losses&quot; tracks the cumulative number of opponents a robot has destroyed (reduced to 0 HP) across all battles. 
-                This is a lifetime metric showing overall combat effectiveness and finishing power.
+                A &quot;total loss&quot; is an opponent written off — reduced to 0 HP. The Total column counts
+                every one a robot has inflicted this season; the columns beside it split that figure by
+                battle type.
               </p>
               <p className="mt-2">
-                <span className="font-semibold text-primary">Destruction Ratio</span> shows total losses inflicted (opponents destroyed) 
-                divided by match losses taken. Higher is better - it means destroying more opponents per defeat.
+                Because participation is gated by your Booking Office subscriptions, most robots only
+                fight a few battle types. Sort by a single type to rank specialists against each other,
+                or by Total for the overall picture.
+              </p>
+              <p className="mt-2">
+                <span className="font-semibold text-primary">Ratio</span> shows total losses inflicted
+                divided by match losses taken. Higher is better — it means writing off more opponents per
+                defeat.
               </p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="bg-surface border border-white/10 rounded-lg p-4 mb-6">
-        <div className="flex flex-wrap gap-4">
-          <div className="flex-1 min-w-[200px]">
-            <label className="block text-sm font-medium text-secondary mb-2">
-              League Filter
-            </label>
-            <select
-              value={leagueFilter}
-              onChange={(e) => setLeagueFilter(e.target.value)}
-              className="w-full bg-surface border border-white/10 rounded-md px-3 py-2 text-primary focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              <option value="all">All Leagues</option>
-              <option value="champion">Champion</option>
-              <option value="diamond">Diamond</option>
-              <option value="platinum">Platinum</option>
-              <option value="gold">Gold</option>
-              <option value="silver">Silver</option>
-              <option value="bronze">Bronze</option>
-            </select>
-          </div>
-
-          <div className="flex items-end">
-            <button
-              onClick={fetchLeaderboard}
-              className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-hover transition-colors"
-            >
-              Refresh
-            </button>
-          </div>
-        </div>
+      {/* Mobile ranking control — the desktop table sorts via column headers,
+          which the card layout has no room for. */}
+      <div className="md:hidden mb-6">
+        <label htmlFor="losses-sort" className="block text-sm font-medium text-secondary mb-2">
+          Rank by
+        </label>
+        <select
+          id="losses-sort"
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value as SortKey)}
+          className="w-full min-h-[44px] bg-surface border border-white/10 rounded-md px-3 py-2 text-primary focus:outline-none focus:ring-2 focus:ring-primary"
+        >
+          <option value="total">All battle types</option>
+          {KILL_MODES.map((mode) => (
+            <option key={mode.key} value={mode.key}>{mode.label}</option>
+          ))}
+        </select>
       </div>
 
       {/* Loading State */}
@@ -166,10 +175,32 @@ function LeaderboardsLossesPage() {
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-tertiary uppercase tracking-wider">#</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-tertiary uppercase tracking-wider">Robot</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-tertiary uppercase tracking-wider">Destroyed</th>
+                  <th className="px-3 py-3 text-right text-xs font-semibold uppercase tracking-wider">
+                    <button
+                      type="button"
+                      onClick={() => setSortBy('total')}
+                      className={sortButtonClass('total')}
+                      aria-sort={sortBy === 'total' ? 'descending' : 'none'}
+                      data-testid="sort-total"
+                    >
+                      Total{sortBy === 'total' ? ' ▾' : ''}
+                    </button>
+                  </th>
+                  {KILL_MODES.map((mode) => (
+                    <th key={mode.key} className="px-3 py-3 text-right text-xs font-semibold uppercase tracking-wider">
+                      <button
+                        type="button"
+                        onClick={() => setSortBy(mode.key)}
+                        className={sortButtonClass(mode.key)}
+                        aria-sort={sortBy === mode.key ? 'descending' : 'none'}
+                        data-testid={`sort-${mode.key}`}
+                      >
+                        {mode.label}{sortBy === mode.key ? ' ▾' : ''}
+                      </button>
+                    </th>
+                  ))}
                   <th className="px-4 py-3 text-left text-xs font-semibold text-tertiary uppercase tracking-wider">Ratio</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-tertiary uppercase tracking-wider">Stable</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-tertiary uppercase tracking-wider">League</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-tertiary uppercase tracking-wider">ELO</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-tertiary uppercase tracking-wider">Record</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-tertiary uppercase tracking-wider">Win %</th>
@@ -187,10 +218,17 @@ function LeaderboardsLossesPage() {
                           {isOwnRobot && <span className="text-xs px-2 py-0.5 bg-primary/20 text-primary rounded">YOURS</span>}
                         </div>
                       </td>
-                      <td className="px-4 py-3"><span className="text-error font-bold text-lg">{entry.totalLosses}</span></td>
+                      <td className="px-3 py-3 text-right"><span className="text-error font-bold text-lg">{entry.totalLosses}</span></td>
+                      {KILL_MODES.map((mode) => {
+                        const value = entry.killsByMode[mode.key] ?? 0;
+                        return (
+                          <td key={mode.key} className="px-3 py-3 text-right">
+                            <span className={value > 0 ? 'text-secondary' : 'text-tertiary'}>{value}</span>
+                          </td>
+                        );
+                      })}
                       <td className="px-4 py-3"><span className={`font-semibold ${entry.lossRatio >= 2.0 ? 'text-success' : entry.lossRatio >= 1.0 ? 'text-warning' : 'text-orange-400'}`}>{entry.lossRatio.toFixed(2)}</span></td>
                       <td className="px-4 py-3"><OwnerNameLink userId={entry.stableId} displayName={entry.stableName} /></td>
-                      <td className="px-4 py-3"><span className={`capitalize ${getLeagueColor(entry.currentLeague)}`}>{entry.currentLeague}</span></td>
                       <td className="px-4 py-3 text-primary">{entry.elo}</td>
                       <td className="px-4 py-3 text-secondary text-sm">{entry.wins}W-{entry.losses}L-{entry.draws}D</td>
                       <td className="px-4 py-3"><span className={`font-medium ${entry.winRate >= 60 ? 'text-success' : entry.winRate >= 50 ? 'text-warning' : 'text-orange-400'}`}>{entry.winRate}%</span></td>
@@ -217,12 +255,29 @@ function LeaderboardsLossesPage() {
                   </div>
                   <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
                     <div className="flex justify-between"><span className="text-secondary">Ratio</span><span className={entry.lossRatio >= 2.0 ? 'text-success' : entry.lossRatio >= 1.0 ? 'text-warning' : 'text-orange-400'}>{entry.lossRatio.toFixed(2)}</span></div>
-                    <div className="flex justify-between"><span className="text-secondary">League</span><span className={`capitalize ${getLeagueColor(entry.currentLeague)}`}>{entry.currentLeague}</span></div>
                     <div className="flex justify-between"><span className="text-secondary">ELO</span><span className="text-primary">{entry.elo}</span></div>
                     <div className="flex justify-between"><span className="text-secondary">Win %</span><span className={entry.winRate >= 60 ? 'text-success' : entry.winRate >= 50 ? 'text-warning' : 'text-orange-400'}>{entry.winRate}%</span></div>
                     <div className="flex justify-between"><span className="text-secondary">Record</span><span className="text-secondary">{entry.wins}W-{entry.losses}L-{entry.draws}D</span></div>
                     <div className="flex justify-between"><span className="text-secondary">Stable</span><OwnerNameLink userId={entry.stableId} displayName={entry.stableName} className="truncate ml-2" /></div>
                   </div>
+                  {/* Per-type breakdown. Only types the robot has actually
+                      fought are listed, so a specialist's card stays short. */}
+                  {(() => {
+                    const fought = KILL_MODES.filter((mode) => (entry.killsByMode[mode.key] ?? 0) > 0);
+                    if (fought.length === 0) return null;
+                    return (
+                      <div className="mt-2 pt-2 border-t border-white/5 flex flex-wrap gap-x-3 gap-y-1 text-xs">
+                        {fought.map((mode) => (
+                          <span
+                            key={mode.key}
+                            className={sortBy === mode.key ? 'text-primary' : 'text-tertiary'}
+                          >
+                            {mode.label} {entry.killsByMode[mode.key]}
+                          </span>
+                        ))}
+                      </div>
+                    );
+                  })()}
                 </div>
               );
             })}
@@ -230,7 +285,7 @@ function LeaderboardsLossesPage() {
 
           {leaderboard.length === 0 && (
             <div className="text-center py-12 text-secondary">
-              No robots found matching the current filters.
+              No robots found.
             </div>
           )}
         </div>

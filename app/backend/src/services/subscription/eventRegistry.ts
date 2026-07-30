@@ -6,19 +6,40 @@
  * New event modes register themselves once via `registerSubscribableEvent`
  * and become subscribable through the Booking Office facility system.
  *
+ * There are deliberately no per-event behaviour hooks here. Every event
+ * follows the same subscription rule (see `subscriptionService`), so a
+ * registration is nothing more than an identifier and a display label.
+ *
  * @module services/subscription/eventRegistry
  */
 
 // ── Types ────────────────────────────────────────────────────────────
 
+/**
+ * Every subscribable event, in display order.
+ *
+ * This tuple is the single source of truth: the `SubscribableEventType` union is
+ * derived from it, and Zod schemas validate against it, so adding a mode in one
+ * place makes it known everywhere.
+ */
+export const SUBSCRIBABLE_EVENT_TYPES = [
+  'league_1v1',
+  'league_2v2',
+  'league_3v3',
+  'tag_team',
+  'koth',
+  'grand_melee',
+  'tournament_1v1',
+  'tournament_2v2',
+  'tournament_3v3',
+] as const;
+
 /** Stable string identifiers for all subscribable events. */
-export type SubscribableEventType = 'league_1v1' | 'tournament_1v1' | 'tag_team' | 'koth' | 'league_2v2' | 'league_3v3' | 'tournament_2v2' | 'tournament_3v3' | 'grand_melee';
+export type SubscribableEventType = (typeof SUBSCRIBABLE_EVENT_TYPES)[number];
 
 export interface SubscribableEventDefinition {
   type: SubscribableEventType;
   label: string;
-  /** Returns true if the given robot has an active obligation preventing unsubscribe. */
-  lockingPredicate: (robotId: number) => Promise<boolean>;
 }
 
 // ── Registry Singleton ───────────────────────────────────────────────
@@ -52,13 +73,6 @@ export function getEventDefinition(type: string): SubscribableEventDefinition | 
 /** Check if a type is a valid registered event. */
 export function isRegisteredEvent(type: string): type is SubscribableEventType {
   return registry.has(type as SubscribableEventType);
-}
-
-/** Get the locking predicate for an event type. Throws if not registered. */
-export function getLockingPredicate(type: SubscribableEventType): (robotId: number) => Promise<boolean> {
-  const def = registry.get(type);
-  if (!def) throw new Error(`[EventRegistry] Unknown event type: ${type}`);
-  return def.lockingPredicate;
 }
 
 // ── Test Helpers ─────────────────────────────────────────────────────

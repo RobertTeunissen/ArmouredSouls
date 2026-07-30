@@ -255,7 +255,7 @@ async function processByeBattle(scheduledMatch: ScheduledLeagueMatchData): Promi
     isDraw: false,
     damageDealt: 0,
     damageTakenByOpponent: 0,
-    opponentDestroyed: false,
+    opponentsDestroyed: 0,
     fameIncrement: 0,
     battleType: 'league_1v1',
     stance: robot.stance,
@@ -598,7 +598,8 @@ async function updateRobotStats(
     isDraw,
     damageDealt: participant.damageDealt,
     damageTakenByOpponent: opponentParticipant?.damageDealt || 0,
-    opponentDestroyed: opponentParticipant?.destroyed || false,
+    // Single opponent, so the flag is already an exact count.
+    opponentsDestroyed: opponentParticipant?.destroyed ? 1 : 0,
     fameIncrement: isWinner ? fameAwarded : 0,
     battleType: 'league_1v1',
     stance: robot.stance,

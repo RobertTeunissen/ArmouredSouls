@@ -979,27 +979,6 @@ describe('KothWinConditionEvaluator', () => {
     });
   });
 
-  describe('rotating zone defaults', () => {
-    it('should use scoreThreshold 45 and timeLimit 210 for rotating zone', () => {
-      const evaluator = new KothWinConditionEvaluator({
-        ...defaultConfig(),
-        rotatingZone: true,
-      });
-      const state = createKothScoreState([1, 2]);
-      state.zoneScores[1] = 30; // below rotating threshold of 45
-      const gameState = makeGameState(state);
-      const robots = [makeRobot(1, 0, 0), makeRobot(2, 0, 0)];
-
-      // At 30 points, should not end (threshold is 45 for rotating)
-      expect(evaluator.evaluate([robots], 100, gameState)).toBeNull();
-
-      // At 45 points, should end
-      state.zoneScores[1] = 45;
-      const result = evaluator.evaluate([robots], 100, gameState);
-      expect(result!.ended).toBe(true);
-      expect(result!.reason).toBe('score_threshold');
-    });
-  });
 
   describe('edge cases', () => {
     it('should return null when gameState has no scoreState', () => {
@@ -1799,7 +1778,6 @@ describe('Elimination edge cases', () => {
 
 import {
   generateNextZonePosition,
-  processZoneRotation,
 } from '../src/services/arena/kothEngine';
 import { euclideanDistance } from '../src/services/arena/vector2d';
 
@@ -1837,69 +1815,6 @@ describe('generateNextZonePosition', () => {
   });
 });
 
-describe('processZoneRotation', () => {
-  const arenaRadius = KOTH_MATCH_DEFAULTS.arenaRadius;
-
-  function makeRotatingZoneState(overrides: Partial<KothZoneState> = {}): KothZoneState {
-    return {
-      center: { x: 0, y: 0 },
-      radius: KOTH_MATCH_DEFAULTS.zoneRadius,
-      isActive: true,
-      rotationCount: 0,
-      rotationTimer: 0,
-      ...overrides,
-    };
-  }
-
-  it('should emit zone_moving event when rotation interval elapsed', () => {
-    const zoneState = makeRotatingZoneState({ rotationTimer: 29.9 });
-    const events = processZoneRotation(zoneState, 1, arenaRadius, 0.1);
-
-    const movingEvent = events.find(e => e.type === 'zone_moving');
-    expect(movingEvent).toBeDefined();
-    expect(movingEvent!.message).toBe('The control zone is moving in 5 seconds!');
-    expect(movingEvent!.kpiData?.newCenter).toBeDefined();
-    expect(movingEvent!.kpiData?.countdown).toBe(5);
-    expect(zoneState.transitionTarget).toBeDefined();
-    expect(zoneState.transitionCountdown).toBe(5);
-  });
-
-  it('should deactivate zone when warning countdown reaches 0', () => {
-    const zoneState = makeRotatingZoneState({
-      transitionCountdown: 0.1,
-      transitionTarget: { x: 5, y: 5 },
-    });
-
-    const events = processZoneRotation(zoneState, 1, arenaRadius, 0.1);
-
-    expect(zoneState.isActive).toBe(false);
-    expect(zoneState.transitionTimer).toBe(0);
-    expect(events).toHaveLength(0);
-  });
-
-  it('should activate zone at new position after transition period', () => {
-    const target = { x: 8, y: 3 };
-    const zoneState = makeRotatingZoneState({
-      isActive: false,
-      transitionTimer: 2.9,
-      transitionTarget: target,
-      rotationCount: 2,
-    });
-
-    const events = processZoneRotation(zoneState, 1, arenaRadius, 0.1);
-
-    expect(zoneState.isActive).toBe(true);
-    expect(zoneState.center).toEqual(target);
-    expect(zoneState.rotationCount).toBe(3);
-
-    const activeEvent = events.find(e => e.type === 'zone_active');
-    expect(activeEvent).toBeDefined();
-    expect(activeEvent!.message).toBe('The control zone has moved to a new position!');
-    expect(activeEvent!.kpiData?.center).toEqual(target);
-    expect(activeEvent!.kpiData?.radius).toBe(KOTH_MATCH_DEFAULTS.zoneRadius);
-    expect(activeEvent!.kpiData?.rotationCount).toBe(3);
-  });
-});
 
 
 // ─── Anti-Passive Penalty System Imports ─────────────────────────────
@@ -2055,18 +1970,14 @@ describe('buildKothGameModeConfig', () => {
     expect(result.maxDuration).toBe(150);
   });
 
-  it('should use rotating zone defaults when rotatingZone is true', () => {
-    const config: KothMatchConfig = { participantCount: 6, matchId: 1, rotatingZone: true };
-    const result = buildKothGameModeConfig(config);
-
-    expect(result.maxDuration).toBe(KOTH_MATCH_DEFAULTS.rotatingZoneTimeLimit); // 210
-  });
-
-  it('should use fixed zone defaults when rotatingZone is false', () => {
+  it('should fall back to the default time limit when none is given', () => {
+    // Covers the default path, as opposed to the explicit timeLimit above. This
+    // case was previously phrased as "when rotatingZone is false"; zone rotation
+    // was abolished by Spec #41, so there is only one zone behaviour left.
     const config: KothMatchConfig = { participantCount: 6, matchId: 1 };
     const result = buildKothGameModeConfig(config);
 
-    expect(result.maxDuration).toBe(KOTH_MATCH_DEFAULTS.timeLimit); // 150
+    expect(result.maxDuration).toBe(KOTH_MATCH_DEFAULTS.timeLimit);
   });
 });
 

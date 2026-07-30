@@ -73,7 +73,6 @@ describe('SchedulingService – Property-Based Tests', () => {
       isByeMatch: args.data.isByeMatch ?? null,
       leagueType: args.data.leagueType ?? null,
       leagueInstanceId: args.data.leagueInstanceId ?? null,
-      rotatingZone: args.data.rotatingZone ?? null,
       scoreThreshold: args.data.scoreThreshold ?? null,
       timeLimit: args.data.timeLimit ?? null,
       zoneRadius: args.data.zoneRadius ?? null,
@@ -181,11 +180,12 @@ describe('SchedulingService – Property-Based Tests', () => {
               slot: i + 1,
             }));
 
+            // No rotatingZone: zone rotation was abolished by Spec #41
+            // (see the note in services/arena/koth/kothZone.ts).
             await schedulingService.createMatch({
               matchType: MatchType.koth,
               scheduledFor: new Date('2025-06-01T13:00:00Z'),
               participants,
-              rotatingZone: true,
               scoreThreshold: 100,
               timeLimit: 120,
               zoneRadius: 50,

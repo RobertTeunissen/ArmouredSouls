@@ -23,8 +23,6 @@ module.exports = {
 
     // src/__tests__/ files that require DB, supertest, or full app context
     'src/routes/__tests__/admin\\.integration\\.test\\.ts$',
-    'src/routes/__tests__/changelog\\.test\\.ts$',
-    'src/routes/__tests__/changelog\\.property\\.test\\.ts$',
     'src/routes/__tests__/adminLeagueHistory\\.test\\.ts$',
     'src/__tests__/guide/guide-routes\\.test\\.ts$',
     'src/__tests__/incomeMultipliers\\.test\\.ts$',
@@ -32,8 +30,6 @@ module.exports = {
     'src/services/achievement/__tests__/achievementService\\.test\\.ts$',
     'src/services/achievement/__tests__/achievementTeamBattle\\.test\\.ts$',
     'src/services/battle/__tests__/battle-participants\\.property\\.test\\.ts$',
-    'src/services/changelog/__tests__/changelogService\\.test\\.ts$',
-    'src/services/changelog/__tests__/changelogService\\.property\\.test\\.ts$',
     'src/services/economy/__tests__/unifiedFacilityROIService\\.test\\.ts$',
     'src/services/economy/__tests__/unifiedFacilityROIService\\.property\\.test\\.ts$',
     'src/services/economy/__tests__/unifiedFacilityROI\\.integration\\.test\\.ts$',

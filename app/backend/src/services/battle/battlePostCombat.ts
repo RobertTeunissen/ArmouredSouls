@@ -17,6 +17,7 @@
  */
 
 import prisma from '../../lib/prisma';
+import { StandingsMode } from '../../../generated/prisma';
 import logger from '../../config/logger';
 import { calculateStreamingRevenue, awardStreamingRevenue, StreamingRevenueCalculation } from '../economy/streamingRevenueService';
 import { eventLogger, EventType } from '../common/eventLogger';
@@ -182,8 +183,16 @@ export interface RobotStatUpdateOptions {
   damageDealt: number;
   /** Total damage this robot received during the battle */
   damageTakenByOpponent: number;
-  /** Whether this robot's opponent was destroyed (HP=0) */
-  opponentDestroyed: boolean;
+  /**
+   * How many opponents this robot destroyed in this battle.
+   *
+   * A count, not a flag. A robot faces one opponent in league_1v1 but two or
+   * three in team battles and up to nineteen in a Grand Melee, so a boolean
+   * capped every multi-opponent mode at one destruction per battle. Derive it
+   * with `countKillsByRobot()` from the shared battle statistics module, which
+   * attributes each elimination to the robot that caused it.
+   */
+  opponentsDestroyed: number;
   /** Fame to increment (0 if not winner or no fame) */
   fameIncrement?: number;
   /** Battle type for context (league_1v1, league_2v2, tag_team, koth, etc.) */
@@ -244,7 +253,17 @@ export async function updateRobotCombatStats(opts: RobotStatUpdateOptions): Prom
     data.wins = opts.isWinner ? { increment: 1 } : undefined;
     data.draws = opts.isDraw ? { increment: 1 } : undefined;
     data.losses = (!opts.isWinner && !opts.isDraw) ? { increment: 1 } : undefined;
-    data.kills = opts.opponentDestroyed ? { increment: 1 } : undefined;
+  }
+
+  // ── Destructions ──
+  // Deliberately OUTSIDE the `skipBattleCounters` guard, for the same reason as
+  // the Grand Melee counters below: KotH and Grand Melee opt out of the
+  // Career_Battle_Counters because a "win" is undefined for a placement, not
+  // because their destructions should go unrecorded. While the increment sat
+  // inside the guard, the two most destructive modes in the game contributed
+  // nothing to `robots.kills`.
+  if (opts.opponentsDestroyed > 0) {
+    data.kills = { increment: opts.opponentsDestroyed };
   }
 
   // ── Stance/Loadout Win Counters ──
@@ -286,6 +305,53 @@ export async function updateRobotCombatStats(opts: RobotStatUpdateOptions): Prom
     where: { id: opts.robotId },
     data,
   });
+
+  await recordModeKills(opts.robotId, opts.battleType, opts.opponentsDestroyed);
+}
+
+/** Battle type strings that map onto a tracked mode, keyed by the string itself. */
+const TRACKED_MODES = new Set<string>(Object.values(StandingsMode));
+
+/**
+ * Add this battle's destructions to the robot's per-battle-type tally.
+ *
+ * `robots.kills` is the lifetime total across every mode; this is the same
+ * figure split by battle type, so a robot that only subscribes to KotH can be
+ * ranked against one that only fights 1v1 league. Every `battleType` an
+ * orchestrator passes already matches a `StandingsMode` value exactly.
+ *
+ * Never throws. A missing tally must not fail a battle that already resolved —
+ * the lifetime total on the robot is written above and is unaffected.
+ */
+async function recordModeKills(
+  robotId: number,
+  battleType: string | undefined,
+  kills: number,
+): Promise<void> {
+  if (kills <= 0) return;
+
+  if (!battleType || !TRACKED_MODES.has(battleType)) {
+    logger.warn(
+      `[post-combat] ${kills} destruction(s) by robot ${robotId} not tallied per mode: ` +
+      `battleType ${battleType ?? 'undefined'} maps to no StandingsMode`,
+    );
+    return;
+  }
+
+  const mode = battleType as StandingsMode;
+
+  try {
+    await prisma.robotModeKills.upsert({
+      where: { robotId_mode: { robotId, mode } },
+      update: { kills: { increment: kills } },
+      create: { robotId, mode, kills },
+    });
+  } catch (error) {
+    logger.error(
+      `[post-combat] Failed to tally ${kills} ${mode} destruction(s) for robot ${robotId} — ` +
+      `${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
 }
 
 // ─── 4–6. Simple Currency / Prestige / Fame Awards ──────────────────

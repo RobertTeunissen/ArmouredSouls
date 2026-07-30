@@ -66,10 +66,10 @@ jest.mock('../../../src/services/notifications/integration', () => ({
 }));
 
 // Mock the tag team dependencies used by executeTagTeamCycle
-const mockRepairAllRobots = jest.fn().mockResolvedValue(undefined);
+const mockRepairRobotsForEvent = jest.fn().mockResolvedValue(undefined);
 jest.mock('../../../src/services/economy/repairService', () => ({
   __esModule: true,
-  repairAllRobots: (...args: unknown[]) => mockRepairAllRobots(...args),
+  repairRobotsForEvent: (...args: unknown[]) => mockRepairRobotsForEvent(...args),
 }));
 
 const mockExecuteScheduledTagTeamBattles = jest.fn().mockResolvedValue({ totalBattles: 5 });

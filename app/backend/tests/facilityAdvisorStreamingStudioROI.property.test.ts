@@ -237,10 +237,7 @@ describe('Property 21: Facility Advisor Provides Streaming Studio ROI', () => {
           );
 
           // Generate facility recommendations
-          const recommendations = await facilityRecommendationService.generateRecommendations(
-            testUserId,
-            10
-          );
+          const recommendations = await facilityRecommendationService.generateRecommendations(testUserId);
 
           // Find the Streaming Studio recommendation
           const studioRec = recommendations.recommendations.find(
@@ -377,10 +374,7 @@ describe('Property 21: Facility Advisor Provides Streaming Studio ROI', () => {
           await createCycleSnapshots(testUserId, currentCycle - 9, currentCycle, 10);
 
           // Generate recommendations
-          const recommendations = await facilityRecommendationService.generateRecommendations(
-            testUserId,
-            10
-          );
+          const recommendations = await facilityRecommendationService.generateRecommendations(testUserId);
 
           // Find Streaming Studio recommendation
           const studioRec = recommendations.recommendations.find(
@@ -438,10 +432,7 @@ describe('Property 21: Facility Advisor Provides Streaming Studio ROI', () => {
           await createCycleSnapshots(testUserId, currentCycle - 9, currentCycle, battlesPerCycle);
 
           // Generate recommendations
-          const recommendations = await facilityRecommendationService.generateRecommendations(
-            testUserId,
-            10
-          );
+          const recommendations = await facilityRecommendationService.generateRecommendations(testUserId);
 
           // Find Streaming Studio recommendation
           const studioRec = recommendations.recommendations.find(
@@ -510,10 +501,7 @@ describe('Property 21: Facility Advisor Provides Streaming Studio ROI', () => {
     await createCycleSnapshots(testUserId, currentCycle - 9, currentCycle, 15);
 
     // Generate recommendations
-    const recommendations = await facilityRecommendationService.generateRecommendations(
-      testUserId,
-      10
-    );
+    const recommendations = await facilityRecommendationService.generateRecommendations(testUserId);
 
     // Find Streaming Studio recommendation
     const studioRec = recommendations.recommendations.find(
@@ -562,10 +550,7 @@ describe('Property 21: Facility Advisor Provides Streaming Studio ROI', () => {
           await createCycleSnapshots(testUserId, currentCycle - 9, currentCycle, battlesPerCycle);
 
           // Generate recommendations
-          const recommendations = await facilityRecommendationService.generateRecommendations(
-            testUserId,
-            10
-          );
+          const recommendations = await facilityRecommendationService.generateRecommendations(testUserId);
 
           // Find Streaming Studio recommendation
           const studioRec = recommendations.recommendations.find(

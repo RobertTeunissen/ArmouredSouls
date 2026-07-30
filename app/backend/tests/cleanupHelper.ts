@@ -1,41 +1,107 @@
 /**
  * Test Cleanup Helper
- * 
+ *
  * Provides a centralized cleanup function that handles foreign key constraints
  * in the correct order.
+ *
+ * Updated for the schema as it stands after Specs #41 and #43 (Backlog #64). What
+ * changed, and why the old code no longer compiled:
+ *
+ * - `scheduled_koth_matches` / `scheduled_koth_match_participants` and
+ *   `scheduled_team_battle_matches` were folded into the unified
+ *   `scheduled_matches_v2` (`scheduledMatch` + `scheduledMatchParticipant`) by
+ *   Spec #41. Participants are rows keyed by `participantType` ('robot' | 'team')
+ *   rather than `robot1Id` / `robot2Id` columns.
+ * - `battles.robot1_id` / `robot2_id` were dropped by Spec #43. Combatants live in
+ *   `battle_participants`.
+ *
+ * Both `BattleParticipant` and `BattleSummary` declare `onDelete: Cascade` on the
+ * battle relation, and `ScheduledMatchParticipant` cascades on the scheduled
+ * match, so deleting the parent is sufficient. Deleting children first is not
+ * just redundant, it breaks the parent lookup that depends on them.
  */
 
 import prisma from '../src/lib/prisma';
+import type { Prisma } from '../generated/prisma';
 
+/**
+ * Battles involving any of the given robots.
+ *
+ * Use this instead of `{ OR: [{ robot1Id: ... }, { robot2Id: ... }] }`. Those
+ * columns were dropped by Spec #43; combatants are `battle_participants` rows, and
+ * a battle can have more than two of them (2v2, 3v3, KotH, Grand Melee), which the
+ * two-column form could never express.
+ */
+export function battlesForRobots(robotIds: number[]): Prisma.BattleWhereInput {
+  return { participants: { some: { robotId: { in: robotIds } } } };
+}
+
+/**
+ * Queued matches in the unified schedule involving any of the given robots.
+ *
+ * `scheduled_matches_v2` stores participants as rows with a `participantType`
+ * discriminator (Spec #41), so a robot is matched through the join rather than
+ * through `robot1Id` / `robot2Id`.
+ */
+export function scheduledMatchesForRobots(robotIds: number[]): Prisma.ScheduledMatchWhereInput {
+  return {
+    participants: { some: { participantType: 'robot', participantId: { in: robotIds } } },
+  };
+}
+
+/** Queued matches booked for any of the given teams (2v2, 3v3, tag team). */
+export function scheduledMatchesForTeams(teamIds: number[]): Prisma.ScheduledMatchWhereInput {
+  return {
+    participants: { some: { participantType: 'team', participantId: { in: teamIds } } },
+  };
+}
+
+/**
+ * Battles involving any robot owned by the given users.
+ *
+ * Replaces `{ OR: [{ robot1: { userId } }, { robot2: { userId } }] }`.
+ * `BattleParticipant` has a real `robot` relation, so this filters in one query.
+ */
+export function battlesForUsers(userIds: number[]): Prisma.BattleWhereInput {
+  return { participants: { some: { robot: { userId: { in: userIds } } } } };
+}
+
+/**
+ * Robot ids owned by the given users.
+ *
+ * Needed because the unified schedule cannot be filtered by owner directly:
+ * `ScheduledMatchParticipant` is entity-agnostic (a `participantType` plus a bare
+ * `participantId`, no foreign key), so there is no `robot` relation to traverse.
+ * Resolve ids first, then pass them to `scheduledMatchesForRobots`.
+ *
+ * Call this before deleting the robots themselves, for obvious reasons.
+ */
+export async function robotIdsForUsers(userIds: number[]): Promise<number[]> {
+  const robots = await prisma.robot.findMany({
+    where: { userId: { in: userIds } },
+    select: { id: true },
+  });
+  return robots.map((r) => r.id);
+}
 
 /**
  * Clean up all test data in the correct order to avoid foreign key constraint violations
- * 
+ *
  * Order matters! Delete in reverse dependency order:
- * 1. Scheduled matches (references battles, robots, teams)
- * 2. Battle participants (references battles, robots)
- * 3. Battles (references robots, tournaments)
- * 4. Team battle members (references team battles, robots)
- * 5. Team battles (references users)
- * 6. Tournament matches (references tournaments, robots)
- * 7. Tournaments (references users)
- * 8. Weapon inventory (references robots, weapons)
- * 9. Robots (references users, league instances)
- * 10. Facilities (references users)
- * 11. Audit logs (references users, robots)
- * 12. Cycle snapshots
- * 13. Users
- * 14. Weapons (base data)
+ * 1. Scheduled matches (unified table; participants cascade)
+ * 2. Battles (participants and summaries cascade)
+ * 3. Team battle members, then team battles
+ * 4. Tournament matches, then tournaments
+ * 5. Weapon inventory, then robots
+ * 6. Facilities, audit logs, cycle snapshots
+ * 7. Users
+ * 8. Weapons (base data)
  */
 export async function cleanupTestData() {
   try {
     // Delete in dependency order
-    await prisma.scheduledKothMatchParticipant.deleteMany({});
-    await prisma.scheduledKothMatch.deleteMany({});
     await prisma.scheduledMatch.deleteMany({});
-    await prisma.scheduledTeamBattleMatch.deleteMany({});
     await prisma.scheduledTournamentMatch.deleteMany({});
-    await prisma.battleParticipant.deleteMany({});
     await prisma.battle.deleteMany({});
     await prisma.teamBattleMember.deleteMany({});
     await prisma.teamBattle.deleteMany({});
@@ -65,35 +131,34 @@ export async function cleanupUserTestData(userId: number) {
     });
     const robotIds = robots.map(r => r.id);
 
-    // Delete in dependency order
-    if (robotIds.length > 0) {
-      await prisma.scheduledKothMatchParticipant.deleteMany({
-        where: { robotId: { in: robotIds } },
-      });
+    // Team ids are needed to reach scheduled matches booked for a team rather
+    // than for an individual robot.
+    const teams = await prisma.teamBattle.findMany({
+      where: { stableId: userId },
+      select: { id: true },
+    });
+    const teamIds = teams.map(t => t.id);
 
+    if (robotIds.length > 0 || teamIds.length > 0) {
       await prisma.scheduledMatch.deleteMany({
         where: {
-          OR: [
-            { robot1Id: { in: robotIds } },
-            { robot2Id: { in: robotIds } },
-          ],
+          participants: {
+            some: {
+              OR: [
+                { participantType: 'robot', participantId: { in: robotIds } },
+                { participantType: 'team', participantId: { in: teamIds } },
+              ],
+            },
+          },
         },
       });
+    }
 
-      await prisma.battleParticipant.deleteMany({
-        where: { robotId: { in: robotIds } },
-      });
-
+    if (robotIds.length > 0) {
       await prisma.battle.deleteMany({
-        where: {
-          OR: [
-            { robot1Id: { in: robotIds } },
-            { robot2Id: { in: robotIds } },
-          ],
-        },
+        where: { participants: { some: { robotId: { in: robotIds } } } },
       });
 
-      // Clean up team battle members and team battles for this user's robots
       await prisma.teamBattleMember.deleteMany({
         where: { robotId: { in: robotIds } },
       });
@@ -103,15 +168,6 @@ export async function cleanupUserTestData(userId: number) {
       });
     }
 
-    // Clean up team battles owned by this user
-    await prisma.scheduledTeamBattleMatch.deleteMany({
-      where: {
-        OR: [
-          { team1: { stableId: userId } },
-          { team2: { stableId: userId } },
-        ],
-      },
-    });
     await prisma.teamBattle.deleteMany({ where: { stableId: userId } });
 
     await prisma.tournament.deleteMany({ where: { winnerId: userId } });

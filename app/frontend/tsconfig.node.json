@@ -4,7 +4,17 @@
     "skipLibCheck": true,
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    // `composite` implies `declaration` and forbids `noEmit`, so this project
+    // always emits. Without an outDir the output landed next to the source as
+    // `vite.config.js` + `vite.config.d.ts`, and Vite resolves `vite.config.js`
+    // *before* `vite.config.ts` (candidate order in vite 8:
+    // js, mjs, ts, cjs, mts, cts). The generated copy therefore shadowed the
+    // source: editing vite.config.ts had no effect until tsc regenerated the .js.
+    // Sending the output somewhere already gitignored removes the shadowing and
+    // the untracked-file noise in one go.
+    "outDir": "./node_modules/.tmp",
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo"
   },
   "include": ["vite.config.ts"]
 }

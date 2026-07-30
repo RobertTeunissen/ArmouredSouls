@@ -243,50 +243,50 @@ describe('recordBattleResult', () => {
 // =============================================================================
 
 describe('awardKothPoints', () => {
-  it('should award 25 points for 1st place', async () => {
-    const existing = createStanding({ mode: 'koth', leaguePoints: 100, totalMatches: 5, totalKills: 10, totalZoneScore: 50, totalZoneTime: 200, bestPlacement: 2 });
+  // KOTH_POINT_SCALE is [10, 6, 4, 2, 1, 0]. These two cases previously expected
+  // 25 and 18 — the Grand Melee scale — and had been failing on that mismatch.
+  it('should award 10 points for 1st place', async () => {
+    const existing = createStanding({ mode: 'koth', leaguePoints: 100, totalMatches: 5, totalZoneScore: 50, totalZoneTime: 200, bestPlacement: 2 });
     (mockPrisma.standing.findUnique as jest.Mock).mockResolvedValue(existing);
-    (mockPrisma.standing.update as jest.Mock).mockResolvedValue({ ...existing, leaguePoints: 125 });
+    (mockPrisma.standing.update as jest.Mock).mockResolvedValue({ ...existing, leaguePoints: 110 });
 
     await standingsService.awardKothPoints({
       robotId: existing.entityId,
       placement: 1,
       totalParticipants: 6,
-      kills: 3,
       zoneScore: 10,
       zoneTime: 30,
     });
 
     expect(mockPrisma.standing.update).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ leaguePoints: 125 }),
+        data: expect.objectContaining({ leaguePoints: 110 }),
       }),
     );
   });
 
-  it('should award 18 points for 2nd place', async () => {
-    const existing = createStanding({ mode: 'koth', leaguePoints: 50, totalMatches: 2, totalKills: 5, totalZoneScore: 20, totalZoneTime: 100, bestPlacement: 2 });
+  it('should award 6 points for 2nd place', async () => {
+    const existing = createStanding({ mode: 'koth', leaguePoints: 50, totalMatches: 2, totalZoneScore: 20, totalZoneTime: 100, bestPlacement: 2 });
     (mockPrisma.standing.findUnique as jest.Mock).mockResolvedValue(existing);
-    (mockPrisma.standing.update as jest.Mock).mockResolvedValue({ ...existing, leaguePoints: 68 });
+    (mockPrisma.standing.update as jest.Mock).mockResolvedValue({ ...existing, leaguePoints: 56 });
 
     await standingsService.awardKothPoints({
       robotId: existing.entityId,
       placement: 2,
       totalParticipants: 6,
-      kills: 2,
       zoneScore: 5,
       zoneTime: 20,
     });
 
     expect(mockPrisma.standing.update).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ leaguePoints: 68 }),
+        data: expect.objectContaining({ leaguePoints: 56 }),
       }),
     );
   });
 
   it('should award 0 points for placement > 6', async () => {
-    const existing = createStanding({ mode: 'koth', leaguePoints: 80, totalMatches: 3, totalKills: 7, totalZoneScore: 30, totalZoneTime: 150, bestPlacement: 3 });
+    const existing = createStanding({ mode: 'koth', leaguePoints: 80, totalMatches: 3, totalZoneScore: 30, totalZoneTime: 150, bestPlacement: 3 });
     (mockPrisma.standing.findUnique as jest.Mock).mockResolvedValue(existing);
     (mockPrisma.standing.update as jest.Mock).mockResolvedValue({ ...existing, leaguePoints: 80 });
 
@@ -294,7 +294,6 @@ describe('awardKothPoints', () => {
       robotId: existing.entityId,
       placement: 7,
       totalParticipants: 10,
-      kills: 1,
       zoneScore: 2,
       zoneTime: 10,
     });
@@ -307,7 +306,7 @@ describe('awardKothPoints', () => {
   });
 
   it('should increment totalMatches on every call', async () => {
-    const existing = createStanding({ mode: 'koth', leaguePoints: 50, totalMatches: 10, totalKills: 20, totalZoneScore: 100, totalZoneTime: 500, bestPlacement: 1 });
+    const existing = createStanding({ mode: 'koth', leaguePoints: 50, totalMatches: 10, totalZoneScore: 100, totalZoneTime: 500, bestPlacement: 1 });
     (mockPrisma.standing.findUnique as jest.Mock).mockResolvedValue(existing);
     (mockPrisma.standing.update as jest.Mock).mockResolvedValue({ ...existing, totalMatches: 11 });
 
@@ -315,7 +314,6 @@ describe('awardKothPoints', () => {
       robotId: existing.entityId,
       placement: 4,
       totalParticipants: 6,
-      kills: 0,
       zoneScore: 3,
       zoneTime: 15,
     });
@@ -327,16 +325,16 @@ describe('awardKothPoints', () => {
     );
   });
 
-  it('should accumulate totalKills and totalZoneScore', async () => {
-    const existing = createStanding({ mode: 'koth', leaguePoints: 50, totalMatches: 5, totalKills: 10, totalZoneScore: 40, totalZoneTime: 200, bestPlacement: 2 });
+  // Destructions moved to `robot_mode_kills`, so this only covers zone score.
+  it('should accumulate totalZoneScore', async () => {
+    const existing = createStanding({ mode: 'koth', leaguePoints: 50, totalMatches: 5, totalZoneScore: 40, totalZoneTime: 200, bestPlacement: 2 });
     (mockPrisma.standing.findUnique as jest.Mock).mockResolvedValue(existing);
-    (mockPrisma.standing.update as jest.Mock).mockResolvedValue({ ...existing, totalKills: 14, totalZoneScore: 48 });
+    (mockPrisma.standing.update as jest.Mock).mockResolvedValue({ ...existing, totalZoneScore: 48 });
 
     await standingsService.awardKothPoints({
       robotId: existing.entityId,
       placement: 3,
       totalParticipants: 6,
-      kills: 4,
       zoneScore: 8,
       zoneTime: 25,
     });
@@ -344,7 +342,6 @@ describe('awardKothPoints', () => {
     expect(mockPrisma.standing.update).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
-          totalKills: 14,
           totalZoneScore: 48,
         }),
       }),
@@ -352,7 +349,7 @@ describe('awardKothPoints', () => {
   });
 
   it('should update bestPlacement when better placement achieved', async () => {
-    const existing = createStanding({ mode: 'koth', leaguePoints: 50, totalMatches: 5, totalKills: 10, totalZoneScore: 40, totalZoneTime: 200, bestPlacement: 3 });
+    const existing = createStanding({ mode: 'koth', leaguePoints: 50, totalMatches: 5, totalZoneScore: 40, totalZoneTime: 200, bestPlacement: 3 });
     (mockPrisma.standing.findUnique as jest.Mock).mockResolvedValue(existing);
     (mockPrisma.standing.update as jest.Mock).mockResolvedValue({ ...existing, bestPlacement: 2 });
 
@@ -360,7 +357,6 @@ describe('awardKothPoints', () => {
       robotId: existing.entityId,
       placement: 2,
       totalParticipants: 6,
-      kills: 2,
       zoneScore: 5,
       zoneTime: 20,
     });
@@ -373,7 +369,7 @@ describe('awardKothPoints', () => {
   });
 
   it('should increment wins and update streak only for 1st place', async () => {
-    const existing = createStanding({ mode: 'koth', wins: 3, currentWinStreak: 1, bestWinStreak: 2, currentLoseStreak: 0, leaguePoints: 100, totalMatches: 10, totalKills: 20, totalZoneScore: 80, totalZoneTime: 400, bestPlacement: 1 });
+    const existing = createStanding({ mode: 'koth', wins: 3, currentWinStreak: 1, bestWinStreak: 2, currentLoseStreak: 0, leaguePoints: 100, totalMatches: 10, totalZoneScore: 80, totalZoneTime: 400, bestPlacement: 1 });
     (mockPrisma.standing.findUnique as jest.Mock).mockResolvedValue(existing);
     (mockPrisma.standing.update as jest.Mock).mockResolvedValue({ ...existing, wins: 4, currentWinStreak: 2 });
 
@@ -381,7 +377,6 @@ describe('awardKothPoints', () => {
       robotId: existing.entityId,
       placement: 1,
       totalParticipants: 6,
-      kills: 5,
       zoneScore: 15,
       zoneTime: 40,
     });

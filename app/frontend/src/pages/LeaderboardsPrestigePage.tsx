@@ -97,16 +97,9 @@ function LeaderboardsPrestigePage() {
 
       {/*
         Spec #46 R5: the Minimum Robots filter is gone — it suppressed
-        single-robot stables from a ranking of stable prestige. Only Refresh remains.
+        single-robot stables from a ranking of stable prestige. The Refresh button
+        is gone too; the ranking only changes on the daily cycle, so a reload covers it.
       */}
-      <div className="mb-6 flex justify-end">
-        <button
-          onClick={fetchLeaderboard}
-          className="min-h-[44px] px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-hover transition-colors"
-        >
-          Refresh
-        </button>
-      </div>
 
       {/* Loading State */}
       {loading && (

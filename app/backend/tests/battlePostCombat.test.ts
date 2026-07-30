@@ -232,7 +232,7 @@ describe('updateRobotCombatStats', () => {
       isDraw: false,
       damageDealt: 250,
       damageTakenByOpponent: 120,
-      opponentDestroyed: true,
+      opponentsDestroyed: 1,
     });
 
     expect(mockPrisma.robot.update).toHaveBeenCalledTimes(1);
@@ -259,7 +259,7 @@ describe('updateRobotCombatStats', () => {
       isDraw: false,
       damageDealt: 120,
       damageTakenByOpponent: 250,
-      opponentDestroyed: false,
+      opponentsDestroyed: 0,
     });
 
     const call = mockPrisma.robot.update.mock.calls[0][0];
@@ -278,7 +278,7 @@ describe('updateRobotCombatStats', () => {
       isDraw: true,
       damageDealt: 200,
       damageTakenByOpponent: 200,
-      opponentDestroyed: false,
+      opponentsDestroyed: 0,
     });
 
     const call = mockPrisma.robot.update.mock.calls[0][0];
@@ -299,7 +299,7 @@ describe('updateRobotCombatStats', () => {
       isDraw: false,
       damageDealt: 250,
       damageTakenByOpponent: 120,
-      opponentDestroyed: false,
+      opponentsDestroyed: 0,
       fameIncrement: 10,
     });
 
@@ -316,7 +316,7 @@ describe('updateRobotCombatStats', () => {
       isDraw: false,
       damageDealt: 250,
       damageTakenByOpponent: 120,
-      opponentDestroyed: false,
+      opponentsDestroyed: 0,
       fameIncrement: 0,
     });
 
@@ -327,22 +327,10 @@ describe('updateRobotCombatStats', () => {
   // NOTE: leaguePoints and streak changes are now managed by StandingsService (Spec #40).
   // updateRobotCombatStats no longer writes leaguePoints to the Robot model.
 
-  it('should merge extraData into the update', async () => {
-    await updateRobotCombatStats({
-      robotId: 1,
-      finalHP: 80,
-      newELO: 1216,
-      isWinner: true,
-      isDraw: false,
-      damageDealt: 250,
-      damageTakenByOpponent: 120,
-      opponentDestroyed: false,
-      extraData: { kothBattles: { increment: 1 } },
-    });
-
-    const call = mockPrisma.robot.update.mock.calls[0][0];
-    expect(call.data.kothBattles).toEqual({ increment: 1 });
-  });
+  // Removed: `extraData` was dropped from RobotStatUpdateOptions and the
+  // `kothBattles` column it wrote no longer exists on the Robot model. The test
+  // only compiled because this suite runs in the integration bucket, where a
+  // suite that fails to typecheck is easy to overlook.
 
   // ── League Win/Lose Streak Tests ──
   // NOTE: Win/lose streaks are now tracked in the standings table by StandingsService (Spec #40).
@@ -359,7 +347,7 @@ describe('updateRobotCombatStats', () => {
       isDraw: false,
       damageDealt: 250,
       damageTakenByOpponent: 120,
-      opponentDestroyed: false,
+      opponentsDestroyed: 0,
       battleType: 'league',
     });
 
@@ -377,7 +365,7 @@ describe('updateRobotCombatStats', () => {
       isDraw: false,
       damageDealt: 250,
       damageTakenByOpponent: 120,
-      opponentDestroyed: false,
+      opponentsDestroyed: 0,
       battleType: 'league',
     });
 
@@ -393,7 +381,7 @@ describe('updateRobotCombatStats', () => {
       isDraw: false,
       damageDealt: 100,
       damageTakenByOpponent: 200,
-      opponentDestroyed: false,
+      opponentsDestroyed: 0,
       battleType: 'league',
     });
 
@@ -412,7 +400,7 @@ describe('updateRobotCombatStats', () => {
       isDraw: true,
       damageDealt: 200,
       damageTakenByOpponent: 200,
-      opponentDestroyed: false,
+      opponentsDestroyed: 0,
       battleType: 'league',
     });
 
@@ -431,7 +419,7 @@ describe('updateRobotCombatStats', () => {
       isDraw: false,
       damageDealt: 250,
       damageTakenByOpponent: 120,
-      opponentDestroyed: false,
+      opponentsDestroyed: 0,
       battleType: 'koth',
     });
 
@@ -450,7 +438,7 @@ describe('updateRobotCombatStats', () => {
       isDraw: false,
       damageDealt: 250,
       damageTakenByOpponent: 120,
-      opponentDestroyed: false,
+      opponentsDestroyed: 0,
     });
 
     const call = mockPrisma.robot.update.mock.calls[0][0];
@@ -470,7 +458,7 @@ describe('updateRobotCombatStats', () => {
       isDraw: false,
       damageDealt: 250,
       damageTakenByOpponent: 120,
-      opponentDestroyed: false,
+      opponentsDestroyed: 0,
       stance: 'offensive',
     });
 
@@ -489,7 +477,7 @@ describe('updateRobotCombatStats', () => {
       isDraw: false,
       damageDealt: 250,
       damageTakenByOpponent: 120,
-      opponentDestroyed: false,
+      opponentsDestroyed: 0,
       stance: 'defensive',
     });
 
@@ -508,7 +496,7 @@ describe('updateRobotCombatStats', () => {
       isDraw: false,
       damageDealt: 250,
       damageTakenByOpponent: 120,
-      opponentDestroyed: false,
+      opponentsDestroyed: 0,
       stance: 'balanced',
     });
 
@@ -527,7 +515,7 @@ describe('updateRobotCombatStats', () => {
       isDraw: false,
       damageDealt: 250,
       damageTakenByOpponent: 120,
-      opponentDestroyed: false,
+      opponentsDestroyed: 0,
       loadoutType: 'dual_wield',
     });
 
@@ -544,7 +532,7 @@ describe('updateRobotCombatStats', () => {
       isDraw: false,
       damageDealt: 100,
       damageTakenByOpponent: 200,
-      opponentDestroyed: false,
+      opponentsDestroyed: 0,
       stance: 'offensive',
       loadoutType: 'dual_wield',
     });
@@ -563,7 +551,7 @@ describe('updateRobotCombatStats', () => {
       isDraw: true,
       damageDealt: 200,
       damageTakenByOpponent: 200,
-      opponentDestroyed: false,
+      opponentsDestroyed: 0,
       stance: 'defensive',
       loadoutType: 'dual_wield',
     });
@@ -582,7 +570,7 @@ describe('updateRobotCombatStats', () => {
       isDraw: false,
       damageDealt: 250,
       damageTakenByOpponent: 120,
-      opponentDestroyed: false,
+      opponentsDestroyed: 0,
       battleType: 'league',
       stance: 'offensive',
       loadoutType: 'dual_wield',

@@ -1,0 +1,23 @@
+{
+  // Typecheck the test suites.
+  //
+  // The main tsconfig excludes `src/__tests__` and `**/*.test.ts` because it
+  // exists to build `dist/`. The side effect was that no `tsc` run ever looked at
+  // a test file, so a suite could stop compiling and the only symptom was jest
+  // printing "Test suite failed to run" — easy to skim past in a 148-suite run.
+  // Dozens of suites rotted that way after Specs #41 and #43 removed schema and
+  // service symbols (Backlog #64).
+  //
+  // Run via `pnpm run typecheck:tests`. This config emits nothing.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    // Tests legitimately import shared formulas from `app/shared/`, which sits
+    // outside `app/backend`. rootDir has to contain them or every such import
+    // reports TS6059. Nothing is emitted, so rootDir only affects that check.
+    "rootDir": "..",
+    "incremental": false
+  },
+  "include": ["src/**/*", "tests/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

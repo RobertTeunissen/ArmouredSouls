@@ -2,6 +2,8 @@ import prisma from '../../lib/prisma';
 import { calculateRepairCost, calculateAttributeSum } from '../../utils/robotCalculations';
 import { eventLogger } from '../common/eventLogger';
 import logger from '../../config/logger';
+import { resolveRobotIdsForEvent } from './repairScope';
+import type { SubscribableEventType } from '../subscription/eventRegistry';
 
 
 
@@ -19,21 +21,88 @@ export interface RepairSummary {
 }
 
 /**
- * Repair all robots that need repair, optionally deducting costs from user balances
- * Uses the proper repair cost formula from PRD_ECONOMY_SYSTEM.md:
- * base_repair = (sum_of_all_23_attributes × 100)
- * damage_percentage = damage_taken / max_hp
- * multiplier = 2.0 if HP=0, 1.5 if HP<10%, else 1.0
- * repair_cost = base_repair × damage_percentage × multiplier × (1 - repair_bay_discount)
- * 
+ * Repair the robots queued for one battle type, before that battle type runs.
+ *
+ * This is the single pre-battle repair entry point for all nine battle types —
+ * league 1v1/2v2/3v3, tag team, KotH, Grand Melee, and the three tournament
+ * brackets. Every cron and the admin cycle runner call it with their own event
+ * type; none of them repair the whole roster any more (issue #411).
+ *
+ * Robots with no match queued for this type are left damaged on purpose, so
+ * their owner can still claim the 50% manual repair discount whenever they next
+ * log in. Nothing is saved or lost overall: a robot that does fight is repaired
+ * at the same full price as before, just not one it was never going to need.
+ *
+ * @param eventType - Battle type about to execute
+ * @param deductCosts - Whether to deduct repair costs from user currency
+ * @param cycleNumber - The current cycle number for logging (optional)
+ * @returns Summary of repairs performed
+ */
+export async function repairRobotsForEvent(
+  eventType: SubscribableEventType,
+  deductCosts: boolean = true,
+  cycleNumber?: number,
+): Promise<RepairSummary> {
+  const robotIds = await resolveRobotIdsForEvent(eventType);
+
+  logger.info(
+    `[RepairService] Pre-battle repair scoped to ${eventType}: ${robotIds.length} robot(s) with a queued match`,
+  );
+
+  return repairRobots(robotIds, deductCosts, cycleNumber);
+}
+
+/**
+ * Repair every damaged robot in the game, ignoring what is scheduled.
+ *
+ * Retained for admin maintenance and the manual battle triggers, where the
+ * operator explicitly wants the whole roster patched up. The daily crons use
+ * {@link repairRobotsForEvent} instead.
+ *
  * @param deductCosts - Whether to deduct repair costs from user currency
  * @param cycleNumber - The current cycle number for logging (optional, will query if not provided)
  * @returns Summary of repairs performed
  */
 export async function repairAllRobots(deductCosts: boolean = true, cycleNumber?: number): Promise<RepairSummary> {
+  return repairRobots(null, deductCosts, cycleNumber);
+}
+
+/**
+ * Repair damaged robots, optionally restricted to a set of ids.
+ *
+ * Shared implementation behind both entry points, so the cost formula and the
+ * Repair_Bay discount behave identically however repair was triggered:
+ * base_repair = (sum_of_all_23_attributes × 100)
+ * damage_percentage = damage_taken / max_hp
+ * multiplier = 2.0 if HP=0, 1.5 if HP<10%, else 1.0
+ * repair_cost = base_repair × damage_percentage × multiplier × (1 - repair_bay_discount)
+ *
+ * @param robotIds - Restrict to these robots, or null for every damaged robot
+ * @param deductCosts - Whether to deduct repair costs from user currency
+ * @param cycleNumber - The current cycle number for logging (optional)
+ * @returns Summary of repairs performed
+ */
+async function repairRobots(
+  robotIds: number[] | null,
+  deductCosts: boolean = true,
+  cycleNumber?: number,
+): Promise<RepairSummary> {
+  // An empty scope means nothing is queued for this battle type — skip the work
+  // rather than issuing a query that would match every robot.
+  if (robotIds !== null && robotIds.length === 0) {
+    return {
+      robotsRepaired: 0,
+      totalBaseCost: 0,
+      totalFinalCost: 0,
+      costsDeducted: deductCosts,
+      userSummaries: [],
+    };
+  }
+
   // Get all robots that need repair with all attributes for cost calculation
   const robots = await prisma.robot.findMany({
     where: {
+      ...(robotIds !== null ? { id: { in: robotIds } } : {}),
       currentHP: {
         lt: prisma.robot.fields.maxHP,
       },
@@ -60,6 +129,13 @@ export async function repairAllRobots(deductCosts: boolean = true, cycleNumber?:
   }
 
   // Batch-load all facilities and robot counts for all affected users (2 queries instead of 2N)
+  //
+  // Both queries filter on the user, never on the scoped robot ids: the
+  // Repair_Bay discount is `repairBayLevel × (5 + activeRobotCount)` capped at
+  // 90%, where activeRobotCount is the owner's whole roster. Narrowing either
+  // query to the robots being repaired would shrink the discount for a scoped
+  // repair, making the same robot cost more when repaired before its own match
+  // than when repaired as part of a full sweep.
   const affectedUserIds = Array.from(robotsByUser.keys());
   const [allFacilities, robotCounts] = await Promise.all([
     prisma.facility.findMany({
@@ -72,7 +148,6 @@ export async function repairAllRobots(deductCosts: boolean = true, cycleNumber?:
       by: ['userId'],
       where: {
         userId: { in: affectedUserIds },
-
       },
       _count: { id: true },
     }),

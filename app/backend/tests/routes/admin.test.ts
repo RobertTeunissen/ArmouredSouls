@@ -159,6 +159,7 @@ jest.mock('../../src/services/team-battle/teamBattleAdapter', () => ({
 jest.mock('../../src/services/economy/repairService', () => ({
   __esModule: true,
   repairAllRobots: jest.fn().mockResolvedValue({ robotsRepaired: 0, totalBaseCost: 0, totalFinalCost: 0, costsDeducted: false, repairs: [] }),
+  repairRobotsForEvent: jest.fn().mockResolvedValue({ robotsRepaired: 0, totalBaseCost: 0, totalFinalCost: 0, costsDeducted: false, repairs: [] }),
 }));
 
 jest.mock('../../src/utils/economyCalculations', () => ({

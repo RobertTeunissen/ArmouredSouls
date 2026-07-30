@@ -260,7 +260,12 @@ describe('Feature: tournament-bracket-seeding', () => {
       fc.assert(
         fc.property(
           fc.integer({ min: 1, max: 500 }),
-          fc.string({ minLength: 1, maxLength: 30 }).filter((s) => s.trim().length > 0 && !/^#\d+\s/.test(s)),
+          // The filter must exclude exactly what the assertion below rejects.
+          // It used to require whitespace after the digits (`^#\d+\s`) while the
+          // assertion did not (`^#\d+`), so a generated name of "#0" passed the
+          // filter and then failed the assertion — a flake that only surfaced on
+          // seeds where fast-check happened to produce such a name.
+          fc.string({ minLength: 1, maxLength: 30 }).filter((s) => s.trim().length > 0 && !/^#\d+/.test(s)),
           (seed, robotName) => {
             const display = formatSeedDisplay(seed, robotName);
 

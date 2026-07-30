@@ -281,6 +281,8 @@ export class FacilityRecommendationService {
         projectedSavingsPerCycle = estimatedRepairCostPerCycle * (nextDiscount / 100);
       }
       
+      const robotLabel = `${activityMetrics.robotCount} robot${activityMetrics.robotCount !== 1 ? 's' : ''}`;
+
       if (projectedSavingsPerCycle > 0) {
         projectedPayoffCycles = Math.ceil(upgradeCost / projectedSavingsPerCycle);
         projectedROI = (projectedSavingsPerCycle * 30 - upgradeCost) / upgradeCost;
@@ -288,6 +290,13 @@ export class FacilityRecommendationService {
         const dataSource = activityMetrics.avgRepairCostPerCycle === 0 ? ' (estimated)' : '';
         reason = `Saves ₡${projectedSavingsPerCycle.toFixed(0)}/cycle on repairs${dataSource} (${currentLevel === 0 ? '' : currentDiscount + '% → '}${nextDiscount}% discount with ${activityMetrics.robotCount} robot${activityMetrics.robotCount !== 1 ? 's' : ''})`;
         priority = projectedPayoffCycles <= 15 ? 'high' : projectedPayoffCycles <= 30 ? 'medium' : 'low';
+      } else {
+        // The repair bay is shown even with no projected saving — see the
+        // exception in the filter at the end of this method, which exists so the
+        // player decides for themselves. It still has to explain itself: this
+        // branch left `reason` as the empty string it was initialised to, so the
+        // recommendation reached the UI as a card with no text at all.
+        reason = `Applies a ${nextDiscount}% repair discount with ${robotLabel}. No repair history yet, so the saving cannot be projected.`;
       }
     } else if (facilityType === 'training_facility') {
       // Training facility reduces attribute upgrade costs
@@ -386,8 +395,15 @@ export class FacilityRecommendationService {
       priority = 'low';
     }
 
-    // Only recommend if ROI is positive or has strategic value
-    // Exception: Always show repair_bay even with negative ROI (user should decide)
+    // Only recommend if ROI is positive or has strategic value.
+    //
+    // Exception: the repair bay is always shown, even at zero or negative
+    // projected ROI, so the player decides. Repair spend is read from
+    // CycleSnapshot.stableMetrics, which a new stable has none of, and a bay is
+    // exactly what such a stable is about to need — suppressing it because the
+    // projection is empty would hide it from the players it helps most. Callers
+    // must therefore tolerate `projectedROI === 0` and a null payoff for this one
+    // facility type; the reason string always explains which case it is.
     if (projectedROI <= 0 && priority === 'low' && facilityType !== 'repair_bay') {
       return null;
     }
@@ -421,7 +437,6 @@ export class FacilityRecommendationService {
       select: {
         id: true,
         totalBattles: true,
-        totalTagTeamBattles: true,
         fame: true,
       },
     });
@@ -433,11 +448,21 @@ export class FacilityRecommendationService {
       return computeStreamingRevenue(0, 0, currentStudioLevel).totalRevenue;
     }
 
+    // KotH matches are the one mode `Robot.totalBattles` does not count, so they
+    // come from `standings` — the same correction `calculateStreamingRevenue`
+    // applies before awarding. Without it this estimate sits below what the
+    // player actually earns.
+    const kothStandings = await prisma.standing.findMany({
+      where: { entityType: 'robot', entityId: { in: robots.map((r) => r.id) }, mode: 'koth' },
+      select: { entityId: true, totalMatches: true },
+    });
+    const kothMatchesByRobot = new Map(kothStandings.map((s) => [s.entityId, s.totalMatches ?? 0]));
+
     // Average of the per-robot awards, each derived from the same function the
     // award path calls.
     let totalRevenue = 0;
     for (const robot of robots) {
-      const totalBattleCount = robot.totalBattles + robot.totalTagTeamBattles;
+      const totalBattleCount = robot.totalBattles + (kothMatchesByRobot.get(robot.id) ?? 0);
       totalRevenue += computeStreamingRevenue(totalBattleCount, robot.fame, currentStudioLevel).totalRevenue;
     }
 

@@ -17,6 +17,7 @@
 import { Tournament, ScheduledTournamentMatch, Prisma } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import { computeBattleSummary } from '../battle/battleSummaryComputer';
+import { countKillsByRobot } from '../../shared/utils/battleStatistics';
 import logger from '../../config/logger';
 import { RobotWithWeapons } from '../battle/combatSimulator';
 import { simulateTeamBattle } from '../team-battle/teamBattleEngine';
@@ -298,6 +299,13 @@ export async function processTeamTournamentBattle(
     });
   }
 
+  // Per-robot destruction credit. The previous expression gave a destroyed
+  // robot no credit at all — even when it wrecked an opponent before dying —
+  // and gave every surviving teammate credit for one shared destruction.
+  const killsByRobot = countKillsByRobot(
+    (battleResult.detailedCombatEvents || []) as unknown as Parameters<typeof countKillsByRobot>[0],
+  );
+
   // Update robot combat stats via shared helper (HP, ELO, counters, damage lifetime)
   for (const robot of team1Robots) {
     const participant = battleResult.participants.find(p => p.robotId === robot.id);
@@ -313,7 +321,7 @@ export async function processTeamTournamentBattle(
           .filter(p => p.team === 2)
           .reduce((sum, p) => sum + p.damageDealt, 0) / teamSize
       ),
-      opponentDestroyed: (participant?.finalHP ?? 0) === 0 ? false : battleResult.participants.filter(p => p.team === 2).some(p => p.finalHP === 0),
+      opponentsDestroyed: killsByRobot[robot.name] ?? 0,
       fameIncrement: 0, // Fame handled in distributeTeamTournamentRewards
       battleType: `tournament_${teamSize}v${teamSize}`,
       stance: robot.stance,
@@ -334,7 +342,7 @@ export async function processTeamTournamentBattle(
           .filter(p => p.team === 1)
           .reduce((sum, p) => sum + p.damageDealt, 0) / teamSize
       ),
-      opponentDestroyed: (participant?.finalHP ?? 0) === 0 ? false : battleResult.participants.filter(p => p.team === 1).some(p => p.finalHP === 0),
+      opponentsDestroyed: killsByRobot[robot.name] ?? 0,
       fameIncrement: 0, // Fame handled in distributeTeamTournamentRewards
       battleType: `tournament_${teamSize}v${teamSize}`,
       stance: robot.stance,

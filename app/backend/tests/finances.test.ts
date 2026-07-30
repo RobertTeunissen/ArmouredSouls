@@ -18,8 +18,8 @@ app.use('/api/finances', financesRoutes);
 app.use(errorHandler);
 
 describe('Finances Routes', () => {
-  let testUserIds: number[] = [];
-  let testRobotIds: number[] = [];
+  const testUserIds: number[] = [];
+  const testRobotIds: number[] = [];
   let authToken: string;
 
   beforeAll(async () => {
@@ -88,16 +88,11 @@ describe('Finances Routes', () => {
   afterAll(async () => {
     // Cleanup in correct dependency order
     if (testRobotIds.length > 0) {
-      await prisma.battleParticipant.deleteMany({
-        where: { robotId: { in: testRobotIds } },
-      });
+      // Combatants live in battle_participants since Spec #43 dropped
+      // battles.robot1_id/robot2_id. Participants and summaries cascade with the
+      // battle, so deleting the battle is enough.
       await prisma.battle.deleteMany({
-        where: {
-          OR: [
-            { robot1Id: { in: testRobotIds } },
-            { robot2Id: { in: testRobotIds } },
-          ],
-        },
+        where: { participants: { some: { robotId: { in: testRobotIds } } } },
       });
       await prisma.robot.deleteMany({
         where: { id: { in: testRobotIds } },

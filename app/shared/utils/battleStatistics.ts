@@ -181,6 +181,41 @@ function isAttackTypeEvent(type: string): boolean {
   return type === 'attack' || type === 'critical' || type === 'miss' || type === 'malfunction';
 }
 
+// ─── Destruction Attribution ─────────────────────────────────────────────────
+
+/**
+ * Event types that take a robot out of a match and can earn kill credit.
+ *
+ * `yield` is deliberately absent. A yielding robot removes itself, so no
+ * opponent earned the destruction — counting it would inflate the credited
+ * robot's tally with an outcome it did not cause.
+ */
+const KILL_CREDIT_EVENT_TYPES = new Set(['destroyed', 'robot_eliminated']);
+
+/**
+ * Count destructions credited to each robot, keyed by robot name.
+ *
+ * This is the single definition of "a destruction" for every match type. Modes
+ * differ in how many opponents a robot can face — 1 in league, 2 or 3 in team
+ * battles, up to 19 in a Grand Melee — so the result is a count, never a flag.
+ *
+ * Relies on the `attacker` field the simulation loop populates on elimination
+ * events (Spec #46 R4.16). Before that fix these fields were absent and every
+ * attribution silently produced zero.
+ */
+export function countKillsByRobot(events: BattleLogEvent[]): Record<string, number> {
+  const killsByRobot: Record<string, number> = {};
+
+  for (const event of events) {
+    if (!KILL_CREDIT_EVENT_TYPES.has(event.type)) continue;
+    const attacker = event.attacker;
+    if (!attacker) continue;
+    killsByRobot[attacker] = (killsByRobot[attacker] ?? 0) + 1;
+  }
+
+  return killsByRobot;
+}
+
 // ─── Main Function ───────────────────────────────────────────────────────────
 
 export function computeBattleStatistics(

@@ -13,7 +13,8 @@ const mockSubscriptionFindMany = jest.fn();
 const mockTournamentFindFirst = jest.fn();
 const mockTournamentCount = jest.fn();
 const mockTeamBattleMemberFindMany = jest.fn();
-const mockScheduledTournamentMatchCount = jest.fn();
+const mockScheduledTournamentMatchFindMany = jest.fn();
+const mockScheduledMatchParticipantFindMany = jest.fn();
 
 jest.mock('../../../src/lib/prisma', () => ({
   __esModule: true,
@@ -22,7 +23,8 @@ jest.mock('../../../src/lib/prisma', () => ({
     subscription: { findMany: (...args: unknown[]) => mockSubscriptionFindMany(...args) },
     tournament: { findFirst: (...args: unknown[]) => mockTournamentFindFirst(...args), count: (...args: unknown[]) => mockTournamentCount(...args) },
     teamBattleMember: { findMany: (...args: unknown[]) => mockTeamBattleMemberFindMany(...args) },
-    scheduledTournamentMatch: { count: (...args: unknown[]) => mockScheduledTournamentMatchCount(...args) },
+    scheduledTournamentMatch: { findMany: (...args: unknown[]) => mockScheduledTournamentMatchFindMany(...args) },
+    scheduledMatchParticipant: { findMany: (...args: unknown[]) => mockScheduledMatchParticipantFindMany(...args) },
   },
 }));
 
@@ -38,7 +40,7 @@ jest.mock('../../../src/services/analytics/matchmakingService', () => ({
 
 jest.mock('../../../src/services/subscription/subscriptionService', () => ({
   __esModule: true,
-  batchActivatePendingSubscriptions: jest.fn().mockResolvedValue(undefined),
+  isRobotSubscribedTo: jest.fn().mockResolvedValue(true),
 }));
 
 jest.mock('../../../src/services/tournament/tournamentService', () => ({
@@ -54,7 +56,7 @@ jest.mock('../../../src/services/tournament/tournamentService', () => ({
 import * as fc from 'fast-check';
 import { checkSchedulingReadiness } from '../../../src/services/analytics/matchmakingService';
 import { createTeamTournament, getEligibleTeamsForTournament, autoCreateNextTeamTournament } from '../../../src/services/tournament/teamTournamentService';
-import { tournament2v2LockingPredicate, tournament3v3LockingPredicate } from '../../../src/services/subscription/lockingPredicates';
+import { resolveOutstandingEventsForRobot } from '../../../src/services/scheduling/eventScheduleScope';
 import { TournamentError, TournamentErrorCode } from '../../../src/errors/tournamentErrors';
 
 const mockCheckSchedulingReadiness = checkSchedulingReadiness as jest.MockedFunction<typeof checkSchedulingReadiness>;
@@ -359,124 +361,109 @@ describe('Feature: team-battle-tournaments, Property 9: Team eligible iff eligib
   });
 });
 
-// ─── Property 10: Tournament locking predicate ───────────────────────────────
+// ─── Property 10: Team tournament slot obligations ───────────────────────────
 
-describe('Feature: team-battle-tournaments, Property 10: Locking predicate returns true iff robot\'s team has pending tournament match', () => {
+describe('Feature: team-battle-tournaments, Property 10: A robot owes a team tournament a match iff its team is alive in the bracket', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockScheduledMatchParticipantFindMany.mockResolvedValue([]);
+    mockScheduledTournamentMatchFindMany.mockResolvedValue([]);
   });
 
   /**
    * **Validates: Requirements 3.5**
    *
-   * For any robot that is a member of a team with at least one pending or scheduled
-   * match in an active tournament of the corresponding type, the locking predicate
-   * SHALL return `true`. For any robot not in such a team, the predicate SHALL
-   * return `false`.
+   * The nine per-event locking predicates this block used to cover are gone. Every
+   * event now shares one rule — unsubscribe is always allowed, and a booked match
+   * holds its slot until fought — so what matters is whether the shared resolver
+   * reports the obligation, not whether a per-event predicate says "locked".
+   *
+   * For any robot in a team with an unresolved match in an active tournament of
+   * the corresponding type, the event SHALL appear in the robot's outstanding
+   * events. For any robot not in such a team, it SHALL NOT.
    */
-  it('should return true when robot has team with pending match in active tournament', async () => {
+  it('should report the event as outstanding exactly when the team has an unresolved bracket match', async () => {
     await fc.assert(
       fc.asyncProperty(
         fc.boolean(),
         fc.constantFrom('team_2v2', 'team_3v3') as fc.Arbitrary<'team_2v2' | 'team_3v3'>,
         fc.integer({ min: 1, max: 1000 }),
         fc.integer({ min: 1, max: 100 }),
-        async (hasPendingMatch, tournamentType, robotId, teamId) => {
-          // Setup: robot is a member of a team
-          mockTeamBattleMemberFindMany.mockResolvedValue([{ teamId }]);
-
-          // Setup: team has (or doesn't have) pending matches in active tournament
-          mockScheduledTournamentMatchCount.mockResolvedValue(hasPendingMatch ? 1 : 0);
-
-          // Call the appropriate locking predicate
-          const predicate = tournamentType === 'team_2v2'
-            ? tournament2v2LockingPredicate
-            : tournament3v3LockingPredicate;
-
-          const result = await predicate(robotId);
-
-          // Locking predicate returns true iff there are pending matches
-          expect(result).toBe(hasPendingMatch);
-        },
-      ),
-      { numRuns: 100 },
-    );
-  });
-
-  it('should return false when robot has no team memberships', async () => {
-    await fc.assert(
-      fc.asyncProperty(
-        fc.constantFrom('team_2v2', 'team_3v3') as fc.Arbitrary<'team_2v2' | 'team_3v3'>,
-        fc.integer({ min: 1, max: 1000 }),
-        async (tournamentType, robotId) => {
-          // Setup: robot has no team memberships
-          mockTeamBattleMemberFindMany.mockResolvedValue([]);
-
-          const predicate = tournamentType === 'team_2v2'
-            ? tournament2v2LockingPredicate
-            : tournament3v3LockingPredicate;
-
-          const result = await predicate(robotId);
-
-          // No team memberships → always false
-          expect(result).toBe(false);
-        },
-      ),
-      { numRuns: 100 },
-    );
-  });
-
-  it('should return false when robot has team but no pending matches in active tournament', async () => {
-    await fc.assert(
-      fc.asyncProperty(
-        fc.constantFrom('team_2v2', 'team_3v3') as fc.Arbitrary<'team_2v2' | 'team_3v3'>,
-        fc.integer({ min: 1, max: 1000 }),
-        fc.array(fc.integer({ min: 1, max: 100 }), { minLength: 1, maxLength: 5 }),
-        async (tournamentType, robotId, teamIds) => {
-          // Setup: robot is a member of one or more teams
-          mockTeamBattleMemberFindMany.mockResolvedValue(
-            teamIds.map(teamId => ({ teamId }))
+        async (hasPendingMatch, participantType, robotId, teamId) => {
+          mockTeamBattleMemberFindMany.mockResolvedValue([{ robotId, teamId }]);
+          mockScheduledTournamentMatchFindMany.mockResolvedValue(
+            hasPendingMatch
+              ? [{ participantType, participant1Id: teamId, participant2Id: null }]
+              : [],
           );
 
-          // Setup: no pending matches in active tournament
-          mockScheduledTournamentMatchCount.mockResolvedValue(0);
+          const outstanding = await resolveOutstandingEventsForRobot(robotId);
 
-          const predicate = tournamentType === 'team_2v2'
-            ? tournament2v2LockingPredicate
-            : tournament3v3LockingPredicate;
-
-          const result = await predicate(robotId);
-
-          // No pending matches → false
-          expect(result).toBe(false);
+          const eventType = participantType === 'team_2v2' ? 'tournament_2v2' : 'tournament_3v3';
+          expect(outstanding.includes(eventType)).toBe(hasPendingMatch);
         },
       ),
       { numRuns: 100 },
     );
   });
 
-  it('should return true when robot has team with multiple pending matches', async () => {
+  it('should report nothing outstanding when the robot has no team memberships', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.integer({ min: 1, max: 1000 }),
+        async (robotId) => {
+          mockTeamBattleMemberFindMany.mockResolvedValue([]);
+
+          const outstanding = await resolveOutstandingEventsForRobot(robotId);
+
+          expect(outstanding).toEqual([]);
+        },
+      ),
+      { numRuns: 100 },
+    );
+  });
+
+  it('should report nothing outstanding when the team is in no active bracket', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.integer({ min: 1, max: 1000 }),
+        fc.array(fc.integer({ min: 1, max: 100 }), { minLength: 1, maxLength: 5 }),
+        async (robotId, teamIds) => {
+          mockTeamBattleMemberFindMany.mockResolvedValue(
+            teamIds.map((teamId) => ({ robotId, teamId })),
+          );
+          mockScheduledTournamentMatchFindMany.mockResolvedValue([]);
+
+          const outstanding = await resolveOutstandingEventsForRobot(robotId);
+
+          expect(outstanding).toEqual([]);
+        },
+      ),
+      { numRuns: 100 },
+    );
+  });
+
+  it('should report the event once however many bracket matches the team has', async () => {
     await fc.assert(
       fc.asyncProperty(
         fc.constantFrom('team_2v2', 'team_3v3') as fc.Arbitrary<'team_2v2' | 'team_3v3'>,
         fc.integer({ min: 1, max: 1000 }),
         fc.integer({ min: 1, max: 100 }),
         fc.integer({ min: 1, max: 10 }),
-        async (tournamentType, robotId, teamId, pendingMatchCount) => {
-          // Setup: robot is a member of a team
-          mockTeamBattleMemberFindMany.mockResolvedValue([{ teamId }]);
+        async (participantType, robotId, teamId, pendingMatchCount) => {
+          mockTeamBattleMemberFindMany.mockResolvedValue([{ robotId, teamId }]);
+          mockScheduledTournamentMatchFindMany.mockResolvedValue(
+            Array.from({ length: pendingMatchCount }, () => ({
+              participantType,
+              participant1Id: teamId,
+              participant2Id: null,
+            })),
+          );
 
-          // Setup: team has multiple pending matches
-          mockScheduledTournamentMatchCount.mockResolvedValue(pendingMatchCount);
+          const outstanding = await resolveOutstandingEventsForRobot(robotId);
 
-          const predicate = tournamentType === 'team_2v2'
-            ? tournament2v2LockingPredicate
-            : tournament3v3LockingPredicate;
-
-          const result = await predicate(robotId);
-
-          // Any pending matches → true
-          expect(result).toBe(true);
+          const eventType = participantType === 'team_2v2' ? 'tournament_2v2' : 'tournament_3v3';
+          expect(outstanding.filter((e) => e === eventType)).toEqual([eventType]);
         },
       ),
       { numRuns: 100 },

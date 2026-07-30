@@ -1,12 +1,16 @@
 /**
  * Unit tests for subscriptionService.ts
  *
- * Tests the core subscription service functions with mocked Prisma client.
- * Covers cap enforcement, duplicate prevention, tournament lock checking,
- * ownership verification, audit logging, and the isRobotSubscribedTo helper.
+ * One rule governs all nine events:
  *
- * Two-state model: subscriptions start as 'pending' and are activated by matchmakers.
- * Only tournament has a lock (can't unsubscribe while alive in bracket).
+ * 1. Subscribing is allowed while the robot occupies fewer slots than its cap.
+ * 2. Unsubscribing is always allowed — no event refuses it.
+ * 3. A booked match still runs, and holds its slot until it has been fought.
+ *
+ * Rule 3 is what stops rule 2 becoming an exploit: a robot cannot leave a
+ * tournament mid-bracket, spend the freed slot elsewhere, and still fight out
+ * the bracket. These tests pin all three, plus ownership, duplicates and the
+ * all-or-nothing bulk save.
  *
  * _Requirements: R3.2, R3.3, R3.5, R4.3, R4.4, R10.2_
  */
@@ -16,10 +20,10 @@
 const mockTx = {
   robot: { findUnique: jest.fn() },
   subscription: {
-    findUnique: jest.fn(),
+    findMany: jest.fn(),
     count: jest.fn(),
-    create: jest.fn(),
-    delete: jest.fn(),
+    createMany: jest.fn(),
+    deleteMany: jest.fn(),
   },
   facility: { findUnique: jest.fn() },
   auditLog: {
@@ -39,17 +43,8 @@ const mockTx = {
 };
 
 const mockPrisma = {
-  subscription: {
-    count: jest.fn(),
-  },
-  scheduledMatchParticipant: {
-    findMany: jest.fn().mockResolvedValue([]),
-  },
-  standing: {
-    findFirst: jest.fn().mockResolvedValue(null),
-    findMany: jest.fn().mockResolvedValue([]),
-  },
-  $transaction: jest.fn((fn: (tx: typeof mockTx) => Promise<void>) => fn(mockTx)),
+  subscription: { count: jest.fn() },
+  $transaction: jest.fn((fn: (tx: typeof mockTx) => Promise<unknown>) => fn(mockTx)),
 };
 
 jest.mock('../../../src/lib/prisma', () => ({
@@ -62,25 +57,48 @@ jest.mock('../../../src/config/logger', () => ({
   default: { info: jest.fn(), warn: jest.fn(), error: jest.fn() },
 }));
 
-// Mock the event registry — we control what's registered
+// The registry is mocked so these tests do not depend on app startup order.
 const mockIsRegisteredEvent = jest.fn();
-const mockGetLockingPredicate = jest.fn();
 jest.mock('../../../src/services/subscription/eventRegistry', () => ({
   __esModule: true,
   isRegisteredEvent: (...args: unknown[]) => mockIsRegisteredEvent(...args),
   getRegisteredEvents: jest.fn(() => []),
-  getLockingPredicate: (...args: unknown[]) => mockGetLockingPredicate(...args),
+  SUBSCRIBABLE_EVENT_TYPES: ['league_1v1', 'tournament_1v1', 'koth', 'grand_melee'],
 }));
 
-// Mock locking predicate function returned by getLockingPredicate
-const mockLockingPredicate = jest.fn();
+/** Events the robot still owes a match to — the shared "is a match booked?" question. */
+const mockResolveOutstandingEventsForRobot = jest.fn();
+jest.mock('../../../src/services/scheduling/eventScheduleScope', () => ({
+  __esModule: true,
+  resolveOutstandingEventsForRobot: (...args: unknown[]) =>
+    mockResolveOutstandingEventsForRobot(...args),
+  resolveOutstandingEventsForRobots: jest.fn().mockResolvedValue(new Map()),
+}));
+
+jest.mock('../../../src/services/scheduling/eventCronSchedule', () => ({
+  __esModule: true,
+  getNextSchedulingMoments: jest.fn(() => ({ league_1v1: '2026-07-31T08:00:00.000Z' })),
+  getNextSchedulingMoment: jest.fn(() => new Date('2026-07-31T08:00:00.000Z')),
+}));
+
+jest.mock('../../../src/services/battle/baseOrchestrator', () => ({
+  __esModule: true,
+  getCurrentCycleNumber: jest.fn().mockResolvedValue(42),
+}));
 
 import {
   isRobotSubscribedTo,
+  hasSubscription,
   subscribeRobot,
   unsubscribeRobot,
+  setSubscriptionsForRobot,
 } from '../../../src/services/subscription/subscriptionService';
 import { SubscriptionError, SubscriptionErrorCode } from '../../../src/errors/subscriptionErrors';
+
+/** Current subscriptions, in the shape `subscription.findMany` returns. */
+function given(eventTypes: string[]): void {
+  mockTx.subscription.findMany.mockResolvedValue(eventTypes.map((eventType) => ({ eventType })));
+}
 
 // ── Tests ────────────────────────────────────────────────────────────
 
@@ -88,54 +106,53 @@ describe('subscriptionService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockIsRegisteredEvent.mockReturnValue(true);
-    mockLockingPredicate.mockResolvedValue(false);
-    mockGetLockingPredicate.mockReturnValue(mockLockingPredicate);
+    mockResolveOutstandingEventsForRobot.mockResolvedValue([]);
+    mockTx.robot.findUnique.mockResolvedValue({ userId: 1 });
+    mockTx.facility.findUnique.mockResolvedValue({ level: 0 }); // cap = 3
     mockTx.auditLog.findFirst.mockResolvedValue(null);
     mockTx.auditLog.create.mockResolvedValue({});
+    mockTx.teamBattleMember.findMany.mockResolvedValue([]);
+    mockTx.subscription.createMany.mockResolvedValue({ count: 1 });
+    mockTx.subscription.deleteMany.mockResolvedValue({ count: 1 });
+    given([]);
   });
 
-  // ── isRobotSubscribedTo ──────────────────────────────────────────
+  // ── Eligibility helpers ──────────────────────────────────────────
 
   describe('isRobotSubscribedTo', () => {
-    it('should return true when active subscription exists', async () => {
+    it('should return true when a subscription exists', async () => {
       mockPrisma.subscription.count.mockResolvedValue(1);
 
-      const result = await isRobotSubscribedTo(1, 'league_1v1');
-
-      expect(result).toBe(true);
+      await expect(isRobotSubscribedTo(1, 'league_1v1')).resolves.toBe(true);
       expect(mockPrisma.subscription.count).toHaveBeenCalledWith({
         where: { robotId: 1, eventType: 'league_1v1', status: 'active' },
       });
     });
 
-    it('should return false when subscription does not exist', async () => {
+    it('should return false when no subscription exists', async () => {
       mockPrisma.subscription.count.mockResolvedValue(0);
 
-      const result = await isRobotSubscribedTo(1, 'tournament_1v1');
-
-      expect(result).toBe(false);
-      expect(mockPrisma.subscription.count).toHaveBeenCalledWith({
-        where: { robotId: 1, eventType: 'tournament_1v1', status: 'active' },
-      });
+      await expect(isRobotSubscribedTo(1, 'tournament_1v1')).resolves.toBe(false);
     });
+  });
 
-    it('should return false for pending subscriptions (only active counts)', async () => {
-      // A pending subscription should not make the robot eligible
-      mockPrisma.subscription.count.mockResolvedValue(0);
+  describe('hasSubscription', () => {
+    it('should ask exactly the same question as isRobotSubscribedTo', async () => {
+      mockPrisma.subscription.count.mockResolvedValue(1);
 
-      const result = await isRobotSubscribedTo(1, 'league_1v1');
-
-      expect(result).toBe(false);
+      await expect(hasSubscription(7, 'koth')).resolves.toBe(true);
+      expect(mockPrisma.subscription.count).toHaveBeenCalledWith({
+        where: { robotId: 7, eventType: 'koth', status: 'active' },
+      });
     });
   });
 
   // ── subscribeRobot ───────────────────────────────────────────────
 
   describe('subscribeRobot', () => {
-    it('should throw ACCESS_DENIED when robot is owned by different user', async () => {
-      mockTx.robot.findUnique.mockResolvedValue({ id: 1, userId: 99 });
+    it('should throw ACCESS_DENIED when robot is owned by a different user', async () => {
+      mockTx.robot.findUnique.mockResolvedValue({ userId: 99 });
 
-      await expect(subscribeRobot(1, 'league_1v1', 42)).rejects.toThrow(SubscriptionError);
       await expect(subscribeRobot(1, 'league_1v1', 42)).rejects.toMatchObject({
         code: SubscriptionErrorCode.ACCESS_DENIED,
         statusCode: 403,
@@ -150,49 +167,40 @@ describe('subscriptionService', () => {
       });
     });
 
-    it('should throw SUBSCRIPTION_UNKNOWN_EVENT for unregistered event type', async () => {
-      mockTx.robot.findUnique.mockResolvedValue({ id: 1, userId: 1 });
+    it('should throw SUBSCRIPTION_UNKNOWN_EVENT for an unregistered event type', async () => {
       mockIsRegisteredEvent.mockReturnValue(false);
 
-      await expect(subscribeRobot(1, 'nonexistent_event', 1)).rejects.toThrow(SubscriptionError);
       await expect(subscribeRobot(1, 'nonexistent_event', 1)).rejects.toMatchObject({
         code: SubscriptionErrorCode.SUBSCRIPTION_UNKNOWN_EVENT,
       });
     });
 
     it('should throw SUBSCRIPTION_DUPLICATE when already subscribed', async () => {
-      mockTx.robot.findUnique.mockResolvedValue({ id: 1, userId: 1 });
-      mockTx.subscription.findUnique.mockResolvedValue({ id: 1, robotId: 1, eventType: 'league_1v1' });
+      given(['league_1v1']);
 
-      await expect(subscribeRobot(1, 'league_1v1', 1)).rejects.toThrow(SubscriptionError);
       await expect(subscribeRobot(1, 'league_1v1', 1)).rejects.toMatchObject({
         code: SubscriptionErrorCode.SUBSCRIPTION_DUPLICATE,
       });
     });
 
-    it('should throw SUBSCRIPTION_CAP_EXCEEDED when at cap', async () => {
-      mockTx.robot.findUnique.mockResolvedValue({ id: 1, userId: 1 });
-      mockTx.subscription.findUnique.mockResolvedValue(null); // no duplicate
-      mockTx.subscription.count.mockResolvedValue(3); // already at cap for L0
-      mockTx.facility.findUnique.mockResolvedValue(null); // L0
+    it('should throw SUBSCRIPTION_CAP_EXCEEDED when the cap is already full', async () => {
+      given(['league_1v1', 'koth', 'tournament_1v1']); // cap for level 0 is 3
 
-      await expect(subscribeRobot(1, 'league_1v1', 1)).rejects.toThrow(SubscriptionError);
-      await expect(subscribeRobot(1, 'league_1v1', 1)).rejects.toMatchObject({
+      await expect(subscribeRobot(1, 'grand_melee', 1)).rejects.toMatchObject({
         code: SubscriptionErrorCode.SUBSCRIPTION_CAP_EXCEEDED,
+        statusCode: 400,
       });
+      expect(mockTx.subscription.createMany).not.toHaveBeenCalled();
     });
 
-    it('should create subscription row with pending status and audit log on success', async () => {
-      mockTx.robot.findUnique.mockResolvedValue({ id: 1, userId: 1 });
-      mockTx.subscription.findUnique.mockResolvedValue(null);
-      mockTx.subscription.count.mockResolvedValue(2); // below cap
+    it('should create the row as active and write an audit entry', async () => {
       mockTx.facility.findUnique.mockResolvedValue({ level: 1 }); // cap = 4
-      mockTx.subscription.create.mockResolvedValue({ id: 10, robotId: 1, eventType: 'league_1v1', status: 'active' });
+      given(['league_1v1']);
 
-      await subscribeRobot(1, 'league_1v1', 1);
+      await subscribeRobot(1, 'koth', 1);
 
-      expect(mockTx.subscription.create).toHaveBeenCalledWith({
-        data: { robotId: 1, eventType: 'league_1v1', status: 'active' },
+      expect(mockTx.subscription.createMany).toHaveBeenCalledWith({
+        data: [{ robotId: 1, eventType: 'koth', status: 'active' }],
       });
       expect(mockTx.auditLog.create).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -205,22 +213,28 @@ describe('subscriptionService', () => {
       );
     });
 
-    it('should succeed when subscription count is below cap', async () => {
-      mockTx.robot.findUnique.mockResolvedValue({ id: 1, userId: 1 });
-      mockTx.subscription.findUnique.mockResolvedValue(null);
-      mockTx.subscription.count.mockResolvedValue(1);
-      mockTx.facility.findUnique.mockResolvedValue({ level: 0 }); // cap = 3
-      mockTx.subscription.create.mockResolvedValue({});
+    it('should seed a Standing for placement modes so the matchmaker can see the robot', async () => {
+      await subscribeRobot(1, 'grand_melee', 1);
 
-      await expect(subscribeRobot(1, 'tournament_1v1', 1)).resolves.toBeUndefined();
+      expect(mockTx.standing.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ entityType: 'robot', entityId: 1, mode: 'grand_melee' }),
+        }),
+      );
+    });
+
+    it('should not seed a Standing for non-placement modes', async () => {
+      await subscribeRobot(1, 'league_1v1', 1);
+
+      expect(mockTx.standing.create).not.toHaveBeenCalled();
     });
   });
 
-  // ── unsubscribeRobot ─────────────────────────────────────────────
+  // ── unsubscribeRobot: the unified rule ───────────────────────────
 
   describe('unsubscribeRobot', () => {
-    it('should throw ACCESS_DENIED when robot is owned by different user', async () => {
-      mockTx.robot.findUnique.mockResolvedValue({ id: 1, userId: 99 });
+    it('should throw ACCESS_DENIED when robot is owned by a different user', async () => {
+      mockTx.robot.findUnique.mockResolvedValue({ userId: 99 });
 
       await expect(unsubscribeRobot(1, 'league_1v1', 42)).rejects.toMatchObject({
         code: SubscriptionErrorCode.ACCESS_DENIED,
@@ -228,71 +242,179 @@ describe('subscriptionService', () => {
       });
     });
 
-    it('should throw EVENT_SUBSCRIPTION_LOCKED when tournament robot is alive in bracket', async () => {
-      mockTx.robot.findUnique.mockResolvedValue({ id: 1, userId: 1 });
-      mockTx.subscription.findUnique.mockResolvedValue({ id: 1, robotId: 1, eventType: 'tournament_1v1' });
-      mockLockingPredicate.mockResolvedValue(true);
-
-      await expect(unsubscribeRobot(1, 'tournament_1v1', 1)).rejects.toThrow(SubscriptionError);
-      await expect(unsubscribeRobot(1, 'tournament_1v1', 1)).rejects.toMatchObject({
-        code: SubscriptionErrorCode.EVENT_SUBSCRIPTION_LOCKED,
-        statusCode: 409,
-      });
-    });
-
-    it('should permit unsubscribe from league without any lock check', async () => {
-      mockTx.robot.findUnique.mockResolvedValue({ id: 1, userId: 1 });
-      mockTx.subscription.findUnique.mockResolvedValue({ id: 1, robotId: 1, eventType: 'league_1v1' });
-      mockLockingPredicate.mockResolvedValue(false);
-      mockTx.subscription.delete.mockResolvedValue({});
-      mockTx.subscription.count.mockResolvedValue(2);
-
-      await expect(unsubscribeRobot(1, 'league_1v1', 1)).resolves.toBeUndefined();
-      expect(mockTx.subscription.delete).toHaveBeenCalled();
-    });
-
-    it('should permit unsubscribe from tournament when not alive in bracket', async () => {
-      mockTx.robot.findUnique.mockResolvedValue({ id: 1, userId: 1 });
-      mockTx.subscription.findUnique.mockResolvedValue({ id: 1, robotId: 1, eventType: 'tournament_1v1' });
-      mockLockingPredicate.mockResolvedValue(false);
-      mockTx.subscription.delete.mockResolvedValue({});
-      mockTx.subscription.count.mockResolvedValue(1);
-
-      await expect(unsubscribeRobot(1, 'tournament_1v1', 1)).resolves.toBeUndefined();
-      expect(mockLockingPredicate).toHaveBeenCalledWith(1);
-    });
-
-    it('should delete subscription row and create audit log on success', async () => {
-      mockTx.robot.findUnique.mockResolvedValue({ id: 1, userId: 1 });
-      mockTx.subscription.findUnique.mockResolvedValue({ id: 1, robotId: 1, eventType: 'league_1v1' });
-      mockLockingPredicate.mockResolvedValue(false);
-      mockTx.subscription.delete.mockResolvedValue({});
-      mockTx.subscription.count.mockResolvedValue(1);
-
-      await unsubscribeRobot(1, 'league_1v1', 1);
-
-      expect(mockTx.subscription.delete).toHaveBeenCalledWith({
-        where: { subscription_robot_event: { robotId: 1, eventType: 'league_1v1' } },
-      });
-      expect(mockTx.auditLog.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            eventType: 'subscription_remove',
-            userId: 1,
-            robotId: 1,
-          }),
-        }),
-      );
-    });
-
     it('should throw SUBSCRIPTION_NOT_FOUND when not subscribed', async () => {
-      mockTx.robot.findUnique.mockResolvedValue({ id: 1, userId: 1 });
-      mockTx.subscription.findUnique.mockResolvedValue(null);
+      given([]);
 
       await expect(unsubscribeRobot(1, 'league_1v1', 1)).rejects.toMatchObject({
         code: SubscriptionErrorCode.SUBSCRIPTION_NOT_FOUND,
         statusCode: 404,
       });
+    });
+
+    it.each(['league_1v1', 'koth', 'grand_melee', 'tournament_1v1'])(
+      'should allow unsubscribe from %s even with a match already booked',
+      async (eventType) => {
+        given([eventType]);
+        mockResolveOutstandingEventsForRobot.mockResolvedValue([eventType]);
+
+        const result = await unsubscribeRobot(1, eventType, 1);
+
+        expect(result.removed).toEqual([eventType]);
+        expect(mockTx.subscription.deleteMany).toHaveBeenCalledWith({
+          where: { robotId: 1, eventType: { in: [eventType] } },
+        });
+      },
+    );
+
+    it('should report the booked match as a held slot', async () => {
+      given(['grand_melee']);
+      mockResolveOutstandingEventsForRobot.mockResolvedValue(['grand_melee']);
+
+      const result = await unsubscribeRobot(1, 'grand_melee', 1);
+
+      expect(result.heldSlots).toEqual(['grand_melee']);
+      expect(result.occupiedCount).toBe(1);
+    });
+
+    it('should write a subscription_remove audit entry', async () => {
+      given(['league_1v1']);
+
+      await unsubscribeRobot(1, 'league_1v1', 1);
+
+      expect(mockTx.auditLog.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ eventType: 'subscription_remove', robotId: 1 }),
+        }),
+      );
+    });
+  });
+
+  // ── Held slots keep the permissive rule honest ────────────────────
+
+  describe('slot accounting', () => {
+    it('should keep a slot occupied by a booked match the robot has unsubscribed from', async () => {
+      // Left the tournament but is still alive in the bracket, plus two others.
+      given(['league_1v1', 'koth']);
+      mockResolveOutstandingEventsForRobot.mockResolvedValue(['tournament_1v1']);
+
+      await expect(subscribeRobot(1, 'grand_melee', 1)).rejects.toMatchObject({
+        code: SubscriptionErrorCode.SUBSCRIPTION_CAP_EXCEEDED,
+        details: expect.objectContaining({
+          cap: 3,
+          currentCount: 4,
+          heldSlots: ['tournament_1v1'],
+        }),
+      });
+    });
+
+    it('should free the slot as soon as the robot is out of the bracket', async () => {
+      // Same roster, but eliminated — no outstanding match, so the slot is free.
+      given(['league_1v1', 'koth']);
+      mockResolveOutstandingEventsForRobot.mockResolvedValue([]);
+
+      const result = await subscribeRobot(1, 'grand_melee', 1);
+
+      expect(result.added).toEqual(['grand_melee']);
+      expect(result.occupiedCount).toBe(3);
+    });
+
+    it('should not double-count a held slot the robot is still subscribed to', async () => {
+      given(['league_1v1']);
+      mockResolveOutstandingEventsForRobot.mockResolvedValue(['league_1v1']);
+
+      const result = await subscribeRobot(1, 'koth', 1);
+
+      expect(result.occupiedCount).toBe(2);
+    });
+  });
+
+  // ── setSubscriptionsForRobot: the bulk save ───────────────────────
+
+  describe('setSubscriptionsForRobot', () => {
+    it('should add and remove in a single call', async () => {
+      given(['league_1v1', 'koth']);
+
+      const result = await setSubscriptionsForRobot(1, ['league_1v1', 'grand_melee'], 1);
+
+      expect(result.added).toEqual(['grand_melee']);
+      expect(result.removed).toEqual(['koth']);
+      expect(mockTx.subscription.deleteMany).toHaveBeenCalledWith({
+        where: { robotId: 1, eventType: { in: ['koth'] } },
+      });
+      expect(mockTx.subscription.createMany).toHaveBeenCalledWith({
+        data: [{ robotId: 1, eventType: 'grand_melee', status: 'active' }],
+      });
+    });
+
+    it('should write nothing at all when the requested set exceeds the cap', async () => {
+      given(['league_1v1']);
+
+      await expect(
+        setSubscriptionsForRobot(1, ['league_1v1', 'koth', 'grand_melee', 'tournament_1v1'], 1),
+      ).rejects.toMatchObject({
+        code: SubscriptionErrorCode.SUBSCRIPTION_CAP_EXCEEDED,
+        details: expect.objectContaining({ cap: 3, requestedCount: 4 }),
+      });
+
+      expect(mockTx.subscription.createMany).not.toHaveBeenCalled();
+      expect(mockTx.subscription.deleteMany).not.toHaveBeenCalled();
+    });
+
+    it('should allow a straight swap at the cap when nothing is booked', async () => {
+      given(['league_1v1', 'koth', 'grand_melee']);
+
+      const result = await setSubscriptionsForRobot(1, ['league_1v1', 'koth', 'tournament_1v1'], 1);
+
+      expect(result.added).toEqual(['tournament_1v1']);
+      expect(result.removed).toEqual(['grand_melee']);
+    });
+
+    it('should refuse a swap that a booked match still occupies a slot for', async () => {
+      given(['league_1v1', 'koth', 'grand_melee']);
+      mockResolveOutstandingEventsForRobot.mockResolvedValue(['grand_melee']);
+
+      await expect(
+        setSubscriptionsForRobot(1, ['league_1v1', 'koth', 'tournament_1v1'], 1),
+      ).rejects.toMatchObject({ code: SubscriptionErrorCode.SUBSCRIPTION_CAP_EXCEEDED });
+    });
+
+    it('should be a no-op when the requested set matches the current one', async () => {
+      given(['league_1v1', 'koth']);
+
+      const result = await setSubscriptionsForRobot(1, ['koth', 'league_1v1'], 1);
+
+      expect(result.added).toEqual([]);
+      expect(result.removed).toEqual([]);
+      expect(mockTx.subscription.createMany).not.toHaveBeenCalled();
+      expect(mockTx.subscription.deleteMany).not.toHaveBeenCalled();
+      expect(mockTx.auditLog.create).not.toHaveBeenCalled();
+    });
+
+    it('should ignore duplicates in the requested set', async () => {
+      given([]);
+
+      const result = await setSubscriptionsForRobot(1, ['koth', 'koth', 'koth'], 1);
+
+      expect(result.added).toEqual(['koth']);
+    });
+
+    it('should reject the whole save when any event type is unknown', async () => {
+      given([]);
+      mockIsRegisteredEvent.mockImplementation((type: string) => type !== 'bogus');
+
+      await expect(setSubscriptionsForRobot(1, ['koth', 'bogus'], 1)).rejects.toMatchObject({
+        code: SubscriptionErrorCode.SUBSCRIPTION_UNKNOWN_EVENT,
+      });
+      expect(mockTx.subscription.createMany).not.toHaveBeenCalled();
+    });
+
+    it('should clear every subscription when given an empty set', async () => {
+      given(['league_1v1', 'koth']);
+
+      const result = await setSubscriptionsForRobot(1, [], 1);
+
+      expect(result.removed).toEqual(['league_1v1', 'koth']);
+      expect(result.added).toEqual([]);
     });
   });
 });

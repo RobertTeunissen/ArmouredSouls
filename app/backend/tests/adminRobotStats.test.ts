@@ -19,8 +19,8 @@ app.use('/api/auth', authRoutes);
 
 describe('Admin Robot Statistics Endpoint', () => {
   let adminToken: string;
-  let testUserIds: number[] = [];
-  let testRobotIds: number[] = [];
+  const testUserIds: number[] = [];
+  const testRobotIds: number[] = [];
 
   beforeAll(async () => {
     await prisma.$connect();
@@ -117,16 +117,11 @@ describe('Admin Robot Statistics Endpoint', () => {
   afterEach(async () => {
     // Cleanup after each test in correct order
     if (testRobotIds.length > 0) {
-      await prisma.battleParticipant.deleteMany({
-        where: { robotId: { in: testRobotIds } },
-      });
+      // Combatants live in battle_participants since Spec #43 dropped
+      // battles.robot1_id/robot2_id. Participants and summaries cascade with the
+      // battle, so deleting the battle is enough.
       await prisma.battle.deleteMany({
-        where: {
-          OR: [
-            { robot1Id: { in: testRobotIds } },
-            { robot2Id: { in: testRobotIds } },
-          ],
-        },
+        where: { participants: { some: { robotId: { in: testRobotIds } } } },
       });
     }
   });

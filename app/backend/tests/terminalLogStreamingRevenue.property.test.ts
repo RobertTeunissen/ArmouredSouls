@@ -13,10 +13,12 @@
  */
 
 import fc from 'fast-check';
-import { Prisma } from '../generated/prisma';
+import { Prisma, MatchType } from '../generated/prisma';
 import { executeScheduledBattles } from '../src/services/league/leagueBattleOrchestrator';
 import { clearSequenceCache } from '../src/services/common/eventLogger';
+import schedulingService from '../src/services/scheduling/schedulingService';
 import prisma from '../src/lib/prisma';
+import { battlesForUsers, robotIdsForUsers, scheduledMatchesForRobots } from './cleanupHelper';
 import logger from '../src/config/logger';
 import Transport from 'winston-transport';
 
@@ -107,20 +109,10 @@ describe('Property 14: Terminal Log Contains Streaming Revenue', () => {
       where: { robot: { OR: [{ userId: testUserId1 }, { userId: testUserId2 }] } },
     });
     await prisma.battle.deleteMany({
-      where: {
-        OR: [
-          { robot1: { userId: testUserId1 } }, { robot2: { userId: testUserId1 } },
-          { robot1: { userId: testUserId2 } }, { robot2: { userId: testUserId2 } },
-        ],
-      },
+      where: battlesForUsers([testUserId1, testUserId2]),
     });
     await prisma.scheduledMatch.deleteMany({
-      where: {
-        OR: [
-          { robot1: { userId: testUserId1 } }, { robot2: { userId: testUserId1 } },
-          { robot1: { userId: testUserId2 } }, { robot2: { userId: testUserId2 } },
-        ],
-      },
+      where: scheduledMatchesForRobots(await robotIdsForUsers([testUserId1, testUserId2])),
     });
     await prisma.robot.deleteMany({
       where: { OR: [{ userId: testUserId1 }, { userId: testUserId2 }] },
@@ -172,11 +164,14 @@ describe('Property 14: Terminal Log Contains Streaming Revenue', () => {
           }
 
           const scheduledFor = new Date();
-          const match = await prisma.scheduledMatch.create({
-            data: {
-              robot1Id: robot1.id, robot2Id: robot2.id,
-              scheduledFor, status: 'scheduled', leagueType: 'bronze',
-            },
+          const match = await schedulingService.createMatch({
+            matchType: MatchType.league_1v1,
+            scheduledFor,
+            leagueType: 'bronze',
+            participants: [
+              { participantType: 'robot', participantId: robot1.id, slot: 1 },
+              { participantType: 'robot', participantId: robot2.id, slot: 2 },
+            ],
           });
 
           const capture = captureWinstonLogs();
@@ -185,7 +180,12 @@ describe('Property 14: Terminal Log Contains Streaming Revenue', () => {
             await executeScheduledBattles(scheduledFor);
 
             const battle = await prisma.battle.findFirst({
-              where: { robot1Id: robot1.id, robot2Id: robot2.id },
+              where: {
+                AND: [
+                  { participants: { some: { robotId: robot1.id } } },
+                  { participants: { some: { robotId: robot2.id } } },
+                ],
+              },
               orderBy: { id: 'desc' },
             });
             expect(battle).not.toBeNull();
@@ -259,11 +259,14 @@ describe('Property 14: Terminal Log Contains Streaming Revenue', () => {
           });
 
           const scheduledFor = new Date();
-          const match = await prisma.scheduledMatch.create({
-            data: {
-              robot1Id: robot1.id, robot2Id: robot2.id,
-              scheduledFor, status: 'scheduled', leagueType: 'bronze',
-            },
+          const match = await schedulingService.createMatch({
+            matchType: MatchType.league_1v1,
+            scheduledFor,
+            leagueType: 'bronze',
+            participants: [
+              { participantType: 'robot', participantId: robot1.id, slot: 1 },
+              { participantType: 'robot', participantId: robot2.id, slot: 2 },
+            ],
           });
 
           const capture = captureWinstonLogs();
@@ -272,7 +275,12 @@ describe('Property 14: Terminal Log Contains Streaming Revenue', () => {
             await executeScheduledBattles(scheduledFor);
 
             const battle = await prisma.battle.findFirst({
-              where: { robot1Id: robot1.id, robot2Id: robot2.id },
+              where: {
+                AND: [
+                  { participants: { some: { robotId: robot1.id } } },
+                  { participants: { some: { robotId: robot2.id } } },
+                ],
+              },
               orderBy: { id: 'desc' },
             });
             expect(battle).not.toBeNull();
@@ -315,13 +323,15 @@ describe('Property 14: Terminal Log Contains Streaming Revenue', () => {
           const robotName = `RealRobot_${Date.now()}_${Math.random()}`;
           const robot = await createTestRobot(testUserId1, battles, fame, robotName);
 
-          const byeRobotName = 'Bye Robot';
-          let byeRobot = await prisma.robot.findFirst({
-            where: { userId: testUserId2, name: byeRobotName },
-          });
-          if (!byeRobot) {
-            byeRobot = await createTestRobot(testUserId2, 0, 0, byeRobotName);
-          }
+          // A bye opponent is an in-memory fabrication with a negative id that
+          // deliberately does not exist in the database (Spec #41 — see
+          // `createByeRobot` in matchmakingService). This test used to insert a
+          // real robot row named 'Bye Robot' and rely on the orchestrator matching
+          // on the name; detection is now `id < 0`, so that row was treated as an
+          // ordinary opponent, a real battle ran, and streaming revenue was logged.
+          // The unified schedule puts no foreign key on `participantId`, which is
+          // what makes booking a negative id possible.
+          const BYE_ROBOT_ID = -1;
 
           if (studioLevel > 0) {
             await prisma.facility.upsert({
@@ -332,11 +342,15 @@ describe('Property 14: Terminal Log Contains Streaming Revenue', () => {
           }
 
           const scheduledFor = new Date();
-          const match = await prisma.scheduledMatch.create({
-            data: {
-              robot1Id: robot.id, robot2Id: byeRobot.id,
-              scheduledFor, status: 'scheduled', leagueType: 'bronze',
-            },
+          const match = await schedulingService.createMatch({
+            matchType: MatchType.league_1v1,
+            scheduledFor,
+            leagueType: 'bronze',
+            participants: [
+              { participantType: 'robot', participantId: robot.id, slot: 1 },
+              { participantType: 'robot', participantId: BYE_ROBOT_ID, slot: 2 },
+            ],
+            isByeMatch: true,
           });
 
           const capture = captureWinstonLogs();
@@ -344,8 +358,10 @@ describe('Property 14: Terminal Log Contains Streaming Revenue', () => {
           try {
             await executeScheduledBattles(scheduledFor);
 
+            // Only the real robot is a participant — the bye opponent is never
+            // persisted, so there is no second participant row to match on.
             const battle = await prisma.battle.findFirst({
-              where: { robot1Id: robot.id, robot2Id: byeRobot.id },
+              where: { participants: { some: { robotId: robot.id } } },
               orderBy: { id: 'desc' },
             });
             expect(battle).not.toBeNull();
@@ -360,7 +376,6 @@ describe('Property 14: Terminal Log Contains Streaming Revenue', () => {
             await prisma.battle.deleteMany({ where: { id: battle!.id } });
             await prisma.scheduledMatch.deleteMany({ where: { id: match.id } });
             await prisma.robot.deleteMany({ where: { id: robot.id } });
-            await prisma.robot.deleteMany({ where: { id: byeRobot.id } });
           } finally {
             capture.restore();
           }
@@ -405,11 +420,14 @@ describe('Property 14: Terminal Log Contains Streaming Revenue', () => {
           }
 
           const scheduledFor = new Date();
-          const match = await prisma.scheduledMatch.create({
-            data: {
-              robot1Id: robot1.id, robot2Id: robot2.id,
-              scheduledFor, status: 'scheduled', leagueType: 'bronze',
-            },
+          const match = await schedulingService.createMatch({
+            matchType: MatchType.league_1v1,
+            scheduledFor,
+            leagueType: 'bronze',
+            participants: [
+              { participantType: 'robot', participantId: robot1.id, slot: 1 },
+              { participantType: 'robot', participantId: robot2.id, slot: 2 },
+            ],
           });
 
           const capture = captureWinstonLogs();
@@ -418,7 +436,12 @@ describe('Property 14: Terminal Log Contains Streaming Revenue', () => {
             await executeScheduledBattles(scheduledFor);
 
             const battle = await prisma.battle.findFirst({
-              where: { robot1Id: robot1.id, robot2Id: robot2.id },
+              where: {
+                AND: [
+                  { participants: { some: { robotId: robot1.id } } },
+                  { participants: { some: { robotId: robot2.id } } },
+                ],
+              },
               orderBy: { id: 'desc' },
             });
             expect(battle).not.toBeNull();

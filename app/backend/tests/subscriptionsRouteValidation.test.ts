@@ -1,27 +1,19 @@
 /**
  * Tests for subscriptions route Zod validation schemas.
  *
- * Validates that subscription endpoints reject invalid input.
+ * Imports the real schemas rather than re-declaring them. The previous version of
+ * this file carried its own copy and went on asserting `z.string().max(30)` long
+ * after the route had moved to a registry-backed enum — a green test proving
+ * nothing about the running code.
  */
 
-import { z } from 'zod';
-import { positiveIntParam } from '../src/utils/securityValidation';
-
-// --- Recreate schemas (same as subscriptions.ts) ---
-
-const robotIdParamSchema = z.object({
-  robotId: positiveIntParam,
-});
-
-const subscribeBodySchema = z.object({
-  eventType: z.string().min(1).max(30),
-});
-
-const adminAnalyticsQuerySchema = z.object({
-  days: z.coerce.number().int().min(1).max(90).optional(),
-});
-
-// --- Tests ---
+import {
+  robotIdParamSchema,
+  subscribeBodySchema,
+  setSubscriptionsBodySchema,
+  adminAnalyticsQuerySchema,
+} from '../src/routes/schemas/subscriptionSchemas';
+import { SUBSCRIBABLE_EVENT_TYPES } from '../src/services/subscription/eventRegistry';
 
 describe('Subscriptions route validation schemas', () => {
   describe('robotIdParamSchema', () => {
@@ -45,23 +37,62 @@ describe('Subscriptions route validation schemas', () => {
   });
 
   describe('subscribeBodySchema', () => {
-    it('should accept valid event type', () => {
-      const result = subscribeBodySchema.safeParse({ eventType: 'league_1v1' });
-      expect(result.success).toBe(true);
+    it.each(SUBSCRIBABLE_EVENT_TYPES)('should accept the registered event %s', (eventType) => {
+      expect(subscribeBodySchema.safeParse({ eventType }).success).toBe(true);
+    });
+
+    it('should reject an event type that is not in the registry', () => {
+      // 'league' was the pre-#36 name; a stale client must not slip through.
+      expect(subscribeBodySchema.safeParse({ eventType: 'league' }).success).toBe(false);
     });
 
     it('should reject empty event type', () => {
       expect(subscribeBodySchema.safeParse({ eventType: '' }).success).toBe(false);
     });
 
-    it('should reject event type over 30 chars', () => {
-      expect(subscribeBodySchema.safeParse({ eventType: 'a'.repeat(31) }).success).toBe(false);
+    it('should reject a missing event type', () => {
+      expect(subscribeBodySchema.safeParse({}).success).toBe(false);
     });
 
     it('should strip unknown fields', () => {
       const result = subscribeBodySchema.safeParse({ eventType: 'koth', extra: 'ignored' });
       expect(result.success).toBe(true);
       if (result.success) expect(result.data).not.toHaveProperty('extra');
+    });
+  });
+
+  describe('setSubscriptionsBodySchema', () => {
+    it('should accept an empty array, which clears all subscriptions', () => {
+      expect(setSubscriptionsBodySchema.safeParse({ eventTypes: [] }).success).toBe(true);
+    });
+
+    it('should accept every registered event at once', () => {
+      const result = setSubscriptionsBodySchema.safeParse({
+        eventTypes: [...SUBSCRIBABLE_EVENT_TYPES],
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it('should reject an array longer than the number of events', () => {
+      // The bound is the DoS control: a request cannot ask for more work than the
+      // game has modes, however large a body it sends.
+      const tooMany = Array(SUBSCRIBABLE_EVENT_TYPES.length + 1).fill('league_1v1');
+      expect(setSubscriptionsBodySchema.safeParse({ eventTypes: tooMany }).success).toBe(false);
+    });
+
+    it('should reject the whole array when one entry is unknown', () => {
+      const result = setSubscriptionsBodySchema.safeParse({
+        eventTypes: ['league_1v1', 'not_a_mode'],
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it('should reject a non-array body', () => {
+      expect(setSubscriptionsBodySchema.safeParse({ eventTypes: 'league_1v1' }).success).toBe(false);
+    });
+
+    it('should reject a missing eventTypes field', () => {
+      expect(setSubscriptionsBodySchema.safeParse({}).success).toBe(false);
     });
   });
 

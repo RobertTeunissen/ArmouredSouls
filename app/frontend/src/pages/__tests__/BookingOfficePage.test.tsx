@@ -13,6 +13,15 @@ vi.mock('../../components/Navigation', () => ({
 vi.mock('../../hooks/useSubscriptions', () => ({
   useStableOverview: vi.fn(),
   useRobotSubscriptions: vi.fn(),
+  saveRobotSubscriptions: vi.fn().mockResolvedValue({
+    success: true, added: [], removed: [], heldSlots: [], occupiedCount: 0, cap: 3, level: 0,
+  }),
+}));
+
+// The page invalidates the shared overview cache after an upgrade.
+vi.mock('../../stores/subscriptionStore', () => ({
+  useSubscriptionStore: (selector: (s: { invalidate: () => void }) => unknown) =>
+    selector({ invalidate: vi.fn() }),
 }));
 
 const mockRefetch = vi.fn().mockResolvedValue(undefined);
@@ -21,9 +30,9 @@ const mockUnsubscribe = vi.fn().mockResolvedValue({ success: true, message: 'Uns
 
 const defaultOverviewData: useSubscriptionsModule.StableOverview = {
   robots: [
-    { robotId: 1, robotName: 'Iron Fist', subscriptions: [{ eventType: 'league_1v1', status: 'active' }, { eventType: 'tournament_1v1', status: 'active' }], cap: 3 },
-    { robotId: 2, robotName: 'Steel Claw', subscriptions: [{ eventType: 'league_1v1', status: 'active' }, { eventType: 'koth', status: 'active' }, { eventType: 'tag_team', status: 'active' }], cap: 3 },
-    { robotId: 3, robotName: 'Thunder Bot', subscriptions: [{ eventType: 'league_1v1', status: 'active' }], cap: 3 },
+    { robotId: 1, robotName: 'Iron Fist', subscriptions: [{ eventType: 'league_1v1', status: 'active' }, { eventType: 'tournament_1v1', status: 'active' }], heldSlots: [], cap: 3 },
+    { robotId: 2, robotName: 'Steel Claw', subscriptions: [{ eventType: 'league_1v1', status: 'active' }, { eventType: 'koth', status: 'active' }, { eventType: 'tag_team', status: 'active' }], heldSlots: [], cap: 3 },
+    { robotId: 3, robotName: 'Thunder Bot', subscriptions: [{ eventType: 'league_1v1', status: 'active' }], heldSlots: [], cap: 3 },
   ],
   registeredEvents: [
     { type: 'league_1v1', label: '1v1 League' },
@@ -32,6 +41,9 @@ const defaultOverviewData: useSubscriptionsModule.StableOverview = {
     { type: 'koth', label: 'King of the Hill' },
   ],
   bookingOfficeLevel: 0,
+  nextSchedulingMoments: {
+    league_1v1: new Date(Date.now() + 3600_000).toISOString(),
+  },
 };
 
 function renderBookingOfficePage(): ReturnType<typeof render> {
@@ -57,6 +69,7 @@ describe('BookingOfficePage', () => {
       refetch: vi.fn(),
       subscribe: mockSubscribe,
       unsubscribe: mockUnsubscribe,
+      saveSubscriptions: vi.fn(),
       mutating: false,
     });
   });
@@ -98,12 +111,12 @@ describe('BookingOfficePage', () => {
       expect(oneOfThree.length).toBeGreaterThanOrEqual(3);
     });
 
-    it('should display subscription cap info per robot', () => {
+    it('should display slot usage per robot', () => {
       renderBookingOfficePage();
-      // Card layout shows "X/Y subscriptions" per robot
-      expect(screen.getByText('2/3 subscriptions')).toBeInTheDocument();
-      expect(screen.getByText('3/3 subscriptions')).toBeInTheDocument();
-      expect(screen.getByText('1/3 subscriptions')).toBeInTheDocument();
+      // Card layout shows "X/Y slots" per robot
+      expect(screen.getByText('2/3 slots')).toBeInTheDocument();
+      expect(screen.getByText('3/3 slots')).toBeInTheDocument();
+      expect(screen.getByText('1/3 slots')).toBeInTheDocument();
     });
 
     it('should show next level info when not at max', () => {
@@ -124,70 +137,60 @@ describe('BookingOfficePage', () => {
     });
   });
 
-  describe('Subscribe/unsubscribe from matrix', () => {
-    it('should call subscribe when clicking an unsubscribed cell', async () => {
+  describe('Editing from the matrix', () => {
+    it('should stage a change rather than saving on each tap', async () => {
       renderBookingOfficePage();
 
-      // Iron Fist is not subscribed to koth — find the subscribe button
-      const subscribeButtons = screen.getAllByLabelText('Subscribe to King of the Hill');
-      fireEvent.click(subscribeButtons[0]);
+      // Iron Fist is not entered in KotH.
+      fireEvent.click(screen.getAllByLabelText('Enter King of the Hill')[0]);
 
+      expect(useSubscriptionsModule.saveRobotSubscriptions).not.toHaveBeenCalled();
       await waitFor(() => {
-        expect(mockSubscribe).toHaveBeenCalledWith('koth');
+        expect(screen.getByText('1 robot changed')).toBeInTheDocument();
       });
     });
 
-    it('should call unsubscribe when clicking a subscribed cell', async () => {
+    it('should save the staged set for the changed robot', async () => {
       renderBookingOfficePage();
 
-      // Iron Fist is subscribed to league — find the unsubscribe button
-      const unsubscribeButtons = screen.getAllByLabelText('Unsubscribe from 1v1 League');
-      fireEvent.click(unsubscribeButtons[0]);
+      fireEvent.click(screen.getAllByLabelText('Enter King of the Hill')[0]);
+      fireEvent.click(screen.getByText('Save changes'));
 
       await waitFor(() => {
-        expect(mockUnsubscribe).toHaveBeenCalledWith('league_1v1');
-      });
-    });
-
-    it('should refetch overview data after toggling a subscription', async () => {
-      renderBookingOfficePage();
-
-      const subscribeButtons = screen.getAllByLabelText('Subscribe to King of the Hill');
-      fireEvent.click(subscribeButtons[0]);
-
-      await waitFor(() => {
-        expect(mockRefetch).toHaveBeenCalled();
+        expect(useSubscriptionsModule.saveRobotSubscriptions).toHaveBeenCalledWith(1, [
+          'league_1v1',
+          'tournament_1v1',
+          'koth',
+        ]);
       });
     });
   });
 
   describe('Cap enforcement in matrix', () => {
-    it('should disable subscribe buttons for robots at cap', () => {
+    it('should block entering a new event for a robot with no free slot', () => {
       renderBookingOfficePage();
 
-      // Steel Claw is at cap (3/3) — subscribe to tournament should be disabled
-      const subscribeButtons = screen.getAllByLabelText('Subscribe to 1v1 Tournament');
-      const disabledButton = subscribeButtons.find((btn) => btn.hasAttribute('disabled'));
-      expect(disabledButton).toBeDefined();
-      expect(disabledButton).toBeDisabled();
+      // Steel Claw is at 3/3.
+      const blocked = screen
+        .getAllByLabelText('1v1 Tournament — no free slot')
+        .find((btn) => btn.hasAttribute('disabled'));
+      expect(blocked).toBeDefined();
+      expect(blocked).toBeDisabled();
     });
 
-    it('should still allow unsubscribe for robots at cap', () => {
+    it('should still offer to leave an event at the cap', () => {
       renderBookingOfficePage();
 
-      // Steel Claw is at cap but can still unsubscribe from league
-      const unsubscribeButtons = screen.getAllByLabelText('Unsubscribe from 1v1 League');
-      // All unsubscribe buttons should be enabled (no locks)
-      unsubscribeButtons.forEach((btn) => {
+      // Leaving is never blocked, for any event.
+      screen.getAllByLabelText('Leave 1v1 League').forEach((btn) => {
         expect(btn).not.toBeDisabled();
       });
     });
 
-    it('should show cap indicator in amber color for robots at cap', () => {
+    it('should show slot usage in amber for a robot with no free slot', () => {
       renderBookingOfficePage();
-      // Steel Claw is at 3/3 — should have amber text
-      const capText = screen.getByText('3/3 subscriptions');
-      expect(capText.className).toContain('text-amber-400');
+
+      expect(screen.getByText('3/3 slots').className).toContain('text-amber-400');
     });
   });
 });

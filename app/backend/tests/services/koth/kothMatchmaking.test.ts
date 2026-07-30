@@ -54,6 +54,7 @@ jest.mock('../../../src/utils/scheduleUtils', () => ({
 jest.mock('../../../src/services/economy/repairService', () => ({
   __esModule: true,
   repairAllRobots: jest.fn().mockResolvedValue(undefined),
+  repairRobotsForEvent: jest.fn().mockResolvedValue(undefined),
 }));
 
 const mockExecuteScheduledKothBattles = jest.fn().mockResolvedValue({ successfulMatches: 3, failedMatches: 0 });

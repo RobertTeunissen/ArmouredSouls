@@ -8,34 +8,25 @@
  */
 
 import express, { Response } from 'express';
-import { z } from 'zod';
 import { authenticateToken, requireAdmin, AuthRequest } from '../middleware/auth';
 import { validateRequest } from '../middleware/schemaValidator';
-import { positiveIntParam } from '../utils/securityValidation';
+import {
+  robotIdParamSchema,
+  subscribeBodySchema,
+  setSubscriptionsBodySchema,
+  adminAnalyticsQuerySchema,
+} from './schemas/subscriptionSchemas';
 import {
   getSubscriptionsForRobot,
   subscribeRobot,
   unsubscribeRobot,
+  setSubscriptionsForRobot,
   getStableOverview,
 } from '../services/subscription/subscriptionService';
 import { getEligibleEvents } from '../services/subscription/rosterEligibilityFilter';
 import prisma from '../lib/prisma';
 
 const router = express.Router();
-
-// --- Zod schemas ---
-
-const robotIdParamSchema = z.object({
-  robotId: positiveIntParam,
-});
-
-const subscribeBodySchema = z.object({
-  eventType: z.string().min(1).max(30),
-});
-
-const adminAnalyticsQuerySchema = z.object({
-  days: z.coerce.number().int().min(1).max(90).optional(),
-});
 
 // --- Routes ---
 
@@ -59,8 +50,8 @@ router.post(
   async (req: AuthRequest, res: Response) => {
     const robotId = Number(req.params.robotId);
     const { eventType } = req.body;
-    await subscribeRobot(robotId, eventType, req.user!.userId);
-    res.json({ success: true, message: `Subscribed to ${eventType}.` });
+    const result = await subscribeRobot(robotId, eventType, req.user!.userId);
+    res.json({ success: true, message: `Subscribed to ${eventType}.`, ...result });
   },
 );
 
@@ -72,8 +63,21 @@ router.post(
   async (req: AuthRequest, res: Response) => {
     const robotId = Number(req.params.robotId);
     const { eventType } = req.body;
-    await unsubscribeRobot(robotId, eventType, req.user!.userId);
-    res.json({ success: true, message: `Unsubscribed from ${eventType}. Takes effect next cycle.` });
+    const result = await unsubscribeRobot(robotId, eventType, req.user!.userId);
+    res.json({ success: true, message: `Unsubscribed from ${eventType}.`, ...result });
+  },
+);
+
+// PUT /api/subscriptions/robot/:robotId — replace a robot's whole subscription set
+router.put(
+  '/robot/:robotId',
+  authenticateToken,
+  validateRequest({ params: robotIdParamSchema, body: setSubscriptionsBodySchema }),
+  async (req: AuthRequest, res: Response) => {
+    const robotId = Number(req.params.robotId);
+    const { eventTypes } = req.body;
+    const result = await setSubscriptionsForRobot(robotId, eventTypes, req.user!.userId);
+    res.json({ success: true, ...result });
   },
 );
 

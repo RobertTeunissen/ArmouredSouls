@@ -165,11 +165,15 @@ Example with details:
 
 | Code | HTTP Status | Description |
 |------|-------------|-------------|
-| `SUBSCRIPTION_CAP_EXCEEDED` | 400 | Robot has reached the maximum number of concurrent event subscriptions allowed by the Stable's Booking Office level. Upgrade the facility to increase the cap. |
+| `SUBSCRIPTION_CAP_EXCEEDED` | 400 | The requested set would occupy more event slots than the Stable's Booking Office level allows. `details` carries `{ currentCount, requestedCount, cap, level, heldSlots }`; `heldSlots` lists events whose slot is still occupied by a booked match, which is the non-obvious reason a save can fail. |
 | `SUBSCRIPTION_DUPLICATE` | 400 | Robot is already subscribed to the requested event type. Each robot can only hold one subscription per event. |
 | `SUBSCRIPTION_UNKNOWN_EVENT` | 400 | The requested event type is not a valid registered subscribable event in the Event Registry. |
-| `EVENT_SUBSCRIPTION_LOCKED` | 409 | Cannot unsubscribe — the robot has a queued (scheduled) battle for this event type. Wait for the battle to execute next cycle before changing subscriptions. |
-| `SUBSCRIPTION_NOT_FOUND` | 404 | The robot does not have an active subscription to the specified event type. Cannot unsubscribe from an event the robot is not subscribed to. |
+| `SUBSCRIPTION_NOT_FOUND` | 404 | The robot is not subscribed to the specified event type. Cannot unsubscribe from an event the robot is not in. |
+
+**Removed:** `EVENT_SUBSCRIPTION_LOCKED` (was 409). Unsubscribing is now permitted for
+every event, so nothing raises it. A booked match no longer blocks the change — it
+keeps its slot until it has been fought, which surfaces as
+`SUBSCRIPTION_CAP_EXCEEDED` with the event listed in `details.heldSlots`.
 
 ### Database Errors (Prisma)
 

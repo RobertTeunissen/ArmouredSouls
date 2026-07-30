@@ -31,17 +31,6 @@ import adminSeasonsRoutes from './routes/adminSeasons';
 import { loadEnvConfig } from './config/env';
 import { initScheduler } from './services/cycle/cycleScheduler';
 import { registerSubscribableEvent } from './services/subscription/eventRegistry';
-import {
-  leagueLockingPredicate,
-  tournamentLockingPredicate,
-  tagTeamLockingPredicate,
-  kothLockingPredicate,
-  league2v2LockingPredicate,
-  league3v3LockingPredicate,
-  tournament2v2LockingPredicate,
-  tournament3v3LockingPredicate,
-  grandMeleeLockingPredicate,
-} from './services/subscription/lockingPredicates';
 import { contentModerationService } from './services/moderation';
 import { getDiskUsage, getMemoryUsage, checkCriticalModules } from './utils/systemHealth';
 import { sendMonitoringAlert } from './utils/monitoringWebhook';
@@ -112,8 +101,19 @@ app.use('/api/auth/register', authLimiter);
 app.use('/api', generalLimiter);
 
 // Per-user rate limiting on economic endpoints — mounted after auth so userId is available (Req 6.4)
+//
+// `/api/subscriptions` is in this list because the shared per-IP bucket punished
+// the wrong people: households and mobile carriers behind one NAT address pooled
+// their Booking Office traffic and locked each other out. Keyed by user id, a
+// player can only ever throttle themselves.
 const userEconomicLimiter = createUserEconomicLimiter();
-const economicPrefixes = ['/api/weapons', '/api/weapon-inventory', '/api/facilities', '/api/robots'];
+const economicPrefixes = [
+  '/api/weapons',
+  '/api/weapon-inventory',
+  '/api/facilities',
+  '/api/robots',
+  '/api/subscriptions',
+];
 for (const prefix of economicPrefixes) {
   app.use(prefix, authenticateToken, userEconomicLimiter);
 }
@@ -237,16 +237,18 @@ import { runStartupSelfTest } from './utils/startupSelfTest';
   app.listen(config.port, host, () => {
     logger.info(`Backend server running on http://${host}:${config.port}`);
 
-    // Register v1 subscribable events (must happen before cycleScheduler.init())
-    registerSubscribableEvent({ type: 'league_1v1', label: '1v1 League', lockingPredicate: leagueLockingPredicate });
-    registerSubscribableEvent({ type: 'tournament_1v1', label: '1v1 Tournament', lockingPredicate: tournamentLockingPredicate });
-    registerSubscribableEvent({ type: 'tag_team', label: 'Tag Team', lockingPredicate: tagTeamLockingPredicate });
-    registerSubscribableEvent({ type: 'koth', label: 'King of the Hill', lockingPredicate: kothLockingPredicate });
-    registerSubscribableEvent({ type: 'league_2v2', label: '2v2 League', lockingPredicate: league2v2LockingPredicate });
-    registerSubscribableEvent({ type: 'league_3v3', label: '3v3 League', lockingPredicate: league3v3LockingPredicate });
-    registerSubscribableEvent({ type: 'tournament_2v2', label: '2v2 Tournament', lockingPredicate: tournament2v2LockingPredicate });
-    registerSubscribableEvent({ type: 'tournament_3v3', label: '3v3 Tournament', lockingPredicate: tournament3v3LockingPredicate });
-    registerSubscribableEvent({ type: 'grand_melee', label: 'Grand Melee', lockingPredicate: grandMeleeLockingPredicate });
+    // Register subscribable events (must happen before cycleScheduler.init()).
+    // Registration is identifier plus label only — every event obeys the same
+    // subscription rule, so there is nothing per-event left to wire up.
+    registerSubscribableEvent({ type: 'league_1v1', label: '1v1 League' });
+    registerSubscribableEvent({ type: 'league_2v2', label: '2v2 League' });
+    registerSubscribableEvent({ type: 'league_3v3', label: '3v3 League' });
+    registerSubscribableEvent({ type: 'tag_team', label: 'Tag Team' });
+    registerSubscribableEvent({ type: 'koth', label: 'King of the Hill' });
+    registerSubscribableEvent({ type: 'grand_melee', label: 'Grand Melee' });
+    registerSubscribableEvent({ type: 'tournament_1v1', label: '1v1 Tournament' });
+    registerSubscribableEvent({ type: 'tournament_2v2', label: '2v2 Tournament' });
+    registerSubscribableEvent({ type: 'tournament_3v3', label: '3v3 Tournament' });
 
     // Initialize the cycle scheduler after the server is listening
     initScheduler({

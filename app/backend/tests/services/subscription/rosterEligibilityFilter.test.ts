@@ -19,12 +19,12 @@ beforeEach(() => {
   _clearRegistryForTesting();
 
   // Register all events so the filter has something to work with
-  registerSubscribableEvent({ type: 'league_1v1', label: '1v1 League', lockingPredicate: async () => false });
-  registerSubscribableEvent({ type: 'tournament_1v1', label: '1v1 Tournament', lockingPredicate: async () => false });
-  registerSubscribableEvent({ type: 'koth', label: 'King of the Hill', lockingPredicate: async () => false });
-  registerSubscribableEvent({ type: 'tag_team', label: 'Tag Team', lockingPredicate: async () => false });
-  registerSubscribableEvent({ type: 'league_2v2', label: '2v2 League', lockingPredicate: async () => false });
-  registerSubscribableEvent({ type: 'league_3v3', label: '3v3 League', lockingPredicate: async () => false });
+  registerSubscribableEvent({ type: 'league_1v1', label: '1v1 League'});
+  registerSubscribableEvent({ type: 'tournament_1v1', label: '1v1 Tournament'});
+  registerSubscribableEvent({ type: 'koth', label: 'King of the Hill'});
+  registerSubscribableEvent({ type: 'tag_team', label: 'Tag Team'});
+  registerSubscribableEvent({ type: 'league_2v2', label: '2v2 League'});
+  registerSubscribableEvent({ type: 'league_3v3', label: '3v3 League'});
 });
 
 // ── Tests ────────────────────────────────────────────────────────────

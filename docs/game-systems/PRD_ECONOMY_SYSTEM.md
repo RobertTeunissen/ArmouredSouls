@@ -1136,6 +1136,35 @@ final_repair_cost = 46,000 × (1 - 0.60) = ₡18,400
 - **Manual repairs have no currency gate** — they are always allowed regardless of the player's credit balance, even if negative. This is the only transaction permitted with negative credits.
 - **Automatic repairs** during cycle processing pay full price (no manual discount)
 
+**Automatic Repair Is Scoped To The Battle About To Run**:
+
+Each battle cron repairs only the robots that have a match queued for *its own*
+battle type — resolved from `scheduled_matches_v2` for the six league-style modes
+and from `tournament_matches` for the three brackets. A robot with no match that
+slot keeps its damage.
+
+This exists because the previous behaviour repaired every damaged robot in the
+game at the start of every battle cron. With nine daily slots, a robot subscribed
+only to `league_1v1` was auto-repaired at full price by the 09:00 2v2 cron an hour
+after its own 08:00 battle, so the 50% manual discount was only reachable by
+logging in inside that gap. Scoping the repair is what makes the discount usable
+without logging in constantly (issue #411).
+
+It defers cost rather than reducing it: a robot that does fight is still repaired
+at full price immediately beforehand. What changes is that the player now has
+until their robot's *next* match to claim the manual discount instead of until
+the next cron of any type.
+
+Scoping is deliberately keyed on the *schedule*, not the subscription. A robot
+eliminated from a tournament bracket stays subscribed for the remaining daily
+rounds, and subscribers who miss a capped KotH or Grand Melee field are subscribed
+without being matched; both would keep paying for repairs they cannot use.
+
+The Repair_Bay discount is unaffected. Both the facility lookup and the roster
+count that feed `repairBayLevel × (5 + activeRobotCount)` are keyed on the owner,
+never on the scoped robot set, so a robot costs the same to repair whether it is
+patched up alone before its own match or as part of a full sweep.
+
 **Manual Repair Discount (50%)**:
 
 When players use the "Repair All" button, a 50% discount is applied after all facility discounts:

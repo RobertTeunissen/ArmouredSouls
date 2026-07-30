@@ -16,10 +16,9 @@ describe('League Rebalancing Service', () => {
     // Clean up in correct order
     await prisma.standing.deleteMany({});
     await prisma.leagueHistory.deleteMany({});
-    await prisma.scheduledKothMatchParticipant.deleteMany({});
-    await prisma.scheduledKothMatch.deleteMany({});
+    // KotH schedules folded into the unified scheduled_matches_v2 (Spec #41);
+    // participants and battle children cascade with their parent.
     await prisma.scheduledMatch.deleteMany({});
-    await prisma.battleParticipant.deleteMany({});
     await prisma.battle.deleteMany({});
     await prisma.robot.deleteMany({});
     await prisma.weaponInventory.deleteMany({});
@@ -57,6 +56,14 @@ describe('League Rebalancing Service', () => {
     tier: string;
     leagueInstanceId: string;
     cyclesInTier: number;
+    /**
+     * League points on the standing. Required in practice: promotion is gated on a
+     * per-tier LP threshold, so a fixture that leaves LP at its default of 0 can
+     * never be promoted. This option was missing, which is why every promotion
+     * expectation in this file failed once the suite started compiling again — the
+     * comments described LP profiles the fixtures never actually created.
+     */
+    leaguePoints?: number;
     elo?: number;
   }) {
     const robot = await prisma.robot.create({
@@ -81,6 +88,7 @@ describe('League Rebalancing Service', () => {
         tier: opts.tier,
         leagueInstanceId: opts.leagueInstanceId,
         cyclesInTier: opts.cyclesInTier,
+        leaguePoints: opts.leaguePoints ?? 0,
         wins: 0,
         losses: 0,
         draws: 0,
@@ -99,6 +107,7 @@ describe('League Rebalancing Service', () => {
           tier: 'bronze',
           leagueInstanceId: 'bronze_1',
           cyclesInTier: 10,
+          leaguePoints: i * 5, // robots 5-19 clear the bronze threshold of 25
         });
       }
 
@@ -120,6 +129,7 @@ describe('League Rebalancing Service', () => {
           tier: 'bronze',
           leagueInstanceId: 'bronze_1',
           cyclesInTier: i < 10 ? 3 : 10, // First 10 have too few cycles
+          leaguePoints: i * 5, // robots 5-19 clear the bronze threshold of 25
         });
       }
 
@@ -145,6 +155,7 @@ describe('League Rebalancing Service', () => {
           tier: 'bronze',
           leagueInstanceId: 'bronze_1',
           cyclesInTier: 10,
+          leaguePoints: i, // 0-19, all below the bronze threshold of 25
         });
       }
 
@@ -159,6 +170,7 @@ describe('League Rebalancing Service', () => {
           tier: 'silver',
           leagueInstanceId: 'silver_1',
           cyclesInTier: 10,
+          leaguePoints: i * 5, // robots 10-19 clear the silver threshold of 50
         });
       }
 
@@ -177,6 +189,7 @@ describe('League Rebalancing Service', () => {
           tier: 'silver',
           leagueInstanceId: 'silver_1',
           cyclesInTier: 10,
+          leaguePoints: 25 + i, // 25-44: past bronze's threshold, short of silver's 50
         });
       }
 
@@ -191,6 +204,7 @@ describe('League Rebalancing Service', () => {
           tier: 'gold',
           leagueInstanceId: 'gold_1',
           cyclesInTier: 10,
+          leaguePoints: 100, // ample; this case is gated on entity count, not LP
         });
       }
 
@@ -207,6 +221,7 @@ describe('League Rebalancing Service', () => {
           tier: 'silver',
           leagueInstanceId: 'silver_1',
           cyclesInTier: 10,
+          leaguePoints: i * 5, // spread so "bottom 10% by LP" is well defined
         });
       }
 
@@ -230,11 +245,12 @@ describe('League Rebalancing Service', () => {
         tier: 'bronze',
         leagueInstanceId: 'bronze_1',
         cyclesInTier: 10,
+        leaguePoints: 50, // asserted to survive the promotion unchanged
         elo: 1300,
       });
 
       // promoteRobot takes the standing entity (returned from determinePromotions)
-      await promoteRobot(standing as any);
+      await promoteRobot(standing);
 
       // Verify standings row was updated
       const updatedStanding = await prisma.standing.findFirst({
@@ -256,7 +272,7 @@ describe('League Rebalancing Service', () => {
         elo: 1800,
       });
 
-      await expect(promoteRobot(standing as any)).rejects.toThrow();
+      await expect(promoteRobot(standing)).rejects.toThrow();
     });
   });
 
@@ -267,10 +283,11 @@ describe('League Rebalancing Service', () => {
         tier: 'silver',
         leagueInstanceId: 'silver_1',
         cyclesInTier: 10,
+        leaguePoints: 5, // asserted to survive the demotion unchanged
         elo: 1100,
       });
 
-      await demoteRobot(standing as any);
+      await demoteRobot(standing);
 
       const updatedStanding = await prisma.standing.findFirst({
         where: { entityType: 'robot', entityId: robot.id, mode: 'league_1v1' },
@@ -291,25 +308,30 @@ describe('League Rebalancing Service', () => {
         elo: 1000,
       });
 
-      await expect(demoteRobot(standing as any)).rejects.toThrow();
+      await expect(demoteRobot(standing)).rejects.toThrow();
     });
   });
 
   describe('rebalanceLeagues', () => {
     it('should process all tiers and return summary', async () => {
-      // Create 20 bronze standings with enough LP for some promotions
-      for (let i = 0; i < 20; i++) {
+      // 30, not 20. Silver starts empty, and `minCohortForNewTier` refuses to open
+      // an empty destination tier with fewer than 3 promotees. The top 10% of 20 is
+      // only 2, so the engine correctly held the promotions ("Holding promotions —
+      // destination silver is empty, need 3 candidates but only have 2") and this
+      // test asked for something its fixture could not produce. 30 gives a cohort of 3.
+      for (let i = 0; i < 30; i++) {
         await createRobotWithStanding({
           name: `Bronze ${i}`,
           tier: 'bronze',
           leagueInstanceId: 'bronze_1',
           cyclesInTier: 10,
+          leaguePoints: i * 5, // robots 5+ clear the bronze threshold of 25
         });
       }
 
       const summary = await rebalanceLeagues();
 
-      expect(summary.totalRobots).toBeGreaterThanOrEqual(20);
+      expect(summary.totalRobots).toBeGreaterThanOrEqual(30);
       expect(summary.totalPromoted).toBeGreaterThan(0);
       expect(summary.tierSummaries.length).toBe(6); // All 6 tiers
     });
@@ -322,6 +344,7 @@ describe('League Rebalancing Service', () => {
           tier: 'bronze',
           leagueInstanceId: 'bronze_1',
           cyclesInTier: 10,
+          leaguePoints: 25 + i, // all clear 25 LP, so the top 10% is exactly 10
           elo: 1200 + i,
         });
       }

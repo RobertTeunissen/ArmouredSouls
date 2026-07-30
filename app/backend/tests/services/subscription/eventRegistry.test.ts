@@ -2,7 +2,11 @@
  * Unit tests for eventRegistry.ts
  *
  * Tests the runtime singleton registry for subscribable battle events.
- * Covers registration, lookup, duplicate rejection, and predicate retrieval.
+ * Covers registration, lookup and duplicate rejection.
+ *
+ * A registration is an identifier plus a display label — nothing more. The
+ * per-event `lockingPredicate` hook was removed when all nine events adopted one
+ * shared subscription rule, so there is no behaviour left to register.
  *
  * _Requirements: R5.1, R5.2, R5.4_
  */
@@ -12,7 +16,7 @@ import {
   getRegisteredEvents,
   getEventDefinition,
   isRegisteredEvent,
-  getLockingPredicate,
+  SUBSCRIBABLE_EVENT_TYPES,
   _clearRegistryForTesting,
 } from '../../../src/services/subscription/eventRegistry';
 
@@ -23,43 +27,25 @@ describe('eventRegistry', () => {
 
   describe('registerSubscribableEvent', () => {
     it('should register a new event type successfully', () => {
-      const predicate = jest.fn().mockResolvedValue(false);
-
       expect(() =>
-        registerSubscribableEvent({
-          type: 'league_1v1',
-          label: '1v1 League',
-          lockingPredicate: predicate,
-        }),
+        registerSubscribableEvent({ type: 'league_1v1', label: '1v1 League' }),
       ).not.toThrow();
     });
 
     it('should throw on duplicate registration', () => {
-      const predicate = jest.fn().mockResolvedValue(false);
-
-      registerSubscribableEvent({
-        type: 'league_1v1',
-        label: '1v1 League',
-        lockingPredicate: predicate,
-      });
+      registerSubscribableEvent({ type: 'league_1v1', label: '1v1 League' });
 
       expect(() =>
-        registerSubscribableEvent({
-          type: 'league_1v1',
-          label: '1v1 League Duplicate',
-          lockingPredicate: predicate,
-        }),
+        registerSubscribableEvent({ type: 'league_1v1', label: '1v1 League Duplicate' }),
       ).toThrow(/Duplicate registration/);
     });
   });
 
   describe('getRegisteredEvents', () => {
     it('should return all registered events', () => {
-      const predicate = jest.fn().mockResolvedValue(false);
-
-      registerSubscribableEvent({ type: 'league_1v1', label: '1v1 League', lockingPredicate: predicate });
-      registerSubscribableEvent({ type: 'tournament_1v1', label: '1v1 Tournament', lockingPredicate: predicate });
-      registerSubscribableEvent({ type: 'koth', label: 'King of the Hill', lockingPredicate: predicate });
+      registerSubscribableEvent({ type: 'league_1v1', label: '1v1 League' });
+      registerSubscribableEvent({ type: 'tournament_1v1', label: '1v1 Tournament' });
+      registerSubscribableEvent({ type: 'koth', label: 'King of the Hill' });
 
       const events = getRegisteredEvents();
 
@@ -76,20 +62,13 @@ describe('eventRegistry', () => {
 
   describe('getEventDefinition', () => {
     it('should return correct definition for registered event', () => {
-      const predicate = jest.fn().mockResolvedValue(true);
-
-      registerSubscribableEvent({
-        type: 'tournament_1v1',
-        label: '1v1 Tournament',
-        lockingPredicate: predicate,
-      });
+      registerSubscribableEvent({ type: 'tournament_1v1', label: '1v1 Tournament' });
 
       const def = getEventDefinition('tournament_1v1');
 
       expect(def).toBeDefined();
       expect(def!.type).toBe('tournament_1v1');
       expect(def!.label).toBe('1v1 Tournament');
-      expect(def!.lockingPredicate).toBe(predicate);
     });
 
     it('should return undefined for unregistered event', () => {
@@ -99,8 +78,7 @@ describe('eventRegistry', () => {
 
   describe('isRegisteredEvent', () => {
     it('should return true for registered event', () => {
-      const predicate = jest.fn().mockResolvedValue(false);
-      registerSubscribableEvent({ type: 'koth', label: 'KotH', lockingPredicate: predicate });
+      registerSubscribableEvent({ type: 'koth', label: 'KotH' });
 
       expect(isRegisteredEvent('koth')).toBe(true);
     });
@@ -110,18 +88,19 @@ describe('eventRegistry', () => {
     });
   });
 
-  describe('getLockingPredicate', () => {
-    it('should return the predicate function for a registered event', () => {
-      const predicate = jest.fn().mockResolvedValue(true);
-      registerSubscribableEvent({ type: 'tag_team', label: 'Tag Team', lockingPredicate: predicate });
+  describe('SUBSCRIBABLE_EVENT_TYPES', () => {
+    it('should be accepted in full by the registry', () => {
+      // The tuple is the source of truth the Zod schemas validate against, so
+      // every entry must be a type the registry will actually take.
+      for (const type of SUBSCRIBABLE_EVENT_TYPES) {
+        expect(() => registerSubscribableEvent({ type, label: type })).not.toThrow();
+      }
 
-      const result = getLockingPredicate('tag_team');
-
-      expect(result).toBe(predicate);
+      expect(getRegisteredEvents()).toHaveLength(SUBSCRIBABLE_EVENT_TYPES.length);
     });
 
-    it('should throw for unregistered event type', () => {
-      expect(() => getLockingPredicate('nonexistent' as any)).toThrow(/Unknown event type/);
+    it('should contain no duplicates', () => {
+      expect(new Set(SUBSCRIBABLE_EVENT_TYPES).size).toBe(SUBSCRIBABLE_EVENT_TYPES.length);
     });
   });
 });

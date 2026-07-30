@@ -16,9 +16,14 @@ import { securityMonitor } from '../services/security/securityMonitor';
 /**
  * Create a per-user rate limiter for economic transaction endpoints.
  *
- * - 60 requests per 1-minute window per authenticated user
+ * - 100 requests per 1-minute window per authenticated user
  * - On limit exceeded: tracks violation via securityMonitor and returns 429
  * - Includes standard `Retry-After` header via `standardHeaders: true`
+ *
+ * Mounted on `/api/weapons`, `/api/weapon-inventory`, `/api/facilities`,
+ * `/api/robots` and `/api/subscriptions` (see `index.ts`). Subscriptions belong
+ * here because the shared per-IP bucket punished the wrong people: players behind
+ * one NAT address pooled their Booking Office traffic and locked each other out.
  */
 export function createUserEconomicLimiter() {
   return rateLimit({

@@ -142,7 +142,7 @@ These facilities unlock special features and late-game mechanics. Some are not y
 | Facility | Purpose | Level 1 Cost | Operating Cost | Key Benefit |
 |----------|---------|-------------|----------------|-------------|
 | Tuning Bay | Per-robot tactical attribute tuning | ₡200,000 | level × ₡300/day | 10–110 bonus attribute points per robot |
-| Booking Office | Tournament access & rewards | ₡250,000 | None | Event subscription access |
+| Booking Office | Event slots per robot | ₡75,000 | level × ₡150/day | +1 event slot per robot per level (3 free, up to 13) |
 
 ### Tuning Bay
 
@@ -154,7 +154,7 @@ See the [Tuning Bay Guide](/guide/facilities/tuning-bay) for the full level tabl
 
 ### Booking Office
 
-Unlocks access to battle events through the subscription system. Each Booking Office level increases your per-robot event subscription cap. See the [Booking Office](/guide/facilities/booking-office) article for the full breakdown.
+Controls how many battle events each robot can be entered in at once. Every robot gets 3 event slots for free; each Booking Office level adds one more, up to 13. With nine events in the game, this is what lets a robot compete in several formats at the same time. See the [Booking Office](/guide/facilities/booking-office) article for the full breakdown.
 
 ## Operating Cost Summary
 

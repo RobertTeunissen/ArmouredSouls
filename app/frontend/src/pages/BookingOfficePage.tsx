@@ -12,11 +12,13 @@ import Navigation from '../components/Navigation';
 import SubscriptionMatrix from '../components/subscriptions/SubscriptionMatrix';
 import BookingOfficeUpgradePanel from '../components/subscriptions/BookingOfficeUpgradePanel';
 import { useStableOverview } from '../hooks/useSubscriptions';
+import { useSubscriptionStore } from '../stores/subscriptionStore';
 import { useCallback, useEffect, useState } from 'react';
 import { getMyTeamBattles, TeamBattle } from '../utils/teamBattleApi';
 
 function BookingOfficePage() {
   const { data, refetch } = useStableOverview();
+  const invalidateOverview = useSubscriptionStore((s) => s.invalidate);
   const bookingOfficeLevel = data?.bookingOfficeLevel ?? 0;
   const [teams2v2, setTeams2v2] = useState<TeamBattle[]>([]);
   // Bumped after an upgrade to force the SubscriptionMatrix to remount and
@@ -24,9 +26,12 @@ function BookingOfficePage() {
   const [matrixKey, setMatrixKey] = useState(0);
 
   const handleUpgraded = useCallback(() => {
+    // The overview is cached with a short TTL, so a remount alone would show the
+    // old cap. Drop the cache first, then refetch.
+    invalidateOverview();
     refetch();
     setMatrixKey((k) => k + 1);
-  }, [refetch]);
+  }, [invalidateOverview, refetch]);
 
   useEffect(() => {
     getMyTeamBattles(2)

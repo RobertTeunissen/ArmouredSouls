@@ -324,11 +324,14 @@ export class BattleProcessor<TMatch = unknown> {
         return sum + (opCombat?.damageDealt ?? 0);
       }, 0);
 
-      // Check if any opponent was destroyed
-      const opponentDestroyed = opponents.some(op => {
+      // Count destroyed opponents. The simulation result carries no per-kill
+      // attribution here, so this over-credits in a multi-opponent match — a
+      // strategy for such a mode should pass `countKillsByRobot()` output
+      // instead. No live match type uses this processor yet.
+      const opponentsDestroyed = opponents.filter(op => {
         const opCombat = simResult.participants.get(op.robot.id);
         return opCombat?.destroyed ?? false;
-      });
+      }).length;
 
       await updateRobotCombatStats({
         robotId: p.robot.id,
@@ -338,8 +341,9 @@ export class BattleProcessor<TMatch = unknown> {
         isDraw: simResult.isDraw,
         damageDealt: combat?.damageDealt ?? 0,
         damageTakenByOpponent,
-        opponentDestroyed,
+        opponentsDestroyed,
         fameIncrement: reward?.fame ?? 0,
+        battleType: this.strategy.battleType,
         stance: p.robot.stance,
         loadoutType: p.robot.loadoutType,
       });

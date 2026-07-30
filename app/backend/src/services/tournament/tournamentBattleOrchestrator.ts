@@ -595,7 +595,8 @@ async function updateRobotStatsForTournament(
     isDraw: false, // No draws in tournaments
     damageDealt: participant.damageDealt,
     damageTakenByOpponent: opponentParticipant?.damageDealt || 0,
-    opponentDestroyed: opponentParticipant?.destroyed || false,
+    // Single opponent, so the flag is already an exact count.
+    opponentsDestroyed: opponentParticipant?.destroyed ? 1 : 0,
     // No league points for tournament battles
     fameIncrement: isWinner ? fameAwarded : 0,
     battleType: 'tournament_1v1',

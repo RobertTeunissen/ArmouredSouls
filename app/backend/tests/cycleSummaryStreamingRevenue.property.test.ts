@@ -10,11 +10,12 @@
  */
 
 import fc from 'fast-check';
-import { Prisma } from '../generated/prisma';
+import { Prisma, MatchType } from '../generated/prisma';
 import { executeScheduledBattles } from '../src/services/league/leagueBattleOrchestrator';
-import { executeScheduledTagTeamBattles } from '../src/services/tag-team/tagTeamBattleOrchestrator';
 import { clearSequenceCache } from '../src/services/common/eventLogger';
+import schedulingService from '../src/services/scheduling/schedulingService';
 import prisma from '../src/lib/prisma';
+import { battlesForRobots, battlesForUsers, robotIdsForUsers, scheduledMatchesForRobots } from './cleanupHelper';
 
 // Helper function to create a minimal test robot
 async function createTestRobot(userId: number, battles: number, fame: number, name: string) {
@@ -124,25 +125,11 @@ describe('Property 16: Cycle Summary Includes Total Streaming Revenue', () => {
     });
 
     await prisma.battle.deleteMany({
-      where: {
-        OR: [
-          { robot1: { userId: testUserId1 } },
-          { robot2: { userId: testUserId1 } },
-          { robot1: { userId: testUserId2 } },
-          { robot2: { userId: testUserId2 } },
-        ],
-      },
+      where: battlesForUsers([testUserId1, testUserId2]),
     });
 
     await prisma.scheduledMatch.deleteMany({
-      where: {
-        OR: [
-          { robot1: { userId: testUserId1 } },
-          { robot2: { userId: testUserId1 } },
-          { robot1: { userId: testUserId2 } },
-          { robot2: { userId: testUserId2 } },
-        ],
-      },
+      where: scheduledMatchesForRobots(await robotIdsForUsers([testUserId1, testUserId2])),
     });
 
     await prisma.robot.deleteMany({
@@ -231,16 +218,16 @@ describe('Property 16: Cycle Summary Includes Total Streaming Revenue', () => {
             },
           });
 
-          // Schedule battle
+          // Schedule battle (participant rows, not robot1_id/robot2_id — Spec #41)
           const scheduledFor = new Date();
-          const match = await prisma.scheduledMatch.create({
-            data: {
-              robot1Id: robot1.id,
-              robot2Id: robot2.id,
-              scheduledFor,
-              status: 'scheduled',
-              leagueType: 'bronze',
-            },
+          const match = await schedulingService.createMatch({
+            matchType: MatchType.league_1v1,
+            scheduledFor,
+            leagueType: 'bronze',
+            participants: [
+              { participantType: 'robot', participantId: robot1.id, slot: 1 },
+              { participantType: 'robot', participantId: robot2.id, slot: 2 },
+            ],
           });
 
           // Execute battle
@@ -252,20 +239,8 @@ describe('Property 16: Cycle Summary Includes Total Streaming Revenue', () => {
           expect(summary.totalStreamingRevenue).toBeGreaterThanOrEqual(0);
 
           // Cleanup - delete in correct order
-          const battles = await prisma.battle.findMany({
-            where: {
-              OR: [
-                { robot1Id: robot1.id },
-                { robot2Id: robot1.id },
-                { robot1Id: robot2.id },
-                { robot2Id: robot2.id },
-              ],
-            },
-          });
           await prisma.battle.deleteMany({
-            where: {
-              id: { in: battles.map(b => b.id) },
-            },
+            where: battlesForRobots([robot1.id, robot2.id]),
           });
           await prisma.scheduledMatch.deleteMany({ where: { id: match.id } });
           await prisma.robot.deleteMany({ where: { id: robot1.id } });

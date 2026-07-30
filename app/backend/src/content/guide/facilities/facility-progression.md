@@ -168,21 +168,23 @@ Storage capacity counts all weapons you own — both equipped and unequipped. Yo
 
 ### Booking Office Progression
 
-| Level | Cost | Prestige Required | Unlock |
-|-------|------|-------------------|--------|
-| 1 | ₡250,000 | 1,000 | Silver league tournaments |
-| 2 | ₡500,000 | 2,500 | Gold league tournaments, custom paint jobs |
-| 3 | ₡750,000 | 5,000 | Platinum tournaments, exclusive weapon skins |
-| 4 | ₡1,000,000 | 10,000 | Diamond tournaments, legendary frame designs |
-| 5 | ₡1,250,000 | 15,000 | Enhanced tournament rewards (+10%) |
-| 6 | ₡1,500,000 | 20,000 | Enhanced tournament rewards (+20%) |
-| 7 | ₡1,750,000 | 25,000 | Champion tournaments, hall of fame |
-| 8 | ₡2,000,000 | 35,000 | Enhanced tournament rewards (+30%) |
-| 9 | ₡2,250,000 | 45,000 | Enhanced tournament rewards (+40%) |
-| 10 | ₡2,500,000 | 50,000 | World Championship, custom arena design |
+Each level adds one event slot per robot, on top of the 3 every robot gets for free.
+
+| Level | Cost | Prestige Required | Event Slots Per Robot | Operating Cost/Day |
+|-------|------|-------------------|----------------------|-------------------|
+| 1 | ₡75,000 | — | 4 | ₡150 |
+| 2 | ₡150,000 | — | 5 | ₡300 |
+| 3 | ₡225,000 | — | 6 | ₡450 |
+| 4 | ₡300,000 | 1,000 | 7 | ₡600 |
+| 5 | ₡375,000 | — | 8 | ₡750 |
+| 6 | ₡450,000 | — | 9 | ₡900 |
+| 7 | ₡525,000 | 5,000 | 10 | ₡1,050 |
+| 8 | ₡600,000 | — | 11 | ₡1,200 |
+| 9 | ₡675,000 | 10,000 | 12 | ₡1,350 |
+| 10 | ₡750,000 | — | 13 (maximum) | ₡1,500 |
 
 ```callout-info
-The Booking Office is the most prestige-gated facility in the game. Every single level requires a prestige threshold, and the requirements climb steeply. On the plus side, it has zero operating costs — once you buy a level, there's no ongoing expense.
+Only three levels are prestige-gated (4, 7 and 9), so the early levels are open to any stable that can afford them. With nine events available and only three free slots, the first couple of levels are what let a robot compete in more than one format at a time.
 ```
 
 ## Prestige Requirements Summary
@@ -191,18 +193,21 @@ Here's a quick reference for all prestige gates across facilities:
 
 | Prestige Threshold | Facilities Unlocked |
 |-------------------|-------------------|
-| 1,000 | Repair Bay L4, Training Facility L4, Roster Expansion L4, Weapons Workshop L4, Booking Office L1, Streaming Studio L4 |
+| 1,000 | Repair Bay L4, Training Facility L4, Roster Expansion L4, Weapons Workshop L4, Booking Office L4, Streaming Studio L4 |
 | 2,000 | All 4 Academies L3 |
-| 2,500 | Booking Office L2, Streaming Studio L5 |
+| 2,500 | Streaming Studio L5 |
 | 3,000 | Merchandising Hub L4 |
 | 4,000 | All 4 Academies L5 |
-| 5,000 | Repair Bay L7, Training Facility L7, Weapons Workshop L7, Booking Office L3, Roster Expansion L7, Streaming Studio L6 |
+| 5,000 | Repair Bay L7, Training Facility L7, Weapons Workshop L7, Booking Office L7, Roster Expansion L7, Streaming Studio L6 |
 | 7,000 | All 4 Academies L7 |
 | 7,500 | Merchandising Hub L7 |
-| 10,000 | Repair Bay L9, Training Facility L9, Weapons Workshop L9, Booking Office L4, Roster Expansion L9, All 4 Academies L9, Streaming Studio L7 |
-| 15,000 | All 4 Academies L10, Booking Office L5, Merchandising Hub L9, Streaming Studio L8 |
-| 25,000 | Booking Office L7, Streaming Studio L9 |
-| 50,000 | Booking Office L10, Streaming Studio L10 |
+| 10,000 | Repair Bay L9, Training Facility L9, Weapons Workshop L9, Booking Office L9, Roster Expansion L9, All 4 Academies L9, Streaming Studio L7 |
+| 15,000 | All 4 Academies L10, Merchandising Hub L9, Streaming Studio L8 |
+| 25,000 | Streaming Studio L9 |
+| 50,000 | Streaming Studio L10 |
+
+The Booking Office has only three gates — levels 4, 7 and 9 — so levels 1 to 3 are
+open to any stable that can pay for them.
 
 ## What's Next?
 

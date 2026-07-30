@@ -43,9 +43,10 @@ export interface LossesLeaderboardEntry {
   robotId: number;
   robotName: string;
   totalLosses: number;
+  /** Destructions split by battle type. Always carries every tracked mode. */
+  killsByMode: Record<string, number>;
   stableId: number;
   stableName: string;
-  currentLeague: string;
   elo: number;
   totalBattles: number;
   wins: number;
@@ -177,19 +178,47 @@ export async function getFameLeaderboard(params: FameLeaderboardParams): Promise
 
 // ── Losses (Kills) Leaderboard ───────────────────────────────────────
 
+/**
+ * Battle types the destruction leaderboard breaks out, in display order.
+ *
+ * Mirrors the `StandingsMode` enum. Every value is a valid enum member, so the
+ * pivot below interpolates them into SQL safely.
+ */
+export const KILL_MODES = [
+  'league_1v1',
+  'league_2v2',
+  'league_3v3',
+  'tag_team',
+  'koth',
+  'grand_melee',
+  'tournament_1v1',
+  'tournament_2v2',
+  'tournament_3v3',
+] as const;
+
+export type KillMode = (typeof KILL_MODES)[number];
+
+/** Columns the destruction leaderboard can be ordered by. */
+export const LOSSES_SORT_KEYS = ['total', ...KILL_MODES] as const;
+
+export type LossesSortKey = (typeof LOSSES_SORT_KEYS)[number];
+
 export interface LossesLeaderboardParams {
   page: number;
   limit: number;
-  league?: string;
+  /** Which column to rank by. Defaults to the lifetime total across all modes. */
+  sortBy?: LossesSortKey;
 }
 
 export async function getLossesLeaderboard(params: LossesLeaderboardParams): Promise<{
   leaderboard: LossesLeaderboardEntry[];
   pagination: LeaderboardPagination;
-  filters: { league: string };
+  sortBy: LossesSortKey;
 }> {
-  const { page, limit, league } = params;
+  const { page, limit } = params;
   const skip = (page - 1) * limit;
+  const sortBy: LossesSortKey =
+    params.sortBy && LOSSES_SORT_KEYS.includes(params.sortBy) ? params.sortBy : 'total';
 
   // Single raw SQL query with JOIN replaces the previous 3-4 Prisma calls
   interface LossesRow {
@@ -205,11 +234,22 @@ export async function getLossesLeaderboard(params: LossesLeaderboardParams): Pro
     user_id: number;
     username: string;
     stable_name: string | null;
-    tier: string | null;
     total_count: bigint;
+    [modeColumn: string]: unknown;
   }
 
-  const hasLeagueFilter = league && league !== 'all';
+  // Pivot robot_mode_kills into one column per battle type. Values come from the
+  // KILL_MODES literal union, never from user input, so this cannot inject.
+  const modeColumns = Prisma.join(
+    KILL_MODES.map(
+      (mode) => Prisma.sql`COALESCE(SUM(CASE WHEN k.mode = ${mode}::"StandingsMode" THEN k.kills END), 0)::int AS ${Prisma.raw(`"${mode}"`)}`,
+    ),
+    ', ',
+  );
+
+  // `total` ranks on the robot's lifetime counter; a mode ranks on its pivot.
+  const orderBy =
+    sortBy === 'total' ? Prisma.sql`r.kills DESC` : Prisma.sql`${Prisma.raw(`"${sortBy}"`)} DESC`;
 
   const rows = await prisma.$queryRaw<LossesRow[]>`
     SELECT
@@ -225,14 +265,14 @@ export async function getLossesLeaderboard(params: LossesLeaderboardParams): Pro
       r."user_id",
       u.username,
       u."stable_name",
-      s.tier,
+      ${modeColumns},
       COUNT(*) OVER() AS total_count
     FROM "robots" r
     JOIN "users" u ON u.id = r."user_id"
-    LEFT JOIN "standings" s ON s."entity_type" = 'robot' AND s."entity_id" = r.id AND s.mode = 'league_1v1'
-    WHERE 1=1
-      ${hasLeagueFilter ? Prisma.sql`AND s.tier = ${league}` : Prisma.empty}
-    ORDER BY r.kills DESC
+    LEFT JOIN "robot_mode_kills" k ON k."robot_id" = r.id
+    GROUP BY r.id, r.name, r.kills, r.elo, r."total_battles", r.wins, r.losses,
+             r.draws, r."damage_dealt_lifetime", r."user_id", u.username, u."stable_name"
+    ORDER BY ${orderBy}, r.kills DESC, r.id ASC
     LIMIT ${limit} OFFSET ${skip}
   `;
 
@@ -243,9 +283,11 @@ export async function getLossesLeaderboard(params: LossesLeaderboardParams): Pro
     robotId: row.id,
     robotName: row.name,
     totalLosses: row.kills,
+    killsByMode: Object.fromEntries(
+      KILL_MODES.map((mode) => [mode, Number(row[mode] ?? 0)]),
+    ) as Record<KillMode, number>,
     stableId: row.user_id,
     stableName: row.stable_name || row.username,
-    currentLeague: row.tier ?? 'bronze',
     elo: row.elo,
     totalBattles: row.total_battles,
     wins: row.wins,
@@ -269,7 +311,7 @@ export async function getLossesLeaderboard(params: LossesLeaderboardParams): Pro
       totalPages: Math.ceil(totalRobots / limit),
       hasMore: skip + rows.length < totalRobots,
     },
-    filters: { league: league || 'all' },
+    sortBy,
   };
 }
 

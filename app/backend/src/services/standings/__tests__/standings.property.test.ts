@@ -150,7 +150,14 @@ describe('Property 5: Battle Completion Updates Standings', () => {
           initialLosses,
           initialDraws,
         ) => {
+          // Every generated starting value must be seeded into the fixture.
+          // LP and the streaks were previously generated but never applied, so
+          // the assertions below only held when all of them happened to be 0.
           const existing = createStanding({
+            leaguePoints: initialLP,
+            currentWinStreak: initialWinStreak,
+            currentLoseStreak: initialLoseStreak,
+            bestWinStreak: Math.max(bestWinStreak, initialWinStreak),
             wins: initialWins,
             losses: initialLosses,
             draws: initialDraws,
@@ -227,8 +234,10 @@ describe('Property 6: KotH Point Award by Placement', () => {
         const expectedPoints =
           placement <= KOTH_POINT_SCALE.length ? KOTH_POINT_SCALE[placement - 1] : 0;
 
+        // The literal here previously held the Grand Melee scale, which made the
+        // test contradict the constant it had just read.
         if (placement <= 6) {
-          expect(expectedPoints).toBe([25, 18, 15, 12, 10, 8][placement - 1]);
+          expect(expectedPoints).toBe([10, 6, 4, 2, 1, 0][placement - 1]);
         } else {
           expect(expectedPoints).toBe(0);
         }
@@ -264,14 +273,14 @@ describe('Property 6: KotH Point Award by Placement', () => {
       fc.asyncProperty(
         fc.integer({ min: 1, max: 10 }),
         fc.integer({ min: 0, max: 500 }),
-        fc.integer({ min: 0, max: 50 }),
         fc.integer({ min: 0, max: 100 }),
         fc.integer({ min: 0, max: 500 }),
-        async (placement, initialLP, kills, zoneScore, zoneTime) => {
+        async (placement, initialLP, zoneScore, zoneTime) => {
           const existing = createStanding({
             mode: 'koth' as StandingsMode,
+            // Must be seeded, or the LP assertion below only holds at 0.
+            leaguePoints: initialLP,
             totalMatches: 5,
-            totalKills: 10,
             totalZoneScore: 40,
             totalZoneTime: 200,
             bestPlacement: 3,
@@ -290,7 +299,6 @@ describe('Property 6: KotH Point Award by Placement', () => {
             robotId: existing.entityId,
             placement,
             totalParticipants: 6,
-            kills,
             zoneScore,
             zoneTime,
           });
@@ -308,7 +316,6 @@ describe('Property 6: KotH Point Award by Placement', () => {
           expect(data.totalMatches).toBe(6);
 
           // Cumulative stats added correctly
-          expect(data.totalKills).toBe(10 + kills);
           expect(data.totalZoneScore).toBe(40 + zoneScore);
           expect(data.totalZoneTime).toBe(200 + zoneTime);
 

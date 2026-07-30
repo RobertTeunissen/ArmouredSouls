@@ -3,6 +3,14 @@ dist
 .env.local
 *.log
 
+# Compiled output of vite.config.ts. tsconfig.node.json is a composite project,
+# so it must emit; it now writes to node_modules/.tmp instead of next to the
+# source. These entries are a backstop, because a stray vite.config.js SHADOWS
+# vite.config.ts — Vite checks for .js before .ts — and silently wins.
+vite.config.js
+vite.config.d.ts
+tsconfig.node.tsbuildinfo
+
 # Vitest
 /coverage/
 

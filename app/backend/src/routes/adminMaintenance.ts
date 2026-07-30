@@ -11,7 +11,11 @@ import { authenticateToken, requireAdmin, AuthRequest } from '../middleware/auth
 import { validateRequest } from '../middleware/schemaValidator';
 import logger from '../config/logger';
 import { processAllDailyFinances } from '../utils/economyCalculations';
-import { getSchedulerState } from '../services/cycle/cycleScheduler';
+import {
+  getSchedulerState,
+  SCHEDULER_JOB_NAMES,
+  type SchedulerJobName,
+} from '../services/cycle/cycleScheduler';
 import { recordAction as recordAuditAction } from '../services/admin/adminAuditLogService';
 import {
   repairAllRobotsAdmin,
@@ -29,6 +33,14 @@ const router = express.Router();
 
 const repairAllBodySchema = z.object({
   deductCosts: z.boolean().optional().default(false),
+});
+
+/**
+ * Job names come from the scheduler's own tuple, so a name can only reach
+ * `triggerJob` if it is one the scheduler actually registers.
+ */
+const schedulerJobParamSchema = z.object({
+  jobName: z.enum(SCHEDULER_JOB_NAMES),
 });
 
 const bulkCyclesBodySchema = z.object({
@@ -169,12 +181,12 @@ router.get('/scheduler/status', authenticateToken, requireAdmin, validateRequest
  * Manually trigger a scheduler job by name. Runs the exact same code path as the cron:
  * repair → execute → notify → track state. Uses the scheduler's mutex lock.
  */
-router.post('/scheduler/trigger/:jobName', authenticateToken, requireAdmin, validateRequest({}), async (req: Request, res: Response) => {
+router.post('/scheduler/trigger/:jobName', authenticateToken, requireAdmin, validateRequest({ params: schedulerJobParamSchema }), async (req: Request, res: Response) => {
   const authReq = req as AuthRequest;
-  const { jobName } = req.params;
+  const jobName = req.params.jobName as SchedulerJobName;
   try {
     const { triggerJob } = await import('../services/cycle/cycleScheduler');
-    await triggerJob(jobName as Parameters<typeof triggerJob>[0]);
+    await triggerJob(jobName);
     recordAuditAction(authReq.user!.userId, 'scheduler_trigger', 'success', { jobName });
     res.json({ success: true, jobName, timestamp: new Date().toISOString() });
   } catch (error) {

@@ -39,7 +39,6 @@ const legacyState: AdminSeasonState = {
   isLegacy: true,
   rolloverInProgress: false,
   balanceChangesAppropriate: false,
-  seasonChangelogDraft: null,
   config: {
     seasonLengthCycles: 100,
     preparationLengthCycles: 2,

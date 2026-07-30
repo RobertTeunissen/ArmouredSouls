@@ -44,6 +44,8 @@ jest.mock('../../services/security/securityMonitor', () => ({
   securityMonitor: {
     logValidationFailure: jest.fn(),
     logAuthorizationFailure: jest.fn(),
+    logAdminAccess: jest.fn(),
+    trackRateLimitViolation: jest.fn(),
     setStableName: jest.fn(),
   },
 }));
@@ -91,7 +93,11 @@ function createApp(): express.Express {
   return app;
 }
 
-function adminToken(userId = 1, tokenVersion = 0): string {
+/** `authenticateToken` reads the role from the database row, not the JWT claim. */
+const ADMIN_USER_ID = 1;
+const REGULAR_USER_ID = 2;
+
+function adminToken(userId = ADMIN_USER_ID, tokenVersion = 0): string {
   return jwt.sign(
     { userId, username: 'admin_user', role: 'admin', tokenVersion },
     JWT_SECRET,
@@ -99,7 +105,7 @@ function adminToken(userId = 1, tokenVersion = 0): string {
   );
 }
 
-function userToken(userId = 2, tokenVersion = 0): string {
+function userToken(userId = REGULAR_USER_ID, tokenVersion = 0): string {
   return jwt.sign(
     { userId, username: 'regular_user', role: 'user', tokenVersion },
     JWT_SECRET,
@@ -126,11 +132,16 @@ describe('Changelog Routes', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    // Default: authenticateToken passes (user exists with matching tokenVersion)
-    mockPrismaUser.findUnique.mockResolvedValue({
-      tokenVersion: 0,
-      stableName: 'Test Stable',
-    });
+    // Default: authenticateToken passes (user exists with matching tokenVersion).
+    // The role comes from this row — requireAdmin ignores the JWT role claim.
+    mockPrismaUser.findUnique.mockImplementation(
+      ({ where }: { where: { id: number } }) =>
+        Promise.resolve({
+          tokenVersion: 0,
+          stableName: 'Test Stable',
+          role: where.id === ADMIN_USER_ID ? 'admin' : 'user',
+        }),
+    );
     // Default service responses
     mockChangelogService.listPublished.mockResolvedValue({ entries: [], total: 0, page: 1, pageSize: 20 });
     mockChangelogService.getUnread.mockResolvedValue([]);

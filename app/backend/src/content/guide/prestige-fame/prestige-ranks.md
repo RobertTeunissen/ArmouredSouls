@@ -46,7 +46,7 @@ Your stable has proven it can compete. At 1,000 Prestige, the +10% battle winnin
 **Key unlocks at this rank**:
 - +10% battle winnings bonus
 - Repair Bay, Training Facility, Roster Expansion at Level 4
-- Booking Office Level 1 (not yet implemented)
+- Booking Office Level 4 (a 7th event slot per robot)
 - Streaming Studio Level 4
 
 ### Veteran (5,000 – 9,999)
@@ -56,7 +56,7 @@ A respected stable with a solid track record. The +20% battle winnings bonus app
 **Key unlocks at this rank**:
 - +20% battle winnings bonus
 - Multiple facilities at Level 7
-- Booking Office Level 3 (not yet implemented)
+- Booking Office Level 7 (a 10th event slot per robot)
 - Merchandising income scaling becomes meaningful
 
 ### Elite (10,000 – 24,999)
@@ -67,7 +67,7 @@ A top-tier stable. The +30% battle winnings bonus applies, and most facilities c
 - +30% battle winnings bonus
 - Most facilities at Level 9
 - Training Academies at Level 9 (attribute cap 48)
-- Booking Office Level 4 (not yet implemented)
+- Booking Office Level 9 (a 12th event slot per robot — its last gate)
 
 ### Champion (25,000 – 49,999)
 
@@ -75,7 +75,7 @@ Among the most successful stables in the game. The +40% battle winnings bonus ap
 
 **Key unlocks at this rank**:
 - +40% battle winnings bonus
-- Booking Office Level 7 (not yet implemented)
+- Hall of Fame access
 - Streaming Studio Level 9
 
 ### Legendary (50,000+)
@@ -84,7 +84,6 @@ An iconic stable with an unmatched legacy. Maximum income bonuses, World Champio
 
 **Key unlocks at this rank**:
 - +50% battle winnings bonus (maximum)
-- Booking Office Level 10 (not yet implemented)
 - Streaming Studio Level 10
 - All facility gates cleared
 

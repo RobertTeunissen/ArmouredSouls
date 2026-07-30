@@ -66,9 +66,6 @@ export async function getEligibleRobotsForTournament(): Promise<Robot[]> {
     return readiness.isReady;
   });
 
-  // Activate pending subscriptions for robots that have room under cap
-  const { batchActivatePendingSubscriptions } = await import('../subscription/subscriptionService');
-  await batchActivatePendingSubscriptions(battleReadyRobots.map(r => r.id), 'tournament_1v1');
 
   // Filter by tournament subscription — only active subscriptions (batch query for efficiency)
   const subscribedRobotIds = await prisma.subscription.findMany({

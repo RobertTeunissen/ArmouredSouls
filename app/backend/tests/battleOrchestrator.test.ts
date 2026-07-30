@@ -1,24 +1,73 @@
+import { MatchType } from '../generated/prisma';
 import prisma from '../src/lib/prisma';
+import logger from '../src/config/logger';
 import {
   processBattle,
   executeScheduledBattles,
 } from '../src/services/league/leagueBattleOrchestrator';
+import schedulingService from '../src/services/scheduling/schedulingService';
 import { calculateELOChange } from '../src/utils/battleMath';
 
+/**
+ * Book a queued 1v1 match and return it in the shape `processBattle` takes.
+ *
+ * Spec #41 replaced `scheduled_matches.robot1_id` / `robot2_id` with participant
+ * rows, so the row goes through the scheduling service. `processBattle` still
+ * accepts the *mapped* 1v1 view -- the object `executeScheduledBattles` assembles
+ * before delegating -- so that is what the helper returns.
+ *
+ * `robot2Id` may be negative: a bye books the fabricated bye robot's id (-1),
+ * which exists only in memory, and bye detection is exactly that sign test.
+ */
+async function createScheduledMatch(
+  robot1Id: number,
+  robot2Id: number,
+  options: { leagueType?: string; scheduledFor?: Date; isByeMatch?: boolean } = {},
+) {
+  const leagueType = options.leagueType ?? 'bronze';
+  const match = await schedulingService.createMatch({
+    matchType: MatchType.league_1v1,
+    scheduledFor: options.scheduledFor ?? new Date(),
+    leagueType,
+    isByeMatch: options.isByeMatch ?? false,
+    participants: [
+      { participantType: 'robot', participantId: robot1Id, slot: 1 },
+      { participantType: 'robot', participantId: robot2Id, slot: 2 },
+    ],
+  });
+
+  return {
+    id: match.id,
+    robot1Id,
+    robot2Id,
+    leagueType,
+    scheduledFor: match.scheduledFor,
+    status: match.status,
+    battleId: match.battleId,
+    createdAt: match.createdAt,
+    _unifiedMatchId: match.id,
+  };
+}
+
+
+/**
+ * The bye robot matchmaking fabricates in memory. It is never inserted, and a
+ * negative id is exactly how `processBattle` recognises a walkover.
+ * @see createByeRobot in services/analytics/matchmakingService.ts
+ */
+const BYE_ROBOT_ID = -1;
 
 describe('Battle Orchestrator', () => {
-  let testUserIds: number[] = [];
-  let testRobotIds: number[] = [];
-  let testWeaponIds: number[] = [];
-  let testWeaponInvIds: number[] = [];
-  let testBattleIds: number[] = [];
+  const testUserIds: number[] = [];
+  const testRobotIds: number[] = [];
+  const testWeaponIds: number[] = [];
+  const testWeaponInvIds: number[] = [];
+  const testBattleIds: number[] = [];
   let testUser: any;
   let practiceSword: any;
 
   beforeAll(async () => {
     // Clean up in correct order to respect foreign key constraints
-    await prisma.scheduledKothMatchParticipant.deleteMany({});
-    await prisma.scheduledKothMatch.deleteMany({});
     await prisma.scheduledMatch.deleteMany({});
     await prisma.battle.deleteMany({});
     await prisma.robot.deleteMany({});
@@ -47,6 +96,7 @@ describe('Battle Orchestrator', () => {
         handsRequired: 'one',
         damageType: 'melee',
         loadoutType: 'single',
+        rangeBand: 'melee',
       },
     });
     testWeaponIds.push(practiceSword.id);
@@ -57,8 +107,6 @@ describe('Battle Orchestrator', () => {
     await prisma.auditLog.deleteMany({});
     await prisma.battleParticipant.deleteMany({});
     await prisma.battle.deleteMany({});
-    await prisma.scheduledKothMatchParticipant.deleteMany({});
-    await prisma.scheduledKothMatch.deleteMany({});
     await prisma.scheduledMatch.deleteMany({});
     await prisma.robot.deleteMany({
       where: { userId: testUser.id },
@@ -78,8 +126,6 @@ describe('Battle Orchestrator', () => {
     await prisma.auditLog.deleteMany({});
     await prisma.battleParticipant.deleteMany({});
     await prisma.battle.deleteMany({});
-    await prisma.scheduledKothMatchParticipant.deleteMany({});
-    await prisma.scheduledKothMatch.deleteMany({});
     await prisma.scheduledMatch.deleteMany({});
     await prisma.robot.deleteMany({});
     await prisma.weaponInventory.deleteMany({});
@@ -156,15 +202,7 @@ describe('Battle Orchestrator', () => {
       });
 
       // Create scheduled match
-      const scheduledMatch = await prisma.scheduledMatch.create({
-        data: {
-          robot1Id: robot1.id,
-          robot2Id: robot2.id,
-          leagueType: 'bronze',
-          scheduledFor: new Date(),
-          status: 'scheduled',
-        },
-      });
+      const scheduledMatch = await createScheduledMatch(robot1.id, robot2.id);
 
       // Execute battle
       const result = await processBattle(scheduledMatch);
@@ -184,7 +222,11 @@ describe('Battle Orchestrator', () => {
       const participantRobotIds = battle!.participants.map(p => p.robotId).sort();
       expect(participantRobotIds).toEqual([robot1.id, robot2.id].sort());
       battle!.participants.forEach(p => {
-        expect(p.role).toBe('solo');
+        // `role` marks a tag-team slot. Every other orchestrator writes null,
+        // and the consumers (matchHistoryService, robotQueryService) treat null
+        // and 'solo' as the same "this is the robot that fought" case — so accept
+        // either rather than pinning the one the schema comment happens to name.
+        expect([null, 'solo']).toContain(p.role);
         expect(p.team).toBeGreaterThanOrEqual(1);
         expect(p.team).toBeLessThanOrEqual(2);
       });
@@ -228,41 +270,14 @@ describe('Battle Orchestrator', () => {
         },
       });
 
-      // Create bye-robot
-      const byeUser = await prisma.user.create({
-        data: {
-          username: 'bye_test',
-          passwordHash: 'hash',
-        },
-      });
-
-      const byeWeaponInv = await prisma.weaponInventory.create({
-        data: { userId: byeUser.id, weaponId: practiceSword.id, pricePaid: 0 },
-      });
-
-      const byeRobot = await prisma.robot.create({
-        data: {
-          userId: byeUser.id,
-          name: 'Bye Robot',
-          currentHP: 10,
-          maxHP: 10,
-          currentShield: 2,
-          maxShield: 2,
-          elo: 1000,
-          loadoutType: 'single',
-          mainWeaponId: byeWeaponInv.id,
-        },
-      });
-
-      // Create scheduled bye-match
-      const scheduledMatch = await prisma.scheduledMatch.create({
-        data: {
-          robot1Id: playerRobot.id,
-          robot2Id: byeRobot.id,
-          leagueType: 'bronze',
-          scheduledFor: new Date(),
-          status: 'scheduled',
-        },
+      // Book the bye the way matchmaking does: the opponent is the fabricated bye
+      // robot (id -1), which is never persisted. This test used to insert a real
+      // robot row named 'Bye Robot' and lean on the name; detection is the id
+      // sign, so that row was just an ordinary opponent and a real fight ran.
+      // Booking a negative id is possible because the unified schedule puts no
+      // foreign key on `participantId`.
+      const scheduledMatch = await createScheduledMatch(playerRobot.id, BYE_ROBOT_ID, {
+        isByeMatch: true,
       });
 
       // Execute battle
@@ -272,12 +287,18 @@ describe('Battle Orchestrator', () => {
       expect(result.winnerId).toBe(playerRobot.id);
       expect(result.isByeMatch).toBe(true);
 
-      // Verify player took minimal damage
+      // A walkover is not simulated, so the player takes no damage at all —
+      // stronger than the "under 15%" this asserted while a real fight happened.
       const updatedPlayer = await prisma.robot.findUnique({
         where: { id: playerRobot.id },
       });
-      const damageTaken = playerRobot.currentHP - updatedPlayer!.currentHP;
-      expect(damageTaken).toBeLessThan(playerRobot.maxHP * 0.15); // Less than 15% damage
+      expect(updatedPlayer!.currentHP).toBe(playerRobot.currentHP);
+
+      // Only the real robot gets a participant row.
+      const participants = await prisma.battleParticipant.findMany({
+        where: { battleId: result.battleId },
+      });
+      expect(participants.map(p => p.robotId)).toEqual([playerRobot.id]);
 
       // Verify player won the battle
       expect(updatedPlayer?.wins).toBe(1);
@@ -305,6 +326,11 @@ describe('Battle Orchestrator', () => {
           kills: 5, // Start with 5 kills
           loadoutType: 'single',
           mainWeaponId: weaponInv1.id,
+          // Never yield, so the fight can only end in a destruction. shouldYield
+          // is `hpPercent <= yieldThreshold && hpPercent > 0`, which 0 can never
+          // satisfy. With the default 10 the loser surrendered at 1 HP and no
+          // kill was recorded, making this test's outcome a coin flip.
+          yieldThreshold: 0,
         },
       });
 
@@ -320,19 +346,12 @@ describe('Battle Orchestrator', () => {
           kills: 3, // Start with 3 kills
           loadoutType: 'single',
           mainWeaponId: weaponInv2.id,
+          yieldThreshold: 0, // see above
         },
       });
 
       // Create scheduled match
-      const scheduledMatch = await prisma.scheduledMatch.create({
-        data: {
-          robot1Id: robot1.id,
-          robot2Id: robot2.id,
-          leagueType: 'bronze',
-          scheduledFor: new Date(),
-          status: 'scheduled',
-        },
-      });
+      const scheduledMatch = await createScheduledMatch(robot1.id, robot2.id);
 
       // Execute battle
       const result = await processBattle(scheduledMatch);
@@ -397,24 +416,10 @@ describe('Battle Orchestrator', () => {
 
       // Create 2 scheduled matches
       const scheduledTime = new Date();
-      await prisma.scheduledMatch.createMany({
-        data: [
-          {
-            robot1Id: robots[0].id,
-            robot2Id: robots[1].id,
-            leagueType: 'bronze',
-            scheduledFor: scheduledTime,
-            status: 'scheduled',
-          },
-          {
-            robot1Id: robots[2].id,
-            robot2Id: robots[3].id,
-            leagueType: 'bronze',
-            scheduledFor: scheduledTime,
-            status: 'scheduled',
-          },
-        ],
-      });
+      // createMany cannot express participant rows, so book each match through
+      // the scheduling service instead.
+      await createScheduledMatch(robots[0].id, robots[1].id, { scheduledFor: scheduledTime });
+      await createScheduledMatch(robots[2].id, robots[3].id, { scheduledFor: scheduledTime });
 
       // Execute all battles
       const summary = await executeScheduledBattles(scheduledTime);
@@ -482,15 +487,7 @@ describe('Battle Orchestrator', () => {
       const initialBalance = userBefore!.currency;
 
       // Create scheduled match
-      const scheduledMatch = await prisma.scheduledMatch.create({
-        data: {
-          robot1Id: robot1.id,
-          robot2Id: robot2.id,
-          leagueType: 'bronze',
-          scheduledFor: new Date(),
-          status: 'scheduled',
-        },
-      });
+      const scheduledMatch = await createScheduledMatch(robot1.id, robot2.id);
 
       // Execute battle
       const result = await processBattle(scheduledMatch);
@@ -531,46 +528,14 @@ describe('Battle Orchestrator', () => {
         },
       });
 
-      // Create bye-robot
-      const byeUser = await prisma.user.create({
-        data: {
-          username: 'bye_streaming_test',
-          passwordHash: 'hash',
-          currency: 10000,
-        },
-      });
-
-      const byeWeaponInv = await prisma.weaponInventory.create({
-        data: { userId: byeUser.id, weaponId: practiceSword.id, pricePaid: 0 },
-      });
-
-      const byeRobot = await prisma.robot.create({
-        data: {
-          userId: byeUser.id,
-          name: 'Bye Robot',
-          currentHP: 10,
-          maxHP: 10,
-          currentShield: 2,
-          maxShield: 2,
-          elo: 1000,
-          loadoutType: 'single',
-          mainWeaponId: byeWeaponInv.id,
-        },
-      });
-
-      // Get initial balances
+      // Get initial balance
       const playerUserBefore = await prisma.user.findUnique({ where: { id: testUser.id } });
-      const byeUserBefore = await prisma.user.findUnique({ where: { id: byeUser.id } });
 
-      // Create scheduled bye-match
-      const scheduledMatch = await prisma.scheduledMatch.create({
-        data: {
-          robot1Id: playerRobot.id,
-          robot2Id: byeRobot.id,
-          leagueType: 'bronze',
-          scheduledFor: new Date(),
-          status: 'scheduled',
-        },
+      // Book against the fabricated bye robot (id -1) — see the note in
+      // 'should handle bye-robot battles correctly'. There is no bye owner to
+      // create or assert on, so the old bye-balance check is gone with it.
+      const scheduledMatch = await createScheduledMatch(playerRobot.id, BYE_ROBOT_ID, {
+        isByeMatch: true,
       });
 
       // Execute battle
@@ -579,23 +544,21 @@ describe('Battle Orchestrator', () => {
       // Verify it was a bye match
       expect(result.isByeMatch).toBe(true);
 
-      // Get final balances
+      // Get final balance
       const playerUserAfter = await prisma.user.findUnique({ where: { id: testUser.id } });
-      const byeUserAfter = await prisma.user.findUnique({ where: { id: byeUser.id } });
-
-      // Calculate balance changes
       const playerBalanceChange = playerUserAfter!.currency - playerUserBefore!.currency;
-      const byeBalanceChange = byeUserAfter!.currency - byeUserBefore!.currency;
 
-      // Player should only get battle winnings (no streaming revenue)
-      // Expected streaming revenue would be: 1000 × (1 + 101/1000) × (1 + 500/5000) × 1.0 = 1211
-      // But since it's a bye match, no streaming revenue should be awarded
-      // The balance change should be less than if streaming revenue was included
-      expect(playerBalanceChange).toBeGreaterThan(0); // Should get battle winnings
-      expect(playerBalanceChange).toBeLessThan(2000); // Should not include streaming revenue
-
-      // Bye robot should get participation reward only (no streaming revenue)
-      expect(byeBalanceChange).toBeGreaterThanOrEqual(0);
+      // The player gets the participation reward and nothing else. Asserting the
+      // exact figure the battle recorded says "no streaming revenue" directly,
+      // where the old "< 2000" only said "less than the streaming estimate" and
+      // would have passed on a partial award.
+      const battle = await prisma.battle.findUnique({
+        where: { id: result.battleId },
+        include: { participants: true },
+      });
+      expect(playerBalanceChange).toBe(battle!.winnerReward);
+      expect(battle!.participants).toHaveLength(1);
+      expect(battle!.participants[0].streamingRevenue).toBe(0);
     });
 
     it('should add streaming revenue to audit log', async () => {
@@ -640,15 +603,7 @@ describe('Battle Orchestrator', () => {
       });
 
       // Create scheduled match
-      const scheduledMatch = await prisma.scheduledMatch.create({
-        data: {
-          robot1Id: robot1.id,
-          robot2Id: robot2.id,
-          leagueType: 'bronze',
-          scheduledFor: new Date(),
-          status: 'scheduled',
-        },
-      });
+      const scheduledMatch = await createScheduledMatch(robot1.id, robot2.id);
 
       // Execute battle
       const result = await processBattle(scheduledMatch);
@@ -714,23 +669,16 @@ describe('Battle Orchestrator', () => {
       });
 
       // Create scheduled match
-      const scheduledMatch = await prisma.scheduledMatch.create({
-        data: {
-          robot1Id: robot1.id,
-          robot2Id: robot2.id,
-          leagueType: 'bronze',
-          scheduledFor: new Date(),
-          status: 'scheduled',
-        },
-      });
+      const scheduledMatch = await createScheduledMatch(robot1.id, robot2.id);
 
-      // Capture console.log output
-      const originalLog = console.log;
+      // Capture the logger, not console.log. The orchestrator emits these through
+      // winston (`logger.info`), which writes to the stream directly, so a
+      // console.log stub saw nothing at all and this assertion was unreachable.
       const logMessages: string[] = [];
-      console.log = (...args: any[]) => {
-        logMessages.push(args.join(' '));
-        originalLog(...args);
-      };
+      const infoSpy = jest.spyOn(logger, 'info').mockImplementation(((message: unknown) => {
+        logMessages.push(String(message));
+        return logger;
+      }) as typeof logger.info);
 
       try {
         // Execute battle
@@ -749,8 +697,7 @@ describe('Battle Orchestrator', () => {
         expect(robot1Log).toMatch(/\[Streaming\].*earned ₡[\d,]+.*from Battle #\d+/);
         expect(robot2Log).toMatch(/\[Streaming\].*earned ₡[\d,]+.*from Battle #\d+/);
       } finally {
-        // Restore console.log
-        console.log = originalLog;
+        infoSpy.mockRestore();
       }
     });
   });

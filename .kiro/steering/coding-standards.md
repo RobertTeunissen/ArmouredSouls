@@ -122,6 +122,7 @@ inclusion: always
   See `app/scripts/backup.sh` for the canonical implementation.
 - **Cleanup before disk guard.** Any script that has both a "free up space" step and a "skip if disk full" guard must run the cleanup *before* the guard. Otherwise the script bails out before it can recover, leaving the disk-full state self-reinforcing — exactly what happened to ACC backups in May 2026.
 - **`set -euo pipefail` at the top of every new script.** Fail-fast on errors, undefined variables, and broken pipelines.
+- **In GitHub Actions, a pipe silently discards failures.** The default shell for a `run:` block is `bash -e {0}` — no `pipefail` — so in `cmd | tail` the step's exit code is `tail`'s, which is always 0. This hid 180 failing integration tests for months. Add `shell: bash` to any step that pipes (that maps to `bash --noprofile --norc -eo pipefail {0}`), or don't pipe.
 
 ### Error Handling
 - Use the `AppError` hierarchy for all business logic errors in services
@@ -174,10 +175,55 @@ inclusion: always
 - Use `pnpm test -- --silent` in CI/CD pipelines to reduce output verbosity
 
 ### Before Committing
-1. Run full test suite and verify all tests pass
+1. Run the test suite and verify all tests pass
 2. Check coverage meets minimum thresholds
 3. Fix any failing tests
 4. Do not commit untested code
+
+### Every test tier is mandatory and blocking
+
+A check that cannot fail the build is not a check. All of these run on every push
+and pull request, in both `ci.yml` and `deploy.yml`, and every one of them gates a
+deploy:
+
+| Gate | Command |
+|---|---|
+| Backend lint | `pnpm run lint` |
+| Backend build (typechecks `src/`) | `pnpm run build` |
+| Test suite typecheck | `pnpm run typecheck:tests` |
+| Backend unit | `pnpm run test:unit` |
+| Backend integration (real Postgres) | `pnpm run test:integration` |
+| Backend heavy (full cycles) | `pnpm run test:heavy` |
+| Frontend lint + build | `pnpm run lint`, `pnpm run build` |
+| Frontend unit | `pnpm run test:ci` |
+| E2E (Playwright) | `pnpm exec playwright test` |
+
+Never re-introduce a bypass. The ones that were found and removed in July 2026:
+
+- `pnpm run test:integration 2>&1 | tail -n 500 || true` in `deploy.yml` — swallowed
+  twice over, and `deploy-acc` listed the job in `needs:` so the gate looked real.
+- The same pipe without `|| true` in `ci.yml`. **A pipe alone is enough to swallow
+  a failure**: GitHub's default shell is `bash -e {0}`, which has no `pipefail`, so
+  the step's exit code is `tail`'s. Set `shell: bash` on any step that pipes.
+- `pnpm run lint || true` on both lint steps in `deploy.yml`, so the pipeline that
+  shipped code was the lenient one.
+- `continue-on-error: true` plus `always()` on the E2E job in both workflows.
+- Frontend unit tests missing from `deploy.yml` entirely.
+- `test:heavy` running in no pipeline at all.
+- `"test": "... unit; ... integration"` in package.json — `;` meant the reported
+  exit code was only the integration run's. Now chained with `&&`.
+
+If a suite is red, either the code is wrong or the test is wrong. Fix one of them.
+Do not make the check advisory, and do not delete a test to make a build pass unless
+the behaviour it covers is genuinely gone (say so explicitly if you do).
+
+**Current state (July 2026).** The unit tier is green (205 suites, 2881 tests) and
+the frontend is green (1890 tests). The integration tier has 90 of 148 suites
+failing and the test typecheck reports 394 errors, both pre-existing: tests that
+were never updated when Specs #41 and #43 dropped schema and service symbols, so
+they stopped compiling. Now that the gates are real, **this blocks deploys until
+Backlog #64 is cleared.** Do not read those failures as caused by your change —
+check whether the suite ever compiled first.
 
 ## Documentation Requirements
 - Document complex algorithms and business logic
@@ -194,7 +240,8 @@ inclusion: always
 - **Hash passwords** - bcrypt with salt rounds 10-12
 - **Secure JWT tokens** - Strong secrets, short expiration
 - **HTTPS only** - Enforce in production (Caddy handles this)
-- **Rate limiting** - Protect auth endpoints (10 req/15min login, 10 req/15min admin password reset, 300 req/min general, 60 req/min per-user economic, 3 req/hr account reset)
+- **Rate limiting** - Protect auth endpoints (10 req/15min login, 10 req/15min admin password reset, 300 req/min general per-IP, 100 req/min per-user economic, 3 req/hr account reset)
+- Per-user economic limiter covers `/api/weapons`, `/api/weapon-inventory`, `/api/facilities`, `/api/robots`, `/api/subscriptions`. Put any endpoint a player hits repeatedly in one sitting on this limiter rather than the shared per-IP bucket, or players behind one NAT address will throttle each other
 - **CORS configuration** - Whitelist specific origins only
 
 ### Authentication & Authorization

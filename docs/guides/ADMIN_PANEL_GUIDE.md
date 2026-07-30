@@ -266,7 +266,7 @@ All routes are admin-only and every action writes an `admin_audit_logs` entry.
 
 ### Season state — `GET /api/admin/seasons/state`
 
-Current season number, phase, cycles completed and remaining, whether a rollover is running, whether the phase is an appropriate window for balance changes, the auto-created season changelog draft, and the effective configuration.
+Current season number, phase, cycles completed and remaining, whether a rollover is running, whether the phase is an appropriate window for balance changes, and the effective configuration.
 
 ### Rollover preview — `GET /api/admin/seasons/rollover-preview`
 
@@ -293,4 +293,4 @@ Sets remaining preparation cycles, 0–7. Rejected when the season is not in its
 1. Run the preview and check the counts look right.
 2. Confirm a recent database backup exists — the purge is not reversible.
 3. Announce the reset if the countdown banner has not been running.
-4. After it completes, complete and publish the auto-created balance changelog draft during the preparation window.
+4. After it completes, write and publish a balance changelog entry at `/admin/changelog` during the preparation window.

@@ -139,6 +139,7 @@ export async function resetCompetitiveAndEconomicState(): Promise<{
   await del('tournament_matches', () => prisma.scheduledTournamentMatch.deleteMany({}));
   await del('weapon_refinement', () => prisma.weaponRefinement.deleteMany({}));
   await del('standings', () => prisma.standing.deleteMany({}));
+  await del('robot_mode_kills', () => prisma.robotModeKills.deleteMany({}));
   await del('user_achievements', () => prisma.userAchievement.deleteMany({}));
 
   // Robots reference weapon inventory rows, so clear the links first.
@@ -288,7 +289,7 @@ export async function previewRollover(): Promise<RolloverPreview> {
     humanStables, humanRobots, generatedStables, generatedRobots,
     battles, battleSummaries, auditLogs, cycleSnapshots,
     financialLedger, leagueHistory, leaderboardCache, practiceStats,
-    standings, weaponInventory, facilities, teamBattles, tournaments,
+    standings, robotModeKills, weaponInventory, facilities, teamBattles, tournaments,
     robotsWithImages,
   ] = await Promise.all([
     prisma.user.count({ where: { isGenerated: false } }),
@@ -304,6 +305,7 @@ export async function previewRollover(): Promise<RolloverPreview> {
     prisma.leaderboardCache.count(),
     prisma.practiceArenaDailyStats.count(),
     prisma.standing.count(),
+    prisma.robotModeKills.count(),
     prisma.weaponInventory.count(),
     prisma.facility.count(),
     prisma.teamBattle.count(),
@@ -321,6 +323,7 @@ export async function previewRollover(): Promise<RolloverPreview> {
       cycle_snapshots: cycleSnapshots, financial_ledger: financialLedger,
       league_history: leagueHistory, leaderboard_cache: leaderboardCache,
       practice_arena_daily_stats: practiceStats, standings,
+      robot_mode_kills: robotModeKills,
       weapon_inventory: weaponInventory, facilities, team_battles: teamBattles, tournaments,
     },
     // Uploaded images are retained, never deleted, by a rollover.

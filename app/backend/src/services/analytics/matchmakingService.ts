@@ -295,9 +295,6 @@ async function buildMatchmakingQueue(leagueId: string): Promise<Robot[]> {
     return readiness.isReady;
   });
   
-  // Activate pending subscriptions for robots that have room under cap
-  const { batchActivatePendingSubscriptions } = await import('../subscription/subscriptionService');
-  await batchActivatePendingSubscriptions(readyRobots.map(r => r.id), 'league_1v1');
 
   // Filter by league subscription — only active subscriptions (batch query for efficiency)
   const subscribedRobotIds = await prisma.subscription.findMany({

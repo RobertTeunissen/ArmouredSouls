@@ -106,7 +106,7 @@ The continuous tournament model ensures:
 - Admin can manually trigger tournaments and include in daily cycle
 - Tournament state persists correctly across rounds
 - Winner determination and new tournament creation work automatically
-- **Battle Readiness**: Auto-repair is performed between tournament and league execution phases in daily cycle. Tournament rounds execute sequentially with all robots fully repaired at start of each round.
+- **Battle Readiness**: Each tournament cron repairs the robots still in its own bracket immediately before the round runs, so every competitor starts its match at full HP. Robots eliminated from the bracket are not repaired — they have no remaining match, and repairing them every daily round would charge for battles they cannot fight (issue #411).
 
 
 ### Non-Goals (Out of Scope for Initial Release)

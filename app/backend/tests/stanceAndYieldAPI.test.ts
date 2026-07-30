@@ -5,8 +5,8 @@ import app from './testApp';
 
 
 describe('Stance and Yield Threshold API Endpoints', () => {
-  let testUserIds: number[] = [];
-  let testRobotIds: number[] = [];
+  const testUserIds: number[] = [];
+  const testRobotIds: number[] = [];
   let testUser: any;
   let testRobot: any;
   let authToken: string;
@@ -19,16 +19,11 @@ describe('Stance and Yield Threshold API Endpoints', () => {
   afterAll(async () => {
     // Cleanup in correct order
     if (testRobotIds.length > 0) {
-      await prisma.battleParticipant.deleteMany({
-        where: { robotId: { in: testRobotIds } },
-      });
+      // Combatants live in battle_participants since Spec #43 dropped
+      // battles.robot1_id/robot2_id. Participants and summaries cascade with the
+      // battle, so deleting the battle is enough.
       await prisma.battle.deleteMany({
-        where: {
-          OR: [
-            { robot1Id: { in: testRobotIds } },
-            { robot2Id: { in: testRobotIds } },
-          ],
-        },
+        where: { participants: { some: { robotId: { in: testRobotIds } } } },
       });
       await prisma.robot.deleteMany({
         where: { id: { in: testRobotIds } },

@@ -32,7 +32,7 @@ Everything you built competitively and economically:
 
 - **Your account** — username, email, password, and role
 - **Your stable name and profile settings** — visibility, notifications, theme
-- **Onboarding state** — you will not be walked through the tutorial again
+- **Onboarding state** — you will not be walked through the tutorial again, and the achievement for completing it is re-granted at the start of each season
 - **Your uploaded robot images** — see below
 - **Your season archive** — permanently, for every season you have played
 
@@ -43,6 +43,8 @@ This is the part players find most surprising, so it is worth being direct about
 Prestige gates facility levels. If prestige carried forward, a veteran would start every season able to reach facility depths a newer player could not touch for weeks. That advantage would compound across seasons and never wash out. Resetting prestige makes facility depth a goal you re-earn each season, which is what keeps the competition level.
 
 Achievements reset for a related reason: as a permanent collection they stop being meaningful after a few seasons, because everything easy is already unlocked. Per season, they become a scorecard — a record of what you managed *this time* — and your archive keeps every season's count.
+
+The one exception is an achievement whose condition depends on something a season does not reset. "Complete onboarding" is the only one today: you keep your onboarding state, so there is no tutorial to redo, and the achievement is simply granted again when the season opens. You get its credits and prestige each season, the same as anyone unlocking it for the first time.
 
 ## Your uploaded images are kept
 

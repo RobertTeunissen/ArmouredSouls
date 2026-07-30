@@ -59,7 +59,6 @@ function makeStanding(overrides: Partial<Record<string, unknown>> = {}) {
     bestWinStreak: 4,
     currentLoseStreak: 0,
     totalMatches: null,
-    totalKills: null,
     totalZoneScore: null,
     totalZoneTime: null,
     bestPlacement: null,
@@ -255,7 +254,7 @@ describe('recordBattleResult', () => {
 
 describe('awardKothPoints', () => {
   it('should award points from F1 scale for 1st place', async () => {
-    const current = makeStanding({ mode: 'koth', leaguePoints: 20, totalMatches: 5, totalKills: 3, totalZoneScore: 100, totalZoneTime: 60, bestPlacement: 2, currentWinStreak: 0, wins: 1, bestWinStreak: 1 });
+    const current = makeStanding({ mode: 'koth', leaguePoints: 20, totalMatches: 5, totalZoneScore: 100, totalZoneTime: 60, bestPlacement: 2, currentWinStreak: 0, wins: 1, bestWinStreak: 1 });
     mockStandingFindUnique.mockResolvedValue(current);
     mockStandingUpdate.mockResolvedValue({ ...current, leaguePoints: 30 });
 
@@ -263,7 +262,6 @@ describe('awardKothPoints', () => {
       robotId: 1,
       placement: 1,
       totalParticipants: 6,
-      kills: 2,
       zoneScore: 50,
       zoneTime: 30,
     });
@@ -273,7 +271,6 @@ describe('awardKothPoints', () => {
         data: expect.objectContaining({
           leaguePoints: 30, // 20 + 10 (1st place)
           totalMatches: 6,
-          totalKills: 5,
           totalZoneScore: 150,
           totalZoneTime: 90,
           bestPlacement: 1,
@@ -285,7 +282,7 @@ describe('awardKothPoints', () => {
   });
 
   it('should award 0 points for 6th place', async () => {
-    const current = makeStanding({ mode: 'koth', leaguePoints: 20, totalMatches: 5, totalKills: 0, totalZoneScore: 0, totalZoneTime: 0, bestPlacement: 3 });
+    const current = makeStanding({ mode: 'koth', leaguePoints: 20, totalMatches: 5, totalZoneScore: 0, totalZoneTime: 0, bestPlacement: 3 });
     mockStandingFindUnique.mockResolvedValue(current);
     mockStandingUpdate.mockResolvedValue(current);
 
@@ -293,7 +290,6 @@ describe('awardKothPoints', () => {
       robotId: 1,
       placement: 6,
       totalParticipants: 6,
-      kills: 0,
       zoneScore: 5,
       zoneTime: 2,
     });
@@ -309,7 +305,7 @@ describe('awardKothPoints', () => {
   });
 
   it('should update bestPlacement when new placement is better', async () => {
-    const current = makeStanding({ mode: 'koth', bestPlacement: 3, totalMatches: 10, totalKills: 5, totalZoneScore: 200, totalZoneTime: 100, leaguePoints: 50 });
+    const current = makeStanding({ mode: 'koth', bestPlacement: 3, totalMatches: 10, totalZoneScore: 200, totalZoneTime: 100, leaguePoints: 50 });
     mockStandingFindUnique.mockResolvedValue(current);
     mockStandingUpdate.mockResolvedValue({ ...current, bestPlacement: 1 });
 
@@ -317,7 +313,6 @@ describe('awardKothPoints', () => {
       robotId: 1,
       placement: 1,
       totalParticipants: 6,
-      kills: 3,
       zoneScore: 80,
       zoneTime: 50,
     });
@@ -338,7 +333,7 @@ describe('awardKothPoints', () => {
 
 describe('awardGrandMeleePoints', () => {
   it('should award 25 LP for 1st place', async () => {
-    const current = makeStanding({ mode: 'grand_melee', leaguePoints: 100, totalMatches: 3, totalKills: 5, totalZoneScore: 1000, totalZoneTime: 300, bestPlacement: 2, wins: 1, currentWinStreak: 0, bestWinStreak: 1, currentLoseStreak: 0 });
+    const current = makeStanding({ mode: 'grand_melee', leaguePoints: 100, totalMatches: 3, totalZoneScore: 1000, totalZoneTime: 300, bestPlacement: 2, wins: 1, currentWinStreak: 0, bestWinStreak: 1, currentLoseStreak: 0 });
     mockStandingFindUnique.mockResolvedValue(current);
     mockStandingUpdate.mockResolvedValue({ ...current, leaguePoints: 125 });
 
@@ -346,7 +341,6 @@ describe('awardGrandMeleePoints', () => {
       robotId: 1,
       placement: 1,
       totalParticipants: 20,
-      kills: 4,
       damageDealt: 500,
       survivalTime: 120,
     });
@@ -356,7 +350,6 @@ describe('awardGrandMeleePoints', () => {
         data: expect.objectContaining({
           leaguePoints: 125, // 100 + 25
           totalMatches: 4,
-          totalKills: 9,
           totalZoneScore: 1500, // reused for damage dealt
           totalZoneTime: 420, // reused for survival time
           bestPlacement: 1,
@@ -368,7 +361,7 @@ describe('awardGrandMeleePoints', () => {
   });
 
   it('should award 0 LP for 11th+ place', async () => {
-    const current = makeStanding({ mode: 'grand_melee', leaguePoints: 50, totalMatches: 1, totalKills: 0, totalZoneScore: 100, totalZoneTime: 60, bestPlacement: 15, currentWinStreak: 1 });
+    const current = makeStanding({ mode: 'grand_melee', leaguePoints: 50, totalMatches: 1, totalZoneScore: 100, totalZoneTime: 60, bestPlacement: 15, currentWinStreak: 1 });
     mockStandingFindUnique.mockResolvedValue(current);
     mockStandingUpdate.mockResolvedValue(current);
 
@@ -376,7 +369,6 @@ describe('awardGrandMeleePoints', () => {
       robotId: 1,
       placement: 15,
       totalParticipants: 20,
-      kills: 0,
       damageDealt: 30,
       survivalTime: 20,
     });

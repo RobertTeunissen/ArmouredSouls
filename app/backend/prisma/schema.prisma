@@ -205,6 +205,7 @@ model Robot {
   tuningAllocation        TuningAllocation?
   achievements            UserAchievement[]
   subscriptions           Subscription[]
+  modeKills               RobotModeKills[]
 
   @@index([userId])
   @@index([elo])
@@ -610,14 +611,11 @@ model ChangelogEntry {
   status      String    @default("draft") @db.VarChar(20) // "draft", "published"
   imageUrl    String?   @map("image_url") @db.VarChar(500)
   publishDate DateTime? @map("publish_date")
-  sourceType  String?   @map("source_type") @db.VarChar(20) // "spec", "commit", "manual"
-  sourceRef   String?   @map("source_ref") @db.VarChar(200)
-  createdBy   Int?      @map("created_by") // Admin user ID, null for auto-generated
+  createdBy   Int?      @map("created_by") // Admin user ID who authored the entry
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
 
   @@index([status, publishDate])
-  @@index([sourceRef])
   @@map("changelog_entries")
 }
 
@@ -734,7 +732,7 @@ model Subscription {
   id        Int      @id @default(autoincrement())
   robotId   Int      @map("robot_id")
   eventType String   @map("event_type") @db.VarChar(30)
-  status    String   @default("pending") @map("status") @db.VarChar(10) // "active" or "pending"
+  status    String   @default("active") @map("status") @db.VarChar(10) // always "active" — see subscriptionService
   createdAt DateTime @default(now()) @map("created_at")
 
   // Relations
@@ -867,6 +865,33 @@ enum StandingsMode {
   grand_melee
 }
 
+// Per-robot, per-battle-type destruction tally ("total losses" inflicted).
+//
+// Deliberately NOT folded into `standings`. A standings row for a team mode is
+// keyed to the team, not the robot, and several matchmaking and rebalancing
+// queries filter by `mode` alone and read every `entity_id` as their own entity
+// type — robot-scoped rows under league_2v2 / league_3v3 / tag_team would be
+// picked up as team ids. This table keeps robot-scoped counts out of that path.
+//
+// `robots.kills` remains the lifetime total across every mode and should equal
+// the sum of a robot's rows here.
+model RobotModeKills {
+  id      Int           @id @default(autoincrement())
+  robotId Int           @map("robot_id")
+  mode    StandingsMode
+  kills   Int           @default(0)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  robot Robot @relation(fields: [robotId], references: [id], onDelete: Cascade)
+
+  @@unique([robotId, mode])
+  // Supports the per-mode leaderboard ranking.
+  @@index([mode, kills(sort: Desc)])
+  @@map("robot_mode_kills")
+}
+
 // Unified competitive standings table replacing league columns on robots and team_battles
 model Standing {
   id               Int           @id @default(autoincrement())
@@ -888,9 +913,10 @@ model Standing {
   bestWinStreak     Int @default(0) @map("best_win_streak")
   currentLoseStreak Int @default(0) @map("current_lose_streak")
 
-  // KotH-specific (nullable, only populated when mode = koth)
+  // Placement-mode specific (nullable, populated for koth and grand_melee).
+  // Destructions are NOT here — they live in `robot_mode_kills`, which covers
+  // every mode rather than only the two whose standings are robot-scoped.
   totalMatches   Int?   @map("total_matches")
-  totalKills     Int?   @map("total_kills")
   totalZoneScore Float? @map("total_zone_score")
   totalZoneTime  Float? @map("total_zone_time")
   bestPlacement  Int?   @map("best_placement")

@@ -26,10 +26,10 @@ let userCurrency = 100000;
 const mockTx = {
   robot: { findUnique: jest.fn() },
   subscription: {
-    findUnique: jest.fn(),
+    findMany: jest.fn(),
     count: jest.fn(),
-    create: jest.fn(),
-    delete: jest.fn(),
+    createMany: jest.fn(),
+    deleteMany: jest.fn(),
   },
   facility: { findUnique: jest.fn() },
   auditLog: {
@@ -47,14 +47,20 @@ const mockTx = {
     findUnique: jest.fn().mockResolvedValue(null),
     create: jest.fn().mockResolvedValue(undefined),
   },
+  // Read by the shared slot resolver: an empty schedule means no held slots, so
+  // these properties exercise the cap against subscriptions alone.
+  scheduledMatchParticipant: { findMany: jest.fn().mockResolvedValue([]) },
+  scheduledTournamentMatch: { findMany: jest.fn().mockResolvedValue([]) },
 };
 
 const mockPrisma = {
   subscription: { count: jest.fn() },
   user: { findUnique: jest.fn() },
   scheduledMatchParticipant: { findMany: jest.fn().mockResolvedValue([]) },
+  scheduledTournamentMatch: { findMany: jest.fn().mockResolvedValue([]) },
+  teamBattleMember: { findMany: jest.fn().mockResolvedValue([]) },
   standing: { findFirst: jest.fn().mockResolvedValue(null), findMany: jest.fn().mockResolvedValue([]) },
-  $transaction: jest.fn((fn: (tx: typeof mockTx) => Promise<void>) => fn(mockTx)),
+  $transaction: jest.fn((fn: (tx: typeof mockTx) => Promise<unknown>) => fn(mockTx)),
 };
 
 jest.mock('../../../src/lib/prisma', () => ({
@@ -65,6 +71,17 @@ jest.mock('../../../src/lib/prisma', () => ({
 jest.mock('../../../src/config/logger', () => ({
   __esModule: true,
   default: { info: jest.fn(), warn: jest.fn(), error: jest.fn() },
+}));
+
+jest.mock('../../../src/services/battle/baseOrchestrator', () => ({
+  __esModule: true,
+  getCurrentCycleNumber: jest.fn().mockResolvedValue(1),
+}));
+
+jest.mock('../../../src/services/scheduling/eventCronSchedule', () => ({
+  __esModule: true,
+  getNextSchedulingMoments: jest.fn(() => ({})),
+  getNextSchedulingMoment: jest.fn(() => new Date('2026-07-31T08:00:00.000Z')),
 }));
 
 // Use real event registry for property tests
@@ -85,7 +102,6 @@ function setupRegistry(): void {
     registerSubscribableEvent({
       type,
       label: type,
-      lockingPredicate: jest.fn().mockResolvedValue(false),
     });
   }
 }
@@ -96,30 +112,34 @@ function setupMocksForSubscribe(level: number): void {
   mockTx.auditLog.findFirst.mockResolvedValue(null);
   mockTx.auditLog.create.mockResolvedValue({});
 
-  // Dynamic subscription tracking
-  mockTx.subscription.findUnique.mockImplementation(({ where }: any) => {
-    const key = `${where.subscription_robot_event.robotId}:${where.subscription_robot_event.eventType}`;
-    return Promise.resolve(subscriptionStore.has(key) ? subscriptionStore.get(key) : null);
+  // Dynamic subscription tracking, in the shapes the single write path uses:
+  // read the current set with findMany, then diff it with createMany/deleteMany.
+  mockTx.subscription.findMany.mockImplementation(({ where }: any) => {
+    const rows: { robotId: number; eventType: string }[] = [];
+    for (const [key, value] of subscriptionStore.entries()) {
+      if (key.startsWith(`${where.robotId}:`)) rows.push(value);
+    }
+    return Promise.resolve(rows);
   });
   mockTx.subscription.count.mockImplementation(({ where }: any) => {
-    if (where.robotId) {
-      let count = 0;
-      for (const key of subscriptionStore.keys()) {
-        if (key.startsWith(`${where.robotId}:`)) count++;
-      }
-      return Promise.resolve(count);
+    let count = 0;
+    for (const key of subscriptionStore.keys()) {
+      if (where.robotId && key.startsWith(`${where.robotId}:`)) count++;
     }
-    return Promise.resolve(0);
+    return Promise.resolve(count);
   });
-  mockTx.subscription.create.mockImplementation(({ data }: any) => {
-    const key = `${data.robotId}:${data.eventType}`;
-    subscriptionStore.set(key, data);
-    return Promise.resolve(data);
+  mockTx.subscription.createMany.mockImplementation(({ data }: any) => {
+    for (const row of data) {
+      subscriptionStore.set(`${row.robotId}:${row.eventType}`, row);
+    }
+    return Promise.resolve({ count: data.length });
   });
-  mockTx.subscription.delete.mockImplementation(({ where }: any) => {
-    const key = `${where.subscription_robot_event.robotId}:${where.subscription_robot_event.eventType}`;
-    subscriptionStore.delete(key);
-    return Promise.resolve({});
+  mockTx.subscription.deleteMany.mockImplementation(({ where }: any) => {
+    let count = 0;
+    for (const eventType of where.eventType.in) {
+      if (subscriptionStore.delete(`${where.robotId}:${eventType}`)) count++;
+    }
+    return Promise.resolve({ count });
   });
 }
 
@@ -312,6 +332,50 @@ describe('Subscription System Property-Based Tests', () => {
     });
   });
 
+  // Feature: 35-booking-office-facility, Property 12: Unsubscribe is never refused
+  describe('Property 12: Unsubscribing is always permitted, for every event', () => {
+    /**
+     * **Validates: the unified subscription rule**
+     *
+     * For any event and any state of the schedule, unsubscribing from an event the
+     * robot is subscribed to SHALL succeed. Before unification, nine predicates
+     * disagreed: Grand Melee refused outright, KotH allowed it, tournaments
+     * refused while alive in a bracket. A player could not predict what a click
+     * would do, which is the whole reason this property exists.
+     */
+    it('never raises EVENT_SUBSCRIPTION_LOCKED, whatever is on the schedule', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.constantFrom(...V1_EVENTS),
+          fc.boolean(), // whether a match for that event is already booked
+          async (eventType, hasBookedMatch) => {
+            subscriptionStore.clear();
+            setupMocksForSubscribe(5);
+
+            // A booked match holds the slot but must never block the unsubscribe.
+            mockTx.scheduledMatchParticipant.findMany.mockResolvedValue(
+              hasBookedMatch && eventType === 'league_1v1'
+                ? [{ participantType: 'robot', participantId: 1, scheduledMatch: { matchType: 'league_1v1' } }]
+                : [],
+            );
+            mockTx.scheduledTournamentMatch.findMany.mockResolvedValue(
+              hasBookedMatch && eventType === 'tournament_1v1'
+                ? [{ participantType: 'robot', participant1Id: 1, participant2Id: 2 }]
+                : [],
+            );
+
+            await subscribeRobot(1, eventType, 1);
+            const result = await unsubscribeRobot(1, eventType, 1);
+
+            expect(result.removed).toEqual([eventType]);
+            expect(subscriptionStore.has(`1:${eventType}`)).toBe(false);
+          },
+        ),
+        { numRuns: 100 },
+      );
+    });
+  });
+
   // Feature: 35-booking-office-facility, Property 8: Duplicate registerSubscribableEvent call throws
   describe('Property 8: Duplicate registerSubscribableEvent call throws', () => {
     /**
@@ -323,14 +387,13 @@ describe('Subscription System Property-Based Tests', () => {
           fc.constantFrom(...V1_EVENTS),
           (eventType) => {
             _clearRegistryForTesting();
-            const predicate = jest.fn().mockResolvedValue(false);
 
             // First registration succeeds
-            registerSubscribableEvent({ type: eventType, label: eventType, lockingPredicate: predicate });
+            registerSubscribableEvent({ type: eventType, label: eventType});
 
             // Second registration throws
             expect(() =>
-              registerSubscribableEvent({ type: eventType, label: eventType, lockingPredicate: predicate }),
+              registerSubscribableEvent({ type: eventType, label: eventType}),
             ).toThrow(/Duplicate registration/);
           },
         ),

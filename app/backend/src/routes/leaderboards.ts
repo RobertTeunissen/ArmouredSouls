@@ -4,6 +4,8 @@ import { validateRequest } from '../middleware/schemaValidator';
 import {
   getFameLeaderboard,
   getLossesLeaderboard,
+  LOSSES_SORT_KEYS,
+  type LossesSortKey,
   getPrestigeLeaderboard,
 } from '../services/analytics/leaderboardService';
 import { leaderboardService, type LeaderboardCategory } from '../services/leaderboard/leaderboardService';
@@ -51,10 +53,13 @@ const fameQuerySchema = z.object({
   limit: z.coerce.number().int().positive().max(100).optional(),
 });
 
+// The losses leaderboard is a lifetime ranking, so it carries no league filter —
+// see the fame schema above for the same reasoning (Spec #46 R5). It does accept
+// a sort column: the total, or any single battle type.
 const lossesQuerySchema = z.object({
   page: z.coerce.number().int().positive().optional(),
   limit: z.coerce.number().int().positive().max(100).optional(),
-  league: z.string().max(30).optional(),
+  sortBy: z.enum(LOSSES_SORT_KEYS).optional(),
 });
 
 // Spec #46 R5: the prestige leaderboard no longer accepts `minRobots`, which
@@ -90,14 +95,17 @@ router.get('/fame', validateRequest({ query: fameQuerySchema }), async (req: Req
  * GET /api/leaderboards/losses
  */
 router.get('/losses', validateRequest({ query: lossesQuerySchema }), async (req: Request, res: Response) => {
-  const cacheKey = `losses:${req.query.page || 1}:${req.query.limit || 100}:${req.query.league || ''}`;
+  // No league fragment: a stale key for a removed filter would fragment the
+  // cache and could serve a filtered payload to an unfiltered request. The sort
+  // column does belong in the key — each ordering is a different payload.
+  const cacheKey = `losses:${req.query.page || 1}:${req.query.limit || 100}:${req.query.sortBy || 'total'}`;
   const cached = getCachedOrNull(cacheKey);
   if (cached) { res.set('Cache-Control', 'public, max-age=300'); res.json(cached); return; }
 
   const result = await getLossesLeaderboard({
     page: parseInt(req.query.page as string) || 1,
     limit: Math.min(parseInt(req.query.limit as string) || 100, 100),
-    league: req.query.league as string,
+    sortBy: req.query.sortBy as LossesSortKey | undefined,
   });
 
   const response = { ...result, timestamp: new Date().toISOString() };

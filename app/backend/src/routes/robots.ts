@@ -3,6 +3,7 @@ import { z } from 'zod';
 import multer from 'multer';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import prisma from '../lib/prisma';
+import { getModeKills } from '../services/battle/modeKillsQueries';
 import type { StandingsMode } from '../../generated/prisma';
 import { eventLogger } from '../services/common/eventLogger';
 import { trackSpending } from '../services/economy/spendingTracker';
@@ -665,9 +666,12 @@ router.get('/:id/koth-standing', authenticateToken, validateRequest({ params: ro
     throw new RobotError(RobotErrorCode.ROBOT_NOT_FOUND, 'Robot not found', 404);
   }
 
-  const standing = await prisma.standing.findFirst({
-    where: { entityType: 'robot', entityId: robotId, mode: 'koth' as StandingsMode },
-  });
+  const [standing, totalKills] = await Promise.all([
+    prisma.standing.findFirst({
+      where: { entityType: 'robot', entityId: robotId, mode: 'koth' as StandingsMode },
+    }),
+    getModeKills(robotId, 'koth'),
+  ]);
 
   if (!standing) {
     res.json({ standing: null });
@@ -681,7 +685,7 @@ router.get('/:id/koth-standing', authenticateToken, validateRequest({ params: ro
       leaguePoints: standing.leaguePoints,
       wins: standing.wins,
       totalMatches: standing.totalMatches,
-      totalKills: standing.totalKills,
+      totalKills,
       bestPlacement: standing.bestPlacement,
       currentWinStreak: standing.currentWinStreak,
       bestWinStreak: standing.bestWinStreak,
@@ -706,9 +710,12 @@ router.get('/:id/grand-melee-standing', authenticateToken, validateRequest({ par
     throw new RobotError(RobotErrorCode.ROBOT_NOT_FOUND, 'Robot not found', 404);
   }
 
-  const standing = await prisma.standing.findFirst({
-    where: { entityType: 'robot', entityId: robotId, mode: 'grand_melee' as StandingsMode },
-  });
+  const [standing, totalKills] = await Promise.all([
+    prisma.standing.findFirst({
+      where: { entityType: 'robot', entityId: robotId, mode: 'grand_melee' as StandingsMode },
+    }),
+    getModeKills(robotId, 'grand_melee'),
+  ]);
 
   if (!standing) {
     res.json({ standing: null });
@@ -722,7 +729,7 @@ router.get('/:id/grand-melee-standing', authenticateToken, validateRequest({ par
       leaguePoints: standing.leaguePoints,
       wins: standing.wins,
       totalMatches: standing.totalMatches,
-      totalKills: standing.totalKills,
+      totalKills,
       bestPlacement: standing.bestPlacement,
       currentWinStreak: standing.currentWinStreak,
       bestWinStreak: standing.bestWinStreak,
