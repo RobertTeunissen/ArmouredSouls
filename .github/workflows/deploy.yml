@@ -53,7 +53,7 @@ jobs:
 
       - name: Lint backend code
         working-directory: ./app/backend
-        run: pnpm run lint || true
+        run: pnpm run lint
 
       - name: Build backend
         working-directory: ./app/backend
@@ -118,11 +118,12 @@ jobs:
 
       - name: Run integration tests
         working-directory: ./app/backend
+        shell: bash
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_test?connection_limit=5
           JWT_SECRET: test-secret-key-for-ci
           NODE_ENV: test
-        run: pnpm run test:integration 2>&1 | tail -n 500 || true
+        run: pnpm run test:integration
 
   frontend-build:
     name: Frontend Build & Lint
@@ -148,7 +149,7 @@ jobs:
 
       - name: Lint frontend code
         working-directory: ./app/frontend
-        run: pnpm run lint || true
+        run: pnpm run lint
 
       - name: Build frontend
         working-directory: ./app/frontend
@@ -169,9 +170,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: [backend-unit-tests, frontend-build]
-    # Run E2E even if frontend-build has issues — but don't block deploy
-    if: ${{ always() && needs['backend-unit-tests'].result == 'success' }}
-    continue-on-error: true
+    if: ${{ needs['backend-unit-tests'].result == 'success' && needs['frontend-build'].result == 'success' }}
 
     services:
       postgres:
