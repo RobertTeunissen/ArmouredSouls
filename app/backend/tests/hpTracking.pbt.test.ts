@@ -87,6 +87,11 @@ function createMockRobot(overrides?: Partial<RobotWithWeapons>): RobotWithWeapon
     defensiveWins: 0,
     balancedWins: 0,
     dualWieldWins: 0,
+    // Added by Spec #44 (Grand Melee). Absent here, the spread of an optional
+    // `overrides` made these `number | undefined` and the whole literal stopped
+    // satisfying RobotWithWeapons.
+    grandMeleeWins: 0,
+    grandMeleeTop3: 0,
     createdAt: new Date('2025-01-01'),
     updatedAt: new Date('2025-01-01'),
     mainWeapon: null,
@@ -101,6 +106,9 @@ function createWeaponInventory(weaponId: number, name: string, baseDamage: numbe
     userId: 1,
     weaponId,
     customName: null,
+    // Spec #33 added pricePaid: resale value is computed against what the player
+    // actually paid (after Workshop discount), not the catalog price.
+    pricePaid: 50000,
     purchasedAt: new Date('2025-01-01'),
     weapon: {
       id: weaponId,
@@ -535,123 +543,25 @@ describe('Property 4: Final event HP matches combat result', () => {
 // ─── Property 5: Legacy fields swap based on attacker role (BUG) ────
 
 /**
- * **BUG DEMONSTRATION TEST**
+ * Property 5 removed: it asserted that a bug WAS PRESENT.
  *
- * This test demonstrates that the legacy robot1HP/robot2HP fields are
- * assigned based on attacker/defender position, NOT robot identity.
+ * The block here demonstrated that the deprecated `robot1HP`/`robot2HP` event
+ * fields swap according to attacker role, and asserted `foundSwap === true` —
+ * meaning the suite could only pass while the defect remained. A test shaped that
+ * way blocks the fix it documents, so it has been deleted rather than inverted.
  *
- * When robot2 attacks robot1:
- * - robot1HP = attackerState.currentHP = robot2's HP (WRONG!)
- * - robot2HP = defenderState.currentHP = robot1's HP (WRONG!)
+ * Two findings from removing it, both filed as Backlog #65 because settling them
+ * needs a proper look at combat event semantics rather than a guess:
  *
- * The robotHP map is correct, but consumers using robot1HP/robot2HP
- * will see swapped values.
+ * 1. The swap is only half fixed. `simulationLoop` and `simulationState` populate
+ *    the legacy fields positionally from `states[0]`/`states[1]`, but
+ *    `attackResolution` still writes `attackerState`/`defenderState` into them.
+ * 2. The canonical `robotHP` map is a cached snapshot injected by `pushEvent`, and
+ *    its `hpSnapshotDirty` flag is not set by `attackResolution`, which mutates
+ *    robot state directly. The map attached to an attack event may therefore
+ *    predate the damage that event describes.
  *
- * This test PASSES because it verifies the bug EXISTS.
- * After the fix, consumers should use robotHP[name] instead.
+ * The remaining properties in this file cover the canonical map, which is the
+ * documented contract (`robotHP`/`robotShield` are marked as the source of truth,
+ * with the numbered fields deprecated).
  */
-describe('Property 5: Legacy fields swap based on attacker role (BUG DEMONSTRATION)', () => {
-  it('should show that robot1HP/robot2HP swap when robot2 attacks', () => {
-    const robot1 = createMockRobot({
-      id: 1,
-      name: 'Gobbo',
-      currentHP: 95,
-      maxHP: 95,
-      currentShield: 15,
-      maxShield: 15,
-      mainWeapon: createWeaponInventory(1, 'Plasma Blade', 25),
-    });
-
-    const robot2 = createMockRobot({
-      id: 2,
-      name: 'WimpBot',
-      currentHP: 80,
-      maxHP: 80,
-      currentShield: 10,
-      maxShield: 10,
-      mainWeapon: createWeaponInventory(2, 'Practice Blaster', 15),
-    });
-
-    const result = simulateBattle(robot1, robot2);
-
-    // Find events where robot2 (WimpBot) is the attacker
-    const robot2AttackEvents = result.events.filter(
-      e => e.attacker === 'WimpBot' && e.robot1HP !== undefined
-    );
-
-    if (robot2AttackEvents.length === 0) {
-      // If no robot2 attacks, the test is inconclusive
-      return;
-    }
-
-    // Check if any event shows the swap
-    let foundSwap = false;
-    for (const event of robot2AttackEvents) {
-      // When WimpBot attacks:
-      // - robot1HP should be Gobbo's HP (the defender) but is actually WimpBot's HP (attacker)
-      // - robot2HP should be WimpBot's HP (the attacker) but is actually Gobbo's HP (defender)
-      //
-      // The robotHP map is correct:
-      // - robotHP['Gobbo'] = Gobbo's actual HP
-      // - robotHP['WimpBot'] = WimpBot's actual HP
-
-      const legacyRobot1HP = event.robot1HP!;
-      const legacyRobot2HP = event.robot2HP!;
-      const correctGobboHP = event.robotHP!['Gobbo'];
-      const correctWimpBotHP = event.robotHP!['WimpBot'];
-
-      // The bug: legacy fields are swapped when robot2 attacks
-      // robot1HP contains the ATTACKER's HP (WimpBot), not robot1's HP (Gobbo)
-      // robot2HP contains the DEFENDER's HP (Gobbo), not robot2's HP (WimpBot)
-      if (legacyRobot1HP === correctWimpBotHP && legacyRobot2HP === correctGobboHP) {
-        foundSwap = true;
-        // This confirms the bug exists
-        // The legacy fields are swapped relative to the correct robotHP map
-      }
-    }
-
-    // We expect to find at least one swapped event when robot2 attacks
-    // This test PASSES when the bug exists (demonstrating the bug)
-    expect(foundSwap).toBe(true);
-  });
-
-  it('should show that robotHP map is always correct regardless of attacker', () => {
-    const robot1 = createMockRobot({
-      id: 1,
-      name: 'Gobbo',
-      currentHP: 95,
-      maxHP: 95,
-      currentShield: 15,
-      maxShield: 15,
-      mainWeapon: createWeaponInventory(1, 'Plasma Blade', 25),
-    });
-
-    const robot2 = createMockRobot({
-      id: 2,
-      name: 'WimpBot',
-      currentHP: 80,
-      maxHP: 80,
-      currentShield: 10,
-      maxShield: 10,
-      mainWeapon: createWeaponInventory(2, 'Practice Blaster', 15),
-    });
-
-    const result = simulateBattle(robot1, robot2);
-
-    // For ALL events, robotHP[name] should be within valid bounds
-    for (const event of result.events) {
-      if (!event.robotHP) continue;
-
-      const gobboHP = event.robotHP['Gobbo'];
-      const wimpbotHP = event.robotHP['WimpBot'];
-
-      // Gobbo's HP should always be <= 95 (its max)
-      expect(gobboHP).toBeLessThanOrEqual(95);
-      expect(gobboHP).toBeGreaterThanOrEqual(0);
-
-      // WimpBot's HP should always be <= 80 (its max)
-      expect(wimpbotHP).toBeLessThanOrEqual(80);
-      expect(wimpbotHP).toBeGreaterThanOrEqual(0);
-    }
-  });
-});

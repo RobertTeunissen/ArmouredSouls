@@ -8,7 +8,7 @@ Items identified during audits, reviews, and development. Prioritized by impact 
 
 | # | Item | Why it blocks |
 |---|------|---------------|
-| [#64](#64--repair-the-integration-test-suite-90-of-148-suites-failing) | Repair the Integration Test Suite | Every test tier is now mandatory in CI. Integration is 90 of 148 suites red and `typecheck:tests` reports 394 errors, so **main cannot deploy** until it is cleared. |
+| [#64](#64--repair-the-integration-test-suite-90-of-148-suites-failing) | Repair the Integration Test Suite | Every test tier is now mandatory in CI, so **main cannot deploy** until it is cleared. Test compile errors are down from 454 to 222; see the item for the live count. |
 
 ---
 
@@ -337,15 +337,83 @@ Two structural problems worth fixing alongside the individual suites:
 
 **Progress.** `tsconfig.test.json` + `pnpm run typecheck:tests` now typecheck the
 suites, and that runs in CI as a blocking step. Test compile errors are down from
-454 to 394 across 44 files; nine suites repaired; two orphaned suites deleted
-(they tested `roiCalculatorService`, which no longer exists). Remaining, largest
-first: battle participant migration in the streaming-revenue and orchestrator
-suites (~180), `scheduledTeamBattleMatch` → unified schedule (46), KotH
-`rotatingZone` suites for an abolished feature (15), `WeaponInventory` fixtures
-missing `pricePaid` (14), `Robot.leaguePoints` / `cyclesInTier` now on `Standing`
-(10), and a tail of implicit-`any` parameters.
+**454 to 221 across 32 files**; four orphaned suites deleted (they tested
+`roiCalculatorService` and `distributeIntoGroups`, neither of which exists).
+Repaired and verified passing: matchmakingService, profileUpdate,
+stanceAndYieldAPI, finances, adminRobotStats, eloProgression, metricProgression,
+middleware/auth, scheduling.property, the four streaming-revenue suites,
+kothEngine (+property), hpTracking, leagueRebalancingService, resetService, and
+analyticsApi. Remaining, largest first: `teamBattleCompleteCycle` (28),
+`battleOrchestrator` (23), `tagTeamByeHandling` (16),
+`tagTeamBattleLogCompleteness` (11), `onboardingApi` (10),
+`kothOrchestrator.property` (10), `cycleSnapshot.property` (10), then a tail of
+4–8 error files.
+
+**A third hole, not yet closed.** `"lint": "eslint src"` never lints tests —
+measured at **45 errors and 448 warnings across 304 test files**, mostly
+auto-fixable (26 `prefer-const`, 13 `no-require-imports`). Two of those errors
+were only ever caught because `lint-staged` lints staged files. Extending the
+lint script to `tests` belongs to this item, per "every check is mandatory".
 
 Expect a second wave of assertion failures once these compile — some suites have not
 executed in months. Two already sampled: auth registration returns 400 where the
 test expects 201, and `leagues.test.ts` expects an `error` key in a 400 body that is
 now `{}`.
+
+### #65 — Combat Event HP Fields: Half-Fixed Swap and a Possibly Stale Canonical Map
+**Source**: Integration suite repair (Backlog #64), 30 July 2026
+**Priority**: Medium — affects anything reading HP out of battle events, including replay
+
+Found while removing a bug-demonstration test in `tests/hpTracking.pbt.test.ts` that
+asserted `foundSwap === true`, i.e. it could only pass while the defect it documented
+remained. Two separate problems came out of it.
+
+**1. The attacker/defender swap is only half fixed.** The deprecated `robot1HP` /
+`robot2HP` / `robot1Shield` / `robot2Shield` event fields are supposed to be
+positional — robot 1 and robot 2 of the battle. `simulationLoop.ts` and
+`simulationState.ts` populate them correctly from `states[0]` / `states[1]`, but
+`attackResolution.ts` still writes `attackerState.currentHP` / `defenderState.currentHP`
+into them at all six event sites. So on any attack event where robot 2 is the
+attacker, the two fields are transposed. They are marked `@deprecated` in
+`combatTypes.ts` with an instruction to use the `robotHP` map instead, so the choice
+is to either finish the fix or drop the fields — leaving them half-right is the worst
+of the three.
+
+**2. The canonical `robotHP` map may predate the event it is attached to.**
+`pushEvent` in `simulationLoop.ts` injects a cached snapshot and rebuilds it only when
+`hpSnapshotDirty` is set. `attackResolution.ts` mutates `defenderState.currentHP`
+directly and never sets that flag, so the map attached to an attack event can still
+show pre-damage HP. This matters more than (1), because `robotHP` is documented as the
+source of truth and is what consumers were told to migrate to.
+
+Worth a focused check of when the snapshot is invalidated relative to damage
+application, then a regression test asserting the map matches post-event state for
+both attack directions — the test that should have existed instead of one asserting a
+bug was present.
+
+### #66 — Metric Progression Silently Attributes Battles to Cycle 1 When a Snapshot Is Missing
+**Source**: Integration suite repair (Backlog #64), 30 July 2026
+**Priority**: Medium — wrong analytics rather than an error, so it fails quietly
+
+`robotPerformanceService` has two ways to answer "which cycle did this battle happen
+in", and they disagree on what to do when there is no `CycleSnapshot`:
+
+- `getCycleNumberForBattle` (single) tries snapshots, then falls back to the latest
+  preceding `cycle_start` audit event, then to 1.
+- `batchGetCycleNumbers` (used by `getRobotMetricProgression`, i.e. every progression
+  chart) consults **snapshots only**. With no snapshot covering a timestamp it takes
+  the closest preceding snapshot's cycle number, or 1 if there is none.
+
+Snapshot creation is wrapped so that a failure cannot abort a cycle, which is correct
+— but it means a missing snapshot is a live possibility, and when it happens every
+battle in that window is filed under the wrong cycle (or cycle 1). The progression
+series then renders with the points quietly in the wrong place, or empty, with no
+error anywhere. Fix is to give the batch path the same audit-log fallback the single
+path has, so the two cannot disagree, and to add a test that a progression built
+without snapshots still lands on the right cycles.
+
+Surfaced by `tests/analyticsApi.test.ts`, where the aggregate assertions need the
+fixture to have *no* snapshots (`getRobotPerformanceSummary` prefers snapshot
+`robotMetrics`, which are built from `battle_complete` audit events the fixture does
+not emit) while the progression assertion needs snapshots to exist. Having to satisfy
+both in one file is what made the divergence visible.

@@ -421,7 +421,6 @@ export class FacilityRecommendationService {
       select: {
         id: true,
         totalBattles: true,
-        totalTagTeamBattles: true,
         fame: true,
       },
     });
@@ -433,11 +432,21 @@ export class FacilityRecommendationService {
       return computeStreamingRevenue(0, 0, currentStudioLevel).totalRevenue;
     }
 
+    // KotH matches are the one mode `Robot.totalBattles` does not count, so they
+    // come from `standings` — the same correction `calculateStreamingRevenue`
+    // applies before awarding. Without it this estimate sits below what the
+    // player actually earns.
+    const kothStandings = await prisma.standing.findMany({
+      where: { entityType: 'robot', entityId: { in: robots.map((r) => r.id) }, mode: 'koth' },
+      select: { entityId: true, totalMatches: true },
+    });
+    const kothMatchesByRobot = new Map(kothStandings.map((s) => [s.entityId, s.totalMatches ?? 0]));
+
     // Average of the per-robot awards, each derived from the same function the
     // award path calls.
     let totalRevenue = 0;
     for (const robot of robots) {
-      const totalBattleCount = robot.totalBattles + robot.totalTagTeamBattles;
+      const totalBattleCount = robot.totalBattles + (kothMatchesByRobot.get(robot.id) ?? 0);
       totalRevenue += computeStreamingRevenue(totalBattleCount, robot.fame, currentStudioLevel).totalRevenue;
     }
 

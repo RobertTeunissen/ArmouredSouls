@@ -1,5 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import prisma from '../src/lib/prisma';
+import { MatchType } from '../generated/prisma';
+import schedulingService from '../src/services/scheduling/schedulingService';
+import { battlesForRobots, scheduledMatchesForRobots } from './cleanupHelper';
 import {
   validateResetEligibility,
   performAccountReset,
@@ -80,7 +83,7 @@ describe('ResetService', () => {
 
   afterEach(async () => {
     // Clean up in reverse order of foreign key dependencies
-    await prisma.scheduledMatch.deleteMany({ where: { OR: [{ robot1Id: testRobotId }, { robot2Id: testRobotId }] } });
+    await prisma.scheduledMatch.deleteMany({ where: scheduledMatchesForRobots([testRobotId, testRobotId]) });
     await prisma.scheduledTournamentMatch.deleteMany({ where: { OR: [{ participant1Id: testRobotId }, { participant2Id: testRobotId }] } });
     await prisma.resetLog.deleteMany({ where: { userId: testUserId } });
     await prisma.facility.deleteMany({ where: { userId: testUserId } });
@@ -120,15 +123,15 @@ describe('ResetService', () => {
         },
       });
 
-      // Create scheduled match
-      await prisma.scheduledMatch.create({
-        data: {
-          robot1Id: testRobotId,
-          robot2Id: opponent.id,
-          leagueType: 'bronze',
-          scheduledFor: new Date(Date.now() + 3600000), // 1 hour from now
-          status: 'scheduled',
-        },
+      // Create scheduled match (participant rows, not robot1_id/robot2_id — Spec #41)
+      await schedulingService.createMatch({
+        matchType: MatchType.league_1v1,
+        leagueType: 'bronze',
+        scheduledFor: new Date(Date.now() + 3600000), // 1 hour from now
+        participants: [
+          { participantType: 'robot', participantId: testRobotId, slot: 1 },
+          { participantType: 'robot', participantId: opponent.id, slot: 2 },
+        ],
       });
 
       const eligibility = await validateResetEligibility(testUserId);
@@ -139,7 +142,7 @@ describe('ResetService', () => {
       expect(eligibility.blockers[0].message).toContain('scheduled battles');
 
       // Cleanup - delete scheduled match first, then robot
-      await prisma.scheduledMatch.deleteMany({ where: { OR: [{ robot1Id: testRobotId }, { robot2Id: opponent.id }] } });
+      await prisma.scheduledMatch.deleteMany({ where: scheduledMatchesForRobots([testRobotId, opponent.id]) });
       await prisma.robot.delete({ where: { id: opponent.id } });
     });
 
@@ -208,13 +211,19 @@ describe('ResetService', () => {
       // Create very recent battle (within last 5 minutes)
       await prisma.battle.create({
         data: {
-          robot1Id: testRobotId,
-          robot2Id: opponent.id,
           battleType: 'league',
           leagueType: 'bronze',
           battleLog: {},
           durationSeconds: 60,
           createdAt: new Date(), // Just now
+          // Combatants are battle_participants rows since Spec #43 dropped
+          // battles.robot1_id / robot2_id.
+          participants: {
+            create: [
+              { robotId: testRobotId, team: 1, role: 'solo', credits: 0, eloBefore: 1200, eloAfter: 1200, finalHP: 100 },
+              { robotId: opponent.id, team: 2, role: 'solo', credits: 0, eloBefore: 1200, eloAfter: 1200, finalHP: 100 },
+            ],
+          },
         },
       });
 
@@ -226,7 +235,7 @@ describe('ResetService', () => {
       expect(eligibility.blockers[0].message).toContain('pending battle results');
 
       // Cleanup
-      await prisma.battle.deleteMany({ where: { robot1Id: testRobotId } });
+      await prisma.battle.deleteMany({ where: battlesForRobots([testRobotId]) });
       await prisma.robot.delete({ where: { id: opponent.id } });
     });
 
@@ -246,13 +255,17 @@ describe('ResetService', () => {
       // Create old battle (more than 5 minutes ago)
       await prisma.battle.create({
         data: {
-          robot1Id: testRobotId,
-          robot2Id: opponent.id,
           battleType: 'league',
           leagueType: 'bronze',
           battleLog: {},
           durationSeconds: 60,
           createdAt: new Date(Date.now() - 10 * 60 * 1000), // 10 minutes ago
+          participants: {
+            create: [
+              { robotId: testRobotId, team: 1, role: 'solo', credits: 0, eloBefore: 1200, eloAfter: 1200, finalHP: 100 },
+              { robotId: opponent.id, team: 2, role: 'solo', credits: 0, eloBefore: 1200, eloAfter: 1200, finalHP: 100 },
+            ],
+          },
         },
       });
 
@@ -262,7 +275,7 @@ describe('ResetService', () => {
       expect(eligibility.blockers).toHaveLength(0);
 
       // Cleanup
-      await prisma.battle.deleteMany({ where: { robot1Id: testRobotId } });
+      await prisma.battle.deleteMany({ where: battlesForRobots([testRobotId]) });
       await prisma.robot.delete({ where: { id: opponent.id } });
     });
 
@@ -280,14 +293,14 @@ describe('ResetService', () => {
       });
 
       // Create scheduled match
-      await prisma.scheduledMatch.create({
-        data: {
-          robot1Id: testRobotId,
-          robot2Id: opponent.id,
-          leagueType: 'bronze',
-          scheduledFor: new Date(Date.now() + 3600000),
-          status: 'scheduled',
-        },
+      await schedulingService.createMatch({
+        matchType: MatchType.league_1v1,
+        leagueType: 'bronze',
+        scheduledFor: new Date(Date.now() + 3600000),
+        participants: [
+          { participantType: 'robot', participantId: testRobotId, slot: 1 },
+          { participantType: 'robot', participantId: opponent.id, slot: 2 },
+        ],
       });
 
       // Create tournament
@@ -321,7 +334,7 @@ describe('ResetService', () => {
       expect(eligibility.blockers.some((b) => b.type === 'tournament')).toBe(true);
 
       // Cleanup - delete in correct order
-      await prisma.scheduledMatch.deleteMany({ where: { OR: [{ robot1Id: testRobotId }, { robot2Id: opponent.id }] } });
+      await prisma.scheduledMatch.deleteMany({ where: scheduledMatchesForRobots([testRobotId, opponent.id]) });
       await prisma.scheduledTournamentMatch.deleteMany({ where: { tournamentId: tournament.id } });
       await prisma.tournament.delete({ where: { id: tournament.id } });
       await prisma.robot.delete({ where: { id: opponent.id } });
@@ -391,14 +404,14 @@ describe('ResetService', () => {
       });
 
       // Create scheduled match to block reset
-      await prisma.scheduledMatch.create({
-        data: {
-          robot1Id: testRobotId,
-          robot2Id: opponent.id,
-          leagueType: 'bronze',
-          scheduledFor: new Date(Date.now() + 3600000),
-          status: 'scheduled',
-        },
+      await schedulingService.createMatch({
+        matchType: MatchType.league_1v1,
+        leagueType: 'bronze',
+        scheduledFor: new Date(Date.now() + 3600000),
+        participants: [
+          { participantType: 'robot', participantId: testRobotId, slot: 1 },
+          { participantType: 'robot', participantId: opponent.id, slot: 2 },
+        ],
       });
 
       await expect(performAccountReset(testUserId)).rejects.toThrow('Reset not allowed');
@@ -408,7 +421,7 @@ describe('ResetService', () => {
       expect(robots.length).toBeGreaterThan(0);
 
       // Cleanup - delete scheduled match first, then robot
-      await prisma.scheduledMatch.deleteMany({ where: { OR: [{ robot1Id: testRobotId }, { robot2Id: opponent.id }] } });
+      await prisma.scheduledMatch.deleteMany({ where: scheduledMatchesForRobots([testRobotId, opponent.id]) });
       await prisma.robot.delete({ where: { id: opponent.id } });
     });
 
@@ -497,14 +510,14 @@ describe('ResetService', () => {
         },
       });
 
-      await prisma.scheduledMatch.create({
-        data: {
-          robot1Id: testRobotId,
-          robot2Id: opponent.id,
-          leagueType: 'bronze',
-          scheduledFor: new Date(Date.now() + 3600000),
-          status: 'scheduled',
-        },
+      await schedulingService.createMatch({
+        matchType: MatchType.league_1v1,
+        leagueType: 'bronze',
+        scheduledFor: new Date(Date.now() + 3600000),
+        participants: [
+          { participantType: 'robot', participantId: testRobotId, slot: 1 },
+          { participantType: 'robot', participantId: opponent.id, slot: 2 },
+        ],
       });
 
       const robotsBeforeAttempt = await prisma.robot.count({ where: { userId: testUserId } });
@@ -527,7 +540,7 @@ describe('ResetService', () => {
       expect(facilitiesAfterAttempt).toBe(facilitiesBeforeAttempt);
 
       // Cleanup - delete scheduled match first, then robot
-      await prisma.scheduledMatch.deleteMany({ where: { OR: [{ robot1Id: testRobotId }, { robot2Id: opponent.id }] } });
+      await prisma.scheduledMatch.deleteMany({ where: scheduledMatchesForRobots([testRobotId, opponent.id]) });
       await prisma.robot.delete({ where: { id: opponent.id } });
     });
   });

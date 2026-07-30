@@ -1,4 +1,4 @@
-import { Robot, StandingsMode } from '../../../generated/prisma';
+import { Standing, StandingsMode } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import { achievementService } from '../achievement';
 
@@ -46,7 +46,7 @@ const ROBOT_LEAGUE_CONFIG: LeagueEngineConfig = {
 
 // ─── Robot Adapter (uses unified factory) ────────────────────────────────────
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- factory returns LeagueAdapter<any>; narrowing breaks callers that expect the full Robot shape
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- createStandingsAdapter is shared by five modes and returns LeagueAdapter<any>; the public functions below narrow to Standing, which is what it actually yields
 const robotAdapter: LeagueAdapter<any> = createStandingsAdapter('league_1v1', {
   maxPerInstance: MAX_ROBOTS_PER_INSTANCE,
   entityType: 'robot',
@@ -73,32 +73,41 @@ export interface FullRebalancingSummary {
 /**
  * Determine which robots should be promoted from a SPECIFIC INSTANCE
  * Robots must meet per-tier LP threshold AND be in top 10% AND ≥5 cycles in current league
+ *
+ * Returns `Standing` rows, not `Robot` rows. These signatures said `Robot[]` while
+ * `robotAdapter` has always returned `prisma.standing.findMany(...)` — the
+ * `LeagueAdapter<any>` in between hid the mismatch. Since Spec #40 moved league data
+ * out of the Robot model, `Robot` no longer even carries `leaguePoints` or
+ * `cyclesInTier`, so the declared type was unusable: any caller reading the LP it had
+ * just sorted by would fail to compile.
  */
-export async function determinePromotions(instanceId: string, excludeRobotIds: Set<number> = new Set()): Promise<Robot[]> {
+export async function determinePromotions(instanceId: string, excludeRobotIds: Set<number> = new Set()): Promise<Standing[]> {
   return determinePromotionsForInstance(instanceId, ROBOT_LEAGUE_CONFIG, robotAdapter, excludeRobotIds);
 }
 
 /**
  * Determine which robots should be demoted from a SPECIFIC INSTANCE
  */
-export async function determineDemotions(instanceId: string, excludeRobotIds: Set<number> = new Set()): Promise<Robot[]> {
+export async function determineDemotions(instanceId: string, excludeRobotIds: Set<number> = new Set()): Promise<Standing[]> {
   return determineDemotionsForInstance(instanceId, ROBOT_LEAGUE_CONFIG, robotAdapter, excludeRobotIds);
 }
 
 /**
  * Promote a robot to the next tier
  * LP retention - league points are NOT reset to 0
+ *
+ * Takes the robot's `Standing` row, which is what `determinePromotions` hands back.
  */
-export async function promoteRobot(robot: Robot): Promise<void> {
-  return promoteEntity(robot, ROBOT_LEAGUE_CONFIG, robotAdapter);
+export async function promoteRobot(standing: Standing): Promise<void> {
+  return promoteEntity(standing, ROBOT_LEAGUE_CONFIG, robotAdapter);
 }
 
 /**
  * Demote a robot to the previous tier
  * LP retention - league points are NOT reset to 0
  */
-export async function demoteRobot(robot: Robot): Promise<void> {
-  return demoteEntity(robot, ROBOT_LEAGUE_CONFIG, robotAdapter);
+export async function demoteRobot(standing: Standing): Promise<void> {
+  return demoteEntity(standing, ROBOT_LEAGUE_CONFIG, robotAdapter);
 }
 
 /**

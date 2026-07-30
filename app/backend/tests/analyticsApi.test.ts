@@ -8,15 +8,61 @@
 
 import request from 'supertest';
 import express from 'express';
+import jwt from 'jsonwebtoken';
 import analyticsRoutes from '../src/routes/analytics';
+import { errorHandler } from '../src/middleware/errorHandler';
+import { getConfig } from '../src/config/env';
 import { cycleSnapshotService } from '../src/services/cycle/cycleSnapshotService';
 import { eventLogger } from '../src/services/common/eventLogger';
 import prisma from '../src/lib/prisma';
+import { battlesForRobots } from './cleanupHelper';
+
+/**
+ * Every analytics route now sits behind `authenticateToken`, and the
+ * per-user routes additionally require the caller to be the owner or an
+ * admin. Rather than threading a header through ~180 call sites, the test app
+ * injects a real signed JWT for an admin user on every request, so the
+ * genuine auth middleware still runs and resolves the role from the database.
+ *
+ * The 401/403 paths are covered by tests/middleware/auth.test.ts and
+ * tests/matches.test.ts; this suite asserts authorised behaviour.
+ */
+const ADMIN_USER_ID = 900001;
+const ADMIN_USERNAME = 'analytics_api_admin';
+let authToken = '';
 
 // Create test app
 const app = express();
 app.use(express.json());
+app.use((req, _res, next) => {
+  req.headers.authorization = `Bearer ${authToken}`;
+  next();
+});
 app.use('/api/analytics', analyticsRoutes);
+app.use(errorHandler);
+
+beforeAll(async () => {
+  await prisma.user.upsert({
+    where: { id: ADMIN_USER_ID },
+    update: { role: 'admin', tokenVersion: 0 },
+    create: {
+      id: ADMIN_USER_ID,
+      username: ADMIN_USERNAME,
+      passwordHash: 'test',
+      role: 'admin',
+    },
+  });
+
+  authToken = jwt.sign(
+    { userId: ADMIN_USER_ID, username: ADMIN_USERNAME, role: 'admin', tokenVersion: 0 },
+    getConfig().jwtSecret,
+    { algorithm: 'HS256' }
+  );
+});
+
+afterAll(async () => {
+  await prisma.user.deleteMany({ where: { id: ADMIN_USER_ID } });
+});
 
 describe('Analytics API - Stable Summary', () => {
   const testCycleStart = 8000;
@@ -159,7 +205,7 @@ describe('Analytics API - Stable Summary', () => {
       .get('/api/analytics/stable/invalid/summary')
       .expect(400);
 
-    expect(response.body).toHaveProperty('error', 'Invalid userId');
+    expect(response.body).toHaveProperty('code', 'VALIDATION_ERROR');
   });
 
   it('should return 400 for invalid lastNCycles parameter', async () => {
@@ -497,14 +543,7 @@ describe('Analytics API - Robot Performance Endpoint', () => {
         },
       },
     });
-    await prisma.battle.deleteMany({
-      where: {
-        OR: [
-          { robot1Id: testRobotId },
-          { robot2Id: testRobotId },
-        ],
-      },
-    });
+    await prisma.battle.deleteMany({ where: battlesForRobots([testRobotId]) });
 
     // Ensure test user exists
     await prisma.user.upsert({
@@ -558,8 +597,6 @@ describe('Analytics API - Robot Performance Endpoint', () => {
       // Create battles for the robot
       const battle = await prisma.battle.create({
         data: {
-          robot1Id: testRobotId,
-          robot2Id: testRobotId + 1,
           winnerId: i % 2 === 0 ? testRobotId : testRobotId + 1,
           battleType: 'league',
           leagueType: 'bronze',
@@ -601,20 +638,20 @@ describe('Analytics API - Robot Performance Endpoint', () => {
       });
 
       await eventLogger.logCycleComplete(cycleNumber, 1000);
-      // Don't create snapshot - robot performance service will query battles directly
+
+      // Deliberately no snapshot: getRobotPerformanceSummary prefers snapshot
+      // robotMetrics when any snapshot covers the range and only falls back to
+      // the Battle table otherwise. Snapshot robotMetrics are built from
+      // battle_complete audit events, which this fixture does not emit, so a
+      // snapshot here would report zero battles. The aggregate assertions below
+      // exercise the Battle-table path; the progression test creates snapshots
+      // for itself, because that path needs them.
     }
   });
 
   afterAll(async () => {
     // Clean up test data
-    await prisma.battle.deleteMany({
-      where: {
-        OR: [
-          { robot1Id: testRobotId },
-          { robot2Id: testRobotId },
-        ],
-      },
-    });
+    await prisma.battle.deleteMany({ where: battlesForRobots([testRobotId]) });
     await prisma.cycleSnapshot.deleteMany({
       where: {
         cycleNumber: {
@@ -723,6 +760,27 @@ describe('Analytics API - Robot Performance Endpoint', () => {
   });
 
   it('should include ELO progression when requested', async () => {
+    // Progression attributes each battle to a cycle via
+    // robotPerformanceService.batchGetCycleNumbers, which resolves a timestamp
+    // against CycleSnapshot windows only — unlike the single-battle
+    // getCycleNumberForBattle, it has no audit-log fallback. Without a snapshot
+    // per cycle every battle lands on cycle 1 and the series comes back empty.
+    // Snapshots are created here rather than in beforeAll so the aggregate tests
+    // keep exercising the Battle-table path (see the note there).
+    for (let i = 0; i < 3; i++) {
+      await cycleSnapshotService.createSnapshot(testCycleStart + i);
+    }
+
+    try {
+      await runEloProgressionAssertions();
+    } finally {
+      await prisma.cycleSnapshot.deleteMany({
+        where: { cycleNumber: { gte: testCycleStart, lte: testCycleStart + 2 } },
+      });
+    }
+  });
+
+  async function runEloProgressionAssertions(): Promise<void> {
     const response = await request(app)
       .get(`/api/analytics/robot/${testRobotId}/performance?cycleRange=[${testCycleStart},${testCycleStart + 2}]&includeELOProgression=true`)
       .expect(200);
@@ -743,7 +801,7 @@ describe('Analytics API - Robot Performance Endpoint', () => {
       expect(point).toHaveProperty('elo');
       expect(point).toHaveProperty('change');
     });
-  });
+  }
 
   it('should not include ELO progression by default', async () => {
     const response = await request(app)
@@ -758,7 +816,7 @@ describe('Analytics API - Robot Performance Endpoint', () => {
       .get(`/api/analytics/robot/invalid/performance?cycleRange=[${testCycleStart},${testCycleStart + 2}]`)
       .expect(400);
 
-    expect(response.body).toHaveProperty('error', 'Invalid robotId');
+    expect(response.body).toHaveProperty('code', 'VALIDATION_ERROR');
   });
 
   it('should return 400 when cycleRange is missing', async () => {
@@ -766,8 +824,8 @@ describe('Analytics API - Robot Performance Endpoint', () => {
       .get(`/api/analytics/robot/${testRobotId}/performance`)
       .expect(400);
 
-    expect(response.body).toHaveProperty('error', 'Missing required parameter');
-    expect(response.body.message).toContain('cycleRange');
+    expect(response.body).toHaveProperty('code', 'MISSING_PARAMETER');
+    expect(response.body.error).toContain('cycleRange');
   });
 
   it('should return 400 for invalid cycleRange format', async () => {
@@ -775,7 +833,7 @@ describe('Analytics API - Robot Performance Endpoint', () => {
       .get(`/api/analytics/robot/${testRobotId}/performance?cycleRange=invalid`)
       .expect(400);
 
-    expect(response.body).toHaveProperty('error', 'Invalid cycleRange format');
+    expect(response.body).toHaveProperty('code', 'INVALID_CYCLE_RANGE_FORMAT');
   });
 
   it('should return 400 for invalid cycleRange format (missing brackets)', async () => {
@@ -783,7 +841,7 @@ describe('Analytics API - Robot Performance Endpoint', () => {
       .get(`/api/analytics/robot/${testRobotId}/performance?cycleRange=1,10`)
       .expect(400);
 
-    expect(response.body).toHaveProperty('error', 'Invalid cycleRange format');
+    expect(response.body).toHaveProperty('code', 'INVALID_CYCLE_RANGE_FORMAT');
   });
 
   it('should return 400 for negative cycle numbers', async () => {
@@ -791,7 +849,7 @@ describe('Analytics API - Robot Performance Endpoint', () => {
       .get(`/api/analytics/robot/${testRobotId}/performance?cycleRange=[-1,10]`)
       .expect(400);
 
-    expect(response.body).toHaveProperty('error', 'Invalid cycle numbers');
+    expect(response.body).toHaveProperty('code', 'INVALID_CYCLE_NUMBERS');
   });
 
   it('should return 400 when startCycle > endCycle', async () => {
@@ -799,7 +857,7 @@ describe('Analytics API - Robot Performance Endpoint', () => {
       .get(`/api/analytics/robot/${testRobotId}/performance?cycleRange=[10,1]`)
       .expect(400);
 
-    expect(response.body).toHaveProperty('error', 'Invalid cycle range');
+    expect(response.body).toHaveProperty('code', 'INVALID_CYCLE_RANGE');
   });
 
   it('should return 404 for non-existent robot', async () => {
@@ -809,7 +867,7 @@ describe('Analytics API - Robot Performance Endpoint', () => {
       .get(`/api/analytics/robot/${nonExistentRobotId}/performance?cycleRange=[${testCycleStart},${testCycleStart + 2}]`)
       .expect(404);
 
-    expect(response.body).toHaveProperty('error', 'Robot not found');
+    expect(response.body).toHaveProperty('code', 'ROBOT_NOT_FOUND');
   });
 
   it('should handle robot with no battles in cycle range', async () => {
@@ -915,7 +973,7 @@ describe('Analytics API - Robot Performance Endpoint', () => {
       .get(`/api/analytics/robot/${testRobotId}/performance?cycleRange=[${testCycleStart},${testCycleStart + 2}]&includeMetricProgression=true&progressionMetric=invalid`)
       .expect(400);
 
-    expect(response.body).toHaveProperty('error', 'Invalid progressionMetric');
+    expect(response.body).toHaveProperty('code', 'INVALID_METRIC');
   });
 
   it('should default to elo metric when progressionMetric is not specified', async () => {
@@ -1004,14 +1062,7 @@ describe('Analytics API - Robot ELO Progression Endpoint', () => {
         },
       },
     });
-    await prisma.battle.deleteMany({
-      where: {
-        OR: [
-          { robot1Id: testRobotId },
-          { robot2Id: testRobotId },
-        ],
-      },
-    });
+    await prisma.battle.deleteMany({ where: battlesForRobots([testRobotId]) });
 
     // Ensure test user exists
     await prisma.user.upsert({
@@ -1071,8 +1122,6 @@ describe('Analytics API - Robot ELO Progression Endpoint', () => {
 
         await prisma.battle.create({
           data: {
-            robot1Id: testRobotId,
-            robot2Id: testRobotId + 1,
             winnerId: testRobotId,
             winnerReward: 100,
             loserReward: 50,
@@ -1100,16 +1149,7 @@ describe('Analytics API - Robot ELO Progression Endpoint', () => {
 
   afterAll(async () => {
     // Clean up test data
-    await prisma.battle.deleteMany({
-      where: {
-        OR: [
-          { robot1Id: testRobotId },
-          { robot2Id: testRobotId },
-          { robot1Id: testRobotId + 1 },
-          { robot2Id: testRobotId + 1 },
-        ],
-      },
-    });
+    await prisma.battle.deleteMany({ where: battlesForRobots([testRobotId, testRobotId + 1]) });
     await prisma.cycleSnapshot.deleteMany({
       where: {
         cycleNumber: {
@@ -1259,7 +1299,7 @@ describe('Analytics API - Robot ELO Progression Endpoint', () => {
       .get(`/api/analytics/robot/invalid/elo?cycleRange=[${testCycleStart},${testCycleStart + 4}]`)
       .expect(400);
 
-    expect(response.body).toHaveProperty('error', 'Invalid robotId');
+    expect(response.body).toHaveProperty('code', 'VALIDATION_ERROR');
   });
 
   it('should return 400 when cycleRange is missing', async () => {
@@ -1267,7 +1307,7 @@ describe('Analytics API - Robot ELO Progression Endpoint', () => {
       .get(`/api/analytics/robot/${testRobotId}/elo`)
       .expect(400);
 
-    expect(response.body).toHaveProperty('error', 'Missing required parameter');
+    expect(response.body).toHaveProperty('code', 'MISSING_PARAMETER');
   });
 
   it('should return 400 for invalid cycleRange format', async () => {
@@ -1275,7 +1315,7 @@ describe('Analytics API - Robot ELO Progression Endpoint', () => {
       .get(`/api/analytics/robot/${testRobotId}/elo?cycleRange=invalid`)
       .expect(400);
 
-    expect(response.body).toHaveProperty('error', 'Invalid cycleRange format');
+    expect(response.body).toHaveProperty('code', 'INVALID_CYCLE_RANGE_FORMAT');
   });
 
   it('should return 400 for negative cycle numbers', async () => {
@@ -1283,7 +1323,7 @@ describe('Analytics API - Robot ELO Progression Endpoint', () => {
       .get(`/api/analytics/robot/${testRobotId}/elo?cycleRange=[-1,10]`)
       .expect(400);
 
-    expect(response.body).toHaveProperty('error', 'Invalid cycle numbers');
+    expect(response.body).toHaveProperty('code', 'INVALID_CYCLE_NUMBERS');
   });
 
   it('should return 400 when startCycle > endCycle', async () => {
@@ -1291,7 +1331,7 @@ describe('Analytics API - Robot ELO Progression Endpoint', () => {
       .get(`/api/analytics/robot/${testRobotId}/elo?cycleRange=[10,5]`)
       .expect(400);
 
-    expect(response.body).toHaveProperty('error', 'Invalid cycle range');
+    expect(response.body).toHaveProperty('code', 'INVALID_CYCLE_RANGE');
   });
 
   it('should return 404 for non-existent robot', async () => {
@@ -1301,7 +1341,7 @@ describe('Analytics API - Robot ELO Progression Endpoint', () => {
       .get(`/api/analytics/robot/${nonExistentRobotId}/elo?cycleRange=[${testCycleStart},${testCycleStart + 4}]`)
       .expect(404);
 
-    expect(response.body).toHaveProperty('error', 'Robot not found');
+    expect(response.body).toHaveProperty('code', 'ROBOT_NOT_FOUND');
   });
 
   it('should handle robot with no battles in cycle range', async () => {
@@ -1429,8 +1469,6 @@ describe('Analytics API - Robot ELO Progression Endpoint', () => {
 
     await prisma.battle.create({
       data: {
-        robot1Id: singleBattleRobotId,
-        robot2Id: testRobotId,
         winnerId: singleBattleRobotId,
         winnerReward: 100,
         loserReward: 50,
@@ -1458,9 +1496,7 @@ describe('Analytics API - Robot ELO Progression Endpoint', () => {
     }
 
     // Clean up
-    await prisma.battle.deleteMany({
-      where: { robot1Id: singleBattleRobotId },
-    });
+    await prisma.battle.deleteMany({ where: battlesForRobots([singleBattleRobotId]) });
     await prisma.robot.delete({
       where: { id: singleBattleRobotId },
     });
@@ -1490,14 +1526,7 @@ describe('Analytics API - Robot Metric Progression Endpoint', () => {
         },
       },
     });
-    await prisma.battle.deleteMany({
-      where: {
-        OR: [
-          { robot1Id: testRobotId },
-          { robot2Id: testRobotId },
-        ],
-      },
-    });
+    await prisma.battle.deleteMany({ where: battlesForRobots([testRobotId]) });
     await prisma.robot.deleteMany({
       where: { id: testRobotId },
     });
@@ -1560,8 +1589,6 @@ describe('Analytics API - Robot Metric Progression Endpoint', () => {
         
         await prisma.battle.create({
           data: {
-            robot1Id: testRobotId,
-            robot2Id: testRobotId + 1,
             winnerId: testRobotId,
             winnerReward: 100,
             loserReward: 50,
@@ -1587,14 +1614,7 @@ describe('Analytics API - Robot Metric Progression Endpoint', () => {
 
   afterAll(async () => {
     // Clean up test data
-    await prisma.battle.deleteMany({
-      where: {
-        OR: [
-          { robot1Id: testRobotId },
-          { robot2Id: testRobotId },
-        ],
-      },
-    });
+    await prisma.battle.deleteMany({ where: battlesForRobots([testRobotId]) });
     await prisma.robot.deleteMany({
       where: { id: testRobotId },
     });
@@ -1723,7 +1743,7 @@ describe('Analytics API - Robot Metric Progression Endpoint', () => {
       .get(`/api/analytics/robot/${testRobotId}/metric/invalidMetric?cycleRange=[${testCycleStart},${testCycleStart + 4}]`)
       .expect(400);
 
-    expect(response.body).toHaveProperty('error', 'Invalid metric');
+    expect(response.body).toHaveProperty('code', 'INVALID_METRIC');
   });
 
   it('should include moving average when requested', async () => {
@@ -1757,7 +1777,7 @@ describe('Analytics API - Robot Metric Progression Endpoint', () => {
       .get(`/api/analytics/robot/invalid/metric/elo?cycleRange=[${testCycleStart},${testCycleStart + 4}]`)
       .expect(400);
 
-    expect(response.body).toHaveProperty('error', 'Invalid robotId');
+    expect(response.body).toHaveProperty('code', 'VALIDATION_ERROR');
   });
 
   it('should return 400 when cycleRange is missing', async () => {
@@ -1765,7 +1785,7 @@ describe('Analytics API - Robot Metric Progression Endpoint', () => {
       .get(`/api/analytics/robot/${testRobotId}/metric/elo`)
       .expect(400);
 
-    expect(response.body).toHaveProperty('error', 'Missing required parameter');
+    expect(response.body).toHaveProperty('code', 'MISSING_PARAMETER');
   });
 
   it('should return 404 for non-existent robot', async () => {
@@ -1775,7 +1795,7 @@ describe('Analytics API - Robot Metric Progression Endpoint', () => {
       .get(`/api/analytics/robot/${nonExistentRobotId}/metric/elo?cycleRange=[${testCycleStart},${testCycleStart + 4}]`)
       .expect(404);
 
-    expect(response.body).toHaveProperty('error', 'Robot not found');
+    expect(response.body).toHaveProperty('code', 'ROBOT_NOT_FOUND');
   });
 
   it('should handle empty data gracefully', async () => {
@@ -1976,12 +1996,29 @@ describe('Analytics API - Facility ROI', () => {
     expect(response.body).toHaveProperty('facilityType', 'merchandising_hub');
     expect(response.body).toHaveProperty('currentLevel', 1);
     expect(response.body).toHaveProperty('totalInvestment', 150000); // Level 1 cost
-    expect(response.body).toHaveProperty('totalReturns', 25000); // 5000 * 5 cycles
-    expect(response.body).toHaveProperty('totalOperatingCosts', 35000); // 7000 * 5 cycles
-    expect(response.body).toHaveProperty('netROI');
     expect(response.body).toHaveProperty('cyclesSincePurchase', 5);
-    expect(response.body).toHaveProperty('isProfitable', false);
-    expect(response.body).toHaveProperty('breakevenCycle');
+
+    // unifiedFacilityROIService sources returns from CycleSnapshot.stableMetrics
+    // and falls back to a formula estimate when the ownership period has no
+    // snapshots. This fixture logs audit events but creates no snapshots, so the
+    // estimate path is the one under test — hence no hard-coded returns figure,
+    // which would only pin down the current balance numbers.
+    expect(response.body).toHaveProperty('dataSource', 'estimate');
+    expect(typeof response.body.totalReturns).toBe('number');
+
+    // Operating costs come from the facility config, not from the logged
+    // operating-cost events: daily cost × cycles owned.
+    expect(response.body.totalOperatingCosts).toBeGreaterThan(0);
+
+    // The reported ROI must agree with the figures it was derived from.
+    const { totalReturns, totalOperatingCosts, totalInvestment, netROI, paidOff } = response.body;
+    expect(netROI).toBeCloseTo(
+      (totalReturns - totalOperatingCosts - totalInvestment) / totalInvestment,
+      10
+    );
+    expect(paidOff).toBe(totalReturns - totalOperatingCosts >= totalInvestment);
+    // Not yet paid off, so a payoff projection is expected rather than null.
+    expect(response.body).toHaveProperty('projectedPayoffCycles');
   });
 
   it('should return 400 for missing facilityType parameter', async () => {
@@ -1989,7 +2026,7 @@ describe('Analytics API - Facility ROI', () => {
       .get(`/api/analytics/facility/${testUserId}/roi`)
       .expect(400);
 
-    expect(response.body).toHaveProperty('error', 'Missing required parameter');
+    expect(response.body).toHaveProperty('code', 'MISSING_PARAMETER');
   });
 
   it('should return 400 for invalid facilityType', async () => {
@@ -1997,7 +2034,7 @@ describe('Analytics API - Facility ROI', () => {
       .get(`/api/analytics/facility/${testUserId}/roi?facilityType=invalid_facility`)
       .expect(400);
 
-    expect(response.body).toHaveProperty('error', 'Invalid facilityType');
+    expect(response.body).toHaveProperty('code', 'INVALID_FACILITY_TYPE');
   });
 
   it('should return 404 for non-existent user', async () => {
@@ -2005,7 +2042,7 @@ describe('Analytics API - Facility ROI', () => {
       .get(`/api/analytics/facility/999999/roi?facilityType=merchandising_hub`)
       .expect(404);
 
-    expect(response.body).toHaveProperty('error', 'User not found');
+    expect(response.body).toHaveProperty('code', 'USER_NOT_FOUND');
   });
 
   it('should return 404 for facility not purchased', async () => {
@@ -2013,7 +2050,7 @@ describe('Analytics API - Facility ROI', () => {
       .get(`/api/analytics/facility/${testUserId}/roi?facilityType=repair_bay`)
       .expect(404);
 
-    expect(response.body).toHaveProperty('error', 'Facility not purchased');
+    expect(response.body).toHaveProperty('code', 'FACILITY_NOT_FOUND');
   });
 
   it('should return ROI for all facilities', async () => {
@@ -2021,14 +2058,22 @@ describe('Analytics API - Facility ROI', () => {
       .get(`/api/analytics/facility/${testUserId}/roi/all`)
       .expect(200);
 
-    expect(response.body).toHaveProperty('userId', testUserId);
-    expect(response.body).toHaveProperty('facilities');
+    // AllEconomicROIsResult nests the aggregates under `totals` and carries no
+    // userId — the old flat shape belonged to the retired roiCalculatorService.
     expect(Array.isArray(response.body.facilities)).toBe(true);
-    expect(response.body.facilities.length).toBe(1); // Only income_generator purchased
-    expect(response.body).toHaveProperty('totalInvestment');
-    expect(response.body).toHaveProperty('totalReturns');
-    expect(response.body).toHaveProperty('totalOperatingCosts');
-    expect(response.body).toHaveProperty('overallNetROI');
+    expect(response.body.facilities.length).toBe(1); // Only merchandising_hub purchased
+    expect(response.body.facilities[0]).toHaveProperty('facilityType', 'merchandising_hub');
+
+    expect(response.body).toHaveProperty('totals');
+    const { totals, facilities } = response.body;
+    expect(totals).toHaveProperty('overallNetROI');
+
+    // The totals must be the sum of the per-facility rows they claim to summarise.
+    const sum = (key: string) =>
+      facilities.reduce((acc: number, f: Record<string, number>) => acc + f[key], 0);
+    expect(totals.totalInvestment).toBe(sum('totalInvestment'));
+    expect(totals.totalReturns).toBe(sum('totalReturns'));
+    expect(totals.totalOperatingCosts).toBe(sum('totalOperatingCosts'));
   });
 
   it('should return 400 for invalid userId in ROI endpoint', async () => {
@@ -2036,7 +2081,7 @@ describe('Analytics API - Facility ROI', () => {
       .get(`/api/analytics/facility/invalid/roi?facilityType=merchandising_hub`)
       .expect(400);
 
-    expect(response.body).toHaveProperty('error', 'Invalid userId');
+    expect(response.body).toHaveProperty('code', 'VALIDATION_ERROR');
   });
 
   it('should return 400 for invalid userId in all ROI endpoint', async () => {
@@ -2044,7 +2089,7 @@ describe('Analytics API - Facility ROI', () => {
       .get(`/api/analytics/facility/invalid/roi/all`)
       .expect(400);
 
-    expect(response.body).toHaveProperty('error', 'Invalid userId');
+    expect(response.body).toHaveProperty('code', 'VALIDATION_ERROR');
   });
 });
 
@@ -2098,7 +2143,7 @@ describe('GET /api/analytics/facility/:userId/recommendations', () => {
 
   it('should return facility recommendations', async () => {
     const response = await request(app)
-      .get(`/api/analytics/facility/${testUserId}/recommendations?lastNCycles=10`)
+      .get(`/api/analytics/facility/${testUserId}/recommendations`)
       .expect(200);
 
     expect(response.body).toHaveProperty('recommendations');
@@ -2107,7 +2152,9 @@ describe('GET /api/analytics/facility/:userId/recommendations', () => {
     expect(response.body).toHaveProperty('userCurrency', 2000000);
     expect(response.body).toHaveProperty('userPrestige', 10000);
     expect(response.body).toHaveProperty('analysisWindow');
-    expect(response.body.analysisWindow).toHaveProperty('cycleCount', 10);
+    // Recommendations analyse lifetime data: cycle 1 through the current cycle.
+    expect(response.body.analysisWindow).toHaveProperty('startCycle', 1);
+    expect(response.body.analysisWindow).toHaveProperty('cycleCount', 20);
 
     // Verify recommendations are sorted by ROI
     if (response.body.recommendations.length > 1) {
@@ -2132,13 +2179,14 @@ describe('GET /api/analytics/facility/:userId/recommendations', () => {
     }
   });
 
-  it('should use default lastNCycles when not provided', async () => {
+  it('should ignore a lastNCycles query parameter and analyse lifetime data', async () => {
     const response = await request(app)
-      .get(`/api/analytics/facility/${testUserId}/recommendations`)
+      .get(`/api/analytics/facility/${testUserId}/recommendations?lastNCycles=3`)
       .expect(200);
 
     expect(response.body).toHaveProperty('analysisWindow');
-    expect(response.body.analysisWindow).toHaveProperty('cycleCount', 10); // Default
+    expect(response.body.analysisWindow).toHaveProperty('startCycle', 1);
+    expect(response.body.analysisWindow).toHaveProperty('cycleCount', 20);
   });
 
   it('should return 400 for invalid userId', async () => {
@@ -2146,22 +2194,19 @@ describe('GET /api/analytics/facility/:userId/recommendations', () => {
       .get(`/api/analytics/facility/invalid/recommendations`)
       .expect(400);
 
-    expect(response.body).toHaveProperty('error', 'Invalid userId');
+    expect(response.body).toHaveProperty('code', 'VALIDATION_ERROR');
   });
 
-  it('should return 400 for invalid lastNCycles parameter', async () => {
-    const response = await request(app)
-      .get(`/api/analytics/facility/${testUserId}/recommendations?lastNCycles=-5`)
-      .expect(400);
-
-    expect(response.body).toHaveProperty('error', 'Invalid lastNCycles parameter');
-  });
+  // Removed: 'should return 400 for invalid lastNCycles parameter'.
+  // The recommendations endpoint no longer accepts a lastNCycles window —
+  // facilityRecommendationService analyses lifetime data (cycle 1 → current),
+  // so there is no parameter left to reject. Ignoring behaviour is asserted above.
 
   it('should return 404 for non-existent user', async () => {
     const response = await request(app)
       .get(`/api/analytics/facility/999999/recommendations`)
       .expect(404);
 
-    expect(response.body).toHaveProperty('error', 'User not found');
+    expect(response.body).toHaveProperty('code', 'USER_NOT_FOUND');
   });
 });
