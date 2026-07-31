@@ -98,6 +98,9 @@ vi.mock('../../components/RobotImageSelector', () => ({
 vi.mock('../../components/Toast', () => ({
   default: () => null,
 }));
+vi.mock('../../components/robot-setup/RobotEligibilityChecklist', () => ({
+  default: () => null,
+}));
 vi.mock('../../utils/matchmakingApi', () => ({
   getMatchHistory: vi.fn().mockResolvedValue({ data: [], pagination: { page: 1, pageSize: 50, total: 0, totalPages: 0 } }),
   BattleHistory: {},
@@ -205,6 +208,9 @@ describe('RobotDetailPage - League History Tab', () => {
       if (url.includes('/grand-melee-standing')) {
         return Promise.resolve({ data: { standing: null } });
       }
+      if (url.includes('/scheduling-eligibility')) {
+        return Promise.resolve({ data: { robotId: 1, isEligible: true, isFullyConfigured: true, gates: [] } });
+      }
       return Promise.resolve({ data: [] });
     });
   });
@@ -241,6 +247,9 @@ describe('RobotDetailPage - League History Tab', () => {
       }
       if (url.includes('/grand-melee-standing')) {
         return Promise.resolve({ data: { standing: null } });
+      }
+      if (url.includes('/scheduling-eligibility')) {
+        return Promise.resolve({ data: { robotId: 1, isEligible: true, isFullyConfigured: true, gates: [] } });
       }
       return Promise.resolve({ data: [] });
     });

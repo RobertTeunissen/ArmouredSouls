@@ -146,7 +146,7 @@ describe('CreateRobotPage - Onboarding Integration', () => {
       });
     });
 
-    it('should navigate to robot detail page after creation in normal mode', async () => {
+    it('should navigate to setup wizard after creation in normal mode', async () => {
       const user = userEvent.setup();
 
       vi.mocked(apiClient.post).mockResolvedValue({
@@ -165,7 +165,7 @@ describe('CreateRobotPage - Onboarding Integration', () => {
       await user.click(screen.getByRole('button', { name: /Create Robot/i }));
 
       await waitFor(() => {
-        expect(mockNavigate).toHaveBeenCalledWith('/robots/42');
+        expect(mockNavigate).toHaveBeenCalledWith('/robots/42/setup', { replace: true });
       });
     });
 

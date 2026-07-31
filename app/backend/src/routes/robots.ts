@@ -47,6 +47,7 @@ import {
 import { uploadRateLimiter, handleImagePreview, handleImageConfirm } from '../services/moderation';
 import { achievementService, type UnlockedAchievement } from '../services/achievement';
 import { getEntityHistory } from '../services/league/leagueHistoryService';
+import { computeSchedulingEligibility } from '../services/robot/robotSchedulingEligibilityService';
 
 // Re-export for backward compatibility (stables.ts imports from here)
 export { sanitizeRobotForPublic, SENSITIVE_ROBOT_FIELDS };
@@ -554,6 +555,14 @@ router.get('/:id/upcoming-matches', authenticateToken, validateRequest({ params:
 
   const result = await getUpcomingMatches(robotId, robot);
   res.json(result);
+});
+
+// Get scheduling eligibility report for a robot
+router.get('/:id/scheduling-eligibility', authenticateToken, validateRequest({ params: robotIdParamsSchema }), async (req: AuthRequest, res: Response) => {
+  const robotId = parseInt(String(req.params.id));
+  await verifyRobotOwnership(prisma, robotId, req.user!.userId);
+  const report = await computeSchedulingEligibility(robotId);
+  res.json(report);
 });
 
 // Bulk upgrade robot attributes (atomic transaction)

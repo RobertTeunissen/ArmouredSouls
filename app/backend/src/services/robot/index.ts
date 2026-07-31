@@ -44,3 +44,9 @@ export {
   checkRosterCapacity,
   createRobotTransaction,
 } from './robotCreationService';
+export {
+  computeSchedulingEligibility,
+  type SchedulingEligibilityGateId,
+  type SchedulingEligibilityGate,
+  type SchedulingEligibilityReport,
+} from './robotSchedulingEligibilityService';

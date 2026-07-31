@@ -69,8 +69,8 @@ function CreateRobotPage() {
         }
         navigate('/onboarding');
       } else {
-        // Normal flow: navigate to the newly created robot
-        navigate(`/robots/${data.robot.id}`);
+        // Normal flow: navigate to the setup wizard for the newly created robot
+        navigate(`/robots/${data.robot.id}/setup`, { replace: true });
       }
     } catch (err: unknown) {
       if (err instanceof ApiError) {

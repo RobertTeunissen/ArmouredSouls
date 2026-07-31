@@ -23,6 +23,7 @@ import type { BattleHistory } from '../utils/matchmakingApi';
 import { getProfile } from '../utils/userApi';
 import type { RobotWithAttributes } from '../types/robot';
 import { useRobotDetail } from '../hooks/useRobotDetail';
+import RobotEligibilityChecklist from '../components/robot-setup/RobotEligibilityChecklist';
 
 function RobotDetailPage() {
   const {
@@ -239,6 +240,11 @@ function RobotDetailPage() {
           <div className="bg-green-900 border border-green-700 text-green-200 px-4 py-3 rounded mb-6">
             {successMessage}
           </div>
+        )}
+
+        {/* Eligibility Checklist — shown for owner's robots that aren't fully configured */}
+        {isOwner && (
+          <RobotEligibilityChecklist robotId={robot.id} showRecommendations />
         )}
 
         {/* Tab Navigation */}
