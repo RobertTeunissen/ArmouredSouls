@@ -18,6 +18,7 @@ import DashboardWelcome from '../components/DashboardWelcome';
 import DashboardOnboardingBanner from '../components/DashboardOnboardingBanner';
 import ChangelogModal from '../components/ChangelogModal';
 import { useRobotStore, useStableStore } from '../stores';
+import { useSubscriptionStore, selectOverview } from '../stores/subscriptionStore';
 
 interface Notification {
   type: 'warning' | 'danger' | 'info';
@@ -46,6 +47,8 @@ function DashboardPage() {
   const fetchRobots = useRobotStore(state => state.fetchRobots);
   const currency = useStableStore(state => state.currency);
   const fetchStableData = useStableStore(state => state.fetchStableData);
+  const subscriptionOverview = useSubscriptionStore(selectOverview);
+  const fetchSubscriptionOverview = useSubscriptionStore(state => state.fetchOverview);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [tierChanges, setTierChanges] = useState<TierChange[]>([]);
   const [onboardingState, setOnboardingState] = useState<TutorialState | null>(null);
@@ -54,6 +57,7 @@ function DashboardPage() {
     if (user) {
       fetchRobots();
       fetchStableData();
+      fetchSubscriptionOverview();
       getTutorialState()
         .then(setOnboardingState)
         .catch(() => setOnboardingState(null));
@@ -70,7 +74,7 @@ function DashboardPage() {
       generateNotifications();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [robots, user, currency]);
+  }, [robots, user, currency, subscriptionOverview]);
 
   const generateNotifications = () => {
     const alerts: Notification[] = [];
@@ -101,6 +105,22 @@ function DashboardPage() {
         action: () => navigate('/finances'),
         actionLabel: 'View Finances'
       });
+    }
+
+    // Check for robots with no event subscriptions (will never be scheduled)
+    if (subscriptionOverview) {
+      const unsubscribedRobots = subscriptionOverview.robots.filter(
+        (r) => r.subscriptions.length === 0
+      );
+      if (unsubscribedRobots.length > 0) {
+        const firstName = unsubscribedRobots[0].robotName;
+        alerts.push({
+          type: 'warning',
+          message: `${firstName} has no event subscriptions${unsubscribedRobots.length > 1 ? ` (+${unsubscribedRobots.length - 1} more)` : ''}`,
+          action: () => navigate(`/robots/${unsubscribedRobots[0].robotId}/setup`),
+          actionLabel: 'Set Up Robot'
+        });
+      }
     }
     
     setNotifications(alerts);

@@ -37,6 +37,7 @@ const ChangelogPage = React.lazy(() => import('./pages/ChangelogPage'));
 const GuidePage = React.lazy(() => import('./pages/GuidePage'));
 const ProfilePage = React.lazy(() => import('./pages/ProfilePage'));
 const BookingOfficePage = React.lazy(() => import('./pages/BookingOfficePage'));
+const RobotSetupWizardPage = React.lazy(() => import('./pages/RobotSetupWizardPage'));
 
 // Lazy-loaded admin pages
 const AdminDashboardPage = React.lazy(() => import('./pages/admin/DashboardPage'));
@@ -104,6 +105,7 @@ function AppRoutes() {
       <Route path="/booking-office" element={<ProtectedRoute><BookingOfficePage /></ProtectedRoute>} />
       <Route path="/robots" element={<ProtectedRoute><RobotsPage /></ProtectedRoute>} />
       <Route path="/robots/create" element={<ProtectedRoute><CreateRobotPage /></ProtectedRoute>} />
+      <Route path="/robots/:id/setup" element={<ProtectedRoute><RobotSetupWizardPage /></ProtectedRoute>} />
       <Route path="/robots/:id" element={<ProtectedRoute><RobotDetailPage /></ProtectedRoute>} />
       <Route path="/weapon-shop" element={<ProtectedRoute><WeaponShopPage /></ProtectedRoute>} />
       <Route path="/battle-history" element={<ProtectedRoute><BattleHistoryPage /></ProtectedRoute>} />
