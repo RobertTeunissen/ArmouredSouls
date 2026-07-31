@@ -21,7 +21,12 @@ function TeamAssignmentStep({ robotId, onComplete }: StepProps) {
   const [newTeamSize, setNewTeamSize] = useState<2 | 3>(2);
 
   const robots = useRobotStore(state => state.robots);
+  const fetchRobots = useRobotStore(state => state.fetchRobots);
   const otherRobots = robots.filter((r) => r.id !== robotId);
+
+  useEffect(() => {
+    fetchRobots();
+  }, [fetchRobots]);
 
   useEffect(() => {
     let cancelled = false;

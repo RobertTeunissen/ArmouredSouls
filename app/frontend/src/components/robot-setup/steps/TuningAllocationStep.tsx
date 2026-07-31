@@ -25,7 +25,7 @@ function TuningAllocationStep({ robotId, onComplete, onSkip }: StepProps) {
   useEffect(() => {
     let cancelled = false;
 
-    api.get<TuningState>(`/api/tuning-allocation/${robotId}`)
+    api.get<TuningState>(`/api/robots/${robotId}/tuning-allocation`)
       .then((data) => {
         if (!cancelled) setTuning(data);
       })

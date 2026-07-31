@@ -68,10 +68,10 @@ function WeaponEquipStep({ robotId, loadoutType, onComplete, onSkip }: StepProps
 
     async function load(): Promise<void> {
       try {
-        const [inv, storage, user, weapons] = await Promise.all([
+        const [inv, storage, userProfile, weapons] = await Promise.all([
           api.get<WeaponInventoryItem[]>('/api/weapon-inventory'),
           api.get<StorageStatus>('/api/weapon-inventory/storage-status'),
-          api.get<{ currency: number }>('/api/users/me'),
+          api.get<{ currency: number }>('/api/user/profile'),
           api.get<ShopWeapon[]>('/api/weapons'),
         ]);
 
@@ -79,7 +79,7 @@ function WeaponEquipStep({ robotId, loadoutType, onComplete, onSkip }: StepProps
 
         setInventory(inv);
         setStorageStatus(storage);
-        setCredits(user.currency);
+        setCredits(userProfile.currency);
         setShopWeapons(weapons);
 
         // Determine sub-state
@@ -96,7 +96,7 @@ function WeaponEquipStep({ robotId, loadoutType, onComplete, onSkip }: StepProps
         } else {
           // Check if player can afford any compatible weapon
           const affordableWeapons = weapons.filter(
-            (w) => isCompatible(w, loadoutType) && w.cost <= user.currency
+            (w) => isCompatible(w, loadoutType) && w.cost <= userProfile.currency
           );
           if (affordableWeapons.length > 0) {
             setSubState('buy-and-equip');
