@@ -275,15 +275,3 @@ Proposal: a guided flow after robot creation that walks through equip weapon(s) 
 Open questions: whether this is a modal wizard, a checklist on the robot page, or an extension of the existing onboarding tour; and whether the same checklist should surface for robots that fall out of readiness later (weapon sold, subscription dropped at a season reset — everything except accounts and onboarding state resets each season, so returning players re-do all of this for every robot).
 
 **Related**: #37 (Robot Detail Page Split) proposes an owner-only "Prepare" workspace covering the same actions — a creation wizard and that page should share components rather than duplicate them. #28 (Progressive Feature Disclosure) and #16 (Player Personas) overlap on how much to show a new player at once.
-
-### #62 — Edge DDoS Protection in Front of ACC — PARTIALLY DONE
-**Source**: Subscription rate-limit investigation (Booking Office unification)
-**Priority**: ~~Medium~~ — **Caddy hardening shipped July 2026** (timeouts, body size limit, header limit). Full edge protection (Cloudflare or equivalent) documented in `docs/guides/operations/EDGE_PROTECTION.md` but requires DNS/infra changes outside the codebase. Remaining work is operational: add domain to Cloudflare, restrict UFW to CF IPs, update `trust proxy` to 2.
-
-There is no protection ahead of the application. `app/Caddyfile` terminates TLS and sets headers and compression, but has no `rate_limit` directive and no connection caps, and there is no CDN or scrubbing layer in front. Everything currently rests on in-process `express-rate-limit` counters, which means every abusive request still costs a Node event-loop turn, a DB round trip in some cases, and TLS termination — on a 2 vCPU / 2 GB DEV1-S.
-
-What exists and is worth keeping in mind: the general limiter is 300 req/min per client IP, register 30/min, login 10/15min, admin 120/min, per-user economic 100/min, body limit 1 MB. `app.set('trust proxy', 1)` is set and PM2 runs a single instance, so the counters are neither pooled into one bucket nor multiplied per worker — they behave as intended. The gap is purely that they are the *only* line of defence.
-
-Options, cheapest first: Caddy's `rate_limit` plugin plus connection limits; Cloudflare in front (free tier covers L3/L4 and basic L7, and hides the origin IP, which also removes direct-to-IP attacks); Scaleway's own edge services. Cloudflare additionally solves the shared-IP fairness problem more cleanly than app-level keys can.
-
-Not urgent while the player base is small and the origin IP is not widely known, but the fix is mostly configuration, so it is cheap to do before it is needed.
