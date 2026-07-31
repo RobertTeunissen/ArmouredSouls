@@ -56,7 +56,6 @@ function RobotSetupWizard({ robotId, robotName, loadoutType, onComplete, onSkip 
   const wizard = useRobotSetupWizard(robotId);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [eligibility, setEligibility] = useState<SchedulingEligibilityReport | null>(null);
 
   // Fetch eligibility on mount
   useEffect(() => {
@@ -67,7 +66,6 @@ function RobotSetupWizard({ robotId, robotName, loadoutType, onComplete, onSkip 
     api.get<SchedulingEligibilityReport>(`/api/robots/${robotId}/scheduling-eligibility`)
       .then((report) => {
         if (cancelled) return;
-        setEligibility(report);
 
         // Already fully configured → redirect to robot detail
         if (report.isFullyConfigured) {

@@ -11,7 +11,7 @@ import { getMyTeamBattles, registerTeamBattle, type TeamBattle } from '../../../
 import { useRobotStore } from '../../../stores';
 import type { StepProps } from '../types';
 
-function TeamAssignmentStep({ robotId, onComplete, onSkip }: StepProps) {
+function TeamAssignmentStep({ robotId, onComplete }: StepProps) {
   const [teams, setTeams] = useState<TeamBattle[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
