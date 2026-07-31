@@ -559,7 +559,7 @@ router.get('/:id/upcoming-matches', authenticateToken, validateRequest({ params:
 
 // Get scheduling eligibility report for a robot
 router.get('/:id/scheduling-eligibility', authenticateToken, validateRequest({ params: robotIdParamsSchema }), async (req: AuthRequest, res: Response) => {
-  const robotId = parseInt(req.params.id);
+  const robotId = parseInt(String(req.params.id));
   await verifyRobotOwnership(prisma, robotId, req.user!.userId);
   const report = await computeSchedulingEligibility(robotId);
   res.json(report);
