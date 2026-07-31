@@ -189,9 +189,12 @@ describe('RobotSetupWizard', () => {
   it('should resume from localStorage state', async () => {
     mockGet.mockResolvedValue(eligibleReport);
 
-    // Pre-seed localStorage with step 3
+    // Pre-seed localStorage mock to return saved state for this robot
     const savedState = { currentStep: 3, completedSteps: [1, 2], skippedSteps: [] };
-    localStorage.setItem('robot-setup-1', JSON.stringify(savedState));
+    vi.mocked(localStorage.getItem).mockImplementation((key: string) => {
+      if (key === 'robot-setup-1') return JSON.stringify(savedState);
+      return null;
+    });
 
     renderWizard();
 
@@ -204,6 +207,7 @@ describe('RobotSetupWizard', () => {
 
   it('should render progress dots for all 7 steps', async () => {
     mockGet.mockResolvedValue(eligibleReport);
+    vi.mocked(localStorage.getItem).mockReturnValue(null);
 
     renderWizard();
 
