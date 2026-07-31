@@ -529,3 +529,11 @@ describe('Property 4: Final event HP matches combat result', () => {
     );
   });
 });
+
+// ─── Property 5: Legacy fields swap based on attacker role (BUG) ────
+
+// Property 5 was removed — it asserted a bug was present (foundSwap === true).
+// The underlying issues (swapped deprecated fields, stale robotHP snapshot) were
+// fixed in Backlog #65. The deprecated robot1HP/robot2HP fields were removed from
+// attackResolution entirely, and the caching was dropped so robotHP always reflects
+// post-damage state.

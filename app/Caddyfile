@@ -1,20 +1,13 @@
 {
 	# Server-level connection protection (Backlog #62)
 	servers {
-		# Max concurrent connections per listener — prevents connection exhaustion
-		# on a 2 vCPU / 2 GB box. 10K is generous for a small game but stops
-		# a SYN flood from consuming all file descriptors.
-		max_header_size 16KB
-	}
-
-	# Aggressive timeouts to shed slow/stalled connections quickly
-	servers :443 {
 		timeouts {
 			read_body   10s
 			read_header 5s
 			write       30s
 			idle        60s
 		}
+		max_header_size 16KB
 	}
 }
 
