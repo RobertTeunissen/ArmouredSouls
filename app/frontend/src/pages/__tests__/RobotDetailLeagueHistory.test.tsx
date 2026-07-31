@@ -208,6 +208,9 @@ describe('RobotDetailPage - League History Tab', () => {
       if (url.includes('/grand-melee-standing')) {
         return Promise.resolve({ data: { standing: null } });
       }
+      if (url.includes('/scheduling-eligibility')) {
+        return Promise.resolve({ data: { robotId: 1, isEligible: true, isFullyConfigured: true, gates: [] } });
+      }
       return Promise.resolve({ data: [] });
     });
   });
@@ -244,6 +247,9 @@ describe('RobotDetailPage - League History Tab', () => {
       }
       if (url.includes('/grand-melee-standing')) {
         return Promise.resolve({ data: { standing: null } });
+      }
+      if (url.includes('/scheduling-eligibility')) {
+        return Promise.resolve({ data: { robotId: 1, isEligible: true, isFullyConfigured: true, gates: [] } });
       }
       return Promise.resolve({ data: [] });
     });
