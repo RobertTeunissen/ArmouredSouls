@@ -28,6 +28,15 @@ vi.mock('../../../utils/ApiError', () => ({
   },
 }));
 
+// Mock step components to avoid deep dependency chains
+vi.mock('../steps/PortraitStep', () => ({ default: ({ onComplete, onSkip }: { onComplete: () => void; onSkip?: () => void }) => <div><span>Choose a Portrait</span><button onClick={onComplete}>Done</button>{onSkip && <button onClick={onSkip}>Skip</button>}</div> }));
+vi.mock('../steps/WeaponEquipStep', () => ({ default: ({ onComplete }: { onComplete: () => void }) => <div><span>Equip a Weapon</span><button onClick={onComplete}>Done</button></div> }));
+vi.mock('../steps/BattleConfigStep', () => ({ default: ({ onComplete }: { onComplete: () => void }) => <div><span>Battle Configuration</span><button onClick={onComplete}>Done</button></div> }));
+vi.mock('../steps/TuningAllocationStep', () => ({ default: ({ onComplete }: { onComplete: () => void }) => <div><span>Tuning Allocation</span><button onClick={onComplete}>Done</button></div> }));
+vi.mock('../steps/TeamAssignmentStep', () => ({ default: ({ onComplete }: { onComplete: () => void }) => <div><span>Team Assignment</span><button onClick={onComplete}>Done</button></div> }));
+vi.mock('../steps/EventSubscriptionStep', () => ({ default: ({ onComplete }: { onComplete: () => void }) => <div><span>Event Subscriptions</span><button onClick={onComplete}>Done</button></div> }));
+vi.mock('../steps/AttributeUpgradeStep', () => ({ default: ({ onComplete }: { onComplete: () => void }) => <div><span>Attribute Upgrades</span><button onClick={onComplete}>Done</button></div> }));
+
 // Mock useNavigate
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {

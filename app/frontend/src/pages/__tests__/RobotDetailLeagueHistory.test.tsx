@@ -98,6 +98,9 @@ vi.mock('../../components/RobotImageSelector', () => ({
 vi.mock('../../components/Toast', () => ({
   default: () => null,
 }));
+vi.mock('../../components/robot-setup/RobotEligibilityChecklist', () => ({
+  default: () => null,
+}));
 vi.mock('../../utils/matchmakingApi', () => ({
   getMatchHistory: vi.fn().mockResolvedValue({ data: [], pagination: { page: 1, pageSize: 50, total: 0, totalPages: 0 } }),
   BattleHistory: {},
