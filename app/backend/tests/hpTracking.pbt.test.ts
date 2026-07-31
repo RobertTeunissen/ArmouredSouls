@@ -1,21 +1,11 @@
 /**
  * Property-based tests for HP Tracking in Combat Events
  *
- * This test file verifies that HP/Shield values in combat events are correctly
- * attributed to robots by name, regardless of attacker/defender roles.
+ * Verifies that robotHP/robotShield maps on combat events are correctly
+ * keyed by robot name and always reflect post-damage state, regardless of
+ * which robot is attacking.
  *
- * BUG CONDITION: When robot2 attacks robot1, the robot1HP/robot2HP fields
- * swap because they're assigned based on attacker/defender position, not
- * robot identity.
- *
- * EXPECTED BEHAVIOR: robotHP[name] should always return the correct HP for
- * that robot, regardless of who is attacking.
- *
- * NOTE: The combat simulator already correctly generates robotHP/robotShield
- * maps via a proxy. The bug is in CONSUMERS (CombatMessageGenerator,
- * BattleDetailsModal) that still use the legacy robot1HP/robot2HP fields.
- *
- * Validates: Bugfix spec 6-combat-event-hp-tracking-fix
+ * Regression suite for Backlog #65 (combat event HP fields fix).
  */
 
 import * as fc from 'fast-check';
@@ -539,29 +529,3 @@ describe('Property 4: Final event HP matches combat result', () => {
     );
   });
 });
-
-// ─── Property 5: Legacy fields swap based on attacker role (BUG) ────
-
-/**
- * Property 5 removed: it asserted that a bug WAS PRESENT.
- *
- * The block here demonstrated that the deprecated `robot1HP`/`robot2HP` event
- * fields swap according to attacker role, and asserted `foundSwap === true` —
- * meaning the suite could only pass while the defect remained. A test shaped that
- * way blocks the fix it documents, so it has been deleted rather than inverted.
- *
- * Two findings from removing it, both filed as Backlog #65 because settling them
- * needs a proper look at combat event semantics rather than a guess:
- *
- * 1. The swap is only half fixed. `simulationLoop` and `simulationState` populate
- *    the legacy fields positionally from `states[0]`/`states[1]`, but
- *    `attackResolution` still writes `attackerState`/`defenderState` into them.
- * 2. The canonical `robotHP` map is a cached snapshot injected by `pushEvent`, and
- *    its `hpSnapshotDirty` flag is not set by `attackResolution`, which mutates
- *    robot state directly. The map attached to an attack event may therefore
- *    predate the damage that event describes.
- *
- * The remaining properties in this file cover the canonical map, which is the
- * documented contract (`robotHP`/`robotShield` are marked as the source of truth,
- * with the numbered fields deprecated).
- */

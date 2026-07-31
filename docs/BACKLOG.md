@@ -6,6 +6,7 @@ Items identified during audits, reviews, and development. Prioritized by impact 
 
 ## 🚫 Blockers
 
+None currently.
 | # | Item | Why it blocks |
 |---|------|---------------|
 | [#64](#64--repair-the-integration-test-suite-90-of-148-suites-failing) | Repair the Integration Test Suite | Every test tier is now mandatory in CI, so **main cannot deploy** until it is cleared. Test compile errors are down from 454 to **149 across 26 files**; see the item for the per-suite breakdown and the remaining work. |
@@ -25,6 +26,23 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 | 5 | Robot Comparison Tool | 42 | 0 🗳️ | 2 | 1 | 1 | 2 | **2.0** |
 | 6 | Dashboard Enhancements | 24 | 0 🗳️ | 2 | 1 | 1 | 2 | **2.0** |
 | 7 | Weapon Special Properties | 11 | 1 🗳️ | 3 | 2 | 2 | 4 | **1.8** |
+| 8 | Daily Login Bonuses & Seasonal Events | 34 | 0 🗳️ | 3 | 1 | 1 | 3 | **1.7** |
+| 9 | Player Personas / Complexity Modes | 16 | 1 🗳️ | 2 | 1 | 2 | 3 | **1.7** |
+| 10 | Arena / Terrain Modifiers | 12 | 1 🗳️ | 3 | 1 | 2 | 4 | **1.5** |
+| 11 | Modular Package Extraction | 35 | 0 🗳️ | 1 | 1 | 2 | 3 | **1.3** |
+| 12 | Robot Detail Page Split | 37 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
+| 13 | Universal Search / Command Palette | 27 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
+| 14 | Progressive Feature Disclosure | 28 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
+| 15 | Weapon Crafting System | 29 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
+| 16 | Free-for-All / Battle Royale Mode | 30 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
+| 17 | Conditional Battle Triggers / AI Scripting | 32 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
+| 18 | Future Revenue Streams | 33 | 0 🗳️ | 2 | 1 | 1 | 4 | **1.0** |
+| 19 | Player Marketplace | 44 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
+| 20 | Social Features (Friends, Guilds, Chat) | 45 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
+| 21 | Prestige Store | 47 | 0 🗳️ | 2 | 1 | 1 | 4 | **1.0** |
+| 22 | Blueprint Library | 48 | 0 🗳️ | 1 | 1 | 1 | 3 | **1.0** |
+| 23 | Cosmetic Customization System | 46 | 0 🗳️ | 2 | 1 | 1 | 5 | **0.8** |
+| 24 | Matchup-Dependent Weapon Effectiveness | 58 | 0 🗳️ | 3 | 1 | 2 | 5 | **1.2** |
 | — | Season System (100-Cycle Seasons) | 41 | — | — | — | — | — | **SHIPPED — Spec #45** |
 | 9 | Daily Login Bonuses & Seasonal Events | 34 | 0 🗳️ | 3 | 1 | 1 | 3 | **1.7** |
 | 10 | Player Personas / Complexity Modes | 16 | 1 🗳️ | 2 | 1 | 2 | 3 | **1.7** |
@@ -48,6 +66,7 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 
 | Item | # | Spec | Completed |
 |------|---|------|-----------|
+| Repair the Integration Test Suite (149→0 compile errors, `typecheck:tests` passes, deleted 3k-line dead test file) | 64 | — (direct implementation) | July 2026 |
 | Grand Melee Mode (20-robot FFA) | 30 | [Spec #44](/.kiro/specs/to-do/44-grand-melee/) | June 2026 |
 | Tag Team Battle Time Limit Enforcement (closed as working-as-designed, documented in BATTLE_SIMULATION_ARCHITECTURE.md § Tag Team Orchestrator) | 19 | — | June 2026 |
 | Battle Table Denormalization Cleanup (19 deprecated columns dropped) | 18 | — (direct implementation, completes Spec #43 Task 6.4) | June 2026 |
@@ -278,6 +297,9 @@ Open questions: whether this is a modal wizard, a checklist on the robot page, o
 
 **Related**: #37 (Robot Detail Page Split) proposes an owner-only "Prepare" workspace covering the same actions — a creation wizard and that page should share components rather than duplicate them. #28 (Progressive Feature Disclosure) and #16 (Player Personas) overlap on how much to show a new player at once.
 
+### #62 — Edge DDoS Protection in Front of ACC — PARTIALLY DONE
+**Source**: Subscription rate-limit investigation (Booking Office unification)
+**Priority**: ~~Medium~~ — **Caddy hardening shipped July 2026** (timeouts, body size limit, header limit). Full edge protection (Cloudflare or equivalent) documented in `docs/guides/operations/EDGE_PROTECTION.md` but requires DNS/infra changes outside the codebase. Remaining work is operational: add domain to Cloudflare, restrict UFW to CF IPs, update `trust proxy` to 2.
 ### #62 — Edge DDoS Protection in Front of ACC
 **Source**: Subscription rate-limit investigation (Booking Office unification)
 **Priority**: Medium — no edge protection exists today; the box is small enough that this matters
@@ -288,6 +310,7 @@ What exists and is worth keeping in mind: the general limiter is 300 req/min per
 
 Options, cheapest first: Caddy's `rate_limit` plugin plus connection limits; Cloudflare in front (free tier covers L3/L4 and basic L7, and hides the origin IP, which also removes direct-to-IP attacks); Scaleway's own edge services. Cloudflare additionally solves the shared-IP fairness problem more cleanly than app-level keys can.
 
+Not urgent while the player base is small and the origin IP is not widely known, but the fix is mostly configuration, so it is cheap to do before it is needed.
 Not urgent while the player base is small and the origin IP is not widely known, but the fix is mostly configuration, so it is cheap to do before it is needed.
 
 ### #63 — Tighten the `require-validate-request` ESLint Rule

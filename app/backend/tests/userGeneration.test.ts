@@ -41,12 +41,10 @@ async function cleanupAutoUsers(): Promise<void> {
     ).map((t) => t.id);
 
     if (teamBattleIds.length > 0) {
-      await prisma.scheduledTeamBattleMatch.deleteMany({
+      await prisma.scheduledMatchParticipant.deleteMany({
         where: {
-          OR: [
-            { team1Id: { in: teamBattleIds } },
-            { team2Id: { in: teamBattleIds } },
-          ],
+          participantType: 'team',
+          participantId: { in: teamBattleIds },
         },
       });
       await prisma.teamBattleMember.deleteMany({
@@ -63,23 +61,16 @@ async function cleanupAutoUsers(): Promise<void> {
     });
     await prisma.battle.deleteMany({
       where: {
-        OR: [
-          { robot1Id: { in: robotIds } },
-          { robot2Id: { in: robotIds } },
-        ],
+        participants: { some: { robotId: { in: robotIds } } },
       },
+    });
+    await prisma.scheduledMatchParticipant.deleteMany({
+      where: { participantId: { in: robotIds }, participantType: 'robot' },
     });
     await prisma.scheduledMatch.deleteMany({
       where: {
-        OR: [
-          { robot1Id: { in: robotIds } },
-          { robot2Id: { in: robotIds } },
-        ],
+        participants: { some: { participantId: { in: robotIds } } },
       },
-    });
-    // Delete KOTH match participants before robots
-    await prisma.scheduledKothMatchParticipant.deleteMany({
-      where: { robotId: { in: robotIds } },
     });
     // Delete subscriptions before robots
     await prisma.subscription.deleteMany({

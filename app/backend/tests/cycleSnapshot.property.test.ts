@@ -14,9 +14,9 @@ const eventLogger = new EventLogger();
 const cycleSnapshotService = new CycleSnapshotService();
 
 // Test data setup helpers
-let testUsers: Map<number, any> = new Map();
-let testRobots: Map<number, any> = new Map();
-let robotIdMapping: Map<number, number> = new Map(); // Maps test robot ID to actual DB robot ID
+const testUsers: Map<number, any> = new Map();
+const testRobots: Map<number, any> = new Map();
+const robotIdMapping: Map<number, number> = new Map(); // Maps test robot ID to actual DB robot ID
 
 async function ensureTestUser(userId: number) {
   if (!testUsers.has(userId)) {
@@ -52,6 +52,7 @@ async function ensureTestRobot(robotId: number, userId: number) {
           cost: 1000,
           handsRequired: 'one',
           loadoutType: 'any',
+          rangeBand: 'melee',
         },
       });
     }
@@ -333,53 +334,59 @@ describe('CycleSnapshotService Property-Based Tests', () => {
             for (const createdBattle of createdBattles) {
               const p1 = (createdBattle as any).participants?.find((p: any) => p.team === 1);
               const p2 = (createdBattle as any).participants?.find((p: any) => p.team === 2);
+              const robot1Id = p1?.robotId;
+              const robot2Id = p2?.robotId;
               const robot1DamageDealt = p1?.damageDealt || 0;
               const robot2DamageDealt = p2?.damageDealt || 0;
               const robot1FameAwarded = p1?.fameAwarded || 0;
               const robot2FameAwarded = p2?.fameAwarded || 0;
 
               // Robot 1 metrics
-              if (!expectedRobotMetrics.has(createdBattle.robot1Id)) {
-                expectedRobotMetrics.set(createdBattle.robot1Id, initMetric());
+              if (robot1Id && !expectedRobotMetrics.has(robot1Id)) {
+                expectedRobotMetrics.set(robot1Id, initMetric());
               }
-              const robot1Metric = expectedRobotMetrics.get(createdBattle.robot1Id)!;
-              robot1Metric.battlesParticipated++;
-              robot1Metric.damageDealt += robot1DamageDealt;
-              robot1Metric.damageReceived += robot2DamageDealt;
-              robot1Metric.eloChange += (p1?.eloAfter ?? 0) - (p1?.eloBefore ?? 0);
-              robot1Metric.fameChange += robot1FameAwarded;
-              
-              if (createdBattle.winnerId === createdBattle.robot1Id) {
-                robot1Metric.wins++;
-                robot1Metric.creditsEarned += createdBattle.winnerReward || 0;
-              } else if (createdBattle.winnerId === null) {
-                robot1Metric.draws++;
-                robot1Metric.creditsEarned += createdBattle.loserReward || 0;
-              } else {
-                robot1Metric.losses++;
-                robot1Metric.creditsEarned += createdBattle.loserReward || 0;
+              if (robot1Id) {
+                const robot1Metric = expectedRobotMetrics.get(robot1Id)!;
+                robot1Metric.battlesParticipated++;
+                robot1Metric.damageDealt += robot1DamageDealt;
+                robot1Metric.damageReceived += robot2DamageDealt;
+                robot1Metric.eloChange += (p1?.eloAfter ?? 0) - (p1?.eloBefore ?? 0);
+                robot1Metric.fameChange += robot1FameAwarded;
+                
+                if (createdBattle.winnerId === robot1Id) {
+                  robot1Metric.wins++;
+                  robot1Metric.creditsEarned += createdBattle.winnerReward || 0;
+                } else if (createdBattle.winnerId === null) {
+                  robot1Metric.draws++;
+                  robot1Metric.creditsEarned += createdBattle.loserReward || 0;
+                } else {
+                  robot1Metric.losses++;
+                  robot1Metric.creditsEarned += createdBattle.loserReward || 0;
+                }
               }
 
               // Robot 2 metrics
-              if (!expectedRobotMetrics.has(createdBattle.robot2Id)) {
-                expectedRobotMetrics.set(createdBattle.robot2Id, initMetric());
+              if (robot2Id && !expectedRobotMetrics.has(robot2Id)) {
+                expectedRobotMetrics.set(robot2Id, initMetric());
               }
-              const robot2Metric = expectedRobotMetrics.get(createdBattle.robot2Id)!;
-              robot2Metric.battlesParticipated++;
-              robot2Metric.damageDealt += robot2DamageDealt;
-              robot2Metric.damageReceived += robot1DamageDealt;
-              robot2Metric.eloChange += (p2?.eloAfter ?? 0) - (p2?.eloBefore ?? 0);
-              robot2Metric.fameChange += robot2FameAwarded;
-              
-              if (createdBattle.winnerId === createdBattle.robot2Id) {
-                robot2Metric.wins++;
-                robot2Metric.creditsEarned += createdBattle.winnerReward || 0;
-              } else if (createdBattle.winnerId === null) {
-                robot2Metric.draws++;
-                robot2Metric.creditsEarned += createdBattle.loserReward || 0;
-              } else {
-                robot2Metric.losses++;
-                robot2Metric.creditsEarned += createdBattle.loserReward || 0;
+              if (robot2Id) {
+                const robot2Metric = expectedRobotMetrics.get(robot2Id)!;
+                robot2Metric.battlesParticipated++;
+                robot2Metric.damageDealt += robot2DamageDealt;
+                robot2Metric.damageReceived += robot1DamageDealt;
+                robot2Metric.eloChange += (p2?.eloAfter ?? 0) - (p2?.eloBefore ?? 0);
+                robot2Metric.fameChange += robot2FameAwarded;
+                
+                if (createdBattle.winnerId === robot2Id) {
+                  robot2Metric.wins++;
+                  robot2Metric.creditsEarned += createdBattle.winnerReward || 0;
+                } else if (createdBattle.winnerId === null) {
+                  robot2Metric.draws++;
+                  robot2Metric.creditsEarned += createdBattle.loserReward || 0;
+                } else {
+                  robot2Metric.losses++;
+                  robot2Metric.creditsEarned += createdBattle.loserReward || 0;
+                }
               }
             }
 
@@ -558,15 +565,15 @@ describe('CycleSnapshotService Property-Based Tests', () => {
                 },
               },
               include: {
-                robot1: { select: { userId: true } },
-                robot2: { select: { userId: true } },
-                participants: true,
+                participants: { include: { robot: { select: { userId: true } } } },
               },
             });
 
             for (const battle of createdBattlesFromDB) {
-              // Use robot1's userId as the stable owner
-              const battleUserId = battle.robot1.userId;
+              // Use first participant's robot userId as the stable owner
+              const firstParticipant = battle.participants[0];
+              const battleUserId = firstParticipant?.robot?.userId;
+              if (!battleUserId) continue;
               actualUserIds.add(battleUserId);
               
               if (!expectedStableMetrics.has(battleUserId)) {

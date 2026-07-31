@@ -72,20 +72,9 @@ describe('Admin Cycle Generation Integration Tests', () => {
       const robotIds = robots.map((r) => r.id);
 
       if (robotIds.length > 0) {
-        // Clean up KotH match participants referencing these robots
-        await prisma.scheduledKothMatchParticipant.deleteMany({
-          where: { robotId: { in: robotIds } },
-        });
-
-        // Clean up tournament matches referencing these robots
-        await prisma.scheduledTournamentMatch.updateMany({
-          where: {
-            OR: [
-              { participant1Id: { in: robotIds } },
-              { participant2Id: { in: robotIds } },
-            ],
-          },
-          data: { participant1Id: null, participant2Id: null },
+        // Clean up scheduled match participants referencing these robots
+        await prisma.scheduledMatchParticipant.deleteMany({
+          where: { participantId: { in: robotIds } },
         });
 
         // Clean up audit logs referencing these robots
@@ -98,18 +87,12 @@ describe('Admin Cycle Generation Integration Tests', () => {
         });
         await prisma.battle.deleteMany({
           where: {
-            OR: [
-              { robot1Id: { in: robotIds } },
-              { robot2Id: { in: robotIds } },
-            ],
+            participants: { some: { robotId: { in: robotIds } } },
           },
         });
         await prisma.scheduledMatch.deleteMany({
           where: {
-            OR: [
-              { robot1Id: { in: robotIds } },
-              { robot2Id: { in: robotIds } },
-            ],
+            participants: { some: { participantId: { in: robotIds } } },
           },
         });
       }

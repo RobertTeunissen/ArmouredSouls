@@ -62,18 +62,15 @@ describe('Authentication Endpoints', () => {
         });
         await prisma.battle.deleteMany({
           where: {
-            OR: [
-              { robot1Id: { in: robotIds } },
-              { robot2Id: { in: robotIds } },
-            ],
+            participants: { some: { robotId: { in: robotIds } } },
           },
+        });
+        await prisma.scheduledMatchParticipant.deleteMany({
+          where: { participantId: { in: robotIds } },
         });
         await prisma.scheduledMatch.deleteMany({
           where: {
-            OR: [
-              { robot1Id: { in: robotIds } },
-              { robot2Id: { in: robotIds } },
-            ],
+            participants: { some: { participantId: { in: robotIds } } },
           },
         });
       }

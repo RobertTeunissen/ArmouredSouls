@@ -26,6 +26,7 @@ import {
   createRecentOpponentQueryFn,
   defaultScheduledFor,
 } from './teamMatchmakingUtils';
+import { createByeRobot } from '../battle/byeRobot';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -215,21 +216,7 @@ function createByeTeam(league: string, leagueId: string, teamSize: 2 | 3): TeamB
           teamId: -1,
           robotId: -(i + 1),
           slotIndex: i,
-          robot: {
-            id: -(i + 1),
-            userId: -1,
-            name: `Bye Robot ${i + 1}`,
-            frameId: 1,
-            paintJob: null,
-            imageUrl: null,
-            elo: 1000,
-            totalBattles: 0,
-            wins: 0, draws: 0, losses: 0,
-            currentHP: 100, maxHP: 100, currentShield: 20, maxShield: 20,
-            loadoutType: 'single',
-            mainWeaponId: null, offhandWeaponId: null,
-            createdAt: new Date(), updatedAt: new Date(),
-          } as unknown as Robot,
+          robot: createByeRobot(-(i + 1)) as unknown as Robot,
         });
       }
       return {

@@ -69,12 +69,12 @@ describe('Onboarding API Integration Tests', () => {
     const robotIds = testUsers.flatMap(u => u.robots.map(r => r.id));
 
     if (robotIds.length > 0) {
+      await prisma.scheduledMatchParticipant.deleteMany({
+        where: { participantId: { in: robotIds } },
+      });
       await prisma.scheduledMatch.deleteMany({
         where: {
-          OR: [
-            { robot1Id: { in: robotIds } },
-            { robot2Id: { in: robotIds } },
-          ],
+          participants: { some: { participantId: { in: robotIds } } },
         },
       });
     }
@@ -110,12 +110,12 @@ describe('Onboarding API Integration Tests', () => {
     const robotIds = testUsers.flatMap(u => u.robots.map(r => r.id));
 
     if (robotIds.length > 0) {
+      await prisma.scheduledMatchParticipant.deleteMany({
+        where: { participantId: { in: robotIds } },
+      });
       await prisma.scheduledMatch.deleteMany({
         where: {
-          OR: [
-            { robot1Id: { in: robotIds } },
-            { robot2Id: { in: robotIds } },
-          ],
+          participants: { some: { participantId: { in: robotIds } } },
         },
       });
     }
@@ -415,10 +415,15 @@ describe('Onboarding API Integration Tests', () => {
       // Create a scheduled match
       await prisma.scheduledMatch.create({
         data: {
-          robot1Id: robot.id,
-          robot2Id: robot2.id,
+          matchType: 'league_1v1',
           leagueType: 'bronze',
           scheduledFor: new Date(Date.now() + 3600000), // 1 hour from now
+          participants: {
+            create: [
+              { participantType: 'robot', participantId: robot.id, slot: 1 },
+              { participantType: 'robot', participantId: robot2.id, slot: 2 },
+            ],
+          },
         },
       });
 
@@ -432,12 +437,12 @@ describe('Onboarding API Integration Tests', () => {
       expect(response.body.data.blockers).toContain('scheduled_matches');
 
       // Cleanup
+      await prisma.scheduledMatchParticipant.deleteMany({
+        where: { participantId: { in: [robot.id, robot2.id] } },
+      });
       await prisma.scheduledMatch.deleteMany({
         where: {
-          OR: [
-            { robot1Id: robot.id },
-            { robot2Id: robot.id },
-          ],
+          participants: { some: { participantId: { in: [robot.id, robot2.id] } } },
         },
       });
       await prisma.robot.deleteMany({
@@ -531,10 +536,15 @@ describe('Onboarding API Integration Tests', () => {
 
       await prisma.scheduledMatch.create({
         data: {
-          robot1Id: robot.id,
-          robot2Id: robot2.id,
+          matchType: 'league_1v1',
           leagueType: 'bronze',
           scheduledFor: new Date(Date.now() + 3600000),
+          participants: {
+            create: [
+              { participantType: 'robot', participantId: robot.id, slot: 1 },
+              { participantType: 'robot', participantId: robot2.id, slot: 2 },
+            ],
+          },
         },
       });
 
@@ -550,12 +560,12 @@ describe('Onboarding API Integration Tests', () => {
       expect(response.body.error).toContain('scheduled');
 
       // Cleanup
+      await prisma.scheduledMatchParticipant.deleteMany({
+        where: { participantId: { in: [robot.id, robot2.id] } },
+      });
       await prisma.scheduledMatch.deleteMany({
         where: {
-          OR: [
-            { robot1Id: robot.id },
-            { robot2Id: robot.id },
-          ],
+          participants: { some: { participantId: { in: [robot.id, robot2.id] } } },
         },
       });
       await prisma.robot.deleteMany({

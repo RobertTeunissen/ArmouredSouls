@@ -514,19 +514,19 @@ describe('Scheduler Property Tests', () => {
         fc.asyncProperty(
           fc.integer({ min: 0, max: 10000 }),
           async (currentCycles) => {
-            prisma.cycleMetadata.findUnique.mockResolvedValue({
+            (prisma.cycleMetadata.findUnique as jest.Mock).mockResolvedValue({
               id: 1,
               totalCycles: currentCycles,
             });
-            prisma.cycleMetadata.update.mockClear();
-            prisma.cycleMetadata.update.mockResolvedValue({
+            (prisma.cycleMetadata.update as jest.Mock).mockClear();
+            (prisma.cycleMetadata.update as jest.Mock).mockResolvedValue({
               id: 1,
               totalCycles: currentCycles + 1,
             });
 
             await runJob('settlement', async () => {
               const metadata = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
-              const newCycleNumber = metadata.totalCycles + 1;
+              const newCycleNumber = metadata!.totalCycles + 1;
 
               await prisma.cycleMetadata.update({
                 where: { id: 1 },

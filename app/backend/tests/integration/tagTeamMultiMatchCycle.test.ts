@@ -69,19 +69,22 @@ describe('Tag Team Multi-Match Cycle Integration Test', () => {
       });
       await prisma.battle.deleteMany({
         where: {
-          robot1Id: { in: testRobotIds },
+          participants: { some: { robotId: { in: testRobotIds } } },
         },
       });
     }
 
     if (testTeamIds.length > 0) {
-      await prisma.scheduledTeamBattleMatch.deleteMany({
+      await prisma.scheduledMatchParticipant.deleteMany({
         where: {
-          matchMode: 'tag_team',
-          OR: [
-            { team1Id: { in: testTeamIds } },
-            { team2Id: { in: testTeamIds } },
-          ],
+          participantType: 'team',
+          participantId: { in: testTeamIds },
+        },
+      });
+      await prisma.scheduledMatch.deleteMany({
+        where: {
+          matchType: 'tag_team',
+          participants: { some: { participantId: { in: testTeamIds } } },
         },
       });
       await prisma.teamBattleMember.deleteMany({
@@ -93,9 +96,12 @@ describe('Tag Team Multi-Match Cycle Integration Test', () => {
     }
 
     if (testRobotIds.length > 0) {
+      await prisma.scheduledMatchParticipant.deleteMany({
+        where: { participantId: { in: testRobotIds } },
+      });
       await prisma.scheduledMatch.deleteMany({
         where: {
-          robot1Id: { in: testRobotIds },
+          participants: { some: { participantId: { in: testRobotIds } } },
         },
       });
       await prisma.robot.deleteMany({
@@ -191,11 +197,15 @@ describe('Tag Team Multi-Match Cycle Integration Test', () => {
     
     const scheduledMatch = await prisma.scheduledMatch.create({
       data: {
-        robot1Id: testRobots[0].id,
-        robot2Id: testRobots[2].id,
+        matchType: 'league_1v1',
         leagueType: 'bronze',
         scheduledFor: new Date(),
-        status: 'scheduled',
+        participants: {
+          create: [
+            { participantType: 'robot', participantId: testRobots[0].id, slot: 1 },
+            { participantType: 'robot', participantId: testRobots[2].id, slot: 2 },
+          ],
+        },
       },
     });
 
@@ -341,16 +351,25 @@ describe('Tag Team Multi-Match Cycle Integration Test', () => {
     }
 
     // Clean up
+    await prisma.battleParticipant.deleteMany({
+      where: { robotId: { in: robots.map(r => r.id) } },
+    });
     await prisma.battle.deleteMany({
       where: {
         battleType: 'tag_team',
-        robot1Id: { in: robots.map(r => r.id) },
+        participants: { some: { robotId: { in: robots.map(r => r.id) } } },
       },
     });
-    await prisma.scheduledTeamBattleMatch.deleteMany({
+    await prisma.scheduledMatchParticipant.deleteMany({
       where: {
-        matchMode: 'tag_team',
-        OR: [{ team1Id: team1.id }, { team1Id: team2.id }],
+        participantType: 'team',
+        participantId: { in: [team1.id, team2.id] },
+      },
+    });
+    await prisma.scheduledMatch.deleteMany({
+      where: {
+        matchType: 'tag_team',
+        participants: { some: { participantId: { in: [team1.id, team2.id] } } },
       },
     });
     await prisma.teamBattleMember.deleteMany({
@@ -424,11 +443,15 @@ describe('Tag Team Multi-Match Cycle Integration Test', () => {
     // Schedule 1v1 match
     const oneVOneMatch = await prisma.scheduledMatch.create({
       data: {
-        robot1Id: robots[0].id,
-        robot2Id: robots[2].id,
+        matchType: 'league_1v1',
         leagueType: 'bronze',
         scheduledFor: new Date(),
-        status: 'scheduled',
+        participants: {
+          create: [
+            { participantType: 'robot', participantId: robots[0].id, slot: 1 },
+            { participantType: 'robot', participantId: robots[2].id, slot: 2 },
+          ],
+        },
       },
     });
 
@@ -437,14 +460,11 @@ describe('Tag Team Multi-Match Cycle Integration Test', () => {
 
     // In a real cycle, 1v1 matches would be processed first
     // We verify this by checking that the system design supports it
-    const scheduledTagTeamMatches = await prisma.scheduledTeamBattleMatch.findMany({
+    const scheduledTagTeamMatches = await prisma.scheduledMatch.findMany({
       where: {
         status: 'scheduled',
-        matchMode: 'tag_team',
-        OR: [
-          { team1Id: teams[0].id },
-          { team2Id: teams[0].id },
-        ],
+        matchType: 'tag_team',
+        participants: { some: { participantId: { in: teams.map(t => t.id) } } },
       },
     });
 
@@ -456,11 +476,20 @@ describe('Tag Team Multi-Match Cycle Integration Test', () => {
     console.log('[Test] ✓ Match processing order verified');
 
     // Clean up
-    await prisma.scheduledTeamBattleMatch.deleteMany({
+    await prisma.scheduledMatchParticipant.deleteMany({
       where: {
-        matchMode: 'tag_team',
-        OR: teams.map(t => ({ team1Id: t.id })),
+        participantType: 'team',
+        participantId: { in: teams.map(t => t.id) },
       },
+    });
+    await prisma.scheduledMatch.deleteMany({
+      where: {
+        matchType: 'tag_team',
+        participants: { some: { participantId: { in: teams.map(t => t.id) } } },
+      },
+    });
+    await prisma.scheduledMatchParticipant.deleteMany({
+      where: { scheduledMatchId: oneVOneMatch.id },
     });
     await prisma.scheduledMatch.deleteMany({ where: { id: oneVOneMatch.id } });
     await prisma.teamBattleMember.deleteMany({

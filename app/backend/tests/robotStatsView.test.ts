@@ -16,12 +16,12 @@ describe('RobotStatsViewService', () => {
 
   beforeAll(async () => {
     // Clean up any existing test data
+    await prisma.battleParticipant.deleteMany({
+      where: { robotId: { in: [testRobotId1, testRobotId2] } },
+    });
     await prisma.battle.deleteMany({
       where: {
-        OR: [
-          { robot1Id: { in: [testRobotId1, testRobotId2] } },
-          { robot2Id: { in: [testRobotId1, testRobotId2] } },
-        ],
+        participants: { some: { robotId: { in: [testRobotId1, testRobotId2] } } },
       },
     });
     await prisma.robot.deleteMany({
@@ -76,8 +76,6 @@ describe('RobotStatsViewService', () => {
     for (let i = 0; i < 3; i++) {
       await prisma.battle.create({
         data: {
-          robot1Id: testRobotId1,
-          robot2Id: testRobotId2,
           winnerId: testRobotId1,
           winnerReward: 100,
           loserReward: 50,
@@ -98,8 +96,6 @@ describe('RobotStatsViewService', () => {
     // Robot 2 wins 1 battle
     await prisma.battle.create({
       data: {
-        robot1Id: testRobotId2,
-        robot2Id: testRobotId1,
         winnerId: testRobotId2,
         winnerReward: 100,
         loserReward: 50,
@@ -133,10 +129,7 @@ describe('RobotStatsViewService', () => {
     });
     await prisma.battle.deleteMany({
       where: {
-        OR: [
-          { robot1Id: { in: [testRobotId1, testRobotId2] } },
-          { robot2Id: { in: [testRobotId1, testRobotId2] } },
-        ],
+        participants: { some: { robotId: { in: [testRobotId1, testRobotId2] } } },
       },
     });
     await prisma.robot.deleteMany({

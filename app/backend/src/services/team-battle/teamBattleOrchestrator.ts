@@ -15,6 +15,7 @@ import { Prisma, StandingsMode, MatchType, Robot } from '../../../generated/pris
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { RobotWithWeapons } from '../battle/combatSimulator';
+import { createByeRobot } from '../battle/byeRobot';
 import { simulateTeamBattle } from './teamBattleEngine';
 import { computeBattleSummary } from '../battle/battleSummaryComputer';
 import { countKillsByRobot } from '../../shared/utils/battleStatistics';
@@ -228,7 +229,7 @@ async function executeSingleTeamBattle(
   // Load robots with weapons for team 2 (or create bye robots)
   let team2Robots: RobotWithWeapons[];
   if (isByeMatch) {
-    team2Robots = createByeRobots(teamSize);
+    team2Robots = Array.from({ length: teamSize }, (_, i) => createByeRobot(-(i + 1)));
   } else {
     team2Robots = await loadTeamRobotsWithWeapons(match.team2!.members.map(m => m.robotId));
   }
@@ -741,112 +742,6 @@ async function loadTeamRobotsWithWeapons(robotIds: number[]): Promise<RobotWithW
   return robots as unknown as RobotWithWeapons[];
 }
 
-/**
- * Create bye robots for a bye-team match.
- * Each bye robot has minimal stats and ELO 1000.
- */
-function createByeRobots(teamSize: 2 | 3): RobotWithWeapons[] {
-  const robots: RobotWithWeapons[] = [];
-  for (let i = 0; i < teamSize; i++) {
-    robots.push(createSingleByeRobot(-(i + 1)));
-  }
-  return robots;
-}
-
-/**
- * Create a single bye robot with minimal stats.
- */
-function createSingleByeRobot(id: number): RobotWithWeapons {
-  const decimal = (val: number) => new Prisma.Decimal(val);
-  return {
-    id,
-    userId: -1,
-    name: `Bye Robot ${Math.abs(id)}`,
-    frameId: 1,
-    paintJob: null,
-    imageUrl: null,
-    combatPower: decimal(10),
-    targetingSystems: decimal(10),
-    criticalSystems: decimal(10),
-    penetration: decimal(10),
-    weaponControl: decimal(10),
-    attackSpeed: decimal(10),
-    armorPlating: decimal(10),
-    shieldCapacity: decimal(10),
-    evasionThrusters: decimal(10),
-    damageDampeners: decimal(10),
-    counterProtocols: decimal(10),
-    hullIntegrity: decimal(10),
-    servoMotors: decimal(10),
-    gyroStabilizers: decimal(10),
-    hydraulicSystems: decimal(10),
-    powerCore: decimal(10),
-    combatAlgorithms: decimal(10),
-    threatAnalysis: decimal(10),
-    adaptiveAI: decimal(10),
-    logicCores: decimal(10),
-    syncProtocols: decimal(10),
-    supportSystems: decimal(10),
-    formationTactics: decimal(10),
-    currentHP: 100,
-    maxHP: 100,
-    currentShield: 20,
-    maxShield: 20,
-    damageTaken: 0,
-    elo: 1000,
-    totalBattles: 0,
-    wins: 0,
-    draws: 0,
-    losses: 0,
-    damageDealtLifetime: 0,
-    damageTakenLifetime: 0,
-    kills: 0,
-    currentLeague: 'bronze',
-    leagueId: 'bronze_1',
-    leaguePoints: 0,
-    cyclesInCurrentLeague: 0,
-    fame: 0,
-    titles: null,
-    totalTagTeamBattles: 0,
-    totalTagTeamWins: 0,
-    totalTagTeamLosses: 0,
-    totalTagTeamDraws: 0,
-    timesTaggedIn: 0,
-    timesTaggedOut: 0,
-    totalLeague1v1Wins: 0,
-    totalLeague1v1Losses: 0,
-    totalLeague1v1Draws: 0,
-    totalLeague2v2Wins: 0,
-    totalLeague3v3Wins: 0,
-    repairCost: 0,
-    battleReadiness: 100,
-    totalRepairsPaid: 0,
-    yieldThreshold: 10,
-    loadoutType: 'single',
-    stance: 'balanced',
-    kothWins: 0,
-    kothMatches: 0,
-    kothTotalZoneScore: 0,
-    kothTotalZoneTime: 0,
-    kothKills: 0,
-    kothBestPlacement: null,
-    kothCurrentWinStreak: 0,
-    kothBestWinStreak: 0,
-    currentWinStreak: 0,
-    bestWinStreak: 0,
-    currentLoseStreak: 0,
-    offensiveWins: 0,
-    defensiveWins: 0,
-    balancedWins: 0,
-    dualWieldWins: 0,
-    mainWeaponId: null,
-    offhandWeaponId: null,
-    mainWeapon: null,
-    offhandWeapon: null,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  } as unknown as RobotWithWeapons;
-}
 
 /**
  * Build the TeamBattleLog JSON structure for Battle.battleLog.

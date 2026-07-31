@@ -53,6 +53,8 @@ jobs:
         working-directory: ./app/backend
         run: pnpm run build
 
+      - name: Typecheck test suites
+        working-directory: ./app/backend
       # `pnpm run build` typechecks src/ only — tsconfig.json excludes tests
       # because it exists to emit dist/. Nothing ever typechecked a test file, so
       # suites silently stopped compiling when Specs #41 and #43 removed schema and
@@ -147,11 +149,12 @@ jobs:
       
       - name: Run integration tests
         working-directory: ./app/backend
+        shell: bash
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_test?connection_limit=5
           JWT_SECRET: test-secret-key-for-ci
           NODE_ENV: test
-        run: pnpm run test:integration 2>&1 | tail -n 500
+        run: pnpm run test:integration
 
   frontend-tests:
     name: Frontend Tests & Lint
@@ -197,10 +200,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: [backend-unit-tests, frontend-tests]
-    # Run E2E even if frontend unit tests fail — but don't block merge
-    # Only skip if backend-unit-tests failed (no point running E2E without a working backend)
-    if: ${{ always() && needs['backend-unit-tests'].result == 'success' }}
-    continue-on-error: true
+    if: ${{ needs['backend-unit-tests'].result == 'success' && needs['frontend-tests'].result == 'success' }}
 
     permissions:
       contents: read

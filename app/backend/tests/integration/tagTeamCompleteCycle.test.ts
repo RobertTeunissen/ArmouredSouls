@@ -62,19 +62,22 @@ describe('Tag Team Complete Cycle Integration Test', () => {
       await prisma.battle.deleteMany({
         where: {
           battleType: 'tag_team',
-          robot1Id: { in: testRobotIds },
+          participants: { some: { robotId: { in: testRobotIds } } },
         },
       });
     }
 
     if (testTeamIds.length > 0) {
-      await prisma.scheduledTeamBattleMatch.deleteMany({
+      await prisma.scheduledMatchParticipant.deleteMany({
         where: {
-          matchMode: 'tag_team',
-          OR: [
-            { team1Id: { in: testTeamIds } },
-            { team2Id: { in: testTeamIds } },
-          ],
+          participantType: 'team',
+          participantId: { in: testTeamIds },
+        },
+      });
+      await prisma.scheduledMatch.deleteMany({
+        where: {
+          matchType: 'tag_team',
+          participants: { some: { participantId: { in: testTeamIds } } },
         },
       });
       await prisma.teamBattleMember.deleteMany({
@@ -185,11 +188,11 @@ describe('Tag Team Complete Cycle Integration Test', () => {
     console.log(`[Test] Created ${matchmakingResult} matches`);
 
     // Verify matches were created
-    const scheduledMatches = await prisma.scheduledTeamBattleMatch.findMany({
+    const scheduledMatches = await prisma.scheduledMatch.findMany({
       where: {
         status: 'scheduled',
-        matchMode: 'tag_team',
-        team1Id: { in: testTeams.map(t => t.id) },
+        matchType: 'tag_team',
+        participants: { some: { participantId: { in: testTeams.map(t => t.id) } } },
       },
     });
     expect(scheduledMatches.length).toBeGreaterThan(0);
