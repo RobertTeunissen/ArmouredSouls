@@ -275,7 +275,7 @@ function SaveBar({ changedCount, saving, onSave, onDiscard }: SaveBarProps) {
       className="fixed left-0 right-0 bottom-16 lg:bottom-0 z-40 border-t border-white/10 bg-surface/95 backdrop-blur px-4 py-3"
     >
       <div className="max-w-6xl mx-auto flex items-center justify-between gap-3">
-        <p className="text-sm text-primary">
+        <p className="text-sm text-white font-medium">
           {changedCount} {changedCount === 1 ? 'robot' : 'robots'} changed
         </p>
         <div className="flex items-center gap-2">
@@ -283,7 +283,7 @@ function SaveBar({ changedCount, saving, onSave, onDiscard }: SaveBarProps) {
             type="button"
             onClick={onDiscard}
             disabled={saving}
-            className="min-h-[44px] px-4 rounded-lg text-sm border border-white/10 text-secondary hover:bg-white/5 disabled:opacity-50"
+            className="min-h-[44px] px-4 rounded-lg text-sm font-semibold bg-surface-elevated hover:bg-gray-600 text-white transition-colors disabled:opacity-50"
           >
             Discard
           </button>
@@ -291,7 +291,7 @@ function SaveBar({ changedCount, saving, onSave, onDiscard }: SaveBarProps) {
             type="button"
             onClick={onSave}
             disabled={saving}
-            className="min-h-[44px] px-5 rounded-lg text-sm font-medium bg-accent text-black disabled:opacity-50"
+            className="min-h-[44px] px-5 rounded-lg text-sm font-semibold bg-primary hover:bg-blue-700 text-white transition-colors disabled:opacity-50"
           >
             {saving ? 'Saving...' : 'Save changes'}
           </button>
@@ -330,7 +330,7 @@ function RobotCard({
   return (
     <div
       className={`bg-surface rounded-lg border p-4 space-y-3 ${
-        isDirty ? 'border-accent/60' : 'border-white/10'
+        isDirty ? 'border-primary/60' : 'border-white/10'
       }`}
     >
       <div className="flex items-center justify-between gap-2">
@@ -442,14 +442,14 @@ function ToggleButton({
   const classes = (): string => {
     if (isSelected) {
       return isPending
-        ? 'bg-accent/25 text-accent border border-accent/60'
+        ? 'bg-primary/20 text-primary border border-primary/60'
         : 'bg-green-500/20 text-green-300 border border-transparent hover:bg-green-500/30';
     }
     if (blocked) {
       return 'bg-white/5 text-secondary/30 border border-white/5 cursor-not-allowed';
     }
     return isPending
-      ? 'bg-white/10 text-secondary border border-accent/60 line-through'
+      ? 'bg-white/10 text-secondary border border-primary/60 line-through'
       : 'bg-white/5 text-secondary border border-white/10 hover:bg-white/10';
   };
 
@@ -478,7 +478,7 @@ function ToggleButton({
         <span className="text-amber-400 text-[10px] uppercase tracking-wide">held</span>
       )}
       {isPending && (
-        <span className="text-accent text-[10px] uppercase tracking-wide">unsaved</span>
+        <span className="text-primary text-[10px] uppercase tracking-wide">unsaved</span>
       )}
       {showTagTeamWarning && (
         <span className="text-amber-400" aria-label="On a Tag Team but not entered in Tag Team events">

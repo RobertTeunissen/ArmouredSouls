@@ -177,6 +177,151 @@ function UpgradePlanner({
     }));
   };
 
+  // Handle maximize a single attribute to cap (or as far as credits allow)
+  const handleMaxAttribute = (attributeKey: string, categoryAcademy: string) => {
+    const currentLevel = Math.floor(robot[attributeKey] as number);
+    const academyLevel = academyLevels[categoryAcademy as keyof typeof academyLevels];
+    const cap = getCapForLevel(academyLevel);
+
+    const currentPlan = upgradePlan[attributeKey];
+    const startLevel = currentPlan ? currentPlan.plannedLevel : currentLevel;
+
+    if (startLevel >= cap) return;
+
+    // Calculate how much budget is available (credits minus cost of other planned upgrades)
+    const otherCosts = Object.entries(upgradePlan)
+      .filter(([key]) => key !== attributeKey)
+      .reduce((sum, [, plan]) => sum + plan.cost, 0);
+    const availableBudget = currentCredits - otherCosts;
+
+    // Find the highest level we can afford from currentLevel (recalculate from scratch)
+    let bestLevel = currentLevel;
+    let totalCost = 0;
+    let totalBaseCost = 0;
+    for (let level = currentLevel; level < cap; level++) {
+      const levelCost = calculateUpgradeCost(level);
+      if (totalCost + levelCost > availableBudget) break;
+      totalCost += levelCost;
+      totalBaseCost += calculateBaseCost(level);
+      bestLevel = level + 1;
+    }
+
+    if (bestLevel <= currentLevel) return;
+
+    setUpgradePlan(prev => ({
+      ...prev,
+      [attributeKey]: {
+        currentLevel,
+        plannedLevel: bestLevel,
+        cost: totalCost,
+        baseCost: totalBaseCost,
+      },
+    }));
+  };
+
+  // Handle maximize all attributes in a category
+  const handleMaxCategory = (categoryKey: string) => {
+    const config = attributeCategories[categoryKey as keyof typeof attributeCategories];
+    if (!config) return;
+
+    const academyType = config.academy as keyof typeof academyLevels;
+    const academyLevel = academyLevels[academyType];
+    const cap = getCapForLevel(academyLevel);
+
+    // Calculate cost of all upgrades NOT in this category
+    const categoryAttrKeys = new Set(config.attributes.map(a => a.key));
+    const otherCosts = Object.entries(upgradePlan)
+      .filter(([key]) => !categoryAttrKeys.has(key))
+      .reduce((sum, [, plan]) => sum + plan.cost, 0);
+    let availableBudget = currentCredits - otherCosts;
+
+    // Distribute budget across attributes in category (round-robin, one level at a time)
+    const attrStates = config.attributes.map(attr => {
+      const currentLevel = Math.floor(robot[attr.key] as number);
+      return { key: attr.key, currentLevel, plannedLevel: currentLevel };
+    });
+
+    // Round-robin: keep upgrading attributes one level at a time until budget or caps exhausted
+    let progress = true;
+    while (progress) {
+      progress = false;
+      for (const state of attrStates) {
+        if (state.plannedLevel >= cap) continue;
+        const levelCost = calculateUpgradeCost(state.plannedLevel);
+        if (levelCost > availableBudget) continue;
+        availableBudget -= levelCost;
+        state.plannedLevel += 1;
+        progress = true;
+      }
+    }
+
+    // Build new plan
+    setUpgradePlan(prev => {
+      const newPlan = { ...prev };
+      for (const state of attrStates) {
+        if (state.plannedLevel > state.currentLevel) {
+          const { cost, baseCost } = calculateTotalCostForAttribute(state.currentLevel, state.plannedLevel);
+          newPlan[state.key] = {
+            currentLevel: state.currentLevel,
+            plannedLevel: state.plannedLevel,
+            cost,
+            baseCost,
+          };
+        } else {
+          delete newPlan[state.key];
+        }
+      }
+      return newPlan;
+    });
+  };
+
+  // Handle maximize all attributes across all categories
+  const handleMaxAll = () => {
+    // Collect all attributes with their caps
+    const allAttrs = Object.entries(attributeCategories).flatMap(([, config]) => {
+      const academyType = config.academy as keyof typeof academyLevels;
+      const academyLevel = academyLevels[academyType];
+      const cap = getCapForLevel(academyLevel);
+      return config.attributes.map(attr => ({
+        key: attr.key,
+        currentLevel: Math.floor(robot[attr.key] as number),
+        plannedLevel: Math.floor(robot[attr.key] as number),
+        cap,
+      }));
+    });
+
+    let availableBudget = currentCredits;
+
+    // Round-robin across all attributes
+    let progress = true;
+    while (progress) {
+      progress = false;
+      for (const state of allAttrs) {
+        if (state.plannedLevel >= state.cap) continue;
+        const levelCost = calculateUpgradeCost(state.plannedLevel);
+        if (levelCost > availableBudget) continue;
+        availableBudget -= levelCost;
+        state.plannedLevel += 1;
+        progress = true;
+      }
+    }
+
+    // Build new plan
+    const newPlan: UpgradePlan = {};
+    for (const state of allAttrs) {
+      if (state.plannedLevel > state.currentLevel) {
+        const { cost, baseCost } = calculateTotalCostForAttribute(state.currentLevel, state.plannedLevel);
+        newPlan[state.key] = {
+          currentLevel: state.currentLevel,
+          plannedLevel: state.plannedLevel,
+          cost,
+          baseCost,
+        };
+      }
+    }
+    setUpgradePlan(newPlan);
+  };
+
   // Handle decrement
   const handleDecrement = (attributeKey: string) => {
     const currentLevel = Math.floor(robot[attributeKey] as number);
@@ -271,6 +416,14 @@ function UpgradePlanner({
             return sum + (plan ? plan.cost : 0);
           }, 0);
 
+          // Check if all attributes in category are already at cap
+          const allAtCap = config.attributes.every(attr => {
+            const currentLevel = Math.floor(robot[attr.key] as number);
+            const plan = upgradePlan[attr.key];
+            const plannedLevel = plan ? plan.plannedLevel : currentLevel;
+            return plannedLevel >= cap;
+          });
+
           // Calculate the height needed for the tallest category (6 attributes)
           const maxAttributes = 6;
           const attributeHeight = 'h-[42px]'; // Fixed height per attribute row
@@ -281,7 +434,21 @@ function UpgradePlanner({
               <div className={`${colors.bg} ${colors.text} px-3 py-2 rounded-lg`}>
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-xl">{colors.icon}</span>
-                  <span className="font-semibold text-sm">{category}</span>
+                  <span className="font-semibold text-sm flex-1">{category}</span>
+                  <button
+                    onClick={() => handleMaxCategory(category)}
+                    disabled={allAtCap}
+                    className={`
+                      px-2 py-0.5 rounded text-xs font-semibold transition-colors
+                      ${!allAtCap
+                        ? 'bg-white/10 hover:bg-white/20 text-white cursor-pointer'
+                        : 'bg-white/5 text-gray-600 cursor-not-allowed'
+                      }
+                    `}
+                    title={allAtCap ? 'All attributes at cap' : `Maximize all ${category} attributes`}
+                  >
+                    Max
+                  </button>
                 </div>
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-secondary">
@@ -321,6 +488,7 @@ function UpgradePlanner({
                         hasPlannedChange={hasPlannedChange}
                         onIncrement={() => handleIncrement(key, academyType)}
                         onDecrement={() => handleDecrement(key)}
+                        onMax={() => handleMaxAttribute(key, academyType)}
                         compact={true}
                       />
                     </div>
@@ -383,6 +551,19 @@ function UpgradePlanner({
             `}
           >
             {isCommitting ? 'Committing...' : 'Commit Upgrades'}
+          </button>
+
+          <button
+            onClick={handleMaxAll}
+            disabled={isCommitting}
+            className={`
+              px-6 py-3 rounded font-semibold transition-colors
+              bg-yellow-600/20 hover:bg-yellow-600/40 text-yellow-300 border border-yellow-600/40 cursor-pointer
+              disabled:bg-surface disabled:text-gray-600 disabled:border-transparent disabled:cursor-not-allowed
+            `}
+            title="Maximize all attributes as far as credits allow"
+          >
+            Max All
           </button>
           
           <button

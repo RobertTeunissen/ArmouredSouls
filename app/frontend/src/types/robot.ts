@@ -93,8 +93,8 @@ export interface RobotWithAttributes extends RobotAttributes {
   maxShield: number;
   mainWeaponId: number | null;
   offhandWeaponId: number | null;
-  mainWeapon: { id: number; weapon: Record<string, unknown> } | null;
-  offhandWeapon: { id: number; weapon: Record<string, unknown> } | null;
+  mainWeapon: { id: number; weapon: Record<string, unknown>; refinements?: Array<{ tier: string; magnitude: number; targetAttribute: string | null }> } | null;
+  offhandWeapon: { id: number; weapon: Record<string, unknown>; refinements?: Array<{ tier: string; magnitude: number; targetAttribute: string | null }> } | null;
   loadoutType: string;
   stance: string;
   yieldThreshold: number;

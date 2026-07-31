@@ -11,6 +11,7 @@ interface AttributeUpgradeRowProps {
   hasPlannedChange: boolean;
   onIncrement: () => void;
   onDecrement: () => void;
+  onMax?: () => void;
   compact?: boolean;
 }
 
@@ -26,6 +27,7 @@ function AttributeUpgradeRow({
   hasPlannedChange,
   onIncrement,
   onDecrement,
+  onMax,
   compact = false,
 }: AttributeUpgradeRowProps) {
   if (compact) {
@@ -97,6 +99,26 @@ function AttributeUpgradeRow({
           >
             +
           </button>
+
+          {/* Max Button */}
+          {onMax && (
+            <button
+              onClick={onMax}
+              disabled={isAtCap}
+              className={`
+                px-1.5 h-6 rounded flex items-center justify-center font-semibold text-[10px]
+                transition-colors
+                ${!isAtCap
+                  ? 'bg-yellow-600/30 hover:bg-yellow-600/50 text-yellow-300 cursor-pointer'
+                  : 'bg-surface text-gray-600 cursor-not-allowed'
+                }
+              `}
+              aria-label={`Maximize ${label}`}
+              title={isAtCap ? `At cap (${cap})` : `Maximize ${label}`}
+            >
+              ⇈
+            </button>
+          )}
 
           {/* Cost Display */}
           <div className="w-16 text-right">
