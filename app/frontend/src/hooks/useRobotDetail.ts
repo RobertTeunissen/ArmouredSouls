@@ -99,6 +99,11 @@ export interface RobotDetail {
 export interface WeaponInventoryItem {
   id: number;
   weapon: WeaponDetail;
+  refinements?: Array<{
+    tier: 'hone' | 'augment' | 'sharpen' | 'forge';
+    magnitude: number;
+    targetAttribute: string | null;
+  }>;
   robotsMain?: Array<{ id: number; name: string }>;
   robotsOffhand?: Array<{ id: number; name: string }>;
 }
@@ -345,14 +350,6 @@ export function useRobotDetail() {
 
     setError('');
     setSuccessMessage('');
-
-    // If the imageUrl starts with /uploads/, it was set by the upload confirm handler
-    if (imageUrl.startsWith('/uploads/')) {
-      setRobot({ ...robot, imageUrl });
-      setSuccessMessage('Robot image updated successfully!');
-      setTimeout(() => setSuccessMessage(''), 3000);
-      return;
-    }
 
     try {
       const result = await updateAppearance(parseInt(id!), imageUrl);

@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
-import { calculateAttributeBonus, getLoadoutBonus, getStanceModifier } from '../utils/robotStats';
+import { useState, useEffect, useMemo } from 'react';
+import { getLoadoutBonus, getStanceModifier } from '../utils/robotStats';
+import { applyRefinementsToWeapon, type WeaponLike, type RefinementRow } from '../../../shared/utils/weaponRefinement';
 import { fetchTuningAllocation } from '../utils/robotApi';
 import type { RobotWithAttributes } from '../types/robot';
 
@@ -74,11 +75,35 @@ function EffectiveStatsDisplay({ robot }: EffectiveStatsDisplayProps) {
     return () => { cancelled = true; };
   }, [robot.id]);
 
+  // Compute effective weapon bonuses including refinements (hone/augment)
+  const refinedWeaponBonuses = useMemo(() => {
+    const bonuses: Record<string, number> = {};
+
+    const applyWeapon = (inventoryItem: unknown) => {
+      const item = inventoryItem as { weapon?: Record<string, unknown>; refinements?: RefinementRow[] } | null;
+      if (!item?.weapon) return;
+      const refinements: RefinementRow[] = (item.refinements ?? []).map((r) => ({
+        tier: r.tier,
+        magnitude: r.magnitude,
+        targetAttribute: r.targetAttribute,
+      }));
+      const effective = applyRefinementsToWeapon(item.weapon as unknown as WeaponLike, refinements);
+      for (const [field, value] of Object.entries(effective.effectiveAttributeBonuses)) {
+        bonuses[field] = (bonuses[field] ?? 0) + value;
+      }
+    };
+
+    applyWeapon(robot.mainWeapon);
+    applyWeapon(robot.offhandWeapon);
+    return bonuses;
+  }, [robot.mainWeapon, robot.offhandWeapon]);
+
   const getEffectiveStat = (attributeKey: string) => {
     const baseValue = robot[attributeKey] as number;
     const numericBase = typeof baseValue === 'string' ? parseFloat(baseValue) : baseValue;
     
-    const weaponBonus = calculateAttributeBonus(attributeKey, robot.mainWeapon, robot.offhandWeapon);
+    const bonusField = `${attributeKey}Bonus`;
+    const weaponBonus = refinedWeaponBonuses[bonusField] ?? 0;
     const tuningBonus = tuningAllocations[attributeKey] ?? 0;
     const loadoutBonus = getLoadoutBonus(robot.loadoutType, attributeKey);
     const stanceBonus = getStanceModifier(robot.stance, attributeKey);
