@@ -542,3 +542,22 @@ jobs:
           else
             pnpm audit --prod
           fi
+
+  # ---------------------------------------------------------------------------
+  # Notify on failure — Discord alert when any blocking job fails
+  # ---------------------------------------------------------------------------
+  notify-failure:
+    name: Discord Failure Alert
+    runs-on: ubuntu-latest
+    needs: [backend-unit-tests, backend-integration-tests, frontend-tests, e2e-tests]
+    if: ${{ failure() }}
+
+    steps:
+      - name: Send Discord notification
+        run: |
+          BRANCH="${GITHUB_REF_NAME}"
+          RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          ACTOR="${GITHUB_ACTOR}"
+          curl -s -H "Content-Type: application/json" \
+            -d "{\"content\": \"🚨 **CI failed** on \`${BRANCH}\` (pushed by ${ACTOR})\\n${RUN_URL}\"}" \
+            "${{ secrets.MONITORING_DISCORD_WEBHOOK }}" || true
