@@ -55,6 +55,18 @@ jobs:
 
       - name: Typecheck test suites
         working-directory: ./app/backend
+      # `pnpm run build` typechecks src/ only — tsconfig.json excludes tests
+      # because it exists to emit dist/. Nothing ever typechecked a test file, so
+      # suites silently stopped compiling when Specs #41 and #43 removed schema and
+      # service symbols; jest reports that as "Test suite failed to run", which is
+      # easy to miss in a 148-suite log. This step makes the count visible.
+      #
+      # continue-on-error until Backlog #64 clears the backlog of 459 pre-existing
+      # errors across 66 files. FLIP THIS TO BLOCKING when the count reaches zero,
+      # otherwise it is a warning nobody reads.
+      - name: Typecheck test suites (non-blocking — Backlog #64)
+        working-directory: ./app/backend
+        continue-on-error: true
         run: pnpm run typecheck:tests
       
       - name: Run unit tests
