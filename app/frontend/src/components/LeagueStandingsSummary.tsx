@@ -18,15 +18,8 @@ interface KothStanding {
   bestPlacement: number | null;
 }
 
-interface GrandMeleeStanding {
-  robotId: number;
-  robotName: string;
-  tier: string;
-  leaguePoints: number;
-  wins: number;
-  totalMatches: number;
-  bestPlacement: number | null;
-}
+// KotH and Grand Melee share the same shape
+type GrandMeleeStanding = KothStanding;
 
 function LeagueStandingsSummary() {
   const { logout } = useAuth();
@@ -231,32 +224,36 @@ function LeagueStandingsSummary() {
           </div>
         )}
 
-        {/* KotH — per robot */}
-        {kothStandings.length > 0 && (
+        {/* KotH — per robot (always show all robots, like 1v1) */}
+        {robots.length > 0 && (
           <div>
             <div className="text-xs text-secondary font-semibold mb-1.5 flex items-center gap-1.5">
               <span className="text-xs px-1.5 py-0.5 bg-orange-400/20 rounded text-orange-400 font-semibold">KotH</span>
               King of the Hill
             </div>
             <div className="space-y-1.5">
-              {kothStandings.map(standing => (
-                <KothStandingCard key={standing.robotId} standing={standing} isSubscribed={robotSubscriptionMap.get(standing.robotId)?.includes('koth') ?? false} />
-              ))}
+              {robots.map(robot => {
+                const standing = kothStandings.find(s => s.robotId === robot.id) ?? null;
+                const isSubscribed = robotSubscriptionMap.get(robot.id)?.includes('koth') ?? false;
+                return <KothStandingCard key={robot.id} robotName={robot.name} standing={standing} isSubscribed={isSubscribed} />;
+              })}
             </div>
           </div>
         )}
 
-        {/* Grand Melee — per robot */}
-        {grandMeleeStandings.length > 0 && (
+        {/* Grand Melee — per robot (always show all robots, like 1v1) */}
+        {robots.length > 0 && (
           <div>
             <div className="text-xs text-secondary font-semibold mb-1.5 flex items-center gap-1.5">
               <span className="text-xs px-1.5 py-0.5 bg-red-400/20 rounded text-red-400 font-semibold">Melee</span>
               Grand Melee
             </div>
             <div className="space-y-1.5">
-              {grandMeleeStandings.map(standing => (
-                <KothStandingCard key={`gm-${standing.robotId}`} standing={standing} isSubscribed={robotSubscriptionMap.get(standing.robotId)?.includes('grand_melee') ?? false} />
-              ))}
+              {robots.map(robot => {
+                const standing = grandMeleeStandings.find(s => s.robotId === robot.id) ?? null;
+                const isSubscribed = robotSubscriptionMap.get(robot.id)?.includes('grand_melee') ?? false;
+                return <KothStandingCard key={`gm-${robot.id}`} robotName={robot.name} standing={standing} isSubscribed={isSubscribed} />;
+              })}
             </div>
           </div>
         )}
@@ -467,36 +464,47 @@ function TagTeamStandingCard({ team }: TeamStandingCardProps) {
 }
 
 interface KothStandingCardProps {
-  standing: KothStanding;
+  robotName: string;
+  standing: KothStanding | null;
   isSubscribed: boolean;
 }
 
-function KothStandingCard({ standing, isSubscribed }: KothStandingCardProps) {
-  const tierColor = getLeagueTierColor(standing.tier);
-  const tierName = getLeagueTierName(standing.tier);
+function KothStandingCard({ robotName, standing, isSubscribed }: KothStandingCardProps) {
+  const tierColor = standing ? getLeagueTierColor(standing.tier) : 'text-gray-500';
+  const tierName = standing ? getLeagueTierName(standing.tier) : '—';
 
   return (
     <div className="bg-[#252b38] border border-white/10 rounded-lg p-2.5">
       {/* Desktop */}
       <div className="hidden md:flex items-center gap-3">
         <div className="flex-1 min-w-0">
-          <div className="font-medium text-sm text-[#e6edf3] truncate">{standing.robotName}</div>
+          <div className="font-medium text-sm text-[#e6edf3] truncate">{robotName}</div>
           <div className="flex items-center gap-2 mt-0.5">
             <span className={`text-xs ${tierColor}`}>{tierName}</span>
-            <span className="text-xs text-secondary">•</span>
-            <span className="text-xs text-secondary">{standing.leaguePoints} LP</span>
-            {standing.bestPlacement && (
+            {standing && (
               <>
                 <span className="text-xs text-secondary">•</span>
-                <span className="text-xs text-secondary">Best: #{standing.bestPlacement}</span>
+                <span className="text-xs text-secondary">{standing.leaguePoints} LP</span>
+                {standing.bestPlacement && (
+                  <>
+                    <span className="text-xs text-secondary">•</span>
+                    <span className="text-xs text-secondary">Best: #{standing.bestPlacement}</span>
+                  </>
+                )}
               </>
             )}
           </div>
         </div>
         <div className="flex-shrink-0 text-xs text-secondary">
-          <span className="text-[#3fb950]">{standing.wins}W</span>
-          <span className="mx-1">/</span>
-          <span className="text-secondary">{standing.totalMatches} matches</span>
+          {standing ? (
+            <>
+              <span className="text-[#3fb950]">{standing.wins}W</span>
+              <span className="mx-1">/</span>
+              <span className="text-secondary">{standing.totalMatches} matches</span>
+            </>
+          ) : (
+            <span className="text-secondary">No matches</span>
+          )}
         </div>
         <div className="flex-shrink-0">
           <span className={`text-xs px-1.5 py-0.5 rounded ${
@@ -510,7 +518,7 @@ function KothStandingCard({ standing, isSubscribed }: KothStandingCardProps) {
       {/* Mobile */}
       <div className="md:hidden">
         <div className="flex items-center justify-between mb-1">
-          <div className="font-medium text-sm text-[#e6edf3] truncate">{standing.robotName}</div>
+          <div className="font-medium text-sm text-[#e6edf3] truncate">{robotName}</div>
           <span className={`text-xs px-1.5 py-0.5 rounded ${
             isSubscribed ? 'bg-[#3fb950]/20 text-[#3fb950]' : 'bg-[#f85149]/20 text-[#f85149]'
           }`}>
@@ -520,15 +528,25 @@ function KothStandingCard({ standing, isSubscribed }: KothStandingCardProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className={`text-xs ${tierColor}`}>{tierName}</span>
-            <span className="text-xs text-secondary">{standing.leaguePoints} LP</span>
-            {standing.bestPlacement && (
-              <span className="text-xs text-secondary">Best #{standing.bestPlacement}</span>
+            {standing && (
+              <>
+                <span className="text-xs text-secondary">{standing.leaguePoints} LP</span>
+                {standing.bestPlacement && (
+                  <span className="text-xs text-secondary">Best #{standing.bestPlacement}</span>
+                )}
+              </>
             )}
           </div>
           <div className="text-xs text-secondary">
-            <span className="text-[#3fb950]">{standing.wins}W</span>
-            <span className="mx-0.5">/</span>
-            <span>{standing.totalMatches} matches</span>
+            {standing ? (
+              <>
+                <span className="text-[#3fb950]">{standing.wins}W</span>
+                <span className="mx-0.5">/</span>
+                <span>{standing.totalMatches} matches</span>
+              </>
+            ) : (
+              <span>No matches</span>
+            )}
           </div>
         </div>
       </div>
