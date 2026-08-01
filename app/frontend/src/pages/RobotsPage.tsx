@@ -21,6 +21,7 @@ function RobotsPage() {
     loading,
     error,
     subscriptionsByRobotId,
+    capByRobotId,
     maxRobots,
     atCapacity,
     viewMode,
@@ -257,7 +258,8 @@ function RobotsPage() {
                           robot.loadoutType,
                           robot.mainWeaponId,
                           robot.offhandWeaponId,
-                          robot.offhandWeapon ?? null
+                          robot.offhandWeapon ?? null,
+                          subscriptionsByRobotId[robot.id]
                         );
 
                         return (
@@ -393,9 +395,6 @@ function RobotsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {displayedRobots.map((robot) => {
                   const hpPercentage = Math.min(100, Math.round((robot.currentHP / robot.maxHP) * 100));
-                  const shieldPercentage = robot.maxShield > 0 
-                    ? Math.min(100, Math.round((robot.currentShield / robot.maxShield) * 100))
-                    : 0;
                   const winRate = calculateWinRate(robot.wins, robot.totalBattles);
                   const actualReadiness = calculateReadiness(robot.currentHP, robot.maxHP);
                   const readinessStatus = getReadinessStatus(
@@ -404,7 +403,8 @@ function RobotsPage() {
                     robot.loadoutType,
                     robot.mainWeaponId,
                     robot.offhandWeaponId,
-                    robot.offhandWeapon ?? null
+                    robot.offhandWeapon ?? null,
+                    subscriptionsByRobotId[robot.id]
                   );
 
                   return (
@@ -434,10 +434,6 @@ function RobotsPage() {
                           <span className="text-secondary">Fame:</span>
                           <span className="font-semibold text-[#ffd700]">{robot.fame}</span>
                         </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-secondary">League:</span>
-                          <span className="font-semibold capitalize">{robot.currentLeague} │ LP: {robot.leaguePoints}</span>
-                        </div>
                         <div className="flex justify-between">
                           <span className="text-secondary">Record:</span>
                           <span className="font-semibold">
@@ -460,22 +456,6 @@ function RobotsPage() {
                         </div>
                       </div>
 
-                      {/* Shield Bar */}
-                      {robot.maxShield > 0 && (
-                        <div className="space-y-2 mb-3">
-                          <div className="flex justify-between text-xs text-secondary">
-                            <span>Shield</span>
-                            <span>{shieldPercentage}%</span>
-                          </div>
-                          <div className="w-full h-5 bg-[#1a1f29] rounded-full overflow-hidden">
-                            <div
-                              className="h-full transition-all duration-300 bg-[#58a6ff]"
-                              style={{ width: `${shieldPercentage}%` }}
-                            />
-                          </div>
-                        </div>
-                      )}
-
                       {/* Weapon & Readiness */}
                       <div className="space-y-2 text-sm mb-4">
                         <div className="flex justify-between">
@@ -495,16 +475,23 @@ function RobotsPage() {
                       </div>
 
                       {/* Event Subscriptions */}
-                      {subscriptionsByRobotId[robot.id] && subscriptionsByRobotId[robot.id].length > 0 && (
-                        <div className="mb-4">
-                          <div className="text-xs text-secondary mb-1.5">Subscriptions</div>
+                      <div className="mb-4">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-xs text-secondary">Subscriptions</span>
+                          <span className="text-xs text-secondary">
+                            {(subscriptionsByRobotId[robot.id] ?? []).length}/{capByRobotId[robot.id] ?? '?'}
+                          </span>
+                        </div>
+                        {subscriptionsByRobotId[robot.id] && subscriptionsByRobotId[robot.id].length > 0 ? (
                           <div className="flex flex-wrap gap-1.5">
                             {subscriptionsByRobotId[robot.id].map((eventType) => (
                               <EventBadge key={eventType} eventType={eventType} />
                             ))}
                           </div>
-                        </div>
-                      )}
+                        ) : (
+                          <span className="text-xs text-tertiary">No events subscribed</span>
+                        )}
+                      </div>
 
                       {/* View Details Button */}
                       <button

@@ -73,7 +73,8 @@ export const getReadinessStatus = (
   loadoutType: string,
   mainWeaponId: number | null,
   offhandWeaponId: number | null,
-  offhandWeapon: { weapon: { weaponType: string } } | null
+  offhandWeapon: { weapon: { weaponType: string } } | null,
+  subscriptions?: string[]
 ): { text: string; color: string; reason: string } => {
   const readiness = calculateReadiness(currentHP, maxHP);
   const hpPercent = (currentHP / maxHP) * 100;
@@ -81,6 +82,10 @@ export const getReadinessStatus = (
   const loadoutCheck = isLoadoutComplete(loadoutType, mainWeaponId, offhandWeaponId, offhandWeapon);
   if (!loadoutCheck.complete) {
     return { text: 'Not Ready', color: 'text-red-500', reason: loadoutCheck.reason };
+  }
+
+  if (subscriptions !== undefined && subscriptions.length === 0) {
+    return { text: 'Not Ready', color: 'text-red-500', reason: 'No Subscriptions' };
   }
 
   if (readiness >= 80) {
@@ -131,6 +136,16 @@ export function useRobotsList() {
     if (subscriptionOverview?.robots) {
       for (const robot of subscriptionOverview.robots) {
         map[robot.robotId] = robot.subscriptions.map(s => s.eventType);
+      }
+    }
+    return map;
+  }, [subscriptionOverview]);
+
+  const capByRobotId = useMemo(() => {
+    const map: Record<number, number> = {};
+    if (subscriptionOverview?.robots) {
+      for (const robot of subscriptionOverview.robots) {
+        map[robot.robotId] = robot.cap;
       }
     }
     return map;
@@ -293,6 +308,7 @@ export function useRobotsList() {
     loading,
     error,
     subscriptionsByRobotId,
+    capByRobotId,
 
     // Pagination / capacity
     maxRobots,
