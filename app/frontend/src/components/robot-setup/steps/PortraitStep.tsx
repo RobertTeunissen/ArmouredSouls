@@ -7,7 +7,7 @@
 
 import { useState } from 'react';
 import RobotImageSelector from '../../RobotImageSelector';
-import { api } from '../../../utils/api';
+import { updateAppearance } from '../../../utils/robotApi';
 import type { StepProps } from '../types';
 
 function PortraitStep({ robotId, onComplete, onSkip }: StepProps) {
@@ -17,7 +17,7 @@ function PortraitStep({ robotId, onComplete, onSkip }: StepProps) {
   const handleSelect = async (imageUrl: string): Promise<void> => {
     setSaving(true);
     try {
-      await api.patch(`/api/robots/${robotId}/image`, { imageUrl });
+      await updateAppearance(robotId, imageUrl);
       onComplete();
     } catch {
       // If image update fails, still allow advancing (portrait is optional)

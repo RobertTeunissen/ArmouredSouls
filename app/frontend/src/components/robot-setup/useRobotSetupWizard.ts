@@ -23,6 +23,7 @@ export interface UseRobotSetupWizardReturn {
   currentStep: number;
   totalSteps: number;
   advance: () => void;
+  goBack: () => void;
   skipStep: () => void;
   skipAll: () => void;
   isComplete: boolean;
@@ -110,6 +111,19 @@ export function useRobotSetupWizard(robotId: number): UseRobotSetupWizardReturn 
     }));
   }, []);
 
+  const goBack = useCallback((): void => {
+    setState((prev) => {
+      if (prev.currentStep <= 1) return prev;
+      return {
+        ...prev,
+        currentStep: prev.currentStep - 1,
+        // Remove the previous step from completed/skipped so it shows as active again
+        completedSteps: prev.completedSteps.filter((s) => s !== prev.currentStep - 1),
+        skippedSteps: prev.skippedSteps.filter((s) => s !== prev.currentStep - 1),
+      };
+    });
+  }, []);
+
   const skipStep = useCallback((): void => {
     setState((prev) => ({
       ...prev,
@@ -132,6 +146,7 @@ export function useRobotSetupWizard(robotId: number): UseRobotSetupWizardReturn 
     currentStep: state.currentStep,
     totalSteps: TOTAL_STEPS,
     advance,
+    goBack,
     skipStep,
     skipAll,
     isComplete: state.currentStep > TOTAL_STEPS,

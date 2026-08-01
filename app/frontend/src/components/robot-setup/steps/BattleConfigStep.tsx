@@ -11,15 +11,16 @@ import YieldThresholdSlider from '../../YieldThresholdSlider';
 import type { StepProps } from '../types';
 
 function BattleConfigStep({ robotId, onComplete, onSkip }: StepProps) {
-  const [stanceSet, setStanceSet] = useState(false);
-  const [yieldSet, setYieldSet] = useState(false);
+  const [currentStance, setCurrentStance] = useState('balanced');
+  const [changed, setChanged] = useState(false);
 
-  const handleStanceChange = (_newStance: string): void => {
-    setStanceSet(true);
+  const handleStanceChange = (newStance: string): void => {
+    setCurrentStance(newStance);
+    setChanged(true);
   };
 
   const handleThresholdChange = (_newThreshold: number): void => {
-    setYieldSet(true);
+    setChanged(true);
   };
 
   return (
@@ -39,7 +40,7 @@ function BattleConfigStep({ robotId, onComplete, onSkip }: StepProps) {
         </p>
         <StanceSelector
           robotId={robotId}
-          currentStance="balanced"
+          currentStance={currentStance}
           onStanceChange={handleStanceChange}
         />
       </div>
@@ -66,7 +67,7 @@ function BattleConfigStep({ robotId, onComplete, onSkip }: StepProps) {
           onClick={onComplete}
           className="bg-primary hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg min-h-[44px] transition-colors"
         >
-          {stanceSet || yieldSet ? 'Continue' : 'Keep Defaults'}
+          {changed ? 'Continue' : 'Keep Defaults'}
         </button>
         {onSkip && (
           <button

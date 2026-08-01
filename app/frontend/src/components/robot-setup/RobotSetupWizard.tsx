@@ -197,13 +197,7 @@ function RobotSetupWizard({ robotId, robotName, loadoutType, onComplete, onSkip 
         <div className="max-w-2xl mx-auto flex items-center justify-between gap-3">
           {/* Back */}
           <button
-            onClick={() => {
-              if (wizard.currentStep > 1) {
-                // Navigate back visually (state already committed, just re-show previous step)
-                wizard.reset();
-                // Re-initialize to previous step (simplified: we just show previous by decrementing)
-              }
-            }}
+            onClick={() => wizard.goBack()}
             disabled={wizard.currentStep <= 1}
             className="bg-surface-elevated hover:bg-gray-600 text-white px-4 py-3 rounded-lg min-h-[44px] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             aria-label="Go back"
