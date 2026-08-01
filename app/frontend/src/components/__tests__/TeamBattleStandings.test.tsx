@@ -85,7 +85,6 @@ describe('LeagueStandingsSummary', () => {
         totalLeagueWins: 8,
         totalLeagueLosses: 3,
         totalLeagueDraws: 1,
-        eligibility: 'ELIGIBLE',
         createdAt: '2024-01-01',
         updatedAt: '2024-01-01',
         members: [],
@@ -126,7 +125,6 @@ describe('LeagueStandingsSummary', () => {
         totalLeagueWins: 8,
         totalLeagueLosses: 3,
         totalLeagueDraws: 1,
-        eligibility: 'ELIGIBLE',
         createdAt: '2024-01-01',
         updatedAt: '2024-01-01',
         members: [],
@@ -144,7 +142,6 @@ describe('LeagueStandingsSummary', () => {
         totalLeagueWins: 12,
         totalLeagueLosses: 5,
         totalLeagueDraws: 2,
-        eligibility: 'ELIGIBLE',
         createdAt: '2024-01-01',
         updatedAt: '2024-01-01',
         members: [],
@@ -163,61 +160,6 @@ describe('LeagueStandingsSummary', () => {
     // Both size labels should be present
     expect(screen.getByText('2v2')).toBeInTheDocument();
     expect(screen.getByText('3v3')).toBeInTheDocument();
-  });
-
-  it('should show eligibility status badge (Ready/Ineligible)', async () => {
-    vi.mocked(getMyTeamBattles).mockResolvedValue([
-      {
-        id: 1,
-        stableId: 1,
-        teamSize: 2,
-        teamName: 'Ready Team',
-        teamLp: 50,
-        teamLeague: 'bronze',
-        teamLeagueId: 'inst-1',
-        cyclesInLeague: 5,
-        totalLeagueWins: 3,
-        totalLeagueLosses: 2,
-        totalLeagueDraws: 0,
-        eligibility: 'ELIGIBLE',
-        createdAt: '2024-01-01',
-        updatedAt: '2024-01-01',
-        members: [],
-        isLockedForBattle: false,
-      },
-      {
-        id: 2,
-        stableId: 1,
-        teamSize: 3,
-        teamName: 'Broken Team',
-        teamLp: 30,
-        teamLeague: 'bronze',
-        teamLeagueId: 'inst-2',
-        cyclesInLeague: 3,
-        totalLeagueWins: 1,
-        totalLeagueLosses: 4,
-        totalLeagueDraws: 0,
-        eligibility: 'INELIGIBLE',
-        createdAt: '2024-01-01',
-        updatedAt: '2024-01-01',
-        members: [],
-        isLockedForBattle: false,
-      },
-    ]);
-    renderWithRouter();
-
-    await waitFor(() => {
-      const readyTeamElements = screen.getAllByText('Ready Team');
-      expect(readyTeamElements.length).toBeGreaterThan(0);
-      const brokenTeamElements = screen.getAllByText('Broken Team');
-      expect(brokenTeamElements.length).toBeGreaterThan(0);
-    });
-
-    // Check eligibility indicators are present (both desktop and mobile views)
-    const readyIndicators = screen.getAllByText(/✓/);
-    const ineligibleIndicators = screen.getAllByText(/✗/);
-    expect(readyIndicators.length).toBeGreaterThan(0);
-    expect(ineligibleIndicators.length).toBeGreaterThan(0);
   });
 
   it('should show error state when API fails', async () => {
@@ -243,7 +185,6 @@ describe('LeagueStandingsSummary', () => {
         totalLeagueWins: 3,
         totalLeagueLosses: 2,
         totalLeagueDraws: 0,
-        eligibility: 'ELIGIBLE',
         createdAt: '2024-01-01',
         updatedAt: '2024-01-01',
         members: [],
@@ -271,7 +212,6 @@ describe('LeagueStandingsSummary', () => {
         totalLeagueWins: 100,
         totalLeagueLosses: 20,
         totalLeagueDraws: 5,
-        eligibility: 'ELIGIBLE',
         createdAt: '2024-01-01',
         updatedAt: '2024-01-01',
         members: [],

@@ -49,7 +49,7 @@ export interface TeamMatchmakingConfig {
   matchType: MatchType;
   standingsMode: string;
   subscriptionEvent: string;
-  /** Optional eligibility filter beyond the standard checks (e.g., team.eligibility === 'ELIGIBLE') */
+  /** Optional additional filter for teams (e.g., custom mode-specific rules) */
   eligibilityFilter?: (team: TeamBattleWithMembers) => boolean;
   logPrefix: string;
 }
@@ -85,7 +85,7 @@ async function getEligibleTeams(
     },
   });
 
-  // Apply custom eligibility filter if provided
+  // Apply custom filter if provided
   const filteredTeams = config.eligibilityFilter
     ? (teams as TeamBattleWithMembers[]).filter(config.eligibilityFilter)
     : (teams as TeamBattleWithMembers[]);
@@ -234,7 +234,6 @@ function createByeTeam(league: string, leagueId: string, teamSize: 2 | 3): TeamB
         tagTeamLeagueId: _leagueId,
         cyclesInTagTeamLeague: 0,
         totalTagTeamWins: 0, totalTagTeamLosses: 0, totalTagTeamDraws: 0,
-        eligibility: 'ELIGIBLE',
         createdAt: new Date(), updatedAt: new Date(),
         members,
       } as TeamBattleWithMembers;

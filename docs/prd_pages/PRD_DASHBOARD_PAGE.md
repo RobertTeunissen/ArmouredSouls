@@ -58,7 +58,7 @@ The Dashboard Page (`/dashboard`) is the most critical page in Armoured Souls - 
 - **Design System**: [docs/design_ux/DESIGN_SYSTEM_QUICK_REFERENCE.md](../design_ux/DESIGN_SYSTEM_QUICK_REFERENCE.md)
 - **Related Files**:
   - Frontend: `app/frontend/src/pages/DashboardPage.tsx`
-  - Components: `app/frontend/src/components/StableStatistics.tsx`, `RobotDashboardCard.tsx`, `HPBar.tsx`, `BattleReadinessBadge.tsx`, `FinancialSummary.tsx`, `UpcomingMatches.tsx`, `RecentMatches.tsx`
+  - Components: `app/frontend/src/components/DashboardNotification.tsx`, `StableStatistics.tsx`, `RobotDashboardCard.tsx`, `HPBar.tsx`, `BattleReadinessBadge.tsx`, `FinancialSummary.tsx`, `UpcomingMatches.tsx`, `RecentMatches.tsx`, `season/SeasonPhaseCard.tsx`
   - Backend: `app/backend/src/routes/user.ts`
   - API Utils: `app/frontend/src/utils/userApi.ts`
 
@@ -84,12 +84,13 @@ The Dashboard Page (`/dashboard`) is the most critical page in Armoured Souls - 
    - Stable name display: "{username}'s Stable"
    - Border separator
 
-3. **Notification System** - `DashboardPage.tsx`
-   - Critical alerts at top of dashboard
-   - Color-coded by severity (danger/warning/info)
-   - Actionable buttons link to fix pages
-   - Auto-generated based on robot/financial status
-   - Types: Robot needs repair, low balance warnings
+3. **Notification System** - `DashboardNotification.tsx`
+   - Unified component for all dashboard alerts
+   - Color-coded by variant: success (green), warning (amber), danger (red), info (blue)
+   - Consistent layout: border-l-4 accent, icon, message, optional detail line, optional action button, optional dismiss
+   - Ordered: tier changes → season countdown → robot readiness → team gaps → team creation suggestions
+   - Priority cascade: one notification per tier for robot issues, naming the most urgent robot
+   - Types: tier promotions/demotions, season ending, no weapon, no subscriptions, subscription slots available, unallocated tuning, damaged, team mode gaps, team creation hints, onboarding/welcome
 
 4. **Visual Robot Cards** - `RobotDashboardCard.tsx`
    - Compact layout (96x96px portrait placeholder)
@@ -227,9 +228,12 @@ The Dashboard Page (`/dashboard`) is the most critical page in Armoured Souls - 
 │   ├── Title: "Command Center"
 │   └── Stable Name: "{username}'s Stable"
 ├── Notification System ✅
-│   ├── Robot needs repair warnings
-│   ├── Low balance warnings
-│   └── Actionable buttons
+│   ├── Tier change events (promotions/demotions)
+│   ├── Season ending countdown (≤5 cycles, dismissible)
+│   ├── Robot readiness cascade (no weapon → no subs → slots free → tuning → damaged)
+│   ├── Team mode subscription gaps
+│   ├── Team creation suggestions
+│   └── Onboarding/welcome (when no robots)
 ├── Top Row (2 columns) ✅
 │   ├── Stable Statistics Panel
 │   │   ├── Total Robots
@@ -254,11 +258,6 @@ The Dashboard Page (`/dashboard`) is the most critical page in Armoured Souls - 
 │       ├── ELO & League display
 │       ├── W/L/D record
 │       └── Click to navigate
-└── Empty State (when 0 robots) ✅
-    ├── Welcome message
-    ├── 4-step onboarding guide
-    ├── "Get Started" button
-    └── Current balance display
 ```
 
 ### Component Hierarchy
@@ -267,8 +266,9 @@ The Dashboard Page (`/dashboard`) is the most critical page in Armoured Souls - 
 DashboardPage.tsx ✅
 ├── Navigation (global component)
 ├── Dashboard Header (inline)
-├── Notification System (inline)
-│   └── Notification cards with actions
+├── SeasonPhaseCard (preparation + cycle 1 only)
+├── DashboardNotification (unified, repeated per notification)
+│   └── Variants: success, warning, danger, info
 ├── Top Row Grid
 │   ├── StableStatistics.tsx ✅
 │   │   ├── Stats fetching

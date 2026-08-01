@@ -58,7 +58,10 @@ export function SeasonPhaseCard() {
   // (preparation, cycle-1 scheduling, countdown) begins at the first rollover.
   if (season.isLegacy) return null;
 
-  const isSchedulingCycle = season.seasonCycle === 1;
+  // From cycle 2 onward the navbar already shows "Season N · Cycle X / Y", so
+  // repeating it as a card is redundant. Only show during cycle 1 (scheduling
+  // notice) — preparation is handled above.
+  if (season.seasonCycle !== 1) return null;
 
   return (
     <div
@@ -66,18 +69,16 @@ export function SeasonPhaseCard() {
       data-testid="season-phase-card"
     >
       <h2 className="text-lg font-semibold text-white">
-        Season {season.seasonNumber} · Cycle {season.seasonCycle} of {season.seasonLengthCycles}
+        Season {season.seasonNumber} · Cycle 1 of {season.seasonLengthCycles}
       </h2>
       <p className="mt-1 text-sm text-secondary">
         {season.remainingCompetitiveCycles} competitive cycle
         {season.remainingCompetitiveCycles === 1 ? '' : 's'} remaining before the season is
         archived and reset.
       </p>
-      {isSchedulingCycle && (
-        <p className="mt-2 text-sm text-amber-200">
-          Matches for the season have been scheduled. The first battles run on the next cycle.
-        </p>
-      )}
+      <p className="mt-2 text-sm text-amber-200">
+        Matches for the season have been scheduled. The first battles run on the next cycle.
+      </p>
     </div>
   );
 }

@@ -5,7 +5,7 @@
  * and combined-ELO seeding for 2v2 and 3v3 team tournaments.
  *
  * Teams are eligible when:
- * - Team has `eligibility = 'ELIGIBLE'`
+ * - Team has a full roster (all member slots filled)
  * - ALL member robots have active subscription to the corresponding event type
  * - ALL member robots pass scheduling readiness checks (weapon loadout)
  *
@@ -30,7 +30,7 @@ import { checkSchedulingReadiness } from '../analytics/matchmakingService';
  * Get all eligible teams for a team tournament of the given size.
  *
  * Eligibility criteria:
- * 1. Team has `eligibility = 'ELIGIBLE'` and matching `teamSize`
+ * 1. Team has a full roster (matching `teamSize`)
  * 2. All member robots have active subscription to the event type
  * 3. All member robots pass scheduling readiness checks
  *
@@ -41,7 +41,7 @@ export async function getEligibleTeamsForTournament(teamSize: 2 | 3): Promise<To
   const eventType = teamSize === 2 ? 'tournament_2v2' : 'tournament_3v3';
 
   const teams = await prisma.teamBattle.findMany({
-    where: { teamSize, eligibility: 'ELIGIBLE' },
+    where: { teamSize },
     include: {
       members: {
         include: {
@@ -65,9 +65,10 @@ export async function getEligibleTeamsForTournament(teamSize: 2 | 3): Promise<To
   });
   const subscribedSet = new Set(subscriptions.map(s => s.robotId));
 
-  // Filter teams: all members must be subscribed AND scheduling-ready
+  // Filter teams: full roster, all members must be subscribed AND scheduling-ready
   const eligible: TournamentParticipant[] = [];
   for (const team of teams) {
+    if (team.members.length !== teamSize) continue;
     const allSubscribed = team.members.every(m => subscribedSet.has(m.robotId));
     const allReady = team.members.every(m => checkSchedulingReadiness(m.robot).isReady);
 

@@ -678,7 +678,6 @@ erDiagram
         int stableId FK
         int teamSize "2 or 3"
         string teamName
-        string eligibility "ELIGIBLE|INELIGIBLE"
         datetime createdAt
         datetime updatedAt
     }

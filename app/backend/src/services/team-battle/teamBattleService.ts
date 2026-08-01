@@ -184,7 +184,6 @@ export async function registerTeam(
         stableId,
         teamSize,
         teamName,
-        eligibility: 'ELIGIBLE',
         members: {
           create: uniqueRobotIds.map((robotId, index) => ({
             robotId,
@@ -210,7 +209,6 @@ export async function registerTeam(
  *
  * Rejects if team is locked for battle (has scheduled match).
  * Validates new robot ownership, subscription, and uniqueness (not already on same-size team).
- * Recalculates eligibility after swap.
  */
 export async function swapTeamMember(
   teamId: number,
@@ -322,31 +320,6 @@ export async function swapTeamMember(
       where: { id: memberToSwap.id },
       data: { robotId: newRobotId },
     });
-
-    // Recalculate eligibility: check all members are subscribed to at least one team event
-    const updatedMembers = await tx.teamBattleMember.findMany({
-      where: { teamId },
-    });
-
-    let eligible = updatedMembers.length === team.teamSize;
-    if (eligible) {
-      const eligEventTypes = getEventTypesForSize(team.teamSize as 2 | 3);
-      for (const member of updatedMembers) {
-        let memberSubscribed = false;
-        for (const et of eligEventTypes) {
-          if (await hasSubscription(member.robotId, et)) { memberSubscribed = true; break; }
-        }
-        if (!memberSubscribed) {
-          eligible = false;
-          break;
-        }
-      }
-    }
-
-    await tx.teamBattle.update({
-      where: { id: teamId },
-      data: { eligibility: eligible ? 'ELIGIBLE' : 'INELIGIBLE' },
-    });
   });
 
   logger.info(`[TeamBattle] Swapped robot ${oldRobotId} → ${newRobotId} on team ${teamId}`);
@@ -438,7 +411,6 @@ export async function swapPositions(
  * Remove a member from a team.
  *
  * Rejects if team is locked for battle.
- * Sets team eligibility to INELIGIBLE (incomplete roster).
  */
 export async function removeTeamMember(
   teamId: number,
@@ -492,12 +464,6 @@ export async function removeTeamMember(
     await tx.teamBattleMember.delete({
       where: { id: memberToRemove.id },
     });
-
-    // Set team to INELIGIBLE (incomplete roster)
-    await tx.teamBattle.update({
-      where: { id: teamId },
-      data: { eligibility: 'INELIGIBLE' },
-    });
   });
 
   logger.info(`[TeamBattle] Removed robot ${robotId} from team ${teamId} — team now INELIGIBLE`);
@@ -508,7 +474,6 @@ export async function removeTeamMember(
  *
  * Validates robot ownership, subscription, and uniqueness.
  * Rejects if team already has N members.
- * If team now has N members, sets eligibility to ELIGIBLE.
  */
 export async function addTeamMember(
   teamId: number,
@@ -618,30 +583,6 @@ export async function addTeamMember(
         slotIndex: nextSlot,
       },
     });
-
-    // If team now has N members, set eligibility to ELIGIBLE
-    const newMemberCount = team.members.length + 1;
-    if (newMemberCount === team.teamSize) {
-      // Verify all members are subscribed to at least one team event before marking eligible
-      const allMembers = [...team.members.map((m) => m.robotId), robotId];
-      const eligEventTypes = getEventTypesForSize(team.teamSize as 2 | 3);
-      let allSubscribed = true;
-      for (const memberId of allMembers) {
-        let memberSubscribed = false;
-        for (const et of eligEventTypes) {
-          if (await hasSubscription(memberId, et)) { memberSubscribed = true; break; }
-        }
-        if (!memberSubscribed) {
-          allSubscribed = false;
-          break;
-        }
-      }
-
-      await tx.teamBattle.update({
-        where: { id: teamId },
-        data: { eligibility: allSubscribed ? 'ELIGIBLE' : 'INELIGIBLE' },
-      });
-    }
   });
 
   logger.info(`[TeamBattle] Added robot ${robotId} to team ${teamId}`);

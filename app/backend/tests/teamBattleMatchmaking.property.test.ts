@@ -167,7 +167,6 @@ function createMockTeam(
     stableId,
     teamSize,
     teamName: `Team-${teamId}`,
-    eligibility: 'ELIGIBLE',
     createdAt: new Date(Date.now() - teamId * 1000), // Unique creation timestamps for tie-breaking
     updatedAt: new Date(),
     members,

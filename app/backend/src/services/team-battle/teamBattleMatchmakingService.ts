@@ -48,7 +48,7 @@ export interface TeamBattleMatchPair {
  * Get eligible teams for matchmaking within a specific league instance.
  *
  * Eligibility criteria:
- * - Team eligibility = ELIGIBLE (full roster)
+ * - Full roster (all member slots filled)
  * - All members subscribed to the corresponding event (league_2v2 or league_3v3)
  * - All members pass scheduling readiness (weapon check)
  * - Team not already scheduled for a pending match
@@ -74,12 +74,11 @@ export async function getEligibleTeams(
     return [];
   }
 
-  // Get all ELIGIBLE teams by standings-derived IDs with members and robots
+  // Get all teams by standings-derived IDs with members and robots
   const teams = await prisma.teamBattle.findMany({
     where: {
       id: { in: teamIdsInInstance },
       teamSize,
-      eligibility: 'ELIGIBLE',
     },
     include: {
       members: {
@@ -90,10 +89,9 @@ export async function getEligibleTeams(
     },
   });
 
-  // Filter for scheduling-ready teams (all members have weapons equipped)
+  // Filter for scheduling-ready teams (all members have weapons equipped and full roster)
   const readyTeams: TeamBattleWithMembers[] = [];
   for (const team of teams) {
-    // Skip teams with incomplete rosters (shouldn't happen with ELIGIBLE filter, but defensive)
     if (team.members.length !== teamSize) {
       continue;
     }
@@ -483,7 +481,6 @@ function createByeTeam(league: string, leagueId: string, teamSize: 2 | 3): TeamB
         stableId: -1,
         teamSize,
         teamName: 'Bye Team',
-        eligibility: 'ELIGIBLE',
         createdAt: new Date(),
         updatedAt: new Date(),
         members,

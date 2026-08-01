@@ -137,7 +137,7 @@ describe('Team Battle Property Tests', () => {
      * **Validates: Requirements R2.4, R2.5, R2.6, R1.9**
      *
      * When all composition rules are satisfied (N distinct owned robots, all subscribed,
-     * no conflicts), registration succeeds and produces an ELIGIBLE team.
+     * no conflicts), registration succeeds.
      */
     it('should succeed when all composition rules are satisfied', async () => {
       await fc.assert(
@@ -165,7 +165,6 @@ describe('Team Battle Property Tests', () => {
 
             expect(team).toBeDefined();
             expect(team.teamSize).toBe(teamSize);
-            expect(team.eligibility).toBe('ELIGIBLE');
             expect(team.stableId).toBe(testUserId);
           },
         ),
@@ -427,7 +426,6 @@ describe('Team Battle Property Tests', () => {
                 testUserId,
               );
               expect(team).toBeDefined();
-              expect(team.eligibility).toBe('ELIGIBLE');
             } else {
               // Should fail with the appropriate error
               try {
@@ -460,21 +458,18 @@ describe('Team Battle Property Tests', () => {
   });
 
   /**
-   * Property 8: Team Eligibility State Machine
+   * Property 8: Team Membership State
    *
    * **Validates: Requirements R2.1, R2.9, R3.10**
    *
-   * Property: A team is INELIGIBLE if and only if:
-   *   - members < N (incomplete roster), OR
-   *   - any member's subscription is missing, OR
-   *   - a robot is destroyed (removed from stable)
-   *
-   * A team is ELIGIBLE when all conditions are met:
-   *   - exactly N members, AND
-   *   - all members subscribed to the corresponding event, AND
+   * Property: A team requires:
+   *   - exactly N members
+   *   - all members subscribed to the corresponding event
    *   - all member robots exist (not destroyed)
+   *
+   * Members can be added, removed, and swapped while respecting subscription rules.
    */
-  describe('Property 8: Team Eligibility State Machine', () => {
+  describe('Property 8: Team Membership State Machine', () => {
     let testUserId: number;
     const createdRobotIds: number[] = [];
     const createdTeamIds: number[] = [];
@@ -599,10 +594,10 @@ describe('Team Battle Property Tests', () => {
     /**
      * **Validates: Requirements R2.1, R2.9, R3.10**
      *
-     * Property: A fully registered team (N members, all subscribed) is ELIGIBLE.
-     * Removing a member makes it INELIGIBLE. Adding back makes it ELIGIBLE again.
+     * Property: A fully registered team (N members, all subscribed) can have members
+     * removed and added back. Verifies removeTeamMember and addTeamMember work correctly.
      */
-    it('should transition ELIGIBLE → INELIGIBLE when member removed, and back to ELIGIBLE when filled', async () => {
+    it('should allow member removal and re-addition', async () => {
       await fc.assert(
         fc.asyncProperty(
           // Generate team size (2 or 3)
@@ -618,7 +613,7 @@ describe('Team Battle Property Tests', () => {
               robotIds.push(robotId);
             }
 
-            // Register a full team — should be ELIGIBLE
+            // Register a full team
             const team = await registerTeam(
               testUserId,
               robotIds,
@@ -627,18 +622,16 @@ describe('Team Battle Property Tests', () => {
               testUserId,
             );
 
-            expect(team.eligibility).toBe('ELIGIBLE');
-
-            // Remove a member — team should become INELIGIBLE (incomplete roster)
+            // Remove a member
             const removedRobotId = robotIds[teamSize - 1];
             await removeTeamMember(team.id, removedRobotId, testUserId);
 
             const teamAfterRemove = await prisma.teamBattle.findUnique({
               where: { id: team.id },
             });
-            expect(teamAfterRemove!.eligibility).toBe('INELIGIBLE');
+            expect(teamAfterRemove).not.toBeNull();
 
-            // Add a new subscribed robot — team should become ELIGIBLE again
+            // Add a new subscribed robot
             const replacementRobotId = await createRobot(`replacement_${teamSize}`);
             await subscribeRobot(replacementRobotId, eventType);
             await addTeamMember(team.id, replacementRobotId, testUserId);
@@ -646,7 +639,7 @@ describe('Team Battle Property Tests', () => {
             const teamAfterAdd = await prisma.teamBattle.findUnique({
               where: { id: team.id },
             });
-            expect(teamAfterAdd!.eligibility).toBe('ELIGIBLE');
+            expect(teamAfterAdd).not.toBeNull();
           },
         ),
         { numRuns: 100 },
@@ -656,11 +649,10 @@ describe('Team Battle Property Tests', () => {
     /**
      * **Validates: Requirements R2.1, R3.10**
      *
-     * Property: A team with all N members but where one member loses their subscription
-     * transitions to INELIGIBLE when a swap is attempted with an unsubscribed robot.
-     * A team where all members are subscribed remains ELIGIBLE after a valid swap.
+     * Property: A team with all N members rejects a swap with an unsubscribed robot.
+     * A swap with a subscribed robot succeeds.
      */
-    it('should be INELIGIBLE when any member lacks subscription after swap', async () => {
+    it('should reject swap when new robot lacks subscription', async () => {
       await fc.assert(
         fc.asyncProperty(
           // Generate team size and whether the new robot is subscribed
@@ -677,7 +669,7 @@ describe('Team Battle Property Tests', () => {
               robotIds.push(robotId);
             }
 
-            // Register a full team — should be ELIGIBLE
+            // Register a full team
             const team = await registerTeam(
               testUserId,
               robotIds,
@@ -685,7 +677,6 @@ describe('Team Battle Property Tests', () => {
               teamSize,
               testUserId,
             );
-            expect(team.eligibility).toBe('ELIGIBLE');
 
             // Create a replacement robot
             const newRobotId = await createRobot(`new_${teamSize}`);
@@ -700,21 +691,9 @@ describe('Team Battle Property Tests', () => {
               await expect(
                 swapTeamMember(team.id, oldRobotId, newRobotId, testUserId),
               ).rejects.toThrow(TeamBattleError);
-
-              // Team should remain ELIGIBLE (swap was rejected)
-              const teamAfter = await prisma.teamBattle.findUnique({
-                where: { id: team.id },
-              });
-              expect(teamAfter!.eligibility).toBe('ELIGIBLE');
             } else {
               // Swap with subscribed robot should succeed
               await swapTeamMember(team.id, oldRobotId, newRobotId, testUserId);
-
-              // Team should remain ELIGIBLE (all members subscribed)
-              const teamAfter = await prisma.teamBattle.findUnique({
-                where: { id: team.id },
-              });
-              expect(teamAfter!.eligibility).toBe('ELIGIBLE');
             }
           },
         ),
@@ -725,10 +704,10 @@ describe('Team Battle Property Tests', () => {
     /**
      * **Validates: Requirements R2.1, R2.9**
      *
-     * Property: A team is INELIGIBLE iff members < N. Registration with exactly N
-     * members produces ELIGIBLE; any state with fewer than N members is INELIGIBLE.
+     * Property: Removing members from a team correctly reduces the member count.
+     * Registration with exactly N members succeeds; members can be removed down to 1.
      */
-    it('should be INELIGIBLE iff member count < teamSize', async () => {
+    it('should track member count correctly after removals', async () => {
       await fc.assert(
         fc.asyncProperty(
           // Generate team size and how many members to keep (1 to N)
@@ -755,7 +734,6 @@ describe('Team Battle Property Tests', () => {
               teamSize,
               testUserId,
             );
-            expect(team.eligibility).toBe('ELIGIBLE');
 
             // Remove members until we have actualMembersToKeep
             const membersToRemove = teamSize - actualMembersToKeep;
@@ -764,20 +742,14 @@ describe('Team Battle Property Tests', () => {
               await removeTeamMember(team.id, robotToRemove, testUserId);
             }
 
-            // Check eligibility
+            // Verify member count after removals
             const teamAfter = await prisma.teamBattle.findUnique({
               where: { id: team.id },
               include: { members: true },
             });
 
             const currentMemberCount = teamAfter!.members.length;
-
-            // Property: INELIGIBLE iff members < teamSize
-            if (currentMemberCount < teamSize) {
-              expect(teamAfter!.eligibility).toBe('INELIGIBLE');
-            } else {
-              expect(teamAfter!.eligibility).toBe('ELIGIBLE');
-            }
+            expect(currentMemberCount).toBe(actualMembersToKeep);
           },
         ),
         { numRuns: 100 },
@@ -788,9 +760,9 @@ describe('Team Battle Property Tests', () => {
      * **Validates: Requirements R2.1, R3.10**
      *
      * Property: Registration requires all robots to be subscribed. If any robot
-     * is not subscribed, registration fails. If all are subscribed, team is ELIGIBLE.
+     * is not subscribed, registration fails. If all are subscribed, registration succeeds.
      */
-    it('should reject registration when any robot lacks subscription (INELIGIBLE precondition)', async () => {
+    it('should reject registration when any robot lacks subscription', async () => {
       await fc.assert(
         fc.asyncProperty(
           // Generate team size and which robot index is unsubscribed (-1 means all subscribed)
@@ -820,7 +792,7 @@ describe('Team Battle Property Tests', () => {
                 registerTeam(testUserId, robotIds, teamName, teamSize, testUserId),
               ).rejects.toThrow(TeamBattleError);
             } else {
-              // All robots subscribed — registration should succeed with ELIGIBLE
+              // All robots subscribed — registration should succeed
               const team = await registerTeam(
                 testUserId,
                 robotIds,
@@ -828,7 +800,7 @@ describe('Team Battle Property Tests', () => {
                 teamSize,
                 testUserId,
               );
-              expect(team.eligibility).toBe('ELIGIBLE');
+              expect(team).toBeDefined();
             }
           },
         ),
@@ -1006,7 +978,6 @@ describe('Team Battle Property Tests', () => {
           stableId: testUserId,
           teamSize,
           teamName,
-          eligibility: 'ELIGIBLE',
           members: {
             create: robotIds.map((robotId, idx) => ({
               robotId,
@@ -1056,14 +1027,14 @@ describe('Team Battle Property Tests', () => {
               robotIds.push(robotId);
             }
 
-            // Create team directly in DB with ELIGIBLE status
+            // Create team directly in DB
             const teamId = await createTeamDirectly(
               robotIds,
               teamSize,
               `SubEligTeam_${teamSize}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
             );
 
-            // Run eligibility check
+            // Check if team would be selected for matchmaking
             const eligibleTeams = await getEligibleTeams('bronze', 'bronze_1', teamSize);
             const teamIncluded = eligibleTeams.some(
               (t: { id: number }) => t.id === teamId,

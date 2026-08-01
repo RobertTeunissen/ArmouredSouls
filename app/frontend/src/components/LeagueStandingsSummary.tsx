@@ -362,24 +362,12 @@ function TeamStandingCard({ team }: TeamStandingCardProps) {
             <span className="ml-2 text-secondary">({totalMatches})</span>
           )}
         </div>
-        <div className="flex-shrink-0">
-          <span className={`text-xs px-1.5 py-0.5 rounded ${
-            team.eligibility === 'ELIGIBLE' ? 'bg-[#3fb950]/20 text-[#3fb950]' : 'bg-[#f85149]/20 text-[#f85149]'
-          }`}>
-            {team.eligibility === 'ELIGIBLE' ? '✓ Ready' : '✗ Ineligible'}
-          </span>
-        </div>
       </div>
 
       {/* Mobile */}
       <div className="md:hidden">
         <div className="flex items-center justify-between mb-1">
           <div className="font-medium text-sm text-[#e6edf3] truncate">{team.teamName}</div>
-          <span className={`text-xs px-1.5 py-0.5 rounded ${
-            team.eligibility === 'ELIGIBLE' ? 'bg-[#3fb950]/20 text-[#3fb950]' : 'bg-[#f85149]/20 text-[#f85149]'
-          }`}>
-            {team.eligibility === 'ELIGIBLE' ? '✓' : '✗'}
-          </span>
         </div>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -426,24 +414,12 @@ function TagTeamStandingCard({ team }: TeamStandingCardProps) {
             <span className="ml-2 text-secondary">({totalMatches})</span>
           )}
         </div>
-        <div className="flex-shrink-0">
-          <span className={`text-xs px-1.5 py-0.5 rounded ${
-            team.eligibility === 'ELIGIBLE' ? 'bg-[#3fb950]/20 text-[#3fb950]' : 'bg-[#f85149]/20 text-[#f85149]'
-          }`}>
-            {team.eligibility === 'ELIGIBLE' ? '✓ Ready' : '✗ Ineligible'}
-          </span>
-        </div>
       </div>
 
       {/* Mobile */}
       <div className="md:hidden">
         <div className="flex items-center justify-between mb-1">
           <div className="font-medium text-sm text-[#e6edf3] truncate">{team.teamName}</div>
-          <span className={`text-xs px-1.5 py-0.5 rounded ${
-            team.eligibility === 'ELIGIBLE' ? 'bg-[#3fb950]/20 text-[#3fb950]' : 'bg-[#f85149]/20 text-[#f85149]'
-          }`}>
-            {team.eligibility === 'ELIGIBLE' ? '✓' : '✗'}
-          </span>
         </div>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">

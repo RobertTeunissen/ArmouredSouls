@@ -608,7 +608,8 @@ interface ForfeitResult {
 
 /**
  * Check if a team is eligible for tournament participation at execution time.
- * A team is eligible if its `eligibility` field is 'ELIGIBLE'.
+ * A team is eligible if it has a full roster and all members have active
+ * subscriptions to the relevant tournament event.
  *
  * @param teamId - The team's ID to check
  * @returns true if the team is eligible, false otherwise
@@ -616,9 +617,16 @@ interface ForfeitResult {
 async function isTeamEligibleForTournament(teamId: number): Promise<boolean> {
   const team = await prisma.teamBattle.findUnique({
     where: { id: teamId },
-    select: { eligibility: true },
+    include: { members: true },
   });
-  return team?.eligibility === 'ELIGIBLE';
+  if (!team || team.members.length !== team.teamSize) return false;
+
+  const eventType = team.teamSize === 2 ? 'tournament_2v2' : 'tournament_3v3';
+  const robotIds = team.members.map(m => m.robotId);
+  const subscribed = await prisma.subscription.count({
+    where: { eventType, robotId: { in: robotIds }, status: 'active' },
+  });
+  return subscribed === team.members.length;
 }
 
 /**

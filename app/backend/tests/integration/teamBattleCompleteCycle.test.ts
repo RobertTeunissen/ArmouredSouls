@@ -202,7 +202,6 @@ describe('Team Battle Complete Cycle Integration Test', () => {
 
     // Verify teams are in correct state
     for (const team of teams) {
-      expect(team.eligibility).toBe('ELIGIBLE');
       expect(team.members.length).toBe(2);
     }
 

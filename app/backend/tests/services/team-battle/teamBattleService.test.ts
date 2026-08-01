@@ -81,8 +81,6 @@ import {
   swapTeamMember,
   renameTeam,
   disbandTeam,
-  removeTeamMember,
-  addTeamMember,
 } from '../../../src/services/team-battle/teamBattleService';
 import { TeamBattleError, TeamBattleErrorCode } from '../../../src/errors/teamBattleErrors';
 
@@ -90,14 +88,13 @@ import { TeamBattleError, TeamBattleErrorCode } from '../../../src/errors/teamBa
 
 function makeTeam(overrides: Partial<{
   id: number; stableId: number; teamSize: number; teamName: string;
-  eligibility: string; members: { id: number; robotId: number; slotIndex: number }[];
+  members: { id: number; robotId: number; slotIndex: number }[];
 }> = {}) {
   return {
     id: 1,
     stableId: 100,
     teamSize: 2,
     teamName: 'TestTeam',
-    eligibility: 'ELIGIBLE',
     members: [
       { id: 1, robotId: 10, slotIndex: 0 },
       { id: 2, robotId: 11, slotIndex: 1 },
@@ -234,7 +231,6 @@ describe('teamBattleService', () => {
             stableId: 100,
             teamSize: 2,
             teamName: 'MyTeam',
-            eligibility: 'ELIGIBLE',
           }),
         }),
       );
@@ -260,7 +256,6 @@ describe('teamBattleService', () => {
             stableId: 100,
             teamSize: 3,
             teamName: 'Trio',
-            eligibility: 'ELIGIBLE',
           }),
         }),
       );
@@ -373,52 +368,6 @@ describe('teamBattleService', () => {
       await expect(swapTeamMember(1, 10, 20, 100)).resolves.toBeUndefined();
       expect(mockTx.teamBattleMember.update).toHaveBeenCalled();
     });
-
-    it('should recalculate eligibility to ELIGIBLE after swap when all subscribed', async () => {
-      mockTx.teamBattle.findUnique.mockResolvedValue(makeTeam());
-      mockTx.robot.findUnique.mockResolvedValue({ id: 20, userId: 100 });
-      mockHasSubscription.mockResolvedValue(true);
-      mockTx.teamBattleMember.findFirst.mockResolvedValue(null);
-      mockTx.teamBattleMember.update.mockResolvedValue({});
-      mockTx.teamBattleMember.findMany.mockResolvedValue([
-        { robotId: 20, slotIndex: 0 },
-        { robotId: 11, slotIndex: 1 },
-      ]);
-      mockTx.teamBattle.update.mockResolvedValue({});
-
-      await swapTeamMember(1, 10, 20, 100);
-
-      expect(mockTx.teamBattle.update).toHaveBeenCalledWith({
-        where: { id: 1 },
-        data: { eligibility: 'ELIGIBLE' },
-      });
-    });
-
-    it('should set eligibility to INELIGIBLE after swap when member not subscribed', async () => {
-      mockTx.teamBattle.findUnique.mockResolvedValue(makeTeam());
-      mockTx.robot.findUnique.mockResolvedValue({ id: 20, userId: 100 });
-      // Swap validation: new robot passes (true on first event type)
-      // Recalc: first member (robot 20) passes, second member (robot 11) fails both event types
-      mockHasSubscription
-        .mockResolvedValueOnce(true)  // swap validation: robot 20, league_2v2 → pass
-        .mockResolvedValueOnce(true)  // recalc: robot 20, league_2v2 → pass
-        .mockResolvedValueOnce(false) // recalc: robot 11, league_2v2 → fail
-        .mockResolvedValueOnce(false); // recalc: robot 11, tournament_2v2 → fail
-      mockTx.teamBattleMember.findFirst.mockResolvedValue(null);
-      mockTx.teamBattleMember.update.mockResolvedValue({});
-      mockTx.teamBattleMember.findMany.mockResolvedValue([
-        { robotId: 20, slotIndex: 0 },
-        { robotId: 11, slotIndex: 1 },
-      ]);
-      mockTx.teamBattle.update.mockResolvedValue({});
-
-      await swapTeamMember(1, 10, 20, 100);
-
-      expect(mockTx.teamBattle.update).toHaveBeenCalledWith({
-        where: { id: 1 },
-        data: { eligibility: 'INELIGIBLE' },
-      });
-    });
   });
 
   // ── renameTeam ───────────────────────────────────────────────────
@@ -520,87 +469,6 @@ describe('teamBattleService', () => {
 
       await expect(disbandTeam(1, 100)).resolves.toBeUndefined();
       expect(mockTx.teamBattle.delete).toHaveBeenCalledWith({ where: { id: 1 } });
-    });
-  });
-
-  // ── Incomplete roster / eligibility state transitions ─────────────
-
-  describe('eligibility state transitions', () => {
-    it('should set team to INELIGIBLE when member is removed', async () => {
-      mockTx.teamBattle.findUnique.mockResolvedValue(makeTeam());
-      mockTx.teamBattleMember.delete.mockResolvedValue({});
-      mockTx.teamBattle.update.mockResolvedValue({});
-
-      await removeTeamMember(1, 10, 100);
-
-      expect(mockTx.teamBattle.update).toHaveBeenCalledWith({
-        where: { id: 1 },
-        data: { eligibility: 'INELIGIBLE' },
-      });
-    });
-
-    it('should set team to ELIGIBLE when roster is filled and all subscribed', async () => {
-      const incompleteTeam = makeTeam({
-        eligibility: 'INELIGIBLE',
-        members: [{ id: 1, robotId: 10, slotIndex: 0 }],
-      });
-      mockTx.teamBattle.findUnique.mockResolvedValue(incompleteTeam);
-      mockTx.robot.findUnique.mockResolvedValue({ id: 20, userId: 100 });
-      mockHasSubscription.mockResolvedValue(true);
-      mockTx.teamBattleMember.findFirst.mockResolvedValue(null);
-      mockTx.teamBattleMember.create.mockResolvedValue({});
-      mockTx.teamBattle.update.mockResolvedValue({});
-
-      await addTeamMember(1, 20, 100);
-
-      expect(mockTx.teamBattle.update).toHaveBeenCalledWith({
-        where: { id: 1 },
-        data: { eligibility: 'ELIGIBLE' },
-      });
-    });
-
-    it('should remain INELIGIBLE when roster filled but member not subscribed', async () => {
-      const incompleteTeam = makeTeam({
-        eligibility: 'INELIGIBLE',
-        members: [{ id: 1, robotId: 10, slotIndex: 0 }],
-      });
-      mockTx.teamBattle.findUnique.mockResolvedValue(incompleteTeam);
-      mockTx.robot.findUnique.mockResolvedValue({ id: 20, userId: 100 });
-      // Add validation: new robot passes subscription check (first event type)
-      // Recalc: existing member (robot 10) fails both event types
-      mockHasSubscription
-        .mockResolvedValueOnce(true)   // add validation: robot 20, league_2v2 → pass
-        .mockResolvedValueOnce(false)  // recalc: robot 10, league_2v2 → fail
-        .mockResolvedValueOnce(false); // recalc: robot 10, tournament_2v2 → fail
-      mockTx.teamBattleMember.findFirst.mockResolvedValue(null);
-      mockTx.teamBattleMember.create.mockResolvedValue({});
-      mockTx.teamBattle.update.mockResolvedValue({});
-
-      await addTeamMember(1, 20, 100);
-
-      expect(mockTx.teamBattle.update).toHaveBeenCalledWith({
-        where: { id: 1 },
-        data: { eligibility: 'INELIGIBLE' },
-      });
-    });
-
-    it('should reject adding member when team already has N members', async () => {
-      mockTx.teamBattle.findUnique.mockResolvedValue(makeTeam()); // already has 2 members
-
-      await expect(addTeamMember(1, 20, 100))
-        .rejects.toMatchObject({
-          code: TeamBattleErrorCode.TEAM_INVALID_COMPOSITION,
-        });
-    });
-
-    it('should reject removing member when team is locked for battle', async () => {
-      mockTx.teamBattle.findUnique.mockResolvedValue(makeTeam());
-      mockTx.scheduledMatchParticipant.count.mockResolvedValue(1);
-
-      await expect(removeTeamMember(1, 10, 100))
-        .rejects.toMatchObject({
-          code: TeamBattleErrorCode.TEAM_LOCKED_FOR_BATTLE,
-        });
     });
   });
 

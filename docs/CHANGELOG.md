@@ -1,6 +1,6 @@
 # Armoured Souls — Changelog
 
-**Last Updated**: May 13, 2026
+**Last Updated**: August 1, 2026
 
 Development history organized by phase and month. For the forward-looking roadmap, see [ROADMAP.md](ROADMAP.md).
 
@@ -106,6 +106,55 @@ Phase 1 delivered a fully functional game with 4 battle modes, 15 facilities, 47
 | 30 | Fix Investment Advisor | Unified ROI calculation from CycleSnapshot data, consolidated Investments & Advisor tabs, graceful degradation with incomplete audit data, economic-only facility filtering |
 | 31 | Weapon DPS Rebalance | baseDamage compression (3.0× → 2.0× DPS spread), differentiated top-tier weapon profiles (fast/standard/burst/heavy), Float schema migration, battle duration normalization (~34s → ~45s) |
 | 32 | League History Tracking | Persistent tier change tracking for robots and tag teams, admin analytics dashboard with yo-yo detection, player-facing timeline visualizations, achievement data support |
+
+### May 2026 — Additional Deliverables
+
+| Item | Spec | Summary |
+|---|---|---|
+| Weapon Resale | [Spec #33](/.kiro/specs/done-may26/33-weapon-resale/) | Workshop-level-dependent rate, ₡0–100% recovery |
+| Weapon Refinement | [Spec #34](/.kiro/specs/done-may26/34-weapon-refinement/) | Per-instance permanent upgrades, 4 tiers, 5-slot cap |
+| Booking Office / Event Subscription | [Spec #35](/.kiro/specs/done-may26/35-booking-office-facility/) | Per-robot subscription model gating participation in all battle events |
+| Cron Schedule Restructure | [Spec #36](/.kiro/specs/done-may26/36-cron-schedule-restructure/) | Daily-everything slot map |
+| Team Battles 2v2 and 3v3 (League) | [Spec #37](/.kiro/specs/done-may26/37-team-battles-2v2-3v3/) | Persistent teams, simultaneous combat, shared LP-primary matchmaking |
+| Untrack Generated Prisma Client | — | 68K lines out of git |
+| HTTP Client Consolidation | — | Typed `api` wrapper everywhere |
+| Console → Structured Logger Migration | — | FE + BE |
+| Env Validation with Zod | — | Fail-fast in production |
+| Pre-commit Hooks | — | husky + lint-staged |
+| Dead Code Audit | — | knip Pass A + B, ~30 files removed |
+| Backend `any` Eliminated | — | Removed from production source |
+| Performance Optimization | — | Direct implementation |
+| Smooth Prestige Multiplier Scaling | — | Direct implementation |
+| Battle History URL State Persistence | — | Direct implementation |
+| Hall of Records Performance Caching | — | Direct implementation |
+| League & Tag Team Instance Deep Linking | — | Direct implementation |
+
+### June 2026 Specs & Deliverables
+
+| Item | Spec | Summary |
+|---|---|---|
+| Team Battle Tournaments (2v2 / 3v3) | [Spec #38](/.kiro/specs/done-june26/38-team-battle-tournaments/) | Single-elimination bracketed tournaments, daily round cadence, coordination effects |
+| Battle Log Retention / TOAST Trim | [Spec #39](/.kiro/specs/to-do/39-battle-log-retention/) | Pre-computed summaries, 7-day retention, nightly cron |
+| Database Unification | [Spec #40](/.kiro/specs/done-june26/40-database-unification/) | Unified standings, financial ledger, leaderboard cache |
+| Unified Match Scheduling | [Spec #41](/.kiro/specs/done-june26/41-unified-match-scheduling/) | Single scheduling table, shared matchmaking pipeline |
+| Tag Team System Unification | [Spec #42](/.kiro/specs/done-june26/42-tag-team-system-unification/) | Tag team as combat mode on 2v2 TeamBattle |
+| Legacy Column Drop (Phase 2) | [Spec #43](/.kiro/specs/to-do/43-legacy-column-drop/) | Spec #40 follow-up |
+| Grand Melee Mode | [Spec #44](/.kiro/specs/to-do/44-grand-melee/) | 20-robot FFA, F1-style placement scoring, full league system |
+| Tag Team Battle Time Limit Enforcement | — | Closed as working-as-designed, documented in BATTLE_SIMULATION_ARCHITECTURE.md |
+| Battle Table Denormalization Cleanup | — | 19 deprecated columns dropped (completes Spec #43 Task 6.4) |
+| Mega-Orchestrator Refactor | — | Combat-critical files |
+| Unimplemented Facilities Removal | — | Research Lab, Medical Bay, Coaching Staff |
+| Frontend Page Hook Extraction | — | RobotsPage, RobotDetailPage |
+| Vitest Performance Tuning | — | CI scripts, dot reporter, coverage gitignore |
+| Test Setup Convention Cleanup | — | Co-located `__tests__/`, eliminated centralized sprawl |
+| Backend Test Reclassification | — | 66 no-DB tests → unit runner, zero overlap, ~2min CI savings |
+
+### July 2026 Specs & Deliverables
+
+| Item | Spec | Summary |
+|---|---|---|
+| Season System | [Spec #45](/.kiro/specs/to-do/45-season-system/) | 100-cycle competitive seasons, 2-cycle prep windows, full archive + reset |
+| Repair the Integration Test Suite | — | 149→0 compile errors, `typecheck:tests` passes, deleted 3k-line dead test file |
 
 ---
 

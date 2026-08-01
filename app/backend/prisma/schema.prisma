@@ -752,9 +752,6 @@ model TeamBattle {
   teamSize Int    @map("team_size") // 2 or 3
   teamName String @map("team_name") @db.VarChar(32) // Player-chosen team name (3-32 chars)
 
-  // Eligibility
-  eligibility String @default("ELIGIBLE") @db.VarChar(20) // "ELIGIBLE" or "INELIGIBLE"
-
   // Timestamps
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
