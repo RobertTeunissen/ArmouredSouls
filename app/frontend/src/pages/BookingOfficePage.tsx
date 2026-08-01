@@ -13,14 +13,12 @@ import SubscriptionMatrix from '../components/subscriptions/SubscriptionMatrix';
 import BookingOfficeUpgradePanel from '../components/subscriptions/BookingOfficeUpgradePanel';
 import { useStableOverview } from '../hooks/useSubscriptions';
 import { useSubscriptionStore } from '../stores/subscriptionStore';
-import { useCallback, useEffect, useState } from 'react';
-import { getMyTeamBattles, TeamBattle } from '../utils/teamBattleApi';
+import { useCallback, useState } from 'react';
 
 function BookingOfficePage() {
   const { data, refetch } = useStableOverview();
   const invalidateOverview = useSubscriptionStore((s) => s.invalidate);
   const bookingOfficeLevel = data?.bookingOfficeLevel ?? 0;
-  const [teams2v2, setTeams2v2] = useState<TeamBattle[]>([]);
   // Bumped after an upgrade to force the SubscriptionMatrix to remount and
   // re-read the new per-robot cap (Spec #46 R6.15)
   const [matrixKey, setMatrixKey] = useState(0);
@@ -32,28 +30,6 @@ function BookingOfficePage() {
     refetch();
     setMatrixKey((k) => k + 1);
   }, [invalidateOverview, refetch]);
-
-  useEffect(() => {
-    getMyTeamBattles(2)
-      .then(setTeams2v2)
-      .catch(() => setTeams2v2([]));
-  }, []);
-
-  // Build subscription map from stable overview
-  const subscriptionMap = new Map<number, string[]>();
-  if (data) {
-    for (const robot of data.robots) {
-      subscriptionMap.set(robot.robotId, robot.subscriptions.map(s => s.eventType));
-    }
-  }
-
-  // Find 2v2 teams with tag_team subscription mismatches
-  const mismatchedTeams = teams2v2.filter((team) => {
-    return team.members.some(member => {
-      const events = subscriptionMap.get(member.robotId) ?? [];
-      return !events.includes('tag_team');
-    });
-  });
 
   return (
     <div className="min-h-screen bg-background text-white">
@@ -90,30 +66,26 @@ function BookingOfficePage() {
         {/* Upgrade control + implication panel (Spec #46 R6) */}
         <BookingOfficeUpgradePanel onUpgraded={handleUpgraded} />
 
-        {/* Tag Team Subscription Warnings */}
-        {mismatchedTeams.length > 0 && (
-          <div className="space-y-2 mb-6">
-            {mismatchedTeams.map((team) => {
-              const unsubscribedMembers = team.members.filter(m => {
-                const events = subscriptionMap.get(m.robotId) ?? [];
-                return !events.includes('tag_team');
-              });
-              return (
-                <div
-                  key={team.id}
-                  className="bg-warning/10 border-l-4 border-warning rounded-lg p-4"
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="text-warning text-lg">⚠️</span>
-                    <span className="text-warning font-semibold text-sm">
-                      {team.teamName}: {unsubscribedMembers.map(m => m.robot.name).join(', ')} not subscribed to Tag Team
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+        {/* Free slots alert */}
+        {data && data.robots.length > 0 && (() => {
+          const robotsWithFreeSlots = data.robots.filter(
+            (r) => r.subscriptions.length < r.cap
+          );
+          if (robotsWithFreeSlots.length === 0) return null;
+          const totalFree = robotsWithFreeSlots.reduce(
+            (sum, r) => sum + (r.cap - r.subscriptions.length), 0
+          );
+          return (
+            <div className="bg-primary/10 border-l-4 border-primary rounded-lg p-4 mb-6">
+              <div className="flex items-center gap-2">
+                <span className="text-primary text-lg">💡</span>
+                <span className="text-primary font-semibold text-sm">
+                  {totalFree} free subscription slot{totalFree !== 1 ? 's' : ''} available across {robotsWithFreeSlots.length} robot{robotsWithFreeSlots.length !== 1 ? 's' : ''}
+                </span>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Subscription Matrix */}
         <SubscriptionMatrix key={matrixKey} />

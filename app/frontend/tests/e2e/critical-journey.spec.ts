@@ -134,8 +134,8 @@ test.describe('Critical User Journey', () => {
     await expect(page.getByText('Battle Configuration')).toBeVisible({ timeout: 10000 });
 
     // The main weapon slot should show "No weapon equipped" initially
-    // Click "Equip Weapon" to open the weapon selection modal
-    await page.getByText('Equip Weapon').first().click();
+    // Click "Equip Weapon" inside the battle-config tab panel (not the eligibility checklist button above)
+    await page.locator('[role="tabpanel"]').getByText('Equip Weapon').first().click();
 
     // The weapon selection modal should appear with "Select Weapon" heading
     await expect(page.getByRole('heading', { name: 'Select Weapon' })).toBeVisible({ timeout: 10000 });

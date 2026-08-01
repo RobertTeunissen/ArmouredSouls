@@ -172,6 +172,7 @@ async function fetchScheduledTournamentMatches(robotIds: number[]) {
     where: {
       participantType: 'robot',
       status: { in: ['pending', 'scheduled'] },
+      tournament: { status: 'active' },
       OR: [{ participant1Id: { in: robotIds } }, { participant2Id: { in: robotIds } }],
     },
     include: {
@@ -200,6 +201,7 @@ async function fetchScheduledTeamTournamentMatches(teamBattleIds: number[]) {
     where: {
       participantType: { in: ['team_2v2', 'team_3v3'] },
       status: { in: ['pending', 'scheduled'] },
+      tournament: { status: 'active' },
       OR: [{ participant1Id: { in: teamBattleIds } }, { participant2Id: { in: teamBattleIds } }],
     },
     include: {
