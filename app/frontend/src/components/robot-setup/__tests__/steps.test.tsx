@@ -103,7 +103,7 @@ describe('WeaponEquipStep', () => {
         { id: 10, weaponId: 1, weapon: { id: 1, name: 'Laser Pistol', weaponType: 'energy', baseDamage: 6, cooldown: 3, cost: 57000, loadoutType: 'single', handsRequired: 'one', rangeBand: 'short' }, equippedOnRobotMain: null, equippedOnRobotOffhand: null },
       ]);
       if (url === '/api/weapon-inventory/storage-status') return Promise.resolve({ currentWeapons: 1, maxCapacity: 5, remainingSlots: 4, isFull: false });
-      if (url === '/api/users/me') return Promise.resolve({ currency: 500000 });
+      if (url === '/api/user/profile') return Promise.resolve({ currency: 500000 });
       if (url === '/api/weapons') return Promise.resolve([]);
       return Promise.resolve({});
     });
@@ -119,7 +119,7 @@ describe('WeaponEquipStep', () => {
     mockGet.mockImplementation((url: string) => {
       if (url === '/api/weapon-inventory') return Promise.resolve([]);
       if (url === '/api/weapon-inventory/storage-status') return Promise.resolve({ currentWeapons: 0, maxCapacity: 5, remainingSlots: 5, isFull: false });
-      if (url === '/api/users/me') return Promise.resolve({ currency: 100000 });
+      if (url === '/api/user/profile') return Promise.resolve({ currency: 100000 });
       if (url === '/api/weapons') return Promise.resolve([
         { id: 1, name: 'Practice Sword', weaponType: 'melee', baseDamage: 6, cooldown: 3, cost: 50000, loadoutType: 'single', handsRequired: 'one', rangeBand: 'melee' },
       ]);
@@ -138,7 +138,7 @@ describe('WeaponEquipStep', () => {
     mockGet.mockImplementation((url: string) => {
       if (url === '/api/weapon-inventory') return Promise.resolve([]);
       if (url === '/api/weapon-inventory/storage-status') return Promise.resolve({ currentWeapons: 5, maxCapacity: 5, remainingSlots: 0, isFull: true });
-      if (url === '/api/users/me') return Promise.resolve({ currency: 500000 });
+      if (url === '/api/user/profile') return Promise.resolve({ currency: 500000 });
       if (url === '/api/weapons') return Promise.resolve([]);
       return Promise.resolve({});
     });
