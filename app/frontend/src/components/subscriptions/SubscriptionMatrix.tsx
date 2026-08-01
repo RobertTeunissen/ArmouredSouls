@@ -72,7 +72,7 @@ function SubscriptionMatrix({ tagTeamRobotIds = new Set() }: SubscriptionMatrixP
     [drafts],
   );
 
-  const robots = data?.robots ?? [];
+  const robots = useMemo(() => data?.robots ?? [], [data?.robots]);
 
   const changedRobotIds = useMemo(
     () =>
