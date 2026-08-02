@@ -171,8 +171,14 @@ export async function logBattleAuditEvent(
  */
 export interface RobotStatUpdateOptions {
   robotId: number;
-  /** Robot's HP at end of battle. Clamped to stored maxHP internally. */
+  /** Robot's HP at end of battle. Scaled proportionally to stored maxHP internally. */
   finalHP: number;
+  /**
+   * The maxHP the robot had during combat (after tuning bonuses).
+   * Used to proportionally scale finalHP back to stored maxHP.
+   * If not provided, falls back to simple clamping.
+   */
+  combatMaxHP?: number;
   /** New absolute ELO value. Pass current ELO if no change (e.g. KotH). */
   newELO: number;
   /** Whether this robot was on the winning side */
@@ -231,13 +237,24 @@ export interface RobotStatUpdateOptions {
  * LP and streaks are managed separately by the standings service.
  */
 export async function updateRobotCombatStats(opts: RobotStatUpdateOptions): Promise<void> {
-  // Clamp finalHP to the robot's stored maxHP to prevent currentHP > maxHP
-  // (combat uses tuning-inflated maxHP which can exceed the persisted value)
+  // Clamp finalHP to the robot's stored maxHP to prevent currentHP > maxHP.
+  // Combat uses tuning-inflated maxHP which can exceed the persisted value,
+  // so we scale proportionally: if the robot lost 20% of its combat HP,
+  // it loses 20% of its stored HP.
   const storedRobot = await prisma.robot.findUnique({
     where: { id: opts.robotId },
     select: { maxHP: true },
   });
-  const clampedHP = storedRobot ? Math.min(opts.finalHP, storedRobot.maxHP) : opts.finalHP;
+
+  let clampedHP: number;
+  if (storedRobot && opts.combatMaxHP && opts.combatMaxHP > 0) {
+    // Proportional scaling: preserve the damage ratio from combat
+    const hpRatio = opts.finalHP / opts.combatMaxHP;
+    clampedHP = Math.round(storedRobot.maxHP * hpRatio);
+  } else {
+    // Fallback: simple clamp (no combatMaxHP available)
+    clampedHP = storedRobot ? Math.min(opts.finalHP, storedRobot.maxHP) : opts.finalHP;
+  }
 
   const data: Record<string, unknown> = {
     currentHP: clampedHP,

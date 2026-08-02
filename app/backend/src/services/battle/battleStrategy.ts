@@ -336,6 +336,7 @@ export class BattleProcessor<TMatch = unknown> {
       await updateRobotCombatStats({
         robotId: p.robot.id,
         finalHP: combat?.finalHP ?? 0,
+        combatMaxHP: p.robot.maxHP,
         newELO: elo.after,
         isWinner,
         isDraw: simResult.isDraw,

@@ -250,6 +250,7 @@ async function processByeBattle(scheduledMatch: ScheduledLeagueMatchData): Promi
   await updateRobotCombatStats({
     robotId: robot.id,
     finalHP: robot.currentHP,
+    combatMaxHP: robot.maxHP,
     newELO: newElo,
     isWinner: true,
     isDraw: false,
@@ -593,6 +594,7 @@ async function updateRobotStats(
   await updateRobotCombatStats({
     robotId: robot.id,
     finalHP,
+    combatMaxHP: robot.maxHP,
     newELO,
     isWinner,
     isDraw,

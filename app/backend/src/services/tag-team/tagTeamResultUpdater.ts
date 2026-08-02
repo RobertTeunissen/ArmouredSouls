@@ -162,6 +162,7 @@ export async function updateTagTeamBattleResults(
     await updateRobotCombatStats({
       robotId: realTeam.activeRobotId,
       finalHP: activeFinalHP,
+      combatMaxHP: realTeam.activeRobot.maxHP,
       newELO: realTeam.activeRobot.elo + realTeamELOChange,
       isWinner: realTeamWon,
       isDraw,
@@ -177,6 +178,7 @@ export async function updateTagTeamBattleResults(
     await updateRobotCombatStats({
       robotId: realTeam.reserveRobotId,
       finalHP: reserveFinalHP,
+      combatMaxHP: realTeam.reserveRobot.maxHP,
       newELO: realTeam.reserveRobot.elo + realTeamELOChange,
       isWinner: realTeamWon,
       isDraw,
@@ -356,6 +358,7 @@ export async function updateTagTeamBattleResults(
   await updateRobotCombatStats({
     robotId: team1.activeRobotId,
     finalHP: result.team1ActiveFinalHP,
+    combatMaxHP: team1.activeRobot.maxHP,
     newELO: team1.activeRobot.elo + eloChanges.team1Change,
     isWinner: team1Won,
     isDraw,
@@ -371,6 +374,7 @@ export async function updateTagTeamBattleResults(
   await updateRobotCombatStats({
     robotId: team1.reserveRobotId,
     finalHP: result.team1ReserveFinalHP,
+    combatMaxHP: team1.reserveRobot.maxHP,
     newELO: team1.reserveRobot.elo + eloChanges.team1Change,
     isWinner: team1Won,
     isDraw,
@@ -386,6 +390,7 @@ export async function updateTagTeamBattleResults(
   await updateRobotCombatStats({
     robotId: team2.activeRobotId,
     finalHP: result.team2ActiveFinalHP,
+    combatMaxHP: team2.activeRobot.maxHP,
     newELO: team2.activeRobot.elo + eloChanges.team2Change,
     isWinner: team2Won,
     isDraw,
@@ -401,6 +406,7 @@ export async function updateTagTeamBattleResults(
   await updateRobotCombatStats({
     robotId: team2.reserveRobotId,
     finalHP: result.team2ReserveFinalHP,
+    combatMaxHP: team2.reserveRobot.maxHP,
     newELO: team2.reserveRobot.elo + eloChanges.team2Change,
     isWinner: team2Won,
     isDraw,

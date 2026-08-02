@@ -181,6 +181,7 @@ async function batchUpdateGrandMeleeRobotStats(
     await updateRobotCombatStats({
       robotId: p.robot.id,
       finalHP: p.finalHP,
+      combatMaxHP: p.robot.maxHP,
       newELO: p.robot.elo, // Grand Melee doesn't use ELO
       isWinner: p.isWinner,
       isDraw: false, // Grand Melee never draws
