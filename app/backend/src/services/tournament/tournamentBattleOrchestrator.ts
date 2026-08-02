@@ -590,6 +590,7 @@ async function updateRobotStatsForTournament(
   await updateRobotCombatStats({
     robotId: robot.id,
     finalHP: participant.finalHP,
+    combatMaxHP: robot.maxHP,
     newELO: participant.eloAfter,
     isWinner,
     isDraw: false, // No draws in tournaments

@@ -380,7 +380,9 @@ function DashboardPage() {
             <DashboardNotification key={idx} {...notif} />
           ))}
 
-          {/* Team mode subscription gaps */}
+          {/* Team mode subscription gaps — only show when there's a mismatch
+              (some members subscribed, others not). If nobody is subscribed to a
+              mode, that's a deliberate choice, not a gap. */}
           {(() => {
             const modeGaps: { team: TeamBattle; modeLabel: string; missing: string[] }[] = [];
 
@@ -397,10 +399,13 @@ function DashboardPage() {
                   ];
 
               for (const { event, label } of modes) {
+                const subscribed = team.members
+                  .filter(m => m.robot.subscriptions?.some(s => s.eventType === event));
                 const missing = team.members
                   .filter(m => !m.robot.subscriptions?.some(s => s.eventType === event))
                   .map(m => m.robot.name);
-                if (missing.length > 0) {
+                // Only a gap if SOME are subscribed but not ALL (mismatch)
+                if (subscribed.length > 0 && missing.length > 0) {
                   modeGaps.push({ team, modeLabel: label, missing });
                 }
               }
@@ -416,8 +421,8 @@ function DashboardPage() {
                 icon="📋"
                 message={`${first.team.teamName} missing ${first.modeLabel} subscription${extra}`}
                 detail={`${first.missing.join(', ')} not subscribed`}
-                actionLabel="Manage Teams"
-                onAction={() => navigate('/team-battles')}
+                actionLabel="Manage Subscriptions"
+                onAction={() => navigate('/booking-office')}
               />
             );
           })()}

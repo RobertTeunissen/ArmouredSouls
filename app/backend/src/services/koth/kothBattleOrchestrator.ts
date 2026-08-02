@@ -155,6 +155,7 @@ async function batchUpdateKothRobotStats(
     await updateRobotCombatStats({
       robotId: p.robot.id,
       finalHP: p.finalHP,
+      combatMaxHP: p.robot.maxHP,
       newELO: p.robot.elo, // KotH doesn't use ELO
       isWinner: p.isWinner,
       isDraw: false, // KotH never draws

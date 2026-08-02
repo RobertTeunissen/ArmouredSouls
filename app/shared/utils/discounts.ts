@@ -62,8 +62,8 @@ export const TRAINING_DISCOUNT_MAX = 90;
  * See docs/game-systems/STABLE_SYSTEM.md for the authoritative specification.
  */
 export function calculateTrainingFacilityDiscount(level: number, rosterCapacity: number): number {
-  // Clamped rather than allowed to go negative: roster_expansion caps at level 9
-  // (capacity 10) today, which lands the rate exactly on 0. If that cap ever
+  // Clamped rather than allowed to go negative: roster_expansion caps at level 10
+  // (capacity 11) today, which would land the rate at -1%. If that cap ever
   // rises, a larger roster must mean "no discount", never a cost penalty.
   const ratePerLevel = Math.max(
     0,

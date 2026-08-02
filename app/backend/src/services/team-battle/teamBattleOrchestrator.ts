@@ -497,6 +497,7 @@ async function executeSingleTeamBattle(
     await updateRobotCombatStats({
       robotId: robot.id,
       finalHP: Math.round(participant?.finalHP ?? robot.currentHP),
+      combatMaxHP: robot.maxHP,
       newELO: robot.elo + eloChanges.team1Change,
       isWinner: team1Won,
       isDraw,
@@ -517,6 +518,7 @@ async function executeSingleTeamBattle(
       await updateRobotCombatStats({
         robotId: robot.id,
         finalHP: Math.round(participant?.finalHP ?? robot.currentHP),
+        combatMaxHP: robot.maxHP,
         newELO: robot.elo + eloChanges.team2Change,
         isWinner: team2Won,
         isDraw,

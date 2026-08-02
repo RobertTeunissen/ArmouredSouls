@@ -2,7 +2,7 @@
 title: "Team Battles Overview"
 description: "How 2v2 and 3v3 League Team Battles work — team registration, simultaneous combat, coordination effects, matchmaking, rewards, and daily schedule."
 order: 1
-lastUpdated: "2026-06-15"
+lastUpdated: "2026-08-02"
 relatedArticles:
   - facilities/booking-office
   - leagues/matchmaking
@@ -70,11 +70,11 @@ You cannot swap members or disband a team while it has a scheduled battle. Wait 
 
 ### Incomplete Rosters
 
-If a team member loses their subscription or is destroyed, the team becomes **ineligible** for matchmaking until the roster is filled again. The team's LP, tier, and history are preserved — just fill the empty slot to resume competing.
+If you remove a team member (via swap or explicit removal), the team won't be scheduled for battles until the roster is filled again. The team's LP, tier, and history are preserved — just fill the empty slot to resume competing.
 
-### Eligibility Warnings
+### Subscription Warnings
 
-If your team can't fight, you'll see a warning on both the **Dashboard** and the **Team Management** page explaining why. The system provides a specific reason for each ineligible team (e.g. a member lost their subscription, a robot was destroyed, or the roster is incomplete) so you know exactly what to fix.
+If your team has a subscription mismatch (e.g. one member subscribed to 2v2 League but the other isn't), the Dashboard will notify you. The team can't be matched for that mode until all members hold the required subscription.
 
 ## Team Coordination Effects
 
@@ -178,9 +178,8 @@ For a team to be matched, **all** of the following must be true:
 
 - ✅ Team has exactly N members (2 for 2v2, 3 for 3v3)
 - ✅ All members hold the corresponding subscription (`2v2 League` or `3v3 League`)
-- ✅ All members are battle-ready (HP > 0, not destroyed)
+- ✅ All members pass scheduling readiness (weapon equipped for their loadout type)
 - ✅ Team is not already scheduled for a battle
-- ✅ Team eligibility status is `ELIGIBLE`
 
 If any condition fails, the team is skipped for that cycle's matchmaking.
 

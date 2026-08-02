@@ -277,11 +277,20 @@ router.post('/skip', authenticateToken, validateRequest({}), async (req: AuthReq
 
   logger.info('Tutorial skipped', { userId });
 
+  let achievementUnlocks: UnlockedAchievement[] = [];
+  try {
+    achievementUnlocks = await achievementService.checkAndAward(userId, null, {
+      type: 'onboarding_complete',
+      data: {},
+    });
+  } catch { /* achievement failures don't block */ }
+
   res.json({
     success: true,
     data: {
       message: 'Tutorial skipped',
     },
+    achievementUnlocks,
   });
 });
 

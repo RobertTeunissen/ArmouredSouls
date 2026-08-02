@@ -312,6 +312,7 @@ export async function processTeamTournamentBattle(
     await updateRobotCombatStats({
       robotId: robot.id,
       finalHP: Math.round(participant?.finalHP ?? robot.currentHP),
+      combatMaxHP: robot.maxHP,
       newELO: robot.elo + eloChanges.team1Change,
       isWinner: winningSide === 1,
       isDraw,
@@ -333,6 +334,7 @@ export async function processTeamTournamentBattle(
     await updateRobotCombatStats({
       robotId: robot.id,
       finalHP: Math.round(participant?.finalHP ?? robot.currentHP),
+      combatMaxHP: robot.maxHP,
       newELO: robot.elo + eloChanges.team2Change,
       isWinner: winningSide === 2,
       isDraw,
