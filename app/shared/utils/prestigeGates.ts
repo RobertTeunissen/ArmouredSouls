@@ -9,6 +9,9 @@
  */
 export const PRESTIGE_GATES: number[] = [0, 0, 0, 1000, 3000, 5000, 10000, 15000, 25000, 50000];
 
+/** Alias matching the backend config export name for cross-reference clarity. */
+export const PRESTIGE_GATES_10 = PRESTIGE_GATES;
+
 /**
  * Get the maximum facility level unlocked by a given prestige amount.
  * Returns 3–10 (levels 1–3 are always free, so minimum is 3).

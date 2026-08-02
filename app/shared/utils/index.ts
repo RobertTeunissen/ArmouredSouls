@@ -65,4 +65,4 @@ export {
   type TuningAttributeMap,
 } from './robotStats';
 
-export { PRESTIGE_GATES, getUnlockedFacilityLevel, getNextPrestigeThreshold } from './prestigeGates';
+export { PRESTIGE_GATES, PRESTIGE_GATES_10, getUnlockedFacilityLevel, getNextPrestigeThreshold } from './prestigeGates';

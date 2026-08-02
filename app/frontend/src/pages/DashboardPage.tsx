@@ -76,7 +76,7 @@ function DashboardPage() {
       api.get<{ tournaments: Array<{ id: number; name: string; participantType: string; completedAt: string | null; winner: { id: number; name: string; user: { id: number; username: string; stableName: string | null } } | null }> }>('/api/tournaments', { params: { status: 'completed' } })
         .then((data) => {
           const cutoff = Date.now() - 48 * 60 * 60 * 1000; // last 48h
-          const recent = data.tournaments
+          const recent = (data.tournaments ?? [])
             .filter(t => t.winner && t.completedAt && new Date(t.completedAt).getTime() > cutoff)
             .map(t => ({
               tournamentId: t.id,

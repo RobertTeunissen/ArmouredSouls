@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { PRESTIGE_GATES, getUnlockedFacilityLevel, getNextPrestigeThreshold } from '../prestigeGates';
+import { PRESTIGE_GATES, getUnlockedFacilityLevel, getNextPrestigeThreshold } from '../../../../shared/utils/prestigeGates';
 
 describe('prestigeGates', () => {
   describe('PRESTIGE_GATES', () => {

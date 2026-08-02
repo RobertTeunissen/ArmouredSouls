@@ -53,7 +53,11 @@ vi.mock('../../utils/teamBattleApi', () => ({
 // Mock api utility
 vi.mock('../../utils/api', () => ({
   api: {
-    get: vi.fn().mockResolvedValue({ changes: [] }),
+    get: vi.fn().mockImplementation((url: string) => {
+      if (url === '/api/leagues/tier-changes/unseen') return Promise.resolve({ changes: [] });
+      if (url === '/api/tournaments') return Promise.resolve({ tournaments: [] });
+      return Promise.resolve({});
+    }),
     post: vi.fn(),
     put: vi.fn(),
   },
