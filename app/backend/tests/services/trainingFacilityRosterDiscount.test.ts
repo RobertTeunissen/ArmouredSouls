@@ -73,7 +73,7 @@ describe('Roster concentration (R11.3)', () => {
   });
 
   it('never returns a negative discount, even beyond the current capacity cap', () => {
-    // roster_expansion caps at level 9 → capacity 10 today. If that cap rises, a
+    // roster_expansion caps at level 10 → capacity 11 today. If that cap rises, a
     // wider roster must mean "no discount", never a cost penalty.
     fc.assert(
       fc.property(
