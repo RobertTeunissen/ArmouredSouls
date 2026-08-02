@@ -199,7 +199,7 @@ function EffectiveStatsDisplay({ robot }: EffectiveStatsDisplayProps) {
                             {formatModifier(stats.totalModifier)}
                           </span>
                           <span className="text-white font-bold text-sm min-w-[40px] text-right">
-                            {stats.effective.toFixed(1)}
+                            {stats.effective.toFixed(2)}
                           </span>
                           <span className="text-secondary text-xs w-3">
                             {isExpanded ? '▼' : '▶'}
@@ -230,7 +230,7 @@ function EffectiveStatsDisplay({ robot }: EffectiveStatsDisplayProps) {
                               <div className="flex justify-between items-center py-2 border-b border-white/10">
                                 <span className="text-secondary">Weapon Bonus:</span>
                                 <span className={getModifierColor(stats.weapon)}>
-                                  {stats.weapon > 0 ? `+${stats.weapon}` : stats.weapon || '0'}
+                                  {stats.weapon > 0 ? `+${Number(stats.weapon.toFixed(2))}` : stats.weapon ? String(Number(stats.weapon.toFixed(2))) : '0'}
                                 </span>
                               </div>
                               <div className="flex justify-between items-center py-2 border-b border-white/10">
