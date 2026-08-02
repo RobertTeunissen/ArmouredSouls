@@ -371,4 +371,50 @@ describe('DashboardPage - Notifications', () => {
       expect(mockNavigate).toHaveBeenCalledWith('/robots/1');
     });
   });
+
+  describe('Prestige unlock notification', () => {
+    beforeEach(() => {
+      mockFetchMyRobots._robots = [
+        { id: 1, name: 'Bot', elo: 1200, currentHP: 100, maxHP: 100, mainWeaponId: 1 },
+      ];
+      mockGetTutorialState.mockResolvedValue({
+        currentStep: 9,
+        hasCompletedOnboarding: true,
+        onboardingSkipped: false,
+        strategy: null,
+        choices: {},
+        startedAt: null,
+        completedAt: '2026-01-01T01:00:00Z',
+      });
+    });
+
+    it('should not show prestige notification when prestige is below 1000', async () => {
+      mockUser.prestige = 500;
+      renderDashboard();
+      await waitFor(() => {
+        expect(screen.getByTestId('robot-card')).toBeInTheDocument();
+      });
+      expect(screen.queryByText(/facilities unlocked/)).not.toBeInTheDocument();
+    });
+
+    it('should show prestige notification when prestige crosses a gate', async () => {
+      mockUser.prestige = 3500;
+      renderDashboard();
+      await waitFor(() => {
+        expect(screen.getByText(/L5 facilities unlocked/)).toBeInTheDocument();
+      });
+    });
+
+    it('should show "View Facilities" action button', async () => {
+      mockUser.prestige = 3500;
+      renderDashboard();
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /view facilities/i })).toBeInTheDocument();
+      });
+    });
+
+    afterEach(() => {
+      mockUser.prestige = 0; // reset for other tests
+    });
+  });
 });

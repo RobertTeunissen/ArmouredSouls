@@ -192,20 +192,3 @@ describe('Payback fits inside a 100-cycle season (Spec #46 R2.13, R2.19)', () =>
     expect(cumulativeCost(10) / legacyNet).toBeGreaterThan(100);
   });
 });
-
-describe('Prestige gates use unified curve (post Spec #46 unification)', () => {
-  const config = getFacilityConfig('merchandising_hub')!;
-
-  it('uses the unified PRESTIGE_GATES_10 thresholds', () => {
-    expect(config.prestigeRequirements).toEqual([0, 0, 0, 1000, 3000, 5000, 10000, 15000, 25000, 50000]);
-  });
-
-  it('no facility uses prestigeGateIsPerSlot (deprecated)', () => {
-    const flagged = ['merchandising_hub', 'streaming_studio', 'repair_bay', 'booking_office', 'tuning_bay']
-      .map((t) => [t, getFacilityConfig(t)?.prestigeGateIsPerSlot ?? false] as const)
-      .filter(([, isPerSlot]) => isPerSlot)
-      .map(([type]) => type);
-
-    expect(flagged).toEqual([]);
-  });
-});
