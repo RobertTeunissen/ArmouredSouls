@@ -421,8 +421,8 @@ function DashboardPage() {
                 icon="📋"
                 message={`${first.team.teamName} missing ${first.modeLabel} subscription${extra}`}
                 detail={`${first.missing.join(', ')} not subscribed`}
-                actionLabel="Manage Teams"
-                onAction={() => navigate('/team-battles')}
+                actionLabel="Manage Subscriptions"
+                onAction={() => navigate('/booking-office')}
               />
             );
           })()}
