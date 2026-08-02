@@ -2,7 +2,7 @@
 title: "Facility Progression & ROI"
 description: "Level-by-level costs, prestige requirements, and return on investment analysis for every facility in Armoured Souls."
 order: 2
-lastUpdated: "2026-03-11"
+lastUpdated: "2026-08-02"
 relatedArticles:
   - facilities/facility-overview
   - facilities/investment-strategy
@@ -13,115 +13,125 @@ relatedArticles:
 
 ## Overview
 
-Every facility in Armoured Souls can be upgraded through multiple levels, each increasing both the benefit and the daily operating cost. Many higher levels also require **Prestige thresholds** — you can't just buy your way to Level 10 on day one. This article covers the full progression for each facility category, including costs, prestige gates, and ROI analysis.
+Every facility in Armoured Souls can be upgraded through multiple levels, each increasing both the benefit and the daily operating cost. Higher levels require **Prestige thresholds** — you can't just buy your way to Level 10 on day one. This article covers the full progression for each facility category, including costs, prestige gates, and ROI analysis.
 
 ```callout-info
 Prestige requirements are "gates," not costs. Your Prestige is never spent — it's only checked against the threshold. Once you have enough Prestige, you can purchase the upgrade if you also have the Credits.
 ```
 
+## Universal Prestige Gates
+
+All facilities share the same prestige curve. Levels 1–3 are always free to purchase (credits only). From Level 4 onward:
+
+| Level | Prestige Required |
+|-------|-------------------|
+| 1–3 | — |
+| 4 | 1,000 |
+| 5 | 3,000 |
+| 6 | 5,000 |
+| 7 | 10,000 |
+| 8 | 15,000 |
+| 9 | 25,000 |
+| 10 | 50,000 |
+
+When you cross a prestige threshold, **every** facility at that level becomes available. The dashboard will notify you when you unlock a new tier.
+
 ## Economy & Discount Facilities
 
 ### Training Facility Progression
 
-The Training Facility is one of the best early investments. Each level adds 10% to your attribute upgrade discount.
+The Training Facility is one of the best early investments. Each level adds up to 10% to your attribute upgrade discount (actual rate depends on roster size).
 
-| Level | Cost | Prestige Required | Discount | Operating Cost/Day | Cumulative Investment |
-|-------|------|-------------------|----------|-------------------|----------------------|
-| 1 | ₡150,000 | — | 10% | ₡250 | ₡150,000 |
-| 2 | ₡300,000 | — | 20% | ₡500 | ₡450,000 |
-| 3 | ₡450,000 | — | 30% | ₡750 | ₡900,000 |
-| 4 | ₡600,000 | 1,000 | 40% | ₡1,000 | ₡1,500,000 |
-| 5 | ₡750,000 | — | 50% | ₡1,250 | ₡2,250,000 |
-| 6 | ₡900,000 | — | 60% | ₡1,500 | ₡3,150,000 |
-| 7 | ₡1,050,000 | 5,000 | 70% | ₡1,750 | ₡4,200,000 |
-| 8 | ₡1,200,000 | — | 80% | ₡2,000 | ₡5,400,000 |
-| 9 | ₡1,350,000 | 10,000 | 90% | ₡2,250 | ₡6,750,000 |
+| Level | Cost | Discount (1 robot) | Operating Cost/Day | Cumulative Investment |
+|-------|------|-------------------|-------------------|----------------------|
+| 1 | ₡150,000 | 9% | ₡250 | ₡150,000 |
+| 2 | ₡300,000 | 18% | ₡500 | ₡450,000 |
+| 3 | ₡450,000 | 27% | ₡750 | ₡900,000 |
+| 4 | ₡600,000 | 36% | ₡1,000 | ₡1,500,000 |
+| 5 | ₡750,000 | 45% | ₡1,250 | ₡2,250,000 |
+| 6 | ₡900,000 | 54% | ₡1,500 | ₡3,150,000 |
+| 7 | ₡1,050,000 | 63% | ₡1,750 | ₡4,200,000 |
+| 8 | ₡1,200,000 | 72% | ₡2,000 | ₡5,400,000 |
+| 9 | ₡1,350,000 | 81% | ₡2,250 | ₡6,750,000 |
+| 10 | ₡1,500,000 | 90% (max) | ₡2,500 | ₡9,250,000 |
 
-**ROI Analysis**: Upgrading all 23 attributes from level 1→10 on one robot costs ₡1,863,000 at full price. With Training Facility Level 1 (10% discount), you save ₡186,300 — meaning the facility pays for itself after upgrading roughly one robot's core attributes. With multiple robots, the payback is even faster.
+**ROI Analysis**: Upgrading all 23 attributes from level 1→10 on one robot costs ₡1,863,000 at full price. With Training Facility Level 1 (9% discount with 1 robot), you save ₡167,670 — meaning the facility pays for itself after upgrading roughly one robot's core attributes. With multiple robots, the payback is even faster.
 
 ```callout-tip
-Training Facility Level 1 is profitable from day one if you're upgrading regularly. It's one of the first facilities you should buy, especially if you plan to run multiple robots.
+Training Facility Level 1 is profitable from day one if you're upgrading regularly. It's one of the first facilities you should buy.
 ```
 
 ### Weapons Workshop Progression
 
-| Level | Cost | Prestige Required | Discount | Special Unlock | Operating Cost/Day |
-|-------|------|-------------------|----------|---------------|-------------------|
-| 1 | ₡75,000 | — | 10% | — | ₡100 |
-| 2 | ₡150,000 | — | 20% | — | ₡200 |
-| 3 | ₡225,000 | — | 30% | Weapon modifications | ₡300 |
-| 4 | ₡300,000 | 1,500 | 40% | — | ₡400 |
-| 5 | ₡375,000 | — | 50% | — | ₡500 |
-| 6 | ₡450,000 | — | 60% | Custom weapon design | ₡600 |
-| 7 | ₡525,000 | 5,000 | 70% | — | ₡700 |
-| 8 | ₡600,000 | — | 80% | — | ₡800 |
-| 9 | ₡675,000 | 10,000 | 90% | — | ₡900 |
-| 10 | ₡750,000 | — | 100% | Free weapons | ₡1,000 |
+| Level | Cost | Discount / Resale Rate | Operating Cost/Day |
+|-------|------|----------------------|-------------------|
+| 1 | ₡75,000 | 10% | ₡100 |
+| 2 | ₡150,000 | 20% | ₡200 |
+| 3 | ₡225,000 | 30% | ₡300 |
+| 4 | ₡300,000 | 40% | ₡400 |
+| 5 | ₡375,000 | 50% | ₡500 |
+| 6 | ₡450,000 | 60% | ₡600 |
+| 7 | ₡525,000 | 70% | ₡700 |
+| 8 | ₡600,000 | 80% | ₡800 |
+| 9 | ₡675,000 | 90% | ₡900 |
+| 10 | ₡750,000 | 100% (free weapons, full resale) | ₡1,000 |
 
-**ROI Analysis**: Weapons are typically one-time purchases made early in the game. The Workshop is most valuable when bought before your first weapon purchase. At Level 1, you save 10% on every weapon — a significant discount on premium weapons costing ₡400K+.
+**ROI Analysis**: The Workshop saves on every weapon purchase and increases resale value. At Level 1, you save 10% on every weapon — a significant discount on premium weapons costing ₡400K+.
 
 ### Repair Bay Progression
 
-| Level | Cost | Prestige Required | Base Discount (1 robot) | Operating Cost/Day |
-|-------|------|-------------------|------------------------|-------------------|
-| 1 | ₡50,000 | — | 6% | ₡100 |
-| 2 | ₡100,000 | — | 12% | ₡200 |
-| 3 | ₡150,000 | — | 18% | ₡300 |
-| 4 | ₡200,000 | 1,000 | 24% | ₡400 |
-| 5 | ₡250,000 | — | 30% | ₡500 |
-| 6 | ₡300,000 | — | 36% | ₡600 |
-| 7 | ₡350,000 | 5,000 | 42% | ₡700 |
-| 8 | ₡400,000 | — | 48% | ₡800 |
-| 9 | ₡450,000 | 10,000 | 54% | ₡900 |
-| 10 | ₡500,000 | — | 60% + auto minor repairs | ₡1,000 |
+| Level | Cost | Base Discount (1 robot) | Operating Cost/Day |
+|-------|------|------------------------|-------------------|
+| 1 | ₡50,000 | 6% | ₡100 |
+| 2 | ₡100,000 | 12% | ₡200 |
+| 3 | ₡150,000 | 18% | ₡300 |
+| 4 | ₡200,000 | 24% | ₡400 |
+| 5 | ₡250,000 | 30% | ₡500 |
+| 6 | ₡300,000 | 36% | ₡600 |
+| 7 | ₡350,000 | 42% | ₡700 |
+| 8 | ₡400,000 | 48% | ₡800 |
+| 9 | ₡450,000 | 54% | ₡900 |
+| 10 | ₡500,000 | 60% | ₡1,000 |
 
-Remember: the actual discount scales with your robot count using the formula **Level × (5 + Active Robots)**, capped at 90%. Here's how that plays out:
-
-| Repair Bay Level | 1 Robot | 3 Robots | 5 Robots | 10 Robots |
-|-----------------|---------|----------|----------|-----------|
-| Level 1 | 6% | 8% | 10% | 15% |
-| Level 3 | 18% | 24% | 30% | 45% |
-| Level 5 | 30% | 40% | 50% | 75% |
-| Level 6 | 36% | 48% | 60% | **90%** (cap) |
-| Level 10 | 60% | 80% | **90%** (cap) | **90%** (cap) |
+The actual discount scales with your robot count: **Level × (5 + Active Robots)**, capped at 90%.
 
 ```callout-warning
-Once you hit the 90% discount cap, further Repair Bay upgrades provide no additional repair savings. With 10 robots, Level 6 already reaches the cap. Plan your investments accordingly — don't overspend on Repair Bay levels you won't benefit from.
+Once you hit the 90% discount cap, further Repair Bay upgrades provide no additional repair savings. With 10 robots, Level 6 already reaches the cap.
 ```
 
 ### Merchandising Hub Progression
 
-| Level | Cost | Prestige Required | Base Income/Day | Operating Cost/Day |
-|-------|------|-------------------|----------------|-------------------|
-| 1 | ₡150,000 | — | ₡5,000 | ₡200 |
-| 2 | ₡300,000 | — | ₡10,000 | ₡400 |
-| 3 | ₡450,000 | — | ₡15,000 | ₡600 |
-| 4 | ₡600,000 | 3,000 | ₡20,000 | ₡800 |
-| 5 | ₡750,000 | — | ₡25,000 | ₡1,000 |
-| 6 | ₡900,000 | — | ₡30,000 | ₡1,200 |
-| 7 | ₡1,050,000 | 7,500 | ₡35,000 | ₡1,400 |
-| 8 | ₡1,200,000 | — | ₡40,000 | ₡1,600 |
-| 9 | ₡1,350,000 | 15,000 | ₡45,000 | ₡1,800 |
-| 10 | ₡1,500,000 | — | ₡50,000 | ₡2,000 |
+| Level | Cost | Base Income/Day | Operating Cost/Day |
+|-------|------|----------------|-------------------|
+| 1 | ₡150,000 | ₡10,000 | ₡200 |
+| 2 | ₡300,000 | ₡20,000 | ₡400 |
+| 3 | ₡450,000 | ₡30,000 | ₡600 |
+| 4 | ₡600,000 | ₡40,000 | ₡800 |
+| 5 | ₡750,000 | ₡50,000 | ₡1,000 |
+| 6 | ₡900,000 | ₡60,000 | ₡1,200 |
+| 7 | ₡1,050,000 | ₡70,000 | ₡1,400 |
+| 8 | ₡1,200,000 | ₡80,000 | ₡1,600 |
+| 9 | ₡1,350,000 | ₡90,000 | ₡1,800 |
+| 10 | ₡1,500,000 | ₡100,000 | ₡2,000 |
 
-**ROI Analysis**: The base income shown above is multiplied by (1 + Prestige / 10,000). With 10,000 Prestige, your Level 5 Merchandising Hub earns ₡25,000 × 2.0 = ₡50,000/day against ₡1,000/day operating cost. That's a massive return. Even at low Prestige, Level 1 breaks even in about 31 cycles.
+**Income formula**: Base Income × (1 + Prestige ÷ Roster_Capacity ÷ 10,000). A concentrated roster (fewer robot slots) earns a higher multiplier per level. With 10,000 Prestige and 1 robot slot, Level 5 earns ₡50,000 × 2.0 = ₡100,000/day.
 
 ### Streaming Studio Progression
 
-| Level | Cost | Prestige Required | Revenue Multiplier | Operating Cost/Day |
-|-------|------|-------------------|-------------------|-------------------|
-| 1 | ₡100,000 | — | 2× | ₡100 |
-| 2 | ₡200,000 | — | 3× | ₡200 |
-| 3 | ₡300,000 | — | 4× | ₡300 |
-| 4 | ₡400,000 | 1,000 | 5× | ₡400 |
-| 5 | ₡500,000 | 2,500 | 6× | ₡500 |
-| 6 | ₡600,000 | 5,000 | 7× | ₡600 |
-| 7 | ₡700,000 | 10,000 | 8× | ₡700 |
-| 8 | ₡800,000 | 15,000 | 9× | ₡800 |
-| 9 | ₡900,000 | 25,000 | 10× | ₡900 |
-| 10 | ₡1,000,000 | 50,000 | 11× | ₡1,000 |
+| Level | Cost | Revenue Multiplier | Operating Cost/Day |
+|-------|------|-------------------|-------------------|
+| 1 | ₡100,000 | 2× | ₡100 |
+| 2 | ₡200,000 | 3× | ₡200 |
+| 3 | ₡300,000 | 4× | ₡300 |
+| 4 | ₡400,000 | 5× | ₡400 |
+| 5 | ₡500,000 | 6× | ₡500 |
+| 6 | ₡600,000 | 7× | ₡600 |
+| 7 | ₡700,000 | 8× | ₡700 |
+| 8 | ₡800,000 | 9× | ₡800 |
+| 9 | ₡900,000 | 10× | ₡900 |
+| 10 | ₡1,000,000 | 11× | ₡1,000 |
 
-**ROI Analysis**: The Streaming Studio has the lowest operating cost of any facility and provides multiplicative returns. Level 1 doubles your streaming revenue for just ₡100/day. With 3 robots averaging 5 battles per day, Level 1 pays for itself in roughly 17 cycles. This is one of the best ROI facilities in the game.
+**ROI Analysis**: The Streaming Studio has the lowest operating cost of any facility and provides multiplicative returns on per-battle streaming revenue. With multiple robots fighting daily, this compounds quickly.
 
 ```callout-tip
 The Streaming Studio's value scales with how many robots you have and how often they fight. If you're running a multi-robot strategy, this facility is an incredible investment even at Level 1.
@@ -131,20 +141,19 @@ The Streaming Studio's value scales with how many robots you have and how often 
 
 ### Roster Expansion Progression
 
-| Level | Cost | Prestige Required | Robot Slots | Operating Cost/Day |
-|-------|------|-------------------|------------|-------------------|
-| 0 | — | — | 1 | ₡0 |
-| 1 | ₡150,000 | — | 2 | ₡500 |
-| 2 | ₡300,000 | — | 3 | ₡1,000 |
-| 3 | ₡450,000 | — | 4 | ₡1,500 |
-| 4 | ₡600,000 | 1,000 | 5 | ₡2,000 |
-| 5 | ₡750,000 | — | 6 | ₡2,500 |
-| 6 | ₡900,000 | — | 7 | ₡3,000 |
-| 7 | ₡1,100,000 | 5,000 | 8 | ₡3,500 |
-| 8 | ₡1,300,000 | — | 9 | ₡4,000 |
-| 9 | ₡1,500,000 | 10,000 | 10 | ₡4,500 |
-
-**Note**: Roster Expansion maxes out at Level 9 (10 robot slots). There is no Level 10.
+| Level | Cost | Robot Slots | Operating Cost/Day |
+|-------|------|------------|-------------------|
+| 0 | — | 1 | ₡0 |
+| 1 | ₡150,000 | 2 | ₡500 |
+| 2 | ₡300,000 | 3 | ₡1,000 |
+| 3 | ₡450,000 | 4 | ₡1,500 |
+| 4 | ₡600,000 | 5 | ₡2,000 |
+| 5 | ₡750,000 | 6 | ₡2,500 |
+| 6 | ₡900,000 | 7 | ₡3,000 |
+| 7 | ₡1,100,000 | 8 | ₡3,500 |
+| 8 | ₡1,300,000 | 9 | ₡4,000 |
+| 9 | ₡1,500,000 | 10 | ₡4,500 |
+| 10 | ₡1,800,000 | 11 (maximum) | ₡5,000 |
 
 ### Storage Facility Progression
 
@@ -170,48 +179,45 @@ Storage capacity counts all weapons you own — both equipped and unequipped. Yo
 
 Each level adds one event slot per robot, on top of the 3 every robot gets for free.
 
-| Level | Cost | Prestige Required | Event Slots Per Robot | Operating Cost/Day |
-|-------|------|-------------------|----------------------|-------------------|
-| 1 | ₡75,000 | — | 4 | ₡150 |
-| 2 | ₡150,000 | — | 5 | ₡300 |
-| 3 | ₡225,000 | — | 6 | ₡450 |
-| 4 | ₡300,000 | 1,000 | 7 | ₡600 |
-| 5 | ₡375,000 | — | 8 | ₡750 |
-| 6 | ₡450,000 | — | 9 | ₡900 |
-| 7 | ₡525,000 | 5,000 | 10 | ₡1,050 |
-| 8 | ₡600,000 | — | 11 | ₡1,200 |
-| 9 | ₡675,000 | 10,000 | 12 | ₡1,350 |
-| 10 | ₡750,000 | — | 13 (maximum) | ₡1,500 |
+| Level | Cost | Event Slots Per Robot | Operating Cost/Day |
+|-------|------|----------------------|-------------------|
+| 1 | ₡75,000 | 4 | ₡150 |
+| 2 | ₡150,000 | 5 | ₡300 |
+| 3 | ₡225,000 | 6 | ₡450 |
+| 4 | ₡300,000 | 7 | ₡600 |
+| 5 | ₡375,000 | 8 | ₡750 |
+| 6 | ₡450,000 | 9 | ₡900 |
+| 7 | ₡525,000 | 10 | ₡1,050 |
+| 8 | ₡600,000 | 11 | ₡1,200 |
+| 9 | ₡675,000 | 12 | ₡1,350 |
+| 10 | ₡750,000 | 13 (maximum) | ₡1,500 |
 
 ```callout-info
-Only three levels are prestige-gated (4, 7 and 9), so the early levels are open to any stable that can afford them. With nine events available and only three free slots, the first couple of levels are what let a robot compete in more than one format at a time.
+With nine battle events available and only three free slots, even Level 1 is a meaningful upgrade. The Booking Office is cheap to start (₡75,000) and has low operating costs.
 ```
 
-## Prestige Requirements Summary
+### Tuning Bay Progression
 
-Here's a quick reference for all prestige gates across facilities:
+Each level increases the tuning point pool available to every robot.
 
-| Prestige Threshold | Facilities Unlocked |
-|-------------------|-------------------|
-| 1,000 | Repair Bay L4, Training Facility L4, Roster Expansion L4, Weapons Workshop L4, Booking Office L4, Streaming Studio L4 |
-| 2,000 | All 4 Academies L3 |
-| 2,500 | Streaming Studio L5 |
-| 3,000 | Merchandising Hub L4 |
-| 4,000 | All 4 Academies L5 |
-| 5,000 | Repair Bay L7, Training Facility L7, Weapons Workshop L7, Booking Office L7, Roster Expansion L7, Streaming Studio L6 |
-| 7,000 | All 4 Academies L7 |
-| 7,500 | Merchandising Hub L7 |
-| 10,000 | Repair Bay L9, Training Facility L9, Weapons Workshop L9, Booking Office L9, Roster Expansion L9, All 4 Academies L9, Streaming Studio L7 |
-| 15,000 | All 4 Academies L10, Merchandising Hub L9, Streaming Studio L8 |
-| 25,000 | Streaming Studio L9 |
-| 50,000 | Streaming Studio L10 |
+| Level | Cost | Tuning Points Per Robot | Operating Cost/Day |
+|-------|------|------------------------|-------------------|
+| 1 | ₡200,000 | 20 | ₡300 |
+| 2 | ₡400,000 | 30 | ₡600 |
+| 3 | ₡600,000 | 40 | ₡900 |
+| 4 | ₡800,000 | 50 | ₡1,200 |
+| 5 | ₡1,000,000 | 60 | ₡1,500 |
+| 6 | ₡1,200,000 | 70 | ₡1,800 |
+| 7 | ₡1,400,000 | 80 | ₡2,100 |
+| 8 | ₡1,600,000 | 90 | ₡2,400 |
+| 9 | ₡1,800,000 | 100 | ₡2,700 |
+| 10 | ₡2,000,000 | 110 (maximum) | ₡3,000 |
 
-The Booking Office has only three gates — levels 4, 7 and 9 — so levels 1 to 3 are
-open to any stable that can pay for them.
+Tuning points are bonus attribute points that can be freely reallocated between battles. They let you fine-tune a robot's build for specific matchups without spending credits on permanent attribute upgrades.
 
 ## What's Next?
 
-- [All 15 Facility Types](/guide/facilities/facility-overview) — Quick overview of every facility
+- [All Facility Types](/guide/facilities/facility-overview) — Quick overview of every facility
 - [Training Academies](/guide/facilities/training-academies) — How academies control attribute caps
 - [Investment Strategy](/guide/facilities/investment-strategy) — When to buy what
 - [Prestige System](/guide/prestige-fame/prestige-system) — How to earn the Prestige needed for facility gates
