@@ -82,7 +82,7 @@ merchandising_income = (merchandising_hub_level × ₡5,000) × (1 + prestige / 
 
 Prestige requirements are checked and enforced in `routes/facility.ts` when upgrading. If the player doesn't have enough prestige, the upgrade is rejected with a 403 error.
 
-Prestige thresholds are defined per facility in `config/facilities.ts`. See [STABLE_SYSTEM.md](STABLE_SYSTEM.md) for the complete list of prestige requirements per facility per level.
+Prestige thresholds are defined in `config/facilities.ts` using the universal `PRESTIGE_GATES_10` curve shared by all facilities: L4: 1,000 · L5: 3,000 · L6: 5,000 · L7: 10,000 · L8: 15,000 · L9: 25,000 · L10: 50,000. Levels 1–3 are free.
 
 ### Prestige Rank Titles
 

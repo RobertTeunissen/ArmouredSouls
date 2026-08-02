@@ -2,12 +2,6 @@
 
 Items identified during audits, reviews, and development. Prioritized by impact on player experience and system reliability.
 
-**Priority scale**: Blocker (stops shipping) · High (should spec soon) · Medium (valuable but not blocking) · Low (nice to have) · Not scoped (future idea only)
-
-## 🚫 Blockers
-
-None currently.
-
 ---
 
 ## WSJF Priority Ranking
@@ -40,56 +34,6 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 | 22 | Blueprint Library | 48 | 0 🗳️ | 1 | 1 | 1 | 3 | **1.0** |
 | 23 | Cosmetic Customization System | 46 | 0 🗳️ | 2 | 1 | 1 | 5 | **0.8** |
 | 24 | Matchup-Dependent Weapon Effectiveness | 58 | 0 🗳️ | 3 | 1 | 2 | 5 | **1.2** |
-
-### Recently Completed (removed from backlog)
-
-| Item | # | Spec | Completed |
-|------|---|------|-----------|
-| Repair the Integration Test Suite (149→0 compile errors, `typecheck:tests` passes, deleted 3k-line dead test file) | 64 | — (direct implementation) | July 2026 |
-| Grand Melee Mode (20-robot FFA) | 30 | [Spec #44](/.kiro/specs/to-do/44-grand-melee/) | June 2026 |
-| Tag Team Battle Time Limit Enforcement (closed as working-as-designed, documented in BATTLE_SIMULATION_ARCHITECTURE.md § Tag Team Orchestrator) | 19 | — | June 2026 |
-| Battle Table Denormalization Cleanup (19 deprecated columns dropped) | 18 | — (direct implementation, completes Spec #43 Task 6.4) | June 2026 |
-| Spec #40 Legacy Column Drop (Phase 2) | 59 | [Spec #43](/.kiro/specs/to-do/43-legacy-column-drop/) | June 2026 |
-| Battle Log Retention / TOAST Trim (pre-computed summaries, 7-day retention, nightly cron) | 53 | [Spec #39](/.kiro/specs/to-do/39-battle-log-retention/) | June 2026 |
-| Database Unification (unified standings, financial ledger, leaderboard cache) | — | [Spec #40](/.kiro/specs/done-june26/40-database-unification/) | June 2026 |
-| Unified Match Scheduling (single scheduling table, shared matchmaking pipeline) | — | [Spec #41](/.kiro/specs/done-june26/41-unified-match-scheduling/) | June 2026 |
-| Tag Team System Unification | 55 | [Spec #42](/.kiro/specs/done-june26/42-tag-team-system-unification/) | June 2026 |
-| Historical Financial Tracking | 23 | [Spec #40](/.kiro/specs/done-june26/40-database-unification/) | June 2026 |
-| Mega-Orchestrator Refactor (combat-critical files) | 49 | — (direct implementation) | June 2026 |
-| Unimplemented Facilities Removal (Research Lab, Medical Bay, Coaching Staff) | 7 | — (direct implementation) | June 2026 |
-| Frontend Page Hook Extraction (RobotsPage, RobotDetailPage) | 50 | — (direct implementation) | June 2026 |
-| Team Battle Tournaments (2v2 / 3v3) | 54 | [Spec #38](/.kiro/specs/done-june26/38-team-battle-tournaments/) | June 2026 |
-| Cron Schedule Restructure — Daily-Everything Slot Map | 56 | [Spec #36](/.kiro/specs/done-may26/36-cron-schedule-restructure/) | June 2026 |
-| Vitest Performance Tuning (CI scripts, dot reporter, coverage gitignore) | 52 | — (direct implementation) | June 2026 |
-| Test Setup Convention Cleanup (co-located `__tests__/`, eliminated centralized sprawl) | 51 | — (direct implementation) | June 2026 |
-| Backend Test Reclassification (66 no-DB tests → unit runner, zero overlap, ~2min CI savings) | — | — (direct implementation) | June 2026 |
-| Tag Team System Unification | 55 | [Spec #42](/.kiro/specs/done-june26/42-tag-team-system-unification/) | June 2026 |
-| Team Battles 2v2 and 3v3 (League) | 31 | [Spec #37](/.kiro/specs/done-may26/37-team-battles-2v2-3v3/) | June 2026 |
-| Untrack Generated Prisma Client (68K lines out of git) | — | — (direct implementation) | May 2026 |
-| HTTP Client Consolidation (typed `api` wrapper everywhere) | — | — (direct implementation) | May 2026 |
-| Console → Structured Logger Migration (FE + BE) | — | — (direct implementation) | May 2026 |
-| Env Validation with Zod (fail-fast in production) | — | — (direct implementation) | May 2026 |
-| Pre-commit Hooks (husky + lint-staged) | — | — (direct implementation) | May 2026 |
-| Dead Code Audit (knip Pass A + B, ~30 files removed) | — | — (direct implementation) | May 2026 |
-| Backend `any` Eliminated from Production Source | — | — (direct implementation) | May 2026 |
-| Weapon Refinement (per-instance permanent upgrades, 4 tiers, 5-slot cap) | 5 (partial) | [Spec #34](/.kiro/specs/done-may26/34-weapon-refinement/) | May 2026 |
-| Battle Subscription Facility (Booking Office event-subscription semantics) | 55 | [Spec #35](/.kiro/specs/done-may26/35-booking-office-facility/) | June 2026 |
-| Weapon Resale (Workshop-level-dependent rate, ₡0–100% recovery) | 5 (partial) | [Spec #33](/.kiro/specs/done-may26/33-weapon-resale/) | May 2026 |
-| Performance Optimization | 20 | — (direct implementation) | May 2026 |
-| Promotion/Demotion History Tracking | 22 | [Spec #32](/.kiro/specs/done-may26/32-league-history-tracking/) | May 2026 |
-| Battle History URL State Persistence | 25 | — (direct implementation) | May 2026 |
-| Hall of Records Performance Caching | 26 | — (direct implementation) | May 2026 |
-| League & Tag Team Instance Deep Linking | 39 | — (direct implementation) | May 2026 |
-| Facility Investment Advisor | 1 | [Spec #30](/.kiro/specs/done-may26/30-fix-investment-advisor/) | May 2026 |
-| Smooth Prestige Multiplier Scaling | 36 | — (direct implementation) | May 2026 |
-| Monitoring and Alerting | 3 | [Spec #29](/.kiro/specs/done-may26/29-monitoring-and-alerting/) | May 2026 |
-| Admin Portal Redesign | 13 | [Spec #28](/.kiro/specs/done-april26/28-admin-portal-redesign/) | April 2026 |
-| Admin Tuning Adoption Dashboard | 38 | [Spec #28](/.kiro/specs/done-april26/28-admin-portal-redesign/) | April 2026 |
-| Achievement / Milestone System | 8 | [Spec #27](/.kiro/specs/done-april26/27-achievement-system/) | April 2026 |
-| In-Game Changelog / "What's New" | 17 | [Spec #24](/.kiro/specs/done-april26/24-in-game-changelog/) | April 2026 |
-| Tuning Pool (Tactical Tuning) | 9 | [Spec #25](/.kiro/specs/done-april26/25-tuning-bay/) | April 2026 |
-| Battle Report Layout Overhaul | 14 | [Spec #26](/.kiro/specs/done-april26/26-battle-report-overhaul/) | April 2026 |
-| Prestige Gating for Facilities | 21 | — (already implemented) | Pre-backlog |
 
 ---
 

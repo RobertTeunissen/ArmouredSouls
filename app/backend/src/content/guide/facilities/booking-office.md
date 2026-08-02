@@ -66,12 +66,12 @@ Tag team combat is **phased**: one active robot per side fights at a time, rathe
 | 2 | 5 | ₡150,000 | — |
 | 3 | 6 | ₡225,000 | — |
 | 4 | 7 | ₡300,000 | 1,000 |
-| 5 | 8 | ₡375,000 | — |
-| 6 | 9 | ₡450,000 | — |
-| 7 | 10 | ₡525,000 | 5,000 |
-| 8 | 11 | ₡600,000 | — |
-| 9 | 12 | ₡675,000 | 10,000 |
-| 10 | 13 (maximum) | ₡750,000 | — |
+| 5 | 8 | ₡375,000 | 3,000 |
+| 6 | 9 | ₡450,000 | 5,000 |
+| 7 | 10 | ₡525,000 | 10,000 |
+| 8 | 11 | ₡600,000 | 15,000 |
+| 9 | 12 | ₡675,000 | 25,000 |
+| 10 | 13 (maximum) | ₡750,000 | 50,000 |
 
 Slots are counted **per robot** — every robot in your Stable gets the same number, based on your Booking Office level. Operating cost is level × ₡150 per day.
 

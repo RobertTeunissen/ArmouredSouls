@@ -192,32 +192,3 @@ describe('Payback fits inside a 100-cycle season (Spec #46 R2.13, R2.19)', () =>
     expect(cumulativeCost(10) / legacyNet).toBeGreaterThan(100);
   });
 });
-
-describe('Prestige gate re-basing (Spec #46 R2.10, R2.11)', () => {
-  const config = getFacilityConfig('merchandising_hub')!;
-
-  it('gates on Prestige_Per_Slot rather than raw prestige', () => {
-    expect(config.prestigeGateIsPerSlot).toBe(true);
-  });
-
-  it('uses the re-based thresholds', () => {
-    expect(config.prestigeRequirements).toEqual([0, 0, 0, 2000, 0, 0, 5000, 0, 9000, 0]);
-  });
-
-  it('is the only facility flagged per-slot', () => {
-    const flagged = ['merchandising_hub', 'streaming_studio', 'repair_bay', 'booking_office', 'tuning_bay']
-      .map((t) => [t, getFacilityConfig(t)?.prestigeGateIsPerSlot ?? false] as const)
-      .filter(([, isPerSlot]) => isPerSlot)
-      .map(([type]) => type);
-
-    expect(flagged).toEqual(['merchandising_hub']);
-  });
-
-  it('a wide stable needs proportionally more raw prestige to clear a gate', () => {
-    const l4Gate = config.prestigeRequirements![3]; // 2000 per slot
-    // One slot: 2,000 raw prestige clears it. Five slots: 10,000 raw needed.
-    expect(2000 / getRosterCapacity(0)).toBeGreaterThanOrEqual(l4Gate);
-    expect(2000 / getRosterCapacity(4)).toBeLessThan(l4Gate);
-    expect(10_000 / getRosterCapacity(4)).toBeGreaterThanOrEqual(l4Gate);
-  });
-});

@@ -310,24 +310,6 @@ function TeamBattleCard({ team, onDisband, onRename, onSwap, onSwapPositions }: 
         </div>
       )}
 
-      {/* Eligibility Warning */}
-      {team.eligibility === 'INELIGIBLE' && (
-        <div className="bg-warning/10 border-l-4 border-warning rounded-lg p-3 mb-4">
-          <div className="flex items-start gap-2">
-            <span className="text-warning shrink-0">⚠️</span>
-            <span className="text-warning text-sm font-semibold">
-              {team.ineligibilityReason === 'missing_subscription'
-                ? `Ineligible — ${team.ineligibilityDetail ?? 'A member'} is not subscribed to ${team.teamSize}v${team.teamSize} League. Subscribe via the Booking Office.`
-                : team.ineligibilityReason === 'incomplete_roster'
-                ? `Ineligible — Team needs ${team.teamSize} members but only has ${team.ineligibilityDetail?.split('/')[0] ?? team.members.length}.`
-                : team.ineligibilityReason === 'member_destroyed'
-                ? `Ineligible — ${team.ineligibilityDetail ?? 'A member'} has been destroyed (0 HP).`
-                : 'Ineligible — check member subscriptions'}
-            </span>
-          </div>
-        </div>
-      )}
-
       {/* Members */}
       <div className={`grid grid-cols-1 ${team.teamSize === 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2'} gap-3 mb-4`}>
         {team.members.map((member) => (

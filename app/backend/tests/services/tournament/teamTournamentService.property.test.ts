@@ -68,7 +68,6 @@ function createMockTeam(id: number, teamSize: number, robotIds: number[]) {
     id,
     teamName: `Team ${id}`,
     teamSize,
-    eligibility: 'ELIGIBLE',
     createdAt: new Date(2024, 0, id),
     members: robotIds.map((robotId, idx) => ({
       robotId,
@@ -196,9 +195,9 @@ describe('Feature: team-battle-tournaments, Property 7: Tournament created iff e
   });
 });
 
-// ─── Property 9: Team eligibility requires full subscription and eligible status ─
+// ─── Property 9: Team eligibility requires full roster, subscription, and readiness ─
 
-describe('Feature: team-battle-tournaments, Property 9: Team eligible iff eligibility=ELIGIBLE AND all members subscribed AND all members ready', () => {
+describe('Feature: team-battle-tournaments, Property 9: Team eligible iff full roster AND all members subscribed AND all members ready', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -207,7 +206,7 @@ describe('Feature: team-battle-tournaments, Property 9: Team eligible iff eligib
    * **Validates: Requirements 3.2, 3.3, 3.7**
    *
    * For any team, the team is eligible for tournament entry if and only if:
-   * (a) the team's `eligibility` field equals `'ELIGIBLE'`, AND
+   * (a) the team has a full roster (members.length === teamSize), AND
    * (b) every member robot holds an active subscription to the corresponding event type, AND
    * (c) every member robot passes scheduling readiness checks.
    */
@@ -215,23 +214,23 @@ describe('Feature: team-battle-tournaments, Property 9: Team eligible iff eligib
     await fc.assert(
       fc.asyncProperty(
         fc.record({
-          eligible: fc.boolean(),
+          fullRoster: fc.boolean(),
           subscriptions: fc.array(fc.boolean(), { minLength: 2, maxLength: 3 }),
           readiness: fc.array(fc.boolean(), { minLength: 2, maxLength: 3 }),
         }),
-        async ({ eligible, subscriptions, readiness }) => {
+        async ({ fullRoster, subscriptions, readiness }) => {
           // Normalize arrays to same length (team size)
           const teamSize = Math.min(subscriptions.length, readiness.length) as 2 | 3;
           const subs = subscriptions.slice(0, teamSize);
           const ready = readiness.slice(0, teamSize);
 
           // Create a single team with the given conditions
-          const robotIds = Array.from({ length: teamSize }, (_, i) => i + 1);
+          const rosterSize = fullRoster ? teamSize : teamSize - 1;
+          const robotIds = Array.from({ length: rosterSize }, (_, i) => i + 1);
           const team = {
             id: 1,
             teamName: 'Test Team',
             teamSize,
-            eligibility: eligible ? 'ELIGIBLE' : 'INELIGIBLE',
             createdAt: new Date(2024, 0, 1),
             members: robotIds.map((robotId, idx) => ({
               robotId,
@@ -249,14 +248,9 @@ describe('Feature: team-battle-tournaments, Property 9: Team eligible iff eligib
             })),
           };
 
-          // Only teams with eligibility='ELIGIBLE' are returned by the Prisma query
-          // (the WHERE clause filters by eligibility: 'ELIGIBLE')
-          if (eligible) {
-            mockTeamBattleFindMany.mockResolvedValue([team]);
-          } else {
-            // Prisma WHERE clause filters out non-eligible teams
-            mockTeamBattleFindMany.mockResolvedValue([]);
-          }
+          // All teams with full rosters are returned by the query;
+          // incomplete rosters are filtered by the service
+          mockTeamBattleFindMany.mockResolvedValue([team]);
 
           // Setup subscription mock: only subscribed robots appear in the result
           const subscribedRobotIds = robotIds.filter((_, idx) => subs[idx]);
@@ -274,9 +268,9 @@ describe('Feature: team-battle-tournaments, Property 9: Team eligible iff eligib
           const result = await getEligibleTeamsForTournament(teamSize);
 
           // Expected: team is eligible iff ALL three conditions are true
-          const allSubscribed = subs.every(s => s === true);
-          const allReady = ready.every(r => r === true);
-          const expectedEligible = eligible && allSubscribed && allReady;
+          const allSubscribed = subs.slice(0, rosterSize).every(s => s === true);
+          const allReady = ready.slice(0, rosterSize).every(r => r === true);
+          const expectedEligible = fullRoster && allSubscribed && allReady;
 
           if (expectedEligible) {
             expect(result).toHaveLength(1);
@@ -294,29 +288,30 @@ describe('Feature: team-battle-tournaments, Property 9: Team eligible iff eligib
     await fc.assert(
       fc.asyncProperty(
         fc.record({
-          eligible: fc.boolean(),
+          fullRoster: fc.boolean(),
           subscriptions: fc.array(fc.boolean(), { minLength: 2, maxLength: 3 }),
           readiness: fc.array(fc.boolean(), { minLength: 2, maxLength: 3 }),
-        }).filter(({ eligible, subscriptions, readiness }) => {
+        }).filter(({ fullRoster, subscriptions, readiness }) => {
           // Only test cases where at least one condition fails
           const teamSize = Math.min(subscriptions.length, readiness.length);
           const subs = subscriptions.slice(0, teamSize);
           const ready = readiness.slice(0, teamSize);
-          const allSubscribed = subs.every(s => s === true);
-          const allReady = ready.every(r => r === true);
-          return !(eligible && allSubscribed && allReady);
+          const rosterSize = fullRoster ? teamSize : teamSize - 1;
+          const allSubscribed = subs.slice(0, rosterSize).every(s => s === true);
+          const allReady = ready.slice(0, rosterSize).every(r => r === true);
+          return !(fullRoster && allSubscribed && allReady);
         }),
-        async ({ eligible, subscriptions, readiness }) => {
+        async ({ fullRoster, subscriptions, readiness }) => {
           const teamSize = Math.min(subscriptions.length, readiness.length) as 2 | 3;
           const subs = subscriptions.slice(0, teamSize);
           const ready = readiness.slice(0, teamSize);
 
-          const robotIds = Array.from({ length: teamSize }, (_, i) => i + 1);
+          const rosterSize = fullRoster ? teamSize : teamSize - 1;
+          const robotIds = Array.from({ length: rosterSize }, (_, i) => i + 1);
           const team = {
             id: 1,
             teamName: 'Test Team',
             teamSize,
-            eligibility: eligible ? 'ELIGIBLE' : 'INELIGIBLE',
             createdAt: new Date(2024, 0, 1),
             members: robotIds.map((robotId, idx) => ({
               robotId,
@@ -334,11 +329,7 @@ describe('Feature: team-battle-tournaments, Property 9: Team eligible iff eligib
             })),
           };
 
-          if (eligible) {
-            mockTeamBattleFindMany.mockResolvedValue([team]);
-          } else {
-            mockTeamBattleFindMany.mockResolvedValue([]);
-          }
+          mockTeamBattleFindMany.mockResolvedValue([team]);
 
           const subscribedRobotIds = robotIds.filter((_, idx) => subs[idx]);
           mockSubscriptionFindMany.mockResolvedValue(

@@ -53,9 +53,6 @@ export interface TeamBattle {
   totalTagTeamWins: number;
   totalTagTeamLosses: number;
   totalTagTeamDraws: number;
-  eligibility: string;
-  ineligibilityReason: string | null;
-  ineligibilityDetail: string | null;
   createdAt: string;
   updatedAt: string;
   members: TeamBattleMember[];
@@ -148,7 +145,6 @@ export interface TeamBattleStanding {
   losses: number;
   draws: number;
   totalMatches: number;
-  eligibility: string;
   cyclesInLeague: number;
   isSubscribed?: boolean;
   zone?: 'promotion' | 'demotion' | null;

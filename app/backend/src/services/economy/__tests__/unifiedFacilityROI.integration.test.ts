@@ -221,9 +221,9 @@ describe('UnifiedFacilityROIService - Integration Tests', () => {
       data: [
         { userId: user.id, facilityType: 'merchandising_hub', level: 2, maxLevel: 10 },
         { userId: user.id, facilityType: 'repair_bay', level: 1, maxLevel: 10 },
-        { userId: user.id, facilityType: 'training_facility', level: 3, maxLevel: 9 },
+        { userId: user.id, facilityType: 'training_facility', level: 3, maxLevel: 10 },
         // Also create a non-economic facility to verify it's excluded
-        { userId: user.id, facilityType: 'roster_expansion', level: 2, maxLevel: 9 },
+        { userId: user.id, facilityType: 'roster_expansion', level: 2, maxLevel: 10 },
       ],
     });
 

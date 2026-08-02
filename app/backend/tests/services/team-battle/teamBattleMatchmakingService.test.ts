@@ -149,7 +149,6 @@ function makeTeam(
   teamSize: 2 | 3 = 2,
   overrides: Partial<{
     stableId: number;
-    eligibility: string;
     robotElos: number[];
     createdAt: Date;
   }> = {},
@@ -169,7 +168,6 @@ function makeTeam(
     stableId,
     teamSize,
     teamName: `Team ${id}`,
-    eligibility: overrides.eligibility ?? 'ELIGIBLE',
     createdAt: overrides.createdAt ?? new Date('2024-01-01'),
     updatedAt: new Date('2024-01-01'),
     members,

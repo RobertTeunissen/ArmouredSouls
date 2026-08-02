@@ -30,7 +30,6 @@ import {
 } from '../services/team-battle/teamBattleService';
 import { MAX_TEAMS_PER_INSTANCE } from '../services/team-battle/teamBattleAdapter';
 import { getEntityHistory } from '../services/league/leagueHistoryService';
-import { hasSubscription } from '../services/subscription/subscriptionService';
 import { getMinLPForPromotion } from '../services/league/leaguePromotionThresholds';
 
 const router = express.Router();
@@ -102,7 +101,7 @@ router.get(
       orderBy: { createdAt: 'asc' },
     });
 
-    // Check lock status and compute ineligibility reason for each team
+    // Check lock status for each team
     const teamsWithMetadata = await Promise.all(
       teams.map(async (team) => {
         // Check if team has pending matches in unified scheduling table
@@ -114,44 +113,9 @@ router.get(
           },
         });
 
-        // Compute ineligibility reason when team is INELIGIBLE
-        let ineligibilityReason: string | null = null;
-        let ineligibilityDetail: string | null = null;
-
-        if (team.eligibility === 'INELIGIBLE') {
-          if (team.members.length < team.teamSize) {
-            ineligibilityReason = 'incomplete_roster';
-            ineligibilityDetail = `${team.members.length}/${team.teamSize}`;
-          } else {
-            // Check subscriptions for each member
-            const eventType = team.teamSize === 2 ? 'league_2v2' : 'league_3v3';
-            for (const member of team.members) {
-              const subscribed = await hasSubscription(member.robotId, eventType);
-              if (!subscribed) {
-                ineligibilityReason = 'missing_subscription';
-                ineligibilityDetail = member.robot.name;
-                break;
-              }
-            }
-
-            // Defensive: check for destroyed member (0 HP)
-            if (!ineligibilityReason) {
-              for (const member of team.members) {
-                if (member.robot.currentHP <= 0) {
-                  ineligibilityReason = 'member_destroyed';
-                  ineligibilityDetail = member.robot.name;
-                  break;
-                }
-              }
-            }
-          }
-        }
-
         return {
           ...team,
           isLockedForBattle: scheduledCount > 0,
-          ineligibilityReason,
-          ineligibilityDetail,
         };
       }),
     );
@@ -445,7 +409,6 @@ router.get(
         losses: s.losses,
         draws: s.draws,
         totalMatches: s.wins + s.losses + s.draws,
-        eligibility: team?.eligibility ?? 'ELIGIBLE',
         cyclesInLeague: s.cyclesInTier,
         isSubscribed,
         zone,

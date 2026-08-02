@@ -253,14 +253,14 @@ describe('Matchmaker Subscription Integration', () => {
       // Mock teams via teamBattle.findMany (new unified pattern uses members, not activeRobot/reserveRobot)
       const teams = [
         {
-          id: 100, teamSize: 2, teamName: 'Team 100', eligibility: 'ELIGIBLE',
+          id: 100, teamSize: 2, teamName: 'Team 100',
           members: [
             { id: 1, robotId: 1, teamId: 100, slotIndex: 0, robot: { id: 1, mainWeaponId: 1, offhandWeaponId: null, loadoutType: 'single' } },
             { id: 2, robotId: 2, teamId: 100, slotIndex: 1, robot: { id: 2, mainWeaponId: 2, offhandWeaponId: null, loadoutType: 'single' } },
           ],
         },
         {
-          id: 101, teamSize: 2, teamName: 'Team 101', eligibility: 'ELIGIBLE',
+          id: 101, teamSize: 2, teamName: 'Team 101',
           members: [
             { id: 3, robotId: 3, teamId: 101, slotIndex: 0, robot: { id: 3, mainWeaponId: 3, offhandWeaponId: null, loadoutType: 'single' } },
             { id: 4, robotId: 4, teamId: 101, slotIndex: 1, robot: { id: 4, mainWeaponId: 4, offhandWeaponId: null, loadoutType: 'single' } },
@@ -302,14 +302,14 @@ describe('Matchmaker Subscription Integration', () => {
 
       const teams = [
         {
-          id: 200, teamSize: 2, teamName: 'Team 200', eligibility: 'ELIGIBLE',
+          id: 200, teamSize: 2, teamName: 'Team 200',
           members: [
             { id: 10, robotId: 10, teamId: 200, slotIndex: 0, robot: { id: 10, mainWeaponId: 1, offhandWeaponId: null, loadoutType: 'single' } },
             { id: 11, robotId: 11, teamId: 200, slotIndex: 1, robot: { id: 11, mainWeaponId: 2, offhandWeaponId: null, loadoutType: 'single' } },
           ],
         },
         {
-          id: 201, teamSize: 2, teamName: 'Team 201', eligibility: 'ELIGIBLE',
+          id: 201, teamSize: 2, teamName: 'Team 201',
           members: [
             { id: 12, robotId: 12, teamId: 201, slotIndex: 0, robot: { id: 12, mainWeaponId: 3, offhandWeaponId: null, loadoutType: 'single' } },
             { id: 13, robotId: 13, teamId: 201, slotIndex: 1, robot: { id: 13, mainWeaponId: 4, offhandWeaponId: null, loadoutType: 'single' } },
@@ -347,14 +347,14 @@ describe('Matchmaker Subscription Integration', () => {
 
       const teams = [
         {
-          id: 300, teamSize: 2, teamName: 'Team 300', eligibility: 'ELIGIBLE',
+          id: 300, teamSize: 2, teamName: 'Team 300',
           members: [
             { id: 20, robotId: 20, teamId: 300, slotIndex: 0, robot: { id: 20, mainWeaponId: 1, offhandWeaponId: null, loadoutType: 'single' } },
             { id: 21, robotId: 21, teamId: 300, slotIndex: 1, robot: { id: 21, mainWeaponId: 2, offhandWeaponId: null, loadoutType: 'single' } },
           ],
         },
         {
-          id: 301, teamSize: 2, teamName: 'Team 301', eligibility: 'ELIGIBLE',
+          id: 301, teamSize: 2, teamName: 'Team 301',
           members: [
             { id: 22, robotId: 22, teamId: 301, slotIndex: 0, robot: { id: 22, mainWeaponId: 3, offhandWeaponId: null, loadoutType: 'single' } },
             { id: 23, robotId: 23, teamId: 301, slotIndex: 1, robot: { id: 23, mainWeaponId: 4, offhandWeaponId: null, loadoutType: 'single' } },

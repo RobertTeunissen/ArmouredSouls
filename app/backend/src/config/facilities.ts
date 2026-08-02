@@ -8,26 +8,27 @@ export interface FacilityConfig {
   benefits: string[]; // Benefit description for each level
   implemented: boolean; // Whether backend logic is implemented
   /**
-   * Prestige requirements for each level (optional)
+   * Prestige requirements for each level (unified across all facilities).
    * Array index corresponds to level (index 0 = level 1, index 1 = level 2, etc.)
-   * Value of 0 or undefined means no prestige requirement for that level
-   * Example: [0, 0, 0, 1000, 0, 0, 5000, 0, 10000, 0] means:
-   *   - Level 4 requires 1,000 prestige
-   *   - Level 7 requires 5,000 prestige
-   *   - Level 9 requires 10,000 prestige
+   * Value of 0 means no prestige requirement for that level.
+   *
+   * Universal curve: L1-L3: free, L4: 1000, L5: 3000, L6: 5000,
+   * L7: 10000, L8: 15000, L9: 25000, L10: 50000
    */
   prestigeRequirements?: number[];
   /**
-   * When true, `prestigeRequirements` are compared against Prestige_Per_Slot
-   * (prestige ÷ Roster_Capacity) rather than raw prestige.
-   *
-   * Spec #46 R2.11: only `merchandising_hub` sets this, because its income
-   * formula was re-based to Prestige_Per_Slot and a gate measured in raw
-   * prestige would no longer describe the same quantity the facility rewards.
-   * Every other facility keeps raw-prestige gates.
+   * @deprecated No longer used. All facilities use raw prestige gates.
+   * Kept temporarily for migration safety — will be removed in a future cleanup.
    */
   prestigeGateIsPerSlot?: boolean;
 }
+
+/**
+ * Universal prestige gate curve applied to all facilities (10 levels).
+ * L1–L3: free, then progressively gated.
+ * Exported so the dashboard can compute "next unlock" without loading facility configs.
+ */
+export const PRESTIGE_GATES_10: number[] = [0, 0, 0, 1000, 3000, 5000, 10000, 15000, 25000, 50000];
 
 export const FACILITY_TYPES: FacilityConfig[] = [
   {
@@ -49,7 +50,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
       'Repair cost discount (maximum 90%)',
     ],
     implemented: true,
-    prestigeRequirements: [0, 0, 0, 1000, 0, 0, 5000, 0, 10000, 0], // L4: 1000, L7: 5000, L9: 10000
+    prestigeRequirements: PRESTIGE_GATES_10,
   },
   {
     type: 'training_facility',
@@ -76,7 +77,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
     implemented: true,
     // L4: 1000, L7: 5000, L9: 10000. L10 is ungated — it was previously unreachable
     // as a max level and no new gate is introduced here.
-    prestigeRequirements: [0, 0, 0, 1000, 0, 0, 5000, 0, 10000, 0],
+    prestigeRequirements: PRESTIGE_GATES_10,
   },
   {
     type: 'weapons_workshop',
@@ -97,15 +98,15 @@ export const FACILITY_TYPES: FacilityConfig[] = [
       '100% discount on weapon purchases (free weapons) · 100% resale rate (full credit recovery)',
     ],
     implemented: true,
-    prestigeRequirements: [0, 0, 0, 1500, 0, 0, 5000, 0, 10000, 0], // L4: 1500, L7: 5000, L9: 10000
+    prestigeRequirements: PRESTIGE_GATES_10, // L4: 1000, L5: 3000, L6: 5000, L7: 10000, L8: 15000, L9: 25000, L10: 50000
   },
 
   {
     type: 'roster_expansion',
     name: 'Roster Expansion',
     description: 'Increases the number of robots you can own',
-    maxLevel: 9,
-    costs: [150000, 300000, 450000, 600000, 750000, 900000, 1100000, 1300000, 1500000],
+    maxLevel: 10,
+    costs: [150000, 300000, 450000, 600000, 750000, 900000, 1100000, 1300000, 1500000, 1800000],
     benefits: [
       '2 robot slots',
       '3 robot slots',
@@ -115,10 +116,11 @@ export const FACILITY_TYPES: FacilityConfig[] = [
       '7 robot slots',
       '8 robot slots',
       '9 robot slots',
-      '10 robot slots (maximum)',
+      '10 robot slots',
+      '11 robot slots (maximum)',
     ],
     implemented: true,
-    prestigeRequirements: [0, 0, 0, 1000, 0, 0, 5000, 0, 10000], // L4: 1000, L7: 5000, L9: 10000
+    prestigeRequirements: PRESTIGE_GATES_10,
   },
   {
     type: 'storage_facility',
@@ -139,7 +141,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
       '55 weapons storage (5 base + 50 from facility - maximum)',
     ],
     implemented: true,
-    // No prestige requirements for Storage Facility
+    prestigeRequirements: PRESTIGE_GATES_10,
   },
 
   {
@@ -161,7 +163,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
       '13 event subscriptions per robot (maximum)',
     ],
     implemented: true,
-    prestigeRequirements: [0, 0, 0, 1000, 0, 0, 5000, 0, 10000, 0], // L4: 1000, L7: 5000, L9: 10000
+    prestigeRequirements: PRESTIGE_GATES_10,
   },
   {
     type: 'combat_training_academy',
@@ -182,7 +184,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
       'Combat Systems cap to level 50 (maximum)',
     ],
     implemented: true,
-    prestigeRequirements: [0, 0, 2000, 0, 4000, 0, 7000, 0, 10000, 15000], // L3: 2000, L5: 4000, L7: 7000, L9: 10000, L10: 15000
+    prestigeRequirements: PRESTIGE_GATES_10,
   },
   {
     type: 'defense_training_academy',
@@ -203,7 +205,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
       'Defensive Systems cap to level 50 (maximum)',
     ],
     implemented: true,
-    prestigeRequirements: [0, 0, 2000, 0, 4000, 0, 7000, 0, 10000, 15000], // L3: 2000, L5: 4000, L7: 7000, L9: 10000, L10: 15000
+    prestigeRequirements: PRESTIGE_GATES_10,
   },
   {
     type: 'mobility_training_academy',
@@ -224,7 +226,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
       'Chassis & Mobility cap to level 50 (maximum)',
     ],
     implemented: true,
-    prestigeRequirements: [0, 0, 2000, 0, 4000, 0, 7000, 0, 10000, 15000], // L3: 2000, L5: 4000, L7: 7000, L9: 10000, L10: 15000
+    prestigeRequirements: PRESTIGE_GATES_10,
   },
   {
     type: 'ai_training_academy',
@@ -245,7 +247,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
       'AI & Team cap to level 50 (maximum)',
     ],
     implemented: true,
-    prestigeRequirements: [0, 0, 2000, 0, 4000, 0, 7000, 0, 10000, 15000], // L3: 2000, L5: 4000, L7: 7000, L9: 10000, L10: 15000
+    prestigeRequirements: PRESTIGE_GATES_10,
   },
   {
     type: 'merchandising_hub',
@@ -266,10 +268,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
       'Master Merchandising (₡100,000/day base, ×prestige per robot slot)',
     ],
     implemented: true,
-    // Spec #46 R2.10: thresholds are Prestige_Per_Slot, not raw prestige.
-    // L4: 2000/slot, L7: 5000/slot, L9: 9000/slot (was 3000 / 7500 / 15000 raw)
-    prestigeRequirements: [0, 0, 0, 2000, 0, 0, 5000, 0, 9000, 0],
-    prestigeGateIsPerSlot: true,
+    prestigeRequirements: PRESTIGE_GATES_10,
   },
   {
     type: 'streaming_studio',
@@ -290,7 +289,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
       '11× streaming revenue per battle - maximum multiplier (₡1,000/day operating cost)',
     ],
     implemented: true,
-    prestigeRequirements: [0, 0, 0, 1000, 2500, 5000, 10000, 15000, 25000, 50000], // L4: 1000, L5: 2500, L6: 5000, L7: 10000, L8: 15000, L9: 25000, L10: 50000
+    prestigeRequirements: PRESTIGE_GATES_10,
   },
   {
     type: 'tuning_bay',
@@ -311,7 +310,7 @@ export const FACILITY_TYPES: FacilityConfig[] = [
       'Tuning pool: 110 bonus points per robot — maximum (₡3,000/day operating cost)',
     ],
     implemented: true,
-    prestigeRequirements: [0, 0, 1000, 0, 3000, 0, 5000, 0, 10000, 15000], // L3: 1000, L5: 3000, L7: 5000, L9: 10000, L10: 15000
+    prestigeRequirements: PRESTIGE_GATES_10,
   },
 ];
 

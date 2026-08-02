@@ -237,7 +237,6 @@ function LeagueStandingsPage() {
         losses: entry.totalTagTeamLosses,
         draws: entry.totalTagTeamDraws,
         totalMatches: entry.totalTagTeamWins + entry.totalTagTeamLosses + entry.totalTagTeamDraws,
-        eligibility: 'ELIGIBLE',
         cyclesInLeague: entry.cyclesInTagTeamLeague ?? 0,
         isSubscribed: undefined,
         zone: entry.zone,

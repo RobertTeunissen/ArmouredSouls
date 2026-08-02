@@ -221,7 +221,6 @@ async function applySubscriptionChange(
     await ensurePlacementStandings(robotId, toAdd, tx);
   }
 
-  await recalculateTeamEligibility(robotId, tx);
   await writeAuditEntries(robotId, requestingUserId, toAdd, toRemove, occupied.size, level, tx);
 
   logger.info('[Subscription] Changed', {
@@ -266,41 +265,6 @@ async function ensurePlacementStandings(robotId: number, added: string[], tx: Tx
         bestWinStreak: 0,
       },
     });
-  }
-}
-
-/**
- * A team only fights when every member is subscribed to its mode, so any change
- * to a member's subscriptions can flip the team either way.
- */
-async function recalculateTeamEligibility(robotId: number, tx: Tx): Promise<void> {
-  const memberships = await tx.teamBattleMember.findMany({
-    where: { robotId },
-    include: { team: { include: { members: true } } },
-  });
-
-  for (const membership of memberships) {
-    const team = membership.team;
-    if (team.members.length !== team.teamSize) continue;
-
-    const requiredEvent = team.teamSize === 2 ? 'league_2v2' : 'league_3v3';
-    const subscribedMembers = await tx.subscription.count({
-      where: {
-        eventType: requiredEvent,
-        robotId: { in: team.members.map((m) => m.robotId) },
-      },
-    });
-    const allSubscribed = subscribedMembers === team.members.length;
-    const eligibility = allSubscribed ? 'ELIGIBLE' : 'INELIGIBLE';
-
-    if (team.eligibility !== eligibility) {
-      await tx.teamBattle.update({ where: { id: team.id }, data: { eligibility } });
-      logger.info('[Subscription] Team eligibility updated', {
-        teamId: team.id,
-        teamName: team.teamName,
-        eligibility,
-      });
-    }
   }
 }
 

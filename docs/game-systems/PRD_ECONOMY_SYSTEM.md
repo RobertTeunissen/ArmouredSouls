@@ -1435,7 +1435,9 @@ merchandising_income = base_merchandising × prestige_multiplier
 operating_cost = level × ₡200/day
 ```
 
-### Why prestige per slot, not raw prestige
+### Why prestige per slot for income (not for gates)
+
+The Merchandising Hub's *income formula* uses prestige per slot to reward concentrated rosters. However, the *prestige gate* for upgrading the facility uses raw prestige — the same unified curve as all other facilities.
 
 The Merchandising Hub was designed to scale with prestige while the Streaming Studio scaled with fame, on the assumption that these were independent axes. They are not.
 
@@ -1453,15 +1455,19 @@ Dividing prestige by **Roster_Capacity** targets the actual cause. A single-robo
 
 **Roster_Capacity is derived from the `roster_expansion` facility level plus one, not from a live count of `robots` rows.** Facility levels never decrease, so the divisor is monotonic and cannot be gamed by selling a robot before the nightly settlement.
 
-**Prestige Gates** (Spec #46 — measured in prestige per slot):
+**Prestige Gates** (unified curve — same for all facilities):
 
 | Level | Requirement |
 |---|---|
-| 4 | 2,000 prestige per robot slot |
-| 7 | 5,000 prestige per robot slot |
-| 9 | 9,000 prestige per robot slot |
+| 4 | 1,000 prestige |
+| 5 | 3,000 prestige |
+| 6 | 5,000 prestige |
+| 7 | 10,000 prestige |
+| 8 | 15,000 prestige |
+| 9 | 25,000 prestige |
+| 10 | 50,000 prestige |
 
-These replace the previous raw-prestige gates of 3,000 / 7,500 / 15,000. A stable that already owns a level above its current gate keeps that level and continues producing income — the gate is evaluated only on the upgrade path, and there is no downgrade or refund.
+All facilities share this curve. Levels 1–3 have no prestige requirement.
 
 **Examples** (all at Roster_Capacity 1 — a single-robot stable):
 

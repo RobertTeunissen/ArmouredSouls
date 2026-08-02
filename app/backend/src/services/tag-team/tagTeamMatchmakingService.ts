@@ -301,7 +301,6 @@ function createByeTeam(league: string, leagueId: string): TeamBattleWithMembers 
         stableId: -1,
         teamSize: 2,
         teamName: 'Bye Team',
-        eligibility: 'ELIGIBLE',
         createdAt: new Date(),
         updatedAt: new Date(),
         members,

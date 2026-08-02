@@ -1234,14 +1234,14 @@ async function seedTeamTournaments(_weapons: { id: number; name: string }[]) {
 
   // Step 1: Find existing teams owned by generated users and subscribe their members
   const existing2v2Teams = await prisma.teamBattle.findMany({
-    where: { teamSize: 2, eligibility: 'ELIGIBLE', stable: { username: { startsWith: 'test_user_' } } },
+    where: { teamSize: 2, stable: { username: { startsWith: 'test_user_' } } },
     include: { members: { select: { robotId: true, robot: { select: { userId: true } } } } },
     take: 8,
     orderBy: { createdAt: 'asc' },
   });
 
   const existing3v3Teams = await prisma.teamBattle.findMany({
-    where: { teamSize: 3, eligibility: 'ELIGIBLE', stable: { username: { startsWith: 'test_user_' } } },
+    where: { teamSize: 3, stable: { username: { startsWith: 'test_user_' } } },
     include: { members: { select: { robotId: true, robot: { select: { userId: true } } } } },
     take: 8,
     orderBy: { createdAt: 'asc' },

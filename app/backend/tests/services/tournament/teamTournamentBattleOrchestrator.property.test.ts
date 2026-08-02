@@ -12,6 +12,7 @@ const mockTournamentFindUnique = jest.fn();
 const mockScheduledTournamentMatchFindMany = jest.fn();
 const mockScheduledTournamentMatchUpdate = jest.fn();
 const mockTeamBattleFindUnique = jest.fn();
+const mockSubscriptionCount = jest.fn();
 
 jest.mock('../../../src/lib/prisma', () => ({
   __esModule: true,
@@ -22,6 +23,7 @@ jest.mock('../../../src/lib/prisma', () => ({
       update: (...args: unknown[]) => mockScheduledTournamentMatchUpdate(...args),
     },
     teamBattle: { findUnique: (...args: unknown[]) => mockTeamBattleFindUnique(...args) },
+    subscription: { count: (...args: unknown[]) => mockSubscriptionCount(...args) },
   },
 }));
 
@@ -288,16 +290,26 @@ describe('Feature: team-battle-tournaments, Property 14: Ineligible team forfeit
           };
           mockScheduledTournamentMatchFindMany.mockResolvedValue([match]);
 
-          // Setup: team eligibility via teamBattle.findUnique with select: { eligibility: true }
+          // Setup: team eligibility via teamBattle.findUnique with include: { members: true }
+          // isTeamEligibleForTournament loads team with members, then checks subscription count
           mockTeamBattleFindUnique.mockImplementation(({ where }: any) => {
-            if (where.id === team1Id) {
-              return Promise.resolve({ eligibility: team1Eligible ? 'ELIGIBLE' : 'INELIGIBLE' });
+            const isEligible = (where.id === team1Id && team1Eligible) ||
+                               (where.id === team2Id && team2Eligible);
+            if (isEligible) {
+              return Promise.resolve({
+                teamSize: 2,
+                members: [{ robotId: where.id * 10 }, { robotId: where.id * 10 + 1 }],
+              });
             }
-            if (where.id === team2Id) {
-              return Promise.resolve({ eligibility: team2Eligible ? 'ELIGIBLE' : 'INELIGIBLE' });
-            }
-            return Promise.resolve(null);
+            // Ineligible: return team with incomplete roster
+            return Promise.resolve({
+              teamSize: 2,
+              members: [{ robotId: where.id * 10 }], // only 1 member for teamSize 2
+            });
           });
+
+          // Subscription count mock (only called for teams with full roster)
+          mockSubscriptionCount.mockResolvedValue(2);
 
           // Track the update call to verify forfeit behavior
           mockScheduledTournamentMatchUpdate.mockResolvedValue({});
@@ -366,8 +378,11 @@ describe('Feature: team-battle-tournaments, Property 14: Ineligible team forfeit
           };
           mockScheduledTournamentMatchFindMany.mockResolvedValue([match]);
 
-          // Both teams ineligible
-          mockTeamBattleFindUnique.mockResolvedValue({ eligibility: 'INELIGIBLE' });
+          // Both teams ineligible — incomplete roster
+          mockTeamBattleFindUnique.mockResolvedValue({
+            teamSize: 2,
+            members: [{ robotId: 1 }], // only 1 member for teamSize 2
+          });
 
           mockScheduledTournamentMatchUpdate.mockResolvedValue({});
 
@@ -423,14 +438,28 @@ describe('Feature: team-battle-tournaments, Property 14: Ineligible team forfeit
           };
           mockScheduledTournamentMatchFindMany.mockResolvedValue([match]);
 
-          // One team ineligible
+          // One team ineligible (incomplete roster), one eligible (full roster + subscriptions)
           mockTeamBattleFindUnique.mockImplementation(({ where }: any) => {
             const isIneligible = (ineligibleSide === 1 && where.id === team1Id) ||
                                  (ineligibleSide === 2 && where.id === team2Id);
+            if (isIneligible) {
+              return Promise.resolve({
+                teamSize: 3,
+                members: [{ robotId: where.id * 10 }], // incomplete roster
+              });
+            }
             return Promise.resolve({
-              eligibility: isIneligible ? 'INELIGIBLE' : 'ELIGIBLE',
+              teamSize: 3,
+              members: [
+                { robotId: where.id * 10 },
+                { robotId: where.id * 10 + 1 },
+                { robotId: where.id * 10 + 2 },
+              ],
             });
           });
+
+          // Subscription count: all members subscribed for eligible team
+          mockSubscriptionCount.mockResolvedValue(3);
 
           mockScheduledTournamentMatchUpdate.mockResolvedValue({});
 

@@ -21,7 +21,6 @@ async function createTagTeamFixture(stableId: number, activeRobotId: number, res
       stableId,
       teamSize: 2,
       teamName: `Test_Team_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-      eligibility: 'ELIGIBLE',
       members: {
         create: [
           { robotId: activeRobotId, slotIndex: 0 },

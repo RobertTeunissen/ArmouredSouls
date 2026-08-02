@@ -54,10 +54,8 @@ router.get('/', authenticateToken, validateRequest({}), async (req: AuthRequest,
       return acc;
     }, {} as Record<string, number>);
 
-    // Roster_Capacity and Prestige_Per_Slot for per-slot prestige gates and for
-    // the Booking Office / Merchandising Hub implication displays (Spec #46 R2)
+    // Roster_Capacity for Booking Office / Merchandising Hub implication displays (Spec #46 R2)
     const rosterCapacity = getRosterCapacity(facilityLevels['roster_expansion'] ?? 0);
-    const prestigePerSlot = user.prestige / rosterCapacity;
 
     // Filter to only implemented facilities, then combine with user data
     const implementedFacilities = FACILITY_TYPES.filter((f) => f.implemented);
@@ -67,16 +65,11 @@ router.get('/', authenticateToken, validateRequest({}), async (req: AuthRequest,
       const nextLevel = currentLevel + 1;
       const upgradeCost = getFacilityUpgradeCost(config.type, currentLevel);
       
-      // Check prestige requirement for next level
+      // Check prestige requirement for next level (unified curve, raw prestige)
       let nextLevelPrestigeRequired = 0;
       if (config.prestigeRequirements && nextLevel <= config.maxLevel) {
         nextLevelPrestigeRequired = config.prestigeRequirements[nextLevel - 1] || 0;
       }
-
-      // Facilities flagged `prestigeGateIsPerSlot` gate on Prestige_Per_Slot
-      // rather than raw prestige, matching the quantity their benefit scales
-      // with (Spec #46 R2.11). Only merchandising_hub sets the flag today.
-      const gateValue = config.prestigeGateIsPerSlot ? prestigePerSlot : user.prestige;
 
       // Calculate dynamic benefits for repair bay
       let currentBenefit = config.benefits[currentLevel - 1] || 'No benefit yet';
@@ -145,8 +138,7 @@ router.get('/', authenticateToken, validateRequest({}), async (req: AuthRequest,
         upgradeCost,
         canUpgrade: currentLevel < config.maxLevel,
         nextLevelPrestigeRequired,
-        prestigeGateIsPerSlot: config.prestigeGateIsPerSlot ?? false,
-        hasPrestige: gateValue >= nextLevelPrestigeRequired,
+        hasPrestige: user.prestige >= nextLevelPrestigeRequired,
         canAfford: user.currency >= upgradeCost,
         currentBenefit,
         nextBenefit,
@@ -211,35 +203,17 @@ router.post('/upgrade', authenticateToken, validateRequest({ body: upgradeBodySc
       );
     }
 
-    // Validate prestige requirement.
-    //
-    // Facilities flagged `prestigeGateIsPerSlot` compare against Prestige_Per_Slot
-    // rather than raw prestige, matching the quantity their benefit scales with
-    // (Spec #46 R2.11). Note this runs only on the upgrade path, so a facility
-    // already owned above its current gate keeps its level and continues
-    // producing income — there is no downgrade or refund path (R2.12).
+    // Validate prestige requirement (unified curve, raw prestige).
+    // A facility already owned above its current gate keeps its level — no downgrade path.
     if (config.prestigeRequirements && config.prestigeRequirements[targetLevel - 1]) {
       const requiredPrestige = config.prestigeRequirements[targetLevel - 1];
 
-      let gateValue = user.prestige;
-      let gateUnit = 'prestige';
-
-      if (config.prestigeGateIsPerSlot) {
-        const rosterExpansion = await prisma.facility.findUnique({
-          where: { userId_facilityType: { userId, facilityType: 'roster_expansion' } },
-          select: { level: true },
-        });
-        const rosterCapacity = getRosterCapacity(rosterExpansion?.level ?? 0);
-        gateValue = user.prestige / rosterCapacity;
-        gateUnit = `prestige per robot slot (you have ${user.prestige.toLocaleString()} prestige across ${rosterCapacity} slot${rosterCapacity === 1 ? '' : 's'})`;
-      }
-
-      if (gateValue < requiredPrestige) {
+      if (user.prestige < requiredPrestige) {
         throw new AuthError(
           AuthErrorCode.FORBIDDEN,
-          `${config.name} Level ${targetLevel} requires ${requiredPrestige.toLocaleString()} ${gateUnit}`,
+          `${config.name} Level ${targetLevel} requires ${requiredPrestige.toLocaleString()} prestige`,
           403,
-          { required: requiredPrestige, current: Math.floor(gateValue) }
+          { required: requiredPrestige, current: Math.floor(user.prestige) }
         );
       }
     }

@@ -2891,7 +2891,7 @@ A team is eligible for matchmaking when ALL of the following are true:
 1. **All members subscribed** — every robot in the team holds a `league_2v2` or `league_3v3` subscription (checked via `isRobotSubscribedTo`)
 2. **All members Robot_Ready** — every robot is alive (`hp > 0`), not under irreversible damage, not flagged unavailable
 3. **Team not already scheduled** — no existing `ScheduledTeamBattleMatch` with status `'scheduled'` for this team
-4. **Team eligibility = ELIGIBLE** — team has exactly N members (incomplete rosters are INELIGIBLE)
+4. **Full roster** — team has exactly N members (teams with fewer members cannot be scheduled)
 
 ### Pairing Algorithm
 

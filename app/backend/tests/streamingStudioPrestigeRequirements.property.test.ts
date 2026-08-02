@@ -5,7 +5,7 @@
  * **Validates: Requirements 6.1-6.9**
  * 
  * For any Streaming Studio upgrade to level L, the system should enforce the 
- * prestige requirement: [0, 0, 0, 1000, 2500, 5000, 10000, 15000, 25000, 50000][L-1],
+ * prestige requirement: [0, 0, 0, 1000, 3000, 5000, 10000, 15000, 25000, 50000][L-1],
  * and reject upgrades when the user's prestige is below the requirement
  */
 
@@ -30,7 +30,7 @@ app.use(express.json());
 app.use('/api/facility', facilityRoutes);
 
 // Prestige requirements for Streaming Studio levels 1-10
-const PRESTIGE_REQUIREMENTS = [0, 0, 0, 1000, 2500, 5000, 10000, 15000, 25000, 50000];
+const PRESTIGE_REQUIREMENTS = [0, 0, 0, 1000, 3000, 5000, 10000, 15000, 25000, 50000];
 
 describe('Property 9: Streaming Studio Prestige Requirements', () => {
   let testUser: any;
