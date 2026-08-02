@@ -142,7 +142,7 @@ export async function getStableSummary(
     };
   }
 
-  const startCycle = Math.max(1, latestCycle - lastNCycles + 1);
+  const startCycle = Math.max(0, latestCycle - lastNCycles + 1);
   const endCycle = latestCycle;
 
   const snapshots = await cycleSnapshotService.getSnapshotRange(startCycle, endCycle, ['stableMetrics']);
