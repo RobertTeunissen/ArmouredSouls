@@ -5,6 +5,7 @@ import { getTutorialState, TutorialState } from '../utils/onboardingApi';
 import { api } from '../utils/api';
 import { getMyTeamBattles, TeamBattle } from '../utils/teamBattleApi';
 import { fetchTuningAllocation, TuningAllocationState } from '../utils/robotApi';
+import { getNextPrestigeThreshold, getUnlockedFacilityLevel } from '../../../shared/utils/prestigeGates';
 import Navigation from '../components/Navigation';
 import UpcomingMatches from '../components/UpcomingMatches';
 import SeasonPhaseCard from '../components/season/SeasonPhaseCard';
@@ -32,6 +33,14 @@ interface TierChange {
   mode?: string;
 }
 
+interface RecentTournamentWinner {
+  tournamentId: number;
+  tournamentName: string;
+  participantType: string;
+  winnerName: string;
+  isMyWin: boolean;
+}
+
 function DashboardPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -46,6 +55,7 @@ function DashboardPage() {
   const fetchSubscriptionOverview = useSubscriptionStore(state => state.fetchOverview);
   const [robotNotifications, setRobotNotifications] = useState<DashboardNotificationProps[]>([]);
   const [tierChanges, setTierChanges] = useState<TierChange[]>([]);
+  const [recentChampions, setRecentChampions] = useState<RecentTournamentWinner[]>([]);
   const [teams, setTeams] = useState<TeamBattle[]>([]);
   const [tuningStates, setTuningStates] = useState<TuningAllocationState[]>([]);
   const [onboardingState, setOnboardingState] = useState<TutorialState | null>(null);
@@ -61,6 +71,22 @@ function DashboardPage() {
       // Fetch unseen tier changes
       api.get<{ changes: TierChange[] }>('/api/leagues/tier-changes/unseen')
         .then((data) => setTierChanges(data.changes))
+        .catch(() => { /* silent */ });
+      // Fetch recently completed tournaments to celebrate winners
+      api.get<{ tournaments: Array<{ id: number; name: string; participantType: string; completedAt: string | null; winner: { id: number; name: string; user: { id: number; username: string; stableName: string | null } } | null }> }>('/api/tournaments', { params: { status: 'completed' } })
+        .then((data) => {
+          const cutoff = Date.now() - 48 * 60 * 60 * 1000; // last 48h
+          const recent = data.tournaments
+            .filter(t => t.winner && t.completedAt && new Date(t.completedAt).getTime() > cutoff)
+            .map(t => ({
+              tournamentId: t.id,
+              tournamentName: t.name,
+              participantType: t.participantType,
+              winnerName: t.winner!.name,
+              isMyWin: t.winner!.user.id === user.id,
+            }));
+          setRecentChampions(recent);
+        })
         .catch(() => { /* silent */ });
       // Fetch all teams
       getMyTeamBattles()
@@ -302,6 +328,23 @@ function DashboardPage() {
             />
           ))}
 
+          {/* Tournament Champions */}
+          {recentChampions.map((champ) => (
+            <DashboardNotification
+              key={champ.tournamentId}
+              variant="success"
+              icon="👑"
+              message={
+                champ.isMyWin
+                  ? `${champ.winnerName} won ${champ.tournamentName}!`
+                  : `${champ.winnerName} won ${champ.tournamentName}`
+              }
+              detail={champ.isMyWin ? 'Championship title awarded' : undefined}
+              actionLabel="View Tournament"
+              onAction={() => navigate(`/tournaments/${champ.tournamentId}`)}
+            />
+          ))}
+
           {/* Season ending soon */}
           {showSeasonCountdown && season && (
             <DashboardNotification
@@ -312,6 +355,25 @@ function DashboardPage() {
               onDismiss={dismissSeasonBanner}
             />
           )}
+
+          {/* Prestige unlock — show next facility tier threshold */}
+          {(() => {
+            const nextGate = getNextPrestigeThreshold(user.prestige);
+            if (!nextGate) return null; // all levels unlocked
+            const currentMax = getUnlockedFacilityLevel(user.prestige);
+            // Only show if the player has crossed at least the first gate (L4 = 1000 prestige)
+            if (currentMax <= 3) return null;
+            return (
+              <DashboardNotification
+                variant="info"
+                icon="⭐"
+                message={`L${currentMax} facilities unlocked`}
+                detail={`Next tier (L${nextGate.level}) requires ${nextGate.required.toLocaleString()} prestige — you have ${user.prestige.toLocaleString()}`}
+                actionLabel="View Facilities"
+                onAction={() => navigate('/facilities')}
+              />
+            );
+          })()}
 
           {/* Robot readiness notifications (priority-ordered) */}
           {robotNotifications.map((notif, idx) => (

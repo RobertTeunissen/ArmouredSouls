@@ -175,7 +175,7 @@ describe('Streaming Studio Prestige Validation', () => {
     });
   });
 
-  describe('Level 5: Requires 2,500 prestige', () => {
+  describe('Level 5: Requires 3,000 prestige', () => {
     beforeEach(async () => {
       // Upgrade to level 4 first (with sufficient prestige)
       await prisma.user.update({
@@ -192,7 +192,7 @@ describe('Streaming Studio Prestige Validation', () => {
     });
 
     it('should block upgrade to Level 5 with insufficient prestige', async () => {
-      // User has 1000 prestige, needs 2500
+      // User has 1000 prestige, needs 3000
       const response = await request(app)
         .post('/api/facility/upgrade')
         .set('Authorization', `Bearer ${authToken}`)
@@ -200,15 +200,15 @@ describe('Streaming Studio Prestige Validation', () => {
 
       expect(response.status).toBe(403);
       expect(response.body.error).toBe('Insufficient prestige');
-      expect(response.body.required).toBe(2500);
-      expect(response.body.message).toContain('Streaming Studio Level 5 requires 2,500 prestige');
+      expect(response.body.required).toBe(3000);
+      expect(response.body.message).toContain('Streaming Studio Level 5 requires 3,000 prestige');
     });
 
     it('should allow upgrade to Level 5 with sufficient prestige', async () => {
-      // Give user 2500 prestige
+      // Give user 3000 prestige
       await prisma.user.update({
         where: { id: testUser.id },
-        data: { prestige: 2500 },
+        data: { prestige: 3000 },
       });
 
       const response = await request(app)

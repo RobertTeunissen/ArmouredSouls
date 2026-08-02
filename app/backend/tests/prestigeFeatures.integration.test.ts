@@ -20,23 +20,23 @@ describe('Prestige Features Integration', () => {
       const repairBayReq = repairBayConfig?.prestigeRequirements?.[3]; // Level 4
       expect(userPrestige >= (repairBayReq || 0)).toBe(true);
       
-      // Booking Office Level 3 requires 5000 prestige - should pass
+      // Booking Office Level 3 requires 0 prestige (unified curve: L1-L3 free) - should pass
       const bookingConfig = getFacilityConfig('booking_office');
       const bookingReq = bookingConfig?.prestigeRequirements?.[2]; // Level 3
       expect(userPrestige >= (bookingReq || 0)).toBe(true);
       
-      // Combat Training Academy Level 7 requires 7000 prestige - should fail
+      // Combat Training Academy Level 7 requires 10000 prestige - should fail
       const combatConfig = getFacilityConfig('combat_training_academy');
       const combatReq = combatConfig?.prestigeRequirements?.[6]; // Level 7
       expect(userPrestige >= (combatReq || 0)).toBe(false);
     });
 
     test('should correctly determine upgrade eligibility', () => {
-      const userPrestige = 10000;
+      const userPrestige = 25000;
       const userCurrency = 2000000;
       
       const config = getFacilityConfig('combat_training_academy');
-      const targetLevel = 9; // Requires 10000 prestige
+      const targetLevel = 9; // Requires 25000 prestige
       const upgradeCost = config?.costs[targetLevel - 1] || 0;
       const prestigeReq = config?.prestigeRequirements?.[targetLevel - 1] || 0;
       
@@ -120,8 +120,8 @@ describe('Prestige Features Integration', () => {
       const prestigeReq = config?.prestigeRequirements?.[targetIncomeGenLevel - 1] || 0;
       const canUpgrade = userPrestige >= prestigeReq;
       
-      // Spec #46 R2.10: the L4 gate is 2000 Prestige_Per_Slot (was 3000 raw)
-      expect(prestigeReq).toBe(2000);
+      // Unified curve: L4 gate = 1000 raw prestige
+      expect(prestigeReq).toBe(1000);
       expect(canUpgrade).toBe(true);
       
       // Calculate income before and after

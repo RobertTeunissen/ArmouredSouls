@@ -129,7 +129,7 @@ Four academies control the attribute caps for each attribute category. Without a
 | Mobility Training Academy | Chassis & Mobility | 5 attributes | ₡100,000 | level × ₡250/day |
 | AI Training Academy | AI Processing + Team Coordination | 7 attributes | ₡100,000 | level × ₡250/day |
 
-All four academies follow the same pricing structure: ₡100,000 per level, with prestige gates at Levels 3, 5, 7, 9, and 10. Each level raises the attribute cap by 3–5 points, from a base cap of 10 up to a maximum of 50.
+All four academies follow the same pricing structure: ₡100,000 per level, with the universal prestige gates at Levels 4, 5, 6, 7, 8, 9, and 10. Each level raises the attribute cap by 3–5 points, from a base cap of 10 up to a maximum of 50.
 
 ```callout-info
 Training Academies are the only way to push attributes past level 10. If you want competitive robots in higher leagues, you'll need to invest in the academies that cover your build's key attributes.
