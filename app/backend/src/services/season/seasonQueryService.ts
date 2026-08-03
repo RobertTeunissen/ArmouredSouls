@@ -73,6 +73,20 @@ export interface StableSeasonDetail extends StableSeasonSummary {
 /** Tier ordering, weakest first, for "best tier reached". */
 const TIER_ORDER = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'];
 
+/**
+ * Deduplicate robot archives by name — retried rollovers may have inserted
+ * duplicate rows (the stable row was upserted, but robot rows used plain create).
+ * Keeps the first occurrence of each robot name.
+ */
+function deduplicateRobots<T extends { robotName: string }>(robots: T[]): T[] {
+  const seen = new Set<string>();
+  return robots.filter((r) => {
+    if (seen.has(r.robotName)) return false;
+    seen.add(r.robotName);
+    return true;
+  });
+}
+
 /** Highest tier across a robot's archived standings. */
 function bestTierOf(
   robots: Array<{ standings: unknown }>,
@@ -164,7 +178,7 @@ export async function getStableSeasonDetail(
     robotCount: archive.robotCount,
     teamCount: archive.teamCount,
     bestTier: bestTierOf(archive.robots),
-    robots: archive.robots.map((r) => ({
+    robots: deduplicateRobots(archive.robots).map((r) => ({
       robotName: r.robotName,
       imageUrl: r.imageUrl,
       frameId: r.frameId,

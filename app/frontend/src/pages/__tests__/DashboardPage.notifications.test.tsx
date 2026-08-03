@@ -82,8 +82,8 @@ vi.mock('../../components/UpcomingMatches', () => ({
   default: () => <div data-testid="upcoming-matches">UpcomingMatches</div>,
 }));
 
-vi.mock('../../components/RecentMatches', () => ({
-  default: () => <div data-testid="recent-matches">RecentMatches</div>,
+vi.mock('../../components/RecentBattles', () => ({
+  default: () => <div data-testid="recent-battles">RecentBattles</div>,
 }));
 
 vi.mock('../../components/FinancialSummary', () => ({

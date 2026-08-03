@@ -9,8 +9,7 @@ import {
   getMatchHistory,
   BattleHistory,
   PaginatedResponse,
-  getBattleOutcome,
-  getELOChange,
+  getBattlePerspective,
   getBattleReward,
 } from '../utils/matchmakingApi';
 import { computeBattleSummary, EMPTY_SUMMARY } from '../utils/battleHistoryStats';
@@ -129,29 +128,8 @@ function BattleHistoryPage() {
     fetchBattles(newPage, battleFilter);
   };
 
-  const isMyRobot = (robotUserId: number) => {
-    return user && robotUserId === user.id;
-  };
-
   const getMatchData = (battle: BattleHistory) => {
-    const isKoth = battle.battleType === 'koth';
-    const isGrandMelee = battle.battleType === 'grand_melee';
-    const isFFA = isKoth || isGrandMelee;
-    const isMyRobot1 = isMyRobot(battle.robot1.userId);
-
-    // For KotH/Grand Melee, backend ensures user's robot is in robot1 (even for 3rd-6th place)
-    const myRobot = isMyRobot1 ? battle.robot1 : battle.robot2;
-    const opponent = isMyRobot1 ? battle.robot2 : battle.robot1;
-    const myRobotId = myRobot.id;
-
-    // For FFA modes, derive outcome from placement (1st = win, rest = loss)
-    const outcome = isFFA
-      ? (battle.kothPlacement === 1 ? 'win' : 'loss')
-      : getBattleOutcome(battle, myRobotId);
-
-    const eloChange = getELOChange(battle, myRobotId);
-
-    return { myRobot, opponent, outcome, eloChange, myRobotId };
+    return getBattlePerspective(battle, { userId: user?.id });
   };
 
   // Calculate summary statistics (extracted to battleHistoryStats.ts)

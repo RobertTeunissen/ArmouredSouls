@@ -10,7 +10,7 @@ import Navigation from '../components/Navigation';
 import UpcomingMatches from '../components/UpcomingMatches';
 import SeasonPhaseCard from '../components/season/SeasonPhaseCard';
 import { useSeasonStore, selectSeason, selectShouldShowCountdown } from '../stores/seasonStore';
-import RecentMatches from '../components/RecentMatches';
+import RecentBattles from '../components/RecentBattles';
 import FinancialSummary from '../components/FinancialSummary';
 import RobotDashboardCard from '../components/RobotDashboardCard';
 import StableStatistics from '../components/StableStatistics';
@@ -283,8 +283,8 @@ function DashboardPage() {
         icon: '🔨',
         message: `${first.name} is damaged (${hpPercent}% HP)${extra}`,
         detail: 'Repair before the next battle to reduce costs',
-        actionLabel: 'Repair',
-        onAction: () => navigate(`/robots/${first.id}`),
+        actionLabel: 'Repair All',
+        onAction: () => navigate('/robots'),
       });
     }
 
@@ -464,7 +464,7 @@ function DashboardPage() {
             as an error rather than as an expected state (Spec #45 R4.5). */}
         {robots.length > 0 && (
           <div className="space-y-6 mb-8">
-            <RecentMatches />
+            <RecentBattles userId={user?.id} />
             {!isPreparing && <UpcomingMatches />}
           </div>
         )}

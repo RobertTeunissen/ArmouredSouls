@@ -137,13 +137,20 @@ export async function writeStableAndRobotArchives(
           level: f.level,
         }));
 
-        const stableArchive = await tx.stableSeasonArchive.upsert({
-          where: {
-            // The unique constraint is (season_number, user_id).
-            seasonNumber_userId: { seasonNumber, userId: user.id },
-          },
-          update: {}, // Already archived — keep the existing data.
-          create: {
+        // Check if this stable was already archived (idempotent retry).
+        // If so, skip robot creation to avoid duplicating robot archives.
+        const existingArchive = await tx.stableSeasonArchive.findUnique({
+          where: { seasonNumber_userId: { seasonNumber, userId: user.id } },
+          select: { id: true },
+        });
+
+        if (existingArchive) {
+          stablesArchived++;
+          continue; // Already archived — skip robot creation on retry.
+        }
+
+        const stableArchive = await tx.stableSeasonArchive.create({
+          data: {
             seasonNumber,
             userId: user.id,
             stableName: stableDisplayName(user),
