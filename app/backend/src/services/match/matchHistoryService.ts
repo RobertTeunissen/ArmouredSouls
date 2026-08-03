@@ -606,12 +606,12 @@ export async function formatBattleHistoryEntry(battle: BattleWithFullRelations, 
       placement: p.placement,
       yielded: p.yielded,
       destroyed: p.destroyed,
-      robot: {
+      robot: p.robot ? {
         id: p.robot.id,
         name: p.robot.name,
         userId: p.robot.userId,
-        user: { username: p.robot.user.stableName || p.robot.user.username },
-      },
+        user: { username: p.robot.user?.stableName || p.robot.user?.username || 'Unknown' },
+      } : { id: p.robotId, name: 'Unknown', userId: 0, user: { username: 'Unknown' } },
     })),
     robot1: robot1 ? {
       id: robot1.id,
