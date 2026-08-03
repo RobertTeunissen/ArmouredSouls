@@ -14,6 +14,69 @@
       "justification": "React Router: RSC Mode CSRF Bypass Allows Action Invocation. Affects >=7.12.0 <8.3.0; NO PATCHED VERSION EXISTS — react-router-dom's latest published release is 7.18.1 and no 8.x has shipped, so there is nothing to upgrade to. Not reachable in this application: the frontend is a client-only Vite SPA using BrowserRouter (app/frontend/src/App.tsx), built with `tsc && vite build` to static assets and served by Caddy. React Server Components mode is not enabled, vite.config.ts declares no ssr/rsc target, and no server-side router API (createStaticHandler, StaticRouter, ServerRouter, renderToPipeableStream) is imported anywhere in src/. The vulnerable code path requires RSC mode to be active. Downgrading below 7.12.0 to escape the advisory range is not viable: it would reintroduce four advisories patched only at >=7.18.0, including a high-severity unauthenticated DoS. Re-evaluate when react-router 8.3.0 is published.",
       "reviewDate": "2026-07-27",
       "nextReviewDate": "2026-09-27"
+    },
+    {
+      "id": "GHSA-xcpc-8h2w-3j85",
+      "package": "adm-zip",
+      "justification": "Transitive dependency of dev/build tooling. Not used in application production code. Crafted ZIP file triggers 4GB memory allocation — only exploitable if parsing untrusted ZIP input, which this app does not do.",
+      "reviewDate": "2026-08-03",
+      "nextReviewDate": "2026-10-03"
+    },
+    {
+      "id": "GHSA-3jxr-9vmj-r5cp",
+      "package": "brace-expansion",
+      "justification": "Transitive dependency via glob/minimatch in dev tooling. Not used with untrusted input in production. DoS via exponential-time expansion requires attacker-controlled brace patterns.",
+      "reviewDate": "2026-08-03",
+      "nextReviewDate": "2026-10-03"
+    },
+    {
+      "id": "GHSA-mh99-v99m-4gvg",
+      "package": "brace-expansion",
+      "justification": "Transitive dependency via glob/minimatch in dev tooling. Not used with untrusted input in production. DoS via unbounded expansion length.",
+      "reviewDate": "2026-08-03",
+      "nextReviewDate": "2026-10-03"
+    },
+    {
+      "id": "GHSA-rgw5-rvv9-x895",
+      "package": "brace-expansion",
+      "justification": "Transitive dependency via glob/minimatch in dev tooling. Not used with untrusted input in production. DoS bypass of CVE-2026-14257 mitigation.",
+      "reviewDate": "2026-08-03",
+      "nextReviewDate": "2026-10-03"
+    },
+    {
+      "id": "GHSA-52cp-r559-cp3m",
+      "package": "js-yaml",
+      "justification": "Transitive dependency of dev tooling (jest, eslint configs). Not used to parse untrusted YAML in production. YAML merge-key chains can force quadratic CPU consumption.",
+      "reviewDate": "2026-08-03",
+      "nextReviewDate": "2026-10-03"
+    },
+    {
+      "id": "GHSA-23hp-3jrh-7fpw",
+      "package": "tar",
+      "justification": "Transitive dependency of npm/node-gyp in native module builds. Not used to decompress untrusted archives in production. Decompression/parse DoS via unlimited input.",
+      "reviewDate": "2026-08-03",
+      "nextReviewDate": "2026-10-03"
+    },
+    {
+      "id": "GHSA-8x88-c5mf-7j5w",
+      "package": "tar",
+      "justification": "Transitive dependency of npm/node-gyp in native module builds. Not used to decompress untrusted archives in production. Negative entry size causes infinite loop.",
+      "reviewDate": "2026-08-03",
+      "nextReviewDate": "2026-10-03"
+    },
+    {
+      "id": "GHSA-v2hh-gcrm-f6hx",
+      "package": "fast-uri",
+      "justification": "Transitive dependency of ajv (JSON schema validation). fast-uri host confusion via literal backslash — not exploitable in this app because URI inputs come from validated user data, not raw untrusted URI strings.",
+      "reviewDate": "2026-08-03",
+      "nextReviewDate": "2026-10-03"
+    },
+    {
+      "id": "GHSA-4c8g-83qw-93j6",
+      "package": "fast-uri",
+      "justification": "Transitive dependency of ajv (JSON schema validation). fast-uri host confusion via failed IDN canonicalization — not exploitable in this app as URI inputs are validated.",
+      "reviewDate": "2026-08-03",
+      "nextReviewDate": "2026-10-03"
     }
   ],
   "_entrySchema": {
