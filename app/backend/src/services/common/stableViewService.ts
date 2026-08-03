@@ -63,21 +63,47 @@ export async function getStableProfile(userId: number) {
 
   if (!user) return null;
 
-  const totalBattles = user.robots.reduce((sum, r) => sum + r.totalBattles, 0);
-  const totalWins = user.robots.reduce((sum, r) => sum + r.wins, 0);
-  const totalLosses = user.robots.reduce((sum, r) => sum + r.losses, 0);
-  const totalDraws = user.robots.reduce((sum, r) => sum + r.draws, 0);
+  // Derive battle stats by counting actual distinct battles this stable participated in.
+  // Robot model counters double-count team battles (each member gets +1).
+  // Only head-to-head modes count toward W/L. KotH and Grand Melee are placement-based.
+  const robotIds = user.robots.map(r => r.id);
+  const teamIds = user.teamBattles.map(t => t.id);
+
+  const battleStats = robotIds.length > 0
+    ? await prisma.$queryRaw<[{ wins: bigint; losses: bigint; draws: bigint }]>`
+        SELECT
+          COUNT(DISTINCT CASE WHEN b.winner_id IS NOT NULL AND (
+            -- 1v1 / tournament: winnerId is the winning robot's ID
+            (b.battle_type IN ('league_1v1', 'tournament_1v1') AND b.winner_id = ANY(${robotIds}))
+            -- Team modes: winningSide matches the participant's team
+            OR (b.battle_type NOT IN ('league_1v1', 'tournament_1v1') AND b.winning_side = bp.team)
+          ) THEN b.id END) AS wins,
+          COUNT(DISTINCT CASE WHEN b.winner_id IS NOT NULL AND NOT (
+            (b.battle_type IN ('league_1v1', 'tournament_1v1') AND b.winner_id = ANY(${robotIds}))
+            OR (b.battle_type NOT IN ('league_1v1', 'tournament_1v1') AND b.winning_side = bp.team)
+          ) THEN b.id END) AS losses,
+          COUNT(DISTINCT CASE WHEN b.winner_id IS NULL THEN b.id END) AS draws
+        FROM battle_participants bp
+        JOIN battles b ON b.id = bp.battle_id
+        WHERE bp.robot_id = ANY(${robotIds})
+          AND b.battle_type NOT IN ('koth', 'grand_melee')
+      `
+    : [{ wins: BigInt(0), losses: BigInt(0), draws: BigInt(0) }];
+
+  const totalWins = Number(battleStats[0].wins);
+  const totalLosses = Number(battleStats[0].losses);
+  const totalDraws = Number(battleStats[0].draws);
+  const totalBattles = totalWins + totalLosses + totalDraws;
   const highestElo = user.robots.length > 0 ? Math.max(...user.robots.map((r) => r.elo)) : 0;
   const winRate = totalBattles > 0 ? Number(((totalWins / totalBattles) * 100).toFixed(1)) : 0;
 
-  // Team battle stats from standings (source of truth since Spec #40)
-  const teamIds = user.teamBattles.map(t => t.id);
+  // Team battle breakdown from standings
   const teamStandings = teamIds.length > 0
     ? await prisma.standing.findMany({
         where: {
           entityType: 'team',
           entityId: { in: teamIds },
-          mode: { in: [StandingsMode.league_2v2, StandingsMode.league_3v3] },
+          mode: { in: [StandingsMode.league_2v2, StandingsMode.league_3v3, StandingsMode.tag_team, StandingsMode.tournament_2v2, StandingsMode.tournament_3v3] },
         },
         select: { wins: true, losses: true, draws: true },
       })

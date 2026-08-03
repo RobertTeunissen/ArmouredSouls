@@ -4,6 +4,7 @@ import { api } from './api';
 // New code should import directly from './battleFormatters'.
 export {
   getBattleOutcome,
+  getBattlePerspective,
   getELOChange,
   formatDateTime,
   formatDuration,
@@ -11,6 +12,7 @@ export {
   getBattleReward,
   isTeamBattleType,
 } from './battleFormatters';
+export type { BattlePerspective } from './battleFormatters';
 
 // Types
 export interface ScheduledMatch {
@@ -130,6 +132,29 @@ export interface ScheduledMatch {
   } | null;
 }
 
+export interface BattleParticipantData {
+  robotId: number;
+  team: number;
+  role: string | null;
+  eloBefore: number;
+  eloAfter: number;
+  finalHP: number;
+  credits: number;
+  streamingRevenue: number;
+  prestigeAwarded: number;
+  fameAwarded: number;
+  damageDealt: number;
+  placement: number | null;
+  yielded: boolean;
+  destroyed: boolean;
+  robot: {
+    id: number;
+    name: string;
+    userId: number;
+    user: { username: string };
+  };
+}
+
 export interface BattleHistory {
   id: number;
   robot1Id: number;
@@ -176,6 +201,10 @@ export interface BattleHistory {
   prestigeAwarded?: number;
   fameAwarded?: number;
   streamingRevenue?: number;
+  // Winning side for team battles (1 = team 1, 2 = team 2, null = draw or 1v1)
+  winningSide?: number | null;
+  // Full participants array — canonical source of per-robot battle data
+  participants?: BattleParticipantData[];
   robot1: {
     id: number;
     name: string;

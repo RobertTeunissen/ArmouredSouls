@@ -25,15 +25,14 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 | 13 | Universal Search / Command Palette | 27 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
 | 14 | Progressive Feature Disclosure | 28 | 0 🗳️ | 2 | 1 | 1 | 3 | **1.3** |
 | 15 | Weapon Crafting System | 29 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
-| 16 | Free-for-All / Battle Royale Mode | 30 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
-| 17 | Conditional Battle Triggers / AI Scripting | 32 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
-| 18 | Future Revenue Streams | 33 | 0 🗳️ | 2 | 1 | 1 | 4 | **1.0** |
-| 19 | Player Marketplace | 44 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
-| 20 | Social Features (Friends, Guilds, Chat) | 45 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
-| 21 | Prestige Store | 47 | 0 🗳️ | 2 | 1 | 1 | 4 | **1.0** |
-| 22 | Blueprint Library | 48 | 0 🗳️ | 1 | 1 | 1 | 3 | **1.0** |
-| 23 | Cosmetic Customization System | 46 | 0 🗳️ | 2 | 1 | 1 | 5 | **0.8** |
-| 24 | Matchup-Dependent Weapon Effectiveness | 58 | 0 🗳️ | 3 | 1 | 2 | 5 | **1.2** |
+| 16 | Conditional Battle Triggers / AI Scripting | 32 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
+| 17 | Future Revenue Streams | 33 | 0 🗳️ | 2 | 1 | 1 | 4 | **1.0** |
+| 18 | Player Marketplace | 44 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
+| 19 | Social Features (Friends, Guilds, Chat) | 45 | 0 🗳️ | 3 | 1 | 1 | 5 | **1.0** |
+| 20 | Prestige Store | 47 | 0 🗳️ | 2 | 1 | 1 | 4 | **1.0** |
+| 21 | Blueprint Library | 48 | 0 🗳️ | 1 | 1 | 1 | 3 | **1.0** |
+| 22 | Cosmetic Customization System | 46 | 0 🗳️ | 2 | 1 | 1 | 5 | **0.8** |
+| 23 | Matchup-Dependent Weapon Effectiveness | 58 | 0 🗳️ | 3 | 1 | 2 | 5 | **1.2** |
 
 ---
 
@@ -43,26 +42,22 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 
 The current front page is just a login and registration module. New visitors have no idea what the game is, how it plays, or why they should sign up. Needs: game concept pitch, screenshots or gameplay preview, feature highlights (4 battle modes, 47 weapons, league system), call-to-action to register.
 
-### #6 — Game Loop Audit — Structural Design Flaws
+### #6 — Game Loop Audit — Remaining Gaps
 **Source**: Design review  
-**Priority**: High — foundational issues that limit long-term retention  
-**Progress**: Loop 1 explored in depth — see [Game Loop 1 Core Loop Exploration](analysis/GAME_LOOP_1_CORE_LOOP_EXPLORATION.md). The Tuning Pool (spec #25) addressed the thin "Adjust" step. The DPS Rebalance (spec #31) addresses baseDamage dominance. Weapon Resale (spec #33) and Weapon Refinement (spec #34) shipped. Loop 1 is complete. Loops 2–6 and missing loops still need exploration.
+**Priority**: Medium — most loops are now addressed; remaining gaps are late-game and social  
+**Progress (Aug 2026)**: Loop 1 (Core), Loop 3 (Competitive), Loop 4 (Reputation), Loop 6 (Facility Investment), and the experimentation/seasonal missing loops are all addressed by shipped specs (#25, #27, #31, #33, #34, #35, #37, #38, #44, #45). What remains:
 
-The game has six identifiable loops, most of which degrade or stall at some point in the player lifecycle.
+**Loop 2: Economic Loop — late-season credit drain.** The Season System (Spec #45) solves infinite accumulation by hard-resetting every 100 cycles, and the Income Dashboard makes ROI visible. But *within* a season, once facilities and attributes are maxed (~cycle 60-70), credits pile up with no meaningful sink. Weapon Refinement helps but caps out.
+- Fix candidates: Weapon Special Properties (#11), Weapon Crafting (#29), Prestige Store (#47), or any recurring consumable/cosmetic credit drain.
 
-**Loop 1: Core Loop (Configure → Battle → Results → Adjust)** — ✅ Addressed. The Tuning Pool (spec #25) enriches the "Adjust" step. The DPS Rebalance (spec #31) makes all four loadout types viable and ensures attribute investment competes with weapon purchases. Weapon Resale (spec #33) and Weapon Refinement (spec #34) shipped. See exploration doc for full analysis.
+**Loop 5: Roster Loop — shallow synergy.** Team Battles (Spec #37) added robot interaction through coordination attributes, and the Booking Office (Spec #35) enables per-robot event specialization. But robots within a stable still lack strategic complementarity — there's no "this robot covers what that one can't" pull. Merchandising normalization (prestige ÷ roster capacity) creates economic tension between breadth and depth, but the *gameplay* reason to diversify is weak.
+- Fix candidates: Arena/Terrain Modifiers (#12) forcing diverse builds, Weapon Special Properties (#11) creating type advantages, Matchup-Dependent Weapon Effectiveness (#58).
 
-**Loop 2: Economic Loop (Earn → Invest → Earn More)** — Not explored yet. Breaks in late game — credits accumulate with no meaningful sink once facilities and attributes are maxed. Weapon upgrades (identified in #5 discussion) would serve as an ongoing credit sink. Season System (#41) would reset the economy entirely.
+**Missing: Social/Rivalry.** The most conspicuously absent loop now that everything else is addressed. Leaderboards and stable profiles create awareness of other players but no interaction — no challenges, no rivalries, no congratulations.
+- Fix candidates: #45 Phase 1 (notifications) and Phase 2 (friends). Even a lightweight "mark as rival" feature that highlights their results in your cycle summary would help.
 
-**Loop 3: Competitive Loop (Battle → Earn LP → Promote → Harder Opponents)** — Not explored yet. One-dimensional. No seasons, resets, or meta shifts.
-
-**Loop 4: Reputation Loop (Win → Prestige/Fame → Unlock → Win More)** — Explored in [Prestige & Fame Design Exploration](analysis/PRESTIGE_FAME_DESIGN_EXPLORATION.md). Prestige gates functional but invisible. Achievement System (#8) identified as the right vehicle for milestone celebrations.
-
-**Loop 5: Roster Loop (Buy Robot → Train → Battle → Specialize → Expand)** — Not explored yet. Robots don't interact outside Tag Team.
-
-**Loop 6: Facility Investment Loop (Spend Now → Save Later)** — Not explored yet. Mechanically strong, experientially invisible.
-
-**Missing loops**: experimentation, social/rivalry, collection/completion, seasonal/event, recovery/comeback.
+**Missing: Recovery/Comeback (minor).** Season reset is the ultimate comeback mechanic. Mid-season, a player who falls behind has limited options beyond patience. No catch-up LP mechanic, no underdog bonus. This may be acceptable by design — LP is supposed to reflect truth — but a 100-cycle season is long to coast through if you stumble early.
+- Open question: is this a problem worth solving, or is the season reset sufficient?
 
 ### #11 — Weapon Special Properties
 **Source**: PRD_WEAPON_ECONOMY.md, PRD_WEAPONS_LOADOUT.md  
@@ -112,9 +107,6 @@ Per the [Prestige & Fame Design Exploration](analysis/PRESTIGE_FAME_DESIGN_EXPLO
 ### #29 — Weapon Crafting System
 Custom weapon design at Workshop Level 6+. Pricing formula already supports it.
 
-### #30 — Free-for-All / Battle Royale Mode
-Large-scale elimination (8–100 robots). [Design analysis](analysis/FREE_FOR_ALL_BATTLE_ROYALE_MODE.md) exists.
-
 ### #32 — Conditional Battle Triggers / Robot AI Scripting
 Player-defined robot behaviors: "switch stance when HP < 30%", "target weakest in KotH".
 
@@ -132,14 +124,6 @@ npm workspace extraction. Only relevant when multiple consumers need shared back
 **Analysis**: [Robot Detail Page Split Analysis](analysis/ROBOT_DETAIL_PAGE_SPLIT_ANALYSIS.md) (June 2026)
 
 The Robot Detail page serves two distinct intents (Review: Overview/Matches/Analytics vs Prepare: Upgrades/Tuning/Battle Config/Stats). With 8 tabs, the page conflates retrospective analysis with prospective preparation — neither context gets appropriate density or layout. Analysis recommends splitting into two pages: a public Robot Profile (`/robots/:id`) as a scrollable career narrative, and an owner-only Workshop (`/robots/:id/prepare`) with collapsible accordion sections, a robot switcher for multi-robot workflows, and a persistent status strip. The "Stable Preparation Dashboard" concept is absorbed into the Workshop via the robot switcher rather than a separate page.
-
-### #41 — Season System (100-Cycle Competitive Seasons) — SHIPPED
-
-**Delivered by [Spec #45](/.kiro/specs/to-do/45-season-system/) (July 2026).** See [PRD_SEASON_SYSTEM.md](game-systems/PRD_SEASON_SYSTEM.md) for the authoritative description.
-
-The shipped design differs from the direction recorded here in one significant way: **prestige and achievements reset** rather than persisting. Prestige gates facility levels, so carrying it forward would let a veteran open every season at facility depths a newer player could not reach, compounding indefinitely. Both are recorded per season in the archive instead.
-
-Also shipped beyond the original sketch: a 2-cycle preparation window with all battle events suspended, four archive tables including a bounded standings snapshot that retains bot-held league positions, deletion (not reset) of auto-generated and seeded stables, a browsable Season Archive page, and retention of uploaded robot images across the reset.
 
 ### #42 — Robot Comparison Tool
 **Source**: Removed from navbar — unimplemented page (`/robots/compare`)  
@@ -159,7 +143,39 @@ Player-to-player weapon trading marketplace. Players list weapons for sale at th
 **Source**: Removed from navbar — unimplemented pages (`/friends`, `/notifications`, `/guilds`, `/guild`, `/guild/manage`, `/chat`)  
 **Priority**: Not scoped — large feature set, low player demand so far
 
-Full social layer: friend lists, in-game notifications, guild creation/management, guild chat. Would enable guild-vs-guild competitions, shared facilities, and social retention loops. Large scope — likely needs to be broken into multiple specs (friends first, then guilds, then chat).
+Full social layer: friend lists, in-game notifications, guild creation/management, guild chat. Would enable guild-vs-guild competitions, shared facilities, and social retention loops. Large scope — broken into four incremental phases below.
+
+**Current state (Aug 2026)**: Zero social infrastructure exists. No WebSocket/SSE layer, no notification inbox, no friend/guild models. What *does* exist: public stable profiles (`/stables/:userId`), leaderboards (player discovery), Team Battles (persistent robot groups), Discord webhooks (operational only), and two unused notification preference booleans on the User model (`notificationsBattle`, `notificationsLeague`). Scale: < 1000 concurrent users, single VPS.
+
+**Risk**: At current player count, friends lists and guild chat risk being a ghost town. In-game notifications have standalone value regardless of population. The signal to start Phase 2+ is players actively visiting each other's stable profiles and recognizing names on leaderboards.
+
+#### Recommended Build Order
+
+**Phase 1: In-Game Notification System** (small-medium, ~2-3 days)
+- Highest standalone value, no social critical-mass problem, activates the dead preference booleans, and every later phase depends on it.
+- Schema: `Notification` table (userId, type, title, body, metadata JSON, read boolean, createdAt). Types: `battle_result`, `league_promotion`, `league_demotion`, `tournament_result`, `achievement_unlocked`, `season_rollover`.
+- Backend: `NotificationService` that existing orchestrators call after battles/promotions. REST endpoints for fetch/mark-read/bulk-dismiss.
+- Frontend: Bell icon in nav header, dropdown or `/notifications` page, respect existing user preferences.
+- Delivery: Start with polling (matches current infra). WebSocket/SSE upgrade is a separate future concern.
+
+**Phase 2: Friends System** (medium, ~3-4 days) — depends on Phase 1
+- Friend requests (send/accept/reject/cancel), friends list, last-active status, friend activity feed.
+- Schema: `Friendship` table (requesterId, addresseeId, status: pending/accepted/blocked, createdAt).
+- Features: Send request from stable profile page, friends list page, filter leaderboards to friends, "friend's recent battles" feed.
+- Triggered by: players actively visiting stable profiles and recognizing rivals from leagues.
+
+**Phase 3: Guilds** (medium-large, ~4-5 days) — depends on Phases 1 + 2
+- Guild CRUD, membership (owner/officer/member roles), guild profile page, guild leaderboard, guild-level stats aggregation.
+- Schema: `Guild` table (name, tag, description, ownerId, createdAt), `GuildMember` table (guildId, userId, role, joinedAt).
+- Builds on Team Battles — a guild is the social layer around existing team mechanics. Later: guild-vs-guild challenges (could be its own spec).
+
+**Phase 4: Chat** (large, ~5-7 days) — depends on Phases 2 + 3, forces WebSocket decision
+- Real-time messaging: guild chat, direct messages between friends.
+- Infrastructure: requires WebSocket layer or aggressive polling. Socket.io or native WS with a simple message queue.
+- Schema: `Message` table (channelId, senderId, content, createdAt), `Channel` table (type: direct/guild, participants).
+- Defer until player count justifies the infrastructure cost — a ghost-town chat is worse than no chat.
+
+**Dependencies**: Phase 1 is independent. Phase 2 needs Phase 1. Phase 3 needs Phases 1+2. Phase 4 needs all three plus real-time infra.
 
 ### #46 — Cosmetic Customization System
 **Source**: Removed from navbar — unimplemented pages (`/customize`, `/customize/skins`, `/customize/stable`, `/customize/poses`, `/customize/emotes`)  
@@ -196,26 +212,3 @@ Let players test any weapon from the shop in practice battles, not just owned we
 **Priority**: Not scoped — large combat system change
 
 Energy weapons bypass armor but shields resist them; ballistic shreds shields but armor blocks. Creates rock-paper-scissors dynamics that require owning multiple weapon types. Large scope — needs its own spec, careful balance work, and UI changes to communicate effectiveness. Synergizes with Arena Modifiers (#12) for meta variation.
-
-### #60 — Drop Legacy League Columns from Robot Model
-**Source**: Grand Melee spec implementation (Spec #44) — discovered during frontend unification
-**Priority**: High — technical debt causing inconsistency across league modes
-
-The Robot model still has `currentLeague`, `leagueId`, `leaguePoints`, and `cyclesInCurrentLeague` columns from before the Database Unification (Spec #40). All league data now lives in the `Standing` table, but these stale Robot columns are still read by the frontend robot store, the league standings page (for 1v1 indicators), and various mock data in tests. They should be dropped from the schema and all reads replaced with Standing table queries. Affects: `storeRobots`, `LeagueStandingsPage`, `matchmakingService` bye-robot factory, `practiceArenaService`, `teamBattleOrchestrator` bye-robot factory, seed file, and ~15 test files.
-
-### #61 — Guided New Robot Setup Workflow
-**Source**: Player experience — a newly created robot is not battle-ready and nothing walks the player through making it so
-**Priority**: Medium — affects every new robot a player creates, including their first
-
-Creating a robot is one step; making it actually compete takes six or seven more, spread across four pages. Nothing guides the player through them, and two of the steps are silent hard gates:
-
-- **No weapon equipped** → `checkSchedulingReadiness()` rejects the robot, so matchmaking skips it. It is never scheduled for anything.
-- **No event subscription** → the Booking Office gates participation in every battle event. Even a fully equipped robot never enters a match.
-
-Either omission leaves a robot sitting idle indefinitely, and the player has no obvious signal why. The other steps are softer but still shape whether the robot performs or bleeds Credits: loadout type, stance, yield threshold (drives repair cost), tuning allocation, and attribute upgrades.
-
-Proposal: a guided flow after robot creation that walks through equip weapon(s) for the chosen loadout → stance → yield threshold → tuning allocation → event subscriptions, with attribute upgrades offered as an optional final step. Skippable at any point, resumable later, and with a persistent "this robot is not battle-ready because…" indicator for anything still outstanding.
-
-Open questions: whether this is a modal wizard, a checklist on the robot page, or an extension of the existing onboarding tour; and whether the same checklist should surface for robots that fall out of readiness later (weapon sold, subscription dropped at a season reset — everything except accounts and onboarding state resets each season, so returning players re-do all of this for every robot).
-
-**Related**: #37 (Robot Detail Page Split) proposes an owner-only "Prepare" workspace covering the same actions — a creation wizard and that page should share components rather than duplicate them. #28 (Progressive Feature Disclosure) and #16 (Player Personas) overlap on how much to show a new player at once.

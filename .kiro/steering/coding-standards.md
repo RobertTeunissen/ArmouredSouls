@@ -217,13 +217,9 @@ If a suite is red, either the code is wrong or the test is wrong. Fix one of the
 Do not make the check advisory, and do not delete a test to make a build pass unless
 the behaviour it covers is genuinely gone (say so explicitly if you do).
 
-**Current state (July 2026).** The unit tier is green (205 suites, 2881 tests) and
-the frontend is green (1890 tests). The integration tier has 90 of 148 suites
-failing and the test typecheck reports 394 errors, both pre-existing: tests that
-were never updated when Specs #41 and #43 dropped schema and service symbols, so
-they stopped compiling. Now that the gates are real, **this blocks deploys until
-Backlog #64 is cleared.** Do not read those failures as caused by your change —
-check whether the suite ever compiled first.
+**Current state (Aug 2026).** All tiers are green: unit (205 suites, 2881 tests),
+frontend (1890 tests), integration (`typecheck:tests` passes, 0 compile errors).
+The integration test repair shipped July 2026.
 
 ## Documentation Requirements
 - Document complex algorithms and business logic

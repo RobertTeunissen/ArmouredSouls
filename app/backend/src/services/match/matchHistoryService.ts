@@ -541,9 +541,8 @@ export async function getMatchHistory(params: HistoryParams) {
 }
 
 export async function formatBattleHistoryEntry(battle: BattleWithFullRelations, targetRobotIds: number[]) {
-  // Derive robot1/robot2 from participants by team.
-  // For FFA modes (KotH, Grand Melee): place user's robot as robot1, winner as robot2
-  // Prefer active/solo participants over reserve for stable ordering in tag-team battles.
+  // Derive legacy robot1/robot2 from participants by team.
+  // These are kept for backward compatibility — new frontend code uses the participants array.
   const isFFA = battle.battleType === 'koth' || battle.battleType === 'grand_melee';
   const team1Participants = battle.participants.filter(p => p.team === 1);
   const team2Participants = battle.participants.filter(p => p.team === 2);
@@ -570,6 +569,7 @@ export async function formatBattleHistoryEntry(battle: BattleWithFullRelations, 
     robot1Id,
     robot2Id,
     winnerId: battle.winnerId,
+    winningSide: battle.winningSide,
     createdAt: battle.createdAt,
     durationSeconds: battle.durationSeconds,
     robot1ELOBefore: robot1Part?.eloBefore || 0,
@@ -589,6 +589,30 @@ export async function formatBattleHistoryEntry(battle: BattleWithFullRelations, 
     prestigeAwarded: userParticipant?.prestigeAwarded ?? 0,
     fameAwarded: userParticipant?.fameAwarded ?? 0,
     streamingRevenue: userParticipant?.streamingRevenue ?? 0,
+    // Participants array — the canonical source of per-robot battle data.
+    // Frontend should use this + robotId to determine perspective instead of robot1/robot2.
+    participants: battle.participants.map((p) => ({
+      robotId: p.robotId,
+      team: p.team,
+      role: p.role,
+      eloBefore: p.eloBefore,
+      eloAfter: p.eloAfter,
+      finalHP: p.finalHP,
+      credits: p.credits,
+      streamingRevenue: p.streamingRevenue,
+      prestigeAwarded: p.prestigeAwarded,
+      fameAwarded: p.fameAwarded,
+      damageDealt: p.damageDealt,
+      placement: p.placement,
+      yielded: p.yielded,
+      destroyed: p.destroyed,
+      robot: p.robot ? {
+        id: p.robot.id,
+        name: p.robot.name,
+        userId: p.robot.userId,
+        user: { username: p.robot.user?.stableName || p.robot.user?.username || 'Unknown' },
+      } : { id: p.robotId, name: 'Unknown', userId: 0, user: { username: 'Unknown' } },
+    })),
     robot1: robot1 ? {
       id: robot1.id,
       name: robot1.name,

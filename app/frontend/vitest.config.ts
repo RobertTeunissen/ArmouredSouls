@@ -20,6 +20,10 @@ export default defineConfig({
         '**/*.config.{js,ts}',
         '**/dist/**',
       ],
+      thresholds: {
+        lines: 40,
+        branches: 35,
+      },
     },
   },
   resolve: {
