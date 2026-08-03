@@ -60,9 +60,22 @@ export function getBattlePerspective(
     ) ?? battle.participants.find(p => p.robotId !== myPart!.robotId);
   }
 
-  // Build robot display objects
-  const myRobot = myPart?.robot ?? battle.robot1;
-  const opponent = opponentPart?.robot ?? battle.robot2;
+  // Build robot display objects — when no participants, use robotId/userId to pick the right side
+  let myRobot: BattlePerspective['myRobot'];
+  let opponent: BattlePerspective['opponent'];
+  if (myPart) {
+    myRobot = myPart.robot;
+    opponent = opponentPart?.robot ?? battle.robot2;
+  } else {
+    // Legacy fallback: determine side from robotId or userId
+    const isRobot1 = robotId
+      ? battle.robot1Id === robotId
+      : userId
+        ? battle.robot1.userId === userId
+        : true;
+    myRobot = isRobot1 ? battle.robot1 : battle.robot2;
+    opponent = isRobot1 ? battle.robot2 : battle.robot1;
+  }
   const myRobotId = myPart?.robotId ?? robotId ?? myRobot.id;
 
   const outcome = getBattleOutcome(battle, myRobotId);
@@ -79,9 +92,13 @@ export const getBattleOutcome = (battle: BattleHistory, robotId: number): 'win' 
   // BYE matches are always a win for the real team
   if (battle.isByeMatch) return 'win';
 
-  // FFA modes: use placement
-  if ((battle.battleType === 'koth' || battle.battleType === 'grand_melee') && battle.kothPlacement != null) {
-    return battle.kothPlacement === 1 ? 'win' : 'loss';
+  // FFA modes: use participant's placement field (canonical), fallback to battle.kothPlacement (legacy)
+  if (battle.battleType === 'koth' || battle.battleType === 'grand_melee') {
+    const participant = findParticipant(battle, robotId);
+    const placement = participant?.placement ?? battle.kothPlacement;
+    if (placement != null) {
+      return placement === 1 ? 'win' : 'loss';
+    }
   }
 
   // If we have participants, use team membership to determine outcome for team modes
