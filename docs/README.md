@@ -1,5 +1,7 @@
 # Armoured Souls Documentation
 
+**Last updated**: August 2, 2026
+
 ## Quick Start
 
 1. Check `guides/operations/LOCAL_SETUP.md` for development environment setup
@@ -24,7 +26,9 @@ docs/
 │   ├── COMBAT_FORMULAS.md           Hit chance, damage, crits, counters
 │   ├── COMBAT_MESSAGES.md           Battle log message generation
 │   ├── PRD_AUDIT_SYSTEM.md          Audit trail and event logging
-│   └── SEED_DATA_SPECIFICATION.md   Dev/test seed data
+│   ├── SEED_DATA_SPECIFICATION.md   Dev/test seed data
+│   ├── diagrams.md                  Architecture diagrams
+│   └── README.md                    Section index
 │
 ├── game-systems/           # What the game does (rules, rewards, mechanics)
 │   ├── GAME_DESIGN.md              Core game concept
@@ -40,12 +44,16 @@ docs/
 │   ├── PRD_ACHIEVEMENT_SYSTEM.md   77-achievement progression layer
 │   ├── PRD_ONBOARDING_SYSTEM.md    New player flow
 │   ├── PRD_AUTO_USER_GENERATION.md Auto-generated opponents
+│   ├── PRD_SEASON_SYSTEM.md        100-cycle competitive seasons
+│   ├── PRD_ROBOT_SETUP_WIZARD.md   7-step guided robot configuration
 │   ├── STABLE_SYSTEM.md            Facilities and stable mechanics
-│   └── TUNING_BAY_SYSTEM.md        Per-robot tactical tuning
+│   ├── TUNING_BAY_SYSTEM.md        Per-robot tactical tuning
+│   └── README.md                   Section index
 │
 ├── prd_pages/              # Page-specific PRDs (UI/UX requirements)
 │   ├── PRD_DASHBOARD_PAGE.md
 │   ├── PRD_ROBOT_DETAIL_PAGE.md
+│   ├── PRD_ROBOT_CREATION_PAGE.md
 │   ├── PRD_BATTLE_HISTORY_PAGE.md
 │   ├── PRD_BATTLE_REPORT_PAGE.md
 │   ├── PRD_LEAGUE_STANDINGS.md
@@ -58,7 +66,8 @@ docs/
 │   ├── PRD_INCOME_DASHBOARD.md
 │   ├── PRD_LOGIN_PAGE.md
 │   ├── PRD_ROBOTS_LIST_PAGE.md
-│   └── PRD_BATTLE_STANCES_AND_YIELD.md
+│   ├── PRD_BATTLE_STANCES_AND_YIELD.md
+│   └── README.md                   Section index
 │
 ├── guides/                 # Operational and feature guides
 │   ├── operations/
@@ -68,11 +77,14 @@ docs/
 │   │   ├── VPS_PROVISIONING_PRD.md  VPS requirements
 │   │   ├── MAINTENANCE.md          Routine maintenance tasks
 │   │   ├── MONITORING.md           Monitoring and alerting
-│   │   └── TROUBLESHOOTING.md      Common issues and fixes
+│   │   ├── EDGE_PROTECTION.md      Edge/CDN protection layer
+│   │   ├── TROUBLESHOOTING.md      Common issues and fixes
+│   │   └── README.md               Section index
 │   ├── ADMIN_PANEL_GUIDE.md         Admin portal usage
 │   ├── ERROR_CODES.md               Error code reference
 │   ├── ONBOARDING_ANALYTICS_GUIDE.md
-│   └── ONBOARDING_TROUBLESHOOTING.md
+│   ├── ONBOARDING_TROUBLESHOOTING.md
+│   └── README.md                    Section index
 │
 ├── design_ux/              # Brand, design system, UX
 │   ├── DESIGN_SYSTEM_README.md      Entry point
@@ -88,25 +100,29 @@ docs/
 │   ├── BATTLE_EXECUTION_AUDIT.md        Cross-type battle reference
 │   ├── FREE_FOR_ALL_BATTLE_ROYALE_MODE.md  Grand Melee scaling analysis
 │   ├── PRESTIGE_FAME_DESIGN_EXPLORATION.md  Fame cosmetics roadmap
-│   └── ROBOT_DETAIL_PAGE_SPLIT_ANALYSIS.md  Profile/Workshop split design
+│   ├── ROBOT_DETAIL_PAGE_SPLIT_ANALYSIS.md  Profile/Workshop split design
+│   └── WEAPON_BALANCE_ANALYSIS.md       Weapon stat analysis
 │
-├── balance_changes/        # Game balance modification history
+├── balance_changes/        # Game balance modification history (10 entries)
+│   ├── COMBAT_TRAINING_ACADEMY_COST_REDUCTION.md
 │   ├── COUNTER_ATTACK_SYSTEM_REWORK.md
+│   ├── KOTH_LINEARIZED_SCALING.md
+│   ├── MOVEMENT_EVENT_THROTTLING_REVERT.md
+│   ├── MULTI_ROBOT_SIMULATOR_FOR_KOTH.md
 │   ├── RANGED_VS_MELEE_REBALANCE.md
 │   ├── STARTING_ECONOMY_REBALANCE.md
+│   ├── THREAT_SCORING_TARGET_SELECTION_INTEGRATION.md
 │   ├── TRAINING_FACILITY_REBALANCE.md
-│   ├── KOTH_LINEARIZED_SCALING.md
-│   └── ... (11 entries)
+│   ├── WEAPON_CONTROL_IMPLEMENTATION.md
+│   └── README.md                   Section index
 │
 ├── features/               # Feature specifications
 │   ├── AT_RISK_USERS_FEATURE.md
 │   ├── user-registration.md
 │   └── user-registration-error-reference.md
 │
-├── api/                    # API specifications
-│   └── authentication.yaml
-│
-└── implementation_notes/   # (empty — candidates for removal)
+└── api/                    # API specifications
+    └── authentication.yaml
 ```
 
 ## Finding What You Need
@@ -123,9 +139,12 @@ docs/
 | See league rules | `game-systems/PRD_LEAGUE_SYSTEM.md` |
 | Check weapon stats | `game-systems/PRD_WEAPON_ECONOMY.md` |
 | See achievement details | `game-systems/PRD_ACHIEVEMENT_SYSTEM.md` |
+| Understand season resets | `game-systems/PRD_SEASON_SYSTEM.md` |
+| See robot setup wizard | `game-systems/PRD_ROBOT_SETUP_WIZARD.md` |
 | Deploy to VPS | `guides/operations/DEPLOYMENT.md` |
 | Troubleshoot production | `guides/operations/TROUBLESHOOTING.md` |
 | Check monitoring/alerts | `guides/operations/MONITORING.md` |
+| Check edge protection | `guides/operations/EDGE_PROTECTION.md` |
 | Understand design system | `design_ux/DESIGN_SYSTEM_README.md` |
 | See what's planned | `BACKLOG.md` |
 | See what's been built | `CHANGELOG.md` |

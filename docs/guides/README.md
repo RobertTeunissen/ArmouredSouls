@@ -1,27 +1,26 @@
 # Guides
 
+**Last updated**: August 2, 2026
+
 Practical guides for developers working on Armoured Souls.
 
-## Operations (Terminal Guides)
+## Operations
 
 Step-by-step procedures for setup, deployment, and maintenance. See [operations/README.md](operations/README.md).
 
 - `operations/LOCAL_SETUP.md` — Local development setup, testing, database management
 - `operations/VPS_SETUP.md` — Provisioning a new Scaleway VPS
+- `operations/VPS_PROVISIONING_PRD.md` — VPS requirements specification
 - `operations/DEPLOYMENT.md` — CI/CD pipeline, ACC/PRD deployment
 - `operations/MAINTENANCE.md` — Logs, backups, server monitoring
+- `operations/MONITORING.md` — Monitoring, alerting, Discord webhooks
+- `operations/EDGE_PROTECTION.md` — Edge/CDN protection layer
 - `operations/TROUBLESHOOTING.md` — Common production issues, rollback
 
-## Architecture & Code Organization
-
-## Security
+## Reference
 
 - `ERROR_CODES.md` — Error code reference
-- Security strategy → moved to [PRD_SECURITY.md](../architecture/PRD_SECURITY.md)
-
-## Testing
-
-- Test commands and infrastructure documented in [operations/LOCAL_SETUP.md](operations/LOCAL_SETUP.md)
+- Security strategy → [PRD_SECURITY.md](../architecture/PRD_SECURITY.md)
 
 ## Feature Guides
 

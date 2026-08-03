@@ -138,12 +138,6 @@ jobs:
       - name: Run integration tests
         working-directory: ./app/backend
         shell: bash
-        # continue-on-error: integration suites have pre-existing assertion
-        # failures (auth registration 400 vs 201, empty error bodies, etc.)
-        # that predate this branch. Typecheck passes; runtime failures are
-        # tracked in Backlog #64 "second wave". Remove this once assertion
-        # failures are cleared.
-        continue-on-error: true
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_test?connection_limit=5
           JWT_SECRET: test-secret-key-for-ci
@@ -389,71 +383,54 @@ jobs:
       - name: Check allowlist and audit backend
         working-directory: ./app/backend
         run: |
-          # Run pnpm audit at high level — fail on high/critical vulnerabilities in production deps only
-          # Dev dependencies are not deployed and don't affect the production attack surface
+          # Fail on high/critical vulnerabilities in production deps only.
+          # Dev dependencies are not deployed and don't affect the production attack surface.
           # Known accepted vulnerabilities are documented in .security-audit-allowlist.json
           ALLOWLIST_FILE="../../.security-audit-allowlist.json"
           if [ -f "$ALLOWLIST_FILE" ]; then
             echo "Security audit allowlist found — reviewing accepted vulnerabilities"
-            cat "$ALLOWLIST_FILE"
           fi
           
           # Run audit and filter out allowlisted advisories
           AUDIT_OUTPUT=$(pnpm audit --json --prod 2>/dev/null || true)
           
           if [ -f "$ALLOWLIST_FILE" ]; then
-            # Extract allowlisted GHSA IDs
-            ALLOWED_IDS=$(cat "$ALLOWLIST_FILE" | node -e "
-              const data = JSON.parse(require('fs').readFileSync('/dev/stdin','utf8'));
-              console.log(data.allowlist.map(e => e.id).join('\n'));
-            ")
-            
-            # Check for non-allowlisted high/critical vulnerabilities
-            UNALLOWED=$(echo "$AUDIT_OUTPUT" | node -e "
+            # pnpm audit --json emits the npm v6 envelope: { actions, advisories, muted, metadata }
+            # Each advisory is keyed by numeric ID with github_advisory_id for GHSA matching
+            echo "$AUDIT_OUTPUT" | node -e "
               const fs = require('fs');
               const input = fs.readFileSync('/dev/stdin', 'utf8');
               const audit = JSON.parse(input);
-              const allowed = new Set(process.argv.slice(1));
-              const vulns = audit.vulnerabilities || {};
-              
-              // Collect all direct advisory IDs for each package (recursive via resolution)
-              function getAdvisoryIds(pkgName, visited = new Set()) {
-                if (visited.has(pkgName)) return [];
-                visited.add(pkgName);
-                const info = vulns[pkgName];
-                if (!info) return [];
-                const ids = [];
-                for (const v of (info.via || [])) {
-                  if (typeof v === 'object' && v.url) {
-                    ids.push(v.url.split('/').pop());
-                  } else if (typeof v === 'string') {
-                    ids.push(...getAdvisoryIds(v, visited));
-                  }
-                }
-                return ids;
-              }
+              const allowlistPath = process.argv[1];
+              const allowlistData = JSON.parse(fs.readFileSync(allowlistPath, 'utf8'));
+              const allowed = new Set(allowlistData.allowlist.map(e => e.id));
+              const advisories = audit.advisories || {};
               
               let found = false;
-              for (const [name, info] of Object.entries(vulns)) {
+              for (const [id, info] of Object.entries(advisories)) {
                 const severity = info.severity;
                 if (severity !== 'high' && severity !== 'critical') continue;
-                const advisoryIds = getAdvisoryIds(name);
-                const allAllowed = advisoryIds.length > 0 && advisoryIds.every(id => allowed.has(id));
-                if (!allAllowed) {
-                  console.error('UNALLOWED: ' + name + ' (' + severity + ') — ' + advisoryIds.join(', '));
-                  found = true;
-                }
+                const ghsa = info.github_advisory_id || '';
+                if (allowed.has(ghsa)) continue;
+                console.error('UNALLOWED: ' + info.module_name + ' (' + severity + ') — ' + ghsa + ' — ' + info.title);
+                found = true;
               }
-              process.exit(found ? 1 : 0);
-            " $ALLOWED_IDS)
+              if (found) {
+                process.exit(1);
+              } else {
+                console.log('All high/critical vulnerabilities are allowlisted or absent');
+              }
+            " "$ALLOWLIST_FILE"
             
             AUDIT_EXIT=$?
             if [ $AUDIT_EXIT -ne 0 ]; then
+              echo ""
               echo "Security audit failed — unallowed high/critical vulnerabilities found"
+              echo "Either fix the vulnerability or add it to .security-audit-allowlist.json with justification"
               pnpm audit --prod
               exit 1
             else
-              echo "Security audit passed — all high/critical vulnerabilities are allowlisted"
+              echo "Security audit passed"
             fi
           else
             pnpm audit --prod
@@ -462,82 +439,52 @@ jobs:
       - name: Check allowlist and audit frontend
         working-directory: ./app/frontend
         run: |
-          # Production deps only — dev tooling (vitest, mermaid, eslint) excluded
-          #
-          # This step previously ran a bare `pnpm audit --prod`, which printed the
-          # allowlist and then ignored it, and failed on ANY severity including
-          # moderate. That made it stricter than the backend step in one direction
-          # (moderates broke the build) and useless in the other (allowlisted
-          # advisories still broke it). It now mirrors the backend logic exactly:
-          # fail only on high/critical that are not allowlisted.
-          #
-          # KNOWN DEFECT, shared with the backend step above: the parser reads
-          # `audit.vulnerabilities`, which is the npm v7+ shape. `pnpm audit --json`
-          # emits the npm v6 envelope instead — `{ actions, advisories, muted,
-          # metadata }` — so the loop iterates an empty object and this gate
-          # currently cannot fail. See docs/architecture/PRD_SECURITY.md
-          # "Audit gate parses the wrong envelope". Fixing it surfaces 9 pre-existing
-          # high/critical backend advisories and is tracked separately rather than
-          # bundled into Spec #46.
+          # Production deps only — dev tooling (vitest, mermaid, eslint) excluded.
+          # Fail only on high/critical that are not allowlisted.
           ALLOWLIST_FILE="../../.security-audit-allowlist.json"
           if [ -f "$ALLOWLIST_FILE" ]; then
             echo "Security audit allowlist found — reviewing accepted vulnerabilities"
-            cat "$ALLOWLIST_FILE"
           fi
 
           AUDIT_OUTPUT=$(pnpm audit --json --prod 2>/dev/null || true)
 
           if [ -f "$ALLOWLIST_FILE" ]; then
-            ALLOWED_IDS=$(cat "$ALLOWLIST_FILE" | node -e "
-              const data = JSON.parse(require('fs').readFileSync('/dev/stdin','utf8'));
-              console.log(data.allowlist.map(e => e.id).join('\n'));
-            ")
-
-            UNALLOWED=$(echo "$AUDIT_OUTPUT" | node -e "
+            # pnpm audit --json emits the npm v6 envelope: { actions, advisories, muted, metadata }
+            # Each advisory is keyed by numeric ID with github_advisory_id for GHSA matching
+            echo "$AUDIT_OUTPUT" | node -e "
               const fs = require('fs');
               const input = fs.readFileSync('/dev/stdin', 'utf8');
               const audit = JSON.parse(input);
-              const allowed = new Set(process.argv.slice(1));
-              const vulns = audit.vulnerabilities || {};
-
-              // Collect all direct advisory IDs for each package (recursive via resolution)
-              function getAdvisoryIds(pkgName, visited = new Set()) {
-                if (visited.has(pkgName)) return [];
-                visited.add(pkgName);
-                const info = vulns[pkgName];
-                if (!info) return [];
-                const ids = [];
-                for (const v of (info.via || [])) {
-                  if (typeof v === 'object' && v.url) {
-                    ids.push(v.url.split('/').pop());
-                  } else if (typeof v === 'string') {
-                    ids.push(...getAdvisoryIds(v, visited));
-                  }
-                }
-                return ids;
-              }
+              const allowlistPath = process.argv[1];
+              const allowlistData = JSON.parse(fs.readFileSync(allowlistPath, 'utf8'));
+              const allowed = new Set(allowlistData.allowlist.map(e => e.id));
+              const advisories = audit.advisories || {};
 
               let found = false;
-              for (const [name, info] of Object.entries(vulns)) {
+              for (const [id, info] of Object.entries(advisories)) {
                 const severity = info.severity;
                 if (severity !== 'high' && severity !== 'critical') continue;
-                const advisoryIds = getAdvisoryIds(name);
-                const allAllowed = advisoryIds.length > 0 && advisoryIds.every(id => allowed.has(id));
-                if (!allAllowed) {
-                  console.error('UNALLOWED: ' + name + ' (' + severity + ') — ' + advisoryIds.join(', '));
-                  found = true;
-                }
+                const ghsa = info.github_advisory_id || '';
+                if (allowed.has(ghsa)) continue;
+                console.error('UNALLOWED: ' + info.module_name + ' (' + severity + ') — ' + ghsa + ' — ' + info.title);
+                found = true;
               }
-              process.exit(found ? 1 : 0);
-            " $ALLOWED_IDS)
+              if (found) {
+                process.exit(1);
+              } else {
+                console.log('All high/critical vulnerabilities are allowlisted or absent');
+              }
+            " "$ALLOWLIST_FILE"
 
             AUDIT_EXIT=$?
             if [ $AUDIT_EXIT -ne 0 ]; then
+              echo ""
               echo "Security audit failed — unallowed high/critical vulnerabilities found"
+              echo "Either fix the vulnerability or add it to .security-audit-allowlist.json with justification"
               pnpm audit --prod
               exit 1
             else
-              echo "Security audit passed — all high/critical vulnerabilities are allowlisted"
+              echo "Security audit passed"
             fi
           else
             pnpm audit --prod
