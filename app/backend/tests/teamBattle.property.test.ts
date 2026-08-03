@@ -238,7 +238,7 @@ describe('Team Battle Property Tests', () => {
 
             try {
               await registerTeam(testUserId, robotIds, `UnownedTeam${teamSize}_${Date.now()}`, teamSize, testUserId);
-              fail('Expected TeamBattleError to be thrown');
+              throw new Error('Expected TeamBattleError to be thrown');
             } catch (error) {
               expect(error).toBeInstanceOf(TeamBattleError);
               expect((error as TeamBattleError).code).toBe(TeamBattleErrorCode.TEAM_OWNERSHIP_VIOLATION);
@@ -276,7 +276,7 @@ describe('Team Battle Property Tests', () => {
 
             try {
               await registerTeam(testUserId, robotIds, `UnsubTeam${teamSize}_${Date.now()}`, teamSize, testUserId);
-              fail('Expected TeamBattleError to be thrown');
+              throw new Error('Expected TeamBattleError to be thrown');
             } catch (error) {
               expect(error).toBeInstanceOf(TeamBattleError);
               expect((error as TeamBattleError).code).toBe(TeamBattleErrorCode.TEAM_INVALID_COMPOSITION);
@@ -332,7 +332,7 @@ describe('Team Battle Property Tests', () => {
 
             try {
               await registerTeam(testUserId, newRobotIds, `ConflictTeam${teamSize}_${Date.now()}`, teamSize, testUserId);
-              fail('Expected TeamBattleError to be thrown');
+              throw new Error('Expected TeamBattleError to be thrown');
             } catch (error) {
               expect(error).toBeInstanceOf(TeamBattleError);
               expect((error as TeamBattleError).code).toBe(TeamBattleErrorCode.TEAM_MEMBER_CONFLICT);
@@ -436,7 +436,7 @@ describe('Team Battle Property Tests', () => {
                   teamSize,
                   testUserId,
                 );
-                fail('Expected TeamBattleError to be thrown');
+                throw new Error('Expected TeamBattleError to be thrown');
               } catch (error) {
                 expect(error).toBeInstanceOf(TeamBattleError);
                 const tbError = error as TeamBattleError;

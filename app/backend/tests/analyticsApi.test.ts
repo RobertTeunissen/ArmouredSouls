@@ -516,7 +516,8 @@ describe('Analytics API - Additional Edge Cases', () => {
     // Should not crash and should return available data
     expect(response.body).toHaveProperty('cycles');
     expect(Array.isArray(response.body.cycles)).toBe(true);
-    expect(response.body.cycleRange[0]).toBeGreaterThanOrEqual(1);
+    // cycleRange[0] may be 0 if no cycles exist yet (e.g., after season rollover)
+    expect(response.body.cycleRange[0]).toBeGreaterThanOrEqual(0);
   });
 });
 
