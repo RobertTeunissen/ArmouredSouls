@@ -122,8 +122,8 @@ describe('SeasonArchivePage — finding your own results', () => {
     generatedStableCount: 340,
     standingsByMode: {
       league_1v1: [
-        { tier: 'gold', leagueInstanceId: 'gold_1', instanceRank: 1, entityType: 'robot', entityName: 'Botzilla', stableName: 'AutoBot', leaguePoints: 100, wins: 9, losses: 1, draws: 0, isGeneratedSubject: true },
-        { tier: 'gold', leagueInstanceId: 'gold_1', instanceRank: 2, entityType: 'robot', entityName: 'MyBot', stableName: 'tester', leaguePoints: 80, wins: 7, losses: 3, draws: 0, isGeneratedSubject: false },
+        { tier: 'gold', leagueInstanceId: 'gold_1', instanceRank: 1, entityType: 'robot', entityName: 'Botzilla', stableName: 'AutoBot', leaguePoints: 100, wins: 9, losses: 1, draws: 0, isGeneratedSubject: true, modeRank: 1 },
+        { tier: 'gold', leagueInstanceId: 'gold_1', instanceRank: 2, entityType: 'robot', entityName: 'MyBot', stableName: 'tester', leaguePoints: 80, wins: 7, losses: 3, draws: 0, isGeneratedSubject: false, modeRank: 2 },
       ],
     },
     accolades: [
@@ -148,7 +148,7 @@ describe('SeasonArchivePage — finding your own results', () => {
   it('should highlight the signed-in player\u2019s own standing with a badge', async () => {
     await expandSeason();
     // The player's own stable is flagged; the bot's is not.
-    expect(screen.getByText('My Stable')).toBeInTheDocument();
+    expect(screen.getByText('You')).toBeInTheDocument();
     // The toolbar summarises how many results belong to the player.
     const toolbar = screen.getByText(/results? for/);
     expect(toolbar.textContent?.replace(/\s+/g, ' ')).toContain('2 results for tester');

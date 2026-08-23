@@ -356,21 +356,26 @@ function DashboardPage() {
             />
           )}
 
-          {/* Prestige unlock — show next facility tier threshold */}
+          {/* Prestige unlock — show only when the player has recently crossed a new gate */}
           {(() => {
             const nextGate = getNextPrestigeThreshold(user.prestige);
             if (!nextGate) return null; // all levels unlocked
             const currentMax = getUnlockedFacilityLevel(user.prestige);
-            // Only show if the player has crossed at least the first gate (L4 = 1000 prestige)
+            // Only relevant once the player has crossed at least L4 (1000 prestige)
             if (currentMax <= 3) return null;
+
+            const storageKey = `prestige_gate_seen_${user.id}`;
+            const lastSeen = Number(localStorage.getItem(storageKey) || '3');
+            // Only show if the player's unlocked level is higher than what they've previously acknowledged
+            if (currentMax <= lastSeen) return null;
+
             return (
-              <DashboardNotification
-                variant="info"
-                icon="⭐"
-                message={`L${currentMax} facilities unlocked`}
-                detail={`Next tier (L${nextGate.level}) requires ${nextGate.required.toLocaleString()} prestige — you have ${user.prestige.toLocaleString()}`}
-                actionLabel="View Facilities"
-                onAction={() => navigate('/facilities')}
+              <PrestigeUnlockNotification
+                currentMax={currentMax}
+                nextGate={nextGate}
+                prestige={user.prestige}
+                storageKey={storageKey}
+                onNavigate={() => navigate('/facilities')}
               />
             );
           })()}
@@ -496,6 +501,39 @@ function DashboardPage() {
         )}
       </div>
     </div>
+  );
+}
+
+/** Small stateful wrapper so dismiss hides the notification immediately. */
+function PrestigeUnlockNotification({
+  currentMax,
+  nextGate,
+  prestige,
+  storageKey,
+  onNavigate,
+}: {
+  currentMax: number;
+  nextGate: { level: number; required: number };
+  prestige: number;
+  storageKey: string;
+  onNavigate: () => void;
+}) {
+  const [dismissed, setDismissed] = useState(false);
+  if (dismissed) return null;
+
+  return (
+    <DashboardNotification
+      variant="info"
+      icon="⭐"
+      message={`L${currentMax} facilities unlocked`}
+      detail={`Next tier (L${nextGate.level}) requires ${nextGate.required.toLocaleString()} prestige — you have ${prestige.toLocaleString()}`}
+      actionLabel="View Facilities"
+      onAction={onNavigate}
+      onDismiss={() => {
+        localStorage.setItem(storageKey, String(currentMax));
+        setDismissed(true);
+      }}
+    />
   );
 }
 

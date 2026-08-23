@@ -133,6 +133,7 @@ export interface SnapshotEntry {
   losses: number;
   draws: number;
   isGeneratedSubject: boolean;
+  modeRank: number;
 }
 
 export interface SeasonDetail {
