@@ -67,48 +67,48 @@ describe('KotH reward calculation', () => {
 
   // ── Base reward tiers ─────────────────────────────────────────
 
-  it('1st place base rewards: 25000 credits, 8 fame, 15 prestige', () => {
+  it('1st place base rewards: 11250 credits, 8 fame, 15 prestige', () => {
     const result = calculateKothRewards(1, 100, 50, 'bronze');
-    expect(result.credits).toBe(25_000);
+    expect(result.credits).toBe(11_250);
     expect(result.fame).toBe(8);
     expect(result.prestige).toBe(15);
     expect(result.zoneDominanceBonus).toBe(false);
   });
 
-  it('2nd place base rewards: 17500 credits, 5 fame, 8 prestige', () => {
+  it('2nd place base rewards: 7875 credits, 5 fame, 8 prestige', () => {
     const result = calculateKothRewards(2, 100, 50, 'bronze');
-    expect(result.credits).toBe(17_500);
+    expect(result.credits).toBe(7_875);
     expect(result.fame).toBe(5);
     expect(result.prestige).toBe(8);
     expect(result.zoneDominanceBonus).toBe(false);
   });
 
-  it('3rd place base rewards: 10000 credits, 3 fame, 3 prestige', () => {
+  it('3rd place base rewards: 5625 credits, 3 fame, 3 prestige', () => {
     const result = calculateKothRewards(3, 100, 50, 'bronze');
-    expect(result.credits).toBe(10_000);
+    expect(result.credits).toBe(5_625);
     expect(result.fame).toBe(3);
     expect(result.prestige).toBe(3);
     expect(result.zoneDominanceBonus).toBe(false);
   });
 
-  it('4th place participation rewards: 5000 credits, 0 fame, 0 prestige', () => {
+  it('4th place participation rewards: 3937 credits, 1 fame, 0 prestige', () => {
     const result = calculateKothRewards(4, 100, 50, 'bronze');
-    expect(result.credits).toBe(5_000);
-    expect(result.fame).toBe(0);
+    expect(result.credits).toBe(3_937);
+    expect(result.fame).toBe(1);
     expect(result.prestige).toBe(0);
   });
 
-  it('5th place participation rewards: 5000 credits, 0 fame, 0 prestige', () => {
+  it('5th place participation rewards: 2813 credits, 1 fame, 0 prestige', () => {
     const result = calculateKothRewards(5, 100, 50, 'bronze');
-    expect(result.credits).toBe(5_000);
-    expect(result.fame).toBe(0);
+    expect(result.credits).toBe(2_813);
+    expect(result.fame).toBe(1);
     expect(result.prestige).toBe(0);
   });
 
-  it('6th place participation rewards: 5000 credits, 0 fame, 0 prestige', () => {
+  it('6th place participation rewards: 2250 credits, 1 fame, 0 prestige', () => {
     const result = calculateKothRewards(6, 100, 50, 'bronze');
-    expect(result.credits).toBe(5_000);
-    expect(result.fame).toBe(0);
+    expect(result.credits).toBe(2_250);
+    expect(result.fame).toBe(1);
     expect(result.prestige).toBe(0);
   });
 
@@ -118,7 +118,7 @@ describe('KotH reward calculation', () => {
     // 76/100 = 0.76 > 0.75 → bonus active
     const result = calculateKothRewards(1, 100, 76, 'bronze');
     expect(result.zoneDominanceBonus).toBe(true);
-    expect(result.credits).toBe(31_250);
+    expect(result.credits).toBe(14_062);
     expect(result.fame).toBe(10);
     expect(result.prestige).toBe(18);
   });
@@ -127,7 +127,7 @@ describe('KotH reward calculation', () => {
     // 74/100 = 0.74 ≤ 0.75 → no bonus
     const result = calculateKothRewards(1, 100, 74, 'bronze');
     expect(result.zoneDominanceBonus).toBe(false);
-    expect(result.credits).toBe(25_000);
+    expect(result.credits).toBe(11_250);
     expect(result.fame).toBe(8);
     expect(result.prestige).toBe(15);
   });

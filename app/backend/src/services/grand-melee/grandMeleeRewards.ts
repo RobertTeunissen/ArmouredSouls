@@ -10,6 +10,12 @@
  * Spec #44: Grand Melee — Requirements R3.1–R3.6
  */
 
+import {
+  getLeagueWinReward,
+  getTierFactor,
+  GRAND_MELEE_CREDIT_BASE_MULTIPLIER,
+} from '../../utils/economyFormulas';
+
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 /** F1 point scale — LP awarded per placement (positions 1-10, 0 for 11+) */
@@ -30,30 +36,12 @@ export const GRAND_MELEE_CREDIT_MULTIPLIER: Record<number, number> = {
 const PARTICIPATION_FLOOR = 0.2;
 
 /**
- * Grand Melee credit base multiplier vs KotH.
- * Reflects the increased difficulty of competing against 19 opponents vs KotH's 5.
+ * Grand Melee credit base multiplier.
+ *
+ * Re-exported from the canonical definition in `utils/economyFormulas` so the
+ * tier base, KotH multiplier and Grand Melee multiplier all live in one place.
  */
-export const GRAND_MELEE_BASE_MULTIPLIER = 2.5;
-
-/** Tier-based credit base values — same as KotH (R3.5) */
-const TIER_CREDIT_BASE: Record<string, number> = {
-  bronze: 7500,
-  silver: 15000,
-  gold: 30000,
-  platinum: 60000,
-  diamond: 115000,
-  champion: 225000,
-};
-
-/** Tier factor for fame/prestige scaling */
-const TIER_FACTOR: Record<string, number> = {
-  bronze: 1.0,
-  silver: 1.5,
-  gold: 2.0,
-  platinum: 3.0,
-  diamond: 4.5,
-  champion: 7.0,
-};
+export const GRAND_MELEE_BASE_MULTIPLIER = GRAND_MELEE_CREDIT_BASE_MULTIPLIER;
 
 /** Base fame by placement (tier-scaled). 0 for positions 11+ */
 const BASE_FAME: Record<number, number> = {
@@ -92,9 +80,8 @@ export function calculateGrandMeleeRewards(
   totalParticipants: number,
   winnerHPPercent?: number,
 ): GrandMeleeRewardResult {
-  const tierKey = tier.toLowerCase();
-  const tierFactor = TIER_FACTOR[tierKey] ?? 1.0;
-  const creditBase = TIER_CREDIT_BASE[tierKey] ?? TIER_CREDIT_BASE.bronze;
+  const tierFactor = getTierFactor(tier);
+  const creditBase = getLeagueWinReward(tier);
 
   // LP: F1 scale, 0 for 11+
   const lpDelta = placement <= GRAND_MELEE_LP_SCALE.length

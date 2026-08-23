@@ -11,7 +11,7 @@ relatedArticles:
 
 ## Credits
 
-All Grand Melee participants earn credits. The base payout is **2.5× the KotH base** multiplied by a placement multiplier. Higher placements earn significantly more credits.
+All Grand Melee participants earn credits. The base payout is **2.5× the league tier base** multiplied by a placement multiplier. Higher placements earn significantly more credits.
 
 Even robots that finish in the bottom half receive a **participation floor** — you'll never walk away empty-handed.
 
