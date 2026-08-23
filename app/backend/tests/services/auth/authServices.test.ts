@@ -18,6 +18,7 @@ const mockStandingFindMany = jest.fn();
 const mockCycleSnapshotFindFirst = jest.fn();
 const mockCycleSnapshotFindUnique = jest.fn();
 const mockAuditLogFindFirst = jest.fn();
+const mockAuditLogFindMany = jest.fn();
 const mockAuditLogCreate = jest.fn();
 const mockTransaction = jest.fn();
 
@@ -44,6 +45,7 @@ jest.mock('../../../src/lib/prisma', () => ({
     },
     auditLog: {
       findFirst: (...args: unknown[]) => mockAuditLogFindFirst(...args),
+      findMany: (...args: unknown[]) => mockAuditLogFindMany(...args),
       create: (...args: unknown[]) => mockAuditLogCreate(...args),
     },
     $transaction: (...args: unknown[]) => mockTransaction(...args),
@@ -99,6 +101,9 @@ function makeUser(overrides: Partial<Record<string, unknown>> = {}) {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  // Safe default so tests that reach computeCycleChanges without caring about
+  // per-cycle results don't have to stub the audit log lookup.
+  mockAuditLogFindMany.mockResolvedValue([]);
 });
 
 // ═══ userService ═══════════════════════════════════════════════════════════════
@@ -365,7 +370,7 @@ describe('userProfileService', () => {
       await expect(getStableStats(999)).rejects.toThrow(AuthError);
     });
 
-    it('should compute cycle changes when snapshots exist', async () => {
+    it('should report the latest cycle activity without subtracting the previous cycle', async () => {
       mockUserFindUnique.mockResolvedValue({ prestige: 100 });
       mockRobotFindMany.mockResolvedValue([
         { id: 1, elo: 1500, totalBattles: 10, wins: 6, losses: 3, draws: 1, currentHP: 100, maxHP: 100, mainWeapon: {} },
@@ -375,23 +380,59 @@ describe('userProfileService', () => {
         .mockResolvedValueOnce([]) // tag team
         .mockResolvedValueOnce([{ tier: 'bronze' }]); // robot league
       mockCycleSnapshotFindFirst.mockResolvedValue({ cycleNumber: 5 });
-      mockCycleSnapshotFindUnique
-        .mockResolvedValueOnce({
-          stableMetrics: [{ userId: 1, totalPrestigeEarned: 50 }],
-          robotMetrics: [{ robotId: 1, wins: 6, losses: 3, eloChange: 20 }],
-        })
-        .mockResolvedValueOnce({
-          stableMetrics: [{ userId: 1, totalPrestigeEarned: 30 }],
-          robotMetrics: [{ robotId: 1, wins: 4, losses: 2, eloChange: 10 }],
-        });
+      mockCycleSnapshotFindUnique.mockResolvedValue({
+        stableMetrics: [{ userId: 1, totalPrestigeEarned: 50 }],
+        robotMetrics: [{ robotId: 1, wins: 2, losses: 1, eloChange: 20 }],
+      });
+      // Snapshot metrics are already per-cycle, so the delta is this cycle's
+      // audit events — not a difference against cycle 4.
+      mockAuditLogFindMany.mockResolvedValue([
+        { payload: { result: 'win', battleType: 'league_1v1' } },
+        { payload: { result: 'win', battleType: 'league_2v2' } },
+        { payload: { result: 'loss', battleType: 'league_1v1' } },
+      ]);
 
       const result = await getStableStats(1);
 
       expect(result.cycleChanges).toEqual({
         prestige: 50,
-        wins: 2, // 6 - 4
-        losses: 1, // 3 - 2
-        highestElo: 20, // eloChange from current snapshot's highest-ELO robot
+        wins: 2,
+        losses: 1,
+        highestElo: 20, // eloChange of the stable's highest-ELO robot this cycle
+      });
+    });
+
+    it('should exclude KotH and Grand Melee placements from the cycle win/loss delta', async () => {
+      // A 6-0 robot that placed 4th in KotH and 12th in Grand Melee must not show
+      // a loss in the delta, because those modes never increment robots.losses
+      // (Spec #46: both orchestrators pass skipBattleCounters: true).
+      mockUserFindUnique.mockResolvedValue({ prestige: 100 });
+      mockRobotFindMany.mockResolvedValue([
+        { id: 1, elo: 1500, totalBattles: 6, wins: 6, losses: 0, draws: 0, currentHP: 100, maxHP: 100, mainWeapon: {} },
+      ]);
+      mockTeamBattleFindMany.mockResolvedValue([]);
+      mockStandingFindMany
+        .mockResolvedValueOnce([]) // tag team
+        .mockResolvedValueOnce([{ tier: 'bronze' }]); // robot league
+      mockCycleSnapshotFindFirst.mockResolvedValue({ cycleNumber: 5 });
+      mockCycleSnapshotFindUnique.mockResolvedValue({
+        stableMetrics: [{ userId: 1, totalPrestigeEarned: 20 }],
+        robotMetrics: [{ robotId: 1, wins: 1, losses: 2, eloChange: 16 }],
+      });
+      mockAuditLogFindMany.mockResolvedValue([
+        { payload: { result: 'win', battleType: 'league_1v1' } },
+        { payload: { result: 'loss', battleType: 'koth' } },
+        { payload: { result: 'loss', battleType: 'grand_melee' } },
+      ]);
+
+      const result = await getStableStats(1);
+
+      expect(result.losses).toBe(0); // career record stays 6-0
+      expect(result.cycleChanges).toEqual({
+        prestige: 20,
+        wins: 1,
+        losses: 0, // the two placement-mode losses are excluded
+        highestElo: 16,
       });
     });
   });
