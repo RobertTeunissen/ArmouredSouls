@@ -168,19 +168,25 @@ function findBestOpponent(
 }
 
 /**
- * Build matchmaking queue for a league instance
+ * Build matchmaking queue for a league instance.
+ * Returns robots sorted by LP descending (ELO tiebreaker) so the greedy
+ * pairing algorithm processes highest-LP robots first — matching the
+ * documented LP-primary matchmaking behaviour.
  */
 async function buildMatchmakingQueue(leagueId: string): Promise<Robot[]> {
-  // Get robot IDs in this instance from standings (source of truth for league placement)
+  // Get robot IDs and LP in this instance from standings (source of truth for league placement)
   const standingsInInstance = await prisma.standing.findMany({
     where: { mode: 'league_1v1', leagueInstanceId: leagueId },
-    select: { entityId: true },
+    select: { entityId: true, leaguePoints: true },
   });
   const robotIdsInInstance = standingsInInstance.map(s => s.entityId);
 
   if (robotIdsInInstance.length === 0) {
     return [];
   }
+
+  // Build LP lookup for sorting
+  const lpByRobotId = new Map(standingsInInstance.map(s => [s.entityId, s.leaguePoints]));
 
   // Load robots by those IDs
   // Note: Full robot rows are needed here because MatchPair.robot flows to the
@@ -190,9 +196,13 @@ async function buildMatchmakingQueue(leagueId: string): Promise<Robot[]> {
     where: {
       id: { in: robotIdsInInstance },
     },
-    orderBy: [
-      { elo: 'desc' },
-    ],
+  });
+
+  // Sort by LP descending (primary), ELO descending (tiebreaker)
+  robots.sort((a, b) => {
+    const lpDiff = (lpByRobotId.get(b.id) ?? 0) - (lpByRobotId.get(a.id) ?? 0);
+    if (lpDiff !== 0) return lpDiff;
+    return b.elo - a.elo;
   });
   
   // Filter for scheduling-ready robots (weapons equipped, HP not checked)
