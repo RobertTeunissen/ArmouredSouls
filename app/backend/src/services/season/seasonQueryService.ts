@@ -289,7 +289,14 @@ export async function getSeasonDetail(seasonNumber: number) {
         losses,
         draws,
         is_generated_subject,
-        ROW_NUMBER() OVER (PARTITION BY mode ORDER BY league_points DESC) AS mode_rank
+        -- Tie-breakers after LP make the ranking stable across requests: LP alone
+        -- leaves rows with equal points in an arbitrary order, so modeRank (and
+        -- therefore the top-100 cut) could shift between page loads. The final
+        -- key is the primary key, so the ordering is always total.
+        ROW_NUMBER() OVER (
+          PARTITION BY mode
+          ORDER BY league_points DESC, wins DESC, losses ASC, entity_name ASC, id ASC
+        ) AS mode_rank
       FROM season_standing_snapshots
       WHERE season_number = ${seasonNumber}
     ) ranked
