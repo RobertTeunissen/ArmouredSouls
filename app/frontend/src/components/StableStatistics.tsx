@@ -85,11 +85,11 @@ function StableStatistics() {
               <div className="flex items-baseline gap-2">
                 <span className="text-success font-semibold">{stats.wins}W</span>
                 <span className="text-error font-semibold">{stats.losses}L</span>
-                {stats.cycleChanges && (stats.cycleChanges.wins !== 0 || stats.cycleChanges.losses !== 0) && (
-                  <span className="text-xs text-secondary">
+                {stats.cycleChanges && (stats.cycleChanges.wins > 0 || stats.cycleChanges.losses > 0) && (
+                  <span className="text-xs text-secondary" title="This cycle">
                     ({[
-                      stats.cycleChanges.wins !== 0 && `+${stats.cycleChanges.wins}W`,
-                      stats.cycleChanges.losses !== 0 && `+${stats.cycleChanges.losses}L`
+                      stats.cycleChanges.wins > 0 && `+${stats.cycleChanges.wins}W`,
+                      stats.cycleChanges.losses > 0 && `+${stats.cycleChanges.losses}L`
                     ].filter(Boolean).join(', ')})
                   </span>
                 )}

@@ -249,11 +249,7 @@ export async function getSeasonDetail(seasonNumber: number) {
     );
   }
 
-  const [snapshots, accolades, stableCount] = await Promise.all([
-    prisma.seasonStandingSnapshot.findMany({
-      where: { seasonNumber },
-      orderBy: [{ mode: 'asc' }, { tier: 'asc' }, { leagueInstanceId: 'asc' }, { instanceRank: 'asc' }],
-    }),
+  const [accolades, stableCount] = await Promise.all([
     prisma.seasonAccolade.findMany({
       where: { seasonNumber },
       orderBy: [{ category: 'asc' }, { rank: 'asc' }],
@@ -261,12 +257,87 @@ export async function getSeasonDetail(seasonNumber: number) {
     prisma.stableSeasonArchive.count({ where: { seasonNumber } }),
   ]);
 
+  // Fetch top 100 per mode, ordered by LP descending (global leaderboard style).
+  // We use a raw query with PARTITION to avoid N+1 or fetching all rows.
+  const topStandings = await prisma.$queryRaw<Array<{
+    mode: string;
+    tier: string;
+    league_instance_id: string;
+    instance_rank: number;
+    entity_type: string;
+    entity_name: string;
+    stable_name: string;
+    league_points: number;
+    wins: number;
+    losses: number;
+    draws: number;
+    is_generated_subject: boolean;
+    mode_rank: bigint;
+  }>>`
+    SELECT *
+    FROM (
+      SELECT
+        mode,
+        tier,
+        league_instance_id,
+        instance_rank,
+        entity_type,
+        entity_name,
+        stable_name,
+        league_points,
+        wins,
+        losses,
+        draws,
+        is_generated_subject,
+        -- Tie-breakers after LP make the ranking stable across requests: LP alone
+        -- leaves rows with equal points in an arbitrary order, so modeRank (and
+        -- therefore the top-100 cut) could shift between page loads. The final
+        -- key is the primary key, so the ordering is always total.
+        ROW_NUMBER() OVER (
+          PARTITION BY mode
+          ORDER BY league_points DESC, wins DESC, losses ASC, entity_name ASC, id ASC
+        ) AS mode_rank
+      FROM season_standing_snapshots
+      WHERE season_number = ${seasonNumber}
+    ) ranked
+    WHERE mode_rank <= 100
+    ORDER BY mode ASC, mode_rank ASC
+  `;
+
   // Group standings by mode so the page can render one section per mode.
-  const byMode = new Map<string, typeof snapshots>();
-  for (const row of snapshots) {
+  const byMode = new Map<string, Array<{
+    tier: string;
+    leagueInstanceId: string;
+    instanceRank: number;
+    entityType: string;
+    entityName: string;
+    stableName: string;
+    leaguePoints: number;
+    wins: number;
+    losses: number;
+    draws: number;
+    isGeneratedSubject: boolean;
+    modeRank: number;
+  }>>();
+
+  for (const row of topStandings) {
+    const entry = {
+      tier: row.tier,
+      leagueInstanceId: row.league_instance_id,
+      instanceRank: row.instance_rank,
+      entityType: row.entity_type,
+      entityName: row.entity_name,
+      stableName: row.stable_name,
+      leaguePoints: row.league_points,
+      wins: row.wins,
+      losses: row.losses,
+      draws: row.draws,
+      isGeneratedSubject: row.is_generated_subject,
+      modeRank: Number(row.mode_rank),
+    };
     const bucket = byMode.get(row.mode);
-    if (bucket) bucket.push(row);
-    else byMode.set(row.mode, [row]);
+    if (bucket) bucket.push(entry);
+    else byMode.set(row.mode, [entry]);
   }
 
   return {
@@ -292,6 +363,7 @@ export async function getSeasonDetail(seasonNumber: number) {
           losses: r.losses,
           draws: r.draws,
           isGeneratedSubject: r.isGeneratedSubject,
+          modeRank: r.modeRank,
         })),
       ]),
     ),

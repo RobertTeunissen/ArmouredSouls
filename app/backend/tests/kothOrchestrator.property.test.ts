@@ -15,12 +15,13 @@ import { calculateKothRewards } from '../src/services/koth/kothBattleOrchestrato
 // ─── Expected base reward tiers ─────────────────────────────────────
 
 const BASE_REWARDS: Record<number, { credits: number; fame: number; prestige: number }> = {
-  1: { credits: 25_000, fame: 8, prestige: 15 },
-  2: { credits: 17_500, fame: 5, prestige: 8 },
-  3: { credits: 10_000, fame: 3, prestige: 3 },
+  1: { credits: 11_250, fame: 8, prestige: 15 },
+  2: { credits: 7_875, fame: 5, prestige: 8 },
+  3: { credits: 5_625, fame: 3, prestige: 3 },
+  4: { credits: 3_937, fame: 1, prestige: 0 },
+  5: { credits: 2_813, fame: 1, prestige: 0 },
+  6: { credits: 2_250, fame: 1, prestige: 0 },
 };
-
-const DEFAULT_REWARDS = { credits: 5_000, fame: 0, prestige: 0 };
 
 const ZONE_DOMINANCE_THRESHOLD = 0.75;
 const ZONE_DOMINANCE_MULTIPLIER = 1.25;
@@ -58,13 +59,13 @@ describe('Property 24: Placement-based rewards follow tiered structure', () => {
   // ── Base reward tiers (no zone dominance) ──────────────────────
 
   describe('base reward tiers without zone dominance bonus', () => {
-    it('1st place gets 25000 credits, 8 fame, 15 prestige', () => {
+    it('1st place gets 11250 credits, 8 fame, 15 prestige', () => {
       fc.assert(
         fc.property(
           noDominanceScoresArb(),
           ({ zoneScore, totalUncontestedScore }) => {
             const result = calculateKothRewards(1, zoneScore, totalUncontestedScore, 'bronze');
-            expect(result.credits).toBe(25_000);
+            expect(result.credits).toBe(11_250);
             expect(result.fame).toBe(8);
             expect(result.prestige).toBe(15);
             expect(result.zoneDominanceBonus).toBe(false);
@@ -74,13 +75,13 @@ describe('Property 24: Placement-based rewards follow tiered structure', () => {
       );
     });
 
-    it('2nd place gets 17500 credits, 5 fame, 8 prestige', () => {
+    it('2nd place gets 7875 credits, 5 fame, 8 prestige', () => {
       fc.assert(
         fc.property(
           noDominanceScoresArb(),
           ({ zoneScore, totalUncontestedScore }) => {
             const result = calculateKothRewards(2, zoneScore, totalUncontestedScore, 'bronze');
-            expect(result.credits).toBe(17_500);
+            expect(result.credits).toBe(7_875);
             expect(result.fame).toBe(5);
             expect(result.prestige).toBe(8);
             expect(result.zoneDominanceBonus).toBe(false);
@@ -90,13 +91,13 @@ describe('Property 24: Placement-based rewards follow tiered structure', () => {
       );
     });
 
-    it('3rd place gets 10000 credits, 3 fame, 3 prestige', () => {
+    it('3rd place gets 5625 credits, 3 fame, 3 prestige', () => {
       fc.assert(
         fc.property(
           noDominanceScoresArb(),
           ({ zoneScore, totalUncontestedScore }) => {
             const result = calculateKothRewards(3, zoneScore, totalUncontestedScore, 'bronze');
-            expect(result.credits).toBe(10_000);
+            expect(result.credits).toBe(5_625);
             expect(result.fame).toBe(3);
             expect(result.prestige).toBe(3);
             expect(result.zoneDominanceBonus).toBe(false);
@@ -106,16 +107,17 @@ describe('Property 24: Placement-based rewards follow tiered structure', () => {
       );
     });
 
-    it('4th–6th place gets 5000 credits, 0 fame, 0 prestige', () => {
+    it('4th place gets 3937 credits, 5th gets 2812, 6th gets 2250', () => {
       fc.assert(
         fc.property(
           fc.integer({ min: 4, max: 6 }),
           noDominanceScoresArb(),
           (placement, { zoneScore, totalUncontestedScore }) => {
             const result = calculateKothRewards(placement, zoneScore, totalUncontestedScore, 'bronze');
-            expect(result.credits).toBe(5_000);
-            expect(result.fame).toBe(0);
-            expect(result.prestige).toBe(0);
+            const expected = BASE_REWARDS[placement];
+            expect(result.credits).toBe(expected.credits);
+            expect(result.fame).toBe(expected.fame);
+            expect(result.prestige).toBe(expected.prestige);
             expect(result.zoneDominanceBonus).toBe(false);
           },
         ),
@@ -134,7 +136,7 @@ describe('Property 24: Placement-based rewards follow tiered structure', () => {
           dominanceScoresArb(),
           (placement, { zoneScore, totalUncontestedScore }) => {
             const result = calculateKothRewards(placement, zoneScore, totalUncontestedScore, 'bronze');
-            const base = placement <= 3 ? BASE_REWARDS[placement] : DEFAULT_REWARDS;
+            const base = BASE_REWARDS[placement];
 
             expect(result.zoneDominanceBonus).toBe(true);
             expect(result.credits).toBe(Math.floor(base.credits * ZONE_DOMINANCE_MULTIPLIER));

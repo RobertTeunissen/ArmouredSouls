@@ -294,25 +294,42 @@ function SeasonDetailView({ detail, myName, mineOnly, onMineOnlyChange }: Detail
         <p className="text-sm text-secondary">No standings or records were captured for this season.</p>
       )}
 
-      {/* Final standings */}
+      {/* Final standings — top 100 per mode, ranked by LP */}
       {visibleStandings.length > 0 && (
         <section>
           <h2 className="mb-3 text-xl font-medium text-white">Final Standings</h2>
-          <div className="space-y-5">
+          <p className="mb-4 text-xs text-tertiary">Top 100 per league, ranked by League Points.</p>
+          <div className="space-y-6">
             {visibleStandings.map(([mode, rows]) => (
-              <div key={mode}>
-                <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-tertiary">
-                  {modeLabel(mode)}
-                </h3>
-                <ul className="space-y-1.5">
-                  {rows.map((row) => (
-                    <StandingRow
-                      key={`${row.tier}-${row.leagueInstanceId}-${row.instanceRank}-${row.entityName}`}
-                      row={row}
-                      mine={isMine(row.stableName, row.isGeneratedSubject)}
-                    />
-                  ))}
-                </ul>
+              <div key={mode} className="overflow-hidden rounded-lg border border-gray-700">
+                <div className="bg-surface-elevated px-4 py-2.5">
+                  <h3 className="text-sm font-semibold uppercase tracking-wide text-white">
+                    {modeLabel(mode)}
+                  </h3>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-gray-700 bg-surface text-left text-tertiary">
+                        <th className="w-12 px-3 py-2 text-center">#</th>
+                        <th className="px-3 py-2">Name</th>
+                        <th className="px-3 py-2">Stable</th>
+                        <th className="px-3 py-2">Tier</th>
+                        <th className="px-3 py-2 text-right">LP</th>
+                        <th className="px-3 py-2 text-right">W/L/D</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rows.map((row) => (
+                        <StandingRow
+                          key={`${row.modeRank}-${row.entityName}`}
+                          row={row}
+                          mine={isMine(row.stableName, row.isGeneratedSubject)}
+                        />
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             ))}
           </div>
@@ -346,36 +363,34 @@ function SeasonDetailView({ detail, myName, mineOnly, onMineOnlyChange }: Detail
 
 function StandingRow({ row, mine }: { row: SnapshotEntry; mine: boolean }) {
   return (
-    <li
-      className={`flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg px-3 py-2 text-xs ${
-        mine ? 'border border-primary bg-primary/10' : 'bg-surface-elevated'
+    <tr
+      className={`border-b border-gray-700/50 ${
+        mine ? 'bg-primary/10' : 'even:bg-surface-elevated/50'
       }`}
     >
-      <span className="w-7 text-center text-sm font-bold text-tertiary">
-        {rankBadge(row.instanceRank)}
-      </span>
-      <span className="min-w-0 flex-1">
+      <td className="w-12 px-3 py-2 text-center font-bold text-tertiary">
+        {rankBadge(row.modeRank)}
+      </td>
+      <td className="px-3 py-2">
         <span className="font-medium text-white">{row.entityName}</span>
-        <span className="ml-2 text-secondary">{row.stableName}</span>
         {mine && (
           <span className="ml-2 rounded bg-primary px-1 text-[10px] font-semibold uppercase text-white">
-            My Stable
+            You
           </span>
         )}
         {row.isGeneratedSubject && (
           <span className="ml-2 rounded bg-surface px-1 text-[10px] uppercase text-tertiary">
-            system
+            bot
           </span>
         )}
-      </span>
-      <span className="capitalize text-tertiary">
-        {row.tier} · {row.leagueInstanceId}
-      </span>
-      <span className="font-semibold text-primary">{row.leaguePoints} LP</span>
-      <span className="text-tertiary">
-        {row.wins}W/{row.losses}L/{row.draws}D
-      </span>
-    </li>
+      </td>
+      <td className="px-3 py-2 text-secondary">{row.stableName}</td>
+      <td className="px-3 py-2 capitalize text-tertiary">{row.tier}</td>
+      <td className="px-3 py-2 text-right font-semibold text-primary">{row.leaguePoints}</td>
+      <td className="px-3 py-2 text-right text-tertiary">
+        {row.wins}/{row.losses}/{row.draws}
+      </td>
+    </tr>
   );
 }
 

@@ -42,6 +42,11 @@ import { calculateStreamingRevenueBatch } from '../economy/streamingRevenueServi
 import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
 import { prepareRobotForCombat } from '../../utils/robotCalculations';
 import { getTuningBonusesBatch } from '../tuning-pool';
+import {
+  getLeagueWinReward,
+  getTierFactor,
+  KOTH_CREDIT_BASE_MULTIPLIER,
+} from '../../utils/economyFormulas';
 
 /** Prepared participant data for batched DB operations */
 interface PreparedParticipant {
@@ -76,7 +81,7 @@ export interface KothBattleExecutionSummary {
  * Calculate KotH rewards based on placement, zone score, uncontested time, and tier.
  *
  * Tier-scaled reward formula:
- *  - Credits: tierBaseReward × placementMultiplier
+ *  - Credits: tierBaseReward × 1.5 × placementMultiplier
  *  - Fame: baseFame × tierFactor
  *  - Prestige: basePrestige × tierFactor
  *  - Zone dominance bonus: +25% to all rewards when >75% of points from uncontested zone control
@@ -89,12 +94,6 @@ export function calculateKothRewards(
   tier: string,
   winnerHPPercent?: number,
 ): { credits: number; prestige: number; fame: number; zoneDominanceBonus: boolean } {
-  // Tier-based credit base (same as getLeagueWinReward)
-  const TIER_CREDIT_BASE: Record<string, number> = {
-    bronze: 7500, silver: 15000, gold: 30000,
-    platinum: 60000, diamond: 115000, champion: 225000,
-  };
-
   // Placement multipliers for credits
   const PLACEMENT_CREDIT_MULTIPLIER: Record<number, number> = {
     1: 1.0, 2: 0.7, 3: 0.5, 4: 0.35, 5: 0.25, 6: 0.2,
@@ -110,17 +109,13 @@ export function calculateKothRewards(
     1: 15, 2: 8, 3: 3, 4: 0, 5: 0, 6: 0,
   };
 
-  // Tier factor for fame/prestige scaling
-  const TIER_FACTOR: Record<string, number> = {
-    bronze: 1.0, silver: 1.5, gold: 2.0,
-    platinum: 3.0, diamond: 4.5, champion: 7.0,
-  };
-
-  const creditBase = TIER_CREDIT_BASE[tier.toLowerCase()] ?? TIER_CREDIT_BASE.bronze;
+  const creditBase = getLeagueWinReward(tier);
   const creditMultiplier = PLACEMENT_CREDIT_MULTIPLIER[placement] ?? 0.2;
-  const tierFactor = TIER_FACTOR[tier.toLowerCase()] ?? 1.0;
+  const tierFactor = getTierFactor(tier);
 
-  let credits = Math.floor(creditBase * creditMultiplier);
+  // Rounded, not floored: the three-way product hits binary-fraction artifacts
+  // (7500 × 1.5 × 0.7 floors to 7874 rather than 7875).
+  let credits = Math.round(creditBase * KOTH_CREDIT_BASE_MULTIPLIER * creditMultiplier);
   let fame = Math.floor((BASE_FAME[placement] ?? 1) * tierFactor);
   let prestige = Math.floor((BASE_PRESTIGE[placement] ?? 0) * tierFactor);
 

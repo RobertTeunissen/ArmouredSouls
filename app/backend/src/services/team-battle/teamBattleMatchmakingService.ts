@@ -314,7 +314,6 @@ export async function pairTeams(
   }
 
   const matches: TeamBattleMatchPair[] = [];
-  const availableTeams = [...teams];
 
   // Pre-calculate combined ELO for all teams from in-memory data
   const combinedELOMap = new Map<number, number>();
@@ -333,6 +332,14 @@ export async function pairTeams(
       select: { entityId: true, leaguePoints: true },
     })).map(s => [s.entityId, s.leaguePoints])
   );
+
+  // Sort by LP descending (primary), combined ELO descending (tiebreaker)
+  // so the greedy algorithm processes highest-LP teams first
+  const availableTeams = [...teams].sort((a, b) => {
+    const lpDiff = (standingsLPMap.get(b.id) ?? 0) - (standingsLPMap.get(a.id) ?? 0);
+    if (lpDiff !== 0) return lpDiff;
+    return (combinedELOMap.get(b.id) ?? 0) - (combinedELOMap.get(a.id) ?? 0);
+  });
 
   // Pair teams using greedy algorithm
   while (availableTeams.length > 1) {

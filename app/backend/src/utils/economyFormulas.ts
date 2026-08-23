@@ -178,6 +178,46 @@ export function getParticipationReward(league: string): number {
   return Math.round(getLeagueWinReward(league) * 0.2);
 }
 
+// ==================== MULTI-ROBOT EVENT REWARDS ====================
+
+/**
+ * Credit base multiplier for King of the Hill.
+ *
+ * KotH credits are `getLeagueWinReward(tier) × this × placementMultiplier`.
+ */
+export const KOTH_CREDIT_BASE_MULTIPLIER = 1.5;
+
+/**
+ * Credit base multiplier for Grand Melee.
+ *
+ * Higher than KotH because a Grand Melee field is up to 20 robots versus
+ * KotH's 5-6, so any given placement is harder to reach.
+ */
+export const GRAND_MELEE_CREDIT_BASE_MULTIPLIER = 2.5;
+
+/**
+ * Tier scaling factor applied to fame and prestige awards in the
+ * placement-based events (KotH, Grand Melee).
+ *
+ * Credits scale via `getLeagueWinReward`; fame and prestige scale via this
+ * factor instead, because their base values are small integers per placement.
+ */
+const TIER_FAME_PRESTIGE_FACTOR: Record<string, number> = {
+  bronze: 1.0,
+  silver: 1.5,
+  gold: 2.0,
+  platinum: 3.0,
+  diamond: 4.5,
+  champion: 7.0,
+};
+
+/**
+ * Get the fame/prestige tier scaling factor. Unknown tiers fall back to 1.0.
+ */
+export function getTierFactor(league: string): number {
+  return TIER_FAME_PRESTIGE_FACTOR[league.toLowerCase()] ?? 1.0;
+}
+
 // ==================== HELPER FUNCTIONS ====================
 
 /**

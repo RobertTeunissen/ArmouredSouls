@@ -440,10 +440,35 @@ describe('teamBattleMatchmakingService', () => {
       const team2 = makeTeam(2, 2, { stableId: 200, robotElos: [1100, 1100] }); // ELO diff = 200
       const team3 = makeTeam(3, 2, { stableId: 300, robotElos: [900, 900] }); // ELO diff = 200
 
-      // All opponents are recent for team1
-      mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([
-        { team1Id: 1, team2Id: 2 },
-        { team1Id: 1, team2Id: 3 },
+      // All opponents are recent for team1 (via unified scheduled_matches_v2)
+      mockPrisma.scheduledMatch.findMany.mockResolvedValue([
+        {
+          id: 101,
+          matchType: 'league_2v2',
+          status: 'completed',
+          scheduledFor: new Date(),
+          participants: [
+            { participantId: 1, participantType: 'team' },
+            { participantId: 2, participantType: 'team' },
+          ],
+        },
+        {
+          id: 102,
+          matchType: 'league_2v2',
+          status: 'completed',
+          scheduledFor: new Date(),
+          participants: [
+            { participantId: 1, participantType: 'team' },
+            { participantId: 3, participantType: 'team' },
+          ],
+        },
+      ]);
+
+      // Give team1 highest LP so it's processed first by the greedy algorithm
+      mockPrisma.standing.findMany.mockResolvedValue([
+        { entityId: 1, leaguePoints: 60 },
+        { entityId: 2, leaguePoints: 30 },
+        { entityId: 3, leaguePoints: 30 },
       ]);
 
       const result = await pairTeams([team1, team2, team3], 2, 'silver', 'silver_2');
@@ -483,6 +508,31 @@ describe('teamBattleMatchmakingService', () => {
       expect(result[0].teamBattleLeagueId).toBe('silver_2');
     });
 
+    it('should process teams in LP-descending order so highest-LP team picks first', async () => {
+      // team1 has highest LP (60), team2 has mid LP (30), team3 has low LP (10)
+      // team1 and team3 are from the same stable — massive penalty (+10000)
+      // If processed LP-first: team1 picks team2 (closest LP, different stable)
+      // If processed arbitrarily: team2 might pick team3 first, leaving team1 with the bye
+      const team1 = makeTeam(1, 2, { stableId: 100, robotElos: [1200, 1200] });
+      const team2 = makeTeam(2, 2, { stableId: 200, robotElos: [1000, 1000] });
+      const team3 = makeTeam(3, 2, { stableId: 100, robotElos: [800, 800] }); // same stable as team1
+
+      mockPrisma.scheduledMatch.findMany.mockResolvedValue([]);
+      mockPrisma.standing.findMany.mockResolvedValue([
+        { entityId: 1, leaguePoints: 60 },
+        { entityId: 2, leaguePoints: 30 },
+        { entityId: 3, leaguePoints: 10 },
+      ]);
+
+      const result = await pairTeams([team1, team2, team3], 2, 'gold', 'gold_1');
+
+      // team1 (highest LP) should be paired with team2 (different stable, closest LP)
+      const team1Match = result.find(m => m.team1.id === 1);
+      expect(team1Match).toBeDefined();
+      expect(team1Match!.team2.id).toBe(2);
+      expect(team1Match!.isByeMatch).toBe(false);
+    });
+
     it('should tie-break by earliest creation timestamp', async () => {
       const team1 = makeTeam(1, 2, { stableId: 100 });
       const team2 = makeTeam(2, 2, {
@@ -492,7 +542,14 @@ describe('teamBattleMatchmakingService', () => {
         createdAt: new Date('2024-01-01'), // earlier
       });
 
-      mockPrisma.scheduledTeamBattleMatch.findMany.mockResolvedValue([]);
+      mockPrisma.scheduledMatch.findMany.mockResolvedValue([]);
+      // All teams same LP so sort is stable (preserves input order)
+      // and scoring tiebreak is purely createdAt
+      mockPrisma.standing.findMany.mockResolvedValue([
+        { entityId: 1, leaguePoints: 50 },
+        { entityId: 2, leaguePoints: 50 },
+        { entityId: 3, leaguePoints: 50 },
+      ]);
 
       const result = await pairTeams([team1, team2, team3], 2, 'silver', 'silver_2');
 

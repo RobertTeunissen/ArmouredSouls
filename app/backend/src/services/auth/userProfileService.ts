@@ -8,6 +8,7 @@ import prisma from '../../lib/prisma';
 import { AuthError, AuthErrorCode } from '../../errors/authErrors';
 import { StandingsMode } from '../../../generated/prisma';
 import { getPrestigeRank } from '../../utils/prestigeUtils';
+import { EventType } from '../common/eventLogger';
 import type { StableMetric, RobotMetric } from '../../types/snapshotTypes';
 
 const LEAGUE_HIERARCHY = [
@@ -159,62 +160,96 @@ interface RobotSlim {
   elo: number;
 }
 
+/**
+ * Battle types that resolve by placement rather than win/loss.
+ *
+ * Both orchestrators pass `skipBattleCounters: true`, so these modes never touch
+ * `robots.wins` / `robots.losses` (Spec #46 records the decision not to widen the
+ * career counters, because a "win" is undefined for placements 2 through N).
+ * They do still emit `battle_complete` audit events, where every non-winning
+ * placement is recorded as a `'loss'` — so they must be excluded here to keep the
+ * per-cycle delta consistent with the career record displayed beside it.
+ */
+const PLACEMENT_MODE_BATTLE_TYPES = ['koth', 'grand_melee'];
+
+/**
+ * Count this cycle's wins and losses for a set of robots, covering the same
+ * modes as the career win/loss counters.
+ */
+async function countCareerCycleResults(
+  cycleNumber: number,
+  robotIds: number[],
+): Promise<{ wins: number; losses: number }> {
+  if (robotIds.length === 0) return { wins: 0, losses: 0 };
+
+  const events = await prisma.auditLog.findMany({
+    where: {
+      cycleNumber,
+      eventType: EventType.BATTLE_COMPLETE,
+      robotId: { in: robotIds },
+    },
+    select: { payload: true },
+  });
+
+  let wins = 0;
+  let losses = 0;
+
+  for (const event of events) {
+    const payload = event.payload as unknown as { result?: string; battleType?: string };
+    if (payload.battleType && PLACEMENT_MODE_BATTLE_TYPES.includes(payload.battleType)) continue;
+    if (payload.result === 'win') wins++;
+    else if (payload.result === 'loss') losses++;
+  }
+
+  return { wins, losses };
+}
+
+/**
+ * Summarise what changed for this stable during the most recent cycle.
+ *
+ * Every figure here is a single cycle's activity, not a difference between two
+ * cycles: the snapshot metrics are themselves already per-cycle aggregates (they
+ * are built from audit events filtered by `cycleNumber`), so subtracting the
+ * previous cycle's totals would compare two unrelated quantities.
+ */
 async function computeCycleChanges(userId: number, robots: RobotSlim[]) {
   const latestSnapshot = await prisma.cycleSnapshot.findFirst({
     orderBy: { cycleNumber: 'desc' },
     select: { cycleNumber: true },
   });
 
-  if (!latestSnapshot || latestSnapshot.cycleNumber <= 1) return null;
+  if (!latestSnapshot) return null;
 
-  const [currentSnapshot, previousSnapshot] = await Promise.all([
-    prisma.cycleSnapshot.findUnique({
-      where: { cycleNumber: latestSnapshot.cycleNumber },
-      select: { stableMetrics: true, robotMetrics: true },
-    }),
-    prisma.cycleSnapshot.findUnique({
-      where: { cycleNumber: latestSnapshot.cycleNumber - 1 },
-      select: { stableMetrics: true, robotMetrics: true },
-    }),
-  ]);
+  const snapshot = await prisma.cycleSnapshot.findUnique({
+    where: { cycleNumber: latestSnapshot.cycleNumber },
+    select: { stableMetrics: true, robotMetrics: true },
+  });
 
-  if (!currentSnapshot || !previousSnapshot) return null;
+  if (!snapshot) return null;
 
-  const currentStableMetrics = (currentSnapshot.stableMetrics as unknown as StableMetric[]).find(
+  const stableMetric = (snapshot.stableMetrics as unknown as StableMetric[]).find(
     (m: StableMetric) => m.userId === userId,
   );
 
   const robotIds = robots.map(r => r.id);
 
-  const currentRobotMetrics = (currentSnapshot.robotMetrics as unknown as RobotMetric[]).filter(
-    (m: RobotMetric) => robotIds.includes(m.robotId),
-  );
-  const previousRobotMetrics = (previousSnapshot.robotMetrics as unknown as RobotMetric[]).filter(
+  const robotMetrics = (snapshot.robotMetrics as unknown as RobotMetric[]).filter(
     (m: RobotMetric) => robotIds.includes(m.robotId),
   );
 
-  const currentWins = currentRobotMetrics.reduce((sum: number, m: RobotMetric) => sum + (m.wins || 0), 0);
-  const currentLosses = currentRobotMetrics.reduce((sum: number, m: RobotMetric) => sum + (m.losses || 0), 0);
-  const previousWins = previousRobotMetrics.reduce((sum: number, m: RobotMetric) => sum + (m.wins || 0), 0);
-  const previousLosses = previousRobotMetrics.reduce((sum: number, m: RobotMetric) => sum + (m.losses || 0), 0);
+  const { wins, losses } = await countCareerCycleResults(latestSnapshot.cycleNumber, robotIds);
 
+  // ELO movement of whichever robot currently holds the stable's highest rating.
   const currentHighestElo = robots.length > 0 ? Math.max(...robots.map(r => r.elo)) : 0;
-
-  let previousHighestElo = currentHighestElo;
-  if (previousRobotMetrics.length > 0) {
-    const highestEloRobot = robots.find(r => r.elo === currentHighestElo);
-    if (highestEloRobot) {
-      const robotMetric = currentRobotMetrics.find((m: RobotMetric) => m.robotId === highestEloRobot.id);
-      if (robotMetric && robotMetric.eloChange !== undefined) {
-        previousHighestElo = currentHighestElo - robotMetric.eloChange;
-      }
-    }
-  }
+  const highestEloRobot = robots.find(r => r.elo === currentHighestElo);
+  const highestEloChange = highestEloRobot
+    ? robotMetrics.find((m: RobotMetric) => m.robotId === highestEloRobot.id)?.eloChange ?? 0
+    : 0;
 
   return {
-    prestige: currentStableMetrics?.totalPrestigeEarned || 0,
-    wins: currentWins - previousWins,
-    losses: currentLosses - previousLosses,
-    highestElo: currentHighestElo - previousHighestElo,
+    prestige: stableMetric?.totalPrestigeEarned || 0,
+    wins,
+    losses,
+    highestElo: highestEloChange,
   };
 }

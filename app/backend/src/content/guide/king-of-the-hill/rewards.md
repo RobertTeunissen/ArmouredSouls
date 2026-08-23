@@ -12,14 +12,18 @@ relatedArticles:
 
 ## Placement Rewards
 
-Rewards are tiered by final placement:
+Rewards are tiered by final placement. The credit base is **1.5× the standard league win reward** for each tier, multiplied by a placement factor:
 
-| Placement | Credits | Fame | Prestige |
+| Placement | Credits (Bronze) | Fame | Prestige |
 |---|---|---|---|
-| 1st | ₡25,000 | 8 | +15 |
-| 2nd | ₡17,500 | 5 | +8 |
-| 3rd | ₡10,000 | 3 | +3 |
-| 4th-6th | ₡5,000 | 0 | 0 |
+| 1st | ₡11,250 | 8 | +15 |
+| 2nd | ₡7,875 | 5 | +8 |
+| 3rd | ₡5,625 | 3 | +3 |
+| 4th | ₡3,937 | 1 | 0 |
+| 5th | ₡2,813 | 1 | 0 |
+| 6th | ₡2,250 | 1 | 0 |
+
+Credits scale with tier (Silver 2×, Gold 4×, etc.). Fame and prestige are multiplied by a tier factor (Bronze 1.0×, Silver 1.5×, Gold 2.0×, Platinum 3.0×, Diamond 4.5×, Champion 7.0×).
 
 The winner's fame is further modified by a performance multiplier: Perfect Victory (100% HP) = 2.0×, Dominating (>80% HP) = 1.5×, Comeback (<20% HP) = 1.25×.
 
