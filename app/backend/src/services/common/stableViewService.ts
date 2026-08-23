@@ -86,6 +86,9 @@ export async function getStableProfile(userId: number) {
             (b.battle_type IN ('league_1v1', 'tournament_1v1') AND b.winner_id <> ALL(${robotIds}))
             OR (b.battle_type NOT IN ('league_1v1', 'tournament_1v1')
                 AND b.winning_side IS NOT NULL AND b.winning_side <> bp.team)
+          COUNT(DISTINCT CASE WHEN b.winner_id IS NOT NULL AND NOT (
+            (b.battle_type IN ('league_1v1', 'tournament_1v1') AND b.winner_id = ANY(${robotIds}))
+            OR (b.battle_type NOT IN ('league_1v1', 'tournament_1v1') AND b.winning_side = bp.team)
           ) THEN b.id END) AS losses,
           COUNT(DISTINCT CASE WHEN b.winner_id IS NULL THEN b.id END) AS draws
         FROM battle_participants bp
