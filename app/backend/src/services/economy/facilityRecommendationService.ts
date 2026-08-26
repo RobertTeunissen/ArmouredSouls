@@ -1,4 +1,5 @@
 import prisma from '../../lib/prisma';
+import { readCycleRepairSpend } from './repairPayloadKeys';
 import { getFacilityConfig, FACILITY_TYPES } from '../../config/facilities';
 import { unifiedFacilityROIService, UnifiedFacilityROI } from './unifiedFacilityROIService';
 import { AuthError, AuthErrorCode } from '../../errors/authErrors';
@@ -162,7 +163,7 @@ export class FacilityRecommendationService {
       if (Array.isArray(stableMetrics)) {
         const userMetrics = stableMetrics.find((m) => m.userId === userId);
         if (userMetrics) {
-          totalRepairCost += userMetrics.totalRepairCosts || 0;
+          totalRepairCost += readCycleRepairSpend(userMetrics as unknown as Record<string, unknown>);
           totalBattles += userMetrics.battlesParticipated || 0;
         }
       }

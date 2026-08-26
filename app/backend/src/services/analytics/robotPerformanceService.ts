@@ -16,6 +16,7 @@ import prisma from '../../lib/prisma';
 import type { Prisma } from '../../../generated/prisma';
 import { cycleSnapshotService } from '../cycle/cycleSnapshotService';
 import type { RobotMetric as RobotMetricData } from '../../types/snapshotTypes';
+import { readRepairChargedCredits } from '../economy/repairPayloadKeys';
 
 /** Shape of snapshot objects returned by cycleSnapshotService.getSnapshotRange() */
 interface SnapshotWithMetrics {
@@ -349,7 +350,10 @@ export class RobotPerformanceService {
 
     repairEvents.forEach((event) => {
       const payload = event.payload as unknown as Record<string, unknown>;
-      totalRepairCosts += (payload.cost as number) || 0;
+      // Spec #48 Requirement 17 criterion 10. Not named in the requirements, but it
+      // reads the same Repair_Spend_Source field, so without the resolver a
+      // pre-rename row would silently report 0 here.
+      totalRepairCosts += readRepairChargedCredits(payload) ?? 0;
     });
 
     // Calculate win rate

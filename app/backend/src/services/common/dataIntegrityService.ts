@@ -1,6 +1,7 @@
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { StableMetric } from '../../types/snapshotTypes';
+import { readCycleRepairSpend } from '../economy/repairPayloadKeys';
 
 export interface IntegrityIssue {
   type: 'credit_mismatch' | 'sequence_gap' | 'missing_events' | 'invalid_data';
@@ -97,7 +98,7 @@ export class DataIntegrityService {
         if (userMetrics) {
           const expectedNetChange = 
             userMetrics.totalCreditsEarned - 
-            userMetrics.totalRepairCosts - 
+            readCycleRepairSpend(userMetrics as unknown as Record<string, unknown>) - 
             userMetrics.operatingCosts;
           
           // Allow 1 credit tolerance for rounding

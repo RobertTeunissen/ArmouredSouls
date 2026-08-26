@@ -10,7 +10,6 @@
 import * as fc from 'fast-check';
 
 const mockRecordTransaction = jest.fn();
-const mockIsEnabled = jest.fn();
 
 jest.mock('../../src/services/financial/financialService', () => ({
   __esModule: true,
@@ -34,8 +33,17 @@ import { applyManualRepairDiscount, calculateRepairQuote } from '../../src/share
 
 beforeEach(() => {
   mockRecordTransaction.mockReset();
-  mockIsEnabled.mockReset();
   mockRecordTransaction.mockResolvedValue({ id: 1 });
+
+  // Reset the cycle-number mock too. One test below uses `mockRejectedValueOnce`,
+  // and without this an unconsumed rejection could leak into whichever test ran
+  // next — which is exactly how this file passed in isolation but failed in the
+  // full suite.
+  const baseOrchestrator = jest.requireMock('../../src/services/battle/baseOrchestrator') as {
+    getCurrentCycleNumber: jest.Mock;
+  };
+  baseOrchestrator.getCurrentCycleNumber.mockReset();
+  baseOrchestrator.getCurrentCycleNumber.mockResolvedValue(42);
 });
 
 describe('Requirement 16 criterion 5: a failed ledger write leaves the repair alone', () => {

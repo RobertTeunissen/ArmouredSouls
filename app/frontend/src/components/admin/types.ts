@@ -283,8 +283,14 @@ export interface RepairLogEvent {
   robotId: number;
   robotName: string;
   repairType: 'manual' | 'automatic';
-  cost: number;
-  preDiscountCost: number | null;
+  /** Credits actually deducted. Renamed from `cost` by Spec #48 Requirement 17. */
+  creditsCharged: number;
+  /**
+   * The same repair priced before the manual discount and after the Repair Bay
+   * discount. Null on an automatic repair, which applies no manual discount.
+   * Renamed from `preDiscountCost`.
+   */
+  creditsBeforeManualDiscount: number | null;
   manualRepairDiscount: number | null;
   eventTimestamp: string;
 }

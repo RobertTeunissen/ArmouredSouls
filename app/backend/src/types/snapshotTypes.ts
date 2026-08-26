@@ -16,7 +16,16 @@ export interface StableMetric {
   battlesParticipated: number;
   totalCreditsEarned: number;
   totalPrestigeEarned: number;
-  totalRepairCosts: number;
+  /**
+   * Credits charged for repairs for this stable during THIS ONE CYCLE.
+   *
+   * Renamed from `totalRepairCosts` by Spec #48 Requirement 17 criterion 3: the old
+   * name sat on a per-cycle metric but read as a lifetime figure. There is no
+   * database migration because this lives inside a `Json` column, so rows written
+   * before the rename keep the old key — read it through `readCycleRepairSpend` in
+   * `services/economy/repairPayloadKeys.ts`, never directly.
+   */
+  cycleRepairCreditsPaid: number;
   merchandisingIncome: number;
   streamingIncome: number;
   operatingCosts: number;
@@ -66,7 +75,14 @@ export interface CycleEventPayload {
   prestige?: number;
   fame?: number;
   streamingRevenue?: number;
-  repairCost?: number;
+  // `repairCost?: number` was removed by Spec #48 Requirement 9 criterion 3. It was
+  // declared but never written by any orchestrator, and its only effect was to let
+  // two dead reads type-check: one in `cycleSnapshotService.aggregateStableMetrics`
+  // (a latent double-count) and one in `cycleCsvExportService` (a CSV column that
+  // always exported 0). Removing the declaration is what stops either coming back.
+  //
+  // Repair spend is read from Repair_Spend_Source — `audit_logs` rows with
+  // `eventType: 'robot_repair'` — and from nowhere else.
   cost?: number;
   merchandising?: number;
   /**

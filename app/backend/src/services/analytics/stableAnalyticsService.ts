@@ -9,6 +9,7 @@
 
 import prisma from '../../lib/prisma';
 import { cycleSnapshotService } from '../cycle/cycleSnapshotService';
+import { readCycleRepairSpend } from '../economy/repairPayloadKeys';
 
 interface CycleBreakdown {
   battleCredits: number;
@@ -93,7 +94,8 @@ function buildCycleSummary(
     userMetrics.totalCreditsEarned +
     userMetrics.merchandisingIncome +
     userMetrics.streamingIncome;
-  const expenses = userMetrics.totalRepairCosts + userMetrics.operatingCosts;
+  const repairSpend = readCycleRepairSpend(userMetrics as unknown as Record<string, unknown>);
+  const expenses = repairSpend + userMetrics.operatingCosts;
   const weaponPurchases = Number(userMetrics.weaponPurchases) || 0;
   const facilityPurchases = Number(userMetrics.facilityPurchases) || 0;
   const robotPurchases = Number(userMetrics.robotPurchases) || 0;
@@ -111,7 +113,7 @@ function buildCycleSummary(
       battleCredits: userMetrics.totalCreditsEarned,
       merchandising: userMetrics.merchandisingIncome,
       streaming: userMetrics.streamingIncome,
-      repairCosts: userMetrics.totalRepairCosts,
+      repairCosts: repairSpend,
       operatingCosts: userMetrics.operatingCosts,
       weaponPurchases,
       facilityPurchases,

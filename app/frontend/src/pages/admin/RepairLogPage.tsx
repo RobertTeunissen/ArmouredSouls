@@ -175,11 +175,15 @@ function RepairLogPage() {
                 {row.repairType}
               </span>
             )},
-            { key: 'cost', label: 'Cost', align: 'right', render: (row) => `₡${row.cost.toLocaleString()}` },
-            { key: 'preDiscountCost', label: 'Pre-Discount', align: 'right', render: (row) => row.repairType === 'manual' && row.preDiscountCost != null ? `₡${row.preDiscountCost.toLocaleString()}` : '—' },
+            // Spec #48 Requirement 17 criterion 13: the column `key` values follow
+            // the renamed response fields, while the labels, order, filters and
+            // rendered values stay exactly as they were — including for a row
+            // written before the rename, which the backend resolvers still read.
+            { key: 'creditsCharged', label: 'Cost', align: 'right', render: (row) => `₡${row.creditsCharged.toLocaleString()}` },
+            { key: 'creditsBeforeManualDiscount', label: 'Pre-Discount', align: 'right', render: (row) => row.repairType === 'manual' && row.creditsBeforeManualDiscount != null ? `₡${row.creditsBeforeManualDiscount.toLocaleString()}` : '—' },
             { key: 'savings', label: 'Savings', align: 'right', render: (row) => {
-              if (row.repairType === 'manual' && row.preDiscountCost != null) {
-                const savings = row.preDiscountCost - row.cost;
+              if (row.repairType === 'manual' && row.creditsBeforeManualDiscount != null) {
+                const savings = row.creditsBeforeManualDiscount - row.creditsCharged;
                 return <span className="text-success">₡{savings.toLocaleString()}</span>;
               }
               return '—';
