@@ -63,7 +63,7 @@ async function createTestRobot(userId: number, name: string, battles: number, fa
       currentHP: 100, maxHP: 100, currentShield: 20, maxShield: 20, damageTaken: 0,
       elo: 1200, wins: 0, draws: 0, losses: 0,
       damageDealtLifetime: 0, damageTakenLifetime: 0, kills: 0,
-      repairCost: 0, battleReadiness: 100, totalRepairsPaid: 0,
+      repairQuoteCredits: 0, battleReadiness: 100, lifetimeRepairCreditsPaid: 0,
       yieldThreshold: 10, loadoutType: 'single', stance: 'balanced', mainWeaponId: null,
     },
   });

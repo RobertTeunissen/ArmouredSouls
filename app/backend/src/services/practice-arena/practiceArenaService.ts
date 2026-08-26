@@ -361,9 +361,9 @@ export async function buildSparringPartner(
     kothBestWinStreak: 0,
 
     // Economic state
-    repairCost: 0,
+    repairQuoteCredits: 0,
     battleReadiness: 100,
-    totalRepairsPaid: 0,
+    lifetimeRepairCreditsPaid: 0,
 
     // Player configuration
     yieldThreshold: config.yieldThreshold,

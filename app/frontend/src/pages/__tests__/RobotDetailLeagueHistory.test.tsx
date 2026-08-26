@@ -158,7 +158,7 @@ const mockRobot = {
   currentShield: 50,
   maxShield: 50,
   battleReadiness: 100,
-  repairCost: 0,
+  repairQuoteCredits: 0,
   totalBattles: 20,
   wins: 12,
   draws: 2,
@@ -166,7 +166,7 @@ const mockRobot = {
   damageDealtLifetime: 5000,
   damageTakenLifetime: 3000,
   kills: 5,
-  totalRepairsPaid: 200,
+  lifetimeRepairCreditsPaid: 200,
   titles: null,
   user: { username: 'testuser', stableName: 'Test Stable' },
 };

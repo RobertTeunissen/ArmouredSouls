@@ -131,7 +131,7 @@ function makeMockRobot(overrides: Partial<RobotWithWeapons> = {}): RobotWithWeap
     damageDealtLifetime: 0, damageTakenLifetime: 0,
     kills: 0,
     fame: 0, titles: null,
-    repairCost: 0, battleReadiness: 100, totalRepairsPaid: 0,
+    repairQuoteCredits: 0, battleReadiness: 100, lifetimeRepairCreditsPaid: 0,
     yieldThreshold: 10,
     loadoutType: 'single',
     stance: 'balanced',

@@ -231,9 +231,9 @@ async function repairRobots(
         data: {
           currentHP: robot.maxHP,
           currentShield: robot.maxShield,
-          repairCost: 0,
+          repairQuoteCredits: 0,
           battleReadiness: 100,
-          totalRepairsPaid: {
+          lifetimeRepairCreditsPaid: {
             increment: repairCost,
           },
         },

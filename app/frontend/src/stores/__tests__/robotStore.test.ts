@@ -21,7 +21,7 @@ const mockRobot: Robot = {
   maxHP: 100,
   currentShield: 50,
   maxShield: 50,
-  repairCost: 10,
+  repairQuoteCredits: 10,
   level: 1,
   currentLeague: 'Bronze',
   leagueId: 'bronze-1',

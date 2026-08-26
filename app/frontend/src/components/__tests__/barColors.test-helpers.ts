@@ -18,7 +18,7 @@ export function createRobot(currentHP: number, maxHP: number, currentShield: num
     currentShield,
     maxShield,
     battleReadiness: 100,
-    repairCost: 0,
+    repairQuoteCredits: 0,
     loadoutType: 'single',
     mainWeaponId: null,
     offhandWeaponId: null,

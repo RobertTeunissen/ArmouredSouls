@@ -31,7 +31,7 @@ export interface Robot {
   maxHP: number;
   currentShield: number;
   maxShield: number;
-  repairCost: number;
+  repairQuoteCredits: number;
   level: number;
   currentLeague: string;
   leagueId: string | null;

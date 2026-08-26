@@ -175,9 +175,18 @@ model Robot {
   grandMeleeTop3 Int @default(0) @map("grand_melee_top3")
 
   // ===== ECONOMIC STATE =====
-  repairCost       Int @default(0) @map("repair_cost") // Cost to fully repair (formula-based)
+  /// A cached Repair_Quote for this robot's CURRENT damage — money not yet spent.
+  /// Renamed from `repairCost` by Spec #48 Requirement 17 criterion 1, because the old
+  /// name read as money already paid. Both repair paths recompute the quote from
+  /// attributes at repair time and ignore this column; it exists so a list view can
+  /// show an estimate without recomputing. Zeroed on repair.
+  repairQuoteCredits Int @default(0) @map("repair_quote_credits")
   battleReadiness  Int @default(100) @map("battle_readiness") // Percentage (100% = full HP, 0% = critical)
-  totalRepairsPaid Int @default(0) @map("total_repairs_paid") // Lifetime repair costs
+  /// Cumulative credits actually CHARGED for repairing this robot across its whole
+  /// life. Renamed from `totalRepairsPaid` by Spec #48 Requirement 17 criterion 2.
+  /// Incremented by both repair paths with the same per-robot figure that is deducted,
+  /// audited and ledgered, so all four agree to the credit.
+  lifetimeRepairCreditsPaid Int @default(0) @map("lifetime_repair_credits_paid")
 
   // ===== PLAYER CONFIGURATION (Settings, NOT upgradeable attributes) =====
   yieldThreshold Int    @default(10) @map("yield_threshold") // HP % where robot surrenders (0-50%)

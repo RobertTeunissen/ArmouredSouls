@@ -441,7 +441,7 @@ export async function getAtRiskUsers(bankruptcyThreshold: number = BANKRUPTCY_RI
           name: true,
           currentHP: true,
           maxHP: true,
-          repairCost: true,
+          repairQuoteCredits: true,
           battleReadiness: true,
         },
       },
@@ -541,7 +541,7 @@ export async function getAtRiskUsers(bankruptcyThreshold: number = BANKRUPTCY_RI
         }
       }
 
-      const totalRepairCost = user.robots.reduce((sum, robot) => sum + robot.repairCost, 0);
+      const totalRepairCost = user.robots.reduce((sum, robot) => sum + robot.repairQuoteCredits, 0);
 
       const avgDailyCost =
         recentHistory.length > 0

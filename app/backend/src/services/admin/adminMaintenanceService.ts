@@ -126,7 +126,7 @@ export async function repairAllRobotsAdmin(deductCosts: boolean): Promise<AdminR
         data: {
           currentHP: robot.maxHP,
           currentShield: robot.maxShield,
-          repairCost: 0,
+          repairQuoteCredits: 0,
           battleReadiness: 100,
         },
       });

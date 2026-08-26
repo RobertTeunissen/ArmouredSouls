@@ -83,7 +83,7 @@ export interface RobotDetail {
   currentShield: number;
   maxShield: number;
   battleReadiness: number;
-  repairCost: number;
+  repairQuoteCredits: number;
   // Performance Tracking
   totalBattles: number;
   wins: number;
@@ -92,7 +92,7 @@ export interface RobotDetail {
   damageDealtLifetime: number;
   damageTakenLifetime: number;
   kills: number;
-  totalRepairsPaid: number;
+  lifetimeRepairCreditsPaid: number;
   titles: string | null;
 }
 

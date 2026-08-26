@@ -98,7 +98,7 @@ const mockRobots = [
     draws: 3,
     totalBattles: 38,
     battleReadiness: 85,
-    repairCost: 7500,
+    repairQuoteCredits: 7500,
     loadoutType: 'single',
     mainWeaponId: 1,
     offhandWeaponId: null,
@@ -126,7 +126,7 @@ const mockRobots = [
     draws: 2,
     totalBattles: 35,
     battleReadiness: 60,
-    repairCost: 20000,
+    repairQuoteCredits: 20000,
     loadoutType: 'weapon_shield',
     mainWeaponId: 2,
     offhandWeaponId: 3,
@@ -264,7 +264,7 @@ describe('RobotsPage', () => {
       const robotsWithNoRepairs = mockRobots.map(r => ({
         ...r,
         currentHP: r.maxHP,
-        repairCost: 0,
+        repairQuoteCredits: 0,
       }));
       setupMocks(robotsWithNoRepairs);
 

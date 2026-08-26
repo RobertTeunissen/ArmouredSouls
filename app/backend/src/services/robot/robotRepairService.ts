@@ -29,8 +29,9 @@ interface RobotNeedingRepair {
   maxHP: number;
   currentShield: number;
   maxShield: number;
-  repairCost: number;
-  /** The Repair_Quote: post-Repair-Bay-discount, pre-manual-discount. */
+  /** The Cached_Repair_Quote column. Recomputed below, so read only for completeness. */
+  repairQuoteCredits: number;
+  /** The Repair_Quote computed now: post-Repair-Bay-discount, pre-manual-discount. */
   calculatedRepairCost: number;
 }
 
@@ -156,9 +157,9 @@ export async function repairAllRobots(userId: number): Promise<RepairAllResult> 
           data: {
             currentHP: robot.maxHP,
             currentShield: robot.maxShield,
-            repairCost: 0,
+            repairQuoteCredits: 0,
             battleReadiness: 100,
-            totalRepairsPaid: { increment: perRobotFinalCost },
+            lifetimeRepairCreditsPaid: { increment: perRobotFinalCost },
           },
         });
       }),

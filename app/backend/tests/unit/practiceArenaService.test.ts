@@ -9,6 +9,9 @@
  *               6.1, 6.5, 6.6, 6.8, 7.1, 12.3
  */
 
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
+
 // ---------------------------------------------------------------------------
 // Mocks — must be declared before imports
 // ---------------------------------------------------------------------------
@@ -187,9 +190,9 @@ function buildMockDbRobot(overrides: Record<string, unknown> = {}) {
     kills: 2,
     fame: 100,
     titles: null,
-    repairCost: 0,
+    repairQuoteCredits: 0,
     battleReadiness: 100,
-    totalRepairsPaid: 0,
+    lifetimeRepairCreditsPaid: 0,
     yieldThreshold: 20,
     loadoutType: 'single',
     stance: 'balanced',
@@ -702,10 +705,8 @@ describe('Practice Arena Service', () => {
   describe('Architectural independence', () => {
     it('should not import battlePostCombat functions', () => {
       // Read the source file and verify no battlePostCombat imports
-      const fs = require('fs');
-      const path = require('path');
-      const serviceSource = fs.readFileSync(
-        path.resolve(__dirname, '../../src/services/practice-arena/practiceArenaService.ts'),
+      const serviceSource = readFileSync(
+        resolve(__dirname, '../../src/services/practice-arena/practiceArenaService.ts'),
         'utf-8',
       );
 

@@ -213,7 +213,7 @@ function RobotDetailPage() {
                   </div>
                   <div className="bg-surface-elevated p-2 rounded">
                     <div className="text-secondary mb-1">Lifetime Repairs</div>
-                    <div className="text-white font-semibold">₡{robot.totalRepairsPaid.toLocaleString()}</div>
+                    <div className="text-white font-semibold">₡{robot.lifetimeRepairCreditsPaid.toLocaleString()}</div>
                   </div>
                   {robot.titles && robot.titles.trim() && (
                     <div className="bg-surface-elevated p-2 rounded">
