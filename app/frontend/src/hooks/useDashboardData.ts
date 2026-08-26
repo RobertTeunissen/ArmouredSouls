@@ -19,6 +19,7 @@ import { getTutorialState, TutorialState } from '../utils/onboardingApi';
 import { api } from '../utils/api';
 import { getMyTeamBattles, TeamBattle } from '../utils/teamBattleApi';
 import { fetchTuningAllocationSummaries, TuningAllocationSummary } from '../utils/robotApi';
+import { fetchCycleProgressSummary, CycleProgressSummary } from '../utils/dashboardApi';
 import { useRobotStore, useStableStore } from '../stores';
 import { useSubscriptionStore } from '../stores/subscriptionStore';
 import type { RecentTournamentWinner, TierChange } from '../utils/dashboardNotifications';
@@ -44,9 +45,24 @@ export interface DashboardData {
   teams: TeamBattle[];
   tuningSummaries: TuningAllocationSummary[];
   onboardingState: TutorialState | null;
+  // ── Spec #48 ──
+  /** Null while loading and on failure. Three tiles depend on it. */
+  cycleProgress: CycleProgressSummary | null;
+  cycleProgressLoading: boolean;
+  cycleProgressError: string | null;
 }
 
-export function useDashboardData(userId: number | undefined): DashboardData {
+/**
+ * @param refreshUser - Optional re-read of the authenticated user, invoked once on
+ *        mount so the credit balance and prestige total describe the same moment as
+ *        the Current_Cycle figures beside them (Spec #48 Requirement 3 criterion 10).
+ *        Passed in rather than pulled from `useAuth` here, so this stays a
+ *        data-fetching hook with explicit dependencies and no context coupling.
+ */
+export function useDashboardData(
+  userId: number | undefined,
+  refreshUser?: () => Promise<void>,
+): DashboardData {
   const robotCount = useRobotStore(state => state.robots.length);
   const fetchRobots = useRobotStore(state => state.fetchRobots);
   const fetchStableData = useStableStore(state => state.fetchStableData);
@@ -57,6 +73,9 @@ export function useDashboardData(userId: number | undefined): DashboardData {
   const [teams, setTeams] = useState<TeamBattle[]>([]);
   const [tuningSummaries, setTuningSummaries] = useState<TuningAllocationSummary[]>([]);
   const [onboardingState, setOnboardingState] = useState<TutorialState | null>(null);
+  const [cycleProgress, setCycleProgress] = useState<CycleProgressSummary | null>(null);
+  const [cycleProgressLoading, setCycleProgressLoading] = useState(true);
+  const [cycleProgressError, setCycleProgressError] = useState<string | null>(null);
 
   useEffect(() => {
     if (userId === undefined) return;
@@ -65,6 +84,37 @@ export function useDashboardData(userId: number | undefined): DashboardData {
     fetchRobots();
     fetchStableData();
     fetchSubscriptionOverview();
+
+    // Spec #48 Requirement 3 criterion 10 and Requirement 6 criterion 12.
+    //
+    // `AuthContext` calls `refreshUser` once, when the application mounts, and never
+    // again unless asked. Without this a player who navigates within the SPA across a
+    // Battle_Slot boundary and then opens the Dashboard would see a prestige total and
+    // credit balance from whenever the tab was opened, sitting beside Current_Cycle
+    // figures that are current — and a Prestige_Gate progress bar computed from the
+    // stale total.
+    //
+    // ONE call covers both figures (criterion 12 forbids a second request for the
+    // balance alone), and a rejection is swallowed: the tiles fall back to the values
+    // already in the context, because a stale total is more useful than no tile
+    // (criteria 11 and 13). This differs from the Cycle_Progress_Summary read below,
+    // whose failure IS surfaced, because three tiles depend on that one.
+    refreshUser?.().catch(() => { /* a stale total beats an empty tile */ });
+
+    setCycleProgressLoading(true);
+    setCycleProgressError(null);
+    fetchCycleProgressSummary()
+      .then(summary => {
+        if (cancelled) return;
+        setCycleProgress(summary);
+        setCycleProgressLoading(false);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setCycleProgress(null);
+        setCycleProgressError("Today's figures are unavailable.");
+        setCycleProgressLoading(false);
+      });
 
     getTutorialState()
       .then(state => { if (!cancelled) setOnboardingState(state); })
@@ -117,5 +167,14 @@ export function useDashboardData(userId: number | undefined): DashboardData {
     return () => { cancelled = true; };
   }, [robotCount]);
 
-  return { tierChanges, recentChampions, teams, tuningSummaries, onboardingState };
+  return {
+    tierChanges,
+    recentChampions,
+    teams,
+    tuningSummaries,
+    onboardingState,
+    cycleProgress,
+    cycleProgressLoading,
+    cycleProgressError,
+  };
 }

@@ -7,9 +7,9 @@ import UpcomingMatches from '../components/UpcomingMatches';
 import SeasonPhaseCard from '../components/season/SeasonPhaseCard';
 import { useSeasonStore, selectSeason, selectShouldShowCountdown } from '../stores/seasonStore';
 import RecentBattles from '../components/RecentBattles';
-import FinancialSummary from '../components/FinancialSummary';
+import { OverviewRow, type OverviewRowData } from '../components/dashboard';
 import RobotDashboardCard from '../components/RobotDashboardCard';
-import StableStatistics from '../components/StableStatistics';
+
 import LeagueStandingsSummary from '../components/LeagueStandingsSummary';
 import ActiveTournamentCard from '../components/ActiveTournamentCard';
 import DashboardNotification from '../components/DashboardNotification';
@@ -29,7 +29,7 @@ import {
 } from '../utils/dashboardNotifications';
 
 function DashboardPage() {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const navigate = useNavigate();
 
   const robots = useRobotStore(state => state.robots);
@@ -39,9 +39,34 @@ function DashboardPage() {
   const dismissSeasonBanner = useSeasonStore(state => state.dismissBanner);
   const isPreparing = season?.phase === 'preparation';
 
-  const { tierChanges, recentChampions, teams, tuningSummaries, onboardingState } =
-    useDashboardData(user?.id);
+  const {
+    tierChanges,
+    recentChampions,
+    teams,
+    tuningSummaries,
+    onboardingState,
+    cycleProgress,
+    cycleProgressLoading,
+    cycleProgressError,
+  } = useDashboardData(user?.id, refreshUser);
   const { acknowledgedLevel, acknowledge } = useAcknowledgedPrestigeLevel(user?.id);
+
+  // Spec #48: everything the Overview_Row needs. The prestige total and credit
+  // balance come from the auth context rather than the endpoint, so both survive a
+  // Cycle_Progress_Summary failure; `useDashboardData` refreshes that context on
+  // mount so they describe the same moment as the cycle figures beside them.
+  const overviewData: OverviewRowData = useMemo(
+    () => ({
+      prestigeTotal: user?.prestige ?? 0,
+      creditBalance: user?.currency ?? 0,
+      robotCount: robots.length,
+      isPreparationPhase: isPreparing,
+      cycleProgress,
+      isLoading: cycleProgressLoading,
+      error: cycleProgressError,
+    }),
+    [user?.prestige, user?.currency, robots.length, isPreparing, cycleProgress, cycleProgressLoading, cycleProgressError],
+  );
 
   // ── Derived notifications ──────────────────────────────────────────────────
   // Pure functions of the fetched data, so memos rather than state written from
@@ -157,14 +182,9 @@ function DashboardPage() {
           {teamNotifications.map(n => renderNotification(n))}
         </div>
 
-        {/* Top Row: Stable Statistics and Financial Summary */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          {/* Stable Statistics */}
-          <StableStatistics />
-
-          {/* Financial Summary */}
-          <FinancialSummary />
-        </div>
+        {/* Spec #48: the Overview_Row. Sits between the notification stack and Recent
+            Battles, and holds that position whatever the notification count. */}
+        <OverviewRow data={overviewData} />
 
         {/* Matchmaking Section. Upcoming matches are omitted during a
             preparation window — none are scheduled, so an empty list would read

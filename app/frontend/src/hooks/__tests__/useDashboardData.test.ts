@@ -46,7 +46,26 @@ vi.mock('../../stores/subscriptionStore', () => ({
     selector({ fetchOverview: mockFetchOverview }),
 }));
 
+const mockFetchCycleProgressSummary = vi.fn();
+vi.mock('../../utils/dashboardApi', () => ({
+  fetchCycleProgressSummary: () => mockFetchCycleProgressSummary(),
+}));
+
 import { useDashboardData } from '../useDashboardData';
+
+const CYCLE_PROGRESS = {
+  window: { start: '2026-08-26T00:00:00.000Z', end: '2026-08-26T12:00:00.000Z', cycleNumber: 61 },
+  battlesFought: 3,
+  matchesScheduled: 5,
+  winLossDraw: { wins: 2, losses: 1, draws: 0 },
+  bestPlacement: null,
+  remainingSlotsUtc: ['15:00'],
+  nextSettlementAt: '2026-08-27T00:00:00.000Z',
+  prestigeEarned: 40,
+  battleEarnings: 51000,
+  repairSpend: { manual: 0, automatic: 0 },
+  comparison: null,
+};
 
 const TUTORIAL_STATE = {
   currentStep: 9,
@@ -80,6 +99,7 @@ describe('useDashboardData', () => {
     mockGetTutorialState.mockResolvedValue(TUTORIAL_STATE);
     mockGetMyTeamBattles.mockResolvedValue([]);
     mockFetchTuningAllocationSummaries.mockResolvedValue([]);
+    mockFetchCycleProgressSummary.mockResolvedValue(CYCLE_PROGRESS);
     mockApiGet.mockImplementation((url: string) => {
       if (url === '/api/leagues/tier-changes/unseen') return Promise.resolve({ changes: [] });
       if (url === '/api/tournaments') return Promise.resolve({ tournaments: [] });
@@ -315,5 +335,106 @@ describe('useDashboardData', () => {
     const { result } = renderHook(() => useDashboardData(1));
 
     await waitFor(() => expect(result.current.tierChanges).toEqual([change]));
+  });
+});
+
+// ─── Spec #48 ───────────────────────────────────────────────────────────────
+
+describe('useDashboardData — Cycle_Progress_Summary (Spec #48)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockRobots = [];
+    mockGetTutorialState.mockResolvedValue(TUTORIAL_STATE);
+    mockGetMyTeamBattles.mockResolvedValue([]);
+    mockFetchTuningAllocationSummaries.mockResolvedValue([]);
+    mockFetchCycleProgressSummary.mockResolvedValue(CYCLE_PROGRESS);
+    mockApiGet.mockImplementation((url: string) => {
+      if (url === '/api/leagues/tier-changes/unseen') return Promise.resolve({ changes: [] });
+      if (url === '/api/tournaments') return Promise.resolve({ tournaments: [] });
+      return Promise.resolve({});
+    });
+  });
+
+  it('exposes the summary once it resolves and clears the loading flag', async () => {
+    const { result } = renderHook(() => useDashboardData(1));
+
+    expect(result.current.cycleProgressLoading).toBe(true);
+
+    await waitFor(() => {
+      expect(result.current.cycleProgress).toEqual(CYCLE_PROGRESS);
+    });
+    expect(result.current.cycleProgressLoading).toBe(false);
+    expect(result.current.cycleProgressError).toBeNull();
+  });
+
+  it('surfaces an error rather than failing silently, because three tiles depend on it', async () => {
+    // Unlike the five optional reads, this one gets an explicit error.
+    mockFetchCycleProgressSummary.mockRejectedValue(new Error('endpoint down'));
+
+    const { result } = renderHook(() => useDashboardData(1));
+
+    await waitFor(() => {
+      expect(result.current.cycleProgressError).not.toBeNull();
+    });
+    expect(result.current.cycleProgress).toBeNull();
+    expect(result.current.cycleProgressLoading).toBe(false);
+  });
+
+  it('leaves the five optional reads failing silently when they reject', async () => {
+    mockGetTutorialState.mockRejectedValue(new Error('nope'));
+    mockGetMyTeamBattles.mockRejectedValue(new Error('nope'));
+    mockApiGet.mockRejectedValue(new Error('nope'));
+
+    const { result } = renderHook(() => useDashboardData(1));
+
+    await waitFor(() => {
+      expect(result.current.cycleProgress).toEqual(CYCLE_PROGRESS);
+    });
+    // An alert that cannot be computed is simply not shown.
+    expect(result.current.tierChanges).toEqual([]);
+    expect(result.current.recentChampions).toEqual([]);
+    expect(result.current.teams).toEqual([]);
+    expect(result.current.onboardingState).toBeNull();
+    // …and it does not take the cycle figures down with it.
+    expect(result.current.cycleProgressError).toBeNull();
+  });
+
+  it('calls refreshUser exactly once, so the balance and totals match the cycle figures', async () => {
+    // Requirement 3 criterion 10 / Requirement 6 criterion 12: AuthContext refreshes
+    // only at app mount, so without this the balance could be hours stale beside a
+    // current Current_Cycle figure.
+    const refreshUser = vi.fn().mockResolvedValue(undefined);
+
+    renderHook(() => useDashboardData(1, refreshUser));
+
+    await waitFor(() => {
+      expect(refreshUser).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it('still renders the row when refreshUser rejects — a stale total beats an empty tile', async () => {
+    // Requirement 3 criterion 11 / Requirement 6 criterion 13.
+    const refreshUser = vi.fn().mockRejectedValue(new Error('refresh failed'));
+
+    const { result } = renderHook(() => useDashboardData(1, refreshUser));
+
+    await waitFor(() => {
+      expect(result.current.cycleProgress).toEqual(CYCLE_PROGRESS);
+    });
+    expect(result.current.cycleProgressError).toBeNull();
+  });
+
+  it('does not call refreshUser or fetch the summary without a signed-in user', () => {
+    const refreshUser = vi.fn();
+
+    renderHook(() => useDashboardData(undefined, refreshUser));
+
+    expect(refreshUser).not.toHaveBeenCalled();
+    expect(mockFetchCycleProgressSummary).not.toHaveBeenCalled();
+  });
+
+  it('issues exactly one summary request per user, not one per tile', () => {
+    renderHook(() => useDashboardData(1));
+    expect(mockFetchCycleProgressSummary).toHaveBeenCalledTimes(1);
   });
 });
