@@ -44,6 +44,7 @@ export function TodaysBattlesTile({
     return (
       <DashboardTile
         title="Today's Battles"
+        periodNote="This cycle, compared with last"
         isLoading={false}
         error={null}
         content={
@@ -64,6 +65,7 @@ export function TodaysBattlesTile({
     return (
       <DashboardTile
         title="Today's Battles"
+        periodNote="This cycle, compared with last"
         isLoading={isLoading}
         error={error ?? (cycleProgress === null ? "Today's figures are unavailable." : null)}
         content={null}
@@ -108,7 +110,6 @@ export function TodaysBattlesTile({
       <DashboardTileStat
         label="Battles fought"
         value={ratioIsCoherent ? `${battlesFought} of ${matchesScheduled}` : `${battlesFought}`}
-        period="current-cycle"
         signMeaning="no-meaning"
       />
 
@@ -123,8 +124,7 @@ export function TodaysBattlesTile({
         <DashboardTileStat
           label={`Wins and losses (${winLossBattles} ${winLossBattles === 1 ? 'match' : 'matches'})`}
           value={`${winLossDraw.wins}W ${winLossDraw.losses}L ${winLossDraw.draws}D`}
-          period="current-cycle"
-          signMeaning="no-meaning"
+            signMeaning="no-meaning"
         />
       ) : null}
 
@@ -142,8 +142,7 @@ export function TodaysBattlesTile({
           value={`${placementReward(bestPlacement.position) !== 'none' ? '🏆 ' : ''}best ${ordinal(
             bestPlacement.position,
           )} of ${bestPlacement.fieldSize}`}
-          period="current-cycle"
-          signMeaning="no-meaning"
+            signMeaning="no-meaning"
         />
       ) : null}
 
@@ -165,6 +164,12 @@ export function TodaysBattlesTile({
   );
 
   return (
-    <DashboardTile title="Today's Battles" isLoading={false} error={null} content={content} />
+    <DashboardTile
+      title="Today's Battles"
+      periodNote="This cycle, compared with last"
+      isLoading={false}
+      error={null}
+      content={content}
+    />
   );
 }

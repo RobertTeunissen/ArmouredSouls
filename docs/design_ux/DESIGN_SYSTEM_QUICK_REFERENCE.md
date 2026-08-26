@@ -328,12 +328,23 @@ member, which is what stops three tiles from drifting apart.
 {/* Row: one column on mobile, three from lg up */}
 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
-  {/* Tile: container, heading, reserved content height */}
+  {/* Tile: container, heading, period stated once, reserved content height */}
   <section className="bg-surface-elevated border border-gray-700 rounded-lg p-4" aria-label={title}>
-    <h3 className="text-xl font-medium text-white mb-3">{title}</h3>
+    <h3 className="text-xl font-medium text-white">{title}</h3>
+    <p className="text-tertiary text-xs mb-3 mt-0.5">This cycle, compared with last</p>
 
-    <div className="min-h-[11rem] flex flex-col gap-2">
-      {content}
+    {/* Reserved height scales with the row count — not a flat block */}
+    <div className="flex flex-col gap-2" style={{ minHeight: `${rows * 2.25}rem` }}>
+
+      {/* Stat row: value owns a right-aligned cell, comparison sits beneath it */}
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3">
+        <span className="text-secondary text-sm">{label}</span>
+        <span className="text-right font-semibold tabular-nums text-white">{value}</span>
+        <span className="col-start-2 text-right text-tertiary text-xs tabular-nums">
+          vs {comparison}
+        </span>
+      </div>
+
 
       {/* Click-through: native button, 44px activation region, text-primary */}
       <button className="mt-auto min-h-11 min-w-11 inline-flex items-center text-primary hover:underline text-sm self-start">
@@ -364,6 +375,19 @@ member, which is what stops three tiles from drifting apart.
   order come for free.
 - **Row layout is `grid-cols-1 lg:grid-cols-3`.** Stacked below 1024px, three across
   above it. Tile count and tile order never depend on data availability.
+- **State the period once, under the heading.** Not on every row. Four repeats of
+  `(this cycle)` in one tile wrap the labels and push the values out of alignment, and
+  they restate the one fact every figure in the tile shares. Only a figure whose period
+  differs from the rest of its tile carries its own — and prefer a self-evident label
+  ("Current balance") over a qualifier.
+- **Values get a right-aligned cell of their own, comparisons go beneath them.** Use
+  `grid grid-cols-[minmax(0,1fr)_auto]` with the comparison on `col-start-2`, not
+  `justify-between` with value and comparison in one group: that puts a row with a
+  comparison mid-row and a row without one flush right, so nothing lines up. Add
+  `tabular-nums` so digits are the same width down the column.
+- **Reserved height scales with the row count.** A flat minimum over-reserves and leaves
+  dead space under the content, which is most obvious on a stacked mobile layout where
+  the grid is not stretching tiles to a common height.
 - **The state that earns this pattern its place**: container, heading and reserved
   content height are **identical across loading, error and loaded**. The loading state
   is placeholder rows, never a zero — a zero reads as a real figure. Nothing on the

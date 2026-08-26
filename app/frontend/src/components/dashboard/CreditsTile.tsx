@@ -44,9 +44,11 @@ export function CreditsTile({ data }: { data: OverviewRowData }): React.ReactEle
           class that maps to is DashboardTile's business, not this file's — passing
           `no-meaning` is how that is expressed. */}
       <DashboardTileStat
-        label="Balance"
+        // "Current" rather than bare "Balance": the tile-level note says "this cycle",
+        // and a balance is a point-in-time value, not a period total (Requirement 6
+        // criterion 1). One word keeps that straight without a per-row period label.
+        label="Current balance"
         value={`₡${Math.round(creditBalance).toLocaleString()}`}
-        period="current-cycle"
         signMeaning="no-meaning"
       />
 
@@ -57,7 +59,6 @@ export function CreditsTile({ data }: { data: OverviewRowData }): React.ReactEle
           <DashboardTileStat
             label="Battle earnings"
             value={`₡${cycleProgress!.battleEarnings.toLocaleString()}`}
-            period="current-cycle"
             comparison={
               comparison ? { value: `₡${comparison.battleEarnings.toLocaleString()}` } : undefined
             }
@@ -77,7 +78,6 @@ export function CreditsTile({ data }: { data: OverviewRowData }): React.ReactEle
               <DashboardTileStat
                 label="Automatic repairs"
                 value={`₡${automaticSpend.toLocaleString()}`}
-                period="current-cycle"
                 comparison={
                   comparisonRepair
                     ? { value: `₡${comparisonRepair.automatic.toLocaleString()}` }
@@ -90,7 +90,6 @@ export function CreditsTile({ data }: { data: OverviewRowData }): React.ReactEle
               <DashboardTileStat
                 label="Manual repairs"
                 value={`₡${manualSpend.toLocaleString()}`}
-                period="current-cycle"
                 comparison={
                   comparisonRepair
                     ? { value: `₡${comparisonRepair.manual.toLocaleString()}` }
@@ -117,6 +116,7 @@ export function CreditsTile({ data }: { data: OverviewRowData }): React.ReactEle
   return (
     <DashboardTile
       title="Credits"
+      periodNote="This cycle, compared with last"
       clickThrough={{ label: 'Full breakdown', to: '/income' }}
       isLoading={isLoading}
       error={null}

@@ -33,7 +33,6 @@ export function PrestigeTile({ data }: { data: OverviewRowData }): React.ReactEl
       <DashboardTileStat
         label="Stable prestige"
         value={prestigeTotal.toLocaleString()}
-        period="current-cycle"
         signMeaning="no-meaning"
       />
 
@@ -42,7 +41,6 @@ export function PrestigeTile({ data }: { data: OverviewRowData }): React.ReactEl
       <DashboardTileStat
         label="Earned"
         value={earned.toLocaleString()}
-        period="current-cycle"
         comparison={comparison !== undefined ? { value: comparison.toLocaleString() } : undefined}
         delta={comparison !== undefined ? earned - comparison : undefined}
         signMeaning="higher-is-better"
@@ -67,6 +65,7 @@ export function PrestigeTile({ data }: { data: OverviewRowData }): React.ReactEl
   return (
     <DashboardTile
       title="Prestige"
+      periodNote="This cycle, compared with last"
       isLoading={isLoading}
       error={error}
       content={content}

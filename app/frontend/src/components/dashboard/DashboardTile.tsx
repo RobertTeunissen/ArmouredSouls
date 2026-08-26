@@ -37,8 +37,23 @@ const PERIOD_TEXT: Record<PeriodLabel, string> = {
 // docs/design_ux/DESIGN_SYSTEM_QUICK_REFERENCE.md; `text-xl font-medium` is its H3
 // step. All three states use the same geometry, so nothing reflows as data arrives.
 const TILE_CONTAINER = 'bg-surface-elevated border border-gray-700 rounded-lg p-4';
-const TILE_HEADING = 'text-xl font-medium text-white mb-3';
-const TILE_CONTENT = 'min-h-[11rem] flex flex-col gap-2';
+const TILE_HEADING = 'text-xl font-medium text-white';
+const TILE_CONTENT = 'flex flex-col gap-2';
+
+/**
+ * Height reserved for the content area, in rem per expected row.
+ *
+ * Requirement 11 criterion 9 asks the loading and error states to reserve *the same*
+ * minimum height as the loaded state, so nothing reflows as data arrives. That was first
+ * implemented as a flat `min-h-[11rem]`, which over-reserved: a loaded tile of four rows
+ * needs about 9rem, so every tile carried dead space below its content, and on mobile —
+ * where the grid does not stretch tiles to a common height — that space had nothing to
+ * absorb it.
+ *
+ * Scaling by the row count the tile already declares keeps the no-reflow guarantee while
+ * reserving only what the content needs.
+ */
+const REM_PER_ROW = 2.25;
 
 /**
  * The only stat-value colour map in the module, kept private so `text-success` and
@@ -67,6 +82,16 @@ function statColour(signMeaning: SignMeaning, delta: number | undefined): string
 export interface DashboardTileProps {
   /** Rendered by the tile as its H3 heading. */
   title: string;
+  /**
+   * The period every figure in this tile covers, stated ONCE beneath the heading.
+   *
+   * Requirement 2 criterion 5 requires that no rendered figure is left without a period,
+   * and that was first read as "put the period on every figure". The result was
+   * `(this cycle)` four times in one tile: it wrapped the labels, which pushed the values
+   * out of a column, and it repeated the one fact every figure in the tile shared. Stating
+   * it once satisfies the same requirement — no figure is ambiguous — without the noise.
+   */
+  periodNote?: string;
   /** Absent means no interactive click-through element at all. */
   clickThrough?: { label: string; to: string };
   isLoading: boolean;
@@ -80,6 +105,7 @@ export interface DashboardTileProps {
 
 export function DashboardTile({
   title,
+  periodNote,
   clickThrough,
   isLoading,
   error,
@@ -104,8 +130,14 @@ export function DashboardTile({
   return (
     <section className={TILE_CONTAINER} aria-label={title}>
       <h3 className={TILE_HEADING}>{title}</h3>
+      {/* Rendered in every state, including loading and error, so the header block is
+          the same height throughout and the content below it never shifts. */}
+      <p className="text-tertiary text-xs mb-3 mt-0.5">{periodNote ?? '\u00A0'}</p>
 
-      <div className={TILE_CONTENT}>
+      <div
+        className={TILE_CONTENT}
+        style={{ minHeight: `${loadingRows * REM_PER_ROW}rem` }}
+      >
         {isLoading ? (
           // Requirement 12 criterion 6: the title plus a placeholder per expected row.
           // No stat value and, crucially, no zero — a zero would read as a real figure.
@@ -136,7 +168,11 @@ export interface DashboardTileStatProps {
   label: string;
   /** Already formatted for display. The tile applies colour, never formatting. */
   value: string;
-  period: PeriodLabel;
+  /**
+   * Overrides the tile-level `periodNote` for this one figure. Only for a figure whose
+   * period differs from the rest of the tile; normally omitted.
+   */
+  period?: PeriodLabel;
   /** Absent when no Comparison_Figure exists, which forces the neutral treatment. */
   comparison?: { value: string };
   /** Numeric delta, used only to pick a colour. Never rendered. */
@@ -144,6 +180,19 @@ export interface DashboardTileStatProps {
   signMeaning: SignMeaning;
 }
 
+/**
+ * One label-and-value row.
+ *
+ * A two-column grid rather than `justify-between`, because with the value and its
+ * comparison in one right-hand group the value's right edge moved from row to row: a
+ * figure with a comparison sat mid-row while one without it sat flush right, so the
+ * numbers never formed a column. The value now owns a right-aligned cell of its own and
+ * the comparison sits beneath it in the same cell, so neither can displace the other and
+ * a long comparison cannot wrap the label.
+ *
+ * `tabular-nums` keeps digits the same width, so the figures align down the column
+ * regardless of which glyphs they contain.
+ */
 export function DashboardTileStat({
   label,
   value,
@@ -153,18 +202,21 @@ export function DashboardTileStat({
   signMeaning,
 }: DashboardTileStatProps): React.ReactElement {
   return (
-    <div className="flex items-baseline justify-between gap-2">
+    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3">
       <span className="text-secondary text-sm">
-        {label} <span className="text-tertiary">({PERIOD_TEXT[period]})</span>
+        {label}
+        {period ? <span className="text-tertiary"> ({PERIOD_TEXT[period]})</span> : null}
       </span>
-      <span className="flex items-baseline gap-2">
-        <span className={`font-semibold ${statColour(signMeaning, delta)}`}>{value}</span>
-        {comparison ? (
-          <span className="text-tertiary text-xs">
-            vs {comparison.value} {PERIOD_TEXT['last-completed-cycle']}
-          </span>
-        ) : null}
+      <span
+        className={`text-right font-semibold tabular-nums ${statColour(signMeaning, delta)}`}
+      >
+        {value}
       </span>
+      {comparison ? (
+        <span className="col-start-2 text-right text-tertiary text-xs tabular-nums">
+          vs {comparison.value}
+        </span>
+      ) : null}
     </div>
   );
 }

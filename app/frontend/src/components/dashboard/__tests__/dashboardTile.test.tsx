@@ -80,7 +80,7 @@ describe('Requirement 11: one geometry across every state', () => {
   });
 
   it('reserves the same content height in every state, so nothing reflows', () => {
-    const heights = (['loading', 'error', 'loaded'] as const).map((state) => {
+    const reserved = (['loading', 'error', 'loaded'] as const).map((state) => {
       const { container: dom, unmount } = renderTile(
         <DashboardTile
           title="Prestige"
@@ -89,17 +89,112 @@ describe('Requirement 11: one geometry across every state', () => {
           error={state === 'error' ? 'nope' : null}
         />,
       );
-      const inner = dom.querySelector('section > div');
-      const className = inner?.className ?? '';
+      const inner = dom.querySelector<HTMLElement>('section > div');
+      const value = inner?.style.minHeight ?? '';
       unmount();
-      return className;
+      return value;
     });
 
-    // Requirement 11 criterion 9: the same min-height class in all three.
-    for (const className of heights) {
-      expect(className).toContain('min-h-');
+    // Requirement 11 criterion 9: an identical reserved height in all three states.
+    for (const value of reserved) {
+      expect(value).toMatch(/^[\d.]+rem$/);
     }
-    expect(new Set(heights).size).toBe(1);
+    expect(new Set(reserved).size).toBe(1);
+  });
+
+  it('scales the reserved height with the row count rather than using a flat block', () => {
+    // The flat `min-h-[11rem]` it replaces over-reserved for every tile, leaving dead
+    // space under the content — most visible on mobile, where the grid does not stretch
+    // tiles to a common height and nothing absorbs it.
+    function reservedFor(loadingRows: number): number {
+      const { container: dom, unmount } = renderTile(
+        <DashboardTile
+          title="Prestige"
+          content={<span>x</span>}
+          isLoading={false}
+          error={null}
+          loadingRows={loadingRows}
+        />,
+      );
+      const value = dom.querySelector<HTMLElement>('section > div')?.style.minHeight ?? '0rem';
+      unmount();
+      return parseFloat(value);
+    }
+
+    expect(reservedFor(4)).toBeGreaterThan(reservedFor(2));
+    // And it stays well under the 11rem the flat value reserved for a three-row tile.
+    expect(reservedFor(3)).toBeLessThan(11);
+  });
+
+  it('states the period once beneath the heading, not on every figure', () => {
+    // Requirement 2 criterion 5 as amended: no figure may be left ambiguous, but the
+    // period is stated once per tile. Four repeats of `(this cycle)` wrapped the labels
+    // and pushed the values out of a column.
+    const { container: dom } = renderTile(
+      <DashboardTile
+        title="Credits"
+        periodNote="This cycle, compared with last"
+        content={
+          <>
+            <DashboardTileStat label="Current balance" value="₡1" signMeaning="no-meaning" />
+            <DashboardTileStat label="Battle earnings" value="₡2" signMeaning="no-meaning" />
+          </>
+        }
+        isLoading={false}
+        error={null}
+      />,
+    );
+
+    const text = dom.textContent ?? '';
+    expect(text).toContain('This cycle, compared with last');
+    expect(text).not.toContain('(this cycle)');
+  });
+
+  it('keeps the header block the same height when no period note is supplied', () => {
+    // The note line renders either way, so a tile without one does not sit taller or
+    // shorter than its neighbours.
+    for (const periodNote of [undefined, 'This cycle']) {
+      const { container: dom, unmount } = renderTile(
+        <DashboardTile
+          title="Prestige"
+          periodNote={periodNote}
+          content={<span>x</span>}
+          isLoading={false}
+          error={null}
+        />,
+      );
+      expect(dom.querySelectorAll('section > p')).toHaveLength(1);
+      unmount();
+    }
+  });
+});
+
+describe('Requirement 6: figures align in a column', () => {
+  it('gives the value its own right-aligned cell with the comparison beneath it', () => {
+    // With the value and its comparison in one right-hand group, a row with a comparison
+    // put its value mid-row while a row without one put it flush right, so the figures
+    // never lined up. The comparison now sits in the second column, on its own line.
+    const { container: dom } = renderTile(
+      <DashboardTileStat
+        label="Battle earnings"
+        value="₡34,429"
+        comparison={{ value: '₡32,929' }}
+        delta={1500}
+        signMeaning="higher-is-better"
+      />,
+    );
+
+    const value = [...dom.querySelectorAll('span')].find((s) => s.textContent === '₡34,429');
+    expect(value?.className).toContain('text-right');
+    expect(value?.className).toContain('tabular-nums');
+
+    const comparison = [...dom.querySelectorAll('span')].find((s) =>
+      s.textContent?.startsWith('vs '),
+    );
+    expect(comparison?.className).toContain('col-start-2');
+    expect(comparison?.className).toContain('text-right');
+    // The period is on the tile, so the comparison does not repeat "last cycle".
+    expect(comparison?.textContent).toBe('vs ₡32,929');
   });
 });
 
