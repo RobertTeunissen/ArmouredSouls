@@ -551,9 +551,6 @@ export class EventLogger {
   }
   
   /**
-   * Log robot repair
-   */
-  /**
    * Log a robot repair — the write side of Repair_Spend_Source.
    *
    * Spec #48 Requirement 17 criteria 4 and 11: the payload carries the RENAMED keys

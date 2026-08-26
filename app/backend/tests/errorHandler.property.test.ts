@@ -11,6 +11,7 @@
 import * as fc from 'fast-check';
 import express, { Request, Response, NextFunction } from 'express';
 import request from 'supertest';
+import type { Server } from 'http';
 
 // Mock the security logger to prevent file I/O during tests
 jest.mock('../src/services/security/securityLogger', () => ({
@@ -88,12 +89,40 @@ const htmlInjectionGen = fc.oneof(
 );
 
 describe('Feature: security-audit-guardrails, Property 12: Error message sanitization', () => {
-  const app = createApp();
+  /**
+   * ONE listening server for the whole suite, reused by every request.
+   *
+   * Passing the Express app to supertest rather than a listening server makes
+   * supertest boot a fresh ephemeral server and tear it down for EVERY call. Three
+   * property tests at 100 runs each is ~300 listen/close cycles from this file alone,
+   * competing for the ephemeral port range with the other 226 suites in the tier.
+   *
+   * That is a load-dependent flake, and it bit three times before being fixed here. It
+   * surfaced two different ways, neither of which looks like a port problem at first
+   * glance: `socket hang up` when a connection was dropped outright, and — more
+   * confusingly — a `400` with an empty body where the test expected `500`, which is
+   * Express answering a request it only partially read. The suite passed in isolation
+   * every time, which is exactly what made it easy to dismiss as noise.
+   *
+   * Passing an already-listening server makes supertest reuse its address instead.
+   */
+  let server: Server;
+
+  beforeAll(() => {
+    server = createApp().listen(0);
+  });
+
+  afterAll(
+    () =>
+      new Promise<void>((resolve, reject) => {
+        server.close((err) => (err ? reject(err) : resolve()));
+      }),
+  );
 
   it('unknown errors never reflect HTML/script content in the response body', () => {
     return fc.assert(
       fc.asyncProperty(htmlInjectionGen, async (maliciousMsg) => {
-        const res = await request(app)
+        const res = await request(server)
           .get('/throw-unknown')
           .query({ msg: maliciousMsg });
 
@@ -117,7 +146,7 @@ describe('Feature: security-audit-guardrails, Property 12: Error message sanitiz
       fc.asyncProperty(
         fc.string({ minLength: 1, maxLength: 50 }).map(s => `<script>${s}</script>`),
         async (scriptTag) => {
-          const res = await request(app)
+          const res = await request(server)
             .get('/throw-unknown')
             .query({ msg: scriptTag });
 
@@ -137,7 +166,7 @@ describe('Feature: security-audit-guardrails, Property 12: Error message sanitiz
       fc.asyncProperty(
         fc.string({ minLength: 1, maxLength: 30 }).filter(s => !s.includes('"') && !s.includes('\\')),
         async (msg) => {
-          const res = await request(app)
+          const res = await request(server)
             .get('/throw-app-error')
             .query({ msg });
 
