@@ -6,7 +6,7 @@ lastUpdated: "2026-07-28"
 relatedArticles:
   - seasons/what-resets
   - seasons/what-is-a-season
-  - prestige-fame/prestige-overview
+  - prestige-fame/prestige-system
 ---
 
 Nothing you achieved is lost at a reset — it moves. Your season archive is permanent and there are two places to read it.

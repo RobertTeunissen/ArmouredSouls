@@ -1,17 +1,55 @@
-import matter from 'gray-matter';
 import yaml from 'js-yaml';
 import logger from '../../config/logger';
 
-// gray-matter@4 ships with js-yaml ^3 but npm/pnpm may hoist js-yaml 4 which
-// removed `yaml.safeLoad`. Supply a custom engine so parsing always works.
-const grayMatterOptions: Parameters<typeof matter>[1] = {
-  engines: {
-    yaml: {
-      parse: (str: string) => yaml.load(str) as Record<string, unknown>,
-      stringify: (obj: object) => yaml.dump(obj),
-    },
-  },
-};
+/**
+ * Matches a leading YAML frontmatter block: `---` on its own first line, the
+ * YAML body, then `---` on its own line. Lazy so the *first* closing delimiter
+ * wins, and multiline so that closing `^---` anchors to a line start rather
+ * than matching a `---` horizontal rule mid-line.
+ */
+const FRONTMATTER_PATTERN = /^---[ \t]*\r?\n([\s\S]*?)^---[ \t]*(?:\r?\n|$)/m;
+
+/**
+ * Splits a raw Markdown string into its YAML frontmatter and body.
+ *
+ * This replaces `gray-matter`, which was removed as a dependency. gray-matter@4
+ * binds `js-yaml`'s `safeLoad` at module-load time, and `safeLoad` was deleted
+ * in js-yaml v4 — so with the `js-yaml: ">=4.2.0"` override in `package.json`
+ * the import itself threw `TypeError: Cannot read properties of undefined
+ * (reading 'bind')`, taking down the guide service and, because `index.ts`
+ * imports the guide routes at top level, the whole application at boot. A
+ * custom-engine option could not help: the crash happened on import, before any
+ * option was read. Splitting frontmatter ourselves removes the dependency
+ * instead of pinning around it.
+ *
+ * Behaviour preserved from gray-matter for the guide's needs: no frontmatter
+ * yields an empty `data` object and the input unchanged as `content`; an empty
+ * frontmatter block yields an empty `data`; a leading UTF-8 BOM is tolerated;
+ * both LF and CRLF line endings are accepted.
+ *
+ * @param raw - Full Markdown file content, possibly with a frontmatter block
+ * @returns The parsed frontmatter as `data` and the remaining Markdown as `content`
+ */
+export function splitFrontmatter(raw: string): {
+  data: Record<string, unknown>;
+  content: string;
+} {
+  // Strip a UTF-8 BOM so the opening delimiter is still first on line 1.
+  const text = raw.charCodeAt(0) === 0xfeff ? raw.slice(1) : raw;
+
+  const match = FRONTMATTER_PATTERN.exec(text);
+  if (match === null || match.index !== 0) {
+    return { data: {}, content: text };
+  }
+
+  const parsed = yaml.load(match[1]);
+  const data =
+    parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)
+      ? (parsed as Record<string, unknown>)
+      : {};
+
+  return { data, content: text.slice(match[0].length) };
+}
 
 /**
  * Represents a heading extracted from Markdown content.
@@ -161,7 +199,7 @@ const REQUIRED_FRONTMATTER_FIELDS: (keyof ArticleFrontmatter)[] = [
 /**
  * Validates that all required frontmatter fields are present and correctly typed.
  *
- * @param data - The parsed frontmatter data object from gray-matter
+ * @param data - The parsed frontmatter data object from `splitFrontmatter`
  * @returns The validated ArticleFrontmatter, or null if validation fails
  */
 export function validateFrontmatter(data: Record<string, unknown>): ArticleFrontmatter | null {
@@ -219,8 +257,8 @@ export function validateFrontmatter(data: Record<string, unknown>): ArticleFront
  */
 export function parseMarkdown(rawContent: string): ParsedArticle | null {
   try {
-    const { data, content } = matter(rawContent, grayMatterOptions);
-    const frontmatter = validateFrontmatter(data as Record<string, unknown>);
+    const { data, content } = splitFrontmatter(rawContent);
+    const frontmatter = validateFrontmatter(data);
 
     if (frontmatter === null) {
       return null;
