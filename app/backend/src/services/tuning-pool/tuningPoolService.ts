@@ -32,6 +32,19 @@ export interface TuningAllocationState {
   allocations: TuningAttributeMap;
 }
 
+/**
+ * Pool budget only — no per-attribute detail.
+ *
+ * Enough to answer "does this robot have points left to spend?", which is all
+ * the dashboard needs. See `getTuningAllocationSummaries`.
+ */
+export interface TuningAllocationSummary {
+  robotId: number;
+  poolSize: number;
+  allocated: number;
+  remaining: number;
+}
+
 // ── Helpers ──────────────────────────────────────────────────────────
 
 /**
@@ -211,6 +224,64 @@ export async function getTuningAllocation(robotId: number, userId: number): Prom
     perAttributeMaxes,
     allocations,
   };
+}
+
+/**
+ * Pool budget for every robot in a stable, in three queries.
+ *
+ * The dashboard previously called `getTuningAllocation` once per robot just to
+ * read `remaining`, which on a full roster meant a request per robot and five
+ * queries inside each. Pool size depends on the user's Tuning Bay level, not on
+ * the robot, so it is looked up once here.
+ *
+ * Ownership is inherent: robots are selected by `userId`, so a caller can only
+ * ever see their own.
+ *
+ * Deliberately read-only. `getTuningAllocation` repairs an over-budget row by
+ * scaling allocations down and persisting the result; this function clamps
+ * `allocated` to the pool for reporting but writes nothing. The reported
+ * `remaining` is identical either way — a scale-down brings the total to exactly
+ * the pool size, leaving 0 remaining, which is what clamping reports too. The
+ * repair still happens whenever the tuning screen reads a robot's full state.
+ *
+ * @param userId - The authenticated user whose roster to summarise
+ * @returns One summary per owned robot, in robot id order
+ */
+export async function getTuningAllocationSummaries(userId: number): Promise<TuningAllocationSummary[]> {
+  const robots = await prisma.robot.findMany({
+    where: { userId },
+    select: { id: true },
+    orderBy: { id: 'asc' },
+  });
+
+  if (robots.length === 0) return [];
+
+  const robotIds = robots.map((r) => r.id);
+
+  const [facilityLevel, rows] = await Promise.all([
+    getTuningBayLevel(userId),
+    prisma.tuningAllocation.findMany({ where: { robotId: { in: robotIds } } }),
+  ]);
+
+  const poolSize = getPoolSize(facilityLevel);
+
+  const allocatedByRobot = new Map<number, number>();
+  for (const row of rows) {
+    const allocations = rowToAllocations(row as unknown as Record<string, unknown>);
+    const total = Object.values(allocations).reduce((sum, v) => sum + (v ?? 0), 0);
+    allocatedByRobot.set(row.robotId, total);
+  }
+
+  return robotIds.map((robotId) => {
+    const raw = allocatedByRobot.get(robotId) ?? 0;
+    const allocated = Math.round(Math.min(raw, poolSize) * 100) / 100;
+    return {
+      robotId,
+      poolSize,
+      allocated,
+      remaining: Math.round((poolSize - allocated) * 100) / 100,
+    };
+  });
 }
 
 /**

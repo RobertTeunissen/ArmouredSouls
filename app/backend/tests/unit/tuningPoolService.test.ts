@@ -24,6 +24,7 @@ import { ROBOT_ATTRIBUTES, type RobotAttribute } from '../../src/services/tuning
 const mockPrisma = {
   robot: {
     findUnique: jest.fn(),
+    findMany: jest.fn(),
   },
   facility: {
     findFirst: jest.fn(),
@@ -31,6 +32,7 @@ const mockPrisma = {
   },
   tuningAllocation: {
     findUnique: jest.fn(),
+    findMany: jest.fn(),
     upsert: jest.fn(),
     deleteMany: jest.fn(),
     update: jest.fn(),
@@ -49,6 +51,7 @@ jest.mock('../../src/middleware/ownership', () => ({
 
 import {
   getTuningAllocation,
+  getTuningAllocationSummaries,
   setTuningAllocation,
   getTuningBonuses,
   clearTuningAllocation,
@@ -459,6 +462,144 @@ describe('tuningPoolService', () => {
 
       // They are independent — robot 2's allocation doesn't affect robot 1
       expect(state1.allocations).not.toEqual(state2.allocations);
+    });
+  });
+
+  // ── getTuningAllocationSummaries ─────────────────────────────────
+
+  describe('getTuningAllocationSummaries', () => {
+    /** Roster of robot ids plus optional allocation rows keyed by robot id. */
+    function setupSummaryMocks(options: {
+      robotIds: number[];
+      tuningBayLevel?: number;
+      allocations?: Record<number, Partial<Record<RobotAttribute, number>>>;
+    }) {
+      const { robotIds, tuningBayLevel = 0, allocations = {} } = options;
+
+      mockPrisma.robot.findMany.mockResolvedValue(robotIds.map((id) => ({ id })));
+      mockPrisma.facility.findFirst.mockResolvedValue(
+        tuningBayLevel > 0 ? { level: tuningBayLevel } : null,
+      );
+      mockPrisma.tuningAllocation.findMany.mockResolvedValue(
+        Object.entries(allocations).map(([robotId, alloc]) => ({
+          ...buildMockAllocationRow(alloc),
+          robotId: Number(robotId),
+        })),
+      );
+    }
+
+    it('should return an empty array when the stable has no robots', async () => {
+      mockPrisma.robot.findMany.mockResolvedValue([]);
+
+      expect(await getTuningAllocationSummaries(1)).toEqual([]);
+    });
+
+    it('should not query allocations when the stable has no robots', async () => {
+      mockPrisma.robot.findMany.mockResolvedValue([]);
+
+      await getTuningAllocationSummaries(1);
+
+      expect(mockPrisma.tuningAllocation.findMany).not.toHaveBeenCalled();
+    });
+
+    it('should report the full base pool as remaining for a robot with no allocation row', async () => {
+      setupSummaryMocks({ robotIds: [1] });
+
+      expect(await getTuningAllocationSummaries(1)).toEqual([
+        { robotId: 1, poolSize: 10, allocated: 0, remaining: 10 },
+      ]);
+    });
+
+    it('should scale the pool with the Tuning Bay level', async () => {
+      setupSummaryMocks({ robotIds: [1], tuningBayLevel: 5 });
+
+      const [summary] = await getTuningAllocationSummaries(1);
+
+      expect(summary.poolSize).toBe(60);
+      expect(summary.remaining).toBe(60);
+    });
+
+    it('should sum allocations across attributes', async () => {
+      setupSummaryMocks({
+        robotIds: [1],
+        tuningBayLevel: 2,
+        allocations: { 1: { combatPower: 5, armorPlating: 3.5 } },
+      });
+
+      expect(await getTuningAllocationSummaries(1)).toEqual([
+        { robotId: 1, poolSize: 30, allocated: 8.5, remaining: 21.5 },
+      ]);
+    });
+
+    it('should include robots that have no allocation row alongside those that do', async () => {
+      setupSummaryMocks({
+        robotIds: [1, 2, 3],
+        tuningBayLevel: 1,
+        allocations: { 2: { combatPower: 4 } },
+      });
+
+      expect(await getTuningAllocationSummaries(1)).toEqual([
+        { robotId: 1, poolSize: 20, allocated: 0, remaining: 20 },
+        { robotId: 2, poolSize: 20, allocated: 4, remaining: 16 },
+        { robotId: 3, poolSize: 20, allocated: 0, remaining: 20 },
+      ]);
+    });
+
+    it('should clamp an over-budget allocation to the pool instead of reporting negative remaining', async () => {
+      // Mirrors a Tuning Bay downgrade: 25 points allocated, pool now 10.
+      setupSummaryMocks({
+        robotIds: [1],
+        tuningBayLevel: 0,
+        allocations: { 1: { combatPower: 15, armorPlating: 10 } },
+      });
+
+      expect(await getTuningAllocationSummaries(1)).toEqual([
+        { robotId: 1, poolSize: 10, allocated: 10, remaining: 0 },
+      ]);
+    });
+
+    it('should not write anything, leaving the scale-down repair to the detail read', async () => {
+      setupSummaryMocks({
+        robotIds: [1],
+        allocations: { 1: { combatPower: 15, armorPlating: 10 } },
+      });
+
+      await getTuningAllocationSummaries(1);
+
+      expect(mockPrisma.tuningAllocation.update).not.toHaveBeenCalled();
+      expect(mockPrisma.tuningAllocation.upsert).not.toHaveBeenCalled();
+    });
+
+    it('should scope the roster query to the requesting user', async () => {
+      setupSummaryMocks({ robotIds: [1] });
+
+      await getTuningAllocationSummaries(42);
+
+      expect(mockPrisma.robot.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { userId: 42 } }),
+      );
+    });
+
+    it('should look up the pool size once regardless of roster size', async () => {
+      setupSummaryMocks({ robotIds: [1, 2, 3, 4, 5] });
+
+      await getTuningAllocationSummaries(1);
+
+      expect(mockPrisma.facility.findFirst).toHaveBeenCalledTimes(1);
+      expect(mockPrisma.tuningAllocation.findMany).toHaveBeenCalledTimes(1);
+    });
+
+    it('should round a fractional total to two decimal places', async () => {
+      setupSummaryMocks({
+        robotIds: [1],
+        tuningBayLevel: 1,
+        allocations: { 1: { combatPower: 0.01, armorPlating: 0.02 } },
+      });
+
+      const [summary] = await getTuningAllocationSummaries(1);
+
+      expect(summary.allocated).toBe(0.03);
+      expect(summary.remaining).toBe(19.97);
     });
   });
 });

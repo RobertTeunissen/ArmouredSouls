@@ -40,9 +40,11 @@ vi.mock('../../utils/onboardingApi', () => ({
 // Mock robotApi
 const mockFetchMyRobots = vi.fn();
 const mockFetchTuningAllocation = vi.fn();
+const mockFetchTuningAllocationSummaries = vi.fn();
 vi.mock('../../utils/robotApi', () => ({
   fetchMyRobots: (...args: unknown[]) => mockFetchMyRobots(...args),
   fetchTuningAllocation: (...args: unknown[]) => mockFetchTuningAllocation(...args),
+  fetchTuningAllocationSummaries: (...args: unknown[]) => mockFetchTuningAllocationSummaries(...args),
 }));
 
 // Mock teamBattleApi
@@ -177,6 +179,7 @@ describe('DashboardPage - Notifications', () => {
     mockFetchMyRobots._robots = [];
     mockFetchMyRobots.mockResolvedValue([]);
     mockFetchTuningAllocation.mockResolvedValue({ robotId: 1, facilityLevel: 0, poolSize: 0, allocated: 0, remaining: 0, perAttributeMaxes: {}, allocations: {} });
+    mockFetchTuningAllocationSummaries.mockResolvedValue([]);
 
     vi.mocked(localStorage.getItem).mockImplementation((key: string) => {
       if (key === 'token') return 'mock-jwt-token';

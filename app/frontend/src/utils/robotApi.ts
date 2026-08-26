@@ -114,6 +114,14 @@ export interface TuningAllocationState {
   allocations: Record<string, number>;
 }
 
+/** Pool budget without per-attribute detail. */
+export interface TuningAllocationSummary {
+  robotId: number;
+  poolSize: number;
+  allocated: number;
+  remaining: number;
+}
+
 // ─── Fetch ───────────────────────────────────────────────────────────────────
 
 /**
@@ -200,6 +208,19 @@ export const fetchRobotRankings = async (robotId: number): Promise<unknown> => {
  */
 export const fetchTuningAllocation = async (robotId: number): Promise<TuningAllocationState> => {
   return api.get<TuningAllocationState>(`/api/robots/${robotId}/tuning-allocation`);
+};
+
+/**
+ * Fetch the pool budget for every robot in the stable, in one request.
+ *
+ * Use this when you only need to know whether points are left to spend — the
+ * dashboard case. For per-attribute detail, use `fetchTuningAllocation`.
+ */
+export const fetchTuningAllocationSummaries = async (): Promise<TuningAllocationSummary[]> => {
+  const data = await api.get<{ summaries: TuningAllocationSummary[] }>(
+    '/api/robots/tuning-allocations/summary',
+  );
+  return data.summaries ?? [];
 };
 
 // ─── Create ──────────────────────────────────────────────────────────────────
