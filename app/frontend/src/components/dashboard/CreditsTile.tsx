@@ -1,9 +1,16 @@
 /**
- * Credits_Tile — "am I making or losing money, and was any of the loss avoidable?"
+ * Credits_Tile — "am I making or losing money, and where is it going?"
  *
- * Spec #48 Requirement 6. Avoidable_Repair_Spend is the point of this tile: it is the
- * only figure on the Overview_Row that responds to whether the player showed up
- * before their robots fought.
+ * Spec #48 Requirement 6, amended 26 August 2026. Repair spend is split by
+ * `repairType` — automatic and manual as two plain lines — rather than reported as a
+ * total plus a derived "avoidable" figure.
+ *
+ * The split carries the same message with less text and no arithmetic to explain. An
+ * automatic repair is one the player was not present for, charged at full price; a
+ * manual one is a repair they took at half price. So the automatic line IS the cost of
+ * not logging in, stated as money actually spent rather than as a hypothetical saving.
+ * The previous line read "Avoidable — repair before each robot's next match", which
+ * needed a sentence of label to explain a number that was not a real transaction.
  */
 
 import React from 'react';
@@ -13,21 +20,6 @@ import {
   DashboardTileNote,
 } from './DashboardTile';
 import type { OverviewRowData } from './types';
-import { MANUAL_REPAIR_DISCOUNT } from '../../../../shared/utils/repairCost';
-
-/**
- * Credits the player would have kept by repairing manually.
- *
- * NOTE: this multiplies by `MANUAL_REPAIR_DISCOUNT` directly rather than calling
- * `applyManualRepairDiscount`. That is deliberate and not a breach of Requirement 15
- * criterion 9, whose ban is on applying the discount to a Repair_Quote at a call
- * site. This derives a DIFFERENT quantity — what was forgone by not taking the
- * discount — from a total that was already charged. The two look alike at a glance,
- * which is why it is spelled out.
- */
-function avoidableRepairSpend(automaticSpend: number): number {
-  return Math.round(automaticSpend * MANUAL_REPAIR_DISCOUNT);
-}
 
 export function CreditsTile({ data }: { data: OverviewRowData }): React.ReactElement {
   const { creditBalance, cycleProgress, isLoading, error } = data;
@@ -37,17 +29,12 @@ export function CreditsTile({ data }: { data: OverviewRowData }): React.ReactEle
   // would hide both. The three cycle figures are replaced by an inline note instead.
   const readFailed = error !== null || cycleProgress === null;
 
-  const repairSpend = cycleProgress
-    ? cycleProgress.repairSpend.manual + cycleProgress.repairSpend.automatic
-    : 0;
-  const avoidable = cycleProgress ? avoidableRepairSpend(cycleProgress.repairSpend.automatic) : 0;
+  const automaticSpend = cycleProgress?.repairSpend.automatic ?? 0;
+  const manualSpend = cycleProgress?.repairSpend.manual ?? 0;
+  const repairSpend = automaticSpend + manualSpend;
 
   const comparison = cycleProgress?.comparison;
   const comparisonRepair = comparison?.repairSpend;
-  const comparisonRepairTotal =
-    comparisonRepair ? comparisonRepair.manual + comparisonRepair.automatic : undefined;
-  const comparisonAvoidable =
-    comparisonRepair ? avoidableRepairSpend(comparisonRepair.automatic) : undefined;
 
   const content = (
     <>
@@ -80,42 +67,45 @@ export function CreditsTile({ data }: { data: OverviewRowData }): React.ReactEle
 
           {/* Requirement 10 criterion 8: both repair lines are omitted TOGETHER when
               nothing was spent — a stable that fought clean should not be shown two
-              zeroes. */}
+              zeroes.
+
+              When there IS spend, both lines render even if one of them is zero. A zero
+              on the automatic line is the good news: every repair was caught at half
+              price. Hiding it would remove the only place that shows so. */}
           {repairSpend > 0 ? (
             <>
               <DashboardTileStat
-                label="Repairs"
-                value={`₡${repairSpend.toLocaleString()}`}
+                label="Automatic repairs"
+                value={`₡${automaticSpend.toLocaleString()}`}
                 period="current-cycle"
                 comparison={
-                  comparisonRepairTotal !== undefined
-                    ? { value: `₡${comparisonRepairTotal.toLocaleString()}` }
+                  comparisonRepair
+                    ? { value: `₡${comparisonRepair.automatic.toLocaleString()}` }
                     : undefined
                 }
-                delta={
-                  comparisonRepairTotal !== undefined
-                    ? repairSpend - comparisonRepairTotal
-                    : undefined
-                }
+                delta={comparisonRepair ? automaticSpend - comparisonRepair.automatic : undefined}
                 signMeaning="lower-is-better"
               />
 
-              {/* Requirement 6 criterion 9: the label names a robot's next scheduled
-                  match as the deadline. Automatic repair is scoped per event, not per
-                  cycle, so "at settlement" would be wrong. */}
               <DashboardTileStat
-                label="Avoidable — repair before each robot's next match"
-                value={`₡${avoidable.toLocaleString()}`}
+                label="Manual repairs"
+                value={`₡${manualSpend.toLocaleString()}`}
                 period="current-cycle"
                 comparison={
-                  comparisonAvoidable !== undefined
-                    ? { value: `₡${comparisonAvoidable.toLocaleString()}` }
+                  comparisonRepair
+                    ? { value: `₡${comparisonRepair.manual.toLocaleString()}` }
                     : undefined
                 }
-                delta={
-                  comparisonAvoidable !== undefined ? avoidable - comparisonAvoidable : undefined
-                }
-                signMeaning="lower-is-better"
+                delta={comparisonRepair ? manualSpend - comparisonRepair.manual : undefined}
+                // `no-meaning`, deliberately, while the automatic line above is
+                // `lower-is-better`. Every credit on the automatic line is a credit the
+                // player would have halved by showing up, so a rise there is
+                // unambiguously bad. Manual spend has no such direction: it rises when a
+                // player fights more AND when they start catching repairs they used to
+                // miss. Rendering that in the error colour would flag the behaviour the
+                // discount exists to encourage. DashboardTile applies a colour only when
+                // the direction is meaningful, and here it is not.
+                signMeaning="no-meaning"
               />
             </>
           ) : null}

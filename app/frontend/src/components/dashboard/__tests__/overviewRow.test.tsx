@@ -296,22 +296,34 @@ describe('Requirements 4 and 5: Todays_Battles_Tile', () => {
 });
 
 describe('Requirement 6: Credits_Tile', () => {
-  it('renders the balance, earnings, repairs and the avoidable portion', () => {
+  it('renders the balance, earnings and repair spend split by type', () => {
+    // Requirement 6 criteria 3 and 4, as amended: two plain lines, no derived figure.
     renderRow(baseData());
     expect(screen.getByText('₡250,000')).toBeInTheDocument();
     expect(screen.getByText('₡51,000')).toBeInTheDocument();
-    // 1200 manual + 800 automatic
-    expect(screen.getByText('₡2,000')).toBeInTheDocument();
-    // avoidable = round(800 × 0.5)
-    expect(screen.getByText('₡400')).toBeInTheDocument();
+    expect(screen.getByText(/Automatic repairs/)).toBeInTheDocument();
+    expect(screen.getByText('₡800')).toBeInTheDocument();
+    expect(screen.getByText(/Manual repairs/)).toBeInTheDocument();
+    expect(screen.getByText('₡1,200')).toBeInTheDocument();
   });
 
-  it('names a robots next scheduled match as the deadline, never settlement', () => {
-    // Requirement 6 criterion 9: automatic repair is scoped per event, not per cycle.
+  it('renders no combined repair total and no avoidable figure', () => {
+    // The two lines replace them. A total would be a third repair number to reconcile,
+    // and the avoidable figure needed a sentence of label to explain a number that was
+    // never a real transaction.
     renderRow(baseData());
-    const label = screen.getByText(/Avoidable/);
-    expect(label.textContent).toMatch(/next match/i);
-    expect(label.textContent).not.toMatch(/settlement|midnight/i);
+    expect(screen.queryByText(/Avoidable/i)).not.toBeInTheDocument();
+    // 1200 + 800: the old combined total.
+    expect(screen.queryByText('₡2,000')).not.toBeInTheDocument();
+  });
+
+  it('shows a zero automatic line when there was manual spend, since that is the good news', () => {
+    renderRow(
+      baseData({ cycleProgress: { ...PROGRESS, repairSpend: { manual: 7468, automatic: 0 } } }),
+    );
+    expect(screen.getByText(/Automatic repairs/)).toBeInTheDocument();
+    expect(screen.getByText('₡0')).toBeInTheDocument();
+    expect(screen.getByText('₡7,468')).toBeInTheDocument();
   });
 
   it('omits both repair lines together when nothing was spent', () => {
@@ -319,8 +331,7 @@ describe('Requirement 6: Credits_Tile', () => {
     renderRow(
       baseData({ cycleProgress: { ...PROGRESS, repairSpend: { manual: 0, automatic: 0 } } }),
     );
-    expect(screen.queryByText(/Repairs/)).not.toBeInTheDocument();
-    expect(screen.queryByText(/Avoidable/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/repairs/i)).not.toBeInTheDocument();
   });
 
   it('keeps the balance and the breakdown link when the cycle read fails', () => {
@@ -344,8 +355,11 @@ describe('Requirement 6: Credits_Tile', () => {
     );
     // Battle earnings keeps its comparison…
     expect(screen.getByText(/vs ₡62,000/)).toBeInTheDocument();
-    // …while the repair lines render without one.
-    expect(screen.getByText('₡2,000')).toBeInTheDocument();
+    // …while both repair lines render their own figure without one.
+    expect(screen.getByText('₡800')).toBeInTheDocument();
+    expect(screen.getByText('₡1,200')).toBeInTheDocument();
+    expect(screen.queryByText(/vs ₡1,500/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/vs ₡900/)).not.toBeInTheDocument();
   });
 
   it('renders no passive income or operating cost line', () => {

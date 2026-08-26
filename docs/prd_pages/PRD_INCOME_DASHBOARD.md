@@ -88,9 +88,11 @@ expect a step in the manual repair series at the cycle Spec #48 shipped, and do 
 it as a balance change.
 
 **Entry point.** The Dashboard Credits tile (`app/frontend/src/components/dashboard/CreditsTile.tsx`)
-is now the way into this page. It carries the current balance, battle earnings, repair
-spend and the avoidable portion of repair spend for the current cycle, each against the
-last completed cycle, and then links here. It deliberately omits passive facility income,
+is now the way into this page. It carries the current balance, battle earnings, and repair
+spend split into its automatic and manual `repairType` totals for the current cycle, each
+against the last completed cycle, and then links here. The automatic figure is the cost of
+not being present before a robot fought, stated as credits actually charged at full price
+rather than as a derived saving. It deliberately omits passive facility income,
 operating costs, per-facility and per-robot breakdowns, ROI and projections — those are
 settlement figures that barely move day to day, and this page already presents them
 properly. It also carries no repair button: the action stays in the Dashboard

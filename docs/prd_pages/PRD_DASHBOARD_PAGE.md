@@ -255,11 +255,12 @@ The Dashboard Page (`/dashboard`) is the most critical page in Armoured Souls - 
 │   │   ├── Wins and losses (N matches) — W/L/D for Win_Loss_Modes
 │   │   ├── Placement events (N) — best placement + field size for Placement_Modes
 │   │   └── Remaining Battle_Slot times today, or the settlement countdown
-│   └── Credits Tile — "am I making or losing money, and was any of it avoidable?"
+│   └── Credits Tile — "am I making or losing money, and where is it going?"
 │       ├── Current balance
 │       ├── Battle earnings this cycle (vs last completed cycle)
-│       ├── Repair spend this cycle (vs last completed cycle)
-│       └── Avoidable repair spend (automatic repair spend × 0.5)
+│       ├── Automatic repairs this cycle — full price, the cost of not being there
+│       └── Manual repairs this cycle — taken at the 50% discount
+│           (both omitted together when nothing was spent; no combined total)
 ├── Match Section (2 columns, conditional) ✅
 │   ├── Upcoming Matches (scrollable)
 │   └── Recent Matches (scrollable)
