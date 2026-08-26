@@ -33,6 +33,8 @@ Based on player poll (April 2026, 16 votes) and backlog analysis. WSJF = (Busine
 | 21 | Blueprint Library | 48 | 0 🗳️ | 1 | 1 | 1 | 3 | **1.0** |
 | 22 | Cosmetic Customization System | 46 | 0 🗳️ | 2 | 1 | 1 | 5 | **0.8** |
 | 23 | Matchup-Dependent Weapon Effectiveness | 58 | 0 🗳️ | 3 | 1 | 2 | 5 | **1.2** |
+| 24 | Financial Ledger Coverage | 59 | 0 🗳️ | 2 | 1 | 3 | 2 | **3.0** |
+| 25 | Dashboard Mobile Optimisation | 60 | 0 🗳️ | 3 | 2 | 2 | 3 | **2.3** |
 
 ---
 
@@ -212,3 +214,43 @@ Let players test any weapon from the shop in practice battles, not just owned we
 **Priority**: Not scoped — large combat system change
 
 Energy weapons bypass armor but shields resist them; ballistic shreds shields but armor blocks. Creates rock-paper-scissors dynamics that require owning multiple weapon types. Large scope — needs its own spec, careful balance work, and UI changes to communicate effectiveness. Synergizes with Arena Modifiers (#12) for meta variation.
+
+### #59 — Financial Ledger Coverage — Five Unwritten Transaction Types
+**Source**: Spec #48 investigation (Aug 2026) — found while establishing where repair spend comes from
+**Priority**: Low now, blocking later — the ledger is behind a default-off flag, so nothing is visibly wrong today, but anything built on it will be wrong until this is closed
+
+`financial_ledger` is the intended transaction record for every credit movement. `financialService.ts` declares twelve `TransactionType` values. Six are actually written:
+
+| Written today | Where |
+|---|---|
+| `battle_income` | `awardCreditsWithLedger`, all battle orchestrators |
+| `weapon_purchase`, `weapon_sale`, `weapon_refinement` | `routes/weaponInventory.ts` |
+| `facility_upgrade` | `routes/facility.ts` |
+| `robot_creation` | `routes/robots.ts` |
+
+Spec #48 adds `repair_cost`, making seven. **Five remain declared and never written**, and they are not all the same kind of gap — each needs a decision to implement or delete rather than a blanket "add the writes":
+
+- **`attribute_upgrade`** — a real credit spend (`commitUpgrades`, `POST /api/robots/:id/upgrades`) that never reaches the ledger. The most conspicuous remaining gap now that repairs are handled. Almost certainly implement.
+- **`settlement_adjustment`** — passive income and operating costs move credits at midnight settlement and are not ledgered. Implement, or decide the ledger is per-action only and settlement lives in `cycle_snapshots` alone.
+- **`streaming_revenue`** — awarded per robot per battle by `awardStreamingRevenue`. Battle rewards reach the ledger as `battle_income`, but streaming revenue is a separate award and does not. Implement.
+- **`subscription_cost`** — likely **obsolete rather than missing**. Spec #35 made subscribing free under the cap and unsubscribing free and always allowed, so there is no cost to record. Check whether this type should be deleted.
+- **`prestige_award`** — likely **misconceived**. Prestige is not credits and the ledger records credit movements with a `balanceAfter`. Check whether this type should be deleted rather than implemented.
+
+**Why this matters even though nothing looks broken.** `financial_ledger_active` in `services/migration/featureFlags.ts` defaults to `false`, and `financialService.recordTransaction` returns `null` when the flag is off, so no ledger row is written anywhere today. The ledger is dormant. The risk is switching it on later and building a report on a record that silently omits attribute upgrades, streaming revenue and settlement — the numbers would look plausible and be wrong.
+
+**Suggested sequencing**: close this before enabling `financial_ledger_active`, and treat "every credit-moving code path writes a ledger entry" as the gate for flipping the flag. A test asserting that every declared `TransactionType` has at least one writer would keep it closed.
+
+**Related**: Spec #48 (repair figures, adds `repair_cost`), Feature Flags (#15).
+
+### #60 — Dashboard Mobile Optimisation
+**Source**: Spec #48 review (Aug 2026) — the Overview_Row redesign satisfies its mobile requirements, but the review surfaced a whole-page problem that spec deliberately did not take on
+**Priority**: Medium — the game is played on phones, and the Dashboard is the first page after login
+
+Spec #48 gives the Overview_Row a correct mobile layout: single column below 1024px, three equal columns above, no horizontal overflow between 320px and 1920px, 44px activation regions. What it does **not** do is optimise the Dashboard as a page on a phone. Two known costs, one introduced by #48 itself:
+
+- **Reserved tile height is paid three times when stacked.** `DashboardTile` reserves one `min-h` sized from the tallest tile (Credits_Tile: four stat rows plus a link) and applies it in the loading, error and loaded states so nothing reflows as data arrives. Side by side on desktop that is free. Stacked on a phone it reserves roughly 528px before Recent Battles, much of it whitespace under the Prestige_Tile, which has fewer rows. The fix is to reserve height **per tile** from that tile's own loaded content, which keeps the no-reflow guarantee and drops the tallest-tile tax. Accepted knowingly in #48 rather than overlooked.
+- **The page as a whole is long on mobile.** Notification stack, Overview_Row, Recent Battles, Upcoming Matches, Active Tournament, League Standings, then a grid of robot cards. Every section stacks. Nobody has measured how far a phone user scrolls to reach their roster, or decided what should be collapsed, deferred or moved behind a tab.
+
+**Suggested scope**: measure the mobile scroll depth first, then decide per section whether it collapses, lazy-loads, or moves. Also revisit whether the robot card grid belongs on the Dashboard at all given `/robots` exists. Pair with the per-tile height fix above, since both are `components/dashboard/` edits.
+
+**Not in scope for #48**, deliberately: that spec's mobile requirements are about the Overview_Row not breaking, not about the page being pleasant on a phone.
