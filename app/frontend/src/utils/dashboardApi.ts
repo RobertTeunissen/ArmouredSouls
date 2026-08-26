@@ -41,7 +41,11 @@ export interface CycleComparison {
 export interface CycleProgressSummary {
   window: CycleWindow;
   battlesFought: number;
+  /** Always `>= battlesFought`: fought matches plus those still ahead today. */
   matchesScheduled: number;
+  /** `winLossBattles + placementBattles === battlesFought`, always. */
+  winLossBattles: number;
+  placementBattles: number;
   winLossDraw: WinLossDraw;
   bestPlacement: BestPlacement | null;
   remainingSlotsUtc: string[];

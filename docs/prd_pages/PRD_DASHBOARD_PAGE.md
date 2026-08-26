@@ -248,10 +248,13 @@ The Dashboard Page (`/dashboard`) is the most critical page in Armoured Souls - 
 │   │   ├── Prestige earned this cycle (vs last completed cycle)
 │   │   └── Progress toward the next Prestige_Gate
 │   ├── Today's Battles Tile — "has today happened yet, and how did it go?"
-│   │   ├── Battles fought of matches scheduled (aggregate, never a list)
-│   │   ├── Win / loss / draw for Win_Loss_Modes
-│   │   ├── Best placement + field size for Placement_Modes
-│   │   └── Remaining Battle_Slot times today
+│   │   │   Aggregate only, never a list. The three figures reconcile:
+│   │   │   win/loss matches + placement events = battles fought.
+│   │   ├── Battles fought (fought + still to come today; fought ⊆ scheduled
+│   │   │   by construction, so the ratio can never exceed 100%)
+│   │   ├── Wins and losses (N matches) — W/L/D for Win_Loss_Modes
+│   │   ├── Placement events (N) — best placement + field size for Placement_Modes
+│   │   └── Remaining Battle_Slot times today, or the settlement countdown
 │   └── Credits Tile — "am I making or losing money, and was any of it avoidable?"
 │       ├── Current balance
 │       ├── Battle earnings this cycle (vs last completed cycle)

@@ -394,6 +394,134 @@ describe('Requirement 4 criteria 9 and 10: both Match_Schedule_Sources are count
   });
 });
 
+describe('Requirement 4 criteria 11, 12 and 13: the tile figures reconcile', () => {
+  /**
+   * The regression this pins. On a database whose schedule rows carried a `scheduledFor`
+   * of tomorrow, four fought battles were reported against one pending tournament row —
+   * `4 of 1` on screen. Two causes: the unified source counted rows of any status while
+   * the tournament source counted only outstanding ones, so a fought round left the
+   * total; and nothing tied a fought battle to the row that produced it, so the two
+   * halves of the ratio were independent estimates.
+   */
+  function foughtToday(battleType: string, battleId: number, robotId: number) {
+    return {
+      battleId,
+      robotId,
+      team: 1,
+      placement: battleType === 'koth' || battleType === 'grand_melee' ? 3 : null,
+      battle: {
+        battleType,
+        winnerId: robotId,
+        winningSide: null,
+        createdAt: new Date('2026-08-26T08:00:00Z'),
+      },
+    };
+  }
+
+  it('never reports fewer scheduled than fought, even with every row dated tomorrow', async () => {
+    mockPrisma.robot.findMany.mockResolvedValue([{ id: 201 }]);
+    mockPrisma.battleParticipant.findMany.mockResolvedValue([
+      foughtToday('league_1v1', 102, 201),
+      foughtToday('tournament_1v1', 114, 201),
+      foughtToday('koth', 199, 201),
+      foughtToday('grand_melee', 223, 201),
+    ]);
+    mockPrisma.battleParticipant.groupBy.mockResolvedValue([
+      { battleId: 199, _count: { id: 8 } },
+      { battleId: 223, _count: { id: 16 } },
+    ]);
+    // Every unified row sits outside the window, exactly as the seeded data did.
+    mockPrisma.scheduledMatchParticipant.findMany.mockResolvedValue([]);
+    // The NEXT round's pending bracket row — the row that used to be the whole total.
+    mockPrisma.scheduledTournamentMatch.findMany.mockResolvedValue([
+      { id: 138, participantType: 'robot' },
+    ]);
+
+    // 15:45 UTC: the 10:00 tournament slot has passed, so nothing is outstanding today.
+    const summary = await getCycleProgressSummary(1, new Date('2026-08-26T15:45:00Z'));
+
+    expect(summary.battlesFought).toBe(4);
+    expect(summary.matchesScheduled).toBe(4);
+    expect(summary.matchesScheduled).toBeGreaterThanOrEqual(summary.battlesFought);
+  });
+
+  it('splits the fought battles into win/loss and placement counts that sum to the total', async () => {
+    mockPrisma.robot.findMany.mockResolvedValue([{ id: 201 }]);
+    mockPrisma.battleParticipant.findMany.mockResolvedValue([
+      foughtToday('league_1v1', 102, 201),
+      foughtToday('tournament_1v1', 114, 201),
+      foughtToday('koth', 199, 201),
+      foughtToday('grand_melee', 223, 201),
+    ]);
+    mockPrisma.battleParticipant.groupBy.mockResolvedValue([
+      { battleId: 199, _count: { id: 8 } },
+      { battleId: 223, _count: { id: 16 } },
+    ]);
+
+    const summary = await getCycleProgressSummary(1, new Date('2026-08-26T15:45:00Z'));
+
+    expect(summary.winLossBattles).toBe(2);
+    expect(summary.placementBattles).toBe(2);
+    expect(summary.winLossBattles + summary.placementBattles).toBe(summary.battlesFought);
+    // The two wins are the league and tournament battles; the placements are excluded.
+    expect(summary.winLossDraw).toEqual({ wins: 2, losses: 0, draws: 0 });
+  });
+
+  it('counts an outstanding slot ahead of now on top of what has been fought', async () => {
+    mockPrisma.robot.findMany.mockResolvedValue([{ id: 201 }]);
+    mockPrisma.battleParticipant.findMany.mockResolvedValue([
+      foughtToday('league_1v1', 102, 201),
+    ]);
+    mockPrisma.scheduledMatchParticipant.findMany.mockResolvedValue([
+      {
+        scheduledMatchId: 300,
+        scheduledMatch: {
+          matchType: 'koth',
+          status: 'scheduled',
+          scheduledFor: new Date('2026-08-26T13:00:00Z'),
+        },
+      },
+    ]);
+
+    const summary = await getCycleProgressSummary(1, new Date('2026-08-26T09:00:00Z'));
+
+    expect(summary.battlesFought).toBe(1);
+    expect(summary.matchesScheduled).toBe(2);
+    expect(summary.remainingSlotsUtc).toEqual(['13:00']);
+  });
+
+  it('holds the invariant across arbitrary fought and outstanding combinations', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.integer({ min: 0, max: 6 }),
+        fc.integer({ min: 0, max: 3 }),
+        async (foughtCount, bracketCount) => {
+          jest.clearAllMocks();
+          resetMocks();
+          mockPrisma.robot.findMany.mockResolvedValue([{ id: 201 }]);
+          mockPrisma.battleParticipant.findMany.mockResolvedValue(
+            Array.from({ length: foughtCount }, (_, i) =>
+              foughtToday('league_1v1', 500 + i, 201),
+            ),
+          );
+          mockPrisma.scheduledTournamentMatch.findMany.mockResolvedValue(
+            Array.from({ length: bracketCount }, (_, i) => ({
+              id: 700 + i,
+              participantType: 'robot',
+            })),
+          );
+
+          const summary = await getCycleProgressSummary(1, new Date('2026-08-26T09:00:00Z'));
+
+          expect(summary.matchesScheduled).toBeGreaterThanOrEqual(summary.battlesFought);
+          expect(summary.winLossBattles + summary.placementBattles).toBe(summary.battlesFought);
+        },
+      ),
+      { numRuns: 60 },
+    );
+  });
+});
+
 describe('Requirement 8 criterion 11: the read is a bounded, unpaginated set of queries', () => {
   /**
    * The bound is on the number of QUERIES, not on wall-clock time. A timing assertion

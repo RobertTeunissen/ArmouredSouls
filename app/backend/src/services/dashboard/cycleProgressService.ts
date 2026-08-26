@@ -190,6 +190,8 @@ export async function getCycleProgressSummary(
       window: { start: start.toISOString(), end: end.toISOString(), cycleNumber: currentCycleNumber },
       battlesFought: 0,
       matchesScheduled: 0,
+      winLossBattles: 0,
+      placementBattles: 0,
       winLossDraw: { wins: 0, losses: 0, draws: 0 },
       bestPlacement: null,
       remainingSlotsUtc: [],
@@ -313,6 +315,26 @@ export async function getCycleProgressSummary(
     }
   }
 
+  // ── How the fought battles split between the two result kinds ──
+  //
+  // Reported per BATTLE, not per side, so that
+  // `winLossBattles + placementBattles === battlesFought` always holds. That identity
+  // is what lets the tile label each line with its own count and have the three
+  // numbers visibly add up; a reader should never have to work out why a record of
+  // 2W 0L 0D sits under a fought count of 4 (Requirement 4 criterion 13).
+  //
+  // Note this is NOT `wins + losses + draws`: a Same_Stable_Pairing is one battle that
+  // contributes both a win and a loss, so the outcome total exceeds the battle count.
+  const winLossBattleIds = new Set<number>();
+  const placementBattleIds = new Set<number>();
+  for (const row of participantRows) {
+    if (PLACEMENT_MODE_BATTLE_TYPES.includes(row.battle.battleType)) {
+      placementBattleIds.add(row.battleId);
+    } else {
+      winLossBattleIds.add(row.battleId);
+    }
+  }
+
   const winLossDraw: WinLossDraw = { wins: 0, losses: 0, draws: 0 };
   for (const side of sides.values()) {
     // Placement modes resolve by finishing position, not win/loss, and are excluded
@@ -361,10 +383,35 @@ export async function getCycleProgressSummary(
   }
 
   // ── Matches scheduled and remaining slots, across BOTH sources ──
-  const unifiedMatchIds = new Set(unifiedRows.map((r) => r.scheduledMatchId));
-  const matchesScheduled = unifiedMatchIds.size + bracketRows.length;
-
+  //
+  // Today's match count is `already fought` + `still to come`, and NOT a count of
+  // schedule rows. That distinction is the whole point of this block.
+  //
+  // Counting rows was wrong in a way that reached the screen: the two sources were
+  // filtered asymmetrically. The unified source counted a row whatever its status, so a
+  // fought league match stayed in the total, while the tournament source counted only
+  // outstanding rows, so a fought round LEFT the total and the next round's pending row
+  // joined it. A player in an active tournament therefore saw the ratio break the moment
+  // their round ran. On a local database whose seeded rows carried a `scheduledFor` of
+  // tomorrow it produced `4 of 1` — four battles fought against a single pending row for
+  // a round not yet played.
+  //
+  // The deeper problem is that nothing links a fought battle back to the row that
+  // produced it, so "fought" and "scheduled" were two independent estimates of the same
+  // thing and the `of` in the rendered ratio asserted a subset relationship the data did
+  // not guarantee. Deriving the total from the fought count plus the outstanding set
+  // makes that relationship true by construction: `battlesFought <= matchesScheduled`
+  // cannot fail, whatever the schedule rows say.
+  //
+  // The `still to come` set is exactly the set that feeds `remainingSlotsUtc` below, so
+  // the denominator and the "Next up" line can never disagree either.
+  //
+  // One consequence to know about: a match whose slot passed without producing a battle
+  // silently leaves the total rather than sitting in it forever. That is the better
+  // failure — the alternative renders `2 of 3` alongside "all scheduled matches fought"
+  // for the rest of the day, which is a contradiction rather than a diagnosis.
   const remainingSlots = new Set<string>();
+  let outstandingMatches = 0;
 
   // Unified: an unfought match contributes its own scheduled time.
   const seenUnified = new Set<number>();
@@ -373,6 +420,7 @@ export async function getCycleProgressSummary(
     seenUnified.add(row.scheduledMatchId);
     if (row.scheduledMatch.status !== 'scheduled') continue;
     if (row.scheduledMatch.scheduledFor <= now) continue;
+    outstandingMatches += 1;
     remainingSlots.add(formatUtcTime(row.scheduledMatch.scheduledFor));
   }
 
@@ -401,9 +449,14 @@ export async function getCycleProgressSummary(
     );
 
     if (slotToday > now && slotToday < nextBoundary) {
+      outstandingMatches += 1;
       remainingSlots.add(formatUtcTime(slotToday));
     }
   }
+
+  // The invariant the rendered ratio depends on. Stated as an expression rather than
+  // left implicit so that a future change to either term cannot quietly break it.
+  const matchesScheduled = battlesFought + outstandingMatches;
 
   const comparison = await readComparison(userId, currentCycleNumber).catch((error) => {
     // Requirement 2 criterion 9: the Current_Cycle figures still return; the frontend
@@ -424,6 +477,8 @@ export async function getCycleProgressSummary(
     },
     battlesFought,
     matchesScheduled,
+    winLossBattles: winLossBattleIds.size,
+    placementBattles: placementBattleIds.size,
     winLossDraw,
     bestPlacement,
     remainingSlotsUtc: [...remainingSlots].sort(),

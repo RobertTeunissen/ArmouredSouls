@@ -71,8 +71,15 @@ export function TodaysBattlesTile({
     );
   }
 
-  const { battlesFought, matchesScheduled, winLossDraw, bestPlacement, remainingSlotsUtc } =
-    cycleProgress;
+  const {
+    battlesFought,
+    matchesScheduled,
+    winLossBattles,
+    placementBattles,
+    winLossDraw,
+    bestPlacement,
+    remainingSlotsUtc,
+  } = cycleProgress;
 
   // Requirement 10 criterion 4: during a Preparation_Phase nothing is scheduled, and
   // that is an explanatory state rather than an error — no retry control.
@@ -80,6 +87,12 @@ export function TodaysBattlesTile({
 
   const hasFought = battlesFought > 0;
   const outcomesTotal = winLossDraw.wins + winLossDraw.losses + winLossDraw.draws;
+
+  // The service guarantees `matchesScheduled >= battlesFought`. This is the safety net
+  // for the day that guarantee breaks: render the fought count alone rather than a
+  // ratio like `4 of 1`, which is arithmetic nonsense on the face of it and destroys
+  // trust in every other figure on the row (Requirement 4 criterion 12).
+  const ratioIsCoherent = matchesScheduled >= battlesFought;
 
   const shownSlots = remainingSlotsUtc.slice(0, SLOTS_SHOWN);
   const extraSlots = remainingSlotsUtc.length - shownSlots.length;
@@ -94,16 +107,21 @@ export function TodaysBattlesTile({
           count against a known scheduled count is a value, not an omission. */}
       <DashboardTileStat
         label="Battles fought"
-        value={`${battlesFought} of ${matchesScheduled}`}
+        value={ratioIsCoherent ? `${battlesFought} of ${matchesScheduled}` : `${battlesFought}`}
         period="current-cycle"
         signMeaning="no-meaning"
       />
 
       {/* Requirement 10 criteria 1 and 2: omitted entirely when nothing was fought,
-          and omitted independently of the placement line. */}
+          and omitted independently of the placement line.
+
+          The match count in the label is what makes the tile add up. Without it, a
+          record of `2W 0L 0D` under a fought count of 4 reads as two missing battles,
+          when in fact the other two were Placement_Mode events reported on the line
+          below (Requirement 4 criterion 13). */}
       {hasFought && outcomesTotal > 0 ? (
         <DashboardTileStat
-          label="Record"
+          label={`Wins and losses (${winLossBattles} ${winLossBattles === 1 ? 'match' : 'matches'})`}
           value={`${winLossDraw.wins}W ${winLossDraw.losses}L ${winLossDraw.draws}D`}
           period="current-cycle"
           signMeaning="no-meaning"
@@ -112,11 +130,16 @@ export function TodaysBattlesTile({
 
       {/* Requirement 5 criteria 3, 5 and 6: a placement is never rendered in the loss
           or error colour, and a reward-earning finish carries a trophy the others do
-          not. `signMeaning: 'no-meaning'` with no delta is what guarantees the colour. */}
+          not. `signMeaning: 'no-meaning'` with no delta is what guarantees the colour.
+
+          Labelled with its own count for the same reason as the line above, and named
+          "Placement events" rather than "Best finish" so that a new player can see that
+          KotH and Grand Melee resolve by finishing position instead of by win or loss —
+          which is the only way the 4 = 2 + 2 split is inferable from the tile. */}
       {bestPlacement !== null ? (
         <DashboardTileStat
-          label="Best finish"
-          value={`${placementReward(bestPlacement.position) !== 'none' ? '🏆 ' : ''}${ordinal(
+          label={`Placement events (${placementBattles})`}
+          value={`${placementReward(bestPlacement.position) !== 'none' ? '🏆 ' : ''}best ${ordinal(
             bestPlacement.position,
           )} of ${bestPlacement.fieldSize}`}
           period="current-cycle"

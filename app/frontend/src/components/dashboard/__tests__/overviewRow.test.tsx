@@ -20,6 +20,9 @@ const PROGRESS: CycleProgressSummary = {
   window: { start: '2026-08-26T00:00:00.000Z', end: '2026-08-26T12:00:00.000Z', cycleNumber: 61 },
   battlesFought: 3,
   matchesScheduled: 5,
+  // 2 win/loss + 1 placement = 3 fought. The service guarantees that identity.
+  winLossBattles: 2,
+  placementBattles: 1,
   winLossDraw: { wins: 2, losses: 1, draws: 0 },
   bestPlacement: { position: 4, fieldSize: 20 },
   remainingSlotsUtc: ['15:00', '17:00', '18:00'],
@@ -179,7 +182,7 @@ describe('Requirements 4 and 5: Todays_Battles_Tile', () => {
   it('renders a reward-earning placement with a marker a non-earning one lacks', () => {
     // Requirement 5 criterion 6.
     renderRow(baseData());
-    expect(screen.getByText(/🏆 4th of 20/)).toBeInTheDocument();
+    expect(screen.getByText(/🏆 best 4th of 20/)).toBeInTheDocument();
 
     render(
       <MemoryRouter>
@@ -190,7 +193,46 @@ describe('Requirements 4 and 5: Todays_Battles_Tile', () => {
         />
       </MemoryRouter>,
     );
-    expect(screen.getByText(/15th of 20/)).toBeInTheDocument();
+    expect(screen.getByText(/best 15th of 20/)).toBeInTheDocument();
+  });
+
+  it('labels each result line with its own match count so the three figures add up', () => {
+    // Requirement 4 criterion 13. The regression: `4 of 1` with a record covering only
+    // two of the four battles and nothing saying the other two were placement events.
+    renderRow(baseData());
+
+    expect(screen.getByText('3 of 5')).toBeInTheDocument();
+    expect(screen.getByText(/Wins and losses \(2 matches\)/)).toBeInTheDocument();
+    expect(screen.getByText(/Placement events \(1\)/)).toBeInTheDocument();
+  });
+
+  it('says "match" rather than "matches" for a single win/loss battle', () => {
+    renderRow(
+      baseData({
+        cycleProgress: {
+          ...PROGRESS,
+          battlesFought: 1,
+          winLossBattles: 1,
+          placementBattles: 0,
+          winLossDraw: { wins: 1, losses: 0, draws: 0 },
+          bestPlacement: null,
+        },
+      }),
+    );
+    expect(screen.getByText(/Wins and losses \(1 match\)/)).toBeInTheDocument();
+  });
+
+  it('drops the ratio rather than rendering an impossible one', () => {
+    // Requirement 4 criterion 12. The service makes `matchesScheduled >= battlesFought`
+    // true by construction; this is the safety net if that ever breaks, because `4 of 1`
+    // on the most prominent module of the page discredits every figure beside it.
+    renderRow(
+      baseData({
+        cycleProgress: { ...PROGRESS, battlesFought: 4, matchesScheduled: 1 },
+      }),
+    );
+    expect(screen.queryByText('4 of 1')).not.toBeInTheDocument();
+    expect(screen.getByText('4')).toBeInTheDocument();
   });
 
   it('omits outcome and placement lines when nothing was fought, keeping the progress line', () => {

@@ -72,13 +72,34 @@ export interface CycleProgressSummary {
   /** Distinct battles the player's robots fought in the window. */
   battlesFought: number;
   /**
-   * Distinct matches scheduled for the window, counted once per stable, across BOTH
+   * The player's matches for this window: those already fought plus those still ahead
+   * of `now` inside it. **Always `>= battlesFought`**, which is what makes the rendered
+   * `X of Y` ratio meaningful — `X` is a part of `Y` by construction rather than by
+   * coincidence.
+   *
+   * Deliberately NOT a count of schedule rows. Outstanding matches are drawn from both
    * Match_Schedule_Sources — `scheduled_matches_v2` for the six unified modes and
-   * `scheduled_tournament_matches` for the three tournament modes. Requirement 4
-   * criterion 9: counting only the first would omit the 10:00, 15:00 and 18:00
-   * Battle_Slots while the fought count still included their battles.
+   * `scheduled_tournament_matches` for the three tournament modes, so the 10:00, 15:00
+   * and 18:00 Battle_Slots are covered (Requirement 4 criterion 9) — but a fought match
+   * is counted from the battle it produced, not from its row. Counting rows made the two
+   * halves of the ratio independent estimates, and the asymmetric status filters between
+   * the two sources let the total fall below the fought count.
    */
   matchesScheduled: number;
+  /**
+   * Distinct fought battles resolved by win, loss or draw — every mode except the
+   * Placement_Modes.
+   *
+   * `winLossBattles + placementBattles === battlesFought`, always. The tile labels each
+   * result line with its own count so the three figures visibly reconcile; without that,
+   * a record of `2W 0L 0D` under a fought count of 4 looks like a missing figure.
+   *
+   * Not derivable from `winLossDraw`: a Same_Stable_Pairing is one battle carrying both
+   * a win and a loss, so `wins + losses + draws` can exceed the battle count.
+   */
+  winLossBattles: number;
+  /** Distinct fought battles resolved by finishing position — the Placement_Modes. */
+  placementBattles: number;
   winLossDraw: WinLossDraw;
   bestPlacement: BestPlacement | null;
   /**

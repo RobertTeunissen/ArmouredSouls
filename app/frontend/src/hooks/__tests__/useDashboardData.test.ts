@@ -57,6 +57,8 @@ const CYCLE_PROGRESS = {
   window: { start: '2026-08-26T00:00:00.000Z', end: '2026-08-26T12:00:00.000Z', cycleNumber: 61 },
   battlesFought: 3,
   matchesScheduled: 5,
+  winLossBattles: 2,
+  placementBattles: 1,
   winLossDraw: { wins: 2, losses: 1, draws: 0 },
   bestPlacement: null,
   remainingSlotsUtc: ['15:00'],
