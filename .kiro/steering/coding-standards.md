@@ -217,9 +217,23 @@ If a suite is red, either the code is wrong or the test is wrong. Fix one of the
 Do not make the check advisory, and do not delete a test to make a build pass unless
 the behaviour it covers is genuinely gone (say so explicitly if you do).
 
-**Current state (Aug 2026).** All tiers are green: unit (205 suites, 2881 tests),
-frontend (1890 tests), integration (`typecheck:tests` passes, 0 compile errors).
-The integration test repair shipped July 2026.
+**Do not record a pass/fail snapshot here.** An earlier version of this section
+claimed "All tiers are green: unit (205 suites, 2881 tests), frontend (1890
+tests)". Test counts change on almost every commit, so a snapshot is stale within
+days, and this one was worse than stale: it asserted every tier was green while
+three backend suites were failing to load outright. A steering file is read as
+authoritative, so a rotting fact in it is actively misleading — it cost real time
+in Aug 2026 when it was trusted over a test run.
+
+Run the suite to find out the current state. The rules above are the durable part;
+the numbers are not a rule at all.
+
+**Excluding a test is a change that needs a stated reason and an expiry.** If a
+suite genuinely cannot run in a tier, `testPathIgnorePatterns` is the right tool,
+but the entry must carry a comment saying *why* and what would allow it back. An
+entry reading `// requires js-yaml 3 API (removed)` outlived its cause by months
+and hid five real failures, three of them broken guide content. Prefer fixing the
+dependency over excluding the test; if you must exclude, say what has to change.
 
 ## Documentation Requirements
 - Document complex algorithms and business logic
