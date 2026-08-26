@@ -4,7 +4,7 @@
  * rules. Imported by both the backend and the frontend.
  *
  * Spec #48 Requirement 15. Before that spec the formula existed three times: here,
- * again as `calculateRepairCost` in `app/backend/src/utils/robotCalculations.ts`
+ * again in `app/backend/src/utils/robotCalculations.ts`
  * (the copy both repair paths actually executed), and inline in
  * `app/frontend/src/components/YieldThresholdSlider.tsx`. Nothing enforced that
  * the three agreed, and the header of this file had been asking for the migration

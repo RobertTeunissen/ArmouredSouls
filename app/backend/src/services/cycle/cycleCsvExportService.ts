@@ -80,9 +80,9 @@ export async function exportCycleBattlesToCSV(cycleNumber: number): Promise<stri
 
   // Generate CSV
   // Eleven columns. A twelfth, `repair_cost`, was removed by Spec #48 Requirement 9
-  // criteria 13-14: it was populated from `payload.repairCost`, which no orchestrator
-  // has ever written, so it exported `0` on every row of every export since it was
-  // added — a wrong number an admin could download.
+  // criteria 13-14: it was populated from a `repairCost` field on the `battle_complete`
+  // payload, which no orchestrator has ever written, so it exported `0` on every row of
+  // every export since it was added — a wrong number an admin could download.
   //
   // It was removed rather than repointed at Repair_Spend_Source, because a row here
   // is one battle participant and a `robot_repair` audit row carries no battle

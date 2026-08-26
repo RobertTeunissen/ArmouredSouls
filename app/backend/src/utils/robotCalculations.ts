@@ -246,7 +246,7 @@ export function calculateEffectiveStatsWithStance(robot: RobotWithWeapons, tunin
 }
 
 /**
- * Repair pricing used to live here as `calculateRepairCost`, alongside a second
+ * Repair pricing used to live here, alongside a second
  * declaration in `app/shared/utils/repairCost.ts` and a third inline in the
  * frontend's `YieldThresholdSlider.tsx`. Spec #48 Requirement 15 consolidated all
  * three into the shared module.

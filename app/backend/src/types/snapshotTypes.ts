@@ -75,7 +75,7 @@ export interface CycleEventPayload {
   prestige?: number;
   fame?: number;
   streamingRevenue?: number;
-  // `repairCost?: number` was removed by Spec #48 Requirement 9 criterion 3. It was
+  // An optional repair-cost member was removed here by Spec #48 Requirement 9 criterion 3. It was
   // declared but never written by any orchestrator, and its only effect was to let
   // two dead reads type-check: one in `cycleSnapshotService.aggregateStableMetrics`
   // (a latent double-count) and one in `cycleCsvExportService` (a CSV column that

@@ -33,6 +33,7 @@ src/components/
 ├── hall-of-records/   # HallOfRecordsPage sub-components
 ├── battle-detail/     # BattleDetailPage sub-components + useBattlePlaybackData hook
 ├── nav/               # Navigation sub-components (NavLink, DropdownMenu, MobileTab, MobileDrawer)
+├── dashboard/         # Overview_Row tiles (PrestigeTile, TodaysBattlesTile, CreditsTile, OverviewRow) + the shared DashboardTile
 ```
 
 ## Component Architecture

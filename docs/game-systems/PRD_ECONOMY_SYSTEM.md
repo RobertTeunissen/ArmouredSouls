@@ -100,8 +100,12 @@
    - Integrated financial processing into bulk cycles
    - Shows costs deducted, users processed, bankruptcies
 
-5. `app/backend/src/utils/robotCalculations.ts` (modified)
-   - Repair cost calculations with multi-robot discount
+5. `app/shared/utils/repairCost.ts` — **the sole implementation** of repair cost
+   arithmetic: `calculateRepairQuote`, `applyManualRepairDiscount`,
+   `calculateRepairBayDiscountPercent` and `MANUAL_REPAIR_DISCOUNT`, imported by both
+   Backend and Frontend. Spec #48 removed the second declaration that used to live in
+   `app/backend/src/utils/robotCalculations.ts` and the third inline copy in
+   `YieldThresholdSlider.tsx`; a repair figure computed anywhere else is a bug.
 
 6. `app/backend/tests/economyCalculations.test.ts` (215 lines, 27 tests ✅)
 
@@ -1167,15 +1171,55 @@ patched up alone before its own match or as part of a full sweep.
 
 **Manual Repair Discount (50%)**:
 
-When players use the "Repair All" button, a 50% discount is applied after all facility discounts:
+When a player repairs manually with the "Repair All" button, they receive a 50%
+discount. It applies **on top of** the Repair Bay saving, so the two stack, and it
+applies **after** the Repair Bay discount, never before it.
+
+Stated in the terms this document uses elsewhere:
+
+- The **Repair Quote** is what an automatic repair charges and what the Frontend shows
+  as an estimate. It already carries the Repair Bay discount:
+  `round(attributeTotal × 100 × (damagePercent / 100) × damageMultiplier × (1 − repairBayDiscount))`.
+- The **charged amount** for a manual repair is `floor(repairQuote × 0.5)`.
 
 ```
-// Manual repair discount stacking:
-costAfterRepairBay = Math.floor(baseCost × (1 - repairBayDiscount / 100))
-finalManualCost = Math.floor(costAfterRepairBay × 0.5)
+// One robot, manual path:
+repairQuote = Math.round(attributeTotal × 100 × (damagePercent / 100) × damageMultiplier × (1 - repairBayDiscount))
+charged     = Math.floor(repairQuote × MANUAL_REPAIR_DISCOUNT)   // MANUAL_REPAIR_DISCOUNT = 0.5
 ```
 
-The discount is multiplicative. A player with 90% Repair Bay discount pays `Math.floor(baseCost × 0.10 × 0.50)` = 5% of base cost for manual repairs. Automatic repairs during cycle processing are unaffected. The player's balance can go negative as a result of manual repairs — this is by design to help struggling players stay active.
+The wording this replaces spoke of a `baseCost` without saying whether the Repair Bay
+discount was already in it. That ambiguity is not academic: it is precisely the reading
+that produced a real bug, in which `POST /repair-all` applied the Repair Bay discount a
+second time to a quote that already carried it when writing its audit rows. Use
+**Repair Quote** for the post-Repair-Bay, pre-manual-discount figure and **charged
+amount** for what leaves the player's balance; do not reintroduce `baseCost`.
+
+**A batch is discounted per robot, then summed** — quote each robot, halve each robot,
+add the halves. Not "sum the quotes, then halve the total". The two differ by up to
+N−1 credits for a batch of N, and the per-robot order is what lets the charge, the
+`robots.lifetimeRepairCreditsPaid` increment, the audit rows and the ledger entries all
+reconcile to the same number.
+
+At a 90% Repair Bay discount a manual repair costs 5% of the undiscounted figure.
+Automatic pre-battle repairs receive no manual discount — they are charged the Repair
+Quote in full. A player's balance may go negative through manual repairs; that is by
+design, so a struggling player can keep fighting.
+
+**Historical note — the manual repair series has a discontinuity.** Before Spec #48,
+the two audit figures written for a manual repair (`creditsCharged` and
+`creditsBeforeManualDiscount`, then named `cost` and `preDiscountCost`) had the Repair
+Bay discount applied a second time, so every manual row recorded a fraction of what the
+player actually paid: 80% of the truth at a 20% Repair Bay discount, a tenth of it at
+the 90% cap. The credits deducted and the per-robot lifetime total were always correct;
+only the audit figures were wrong, and they are what `/admin/repair-log`,
+Cycle Repair Spend and the Income Dashboard read. Spec #48 fixed the write path and
+**deliberately did not backfill**: a pre-fix row cannot be repaired from its own
+contents, because that needs the Repair Bay level and active robot count as they stood
+at the moment of the repair, and both are mutable. Rows written before that spec keep
+their understated values and the `cycle_snapshots` totals derived from them stay
+understated. Expect a step in the manual repair series at the cycle Spec #48 shipped,
+and do not read it as a balance change.
 
 ### 6. Operating Costs (Daily Recurring)
 

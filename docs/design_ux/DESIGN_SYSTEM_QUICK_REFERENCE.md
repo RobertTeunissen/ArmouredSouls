@@ -315,6 +315,60 @@ type TabId = 'overview' | 'playback' | 'combat-log';
 </div>
 ```
 
+### Dashboard Tile Component
+
+The Dashboard Overview Row (`app/frontend/src/components/dashboard/`) is built from one
+shared tile, `DashboardTile.tsx`. Container, heading step, stat-value colours, loading
+state, error state and click-through live in that file and nowhere else — a tile
+instance supplies content and nothing else. Its props interface carries no
+`className`, no `style`, no `variant` and no colour, padding, size or typography
+member, which is what stops three tiles from drifting apart.
+
+```jsx
+{/* Row: one column on mobile, three from lg up */}
+<div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+  {/* Tile: container, heading, reserved content height */}
+  <section className="bg-surface-elevated border border-gray-700 rounded-lg p-4" aria-label={title}>
+    <h3 className="text-xl font-medium text-white mb-3">{title}</h3>
+
+    <div className="min-h-[11rem] flex flex-col gap-2">
+      {content}
+
+      {/* Click-through: native button, 44px activation region, text-primary */}
+      <button className="mt-auto min-h-11 min-w-11 inline-flex items-center text-primary hover:underline text-sm self-start">
+        {linkLabel}
+      </button>
+    </div>
+  </section>
+</div>
+```
+
+**Rules:**
+
+- **Container**: `bg-surface-elevated` with `border border-gray-700` — the Card
+  Component pattern above. Never `bg-surface` for a tile; that is the page surface it
+  sits on, and a tile that matches its background stops reading as a tile.
+- **Heading**: H3 at `text-xl font-medium`. One step, no per-tile override.
+- **Three stat-value treatments and one rule for choosing between them**:
+  `text-white` (neutral), `text-success` (favourable), `text-error` (unfavourable). A
+  colour applies **only when a comparison figure exists and the direction of movement
+  is meaningful**. No comparison, no meaning, or an equal figure all render neutral —
+  so a rising repair bill is never green, and nothing flips colour at an arbitrary
+  threshold. The tile decides; callers pass a delta and a direction, never a class.
+- **`text-primary` is for links and actions only.** It is never a stat value. Spending
+  an accent colour on a neutral number is how the old Financial Overview card ended up
+  rendering the credit balance in a second colour from the navigation bar.
+- **Activation regions are at least 44px** (`min-h-11 min-w-11`). Use a native
+  `<button>` or a router `<Link>` so Enter/Space activation, focus ring and DOM tab
+  order come for free.
+- **Row layout is `grid-cols-1 lg:grid-cols-3`.** Stacked below 1024px, three across
+  above it. Tile count and tile order never depend on data availability.
+- **The state that earns this pattern its place**: container, heading and reserved
+  content height are **identical across loading, error and loaded**. The loading state
+  is placeholder rows, never a zero — a zero reads as a real figure. Nothing on the
+  page reflows as data arrives.
+
 ---
 
 ## 📁 Asset File Naming (Convention)

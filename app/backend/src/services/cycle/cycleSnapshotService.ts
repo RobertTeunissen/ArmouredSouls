@@ -200,10 +200,10 @@ export class CycleSnapshotService {
         metric.totalCreditsEarned += payload.credits || 0;
         metric.totalPrestigeEarned += payload.prestige || 0;
         metric.streamingIncome += payload.streamingRevenue || 0;
-        // Spec #48 Requirement 9 criterion 2: a `metric.totalRepairCosts +=
-        // payload.repairCost || 0` read used to sit here. No orchestrator has ever
-        // written `repairCost` onto a `battle_complete` payload, so it contributed
-        // nothing — and the moment one did, every stable's repair total would have
+        // Spec #48 Requirement 9 criterion 2: a read of a `repairCost` field off the
+        // `battle_complete` payload, accumulating into the old `totalRepairCosts`
+        // metric, used to sit here. No orchestrator has ever written that field, so it
+        // contributed nothing — and the moment one did, every stable's repair total would have
         // silently doubled, because the `robot_repair` loop below already counts the
         // whole of it. Repair spend comes from Repair_Spend_Source only.
       });

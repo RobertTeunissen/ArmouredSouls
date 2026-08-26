@@ -123,9 +123,11 @@ async function readComparison(
  *
  * Fetches only `robot_repair` rows for this user inside the window and sums in
  * application code, because Prisma cannot `_sum` a field inside a `Json` column
- * (Requirement 9 criterion 4). `preDiscountCost` is never read: summing it would
- * report manual spend at roughly double what was charged and drop automatic spend
- * entirely. A row with no `repairType` or a non-numeric charged figure is skipped and
+ * (Requirement 9 criterion 4). Only the charged figure is read. The pre-manual-discount
+ * figure — `creditsBeforeManualDiscount`, present on manual rows only — is never an
+ * input here: summing it would report manual spend at roughly double what was charged
+ * and drop automatic spend entirely, since automatic rows do not carry it. A row with
+ * no `repairType` or a non-numeric charged figure is skipped and
  * the remaining aggregation completes (criterion 10).
  */
 async function aggregateRepairSpend(

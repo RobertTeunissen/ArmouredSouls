@@ -36,11 +36,15 @@ jest.mock('../../src/config/env', () => ({
   }),
 }));
 
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
+
 import { currentCycleWindow } from '../../src/services/dashboard/cycleWindow';
 import {
   getCycleProgressSummary,
   resolveSideOutcome,
 } from '../../src/services/dashboard/cycleProgressService';
+import { PLACEMENT_MODE_BATTLE_TYPES } from '../../src/services/auth/userProfileService';
 
 const RUNS = { numRuns: 200 };
 
@@ -387,6 +391,99 @@ describe('Requirement 4 criteria 9 and 10: both Match_Schedule_Sources are count
 
     expect(summary.matchesScheduled).toBe(1);
     expect(summary.remainingSlotsUtc).toEqual(['14:00']);
+  });
+});
+
+describe('Requirement 8 criterion 11: the read is a bounded, unpaginated set of queries', () => {
+  /**
+   * The bound is on the number of QUERIES, not on wall-clock time. A timing assertion
+   * would measure the mock, and would be the kind of check that goes flaky on a loaded
+   * CI box; the shape of the read is what actually determines whether the endpoint
+   * stays inside its budget as a roster grows.
+   */
+  it('issues the same number of queries for 20 robots and 40 battles as for one of each', async () => {
+    const countQueries = (): number =>
+      Object.values(mockPrisma)
+        .flatMap((model) => Object.values(model))
+        .reduce((total, fn) => total + (fn as jest.Mock).mock.calls.length, 0);
+
+    mockPrisma.robot.findMany.mockResolvedValue([{ id: 1 }]);
+    await getCycleProgressSummary(7, new Date('2026-08-26T12:00:00Z'));
+    const smallStable = countQueries();
+
+    jest.clearAllMocks();
+    resetMocks();
+
+    const robots = Array.from({ length: 20 }, (_, i) => ({ id: i + 1 }));
+    mockPrisma.robot.findMany.mockResolvedValue(robots);
+    mockPrisma.battleParticipant.findMany.mockResolvedValue(
+      Array.from({ length: 40 }, (_, i) => ({
+        battleId: 1000 + i,
+        robotId: (i % 20) + 1,
+        team: 1,
+        placement: null,
+        battle: {
+          battleType: 'league_1v1',
+          winnerId: (i % 20) + 1,
+          winningSide: null,
+          createdAt: new Date('2026-08-26T08:00:00Z'),
+        },
+      })),
+    );
+
+    const summary = await getCycleProgressSummary(7, new Date('2026-08-26T12:00:00Z'));
+    const largeStable = countQueries();
+
+    // No per-robot and no per-battle query: the count does not grow with the data.
+    expect(largeStable).toBe(smallStable);
+    expect(summary.battlesFought).toBe(40);
+  });
+
+  it('takes no `skip` or `take` argument on any query', async () => {
+    // Requirement 8 criterion 11: the response is a fixed-size aggregate, so pagination
+    // would only be able to truncate a total into a wrong number.
+    mockPrisma.robot.findMany.mockResolvedValue([{ id: 1 }]);
+    await getCycleProgressSummary(7, new Date('2026-08-26T12:00:00Z'));
+
+    const everyArgument = Object.values(mockPrisma)
+      .flatMap((model) => Object.values(model))
+      .flatMap((fn) => (fn as jest.Mock).mock.calls)
+      .flat();
+
+    for (const argument of everyArgument) {
+      expect(argument).not.toHaveProperty('skip');
+      expect(argument).not.toHaveProperty('take');
+    }
+  });
+});
+
+describe('Requirement 5 criterion 2: the Placement_Mode list is reused, not copied', () => {
+  /**
+   * The service imports `PLACEMENT_MODE_BATTLE_TYPES` rather than re-exporting it, so
+   * there is no second binding to compare a reference against from out here. What can
+   * fail — and what Verification criterion 9 is actually about — is a second *declaration*
+   * appearing in the service. A structural `toEqual` would not catch that: a copied
+   * `['koth', 'grand_melee']` compares equal to the original right up to the day someone
+   * adds a third placement mode to one of them.
+   */
+  const source = readFileSync(
+    resolve(__dirname, '../../src/services/dashboard/cycleProgressService.ts'),
+    'utf-8',
+  );
+
+  it('imports the list from userProfileService', () => {
+    expect(source).toMatch(
+      /import\s*\{\s*PLACEMENT_MODE_BATTLE_TYPES\s*\}\s*from\s*'\.\.\/auth\/userProfileService'/,
+    );
+  });
+
+  it('declares no placement-mode array of its own', () => {
+    expect(source).not.toMatch(/PLACEMENT_MODE_BATTLE_TYPES\s*=/);
+    expect(source.replace(/\/\/.*$/gm, '')).not.toMatch(/\[\s*'koth'/);
+  });
+
+  it('resolves both placement modes through that one list', () => {
+    expect(PLACEMENT_MODE_BATTLE_TYPES).toEqual(expect.arrayContaining(['koth', 'grand_melee']));
   });
 });
 
