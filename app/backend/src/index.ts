@@ -22,6 +22,7 @@ import practiceArenaRouter from './routes/practiceArena';
 import stablesRoutes from './routes/stables';
 import changelogRoutes from './routes/changelog';
 import tuningAllocationRoutes from './routes/tuningAllocation';
+import dashboardCycleRoutes from './routes/dashboardCycle';
 import achievementsRoutes from './routes/achievements';
 import subscriptionsRoutes from './routes/subscriptions';
 import teamBattlesRoutes from './routes/teamBattles';
@@ -181,6 +182,9 @@ app.use('/api/practice-arena', practiceArenaRouter);
 app.use('/api/stables', stablesRoutes);
 app.use('/api/changelog', changelogRoutes);
 app.use('/api/robots', tuningAllocationRoutes);
+// Spec #48: a fresh base path, so no router mounted earlier can capture
+// `/current-cycle` as a resource id the way `/api/robots`'s `GET /:id` would.
+app.use('/api/dashboard', dashboardCycleRoutes);
 app.use('/api/achievements', achievementsRoutes);
 app.use('/api/subscriptions', subscriptionsRoutes);
 app.use('/api/team-battles', teamBattlesRoutes);
