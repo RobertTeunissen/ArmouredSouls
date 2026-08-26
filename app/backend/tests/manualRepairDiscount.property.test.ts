@@ -1,5 +1,5 @@
 import * as fc from 'fast-check';
-import { calculateRepairCost } from '../src/utils/robotCalculations';
+import { calculateRepairCost } from './helpers/legacyRepairCost';
 
 // Feature: manual-repair-cost-reduction, Property 1: Manual discount formula
 

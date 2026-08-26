@@ -1,7 +1,8 @@
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { calculateMaxHP } from '../../utils/robotCalculations';
-import { calculateRepairCost, calculateAttributeSum } from '../../utils/robotCalculations';
+import { calculateAttributeSum } from '../../utils/robotCalculations';
+import { calculateRepairQuote } from '../../shared/utils/repairCost';
 
 /**
  * Shape returned by repairAllRobotsAdmin — matches the original inline response.
@@ -112,13 +113,9 @@ export async function repairAllRobotsAdmin(deductCosts: boolean): Promise<AdminR
       const damagePercent = (damageTaken / fullRobot.maxHP) * 100;
       const hpPercent = (fullRobot.currentHP / fullRobot.maxHP) * 100;
 
-      const repairCost = calculateRepairCost(
-        sumOfAllAttributes,
-        damagePercent,
-        hpPercent,
-        repairBayLevel,
-        0,
-        activeRobotCount,
+      const repairCost = calculateRepairQuote(
+        { attributeTotal: sumOfAllAttributes, damagePercent, hpPercent },
+        { repairBayLevel, activeRobotCount },
       );
 
       const hpToRestore = robot.maxHP - robot.currentHP;

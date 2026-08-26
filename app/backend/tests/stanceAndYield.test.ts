@@ -3,10 +3,10 @@ import {
   getStanceModifier,
   isValidStance,
   isValidYieldThreshold,
-  calculateRepairCost,
   calculateAttributeSum,
   STANCE_MODIFIERS,
 } from '../src/utils/robotCalculations';
+import { calculateRepairQuote } from '../src/shared/utils/repairCost';
 import { Robot, WeaponInventory, Weapon, Prisma } from '../generated/prisma';
 
 // Mock robot data
@@ -234,54 +234,57 @@ describe('Repair Cost Calculations', () => {
   const sumOfAllAttributes = 230; // Total of all 23 attributes
   const baseRepairCost = sumOfAllAttributes * 100; // 23,000
 
-  describe('calculateRepairCost', () => {
+  describe('calculateRepairQuote', () => {
+    // Spec #48 Requirement 15: pricing moved from `robotCalculations.calculateRepairCost`
+    // to the Shared_Repair_Module. Expected values are unchanged — the point of the
+    // consolidation was that no charged amount moves.
+    const quote = (
+      damagePercent: number,
+      hpPercent: number,
+      repairBayLevel = 0,
+      activeRobotCount = 0,
+    ): number =>
+      calculateRepairQuote(
+        { attributeTotal: sumOfAllAttributes, damagePercent, hpPercent },
+        { repairBayLevel, activeRobotCount },
+      );
+
     it('should calculate 2x multiplier for total destruction', () => {
-      const cost = calculateRepairCost(sumOfAllAttributes, 100, 0); // 100% damage, 0% HP
-      expect(cost).toBe(46000); // 23,000 * 1.0 * 2.0
+      expect(quote(100, 0)).toBe(46000); // 23,000 * 1.0 * 2.0
     });
 
     it('should calculate 1.5x multiplier for heavy damage', () => {
-      const cost = calculateRepairCost(sumOfAllAttributes, 95, 5); // 95% damage, 5% HP
-      expect(cost).toBe(32775); // 23,000 * 0.95 * 1.5
+      expect(quote(95, 5)).toBe(32775); // 23,000 * 0.95 * 1.5
     });
 
     it('should calculate no multiplier for normal yield', () => {
-      const cost = calculateRepairCost(sumOfAllAttributes, 85, 15); // 85% damage, 15% HP
-      expect(cost).toBe(19550); // 23,000 * 0.85 * 1.0
+      expect(quote(85, 15)).toBe(19550); // 23,000 * 0.85 * 1.0
     });
 
     it('should calculate cost for victory scenario', () => {
-      const cost = calculateRepairCost(sumOfAllAttributes, 60, 40); // 60% damage, 40% HP
-      expect(cost).toBe(13800); // 23,000 * 0.60 * 1.0
+      expect(quote(60, 40)).toBe(13800); // 23,000 * 0.60 * 1.0
     });
 
     it('should apply Repair Bay discount correctly', () => {
-      const cost = calculateRepairCost(sumOfAllAttributes, 100, 0, 5); // Level 5 Repair Bay
-      expect(cost).toBe(34500); // 23,000 * 1.0 * 2.0 * 0.75 (25% discount)
+      expect(quote(100, 0, 5)).toBe(34500); // 23,000 * 1.0 * 2.0 * 0.75 (25% discount)
     });
 
     it('should cap Repair Bay discount at 50%', () => {
-      const cost = calculateRepairCost(sumOfAllAttributes, 100, 0, 10); // Level 10 Repair Bay
-      expect(cost).toBe(23000); // 23,000 * 1.0 * 2.0 * 0.5 (50% discount max)
+      expect(quote(100, 0, 10)).toBe(23000); // 23,000 * 1.0 * 2.0 * 0.5 (50% discount)
     });
 
     it('should apply Repair Bay discount after damage multipliers', () => {
-      const cost = calculateRepairCost(sumOfAllAttributes, 85, 15, 5); // Level 5 Repair Bay
       // 23,000 * 0.85 * 1.0 * 0.75 = 14,662.5 -> 14,663
-      expect(cost).toBe(14663);
+      expect(quote(85, 15, 5)).toBe(14663);
     });
 
     it('should handle no Repair Bay (level 0)', () => {
-      const cost = calculateRepairCost(sumOfAllAttributes, 100, 0, 0);
-      expect(cost).toBe(46000); // No discount
+      expect(quote(100, 0, 0)).toBe(46000); // No discount
     });
 
     it('should handle partial Repair Bay levels', () => {
-      const costLevel3 = calculateRepairCost(sumOfAllAttributes, 100, 0, 3); // 15% discount
-      expect(costLevel3).toBe(39100); // 23,000 * 1.0 * 2.0 * 0.85
-      
-      const costLevel7 = calculateRepairCost(sumOfAllAttributes, 100, 0, 7); // 35% discount
-      expect(costLevel7).toBe(29900); // 23,000 * 1.0 * 2.0 * 0.65
+      expect(quote(100, 0, 3)).toBe(39100); // 23,000 * 1.0 * 2.0 * 0.85
+      expect(quote(100, 0, 7)).toBe(29900); // 23,000 * 1.0 * 2.0 * 0.65
     });
   });
 

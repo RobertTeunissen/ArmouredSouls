@@ -7,7 +7,7 @@
  * Requirements: 1.1, 1.2, 1.3, 1.4, 2.1, 2.2, 2.3, 4.1, 4.2, 6.1, 6.2, 6.3, 6.7
  */
 
-import { calculateRepairCost } from '../src/utils/robotCalculations';
+import { calculateRepairCost } from './helpers/legacyRepairCost';
 
 /** Mirrors the calculation in the repair-all endpoint */
 function calculateManualRepairCost(baseCost: number, repairBayDiscount: number) {
