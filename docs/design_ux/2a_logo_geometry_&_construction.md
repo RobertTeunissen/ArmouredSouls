@@ -17,7 +17,11 @@ Deviation requires an explicit brand decision.
 
 ### Typeface Class
 **Industrial Precision System**  
-(DIN / DIN Next / Inter Tight–class, condensed industrial grotesk)
+Shipped as **Inter Bold in ALL CAPS with `tracking-tight`** — the single typeface used across
+the application. The condensed industrial grotesks this section used to name (DIN, DIN Next,
+Inter Tight) are not in use; DIN is commercial and unlicensed here. The geometry rules below
+are unaffected: the logo marks are drawn SVG assets, so their construction does not depend on
+a webfont, and only the HTML wordmark beside them takes its letterforms from Inter.
 
 > Vendor font choice may vary, geometry may not.
 

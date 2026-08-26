@@ -42,7 +42,7 @@ This PRD defines the requirements for updating the Login page (`/login`) to alig
 - ✅ Error handling and loading states
 - ✅ Direction D logo (SVG) properly implemented
 - ✅ Design system color palette applied
-- ✅ Typography using Inter and Inter Tight fonts
+- ✅ Typography using Inter (single family)
 - ✅ Responsive layout with proper spacing
 - ✅ Accessibility features (ARIA labels, keyboard navigation)
 - ✅ Infrastructure motion guidelines applied (fade-in animations)
@@ -65,7 +65,7 @@ The login page has been successfully implemented according to all specifications
 - Emotional Target: **Confidence, professionalism, maturity**
 - Motion State: **Infrastructure** (reassure, signal readiness, avoid urgency)
 - Color System: Dark theme with design system palette
-- Typography: DIN Next/Inter Tight for headers, Inter for body
+- Typography: Inter throughout — one family, hierarchy from size, weight and colour
 
 ---
 
@@ -165,7 +165,7 @@ The login page has been successfully implemented according to all specifications
 
 **Requirements**:
 - **Text**: "ARMOURED SOULS" (ALL CAPS)
-- **Font Family**: 'DIN Next', 'Inter Tight', 'Roboto Condensed', sans-serif
+- **Font Family**: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif (the one family; inherited, never named on the element)
 - **Font Size**: 36px (text-4xl)
 - **Font Weight**: Bold (700)
 - **Color**: Primary text (#e6edf3)
@@ -533,7 +533,7 @@ background: #0a0e14; /* Deep space black from design system */
 
 **Logo/Headers**:
 ```css
-font-family: 'DIN Next', 'Inter Tight', 'Roboto Condensed', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; /* one family for everything */
 ```
 
 **UI/Body**:
@@ -545,7 +545,7 @@ font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', '
 
 | Element | Font | Size | Weight | Line Height | Usage |
 |---------|------|------|--------|-------------|-------|
-| Logo/Title | DIN Next/Inter Tight | 36px | Bold (700) | 1.2 | "ARMOURED SOULS" |
+| Logo/Title | Inter (`tracking-tight`) | 36px | Bold (700) | 1.2 | "ARMOURED SOULS" |
 | Form Title | Inter | 24px | Bold (700) | 1.2 | "Login" |
 | Body Text | Inter | 16px | Regular (400) | 1.5 | Input fields |
 | Labels | Inter | 14px | Medium (500) | 1.5 | Form labels |
@@ -774,7 +774,7 @@ font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', '
 
 - [x] Replace "Armoured Souls" text with Direction D logo (SVG)
 - [x] Update color palette to design system colors
-- [x] Apply typography system (Inter/Inter Tight fonts)
+- [x] Apply typography system (Inter, single family)
 - [x] Update background (design system color #0a0e14)
 - [x] Update form container styling (surface elevated, border radius)
 - [x] Update input field styling (colors, focus states)
@@ -861,7 +861,7 @@ module.exports = {
         info: '#a371f7',
       },
       fontFamily: {
-        'header': ['DIN Next', 'Inter Tight', 'Roboto Condensed', 'sans-serif'],
+        /* No custom family. --font-sans is Inter; nothing names a family per element. */
         'body': ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
       },
     },
@@ -876,7 +876,7 @@ module.exports = {
 ### Visual Acceptance Criteria - ✅ ALL MET
 
 - [x] Direction D logo visible and properly sized (80×80px, w-20 h-20)
-- [x] Wordmark uses Inter Tight font (font-header class)
+- [x] Wordmark uses Inter Bold with `tracking-tight` (no separate display face)
 - [x] Background uses design system color (#0a0e14)
 - [x] Form container uses surface elevated color (#252b38)
 - [x] Input fields match design system specifications
@@ -1087,7 +1087,7 @@ const INPUT_CLASS =
 | Element | Original Specification | Actual Implementation | Status |
 |---------|----------------------|---------------------|--------|
 | Logo | Direction D logo SVG | Direction D logo SVG (geometric shield) | ✅ Implemented |
-| Title Font | DIN Next / Inter Tight | Inter Tight (font-header) | ✅ Implemented |
+| Title Font | Inter Bold + `tracking-tight` | Inter Bold + `tracking-tight` (inherited) | ✅ Implemented |
 | Background | #0a0e14 (design system) | #0a0e14 (bg-background) | ✅ Implemented |
 | Form Background | #252b38 (surface elevated) | #252b38 (bg-surface-elevated) | ✅ Implemented |
 | Input Background | #1a1f29 (surface) | #1a1f29 (bg-surface) | ✅ Implemented |
@@ -1143,7 +1143,7 @@ function LoginPage() {
             alt="Armoured Souls" 
             className="w-20 h-20 mx-auto mb-6 animate-fade-in"
           />
-          <h1 className="text-4xl font-bold font-header tracking-tight animate-fade-in">
+          <h1 className="text-4xl font-bold tracking-tight animate-fade-in">
             ARMOURED SOULS
           </h1>
         </div>
@@ -1159,7 +1159,7 @@ function LoginPage() {
 **Key Features**:
 - ✅ Direction D logo imported and displayed
 - ✅ Design system colors via Tailwind classes
-- ✅ Typography hierarchy (font-header for title)
+- ✅ Typography hierarchy (size and weight; no per-element font family)
 - ✅ Infrastructure motion (fade-in animations)
 - ✅ Accessibility (ARIA attributes throughout)
 - ✅ Loading states with proper UX

@@ -112,27 +112,49 @@
 
 ## 📝 Typography (Quick Reference)
 
-### Font Stack
+### Font Stack — one family, Inter
 
 ```css
-/* Logo & Headers */
-font-family: 'DIN Next', 'Inter Tight', 'Roboto Condensed', sans-serif;
-
-/* UI & Body */
+/* Everything. Set once as --font-sans in app/frontend/src/index.css. */
 font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 ```
+
+**Never name a font family on an element.** There is no `font-header` and no `font-body`
+utility. Everything inherits Inter, so a page cannot end up mixing typefaces.
+
+Hierarchy comes from **size, weight and colour** — never from a second typeface.
+
+This replaces an earlier two-family system that paired Inter with a header stack of
+`'Inter Tight', 'DIN Next', 'Roboto Condensed'`. It was removed because it did not work:
+DIN Next is a commercial font we do not license and Roboto Condensed was never loaded, so
+both applied only to users who happened to have them installed, and the `font-header` class
+reached seven elements out of hundreds. The result was an inconsistent page for no benefit.
+
+### Loaded Weights
+
+Inter at **400, 500, 600, 700**. These four and no others.
+
+Do not use a weight outside this set. A weight with no matching face does not fall back
+gracefully — the browser resolves it to a neighbour or synthesises it. `font-semibold` (600)
+was used app-wide for months while only 400/500/700 were fetched, so it rendered identically
+to `font-bold`, and the distinction the scale drew was invisible.
 
 ### Typography Scale
 
 | Element | Class (Tailwind) | Size | Weight |
 |---------|-----------------|------|--------|
-| Logo | `text-4xl font-bold` | 36px | Bold |
-| H1 Page Title | `text-3xl font-bold` | 30px | Bold |
-| H2 Section Title | `text-2xl font-bold` | 24px | Bold |
-| H3 Subsection | `text-xl font-medium` | 20px | Medium |
-| Body | `text-base` | 16px | Regular |
-| Label | `text-sm font-medium` | 14px | Medium |
-| Small | `text-xs` | 12px | Regular |
+| Logo / wordmark | `text-4xl font-bold tracking-tight` | 36px | 700 |
+| H1 Page Title | `text-3xl font-bold` | 30px | 700 |
+| H2 Section Title | `text-2xl font-bold` | 24px | 700 |
+| H3 Subsection | `text-xl font-medium` | 20px | 500 |
+| Body | `text-base` | 16px | 400 |
+| Stat value | `font-semibold tabular-nums` | 16px | 600 |
+| Label | `text-sm` | 14px | 400 |
+| Small / metadata | `text-xs` | 12px | 400 |
+
+The wordmark uses `tracking-tight` in place of the condensed typeface it used to rely on:
+ALL CAPS Inter Bold with tightened letter-spacing carries the industrial feel without a
+second font file.
 
 ---
 
@@ -529,8 +551,10 @@ Before implementing a new page or component, verify:
 6. **❌ Long animation durations (>500ms)**
    - ✅ Keep animations brief (150-300ms)
 
-7. **❌ Mixing font families**
-   - ✅ DIN/Inter Tight for headers, Inter for body
+7. **❌ Naming a font family on an element**
+   - ✅ Inter everywhere, inherited. Hierarchy from size, weight and colour
+   - ❌ Never a commercial font we do not license — it silently falls back for everyone
+     except the few who have it installed, which is worse than not using it at all
 
 8. **❌ Uncompressed images**
    - ✅ Use WebP format, compress aggressively

@@ -145,7 +145,10 @@ function DashboardPage() {
         {/* Dashboard Header */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 pb-4 border-b border-white/10">
           <h1 className="text-3xl font-bold text-white">Command Center</h1>
-          <div className="text-lg text-secondary">
+          {/* Body step (16px), not the undocumented `text-lg`. The stable name is
+              emphasised by weight and colour rather than by a size the scale does not
+              name. */}
+          <div className="text-base text-secondary">
             <span className="font-semibold text-white">{user.stableName || user.username}</span>&apos;s Stable
           </div>
         </div>
@@ -213,7 +216,8 @@ function DashboardPage() {
         {/* My Robots Section */}
         {robots.length > 0 && (
           <div className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4">My Robots</h2>
+            {/* H2 is `font-bold` in the scale, not `font-semibold`. */}
+            <h2 className="text-2xl font-bold mb-4">My Robots</h2>
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
               {robots.map((robot) => (
                 <RobotDashboardCard key={robot.id} robot={{ ...robot, imageUrl: robot.imageUrl ?? null }} />

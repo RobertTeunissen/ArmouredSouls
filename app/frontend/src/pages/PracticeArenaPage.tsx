@@ -48,7 +48,7 @@ function PracticeArenaPage() {
       <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold text-primary font-header tracking-tight">
+          <h1 className="text-3xl font-bold text-primary tracking-tight">
             ⚡ Combat Simulation Lab
           </h1>
           <p className="text-secondary text-sm max-w-xl mx-auto">

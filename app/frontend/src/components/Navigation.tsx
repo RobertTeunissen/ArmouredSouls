@@ -74,7 +74,7 @@ function Navigation() {
               aria-label="Armoured Souls Home"
             >
               <LogoB className="w-10 h-10 text-primary" />
-              <h1 className="text-xl font-bold text-primary tracking-tight font-header">ARMOURED SOULS</h1>
+              <h1 className="text-xl font-bold text-primary tracking-tight">ARMOURED SOULS</h1>
             </button>
 
             <div className="flex gap-2 ml-4">
@@ -123,7 +123,7 @@ function Navigation() {
           <div className="h-14 px-4 flex items-center justify-between">
             <button onClick={() => navigate('/dashboard')} className="flex items-center gap-3" aria-label="Armoured Souls Home">
               <LogoB className="w-8 h-8 text-primary" />
-              <h1 className="text-lg font-bold text-primary tracking-tight font-header">ARMOURED SOULS</h1>
+              <h1 className="text-lg font-bold text-primary tracking-tight">ARMOURED SOULS</h1>
             </button>
             <div className="flex items-center gap-2">
             <SeasonProgressIndicator compact />
