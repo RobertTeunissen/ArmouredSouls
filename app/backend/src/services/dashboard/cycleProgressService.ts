@@ -237,6 +237,19 @@ export async function getCycleProgressSummary(
     }),
 
     // Match_Schedule_Source 1: the unified schedule.
+    //
+    // Bounded by `nextBoundary`, NOT by `end`. Every other read in this batch asks "what
+    // happened?" and so stops at `end`, the request timestamp. This one asks "what is on
+    // today's schedule?", which includes the slots still ahead — that is the whole point
+    // of the outstanding half of `matchesScheduled`.
+    //
+    // Getting this wrong is silent rather than loud, and it shipped: with `lt: end` the
+    // query returned only matches whose slot had already passed, and the loop below then
+    // skipped every one of them for being `<= now`. The unified source therefore
+    // contributed nothing to `outstandingMatches` or `remainingSlotsUtc` ever, so a stable
+    // with eleven league matches queued for later today and one tournament bracket row
+    // reported `0 of 1` with the tournament's slot as the only "Next up" — the eleven were
+    // invisible.
     prisma.scheduledMatchParticipant.findMany({
       where: {
         OR: [
@@ -245,7 +258,7 @@ export async function getCycleProgressSummary(
             ? [{ participantType: 'team', participantId: { in: teamIds } }]
             : []),
         ],
-        scheduledMatch: { scheduledFor: { gte: start, lt: end } },
+        scheduledMatch: { scheduledFor: { gte: start, lt: nextBoundary } },
       },
       select: {
         scheduledMatchId: true,
