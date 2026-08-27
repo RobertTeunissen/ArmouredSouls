@@ -403,6 +403,13 @@ describe('Requirement 4 criteria 11, 12 and 13: the tile figures reconcile', () 
    * total; and nothing tied a fought battle to the row that produced it, so the two
    * halves of the ratio were independent estimates.
    */
+  function unifiedRow(scheduledMatchId: number, matchType: string, scheduledFor: string) {
+    return {
+      scheduledMatchId,
+      scheduledMatch: { matchType, status: 'scheduled', scheduledFor: new Date(scheduledFor) },
+    };
+  }
+
   function foughtToday(battleType: string, battleId: number, robotId: number) {
     return {
       battleId,
@@ -467,6 +474,44 @@ describe('Requirement 4 criteria 11, 12 and 13: the tile figures reconcile', () 
     expect(summary.winLossDraw).toEqual({ wins: 2, losses: 0, draws: 0 });
   });
 
+  it('counts every unified slot queued for later today, not just tournament brackets', async () => {
+    // The ACC regression, reproduced. A stable early in the cycle with a full day of
+    // league matches queued plus one tournament bracket row reported `0 of 1` and offered
+    // the tournament's slot as the only "Next up", because the unified schedule read was
+    // bounded at the request timestamp and returned nothing.
+    mockPrisma.robot.findMany.mockResolvedValue([{ id: 1 }, { id: 2 }, { id: 3 }]);
+    mockPrisma.scheduledMatchParticipant.findMany.mockResolvedValue([
+      unifiedRow(801, 'league_1v1', '2026-08-27T08:00:00Z'),
+      unifiedRow(802, 'league_1v1', '2026-08-27T08:00:00Z'),
+      unifiedRow(803, 'league_2v2', '2026-08-27T09:00:00Z'),
+      unifiedRow(804, 'tag_team', '2026-08-27T11:00:00Z'),
+      unifiedRow(805, 'koth', '2026-08-27T13:00:00Z'),
+      unifiedRow(806, 'league_3v3', '2026-08-27T14:00:00Z'),
+      unifiedRow(807, 'grand_melee', '2026-08-27T17:00:00Z'),
+    ]);
+    mockPrisma.scheduledTournamentMatch.findMany.mockResolvedValue([
+      { id: 900, participantType: 'team_3v3' },
+    ]);
+
+    // 02:00 UTC — every slot above is still ahead.
+    const summary = await getCycleProgressSummary(7, new Date('2026-08-27T02:00:00Z'));
+
+    expect(summary.battlesFought).toBe(0);
+    // Seven unified matches plus one bracket round.
+    expect(summary.matchesScheduled).toBe(8);
+    // Two rows share the 08:00 slot, so six distinct unified times plus the 3v3
+    // tournament's 18:00 from cron config.
+    expect(summary.remainingSlotsUtc).toEqual([
+      '08:00',
+      '09:00',
+      '11:00',
+      '13:00',
+      '14:00',
+      '17:00',
+      '18:00',
+    ]);
+  });
+
   it('counts an outstanding slot ahead of now on top of what has been fought', async () => {
     mockPrisma.robot.findMany.mockResolvedValue([{ id: 201 }]);
     mockPrisma.battleParticipant.findMany.mockResolvedValue([
@@ -519,6 +564,59 @@ describe('Requirement 4 criteria 11, 12 and 13: the tile figures reconcile', () 
       ),
       { numRuns: 60 },
     );
+  });
+});
+
+describe('Requirement 4 criterion 11: the schedule read spans the whole cycle', () => {
+  /**
+   * These assert on the QUERY ARGUMENTS, which is unusual for a behavioural suite and is
+   * the point.
+   *
+   * A mocked Prisma returns whatever the mock was told to return and ignores the `where`
+   * clause entirely. So the outstanding-match tests above pass whether the service asks
+   * for the right window or the wrong one — and a wrong window shipped exactly that way:
+   * the unified schedule query was bounded by `end` (the request timestamp) instead of
+   * `nextBoundary`, so it could only ever return slots that had already passed, and the
+   * fold then discarded all of them as `<= now`. Eleven queued league matches were
+   * invisible on the Dashboard and every unit test was green.
+   *
+   * Asserting the bounds is the only way to catch that with a mocked client. The
+   * distinction is deliberate and worth stating: reads about what HAPPENED stop at `end`;
+   * the read about what is SCHEDULED spans the full cycle.
+   */
+  const now = new Date('2026-08-27T02:00:00Z');
+  const start = new Date('2026-08-27T00:00:00Z');
+  const nextBoundary = new Date('2026-08-28T00:00:00Z');
+
+  beforeEach(async () => {
+    mockPrisma.robot.findMany.mockResolvedValue([{ id: 1 }]);
+    await getCycleProgressSummary(7, now);
+  });
+
+  it('asks for schedule rows up to the next settlement boundary, not up to now', () => {
+    const where = mockPrisma.scheduledMatchParticipant.findMany.mock.calls[0][0].where;
+    const range = where.scheduledMatch.scheduledFor;
+
+    expect(range.gte).toEqual(start);
+    expect(range.lt).toEqual(nextBoundary);
+    // The bug: bounding the schedule read at the request timestamp.
+    expect(range.lt).not.toEqual(now);
+  });
+
+  it('still bounds the participation read at the request timestamp', () => {
+    const where = mockPrisma.battleParticipant.findMany.mock.calls[0][0].where;
+    const range = where.battle.createdAt;
+
+    expect(range.gte).toEqual(start);
+    expect(range.lt).toEqual(now);
+  });
+
+  it('still bounds the repair read at the request timestamp', () => {
+    const where = mockPrisma.auditLog.findMany.mock.calls[0][0].where;
+    const range = where.eventTimestamp;
+
+    expect(range.gte).toEqual(start);
+    expect(range.lt).toEqual(now);
   });
 });
 

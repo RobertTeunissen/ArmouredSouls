@@ -1,4 +1,5 @@
 import { api } from './api';
+import type { RobotAttribute } from '../../../shared/utils/robotAttributes';
 
 interface WeaponSlot {
   id: number;
@@ -69,6 +70,13 @@ export interface Robot {
   adaptiveAI: number;
   logicCores: number;
   syncProtocols: number;
+  // These two completed the 23 late and were missed here, while `types/robot.ts` had
+  // them. `sumAttributes` reads attributes by key off a `Record<string, unknown>` cast,
+  // so the omission could not produce a compile error — it would just have silently
+  // dropped two attributes from every repair quote the moment the API stopped sending
+  // them. The `RobotCoversAllAttributes` check below now makes that a build failure.
+  supportSystems: number;
+  formationTactics: number;
   // Team Battle Statistics
   totalLeague1v1Wins: number;
   totalLeague1v1Losses: number;
@@ -89,6 +97,21 @@ export interface Robot {
   mainWeapon?: WeaponSlot | null;
   offhandWeapon?: WeaponSlot | null;
 }
+
+/**
+ * Compile-time guard: `Robot` must carry every attribute `sumAttributes` reads.
+ *
+ * `sumAttributes` in `app/shared/utils/repairCost.ts` casts to
+ * `Record<string, unknown>` and looks each of the 23 `ROBOT_ATTRIBUTES` up by name, so a
+ * missing field is invisible to the compiler and silently contributes 0 to the repair
+ * quote. `Pick` fails to typecheck if any name in the list is absent from `Robot`, which
+ * turns the next omission into a build error instead of an understated quote on the
+ * Robots page.
+ *
+ * Costs nothing at runtime — it is a type-only declaration.
+ */
+type RobotCoversAllAttributes = Pick<Robot, RobotAttribute>;
+export type { RobotCoversAllAttributes };
 
 export interface UpgradePlan {
   currentLevel: number;
