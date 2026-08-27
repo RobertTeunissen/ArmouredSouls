@@ -89,7 +89,7 @@ function FrontPage() {
             alt="Armoured Souls"
             className="w-20 h-20 mx-auto mb-6 animate-fade-in"
           />
-          <h1 className="text-4xl font-bold font-header tracking-tight animate-fade-in">
+          <h1 className="text-4xl font-bold tracking-tight animate-fade-in">
             ARMOURED SOULS
           </h1>
         </div>

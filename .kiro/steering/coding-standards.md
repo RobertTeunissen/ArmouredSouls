@@ -31,7 +31,9 @@ inclusion: always
 - Group related functionality into services
 - Keep functions focused and single-purpose
 - Maximum function length: ~50 lines (guideline, not strict rule)
-- Game formulas shared between frontend and backend (upgrade costs, academy caps, discount calculations) must live in `app/shared/utils/` — never inline or locally redefine a formula that already exists there
+- Game formulas shared between frontend and backend (upgrade costs, academy caps, discount calculations, **repair costs**) must live in `app/shared/utils/` — never inline or locally redefine a formula that already exists there
+- **Repair cost is the worked example of what happens when this rule is ignored.** The rule was in this file the whole time, and for as long as the duplicate stood it was violated: `app/shared/utils/repairCost.ts` held the shared declaration, `app/backend/src/utils/robotCalculations.ts` held a second one that was the one both repair paths actually executed, and `YieldThresholdSlider.tsx` held a third inline copy driving the on-screen estimate. The shared module's own header comment asked for the migration and nothing enforced it, so the number a player was charged came from the declaration that was not shared. Spec #48 collapsed all three into `calculateRepairQuote` in `app/shared/utils/repairCost.ts`. A duplicate that "agrees today" is not a duplicate that agrees tomorrow.
+- **`app/backend/src/shared/utils` is a symlink to `app/shared/utils`.** A file that appears under both paths is one file, not two. The Backend imports the shared modules through that symlink (`../../shared/utils/repairCost`), so do not "de-duplicate" a path that resolves to the same inode, and do not delete anything through the symlinked path — that deletes the shared module. It also affects greps: BSD `grep -r` follows symlinks and GNU `grep -r` does not, so a recursive search over `app/` reports a shared file twice on macOS and once in CI. Pass `--exclude-dir=shared` when a check counts matches.
 
 ### Route Handler Guidelines
 - Route handlers should be thin wrappers: parse input, call a service, return the response
@@ -96,12 +98,33 @@ inclusion: always
 - **Never re-derive an archived figure from live data.** Archive rows are the record of what happened under the balance rules of their own season; recomputing them under current rules would rewrite history.
 - **Classify system stables by `users.is_generated`, never by username prefix.** The column is authoritative and defaults to `false`, so an unclassified account fails safe as a Human_Stable and is never deleted by a rollover.
 - **Never read `battle_log` for permanent data** — see the Battle Data Architecture section below; the same reasoning applies with a shorter horizon.
+- **The two old-key fallbacks in `app/backend/src/services/economy/repairPayloadKeys.ts` are removable at the next Season_Rollover.** They exist only to read rows written before Spec #48 renamed the keys, and a rollover purges `audit_logs` and `cycle_snapshots` in full, so after the first rollover no row can carry an old key. Remove the fallbacks, not the resolvers — the resolvers are also where the malformed-row rule lives.
 
 ### Battle Data Architecture (Spec #39)
 - **Never read `battle_log` for permanent data.** The `battle_log` column is ephemeral — NULLed after 7 days. All persistent battle data lives in `battle_summaries` (pre-computed stats) or proper columns (`battles.winning_side`).
 - **Always write a `BattleSummary` at battle creation.** Every orchestrator must call `computeBattleSummary()` and insert a row in `battle_summaries` alongside the battle creation. Wrap in try/catch — never fail a battle because the summary fails.
 - **Use `battles.winning_side` for team battle winner detection**, not `battleLog.winningSide`. The column survives retention and is indexable.
 - **The shared computation lives in `app/shared/utils/battleStatistics.ts`.** Both frontend and backend import from here — no duplicate implementations.
+
+### Repair Data Architecture (Spec #48)
+
+- **Every repair *spend* figure is read from Repair_Spend_Source and nothing else**: `audit_logs` rows with `eventType: 'robot_repair'`, whose payload carries `creditsCharged`, `repairType`, `manualRepairDiscount` and, on manual events only, `creditsBeforeManualDiscount`.
+- **The three things that are not a repair spend source:**
+  - **Not a `battle_complete` payload.** `payload.repairCost` was read in two places and written by nobody. The CSV column fed from it exported `0` on every row for as long as it existed, and the snapshot rollup was only correct by accident — the day an orchestrator added the field, every stable's repair total would have doubled. Both reads and the optional field are gone; do not reintroduce them.
+  - **Not the Cached_Repair_Quote column** (`robots.repairQuoteCredits`). It is a forward-looking estimate of what a repair *would* cost right now, zeroed on repair. It has never been money spent.
+  - **Not `financial_ledger`.** `financial_ledger_active` defaults to `false`, so `repair_cost` entries may not exist at all. The ledger mirrors the truth; it is not the truth.
+- **The four Repair_Figure_Stores**, each kept because each answers a different question:
+
+  | Store | Location | Question it answers |
+  |---|---|---|
+  | Repair_Spend_Source | `audit_logs` `eventType: 'robot_repair'`, `creditsCharged` | What happened, per event |
+  | Lifetime_Repair_Spend | `robots.lifetimeRepairCreditsPaid` | What has this robot cost in total |
+  | Cached_Repair_Quote | `robots.repairQuoteCredits` | What would repairing it cost right now |
+  | Cycle_Repair_Spend | `cycleRepairCreditsPaid` in the `stableMetrics` JSON of `cycle_snapshots` | What did repairs cost this stable this cycle |
+
+- **One implementation of the arithmetic**: `calculateRepairQuote`, `applyManualRepairDiscount` and `calculateRepairBayDiscountPercent` in `app/shared/utils/repairCost.ts`. Never multiply a cost by `MANUAL_REPAIR_DISCOUNT` at a call site, and never re-apply a Repair_Bay_Discount to a quote that already carries it — that second application is the bug Spec #48 fixed, and it made every manual audit row record a fraction of what the player paid.
+- **A batch manual repair is quoted per robot, discounted per robot, then summed** — in that order, on the charge, the lifetime increment, the audit rows and the ledger entries alike, so no two of them can disagree through two different roundings.
+- **Manual repair audit figures written before Spec #48 are understated** and are not corrected retroactively, so the manual repair series has a discontinuity at the cycle that spec shipped. Do not read a step there as a balance change.
 
 ### Shell Scripts (operations / deploy / cron)
 - **Never `source .env` directly.** Bash interprets unquoted values as commands. With a line like `LEAGUE_SCHEDULE=0 20 * * *` in `.env`, `source` parses the assignment as `LEAGUE_SCHEDULE=0` and tries to execute `20 * * *` as a command, crashing the script with `20: command not found`. We've hit this bug twice (PR #332 in `preflight.sh`, PR #336 in `backup.sh`).
@@ -217,9 +240,23 @@ If a suite is red, either the code is wrong or the test is wrong. Fix one of the
 Do not make the check advisory, and do not delete a test to make a build pass unless
 the behaviour it covers is genuinely gone (say so explicitly if you do).
 
-**Current state (Aug 2026).** All tiers are green: unit (205 suites, 2881 tests),
-frontend (1890 tests), integration (`typecheck:tests` passes, 0 compile errors).
-The integration test repair shipped July 2026.
+**Do not record a pass/fail snapshot here.** An earlier version of this section
+claimed "All tiers are green: unit (205 suites, 2881 tests), frontend (1890
+tests)". Test counts change on almost every commit, so a snapshot is stale within
+days, and this one was worse than stale: it asserted every tier was green while
+three backend suites were failing to load outright. A steering file is read as
+authoritative, so a rotting fact in it is actively misleading — it cost real time
+in Aug 2026 when it was trusted over a test run.
+
+Run the suite to find out the current state. The rules above are the durable part;
+the numbers are not a rule at all.
+
+**Excluding a test is a change that needs a stated reason and an expiry.** If a
+suite genuinely cannot run in a tier, `testPathIgnorePatterns` is the right tool,
+but the entry must carry a comment saying *why* and what would allow it back. An
+entry reading `// requires js-yaml 3 API (removed)` outlived its cause by months
+and hid five real failures, three of them broken guide content. Prefer fixing the
+dependency over excluding the test; if you must exclude, say what has to change.
 
 ## Documentation Requirements
 - Document complex algorithms and business logic

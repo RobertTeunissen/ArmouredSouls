@@ -180,7 +180,7 @@ function BattleConfigTab({ robot, weapons, repairBayLevel = 0, activeRobotCount 
         <div className="space-y-2">
           <div className="text-secondary text-sm font-semibold uppercase tracking-wide">Repair Cost</div>
           <div className="text-2xl font-bold text-warning">
-            ₡{robot.repairCost.toLocaleString()}
+            ₡{robot.repairQuoteCredits.toLocaleString()}
           </div>
           <div className="text-xs text-secondary mt-4">
             Current damage repair estimate

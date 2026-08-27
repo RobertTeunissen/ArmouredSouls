@@ -6,7 +6,7 @@ lastUpdated: "2026-06-18"
 relatedArticles:
   - grand-melee/scoring-and-placement
   - grand-melee/strategy
-  - prestige-fame/overview
+  - prestige-fame/prestige-system
 ---
 
 ## Credits

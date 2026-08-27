@@ -246,39 +246,20 @@ export function calculateEffectiveStatsWithStance(robot: RobotWithWeapons, tunin
 }
 
 /**
- * Calculate repair cost based on damage, HP, Repair Bay level, and active robot count.
- * Formula: baseRepairCost × (damagePercent / 100) × multiplier × (1 - repairBayDiscount)
- * Multi-robot discount: repairBayLevel × (5 + activeRobotCount), capped at 90%
+ * Repair pricing used to live here, alongside a second
+ * declaration in `app/shared/utils/repairCost.ts` and a third inline in the
+ * frontend's `YieldThresholdSlider.tsx`. Spec #48 Requirement 15 consolidated all
+ * three into the shared module.
+ *
+ * Import `calculateRepairQuote` and `applyManualRepairDiscount` from
+ * `../shared/utils/repairCost` instead. It is deliberately NOT re-exported under
+ * the old name: that would keep the six-argument positional signature — including
+ * a dead `_medicalBayLevel` placeholder — alive in the backend, and that shape is
+ * what made the double-discount bug in `routes/robots.ts` easy to write.
+ *
+ * `calculateAttributeSum` below stays: it sums attributes rather than performing
+ * arithmetic on the sum, so it is not part of the repair formula.
  */
-export function calculateRepairCost(
-  sumOfAllAttributes: number,
-  damagePercent: number,
-  hpPercent: number,
-  repairBayLevel: number = 0,
-  _medicalBayLevel: number = 0,
-  activeRobotCount: number = 0,
-): number {
-  if (damagePercent <= 0) return 0;
-
-  const baseRepairCost = sumOfAllAttributes * 100;
-
-  // Determine multiplier based on HP percentage
-  let multiplier = 1.0;
-  if (hpPercent === 0) {
-    multiplier = 2.0; // Total destruction
-  } else if (hpPercent < 10) {
-    multiplier = 1.5; // Heavily damaged
-  }
-
-  const rawCost = baseRepairCost * (damagePercent / 100) * multiplier;
-
-  // Apply Repair Bay discount with multi-robot bonus
-  const rawDiscount = repairBayLevel * (5 + activeRobotCount);
-  const repairBayDiscount = Math.min(rawDiscount, 90) / 100;
-  const finalCost = rawCost * (1 - repairBayDiscount);
-
-  return Math.round(finalCost);
-}
 
 /**
  * Calculate sum of all 23 robot attributes.

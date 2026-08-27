@@ -70,9 +70,9 @@ async function createTestRobot(userId: number, battles: number, fame: number) {
       kills: 0,
       // League & Fame
       // Economic
-      repairCost: 0,
+      repairQuoteCredits: 0,
       battleReadiness: 100,
-      totalRepairsPaid: 0,
+      lifetimeRepairCreditsPaid: 0,
       // Configuration
       yieldThreshold: 10,
       loadoutType: 'single',

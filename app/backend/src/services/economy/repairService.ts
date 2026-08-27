@@ -1,5 +1,7 @@
 import prisma from '../../lib/prisma';
-import { calculateRepairCost, calculateAttributeSum } from '../../utils/robotCalculations';
+import { calculateAttributeSum } from '../../utils/robotCalculations';
+import { calculateRepairQuote } from '../../shared/utils/repairCost';
+import { recordLedgerEntry } from '../financial/recordLedgerEntry';
 import { eventLogger } from '../common/eventLogger';
 import logger from '../../config/logger';
 import { resolveRobotIdsForEvent } from './repairScope';
@@ -168,6 +170,8 @@ async function repairRobots(
   // Collect all DB operations for batching
   const robotUpdates: ReturnType<typeof prisma.robot.update>[] = [];
   const userDeductions: ReturnType<typeof prisma.user.update>[] = [];
+  /** Owner of each entry in `userDeductions`, same order. */
+  const deductionUserIds: number[] = [];
   const repairEvents: Array<{
     userId: number;
     robotId: number;
@@ -203,25 +207,20 @@ async function repairRobots(
       // Calculate HP percentage for multiplier
       const hpPercent = (robot.currentHP / robot.maxHP) * 100;
       
-      // Use the proper repair cost formula
-      const repairCost = calculateRepairCost(
-        sumOfAllAttributes,
-        damagePercent,
-        hpPercent,
-        repairBayLevel,
-        0,
-        activeRobotCount
+      // The Repair_Quote — what this path charges. Spec #48 Requirement 15
+      // criterion 7: pricing comes from the Shared_Repair_Module only.
+      const repairCost = calculateRepairQuote(
+        { attributeTotal: sumOfAllAttributes, damagePercent, hpPercent },
+        { repairBayLevel, activeRobotCount },
       );
-      
-      // Calculate base cost (without discounts) for reporting
-      const baseRepairCost = sumOfAllAttributes * 100;
-      let multiplier = 1.0;
-      if (hpPercent === 0) {
-        multiplier = 2.0;
-      } else if (hpPercent < 10) {
-        multiplier = 1.5;
-      }
-      const baseCost = Math.round(baseRepairCost * (damagePercent / 100) * multiplier);
+
+      // The same quote priced with no Repair Bay discount, for the reporting
+      // figures below. Obtained from the same function rather than by repeating
+      // the formula, so the two cannot drift.
+      const baseCost = calculateRepairQuote(
+        { attributeTotal: sumOfAllAttributes, damagePercent, hpPercent },
+        { repairBayLevel: 0, activeRobotCount: 0 },
+      );
 
       userBaseCost += baseCost;
       userFinalCost += repairCost;
@@ -232,9 +231,9 @@ async function repairRobots(
         data: {
           currentHP: robot.maxHP,
           currentShield: robot.maxShield,
-          repairCost: 0,
+          repairQuoteCredits: 0,
           battleReadiness: 100,
-          totalRepairsPaid: {
+          lifetimeRepairCreditsPaid: {
             increment: repairCost,
           },
         },
@@ -264,6 +263,9 @@ async function repairRobots(
           },
         },
       }));
+      // Parallel to `userDeductions`, so the transaction results below can be
+      // mapped back to owners without a second query.
+      deductionUserIds.push(userId);
     }
 
     userSummaries.push({
@@ -281,9 +283,22 @@ async function repairRobots(
     const chunk = robotUpdates.slice(i, i + CHUNK_SIZE);
     await prisma.$transaction(chunk, { timeout: 30000 });
   }
+  // Post-deduction balance per owner, taken from the update results themselves so
+  // the ledger writes below need no extra query. A mocked or non-returning
+  // transaction simply yields an empty map, and the ledger step skips those owners.
+  const postDeductionBalance = new Map<number, number>();
   for (let i = 0; i < userDeductions.length; i += CHUNK_SIZE) {
     const chunk = userDeductions.slice(i, i + CHUNK_SIZE);
-    await prisma.$transaction(chunk, { timeout: 30000 });
+    const updated = await prisma.$transaction(chunk, { timeout: 30000 });
+    if (Array.isArray(updated)) {
+      updated.forEach((row, offset) => {
+        const userId = deductionUserIds[i + offset];
+        const currency = (row as { currency?: number } | undefined)?.currency;
+        if (userId !== undefined && typeof currency === 'number') {
+          postDeductionBalance.set(userId, currency);
+        }
+      });
+    }
   }
 
   // Log repair events sequentially (audit trail, non-critical)
@@ -305,6 +320,20 @@ async function repairRobots(
     }
   }
 
+  // Spec #48 Requirement 16: one Repair_Ledger_Entry per robot, matching the
+  // granularity of the audit rows above so the two reconcile one-to-one.
+  //
+  // Skipped entirely when `deductCosts` is false: that mode moves no credits, so an
+  // entry would record a charge that never happened and a `balanceAfter` with no
+  // meaning (criterion 2's balance has nothing to refer to).
+  //
+  // `balanceAfter` is walked backwards from each user's committed post-deduction
+  // balance because the deduction is one decrement per user, not per robot — the
+  // per-robot balance is derived, never observed.
+  if (deductCosts) {
+    await writeAutomaticRepairLedgerEntries(repairEvents, postDeductionBalance, cycleNumber);
+  }
+
   return {
     robotsRepaired: robots.length,
     totalBaseCost,
@@ -312,4 +341,61 @@ async function repairRobots(
     costsDeducted: deductCosts,
     userSummaries,
   };
+}
+
+/**
+ * Write one Repair_Ledger_Entry per repaired robot on the Automatic_Repair_Path.
+ *
+ * Spec #48 Requirement 16 criteria 2, 3 and 6.
+ *
+ * Both repair paths deduct once per user rather than once per robot, so a
+ * per-robot `balanceAfter` is not something the database ever saw. It is derived:
+ * take each owner's committed post-deduction balance — returned by the `user.update`
+ * inside the deduction transaction, so no extra query is needed — then walk
+ * backwards through that owner's repair events, emitting last-robot-first so each
+ * entry's `balanceAfter` is the balance immediately after that robot's share was
+ * taken.
+ *
+ * An owner absent from `postDeductionBalance` is skipped rather than guessed at.
+ *
+ * `recordLedgerEntry` swallows its own failures, so a ledger problem cannot affect
+ * a repair that has already been charged (criterion 5). While
+ * `financial_ledger_active` is false, `financialService.recordTransaction` returns
+ * null and no row is persisted (criterion 7) — this is consistency work that makes
+ * the ledger correct whenever it is switched on, not a visible feature.
+ */
+async function writeAutomaticRepairLedgerEntries(
+  repairEvents: Array<{ userId: number; robotId: number; repairCost: number }>,
+  postDeductionBalance: Map<number, number>,
+  cycleNumber?: number,
+): Promise<void> {
+  if (repairEvents.length === 0) return;
+
+  const eventsByUser = new Map<number, Array<{ robotId: number; repairCost: number }>>();
+  for (const event of repairEvents) {
+    const existing = eventsByUser.get(event.userId);
+    if (existing) existing.push({ robotId: event.robotId, repairCost: event.repairCost });
+    else eventsByUser.set(event.userId, [{ robotId: event.robotId, repairCost: event.repairCost }]);
+  }
+
+  for (const [userId, events] of eventsByUser) {
+    let runningBalance = postDeductionBalance.get(userId);
+    if (runningBalance === undefined) continue;
+
+    for (const event of [...events].reverse()) {
+      if (event.repairCost <= 0) continue;
+
+      await recordLedgerEntry({
+        userId,
+        robotId: event.robotId,
+        transactionType: 'repair_cost',
+        amount: -event.repairCost,
+        balanceAfter: runningBalance,
+        description: 'Automatic pre-battle repair of 1 robot',
+        metadata: { repairType: 'automatic', robotCount: 1, cycleNumber },
+      });
+
+      runningBalance += event.repairCost;
+    }
+  }
 }

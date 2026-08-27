@@ -57,7 +57,7 @@ export function MobileDrawer({ isOpen, onClose, isActive, userRobots, isAdmin, o
         aria-label="Navigation menu"
       >
         <div className="h-14 px-4 flex items-center justify-between border-b border-white/10">
-          <h2 className="text-lg font-bold text-primary font-header tracking-tight">
+          <h2 className="text-lg font-bold text-primary tracking-tight">
             ARMOURED SOULS
           </h2>
           <button

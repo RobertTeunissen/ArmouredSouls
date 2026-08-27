@@ -2,6 +2,7 @@ import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import type { Prisma, AuditLog } from '../../../generated/prisma';
 import type { StableMetric, RobotMetric, StepDuration, CycleEventPayload } from '../../types/snapshotTypes';
+import { readRepairChargedCredits } from '../economy/repairPayloadKeys';
 
 /**
  * CycleSnapshotService
@@ -159,7 +160,10 @@ export class CycleSnapshotService {
             battlesParticipated: 0,
             totalCreditsEarned: 0,
             totalPrestigeEarned: 0,
-            totalRepairCosts: 0,
+            // Spec #48 Requirement 17 criteria 9 and 11: new writes carry the
+            // renamed key ONLY, never both, so a partially migrated row cannot
+            // double a repair total.
+            cycleRepairCreditsPaid: 0,
             merchandisingIncome: 0,
             streamingIncome: 0,
             operatingCosts: 0,
@@ -196,7 +200,12 @@ export class CycleSnapshotService {
         metric.totalCreditsEarned += payload.credits || 0;
         metric.totalPrestigeEarned += payload.prestige || 0;
         metric.streamingIncome += payload.streamingRevenue || 0;
-        metric.totalRepairCosts += payload.repairCost || 0;
+        // Spec #48 Requirement 9 criterion 2: a read of a `repairCost` field off the
+        // `battle_complete` payload, accumulating into the old `totalRepairCosts`
+        // metric, used to sit here. No orchestrator has ever written that field, so it
+        // contributed nothing — and the moment one did, every stable's repair total would have
+        // silently doubled, because the `robot_repair` loop below already counts the
+        // whole of it. Repair spend comes from Repair_Spend_Source only.
       });
 
       // Add passive income (merchandising and streaming)
@@ -224,11 +233,18 @@ export class CycleSnapshotService {
         },
       });
 
+      // Repair_Spend_Source is the ONLY contributor to the per-cycle repair total.
+      // Read through the resolver so a row written before Spec #48's key rename
+      // still reports its true amount, and so a malformed row is skipped rather
+      // than poisoning the sum with NaN (Requirement 9 criterion 10).
       repairEvents.forEach((event: AuditLog) => {
         if (!event.userId) return;
         const metric = getOrCreateMetric(event.userId);
-        const payload = event.payload as unknown as CycleEventPayload;
-        metric.totalRepairCosts += payload.cost || 0;
+        const charged = readRepairChargedCredits(
+          event.payload as unknown as Record<string, unknown>,
+        );
+        if (charged === null) return;
+        metric.cycleRepairCreditsPaid += charged;
       });
 
       // Add purchase costs (weapons, facilities, robots, attribute upgrades)
@@ -362,7 +378,7 @@ export class CycleSnapshotService {
           metric.merchandisingIncome +
           metric.streamingIncome +
           metric.achievementRewards -
-          metric.totalRepairCosts -
+          metric.cycleRepairCreditsPaid -
           metric.operatingCosts -
           metric.totalPurchases;
         
@@ -450,8 +466,10 @@ export class CycleSnapshotService {
 
       const robotMetric = metricsMap.get(event.robotId);
       if (robotMetric) {
-        const payload = event.payload as unknown as CycleEventPayload;
-        robotMetric.repairCosts += payload.cost || 0;
+        // Same Repair_Spend_Source rows, per robot rather than per stable.
+        robotMetric.repairCosts += readRepairChargedCredits(
+          event.payload as unknown as Record<string, unknown>,
+        ) ?? 0;
       }
     });
     

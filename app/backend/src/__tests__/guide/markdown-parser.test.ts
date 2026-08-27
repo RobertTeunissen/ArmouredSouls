@@ -99,7 +99,7 @@ Some content without frontmatter.
 `;
       const result = parseMarkdown(noFrontmatter);
 
-      // gray-matter returns empty data object when no frontmatter, so validation fails
+      // splitFrontmatter returns an empty data object when there is no frontmatter, so validation fails
       expect(result).toBeNull();
     });
   });

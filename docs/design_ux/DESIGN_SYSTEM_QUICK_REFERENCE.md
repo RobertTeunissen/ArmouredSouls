@@ -112,27 +112,49 @@
 
 ## 📝 Typography (Quick Reference)
 
-### Font Stack
+### Font Stack — one family, Inter
 
 ```css
-/* Logo & Headers */
-font-family: 'DIN Next', 'Inter Tight', 'Roboto Condensed', sans-serif;
-
-/* UI & Body */
+/* Everything. Set once as --font-sans in app/frontend/src/index.css. */
 font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 ```
+
+**Never name a font family on an element.** There is no `font-header` and no `font-body`
+utility. Everything inherits Inter, so a page cannot end up mixing typefaces.
+
+Hierarchy comes from **size, weight and colour** — never from a second typeface.
+
+This replaces an earlier two-family system that paired Inter with a header stack of
+`'Inter Tight', 'DIN Next', 'Roboto Condensed'`. It was removed because it did not work:
+DIN Next is a commercial font we do not license and Roboto Condensed was never loaded, so
+both applied only to users who happened to have them installed, and the `font-header` class
+reached seven elements out of hundreds. The result was an inconsistent page for no benefit.
+
+### Loaded Weights
+
+Inter at **400, 500, 600, 700**. These four and no others.
+
+Do not use a weight outside this set. A weight with no matching face does not fall back
+gracefully — the browser resolves it to a neighbour or synthesises it. `font-semibold` (600)
+was used app-wide for months while only 400/500/700 were fetched, so it rendered identically
+to `font-bold`, and the distinction the scale drew was invisible.
 
 ### Typography Scale
 
 | Element | Class (Tailwind) | Size | Weight |
 |---------|-----------------|------|--------|
-| Logo | `text-4xl font-bold` | 36px | Bold |
-| H1 Page Title | `text-3xl font-bold` | 30px | Bold |
-| H2 Section Title | `text-2xl font-bold` | 24px | Bold |
-| H3 Subsection | `text-xl font-medium` | 20px | Medium |
-| Body | `text-base` | 16px | Regular |
-| Label | `text-sm font-medium` | 14px | Medium |
-| Small | `text-xs` | 12px | Regular |
+| Logo / wordmark | `text-4xl font-bold tracking-tight` | 36px | 700 |
+| H1 Page Title | `text-3xl font-bold` | 30px | 700 |
+| H2 Section Title | `text-2xl font-bold` | 24px | 700 |
+| H3 Subsection | `text-xl font-medium` | 20px | 500 |
+| Body | `text-base` | 16px | 400 |
+| Stat value | `font-semibold tabular-nums` | 16px | 600 |
+| Label | `text-sm` | 14px | 400 |
+| Small / metadata | `text-xs` | 12px | 400 |
+
+The wordmark uses `tracking-tight` in place of the condensed typeface it used to rely on:
+ALL CAPS Inter Bold with tightened letter-spacing carries the industrial feel without a
+second font file.
 
 ---
 
@@ -315,6 +337,84 @@ type TabId = 'overview' | 'playback' | 'combat-log';
 </div>
 ```
 
+### Dashboard Tile Component
+
+The Dashboard Overview Row (`app/frontend/src/components/dashboard/`) is built from one
+shared tile, `DashboardTile.tsx`. Container, heading step, stat-value colours, loading
+state, error state and click-through live in that file and nowhere else — a tile
+instance supplies content and nothing else. Its props interface carries no
+`className`, no `style`, no `variant` and no colour, padding, size or typography
+member, which is what stops three tiles from drifting apart.
+
+```jsx
+{/* Row: one column on mobile, three from lg up */}
+<div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+  {/* Tile: container, heading, period stated once, reserved content height */}
+  <section className="bg-surface-elevated border border-gray-700 rounded-lg p-4" aria-label={title}>
+    <h3 className="text-xl font-medium text-white">{title}</h3>
+    <p className="text-tertiary text-xs mb-3 mt-0.5">This cycle, compared with last</p>
+
+    {/* Reserved height scales with the row count — not a flat block */}
+    <div className="flex flex-col gap-2" style={{ minHeight: `${rows * 2.25}rem` }}>
+
+      {/* Stat row: value owns a right-aligned cell, comparison sits beneath it */}
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3">
+        <span className="text-secondary text-sm">{label}</span>
+        <span className="text-right font-semibold tabular-nums text-white">{value}</span>
+        <span className="col-start-2 text-right text-tertiary text-xs tabular-nums">
+          vs {comparison}
+        </span>
+      </div>
+
+
+      {/* Click-through: native button, 44px activation region, text-primary */}
+      <button className="mt-auto min-h-11 min-w-11 inline-flex items-center text-primary hover:underline text-sm self-start">
+        {linkLabel}
+      </button>
+    </div>
+  </section>
+</div>
+```
+
+**Rules:**
+
+- **Container**: `bg-surface-elevated` with `border border-gray-700` — the Card
+  Component pattern above. Never `bg-surface` for a tile; that is the page surface it
+  sits on, and a tile that matches its background stops reading as a tile.
+- **Heading**: H3 at `text-xl font-medium`. One step, no per-tile override.
+- **Three stat-value treatments and one rule for choosing between them**:
+  `text-white` (neutral), `text-success` (favourable), `text-error` (unfavourable). A
+  colour applies **only when a comparison figure exists and the direction of movement
+  is meaningful**. No comparison, no meaning, or an equal figure all render neutral —
+  so a rising repair bill is never green, and nothing flips colour at an arbitrary
+  threshold. The tile decides; callers pass a delta and a direction, never a class.
+- **`text-primary` is for links and actions only.** It is never a stat value. Spending
+  an accent colour on a neutral number is how the old Financial Overview card ended up
+  rendering the credit balance in a second colour from the navigation bar.
+- **Activation regions are at least 44px** (`min-h-11 min-w-11`). Use a native
+  `<button>` or a router `<Link>` so Enter/Space activation, focus ring and DOM tab
+  order come for free.
+- **Row layout is `grid-cols-1 lg:grid-cols-3`.** Stacked below 1024px, three across
+  above it. Tile count and tile order never depend on data availability.
+- **State the period once, under the heading.** Not on every row. Four repeats of
+  `(this cycle)` in one tile wrap the labels and push the values out of alignment, and
+  they restate the one fact every figure in the tile shares. Only a figure whose period
+  differs from the rest of its tile carries its own — and prefer a self-evident label
+  ("Current balance") over a qualifier.
+- **Values get a right-aligned cell of their own, comparisons go beneath them.** Use
+  `grid grid-cols-[minmax(0,1fr)_auto]` with the comparison on `col-start-2`, not
+  `justify-between` with value and comparison in one group: that puts a row with a
+  comparison mid-row and a row without one flush right, so nothing lines up. Add
+  `tabular-nums` so digits are the same width down the column.
+- **Reserved height scales with the row count.** A flat minimum over-reserves and leaves
+  dead space under the content, which is most obvious on a stacked mobile layout where
+  the grid is not stretching tiles to a common height.
+- **The state that earns this pattern its place**: container, heading and reserved
+  content height are **identical across loading, error and loaded**. The loading state
+  is placeholder rows, never a zero — a zero reads as a real figure. Nothing on the
+  page reflows as data arrives.
+
 ---
 
 ## 📁 Asset File Naming (Convention)
@@ -451,8 +551,10 @@ Before implementing a new page or component, verify:
 6. **❌ Long animation durations (>500ms)**
    - ✅ Keep animations brief (150-300ms)
 
-7. **❌ Mixing font families**
-   - ✅ DIN/Inter Tight for headers, Inter for body
+7. **❌ Naming a font family on an element**
+   - ✅ Inter everywhere, inherited. Hierarchy from size, weight and colour
+   - ❌ Never a commercial font we do not license — it silently falls back for everyone
+     except the few who have it installed, which is worse than not using it at all
 
 8. **❌ Uncompressed images**
    - ✅ Use WebP format, compress aggressively

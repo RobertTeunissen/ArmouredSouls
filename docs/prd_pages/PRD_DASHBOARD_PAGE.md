@@ -58,9 +58,13 @@ The Dashboard Page (`/dashboard`) is the most critical page in Armoured Souls - 
 - **Design System**: [docs/design_ux/DESIGN_SYSTEM_QUICK_REFERENCE.md](../design_ux/DESIGN_SYSTEM_QUICK_REFERENCE.md)
 - **Related Files**:
   - Frontend: `app/frontend/src/pages/DashboardPage.tsx`
-  - Components: `app/frontend/src/components/DashboardNotification.tsx`, `StableStatistics.tsx`, `RobotDashboardCard.tsx`, `HPBar.tsx`, `BattleReadinessBadge.tsx`, `FinancialSummary.tsx`, `UpcomingMatches.tsx`, `RecentMatches.tsx`, `season/SeasonPhaseCard.tsx`
-  - Backend: `app/backend/src/routes/user.ts`
-  - API Utils: `app/frontend/src/utils/userApi.ts`
+  - Components: `app/frontend/src/components/DashboardNotification.tsx`, `RobotDashboardCard.tsx`, `HPBar.tsx`, `BattleReadinessBadge.tsx`, `UpcomingMatches.tsx`, `RecentMatches.tsx`, `season/SeasonPhaseCard.tsx`
+  - Overview Row (Spec #48): `app/frontend/src/components/dashboard/OverviewRow.tsx`, `PrestigeTile.tsx`, `TodaysBattlesTile.tsx`, `CreditsTile.tsx`, `DashboardTile.tsx` (plus `types.ts`, `placementFormatting.ts` and the `index.ts` barrel)
+  - Hooks: `app/frontend/src/hooks/useDashboardData.ts`, `app/frontend/src/hooks/useAcknowledgedPrestigeLevel.ts`
+  - Notification assembly: `app/frontend/src/utils/dashboardNotifications.ts`
+  - Backend: `app/backend/src/routes/user.ts`, `app/backend/src/routes/dashboardCycle.ts` (`GET /api/dashboard/current-cycle`), `app/backend/src/services/dashboard/cycleProgressService.ts`, `app/backend/src/services/dashboard/cycleWindow.ts`
+  - API Utils: `app/frontend/src/utils/userApi.ts`, `app/frontend/src/utils/dashboardApi.ts`
+  - **Deleted by Spec #48**: `StableStatistics.tsx`, `FinancialSummary.tsx`
 
 ---
 
@@ -234,19 +238,29 @@ The Dashboard Page (`/dashboard`) is the most critical page in Armoured Souls - 
 │   ├── Team mode subscription gaps
 │   ├── Team creation suggestions
 │   └── Onboarding/welcome (when no robots)
-├── Top Row (2 columns) ✅
-│   ├── Stable Statistics Panel
-│   │   ├── Total Robots
-│   │   ├── Robots Ready
-│   │   ├── Total Battles
-│   │   ├── Win Rate (color-coded)
-│   │   ├── Average ELO
-│   │   └── Highest League
-│   └── Financial Summary
-│       ├── Current Balance
-│       ├── Daily Passive Net
-│       ├── Prestige
-│       └── Battle Bonus
+├── Overview Row (1 column mobile / 3 columns ≥1024px) ✅  [Spec #48]
+│   │   Position invariant: immediately after the notification stack and
+│   │   immediately before the Match Section, regardless of how many
+│   │   notifications render — including zero. Tile count and tile order
+│   │   never depend on data availability.
+│   ├── Prestige Tile — "am I climbing?"
+│   │   ├── Prestige total
+│   │   ├── Prestige earned this cycle (vs last completed cycle)
+│   │   └── Progress toward the next Prestige_Gate
+│   ├── Today's Battles Tile — "has today happened yet, and how did it go?"
+│   │   │   Aggregate only, never a list. The three figures reconcile:
+│   │   │   win/loss matches + placement events = battles fought.
+│   │   ├── Battles fought (fought + still to come today; fought ⊆ scheduled
+│   │   │   by construction, so the ratio can never exceed 100%)
+│   │   ├── Wins and losses (N matches) — W/L/D for Win_Loss_Modes
+│   │   ├── Placement events (N) — best placement + field size for Placement_Modes
+│   │   └── Remaining Battle_Slot times today, or the settlement countdown
+│   └── Credits Tile — "am I making or losing money, and where is it going?"
+│       ├── Current balance
+│       ├── Battle earnings this cycle (vs last completed cycle)
+│       ├── Automatic repairs this cycle — full price, the cost of not being there
+│       └── Manual repairs this cycle — taken at the 50% discount
+│           (both omitted together when nothing was spent; no combined total)
 ├── Match Section (2 columns, conditional) ✅
 │   ├── Upcoming Matches (scrollable)
 │   └── Recent Matches (scrollable)
@@ -269,15 +283,16 @@ DashboardPage.tsx ✅
 ├── SeasonPhaseCard (preparation + cycle 1 only)
 ├── DashboardNotification (unified, repeated per notification)
 │   └── Variants: success, warning, danger, info
-├── Top Row Grid
-│   ├── StableStatistics.tsx ✅
-│   │   ├── Stats fetching
-│   │   ├── 3x2 grid layout
-│   │   └── Color-coded metrics
-│   └── FinancialSummary.tsx ✅
-│       ├── Balance display
-│       ├── Daily income/costs
-│       └── Prestige/bonus
+├── dashboard/OverviewRow.tsx ✅  [Spec #48]
+│   │   grid-cols-1 lg:grid-cols-3 — fixed left-to-right tile order
+│   ├── dashboard/PrestigeTile.tsx ✅
+│   ├── dashboard/TodaysBattlesTile.tsx ✅
+│   ├── dashboard/CreditsTile.tsx ✅
+│   └── dashboard/DashboardTile.tsx ✅ (shared, used by all three)
+│       ├── Container, H3 heading step, reserved content height
+│       ├── The only stat-value colour map on the row
+│       ├── Loading and error states with identical geometry
+│       └── Content primitives: Stat, Progress, Lines, Prompt, Note
 ├── Match Section (conditional)
 │   ├── UpcomingMatches.tsx ✅
 │   │   ├── League matches
@@ -354,11 +369,16 @@ const [notifications, setNotifications] = useState<Notification[]>([]);
 const { user, logout } = useAuth();
 ```
 
-**Data Fetching**:
+**Data Fetching** (all reads issued from `hooks/useDashboardData.ts`):
 - Robots: `GET /api/robots`
-- Stats: `GET /api/user/stats` (via StableStatistics component)
-- Finances: `GET /api/finances/summary` (via FinancialSummary component)
+- Overview Row: `GET /api/dashboard/current-cycle` — the one read behind all three tiles.
+  Unlike the optional reads beside it, a failure here sets an explicit error rather than
+  failing silently, because three tiles depend on it. The same effect calls `refreshUser()`
+  exactly once, so the balance and prestige total describe the same moment as the
+  current-cycle figures next to them; a rejection is swallowed and the context values stand.
 - Matches: `GET /api/matches/upcoming`, `GET /api/matches/history`
+- **Not fetched for tile rendering**: `GET /api/user/stats` and `GET /api/finances/summary`.
+  Both left the Dashboard with `StableStatistics` and `FinancialSummary` (Spec #48).
 
 **Performance Optimizations**:
 - Single API call per data source
@@ -367,9 +387,9 @@ const { user, logout } = useAuth();
 - Conditional rendering (hide sections when empty)
 
 **Responsive Design**:
-- Desktop (≥1024px): 3-column robot grid, 2-column top row
-- Tablet (768-1023px): 2-column robot grid, 2-column top row
-- Mobile (<768px): 1-column layout throughout
+- Desktop (≥1024px): 3-column robot grid, 3-column Overview Row
+- Tablet (768-1023px): 2-column robot grid, stacked Overview Row
+- Mobile (<768px): 1-column layout throughout; Battle_Slot times wrap rather than truncate
 
 ### Backend API
 
@@ -649,11 +669,14 @@ Coming Soon: Roster Expansion Level 4 (requires 1,000 prestige) ✓
 - Optional: Add `/api/user/prestige-info` endpoint with rank calculation
 
 **Frontend**:
-- Update `FinancialSummary.tsx` component
+- ~~Update `FinancialSummary.tsx` component~~ — **largely delivered by Spec #48.** The
+  prestige total, the progress bar toward the next Prestige_Gate and the percentage as text
+  now live in `components/dashboard/PrestigeTile.tsx`, computed on the Frontend from
+  `app/shared/utils/prestigeGates.ts`. `FinancialSummary.tsx` is deleted. What remains
+  unbuilt from this proposal is the named rank label ("Established", "Veteran") and its
+  tooltip.
 - Add prestige rank calculation function
-- Add progress bar component
 - Add tooltip component
-- Fetch facility prestige requirements for "Next Unlock"
 
 **Priority**: P2 (Medium - Quality of Life)
 
@@ -775,7 +798,12 @@ Coming Soon: Roster Expansion Level 4 (requires 1,000 prestige) ✓
 ### Backend Files
 ```
 app/backend/src/routes/
-└── user.ts                    # ✅ GET /api/user/stats endpoint
+├── user.ts                    # ✅ GET /api/user/stats endpoint (no longer read by the Dashboard)
+└── dashboardCycle.ts          # ✅ GET /api/dashboard/current-cycle (Spec #48)
+
+app/backend/src/services/dashboard/
+├── cycleProgressService.ts    # ✅ Current-cycle aggregate behind the Overview Row
+└── cycleWindow.ts             # ✅ Midnight-UTC cycle window resolution
 ```
 
 ### Frontend Components
@@ -784,10 +812,19 @@ app/frontend/src/components/
 ├── HPBar.tsx                  # ✅ Reusable HP bar component
 ├── BattleReadinessBadge.tsx   # ✅ Status badge component
 ├── RobotDashboardCard.tsx     # ✅ Compact robot card
-├── StableStatistics.tsx       # ✅ Aggregate stats panel
-├── FinancialSummary.tsx       # ✅ Financial overview (updated)
 ├── UpcomingMatches.tsx        # ✅ Upcoming matches (updated)
-└── RecentMatches.tsx          # ✅ Recent matches (updated)
+├── RecentMatches.tsx          # ✅ Recent matches (updated)
+└── dashboard/                 # ✅ Overview Row (Spec #48)
+    ├── DashboardTile.tsx      #    Shared tile: container, heading, colours, states
+    ├── OverviewRow.tsx        #    grid-cols-1 lg:grid-cols-3, fixed tile order
+    ├── PrestigeTile.tsx
+    ├── TodaysBattlesTile.tsx
+    ├── CreditsTile.tsx
+    ├── placementFormatting.ts
+    ├── types.ts
+    └── index.ts
+
+Removed by Spec #48: StableStatistics.tsx, FinancialSummary.tsx
 ```
 
 ### Frontend Pages
@@ -796,10 +833,19 @@ app/frontend/src/pages/
 └── DashboardPage.tsx          # ✅ Main dashboard page (major refactor)
 ```
 
+### Frontend Hooks
+```
+app/frontend/src/hooks/
+├── useDashboardData.ts             # ✅ Every Dashboard read, one userId-keyed effect
+└── useAcknowledgedPrestigeLevel.ts # ✅ Prestige unlock acknowledgement
+```
+
 ### Frontend Utils
 ```
 app/frontend/src/utils/
-└── userApi.ts                 # ✅ User API utilities
+├── userApi.ts                 # ✅ User API utilities
+├── dashboardApi.ts            # ✅ GET /api/dashboard/current-cycle client
+└── dashboardNotifications.ts  # ✅ Notification stack assembly
 ```
 
 ### Styles
@@ -821,11 +867,51 @@ app/frontend/src/
 - **PRD Compliance**: Phase 1 & 2 complete
 
 ### Size Improvements
+
+*Historical (February 2026). The two cards these figures measured — Stable Overview and
+Financial Overview — were deleted by Spec #48 and replaced by the three-tile Overview Row,
+so the two card-height figures no longer describe anything on the page.*
+
+- ~~Stable Overview height: -67%~~ (component deleted)
+- ~~Financial Overview height: -30%~~ (component deleted)
 - Dashboard height (with data): -30%
-- Stable Overview height: -67%
-- Financial Overview height: -30%
 - Match container: Scrollable (max 400px)
 - Information density: High ↑
+
+---
+
+## Decision Record: Overview Row Time Basis (Spec #48)
+
+**The Dashboard states current-cycle figures against the last completed cycle.** A cycle
+runs from one midnight UTC settlement boundary to the next; the current-cycle figure covers
+that boundary up to the moment of the request.
+
+This is a real, moving figure rather than a rounding of a daily total: credits, prestige and
+fame are awarded at battle completion, and there are nine battle slots a day, so a player's
+totals move up to nine times between logins. Only passive income and operating costs wait
+for settlement.
+
+Three alternatives were rejected:
+
+- **Rolling 24 hours** — figures shrink between refreshes as events age out of the window. A
+  module whose job is to show momentum cannot have its numbers fall because time passed.
+- **Since last login** — `lastLoginAt` is written at login as a fire-and-forget update, so by
+  the time the Dashboard's requests land the window is already empty. The tier-changes
+  endpoint uses a fixed 24h window specifically to dodge this race; that precedent rules the
+  approach out rather than inviting a second workaround.
+- **Last completed cycle only** — static for a whole day, in the most prominent position on
+  the page.
+
+The tier-change notification keeps its fixed 24h window, and that is not an inconsistency: a
+tier change is an event, shown once, that either happened or did not. A total is a quantity,
+so it needs a period with edges.
+
+**Nine lifetime stats were removed rather than rehomed**: `highestELO`, `highestLeague`,
+`highestTagTeamLeague`, `totalRobots`, `totalBattles`, lifetime wins, lifetime losses,
+lifetime draws and lifetime win rate. None of them can change within a day, which is the
+opposite of what the first module on a landing page should carry. They need no new home —
+per-robot detail pages and league standings already show them, and `GET /api/user/stats`
+still returns every field unchanged for those consumers.
 
 ---
 

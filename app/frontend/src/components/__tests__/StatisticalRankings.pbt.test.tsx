@@ -27,6 +27,27 @@ afterEach(() => {
 });
 
 /**
+ * Wait until the rankings have actually rendered.
+ *
+ * The loading state renders the SAME "Statistical Rankings" heading as the loaded state
+ * (only the heading's type scale differs), so `findAllByText(/Statistical Rankings/i)`
+ * resolves while the nine skeleton placeholders are still on screen. Every synchronous
+ * `getAllByText` that followed it was therefore a race against the mocked promise — one
+ * that usually won and, under parallel load, did not: `should display rank format with
+ * correct spacing and punctuation` failed on seed 1152160664 / counterexample [4,2,525].
+ *
+ * The skeletons carry `animate-pulse` and the loaded cards do not, so their absence is
+ * the ready signal.
+ */
+async function waitForRankingsLoaded(): Promise<HTMLElement[]> {
+  const headers = await screen.findAllByText(/Statistical Rankings/i);
+  await waitFor(() => {
+    expect(document.querySelectorAll('.animate-pulse').length).toBe(0);
+  });
+  return headers;
+}
+
+/**
  * Property-Based Tests for Robot Detail Page Visual Enhancement
  * Feature: robot-detail-page-visual-enhancement
  * Testing Framework: fast-check with minimum 100 iterations
@@ -79,7 +100,7 @@ describe('Property 5: Rank Display Format (Property-Based Test)', () => {
           render(<StatisticalRankings robotId={robotId} />);
           
           // Wait for component to load - use findAllByText since there might be multiple from previous iterations
-          const headers = await screen.findAllByText(/Statistical Rankings/i);
+          const headers = await waitForRankingsLoaded();
           expect(headers.length).toBeGreaterThan(0);
           
           // Property: Every ranking card must display rank in format "#X of Y"
@@ -136,7 +157,7 @@ describe('Property 5: Rank Display Format (Property-Based Test)', () => {
           
           render(<StatisticalRankings robotId={robotId} />);
           
-          const headers = await screen.findAllByText(/Statistical Rankings/i);
+          const headers = await waitForRankingsLoaded();
           expect(headers.length).toBeGreaterThan(0);
           
           // Property: Rank format must be correct for edge cases
@@ -235,7 +256,7 @@ describe('Property 5: Rank Display Format (Property-Based Test)', () => {
           
           render(<StatisticalRankings robotId={robotId} />);
           
-          const headers = await screen.findAllByText(/Statistical Rankings/i);
+          const headers = await waitForRankingsLoaded();
           expect(headers.length).toBeGreaterThan(0);
           
           // Property: Each category must display its specific rank in correct format
@@ -301,7 +322,7 @@ describe('Property 5: Rank Display Format (Property-Based Test)', () => {
             
             render(<StatisticalRankings robotId={robotId} />);
             
-            const headers = await screen.findAllByText(/Statistical Rankings/i);
+            const headers = await waitForRankingsLoaded();
             expect(headers.length).toBeGreaterThan(0);
             
             // Property: Format must be consistent across renders
@@ -353,7 +374,7 @@ describe('Property 5: Rank Display Format (Property-Based Test)', () => {
           
           render(<StatisticalRankings robotId={robotId} />);
           
-          const headers = await screen.findAllByText(/Statistical Rankings/i);
+          const headers = await waitForRankingsLoaded();
           expect(headers.length).toBeGreaterThan(0);
           
           // Property: Format must have exact spacing and punctuation
@@ -431,7 +452,7 @@ describe('Property 6: Percentile Badge Display (Property-Based Test)', () => {
           
           render(<StatisticalRankings robotId={robotId} />);
           
-          await screen.findAllByText(/Statistical Rankings/i);
+          await waitForRankingsLoaded();
           
           // Property: Gold badge must be displayed for top 10%
           const goldBadges = screen.getAllByText('Top 10%');
@@ -481,7 +502,7 @@ describe('Property 6: Percentile Badge Display (Property-Based Test)', () => {
           
           render(<StatisticalRankings robotId={robotId} />);
           
-          await screen.findAllByText(/Statistical Rankings/i);
+          await waitForRankingsLoaded();
           
           // Property: Silver badge must be displayed for top 25%
           const silverBadges = screen.getAllByText('Top 25%');
@@ -531,7 +552,7 @@ describe('Property 6: Percentile Badge Display (Property-Based Test)', () => {
           
           render(<StatisticalRankings robotId={robotId} />);
           
-          await screen.findAllByText(/Statistical Rankings/i);
+          await waitForRankingsLoaded();
           
           // Property: Bronze badge must be displayed for top 50%
           const bronzeBadges = screen.getAllByText('Top 50%');
@@ -581,7 +602,7 @@ describe('Property 6: Percentile Badge Display (Property-Based Test)', () => {
           
           render(<StatisticalRankings robotId={robotId} />);
           
-          await screen.findAllByText(/Statistical Rankings/i);
+          await waitForRankingsLoaded();
           
           // Property: No badges should be displayed for below 50%
           expect(screen.queryByText('Top 10%')).toBeNull();
@@ -632,7 +653,7 @@ describe('Property 6: Percentile Badge Display (Property-Based Test)', () => {
           
           render(<StatisticalRankings robotId={robotId} />);
           
-          await screen.findAllByText(/Statistical Rankings/i);
+          await waitForRankingsLoaded();
           
           // Property: Correct badge must be displayed for edge cases
           if (expectedBadge) {
@@ -747,7 +768,7 @@ describe('Property 6: Percentile Badge Display (Property-Based Test)', () => {
           
           render(<StatisticalRankings robotId={robotId} />);
           
-          await screen.findAllByText(/Statistical Rankings/i);
+          await waitForRankingsLoaded();
           
           // Property: Each category must display the correct badge based on its percentile
           const allPercentiles = Object.values(percentiles);
@@ -806,7 +827,7 @@ describe('Property 6: Percentile Badge Display (Property-Based Test)', () => {
             
             render(<StatisticalRankings robotId={robotId} />);
             
-            await screen.findAllByText(/Statistical Rankings/i);
+            await waitForRankingsLoaded();
             
             // Property: Badge display must be consistent with percentile value
             if (percentile >= 90) {

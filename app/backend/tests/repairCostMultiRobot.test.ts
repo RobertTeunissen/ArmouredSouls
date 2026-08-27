@@ -1,4 +1,4 @@
-import { calculateRepairCost } from '../src/utils/robotCalculations';
+import { calculateRepairCost } from './helpers/legacyRepairCost';
 
 describe('calculateRepairCost - Multi-Robot Discount', () => {
   afterAll(() => {

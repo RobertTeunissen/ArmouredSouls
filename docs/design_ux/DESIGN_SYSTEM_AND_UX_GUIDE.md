@@ -1118,31 +1118,47 @@ Examples:
 
 ### Type System Selection
 
-**System A — Industrial Precision (RECOMMENDED AND LOCKED)**
+**System A — Industrial Precision (LOCKED), delivered with a single typeface**
 
-#### Display / Logo Font
-- **Family**: DIN Condensed / DIN Next / Inter Tight (or similar industrial grotesk)
-- **Weight**: Bold / Heavy only for logos
-- **Casing**: ALL CAPS for logo wordmarks
-- **Usage**: Logo, page headers, section titles
+#### The One Font
 
-#### UI / Body Font
-- **Family**: Inter / Source Sans 3 / IBM Plex Sans
-- **Weights**: Regular (400), Medium (500), Bold (700)
-- **Usage**: Body text, labels, buttons, descriptions
+- **Family**: Inter, with `-apple-system`, `BlinkMacSystemFont`, `'Segoe UI'`, `sans-serif`
+  as fallbacks. Declared once as `--font-sans` in `app/frontend/src/index.css`; every
+  element inherits it.
+- **Weights loaded**: 400 regular, 500 medium, 600 semibold, 700 bold. These four only —
+  a weight outside the set has no matching face and the browser substitutes or synthesises
+  one.
+- **Usage**: everything. Logo wordmark, headings, body, labels, buttons, metadata.
+- **Never name a font family on an element.** There is no `font-header` or `font-body`
+  utility to apply inconsistently.
+
+**What was removed and why.** An earlier version of this section specified a separate
+display face — DIN Condensed / DIN Next / Inter Tight — for the logo and headings. It was
+withdrawn in August 2026. DIN Next and DIN Condensed are commercial and this project does
+not license them, so they only ever applied to viewers who happened to have them installed
+locally. Roboto Condensed, listed as a fallback, was never loaded at all. Inter Tight *was*
+loaded, but the `font-header` class that selected it reached seven elements across the whole
+application. The net effect was an inconsistent page rather than a distinct display voice.
+
+The industrial character now comes from **ALL CAPS with `tracking-tight`** on the wordmark
+and from disciplined weight and size steps elsewhere. If a genuine display face is wanted
+later, licence it, self-host it, and apply it everywhere it belongs — not to seven elements.
 
 ### Typography Hierarchy
 
-| Element | Font | Size | Weight | Color | Usage |
-|---------|------|------|--------|-------|-------|
-| Logo | DIN Next / Inter Tight | 32-40px | Bold | Adaptive | Navigation |
-| H1 | DIN Next / Inter Tight | 32px | Bold | Primary | Page titles |
-| H2 | DIN Next / Inter Tight | 24px | Bold | Primary | Section titles |
-| H3 | Inter | 18px | Medium | Primary | Subsection |
-| Body | Inter | 16px | Regular | Secondary | Descriptions |
-| Label | Inter | 14px | Medium | Secondary | Form labels, tags |
-| Small | Inter | 12px | Regular | Tertiary | Metadata, footnotes |
-| Button | Inter | 16px | Medium | Primary | Action buttons |
+All Inter. Hierarchy from size, weight and colour.
+
+| Element | Size | Weight | Color | Usage |
+|---------|------|--------|-------|-------|
+| Logo wordmark | 32-40px | 700 + `tracking-tight` | Adaptive | Navigation, front page |
+| H1 | 30-32px | 700 | Primary | Page titles |
+| H2 | 24px | 700 | Primary | Section titles |
+| H3 | 20px | 500 | Primary | Subsection, card headings |
+| Body | 16px | 400 | Secondary | Descriptions |
+| Stat value | 16px | 600 + `tabular-nums` | White | Figures in cards and tiles |
+| Label | 14px | 400 | Secondary | Form labels, tags, stat labels |
+| Small | 12px | 400 | Tertiary | Metadata, footnotes, comparisons |
+| Button | 16px | 500 | Primary | Action buttons |
 
 ### Typography Rules
 

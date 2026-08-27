@@ -11,7 +11,11 @@ import { api } from '../utils/api';
 import { repairAllRobots } from '../utils/robotApi';
 import { useRobotStore } from '../stores';
 import { useStableOverview } from './useSubscriptions';
-import { calculateRobotRepairCost, calculateRepairBayDiscount, MANUAL_REPAIR_DISCOUNT } from '../../../shared/utils/repairCost';
+import {
+  calculateRepairQuote,
+  applyManualRepairDiscount,
+  calculateRepairBayDiscountPercent,
+} from '../../../shared/utils/repairCost';
 import type { Facility } from '../components/facilities/types';
 
 // ─── Utility functions ───────────────────────────────────────────────────────
@@ -193,14 +197,22 @@ export function useRobotsList() {
 
   const calculateTotalRepairCost = (): { totalBaseCost: number; discountedCost: number; discount: number } => {
     const activeRobotCount = robots.filter(r => r.name !== 'Bye Robot').length;
+    const bayContext = { repairBayLevel, activeRobotCount };
 
-    const totalBaseCost = robots.reduce((sum, robot) => {
-      const cost = calculateRobotRepairCost(robot, repairBayLevel, activeRobotCount);
-      return sum + cost;
-    }, 0);
+    // Spec #48 Requirement 15 criterion 11: discount PER ROBOT and then sum, which
+    // is what the backend now charges. Discounting the batch total instead — what
+    // this did before — could show an estimate up to N-1 credits above the real
+    // charge for N robots, so the confirmation dialog quoted a number the player
+    // was never billed.
+    let totalBaseCost = 0;
+    let discountedCost = 0;
+    for (const robot of robots) {
+      const quote = calculateRepairQuote({ robot }, bayContext);
+      totalBaseCost += quote;
+      discountedCost += applyManualRepairDiscount(quote);
+    }
 
-    const discount = calculateRepairBayDiscount(repairBayLevel, activeRobotCount);
-    const discountedCost = Math.floor(totalBaseCost * MANUAL_REPAIR_DISCOUNT);
+    const discount = calculateRepairBayDiscountPercent(bayContext);
 
     return { totalBaseCost, discountedCost, discount };
   };

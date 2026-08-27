@@ -42,6 +42,61 @@
 | v1.6 | Feb 7, 2026 | **Overview tab refinements**: UI improvements based on user feedback (duplicate metrics, battle winnings, facility levels, two-column layout) |
 | v1.7 | Feb 7, 2026 | **Per-robot enhancements**: Inline recommendations on robot cards, battle breakdown with league/tournament distinction, monthly repairs calculation fixed |
 | v1.8 | Feb 10, 2026 | Document consolidation |
+| v1.9 | Aug 26, 2026 | **Repair cost source corrected** (Spec #48). Repair spend comes from `robot_repair` audit rows, per cycle — not from battle records and not on a rolling 7-day window. Adds the Dashboard Credits tile as an entry point. |
+
+---
+
+## Repair Cost Data Source (authoritative — Spec #48)
+
+**This section supersedes every description of repair costs further down this document.**
+The passages below it are a record of what was built in February 2026, and their repair
+framing was wrong in two ways.
+
+**Where repair spend comes from.** The single authoritative source is `audit_logs` rows
+with `eventType: 'robot_repair'`. Each row's payload carries `creditsCharged` (what the
+player was actually charged for that robot), `repairType` (`'manual'` or `'automatic'`),
+`manualRepairDiscount` and, on manual events only, `creditsBeforeManualDiscount`. Repair
+totals are summed from these rows in application code, because the figures live inside a
+`Json` column and Prisma cannot `_sum` into one.
+
+**The period is a cycle, not a rolling window.** A repair figure is stated for one cycle,
+bounded by the midnight UTC settlement boundaries — the current cycle so far, or a named
+completed cycle. The "last 7 days" framing used below shrinks between two refreshes as
+events age out of the window, which is why it was dropped: a total whose value falls
+because time passed cannot be reconciled against anything.
+
+**Two things that are not repair sources:**
+
+- **Battle records.** The code sample further down reads
+  `battle.robot1RepairCost` / `battle.robot2RepairCost`. **Those columns do not exist on
+  the `Battle` model** and, on the evidence of the sample, never did in that shape. A
+  related trap was live for longer: `payload.repairCost` on `battle_complete` audit
+  events was read in two places and written by nobody, so the CSV column fed from it
+  exported `0` on every row. Both reads are gone.
+- **`robots.repairQuoteCredits`.** A cached quote for what repairing that robot *would*
+  cost right now, zeroed on repair. It has never been money spent.
+
+**Historical figures understate manual repair spend.** Every `repairCosts` figure on this
+page, and every Cycle Repair Spend total in `cycle_snapshots` behind it, is understated
+for cycles before Spec #48 shipped. `POST /repair-all` applied the Repair Bay discount a
+second time when writing its audit rows, so a manual row recorded 80% of the truth at a
+20% Repair Bay discount and a tenth of it at the 90% cap. The credits deducted from
+players were always correct; only the recorded figures were wrong. **No backfill was
+attempted** — a pre-fix row cannot be repaired from its own contents, because that needs
+the Repair Bay level and active robot count as they stood at the time, both mutable. So
+expect a step in the manual repair series at the cycle Spec #48 shipped, and do not read
+it as a balance change.
+
+**Entry point.** The Dashboard Credits tile (`app/frontend/src/components/dashboard/CreditsTile.tsx`)
+is now the way into this page. It carries the current balance, battle earnings, and repair
+spend split into its automatic and manual `repairType` totals for the current cycle, each
+against the last completed cycle, and then links here. The automatic figure is the cost of
+not being present before a robot fought, stated as credits actually charged at full price
+rather than as a derived saving. It deliberately omits passive facility income,
+operating costs, per-facility and per-robot breakdowns, ROI and projections — those are
+settlement figures that barely move day to day, and this page already presents them
+properly. It also carries no repair button: the action stays in the Dashboard
+notification stack.
 
 ---
 
@@ -87,6 +142,10 @@ Three key improvements implemented based on user feedback:
 - Displays daily average × 30 for monthly estimate
 
 **Result**: Accurate repair cost projections for financial planning
+
+> **Superseded — Spec #48.** Repair spend is not derived from battle records and is not
+> stated on a rolling 7-day window. See
+> [Repair Cost Data Source](#repair-cost-data-source-authoritative--spec-48).
 
 **Files Modified**:
 - Backend: `economyCalculations.ts`
@@ -1037,6 +1096,9 @@ Three key improvements to Per-Robot Breakdown tab:
 - Now calculates from recent battles (last 7 days)
 - Sums all repair costs and calculates daily average
 - Displays daily average × 30 for monthly estimate
+
+> **Superseded — Spec #48.** Repair spend comes from `robot_repair` audit rows, per cycle.
+> See [Repair Cost Data Source](#repair-cost-data-source-authoritative--spec-48).
 - Result: Accurate repair cost projections for financial planning
 
 **Files Modified** (4):
@@ -1192,22 +1254,30 @@ const streamingShare = ((battleProportion + fameProportion) / 2) * totalStreamin
 #### Cost Allocation Logic
 
 **Repairs** (per robot):
+
+> **Corrected — Spec #48.** The original sample here read
+> `battle.robot1RepairCost` / `battle.robot2RepairCost` off battle records on a rolling
+> 7-day window. Those columns do not exist on the `Battle` model. Repair spend comes from
+> `robot_repair` audit rows, bounded by a cycle. See
+> [Repair Cost Data Source](#repair-cost-data-source-authoritative--spec-48).
+
 ```typescript
-// Direct from battle records
-const repairs = await prisma.battle.findMany({
+// Repair_Spend_Source: robot_repair audit rows for one cycle window
+const repairEvents = await prisma.auditLog.findMany({
   where: {
-    createdAt: { gte: sevenDaysAgo },
-    OR: [
-      { robot1Id: robotId },
-      { robot2Id: robotId },
-    ],
+    eventType: 'robot_repair',
+    userId,
+    robotId,
+    createdAt: { gte: cycleStart, lt: cycleEnd },
   },
+  select: { payload: true },
 });
 
-const totalRepairs = repairs.reduce((sum, battle) => {
-  const isRobot1 = battle.robot1Id === robotId;
-  const repairCost = isRobot1 ? battle.robot1RepairCost : battle.robot2RepairCost;
-  return sum + (repairCost || 0);
+// Summed in application code: the figures live inside a Json column,
+// so Prisma cannot _sum into one.
+const totalRepairs = repairEvents.reduce((sum, event) => {
+  const charged = readRepairChargedCredits(event.payload);
+  return charged === null ? sum : sum + charged;
 }, 0);
 ```
 

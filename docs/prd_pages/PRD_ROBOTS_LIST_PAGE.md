@@ -719,7 +719,7 @@ colors: {
 ### Typography
 
 **Font Families** (from Design System):
-- Headers: `'DIN Next', 'Inter Tight', 'Roboto Condensed', sans-serif`
+- All text: `'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif` (one family; hierarchy from size, weight and colour)
 - Body/UI: `'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`
 
 **Type Scale**:
@@ -1059,7 +1059,7 @@ All files                    |   88.xx |    85.xx |   92.xx |   88.xx |
 
 **Visual Design**:
 - ✅ Design system color palette applied (background, surface, primary, status colors)
-- ✅ Typography uses system fonts (DIN Next for headers, Inter for body)
+- ✅ Typography uses Inter throughout (single family)
 - ✅ Cards use surface-elevated (#252b38) with proper borders
 - ✅ Hover states implemented with 200ms transitions
 - ✅ Portrait space reserved (256×256px) with placeholder

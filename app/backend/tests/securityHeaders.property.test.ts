@@ -12,6 +12,7 @@ import * as fc from 'fast-check';
 import express from 'express';
 import helmet from 'helmet';
 import request from 'supertest';
+import type { Server } from 'http';
 
 const NUM_RUNS = 50;
 
@@ -47,7 +48,32 @@ function createApp() {
 }
 
 describe('Feature: security-audit-guardrails, Property 13: Security headers present on all responses', () => {
-  const app = createApp();
+  /**
+   * ONE listening server for the whole suite, reused by every request — the same fix
+   * applied to `errorHandler.property.test.ts`, for the same reason.
+   *
+   * Passing the Express app to supertest rather than a listening server makes it boot a
+   * fresh ephemeral server and tear it down for EVERY call. Five property tests at 50 runs
+   * each is ~250 listen/close cycles from this file alone, competing for the ephemeral port
+   * range with the other 226 suites in the tier. Under that pressure a request can be only
+   * partially read, and the assertion then fails on a response the server never really
+   * sent — here, a missing `Content-Security-Policy` header rather than a connection
+   * error, which is why it reads as a security regression instead of a port problem.
+   *
+   * It passes in isolation every time. Binding once removes the churn.
+   */
+  let server: Server;
+
+  beforeAll(() => {
+    server = createApp().listen(0);
+  });
+
+  afterAll(
+    () =>
+      new Promise<void>((resolve, reject) => {
+        server.close((err) => (err ? reject(err) : resolve()));
+      }),
+  );
 
   // Generator for safe URL path segments (alphanumeric + hyphens)
   const pathSegmentGen = fc.string({ minLength: 1, maxLength: 12, unit: fc.constantFrom(
@@ -60,7 +86,7 @@ describe('Feature: security-audit-guardrails, Property 13: Security headers pres
 
   // Helper to make a request with a dynamic method
   async function makeRequest(method: string, path: string) {
-    const agent = request(app);
+    const agent = request(server);
     switch (method) {
       case 'post': return agent.post(path);
       case 'put': return agent.put(path);

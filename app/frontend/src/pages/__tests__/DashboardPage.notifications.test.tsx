@@ -40,9 +40,11 @@ vi.mock('../../utils/onboardingApi', () => ({
 // Mock robotApi
 const mockFetchMyRobots = vi.fn();
 const mockFetchTuningAllocation = vi.fn();
+const mockFetchTuningAllocationSummaries = vi.fn();
 vi.mock('../../utils/robotApi', () => ({
   fetchMyRobots: (...args: unknown[]) => mockFetchMyRobots(...args),
   fetchTuningAllocation: (...args: unknown[]) => mockFetchTuningAllocation(...args),
+  fetchTuningAllocationSummaries: (...args: unknown[]) => mockFetchTuningAllocationSummaries(...args),
 }));
 
 // Mock teamBattleApi
@@ -86,17 +88,17 @@ vi.mock('../../components/RecentBattles', () => ({
   default: () => <div data-testid="recent-battles">RecentBattles</div>,
 }));
 
-vi.mock('../../components/FinancialSummary', () => ({
-  default: () => <div data-testid="financial-summary">FinancialSummary</div>,
+// Spec #48: the Overview_Row replaced the StableStatistics / FinancialSummary pair.
+// Mocked as one unit so these notification tests stay about notifications.
+vi.mock('../../components/dashboard', () => ({
+  OverviewRow: () => <div data-testid="overview-row">OverviewRow</div>,
 }));
 
 vi.mock('../../components/RobotDashboardCard', () => ({
   default: ({ robot }: any) => <div data-testid="robot-card">{robot.name}</div>,
 }));
 
-vi.mock('../../components/StableStatistics', () => ({
-  default: () => <div data-testid="stable-statistics">StableStatistics</div>,
-}));
+
 
 vi.mock('../../components/ChangelogModal', () => ({
   default: () => null,
@@ -177,6 +179,7 @@ describe('DashboardPage - Notifications', () => {
     mockFetchMyRobots._robots = [];
     mockFetchMyRobots.mockResolvedValue([]);
     mockFetchTuningAllocation.mockResolvedValue({ robotId: 1, facilityLevel: 0, poolSize: 0, allocated: 0, remaining: 0, perAttributeMaxes: {}, allocations: {} });
+    mockFetchTuningAllocationSummaries.mockResolvedValue([]);
 
     vi.mocked(localStorage.getItem).mockImplementation((key: string) => {
       if (key === 'token') return 'mock-jwt-token';

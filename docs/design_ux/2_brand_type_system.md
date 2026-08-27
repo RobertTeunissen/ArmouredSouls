@@ -34,9 +34,22 @@ A valid type system for Armoured Souls must:
 ## System A — Industrial Precision (Recommended)
 
 ### Display / Logo Font
-**DIN Condensed / DIN Next / Inter Tight (customised)**
+**Inter Bold, ALL CAPS, `tracking-tight`**
 
-*(Exact font can be licensed or substituted; the system matters more than the vendor.)*
+> **As shipped (August 2026):** the application uses **one typeface, Inter**, for
+> everything — wordmark, headings, body and figures. The condensed display faces this
+> section originally named (DIN Condensed, DIN Next, Inter Tight) are **not in use**. DIN is
+> commercial and unlicensed here, so it never rendered for players; the separate header
+> class that selected Inter Tight reached seven elements out of hundreds and made the
+> interface look mixed rather than deliberate.
+>
+> The characteristics below still describe the *target*, and Inter Bold in caps with
+> tightened letter-spacing delivers most of them. If a true condensed display face is
+> wanted, licence it, self-host it, and apply it to every wordmark and heading — not to a
+> handful. See `docs/design_ux/DESIGN_SYSTEM_QUICK_REFERENCE.md` § Typography for the
+> shipped rules.
+
+*(The system matters more than the vendor — but an unlicensed vendor is not a system.)*
 
 #### Why this works
 - Engineered, utilitarian origins

@@ -33,7 +33,7 @@ describe('Property 19: Configuration Change Feedback (Property-Based Test)', () 
     currentShield: 500,
     maxShield: 500,
     battleReadiness: 100,
-    repairCost: 0,
+    repairQuoteCredits: 0,
     loadoutType,
     mainWeaponId: null,
     offhandWeaponId: null,

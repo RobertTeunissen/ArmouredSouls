@@ -161,7 +161,7 @@ interface RobotSlim {
 }
 
 /**
- * Battle types that resolve by placement rather than win/loss.
+ * Battle modes whose result is a finishing position rather than a win or a loss.
  *
  * Both orchestrators pass `skipBattleCounters: true`, so these modes never touch
  * `robots.wins` / `robots.losses` (Spec #46 records the decision not to widen the
@@ -169,8 +169,13 @@ interface RobotSlim {
  * They do still emit `battle_complete` audit events, where every non-winning
  * placement is recorded as a `'loss'` — so they must be excluded here to keep the
  * per-cycle delta consistent with the career record displayed beside it.
+ *
+ * Exported for Spec #48's Cycle_Progress_Summary service, which must exclude the
+ * same modes from its win/loss/draw counts. Requirement 8 criterion 7 requires the
+ * import rather than a second list, so the two can never disagree about which modes
+ * are placement-based.
  */
-const PLACEMENT_MODE_BATTLE_TYPES = ['koth', 'grand_melee'];
+export const PLACEMENT_MODE_BATTLE_TYPES = ['koth', 'grand_melee'];
 
 /**
  * Count this cycle's wins and losses for a set of robots, covering the same

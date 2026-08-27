@@ -200,13 +200,13 @@ export async function generateFinancialReport(
     where: { userId },
     select: {
       id: true,
-      repairCost: true,
+      repairQuoteCredits: true,
     },
   });
 
   // Sum all current repair costs
   const totalRepairCosts = userRobotsWithRepairCost.reduce((sum, robot) => {
-    return sum + (robot.repairCost || 0);
+    return sum + (robot.repairQuoteCredits || 0);
   }, 0);
 
   // For daily average, we'll use current repair costs as an estimate
@@ -307,13 +307,13 @@ export async function processDailyFinances(userId: number): Promise<DailyFinanci
       name: true,
       currentHP: true,
       maxHP: true,
-      repairCost: true,
+      repairQuoteCredits: true,
     },
   });
 
   // Calculate total repair costs (but don't actually repair - that's done separately)
   const totalRepairCost = robots.reduce((sum, robot) => {
-    return sum + (robot.repairCost || 0);
+    return sum + (robot.repairQuoteCredits || 0);
   }, 0);
 
   // Total costs to deduct
@@ -467,7 +467,7 @@ export async function generatePerRobotFinancialReport(userId: number): Promise<{
       fame: true,
       totalBattles: true,
       wins: true,
-      repairCost: true,
+      repairQuoteCredits: true,
     },
   });
 
@@ -579,7 +579,7 @@ export async function generatePerRobotFinancialReport(userId: number): Promise<{
       }
 
       // Use robot's current repair cost
-      const repairCosts = robot.repairCost || 0;
+      const repairCosts = robot.repairQuoteCredits || 0;
 
       // Calculate merchandising contribution (proportional to fame)
       const merchandising = totalFame > 0

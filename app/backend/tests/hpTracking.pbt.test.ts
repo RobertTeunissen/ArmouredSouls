@@ -60,9 +60,9 @@ function createMockRobot(overrides?: Partial<RobotWithWeapons>): RobotWithWeapon
     // Legacy fields (moving to standings table in Spec #40, retained on Robot type until migration 14.6)
     fame: 0,
     titles: null,
-    repairCost: 0,
+    repairQuoteCredits: 0,
     battleReadiness: 100,
-    totalRepairsPaid: 0,
+    lifetimeRepairCreditsPaid: 0,
     yieldThreshold: 10,
     loadoutType: 'single',
     stance: 'balanced',

@@ -2,6 +2,10 @@ import prisma from '../../lib/prisma';
 import type { Prisma } from '../../../generated/prisma';
 import { MatchType } from '../../../generated/prisma';
 import { buildUserFilter } from '../../utils/buildUserFilter';
+import {
+  readRepairChargedCredits,
+  readRepairPreDiscountCredits,
+} from '../economy/repairPayloadKeys';
 import { classifyChurnRisk } from './adminDashboardService';
 
 const BANKRUPTCY_RISK_THRESHOLD = 10000; // Credits below which a user is considered at risk
@@ -437,7 +441,7 @@ export async function getAtRiskUsers(bankruptcyThreshold: number = BANKRUPTCY_RI
           name: true,
           currentHP: true,
           maxHP: true,
-          repairCost: true,
+          repairQuoteCredits: true,
           battleReadiness: true,
         },
       },
@@ -537,7 +541,7 @@ export async function getAtRiskUsers(bankruptcyThreshold: number = BANKRUPTCY_RI
         }
       }
 
-      const totalRepairCost = user.robots.reduce((sum, robot) => sum + robot.repairCost, 0);
+      const totalRepairCost = user.robots.reduce((sum, robot) => sum + robot.repairQuoteCredits, 0);
 
       const avgDailyCost =
         recentHistory.length > 0
@@ -1060,8 +1064,12 @@ export async function getRepairAuditLog(params: {
       robotId: event.robotId || 0,
       robotName: robotMap.get(event.robotId || 0) || 'Unknown',
       repairType: (payload.repairType as 'manual' | 'automatic') || 'automatic',
-      cost: (payload.cost as number) || 0,
-      preDiscountCost: (payload.preDiscountCost as number) ?? null,
+      // Spec #48 Requirement 17 criteria 4, 10 and 13: read through the resolvers
+      // so a row written before the key rename still reports its true amounts, and
+      // rename the response fields to say what they mean. `RepairLogPage.tsx` moves
+      // in the same change and renders the same columns and values as before.
+      creditsCharged: readRepairChargedCredits(payload) ?? 0,
+      creditsBeforeManualDiscount: readRepairPreDiscountCredits(payload),
       manualRepairDiscount: (payload.manualRepairDiscount as number) ?? null,
       eventTimestamp: event.eventTimestamp.toISOString(),
     };
@@ -1084,10 +1092,10 @@ export async function getRepairAuditLog(params: {
     const eventRepairType = (payload.repairType as string) || 'automatic';
     if (eventRepairType === 'manual') {
       totalManualRepairs++;
-      const preDiscount = payload.preDiscountCost as number | undefined;
-      const cost = payload.cost as number | undefined;
-      if (preDiscount != null && cost != null) {
-        totalSavings += preDiscount - cost;
+      const preDiscount = readRepairPreDiscountCredits(payload);
+      const charged = readRepairChargedCredits(payload);
+      if (preDiscount !== null && charged !== null) {
+        totalSavings += preDiscount - charged;
       }
     } else {
       totalAutomaticRepairs++;

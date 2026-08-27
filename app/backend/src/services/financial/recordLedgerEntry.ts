@@ -38,7 +38,13 @@ export async function recordLedgerEntry(params: LedgerEntryParams): Promise<void
       userId: params.userId,
       robotId: params.robotId,
       transactionType: params.transactionType,
-      amount: params.amount,
+      // Normalise negative zero. Callers write `amount: -cost`, and a cost of zero is
+      // reachable: a manual repair of a low-attribute robot behind a high Repair Bay
+      // discount quotes 1 credit and floors to 0 after the manual discount. `-0` is
+      // harmless once it reaches Postgres, but it is not harmless in JavaScript —
+      // `Object.is(-0, 0)` is false, so it silently breaks any strict-equality check on a
+      // ledger total, which is exactly how it was found.
+      amount: params.amount === 0 ? 0 : params.amount,
       balanceAfter: params.balanceAfter,
       description: params.description,
       metadata: params.metadata,

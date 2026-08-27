@@ -1,5 +1,10 @@
 import { useState, useEffect } from 'react';
 import { updateYieldThreshold } from '../utils/robotApi';
+import {
+  calculateRepairQuote,
+  sumAttributes,
+  type RepairCostRobot,
+} from '../../../shared/utils/repairCost';
 
 interface YieldThresholdSliderProps {
   robotId: number;
@@ -58,60 +63,27 @@ function YieldThresholdSlider({
     }
   };
 
-  const calculateAttributeSum = () => {
-    const attributes = [
-      'combatPower',
-      'targetingSystems',
-      'criticalSystems',
-      'penetration',
-      'weaponControl',
-      'attackSpeed',
-      'armorPlating',
-      'shieldCapacity',
-      'evasionThrusters',
-      'damageDampeners',
-      'counterProtocols',
-      'hullIntegrity',
-      'servoMotors',
-      'gyroStabilizers',
-      'hydraulicSystems',
-      'powerCore',
-      'combatAlgorithms',
-      'threatAnalysis',
-      'adaptiveAI',
-      'logicCores',
-      'syncProtocols',
-      'supportSystems',
-      'formationTactics',
-    ];
-
-    return attributes.reduce((sum, attr) => {
-      const value = robotAttributes[attr];
-      // Convert to number in case it's a string from Decimal serialization
-      const numValue = typeof value === 'string' ? parseFloat(value) : Number(value) || 0;
-      return sum + numValue;
-    }, 0);
-  };
-
-  const calculateRepairCost = (damagePercent: number, hpPercent: number): number => {
-    const sumOfAttributes = calculateAttributeSum();
-    const baseRepairCost = sumOfAttributes * 100;
-
-    let multiplier = 1.0;
-    if (hpPercent === 0) {
-      multiplier = 2.0; // Total destruction
-    } else if (hpPercent < 10) {
-      multiplier = 1.5; // Heavily damaged
-    }
-
-    const rawCost = baseRepairCost * (damagePercent / 100) * multiplier;
-
-    // NEW FORMULA: discount = repairBayLevel × (5 + activeRobotCount), capped at 90%
-    const discount = Math.min(repairBayLevel * (5 + activeRobotCount), 90);
-    const finalCost = rawCost * (1 - discount / 100);
-
-    return Math.round(finalCost);
-  };
+  /**
+   * Price a hypothetical repair for the scenario table.
+   *
+   * Spec #48 Requirement 15 criterion 8: this component used to declare the repair
+   * formula inline — the base cost, the damage multiplier bands and the Repair Bay
+   * discount cap, all repeated — which made it the third copy in the codebase and
+   * the one nothing tested. It now calls the Shared_Repair_Module, so the estimate
+   * shown here and the amount the backend charges cannot diverge.
+   *
+   * `sumAttributes` reads the 23 attributes by name and coerces string-serialised
+   * Decimals, which is why the local attribute loop is gone too.
+   */
+  const quoteForScenario = (damagePercent: number, hpPercent: number): number =>
+    calculateRepairQuote(
+      {
+        attributeTotal: sumAttributes(robotAttributes as unknown as RepairCostRobot),
+        damagePercent,
+        hpPercent,
+      },
+      { repairBayLevel, activeRobotCount },
+    );
 
   const getRiskLevel = (threshold: number): { color: string; text: string } => {
     if (threshold >= 30) {
@@ -185,7 +157,7 @@ function YieldThresholdSlider({
           )}
           <div className="space-y-2">
             {scenarios.map((scenario, idx) => {
-              const cost = calculateRepairCost(scenario.damage, scenario.hp);
+              const cost = quoteForScenario(scenario.damage, scenario.hp);
               return (
                 <div
                   key={idx}

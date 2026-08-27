@@ -448,9 +448,9 @@ function createByeTeam(league: string, leagueId: string, teamSize: 2 | 3): TeamB
         fame: 0,
         titles: null,
         // Economic
-        repairCost: 0,
+        repairQuoteCredits: 0,
         battleReadiness: 100,
-        totalRepairsPaid: 0,
+        lifetimeRepairCreditsPaid: 0,
         // Configuration
         yieldThreshold: 10,
         loadoutType: 'single',

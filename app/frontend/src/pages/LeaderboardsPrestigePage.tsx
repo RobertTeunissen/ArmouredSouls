@@ -87,7 +87,7 @@ function LeaderboardsPrestigePage() {
       <div className="container mx-auto px-4 py-8 pb-24 lg:pb-8 max-w-7xl">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-primary mb-2 font-header">
+        <h1 className="text-2xl sm:text-3xl font-bold text-primary mb-2">
           🏆 Prestige Leaderboard
         </h1>
         <p className="text-secondary">

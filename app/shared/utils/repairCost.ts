@@ -1,58 +1,112 @@
 /**
- * Repair cost calculation shared between backend and frontend.
+ * Repair pricing — the ONE place under `app/` that declares the repair cost
+ * formula, the Repair Bay discount, the manual repair discount and the rounding
+ * rules. Imported by both the backend and the frontend.
  *
- * The formula mirrors the backend's `calculateRepairCost` in
- * `app/backend/src/utils/robotCalculations.ts`. Any changes there
- * must be reflected here (and vice-versa) until the backend is
- * migrated to import from this shared module.
+ * Spec #48 Requirement 15. Before that spec the formula existed three times: here,
+ * again in `app/backend/src/utils/robotCalculations.ts`
+ * (the copy both repair paths actually executed), and inline in
+ * `app/frontend/src/components/YieldThresholdSlider.tsx`. Nothing enforced that
+ * the three agreed, and the header of this file had been asking for the migration
+ * since it was written. The other two are gone; this is the survivor.
  *
- * Formula:
- *   baseRepairCost = sumOfAllAttributes × 100
- *   multiplier     = 2.0 if hpPercent === 0
- *                    1.5 if hpPercent < 10
- *                    1.0 otherwise
- *   rawCost        = baseRepairCost × (damagePercent / 100) × multiplier
+ * NOTE ON PATHS: `app/backend/src/shared/utils` is a SYMLINK to `app/shared/utils`.
+ * A backend import of `../../shared/utils/repairCost` resolves to this very file —
+ * it is not a copy. Do not "delete the duplicate" you think you see there.
+ *
+ * Formula (Requirement 15 criteria 4 and 5):
+ *   quote = round(attributeTotal × 100
+ *                 × (damagePercent / 100)
+ *                 × damageMultiplier
+ *                 × (1 − repairBayDiscount))
+ *
+ *   damageMultiplier  = 2.0 at exactly 0% HP, 1.5 below 10% HP, 1.0 otherwise
  *   repairBayDiscount = min(90, repairBayLevel × (5 + activeRobotCount)) / 100
- *   finalCost      = round(rawCost × (1 - repairBayDiscount))
+ *
+ * The rounding split is deliberate and pins pre-consolidation behaviour:
+ * `Math.round` on the quote, `Math.floor` on the manual discount (criterion 10).
+ * `tests/unit/repairCostParity.test.ts` holds literals captured from the old
+ * implementation so a change to either is caught.
  */
 
 import { ROBOT_ATTRIBUTES } from './robotAttributes';
 
-/** Cost multiplier per attribute point */
+/** Credits per attribute point before any multiplier. */
 const ATTRIBUTE_COST_MULTIPLIER = 100;
 
-/** Multiplier when robot is at exactly 0% HP (total destruction) */
+/** Damage_Multiplier at exactly 0% HP (total destruction). */
 const DESTRUCTION_MULTIPLIER = 2.0;
 
-/** Multiplier when robot is below 10% HP (heavily damaged) */
+/** Damage_Multiplier below 10% HP (heavily damaged). */
 const HEAVY_DAMAGE_MULTIPLIER = 1.5;
 
-/** Maximum Repair Bay discount percentage */
-const MAX_REPAIR_BAY_DISCOUNT = 90;
+/** Repair Bay discount ceiling, as a percentage. Requirement 15 criterion 5. */
+export const MAX_REPAIR_BAY_DISCOUNT_PERCENT = 90;
 
-/** Manual repair discount (50% off auto-repair cost) */
+/**
+ * The reduction a player receives for repairing a robot before its next
+ * scheduled match rather than letting the pre-battle cron repair it.
+ *
+ * Declared exactly once under `app/`. Requirement 15 criterion 9 forbids any
+ * call site multiplying by this directly — go through `applyManualRepairDiscount`
+ * so the discount is applied in one place, with one rounding rule.
+ */
 export const MANUAL_REPAIR_DISCOUNT = 0.5;
 
 /**
- * Minimal robot shape needed to compute repair cost.
- * Works with both Prisma model objects and plain API response objects.
+ * Minimal robot shape needed to price a repair. Works with Prisma model objects
+ * and with plain API response objects; attribute values may be numbers or Prisma
+ * Decimals, which `sumAttributes` coerces.
  */
 export interface RepairCostRobot {
   currentHP: number;
   maxHP: number;
 }
 
+/** The two inputs to the Repair Bay discount. */
+export interface RepairBayContext {
+  repairBayLevel: number;
+  activeRobotCount: number;
+}
+
 /**
- * Round to 2 decimal places — mirrors the backend's `roundToTwo`.
+ * What is being priced.
+ *
+ * The robot form derives the damage percentage, HP percentage and attribute total
+ * from the robot itself. The explicit form prices a hypothetical, which is what
+ * the yield-threshold scenario table needs — it asks "what would this cost at 30%
+ * HP?" about a robot that is currently undamaged.
  */
+export type RepairQuoteSubject =
+  | { robot: RepairCostRobot }
+  | { attributeTotal: number; damagePercent: number; hpPercent: number };
+
+/** Round to 2 decimal places — mirrors the backend's `roundToTwo`. */
 function roundToTwo(value: number): number {
   return Math.round(value * 100) / 100;
 }
 
 /**
+ * Reject input that would produce a negative or non-finite quote.
+ *
+ * A plain `RangeError` is thrown rather than an `AppError` subclass because this
+ * module is imported by the frontend and must not depend on `src/errors/`. Each
+ * backend repair path catches it and rethrows as
+ * `RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, …, 400)`.
+ *
+ * Requirement 15 criterion 17.
+ */
+function assertFiniteNonNegative(label: string, value: number): void {
+  if (!Number.isFinite(value) || value < 0) {
+    throw new RangeError(`repairCost: ${label} must be a finite number >= 0, received ${value}`);
+  }
+}
+
+/**
  * Sum all 23 attribute values on a robot object.
- * Handles both numeric values and Prisma Decimal objects (via `Number()`).
- * Applies `roundToTwo` to the sum to match the backend's `calculateAttributeSum`.
+ *
+ * Handles numeric values and Prisma Decimals via `Number()`, and applies
+ * `roundToTwo` to match the backend's `calculateAttributeSum`.
  */
 export function sumAttributes(robot: RepairCostRobot): number {
   let sum = 0;
@@ -67,64 +121,102 @@ export function sumAttributes(robot: RepairCostRobot): number {
 }
 
 /**
- * Calculate the automatic repair cost for a single robot.
- * This is the cost before the manual repair discount is applied.
+ * The Repair Bay discount as a whole percentage:
+ *   min(90, repairBayLevel × (5 + activeRobotCount))
  *
- * Signature matches the backend's `calculateRepairCost` in robotCalculations.ts
- * (including the unused `_medicalBayLevel` placeholder for future use).
+ * Exported for display and for the value `repairAllRobots` returns as `discount`.
+ * It neither produces a quote nor applies the manual discount, so Requirement 15
+ * criterion 1's one-function-each rule is unaffected.
+ *
+ * @throws RangeError if either input is negative or not finite
  */
-export function calculateRepairCost(
-  sumOfAllAttributes: number,
-  damagePercent: number,
-  hpPercent: number,
-  repairBayLevel: number = 0,
-  _medicalBayLevel: number = 0,
-  activeRobotCount: number = 0,
+export function calculateRepairBayDiscountPercent(context: RepairBayContext): number {
+  assertFiniteNonNegative('repairBayLevel', context.repairBayLevel);
+  assertFiniteNonNegative('activeRobotCount', context.activeRobotCount);
+
+  return Math.min(
+    MAX_REPAIR_BAY_DISCOUNT_PERCENT,
+    context.repairBayLevel * (5 + context.activeRobotCount),
+  );
+}
+
+/**
+ * The Repair_Quote: credits to repair one robot to full at its current damage,
+ * AFTER the Repair Bay discount and BEFORE the manual repair discount.
+ *
+ * This is the figure an automatic pre-battle repair charges, the figure the
+ * frontend shows as an estimate, and the input to `applyManualRepairDiscount`.
+ *
+ * Returns 0 for an undamaged robot, in which case the caller must deduct no
+ * credits, record no audit row and write no ledger entry (criterion 16).
+ *
+ * @throws RangeError if any input is negative or not finite (criterion 17)
+ */
+export function calculateRepairQuote(
+  subject: RepairQuoteSubject,
+  context: RepairBayContext,
 ): number {
-  if (damagePercent <= 0) return 0;
+  let attributeTotal: number;
+  let damagePercent: number;
+  let hpPercent: number;
 
-  const baseRepairCost = sumOfAllAttributes * ATTRIBUTE_COST_MULTIPLIER;
+  if ('robot' in subject) {
+    const { robot } = subject;
+    assertFiniteNonNegative('maxHP', robot.maxHP);
+    assertFiniteNonNegative('currentHP', robot.currentHP);
 
-  // Determine multiplier based on HP percentage
-  let multiplier = 1.0;
-  if (hpPercent === 0) {
-    multiplier = DESTRUCTION_MULTIPLIER;
-  } else if (hpPercent < 10) {
-    multiplier = HEAVY_DAMAGE_MULTIPLIER;
+    if (robot.maxHP === 0) {
+      throw new RangeError('repairCost: maxHP must be greater than 0');
+    }
+
+    const damageTaken = robot.maxHP - robot.currentHP;
+    if (damageTaken <= 0) return 0;
+
+    attributeTotal = sumAttributes(robot);
+    damagePercent = (damageTaken / robot.maxHP) * 100;
+    hpPercent = (robot.currentHP / robot.maxHP) * 100;
+  } else {
+    attributeTotal = subject.attributeTotal;
+    damagePercent = subject.damagePercent;
+    hpPercent = subject.hpPercent;
   }
 
-  const rawCost = baseRepairCost * (damagePercent / 100) * multiplier;
+  assertFiniteNonNegative('attributeTotal', attributeTotal);
+  assertFiniteNonNegative('damagePercent', damagePercent);
+  assertFiniteNonNegative('hpPercent', hpPercent);
 
-  // Repair Bay discount with multi-robot bonus
-  const rawDiscount = repairBayLevel * (5 + activeRobotCount);
-  const repairBayDiscount = Math.min(rawDiscount, MAX_REPAIR_BAY_DISCOUNT) / 100;
-  const finalCost = rawCost * (1 - repairBayDiscount);
+  if (damagePercent <= 0) return 0;
+
+  const baseRepairCost = attributeTotal * ATTRIBUTE_COST_MULTIPLIER;
+
+  let damageMultiplier = 1.0;
+  if (hpPercent === 0) {
+    damageMultiplier = DESTRUCTION_MULTIPLIER;
+  } else if (hpPercent < 10) {
+    damageMultiplier = HEAVY_DAMAGE_MULTIPLIER;
+  }
+
+  const rawCost = baseRepairCost * (damagePercent / 100) * damageMultiplier;
+  const discountPercent = calculateRepairBayDiscountPercent(context);
+  const finalCost = rawCost * (1 - discountPercent / 100);
 
   return Math.round(finalCost);
 }
 
 /**
- * Calculate the automatic repair cost for a robot given its full object.
- * Convenience wrapper that derives damagePercent and hpPercent from the robot.
+ * The Charged_Repair_Cost on the manual repair path: a Repair_Quote reduced by
+ * the manual repair discount, rounded DOWN.
+ *
+ * The only place under `app/` that applies the discount (Requirement 15
+ * criterion 9). Where a manual repair covers several robots, call this per robot
+ * and then sum — never sum the quotes and discount the total. Criteria 11 and 12
+ * make the per-robot figure authoritative because it is the one that reconciles
+ * with the per-robot audit, lifetime and ledger records; the batch-level
+ * alternative can sit up to N−1 credits higher for N robots.
+ *
+ * @throws RangeError if `quote` is negative or not finite
  */
-export function calculateRobotRepairCost(
-  robot: RepairCostRobot,
-  repairBayLevel: number = 0,
-  activeRobotCount: number = 0,
-): number {
-  const damageTaken = robot.maxHP - robot.currentHP;
-  if (damageTaken <= 0) return 0;
-
-  const damagePercent = (damageTaken / robot.maxHP) * 100;
-  const hpPercent = (robot.currentHP / robot.maxHP) * 100;
-  const attributeSum = sumAttributes(robot);
-
-  return calculateRepairCost(attributeSum, damagePercent, hpPercent, repairBayLevel, 0, activeRobotCount);
-}
-
-/**
- * Calculate the Repair Bay discount percentage.
- */
-export function calculateRepairBayDiscount(repairBayLevel: number, activeRobotCount: number): number {
-  return Math.min(MAX_REPAIR_BAY_DISCOUNT, repairBayLevel * (5 + activeRobotCount));
+export function applyManualRepairDiscount(quote: number): number {
+  assertFiniteNonNegative('quote', quote);
+  return Math.floor(quote * MANUAL_REPAIR_DISCOUNT);
 }

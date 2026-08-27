@@ -1,6 +1,7 @@
 import prisma from '../../lib/prisma';
 import { getFacilityConfig } from '../../config/facilities';
 import { StableMetric } from '../../types/snapshotTypes';
+import { readCycleRepairSpend } from './repairPayloadKeys';
 // Spec #46 R10: streaming estimates derive from the award-path formula.
 import { computeStreamingRevenue } from './streamingRevenueService';
 import {
@@ -386,7 +387,7 @@ export class UnifiedFacilityROIService {
     robotCount: number
   ): number {
     const totalRepairCosts = userMetrics.reduce(
-      (sum, m) => sum + (m.totalRepairCosts || 0),
+      (sum, m) => sum + readCycleRepairSpend(m as unknown as Record<string, unknown>),
       0
     );
     const discountPercent = Math.min(90, level * (5 + robotCount));
@@ -609,7 +610,7 @@ export class UnifiedFacilityROIService {
       case 'streaming_studio':
         return metric.streamingIncome > 0;
       case 'repair_bay':
-        return metric.totalRepairCosts > 0;
+        return readCycleRepairSpend(metric as unknown as Record<string, unknown>) > 0;
       case 'training_facility':
         return metric.attributeUpgrades > 0;
       case 'weapons_workshop':
@@ -660,7 +661,7 @@ export class UnifiedFacilityROIService {
     userId: number
   ): Promise<number> {
     const totalRepairCosts = userMetrics.reduce(
-      (sum, m) => sum + (m.totalRepairCosts || 0),
+      (sum, m) => sum + readCycleRepairSpend(m as unknown as Record<string, unknown>),
       0
     );
 

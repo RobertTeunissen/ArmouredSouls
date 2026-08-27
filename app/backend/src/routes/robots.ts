@@ -413,20 +413,49 @@ router.post('/repair-all', authenticateToken, validateRequest({}), async (req: A
 
   const result = await repairAllRobots(userId);
 
-  // Log repair events
+  // Spec #48 Requirement 18: the Repair Bay discount is applied EXACTLY ONCE,
+  // by the Shared_Repair_Module when it produced `calculatedRepairCost`. This loop
+  // previously re-applied `result.discount` to that already-discounted quote, which
+  // understated every manual repair row in the audit log — the source every repair
+  // total is read from. `result.discount` is still recorded as `discountPercent`
+  // because it is a record of what applied, not an input to either money figure.
+  const chargedByRobotId = new Map(result.chargedPerRobot.map((e) => [e.robotId, e.charged]));
+
   try {
     for (const robot of result.robotsNeedingRepair) {
-      const perRobotCostAfterRepairBay = Math.floor(robot.calculatedRepairCost * (1 - result.discount / 100));
-      const perRobotFinalCost = Math.floor(perRobotCostAfterRepairBay * 0.5);
+      const perRobotFinalCost = chargedByRobotId.get(robot.id) ?? 0;
       const damageRepaired = robot.maxHP - robot.currentHP;
 
       await eventLogger.logRobotRepair(
         userId, robot.id, perRobotFinalCost, damageRepaired,
-        result.discount, undefined, 'manual', 50, perRobotCostAfterRepairBay
+        result.discount, undefined, 'manual', 50, robot.calculatedRepairCost
       );
     }
   } catch (logError) {
     logger.error('Failed to log manual repair events:', logError);
+  }
+
+  // Spec #48 Requirement 16: one Repair_Ledger_Entry per robot, at the same
+  // granularity as the audit rows so the two reconcile one-to-one. Written after
+  // the repair transaction has committed and NOT enrolled in it, following the
+  // `robot_creation` pattern already in this file — a ledger failure must never
+  // roll back a repair the player has already been charged for.
+  //
+  // `balanceAfter` is walked backwards from the committed balance, last robot
+  // first, because both repair paths deduct once per user: no per-robot balance is
+  // ever observed in the database, so this is a derivation rather than a reading.
+  let runningBalance = result.newCurrency;
+  for (const entry of [...result.chargedPerRobot].reverse()) {
+    recordLedgerEntry({
+      userId,
+      robotId: entry.robotId,
+      transactionType: 'repair_cost',
+      amount: -entry.charged,
+      balanceAfter: runningBalance,
+      description: `Manual repair of 1 robot (batch of ${result.repairedCount})`,
+      metadata: { repairType: 'manual', robotCount: 1, batchSize: result.repairedCount },
+    });
+    runningBalance += entry.charged;
   }
 
   res.json({

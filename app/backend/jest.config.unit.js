@@ -18,7 +18,9 @@ module.exports = {
     'tests/routes/admin\\.test\\.ts$',           // requires supertest + full app setup
     'tests/unit/practiceArenaService\\.test\\.ts$', // imports prisma directly
     'tests/unit/practiceArena\\.property\\.test\\.ts$', // imports prisma directly
-    'tests/guide/content-validation\\.test\\.ts$', // requires js-yaml 3 API (removed)
+    // NOTE: 'tests/guide/content-validation.test.ts' was excluded here with the
+    // reason "requires js-yaml 3 API (removed)". That reason is gone: the guide
+    // parser no longer depends on gray-matter, so the test runs in this suite.
     'tests/middleware/errorHandler\\.test\\.ts$', // imports app with DB dependency
 
     // src/__tests__/ files that require DB, supertest, or full app context

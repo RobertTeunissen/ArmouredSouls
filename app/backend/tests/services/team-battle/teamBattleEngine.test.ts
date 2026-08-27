@@ -159,9 +159,9 @@ function createMockRobot(
     balancedWins: 0,
     dualWieldWins: 0,
     // Economic State
-    repairCost: 0,
+    repairQuoteCredits: 0,
     battleReadiness: 100,
-    totalRepairsPaid: 0,
+    lifetimeRepairCreditsPaid: 0,
     // Player Configuration
     yieldThreshold: 0,
     loadoutType: 'single',

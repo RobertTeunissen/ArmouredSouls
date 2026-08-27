@@ -20,7 +20,7 @@ function makeRobot(overrides: Partial<Robot> = {}): Robot {
     maxHP: 100,
     currentShield: 50,
     maxShield: 50,
-    repairCost: 0,
+    repairQuoteCredits: 0,
     level: 1,
     currentLeague: 'Bronze',
     leagueId: null,

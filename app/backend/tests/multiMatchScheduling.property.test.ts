@@ -64,9 +64,9 @@ async function createTestRobot(userId: number, name: string, elo: number = 1200)
       // League & Fame
       fame: 0,
       // Economic
-      repairCost: 0,
+      repairQuoteCredits: 0,
       battleReadiness: 100,
-      totalRepairsPaid: 0,
+      lifetimeRepairCreditsPaid: 0,
       // Configuration
       yieldThreshold: 10,
       loadoutType: 'single',

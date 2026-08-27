@@ -1,6 +1,7 @@
 import * as fc from 'fast-check';
 import { Robot, Prisma } from '../generated/prisma';
 import prisma from '../src/lib/prisma';
+import { getLeagueWinReward, getParticipationReward } from '../src/utils/economyCalculations';
 
 
 // Test configuration
@@ -63,9 +64,9 @@ function createTestRobot(overrides: Partial<Robot> = {}): Robot {
     titles: null,
     // Tag Team Statistics
     // Economic
-    repairCost: 0,
+    repairQuoteCredits: 0,
     battleReadiness: 100,
-    totalRepairsPaid: 0,
+    lifetimeRepairCreditsPaid: 0,
     // Configuration
     yieldThreshold: 10,
     loadoutType: 'single',
@@ -393,15 +394,15 @@ describe('Tag Team Battle Orchestrator - Property Tests', () => {
      * should be exactly 2x the standard league match rewards for that tier and outcome type.
      */
 
-    // Inline the function for testing (can't import due to Prisma schema dependencies)
+    // Mirrors the orchestrator's reward arithmetic; the orchestrator itself is not
+    // imported here because it pulls in the full battle pipeline.
     function calculateTagTeamRewards(
       league: string,
       isWinner: boolean,
       isDraw: boolean
     ): number {
       const TAG_TEAM_REWARD_MULTIPLIER = 2;
-      const { getLeagueWinReward, getParticipationReward } = require('../src/utils/economyCalculations');
-      
+
       const baseReward = getLeagueWinReward(league);
       const participationReward = getParticipationReward(league);
 
@@ -425,8 +426,6 @@ describe('Tag Team Battle Orchestrator - Property Tests', () => {
           (league, outcome) => {
             const isWinner = outcome === 'win';
             const isDraw = outcome === 'draw';
-
-            const { getLeagueWinReward, getParticipationReward } = require('../src/utils/economyCalculations');
 
             // Calculate tag team reward
             const tagTeamReward = calculateTagTeamRewards(league, isWinner, isDraw);
@@ -456,8 +455,6 @@ describe('Tag Team Battle Orchestrator - Property Tests', () => {
         fc.property(
           fc.constantFrom('bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'),
           (league) => {
-            const { getLeagueWinReward, getParticipationReward } = require('../src/utils/economyCalculations');
-
             const tagTeamWinReward = calculateTagTeamRewards(league, true, false);
             const standardWinReward = getLeagueWinReward(league) + getParticipationReward(league);
 
@@ -473,8 +470,6 @@ describe('Tag Team Battle Orchestrator - Property Tests', () => {
         fc.property(
           fc.constantFrom('bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'),
           (league) => {
-            const { getParticipationReward } = require('../src/utils/economyCalculations');
-
             const tagTeamLossReward = calculateTagTeamRewards(league, false, false);
             const standardLossReward = getParticipationReward(league);
 
@@ -490,8 +485,6 @@ describe('Tag Team Battle Orchestrator - Property Tests', () => {
         fc.property(
           fc.constantFrom('bronze', 'silver', 'gold', 'platinum', 'diamond', 'champion'),
           (league) => {
-            const { getParticipationReward } = require('../src/utils/economyCalculations');
-
             const tagTeamDrawReward = calculateTagTeamRewards(league, false, true);
             const standardDrawReward = getParticipationReward(league);
 
@@ -987,7 +980,7 @@ describe('Tag Team Battle Orchestrator - Property Tests', () => {
         champion: 40,
       };
 
-      let baseFame = baseFameByLeague[league] || 0;
+      const baseFame = baseFameByLeague[league] || 0;
       const damageMultiplier = Math.min(1.5, Math.max(0.5, damageDealt / 100));
       const survivalMultiplier = Math.min(1.5, Math.max(0.5, survivalTime / totalBattleTime));
       const winnerMultiplier = isWinner ? 1.2 : 0.8;

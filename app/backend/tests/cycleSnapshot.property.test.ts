@@ -552,7 +552,7 @@ describe('CycleSnapshotService Property-Based Tests', () => {
               battlesParticipated: number;
               totalCreditsEarned: number;
               totalPrestigeEarned: number;
-              totalRepairCosts: number;
+              cycleRepairCreditsPaid: number;
             }>();
 
             // Get actual battles from DB with participants
@@ -581,7 +581,7 @@ describe('CycleSnapshotService Property-Based Tests', () => {
                   battlesParticipated: 0,
                   totalCreditsEarned: 0,
                   totalPrestigeEarned: 0,
-                  totalRepairCosts: 0,
+                  cycleRepairCreditsPaid: 0,
                 });
               }
               const metrics = expectedStableMetrics.get(battleUserId)!;
@@ -590,7 +590,7 @@ describe('CycleSnapshotService Property-Based Tests', () => {
               const p1 = battle.participants.find(p => p.team === 1);
               const p2 = battle.participants.find(p => p.team === 2);
               metrics.totalPrestigeEarned += (p1?.prestigeAwarded || 0) + (p2?.prestigeAwarded || 0);
-              metrics.totalRepairCosts += 0; // Repair costs tracked elsewhere
+              metrics.cycleRepairCreditsPaid += 0; // Repair costs tracked elsewhere
             }
 
             // Property: Snapshot stable metrics should match calculated values
@@ -601,7 +601,7 @@ describe('CycleSnapshotService Property-Based Tests', () => {
               expect(stableMetric!.battlesParticipated).toBe(expected.battlesParticipated);
               expect(stableMetric!.totalCreditsEarned).toBe(expected.totalCreditsEarned);
               expect(stableMetric!.totalPrestigeEarned).toBe(expected.totalPrestigeEarned);
-              expect(stableMetric!.totalRepairCosts).toBe(expected.totalRepairCosts);
+              expect(stableMetric!.cycleRepairCreditsPaid).toBe(expected.cycleRepairCreditsPaid);
             }
           }
         ),
@@ -709,7 +709,7 @@ describe('CycleSnapshotService Property-Based Tests', () => {
             expect(stableMetric!.totalCreditsEarned).toBe(data.battleCredits);
             expect(stableMetric!.merchandisingIncome).toBe(data.merchandising);
             expect(stableMetric!.streamingIncome).toBe(data.streaming);
-            expect(stableMetric!.totalRepairCosts).toBe(data.repairCosts);
+            expect(stableMetric!.cycleRepairCreditsPaid).toBe(data.repairCosts);
             expect(stableMetric!.operatingCosts).toBe(data.operatingCosts);
           }
         ),
@@ -782,7 +782,7 @@ describe('CycleSnapshotService Property-Based Tests', () => {
               expect(stableMetric!.streamingIncome).toBe(expected.streaming);
               expect(stableMetric!.battlesParticipated).toBe(0);
               expect(stableMetric!.totalCreditsEarned).toBe(0);
-              expect(stableMetric!.totalRepairCosts).toBe(0);
+              expect(stableMetric!.cycleRepairCreditsPaid).toBe(0);
             }
           }
         ),

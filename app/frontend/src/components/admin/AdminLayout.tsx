@@ -187,7 +187,7 @@ function Sidebar() {
     >
       {/* Sidebar header */}
       <div className="h-14 flex items-center px-4 border-b border-white/10 shrink-0">
-        <span className="hidden md:inline text-primary font-bold text-lg font-header tracking-tight">
+        <span className="hidden md:inline text-primary font-bold text-lg tracking-tight">
           Admin Portal
         </span>
         <span className="md:hidden text-primary font-bold text-lg">⚡</span>

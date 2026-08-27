@@ -10,6 +10,7 @@
 import { Prisma } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import type { RefinementTier } from '../../shared/utils/weaponRefinement';
+import { REPAIR_CHARGED_KEY, REPAIR_PRE_DISCOUNT_KEY } from '../economy/repairPayloadKeys';
 
 /**
  * Event type enumeration - all event types stored in the audit log
@@ -550,18 +551,36 @@ export class EventLogger {
   }
   
   /**
-   * Log robot repair
+   * Log a robot repair — the write side of Repair_Spend_Source.
+   *
+   * Spec #48 Requirement 17 criteria 4 and 11: the payload carries the RENAMED keys
+   * only (`creditsCharged`, `creditsBeforeManualDiscount`), never the old `cost` /
+   * `preDiscountCost` alongside them, so a partially migrated row cannot double a
+   * repair total. Readers go through `services/economy/repairPayloadKeys.ts`, which
+   * falls back to the old names for rows written before this change.
+   *
+   * `repairType`, `manualRepairDiscount` and `discountPercent` are deliberately NOT
+   * renamed: the `payload.repairType` JSON path filter behind
+   * `GET /api/admin/audit-log/repairs` must keep matching pre- and post-rename rows.
+   *
+   * Parameter names changed to say what the two figures mean; parameter ORDER did
+   * not, so existing call sites need no positional rework.
+   *
+   * @param creditsCharged - Credits actually deducted for this robot
+   * @param creditsBeforeManualDiscount - The Repair_Quote, i.e. the same repair
+   *        priced after the Repair Bay discount and before the manual discount.
+   *        Omitted on the automatic path, which applies no manual discount.
    */
   async logRobotRepair(
     userId: number,
     robotId: number,
-    cost: number,
+    creditsCharged: number,
     damageRepaired: number,
     discountPercent: number,
     cycleNumber?: number,
     repairType?: 'manual' | 'automatic',
     manualRepairDiscount?: number,
-    preDiscountCost?: number
+    creditsBeforeManualDiscount?: number
   ): Promise<void> {
     // Use provided cycle number, or get current cycle number from metadata
     let actualCycleNumber = cycleNumber;
@@ -573,7 +592,7 @@ export class EventLogger {
     }
     
     const payload: BaseEventPayload = {
-      cost,
+      [REPAIR_CHARGED_KEY]: creditsCharged,
       damageRepaired,
       discountPercent,
     };
@@ -584,8 +603,8 @@ export class EventLogger {
     if (manualRepairDiscount !== undefined) {
       payload.manualRepairDiscount = manualRepairDiscount;
     }
-    if (preDiscountCost !== undefined) {
-      payload.preDiscountCost = preDiscountCost;
+    if (creditsBeforeManualDiscount !== undefined) {
+      payload[REPAIR_PRE_DISCOUNT_KEY] = creditsBeforeManualDiscount;
     }
 
     await this.logEvent(

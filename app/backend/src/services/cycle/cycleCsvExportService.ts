@@ -18,7 +18,6 @@ interface BattleCSVRow {
   result: string;
   winnings: number;
   streaming_revenue: number;
-  repair_cost: number;
   prestige_awarded: number;
   fame_awarded: number;
 }
@@ -69,7 +68,6 @@ export async function exportCycleBattlesToCSV(cycleNumber: number): Promise<stri
       result: payload.result || 'unknown',
       winnings: payload.credits || 0,
       streaming_revenue: payload.isByeMatch ? 0 : (payload.streamingRevenue || 0),
-      repair_cost: payload.repairCost || 0,
       prestige_awarded: payload.prestige || 0,
       fame_awarded: payload.fame || 0,
     });
@@ -81,10 +79,22 @@ export async function exportCycleBattlesToCSV(cycleNumber: number): Promise<stri
   // no longer emitted by new code.
 
   // Generate CSV
-  const header = 'cycle,battle_id,robot_id,robot_name,opponent_id,opponent_name,result,winnings,streaming_revenue,repair_cost,prestige_awarded,fame_awarded\n';
+  // Eleven columns. A twelfth, `repair_cost`, was removed by Spec #48 Requirement 9
+  // criteria 13-14: it was populated from a `repairCost` field on the `battle_complete`
+  // payload, which no orchestrator has ever written, so it exported `0` on every row of
+  // every export since it was added — a wrong number an admin could download.
+  //
+  // It was removed rather than repointed at Repair_Spend_Source, because a row here
+  // is one battle participant and a `robot_repair` audit row carries no battle
+  // reference: no repair figure can be attributed to an identified battle. If a
+  // repair column is ever added back, source it from Repair_Spend_Source and state
+  // the period it covers in the column name — and do not repeat a stable-level or
+  // cycle-level total across that stable's rows, because anyone summing the column
+  // would get a multiple of the true figure.
+  const header = 'cycle,battle_id,robot_id,robot_name,opponent_id,opponent_name,result,winnings,streaming_revenue,prestige_awarded,fame_awarded\n';
   
   const csvRows = rows.map(row => {
-    return `${row.cycle},${row.battle_id},${row.robot_id},"${row.robot_name}",${row.opponent_id},"${row.opponent_name}",${row.result},${row.winnings},${row.streaming_revenue},${row.repair_cost},${row.prestige_awarded},${row.fame_awarded}`;
+    return `${row.cycle},${row.battle_id},${row.robot_id},"${row.robot_name}",${row.opponent_id},"${row.opponent_name}",${row.result},${row.winnings},${row.streaming_revenue},${row.prestige_awarded},${row.fame_awarded}`;
   }).join('\n');
 
   return header + csvRows;

@@ -16,7 +16,7 @@ import { AuthRequest, authenticateToken } from '../middleware/auth';
 import { AuthError, AuthErrorCode } from '../errors/authErrors';
 import { validateRequest } from '../middleware/schemaValidator';
 import { positiveIntParam } from '../utils/securityValidation';
-import { getTuningAllocation, setTuningAllocation } from '../services/tuning-pool';
+import { getTuningAllocation, getTuningAllocationSummaries, setTuningAllocation } from '../services/tuning-pool';
 import { ROBOT_ATTRIBUTES, type RobotAttribute } from '../services/tuning-pool/tuningPoolConfig';
 import { achievementService, type UnlockedAchievement } from '../services/achievement';
 
@@ -66,6 +66,31 @@ const tuningBodySchema = z
   .transform((rec) => rec as Partial<Record<RobotAttribute, number>>);
 
 // --- Route handlers ---
+
+/**
+ * GET /api/robots/tuning-allocations/summary
+ *
+ * Pool budget for every robot in the caller's stable. Lets the dashboard ask one
+ * question once instead of once per robot.
+ *
+ * The two-segment path is deliberate: the robots router is mounted on the same
+ * prefix and matches `GET /:id` first, so a single-segment path here would be
+ * swallowed by it and rejected as a malformed robot id.
+ */
+router.get(
+  '/tuning-allocations/summary',
+  authenticateToken,
+  validateRequest({}),
+  async (req: AuthRequest, res: Response) => {
+    if (!req.user) {
+      throw new AuthError(AuthErrorCode.UNAUTHORIZED, 'Authentication required', 401);
+    }
+
+    const summaries = await getTuningAllocationSummaries(req.user.userId);
+
+    res.json({ summaries });
+  },
+);
 
 /**
  * GET /api/robots/:id/tuning-allocation

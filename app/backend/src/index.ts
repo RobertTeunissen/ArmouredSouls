@@ -22,6 +22,7 @@ import practiceArenaRouter from './routes/practiceArena';
 import stablesRoutes from './routes/stables';
 import changelogRoutes from './routes/changelog';
 import tuningAllocationRoutes from './routes/tuningAllocation';
+import dashboardCycleRoutes from './routes/dashboardCycle';
 import achievementsRoutes from './routes/achievements';
 import subscriptionsRoutes from './routes/subscriptions';
 import teamBattlesRoutes from './routes/teamBattles';
@@ -113,6 +114,13 @@ const economicPrefixes = [
   '/api/facilities',
   '/api/robots',
   '/api/subscriptions',
+  // `/api/dashboard` moves no credits, but it is the most frequently hit authenticated
+  // read in the application — every Dashboard mount issues it, and a player navigating
+  // the SPA can mount the Dashboard many times in a session. That is exactly the traffic
+  // the coding standard says belongs on the per-user bucket rather than the shared per-IP
+  // one: on the shared bucket, a household or mobile carrier behind a single NAT address
+  // pools its Dashboard reads and the players throttle each other.
+  '/api/dashboard',
 ];
 for (const prefix of economicPrefixes) {
   app.use(prefix, authenticateToken, userEconomicLimiter);
@@ -181,6 +189,9 @@ app.use('/api/practice-arena', practiceArenaRouter);
 app.use('/api/stables', stablesRoutes);
 app.use('/api/changelog', changelogRoutes);
 app.use('/api/robots', tuningAllocationRoutes);
+// Spec #48: a fresh base path, so no router mounted earlier can capture
+// `/current-cycle` as a resource id the way `/api/robots`'s `GET /:id` would.
+app.use('/api/dashboard', dashboardCycleRoutes);
 app.use('/api/achievements', achievementsRoutes);
 app.use('/api/subscriptions', subscriptionsRoutes);
 app.use('/api/team-battles', teamBattlesRoutes);

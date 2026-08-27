@@ -106,10 +106,10 @@ export interface RobotWithAttributes extends RobotAttributes {
   kills: number;
   damageDealtLifetime: number;
   damageTakenLifetime: number;
-  totalRepairsPaid: number;
+  lifetimeRepairCreditsPaid: number;
   titles: string | null;
   battleReadiness: number;
-  repairCost: number;
+  repairQuoteCredits: number;
   user?: {
     id?: number;
     username: string;
