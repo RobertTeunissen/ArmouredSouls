@@ -30,6 +30,34 @@ jobs:
         uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
+          # Analyse production source only.
+          #
+          # CodeQL's security queries reason about served attack surface. A test file
+          # builds throwaway Express apps, signs its own JWTs and embeds fixture secrets,
+          # none of which is ever exposed — so findings there are noise that buries the
+          # real ones. `js/missing-rate-limiting` is the concrete case that forced this:
+          # it flagged the stand-in routers inside two route tests, and mounting the real
+          # per-user limiter in those test apps did not clear it. The query looks for a
+          # limiter preceding the handler on a path it can follow; a separate
+          # `app.use(prefix, authenticateToken, limiter)` was not recognised as covering a
+          # router mounted by a different `app.use`, and the added `authenticateToken` was
+          # itself flagged as a third unprotected authorization point. Contorting test
+          # scaffolding to satisfy a query about production routing was the wrong move.
+          #
+          # The genuine finding behind those alerts — that `/api/dashboard` sat on the
+          # shared per-IP bucket rather than the per-user one — is fixed in
+          # `src/index.ts`, where `economicPrefixes` now includes it.
+          #
+          # Everything under `src/` stays analysed. If a helper under `tests/` is ever
+          # imported by production code, move it into `src/` rather than relaxing this.
+          config: |
+            paths-ignore:
+              - '**/*.test.ts'
+              - '**/*.test.tsx'
+              - '**/*.spec.ts'
+              - '**/*.spec.tsx'
+              - 'app/backend/tests/**'
+              - 'app/frontend/tests/**'
 
       - name: Autobuild
         uses: github/codeql-action/autobuild@v3

@@ -198,9 +198,16 @@ describe('Property 30: Repair_Ledger_Entries reconcile one-to-one with Repair_Sp
             (c) => c[0] as { amount: number; balanceAfter: number },
           );
 
-          // Amounts are all negative and sum to the negation of the deduction.
+          // Amounts are all negative and cancel the deduction exactly.
+          //
+          // Stated as a sum to zero rather than `toBe(-deduction)`: when nothing was
+          // charged, `-deduction` is `-0` while the accumulated total is `+0`, and `toBe`
+          // uses `Object.is`, for which those differ. A batch CAN charge zero — a
+          // low-attribute robot behind a high Repair Bay discount quotes 1 credit and
+          // floors to 0 after the manual discount. The reconciliation this property is
+          // about does not care about the sign of zero, so it should not assert on it.
           const ledgerTotal = calls.reduce((sum, c) => sum + c.amount, 0);
-          expect(ledgerTotal).toBe(-deduction);
+          expect(ledgerTotal + deduction).toBe(0);
           expect(calls.every((c) => c.amount <= 0)).toBe(true);
 
           // The walk ends back at the pre-deduction balance, which is the proof the

@@ -59,7 +59,6 @@ import { errorHandler } from '../../src/middleware/errorHandler';
 import { AuthRequest, authenticateToken } from '../../src/middleware/auth';
 import { validateRequest } from '../../src/middleware/schemaValidator';
 import { positiveIntParam } from '../../src/utils/securityValidation';
-import { createUserEconomicLimiter } from '../../src/middleware/userRateLimiter';
 
 const SUMMARY = {
   window: { start: '2026-08-26T00:00:00.000Z', end: '2026-08-26T12:00:00.000Z', cycleNumber: 61 },
@@ -100,13 +99,6 @@ function createApp(): express.Express {
   );
   app.use('/api/robots', robotsStandIn);
 
-  // Mirrors `src/index.ts`: both prefixes sit behind the per-user economic limiter,
-  // mounted after `authenticateToken` so the limiter can key on the user id. Included
-  // here so the test app matches the real mounting order — a route that is rate-limited
-  // in production should be rate-limited in the app under test, or the test is exercising
-  // a chain that does not exist. The cap is 100 requests per minute per user and this
-  // file makes nine, so it cannot trip.
-  app.use('/api/dashboard', authenticateToken, createUserEconomicLimiter());
   app.use('/api/dashboard', dashboardCycleRouter);
   app.use(errorHandler);
   return app;
