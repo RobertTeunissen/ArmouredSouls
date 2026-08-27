@@ -22,12 +22,22 @@ test.describe('Dashboard Page', () => {
     await expect(page.getByText(/Stable$/)).toBeVisible();
   });
 
+  test('should display the Overview_Row with all three tiles', async ({ page }) => {
+    // Spec #48 replaced the "Stable Overview" and "Financial Overview" cards with three
+    // tiles. Tile count and order never depend on data availability, so all three must be
+    // present whatever the cycle read returned.
+    await expect(page.getByRole('heading', { name: 'Prestige' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: "Today's Battles" })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Credits' })).toBeVisible();
+  });
+
   test('should display credits balance', async ({ page }) => {
-    // Check Financial Overview section heading exists
-    await expect(page.getByRole('heading', { name: 'Financial Overview' })).toBeVisible();
+    // The balance lives on the Credits tile and survives a failed cycle-progress read
+    // (Requirement 6 criterion 10), so it is safe to assert unconditionally.
+    await expect(page.getByRole('heading', { name: 'Credits' })).toBeVisible();
+    await expect(page.getByText('Current balance')).toBeVisible();
 
     // Check that a credits amount is visible (₡ symbol followed by digits)
-    await expect(page.getByText('Current Balance')).toBeVisible();
     const creditsElement = page.getByText(/₡[\d,]+/);
     await expect(creditsElement.first()).toBeVisible();
   });
@@ -59,9 +69,11 @@ test.describe('Dashboard Page', () => {
     // Set viewport to tablet size
     await page.setViewportSize({ width: 768, height: 1024 });
 
-    // Verify main elements are still visible
+    // Verify main elements are still visible. Below 1024px the Overview_Row stacks to a
+    // single column, so all three tiles remain present — the layout changes, not the
+    // content (Requirement 13).
     await expect(page.getByRole('heading', { name: 'Command Center' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Financial Overview' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Credits' })).toBeVisible();
   });
 
   test('should be responsive on mobile', async ({ page }) => {

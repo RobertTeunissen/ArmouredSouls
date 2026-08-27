@@ -114,6 +114,13 @@ const economicPrefixes = [
   '/api/facilities',
   '/api/robots',
   '/api/subscriptions',
+  // `/api/dashboard` moves no credits, but it is the most frequently hit authenticated
+  // read in the application — every Dashboard mount issues it, and a player navigating
+  // the SPA can mount the Dashboard many times in a session. That is exactly the traffic
+  // the coding standard says belongs on the per-user bucket rather than the shared per-IP
+  // one: on the shared bucket, a household or mobile carrier behind a single NAT address
+  // pools its Dashboard reads and the players throttle each other.
+  '/api/dashboard',
 ];
 for (const prefix of economicPrefixes) {
   app.use(prefix, authenticateToken, userEconomicLimiter);

@@ -67,6 +67,7 @@ import { errorHandler } from '../../src/middleware/errorHandler';
 import { AuthRequest, authenticateToken } from '../../src/middleware/auth';
 import { validateRequest } from '../../src/middleware/schemaValidator';
 import { positiveIntParam } from '../../src/utils/securityValidation';
+import { createUserEconomicLimiter } from '../../src/middleware/userRateLimiter';
 
 // ---------------------------------------------------------------------------
 // Test app
@@ -93,6 +94,13 @@ function robotsRouterStandIn() {
 function createTestApp() {
   const app = express();
   app.use(express.json());
+  // Mirrors `src/index.ts`: `/api/robots` sits behind the per-user economic limiter,
+  // mounted after `authenticateToken` so the limiter can key on the user id. Included
+  // here so the test app matches the real mounting order — a route that is rate-limited
+  // in production should be rate-limited in the app under test, or the test is
+  // exercising a chain that does not exist. The cap is 100 requests per minute per user
+  // and this file makes nine, so it cannot trip.
+  app.use('/api/robots', authenticateToken, createUserEconomicLimiter());
   app.use('/api/robots', robotsRouterStandIn());
   app.use('/api/robots', tuningAllocationRouter);
   app.use(errorHandler);
