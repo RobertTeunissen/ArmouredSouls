@@ -28,7 +28,7 @@ Both are awarded automatically by the battle orchestrators after each battle via
 
 ### Earning Prestige
 
-Prestige is awarded to the winning player's User record. No prestige for draws, losses, or bye matches. (True for all nine modes since Spec #49 — before it, team and tag team byes awarded full prestige, so this rule was aspirational rather than enforced.).
+Prestige is awarded to the winning player's User record. No prestige for draws, losses, or bye matches. (True for all nine modes since Spec #49 — before it, team and tag team byes awarded full prestige, so this rule was aspirational rather than enforced.)
 
 #### League Battles
 

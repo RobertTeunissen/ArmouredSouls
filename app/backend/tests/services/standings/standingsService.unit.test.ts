@@ -394,13 +394,38 @@ describe('awardGrandMeleePoints', () => {
   // Spec #49: the LP a player is shown and the LP a player is given came from
   // two separate declarations of these ten numbers. This asserts they are now
   // one, across the module boundary, for every placement including past the end.
-  it('should award exactly the lpDelta the rewards module reports, for every placement', () => {
+  it('should award exactly the lpDelta the shared scale declares, for every placement', async () => {
+    const startingLp = 100;
+
     for (let placement = 1; placement <= 25; placement++) {
-      const expected =
+      const expectedDelta =
         placement <= GRAND_MELEE_LP_SCALE.length ? GRAND_MELEE_LP_SCALE[placement - 1] : 0;
-      const fromScale =
-        placement <= GRAND_MELEE_LP_SCALE.length ? GRAND_MELEE_LP_SCALE[placement - 1] : 0;
-      expect(fromScale).toBe(expected);
+
+      const current = makeStanding({
+        mode: 'grand_melee',
+        leaguePoints: startingLp,
+        totalMatches: 0,
+        totalZoneScore: 0,
+        totalZoneTime: 0,
+        bestPlacement: 99,
+      });
+      mockStandingFindUnique.mockResolvedValue(current);
+      mockStandingUpdate.mockResolvedValue(current);
+      mockStandingUpdate.mockClear();
+
+      await standingsService.awardGrandMeleePoints({
+        robotId: 1,
+        placement,
+        totalParticipants: 20,
+        damageDealt: 0,
+        survivalTime: 0,
+      });
+
+      expect(mockStandingUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ leaguePoints: startingLp + expectedDelta }),
+        }),
+      );
     }
   });
 });

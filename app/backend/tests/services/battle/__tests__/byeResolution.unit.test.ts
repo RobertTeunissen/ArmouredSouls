@@ -23,6 +23,8 @@ const mockParticipantCreate = jest.fn();
 const mockSummaryCreate = jest.fn();
 const mockScheduledMatchUpdateMany = jest.fn();
 const mockTournamentMatchUpdateMany = jest.fn();
+const mockScheduledMatchFindUnique = jest.fn();
+const mockTournamentMatchFindUnique = jest.fn();
 
 jest.mock('../../../../src/lib/prisma', () => ({
   __esModule: true,
@@ -33,9 +35,13 @@ jest.mock('../../../../src/lib/prisma', () => ({
     },
     battleParticipant: { create: (...a: unknown[]) => mockParticipantCreate(...a) },
     battleSummary: { create: (...a: unknown[]) => mockSummaryCreate(...a) },
-    scheduledMatch: { updateMany: (...a: unknown[]) => mockScheduledMatchUpdateMany(...a) },
+    scheduledMatch: {
+      updateMany: (...a: unknown[]) => mockScheduledMatchUpdateMany(...a),
+      findUnique: (...a: unknown[]) => mockScheduledMatchFindUnique(...a),
+    },
     scheduledTournamentMatch: {
       updateMany: (...a: unknown[]) => mockTournamentMatchUpdateMany(...a),
+      findUnique: (...a: unknown[]) => mockTournamentMatchFindUnique(...a),
     },
   },
 }));
@@ -232,6 +238,7 @@ describe('the per-mode differences match the Bye_Mode_Table', () => {
 describe('the Bye_Award_Claim pays at most once', () => {
   it('should pay nothing and delete the orphan battle when the claim is lost', async () => {
     mockScheduledMatchUpdateMany.mockResolvedValue({ count: 0 });
+    mockScheduledMatchFindUnique.mockResolvedValue({ battleId: 555 });
 
     const result = await resolveByeEvent(inputFor('league_1v1'));
 
@@ -242,6 +249,18 @@ describe('the Bye_Award_Claim pays at most once', () => {
     // The battles row created before the claim is cleaned up, so a lost claim
     // leaves no orphan.
     expect(mockBattleDelete).toHaveBeenCalledWith({ where: { id: 999 } });
+  });
+
+  it('should report the winning battle id when the claim is lost, not the orphan and not null', async () => {
+    mockScheduledMatchUpdateMany.mockResolvedValue({ count: 0 });
+    mockScheduledMatchFindUnique.mockResolvedValue({ battleId: 555 });
+
+    const result = await resolveByeEvent(inputFor('league_1v1'));
+
+    // 555 is the battle written by whoever claimed first; 999 is this call's
+    // orphan, which was deleted. A caller linking to a battle needs the former.
+    expect(result.battleId).toBe(555);
+    expect(mockScheduledMatchFindUnique).toHaveBeenCalled();
   });
 
   it('should claim before paying, never after', async () => {

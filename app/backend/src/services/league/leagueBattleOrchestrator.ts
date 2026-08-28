@@ -243,8 +243,17 @@ async function processByeBattle(scheduledMatch: ScheduledLeagueMatchData): Promi
     `[Battle] Bye-match: ${robot.name} (User ${robot.userId}) auto-win | LP +${LEAGUE_POINTS_WIN} | ELO ${robot.elo} → ${newElo} | ₡${resolution.creditsPaid}`,
   );
 
+  // The writer returns the winning battle id even when the claim was already
+  // taken, so a null here means nothing resolved at all. Surfacing 0 would hand
+  // callers an id that links nowhere; fail loudly instead.
+  if (resolution.battleId === null) {
+    throw new Error(
+      `Bye resolution produced no battle for scheduled match ${scheduledMatch.id} (robot ${robot.id})`,
+    );
+  }
+
   return {
-    battleId: resolution.battleId ?? 0,
+    battleId: resolution.battleId,
     winnerId: robot.id,
     robot1FinalHP: robot.currentHP,
     robot2FinalHP: 0,

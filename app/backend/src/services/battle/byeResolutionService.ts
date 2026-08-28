@@ -106,6 +106,14 @@ export interface ByeResolutionInput {
 }
 
 export interface ByeResolutionResult {
+  /**
+   * The `battles` row this Bye_Event resolved to.
+   *
+   * On the `alreadyResolved` path this is the battle written by whoever won the
+   * Bye_Award_Claim first, not null — a caller that links to a battle needs a
+   * real id on a re-run just as much as on the first pass. It is null only when
+   * there was nothing to resolve at all (no real participants).
+   */
   battleId: number | null;
   creditsPaid: number;
   /** True when the Bye_Award_Claim was already taken — nothing was paid. */
@@ -142,6 +150,29 @@ async function claimByeAward(claim: ByeAwardClaim, battleId: number): Promise<bo
     data: { battleId },
   });
   return count === 1;
+}
+
+/**
+ * Read the battle id held by whoever won the Bye_Award_Claim.
+ *
+ * Only called when `claimByeAward` lost. The row has to be re-read: a caller's
+ * own copy of the queued match was loaded while the row was still unclaimed, so
+ * its `battleId` is null in exactly the case where the value is wanted.
+ */
+async function readClaimedBattleId(claim: ByeAwardClaim): Promise<number | null> {
+  if (claim.source === 'scheduled_match') {
+    const row = await prisma.scheduledMatch.findUnique({
+      where: { id: claim.scheduledMatchId },
+      select: { battleId: true },
+    });
+    return row?.battleId ?? null;
+  }
+
+  const row = await prisma.scheduledTournamentMatch.findUnique({
+    where: { id: claim.tournamentMatchId },
+    select: { battleId: true },
+  });
+  return row?.battleId ?? null;
 }
 
 // ─── The writer ──────────────────────────────────────────────────────────────
@@ -193,10 +224,11 @@ export async function resolveByeEvent(
   const claimed = await claimByeAward(input.claim, battle.id);
   if (!claimed) {
     await prisma.battle.delete({ where: { id: battle.id } }).catch(() => {});
+    const winningBattleId = await readClaimedBattleId(input.claim);
     logger.warn(
-      `[Bye] ${input.mode}: award already claimed for ${JSON.stringify(input.claim)}, nothing paid`,
+      `[Bye] ${input.mode}: award already claimed for ${JSON.stringify(input.claim)}, nothing paid (battle ${winningBattleId})`,
     );
-    return { battleId: null, creditsPaid: 0, alreadyResolved: true };
+    return { battleId: winningBattleId, creditsPaid: 0, alreadyResolved: true };
   }
 
   // ── 3. Participant rows: inert by construction ──

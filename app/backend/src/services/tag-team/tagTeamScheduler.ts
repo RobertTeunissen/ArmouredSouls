@@ -62,10 +62,29 @@ async function resolveTagTeamBye(
     );
   }
 
-  const robots = await prisma.robot.findMany({
-    where: { id: { in: teamRaw.members.map(m => m.robotId) } },
+  // `members` is ordered by `slotIndex`, and everything below treats robots[0]
+  // as Active and robots[1] as Reserve. `findMany` gives no ordering guarantee
+  // for an `in` filter, so re-order to the slot order rather than trusting it —
+  // an unordered result would silently swap Active and Reserve in the returned
+  // HP fields and in the battle metadata.
+  const memberRobotIds = teamRaw.members.map(m => m.robotId);
+  const robotRows = await prisma.robot.findMany({
+    where: { id: { in: memberRobotIds } },
     select: { id: true, name: true, userId: true, currentHP: true, maxHP: true, elo: true },
   });
+  const robotsById = new Map(robotRows.map(r => [r.id, r]));
+  const robots = memberRobotIds
+    .map(id => robotsById.get(id))
+    .filter((r): r is NonNullable<typeof r> => r !== undefined);
+
+  if (robots.length < 2) {
+    throw new TagTeamError(
+      TagTeamErrorCode.INVALID_TEAM_COMPOSITION,
+      `Team ${match.team1Id} has members without robot rows for tag team bye match ${match.id}`,
+      404,
+      { matchId: match.id, teamId: match.team1Id },
+    );
+  }
 
   // ELO against the notional combined bye-team rating (1000 per robot).
   const teamSumELO = robots.reduce((sum, r) => sum + r.elo, 0);
@@ -99,8 +118,19 @@ async function resolveTagTeamBye(
     `[TagTeamBattle] Bye: team ${match.team1Id} auto-win | ₡${resolution.creditsPaid} | no damage, no prestige, no fame`,
   );
 
+  // Same reasoning as the league bye path: the writer supplies the winning
+  // battle id on an already-claimed re-run, so null means nothing resolved.
+  if (resolution.battleId === null) {
+    throw new TagTeamError(
+      TagTeamErrorCode.INVALID_TEAM_COMPOSITION,
+      `Bye resolution produced no battle for tag team match ${match.id}`,
+      500,
+      { matchId: match.id, teamId: match.team1Id },
+    );
+  }
+
   return {
-    battleId: resolution.battleId ?? 0,
+    battleId: resolution.battleId,
     winnerId: match.team1Id,
     isDraw: false,
     durationSeconds: BYE_BATTLE_DURATION_SECONDS,

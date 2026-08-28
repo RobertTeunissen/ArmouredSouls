@@ -344,7 +344,9 @@ describe('Bye_Invariant (Spec #49)', () => {
       const second = await resolveFor('league_1v1', fx);
       expect(second.alreadyResolved).toBe(true);
       expect(second.creditsPaid).toBe(0);
-      expect(second.battleId).toBeNull();
+      // The second attempt reports the battle the FIRST one wrote, so a caller
+      // re-processing a completed row still gets a real id to link to.
+      expect(second.battleId).toBe(first.battleId);
 
       const userAfterSecond = await prisma.user.findUnique({ where: { id: fx.userId } });
       expect(userAfterSecond!.currency).toBe(userAfterFirst!.currency);
@@ -365,6 +367,7 @@ describe('Bye_Invariant (Spec #49)', () => {
       const second = await resolveFor('tournament_1v1', fx);
       expect(second.alreadyResolved).toBe(true);
       expect(second.creditsPaid).toBe(0);
+      expect(second.battleId).toBe(first.battleId);
     });
   });
 });
