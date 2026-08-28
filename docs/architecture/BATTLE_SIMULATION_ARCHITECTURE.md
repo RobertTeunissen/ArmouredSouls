@@ -222,7 +222,7 @@ Each orchestrator handles a different match type but follows the same core patte
 | Match source | `TournamentMatch` records (created by tournament bracket system) |
 | Battle type | `"tournament"` |
 | Participants | 2 robots → 2 BattleParticipant records |
-| Bye handling | Tournament byes are auto-completed at creation — no battle, no rewards, no combat |
+| Bye handling | Tournament byes are auto-completed at creation — no combat, but since Spec #49 a `battles` row *is* written and the bye pays the round's loss reward. See PRD_BATTLE_DATA_ARCHITECTURE.md § Bye Battle Records |
 | Draw handling | Not allowed — `isTournament=true` flag triggers HP% tiebreaker, then deterministic fallback |
 | Rewards | Round-based tournament rewards (scale with bracket depth), prestige, fame, streaming revenue |
 | League points | Not affected |

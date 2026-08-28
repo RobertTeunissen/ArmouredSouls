@@ -172,10 +172,20 @@ export function getLeagueWinReward(league: string): number {
 }
 
 /**
+ * Participation_Reward_Fraction — the share of a tier win reward that a
+ * participation reward pays (Spec #49).
+ *
+ * Declared once here. Do not inline 0.2 at a call site, and do not confuse this
+ * with the tournament PARTICIPATION_PERCENTAGE (0.30) in `tournamentRewards.ts`
+ * — that one is a fraction of a round's win reward, not of a tier base.
+ */
+export const PARTICIPATION_REWARD_FRACTION = 0.2;
+
+/**
  * Calculate participation reward (20% of league win reward).
  */
 export function getParticipationReward(league: string): number {
-  return Math.round(getLeagueWinReward(league) * 0.2);
+  return Math.round(getLeagueWinReward(league) * PARTICIPATION_REWARD_FRACTION);
 }
 
 // ==================== MULTI-ROBOT EVENT REWARDS ====================

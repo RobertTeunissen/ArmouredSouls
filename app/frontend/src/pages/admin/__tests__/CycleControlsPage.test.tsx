@@ -7,7 +7,7 @@
  * _Requirements: 8.1, 8.2, 8.3, 8.5, 8.6, 8.7, 8.8_
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import CycleControlsPage from '../CycleControlsPage';
 
@@ -19,6 +19,17 @@ vi.mock('../../../utils/apiClient', () => ({
   default: {
     get: vi.fn(),
     post: (...args: unknown[]) => mockPost(...args),
+  },
+}));
+
+// The page calls `api.post` from utils/api, which is a wrapper *around*
+// apiClient — mocking apiClient alone does not intercept it, so a bulk run
+// would fall through to a real request and reject under jsdom.
+const mockApiPost = vi.fn();
+vi.mock('../../../utils/api', () => ({
+  api: {
+    get: vi.fn(),
+    post: (...args: unknown[]) => mockApiPost(...args),
   },
 }));
 
@@ -234,5 +245,79 @@ describe('CycleControlsPage', () => {
     const runButton = grandMeleeRow!.querySelector('button');
     expect(runButton).not.toBeNull();
     expect(runButton!.textContent).toBe('Run');
+  });
+});
+
+// ────────────────────────────────────────────────────────────────
+// Spec #49 — bye counts on the Admin_Cycle_Surface
+//
+// Creating byes in koth and grand_melee without also counting them would make
+// the spec's own new event type invisible in the one place operators watch
+// cycles from. An operator reading "12 successful KotH matches" would have no
+// way to know four of them ran no combat.
+// ────────────────────────────────────────────────────────────────
+describe('bye counts (Spec #49)', () => {
+  const summaryWithByes = {
+    results: [
+      {
+        cycle: 1,
+        battles: {
+          totalBattles: 5,
+          successfulBattles: 4,
+          failedBattles: 0,
+          byeBattles: 1,
+          errors: [],
+        },
+        kothBattles: { successfulMatches: 1, byeMatches: 4, failedMatches: 0, totalMatches: 5 },
+        grandMeleeBattles: { successfulMatches: 1, byeMatches: 7, failedMatches: 0 },
+        tournaments: { byeMatchesResolved: 3 },
+        duration: 1234,
+      },
+    ],
+  };
+
+  it('should log the bye count for every event type that reports one', async () => {
+    mockApiPost.mockResolvedValue(summaryWithByes);
+    const user = userEvent.setup();
+    render(<CycleControlsPage />);
+
+    const runButton = screen.getByRole('button', { name: /🚀 Run/ });
+    await user.click(runButton);
+
+    await waitFor(() => expect(mockAddSessionLog.mock.calls.length).toBeGreaterThan(1));
+
+    const logged = mockAddSessionLog.mock.calls.map((c) => String(c[1]));
+    expect(logged.some((m) => /1 bye/.test(m))).toBe(true);
+    expect(logged.some((m) => /KotH.*4 bye/.test(m))).toBe(true);
+    expect(logged.some((m) => /Grand Melee.*7 bye/.test(m))).toBe(true);
+    expect(logged.some((m) => /3 bracket bye/.test(m))).toBe(true);
+  });
+
+  // The bye fields are optional precisely so this case renders. A run against an
+  // older backend, or a partial summary from a failed step, must not blank the
+  // panel.
+  it('should render a summary with every bye count absent, without throwing', async () => {
+    mockApiPost.mockResolvedValue({
+      results: [
+        {
+          cycle: 1,
+          kothBattles: { successfulMatches: 2, failedMatches: 0, totalMatches: 2 },
+          grandMeleeBattles: { successfulMatches: 1, failedMatches: 0 },
+          tournaments: {},
+          duration: 500,
+        },
+      ],
+    });
+    const user = userEvent.setup();
+    render(<CycleControlsPage />);
+
+    const runButton = screen.getByRole('button', { name: /🚀 Run/ });
+    await expect(user.click(runButton)).resolves.not.toThrow();
+
+    await waitFor(() => expect(mockAddSessionLog.mock.calls.length).toBeGreaterThan(1));
+
+    const logged = mockAddSessionLog.mock.calls.map((c) => String(c[1]));
+    expect(logged.some((m) => /KotH: 2 fought/.test(m))).toBe(true);
+    expect(logged.some((m) => /bye/.test(m))).toBe(false);
   });
 });

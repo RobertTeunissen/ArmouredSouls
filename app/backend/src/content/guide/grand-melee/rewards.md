@@ -2,7 +2,7 @@
 title: "Rewards"
 description: "Credits, Fame, and Prestige rewards for Grand Melee placements."
 order: 4
-lastUpdated: "2026-06-18"
+lastUpdated: "2026-08-27"
 relatedArticles:
   - grand-melee/scoring-and-placement
   - grand-melee/strategy
@@ -13,7 +13,7 @@ relatedArticles:
 
 All Grand Melee participants earn credits. The base payout is **2.5× the league tier base** multiplied by a placement multiplier. Higher placements earn significantly more credits.
 
-Even robots that finish in the bottom half receive a **participation floor** — you'll never walk away empty-handed.
+Even robots that finish in the bottom half receive a **last-place floor** — you'll never walk away empty-handed.
 
 ## Fame
 
@@ -38,6 +38,10 @@ The 1st place finisher receives a **+50% Prestige bonus** if they end the battle
 | 4th–10th | 2.5× base × placement multiplier | ✅ Tier-scaled | — |
 | 11th–20th | 2.5× base × low multiplier (floor) | — | — |
 
-## Participation Floor
+## Last-Place Floor
 
-Every robot that enters Grand Melee receives at least the floor credit reward regardless of placement. This ensures that even a last-place finish contributes to your economic progress.
+Every robot that **fights** in a Grand Melee receives at least the floor credit reward regardless of placement. This ensures that even a last-place finish contributes to your economic progress.
+
+```callout-warning
+Don't confuse this with a **bye**. The last-place floor is what you earn for turning up and finishing last — 2.5× the league tier base times the lowest placement multiplier. A [bye](/guide/economy/battle-rewards) is what you earn when the field was too thin to run at all, and it pays the ordinary participation reward for your tier, which is a good deal less. Fighting and finishing last pays more than not fighting.
+```

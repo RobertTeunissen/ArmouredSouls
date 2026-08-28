@@ -21,7 +21,7 @@ import { countKillsByRobot } from '../../shared/utils/battleStatistics';
 import logger from '../../config/logger';
 import { RobotWithWeapons } from '../battle/combatSimulator';
 import { simulateTeamBattle } from '../team-battle/teamBattleEngine';
-import { calculateTeamBattleELOChanges } from '../team-battle/teamBattleRewardService';
+import { calculateTeamBattleELOChanges, distributeTeamCredits } from '../team-battle/teamBattleRewardService';
 import { TeamBattleResult, TeamBattleLog } from '../../types/teamBattleLogTypes';
 import { prepareRobotForCombat } from '../../utils/robotCalculations';
 import { getTuningBonusesBatch } from '../tuning-pool';
@@ -733,15 +733,31 @@ async function distributeTeamTournamentRewards(
   const loserOwnerId = winningSide === 1 ? team2OwnerId : team1OwnerId;
 
   // ─── Credits ───────────────────────────────────────────────────────
-  // Winner per robot: calculateTournamentWinReward × teamSize
-  const winnerCreditPerRobot = calculateTournamentWinReward(totalParticipants, currentRound, maxRounds) * teamSize;
-  // Loser per robot: 30% of winner (calculateTournamentParticipationReward × teamSize)
-  const loserCreditPerRobot = calculateTournamentParticipationReward(totalParticipants, currentRound, maxRounds) * teamSize;
+  // The teamSize factor is applied exactly ONCE, here, on each arm (Spec #49).
+  // These are owner totals; the per-robot split follows below.
+  //
+  // Before Spec #49 these were named `...CreditPerRobot`, already carried a
+  // `× teamSize`, and were then multiplied by `teamSize` a second time at the
+  // award call — so an owner was paid `base × teamSize²`, i.e. 9× instead of 3×
+  // for a 3v3. Both arms were affected.
+  const winnerOwnerTotal = calculateTournamentWinReward(totalParticipants, currentRound, maxRounds) * teamSize;
+  const loserOwnerTotal = calculateTournamentParticipationReward(totalParticipants, currentRound, maxRounds) * teamSize;
 
-  // Award credits to owners (each robot earns the full amount)
+  // Award credits to owners
   const cycleNumber = await getCurrentCycleNumber();
-  await awardCreditsWithLedger(winnerOwnerId, winnerCreditPerRobot * teamSize, 'battle_income', cycleNumber, 'Team tournament reward');
-  await awardCreditsWithLedger(loserOwnerId, loserCreditPerRobot * teamSize, 'battle_income', cycleNumber, 'Team tournament reward');
+  await awardCreditsWithLedger(winnerOwnerId, winnerOwnerTotal, 'battle_income', cycleNumber, 'Team tournament reward');
+  await awardCreditsWithLedger(loserOwnerId, loserOwnerTotal, 'battle_income', cycleNumber, 'Team tournament reward');
+
+  // Per-robot shares, remainder distributed one credit at a time so the
+  // participant rows sum exactly to what the owner received.
+  const winnerShares = distributeTeamCredits(
+    winnerOwnerTotal,
+    winnerRobots.map(r => ({ robotId: r.id })),
+  );
+  const loserShares = distributeTeamCredits(
+    loserOwnerTotal,
+    loserRobots.map(r => ({ robotId: r.id })),
+  );
 
   // ─── Prestige (Stepped Curve — winner only) ────────────────────────
   const winnerPrestige = calculateTeamTournamentPrestige(currentRound, maxRounds);
@@ -785,11 +801,13 @@ async function distributeTeamTournamentRewards(
   }
 
   // ─── Update BattleParticipant records with correct reward amounts ──
+  // Per-robot credits come from the share arrays, so they sum exactly to the
+  // owner total rather than each carrying the whole amount.
   for (const robot of winnerRobots) {
     await prisma.battleParticipant.update({
       where: { battleId_robotId: { battleId, robotId: robot.id } },
       data: {
-        credits: winnerCreditPerRobot,
+        credits: winnerShares.find(s => s.robotId === robot.id)?.credits ?? 0,
         prestigeAwarded: winnerPrestige,
         fameAwarded: winnerFame,
       },
@@ -799,7 +817,7 @@ async function distributeTeamTournamentRewards(
     await prisma.battleParticipant.update({
       where: { battleId_robotId: { battleId, robotId: robot.id } },
       data: {
-        credits: loserCreditPerRobot,
+        credits: loserShares.find(s => s.robotId === robot.id)?.credits ?? 0,
         prestigeAwarded: 0,
         fameAwarded: 0,
       },
@@ -807,15 +825,18 @@ async function distributeTeamTournamentRewards(
   }
 
   // ─── Update Battle record with reward amounts ──────────────────────
+  // These are per-OWNER totals. The stored number is unchanged from before
+  // Spec #49 (it was always `base × teamSize`), but its meaning shifted: the
+  // owner is now paid exactly this, rather than `teamSize ×` this.
   await prisma.battle.update({
     where: { id: battleId },
     data: {
-      winnerReward: winnerCreditPerRobot,
-      loserReward: loserCreditPerRobot,
+      winnerReward: winnerOwnerTotal,
+      loserReward: loserOwnerTotal,
     },
   });
 
-  return { winnerReward: winnerCreditPerRobot, loserReward: loserCreditPerRobot, winnerPrestige, winnerFame };
+  return { winnerReward: winnerOwnerTotal, loserReward: loserOwnerTotal, winnerPrestige, winnerFame };
 }
 
 // ─── Helper Functions ────────────────────────────────────────────────────────

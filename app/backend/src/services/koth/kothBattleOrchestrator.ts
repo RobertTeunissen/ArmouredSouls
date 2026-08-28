@@ -3,6 +3,7 @@
 import prisma from '../../lib/prisma';
 import { Prisma } from '../../../generated/prisma';
 import logger from '../../config/logger';
+import { resolvePlacementBye } from '../scheduling/thinInstanceByes';
 import { computeBattleSummary } from '../battle/battleSummaryComputer';
 import { KothError, KothErrorCode } from '../../errors/kothErrors';
 
@@ -67,6 +68,16 @@ interface PreparedParticipant {
 export interface KothBattleExecutionSummary {
   totalMatches: number;
   successfulMatches: number;
+  /**
+   * Bye_Events resolved this run (Spec #49).
+   *
+   * A sibling of `successfulMatches`, not a subset: the three counters
+   * partition `totalMatches`, so `successfulMatches` keeps meaning
+   * "combat was simulated" — which is what an operator reads when
+   * diagnosing a cycle. `matchResults.length` therefore equals
+   * `successfulMatches + byeMatches`.
+   */
+  byeMatches: number;
   failedMatches: number;
   totalRobotsInvolved: number;
   matchResults: Array<{
@@ -608,6 +619,7 @@ export async function executeScheduledKothBattles(_scheduledFor?: Date): Promise
   const summary: KothBattleExecutionSummary = {
     totalMatches: totalCount,
     successfulMatches: 0,
+    byeMatches: 0,
     failedMatches: 0,
     totalRobotsInvolved: 0,
     matchResults: [],
@@ -633,6 +645,7 @@ export async function executeScheduledKothBattles(_scheduledFor?: Date): Promise
       scheduledFor: unifiedMatch.scheduledFor,
       status: unifiedMatch.status,
       battleId: unifiedMatch.battleId,
+      isByeMatch: unifiedMatch.isByeMatch,
       scoreThreshold: unifiedMatch.scoreThreshold,
       timeLimit: unifiedMatch.timeLimit,
       zoneRadius: unifiedMatch.zoneRadius,
@@ -668,6 +681,10 @@ export async function executeScheduledKothBattles(_scheduledFor?: Date): Promise
         scheduledFor: unifiedMatch.scheduledFor,
         status: unifiedMatch.status,
         battleId: unifiedMatch.battleId,
+        // Carried at BOTH mapping sites — the super-batch cooldown re-fetches
+        // and re-maps, so omitting it here would silently drop bye detection
+        // for every match after the first twenty.
+        isByeMatch: unifiedMatch.isByeMatch,
         scoreThreshold: unifiedMatch.scoreThreshold,
         timeLimit: unifiedMatch.timeLimit,
         zoneRadius: unifiedMatch.zoneRadius,
@@ -696,6 +713,17 @@ export async function executeScheduledKothBattles(_scheduledFor?: Date): Promise
     const participantCount = match.participants.length;
 
     try {
+      // A Thin_Instance bye resolves without combat (Spec #49). One entry point,
+      // identity only — no per-orchestrator adapter.
+      if (match.isByeMatch === true) {
+        await resolvePlacementBye(match.id, 'koth', match.participants.map(p => p.robotId));
+        summary.byeMatches++;
+        summary.totalRobotsInvolved += participantCount;
+        summary.matchResults.push({ matchId, winnerId: null, placements: [] });
+        processed++;
+        continue;
+      }
+
       const result = await processKothBattle(match);
       summary.successfulMatches++;
       summary.totalRobotsInvolved += participantCount;
@@ -727,6 +755,6 @@ export async function executeScheduledKothBattles(_scheduledFor?: Date): Promise
     logger.info(`[KotH Orchestrator] Reset ${summary.failedMatches} failed matches back to 'scheduled' for retry`);
   }
 
-  logger.info(`[KotH Orchestrator] Execution complete: ${summary.successfulMatches} successful, ${summary.failedMatches} failed (mem: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB)`);
+  logger.info(`[KotH Orchestrator] Execution complete: ${summary.successfulMatches} successful, ${summary.byeMatches} byes, ${summary.failedMatches} failed (mem: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB)`);
   return summary;
 }

@@ -16,6 +16,7 @@ import {
   getCurrentRoundMatches,
   autoCreateNextTournament,
   advanceWinnersToNextRound,
+  completeByeMatch,
 } from '../tournament/tournamentService';
 import { processTournamentBattle } from '../tournament/tournamentBattleOrchestrator';
 import { executeTeamTournamentRound } from '../tournament/teamTournamentBattleOrchestrator';
@@ -83,6 +84,8 @@ export interface TournamentStepSummary {
   tournamentsExecuted?: number;
   roundsExecuted?: number;
   matchesExecuted?: number;
+  /** Bracket Bye_Events resolved and paid this run (Spec #49). */
+  byeMatchesResolved?: number;
   tournamentsCompleted?: number;
   tournamentsCreated?: number;
   errors?: string[];
@@ -98,6 +101,7 @@ async function executeTournamentStep(): Promise<TournamentStepSummary> {
     tournamentsExecuted: 0,
     roundsExecuted: 0,
     matchesExecuted: 0,
+    byeMatchesResolved: 0,
     tournamentsCompleted: 0,
     tournamentsCreated: 0,
     errors: [],
@@ -113,17 +117,13 @@ async function executeTournamentStep(): Promise<TournamentStepSummary> {
         if (currentRoundMatches.length > 0) {
           for (const match of currentRoundMatches) {
             if (match.participant1Id && !match.participant2Id) {
-              await prisma.scheduledTournamentMatch.update({
-                where: { id: match.id },
-                data: {
-                  winnerId: match.participant1Id,
-                  status: 'completed',
-                  isByeMatch: true,
-                  completedAt: new Date(),
-                },
-              });
+              // Routed through the shared helper (Spec #49) so the admin
+              // bulk-cycle path pays a bracket bye identically to the cron path.
+              // Before this, the two diverged: a bye completed here paid nothing.
+              const paid = await completeByeMatch(match, match.participant1Id);
               logger.info(`[Admin] Auto-completed bye match ${match.id} in tournament ${tournament.id}`);
               summary.matchesExecuted!++;
+              if (paid) summary.byeMatchesResolved = (summary.byeMatchesResolved ?? 0) + 1;
               continue;
             }
 

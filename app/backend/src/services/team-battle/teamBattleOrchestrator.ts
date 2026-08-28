@@ -15,7 +15,7 @@ import { Prisma, StandingsMode, MatchType, Robot } from '../../../generated/pris
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { RobotWithWeapons } from '../battle/combatSimulator';
-import { createByeRobot } from '../battle/byeRobot';
+import { resolveByeEvent, BYE_BATTLE_DURATION_SECONDS } from '../battle/byeResolutionService';
 import { simulateTeamBattle } from './teamBattleEngine';
 import { computeBattleSummary } from '../battle/battleSummaryComputer';
 import { countKillsByRobot } from '../../shared/utils/battleStatistics';
@@ -202,6 +202,78 @@ export async function executeScheduledTeamBattles(
   return { matchesCompleted, matchesCancelled, results };
 }
 
+// ─── Bye Resolution ──────────────────────────────────────────────────────────
+
+/**
+ * Resolve a team league bye through the Bye_Reward_Module (Spec #49).
+ *
+ * Nothing is simulated, no opponent is fabricated, and no robot is prepared for
+ * combat — weapons and tuning cannot affect an unsimulated outcome, so this does
+ * not call `loadTeamRobotsWithWeapons` or `prepareRobotForCombat` either. A
+ * plain robot read supplies the names, HP and ELO the writer needs.
+ *
+ * The team still gains ELO against the bye team's notional rating and LP +3,
+ * exactly as before: removing the simulation changes how the outcome is reached,
+ * not what the outcome is worth.
+ */
+async function resolveTeamLeagueBye(
+  match: ScheduledMatchWithTeams,
+  teamSize: 2 | 3,
+  battleType: string,
+  cycleNumber: number,
+): Promise<SingleMatchResult> {
+  const robotIds = match.team1.members.map(m => m.robotId);
+  const robots = await prisma.robot.findMany({
+    where: { id: { in: robotIds } },
+    select: { id: true, name: true, userId: true, currentHP: true, maxHP: true, elo: true },
+  });
+
+  const team1SumELO = robots.reduce((sum, r) => sum + r.elo, 0);
+  const eloChanges = calculateTeamBattleELOChanges(
+    team1SumELO,
+    getByeTeamELO(teamSize),
+    true,
+    false,
+  );
+
+  const newEloByRobotId: Record<number, number> = {};
+  for (const r of robots) {
+    newEloByRobotId[r.id] = r.elo + eloChanges.team1Change;
+  }
+
+  const mode = teamSize === 2 ? 'league_2v2' : 'league_3v3';
+
+  const resolution = await resolveByeEvent({
+    mode,
+    context: { mode, tier: match.teamBattleLeague },
+    claim: { source: 'scheduled_match', scheduledMatchId: match.id },
+    participants: robots,
+    stableUserId: match.team1.stableId,
+    battle: {
+      battleType,
+      leagueType: match.teamBattleLeague,
+      leagueInstanceId: match.teamBattleLeagueId,
+      winnerId: robots[0]?.id ?? null,
+      winningSide: 1,
+      byeMessage: `${match.team1.teamName ?? 'Team'} wins by walkover (bye)`,
+    },
+    standingEntity: { entityType: 'team', entityId: match.team1Id },
+    newEloByRobotId,
+    eloChange: eloChanges.team1Change,
+    cycleNumber,
+  });
+
+  logger.info(
+    `[TeamBattle] Bye: team ${match.team1Id} (${mode}) auto-win | ₡${resolution.creditsPaid} | no damage, no prestige, no fame`,
+  );
+
+  return {
+    matchId: match.id,
+    status: 'completed',
+    battleId: resolution.battleId ?? undefined,
+  };
+}
+
 // ─── Single Match Execution ──────────────────────────────────────────────────
 
 /**
@@ -221,47 +293,39 @@ async function executeSingleTeamBattle(
   battleType: string,
   cycleNumber: number,
 ): Promise<SingleMatchResult> {
-  const isByeMatch = match.team2Id === null;
-
-  // Load robots with weapons for team 1
-  const team1Robots = await loadTeamRobotsWithWeapons(match.team1.members.map(m => m.robotId));
-
-  // Load robots with weapons for team 2 (or create bye robots)
-  let team2Robots: RobotWithWeapons[];
-  if (isByeMatch) {
-    team2Robots = Array.from({ length: teamSize }, (_, i) => createByeRobot(-(i + 1)));
-  } else {
-    team2Robots = await loadTeamRobotsWithWeapons(match.team2!.members.map(m => m.robotId));
+  // A bye is detected before the absent side is loaded or fabricated, and it
+  // never reaches the simulation below (Spec #49 R12.1, R12.2).
+  //
+  // This path used to run the entire fought-battle body for a bye: it built
+  // `teamSize` Bye_Placeholders, simulated a real battle against them, then
+  // overrode the outcome. The placeholders carry no weapon, so `getWeaponInfo`
+  // fell back to Fists at 10 base damage and the `!weaponLike` branch in the
+  // attack loop skipped the range check entirely — two or three of them punched
+  // the real team for the full duration, and the damage was persisted. A
+  // walkover was billing players for repairs on a battle nobody fought.
+  if (match.team2Id === null) {
+    return resolveTeamLeagueBye(match, teamSize, battleType, cycleNumber);
   }
+
+  // Load robots with weapons for both teams
+  const team1Robots = await loadTeamRobotsWithWeapons(match.team1.members.map(m => m.robotId));
+  const team2Robots = await loadTeamRobotsWithWeapons(match.team2!.members.map(m => m.robotId));
 
   // Prepare all robots for combat (apply tuning bonuses)
   const allRealRobotIds = [
     ...team1Robots.map(r => r.id),
-    ...(isByeMatch ? [] : team2Robots.map(r => r.id)),
+    ...team2Robots.map(r => r.id),
   ];
   const tuningMap = await getTuningBonusesBatch(allRealRobotIds);
   for (const robot of team1Robots) {
     prepareRobotForCombat(robot, tuningMap.get(robot.id) ?? {});
   }
-  if (!isByeMatch) {
-    for (const robot of team2Robots) {
-      prepareRobotForCombat(robot, tuningMap.get(robot.id) ?? {});
-    }
+  for (const robot of team2Robots) {
+    prepareRobotForCombat(robot, tuningMap.get(robot.id) ?? {});
   }
 
   // Simulate the battle
-  let battleResult = simulateTeamBattle(team1Robots, team2Robots, teamSize);
-
-  // Bye matches are always an auto-win for team 1 — override simulation result
-  if (isByeMatch) {
-    battleResult = {
-      ...battleResult,
-      winningSide: 1,
-      winnerRobotId: team1Robots[0].id,
-      isDraw: false,
-      isByeMatch: true,
-    };
-  }
+  const battleResult = simulateTeamBattle(team1Robots, team2Robots, teamSize);
 
   // Determine winning team ID
   const team1Won = battleResult.winningSide === 1;
@@ -271,9 +335,7 @@ async function executeSingleTeamBattle(
 
   // Compute team ELOs for reward calculation
   const team1SumELO = team1Robots.reduce((sum, r) => sum + r.elo, 0);
-  const team2SumELO = isByeMatch
-    ? getByeTeamELO(teamSize)
-    : team2Robots.reduce((sum, r) => sum + r.elo, 0);
+  const team2SumELO = team2Robots.reduce((sum, r) => sum + r.elo, 0);
 
   // Calculate ELO changes
   const eloChanges = calculateTeamBattleELOChanges(
@@ -341,7 +403,7 @@ async function executeSingleTeamBattle(
 
     // Award credits to stables
     await awardCreditsWithLedger(match.team1.stableId, team1Reward, 'battle_income', cycleNumber, 'Team battle reward');
-    if (!isByeMatch && match.team2) {
+    if (match.team2) {
       await awardCreditsWithLedger(match.team2.stableId, team2Reward, 'battle_income', cycleNumber, 'Team battle reward');
     }
 
@@ -352,7 +414,7 @@ async function executeSingleTeamBattle(
 
     // Award prestige to stables
     await awardPrestigeToUser(match.team1.stableId, team1Prestige);
-    if (!isByeMatch && match.team2) {
+    if (match.team2) {
       await awardPrestigeToUser(match.team2.stableId, team2Prestige);
     }
 
@@ -372,7 +434,7 @@ async function executeSingleTeamBattle(
     });
 
     // Update team 2 standings (skip for bye)
-    if (!isByeMatch && match.team2Id) {
+    if (match.team2Id) {
       const team2Outcome = isDraw ? 'draw' : team2Won ? 'win' : 'loss';
       await standingsService.recordBattleResult({
         entityType: 'team',
@@ -401,7 +463,7 @@ async function executeSingleTeamBattle(
       });
     }
 
-    if (!isByeMatch) {
+    {
       for (const robot of team2Robots) {
         const robotCredits = team2Credits.find(c => c.robotId === robot.id);
         // Update BattleParticipant with final values
@@ -440,7 +502,7 @@ async function executeSingleTeamBattle(
   if (winningSide !== null) {
     await prisma.battle.update({ where: { id: battle.id }, data: { winningSide } }).catch(() => {});
   }
-  const allRobots = [...team1Robots, ...(isByeMatch ? [] : team2Robots)];
+  const allRobots = [...team1Robots, ...team2Robots];
   const robotMaxHP: Record<string, number> = {};
   const robotNameToId: Record<string, number> = {};
   const robotNameToTeam: Record<string, number> = {};
@@ -460,7 +522,7 @@ async function executeSingleTeamBattle(
     robotNameToTeam,
     tagTeamInfo: {
       team1Robots: team1Robots.filter(r => r.id > 0).map(r => r.name),
-      team2Robots: isByeMatch ? [] : team2Robots.filter(r => r.id > 0).map(r => r.name),
+      team2Robots: team2Robots.filter(r => r.id > 0).map(r => r.name),
     },
     startingPositions: battleResult.startingPositions as Record<string, { x: number; y: number }> | undefined,
     endingPositions: battleResult.endingPositions as Record<string, { x: number; y: number }> | undefined,
@@ -511,9 +573,8 @@ async function executeSingleTeamBattle(
     });
   }
 
-  if (!isByeMatch) {
+  {
     for (const robot of team2Robots) {
-      if (robot.id < 0) continue; // Skip bye robots
       const participant = battleResult.participants.find(p => p.robotId === robot.id);
       await updateRobotCombatStats({
         robotId: robot.id,
@@ -538,10 +599,10 @@ async function executeSingleTeamBattle(
   // Award streaming revenue per robot
   for (const robot of team1Robots) {
     await awardStreamingRevenueForParticipant(
-      robot.id, match.team1.stableId, battle.id, isByeMatch, teamSize,
+      robot.id, match.team1.stableId, battle.id, false, teamSize,
     );
   }
-  if (!isByeMatch && match.team2) {
+  if (match.team2) {
     for (const robot of team2Robots) {
       await awardStreamingRevenueForParticipant(
         robot.id, match.team2.stableId, battle.id, false, teamSize,
@@ -566,7 +627,7 @@ async function executeSingleTeamBattle(
   // R9.7: Resolve opponent team names and LP deltas for match notifications
   const team1LPDelta = calculateTeamBattleLPDelta(team1Won, isDraw);
   const team2LPDelta = calculateTeamBattleLPDelta(team2Won, isDraw);
-  const team1OpponentName = isByeMatch ? 'Bye' : (match.team2?.teamName ?? 'Unknown');
+  const team1OpponentName = match.team2?.teamName ?? 'Unknown';
   const team2OpponentName = match.team1.teamName ?? 'Unknown';
 
   for (const robot of team1Robots) {
@@ -598,7 +659,7 @@ async function executeSingleTeamBattle(
         },
         null, // Team battle has no single opponent
         0,    // Streaming revenue tracked separately
-        isByeMatch,
+        false, // never a bye — byes return before this point (Spec #49)
         {
           isTeamBattle: true,
           teamSize,
@@ -616,7 +677,7 @@ async function executeSingleTeamBattle(
     }
   }
 
-  if (!isByeMatch && match.team2) {
+  if (match.team2) {
     for (const robot of team2Robots) {
       const participant = battleResult.participants.find(p => p.robotId === robot.id);
       const robotCredits = team2Credits.find(c => c.robotId === robot.id);
@@ -689,7 +750,7 @@ async function executeSingleTeamBattle(
     });
   }
 
-  if (!isByeMatch && match.team2) {
+  if (match.team2) {
     for (const robot of team2Robots) {
       const prevLost = await didRobotLosePreviousBattle(robot.id, battle.id);
       await checkAndAwardAchievements(match.team2.stableId, robot.id, {

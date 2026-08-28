@@ -132,17 +132,32 @@ describe('resolveRobotIdsForEvent — tournament modes', () => {
     const ids = await resolveRobotIdsForEvent('tournament_1v1');
 
     expect(ids).toEqual([3, 4, 5, 6]);
+    // Spec #49: no `isByeMatch` filter. A bracket bye is a scheduled match that
+    // resolves differently, so it is scoped for repair like any other.
     expect(mockScheduledTournamentMatchFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {
           participantType: 'robot',
           status: { in: ['pending', 'scheduled'] },
-          isByeMatch: false,
         },
       }),
     );
     // The unified table holds no tournament bracket rows.
     expect(mockScheduledMatchParticipantFindMany).not.toHaveBeenCalled();
+  });
+
+  // Spec #49 removed the tournament-only bye exemption. Auto-repair must now
+  // cover a byed robot in every mode, so a bracket bye row is included.
+  it('should include a bracket bye participant in repair scoping', async () => {
+    mockScheduledTournamentMatchFindMany.mockResolvedValue([
+      { participant1Id: 11, participant2Id: null }, // a bye: one side empty
+      { participant1Id: 12, participant2Id: 13 },
+    ]);
+
+    const ids = await resolveRobotIdsForEvent('tournament_1v1');
+
+    expect(ids).toContain(11);
+    expect(ids).toEqual([11, 12, 13]);
   });
 
   // Later rounds exist as placeholders with null participants until the bracket

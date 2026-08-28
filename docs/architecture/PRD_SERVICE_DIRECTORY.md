@@ -93,6 +93,7 @@ Core combat engine — the simulator and shared orchestration helpers.
 | `combatSimulator` | Tick-based 1v1 and N-robot combat simulation (`simulateBattle`, `simulateBattleMulti`) |
 | `baseOrchestrator` | Shared battle orchestration pipeline (validate → simulate → record) |
 | `battlePostCombat` | Shared post-combat helpers (streaming revenue, audit logging, stat updates, credit/prestige/fame awards) |
+| `byeResolutionService` | The single writer for a Bye_Event in all nine modes — entity resolution, the Bye_Award_Claim, the whole Bye_Record and the credit award. Simulates nothing (Spec #49) |
 | `battleStrategy` | Strategy pattern interface + `BattleProcessor` for new match types |
 | `combatMessageGenerator` | Converts raw combat events into narrative battle log messages |
 
@@ -136,7 +137,7 @@ King of the Hill mode — orchestration and matchmaking.
 | Service | Purpose |
 |---------|---------|
 | `kothBattleOrchestrator` | KotH match execution (placement rewards, zone scoring, no ELO changes) |
-| `kothMatchmakingService` | KotH group formation (5-6 robots, LP-banding within tier/instance, same-stable swaps, recent-opponent swaps — unified pipeline per Spec #41) |
+| `kothMatchmakingService` | KotH group formation (5-6 robots, LP-banding within tier/instance, same-stable swaps, recent-opponent swaps — unified pipeline per Spec #41). A tier instance below `MIN_GROUP_SIZE` now creates one Bye_Event per eligible robot via `scheduling/thinInstanceByes` rather than being skipped (Spec #49) |
 
 ### league/
 1v1 league system — battles, instances, and promotions.
@@ -260,8 +261,9 @@ slot until fought. See `scheduling/eventScheduleScope` below and
 
 | Service | Purpose |
 |---------|---------|
-| `eventScheduleScope` | The single answer to "is there a queued match?", asked from both directions over one `Record<SubscribableEventType, …>` scope map: `resolveRobotIdsForEvent` (who fights event X next — used by pre-battle repair, issue #411) and `resolveOutstandingEventsForRobots` (which events a robot still owes a match to — used by subscription slot accounting). Adding a tenth mode fails to compile until its schedule source is declared |
+| `eventScheduleScope` | The single answer to "is there a queued match?", asked from both directions over one `Record<SubscribableEventType, …>` scope map: `resolveRobotIdsForEvent` (who fights event X next — used by pre-battle repair, issue #411; carries no `isByeMatch` filter on either arm since Spec #49, so a byed robot is repaired like any other booked match) and `resolveOutstandingEventsForRobots` (which events a robot still owes a match to — used by subscription slot accounting). Adding a tenth mode fails to compile until its schedule source is declared |
 | `eventCronSchedule` | `getNextSchedulingMoment(s)` — when each event next books matches, derived from the configured cron slot. Surfaced to players so they know the deadline to be subscribed by |
+| `thinInstanceByes` | Bye creation and resolution for the two Placement_Modes (Spec #49). `planThinInstanceByes` is pure — one entry per eligible robot when a `koth`/`grand_melee` tier instance falls below `MIN_GROUP_SIZE`; `createThinInstanceByes` persists it; `resolvePlacementBye` resolves the resulting rows. Both matchmakers call it, so the two cannot drift apart. Before this, a thin instance was skipped in silence and nothing was written to any table |
 
 ---
 

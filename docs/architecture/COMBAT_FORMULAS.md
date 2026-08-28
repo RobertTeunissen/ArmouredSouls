@@ -1344,6 +1344,14 @@ Loser/Draw reward (per robot) = Winner reward × 0.20
 
 Each robot on the winning team earns the full multiplied amount. Fame and prestige are not split — each robot earns the full tier-appropriate amount.
 
+**A bye is not a win, and uses a different formula (Spec #49).** When a team receives a walkover there is no fought battle, so the win reward does not apply:
+
+```
+Bye reward (total to the stable) = 1v1 participation reward × teamSize
+```
+
+That is the *participation* floor multiplied by team size, not `(win + participation)` — so a bye pays one sixth of what the fought-win formula above would pay at the same tier. A bye also awards zero prestige, zero fame and zero streaming revenue, simulates no combat, and therefore inflicts no damage and no repair cost. Do not conflate the two formulas: they differ by a factor of 6.
+
 ### ELO Updates
 
 ```

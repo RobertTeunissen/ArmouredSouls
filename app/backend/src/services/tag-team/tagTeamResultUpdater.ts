@@ -62,10 +62,9 @@ export async function updateTagTeamBattleResults(
   match: TagTeamMatchWithTeams,
   result: TagTeamBattleResult
 ): Promise<void> {
-  // Check if this is a bye-team match (bye matches have team2Id = null in the DB)
-  const isByeMatch = match.team2Id === null;
-  const team1IsBye = false; // Team 1 is never the bye team (matchmaking always puts real team as team1)
-  const team2IsBye = match.team2Id === null;
+  // This updater is only ever reached for a fought match. A bye is detected at
+  // the top of `tagTeamScheduler` and resolved by the Bye_Reward_Module before
+  // any opponent is loaded (Spec #49), so both teams are real here.
 
   // Map teams to the expected shape (slot 0 = active, slot 1 = reserve)
   const mapTeam = (raw: (TeamBattle & { members: Array<{ robot: Robot; slotIndex: number; robotId: number }> }) | null) => {
@@ -83,182 +82,12 @@ export async function updateTagTeamBattleResults(
   };
 
   // Use pre-loaded teams from the scheduled match query (no re-fetch needed)
-  const team1 = team1IsBye ? null : mapTeam(match.team1);
-  const team2 = team2IsBye ? null : mapTeam(match.team2);
+  const team1 = mapTeam(match.team1);
+  const team2 = mapTeam(match.team2);
 
-  // For bye-team matches, only update the real team
-  if (isByeMatch) {
-    const realTeam = team1 || team2;
-    if (!realTeam || !realTeam.activeRobot || !realTeam.reserveRobot) {
-      throw new TagTeamError(
-        TagTeamErrorCode.INVALID_TEAM_COMPOSITION,
-        `Real team or robots not found for bye-match ${match.id}`,
-        400,
-        { matchId: match.id }
-      );
-    }
-
-    const realTeamWon = result.winnerId === realTeam.id;
-    const isDraw = result.isDraw;
-
-    // Calculate ELO changes against bye-team (combined ELO 2000)
-    const realTeamCombinedELO = realTeam.activeRobot.elo + realTeam.reserveRobot.elo;
-    const byeTeamCombinedELO = 2000;
-    const eloChanges = team1IsBye 
-      ? calculateTagTeamELOChanges(byeTeamCombinedELO, realTeamCombinedELO, false, isDraw)
-      : calculateTagTeamELOChanges(realTeamCombinedELO, byeTeamCombinedELO, realTeamWon, isDraw);
-    
-    const realTeamELOChange = team1IsBye ? eloChanges.team2Change : eloChanges.team1Change;
-
-    // Calculate league point changes (Requirements 12.4, 12.5: same as normal matches)
-    const realTeamLeaguePoints = calculateTagTeamLeaguePoints(realTeamWon, isDraw);
-
-    // Calculate rewards (Requirements 12.4, 12.5: full rewards for wins, normal penalties for losses)
-    const realTeamRewards = calculateTagTeamRewards(match.teamBattleLeague, realTeamWon, isDraw);
-
-    // Calculate repair costs
-    // NOTE: Repair costs are NOT calculated here anymore
-    // They are calculated by RepairService when repairs are actually triggered
-    // This ensures accurate costs based on current damage and facility levels
-
-    const activeFinalHP = team1IsBye ? result.team2ActiveFinalHP : result.team1ActiveFinalHP;
-    const reserveFinalHP = team1IsBye ? result.team2ReserveFinalHP : result.team1ReserveFinalHP;
-    const tagOutTime = team1IsBye ? result.team2TagOutTime : result.team1TagOutTime;
-
-    // NOTE: Repair costs are NOT calculated here anymore
-    // They are calculated by RepairService when repairs are actually triggered
-    // This ensures accurate costs based on current damage and facility levels
-
-    // Calculate prestige
-    const prestige = calculateTagTeamPrestige(match.teamBattleLeague, realTeamWon, isDraw);
-
-    // Calculate fame (Requirement 10.7) based on damage dealt and survival time
-    const totalBattleTime = result.durationSeconds;
-    const activeDamageDealt = team1IsBye ? result.team2ActiveDamageDealt : result.team1ActiveDamageDealt;
-    const reserveDamageDealt = team1IsBye ? result.team2ReserveDamageDealt : result.team1ReserveDamageDealt;
-    const activeSurvivalTime = team1IsBye ? result.team2ActiveSurvivalTime : result.team1ActiveSurvivalTime;
-    const reserveSurvivalTime = team1IsBye ? result.team2ReserveSurvivalTime : result.team1ReserveSurvivalTime;
-
-    const activeFame = calculateTagTeamFame(
-      match.teamBattleLeague,
-      realTeam.activeRobot,
-      activeDamageDealt,
-      activeSurvivalTime,
-      totalBattleTime,
-      realTeamWon,
-      isDraw
-    );
-    const reserveFame = calculateTagTeamFame(
-      match.teamBattleLeague,
-      realTeam.reserveRobot,
-      reserveDamageDealt,
-      reserveSurvivalTime,
-      totalBattleTime,
-      realTeamWon,
-      isDraw
-    );
-
-    // Update robots via unified combat stats function
-    await updateRobotCombatStats({
-      robotId: realTeam.activeRobotId,
-      finalHP: activeFinalHP,
-      combatMaxHP: realTeam.activeRobot.maxHP,
-      newELO: realTeam.activeRobot.elo + realTeamELOChange,
-      isWinner: realTeamWon,
-      isDraw,
-      damageDealt: Math.round(activeDamageDealt),
-      damageTakenByOpponent: realTeam.activeRobot.maxHP - activeFinalHP,
-      opponentsDestroyed: 0, // Bye opponent is virtual
-      fameIncrement: activeFame,
-      battleType: 'tag_team',
-      stance: realTeam.activeRobot.stance,
-      loadoutType: realTeam.activeRobot.loadoutType,
-    });
-
-    await updateRobotCombatStats({
-      robotId: realTeam.reserveRobotId,
-      finalHP: reserveFinalHP,
-      combatMaxHP: realTeam.reserveRobot.maxHP,
-      newELO: realTeam.reserveRobot.elo + realTeamELOChange,
-      isWinner: realTeamWon,
-      isDraw,
-      damageDealt: Math.round(reserveDamageDealt),
-      damageTakenByOpponent: tagOutTime !== undefined
-        ? realTeam.reserveRobot.maxHP - reserveFinalHP
-        : 0,
-      opponentsDestroyed: 0, // Bye opponent is virtual
-      fameIncrement: reserveFame,
-      battleType: 'tag_team',
-      stance: realTeam.reserveRobot.stance,
-      loadoutType: realTeam.reserveRobot.loadoutType,
-    });
-
-    // Update team standings via standingsService
-    const byeTeamOutcome = isDraw ? 'draw' : realTeamWon ? 'win' : 'loss';
-    await standingsService.recordBattleResult({
-      entityType: 'team',
-      entityId: realTeam.id,
-      mode: 'tag_team',
-      outcome: byeTeamOutcome,
-      lpDelta: realTeamLeaguePoints,
-    });
-
-    // Update stable via shared helpers
-    // Note: Repair costs are deducted separately by RepairService, not here
-    const cycleNumber = await getCurrentCycleNumber();
-    await awardCreditsWithLedger(realTeam.stableId, realTeamRewards, 'battle_income', cycleNumber, 'Tag team battle reward');
-    await awardPrestigeToUser(realTeam.stableId, prestige);
-
-    // Update battle record with actual values
-    const winnerReward = realTeamWon ? realTeamRewards : 0;
-    const loserReward = !realTeamWon && !isDraw ? realTeamRewards : 0;
-    
-    await prisma.battle.update({
-      where: { id: result.battleId },
-      data: {
-        winnerReward,
-        loserReward,
-
-      },
-    });
-
-    logger.info(
-      `[TagTeamBattles] Updated bye-match results for match ${match.id}: ` +
-      `Team ${realTeam.id} ELO ${realTeamELOChange > 0 ? '+' : ''}${realTeamELOChange}`
-    );
-
-    // Update BattleParticipant records for the real team with ELO, prestige, fame, and credits
-    const byeCreditsPerRobot = Math.floor(realTeamRewards / 2);
-    const byePrestigePerRobot = Math.floor(prestige / 2);
-
-    await prisma.battleParticipant.updateMany({
-      where: {
-        battleId: result.battleId,
-        robotId: realTeam.activeRobotId,
-      },
-      data: {
-        credits: byeCreditsPerRobot,
-        eloAfter: realTeam.activeRobot.elo + realTeamELOChange,
-        prestigeAwarded: byePrestigePerRobot,
-        fameAwarded: activeFame,
-      },
-    });
-
-    await prisma.battleParticipant.updateMany({
-      where: {
-        battleId: result.battleId,
-        robotId: realTeam.reserveRobotId,
-      },
-      data: {
-        credits: byeCreditsPerRobot,
-        eloAfter: realTeam.reserveRobot.elo + realTeamELOChange,
-        prestigeAwarded: byePrestigePerRobot,
-        fameAwarded: reserveFame,
-      },
-    });
-
-    return;
-  }
+  // The bye branch that used to sit here is gone (Spec #49). It paid
+  // 2x (win + participation), full prestige and full fame, and split the credits
+  // with a floor-only division that could lose a credit.
 
   // Normal match (both teams are real)
   if (!team1 || !team2) {

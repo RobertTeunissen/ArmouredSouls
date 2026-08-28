@@ -56,7 +56,7 @@ The Armoured Souls matchmaking system is a **fully implemented** turn-based mult
 - **Battle Scheduling**: Daily cycle with 24-hour adjustment period
 - **League Progression**: Top 10% promotion AND ≥25 league points (min 5 cycles in tier), bottom 10% demotion
 - **Battle Readiness**: Weapons-only check — robots must have all required weapons equipped for their loadout type. HP is not checked because auto-repair runs before battle execution.
-- **Bye-Robot System**: Handles odd numbers (ELO 1000, full rewards)
+- **Bye-Robot System**: Handles odd numbers (ELO 1000, participation reward — Spec #49)
 - **Combat Logs**: Action-by-action with 50+ message templates
 - **Admin Tools**: Bulk cycle testing (up to 100 cycles) with auto-repair
 - **Complete UI**: Dashboard, battle history, league standings, match details
@@ -182,7 +182,7 @@ The Armoured Souls matchmaking system is a **fully implemented** turn-based mult
 - **Implementation**: Runs every cycle, checks eligibility, resets points and cycles counter
 
 **D4: Odd Robot Handling**
-- **Decision**: Bye-robot (ELO 1000, full rewards)
+- **Decision**: Bye-robot (ELO 1000, participation reward — Spec #49)
 - **Rationale**: Every robot fights, no sitting out
 - **Implementation**: Special robot id: -1, predictable weak stats
 
@@ -447,7 +447,7 @@ The scheduled batch model allows:
 - Never match robot against same opponent twice in same batch
 - Soft deprioritize same-stable matchups (strongly in leagues, allow as last resort)
 - Soft deprioritize recent opponents (last 5 matches)
-- Odd-numbered robots matched with bye-robot (ELO 1000, full rewards)
+- Odd-numbered robots matched with bye-robot (ELO 1000, participation reward — Spec #49)
 
 **Design Decision**: Soft deprioritization prevents deadlocks in small leagues while maintaining fairness. Recent opponent tracking adds variety to matchups.
 
@@ -1390,7 +1390,7 @@ See [COMBAT_MESSAGES.md](COMBAT_MESSAGES.md) for 100+ message templates and comp
    - **Solution**: Match with bye-robot (special robot id: -1, ELO 1000)
    - Bye-robot has minimal stats, predictable behavior
    - Player robot gets easy win
-   - Full battle rewards awarded (compensates for low ELO gain)
+   - Participation reward awarded — 20% of the tier base, the same a loss pays (Spec #49). Not full rewards
    - Bye-robot never gains/loses ELO
 
 2. **No Suitable Opponent**
@@ -1497,7 +1497,7 @@ See [COMBAT_MESSAGES.md](COMBAT_MESSAGES.md) for 100+ message templates and comp
 
 **D6: Odd Robot Handling**
 - **Decision**: Match with bye-robot (special robot, ELO 1000)
-- **Rewards**: Full rewards to compensate for low ELO gain
+- **Rewards**: Participation reward only (20% of tier base), plus the usual LP and ELO for a win. No prestige, no fame, no streaming revenue, and no combat is simulated so no damage is taken (Spec #49)
 - **Rationale**: Every robot gets to fight, no sitting out
 
 **D7: Recent Opponent Avoidance**
@@ -2743,7 +2743,7 @@ The Armoured Souls matchmaking system is **fully implemented and operational** a
 - ✅ First day solution (all robots start in Bronze)
 - ✅ Edge cases handled (odd numbers, no opponents, same-stable, etc.)
 - ✅ Battle readiness warnings (3 locations)
-- ✅ Bye-robot matches (full rewards compensation)
+- ✅ Bye-robot matches (participation reward — Spec #49)
 
 ### Key Achievements
 

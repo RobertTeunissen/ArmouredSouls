@@ -11,6 +11,11 @@
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { StandingsMode, Standing } from '../../../generated/prisma';
+// Single declaration of the Grand Melee placement point scale (Spec #49).
+// Import direction is standingsService → grandMeleeRewards, which is cycle-free:
+// grandMeleeRewards imports only economyFormulas, and economyFormulas imports
+// nothing. The reverse direction would drag Prisma into a currently pure module.
+import { GRAND_MELEE_LP_SCALE } from '../grand-melee/grandMeleeRewards';
 
 // --- Types ---
 
@@ -340,8 +345,11 @@ export interface AwardGrandMeleePointsParams {
   survivalTime: number;
 }
 
-/** Point scale for Grand Melee placements (1st through 10th, 0 for 11+). */
-export const GRAND_MELEE_POINT_SCALE = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
+// The Grand Melee placement point scale is declared once, in
+// `services/grand-melee/grandMeleeRewards.ts` as GRAND_MELEE_LP_SCALE, and
+// imported here (Spec #49). Before that there were two declarations of the same
+// ten numbers: this one fed `standings.leaguePoints`, while the other filled the
+// `lpDelta` a player is shown. They agreed, but nothing enforced it.
 
 /**
  * Awards Grand Melee points to a robot based on their placement using an F1-style point scale.
@@ -357,7 +365,7 @@ async function awardGrandMeleePoints(params: AwardGrandMeleePointsParams): Promi
   const { robotId, placement, damageDealt, survivalTime } = params;
 
   // Determine points from F1-style scale (0 if placement exceeds scale length)
-  const points = placement <= GRAND_MELEE_POINT_SCALE.length ? GRAND_MELEE_POINT_SCALE[placement - 1] : 0;
+  const points = placement <= GRAND_MELEE_LP_SCALE.length ? GRAND_MELEE_LP_SCALE[placement - 1] : 0;
 
   // Get or create the Grand Melee standing for this robot
   const current = await getOrCreateStanding('robot', robotId, 'grand_melee');

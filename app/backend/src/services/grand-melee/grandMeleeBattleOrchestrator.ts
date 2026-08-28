@@ -3,6 +3,7 @@
 import prisma from '../../lib/prisma';
 import { Prisma } from '../../../generated/prisma';
 import logger from '../../config/logger';
+import { resolvePlacementBye } from '../scheduling/thinInstanceByes';
 import { computeBattleSummary } from '../battle/battleSummaryComputer';
 import { countKillsByRobot } from '../../shared/utils/battleStatistics';
 import { simulateBattleMulti, RobotWithWeapons, BattleConfig, SpatialCombatResult, SpatialRobotCombatState, SpatialCombatEvent } from '../battle/combatSimulator';
@@ -55,6 +56,16 @@ interface PreparedParticipant {
 export interface GrandMeleeBattleExecutionSummary {
   totalMatches: number;
   successfulMatches: number;
+  /**
+   * Bye_Events resolved this run (Spec #49).
+   *
+   * A sibling of `successfulMatches`, not a subset: the three counters
+   * partition `totalMatches`, so `successfulMatches` keeps meaning
+   * "combat was simulated" — which is what an operator reads when
+   * diagnosing a cycle. `matchResults.length` therefore equals
+   * `successfulMatches + byeMatches`.
+   */
+  byeMatches: number;
   failedMatches: number;
   totalRobotsInvolved: number;
   matchResults: Array<{
@@ -616,6 +627,7 @@ export async function executeScheduledGrandMeleeBattles(): Promise<GrandMeleeBat
   const summary: GrandMeleeBattleExecutionSummary = {
     totalMatches: totalCount,
     successfulMatches: 0,
+    byeMatches: 0,
     failedMatches: 0,
     totalRobotsInvolved: 0,
     matchResults: [],
@@ -676,6 +688,21 @@ export async function executeScheduledGrandMeleeBattles(): Promise<GrandMeleeBat
     const participantCount = unifiedMatch.participants.length;
 
     try {
+      // A Thin_Instance bye resolves without combat (Spec #49).
+      if (unifiedMatch.isByeMatch === true) {
+        await resolvePlacementBye(
+          unifiedMatch.id,
+          'grand_melee',
+          unifiedMatch.participants.map(p => p.participantId),
+          unifiedMatch.leagueType ?? undefined,
+        );
+        summary.byeMatches++;
+        summary.totalRobotsInvolved += participantCount;
+        summary.matchResults.push({ matchId, winnerId: null, placements: [] });
+        processed++;
+        continue;
+      }
+
       const result = await processGrandMeleeBattle({
         id: unifiedMatch.id,
         participants: unifiedMatch.participants,
@@ -711,7 +738,7 @@ export async function executeScheduledGrandMeleeBattles(): Promise<GrandMeleeBat
   }
 
   logger.info(
-    `[Grand Melee Orchestrator] Execution complete: ${summary.successfulMatches} successful, ${summary.failedMatches} failed (mem: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB)`,
+    `[Grand Melee Orchestrator] Execution complete: ${summary.successfulMatches} successful, ${summary.byeMatches} byes, ${summary.failedMatches} failed (mem: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB)`,
   );
   return summary;
 }

@@ -2,7 +2,7 @@
 title: "Matchmaking"
 description: "How the matchmaking algorithm pairs opponents — LP-primary matching with ELO as a secondary quality check, scoring penalties, and special handling for edge cases."
 order: 2
-lastUpdated: "2026-03-12"
+lastUpdated: "2026-08-27"
 relatedArticles:
   - leagues/league-tiers
   - leagues/league-points
@@ -108,7 +108,9 @@ This greedy approach means the top-ranked robots get first pick of opponents, wh
 
 ### Bye-Robots
 
-A bye-robot is assigned when there's an **odd number** of eligible robots in an instance. The leftover robot (the last one remaining after all pairs are formed) is matched against a special weak opponent (ELO 1000) that provides an easy win with full rewards. Bye matches ensure no robot sits out a cycle.
+A bye-robot is assigned when there's an **odd number** of eligible robots in an instance. The leftover robot (the last one remaining after all pairs are formed) receives a walkover: an automatic win against a placeholder opponent rated at ELO 1000.
+
+A bye pays the **participation reward** for your tier — the same amount a loss pays, not a winner's reward — plus the usual LP and ELO for a win. No combat is simulated, so your robot takes no damage and incurs no repair bill. Bye matches ensure no robot sits out a cycle.
 
 ```callout-tip
 Bye matches are not a punishment. They're a guarantee that every eligible robot gets to fight every cycle, even when the numbers don't work out evenly.

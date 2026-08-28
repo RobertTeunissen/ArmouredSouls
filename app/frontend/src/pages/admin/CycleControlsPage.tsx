@@ -29,8 +29,12 @@ interface CycleResult {
   repair3?: { robotsRepaired: number; totalFinalCost: number };
   matchmaking?: { matchesCreated: number; subscriptionExclusions?: number };
   battles?: { totalBattles: number; successfulBattles: number; failedBattles: number; byeBattles: number; errors: string[] };
-  tournaments?: { executed?: number; completed?: number; failed?: number; tournamentsExecuted?: number; roundsExecuted?: number; matchesExecuted?: number; tournamentsCompleted?: number; tournamentsCreated?: number; errors?: string[]; error?: string };
-  kothBattles?: { successfulMatches: number; failedMatches: number; totalMatches: number };
+  tournaments?: { executed?: number; completed?: number; failed?: number; tournamentsExecuted?: number; roundsExecuted?: number; matchesExecuted?: number; byeMatchesResolved?: number; tournamentsCompleted?: number; tournamentsCreated?: number; errors?: string[]; error?: string };
+  // Bye counts are optional (Spec #49): the panel renders whatever a run
+  // reports, so an older backend or a partial summary from a failed step still
+  // renders the rest of the block.
+  kothBattles?: { successfulMatches: number; byeMatches?: number; failedMatches: number; totalMatches: number };
+  grandMeleeBattles?: { successfulMatches: number; byeMatches?: number; failedMatches: number; matchesCreated?: number };
   repairPostKoth?: { robotsRepaired: number; totalFinalCost: number };
   kothMatchmaking?: { matchesCreated: number; subscriptionExclusions?: number };
   finances?: { usersProcessed: number; totalCostsDeducted: number; bankruptUsers: number };
@@ -130,10 +134,35 @@ function CycleControlsPage() {
       if (data.results && data.results.length > 0) {
         data.results.forEach((result: CycleResult) => {
           if (result.battles) {
-            const { totalBattles, successfulBattles, failedBattles } = result.battles;
+            const { totalBattles, successfulBattles, failedBattles, byeBattles } = result.battles;
+            // Bye count is reported so a walkover is traceable rather than
+            // indistinguishable from a fought match (Spec #49).
+            const byePart = byeBattles > 0 ? `, ${byeBattles} bye` : '';
             addSessionLog(
               failedBattles > 0 ? 'warning' : 'success',
-              `Cycle ${result.cycle}: ${totalBattles} battle(s) (${successfulBattles} successful, ${failedBattles} failed)`,
+              `Cycle ${result.cycle}: ${totalBattles} battle(s) (${successfulBattles} successful${byePart}, ${failedBattles} failed)`,
+            );
+          }
+          if (result.kothBattles) {
+            const { successfulMatches, failedMatches, byeMatches } = result.kothBattles;
+            const kothByePart = byeMatches ? `, ${byeMatches} bye` : '';
+            addSessionLog(
+              failedMatches > 0 ? 'warning' : 'success',
+              `Cycle ${result.cycle}: KotH: ${successfulMatches} fought${kothByePart}, ${failedMatches} failed`,
+            );
+          }
+          if (result.grandMeleeBattles) {
+            const { successfulMatches, failedMatches, byeMatches } = result.grandMeleeBattles;
+            const gmByePart = byeMatches ? `, ${byeMatches} bye` : '';
+            addSessionLog(
+              failedMatches > 0 ? 'warning' : 'success',
+              `Cycle ${result.cycle}: Grand Melee: ${successfulMatches} fought${gmByePart}, ${failedMatches} failed`,
+            );
+          }
+          if (result.tournaments?.byeMatchesResolved) {
+            addSessionLog(
+              'info',
+              `Cycle ${result.cycle}: Tournaments: ${result.tournaments.byeMatchesResolved} bracket bye(s) resolved and paid`,
             );
           }
           if (result.team2v2LeagueBlock) {

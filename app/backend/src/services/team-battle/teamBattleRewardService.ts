@@ -86,19 +86,28 @@ export interface RobotCreditAllocation {
 }
 
 /**
- * Distribute team credits across N robots per R7.4 rules:
- *   - Surviving robots (finalHP > 0) get an equal share
- *   - Destroyed robots (finalHP = 0) with damageDealt > 0 get at least 1 credit
- *   - Destroyed robots with damageDealt = 0 get 0 credits
- *   - Sum of all allocations equals totalReward exactly (no rounding loss)
+ * Distribute team credits across N robots.
+ *
+ * A plain equal split: every robot receives `floor(total / n)`, and the
+ * remainder is handed out one credit at a time to the first robots in the list,
+ * so the allocations sum to `totalReward` exactly with no rounding loss.
+ *
+ * The parameter is deliberately widened to `{ robotId: number }` (Spec #49) so
+ * the bye path can reuse this rule rather than re-deriving it. The body only
+ * ever reads `robotId` and `participants.length`, so `TeamBattleParticipantResult[]`
+ * still satisfies it and no existing call site changes.
+ *
+ * NOTE: an earlier version of this comment described destroyed-robot special
+ * cases (a minimum of 1 credit when `damageDealt > 0`, 0 credits otherwise).
+ * The implementation has never done that. The comment was wrong, not the code.
  *
  * @param totalReward - Total team credit reward to distribute
- * @param participants - Per-robot battle results for this team
+ * @param participants - Robots on this side; only `robotId` is read
  * @returns Array of per-robot credit allocations (sum === totalReward)
  */
 export function distributeTeamCredits(
   totalReward: number,
-  participants: TeamBattleParticipantResult[],
+  participants: Array<{ robotId: number }>,
 ): RobotCreditAllocation[] {
   if (participants.length === 0) return [];
 

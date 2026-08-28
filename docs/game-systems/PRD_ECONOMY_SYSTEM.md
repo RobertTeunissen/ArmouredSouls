@@ -49,7 +49,7 @@
 **Battle Rewards:**
 - ✅ League-based rewards: Bronze (₡7.5K) → Champion (₡225K)
 - ✅ Prestige multipliers: Smooth scaling up to +50% bonus on winnings
-- ✅ Participation rewards: 30% of league base for all combatants
+- ✅ Participation rewards: 20% of league base win reward for all combatants
 - ✅ **NEW**: Detailed reward breakdown shown in battle logs:
   - League base reward with min/max range
   - Prestige bonus percentage and amount
@@ -89,7 +89,7 @@
 3. `app/backend/src/services/league/leagueBattleOrchestrator.ts` (enhanced, shared helpers in `battlePostCombat.ts`)
    - League-based battle rewards
    - Prestige multipliers: Smooth scaling up to +50%
-   - Participation rewards (30% of base)
+   - Participation rewards (20% of the base win reward)
    - Detailed reward breakdown in battle logs:
      - Shows league base with min/max range
      - Displays prestige bonus percentage and amount
@@ -645,7 +645,7 @@ This PRD defines the complete economy system for Armoured Souls, covering all co
 - ✅ **Battle reward system** - League-based rewards with prestige multipliers
   - Bronze: ₡7.5K → Champion: ₡225K
   - Prestige multipliers: Smooth scaling up to +50% bonus
-  - Participation rewards: 30% of league base
+  - Participation rewards: 20% of the league base win reward
   - **NEW (Feb 4)**: Rewards tracked in database and displayed in admin
 - ✅ **Fame system** - Performance-based fame awards
   - Perfect victory (100% HP): 2x multiplier
@@ -1337,7 +1337,7 @@ else:
 winner_reward = min(winner_base_reward + ELO_bonus, league_max)
 
 // Participation reward (both winner and loser receive this)
-participation_reward = league_base × 0.3  // 30% of league base
+participation_reward = league_base × 0.2  // PARTICIPATION_REWARD_FRACTION
 
 // Example: Bronze league (₡5K-₡10K range)
 // Winner: Your ELO: 1150, Opponent ELO: 1250
@@ -1354,17 +1354,28 @@ participation_reward = league_base × 0.3  // 30% of league base
 ```
 
 **Participation Award System**:
-- **Amount**: 30% of league base reward (both winner and loser)
+- **Amount**: 20% of the league base win reward (both winner and loser). Declared once as `PARTICIPATION_REWARD_FRACTION` in `app/backend/src/utils/economyFormulas.ts`
 - **Purpose**: Offset repair costs, especially for losers who take more damage
 - **Balance**: Ensures losing players still earn some credits to cover basic repairs
 
-**League-Specific Participation Rewards**:
-- Bronze league: ₡1,500 (30% of ₡5,000 base)
-- Silver league: ₡3,000 (30% of ₡10,000 base)
-- Gold league: ₡6,000 (30% of ₡20,000 base)
-- Platinum league: ₡12,000 (30% of ₡40,000 base)
-- Diamond league: ₡24,000 (30% of ₡80,000 base)
-- Champion league: ₡45,000 (30% of ₡150,000 base)
+**League-Specific Participation Rewards** (20% of `getLeagueWinReward(tier)`):
+- Bronze league: ₡1,500 (20% of ₡7,500 base)
+- Silver league: ₡3,000 (20% of ₡15,000 base)
+- Gold league: ₡6,000 (20% of ₡30,000 base)
+- Platinum league: ₡12,000 (20% of ₡60,000 base)
+- Diamond league: ₡23,000 (20% of ₡115,000 base)
+- Champion league: ₡45,000 (20% of ₡225,000 base)
+
+> **Corrected by Spec #49.** This section previously stated "30% of league base" against a
+> *different* set of base figures (₡5,000 bronze, ₡80,000 diamond, ₡150,000 champion). Both the
+> percentage and the bases were wrong, and for five of the six tiers the two errors cancelled to
+> the correct credit figure — which is why it went unnoticed. Diamond did not cancel: the doc
+> said ₡24,000 where the code pays ₡23,000. The figures above are 20% of the real
+> `getLeagueWinReward` table.
+>
+> 30% is the *tournament* participation percentage (`PARTICIPATION_PERCENTAGE` in
+> `tournamentRewards.ts`), which is a fraction of a round's win reward, not of a tier base. The
+> two are genuinely different numbers; do not reintroduce one in place of the other.
 
 **Economic Impact with Participation Awards**:
 - **Winner** (Bronze): ₡7,500 win reward + ₡1,500 participation = ₡9,000 total

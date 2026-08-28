@@ -82,6 +82,16 @@ const mockCalculateTeamBattleELOChanges = jest.fn();
 const mockCalculateTeamBattleLPDelta = jest.fn();
 const mockGetByeTeamELO = jest.fn();
 
+// Spec #49: a bye leaves the fought path entirely and is resolved by the
+// Bye_Reward_Module, so the orchestrator's bye branch is asserted by what it
+// delegates to rather than by what it simulates.
+const mockResolveByeEvent = jest.fn();
+jest.mock('../../../src/services/battle/byeResolutionService', () => ({
+  __esModule: true,
+  resolveByeEvent: (...args: unknown[]) => mockResolveByeEvent(...args),
+  BYE_BATTLE_DURATION_SECONDS: 15,
+}));
+
 jest.mock('../../../src/services/team-battle/teamBattleRewardService', () => ({
   __esModule: true,
   calculateTeamBattleReward: (...args: unknown[]) => mockCalculateTeamBattleReward(...args),
@@ -317,6 +327,11 @@ function setupDefaultMocks(teamSize: 2 | 3 = 2) {
   mockCalculateTeamBattleELOChanges.mockReturnValue({ team1Change: 16, team2Change: -16 });
   mockCalculateTeamBattleLPDelta.mockReturnValue(3);
   mockGetByeTeamELO.mockReturnValue(2000);
+  mockResolveByeEvent.mockResolvedValue({
+    battleId: 99,
+    creditsPaid: 3000,
+    alreadyResolved: false,
+  });
   mockLogBattleAuditEvent.mockResolvedValue(undefined);
   mockAwardCreditsToUser.mockResolvedValue(undefined);
   mockAwardCreditsWithLedger.mockResolvedValue(undefined);
@@ -709,30 +724,22 @@ describe('teamBattleOrchestrator', () => {
       }));
     });
 
-    it('should set opponent team name to "Bye" for bye matches (R9.7)', async () => {
+    // Spec #49: a bye no longer travels the fought-battle audit path, so the
+    // orchestrator emits no `opponentTeamName: 'Bye'` extras for one. The bye's
+    // audit rows come from the Bye_Resolution_Writer instead, which is asserted
+    // in the bye-match handling block below and in the integration tier.
+    it('should not emit fought-battle audit extras for a bye match', async () => {
       const match = makeScheduledMatch(1, 2, { isBye: true });
       mockUnifiedScheduledMatches([match]);
-      mockCalculateTeamBattleLPDelta.mockReturnValue(3);
-
-      mockTransaction.mockImplementation(async (cb: (...args: unknown[]) => unknown) => {
-        const tx = {
-          battle: { create: jest.fn().mockResolvedValue({ id: 99 }), update: jest.fn() },
-          battleParticipant: { createMany: jest.fn(), updateMany: jest.fn() },
-          robot: { update: jest.fn() },
-          scheduledMatch: { update: jest.fn() },
-        };
-        return cb(tx);
-      });
 
       await executeScheduledTeamBattles(2);
 
-      // Team 1 robots should have opponent team name = "Bye"
-      const team1Call = mockLogBattleAuditEvent.mock.calls[0];
-      const team1Extras = team1Call[5];
-      expect(team1Extras).toEqual(expect.objectContaining({
-        opponentTeamName: 'Bye',
-        teamLpDelta: 3,
-      }));
+      const byeExtras = mockLogBattleAuditEvent.mock.calls.map(c => c[5]);
+      for (const extras of byeExtras) {
+        expect(extras).not.toEqual(
+          expect.objectContaining({ opponentTeamName: 'Bye' }),
+        );
+      }
     });
 
     it('should continue execution even if audit log fails for one robot', async () => {
@@ -765,25 +772,30 @@ describe('teamBattleOrchestrator', () => {
   });
 
   describe('bye-match handling', () => {
-    it('should handle bye matches without team2 robots', async () => {
+    // Spec #49 R12.1: a bye is never simulated. This assertion was inverted —
+    // it previously required `toHaveBeenCalledTimes(1)` with the comment
+    // "Simulation should still be called". That simulation ran against
+    // weaponless Bye_Placeholders which, via the Fists fallback and the
+    // `!weaponLike` range bypass, dealt real damage that was then persisted to
+    // the real team. A walkover was billing players for repairs.
+    it('should never simulate combat for a bye match', async () => {
       const match = makeScheduledMatch(1, 2, { isBye: true });
       mockUnifiedScheduledMatches([match]);
 
-      mockTransaction.mockImplementation(async (cb: (...args: unknown[]) => unknown) => {
-        const tx = {
-          battle: { create: jest.fn().mockResolvedValue({ id: 99 }), update: jest.fn() },
-          battleParticipant: { createMany: jest.fn(), updateMany: jest.fn() },
-          robot: { update: jest.fn() },
-          scheduledMatch: { update: jest.fn() },
-        };
-        return cb(tx);
-      });
+      await executeScheduledTeamBattles(2);
 
-      const result = await executeScheduledTeamBattles(2);
+      expect(mockSimulateTeamBattle).not.toHaveBeenCalled();
+    });
 
-      expect(result.matchesCompleted).toBe(1);
-      // Simulation should still be called
-      expect(mockSimulateTeamBattle).toHaveBeenCalledTimes(1);
+    it('should delegate a bye to the Bye_Reward_Module rather than the fought path', async () => {
+      const match = makeScheduledMatch(1, 2, { isBye: true });
+      mockUnifiedScheduledMatches([match]);
+
+      await executeScheduledTeamBattles(2);
+
+      expect(mockResolveByeEvent).toHaveBeenCalledTimes(1);
+      const call = mockResolveByeEvent.mock.calls[0][0] as { mode: string };
+      expect(call.mode).toBe('league_2v2');
     });
   });
 });
