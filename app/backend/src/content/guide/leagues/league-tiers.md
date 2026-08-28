@@ -2,7 +2,7 @@
 title: "League Tiers & Instances"
 description: "The six competitive tiers in Armoured Souls — from Bronze to Champion — and how the instance system keeps leagues balanced and competitive."
 order: 1
-lastUpdated: "2026-03-12"
+lastUpdated: "2026-08-27"
 relatedArticles:
   - leagues/matchmaking
   - leagues/league-points
@@ -70,7 +70,7 @@ Matchmaking also prefers opponents within your own instance, though it can fall 
 
 ## League Tier Rewards
 
-Higher tiers mean bigger rewards. Each tier has a fixed base win reward — the amount you earn for winning a battle. Losers receive a participation reward (30% of the tier minimum).
+Higher tiers mean bigger rewards. Each tier has a fixed base win reward — the amount you earn for winning a battle. Losers receive a **participation reward: 20% of that tier's base win reward**.
 
 | Tier | Base Win Reward | Participation Reward |
 |------|----------------|---------------------|

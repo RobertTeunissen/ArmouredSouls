@@ -1,8 +1,8 @@
 ---
 title: "Bye Matches"
-description: "How bye matches work in tournaments — why top seeds advance without fighting, how byes are assigned, and the no-rewards rule for bye rounds."
+description: "How bye matches work in tournaments — why top seeds advance without fighting, how byes are assigned, and what a bye round pays."
 order: 4
-lastUpdated: "2026-03-11"
+lastUpdated: "2026-08-27"
 relatedArticles:
   - tournaments/tournament-format
   - tournaments/rewards
@@ -14,7 +14,7 @@ relatedArticles:
 
 When a tournament doesn't have a perfect power-of-two number of participants (8, 16, 32, etc.), some robots need to skip the first round to make the bracket work. These skipped rounds are called **bye matches** — the robot advances to the next round without fighting.
 
-Byes are assigned to the **top seeds** as a reward for their strong ELO performance. It's an advantage, but it comes with a trade-off: no battle means no rewards for that round.
+Byes are assigned to the **top seeds** as a reward for their strong ELO performance. It's an advantage, and a bye round still pays: you earn the same credits a loss would earn for that round.
 
 ## How Byes Are Assigned
 
@@ -43,17 +43,17 @@ When your robot receives a bye:
 1. **No battle occurs** — Your robot doesn't fight in that round
 2. **Automatic advancement** — You move directly to the next round
 3. **No damage taken** — Your robot enters the next round at full health
-4. **No rewards earned** — You receive zero credits, prestige, and fame for the bye round
+4. **Credits earned, nothing else** — You receive the same credits a loss earns for that round. No prestige and no fame, because those are earned by fighting
 
 The robot simply waits while the other first-round matches play out, then enters the bracket in the second round against a first-round winner.
 
 ```callout-warning
-Byes grant no rewards. A robot that receives a first-round bye and then wins its next match earns the progression multiplier for that round — but nothing for the bye round. Over a full tournament, this means bye recipients earn rewards for fewer rounds than robots who fight from the start.
+A bye pays what a loss pays for that round — not what a win pays. A robot that receives a first-round bye and then wins its next match earns the progression multiplier for that round, plus the loss-equivalent credits for the bye round. So a bye costs you the *difference* between a win and a loss for one round, not the whole round's reward.
 ```
 
 ## The Bye Trade-Off
 
-Byes are generally advantageous, but they're not purely beneficial. Here's the full picture:
+Byes are advantageous on balance. They used to carry a real cost — a bye round paid nothing at all — but a bye now pays the loss-equivalent credits, so the only thing you forgo is the gap between a win and a loss for that one round. Here's the full picture:
 
 ### Advantages
 
@@ -63,7 +63,7 @@ Byes are generally advantageous, but they're not purely beneficial. Here's the f
 
 ### Disadvantages
 
-- **No rewards for the bye round** — You miss out on the base (1.0×) rewards for the first round. Over many tournaments, this adds up.
+- **No win reward for the bye round** — You earn the loss-equivalent credits, not the winner's, so you forgo the difference for that round. You also earn no prestige or fame for it.
 - **Cold start** — Your first actual battle is against a robot that's already warmed up with a win. Some argue there's a psychological (or strategic) disadvantage to entering mid-tournament.
 
 ```callout-tip

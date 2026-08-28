@@ -4,7 +4,8 @@
  * This file exists to preserve existing import paths.
  */
 export * from './tagTeamTypes';
-export * from './tagTeamByeTeam';
+// `tagTeamByeTeam` was deleted by Spec #49. Its only purpose was building a
+// combat-ready Bye_Placeholder team for a simulation that no longer runs.
 export * from './tagTeamSimulation';
 export * from './tagTeamBattleRecord';
 export * from './tagTeamRewards';

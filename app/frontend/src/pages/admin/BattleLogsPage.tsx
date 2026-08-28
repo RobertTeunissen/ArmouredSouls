@@ -587,9 +587,14 @@ function BattleDetailPanel({ battle }: { battle: BattleDetail }) {
         <div className="bg-yellow-900/30 border border-yellow-700/30 text-yellow-200 p-4 rounded">
           <p className="font-semibold">⚠️ No Detailed Combat Events</p>
           <p className="text-sm mt-1">
-            This battle was fought using the old system or is a bye-match. Detailed
-            combat logs with formula breakdowns are only available for battles
-            fought with the new combat simulator.
+            This is a bye — a walkover with no opponent, so there was no combat to
+            log. Byes are recorded for all nine battle modes and pay a
+            participation reward; they simulate nothing by design.
+          </p>
+          <p className="text-sm mt-1">
+            Otherwise, this battle was fought using the old system. Detailed combat
+            logs with formula breakdowns are only available for battles fought with
+            the new combat simulator.
           </p>
         </div>
       )}

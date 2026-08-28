@@ -236,7 +236,7 @@ processBattle() → simulateBattleWrapper() → simulateBattle()
 ### Combat Execution
 - Calls `simulateBattle(robot1, robot2, true)` — tournament mode enabled
 - **No draws possible**: HP tiebreaker at time limit, robot1 wins on perfect tie
-- Bye matches are auto-completed at creation (no battle, no rewards)
+- Bye matches are auto-completed at creation (no battle, no rewards) — **changed by Spec #49 (Aug 2026): a `battles` row is now written and the bye pays the round's loss reward**
 
 ### Reward System
 | Reward | Winner | Loser |
@@ -483,7 +483,7 @@ processKothBattle() → simulateKothBattle(robots, config)
 | Lead time | 24h | Pre-determined bracket | 48h | Next Mon/Wed/Fri |
 | Frequency | Daily | Daily (1 round/cycle) | Every other cycle (odd) | Mon/Wed/Fri |
 | Per-instance | Yes | No (all eligible) | Yes | No (all eligible) |
-| Bye handling | Bye Robot (ELO 1000) | Auto-advance (no battle) | Bye Team (ELO 2000) | Sit out (< 5 robots) |
+| Bye handling | Bye Robot (ELO 1000) | Auto-advance (no battle) | Bye Team (ELO 2000) | Sit out (< 5 robots) — **changed by Spec #49: a Bye_Event per eligible robot** |
 
 ### DB Storage Differences
 

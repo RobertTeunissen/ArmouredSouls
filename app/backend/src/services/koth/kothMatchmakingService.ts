@@ -15,6 +15,7 @@ import { MatchType, StandingsMode } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import schedulingService from '../scheduling/schedulingService';
+import { createThinInstanceByes } from '../scheduling/thinInstanceByes';
 import { checkSchedulingReadiness } from '../analytics/matchmakingService';
 import { TEAM_BATTLE_LEAGUE_TIERS as KOTH_LEAGUE_TIERS } from '../team-battle/teamBattleAdapter';
 import {
@@ -354,7 +355,22 @@ export async function runKothMatchmaking(scheduledFor?: Date): Promise<number> {
           const eligible = await getEligibleRobots(tier, instanceId);
 
           if (eligible.length < MIN_GROUP_SIZE) {
-            logger.info(`${LOG_PREFIX} ${instanceId}: Insufficient eligible robots (${eligible.length}/${MIN_GROUP_SIZE}) — skipping`);
+            // A Thin_Instance cannot run a match, but a subscribed robot has
+            // still allocated its slot — so each eligible robot gets a
+            // Bye_Event rather than the whole instance being skipped in
+            // silence (Spec #49). Before this, nothing at all was written.
+            const byesCreated = await createThinInstanceByes({
+              matchType: MatchType.koth,
+              tier,
+              leagueInstanceId: instanceId,
+              robots: eligible,
+              scheduledFor: matchTime,
+            });
+            logger.info(
+              `${LOG_PREFIX} ${instanceId}: Thin instance — ` +
+              `${eligible.length}/${MIN_GROUP_SIZE} eligible robots, ${byesCreated} bye events created`,
+            );
+            totalMatches += byesCreated;
             continue;
           }
 

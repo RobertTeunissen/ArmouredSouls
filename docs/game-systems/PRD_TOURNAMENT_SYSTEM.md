@@ -288,9 +288,10 @@ The continuous tournament model ensures:
   - Applies logarithmic scaling for tournament size (handles 100k+ participants)
   - **Winner receives full calculated reward**
   - **Loser receives participation reward** (30% of winner's credits)
-  - **Bye matches (TOURNAMENT ONLY)**: Robot advances to next round automatically
-    - NO battle record created (different from league byes)
-    - NO rewards awarded (no match occurred)
+  - **Bye matches**: Robot advances to next round automatically
+    - A battle record IS created, as for every other mode (Spec #49) — no combat is simulated, so the summary carries `hasData: false`
+    - Credits ARE awarded: the same amount a loss pays for that round (Spec #49)
+    - NO prestige and NO fame
     - NO streaming income (no match to stream)
     - Simply updates TournamentMatch.winnerId and status
     - **League byes still fight "Bye Robot" for income** (handled in leagueBattleOrchestrator.ts)
@@ -891,7 +892,7 @@ Round 5 - Finals (1 match):
 - NO battle, NO rewards, NO records
 - Robot advances automatically to next round
 
-**League Byes (WITH battles - LEAGUE ONLY):**
+**League Byes (WITH battles):**
 - Robot fights "Bye Robot" (system robot)
 - Battle record created with participation rewards
 - Ensures income on days with odd number of league participants
@@ -901,11 +902,13 @@ Round 5 - Finals (1 match):
 - Participant count not a power of 2 (e.g., 350 participants → 512 bracket → 162 byes)
 - Highest-seeded robots receive byes based on ELO ranking
 
-**Bye Match Processing:**
-- **NO battle occurs** - robot advances automatically
-- **NO battle record created** - no Battle entry in database
-- **NO rewards awarded** - no credits, prestige, or fame
+**Bye Match Processing (updated by Spec #49):**
+- **NO battle occurs** - robot advances automatically, nothing is simulated
+- **A battle record IS created** - a `battles` row with `battleLog.isByeMatch: true`, plus participant, summary and audit rows. Before Spec #49 no row was written, which is why no tournament bye was visible anywhere
+- **Credits ARE awarded** - the same amount a loss pays for that round, through the same function so the two cannot drift apart
+- **NO prestige and NO fame** - those are earned by fighting
 - **NO streaming income** - no match to stream
+- **NO damage** - nothing is simulated, so a bye cannot cost a repair bill
 - **NO damage taken** - robot maintains current HP
 - TournamentMatch record updated:
   - `winnerId` = `robot1Id` (the bye recipient)
@@ -1874,7 +1877,7 @@ pnpm run prisma:seed
 - [ ] New tournament auto-creates after completion
 - [ ] Rewards calculated correctly (tournament size-based)
 - [ ] Battle records created for all matches
-- [ ] Bye matches auto-complete (no battle)
+- [ ] Bye matches auto-complete (no combat, but a battle record and a loss-equivalent credit award)
 - [ ] Draw handling works with HP tiebreaker
 
 #### Frontend Functionality

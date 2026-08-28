@@ -23,6 +23,7 @@ export {
   calculateFinancialHealth,
   getLeagueWinReward,
   getParticipationReward,
+  PARTICIPATION_REWARD_FRACTION,
   getFacilityName,
 } from './economyFormulas';
 

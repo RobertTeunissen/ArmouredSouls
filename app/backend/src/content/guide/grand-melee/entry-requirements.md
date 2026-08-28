@@ -2,7 +2,7 @@
 title: "Entry Requirements"
 description: "What your robot needs to participate in Grand Melee — subscriptions, weapon readiness, and minimum player thresholds."
 order: 2
-lastUpdated: "2026-06-18"
+lastUpdated: "2026-08-27"
 relatedArticles:
   - grand-melee/basics
   - grand-melee/scoring-and-placement
@@ -21,7 +21,7 @@ Your robot must have **at least one weapon equipped** to be eligible. Robots wit
 
 ## Minimum Robot Threshold
 
-A Grand Melee match requires a **minimum of 8 robots** per tier instance to fire. If fewer than 8 eligible robots are available in a tier at 17:00 UTC, no match is created for that tier instance that day.
+A Grand Melee match requires a **minimum of 8 robots** per tier instance to fire. If fewer than 8 eligible robots are available in a tier at 17:00 UTC, the field is too thin to run — so every eligible robot receives a **bye** instead. A bye pays the participation reward for your tier, takes no damage, and leaves your placement record untouched.
 
 When 8–19 robots are available, the match runs with fewer than 20 participants. The scoring system adjusts — placements are still ranked by elimination order, but fewer placement slots are filled.
 

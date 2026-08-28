@@ -6,10 +6,12 @@ import { TagTeamError, TagTeamErrorCode } from '../../errors/tagTeamErrors';
 import { prepareRobotForCombat } from '../../utils/robotCalculations';
 import { getTuningBonusesBatch } from '../tuning-pool';
 import { TagTeamWithRobots, TagTeamBattleResult } from './tagTeamTypes';
-import { createByeTeamForBattle } from './tagTeamByeTeam';
 import { simulateTagTeamBattle } from './tagTeamSimulation';
 import { createTagTeamBattleRecord } from './tagTeamBattleRecord';
 import { updateTagTeamBattleResults, checkTeamReadinessForBattle } from './tagTeamResultUpdater';
+import { calculateTagTeamELOChanges } from './tagTeamRewards';
+import { resolveByeEvent, BYE_BATTLE_DURATION_SECONDS } from '../battle/byeResolutionService';
+import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
 
 // ─── Scheduled Match Shape (mapped from unified table) ───────────────────────
 
@@ -35,6 +37,127 @@ interface ScheduledTagTeamMatchData {
  * Requirement 3.1: Initialize battle with both teams' active robots
  * Requirement 12.3: Execute normal battle against bye-team
  */
+/**
+ * Resolve a tag team bye through the Bye_Reward_Module (Spec #49).
+ *
+ * No Bye_Placeholder team is built, `simulateTagTeamBattle` is never called, and
+ * `createTagTeamBattleRecord` is not reached — the `battles` row is born in the
+ * writer, like every other mode. The team still gains ELO against the 2000
+ * combined bye-team rating and LP +3, unchanged.
+ */
+async function resolveTagTeamBye(
+  match: ScheduledTagTeamMatchData,
+): Promise<TagTeamBattleResult> {
+  const teamRaw = await prisma.teamBattle.findUnique({
+    where: { id: match.team1Id },
+    include: { members: { orderBy: { slotIndex: 'asc' } } },
+  });
+
+  if (!teamRaw || teamRaw.members.length < 2) {
+    throw new TagTeamError(
+      TagTeamErrorCode.INVALID_TEAM_COMPOSITION,
+      `Real team not found or incomplete for tag team bye match ${match.id}`,
+      404,
+      { matchId: match.id, teamId: match.team1Id },
+    );
+  }
+
+  // `members` is ordered by `slotIndex`, and everything below treats robots[0]
+  // as Active and robots[1] as Reserve. `findMany` gives no ordering guarantee
+  // for an `in` filter, so re-order to the slot order rather than trusting it —
+  // an unordered result would silently swap Active and Reserve in the returned
+  // HP fields and in the battle metadata.
+  const memberRobotIds = teamRaw.members.map(m => m.robotId);
+  const robotRows = await prisma.robot.findMany({
+    where: { id: { in: memberRobotIds } },
+    select: { id: true, name: true, userId: true, currentHP: true, maxHP: true, elo: true },
+  });
+  const robotsById = new Map(robotRows.map(r => [r.id, r]));
+  const robots = memberRobotIds
+    .map(id => robotsById.get(id))
+    .filter((r): r is NonNullable<typeof r> => r !== undefined);
+
+  if (robots.length < 2) {
+    throw new TagTeamError(
+      TagTeamErrorCode.INVALID_TEAM_COMPOSITION,
+      `Team ${match.team1Id} has members without robot rows for tag team bye match ${match.id}`,
+      404,
+      { matchId: match.id, teamId: match.team1Id },
+    );
+  }
+
+  // ELO against the notional combined bye-team rating (1000 per robot).
+  const teamSumELO = robots.reduce((sum, r) => sum + r.elo, 0);
+  const eloChanges = calculateTagTeamELOChanges(teamSumELO, 2000, true, false);
+  const newEloByRobotId: Record<number, number> = {};
+  for (const r of robots) {
+    newEloByRobotId[r.id] = r.elo + eloChanges.team1Change;
+  }
+
+  const resolution = await resolveByeEvent({
+    mode: 'tag_team',
+    context: { mode: 'tag_team', tier: match.teamBattleLeague },
+    claim: { source: 'scheduled_match', scheduledMatchId: match.id },
+    participants: robots,
+    stableUserId: teamRaw.stableId,
+    battle: {
+      battleType: 'tag_team',
+      leagueType: match.teamBattleLeague,
+      leagueInstanceId: match.teamBattleLeagueId,
+      winnerId: robots[0]?.id ?? null,
+      winningSide: 1,
+      byeMessage: `${teamRaw.teamName ?? 'Team'} wins by walkover (bye)`,
+    },
+    standingEntity: { entityType: 'team', entityId: match.team1Id },
+    newEloByRobotId,
+    eloChange: eloChanges.team1Change,
+    cycleNumber: await getCurrentCycleNumber(),
+  });
+
+  logger.info(
+    `[TagTeamBattle] Bye: team ${match.team1Id} auto-win | ₡${resolution.creditsPaid} | no damage, no prestige, no fame`,
+  );
+
+  // Same reasoning as the league bye path: the writer supplies the winning
+  // battle id on an already-claimed re-run, so null means nothing resolved.
+  if (resolution.battleId === null) {
+    throw new TagTeamError(
+      TagTeamErrorCode.INVALID_TEAM_COMPOSITION,
+      `Bye resolution produced no battle for tag team match ${match.id}`,
+      500,
+      { matchId: match.id, teamId: match.team1Id },
+    );
+  }
+
+  return {
+    battleId: resolution.battleId,
+    winnerId: match.team1Id,
+    isDraw: false,
+    durationSeconds: BYE_BATTLE_DURATION_SECONDS,
+    // Nothing was simulated, so every combat figure is zero and HP is untouched.
+    team1ActiveFinalHP: robots[0]?.currentHP ?? 0,
+    team1ReserveFinalHP: robots[1]?.currentHP ?? 0,
+    team2ActiveFinalHP: 0,
+    team2ReserveFinalHP: 0,
+    team1ReserveUsed: false,
+    team2ReserveUsed: false,
+    team1ActiveDamageDealt: 0,
+    team1ReserveDamageDealt: 0,
+    team2ActiveDamageDealt: 0,
+    team2ReserveDamageDealt: 0,
+    team1ActiveSurvivalTime: 0,
+    team1ReserveSurvivalTime: 0,
+    team2ActiveSurvivalTime: 0,
+    team2ReserveSurvivalTime: 0,
+    battleLog: [],
+    phases: [],
+    team1Name: teamRaw.teamName ?? 'Team',
+    team2Name: 'Bye',
+    team1ReserveName: robots[1]?.name ?? '',
+    team2ReserveName: '',
+  };
+}
+
 export async function executeTagTeamBattle(match: ScheduledTagTeamMatchData): Promise<TagTeamBattleResult> {
   // R1.8: Reject payloads with team battle league types
   if (match.matchMode !== 'tag_team') {
@@ -45,9 +168,16 @@ export async function executeTagTeamBattle(match: ScheduledTagTeamMatchData): Pr
     );
   }
 
-  // Check if this is a bye-team match
-  const _isByeMatch = match.team2Id === null;
-  
+  // A bye is detected and resolved before any opponent is fabricated and before
+  // the simulator is reached (Spec #49 R12.1, R12.2). This path used to build a
+  // Bye_Placeholder team, simulate a full tag team battle against it, correct a
+  // drawn result to a win, and persist the simulated damage to the real robots —
+  // so a walkover produced a repair bill. Nothing is simulated now, so there is
+  // no result to override and a draw is structurally impossible.
+  if (match.team2Id === null) {
+    return resolveTagTeamBye(match);
+  }
+
   // Spec #34: include refinements so prepareRobotForCombat can fold them
   // into the weapon's effective stats before the simulator reads them.
   // Load from TeamBattle with members (slotIndex 0 = active, slotIndex 1 = reserve)
@@ -100,11 +230,9 @@ export async function executeTagTeamBattle(match: ScheduledTagTeamMatchData): Pr
     };
   }
 
-  // Load team2
+  // Load team2. A bye returned above, so team2Id is non-null here.
   let team2: TagTeamWithRobots | null;
-  if (match.team2Id === null) {
-    team2 = createByeTeamForBattle();
-  } else {
+  {
     const team2Raw = await prisma.teamBattle.findUnique({
       where: { id: match.team2Id },
       include: {
@@ -170,12 +298,10 @@ export async function executeTagTeamBattle(match: ScheduledTagTeamMatchData): Pr
 
   // Simulate the tag team battle
   const result = await simulateTagTeamBattle(team1 as TagTeamWithRobots, team2 as TagTeamWithRobots);
-  
-  // Bye matches can never be a draw — the real team always wins on timeout
-  if (_isByeMatch && result.isDraw) {
-    result.isDraw = false;
-    result.winnerId = match.team1Id; // Real team is always team1 for bye matches
-  }
+
+  // The bye draw-override that used to sit here is gone (Spec #49 R12.7). It
+  // existed only to correct a simulation that should not have run for a bye;
+  // byes now return before this point, so there is nothing to correct.
 
   // Map robot winner ID to team winner ID if needed
   if (result.winnerId) {

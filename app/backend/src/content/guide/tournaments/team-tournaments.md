@@ -2,7 +2,7 @@
 title: "Team Tournaments (2v2 & 3v3)"
 description: "How team tournaments work in Armoured Souls — 2v2 and 3v3 single-elimination brackets with daily round cadence, team eligibility, and championship rewards."
 order: 5
-lastUpdated: "2026-06-20"
+lastUpdated: "2026-08-27"
 relatedArticles:
   - tournaments/tournament-format
   - tournaments/eligibility
@@ -127,7 +127,7 @@ Fame is awarded to each robot on the winning team based on exclusivity (fewer te
 ELO changes use the team battle formula — the same delta is applied to each member robot on both teams based on combined team ELO difference.
 
 ```callout-tip
-Bye matches award zero rewards. If your team receives a first-round bye due to high seeding, you advance but earn nothing for that round. The real rewards start when you actually fight.
+A bye pays what a loss pays for that round, per robot on your team. If your team receives a first-round bye due to high seeding you advance and still earn the loss-equivalent credits — you forgo only the winner's share for that round, and earn no prestige or fame for it. No combat is simulated, so your robots take no damage.
 ```
 
 ## Combat Rules

@@ -4,6 +4,7 @@ import logger from '../../config/logger';
 import { CombatMessageGenerator } from '../battle/combatMessageGenerator';
 import { simulateBattle, type CombatEvent } from '../battle/combatSimulator';
 import { computeBattleSummary } from '../battle/battleSummaryComputer';
+import { resolveByeEvent } from '../battle/byeResolutionService';
 import {
   getLeagueWinReward,
   getParticipationReward,
@@ -199,100 +200,60 @@ async function processByeBattle(scheduledMatch: ScheduledLeagueMatchData): Promi
     );
   }
 
-  // ELO change: player always wins vs bye robot (ELO 1000)
+  // ELO change: player always wins vs bye robot (ELO 1000). Retained — a
+  // league_1v1 bye has always moved ELO and continues to (Spec #49 R12.10).
   const byeElo = 1000;
   const eloChanges = calculateELOChange(robot.elo, byeElo, false);
   const newElo = robot.elo + eloChanges.winnerChange;
 
-  // Participation reward only (no win bonus for bye matches)
-  const participationReward = getParticipationReward(scheduledMatch.leagueType);
-
-  // Create Battle record — real robot ID fills both FK slots (same pattern as team battles)
-  const battle = await prisma.battle.create({
-    data: {
-      winnerId: robot.id,
+  // Everything below — the reward, the battles row, the participant row, the
+  // Standing write, the credit award, the summary, the audit rows and the
+  // scheduled-match transition — is the Bye_Reward_Module's job (Spec #49).
+  // This is the shape all nine modes now share; the summary and audit rows that
+  // this path used to skip come for free because the writer produces them.
+  const resolution = await resolveByeEvent({
+    mode: 'league_1v1',
+    context: { mode: 'league_1v1', tier: scheduledMatch.leagueType },
+    claim: { source: 'scheduled_match', scheduledMatchId: scheduledMatch.id },
+    participants: [
+      {
+        id: robot.id,
+        name: robot.name,
+        userId: robot.userId,
+        currentHP: robot.currentHP,
+        maxHP: robot.maxHP,
+        elo: robot.elo,
+      },
+    ],
+    stableUserId: robot.userId,
+    battle: {
       battleType: 'league_1v1',
       leagueType: scheduledMatch.leagueType,
       leagueInstanceId: scheduledMatch.leagueInstanceId,
-      battleLog: {
-        events: [{ timestamp: 0, type: 'bye_match', message: `${robot.name} wins by walkover (bye)` }],
-        isByeMatch: true,
-        detailedCombatEvents: [],
-      } as unknown as Prisma.InputJsonValue,
-      durationSeconds: BYE_BATTLE_DURATION,
-      winnerReward: participationReward,
-      loserReward: 0,
-
+      winnerId: robot.id,
+      byeMessage: `${robot.name} wins by walkover (bye)`,
     },
+    standingEntity: { entityType: 'robot', entityId: robot.id },
+    newEloByRobotId: { [robot.id]: newElo },
+    eloChange: eloChanges.winnerChange,
+    cycleNumber: await getCurrentCycleNumber(),
   });
 
-  // Single BattleParticipant for the real robot only (skip bye robot — same as team battles)
-  await prisma.battleParticipant.create({
-    data: {
-      battleId: battle.id,
-      robotId: robot.id,
-      team: 1,
-      role: null,
-      credits: participationReward,
-      streamingRevenue: 0,
-      eloBefore: robot.elo,
-      eloAfter: newElo,
-      prestigeAwarded: 0,
-      fameAwarded: 0,
-      damageDealt: 0,
-      finalHP: robot.currentHP,
-      yielded: false,
-      destroyed: false,
-    },
-  });
-
-  // Update robot combat stats (ELO, win counters)
-  await updateRobotCombatStats({
-    robotId: robot.id,
-    finalHP: robot.currentHP,
-    combatMaxHP: robot.maxHP,
-    newELO: newElo,
-    isWinner: true,
-    isDraw: false,
-    damageDealt: 0,
-    damageTakenByOpponent: 0,
-    opponentsDestroyed: 0,
-    fameIncrement: 0,
-    battleType: 'league_1v1',
-    stance: robot.stance,
-    loadoutType: robot.loadoutType,
-  });
-
-  // Update standings (LP +3 for a win) via unified service
-  await standingsService.recordBattleResult({
-    entityType: 'robot',
-    entityId: robot.id,
-    mode: 'league_1v1',
-    outcome: 'win',
-    lpDelta: LEAGUE_POINTS_WIN,
-  });
-
-  // Award participation credits
-  const cycleNumber = await getCurrentCycleNumber();
-  await awardCreditsWithLedger(
-    robot.userId,
-    participationReward,
-    'battle_income',
-    cycleNumber,
-    'League 1v1 bye-match participation',
-    robot.id,
+  logger.info(
+    `[Battle] Bye-match: ${robot.name} (User ${robot.userId}) auto-win | LP +${LEAGUE_POINTS_WIN} | ELO ${robot.elo} → ${newElo} | ₡${resolution.creditsPaid}`,
   );
 
-  // Mark the scheduled match as completed with the battle reference
-  await prisma.scheduledMatch.update({
-    where: { id: scheduledMatch.id },
-    data: { status: 'completed', battleId: battle.id },
-  });
-
-  logger.info(`[Battle] Bye-match: ${robot.name} (User ${robot.userId}) auto-win | LP +${LEAGUE_POINTS_WIN} | ELO ${robot.elo} → ${newElo} | ₡${participationReward}`);
+  // The writer returns the winning battle id even when the claim was already
+  // taken, so a null here means nothing resolved at all. Surfacing 0 would hand
+  // callers an id that links nowhere; fail loudly instead.
+  if (resolution.battleId === null) {
+    throw new Error(
+      `Bye resolution produced no battle for scheduled match ${scheduledMatch.id} (robot ${robot.id})`,
+    );
+  }
 
   return {
-    battleId: battle.id,
+    battleId: resolution.battleId,
     winnerId: robot.id,
     robot1FinalHP: robot.currentHP,
     robot2FinalHP: 0,

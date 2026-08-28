@@ -1,4 +1,16 @@
 import * as fc from 'fast-check';
+import {
+  // Spec #49: the real reward functions are imported rather than re-declared.
+  // The removed local copies carried the comment "Mirrors the orchestrator's
+  // reward arithmetic; the orchestrator itself is not imported here because it
+  // pulls in the full battle pipeline" — which was not true. tagTeamRewards.ts
+  // imports only economyCalculations, battleMath and its own types. A test that
+  // asserts a copy of a formula against another copy cannot catch a change to
+  // the real one.
+  calculateTagTeamRewards,
+  calculateTagTeamPrestige,
+} from '../src/services/tag-team/tagTeamRewards';
+
 import { Robot, Prisma } from '../generated/prisma';
 import prisma from '../src/lib/prisma';
 import { getLeagueWinReward, getParticipationReward } from '../src/utils/economyCalculations';
@@ -394,29 +406,6 @@ describe('Tag Team Battle Orchestrator - Property Tests', () => {
      * should be exactly 2x the standard league match rewards for that tier and outcome type.
      */
 
-    // Mirrors the orchestrator's reward arithmetic; the orchestrator itself is not
-    // imported here because it pulls in the full battle pipeline.
-    function calculateTagTeamRewards(
-      league: string,
-      isWinner: boolean,
-      isDraw: boolean
-    ): number {
-      const TAG_TEAM_REWARD_MULTIPLIER = 2;
-
-      const baseReward = getLeagueWinReward(league);
-      const participationReward = getParticipationReward(league);
-
-      let reward: number;
-      if (isDraw) {
-        reward = participationReward;
-      } else if (isWinner) {
-        reward = baseReward + participationReward;
-      } else {
-        reward = participationReward;
-      }
-
-      return Math.round(reward * TAG_TEAM_REWARD_MULTIPLIER);
-    }
 
     test('tag team rewards are exactly 2x standard league rewards', () => {
       fc.assert(
@@ -867,23 +856,6 @@ describe('Tag Team Battle Orchestrator - Property Tests', () => {
      * match prestige for that tier.
      */
 
-    function calculateTagTeamPrestige(league: string, isWinner: boolean, isDraw: boolean): number {
-      if (isDraw || !isWinner) {
-        return 0;
-      }
-
-      const standardPrestige: Record<string, number> = {
-        bronze: 5,
-        silver: 10,
-        gold: 20,
-        platinum: 30,
-        diamond: 50,
-        champion: 75,
-      };
-
-      const basePrestige = standardPrestige[league] || 0;
-      return Math.round(basePrestige * 1.6);
-    }
 
     test('tag team prestige is 1.6x standard prestige', () => {
       fc.assert(

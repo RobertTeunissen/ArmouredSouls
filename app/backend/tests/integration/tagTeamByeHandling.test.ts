@@ -227,13 +227,17 @@ describe('Tag Team Bye-Team Handling Integration Test', () => {
     // Step 2: Verify bye-team battle was executed
     console.log('[Test] Step 2: Verifying bye-team battle execution...');
     
-    const byeBattles = await prisma.battle.findMany({
-      where: {
-        battleType: 'tag_team',
-        participants: { some: { robotId: -1 } },
-      },
+    // Spec #49: a bye writes NO participant row for the placeholder. Those carry
+    // negative ids and `battle_participants.robotId` has a Robot foreign key, so
+    // such a row cannot exist — this query used to look for one and therefore
+    // could never have passed. Byes are identified by their battleLog flag.
+    const allTagTeamBattles = await prisma.battle.findMany({
+      where: { battleType: 'tag_team' },
       include: { participants: true },
     });
+    const byeBattles = allTagTeamBattles.filter(
+      b => (b.battleLog as { isByeMatch?: boolean } | null)?.isByeMatch === true,
+    );
 
     expect(byeBattles.length).toBeGreaterThan(0);
     console.log(`[Test] Found ${byeBattles.length} bye-team battles`);
@@ -241,14 +245,21 @@ describe('Tag Team Bye-Team Handling Integration Test', () => {
     // Verify bye-team battle structure
     const byeBattle = byeBattles[0];
     expect(byeBattle.battleType).toBe('tag_team');
-    const byeBattleRobotIds = byeBattle.participants.map(p => p.robotId);
-    expect(byeBattleRobotIds).toContain(-1);
+    // Only real robots get participant rows, never the placeholder.
+    for (const p of byeBattle.participants) {
+      expect(p.robotId).toBeGreaterThan(0);
+      // Nothing was simulated, so every combat figure is inert.
+      expect(p.damageDealt).toBe(0);
+      expect(p.destroyed).toBe(false);
+      expect(p.prestigeAwarded).toBe(0);
+      expect(p.fameAwarded).toBe(0);
+    }
 
     // Step 3: Verify rewards were awarded
     console.log('[Test] Step 3: Verifying rewards...');
     
-    // Find the real team that fought the bye-team
-    const realParticipant = byeBattle.participants.find(p => p.robotId !== -1);
+    // Every participant is a real robot now, so take the first.
+    const realParticipant = byeBattle.participants[0];
     const realTeamId = realParticipant!.robotId;
     
     const realRobot = await prisma.robot.findUnique({
@@ -272,13 +283,13 @@ describe('Tag Team Bye-Team Handling Integration Test', () => {
     // This is verified by checking the ELO changes
     // The bye-team should be treated as having combined ELO of 2000
     
-    const byeBattles = await prisma.battle.findMany({
-      where: {
-        battleType: 'tag_team',
-        participants: { some: { robotId: -1 } },
-      },
+    const allTagTeamBattles = await prisma.battle.findMany({
+      where: { battleType: 'tag_team' },
       include: { participants: true },
     });
+    const byeBattles = allTagTeamBattles.filter(
+      b => (b.battleLog as { isByeMatch?: boolean } | null)?.isByeMatch === true,
+    );
 
     if (byeBattles.length === 0) {
       console.log('[Test] No bye-team battles found, skipping ELO verification');
@@ -286,9 +297,7 @@ describe('Tag Team Bye-Team Handling Integration Test', () => {
     }
 
     const byeBattle = byeBattles[0];
-    
-    // Find the real team's robots
-    const realParticipant = byeBattle.participants.find(p => p.robotId !== -1);
+    const realParticipant = byeBattle.participants[0];
     const realTeamRobotId = realParticipant!.robotId;
     
     const realRobot = await prisma.robot.findUnique({
@@ -301,6 +310,11 @@ describe('Tag Team Bye-Team Handling Integration Test', () => {
     // We can't verify the exact calculation here, but we can verify
     // that the battle was executed and ELO changed
     expect(realRobot!.totalBattles).toBeGreaterThan(0);
+
+    // Spec #49: ELO still moves for a tag team bye, but HP does not. A bye is
+    // never simulated, so the participant row records the robot's HP as it was.
+    expect(realParticipant.finalHP).toBe(realRobot!.currentHP);
+    expect(realParticipant.eloAfter).not.toBe(realParticipant.eloBefore);
 
     console.log('[Test] ✓ Bye-team ELO verification complete');
   });

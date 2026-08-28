@@ -2,7 +2,7 @@
 title: "Tag Team Battles"
 description: "How Tag Team combat works — phased 1v1 battles with tag-in mechanics, Active/Reserve roles, rewards, LP, and how it differs from simultaneous 2v2 League."
 order: 2
-lastUpdated: "2026-08-02"
+lastUpdated: "2026-08-27"
 relatedArticles:
   - team-battles/overview
   - facilities/booking-office
@@ -58,7 +58,7 @@ Tag Team uses the same LP-primary matchmaking as other leagues:
 - LP difference is the primary scoring factor
 - Recent opponents are penalised to force variety
 - Same-stable teams cannot be matched against each other
-- Byes are issued when an odd number of teams are eligible
+- Byes are issued when an odd number of teams are eligible. A bye is an automatic win paying the participation reward per robot (2× the solo figure), with no prestige, no fame, and no damage taken — nothing is simulated
 
 Tag Team has its own **separate LP and league tier** (`tagTeamLp`, `tagTeamLeague`) — independent from 2v2 League standings.
 

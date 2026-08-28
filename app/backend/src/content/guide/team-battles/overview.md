@@ -2,7 +2,7 @@
 title: "Team Battles Overview"
 description: "How 2v2 and 3v3 League Team Battles work — team registration, simultaneous combat, coordination effects, matchmaking, rewards, and daily schedule."
 order: 1
-lastUpdated: "2026-08-02"
+lastUpdated: "2026-08-27"
 relatedArticles:
   - facilities/booking-office
   - leagues/matchmaking
@@ -126,7 +126,7 @@ Team Battle matchmaking uses the same LP-primary system as other leagues:
 - **ELO** is a secondary factor (no hard reject, just preference)
 - **Recent opponents** are penalised to force variety (won't face the same team repeatedly)
 - **Same-stable teams** are heavily penalised (effectively blocked unless no other option)
-- If an odd number of teams are eligible, the last team receives a **bye** (automatic win with reduced rewards)
+- If an odd number of teams are eligible, the last team receives a **bye**: an automatic win paying the participation reward per robot (so 2× the solo figure for a 2v2, 3× for a 3v3), with no prestige, no fame, and no damage taken
 
 Team ELO is calculated as the sum of all member robots' individual ELOs. This means upgrading your robots' ELO through 1v1 battles also strengthens your team's matchmaking position.
 

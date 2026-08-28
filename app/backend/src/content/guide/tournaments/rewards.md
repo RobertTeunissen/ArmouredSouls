@@ -2,7 +2,7 @@
 title: "Tournament Rewards"
 description: "What you earn from tournament competition — credits, prestige, fame, championship titles, and how tournament size and round progression scale your rewards."
 order: 3
-lastUpdated: "2026-03-12"
+lastUpdated: "2026-08-27"
 relatedArticles:
   - seasons/what-resets
   - tournaments/tournament-format
@@ -115,7 +115,7 @@ In a much larger tournament with 1,000 participants (10 rounds, size multiplier 
 | Round 10 (Final) | ₡20,000 × 1.50 × 1.00 | ₡30,000 |
 
 ```callout-warning
-You only earn rewards for battles you actually fight and win. If you receive a [bye](/guide/tournaments/bye-matches) in the first round, you advance but earn nothing for that round.
+A bye pays the same credits a loss pays for that round. If you receive a [bye](/guide/tournaments/bye-matches) in the first round you advance and still earn the loss-equivalent credits — you simply forgo the winner's share for that round, and earn no prestige or fame for it.
 ```
 
 ## Championship Rewards

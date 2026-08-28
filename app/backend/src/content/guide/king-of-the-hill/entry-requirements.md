@@ -2,7 +2,7 @@
 title: "Entry Requirements"
 description: "Weapon readiness, stable separation, schedule, and eligibility rules."
 order: 6
-lastUpdated: "2026-03-18"
+lastUpdated: "2026-08-27"
 relatedArticles:
   - king-of-the-hill/match-formats
   - king-of-the-hill/rewards
@@ -31,4 +31,6 @@ Zone rotation is determined by cycle number (modulo-based), providing variety ac
 
 ## Matchmaking
 
-Eligible robots are sorted by ELO descending and distributed into groups using snake-draft ordering. Groups are 6 robots when possible, with a remainder group of 5. If fewer than 5 robots are eligible, no matches are created.
+Eligible robots are sorted by ELO descending and distributed into groups using snake-draft ordering. Groups are 6 robots when possible, with a remainder group of 5.
+
+If fewer than 5 robots are eligible in a tier instance, the field is too thin to run — so every eligible robot receives a **bye** instead. A bye pays the participation reward for your tier, takes no damage, and costs you nothing: your subscription still returns something on a quiet day.

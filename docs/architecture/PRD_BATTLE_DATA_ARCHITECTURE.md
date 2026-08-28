@@ -78,6 +78,47 @@ model BattleParticipant {
 
 ---
 
+## Bye Battle Records (Spec #49)
+
+A **bye** is what a subscribed robot gets when the schedule has nothing for it to fight: an odd number of entrants, a `koth`/`grand_melee` tier instance below its `MIN_GROUP_SIZE`, or a non-power-of-two tournament bracket. Byes exist in all nine battle modes and every one of them writes the same record.
+
+### The record every bye writes
+
+| Artefact | Count | Notes |
+|---|---|---|
+| `battles` | 1 | `battleLog.isByeMatch: true`, `durationSeconds: 15`, `loserReward: 0` |
+| `battle_participants` | one per **real** robot | Never a row for a Bye_Placeholder — those carry negative ids and the `robot` FK would reject them |
+| `battle_summaries` | 1 | `hasData: false`, `totalEvents: 0` — a truthful, queryable marker that no combat occurred |
+| `audit_logs` (`battle_complete`) | one per real robot | `payload.isByeMatch: true` plus the credits paid |
+| Credit award | 1 | Through `awardCreditsWithLedger` with `battle_income` |
+
+Before Spec #49 this was uneven: a `league_1v1` bye wrote no summary and no audit row (its early return preceded both), a `tag_team` bye wrote no audit row, and the three tournament modes wrote **no `battles` row at all** — which is why no tournament bye was visible anywhere.
+
+### Participant column values
+
+Every bye participant row is inert by construction, because nothing is simulated:
+
+| Column | Value |
+|---|---|
+| `damageDealt` | `0` |
+| `finalHP` | the robot's `currentHP` at the time of the bye — unchanged |
+| `destroyed`, `yielded` | `false` |
+| `prestigeAwarded`, `fameAwarded`, `streamingRevenue` | `0` |
+| `eloBefore` / `eloAfter` | differ only in the four league modes; equal in tournaments and Placement_Modes |
+| `credits` | share of the stable award; the shares sum to it exactly |
+
+### This satisfies the summary rule, which byes used to violate
+
+This document requires a `BattleSummary` at battle creation. The `league_1v1` bye path violated that rule for as long as it existed — `computeBattleSummary` sat inside `createBattleRecord`, which only the fought path called. Routing every bye through `resolveByeEvent` closes it for all nine modes at once.
+
+### Where the code lives
+
+- Amounts: `app/backend/src/utils/byeRewards.ts` (`resolveByeReward`, `BYE_MODE_SPECS`)
+- Records: `app/backend/src/services/battle/byeResolutionService.ts` (`resolveByeEvent`)
+- Placement_Mode bye creation: `app/backend/src/services/scheduling/thinInstanceByes.ts`
+
+---
+
 ## Battle Model (Current State)
 
 The Battle table retains core battle metadata. Some legacy per-robot columns were removed (see Migration History), but it still contains robot references, tag team fields, and ELO tracking for backward compatibility.

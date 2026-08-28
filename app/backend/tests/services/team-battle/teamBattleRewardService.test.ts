@@ -440,15 +440,18 @@ describe('teamBattleRewardService', () => {
     });
   });
 
-  // ─── Bye-team reward calculation (R7.9) ────────────────────────────────────
+  // ─── Bye-team ELO (R7.9) ───────────────────────────────────────────────────
+  //
+  // Spec #49 deleted the test that asserted a bye pays the full winner reward.
+  // The behaviour it covered is genuinely gone: a bye now pays
+  // `getParticipationReward(tier) x teamSize` — one sixth of the fought-win
+  // figure — which is asserted in tests/utils/byeRewards.property.test.ts and
+  // pinned as literals there. `calculateTeamBattleReward` itself is unchanged and
+  // still correct for a fought battle; it is simply no longer on the bye path.
+  //
+  // The bye-team ELO tests below stay: bye-team ELO is unchanged by Spec #49.
 
-  describe('bye-team reward calculation (R7.9)', () => {
-    it('should compute reward normally for bye-team matches', () => {
-      // Bye-team matches still award full winner reward to the real team
-      const reward = calculateTeamBattleReward('bronze', 2, true, false);
-      expect(reward).toBe(18000);
-    });
-
+  describe('bye-team ELO (R7.9)', () => {
     it('should compute ELO change against bye-team rating', () => {
       // Real team with ELO 2400 vs bye-team ELO 2000 (2v2)
       const byeELO = getByeTeamELO(2);

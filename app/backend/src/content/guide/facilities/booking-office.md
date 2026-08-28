@@ -2,7 +2,7 @@
 title: "Booking Office"
 description: "How the Booking Office facility works — event subscriptions, per-robot slot caps, switching between events, and how to manage which battle events your robots participate in."
 order: 7
-lastUpdated: "2026-07-30"
+lastUpdated: "2026-08-27"
 relatedArticles:
   - facilities/facility-overview
   - facilities/facility-progression
@@ -113,6 +113,22 @@ Knocked out early in a long tournament? The moment your robot is eliminated it o
 ```
 
 Slots are counted **per robot**. Other robots in your Stable are never affected by what one robot is doing.
+
+## When the Schedule Has Nothing for You
+
+A subscription always returns something. If you allocated a slot to an event, a quiet day should not mean a wasted slot — so when the schedule can't give your robot a real opponent, it gets a **bye** instead.
+
+That happens in three situations:
+
+- An **odd number** of eligible entrants in your instance, so one robot or team is left without a pairing.
+- A **field too thin to run** — fewer than 5 eligible robots for King of the Hill, or fewer than 8 for Grand Melee, in your tier instance.
+- A **tournament bracket** that isn't a power of two, so some seeds skip a round.
+
+A bye pays the participation reward for your tier, per robot on your side, and simulates no combat — so your robot takes no damage and you get no repair bill from it. See [Battle Rewards](/guide/economy/battle-rewards) for the figures.
+
+```callout-info
+A booked match holds its slot until it is resolved, and a bye is a booked match. You can unsubscribe at any time, free and immediately, but the slot stays occupied until the bye has been paid out. This is what stops a slot being used twice in one cycle.
+```
 
 ## Robot Specialisation
 

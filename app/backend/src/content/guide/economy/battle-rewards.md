@@ -2,7 +2,7 @@
 title: "Battle Reward Scaling"
 description: "How battle winnings scale by league tier from Bronze through Champion, and how Prestige bonus multipliers increase your earnings."
 order: 2
-lastUpdated: "2026-03-12"
+lastUpdated: "2026-08-27"
 relatedArticles:
   - economy/credits-and-income
   - leagues/league-tiers
@@ -19,7 +19,7 @@ Battle winnings are your primary income source in Armoured Souls. Every league b
 
 ## Base Win Rewards by League Tier
 
-Each league tier has a fixed base win reward — the amount a winner earns per battle. Losers still earn a participation reward (30% of the tier minimum).
+Each league tier has a fixed base win reward — the amount a winner earns per battle. Losers still earn a **participation reward: 20% of that tier's base win reward**.
 
 | League Tier | Base Win Reward | Participation Reward | Multiplier vs Bronze |
 |-------------|----------------|---------------------|---------------------|
@@ -39,13 +39,27 @@ The jump between tiers is substantial. Promoting even one robot from Bronze to S
 Every battle participant earns credits. The outcome determines how much:
 
 - **Victory** — You earn the full base win reward for your tier
-- **Loss** — You earn the participation reward (30% of the tier minimum)
+- **Loss** — You earn the participation reward (20% of your tier's base win reward)
 
 Even a loss generates income. Your robots are professional fighters — they get paid for showing up, win or lose. But winning consistently is the path to financial growth.
 
 ```callout-info
 You always earn something from every battle. A Bronze-tier loss still pays ₡1,500 in participation rewards, which helps cover basic operating costs. But a Champion-tier victory at ₡225,000 is a game-changer for your stable's finances.
 ```
+
+## Byes
+
+Sometimes the schedule has nothing for your robot to fight — an odd number of entrants in your instance, a tier too thin to run a Grand Melee field, or a tournament bracket that needs someone to skip a round. That's a **bye**, and it still pays.
+
+A bye pays the **participation reward** for your tier — the same figure a loss pays — multiplied by the number of robots on your side. So a 1v1 bye pays one participation reward, a 2v2 or Tag Team bye pays two, and a 3v3 bye pays three. A tournament bye pays whatever a loss pays for that round.
+
+What a bye does **not** pay is prestige, fame or streaming revenue. Those are earned by fighting.
+
+```callout-info
+No combat is simulated for a bye, so your robot takes no damage and you get no repair bill from it. A walkover leaves your roster exactly as it was.
+```
+
+Byes exist so that a subscription always returns something. If you allocated a Booking Office slot to an event, a quiet day should not mean a wasted slot — see [Booking Office](/guide/facilities/booking-office).
 
 ## Prestige Bonus Multipliers
 

@@ -105,7 +105,13 @@ Matchmaking runs within each instance. Robots are sorted by LP (desc), then ELO 
 
 ### Bye Robot
 
-When an instance has an odd number of robots, a synthetic "Bye Robot" (ELO 1000) is created for the unmatched robot. Bye battles use reduced damage (8% HP loss) and a fixed 15-second duration.
+When an instance has an odd number of robots, a synthetic "Bye Robot" (ELO 1000) is created for the unmatched robot, so a `scheduled_matches_v2` row can name two sides. Bye battles have a fixed 15-second nominal duration.
+
+**A bye is never simulated (Spec #49).** No combat runs, so the real robot takes **no damage at all** — the "reduced damage (8% HP loss)" this section previously described no longer occurs, and a bye can never produce a repair bill. A drawn bye is structurally impossible rather than corrected after the fact.
+
+**What a bye pays.** The participation reward for the tier (20% of the base win reward), multiplied by the number of robots on the real side — so ×1 for `league_1v1`, ×2 for `league_2v2` and Tag Team, ×3 for `league_3v3`. Plus the usual LP and ELO for a win. It pays **no prestige, no fame and no streaming revenue**.
+
+**Byes exist in all nine modes, not just the odd-robot case.** The same rule covers a `koth` or `grand_melee` tier instance that falls below its minimum field size, and a non-power-of-two tournament bracket. The reward is declared once in `app/backend/src/utils/byeRewards.ts`. See `docs/architecture/PRD_BATTLE_DATA_ARCHITECTURE.md` § Bye Battle Records.
 
 ---
 

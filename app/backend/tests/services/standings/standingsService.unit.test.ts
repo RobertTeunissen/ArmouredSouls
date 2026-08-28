@@ -38,7 +38,11 @@ jest.mock('../../../src/config/logger', () => ({
   default: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
 }));
 
-import standingsService, { getOrCreateStanding, KOTH_POINT_SCALE, GRAND_MELEE_POINT_SCALE } from '../../../src/services/standings/standingsService';
+import standingsService, { getOrCreateStanding, KOTH_POINT_SCALE } from '../../../src/services/standings/standingsService';
+// Spec #49: the Grand Melee placement scale is declared once, in the rewards
+// module, and imported by the Standings_Service. The former
+// GRAND_MELEE_POINT_SCALE duplicate in standingsService is gone.
+import { GRAND_MELEE_LP_SCALE } from '../../../src/services/grand-melee/grandMeleeRewards';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -384,7 +388,45 @@ describe('awardGrandMeleePoints', () => {
   });
 
   it('should have correct F1 point scale', () => {
-    expect(GRAND_MELEE_POINT_SCALE).toEqual([25, 18, 15, 12, 10, 8, 6, 4, 2, 1]);
+    expect(GRAND_MELEE_LP_SCALE).toEqual([25, 18, 15, 12, 10, 8, 6, 4, 2, 1]);
+  });
+
+  // Spec #49: the LP a player is shown and the LP a player is given came from
+  // two separate declarations of these ten numbers. This asserts they are now
+  // one, across the module boundary, for every placement including past the end.
+  it('should award exactly the lpDelta the shared scale declares, for every placement', async () => {
+    const startingLp = 100;
+
+    for (let placement = 1; placement <= 25; placement++) {
+      const expectedDelta =
+        placement <= GRAND_MELEE_LP_SCALE.length ? GRAND_MELEE_LP_SCALE[placement - 1] : 0;
+
+      const current = makeStanding({
+        mode: 'grand_melee',
+        leaguePoints: startingLp,
+        totalMatches: 0,
+        totalZoneScore: 0,
+        totalZoneTime: 0,
+        bestPlacement: 99,
+      });
+      mockStandingFindUnique.mockResolvedValue(current);
+      mockStandingUpdate.mockResolvedValue(current);
+      mockStandingUpdate.mockClear();
+
+      await standingsService.awardGrandMeleePoints({
+        robotId: 1,
+        placement,
+        totalParticipants: 20,
+        damageDealt: 0,
+        survivalTime: 0,
+      });
+
+      expect(mockStandingUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ leaguePoints: startingLp + expectedDelta }),
+        }),
+      );
+    }
   });
 });
 

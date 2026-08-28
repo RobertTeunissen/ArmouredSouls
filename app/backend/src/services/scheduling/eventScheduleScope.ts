@@ -98,11 +98,16 @@ async function resolveTournamentParticipants(
   participantType: TournamentParticipantType,
   db: Db,
 ): Promise<number[]> {
+  // No bye filter (Spec #49). A Bye_Event is a scheduled match that resolves
+  // differently, not a match that does not exist, so the robot is repaired on
+  // the same rule as everyone else in that Battle_Slot. Before Spec #49 this
+  // clause carried `isByeMatch: false`, which meant auto-repair depended on
+  // which mode the bye happened in — the unified arm has never had such a
+  // filter, so a league bye was repaired and a bracket bye was not.
   const matches = await db.scheduledTournamentMatch.findMany({
     where: {
       participantType,
       status: { in: ['pending', 'scheduled'] },
-      isByeMatch: false,
     },
     select: { participant1Id: true, participant2Id: true },
   });
