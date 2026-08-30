@@ -30,6 +30,7 @@ import { practiceArenaMetrics } from '../practice-arena/practiceArenaMetrics';
 import { EventLogger, EventType } from '../common/eventLogger';
 import { JobContext } from '../notifications/integration';
 import { buildSuccessMessage, buildErrorMessage, getActiveIntegrations, dispatchNotification } from '../notifications/notification-service';
+import { SCHEDULER_JOB_NAMES, type SchedulerJobName } from './schedulerJobNames';
 
 const eventLogger = new EventLogger();
 
@@ -50,28 +51,10 @@ export interface SchedulerConfig {
   grandMeleeSchedule: string;          // cron: default '0 17 * * *'
 }
 
-/**
- * Every scheduler job name.
- *
- * A tuple rather than a bare union so the admin trigger endpoint can validate
- * against it with `z.enum`. That endpoint used to read `:jobName` unvalidated and
- * cast it into `triggerJob`, relying on the handler map to reject anything
- * unknown — validation by side effect.
- */
-export const SCHEDULER_JOB_NAMES = [
-  'league',
-  'tournament',
-  'tagTeam',
-  'settlement',
-  'koth',
-  'team2v2League',
-  'team3v3League',
-  'team2v2Tournament',
-  'team3v3Tournament',
-  'grandMelee',
-] as const;
-
-export type SchedulerJobName = (typeof SCHEDULER_JOB_NAMES)[number];
+// Re-exported for the many existing importers. The declaration lives in its own
+// module so that mocking this one cannot erase it — see schedulerJobNames.ts.
+export { SCHEDULER_JOB_NAMES };
+export type { SchedulerJobName };
 
 export interface JobState {
   name: SchedulerJobName;
@@ -861,49 +844,54 @@ const BATTLE_EVENT_JOBS: ReadonlySet<JobState['name']> = new Set<JobState['name'
 ]);
 
 export async function runJob(jobName: JobState['name'], handler: () => Promise<JobContext | void>): Promise<void> {
-  // Spec #45 R3.1–R3.3: suspend every battle event during the preparation
-  // window so no player forfeits a battle while rebuilding a stable.
-  if (BATTLE_EVENT_JOBS.has(jobName)) {
-    // Fail open: if the season state cannot be read, run the job. Suspending
-    // every battle event because one read failed would silently stop the game,
-    // which is worse than running a cycle during a preparation window.
-    let season: { phase: string; seasonNumber: number; preparationDay: number;
-      remainingPreparationCycles: number } | null = null;
-    try {
-      const { getCurrentSeason } = await import('../season/seasonService');
-      season = await getCurrentSeason();
-    } catch (error) {
-      logger.error(
-        `Scheduler: could not read season state for "${jobName}" — running anyway. ${error instanceof Error ? error.message : String(error)}`,
-      );
-    }
-
-    if (season && season.phase === 'preparation') {
-      const state = jobStates.get(jobName);
-      const now = new Date();
-      if (state) {
-        state.lastRunAt = now;
-        state.lastRunDurationMs = 0;
-        state.lastRunStatus = 'success';
-        state.lastError = null;
-      }
-      logger.info(
-        `Scheduler: job "${jobName}" skipped — season_preparation ` +
-        `(Season ${season.seasonNumber}, preparation day ${season.preparationDay}, ` +
-        `${season.remainingPreparationCycles} preparation cycle(s) remaining)`,
-      );
-      return;
-    }
-  }
-
+  // The lock is taken first, before any await. Spec #45's preparation gate used to
+  // sit above this line and it does an `await import(...)`, so a battle-event job
+  // yielded before reaching `acquireLock` and an infrastructure job called later
+  // could take the lock ahead of it. That cost the queue its FIFO property, and it
+  // also let the skip path below write `jobStates` while another run of the same
+  // job held the lock. Both go away by gating under the lock: the gate returns
+  // inside the try, so the `finally` releases it.
   await acquireLock(jobName);
 
   const state = jobStates.get(jobName);
   const startTime = new Date();
 
-  logger.info(`Scheduler: job "${jobName}" started at ${startTime.toISOString()}`);
-
   try {
+    // Spec #45 R3.1–R3.3: suspend every battle event during the preparation
+    // window so no player forfeits a battle while rebuilding a stable.
+    if (BATTLE_EVENT_JOBS.has(jobName)) {
+      // Fail open: if the season state cannot be read, run the job. Suspending
+      // every battle event because one read failed would silently stop the game,
+      // which is worse than running a cycle during a preparation window.
+      let season: { phase: string; seasonNumber: number; preparationDay: number;
+        remainingPreparationCycles: number } | null = null;
+      try {
+        const { getCurrentSeason } = await import('../season/seasonService');
+        season = await getCurrentSeason();
+      } catch (error) {
+        logger.error(
+          `Scheduler: could not read season state for "${jobName}" — running anyway. ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+
+      if (season && season.phase === 'preparation') {
+        if (state) {
+          state.lastRunAt = startTime;
+          state.lastRunDurationMs = 0;
+          state.lastRunStatus = 'success';
+          state.lastError = null;
+        }
+        logger.info(
+          `Scheduler: job "${jobName}" skipped — season_preparation ` +
+          `(Season ${season.seasonNumber}, preparation day ${season.preparationDay}, ` +
+          `${season.remainingPreparationCycles} preparation cycle(s) remaining)`,
+        );
+        return;
+      }
+    }
+
+    logger.info(`Scheduler: job "${jobName}" started at ${startTime.toISOString()}`);
+
     const jobContext = await handler();
 
     const endTime = new Date();

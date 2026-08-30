@@ -12,10 +12,8 @@ import { z } from 'zod';
 import { AuthRequest, authenticateToken } from '../middleware/auth';
 import { robotPerformanceService } from '../services/analytics/robotPerformanceService';
 import type { RobotMetric } from '../services/analytics/robotPerformanceService';
-import type { LeaderboardOptions } from '../services/analytics/robotStatsViewService';
 import { getCurrentCycle } from '../services/analytics/cycleAnalyticsService';
 import { getStableSummary } from '../services/analytics/stableAnalyticsService';
-import { getLeaderboardWithTotal } from '../services/analytics/leaderboardAnalyticsService';
 import { unifiedFacilityROIService } from '../services/economy/unifiedFacilityROIService';
 import { getKothPerformance } from '../services/analytics/kothAnalyticsService';
 import { calculateEloMovingAverage, calculateTrendLine } from '../services/analytics/trendHelpers';
@@ -56,11 +54,6 @@ const robotMetricParamsSchema = z.object({
   metricName: z.string().min(1).max(30),
 });
 
-const leaderboardQuerySchema = z.object({
-  orderBy: z.enum(['elo', 'winRate', 'battles', 'kills', 'damageDealt']).optional(),
-  limit: z.coerce.number().int().positive().max(1000).optional(),
-  offset: z.coerce.number().int().nonnegative().optional(),
-});
 
 const cycleRangeQuerySchema = z.object({
   startCycle: z.coerce.number().int().positive().optional(),
@@ -245,54 +238,19 @@ router.get('/robot/:robotId/metric/:metricName', authenticateToken, validateRequ
   return res.json(response);
 });
 
-/** GET /api/analytics/leaderboard */
-router.get('/leaderboard', validateRequest({ query: leaderboardQuerySchema }), async (req: Request, res: Response) => {
-  const validOrderBy = ['elo', 'winRate', 'battles', 'kills', 'damageDealt'];
-  const orderByParam = req.query.orderBy as string | undefined;
-  const orderBy = (orderByParam && validOrderBy.includes(orderByParam)
-    ? orderByParam
-    : 'elo') as LeaderboardOptions['orderBy'];
-
-  let limit = 100;
-  if (req.query.limit) {
-    const parsed = parseInt(req.query.limit as string);
-    if (isNaN(parsed) || parsed < 1) throw new AppError('INVALID_LIMIT', 'limit must be a positive integer', 400);
-    limit = Math.min(parsed, 1000);
-  }
-
-  let offset = 0;
-  if (req.query.offset) {
-    const parsed = parseInt(req.query.offset as string);
-    if (isNaN(parsed) || parsed < 0) throw new AppError('INVALID_OFFSET', 'offset must be a non-negative integer', 400);
-    offset = parsed;
-  }
-
-  const result = await getLeaderboardWithTotal({ orderBy, limit, offset });
-  return res.json(result);
-});
-
-/** GET /api/analytics/robot/:robotId/stats */
-router.get('/robot/:robotId/stats', authenticateToken, validateRequest({ params: robotIdParamsSchema }), async (req: Request, res: Response) => {
-  const { robotStatsViewService } = await import('../services/analytics/robotStatsViewService');
-  const robotId = parseInt(String(req.params.robotId));
-  if (isNaN(robotId)) throw new AppError('INVALID_ROBOT_ID', 'robotId must be a valid integer', 400);
-
-  const stats = await robotStatsViewService.getRobotStats(robotId);
-  if (!stats) throw new RobotError(RobotErrorCode.ROBOT_NOT_FOUND, `No stats found for robot with ID ${robotId}`, 404);
-
-  return res.json(stats);
-});
-
-/** POST /api/analytics/stats/refresh */
-router.post('/stats/refresh', authenticateToken, validateRequest({}), async (req: Request, res: Response) => {
-  const authReq = req as AuthRequest;
-  if (authReq.user?.role !== 'admin') {
-    return res.status(403).json({ error: 'Admin access required' });
-  }
-  const { robotStatsViewService } = await import('../services/analytics/robotStatsViewService');
-  await robotStatsViewService.refreshStats();
-  return res.json({ success: true, message: 'Robot stats materialized view refreshed successfully' });
-});
+// Spec #51: three endpoints were removed here — GET /api/analytics/leaderboard,
+// GET /api/analytics/robot/:robotId/stats and POST /api/analytics/stats/refresh.
+//
+// All three read the `robot_current_stats` materialized view, which no migration ever
+// created: spec "cycle-audit-logging-system" task 5.6 is ticked but its DDL never
+// landed. Every request to them could only ever raise a Postgres "relation does not
+// exist" and answer 500, and nothing called them — the game's leaderboards are served
+// by `/api/leaderboards/*` and `leaderboardService`, and the robot analytics the
+// frontend uses are `/performance`, `/metric/:metric` and `/koth-performance`.
+//
+// Deleted rather than backfilled with a migration because a battles-derived view of
+// ELO and win counts would be a second source of truth for ranking, and
+// .kiro/steering/coding-standards.md makes `standings` the only one.
 
 /** GET /api/analytics/facility/:userId/roi */
 router.get('/facility/:userId/roi', authenticateToken, validateRequest({ params: userIdParamsSchema }), async (req: Request, res: Response) => {

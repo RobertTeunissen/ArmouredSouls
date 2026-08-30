@@ -1,4 +1,5 @@
 import prisma from '../../lib/prisma';
+import { getRobotLeagueTiers, tierOf } from '../standings/robotLeagueTiers';
 import type { Prisma } from '../../../generated/prisma';
 import { MatchType } from '../../../generated/prisma';
 import { buildUserFilter } from '../../utils/buildUserFilter';
@@ -587,7 +588,6 @@ export async function getRobotAttributeStats() {
       id: true,
       name: true,
       userId: true,
-      currentLeague: true,
       elo: true,
       totalBattles: true,
       wins: true,
@@ -618,6 +618,10 @@ export async function getRobotAttributeStats() {
       formationTactics: true,
     },
   });
+
+  // League tier comes from `standings`; Robot has had no `currentLeague` column since
+  // Spec #40, and selecting it made this whole endpoint 500.
+  const leagueTiers = await getRobotLeagueTiers(robots.map((r) => r.id));
 
   if (robots.length === 0) {
     return {
@@ -657,7 +661,7 @@ export async function getRobotAttributeStats() {
           id: r.id,
           name: r.name,
           value: Number(r[attr]),
-          league: r.currentLeague,
+          league: tierOf(leagueTiers, r.id),
           elo: r.elo,
           winRate: r.totalBattles > 0 ? Number((r.wins / r.totalBattles * 100).toFixed(1)) : 0,
         }))
@@ -676,7 +680,7 @@ export async function getRobotAttributeStats() {
   const statsByLeague: Record<string, { count: number; averageElo: number; attributes: Record<string, { mean: number; median: number; min: number; max: number }> }> = {};
 
   for (const league of leagues) {
-    const leagueRobots = robots.filter(r => r.currentLeague === league);
+    const leagueRobots = robots.filter(r => tierOf(leagueTiers, r.id) === league);
     if (leagueRobots.length === 0) continue;
 
     statsByLeague[league] = {
@@ -749,7 +753,7 @@ export async function getRobotAttributeStats() {
       id: r.id,
       name: r.name,
       value: Number(r[attr]),
-      league: r.currentLeague,
+      league: tierOf(leagueTiers, r.id),
       elo: r.elo,
       winRate: r.totalBattles > 0 ? Number((r.wins / r.totalBattles * 100).toFixed(1)) : 0,
     }));
@@ -758,7 +762,7 @@ export async function getRobotAttributeStats() {
       id: r.id,
       name: r.name,
       value: Number(r[attr]),
-      league: r.currentLeague,
+      league: tierOf(leagueTiers, r.id),
       elo: r.elo,
       winRate: r.totalBattles > 0 ? Number((r.wins / r.totalBattles * 100).toFixed(1)) : 0,
     }));
@@ -840,7 +844,6 @@ export async function getRecentUserActivity(cyclesBack: number, filter: string =
           currentHP: true,
           maxHP: true,
           elo: true,
-          currentLeague: true,
           totalBattles: true,
           wins: true,
           losses: true,
@@ -863,6 +866,12 @@ export async function getRecentUserActivity(cyclesBack: number, filter: string =
     },
     orderBy: { createdAt: 'desc' },
   });
+
+  // League tier comes from `standings`, one query for every robot across every user
+  // listed. Robot has had no `currentLeague` column since Spec #40.
+  const userRobotLeagueTiers = await getRobotLeagueTiers(
+    recentUsers.flatMap((user) => user.robots.map((r) => r.id)),
+  );
 
   // Enrich each user with activity indicators
   const usersWithActivity = recentUsers.map((user) => {
@@ -918,7 +927,7 @@ export async function getRecentUserActivity(cyclesBack: number, filter: string =
         maxHP: r.maxHP,
         hpPercent: r.maxHP > 0 ? Math.round((r.currentHP / r.maxHP) * 100) : 0,
         elo: r.elo,
-        league: r.currentLeague,
+        league: tierOf(userRobotLeagueTiers, r.id),
         totalBattles: r.totalBattles,
         wins: r.wins,
         losses: r.losses,

@@ -13,11 +13,23 @@ import { z } from 'zod';
  * Safe name: letters, numbers, spaces, hyphens, underscores, apostrophes, periods, exclamation marks.
  * Used for robot names and other user-visible name fields.
  */
+/**
+ * Messages are deliberately generic: this primitive backs robot names, team names and
+ * weapon custom names. A route that wants field-specific wording declares its own
+ * schema with the canonical text — see `robotNameSchema` in `routes/robots.ts`.
+ *
+ * They still name the rule, because `validateRequest` puts them in the response's
+ * `error` string and Zod's defaults ('Too big: expected string to have <=50
+ * characters') read as internals.
+ */
 export const safeName = z
   .string()
-  .min(1)
-  .max(50)
-  .regex(/^[a-zA-Z0-9 _\-'.!]+$/, 'Contains disallowed characters');
+  .min(1, 'Name is required')
+  .max(50, 'Name must be 50 characters or less')
+  .regex(
+    /^[a-zA-Z0-9 _\-'.!]+$/,
+    'Name can only contain letters, numbers, spaces, hyphens, underscores, apostrophes, periods, and exclamation marks',
+  );
 
 /**
  * Safe slug: alphanumeric, hyphens, underscores only.
@@ -97,8 +109,24 @@ export const paginationQuery = z.object({
  * Stable name: letters, numbers, spaces, hyphens, underscores.
  * Used for player stable names (public display names).
  */
+/**
+ * The wording is the canonical wording from `validateStableName` in
+ * `utils/validation.ts`, deliberately duplicated here rather than paraphrased.
+ *
+ * These messages are user-facing: `validateRequest` builds the response's `error`
+ * string from the failing issues, and this schema runs in front of
+ * `validateStableName`, so whatever is written here is what a player reads. Zod's
+ * defaults ('Too small: expected string to have >=3 characters') name neither the
+ * field nor the rule.
+ *
+ * Profanity is checked by `validateStableName` in the handler, not here — that is a
+ * content rule rather than a shape rule, and it needs the profanity list.
+ */
 export const stableName = z
   .string()
-  .min(3)
-  .max(30)
-  .regex(/^[a-zA-Z0-9 _-]+$/, 'Contains disallowed characters');
+  .min(3, 'Stable name must be at least 3 characters')
+  .max(30, 'Stable name must be 30 characters or less')
+  .regex(
+    /^[a-zA-Z0-9 _-]+$/,
+    'Stable name can only contain letters, numbers, spaces, hyphens, and underscores',
+  );

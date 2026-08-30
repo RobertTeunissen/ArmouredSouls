@@ -781,8 +781,12 @@ model TeamBattleMember {
   slotIndex Int @map("slot_index") // Position in team (0-based)
 
   // Relations
+  // Both parents cascade: a membership row cannot outlive either the team or the
+  // robot. `robotId` was RESTRICT until Spec #51, which made `resetService` fail for
+  // any player who had formed a team — see the migration
+  // 20260829120000_cascade_team_membership_on_robot_delete.
   team  TeamBattle @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  robot Robot      @relation(fields: [robotId], references: [id])
+  robot Robot      @relation(fields: [robotId], references: [id], onDelete: Cascade)
 
   @@unique([teamId, slotIndex])
   @@unique([teamId, robotId])

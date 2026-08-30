@@ -2,6 +2,8 @@ import prisma from '../../lib/prisma';
 import { getFacilityConfig } from '../../config/facilities';
 import { StableMetric } from '../../types/snapshotTypes';
 import { readCycleRepairSpend } from './repairPayloadKeys';
+import { calculateRepairBayDiscountPercent } from '../../shared/utils/repairCost';
+import { EconomyError, EconomyErrorCode } from '../../errors/economyErrors';
 // Spec #46 R10: streaming estimates derive from the award-path formula.
 import { computeStreamingRevenue } from './streamingRevenueService';
 import {
@@ -426,7 +428,10 @@ export class UnifiedFacilityROIService {
     });
 
     if (!user) {
-      throw new Error('User not found');
+      // A bare `Error` here reached the error handler as a 500. Bad input on this
+      // endpoint is a client error, and the AppError hierarchy is what carries the
+      // status and code (see the Error Handling rules in coding-standards.md).
+      throw new EconomyError(EconomyErrorCode.FACILITY_NOT_FOUND, 'User not found', 404);
     }
 
     // Get current facility level
@@ -443,8 +448,19 @@ export class UnifiedFacilityROIService {
 
     // Validate target level
     const config = getFacilityConfig(facilityType);
-    if (!config || targetLevel > config.maxLevel || targetLevel <= currentLevel) {
-      throw new Error('Invalid target level');
+    if (!config) {
+      throw new EconomyError(
+        EconomyErrorCode.INVALID_FACILITY_TYPE,
+        `Unknown facility type '${facilityType}'`,
+        400,
+      );
+    }
+    if (targetLevel > config.maxLevel || targetLevel <= currentLevel) {
+      throw new EconomyError(
+        EconomyErrorCode.INVALID_TRANSACTION,
+        `Target level must be above the current level (${currentLevel}) and at most ${config.maxLevel}`,
+        400,
+      );
     }
 
     // Calculate upgrade cost
@@ -675,7 +691,14 @@ export class UnifiedFacilityROIService {
     // The discount represents what the user saved by having the repair bay.
     // totalRepairCosts in the snapshot is the ACTUAL cost paid (after discount).
     // Savings = actualCost * (discountPercent / (100 - discountPercent))
-    const discountPercent = Math.min(90, level * (5 + robotCount));
+    //
+    // The percentage comes from the Shared_Repair_Module. This line held a fourth
+    // inline copy of `min(90, level × (5 + robotCount))` that Spec #48 missed when
+    // it collapsed the other three.
+    const discountPercent = calculateRepairBayDiscountPercent({
+      repairBayLevel: level,
+      activeRobotCount: robotCount,
+    });
     if (discountPercent >= 100) return 0;
 
     const savings = totalRepairCosts * (discountPercent / (100 - discountPercent));

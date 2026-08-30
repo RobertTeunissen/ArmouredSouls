@@ -17,14 +17,31 @@ const router = express.Router();
 
 // --- Zod schemas for user routes ---
 
+// Every message here is user-facing: `validateRequest` builds the response's `error`
+// string from the failing issues, and this schema runs in front of the handler's own
+// checks. The wording matches `validateStableName` / `validatePassword` in
+// `utils/validation.ts` and the handler's enum messages below, so a player sees the
+// same sentence whichever layer rejects the request.
 const profileUpdateBodySchema = z.object({
   stableName: stableNameSchema.optional(),
-  profileVisibility: z.enum(['public', 'private']).optional(),
+  profileVisibility: z
+    .enum(['public', 'private'], { message: "Profile visibility must be 'public' or 'private'" })
+    .optional(),
   notificationsBattle: z.boolean().optional(),
   notificationsLeague: z.boolean().optional(),
-  themePreference: z.enum(['dark', 'light', 'auto']).optional(),
-  currentPassword: z.string().min(1).max(128).optional(),
-  newPassword: z.string().min(8).max(128).optional(),
+  themePreference: z
+    .enum(['dark', 'light', 'auto'], { message: "Theme must be 'dark', 'light', or 'auto'" })
+    .optional(),
+  currentPassword: z
+    .string()
+    .min(1, 'Current password is required to change password')
+    .max(128, 'Current password must be 128 characters or less')
+    .optional(),
+  newPassword: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .max(128, 'Password must be 128 characters or less')
+    .optional(),
 });
 
 // Get current user profile
@@ -116,9 +133,23 @@ router.put('/profile', authenticateToken, validateRequest({ body: profileUpdateB
     }
   }
 
-  // Return validation errors if any
-  if (Object.keys(validationErrors).length > 0) {
-    throw new AppError('VALIDATION_ERROR', 'Validation failed', 400, { errors: validationErrors });
+  // Return validation errors if any.
+  //
+  // Spec #51: `details` carries a `fields` array, matching what `validateRequest`
+  // emits, and `error` carries the joined messages. This endpoint previously had a
+  // third shape all of its own — `details.errors` keyed by field name, with a fixed
+  // `'Validation failed'` message. `ProfilePage.tsx` assigned `data.details` straight
+  // into a `Record<field, message>`, so it received `{ errors: { ... } }`, rendered
+  // no message under any field, and skipped the generic banner too because
+  // `data.details` was truthy. A profile validation error showed the player nothing.
+  const failedFields = Object.entries(validationErrors);
+  if (failedFields.length > 0) {
+    throw new AppError(
+      'VALIDATION_ERROR',
+      failedFields.map(([, message]) => message).join(', '),
+      400,
+      { fields: failedFields.map(([field, message]) => ({ field, message })) },
+    );
   }
 
   // Build update data object (only include provided fields)

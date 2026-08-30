@@ -90,7 +90,6 @@ export async function getEngagementPlayers(
           select: {
             totalBattles: true,
             wins: true,
-            currentLeague: true,
           },
         },
       },

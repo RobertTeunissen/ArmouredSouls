@@ -30,6 +30,7 @@ import {
 import { recordAction as recordAuditAction, getEntries as getAuditEntries } from '../services/admin/adminAuditLogService';
 import { handleAdminUploads, handleAdminCleanup } from '../services/moderation/adminUploadsHandler';
 import prisma from '../lib/prisma';
+import { getRobotLeagueTiers, tierOf } from '../services/standings/robotLeagueTiers';
 
 const router = express.Router();
 
@@ -56,7 +57,13 @@ const recentUsersQuerySchema = z.object({
 const repairAuditQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(25),
-  repairType: z.enum(['manual', 'automatic']).optional(),
+  // The message is user-facing: `validateRequest` builds the response's `error` from
+  // the failing issues, and this schema rejects before the handler's own check below,
+  // so Zod's default ('Invalid option: expected one of "manual"|"automatic"') is what
+  // an operator would otherwise read.
+  repairType: z
+    .enum(['manual', 'automatic'], { message: "repairType must be 'manual' or 'automatic'" })
+    .optional(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
   stableName: z.string().max(100).optional(),
@@ -273,12 +280,7 @@ router.get('/users/:id', authenticateToken, requireAdmin, validateRequest({ para
   }
 
   // Enrich robots with league tier from standings table (source of truth since Spec #40)
-  const robotIds = user.robots.map(r => r.id);
-  const standings = await prisma.standing.findMany({
-    where: { entityType: 'robot', entityId: { in: robotIds }, mode: 'league_1v1' },
-    select: { entityId: true, tier: true },
-  });
-  const leagueMap = new Map(standings.map(s => [s.entityId, s.tier]));
+  const leagueMap = await getRobotLeagueTiers(user.robots.map(r => r.id));
 
   res.json({
     id: user.id,
@@ -296,7 +298,7 @@ router.get('/users/:id', authenticateToken, requireAdmin, validateRequest({ para
       id: r.id,
       name: r.name,
       elo: r.elo,
-      league: leagueMap.get(r.id) ?? 'bronze',
+      league: tierOf(leagueMap, r.id),
       wins: r.wins,
       losses: r.losses,
       draws: r.draws,

@@ -249,7 +249,8 @@ type RobotWithUser = Prisma.RobotGetPayload<{
 }>;
 
 /**
- * Get all robots in a specific instance (via standings table)
+ * Get all robots in a specific instance (via standings table),
+ * ranked LP-first and then by ELO.
  */
 export async function getRobotsInInstance(leagueId: string): Promise<RobotWithUser[]> {
   // Look up robot IDs from the standings table
@@ -259,18 +260,15 @@ export async function getRobotsInInstance(leagueId: string): Promise<RobotWithUs
       entityType: 'robot',
       leagueInstanceId: leagueId,
     },
-    orderBy: [
-      { leaguePoints: 'desc' },
-    ],
-    select: { entityId: true },
+    select: { entityId: true, leaguePoints: true },
   });
 
   if (standings.length === 0) return [];
 
-  const robotIds = standings.map(s => s.entityId);
+  const leaguePointsByRobotId = new Map(standings.map((s) => [s.entityId, s.leaguePoints]));
 
-  return prisma.robot.findMany({
-    where: { id: { in: robotIds } },
+  const robots = await prisma.robot.findMany({
+    where: { id: { in: [...leaguePointsByRobotId.keys()] } },
     include: {
       user: {
         select: {
@@ -279,9 +277,15 @@ export async function getRobotsInInstance(leagueId: string): Promise<RobotWithUs
         },
       },
     },
-    orderBy: [
-      { elo: 'desc' },
-    ],
+  });
+
+  // LP is the primary sort key and lives in `standings`, so it cannot be expressed in the
+  // robot query's `orderBy`. Ordering the standings query instead does not work either:
+  // the robot query re-orders the rows, which is how Spec #43 silently dropped LP from
+  // this ranking and left it ordered by ELO alone.
+  return robots.sort((a, b) => {
+    const lpDelta = (leaguePointsByRobotId.get(b.id) ?? 0) - (leaguePointsByRobotId.get(a.id) ?? 0);
+    return lpDelta !== 0 ? lpDelta : b.elo - a.elo;
   });
 }
 
