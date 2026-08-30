@@ -42,6 +42,7 @@ import { getNextSchedulingMoments } from '../scheduling/eventCronSchedule';
 import { SubscriptionError, SubscriptionErrorCode } from '../../errors/subscriptionErrors';
 import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
 import logger from '../../config/logger';
+import { withAuditSequence } from '../common/auditSequence';
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -279,34 +280,40 @@ async function writeAuditEntries(
   tx: Tx,
 ): Promise<void> {
   const cycleNumber = await getCurrentCycleNumber();
-  const lastEntry = await tx.auditLog.findFirst({
-    where: { cycleNumber },
-    orderBy: { sequenceNumber: 'desc' },
-    select: { sequenceNumber: true },
-  });
-  let sequenceNumber = lastEntry ? lastEntry.sequenceNumber + 1 : 1;
 
   const entries = [
     ...added.map((eventType) => ({ eventType, type: 'subscription_create' as const })),
     ...removed.map((eventType) => ({ eventType, type: 'subscription_remove' as const })),
   ];
 
-  for (const entry of entries) {
-    await tx.auditLog.create({
-      data: {
-        cycleNumber,
-        eventType: entry.type,
-        sequenceNumber: sequenceNumber++,
-        userId,
-        robotId,
-        payload: {
-          eventType: entry.eventType,
-          occupiedCount,
-          bookingOfficeLevel: level,
-        } satisfies Prisma.JsonObject,
-      },
-    });
-  }
+  if (entries.length === 0) return;
+
+  // Spec #51: allocation goes through the shared Sequence_Allocator. This
+  // function previously read the maximum sequence number and incremented it
+  // locally, which raced with `EventLogger` and with itself.
+  await withAuditSequence(
+    cycleNumber,
+    entries.length,
+    async (startSequence, client) => {
+      for (const [index, entry] of entries.entries()) {
+        await client.auditLog.create({
+          data: {
+            cycleNumber,
+            eventType: entry.type,
+            sequenceNumber: startSequence + index,
+            userId,
+            robotId,
+            payload: {
+              eventType: entry.eventType,
+              occupiedCount,
+              bookingOfficeLevel: level,
+            } satisfies Prisma.JsonObject,
+          },
+        });
+      }
+    },
+    tx,
+  );
 }
 
 // ── Public write API ─────────────────────────────────────────────────

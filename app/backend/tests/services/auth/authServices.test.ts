@@ -255,6 +255,9 @@ describe('passwordResetService', () => {
             findFirst: jest.fn().mockResolvedValue({ sequenceNumber: 10 }),
             create: jest.fn().mockResolvedValue({}),
           },
+          // Spec #51: `withAuditSequence` takes pg_advisory_xact_lock(3, cycle)
+          // on the transaction client before allocating a sequence number.
+          $executeRaw: jest.fn().mockResolvedValue(0),
         };
         return callback(tx);
       });
@@ -283,6 +286,7 @@ describe('passwordResetService', () => {
             findFirst: jest.fn(),
             create: jest.fn(),
           },
+          $executeRaw: jest.fn().mockResolvedValue(0),
         };
         return callback(tx);
       });

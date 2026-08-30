@@ -51,6 +51,9 @@ const mockTx = {
   // these properties exercise the cap against subscriptions alone.
   scheduledMatchParticipant: { findMany: jest.fn().mockResolvedValue([]) },
   scheduledTournamentMatch: { findMany: jest.fn().mockResolvedValue([]) },
+  // Spec #51: `withAuditSequence` takes pg_advisory_xact_lock(3, cycle) on the
+  // transaction client before allocating audit sequence numbers.
+  $executeRaw: jest.fn().mockResolvedValue(0),
 };
 
 const mockPrisma = {
