@@ -5,11 +5,51 @@ fileMatchPattern: "**/tests/**,**/*.test.ts,**/*.test.tsx,**/*.spec.ts,**/*.prop
 
 # Testing Strategy
 
-## Current Test Status
-- Pass rate: ~82% (900-910 of 1099 tests passing)
-- Last updated: February 24, 2026
-- Framework: Jest with TypeScript
-- Property testing: fast-check library
+## Frameworks
+
+- Backend: Jest with TypeScript (ts-jest)
+- Frontend: Vitest 4 with jsdom
+- Property testing: fast-check, both sides
+
+**No pass-rate snapshot lives here.** This section used to claim "Pass rate: ~82% (900-910 of 1099
+tests passing), Last updated: February 24, 2026". Counts change on almost every commit, so a
+snapshot is stale within days and is then read as authoritative — the same failure mode
+`coding-standards.md` documents costing real time in August 2026. Run the suite to learn the
+current state.
+
+## Test tiers and the Tier_Partition (Spec #51)
+
+The backend has three tiers, and **every `*.test.ts` file under `app/backend/tests/` or
+`app/backend/src/` must be collected by exactly one of them.**
+
+| Tier | Config | Command | For |
+|---|---|---|---|
+| Unit | `jest.config.unit.js` | `pnpm run test:unit` | Pure logic, mocked dependencies. Parallel. |
+| Integration | `jest.config.integration.js` | `pnpm run test:integration` | Needs a real database or supertest. `maxWorkers: 1`. |
+| Heavy | `jest.config.heavy.js` | `pnpm run test:heavy` | Full cycle execution, bulk operations. Own CI job. |
+
+### Choosing a tier for a new test
+
+Membership is declared in one place: `app/backend/jest.tiers.js`.
+
+- **Needs a real database, or drives the app through supertest** → add it to `DB_DEPENDENT`.
+- **Runs a full game cycle or bulk operations** → add it to `HEAVY_TESTS`.
+- **Anything else** → add nothing. The unit tier is the default.
+
+A new test therefore lands in the unit tier automatically, and if it actually needs a database it
+fails immediately and loudly. That is the intended failure direction.
+
+### Never add `testPathIgnorePatterns` to a tier config
+
+Excluding a file from one tier does not move it into another. Doing so is how four suites came to
+run in **no tier at all** — including `tests/middleware/errorHandler.test.ts`, the only test for
+the middleware that shapes every API error body. A separate hand-maintained path list in
+`jest.config.integration.js` had also fallen behind the codebase, so ten `src/**/__tests__/` files
+were running **twice**. Both failure modes were silent.
+
+`pnpm run test:tiers:verify` enforces the partition and blocks CI. It reports any file collected by
+zero tiers (Orphaned_Test) or more than one (Duplicated_Test), naming each offender. If you find
+yourself wanting a bespoke exclusion, change the classification in `jest.tiers.js` instead.
 
 ## Testing Policy
 
@@ -238,15 +278,78 @@ beforeEach(async () => {
 });
 ```
 
-### Cleaning Up Test Data
+### A competitive fixture must write `standings` (Spec #40, #43, #51)
+
+**Creating a robot or a team does not enter it into a competition.** Spec #40 moved tier,
+league instance, LP and `cyclesInTier` out of `Robot` and `TeamBattle` and into
+`standings`; Spec #43 dropped the old columns and migrated the reads. A fixture that
+creates entities and no standing rows creates entities that are in no league at all.
+
+`getInstancesForTier`, `getLeagueInstanceStats`, `rebalanceLeagues`,
+`rebalanceTagTeamLeagues`, `runMatchmakingForTier`, `getEligibleTeams` and the tag team
+orchestrator all scope their work from `standings`, find nothing, and correctly do
+nothing. **That is what "Expected 331, Received 0" means: not a broken service, a fixture
+that predates Spec #40.** It was the single largest cause of Heavy_Tier failures.
+
+Use `tests/helpers/standings.ts` — `enterRobotStanding`, `enterTeamStanding`,
+`enterRobotStandings` — rather than an inline `prisma.standing.create`, so the shape of a
+correct fixture lives in one place.
+
+Two fields gate the league engine and must be set deliberately, not defaulted:
+
+- **`cyclesInTier`** — `leagueEngine` counts only entities at or above
+  `minCyclesForRebalancing` (5 for the LP leagues, 10 for the Placement_Modes) as
+  eligible, and takes 10% of the **eligible** count, not of the tier total. Leave it at 0
+  and every promotion assertion reads 0.
+- **`leaguePoints`** — promotion also requires the per-tier threshold from
+  `getMinLPForPromotion` (bronze 25, silver 50, gold 75, platinum 100, diamond 125).
+
+There is also a **destination-cohort rule** that surprises fixtures: `leagueEngine` holds
+promotions entirely when the destination tier is empty and there are fewer than
+`minCohortForNewTier` (3) candidates. A 20-entity tier yields 2 candidates at 10%, which
+is below that floor, so a 20-entity fixture promotes nobody — and a test written for it
+ends up asserting the cohort rule by accident instead of the percentage rule on purpose.
+Size the fixture so 10% is at least 3.
+
+### `standings` has no foreign key, so deleting entities does not clean it up
+
+`standings` is polymorphic (`entityType` + `entityId`), so it has **no** foreign key to
+`robots` or `team_battles`. `prisma.robot.deleteMany` leaves its standing rows behind, and
+the next test in the file inherits them. Since suites reuse tier names — `bronze` above
+all — an uncleared row lands directly in a later test's instance counts.
+
+Clear it explicitly in teardown, and clear it before the entities:
+
 ```typescript
 afterEach(async () => {
-  // Delete in reverse order of foreign key dependencies
-  await prisma.battle.deleteMany({ where: { robot1Id: testRobot.id } });
+  // standings first: no FK, so it is not cascaded by the deletes below
+  await prisma.standing.deleteMany({});
+  // then in reverse order of foreign key dependencies
+  await prisma.battleParticipant.deleteMany({ where: { robotId: testRobot.id } });
   await prisma.robot.deleteMany({ where: { userId: testUser.id } });
   await prisma.user.deleteMany({ where: { id: testUser.id } });
 });
 ```
+
+A suite that rebalances a whole competition — anything calling `rebalanceLeagues` or
+`rebalanceTagTeamLeagues` — must also clear that mode's standings in `beforeAll`, because
+those functions operate on every row for the mode, not only on the rows the suite created.
+
+### A dropped column takes its predicate with it — check what the `where` still asks
+
+When Spec #40 moved tier off `TeamBattle`, `tests/integration/tagTeamLeagueRebalancing.test.ts`
+kept its verification queries and lost only the tier predicate that no longer compiled.
+What remained was `prisma.teamBattle.findMany({ where: { id: { in: teamIds } } })` — a
+query that counts every team the test created, whatever tier it ended in.
+
+The suite then asserted the same unfiltered 20-row result equalled both 2 and 18 in one
+test, so it could not pass under any behaviour. It reported "Received: 20", which reads
+like a rebalancing defect and was in fact a test that had stopped asking about tiers.
+
+**When a migration drops a column, a query that filtered on it does not become a broader
+query — it becomes a different question.** Move the predicate to its new home rather than
+deleting it.
+
 
 ## Schema Changes and Tests
 
@@ -282,8 +385,8 @@ await prisma.battle.create({
 ```typescript
 await prisma.battle.create({
   data: {
-    robot1Id: robot1.id,
-    robot2Id: robot2.id,
+    // No robot1Id / robot2Id: Spec #43 dropped both columns. The participants ARE the
+    // identity of the two sides, and `winningSide` records the outcome.
     participants: {
       create: [
         { robotId: robot1.id, team: 1, damageDealt: 50, credits: 1000, eloBefore: 1500, eloAfter: 1520, finalHP: 80 },
@@ -293,6 +396,84 @@ await prisma.battle.create({
   },
 });
 ```
+
+Prefer `createTestBattle` in `tests/testHelpers.ts` over an inline `battle.create`. Spec
+#51 found removed Battle columns (`robot1Id`, `robot2Id`, `robot1ELOBefore`, `eloChange`)
+still being passed at nine inline call sites across eight suites, every one of which threw
+`PrismaClientValidationError` — including from the "new" example in this very file, which
+carried `robot1Id` for as long as the columns had been gone. A shared helper is one place
+to fix; nine inline literals are nine.
+
+### Pass a listening server to supertest, not the app (Spec #51)
+
+`request(app)` makes supertest stand up a **fresh ephemeral server for every call** and tear
+it down again. In a suite that issues many requests — a property test multiplies its call
+sites by `numRuns` — that churn produces failures that have nothing to do with the assertion:
+
+- **HTTP 426**, a status nothing in this codebase sends, arriving where a 200 or 401 was
+  expected.
+- **`socket hang up`**.
+- Occasionally an **indefinite hang**: `changelog.property` normally finishes in under 2s and
+  was once observed sitting until Jest's 30s timeout fired, leaving a worker to be killed by
+  hand.
+
+Bind once per file and pass the server:
+
+```typescript
+let server: import('http').Server;
+
+beforeAll(() => { server = app.listen(0); });
+afterAll(async () => { await new Promise<void>((r) => server.close(() => r())); });
+
+// then
+await request(server).get('/api/thing');
+```
+
+Converted for this reason so far: `guide-routes`, `battleLogStreamingRevenue.property`,
+`changelog.property`, `streamingStudioPrestigeRequirements.property` (~800 requests per run,
+the worst offender), `weaponInventory`.
+
+**Do not "fix" this by disabling HTTP keep-alive.** It looks like the right answer — Node 19+
+defaults `http.globalAgent.keepAlive` to `true`, so a pooled socket can outlive the ephemeral
+server it was opened against. Spec #51 tried exactly that, globally, and reverted it: with
+pooling off, every request opens and closes its own connection, which took the machine to
+**1,536 sockets in TIME_WAIT** and converted an intermittent 426 into ephemeral port
+exhaustion. A full tier run stalled at 91 of 113 suites and left four stray workers. The
+problem is the number of servers, not the pooling of sockets.
+
+### Beware measuring a shared database from two runs at once
+
+Spec #51 spent real time chasing "flakes" that were an artefact of its own measurement: two
+full tier runs had been started in the background and overlapped on one database. The symptoms
+look alarming and nothing like a race in the code under test — 32 `robots_user_id_fkey`
+violations, 29 "No record was found for a delete", and 7
+`(cycle_number, sequence_number)` collisions in a single run, spread across suites with
+nothing in common.
+
+The tell is breadth: a genuine flake hits one suite, and a concurrency artefact hits a dozen
+unrelated ones with foreign-key and missing-row errors. Before diagnosing anything, check that
+only one runner is live (`pgrep -f jest`), and prefer running tiers in the foreground one at a
+time when measuring.
+
+### Every `fc.float` and `fc.double` needs `noNaN: true`
+
+fast-check generates `NaN` from a **bounded** `fc.float({ min, max })` unless told not to,
+and `NaN` fails every comparison silently rather than loudly. This is the single most
+likely cause of a property test that passes locally and fails on a different seed.
+
+```typescript
+// wrong — one run in three or so draws NaN
+fc.float({ min: 1.52, max: 3.0 })
+// right
+fc.float({ min: 1.52, max: 3.0, noNaN: true, noDefaultInfinity: true })
+```
+
+Spec #51 traced an intermittent Integration_Tier failure to exactly this: a duration
+multiplier drew `NaN`, `Math.floor(baseline * NaN)` produced a `NaN` duration, and the
+degradation detector correctly reported nothing. Worse, the sibling property asserting the
+detector returns `null` **passed on the same input for the wrong reason**, which is how the
+generator survived so long. Physical quantities — durations, damage, percentages, scores —
+cannot be `NaN`; say so in the arbitrary.
 
 ## Property-Based Testing
 

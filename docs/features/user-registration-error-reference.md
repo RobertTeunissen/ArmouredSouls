@@ -68,7 +68,7 @@ Multiple validation errors are joined with `, ` in a single `error` string. For 
 
 ---
 
-#### `DUPLICATE_USERNAME`
+#### `DUPLICATE_USERNAME` — `409 Conflict`
 
 Returned when the submitted username already exists in the database.
 
@@ -89,7 +89,7 @@ Returned when the submitted username already exists in the database.
 
 ---
 
-#### `DUPLICATE_STABLE_NAME`
+#### `DUPLICATE_STABLE_NAME` — `409 Conflict`
 
 Returned when the submitted stable name already exists in the database.
 
@@ -110,7 +110,7 @@ Returned when the submitted stable name already exists in the database.
 
 ---
 
-#### `DUPLICATE_EMAIL`
+#### `DUPLICATE_EMAIL` — `409 Conflict`
 
 Returned when the submitted email already exists in the database.
 
@@ -245,9 +245,9 @@ When the API request fails without a response (network timeout, DNS failure, ser
 | Code                 | HTTP | Endpoint(s)       | Error Message (summary)                                                        |
 |----------------------|------|--------------------|--------------------------------------------------------------------------------|
 | `VALIDATION_ERROR`   | 400  | Register           | Field-specific validation message(s)                                           |
-| `DUPLICATE_USERNAME` | 400  | Register           | Username is already taken                                                      |
-| `DUPLICATE_STABLE_NAME` | 400 | Register          | Stable name is already taken                                                   |
-| `DUPLICATE_EMAIL`    | 400  | Register           | Email is already registered                                                    |
+| `DUPLICATE_USERNAME` | 409  | Register           | Username is already taken                                                      |
+| `DUPLICATE_STABLE_NAME` | 409 | Register          | Stable name is already taken                                                   |
+| `DUPLICATE_EMAIL`    | 409  | Register           | Email is already registered                                                    |
 | `INVALID_CREDENTIALS`| 401  | Login              | Invalid credentials                                                            |
 | *(none)*             | 429  | Register, Login    | Too many requests. Please try again later.                                     |
 | `DATABASE_ERROR`     | 500  | Register, Login    | Registration is temporarily unavailable. / An error occurred during login.     |

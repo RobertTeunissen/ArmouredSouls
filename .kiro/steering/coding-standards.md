@@ -91,6 +91,61 @@ inclusion: always
 - Include proper indexes for performance
 - Never read league, KotH, or tag-team competitive stats from the Robot or TeamBattle models — the `standings` table is the single source of truth for all competitive ranking data. Use `prisma.standing.findUnique({ where: { entityType_entityId_mode: { entityType: 'robot', entityId: robotId, mode: 'league_1v1' } } })` for per-entity lookups.
 
+### Deletion order and `onDelete` (Spec #51)
+
+- **A `RESTRICT` foreign key that only test teardown ever trips is still a production
+  defect.** `TeamBattleMember.robot` was `RESTRICT`, so deleting a robot that belonged to a
+  team threw. That surfaced as 27 failing Heavy_Tier tests, but the same constraint broke
+  `resetService` — **account reset failed for any player who had ever joined a team.** The
+  tests were reporting a real bug in a real user-facing flow.
+- The fix was `onDelete: Cascade` on `TeamBattleMember.robot` plus corrected ordering in
+  `resetService`, not 195 edited test call sites. When a constraint is wrong, change the
+  constraint.
+- **Choose between cascade and explicit ordering deliberately.** A membership row has no
+  meaning without its robot, so it cascades. A `battles` row outlives its participants and
+  must not.
+- `standings` is the exception that catches people out: it is polymorphic
+  (`entityType` + `entityId`) and therefore has **no** foreign key to `robots` or
+  `team_battles`, so nothing about it is ever cascaded. It must be deleted explicitly, and
+  before the entities it refers to. See `.kiro/steering/testing-strategy.md`.
+
+### Audit sequence numbers (Spec #51)
+
+- **Allocate `audit_logs.sequence_number` only through `withAuditSequence`** in
+  `src/services/common/auditSequence.ts`. Never read the current maximum and increment it.
+- **The read-then-increment pattern is a race, and it is not rare.** Three call sites did
+  `findFirst({ orderBy: { sequenceNumber: 'desc' } })` and then `+1` across an `await`;
+  two concurrent callers computed the same number and the second insert violated
+  `@@unique([cycleNumber, sequenceNumber])`. One integration run produced 3,142 collisions.
+- **It was a silent data-loss bug, not a test annoyance.** `EventLogger.logEvent` catches its
+  own failures, so a collision dropped an `audit_logs` row instead of failing a request — and
+  under Spec #48 those rows are the sole Repair_Spend_Source. A racy allocator puts holes in
+  the repair-spend and battle-income series the Dashboard and admin analytics read.
+- **`eventLogger.ts` blamed "parallel test runners or multi-process deployments" for years.**
+  Both are ruled out by `maxWorkers: 1` in `jest.config.integration.js` and `instances: 1` in
+  `app/ecosystem.config.js`. The collision is intra-process, on the async gap. Do not go
+  looking for a second process.
+- **Do not replace the advisory lock with a PostgreSQL sequence.** `checkSequenceNumbers` in
+  `services/common/dataIntegrityService.ts` reports every gap as a `sequence_number_continuity`
+  issue, and a sequence produces gaps by design. The gapless property is load-bearing.
+- The lock namespace is `3`. `2` belongs to robot locks in `teamBattleService.ts`.
+
+### Validation messages are user-facing (Spec #51)
+
+- **A Zod message must name its own field.** `RegistrationForm.tsx` decides which input to show
+  an error under by keyword-matching the response's `error` string, so
+  `'Username must be at least 3 characters long'` works and Zod's default
+  `'Too small: expected string to have >=3 characters'` does not.
+- `validateRequest` builds `error` by joining the failing issues' messages via `describeIssues`.
+  It previously threw a fixed `'Invalid request body'`, which matched no keyword and sent every
+  server-side validation failure to the generic banner instead of its field. `details.fields`
+  carries the structured per-field data and is unchanged.
+- A missing key is rendered as `'<Field> is required'`, because Zod reports it as
+  `'invalid input: expected string, received undefined'`, which names neither the field nor the
+  problem.
+- Never put a submitted value into a message. `issue.message` and `issue.path` come from the
+  schema, which is what keeps this free of user-input reflection.
+
 ### Season-Scoped Data (Spec #45)
 
 - **Never assume data older than the current season exists.** A Season_Rollover purges `battles`, `battle_summaries`, `audit_logs`, `cycle_snapshots`, `financial_ledger`, `league_history`, `leaderboard_cache`, and `practice_arena_daily_stats`. Any query that reaches back further than the current season will silently return nothing.
@@ -224,15 +279,16 @@ inclusion: always
 
 ### Every test tier is mandatory and blocking
 
-A check that cannot fail the build is not a check. All of these run on every push
-and pull request, in both `ci.yml` and `deploy.yml`, and every one of them gates a
-deploy:
+A check that cannot fail the build is not a check. These are the gates, and each
+one is intended to run on every push and pull request in both `ci.yml` and
+`deploy.yml` and to block a deploy:
 
 | Gate | Command |
 |---|---|
 | Backend lint | `pnpm run lint` |
 | Backend build (typechecks `src/`) | `pnpm run build` |
 | Test suite typecheck | `pnpm run typecheck:tests` |
+| Test tier partition | `pnpm run test:tiers:verify` |
 | Backend unit | `pnpm run test:unit` |
 | Backend integration (real Postgres) | `pnpm run test:integration` |
 | Backend heavy (full cycles) | `pnpm run test:heavy` |
@@ -240,7 +296,25 @@ deploy:
 | Frontend unit | `pnpm run test:ci` |
 | E2E (Playwright) | `pnpm exec playwright test` |
 
-Never re-introduce a bypass. The ones that were found and removed in July 2026:
+**This table states intent, not verified fact.** An earlier version asserted that
+every row "gates a deploy"; when Spec #51 measured it in August 2026, three of the
+nine did not. A table cannot know what the workflows say, so read the workflows
+before relying on it, using the two-part test below.
+
+Two things make a gate real, and you have to check both:
+
+1. **The step must be able to fail.** No `continue-on-error`, no `|| true`, no
+   unguarded pipe.
+2. **Every deploy job must list its job in `needs:`.**
+
+Neither alone is sufficient, and this is the trap. **A job containing a
+`continue-on-error` step still reports success to `needs:`**, so a `needs:` entry
+is not evidence of a real gate — Spec #51 found `backend-integration-tests` listed
+in both deploy jobs' `needs:` while its test step carried `continue-on-error: true`
+and 274 tests were failing. When auditing, grep for all three of
+`continue-on-error`, `|| true`, and `|` — not just the pipe patterns.
+
+Never re-introduce a bypass. Found and removed in July 2026:
 
 - `pnpm run test:integration 2>&1 | tail -n 500 || true` in `deploy.yml` — swallowed
   twice over, and `deploy-acc` listed the job in `needs:` so the gate looked real.
@@ -250,10 +324,27 @@ Never re-introduce a bypass. The ones that were found and removed in July 2026:
 - `pnpm run lint || true` on both lint steps in `deploy.yml`, so the pipeline that
   shipped code was the lenient one.
 - `continue-on-error: true` plus `always()` on the E2E job in both workflows.
-- Frontend unit tests missing from `deploy.yml` entirely.
-- `test:heavy` running in no pipeline at all.
+
+Found and removed in August 2026 by Spec #51. **Four of these were listed above as
+already removed in July 2026; that removal was never completed.** Treat the list
+above as a record of what was found, not proof of what is currently wired — verify
+against the workflow files:
+
+- `continue-on-error: true` on the integration test step, in **both** `ci.yml` and
+  `deploy.yml`. Not a pipe and not `|| true`, which is why the July audit missed it.
+- `test:heavy` in no workflow at all — the July entry claimed this was fixed and it
+  never was. Suites collected only by `jest.config.heavy.js` had never run in CI.
+- `e2e-tests` absent from `deploy-acc.needs` and `deploy-prd.needs`. The job ran;
+  nothing waited for it.
+- Frontend unit tests absent from `deploy.yml` — also claimed fixed in July, also
+  not done. That job ran lint and build only.
 - `"test": "... unit; ... integration"` in package.json — `;` meant the reported
-  exit code was only the integration run's. Now chained with `&&`.
+  exit code was only the integration run's. Claimed chained with `&&` in July; was
+  still `;`. Now actually `&&`.
+
+Also added by Spec #51: `pnpm run test:tiers:verify`, which fails the build if any
+backend test file is collected by zero tiers or by more than one. See
+`.kiro/steering/testing-strategy.md`.
 
 If a suite is red, either the code is wrong or the test is wrong. Fix one of them.
 Do not make the check advisory, and do not delete a test to make a build pass unless
