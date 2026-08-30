@@ -59,12 +59,100 @@ jobs:
         working-directory: ./app/backend
         run: pnpm run build
 
+      # Spec #51: enforces the Tier_Partition. See ci.yml for rationale.
+      - name: Verify test tier partition
+        working-directory: ./app/backend
+        run: pnpm run test:tiers:verify
+
+      - name: Typecheck test suites
+        working-directory: ./app/backend
+        run: pnpm run typecheck:tests
+
       - name: Run unit tests
         working-directory: ./app/backend
         env:
           NODE_ENV: test
           JWT_SECRET: test-secret-key-for-ci
         run: pnpm run test:unit
+
+  backend-heavy-tests:
+    name: Backend Heavy Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # ------------------------------------------------------------------
+    # Spec #51: BLOCKING. The Exclusion_Register entry for this tier is closed.
+    #
+    # It ran in no pipeline at all before Spec #51, and its first ever
+    # measurement was 15 of 23 suites failing — which is why it was wired as an
+    # Advisory_Step with an expiry rather than as a gate. Those suites have since
+    # been triaged and the tier is green and repeatable, so the expiry has been
+    # discharged: `continue-on-error` is gone and the job is listed in both deploy
+    # jobs' `needs:`.
+    #
+    # The failures were fixture drift, not product defects. The dominant cause was
+    # fixtures that predate Spec #40 and write no `standings` row, so services
+    # scoped their work from an empty competition and did nothing. See
+    # `.kiro/steering/testing-strategy.md` for the fixture rules.
+    #
+    # Do not reintroduce `continue-on-error` here. If this tier goes red, that is
+    # the signal it exists to give.
+    # ------------------------------------------------------------------
+
+    # Spec #51: previously ran in no pipeline at all.
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: armouredsouls_heavy
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          --shm-size=256mb
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+          cache-dependency-path: app/backend/pnpm-lock.yaml
+
+      - name: Install backend dependencies
+        working-directory: ./app/backend
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        working-directory: ./app/backend
+        env:
+          DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
+        run: pnpm run prisma:generate
+
+      - name: Run database migrations
+        working-directory: ./app/backend
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_heavy?connection_limit=5
+        run: pnpm exec prisma migrate deploy
+
+      - name: Run heavy tests
+        working-directory: ./app/backend
+        shell: bash
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_heavy?connection_limit=5
+          JWT_SECRET: test-secret-key-for-ci
+          NODE_ENV: test
+        run: pnpm run test:heavy
 
   backend-integration-tests:
     name: Backend Integration Tests
@@ -116,10 +204,11 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_test?connection_limit=5
         run: pnpm exec prisma migrate deploy
 
+      # Spec #51: `continue-on-error: true` removed. See the equivalent step in
+      # ci.yml for why a flag here defeated every `needs:` entry downstream.
       - name: Run integration tests
         working-directory: ./app/backend
         shell: bash
-        continue-on-error: true
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/armouredsouls_test?connection_limit=5
           JWT_SECRET: test-secret-key-for-ci
@@ -155,6 +244,14 @@ jobs:
       - name: Build frontend
         working-directory: ./app/frontend
         run: pnpm run build
+
+      # Spec #51: frontend unit tests were absent from this workflow entirely.
+      # The steering file records that gap as removed in July 2026; this job ran
+      # only lint and build, so the removal never happened here either.
+      - name: Run frontend unit tests
+        working-directory: ./app/frontend
+        timeout-minutes: 15
+        run: pnpm run test:ci
 
       - name: Upload frontend build artifacts
         uses: actions/upload-artifact@v6
@@ -310,7 +407,14 @@ jobs:
   deploy-acc:
     name: Deploy to Acceptance
     runs-on: ubuntu-latest
-    needs: [backend-unit-tests, backend-integration-tests, frontend-build]
+    # Spec #51: e2e-tests and backend-heavy-tests were both absent from this list,
+    # so neither gated a deploy. Both block now.
+    #
+    # backend-heavy-tests was held out while it carried `continue-on-error`, because
+    # such a job always reports success to `needs:` — the entry would have looked
+    # like a gate and could never have failed. The flag is gone, so the entry is
+    # real. Removing the flag and adding the entry is one change, never two.
+    needs: [backend-unit-tests, backend-integration-tests, backend-heavy-tests, frontend-build, e2e-tests]
     if: github.event_name == 'push'
     environment: acceptance
     permissions:
@@ -657,7 +761,14 @@ jobs:
   deploy-prd:
     name: Deploy to Production
     runs-on: ubuntu-latest
-    needs: [backend-unit-tests, backend-integration-tests, frontend-build]
+    # Spec #51: e2e-tests and backend-heavy-tests were both absent from this list,
+    # so neither gated a deploy. Both block now.
+    #
+    # backend-heavy-tests was held out while it carried `continue-on-error`, because
+    # such a job always reports success to `needs:` — the entry would have looked
+    # like a gate and could never have failed. The flag is gone, so the entry is
+    # real. Removing the flag and adding the entry is one change, never two.
+    needs: [backend-unit-tests, backend-integration-tests, backend-heavy-tests, frontend-build, e2e-tests]
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production'
     environment: production
     permissions:
