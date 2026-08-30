@@ -85,6 +85,23 @@ async function cleanupAutoUsers(): Promise<void> {
 }
 
 describe('User Generation (Tiered Stable System)', () => {
+
+/**
+ * The four solo events a 1-robot stable draws from, and every event a generated
+ * stable can subscribe to. `grand_melee` belongs to both since Spec #44 made Grand
+ * Melee a real mode; these lists omitted it, so any run that happened to pick it
+ * failed.
+ */
+const SOLO_EVENTS = ['league_1v1', 'tournament_1v1', 'koth', 'grand_melee'];
+const ALL_SUBSCRIBABLE_EVENTS = [
+  ...SOLO_EVENTS,
+  'tag_team',
+  'league_2v2',
+  'league_3v3',
+  'tournament_2v2',
+  'tournament_3v3',
+];
+
   beforeAll(async () => {
     await prisma.$connect();
     // Weapons are seeded globally via tests/setup.ts (all 47 WEAPON_DEFINITIONS)
@@ -757,7 +774,7 @@ describe('User Generation (Tiered Stable System)', () => {
       }
     });
 
-    it('should assign subscriptions to 1-robot stables: league_1v1, tournament_1v1, koth (R15.2)', async () => {
+    it('should assign 3 of the 4 solo events to 1-robot stables (R15.2)', async () => {
       const result = await generateBattleReadyUsers(3);
 
       // ExpertBot has 1 robot — should get exactly league_1v1, tournament_1v1, koth
@@ -767,8 +784,15 @@ describe('User Generation (Tiered Stable System)', () => {
       });
 
       expect(expertBotRobots.length).toBe(1);
-      const subs = expertBotRobots[0].subscriptions.map(s => s.eventType).sort();
-      expect(subs).toEqual(['koth', 'league_1v1', 'tournament_1v1']);
+      const subs = expertBotRobots[0].subscriptions.map(s => s.eventType);
+      // A 1-robot stable is capped at 3 and picks 3 at random from the four solo
+      // events. `grand_melee` became the fourth when Spec #44 made Grand Melee a real
+      // mode, so the set is no longer the fixed triple this asserted.
+      expect(subs).toHaveLength(3);
+      expect(new Set(subs).size).toBe(3);
+      for (const eventType of subs) {
+        expect(SOLO_EVENTS).toContain(eventType);
+      }
     });
 
     it('should assign 4 subscriptions to 2-robot stables with team modes (R15.2)', async () => {
@@ -786,7 +810,7 @@ describe('User Generation (Tiered Stable System)', () => {
 
         const eventTypes = robot.subscriptions.map(s => s.eventType);
         // All subscriptions should be valid event types
-        const validEvents = ['league_1v1', 'tournament_1v1', 'koth', 'tag_team', 'league_2v2', 'league_3v3', 'tournament_2v2', 'tournament_3v3'];
+        const validEvents = ALL_SUBSCRIBABLE_EVENTS;
         for (const eventType of eventTypes) {
           expect(validEvents).toContain(eventType);
         }
@@ -816,7 +840,7 @@ describe('User Generation (Tiered Stable System)', () => {
         expect(has3v3).toBe(true);
 
         // All subscriptions should be valid event types
-        const validEvents = ['league_1v1', 'tournament_1v1', 'koth', 'tag_team', 'league_2v2', 'league_3v3', 'tournament_2v2', 'tournament_3v3'];
+        const validEvents = ALL_SUBSCRIBABLE_EVENTS;
         for (const eventType of eventTypes) {
           expect(validEvents).toContain(eventType);
         }
@@ -948,7 +972,14 @@ describe('User Generation (Tiered Stable System)', () => {
     it('should ensure team members are subscribed to the corresponding event (R15.5)', async () => {
       await generateBattleReadyUsers(3);
 
-      // Verify 2v2 team members have league_2v2 subscription
+      // A 2v2 TeamBattle is created when the stable subscribes to ANY team-2 mode —
+      // league_2v2, tag_team or tournament_2v2 — because one TeamBattle entity
+      // participates in all of them. Requiring `league_2v2` specifically failed
+      // whenever the generator picked tournament_2v2 or tag_team instead. The real
+      // invariant is that a team member holds at least one mode of the right size.
+      const TEAM_2_MODES = ['league_2v2', 'tag_team', 'tournament_2v2'];
+      const TEAM_3_MODES = ['league_3v3', 'tournament_3v3'];
+
       const teams2v2 = await prisma.teamBattle.findMany({
         where: {
           stable: { username: { startsWith: 'auto_' } },
@@ -960,7 +991,7 @@ describe('User Generation (Tiered Stable System)', () => {
       for (const team of teams2v2) {
         for (const member of team.members) {
           const subs = member.robot.subscriptions.map(s => s.eventType);
-          expect(subs).toContain('league_2v2');
+          expect(subs.some((e) => TEAM_2_MODES.includes(e))).toBe(true);
         }
       }
 
@@ -976,7 +1007,7 @@ describe('User Generation (Tiered Stable System)', () => {
       for (const team of teams3v3) {
         for (const member of team.members) {
           const subs = member.robot.subscriptions.map(s => s.eventType);
-          expect(subs).toContain('league_3v3');
+          expect(subs.some((e) => TEAM_3_MODES.includes(e))).toBe(true);
         }
       }
     });

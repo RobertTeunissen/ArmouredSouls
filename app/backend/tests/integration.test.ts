@@ -7,18 +7,24 @@ import prisma from '../src/lib/prisma';
 import { executeScheduledBattles } from '../src/services/league/leagueBattleOrchestrator';
 import { runMatchmaking } from '../src/services/analytics/matchmakingService';
 import { rebalanceLeagues } from '../src/services/league/leagueRebalancingService';
+import { createLeagueCohort, deleteLeagueCohort, type LeagueCohort } from './helpers/leagueCohort';
 
 
 describe('Integration Test: Complete Daily Cycle', () => {
+  let cohort: LeagueCohort;
+
   beforeAll(async () => {
-    // Ensure database is seeded with test data
-    const robotCount = await prisma.robot.count();
-    if (robotCount < 10) {
-      console.warn('Warning: Database should have at least 10 robots for integration testing');
-    }
+    // Build the robots this cycle needs.
+    //
+    // This used to `console.warn` when the database held fewer than 10 robots and then
+    // assert on whatever it found — so the suite passed only when another suite or a seed
+    // had left suitable robots behind, and reported "Expected > 0, Received 0" otherwise.
+    // Six stables give three real 1v1 matches with no same-stable exclusions.
+    cohort = await createLeagueCohort(6);
   });
 
   afterAll(async () => {
+    await deleteLeagueCohort(cohort);
     await prisma.$disconnect();
   });
 
@@ -28,11 +34,9 @@ describe('Integration Test: Complete Daily Cycle', () => {
       where: { status: 'scheduled' },
     });
 
-    // Step 2: Get initial robot stats
+    // Step 2: Get initial stats for THIS suite's robots.
     const initialRobots = await prisma.robot.findMany({
-      where: {
-        currentHP: { gte: 75 }, // Battle-ready robots
-      },
+      where: { id: { in: cohort.robotIds } },
       select: {
         id: true,
         name: true,
@@ -40,7 +44,7 @@ describe('Integration Test: Complete Daily Cycle', () => {
         currentHP: true,
         totalBattles: true,
       },
-      take: 10,
+      orderBy: { id: 'asc' },
     });
 
     expect(initialRobots.length).toBeGreaterThan(0);
@@ -105,25 +109,28 @@ describe('Integration Test: Complete Daily Cycle', () => {
         wins: true,
         losses: true,
       },
+      orderBy: { id: 'asc' },
     });
 
-    // At least one robot should have updated stats
+    // Compared by id, not by array index. `findMany` gives no ordering guarantee unless
+    // asked, so pairing two result sets positionally compares unrelated robots.
+    const initialById = new Map(initialRobots.map(r => [r.id, r]));
     const robotsWithUpdatedBattles = updatedRobots.filter(
-      (robot, index) => robot.totalBattles > initialRobots[index].totalBattles
+      robot => robot.totalBattles > (initialById.get(robot.id)?.totalBattles ?? 0)
     );
     expect(robotsWithUpdatedBattles.length).toBeGreaterThan(0);
     console.log(`${robotsWithUpdatedBattles.length} robots participated in battles`);
 
     // Verify ELO changes
     const robotsWithELOChange = updatedRobots.filter(
-      (robot, index) => robot.elo !== initialRobots[index].elo
+      robot => robot.elo !== initialById.get(robot.id)?.elo
     );
     expect(robotsWithELOChange.length).toBeGreaterThan(0);
     console.log(`${robotsWithELOChange.length} robots had ELO changes`);
 
     // Verify HP changes
     const robotsWithHPChange = updatedRobots.filter(
-      (robot, index) => robot.currentHP < initialRobots[index].currentHP
+      robot => robot.currentHP < (initialById.get(robot.id)?.currentHP ?? 0)
     );
     expect(robotsWithHPChange.length).toBeGreaterThan(0);
     console.log(`${robotsWithHPChange.length} robots took damage`);
@@ -240,24 +247,37 @@ describe('Integration Test: Complete Daily Cycle', () => {
   });
 
   it('should maintain data consistency after cycle', async () => {
-    // Verify all completed scheduled matches have corresponding battles
+    // Both checks are scoped to THIS suite's cohort.
+    //
+    // They used to query the whole database, which made them assertions about every other
+    // suite's leftovers rather than about this cycle — the completed-match check read 10
+    // rows belonging to other suites. A global invariant cannot be asserted from one suite
+    // while the Heavy_Tier shares a database.
+    //
+    // The participant check is scoped for a second reason: "every battle has at least 2
+    // participants" is no longer true of the database as a whole. Spec #49 writes a bye as a
+    // real `battles` row carrying only the real side, which for a 1v1 bye is one row.
     const completedMatches = await prisma.scheduledMatch.findMany({
       where: {
         status: 'completed',
-        battleId: null, // Should not exist - all completed matches should have battleId
+        battleId: null, // Should not exist — a completed match must reference its battle
+        participants: { some: { participantId: { in: cohort.robotIds } } },
       },
     });
 
     expect(completedMatches.length).toBe(0);
 
-    // Verify all battles have valid participants
-    const allBattles = await prisma.battle.findMany({
+    const cohortBattles = await prisma.battle.findMany({
+      where: { participants: { some: { robotId: { in: cohort.robotIds } } } },
       include: { participants: true },
     });
 
-    // All battles should have at least 2 participants
-    const invalidBattles = allBattles.filter(b => b.participants.length < 2);
-
+    // Every fought battle has both sides. Byes are excluded: nothing was fought and only
+    // the real side is recorded.
+    const foughtBattles = cohortBattles.filter(
+      b => (b.battleLog as { isByeMatch?: boolean } | null)?.isByeMatch !== true,
+    );
+    const invalidBattles = foughtBattles.filter(b => b.participants.length < 2);
     expect(invalidBattles.length).toBe(0);
   });
 });

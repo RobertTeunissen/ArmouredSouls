@@ -1,4 +1,5 @@
 import { DiscordIntegration } from '../src/services/notifications/discord-integration';
+import { _resetConfigForTesting } from '../src/config/env';
 
 // Mock logger to prevent console output
 jest.mock('../src/config/logger', () => ({
@@ -264,6 +265,10 @@ describe('Scheduler Notification Integration', () => {
 
   it('should log warning and skip Discord delivery when DISCORD_WEBHOOK_URL is missing', async () => {
     delete process.env.DISCORD_WEBHOOK_URL;
+    // `getConfig()` memoises on first call, so deleting the variable is not enough:
+    // `getActiveIntegrations` reads `getConfig().discordWebhookUrl` and would still
+    // see the cached value. `_resetConfigForTesting` exists for exactly this.
+    _resetConfigForTesting();
 
     // Use the real getActiveIntegrations for this test
     const { getActiveIntegrations: realGetActiveIntegrations } = jest.requireActual(

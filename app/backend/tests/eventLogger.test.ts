@@ -5,7 +5,7 @@
  */
 
 import prisma from '../src/lib/prisma';
-import { EventLogger, EventType, clearSequenceCache } from '../src/services/common/eventLogger';
+import { EventLogger, EventType } from '../src/services/common/eventLogger';
 
 const eventLogger = new EventLogger();
 
@@ -22,9 +22,6 @@ describe('EventLogger Service', () => {
     await prisma.auditLog.deleteMany({
       where: { cycleNumber: { in: [testCycleNumber, testCycleNumber + 1] } },
     });
-    // Clear sequence cache
-    clearSequenceCache(testCycleNumber);
-    clearSequenceCache(testCycleNumber + 1);
   });
 
   afterAll(async () => {
@@ -512,8 +509,6 @@ describe('EventLogger Service', () => {
         },
       });
 
-      // Clear cache to simulate restart
-      clearSequenceCache(testCycleNumber);
 
       // Log new event
       await eventLogger.logEvent(testCycleNumber, EventType.CYCLE_COMPLETE, { test: 'new' });

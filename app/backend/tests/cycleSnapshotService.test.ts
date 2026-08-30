@@ -83,33 +83,44 @@ describe('CycleSnapshotService', () => {
     expect(snapshots[0].cycleNumber).toBe(testCycleNumber);
   });
 
-  it('should throw error if cycle is incomplete (missing start event)', async () => {
+  // An incomplete cycle no longer rejects. `createSnapshot` tolerates a missing
+  // cycle_start or cycle_complete event, logs a warning and falls back to the current
+  // time, because bulk cycle runs and manual triggers legitimately produce cycles with
+  // no start event. These two tests asserted a rejection matching /incomplete/ — a
+  // message the service has not produced since that change.
+  it('should snapshot a cycle with no start event, using fallback timestamps', async () => {
     const incompleteCycle = testCycleNumber + 1;
+    await prisma.cycleSnapshot.deleteMany({ where: { cycleNumber: incompleteCycle } });
 
     // Only log complete event, no start event
     await eventLogger.logCycleComplete(incompleteCycle, 100);
 
-    await expect(
-      cycleSnapshotService.createSnapshot(incompleteCycle)
-    ).rejects.toThrow('incomplete');
+    const snapshot = await cycleSnapshotService.createSnapshot(incompleteCycle);
+    expect(snapshot.cycleNumber).toBe(incompleteCycle);
+    expect(snapshot.startTime).toBeInstanceOf(Date);
+    expect(snapshot.endTime).toBeInstanceOf(Date);
 
     // Clean up
+    await prisma.cycleSnapshot.deleteMany({ where: { cycleNumber: incompleteCycle } });
     await prisma.auditLog.deleteMany({
       where: { cycleNumber: incompleteCycle },
     });
   });
 
-  it('should throw error if cycle is incomplete (missing complete event)', async () => {
+  it('should snapshot a cycle with no complete event, using fallback timestamps', async () => {
     const incompleteCycle = testCycleNumber + 2;
+    await prisma.cycleSnapshot.deleteMany({ where: { cycleNumber: incompleteCycle } });
 
     // Only log start event, no complete event
     await eventLogger.logCycleStart(incompleteCycle, 'manual');
 
-    await expect(
-      cycleSnapshotService.createSnapshot(incompleteCycle)
-    ).rejects.toThrow('incomplete');
+    const snapshot = await cycleSnapshotService.createSnapshot(incompleteCycle);
+    expect(snapshot.cycleNumber).toBe(incompleteCycle);
+    expect(snapshot.startTime).toBeInstanceOf(Date);
+    expect(snapshot.endTime).toBeInstanceOf(Date);
 
     // Clean up
+    await prisma.cycleSnapshot.deleteMany({ where: { cycleNumber: incompleteCycle } });
     await prisma.auditLog.deleteMany({
       where: { cycleNumber: incompleteCycle },
     });

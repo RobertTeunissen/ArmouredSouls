@@ -29,6 +29,7 @@ const mockSecurityMonitor = {
   trackRateLimitViolation: jest.fn(),
   logValidationFailure: jest.fn(),
   logAuthorizationFailure: jest.fn(),
+  logAdminAccess: jest.fn(),
   setStableName: jest.fn(),
 };
 jest.mock('../src/services/security/securityMonitor', () => ({
@@ -41,10 +42,18 @@ const mockPrismaUser = {
   findUnique: jest.fn(),
   findMany: jest.fn(),
 };
+// `users/search` also matches on robot name, and it does so against the robot
+// delegate directly rather than through a relation filter on User. Without this the
+// handler threw on `prisma.robot.findMany` being undefined and every search test
+// saw a 500.
+const mockPrismaRobot = {
+  findMany: jest.fn().mockResolvedValue([]),
+};
 jest.mock('../src/lib/prisma', () => ({
   __esModule: true,
   default: {
     user: mockPrismaUser,
+    robot: mockPrismaRobot,
     $disconnect: jest.fn(),
   },
 }));
@@ -99,6 +108,21 @@ function adminToken(userId = 1, tokenVersion = 0): string {
   );
 }
 
+/**
+ * A token for an admin nobody else in this file uses.
+ *
+ * `requireAdmin` runs a real express-rate-limit bucket keyed on the admin's user id,
+ * 120 requests per minute. A 100-iteration property sharing id 1 with the rest of
+ * the file exhausts that budget and starts receiving 429s. Property 8 failed on it
+ * outright; properties 6 and 7 guard with `if (res.status === 200)` and so were
+ * quietly asserting nothing once the budget ran out. A fresh id per iteration gives
+ * each one its own bucket. Throttling itself is covered by its own 429 test.
+ */
+let nextIsolatedAdminId = 1000;
+function isolatedAdminToken(): string {
+  return adminToken(nextIsolatedAdminId++);
+}
+
 /** Generate a non-admin JWT token */
 function userToken(userId = 2, tokenVersion = 0): string {
   return jwt.sign(
@@ -115,12 +139,23 @@ function userToken(userId = 2, tokenVersion = 0): string {
 describe('POST /api/admin/users/:id/reset-password', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockPrismaRobot.findMany.mockResolvedValue([]);
 
     // Default: authenticateToken passes (user exists with matching tokenVersion)
-    mockPrismaUser.findUnique.mockResolvedValue({
-      tokenVersion: 0,
-      stableName: 'Test Stable',
-    });
+    // `role` comes from the database row, not the JWT claim: authenticateToken sets
+    // `req.user.role` from `prisma.user.findUnique`, so a role change takes effect
+    // without reissuing a token. The row therefore has to carry it, and it has to be
+    // routed on user id — id 2 is the regular player, every other id is an admin.
+    // A single flat `role: 'admin'` would make the non-admin case pass as an admin;
+    // no role at all makes `requireAdmin` answer 403 to everything.
+    mockPrismaUser.findUnique.mockImplementation(
+      ({ where }: { where: { id: number } }) =>
+        Promise.resolve({
+          tokenVersion: 0,
+          stableName: 'Test Stable',
+          role: where.id === 2 ? 'user' : 'admin',
+        }),
+    );
 
     // Default: validatePassword passes
     mockValidatePassword.mockReturnValue({ valid: true });
@@ -297,12 +332,23 @@ describe('POST /api/admin/users/:id/reset-password', () => {
 describe('GET /api/admin/users/search', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockPrismaRobot.findMany.mockResolvedValue([]);
 
     // Default: authenticateToken passes (user exists with matching tokenVersion)
-    mockPrismaUser.findUnique.mockResolvedValue({
-      tokenVersion: 0,
-      stableName: 'Test Stable',
-    });
+    // `role` comes from the database row, not the JWT claim: authenticateToken sets
+    // `req.user.role` from `prisma.user.findUnique`, so a role change takes effect
+    // without reissuing a token. The row therefore has to carry it, and it has to be
+    // routed on user id — id 2 is the regular player, every other id is an admin.
+    // A single flat `role: 'admin'` would make the non-admin case pass as an admin;
+    // no role at all makes `requireAdmin` answer 403 to everything.
+    mockPrismaUser.findUnique.mockImplementation(
+      ({ where }: { where: { id: number } }) =>
+        Promise.resolve({
+          tokenVersion: 0,
+          stableName: 'Test Stable',
+          role: where.id === 2 ? 'user' : 'admin',
+        }),
+    );
 
     // Default: findMany returns empty
     mockPrismaUser.findMany.mockResolvedValue([]);
@@ -464,12 +510,23 @@ describe('Admin Password Reset Routes — Property-Based Tests', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockPrismaRobot.findMany.mockResolvedValue([]);
 
     // Default: authenticateToken passes
-    mockPrismaUser.findUnique.mockResolvedValue({
-      tokenVersion: 0,
-      stableName: 'Test Stable',
-    });
+    // `role` comes from the database row, not the JWT claim: authenticateToken sets
+    // `req.user.role` from `prisma.user.findUnique`, so a role change takes effect
+    // without reissuing a token. The row therefore has to carry it, and it has to be
+    // routed on user id — id 2 is the regular player, every other id is an admin.
+    // A single flat `role: 'admin'` would make the non-admin case pass as an admin;
+    // no role at all makes `requireAdmin` answer 403 to everything.
+    mockPrismaUser.findUnique.mockImplementation(
+      ({ where }: { where: { id: number } }) =>
+        Promise.resolve({
+          tokenVersion: 0,
+          stableName: 'Test Stable',
+          role: where.id === 2 ? 'user' : 'admin',
+        }),
+    );
 
     // Default: resetPassword succeeds
     mockResetPassword.mockResolvedValue({ userId: 42, username: 'player1' });
@@ -481,11 +538,10 @@ describe('Admin Password Reset Routes — Property-Based Tests', () => {
    * For any string `s`, the API accepts `s` if and only if
    * `validatePassword(s)` returns `{ valid: true }`.
    *
-   * Because the rate limiter (10 req/15 min) would block 100+ HTTP requests,
-   * we verify the delegation property by calling the real `validatePassword`
-   * on each generated string and confirming the result determines the route's
-   * accept/reject behavior. The mock is set to return the real result, and we
-   * verify the route handler's logic matches.
+   * Each iteration uses its own admin id so it gets its own rate-limit bucket. This
+   * used to share one id and tolerate 429 instead, which meant everything after the
+   * tenth iteration asserted nothing at all — the property looked like it ran 100
+   * cases and effectively ran 10.
    *
    * **Validates: Requirements 2.4, 3.2, 3.5**
    */
@@ -502,22 +558,15 @@ describe('Admin Password Reset Routes — Property-Based Tests', () => {
 
           const res = await request(app)
             .post('/api/admin/users/42/reset-password')
-            .set('Authorization', `Bearer ${adminToken()}`)
+            .set('Authorization', `Bearer ${isolatedAdminToken()}`)
             .send({ password });
 
           if (realResult.valid) {
-            // Route should accept — 200 success (or at worst 429 from rate limiter)
-            if (res.status !== 429) {
-              expect(res.status).toBe(200);
-              expect(res.body.success).toBe(true);
-            }
+            expect(res.status).toBe(200);
+            expect(res.body.success).toBe(true);
           } else {
-            // Route should reject with 400 containing the validation error
-            // (unless rate-limited, in which case 429 is acceptable)
-            if (res.status !== 429) {
-              expect(res.status).toBe(400);
-              expect(res.body.error).toBe(realResult.error);
-            }
+            expect(res.status).toBe(400);
+            expect(res.body.error).toBe(realResult.error);
           }
         },
       ),
@@ -560,18 +609,14 @@ describe('Admin Password Reset Routes — Property-Based Tests', () => {
       fc.asyncProperty(invalidUserIdArb, async (invalidId) => {
         const res = await request(app)
           .post(`/api/admin/users/${invalidId}/reset-password`)
-          .set('Authorization', `Bearer ${adminToken()}`)
+          .set('Authorization', `Bearer ${isolatedAdminToken()}`)
           .send({ password: 'ValidPass1' });
 
-        // The request must be rejected — either 400 (Zod validation) or
-        // 429 (rate limiter exhausted from earlier tests). Both confirm
-        // the invalid userId is never accepted.
-        expect([400, 429]).toContain(res.status);
-
-        // When we do get a 400, verify it's a validation error
-        if (res.status === 400) {
-          expect(res.body).toHaveProperty('code', 'VALIDATION_ERROR');
-        }
+        // 400 exactly. This accepted `[400, 429]` because iterations shared one
+        // admin id and exhausted its rate-limit bucket; with a fresh id per
+        // iteration a 429 here would be a real defect rather than noise.
+        expect(res.status).toBe(400);
+        expect(res.body).toHaveProperty('code', 'VALIDATION_ERROR');
       }),
       { numRuns: 100 },
     );
@@ -604,11 +649,19 @@ describe('Admin Password Reset Routes — Property-Based Tests', () => {
           const encodedQuery = encodeURIComponent(query);
           const res = await request(app)
             .get(`/api/admin/users/search?q=${encodedQuery}`)
-            .set('Authorization', `Bearer ${adminToken()}`);
+            .set('Authorization', `Bearer ${isolatedAdminToken()}`);
 
-          if (res.status === 200) {
-            expect(res.body.users.length).toBeLessThanOrEqual(10);
+          // Asserted unconditionally. This was guarded on `res.status === 200`,
+          // which silently passed once the shared admin id's rate-limit bucket ran
+          // out; the isolated id per iteration removes the need for the guard.
+          //
+          // Thrown rather than expect()ed so an unexpected status names itself. Each
+          // iteration is a real HTTP round trip, and a 100-iteration property under a
+          // fully parallel tier has produced a status no code in this repo returns.
+          if (res.status !== 200) {
+            throw new Error(`expected 200, got ${res.status}: ${JSON.stringify(res.body)}`);
           }
+          expect(res.body.users.length).toBeLessThanOrEqual(10);
         },
       ),
       { numRuns: 100 },
@@ -644,13 +697,16 @@ describe('Admin Password Reset Routes — Property-Based Tests', () => {
           const encodedQuery = encodeURIComponent(query);
           const res = await request(app)
             .get(`/api/admin/users/search?q=${encodedQuery}`)
-            .set('Authorization', `Bearer ${adminToken()}`);
+            .set('Authorization', `Bearer ${isolatedAdminToken()}`);
 
-          if (res.status === 200) {
-            for (const user of res.body.users) {
-              const keys = Object.keys(user).sort();
-              expect(keys).toEqual(allowedFields.sort());
-            }
+          // See Property 6 on why this is no longer guarded on a 200, and on why the
+          // status check throws with the body attached.
+          if (res.status !== 200) {
+            throw new Error(`expected 200, got ${res.status}: ${JSON.stringify(res.body)}`);
+          }
+          for (const user of res.body.users) {
+            const keys = Object.keys(user).sort();
+            expect(keys).toEqual(allowedFields.sort());
           }
         },
       ),
@@ -678,7 +734,7 @@ describe('Admin Password Reset Routes — Property-Based Tests', () => {
         const encodedQuery = encodeURIComponent(query);
         const res = await request(app)
           .get(`/api/admin/users/search?q=${encodedQuery}`)
-          .set('Authorization', `Bearer ${adminToken()}`);
+          .set('Authorization', `Bearer ${isolatedAdminToken()}`);
 
         expect(res.status).toBe(400);
       }),

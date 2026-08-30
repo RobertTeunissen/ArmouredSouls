@@ -166,8 +166,6 @@ describe('ELO Progression Property-Based Tests', () => {
 
               const battle = await prisma.battle.create({
                 data: {
-                  robot1Id: robotId,
-                  robot2Id: opponentId,
                   winnerId: eloChange > 0 ? robotId : (eloChange < 0 ? opponentId : null),
                   battleType: 'league_1v1',
                   leagueType: 'bronze',
@@ -347,8 +345,6 @@ describe('ELO Progression Property-Based Tests', () => {
 
               const battle = await prisma.battle.create({
                 data: {
-                  robot1Id: opponentId, // Opponent is robot1
-                  robot2Id: robotId,    // Our robot is robot2
                   winnerId: eloChange > 0 ? robotId : (eloChange < 0 ? opponentId : null),
                   battleType: 'league_1v1',
                   leagueType: 'bronze',
@@ -516,8 +512,6 @@ describe('ELO Progression Property-Based Tests', () => {
 
               const battle = await prisma.battle.create({
                 data: {
-                  robot1Id: robotId,
-                  robot2Id: opponentId,
                   winnerId: eloChange > 0 ? robotId : (eloChange < 0 ? opponentId : null),
                   battleType: 'league_1v1',
                   leagueType: 'bronze',
@@ -661,8 +655,6 @@ describe('ELO Progression Property-Based Tests', () => {
 
             const battle = await prisma.battle.create({
               data: {
-                robot1Id: robotId,
-                robot2Id: opponentId,
                 winnerId: eloChange > 0 ? robotId : (eloChange < 0 ? opponentId : null),
                 battleType: 'league_1v1',
                 leagueType: 'bronze',

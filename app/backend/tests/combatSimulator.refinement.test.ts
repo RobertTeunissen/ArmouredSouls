@@ -157,8 +157,9 @@ describe('Combat simulator — refinement integration', () => {
 
     prepareRobotForCombat(robot);
 
-    // Catalog baseDamage was 12; Forge adds 1.0 → 13
-    expect(robot.mainWeapon!.weapon.baseDamage).toBe(13);
+    // Forge is +8% of base damage per instance, not a flat +1.0 — see the tier table
+    // in app/shared/utils/weaponRefinement.ts. Catalog baseDamage 12 → 12 × 1.08 = 12.96.
+    expect(robot.mainWeapon!.weapon.baseDamage).toBeCloseTo(12.96, 5);
   });
 
   it('prepareRobotForCombat folds Sharpen into cooldown', () => {
@@ -170,8 +171,9 @@ describe('Combat simulator — refinement integration', () => {
 
     prepareRobotForCombat(robot);
 
-    // Catalog cooldown was 3.0; Sharpen subtracts 0.25 → 2.75
-    expect(robot.mainWeapon!.weapon.cooldown).toBeCloseTo(2.75, 5);
+    // Sharpen is -10% of base cooldown per instance, not a flat -0.25 — see the tier
+    // table in app/shared/utils/weaponRefinement.ts. Catalog cooldown 3.0 → 2.7.
+    expect(robot.mainWeapon!.weapon.cooldown).toBeCloseTo(2.7, 5);
   });
 
   it('prepareRobotForCombat folds Hone into the catalog attribute bonus', () => {
@@ -274,9 +276,21 @@ describe('Combat simulator — refinement integration', () => {
     // The refined robot should win in this deterministic-enough setup.
     // Combat has RNG (hits, crits, malfunctions) so we can't assert the exact
     // winner with certainty, but Robot 1 should win or draw the *vast* majority
-    // of the time. We run a short series and assert > 60% wins.
+    // of the time. We run a series and assert >= 60% wins.
     let robot1Wins = 0;
-    const trials = 30;
+    // 400 trials, not 30.
+    //
+    // The threshold below is unchanged; the sample backing it is not. The refined robot's
+    // true win rate here is around 0.70, and at 30 trials the standard error is 0.084, so
+    // a 0.60 bound sat only ~1.2 standard errors below the mean — roughly a one-in-nine
+    // failure per run, which is what made this the flakiest suite in the tier (observed
+    // 17/30 = 0.567). At 400 trials the standard error is 0.023 and the same bound is over
+    // 4 standard errors out, which is a statement about refinements rather than about luck.
+    //
+    // `simulateBattle` is pure in-memory computation, so the extra trials cost little. Do
+    // not reduce this count to speed the suite up, and do not lower the bound instead —
+    // lowering it would weaken the claim that refinements produce a combat advantage.
+    const trials = 400;
     for (let i = 0; i < trials; i++) {
       const r1 = makeMockRobot({
         id: 1, name: 'Refiner',
@@ -300,7 +314,6 @@ describe('Combat simulator — refinement integration', () => {
 
     // With +2 baseDamage and +5 Combat Power, the refined robot has a substantial
     // edge. We want to confirm refinements actually translate into combat advantage.
-    // Use a generous lower bound (>= 60%) to avoid RNG flakiness.
     expect(robot1Wins / trials).toBeGreaterThanOrEqual(0.6);
 
     // Also confirm at least one trial completed without errors.

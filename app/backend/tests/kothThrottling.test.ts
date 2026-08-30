@@ -21,8 +21,19 @@
 
 // ─── Mocks (must be before imports) ──────────────────────────────────
 
+// Keeps this file a module rather than a global script. The orchestrator below is
+// loaded with `require` (see the note at that import), so without this there is no
+// top-level `import`/`export` and TypeScript puts `mockPrisma` in the global scope,
+// where it collides with the same name in tests/startup.test.ts.
+export {};
+
+// The queue is `scheduled_matches_v2` (`prisma.scheduledMatch`), not the retired
+// per-mode `scheduledKothMatch` table. This suite mocked the retired one for as
+// long as Spec #40's unification had been in place, so every test here died inside
+// `executeScheduledKothBattles` on `prisma.scheduledMatch.count` being undefined
+// and none of the throttling or batching behaviour above was actually verified.
 const mockPrisma = {
-  scheduledKothMatch: {
+  scheduledMatch: {
     count: jest.fn(),
     findFirst: jest.fn(),
     update: jest.fn().mockResolvedValue({}),
@@ -46,6 +57,13 @@ const mockPrisma = {
     create: jest.fn().mockResolvedValue({}),
     createMany: jest.fn().mockResolvedValue({ count: 5 }),
     update: jest.fn().mockResolvedValue({}),
+    findMany: jest.fn().mockResolvedValue([]),
+  },
+  battleSummary: {
+    create: jest.fn().mockResolvedValue({}),
+  },
+  standing: {
+    findMany: jest.fn().mockResolvedValue([]),
   },
   cycleMetadata: {
     findUnique: jest.fn().mockResolvedValue({ id: 1, currentCycle: 1, totalCycles: 1 }),
@@ -122,16 +140,33 @@ jest.mock('../src/services/battle/combatMessageGenerator', () => ({
 }));
 
 jest.mock('../src/services/battle/battlePostCombat', () => ({
-  awardStreamingRevenueForParticipant: jest.fn().mockResolvedValue({ totalRevenue: 100 }),
   logBattleAuditEvent: jest.fn().mockResolvedValue(undefined),
-  awardCreditsToUser: jest.fn().mockResolvedValue(undefined),
-  awardPrestigeToUser: jest.fn().mockResolvedValue(undefined),
-  awardFameToRobot: jest.fn().mockResolvedValue(undefined),
+  checkAndAwardAchievements: jest.fn().mockResolvedValue([]),
+  updateRobotCombatStats: jest.fn().mockResolvedValue(undefined),
 }));
 
 jest.mock('../src/services/economy/streamingRevenueService', () => ({
-  calculateStreamingRevenue: jest.fn().mockResolvedValue({ totalRevenue: 100 }),
-  awardStreamingRevenue: jest.fn().mockResolvedValue(undefined),
+  calculateStreamingRevenueBatch: jest.fn().mockResolvedValue(new Map()),
+}));
+
+jest.mock('../src/services/standings/standingsService', () => ({
+  __esModule: true,
+  default: { awardKothPoints: jest.fn().mockResolvedValue(undefined) },
+}));
+
+jest.mock('../src/services/tuning-pool', () => ({
+  getTuningBonusesBatch: jest.fn().mockResolvedValue(new Map()),
+}));
+
+// Combat preparation folds weapons and refinements into effective stats. The
+// robot fixtures here are deliberately minimal, so stub it rather than grow them.
+jest.mock('../src/utils/robotCalculations', () => ({
+  prepareRobotForCombat: jest.fn(),
+}));
+
+// Returning null skips the battle_summaries write, which this suite does not assert on.
+jest.mock('../src/services/battle/battleSummaryComputer', () => ({
+  computeBattleSummary: jest.fn().mockReturnValue(null),
 }));
 
 jest.mock('../src/services/battle/baseOrchestrator', () => ({
@@ -139,8 +174,22 @@ jest.mock('../src/services/battle/baseOrchestrator', () => ({
 }));
 
 // ─── Import after mocks ─────────────────────────────────────────────
-
-import { executeScheduledKothBattles } from '../src/services/koth/kothBattleOrchestrator';
+//
+// Loaded through `require` rather than `import` on purpose. The four throttle
+// constants are module-level and gated on production:
+//
+//   const MATCH_THROTTLE_MS = process.env.NODE_ENV === 'production' ? 500 : 0;
+//
+// so the delays this suite exists to measure are all 0 under `NODE_ENV=test`.
+// An ES import is hoisted above any statement, which is why the environment has
+// to be set around a require instead. It is restored on the next line so the
+// setting cannot leak to another suite sharing this worker.
+const previousNodeEnv = process.env.NODE_ENV;
+process.env.NODE_ENV = 'production';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { executeScheduledKothBattles } = require('../src/services/koth/kothBattleOrchestrator') as
+  typeof import('../src/services/koth/kothBattleOrchestrator');
+process.env.NODE_ENV = previousNodeEnv;
 
 // ─── Test helpers ────────────────────────────────────────────────────
 
@@ -159,24 +208,35 @@ function makeRobot(id: number, userId: number) {
   };
 }
 
+/**
+ * A `scheduled_matches_v2` row as the orchestrator reads it: participants carry
+ * `participantId`, not `robotId`, and `isByeMatch` must be present because a bye
+ * short-circuits combat entirely (Spec #49).
+ */
 function makeMatch(id: number, robotIds: number[]) {
   return {
     id,
-    rotatingZone: false,
+    matchType: 'koth',
+    scheduledFor: new Date(),
+    status: 'scheduled',
+    battleId: null,
+    isByeMatch: false,
     scoreThreshold: null,
     timeLimit: null,
     zoneRadius: null,
     createdAt: new Date(),
-    status: 'scheduled',
-    participants: robotIds.map(robotId => ({ robotId })),
+    participants: robotIds.map((participantId, i) => ({
+      id: id * 100 + i,
+      participantId,
+    })),
   };
 }
 
 /** Set up findFirst to return matches from a queue, then null when exhausted */
 function setupMatchQueue(matches: ReturnType<typeof makeMatch>[]): void {
   const queue = [...matches];
-  mockPrisma.scheduledKothMatch.count.mockResolvedValue(matches.length);
-  mockPrisma.scheduledKothMatch.findFirst.mockImplementation(() => {
+  mockPrisma.scheduledMatch.count.mockResolvedValue(matches.length);
+  mockPrisma.scheduledMatch.findFirst.mockImplementation(() => {
     return Promise.resolve(queue.shift() ?? null);
   });
 }
@@ -279,8 +339,8 @@ describe('KotH Orchestrator Throttling', () => {
   it('should mark failed matches as error during run and reset to scheduled after', async () => {
     const matches = [makeMatch(1, [1, 2, 3, 4, 5]), makeMatch(2, [1, 2, 3, 4, 5])];
     const queue = [...matches];
-    mockPrisma.scheduledKothMatch.count.mockResolvedValue(2);
-    mockPrisma.scheduledKothMatch.findFirst.mockImplementation(() => {
+    mockPrisma.scheduledMatch.count.mockResolvedValue(2);
+    mockPrisma.scheduledMatch.findFirst.mockImplementation(() => {
       return Promise.resolve(queue.shift() ?? null);
     });
 
@@ -302,11 +362,14 @@ describe('KotH Orchestrator Throttling', () => {
     expect(summary.failedMatches).toBe(1);
     expect(summary.errors[0]).toContain('expected at least 5 robots');
     // Failed match should be temporarily marked as 'error', then reset to 'scheduled'
-    expect(mockPrisma.scheduledKothMatch.update).toHaveBeenCalledWith(
+    expect(mockPrisma.scheduledMatch.update).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: 1 }, data: { status: 'error' } }),
     );
-    expect(mockPrisma.scheduledKothMatch.updateMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { status: 'error' }, data: { status: 'scheduled' } }),
+    expect(mockPrisma.scheduledMatch.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { matchType: 'koth', status: 'error' },
+        data: { status: 'scheduled' },
+      }),
     );
   });
 
@@ -319,8 +382,8 @@ describe('KotH Orchestrator Throttling', () => {
     await promise;
 
     // Should use findFirst (one at a time), not findMany (all at once)
-    expect(mockPrisma.scheduledKothMatch.findFirst).toHaveBeenCalled();
-    expect(mockPrisma.scheduledKothMatch.count).toHaveBeenCalledTimes(1);
+    expect(mockPrisma.scheduledMatch.findFirst).toHaveBeenCalled();
+    expect(mockPrisma.scheduledMatch.count).toHaveBeenCalledTimes(1);
   });
 
   it('should apply longer batch cooldown after every 10 matches', async () => {

@@ -67,6 +67,10 @@ describe('UnifiedFacilityROIService - Property-Based Tests', () => {
   beforeEach(() => {
     service = new UnifiedFacilityROIService();
     jest.clearAllMocks();
+    // The Repair_Bay savings estimate reads the stable's robot count, because the
+    // Repair_Bay_Discount scales with it. Every property here generates a facility
+    // type from the economic set, so any run that draws `repair_bay` reaches this.
+    (mockedPrisma.robot.findMany as jest.Mock).mockResolvedValue([{ id: 1 }, { id: 2 }]);
   });
 
   describe('Property: totalInvestment always equals sum of config costs', () => {

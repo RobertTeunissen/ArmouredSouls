@@ -112,9 +112,25 @@ const VALID_CATEGORIES = ['balance', 'feature', 'bugfix', 'economy'] as const;
 
 describe('Property 13: API input validation rejects invalid data with field-level errors', () => {
   let app: express.Express;
+  /**
+   * One listening server for the whole file.
+   *
+   * `request(server)` makes supertest start a fresh ephemeral server per call, and these five
+   * properties issue 20 requests each — 100 servers per run. That intermittently HANGS: the
+   * suite normally finishes in under 2s, but was observed to sit indefinitely until Jest's
+   * 30s test timeout fired, and once to leave a worker that had to be killed by hand. It is
+   * the same churn behind the HTTP 426 in `battleLogStreamingRevenue` and the socket hang-ups
+   * in guide-routes. Binding once removes it.
+   */
+  let server: import('http').Server;
 
   beforeAll(() => {
     app = createApp();
+    server = app.listen(0);
+  });
+
+  afterAll(async () => {
+    await new Promise<void>((resolve) => server.close(() => resolve()));
   });
 
   beforeEach(() => {
@@ -145,7 +161,7 @@ describe('Property 13: API input validation rejects invalid data with field-leve
 
     await fc.assert(
       fc.asyncProperty(invalidTitleArb, async (title) => {
-        const res = await request(app)
+        const res = await request(server)
           .post('/api/changelog/admin')
           .set('Authorization', `Bearer ${adminToken()}`)
           .send({ title, body: 'Valid body text', category: 'feature' });
@@ -173,7 +189,7 @@ describe('Property 13: API input validation rejects invalid data with field-leve
 
     await fc.assert(
       fc.asyncProperty(invalidBodyArb, async (body) => {
-        const res = await request(app)
+        const res = await request(server)
           .post('/api/changelog/admin')
           .set('Authorization', `Bearer ${adminToken()}`)
           .send({ title: 'Valid Title', body, category: 'feature' });
@@ -197,7 +213,7 @@ describe('Property 13: API input validation rejects invalid data with field-leve
 
     await fc.assert(
       fc.asyncProperty(invalidCategoryArb, async (category) => {
-        const res = await request(app)
+        const res = await request(server)
           .post('/api/changelog/admin')
           .set('Authorization', `Bearer ${adminToken()}`)
           .send({ title: 'Valid Title', body: 'Valid body', category });
@@ -227,7 +243,7 @@ describe('Property 13: API input validation rejects invalid data with field-leve
     await fc.assert(
       fc.asyncProperty(invalidIdArb, async (invalidId) => {
         // Test on PUT (update)
-        const res = await request(app)
+        const res = await request(server)
           .put(`/api/changelog/admin/${invalidId}`)
           .set('Authorization', `Bearer ${adminToken()}`)
           .send({ title: 'Updated' });
@@ -255,7 +271,7 @@ describe('Property 13: API input validation rejects invalid data with field-leve
           ),
         }),
         async ({ title, body, category }) => {
-          const res = await request(app)
+          const res = await request(server)
             .post('/api/changelog/admin')
             .set('Authorization', `Bearer ${adminToken()}`)
             .send({ title, body, category });

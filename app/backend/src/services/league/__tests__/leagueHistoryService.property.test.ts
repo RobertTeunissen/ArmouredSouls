@@ -153,6 +153,10 @@ describe('leagueHistoryService Property Tests', () => {
                 entityId,
                 userId,
                 changeType: 'promotion',
+                // `mode` discriminates which competitive track a tier change came from
+                // (Spec #32/#37). `recordTierChange` always writes it, defaulting to null
+                // when the caller omits it, so it belongs in the expectation.
+                mode: null,
                 sourceTier,
                 destinationTier,
                 sourceLeagueId,
@@ -211,6 +215,10 @@ describe('leagueHistoryService Property Tests', () => {
                 entityId,
                 userId,
                 changeType: 'demotion',
+                // `mode` discriminates which competitive track a tier change came from
+                // (Spec #32/#37). `recordTierChange` always writes it, defaulting to null
+                // when the caller omits it, so it belongs in the expectation.
+                mode: null,
                 sourceTier,
                 destinationTier,
                 sourceLeagueId,
@@ -270,6 +278,8 @@ describe('leagueHistoryService Property Tests', () => {
                 entityId,
                 userId: stableId,
                 changeType,
+                // See Property 1: `recordTierChange` always writes `mode`.
+                mode: null,
                 sourceTier,
                 destinationTier,
                 sourceLeagueId,

@@ -139,7 +139,17 @@ describe('Analytics API - Stable Summary', () => {
         },
       },
     });
-    await prisma.$disconnect();
+    // No `prisma.$disconnect()` here.
+    //
+    // This file has nine `describe` blocks sharing the module-level Prisma singleton, and
+    // three of them used to disconnect it in their own `afterAll` — so the client was torn
+    // down while later describes still had tests to run. Under the Prisma 7 driver adapter a
+    // disconnect ends the underlying pg Pool, which makes any later query's behaviour depend
+    // on reconnection timing. That is the most likely source of this suite's intermittent
+    // 404 from `requireRobotExists` on a robot it had just created.
+    //
+    // `tests/setup.ts` owns the lifecycle: it disconnects once per worker in a global
+    // `afterAll`. A test file should not disconnect a client it did not create.
   });
 
   it('should return summary for last N cycles with default N=10', async () => {
@@ -675,7 +685,17 @@ describe('Analytics API - Robot Performance Endpoint', () => {
     await prisma.user.delete({
       where: { id: testUserId },
     }).catch(() => {});
-    await prisma.$disconnect();
+    // No `prisma.$disconnect()` here.
+    //
+    // This file has nine `describe` blocks sharing the module-level Prisma singleton, and
+    // three of them used to disconnect it in their own `afterAll` — so the client was torn
+    // down while later describes still had tests to run. Under the Prisma 7 driver adapter a
+    // disconnect ends the underlying pg Pool, which makes any later query's behaviour depend
+    // on reconnection timing. That is the most likely source of this suite's intermittent
+    // 404 from `requireRobotExists` on a robot it had just created.
+    //
+    // `tests/setup.ts` owns the lifecycle: it disconnects once per worker in a global
+    // `afterAll`. A test file should not disconnect a client it did not create.
   });
 
   it('should return robot performance summary', async () => {
@@ -1839,7 +1859,17 @@ describe('Analytics API - Current Cycle', () => {
   });
 
   afterAll(async () => {
-    await prisma.$disconnect();
+    // No `prisma.$disconnect()` here.
+    //
+    // This file has nine `describe` blocks sharing the module-level Prisma singleton, and
+    // three of them used to disconnect it in their own `afterAll` — so the client was torn
+    // down while later describes still had tests to run. Under the Prisma 7 driver adapter a
+    // disconnect ends the underlying pg Pool, which makes any later query's behaviour depend
+    // on reconnection timing. That is the most likely source of this suite's intermittent
+    // 404 from `requireRobotExists` on a robot it had just created.
+    //
+    // `tests/setup.ts` owns the lifecycle: it disconnects once per worker in a global
+    // `afterAll`. A test file should not disconnect a client it did not create.
   });
 
   it('should return current cycle number', async () => {

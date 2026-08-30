@@ -12,7 +12,6 @@
 import fc from 'fast-check';
 import { Prisma, MatchType } from '../generated/prisma';
 import { executeScheduledBattles } from '../src/services/league/leagueBattleOrchestrator';
-import { clearSequenceCache } from '../src/services/common/eventLogger';
 import schedulingService from '../src/services/scheduling/schedulingService';
 import prisma from '../src/lib/prisma';
 import { battlesForRobots, battlesForUsers, robotIdsForUsers, scheduledMatchesForRobots } from './cleanupHelper';
@@ -113,7 +112,6 @@ describe('Property 16: Cycle Summary Includes Total Streaming Revenue', () => {
     // Get current cycle number for clearing cache
     const metadata = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
     const cycleNumber = metadata?.totalCycles || 0;
-    clearSequenceCache(cycleNumber);
 
     // Cleanup - delete in correct order to avoid foreign key constraints
     await prisma.battleParticipant.deleteMany({

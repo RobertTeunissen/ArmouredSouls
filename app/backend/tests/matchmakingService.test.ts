@@ -10,6 +10,35 @@ import { battlesForRobots, scheduledMatchesForRobots } from './cleanupHelper';
 
 
 describe('Matchmaking Service', () => {
+
+/**
+ * Enter a robot into a league instance and subscribe it to the event.
+ *
+ * Matchmaking scopes its queue from `standings` — the source of truth for tier and
+ * instance since Spec #40 — so a robot with no standing row is in no instance and is
+ * invisible to `runMatchmakingForTier`. These fixtures created robots and
+ * subscriptions but no standings, so every queue logged "0 robots available (0 total,
+ * 0 ready)" and every match count was 0.
+ */
+async function enterLeague(
+  robotId: number,
+  options: { tier?: string; leagueInstanceId?: string; leaguePoints?: number } = {},
+): Promise<void> {
+  await prisma.standing.create({
+    data: {
+      entityType: 'robot',
+      entityId: robotId,
+      mode: 'league_1v1',
+      tier: options.tier ?? 'bronze',
+      leagueInstanceId: options.leagueInstanceId ?? `${options.tier ?? 'bronze'}_1`,
+      leaguePoints: options.leaguePoints ?? 0,
+    },
+  });
+  await prisma.subscription.create({
+    data: { robotId, eventType: 'league_1v1', status: 'active' },
+  });
+}
+
   const testUserIds: number[] = [];
   let testRobotIds: number[] = [];
   const testWeaponIds: number[] = [];
@@ -449,10 +478,7 @@ describe('Matchmaking Service', () => {
             mainWeaponId: weaponInv.id,
           },
         });
-        // Create league_1v1 subscription (required for matchmaking eligibility)
-        await prisma.subscription.create({
-          data: { robotId: robot.id, eventType: 'league_1v1', status: 'active' },
-        });
+        await enterLeague(robot.id);
         robots.push(robot);
       }
 
@@ -544,7 +570,7 @@ describe('Matchmaking Service', () => {
             mainWeaponId: weaponInv.id,
           },
         });
-        await prisma.subscription.create({ data: { robotId: robot.id, eventType: 'league_1v1', status: 'active' } });
+        await enterLeague(robot.id);
         robots.push(robot);
       }
 
@@ -605,7 +631,7 @@ describe('Matchmaking Service', () => {
             mainWeaponId: weaponInv.id,
           },
         });
-        await prisma.subscription.create({ data: { robotId: robot.id, eventType: 'league_1v1', status: 'active' } });
+        await enterLeague(robot.id);
         robots.push(robot);
       }
 
@@ -715,7 +741,9 @@ describe('Matchmaking Service', () => {
             mainWeaponId: weaponInv.id,
           },
         });
-        await prisma.subscription.create({ data: { robotId: robot.id, eventType: 'league_1v1', status: 'active' } });
+        // This case runs matchmaking for platinum, so the standing has to place the
+        // robots there — the tier comes from `standings`, not from the robot row.
+        await enterLeague(robot.id, { tier: 'platinum' });
         robots.push(robot);
       }
 
@@ -772,7 +800,7 @@ describe('Matchmaking Service', () => {
               mainWeaponId: weaponInv.id,
             },
           });
-          await prisma.subscription.create({ data: { robotId: robot.id, eventType: 'league_1v1', status: 'active' } });
+          await enterLeague(robot.id);
           allRobots.push(robot);
         }
       }

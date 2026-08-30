@@ -4,6 +4,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from '../src/routes/auth';
+import { errorHandler } from '../src/middleware/errorHandler';
 
 dotenv.config();
 
@@ -11,6 +12,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use('/api/auth', authRoutes);
+
+// Spec #51: without the errorHandler mounted, a thrown AppError falls through
+// to Express's default handler, which sends the right status with an EMPTY
+// body. That is why these suites saw 400 but no `body.error` or `body.code`.
+app.use(errorHandler);
 
 /**
  * Integration tests for the enhanced POST /api/auth/login endpoint.

@@ -6,7 +6,7 @@
 
 import prisma from '../src/lib/prisma';
 import { processBattle } from '../src/services/league/leagueBattleOrchestrator';
-import { EventType, clearSequenceCache } from '../src/services/common/eventLogger';
+import { EventType } from '../src/services/common/eventLogger';
 
 
 describe('Battle Event Logging Integration', () => {
@@ -80,8 +80,14 @@ describe('Battle Event Logging Integration', () => {
     });
     testRobotIds.push(testRobot2.id);
 
-    // Create scheduled match
-    scheduledMatch = await prisma.scheduledMatch.create({
+    // Create scheduled match.
+    //
+    // `processBattle` takes the *mapped* 1v1 view that `executeScheduledBattles`
+    // assembles — `{ robot1Id, robot2Id, ... }` — not the raw `scheduled_matches_v2`
+    // row, whose combatants live in the `participants` relation. Passing the row
+    // straight through left `robot1Id` undefined and Prisma rejected the lookup with
+    // "Argument `where` ... needs at least one of `id` or `name`".
+    const matchRow = await prisma.scheduledMatch.create({
       data: {
         matchType: 'league_1v1',
         leagueType: 'bronze',
@@ -94,7 +100,18 @@ describe('Battle Event Logging Integration', () => {
         },
       },
     });
-    testMatchIds.push(scheduledMatch.id);
+    testMatchIds.push(matchRow.id);
+    scheduledMatch = {
+      id: matchRow.id,
+      robot1Id: testRobot1.id,
+      robot2Id: testRobot2.id,
+      leagueType: matchRow.leagueType,
+      scheduledFor: matchRow.scheduledFor,
+      status: matchRow.status,
+      battleId: matchRow.battleId,
+      createdAt: matchRow.createdAt,
+      _unifiedMatchId: matchRow.id,
+    };
   });
 
   afterEach(async () => {

@@ -230,12 +230,35 @@ describe('Team Battle Complete Cycle Integration Test', () => {
     });
     expect(scheduledMatches.length).toBeGreaterThan(0);
 
-    // Verify match structure — test teams should have matches scheduled
+    // Verify match structure — test teams should have matches scheduled.
+    //
+    // The instance is compared against the participating teams' own `standings` rows rather
+    // than against the literal 'bronze_1'. `assignLeagueInstance` places a new team in the
+    // LEAST-FULL instance of its tier, so once other teams in the shared database fill
+    // bronze_1 these teams are placed in bronze_2 and the hard-coded literal fails with
+    // "Expected bronze_1, Received bronze_2" — a fact about the database, not about
+    // matchmaking. The invariant that actually matters is that a match is scheduled in the
+    // same instance its teams compete in.
+    const teamStandings = await prisma.standing.findMany({
+      where: { mode: 'league_2v2', entityType: 'team', entityId: { in: testTeamIds } },
+      select: { entityId: true, leagueInstanceId: true },
+    });
+    const instanceByTeamId = new Map(teamStandings.map((st) => [st.entityId, st.leagueInstanceId]));
+
     for (const match of scheduledMatches) {
       expect(match.matchType).toBe('league_2v2');
       expect(match.leagueType).toBe('bronze');
-      expect(match.leagueInstanceId).toBe('bronze_1');
       expect(match.status).toBe('scheduled');
+
+      const bookedTestTeamIds = match.participants
+        .filter((p) => p.participantType === 'team' && instanceByTeamId.has(p.participantId))
+        .map((p) => p.participantId);
+      // Every test team in this match competes in the instance the match was scheduled in.
+      for (const teamId of bookedTestTeamIds) {
+        expect(match.leagueInstanceId).toBe(instanceByTeamId.get(teamId));
+      }
+      // And it is a bronze instance, which is what the tier assertion above means.
+      expect(match.leagueInstanceId).toMatch(/^bronze_\d+$/);
     }
     // With other teams in the database, test teams should be paired (no byes for
     // 4+ teams). A bye books a single team participant, so "two teams booked" is

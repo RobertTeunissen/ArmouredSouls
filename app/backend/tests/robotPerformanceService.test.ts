@@ -20,17 +20,15 @@ async function createBattleWithParticipants(opts: {
   robot1: { eloBefore: number; eloAfter: number; damageDealt: number; finalHP: number; fameAwarded: number; credits: number; destroyed?: boolean };
   robot2: { eloBefore: number; eloAfter: number; damageDealt: number; finalHP: number; fameAwarded: number; credits: number; destroyed?: boolean };
 }) {
-  const eloChange = Math.abs(opts.robot1.eloAfter - opts.robot1.eloBefore);
+  // `Battle` carries no combatant or ELO columns — those live on
+  // `battle_participants`, which the `participants.create` block below writes.
   return prisma.battle.create({
     data: {
-      robot1Id: opts.robot1Id,
-      robot2Id: opts.robot2Id,
       winnerId: opts.winnerId,
       battleType: 'league',
       leagueType: 'bronze',
       battleLog: { events: [] },
       durationSeconds: 30,
-      eloChange,
       winnerReward: opts.winnerId ? opts.robot1Id === opts.winnerId ? opts.robot1.credits : opts.robot2.credits : 0,
       loserReward: opts.winnerId ? opts.robot1Id === opts.winnerId ? opts.robot2.credits : opts.robot1.credits : 500,
       participants: {

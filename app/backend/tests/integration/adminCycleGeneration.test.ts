@@ -23,6 +23,17 @@ app.use(cors());
 app.use(express.json());
 app.use('/api/admin', adminRoutes);
 
+/**
+ * Highest cycle number this suite can reach.
+ *
+ * Every test here resets `cycleMetadata.totalCycles` to 0 and then runs at most 8 cycles, so
+ * nothing above this is ever touched. The cleanup queries are bounded by it rather than
+ * deleting `audit_logs` wholesale: an unbounded `deleteMany({})` took the suite from 32s
+ * standing alone to 251s inside a full Heavy_Tier run, because by then the table holds every
+ * other suite's rows too.
+ */
+const MAX_CYCLE_TOUCHED = 50;
+
 describe('Admin Cycle Generation Integration Tests', () => {
   let adminUser: { id: number; username: string };
   let adminToken: string;
@@ -46,11 +57,27 @@ describe('Admin Cycle Generation Integration Tests', () => {
       process.env.JWT_SECRET || 'test-secret',
     );
 
+    // This suite drives cycles from number 1 upward, and `cycle_snapshots.cycle_number` is
+    // globally unique. `afterEach` clears the cycles this suite creates, but an earlier suite
+    // in the same Heavy_Tier run leaves its own snapshots AND an advanced
+    // `cycleMetadata.totalCycles` behind — so the first test here started at cycle 51 and
+    // generated 51 users where it expected 1, and collided with leftover snapshots. Clearing
+    // and resetting on entry as well as on exit makes the suite's result independent of what
+    // ran before it.
+    await prisma.cycleSnapshot.deleteMany({ where: { cycleNumber: { lte: MAX_CYCLE_TOUCHED } } });
+    await prisma.auditLog.deleteMany({ where: { cycleNumber: { lte: MAX_CYCLE_TOUCHED } } });
     // Ensure CycleMetadata exists
     const existing = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
     if (!existing) {
       await prisma.cycleMetadata.create({
         data: { id: 1, totalCycles: 0 },
+      });
+    } else {
+      // Reset, not just ensure-exists. `cycleMetadata` is a singleton row shared by every
+      // suite, and the cycle number it holds decides how many users a cycle generates.
+      await prisma.cycleMetadata.update({
+        where: { id: 1 },
+        data: { totalCycles: 0, lastCycleAt: null },
       });
     }
   });
@@ -113,7 +140,23 @@ describe('Admin Cycle Generation Integration Tests', () => {
       });
     }
 
-    // Reset cycle counter after each test
+    // Reset cycle counter after each test.
+    //
+    // Resetting the counter means the next test re-runs cycles 1..N, so the rows those
+    // cycle numbers already own must go with it. `cycle_snapshots.cycle_number` is globally
+    // `@unique` and `audit_logs` is keyed by `(cycle_number, sequence_number)`, so leaving
+    // them behind makes the suite collide with itself: Spec #51 measured **44
+    // `Unique constraint failed on the fields: (cycle_number)`** errors in one Heavy_Tier
+    // run, and every single one came from this file. They were mostly invisible because
+    // `cycleSnapshotService`'s callers wrap snapshot creation defensively — so instead of
+    // failing, a cycle would complete with no snapshot and no `userGeneration` payload,
+    // which is what produced "Cannot read properties of undefined (reading 'usersCreated')".
+    //
+    // `prisma.cycleSnapshot.create` is right to throw rather than upsert: in production
+    // cycle numbers are monotonic and settlement runs once per cycle, so a duplicate means
+    // a double settlement. The test was wrong to replay cycle numbers.
+    await prisma.cycleSnapshot.deleteMany({ where: { cycleNumber: { lte: MAX_CYCLE_TOUCHED } } });
+    await prisma.auditLog.deleteMany({ where: { cycleNumber: { lte: MAX_CYCLE_TOUCHED } } });
     await prisma.cycleMetadata.update({
       where: { id: 1 },
       data: { totalCycles: 0 },
@@ -147,10 +190,15 @@ describe('Admin Cycle Generation Integration Tests', () => {
       expect(response.body.cyclesCompleted).toBe(3);
       expect(response.body.generateUsersPerCycleEnabled).toBe(true);
 
-      // Cycle 1 creates 1 user, Cycle 2 creates 2, Cycle 3 creates 3
-      expect(response.body.results[0].userGeneration.usersCreated).toBe(1);
-      expect(response.body.results[1].userGeneration.usersCreated).toBe(2);
-      expect(response.body.results[2].userGeneration.usersCreated).toBe(3);
+      // Cycle 1 creates 1 user, Cycle 2 creates 2, Cycle 3 creates 3.
+      //
+      // `userGeneration` lives under `settlement`, not at the top of a cycle result.
+      // `CycleResult.settlement` in `adminCycleService.ts` has declared it there since user
+      // generation became a settlement step; these assertions kept the pre-settlement path
+      // and so read `undefined.usersCreated`.
+      expect(response.body.results[0].settlement.userGeneration.usersCreated).toBe(1);
+      expect(response.body.results[1].settlement.userGeneration.usersCreated).toBe(2);
+      expect(response.body.results[2].settlement.userGeneration.usersCreated).toBe(3);
 
       // Total: 1+2+3 = 6 users with auto_ prefix
       const totalUsers = await prisma.user.count({
@@ -194,9 +242,9 @@ describe('Admin Cycle Generation Integration Tests', () => {
       expect(response2.body.totalCyclesInSystem).toBe(8);
 
       // Cycles 6, 7, 8 create 6, 7, 8 users respectively
-      expect(response2.body.results[0].userGeneration.usersCreated).toBe(6);
-      expect(response2.body.results[1].userGeneration.usersCreated).toBe(7);
-      expect(response2.body.results[2].userGeneration.usersCreated).toBe(8);
+      expect(response2.body.results[0].settlement.userGeneration.usersCreated).toBe(6);
+      expect(response2.body.results[1].settlement.userGeneration.usersCreated).toBe(7);
+      expect(response2.body.results[2].settlement.userGeneration.usersCreated).toBe(8);
 
       // Total: 15 + 21 = 36 users
       const totalUsers = await prisma.user.count({
@@ -223,9 +271,12 @@ describe('Admin Cycle Generation Integration Tests', () => {
       expect(response.status).toBe(200);
       expect(response.body.generateUsersPerCycleEnabled).toBe(false);
 
-      // No user generation in results
+      // No user generation in results. `generateUsersPerCycle: false` leaves
+      // `userGenerationSummary` at its `null` initialiser, so the key is present and null.
       response.body.results.forEach((result: Record<string, unknown>) => {
-        expect(result.userGeneration).toBeNull();
+        const settlement = result.settlement as Record<string, unknown>;
+        expect(settlement).toBeDefined();
+        expect(settlement.userGeneration).toBeNull();
       });
 
       const totalUsers = await prisma.user.count({
@@ -297,9 +348,10 @@ describe('Admin Cycle Generation Integration Tests', () => {
       // Verify result structure includes tiered generation fields
       response.body.results.forEach((result: Record<string, unknown>) => {
         expect(result).toHaveProperty('cycle');
-        expect(result).toHaveProperty('userGeneration');
+        expect(result).toHaveProperty('settlement.userGeneration');
 
-        const ug = result.userGeneration as Record<string, unknown>;
+        const settlement = result.settlement as Record<string, unknown>;
+        const ug = settlement.userGeneration as Record<string, unknown>;
         expect(ug).toHaveProperty('usersCreated');
         expect(ug).toHaveProperty('robotsCreated');
         expect(ug).toHaveProperty('tagTeamsCreated');
@@ -350,7 +402,7 @@ describe('Admin Cycle Generation Integration Tests', () => {
         });
 
       expect(response.status).toBe(200);
-      expect(response.body.results[0].userGeneration.usersCreated).toBe(1);
+      expect(response.body.results[0].settlement.userGeneration.usersCreated).toBe(1);
 
       const metadata = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
       expect(metadata).not.toBeNull();

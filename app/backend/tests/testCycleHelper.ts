@@ -4,7 +4,6 @@
  * to avoid sequence number conflicts in the auditLog table
  */
 
-import { clearSequenceCache } from '../src/services/common/eventLogger';
 import { PrismaClient } from '../generated/prisma';
 
 // Counter for generating unique cycle numbers within INT4 range
@@ -27,8 +26,6 @@ export async function cleanupTestCycle(cycleNumber: number, prismaClient?: Prism
   // Use provided client or import the shared one
   const prisma = prismaClient || (await import('../src/lib/prisma')).default;
   
-  // Clear sequence cache first
-  clearSequenceCache(cycleNumber);
   
   // Delete audit log entries for this cycle
   await prisma.auditLog.deleteMany({
@@ -43,8 +40,6 @@ export async function cleanupTestCycles(cycleNumbers: number[], prismaClient?: P
   // Use provided client or import the shared one
   const prisma = prismaClient || (await import('../src/lib/prisma')).default;
   
-  // Clear sequence caches
-  cycleNumbers.forEach(clearSequenceCache);
   
   // Delete audit log entries for all cycles
   await prisma.auditLog.deleteMany({

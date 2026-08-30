@@ -60,8 +60,6 @@ describe('Financial Report - Streaming Revenue Integration', () => {
   ): Promise<number> {
     const battle = await prisma.battle.create({
       data: {
-        robot1Id,
-        robot2Id,
         winnerId,
         battleType: 'league_1v1',
         leagueType: 'bronze',

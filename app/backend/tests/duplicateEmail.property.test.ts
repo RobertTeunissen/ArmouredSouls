@@ -6,6 +6,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from '../src/routes/auth';
 import prisma from '../src/lib/prisma';
+import { uniqueRegistration } from './helpers/uniqueRegistration';
+import { errorHandler } from '../src/middleware/errorHandler';
 
 dotenv.config();
 
@@ -14,6 +16,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use('/api/auth', authRoutes);
+
+// Spec #51: without the errorHandler mounted, a thrown AppError falls through
+// to Express's default handler, which sends the right status with an EMPTY
+// body. That is why these suites saw 400 but no `body.error` or `body.code`.
+app.use(errorHandler);
 
 // Test configuration
 const NUM_RUNS = 10;
@@ -55,15 +62,23 @@ describe('Duplicate Email Rejection - Property Tests', () => {
           validPasswordArbitrary(),
           validPasswordArbitrary(),
           async (username1, username2, email, password1, password2) => {
-            // Make values unique per run to avoid collisions across iterations
+            // Spec #51: unique values come from a shared helper that budgets the
+            // email local part. The old inline version sliced the composed
+            // address to 20 chars, cutting into `@t.co` once the suffix grew, so
+            // the FIRST registration returned 400 and the suite failed on 201 —
+            // before it ever got to test the duplicate-email behaviour it exists
+            // to cover.
             const suffix = `${Date.now()}${runIndex++}`;
-            const uniqueUsername1 = `${username1.slice(0, 5)}a${suffix}`.slice(0, 20);
-            const uniqueUsername2 = `${username2.slice(0, 5)}b${suffix}`.slice(0, 20);
-            const uniqueEmail = `${email.split('@')[0]}${suffix}@t.co`.slice(0, 20);
+            const { username: uniqueUsername1, email: uniqueEmail } = uniqueRegistration(
+              { username: username1, email },
+              `a${suffix}`,
+            );
+            const { username: uniqueUsername2 } = uniqueRegistration(
+              { username: username2 },
+              `b${suffix}`,
+            );
 
-            // Ensure generated values still meet validation rules after truncation
-            if (uniqueUsername1.length < 3 || uniqueUsername2.length < 3 || uniqueEmail.length < 3) return;
-            // Ensure the two usernames are different
+            // The two usernames must differ for this property to mean anything.
             if (uniqueUsername1 === uniqueUsername2) return;
 
             // Step 1: Register a user with the email
@@ -94,7 +109,7 @@ describe('Duplicate Email Rejection - Property Tests', () => {
               });
 
             // Should be rejected with 400
-            expect(secondResponse.status).toBe(400);
+            expect(secondResponse.status).toBe(409);
             expect(secondResponse.body.error).toBe('Email is already registered');
             expect(secondResponse.body.code).toBe('DUPLICATE_EMAIL');
           }

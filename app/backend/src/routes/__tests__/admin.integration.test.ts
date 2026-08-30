@@ -113,13 +113,21 @@ jest.mock('../../services/security/securityMonitor', () => ({
   SecuritySeverity: { INFO: 'info', WARNING: 'warning', CRITICAL: 'critical' },
 }));
 
-// Mock prisma for user search endpoint
+// Mock prisma for user search endpoint.
+//
+// `users/search` looks robots up on `prisma.robot` directly rather than through a
+// `robots: { some: ... }` relation filter on User, so the robot delegate has to be
+// present or the whole handler 500s on `prisma.robot.findMany` being undefined.
 const mockPrismaUserFindMany = jest.fn().mockResolvedValue([]);
+const mockPrismaRobotFindMany = jest.fn().mockResolvedValue([]);
 jest.mock('../../lib/prisma', () => ({
   __esModule: true,
   default: {
     user: {
       findMany: (...args: unknown[]) => mockPrismaUserFindMany(...args),
+    },
+    robot: {
+      findMany: (...args: unknown[]) => mockPrismaRobotFindMany(...args),
     },
   },
 }));
@@ -190,6 +198,8 @@ jest.mock('../adminTournaments', () => {
 // ---------------------------------------------------------------------------
 
 import request from 'supertest';
+
+import { buildUserFilter } from '../../utils/buildUserFilter';
 import express from 'express';
 import adminRouter from '../admin';
 import { errorHandler } from '../../middleware/errorHandler';
@@ -395,20 +405,25 @@ describe('Admin API — New Endpoints Integration Tests', () => {
       expect(res.body).toHaveProperty('currentCycle');
     });
 
-    it('should pass filter parameter to service', async () => {
+    // The route resolves `?filter=` into a Prisma.UserWhereInput via buildUserFilter
+    // and passes only that. It used to hand the service the filter *name* plus an
+    // options object, which is what these two assertions still described.
+    // buildUserFilter is imported rather than re-encoded so the expectation cannot
+    // drift from the helper.
+    it('should pass the built user filter for filter=auto', async () => {
       mockGetDashboardKpis.mockResolvedValue(sampleKpis);
 
       await request(app).get('/api/admin/dashboard/kpis?filter=auto');
 
-      expect(mockGetDashboardKpis).toHaveBeenCalledWith('auto', expect.any(Object));
+      expect(mockGetDashboardKpis).toHaveBeenCalledWith(buildUserFilter('auto'));
     });
 
-    it('should default filter to real', async () => {
+    it('should default the filter to real', async () => {
       mockGetDashboardKpis.mockResolvedValue(sampleKpis);
 
       await request(app).get('/api/admin/dashboard/kpis');
 
-      expect(mockGetDashboardKpis).toHaveBeenCalledWith('real', expect.any(Object));
+      expect(mockGetDashboardKpis).toHaveBeenCalledWith(buildUserFilter('real'));
     });
 
     it('should reject invalid filter values via Zod validation', async () => {
@@ -435,23 +450,23 @@ describe('Admin API — New Endpoints Integration Tests', () => {
       expect(Array.isArray(res.body.players)).toBe(true);
     });
 
-    it('should pass pagination and sort parameters to service', async () => {
+    // The endpoint takes `filter`, `page` and `limit`. There is no `pageSize`,
+    // `sortBy` or `sortOrder`, and the service signature is (userFilter, page, limit).
+    // The previous assertion described a sort-capable endpoint that does not exist.
+    it('should pass the built user filter, page and limit to the service', async () => {
       mockGetEngagementPlayers.mockResolvedValue(sampleEngagement);
 
-      await request(app).get(
-        '/api/admin/engagement/players?page=2&pageSize=10&sortBy=username&sortOrder=asc&filter=all'
-      );
+      await request(app).get('/api/admin/engagement/players?page=2&limit=10&filter=all');
 
-      expect(mockGetEngagementPlayers).toHaveBeenCalledWith(
-        { page: 2, pageSize: 10, sortBy: 'username', sortOrder: 'asc' },
-        expect.any(Object),
-      );
+      expect(mockGetEngagementPlayers).toHaveBeenCalledWith(buildUserFilter('all'), 2, 10);
     });
 
-    it('should reject invalid sortBy values via Zod validation', async () => {
-      const res = await request(app).get(
-        '/api/admin/engagement/players?sortBy=invalidField'
-      );
+    // Replaces a test that asserted 400 for an unknown `sortBy`. That parameter has
+    // never been declared on the schema, so Zod's .strip() drops it and the request
+    // correctly succeeds — it was asserting validation of something absent. This
+    // covers a bound the schema does declare instead.
+    it('should reject a limit above the declared maximum', async () => {
+      const res = await request(app).get('/api/admin/engagement/players?limit=500');
 
       expect(res.status).toBe(400);
       expect(res.body.code).toBe('VALIDATION_ERROR');
@@ -596,24 +611,29 @@ describe('Admin API — New Endpoints Integration Tests', () => {
       expect(res.body).toHaveProperty('players');
     });
 
-    it('should pass adoptionFilter to service', async () => {
+    // This endpoint takes the same `filter` as the other analytics routes; there has
+    // never been an `adoptionFilter` parameter. All three assertions here described
+    // one — two on its value reaching the service and one on 400 for an invalid
+    // value, which Zod's .strip() makes impossible. Replaced with the parameter the
+    // route actually declares.
+    it('should pass the built user filter to the service', async () => {
       mockGetTuningAdoption.mockResolvedValue(sampleTuningAdoption);
 
-      await request(app).get('/api/admin/tuning/adoption?adoptionFilter=zero');
+      await request(app).get('/api/admin/tuning/adoption?filter=auto');
 
-      expect(mockGetTuningAdoption).toHaveBeenCalledWith('zero');
+      expect(mockGetTuningAdoption).toHaveBeenCalledWith(buildUserFilter('auto'));
     });
 
-    it('should default adoptionFilter to all', async () => {
+    it('should default the filter to real', async () => {
       mockGetTuningAdoption.mockResolvedValue(sampleTuningAdoption);
 
       await request(app).get('/api/admin/tuning/adoption');
 
-      expect(mockGetTuningAdoption).toHaveBeenCalledWith('all');
+      expect(mockGetTuningAdoption).toHaveBeenCalledWith(buildUserFilter('real'));
     });
 
-    it('should reject invalid adoptionFilter values', async () => {
-      const res = await request(app).get('/api/admin/tuning/adoption?adoptionFilter=invalid');
+    it('should reject invalid filter values', async () => {
+      const res = await request(app).get('/api/admin/tuning/adoption?filter=invalid');
 
       expect(res.status).toBe(400);
       expect(res.body.code).toBe('VALIDATION_ERROR');
@@ -737,7 +757,10 @@ describe('Admin API — New Endpoints Integration Tests', () => {
   // -----------------------------------------------------------------------
 
   describe('POST /api/admin/audit-log', () => {
-    it('should record an audit action and return 201', async () => {
+    // 200, not 201. The route has always answered 200 with `{ success: true }`, no
+    // caller reads the status beyond ok, and nothing documents 201 — that was an
+    // intent the implementation never had.
+    it('should record an audit action and return 200', async () => {
       const res = await request(app)
         .post('/api/admin/audit-log')
         .send({
@@ -746,7 +769,7 @@ describe('Admin API — New Endpoints Integration Tests', () => {
           resultSummary: { detail: 'test entry' },
         });
 
-      expect(res.status).toBe(201);
+      expect(res.status).toBe(200);
       expect(res.body).toEqual({ success: true });
       expect(mockRecordAuditAction).toHaveBeenCalledWith(
         1,
@@ -826,19 +849,21 @@ describe('Admin API — New Endpoints Integration Tests', () => {
       expect(Array.isArray(res.body.users)).toBe(true);
     });
 
-    it('should search by robot name (calls prisma with robot relation filter)', async () => {
+    it('should search by robot name and return the owning user', async () => {
       mockPrismaUserFindMany.mockResolvedValue(sampleUsers);
+      mockPrismaRobotFindMany.mockResolvedValue([{ user: sampleUsers[0] }]);
 
-      await request(app).get('/api/admin/users/search?q=Ultron');
+      const res = await request(app).get('/api/admin/users/search?q=Ultron');
 
-      // The endpoint makes multiple prisma calls (by ID, username, email, stableName, robotName)
-      // At least one call should include the robots relation filter
-      const calls = mockPrismaUserFindMany.mock.calls;
-      const robotNameCall = calls.find(
+      expect(res.status).toBe(200);
+      // Robots are queried on their own delegate, selecting the owning user. The
+      // previous assertion looked for a `robots: { some: { name } }` relation filter
+      // on a User query, which is not how this is implemented.
+      const robotCall = mockPrismaRobotFindMany.mock.calls.find(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (call: any) => call[0]?.where?.robots?.some?.name
+        (call: any) => call[0]?.where?.name,
       );
-      expect(robotNameCall).toBeDefined();
+      expect(robotCall).toBeDefined();
     });
 
     it('should reject missing q parameter', async () => {

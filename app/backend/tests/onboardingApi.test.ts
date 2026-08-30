@@ -348,13 +348,17 @@ describe('Onboarding API Integration Tests', () => {
     it('should resume from last completed step after logout', async () => {
       // Progress to step 5 one step at a time (service validates step transitions)
       for (let step = 2; step <= 5; step++) {
-        await request(app)
+        const setupResponse = await request(app)
           .post('/api/onboarding/state')
           .set('Authorization', `Bearer ${testToken}`)
           .send({
             step,
             ...(step === 5 ? { strategy: '1_mighty', choices: { rosterStrategy: '1_mighty' } } : {}),
           });
+        // Assert the SETUP advanced. Ignoring these responses meant a rejected transition
+        // surfaced as "Expected 5, Received 4" on the assertion below, which points at the
+        // resume behaviour rather than at the step that actually failed.
+        expect(setupResponse.status).toBe(200);
       }
 
       // Simulate logout by creating new token (same user)
@@ -505,8 +509,10 @@ describe('Onboarding API Integration Tests', () => {
           confirmation: 'WRONG',
         });
 
+      // The standard error body is `{ error, code, details? }` — there is no `success`
+      // field on a failure, and the route's own docblock documents exactly this shape.
       expect(response.status).toBe(400);
-      expect(response.body.success).toBe(false);
+      expect(response.body.code).toBe('RESET_INVALID_CONFIRMATION');
       expect(response.body.error).toContain('Invalid confirmation');
     });
 
@@ -556,7 +562,7 @@ describe('Onboarding API Integration Tests', () => {
         });
 
       expect(response.status).toBe(400);
-      expect(response.body.success).toBe(false);
+      expect(response.body.code).toBe('RESET_BLOCKED');
       expect(response.body.error).toContain('scheduled');
 
       // Cleanup

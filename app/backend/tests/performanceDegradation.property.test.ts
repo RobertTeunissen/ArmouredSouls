@@ -7,12 +7,30 @@
  * Engine should flag it as a performance degradation.
  * 
  * Validates: Requirements 15.4
+ *
+ * Every `fc.float` here passes `noNaN: true`. fast-check generates NaN from a bounded
+ * `fc.float`/`fc.double` unless told not to, and NaN is not a value a duration multiplier
+ * can take — durations are measured milliseconds. Without it, `Math.floor(baseline * NaN)`
+ * produced a NaN duration, the service found no degradation, and Property 16.1 failed on
+ * roughly one run in three: seed 1966233560 gave the counterexample [100, NaN, "step_a"].
+ * Property 16.2 hid the same defect because it asserts the alert IS null, which NaN
+ * satisfies for the wrong reason.
  */
 
 import fc from 'fast-check';
 import { CyclePerformanceMonitoringService } from '../src/services/cycle/cyclePerformanceMonitoringService';
 import { EventLogger } from '../src/services/common/eventLogger';
 import prisma from '../src/lib/prisma';
+
+/**
+ * This suite writes roughly 13,000 `audit_logs` rows: six properties x 10 runs x ~220
+ * events, each event taking the Spec #51 advisory lock to allocate its sequence number.
+ * It measures around 38s on a quiet machine, which leaves no headroom under the tier's
+ * 60s default and made it the second-most likely suite in the tier to time out under
+ * load. The timeout is raised rather than the run count reduced — a timeout is not an
+ * assertion, and cutting `numRuns` would cut the coverage this property exists for.
+ */
+jest.setTimeout(180_000);
 
 describe('Property 16: Performance Degradation Detection', () => {
   let service: CyclePerformanceMonitoringService;
@@ -39,7 +57,7 @@ describe('Property 16: Performance Degradation Detection', () => {
     await fc.assert(
       fc.asyncProperty(
         fc.integer({ min: 100, max: 5000 }), // baselineDuration
-        fc.float({ min: Math.fround(1.52), max: Math.fround(3.0) }), // degradationMultiplier (> 1.5, with margin for Math.floor)
+        fc.float({ min: Math.fround(1.52), max: Math.fround(3.0), noNaN: true, noDefaultInfinity: true }), // degradationMultiplier (> 1.5, with margin for Math.floor)
         fc.constantFrom('step_a', 'step_b', 'step_c'), // stepName
         async (baselineDuration, degradationMultiplier, stepName) => {
           // Clean up for this iteration
@@ -85,7 +103,7 @@ describe('Property 16: Performance Degradation Detection', () => {
     await fc.assert(
       fc.asyncProperty(
         fc.integer({ min: 100, max: 5000 }), // baselineDuration
-        fc.float({ min: Math.fround(0.5), max: Math.fround(1.5) }), // multiplier (<= 1.5)
+        fc.float({ min: Math.fround(0.5), max: Math.fround(1.5), noNaN: true, noDefaultInfinity: true }), // multiplier (<= 1.5)
         fc.constantFrom('step_x', 'step_y', 'step_z'), // stepName
         async (baselineDuration, multiplier, stepName) => {
           // Clean up for this iteration
@@ -125,13 +143,23 @@ describe('Property 16: Performance Degradation Detection', () => {
     await fc.assert(
       fc.asyncProperty(
         fc.integer({ min: 100, max: 3000 }), // baselineDuration
-        fc.float({ min: Math.fround(1.51), max: Math.fround(3.0) }), // degradationMultiplier
+        // Lower bound 1.55, not 1.51. The service alerts only when the recent average
+        // is STRICTLY above 1.5x the baseline, and two roundings sit between the
+        // multiplier and that comparison: Math.fround(1.51) is 1.5099999904632568, and
+        // Math.floor then pulls the duration down again. At baseline 100 that produced
+        // exactly 150 — not greater than the 150 threshold — so no alert was raised and
+        // the property failed on its own generator rather than on the service. 1.55
+        // clears the threshold for every baseline in range: 0.05 x 100 = 5 exceeds the
+        // most a floor can remove.
+        fc.float({ min: Math.fround(1.55), max: Math.fround(3.0), noNaN: true, noDefaultInfinity: true }), // degradationMultiplier
         fc.constantFrom('step_1', 'step_2', 'step_3'), // stepName
         async (baselineDuration, degradationMultiplier, stepName) => {
           // Clean up for this iteration
           await prisma.auditLog.deleteMany({});
 
           const recentDuration = Math.floor(baselineDuration * degradationMultiplier);
+          // The precondition this property depends on, stated rather than assumed.
+          expect(recentDuration).toBeGreaterThan(baselineDuration * 1.5);
           const expectedDegradationPercent = (degradationMultiplier - 1) * 100;
 
           // Create baseline data
@@ -284,7 +312,7 @@ describe('Property 16: Performance Degradation Detection', () => {
         fc.array(
           fc.record({
             stepName: fc.constantFrom('s1', 's2', 's3', 's4', 's5'),
-            degradationMultiplier: fc.float({ min: Math.fround(1.6), max: Math.fround(3.0) }),
+            degradationMultiplier: fc.float({ min: Math.fround(1.6), max: Math.fround(3.0), noNaN: true, noDefaultInfinity: true }),
           }),
           { minLength: 3, maxLength: 5 }
         ),

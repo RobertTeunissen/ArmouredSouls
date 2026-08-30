@@ -44,6 +44,12 @@ const mockPrisma = {
     aggregate: jest.fn().mockResolvedValue({ _sum: { credits: 0, streamingRevenue: 0 } }),
     count: jest.fn().mockResolvedValue(0),
   },
+  standing: {
+    findMany: jest.fn().mockResolvedValue([]),
+  },
+  teamBattleMember: {
+    findMany: jest.fn().mockResolvedValue([]),
+  },
   $queryRawUnsafe: jest.fn().mockResolvedValue([{ count: BigInt(0) }]),
   $executeRawUnsafe: jest.fn().mockResolvedValue(0),
 };
@@ -67,6 +73,37 @@ jest.mock('../../../utils/robotCalculations', () => ({
 import { achievementService } from '../achievementService';
 import type { AchievementEvent } from '../achievementService';
 import { ACHIEVEMENTS } from '../../../config/achievements';
+
+/**
+ * Seed the win counters the evaluator actually reads.
+ *
+ * Team-mode wins are neither columns on Robot nor robot-scoped standings. They
+ * are `entityType: 'team'` standings keyed by `TeamBattle.id`, reached through
+ * `TeamBattleMember` - see services/achievement/teamModeWins.ts. Every awarding
+ * test in this suite previously set a `robot.findUnique` fixture and commented
+ * "robot with 1 totalLeague2v2Wins", naming a field that has never existed on
+ * that model, so none of them could have passed on any data.
+ *
+ * `teamSize: 2` feeds both `league_2v2` and `tag_team`; `teamSize: 3` feeds
+ * `league_3v3`.
+ */
+function seedTeamModeWins(
+  teamEntries: Array<{ teamId: number; teamSize: number; mode: string; wins: number }>,
+  robotStandings: Array<{ entityId: number; mode: string; wins: number }> = [],
+): void {
+  const uniqueTeams = [...new Map(teamEntries.map((e) => [e.teamId, e])).values()];
+  mockPrisma.teamBattleMember.findMany.mockResolvedValue(
+    uniqueTeams.map((e) => ({ robotId: 1, teamId: e.teamId, team: { teamSize: e.teamSize } })),
+  );
+  mockPrisma.standing.findMany.mockImplementation(
+    ({ where }: { where: { entityType: string } }) =>
+      Promise.resolve(
+        where.entityType === 'team'
+          ? teamEntries.map((e) => ({ entityId: e.teamId, mode: e.mode, wins: e.wins }))
+          : robotStandings,
+      ),
+  );
+}
 
 // ─── Test Helpers ────────────────────────────────────────────────────
 
@@ -92,6 +129,8 @@ beforeEach(() => {
     _sum: { credits: 0, streamingRevenue: 0 },
   });
   mockPrisma.battleParticipant.count.mockResolvedValue(0);
+  mockPrisma.standing.findMany.mockResolvedValue([]);
+  mockPrisma.teamBattleMember.findMany.mockResolvedValue([]);
   mockPrisma.$queryRawUnsafe.mockResolvedValue([{ count: BigInt(0) }]);
   mockPrisma.$executeRawUnsafe.mockResolvedValue(0);
 });
@@ -105,6 +144,7 @@ describe('Achievement Team Battle: league_2v2_wins trigger', () => {
       .filter((a) => a.id !== 'L18')
       .map((a) => ({ achievementId: a.id }));
     mockPrisma.userAchievement.findMany.mockResolvedValueOnce(allExceptL18);
+    seedTeamModeWins([{ teamId: 50, teamSize: 2, mode: 'league_2v2', wins: 1 }]);
 
     // Robot with 1 totalLeague2v2Wins
     mockPrisma.robot.findUnique.mockResolvedValue({
@@ -135,6 +175,7 @@ describe('Achievement Team Battle: league_2v2_wins trigger', () => {
       .filter((a) => a.id !== 'L19')
       .map((a) => ({ achievementId: a.id }));
     mockPrisma.userAchievement.findMany.mockResolvedValueOnce(allExceptL19);
+    seedTeamModeWins([{ teamId: 50, teamSize: 2, mode: 'league_2v2', wins: 25 }]);
 
     mockPrisma.robot.findUnique.mockResolvedValue({
       wins: 0,
@@ -163,6 +204,7 @@ describe('Achievement Team Battle: league_2v2_wins trigger', () => {
       .filter((a) => a.id !== 'L18')
       .map((a) => ({ achievementId: a.id }));
     mockPrisma.userAchievement.findMany.mockResolvedValueOnce(allExceptL18);
+    seedTeamModeWins([{ teamId: 50, teamSize: 2, mode: 'league_2v2', wins: 0 }]);
 
     mockPrisma.robot.findUnique.mockResolvedValue({
       wins: 0,
@@ -192,6 +234,7 @@ describe('Achievement Team Battle: league_3v3_wins trigger', () => {
       .filter((a) => a.id !== 'L20')
       .map((a) => ({ achievementId: a.id }));
     mockPrisma.userAchievement.findMany.mockResolvedValueOnce(allExceptL20);
+    seedTeamModeWins([{ teamId: 60, teamSize: 3, mode: 'league_3v3', wins: 1 }]);
 
     mockPrisma.robot.findUnique.mockResolvedValue({
       wins: 0,
@@ -220,6 +263,7 @@ describe('Achievement Team Battle: league_3v3_wins trigger', () => {
       .filter((a) => a.id !== 'L21')
       .map((a) => ({ achievementId: a.id }));
     mockPrisma.userAchievement.findMany.mockResolvedValueOnce(allExceptL21);
+    seedTeamModeWins([{ teamId: 60, teamSize: 3, mode: 'league_3v3', wins: 25 }]);
 
     mockPrisma.robot.findUnique.mockResolvedValue({
       wins: 0,
@@ -248,6 +292,7 @@ describe('Achievement Team Battle: league_3v3_wins trigger', () => {
       .filter((a) => a.id !== 'L20')
       .map((a) => ({ achievementId: a.id }));
     mockPrisma.userAchievement.findMany.mockResolvedValueOnce(allExceptL20);
+    seedTeamModeWins([{ teamId: 60, teamSize: 3, mode: 'league_3v3', wins: 0 }]);
 
     mockPrisma.robot.findUnique.mockResolvedValue({
       wins: 0,
@@ -280,6 +325,13 @@ describe('Achievement Team Battle: C18 "Autobots, Roll Out!" updated logic', () 
       .filter((a) => a.id !== 'C18')
       .map((a) => ({ achievementId: a.id }));
     mockPrisma.userAchievement.findMany.mockResolvedValueOnce(allExceptC18);
+    seedTeamModeWins(
+      [
+        { teamId: 50, teamSize: 2, mode: 'league_2v2', wins: 3 },
+        { teamId: 50, teamSize: 2, mode: 'tag_team', wins: 2 },
+      ],
+      [{ entityId: 1, mode: 'koth', wins: 1 }],
+    );
 
     // Robot with wins in all categories (league via 2v2 wins)
     mockPrisma.robot.findUnique.mockResolvedValue({
@@ -293,8 +345,11 @@ describe('Achievement Team Battle: C18 "Autobots, Roll Out!" updated logic', () 
     });
 
     // findMany for checkAllModesWin — robots with wins in all categories
+    // `id` matters: checkAllModesWin() feeds these ids into the team-mode win
+    // resolver, so a fixture without one resolves no team standings at all.
     mockPrisma.robot.findMany.mockResolvedValue([
       {
+        id: 1,
         wins: 0,
       },
     ]);
@@ -323,6 +378,13 @@ describe('Achievement Team Battle: C18 "Autobots, Roll Out!" updated logic', () 
       .filter((a) => a.id !== 'C18')
       .map((a) => ({ achievementId: a.id }));
     mockPrisma.userAchievement.findMany.mockResolvedValueOnce(allExceptC18);
+    seedTeamModeWins(
+      [
+        { teamId: 50, teamSize: 2, mode: 'tag_team', wins: 2 },
+        { teamId: 60, teamSize: 3, mode: 'league_3v3', wins: 3 },
+      ],
+      [{ entityId: 1, mode: 'koth', wins: 1 }],
+    );
 
     mockPrisma.robot.findUnique.mockResolvedValue({
       wins: 0,
@@ -335,8 +397,11 @@ describe('Achievement Team Battle: C18 "Autobots, Roll Out!" updated logic', () 
     });
 
     // findMany for checkAllModesWin
+    // `id` matters: checkAllModesWin() feeds these ids into the team-mode win
+    // resolver, so a fixture without one resolves no team standings at all.
     mockPrisma.robot.findMany.mockResolvedValue([
       {
+        id: 1,
         wins: 0,
       },
     ]);
@@ -363,6 +428,11 @@ describe('Achievement Team Battle: C18 "Autobots, Roll Out!" updated logic', () 
       .filter((a) => a.id !== 'C18')
       .map((a) => ({ achievementId: a.id }));
     mockPrisma.userAchievement.findMany.mockResolvedValueOnce(allExceptC18);
+    // League satisfied by Robot.wins; tag team and KotH still have to come from standings.
+    seedTeamModeWins(
+      [{ teamId: 50, teamSize: 2, mode: 'tag_team', wins: 2 }],
+      [{ entityId: 1, mode: 'koth', wins: 1 }],
+    );
 
     mockPrisma.robot.findUnique.mockResolvedValue({
       wins: 1,
@@ -375,8 +445,11 @@ describe('Achievement Team Battle: C18 "Autobots, Roll Out!" updated logic', () 
     });
 
     // findMany for checkAllModesWin
+    // `id` matters: checkAllModesWin() feeds these ids into the team-mode win
+    // resolver, so a fixture without one resolves no team standings at all.
     mockPrisma.robot.findMany.mockResolvedValue([
       {
+        id: 1,
         wins: 1,
       },
     ]);
@@ -403,6 +476,7 @@ describe('Achievement Team Battle: C18 "Autobots, Roll Out!" updated logic', () 
       .filter((a) => a.id !== 'C18')
       .map((a) => ({ achievementId: a.id }));
     mockPrisma.userAchievement.findMany.mockResolvedValueOnce(allExceptC18);
+    seedTeamModeWins([{ teamId: 50, teamSize: 2, mode: 'tag_team', wins: 2 }], []);
 
     mockPrisma.robot.findUnique.mockResolvedValue({
       wins: 1,
@@ -415,8 +489,11 @@ describe('Achievement Team Battle: C18 "Autobots, Roll Out!" updated logic', () 
     });
 
     // findMany for checkAllModesWin — no KotH wins
+    // `id` matters: checkAllModesWin() feeds these ids into the team-mode win
+    // resolver, so a fixture without one resolves no team standings at all.
     mockPrisma.robot.findMany.mockResolvedValue([
       {
+        id: 1,
         wins: 1,
       },
     ]);
@@ -443,6 +520,7 @@ describe('Achievement Team Battle: C18 "Autobots, Roll Out!" updated logic', () 
       .filter((a) => a.id !== 'C18')
       .map((a) => ({ achievementId: a.id }));
     mockPrisma.userAchievement.findMany.mockResolvedValueOnce(allExceptC18);
+    seedTeamModeWins([], [{ entityId: 1, mode: 'koth', wins: 1 }]);
 
     mockPrisma.robot.findUnique.mockResolvedValue({
       wins: 1,
@@ -455,8 +533,11 @@ describe('Achievement Team Battle: C18 "Autobots, Roll Out!" updated logic', () 
     });
 
     // findMany for checkAllModesWin — no tag team wins
+    // `id` matters: checkAllModesWin() feeds these ids into the team-mode win
+    // resolver, so a fixture without one resolves no team standings at all.
     mockPrisma.robot.findMany.mockResolvedValue([
       {
+        id: 1,
         wins: 1,
       },
     ]);
@@ -483,6 +564,10 @@ describe('Achievement Team Battle: C18 "Autobots, Roll Out!" updated logic', () 
       .filter((a) => a.id !== 'C18')
       .map((a) => ({ achievementId: a.id }));
     mockPrisma.userAchievement.findMany.mockResolvedValueOnce(allExceptC18);
+    seedTeamModeWins(
+      [{ teamId: 50, teamSize: 2, mode: 'tag_team', wins: 2 }],
+      [{ entityId: 1, mode: 'koth', wins: 1 }],
+    );
 
     mockPrisma.robot.findUnique.mockResolvedValue({
       wins: 1,
@@ -495,8 +580,11 @@ describe('Achievement Team Battle: C18 "Autobots, Roll Out!" updated logic', () 
     });
 
     // findMany for checkAllModesWin — has all robot-level wins
+    // `id` matters: checkAllModesWin() feeds these ids into the team-mode win
+    // resolver, so a fixture without one resolves no team standings at all.
     mockPrisma.robot.findMany.mockResolvedValue([
       {
+        id: 1,
         wins: 1,
       },
     ]);
@@ -536,8 +624,11 @@ describe('Achievement Team Battle: C18 "Autobots, Roll Out!" updated logic', () 
     });
 
     // findMany for checkAllModesWin — no league wins at all
+    // `id` matters: checkAllModesWin() feeds these ids into the team-mode win
+    // resolver, so a fixture without one resolves no team standings at all.
     mockPrisma.robot.findMany.mockResolvedValue([
       {
+        id: 1,
         wins: 0,
       },
     ]);

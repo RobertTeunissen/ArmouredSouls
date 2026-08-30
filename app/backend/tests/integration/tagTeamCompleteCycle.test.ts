@@ -16,25 +16,7 @@
 import prisma from '../../src/lib/prisma';
 import { runTagTeamMatchmaking } from '../../src/services/tag-team/tagTeamMatchmakingService';
 import { executeScheduledTagTeamBattles } from '../../src/services/tag-team/tagTeamBattleOrchestrator';
-
-/** Helper: Create a 2v2 TeamBattle with members (slot 0 = active, slot 1 = reserve) */
-async function createTagTeamFixture(stableId: number, activeRobotId: number, reserveRobotId: number) {
-  return prisma.teamBattle.create({
-    data: {
-      stableId,
-      teamSize: 2,
-      teamName: `Test_Team_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-      members: {
-        create: [
-          { robotId: activeRobotId, slotIndex: 0 },
-          { robotId: reserveRobotId, slotIndex: 1 },
-        ],
-      },
-    },
-    include: { members: true },
-  });
-}
-
+import { createTagTeamFixture, clearTagTeamCompetition } from '../helpers/tagTeam';
 
 describe('Tag Team Complete Cycle Integration Test', () => {
   let testUserIds: number[] = [];
@@ -65,6 +47,8 @@ describe('Tag Team Complete Cycle Integration Test', () => {
         },
       });
     }
+
+    await clearTagTeamCompetition(testTeamIds, testRobotIds);
 
     if (testTeamIds.length > 0) {
       await prisma.scheduledMatchParticipant.deleteMany({
@@ -110,6 +94,62 @@ describe('Tag Team Complete Cycle Integration Test', () => {
   afterAll(async () => {
     await prisma.$disconnect();
   });
+
+  /**
+   * Create `stableCount` stables, each with one 2-robot tag team that is entered in the
+   * competition and subscribed, and register every id for teardown.
+   *
+   * Extracted so the battle-log test can build its own battle. It previously searched for a
+   * battle left behind by the first test — but `afterEach` deletes robots, teams and
+   * battles, so `testRobotIds` was always empty by then and the query matched nothing. The
+   * test hit its `if (!battle) return` early exit on every run and asserted nothing at all.
+   */
+  async function createTagTeamCohort(stableCount: number) {
+    const users: any[] = [];
+    const robots: any[] = [];
+    const teams: any[] = [];
+
+    for (let i = 0; i < stableCount; i++) {
+      const user = await prisma.user.create({
+        data: {
+          username: `tagteam_cohort_${i}_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+          passwordHash: 'test_hash',
+          currency: 100000,
+          prestige: 0,
+        },
+      });
+      users.push(user);
+      testUserIds.push(user.id);
+
+      for (let j = 0; j < 2; j++) {
+        const weaponInv = await prisma.weaponInventory.create({
+          data: { userId: user.id, weaponId: weapon.id, pricePaid: 0 },
+        });
+        const robot = await prisma.robot.create({
+          data: {
+            userId: user.id,
+            name: `Cohort_Robot_${i}_${j}_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+            elo: 1000 + i * 100,
+            currentHP: 100,
+            maxHP: 100,
+            currentShield: 20,
+            maxShield: 20,
+            yieldThreshold: 20,
+            loadoutType: 'single',
+            mainWeaponId: weaponInv.id,
+          },
+        });
+        robots.push(robot);
+        testRobotIds.push(robot.id);
+      }
+
+      const team = await createTagTeamFixture(user.id, robots[i * 2].id, robots[i * 2 + 1].id);
+      teams.push(team);
+      testTeamIds.push(team.id);
+    }
+
+    return { users, robots, teams };
+  }
 
   it('should complete full tag team cycle: create → matchmake → battle → verify', async () => {
     // Step 1: Create teams
@@ -210,10 +250,12 @@ describe('Tag Team Complete Cycle Integration Test', () => {
     console.log('[Test] Step 4: Verifying battle results...');
 
     // Verify battles were created
+    // `robot1Id` was dropped from `battles` by Spec #43 — the participants are the
+    // identity of the two sides now, so the question has to be asked through them.
     const battles = await prisma.battle.findMany({
       where: {
         battleType: 'tag_team',
-        robot1Id: { in: testRobots.map(r => r.id) },
+        participants: { some: { robotId: { in: testRobots.map(r => r.id) } } },
       },
     });
     expect(battles.length).toBeGreaterThan(0);
@@ -303,23 +345,29 @@ describe('Tag Team Complete Cycle Integration Test', () => {
   });
 
   it('should verify battle log contains tag events', async () => {
-    // Find a completed battle
+    // Build a battle for this test rather than looking for one another test left behind.
+    // `robot1Id` no longer exists on `battles` (Spec #43), and even with the column the
+    // query could not have matched: `afterEach` empties `testRobotIds`.
+    await createTagTeamCohort(2);
+    const matchesCreated = await runTagTeamMatchmaking();
+    expect(matchesCreated).toBeGreaterThan(0);
+    const executed = await executeScheduledTagTeamBattles();
+    expect(executed.totalBattles).toBeGreaterThan(0);
+
     const battle = await prisma.battle.findFirst({
       where: {
         battleType: 'tag_team',
-        robot1Id: { in: testRobotIds },
+        participants: { some: { robotId: { in: testRobotIds } } },
       },
+      orderBy: { id: 'desc' },
     });
 
-    if (!battle) {
-      console.log('[Test] No battles found, skipping battle log verification');
-      return;
-    }
-
-    expect(battle.battleLog).toBeDefined();
+    // The battle must exist — the early-return that used to hide its absence is gone.
+    expect(battle).not.toBeNull();
+    expect(battle!.battleLog).toBeDefined();
     
     // Verify battle log structure
-    const battleLog = battle.battleLog as any;
+    const battleLog = battle!.battleLog as any;
     expect(battleLog.tagTeamBattle).toBe(true);
     expect(battleLog.events).toBeDefined();
     expect(Array.isArray(battleLog.events)).toBe(true);

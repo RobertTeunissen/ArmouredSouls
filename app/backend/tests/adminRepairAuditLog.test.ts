@@ -6,6 +6,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import adminRoutes from '../src/routes/admin';
 import authRoutes from '../src/routes/auth';
+import { errorHandler } from '../src/middleware/errorHandler';
 
 dotenv.config();
 
@@ -14,6 +15,11 @@ app.use(cors());
 app.use(express.json());
 app.use('/api/admin', adminRoutes);
 app.use('/api/auth', authRoutes);
+
+// Spec #51: without the errorHandler mounted, a thrown AppError falls through
+// to Express's default handler, which sends the right status with an EMPTY
+// body. That is why these suites saw 400 but no `body.error` or `body.code`.
+app.use(errorHandler);
 
 describe('GET /api/admin/audit-log/repairs', () => {
   let adminToken: string;
@@ -213,8 +219,11 @@ describe('GET /api/admin/audit-log/repairs', () => {
     expect(event).toHaveProperty('robotId');
     expect(event).toHaveProperty('robotName');
     expect(event).toHaveProperty('repairType');
-    expect(event).toHaveProperty('cost');
-    expect(event).toHaveProperty('preDiscountCost');
+    // Spec #48 renamed these to say what they mean: `cost` → `creditsCharged`,
+    // `preDiscountCost` → `creditsBeforeManualDiscount`. RepairLogPage.tsx moved in
+    // the same change; this suite did not, and nothing gated it.
+    expect(event).toHaveProperty('creditsCharged');
+    expect(event).toHaveProperty('creditsBeforeManualDiscount');
     expect(event).toHaveProperty('manualRepairDiscount');
     expect(event).toHaveProperty('eventTimestamp');
   });
@@ -247,7 +256,7 @@ describe('GET /api/admin/audit-log/repairs', () => {
       .set('Authorization', `Bearer ${adminToken}`);
 
     expect(response.status).toBe(400);
-    expect(response.body.error).toContain('Invalid repairType');
+    expect(response.body.error).toContain("repairType must be 'manual' or 'automatic'");
   });
 
   it('should default page to 1 and limit to 25', async () => {
@@ -320,14 +329,14 @@ describe('GET /api/admin/audit-log/repairs', () => {
     }
   });
 
-  it('should return null for preDiscountCost and manualRepairDiscount on automatic repairs', async () => {
+  it('should return null for creditsBeforeManualDiscount and manualRepairDiscount on automatic repairs', async () => {
     const response = await request(app)
       .get('/api/admin/audit-log/repairs?repairType=automatic')
       .set('Authorization', `Bearer ${adminToken}`);
 
     expect(response.status).toBe(200);
     for (const event of response.body.events) {
-      expect(event.preDiscountCost).toBeNull();
+      expect(event.creditsBeforeManualDiscount).toBeNull();
       expect(event.manualRepairDiscount).toBeNull();
     }
   });

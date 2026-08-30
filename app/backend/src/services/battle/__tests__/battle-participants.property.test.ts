@@ -11,14 +11,22 @@
  * **Validates: Requirement 8.3**
  */
 
+// `createTagTeamBattleRecord` writes four tables, not two: it creates the battle,
+// the participants, then updates `battles.winning_side` and writes the Spec #39
+// `battle_summaries` row. Mocking only the first two left `battle.update` and
+// `battleSummary.create` undefined, which threw before any assertion ran.
 jest.mock('../../../lib/prisma', () => ({
   __esModule: true,
   default: {
     battle: {
       create: jest.fn(),
+      update: jest.fn().mockResolvedValue({}),
     },
     battleParticipant: {
       createMany: jest.fn(),
+    },
+    battleSummary: {
+      create: jest.fn().mockResolvedValue({}),
     },
   },
 }));

@@ -7,11 +7,58 @@
 
 import prisma from '../src/lib/prisma';
 import fc from 'fast-check';
-import { EventLogger, EventType, clearSequenceCache } from '../src/services/common/eventLogger';
+import { EventLogger, EventType } from '../src/services/common/eventLogger';
 import { CycleSnapshotService } from '../src/services/cycle/cycleSnapshotService';
 
 const eventLogger = new EventLogger();
 const cycleSnapshotService = new CycleSnapshotService();
+
+/**
+ * Emit the `battle_complete` audit events a cycle snapshot is actually built from.
+ *
+ * `CycleSnapshotService` aggregates ENTIRELY from `audit_logs`: `aggregateRobotMetrics` and
+ * `aggregateStableMetrics` both read `battle_complete` events for the cycle and never touch
+ * `battles` or `battle_participants`. These properties created battle rows and then asserted
+ * the snapshot reflected them, so `snapshot.robotMetrics.find(...)` returned `undefined` and
+ * the failure read "expect(received).toBeDefined() / Received: undefined".
+ *
+ * `battleId` is passed through so the service can pair the two sides and derive
+ * `damageReceived`, which is what the production path does via `logBattleAuditEvent`.
+ */
+async function logBattleCompleteEvents(
+  cycleNumber: number,
+  battleId: number,
+  userId: number,
+  sides: Array<{
+    robotId: number;
+    result: 'win' | 'loss' | 'draw';
+    damageDealt: number;
+    credits: number;
+    eloChange: number;
+    fame: number;
+    prestige: number;
+    streamingRevenue?: number;
+    destroyed?: boolean;
+  }>,
+): Promise<void> {
+  for (const side of sides) {
+    await eventLogger.logEvent(
+      cycleNumber,
+      EventType.BATTLE_COMPLETE,
+      {
+        result: side.result,
+        damageDealt: side.damageDealt,
+        credits: side.credits,
+        eloChange: side.eloChange,
+        fame: side.fame,
+        prestige: side.prestige,
+        streamingRevenue: side.streamingRevenue ?? 0,
+        destroyed: side.destroyed ?? false,
+      },
+      { userId, robotId: side.robotId, battleId },
+    );
+  }
+}
 
 // Test data setup helpers
 const testUsers: Map<number, any> = new Map();
@@ -109,10 +156,6 @@ describe('CycleSnapshotService Property-Based Tests', () => {
     testRobots.clear();
     robotIdMapping.clear();
     
-    // Clear sequence cache
-    for (let i = 1; i <= 100; i++) {
-      clearSequenceCache(i);
-    }
   });
 
   afterAll(async () => {
@@ -146,7 +189,6 @@ describe('CycleSnapshotService Property-Based Tests', () => {
             await prisma.cycleSnapshot.deleteMany({ where: { cycleNumber } });
             await prisma.auditLog.deleteMany({ where: { cycleNumber } });
             await prisma.battle.deleteMany({});
-            clearSequenceCache(cycleNumber);
 
             // Log cycle start and end events
             const cycleStartTime = new Date();
@@ -255,7 +297,6 @@ describe('CycleSnapshotService Property-Based Tests', () => {
             await prisma.cycleSnapshot.deleteMany({ where: { cycleNumber } });
             await prisma.auditLog.deleteMany({ where: { cycleNumber } });
             await prisma.battle.deleteMany({});
-            clearSequenceCache(cycleNumber);
 
             // Log cycle start
             const cycleStartTime = new Date();
@@ -277,8 +318,8 @@ describe('CycleSnapshotService Property-Based Tests', () => {
               
               const createdBattle = await prisma.battle.create({
                 data: {
-                  robot1: { connect: { id: robot1.id } },
-                  robot2: { connect: { id: robot2.id } },
+                  // No `robot1` / `robot2` relations: Spec #43 dropped both columns. The
+                  // `participants` rows below ARE the identity of the two sides.
                   winnerId,
                   winnerReward: battle.winnerReward,
                   loserReward: battle.loserReward,
@@ -288,14 +329,43 @@ describe('CycleSnapshotService Property-Based Tests', () => {
                   leagueType: 'bronze',
                   participants: {
                     create: [
-                      { robotId: robot1.id, team: 1, credits: battle.winnerReward || 0, eloBefore: 1200, eloAfter: 1200 + battle.robot1ELOChange, finalHP: 50 },
-                      { robotId: robot2.id, team: 2, credits: battle.loserReward || 0, eloBefore: 1200, eloAfter: 1200 + battle.robot2ELOChange, finalHP: 0 },
+                      // `damageDealt`, `fameAwarded` and `prestigeAwarded` are written
+                      // here as well as into the audit events below. The expectation block
+                      // reads them off these participant rows, and they used to be omitted
+                      // — so they defaulted to 0 and the expected metrics were 0 for every
+                      // generated input, disagreeing with the events the snapshot is built
+                      // from. The two records describe one battle and must agree.
+                      { robotId: robot1.id, team: 1, credits: battle.winnerReward || 0, eloBefore: 1200, eloAfter: 1200 + battle.robot1ELOChange, finalHP: 50, damageDealt: battle.robot1DamageDealt, fameAwarded: battle.robot1FameAwarded, prestigeAwarded: battle.robot1PrestigeAwarded },
+                      { robotId: robot2.id, team: 2, credits: battle.loserReward || 0, eloBefore: 1200, eloAfter: 1200 + battle.robot2ELOChange, finalHP: 0, damageDealt: battle.robot2DamageDealt, fameAwarded: battle.robot2FameAwarded, prestigeAwarded: battle.robot2PrestigeAwarded },
                     ],
                   },
                 },
                 include: { participants: true },
               });
               createdBattles.push(createdBattle);
+
+              const r1Result = winnerId === robot1.id ? 'win' : winnerId === null ? 'draw' : 'loss';
+              const r2Result = winnerId === robot2.id ? 'win' : winnerId === null ? 'draw' : 'loss';
+              await logBattleCompleteEvents(cycleNumber, createdBattle.id, user.id, [
+                {
+                  robotId: robot1.id,
+                  result: r1Result,
+                  damageDealt: battle.robot1DamageDealt,
+                  credits: r1Result === 'win' ? (battle.winnerReward || 0) : (battle.loserReward || 0),
+                  eloChange: battle.robot1ELOChange,
+                  fame: battle.robot1FameAwarded,
+                  prestige: battle.robot1PrestigeAwarded,
+                },
+                {
+                  robotId: robot2.id,
+                  result: r2Result,
+                  damageDealt: battle.robot2DamageDealt,
+                  credits: r2Result === 'win' ? (battle.winnerReward || 0) : (battle.loserReward || 0),
+                  eloChange: battle.robot2ELOChange,
+                  fame: battle.robot2FameAwarded,
+                  prestige: battle.robot2PrestigeAwarded,
+                },
+              ]);
             }
 
             // Log cycle complete
@@ -436,7 +506,6 @@ describe('CycleSnapshotService Property-Based Tests', () => {
             await prisma.cycleSnapshot.deleteMany({ where: { cycleNumber } });
             await prisma.auditLog.deleteMany({ where: { cycleNumber } });
             await prisma.battle.deleteMany({});
-            clearSequenceCache(cycleNumber);
 
             // Log cycle start
             const cycleStartTime = new Date();
@@ -502,7 +571,6 @@ describe('CycleSnapshotService Property-Based Tests', () => {
             await prisma.cycleSnapshot.deleteMany({ where: { cycleNumber } });
             await prisma.auditLog.deleteMany({ where: { cycleNumber } });
             await prisma.battle.deleteMany({});
-            clearSequenceCache(cycleNumber);
 
             // Log cycle start
             const cycleStartTime = new Date();
@@ -518,10 +586,8 @@ describe('CycleSnapshotService Property-Based Tests', () => {
               const robot1 = await ensureTestRobot(battle.robot1Id, battle.userId);
               const robot2 = await ensureTestRobot(battle.robot2Id, battle.userId);
               
-              await prisma.battle.create({
+              const createdBattle = await prisma.battle.create({
                 data: {
-                  robot1: { connect: { id: robot1.id } },
-                  robot2: { connect: { id: robot2.id } },
                   winnerId: robot1.id, // Robot 1 always wins for simplicity
                   winnerReward: battle.winnerReward,
                   loserReward: battle.loserReward,
@@ -531,12 +597,33 @@ describe('CycleSnapshotService Property-Based Tests', () => {
                   leagueType: 'bronze',
                   participants: {
                     create: [
-                      { robotId: robot1.id, team: 1, credits: battle.winnerReward || 0, eloBefore: 1500, eloAfter: 1520, finalHP: 50 },
-                      { robotId: robot2.id, team: 2, credits: battle.loserReward || 0, eloBefore: 1500, eloAfter: 1480, finalHP: 0 },
+                      { robotId: robot1.id, team: 1, credits: battle.winnerReward || 0, eloBefore: 1500, eloAfter: 1520, finalHP: 50, prestigeAwarded: battle.robot1PrestigeAwarded },
+                      { robotId: robot2.id, team: 2, credits: battle.loserReward || 0, eloBefore: 1500, eloAfter: 1480, finalHP: 0, prestigeAwarded: battle.robot2PrestigeAwarded },
                     ],
                   },
                 },
               });
+
+              await logBattleCompleteEvents(cycleNumber, createdBattle.id, user.id, [
+                {
+                  robotId: robot1.id,
+                  result: 'win',
+                  damageDealt: 0,
+                  credits: battle.winnerReward,
+                  eloChange: 20,
+                  fame: 0,
+                  prestige: battle.robot1PrestigeAwarded,
+                },
+                {
+                  robotId: robot2.id,
+                  result: 'loss',
+                  damageDealt: 0,
+                  credits: battle.loserReward,
+                  eloChange: -20,
+                  fame: 0,
+                  prestige: battle.robot2PrestigeAwarded,
+                },
+              ]);
             }
 
             // Log cycle complete
@@ -555,44 +642,35 @@ describe('CycleSnapshotService Property-Based Tests', () => {
               cycleRepairCreditsPaid: number;
             }>();
 
-            // Get actual battles from DB with participants
-            const actualUserIds = new Set<number>();
-            const createdBattlesFromDB = await prisma.battle.findMany({
-              where: {
-                createdAt: {
-                  gte: await cycleSnapshotService['getCycleStartTime'](cycleNumber),
-                  lte: await cycleSnapshotService['getCycleEndTime'](cycleNumber),
-                },
-              },
-              include: {
-                participants: { include: { robot: { select: { userId: true } } } },
-              },
-            });
-
-            for (const battle of createdBattlesFromDB) {
-              // Use first participant's robot userId as the stable owner
-              const firstParticipant = battle.participants[0];
-              const battleUserId = firstParticipant?.robot?.userId;
-              if (!battleUserId) continue;
-              actualUserIds.add(battleUserId);
-              
-              if (!expectedStableMetrics.has(battleUserId)) {
-                expectedStableMetrics.set(battleUserId, {
+            // Expectations are built from the generated battles, per ROBOT.
+            //
+            // `aggregateStableMetrics` increments `battlesParticipated` once per
+            // `battle_complete` event, and there is one event per robot — its own comment
+            // says "Each battle_complete event represents ONE robot's battle". Both robots
+            // in this fixture belong to the same stable, so a battle contributes 2.
+            //
+            // The old expectation counted once per BATTLE while summing credits across both
+            // robots, so it was per-battle and per-robot at the same time and could not match
+            // either reading. It also derived everything from `battles` rows, which this
+            // service never looks at — hence `stableMetric` coming back `undefined`.
+            for (const battle of battles) {
+              const userId = (await ensureTestUser(battle.userId)).id;
+              if (!expectedStableMetrics.has(userId)) {
+                expectedStableMetrics.set(userId, {
                   battlesParticipated: 0,
                   totalCreditsEarned: 0,
                   totalPrestigeEarned: 0,
                   cycleRepairCreditsPaid: 0,
                 });
               }
-              const metrics = expectedStableMetrics.get(battleUserId)!;
-              metrics.battlesParticipated++;
-              metrics.totalCreditsEarned += (battle.winnerReward || 0) + (battle.loserReward || 0);
-              const p1 = battle.participants.find(p => p.team === 1);
-              const p2 = battle.participants.find(p => p.team === 2);
-              metrics.totalPrestigeEarned += (p1?.prestigeAwarded || 0) + (p2?.prestigeAwarded || 0);
-              metrics.cycleRepairCreditsPaid += 0; // Repair costs tracked elsewhere
+              const metrics = expectedStableMetrics.get(userId)!;
+              // Two robots, two events.
+              metrics.battlesParticipated += 2;
+              metrics.totalCreditsEarned += battle.winnerReward + battle.loserReward;
+              metrics.totalPrestigeEarned += battle.robot1PrestigeAwarded + battle.robot2PrestigeAwarded;
+              // No `robot_repair` events are emitted by this fixture, so nothing is charged.
+              metrics.cycleRepairCreditsPaid += 0;
             }
-
             // Property: Snapshot stable metrics should match calculated values
             for (const [userId, expected] of expectedStableMetrics) {
               const stableMetric = snapshot.stableMetrics.find(m => m.userId === userId);
@@ -626,7 +704,6 @@ describe('CycleSnapshotService Property-Based Tests', () => {
             await prisma.cycleSnapshot.deleteMany({ where: { cycleNumber } });
             await prisma.auditLog.deleteMany({ where: { cycleNumber } });
             await prisma.battle.deleteMany({});
-            clearSequenceCache(cycleNumber);
 
             // Log cycle start
             const cycleStartTime = new Date();
@@ -641,10 +718,8 @@ describe('CycleSnapshotService Property-Based Tests', () => {
             const robot2 = await ensureTestRobot(2, data.userId);
 
             // Create a battle to generate credits and repair costs
-            await prisma.battle.create({
+            const netProfitBattle = await prisma.battle.create({
               data: {
-                robot1: { connect: { id: robot1.id } },
-                robot2: { connect: { id: robot2.id } },
                 winnerId: robot1.id,
                 winnerReward: data.battleCredits,
                 loserReward: 0,
@@ -661,6 +736,44 @@ describe('CycleSnapshotService Property-Based Tests', () => {
               },
             });
 
+
+            // The snapshot is an audit-log rollup: `totalCreditsEarned` comes from
+            // `battle_complete` events and `cycleRepairCreditsPaid` from `robot_repair`
+            // events (the Repair_Spend_Source). This fixture created a battle row and logged
+            // neither, so `netProfit` was missing both the battle credits and the repair
+            // charge — it read 0 where the expectation had a real figure.
+            await logBattleCompleteEvents(cycleNumber, netProfitBattle.id, user.id, [
+              {
+                robotId: robot1.id,
+                result: 'win',
+                damageDealt: 0,
+                credits: data.battleCredits,
+                eloChange: 20,
+                fame: 0,
+                prestige: 0,
+              },
+              {
+                robotId: robot2.id,
+                result: 'loss',
+                damageDealt: 0,
+                credits: 0,
+                eloChange: -20,
+                fame: 0,
+                prestige: 0,
+              },
+            ]);
+
+            // One repair charge for the whole generated amount, on the automatic path (no
+            // manual discount, so no pre-discount figure is recorded).
+            await eventLogger.logRobotRepair(
+              user.id,
+              robot1.id,
+              data.repairCosts,
+              10,
+              0,
+              cycleNumber,
+              'automatic',
+            );
             // Small delay before logging passive income/costs
             await new Promise(resolve => setTimeout(resolve, 10));
 
@@ -734,7 +847,6 @@ describe('CycleSnapshotService Property-Based Tests', () => {
             await prisma.cycleSnapshot.deleteMany({ where: { cycleNumber } });
             await prisma.auditLog.deleteMany({ where: { cycleNumber } });
             await prisma.battle.deleteMany({});
-            clearSequenceCache(cycleNumber);
 
             // Log cycle start
             await eventLogger.logCycleStart(cycleNumber, 'manual');

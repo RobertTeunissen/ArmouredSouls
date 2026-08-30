@@ -7,6 +7,7 @@ import dotenv from 'dotenv';
 import { Prisma } from '../generated/prisma';
 import authRoutes from '../src/routes/auth';
 import * as userService from '../src/services/auth/userService';
+import { errorHandler } from '../src/middleware/errorHandler';
 
 dotenv.config();
 
@@ -15,6 +16,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use('/api/auth', authRoutes);
+
+// Spec #51: without the errorHandler mounted, a thrown AppError falls through
+// to Express's default handler, which sends the right status with an EMPTY
+// body. That is why these suites saw 400 but no `body.error` or `body.code`.
+app.use(errorHandler);
 
 // Lower NUM_RUNS since we're testing error paths with mocks
 const NUM_RUNS = 10;

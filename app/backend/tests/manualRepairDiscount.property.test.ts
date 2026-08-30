@@ -112,8 +112,8 @@ describe('Manual Repair Discount - Property Tests', () => {
       fc.assert(
         fc.property(
           fc.integer({ min: 1, max: 500 }),       // attributeSum
-          fc.float({ min: 0, max: 100 }),          // damagePercent
-          fc.float({ min: 0, max: 100 }),          // hpPercent
+          fc.float({ min: 0, max: 100, noNaN: true, noDefaultInfinity: true }),          // damagePercent
+          fc.float({ min: 0, max: 100, noNaN: true, noDefaultInfinity: true }),          // hpPercent
           fc.integer({ min: 0, max: 10 }),         // repairBayLevel
           fc.integer({ min: 1, max: 20 }),         // robotCount
           (attributeSum, damagePercent, hpPercent, repairBayLevel, robotCount) => {

@@ -18,8 +18,17 @@ app.use(express.json());
 app.use('/api/weapon-inventory', weaponInventoryRoutes);
 app.use(errorHandler);
 
+/**
+ * One listening server for the whole file.
+ *
+ * 46 `request(server)` call sites each stood up and tore down their own ephemeral server. That
+ * churn intermittently returned HTTP 426 — a status nothing in this codebase sends — which
+ * showed up here as "Expected 401, Received 426". Binding once removes it.
+ */
+let server: import('http').Server;
+
 describe('Weapon Inventory Routes', () => {
-  let testUserIds: number[] = [];
+  const testUserIds: number[] = [];
   let testUser: any;
   let authToken: string;
   let testWeapon: any;
@@ -27,6 +36,7 @@ describe('Weapon Inventory Routes', () => {
   beforeAll(async () => {
     await prisma.$connect();
     
+    server = app.listen(0);
     // Create test user
     testUser = await createTestUser();
     testUserIds.push(testUser.id);
@@ -44,6 +54,7 @@ describe('Weapon Inventory Routes', () => {
   });
 
   afterAll(async () => {
+    await new Promise<void>((resolve) => server.close(() => resolve()));
     // Cleanup
     if (testUserIds.length > 0) {
       for (const userId of testUserIds) {
@@ -55,7 +66,7 @@ describe('Weapon Inventory Routes', () => {
 
   describe('GET /api/weapon-inventory', () => {
     it('should get user weapon inventory with auth', async () => {
-      const response = await request(app)
+      const response = await request(server)
         .get('/api/weapon-inventory')
         .set('Authorization', `Bearer ${authToken}`);
 
@@ -73,7 +84,7 @@ describe('Weapon Inventory Routes', () => {
     });
 
     it('should return 401 without authentication', async () => {
-      const response = await request(app)
+      const response = await request(server)
         .get('/api/weapon-inventory');
 
       expect(response.status).toBe(401);
@@ -82,7 +93,7 @@ describe('Weapon Inventory Routes', () => {
 
   describe('POST /api/weapon-inventory/purchase', () => {
     it('should return 400 without weapon ID', async () => {
-      const response = await request(app)
+      const response = await request(server)
         .post('/api/weapon-inventory/purchase')
         .set('Authorization', `Bearer ${authToken}`)
         .send({});
@@ -93,7 +104,7 @@ describe('Weapon Inventory Routes', () => {
     });
 
     it('should return 400 with invalid weapon ID', async () => {
-      const response = await request(app)
+      const response = await request(server)
         .post('/api/weapon-inventory/purchase')
         .set('Authorization', `Bearer ${authToken}`)
         .send({ weaponId: 'invalid' });
@@ -103,7 +114,7 @@ describe('Weapon Inventory Routes', () => {
     });
 
     it('should return 404 with non-existent weapon ID', async () => {
-      const response = await request(app)
+      const response = await request(server)
         .post('/api/weapon-inventory/purchase')
         .set('Authorization', `Bearer ${authToken}`)
         .send({ weaponId: 99999 });
@@ -112,7 +123,7 @@ describe('Weapon Inventory Routes', () => {
     });
 
     it('should return 401 without authentication', async () => {
-      const response = await request(app)
+      const response = await request(server)
         .post('/api/weapon-inventory/purchase')
         .send({ weaponId: testWeapon?.id || 1 });
 
@@ -122,7 +133,7 @@ describe('Weapon Inventory Routes', () => {
 
   describe('GET /api/weapon-inventory/storage-status', () => {
     it('should get storage status with auth', async () => {
-      const response = await request(app)
+      const response = await request(server)
         .get('/api/weapon-inventory/storage-status')
         .set('Authorization', `Bearer ${authToken}`);
 
@@ -136,7 +147,7 @@ describe('Weapon Inventory Routes', () => {
     });
 
     it('should return 401 without authentication', async () => {
-      const response = await request(app)
+      const response = await request(server)
         .get('/api/weapon-inventory/storage-status');
 
       expect(response.status).toBe(401);
@@ -144,17 +155,21 @@ describe('Weapon Inventory Routes', () => {
   });
 
   describe('GET /api/weapon-inventory/:id/available', () => {
-    it('should return 404 for non-existent inventory item', async () => {
-      const response = await request(app)
+    it('should return 403 for an inventory item that does not exist', async () => {
+      const response = await request(server)
         .get('/api/weapon-inventory/99999/available')
         .set('Authorization', `Bearer ${authToken}`);
 
-      expect(response.status).toBe(404);
+      // 403, not 404. `verifyWeaponOwnership` answers a generic "Access denied" for an
+      // absent item as well as one owned by someone else, so the response cannot be
+      // used to probe which inventory ids exist. See the ownership rule in
+      // .kiro/steering/coding-standards.md.
+      expect(response.status).toBe(403);
       expect(response.body).toHaveProperty('error');
     });
 
     it('should return 401 without authentication', async () => {
-      const response = await request(app)
+      const response = await request(server)
         .get('/api/weapon-inventory/1/available');
 
       expect(response.status).toBe(401);
@@ -211,7 +226,7 @@ describe('Weapon Inventory Routes', () => {
     }
 
     it('returns 401 without authentication', async () => {
-      const response = await request(app).delete('/api/weapon-inventory/1');
+      const response = await request(server).delete('/api/weapon-inventory/1');
       expect(response.status).toBe(401);
     });
 
@@ -221,7 +236,7 @@ describe('Weapon Inventory Routes', () => {
       const weapon = await prisma.weapon.findFirst();
       const inv = await giveWeapon(ownerCtx.user.id, weapon!.id, 100_000);
 
-      const response = await request(app)
+      const response = await request(server)
         .delete(`/api/weapon-inventory/${inv.id}`)
         .set('Authorization', `Bearer ${otherCtx.token}`);
 
@@ -231,7 +246,7 @@ describe('Weapon Inventory Routes', () => {
 
     it('returns 403 (generic ownership failure) when inventory ID does not exist — prevents enumeration', async () => {
       const ctx = await createResaleUser();
-      const response = await request(app)
+      const response = await request(server)
         .delete('/api/weapon-inventory/9999999')
         .set('Authorization', `Bearer ${ctx.token}`);
       // verifyWeaponOwnership returns a generic 403 for both "not found" and "owned by another user"
@@ -245,7 +260,7 @@ describe('Weapon Inventory Routes', () => {
       const inv = await giveWeapon(ctx.user.id, weapon!.id, 100_000);
       await createRobotWithMainWeapon(ctx.user.id, inv.id);
 
-      const response = await request(app)
+      const response = await request(server)
         .delete(`/api/weapon-inventory/${inv.id}`)
         .set('Authorization', `Bearer ${ctx.token}`);
 
@@ -272,7 +287,7 @@ describe('Weapon Inventory Routes', () => {
         },
       });
 
-      const response = await request(app)
+      const response = await request(server)
         .delete(`/api/weapon-inventory/${inv.id}`)
         .set('Authorization', `Bearer ${ctx.token}`);
 
@@ -285,7 +300,7 @@ describe('Weapon Inventory Routes', () => {
       const weapon = await prisma.weapon.findFirst();
       const inv = await giveWeapon(ctx.user.id, weapon!.id, 100_000);
 
-      const response = await request(app)
+      const response = await request(server)
         .delete(`/api/weapon-inventory/${inv.id}`)
         .set('Authorization', `Bearer ${ctx.token}`);
 
@@ -302,7 +317,7 @@ describe('Weapon Inventory Routes', () => {
       const weapon = await prisma.weapon.findFirst();
       const inv = await giveWeapon(ctx.user.id, weapon!.id, 100_000);
 
-      const response = await request(app)
+      const response = await request(server)
         .delete(`/api/weapon-inventory/${inv.id}`)
         .set('Authorization', `Bearer ${ctx.token}`);
 
@@ -316,7 +331,7 @@ describe('Weapon Inventory Routes', () => {
       const weapon = await prisma.weapon.findFirst();
       const inv = await giveWeapon(ctx.user.id, weapon!.id, 100_000);
 
-      const response = await request(app)
+      const response = await request(server)
         .delete(`/api/weapon-inventory/${inv.id}`)
         .set('Authorization', `Bearer ${ctx.token}`);
 
@@ -329,7 +344,7 @@ describe('Weapon Inventory Routes', () => {
       const weapon = await prisma.weapon.findFirst();
       const inv = await giveWeapon(ctx.user.id, weapon!.id, 425_000);
 
-      const response = await request(app)
+      const response = await request(server)
         .delete(`/api/weapon-inventory/${inv.id}`)
         .set('Authorization', `Bearer ${ctx.token}`);
 
@@ -343,7 +358,7 @@ describe('Weapon Inventory Routes', () => {
       const weapon = await prisma.weapon.findFirst();
       const inv = await giveWeapon(ctx.user.id, weapon!.id, 0);
 
-      const response = await request(app)
+      const response = await request(server)
         .delete(`/api/weapon-inventory/${inv.id}`)
         .set('Authorization', `Bearer ${ctx.token}`);
 
@@ -363,7 +378,7 @@ describe('Weapon Inventory Routes', () => {
         where: { userId: ctx.user.id, eventType: 'weapon_sale' },
       });
 
-      const response = await request(app)
+      const response = await request(server)
         .delete(`/api/weapon-inventory/${inv.id}`)
         .set('Authorization', `Bearer ${ctx.token}`);
       expect(response.status).toBe(200);
@@ -385,7 +400,7 @@ describe('Weapon Inventory Routes', () => {
         where: { userId: ctx.user.id, eventType: 'weapon_sale' },
       });
 
-      const response = await request(app)
+      const response = await request(server)
         .delete(`/api/weapon-inventory/${inv.id}`)
         .set('Authorization', `Bearer ${ctx.token}`);
 
@@ -409,8 +424,8 @@ describe('Weapon Inventory Routes', () => {
 
       // Fire two parallel DELETE requests
       const [r1, r2] = await Promise.all([
-        request(app).delete(`/api/weapon-inventory/${inv.id}`).set('Authorization', `Bearer ${ctx.token}`),
-        request(app).delete(`/api/weapon-inventory/${inv.id}`).set('Authorization', `Bearer ${ctx.token}`),
+        request(server).delete(`/api/weapon-inventory/${inv.id}`).set('Authorization', `Bearer ${ctx.token}`),
+        request(server).delete(`/api/weapon-inventory/${inv.id}`).set('Authorization', `Bearer ${ctx.token}`),
       ]);
 
       const successCount = [r1, r2].filter((r) => r.status === 200).length;
@@ -419,9 +434,19 @@ describe('Weapon Inventory Routes', () => {
       expect(successCount).toBe(1);
       expect(notFoundCount).toBe(1);
 
-      // Currency increased by exactly one sale price, not two
+      // Currency increased by exactly one sale price, not two.
+      //
+      // A first sale also unlocks E18 "Pawn Star", whose reward credits land on the
+      // same balance — which is why a flat 100_000 here read as 225_000. The reward is
+      // taken from the response rather than hard-coded so the assertion stays exact
+      // without re-encoding the achievement's payout.
+      const success = [r1, r2].find((r) => r.status === 200)!;
+      const achievementCredits = (
+        (success.body.achievementUnlocks ?? []) as Array<{ rewardCredits: number }>
+      ).reduce((sum, a) => sum + a.rewardCredits, 0);
+
       const after = await prisma.user.findUnique({ where: { id: ctx.user.id } });
-      expect(after!.currency).toBe(100_000);
+      expect(after!.currency).toBe(100_000 + achievementCredits);
 
       // Row deleted
       const deleted = await prisma.weaponInventory.findUnique({ where: { id: inv.id } });
@@ -435,7 +460,7 @@ describe('Weapon Inventory Routes', () => {
       const weapon = await prisma.weapon.findFirst();
       const inv = await giveWeapon(ctx.user.id, weapon!.id, 100_000);
 
-      const response = await request(app)
+      const response = await request(server)
         .delete(`/api/weapon-inventory/${inv.id}`)
         .set('Authorization', `Bearer ${ctx.token}`);
 
@@ -466,7 +491,7 @@ describe('Weapon Inventory Routes', () => {
       }
 
       const inv = await giveWeapon(ctx.user.id, weapon!.id, 100_000);
-      const response = await request(app)
+      const response = await request(server)
         .delete(`/api/weapon-inventory/${inv.id}`)
         .set('Authorization', `Bearer ${ctx.token}`);
 
@@ -480,7 +505,7 @@ describe('Weapon Inventory Routes', () => {
       const weapon = await prisma.weapon.findFirst();
       const inv = await giveWeapon(ctx.user.id, weapon!.id, 100_000);
 
-      const response = await request(app)
+      const response = await request(server)
         .delete(`/api/weapon-inventory/${inv.id}`)
         .set('Authorization', `Bearer ${ctx.token}`);
 
@@ -509,7 +534,7 @@ describe('Weapon Inventory Routes', () => {
 
       // Sell one more weapon worth ≥ ₡1,000 to push total over the ₡500K threshold
       const inv = await giveWeapon(ctx.user.id, weapon!.id, 100_000);
-      const response = await request(app)
+      const response = await request(server)
         .delete(`/api/weapon-inventory/${inv.id}`)
         .set('Authorization', `Bearer ${ctx.token}`);
 
@@ -554,7 +579,7 @@ describe('Weapon Inventory Routes', () => {
     }
 
     it('returns 401 without auth', async () => {
-      const response = await request(app)
+      const response = await request(server)
         .post('/api/weapon-inventory/1/refine')
         .send({ tier: 'hone', magnitude: 1, targetAttribute: 'combatPower' });
       expect(response.status).toBe(401);
@@ -566,7 +591,7 @@ describe('Weapon Inventory Routes', () => {
       const weapon = await prisma.weapon.findFirst({ where: { combatPowerBonus: { gt: 0 } } });
       const inv = await giveRefineWeapon(owner.user.id, weapon!.id);
 
-      const response = await request(app)
+      const response = await request(server)
         .post(`/api/weapon-inventory/${inv.id}/refine`)
         .set('Authorization', `Bearer ${intruder.token}`)
         .send({ tier: 'hone', magnitude: 1, targetAttribute: 'combatPower' });
@@ -576,7 +601,7 @@ describe('Weapon Inventory Routes', () => {
 
     it('returns 404 for nonexistent inventory ID', async () => {
       const ctx = await createRefineUser({ workshopLevel: 1, currency: 1_000_000 });
-      const response = await request(app)
+      const response = await request(server)
         .post('/api/weapon-inventory/999999999/refine')
         .set('Authorization', `Bearer ${ctx.token}`)
         .send({ tier: 'hone', magnitude: 1, targetAttribute: 'combatPower' });
@@ -588,7 +613,7 @@ describe('Weapon Inventory Routes', () => {
       const weapon = await prisma.weapon.findFirst({ where: { combatPowerBonus: { gt: 0 } } });
       const inv = await giveRefineWeapon(ctx.user.id, weapon!.id);
 
-      const response = await request(app)
+      const response = await request(server)
         .post(`/api/weapon-inventory/${inv.id}/refine`)
         .set('Authorization', `Bearer ${ctx.token}`)
         .send({ tier: 'hone', magnitude: 1, targetAttribute: 'combatPower' });
@@ -603,7 +628,7 @@ describe('Weapon Inventory Routes', () => {
       const weapon = await prisma.weapon.findFirst({ where: { combatPowerBonus: { gt: 0 } } });
       const inv = await giveRefineWeapon(ctx.user.id, weapon!.id, 100_000);
 
-      const response = await request(app)
+      const response = await request(server)
         .post(`/api/weapon-inventory/${inv.id}/refine`)
         .set('Authorization', `Bearer ${ctx.token}`)
         .send({ tier: 'hone', magnitude: 1, targetAttribute: 'combatPower' });
@@ -628,7 +653,7 @@ describe('Weapon Inventory Routes', () => {
       const weapon = await prisma.weapon.findFirst({ where: { weaponType: { not: 'shield' } } });
       const inv = await giveRefineWeapon(ctx.user.id, weapon!.id, 100_000);
 
-      const response = await request(app)
+      const response = await request(server)
         .post(`/api/weapon-inventory/${inv.id}/refine`)
         .set('Authorization', `Bearer ${ctx.token}`)
         .send({ tier: 'forge', magnitude: 1 });
@@ -643,7 +668,7 @@ describe('Weapon Inventory Routes', () => {
       const shield = await prisma.weapon.findFirst({ where: { weaponType: 'shield' } });
       const inv = await giveRefineWeapon(ctx.user.id, shield!.id);
 
-      const response = await request(app)
+      const response = await request(server)
         .post(`/api/weapon-inventory/${inv.id}/refine`)
         .set('Authorization', `Bearer ${ctx.token}`)
         .send({ tier: 'sharpen', magnitude: 1 });
@@ -658,7 +683,7 @@ describe('Weapon Inventory Routes', () => {
       const weapon = await prisma.weapon.findFirst({ where: { combatPowerBonus: 0, name: { not: { contains: 'Practice' } } } });
       const inv = await giveRefineWeapon(ctx.user.id, weapon!.id);
 
-      const response = await request(app)
+      const response = await request(server)
         .post(`/api/weapon-inventory/${inv.id}/refine`)
         .set('Authorization', `Bearer ${ctx.token}`)
         .send({ tier: 'hone', magnitude: 1, targetAttribute: 'combatPower' });
@@ -672,7 +697,7 @@ describe('Weapon Inventory Routes', () => {
       const weapon = await prisma.weapon.findFirst({ where: { combatPowerBonus: { gt: 0 } } });
       const inv = await giveRefineWeapon(ctx.user.id, weapon!.id);
 
-      const response = await request(app)
+      const response = await request(server)
         .post(`/api/weapon-inventory/${inv.id}/refine`)
         .set('Authorization', `Bearer ${ctx.token}`)
         .send({ tier: 'augment', magnitude: 1, targetAttribute: 'combatPower' });
@@ -686,7 +711,7 @@ describe('Weapon Inventory Routes', () => {
       const weapon = await prisma.weapon.findFirst({ where: { combatPowerBonus: { gt: 0 } } });
       const inv = await giveRefineWeapon(ctx.user.id, weapon!.id);
 
-      const response = await request(app)
+      const response = await request(server)
         .post(`/api/weapon-inventory/${inv.id}/refine`)
         .set('Authorization', `Bearer ${ctx.token}`)
         .send({ tier: 'hone', magnitude: 1, targetAttribute: 'combatPower' });
@@ -704,7 +729,7 @@ describe('Weapon Inventory Routes', () => {
         where: { userId: ctx.user.id, eventType: 'weapon_refinement' },
       });
 
-      const response = await request(app)
+      const response = await request(server)
         .post(`/api/weapon-inventory/${inv.id}/refine`)
         .set('Authorization', `Bearer ${ctx.token}`)
         .send({ tier: 'hone', magnitude: 1, targetAttribute: 'combatPower' });
@@ -721,7 +746,7 @@ describe('Weapon Inventory Routes', () => {
       const weapon = await prisma.weapon.findFirst({ where: { combatPowerBonus: { gt: 0 } } });
       const inv = await giveRefineWeapon(ctx.user.id, weapon!.id);
 
-      const response = await request(app)
+      const response = await request(server)
         .post(`/api/weapon-inventory/${inv.id}/refine`)
         .set('Authorization', `Bearer ${ctx.token}`)
         .send({ tier: 'hone', magnitude: 1, targetAttribute: 'combatPower' });
@@ -746,7 +771,7 @@ describe('Weapon Inventory Routes', () => {
 
       let lastResponse;
       for (const body of refineRequests) {
-        lastResponse = await request(app)
+        lastResponse = await request(server)
           .post(`/api/weapon-inventory/${inv.id}/refine`)
           .set('Authorization', `Bearer ${ctx.token}`)
           .send(body);
@@ -780,7 +805,7 @@ describe('Weapon Inventory Routes', () => {
         data: { userId: ctx.user.id, weaponId: weapon!.id, pricePaid: 50_000 },
       });
 
-      const response = await request(app)
+      const response = await request(server)
         .patch(`/api/weapon-inventory/${inv.id}/custom-name`)
         .set('Authorization', `Bearer ${ctx.token}`)
         .send({ customName: 'Old Faithful' });
@@ -796,7 +821,7 @@ describe('Weapon Inventory Routes', () => {
         data: { userId: ctx.user.id, weaponId: weapon!.id, pricePaid: 50_000, customName: 'Existing' },
       });
 
-      const response = await request(app)
+      const response = await request(server)
         .patch(`/api/weapon-inventory/${inv.id}/custom-name`)
         .set('Authorization', `Bearer ${ctx.token}`)
         .send({ customName: null });
@@ -812,7 +837,7 @@ describe('Weapon Inventory Routes', () => {
         data: { userId: ctx.user.id, weaponId: weapon!.id, pricePaid: 50_000 },
       });
 
-      const response = await request(app)
+      const response = await request(server)
         .patch(`/api/weapon-inventory/${inv.id}/custom-name`)
         .set('Authorization', `Bearer ${ctx.token}`)
         .send({ customName: '<script>alert(1)</script>' });
@@ -821,7 +846,7 @@ describe('Weapon Inventory Routes', () => {
     });
 
     it('returns 401 without auth', async () => {
-      const response = await request(app)
+      const response = await request(server)
         .patch('/api/weapon-inventory/1/custom-name')
         .send({ customName: 'Hi' });
       expect(response.status).toBe(401);
@@ -835,7 +860,7 @@ describe('Weapon Inventory Routes', () => {
         data: { userId: owner.user.id, weaponId: weapon!.id, pricePaid: 50_000 },
       });
 
-      const response = await request(app)
+      const response = await request(server)
         .patch(`/api/weapon-inventory/${inv.id}/custom-name`)
         .set('Authorization', `Bearer ${intruder.token}`)
         .send({ customName: 'Stolen' });
