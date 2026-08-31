@@ -245,9 +245,35 @@ describe('Battle Orchestrator', () => {
       expect(updatedRobot1?.totalBattles).toBe(1);
       expect(updatedRobot2?.totalBattles).toBe(1);
       
-      // One should have won
-      expect(updatedRobot1!.wins + updatedRobot2!.wins).toBe(1);
-      expect(updatedRobot1!.losses + updatedRobot2!.losses).toBe(1);
+      // The outcome must be recorded consistently — for EITHER outcome.
+      //
+      // This used to assert one win and one loss unconditionally, which fails on a draw:
+      // a drawn battle increments `draws` and leaves both `wins` and `losses` at 0, so the
+      // sums are 0 and the test read "Expected 1, Received 0". Combat is stochastic and
+      // these robots have 10 HP, so a draw is rare but perfectly legal — rare enough that it
+      // passed every local run and the pull request's CI, and then blocked a deploy from
+      // main. Asserting "somebody won" was an assumption about the RNG, not about the
+      // orchestrator.
+      //
+      // What the orchestrator actually guarantees is that the battle's recorded winner and
+      // the robots' counters agree, so that is what is asserted. Note `result.winnerId` is
+      // `null` on a draw, which is why the `toBeDefined()` check above does not catch it.
+      const winnerId = battle!.winnerId;
+      if (winnerId === null) {
+        expect(updatedRobot1!.wins + updatedRobot2!.wins).toBe(0);
+        expect(updatedRobot1!.losses + updatedRobot2!.losses).toBe(0);
+        expect(updatedRobot1!.draws).toBe(1);
+        expect(updatedRobot2!.draws).toBe(1);
+      } else {
+        expect(updatedRobot1!.wins + updatedRobot2!.wins).toBe(1);
+        expect(updatedRobot1!.losses + updatedRobot2!.losses).toBe(1);
+        expect(updatedRobot1!.draws + updatedRobot2!.draws).toBe(0);
+        // The robot the battle names as winner is the one whose win was counted.
+        const winner = winnerId === robot1.id ? updatedRobot1! : updatedRobot2!;
+        const loser = winnerId === robot1.id ? updatedRobot2! : updatedRobot1!;
+        expect(winner.wins).toBe(1);
+        expect(loser.losses).toBe(1);
+      }
     });
 
     it('should handle bye-robot battles correctly', async () => {

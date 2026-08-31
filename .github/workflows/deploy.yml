@@ -337,6 +337,13 @@ jobs:
           PORT: 3001
           CORS_ORIGIN: http://localhost:4173
           SCHEDULER_ENABLED: false
+          # See the matching block in ci.yml: the per-IP login limiter (10 per
+          # 15 minutes, failed attempts included) is exhausted by the suite
+          # because all traffic shares one IP, and a spent budget cannot
+          # recover inside a run. Raised so the limiter stops deciding which
+          # test fails.
+          RATE_LIMIT_MAX_REQUESTS: 5000
+          LOGIN_RATE_LIMIT_MAX: 1000
         run: |
           node dist/index.js &
           echo "Waiting for backend to start..."

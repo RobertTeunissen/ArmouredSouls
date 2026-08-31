@@ -364,6 +364,18 @@ jobs:
           CORS_ORIGIN: http://localhost:4173
           SCHEDULER_ENABLED: false
           BCRYPT_SALT_ROUNDS: 4
+          # The whole E2E suite arrives from 127.0.0.1, so the per-IP limiters
+          # see one client where production sees many. The login limiter
+          # defaults to 10 POSTs per 15 minutes and counts failed attempts,
+          # which the suite exhausts: auth.setup, login.spec, the deliberate
+          # invalid-credential tests, and every navigateToProtectedPage
+          # fallback all draw on the same budget. Once spent it cannot recover
+          # inside a ~5 minute run, so later logins get a 429, the UI renders
+          # "Login failed", and waitForURL times out. The victim differed per
+          # run, which read as flake. No E2E test asserts rate limiting; it is
+          # covered by backend unit tests.
+          RATE_LIMIT_MAX_REQUESTS: 5000
+          LOGIN_RATE_LIMIT_MAX: 1000
         run: |
           node dist/index.js &
           echo "Waiting for backend to start..."
