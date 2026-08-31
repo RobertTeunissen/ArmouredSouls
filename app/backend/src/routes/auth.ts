@@ -89,7 +89,7 @@ const loginBodySchema = z.object({
  * @example
  * // Successful registration
  * POST /api/auth/register
- * { "username": "player1", "email": "player1_mail", "password": "securePass1", "stableName": "Iron Warriors" }
+ * { "username": "player1", "email": "player1@mail.com", "password": "securePass1", "stableName": "Iron Warriors" }
  * // → 201 { token: "eyJ...", user: { id, username, email, stableName, currency, prestige, role } }
  *
  * @throws {400} When validation fails
@@ -210,7 +210,7 @@ router.post('/register', validateRequest({ body: registerBodySchema }), async (r
  * @example
  * // Login with email
  * POST /api/auth/login
- * { "identifier": "player1_mail", "password": "securePass1" }
+ * { "identifier": "player1@mail.com", "password": "securePass1" }
  * // → 200 { token: "eyJ...", user: { ... } }
  *
  * @throws {400} When identifier or password is missing

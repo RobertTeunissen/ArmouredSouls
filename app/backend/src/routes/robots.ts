@@ -95,7 +95,15 @@ const stanceBodySchema = z.object({
   stance: z
     .string({ message: 'Stance is required and must be a string' })
     .min(1, 'Stance is required and must be a string')
-    .max(20, 'Invalid stance. Must be one of: offensive, defensive, balanced'),
+    // A length bound, described as one. It previously carried the "must be one of"
+    // message, which is misleading: this check only enforces length, and the one-of
+    // check happens in the handler. A 25-character stance would have been told it was
+    // not one of three values when the real problem was its length.
+    //
+    // Deliberately NOT a `z.enum` of the three stances: the handler lowercases before
+    // comparing, so 'OFFENSIVE' is accepted today and an enum here would start
+    // rejecting it. The one-of check stays where the normalisation is.
+    .max(20, 'Stance must be 20 characters or less'),
 });
 
 const yieldThresholdBodySchema = z.object({

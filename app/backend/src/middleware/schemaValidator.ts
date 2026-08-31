@@ -45,21 +45,48 @@ interface ValidationSchemas {
  * Note on safety: `issue.message` and `issue.path` come from the schema, never
  * from the submitted value, so this reflects no user input back to the client.
  */
-function describeIssues(issues: ZodIssue[], fallback: string): string {
-  const messages = issues.map(describeIssue).filter(Boolean);
+function describeIssues(issues: ZodIssue[], fallback: string, input: unknown): string {
+  const messages = issues.map((issue) => describeIssue(issue, input)).filter(Boolean);
   return messages.length > 0 ? messages.join(', ') : fallback;
+}
+
+/**
+ * Read the submitted value at an issue's path, to tell a MISSING key from a wrong-typed one.
+ *
+ * Returns `undefined` both for an absent key and for a path that cannot be walked, which is
+ * the same answer for this decision either way.
+ */
+function valueAtPath(input: unknown, path: ZodIssue['path']): unknown {
+  let current: unknown = input;
+  for (const key of path) {
+    if (current === null || typeof current !== 'object') return undefined;
+    current = (current as Record<string | number, unknown>)[key as string | number];
+  }
+  return current;
 }
 
 /**
  * Render one issue as user-facing text.
  *
  * A missing key is special-cased. Zod reports it as
- * 'invalid input: expected string, received undefined', which names neither the
+ * 'Invalid input: expected string, received undefined', which names neither the
  * field nor the problem, so an absent `password` and an absent `stableName` were
  * indistinguishable to the user. This turns it into '<Field> is required'.
+ *
+ * Missing-ness is decided from the SUBMITTED VALUE at `issue.path`, not by matching
+ * `issue.message`. The message text varies across Zod versions and error maps, so a regex
+ * over it is brittle — and the obvious structured alternative is not available: Zod 4 removed
+ * `received` from `invalid_type` issues, which carry only `expected`, `code`, `path` and
+ * `message` (verified against zod 4.4.3). The value at the path is version-independent: for an
+ * absent key it is `undefined`, and for a wrong-typed key it is the offending value.
+ *
+ * Note on safety: only the PRESENCE of that value is used. It is never interpolated into the
+ * message, so this still reflects no user input back to the client — `issue.message` and
+ * `issue.path` continue to come from the schema alone.
  */
-function describeIssue(issue: ZodIssue): string {
-  const isMissing = issue.code === 'invalid_type' && /received undefined/i.test(issue.message);
+function describeIssue(issue: ZodIssue, input: unknown): string {
+  const isMissing =
+    issue.code === 'invalid_type' && valueAtPath(input, issue.path) === undefined;
   if (isMissing) {
     const field = issue.path.length > 0 ? String(issue.path[issue.path.length - 1]) : 'Value';
     return `${field.charAt(0).toUpperCase()}${field.slice(1)} is required`;
@@ -78,7 +105,7 @@ export function validateRequest(schemas: ValidationSchemas) {
       const result = schemas.params.safeParse(req.params);
       if (!result.success) {
         securityMonitor.logValidationFailure(req.originalUrl, 'invalid_params', req.ip || 'unknown');
-        throw new AppError('VALIDATION_ERROR', describeIssues(result.error.issues, 'Invalid URL parameters'), 400, {
+        throw new AppError('VALIDATION_ERROR', describeIssues(result.error.issues, 'Invalid URL parameters', req.params), 400, {
           fields: result.error.issues.map((i) => ({
             field: i.path.join('.'),
             message: i.message,
@@ -92,7 +119,7 @@ export function validateRequest(schemas: ValidationSchemas) {
       const result = schemas.query.safeParse(req.query);
       if (!result.success) {
         securityMonitor.logValidationFailure(req.originalUrl, 'invalid_query', req.ip || 'unknown');
-        throw new AppError('VALIDATION_ERROR', describeIssues(result.error.issues, 'Invalid query parameters'), 400, {
+        throw new AppError('VALIDATION_ERROR', describeIssues(result.error.issues, 'Invalid query parameters', req.query), 400, {
           fields: result.error.issues.map((i) => ({
             field: i.path.join('.'),
             message: i.message,
@@ -105,7 +132,7 @@ export function validateRequest(schemas: ValidationSchemas) {
       const result = schemas.body.safeParse(req.body);
       if (!result.success) {
         securityMonitor.logValidationFailure(req.originalUrl, 'invalid_body', req.ip || 'unknown');
-        throw new AppError('VALIDATION_ERROR', describeIssues(result.error.issues, 'Invalid request body'), 400, {
+        throw new AppError('VALIDATION_ERROR', describeIssues(result.error.issues, 'Invalid request body', req.body), 400, {
           fields: result.error.issues.map((i) => ({
             field: i.path.join('.'),
             message: i.message,

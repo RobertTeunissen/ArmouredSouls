@@ -53,7 +53,7 @@ export interface User {
  * @example
  * const user = await createUser({
  *   username: 'player1',
- *   email: 'player1_mail',
+ *   email: 'player1@mail.com',
  *   passwordHash: '$2b$10$...',
  * });
  * console.log(user.currency); // 3000000
@@ -125,7 +125,7 @@ export async function findUserByUsername(username: string): Promise<User | null>
  * @returns The User object if found, or null if no user exists with that email
  *
  * @example
- * const user = await findUserByEmail('player1_mail');
+ * const user = await findUserByEmail('player1@mail.com');
  *
  * Requirements: 6.2
  */
@@ -153,7 +153,7 @@ export async function findUserByEmail(email: string): Promise<User | null> {
  * const user1 = await findUserByIdentifier('player1');
  *
  * // Also works with email
- * const user2 = await findUserByIdentifier('player1_mail');
+ * const user2 = await findUserByIdentifier('player1@mail.com');
  *
  * Requirements: 6.1, 6.2, 6.6
  */
