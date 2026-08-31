@@ -45,8 +45,15 @@ function getCatalogBonus(weapon: Weapon, attribute: string): number {
 
 // --- Zod schemas for weapon inventory routes ---
 
+// The message is user-facing: `validateRequest` builds the response's `error` from
+// the failing issues. `z.coerce.number()` turns a missing key into NaN, whose default
+// message ('Invalid input: expected number, received NaN') names neither the field
+// nor the problem.
 const purchaseBodySchema = z.object({
-  weaponId: z.coerce.number().int().positive(),
+  weaponId: z.coerce
+    .number({ message: 'Weapon ID is required and must be a number' })
+    .int('Weapon ID must be a whole number')
+    .positive('Weapon ID must be a positive number'),
 });
 
 const inventoryIdParamsSchema = z.object({

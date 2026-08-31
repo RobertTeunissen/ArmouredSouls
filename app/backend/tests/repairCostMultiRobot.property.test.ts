@@ -1034,16 +1034,28 @@ describe('Repair Cost Multi-Robot Discount - Property Tests', () => {
               activeRobotCount
             );
             
-            // Different damage scenario
-            const cost2 = calculateRepairCost(
-              sumOfAllAttributes,
-              damagePercent + 10,
-              hpPercent - 10,
-              repairBayLevel,
-              medicalBayLevel,
-              activeRobotCount
-            );
-            
+            // Different damage scenario, interleaved between two identical calls so a caching
+            // bug would show up as cost1 !== cost3.
+            //
+            // The validity guard now wraps the CALL, not just the assertion. It used to sit
+            // below, after `calculateRepairCost` had already been invoked with
+            // `hpPercent - 10` — negative whenever `hpPercent < 10`, which
+            // `calculateRepairQuote` correctly rejects with a RangeError. The test was asking
+            // the shared module to price an impossible robot, and failed on whichever seed
+            // drew an hpPercent under 10.
+            const derivedInputsValid = damagePercent + 10 <= 100 && hpPercent - 10 >= 0;
+            if (derivedInputsValid) {
+              const cost2 = calculateRepairCost(
+                sumOfAllAttributes,
+                damagePercent + 10,
+                hpPercent - 10,
+                repairBayLevel,
+                medicalBayLevel,
+                activeRobotCount
+              );
+              expect(cost2).toBeGreaterThanOrEqual(0);
+            }
+
             // Back to original scenario
             const cost3 = calculateRepairCost(
               sumOfAllAttributes,
@@ -1053,16 +1065,9 @@ describe('Repair Cost Multi-Robot Discount - Property Tests', () => {
               medicalBayLevel,
               activeRobotCount
             );
-            
+
             // First and third calls (same inputs) should produce identical results
             expect(cost1).toBe(cost3);
-            
-            // Second call (different inputs) should produce different result (unless edge case)
-            // This verifies the function is not caching incorrectly
-            if (damagePercent + 10 <= 100 && hpPercent - 10 >= 0) {
-              // Only check if inputs are valid
-              expect(cost2).toBeGreaterThanOrEqual(0);
-            }
           }
         ),
         { numRuns: NUM_RUNS }

@@ -7,6 +7,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import userRoutes from '../src/routes/user';
+import { validateStableName } from '../src/utils/validation';
 
 dotenv.config();
 
@@ -20,6 +21,31 @@ app.use('/api/user', userRoutes);
 
 // Test configuration
 const NUM_RUNS = 10;
+
+/**
+ * Compose a unique stable name that the endpoint will actually accept.
+ *
+ * Three sites built `${base}_${Date.now()}_${random}` and never checked the composed
+ * result against the rules the endpoint enforces. `Math.random().toString(36)` produces
+ * arbitrary letters, so the suffix occasionally spells a banned substring — the observed
+ * counterexample was `wKR11LYI_1788014097350_zassa`, where "zassa" contains "ass". The
+ * endpoint correctly returned 400 and the property, which is about SUCCESSFUL updates,
+ * reported that as a failure.
+ *
+ * Filtering against `validateStableName` rather than re-implementing the rules keeps the
+ * validator the single source of truth: if the length bound or the character class changes,
+ * this generator follows automatically.
+ */
+function composeUniqueStableName(base: string): string {
+  for (let attempt = 0; attempt < 100; attempt++) {
+    const suffix = `_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+    const candidate = `${base.trim().substring(0, 30 - suffix.length)}${suffix}`;
+    if (validateStableName(candidate).valid) {
+      return candidate;
+    }
+  }
+  throw new Error(`Could not compose a valid unique stable name from base "${base}"`);
+}
 
 describe('Profile Update Endpoint - Property Tests', () => {
   let testUsers: any[] = [];
@@ -51,14 +77,7 @@ describe('Profile Update Endpoint - Property Tests', () => {
         fc.asyncProperty(
           validStableNameGenerator(),
           async (stableName) => {
-            // Trim the stable name (backend trims it)
-            const trimmedName = stableName.trim();
-            
-            // Make stable name unique by adding timestamp and random suffix, ensure it stays within 30 chars
-            const suffix = `_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-            const maxBaseLength = 30 - suffix.length;
-            const baseName = trimmedName.substring(0, maxBaseLength);
-            const uniqueStableName = `${baseName}${suffix}`;
+            const uniqueStableName = composeUniqueStableName(stableName);
             
             // Create test user
             const passwordHash = await bcrypt.hash('TestPass123', 10);
@@ -467,12 +486,7 @@ function partialUpdateGenerator(): fc.Arbitrary<any> {
   return fc.record(
     {
       stableName: fc.option(
-        validStableNameGenerator().map(name => {
-          const suffix = `_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-          const maxBaseLength = 30 - suffix.length;
-          const baseName = name.trim().substring(0, maxBaseLength);
-          return `${baseName}${suffix}`;
-        }), 
+        validStableNameGenerator().map(composeUniqueStableName), 
         { nil: undefined }
       ),
       profileVisibility: fc.option(fc.constantFrom('public' as const, 'private' as const), { nil: undefined }),
@@ -494,12 +508,7 @@ function validProfileUpdateGenerator(): fc.Arbitrary<any> {
   return fc.record(
     {
       stableName: fc.option(
-        validStableNameGenerator().map(name => {
-          const suffix = `_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-          const maxBaseLength = 30 - suffix.length;
-          const baseName = name.trim().substring(0, maxBaseLength);
-          return `${baseName}${suffix}`;
-        }), 
+        validStableNameGenerator().map(composeUniqueStableName), 
         { nil: undefined }
       ),
       profileVisibility: fc.option(fc.constantFrom('public' as const, 'private' as const), { nil: undefined }),

@@ -33,6 +33,7 @@ import prisma from '../../lib/prisma';
 import type { Prisma } from '../../../generated/prisma';
 import { hashPassword } from './passwordService';
 import { AuthError, AuthErrorCode } from '../../errors/authErrors';
+import { withAuditSequence } from '../common/auditSequence';
 
 /**
  * Describes who or what triggered the password reset.
@@ -110,28 +111,30 @@ export async function resetPassword(
       },
     });
 
-    // 4. Generate a unique sequence number for cycleNumber 0
-    const lastEntry = await tx.auditLog.findFirst({
-      where: { cycleNumber: 0 },
-      orderBy: { sequenceNumber: 'desc' },
-      select: { sequenceNumber: true },
-    });
-    const sequenceNumber = lastEntry ? lastEntry.sequenceNumber + 1 : 1;
-
-    // 5. Write audit log entry — no password or hash in payload
-    await tx.auditLog.create({
-      data: {
-        cycleNumber: 0,
-        eventType: 'admin_password_reset',
-        sequenceNumber,
-        userId: initiator.initiatorId,
-        payload: {
-          adminId: initiator.initiatorId,
-          targetUserId,
-          resetType: initiator.resetType,
-        } satisfies Prisma.JsonObject,
+    // 4 & 5. Allocate a sequence number and write the audit entry under the
+    // shared Sequence_Allocator. Spec #51: this used to read the maximum and
+    // increment locally, which raced with every other audit writer on cycle 0.
+    // No password or hash in the payload.
+    await withAuditSequence(
+      0,
+      1,
+      async (sequenceNumber, client) => {
+        await client.auditLog.create({
+          data: {
+            cycleNumber: 0,
+            eventType: 'admin_password_reset',
+            sequenceNumber,
+            userId: initiator.initiatorId,
+            payload: {
+              adminId: initiator.initiatorId,
+              targetUserId,
+              resetType: initiator.resetType,
+            } satisfies Prisma.JsonObject,
+          },
+        });
       },
-    });
+      tx,
+    );
 
     return {
       userId: user.id,

@@ -247,52 +247,52 @@ app.use(errorHandler);
 
 // ── Tests ────────────────────────────────────────────────────────────
 
-describe('Admin reserved-slot trigger endpoints (R6.3, R8.2, R8.3)', () => {
+describe('Admin scheduler trigger endpoint (R6.3, R8.2, R8.3)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockUser = { userId: 1, username: 'admin', role: 'admin' };
   });
 
-  const reservedSlotEndpoints = [
-    { path: '/api/admin/grand-melee/trigger', event: 'grand_melee' },
-  ];
+  // Spec #51: this block previously covered POST /api/admin/grand-melee/trigger,
+  // a deprecated placeholder that answered `{ deprecated: true }`. Spec #44 made
+  // Grand Melee a real mode and removed that route, so the behaviour asserted here
+  // is genuinely gone. Retargeted rather than deleted: the manual trigger it stood
+  // in for now goes through the generic scheduler endpoint, whose `:jobName` is
+  // validated against SCHEDULER_JOB_NAMES.
+  describe('POST /api/admin/scheduler/trigger/grandMelee', () => {
+    const path = '/api/admin/scheduler/trigger/grandMelee';
 
-  describe.each(reservedSlotEndpoints)('POST $path', ({ path, event }) => {
-    test('should return HTTP 200 with correct body', async () => {
+    test('should return HTTP 200 with the triggered job name', async () => {
       const res = await request(app).post(path).send({});
-
       expect(res.status).toBe(200);
-      expect(res.body).toMatchObject({
-        success: true,
-        deprecated: true,
-        message: 'Grand Melee cycle triggered successfully',
-      });
+      expect(res.body).toMatchObject({ success: true, jobName: 'grandMelee' });
+      expect(res.body.timestamp).toBeDefined();
     });
 
     test('should create an adminAuditLog row per invocation', async () => {
       await request(app).post(path).send({});
-
       expect(mockRecordAction).toHaveBeenCalledWith(
         1, // userId
-        'grand_melee_trigger',
+        'scheduler_trigger',
         'success',
-        expect.objectContaining({ message: 'Grand Melee cycle triggered (deprecated endpoint)' }),
+        expect.objectContaining({ jobName: 'grandMelee' }),
       );
+    });
+
+    test('should reject a job name outside SCHEDULER_JOB_NAMES with 400', async () => {
+      const res = await request(app).post('/api/admin/scheduler/trigger/notAJob').send({});
+      expect(res.status).toBe(400);
     });
 
     test('should require authentication (401 without token)', async () => {
       mockUser = null;
-
       const res = await request(app).post(path).send({});
-
       expect(res.status).toBe(401);
     });
 
     test('should require admin role (403 for non-admin)', async () => {
       mockUser = { userId: 2, username: 'player', role: 'user' };
-
       const res = await request(app).post(path).send({});
-
       expect(res.status).toBe(403);
     });
   });

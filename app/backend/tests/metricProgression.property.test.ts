@@ -347,8 +347,6 @@ describe('Metric Progression Property-Based Tests', () => {
             const cycleStart = new Date(2024, 0, cycleNumber, 0, 0, 0);
             const battle = await prisma.battle.create({
               data: {
-                robot1Id: robotId,
-                robot2Id: robotId + 10000,
                 winnerId: eloChange > 0 ? robotId : (eloChange < 0 ? robotId + 10000 : null),
                 battleType: 'league',
                 leagueType: 'bronze',
@@ -562,8 +560,6 @@ async function createBattlesWithELOChanges(
 
     const battle = await prisma.battle.create({
       data: {
-        robot1Id: robotId,
-        robot2Id: opponentId,
         winnerId: eloChange > 0 ? robotId : (eloChange < 0 ? opponentId : null),
         battleType: 'league',
         leagueType: 'bronze',
@@ -605,8 +601,6 @@ async function createBattlesWithFameAwards(
 
     const battle = await prisma.battle.create({
       data: {
-        robot1Id: robotId,
-        robot2Id: opponentId,
         winnerId: robotId,
         battleType: 'league',
         leagueType: 'bronze',
@@ -647,8 +641,6 @@ async function createBattlesWithDamage(
 
     const battle = await prisma.battle.create({
       data: {
-        robot1Id: robotId,
-        robot2Id: opponentId,
         winnerId: robotId,
         battleType: 'league',
         leagueType: 'bronze',
@@ -689,8 +681,6 @@ async function createBattlesWithOutcomes(
 
     const battle = await prisma.battle.create({
       data: {
-        robot1Id: robotId,
-        robot2Id: opponentId,
         winnerId: isWin ? robotId : opponentId,
         battleType: 'league',
         leagueType: 'bronze',
@@ -731,8 +721,6 @@ async function createBattlesWithCredits(
 
     const battle = await prisma.battle.create({
       data: {
-        robot1Id: robotId,
-        robot2Id: opponentId,
         winnerId: robotId,
         battleType: 'league',
         leagueType: 'bronze',

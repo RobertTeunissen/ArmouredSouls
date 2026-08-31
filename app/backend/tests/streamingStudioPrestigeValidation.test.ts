@@ -13,6 +13,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import facilityRoutes from '../src/routes/facility';
 import { createTestUser, deleteTestUser } from './testHelpers';
+import { errorHandler } from '../src/middleware/errorHandler';
 
 dotenv.config();
 
@@ -22,6 +23,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use('/api/facility', facilityRoutes);
+
+// Spec #51: without the errorHandler mounted, a thrown AppError falls through
+// to Express's default handler, which sends the right status with an EMPTY
+// body. That is why these suites saw 400 but no `body.error` or `body.code`.
+app.use(errorHandler);
 
 describe('Streaming Studio Prestige Validation', () => {
   let testUser: any;
@@ -136,10 +142,10 @@ describe('Streaming Studio Prestige Validation', () => {
         .send({ facilityType: 'streaming_studio' });
 
       expect(response.status).toBe(403);
-      expect(response.body.error).toBe('Insufficient prestige');
-      expect(response.body.required).toBe(1000);
-      expect(response.body.current).toBe(0);
-      expect(response.body.message).toContain('Streaming Studio Level 4 requires 1,000 prestige');
+      expect(response.body.error).toMatch(/requires [\d,]+ prestige/);
+      expect(response.body.details.required).toBe(1000);
+      expect(response.body.details.current).toBe(0);
+      expect(response.body.error).toContain('Streaming Studio Level 4 requires 1,000 prestige');
     });
 
     it('should allow upgrade to Level 4 with exactly 1,000 prestige', async () => {
@@ -199,9 +205,9 @@ describe('Streaming Studio Prestige Validation', () => {
         .send({ facilityType: 'streaming_studio' });
 
       expect(response.status).toBe(403);
-      expect(response.body.error).toBe('Insufficient prestige');
-      expect(response.body.required).toBe(3000);
-      expect(response.body.message).toContain('Streaming Studio Level 5 requires 3,000 prestige');
+      expect(response.body.error).toMatch(/requires [\d,]+ prestige/);
+      expect(response.body.details.required).toBe(3000);
+      expect(response.body.error).toContain('Streaming Studio Level 5 requires 3,000 prestige');
     });
 
     it('should allow upgrade to Level 5 with sufficient prestige', async () => {
@@ -243,7 +249,7 @@ describe('Streaming Studio Prestige Validation', () => {
         .send({ facilityType: 'streaming_studio' });
 
       expect(response.status).toBe(403);
-      expect(response.body.required).toBe(5000);
+      expect(response.body.details.required).toBe(5000);
     });
 
     it('should enforce 10,000 prestige for Level 7', async () => {
@@ -267,7 +273,7 @@ describe('Streaming Studio Prestige Validation', () => {
         .send({ facilityType: 'streaming_studio' });
 
       expect(response.status).toBe(403);
-      expect(response.body.required).toBe(10000);
+      expect(response.body.details.required).toBe(10000);
     });
 
     it('should enforce 15,000 prestige for Level 8', async () => {
@@ -291,7 +297,7 @@ describe('Streaming Studio Prestige Validation', () => {
         .send({ facilityType: 'streaming_studio' });
 
       expect(response.status).toBe(403);
-      expect(response.body.required).toBe(15000);
+      expect(response.body.details.required).toBe(15000);
     });
 
     it('should enforce 25,000 prestige for Level 9', async () => {
@@ -315,7 +321,7 @@ describe('Streaming Studio Prestige Validation', () => {
         .send({ facilityType: 'streaming_studio' });
 
       expect(response.status).toBe(403);
-      expect(response.body.required).toBe(25000);
+      expect(response.body.details.required).toBe(25000);
     });
 
     it('should enforce 50,000 prestige for Level 10', async () => {
@@ -339,7 +345,7 @@ describe('Streaming Studio Prestige Validation', () => {
         .send({ facilityType: 'streaming_studio' });
 
       expect(response.status).toBe(403);
-      expect(response.body.required).toBe(50000);
+      expect(response.body.details.required).toBe(50000);
     });
 
     it('should allow upgrade to Level 10 with 50,000 prestige', async () => {
@@ -385,10 +391,10 @@ describe('Streaming Studio Prestige Validation', () => {
 
       expect(response.status).toBe(403);
       expect(response.body).toHaveProperty('error');
-      expect(response.body).toHaveProperty('required');
-      expect(response.body).toHaveProperty('current');
-      expect(response.body).toHaveProperty('message');
-      expect(response.body.message).toMatch(/Streaming Studio Level \d+ requires [\d,]+ prestige/);
+      expect(response.body.details).toHaveProperty('required');
+      expect(response.body.details).toHaveProperty('current');
+      // The sentence lives in `error`; the standard body has no `message` field.
+      expect(response.body.error).toMatch(/Streaming Studio Level \d+ requires [\d,]+ prestige/);
     });
   });
 });

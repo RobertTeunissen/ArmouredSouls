@@ -11,6 +11,7 @@ import { Prisma } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
 import type { RefinementTier } from '../../shared/utils/weaponRefinement';
 import { REPAIR_CHARGED_KEY, REPAIR_PRE_DISCOUNT_KEY } from '../economy/repairPayloadKeys';
+import { withAuditSequence } from './auditSequence';
 
 /**
  * Event type enumeration - all event types stored in the audit log
@@ -99,45 +100,17 @@ interface EventLogEntry {
   metadata?: EventMetadata | null;
 }
 
-/**
- * Sequence number cache per cycle.
- * Node.js is single-threaded — no lock needed for synchronous counter increments.
- * The cache is only invalidated on unique constraint violations (rare race with
- * parallel test runners or multi-process deployments).
+/*
+ * Spec #51: the module-level `sequenceNumberCache`, `getNextSequenceNumber` and
+ * `clearSequenceCache` were removed from here. They implemented check-then-act
+ * across an `await` and caused 3,142 unique-constraint collisions in a single
+ * integration run, each silently dropping an audit row.
+ *
+ * Allocation now goes through `withAuditSequence` in `./auditSequence`, which
+ * serialises per cycle with `pg_advisory_xact_lock`. See that module for why a
+ * Postgres sequence is not an acceptable alternative and for the correction to
+ * the old "parallel test runners or multi-process deployments" diagnosis.
  */
-const sequenceNumberCache = new Map<number, number>();
-
-/**
- * Get the next sequence number for a cycle.
- * Synchronous in-memory increment when cached; single DB query on cache miss.
- */
-async function getNextSequenceNumber(cycleNumber: number): Promise<number> {
-  // Check cache first (fast path — no DB hit)
-  if (sequenceNumberCache.has(cycleNumber)) {
-    const current = sequenceNumberCache.get(cycleNumber)!;
-    const next = current + 1;
-    sequenceNumberCache.set(cycleNumber, next);
-    return next;
-  }
-
-  // Cache miss: query database for the highest sequence number in this cycle
-  const lastEvent = await prisma.auditLog.findFirst({
-    where: { cycleNumber },
-    orderBy: { sequenceNumber: 'desc' },
-    select: { sequenceNumber: true },
-  });
-
-  const nextSequence = lastEvent ? lastEvent.sequenceNumber + 1 : 1;
-  sequenceNumberCache.set(cycleNumber, nextSequence);
-  return nextSequence;
-}
-
-/**
- * Clear sequence number cache for a cycle (call at cycle end)
- */
-export function clearSequenceCache(cycleNumber: number): void {
-  sequenceNumberCache.delete(cycleNumber);
-}
 
 /**
  * Validate event payload against schema
@@ -173,52 +146,38 @@ export class EventLogger {
   ): Promise<void> {
     // Validate payload
     validateEventPayload(eventType, payload);
-    
-    // Retry loop for sequence number conflicts (parallel test execution)
-    for (let attempt = 0; attempt < 5; attempt++) {
-      // Get next sequence number
-      const sequenceNumber = await getNextSequenceNumber(cycleNumber);
-      
-      // Create event entry
-      const entry: EventLogEntry = {
-        cycleNumber,
-        eventType,
-        eventTimestamp: options?.timestamp || new Date(),
-        sequenceNumber,
-        userId: options?.userId || null,
-        robotId: options?.robotId || null,
-        battleId: options?.battleId || null,
-        payload,
-        metadata: options?.metadata || null,
-      };
-      
-      try {
-        // Insert into database
-        await prisma.auditLog.create({
-          data: {
-            cycleNumber: entry.cycleNumber,
-            eventType: entry.eventType,
-            eventTimestamp: entry.eventTimestamp,
-            sequenceNumber: entry.sequenceNumber,
-            userId: entry.userId,
-            robotId: entry.robotId,
-            battleId: entry.battleId,
-            payload: entry.payload as Prisma.JsonObject,
-            metadata: entry.metadata ? (entry.metadata as Prisma.JsonObject) : undefined,
-          },
-        });
-        return; // Success
-      } catch (error: unknown) {
-        const isUniqueViolation = error instanceof Error && 
-          error.message.includes('Unique constraint failed');
-        if (isUniqueViolation && attempt < 4) {
-          // Refresh sequence cache from DB and retry
-          clearSequenceCache(cycleNumber);
-          continue;
-        }
-        throw error;
-      }
-    }
+
+    // Spec #51: the five-attempt unique-violation retry loop that used to wrap
+    // this insert existed only to paper over the allocation race. With
+    // allocation serialised per cycle, a collision here would mean the
+    // Gapless_Invariant is broken and must surface rather than be retried.
+    const entry: EventLogEntry = {
+      cycleNumber,
+      eventType,
+      eventTimestamp: options?.timestamp || new Date(),
+      sequenceNumber: 0, // assigned under the lock below
+      userId: options?.userId || null,
+      robotId: options?.robotId || null,
+      battleId: options?.battleId || null,
+      payload,
+      metadata: options?.metadata || null,
+    };
+
+    await withAuditSequence(cycleNumber, 1, async (startSequence, tx) => {
+      await tx.auditLog.create({
+        data: {
+          cycleNumber: entry.cycleNumber,
+          eventType: entry.eventType,
+          eventTimestamp: entry.eventTimestamp,
+          sequenceNumber: startSequence,
+          userId: entry.userId,
+          robotId: entry.robotId,
+          battleId: entry.battleId,
+          payload: entry.payload as Prisma.JsonObject,
+          metadata: entry.metadata ? (entry.metadata as Prisma.JsonObject) : undefined,
+        },
+      });
+    });
   }
   
   /**
@@ -241,50 +200,35 @@ export class EventLogger {
     for (const event of events) {
       validateEventPayload(event.eventType, event.payload);
     }
-    
-    // Retry loop for sequence number conflicts (parallel test execution)
-    for (let attempt = 0; attempt < 5; attempt++) {
-      // Get sequence numbers for all events
-      const entries: EventLogEntry[] = [];
-      for (const event of events) {
-        const sequenceNumber = await getNextSequenceNumber(cycleNumber);
-        entries.push({
-          cycleNumber,
-          eventType: event.eventType,
-          eventTimestamp: event.timestamp || new Date(),
-          sequenceNumber,
-          userId: event.userId || null,
-          robotId: event.robotId || null,
-          payload: event.payload,
-          metadata: event.metadata || null,
-        });
-      }
-      
-      try {
-        // Batch insert
-        await prisma.auditLog.createMany({
-          data: entries.map(entry => ({
-            cycleNumber: entry.cycleNumber,
-            eventType: entry.eventType,
-            eventTimestamp: entry.eventTimestamp,
-            sequenceNumber: entry.sequenceNumber,
-            userId: entry.userId,
-            robotId: entry.robotId,
-            payload: entry.payload as Prisma.JsonObject,
-            metadata: entry.metadata ? (entry.metadata as Prisma.JsonObject) : undefined,
-          })),
-        });
-        return; // Success
-      } catch (error: unknown) {
-        const isUniqueViolation = error instanceof Error && 
-          error.message.includes('Unique constraint failed');
-        if (isUniqueViolation && attempt < 4) {
-          clearSequenceCache(cycleNumber);
-          continue;
-        }
-        throw error;
-      }
-    }
+
+    // Spec #51: one contiguous block for the whole batch, allocated once under
+    // the lock. Previously each event took its own trip through the racy
+    // allocator, so a batch of n events was n chances to collide.
+    await withAuditSequence(cycleNumber, events.length, async (startSequence, tx) => {
+      const entries: EventLogEntry[] = events.map((event, index) => ({
+        cycleNumber,
+        eventType: event.eventType,
+        eventTimestamp: event.timestamp || new Date(),
+        sequenceNumber: startSequence + index,
+        userId: event.userId || null,
+        robotId: event.robotId || null,
+        payload: event.payload,
+        metadata: event.metadata || null,
+      }));
+
+      await tx.auditLog.createMany({
+        data: entries.map((entry) => ({
+          cycleNumber: entry.cycleNumber,
+          eventType: entry.eventType,
+          eventTimestamp: entry.eventTimestamp,
+          sequenceNumber: entry.sequenceNumber,
+          userId: entry.userId,
+          robotId: entry.robotId,
+          payload: entry.payload as Prisma.JsonObject,
+          metadata: entry.metadata ? (entry.metadata as Prisma.JsonObject) : undefined,
+        })),
+      });
+    });
   }
   
   /**
@@ -329,9 +273,10 @@ export class EventLogger {
       totalDuration: totalDurationMs,
       timestamp: new Date().toISOString(),
     });
-    
-    // Clear sequence cache for this cycle
-    clearSequenceCache(cycleNumber);
+
+    // Spec #51: no cache to clear. Allocation reads the current maximum from the
+    // database under an advisory lock on every call, so there is no per-cycle
+    // state to reset at cycle end.
   }
   
   /**

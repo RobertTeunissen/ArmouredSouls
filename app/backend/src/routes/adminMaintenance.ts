@@ -11,11 +11,13 @@ import { authenticateToken, requireAdmin, AuthRequest } from '../middleware/auth
 import { validateRequest } from '../middleware/schemaValidator';
 import logger from '../config/logger';
 import { processAllDailyFinances } from '../utils/economyCalculations';
+import { getSchedulerState } from '../services/cycle/cycleScheduler';
+// Imported from the constants module, not from cycleScheduler: a test that mocks
+// the scheduler must not be able to turn this into `z.enum(undefined)`.
 import {
-  getSchedulerState,
   SCHEDULER_JOB_NAMES,
   type SchedulerJobName,
-} from '../services/cycle/cycleScheduler';
+} from '../services/cycle/schedulerJobNames';
 import { recordAction as recordAuditAction } from '../services/admin/adminAuditLogService';
 import {
   repairAllRobotsAdmin,

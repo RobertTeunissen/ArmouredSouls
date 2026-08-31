@@ -6,6 +6,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import userRoutes from '../src/routes/user';
+import { errorHandler } from '../src/middleware/errorHandler';
 
 dotenv.config();
 
@@ -17,12 +18,52 @@ app.use(cors());
 app.use(express.json());
 app.use('/api/user', userRoutes);
 
+// Spec #51: without the errorHandler mounted, a thrown AppError falls through
+// to Express's default handler, which sends the right status with an EMPTY
+// body. That is why these suites saw 400 but no `body.error` or `body.code`.
+app.use(errorHandler);
+
 describe('Profile Update Endpoint', () => {
   const testUserIds: number[] = [];
   let testUser: any;
   let authToken: string;
   const testUsername = `testuser_${Date.now()}`;
   const testPassword = 'TestPass123';
+
+  /**
+   * Sign a token against the user's *current* `tokenVersion`.
+   *
+   * authenticateToken compares the token's `tokenVersion` against the database row
+   * and rejects a mismatch, which is how a password change invalidates existing
+   * sessions. A token signed once in `beforeAll` therefore dies the moment any test
+   * in this file changes the password, and every later test sees a 401 unrelated to
+   * what it is asserting.
+   */
+  /**
+   * Field → message from the standard error body.
+   *
+   * The shape is `details.fields`, an array of `{ field, message }`, and `error`
+   * carries the joined messages. These assertions used to read `details.stableName`
+   * — a fourth shape nothing produced. See the note in `src/routes/user.ts`.
+   */
+  function fieldErrors(body: {
+    details?: { fields?: Array<{ field: string; message: string }> };
+  }): Record<string, string> {
+    return Object.fromEntries((body.details?.fields ?? []).map((f) => [f.field, f.message]));
+  }
+
+  async function signTokenForUser(userId: number): Promise<string> {
+    const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
+    return jwt.sign(
+      {
+        userId: user.id,
+        username: user.username,
+        role: user.role,
+        tokenVersion: user.tokenVersion,
+      },
+      JWT_SECRET,
+    );
+  }
 
   beforeAll(async () => {
     await prisma.$connect();
@@ -40,11 +81,7 @@ describe('Profile Update Endpoint', () => {
     });
     testUserIds.push(testUser.id);
 
-    // Generate auth token
-    authToken = jwt.sign(
-      { userId: testUser.id, username: testUser.username, role: testUser.role },
-      JWT_SECRET
-    );
+    authToken = await signTokenForUser(testUser.id);
   });
 
   afterEach(async () => {
@@ -185,6 +222,10 @@ describe('Profile Update Endpoint', () => {
         where: { id: testUser.id },
         data: { passwordHash: await bcrypt.hash(testPassword, 10) },
       });
+
+      // The successful change above bumped `tokenVersion`, so `authToken` is now
+      // rejected. Re-issue it the way a real client would after re-authenticating.
+      authToken = await signTokenForUser(testUser.id);
     });
 
     it('should reject password change with incorrect current password', async () => {
@@ -209,8 +250,8 @@ describe('Profile Update Endpoint', () => {
         });
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toBe('Validation failed');
-      expect(response.body.details.currentPassword).toBeDefined();
+      expect(response.body.error).toBe('Current password is required to change password');
+      expect(fieldErrors(response.body).currentPassword).toBeDefined();
     });
 
     it('should reject stable name that is too short', async () => {
@@ -220,8 +261,8 @@ describe('Profile Update Endpoint', () => {
         .send({ stableName: 'ab' });
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toBe('Validation failed');
-      expect(response.body.details.stableName).toContain('at least 3 characters');
+      expect(response.body.error).toContain('at least 3 characters');
+      expect(fieldErrors(response.body).stableName).toContain('at least 3 characters');
     });
 
     it('should reject stable name that is too long', async () => {
@@ -231,8 +272,8 @@ describe('Profile Update Endpoint', () => {
         .send({ stableName: 'a'.repeat(31) });
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toBe('Validation failed');
-      expect(response.body.details.stableName).toContain('30 characters or less');
+      expect(response.body.error).toContain('30 characters or less');
+      expect(fieldErrors(response.body).stableName).toContain('30 characters or less');
     });
 
     it('should reject stable name with invalid characters', async () => {
@@ -242,8 +283,8 @@ describe('Profile Update Endpoint', () => {
         .send({ stableName: 'Test@Name!' });
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toBe('Validation failed');
-      expect(response.body.details.stableName).toContain('only contain');
+      expect(response.body.error).toContain('only contain');
+      expect(fieldErrors(response.body).stableName).toContain('only contain');
     });
 
     it('should reject stable name with profanity', async () => {
@@ -252,9 +293,11 @@ describe('Profile Update Endpoint', () => {
         .set('Authorization', `Bearer ${authToken}`)
         .send({ stableName: 'BadShitName' });
 
+      // Profanity is a content rule, checked in the handler rather than in the Zod
+      // schema, so this is the one stableName case that reaches the second layer.
       expect(response.status).toBe(400);
-      expect(response.body.error).toBe('Validation failed');
-      expect(response.body.details.stableName).toContain('inappropriate content');
+      expect(response.body.error).toContain('inappropriate content');
+      expect(fieldErrors(response.body).stableName).toContain('inappropriate content');
     });
 
     it('should reject duplicate stable name', async () => {
@@ -290,8 +333,8 @@ describe('Profile Update Endpoint', () => {
         });
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toBe('Validation failed');
-      expect(response.body.details.newPassword).toContain('at least 8 characters');
+      expect(response.body.error).toContain('at least 8 characters');
+      expect(fieldErrors(response.body).newPassword).toContain('at least 8 characters');
     });
 
     it('should reject weak password (no uppercase)', async () => {
@@ -304,8 +347,8 @@ describe('Profile Update Endpoint', () => {
         });
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toBe('Validation failed');
-      expect(response.body.details.newPassword).toContain('uppercase letter');
+      expect(response.body.error).toContain('uppercase letter');
+      expect(fieldErrors(response.body).newPassword).toContain('uppercase letter');
     });
 
     it('should reject weak password (no lowercase)', async () => {
@@ -318,8 +361,8 @@ describe('Profile Update Endpoint', () => {
         });
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toBe('Validation failed');
-      expect(response.body.details.newPassword).toContain('lowercase letter');
+      expect(response.body.error).toContain('lowercase letter');
+      expect(fieldErrors(response.body).newPassword).toContain('lowercase letter');
     });
 
     it('should reject weak password (no number)', async () => {
@@ -332,8 +375,8 @@ describe('Profile Update Endpoint', () => {
         });
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toBe('Validation failed');
-      expect(response.body.details.newPassword).toContain('number');
+      expect(response.body.error).toContain('number');
+      expect(fieldErrors(response.body).newPassword).toContain('number');
     });
 
     it('should reject invalid profile visibility value', async () => {
@@ -343,8 +386,8 @@ describe('Profile Update Endpoint', () => {
         .send({ profileVisibility: 'invalid' });
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toBe('Validation failed');
-      expect(response.body.details.profileVisibility).toBeDefined();
+      expect(response.body.error).toBe("Profile visibility must be 'public' or 'private'");
+      expect(fieldErrors(response.body).profileVisibility).toBeDefined();
     });
 
     it('should reject invalid theme preference value', async () => {
@@ -354,8 +397,8 @@ describe('Profile Update Endpoint', () => {
         .send({ themePreference: 'invalid' });
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toBe('Validation failed');
-      expect(response.body.details.themePreference).toBeDefined();
+      expect(response.body.error).toBe("Theme must be 'dark', 'light', or 'auto'");
+      expect(fieldErrors(response.body).themePreference).toBeDefined();
     });
 
     it('should reject request without authentication token', async () => {
@@ -475,13 +518,15 @@ describe('Profile Update Endpoint', () => {
         });
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toBe('Validation failed');
       expect(response.body.details).toBeDefined();
-      
-      // Verify field-specific error messages are present
-      expect(response.body.details.stableName).toBeDefined();
-      expect(response.body.details.profileVisibility).toBeDefined();
-      expect(response.body.details.themePreference).toBeDefined();
+
+      // Every failing field is named, and `error` repeats their messages so a client
+      // that only reads the string still shows something useful.
+      const errors = fieldErrors(response.body);
+      expect(errors.stableName).toBeDefined();
+      expect(errors.profileVisibility).toBeDefined();
+      expect(errors.themePreference).toBeDefined();
+      expect(response.body.error).toContain(errors.stableName);
     });
   });
 });

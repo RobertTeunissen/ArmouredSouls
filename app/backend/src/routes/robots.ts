@@ -10,7 +10,7 @@ import { trackSpending } from '../services/economy/spendingTracker';
 import logger from '../config/logger';
 import { RobotError, RobotErrorCode } from '../errors/robotErrors';
 import { validateRequest } from '../middleware/schemaValidator';
-import { safeName, positiveIntParam } from '../utils/securityValidation';
+import { positiveIntParam } from '../utils/securityValidation';
 import { verifyRobotOwnership } from '../middleware/ownership';
 import { securityMonitor } from '../services/security/securityMonitor';
 import { handleMulterError } from '../middleware/handleMulterError';
@@ -60,8 +60,23 @@ const robotIdParamsSchema = z.object({
   id: positiveIntParam,
 });
 
+/**
+ * Robot-specific name wording, matching `validateRobotName` in
+ * `services/robot/robotCreationService.ts` so the sentence is the same whichever layer
+ * rejects. The shared `safeName` primitive stays generic because team names and weapon
+ * custom names use it too.
+ */
+const robotNameSchema = z
+  .string({ message: 'Robot name is required' })
+  .min(1, 'Robot name must be between 1 and 50 characters')
+  .max(50, 'Robot name must be between 1 and 50 characters')
+  .regex(
+    /^[a-zA-Z0-9 _\-'.!]+$/,
+    'Robot name can only contain letters, numbers, spaces, hyphens, underscores, apostrophes, periods, and exclamation marks',
+  );
+
 const createRobotBodySchema = z.object({
-  name: safeName,
+  name: robotNameSchema,
 });
 
 const equipWeaponBodySchema = z.object({
@@ -72,12 +87,30 @@ const loadoutTypeBodySchema = z.object({
   loadoutType: z.enum(['single', 'weapon_shield', 'two_handed', 'dual_wield']),
 });
 
+// The messages are user-facing: `validateRequest` builds the response's `error`
+// string from the failing issues, and these schemas run in front of the handlers'
+// own checks below, so the wording here is what reaches the player. It matches the
+// handlers' wording deliberately — a request rejected at either layer reads the same.
 const stanceBodySchema = z.object({
-  stance: z.string().min(1).max(20),
+  stance: z
+    .string({ message: 'Stance is required and must be a string' })
+    .min(1, 'Stance is required and must be a string')
+    // A length bound, described as one. It previously carried the "must be one of"
+    // message, which is misleading: this check only enforces length, and the one-of
+    // check happens in the handler. A 25-character stance would have been told it was
+    // not one of three values when the real problem was its length.
+    //
+    // Deliberately NOT a `z.enum` of the three stances: the handler lowercases before
+    // comparing, so 'OFFENSIVE' is accepted today and an enum here would start
+    // rejecting it. The one-of check stays where the normalisation is.
+    .max(20, 'Stance must be 20 characters or less'),
 });
 
 const yieldThresholdBodySchema = z.object({
-  yieldThreshold: z.coerce.number().min(0).max(50),
+  yieldThreshold: z.coerce
+    .number({ message: 'Yield threshold is required and must be a number' })
+    .min(0, 'Yield threshold must be between 0 and 50')
+    .max(50, 'Yield threshold must be between 0 and 50'),
 });
 
 const appearanceBodySchema = z.object({

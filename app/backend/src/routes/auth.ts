@@ -29,10 +29,33 @@ const router = express.Router();
 
 // --- Zod schemas for auth routes ---
 
+// Spec #51: these messages are the ones the user sees. `validateRequest` now
+// joins them into the response's `error` field, and `RegistrationForm.tsx` maps a
+// VALIDATION_ERROR to the offending input by keyword-matching that text — so each
+// message must name its own field.
+//
+// The wording is kept identical to `utils/validation.ts`, which produced these
+// strings before this Zod schema was placed in front of it. Both layers still run
+// (this one as middleware, `validateRegistrationRequest` inside the handler) and
+// both declare the same bounds, which is a duplication worth collapsing — see the
+// note in tasks.md. It is left alone here to keep this spec's scope to
+// restoration.
 const registerBodySchema = z.object({
-  username: z.string().min(3).max(20).regex(/^[a-zA-Z0-9_-]+$/, 'Username can only contain letters, numbers, underscores, and hyphens'),
-  email: z.string().min(3).max(50).email('Please provide a valid email address'),
-  password: z.string().min(8).max(128),
+  username: z
+    .string()
+    .min(3, 'Username must be at least 3 characters long')
+    .max(20, 'Username must not exceed 20 characters')
+    .regex(/^[a-zA-Z0-9_-]+$/, 'Username can only contain letters, numbers, underscores, and hyphens'),
+  email: z
+    .string()
+    .min(3, 'Email must be at least 3 characters long')
+    .max(50, 'Email must not exceed 50 characters')
+    .regex(/^[a-zA-Z0-9._@-]+$/, 'Email contains invalid characters')
+    .email('Please provide a valid email address'),
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters long')
+    .max(128, 'Password must not exceed 128 characters'),
   stableName: stableNameSchema,
 });
 
@@ -59,16 +82,18 @@ const loginBodySchema = z.object({
  *
  * **Responses:**
  * - `201 Created` — `{ token, user }` on successful registration
- * - `400 Bad Request` — validation error or duplicate username/email/stableName (codes: `VALIDATION_ERROR`, `DUPLICATE_USERNAME`, `DUPLICATE_EMAIL`, `DUPLICATE_STABLE_NAME`)
+ * - `400 Bad Request` — validation error (code: `VALIDATION_ERROR`)
+ * - `409 Conflict` — duplicate username, email, or stable name (codes: `DUPLICATE_USERNAME`, `DUPLICATE_EMAIL`, `DUPLICATE_STABLE_NAME`)
  * - `500 Internal Server Error` — database or unexpected error (codes: `DATABASE_ERROR`, `INTERNAL_ERROR`)
  *
  * @example
  * // Successful registration
  * POST /api/auth/register
- * { "username": "player1", "email": "player1_mail", "password": "securePass1", "stableName": "Iron Warriors" }
+ * { "username": "player1", "email": "player1@mail.com", "password": "securePass1", "stableName": "Iron Warriors" }
  * // → 201 { token: "eyJ...", user: { id, username, email, stableName, currency, prestige, role } }
  *
- * @throws {400} When validation fails, username is taken, email is already registered, or stable name is taken
+ * @throws {400} When validation fails
+ * @throws {409} When username is taken, email is already registered, or stable name is taken
  * @throws {500} When a database error or unexpected error occurs
  */
 router.post('/register', validateRequest({ body: registerBodySchema }), async (req: Request, res: Response) => {
@@ -88,14 +113,24 @@ router.post('/register', validateRequest({ body: registerBodySchema }), async (r
   const existingUsername = await findUserByUsername(username);
   if (existingUsername) {
     logger.warn('Registration rejected: duplicate username', { username });
-    throw new AuthError(AuthErrorCode.USER_ALREADY_EXISTS, 'Username is already taken', 409);
+    // Spec #51: this threw `AuthErrorCode.USER_ALREADY_EXISTS`, which is not a
+    // code the client knows. `RegistrationForm.tsx` switches on
+    // DUPLICATE_USERNAME / DUPLICATE_EMAIL / DUPLICATE_STABLE_NAME to place the
+    // message under the offending field, so USER_ALREADY_EXISTS fell through to
+    // the generic banner and the user never saw which field was wrong. The
+    // OpenAPI spec, the error reference and this route's own docblock all
+    // documented DUPLICATE_USERNAME the whole time — only the throw disagreed.
+    // Shape now matches the DUPLICATE_STABLE_NAME throw below.
+    throw new AppError('DUPLICATE_USERNAME', 'Username is already taken', 409);
   }
 
   // Check for duplicate email
   const existingEmail = await findUserByEmail(email);
   if (existingEmail) {
     logger.warn('Registration rejected: duplicate email', { email });
-    throw new AuthError(AuthErrorCode.EMAIL_ALREADY_EXISTS, 'Email is already registered', 409);
+    // Spec #51: was `AuthErrorCode.EMAIL_ALREADY_EXISTS` — see the duplicate
+    // username case above for why that code never reached the email field.
+    throw new AppError('DUPLICATE_EMAIL', 'Email is already registered', 409);
   }
 
   // Check for duplicate stable name
@@ -175,7 +210,7 @@ router.post('/register', validateRequest({ body: registerBodySchema }), async (r
  * @example
  * // Login with email
  * POST /api/auth/login
- * { "identifier": "player1_mail", "password": "securePass1" }
+ * { "identifier": "player1@mail.com", "password": "securePass1" }
  * // → 200 { token: "eyJ...", user: { ... } }
  *
  * @throws {400} When identifier or password is missing

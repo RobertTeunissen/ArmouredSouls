@@ -111,7 +111,7 @@ sequenceDiagram
     DB-->>US: User | null
 
     alt Username taken
-        API-->>RF: 400 { error, code: "DUPLICATE_USERNAME" }
+        API-->>RF: 409 { error, code: "DUPLICATE_USERNAME" }
     end
 
     API->>US: findUserByEmail(email)
@@ -119,7 +119,7 @@ sequenceDiagram
     DB-->>US: User | null
 
     alt Email taken
-        API-->>RF: 400 { error, code: "DUPLICATE_EMAIL" }
+        API-->>RF: 409 { error, code: "DUPLICATE_EMAIL" }
     end
 
     API->>US: findUserByStableName(stableName)
@@ -127,7 +127,7 @@ sequenceDiagram
     DB-->>US: User | null
 
     alt Stable name taken
-        API-->>RF: 400 { error, code: "DUPLICATE_STABLE_NAME" }
+        API-->>RF: 409 { error, code: "DUPLICATE_STABLE_NAME" }
     end
 
     API->>PS: hashPassword(password)
@@ -229,11 +229,11 @@ flowchart TD
     Valid -->|Yes| DupCheck[Check duplicates]
 
     DupCheck --> Dup{Duplicate?}
-    Dup -->|Yes| R400Dup[400 Duplicate Error]
+    Dup -->|Yes| R409Dup[409 Duplicate Error]
     Dup -->|No| StableCheck[Check stable name duplicate]
 
     StableCheck --> StableDup{Stable name taken?}
-    StableDup -->|Yes| R400Dup
+    StableDup -->|Yes| R409Dup
     StableDup -->|No| Hash[Hash password with bcrypt]
 
     Hash --> CreateUser[Insert user into DB]
@@ -259,7 +259,7 @@ flowchart TD
     UpdateCtx --> Dashboard([Redirect to Dashboard])
 
     R400 --> ShowErr[Display error in form]
-    R400Dup --> ShowErr
+    R409Dup --> ShowErr
     R401 --> ShowErr
     R429 --> ShowErr
 ```

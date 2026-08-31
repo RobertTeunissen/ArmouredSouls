@@ -19,12 +19,31 @@ import express from 'express';
 import cors from 'cors';
 import matchesRoutes from '../src/routes/matches';
 import jwt from 'jsonwebtoken';
+import { errorHandler } from '../src/middleware/errorHandler';
 
 // Create test app
 const app = express();
 app.use(cors());
 app.use(express.json());
 app.use('/api/matches', matchesRoutes);
+
+// Spec #51: without the errorHandler mounted, a thrown AppError falls through
+// to Express's default handler, which sends the right status with an EMPTY
+// body. That is why these suites saw 400 but no `body.error` or `body.code`.
+app.use(errorHandler);
+
+/**
+ * One listening server for the whole file, rather than one per request.
+ *
+ * `request(server)` makes supertest start a fresh ephemeral server and socket for EVERY call.
+ * These properties issue one request per fast-check run, so the file opens dozens and the tier
+ * as a whole opens hundreds — enough for a connection to come back as HTTP 426 instead of 200,
+ * which surfaced here as "Expected 200, Received 426" on a random seed.
+ *
+ * Same failure mode and same fix as the guide-routes suite: bind once and reuse. Requests
+ * below go to `server`, not `app`.
+ */
+let server: import('http').Server;
 
 const JWT_SECRET = process.env.JWT_SECRET || 'test-secret-key';
 
@@ -82,8 +101,6 @@ async function createBattleWithStreamingRevenue(
 ) {
   const battle = await prisma.battle.create({
     data: {
-      robot1Id,
-      robot2Id,
       winnerId,
       winnerReward: 1000,
       loserReward: 500,
@@ -135,6 +152,8 @@ describe('Property 13: Battle Log Contains Streaming Revenue Data', () => {
   let authToken: string;
 
   beforeAll(async () => {
+    server = app.listen(0);
+
     testUser = await prisma.user.create({
       data: {
         username: `test_user_battlelog_${Date.now()}`,
@@ -170,6 +189,7 @@ describe('Property 13: Battle Log Contains Streaming Revenue Data', () => {
 
   afterAll(async () => {
     await prisma.user.deleteMany({ where: { id: testUser.id } }).catch(() => {});
+    await new Promise<void>((resolve) => server.close(() => resolve()));
     await prisma.$disconnect();
   });
 
@@ -206,7 +226,7 @@ describe('Property 13: Battle Log Contains Streaming Revenue Data', () => {
             robot1.id, robot2.id, winnerId, totalRevenue1, totalRevenue2,
           );
 
-          const response = await request(app)
+          const response = await request(server)
             .get(`/api/matches/battles/${battle.id}/log`)
             .set('Authorization', `Bearer ${authToken}`);
 
@@ -263,7 +283,7 @@ describe('Property 13: Battle Log Contains Streaming Revenue Data', () => {
             robot1.id, robot2.id, winnerId, totalRevenue1, totalRevenue2,
           );
 
-          const response = await request(app)
+          const response = await request(server)
             .get(`/api/matches/battles/${battle.id}/log`)
             .set('Authorization', `Bearer ${authToken}`);
 
@@ -316,7 +336,7 @@ describe('Property 13: Battle Log Contains Streaming Revenue Data', () => {
             robot1.id, robot2.id, null, totalRevenue1, totalRevenue2,
           );
 
-          const response = await request(app)
+          const response = await request(server)
             .get(`/api/matches/battles/${battle.id}/log`)
             .set('Authorization', `Bearer ${authToken}`);
 
@@ -359,7 +379,7 @@ describe('Property 13: Battle Log Contains Streaming Revenue Data', () => {
             robot1.id, robot2.id, robot1.id, expectedRevenue, expectedRevenue,
           );
 
-          const response = await request(app)
+          const response = await request(server)
             .get(`/api/matches/battles/${battle.id}/log`)
             .set('Authorization', `Bearer ${authToken}`);
 

@@ -25,15 +25,23 @@ jest.mock('node-cron', () => ({
   schedule: (...args: any[]) => mockSchedule(...args),
 }));
 
-// Mock logger to capture log output
+// Mock logger to capture log output.
+//
+// The message is coerced to a string. Winston accepts a non-string first argument
+// and some scheduler call sites pass one, which previously landed in `logEntries`
+// unconverted and made every `e.message.includes(...)` filter throw
+// `e.message.includes is not a function` — a failure that pointed at the assertion
+// rather than at the harness.
 const logEntries: { level: string; message: string }[] = [];
+const asMessage = (msg: unknown): string =>
+  typeof msg === 'string' ? msg : msg instanceof Error ? msg.message : JSON.stringify(msg) ?? String(msg);
 jest.mock('../src/config/logger', () => ({
   __esModule: true,
   default: {
-    info: (msg: string) => logEntries.push({ level: 'info', message: msg }),
-    error: (msg: string) => logEntries.push({ level: 'error', message: msg }),
-    warn: (msg: string) => logEntries.push({ level: 'warn', message: msg }),
-    debug: (msg: string) => logEntries.push({ level: 'debug', message: msg }),
+    info: (msg: unknown) => logEntries.push({ level: 'info', message: asMessage(msg) }),
+    error: (msg: unknown) => logEntries.push({ level: 'error', message: asMessage(msg) }),
+    warn: (msg: unknown) => logEntries.push({ level: 'warn', message: asMessage(msg) }),
+    debug: (msg: unknown) => logEntries.push({ level: 'debug', message: asMessage(msg) }),
   },
 }));
 

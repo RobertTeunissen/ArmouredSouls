@@ -679,7 +679,11 @@ describe('Practice Arena Service', () => {
         },
       });
 
-      // Verify NO write operations on any table
+      // No battle, participant, robot or audit state is written by a practice
+      // battle. The one permitted write is the `totalPracticeBattles` counter on
+      // `users`, which the achievement system's `practice_battles` trigger reads
+      // (PRD_ACHIEVEMENT_SYSTEM.md). It is asserted exactly rather than excluded,
+      // so a second field creeping into that update still fails this test.
       expect(mockPrisma.robot.create).not.toHaveBeenCalled();
       expect(mockPrisma.robot.update).not.toHaveBeenCalled();
       expect(mockPrisma.robot.delete).not.toHaveBeenCalled();
@@ -688,8 +692,12 @@ describe('Practice Arena Service', () => {
       expect(mockPrisma.robot.upsert).not.toHaveBeenCalled();
       expect(mockPrisma.robot.deleteMany).not.toHaveBeenCalled();
       expect(mockPrisma.user.create).not.toHaveBeenCalled();
-      expect(mockPrisma.user.update).not.toHaveBeenCalled();
       expect(mockPrisma.user.delete).not.toHaveBeenCalled();
+      expect(mockPrisma.user.update).toHaveBeenCalledTimes(1);
+      expect(mockPrisma.user.update).toHaveBeenCalledWith({
+        where: { id: 1 },
+        data: { totalPracticeBattles: { increment: 1 } },
+      });
       expect(mockPrisma.battle.create).not.toHaveBeenCalled();
       expect(mockPrisma.battle.update).not.toHaveBeenCalled();
       expect(mockPrisma.battle.delete).not.toHaveBeenCalled();

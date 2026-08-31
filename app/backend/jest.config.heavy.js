@@ -1,27 +1,19 @@
-// Heavy integration tests: full cycle execution, bulk operations
-// These tests hit the real database with full game cycles and should be run separately
-// Run with: npm run test:heavy
+// Heavy integration tests: full cycle execution, bulk operations.
+// These hit the real database with full game cycles and run in their own job.
+// Run with: pnpm run test:heavy
+//
+// Spec #51: test selection comes from jest.tiers.js (the HEAVY_TESTS list).
+// Until Spec #51 this tier ran in NO pipeline — `test:heavy` appeared in
+// package.json and in neither workflow — so suites collected only here had never
+// executed in CI. `tests/integration/tagTeamByeHandling.test.ts` carried an
+// assertion that could never pass and nothing caught it.
 const base = require('./jest.config');
+const { testMatchFor } = require('./jest.tiers');
 
 module.exports = {
   ...base,
-  testMatch: undefined,
-  testRegex: [
-    'tests/integration/.+\\.test\\.ts$',
-    'tests/integration\\.test\\.ts$',
-    'streamingRevenueFormula\\.property\\.test\\.ts$',
-    'tagTeamBattleOrchestrator\\.property\\.test\\.ts$',
-    'repairCostMultiRobot\\.property\\.test\\.ts$',
-    'tagTeamValidation\\.property\\.test\\.ts$',
-    'battleOrchestrator\\.test\\.ts$',
-    'cycleSnapshot\\.property\\.test\\.ts$',
-    'tagTeamLeagueInstance\\.property\\.test\\.ts$',
-    'tagTeamLeagueInstanceService\\.test\\.ts$',
-    'facilityRecommendation\\.property\\.test\\.ts$',
-    'multiMatchScheduling\\.property\\.test\\.ts$',
-    'financialReportStreamingRevenue\\.property\\.test\\.ts$',
-    'leagueInstanceService\\.test\\.ts$',
-  ],
+  testRegex: undefined,
+  testMatch: testMatchFor('heavy'),
   maxWorkers: 1,
   testTimeout: 120000,
 };

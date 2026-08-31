@@ -166,7 +166,7 @@ describe('Stables API - GET /api/stables/:userId', () => {
   it('should return correct response shape for a user with robots and facilities', async () => {
     const suffix = `${Date.now()}_${Math.random().toString(36).substring(7)}`;
     // Create robots for the target user
-    await prisma.robot.create({
+    const alpha = await prisma.robot.create({
       data: {
         name: `Alpha Bot ${suffix}`,
         userId: testUser.id,
@@ -209,7 +209,7 @@ describe('Stables API - GET /api/stables/:userId', () => {
       },
     });
 
-    await prisma.robot.create({
+    const beta = await prisma.robot.create({
       data: {
         name: `Beta Bot ${suffix}`,
         userId: testUser.id,
@@ -251,6 +251,58 @@ describe('Stables API - GET /api/stables/:userId', () => {
         formationTactics: 5,
       },
     });
+
+    // Stable stats are derived from `battle_participants`, not from the Robot counters
+    // set above. Spec #43 dropped `battles.robot1_id`/`robot2_id` and made participant
+    // rows the source of truth, so `stableViewService` counts real battles. The Robot
+    // counters are that robot's own lifetime figures and no longer feed this aggregate;
+    // this fixture set only those, which is why every stat came back 0.
+    const opponentUser = await prisma.user.create({
+      data: {
+        username: `so_${suffix}`,
+        passwordHash: 'unused',
+        role: 'user',
+      },
+    });
+    testUserIds.push(opponentUser.id);
+    const opponent = await prisma.robot.create({
+      data: {
+        name: `Opponent Bot ${suffix}`,
+        userId: opponentUser.id,
+        elo: 1400,
+        currentHP: 100,
+        maxHP: 100,
+        currentShield: 10,
+        maxShield: 10,
+      },
+    });
+
+    /** One league_1v1 battle between `ours` and the opponent. */
+    const recordBattle = async (ours: { id: number }, winnerId: number | null) => {
+      await prisma.battle.create({
+        data: {
+          winnerId,
+          battleType: 'league_1v1',
+          leagueType: 'bronze',
+          durationSeconds: 30,
+          battleLog: { events: [] },
+          participants: {
+            create: [
+              { robotId: ours.id, team: 1, credits: 0, eloBefore: 1200, eloAfter: 1200, finalHP: 50 },
+              { robotId: opponent.id, team: 2, credits: 0, eloBefore: 1200, eloAfter: 1200, finalHP: 50 },
+            ],
+          },
+        },
+      });
+    };
+
+    // Alpha: 10 wins, 3 losses, 2 draws. Beta: 5 wins, 5 losses.
+    // Totals: 25 battles, 15 wins, 8 losses, 2 draws -> 60% win rate.
+    for (let i = 0; i < 10; i++) await recordBattle(alpha, alpha.id);
+    for (let i = 0; i < 3; i++) await recordBattle(alpha, opponent.id);
+    for (let i = 0; i < 2; i++) await recordBattle(alpha, null);
+    for (let i = 0; i < 5; i++) await recordBattle(beta, beta.id);
+    for (let i = 0; i < 5; i++) await recordBattle(beta, opponent.id);
 
     // Create a facility for the target user
     await prisma.facility.create({

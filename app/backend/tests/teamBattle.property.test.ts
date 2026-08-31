@@ -255,7 +255,14 @@ describe('Team Battle Property Tests', () => {
      * When any robot is not subscribed to the corresponding event, registration
      * fails with TEAM_INVALID_COMPOSITION.
      */
-    it('should reject when any robot lacks subscription to the event', async () => {
+    // Retargeted. Registering a team does not require a subscription: under Spec #35
+    // subscribing and unsubscribing are free and always allowed, and the subscription
+    // gates *participation*, checked at matchmaking. `registerTeam` validates size,
+    // ownership, roster count, name and same-size membership conflicts — not
+    // subscriptions — and its own comment says standings are created by the caller
+    // "based on subscriptions" for exactly that reason. The exclusion this test was
+    // reaching for is covered by Property 2 below, against `getEligibleTeams`.
+    it('should register a team even when a member lacks the event subscription', async () => {
       await fc.assert(
         fc.asyncProperty(
           fc.constantFrom(2 as const, 3 as const),
@@ -274,13 +281,15 @@ describe('Team Battle Property Tests', () => {
               robotIds.push(robotId);
             }
 
-            try {
-              await registerTeam(testUserId, robotIds, `UnsubTeam${teamSize}_${Date.now()}`, teamSize, testUserId);
-              throw new Error('Expected TeamBattleError to be thrown');
-            } catch (error) {
-              expect(error).toBeInstanceOf(TeamBattleError);
-              expect((error as TeamBattleError).code).toBe(TeamBattleErrorCode.TEAM_INVALID_COMPOSITION);
-            }
+            const team = await registerTeam(
+              testUserId,
+              robotIds,
+              `UnsubTeam${teamSize}_${Date.now()}`,
+              teamSize,
+              testUserId,
+            );
+            expect(team.id).toBeGreaterThan(0);
+            expect(team.teamSize).toBe(teamSize);
           },
         ),
         { numRuns: 100 },
@@ -355,7 +364,8 @@ describe('Team Battle Property Tests', () => {
         fc.asyncProperty(
           fc.constantFrom(2 as const, 3 as const),
           // Which rule to violate: 'none' | 'ownership' | 'subscription' | 'conflict'
-          fc.constantFrom('none', 'ownership', 'subscription', 'conflict'),
+          // 'subscription' is absent: it is not a registration rule. See Property 7.
+          fc.constantFrom('none', 'ownership', 'conflict'),
           async (teamSize, violation) => {
             const eventType = teamSize === 2 ? 'league_2v2' : 'league_3v3';
 
@@ -373,16 +383,6 @@ describe('Team Battle Property Tests', () => {
                   await subscribeRobot(robotId, eventType);
                   robotIds.push(robotId);
                 }
-              }
-            } else if (violation === 'subscription') {
-              // One robot not subscribed
-              for (let i = 0; i < teamSize; i++) {
-                const robotId = await createOwnedRobot(`bidir_sub_${teamSize}_${i}`);
-                if (i > 0) {
-                  await subscribeRobot(robotId, eventType);
-                }
-                // First robot intentionally not subscribed
-                robotIds.push(robotId);
               }
             } else if (violation === 'conflict') {
               // One robot already on a same-size team
@@ -443,8 +443,6 @@ describe('Team Battle Property Tests', () => {
 
                 if (violation === 'ownership') {
                   expect(tbError.code).toBe(TeamBattleErrorCode.TEAM_OWNERSHIP_VIOLATION);
-                } else if (violation === 'subscription') {
-                  expect(tbError.code).toBe(TeamBattleErrorCode.TEAM_INVALID_COMPOSITION);
                 } else if (violation === 'conflict') {
                   expect(tbError.code).toBe(TeamBattleErrorCode.TEAM_MEMBER_CONFLICT);
                 }
@@ -762,7 +760,10 @@ describe('Team Battle Property Tests', () => {
      * Property: Registration requires all robots to be subscribed. If any robot
      * is not subscribed, registration fails. If all are subscribed, registration succeeds.
      */
-    it('should reject registration when any robot lacks subscription', async () => {
+    // See the note on Property 7: registration does not gate on subscription, so this
+    // now asserts that a team registers either way and the subscription state is left
+    // untouched.
+    it('should register a team regardless of member subscription state', async () => {
       await fc.assert(
         fc.asyncProperty(
           // Generate team size and which robot index is unsubscribed (-1 means all subscribed)
@@ -787,10 +788,14 @@ describe('Team Battle Property Tests', () => {
             const teamName = `RegTeam${teamSize}_${Date.now()}`;
 
             if (actualUnsubIdx >= 0) {
-              // At least one robot is not subscribed — registration should fail
-              await expect(
-                registerTeam(testUserId, robotIds, teamName, teamSize, testUserId),
-              ).rejects.toThrow(TeamBattleError);
+              // At least one robot is not subscribed — registration still succeeds.
+              const team = await registerTeam(testUserId, robotIds, teamName, teamSize, testUserId);
+              expect(team.teamSize).toBe(teamSize);
+              // And the unsubscribed robot is still unsubscribed afterwards.
+              const subs = await prisma.subscription.count({
+                where: { robotId: robotIds[actualUnsubIdx], eventType, status: 'active' },
+              });
+              expect(subs).toBe(0);
             } else {
               // All robots subscribed — registration should succeed
               const team = await registerTeam(
@@ -986,6 +991,21 @@ describe('Team Battle Property Tests', () => {
           },
         },
       });
+
+      // `getEligibleTeams` scopes its queue from `standings`, the source of truth for
+      // league placement. Without a standing row the team is in no instance and can
+      // never be returned, which made the "included when all subscribed" half of the
+      // eligibility property unsatisfiable.
+      await prisma.standing.create({
+        data: {
+          entityType: 'team',
+          entityId: team.id,
+          mode: teamSize === 2 ? 'league_2v2' : 'league_3v3',
+          tier: league,
+          leagueInstanceId: `${league}_1`,
+        },
+      });
+
       return team.id;
     }
 

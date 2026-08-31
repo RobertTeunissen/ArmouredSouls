@@ -13,7 +13,6 @@ import fc from 'fast-check';
 import { Prisma, MatchType } from '../generated/prisma';
 import { executeScheduledBattles } from '../src/services/league/leagueBattleOrchestrator';
 import { exportCycleBattlesToCSV } from '../src/services/cycle/cycleCsvExportService';
-import { clearSequenceCache } from '../src/services/common/eventLogger';
 import schedulingService from '../src/services/scheduling/schedulingService';
 import prisma from '../src/lib/prisma';
 import { battlesForRobots, battlesForUsers, robotIdsForUsers, scheduledMatchesForRobots } from './cleanupHelper';
@@ -123,7 +122,6 @@ describe('Property 15: Cycle CSV Contains Streaming Revenue Column', () => {
   });
 
   afterEach(async () => {
-    clearSequenceCache(testCycleNumber);
 
     // Cleanup - delete in correct order to avoid foreign key constraints
     // Clean up audit log entries for this test cycle

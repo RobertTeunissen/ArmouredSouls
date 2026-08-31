@@ -43,6 +43,16 @@ const mockPrisma = {
     aggregate: jest.fn().mockResolvedValue({ _sum: { credits: 0, streamingRevenue: 0 } }),
     count: jest.fn().mockResolvedValue(0),
   },
+  // `checkAndAward` pre-fetches robot standings and team memberships alongside the
+  // robot row, because per-mode counters live in `standings` rather than on Robot.
+  // Both are awaited in the same `Promise.all`, so omitting either made every
+  // award test see the empty array that `checkAndAward`'s own catch block returns.
+  standing: {
+    findMany: jest.fn().mockResolvedValue([]),
+  },
+  teamBattleMember: {
+    findMany: jest.fn().mockResolvedValue([]),
+  },
   $queryRawUnsafe: jest.fn().mockResolvedValue([{ count: BigInt(0) }]),
   $executeRawUnsafe: jest.fn().mockResolvedValue(0),
 };
@@ -90,6 +100,8 @@ beforeEach(() => {
   mockPrisma.tuningAllocation.findMany.mockResolvedValue([]);
   mockPrisma.battleParticipant.aggregate.mockResolvedValue({ _sum: { credits: 0, streamingRevenue: 0 } });
   mockPrisma.battleParticipant.count.mockResolvedValue(0);
+  mockPrisma.standing.findMany.mockResolvedValue([]);
+  mockPrisma.teamBattleMember.findMany.mockResolvedValue([]);
   mockPrisma.$queryRawUnsafe.mockResolvedValue([{ count: BigInt(0) }]);
   mockPrisma.$executeRawUnsafe.mockResolvedValue(0);
 });

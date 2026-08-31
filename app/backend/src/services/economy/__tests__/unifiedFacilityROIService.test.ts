@@ -76,6 +76,11 @@ describe('UnifiedFacilityROIService', () => {
           stableMetrics: [m],
         }))
       );
+
+      // The Repair_Bay savings estimate reads the stable's robot count, because the
+      // Repair_Bay_Discount scales with it. Without this the repair_bay case threw
+      // on `robots.length` before reaching an assertion.
+      (mockedPrisma.robot.findMany as jest.Mock).mockResolvedValue([{ id: 1 }, { id: 2 }]);
     };
 
     it('should calculate ROI for merchandising_hub from snapshot data', async () => {
@@ -431,10 +436,25 @@ describe('UnifiedFacilityROIService', () => {
         { userId: 1, facilityType: 'streaming_studio', level: 1, maxLevel: 10 },
       ]);
 
-      // Mock for each calculateFacilityROI call
-      (mockedPrisma.facility.findUnique as jest.Mock)
-        .mockResolvedValueOnce({ userId: 1, facilityType: 'merchandising_hub', level: 2, maxLevel: 10 })
-        .mockResolvedValueOnce({ userId: 1, facilityType: 'streaming_studio', level: 1, maxLevel: 10 });
+      // Routed on facilityType rather than queued with mockResolvedValueOnce.
+      // Merchandising ROI also looks up `roster_expansion` (Spec #46 R2), so the
+      // number of findUnique calls is no longer one per facility. A queue that is
+      // not fully drained survives `jest.clearAllMocks()` — which clears calls but
+      // not queued once-values — and the leftover entry was being returned to the
+      // next test in the file, where it reported a facility level of 2 for a
+      // fixture that said 1.
+      (mockedPrisma.facility.findUnique as jest.Mock).mockImplementation(
+        ({ where }: { where: { userId_facilityType: { facilityType: string } } }) => {
+          const type = where.userId_facilityType.facilityType;
+          const levels: Record<string, number> = {
+            merchandising_hub: 2,
+            streaming_studio: 1,
+            roster_expansion: 0,
+          };
+          if (!(type in levels)) return Promise.resolve(null);
+          return Promise.resolve({ userId: 1, facilityType: type, level: levels[type], maxLevel: 10 });
+        },
+      );
 
       (mockedPrisma.cycleMetadata.findUnique as jest.Mock).mockResolvedValue({
         id: 1,

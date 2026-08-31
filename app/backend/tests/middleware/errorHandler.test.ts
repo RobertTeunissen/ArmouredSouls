@@ -6,7 +6,7 @@
  * 2. Prisma error mapping - P2002→409, P2025→404, P2003→400, P2014→400
  * 3. Unknown error fallback - returns 500 with INTERNAL_ERROR
  * 4. Production mode redaction - hides stack traces in production/acceptance environments
- * 5. Development mode - includes stack traces
+ * 5. Non-production - adds one fixed hint, and still no stack or raw message
  *
  * @module tests/middleware/errorHandler
  */
@@ -26,11 +26,28 @@ jest.mock('../../src/config/logger', () => ({
   default: mockLogger,
 }));
 
+// The handler branches on `getConfig().nodeEnv`. Mocked rather than driven through
+// `process.env` + `_resetConfigForTesting`, for two reasons: `getConfig()` memoises, so
+// setting the variable alone has no effect and every environment-dependent test here
+// silently ran under the ambient environment; and a genuine reload under
+// `NODE_ENV=production` fails validation on the development JWT_SECRET and calls
+// `process.exit(1)`, taking the worker with it.
+let mockNodeEnv = 'test';
+jest.mock('../../src/config/env', () => ({
+  getConfig: () => ({ nodeEnv: mockNodeEnv }),
+}));
+
 // Import after mocking
 import { errorHandler } from '../../src/middleware/errorHandler';
 import { AppError } from '../../src/errors/AppError';
 
 describe('errorHandler middleware', () => {
+
+  /** Point the mocked config at an environment. */
+  const setNodeEnv = (value: string | undefined): void => {
+    mockNodeEnv = value ?? '';
+  };
+
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
   let mockNext: NextFunction;
@@ -231,16 +248,22 @@ describe('errorHandler middleware', () => {
       );
     });
 
-    test('should include original Prisma error message in response', () => {
+    test('should NOT reflect the original Prisma error message to the client', () => {
       const originalMessage = 'Unique constraint failed on the fields: (`email`)';
       const error = createPrismaError('P2002', originalMessage);
 
       errorHandler(error, mockRequest as Request, mockResponse as Response, mockNext);
 
-      expect(jsonMock).toHaveBeenCalledWith(
-        expect.objectContaining({
-          error: originalMessage,
-        })
+      // Inverted deliberately. The handler returns a generic message derived from the
+      // mapped code and logs the Prisma text instead, because a Prisma message can echo
+      // submitted values — the column names and, for some codes, the value itself. This
+      // test asserted the opposite, from before that hardening; it had never run.
+      const body = jsonMock.mock.calls[0][0];
+      expect(body).toEqual({ error: 'database unique violation', code: 'DATABASE_UNIQUE_VIOLATION' });
+      expect(JSON.stringify(body)).not.toContain('email');
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Prisma error',
+        expect.objectContaining({ prismaMessage: originalMessage }),
       );
     });
 
@@ -249,9 +272,12 @@ describe('errorHandler middleware', () => {
 
       errorHandler(error, mockRequest as Request, mockResponse as Response, mockNext);
 
+      // `prismaMessage` is part of the log entry: it is where the detail goes now that
+      // the response no longer carries it.
       expect(mockLogger.warn).toHaveBeenCalledWith('Prisma error', {
         prismaCode: 'P2002',
         mapped: 'DATABASE_UNIQUE_VIOLATION',
+        prismaMessage: 'Unique constraint failed',
         method: 'GET',
         path: '/api/test',
       });
@@ -272,14 +298,12 @@ describe('errorHandler middleware', () => {
   });
 
   describe('Unknown error fallback', () => {
-    const originalEnv = process.env.NODE_ENV;
-
     afterEach(() => {
-      process.env.NODE_ENV = originalEnv;
+      setNodeEnv('test');
     });
 
     test('should return 500 status for unknown errors', () => {
-      process.env.NODE_ENV = 'development';
+      setNodeEnv('development');
       const error = new Error('Something went wrong');
 
       errorHandler(error, mockRequest as Request, mockResponse as Response, mockNext);
@@ -288,7 +312,7 @@ describe('errorHandler middleware', () => {
     });
 
     test('should return INTERNAL_ERROR code for unknown errors', () => {
-      process.env.NODE_ENV = 'development';
+      setNodeEnv('development');
       const error = new Error('Something went wrong');
 
       errorHandler(error, mockRequest as Request, mockResponse as Response, mockNext);
@@ -301,7 +325,7 @@ describe('errorHandler middleware', () => {
     });
 
     test('should return generic error message for unknown errors', () => {
-      process.env.NODE_ENV = 'development';
+      setNodeEnv('development');
       const error = new Error('Something went wrong');
 
       errorHandler(error, mockRequest as Request, mockResponse as Response, mockNext);
@@ -314,7 +338,7 @@ describe('errorHandler middleware', () => {
     });
 
     test('should log unknown error with error level', () => {
-      process.env.NODE_ENV = 'development';
+      setNodeEnv('development');
       const error = new Error('Something went wrong');
 
       errorHandler(error, mockRequest as Request, mockResponse as Response, mockNext);
@@ -328,7 +352,7 @@ describe('errorHandler middleware', () => {
     });
 
     test('should handle errors without stack trace', () => {
-      process.env.NODE_ENV = 'development';
+      setNodeEnv('development');
       const error = new Error('No stack error');
       delete error.stack;
 
@@ -344,14 +368,12 @@ describe('errorHandler middleware', () => {
   });
 
   describe('Production mode redaction', () => {
-    const originalEnv = process.env.NODE_ENV;
-
     afterEach(() => {
-      process.env.NODE_ENV = originalEnv;
+      setNodeEnv('test');
     });
 
     test('should hide stack trace in production environment', () => {
-      process.env.NODE_ENV = 'production';
+      setNodeEnv('production');
       const error = new Error('Production error');
 
       errorHandler(error, mockRequest as Request, mockResponse as Response, mockNext);
@@ -366,7 +388,7 @@ describe('errorHandler middleware', () => {
     });
 
     test('should hide stack trace in acceptance environment', () => {
-      process.env.NODE_ENV = 'acceptance';
+      setNodeEnv('acceptance');
       const error = new Error('Acceptance error');
 
       errorHandler(error, mockRequest as Request, mockResponse as Response, mockNext);
@@ -381,7 +403,7 @@ describe('errorHandler middleware', () => {
     });
 
     test('should not expose internal error details in production', () => {
-      process.env.NODE_ENV = 'production';
+      setNodeEnv('production');
       const error = new Error('Database connection failed: password incorrect');
 
       errorHandler(error, mockRequest as Request, mockResponse as Response, mockNext);
@@ -394,64 +416,61 @@ describe('errorHandler middleware', () => {
   });
 
   describe('Development mode', () => {
-    const originalEnv = process.env.NODE_ENV;
-
     afterEach(() => {
-      process.env.NODE_ENV = originalEnv;
+      setNodeEnv('test');
     });
 
-    test('should include stack trace in development environment', () => {
-      process.env.NODE_ENV = 'development';
+    // These four asserted a stack trace and the raw error text in the response body
+    // outside production. That was removed deliberately: an unknown error's message can
+    // contain submitted input, so reflecting it is an XSS vector, and a stack discloses
+    // paths. Non-production now differs from production by one fixed sentence and
+    // nothing else. Inverted rather than deleted so the hardening is pinned.
+    const NON_PRODUCTION_HINT = 'An unexpected error occurred. Check server logs for details.';
+
+    test('should add only a fixed hint outside production, never a stack', () => {
+      setNodeEnv('development');
       const error = new Error('Development error');
 
       errorHandler(error, mockRequest as Request, mockResponse as Response, mockNext);
 
-      expect(jsonMock).toHaveBeenCalledWith(
-        expect.objectContaining({
-          stack: expect.any(String),
-        })
-      );
+      expect(jsonMock).toHaveBeenCalledWith({
+        error: 'Internal Server Error',
+        code: 'INTERNAL_ERROR',
+        message: NON_PRODUCTION_HINT,
+      });
     });
 
-    test('should include original error message in development environment', () => {
-      process.env.NODE_ENV = 'development';
+    test('should NOT reflect the original error message outside production', () => {
+      setNodeEnv('development');
       const error = new Error('Detailed development error');
 
       errorHandler(error, mockRequest as Request, mockResponse as Response, mockNext);
 
-      expect(jsonMock).toHaveBeenCalledWith(
-        expect.objectContaining({
-          message: 'Detailed development error',
-        })
-      );
+      const body = jsonMock.mock.calls[0][0];
+      expect(JSON.stringify(body)).not.toContain('Detailed development error');
+      expect(body.message).toBe(NON_PRODUCTION_HINT);
     });
 
-    test('should include stack trace in test environment', () => {
-      process.env.NODE_ENV = 'test';
+    test('should behave the same in the test environment', () => {
+      setNodeEnv('test');
       const error = new Error('Test environment error');
 
       errorHandler(error, mockRequest as Request, mockResponse as Response, mockNext);
 
-      expect(jsonMock).toHaveBeenCalledWith(
-        expect.objectContaining({
-          stack: expect.any(String),
-          message: 'Test environment error',
-        })
-      );
+      const body = jsonMock.mock.calls[0][0];
+      expect(body).not.toHaveProperty('stack');
+      expect(body.message).toBe(NON_PRODUCTION_HINT);
     });
 
-    test('should include stack trace when NODE_ENV is undefined', () => {
-      delete process.env.NODE_ENV;
+    test('should behave the same when NODE_ENV is undefined', () => {
+      setNodeEnv(undefined);
       const error = new Error('No env error');
 
       errorHandler(error, mockRequest as Request, mockResponse as Response, mockNext);
 
-      expect(jsonMock).toHaveBeenCalledWith(
-        expect.objectContaining({
-          stack: expect.any(String),
-          message: 'No env error',
-        })
-      );
+      const body = jsonMock.mock.calls[0][0];
+      expect(body).not.toHaveProperty('stack');
+      expect(body.message).toBe(NON_PRODUCTION_HINT);
     });
   });
 
@@ -470,7 +489,7 @@ describe('errorHandler middleware', () => {
     });
 
     test('should log request method and path for unknown errors', () => {
-      process.env.NODE_ENV = 'development';
+      setNodeEnv('development');
       mockRequest.method = 'DELETE';
       mockRequest.originalUrl = '/api/robots/123';
       const error = new Error('Unknown error');

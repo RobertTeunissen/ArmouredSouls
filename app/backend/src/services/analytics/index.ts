@@ -11,14 +11,6 @@ export type {
   MatchPair,
 } from './matchmakingService';
 
-export {
-  robotStatsViewService,
-  RobotStatsViewService,
-} from './robotStatsViewService';
-export type {
-  RobotStats,
-  LeaderboardOptions,
-} from './robotStatsViewService';
 
 export {
   robotPerformanceService,
@@ -48,8 +40,6 @@ export type { CurrentCycleInfo } from './cycleAnalyticsService';
 export { getStableSummary } from './stableAnalyticsService';
 export type { StableSummary } from './stableAnalyticsService';
 
-export { getLeaderboardWithTotal } from './leaderboardAnalyticsService';
-export type { LeaderboardResult } from './leaderboardAnalyticsService';
 
 export { getKothPerformance } from './kothAnalyticsService';
 export type { KothPerformance } from './kothAnalyticsService';

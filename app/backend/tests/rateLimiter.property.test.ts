@@ -14,7 +14,19 @@ function createApp(options: { max: number; keyGenerator?: (req: Request) => stri
   app.set('trust proxy', true);
 
   const limiterOptions: Parameters<typeof rateLimit>[0] = {
-    windowMs: 60 * 1000,
+    // 10 minutes, not 60 seconds.
+    //
+    // The property under test is "once the limit is exceeded within the window, the next
+    // request is 429". The window LENGTH is fixture detail, and a 60s one made the test
+    // depend on wall-clock time: `MemoryStore` rolls its counters when the window elapses,
+    // so a run slow enough to straddle that boundary sees the count reset and the
+    // over-limit request correctly return 200. That is the store behaving properly and the
+    // fixture asking the wrong question.
+    //
+    // It failed exactly once in a ~300s full-tier run (seed -1377824546, limit 15) and
+    // never in isolation. A window far longer than the suite can possibly take removes the
+    // timing variable while asserting the identical property.
+    windowMs: 10 * 60 * 1000,
     max: options.max,
     standardHeaders: true,
     legacyHeaders: false,

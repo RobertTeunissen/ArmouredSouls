@@ -19,9 +19,9 @@ info:
     | Code                | HTTP Status | Description                        |
     |---------------------|-------------|------------------------------------|
     | VALIDATION_ERROR    | 400         | Input failed validation rules      |
-    | DUPLICATE_USERNAME  | 400         | Username is already taken          |
-    | DUPLICATE_STABLE_NAME | 400       | Stable name is already taken       |
-    | DUPLICATE_EMAIL     | 400         | Email is already registered        |
+    | DUPLICATE_USERNAME  | 409         | Username is already taken          |
+    | DUPLICATE_STABLE_NAME | 409       | Stable name is already taken       |
+    | DUPLICATE_EMAIL     | 409         | Email is already registered        |
     | DATABASE_ERROR      | 500         | A database error occurred          |
     | INTERNAL_ERROR      | 500         | An unexpected server error occurred|
     | INVALID_CREDENTIALS | 401         | Invalid login credentials          |
@@ -94,7 +94,11 @@ paths:
                       role: user
         '400':
           description: |
-            Bad request — validation failure, duplicate username, duplicate stable name, or duplicate email.
+            Bad request — validation failure.
+
+            A duplicate username, stable name or email is a `409`, not a `400`.
+            Every `VALIDATION_ERROR` message names the field it concerns, because
+            the client places the message under that input by keyword-matching it.
           content:
             application/json:
               schema:
@@ -105,6 +109,14 @@ paths:
                   value:
                     error: "Username must be at least 3 characters long"
                     code: VALIDATION_ERROR
+        '409':
+          description: |
+            Conflict — the username, stable name or email is already taken.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
                 duplicateUsername:
                   summary: Username already taken
                   value:

@@ -6,6 +6,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import matchesRoutes from '../src/routes/matches';
 import { createTestUser, createTestRobot, deleteTestUser } from './testHelpers';
+import { errorHandler } from '../src/middleware/errorHandler';
 
 dotenv.config();
 
@@ -16,8 +17,13 @@ app.use(cors());
 app.use(express.json());
 app.use('/api/matches', matchesRoutes);
 
+// Spec #51: without the errorHandler mounted, a thrown AppError falls through
+// to Express's default handler, which sends the right status with an EMPTY
+// body. That is why these suites saw 400 but no `body.error` or `body.code`.
+app.use(errorHandler);
+
 describe('Matches Routes', () => {
-  let testUserIds: number[] = [];
+  const testUserIds: number[] = [];
   let testUser: any;
   let authToken: string;
   let testRobotId: number | undefined;
@@ -101,8 +107,11 @@ describe('Matches Routes', () => {
       expect(response.status).toBe(200);
       expect(response.body.pagination).toHaveProperty('page');
       expect(response.body.pagination.page).toBe(1);
-      expect(response.body.pagination).toHaveProperty('perPage');
-      expect(response.body.pagination.perPage).toBe(10);
+      // The request parameter is `perPage`; the response field is `pageSize`. That
+      // asymmetry is what the frontend reads (LeagueStandingsPage.tsx and the shared
+      // pagination shape), so the response side is asserted as `pageSize`.
+      expect(response.body.pagination).toHaveProperty('pageSize');
+      expect(response.body.pagination.pageSize).toBe(10);
     });
 
     it('should filter by robot ID', async () => {

@@ -6,6 +6,42 @@ import {
   getLeagueInstanceStats,
   MAX_ROBOTS_PER_INSTANCE,
 } from '../../src/services/league/leagueInstanceService';
+import { enterRobotStandings } from '../helpers/standings';
+
+/**
+ * Places every robot this user owns into one bronze instance.
+ *
+ * Spec #40 moved tier, instance, LP and `cyclesInTier` off the Robot model, so creating
+ * robots no longer enters them into a competition. Without a standing row
+ * `getLeagueInstanceStats` sees an empty tier and `rebalanceLeagues` has nothing to
+ * promote, which is why the assertions here read "Expected 331, Received 0".
+ *
+ * `cyclesInTier` matters as much as LP: `leagueEngine` only counts entities with at
+ * least 5 cycles in tier as eligible, and the promotion count is 10% of the ELIGIBLE
+ * total, not of the tier total.
+ */
+async function enterBronze(
+  userId: number,
+  namePrefix: string,
+  cyclesInTier: number,
+): Promise<number> {
+  const robots = await prisma.robot.findMany({
+    where: { userId, name: { startsWith: namePrefix } },
+    select: { id: true },
+    orderBy: { id: 'asc' },
+  });
+  // LP above the bronze promotion threshold of 25, and distinct so the top-10% slice
+  // is deterministic rather than dependent on row order.
+  for (let i = 0; i < robots.length; i++) {
+    await enterRobotStandings([robots[i].id], 'league_1v1', {
+      tier: 'bronze',
+      leagueInstanceId: 'bronze_1',
+      leaguePoints: 30 + i,
+      cyclesInTier,
+    });
+  }
+  return robots.length;
+}
 
 
 /**
@@ -17,6 +53,10 @@ import {
 describe('Bronze League Rebalancing - Integration Test', () => {
   beforeAll(async () => {
     // Clean up test data
+    // `standings` is polymorphic (entityType + entityId) and so has no foreign key to
+    // `robots`. Deleting robots leaves its rows behind, and both tests here use the
+    // bronze tier, so an uncleared row from the first lands in the second's counts.
+    await prisma.standing.deleteMany({});
     await prisma.scheduledMatch.deleteMany({});
     await prisma.battle.deleteMany({});
     await prisma.robot.deleteMany({});
@@ -24,6 +64,12 @@ describe('Bronze League Rebalancing - Integration Test', () => {
     await prisma.facility.deleteMany({});
     await prisma.user.deleteMany({});
     await prisma.weapon.deleteMany({});
+  });
+
+  afterEach(async () => {
+    await prisma.standing.deleteMany({});
+    await prisma.robot.deleteMany({});
+    await prisma.user.deleteMany({});
   });
 
   afterAll(async () => {
@@ -54,6 +100,9 @@ describe('Bronze League Rebalancing - Integration Test', () => {
       });
     }
     await prisma.robot.createMany({ data: robots });
+    // ">= 5 cycles in the league" was stated in a comment above and never written to
+    // the database. It is a standings column, and promotion eligibility depends on it.
+    await enterBronze(user.id, 'Robot ', 5);
 
     // Verify initial state - all robots in one instance
     const initialStats = await getLeagueInstanceStats('bronze');
@@ -146,6 +195,12 @@ describe('Bronze League Rebalancing - Integration Test', () => {
       });
     }
     await prisma.robot.createMany({ data: newRobots });
+
+    // The 100 established robots are eligible (5 cycles in tier); the 250 newcomers are
+    // not (0 cycles). That is what makes the promotion count 10 — 10% of 100 eligible —
+    // rather than 35, and it is the distinction the "new players" narrative describes.
+    await enterBronze(user.id, 'Initial Robot ', 5);
+    await enterBronze(user.id, 'New Robot ', 0);
 
     // Verify all 350 robots are in bronze_1
     const beforeStats = await getLeagueInstanceStats('bronze');

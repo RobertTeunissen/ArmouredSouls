@@ -16,8 +16,56 @@ async function createTagTeamFixture(stableId: number, activeRobotId: number, res
         ],
       },
     },
-    include: { members: true },
+    // Members include their robots: the orchestrator reads combat attributes off them.
+    include: { members: { include: { robot: true } } },
   });
+}
+
+/**
+ * Place a tag team in a league instance.
+ *
+ * The orchestrator reads LP and tier from the team's `tag_team` standing and refuses
+ * to run without one — `standings` is the source of truth for ranking, so a team with
+ * no standing row is not in the competition.
+ */
+async function enterTagTeamLeague(teamId: number): Promise<void> {
+  await prisma.standing.create({
+    data: {
+      entityType: 'team',
+      entityId: teamId,
+      mode: 'tag_team',
+      tier: 'bronze',
+      leagueInstanceId: 'bronze_1',
+    },
+  });
+}
+
+/**
+ * Map a `scheduled_matches_v2` row to the shape `executeTagTeamBattle` accepts.
+ *
+ * It takes the *mapped* view the orchestrator's caller assembles — team ids, the
+ * `matchMode` discriminator and the loaded teams — not the raw row, whose participants
+ * live in a relation. Every call site here passed the row `as any`, so the mismatch
+ * type-checked and the orchestrator rejected it at runtime with
+ * `INVALID_TEAM_COMPOSITION` on `match.matchMode !== 'tag_team'` being undefined.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function toTagTeamMatchData(matchRow: any, team1: any, team2: any): any {
+  return {
+    id: matchRow.id,
+    team1Id: team1.id,
+    team2Id: team2?.id ?? null,
+    teamSize: 2,
+    matchMode: 'tag_team',
+    teamBattleLeague: matchRow.leagueType ?? 'bronze',
+    teamBattleLeagueId: matchRow.leagueInstanceId ?? 'bronze_1',
+    scheduledFor: matchRow.scheduledFor,
+    status: matchRow.status,
+    cancelReason: matchRow.cancelReason ?? null,
+    createdAt: matchRow.createdAt,
+    team1,
+    team2: team2 ?? null,
+  };
 }
 
 
@@ -228,6 +276,8 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
           // Create tag teams
           const team1 = await createTagTeamFixture(testUserId1, robot1.id, robot2.id);
           const team2 = await createTagTeamFixture(testUserId2, robot3.id, robot4.id);
+          await enterTagTeamLeague(team1.id);
+          await enterTagTeamLeague(team2.id);
 
 
 
@@ -247,7 +297,7 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
           });
 
           // Execute the battle
-          const battleResult = await executeTagTeamBattle(match as any);
+          const battleResult = await executeTagTeamBattle(toTagTeamMatchData(match, team1, team2));
 
           // Retrieve the battle record
           const battle = await prisma.battle.findUnique({
@@ -380,6 +430,8 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
           // Create tag teams
           const team1 = await createTagTeamFixture(testUserId1, robot1.id, robot2.id);
           const team2 = await createTagTeamFixture(testUserId2, robot3.id, robot4.id);
+          await enterTagTeamLeague(team1.id);
+          await enterTagTeamLeague(team2.id);
 
 
 
@@ -399,7 +451,7 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
           });
 
           // Execute the battle
-          const battleResult = await executeTagTeamBattle(match as any);
+          const battleResult = await executeTagTeamBattle(toTagTeamMatchData(match, team1, team2));
 
           // Retrieve the battle record
           const battle = await prisma.battle.findUnique({
@@ -537,6 +589,8 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
           // Create tag teams
           const team1 = await createTagTeamFixture(testUserId1, robot1.id, robot2.id);
           const team2 = await createTagTeamFixture(testUserId2, robot3.id, robot4.id);
+          await enterTagTeamLeague(team1.id);
+          await enterTagTeamLeague(team2.id);
 
 
 
@@ -556,7 +610,7 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
           });
 
           // Execute the battle
-          const battleResult = await executeTagTeamBattle(match as any);
+          const battleResult = await executeTagTeamBattle(toTagTeamMatchData(match, team1, team2));
 
           // Retrieve the battle record
           const battle = await prisma.battle.findUnique({
@@ -695,6 +749,8 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
           // Create tag teams
           const team1 = await createTagTeamFixture(testUserId1, robot1.id, robot2.id);
           const team2 = await createTagTeamFixture(testUserId2, robot3.id, robot4.id);
+          await enterTagTeamLeague(team1.id);
+          await enterTagTeamLeague(team2.id);
 
 
 
@@ -714,7 +770,7 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
           });
 
           // Execute the battle
-          const battleResult = await executeTagTeamBattle(match as any);
+          const battleResult = await executeTagTeamBattle(toTagTeamMatchData(match, team1, team2));
 
           // Retrieve the battle record
           const battle = await prisma.battle.findUnique({
@@ -852,6 +908,8 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
           // Create tag teams
           const team1 = await createTagTeamFixture(testUserId1, robot1.id, robot2.id);
           const team2 = await createTagTeamFixture(testUserId2, robot3.id, robot4.id);
+          await enterTagTeamLeague(team1.id);
+          await enterTagTeamLeague(team2.id);
 
 
 
@@ -871,7 +929,7 @@ describe('Tag Team Battle Log Completeness Property Tests', () => {
           });
 
           // Execute the battle
-          const battleResult = await executeTagTeamBattle(match as any);
+          const battleResult = await executeTagTeamBattle(toTagTeamMatchData(match, team1, team2));
 
           // Retrieve the battle record
           const battle = await prisma.battle.findUnique({

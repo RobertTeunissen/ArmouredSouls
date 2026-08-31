@@ -5,12 +5,18 @@ import express from 'express';
 import cors from 'cors';
 import jwt from 'jsonwebtoken';
 import matchesRoutes from '../src/routes/matches';
+import { errorHandler } from '../src/middleware/errorHandler';
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 app.use('/api/matches', matchesRoutes);
+
+// Spec #51: without the errorHandler mounted, a thrown AppError falls through
+// to Express's default handler, which sends the right status with an EMPTY
+// body. That is why these suites saw 400 but no `body.error` or `body.code`.
+app.use(errorHandler);
 
 // Test configuration
 const NUM_RUNS = 10;
@@ -205,34 +211,57 @@ describe('Feature: tag-team-matches, Property 25: Match List Inclusion', () => {
           expect(response.body.matches).toBeDefined();
           expect(Array.isArray(response.body.matches)).toBe(true);
 
-          // Verify all scheduled 1v1 matches are included
-          const leagueMatchesInResponse = response.body.matches.filter(
-            (m: any) => m.matchType === 'league'
+          // Scoped to the ids this iteration created.
+          //
+          // Two things were wrong. `matchType` is the unified `scheduled_matches_v2`
+          // discriminator, so a 1v1 league match is 'league_1v1' and not 'league' —
+          // filtering on 'league' matched nothing, so the count assertion held only
+          // while the fixture created zero 1v1 matches. And counting every match of a
+          // type in the response makes the property depend on ambient rows: any other
+          // upcoming match this stable has, from another mode or an earlier iteration,
+          // is counted too.
+          const createdIds = new Set<number>([
+            ...scheduledMatches.map((m) => m.id),
+            ...tagTeamMatches.map((m) => m.id),
+          ]);
+          const ours = response.body.matches.filter((m: any) => createdIds.has(m.id));
+
+          const leagueMatchesInResponse = ours.filter(
+            (m: any) => m.matchType === 'league_1v1'
           );
           expect(leagueMatchesInResponse.length).toBe(scheduledMatches.length);
 
           // Verify all scheduled tag team matches are included with tag_team indicator
-          const tagTeamMatchesInResponse = response.body.matches.filter(
+          const tagTeamMatchesInResponse = ours.filter(
             (m: any) => m.matchType === 'tag_team'
           );
           expect(tagTeamMatchesInResponse.length).toBe(tagTeamMatches.length);
 
-          // Verify tag team matches have proper structure
+          // Verify tag team matches have proper structure.
+          //
+          // The response shape is `teamBattleTeam1`/`teamBattleTeam2`, each with a
+          // `members` array ordered by `slotIndex`. This asserted `team1`/`team2` with
+          // `activeRobot`/`reserveRobot`, which is the pre-unification shape from when
+          // Tag Team was its own entity; it is now a combat mode on TeamBattle, whose
+          // roster is `members[]`. `matchmakingApi.ts` and `TeamBattleMatchCard.tsx`
+          // read the current shape.
           tagTeamMatchesInResponse.forEach((match: any) => {
             expect(match.matchType).toBe('tag_team');
-            expect(match.team1).toBeDefined();
-            expect(match.team2).toBeDefined();
-            expect(match.team1.activeRobot).toBeDefined();
-            expect(match.team1.reserveRobot).toBeDefined();
-            expect(match.team2.activeRobot).toBeDefined();
-            expect(match.team2.reserveRobot).toBeDefined();
-            expect(match.team1.combinedELO).toBeDefined();
-            expect(match.team2.combinedELO).toBeDefined();
+            expect(match.teamBattleTeam1).toBeDefined();
+            expect(match.teamBattleTeam2).toBeDefined();
+            expect(match.teamBattleTeam1.members).toHaveLength(2);
+            expect(match.teamBattleTeam2.members).toHaveLength(2);
+            expect(match.teamBattleTeam1.combinedELO).toBeDefined();
+            expect(match.teamBattleTeam2.combinedELO).toBeDefined();
           });
 
-          // Verify total count
-          expect(response.body.total).toBe(scheduledMatches.length + tagTeamMatches.length);
-          expect(response.body.tagTeamMatches).toBe(tagTeamMatches.length);
+          // `total` and the per-type counters cover every upcoming match for this
+          // stable across all nine modes plus tournaments, so they are lower bounds.
+          expect(response.body.leagueMatches).toBeGreaterThanOrEqual(scheduledMatches.length);
+          expect(response.body.tagTeamMatches).toBeGreaterThanOrEqual(tagTeamMatches.length);
+          expect(response.body.total).toBeGreaterThanOrEqual(
+            scheduledMatches.length + tagTeamMatches.length,
+          );
 
           // Clean up
           await prisma.scheduledMatchParticipant.deleteMany({
@@ -312,8 +341,6 @@ describe('Feature: tag-team-matches, Property 25: Match List Inclusion', () => {
           for (let i = 0; i < Math.min(config.num1v1Battles, Math.floor(robots.length / 2)); i++) {
             const battle = await prisma.battle.create({
               data: {
-                robot1Id: robots[i * 2].id,
-                robot2Id: robots[i * 2 + 1].id,
                 winnerId: robots[i * 2].id,
                 leagueType: 'bronze',
                 battleType: 'league',
@@ -337,15 +364,9 @@ describe('Feature: tag-team-matches, Property 25: Match List Inclusion', () => {
           for (let i = 0; i < Math.min(config.numTagTeamBattles, Math.floor(robots.length / 4)); i++) {
             const battle = await prisma.battle.create({
               data: {
-                robot1Id: robots[i * 4].id,
-                robot2Id: robots[i * 4 + 2].id,
                 winnerId: robots[i * 4].id,
                 leagueType: 'bronze',
                 battleType: 'tag_team',
-                team1ActiveRobotId: robots[i * 4].id,
-                team1ReserveRobotId: robots[i * 4 + 1].id,
-                team2ActiveRobotId: robots[i * 4 + 2].id,
-                team2ReserveRobotId: robots[i * 4 + 3].id,
                 durationSeconds: 45,
                 winnerReward: 2000,
                 loserReward: 1000,

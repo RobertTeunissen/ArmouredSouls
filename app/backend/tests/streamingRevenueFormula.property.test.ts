@@ -1,3 +1,4 @@
+import { enterRobotStanding } from './helpers/standings';
 /**
  * Property-Based Tests for Streaming Revenue Formula
  * Property 1: Streaming Revenue Formula Correctness
@@ -380,17 +381,26 @@ describe('Property 4: Battle Count Includes All Battle Types', () => {
   });
 
   /**
-   * Property 4: The battle count used in streaming revenue calculation should
-   * equal totalBattles + totalTagTeamBattles (1v1 + Tournament + Tag Team)
+   * Property 4: the battle count used for streaming revenue includes every battle type.
+   *
+   * The data model moved underneath this property. `robots.totalTagTeamBattles` is gone:
+   * `robots.totalBattles` now counts 1v1, tournament, 2v2, 3v3 AND tag team together — every
+   * non-KotH mode — and KotH alone lives in `standings.totalMatches` for mode `koth`
+   * (`streamingRevenueService.ts` says so at the point of the sum).
+   *
+   * The old fixture generated a separate `tagTeamBattles` value and then wrote it with
+   * `prisma.robot.update({ data: {} })` — an EMPTY update left behind when the column was
+   * dropped. The generated number was never applied anywhere, while the expectation still
+   * added it, so the assertion read "Expected 1, Received 0" for any non-zero draw.
    */
   test('Property 4: Battle count includes all battle types', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.integer({ min: 0, max: 5000 }),  // 1v1 + tournament battles (totalBattles)
-        fc.integer({ min: 0, max: 5000 }),  // tag team battles (totalTagTeamBattles)
+        fc.integer({ min: 0, max: 5000 }),  // all non-KotH battles (robots.totalBattles)
+        fc.integer({ min: 0, max: 5000 }),  // KotH matches (standings.totalMatches, mode koth)
         fc.integer({ min: 0, max: 50000 }), // fame
         fc.integer({ min: 0, max: 10 }),    // studio level
-        async (oneVOneAndTournamentBattles, tagTeamBattles, fame, studioLevel) => {
+        async (nonKothBattles, kothMatches, fame, studioLevel) => {
           // Clean up facility first to ensure clean state
           await prisma.facility.deleteMany({
             where: {
@@ -399,17 +409,13 @@ describe('Property 4: Battle Count Includes All Battle Types', () => {
             },
           });
 
-          // Create robot with specified battle counts
-          // totalBattles includes 1v1 and tournament battles
-          // totalTagTeamBattles is separate
-          const robot = await createTestRobot(testUserId, oneVOneAndTournamentBattles, fame);
-          
-          // Update tag team battles separately
-          await prisma.robot.update({
-            where: { id: robot.id },
-            data: {
-            },
-          });
+          // `totalBattles` carries every non-KotH mode, including tag team.
+          const robot = await createTestRobot(testUserId, nonKothBattles, fame);
+
+          // KotH is the one mode counted outside the Robot row.
+          if (kothMatches > 0) {
+            await enterRobotStanding(robot.id, 'koth', { totalMatches: kothMatches });
+          }
 
           // Create Streaming Studio facility only if level > 0
           if (studioLevel > 0) {
@@ -426,9 +432,9 @@ describe('Property 4: Battle Count Includes All Battle Types', () => {
           const result = await calculateStreamingRevenue(robot.id, testUserId, false);
 
           // Calculate expected values manually
-          // According to Requirement 2.7: total battle count = 1v1 + Tag Team + Tournament
-          // In the schema: totalBattles = 1v1 + Tournament, totalTagTeamBattles = Tag Team
-          const expectedTotalBattles = oneVOneAndTournamentBattles + tagTeamBattles;
+          // Total battle count = every non-KotH mode (already summed on the Robot row) plus
+          // KotH (read from standings).
+          const expectedTotalBattles = nonKothBattles + kothMatches;
           const expectedBattleMultiplier = 1 + (expectedTotalBattles / 1000);
           const expectedFameMultiplier = 1 + (fame / 5000);
           const expectedStudioMultiplier = 1 + (studioLevel * 1.0);
@@ -487,29 +493,30 @@ describe('Property 4: Battle Count Includes All Battle Types', () => {
   });
 
   /**
-   * Property 4.2: Edge case - Only tag team battles (no 1v1)
+   * Property 4.2: Edge case — only KotH matches, no other mode.
+   *
+   * Was "only tag team battles", which can no longer be expressed: tag team is inside
+   * `robots.totalBattles` and is not separable from 1v1. KotH is now the only count held
+   * outside the Robot row, so it is what exercises the "count from a second source" half of
+   * the sum. The empty `robot.update({ data: {} })` that made the old version vacuous is
+   * gone.
    */
-  test('Property 4.2: Battle count with only tag team battles', async () => {
+  test('Property 4.2: Battle count with only KotH matches', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.integer({ min: 1, max: 5000 }),  // tag team battles only
+        fc.integer({ min: 1, max: 5000 }),  // KotH matches only
         fc.integer({ min: 0, max: 50000 }), // fame
-        async (tagTeamBattles, fame) => {
-          // Create robot with zero 1v1 battles
+        async (kothMatches, fame) => {
+          // Zero non-KotH battles.
           const robot = await createTestRobot(testUserId, 0, fame);
-          
-          // Update tag team battles
-          await prisma.robot.update({
-            where: { id: robot.id },
-            data: {
-            },
-          });
+
+          await enterRobotStanding(robot.id, 'koth', { totalMatches: kothMatches });
 
           // Calculate streaming revenue
           const result = await calculateStreamingRevenue(robot.id, testUserId, false);
 
-          // Property: Battle count should equal tag team battles when no 1v1 battles
-          expect(result!.robotBattles).toBe(tagTeamBattles);
+          // Property: with no other mode, the count is exactly the KotH matches.
+          expect(result!.robotBattles).toBe(kothMatches);
 
           // Clean up robot for next iteration
           await prisma.robot.deleteMany({ where: { id: robot.id } });

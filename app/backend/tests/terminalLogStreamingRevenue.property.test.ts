@@ -15,7 +15,6 @@
 import fc from 'fast-check';
 import { Prisma, MatchType } from '../generated/prisma';
 import { executeScheduledBattles } from '../src/services/league/leagueBattleOrchestrator';
-import { clearSequenceCache } from '../src/services/common/eventLogger';
 import schedulingService from '../src/services/scheduling/schedulingService';
 import prisma from '../src/lib/prisma';
 import { battlesForUsers, robotIdsForUsers, scheduledMatchesForRobots } from './cleanupHelper';
@@ -103,7 +102,6 @@ describe('Property 14: Terminal Log Contains Streaming Revenue', () => {
   afterEach(async () => {
     const metadata = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
     const cycleNumber = metadata?.totalCycles || 0;
-    clearSequenceCache(cycleNumber);
 
     await prisma.battleParticipant.deleteMany({
       where: { robot: { OR: [{ userId: testUserId1 }, { userId: testUserId2 }] } },

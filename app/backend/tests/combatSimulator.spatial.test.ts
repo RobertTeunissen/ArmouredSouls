@@ -284,8 +284,15 @@ describe('simulateBattle — spatial refactor', () => {
       for (const event of combatEvents) {
         expect(event.attacker).toBeDefined();
         expect(event.defender).toBeDefined();
-        expect(event).toHaveProperty('robot1HP');
-        expect(event).toHaveProperty('robot2HP');
+        // `robotHP`, not `robot1HP`/`robot2HP`. Those two are marked @deprecated and
+        // optional on CombatEvent — they swap with attacker/defender roles, which is
+        // why the name-keyed map replaced them — and `malfunction` events never carried
+        // them, which is what this assertion was actually catching. The map is injected
+        // on every event push, so asserting it is both correct and stronger.
+        expect(event.robotHP).toBeDefined();
+        expect(Object.keys(event.robotHP!)).toEqual(
+          expect.arrayContaining([event.attacker!, event.defender!]),
+        );
       }
     });
 

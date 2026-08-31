@@ -11,27 +11,9 @@
  */
 
 import prisma from '../../src/lib/prisma';
+import { createTagTeamFixture, clearTagTeamCompetition } from '../helpers/tagTeam';
 import { runTagTeamMatchmaking } from '../../src/services/tag-team/tagTeamMatchmakingService';
 import { executeScheduledTagTeamBattles } from '../../src/services/tag-team/tagTeamBattleOrchestrator';
-
-/** Helper: Create a 2v2 TeamBattle with members (slot 0 = active, slot 1 = reserve) */
-async function createTagTeamFixture(stableId: number, activeRobotId: number, reserveRobotId: number) {
-  return prisma.teamBattle.create({
-    data: {
-      stableId,
-      teamSize: 2,
-      teamName: `Test_Team_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-      members: {
-        create: [
-          { robotId: activeRobotId, slotIndex: 0 },
-          { robotId: reserveRobotId, slotIndex: 1 },
-        ],
-      },
-    },
-    include: { members: true },
-  });
-}
-
 
 describe('Tag Team Multi-Match Cycle Integration Test', () => {
   let testUserIds: number[] = [];
@@ -61,6 +43,7 @@ describe('Tag Team Multi-Match Cycle Integration Test', () => {
   });
 
   afterEach(async () => {
+    await clearTagTeamCompetition(testTeamIds, testRobotIds);
     // Clean up in correct order
     if (testRobotIds.length > 0) {
       await prisma.battleParticipant.deleteMany({

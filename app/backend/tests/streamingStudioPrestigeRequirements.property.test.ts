@@ -19,6 +19,7 @@ import dotenv from 'dotenv';
 import facilityRoutes from '../src/routes/facility';
 import { createTestUser, deleteTestUser } from './testHelpers';
 import { getFacilityConfig } from '../src/config/facilities';
+import { errorHandler } from '../src/middleware/errorHandler';
 
 dotenv.config();
 
@@ -29,8 +30,45 @@ app.use(cors());
 app.use(express.json());
 app.use('/api/facility', facilityRoutes);
 
+// Spec #51: without the errorHandler mounted, a thrown AppError falls through
+// to Express's default handler, which sends the right status with an EMPTY
+// body. That is why these suites saw 400 but no `body.error` or `body.code`.
+app.use(errorHandler);
+
+/**
+ * One listening server for the whole file.
+ *
+ * This is the highest-request suite in the repository: four properties at 20 runs each, and
+ * every run drives up to 10 facility upgrades over HTTP — roughly 800 requests. With
+ * `request(app)` makes supertest stand up and tear down an ephemeral server for every one of
+ * them, and that churn intermittently returns HTTP 426 — a status nothing in this codebase
+ * sends. Binding once removes it.
+ *
+ * Do NOT try to fix this by disabling `http.globalAgent` keep-alive. That was attempted and
+ * reverted: with pooling off, every request opens and closes its own connection, which pushed
+ * the machine to 1,536 sockets in TIME_WAIT and turned the intermittent 426 into ephemeral
+ * port exhaustion — `socket hang up`, and a tier run that stalled at 91 of 113 suites. Fewer
+ * servers is the fix; fewer pooled sockets is the opposite of it.
+ */
+let server: import('http').Server;
+
 // Prestige requirements for Streaming Studio levels 1-10
 const PRESTIGE_REQUIREMENTS = [0, 0, 0, 1000, 3000, 5000, 10000, 15000, 25000, 50000];
+
+/**
+ * Currency for the setup phase, which buys the levels below the one under test.
+ *
+ * Was 10,000,000, which does not cover six streaming studio levels. Three of the four setup
+ * loops below drove `targetLevel - 1` upgrades over HTTP and ignored every response, so once
+ * the budget ran out the facility silently stopped short. The property then read the prestige
+ * requirement of the WRONG level and reported "Expected 10000, Received 5000" — which reads
+ * as a requirements-table defect and was really a setup that ran out of money.
+ *
+ * It looked intermittent only because `fc.constantFrom(4, ..., 10)` draws a different target
+ * level on each run; it is deterministic for the higher levels. `currency` is an `Int`, so
+ * this stays inside the 32-bit range.
+ */
+const SETUP_CURRENCY = 2_000_000_000;
 
 describe('Property 9: Streaming Studio Prestige Requirements', () => {
   let testUser: any;
@@ -38,9 +76,11 @@ describe('Property 9: Streaming Studio Prestige Requirements', () => {
 
   beforeAll(async () => {
     await prisma.$connect();
+    server = app.listen(0);
   });
 
   afterAll(async () => {
+    await new Promise<void>((resolve) => server.close(() => resolve()));
     await prisma.$disconnect();
   });
 
@@ -51,7 +91,7 @@ describe('Property 9: Streaming Studio Prestige Requirements', () => {
     // Give user enough credits for all upgrades
     await prisma.user.update({
       where: { id: testUser.id },
-      data: { currency: 10000000, prestige: 0 },
+      data: { currency: SETUP_CURRENCY, prestige: 0 },
     });
 
     // Generate JWT token
@@ -80,7 +120,7 @@ describe('Property 9: Streaming Studio Prestige Requirements', () => {
 
     // Upgrade facility level by level
     for (let i = 0; i < targetLevel; i++) {
-      await request(app)
+      await request(server)
         .post('/api/facility/upgrade')
         .set('Authorization', `Bearer ${authToken}`)
         .send({ facilityType: 'streaming_studio' });
@@ -108,7 +148,7 @@ describe('Property 9: Streaming Studio Prestige Requirements', () => {
           // Reset user prestige and currency
           await prisma.user.update({
             where: { id: testUser.id },
-            data: { prestige: userPrestige, currency: 10000000 },
+            data: { prestige: userPrestige, currency: SETUP_CURRENCY },
           });
 
           // Get the prestige requirement for the target level
@@ -133,7 +173,7 @@ describe('Property 9: Streaming Studio Prestige Requirements', () => {
 
             // Upgrade to level before target
             for (let i = 0; i < targetLevel - 1; i++) {
-              const response = await request(app)
+              const response = await request(server)
                 .post('/api/facility/upgrade')
                 .set('Authorization', `Bearer ${authToken}`)
                 .send({ facilityType: 'streaming_studio' });
@@ -150,7 +190,7 @@ describe('Property 9: Streaming Studio Prestige Requirements', () => {
           }
 
           // Attempt to upgrade to target level
-          const response = await request(app)
+          const response = await request(server)
             .post('/api/facility/upgrade')
             .set('Authorization', `Bearer ${authToken}`)
             .send({ facilityType: 'streaming_studio' });
@@ -162,11 +202,11 @@ describe('Property 9: Streaming Studio Prestige Requirements', () => {
           } else {
             // Property: If user prestige < required prestige, upgrade should fail
             expect(response.status).toBe(403);
-            expect(response.body.error).toBe('Insufficient prestige');
-            expect(response.body.required).toBe(requiredPrestige);
-            expect(response.body.current).toBe(userPrestige);
-            expect(response.body.message).toContain(`Streaming Studio Level ${targetLevel}`);
-            expect(response.body.message).toContain(`${requiredPrestige.toLocaleString()} prestige`);
+            expect(response.body.error).toMatch(/requires [\d,]+ prestige/);
+            expect(response.body.details.required).toBe(requiredPrestige);
+            expect(response.body.details.current).toBe(userPrestige);
+            expect(response.body.error).toContain(`Streaming Studio Level ${targetLevel}`);
+            expect(response.body.error).toContain(`${requiredPrestige.toLocaleString()} prestige`);
           }
         }
       ),
@@ -194,12 +234,12 @@ describe('Property 9: Streaming Studio Prestige Requirements', () => {
           // Set user prestige
           await prisma.user.update({
             where: { id: testUser.id },
-            data: { prestige: userPrestige, currency: 10000000 },
+            data: { prestige: userPrestige, currency: SETUP_CURRENCY },
           });
 
           // Upgrade to target level
           for (let i = 0; i < targetLevel; i++) {
-            const response = await request(app)
+            const response = await request(server)
               .post('/api/facility/upgrade')
               .set('Authorization', `Bearer ${authToken}`)
               .send({ facilityType: 'streaming_studio' });
@@ -250,14 +290,18 @@ describe('Property 9: Streaming Studio Prestige Requirements', () => {
           );
           await prisma.user.update({
             where: { id: testUser.id },
-            data: { prestige: maxPrestigeNeeded, currency: 10000000 },
+            data: { prestige: maxPrestigeNeeded, currency: SETUP_CURRENCY },
           });
 
           for (let i = 0; i < targetLevel - 1; i++) {
-            await request(app)
+            const setupResponse = await request(server)
               .post('/api/facility/upgrade')
               .set('Authorization', `Bearer ${authToken}`)
               .send({ facilityType: 'streaming_studio' });
+            // Assert the SETUP worked. Ignoring these responses is what let the facility
+            // stop short of `targetLevel` and made the property read the wrong level's
+            // prestige requirement.
+            expect(setupResponse.status).toBe(200);
           }
 
           // Set prestige to insufficient amount
@@ -267,14 +311,14 @@ describe('Property 9: Streaming Studio Prestige Requirements', () => {
           });
 
           // Attempt upgrade with insufficient prestige
-          const failResponse = await request(app)
+          const failResponse = await request(server)
             .post('/api/facility/upgrade')
             .set('Authorization', `Bearer ${authToken}`)
             .send({ facilityType: 'streaming_studio' });
 
           // Property: Should fail with insufficient prestige
           expect(failResponse.status).toBe(403);
-          expect(failResponse.body.required).toBe(requiredPrestige);
+          expect(failResponse.body.details.required).toBe(requiredPrestige);
 
           // Now set prestige to exactly the requirement
           await prisma.user.update({
@@ -283,7 +327,7 @@ describe('Property 9: Streaming Studio Prestige Requirements', () => {
           });
 
           // Attempt upgrade with exact prestige
-          const successResponse = await request(app)
+          const successResponse = await request(server)
             .post('/api/facility/upgrade')
             .set('Authorization', `Bearer ${authToken}`)
             .send({ facilityType: 'streaming_studio' });
@@ -344,14 +388,18 @@ describe('Property 9: Streaming Studio Prestige Requirements', () => {
           );
           await prisma.user.update({
             where: { id: testUser.id },
-            data: { prestige: maxPrestigeNeeded, currency: 10000000 },
+            data: { prestige: maxPrestigeNeeded, currency: SETUP_CURRENCY },
           });
 
           for (let i = 0; i < targetLevel - 1; i++) {
-            await request(app)
+            const setupResponse = await request(server)
               .post('/api/facility/upgrade')
               .set('Authorization', `Bearer ${authToken}`)
               .send({ facilityType: 'streaming_studio' });
+            // Assert the SETUP worked. Ignoring these responses is what let the facility
+            // stop short of `targetLevel` and made the property read the wrong level's
+            // prestige requirement.
+            expect(setupResponse.status).toBe(200);
           }
 
           // Set prestige to 0
@@ -361,7 +409,7 @@ describe('Property 9: Streaming Studio Prestige Requirements', () => {
           });
 
           // Attempt upgrade
-          const response = await request(app)
+          const response = await request(server)
             .post('/api/facility/upgrade')
             .set('Authorization', `Bearer ${authToken}`)
             .send({ facilityType: 'streaming_studio' });
@@ -369,19 +417,19 @@ describe('Property 9: Streaming Studio Prestige Requirements', () => {
           // Property: Error response should contain all required fields
           expect(response.status).toBe(403);
           expect(response.body).toHaveProperty('error');
-          expect(response.body).toHaveProperty('required');
-          expect(response.body).toHaveProperty('current');
-          expect(response.body).toHaveProperty('message');
+          expect(response.body.details).toHaveProperty('required');
+          expect(response.body.details).toHaveProperty('current');
+          // The sentence lives in `error`; the standard body has no `message` field.
 
           // Property: Required prestige should match configuration
-          expect(response.body.required).toBe(requiredPrestige);
+          expect(response.body.details.required).toBe(requiredPrestige);
 
           // Property: Current prestige should match user's prestige
-          expect(response.body.current).toBe(0);
+          expect(response.body.details.current).toBe(0);
 
           // Property: Message should contain level and prestige information
-          expect(response.body.message).toMatch(/Streaming Studio Level \d+/);
-          expect(response.body.message).toMatch(/[\d,]+ prestige/);
+          expect(response.body.error).toMatch(/Streaming Studio Level \d+/);
+          expect(response.body.error).toMatch(/[\d,]+ prestige/);
         }
       ),
       { numRuns: 15 }
@@ -413,14 +461,18 @@ describe('Property 9: Streaming Studio Prestige Requirements', () => {
           );
           await prisma.user.update({
             where: { id: testUser.id },
-            data: { prestige: maxPrestigeNeeded, currency: 10000000 },
+            data: { prestige: maxPrestigeNeeded, currency: SETUP_CURRENCY },
           });
 
           for (let i = 0; i < targetLevel - 1; i++) {
-            await request(app)
+            const setupResponse = await request(server)
               .post('/api/facility/upgrade')
               .set('Authorization', `Bearer ${authToken}`)
               .send({ facilityType: 'streaming_studio' });
+            // Assert the SETUP worked. Ignoring these responses is what let the facility
+            // stop short of `targetLevel` and made the property read the wrong level's
+            // prestige requirement.
+            expect(setupResponse.status).toBe(200);
           }
 
           // Set prestige to 0 and currency to insufficient amount
@@ -430,7 +482,7 @@ describe('Property 9: Streaming Studio Prestige Requirements', () => {
           });
 
           // Attempt upgrade
-          const response = await request(app)
+          const response = await request(server)
             .post('/api/facility/upgrade')
             .set('Authorization', `Bearer ${authToken}`)
             .send({ facilityType: 'streaming_studio' });
@@ -438,8 +490,8 @@ describe('Property 9: Streaming Studio Prestige Requirements', () => {
           // Property: Should fail with prestige error (not currency error)
           // This validates that prestige is checked first
           expect(response.status).toBe(403);
-          expect(response.body.error).toBe('Insufficient prestige');
-          expect(response.body.required).toBe(requiredPrestige);
+          expect(response.body.error).toMatch(/requires [\d,]+ prestige/);
+          expect(response.body.details.required).toBe(requiredPrestige);
         }
       ),
       { numRuns: 20 }

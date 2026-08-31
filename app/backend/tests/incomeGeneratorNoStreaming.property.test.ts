@@ -12,6 +12,7 @@
 import fc from 'fast-check';
 import prisma from '../src/lib/prisma';
 import { calculateDailyPassiveIncome } from '../src/utils/economyCalculations';
+import { getMerchandisingBaseRate } from '../src/utils/economyFormulas';
 
 
 describe('Property 18: Income Generator No Longer Provides Streaming Revenue', () => {
@@ -104,14 +105,19 @@ describe('Property 18: Income Generator No Longer Provides Streaming Revenue', (
           // (which would indicate streaming revenue is being added)
           expect(result.total).not.toBeGreaterThan(result.merchandising);
 
-          // Property: Merchandising should scale with prestige
-          // Base rates by level (from facilities.ts merchandising_hub):
-          const baseRates: { [key: number]: number } = {
-            1: 5000, 2: 10000, 3: 15000, 4: 20000, 5: 25000,
-            6: 30000, 7: 35000, 8: 40000, 9: 45000, 10: 50000,
-          };
-          const expectedBaseRate = baseRates[incomeGeneratorLevel];
-          const expectedPrestigeMultiplier = 1 + (prestige / 10000);
+          // Property: Merchandising should scale with prestige.
+          //
+          // The base rate is read from `getMerchandisingBaseRate` rather than
+          // re-encoded here. This test carried its own copy of the table — ₡5,000 per
+          // level — and Spec #46 R2.5 doubled the real one to ₡10,000 per level, so the
+          // copy was wrong by a factor of two at every level. That duplication is the
+          // reason it could drift at all.
+          const expectedBaseRate = getMerchandisingBaseRate(incomeGeneratorLevel);
+
+          // Prestige_Per_Slot: prestige divided by Roster_Capacity (Spec #46 R2.1).
+          // This stable has no roster_expansion facility, so its capacity is 1.
+          const rosterCapacity = 1;
+          const expectedPrestigeMultiplier = 1 + (prestige / rosterCapacity / 10000);
           const expectedMerchandising = Math.round(expectedBaseRate * expectedPrestigeMultiplier);
 
           // Property: Merchandising should match the expected formula

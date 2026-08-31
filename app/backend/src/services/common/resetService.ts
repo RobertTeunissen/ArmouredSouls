@@ -213,7 +213,23 @@ export async function performAccountReset(userId: number, reason?: string): Prom
       });
     }
 
-    // Delete all robots (cascade will handle battle history)
+    // Teams and their membership rows go BEFORE the robots.
+    //
+    // Spec #51: this used to delete the robots first and the teams twenty lines
+    // later, with the comment "Teams are removed because their members are gone" —
+    // the ordering was exactly backwards. `team_battle_members.robot_id` was
+    // RESTRICT, so the robot delete raised a foreign key violation and rolled the
+    // whole transaction back: POST /api/onboarding/reset-account failed outright for
+    // any player who had ever formed a team. The migration
+    // 20260829120000_cascade_team_membership_on_robot_delete makes that constraint
+    // cascade, so this ordering is no longer load-bearing, but it is still the
+    // correct order to state.
+    await tx.teamBattleMember.deleteMany({
+      where: { robotId: { in: userRobotIds.map(r => r.id) } },
+    });
+    await tx.teamBattle.deleteMany({ where: { stableId: userId } });
+
+    // Delete all robots (battle history and team membership cascade)
     await tx.robot.deleteMany({
       where: { userId },
     });
@@ -231,8 +247,7 @@ export async function performAccountReset(userId: number, reason?: string): Prom
     // Spec #45 R4.10: clear the same competitive state a Season_Rollover clears.
     // Without this, a mid-season reset would wipe assets while preserving
     // prestige and achievements — a competitive advantage the player keeps for
-    // free. Teams are removed because their members are gone.
-    await tx.teamBattle.deleteMany({ where: { stableId: userId } });
+    // free. Teams are deleted above, before the robots they contain.
     await tx.userAchievement.deleteMany({ where: { userId } });
 
     // Reset user state

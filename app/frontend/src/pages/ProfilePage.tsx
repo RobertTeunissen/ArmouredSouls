@@ -103,14 +103,34 @@ function ProfilePage() {
       // Auto-hide success message after 5 seconds
       setTimeout(() => setSaveSuccess(false), 5000);
     } catch (error: unknown) {
-      const err = error as { response?: { status: number; data: { details?: Record<string, string>; error?: string } }; request?: unknown };
+      const err = error as {
+        response?: {
+          status: number;
+          data: { details?: { fields?: Array<{ field: string; message: string }> }; error?: string };
+        };
+        request?: unknown;
+      };
       // Handle API error responses
       if (err.response) {
         const { status, data } = err.response;
-        
-        if (status === 400 && data.details) {
-          // Validation errors - display field-specific errors
-          setErrors(data.details);
+
+        if (status === 400) {
+          // Validation errors — display field-specific errors.
+          //
+          // The backend's shape is `details.fields`, an array of { field, message }.
+          // This used to assign `data.details` straight into the errors record, so it
+          // stored `{ fields: [...] }`, rendered nothing under any field, and skipped
+          // the banner below because `data.details` was truthy. A validation error
+          // was therefore completely invisible. Falls back to the `error` string,
+          // which now carries the joined messages.
+          const fieldErrors = Object.fromEntries(
+            (data.details?.fields ?? []).map(({ field, message }) => [field, message]),
+          );
+          setErrors(
+            Object.keys(fieldErrors).length > 0
+              ? fieldErrors
+              : { general: data.error || 'Failed to update profile' },
+          );
         } else if (status === 401) {
           // Authentication error
           if (passwordData.current) {

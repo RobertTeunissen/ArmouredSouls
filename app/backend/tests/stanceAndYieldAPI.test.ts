@@ -125,7 +125,11 @@ describe('Stance and Yield Threshold API Endpoints', () => {
 
       expect(response.status).toBe(400);
       expect(response.body.error).toContain('Invalid stance');
-      expect(response.body.code).toBe('INVALID_STANCE');
+      // `INVALID_STANCE` has never existed. The route throws
+      // RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, which is the code
+      // docs/guides/ERROR_CODES.md documents for this class, and nothing in the
+      // frontend switches on either name.
+      expect(response.body.code).toBe('INVALID_ROBOT_ATTRIBUTES');
     });
 
     it('should reject missing stance value', async () => {
@@ -147,14 +151,18 @@ describe('Stance and Yield Threshold API Endpoints', () => {
       expect(response.status).toBe(400);
     });
 
-    it('should return 404 for non-existent robot', async () => {
+    it('should return 403 for a robot that does not exist', async () => {
       const response = await request(app)
         .patch('/api/robots/999999/stance')
         .set('Authorization', `Bearer ${authToken}`)
         .send({ stance: 'offensive' });
 
-      expect(response.status).toBe(404);
-      expect(response.body.error).toContain('not found');
+      // 403, not 404. `verifyRobotOwnership` answers a generic "Access denied" for a
+      // robot that is absent as well as one owned by someone else, so the response
+      // cannot be used to probe which robot ids exist. See the ownership rule in
+      // .kiro/steering/coding-standards.md.
+      expect(response.status).toBe(403);
+      expect(response.body.error).toContain('Access denied');
     });
 
     it('should return 403 for unauthorized user', async () => {
@@ -180,7 +188,8 @@ describe('Stance and Yield Threshold API Endpoints', () => {
         .send({ stance: 'offensive' });
 
       expect(response.status).toBe(403);
-      expect(response.body.error).toContain('Not authorized');
+      // Deliberately the same generic message as the absent-robot case above.
+      expect(response.body.error).toContain('Access denied');
     });
 
     it('should return 401 without authentication', async () => {
@@ -244,7 +253,10 @@ describe('Stance and Yield Threshold API Endpoints', () => {
 
       expect(response.status).toBe(400);
       expect(response.body.error).toContain('between 0 and 50');
-      expect(response.body.code).toBe('INVALID_YIELD_THRESHOLD');
+      // `INVALID_YIELD_THRESHOLD` has never existed either, and the bound is now
+      // checked at the Zod boundary, so the code is VALIDATION_ERROR. The message is
+      // asserted above and carries the domain wording.
+      expect(response.body.code).toBe('VALIDATION_ERROR');
     });
 
     it('should reject negative yield threshold', async () => {
@@ -254,7 +266,10 @@ describe('Stance and Yield Threshold API Endpoints', () => {
         .send({ yieldThreshold: -5 });
 
       expect(response.status).toBe(400);
-      expect(response.body.code).toBe('INVALID_YIELD_THRESHOLD');
+      // `INVALID_YIELD_THRESHOLD` has never existed either, and the bound is now
+      // checked at the Zod boundary, so the code is VALIDATION_ERROR. The message is
+      // asserted above and carries the domain wording.
+      expect(response.body.code).toBe('VALIDATION_ERROR');
     });
 
     it('should reject non-numeric yield threshold', async () => {
@@ -264,7 +279,10 @@ describe('Stance and Yield Threshold API Endpoints', () => {
         .send({ yieldThreshold: 'high' });
 
       expect(response.status).toBe(400);
-      expect(response.body.code).toBe('INVALID_YIELD_THRESHOLD');
+      // `INVALID_YIELD_THRESHOLD` has never existed either, and the bound is now
+      // checked at the Zod boundary, so the code is VALIDATION_ERROR. The message is
+      // asserted above and carries the domain wording.
+      expect(response.body.code).toBe('VALIDATION_ERROR');
     });
 
     it('should reject missing yield threshold', async () => {
@@ -277,13 +295,14 @@ describe('Stance and Yield Threshold API Endpoints', () => {
       expect(response.body.error).toContain('required');
     });
 
-    it('should return 404 for non-existent robot', async () => {
+    it('should return 403 for a robot that does not exist', async () => {
       const response = await request(app)
         .patch('/api/robots/999999/yield-threshold')
         .set('Authorization', `Bearer ${authToken}`)
         .send({ yieldThreshold: 25 });
 
-      expect(response.status).toBe(404);
+      // See the stance case above: ownership failures are a generic 403.
+      expect(response.status).toBe(403);
     });
 
     it('should return 403 for unauthorized user', async () => {

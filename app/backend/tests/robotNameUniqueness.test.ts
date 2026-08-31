@@ -6,6 +6,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import robotRoutes from '../src/routes/robots';
+import { errorHandler } from '../src/middleware/errorHandler';
 
 dotenv.config();
 
@@ -16,6 +17,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use('/api/robots', robotRoutes);
+
+// Spec #51: without the errorHandler mounted, a thrown AppError falls through
+// to Express's default handler, which sends the right status with an EMPTY
+// body. That is why these suites saw 400 but no `body.error` or `body.code`.
+app.use(errorHandler);
 
 describe('Robot Name Uniqueness', () => {
   const testUserIds: number[] = [];
@@ -161,10 +167,21 @@ describe('Robot Name Uniqueness', () => {
         .send({ name: robotName });
 
       expect(secondResponse.status).toBe(400);
-      expect(secondResponse.body.error).toBe('You already have a robot with this name');
+      // Robot names are globally unique, and the message says so rather than implying
+      // the clash is with one of your own robots. Migration
+      // 20260402101920_global_unique_robot_names dropped `robots_user_id_name_key` and
+      // created `robots_name_key`, so this is a database constraint, not a preference.
+      expect(secondResponse.body.error).toBe(
+        'A robot with this name already exists. Please choose a different name.',
+      );
     });
 
-    it('should allow different users to create robots with the same name', async () => {
+    // Inverted. Robot names are unique across the whole game, not per stable:
+    // migration 20260402101920_global_unique_robot_names dropped the per-user index
+    // `robots_user_id_name_key` and replaced it with the global `robots_name_key`.
+    // This asserted the pre-migration behaviour and could not have passed against the
+    // current schema at all — the insert would violate the unique index.
+    it('should reject a name already taken by another user', async () => {
       // Create second test user
       const secondUsername = `testuser2_${Date.now()}`;
       const secondPasswordHash = await bcrypt.hash(testPassword, 10);
@@ -207,18 +224,15 @@ describe('Robot Name Uniqueness', () => {
         testRobotIds.push(firstResponse.body.robot.id);
       }
 
-      // Second user creates a robot with the same name - should succeed
+      // Second user creates a robot with the same name — rejected, because the name is
+      // taken globally.
       const secondResponse = await request(app)
         .post('/api/robots')
         .set('Authorization', `Bearer ${secondAuthToken}`)
         .send({ name: robotName });
 
-      expect(secondResponse.status).toBe(201);
-      expect(secondResponse.body.robot.name).toBe(robotName);
-      expect(secondResponse.body.robot.userId).toBe(secondUser.id);
-      if (secondResponse.body.robot?.id) {
-        testRobotIds.push(secondResponse.body.robot.id);
-      }
+      expect(secondResponse.status).toBe(400);
+      expect(secondResponse.body.code).toBe('ROBOT_NAME_TAKEN');
     });
 
     it('should handle case-sensitive name validation correctly', async () => {
@@ -292,7 +306,10 @@ describe('Robot Name Uniqueness', () => {
         .send({ name: '' });
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toBe('Robot name is required');
+      // An empty string trips both the length and the charset rule, and `error` joins
+      // every failing issue. Asserted as a substring so adding a rule to the schema
+      // does not break this.
+      expect(response.body.error).toContain('Robot name must be between 1 and 50 characters');
     });
 
     it('should reject robot names longer than 50 characters', async () => {

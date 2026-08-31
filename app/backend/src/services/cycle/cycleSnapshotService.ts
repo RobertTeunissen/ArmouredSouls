@@ -453,6 +453,10 @@ export class CycleSnapshotService {
       // We'll need to query opponent events or accept this limitation
     });
 
+    // NOTE: `damageReceived` and `kills` are derived further down, from the opponent's
+    // event in the same battle (grouped on `audit_logs.battleId`). Do not add a second
+    // pass here — an earlier attempt in this spec did, and it double-counted every figure.
+
     // Add repair costs from audit log
     const repairEvents = await prisma.auditLog.findMany({
       where: {

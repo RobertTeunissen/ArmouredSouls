@@ -17,7 +17,16 @@ describe('Deterministic Tie-Breaking — Property 7: createdAt', () => {
         fc.integer({ min: 900, max: 1100 }), // shared ELO (forces same score)
         fc.integer({ min: 40, max: 60 }), // shared LP
         fc.array(
-          fc.date({ min: new Date('2024-01-01'), max: new Date('2025-01-01') }),
+          // `noInvalidDate` matters: fast-check's `date` arbitrary includes Invalid
+          // Date in its range, and one shrank into this property as
+          // `new Date(NaN)`. Every comparison against NaN is false, so the sort
+          // assertion failed on an impossible input — `createdAt` is a non-null
+          // DateTime column and can never hold one.
+          fc.date({
+            min: new Date('2024-01-01'),
+            max: new Date('2025-01-01'),
+            noInvalidDate: true,
+          }),
           { minLength: 3, maxLength: 8 },
         ),
         (sharedELO, sharedLP, createdAtDates) => {

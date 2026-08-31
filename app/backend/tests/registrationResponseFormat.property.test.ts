@@ -6,6 +6,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from '../src/routes/auth';
 import prisma from '../src/lib/prisma';
+import { uniqueRegistration } from './helpers/uniqueRegistration';
 
 dotenv.config();
 
@@ -54,13 +55,15 @@ describe('Registration Response Format - Property Tests', () => {
           validEmailArbitrary(),
           validPasswordArbitrary(),
           async (username, email, password) => {
-            // Make username and email unique per run to avoid collisions
+            // Spec #51: unique values come from a shared helper that budgets the
+            // email local part. The old inline version sliced the composed address
+            // to 20 chars, cutting into `@t.co` once the suffix grew, so
+            // registration correctly returned 400 and this suite failed on 201.
             const suffix = `${Date.now()}${runIndex++}`;
-            const uniqueUsername = `${username.slice(0, 10)}${suffix}`.slice(0, 20);
-            const uniqueEmail = `${email.split('@')[0]}${suffix}@t.co`.slice(0, 20);
-
-            // Ensure generated values still meet validation rules after truncation
-            if (uniqueUsername.length < 3 || uniqueEmail.length < 3) return;
+            const { username: uniqueUsername, email: uniqueEmail } = uniqueRegistration(
+              { username, email },
+              suffix,
+            );
 
             const response = await request(app)
               .post('/api/auth/register')

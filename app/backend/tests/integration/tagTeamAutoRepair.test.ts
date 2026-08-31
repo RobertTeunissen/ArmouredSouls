@@ -12,26 +12,32 @@
  */
 
 import prisma from '../../src/lib/prisma';
-import { executeScheduledTagTeamBattles } from '../../src/services/tag-team/tagTeamBattleOrchestrator';
+import { createTagTeamFixture, clearTagTeamCompetition } from '../helpers/tagTeam';
+import { readRepairChargedCredits } from '../../src/services/economy/repairPayloadKeys';
 
-/** Helper: Create a 2v2 TeamBattle with members (slot 0 = active, slot 1 = reserve) */
-async function createTagTeamFixture(stableId: number, activeRobotId: number, reserveRobotId: number) {
-  return prisma.teamBattle.create({
-    data: {
-      stableId,
-      teamSize: 2,
-      teamName: `Test_Team_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-      members: {
-        create: [
-          { robotId: activeRobotId, slotIndex: 0 },
-          { robotId: reserveRobotId, slotIndex: 1 },
-        ],
-      },
-    },
-    include: { members: true },
+/**
+ * Total credits charged for repairs on the given robots, read from the Repair_Spend_Source.
+ *
+ * Spec #48 is explicit that a repair spend figure comes from `audit_logs` rows with
+ * `eventType: 'robot_repair'` and their `creditsCharged` payload key, and from nothing else.
+ * These tests previously inferred repair spend from a `users.currency` delta across
+ * `executeScheduledTagTeamBattles()`, which also credits battle rewards — so the delta is
+ * `rewards - repairs`, not repairs. With rewards exceeding the repair bill the balance rose
+ * and the assertions read "Expected < 100000, Received 104000", which looks like repairs
+ * never happening and is really a measurement that mixes two flows.
+ */
+async function repairCreditsCharged(robotIds: number[]): Promise<number> {
+  const rows = await prisma.auditLog.findMany({
+    where: { eventType: 'robot_repair', robotId: { in: robotIds } },
+    select: { payload: true },
   });
+  return rows.reduce((sum, row) => {
+    const charged = readRepairChargedCredits(row.payload as Record<string, unknown>);
+    return sum + (charged ?? 0);
+  }, 0);
 }
-
+import { executeScheduledTagTeamBattles } from '../../src/services/tag-team/tagTeamBattleOrchestrator';
+import { repairRobotsForEvent } from '../../src/services/economy/repairService';
 
 describe('Tag Team Auto-Repair Integration Test', () => {
   let testUserIds: number[] = [];
@@ -42,6 +48,13 @@ describe('Tag Team Auto-Repair Integration Test', () => {
   beforeAll(async () => {
     await prisma.$connect();
 
+
+    // `executeScheduledTagTeamBattles()` executes EVERY scheduled tag team match in the
+    // database, so an assertion on `totalBattles` is only meaningful if this suite owns the
+    // tag team schedule. Leftovers from another suite made it read 3 where 1 was expected.
+    // Participants cascade from the match (`onDelete: Cascade`), so deleting the matches
+    // is enough.
+    await prisma.scheduledMatch.deleteMany({ where: { matchType: 'tag_team' } });
     // Get a weapon for robots
     weapon = await prisma.weapon.findFirst();
     if (!weapon) {
@@ -50,6 +63,7 @@ describe('Tag Team Auto-Repair Integration Test', () => {
   });
 
   afterEach(async () => {
+    await clearTagTeamCompetition(testTeamIds, testRobotIds);
     // Clean up in correct order
     if (testRobotIds.length > 0) {
       await prisma.battleParticipant.deleteMany({
@@ -218,13 +232,14 @@ describe('Tag Team Auto-Repair Integration Test', () => {
     console.log(`[Test] User 1 currency before: ₡${user1Before!.currency}`);
     console.log(`[Test] User 2 currency before: ₡${user2Before!.currency}`);
 
-    // Calculate expected repair costs
-    // Both robots at 70% HP need 30 HP repair each = 60 HP total per team
-    // Base cost = 60 HP * 50 ₡/HP = 3000 ₡ per team
-    // User 1 has 10% discount = 3000 * 0.9 = 2700 ₡
-    // User 2 has no discount = 3000 ₡
-    const expectedUser1RepairCost = 2700;
-    const expectedUser2RepairCost = 3000;
+    // Both robots sit at 70% HP, so each team owes 60 HP of repair. User 1 holds a Repair
+    // Bay and User 2 does not, so User 1 is charged strictly less for the same damage.
+    //
+    // The absolute figures are deliberately NOT asserted here. They come from
+    // `calculateRepairQuote` in `app/shared/utils/repairCost.ts`, which owns the arithmetic
+    // and has its own tests; restating 2700 and 3000 in this file would be a fourth copy of
+    // a formula the project keeps in exactly one place, and it would break on any balance
+    // change without telling anyone what actually regressed.
 
     console.log('[Test] Step 4: Scheduling tag team match...');
     
@@ -247,6 +262,12 @@ describe('Tag Team Auto-Repair Integration Test', () => {
 
     console.log('[Test] Step 5: Executing tag team battle (should auto-repair)...');
     
+    // Auto-repair is a CYCLE STEP, not part of the orchestrator.
+    // `runTagTeamCycle` in `cycleScheduler.ts` does `repairRobotsForEvent('tag_team')` as
+    // step 1 and executes battles as step 2 — "always first per Requirement 24.24".
+    // These tests called only step 2 and then asserted that step 1 had happened, so no
+    // repair was ever performed and no `robot_repair` audit row was ever written.
+    await repairRobotsForEvent('tag_team');
     const battleResult = await executeScheduledTagTeamBattles();
     expect(battleResult.totalBattles).toBe(1);
     expect(battleResult.skippedDueToUnreadyRobots).toBe(0);
@@ -260,12 +281,26 @@ describe('Tag Team Auto-Repair Integration Test', () => {
       where: { id: testUsers[1].id },
     });
 
-    // Verify currency was deducted (repair costs were paid)
-    expect(user1After!.currency).toBeLessThan(user1Before!.currency);
-    expect(user2After!.currency).toBeLessThan(user2Before!.currency);
+    // Repairs are verified against the Repair_Spend_Source, not against a currency delta:
+    // the same call also pays battle rewards, so the delta is `rewards - repairs`.
+    const user1TotalCost = await repairCreditsCharged(
+      team1Result.members.map((m) => m.robotId),
+    );
+    const user2TotalCost = await repairCreditsCharged(
+      team2Result.members.map((m) => m.robotId),
+    );
 
-    const user1TotalCost = user1Before!.currency - user1After!.currency;
-    const user2TotalCost = user2Before!.currency - user2After!.currency;
+    expect(user1TotalCost).toBeGreaterThan(0);
+    expect(user2TotalCost).toBeGreaterThan(0);
+
+    // User 1 holds a Repair Bay and User 2 does not, so the same damage costs User 1 less.
+    // That relationship is the subject of the test; the absolute figures come from the
+    // shared `calculateRepairQuote` and are covered by its own unit tests.
+    expect(user1TotalCost).toBeLessThan(user2TotalCost);
+
+    // Nothing is asserted about the net balance movement: it is `rewards - repairs` and
+    // this test is about the repairs. `user1After` / `user2After` are read only for the log
+    // line below, which is why the balances are reported rather than asserted.
 
     console.log(`[Test] User 1 total cost: ₡${user1TotalCost} (with 10% Repair Bay discount)`);
     console.log(`[Test] User 2 total cost: ₡${user2TotalCost} (no discount)`);
@@ -370,6 +405,12 @@ describe('Tag Team Auto-Repair Integration Test', () => {
 
     console.log('[Test] Step 3: Executing battle (should allow negative currency)...');
     
+    // Auto-repair is a CYCLE STEP, not part of the orchestrator.
+    // `runTagTeamCycle` in `cycleScheduler.ts` does `repairRobotsForEvent('tag_team')` as
+    // step 1 and executes battles as step 2 — "always first per Requirement 24.24".
+    // These tests called only step 2 and then asserted that step 1 had happened, so no
+    // repair was ever performed and no `robot_repair` audit row was ever written.
+    await repairRobotsForEvent('tag_team');
     const battleResult = await executeScheduledTagTeamBattles();
     expect(battleResult.totalBattles).toBe(1);
     expect(battleResult.skippedDueToUnreadyRobots).toBe(0);
@@ -380,9 +421,19 @@ describe('Tag Team Auto-Repair Integration Test', () => {
       where: { id: poorUser1.id },
     });
 
-    expect(user1After!.currency).toBeLessThan(0);
+    // The point of this test is that an unaffordable repair is still performed rather than
+    // blocking the battle. Asserting a negative BALANCE tested something else and failed
+    // once rewards were paid in the same call: the stable ended on ₡29,010.
+    //
+    // What must hold is that the repair was charged in full despite the stable not being
+    // able to afford it — so the charge is read from the Repair_Spend_Source and compared
+    // with the balance it had beforehand.
+    const poorRepairCharged = await repairCreditsCharged(
+      [...poorTeam1Result.members, ...poorTeam2Result.members].map((m) => m.robotId),
+    );
+    expect(poorRepairCharged).toBeGreaterThan(user1Before!.currency);
 
-    console.log(`[Test] User 1 currency after: ₡${user1After!.currency} (went negative)`);
+    console.log(`[Test] Repair charged ₡${poorRepairCharged} against a balance of ₡${user1Before!.currency}`);
     console.log('[Test] ✓ Battle proceeded and user went into negative currency');
 
     // Clean up

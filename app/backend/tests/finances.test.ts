@@ -247,12 +247,41 @@ describe('Finances Routes', () => {
         .post('/api/finances/roi-calculator')
         .set('Authorization', `Bearer ${authToken}`)
         .send({
-          facilityType: 'training_academy',
+          // A real facility type. This said 'training_academy', which is not one —
+          // the academies are combat_/defense_/mobility_/ai_training_academy — so the
+          // service could only ever reject it. It answered 500 rather than 400, which
+          // the `[200, 400]` assertion turned into the failure that surfaced both.
+          facilityType: 'repair_bay',
           targetLevel: 1,
         });
 
-      // Should succeed (200) or return validation error (400) if facility already at/above target level
-      expect([200, 400]).toContain(response.status);
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('currentLevel');
+      expect(response.body).toHaveProperty('targetLevel', 1);
+      expect(response.body).toHaveProperty('upgradeCost');
+    });
+
+    it('should return 400 for an unknown facility type', async () => {
+      const response = await request(app)
+        .post('/api/finances/roi-calculator')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({ facilityType: 'training_academy', targetLevel: 1 });
+
+      expect(response.status).toBe(400);
+      expect(response.body.code).toBe('INVALID_FACILITY_TYPE');
+    });
+
+    it('should return 400 for a target level above the facility maximum', async () => {
+      const response = await request(app)
+        .post('/api/finances/roi-calculator')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({ facilityType: 'repair_bay', targetLevel: 99 });
+
+      // Both bounds — above max, and at or below the current level — come back as
+      // INVALID_TRANSACTION. This used to be a bare `throw new Error`, which the error
+      // handler could only render as a 500.
+      expect(response.status).toBe(400);
+      expect(response.body.code).toBe('INVALID_TRANSACTION');
     });
 
     it('should return 401 without authentication', async () => {

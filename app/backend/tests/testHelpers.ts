@@ -121,18 +121,17 @@ export async function createTestBattle(opts: {
   robot1Destroyed?: boolean;
   robot2Destroyed?: boolean;
 }) {
+  // The `robot1*` / `robot2*` names survive in `opts` because they read well at a
+  // call site, but they are inputs to the participant rows only. `Battle` itself
+  // carries no combatant columns: `robot1Id`, `robot2Id`, the four ELO fields and
+  // `eloChange` were moved to `battle_participants` and this helper kept passing
+  // them to `battle.create` for months, so every suite that used it failed with
+  // `Unknown argument robot1Id`.
   const battle = await prisma.battle.create({
     data: {
-      robot1Id: opts.robot1Id,
-      robot2Id: opts.robot2Id,
       winnerId: opts.winnerId ?? null,
       battleType: opts.battleType || 'league',
       leagueType: opts.leagueType || 'bronze',
-      robot1ELOBefore: opts.robot1ELOBefore ?? 1200,
-      robot2ELOBefore: opts.robot2ELOBefore ?? 1200,
-      robot1ELOAfter: opts.robot1ELOAfter ?? 1210,
-      robot2ELOAfter: opts.robot2ELOAfter ?? 1190,
-      eloChange: opts.eloChange ?? 10,
       winnerReward: opts.winnerReward ?? 1000,
       loserReward: opts.loserReward ?? 500,
       durationSeconds: opts.durationSeconds ?? 30,

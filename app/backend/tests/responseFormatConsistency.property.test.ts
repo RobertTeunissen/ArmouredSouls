@@ -6,6 +6,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from '../src/routes/auth';
 import prisma from '../src/lib/prisma';
+import { uniqueRegistration } from './helpers/uniqueRegistration';
+import { errorHandler } from '../src/middleware/errorHandler';
 
 dotenv.config();
 
@@ -14,6 +16,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use('/api/auth', authRoutes);
+
+// Spec #51: without the errorHandler mounted, a thrown AppError falls through
+// to Express's default handler, which sends the right status with an EMPTY
+// body. That is why these suites saw 400 but no `body.error` or `body.code`.
+app.use(errorHandler);
 
 // Test configuration
 const NUM_RUNS = 10;
@@ -54,13 +61,15 @@ describe('Response Format Consistency - Property Tests', () => {
           validEmailArbitrary(),
           validPasswordArbitrary(),
           async (username, email, password) => {
-            // Make username and email unique per run to avoid collisions
+            // Spec #51: unique values come from a shared helper that budgets the
+            // email local part. The old inline version sliced the composed address
+            // to 20 chars, cutting into `@t.co` once the suffix grew, so
+            // registration correctly returned 400 and this suite failed on 201.
             const suffix = `${Date.now()}${runIndex++}`;
-            const uniqueUsername = `${username.slice(0, 10)}${suffix}`.slice(0, 20);
-            const uniqueEmail = `${email.split('@')[0]}${suffix}@t.co`.slice(0, 20);
-
-            // Ensure generated values still meet validation rules after truncation
-            if (uniqueUsername.length < 3 || uniqueEmail.length < 3) return;
+            const { username: uniqueUsername, email: uniqueEmail } = uniqueRegistration(
+              { username, email },
+              suffix,
+            );
 
             // Step 1: Register a user with valid credentials
             const registerResponse = await request(app)

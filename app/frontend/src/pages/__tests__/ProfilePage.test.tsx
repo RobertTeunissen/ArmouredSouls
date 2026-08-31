@@ -270,10 +270,26 @@ describe('ProfilePage', () => {
     });
 
     it('should display validation errors from API', async () => {
+      // `details.fields` is an array of { field, message }.
+      //
+      // This mock used to be a flat `details: { stableName: '...' }`, a shape the backend has
+      // never sent: `PUT /api/user/profile` previously emitted `details.errors` keyed by field
+      // name, and `validateRequest` has always emitted `details.fields`. The old
+      // `setErrors(data.details)` in ProfilePage happened to satisfy the invented flat mock,
+      // so the test passed while a real validation error rendered nothing under any field and
+      // was also suppressed from the banner, because `data.details` was truthy either way.
+      // Spec #51 made the endpoint emit `fields` like every other route; the mock now matches.
       vi.mocked(userApi.updateProfile).mockRejectedValue({
         response: {
           status: 400,
-          data: { error: 'Validation failed', details: { stableName: 'Stable name contains inappropriate content' } },
+          data: {
+            error: 'Stable name contains inappropriate content',
+            details: {
+              fields: [
+                { field: 'stableName', message: 'Stable name contains inappropriate content' },
+              ],
+            },
+          },
         },
       });
 
@@ -287,6 +303,30 @@ describe('ProfilePage', () => {
 
       await waitFor(() => {
         expect(screen.getByText('Stable name contains inappropriate content')).toBeInTheDocument();
+      });
+    });
+
+    it('should fall back to the banner when a 400 carries no field details', async () => {
+      // The other half of the same defect. `setErrors(data.details)` was guarded by a truthy
+      // check on `data.details`, so a 400 whose details held no usable field entries showed
+      // the player nothing at all — no inline error and no banner.
+      vi.mocked(userApi.updateProfile).mockRejectedValue({
+        response: {
+          status: 400,
+          data: { error: 'Validation failed', details: { fields: [] } },
+        },
+      });
+
+      renderProfilePage();
+      await waitFor(() => {
+        expect(screen.getByText('My Profile')).toBeInTheDocument();
+      });
+
+      const saveButton = await changeStableNameAndWaitForButton('Some Name');
+      fireEvent.click(saveButton);
+
+      await waitFor(() => {
+        expect(screen.getByText('Validation failed')).toBeInTheDocument();
       });
     });
 

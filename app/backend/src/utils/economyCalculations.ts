@@ -8,8 +8,8 @@
  */
 
 import prisma from '../lib/prisma';
+import { getRobotLeagueTiers, tierOf } from '../services/standings/robotLeagueTiers';
 import logger from '../config/logger';
-import { StandingsMode } from '../../generated/prisma';
 
 // Re-export all pure calculation functions for backward compatibility
 export {
@@ -492,11 +492,7 @@ export async function generatePerRobotFinancialReport(userId: number): Promise<{
 
   // Get league tiers from standings for the response
   const robotIds = robots.map(r => r.id);
-  const leagueStandings = await prisma.standing.findMany({
-    where: { entityType: 'robot', entityId: { in: robotIds }, mode: StandingsMode.league_1v1 },
-    select: { entityId: true, tier: true },
-  });
-  const leagueMap = new Map(leagueStandings.map(s => [s.entityId, s.tier]));
+  const leagueMap = await getRobotLeagueTiers(robotIds);
 
   // Get Merchandising Hub level and Roster_Capacity for passive income (Spec #46 R2)
   const passiveIncomeFacilities = await prisma.facility.findMany({
@@ -610,7 +606,7 @@ export async function generatePerRobotFinancialReport(userId: number): Promise<{
       return {
         id: robot.id,
         name: robot.name,
-        currentLeague: leagueMap.get(robot.id) ?? 'bronze',
+        currentLeague: tierOf(leagueMap, robot.id),
         elo: robot.elo,
         revenue: {
           battleWinnings,

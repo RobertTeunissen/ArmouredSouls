@@ -4,6 +4,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from '../src/routes/auth';
+import { errorHandler } from '../src/middleware/errorHandler';
 
 dotenv.config();
 
@@ -11,6 +12,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use('/api/auth', authRoutes);
+
+// Spec #51: without the errorHandler mounted, a thrown AppError falls through
+// to Express's default handler, which sends the right status with an EMPTY
+// body. That is why these suites saw 400 but no `body.error` or `body.code`.
+app.use(errorHandler);
 
 describe('Registration Error Handling', () => {
   let testUserIds: number[] = [];
@@ -74,8 +80,8 @@ describe('Registration Error Handling', () => {
     });
   });
 
-  describe('Duplicate errors → 400 with specific message', () => {
-    it('should return 400 with DUPLICATE_USERNAME code for existing username', async () => {
+  describe('Duplicate errors → 409 with specific message', () => {
+    it('should return 409 with DUPLICATE_USERNAME code for existing username', async () => {
       const uniqueSuffix = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
       const username = `dup_${uniqueSuffix}`.substring(0, 20);
       const email1 = `e1_${uniqueSuffix.substring(0, 6)}@t.co`;
@@ -95,12 +101,12 @@ describe('Registration Error Handling', () => {
         .post('/api/auth/register')
         .send({ username, email: email2, password: 'password123', stableName: stableName2 });
 
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(409);
       expect(response.body.error).toBe('Username is already taken');
       expect(response.body.code).toBe('DUPLICATE_USERNAME');
     });
 
-    it('should return 400 with DUPLICATE_EMAIL code for existing email', async () => {
+    it('should return 409 with DUPLICATE_EMAIL code for existing email', async () => {
       const uniqueSuffix = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
       const username1 = `us1_${uniqueSuffix}`.substring(0, 20);
       const username2 = `us2_${uniqueSuffix}`.substring(0, 20);
@@ -119,7 +125,7 @@ describe('Registration Error Handling', () => {
         .post('/api/auth/register')
         .send({ username: username2, email, password: 'password123', stableName: `s2_${uniqueSuffix}`.substring(0, 30) });
 
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(409);
       expect(response.body.error).toBe('Email is already registered');
       expect(response.body.code).toBe('DUPLICATE_EMAIL');
     });

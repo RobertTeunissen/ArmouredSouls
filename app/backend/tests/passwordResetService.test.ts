@@ -16,6 +16,11 @@ const mockFindUnique = jest.fn();
 const mockUpdate = jest.fn();
 const mockAuditLogFindFirst = jest.fn();
 const mockAuditLogCreate = jest.fn();
+// Spec #51: audit sequence allocation now takes pg_advisory_xact_lock(3, cycle)
+// through the shared Sequence_Allocator, so the mocked transaction client needs
+// $executeRaw. The real Prisma.TransactionClient has always had it; this mock
+// just never exercised it.
+const mockExecuteRaw = jest.fn().mockResolvedValue(0);
 
 const mockTx = {
   user: {
@@ -26,6 +31,7 @@ const mockTx = {
     findFirst: mockAuditLogFindFirst,
     create: mockAuditLogCreate,
   },
+  $executeRaw: mockExecuteRaw,
 };
 
 // $transaction receives a callback; we invoke it with our mockTx
@@ -338,6 +344,13 @@ describe('PasswordResetService — Property-Based Tests', () => {
    *
    * Uses the REAL hashPassword implementation (not the mock).
    *
+   * Carries an explicit 180s timeout. 100 runs x (one bcrypt hash + one bcrypt compare) is
+   * roughly 40s of deliberate key-stretching, which overran the Unit_Tier's 30s default when
+   * the machine was loaded — the suite was measured at 58s in a full-tier run and 36s alone.
+   * Neither `numRuns` nor the bcrypt cost factor is the thing to reduce: the first is the
+   * coverage this property exists for, the second is a security parameter. A timeout is not
+   * an assertion.
+   *
    * **Validates: Requirements 11.4**
    */
   test('Property 5: any valid password round-trips through bcrypt hash + compare', async () => {
@@ -359,7 +372,7 @@ describe('PasswordResetService — Property-Based Tests', () => {
       }),
       { numRuns: 100 },
     );
-  });
+  }, 180_000);
 
   /**
    * **Property 4: Token version increment**

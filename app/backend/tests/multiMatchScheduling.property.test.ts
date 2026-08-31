@@ -9,14 +9,33 @@ import { executeScheduledTagTeamBattles } from '../src/services/tag-team/tagTeam
 
 
 // Test configuration
+import { enterTeamStanding } from './helpers/standings';
+
 const NUM_RUNS = 10;
 
-// Helper to create a test robot
+/**
+ * Helper to create a test robot.
+ *
+ * `name` is a label, not an identity: the caller's string is suffixed to make it unique.
+ * `robots.name` is GLOBALLY unique (`name String @unique`, migration
+ * `20260402101920_global_unique_robot_names`), and every call site here passes a fixed
+ * `User1Robot${i}` / `User2Robot${i}`. Across four properties at 10 fast-check runs each
+ * that is the same handful of names re-created ~80 times, so every run after the first
+ * failed with `Unique constraint failed on the fields: (name)` before the property under
+ * test could even begin. Nothing in this file asserts on a robot's name.
+ *
+ * `robots.name` is `VarChar(50)`, so the suffix is kept short and the label is truncated to
+ * leave room for it rather than overflowing the column.
+ */
+let robotNameCounter = 0;
+
 async function createTestRobot(userId: number, name: string, elo: number = 1200): Promise<Robot> {
+  const suffix = `_${Date.now().toString(36)}_${(robotNameCounter++).toString(36)}`;
+  const uniqueName = `${name.substring(0, 50 - suffix.length)}${suffix}`;
   return await prisma.robot.create({
     data: {
       userId,
-      name,
+      name: uniqueName,
       frameId: 1,
       // Combat Systems
       combatPower: new Prisma.Decimal(10),
@@ -556,6 +575,14 @@ describe('Multi-Match Scheduling and Execution - Property Tests', () => {
             // Create tag teams using robots 0 and 1
             const team1 = await registerTeam(user1.id, [user1Robots[0].id, user1Robots[1].id], 'Team1', 2, user1.id);
             const team2 = await registerTeam(user2.id, [user2Robots[0].id, user2Robots[1].id], 'Team2', 2, user2.id);
+
+            // `registerTeam` enters a 2v2 team into the 2v2 league, not into tag team — tag
+            // team is a separate mode on the same TeamBattle row with its own `standings`
+            // entry. Without it the orchestrator logs "No standing found for team N in
+            // tag_team mode — skipping match" and CANCELS the match, which is why this
+            // assertion read "cancelled" where it expected "completed".
+            await enterTeamStanding(team1.id, 'tag_team', { tier: 'bronze', leagueInstanceId: 'bronze_1' });
+            await enterTeamStanding(team2.id, 'tag_team', { tier: 'bronze', leagueInstanceId: 'bronze_1' });
 
             // Manually damage robots to simulate 1v1 battle damage
             // Damage robot 0 from each user to below readiness threshold (75%)

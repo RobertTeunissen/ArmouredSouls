@@ -1,14 +1,38 @@
 # Spec 51 — Test Tier Restoration: Investigation Notes
 
-> **Status: investigation complete, requirements not started.**
-> This is a measured survey of the integration tier's failures plus two CI gaps, and it ends with
-> four decisions that must be made before `requirements.md` can be written. It is deliberately not a
-> requirements document: the biggest question — whether a failing test means the code is wrong or the
-> test is wrong — has 67 different answers, and guessing them in bulk would be worse than useless.
+> **Status: superseded by `requirements.md`, `design.md` and `tasks.md`. Kept as the record of how
+> this was found.**
 >
 > Measured 27 August 2026 against a pristine `git worktree` at HEAD `e4da0182`, so every count below
 > is the state of `main` and **not** a consequence of Spec #49. Confirmed by running the same tier on
 > the working tree and diffing the failure lists.
+>
+> ### Decision 1 is answered — 28 August 2026
+>
+> **The Integration_Tier was not gating.** Of the three possibilities in § Gap 2, it was the second:
+> the gate was being swallowed. `continue-on-error: true` sat on the "Run integration tests" step in
+> **both** `ci.yml` and `deploy.yml`. Not a pipe and not `|| true`, which is why the July 2026 audit —
+> which searched for those two patterns — walked past it. Because a `continue-on-error` *step* still
+> lets its *job* report success, the `needs: [backend-integration-tests]` entry in both deploy jobs
+> was satisfied by a job running 274 failing tests.
+>
+> So the spec landed on the **large and urgent** branch, not the environment-shaped one.
+>
+> Three further gaps were measured that this document does not record:
+>
+> - `test:heavy` was wired into no workflow. § Gap 1 asked whether the July removal regressed or was
+>   never completed: it was never completed.
+> - `e2e-tests` was absent from both deploy jobs' `needs:`, so Playwright ran but nothing waited for
+>   it. This document scoped Playwright out as "not measured"; that finding brought it in.
+> - **Four test files were collected by no tier at all**, including
+>   `tests/middleware/errorHandler.test.ts`. The § "Category A" lead below was right that this
+>   exclusion mattered, and understated it: the file was not merely excluded from the unit tier, it
+>   ran nowhere. Ten further files ran in two tiers.
+>
+> Decisions 2, 3 and 4 are resolved in `requirements.md` and `design.md`. In particular Decision 3
+> ruled out the PostgreSQL-sequence option listed first below: `checkSequenceNumbers` in
+> `dataIntegrityService.ts` reports every gap as an integrity issue, so gapless numbering is
+> load-bearing.
 
 ## How this was found
 

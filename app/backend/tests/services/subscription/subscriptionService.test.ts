@@ -40,6 +40,11 @@ const mockTx = {
     findUnique: jest.fn().mockResolvedValue(null),
     create: jest.fn().mockResolvedValue(undefined),
   },
+  // Spec #51: audit sequence numbers are allocated by `withAuditSequence`, which
+  // takes pg_advisory_xact_lock(3, cycle) on the transaction client. The real
+  // Prisma.TransactionClient has always exposed $executeRaw; this mock simply
+  // never needed it before.
+  $executeRaw: jest.fn().mockResolvedValue(0),
 };
 
 const mockPrisma = {

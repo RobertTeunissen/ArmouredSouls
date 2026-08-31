@@ -1,7 +1,9 @@
 // Common/utility services barrel file
 
 // Event logging
-export { EventLogger, EventType, clearSequenceCache } from './eventLogger';
+export { EventLogger, EventType } from './eventLogger';
+// Spec #51: `clearSequenceCache` removed — the cache it cleared is gone.
+export { withAuditSequence } from './auditSequence';
 
 // Event compression
 export { compressEventsForStorage, estimateEventSize, estimateEventsMemory } from './eventCompression';

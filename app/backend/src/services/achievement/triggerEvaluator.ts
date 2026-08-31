@@ -9,6 +9,7 @@ import { calculateEffectiveStatsWithStance } from '../../utils/robotCalculations
 import type { AchievementDefinition } from '../../config/achievements';
 import { STARTER_WEAPON_NAMES } from '../../config/starterWeapons';
 import type { AchievementEvent } from './achievementTypes';
+import { resolveTeamModeWins, type TeamModeWins } from './teamModeWins';
 
 // ─── Cached-Data Helpers (no DB queries) ────────────────────────────
 
@@ -269,10 +270,19 @@ export async function checkAllModesWin(userId: number): Promise<boolean> {
     select: { entityId: true, mode: true, wins: true },
   });
 
+  // Spec #51: the three team modes were read from this robot-scoped list, which
+  // is the same defect Spec #46 R8 Cause A fixed in `achievementService.ts` and
+  // left standing here. `tag_team`, `league_2v2` and `league_3v3` only ever write
+  // `entityType: 'team'` rows keyed by `TeamBattle.id`, so `hasTagTeamWin` was
+  // always false and C18 "Autobots, Roll Out!" was unreachable for every player.
+  // Resolved through the shared resolver so the two call sites cannot drift.
+  const teamWins = [...(await resolveTeamModeWins(robotIds)).values()];
+  const anyTeamWin = (mode: keyof TeamModeWins): boolean => teamWins.some(w => w[mode] > 0);
+
   const hasLeagueWin = robots.some(r => r.wins > 0) ||
-    standings.some(s => (s.mode === 'league_2v2' || s.mode === 'league_3v3') && s.wins > 0);
+    anyTeamWin('league_2v2') || anyTeamWin('league_3v3');
   const hasKothWin = standings.some(s => s.mode === 'koth' && s.wins > 0);
-  const hasTagTeamWin = standings.some(s => s.mode === 'tag_team' && s.wins > 0);
+  const hasTagTeamWin = anyTeamWin('tag_team');
 
   const user = await prisma.user.findUnique({
     where: { id: userId },

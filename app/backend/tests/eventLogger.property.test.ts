@@ -7,7 +7,7 @@
 
 import prisma from '../src/lib/prisma';
 import fc from 'fast-check';
-import { EventLogger, EventType, clearSequenceCache } from '../src/services/common/eventLogger';
+import { EventLogger, EventType } from '../src/services/common/eventLogger';
 
 const eventLogger = new EventLogger();
 
@@ -15,10 +15,6 @@ describe('EventLogger Property-Based Tests', () => {
   beforeEach(async () => {
     // Clean up audit logs before each test
     await prisma.auditLog.deleteMany({});
-    // Clear sequence cache
-    for (let i = 1; i <= 100; i++) {
-      clearSequenceCache(i);
-    }
   });
 
   afterAll(async () => {
@@ -66,8 +62,8 @@ describe('EventLogger Property-Based Tests', () => {
                 // Generate various payload fields
                 amount: fc.option(fc.integer({ min: -100000, max: 100000 })),
                 cost: fc.option(fc.integer({ min: 0, max: 100000 })),
-                oldValue: fc.option(fc.float({ min: 0, max: 100 })),
-                newValue: fc.option(fc.float({ min: 0, max: 100 })),
+                oldValue: fc.option(fc.float({ min: 0, max: 100, noNaN: true, noDefaultInfinity: true })),
+                newValue: fc.option(fc.float({ min: 0, max: 100, noNaN: true, noDefaultInfinity: true })),
                 facilityType: fc.option(fc.constantFrom('training_academy', 'repair_bay', 'income_generator')),
                 robotId: fc.option(fc.integer({ min: 1, max: 1000 })),
                 userId: fc.option(fc.integer({ min: 1, max: 100 })),
@@ -82,7 +78,6 @@ describe('EventLogger Property-Based Tests', () => {
           async (cycleNumber, events) => {
             // Clear any existing data for this cycle
             await prisma.auditLog.deleteMany({ where: { cycleNumber } });
-            clearSequenceCache(cycleNumber);
 
             // Log all events
             await eventLogger.logEventBatch(
@@ -157,7 +152,6 @@ describe('EventLogger Property-Based Tests', () => {
           async (cycleNumber, payload) => {
             // Clear any existing data for this cycle
             await prisma.auditLog.deleteMany({ where: { cycleNumber } });
-            clearSequenceCache(cycleNumber);
 
             // Log event with complex payload
             await eventLogger.logEvent(
@@ -201,7 +195,6 @@ describe('EventLogger Property-Based Tests', () => {
           async (cycleNumber, events) => {
             // Clear any existing data for this cycle
             await prisma.auditLog.deleteMany({ where: { cycleNumber } });
-            clearSequenceCache(cycleNumber);
 
             // Log events sequentially (realistic for cycle execution)
             for (const e of events) {
@@ -246,7 +239,6 @@ describe('EventLogger Property-Based Tests', () => {
           async (cycleNumber, userId, robotId) => {
             // Clear any existing data for this cycle
             await prisma.auditLog.deleteMany({ where: { cycleNumber } });
-            clearSequenceCache(cycleNumber);
 
             // Log various event types that represent a cycle execution (sequentially)
             await eventLogger.logCycleStart(cycleNumber, 'manual');
@@ -399,7 +391,6 @@ describe('EventLogger Property-Based Tests', () => {
           async (cycleNumber, events) => {
             // Clear any existing data for this cycle
             await prisma.auditLog.deleteMany({ where: { cycleNumber } });
-            clearSequenceCache(cycleNumber);
 
             // Log all events
             for (const e of events) {
@@ -472,7 +463,6 @@ describe('EventLogger Property-Based Tests', () => {
           async (cycleNumber, events) => {
             // Clear any existing data for this cycle
             await prisma.auditLog.deleteMany({ where: { cycleNumber } });
-            clearSequenceCache(cycleNumber);
 
             // Log events concurrently (simulates race conditions)
             await Promise.all(
@@ -536,7 +526,6 @@ describe('EventLogger Property-Based Tests', () => {
             await prisma.auditLog.deleteMany({
               where: { cycleNumber: { in: uniqueCycles } },
             });
-            uniqueCycles.forEach(c => clearSequenceCache(c));
 
             // Log events for each cycle
             for (const cycleNumber of uniqueCycles) {
@@ -598,7 +587,6 @@ describe('EventLogger Property-Based Tests', () => {
           async (cycleNumber, events) => {
             // Clear any existing data for this cycle
             await prisma.auditLog.deleteMany({ where: { cycleNumber } });
-            clearSequenceCache(cycleNumber);
 
             // Log events sequentially with small delays to ensure timestamp ordering
             for (const e of events) {
@@ -652,7 +640,6 @@ describe('EventLogger Property-Based Tests', () => {
           async (cycleNumber, events) => {
             // Clear any existing data for this cycle
             await prisma.auditLog.deleteMany({ where: { cycleNumber } });
-            clearSequenceCache(cycleNumber);
 
             // Log events in batch
             await eventLogger.logEventBatch(
