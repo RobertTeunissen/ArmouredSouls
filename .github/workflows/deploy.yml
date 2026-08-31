@@ -422,7 +422,14 @@ jobs:
     # like a gate and could never have failed. The flag is gone, so the entry is
     # real. Removing the flag and adding the entry is one change, never two.
     needs: [backend-unit-tests, backend-integration-tests, backend-heavy-tests, frontend-build, e2e-tests]
-    if: github.event_name == 'push'
+    # A manual dispatch used to skip this job, so `gh workflow run deploy.yml
+    # -f environment=acceptance` ran the gates, deployed nothing, and reported
+    # the whole run green. That is the worst possible answer while ACC is down:
+    # it looks like a redeploy succeeded. Dispatch can now reach ACC, which is
+    # also the only way to redeploy without pushing to main.
+    if: >-
+      github.event_name == 'push' ||
+      (github.event_name == 'workflow_dispatch' && inputs.environment == 'acceptance')
     environment: acceptance
     permissions:
       contents: write
@@ -735,6 +742,40 @@ jobs:
               fi
               echo "Enhanced health check passed (disk: $DISK_STATUS, modules: $MODULE_STATUS)"
             fi
+
+      # When the health check fails the backend is not listening, and the reason
+      # is only visible on the box. Without this the workflow reported
+      # "Health check failed after 30s" and nothing else, which is not enough to
+      # act on: index.ts calls process.exit(1) before app.listen if
+      # runStartupSelfTest fails, and a crash loop, an OOM kill and a failed
+      # native module load are indistinguishable from outside. `pm2 flush` runs
+      # before the restart, so this log is the failing boot and nothing older.
+      - name: Capture backend diagnostics (on failure)
+        if: failure()
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.ACC_VPS_IP }}
+          username: ${{ secrets.ACC_VPS_USER }}
+          key: ${{ secrets.ACC_SSH_KEY }}
+          script: |
+            echo "===== pm2 list ====="
+            pm2 list || true
+            echo "===== pm2 logs (last 150 lines) ====="
+            pm2 logs --lines 150 --nostream || true
+            echo "===== memory ====="
+            free -m || true
+            echo "===== disk ====="
+            df -h / || true
+            echo "===== CRITICAL_MODULES present in dist? ====="
+            cd /opt/armouredsouls/backend 2>/dev/null || exit 0
+            for m in utils/economyCalculations \
+                     services/cycle/cycleScheduler \
+                     services/notifications/notification-service \
+                     services/league/leagueBattleOrchestrator \
+                     services/economy/repairService \
+                     services/analytics/matchmakingService; do
+              if [ -f "dist/$m.js" ]; then echo "OK      $m"; else echo "MISSING $m"; fi
+            done
 
       - name: Notify deploy success
         if: success()
