@@ -766,16 +766,36 @@ jobs:
             free -m || true
             echo "===== disk ====="
             df -h / || true
+            echo "===== pm2 describe (exit reason, cwd, script) ====="
+            pm2 describe armouredsouls-backend || true
+            echo "===== app directory ====="
+            APP_DIR=/opt/armouredsouls/backend
+            ls -la "$APP_DIR" 2>&1 | head -20 || true
             echo "===== CRITICAL_MODULES present in dist? ====="
-            cd /opt/armouredsouls/backend 2>/dev/null || exit 0
-            for m in utils/economyCalculations \
-                     services/cycle/cycleScheduler \
-                     services/notifications/notification-service \
-                     services/league/leagueBattleOrchestrator \
-                     services/economy/repairService \
-                     services/analytics/matchmakingService; do
-              if [ -f "dist/$m.js" ]; then echo "OK      $m"; else echo "MISSING $m"; fi
-            done
+            if cd "$APP_DIR" 2>/dev/null; then
+              for m in utils/economyCalculations \
+                       services/cycle/cycleScheduler \
+                       services/notifications/notification-service \
+                       services/league/leagueBattleOrchestrator \
+                       services/economy/repairService \
+                       services/analytics/matchmakingService; do
+                if [ -f "dist/$m.js" ]; then echo "OK      $m"; else echo "MISSING $m"; fi
+              done
+              # The process is SIGINT'd with code 0 and writes no application log
+              # at all — no winston output, empty error log — so the failure is
+              # invisible through PM2. Run it in the foreground to see what it
+              # actually prints. PM2 stops it before it can bind, so the port is
+              # free; if it is not, EADDRINUSE is itself the answer.
+              echo "===== foreground boot (25s, stdout+stderr) ====="
+              pm2 stop armouredsouls-backend >/dev/null 2>&1 || true
+              set +e
+              timeout 25 node dist/index.js 2>&1 | tail -60
+              echo "--- foreground exit code: $? ---"
+              set -e
+              pm2 start armouredsouls-backend >/dev/null 2>&1 || true
+            else
+              echo "cd $APP_DIR failed"
+            fi
 
       - name: Notify deploy success
         if: success()
