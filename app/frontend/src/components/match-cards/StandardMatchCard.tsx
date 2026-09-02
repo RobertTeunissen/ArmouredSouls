@@ -32,7 +32,7 @@ function StandardMatchCard({ match, myRobot, opponent, getRoundName }: StandardM
       `}
     >
       {/* Desktop Layout */}
-      <div className="hidden md:flex items-center gap-3">
+      <div className="hidden lg:flex items-center gap-3">
         <div className="flex-shrink-0 w-6 text-center text-base">
           {modeConfig.icon}
         </div>
@@ -66,7 +66,7 @@ function StandardMatchCard({ match, myRobot, opponent, getRoundName }: StandardM
       </div>
 
       {/* Mobile Layout */}
-      <div className="md:hidden">
+      <div className="lg:hidden">
         <div className="flex items-center justify-between mb-1.5">
           <div className="flex items-center gap-1.5">
             <span className="text-base">{modeConfig.icon}</span>

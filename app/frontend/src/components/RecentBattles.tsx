@@ -14,7 +14,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CompactBattleCard from './CompactBattleCard';
-import { getMatchHistory, BattleHistory, getBattlePerspective, getBattleReward } from '../utils/matchmakingApi';
+import { getMatchHistory, BattleHistory, getBattlePerspective, getBattleEconomicDisplay } from '../utils/matchmakingApi';
+import { expandBattleDisplayInstances, type BattleDisplayInstance } from '../utils/match-display-instances';
 import { createLogger } from '../utils/logger';
 
 const log = createLogger('RecentBattles');
@@ -88,36 +89,55 @@ function RecentBattles({ battles: battlesProp, robotId, userId, limit = 20, titl
     );
   }
 
+  const displayInstances: BattleDisplayInstance[] = battles.flatMap((battle) => {
+    const expanded = expandBattleDisplayInstances(battle, { robotId, userId });
+    if (expanded.length > 0) return expanded;
+
+    // Preserve legacy records without participants while keeping the source
+    // battle key unique and the perspective explicit.
+    const perspectiveRobotId = robotId ?? battle.robot1Id;
+    return [{
+      battle,
+      displayInstanceKey: `battle:${battle.id}:legacy:${perspectiveRobotId}`,
+      perspectiveRobotId,
+      perspectiveRobotIds: [perspectiveRobotId],
+    }];
+  });
+
   return (
     <div className="bg-surface p-4 rounded-lg border border-white/10">
       <div className="flex justify-between items-center mb-3">
         <h2 className="text-lg font-semibold">{title}</h2>
         <button
           onClick={() => navigate('/battle-history')}
-          className="text-primary hover:text-primary-light text-xs font-semibold"
+          className="text-primary hover:text-primary-light text-xs font-semibold min-h-[44px] px-2"
         >
           View All →
         </button>
       </div>
 
       <div className="space-y-0 max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
-        {battles.map((battle) => {
-          const { myRobot, opponent, outcome, eloChange, myRobotId } = getBattlePerspective(battle, { robotId, userId });
-          const reward = getBattleReward(battle, myRobotId);
+        {displayInstances.map((instance) => {
+          const { battle } = instance;
+          const { myRobot, opponent, outcome, eloChange, myRobotId } = getBattlePerspective(
+            battle,
+            { robotId: instance.perspectiveRobotId },
+          );
+          const economics = getBattleEconomicDisplay(battle, instance.perspectiveRobotId);
 
           return (
             <CompactBattleCard
-              key={battle.id}
+              key={instance.displayInstanceKey}
               battle={battle}
               myRobot={myRobot}
               opponent={opponent}
               outcome={outcome}
               eloChange={eloChange}
               myRobotId={myRobotId}
-              reward={reward}
-              prestige={battle.prestigeAwarded}
-              fame={battle.fameAwarded}
-              streamingRevenue={battle.streamingRevenue}
+              reward={economics.credits}
+              prestige={economics.prestigeAwarded}
+              fame={economics.fameAwarded}
+              streamingRevenue={economics.streamingRevenue}
               onClick={() => navigate(`/battle/${battle.id}`)}
             />
           );
@@ -126,5 +146,6 @@ function RecentBattles({ battles: battlesProp, robotId, userId, limit = 20, titl
     </div>
   );
 }
+
 
 export default RecentBattles;

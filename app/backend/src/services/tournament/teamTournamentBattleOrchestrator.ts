@@ -41,6 +41,7 @@ import {
   updateRobotCombatStats,
 } from '../battle/battlePostCombat';
 import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
+import { completeByeMatch } from './tournamentService';
 
 // ─── Team Tournament Prestige (Stepped Curve) ────────────────────────────────
 
@@ -501,7 +502,6 @@ export async function executeTeamTournamentRound(
       tournamentId,
       round: tournament.currentRound,
       status: { in: ['pending', 'scheduled'] },
-      isByeMatch: false, // Skip bye matches (already auto-completed)
     },
     orderBy: { matchNumber: 'asc' },
   });
@@ -517,6 +517,30 @@ export async function executeTeamTournamentRound(
   // 3. Execute each match
   for (const match of pendingMatches) {
     try {
+      if (match.isByeMatch) {
+        const advancingParticipantId = match.participant1Id ?? match.participant2Id;
+        if (advancingParticipantId === null) {
+          throw new TournamentError(
+            TournamentErrorCode.MATCH_MISSING_ROBOTS,
+            `Team tournament bye ${match.id} missing advancing team`,
+            400,
+            { matchId: match.id },
+          );
+        }
+
+        const resolved = await completeByeMatch(match, advancingParticipantId);
+        if (!resolved) {
+          throw new TournamentError(
+            TournamentErrorCode.INVALID_MATCH_STATE,
+            `Team tournament bye ${match.id} did not produce a Bye_Record`,
+            400,
+            { matchId: match.id },
+          );
+        }
+        matchesExecuted++;
+        continue;
+      }
+
       // Check forfeit conditions (R5.5, R5.6)
       const forfeit = await checkForfeitConditions(match);
       if (forfeit.shouldForfeit) {

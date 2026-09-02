@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { screen } from '@testing-library/react';
+import { screen, fireEvent } from '@testing-library/react';
 import { renderWithRouter } from '../../test-utils';
 import CompactBattleCard from '../CompactBattleCard';
 import { BattleHistory } from '../../utils/matchmakingApi';
@@ -269,5 +269,75 @@ describe('CompactBattleCard economic indicators', () => {
 
     // Total credits = 500 + 0 = 500
     expect(screen.getAllByText('₡500').length).toBeGreaterThan(0);
+  });
+});
+
+describe('CompactBattleCard bye state', () => {
+  it('should prioritize BYE, omit the opponent, and remain keyboard operable', () => {
+    const battle = makeLeagueBattle({
+      isByeMatch: true,
+      winnerId: null,
+      robot2Id: null,
+      robot2: null,
+    });
+    const onClick = vi.fn();
+
+    renderWithRouter(
+      <CompactBattleCard
+        battle={battle}
+        myRobot={battle.robot1}
+        opponent={null}
+        reward={25}
+        streamingRevenue={0}
+        outcome="win"
+        eloChange={0}
+        myRobotId={10}
+        onClick={onClick}
+      />,
+    );
+
+    expect(screen.getAllByText('BYE').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('No opponent — walkover').length).toBeGreaterThan(0);
+    expect(screen.queryByText('DRAW')).toBeNull();
+
+    const card = screen.getAllByRole('button', { name: /IronClaw bye result/i })[0];
+    expect(card).toHaveAttribute('tabindex', '0');
+    fireEvent.keyDown(card, { key: 'Enter' });
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('CompactBattleCard responsive and accessible layout', () => {
+  it.each([320, 768, 1023, 1024])('should retain reward and bye content without horizontal overflow at %spx', (width) => {
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: width });
+    const { unmount } = renderWithRouter(
+      <CompactBattleCard
+        battle={makeLeagueBattle({
+          isByeMatch: true,
+          winnerId: null,
+          robot2Id: null,
+          robot2: null,
+        })}
+        myRobot={makeLeagueBattle().robot1}
+        opponent={null}
+        reward={25}
+        streamingRevenue={0}
+        outcome="win"
+        eloChange={0}
+        myRobotId={10}
+        onClick={vi.fn()}
+      />,
+    );
+
+    const card = screen.getByRole('button', { name: /IronClaw bye result/i });
+    expect(card.textContent).toContain('BYE');
+    expect(card.textContent).toContain('25');
+    expect(card.textContent).toContain('No opponent — walkover');
+    expect(card.scrollWidth).toBeLessThanOrEqual(card.clientWidth);
+    expect(card.className).toContain('min-h-[44px]');
+    expect(Array.from(card.children).some(child => child.className.includes('hidden lg:flex'))).toBe(true);
+    expect(Array.from(card.children).some(child => child.className.includes('lg:hidden'))).toBe(true);
+
+    unmount();
   });
 });

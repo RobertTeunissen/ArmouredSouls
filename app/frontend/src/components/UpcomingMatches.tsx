@@ -4,6 +4,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { KothMatchCard, ByeMatchCard, StandardMatchCard, TeamBattleMatchCard } from './match-cards';
+import { expandUpcomingMatchInstances, type UpcomingMatchInstance } from '../utils/match-display-instances';
+import { resolveByeCardSubject } from './match-cards/bye-match-data';
 
 interface BattleReadiness {
   isReady: boolean;
@@ -55,46 +57,22 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
     }
   };
 
-  const isMyRobot = (robotUserId: number): boolean => {
-    return user != null && robotUserId === user.id;
-  };
-
-  const getMatchResult = (match: ScheduledMatch) => {
-    if (!match) return null;
-
-    if (match.matchType === 'tag_team') {
-      if (!match.team1 || !match.team2) return null;
-      if (!match.team1.activeRobot || !match.team2.activeRobot ||
-          !match.team1.reserveRobot || !match.team2.reserveRobot) return null;
-      if (!match.team1.activeRobot.userId || !match.team2.activeRobot.userId) return null;
-
-      const myTeam = isMyRobot(match.team1.activeRobot.userId) ? match.team1 : match.team2;
-      const opponentTeam = isMyRobot(match.team1.activeRobot.userId) ? match.team2 : match.team1;
-      return { myTeam, opponentTeam, isTagTeam: true as const };
-    }
-
-    if (match.matchType === 'tournament_1v1' && !match.isByeMatch && (!match.robot1 || !match.robot2)) {
-      return null;
-    }
-
-    if (match.isByeMatch && match.robot1) {
-      return { myRobot: match.robot1, opponent: null, isTagTeam: false as const, isByeMatch: true as const };
-    }
-
+  const getMatchResult = (match: ScheduledMatch, perspectiveRobotId?: number) => {
     if (!match.robot1 || !match.robot2) return null;
-    if (!match.robot1.userId || !match.robot2.userId) return null;
 
-    const myRobot = isMyRobot(match.robot1.userId) ? match.robot1 : match.robot2;
-    const opponent = isMyRobot(match.robot1.userId) ? match.robot2 : match.robot1;
-    return { myRobot, opponent, isTagTeam: false as const };
-  };
+    const myRobot = perspectiveRobotId === match.robot1.id
+      ? match.robot1
+      : perspectiveRobotId === match.robot2.id
+        ? match.robot2
+        : user?.id === match.robot1.userId
+          ? match.robot1
+          : user?.id === match.robot2.userId
+            ? match.robot2
+            : null;
+    if (!myRobot) return null;
 
-  const getRoundName = (round: number, maxRounds: number): string => {
-    const remainingRounds = maxRounds - round + 1;
-    if (remainingRounds === 1) return 'Finals';
-    if (remainingRounds === 2) return 'Semi-finals';
-    if (remainingRounds === 3) return 'Quarter-finals';
-    return `Round ${round}/${maxRounds}`;
+    const opponent = myRobot.id === match.robot1.id ? match.robot2 : match.robot1;
+    return { myRobot, opponent };
   };
 
   const getReadinessWarningColor = (): string => {
@@ -142,50 +120,78 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
     );
   }
 
-  const renderMatchCard = (match: ScheduledMatch) => {
-    // FFA matches (KotH, Grand Melee)
-    if (match.matchType === 'koth' || match.matchType === 'grand_melee') {
-      return <KothMatchCard key={match.id} match={match} myUserId={user?.id} />;
-    }
+  const renderMatchCard = (match: UpcomingMatchInstance) => {
+    if (!user) return null;
 
-    // Team Battle matches (2v2 / 3v3 League, Tag Team, Tournaments)
-    if (match.matchType === 'league_2v2' || match.matchType === 'league_3v3' || match.matchType === 'tag_team' || match.matchType === 'tournament_2v2' || match.matchType === 'tournament_3v3') {
-      return <TeamBattleMatchCard key={match.id} match={match} myUserId={user?.id} />;
-    }
+    // All bye records use the shared card before any mode-specific dispatch.
+    if (match.isByeMatch === true) {
+      const subject = resolveByeCardSubject(match, {
+        perspectiveRobotId: match.perspectiveRobotId,
+        perspectiveTeamId: match.perspectiveTeamId,
+        userId: user.id,
+      });
+      if (!subject) return null;
 
-    const matchResult = getMatchResult(match);
-    if (!matchResult) {
-      return null;
-    }
-
-    const { myRobot, opponent } = matchResult as { myRobot: { name: string; id: number; elo: number; userId: number } | null; opponent: { name: string; id: number; elo: number; userId: number } | null; isTagTeam: false; isByeMatch?: boolean };
-    if (!myRobot) return null;
-
-    // Bye matches
-    if (matchResult.isByeMatch) {
       return (
         <ByeMatchCard
-          key={match.id}
+          key={match.displayInstanceKey}
           match={match}
-          myRobot={myRobot}
-          getRoundName={getRoundName}
+          subject={subject}
         />
       );
     }
 
-    if (!opponent) return null;
+    // FFA matches (KotH, Grand Melee)
+    if (match.matchType === 'koth' || match.matchType === 'grand_melee') {
+      return (
+        <KothMatchCard
+          key={match.displayInstanceKey}
+          match={match}
+          myUserId={user.id}
+          perspectiveRobotId={match.perspectiveRobotId}
+        />
+      );
+    }
+
+    // Team Battle matches (2v2 / 3v3 League, Tag Team, Tournaments)
+    if (match.matchType === 'league_2v2' || match.matchType === 'league_3v3' || match.matchType === 'tag_team' || match.matchType === 'tournament_2v2' || match.matchType === 'tournament_3v3') {
+      return (
+        <TeamBattleMatchCard
+          key={match.displayInstanceKey}
+          match={match}
+          myUserId={user.id}
+          perspectiveTeamId={match.perspectiveTeamId}
+        />
+      );
+    }
+
+    const matchResult = getMatchResult(match, match.perspectiveRobotId);
+    if (!matchResult) return null;
+
+    const { myRobot, opponent } = matchResult;
+    if (!myRobot || !opponent) return null;
 
     // Standard 1v1 matches (league / tournament)
     return (
       <StandardMatchCard
-        key={match.id}
+        key={match.displayInstanceKey}
         match={match}
         myRobot={myRobot}
         opponent={opponent}
-        getRoundName={getRoundName}
+        getRoundName={(round, maxRounds) => {
+          const remainingRounds = maxRounds - round + 1;
+          if (remainingRounds === 1) return 'Finals';
+          if (remainingRounds === 2) return 'Semi-finals';
+          if (remainingRounds === 3) return 'Quarter-finals';
+          return `Round ${round}/${maxRounds}`;
+        }}
       />
     );
   };
+
+  const displayInstances = user
+    ? matches.flatMap(match => expandUpcomingMatchInstances(match, user.id))
+    : [];
 
   return (
     <div className="bg-surface p-4 rounded-lg border border-white/10">
@@ -208,7 +214,7 @@ function UpcomingMatches({ robotId, battleReadiness }: UpcomingMatchesProps = {}
         </div>
       )}
       <div className="space-y-0 max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
-        {matches.map(renderMatchCard)}
+        {displayInstances.map(renderMatchCard)}
       </div>
     </div>
   );

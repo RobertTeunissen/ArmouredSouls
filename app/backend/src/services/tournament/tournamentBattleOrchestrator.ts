@@ -2,9 +2,12 @@
  * Tournament Battle Orchestrator
  * Handles tournament-specific battle execution and rewards
  * 
- * IMPORTANT: Tournament bye matches do NOT create battles or awards.
+ * Tournament bye matches are resolved at current-round processing through the
+ * shared no-simulation Bye_Record writer. They do not call the combat engine,
+ * but they do create a resolved battle and award the tournament participation
+ * floor once the round is processed.
  * League bye matches (against "Bye Robot") are handled in battleOrchestrator.ts
- * and DO create battles with participation rewards.
+ * and follow their existing path.
  */
 
 import { Robot, ScheduledTournamentMatch, Battle, Prisma } from '../../../generated/prisma';
@@ -53,9 +56,9 @@ export interface TournamentBattleResult {
 /**
  * Process a tournament match battle
  * 
- * Note: Tournament bye matches should NOT call this function.
- * Tournament byes are auto-completed at tournament creation (no battle, no rewards).
- * This is different from league bye matches which DO fight the "Bye Robot".
+ * Note: Tournament bye matches must be routed to `completeByeMatch` by the
+ * current-round processor. This function handles fought matches only; the
+ * shared bye writer creates the resolved battle and reward without simulation.
  */
 export async function processTournamentBattle(
   tournamentMatch: ScheduledTournamentMatch

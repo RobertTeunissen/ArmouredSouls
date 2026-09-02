@@ -11,7 +11,9 @@ import {
   PaginatedResponse,
   getBattlePerspective,
   getBattleReward,
+  getBattleEconomicDisplay,
 } from '../utils/matchmakingApi';
+import { expandBattleDisplayInstances } from '../utils/match-display-instances';
 import { computeBattleSummary, EMPTY_SUMMARY } from '../utils/battleHistoryStats';
 
 type BattleFilterType = 'overall' | 'league' | 'tournament' | 'tag_team' | 'koth' | 'grand_melee' | 'league_2v2' | 'league_3v3' | 'tournament_2v2' | 'tournament_3v3';
@@ -157,8 +159,8 @@ function BattleHistoryPage() {
         const { myRobot, opponent } = getMatchData(b);
         return (
           myRobot.name.toLowerCase().includes(search) ||
-          opponent.name.toLowerCase().includes(search) ||
-          opponent.user.username.toLowerCase().includes(search)
+          opponent?.name.toLowerCase().includes(search) ||
+          opponent?.user.username.toLowerCase().includes(search)
         );
       });
     }
@@ -323,26 +325,40 @@ function BattleHistoryPage() {
                   )}
                 </div>
               ) : (
-                filteredAndSortedBattles.map((battle) => {
-                  const { myRobot, opponent, outcome, eloChange, myRobotId } = getMatchData(battle);
-                  const reward = getBattleReward(battle, myRobotId);
+                filteredAndSortedBattles.flatMap((battle) => {
+                  const expanded = expandBattleDisplayInstances(battle, { userId: user.id });
+                  const instances = expanded.length > 0
+                    ? expanded
+                    : [{
+                        battle,
+                        displayInstanceKey: `battle:${battle.id}:legacy:${battle.robot1Id}`,
+                        perspectiveRobotId: battle.robot1Id,
+                        perspectiveRobotIds: [battle.robot1Id],
+                      }];
 
-                  return (
-                    <CompactBattleCard
-                      key={battle.id}
-                      battle={battle}
-                      myRobot={myRobot}
-                      opponent={opponent}
-                      outcome={outcome}
-                      eloChange={eloChange}
-                      myRobotId={myRobotId}
-                      reward={reward}
-                      prestige={battle.prestigeAwarded}
-                      fame={battle.fameAwarded}
-                      streamingRevenue={battle.streamingRevenue}
-                      onClick={() => navigate(`/battle/${battle.id}`)}
-                    />
-                  );
+                  return instances.map((instance) => {
+                    const perspective = getBattlePerspective(battle, {
+                      robotId: instance.perspectiveRobotId,
+                    });
+                    const economics = getBattleEconomicDisplay(battle, instance.perspectiveRobotId);
+
+                    return (
+                      <CompactBattleCard
+                        key={instance.displayInstanceKey}
+                        battle={battle}
+                        myRobot={perspective.myRobot}
+                        opponent={perspective.opponent}
+                        outcome={perspective.outcome}
+                        eloChange={perspective.eloChange}
+                        myRobotId={perspective.myRobotId}
+                        reward={economics.credits}
+                        prestige={economics.prestigeAwarded}
+                        fame={economics.fameAwarded}
+                        streamingRevenue={economics.streamingRevenue}
+                        onClick={() => navigate(`/battle/${battle.id}`)}
+                      />
+                    );
+                  });
                 })
               )}
             </div>

@@ -10,11 +10,14 @@ export {
   formatDuration,
   getTournamentRoundName,
   getBattleReward,
+  getBattleEconomicDisplay,
   isTeamBattleType,
 } from './battleFormatters';
-export type { BattlePerspective } from './battleFormatters';
+export type { BattlePerspective, BattleEconomicDisplay } from './battleFormatters';
 
 // Types
+export type ByeRewardStatus = 'expected' | 'awarded' | 'pending';
+
 export interface ScheduledMatch {
   id: number | string; // Can be number for league or "tournament-X" string for tournaments or "tag-team-X" for tag teams
   matchType?: 'league_1v1' | 'tournament_1v1' | 'tag_team' | 'koth' | 'grand_melee' | 'league_2v2' | 'league_3v3' | 'tournament_2v2' | 'tournament_3v3';
@@ -26,6 +29,8 @@ export interface ScheduledMatch {
   robot1Id?: number;
   robot2Id?: number;
   isByeMatch?: boolean;
+  byeRewardCredits?: number | null;
+  byeRewardStatus?: ByeRewardStatus;
   team1Id?: number;
   team2Id?: number;
   tagTeamLeague?: string;
@@ -158,7 +163,7 @@ export interface BattleParticipantData {
 export interface BattleHistory {
   id: number;
   robot1Id: number;
-  robot2Id: number;
+  robot2Id: number | null;
   winnerId: number | null;
   createdAt: string;
   durationSeconds: number;
@@ -197,6 +202,8 @@ export interface BattleHistory {
   team2TagOutTime?: number | null;
   // Bye match indicator
   isByeMatch?: boolean;
+  byeRewardCredits?: number | null;
+  byeRewardStatus?: ByeRewardStatus;
   // Economic fields (from BattleParticipant for the requesting user's robot)
   prestigeAwarded?: number;
   fameAwarded?: number;
@@ -224,7 +231,7 @@ export interface BattleHistory {
     user: {
       username: string;
     };
-  };
+  } | null;
 }
 
 export interface LeagueRobot {

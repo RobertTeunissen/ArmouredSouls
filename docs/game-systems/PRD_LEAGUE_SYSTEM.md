@@ -1,6 +1,6 @@
 # Product Requirements Document: League System
 
-**Last Updated**: April 18, 2026  
+**Last Updated**: September 1, 2026
 **Status**: ✅ Implemented  
 **Owner**: Robert Teunissen  
 **Epic**: League Progression System  
@@ -9,6 +9,7 @@
 ---
 
 ## Version History
+- v2.2 (September 1, 2026) — Spec #50 shared Bye_Card display, durable bye markers, expected/awarded reward display, and all-mode Match/Battle treatment.
 - v2.1 (April 18, 2026) — Per-tier LP promotion thresholds: Bronze 25, Silver 50, Gold 75, Platinum 100, Diamond 125. Replaces flat 25 LP threshold for all tiers.
 - v2.0 (April 2, 2026) — Consolidated from three separate documents (`LEAGUE_SYSTEM_IMPLEMENTATION_GUIDE.md`, `PRD_LEAGUE_PROMOTION.md`, `PRD_LEAGUE_REBALANCING.md`) and the LP matchmaking addendum (`PRD_MATCHMAKING_LP_UPDATE.md`). Removed proposed-but-not-implemented features (PromotionHistory model, Team2v2 model, instance change tracking, UI mockups for non-existent pages). Updated file paths to reflect backend service consolidation.
 - v1.1 (February 22, 2026) — Documentation corrections to match implementation
@@ -105,13 +106,21 @@ Matchmaking runs within each instance. Robots are sorted by LP (desc), then ELO 
 
 ### Bye Robot
 
-When an instance has an odd number of robots, a synthetic "Bye Robot" (ELO 1000) is created for the unmatched robot, so a `scheduled_matches_v2` row can name two sides. Bye battles have a fixed 15-second nominal duration.
+When an instance has an odd number of robots, scheduling may use a synthetic "Bye Robot" sentinel (ELO 1000) so a `scheduled_matches_v2` row can name two sides. The sentinel is a scheduling artefact only: it is never simulated, never used as a player-facing opponent, and never included as a real participant in a Bye_Card.
 
 **A bye is never simulated (Spec #49).** No combat runs, so the real robot takes **no damage at all** — the "reduced damage (8% HP loss)" this section previously described no longer occurs, and a bye can never produce a repair bill. A drawn bye is structurally impossible rather than corrected after the fact.
 
-**What a bye pays.** The participation reward for the tier (20% of the base win reward), multiplied by the number of robots on the real side — so ×1 for `league_1v1`, ×2 for `league_2v2` and Tag Team, ×3 for `league_3v3`. Plus the usual LP and ELO for a win. It pays **no prestige, no fame and no streaming revenue**.
+**What a bye pays.** The participation reward for the tier (20% of the base win reward), multiplied by the number of robots on the real side — so ×1 for `league_1v1`, ×2 for `league_2v2` and Tag Team, ×3 for `league_3v3`. Plus the usual LP and ELO for a win. It pays **no prestige, no fame and no streaming revenue**. The reward declaration remains in `app/backend/src/utils/byeRewards.ts`; this display note does not create another formula.
 
-**Byes exist in all nine modes, not just the odd-robot case.** The same rule covers a `koth` or `grand_melee` tier instance that falls below its minimum field size, and a non-power-of-two tournament bracket. The reward is declared once in `app/backend/src/utils/byeRewards.ts`. See `docs/architecture/PRD_BATTLE_DATA_ARCHITECTURE.md` § Bye Battle Records.
+**Byes exist in all nine modes, not just the odd-robot case.** The same rule covers a `koth` or `grand_melee` tier instance that falls below its minimum field size, and a non-power-of-two tournament bracket. See `docs/architecture/PRD_BATTLE_DATA_ARCHITECTURE.md` § Bye Battle Records.
+
+### Shared Bye_Event display
+
+League byes use the same player-facing Bye_Card as tournament, tag-team, and Placement_Mode byes. The nine covered modes are `league_1v1`, `tournament_1v1`, `league_2v2`, `tournament_2v2`, `league_3v3`, `tournament_3v3`, `tag_team`, `koth`, and `grand_melee`.
+
+A queued league bye appears in Upcoming Matches with the real robot, team, or FFA participant, `isByeMatch: true`, and an expected Bye_Reward_Display. It is not a zero-credit result and it does not expose the sentinel as an opponent. After the battle slot resolves the walkover, the record appears in Recent Battles with the awarded participant credits. History reads the durable `scheduled_matches_v2.is_bye_match` marker rather than relying on the retained battle log.
+
+The shared card shows BYE, the mode, the real subject, scheduled/resolution time, neutral no-opponent copy, and expected or awarded credits. It never claims that a league bye was fought, simulated, drawn, or damaging. These display rules do not change league matchmaking, reward arithmetic, or the existing Upcoming Matches and Recent Battles headings.
 
 ---
 

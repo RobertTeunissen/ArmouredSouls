@@ -116,18 +116,27 @@ async function executeTournamentStep(): Promise<TournamentStepSummary> {
 
         if (currentRoundMatches.length > 0) {
           for (const match of currentRoundMatches) {
-            if (match.participant1Id && !match.participant2Id) {
+            if (match.isByeMatch) {
+              const advancingParticipantId = match.participant1Id ?? match.participant2Id;
+              if (advancingParticipantId === null) {
+                summary.errors!.push(`Tournament ${tournament.id} Match ${match.id}: Bye has no advancing participant`);
+                continue;
+              }
+
               // Routed through the shared helper (Spec #49) so the admin
               // bulk-cycle path pays a bracket bye identically to the cron path.
-              // Before this, the two diverged: a bye completed here paid nothing.
-              const paid = await completeByeMatch(match, match.participant1Id);
-              logger.info(`[Admin] Auto-completed bye match ${match.id} in tournament ${tournament.id}`);
+              const resolved = await completeByeMatch(match, advancingParticipantId);
+              if (!resolved) {
+                summary.errors!.push(`Tournament ${tournament.id} Match ${match.id}: Bye_Record was not created`);
+                continue;
+              }
+              logger.info(`[Admin] Resolved bye match ${match.id} in tournament ${tournament.id}`);
               summary.matchesExecuted!++;
-              if (paid) summary.byeMatchesResolved = (summary.byeMatchesResolved ?? 0) + 1;
+              summary.byeMatchesResolved = (summary.byeMatchesResolved ?? 0) + 1;
               continue;
             }
 
-            if (!match.participant1Id && !match.participant2Id) {
+            if (!match.participant1Id || !match.participant2Id) {
               summary.errors!.push(`Tournament ${tournament.id} Match ${match.id}: No robots assigned`);
               continue;
             }
