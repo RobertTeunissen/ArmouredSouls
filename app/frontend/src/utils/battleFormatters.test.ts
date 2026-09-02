@@ -3,17 +3,50 @@
  * formatting battle-related data for UI display.
  */
 import { describe, it, expect } from 'vitest';
+import fc from 'fast-check';
 import {
   getBattleOutcome,
   getELOChange,
   formatDuration,
   getTournamentRoundName,
   getBattleReward,
+  getBattleEconomicDisplay,
   isTeamBattleType,
 } from './battleFormatters';
-import type { BattleHistory } from './matchmakingApi';
+import type { BattleHistory, BattleParticipantData } from './matchmakingApi';
 
 // Minimal battle factory for testing
+function makeParticipant(
+  robotId: number,
+  userId: number,
+  team: number,
+  values: Partial<BattleParticipantData> = {},
+): BattleParticipantData {
+  return {
+    robotId,
+    team,
+    role: null,
+    eloBefore: 1200,
+    eloAfter: 1210,
+    finalHP: 100,
+    credits: 10,
+    streamingRevenue: 2,
+    prestigeAwarded: 3,
+    fameAwarded: 4,
+    damageDealt: 50,
+    placement: null,
+    yielded: false,
+    destroyed: false,
+    robot: {
+      id: robotId,
+      name: `Robot ${robotId}`,
+      userId,
+      user: { username: `user-${userId}` },
+    },
+    ...values,
+  };
+}
+
 function makeBattle(overrides: Partial<BattleHistory> = {}): BattleHistory {
   return {
     id: 1,
@@ -112,6 +145,149 @@ describe('getTournamentRoundName', () => {
   it('should return Round X/Y for earlier rounds', () => {
     expect(getTournamentRoundName(1, 4)).toBe('Round 1/4');
     expect(getTournamentRoundName(1, 5)).toBe('Round 1/5');
+  });
+});
+
+describe('getBattleEconomicDisplay', () => {
+  it('should sum two same-side participants while preserving the perspective prestige once', () => {
+    const battle = makeBattle({
+      battleType: 'league_2v2',
+      participants: [
+        makeParticipant(10, 7, 1, {
+          credits: 100,
+          streamingRevenue: 11,
+          fameAwarded: 12,
+          prestigeAwarded: 13,
+        }),
+        makeParticipant(11, 7, 1, {
+          credits: 200,
+          streamingRevenue: 21,
+          fameAwarded: 22,
+          prestigeAwarded: 23,
+        }),
+        makeParticipant(20, 8, 2, {
+          credits: 999,
+          streamingRevenue: 99,
+          fameAwarded: 88,
+          prestigeAwarded: 77,
+        }),
+      ],
+    });
+
+    expect(getBattleEconomicDisplay(battle, 10)).toEqual({
+      credits: 300,
+      streamingRevenue: 32,
+      fameAwarded: 34,
+      prestigeAwarded: 13,
+    });
+    expect(getBattleReward(battle, 10)).toBe(300);
+  });
+
+  it('should keep opposite same-stable sides as separate economic instances', () => {
+    const battle = makeBattle({
+      battleType: 'league_1v1',
+      participants: [
+        makeParticipant(10, 7, 1, { credits: 100, streamingRevenue: 10, fameAwarded: 1, prestigeAwarded: 4 }),
+        makeParticipant(20, 7, 2, { credits: 200, streamingRevenue: 20, fameAwarded: 2, prestigeAwarded: 8 }),
+        makeParticipant(30, 8, 1, { credits: 300, streamingRevenue: 30, fameAwarded: 3, prestigeAwarded: 12 }),
+      ],
+    });
+
+    expect(getBattleEconomicDisplay(battle, 10)).toEqual({
+      credits: 100,
+      streamingRevenue: 10,
+      fameAwarded: 1,
+      prestigeAwarded: 4,
+    });
+    expect(getBattleEconomicDisplay(battle, 20)).toEqual({
+      credits: 200,
+      streamingRevenue: 20,
+      fameAwarded: 2,
+      prestigeAwarded: 8,
+    });
+  });
+
+  it('should keep each Placement_Mode robot as its own economic display', () => {
+    const battle = makeBattle({
+      battleType: 'grand_melee',
+      participants: [
+        makeParticipant(10, 7, 1, { credits: 100, streamingRevenue: 10, fameAwarded: 1, prestigeAwarded: 4 }),
+        makeParticipant(11, 7, 1, { credits: 200, streamingRevenue: 20, fameAwarded: 2, prestigeAwarded: 8 }),
+      ],
+    });
+
+    expect(getBattleEconomicDisplay(battle, 10)).toEqual({
+      credits: 100,
+      streamingRevenue: 10,
+      fameAwarded: 1,
+      prestigeAwarded: 4,
+    });
+    expect(getBattleEconomicDisplay(battle, 11)).toEqual({
+      credits: 200,
+      streamingRevenue: 20,
+      fameAwarded: 2,
+      prestigeAwarded: 8,
+    });
+  });
+
+  it('should use Reward_Fallback when participants are missing or the requested robot is absent', () => {
+    const missingParticipants = makeBattle({
+      winnerId: 10,
+      winnerReward: 450,
+      streamingRevenue: 7,
+      fameAwarded: 8,
+      prestigeAwarded: 9,
+    });
+    expect(getBattleEconomicDisplay(missingParticipants, 10)).toEqual({
+      credits: 450,
+      streamingRevenue: 7,
+      fameAwarded: 8,
+      prestigeAwarded: 9,
+    });
+
+    const missingRobot = makeBattle({
+      winnerId: 10,
+      winnerReward: 450,
+      participants: [makeParticipant(20, 99, 1, { credits: 999 })],
+    });
+    expect(getBattleEconomicDisplay(missingRobot, 10)).toEqual({
+      credits: 450,
+      streamingRevenue: 0,
+      fameAwarded: 0,
+      prestigeAwarded: 0,
+    });
+  });
+
+  it('should preserve zero participant values', () => {
+    const battle = makeBattle({
+      participants: [makeParticipant(10, 7, 1, {
+        credits: 0,
+        streamingRevenue: 0,
+        fameAwarded: 0,
+        prestigeAwarded: 0,
+      })],
+    });
+
+    expect(getBattleEconomicDisplay(battle, 10)).toEqual({
+      credits: 0,
+      streamingRevenue: 0,
+      fameAwarded: 0,
+      prestigeAwarded: 0,
+    });
+  });
+
+  it('should conserve same-side credits for one to three participants', () => {
+    fc.assert(
+      fc.property(fc.array(fc.integer({ min: 0, max: 1000 }), { minLength: 1, maxLength: 3 }), credits => {
+        const participants = credits.map((credit, index) => makeParticipant(100 + index, 7, 1, {
+          credits: credit,
+        }));
+        const battle = makeBattle({ participants });
+        const display = getBattleEconomicDisplay(battle, 100);
+
+        expect(display.credits).toBe(credits.reduce((total, credit) => total + credit, 0));
+      }),
+    );
   });
 });
 

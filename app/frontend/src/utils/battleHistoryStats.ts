@@ -97,7 +97,7 @@ export function computeBattleSummary(
     // Fall back to robot1 if neither matches — stats come from kothPlacement anyway
     const myRobotId = battle.robot1.userId === userId
       ? battle.robot1.id
-      : battle.robot2.userId === userId
+      : battle.robot2?.userId === userId
         ? battle.robot2.id
         : battle.robot1.id;
     

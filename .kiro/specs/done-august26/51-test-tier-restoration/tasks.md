@@ -246,6 +246,7 @@ _Requirements: 7.1, 7.2, 7.4, 7.5_
 - [x] 9.6 Update `analysis.md` to record that Decision 1 is answered, that the Integration_Tier gate
       was swallowed by `continue-on-error`, and that the spec landed on the large-and-urgent branch.
 - [x] 9.7 Confirm no pass/fail or count snapshot was added to any steering file.
+- [x] 9.8 Review `docs/guides/operations/LOCAL_SETUP.md` and `docs/guides/operations/DEPLOYMENT.md`: add the tier-partition verification command and describe the Heavy_Tier, tier-partition verification, and E2E suite as blocking pipeline checks. Review `.kiro/steering/project-overview.md` and record that no update is required because the project structure and technology stack are unchanged.
 
 _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 8.7, 8.8_
 

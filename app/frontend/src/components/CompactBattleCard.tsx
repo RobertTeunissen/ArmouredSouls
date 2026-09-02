@@ -1,4 +1,4 @@
-import React from 'react';
+import type { FC, KeyboardEvent, ReactNode } from 'react';
 import { BattleHistory, getTournamentRoundName, getLeagueTierName } from '../utils/matchmakingApi';
 import { formatDateTime } from '../utils/matchmakingApi';
 import { getModeConfig, OUTCOME_BADGE_CONFIG } from '../utils/battleModeConfig';
@@ -12,7 +12,7 @@ interface BattleRobot {
 interface CompactBattleCardProps {
   battle: BattleHistory;
   myRobot: BattleRobot;
-  opponent: BattleRobot;
+  opponent: BattleRobot | null;
   outcome: string;
   eloChange: number;
   myRobotId: number;
@@ -23,7 +23,7 @@ interface CompactBattleCardProps {
   onClick: () => void;
 }
 
-const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
+const CompactBattleCard: FC<CompactBattleCardProps> = ({
   battle,
   myRobot,
   opponent,
@@ -37,6 +37,10 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
   onClick,
 }) => {
   const totalCredits = reward + (streamingRevenue ?? 0);
+  const isBye = battle.isByeMatch === true;
+  const opponentName = opponent?.name ?? 'No opponent';
+  const opponentDisplay = isBye ? 'No opponent — walkover' : opponentName;
+  const matchupSeparator = isBye ? '•' : 'vs';
   const isTournament = battle.battleType === 'tournament_1v1';
   const isTeamTournament = battle.battleType === 'tournament_2v2' || battle.battleType === 'tournament_3v3';
   const isTagTeam = battle.battleType === 'tag_team';
@@ -52,7 +56,7 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
     return modeConfig.icon;
   };
   
-  const getBattleTypeText = (): React.ReactNode => {
+  const getBattleTypeText = (): ReactNode => {
     if (isKoth) {
       return 'King of the Hill';
     }
@@ -131,7 +135,7 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
 
   // For tag team battles, use team names (consistent with 2v2/3v3 league display)
   let myTeamRobots = myRobot.name;
-  let opponentTeamRobots = opponent.name;
+  let opponentTeamRobots = opponentDisplay;
   
   if (isTagTeam) {
     // Use team names from API (same as 2v2/3v3 league)
@@ -143,15 +147,26 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
       ? (battleAny.team1TeamName || myRobot.name)
       : (battleAny.team2TeamName || myRobot.name);
     opponentTeamRobots = isTeam1
-      ? (battleAny.team2TeamName || opponent.name)
-      : (battleAny.team1TeamName || opponent.name);
+      ? (battleAny.team2TeamName || opponentDisplay)
+      : (battleAny.team1TeamName || opponentDisplay);
   }
   
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      onClick();
+    }
+  };
+
   return (
-    <div 
+    <div
+      role="button"
+      tabIndex={0}
+      aria-label={isBye ? `${myRobot.name} bye result` : `${myRobot.name} battle result`}
       onClick={onClick}
+      onKeyDown={handleKeyDown}
       className={`
-        bg-[#252b38] border border-white/10 rounded-lg p-2 mb-1.5
+        bg-[#252b38] border border-white/10 rounded-lg p-2 mb-1.5 min-h-[44px]
         border-l-4 ${getBorderColor()}
         hover:bg-[#1a1f29] hover:border-[#58a6ff]/50 cursor-pointer 
         transition-all duration-150 ease-out
@@ -159,7 +174,7 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
       `}
     >
       {/* Desktop Layout */}
-      <div className="hidden md:flex items-center gap-3">
+      <div className="hidden lg:flex items-center gap-3">
         {/* Battle Type Icon */}
         <div className="flex-shrink-0 w-6 text-center text-base">
           {getBattleTypeIcon()}
@@ -167,7 +182,11 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
         
         {/* Outcome Badge */}
         <div className="flex-shrink-0 w-20">
-          {isFFA && battle.kothPlacement != null && battle.kothParticipantCount != null ? (
+          {isBye ? (
+            <div className="text-xs font-bold px-1.5 py-0.5 rounded text-center bg-yellow-500/20 text-warning">
+              BYE
+            </div>
+          ) : isFFA && battle.kothPlacement != null && battle.kothParticipantCount != null ? (
             <div className={`text-xs font-bold px-1.5 py-0.5 rounded text-center whitespace-nowrap ${getKothPlacementBadgeClass()}`}>
               {battle.kothPlacement}{getKothPlacementSuffix(battle.kothPlacement)} of {battle.kothParticipantCount}
             </div>
@@ -208,7 +227,7 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
               </div>
               <div className="font-medium text-xs truncate">
                 <span className="text-[#58a6ff]">{myTeamRobots}</span>
-                <span className="text-[#57606a] mx-1.5">vs</span>
+                <span className="text-[#57606a] mx-1.5">{matchupSeparator}</span>
                 <span className="text-[#e6edf3]">{opponentTeamRobots}</span>
               </div>
             </div>
@@ -226,8 +245,8 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
             </div>
             <div className="font-medium text-xs truncate">
               <span className="text-[#58a6ff]">{(battle as unknown as { team1TeamName?: string }).team1TeamName || myRobot.name}</span>
-              <span className="text-[#57606a] mx-1.5">vs</span>
-              <span className="text-[#e6edf3]">{(battle as unknown as { team2TeamName?: string }).team2TeamName || opponent.name}</span>
+              <span className="text-[#57606a] mx-1.5">{matchupSeparator}</span>
+              <span className="text-[#e6edf3]">{(battle as unknown as { team2TeamName?: string }).team2TeamName || opponentDisplay}</span>
             </div>
           </div>
         ) : isTeamTournament ? (
@@ -243,8 +262,8 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
             </div>
             <div className="font-medium text-xs truncate">
               <span className="text-[#58a6ff]">{(battle as unknown as { team1TeamName?: string }).team1TeamName || myRobot.name}</span>
-              <span className="text-[#57606a] mx-1.5">vs</span>
-              <span className="text-[#e6edf3]">{(battle as unknown as { team2TeamName?: string }).team2TeamName || opponent.name}</span>
+              <span className="text-[#57606a] mx-1.5">{matchupSeparator}</span>
+              <span className="text-[#e6edf3]">{(battle as unknown as { team2TeamName?: string }).team2TeamName || opponentDisplay}</span>
             </div>
           </div>
         ) : (
@@ -260,8 +279,8 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
             </div>
             <div className="font-medium text-xs truncate">
               <span className="text-[#58a6ff]">{myRobot.name}</span>
-              <span className="text-[#57606a] mx-1.5">vs</span>
-              <span className="text-[#e6edf3]">{opponent.name}</span>
+              <span className="text-[#57606a] mx-1.5">{matchupSeparator}</span>
+              <span className="text-[#e6edf3]">{opponentDisplay}</span>
             </div>
           </div>
         )}
@@ -312,12 +331,16 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
       </div>
       
       {/* Mobile Layout */}
-      <div className="md:hidden">
+      <div className="lg:hidden">
         {/* Header Row */}
         <div className="flex items-center justify-between mb-1.5">
           <div className="flex items-center gap-1.5">
             <span className="text-base">{getBattleTypeIcon()}</span>
-            {isFFA && battle.kothPlacement != null && battle.kothParticipantCount != null ? (
+            {isBye ? (
+              <div className="text-xs font-bold px-1.5 py-0.5 rounded bg-yellow-500/20 text-warning">
+                BYE
+              </div>
+            ) : isFFA && battle.kothPlacement != null && battle.kothParticipantCount != null ? (
               <div className={`text-xs font-bold px-1.5 py-0.5 rounded ${getKothPlacementBadgeClass()}`}>
                 {battle.kothPlacement}{getKothPlacementSuffix(battle.kothPlacement)} of {battle.kothParticipantCount}
               </div>
@@ -373,27 +396,27 @@ const CompactBattleCard: React.FC<CompactBattleCardProps> = ({
             <>
               <div className="text-sm font-medium mb-1">
                 <span className="text-[#58a6ff]">{myTeamRobots}</span>
-                <span className="text-[#57606a] mx-1.5">vs</span>
+                <span className="text-[#57606a] mx-1.5">{matchupSeparator}</span>
                 <span className="text-[#e6edf3]">{opponentTeamRobots}</span>
               </div>
             </>
           ) : isTeamBattle ? (
             <div className="text-sm font-medium">
               <span className="text-[#58a6ff]">{(battle as unknown as { team1TeamName?: string }).team1TeamName || myRobot.name}</span>
-              <span className="text-[#57606a] mx-1.5">vs</span>
-              <span className="text-[#e6edf3]">{(battle as unknown as { team2TeamName?: string }).team2TeamName || opponent.name}</span>
+              <span className="text-[#57606a] mx-1.5">{matchupSeparator}</span>
+              <span className="text-[#e6edf3]">{(battle as unknown as { team2TeamName?: string }).team2TeamName || opponentDisplay}</span>
             </div>
           ) : isTeamTournament ? (
             <div className="text-sm font-medium">
               <span className="text-[#58a6ff]">{(battle as unknown as { team1TeamName?: string }).team1TeamName || myRobot.name}</span>
-              <span className="text-[#57606a] mx-1.5">vs</span>
-              <span className="text-[#e6edf3]">{(battle as unknown as { team2TeamName?: string }).team2TeamName || opponent.name}</span>
+              <span className="text-[#57606a] mx-1.5">{matchupSeparator}</span>
+              <span className="text-[#e6edf3]">{(battle as unknown as { team2TeamName?: string }).team2TeamName || opponentDisplay}</span>
             </div>
           ) : (
             <div className="text-sm font-medium">
               <span className="text-[#58a6ff]">{myRobot.name}</span>
-              <span className="text-[#57606a] mx-1.5">vs</span>
-              <span className="text-[#e6edf3]">{opponent.name}</span>
+              <span className="text-[#57606a] mx-1.5">{matchupSeparator}</span>
+              <span className="text-[#e6edf3]">{opponentDisplay}</span>
             </div>
           )}
         </div>

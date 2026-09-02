@@ -420,6 +420,9 @@ _Requirements: 8.1–8.8_
 | `.kiro/steering/testing-strategy.md` | Document the Tier_Partition, how to choose a tier for a new test, the `DB_DEPENDENT` list, and that `test:tiers:verify` enforces it (8.4). |
 | `app/backend/src/services/common/eventLogger.ts` | Correct the docstring misdiagnosis (8.6, 4.7). |
 | `.kiro/specs/to-do/51-test-tier-restoration/analysis.md` | Record that Decision 1 is answered and which branch it landed on (8.7). |
+| `docs/guides/operations/LOCAL_SETUP.md` | Add `test:tiers:verify` and explain that every backend test belongs to exactly one configured tier. |
+| `docs/guides/operations/DEPLOYMENT.md` | Describe the Heavy_Tier and tier-partition verification as blocking pipeline checks alongside the existing backend, frontend, and E2E gates. |
+| `.kiro/steering/project-overview.md` | Reviewed; no update is required because this spec changes test and CI wiring, not the project structure or technology stack. |
 
 No pass/fail or count snapshot goes into any steering file (8.8). The Tier_Baseline lives in this
 design document, which is a dated spec artefact rather than an authoritative rule.

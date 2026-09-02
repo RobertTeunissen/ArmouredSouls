@@ -11,6 +11,7 @@ import {
   getActiveTournaments,
   getCurrentRoundMatches,
   advanceWinnersToNextRound,
+  completeByeMatch,
   autoCreateNextTournament,
 } from '../tournament/tournamentService';
 import { processTournamentBattle } from '../tournament/tournamentBattleOrchestrator';
@@ -174,6 +175,20 @@ async function executeTournamentCycle(): Promise<JobContext> {
     if (currentRoundMatches.length > 0) {
       for (const match of currentRoundMatches) {
         try {
+          if (match.isByeMatch) {
+            const advancingParticipantId = match.participant1Id ?? match.participant2Id;
+            if (advancingParticipantId === null) {
+              throw new Error(`Bye match ${match.id} has no advancing participant`);
+            }
+
+            const resolved = await completeByeMatch(match, advancingParticipantId);
+            if (!resolved) {
+              throw new Error(`Bye match ${match.id} did not produce a Bye_Record`);
+            }
+            totalMatchesExecuted++;
+            continue;
+          }
+
           await processTournamentBattle(match);
           totalMatchesExecuted++;
         } catch (error) {

@@ -4,16 +4,21 @@ import { getModeConfig } from '../../utils/battleModeConfig';
 interface KothMatchCardProps {
   match: ScheduledMatch;
   myUserId?: number;
+  perspectiveRobotId?: number;
 }
 
-function KothMatchCard({ match, myUserId }: KothMatchCardProps) {
+function KothMatchCard({ match, myUserId, perspectiveRobotId }: KothMatchCardProps) {
   const modeConfig = getModeConfig(match.matchType ?? 'koth');
   const modeLabel = match.matchType === 'grand_melee' ? 'Grand Melee' : 'King of the Hill';
   const participants = match.kothParticipants || [];
   const participantCount = match.kothParticipantCount ?? participants.length;
 
   // Find the current user's robot among participants
-  const myRobot = myUserId ? participants.find(p => p.userId === myUserId) : undefined;
+  const myRobot = perspectiveRobotId != null
+    ? participants.find(participant => participant.id === perspectiveRobotId)
+    : myUserId != null
+      ? participants.find(participant => participant.userId === myUserId)
+      : undefined;
 
   return (
     <div
@@ -26,7 +31,7 @@ function KothMatchCard({ match, myUserId }: KothMatchCardProps) {
       `}
     >
       {/* Desktop Layout */}
-      <div className="hidden md:flex items-center gap-3">
+      <div className="hidden lg:flex items-center gap-3">
         <div className="flex-shrink-0 w-6 text-center text-base">{modeConfig.icon}</div>
         <div className="flex-shrink-0 w-16">
           <div className="text-xs font-bold px-1.5 py-0.5 rounded text-center bg-primary-dark/20 text-primary">
@@ -61,7 +66,7 @@ function KothMatchCard({ match, myUserId }: KothMatchCardProps) {
       </div>
 
       {/* Mobile Layout */}
-      <div className="md:hidden">
+      <div className="lg:hidden">
         <div className="flex items-center justify-between mb-1.5">
           <div className="flex items-center gap-1.5">
             <span className="text-base">{modeConfig.icon}</span>

@@ -27,7 +27,7 @@ function findParticipantByUserId(battle: BattleHistory, userId: number): BattleP
 
 export interface BattlePerspective {
   myRobot: { id: number; name: string; userId: number; user: { username: string } };
-  opponent: { id: number; name: string; userId: number; user: { username: string } };
+  opponent: { id: number; name: string; userId: number; user: { username: string } } | null;
   myRobotId: number;
   outcome: 'win' | 'loss' | 'draw';
   eloChange: number;
@@ -65,7 +65,7 @@ export function getBattlePerspective(
   let opponent: BattlePerspective['opponent'];
   if (myPart) {
     myRobot = myPart.robot;
-    opponent = opponentPart?.robot ?? battle.robot2;
+    opponent = battle.isByeMatch ? null : (opponentPart?.robot ?? battle.robot2);
   } else {
     // Legacy fallback: determine side from robotId or userId
     const isRobot1 = robotId
@@ -73,8 +73,8 @@ export function getBattlePerspective(
       : userId
         ? battle.robot1.userId === userId
         : true;
-    myRobot = isRobot1 ? battle.robot1 : battle.robot2;
-    opponent = isRobot1 ? battle.robot2 : battle.robot1;
+    myRobot = isRobot1 ? battle.robot1 : (battle.robot2 ?? battle.robot1);
+    opponent = battle.isByeMatch ? null : (isRobot1 ? battle.robot2 : battle.robot1);
   }
   const myRobotId = myPart?.robotId ?? robotId ?? myRobot.id;
 
@@ -87,10 +87,9 @@ export function getBattlePerspective(
 // ─── Outcome determination ───────────────────────────────────────────────────
 
 export const getBattleOutcome = (battle: BattleHistory, robotId: number): 'win' | 'loss' | 'draw' => {
-  if (!battle.winnerId) return 'draw';
-
-  // BYE matches are always a win for the real team
+  // BYE matches are always a win for the real team, even if legacy rows omit winnerId.
   if (battle.isByeMatch) return 'win';
+  if (!battle.winnerId) return 'draw';
 
   // FFA modes: use participant's placement field (canonical), fallback to battle.kothPlacement (legacy)
   if (battle.battleType === 'koth' || battle.battleType === 'grand_melee') {
@@ -157,22 +156,75 @@ export const getELOChange = (battle: BattleHistory, robotId: number): number => 
   return battle.robot2ELOAfter - battle.robot2ELOBefore;
 };
 
-// ─── Reward ──────────────────────────────────────────────────────────────────
+// ─── Economic display ────────────────────────────────────────────────────────
+
+export interface BattleEconomicDisplay {
+  credits: number;
+  streamingRevenue: number;
+  fameAwarded: number;
+  prestigeAwarded: number;
+}
+
+function getLegacyEconomicDisplay(battle: BattleHistory, robotId: number): BattleEconomicDisplay {
+  const outcome = getBattleOutcome(battle, robotId);
+  return {
+    credits: outcome === 'win' ? battle.winnerReward : battle.loserReward,
+    streamingRevenue: battle.streamingRevenue ?? 0,
+    fameAwarded: battle.fameAwarded ?? 0,
+    prestigeAwarded: battle.prestigeAwarded ?? 0,
+  };
+}
 
 /**
- * Get the reward amount for a specific robot in a battle.
+ * Aggregate additive economics for the represented stable side of a battle.
+ *
+ * Non-FFA modes aggregate same-owner participants on the perspective
+ * participant's team. Placement modes intentionally remain one robot per
+ * display instance, so their values are not merged across FFA participants.
  */
-export const getBattleReward = (battle: BattleHistory, robotId: number): number => {
-  // Use participants if available — credits field is the actual reward
-  const participant = findParticipant(battle, robotId);
-  if (participant) {
-    return participant.credits;
+export const getBattleEconomicDisplay = (
+  battle: BattleHistory,
+  robotId: number,
+): BattleEconomicDisplay => {
+  const participants = battle.participants;
+  const perspectiveParticipant = findParticipant(battle, robotId);
+
+  if (!participants?.length || !perspectiveParticipant) {
+    return getLegacyEconomicDisplay(battle, robotId);
   }
 
-  // Legacy fallback: determine from outcome
-  const outcome = getBattleOutcome(battle, robotId);
-  if (outcome === 'win') return battle.winnerReward;
-  return battle.loserReward;
+  const isPlacementMode = battle.battleType === 'koth' || battle.battleType === 'grand_melee';
+  const perspectiveParticipants = isPlacementMode
+    ? [perspectiveParticipant]
+    : participants.filter(
+      participant => participant.robot.userId === perspectiveParticipant.robot.userId
+        && participant.team === perspectiveParticipant.team,
+    );
+
+  return {
+    credits: perspectiveParticipants.reduce((total, participant) => total + participant.credits, 0),
+    streamingRevenue: perspectiveParticipants.reduce(
+      (total, participant) => total + participant.streamingRevenue,
+      0,
+    ),
+    fameAwarded: perspectiveParticipants.reduce(
+      (total, participant) => total + participant.fameAwarded,
+      0,
+    ),
+    // Prestige is a participant-level display allocation, not an additive
+    // stable total. Preserve the selected perspective participant exactly once.
+    prestigeAwarded: perspectiveParticipant.prestigeAwarded,
+  };
+};
+
+/**
+ * Get the credit total for a specific battle perspective.
+ *
+ * Kept as a compatibility helper for sorting and existing callers; all
+ * participant aggregation lives in getBattleEconomicDisplay.
+ */
+export const getBattleReward = (battle: BattleHistory, robotId: number): number => {
+  return getBattleEconomicDisplay(battle, robotId).credits;
 };
 
 // ─── Formatting utilities ────────────────────────────────────────────────────

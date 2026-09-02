@@ -288,13 +288,6 @@ export async function createTournament(options: CreateTournamentOptions): Promis
     orderBy: [{ round: 'asc' }, { matchNumber: 'asc' }],
   });
 
-  // Auto-complete round-1 bye matches. Advancement is unchanged; each also now
-  // pays the Tournament_Round_Loss_Reward through the Bye_Reward_Module (Spec #49).
-  const byeMatches = bracket.filter(match => match.isByeMatch && match.round === 1);
-  for (const byeMatch of byeMatches) {
-    await completeByeMatch(byeMatch, byeMatch.participant1Id);
-  }
-
   // Set status to 'active', record startedAt
   await prisma.tournament.update({
     where: { id: tournament.id },
@@ -719,7 +712,10 @@ export async function getCurrentRoundMatches(tournamentId: number): Promise<Sche
     where: {
       tournamentId,
       round: tournament.currentRound,
-      status: { in: ['pending', 'scheduled'] },
+      OR: [
+        { status: { in: ['pending', 'scheduled'] } },
+        { isByeMatch: true, battleId: null, status: 'completed' },
+      ],
     },
     include: {
       tournament: {
@@ -734,40 +730,34 @@ export async function getCurrentRoundMatches(tournamentId: number): Promise<Sche
 }
 
 /**
- * Complete a bracket bye: advance the participant, then pay the
- * Tournament_Round_Loss_Reward through the Bye_Reward_Module (Spec #49).
+ * Resolve a generated tournament bye during current-round processing.
  *
- * Bracket advancement is unchanged — the same `status`, `winnerId` and
- * `completedAt` writes happen in the same order they always did, so the
- * whole-round recursion in `advanceWinnersToNextRound` behaves identically.
+ * Bracket generation and advancement only create the pending scheduled Match.
+ * This function is the round boundary that invokes the shared no-simulation
+ * writer, then marks the scheduling row terminal after its Bye_Record exists.
+ * The writer's tournament-match battleId claim makes retries idempotent.
  *
- * A tournament bye used to pay nothing and write no `battles` row at all, which
- * is why no tournament bye was visible anywhere. It now pays exactly what a loss
- * pays for that round, through the same function and with the same team size
- * factor, so the two figures cannot drift apart.
- *
- * @param advancingParticipantId The participant advancing, or null for the
- *   both-slots-empty case — bracket housekeeping with nobody to pay.
- * @returns true when a reward was paid, for the caller's bye count.
+ * @param advancingParticipantId The participant advancing, or null for empty
+ *   bracket housekeeping with nobody to resolve.
+ * @returns true when a real Bye_Event has a resolved battle.
  */
 export async function completeByeMatch(
   match: ScheduledTournamentMatch,
   advancingParticipantId: number | null,
 ): Promise<boolean> {
-  // 1. Bracket advancement, exactly as before.
-  await prisma.scheduledTournamentMatch.update({
-    where: { id: match.id },
-    data: {
-      winnerId: advancingParticipantId,
-      status: 'completed',
-      isByeMatch: true,
-      completedAt: new Date(),
-    },
-  });
+  if (advancingParticipantId === null) {
+    await prisma.scheduledTournamentMatch.update({
+      where: { id: match.id },
+      data: {
+        winnerId: null,
+        status: 'completed',
+        isByeMatch: false,
+        completedAt: new Date(),
+      },
+    });
+    return false;
+  }
 
-  if (advancingParticipantId === null) return false;
-
-  // 2. Resolve the Bye_Event.
   const tournament = await prisma.tournament.findUnique({ where: { id: match.tournamentId } });
   if (!tournament) return false;
 
@@ -804,7 +794,7 @@ export async function completeByeMatch(
   if (robots.length === 0) return false;
 
   try {
-    await resolveByeEvent({
+    const resolution = await resolveByeEvent({
       mode,
       context: {
         mode,
@@ -834,9 +824,22 @@ export async function completeByeMatch(
       },
       cycleNumber: await getCurrentCycleNumber(),
     });
+
+    if (resolution.battleId === null) return false;
+
+    await prisma.scheduledTournamentMatch.update({
+      where: { id: match.id },
+      data: {
+        winnerId: advancingParticipantId,
+        status: 'completed',
+        isByeMatch: true,
+        battleId: resolution.battleId,
+        completedAt: new Date(),
+      },
+    });
     return true;
   } catch (err) {
-    // A bye reward must never break bracket advancement, which already happened.
+    // Keep the scheduling row pending when resolution fails so the round can be retried.
     logger.error(`[Tournament] Bye reward failed for match ${match.id}: ${err}`);
     return false;
   }
@@ -914,46 +917,44 @@ export async function advanceWinnersToNextRound(tournamentId: number): Promise<v
     orderBy: { matchNumber: 'asc' },
   });
 
-  // Populate next round matches with winners
+  // Populate next round matches with winners. A one-sided row is an upcoming
+  // Bye_Event; it is resolved only when this round is processed. A fully empty
+  // row is bracket housekeeping and can be terminal immediately.
   // Winners are paired: match 1 & 2 → next match 1, match 3 & 4 → next match 2, etc.
   for (let i = 0; i < nextRoundMatches.length; i++) {
     const participant1Id = winners[i * 2] ?? null;
     const participant2Id = winners[i * 2 + 1] ?? null;
+    const hasParticipant1 = participant1Id !== null;
+    const hasParticipant2 = participant2Id !== null;
+    const isByeMatch = hasParticipant1 !== hasParticipant2;
+    const isEmptyPlaceholder = !hasParticipant1 && !hasParticipant2;
 
     await prisma.scheduledTournamentMatch.update({
       where: { id: nextRoundMatches[i].id },
       data: {
         participant1Id,
         participant2Id,
-        status: 'pending',
+        winnerId: null,
+        battleId: null,
+        status: isEmptyPlaceholder ? 'completed' : 'pending',
+        isByeMatch,
+        completedAt: isEmptyPlaceholder ? new Date() : null,
       },
     });
-  }
 
-  // Auto-complete any next-round match that has robot1 but no robot2 (bye match)
-  // This mirrors what createSingleEliminationTournament does for round 1 byes
-  const updatedNextRoundMatches = await prisma.scheduledTournamentMatch.findMany({
-    where: { tournamentId, round: nextRound },
-    orderBy: { matchNumber: 'asc' },
-  });
-
-  for (const match of updatedNextRoundMatches) {
-    if (match.participant1Id !== null && match.participant2Id === null) {
-      await completeByeMatch(match, match.participant1Id);
-      logger.info(`[Tournament] Auto-completed bye match ${match.id} in round ${nextRound} (winner: participant ${match.participant1Id})`);
-    } else if (match.participant1Id === null && match.participant2Id !== null) {
-      // Reverse bye: participant2 has no opponent due to missing winner upstream
-      await completeByeMatch(match, match.participant2Id);
-      logger.info(`[Tournament] Auto-completed reverse bye match ${match.id} in round ${nextRound} (winner: participant ${match.participant2Id})`);
-    } else if (match.participant1Id === null && match.participant2Id === null) {
-      // Both slots empty — bracket housekeeping, not a Bye_Event. Nobody holds a
-      // Subscription behind it, so there is nothing to pay (Spec #49).
-      await completeByeMatch(match, null);
-      logger.warn(`[Tournament] Empty match ${match.id} in round ${nextRound} — no participants assigned, auto-completed`);
+    if (isByeMatch) {
+      logger.info(
+        `[Tournament] Created pending bye match ${nextRoundMatches[i].id} in round ${nextRound}`,
+      );
+    } else if (isEmptyPlaceholder) {
+      logger.warn(
+        `[Tournament] Empty match ${nextRoundMatches[i].id} in round ${nextRound} — marked as bracket housekeeping`,
+      );
     }
   }
 
-  // Advance to next round
+  // Advance to next round. Any generated bye remains visible in Upcoming
+  // Matches until the next scheduled round execution invokes completeByeMatch.
   await prisma.tournament.update({
     where: { id: tournamentId },
     data: {
@@ -962,20 +963,6 @@ export async function advanceWinnersToNextRound(tournamentId: number): Promise<v
   });
 
   logger.info(`[Tournament] Advanced to round ${nextRound} with ${winners.length} winners`);
-
-  // Check if all next-round matches are already completed (all byes) — need to recurse
-  const pendingNextRound = await prisma.scheduledTournamentMatch.count({
-    where: { tournamentId, round: nextRound, status: { in: ['pending', 'scheduled'] } },
-  });
-  const completedNextRound = await prisma.scheduledTournamentMatch.findMany({
-    where: { tournamentId, round: nextRound, status: 'completed' },
-  });
-
-  if (pendingNextRound === 0 && completedNextRound.length > 0) {
-    // All matches in next round are byes — advance again
-    logger.info(`[Tournament] All matches in round ${nextRound} are byes, advancing again...`);
-    await advanceWinnersToNextRound(tournamentId);
-  }
 }
 
 /**

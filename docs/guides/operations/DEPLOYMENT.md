@@ -72,7 +72,7 @@ Check the frontend loads via your domain in a browser.
 
 Every push to `main` triggers the full pipeline:
 
-1. **Stage 1**: Backend tests (unit + integration) + frontend build/lint/unit tests (parallel)
+1. **Stage 1**: Backend unit, integration, and heavy tests plus `test:tiers:verify`, alongside frontend build/lint/unit tests (parallel). These checks are blocking gates.
 2. **Stage 2**: E2E tests — provisions a PostgreSQL 17 service container, runs database migrations, seeds test data (`pnpm exec prisma db seed`), starts the backend server, builds the frontend, installs Playwright Chromium, and runs the full Playwright E2E suite. Uploads HTML report and failure artifacts (screenshots, traces) to GitHub Actions. 15-minute timeout. Blocks deployment on failure.
 3. **Deploy**: rsync artifacts → `pnpm install --frozen-lockfile --production` → pre-migration backup → `prisma migrate deploy` → PM2 restart
 4. **Enhanced health check**: Validates HTTP 200 + `disk.status` != "critical" + `modules.status` == "ok". Catches partial builds and disk issues.
