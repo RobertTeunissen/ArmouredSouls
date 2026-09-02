@@ -120,7 +120,8 @@ The generated client lives at `app/backend/generated/prisma/` (not `@prisma/clie
 cd app/backend
 pnpm run test:unit          # Unit tests only
 pnpm run test:integration   # Integration tests only
-pnpm run test               # Both
+pnpm run test:tiers:verify  # Verify every backend test belongs to exactly one tier
+pnpm run test               # Unit + integration tests
 pnpm run test:heavy         # Long-running / property-based tests
 pnpm run test:all           # Everything
 ```
