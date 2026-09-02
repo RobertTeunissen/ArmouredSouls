@@ -159,8 +159,8 @@ function BattleHistoryPage() {
         const { myRobot, opponent } = getMatchData(b);
         return (
           myRobot.name.toLowerCase().includes(search) ||
-          opponent?.name.toLowerCase().includes(search) ||
-          opponent?.user.username.toLowerCase().includes(search)
+          (opponent?.name ?? '').toLowerCase().includes(search) ||
+          (opponent?.user?.username ?? '').toLowerCase().includes(search)
         );
       });
     }

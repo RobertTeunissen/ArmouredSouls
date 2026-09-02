@@ -7,7 +7,21 @@
  * Validates: Requirement 7.5
  */
 
-import { formatBattleHistoryEntry } from '../matchHistoryService';
+import prisma from '../../../lib/prisma';
+import { formatBattleHistoryEntry, getUpcomingMatches } from '../matchHistoryService';
+
+jest.mock('../../../lib/prisma', () => ({
+  __esModule: true,
+  default: {
+    scheduledMatch: { findMany: jest.fn() },
+    scheduledTournamentMatch: { findMany: jest.fn() },
+    tournament: { findMany: jest.fn() },
+    robot: { findMany: jest.fn(), findUnique: jest.fn() },
+    user: { findUnique: jest.fn() },
+    teamBattle: { findMany: jest.fn(), findUnique: jest.fn() },
+    standing: { findMany: jest.fn() },
+  },
+}));
 
 // ─── Mock Data Helpers ───────────────────────────────────────────────
 
@@ -223,5 +237,61 @@ describe('formatBattleHistoryEntry — economic fields', () => {
     expect(result.prestigeAwarded).toBe(8);
     expect(result.fameAwarded).toBe(4);
     expect(result.streamingRevenue).toBe(150);
+  });
+});
+
+describe('getUpcomingMatches — robot perspective', () => {
+  it('should select the requested robot by Robot.id when it is in slot two', async () => {
+    const opponentRobot = {
+      id: 100,
+      name: 'OpponentBot',
+      elo: 1100,
+      currentHP: 90,
+      maxHP: 100,
+      userId: 8,
+    };
+    const ownedRobot = {
+      id: 200,
+      name: 'OwnedBot',
+      elo: 1200,
+      currentHP: 100,
+      maxHP: 100,
+      userId: 7,
+    };
+    const robotsById = new Map<number, typeof ownedRobot>([
+      [opponentRobot.id, opponentRobot],
+      [ownedRobot.id, ownedRobot],
+    ]);
+
+    jest.clearAllMocks();
+    (prisma.scheduledMatch.findMany as jest.Mock).mockResolvedValue([{
+      id: 900,
+      matchType: 'league_1v1',
+      scheduledFor: new Date('2026-09-02T12:00:00Z'),
+      leagueType: 'bronze',
+      leagueInstanceId: null,
+      isByeMatch: false,
+      participants: [
+        { participantType: 'robot', participantId: opponentRobot.id, slot: 1 },
+        { participantType: 'robot', participantId: ownedRobot.id, slot: 2 },
+      ],
+    }]);
+    (prisma.scheduledTournamentMatch.findMany as jest.Mock).mockResolvedValue([]);
+    (prisma.tournament.findMany as jest.Mock).mockResolvedValue([]);
+    (prisma.robot.findUnique as jest.Mock).mockImplementation(
+      ({ where }: { where: { id: number } }) => Promise.resolve(robotsById.get(where.id) ?? null),
+    );
+    (prisma.user.findUnique as jest.Mock).mockImplementation(
+      ({ where }: { where: { id: number } }) => Promise.resolve({ username: `user-${where.id}` }),
+    );
+
+    const result = await getUpcomingMatches([ownedRobot.id], [], []);
+    const upcomingMatch = result.matches.find(match => match.id === 900) as {
+      robot1: { id: number } | null;
+      robot2: { id: number } | null;
+    };
+
+    expect(upcomingMatch.robot1?.id).toBe(ownedRobot.id);
+    expect(upcomingMatch.robot2?.id).toBe(opponentRobot.id);
   });
 });

@@ -360,7 +360,7 @@ function getTierByeDisplay(matchType: string, tier: string): ByeRewardDisplay {
  */
 async function formatUnifiedMatches(
   matches: Array<{ id: number; matchType: string; scheduledFor: Date; leagueType: string | null; leagueInstanceId: string | null; isByeMatch: boolean | null; participants: Array<{ participantType: string; participantId: number; slot: number }> }>,
-  userRobotIds: number[],
+  targetRobotIds: number[],
   userTeamBattleIds: number[],
 ) {
   const formatted = [];
@@ -412,7 +412,7 @@ async function formatUnifiedMatches(
       }) : null;
 
       const perspectiveRobot = [robot1, robot2].find(robot =>
-        robot !== null && userRobotIds.includes(robot.userId),
+        robot !== null && targetRobotIds.includes(robot.id),
       ) ?? robot1 ?? robot2;
       const displayRobot2 = isByeMatch
         ? null

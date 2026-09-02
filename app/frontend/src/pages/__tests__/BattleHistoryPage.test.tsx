@@ -80,10 +80,19 @@ function battle(participants: BattleParticipantData[]): BattleHistory {
   } as BattleHistory;
 }
 
-function renderPage(): void {
+function makeByeBattle(): BattleHistory {
+  return {
+    ...battle([participant(10, 7, 1, 100, 10)]),
+    isByeMatch: true,
+    robot2Id: null,
+    robot2: null,
+  };
+}
+
+function renderPage(initialEntry = '/battle-history'): void {
   (localStorage.getItem as ReturnType<typeof vi.fn>).mockReturnValue('test-token');
   render(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={[initialEntry]}>
       <BattleHistoryPage />
     </MemoryRouter>,
   );
@@ -138,5 +147,33 @@ describe('BattleHistoryPage display instances', () => {
         expect.stringContaining('330'),
       ]));
     });
+  });
+
+  it('should search a bye by the owned robot without requiring an opponent', async () => {
+    mockGetMatchHistory.mockResolvedValue({
+      data: [makeByeBattle()],
+      pagination: { page: 1, pageSize: 20, total: 1, totalPages: 1 },
+    });
+
+    renderPage('/battle-history?q=Robot%2010');
+
+    await waitFor(() => {
+      expect(screen.getAllByRole('button', { name: /bye result/i })).toHaveLength(1);
+    });
+    expect(screen.queryByText('No Battles Found')).not.toBeInTheDocument();
+  });
+
+  it('should not match a bye by an opponent search term', async () => {
+    mockGetMatchHistory.mockResolvedValue({
+      data: [makeByeBattle()],
+      pagination: { page: 1, pageSize: 20, total: 1, totalPages: 1 },
+    });
+
+    renderPage('/battle-history?q=Opponent');
+
+    await waitFor(() => {
+      expect(screen.getByText('No Battles Found')).toBeInTheDocument();
+    });
+    expect(screen.queryAllByRole('button', { name: /bye result/i })).toHaveLength(0);
   });
 });
