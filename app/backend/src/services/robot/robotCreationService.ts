@@ -8,6 +8,10 @@ import prisma from '../../lib/prisma';
 import { lockUserForSpending } from '../../lib/creditGuard';
 import { RobotError, RobotErrorCode } from '../../errors/robotErrors';
 import { assignLeagueInstance } from '../league/leagueInstanceService';
+import { applyCreditMutationInTransaction } from '../financial/creditMutationService';
+import { createEconomicRequestIdentity, findEconomicRequestReplay, buildEconomicRequestAuditContext } from '../financial/economicRequestReplayService';
+import { buildPurchaseBreakdown } from '../financial/financialBreakdowns';
+import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
 
 export const ROBOT_CREATION_COST = 500000;
 
@@ -78,9 +82,16 @@ export async function checkRosterCapacity(userId: number) {
  * Create a robot inside a locked transaction.
  * Returns the created robot and updated user.
  */
-export async function createRobotTransaction(userId: number, trimmedName: string) {
+export async function createRobotTransaction(userId: number, trimmedName: string, requestKey: string) {
+  const identity = createEconomicRequestIdentity(userId, 'robot_creation', requestKey, { name: trimmedName });
   return prisma.$transaction(async (tx) => {
-    const lockedUser = await lockUserForSpending(tx, userId);
+    await lockUserForSpending(tx, userId);
+    const replay = await findEconomicRequestReplay<{ robot: unknown; currency: number; message: string }>(tx, identity);
+    if (replay) {
+      return { user: { currency: replay.response.currency }, robot: replay.response.robot, replayed: true };
+    }
+
+    const lockedUser = await tx.user.findUniqueOrThrow({ where: { id: userId } });
 
     if (lockedUser.currency < ROBOT_CREATION_COST) {
       throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Insufficient credits', 400);
@@ -100,11 +111,6 @@ export async function createRobotTransaction(userId: number, trimmedName: string
         400,
       );
     }
-
-    const updatedUser = await tx.user.update({
-      where: { id: userId },
-      data: { currency: { decrement: ROBOT_CREATION_COST } },
-    });
 
     const hullIntegrity = 1;
     const shieldCapacity = 1;
@@ -157,6 +163,32 @@ export async function createRobotTransaction(userId: number, trimmedName: string
       ],
     });
 
-    return { user: updatedUser, robot };
+    const cycleNumber = await getCurrentCycleNumber();
+    const financialEventId = identity.financialEventId;
+    const coreResponse = {
+      robot,
+      currency: lockedUser.currency - ROBOT_CREATION_COST,
+      message: 'Robot created successfully',
+    };
+    const financialResult = await applyCreditMutationInTransaction(tx, {
+      cycleNumber,
+      userId,
+      transactionType: 'robot_creation',
+      amount: -ROBOT_CREATION_COST,
+      description: `Created robot: ${trimmedName}`,
+      financialEventId,
+      breakdown: buildPurchaseBreakdown({
+        transactionType: 'robot_creation',
+        sourceEventId: financialEventId,
+        amount: -ROBOT_CREATION_COST,
+        operation: 'robot_creation',
+        itemId: robot.id,
+        basePrice: ROBOT_CREATION_COST,
+        discountAmount: 0,
+      }),
+      auditContext: buildEconomicRequestAuditContext(identity, coreResponse),
+    });
+
+    return { user: { currency: financialResult.balanceAfter }, robot, replayed: false };
   });
 }

@@ -591,10 +591,14 @@ async function updateRobotStats(
     },
   });
   
-  // Award prestige and credits via shared helpers
-  await awardPrestigeToUser(robot.userId, prestigeAwarded);
+  // Award stable-level prestige and battle income through the shared services.
   const reward = isWinner ? battle.winnerReward : battle.loserReward;
   const cycleNumber = await getCurrentCycleNumber();
+  await awardPrestigeToUser(robot.userId, prestigeAwarded, cycleNumber, {
+    source: 'battle',
+    mode: 'league_1v1',
+    battleId: battle.id,
+  });
   await awardCreditsWithLedger(
     robot.userId,
     reward ?? 0,
@@ -602,6 +606,17 @@ async function updateRobotStats(
     cycleNumber,
     'League 1v1 battle reward',
     robot.id,
+    { battleId: battle.id },
+    {
+      battleId: battle.id,
+      mode: 'league_1v1',
+      tier: battle.leagueType,
+      outcome: isDraw ? 'draw' : isWinner ? 'win' : 'loss',
+      participationFloor: battle.loserReward ?? 0,
+      winComponent: isWinner ? Math.max(0, (battle.winnerReward ?? 0) - (battle.loserReward ?? 0)) : 0,
+      teamSize: 1,
+      isBye: isByeMatch,
+    },
   );
   
   return { prestigeAwarded, fameAwarded };
@@ -684,8 +699,8 @@ export async function processBattle(scheduledMatch: ScheduledLeagueMatchData): P
   
   // Calculate and award streaming revenue (parallel — independent per robot)
   const [streamingRevenue1, streamingRevenue2] = await Promise.all([
-    awardStreamingRevenueForParticipant(robot1.id, robot1.userId, battle.id, false),
-    awardStreamingRevenueForParticipant(robot2.id, robot2.userId, battle.id, false),
+    awardStreamingRevenueForParticipant(robot1.id, robot1.userId, battle.id, false, 1, 'league_1v1'),
+    awardStreamingRevenueForParticipant(robot2.id, robot2.userId, battle.id, false, 1, 'league_1v1'),
   ]);
   
   if (streamingRevenue1) {
@@ -893,10 +908,12 @@ export async function executeScheduledBattles(_scheduledFor?: Date): Promise<Bat
   for (const match of scheduledMatches) {
     try {
       const result = await processBattle(match);
-      summary.successfulBattles++;
-      
       if (result.isByeMatch) {
+        // A bye resolves successfully but simulates no combat, so it belongs
+        // exclusively in the bye counter rather than successful fought battles.
         summary.byeBattles++;
+      } else {
+        summary.successfulBattles++;
       }
       
       // Track reputation awards (league type already known from the scheduled match)

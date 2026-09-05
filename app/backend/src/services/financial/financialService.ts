@@ -1,24 +1,19 @@
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { isEnabled } from '../migration/featureFlags';
+import {
+  assertRequiredCaptureForCycle,
+  classifyCycle,
+  type FinancialRolloutState,
+} from '../migration/financialRollout';
+import { FinancialError, FinancialErrorCode } from '../../errors';
+import {
+  assertTransactionType,
+  type TransactionType,
+} from '../../types';
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
-type TransactionType =
-  | 'battle_income'
-  | 'streaming_revenue'
-  | 'repair_cost'
-  | 'facility_upgrade'
-  | 'weapon_purchase'
-  | 'weapon_sale'
-  | 'weapon_refinement'
-  | 'robot_creation'
-  | 'subscription_cost'
-  | 'prestige_award'
-  | 'attribute_upgrade'
-  | 'settlement_adjustment';
+export { TRANSACTION_TYPES } from '../../types';
+export type { TransactionType } from '../../types';
 
 interface RecordTransactionParams {
   cycleNumber: number;
@@ -56,12 +51,12 @@ interface GetReportParams {
 // Income types (positive amounts)
 // ---------------------------------------------------------------------------
 
-const INCOME_TYPES: Set<TransactionType> = new Set([
+const INCOME_TYPES: ReadonlySet<TransactionType> = new Set([
   'battle_income',
   'streaming_revenue',
   'weapon_sale',
-  'prestige_award',
-  'settlement_adjustment',
+  'achievement_reward',
+  'passive_income',
 ]);
 
 // ---------------------------------------------------------------------------
@@ -69,12 +64,33 @@ const INCOME_TYPES: Set<TransactionType> = new Set([
 // ---------------------------------------------------------------------------
 
 /**
- * Records a single ledger entry for a credit-changing event.
+ * Records a legacy ledger enrichment entry for a credit-changing event.
  *
- * Checks the `financial_ledger_active` feature flag before writing.
- * Returns the created row or `null` if the flag is disabled.
+ * Before `Cutover_Cycle`, this retains the old feature-flagged compatibility
+ * behavior. At and after cutover this API is deliberately rejected: it cannot
+ * provide a Financial_Event identity or the paired financial audit row, so it
+ * must never become a null/suppressed success on the authoritative path.
  */
 async function recordTransaction(params: RecordTransactionParams) {
+  try {
+    assertTransactionType(params.transactionType);
+  } catch (error) {
+    throw new FinancialError(
+      FinancialErrorCode.INVALID_TRANSACTION_TYPE,
+      error instanceof Error ? error.message : 'Invalid transaction type',
+    );
+  }
+  const rollout: FinancialRolloutState = await assertRequiredCaptureForCycle(params.cycleNumber);
+
+  if (classifyCycle(params.cycleNumber, rollout) === 'post_cutover') {
+    throw new FinancialError(
+      FinancialErrorCode.REQUIRED_CAPTURE_UNAVAILABLE,
+      'Legacy financial ledger recording is not permitted after ACC cutover; use Credit_Mutation_Service',
+      503,
+      { cycleNumber: params.cycleNumber, cutoverCycle: rollout.cutoverCycle },
+    );
+  }
+
   const flagActive = await isEnabled('financial_ledger_active');
 
   if (!flagActive) {
@@ -197,4 +213,4 @@ const financialService = {
 };
 
 export default financialService;
-export type { RecordTransactionParams, TransactionSummary, FinancialReport, GetReportParams, TransactionType };
+export type { RecordTransactionParams, TransactionSummary, FinancialReport, GetReportParams };

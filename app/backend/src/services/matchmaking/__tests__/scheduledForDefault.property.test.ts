@@ -30,15 +30,17 @@ describe('defaultScheduledFor — Property 8: scheduledFor Default Computation',
 
           // Must be 24h ahead (within same hour boundary)
           const expected24hAhead = new Date(mockNow.getTime() + 24 * 60 * 60 * 1000);
-          expect(result.getFullYear()).toBe(expected24hAhead.getFullYear());
-          expect(result.getMonth()).toBe(expected24hAhead.getMonth());
-          expect(result.getDate()).toBe(expected24hAhead.getDate());
-          expect(result.getHours()).toBe(expected24hAhead.getHours());
+          const expectedTime = Math.floor(expected24hAhead.getTime() / (60 * 60 * 1000)) * (60 * 60 * 1000);
+          expect(result.getTime()).toBe(expectedTime);
+          expect(result.getUTCFullYear()).toBe(expected24hAhead.getUTCFullYear());
+          expect(result.getUTCMonth()).toBe(expected24hAhead.getUTCMonth());
+          expect(result.getUTCDate()).toBe(expected24hAhead.getUTCDate());
+          expect(result.getUTCHours()).toBe(expected24hAhead.getUTCHours());
 
-          // Minutes, seconds, and milliseconds must be zero
-          expect(result.getMinutes()).toBe(0);
-          expect(result.getSeconds()).toBe(0);
-          expect(result.getMilliseconds()).toBe(0);
+          // The production slot boundary is UTC, not the server's local timezone.
+          expect(result.getUTCMinutes()).toBe(0);
+          expect(result.getUTCSeconds()).toBe(0);
+          expect(result.getUTCMilliseconds()).toBe(0);
 
           jest.restoreAllMocks();
         },

@@ -7,6 +7,9 @@ import dotenv from 'dotenv';
 import facilityRoutes from '../src/routes/facility';
 import { createTestUser, deleteTestUser } from './testHelpers';
 import { errorHandler } from '../src/middleware/errorHandler';
+import { usePostCutoverFinancialRollout } from './financialRolloutTestHelper';
+
+usePostCutoverFinancialRollout();
 
 dotenv.config();
 
@@ -55,7 +58,8 @@ describe('Facility Routes', () => {
     it('should get user facilities with auth', async () => {
       const response = await request(app)
         .get('/api/facility')
-        .set('Authorization', `Bearer ${authToken}`);
+        .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('facilities');
@@ -97,6 +101,7 @@ describe('Facility Routes', () => {
       const response = await request(app)
         .post('/api/facility/upgrade')
         .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({});
 
       expect(response.status).toBe(400);
@@ -108,6 +113,7 @@ describe('Facility Routes', () => {
       const response = await request(app)
         .post('/api/facility/upgrade')
         .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ facilityType: 'invalid_facility_type' });
 
       expect(response.status).toBe(400);
@@ -119,6 +125,7 @@ describe('Facility Routes', () => {
       const response = await request(app)
         .post('/api/facility/upgrade')
         .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ facilityType: 'roster_expansion' });
 
       // Should either succeed, indicate max level reached, or insufficient credits

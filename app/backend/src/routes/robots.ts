@@ -11,10 +11,11 @@ import logger from '../config/logger';
 import { RobotError, RobotErrorCode } from '../errors/robotErrors';
 import { validateRequest } from '../middleware/schemaValidator';
 import { positiveIntParam } from '../utils/securityValidation';
+import { getIdempotencyKey, idempotencyHeadersSchema } from '../utils/idempotency';
+import { findCompletedEconomicRequest } from '../services/financial/economicRequestReplayService';
 import { verifyRobotOwnership } from '../middleware/ownership';
 import { securityMonitor } from '../services/security/securityMonitor';
 import { handleMulterError } from '../middleware/handleMulterError';
-import { recordLedgerEntry } from '../services/financial/recordLedgerEntry';
 
 // Service imports
 import { sanitizeRobotForPublic, SENSITIVE_ROBOT_FIELDS } from '../services/robot/robotSanitizer';
@@ -157,13 +158,25 @@ router.get('/', authenticateToken, validateRequest({}), async (req: AuthRequest,
 });
 
 // Create a new robot
-router.post('/', authenticateToken, validateRequest({ body: createRobotBodySchema }), async (req: AuthRequest, res: Response) => {
+router.post('/', authenticateToken, validateRequest({ body: createRobotBodySchema, headers: idempotencyHeadersSchema }), async (req: AuthRequest, res: Response) => {
   const userId = req.user!.userId;
   const { name } = req.body;
+  const requestKey = getIdempotencyKey(req.headers);
+  const requestFacts = { name: String(name).trim() };
+  const replay = await findCompletedEconomicRequest<{ robot: unknown; currency: number; message: string }>(userId, 'robot_creation', requestKey, requestFacts);
+  if (replay) {
+    res.status(201).json({ ...replay.response, achievementUnlocks: [], replayed: true });
+    return;
+  }
 
   const trimmedName = await validateRobotName(name);
   const user = await checkRosterCapacity(userId);
-  const result = await createRobotTransaction(userId, trimmedName);
+  const result = await createRobotTransaction(userId, trimmedName, requestKey);
+  if (result.replayed) {
+    res.status(201).json({ robot: result.robot, currency: result.user.currency, message: 'Robot created successfully', achievementUnlocks: [], replayed: true });
+    return;
+  }
+  const createdRobot = result.robot as { id: number };
 
   // Log robot creation event
   try {
@@ -171,7 +184,7 @@ router.post('/', authenticateToken, validateRequest({ body: createRobotBodySchem
     const currentCycle = (cycleMetadata?.totalCycles || 0) + 1;
 
     await eventLogger.logRobotPurchase(
-      currentCycle, userId, result.robot.id, name,
+      currentCycle, userId, createdRobot.id, name,
       ROBOT_CREATION_COST, user.currency, result.user.currency
     );
 
@@ -190,23 +203,15 @@ router.post('/', authenticateToken, validateRequest({ body: createRobotBodySchem
     logger.error('Failed to log robot creation event:', logError);
   }
 
-  // Record financial ledger entry (non-blocking)
-  recordLedgerEntry({
-    userId, transactionType: 'robot_creation',
-    amount: -ROBOT_CREATION_COST, balanceAfter: result.user.currency,
-    description: `Created robot: ${trimmedName}`,
-    metadata: { robotId: result.robot.id, robotName: trimmedName },
-  });
-
   res.status(201).json({
     robot: result.robot,
     currency: result.user.currency,
     message: 'Robot created successfully',
     achievementUnlocks: await (async (): Promise<UnlockedAchievement[]> => {
       try {
-        return await achievementService.checkAndAward(userId, result.robot.id, {
+        return await achievementService.checkAndAward(userId, createdRobot.id, {
           type: 'robot_created',
-          data: { robotId: result.robot.id, robotName: trimmedName },
+          data: { robotId: createdRobot.id, robotName: trimmedName },
         });
       } catch { return []; }
     })(),
@@ -452,44 +457,9 @@ router.post('/repair-all', authenticateToken, validateRequest({}), async (req: A
   // understated every manual repair row in the audit log — the source every repair
   // total is read from. `result.discount` is still recorded as `discountPercent`
   // because it is a record of what applied, not an input to either money figure.
-  const chargedByRobotId = new Map(result.chargedPerRobot.map((e) => [e.robotId, e.charged]));
-
-  try {
-    for (const robot of result.robotsNeedingRepair) {
-      const perRobotFinalCost = chargedByRobotId.get(robot.id) ?? 0;
-      const damageRepaired = robot.maxHP - robot.currentHP;
-
-      await eventLogger.logRobotRepair(
-        userId, robot.id, perRobotFinalCost, damageRepaired,
-        result.discount, undefined, 'manual', 50, robot.calculatedRepairCost
-      );
-    }
-  } catch (logError) {
-    logger.error('Failed to log manual repair events:', logError);
-  }
-
-  // Spec #48 Requirement 16: one Repair_Ledger_Entry per robot, at the same
-  // granularity as the audit rows so the two reconcile one-to-one. Written after
-  // the repair transaction has committed and NOT enrolled in it, following the
-  // `robot_creation` pattern already in this file — a ledger failure must never
-  // roll back a repair the player has already been charged for.
-  //
-  // `balanceAfter` is walked backwards from the committed balance, last robot
-  // first, because both repair paths deduct once per user: no per-robot balance is
-  // ever observed in the database, so this is a derivation rather than a reading.
-  let runningBalance = result.newCurrency;
-  for (const entry of [...result.chargedPerRobot].reverse()) {
-    recordLedgerEntry({
-      userId,
-      robotId: entry.robotId,
-      transactionType: 'repair_cost',
-      amount: -entry.charged,
-      balanceAfter: runningBalance,
-      description: `Manual repair of 1 robot (batch of ${result.repairedCount})`,
-      metadata: { repairType: 'manual', robotCount: 1, batchSize: result.repairedCount },
-    });
-    runningBalance += entry.charged;
-  }
+  // Required financial and robot_repair records are written by
+  // `repairAllRobots` inside the same transaction as the balance and robot
+  // state. The route keeps only the established response contract.
 
   res.json({
     success: true,
@@ -628,10 +598,17 @@ router.get('/:id/scheduling-eligibility', authenticateToken, validateRequest({ p
 });
 
 // Bulk upgrade robot attributes (atomic transaction)
-router.post('/:id/upgrades', authenticateToken, validateRequest({ params: robotIdParamsSchema, body: upgradesBodySchema }), async (req: AuthRequest, res: Response) => {
+router.post('/:id/upgrades', authenticateToken, validateRequest({ params: robotIdParamsSchema, body: upgradesBodySchema, headers: idempotencyHeadersSchema }), async (req: AuthRequest, res: Response) => {
   const userId = req.user!.userId;
   const robotId = parseInt(String(req.params.id));
   const { upgrades } = req.body;
+  const requestKey = getIdempotencyKey(req.headers);
+  const replay = await findCompletedEconomicRequest<{ robot: unknown; currency: number; totalCost: number; upgradeOperations: unknown[] }>(userId, 'attribute_upgrade', requestKey, { robotId, upgrades });
+  if (replay) {
+    const count = replay.response.upgradeOperations.length;
+    res.json({ success: true, robot: replay.response.robot, currency: replay.response.currency, totalCost: replay.response.totalCost, upgradesApplied: count, message: `Successfully upgraded ${count} attribute${count > 1 ? 's' : ''}`, achievementUnlocks: [], replayed: true });
+    return;
+  }
 
   if (isNaN(robotId)) {
     throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Invalid robot ID', 400);
@@ -642,7 +619,12 @@ router.post('/:id/upgrades', authenticateToken, validateRequest({ params: robotI
     throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Upgrades object is required', 400);
   }
 
-  const result = await executeUpgradeTransaction(userId, robotId, upgrades);
+  const result = await executeUpgradeTransaction(userId, robotId, upgrades, requestKey);
+  if (result.replayed) {
+    const count = result.upgradeOperations.length;
+    res.json({ success: true, robot: result.robot, currency: result.user.currency, totalCost: result.totalCost, upgradesApplied: count, message: `Successfully upgraded ${count} attribute${count > 1 ? 's' : ''}`, achievementUnlocks: [], replayed: true });
+    return;
+  }
 
   // Log attribute upgrade events
   try {

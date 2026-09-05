@@ -404,10 +404,12 @@ export async function executeScheduledTagTeamBattles(_scheduledFor?: Date): Prom
   let skippedDueToUnreadyRobots = 0;
 
   for (const match of scheduledMatches) {
+    // A tag-team bye has no second team participant. Keep this outside `try`
+    // because the catch must preserve a claimed bye rather than cancelling it.
+    const isByeMatch = match.team2Id === null;
+
     try {
       // Skip readiness check for bye-team matches (bye-teams are always ready)
-      const isByeMatch = match.team2Id === null;
-      
       if (!isByeMatch) {
         // Requirement 11.3: Dynamic eligibility checking
         // Check if both teams are ready (may have taken damage in earlier matches)
@@ -443,13 +445,24 @@ export async function executeScheduledTagTeamBattles(_scheduledFor?: Date): Prom
         losses++;
       }
 
-      // Update robot stats and apply rewards (streaming revenue tracked inside)
-      await updateTagTeamBattleResults(match, result);
+      // A Bye_Event is fully persisted and paid by resolveByeEvent. The
+      // post-combat updater requires two real teams, so running it here would
+      // turn an already-completed bye into a cancelled scheduled match.
+      if (!isByeMatch) {
+        await updateTagTeamBattleResults(match, result);
+      }
 
     } catch (error) {
       logger.error(`[TagTeamBattles] Error executing match ${match.id}:`, error);
-      
-      // Mark match as cancelled on error (unified table)
+
+      if (isByeMatch) {
+        // resolveByeEvent claims before payment. Preserve that completed claim
+        // on a required-pair failure so reconciliation can find the linked
+        // battle without participants and an operator can safely remediate it.
+        // Cancelling it would hide an unpaid reward and prevent recovery.
+        continue;
+      }
+
       await prisma.scheduledMatch.update({
         where: { id: match.id },
         data: { status: 'cancelled', cancelReason: error instanceof Error ? error.message : String(error) },

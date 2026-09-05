@@ -38,6 +38,9 @@ async function repairCreditsCharged(robotIds: number[]): Promise<number> {
 }
 import { executeScheduledTagTeamBattles } from '../../src/services/tag-team/tagTeamBattleOrchestrator';
 import { repairRobotsForEvent } from '../../src/services/economy/repairService';
+import { usePostCutoverFinancialRollout } from '../financialRolloutTestHelper';
+
+usePostCutoverFinancialRollout();
 
 describe('Tag Team Auto-Repair Integration Test', () => {
   let testUserIds: number[] = [];
@@ -64,10 +67,15 @@ describe('Tag Team Auto-Repair Integration Test', () => {
 
   afterEach(async () => {
     await clearTagTeamCompetition(testTeamIds, testRobotIds);
-    // Clean up in correct order
     if (testRobotIds.length > 0) {
-      await prisma.battleParticipant.deleteMany({
-        where: { robotId: { in: testRobotIds } },
+      await prisma.financialLedger.deleteMany({ where: { userId: { in: testUserIds } } });
+      await prisma.auditLog.deleteMany({
+        where: {
+          OR: [
+            { userId: { in: testUserIds } },
+            { robotId: { in: testRobotIds } },
+          ],
+        },
       });
       await prisma.battle.deleteMany({
         where: {
@@ -371,6 +379,10 @@ describe('Tag Team Auto-Repair Integration Test', () => {
       poorRobots[3].id
     );
 
+    testUserIds.push(poorUser1.id, poorUser2.id);
+    testRobotIds.push(...poorRobots.map((robot) => robot.id));
+    testTeamIds.push(poorTeam1Result.id, poorTeam2Result.id);
+
     // Now damage the robots (after team creation)
     console.log('[Test] Damaging robots...');
     for (const robot of poorRobots) {
@@ -382,7 +394,7 @@ describe('Tag Team Auto-Repair Integration Test', () => {
 
     console.log('[Test] Step 2: Scheduling match with insufficient funds...');
     
-    const match = await prisma.scheduledMatch.create({
+    await prisma.scheduledMatch.create({
       data: {
         matchType: 'tag_team',
         leagueType: 'bronze',
@@ -436,38 +448,7 @@ describe('Tag Team Auto-Repair Integration Test', () => {
     console.log(`[Test] Repair charged ₡${poorRepairCharged} against a balance of ₡${user1Before!.currency}`);
     console.log('[Test] ✓ Battle proceeded and user went into negative currency');
 
-    // Clean up
-    await prisma.battleParticipant.deleteMany({
-      where: { robotId: { in: poorRobots.map(r => r.id) } },
-    });
-    await prisma.battle.deleteMany({
-      where: {
-        battleType: 'tag_team',
-        participants: { some: { robotId: { in: poorRobots.map(r => r.id) } } },
-      },
-    });
-    await prisma.scheduledMatchParticipant.deleteMany({
-      where: { scheduledMatchId: match.id },
-    });
-    await prisma.scheduledMatch.deleteMany({
-      where: { id: match.id },
-    });
-    await prisma.teamBattleMember.deleteMany({
-      where: { teamId: { in: [poorTeam1Result.id, poorTeam2Result.id] } },
-    });
-    await prisma.teamBattle.deleteMany({
-      where: {
-        id: { in: [poorTeam1Result.id, poorTeam2Result.id] },
-      },
-    });
-    await prisma.robot.deleteMany({
-      where: { id: { in: poorRobots.map(r => r.id) } },
-    });
-    await prisma.weaponInventory.deleteMany({
-      where: { userId: { in: [poorUser1.id, poorUser2.id] } },
-    });
-    await prisma.user.deleteMany({
-      where: { id: { in: [poorUser1.id, poorUser2.id] } },
-    });
+    // Shared afterEach cleanup removes all tracked fixture rows, including the
+    // financial pairs and subtype-bearing repair audits created post-cutover.
   });
 });

@@ -52,7 +52,22 @@ const mockPrisma = {
   },
   $queryRawUnsafe: jest.fn().mockResolvedValue([{ count: BigInt(0) }]),
   $executeRawUnsafe: jest.fn().mockResolvedValue(0),
+  $transaction: jest.fn(),
 };
+
+mockPrisma.$transaction.mockImplementation(
+  async (callback: (tx: typeof mockPrisma) => Promise<unknown>) => callback(mockPrisma),
+);
+
+const mockApplyCreditMutationInTransaction = jest.fn().mockResolvedValue({
+  created: true,
+  balanceAfter: 125000,
+});
+const mockApplyPrestigeAwardInTransaction = jest.fn().mockResolvedValue({
+  created: true,
+  prestigeAfter: 25,
+});
+const mockGetCurrentCycle = jest.fn().mockResolvedValue({ cycleNumber: 1, lastCycleAt: null });
 
 jest.mock('../../../lib/prisma', () => ({
   __esModule: true,
@@ -66,6 +81,24 @@ jest.mock('../../../config/logger', () => ({
 
 jest.mock('../../../utils/robotCalculations', () => ({
   calculateEffectiveStatsWithStance: jest.fn().mockReturnValue({}),
+}));
+
+jest.mock('../../financial/creditMutationService', () => ({
+  applyCreditMutationInTransaction: (...args: unknown[]) => mockApplyCreditMutationInTransaction(...args),
+}));
+
+jest.mock('../../financial/prestigeService', () => ({
+  applyPrestigeAwardInTransaction: (...args: unknown[]) => mockApplyPrestigeAwardInTransaction(...args),
+}));
+
+jest.mock('../../analytics/cycleAnalyticsService', () => ({
+  getCurrentCycle: (...args: unknown[]) => mockGetCurrentCycle(...args),
+}));
+
+jest.mock('../../common/eventLogger', () => ({
+  eventLogger: {
+    logAchievementUnlock: jest.fn().mockResolvedValue(undefined),
+  },
 }));
 
 // ─── Imports (after mocks) ───────────────────────────────────────────
@@ -111,7 +144,7 @@ beforeEach(() => {
   jest.clearAllMocks();
 
   mockPrisma.userAchievement.findMany.mockResolvedValue([]);
-  mockPrisma.userAchievement.create.mockResolvedValue({});
+  mockPrisma.userAchievement.create.mockResolvedValue({ id: 1 });
   mockPrisma.userAchievement.count.mockResolvedValue(0);
   mockPrisma.userAchievement.groupBy.mockResolvedValue([]);
   mockPrisma.user.findUnique.mockResolvedValue(null);

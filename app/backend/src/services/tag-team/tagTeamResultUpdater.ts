@@ -267,13 +267,56 @@ export async function updateTagTeamBattleResults(
     lpDelta: team2LeaguePoints,
   });
 
-  // Update stables (currency, prestige) via shared helpers
-  // Note: Repair costs are deducted separately by RepairService, not here
   const cycleNumber = await getCurrentCycleNumber();
-  await awardCreditsWithLedger(team1.stableId, team1Rewards, 'battle_income', cycleNumber, 'Tag team battle reward');
-  await awardPrestigeToUser(team1.stableId, team1Prestige);
-  await awardCreditsWithLedger(team2.stableId, team2Rewards, 'battle_income', cycleNumber, 'Tag team battle reward');
-  await awardPrestigeToUser(team2.stableId, team2Prestige);
+  const tagTeamMode = 'tag_team';
+  await awardCreditsWithLedger(
+    team1.stableId,
+    team1Rewards,
+    'battle_income',
+    cycleNumber,
+    'Tag team battle reward',
+    undefined,
+    { battleId: result.battleId, teamSize: 2 },
+    {
+      battleId: result.battleId,
+      mode: tagTeamMode,
+      tier: match.teamBattleLeague,
+      outcome: team1Won ? 'win' : isDraw ? 'draw' : 'loss',
+      participationFloor: team1Rewards,
+      winComponent: 0,
+      teamSize: 2,
+      isBye: false,
+    },
+  );
+  await awardPrestigeToUser(team1.stableId, team1Prestige, cycleNumber, {
+    source: 'battle',
+    mode: tagTeamMode,
+    battleId: result.battleId,
+  });
+  await awardCreditsWithLedger(
+    team2.stableId,
+    team2Rewards,
+    'battle_income',
+    cycleNumber,
+    'Tag team battle reward',
+    undefined,
+    { battleId: result.battleId, teamSize: 2 },
+    {
+      battleId: result.battleId,
+      mode: tagTeamMode,
+      tier: match.teamBattleLeague,
+      outcome: team2Won ? 'win' : isDraw ? 'draw' : 'loss',
+      participationFloor: team2Rewards,
+      winComponent: 0,
+      teamSize: 2,
+      isBye: false,
+    },
+  );
+  await awardPrestigeToUser(team2.stableId, team2Prestige, cycleNumber, {
+    source: 'battle',
+    mode: tagTeamMode,
+    battleId: result.battleId,
+  });
 
   // Update battle record with actual values
   await prisma.battle.update({
@@ -308,10 +351,10 @@ export async function updateTagTeamBattleResults(
   // Each robot earns based on its own stats, divided by teamSize (2) to preserve economics
   const TAG_TEAM_SIZE = 2;
   const [team1ActiveStreaming, team1ReserveStreaming, team2ActiveStreaming, team2ReserveStreaming] = await Promise.all([
-    awardStreamingRevenueForParticipant(team1.activeRobotId, team1.stableId, result.battleId, false, TAG_TEAM_SIZE),
-    awardStreamingRevenueForParticipant(team1.reserveRobotId, team1.stableId, result.battleId, false, TAG_TEAM_SIZE),
-    awardStreamingRevenueForParticipant(team2.activeRobotId, team2.stableId, result.battleId, false, TAG_TEAM_SIZE),
-    awardStreamingRevenueForParticipant(team2.reserveRobotId, team2.stableId, result.battleId, false, TAG_TEAM_SIZE),
+    awardStreamingRevenueForParticipant(team1.activeRobotId, team1.stableId, result.battleId, false, TAG_TEAM_SIZE, 'tag_team'),
+    awardStreamingRevenueForParticipant(team1.reserveRobotId, team1.stableId, result.battleId, false, TAG_TEAM_SIZE, 'tag_team'),
+    awardStreamingRevenueForParticipant(team2.activeRobotId, team2.stableId, result.battleId, false, TAG_TEAM_SIZE, 'tag_team'),
+    awardStreamingRevenueForParticipant(team2.reserveRobotId, team2.stableId, result.battleId, false, TAG_TEAM_SIZE, 'tag_team'),
   ]);
 
   // Log streaming revenue

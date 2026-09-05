@@ -10,7 +10,14 @@ export { compressEventsForStorage, estimateEventSize, estimateEventsMemory } fro
 
 // Data integrity
 export { DataIntegrityService } from './dataIntegrityService';
-export type { IntegrityIssue, IntegrityReport } from './dataIntegrityService';
+export type { IntegrityIssue, IntegrityIssueType, IntegrityReport } from './dataIntegrityService';
+export {
+  collectFinancialIntegrityIssues,
+} from './financialIntegrityDiagnostics';
+export type {
+  FinancialIntegrityIssue,
+  FinancialIntegrityIssueType,
+} from './financialIntegrityDiagnostics';
 
 // Query service
 export { QueryService } from './queryService';

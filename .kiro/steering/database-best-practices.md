@@ -41,7 +41,7 @@ model Robot {
   armor     Decimal  @db.Decimal(10, 2)
   speed     Decimal  @db.Decimal(10, 2)
   elo       Int      @default(1500)
-  credits   Decimal  @db.Decimal(15, 2) @default(0)
+  currency  Decimal  @db.Decimal(15, 2) @default(0)
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -166,7 +166,7 @@ const users = await prisma.user.findMany({
   select: {
     id: true,
     username: true,
-    credits: true
+    currency: true
   }
 });
 ```
@@ -205,33 +205,7 @@ return {
 - Financial transactions
 
 **Transaction Example**:
-```typescript
-await prisma.$transaction(async (tx) => {
-  // Deduct credits from buyer
-  await tx.user.update({
-    where: { id: buyerId },
-    data: { credits: { decrement: weaponCost } }
-  });
-  
-  // Add weapon to inventory
-  await tx.weaponInventory.create({
-    data: {
-      robotId,
-      weaponId,
-      quantity: 1
-    }
-  });
-  
-  // Log transaction
-  await tx.transaction.create({
-    data: {
-      userId: buyerId,
-      type: 'WEAPON_PURCHASE',
-      amount: -weaponCost
-    }
-  });
-});
-```
+**Current-economy Credits example (Spec #53):** Do not update `User.currency` directly or create an ad-hoc transaction row. Within the enclosing interactive transaction, call `Credit_Mutation_Service` with the signed amount, one of the closed `Transaction_Taxonomy` values, a durable `financialEventId`, and validated `Financial_Breakdown`; it locks and re-reads `User.currency` and atomically writes the balance, `FinancialLedger`, and paired `AuditLog` `financial_transaction` record. Create the inventory row in the same transaction.
 
 ### Transaction Best Practices
 
@@ -246,6 +220,20 @@ await prisma.$transaction(async (tx) => {
 - Don't perform complex calculations in transactions
 - Don't hold transactions open for user input
 - Don't nest transactions unnecessarily
+
+### Financial mutation persistence contract (Spec #53)
+
+The post-cutover financial path uses `User.currency` as the only mutable Credits balance. A `Credit_Mutation_Service` operation must keep the balance update, the `FinancialLedger` insert, and the paired `AuditLog` insert inside one interactive transaction. Lock and re-read the user row before applying a racing mutation, allocate the audit `sequenceNumber` with `withAuditSequence`, and commit only after both immutable records exist. If any required write fails, the transaction rolls back; do not use a best-effort ledger helper or a feature flag to leave a changed balance without evidence.
+
+Each successful mutation has one non-null `financialEventId`. The `FinancialLedger` row is the accounting/reporting record; the `AuditLog` row with `eventType` `financial_transaction` is the operational/security/reconciliation record. They share the event identity and core financial facts, but the audit row is not a second balance mutation. `FinancialLedger.financialEventId` is unique for post-cutover rows. `AuditLog.financialEventId` is nullable for legacy/unrelated events and participates in a composite uniqueness rule with `eventType`; `AuditLog.sourceEventId` is similarly nullable and unique with `eventType` for `prestige_change` records. Do not add a foreign key from the polymorphic audit stream to the ledger; enforce pairing through uniqueness, atomic writes, and reconciliation diagnostics.
+
+`Financial_Breakdown` JSON must be represented by explicit TypeScript types and runtime validation, then written to the ledger metadata and paired audit payload. It records formula/version, typed inputs, modifiers, source identity, discounts or bonuses, operation order, precision, and final rounding. A later report must be able to explain the amount without reading current facilities, prestige, fame, repair quotes, or formula code. `repair_cost` additionally requires `repairType` `manual` or `automatic`; a manual batch remains one wider transaction containing one per-robot financial/domain pair per repaired robot. Settlement writes one `passive_income` pair and one `operating_costs` pair per stable/cycle, including zero-valued components.
+
+The final `Transaction_Taxonomy` is exactly `battle_income`, `streaming_revenue`, `repair_cost`, `facility_upgrade`, `weapon_purchase`, `weapon_sale`, `weapon_refinement`, `robot_creation`, `attribute_upgrade`, `achievement_reward`, `passive_income`, and `operating_costs`. New writes must reject `subscription_cost`, `prestige_award`, and `settlement_adjustment`. `Prestige_Service` writes separate `prestige_change` records with `sourceEventId`; Booking Office subscription changes remain free and emit no financial record.
+
+### Forward-only identity migration
+
+Add pairing fields as nullable migration-safe columns so surviving pre-cutover rows remain readable. Before relying on uniqueness, run a diagnostic for existing duplicate identities; do not rewrite old amounts, fabricate pairs, or relabel legacy rows. Select `Cutover_Cycle` in `ACC` only after schema/client generation, writer migration, the `Coverage_Manifest` check, blocking test tiers, and required capture activation pass. Reconciliation must separate post-cutover defects from pre-cutover history and must not become a historical reconstruction script.
 
 ## Connection Pooling
 
@@ -282,7 +270,7 @@ model User {
   id       Int    @id @default(autoincrement())
   username String @unique @db.VarChar(50)
   email    String @unique @db.VarChar(255)
-  credits  Decimal @db.Decimal(15, 2) @default(0)
+  currency Decimal @db.Decimal(15, 2) @default(0)
   
   @@index([username])
   @@index([email])

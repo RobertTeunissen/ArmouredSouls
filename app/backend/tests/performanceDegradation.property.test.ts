@@ -19,7 +19,7 @@
 
 import fc from 'fast-check';
 import { CyclePerformanceMonitoringService } from '../src/services/cycle/cyclePerformanceMonitoringService';
-import { EventLogger } from '../src/services/common/eventLogger';
+import { EventLogger, EventType } from '../src/services/common/eventLogger';
 import prisma from '../src/lib/prisma';
 
 /**
@@ -327,31 +327,30 @@ describe('Property 16: Performance Degradation Detection', () => {
             degradationMultiplier: s.degradationMultiplier,
           }));
 
-          // Create data for each step
-          for (const step of uniqueSteps) {
-            const recentDuration = Math.floor(step.baselineDuration * step.degradationMultiplier);
-
-            // Baseline
-            for (let cycle = 1; cycle <= 100; cycle++) {
-              await eventLogger.logCycleStepComplete(
-                cycle,
-                step.stepName,
-                1,
-                step.baselineDuration,
-                {}
-              );
-            }
-
-            // Recent
-            for (let cycle = 101; cycle <= 110; cycle++) {
-              await eventLogger.logCycleStepComplete(cycle, step.stepName, 1, recentDuration, {});
-            }
-          }
-
-          // Add cycle complete events
+          // Seed each cycle in one contiguous, sequence-allocated batch. This
+          // retains the real EventLogger and its gapless audit invariant while
+          // avoiding one transaction per step on shared/slow local databases.
           for (let cycle = 1; cycle <= 110; cycle++) {
-            await eventLogger.logCycleComplete(cycle, 1000);
+            const isRecentCycle = cycle > 100;
+            await eventLogger.logEventBatch(
+              cycle,
+              uniqueSteps.map((step, index) => ({
+                eventType: EventType.CYCLE_STEP_COMPLETE,
+                payload: {
+                  stepName: step.stepName,
+                  stepNumber: index + 1,
+                  duration: isRecentCycle
+                    ? Math.floor(step.baselineDuration * step.degradationMultiplier)
+                    : step.baselineDuration,
+                  summary: {},
+                },
+              })),
+            );
           }
+
+          // One completed cycle at the end establishes the service's latest
+          // cycle boundary; prior completion rows cannot affect this property.
+          await eventLogger.logCycleComplete(110, 1000);
 
           const alerts = await service.detectAllStepDegradations(10, 100);
 

@@ -17,18 +17,44 @@ jest.mock('../../migration/featureFlags', () => ({
   __esModule: true,
   isEnabled: jest.fn(),
 }));
+jest.mock('../../migration/financialRollout', () => ({
+  __esModule: true,
+  assertRequiredCaptureForCycle: jest.fn(),
+  classifyCycle: jest.fn(),
+}));
 
 import prisma from '../../../lib/prisma';
 import { isEnabled } from '../../migration/featureFlags';
+import { assertRequiredCaptureForCycle, classifyCycle } from '../../migration/financialRollout';
 import financialService from '../financialService';
 
 const mockIsEnabled = isEnabled as jest.MockedFunction<typeof isEnabled>;
+const mockAssertRequiredCapture = assertRequiredCaptureForCycle as jest.MockedFunction<typeof assertRequiredCaptureForCycle>;
+const mockClassifyCycle = classifyCycle as jest.MockedFunction<typeof classifyCycle>;
 const mockCreate = prisma.financialLedger.create as jest.Mock;
 const mockGroupBy = prisma.financialLedger.groupBy as jest.Mock;
+
+const preCutoverState = {
+  environment: 'ACC' as const,
+  phase: 'schema_client_generation' as const,
+  schemaClientGenerated: false,
+  writerManifestComplete: false,
+  blockingTestsPassed: false,
+  requiredCaptureActive: false,
+  accCutoverRecorded: false,
+  reconciliationPassed: false,
+  documentationComplete: false,
+  cutoverCycle: null,
+  cutoverRecordedAt: null,
+  reconciledAt: null,
+  documentedAt: null,
+};
 
 beforeEach(() => {
   jest.clearAllMocks();
   mockIsEnabled.mockResolvedValue(true);
+  mockAssertRequiredCapture.mockResolvedValue(preCutoverState);
+  mockClassifyCycle.mockReturnValue('pre_cutover');
 });
 
 // ---------------------------------------------------------------------------
@@ -54,19 +80,27 @@ describe('recordTransaction', () => {
     expect(mockCreate).toHaveBeenCalledTimes(1);
   });
 
-  it('should return null when feature flag is disabled', async () => {
-    mockIsEnabled.mockResolvedValue(false);
+  it('should reject the legacy writer after the ACC cutover instead of returning null', async () => {
+    const postCutoverState = {
+      ...preCutoverState,
+      phase: 'acc_cutover' as const,
+      requiredCaptureActive: true,
+      accCutoverRecorded: true,
+      cutoverCycle: 10,
+    };
+    mockAssertRequiredCapture.mockResolvedValue(postCutoverState);
+    mockClassifyCycle.mockReturnValue('post_cutover');
 
-    const result = await financialService.recordTransaction({
-      cycleNumber: 1,
+    await expect(financialService.recordTransaction({
+      cycleNumber: 10,
       userId: 100,
       transactionType: 'battle_income',
       amount: 1000,
       balanceAfter: 11000,
       description: 'Test',
+    })).rejects.toMatchObject({
+      code: 'FINANCIAL_REQUIRED_CAPTURE_UNAVAILABLE',
     });
-
-    expect(result).toBeNull();
     expect(mockCreate).not.toHaveBeenCalled();
   });
 

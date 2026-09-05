@@ -9,7 +9,7 @@
 
 import prisma from '../lib/prisma';
 import { getRobotLeagueTiers, tierOf } from '../services/standings/robotLeagueTiers';
-import logger from '../config/logger';
+import { settlementService } from '../services/financial/settlementService';
 
 // Re-export all pure calculation functions for backward compatibility
 export {
@@ -276,89 +276,28 @@ export interface DailyFinancialSummary {
 }
 
 /**
- * Process daily financial obligations for a user
- * - Deduct operating costs
- * - Track repair costs (repairs should be done separately)
- * - Check for bankruptcy
+ * Process daily financial obligations for one stable through Settlement_Service.
+ *
+ * This compatibility wrapper retains the historical response shape while making
+ * the shared settlement implementation the only balance-mutating path.
  */
 export async function processDailyFinances(userId: number): Promise<DailyFinancialSummary> {
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
+  const cycleNumber = await settlementService.getCurrentSettlementCycleNumber();
+  const result = await settlementService.settleCycle({
+    cycleNumber,
+    includeAdmins: true,
+    userIds: [userId],
   });
-
-  if (!user) {
+  const summary = result.summaries[0];
+  if (!summary) {
     throw new Error(`User ${userId} not found`);
   }
-
-  const startingBalance = user.currency;
-
-  // Calculate operating costs
-  const operatingCosts = await calculateTotalDailyOperatingCosts(userId);
-
-  // Get robots needing repair
-  const robots = await prisma.robot.findMany({
-    where: {
-      userId,
-      currentHP: {
-        lt: prisma.robot.fields.maxHP,
-      },
-    },
-    select: {
-      id: true,
-      name: true,
-      currentHP: true,
-      maxHP: true,
-      repairQuoteCredits: true,
-    },
-  });
-
-  // Calculate total repair costs (but don't actually repair - that's done separately)
-  const totalRepairCost = robots.reduce((sum, robot) => {
-    return sum + (robot.repairQuoteCredits || 0);
-  }, 0);
-
-  // Total costs to deduct
-  const totalCosts = operatingCosts.total;
-
-  // Deduct operating costs atomically to prevent race conditions with concurrent user actions
-  if (totalCosts > 0) {
-    await prisma.user.update({
-      where: { id: userId },
-      data: {
-        currency: { decrement: totalCosts },
-      },
-    });
-  }
-
-  // Re-read balance after deduction to get accurate ending balance
-  const updatedUser = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { currency: true },
-  });
-  const newBalance = updatedUser?.currency ?? 0;
-
-  const isBankrupt = newBalance <= 0;
-  const canAffordCosts = startingBalance >= totalCosts;
-
-  return {
-    userId: user.id,
-    username: user.username,
-    startingBalance,
-    operatingCosts,
-    repairCosts: {
-      total: totalRepairCost,
-      robotsRepaired: 0, // Not repaired in this function
-    },
-    totalCosts,
-    endingBalance: newBalance,
-    balanceChange: newBalance - startingBalance,
-    isBankrupt,
-    canAffordCosts,
-  };
+  return summary;
 }
 
 /**
- * Process daily finances for all users
+ * Process daily finances for all non-admin users through Settlement_Service.
+ * The legacy aggregate shape is retained for the admin endpoint contract.
  */
 export async function processAllDailyFinances(): Promise<{
   usersProcessed: number;
@@ -366,45 +305,17 @@ export async function processAllDailyFinances(): Promise<{
   bankruptUsers: number;
   summaries: DailyFinancialSummary[];
 }> {
-  const users = await prisma.user.findMany({
-    where: {
-      role: {
-        not: 'admin', // Don't process admin accounts
-      },
-    },
+  const cycleNumber = await settlementService.getCurrentSettlementCycleNumber();
+  const result = await settlementService.settleCycle({
+    cycleNumber,
+    includeAdmins: false,
   });
 
-  const summaries: DailyFinancialSummary[] = [];
-  let totalCostsDeducted = 0;
-  let bankruptUsers = 0;
-
-  // Process users in parallel batches of 20 to avoid overwhelming the DB connection pool
-  const BATCH_SIZE = 20;
-  for (let i = 0; i < users.length; i += BATCH_SIZE) {
-    const batch = users.slice(i, i + BATCH_SIZE);
-    const batchResults = await Promise.allSettled(
-      batch.map(user => processDailyFinances(user.id))
-    );
-
-    for (let j = 0; j < batchResults.length; j++) {
-      const result = batchResults[j];
-      if (result.status === 'fulfilled') {
-        summaries.push(result.value);
-        totalCostsDeducted += result.value.totalCosts;
-        if (result.value.isBankrupt) {
-          bankruptUsers++;
-        }
-      } else {
-        logger.error(`[Daily Finances] Error processing user ${batch[j].id}:`, result.reason);
-      }
-    }
-  }
-
   return {
-    usersProcessed: users.length,
-    totalCostsDeducted,
-    bankruptUsers,
-    summaries,
+    usersProcessed: result.usersProcessed,
+    totalCostsDeducted: result.totalOperatingCosts,
+    bankruptUsers: result.bankruptUsers,
+    summaries: result.summaries,
   };
 }
 

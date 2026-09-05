@@ -1,15 +1,18 @@
 import prisma from '../../lib/prisma';
+import { FinancialError, FinancialErrorCode } from '../../errors';
+import { getFinancialRolloutState } from './financialRollout';
 
 /**
  * Migration feature flags for Spec #40 — Database Unification.
  *
  * Flags are persisted in the `cycle_metadata.feature_flags` JSON column
- * and control which subsystems use the new unified schema vs legacy tables.
- * All flags default to `false` (legacy behavior) so a failed read is always
- * safe — the system falls back to the pre-migration code paths.
+ * and control subsystems that still have a legacy fallback. The financial flag
+ * is legacy-only configuration: after the durable ACC cutover state is reached,
+ * required capture is controlled by `financialRollout.ts` and cannot be disabled
+ * by this nullable feature flag.
  *
  * Flags are cached in-memory for 60 seconds to avoid hitting the database on
- * every request (leaderboard + financial service check flags per call).
+ * every request (leaderboard + legacy financial service checks per call).
  */
 export interface MigrationFeatureFlags {
   /** When true, credit/debit flows write to the new financial ledger table. */
@@ -86,6 +89,21 @@ export async function setFlag(
   flag: keyof MigrationFeatureFlags,
   value: boolean,
 ): Promise<void> {
+  // Required post-cutover capture is not a rollback flag. Once ACC has a
+  // durable cutover cycle, disabling this legacy flag must fail rather than
+  // silently restoring null/suppressed ledger enrichment.
+  if (flag === 'financial_ledger_active' && !value) {
+    const rollout = await getFinancialRolloutState();
+    if (rollout.cutoverCycle !== null) {
+      throw new FinancialError(
+        FinancialErrorCode.REQUIRED_CAPTURE_UNAVAILABLE,
+        'financial_ledger_active cannot disable required capture after ACC cutover',
+        409,
+        { cutoverCycle: rollout.cutoverCycle },
+      );
+    }
+  }
+
   const current = await getFlags();
   const updated: MigrationFeatureFlags = { ...current, [flag]: value };
 

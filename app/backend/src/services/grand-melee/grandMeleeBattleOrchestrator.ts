@@ -12,14 +12,20 @@ import {
   logBattleAuditEvent,
   checkAndAwardAchievements,
   updateRobotCombatStats,
+  awardCreditsWithLedger,
+  awardPrestigeToUser,
+  awardBattleStreamingRevenue,
 } from '../battle/battlePostCombat';
 import standingsService from '../standings/standingsService';
 import { calculateStreamingRevenueBatch } from '../economy/streamingRevenueService';
 import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
 import { prepareRobotForCombat } from '../../utils/robotCalculations';
 import { getTuningBonusesBatch } from '../tuning-pool';
-import { calculateGrandMeleeRewards } from './grandMeleeRewards';
+import { calculateGrandMeleeRewards, GRAND_MELEE_BASE_MULTIPLIER, GRAND_MELEE_CREDIT_MULTIPLIER } from './grandMeleeRewards';
+import { getLeagueWinReward } from '../../utils/economyFormulas';
+import type { PlacementRewardComponent } from '../../types/financialTypes';
 import schedulingService from '../scheduling/schedulingService';
+import { defer } from '../common/deferredWork';
 
 /** Yield the event loop so Express can serve requests between heavy DB work */
 const throttle = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
@@ -37,6 +43,8 @@ const SUPER_BATCH_COOLDOWN_MS = process.env.NODE_ENV === 'production' ? 30000 : 
 
 /** Minimum robots required to run a Grand Melee match */
 const MIN_PARTICIPANTS = 8;
+/** Persisted formula fact for placements outside the top-ten reward curve. */
+const GRAND_MELEE_PARTICIPATION_FLOOR_MULTIPLIER = 0.2;
 
 // ─── Interfaces ─────────────────────────────────────────────────────
 
@@ -49,6 +57,7 @@ interface PreparedParticipant {
   finalHP: number;
   destroyed: boolean;
   isWinner: boolean;
+  tier: string;
   rewards: { credits: number; prestige: number; fame: number; lpDelta: number };
 }
 
@@ -314,6 +323,7 @@ async function processGrandMeleeBattle(
       finalHP: p.finalHP,
       destroyed: p.destroyed,
       isWinner,
+      tier: robotTier,
       rewards,
     };
   });
@@ -419,23 +429,36 @@ async function processGrandMeleeBattle(
   }
 
   // 12. Calculate streaming revenue with single batch query
-  const _cycleNumber = await getCurrentCycleNumber();
+  const cycleNumber = await getCurrentCycleNumber();
   const streamingCalcMap = await calculateStreamingRevenueBatch(
     preparedParticipants.map(p => ({ robotId: p.robot.id, userId: p.robot.userId })),
   );
 
-  // 13. Batched currency/prestige/fame updates in a single transaction
-  const currencyUpdates: Prisma.PrismaPromise<unknown>[] = [];
-
-  // Group credits by userId to combine multiple robots from same user
+  // 13. Atomic stable income, per-robot streaming, prestige, and fame updates.
   const creditsByUser = new Map<number, number>();
+  const placementRewardsByUser = new Map<number, PlacementRewardComponent[]>();
   const prestigeByUser = new Map<number, number>();
   const fameByRobot = new Map<number, number>();
-  const streamingByUser = new Map<number, number>();
 
   preparedParticipants.forEach((p) => {
     if (p.rewards.credits > 0) {
       creditsByUser.set(p.robot.userId, (creditsByUser.get(p.robot.userId) ?? 0) + p.rewards.credits);
+      const placementRewards = placementRewardsByUser.get(p.robot.userId) ?? [];
+      const participationFloorApplied = p.placement > 10;
+      placementRewards.push({
+        mode: 'grand_melee',
+        robotId: p.robot.id,
+        tier: p.tier,
+        placement: p.placement,
+        credits: p.rewards.credits,
+        tierBaseReward: getLeagueWinReward(p.tier),
+        modeBaseMultiplier: GRAND_MELEE_BASE_MULTIPLIER,
+        placementMultiplier: GRAND_MELEE_CREDIT_MULTIPLIER[p.placement] ?? GRAND_MELEE_PARTICIPATION_FLOOR_MULTIPLIER,
+        totalParticipants: robots.length,
+        participationFloorApplied,
+        participationFloorMultiplier: participationFloorApplied ? GRAND_MELEE_PARTICIPATION_FLOOR_MULTIPLIER : 0,
+      });
+      placementRewardsByUser.set(p.robot.userId, placementRewards);
     }
     if (p.rewards.prestige > 0) {
       prestigeByUser.set(p.robot.userId, (prestigeByUser.get(p.robot.userId) ?? 0) + p.rewards.prestige);
@@ -443,62 +466,75 @@ async function processGrandMeleeBattle(
     if (p.rewards.fame > 0) {
       fameByRobot.set(p.robot.id, (fameByRobot.get(p.robot.id) ?? 0) + p.rewards.fame);
     }
-    const streamingCalc = streamingCalcMap.get(p.robot.id);
-    if (streamingCalc) {
-      streamingByUser.set(p.robot.userId, (streamingByUser.get(p.robot.userId) ?? 0) + streamingCalc.totalRevenue);
-    }
   });
 
-  // Build transaction operations
-  for (const [userId, credits] of creditsByUser) {
-    const streaming = streamingByUser.get(userId) ?? 0;
-    const prestige = prestigeByUser.get(userId) ?? 0;
-    currencyUpdates.push(
-      prisma.user.update({
-        where: { id: userId },
-        data: {
-          currency: { increment: credits + streaming },
-          prestige: prestige > 0 ? { increment: prestige } : undefined,
+  await prisma.$transaction(async (tx) => {
+    for (const [userId, credits] of creditsByUser) {
+      await awardCreditsWithLedger(
+        userId,
+        credits,
+        'battle_income',
+        cycleNumber,
+        'Grand Melee battle reward',
+        undefined,
+        { battleId: battle.id, placementMode: 'grand_melee' },
+        {
+          battleId: battle.id,
+          mode: 'grand_melee',
+          tier: 'placement_aggregate',
+          outcome: 'placement',
+          placement: null,
+          participationFloor: 0,
+          winComponent: 0,
+          teamSize: 1,
+          isBye: false,
+          placementRewardComponents: placementRewardsByUser.get(userId),
+          tx,
         },
-      }),
-    );
-  }
+      );
+    }
 
-  for (const [robotId, fame] of fameByRobot) {
-    currencyUpdates.push(
-      prisma.robot.update({
+    for (const [userId, prestige] of prestigeByUser) {
+      await awardPrestigeToUser(userId, prestige, cycleNumber, {
+        source: 'battle',
+        mode: 'grand_melee',
+        battleId: battle.id,
+        tx,
+      });
+    }
+
+    for (const [robotId, fame] of fameByRobot) {
+      await tx.robot.update({
         where: { id: robotId },
         data: { fame: { increment: fame } },
-      }),
-    );
-  }
-
-  // Execute all currency updates in a single transaction
-  if (currencyUpdates.length > 0) {
-    await prisma.$transaction(currencyUpdates);
-  }
-
-  // 14. Update streaming revenue on BattleParticipant records
-  const streamingUpdates = preparedParticipants
-    .map((p) => {
-      const calc = streamingCalcMap.get(p.robot.id);
-      if (!calc) return null;
-      return prisma.battleParticipant.update({
-        where: { battleId_robotId: { battleId: battle.id, robotId: p.robot.id } },
-        data: { streamingRevenue: calc.totalRevenue },
       });
-    })
-    .filter((u): u is NonNullable<typeof u> => u !== null);
+    }
 
-  if (streamingUpdates.length > 0) {
-    await prisma.$transaction(streamingUpdates);
-  }
+    for (const participant of preparedParticipants) {
+      const streamingCalc = streamingCalcMap.get(participant.robot.id);
+      if (!streamingCalc) continue;
+      await awardBattleStreamingRevenue(
+        participant.robot.userId,
+        streamingCalc,
+        cycleNumber,
+        battle.id,
+        'grand_melee',
+        tx,
+      );
+      await tx.battleParticipant.update({
+        where: {
+          battleId_robotId: { battleId: battle.id, robotId: participant.robot.id },
+        },
+        data: { streamingRevenue: streamingCalc.totalRevenue },
+      });
+    }
+  });
 
   // 15. Update Grand Melee robot stats + standings
   await batchUpdateGrandMeleeRobotStats(preparedParticipants, simResult.durationSeconds);
 
   // 16. Check and award achievements (deferred — non-critical path)
-  setImmediate(async () => {
+  defer('grand melee achievements', async () => {
     try {
       const prevBattleResults = await prisma.battleParticipant.findMany({
         where: {
@@ -547,7 +583,7 @@ async function processGrandMeleeBattle(
   });
 
   // 17. Log audit events (fire-and-forget for performance)
-  setImmediate(async () => {
+  defer('grand melee audit', async () => {
     try {
       for (const p of preparedParticipants) {
         const streamingCalc = streamingCalcMap.get(p.robot.id);

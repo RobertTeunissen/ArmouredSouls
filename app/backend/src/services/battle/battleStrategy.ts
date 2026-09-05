@@ -356,17 +356,32 @@ export class BattleProcessor<TMatch = unknown> {
         reward?.credits ?? 0,
         'battle_income',
         cycleNumber,
-        'KotH battle reward',
+        `${strategy.battleType} battle reward`,
         p.robot.id,
+        { battleId: battle.id },
+        {
+          battleId: battle.id,
+          mode: strategy.battleType,
+          tier: strategy.leagueType,
+          outcome: isBye ? 'bye' : simResult.isDraw ? 'draw' : isWinner ? 'win' : 'loss',
+          participationFloor: reward?.credits ?? 0,
+          winComponent: 0,
+          teamSize: 1,
+          isBye,
+        },
       );
-      await awardPrestigeToUser(p.userId, reward?.prestige ?? 0);
+      await awardPrestigeToUser(p.userId, reward?.prestige ?? 0, cycleNumber, {
+        source: 'battle',
+        mode: strategy.battleType,
+        battleId: battle.id,
+      });
     }
 
     // 8. Streaming revenue
     if (strategy.hasStreamingRevenue && !isBye) {
       for (const p of participants) {
         const calc = await awardStreamingRevenueForParticipant(
-          p.robot.id, p.userId, battle.id, isBye,
+          p.robot.id, p.userId, battle.id, isBye, 1, strategy.battleType,
         );
         if (calc) {
           logger.info(

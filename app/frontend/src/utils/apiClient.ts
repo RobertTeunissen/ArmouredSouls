@@ -35,6 +35,12 @@ apiClient.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  const isEconomicMutation = config.method !== undefined
+    && ['post', 'delete'].includes(config.method.toLowerCase())
+    && /^\/api\/(weapon-inventory(?:\/purchase|\/\d+(?:\/refine)?)?|facilities\/upgrade|robots(?:\/\d+\/upgrades)?)$/.test(config.url ?? '');
+  if (isEconomicMutation && !config.headers['Idempotency-Key']) {
+    config.headers['Idempotency-Key'] = crypto.randomUUID();
+  }
   return config;
 });
 

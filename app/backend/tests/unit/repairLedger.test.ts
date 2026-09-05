@@ -10,6 +10,8 @@
 import * as fc from 'fast-check';
 
 const mockRecordTransaction = jest.fn();
+const mockGetFinancialRolloutState = jest.fn();
+const mockClassifyCycle = jest.fn();
 
 jest.mock('../../src/services/financial/financialService', () => ({
   __esModule: true,
@@ -23,6 +25,11 @@ jest.mock('../../src/services/battle/baseOrchestrator', () => ({
   getCurrentCycleNumber: jest.fn().mockResolvedValue(42),
 }));
 
+jest.mock('../../src/services/migration/financialRollout', () => ({
+  classifyCycle: (...args: unknown[]) => mockClassifyCycle(...args),
+  getFinancialRolloutState: (...args: unknown[]) => mockGetFinancialRolloutState(...args),
+}));
+
 jest.mock('../../src/config/logger', () => ({
   __esModule: true,
   default: { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() },
@@ -34,6 +41,10 @@ import { applyManualRepairDiscount, calculateRepairQuote } from '../../src/share
 beforeEach(() => {
   mockRecordTransaction.mockReset();
   mockRecordTransaction.mockResolvedValue({ id: 1 });
+  mockGetFinancialRolloutState.mockReset();
+  mockGetFinancialRolloutState.mockResolvedValue({ cutoverCycle: null });
+  mockClassifyCycle.mockReset();
+  mockClassifyCycle.mockReturnValue('pre_cutover');
 
   // Reset the cycle-number mock too. One test below uses `mockRejectedValueOnce`,
   // and without this an unconsumed rejection could leak into whichever test ran
@@ -46,8 +57,9 @@ beforeEach(() => {
   baseOrchestrator.getCurrentCycleNumber.mockResolvedValue(42);
 });
 
-describe('Requirement 16 criterion 5: a failed ledger write leaves the repair alone', () => {
-  it('swallows a rejection from recordTransaction and resolves', async () => {
+describe('Requirement 16 criterion 5: required capture is fail-closed after cutover', () => {
+  it('propagates a rejection from recordTransaction after ACC cutover', async () => {
+    mockClassifyCycle.mockReturnValueOnce('post_cutover');
     mockRecordTransaction.mockRejectedValueOnce(new Error('ledger table is on fire'));
 
     await expect(
@@ -59,12 +71,27 @@ describe('Requirement 16 criterion 5: a failed ledger write leaves the repair al
         balanceAfter: 1000,
         description: 'Manual repair of 1 robot (batch of 1)',
       }),
-    ).resolves.toBeUndefined();
+    ).rejects.toThrow('ledger table is on fire');
   });
 
-  it('swallows a rejection from the cycle-number lookup too', async () => {
+  it('propagates a cycle-number lookup failure and does not write', async () => {
     const baseOrchestrator = jest.requireMock('../../src/services/battle/baseOrchestrator');
     baseOrchestrator.getCurrentCycleNumber.mockRejectedValueOnce(new Error('no cycle'));
+
+    await expect(
+      recordLedgerEntry({
+        userId: 7,
+        transactionType: 'repair_cost',
+        amount: -500,
+        balanceAfter: 1000,
+        description: 'Automatic pre-battle repair of 1 robot',
+      }),
+    ).rejects.toThrow('no cycle');
+    expect(mockRecordTransaction).not.toHaveBeenCalled();
+  });
+
+  it('retains compatibility swallowing for a pre-cutover ledger failure', async () => {
+    mockRecordTransaction.mockRejectedValueOnce(new Error('legacy ledger unavailable'));
 
     await expect(
       recordLedgerEntry({

@@ -20,6 +20,9 @@ import prisma from '../../src/lib/prisma';
 import { createTagTeamFixture, clearTagTeamCompetition } from '../helpers/tagTeam';
 import { runTagTeamMatchmaking } from '../../src/services/tag-team/tagTeamMatchmakingService';
 import { executeScheduledTagTeamBattles } from '../../src/services/tag-team/tagTeamBattleOrchestrator';
+import { usePostCutoverFinancialRollout } from '../financialRolloutTestHelper';
+
+usePostCutoverFinancialRollout();
 
 describe('Tag Team Bye-Team Handling Integration Test', () => {
   let testUserIds: number[] = [];
@@ -296,8 +299,15 @@ describe('Tag Team Bye-Team Handling Integration Test', () => {
     expect(byeBattles.length).toBeGreaterThan(0);
     console.log(`[Test] Found ${byeBattles.length} bye-team battles`);
 
-    // Verify bye-team battle structure
     const byeBattle = byeBattles[0];
+    const byeScheduledMatch = await prisma.scheduledMatch.findFirst({
+      where: { matchType: 'tag_team', battleId: byeBattle.id },
+    });
+    expect(byeScheduledMatch).not.toBeNull();
+    expect(byeScheduledMatch!.status).toBe('completed');
+    expect(byeScheduledMatch!.cancelReason).toBeNull();
+
+    // Verify bye-team battle structure
     expect(byeBattle.battleType).toBe('tag_team');
     // Only real robots get participant rows, never the placeholder.
     for (const p of byeBattle.participants) {

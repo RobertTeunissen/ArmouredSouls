@@ -15,7 +15,7 @@ import { Prisma, StandingsMode, MatchType, Robot } from '../../../generated/pris
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
 import { RobotWithWeapons } from '../battle/combatSimulator';
-import { resolveByeEvent, BYE_BATTLE_DURATION_SECONDS } from '../battle/byeResolutionService';
+import { resolveByeEvent } from '../battle/byeResolutionService';
 import { simulateTeamBattle } from './teamBattleEngine';
 import { computeBattleSummary } from '../battle/battleSummaryComputer';
 import { countKillsByRobot } from '../../shared/utils/battleStatistics';
@@ -401,10 +401,51 @@ async function executeSingleTeamBattle(
     const team1Credits = distributeTeamCredits(team1Reward, team1Participants);
     const team2Credits = distributeTeamCredits(team2Reward, team2Participants);
 
-    // Award credits to stables
-    await awardCreditsWithLedger(match.team1.stableId, team1Reward, 'battle_income', cycleNumber, 'Team battle reward');
+    // Award stable-level battle income through the same interactive transaction.
+    const teamMode = teamSize === 2 ? 'league_2v2' : 'league_3v3';
+    const team1Outcome = isDraw ? 'draw' : team1Won ? 'win' : 'loss';
+    await awardCreditsWithLedger(
+      match.team1.stableId,
+      team1Reward,
+      'battle_income',
+      cycleNumber,
+      'Team battle reward',
+      undefined,
+      { battleId: battleRecord.id, teamSize },
+      {
+        battleId: battleRecord.id,
+        mode: teamMode,
+        tier: match.teamBattleLeague,
+        outcome: team1Outcome,
+        participationFloor: team1Reward,
+        winComponent: 0,
+        teamSize,
+        isBye: false,
+        tx,
+      },
+    );
     if (match.team2) {
-      await awardCreditsWithLedger(match.team2.stableId, team2Reward, 'battle_income', cycleNumber, 'Team battle reward');
+      const team2Outcome = isDraw ? 'draw' : team2Won ? 'win' : 'loss';
+      await awardCreditsWithLedger(
+        match.team2.stableId,
+        team2Reward,
+        'battle_income',
+        cycleNumber,
+        'Team battle reward',
+        undefined,
+        { battleId: battleRecord.id, teamSize },
+        {
+          battleId: battleRecord.id,
+          mode: teamMode,
+          tier: match.teamBattleLeague,
+          outcome: team2Outcome,
+          participationFloor: team2Reward,
+          winComponent: 0,
+          teamSize,
+          isBye: false,
+          tx,
+        },
+      );
     }
 
     // Calculate fame and prestige
@@ -412,10 +453,20 @@ async function executeSingleTeamBattle(
     const team1Prestige = calculateTeamBattlePrestige(match.teamBattleLeague, team1Won, isDraw);
     const team2Prestige = calculateTeamBattlePrestige(match.teamBattleLeague, team2Won, isDraw);
 
-    // Award prestige to stables
-    await awardPrestigeToUser(match.team1.stableId, team1Prestige);
+    // Award stable-level prestige through the same transaction; it is not a credit row.
+    await awardPrestigeToUser(match.team1.stableId, team1Prestige, cycleNumber, {
+      source: 'battle',
+      mode: teamMode,
+      battleId: battleRecord.id,
+      tx,
+    });
     if (match.team2) {
-      await awardPrestigeToUser(match.team2.stableId, team2Prestige);
+      await awardPrestigeToUser(match.team2.stableId, team2Prestige, cycleNumber, {
+        source: 'battle',
+        mode: teamMode,
+        battleId: battleRecord.id,
+        tx,
+      });
     }
 
     // Calculate LP deltas
@@ -423,8 +474,7 @@ async function executeSingleTeamBattle(
     const team2LPDelta = calculateTeamBattleLPDelta(team2Won, isDraw);
 
     // Update team 1 standings via unified service
-    const team1Mode = teamSize === 2 ? 'league_2v2' : 'league_3v3';
-    const team1Outcome = isDraw ? 'draw' : team1Won ? 'win' : 'loss';
+    const team1Mode = teamMode;
     await standingsService.recordBattleResult({
       entityType: 'team',
       entityId: match.team1Id,
@@ -600,12 +650,14 @@ async function executeSingleTeamBattle(
   for (const robot of team1Robots) {
     await awardStreamingRevenueForParticipant(
       robot.id, match.team1.stableId, battle.id, false, teamSize,
+      teamSize === 2 ? 'league_2v2' : 'league_3v3',
     );
   }
   if (match.team2) {
     for (const robot of team2Robots) {
       await awardStreamingRevenueForParticipant(
         robot.id, match.team2.stableId, battle.id, false, teamSize,
+        teamSize === 2 ? 'league_2v2' : 'league_3v3',
       );
     }
   }

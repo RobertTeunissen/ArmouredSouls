@@ -6,6 +6,15 @@ const mockUserFindUnique = jest.fn();
 const mockFacilityFindUnique = jest.fn();
 const mockRobotFindMany = jest.fn();
 const mockTransaction = jest.fn();
+const mockApplyRepairCreditMutationInTransaction = jest.fn();
+const mockBuildRepairOperationId = jest.fn();
+const mockTransactionClient = {
+  facility: { findUnique: (...args: unknown[]) => mockFacilityFindUnique(...args) },
+  robot: {
+    findMany: (...args: unknown[]) => mockRobotFindMany(...args),
+    update: jest.fn().mockResolvedValue({}),
+  },
+};
 
 jest.mock('../../../src/lib/prisma', () => ({
   __esModule: true,
@@ -21,6 +30,11 @@ jest.mock('../../../src/lib/creditGuard', () => ({
   lockUserForSpending: jest.fn().mockResolvedValue({ id: 1, currency: 5000000 }),
 }));
 
+jest.mock('../../../src/services/financial/repairMutationService', () => ({
+  applyRepairCreditMutationInTransaction: (...args: unknown[]) => mockApplyRepairCreditMutationInTransaction(...args),
+  buildRepairOperationId: (...args: unknown[]) => mockBuildRepairOperationId(...args),
+}));
+
 jest.mock('../../../src/config/logger', () => ({
   __esModule: true,
   default: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
@@ -31,6 +45,16 @@ import { RobotError } from '../../../src/errors/robotErrors';
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockTransaction.mockImplementation(
+    async (callback: (tx: typeof mockTransactionClient) => Promise<unknown>) => callback(mockTransactionClient),
+  );
+  mockBuildRepairOperationId.mockReturnValue('manual-operation');
+  mockApplyRepairCreditMutationInTransaction.mockImplementation(
+    ({ charge }: { charge: number }) => Promise.resolve({
+      balanceAfter: 5000000 - charge,
+      created: true,
+    }),
+  );
 });
 
 describe('repairAllRobots', () => {
@@ -55,13 +79,9 @@ describe('repairAllRobots', () => {
         syncProtocols: 1, supportSystems: 1, formationTactics: 1,
       },
     ]);
-    mockTransaction.mockImplementation(async (cb: (tx: unknown) => Promise<unknown>) => {
-      const tx = {
-        user: { update: jest.fn().mockResolvedValue({ currency: 4900000 }) },
-        robot: { update: jest.fn().mockResolvedValue({}) },
-      };
-      return cb(tx);
-    });
+    mockTransaction.mockImplementation(
+      async (callback: (tx: typeof mockTransactionClient) => Promise<unknown>) => callback(mockTransactionClient),
+    );
 
     const result = await repairAllRobots(1);
 
@@ -107,13 +127,9 @@ describe('repairAllRobots', () => {
         syncProtocols: 1, supportSystems: 1, formationTactics: 1,
       },
     ]);
-    mockTransaction.mockImplementation(async (cb: (tx: unknown) => Promise<unknown>) => {
-      const tx = {
-        user: { update: jest.fn().mockResolvedValue({ currency: 4000000 }) },
-        robot: { update: jest.fn().mockResolvedValue({}) },
-      };
-      return cb(tx);
-    });
+    mockTransaction.mockImplementation(
+      async (callback: (tx: typeof mockTransactionClient) => Promise<unknown>) => callback(mockTransactionClient),
+    );
 
     const result = await repairAllRobots(1);
 

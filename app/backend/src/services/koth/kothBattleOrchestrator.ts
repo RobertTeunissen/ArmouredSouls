@@ -36,6 +36,9 @@ import {
   logBattleAuditEvent,
   checkAndAwardAchievements,
   updateRobotCombatStats,
+  awardCreditsWithLedger,
+  awardPrestigeToUser,
+  awardBattleStreamingRevenue,
 } from '../battle/battlePostCombat';
 import standingsService from '../standings/standingsService';
 import { CombatMessageGenerator } from '../battle/combatMessageGenerator';
@@ -43,11 +46,18 @@ import { calculateStreamingRevenueBatch } from '../economy/streamingRevenueServi
 import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
 import { prepareRobotForCombat } from '../../utils/robotCalculations';
 import { getTuningBonusesBatch } from '../tuning-pool';
+import { defer } from '../common/deferredWork';
+import type { PlacementRewardComponent } from '../../types/financialTypes';
 import {
   getLeagueWinReward,
   getTierFactor,
   KOTH_CREDIT_BASE_MULTIPLIER,
 } from '../../utils/economyFormulas';
+
+const KOTH_PLACEMENT_CREDIT_MULTIPLIERS: Record<number, number> = {
+  1: 1.0, 2: 0.7, 3: 0.5, 4: 0.35, 5: 0.25, 6: 0.2,
+};
+const KOTH_ZONE_DOMINANCE_MULTIPLIER = 1.25;
 
 /** Prepared participant data for batched DB operations */
 interface PreparedParticipant {
@@ -61,6 +71,7 @@ interface PreparedParticipant {
   finalHP: number;
   destroyed: boolean;
   isWinner: boolean;
+  tier: string;
   rewards: { credits: number; prestige: number; fame: number; zoneDominanceBonus: boolean };
 }
 
@@ -106,11 +117,7 @@ export function calculateKothRewards(
   winnerHPPercent?: number,
 ): { credits: number; prestige: number; fame: number; zoneDominanceBonus: boolean } {
   // Placement multipliers for credits
-  const PLACEMENT_CREDIT_MULTIPLIER: Record<number, number> = {
-    1: 1.0, 2: 0.7, 3: 0.5, 4: 0.35, 5: 0.25, 6: 0.2,
-  };
-
-  // Base fame by placement
+  const creditMultiplier = KOTH_PLACEMENT_CREDIT_MULTIPLIERS[placement] ?? 0.2;
   const BASE_FAME: Record<number, number> = {
     1: 8, 2: 5, 3: 3, 4: 1, 5: 1, 6: 1,
   };
@@ -121,7 +128,6 @@ export function calculateKothRewards(
   };
 
   const creditBase = getLeagueWinReward(tier);
-  const creditMultiplier = PLACEMENT_CREDIT_MULTIPLIER[placement] ?? 0.2;
   const tierFactor = getTierFactor(tier);
 
   // Rounded, not floored: the three-way product hits binary-fraction artifacts
@@ -142,9 +148,9 @@ export function calculateKothRewards(
   // Zone dominance bonus: +25% when >75% of points from uncontested zone control
   const zoneDominanceBonus = zoneScore > 0 && (uncontestedScore / zoneScore) > 0.75;
   if (zoneDominanceBonus) {
-    credits = Math.floor(credits * 1.25);
-    fame = Math.floor(fame * 1.25);
-    prestige = Math.floor(prestige * 1.25);
+    credits = Math.floor(credits * KOTH_ZONE_DOMINANCE_MULTIPLIER);
+    fame = Math.floor(fame * KOTH_ZONE_DOMINANCE_MULTIPLIER);
+    prestige = Math.floor(prestige * KOTH_ZONE_DOMINANCE_MULTIPLIER);
   }
 
   return { credits, prestige, fame, zoneDominanceBonus };
@@ -354,6 +360,7 @@ async function processKothBattle(
       finalHP: p.finalHP,
       destroyed: p.destroyed,
       isWinner,
+      tier: robotTier,
       rewards,
     };
   });
@@ -413,24 +420,40 @@ async function processKothBattle(
     });
   }
 
-  // 10. BATCHED: Calculate streaming revenue with single batch query (2 queries instead of 2N)
-  const _cycleNumber = await getCurrentCycleNumber();
+  // 11. One atomic financial transaction for stable battle income, per-robot
+  // streaming, stable prestige, and fame. KotH must not combine these deltas.
+  const cycleNumber = await getCurrentCycleNumber();
   const streamingCalcMap = await calculateStreamingRevenueBatch(
-    preparedParticipants.map(p => ({ robotId: p.robot.id, userId: p.robot.userId }))
+    preparedParticipants.map((participant) => ({
+      robotId: participant.robot.id,
+      userId: participant.robot.userId,
+    })),
   );
-
-  // 11. BATCHED: All currency/prestige/fame updates in a single transaction
-  const currencyUpdates: Prisma.PrismaPromise<unknown>[] = [];
-  
-  // Group credits by userId to combine multiple robots from same user
   const creditsByUser = new Map<number, number>();
+  const placementRewardsByUser = new Map<number, PlacementRewardComponent[]>();
   const prestigeByUser = new Map<number, number>();
   const fameByRobot = new Map<number, number>();
-  const streamingByUser = new Map<number, number>();
 
   preparedParticipants.forEach((p) => {
     if (p.rewards.credits > 0) {
       creditsByUser.set(p.robot.userId, (creditsByUser.get(p.robot.userId) ?? 0) + p.rewards.credits);
+      const placementRewards = placementRewardsByUser.get(p.robot.userId) ?? [];
+      placementRewards.push({
+        mode: 'koth',
+        robotId: p.robot.id,
+        tier: p.tier,
+        placement: p.placement,
+        credits: p.rewards.credits,
+        tierBaseReward: getLeagueWinReward(p.tier),
+        modeBaseMultiplier: KOTH_CREDIT_BASE_MULTIPLIER,
+        placementMultiplier: KOTH_PLACEMENT_CREDIT_MULTIPLIERS[p.placement] ?? 0.2,
+        zoneScore: p.zoneScore,
+        zoneTime: p.zoneTime,
+        uncontestedScore: p.uncontestedScore,
+        zoneDominanceBonus: p.rewards.zoneDominanceBonus,
+        zoneDominanceMultiplier: p.rewards.zoneDominanceBonus ? KOTH_ZONE_DOMINANCE_MULTIPLIER : 1,
+      });
+      placementRewardsByUser.set(p.robot.userId, placementRewards);
     }
     if (p.rewards.prestige > 0) {
       prestigeByUser.set(p.robot.userId, (prestigeByUser.get(p.robot.userId) ?? 0) + p.rewards.prestige);
@@ -438,56 +461,69 @@ async function processKothBattle(
     if (p.rewards.fame > 0) {
       fameByRobot.set(p.robot.id, (fameByRobot.get(p.robot.id) ?? 0) + p.rewards.fame);
     }
-    const streamingCalc = streamingCalcMap.get(p.robot.id);
-    if (streamingCalc) {
-      streamingByUser.set(p.robot.userId, (streamingByUser.get(p.robot.userId) ?? 0) + streamingCalc.totalRevenue);
-    }
   });
 
-  // Build transaction operations
-  for (const [userId, credits] of creditsByUser) {
-    const streaming = streamingByUser.get(userId) ?? 0;
-    const prestige = prestigeByUser.get(userId) ?? 0;
-    currencyUpdates.push(
-      prisma.user.update({
-        where: { id: userId },
-        data: {
-          currency: { increment: credits + streaming },
-          prestige: prestige > 0 ? { increment: prestige } : undefined,
+  await prisma.$transaction(async (tx) => {
+    for (const [userId, credits] of creditsByUser) {
+      await awardCreditsWithLedger(
+        userId,
+        credits,
+        'battle_income',
+        cycleNumber,
+        'KotH battle reward',
+        undefined,
+        { battleId: battle.id, placementMode: 'koth' },
+        {
+          battleId: battle.id,
+          mode: 'koth',
+          tier: 'placement_aggregate',
+          outcome: 'placement',
+          placement: null,
+          participationFloor: 0,
+          winComponent: 0,
+          teamSize: 1,
+          isBye: false,
+          placementRewardComponents: placementRewardsByUser.get(userId),
+          tx,
         },
-      })
-    );
-  }
+      );
+    }
 
-  for (const [robotId, fame] of fameByRobot) {
-    currencyUpdates.push(
-      prisma.robot.update({
+    for (const [userId, prestige] of prestigeByUser) {
+      await awardPrestigeToUser(userId, prestige, cycleNumber, {
+        source: 'battle',
+        mode: 'koth',
+        battleId: battle.id,
+        tx,
+      });
+    }
+
+    for (const [robotId, fame] of fameByRobot) {
+      await tx.robot.update({
         where: { id: robotId },
         data: { fame: { increment: fame } },
-      })
-    );
-  }
-
-  // Execute all currency updates in a single transaction
-  if (currencyUpdates.length > 0) {
-    await prisma.$transaction(currencyUpdates);
-  }
-
-  // 12. BATCHED: Update streaming revenue on BattleParticipant records
-  const streamingUpdates = preparedParticipants
-    .map((p) => {
-      const calc = streamingCalcMap.get(p.robot.id);
-      if (!calc) return null;
-      return prisma.battleParticipant.update({
-        where: { battleId_robotId: { battleId: battle.id, robotId: p.robot.id } },
-        data: { streamingRevenue: calc.totalRevenue },
       });
-    })
-    .filter((u): u is NonNullable<typeof u> => u !== null);
+    }
 
-  if (streamingUpdates.length > 0) {
-    await prisma.$transaction(streamingUpdates);
-  }
+    for (const participant of preparedParticipants) {
+      const streamingCalc = streamingCalcMap.get(participant.robot.id);
+      if (!streamingCalc) continue;
+      await awardBattleStreamingRevenue(
+        participant.robot.userId,
+        streamingCalc,
+        cycleNumber,
+        battle.id,
+        'koth',
+        tx,
+      );
+      await tx.battleParticipant.update({
+        where: {
+          battleId_robotId: { battleId: battle.id, robotId: participant.robot.id },
+        },
+        data: { streamingRevenue: streamingCalc.totalRevenue },
+      });
+    }
+  });
 
   // 13. BATCHED: Update KotH robot stats
   await batchUpdateKothRobotStats(preparedParticipants);
@@ -495,7 +531,7 @@ async function processKothBattle(
   // 13b. Check and award achievements for all participants (deferred — non-critical path)
   // Achievement checks are not required for battle results and can run asynchronously
   // like audit logging. This removes ~12-24 sequential DB queries from the critical path.
-  setImmediate(async () => {
+  defer('koth achievements', async () => {
     try {
       // Batch fetch previous battle loss data for all robots in one query
       const prevBattleResults = await prisma.battleParticipant.findMany({
@@ -540,7 +576,7 @@ async function processKothBattle(
 
   // 14. BATCHED: Log audit events (fire-and-forget for performance)
   // Audit logging is non-critical and can be done asynchronously
-  setImmediate(async () => {
+  defer('koth audit', async () => {
     try {
       for (let i = 0; i < preparedParticipants.length; i++) {
         const p = preparedParticipants[i];

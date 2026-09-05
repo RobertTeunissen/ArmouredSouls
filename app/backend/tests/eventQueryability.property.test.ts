@@ -1,22 +1,55 @@
+import { Prisma } from '../generated/prisma';
 import prisma from '../src/lib/prisma';
 import { QueryService } from '../src/services/common/queryService';
-import { EventLogger } from '../src/services/common/eventLogger';
 import fc from 'fast-check';
 
 const queryService = new QueryService();
-const eventLogger = new EventLogger();
+
+interface AuditFixture {
+  cycleNumber: number;
+  eventType: string;
+  userId?: number;
+  payload?: Record<string, unknown>;
+}
+
+/**
+ * Inserts deterministic audit fixtures for query behavior tests.
+ *
+ * QueryService neither invokes EventLogger nor relies on advisory-lock allocation.
+ * Supplying the required, contiguous per-cycle sequence numbers directly keeps these
+ * properties focused on filtering, sorting, and pagination while dedicated event
+ * logging and sequence suites continue to cover the gapless allocator.
+ */
+async function insertAuditFixtures(fixtures: readonly AuditFixture[]): Promise<void> {
+  const nextSequenceByCycle = new Map<number, number>();
+
+  await prisma.auditLog.createMany({
+    data: fixtures.map((fixture, index) => {
+      const sequenceNumber = nextSequenceByCycle.get(fixture.cycleNumber) ?? 1;
+      nextSequenceByCycle.set(fixture.cycleNumber, sequenceNumber + 1);
+
+      return {
+        cycleNumber: fixture.cycleNumber,
+        eventType: fixture.eventType,
+        eventTimestamp: new Date(Date.UTC(2026, 0, 1, 0, 0, index)),
+        sequenceNumber,
+        userId: fixture.userId,
+        payload: (fixture.payload ?? {}) as Prisma.InputJsonObject,
+      };
+    }),
+  });
+}
 
 /**
  * Property 5: Event Queryability
- * 
+ *
  * For any combination of filters (cycle range, user ID, robot ID, event type, date range),
  * the query service should return all matching audit log entries in the specified order.
- * 
+ *
  * Validates: Requirements 9.2, 9.5
  */
 describe('Property 5: Event Queryability', () => {
   beforeEach(async () => {
-    // Clean up test data
     await prisma.auditLog.deleteMany({});
   });
 
@@ -24,59 +57,36 @@ describe('Property 5: Event Queryability', () => {
     await prisma.$disconnect();
   });
 
-  /**
-   * Property 5.1: Cycle range filtering returns only events within range
-   * 
-   * For any cycle range, only events within that range should be returned.
-   */
   it('cycle range filtering returns only events within range', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.array(
-          fc.integer({ min: 1, max: 50 }),
-          { minLength: 5, maxLength: 20 }
-        ),
+        fc.array(fc.integer({ min: 1, max: 50 }), { minLength: 5, maxLength: 20 }),
         fc.integer({ min: 1, max: 50 }),
         fc.integer({ min: 1, max: 50 }),
         async (cycles, rangeStart, rangeEnd) => {
-          // Cleanup for this iteration
           await prisma.auditLog.deleteMany({});
+          const [start, end] = rangeStart <= rangeEnd ? [rangeStart, rangeEnd] : [rangeEnd, rangeStart];
 
-          // Ensure rangeStart <= rangeEnd
-          const [start, end] = rangeStart <= rangeEnd 
-            ? [rangeStart, rangeEnd] 
-            : [rangeEnd, rangeStart];
+          await insertAuditFixtures(cycles.map((cycle) => ({
+            cycleNumber: cycle,
+            eventType: 'cycle_start',
+            payload: { triggerType: 'manual' },
+          })));
 
-          // Create events in various cycles
-          for (const cycle of cycles) {
-            await eventLogger.logCycleStart(cycle, 'manual');
-          }
+          const result = await queryService.queryEvents({ cycleRange: [start, end] });
 
-          // Query events in range
-          const result = await queryService.queryEvents({
-            cycleRange: [start, end],
-          });
-
-          // Verify all returned events are within range
           for (const event of result.events) {
             expect(event.cycleNumber).toBeGreaterThanOrEqual(start);
             expect(event.cycleNumber).toBeLessThanOrEqual(end);
           }
 
-          // Verify count matches
-          const expectedCount = cycles.filter(c => c >= start && c <= end).length;
-          expect(result.events.length).toBe(expectedCount);
-        }
+          expect(result.events.length).toBe(cycles.filter((cycle) => cycle >= start && cycle <= end).length);
+        },
       ),
-      { numRuns: 15 }
+      { numRuns: 15 },
     );
   });
 
-  /**
-   * Property 5.2: User filtering returns only events for that user
-   * 
-   * For any user ID, only events associated with that user should be returned.
-   */
   it('user filtering returns only events for that user', async () => {
     await fc.assert(
       fc.asyncProperty(
@@ -86,95 +96,61 @@ describe('Property 5: Event Queryability', () => {
             userId: fc.integer({ min: 1, max: 20 }),
             amount: fc.integer({ min: -1000, max: 1000 }),
           }),
-          { minLength: 5, maxLength: 15 }
+          { minLength: 5, maxLength: 15 },
         ),
         async (targetUserId, events) => {
-          // Cleanup for this iteration
           await prisma.auditLog.deleteMany({});
+          await insertAuditFixtures(events.map((event) => ({
+            cycleNumber: 1,
+            eventType: 'credit_change',
+            userId: event.userId,
+            payload: { amount: event.amount, newBalance: 10000 + event.amount, source: 'battle' },
+          })));
 
-          // Create events for various users
-          for (const event of events) {
-            await eventLogger.logCreditChange(
-              1,
-              event.userId,
-              event.amount,
-              10000 + event.amount,
-              'battle'
-            );
-          }
+          const result = await queryService.queryEvents({ userId: targetUserId });
 
-          // Query events for target user
-          const result = await queryService.queryEvents({
-            userId: targetUserId,
-          });
-
-          // Verify all returned events belong to target user
           for (const event of result.events) {
             expect(event.userId).toBe(targetUserId);
           }
 
-          // Verify count matches
-          const expectedCount = events.filter(e => e.userId === targetUserId).length;
-          expect(result.events.length).toBe(expectedCount);
-        }
+          expect(result.events.length).toBe(events.filter((event) => event.userId === targetUserId).length);
+        },
       ),
-      { numRuns: 15 }
+      { numRuns: 15 },
     );
   });
 
-  /**
-   * Property 5.3: Event type filtering returns only matching types
-   * 
-   * For any set of event types, only events of those types should be returned.
-   */
   it('event type filtering returns only matching types', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.array(
-          fc.constantFrom('cycle_start', 'cycle_complete', 'cycle_step_complete'),
-          { minLength: 1, maxLength: 3 }
-        ),
+        fc.array(fc.constantFrom('cycle_start', 'cycle_complete', 'cycle_step_complete'), { minLength: 1, maxLength: 3 }),
         fc.integer({ min: 5, max: 15 }),
         async (targetTypes, numCycles) => {
-          // Cleanup for this iteration
           await prisma.auditLog.deleteMany({});
+          const fixtures: AuditFixture[] = [];
 
-          // Create various event types
-          let expectedCount = 0;
-          for (let i = 1; i <= numCycles; i++) {
-            await eventLogger.logCycleStart(i, 'manual');
-            if (targetTypes.includes('cycle_start')) expectedCount++;
-
-            await eventLogger.logCycleStepComplete(i, 'step_1', 1, 100);
-            if (targetTypes.includes('cycle_step_complete')) expectedCount++;
-
-            await eventLogger.logCycleComplete(i, 100);
-            if (targetTypes.includes('cycle_complete')) expectedCount++;
+          for (let cycle = 1; cycle <= numCycles; cycle += 1) {
+            fixtures.push(
+              { cycleNumber: cycle, eventType: 'cycle_start', payload: { triggerType: 'manual' } },
+              { cycleNumber: cycle, eventType: 'cycle_step_complete', payload: { stepName: 'step_1', stepNumber: 1, duration: 100 } },
+              { cycleNumber: cycle, eventType: 'cycle_complete', payload: { totalDuration: 100 } },
+            );
           }
+          await insertAuditFixtures(fixtures);
 
-          // Query events by type
-          const result = await queryService.queryEvents({
-            eventType: targetTypes,
-          });
+          const result = await queryService.queryEvents({ eventType: targetTypes });
 
-          // Verify all returned events match target types
           for (const event of result.events) {
             expect(targetTypes).toContain(event.eventType);
           }
 
-          // Verify count matches
-          expect(result.events.length).toBe(expectedCount);
-        }
+          expect(result.events.length).toBe(numCycles * new Set(targetTypes).size);
+        },
       ),
-      { numRuns: 25 }
+      { numRuns: 25 },
     );
   });
 
-  /**
-   * Property 5.4: Pagination returns correct subset
-   * 
-   * For any pagination parameters, the correct subset of events should be returned.
-   */
   it('pagination returns correct subset', async () => {
     await fc.assert(
       fc.asyncProperty(
@@ -182,87 +158,56 @@ describe('Property 5: Event Queryability', () => {
         fc.integer({ min: 1, max: 10 }),
         fc.integer({ min: 0, max: 5 }),
         async (totalEvents, pageSize, pageOffset) => {
-          // Cleanup for this iteration
           await prisma.auditLog.deleteMany({});
+          await insertAuditFixtures(Array.from({ length: totalEvents }, (_, index) => ({
+            cycleNumber: index + 1,
+            eventType: 'cycle_start',
+            payload: { triggerType: 'manual' },
+          })));
 
-          // Create events
-          for (let i = 1; i <= totalEvents; i++) {
-            await eventLogger.logCycleStart(i, 'manual');
-          }
-
-          // Query with pagination
           const offset = pageOffset * pageSize;
-          const result = await queryService.queryEvents({
-            limit: pageSize,
-            offset,
-          });
-
-          // Verify correct number of events returned
+          const result = await queryService.queryEvents({ limit: pageSize, offset });
           const expectedCount = Math.min(pageSize, Math.max(0, totalEvents - offset));
+
           expect(result.events.length).toBe(expectedCount);
-
-          // Verify hasMore flag
-          const expectedHasMore = offset + result.events.length < totalEvents;
-          expect(result.hasMore).toBe(expectedHasMore);
-
-          // Verify total count
+          expect(result.hasMore).toBe(offset + result.events.length < totalEvents);
           expect(result.total).toBe(totalEvents);
-        }
+        },
       ),
-      { numRuns: 15 }
+      { numRuns: 15 },
     );
   });
 
-  /**
-   * Property 5.5: Sorting maintains order
-   * 
-   * For any sort order, events should be returned in that order.
-   */
   it('sorting maintains order', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.array(
-          fc.integer({ min: 1, max: 20 }),
-          { minLength: 5, maxLength: 15 }
-        ),
+        fc.array(fc.integer({ min: 1, max: 20 }), { minLength: 5, maxLength: 15 }),
         fc.constantFrom('asc', 'desc'),
         async (cycles, sortOrder) => {
-          // Cleanup for this iteration
           await prisma.auditLog.deleteMany({});
+          await insertAuditFixtures(cycles.map((cycle) => ({
+            cycleNumber: cycle,
+            eventType: 'cycle_start',
+            payload: { triggerType: 'manual' },
+          })));
 
-          // Create events in random cycle order
-          for (const cycle of cycles) {
-            await eventLogger.logCycleStart(cycle, 'manual');
-          }
+          const result = await queryService.queryEvents({ sortBy: 'cycle', sortOrder: sortOrder as 'asc' | 'desc' });
 
-          // Query with sorting
-          const result = await queryService.queryEvents({
-            sortBy: 'cycle',
-            sortOrder: sortOrder as 'asc' | 'desc',
-          });
-
-          // Verify order
-          for (let i = 1; i < result.events.length; i++) {
-            const prev = result.events[i - 1].cycleNumber;
-            const curr = result.events[i].cycleNumber;
-
+          for (let index = 1; index < result.events.length; index += 1) {
+            const previous = result.events[index - 1].cycleNumber;
+            const current = result.events[index].cycleNumber;
             if (sortOrder === 'asc') {
-              expect(curr).toBeGreaterThanOrEqual(prev);
+              expect(current).toBeGreaterThanOrEqual(previous);
             } else {
-              expect(curr).toBeLessThanOrEqual(prev);
+              expect(current).toBeLessThanOrEqual(previous);
             }
           }
-        }
+        },
       ),
-      { numRuns: 15 }
+      { numRuns: 15 },
     );
   });
 
-  /**
-   * Property 5.6: Combined filters are applied correctly
-   * 
-   * For any combination of filters, all filters should be applied.
-   */
   it('combined filters are applied correctly', async () => {
     await fc.assert(
       fc.asyncProperty(
@@ -270,35 +215,24 @@ describe('Property 5: Event Queryability', () => {
         fc.integer({ min: 1, max: 5 }),
         fc.integer({ min: 6, max: 10 }),
         fc.array(
-          fc.record({
-            cycle: fc.integer({ min: 1, max: 10 }),
-            userId: fc.integer({ min: 1, max: 10 }),
-          }),
-          { minLength: 10, maxLength: 20 }
+          fc.record({ cycle: fc.integer({ min: 1, max: 10 }), userId: fc.integer({ min: 1, max: 10 }) }),
+          { minLength: 10, maxLength: 20 },
         ),
         async (targetUserId, rangeStart, rangeEnd, events) => {
-          // Cleanup for this iteration
           await prisma.auditLog.deleteMany({});
+          await insertAuditFixtures(events.map((event) => ({
+            cycleNumber: event.cycle,
+            eventType: 'credit_change',
+            userId: event.userId,
+            payload: { amount: 100, newBalance: 10100, source: 'battle' },
+          })));
 
-          // Create events
-          for (const event of events) {
-            await eventLogger.logCreditChange(
-              event.cycle,
-              event.userId,
-              100,
-              10100,
-              'battle'
-            );
-          }
-
-          // Query with combined filters
           const result = await queryService.queryEvents({
             userId: targetUserId,
             cycleRange: [rangeStart, rangeEnd],
             eventType: ['credit_change'],
           });
 
-          // Verify all filters are applied
           for (const event of result.events) {
             expect(event.userId).toBe(targetUserId);
             expect(event.cycleNumber).toBeGreaterThanOrEqual(rangeStart);
@@ -306,99 +240,64 @@ describe('Property 5: Event Queryability', () => {
             expect(event.eventType).toBe('credit_change');
           }
 
-          // Verify count matches
-          const expectedCount = events.filter(
-            e =>
-              e.userId === targetUserId &&
-              e.cycle >= rangeStart &&
-              e.cycle <= rangeEnd
-          ).length;
+          const expectedCount = events.filter((event) => (
+            event.userId === targetUserId && event.cycle >= rangeStart && event.cycle <= rangeEnd
+          )).length;
           expect(result.events.length).toBe(expectedCount);
-        }
+        },
       ),
-      { numRuns: 25 }
+      { numRuns: 25 },
     );
   });
 
-  /**
-   * Property 5.7: Empty result set handled correctly
-   * 
-   * For any filters that match no events, an empty result should be returned.
-   */
   it('empty result set handled correctly', async () => {
     await fc.assert(
       fc.asyncProperty(
         fc.integer({ min: 1, max: 10 }),
         fc.integer({ min: 100, max: 200 }),
         async (existingCycle, nonExistentCycle) => {
-          // Cleanup for this iteration
           await prisma.auditLog.deleteMany({});
+          await insertAuditFixtures([{
+            cycleNumber: existingCycle,
+            eventType: 'cycle_start',
+            payload: { triggerType: 'manual' },
+          }]);
 
-          // Create events in one cycle
-          await eventLogger.logCycleStart(existingCycle, 'manual');
-
-          // Query for non-existent cycle
-          const result = await queryService.queryEvents({
-            cycleNumber: nonExistentCycle,
-          });
-
-          // Verify empty result
+          const result = await queryService.queryEvents({ cycleNumber: nonExistentCycle });
           expect(result.events).toHaveLength(0);
           expect(result.total).toBe(0);
           expect(result.hasMore).toBe(false);
-        }
+        },
       ),
-      { numRuns: 25 }
+      { numRuns: 25 },
     );
   });
 
-  /**
-   * Property 5.8: Count matches filtered results
-   * 
-   * For any filters, the count should match the number of filtered events.
-   */
   it('count matches filtered results', async () => {
     await fc.assert(
       fc.asyncProperty(
         fc.array(
-          fc.record({
-            cycle: fc.integer({ min: 1, max: 20 }),
-            userId: fc.integer({ min: 1, max: 10 }),
-          }),
-          { minLength: 10, maxLength: 30 }
+          fc.record({ cycle: fc.integer({ min: 1, max: 20 }), userId: fc.integer({ min: 1, max: 10 }) }),
+          { minLength: 10, maxLength: 30 },
         ),
         fc.integer({ min: 1, max: 10 }),
         async (events, targetUserId) => {
-          // Cleanup for this iteration
           await prisma.auditLog.deleteMany({});
+          await insertAuditFixtures(events.map((event) => ({
+            cycleNumber: event.cycle,
+            eventType: 'credit_change',
+            userId: event.userId,
+            payload: { amount: 100, newBalance: 10100, source: 'battle' },
+          })));
 
-          // Create events
-          for (const event of events) {
-            await eventLogger.logCreditChange(
-              event.cycle,
-              event.userId,
-              100,
-              10100,
-              'battle'
-            );
-          }
+          const result = await queryService.queryEvents({ userId: targetUserId });
+          const count = await queryService.countEvents({ userId: targetUserId });
 
-          // Query with filters
-          const result = await queryService.queryEvents({
-            userId: targetUserId,
-          });
-
-          // Count with same filters
-          const count = await queryService.countEvents({
-            userId: targetUserId,
-          });
-
-          // Verify count matches
           expect(count).toBe(result.total);
           expect(count).toBe(result.events.length);
-        }
+        },
       ),
-      { numRuns: 25 }
+      { numRuns: 25 },
     );
   });
 });

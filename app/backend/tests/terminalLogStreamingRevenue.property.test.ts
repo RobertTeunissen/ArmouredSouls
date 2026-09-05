@@ -20,6 +20,9 @@ import prisma from '../src/lib/prisma';
 import { battlesForUsers, robotIdsForUsers, scheduledMatchesForRobots } from './cleanupHelper';
 import logger from '../src/config/logger';
 import Transport from 'winston-transport';
+import { usePostCutoverFinancialRollout } from './financialRolloutTestHelper';
+
+usePostCutoverFinancialRollout();
 
 // Helper function to create a minimal test robot
 async function createTestRobot(userId: number, battles: number, fame: number, name: string) {

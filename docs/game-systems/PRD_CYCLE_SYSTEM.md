@@ -144,7 +144,7 @@ Heavy modes (1v1 League, KotH) are spaced 5 hours apart. Reserved slots are no-o
 
 | Step | Action |
 |------|--------|
-| 1 | Calculate and credit passive income (merchandising, streaming) |
+| 1 | Calculate and credit passive income (merchandising only; Streaming Studio remains per-battle `streaming_revenue`) |
 | 2 | Calculate and debit operating costs (facilities, roster) |
 | 3 | Log end-of-cycle balances for all users |
 | 4 | Increment cycle counters (`cyclesInCurrentLeague`, `cyclesInTagTeamLeague`, `totalCycles`) |
@@ -153,6 +153,19 @@ Heavy modes (1v1 League, KotH) are spaced 5 hours apart. Reserved slots are no-o
 | 7 | Auto-generate users (if configured) |
 
 ---
+
+### Spec #53 settlement and financial evidence contract
+
+`User.currency` is the balance field used by settlement. `Settlement_Service` is the only mutating implementation: `cycleScheduler.ts`, `adminCycleService.ts`, and the supported `/api/admin/daily-finances/process` path delegate to it rather than maintaining separate balance updates. For each applicable stable and `cycleNumber`, it creates exactly two financial components in a deterministic order:
+
+1. one `passive_income` `FinancialLedger`/`AuditLog` `financial_transaction` pair; and
+2. one `operating_costs` pair.
+
+Both components are written even when their amount is zero. A zero-valued component records the completed formula calculation and unchanged `balanceAfter`; it is not an extra currency delta. Each component carries its stable/cycle/component identity and typed `Financial_Breakdown`, including Merchandising Hub, prestige/roster-capacity, facility/roster operating-cost, and rounding inputs. Per-battle Streaming Studio revenue remains `streaming_revenue`, not settlement income.
+
+The paired `FinancialLedger` row is the accounting/reporting record and the paired `AuditLog` row with `eventType` `financial_transaction` is the operational/security record. They share `financialEventId`, are written atomically with the `User.currency` update, and are idempotent on a stable/cycle/component identity. Existing `passive_income`, `operating_costs`, cycle snapshots, and admin response fields remain compatible during this capture-only change. The generic `/api/admin/audit-log` endpoint can query `financial_transaction` rows; `/api/admin/audit-log/repairs` remains focused on subtype-bearing `robot_repair` rows.
+
+Rerunning a settlement returns the existing component results and does not pay or charge twice. A failed paired write rolls back the component and its balance change. The existing snapshot backfill remains a derived snapshot operation; it is not permission to reconstruct, pair, or normalize pre-cutover financial history.
 
 ## 5. Admin Bulk Cycle
 
@@ -304,27 +317,29 @@ interface RobotMetric {
 
 The snapshot service (`cycleSnapshotService.ts`) aggregates from these AuditLog event types:
 
-| Event Type | Data Extracted |
-|------------|---------------|
-| `battle_complete` | Credits, streaming, prestige, fame, damage, wins/losses |
-| `passive_income` | Merchandising income |
-| `operating_costs` | Facility costs, roster costs |
-| `robot_repair` | Repair costs |
-| `weapon_purchase` | Weapon spending |
-| `facility_upgrade` | Facility spending |
-| `attribute_upgrade` | Attribute spending |
-| `robot_purchase` | Robot spending |
-| `cycle_end_balance` | End-of-cycle balance per user |
+| Event Type | Compatibility data extracted |
+|------------|-------------------------------|
+| `battle_complete` | Combat/display values: fame, damage, and wins/losses |
+| `passive_income` | Merchandising income compatibility data |
+| `operating_costs` | Facility and roster-cost compatibility data |
+| `robot_repair` | Repair domain data, including subtype-bearing charges |
+| `weapon_purchase` | Weapon-spending compatibility data |
+| `facility_upgrade` | Facility-spending compatibility data |
+| `attribute_upgrade` | Attribute-spending compatibility data |
+| `robot_purchase` | Robot-spending compatibility data |
+| `cycle_end_balance` | End-of-cycle balance compatibility data |
+
+This table does not define post-cutover financial accounting sources. Credits amounts, balances, and taxonomy use reconciled `FinancialLedger`/`financial_transaction` pairs by `financialEventId`; Repair_Spend uses `robot_repair`; prestige uses `prestige_change`.
 
 ### Backfill Capability
 
-Snapshots can be reconstructed from AuditLog at any time:
+Snapshot regeneration is a derived-projection repair only:
 
 ```
 POST /api/admin/snapshots/backfill
 ```
 
-Deletes existing snapshots and recreates them from AuditLog events. Use cases: fix corrupted snapshots, update aggregation logic, regenerate historical data.
+It may replace a `CycleSnapshot` using retained domain events, but it must never create, pair, relabel, normalize, or infer `FinancialLedger`, `financial_transaction`, repair, or prestige history. In particular, pre-cutover financial history is never reconstructed.
 
 ---
 
@@ -417,9 +432,9 @@ Achieved through one row per cycle, pre-aggregated metrics, and indexed `cycle_n
 
 ### Guarantees
 
-1. **AuditLog is source of truth** — all events written during execution, immutable once written
-2. **CycleSnapshot is derived** — 100% computed from AuditLog, can be regenerated at any time
-3. **Backfill ensures consistency** — detects and fixes corrupted snapshots
+1. **Domain AuditLog events are immutable inputs** — they feed compatibility projections but are not a universal financial source
+2. **CycleSnapshot is derived** — it may be regenerated without mutating source events or reconstructing historical financial pairs
+3. **Post-cutover accounting stays separate** — Credits use reconciled `FinancialLedger`/`financial_transaction` pairs, Repair_Spend uses `robot_repair`, and prestige uses `prestige_change`
 
 ### Battle Readiness Criteria
 
@@ -442,6 +457,14 @@ final_cost  = base_repair × damage_pct × multiplier × (1 - repair_bay_discoun
 ```
 
 Repair Bay discount: Level × (5 + Active Robot Count), capped at 90%.
+
+## Spec #53 cutover and reconciliation boundary
+
+The financial contract is forward-only. `Cutover_Cycle` is selected in `ACC` only after schema/client generation, all `Coverage_Manifest` writers, blocking tier checks, and required capture activation pass. Pre-cutover `financial_ledger` and `audit_logs` rows remain queryable `Legacy_Record` history where retained; they are not rewritten, paired, relabelled, or reconstructed. No service may substitute a `battle_complete` payload, cached repair quote, or current formula for a missing post-cutover canonical event, and no one-off historical reconstruction script may be added.
+
+Post-cutover reconciliation checks the paired `FinancialLedger`/`AuditLog` records by `financialEventId`, duplicate identities, amount and `balanceAfter` consistency, valid taxonomy and `Financial_Breakdown`, repair subtype/domain pairs, both settlement components including zero-valued rows, prestige `sourceEventId` records, and direct `User.currency` writers outside `Credit_Mutation_Service`. Diagnostics label pre-cutover gaps as outside the completeness claim rather than attempting to fix them.
+
+For financial questions, the paired records are the `Canonical_Source`; for repair spend, use `AuditLog` `robot_repair` rows with `creditsCharged` and `repairType`; for prestige, use `prestige_change` rows; for subscriptions and lifecycle, use their existing Booking Office and archive/lifecycle records. `Income_Dashboard`, `Cycle_Summary`, financial-page UI, and player-guide content are outside this capture change and remain consumers/regression surfaces for a later `Financial_Page_Follow_On`.
 
 ## Season Phase Gating (Spec #45)
 

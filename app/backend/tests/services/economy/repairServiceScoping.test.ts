@@ -10,9 +10,18 @@ const mockRobotFindMany = jest.fn();
 const mockRobotGroupBy = jest.fn();
 const mockRobotUpdate = jest.fn();
 const mockFacilityFindMany = jest.fn();
-const mockUserUpdate = jest.fn();
 const mockTransaction = jest.fn();
 const mockResolveRobotIdsForEvent = jest.fn();
+
+const mockTx = {
+  robot: {
+    findMany: (...args: unknown[]) => mockRobotFindMany(...args),
+    groupBy: (...args: unknown[]) => mockRobotGroupBy(...args),
+    update: (...args: unknown[]) => mockRobotUpdate(...args),
+  },
+  facility: { findMany: (...args: unknown[]) => mockFacilityFindMany(...args) },
+  $queryRaw: jest.fn().mockResolvedValue([{ id: 1, currency: 100000 }]),
+};
 
 jest.mock('../../../src/lib/prisma', () => ({
   __esModule: true,
@@ -24,18 +33,22 @@ jest.mock('../../../src/lib/prisma', () => ({
       fields: { maxHP: 'maxHP' },
     },
     facility: { findMany: (...args: unknown[]) => mockFacilityFindMany(...args) },
-    user: { update: (...args: unknown[]) => mockUserUpdate(...args) },
     $transaction: (...args: unknown[]) => mockTransaction(...args),
   },
+}));
+
+jest.mock('../../../src/lib/creditGuard', () => ({
+  lockUserForSpending: jest.fn().mockResolvedValue({ id: 1, currency: 100000 }),
+}));
+
+jest.mock('../../../src/services/financial/repairMutationService', () => ({
+  applyRepairCreditMutationInTransaction: jest.fn().mockResolvedValue({ created: true, balanceAfter: 100000 }),
+  buildRepairOperationId: jest.fn().mockReturnValue('test-repair-operation'),
 }));
 
 jest.mock('../../../src/config/logger', () => ({
   __esModule: true,
   default: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
-}));
-
-jest.mock('../../../src/services/common/eventLogger', () => ({
-  eventLogger: { logRobotRepair: jest.fn().mockResolvedValue(undefined) },
 }));
 
 jest.mock('../../../src/services/economy/repairScope', () => ({
@@ -69,9 +82,8 @@ beforeEach(() => {
   mockRobotFindMany.mockResolvedValue([]);
   mockRobotGroupBy.mockResolvedValue([]);
   mockFacilityFindMany.mockResolvedValue([]);
-  mockRobotUpdate.mockReturnValue({});
-  mockUserUpdate.mockReturnValue({});
-  mockTransaction.mockResolvedValue([]);
+  mockRobotUpdate.mockResolvedValue({});
+  mockTransaction.mockImplementation(async (callback: (tx: typeof mockTx) => Promise<unknown>) => callback(mockTx));
 });
 
 describe('repairRobotsForEvent', () => {

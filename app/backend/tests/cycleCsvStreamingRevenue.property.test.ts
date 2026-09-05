@@ -16,6 +16,9 @@ import { exportCycleBattlesToCSV } from '../src/services/cycle/cycleCsvExportSer
 import schedulingService from '../src/services/scheduling/schedulingService';
 import prisma from '../src/lib/prisma';
 import { battlesForRobots, battlesForUsers, robotIdsForUsers, scheduledMatchesForRobots } from './cleanupHelper';
+import { usePostCutoverFinancialRollout } from './financialRolloutTestHelper';
+
+usePostCutoverFinancialRollout();
 
 // Helper function to create a minimal test robot
 async function createTestRobot(userId: number, battles: number, fame: number, name: string) {

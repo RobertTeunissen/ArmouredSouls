@@ -20,6 +20,9 @@ import facilityRoutes from '../src/routes/facility';
 import { createTestUser, deleteTestUser } from './testHelpers';
 import { getFacilityConfig } from '../src/config/facilities';
 import { errorHandler } from '../src/middleware/errorHandler';
+import { usePostCutoverFinancialRollout } from './financialRolloutTestHelper';
+
+usePostCutoverFinancialRollout();
 
 dotenv.config();
 
@@ -38,11 +41,10 @@ app.use(errorHandler);
 /**
  * One listening server for the whole file.
  *
- * This is the highest-request suite in the repository: four properties at 20 runs each, and
- * every run drives up to 10 facility upgrades over HTTP — roughly 800 requests. With
- * `request(app)` makes supertest stand up and tear down an ephemeral server for every one of
- * them, and that churn intermittently returns HTTP 426 — a status nothing in this codebase
- * sends. Binding once removes it.
+ * This is a high-request suite: five properties run 10–20 generated cases each, and every
+ * case drives up to 10 facility upgrades over HTTP. `request(app)` makes supertest stand up
+ * and tear down an ephemeral server for every request, and that churn intermittently returns
+ * HTTP 426 — a status nothing in this codebase sends. Binding once removes it.
  *
  * Do NOT try to fix this by disabling `http.globalAgent` keep-alive. That was attempted and
  * reverted: with pooling off, every request opens and closes its own connection, which pushed
@@ -123,6 +125,7 @@ describe('Property 9: Streaming Studio Prestige Requirements', () => {
       await request(server)
         .post('/api/facility/upgrade')
         .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ facilityType: 'streaming_studio' });
     }
   }
@@ -176,6 +179,7 @@ describe('Property 9: Streaming Studio Prestige Requirements', () => {
               const response = await request(server)
                 .post('/api/facility/upgrade')
                 .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
                 .send({ facilityType: 'streaming_studio' });
               
               // Should succeed since we have enough prestige
@@ -193,6 +197,7 @@ describe('Property 9: Streaming Studio Prestige Requirements', () => {
           const response = await request(server)
             .post('/api/facility/upgrade')
             .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
             .send({ facilityType: 'streaming_studio' });
 
           // Property: If user prestige >= required prestige, upgrade should succeed
@@ -212,7 +217,8 @@ describe('Property 9: Streaming Studio Prestige Requirements', () => {
       ),
       { numRuns: 10 }
     );
-  }, 60000);
+  // Each generated case exercises real HTTP, Prisma, ledger, audit, and facility paths.
+  }, 120000);
 
   /**
    * Property 9.1: Levels 1-3 should never require prestige
@@ -242,6 +248,7 @@ describe('Property 9: Streaming Studio Prestige Requirements', () => {
             const response = await request(server)
               .post('/api/facility/upgrade')
               .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
               .send({ facilityType: 'streaming_studio' });
 
             // Property: Should always succeed regardless of prestige
@@ -297,6 +304,7 @@ describe('Property 9: Streaming Studio Prestige Requirements', () => {
             const setupResponse = await request(server)
               .post('/api/facility/upgrade')
               .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
               .send({ facilityType: 'streaming_studio' });
             // Assert the SETUP worked. Ignoring these responses is what let the facility
             // stop short of `targetLevel` and made the property read the wrong level's
@@ -314,6 +322,7 @@ describe('Property 9: Streaming Studio Prestige Requirements', () => {
           const failResponse = await request(server)
             .post('/api/facility/upgrade')
             .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
             .send({ facilityType: 'streaming_studio' });
 
           // Property: Should fail with insufficient prestige
@@ -330,6 +339,7 @@ describe('Property 9: Streaming Studio Prestige Requirements', () => {
           const successResponse = await request(server)
             .post('/api/facility/upgrade')
             .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
             .send({ facilityType: 'streaming_studio' });
 
           // Property: Should succeed with exact prestige requirement
@@ -339,7 +349,8 @@ describe('Property 9: Streaming Studio Prestige Requirements', () => {
       ),
       { numRuns: 15 }
     );
-  }, 60000);
+  // Each generated case exercises real HTTP, Prisma, ledger, audit, and facility paths.
+  }, 120000);
 
   /**
    * Property 9.3: Prestige requirements should match the configuration
@@ -395,6 +406,7 @@ describe('Property 9: Streaming Studio Prestige Requirements', () => {
             const setupResponse = await request(server)
               .post('/api/facility/upgrade')
               .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
               .send({ facilityType: 'streaming_studio' });
             // Assert the SETUP worked. Ignoring these responses is what let the facility
             // stop short of `targetLevel` and made the property read the wrong level's
@@ -412,6 +424,7 @@ describe('Property 9: Streaming Studio Prestige Requirements', () => {
           const response = await request(server)
             .post('/api/facility/upgrade')
             .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
             .send({ facilityType: 'streaming_studio' });
 
           // Property: Error response should contain all required fields
@@ -434,7 +447,8 @@ describe('Property 9: Streaming Studio Prestige Requirements', () => {
       ),
       { numRuns: 15 }
     );
-  }, 60000);
+  // Each generated case exercises real HTTP, Prisma, ledger, audit, and facility paths.
+  }, 120000);
 
   /**
    * Property 9.5: Prestige check should occur before currency check
@@ -468,6 +482,7 @@ describe('Property 9: Streaming Studio Prestige Requirements', () => {
             const setupResponse = await request(server)
               .post('/api/facility/upgrade')
               .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
               .send({ facilityType: 'streaming_studio' });
             // Assert the SETUP worked. Ignoring these responses is what let the facility
             // stop short of `targetLevel` and made the property read the wrong level's
@@ -485,6 +500,7 @@ describe('Property 9: Streaming Studio Prestige Requirements', () => {
           const response = await request(server)
             .post('/api/facility/upgrade')
             .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
             .send({ facilityType: 'streaming_studio' });
 
           // Property: Should fail with prestige error (not currency error)
@@ -496,5 +512,6 @@ describe('Property 9: Streaming Studio Prestige Requirements', () => {
       ),
       { numRuns: 20 }
     );
-  }, 60000);
+  // Each generated case exercises real HTTP, Prisma, ledger, audit, and facility paths.
+  }, 120000);
 });

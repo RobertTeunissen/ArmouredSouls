@@ -11,7 +11,11 @@ import logger from '../config/logger';
 import { AuthError, AuthErrorCode } from '../errors/authErrors';
 import { EconomyError, EconomyErrorCode } from '../errors/economyErrors';
 import { validateRequest } from '../middleware/schemaValidator';
-import { recordLedgerEntry } from '../services/financial/recordLedgerEntry';
+import { applyCreditMutationInTransaction } from '../services/financial/creditMutationService';
+import { getIdempotencyKey, idempotencyHeadersSchema } from '../utils/idempotency';
+import { createEconomicRequestIdentity, findCompletedEconomicRequest, findEconomicRequestReplay, buildEconomicRequestAuditContext } from '../services/financial/economicRequestReplayService';
+import { buildPurchaseBreakdown } from '../services/financial/financialBreakdowns';
+import { getCurrentCycleNumber } from '../services/battle/baseOrchestrator';
 import { securityMonitor } from '../services/security/securityMonitor';
 import { achievementService, type UnlockedAchievement } from '../services/achievement';
 // Spec #46 R11: Training Facility discount is roster-dependent.
@@ -157,9 +161,16 @@ router.get('/', authenticateToken, validateRequest({}), async (req: AuthRequest,
 });
 
 // Upgrade a facility
-router.post('/upgrade', authenticateToken, validateRequest({ body: upgradeBodySchema }), async (req: AuthRequest, res: Response) => {
+router.post('/upgrade', authenticateToken, validateRequest({ body: upgradeBodySchema, headers: idempotencyHeadersSchema }), async (req: AuthRequest, res: Response) => {
     const userId = req.user!.userId;
     const { facilityType } = req.body;
+    const requestKey = getIdempotencyKey(req.headers);
+    const identity = createEconomicRequestIdentity(userId, 'facility_upgrade', requestKey, { facilityType });
+    const replay = await findCompletedEconomicRequest<{ facility: unknown; currency: number; message: string }>(userId, 'facility_upgrade', requestKey, { facilityType });
+    if (replay) {
+      res.json({ ...replay.response, achievementUnlocks: [], replayed: true });
+      return;
+    }
 
     if (!facilityType) {
       throw new EconomyError(EconomyErrorCode.INVALID_FACILITY_TYPE, 'Facility type is required', 400);
@@ -244,6 +255,10 @@ router.post('/upgrade', authenticateToken, validateRequest({ body: upgradeBodySc
     const result = await prisma.$transaction(async (tx) => {
       // Acquire exclusive row lock — blocks concurrent purchases for this user
       const lockedUser = await lockUserForSpending(tx, userId);
+      const replayInTransaction = await findEconomicRequestReplay<{ facility: unknown; currency: number; message: string }>(tx, identity);
+      if (replayInTransaction) {
+        return { user: { currency: replayInTransaction.response.currency }, facility: replayInTransaction.response.facility, replayed: true };
+      }
 
       if (lockedUser.currency < upgradeCost) {
         throw new EconomyError(
@@ -276,12 +291,6 @@ router.post('/upgrade', authenticateToken, validateRequest({ body: upgradeBodySc
         );
       }
 
-      // Atomic currency decrement — safe because row is locked
-      const updatedUser = await tx.user.update({
-        where: { id: userId },
-        data: { currency: { decrement: upgradeCost } },
-      });
-
       // Upgrade or create facility
       let updatedFacility;
       if (freshFacility) {
@@ -299,8 +308,40 @@ router.post('/upgrade', authenticateToken, validateRequest({ body: upgradeBodySc
         });
       }
 
-      return { user: updatedUser, facility: updatedFacility };
+      const financialEventId = identity.financialEventId;
+      const coreResponse = {
+        facility: updatedFacility,
+        currency: lockedUser.currency - upgradeCost,
+        message: 'Facility upgraded successfully',
+      };
+      const financialResult = await applyCreditMutationInTransaction(tx, {
+        cycleNumber: await getCurrentCycleNumber(),
+        userId,
+        transactionType: 'facility_upgrade',
+        amount: -upgradeCost,
+        description: `Upgraded ${facilityType} to level ${targetLevel}`,
+        financialEventId,
+        breakdown: buildPurchaseBreakdown({
+          transactionType: 'facility_upgrade',
+          sourceEventId: financialEventId,
+          amount: -upgradeCost,
+          operation: currentLevel === 0 ? 'facility_purchase' : 'facility_upgrade',
+          facilityType,
+          previousLevel: currentLevel,
+          newLevel: targetLevel,
+          basePrice: upgradeCost,
+          discountAmount: 0,
+        }),
+        auditContext: buildEconomicRequestAuditContext(identity, coreResponse),
+      });
+
+      return { user: { currency: financialResult.balanceAfter }, facility: updatedFacility, replayed: false };
     });
+
+    if (result.replayed) {
+      res.json({ facility: result.facility, currency: result.user.currency, message: 'Facility upgraded successfully', achievementUnlocks: [], replayed: true });
+      return;
+    }
 
     // Log facility transaction event
     try {
@@ -336,14 +377,6 @@ router.post('/upgrade', authenticateToken, validateRequest({ body: upgradeBodySc
       logger.error('Failed to log facility transaction event:', logError);
       // Don't fail the request if logging fails
     }
-
-    // Record financial ledger entry (non-blocking)
-    recordLedgerEntry({
-      userId, transactionType: 'facility_upgrade',
-      amount: -upgradeCost, balanceAfter: result.user.currency,
-      description: `Upgraded ${facilityType} to level ${targetLevel}`,
-      metadata: { facilityType, newLevel: targetLevel },
-    });
 
     res.json({
       facility: result.facility,

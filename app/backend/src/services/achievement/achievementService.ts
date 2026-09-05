@@ -19,6 +19,10 @@ import logger from '../../config/logger';
 import { getAchievementsByTriggerType } from '../../config/achievements';
 import { eventLogger } from '../common/eventLogger';
 import { getCurrentCycle } from '../analytics/cycleAnalyticsService';
+import { applyCreditMutationInTransaction } from '../financial/creditMutationService';
+import { applyPrestigeAwardInTransaction } from '../financial/prestigeService';
+import { buildAchievementRewardEventId, buildAchievementPrestigeEventId } from '../financial/financialEventIdentity';
+import { buildAchievementRewardBreakdown } from '../financial/financialBreakdowns';
 
 import {
   type AchievementEvent,
@@ -130,21 +134,71 @@ class AchievementService implements IAchievementService {
           const effectiveRobotId = achievement.scope === 'robot' ? robotId : null;
 
           try {
-            await prisma.userAchievement.create({
-              data: { userId, achievementId: achievement.id, robotId: effectiveRobotId },
+            const { cycleNumber } = await getCurrentCycle();
+            await prisma.$transaction(async (tx) => {
+              const unlock = await tx.userAchievement.create({
+                data: { userId, achievementId: achievement.id, robotId: effectiveRobotId },
+              });
+
+              const financialEventId = buildAchievementRewardEventId(unlock.id, userId);
+              const creditResult = await applyCreditMutationInTransaction(tx, {
+                cycleNumber,
+                userId,
+                robotId: effectiveRobotId ?? undefined,
+                transactionType: 'achievement_reward',
+                amount: achievement.rewardCredits,
+                description: `Achievement reward: ${achievement.name}`,
+                financialEventId,
+                breakdown: buildAchievementRewardBreakdown({
+                  sourceEventId: financialEventId,
+                  amount: achievement.rewardCredits,
+                  achievementId: achievement.id,
+                  unlockId: unlock.id,
+                  baseReward: achievement.rewardCredits,
+                }),
+                auditContext: {
+                  achievementId: achievement.id,
+                  unlockId: unlock.id,
+                  achievementName: achievement.name,
+                },
+              });
+
+              if (achievement.rewardPrestige > 0) {
+                const prestigeEventId = buildAchievementPrestigeEventId(unlock.id, userId);
+                await applyPrestigeAwardInTransaction(tx, {
+                  cycleNumber,
+                  userId,
+                  amount: achievement.rewardPrestige,
+                  source: 'achievement',
+                  sourceEventId: prestigeEventId,
+                  achievementId: achievement.id,
+                  breakdown: {
+                    schemaVersion: 1,
+                    formula: 'achievement.prestige',
+                    formulaVersion: '1',
+                    inputs: [{ name: 'awardAmount', value: achievement.rewardPrestige, unit: 'prestige', source: 'achievement_definition' }],
+                    modifiers: [],
+                    rounding: { precision: 0, mode: 'none', operationOrder: ['awardAmount'], scope: 'aggregate' },
+                    sourceEventId: prestigeEventId,
+                    source: 'achievement',
+                    awardAmount: achievement.rewardPrestige,
+                    mode: null,
+                    battleId: null,
+                    achievementId: achievement.id,
+                  },
+                  auditContext: {
+                    achievementId: achievement.id,
+                    unlockId: unlock.id,
+                    achievementName: achievement.name,
+                  },
+                });
+              }
+
+              return { unlock, creditResult };
             });
 
-            await prisma.user.update({
-              where: { id: userId },
-              data: {
-                currency: { increment: achievement.rewardCredits },
-                prestige: { increment: achievement.rewardPrestige },
-              },
-            });
-
-            // Log audit event
+            // Log the compatibility achievement event after the required pair commits.
             try {
-              const { cycleNumber } = await getCurrentCycle();
               if (cycleNumber > 0) {
                 await eventLogger.logAchievementUnlock(
                   cycleNumber, userId, achievement.id,

@@ -36,6 +36,7 @@ import {
   logBattleAuditEvent,
   updateRobotCombatStats,
 } from './battlePostCombat';
+import { buildByeBattleIncomeEventId } from '../financial/financialEventIdentity';
 import standingsService from '../standings/standingsService';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -231,7 +232,43 @@ export async function resolveByeEvent(
     return { battleId: winningBattleId, creditsPaid: 0, alreadyResolved: true };
   }
 
-  // ── 3. Participant rows: inert by construction ──
+  // ── 3. Pay before recording compatibility rows ──
+  //
+  // Claim-before-payment intentionally favors a detectable missing reward over
+  // duplicate payment. Payment must also precede participants: if it fails, the
+  // claimed queued row points at a battle with no participants, which is the
+  // reconciliation signature for an unpaid Bye_Event.
+  const byeTier = 'tier' in input.context ? input.context.tier : 'tournament_round';
+  const byeSourceId = input.claim.source === 'scheduled_match'
+    ? input.claim.scheduledMatchId
+    : input.claim.tournamentMatchId;
+  const financialEventId = buildByeBattleIncomeEventId(
+    byeSourceId,
+    input.stableUserId,
+    input.mode,
+  );
+  await awardCreditsWithLedger(
+    input.stableUserId,
+    reward.credits,
+    'battle_income',
+    input.cycleNumber,
+    `${input.mode} bye reward`,
+    undefined,
+    { battleId: battle.id, scheduledMatchId: byeSourceId, isBye: true },
+    {
+      battleId: battle.id,
+      sourceEventId: financialEventId,
+      mode: input.mode,
+      tier: byeTier,
+      outcome: 'bye',
+      participationFloor: reward.credits,
+      winComponent: 0,
+      teamSize: spec.teamSize,
+      isBye: true,
+    },
+  );
+
+  // ── 4. Participant rows: inert by construction ──
   const shares = distributeTeamCredits(
     reward.credits,
     realParticipants.map(p => ({ robotId: p.id })),
@@ -323,16 +360,7 @@ export async function resolveByeEvent(
     }
   }
 
-  // ── 7. Pay ──
-  await awardCreditsWithLedger(
-    input.stableUserId,
-    reward.credits,
-    'battle_income',
-    input.cycleNumber,
-    `${input.mode} bye reward`,
-  );
-
-  // ── 8. Audit rows, one per real robot, never fatal ──
+  // ── 7. Audit rows, one per real robot, never fatal ──
   for (const p of realParticipants) {
     try {
       await logBattleAuditEvent(

@@ -1,14 +1,14 @@
 /**
- * Factory for creating valid FinancialLedger entries.
+ * Factory for FinancialLedger reader tests.
  *
- * Supports all 12 transaction types with appropriate sign conventions:
- * - Income types: positive amounts (default 1000)
- * - Expense types: negative amounts (default -500)
- *
- * Types defined locally to match the Prisma schema from Spec #40.
- * Once `prisma generate` is run after Tasks 1.1–1.5, these can be
- * replaced with imports from '../../generated/prisma'.
+ * The taxonomy is imported from the production type barrel so fixtures cannot
+ * silently reintroduce an obsolete new-writer label.
  */
+
+import {
+  TRANSACTION_TYPES,
+  type TransactionType,
+} from '../../src/types';
 
 export interface FinancialLedger {
   id: number;
@@ -20,34 +20,16 @@ export interface FinancialLedger {
   balanceAfter: number;
   description: string;
   metadata: Record<string, unknown> | null;
+  financialEventId?: string | null;
   createdAt: Date;
 }
-
-let ledgerIdCounter = 1000;
-
-const TRANSACTION_TYPES = [
-  'battle_income',
-  'streaming_revenue',
-  'repair_cost',
-  'facility_upgrade',
-  'weapon_purchase',
-  'weapon_sale',
-  'weapon_refinement',
-  'robot_creation',
-  'subscription_cost',
-  'prestige_award',
-  'attribute_upgrade',
-  'settlement_adjustment',
-] as const;
-
-type TransactionType = (typeof TRANSACTION_TYPES)[number];
 
 const INCOME_TYPES: TransactionType[] = [
   'battle_income',
   'streaming_revenue',
   'weapon_sale',
-  'prestige_award',
-  'settlement_adjustment',
+  'achievement_reward',
+  'passive_income',
 ];
 
 const EXPENSE_TYPES: TransactionType[] = [
@@ -56,9 +38,11 @@ const EXPENSE_TYPES: TransactionType[] = [
   'weapon_purchase',
   'weapon_refinement',
   'robot_creation',
-  'subscription_cost',
   'attribute_upgrade',
+  'operating_costs',
 ];
+
+let ledgerIdCounter = 1000;
 
 function isIncomeType(type: TransactionType): boolean {
   return INCOME_TYPES.includes(type);
@@ -78,18 +62,14 @@ function getDefaultDescription(type: TransactionType): string {
     weapon_sale: 'Weapon sold to shop',
     weapon_refinement: 'Weapon refinement cost',
     robot_creation: 'New robot construction',
-    subscription_cost: 'Event subscription fee',
-    prestige_award: 'Prestige milestone reward',
     attribute_upgrade: 'Attribute upgrade cost',
-    settlement_adjustment: 'End-of-cycle settlement',
+    achievement_reward: 'Achievement reward',
+    passive_income: 'Cycle passive income',
+    operating_costs: 'Cycle operating costs',
   };
   return descriptions[type];
 }
 
-/**
- * Creates a valid FinancialLedger entry with sensible defaults.
- * Amount defaults to 1000 (income) or -500 (expense) based on transaction type.
- */
 export function createLedgerEntry(overrides?: Partial<FinancialLedger>): FinancialLedger {
   const id = overrides?.id ?? ++ledgerIdCounter;
   const transactionType = (overrides?.transactionType ?? 'battle_income') as TransactionType;
@@ -106,19 +86,16 @@ export function createLedgerEntry(overrides?: Partial<FinancialLedger>): Financi
     balanceAfter,
     description: getDefaultDescription(transactionType),
     metadata: null,
+    financialEventId: null,
     createdAt: new Date(),
   };
 
   return { ...base, ...overrides };
 }
 
-/**
- * Creates a ledger entry pre-configured for a specific transaction type.
- * Income types get positive amounts, expense types get negative amounts.
- */
 export function createLedgerEntryForType(
   transactionType: TransactionType,
-  overrides?: Partial<FinancialLedger>
+  overrides?: Partial<FinancialLedger>,
 ): FinancialLedger {
   return createLedgerEntry({ transactionType, ...overrides });
 }

@@ -32,6 +32,7 @@ import { EventLogger, EventType } from '../common/eventLogger';
 import { JobContext } from '../notifications/integration';
 import { buildSuccessMessage, buildErrorMessage, getActiveIntegrations, dispatchNotification } from '../notifications/notification-service';
 import { SCHEDULER_JOB_NAMES, type SchedulerJobName } from './schedulerJobNames';
+import { settlementService } from '../financial/settlementService';
 
 const eventLogger = new EventLogger();
 
@@ -316,154 +317,19 @@ export async function executeSettlement(): Promise<JobContext> {
   // Log cycle start event (required for snapshot creation)
   await eventLogger.logCycleStart(currentCycleNumber, 'scheduled');
 
-  // Step 1: Calculate and credit passive income for all users
-  logger.info('Daily Settlement: Step 1 — Processing passive income');
-  const { calculateMerchandisingIncome, calculateFacilityOperatingCost, getRosterCapacity } = await import('../../utils/economyCalculations');
-
-  const allUsers = await prisma.user.findMany({
-    where: {},
-    select: { id: true, prestige: true },
+  // Step 1: Calculate and record both settlement components for all users.
+  // Settlement_Service owns the formulas, paired financial mutations, zero
+  // component policy, and compatibility domain audit rows.
+  logger.info('Daily Settlement: Processing passive income and operating costs');
+  const settlementResult = await settlementService.settleCycle({
+    cycleNumber: currentCycleNumber,
+    includeAdmins: true,
   });
-
-  const userIds = allUsers.map(u => u.id);
-
-  // Batch-load all facilities and robots for all users (2 queries instead of 2N)
-  const [allFacilities, allRobots] = await Promise.all([
-    prisma.facility.findMany({ where: { userId: { in: userIds } } }),
-    prisma.robot.findMany({
-      where: { userId: { in: userIds } },
-      select: { id: true, userId: true, totalBattles: true, fame: true, name: true },
-    }),
-  ]);
-
-  // Group by userId in memory
-  const facilitiesByUser = new Map<number, typeof allFacilities>();
-  for (const f of allFacilities) {
-    if (!facilitiesByUser.has(f.userId)) facilitiesByUser.set(f.userId, []);
-    facilitiesByUser.get(f.userId)!.push(f);
-  }
-  const robotsByUser = new Map<number, typeof allRobots>();
-  for (const r of allRobots) {
-    if (!robotsByUser.has(r.userId)) robotsByUser.set(r.userId, []);
-    robotsByUser.get(r.userId)!.push(r);
-  }
-
-  let totalPassiveIncome = 0;
-  let totalOperatingCosts = 0;
-
-  // Collect audit events for batch insertion
-  const passiveIncomeEvents: Array<{
-    eventType: typeof import('../common/eventLogger').EventType.PASSIVE_INCOME;
-    payload: Record<string, unknown>;
-    userId: number;
-  }> = [];
-
-  for (const user of allUsers) {
-    const userFacilities = facilitiesByUser.get(user.id) || [];
-    const merchHub = userFacilities.find(f => f.facilityType === 'merchandising_hub');
-    const merchLevel = merchHub?.level || 0;
-
-    // Roster_Capacity comes from the facility rows already batch-loaded above,
-    // so no per-user query is added (Spec #46 R2.8)
-    const rosterExpansion = userFacilities.find(f => f.facilityType === 'roster_expansion');
-    const rosterCapacity = getRosterCapacity(rosterExpansion?.level ?? 0);
-    const prestigePerSlot = user.prestige / rosterCapacity;
-
-    const merchandising = calculateMerchandisingIncome(merchLevel, user.prestige, rosterCapacity);
-
-    if (merchandising > 0) {
-      const userRobots = robotsByUser.get(user.id) || [];
-      const totalBattles = userRobots.reduce((sum, r) => sum + r.totalBattles, 0);
-      const totalFame = userRobots.reduce((sum, r) => sum + r.fame, 0);
-
-      passiveIncomeEvents.push({
-        eventType: EventType.PASSIVE_INCOME,
-        payload: {
-          merchandising,
-          streaming: 0,
-          totalIncome: merchandising,
-          facilityLevel: merchLevel,
-          prestige: user.prestige,
-          // Recorded so merchandising income can be reconciled after the fact
-          // without re-deriving capacity from historical facility state (R2.9)
-          rosterCapacity,
-          prestigePerSlot: Number(prestigePerSlot.toFixed(2)),
-          totalBattles,
-          totalFame,
-        },
-        userId: user.id,
-      });
-
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { currency: { increment: merchandising } },
-      });
-
-      totalPassiveIncome += merchandising;
-    }
-  }
-
-  // Batch-insert passive income audit events
-  if (passiveIncomeEvents.length > 0) {
-    await eventLogger.logEventBatch(currentCycleNumber, passiveIncomeEvents);
-  }
+  const totalPassiveIncome = settlementResult.totalPassiveIncome;
+  const totalOperatingCosts = settlementResult.totalOperatingCosts;
   logger.info(`Daily Settlement: Passive income credited — ₡${totalPassiveIncome.toLocaleString()}`);
-
-  // Step 2: Calculate and debit operating costs for all users
-  logger.info('Daily Settlement: Step 2 — Processing operating costs');
-
-  const operatingCostEvents: Array<{
-    eventType: typeof import('../common/eventLogger').EventType.OPERATING_COSTS;
-    payload: Record<string, unknown>;
-    userId: number;
-  }> = [];
-
-  for (const user of allUsers) {
-    const userFacilities = facilitiesByUser.get(user.id) || [];
-    const userRobots = robotsByUser.get(user.id) || [];
-
-    const facilityCosts = userFacilities.map(f => ({
-      facilityType: f.facilityType,
-      level: f.level,
-      cost: calculateFacilityOperatingCost(f.facilityType, f.level),
-    }));
-
-    let totalCost = facilityCosts.reduce((sum, f) => sum + f.cost, 0);
-
-    if (userRobots.length > 1) {
-      const rosterCost = (userRobots.length - 1) * 500;
-      facilityCosts.push({
-        facilityType: 'roster_expansion',
-        level: 0,
-        cost: rosterCost,
-      });
-      totalCost += rosterCost;
-    }
-
-    if (totalCost > 0) {
-      operatingCostEvents.push({
-        eventType: EventType.OPERATING_COSTS,
-        payload: {
-          costs: facilityCosts.filter(f => f.cost > 0),
-          totalCost,
-        },
-        userId: user.id,
-      });
-
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { currency: { decrement: totalCost } },
-      });
-
-      totalOperatingCosts += totalCost;
-    }
-  }
-
-  // Batch-insert operating cost audit events
-  if (operatingCostEvents.length > 0) {
-    await eventLogger.logEventBatch(currentCycleNumber, operatingCostEvents);
-  }
   logger.info(`Daily Settlement: Operating costs debited — ₡${totalOperatingCosts.toLocaleString()}`);
+
 
   // Check for bankrupt users and award daily_finances achievements
   try {

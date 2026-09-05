@@ -1,12 +1,18 @@
 import prisma from '../../lib/prisma';
+import { lockUserForSpending } from '../../lib/creditGuard';
 import logger from '../../config/logger';
-import { calculateMaxHP } from '../../utils/robotCalculations';
-import { calculateAttributeSum } from '../../utils/robotCalculations';
-import { calculateRepairQuote } from '../../shared/utils/repairCost';
+import { calculateMaxHP, calculateAttributeSum } from '../../utils/robotCalculations';
+import {
+  calculateRepairQuote,
+  calculateRepairBayDiscountPercent,
+} from '../../shared/utils/repairCost';
+import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
+import {
+  applyRepairCreditMutationInTransaction,
+  buildRepairOperationId,
+} from '../financial/repairMutationService';
 
-/**
- * Shape returned by repairAllRobotsAdmin — matches the original inline response.
- */
+/** Shape returned by repairAllRobotsAdmin — matches the existing admin response. */
 export interface AdminRepairResult {
   success: boolean;
   robotsRepaired: number;
@@ -26,9 +32,7 @@ export interface AdminRepairResult {
   timestamp: string;
 }
 
-/**
- * Shape returned by recalculateAllRobotHP — matches the original inline response.
- */
+/** Shape returned by recalculateAllRobotHP — matches the existing admin response. */
 export interface AdminRecalculateHPResult {
   success: boolean;
   robotsUpdated: number;
@@ -44,127 +48,145 @@ export interface AdminRecalculateHPResult {
 }
 
 /**
- * Repair all robots to full HP/shield via admin panel.
- * Extracted from the POST /api/admin/repair/all route handler.
+ * Repair all damaged robots to full HP/shield via the admin panel.
+ *
+ * An explicitly charged admin run is an Automatic_Repair operation: every
+ * robot gets its own financial identity, financial pair and robot_repair source
+ * row inside the same transaction as its state and lifetime update. The
+ * existing `deductCosts: false` compatibility mode remains nonfinancial.
  */
 export async function repairAllRobotsAdmin(deductCosts: boolean): Promise<AdminRepairResult> {
   logger.info('[Admin] Auto-repairing all robots...');
+  const cycleNumber = await getCurrentCycleNumber();
 
-  // Get all robots that need repair
-  const robots = await prisma.robot.findMany({
-    where: {
-      currentHP: {
-        lt: prisma.robot.fields.maxHP,
-      },
-    },
-    select: {
-      id: true,
-      name: true,
-      userId: true,
-      currentHP: true,
-      maxHP: true,
-      maxShield: true,
-    },
+  const result = await prisma.$transaction(async (tx) => {
+    const where = { currentHP: { lt: prisma.robot.fields.maxHP } };
+    const initialRobots = await tx.robot.findMany({ where });
+    if (initialRobots.length === 0) {
+      return { robotsRepaired: 0, repairs: [] as AdminRepairResult['repairs'] };
+    }
+
+    const initialUserIds = [...new Set(initialRobots.map((robot) => robot.userId))].sort((a, b) => a - b);
+    for (const userId of initialUserIds) {
+      await lockUserForSpending(tx, userId);
+    }
+
+    const robots = await tx.robot.findMany({ where });
+    if (robots.length === 0) {
+      return { robotsRepaired: 0, repairs: [] as AdminRepairResult['repairs'] };
+    }
+
+    const robotsByUser = new Map<number, typeof robots>();
+    for (const robot of robots) {
+      const existing = robotsByUser.get(robot.userId);
+      if (existing) existing.push(robot);
+      else robotsByUser.set(robot.userId, [robot]);
+    }
+
+    const userIds = [...robotsByUser.keys()].sort((a, b) => a - b);
+    const [facilities, robotCounts] = await Promise.all([
+      tx.facility.findMany({
+        where: { userId: { in: userIds }, facilityType: 'repair_bay' },
+      }),
+      tx.robot.groupBy({
+        by: ['userId'],
+        where: { userId: { in: userIds } },
+        _count: { id: true },
+      }),
+    ]);
+    const facilityByUser = new Map(facilities.map((facility) => [facility.userId, facility]));
+    const robotCountByUser = new Map(robotCounts.map((row) => [row.userId, row._count.id]));
+    const repairs: AdminRepairResult['repairs'] = [];
+
+    for (const userId of userIds) {
+      const userRobots = [...(robotsByUser.get(userId) ?? [])].sort((a, b) => a.id - b.id);
+      const repairBayLevel = facilityByUser.get(userId)?.level ?? 0;
+      const activeRobotCount = robotCountByUser.get(userId) ?? 0;
+      const repairBayDiscount = calculateRepairBayDiscountPercent({ repairBayLevel, activeRobotCount });
+      const operationId = buildRepairOperationId('admin', cycleNumber, userId, userRobots);
+
+      for (const robot of userRobots) {
+        const attributeTotal = calculateAttributeSum(robot);
+        const damageRepaired = robot.maxHP - robot.currentHP;
+        const damagePercent = (damageRepaired / robot.maxHP) * 100;
+        const hpPercent = (robot.currentHP / robot.maxHP) * 100;
+        const baseQuote = calculateRepairQuote(
+          { attributeTotal, damagePercent, hpPercent },
+          { repairBayLevel: 0, activeRobotCount: 0 },
+        );
+        const repairCost = calculateRepairQuote(
+          { attributeTotal, damagePercent, hpPercent },
+          { repairBayLevel, activeRobotCount },
+        );
+
+        let created = true;
+        if (deductCosts) {
+          const financialResult = await applyRepairCreditMutationInTransaction({
+            tx,
+            cycleNumber,
+            operationId,
+            userId,
+            robotId: robot.id,
+            repairType: 'automatic',
+            charge: repairCost,
+            description: 'Administrative automatic repair of 1 robot',
+            baseQuote,
+            damageRepaired,
+            repairBayLevel,
+            activeRobotCount,
+            repairBayDiscountPercent: repairBayDiscount,
+            manualRepairDiscountPercent: 0,
+            quoteBeforeManualDiscount: repairCost,
+            attributeTotal,
+            damagePercent,
+            hpPercent,
+            auditContext: {
+              operationType: 'admin_maintenance_repair',
+              repairType: 'automatic',
+              adminMaintenance: true,
+            },
+          });
+          created = financialResult.created;
+        }
+
+        if (!deductCosts || created) {
+          await tx.robot.update({
+            where: { id: robot.id },
+            data: {
+              currentHP: robot.maxHP,
+              currentShield: robot.maxShield,
+              repairQuoteCredits: 0,
+              battleReadiness: 100,
+              lifetimeRepairCreditsPaid: { increment: deductCosts ? repairCost : 0 },
+            },
+          });
+        }
+
+        repairs.push({
+          robotId: robot.id,
+          robotName: robot.name,
+          userId: robot.userId,
+          hpRestored: damageRepaired,
+          // The compatibility response has always exposed the already
+          // Repair-Bay-discounted quote in both cost fields.
+          baseCost: repairCost,
+          discount: 0,
+          finalCost: repairCost,
+          costDeducted: deductCosts,
+        });
+      }
+    }
+
+    return { robotsRepaired: robots.length, repairs };
   });
-
-  const repairs: AdminRepairResult['repairs'] = [];
-
-  // Group robots by user to apply facility discounts
-  const robotsByUser = new Map<number, typeof robots>();
-  for (const robot of robots) {
-    if (!robotsByUser.has(robot.userId)) {
-      robotsByUser.set(robot.userId, []);
-    }
-    robotsByUser.get(robot.userId)!.push(robot);
-  }
-
-  for (const [userId, userRobots] of robotsByUser.entries()) {
-    // Get repair bay facility for discounts
-    const repairBay = await prisma.facility.findFirst({
-      where: {
-        userId,
-        facilityType: 'repair_bay',
-      },
-    });
-
-    const repairBayLevel = repairBay?.level || 0;
-
-    // Query active robot count for multi-robot discount
-    const activeRobotCount = await prisma.robot.count({
-      where: {
-        userId,
-
-      },
-    });
-
-    let totalUserRepairCost = 0;
-
-    for (const robot of userRobots) {
-      // Fetch full robot data for attribute calculation
-      const fullRobot = await prisma.robot.findUnique({
-        where: { id: robot.id },
-      });
-
-      if (!fullRobot) continue;
-
-      // Use the SAME calculation as repairService.ts
-      const sumOfAllAttributes = calculateAttributeSum(fullRobot);
-      const damageTaken = fullRobot.maxHP - fullRobot.currentHP;
-      const damagePercent = (damageTaken / fullRobot.maxHP) * 100;
-      const hpPercent = (fullRobot.currentHP / fullRobot.maxHP) * 100;
-
-      const repairCost = calculateRepairQuote(
-        { attributeTotal: sumOfAllAttributes, damagePercent, hpPercent },
-        { repairBayLevel, activeRobotCount },
-      );
-
-      const hpToRestore = robot.maxHP - robot.currentHP;
-
-      // Update robot HP and set battle ready
-      await prisma.robot.update({
-        where: { id: robot.id },
-        data: {
-          currentHP: robot.maxHP,
-          currentShield: robot.maxShield,
-          repairQuoteCredits: 0,
-          battleReadiness: 100,
-        },
-      });
-
-      totalUserRepairCost += repairCost;
-
-      repairs.push({
-        robotId: robot.id,
-        robotName: robot.name,
-        userId: robot.userId,
-        hpRestored: hpToRestore,
-        baseCost: repairCost,
-        discount: 0, // Discount already included in calculation
-        finalCost: repairCost,
-        costDeducted: deductCosts,
-      });
-    }
-
-    // Deduct costs if requested
-    if (deductCosts && totalUserRepairCost > 0) {
-      await prisma.user.update({
-        where: { id: userId },
-        data: {
-          currency: {
-            decrement: totalUserRepairCost,
-          },
-        },
-      });
-    }
-  }
 
   return {
     success: true,
-    robotsRepaired: robots.length,
-    totalBaseCost: repairs.reduce((sum, r) => sum + r.baseCost, 0),
-    totalFinalCost: repairs.reduce((sum, r) => sum + r.finalCost, 0),
+    robotsRepaired: result.robotsRepaired,
+    totalBaseCost: result.repairs.reduce((sum, repair) => sum + repair.baseCost, 0),
+    totalFinalCost: result.repairs.reduce((sum, repair) => sum + repair.finalCost, 0),
     costsDeducted: deductCosts,
-    repairs,
+    repairs: result.repairs,
     timestamp: new Date().toISOString(),
   };
 }
@@ -176,40 +198,25 @@ export async function repairAllRobotsAdmin(deductCosts: boolean): Promise<AdminR
 export async function recalculateAllRobotHP(): Promise<AdminRecalculateHPResult> {
   logger.info('[Admin] Recalculating HP for all robots using new formula...');
 
-  // Get all robots with weapon includes (needed by calculateMaxHP)
   const robots = await prisma.robot.findMany({
     include: {
-      mainWeapon: {
-        include: {
-          weapon: true,
-        },
-      },
-      offhandWeapon: {
-        include: {
-          weapon: true,
-        },
-      },
+      mainWeapon: { include: { weapon: true } },
+      offhandWeapon: { include: { weapon: true } },
     },
   });
 
   const updates: AdminRecalculateHPResult['updates'] = [];
-
   for (const robot of robots) {
     const oldMaxHP = robot.maxHP;
-
-    // Calculate new maxHP using the formula
     const newMaxHP = calculateMaxHP(robot);
-
-    // Calculate currentHP proportionally
     const hpPercentage = robot.maxHP > 0 ? robot.currentHP / robot.maxHP : 1;
     const newCurrentHP = Math.round(newMaxHP * hpPercentage);
 
-    // Update robot
     await prisma.robot.update({
       where: { id: robot.id },
       data: {
         maxHP: newMaxHP,
-        currentHP: Math.min(newCurrentHP, newMaxHP), // Cap at maxHP
+        currentHP: Math.min(newCurrentHP, newMaxHP),
       },
     });
 

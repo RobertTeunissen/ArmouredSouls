@@ -60,9 +60,13 @@ export interface ArchiveVerification {
 
 // ─── Helpers ─────────────────────────────────────────────────────────
 
+/** Maximum length shared by all archived stable-name columns. */
+const ARCHIVED_STABLE_NAME_MAX_LENGTH = 30;
+
 /** Stable display name, falling back to the username when unset. */
 function stableDisplayName(user: { username: string; stableName: string | null }): string {
-  return user.stableName ?? user.username;
+  const displayName = user.stableName ?? user.username;
+  return displayName.slice(0, ARCHIVED_STABLE_NAME_MAX_LENGTH);
 }
 
 // ─── Stage 1a: stable and robot archives ─────────────────────────────
@@ -302,13 +306,13 @@ export async function writeStandingSnapshot(
         const robot = robotById.get(s.entityId);
         if (!robot) return; // entity already gone — skip rather than store a placeholder
         entityName = robot.name;
-        stableName = robot.user.stableName ?? robot.user.username;
+        stableName = stableDisplayName(robot.user);
         isGenerated = robot.user.isGenerated;
       } else if (s.entityType === 'team') {
         const team = teamById.get(s.entityId);
         if (!team) return;
         entityName = team.teamName;
-        stableName = team.stable.stableName ?? team.stable.username;
+        stableName = stableDisplayName(team.stable);
         isGenerated = team.stable.isGenerated;
       }
 

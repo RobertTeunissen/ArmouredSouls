@@ -177,8 +177,8 @@ export async function processTournamentBattle(
   // Calculate and award streaming revenue (Requirement 16.1-16.7)
   // Tournament battles award streaming revenue using the same formula as 1v1 battles
   // No streaming revenue for bye matches (handled by isByeMatch check at function start)
-  const streamingRevenue1 = await awardStreamingRevenueForParticipant(robot1.id, robot1.userId, battle.id, false);
-  const streamingRevenue2 = await awardStreamingRevenueForParticipant(robot2.id, robot2.userId, battle.id, false);
+  const streamingRevenue1 = await awardStreamingRevenueForParticipant(robot1.id, robot1.userId, battle.id, false, 1, 'tournament_1v1');
+  const streamingRevenue2 = await awardStreamingRevenueForParticipant(robot2.id, robot2.userId, battle.id, false, 1, 'tournament_1v1');
 
   if (streamingRevenue1) {
     logger.info(`[Streaming] ${robot1.name} earned ₡${streamingRevenue1.totalRevenue.toLocaleString()} from Tournament Battle #${battle.id}`);
@@ -608,10 +608,14 @@ async function updateRobotStatsForTournament(
     loadoutType: robot.loadoutType,
   });
 
-  // Award prestige and credits via shared helpers
-  await awardPrestigeToUser(robot.userId, isWinner ? prestigeAwarded : 0);
+  // Award stable-level prestige and tournament income through shared services.
   const reward = isWinner ? battle.winnerReward : battle.loserReward;
   const cycleNumber = await getCurrentCycleNumber();
+  await awardPrestigeToUser(robot.userId, isWinner ? prestigeAwarded : 0, cycleNumber, {
+    source: 'battle',
+    mode: 'tournament_1v1',
+    battleId: battle.id,
+  });
   await awardCreditsWithLedger(
     robot.userId,
     reward ?? 0,
@@ -619,6 +623,17 @@ async function updateRobotStatsForTournament(
     cycleNumber,
     'Tournament battle reward',
     robot.id,
+    { battleId: battle.id },
+    {
+      battleId: battle.id,
+      mode: 'tournament_1v1',
+      tier: battle.leagueType,
+      outcome: isWinner ? 'win' : 'loss',
+      participationFloor: battle.loserReward ?? 0,
+      winComponent: isWinner ? Math.max(0, (battle.winnerReward ?? 0) - (battle.loserReward ?? 0)) : 0,
+      teamSize: 1,
+      isBye: false,
+    },
   );
 
   return { prestigeAwarded, fameAwarded };

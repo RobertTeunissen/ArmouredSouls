@@ -7,6 +7,9 @@ import dotenv from 'dotenv';
 import weaponInventoryRoutes from '../src/routes/weaponInventory';
 import { errorHandler } from '../src/middleware/errorHandler';
 import { createTestUser, deleteTestUser } from './testHelpers';
+import { usePostCutoverFinancialRollout } from './financialRolloutTestHelper';
+
+usePostCutoverFinancialRollout();
 
 dotenv.config();
 
@@ -68,7 +71,8 @@ describe('Weapon Inventory Routes', () => {
     it('should get user weapon inventory with auth', async () => {
       const response = await request(server)
         .get('/api/weapon-inventory')
-        .set('Authorization', `Bearer ${authToken}`);
+        .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
 
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
@@ -96,6 +100,7 @@ describe('Weapon Inventory Routes', () => {
       const response = await request(server)
         .post('/api/weapon-inventory/purchase')
         .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({});
 
       expect(response.status).toBe(400);
@@ -107,6 +112,7 @@ describe('Weapon Inventory Routes', () => {
       const response = await request(server)
         .post('/api/weapon-inventory/purchase')
         .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ weaponId: 'invalid' });
 
       expect(response.status).toBe(400);
@@ -117,6 +123,7 @@ describe('Weapon Inventory Routes', () => {
       const response = await request(server)
         .post('/api/weapon-inventory/purchase')
         .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ weaponId: 99999 });
 
       expect(response.status).toBe(404);
@@ -135,7 +142,8 @@ describe('Weapon Inventory Routes', () => {
     it('should get storage status with auth', async () => {
       const response = await request(server)
         .get('/api/weapon-inventory/storage-status')
-        .set('Authorization', `Bearer ${authToken}`);
+        .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('currentWeapons');
@@ -158,7 +166,8 @@ describe('Weapon Inventory Routes', () => {
     it('should return 403 for an inventory item that does not exist', async () => {
       const response = await request(server)
         .get('/api/weapon-inventory/99999/available')
-        .set('Authorization', `Bearer ${authToken}`);
+        .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
 
       // 403, not 404. `verifyWeaponOwnership` answers a generic "Access denied" for an
       // absent item as well as one owned by someone else, so the response cannot be
@@ -238,7 +247,8 @@ describe('Weapon Inventory Routes', () => {
 
       const response = await request(server)
         .delete(`/api/weapon-inventory/${inv.id}`)
-        .set('Authorization', `Bearer ${otherCtx.token}`);
+        .set('Authorization', `Bearer ${otherCtx.token}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
 
       expect(response.status).toBe(403);
       expect(response.body).toHaveProperty('error');
@@ -248,7 +258,8 @@ describe('Weapon Inventory Routes', () => {
       const ctx = await createResaleUser();
       const response = await request(server)
         .delete('/api/weapon-inventory/9999999')
-        .set('Authorization', `Bearer ${ctx.token}`);
+        .set('Authorization', `Bearer ${ctx.token}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
       // verifyWeaponOwnership returns a generic 403 for both "not found" and "owned by another user"
       // to prevent inventory ID enumeration. This is the same response another-user-weapon would get.
       expect(response.status).toBe(403);
@@ -262,7 +273,8 @@ describe('Weapon Inventory Routes', () => {
 
       const response = await request(server)
         .delete(`/api/weapon-inventory/${inv.id}`)
-        .set('Authorization', `Bearer ${ctx.token}`);
+        .set('Authorization', `Bearer ${ctx.token}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
 
       expect(response.status).toBe(409);
       expect(response.body).toHaveProperty('code', 'WEAPON_EQUIPPED');
@@ -289,7 +301,8 @@ describe('Weapon Inventory Routes', () => {
 
       const response = await request(server)
         .delete(`/api/weapon-inventory/${inv.id}`)
-        .set('Authorization', `Bearer ${ctx.token}`);
+        .set('Authorization', `Bearer ${ctx.token}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
 
       expect(response.status).toBe(409);
       expect(response.body).toHaveProperty('code', 'WEAPON_EQUIPPED');
@@ -302,7 +315,8 @@ describe('Weapon Inventory Routes', () => {
 
       const response = await request(server)
         .delete(`/api/weapon-inventory/${inv.id}`)
-        .set('Authorization', `Bearer ${ctx.token}`);
+        .set('Authorization', `Bearer ${ctx.token}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
 
       expect(response.status).toBe(200);
       expect(response.body.salePrice).toBe(0);
@@ -319,7 +333,8 @@ describe('Weapon Inventory Routes', () => {
 
       const response = await request(server)
         .delete(`/api/weapon-inventory/${inv.id}`)
-        .set('Authorization', `Bearer ${ctx.token}`);
+        .set('Authorization', `Bearer ${ctx.token}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
 
       expect(response.status).toBe(200);
       expect(response.body.salePrice).toBe(10_000);
@@ -333,7 +348,8 @@ describe('Weapon Inventory Routes', () => {
 
       const response = await request(server)
         .delete(`/api/weapon-inventory/${inv.id}`)
-        .set('Authorization', `Bearer ${ctx.token}`);
+        .set('Authorization', `Bearer ${ctx.token}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
 
       expect(response.status).toBe(200);
       expect(response.body.salePrice).toBe(50_000);
@@ -346,7 +362,8 @@ describe('Weapon Inventory Routes', () => {
 
       const response = await request(server)
         .delete(`/api/weapon-inventory/${inv.id}`)
-        .set('Authorization', `Bearer ${ctx.token}`);
+        .set('Authorization', `Bearer ${ctx.token}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
 
       expect(response.status).toBe(200);
       expect(response.body.salePrice).toBe(425_000);
@@ -360,7 +377,8 @@ describe('Weapon Inventory Routes', () => {
 
       const response = await request(server)
         .delete(`/api/weapon-inventory/${inv.id}`)
-        .set('Authorization', `Bearer ${ctx.token}`);
+        .set('Authorization', `Bearer ${ctx.token}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
 
       expect(response.status).toBe(200);
       expect(response.body.salePrice).toBe(0);
@@ -380,7 +398,8 @@ describe('Weapon Inventory Routes', () => {
 
       const response = await request(server)
         .delete(`/api/weapon-inventory/${inv.id}`)
-        .set('Authorization', `Bearer ${ctx.token}`);
+        .set('Authorization', `Bearer ${ctx.token}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
       expect(response.status).toBe(200);
 
       const after = await prisma.auditLog.count({
@@ -402,7 +421,8 @@ describe('Weapon Inventory Routes', () => {
 
       const response = await request(server)
         .delete(`/api/weapon-inventory/${inv.id}`)
-        .set('Authorization', `Bearer ${ctx.token}`);
+        .set('Authorization', `Bearer ${ctx.token}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
 
       expect(response.status).toBe(500);
       expect(response.body).toHaveProperty('code', 'INVALID_TRANSACTION');
@@ -424,8 +444,14 @@ describe('Weapon Inventory Routes', () => {
 
       // Fire two parallel DELETE requests
       const [r1, r2] = await Promise.all([
-        request(server).delete(`/api/weapon-inventory/${inv.id}`).set('Authorization', `Bearer ${ctx.token}`),
-        request(server).delete(`/api/weapon-inventory/${inv.id}`).set('Authorization', `Bearer ${ctx.token}`),
+        request(server)
+          .delete(`/api/weapon-inventory/${inv.id}`)
+          .set('Authorization', `Bearer ${ctx.token}`)
+          .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`),
+        request(server)
+          .delete(`/api/weapon-inventory/${inv.id}`)
+          .set('Authorization', `Bearer ${ctx.token}`)
+          .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`),
       ]);
 
       const successCount = [r1, r2].filter((r) => r.status === 200).length;
@@ -462,7 +488,8 @@ describe('Weapon Inventory Routes', () => {
 
       const response = await request(server)
         .delete(`/api/weapon-inventory/${inv.id}`)
-        .set('Authorization', `Bearer ${ctx.token}`);
+        .set('Authorization', `Bearer ${ctx.token}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
 
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body.achievementUnlocks)).toBe(true);
@@ -493,7 +520,8 @@ describe('Weapon Inventory Routes', () => {
       const inv = await giveWeapon(ctx.user.id, weapon!.id, 100_000);
       const response = await request(server)
         .delete(`/api/weapon-inventory/${inv.id}`)
-        .set('Authorization', `Bearer ${ctx.token}`);
+        .set('Authorization', `Bearer ${ctx.token}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
 
       expect(response.status).toBe(200);
       const ids = response.body.achievementUnlocks.map((a: { id: string }) => a.id);
@@ -507,7 +535,8 @@ describe('Weapon Inventory Routes', () => {
 
       const response = await request(server)
         .delete(`/api/weapon-inventory/${inv.id}`)
-        .set('Authorization', `Bearer ${ctx.token}`);
+        .set('Authorization', `Bearer ${ctx.token}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
 
       expect(response.status).toBe(200);
       const ids = response.body.achievementUnlocks.map((a: { id: string }) => a.id);
@@ -536,7 +565,8 @@ describe('Weapon Inventory Routes', () => {
       const inv = await giveWeapon(ctx.user.id, weapon!.id, 100_000);
       const response = await request(server)
         .delete(`/api/weapon-inventory/${inv.id}`)
-        .set('Authorization', `Bearer ${ctx.token}`);
+        .set('Authorization', `Bearer ${ctx.token}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
 
       expect(response.status).toBe(200);
       // L5 = 50%, ₡100K × 50% = ₡50K. Combined with ₡499K pre-seeded = ₡549K. ≥ ₡500K → unlock
@@ -594,6 +624,7 @@ describe('Weapon Inventory Routes', () => {
       const response = await request(server)
         .post(`/api/weapon-inventory/${inv.id}/refine`)
         .set('Authorization', `Bearer ${intruder.token}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ tier: 'hone', magnitude: 1, targetAttribute: 'combatPower' });
 
       expect(response.status).toBe(403);
@@ -604,6 +635,7 @@ describe('Weapon Inventory Routes', () => {
       const response = await request(server)
         .post('/api/weapon-inventory/999999999/refine')
         .set('Authorization', `Bearer ${ctx.token}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ tier: 'hone', magnitude: 1, targetAttribute: 'combatPower' });
       expect(response.status).toBe(403); // verifyWeaponOwnership returns 403 for missing rows
     });
@@ -616,6 +648,7 @@ describe('Weapon Inventory Routes', () => {
       const response = await request(server)
         .post(`/api/weapon-inventory/${inv.id}/refine`)
         .set('Authorization', `Bearer ${ctx.token}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ tier: 'hone', magnitude: 1, targetAttribute: 'combatPower' });
 
       expect(response.status).toBe(403);
@@ -631,6 +664,7 @@ describe('Weapon Inventory Routes', () => {
       const response = await request(server)
         .post(`/api/weapon-inventory/${inv.id}/refine`)
         .set('Authorization', `Bearer ${ctx.token}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ tier: 'hone', magnitude: 1, targetAttribute: 'combatPower' });
 
       expect(response.status).toBe(200);
@@ -656,6 +690,7 @@ describe('Weapon Inventory Routes', () => {
       const response = await request(server)
         .post(`/api/weapon-inventory/${inv.id}/refine`)
         .set('Authorization', `Bearer ${ctx.token}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ tier: 'forge', magnitude: 1 });
 
       expect(response.status).toBe(200);
@@ -671,6 +706,7 @@ describe('Weapon Inventory Routes', () => {
       const response = await request(server)
         .post(`/api/weapon-inventory/${inv.id}/refine`)
         .set('Authorization', `Bearer ${ctx.token}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ tier: 'sharpen', magnitude: 1 });
 
       expect(response.status).toBe(400);
@@ -686,6 +722,7 @@ describe('Weapon Inventory Routes', () => {
       const response = await request(server)
         .post(`/api/weapon-inventory/${inv.id}/refine`)
         .set('Authorization', `Bearer ${ctx.token}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ tier: 'hone', magnitude: 1, targetAttribute: 'combatPower' });
 
       expect(response.status).toBe(400);
@@ -700,6 +737,7 @@ describe('Weapon Inventory Routes', () => {
       const response = await request(server)
         .post(`/api/weapon-inventory/${inv.id}/refine`)
         .set('Authorization', `Bearer ${ctx.token}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ tier: 'augment', magnitude: 1, targetAttribute: 'combatPower' });
 
       expect(response.status).toBe(400);
@@ -714,6 +752,7 @@ describe('Weapon Inventory Routes', () => {
       const response = await request(server)
         .post(`/api/weapon-inventory/${inv.id}/refine`)
         .set('Authorization', `Bearer ${ctx.token}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ tier: 'hone', magnitude: 1, targetAttribute: 'combatPower' });
 
       expect(response.status).toBe(402);
@@ -732,6 +771,7 @@ describe('Weapon Inventory Routes', () => {
       const response = await request(server)
         .post(`/api/weapon-inventory/${inv.id}/refine`)
         .set('Authorization', `Bearer ${ctx.token}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ tier: 'hone', magnitude: 1, targetAttribute: 'combatPower' });
       expect(response.status).toBe(200);
 
@@ -749,6 +789,7 @@ describe('Weapon Inventory Routes', () => {
       const response = await request(server)
         .post(`/api/weapon-inventory/${inv.id}/refine`)
         .set('Authorization', `Bearer ${ctx.token}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ tier: 'hone', magnitude: 1, targetAttribute: 'combatPower' });
 
       expect(response.status).toBe(200);
@@ -774,6 +815,7 @@ describe('Weapon Inventory Routes', () => {
         lastResponse = await request(server)
           .post(`/api/weapon-inventory/${inv.id}/refine`)
           .set('Authorization', `Bearer ${ctx.token}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
           .send(body);
         expect(lastResponse.status).toBe(200);
       }
@@ -808,6 +850,7 @@ describe('Weapon Inventory Routes', () => {
       const response = await request(server)
         .patch(`/api/weapon-inventory/${inv.id}/custom-name`)
         .set('Authorization', `Bearer ${ctx.token}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ customName: 'Old Faithful' });
 
       expect(response.status).toBe(200);
@@ -824,6 +867,7 @@ describe('Weapon Inventory Routes', () => {
       const response = await request(server)
         .patch(`/api/weapon-inventory/${inv.id}/custom-name`)
         .set('Authorization', `Bearer ${ctx.token}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ customName: null });
 
       expect(response.status).toBe(200);
@@ -840,6 +884,7 @@ describe('Weapon Inventory Routes', () => {
       const response = await request(server)
         .patch(`/api/weapon-inventory/${inv.id}/custom-name`)
         .set('Authorization', `Bearer ${ctx.token}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ customName: '<script>alert(1)</script>' });
 
       expect(response.status).toBe(400);
@@ -863,6 +908,7 @@ describe('Weapon Inventory Routes', () => {
       const response = await request(server)
         .patch(`/api/weapon-inventory/${inv.id}/custom-name`)
         .set('Authorization', `Bearer ${intruder.token}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ customName: 'Stolen' });
 
       expect(response.status).toBe(403);
