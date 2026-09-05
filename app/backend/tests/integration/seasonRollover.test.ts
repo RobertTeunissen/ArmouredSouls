@@ -189,6 +189,46 @@ describe('Season Rollover Integration', () => {
       expect(verification.expectedStables).toBeGreaterThan(0);
     });
 
+    it('should archive fallback usernames within the stable-name column limit', async () => {
+      const longStable = await seedStable(false);
+      const longUsername = `archive_fallback_${Date.now()}_${seq}_long_username`;
+
+      await prisma.user.update({
+        where: { id: longStable.userId },
+        data: { username: longUsername, stableName: null },
+      });
+      await prisma.standing.updateMany({
+        where: { entityType: 'robot', entityId: longStable.robotId },
+        data: { mode: 'koth', tier: 'bronze', leagueInstanceId: 'bronze_long' },
+      });
+
+      try {
+        await writeSeasonArchive(LEGACY_SEASON_NUMBER, 118);
+
+        const expectedStableName = longUsername.slice(0, 30);
+        const archive = await prisma.stableSeasonArchive.findUnique({
+          where: {
+            seasonNumber_userId: {
+              seasonNumber: LEGACY_SEASON_NUMBER,
+              userId: longStable.userId,
+            },
+          },
+        });
+        const snapshot = await prisma.seasonStandingSnapshot.findFirst({
+          where: {
+            seasonNumber: LEGACY_SEASON_NUMBER,
+            mode: 'koth',
+            stableName: expectedStableName,
+          },
+        });
+
+        expect(archive?.stableName).toBe(expectedStableName);
+        expect(snapshot?.stableName).toBe(expectedStableName);
+      } finally {
+        await cleanupStable(longStable.userId);
+      }
+    });
+
     it('should pass verification once the archive is written, counting humans only', async () => {
       const generated = await seedStable(true);
       try {

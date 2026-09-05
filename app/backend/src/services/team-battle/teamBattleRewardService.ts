@@ -26,7 +26,6 @@ import {
   FAME_BY_LEAGUE,
   PRESTIGE_BY_LEAGUE,
 } from '../../utils/battleMath';
-import { TeamBattleParticipantResult } from '../../types/teamBattleLogTypes';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 

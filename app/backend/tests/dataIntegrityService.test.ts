@@ -1,6 +1,7 @@
 import prisma from '../src/lib/prisma';
 import { DataIntegrityService } from '../src/services/common/dataIntegrityService';
 import { EventLogger } from '../src/services/common/eventLogger';
+import { DEFAULT_ROLLOUT_STATE } from '../src/services/migration/financialRollout';
 
 const integrityService = new DataIntegrityService();
 const eventLogger = new EventLogger();
@@ -9,12 +10,23 @@ describe('DataIntegrityService', () => {
   let testCycleNumbers: number[] = [];
   let testUserIds: number[] = [];
   let cycleCounter = 10000; // Start from a safe base number
+  let originalFeatureFlags: unknown = {};
 
   beforeAll(async () => {
     await prisma.$connect();
+    const metadata = await prisma.cycleMetadata.findUnique({
+      where: { id: 1 },
+      select: { featureFlags: true },
+    });
+    originalFeatureFlags = metadata?.featureFlags ?? {};
   });
 
   afterAll(async () => {
+    await prisma.cycleMetadata.upsert({
+      where: { id: 1 },
+      update: { featureFlags: originalFeatureFlags as never },
+      create: { id: 1, featureFlags: originalFeatureFlags as never },
+    });
     await prisma.$disconnect();
   });
 
@@ -22,6 +34,9 @@ describe('DataIntegrityService', () => {
     // Clean up test data in correct order
     if (testCycleNumbers.length > 0) {
       await prisma.auditLog.deleteMany({
+        where: { cycleNumber: { in: testCycleNumbers } },
+      });
+      await prisma.financialLedger.deleteMany({
         where: { cycleNumber: { in: testCycleNumbers } },
       });
       await prisma.cycleSnapshot.deleteMany({
@@ -37,6 +52,11 @@ describe('DataIntegrityService', () => {
 
     testCycleNumbers = [];
     testUserIds = [];
+    await prisma.cycleMetadata.upsert({
+      where: { id: 1 },
+      update: { featureFlags: originalFeatureFlags as never },
+      create: { id: 1, featureFlags: originalFeatureFlags as never },
+    });
   });
 
   describe('validateCycleIntegrity', () => {
@@ -62,6 +82,8 @@ describe('DataIntegrityService', () => {
       expect(report.isValid).toBe(true);
       expect(report.issues).toHaveLength(0);
       expect(report.cycleNumber).toBe(cycleNumber);
+      expect(report.evidenceBoundary).toBe('pre_cutover');
+      expect(report.completenessClaim).toBe('outside');
       expect(report.checksPerformed).toContain('credit_sum_consistency');
       expect(report.checksPerformed).toContain('sequence_number_continuity');
       expect(report.checksPerformed).toContain('event_completeness');
@@ -337,6 +359,69 @@ describe('DataIntegrityService', () => {
 
       const creditIssue = report.issues.find(i => i.type === 'credit_mismatch');
       expect(creditIssue).toBeUndefined(); // Should pass with 1 credit tolerance
+    });
+  });
+
+  describe('post-cutover financial diagnostics', () => {
+    it('labels legacy cycles outside the claim and reports unpaired/invalid post-cutover evidence', async () => {
+      const cycleNumber = cycleCounter++;
+      testCycleNumbers.push(cycleNumber);
+      const rollout = {
+        ...DEFAULT_ROLLOUT_STATE,
+        phase: 'acc_cutover' as const,
+        schemaClientGenerated: true,
+        writerManifestComplete: true,
+        blockingTestsPassed: true,
+        requiredCaptureActive: true,
+        accCutoverRecorded: true,
+        cutoverCycle: cycleNumber,
+        reconciliationPassed: false,
+        documentationComplete: false,
+      };
+      const currentFlags = originalFeatureFlags && typeof originalFeatureFlags === 'object'
+        ? originalFeatureFlags as Record<string, unknown>
+        : {};
+      await prisma.cycleMetadata.upsert({
+        where: { id: 1 },
+        update: { featureFlags: { ...currentFlags, financial_rollout: rollout } as never },
+        create: { id: 1, featureFlags: { ...currentFlags, financial_rollout: rollout } as never },
+      });
+
+      await prisma.financialLedger.create({
+        data: {
+          cycleNumber,
+          userId: 910000,
+          robotId: null,
+          transactionType: 'battle_income',
+          amount: 100,
+          balanceAfter: 100,
+          description: 'diagnostic ledger row',
+          metadata: {},
+          financialEventId: `diagnostic-ledger-${cycleNumber}`,
+        },
+      });
+      await prisma.auditLog.create({
+        data: {
+          cycleNumber,
+          eventType: 'financial_transaction',
+          sequenceNumber: 1,
+          userId: 910001,
+          payload: { transactionType: 'obsolete_new_value' },
+          financialEventId: `diagnostic-audit-${cycleNumber}`,
+        },
+      });
+
+      const report = await integrityService.validateCycleIntegrity(cycleNumber);
+      const issueTypes = report.issues.map((currentIssue) => currentIssue.type);
+
+      expect(report.evidenceBoundary).toBe('post_cutover');
+      expect(report.completenessClaim).toBe('included');
+      expect(issueTypes).toContain('unpaired_ledger');
+      expect(issueTypes).toContain('unpaired_financial_audit');
+      expect(issueTypes).toContain('invalid_breakdown');
+      expect(issueTypes).toContain('invalid_taxonomy');
+      expect(report.issues.filter((currentIssue) => currentIssue.type === 'unpaired_ledger')[0])
+        .toMatchObject({ evidenceBoundary: 'post_cutover', completenessClaim: 'included' });
     });
   });
 

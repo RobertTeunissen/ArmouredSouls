@@ -20,6 +20,7 @@ interface ValidationSchemas {
   body?: ZodSchema;
   params?: ZodSchema;
   query?: ZodSchema;
+  headers?: ZodSchema;
 }
 
 /**
@@ -126,6 +127,20 @@ export function validateRequest(schemas: ValidationSchemas) {
           })),
         });
       }
+    }
+
+    if (schemas.headers) {
+      const result = schemas.headers.safeParse(req.headers);
+      if (!result.success) {
+        securityMonitor.logValidationFailure(req.originalUrl, 'invalid_headers', req.ip || 'unknown');
+        throw new AppError('VALIDATION_ERROR', describeIssues(result.error.issues, 'Invalid request headers', req.headers), 400, {
+          fields: result.error.issues.map((i) => ({
+            field: i.path.join('.'),
+            message: i.message,
+          })),
+        });
+      }
+      Object.assign(req.headers, result.data);
     }
 
     if (schemas.body) {

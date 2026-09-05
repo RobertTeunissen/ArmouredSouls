@@ -241,14 +241,14 @@ export async function updateTutorialState(
   }
 
   try {
-    const { onboardingChoices, ...rest } = updates;
     const user = await prisma.user.update({
       where: { id: userId },
       data: {
-        ...rest,
-        ...(onboardingChoices !== undefined && {
-          onboardingChoices: onboardingChoices as Prisma.InputJsonValue,
-        }),
+        onboardingStep: updates.onboardingStep,
+        onboardingStrategy: updates.onboardingStrategy,
+        onboardingChoices: updates.onboardingChoices === undefined
+          ? undefined
+          : updates.onboardingChoices as Prisma.InputJsonValue,
       },
     });
 

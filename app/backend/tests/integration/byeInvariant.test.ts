@@ -32,6 +32,9 @@ import {
 } from '../../src/utils/byeRewards';
 import { getParticipationReward } from '../../src/utils/economyFormulas';
 import { calculateTournamentParticipationReward } from '../../src/utils/tournamentRewards';
+import { usePostCutoverFinancialRollout } from '../financialRolloutTestHelper';
+
+usePostCutoverFinancialRollout();
 
 const TIER = 'bronze';
 const TOURNAMENT_CTX = { totalParticipants: 16, currentRound: 1, maxRounds: 4 };

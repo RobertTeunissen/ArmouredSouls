@@ -35,8 +35,12 @@ const mockPrisma = {
   user: {
     update: jest.fn().mockResolvedValue({}),
   },
-  $transaction: jest.fn().mockImplementation((ops: unknown[]) => Promise.resolve(Array.isArray(ops) ? ops.map(() => ({})) : undefined)),
+  $transaction: jest.fn(),
 };
+
+mockPrisma.$transaction.mockImplementation(
+  async (callback: (tx: typeof mockPrisma) => Promise<unknown>) => callback(mockPrisma),
+);
 
 jest.mock('../../../src/lib/prisma', () => ({
   __esModule: true,
@@ -62,6 +66,9 @@ jest.mock('../../../src/services/battle/battlePostCombat', () => ({
   logBattleAuditEvent: jest.fn().mockResolvedValue(undefined),
   checkAndAwardAchievements: jest.fn().mockResolvedValue(undefined),
   updateRobotCombatStats: jest.fn().mockResolvedValue(undefined),
+  awardCreditsWithLedger: jest.fn().mockResolvedValue(undefined),
+  awardPrestigeToUser: jest.fn().mockResolvedValue(undefined),
+  awardBattleStreamingRevenue: jest.fn().mockResolvedValue(undefined),
 }));
 
 jest.mock('../../../src/services/standings/standingsService', () => ({
@@ -86,6 +93,8 @@ jest.mock('../../../src/services/tuning-pool', () => ({
 }));
 
 jest.mock('../../../src/services/grand-melee/grandMeleeRewards', () => ({
+  GRAND_MELEE_BASE_MULTIPLIER: 2.5,
+  GRAND_MELEE_CREDIT_MULTIPLIER: { 1: 1, 2: 0.8, 3: 0.65, 4: 0.55, 5: 0.45, 6: 0.38, 7: 0.32, 8: 0.28, 9: 0.24, 10: 0.22 },
   calculateGrandMeleeRewards: jest.fn().mockReturnValue({ credits: 500, fame: 5, prestige: 10, lpDelta: 25 }),
 }));
 
@@ -100,7 +109,12 @@ jest.mock('../../../src/services/battle/battleSummaryComputer', () => ({
 
 import { executeScheduledGrandMeleeBattles } from '../../../src/services/grand-melee/grandMeleeBattleOrchestrator';
 import { simulateBattleMulti } from '../../../src/services/battle/combatSimulator';
-import { updateRobotCombatStats } from '../../../src/services/battle/battlePostCombat';
+import {
+  awardBattleStreamingRevenue,
+  awardCreditsWithLedger,
+  updateRobotCombatStats,
+} from '../../../src/services/battle/battlePostCombat';
+import { calculateStreamingRevenueBatch } from '../../../src/services/economy/streamingRevenueService';
 import standingsService from '../../../src/services/standings/standingsService';
 import schedulingService from '../../../src/services/scheduling/schedulingService';
 
@@ -315,5 +329,61 @@ describe('executeScheduledGrandMeleeBattles', () => {
         }),
       }),
     );
+  });
+});
+
+
+describe('Grand Melee placement financial provenance', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockPrisma.scheduledMatch.count.mockResolvedValue(0);
+    mockPrisma.scheduledMatch.findFirst.mockResolvedValue(null);
+    mockPrisma.scheduledMatch.update.mockResolvedValue({});
+    mockPrisma.scheduledMatch.updateMany.mockResolvedValue({ count: 0 });
+    mockPrisma.robot.findMany.mockResolvedValue([]);
+    mockPrisma.standing.findMany.mockResolvedValue([]);
+    mockPrisma.battle.create.mockResolvedValue({ id: 100 });
+    mockPrisma.battleParticipant.createMany.mockResolvedValue({ count: 20 });
+    mockPrisma.battleParticipant.update.mockResolvedValue({});
+    mockPrisma.battleParticipant.findMany.mockResolvedValue([]);
+    mockPrisma.battleSummary.create.mockResolvedValue({});
+  });
+
+  it('should aggregate placement income by stable while retaining every robot award and streaming each robot', async () => {
+    const match = makeScheduledMatch(1, 8);
+    const robots = Array.from({ length: 8 }, (_, index) => makeRobot(index + 1, index < 2 ? 1 : index + 1));
+    const streamCalculations = new Map(robots.map((robot) => [robot.id, { totalRevenue: robot.id * 10 }]));
+
+    mockPrisma.scheduledMatch.count.mockResolvedValueOnce(1);
+    mockPrisma.scheduledMatch.findFirst.mockResolvedValueOnce(match);
+    mockPrisma.robot.findMany.mockResolvedValueOnce(robots);
+    mockPrisma.standing.findMany.mockResolvedValueOnce([
+      { entityId: 1, tier: 'gold' },
+      { entityId: 2, tier: 'silver' },
+    ]);
+    (simulateBattleMulti as jest.Mock).mockReturnValueOnce(makeSimResult(8));
+    (calculateStreamingRevenueBatch as jest.Mock).mockResolvedValueOnce(streamCalculations);
+
+    await executeScheduledGrandMeleeBattles();
+
+    const stableAward = (awardCreditsWithLedger as jest.Mock).mock.calls.find(([userId]) => userId === 1);
+    expect(stableAward).toBeDefined();
+    expect(stableAward[1]).toBe(1000);
+    expect(stableAward[7]).toMatchObject({
+      mode: 'grand_melee',
+      tier: 'placement_aggregate',
+      placement: null,
+      participationFloor: 0,
+      placementRewardComponents: [
+        expect.objectContaining({ robotId: 1, tier: 'gold', placement: 1, credits: 500, totalParticipants: 8, participationFloorApplied: false }),
+        expect.objectContaining({ robotId: 2, tier: 'silver', placement: 8, credits: 500, totalParticipants: 8, participationFloorApplied: false }),
+      ],
+    });
+    expect((stableAward[7].placementRewardComponents as Array<{ credits: number }>).reduce((sum, component) => sum + component.credits, 0))
+      .toBe(stableAward[1]);
+    expect(awardCreditsWithLedger).toHaveBeenCalledTimes(7);
+    expect(awardBattleStreamingRevenue).toHaveBeenCalledTimes(8);
+    expect(awardBattleStreamingRevenue).toHaveBeenCalledWith(1, streamCalculations.get(1), 5, 100, 'grand_melee', mockPrisma);
+    expect(awardBattleStreamingRevenue).toHaveBeenCalledWith(1, streamCalculations.get(2), 5, 100, 'grand_melee', mockPrisma);
   });
 });

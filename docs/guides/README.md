@@ -25,6 +25,7 @@ Step-by-step procedures for setup, deployment, and maintenance. See [operations/
 ## Feature Guides
 
 - `ADMIN_PANEL_GUIDE.md` — Admin panel usage
+- `FINANCIAL_LEDGER_AUDIT_GUIDE.md` — Financial mutation pairing, reconciliation, repair/prestige boundaries, and ACC cutover operations
 - `ONBOARDING_ANALYTICS_GUIDE.md` — Onboarding analytics dashboard
 - `ONBOARDING_TROUBLESHOOTING.md` — Onboarding system troubleshooting
 

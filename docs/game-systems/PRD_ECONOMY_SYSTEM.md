@@ -708,6 +708,37 @@ This PRD defines the complete economy system for Armoured Souls, covering all co
 - Used in streaming revenue calculations (aggregate)
 - Displayed for competitive rankings
 
+### Financial Capture Contract (Spec #53)
+
+Credits are stored in the Prisma `User.currency` field; `currency` is the mutable balance and “Credits” is the player-facing name. From the selected ACC `Cutover_Cycle`, all current-economy balance changes use `Credit_Mutation_Service`. A successful mutation updates `User.currency`, inserts exactly one `FinancialLedger` accounting/reporting row, and inserts exactly one paired `AuditLog` row with `eventType` `financial_transaction`. Both rows share one `financialEventId` and are committed atomically. The audit row is an operational, security, and reconciliation record, not a second currency mutation.
+
+The closed `Transaction_Taxonomy` is:
+
+| `transactionType` | Meaning |
+|---|---|
+| `battle_income` | Fought-battle reward or `Bye_Event` participation floor |
+| `streaming_revenue` | Per-robot streaming reward from a fought battle |
+| `repair_cost` | Manual, automatic, or charged admin `Repair_Spend` |
+| `facility_upgrade` | Facility purchase or upgrade charge |
+| `weapon_purchase` | Weapon purchase charge |
+| `weapon_sale` | Weapon sale proceeds |
+| `weapon_refinement` | Weapon refinement charge |
+| `robot_creation` | Robot creation charge |
+| `attribute_upgrade` | Attribute upgrade charge |
+| `achievement_reward` | Achievement credit reward |
+| `passive_income` | Gross settlement passive income |
+| `operating_costs` | Gross settlement operating costs |
+
+New writers must reject `subscription_cost`, `prestige_award`, and `settlement_adjustment`. `Financial_Breakdown` is typed and validated before persistence. It records the formula/version, source identity, amount-affecting inputs, modifiers, discounts or bonuses, operation order, precision, and final rounding so a later report does not re-derive history from current facilities, prestige, fame, repair quotes, or formulas.
+
+Battle results use one shared financial reward path across all nine scheduled modes. Fought battles aggregate `battle_income` at stable level, write one pair per receiving stable, write one `streaming_revenue` pair per eligible participating robot, and send positive stable-level prestige to `Prestige_Service`. `Bye_Event` resolution writes only the existing participation-floor `battle_income` pair: no streaming, fame, prestige, or simulation. If a scheduled byed robot needs pre-battle `Automatic_Repair`, that is a separate per-robot `repair_cost` event and is not attributed to the bye.
+
+`Manual_Repair`, `Automatic_Repair`, and charged admin maintenance repairs use `repair_cost` with mandatory `repairType` `manual` or `automatic`. Each repaired robot receives one financial pair and one subtype-bearing `AuditLog` `robot_repair` record. Manual batches quote, discount, and round each robot before summing; the balance delta, lifetime total, financial rows, and repair audit rows must agree. The `robot_repair` rows and `creditsCharged` remain the `Repair_Spend` `Canonical_Source`; a `battle_complete` payload, `robots.repairQuoteCredits`, or an aggregate that loses the subtype is not a spend source.
+
+`Prestige_Service` records each positive battle or achievement award separately as an `AuditLog` `prestige_change` row with a unique `sourceEventId`, cycle/timestamp, source, exact aggregate, and resulting prestige. Prestige is never a `FinancialLedger` amount. `Settlement_Service` is the sole mutating settlement path for the scheduler and supported admin triggers: it writes exactly one `passive_income` pair and one `operating_costs` pair per applicable stable/cycle, including zero-valued components with unchanged `balanceAfter`. Booking Office subscribe/unsubscribe operations remain free and emit no financial record.
+
+Pre-cutover records remain `Legacy_Record` history. They are not split, paired, relabelled, backfilled, or used to claim complete coverage. No historical reconstruction script is permitted. See [`FINANCIAL_LEDGER_AUDIT_GUIDE.md`](../guides/FINANCIAL_LEDGER_AUDIT_GUIDE.md) for the source map, row-count examples, admin compatibility, reconciliation procedure, and the no-UI `Financial_Page_Follow_On` boundary.
+
 ### Economic Philosophy
 
 1. **Multiple Paths to Success**: Players can focus on quality (one powerful robot), quantity (multiple robots), or specialization (weapon trading, specific tournaments, 2v2 or other team battles)
@@ -1803,6 +1834,8 @@ Prestige unlocks higher facility levels (see [STABLE_SYSTEM.md](STABLE_SYSTEM.md
 
 ## Daily Financial System
 
+**Spec #53 boundary:** The report and dashboard material below is existing product-design reference. Spec #53 does not add or redesign it, change a Player_Guide, or authorize a new financial UI. A later `Financial_Page_Follow_On` may consume corrected records under the canonical-source rules.
+
 ### Daily Report Structure
 
 Players receive a **daily financial report** showing all income and expenses. This can be presented:
@@ -2062,29 +2095,9 @@ Recommendations:
 
 **Calculation Methodology**: Unified Cycle-Snapshot-Based Approach
 
-All facility ROI calculations are performed by the `unifiedFacilityROIService` — the single source of truth for facility investment performance. This service replaces the previous dual-path approach (audit-log-based historical and formula-based projections) with a consistent methodology.
+All facility ROI calculations use `unifiedFacilityROIService` for prospective facility-investment analysis.
 
-**Data Source**: `CycleSnapshot.stableMetrics` (pre-aggregated per-user financial data per cycle)
-
-The unified service extracts per-facility returns from the `StableMetric` fields:
-- **Merchandising Hub**: Sum of `merchandisingIncome` across all owned cycles
-- **Streaming Studio**: Sum of `streamingIncome` across all owned cycles
-- **Repair Bay**: Estimated savings from `totalRepairCosts` using facility discount formula
-- **Training Facility**: Estimated savings from `attributeUpgrades` using facility discount formula
-- **Weapons Workshop**: Estimated savings from `weaponPurchases` using facility discount formula
-
-**Fallback Strategy** (when no cycle snapshots exist for the ownership period):
-1. **Primary**: Use cycle snapshot data (most accurate, reflects actual player activity)
-2. **Fallback**: Formula-based estimates using facility config rates × cycles owned
-   - Merchandising Hub: `baseIncome[level] × prestigeMultiplier × cyclesOwned`
-   - Streaming Studio: `avgStreamingPerBattle × avgBattlesPerCycle × cyclesOwned`
-   - Discount facilities: `avgSpendingPerCycle × discountPercent × cyclesOwned`
-3. Response includes `dataSource: 'snapshot' | 'estimate'` so the UI can indicate confidence level
-
-**Purchase Cycle Determination** (no longer requires audit event):
-1. Try: `facility_purchase` audit log event
-2. Fallback: Earliest cycle snapshot with non-zero activity for that facility type
-3. Final fallback: Cycle 1
+**Historical actuals and projections are separate.** For post-cutover actual Credits, returns, charges, and balances, `Financial_Page_Follow_On` must read reconciled `FinancialLedger`/`financial_transaction` pairs and stored `Financial_Breakdown`; actual repair spend must read `robot_repair` `creditsCharged` with `repairType`. It must not infer historical actuals from `CycleSnapshot`, current facility configuration, current prestige/fame, current formulas, or an assumed purchase cycle. Pre-cutover rows remain `Legacy_Record` history and are not reconstructed. Current configuration may support a clearly labelled prospective estimate only; that estimate must not fill, combine with, or be presented as an actual historical return.
 
 **Key Metrics Calculated**:
 - `totalInvestment`: Sum of facility config costs from level 0 to current level

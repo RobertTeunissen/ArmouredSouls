@@ -51,6 +51,19 @@ were running **twice**. Both failure modes were silent.
 zero tiers (Orphaned_Test) or more than one (Duplicated_Test), naming each offender. If you find
 yourself wanting a bespoke exclusion, change the classification in `jest.tiers.js` instead.
 
+## Spec #53 financial coverage and tier rules
+
+Financial capture is critical-path database behavior, so its coverage is partitioned across the existing Unit, Integration, Heavy, frontend, and E2E tiers rather than placed in an advisory suite.
+
+- **`Coverage_Manifest`** is the typed inventory of every post-cutover current-economy credit writer and every positive prestige source. It must include all nine battle modes, `Bye_Event` resolution, streaming, achievement rewards, robot creation, attributes, facilities, weapons, manual/automatic/admin repairs, both settlement entry points, the legacy admin daily-finance route, free subscriptions, and lifecycle boundaries. Each entry names the source function, shared service, identity strategy, record type, and target tier.
+- **Direct-writer verification** searches or analyzes production code for `User.currency` mutations. It fails for any current-economy increment, decrement, set, or replacement outside `Credit_Mutation_Service`, except enumerated `Opening_Balance_Boundary` operations. Exclude generated output and `app/backend/src/shared` because that path is the symlink to `app/shared`; do not count the shared module twice.
+- **Unit coverage** validates the closed `Transaction_Taxonomy`, typed `Financial_Breakdown`, event-identity construction/conflicts, stable reward aggregation, exact battle row fan-out, prestige record fields, per-robot repair arithmetic, settlement component construction including zero values, subscription exclusion, the manifest, and direct-writer checks.
+- **PostgreSQL Integration_Tier coverage** proves paired-write atomicity and rollback, `financialEventId` and `sourceEventId` duplicate/conflict behavior, concurrent retry safety, `withAuditSequence` continuity, all nine battle modes plus `Bye_Event`, per-stable income/per-robot streaming, per-robot repair pairs including automatic repair for a byed robot, achievement/economic writers, settlement reruns and partial failure, lifecycle boundaries, diagnostics, and admin route compatibility.
+- **Heavy_Tier coverage** runs representative complete scheduler and admin-cycle flows through team modes, tag team, tournaments, KotH, Grand Melee, streaming, automatic/manual repairs, settlement, and retry safety. It must verify that a bye’s automatic repair is a separate `repair_cost` event and that zero-valued settlement components still receive one pair each.
+- **Frontend and E2E regression coverage** retains admin contract tests for `CycleControlsPage`, `RepairLogPage`, `EconomyOverviewPage`, and `AuditLogPage`, plus existing authenticated admin and battle/result Playwright flows. No financial-page UI test or player-guide behavior is changed by this capture-only work.
+
+Only tests for removed behavior may be retired: feature-flag-off/null ledger enrichment, obsolete taxonomy labels, direct combined KotH/Grand Melee currency updates, and independent legacy daily-finance mutation. Formula/property, repair-log, admin contract, financial-page no-regression, player-guide content, battle-result, and domain snapshot tests remain blocking. The final gate uses `pnpm run lint`, `pnpm run build`, `pnpm run typecheck:tests`, `pnpm run test:tiers:verify`, `pnpm run test:unit`, `pnpm run test:integration`, `pnpm run test:heavy`, the frontend lint/build/unit commands, and the existing Playwright command; this documentation-only task does not run those suites.
+
 ## Testing Policy
 
 ### Required Testing Standards

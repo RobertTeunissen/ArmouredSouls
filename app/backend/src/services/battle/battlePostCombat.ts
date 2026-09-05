@@ -17,13 +17,21 @@
  */
 
 import prisma from '../../lib/prisma';
+import type { Prisma } from '../../../generated/prisma';
 import { StandingsMode } from '../../../generated/prisma';
 import logger from '../../config/logger';
 import { calculateStreamingRevenue, awardStreamingRevenue, StreamingRevenueCalculation } from '../economy/streamingRevenueService';
 import { eventLogger, EventType } from '../common/eventLogger';
 import { getCurrentCycleNumber } from './baseOrchestrator';
 import { achievementService, type AchievementEvent, type UnlockedAchievement } from '../achievement';
-import type { TransactionType } from '../financial/financialService';
+import { applyCreditMutation, applyCreditMutationInTransaction } from '../financial/creditMutationService';
+import { buildBattleIncomeEventId, buildBattlePrestigeEventId } from '../financial/financialEventIdentity';
+import { applyPrestigeAward, applyPrestigeAwardInTransaction } from '../financial/prestigeService';
+import type {
+  BattleIncomeBreakdown,
+  PlacementRewardComponent,
+  PrestigeAwardBreakdown,
+} from '../../types';
 
 // ─── Shared Types ────────────────────────────────────────────────────
 
@@ -76,6 +84,7 @@ export async function awardStreamingRevenueForParticipant(
   battleId: number,
   isByeMatch: boolean = false,
   teamSize: number = 1,
+  mode: string = 'unknown',
 ): Promise<StreamingRevenueCalculation | null> {
   if (isByeMatch) return null;
 
@@ -88,7 +97,7 @@ export async function awardStreamingRevenueForParticipant(
   }
 
   const cycleNumber = await getCurrentCycleNumber();
-  await awardStreamingRevenue(userId, calc, cycleNumber);
+  await awardBattleStreamingRevenue(userId, calc, cycleNumber, battleId, mode);
 
   // Update participant record
   await prisma.battleParticipant.update({
@@ -97,6 +106,23 @@ export async function awardStreamingRevenueForParticipant(
   });
 
   return calc;
+}
+
+/**
+ * Apply a precomputed per-robot streaming result through the shared
+ * Battle_Financial_Reward_Service adapter. Placement modes use the batch
+ * calculator, so they pass the same calculation here instead of bypassing
+ * the battle financial boundary and calling the economy writer directly.
+ */
+export async function awardBattleStreamingRevenue(
+  userId: number,
+  calculation: StreamingRevenueCalculation,
+  cycleNumber: number,
+  battleId: number,
+  mode: string,
+  tx?: Prisma.TransactionClient,
+): Promise<void> {
+  await awardStreamingRevenue(userId, calculation, cycleNumber, battleId, mode, tx);
 }
 
 // ─── 2. Audit Logging ────────────────────────────────────────────────
@@ -371,21 +397,93 @@ async function recordModeKills(
   }
 }
 
-// ─── 4–6. Simple Currency / Prestige / Fame Awards ──────────────────
+// ─── 4–6. Shared financial/progression/fame awards ──────────────────
 
-/** Award credits to a user */
-export async function awardCreditsToUser(userId: number, amount: number): Promise<void> {
-  if (amount <= 0) return;
-  await prisma.user.update({
-    where: { id: userId },
-    data: { currency: { increment: amount } },
-  });
+export interface BattleCreditAwardOptions {
+  sourceEventId?: string;
+  battleId?: number;
+  mode?: string;
+  tier?: number | string;
+  outcome?: string;
+  placement?: number | null;
+  participationFloor?: number;
+  winComponent?: number;
+  teamSize?: number;
+  isBye?: boolean;
+  placementRewardComponents?: readonly PlacementRewardComponent[];
+  tx?: Prisma.TransactionClient;
 }
 
-/**
- * Award credits to a user with financial ledger recording.
- * Use this when you know the transactionType and cycleNumber.
- */
+export interface PrestigeAwardOptions {
+  sourceEventId?: string;
+  source?: 'battle' | 'achievement';
+  mode?: string;
+  battleId?: number;
+  achievementId?: number;
+  tx?: Prisma.TransactionClient;
+}
+
+function buildBattleBreakdown(
+  amount: number,
+  sourceEventId: string,
+  options: BattleCreditAwardOptions,
+): BattleIncomeBreakdown {
+  const placementRewardComponents = options.placementRewardComponents;
+  const usesPlacementComponents = placementRewardComponents !== undefined;
+  return {
+    schemaVersion: 1,
+    formula: usesPlacementComponents ? 'battle.placement_income' : 'battle_income',
+    formulaVersion: '1',
+    inputs: [
+      { name: 'participationFloor', value: options.participationFloor ?? amount, unit: 'credits', source: 'battle_reward' },
+      { name: 'winComponent', value: options.winComponent ?? 0, unit: 'credits', source: 'battle_reward' },
+      { name: 'teamSize', value: options.teamSize ?? 1, unit: 'robots', source: 'battle_context' },
+      ...(usesPlacementComponents
+        ? [{ name: 'placementRewardTotal', value: amount, unit: 'credits', source: 'per_robot_placement_awards' }]
+        : []),
+    ],
+    modifiers: [],
+    rounding: {
+      precision: 0,
+      mode: 'round',
+      operationOrder: usesPlacementComponents
+        ? ['perRobotPlacementAwards', 'stableAggregation']
+        : ['participationFloor', 'winComponent', 'teamSize'],
+      scope: usesPlacementComponents ? 'per_item' : 'aggregate',
+    },
+    finalAmount: amount,
+    sourceEventId,
+    transactionType: 'battle_income',
+    mode: options.mode ?? 'unknown',
+    tier: options.tier ?? 'unknown',
+    outcome: options.outcome ?? 'unknown',
+    placement: options.placement ?? null,
+    participationFloor: options.participationFloor ?? amount,
+    winComponent: options.winComponent ?? 0,
+    teamSize: options.teamSize ?? 1,
+    stableAggregation: 'stable',
+    isBye: options.isBye ?? false,
+    ...(usesPlacementComponents ? { placementRewardComponents } : {}),
+  };
+}
+
+/** Compatibility wrapper for callers that only need the shared battle path. */
+export async function awardCreditsToUser(userId: number, amount: number): Promise<void> {
+  if (amount <= 0) return;
+  const cycleNumber = await getCurrentCycleNumber();
+  await awardCreditsWithLedger(
+    userId,
+    amount,
+    'battle_income',
+    cycleNumber,
+    'Battle reward',
+    undefined,
+    undefined,
+    { mode: 'unknown', outcome: 'unknown' },
+  );
+}
+
+/** Apply one stable-level battle-income mutation through the atomic pair. */
 export async function awardCreditsWithLedger(
   userId: number,
   amount: number,
@@ -394,41 +492,96 @@ export async function awardCreditsWithLedger(
   description: string,
   robotId?: number,
   metadata?: Record<string, unknown>,
+  options: BattleCreditAwardOptions = {},
 ): Promise<void> {
   if (amount <= 0) return;
-  const updated = await prisma.user.update({
-    where: { id: userId },
-    data: { currency: { increment: amount } },
-    select: { currency: true },
-  });
+  if (transactionType !== 'battle_income') {
+    throw new Error(`Battle reward cannot use transaction type ${transactionType}`);
+  }
 
-  // Record to financial ledger (non-blocking — never crash a battle for ledger failure)
-  try {
-    const financialService = (await import('../financial/financialService')).default;
-    await financialService.recordTransaction({
-      cycleNumber,
-      userId,
-      robotId,
-      transactionType: transactionType as TransactionType,
-      amount,
-      balanceAfter: updated.currency,
-      description,
-      metadata,
-    });
-  } catch (err) {
-    // Ledger recording failure must never block gameplay
-    const logger = (await import('../../config/logger')).default;
-    logger.error(`[BattlePostCombat] Financial ledger record failed for user ${userId}: ${err}`);
+  const sourceEventId = options.sourceEventId
+    ?? (typeof metadata?.sourceEventId === 'string' ? metadata.sourceEventId : undefined)
+    ?? (options.battleId !== undefined
+      ? buildBattleIncomeEventId(options.battleId, userId, options.mode ?? 'unknown')
+      : `battle:legacy:${cycleNumber}:${userId}:${amount}`);
+  const breakdown = buildBattleBreakdown(amount, sourceEventId, options);
+
+  const mutationInput = {
+    cycleNumber,
+    userId,
+    // Battle income is stable-aggregated. The optional robotId remains context
+    // for old call sites but is not stored on the stable-level mutation.
+    robotId: undefined,
+    transactionType: 'battle_income' as const,
+    amount,
+    description,
+    financialEventId: sourceEventId,
+    breakdown,
+    auditContext: {
+      ...(metadata ?? {}),
+      participantRobotId: robotId ?? null,
+    },
+  };
+  if (options.tx) {
+    await applyCreditMutationInTransaction(options.tx, mutationInput);
+  } else {
+    await applyCreditMutation(mutationInput);
   }
 }
 
-/** Award prestige to a user */
-export async function awardPrestigeToUser(userId: number, amount: number): Promise<void> {
+function buildPrestigeBreakdown(
+  amount: number,
+  sourceEventId: string,
+  options: PrestigeAwardOptions,
+): PrestigeAwardBreakdown {
+  return {
+    schemaVersion: 1,
+    formula: options.source === 'achievement' ? 'achievement.prestige' : 'battle.prestige',
+    formulaVersion: '1',
+    inputs: [{ name: 'awardAmount', value: amount, unit: 'prestige', source: options.source ?? 'battle' }],
+    modifiers: [],
+    rounding: { precision: 0, mode: 'none', operationOrder: ['awardAmount'], scope: 'aggregate' },
+    sourceEventId,
+    source: options.source ?? 'battle',
+    awardAmount: amount,
+    mode: options.mode ?? null,
+    battleId: options.battleId ?? null,
+    achievementId: options.achievementId ?? null,
+  };
+}
+
+/** Apply one stable-level positive prestige award through Prestige_Service. */
+export async function awardPrestigeToUser(
+  userId: number,
+  amount: number,
+  cycleNumber?: number,
+  options: PrestigeAwardOptions = {},
+): Promise<void> {
   if (amount <= 0) return;
-  await prisma.user.update({
-    where: { id: userId },
-    data: { prestige: { increment: amount } },
-  });
+  const actualCycle = cycleNumber ?? await getCurrentCycleNumber();
+  const sourceEventId = options.sourceEventId
+    ?? (options.source === 'battle' && options.battleId !== undefined && options.mode
+      ? buildBattlePrestigeEventId(options.battleId, userId, options.mode)
+      : `prestige:legacy:${actualCycle}:${userId}:${amount}`);
+  const source = options.source ?? 'battle';
+  const breakdown = buildPrestigeBreakdown(amount, sourceEventId, options);
+
+  const mutationInput = {
+    cycleNumber: actualCycle,
+    userId,
+    amount,
+    source,
+    sourceEventId,
+    mode: options.mode,
+    battleId: options.battleId,
+    achievementId: options.achievementId,
+    breakdown,
+  };
+  if (options.tx) {
+    await applyPrestigeAwardInTransaction(options.tx, mutationInput);
+  } else {
+    await applyPrestigeAward(mutationInput);
+  }
 }
 
 /** Award fame to a robot */

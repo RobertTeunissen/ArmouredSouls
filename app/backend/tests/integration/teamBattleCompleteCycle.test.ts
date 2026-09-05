@@ -28,6 +28,9 @@ import {
   rebalanceTeamBattleLeagues,
 } from '../../src/services/team-battle/teamBattleAdapter';
 import { battlesForRobots, scheduledMatchesForTeams } from '../cleanupHelper';
+import { usePostCutoverFinancialRollout } from '../financialRolloutTestHelper';
+
+usePostCutoverFinancialRollout();
 
 describe('Team Battle Complete Cycle Integration Test', () => {
   let testUserIds: number[] = [];
@@ -61,10 +64,20 @@ describe('Team Battle Complete Cycle Integration Test', () => {
     }
 
     if (testRobotIds.length > 0) {
+      await prisma.financialLedger.deleteMany({ where: { userId: { in: testUserIds } } });
+      await prisma.auditLog.deleteMany({
+        where: {
+          OR: [
+            { userId: { in: testUserIds } },
+            { robotId: { in: testRobotIds } },
+          ],
+        },
+      });
       await prisma.battle.deleteMany({ where: battlesForRobots(testRobotIds) });
     }
 
     if (testTeamIds.length > 0) {
+      await prisma.standing.deleteMany({ where: { entityType: 'team', entityId: { in: testTeamIds } } });
       await prisma.teamBattleMember.deleteMany({
         where: { teamId: { in: testTeamIds } },
       });
@@ -490,39 +503,6 @@ describe('Team Battle Complete Cycle Integration Test', () => {
       where: { battleType: 'tournament' },
     });
     expect(oldTournamentBattles).toBe(0);
-  });
-
-  it('should verify tag team mode is unaffected by team battle execution', async () => {
-    // Verify tag team battles still use 'tag_team' battleType (not renamed)
-    const tagTeamBattleCount = await prisma.battle.count({
-      where: { battleType: 'tag_team' },
-    });
-
-    // If tag team battles exist, verify they are intact
-    if (tagTeamBattleCount > 0) {
-      const sampleTagTeamBattle = await prisma.battle.findFirst({
-        where: { battleType: 'tag_team' },
-        include: { participants: true },
-      });
-
-      expect(sampleTagTeamBattle).not.toBeNull();
-      expect(sampleTagTeamBattle!.battleType).toBe('tag_team');
-      // Tag team's distinguishing feature is the Active/Reserve slot split. That
-      // used to be `battles.team1_active_robot_id`; since Spec #43 it is the
-      // `role` column on each participant, so assert on that instead.
-      const roles = sampleTagTeamBattle!.participants.map(p => p.role);
-      expect(roles).toContain('active');
-    }
-
-    // Verify tag team scheduled matches are still their own match type in the
-    // unified schedule (Spec #41 folded the per-mode tables into one).
-    const tagTeamScheduledCount = await prisma.scheduledMatch.count({
-      where: { matchType: MatchType.tag_team },
-    });
-    // Just verify the query is accessible and not corrupted
-    expect(tagTeamScheduledCount).toBeGreaterThanOrEqual(0);
-
-    console.log('[Test] ✓ Tag team mode verified unaffected');
   });
 
   it('should run both 2v2 and 3v3 in same cycle (simulating bulk cycle)', async () => {

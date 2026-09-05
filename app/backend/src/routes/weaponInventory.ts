@@ -25,7 +25,11 @@ import {
 } from '../shared/utils/weaponRefinement';
 import { ROBOT_ATTRIBUTES } from '../shared/utils/robotAttributes';
 import type { Weapon } from '../../generated/prisma';
-import { recordLedgerEntry } from '../services/financial/recordLedgerEntry';
+import { applyCreditMutationInTransaction } from '../services/financial/creditMutationService';
+import { getIdempotencyKey, idempotencyHeadersSchema } from '../utils/idempotency';
+import { createEconomicRequestIdentity, findCompletedEconomicRequest, findEconomicRequestReplay, buildEconomicRequestAuditContext } from '../services/financial/economicRequestReplayService';
+import { buildPurchaseBreakdown } from '../services/financial/financialBreakdowns';
+import { getCurrentCycleNumber } from '../services/battle/baseOrchestrator';
 
 const router = express.Router();
 
@@ -224,11 +228,17 @@ router.get('/', authenticateToken, validateRequest({}), async (req: AuthRequest,
 });
 
 // Purchase a weapon into inventory
-router.post('/purchase', authenticateToken, validateRequest({ body: purchaseBodySchema }), async (req: AuthRequest, res: Response) => {
+router.post('/purchase', authenticateToken, validateRequest({ body: purchaseBodySchema, headers: idempotencyHeadersSchema }), async (req: AuthRequest, res: Response) => {
   const userId = req.user!.userId;
   const { weaponId } = req.body;
-
+  const requestKey = getIdempotencyKey(req.headers);
   const weaponIdNum = Number(weaponId);
+  const identity = createEconomicRequestIdentity(userId, 'weapon_purchase', requestKey, { weaponId: weaponIdNum });
+  const replay = await findCompletedEconomicRequest<{ weaponInventory: unknown; currency: number; message: string }>(userId, 'weapon_purchase', requestKey, { weaponId: weaponIdNum });
+  if (replay) {
+    res.status(201).json({ ...replay.response, achievementUnlocks: [], replayed: true });
+    return;
+  }
 
   // Get weapon details
   const weapon = await prisma.weapon.findUnique({
@@ -287,6 +297,10 @@ router.post('/purchase', authenticateToken, validateRequest({ body: purchaseBody
   // Purchase weapon in a transaction with row-level locking
   const result = await prisma.$transaction(async (tx) => {
     const lockedUser = await lockUserForSpending(tx, userId);
+    const replayInTransaction = await findEconomicRequestReplay<{ weaponInventory: unknown; currency: number; message: string }>(tx, identity);
+    if (replayInTransaction) {
+      return { user: { currency: replayInTransaction.response.currency }, weaponInventory: replayInTransaction.response.weaponInventory, replayed: true };
+    }
 
     if (lockedUser.currency < finalCost) {
       throw new EconomyError(EconomyErrorCode.INSUFFICIENT_CREDITS, 'Insufficient credits', 400, {
@@ -313,18 +327,51 @@ router.post('/purchase', authenticateToken, validateRequest({ body: purchaseBody
       throw new EconomyError(EconomyErrorCode.STORAGE_CAPACITY_FULL, 'Storage capacity full', 400);
     }
 
-    const updatedUser = await tx.user.update({
-      where: { id: userId },
-      data: { currency: { decrement: finalCost } },
-    });
-
     const weaponInventory = await tx.weaponInventory.create({
       data: { userId, weaponId: weaponIdNum, pricePaid: finalCost },
       include: { weapon: true },
     });
 
-    return { user: updatedUser, weaponInventory };
+    const financialEventId = identity.financialEventId;
+    const coreResponse = {
+      weaponInventory,
+      currency: lockedUser.currency - finalCost,
+      message: 'Weapon purchased successfully',
+    };
+    const financialResult = await applyCreditMutationInTransaction(tx, {
+      cycleNumber: await getCurrentCycleNumber(),
+      userId,
+      transactionType: 'weapon_purchase',
+      amount: -finalCost,
+      description: `Purchased weapon: ${weapon.name}`,
+      financialEventId,
+      breakdown: buildPurchaseBreakdown({
+        transactionType: 'weapon_purchase',
+        sourceEventId: financialEventId,
+        amount: -finalCost,
+        operation: 'weapon_purchase',
+        itemId: weaponInventory.id,
+        basePrice: weapon.cost,
+        discountAmount: weapon.cost - finalCost,
+        inputs: [
+          { name: 'catalogPrice', value: weapon.cost, unit: 'credits', source: 'weapon_catalog' },
+          { name: 'workshopLevel', value: freshWorkshopLevel, unit: 'levels', source: 'facility' },
+          { name: 'finalCost', value: finalCost, unit: 'credits', source: 'shared_discount_formula' },
+        ],
+        modifiers: [{ name: 'workshopDiscount', value: discountPercent, unit: 'percent', source: 'shared_discount_formula', applied: discountPercent > 0 }],
+        roundingMode: 'floor',
+        operationOrder: ['catalogPrice', 'workshopDiscount', 'finalCost'],
+      }),
+      auditContext: buildEconomicRequestAuditContext(identity, coreResponse),
+    });
+
+    return { user: { currency: financialResult.balanceAfter }, weaponInventory, replayed: false };
   });
+
+  if (result.replayed) {
+    res.status(201).json({ weaponInventory: result.weaponInventory, currency: result.user.currency, message: 'Weapon purchased successfully', achievementUnlocks: [], replayed: true });
+    return;
+  }
 
   // Log weapon purchase event (non-blocking)
   try {
@@ -342,14 +389,6 @@ router.post('/purchase', authenticateToken, validateRequest({ body: purchaseBody
   } catch (logError) {
     logger.error('Failed to log weapon purchase event:', logError);
   }
-
-  // Record financial ledger entry (non-blocking)
-  recordLedgerEntry({
-    userId, transactionType: 'weapon_purchase',
-    amount: -finalCost, balanceAfter: result.user.currency,
-    description: `Purchased weapon: ${weapon.name}`,
-    metadata: { weaponId: weapon.id, weaponName: weapon.name },
-  });
 
   res.status(201).json({
     weaponInventory: result.weaponInventory,
@@ -433,16 +472,27 @@ router.delete(
   '/:id',
   authenticateToken,
   resaleRateLimiter, // After authenticateToken so req.user is populated for keyGenerator
-  validateRequest({ params: inventoryIdParamsSchema }),
+  validateRequest({ params: inventoryIdParamsSchema, headers: idempotencyHeadersSchema }),
   async (req: AuthRequest, res: Response) => {
     const userId = req.user!.userId;
     const inventoryId = parseInt(String(req.params.id));
+    const requestKey = getIdempotencyKey(req.headers);
+    const identity = createEconomicRequestIdentity(userId, 'weapon_sale', requestKey, { inventoryId });
+    const replay = await findCompletedEconomicRequest<{ salePrice: number; currency: number; weaponName: string; message: string }>(userId, 'weapon_sale', requestKey, { inventoryId });
+    if (replay) {
+      res.json({ ...replay.response, achievementUnlocks: [], replayed: true });
+      return;
+    }
 
     await verifyWeaponOwnership(prisma, inventoryId, userId);
 
     const result = await prisma.$transaction(async (tx) => {
       // 1. Lock user row first (existing convention for credit-affecting endpoints)
       const lockedUser = await lockUserForSpending(tx, userId);
+      const replayInTransaction = await findEconomicRequestReplay<{ salePrice: number; currency: number; weaponName: string; message: string }>(tx, identity);
+      if (replayInTransaction) {
+        return { ...replayInTransaction.response, weaponId: 0, pricePaid: 0, workshopLevel: 0, resaleRate: 0, previousBalance: lockedUser.currency, replayed: true };
+      }
 
       // 2. Lock the weapon_inventory row second.
       //    Serializes resale-vs-resale on the same row AND resale-vs-equip on
@@ -508,15 +558,45 @@ router.delete(
       const resaleRate = calculateWeaponResaleRate(workshopLevel);
       const salePrice = applyResaleRate(weaponInv.pricePaid, resaleRate);
 
-      const updatedUser = await tx.user.update({
-        where: { id: userId },
-        data: { currency: { increment: salePrice } },
+      const financialEventId = identity.financialEventId;
+      const coreResponse = {
+        salePrice,
+        currency: lockedUser.currency + salePrice,
+        weaponName: weaponMeta?.name ?? 'Weapon',
+        message: `Sold ${weaponMeta?.name ?? 'Weapon'} for ₡${salePrice.toLocaleString()}`,
+      };
+      const financialResult = await applyCreditMutationInTransaction(tx, {
+        cycleNumber: await getCurrentCycleNumber(),
+        userId,
+        transactionType: 'weapon_sale',
+        amount: salePrice,
+        description: `Sold weapon: ${weaponMeta?.name ?? 'Weapon'}`,
+        financialEventId,
+        breakdown: buildPurchaseBreakdown({
+          transactionType: 'weapon_sale',
+          sourceEventId: financialEventId,
+          amount: salePrice,
+          operation: 'weapon_sale',
+          itemId: inventoryId,
+          basePrice: weaponInv.pricePaid,
+          discountAmount: weaponInv.pricePaid - salePrice,
+          saleValue: salePrice,
+          inputs: [
+            { name: 'pricePaid', value: weaponInv.pricePaid, unit: 'credits', source: 'weapon_inventory' },
+            { name: 'workshopLevel', value: workshopLevel, unit: 'levels', source: 'facility' },
+            { name: 'resaleRate', value: resaleRate, unit: 'percent', source: 'shared_resale_formula' },
+          ],
+          modifiers: [{ name: 'resaleRate', value: resaleRate, unit: 'percent', source: 'shared_resale_formula', applied: true }],
+          roundingMode: 'floor',
+          operationOrder: ['pricePaid', 'resaleRate', 'saleValue'],
+        }),
+        auditContext: buildEconomicRequestAuditContext(identity, coreResponse),
       });
 
       await tx.weaponInventory.delete({ where: { id: inventoryId } });
 
       return {
-        user: updatedUser,
+        user: { currency: financialResult.balanceAfter },
         weaponName: weaponMeta?.name ?? 'Weapon',
         weaponId: weaponInv.weaponId,
         salePrice,
@@ -524,8 +604,30 @@ router.delete(
         workshopLevel,
         resaleRate,
         previousBalance: lockedUser.currency,
+        replayed: false,
       };
     });
+
+    if (result.replayed) {
+      const replayedSale = result as {
+        salePrice: number;
+        currency: number;
+        weaponName: string;
+        message: string;
+      };
+      res.json({ ...replayedSale, achievementUnlocks: [], replayed: true });
+      return;
+    }
+    const completedSale = result as {
+      user: { currency: number };
+      weaponName: string;
+      weaponId: number;
+      salePrice: number;
+      pricePaid: number;
+      workshopLevel: number;
+      resaleRate: number;
+      previousBalance: number;
+    };
 
     // Non-blocking audit log + structured log.
     // Note: does NOT call securityMonitor.trackSpending — resale is income,
@@ -533,25 +635,17 @@ router.delete(
     try {
       const cycleMetadata = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
       const currentCycle = (cycleMetadata?.totalCycles || 0) + 1;
-      await eventLogger.logWeaponSale(currentCycle, userId, result.weaponId, result.salePrice);
+      await eventLogger.logWeaponSale(currentCycle, userId, completedSale.weaponId, completedSale.salePrice);
 
       logger.info(
-        `[Weapon] User ${userId} | Sold: ${result.weaponName} | ` +
-        `Price: ₡${result.salePrice.toLocaleString()} (paid ₡${result.pricePaid.toLocaleString()}) | ` +
-        `Workshop L${result.workshopLevel} (${result.resaleRate}% rate) | ` +
-        `Balance: ₡${result.previousBalance.toLocaleString()} → ₡${result.user.currency.toLocaleString()}`,
+        `[Weapon] User ${userId} | Sold: ${completedSale.weaponName} | ` +
+        `Price: ₡${completedSale.salePrice.toLocaleString()} (paid ₡${completedSale.pricePaid.toLocaleString()}) | ` +
+        `Workshop L${completedSale.workshopLevel} (${completedSale.resaleRate}% rate) | ` +
+        `Balance: ₡${completedSale.previousBalance.toLocaleString()} → ₡${completedSale.user.currency.toLocaleString()}`,
       );
     } catch (logError) {
       logger.error('Failed to log weapon sale event:', logError);
     }
-
-    // Record financial ledger entry (non-blocking)
-    recordLedgerEntry({
-      userId, transactionType: 'weapon_sale',
-      amount: result.salePrice, balanceAfter: result.user.currency,
-      description: `Sold weapon: ${result.weaponName}`,
-      metadata: { weaponId: result.weaponId },
-    });
 
     // Achievement check (Spec #33 R7.10–R7.11)
     const achievementUnlocks = await (async (): Promise<UnlockedAchievement[]> => {
@@ -559,10 +653,10 @@ router.delete(
         return await achievementService.checkAndAward(userId, null, {
           type: 'weapon_sold',
           data: {
-            weaponId: result.weaponId,
-            salePrice: result.salePrice,
-            pricePaid: result.pricePaid,
-            workshopLevel: result.workshopLevel,
+            weaponId: completedSale.weaponId,
+            salePrice: completedSale.salePrice,
+            pricePaid: completedSale.pricePaid,
+            workshopLevel: completedSale.workshopLevel,
           },
         });
       } catch {
@@ -571,10 +665,10 @@ router.delete(
     })();
 
     res.json({
-      salePrice: result.salePrice,
-      currency: result.user.currency,
-      weaponName: result.weaponName,
-      message: `Sold ${result.weaponName} for ₡${result.salePrice.toLocaleString()}`,
+      salePrice: completedSale.salePrice,
+      currency: completedSale.user.currency,
+      weaponName: completedSale.weaponName,
+      message: `Sold ${completedSale.weaponName} for ₡${completedSale.salePrice.toLocaleString()}`,
       achievementUnlocks,
     });
   },
@@ -618,22 +712,34 @@ router.post(
   '/:id/refine',
   authenticateToken,
   refineRateLimiter, // After authenticateToken so req.user is populated for keyGenerator
-  validateRequest({ params: inventoryIdParamsSchema, body: refineBodySchema }),
+  validateRequest({ params: inventoryIdParamsSchema, body: refineBodySchema, headers: idempotencyHeadersSchema }),
   async (req: AuthRequest, res: Response) => {
     const userId = req.user!.userId;
     const inventoryId = parseInt(String(req.params.id));
     const { tier, magnitude, targetAttribute } = req.body as z.infer<typeof refineBodySchema>;
-
-    await verifyWeaponOwnership(prisma, inventoryId, userId);
+    const requestKey = getIdempotencyKey(req.headers);
 
     // Sharpen/Forge always store magnitude 1 (the Zod schema enforces this on
     // input; we mirror it on the storage path so an audit log of the row
     // never disagrees with the formula module's expectations).
     const magnitudeForStorage = (tier === 'sharpen' || tier === 'forge') ? 1 : magnitude;
+    const requestFacts = { inventoryId, tier, magnitude: magnitudeForStorage, targetAttribute: targetAttribute ?? null };
+    const identity = createEconomicRequestIdentity(userId, 'weapon_refinement', requestKey, requestFacts);
+    const replay = await findCompletedEconomicRequest<{ weaponInventory: unknown; currency: number; cost: number; message: string }>(userId, 'weapon_refinement', requestKey, requestFacts);
+    if (replay) {
+      res.json({ ...replay.response, achievementUnlocks: [], replayed: true });
+      return;
+    }
+
+    await verifyWeaponOwnership(prisma, inventoryId, userId);
 
     const result = await prisma.$transaction(async (tx) => {
       // 1. Lock user row first (matches Spec #33 lock acquisition order)
       const lockedUser = await lockUserForSpending(tx, userId);
+      const replayInTransaction = await findEconomicRequestReplay<{ weaponInventory: unknown; currency: number; cost: number; message: string }>(tx, identity);
+      if (replayInTransaction) {
+        return { user: { currency: replayInTransaction.response.currency }, weapon: { id: 0, name: '' }, weaponInventory: replayInTransaction.response.weaponInventory, newRefinement: { slotIndex: 0 }, cost: replayInTransaction.response.cost, workshopLevel: 0, previousBalance: lockedUser.currency, message: replayInTransaction.response.message, replayed: true };
+      }
 
       // 2. Lock the weapon_inventory row second.
       //    Serialises refine-vs-refine, refine-vs-resale, and refine-vs-equip
@@ -785,12 +891,7 @@ router.post(
       while (usedSlots.has(slotIndex)) slotIndex++;
       // slotIndex is guaranteed to be in [1..5] because slotCheck above passed.
 
-      // 11. Mutations: deduct currency, increment pricePaid, insert refinement row.
-      const updatedUser = await tx.user.update({
-        where: { id: userId },
-        data: { currency: { decrement: cost } },
-      });
-
+      // 11. Mutations: increment pricePaid and insert refinement row.
       await tx.weaponInventory.update({
         where: { id: inventoryId },
         data: { pricePaid: { increment: cost } },
@@ -816,21 +917,81 @@ router.post(
         },
       });
 
+      const financialEventId = identity.financialEventId;
+      const coreResponse = {
+        weaponInventory: updatedInventory,
+        currency: lockedUser.currency - cost,
+        cost,
+        message: `Refined ${weapon.name}: ${tier}${targetAttribute ? ` ${targetAttribute} +${magnitudeForStorage}` : ''}`,
+      };
+      const financialResult = await applyCreditMutationInTransaction(tx, {
+        cycleNumber: await getCurrentCycleNumber(),
+        userId,
+        transactionType: 'weapon_refinement',
+        amount: -cost,
+        description: `Refined weapon slot ${slotIndex}`,
+        financialEventId,
+        breakdown: buildPurchaseBreakdown({
+          transactionType: 'weapon_refinement',
+          sourceEventId: financialEventId,
+          amount: -cost,
+          operation: 'weapon_refinement',
+          itemId: inventoryId,
+          basePrice: cost,
+          discountAmount: 0,
+          inputs: [
+            { name: 'tier', value: tier, unit: 'refinement_tier', source: 'request' },
+            { name: 'magnitude', value: magnitudeForStorage, unit: 'points', source: 'request' },
+            { name: 'workshopLevel', value: workshopLevel, unit: 'levels', source: 'facility' },
+            { name: 'slotIndex', value: slotIndex, unit: 'slot', source: 'weapon_inventory' },
+          ],
+        }),
+        auditContext: buildEconomicRequestAuditContext(identity, coreResponse),
+      });
+
       return {
-        user: updatedUser,
+        user: { currency: financialResult.balanceAfter },
         weapon,
         weaponInventory: updatedInventory,
         newRefinement,
         cost,
         workshopLevel,
         previousBalance: lockedUser.currency,
+        replayed: false,
       };
     });
+
+    if (result.replayed) {
+      const replayedRefinement = result as {
+        user: { currency: number };
+        weaponInventory: unknown;
+        cost: number;
+        message: string;
+      };
+      res.json({
+        weaponInventory: replayedRefinement.weaponInventory,
+        currency: replayedRefinement.user.currency,
+        cost: replayedRefinement.cost,
+        message: replayedRefinement.message,
+        achievementUnlocks: [],
+        replayed: true,
+      });
+      return;
+    }
+    const completedRefinement = result as {
+      user: { currency: number };
+      weapon: { id: number; name: string };
+      weaponInventory: { id: number };
+      newRefinement: { slotIndex: number };
+      cost: number;
+      workshopLevel: number;
+      previousBalance: number;
+    };
 
     // ── Post-commit ───────────────────────────────────────────────────
 
     // Refinement IS spending — purchase tracks it, resale doesn't, refinement does.
-    securityMonitor.trackSpending(userId, result.cost, {
+    securityMonitor.trackSpending(userId, completedRefinement.cost, {
       sourceIp: req.ip || undefined,
       endpoint: req.originalUrl,
     });
@@ -840,35 +1001,27 @@ router.post(
       const cycleMetadata = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
       const currentCycle = (cycleMetadata?.totalCycles || 0) + 1;
       await eventLogger.logWeaponRefinement(currentCycle, userId, {
-        weaponInventoryId: result.weaponInventory.id,
-        weaponId: result.weapon.id,
+        weaponInventoryId: completedRefinement.weaponInventory.id,
+        weaponId: completedRefinement.weapon.id,
         tier,
         magnitude: magnitudeForStorage,
         targetAttribute: targetAttribute ?? null,
-        costPaid: result.cost,
-        workshopLevel: result.workshopLevel,
+        costPaid: completedRefinement.cost,
+        workshopLevel: completedRefinement.workshopLevel,
       });
 
       const attrInfo = targetAttribute ? ` (${targetAttribute} +${magnitudeForStorage})` : '';
       logger.info(
-        `[Refine] User ${userId} | Weapon: ${result.weapon.name} (inv ${result.weaponInventory.id}) | ` +
+        `[Refine] User ${userId} | Weapon: ${completedRefinement.weapon.name} (inv ${completedRefinement.weaponInventory.id}) | ` +
         `Tier: ${tier}${attrInfo} | ` +
-        `Cost: ₡${result.cost.toLocaleString()} | ` +
-        `Workshop L${result.workshopLevel} | ` +
-        `Slot: ${result.newRefinement.slotIndex}/5 | ` +
-        `Balance: ₡${result.previousBalance.toLocaleString()} → ₡${result.user.currency.toLocaleString()}`,
+        `Cost: ₡${completedRefinement.cost.toLocaleString()} | ` +
+        `Workshop L${completedRefinement.workshopLevel} | ` +
+        `Slot: ${completedRefinement.newRefinement.slotIndex}/5 | ` +
+        `Balance: ₡${completedRefinement.previousBalance.toLocaleString()} → ₡${completedRefinement.user.currency.toLocaleString()}`,
       );
     } catch (logError) {
       logger.error('Failed to log weapon refinement event:', logError);
     }
-
-    // Record financial ledger entry (non-blocking)
-    recordLedgerEntry({
-      userId, transactionType: 'weapon_refinement',
-      amount: -result.cost, balanceAfter: result.user.currency,
-      description: `Refined weapon slot ${result.newRefinement.slotIndex}`,
-      metadata: { weaponInventoryId: inventoryId, slotIndex: result.newRefinement.slotIndex },
-    });
 
     // Achievement check (wired in Task 14; the trigger map already includes
     // 'weapon_refined'). Failures must NOT block the response.
@@ -877,13 +1030,13 @@ router.post(
         return await achievementService.checkAndAward(userId, null, {
           type: 'weapon_refined',
           data: {
-            weaponInventoryId: result.weaponInventory.id,
-            weaponId: result.weapon.id,
+            weaponInventoryId: completedRefinement.weaponInventory.id,
+            weaponId: completedRefinement.weapon.id,
             tier,
             magnitude: magnitudeForStorage,
             targetAttribute: targetAttribute ?? null,
-            costPaid: result.cost,
-            workshopLevel: result.workshopLevel,
+            costPaid: completedRefinement.cost,
+            workshopLevel: completedRefinement.workshopLevel,
           },
         });
       } catch {
@@ -893,10 +1046,10 @@ router.post(
 
     const messageAttr = targetAttribute ? ` ${targetAttribute} +${magnitudeForStorage}` : '';
     res.json({
-      weaponInventory: result.weaponInventory,
-      currency: result.user.currency,
-      cost: result.cost,
-      message: `Refined ${result.weapon.name}: ${tier}${messageAttr}`,
+      weaponInventory: completedRefinement.weaponInventory,
+      currency: completedRefinement.user.currency,
+      cost: completedRefinement.cost,
+      message: `Refined ${completedRefinement.weapon.name}: ${tier}${messageAttr}`,
       achievementUnlocks,
     });
   },

@@ -28,6 +28,20 @@ jest.mock('../src/lib/prisma', () => ({
 
 const mockCalculateStreamingRevenue = jest.fn();
 const mockAwardStreamingRevenue = jest.fn();
+const mockApplyCreditMutation = jest.fn().mockResolvedValue({ created: true, balanceAfter: 0 });
+const mockApplyCreditMutationInTransaction = jest.fn().mockResolvedValue({ created: true, balanceAfter: 0 });
+const mockApplyPrestigeAward = jest.fn().mockResolvedValue({ created: true, prestigeAfter: 0 });
+const mockApplyPrestigeAwardInTransaction = jest.fn().mockResolvedValue({ created: true, prestigeAfter: 0 });
+
+jest.mock('../src/services/financial/creditMutationService', () => ({
+  applyCreditMutation: (...args: unknown[]) => mockApplyCreditMutation(...args),
+  applyCreditMutationInTransaction: (...args: unknown[]) => mockApplyCreditMutationInTransaction(...args),
+}));
+
+jest.mock('../src/services/financial/prestigeService', () => ({
+  applyPrestigeAward: (...args: unknown[]) => mockApplyPrestigeAward(...args),
+  applyPrestigeAwardInTransaction: (...args: unknown[]) => mockApplyPrestigeAwardInTransaction(...args),
+}));
 
 jest.mock('../src/services/economy/streamingRevenueService', () => ({
   calculateStreamingRevenue: (...args: unknown[]) => mockCalculateStreamingRevenue(...args),
@@ -138,7 +152,7 @@ describe('awardStreamingRevenueForParticipant', () => {
 
     expect(result).toEqual(calc);
     expect(mockCalculateStreamingRevenue).toHaveBeenCalledWith(1, 10, false);
-    expect(mockAwardStreamingRevenue).toHaveBeenCalledWith(10, calc, 42);
+    expect(mockAwardStreamingRevenue).toHaveBeenCalledWith(10, calc, 42, 100, 'unknown', undefined);
     expect(mockPrisma.battleParticipant.update).toHaveBeenCalledWith({
       where: { battleId_robotId: { battleId: 100, robotId: 1 } },
       data: { streamingRevenue: 2142 },
@@ -589,47 +603,58 @@ describe('updateRobotCombatStats', () => {
 });
 
 describe('awardCreditsToUser', () => {
-  it('should increment user currency when amount > 0', async () => {
+  it('should apply a battle-income mutation when amount > 0', async () => {
     await awardCreditsToUser(10, 5000);
 
-    expect(mockPrisma.user.update).toHaveBeenCalledWith({
-      where: { id: 10 },
-      data: { currency: { increment: 5000 } },
-    });
-  });
-
-  it('should not call prisma when amount is 0', async () => {
-    await awardCreditsToUser(10, 0);
-
+    expect(mockApplyCreditMutation).toHaveBeenCalledWith(expect.objectContaining({
+      cycleNumber: 42,
+      userId: 10,
+      transactionType: 'battle_income',
+      amount: 5000,
+      description: 'Battle reward',
+    }));
     expect(mockPrisma.user.update).not.toHaveBeenCalled();
   });
 
-  it('should not call prisma when amount is negative', async () => {
+  it('should not call the financial service when amount is 0', async () => {
+    await awardCreditsToUser(10, 0);
+
+    expect(mockApplyCreditMutation).not.toHaveBeenCalled();
+    expect(mockPrisma.user.update).not.toHaveBeenCalled();
+  });
+
+  it('should not call the financial service when amount is negative', async () => {
     await awardCreditsToUser(10, -100);
 
+    expect(mockApplyCreditMutation).not.toHaveBeenCalled();
     expect(mockPrisma.user.update).not.toHaveBeenCalled();
   });
 });
 
 describe('awardPrestigeToUser', () => {
-  it('should increment user prestige when amount > 0', async () => {
+  it('should apply a battle prestige award when amount > 0', async () => {
     await awardPrestigeToUser(10, 15);
 
-    expect(mockPrisma.user.update).toHaveBeenCalledWith({
-      where: { id: 10 },
-      data: { prestige: { increment: 15 } },
-    });
-  });
-
-  it('should not call prisma when amount is 0', async () => {
-    await awardPrestigeToUser(10, 0);
-
+    expect(mockApplyPrestigeAward).toHaveBeenCalledWith(expect.objectContaining({
+      cycleNumber: 42,
+      userId: 10,
+      amount: 15,
+      source: 'battle',
+    }));
     expect(mockPrisma.user.update).not.toHaveBeenCalled();
   });
 
-  it('should not call prisma when amount is negative', async () => {
+  it('should not call the financial service when amount is 0', async () => {
+    await awardPrestigeToUser(10, 0);
+
+    expect(mockApplyPrestigeAward).not.toHaveBeenCalled();
+    expect(mockPrisma.user.update).not.toHaveBeenCalled();
+  });
+
+  it('should not call the financial service when amount is negative', async () => {
     await awardPrestigeToUser(10, -5);
 
+    expect(mockApplyPrestigeAward).not.toHaveBeenCalled();
     expect(mockPrisma.user.update).not.toHaveBeenCalled();
   });
 });

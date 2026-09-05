@@ -249,6 +249,10 @@ export function validateUpgradesFresh(
 import prisma from '../../lib/prisma';
 import { lockUserForSpending } from '../../lib/creditGuard';
 import { calculateMaxHP, calculateMaxShield } from '../../utils/robotCalculations';
+import { applyCreditMutationInTransaction } from '../financial/creditMutationService';
+import { createEconomicRequestIdentity, findEconomicRequestReplay, buildEconomicRequestAuditContext } from '../financial/economicRequestReplayService';
+import { buildPurchaseBreakdown } from '../financial/financialBreakdowns';
+import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
 
 const FACILITY_TYPES = ['training_facility', 'combat_training_academy', 'defense_training_academy', 'mobility_training_academy', 'ai_training_academy'] as const;
 
@@ -276,7 +280,9 @@ export async function executeUpgradeTransaction(
   userId: number,
   robotId: number,
   upgrades: Record<string, UpgradeRequest>,
-): Promise<UpgradeTransactionResult> {
+  requestKey: string,
+): Promise<UpgradeTransactionResult & { replayed: boolean }> {
+  const identity = createEconomicRequestIdentity(userId, 'attribute_upgrade', requestKey, { robotId, upgrades });
   const robot = await prisma.robot.findFirst({ where: { id: robotId, userId } });
   if (!robot) throw new RobotError(RobotErrorCode.ROBOT_NOT_FOUND, 'Robot not found', 404);
 
@@ -303,7 +309,18 @@ export async function executeUpgradeTransaction(
   }
 
   const txResult = await prisma.$transaction(async (tx) => {
-    const lockedUser = await lockUserForSpending(tx, userId);
+    await lockUserForSpending(tx, userId);
+    const replay = await findEconomicRequestReplay<{ robot: unknown; currency: number; totalCost: number; upgradeOperations: UpgradeOperation[] }>(tx, identity);
+    if (replay) {
+      return {
+        user: { currency: replay.response.currency },
+        robot: replay.response.robot,
+        totalCost: replay.response.totalCost,
+        upgradeOperations: replay.response.upgradeOperations,
+        replayed: true,
+      };
+    }
+    const lockedUser = await tx.user.findUniqueOrThrow({ where: { id: userId } });
 
     const freshFacilities = await tx.facility.findMany({
       where: { userId, facilityType: { in: [...FACILITY_TYPES] } },
@@ -327,11 +344,6 @@ export async function executeUpgradeTransaction(
       throw new RobotError(RobotErrorCode.INVALID_ROBOT_ATTRIBUTES, 'Insufficient credits', 400, { required: fresh.totalCost, current: lockedUser.currency });
     }
 
-    const updatedUser = await tx.user.update({
-      where: { id: userId },
-      data: { currency: { decrement: fresh.totalCost } },
-    });
-
     const updateData: Record<string, number> = {};
     for (const op of fresh.upgradeOperations) updateData[op.attribute] = op.toLevel;
 
@@ -346,6 +358,7 @@ export async function executeUpgradeTransaction(
       include: { mainWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } }, offhandWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } } },
     });
 
+    let responseRobot = updatedRobot;
     const needsHPUpdate = upgradeOperations.some(op => op.attribute === 'hullIntegrity' || op.attribute === 'shieldCapacity');
     if (needsHPUpdate) {
       const maxHP = calculateMaxHP(updatedRobot);
@@ -353,7 +366,7 @@ export async function executeUpgradeTransaction(
       const hpPct = freshRobot.maxHP > 0 ? freshRobot.currentHP / freshRobot.maxHP : 1;
       const shieldPct = freshRobot.maxShield > 0 ? freshRobot.currentShield / freshRobot.maxShield : 1;
 
-      const finalRobot = await tx.robot.update({
+      responseRobot = await tx.robot.update({
         where: { id: robotId },
         data: {
           maxHP, maxShield,
@@ -362,11 +375,48 @@ export async function executeUpgradeTransaction(
         },
         include: { mainWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } }, offhandWeapon: { include: { weapon: true, refinements: { orderBy: { slotIndex: 'asc' } } } } },
       });
-      return { user: updatedUser, robot: finalRobot };
     }
 
-    return { user: updatedUser, robot: updatedRobot };
+    const financialEventId = identity.financialEventId;
+    const coreResponse = {
+      robot: responseRobot,
+      currency: lockedUser.currency - fresh.totalCost,
+      totalCost: fresh.totalCost,
+      upgradeOperations: fresh.upgradeOperations,
+    };
+    const financialResult = await applyCreditMutationInTransaction(tx, {
+      cycleNumber: await getCurrentCycleNumber(),
+      userId,
+      robotId,
+      transactionType: 'attribute_upgrade',
+      amount: -fresh.totalCost,
+      description: `Upgraded attributes on robot ${robotId}`,
+      financialEventId,
+      breakdown: buildPurchaseBreakdown({
+        transactionType: 'attribute_upgrade',
+        sourceEventId: financialEventId,
+        amount: -fresh.totalCost,
+        operation: 'attribute_upgrade',
+        itemId: robotId,
+        basePrice: fresh.totalCost,
+        discountAmount: 0,
+        inputs: fresh.upgradeOperations.flatMap(op => [
+          { name: `${op.attribute}.fromLevel`, value: op.fromLevel, unit: 'level', source: 'robot' },
+          { name: `${op.attribute}.toLevel`, value: op.toLevel, unit: 'level', source: 'request' },
+          { name: `${op.attribute}.cost`, value: op.cost, unit: 'credits', source: 'shared_upgrade_formula' },
+        ]),
+      }),
+      auditContext: buildEconomicRequestAuditContext(identity, coreResponse),
+    });
+
+    return {
+      user: { currency: financialResult.balanceAfter },
+      robot: responseRobot,
+      totalCost: fresh.totalCost,
+      upgradeOperations: fresh.upgradeOperations,
+      replayed: false,
+    };
   });
 
-  return { ...txResult, totalCost, upgradeOperations };
+  return txResult;
 }

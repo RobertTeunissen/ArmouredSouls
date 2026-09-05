@@ -108,8 +108,14 @@ describe('Feature: security-audit-guardrails, Property 12: Error message sanitiz
    */
   let server: Server;
 
-  beforeAll(() => {
-    server = createApp().listen(0);
+  beforeAll(async () => {
+    const app = createApp();
+    await new Promise<void>((resolve, reject) => {
+      server = app.listen(0, (error?: Error) => {
+        if (error) reject(error);
+        else resolve();
+      });
+    });
   });
 
   afterAll(

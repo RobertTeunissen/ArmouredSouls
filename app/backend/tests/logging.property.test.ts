@@ -174,8 +174,8 @@ describe('Logging - Property Tests', () => {
               res.status(statusCode).json({ ok: true });
             });
 
-            await request(app)
-              [method.toLowerCase() as 'get' | 'post' | 'put' | 'delete' | 'patch'](path);
+            const requestMethod = method.toLowerCase() as 'get' | 'post' | 'put' | 'delete' | 'patch';
+            await request(app)[requestMethod](path);
 
             // Verify a log entry was produced
             const logEntries = logLines.map((line) => JSON.parse(line));
@@ -310,7 +310,7 @@ describe('Logging - Property Tests', () => {
       );
     });
 
-    test('no raw sensitive data survives redaction in serialized output', () => {
+    test('no raw sensitive data survives redaction', () => {
       fc.assert(
         fc.property(
           fc.dictionary(
@@ -320,10 +320,10 @@ describe('Logging - Property Tests', () => {
           ),
           (obj) => {
             const result = redactSensitive(obj as Record<string, unknown>);
-            const serialized = JSON.stringify(result);
 
-            // No raw password/token/jwt/connection string values should appear
-            // (only [REDACTED] should be present for sensitive entries)
+            // Assert the invariant structurally. JSON punctuation can equal a
+            // short raw value (for example, `,` appears between properties),
+            // so serialized-substring checks can produce false positives.
             for (const [key, value] of Object.entries(obj)) {
               const isSensitiveKey = [
                 /password/i, /token/i, /jwt/i, /secret/i,
@@ -337,12 +337,7 @@ describe('Logging - Property Tests', () => {
                 /database.*url/i, /postgresql:\/\//i,
               ].some((p) => p.test(value));
 
-              if (isSensitiveKey || isSensitiveValue) {
-                // The original value should not appear in the serialized output
-                if (typeof value === 'string' && value.length > 0) {
-                  expect(serialized).not.toContain(`"${value}"`);
-                }
-              }
+              expect(result[key]).toBe(isSensitiveKey || isSensitiveValue ? '[REDACTED]' : value);
             }
           },
         ),

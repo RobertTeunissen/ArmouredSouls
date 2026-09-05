@@ -767,10 +767,46 @@ async function distributeTeamTournamentRewards(
   const winnerOwnerTotal = calculateTournamentWinReward(totalParticipants, currentRound, maxRounds) * teamSize;
   const loserOwnerTotal = calculateTournamentParticipationReward(totalParticipants, currentRound, maxRounds) * teamSize;
 
-  // Award credits to owners
   const cycleNumber = await getCurrentCycleNumber();
-  await awardCreditsWithLedger(winnerOwnerId, winnerOwnerTotal, 'battle_income', cycleNumber, 'Team tournament reward');
-  await awardCreditsWithLedger(loserOwnerId, loserOwnerTotal, 'battle_income', cycleNumber, 'Team tournament reward');
+  const tournamentMode = teamSize === 2 ? 'tournament_2v2' : 'tournament_3v3';
+  await awardCreditsWithLedger(
+    winnerOwnerId,
+    winnerOwnerTotal,
+    'battle_income',
+    cycleNumber,
+    'Team tournament reward',
+    undefined,
+    { battleId, teamSize },
+    {
+      battleId,
+      mode: tournamentMode,
+      tier: currentRound,
+      outcome: 'win',
+      participationFloor: winnerOwnerTotal,
+      winComponent: 0,
+      teamSize,
+      isBye: false,
+    },
+  );
+  await awardCreditsWithLedger(
+    loserOwnerId,
+    loserOwnerTotal,
+    'battle_income',
+    cycleNumber,
+    'Team tournament reward',
+    undefined,
+    { battleId, teamSize },
+    {
+      battleId,
+      mode: tournamentMode,
+      tier: currentRound,
+      outcome: 'loss',
+      participationFloor: loserOwnerTotal,
+      winComponent: 0,
+      teamSize,
+      isBye: false,
+    },
+  );
 
   // Per-robot shares, remainder distributed one credit at a time so the
   // participant rows sum exactly to what the owner received.
@@ -786,7 +822,11 @@ async function distributeTeamTournamentRewards(
   // ─── Prestige (Stepped Curve — winner only) ────────────────────────
   const winnerPrestige = calculateTeamTournamentPrestige(currentRound, maxRounds);
   // Losers earn ZERO prestige
-  await awardPrestigeToUser(winnerOwnerId, winnerPrestige * teamSize);
+  await awardPrestigeToUser(winnerOwnerId, winnerPrestige * teamSize, cycleNumber, {
+    source: 'battle',
+    mode: tournamentMode,
+    battleId,
+  });
 
   // ─── Fame (winner only) ────────────────────────────────────────────
   // Calculate teams remaining in current round for exclusivity multiplier
@@ -818,10 +858,10 @@ async function distributeTeamTournamentRewards(
 
   // ─── Streaming Revenue (all participants) ──────────────────────────
   for (const robot of winnerRobots) {
-    await awardStreamingRevenueForParticipant(robot.id, winnerOwnerId, battleId, false, teamSize);
+    await awardStreamingRevenueForParticipant(robot.id, winnerOwnerId, battleId, false, teamSize, tournamentMode);
   }
   for (const robot of loserRobots) {
-    await awardStreamingRevenueForParticipant(robot.id, loserOwnerId, battleId, false, teamSize);
+    await awardStreamingRevenueForParticipant(robot.id, loserOwnerId, battleId, false, teamSize, tournamentMode);
   }
 
   // ─── Update BattleParticipant records with correct reward amounts ──

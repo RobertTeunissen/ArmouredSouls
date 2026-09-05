@@ -165,8 +165,24 @@ describe('the Bye_Invariant holds in every mode', () => {
       result.creditsPaid,
       'battle_income',
       10,
-      expect.any(String),
+      `${mode} bye reward`,
+      undefined,
+      { battleId: 999, scheduledMatchId: 5, isBye: true },
+      expect.objectContaining({
+        battleId: 999,
+        sourceEventId: `bye:5:${ROBOT.userId}:${mode}:battle_income`,
+        mode,
+        isBye: true,
+      }),
     );
+    const awardOptions = mockAwardCredits.mock.calls[0][7] as {
+      sourceEventId?: string;
+      mode?: string;
+      isBye?: boolean;
+    };
+    expect(awardOptions.sourceEventId).toBe(`bye:5:${ROBOT.userId}:${mode}:battle_income`);
+    expect(awardOptions.mode).toBe(mode);
+    expect(awardOptions.isBye).toBe(true);
 
     // A summary row with no combat data.
     expect(mockSummaryCreate).toHaveBeenCalledTimes(1);
@@ -276,6 +292,22 @@ describe('the Bye_Award_Claim pays at most once', () => {
     await resolveByeEvent(inputFor('league_1v1'));
 
     expect(order).toEqual(['claim', 'pay']);
+  });
+
+  it('should leave a claimed unpaid bye without participants when the financial pair fails', async () => {
+    mockAwardCredits.mockRejectedValue(new Error('paired capture unavailable'));
+
+    await expect(resolveByeEvent(inputFor('tag_team'))).rejects.toThrow('paired capture unavailable');
+
+    // Claim-before-payment is retained; the linked battle without participants
+    // is the reconciliation signature for the lost (never duplicated) reward.
+    expect(mockScheduledMatchUpdateMany).toHaveBeenCalledWith(expect.objectContaining({
+      data: { status: 'completed', battleId: 999 },
+    }));
+    expect(mockParticipantCreate).not.toHaveBeenCalled();
+    expect(mockSummaryCreate).not.toHaveBeenCalled();
+    expect(mockRecordBattleResult).not.toHaveBeenCalled();
+    expect(mockUpdateRobotCombatStats).not.toHaveBeenCalled();
   });
 
   it('should claim the tournament battleId column rather than status', async () => {

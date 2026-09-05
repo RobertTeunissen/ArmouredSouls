@@ -237,6 +237,8 @@ export function createRecentOpponentQueryFn(
  */
 export function defaultScheduledFor(): Date {
   const d = new Date(Date.now() + 24 * 60 * 60 * 1000);
-  d.setMinutes(0, 0, 0);
+  // Battle slots are UTC. Local setters can resolve a repeated DST hour to a
+  // different instant, shortening the intended 24-hour lead time.
+  d.setUTCMinutes(0, 0, 0);
   return d;
 }

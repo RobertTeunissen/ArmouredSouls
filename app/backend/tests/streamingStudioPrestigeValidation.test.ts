@@ -14,6 +14,9 @@ import dotenv from 'dotenv';
 import facilityRoutes from '../src/routes/facility';
 import { createTestUser, deleteTestUser } from './testHelpers';
 import { errorHandler } from '../src/middleware/errorHandler';
+import { usePostCutoverFinancialRollout } from './financialRolloutTestHelper';
+
+usePostCutoverFinancialRollout();
 
 dotenv.config();
 
@@ -70,6 +73,7 @@ describe('Streaming Studio Prestige Validation', () => {
       const response = await request(app)
         .post('/api/facility/upgrade')
         .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ facilityType: 'streaming_studio' });
 
       expect(response.status).toBe(200);
@@ -81,12 +85,14 @@ describe('Streaming Studio Prestige Validation', () => {
       await request(app)
         .post('/api/facility/upgrade')
         .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ facilityType: 'streaming_studio' });
 
       // Then upgrade to level 2
       const response = await request(app)
         .post('/api/facility/upgrade')
         .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ facilityType: 'streaming_studio' });
 
       expect(response.status).toBe(200);
@@ -98,18 +104,21 @@ describe('Streaming Studio Prestige Validation', () => {
       await request(app)
         .post('/api/facility/upgrade')
         .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ facilityType: 'streaming_studio' });
 
       // Upgrade to level 2
       await request(app)
         .post('/api/facility/upgrade')
         .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ facilityType: 'streaming_studio' });
 
       // Upgrade to level 3
       const response = await request(app)
         .post('/api/facility/upgrade')
         .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ facilityType: 'streaming_studio' });
 
       expect(response.status).toBe(200);
@@ -123,14 +132,17 @@ describe('Streaming Studio Prestige Validation', () => {
       await request(app)
         .post('/api/facility/upgrade')
         .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ facilityType: 'streaming_studio' });
       await request(app)
         .post('/api/facility/upgrade')
         .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ facilityType: 'streaming_studio' });
       await request(app)
         .post('/api/facility/upgrade')
         .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ facilityType: 'streaming_studio' });
     });
 
@@ -139,6 +151,7 @@ describe('Streaming Studio Prestige Validation', () => {
       const response = await request(app)
         .post('/api/facility/upgrade')
         .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ facilityType: 'streaming_studio' });
 
       expect(response.status).toBe(403);
@@ -158,6 +171,7 @@ describe('Streaming Studio Prestige Validation', () => {
       const response = await request(app)
         .post('/api/facility/upgrade')
         .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ facilityType: 'streaming_studio' });
 
       expect(response.status).toBe(200);
@@ -174,6 +188,7 @@ describe('Streaming Studio Prestige Validation', () => {
       const response = await request(app)
         .post('/api/facility/upgrade')
         .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ facilityType: 'streaming_studio' });
 
       expect(response.status).toBe(200);
@@ -193,6 +208,7 @@ describe('Streaming Studio Prestige Validation', () => {
         await request(app)
           .post('/api/facility/upgrade')
           .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
           .send({ facilityType: 'streaming_studio' });
       }
     });
@@ -202,6 +218,7 @@ describe('Streaming Studio Prestige Validation', () => {
       const response = await request(app)
         .post('/api/facility/upgrade')
         .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ facilityType: 'streaming_studio' });
 
       expect(response.status).toBe(403);
@@ -220,6 +237,7 @@ describe('Streaming Studio Prestige Validation', () => {
       const response = await request(app)
         .post('/api/facility/upgrade')
         .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ facilityType: 'streaming_studio' });
 
       expect(response.status).toBe(200);
@@ -239,6 +257,7 @@ describe('Streaming Studio Prestige Validation', () => {
         await request(app)
           .post('/api/facility/upgrade')
           .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
           .send({ facilityType: 'streaming_studio' });
       }
 
@@ -246,6 +265,7 @@ describe('Streaming Studio Prestige Validation', () => {
       const response = await request(app)
         .post('/api/facility/upgrade')
         .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ facilityType: 'streaming_studio' });
 
       expect(response.status).toBe(403);
@@ -263,6 +283,7 @@ describe('Streaming Studio Prestige Validation', () => {
         await request(app)
           .post('/api/facility/upgrade')
           .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
           .send({ facilityType: 'streaming_studio' });
       }
 
@@ -270,6 +291,7 @@ describe('Streaming Studio Prestige Validation', () => {
       const response = await request(app)
         .post('/api/facility/upgrade')
         .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ facilityType: 'streaming_studio' });
 
       expect(response.status).toBe(403);
@@ -287,6 +309,7 @@ describe('Streaming Studio Prestige Validation', () => {
         await request(app)
           .post('/api/facility/upgrade')
           .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
           .send({ facilityType: 'streaming_studio' });
       }
 
@@ -294,6 +317,7 @@ describe('Streaming Studio Prestige Validation', () => {
       const response = await request(app)
         .post('/api/facility/upgrade')
         .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ facilityType: 'streaming_studio' });
 
       expect(response.status).toBe(403);
@@ -311,6 +335,7 @@ describe('Streaming Studio Prestige Validation', () => {
         await request(app)
           .post('/api/facility/upgrade')
           .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
           .send({ facilityType: 'streaming_studio' });
       }
 
@@ -318,6 +343,7 @@ describe('Streaming Studio Prestige Validation', () => {
       const response = await request(app)
         .post('/api/facility/upgrade')
         .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ facilityType: 'streaming_studio' });
 
       expect(response.status).toBe(403);
@@ -335,6 +361,7 @@ describe('Streaming Studio Prestige Validation', () => {
         await request(app)
           .post('/api/facility/upgrade')
           .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
           .send({ facilityType: 'streaming_studio' });
       }
 
@@ -342,6 +369,7 @@ describe('Streaming Studio Prestige Validation', () => {
       const response = await request(app)
         .post('/api/facility/upgrade')
         .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ facilityType: 'streaming_studio' });
 
       expect(response.status).toBe(403);
@@ -359,6 +387,7 @@ describe('Streaming Studio Prestige Validation', () => {
         await request(app)
           .post('/api/facility/upgrade')
           .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
           .send({ facilityType: 'streaming_studio' });
       }
 
@@ -366,6 +395,7 @@ describe('Streaming Studio Prestige Validation', () => {
       const response = await request(app)
         .post('/api/facility/upgrade')
         .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ facilityType: 'streaming_studio' });
 
       expect(response.status).toBe(200);
@@ -380,6 +410,7 @@ describe('Streaming Studio Prestige Validation', () => {
         await request(app)
           .post('/api/facility/upgrade')
           .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
           .send({ facilityType: 'streaming_studio' });
       }
 
@@ -387,6 +418,7 @@ describe('Streaming Studio Prestige Validation', () => {
       const response = await request(app)
         .post('/api/facility/upgrade')
         .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ facilityType: 'streaming_studio' });
 
       expect(response.status).toBe(403);

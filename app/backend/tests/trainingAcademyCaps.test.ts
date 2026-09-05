@@ -3,6 +3,9 @@ import { Prisma } from '../generated/prisma';
 import prisma from '../src/lib/prisma';
 import jwt from 'jsonwebtoken';
 import app from './testApp';
+import { usePostCutoverFinancialRollout } from './financialRolloutTestHelper';
+
+usePostCutoverFinancialRollout();
 
 
 describe('Training Academy Cap Enforcement', () => {
@@ -15,6 +18,7 @@ describe('Training Academy Cap Enforcement', () => {
     return request(app)
       .post(`/api/robots/${robotId}/upgrades`)
       .set('Authorization', `Bearer ${authToken}`)
+      .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
       .send({
         upgrades: {
           [attribute]: { currentLevel, plannedLevel: currentLevel + 1 }

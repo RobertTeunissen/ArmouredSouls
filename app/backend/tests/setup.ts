@@ -10,6 +10,7 @@ import { config } from 'dotenv';
 import path from 'path';
 import prisma from '../src/lib/prisma';
 import { WEAPON_DEFINITIONS, upsertWeapon } from '../prisma/seed';
+import { flushDeferredWork } from '../src/services/common/deferredWork';
 
 // Load environment variables from .env file
 config({ path: path.resolve(__dirname, '../.env') });
@@ -59,7 +60,24 @@ beforeAll(async () => {
   `;
 }, 120000); // 2 minute timeout for initial seeding
 
+// Drain deferred background work before each test's own teardown runs.
+//
+// The KotH and Grand Melee orchestrators defer achievement evaluation off the battle's
+// critical path. Nothing could wait for it, so a suite would delete its users and robots and
+// the deferred callback would then run against rows that no longer existed — producing 78
+// `league_history_user_id_fkey` violations, 15 audit-sequence collisions and 8 duplicate
+// achievement inserts in one measured run, and leaving a backlog that ran on into the NEXT
+// suite. Two suites that normally take seconds took 1,791s and 1,027s, blew their 120s
+// per-test timeout, and failed a deploy from `main`.
+//
+// Flushing here rather than in each suite means a new test cannot forget. It is a no-op when
+// nothing is pending, which is the overwhelmingly common case.
+afterEach(async () => {
+  await flushDeferredWork();
+});
+
 // Global teardown - runs once after all tests in this worker
 afterAll(async () => {
+  await flushDeferredWork();
   await prisma.$disconnect();
 });

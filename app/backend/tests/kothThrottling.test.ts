@@ -68,8 +68,12 @@ const mockPrisma = {
   cycleMetadata: {
     findUnique: jest.fn().mockResolvedValue({ id: 1, currentCycle: 1, totalCycles: 1 }),
   },
-  $transaction: jest.fn().mockImplementation((ops) => Promise.resolve(ops.map(() => ({})))),
+  $transaction: jest.fn(),
 };
+
+mockPrisma.$transaction.mockImplementation(
+  async (callback: (tx: typeof mockPrisma) => Promise<unknown>) => callback(mockPrisma),
+);
 
 jest.mock('../src/lib/prisma', () => ({
   __esModule: true,
@@ -143,6 +147,9 @@ jest.mock('../src/services/battle/battlePostCombat', () => ({
   logBattleAuditEvent: jest.fn().mockResolvedValue(undefined),
   checkAndAwardAchievements: jest.fn().mockResolvedValue([]),
   updateRobotCombatStats: jest.fn().mockResolvedValue(undefined),
+  awardCreditsWithLedger: jest.fn().mockResolvedValue(undefined),
+  awardPrestigeToUser: jest.fn().mockResolvedValue(undefined),
+  awardBattleStreamingRevenue: jest.fn().mockResolvedValue(undefined),
 }));
 
 jest.mock('../src/services/economy/streamingRevenueService', () => ({
@@ -189,6 +196,16 @@ process.env.NODE_ENV = 'production';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { executeScheduledKothBattles } = require('../src/services/koth/kothBattleOrchestrator') as
   typeof import('../src/services/koth/kothBattleOrchestrator');
+const {
+  awardBattleStreamingRevenue,
+  awardCreditsWithLedger,
+} = jest.requireMock('../src/services/battle/battlePostCombat') as {
+  awardBattleStreamingRevenue: jest.Mock;
+  awardCreditsWithLedger: jest.Mock;
+};
+const { calculateStreamingRevenueBatch } = jest.requireMock('../src/services/economy/streamingRevenueService') as {
+  calculateStreamingRevenueBatch: jest.Mock;
+};
 process.env.NODE_ENV = previousNodeEnv;
 
 // ─── Test helpers ────────────────────────────────────────────────────
@@ -430,5 +447,72 @@ describe('KotH Orchestrator Throttling', () => {
 
     // After 20th match: 30s super-batch cooldown for memory reclamation
     expect(timestamps[20] - timestamps[19]).toBeGreaterThanOrEqual(30000);
+  });
+});
+
+
+describe('KotH placement financial provenance', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    jest.useFakeTimers({ advanceTimers: true });
+    const robots = [1, 2, 3, 4, 5].map(id => makeRobot(id, id));
+    mockPrisma.robot.findMany.mockResolvedValue(robots);
+    mockPrisma.robot.findUnique.mockImplementation(({ where }: { where: { id: number } }) => {
+      const robot = robots.find((candidate) => candidate.id === where.id);
+      return Promise.resolve(robot ?? null);
+    });
+    mockPrisma.battle.create.mockResolvedValue({ id: 100 });
+    mockPrisma.standing.findMany.mockResolvedValue([]);
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it('should aggregate one stable income with actual per-robot tier, placement, zone facts, and per-robot streaming', async () => {
+    setupMatchQueue([makeMatch(1, [1, 2, 3, 4, 5])]);
+    const robots = [
+      makeRobot(1, 1),
+      makeRobot(2, 1),
+      makeRobot(3, 3),
+      makeRobot(4, 4),
+      makeRobot(5, 5),
+    ];
+    const streamCalculations = new Map(robots.map((robot) => [robot.id, { totalRevenue: robot.id * 10 }]));
+    mockPrisma.robot.findMany.mockResolvedValueOnce(robots);
+    mockPrisma.standing.findMany.mockResolvedValueOnce([
+      { entityId: 1, tier: 'gold' },
+      { entityId: 2, tier: 'silver' },
+    ]);
+    calculateStreamingRevenueBatch.mockResolvedValueOnce(streamCalculations);
+
+    const promise = executeScheduledKothBattles();
+    await jest.runAllTimersAsync();
+    await promise;
+
+    const stableAward = awardCreditsWithLedger.mock.calls.find(([userId]) => userId === 1);
+    if (!stableAward) throw new Error('Expected stable-level KotH award');
+    const participantRows = mockPrisma.battleParticipant.createMany.mock.calls[0][0].data as Array<{ robotId: number; credits: number }>;
+    const firstCredits = participantRows.find((participant) => participant.robotId === 1)?.credits;
+    const secondCredits = participantRows.find((participant) => participant.robotId === 2)?.credits;
+    expect(firstCredits).toBeDefined();
+    expect(secondCredits).toBeDefined();
+    expect(stableAward[1]).toBe(firstCredits! + secondCredits!);
+    expect(stableAward[7]).toMatchObject({
+      mode: 'koth',
+      tier: 'placement_aggregate',
+      placement: null,
+      participationFloor: 0,
+      placementRewardComponents: [
+        expect.objectContaining({ robotId: 1, tier: 'gold', placement: 1, credits: firstCredits, zoneScore: 100, zoneTime: 60, uncontestedScore: 50, zoneDominanceBonus: false }),
+        expect.objectContaining({ robotId: 2, tier: 'silver', placement: 2, credits: secondCredits, zoneScore: 80, zoneTime: 40, uncontestedScore: 30, zoneDominanceBonus: false }),
+      ],
+    });
+    expect((stableAward[7].placementRewardComponents as Array<{ credits: number }>).reduce((sum, component) => sum + component.credits, 0))
+      .toBe(stableAward[1]);
+    expect(awardCreditsWithLedger).toHaveBeenCalledTimes(4);
+    expect(awardBattleStreamingRevenue).toHaveBeenCalledTimes(5);
+    expect(awardBattleStreamingRevenue).toHaveBeenCalledWith(1, streamCalculations.get(1), 1, 100, 'koth', mockPrisma);
+    expect(awardBattleStreamingRevenue).toHaveBeenCalledWith(1, streamCalculations.get(2), 1, 100, 'koth', mockPrisma);
   });
 });

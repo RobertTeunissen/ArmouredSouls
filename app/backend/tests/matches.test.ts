@@ -7,6 +7,8 @@ import dotenv from 'dotenv';
 import matchesRoutes from '../src/routes/matches';
 import { createTestUser, createTestRobot, deleteTestUser } from './testHelpers';
 import { errorHandler } from '../src/middleware/errorHandler';
+import { getConfig } from '../src/config/env';
+import type { Server } from 'node:http';
 
 dotenv.config();
 
@@ -22,6 +24,9 @@ app.use('/api/matches', matchesRoutes);
 // body. That is why these suites saw 400 but no `body.error` or `body.code`.
 app.use(errorHandler);
 
+/** Bind the app once to avoid Supertest's per-request listener churn. */
+let server: Server;
+
 describe('Matches Routes', () => {
   const testUserIds: number[] = [];
   let testUser: any;
@@ -30,6 +35,7 @@ describe('Matches Routes', () => {
 
   beforeAll(async () => {
     await prisma.$connect();
+    server = app.listen(0);
     
     // Create test user
     testUser = await createTestUser();
@@ -42,11 +48,12 @@ describe('Matches Routes', () => {
     // Generate JWT token
     authToken = jwt.sign(
       { userId: testUser.id, username: testUser.username },
-      process.env.JWT_SECRET || 'test-secret'
+      getConfig().jwtSecret,
     );
   });
 
   afterAll(async () => {
+    await new Promise<void>((resolve) => server.close(() => resolve()));
     // Cleanup
     if (testUserIds.length > 0) {
       for (const userId of testUserIds) {
@@ -58,7 +65,7 @@ describe('Matches Routes', () => {
 
   describe('GET /api/matches/upcoming', () => {
     it('should get upcoming matches with auth', async () => {
-      const response = await request(app)
+      const response = await request(server)
         .get('/api/matches/upcoming')
         .set('Authorization', `Bearer ${authToken}`);
 
@@ -71,14 +78,14 @@ describe('Matches Routes', () => {
     });
 
     it('should return 401 without authentication', async () => {
-      const response = await request(app)
+      const response = await request(server)
         .get('/api/matches/upcoming');
 
       expect(response.status).toBe(401);
     });
 
     it('should return 401 with invalid token', async () => {
-      const response = await request(app)
+      const response = await request(server)
         .get('/api/matches/upcoming')
         .set('Authorization', 'Bearer invalid_token');
 
@@ -88,7 +95,7 @@ describe('Matches Routes', () => {
 
   describe('GET /api/matches/history', () => {
     it('should get match history with auth', async () => {
-      const response = await request(app)
+      const response = await request(server)
         .get('/api/matches/history')
         .set('Authorization', `Bearer ${authToken}`);
 
@@ -99,7 +106,7 @@ describe('Matches Routes', () => {
     });
 
     it('should support pagination', async () => {
-      const response = await request(app)
+      const response = await request(server)
         .get('/api/matches/history')
         .set('Authorization', `Bearer ${authToken}`)
         .query({ page: 1, perPage: 10 });
@@ -120,7 +127,7 @@ describe('Matches Routes', () => {
         return;
       }
 
-      const response = await request(app)
+      const response = await request(server)
         .get('/api/matches/history')
         .set('Authorization', `Bearer ${authToken}`)
         .query({ robotId: testRobotId });
@@ -130,7 +137,7 @@ describe('Matches Routes', () => {
     });
 
     it('should return 401 without authentication', async () => {
-      const response = await request(app)
+      const response = await request(server)
         .get('/api/matches/history');
 
       expect(response.status).toBe(401);
@@ -139,14 +146,14 @@ describe('Matches Routes', () => {
 
   describe('GET /api/matches/battles/:id/log', () => {
     it('should return 401 without authentication', async () => {
-      const response = await request(app)
+      const response = await request(server)
         .get('/api/matches/battles/test-battle-id/log');
 
       expect(response.status).toBe(401);
     });
 
     it('should return 401 with invalid token', async () => {
-      const response = await request(app)
+      const response = await request(server)
         .get('/api/matches/battles/test-battle-id/log')
         .set('Authorization', 'Bearer invalid_token');
 
@@ -154,7 +161,7 @@ describe('Matches Routes', () => {
     });
 
     it('should handle non-existent battle ID with auth', async () => {
-      const response = await request(app)
+      const response = await request(server)
         .get('/api/matches/battles/non-existent-id/log')
         .set('Authorization', `Bearer ${authToken}`);
 

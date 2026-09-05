@@ -9,8 +9,12 @@
  * Studio Multiplier: Each level adds 100% (L1 = 2×, L2 = 3×, L3 = 4×, etc.)
  */
 
+import type { Prisma } from '../../../generated/prisma';
 import prisma from '../../lib/prisma';
-import { RobotError, RobotErrorCode } from '../../errors/robotErrors';
+import { RobotError, RobotErrorCode, FinancialError, FinancialErrorCode } from '../../errors';
+import { applyCreditMutation, applyCreditMutationInTransaction } from '../financial/creditMutationService';
+import { buildStreamingEventId } from '../financial/financialEventIdentity';
+import type { StreamingRevenueBreakdown as FinancialStreamingRevenueBreakdown } from '../../types';
 
 /**
  * Streaming revenue calculation result for a single robot
@@ -185,27 +189,79 @@ export async function calculateStreamingRevenue(
 }
 
 /**
- * Award streaming revenue to a user's balance and track analytics
- * @param userId - User ID to award revenue to
- * @param calculation - Streaming revenue calculation result
- * @param cycleNumber - Current cycle number for analytics tracking
+ * Apply one streaming award through the required paired financial path.
+ * `battleId` and `mode` are source-boundary facts and are part of the retry
+ * identity; callers must pass the same values when retrying the operation.
  */
 export async function awardStreamingRevenue(
   userId: number,
   calculation: StreamingRevenueCalculation,
-  _cycleNumber: number
+  cycleNumber: number,
+  battleId: number,
+  mode: string,
+  tx?: Prisma.TransactionClient,
 ): Promise<void> {
-  // Update user balance
-  await prisma.user.update({
-    where: { id: userId },
-    data: {
-      currency: {
-        increment: calculation.totalRevenue,
-      },
-    },
-  });
+  if (!Number.isInteger(battleId) || battleId < 1) {
+    throw new FinancialError(FinancialErrorCode.INVALID_EVENT_IDENTITY, 'battleId is required for streaming revenue');
+  }
 
-  // Streaming revenue is tracked in BattleParticipant table
+  const financialEventId = buildStreamingEventId(battleId, calculation.robotId, mode);
+  const breakdown: FinancialStreamingRevenueBreakdown = {
+    schemaVersion: 1,
+    formula: 'streaming_revenue',
+    formulaVersion: '1',
+    inputs: [
+      { name: 'robotBattles', value: calculation.robotBattles, unit: 'battles', source: 'robot' },
+      { name: 'robotFame', value: calculation.robotFame, unit: 'fame', source: 'robot' },
+      { name: 'studioLevel', value: calculation.studioLevel, unit: 'levels', source: 'facility' },
+    ],
+    modifiers: [
+      { name: 'battleMultiplier', value: calculation.battleMultiplier, unit: 'multiplier', source: 'streaming_formula', applied: true },
+      { name: 'fameMultiplier', value: calculation.fameMultiplier, unit: 'multiplier', source: 'streaming_formula', applied: true },
+      { name: 'studioMultiplier', value: calculation.studioMultiplier, unit: 'multiplier', source: 'streaming_formula', applied: true },
+    ],
+    rounding: {
+      precision: 0,
+      mode: 'floor',
+      operationOrder: ['baseAmount', 'battleMultiplier', 'fameMultiplier', 'studioMultiplier', 'teamSize'],
+      scope: 'per_item',
+    },
+    finalAmount: calculation.totalRevenue,
+    sourceEventId: financialEventId,
+    transactionType: 'streaming_revenue',
+    battleId,
+    robotId: calculation.robotId,
+    mode,
+    eligible: true,
+    baseAmount: calculation.baseAmount,
+    battleMultiplier: calculation.battleMultiplier,
+    fameMultiplier: calculation.fameMultiplier,
+    studioMultiplier: calculation.studioMultiplier,
+    totalRevenue: calculation.totalRevenue,
+  };
+
+  const mutationInput = {
+    cycleNumber,
+    userId,
+    robotId: calculation.robotId,
+    transactionType: 'streaming_revenue' as const,
+    amount: calculation.totalRevenue,
+    description: `Streaming Studio revenue for robot ${calculation.robotId}`,
+    financialEventId,
+    breakdown,
+    auditContext: {
+      robotName: calculation.robotName,
+      robotBattles: calculation.robotBattles,
+      robotFame: calculation.robotFame,
+      studioLevel: calculation.studioLevel,
+    },
+  };
+
+  if (tx) {
+    await applyCreditMutationInTransaction(tx, mutationInput);
+  } else {
+    await applyCreditMutation(mutationInput);
+  }
 }
 
 /**

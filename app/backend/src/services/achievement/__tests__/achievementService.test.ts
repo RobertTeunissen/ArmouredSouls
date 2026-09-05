@@ -55,7 +55,22 @@ const mockPrisma = {
   },
   $queryRawUnsafe: jest.fn().mockResolvedValue([{ count: BigInt(0) }]),
   $executeRawUnsafe: jest.fn().mockResolvedValue(0),
+  $transaction: jest.fn(),
 };
+
+mockPrisma.$transaction.mockImplementation(
+  async (callback: (tx: typeof mockPrisma) => Promise<unknown>) => callback(mockPrisma),
+);
+
+const mockApplyCreditMutationInTransaction = jest.fn().mockResolvedValue({
+  created: true,
+  balanceAfter: 125000,
+});
+const mockApplyPrestigeAwardInTransaction = jest.fn().mockResolvedValue({
+  created: true,
+  prestigeAfter: 25,
+});
+const mockGetCurrentCycle = jest.fn().mockResolvedValue({ cycleNumber: 1, lastCycleAt: null });
 
 jest.mock('../../../lib/prisma', () => ({
   __esModule: true,
@@ -65,6 +80,24 @@ jest.mock('../../../lib/prisma', () => ({
 jest.mock('../../../config/logger', () => ({
   __esModule: true,
   default: { info: jest.fn(), error: jest.fn(), warn: jest.fn(), debug: jest.fn() },
+}));
+
+jest.mock('../../financial/creditMutationService', () => ({
+  applyCreditMutationInTransaction: mockApplyCreditMutationInTransaction,
+}));
+
+jest.mock('../../financial/prestigeService', () => ({
+  applyPrestigeAwardInTransaction: mockApplyPrestigeAwardInTransaction,
+}));
+
+jest.mock('../../analytics/cycleAnalyticsService', () => ({
+  getCurrentCycle: mockGetCurrentCycle,
+}));
+
+jest.mock('../../common/eventLogger', () => ({
+  eventLogger: {
+    logAchievementUnlock: jest.fn().mockResolvedValue(undefined),
+  },
 }));
 
 jest.mock('../../../utils/robotCalculations', () => ({
@@ -104,6 +137,13 @@ beforeEach(() => {
   mockPrisma.teamBattleMember.findMany.mockResolvedValue([]);
   mockPrisma.$queryRawUnsafe.mockResolvedValue([{ count: BigInt(0) }]);
   mockPrisma.$executeRawUnsafe.mockResolvedValue(0);
+  mockPrisma.$transaction.mockImplementation(async (callback: (tx: unknown) => Promise<unknown>) => callback(mockPrisma));
+  mockApplyCreditMutationInTransaction.mockReset();
+  mockApplyCreditMutationInTransaction.mockResolvedValue({ created: true, balanceAfter: 125000 });
+  mockApplyPrestigeAwardInTransaction.mockReset();
+  mockApplyPrestigeAwardInTransaction.mockResolvedValue({ created: true, prestigeAfter: 25 });
+  mockGetCurrentCycle.mockReset();
+  mockGetCurrentCycle.mockResolvedValue({ cycleNumber: 1, lastCycleAt: null });
 });
 
 // ─── Tests: checkAndAward ────────────────────────────────────────────
@@ -172,7 +212,7 @@ describe('AchievementService.checkAndAward', () => {
     expect(createdIds).toContain('C1');
   });
 
-  it('should award credits and prestige via user.update', async () => {
+  it('should award credits and prestige through their separate shared services', async () => {
     mockPrisma.userAchievement.findMany.mockResolvedValueOnce([]);
     // Robot with 1 win — qualifies for C1 (easy tier: 25000 credits, 25 prestige)
     mockPrisma.robot.findUnique.mockResolvedValue({ wins: 1, name: 'TestBot' });
@@ -184,18 +224,40 @@ describe('AchievementService.checkAndAward', () => {
 
     await achievementService.checkAndAward(1, 1, event);
 
-    // Find the user.update call that awards C1 rewards
-    const updateCalls = mockPrisma.user.update.mock.calls;
-    const rewardCall = updateCalls.find(
-      (c: unknown[]) => {
-        const arg = c[0] as { data: { currency?: { increment: number } } };
-        return arg.data.currency?.increment === 25_000;
-      },
+    expect(mockApplyCreditMutationInTransaction).toHaveBeenCalledWith(
+      mockPrisma,
+      expect.objectContaining({
+        userId: 1,
+        transactionType: 'achievement_reward',
+        amount: 25_000,
+        breakdown: expect.objectContaining({
+          transactionType: 'achievement_reward',
+          finalAmount: 25_000,
+        }),
+      }),
     );
-    expect(rewardCall).toBeDefined();
-    const rewardData = (rewardCall![0] as { data: { currency: { increment: number }; prestige: { increment: number } } }).data;
-    expect(rewardData.currency).toEqual({ increment: 25_000 });
-    expect(rewardData.prestige).toEqual({ increment: 25 });
+    expect(mockApplyPrestigeAwardInTransaction).toHaveBeenCalledWith(
+      mockPrisma,
+      expect.objectContaining({
+        userId: 1,
+        source: 'achievement',
+        amount: 25,
+        breakdown: expect.objectContaining({
+          source: 'achievement',
+          awardAmount: 25,
+        }),
+      }),
+    );
+    expect(mockPrisma.user.update).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ currency: expect.anything() }),
+      }),
+    );
+    expect(mockPrisma.user.update).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ prestige: expect.anything() }),
+      }),
+    );
   });
 
   it('should set robotId for robot-scope achievements', async () => {

@@ -7,6 +7,9 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import robotRoutes from '../src/routes/robots';
 import { errorHandler } from '../src/middleware/errorHandler';
+import { usePostCutoverFinancialRollout } from './financialRolloutTestHelper';
+
+usePostCutoverFinancialRollout();
 
 dotenv.config();
 
@@ -136,6 +139,7 @@ describe('Robot Name Uniqueness', () => {
       const response = await request(app)
         .post('/api/robots')
         .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ name: robotName });
 
       expect(response.status).toBe(201);
@@ -153,6 +157,7 @@ describe('Robot Name Uniqueness', () => {
       const firstResponse = await request(app)
         .post('/api/robots')
         .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ name: robotName });
 
       expect(firstResponse.status).toBe(201);
@@ -164,6 +169,7 @@ describe('Robot Name Uniqueness', () => {
       const secondResponse = await request(app)
         .post('/api/robots')
         .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ name: robotName });
 
       expect(secondResponse.status).toBe(400);
@@ -217,6 +223,7 @@ describe('Robot Name Uniqueness', () => {
       const firstResponse = await request(app)
         .post('/api/robots')
         .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ name: robotName });
 
       expect(firstResponse.status).toBe(201);
@@ -229,6 +236,7 @@ describe('Robot Name Uniqueness', () => {
       const secondResponse = await request(app)
         .post('/api/robots')
         .set('Authorization', `Bearer ${secondAuthToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ name: robotName });
 
       expect(secondResponse.status).toBe(400);
@@ -255,6 +263,7 @@ describe('Robot Name Uniqueness', () => {
       const response1 = await request(app)
         .post('/api/robots')
         .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ name: 'TestBot' });
 
       if (response1.status !== 201) {
@@ -269,6 +278,7 @@ describe('Robot Name Uniqueness', () => {
       const response2 = await request(app)
         .post('/api/robots')
         .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ name: 'testbot' });
 
       if (response2.status !== 201) {
@@ -303,6 +313,7 @@ describe('Robot Name Uniqueness', () => {
       const response = await request(app)
         .post('/api/robots')
         .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ name: '' });
 
       expect(response.status).toBe(400);
@@ -317,6 +328,7 @@ describe('Robot Name Uniqueness', () => {
       const response = await request(app)
         .post('/api/robots')
         .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ name: longName });
 
       expect(response.status).toBe(400);
@@ -329,6 +341,7 @@ describe('Robot Name Uniqueness', () => {
       const response = await request(app)
         .post('/api/robots')
         .set('Authorization', `Bearer ${authToken}`)
+        .set('Idempotency-Key', `test-${Date.now()}-${Math.random().toString(36).slice(2)}`)
         .send({ name: maxLengthName });
 
       if (response.status !== 201) {

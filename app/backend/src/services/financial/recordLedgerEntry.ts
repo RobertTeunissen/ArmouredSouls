@@ -3,8 +3,9 @@
  *
  * Encapsulates the repeated pattern of fetching the current cycle number
  * and writing a ledger entry via financialService.recordTransaction().
- * Failures are silently swallowed — the ledger is an enrichment layer,
- * never a critical path.
+ * Pre-cutover callers may still use this compatibility wrapper while their
+ * rows remain outside the completeness claim. Post-cutover callers must use
+ * the atomic Credit_Mutation_Service path; required errors are propagated.
  *
  * Usage:
  *   import { recordLedgerEntry } from '../services/financial/recordLedgerEntry';
@@ -14,6 +15,7 @@
 import financialService from './financialService';
 import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
 import logger from '../../config/logger';
+import { classifyCycle, getFinancialRolloutState } from '../migration/financialRollout';
 import type { TransactionType } from './financialService';
 
 export interface LedgerEntryParams {
@@ -27,12 +29,23 @@ export interface LedgerEntryParams {
 }
 
 /**
- * Record a financial ledger entry. Non-blocking — catches and logs errors
- * without propagating them. Safe to call without try-catch in route handlers.
+ * Record a legacy financial ledger entry.
+ *
+ * Only a recording failure after a successful pre-cutover classification is
+ * non-blocking: those rows are outside the completeness claim. Cycle lookup,
+ * rollout lookup, and classification failures always propagate because the
+ * helper cannot prove that legacy compatibility applies. Post-cutover callers
+ * likewise receive every error, preventing a balance mutation from appearing
+ * successful while its paired evidence is missing.
  */
 export async function recordLedgerEntry(params: LedgerEntryParams): Promise<void> {
+  let establishedPreCutover = false;
+
   try {
     const cycleNumber = await getCurrentCycleNumber();
+    const rollout = await getFinancialRolloutState();
+    establishedPreCutover = classifyCycle(cycleNumber, rollout) === 'pre_cutover';
+
     await financialService.recordTransaction({
       cycleNumber,
       userId: params.userId,
@@ -50,6 +63,7 @@ export async function recordLedgerEntry(params: LedgerEntryParams): Promise<void
       metadata: params.metadata,
     });
   } catch (error) {
+    if (!establishedPreCutover) throw error;
     logger.debug(`[Ledger] Failed to record ${params.transactionType} for user ${params.userId}: ${error instanceof Error ? error.message : String(error)}`);
   }
 }

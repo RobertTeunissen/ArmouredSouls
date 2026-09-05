@@ -14,6 +14,12 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import adminRoutes from '../../src/routes/admin';
 import { createTestUser, deleteTestUser } from '../testHelpers';
+import {
+  installPostCutoverFinancialRollout,
+  usePostCutoverFinancialRollout,
+} from '../financialRolloutTestHelper';
+
+usePostCutoverFinancialRollout();
 
 dotenv.config();
 
@@ -40,6 +46,10 @@ describe('Admin Cycle Generation Integration Tests', () => {
 
   beforeAll(async () => {
     await prisma.$connect();
+    // Bulk-cycle execution consumes every unified queued match, so this suite
+    // owns a clean schedule rather than inheriting another heavy test's work.
+    await prisma.scheduledMatch.deleteMany({});
+    await clearGeneratedFixtures();
 
     // Create admin user
     adminUser = await prisma.user.create({
@@ -65,6 +75,7 @@ describe('Admin Cycle Generation Integration Tests', () => {
     // and resetting on entry as well as on exit makes the suite's result independent of what
     // ran before it.
     await prisma.cycleSnapshot.deleteMany({ where: { cycleNumber: { lte: MAX_CYCLE_TOUCHED } } });
+    await prisma.financialLedger.deleteMany({ where: { cycleNumber: { lte: MAX_CYCLE_TOUCHED } } });
     await prisma.auditLog.deleteMany({ where: { cycleNumber: { lte: MAX_CYCLE_TOUCHED } } });
     // Ensure CycleMetadata exists
     const existing = await prisma.cycleMetadata.findUnique({ where: { id: 1 } });
@@ -83,79 +94,14 @@ describe('Admin Cycle Generation Integration Tests', () => {
   });
 
   afterEach(async () => {
-    // Clean up all auto-generated users (auto_wimpbot_*, auto_averagebot_*, auto_expertbot_*)
-    const autoUsers = await prisma.user.findMany({
-      where: { username: { startsWith: 'auto_' } },
-      select: { id: true },
-    });
+    await clearGeneratedFixtures();
+    await prisma.scheduledMatch.deleteMany({});
 
-    const userIds = autoUsers.map((u) => u.id);
-
-    if (userIds.length > 0) {
-      const robots = await prisma.robot.findMany({
-        where: { userId: { in: userIds } },
-        select: { id: true },
-      });
-      const robotIds = robots.map((r) => r.id);
-
-      if (robotIds.length > 0) {
-        // Clean up scheduled match participants referencing these robots
-        await prisma.scheduledMatchParticipant.deleteMany({
-          where: { participantId: { in: robotIds } },
-        });
-
-        // Clean up audit logs referencing these robots
-        await prisma.auditLog.deleteMany({
-          where: { robotId: { in: robotIds } },
-        });
-
-        await prisma.battleParticipant.deleteMany({
-          where: { robotId: { in: robotIds } },
-        });
-        await prisma.battle.deleteMany({
-          where: {
-            participants: { some: { robotId: { in: robotIds } } },
-          },
-        });
-        await prisma.scheduledMatch.deleteMany({
-          where: {
-            participants: { some: { participantId: { in: robotIds } } },
-          },
-        });
-      }
-
-      // Clean up audit logs referencing these users
-      await prisma.auditLog.deleteMany({
-        where: { userId: { in: userIds } },
-      });
-
-      await prisma.weaponInventory.deleteMany({
-        where: { userId: { in: userIds } },
-      });
-      await prisma.robot.deleteMany({
-        where: { userId: { in: userIds } },
-      });
-      await prisma.user.deleteMany({
-        where: { id: { in: userIds } },
-      });
-    }
-
-    // Reset cycle counter after each test.
-    //
-    // Resetting the counter means the next test re-runs cycles 1..N, so the rows those
-    // cycle numbers already own must go with it. `cycle_snapshots.cycle_number` is globally
-    // `@unique` and `audit_logs` is keyed by `(cycle_number, sequence_number)`, so leaving
-    // them behind makes the suite collide with itself: Spec #51 measured **44
-    // `Unique constraint failed on the fields: (cycle_number)`** errors in one Heavy_Tier
-    // run, and every single one came from this file. They were mostly invisible because
-    // `cycleSnapshotService`'s callers wrap snapshot creation defensively — so instead of
-    // failing, a cycle would complete with no snapshot and no `userGeneration` payload,
-    // which is what produced "Cannot read properties of undefined (reading 'usersCreated')".
-    //
-    // `prisma.cycleSnapshot.create` is right to throw rather than upsert: in production
-    // cycle numbers are monotonic and settlement runs once per cycle, so a duplicate means
-    // a double settlement. The test was wrong to replay cycle numbers.
+    // Resetting the counter means the next test re-runs cycles 1..N, so every
+    // low-cycle record that owns an idempotency or uniqueness boundary must go
+    // with it. Production never replays a cycle number.
     await prisma.cycleSnapshot.deleteMany({ where: { cycleNumber: { lte: MAX_CYCLE_TOUCHED } } });
+    await prisma.financialLedger.deleteMany({ where: { cycleNumber: { lte: MAX_CYCLE_TOUCHED } } });
     await prisma.auditLog.deleteMany({ where: { cycleNumber: { lte: MAX_CYCLE_TOUCHED } } });
     await prisma.cycleMetadata.update({
       where: { id: 1 },
@@ -182,20 +128,18 @@ describe('Admin Cycle Generation Integration Tests', () => {
           autoRepair: false,
           includeDailyFinances: false,
           includeTournaments: false,
+          includeKoth: false,
           generateUsersPerCycle: true,
         });
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
       expect(response.body.cyclesCompleted).toBe(3);
-      expect(response.body.generateUsersPerCycleEnabled).toBe(true);
-
-      // Cycle 1 creates 1 user, Cycle 2 creates 2, Cycle 3 creates 3.
-      //
-      // `userGeneration` lives under `settlement`, not at the top of a cycle result.
-      // `CycleResult.settlement` in `adminCycleService.ts` has declared it there since user
-      // generation became a settlement step; these assertions kept the pre-settlement path
-      // and so read `undefined.usersCreated`.
+      expect(response.body.results).toHaveLength(3);
+      response.body.results.forEach((result: Record<string, unknown>) => {
+        expect(result.error).toBeUndefined();
+        expect(result.settlement).toBeDefined();
+      });
       expect(response.body.results[0].settlement.userGeneration.usersCreated).toBe(1);
       expect(response.body.results[1].settlement.userGeneration.usersCreated).toBe(2);
       expect(response.body.results[2].settlement.userGeneration.usersCreated).toBe(3);
@@ -217,6 +161,7 @@ describe('Admin Cycle Generation Integration Tests', () => {
           autoRepair: false,
           includeDailyFinances: false,
           includeTournaments: false,
+          includeKoth: false,
           generateUsersPerCycle: true,
         });
 
@@ -235,13 +180,18 @@ describe('Admin Cycle Generation Integration Tests', () => {
           autoRepair: false,
           includeDailyFinances: false,
           includeTournaments: false,
+          includeKoth: false,
           generateUsersPerCycle: true,
         });
 
       expect(response2.status).toBe(200);
       expect(response2.body.totalCyclesInSystem).toBe(8);
 
-      // Cycles 6, 7, 8 create 6, 7, 8 users respectively
+      expect(response2.body.results).toHaveLength(3);
+      response2.body.results.forEach((result: Record<string, unknown>) => {
+        expect(result.error).toBeUndefined();
+        expect(result.settlement).toBeDefined();
+      });
       expect(response2.body.results[0].settlement.userGeneration.usersCreated).toBe(6);
       expect(response2.body.results[1].settlement.userGeneration.usersCreated).toBe(7);
       expect(response2.body.results[2].settlement.userGeneration.usersCreated).toBe(8);
@@ -265,6 +215,7 @@ describe('Admin Cycle Generation Integration Tests', () => {
           autoRepair: false,
           includeDailyFinances: false,
           includeTournaments: false,
+          includeKoth: false,
           generateUsersPerCycle: false,
         });
 
@@ -294,6 +245,7 @@ describe('Admin Cycle Generation Integration Tests', () => {
           autoRepair: false,
           includeDailyFinances: false,
           includeTournaments: false,
+          includeKoth: false,
         });
 
       expect(response.status).toBe(200);
@@ -316,6 +268,7 @@ describe('Admin Cycle Generation Integration Tests', () => {
           autoRepair: false,
           includeDailyFinances: false,
           includeTournaments: false,
+          includeKoth: false,
           generateUsersPerCycle: true,
         });
 
@@ -333,6 +286,7 @@ describe('Admin Cycle Generation Integration Tests', () => {
           autoRepair: false,
           includeDailyFinances: false,
           includeTournaments: false,
+          includeKoth: false,
           generateUsersPerCycle: true,
         });
 
@@ -387,8 +341,11 @@ describe('Admin Cycle Generation Integration Tests', () => {
     }, 30000);
 
     it('should auto-create CycleMetadata if missing', async () => {
-      // Delete CycleMetadata
+      // This deliberately verifies the service can recreate its singleton. Reinstall the
+      // scoped test rollout immediately afterwards so the event slots keep their real
+      // post-cutover paired-capture contract rather than exercising the pre-cutover guard.
       await prisma.cycleMetadata.deleteMany({});
+      await installPostCutoverFinancialRollout();
 
       const response = await request(app)
         .post('/api/admin/cycles/bulk')
@@ -398,6 +355,7 @@ describe('Admin Cycle Generation Integration Tests', () => {
           autoRepair: false,
           includeDailyFinances: false,
           includeTournaments: false,
+          includeKoth: false,
           generateUsersPerCycle: true,
         });
 
@@ -414,7 +372,7 @@ describe('Admin Cycle Generation Integration Tests', () => {
       const cycles = 5;
       const expectedTotal = (cycles * (cycles + 1)) / 2; // 15 users
 
-      await request(app)
+      const response = await request(app)
         .post('/api/admin/cycles/bulk')
         .set('Authorization', `Bearer ${adminToken}`)
         .send({
@@ -422,8 +380,18 @@ describe('Admin Cycle Generation Integration Tests', () => {
           autoRepair: false,
           includeDailyFinances: false,
           includeTournaments: false,
+          includeKoth: false,
           generateUsersPerCycle: true,
         });
+
+      expect(response.status).toBe(200);
+      expect(response.body.results).toHaveLength(cycles);
+      response.body.results.forEach((result: Record<string, unknown>, index: number) => {
+        expect(result.error).toBeUndefined();
+        expect(result.settlement).toBeDefined();
+        const settlement = result.settlement as { userGeneration: { usersCreated: number } };
+        expect(settlement.userGeneration.usersCreated).toBe(index + 1);
+      });
 
       const totalUsers = await prisma.user.count({
         where: { username: { startsWith: 'auto_' } },
@@ -433,16 +401,24 @@ describe('Admin Cycle Generation Integration Tests', () => {
     }, 180000);
 
     it('should create robots eligible for matchmaking', async () => {
-      await request(app)
+      // Run one cycle so these robots are inspected immediately after generation.
+      // In later cycles they may legitimately have fought scheduled matches and taken damage.
+      const response = await request(app)
         .post('/api/admin/cycles/bulk')
         .set('Authorization', `Bearer ${adminToken}`)
         .send({
-          cycles: 3,
+          cycles: 1,
           autoRepair: false,
           includeDailyFinances: false,
           includeTournaments: false,
+          includeKoth: false,
           generateUsersPerCycle: true,
         });
+
+      expect(response.status).toBe(200);
+      expect(response.body.results).toHaveLength(1);
+      expect(response.body.results[0].error).toBeUndefined();
+      expect(response.body.results[0].settlement.userGeneration.usersCreated).toBe(1);
 
       const robots = await prisma.robot.findMany({
         where: { user: { username: { startsWith: 'auto_' } } },
@@ -460,3 +436,84 @@ describe('Admin Cycle Generation Integration Tests', () => {
     }, 120000);
   });
 });
+
+/** Remove generated stables and every fixture-owned dependency before replaying cycles 1..N. */
+async function clearGeneratedFixtures(): Promise<void> {
+  const autoUsers = await prisma.user.findMany({
+    where: { username: { startsWith: 'auto_' } },
+    select: { id: true },
+  });
+  const userIds = autoUsers.map((user) => user.id);
+
+  if (userIds.length === 0) {
+    return;
+  }
+
+  const [robots, teams] = await Promise.all([
+    prisma.robot.findMany({
+      where: { userId: { in: userIds } },
+      select: { id: true },
+    }),
+    prisma.teamBattle.findMany({
+      where: { stableId: { in: userIds } },
+      select: { id: true },
+    }),
+  ]);
+  const robotIds = robots.map((robot) => robot.id);
+  const teamIds = teams.map((team) => team.id);
+  const participantClauses = [
+    ...(robotIds.length > 0 ? [{ participantId: { in: robotIds } }] : []),
+    ...(teamIds.length > 0 ? [{ participantId: { in: teamIds } }] : []),
+  ];
+
+  const [battles, scheduledMatches] = await Promise.all([
+    robotIds.length > 0
+      ? prisma.battle.findMany({
+        where: { participants: { some: { robotId: { in: robotIds } } } },
+        select: { id: true },
+      })
+      : [],
+    participantClauses.length > 0
+      ? prisma.scheduledMatch.findMany({
+        where: { participants: { some: { OR: participantClauses } } },
+        select: { id: true },
+      })
+      : [],
+  ]);
+
+  await prisma.financialLedger.deleteMany({ where: { userId: { in: userIds } } });
+  await prisma.auditLog.deleteMany({
+    where: {
+      OR: [
+        { userId: { in: userIds } },
+        ...(robotIds.length > 0 ? [{ robotId: { in: robotIds } }] : []),
+      ],
+    },
+  });
+  await prisma.leagueHistory.deleteMany({ where: { userId: { in: userIds } } });
+
+  if (scheduledMatches.length > 0) {
+    await prisma.scheduledMatch.deleteMany({ where: { id: { in: scheduledMatches.map((match) => match.id) } } });
+  }
+  if (battles.length > 0) {
+    await prisma.battle.deleteMany({ where: { id: { in: battles.map((battle) => battle.id) } } });
+  }
+
+  await prisma.standing.deleteMany({
+    where: {
+      OR: [
+        ...(robotIds.length > 0 ? [{ entityType: 'robot', entityId: { in: robotIds } }] : []),
+        ...(teamIds.length > 0 ? [{ entityType: 'team', entityId: { in: teamIds } }] : []),
+      ],
+    },
+  });
+  if (teamIds.length > 0) {
+    await prisma.teamBattle.deleteMany({ where: { id: { in: teamIds } } });
+  }
+  if (robotIds.length > 0) {
+    await prisma.subscription.deleteMany({ where: { robotId: { in: robotIds } } });
+  }
+  await prisma.weaponInventory.deleteMany({ where: { userId: { in: userIds } } });
+  await prisma.robot.deleteMany({ where: { userId: { in: userIds } } });
+  await prisma.user.deleteMany({ where: { id: { in: userIds } } });
+}

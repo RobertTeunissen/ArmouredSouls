@@ -463,6 +463,12 @@ model AuditLog {
   robotId  Int? @map("robot_id")
   battleId Int? @map("battle_id") // For battle_complete events
 
+  // Spec #53: nullable identities preserve pre-cutover legacy rows. New
+  // financial_transaction rows require financialEventId; prestige_change rows
+  // require sourceEventId at the service boundary.
+  financialEventId String? @map("financial_event_id") @db.VarChar(191)
+  sourceEventId    String? @map("source_event_id") @db.VarChar(191)
+
   // Flexible event data
   payload Json
 
@@ -470,6 +476,10 @@ model AuditLog {
   metadata Json?
 
   @@unique([cycleNumber, sequenceNumber], name: "audit_logs_cycle_sequence")
+  @@unique([eventType, financialEventId], name: "audit_logs_event_type_financial_event_id")
+  @@unique([eventType, sourceEventId], name: "audit_logs_event_type_source_event_id")
+  @@index([financialEventId])
+  @@index([sourceEventId])
   @@index([userId])
   @@index([robotId])
   @@index([battleId])
@@ -953,6 +963,9 @@ model FinancialLedger {
   balanceAfter    Int      @map("balance_after")
   description     String   @db.VarChar(255)
   metadata        Json? // Optional structured data per transaction type
+  // Nullable only for pre-cutover Legacy_Record rows. New financial events
+  // always provide a durable identity and are protected by the unique index.
+  financialEventId String? @unique(map: "financial_ledger_financial_event_id_key") @map("financial_event_id") @db.VarChar(191)
   createdAt       DateTime @default(now()) @map("created_at")
 
   @@index([userId, cycleNumber])

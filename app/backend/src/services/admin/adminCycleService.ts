@@ -26,6 +26,7 @@ import { EventLogger } from '../common/eventLogger';
 import { cycleLogger } from '../../utils/cycleLogger';
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
+import { settlementService } from '../financial/settlementService';
 
 /** Options accepted by the bulk cycle executor (mirrors req.body fields). */
 export interface BulkCycleOptions {
@@ -320,9 +321,7 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
       stepNumber++;
       logger.info(`[Admin] Step ${stepNumber}: Matchmaking for Leagues (1v1)`);
       const leagueMatchmakingStart = Date.now();
-      const leagueScheduledFor = new Date(Date.now() + 24 * 60 * 60 * 1000);
-      leagueScheduledFor.setMinutes(0, 0, 0);
-      const leagueMatchesCreated = await runMatchmaking(leagueScheduledFor);
+      const leagueMatchesCreated = await runMatchmaking();
       await eventLogger.logCycleStepComplete(
         currentCycleNumber,
         'matchmaking_leagues',
@@ -384,9 +383,7 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
         stepNumber++;
         logger.info(`[Admin] Step ${stepNumber}: Matchmaking for Team 2v2 League`);
         const team2v2MatchmakingStart = Date.now();
-        const team2v2ScheduledFor = new Date(Date.now() + 24 * 60 * 60 * 1000);
-        team2v2ScheduledFor.setMinutes(0, 0, 0);
-        team2v2MatchesCreated = await runTeamBattleMatchmaking(2, team2v2ScheduledFor);
+        team2v2MatchesCreated = await runTeamBattleMatchmaking(2);
         await eventLogger.logCycleStepComplete(
           currentCycleNumber,
           'matchmaking_team_2v2',
@@ -486,9 +483,7 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
       stepNumber++;
       logger.info(`[Admin] Step ${stepNumber}: Matchmaking for Tag Teams`);
       const tagTeamMatchmakingStart = Date.now();
-      const tagTeamScheduledFor = new Date(Date.now() + 24 * 60 * 60 * 1000);
-      tagTeamScheduledFor.setMinutes(0, 0, 0);
-      const tagTeamMatchesCreated = await runTagTeamMatchmaking(tagTeamScheduledFor);
+      const tagTeamMatchesCreated = await runTagTeamMatchmaking();
       await eventLogger.logCycleStepComplete(
         currentCycleNumber,
         'matchmaking_tag_teams',
@@ -550,9 +545,7 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
         stepNumber++;
         logger.info(`[Admin] Step ${stepNumber}: KotH Matchmaking`);
         const kothMatchmakingStart = Date.now();
-        const kothScheduledFor = new Date(Date.now() + 24 * 60 * 60 * 1000);
-        kothScheduledFor.setMinutes(0, 0, 0);
-        kothMatchesCreated = await runKothMatchmaking(kothScheduledFor);
+        kothMatchesCreated = await runKothMatchmaking();
         await eventLogger.logCycleStepComplete(
           currentCycleNumber,
           'matchmaking_koth',
@@ -625,9 +618,7 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
         stepNumber++;
         logger.info(`[Admin] Step ${stepNumber}: Matchmaking for Team 3v3 League`);
         const team3v3MatchmakingStart = Date.now();
-        const team3v3ScheduledFor = new Date(Date.now() + 24 * 60 * 60 * 1000);
-        team3v3ScheduledFor.setMinutes(0, 0, 0);
-        team3v3MatchesCreated = await runTeamBattleMatchmaking(3, team3v3ScheduledFor);
+        team3v3MatchesCreated = await runTeamBattleMatchmaking(3);
         await eventLogger.logCycleStepComplete(
           currentCycleNumber,
           'matchmaking_team_3v3',
@@ -875,102 +866,13 @@ export async function executeBulkCycles(options: BulkCycleOptions): Promise<Bulk
       let financesUsersProcessed = 0;
 
       if (includeDailyFinances) {
-        const { calculateDailyPassiveIncome, calculateFacilityOperatingCost } = await import('../../utils/economyCalculations');
-
-        const allUsers = await prisma.user.findMany({
-          where: {},
-          select: { id: true, prestige: true },
+        const settlementResult = await settlementService.settleCycle({
+          cycleNumber: currentCycleNumber,
+          includeAdmins: true,
         });
-        financesUsersProcessed = allUsers.length;
-
-        // Collect all currency updates to batch in a single transaction
-        const currencyUpdates: Array<ReturnType<typeof prisma.user.update>> = [];
-
-        for (const user of allUsers) {
-          const passiveIncome = await calculateDailyPassiveIncome(user.id);
-
-          const facilities = await prisma.facility.findMany({
-            where: { userId: user.id },
-          });
-
-          const userRobots = await prisma.robot.findMany({
-            where: { userId: user.id },
-            select: { totalBattles: true, fame: true },
-          });
-
-          const facilityCosts = facilities.map(f => ({
-            facilityType: f.facilityType,
-            level: f.level,
-            cost: calculateFacilityOperatingCost(f.facilityType, f.level),
-          }));
-
-          let totalCost = facilityCosts.reduce((sum, f) => sum + f.cost, 0);
-
-          if (userRobots.length > 1) {
-            const rosterCost = (userRobots.length - 1) * 500;
-            facilityCosts.push({
-              facilityType: 'roster_expansion',
-              level: 0,
-              cost: rosterCost,
-            });
-            totalCost += rosterCost;
-          }
-
-          const totalBattles = userRobots.reduce((sum, r) => sum + r.totalBattles, 0);
-          const totalFame = userRobots.reduce((sum, r) => sum + r.fame, 0);
-
-          const incomeGenerator = await prisma.facility.findUnique({
-            where: {
-              userId_facilityType: {
-                userId: user.id,
-                facilityType: 'merchandising_hub',
-              },
-            },
-          });
-
-          if (passiveIncome.total > 0) {
-            await eventLogger.logPassiveIncome(
-              currentCycleNumber,
-              user.id,
-              passiveIncome.merchandising,
-              0,
-              incomeGenerator?.level || 0,
-              user.prestige,
-              totalBattles,
-              totalFame
-            );
-
-            totalPassiveIncome += passiveIncome.total;
-          }
-
-          if (totalCost > 0) {
-            await eventLogger.logOperatingCosts(
-              currentCycleNumber,
-              user.id,
-              facilityCosts.filter(f => f.cost > 0),
-              totalCost
-            );
-
-            const facilityList = facilityCosts.filter(f => f.cost > 0).map(f => `${f.facilityType}(L${f.level}): ₡${f.cost}`).join(', ');
-            logger.info(`[OperatingCosts] User ${user.id} | Total: ₡${totalCost.toLocaleString()} | Facilities: ${facilityList}`);
-
-            totalOperatingCosts += totalCost;
-          }
-
-          // Calculate net change (income - costs) and batch the update
-          const netChange = passiveIncome.total - totalCost;
-          if (netChange !== 0) {
-            currencyUpdates.push(prisma.user.update({
-              where: { id: user.id },
-              data: { currency: { increment: netChange } },
-            }));
-          }
-        }
-
-        // Execute all currency updates in a single transaction
-        if (currencyUpdates.length > 0) {
-          await prisma.$transaction(currencyUpdates, { timeout: 30000 });
-        }
+        financesUsersProcessed = settlementResult.usersProcessed;
+        totalPassiveIncome = settlementResult.totalPassiveIncome;
+        totalOperatingCosts = settlementResult.totalOperatingCosts;
 
         logger.info(`[Admin] Passive income: ₡${totalPassiveIncome.toLocaleString()}, Operating costs: ₡${totalOperatingCosts.toLocaleString()}`);
       } else {

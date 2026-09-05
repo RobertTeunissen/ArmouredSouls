@@ -29,6 +29,7 @@ export enum EventType {
   // Stable/User events
   USER_CREATED = 'user_created',
   CREDIT_CHANGE = 'credit_change', // For manual admin adjustments only
+  FINANCIAL_TRANSACTION = 'financial_transaction',
   PRESTIGE_CHANGE = 'prestige_change',
   PASSIVE_INCOME = 'passive_income',
   OPERATING_COSTS = 'operating_costs',
@@ -357,6 +358,57 @@ export class EventLogger {
       { userId }
     );
   }
+
+  /**
+   * Write the legacy settlement domain row inside the financial transaction.
+   *
+   * The `financialEventId` is an additive link for new rows. The fallback to a
+   * same-cycle legacy row prevents a rerun after cutover from double-counting
+   * snapshot inputs that were already written by the pre-pair implementation.
+   */
+  async logSettlementComponentInTransaction(
+    tx: Prisma.TransactionClient,
+    input: {
+      cycleNumber: number;
+      userId: number;
+      componentType: 'passive_income' | 'operating_costs';
+      financialEventId: string;
+      payload: BaseEventPayload;
+      timestamp?: Date;
+    },
+  ): Promise<void> {
+    const eventType = input.componentType === 'passive_income'
+      ? EventType.PASSIVE_INCOME
+      : EventType.OPERATING_COSTS;
+    const existing = await tx.auditLog.findFirst({
+      where: {
+        cycleNumber: input.cycleNumber,
+        userId: input.userId,
+        eventType,
+        OR: [
+          { financialEventId: input.financialEventId },
+          { financialEventId: null },
+        ],
+      },
+      select: { id: true },
+    });
+    if (existing) return;
+
+    validateEventPayload(eventType, input.payload);
+    await withAuditSequence(input.cycleNumber, 1, async (startSequence, sequenceTx) => {
+      await sequenceTx.auditLog.create({
+        data: {
+          cycleNumber: input.cycleNumber,
+          eventType,
+          eventTimestamp: input.timestamp ?? new Date(),
+          sequenceNumber: startSequence,
+          userId: input.userId,
+          payload: input.payload as Prisma.JsonObject,
+          financialEventId: input.financialEventId,
+        },
+      });
+    }, tx);
+  }
   
   /**
    * Log credit change
@@ -560,6 +612,69 @@ export class EventLogger {
     );
   }
   
+  /**
+   * Log a robot repair inside the caller's transaction.
+   *
+   * Required repair capture must share the transaction with the balance mutation
+   * and robot state update. The source identity makes the domain row retry-safe
+   * while keeping it separate from the financial_transaction audit row.
+   */
+  async logRobotRepairInTransaction(
+    tx: Prisma.TransactionClient,
+    input: {
+      cycleNumber: number;
+      userId: number;
+      robotId: number;
+      creditsCharged: number;
+      damageRepaired: number;
+      discountPercent: number;
+      repairType: 'manual' | 'automatic';
+      manualRepairDiscount?: number;
+      creditsBeforeManualDiscount?: number;
+      sourceEventId: string;
+      timestamp?: Date;
+    },
+  ): Promise<void> {
+    const existing = await tx.auditLog.findFirst({
+      where: {
+        eventType: EventType.ROBOT_REPAIR,
+        sourceEventId: input.sourceEventId,
+      },
+      select: { id: true },
+    });
+    if (existing) return;
+
+    const payload: BaseEventPayload = {
+      [REPAIR_CHARGED_KEY]: input.creditsCharged,
+      damageRepaired: input.damageRepaired,
+      discountPercent: input.discountPercent,
+      repairType: input.repairType,
+      sourceEventId: input.sourceEventId,
+    };
+    if (input.manualRepairDiscount !== undefined) {
+      payload.manualRepairDiscount = input.manualRepairDiscount;
+    }
+    if (input.creditsBeforeManualDiscount !== undefined) {
+      payload[REPAIR_PRE_DISCOUNT_KEY] = input.creditsBeforeManualDiscount;
+    }
+
+    validateEventPayload(EventType.ROBOT_REPAIR, payload);
+    await withAuditSequence(input.cycleNumber, 1, async (startSequence, sequenceTx) => {
+      await sequenceTx.auditLog.create({
+        data: {
+          cycleNumber: input.cycleNumber,
+          eventType: EventType.ROBOT_REPAIR,
+          eventTimestamp: input.timestamp ?? new Date(),
+          sequenceNumber: startSequence,
+          userId: input.userId,
+          robotId: input.robotId,
+          payload: payload as Prisma.JsonObject,
+          sourceEventId: input.sourceEventId,
+        },
+      });
+    }, tx);
+  }
+
   /**
    * Log calculation metadata for debugging
    */

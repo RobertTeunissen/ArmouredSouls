@@ -97,6 +97,25 @@ app.use(express.json());
 app.use('/api/admin', adminRoutes);
 app.use(errorHandler);
 
+// Reuse one listening server: this file has hundreds of property-test requests,
+// and passing the unbound app to Supertest creates an ephemeral listener per call.
+let server: ReturnType<typeof app.listen>;
+
+beforeAll(async () => {
+  await new Promise<void>((resolve, reject) => {
+    server = app.listen(0, (error?: Error) => {
+      if (error) reject(error);
+      else resolve();
+    });
+  });
+});
+
+afterAll(
+  () => new Promise<void>((resolve, reject) => {
+    server.close((error) => (error ? reject(error) : resolve()));
+  }),
+);
+
 const JWT_SECRET = 'test-secret-key';
 
 /** Generate a valid admin JWT token */
@@ -172,7 +191,7 @@ describe('POST /api/admin/users/:id/reset-password', () => {
 
   describe('authentication and authorization', () => {
     it('should return 401 when no token is provided', async () => {
-      const res = await request(app)
+      const res = await request(server)
         .post('/api/admin/users/42/reset-password')
         .send({ password: 'ValidPass1' });
 
@@ -181,7 +200,7 @@ describe('POST /api/admin/users/:id/reset-password', () => {
     });
 
     it('should return 401 when token is invalid', async () => {
-      const res = await request(app)
+      const res = await request(server)
         .post('/api/admin/users/42/reset-password')
         .set('Authorization', 'Bearer invalid-token-here')
         .send({ password: 'ValidPass1' });
@@ -190,7 +209,7 @@ describe('POST /api/admin/users/:id/reset-password', () => {
     });
 
     it('should return 403 when user is not an admin', async () => {
-      const res = await request(app)
+      const res = await request(server)
         .post('/api/admin/users/42/reset-password')
         .set('Authorization', `Bearer ${userToken()}`)
         .send({ password: 'ValidPass1' });
@@ -202,7 +221,7 @@ describe('POST /api/admin/users/:id/reset-password', () => {
 
   describe('successful reset', () => {
     it('should return 200 with userId and username on successful reset', async () => {
-      const res = await request(app)
+      const res = await request(server)
         .post('/api/admin/users/42/reset-password')
         .set('Authorization', `Bearer ${adminToken()}`)
         .send({ password: 'ValidPass1' });
@@ -225,7 +244,7 @@ describe('POST /api/admin/users/:id/reset-password', () => {
 
   describe('validation errors', () => {
     it('should return 400 when password field is missing', async () => {
-      const res = await request(app)
+      const res = await request(server)
         .post('/api/admin/users/42/reset-password')
         .set('Authorization', `Bearer ${adminToken()}`)
         .send({});
@@ -241,7 +260,7 @@ describe('POST /api/admin/users/:id/reset-password', () => {
         error: 'Password must be at least 8 characters',
       });
 
-      const res = await request(app)
+      const res = await request(server)
         .post('/api/admin/users/42/reset-password')
         .set('Authorization', `Bearer ${adminToken()}`)
         .send({ password: 'short' });
@@ -253,7 +272,7 @@ describe('POST /api/admin/users/:id/reset-password', () => {
 
     it('should return 400 for invalid userId values (zero, negative, non-integer)', async () => {
       // Test zero
-      const resZero = await request(app)
+      const resZero = await request(server)
         .post('/api/admin/users/0/reset-password')
         .set('Authorization', `Bearer ${adminToken()}`)
         .send({ password: 'ValidPass1' });
@@ -261,14 +280,14 @@ describe('POST /api/admin/users/:id/reset-password', () => {
       expect(resZero.body).toHaveProperty('code', 'VALIDATION_ERROR');
 
       // Test negative
-      const resNeg = await request(app)
+      const resNeg = await request(server)
         .post('/api/admin/users/-5/reset-password')
         .set('Authorization', `Bearer ${adminToken()}`)
         .send({ password: 'ValidPass1' });
       expect(resNeg.status).toBe(400);
 
       // Test non-integer (float)
-      const resFloat = await request(app)
+      const resFloat = await request(server)
         .post('/api/admin/users/3.14/reset-password')
         .set('Authorization', `Bearer ${adminToken()}`)
         .send({ password: 'ValidPass1' });
@@ -282,7 +301,7 @@ describe('POST /api/admin/users/:id/reset-password', () => {
         new AuthError('USER_NOT_FOUND', 'User not found', 404),
       );
 
-      const res = await request(app)
+      const res = await request(server)
         .post('/api/admin/users/999/reset-password')
         .set('Authorization', `Bearer ${adminToken()}`)
         .send({ password: 'ValidPass1' });
@@ -304,7 +323,7 @@ describe('POST /api/admin/users/:id/reset-password', () => {
       // Keep sending until we get a 429 (the prior tests already consumed
       // some of the 10-request budget from the same IP)
       for (let i = 0; i < 15; i++) {
-        lastRes = await request(app)
+        lastRes = await request(server)
           .post('/api/admin/users/42/reset-password')
           .set('Authorization', `Bearer ${token}`)
           .send({ password: 'ValidPass1' });
@@ -363,7 +382,7 @@ describe('GET /api/admin/users/search', () => {
       .mockResolvedValueOnce([matchedUser])  // username search
       .mockResolvedValueOnce([]);            // email search
 
-    const res = await request(app)
+    const res = await request(server)
       .get('/api/admin/users/search?q=play')
       .set('Authorization', `Bearer ${adminToken()}`);
 
@@ -381,7 +400,7 @@ describe('GET /api/admin/users/search', () => {
       .mockResolvedValueOnce([])             // username search
       .mockResolvedValueOnce([matchedUser]); // email search
 
-    const res = await request(app)
+    const res = await request(server)
       .get('/api/admin/users/search?q=warrior@')
       .set('Authorization', `Bearer ${adminToken()}`);
 
@@ -399,7 +418,7 @@ describe('GET /api/admin/users/search', () => {
       .mockResolvedValueOnce([])             // username search
       .mockResolvedValueOnce([]);            // email search
 
-    const res = await request(app)
+    const res = await request(server)
       .get('/api/admin/users/search?q=42')
       .set('Authorization', `Bearer ${adminToken()}`);
 
@@ -412,7 +431,7 @@ describe('GET /api/admin/users/search', () => {
     // All searches return empty
     mockPrismaUser.findMany.mockResolvedValue([]);
 
-    const res = await request(app)
+    const res = await request(server)
       .get('/api/admin/users/search?q=nonexistent')
       .set('Authorization', `Bearer ${adminToken()}`);
 
@@ -423,7 +442,7 @@ describe('GET /api/admin/users/search', () => {
   it('should return 400 when query exceeds 50 characters', async () => {
     const longQuery = 'a'.repeat(51);
 
-    const res = await request(app)
+    const res = await request(server)
       .get(`/api/admin/users/search?q=${longQuery}`)
       .set('Authorization', `Bearer ${adminToken()}`);
 
@@ -431,7 +450,7 @@ describe('GET /api/admin/users/search', () => {
   });
 
   it('should return 400 when query is empty', async () => {
-    const res = await request(app)
+    const res = await request(server)
       .get('/api/admin/users/search?q=')
       .set('Authorization', `Bearer ${adminToken()}`);
 
@@ -445,7 +464,7 @@ describe('GET /api/admin/users/search', () => {
       .mockResolvedValueOnce([safeUser])  // username search
       .mockResolvedValueOnce([]);         // email search
 
-    const res = await request(app)
+    const res = await request(server)
       .get('/api/admin/users/search?q=safe')
       .set('Authorization', `Bearer ${adminToken()}`);
 
@@ -556,7 +575,7 @@ describe('Admin Password Reset Routes — Property-Based Tests', () => {
           mockValidatePassword.mockReturnValue(realResult);
           mockResetPassword.mockResolvedValue({ userId: 42, username: 'player1' });
 
-          const res = await request(app)
+          const res = await request(server)
             .post('/api/admin/users/42/reset-password')
             .set('Authorization', `Bearer ${isolatedAdminToken()}`)
             .send({ password });
@@ -607,7 +626,7 @@ describe('Admin Password Reset Routes — Property-Based Tests', () => {
 
     await fc.assert(
       fc.asyncProperty(invalidUserIdArb, async (invalidId) => {
-        const res = await request(app)
+        const res = await request(server)
           .post(`/api/admin/users/${invalidId}/reset-password`)
           .set('Authorization', `Bearer ${isolatedAdminToken()}`)
           .send({ password: 'ValidPass1' });
@@ -647,7 +666,7 @@ describe('Admin Password Reset Routes — Property-Based Tests', () => {
           mockPrismaUser.findMany.mockResolvedValue(users);
 
           const encodedQuery = encodeURIComponent(query);
-          const res = await request(app)
+          const res = await request(server)
             .get(`/api/admin/users/search?q=${encodedQuery}`)
             .set('Authorization', `Bearer ${isolatedAdminToken()}`);
 
@@ -695,7 +714,7 @@ describe('Admin Password Reset Routes — Property-Based Tests', () => {
           mockPrismaUser.findMany.mockResolvedValue(users);
 
           const encodedQuery = encodeURIComponent(query);
-          const res = await request(app)
+          const res = await request(server)
             .get(`/api/admin/users/search?q=${encodedQuery}`)
             .set('Authorization', `Bearer ${isolatedAdminToken()}`);
 
@@ -732,7 +751,7 @@ describe('Admin Password Reset Routes — Property-Based Tests', () => {
     await fc.assert(
       fc.asyncProperty(invalidQueryArb, async (query) => {
         const encodedQuery = encodeURIComponent(query);
-        const res = await request(app)
+        const res = await request(server)
           .get(`/api/admin/users/search?q=${encodedQuery}`)
           .set('Authorization', `Bearer ${isolatedAdminToken()}`);
 

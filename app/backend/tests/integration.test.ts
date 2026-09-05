@@ -8,7 +8,9 @@ import { executeScheduledBattles } from '../src/services/league/leagueBattleOrch
 import { runMatchmaking } from '../src/services/analytics/matchmakingService';
 import { rebalanceLeagues } from '../src/services/league/leagueRebalancingService';
 import { createLeagueCohort, deleteLeagueCohort, type LeagueCohort } from './helpers/leagueCohort';
+import { usePostCutoverFinancialRollout } from './financialRolloutTestHelper';
 
+usePostCutoverFinancialRollout();
 
 describe('Integration Test: Complete Daily Cycle', () => {
   let cohort: LeagueCohort;
@@ -156,13 +158,19 @@ describe('Integration Test: Complete Daily Cycle', () => {
       console.log('Skipping rebalancing - insufficient battle history');
     }
 
-    // Step 7: Verify battle logs are generated
+    // Step 7: Verify a fought battle from this cohort has combat lifecycle logs.
+    // A Bye_Event deliberately has only a `bye_match` event because no combat ran.
     console.log('\n--- Step 5: Verify Battle Logs ---');
-    const battleWithLog = await prisma.battle.findFirst({
+    const cohortBattlesWithLogs = await prisma.battle.findMany({
       where: {
-        battleLog: { not: undefined },
+        createdAt: { gte: new Date(Date.now() - 60 * 1000) },
+        participants: { some: { robotId: { in: cohort.robotIds } } },
       },
+      orderBy: { createdAt: 'desc' },
     });
+    const battleWithLog = cohortBattlesWithLogs.find(
+      battle => (battle.battleLog as { isByeMatch?: boolean } | null)?.isByeMatch !== true,
+    );
 
     expect(battleWithLog).toBeDefined();
     expect(battleWithLog?.battleLog).toBeDefined();

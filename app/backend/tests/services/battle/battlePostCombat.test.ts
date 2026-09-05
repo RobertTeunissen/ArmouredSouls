@@ -12,6 +12,10 @@ const mockBattleParticipantFindFirst = jest.fn();
 const mockFinancialLedgerCreate = jest.fn();
 const mockAuditLogCreate = jest.fn();
 const mockAuditLogFindFirst = jest.fn();
+const mockApplyCreditMutation = jest.fn().mockResolvedValue({ created: true, balanceAfter: 0 });
+const mockApplyCreditMutationInTransaction = jest.fn().mockResolvedValue({ created: true, balanceAfter: 0 });
+const mockApplyPrestigeAward = jest.fn().mockResolvedValue({ created: true, prestigeAfter: 0 });
+const mockApplyPrestigeAwardInTransaction = jest.fn().mockResolvedValue({ created: true, prestigeAfter: 0 });
 
 jest.mock('../../../src/lib/prisma', () => ({
   __esModule: true,
@@ -28,8 +32,18 @@ jest.mock('../../../src/lib/prisma', () => ({
       create: (...args: unknown[]) => mockAuditLogCreate(...args),
       findFirst: (...args: unknown[]) => mockAuditLogFindFirst(...args),
     },
-    cycleMetadata: { findUnique: jest.fn().mockResolvedValue({ currentCycle: 1 }) },
+    cycleMetadata: { findUnique: jest.fn().mockResolvedValue({ totalCycles: 1 }) },
   },
+}));
+
+jest.mock('../../../src/services/financial/creditMutationService', () => ({
+  applyCreditMutation: (...args: unknown[]) => mockApplyCreditMutation(...args),
+  applyCreditMutationInTransaction: (...args: unknown[]) => mockApplyCreditMutationInTransaction(...args),
+}));
+
+jest.mock('../../../src/services/financial/prestigeService', () => ({
+  applyPrestigeAward: (...args: unknown[]) => mockApplyPrestigeAward(...args),
+  applyPrestigeAwardInTransaction: (...args: unknown[]) => mockApplyPrestigeAwardInTransaction(...args),
 }));
 
 jest.mock('../../../src/config/logger', () => ({
@@ -402,24 +416,30 @@ describe('updateRobotCombatStats', () => {
 });
 
 describe('awardCreditsToUser', () => {
-  it('should increment user currency', async () => {
+  it('should apply a battle-income mutation', async () => {
     await awardCreditsToUser(1, 5000);
 
-    expect(mockUserUpdate).toHaveBeenCalledWith({
-      where: { id: 1 },
-      data: { currency: { increment: 5000 } },
-    });
+    expect(mockApplyCreditMutation).toHaveBeenCalledWith(expect.objectContaining({
+      cycleNumber: 1,
+      userId: 1,
+      transactionType: 'battle_income',
+      amount: 5000,
+    }));
+    expect(mockUserUpdate).not.toHaveBeenCalled();
   });
 });
 
 describe('awardPrestigeToUser', () => {
-  it('should increment user prestige', async () => {
+  it('should apply a battle prestige award', async () => {
     await awardPrestigeToUser(1, 50);
 
-    expect(mockUserUpdate).toHaveBeenCalledWith({
-      where: { id: 1 },
-      data: { prestige: { increment: 50 } },
-    });
+    expect(mockApplyPrestigeAward).toHaveBeenCalledWith(expect.objectContaining({
+      cycleNumber: 1,
+      userId: 1,
+      amount: 50,
+      source: 'battle',
+    }));
+    expect(mockUserUpdate).not.toHaveBeenCalled();
   });
 });
 
