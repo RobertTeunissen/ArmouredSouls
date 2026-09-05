@@ -322,13 +322,7 @@ Note: The database migration (new tables, renamed event types) is forward-only. 
 
 The financial ledger deployment and the irreversible paired-capture cutover are separate operations. Deploying the code does **not** select a `Cutover_Cycle`. Do not edit `cycle_metadata.feature_flags` directly.
 
-The restricted command is available only on ACC. Before using it, set this exact line in `/opt/armouredsouls/backend/.env`, deploy the release, and restart PM2 through the ordinary deployment procedure:
-
-```text
-FINANCIAL_ROLLOUT_TARGET=ACC
-```
-
-The command additionally requires `NODE_ENV=acceptance`; it refuses to run in development or production. It uses the rollout service's ordered guards, has no force/rollback mode, and disconnects after each invocation.
+The restricted command is bundled with the release and uses ACC's permanent `NODE_ENV=acceptance` setting; there is no rollout-specific environment flag to configure or remove. Deploy the release and restart PM2 through the ordinary deployment procedure before using it.
 
 ### Preconditions
 

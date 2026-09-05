@@ -31,7 +31,7 @@ function createHarness(overrides: Partial<FinancialRolloutCliDependencies> = {})
   };
 
   const dependencies: FinancialRolloutCliDependencies = {
-    config: { nodeEnv: 'acceptance', financialRolloutTarget: 'ACC' },
+    config: { nodeEnv: 'acceptance' },
     getRolloutState: calls.getRolloutState,
     getMissingRolloutGates: () => [],
     markSchemaClientGenerationComplete: calls.markSchemaClientGenerationComplete,
@@ -53,9 +53,9 @@ function createHarness(overrides: Partial<FinancialRolloutCliDependencies> = {})
 }
 
 describe('financial rollout CLI', () => {
-  it('refuses non-ACC environments before it reads rollout state', async () => {
+  it('refuses non-acceptance environments before it reads rollout state', async () => {
     const harness = createHarness({
-      config: { nodeEnv: 'development', financialRolloutTarget: 'ACC' },
+      config: { nodeEnv: 'development' },
     });
 
     await expect(runFinancialRolloutCli(['status'], harness.dependencies)).resolves.toBe(1);

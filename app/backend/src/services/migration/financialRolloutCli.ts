@@ -3,7 +3,6 @@ import type { FinancialRolloutState } from './financialRollout';
 
 export interface FinancialRolloutCliConfig {
   nodeEnv: string;
-  financialRolloutTarget: string | undefined;
 }
 
 export interface FinancialRolloutCliDependencies {
@@ -42,9 +41,9 @@ const CONFIRMATION_FLAGS: Record<ConfirmedCommand, string> = {
   'mark-documentation': '--confirm-documentation',
 };
 
-function assertAccTarget(config: FinancialRolloutCliConfig): void {
-  if (config.nodeEnv !== 'acceptance' || config.financialRolloutTarget !== 'ACC') {
-    throw new Error('Financial rollout commands require NODE_ENV=acceptance and FINANCIAL_ROLLOUT_TARGET=ACC');
+function assertAcceptanceEnvironment(config: FinancialRolloutCliConfig): void {
+  if (config.nodeEnv !== 'acceptance') {
+    throw new Error('Financial rollout commands require NODE_ENV=acceptance');
   }
 }
 
@@ -197,7 +196,7 @@ export async function runFinancialRolloutCli(
   let exitCode = 0;
 
   try {
-    assertAccTarget(dependencies.config);
+    assertAcceptanceEnvironment(dependencies.config);
     const command = args[0];
 
     if (command === 'status') {

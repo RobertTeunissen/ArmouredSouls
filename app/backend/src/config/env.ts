@@ -147,10 +147,6 @@ const EnvSchema = z
     APP_BASE_URL: z.string().optional(),
     ENABLE_MODERATION: boolFlag,
 
-    // ── Restricted operational controls ─────────────────────────────
-    // The financial-rollout CLI additionally requires NODE_ENV=acceptance.
-    // Keeping this optional means normal application startup remains unaffected.
-    FINANCIAL_ROLLOUT_TARGET: z.string().optional(),
   })
   .superRefine((env, ctx) => {
     // Production-only invariants. Acceptance / staging deploys SHOULD also
@@ -233,8 +229,6 @@ export interface EnvConfig {
   appBaseUrl: string | undefined;
   /** Force-enable image moderation in non-prod environments. */
   enableModeration: boolean;
-  /** Explicit environment identity required by the ACC financial-rollout CLI. */
-  financialRolloutTarget: string | undefined;
 }
 
 const toEnvConfig = (parsed: z.infer<typeof EnvSchema>): EnvConfig => ({
@@ -279,7 +273,6 @@ const toEnvConfig = (parsed: z.infer<typeof EnvSchema>): EnvConfig => ({
   dailyReportSchedule: parsed.DAILY_REPORT_SCHEDULE,
   appBaseUrl: parsed.APP_BASE_URL || undefined,
   enableModeration: parsed.ENABLE_MODERATION,
-  financialRolloutTarget: parsed.FINANCIAL_ROLLOUT_TARGET || undefined,
 });
 
 /**
