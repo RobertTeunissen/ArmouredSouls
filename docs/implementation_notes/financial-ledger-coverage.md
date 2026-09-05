@@ -333,4 +333,10 @@ The following later checks supplement the focused evidence above. They do not se
 - Frontend `build` **passed** (Vite production build); frontend `test:ci` **passed** (192 files, 1945 passed, 3 skipped). Frontend lint emitted only its command header and remained runner-inconclusive.
 - Playwright E2E remains incomplete: the backend started, but the setup project stalled while authenticating `test_user_001` after an application error. The run was stopped without a trustworthy suite result, and no test data was changed merely to force it through.
 
-The required rollout gate is therefore **not complete**: no `Cutover_Cycle` has been selected, and the spec remains in `to-do` until every required validation result is successfully recorded.
+The required ACC rollout gate is therefore **not complete**: no `Cutover_Cycle` has been selected, and the operational evidence remains outstanding until every required validation result is successfully recorded.
+
+## ACC rollout command preparation
+
+The Spec 53 release now includes the restricted `pnpm run financial:rollout` ACC operational command. It delegates only to the public guarded transitions in `financialRollout.ts`; it has no direct `featureFlags` write, force mode, rollback, or combined activation/cutover command. It requires both `NODE_ENV=acceptance` and `FINANCIAL_ROLLOUT_TARGET=ACC`, uses operation-specific confirmations, verifies that the requested immutable cutover equals the stored current cycle, and requires a clean read-only financial diagnostic before reconciliation can be recorded.
+
+This document does **not** record an activation, `Cutover_Cycle`, reconciliation result, or documentation attestation yet. Those values must be added with their actual ACC timestamps and command outputs after the post-settlement/pre-first-match operational window. The exact host preparation and command sequence are in [`docs/guides/operations/DEPLOYMENT.md`](../guides/operations/DEPLOYMENT.md#spec-53--acc-financial-rollout-cutover).

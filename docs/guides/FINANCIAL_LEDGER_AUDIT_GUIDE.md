@@ -346,3 +346,15 @@ This guide does not change player-facing rules or presentation:
 - The later `Financial_Page_Follow_On` must consume paired financial records, stored `Financial_Breakdown`, repair-source boundaries, and prestige records. It must not reconstruct historical money from battle payloads or current formulas.
 
 For domain formulas and lifecycle rules, see [`PRD_ECONOMY_SYSTEM.md`](../game-systems/PRD_ECONOMY_SYSTEM.md), [`PRD_CYCLE_SYSTEM.md`](../game-systems/PRD_CYCLE_SYSTEM.md), [`PRD_AUDIT_SYSTEM.md`](../architecture/PRD_AUDIT_SYSTEM.md), and [`PRD_SEASON_SYSTEM.md`](../game-systems/PRD_SEASON_SYSTEM.md).
+
+## 11. ACC rollout control
+
+The release is made authoritative only through `pnpm run financial:rollout` on the ACC host. The command requires both `NODE_ENV=acceptance` and `FINANCIAL_ROLLOUT_TARGET=ACC`, calls the guarded `financialRollout` service transitions, and never edits `cycle_metadata.feature_flags` directly. It has no force, rollback, or combined activate-and-cutover operation.
+
+Run `pnpm run financial:rollout -- status` before every phase. Each mutation requires its own operation-specific confirmation. Activate required capture only after the schema/client, writer-manifest, and blocking-test gates are independently verified. After a completed 00:00 UTC settlement and before the first scheduled battle, record only the `currentCycle` returned by the immediately preceding status command:
+
+```bash
+pnpm run financial:rollout -- record-acc-cutover --cycle CURRENT_CYCLE --confirm-acc-cutover
+```
+
+This value is immutable. After the cutover cycle completes, use `reconcile --cycle CUTOVER_CYCLE`; `mark-reconciliation` refuses to complete while any integrity issue remains. The full sequence and host preparation are in [DEPLOYMENT.md](operations/DEPLOYMENT.md#spec-53--acc-financial-rollout-cutover).

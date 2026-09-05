@@ -318,3 +318,62 @@ pm2 restart armouredsouls-backend
 ```
 
 Note: The database migration (new tables, renamed event types) is forward-only. The new tables are harmless if unused. The event type rename (`league` → `league_1v1`) is consumed by all code paths after Spec 37 — a full rollback would need to also revert the migration or update code to handle both old and new names.
+## Spec 53 — ACC Financial Rollout Cutover
+
+The financial ledger deployment and the irreversible paired-capture cutover are separate operations. Deploying the code does **not** select a `Cutover_Cycle`. Do not edit `cycle_metadata.feature_flags` directly.
+
+The restricted command is available only on ACC. Before using it, set this exact line in `/opt/armouredsouls/backend/.env`, deploy the release, and restart PM2 through the ordinary deployment procedure:
+
+```text
+FINANCIAL_ROLLOUT_TARGET=ACC
+```
+
+The command additionally requires `NODE_ENV=acceptance`; it refuses to run in development or production. It uses the rollout service's ordered guards, has no force/rollback mode, and disconnects after each invocation.
+
+### Preconditions
+
+1. Confirm the deployed migration and generated Prisma client match the release.
+2. Confirm the complete blocking CI suite for the release passed, including E2E.
+3. Run all commands from `/opt/armouredsouls/backend`; do not `source` the environment file.
+4. Use the deployment health check and `pnpm run financial:rollout -- status` to verify ACC state before any mutation.
+
+### Gate activation
+
+After the prerequisites are independently verified, record each attestation separately. The writer-manifest command also runs the live direct-writer guard. Required capture can be activated before cutover because no cycle is authoritative until a cutover is recorded.
+
+```bash
+cd /opt/armouredsouls/backend
+pnpm run financial:rollout -- status
+pnpm run financial:rollout -- mark-schema-client-generation --confirm-schema-client-generation
+pnpm run financial:rollout -- mark-writer-manifest --confirm-writer-manifest
+pnpm run financial:rollout -- mark-blocking-tests --confirm-blocking-tests
+pnpm run financial:rollout -- activate-required-capture --confirm-required-capture
+pnpm run financial:rollout -- status
+```
+
+### Post-settlement cutover
+
+After the 00:00 UTC settlement has completed and before the first 1v1 League slot at 08:00 UTC, inspect the stored cycle and record exactly that value. The command refuses a past or future value, repeated options, malformed values, missing confirmation, and a value that differs from `cycle_metadata.totalCycles`.
+
+```bash
+cd /opt/armouredsouls/backend
+pnpm run financial:rollout -- status
+pnpm run financial:rollout -- record-acc-cutover --cycle CURRENT_CYCLE --confirm-acc-cutover
+pnpm run financial:rollout -- status
+```
+
+Replace `CURRENT_CYCLE` with the `currentCycle` value from the immediately preceding status JSON. The same cycle is idempotent; any different cycle is rejected because `Cutover_Cycle` is immutable. Never select a cycle already in progress.
+
+### Reconciliation and documentation closure
+
+After the selected cycle has fully completed and the following settlement has advanced the stored current cycle, run the read-only diagnostic. Only mark reconciliation when it reports an empty `issues` array. Then add the actual selected cycle, timestamps, command results, and retained legacy limits to `docs/implementation_notes/financial-ledger-coverage.md` before the final documentation attestation.
+
+```bash
+cd /opt/armouredsouls/backend
+pnpm run financial:rollout -- reconcile --cycle CUTOVER_CYCLE
+pnpm run financial:rollout -- mark-reconciliation --cycle CUTOVER_CYCLE --confirm-reconciliation
+pnpm run financial:rollout -- mark-documentation --confirm-documentation
+pnpm run financial:rollout -- status
+```
+
+A nonzero exit is a blocking rollout result. Investigate and correct it; do not rerun a different cutover cycle or work around the command by editing persisted state.

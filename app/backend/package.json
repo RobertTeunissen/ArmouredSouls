@@ -23,6 +23,7 @@
     "test:integration": "jest --config jest.config.integration.js",
     "test:heavy": "jest --config jest.config.heavy.js --forceExit",
     "test:tiers:verify": "tsx scripts/verifyTiers.ts",
+    "financial:rollout": "tsx scripts/financialRollout.ts",
     "test:all": "pnpm run test && pnpm run test:heavy",
     "test:matchmaking": "tsx scripts/testMatchmaking.ts",
     "test:robot-stats": "tsx scripts/testRobotStats.ts"
