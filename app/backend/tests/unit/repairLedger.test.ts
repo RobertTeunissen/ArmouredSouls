@@ -87,6 +87,40 @@ describe('Requirement 16 criterion 5: required capture is fail-closed after cuto
         description: 'Automatic pre-battle repair of 1 robot',
       }),
     ).rejects.toThrow('no cycle');
+    expect(mockClassifyCycle).not.toHaveBeenCalled();
+    expect(mockRecordTransaction).not.toHaveBeenCalled();
+  });
+
+  it('propagates a rollout lookup failure and does not write', async () => {
+    mockGetFinancialRolloutState.mockRejectedValueOnce(new Error('rollout unavailable'));
+
+    await expect(
+      recordLedgerEntry({
+        userId: 7,
+        transactionType: 'repair_cost',
+        amount: -500,
+        balanceAfter: 1000,
+        description: 'Automatic pre-battle repair of 1 robot',
+      }),
+    ).rejects.toThrow('rollout unavailable');
+    expect(mockClassifyCycle).not.toHaveBeenCalled();
+    expect(mockRecordTransaction).not.toHaveBeenCalled();
+  });
+
+  it('propagates a cycle classification failure and does not write', async () => {
+    mockClassifyCycle.mockImplementationOnce(() => {
+      throw new Error('classification unavailable');
+    });
+
+    await expect(
+      recordLedgerEntry({
+        userId: 7,
+        transactionType: 'repair_cost',
+        amount: -500,
+        balanceAfter: 1000,
+        description: 'Automatic pre-battle repair of 1 robot',
+      }),
+    ).rejects.toThrow('classification unavailable');
     expect(mockRecordTransaction).not.toHaveBeenCalled();
   });
 
