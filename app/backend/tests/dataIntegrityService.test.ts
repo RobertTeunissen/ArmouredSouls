@@ -402,6 +402,35 @@ describe('DataIntegrityService', () => {
       expect(report.issues.filter((currentIssue) => currentIssue.type === 'unpaired_ledger')[0])
         .toMatchObject({ evidenceBoundary: 'identified_paired_capture', completenessClaim: 'included' });
     });
+
+    it('reports both settlement components missing for a stable in the cycle snapshot', async () => {
+      const cycleNumber = cycleCounter++;
+      const userId = 920000 + cycleNumber;
+      testCycleNumbers.push(cycleNumber);
+
+      await prisma.cycleSnapshot.create({
+        data: {
+          cycleNumber,
+          triggerType: 'manual',
+          startTime: new Date(),
+          endTime: new Date(),
+          durationMs: 1000,
+          stableMetrics: [{ userId }],
+          robotMetrics: [],
+          stepDurations: [],
+        },
+      });
+
+      const report = await integrityService.validateCycleIntegrity(cycleNumber);
+      const settlementIssues = report.issues.filter(
+        (currentIssue) => currentIssue.type === 'missing_settlement_component',
+      );
+
+      expect(settlementIssues).toEqual(expect.arrayContaining([
+        expect.objectContaining({ details: { cycleNumber, userId, component: 'passive_income' } }),
+        expect.objectContaining({ details: { cycleNumber, userId, component: 'operating_costs' } }),
+      ]));
+    });
   });
 
   describe('validateCycleRange', () => {

@@ -330,10 +330,12 @@ async function snapshotUserIds(cycleNumber: number): Promise<Set<number>> {
 }
 
 function addSettlementIssues(
+  cycleNumber: number,
   ledgerRows: readonly LedgerRow[],
+  snapshotUsers: ReadonlySet<number>,
   issues: FinancialIntegrityIssue[],
 ): void {
-  const applicableUsers = new Set<number>();
+  const applicableUsers = new Set(snapshotUsers);
   const byUser = new Map<number, Set<TransactionType>>();
 
   for (const row of ledgerRows) {
@@ -356,8 +358,8 @@ function addSettlementIssues(
       if (!components.has(component)) {
         issues.push(issue(
           'missing_settlement_component',
-          `Settlement cycle ${ledgerRows[0]?.cycleNumber ?? 'unknown'} is missing ${component} for user ${userId}`,
-          { cycleNumber: ledgerRows[0]?.cycleNumber, userId, component },
+          `Settlement cycle ${cycleNumber} is missing ${component} for user ${userId}`,
+          { cycleNumber, userId, component },
         ));
       }
     }
@@ -427,7 +429,7 @@ export async function collectFinancialIntegrityIssues(
   workspaceRoot?: string,
 ): Promise<readonly FinancialIntegrityIssue[]> {
 
-  const [ledgerRows, financialAudits, repairDomainRows, prestigeRows] = await Promise.all([
+  const [ledgerRows, financialAudits, repairDomainRows, prestigeRows, snapshotUsers] = await Promise.all([
     prisma.financialLedger.findMany({
       where: { cycleNumber },
       select: {
@@ -491,8 +493,8 @@ export async function collectFinancialIntegrityIssues(
         eventTimestamp: true,
       },
     }),
+    snapshotUserIds(cycleNumber),
   ]);
-
   const typedLedgerRows = ledgerRows as unknown as LedgerRow[];
   const typedFinancialAudits = financialAudits as unknown as AuditRow[];
   const typedRepairRows = repairDomainRows as unknown as AuditRow[];
@@ -504,7 +506,7 @@ export async function collectFinancialIntegrityIssues(
   validateFinancialAuditRows(typedFinancialAudits, issues);
   addBalanceAfterIssues(typedLedgerRows, issues);
   addRepairIssues(typedLedgerRows, typedFinancialAudits, typedRepairRows, issues);
-  addSettlementIssues(typedLedgerRows, issues);
+  addSettlementIssues(cycleNumber, typedLedgerRows, snapshotUsers, issues);
   addPrestigeIssues(typedPrestigeRows, issues);
   addDirectWriterIssues(issues, workspaceRoot);
 
