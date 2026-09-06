@@ -238,7 +238,7 @@ async function repairRobots(
       userSummaries,
       logEvents,
     };
-  });
+  }, { timeout: 30_000 });
 
   for (const event of result.logEvents) {
     logger.info(
