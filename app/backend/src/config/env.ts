@@ -146,6 +146,7 @@ const EnvSchema = z
     // ── Optional integrations ────────────────────────────────────────
     APP_BASE_URL: z.string().optional(),
     ENABLE_MODERATION: boolFlag,
+
   })
   .superRefine((env, ctx) => {
     // Production-only invariants. Acceptance / staging deploys SHOULD also
