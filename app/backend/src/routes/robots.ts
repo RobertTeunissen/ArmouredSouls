@@ -45,7 +45,12 @@ import {
   checkRosterCapacity,
   createRobotTransaction,
 } from '../services/robot/robotCreationService';
-import { uploadRateLimiter, handleImagePreview, handleImageConfirm } from '../services/moderation';
+import {
+  contentModerationService,
+  uploadRateLimiter,
+  handleImagePreview,
+  handleImageConfirm,
+} from '../services/moderation';
 import { achievementService, type UnlockedAchievement } from '../services/achievement';
 import { getEntityHistory } from '../services/league/leagueHistoryService';
 import { computeSchedulingEligibility } from '../services/robot/robotSchedulingEligibilityService';
@@ -137,6 +142,17 @@ const imageParamsSchema = z.object({ id: positiveIntParam });
 const imageQuerySchema = z.object({ acknowledgeRobotLikeness: z.enum(['true']).optional() });
 const confirmBodySchema = z.object({ confirmationToken: z.string().uuid() });
 
+// The client checks this before presenting the custom-upload flow. It is
+// authenticated because only signed-in players can upload an image, and only
+// exposes a player-safe state rather than model or infrastructure errors.
+router.get(
+  '/image-moderation-status',
+  authenticateToken,
+  validateRequest({}),
+  (_req: AuthRequest, res: Response) => {
+    res.json(contentModerationService.getAvailability());
+  },
+);
 
 // Get all robots from all users
 router.get('/all/robots', authenticateToken, validateRequest({}), async (req: AuthRequest, res: Response) => {

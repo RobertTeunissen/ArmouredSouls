@@ -5,7 +5,11 @@ export { fileValidationService } from './fileValidationService';
 export type { FileValidationResult } from './fileValidationService';
 
 export { contentModerationService } from './contentModerationService';
-export type { ModerationResult } from './contentModerationService';
+export type {
+  ModerationAvailability,
+  ModerationAvailabilityStatus,
+  ModerationResult,
+} from './contentModerationService';
 
 export { imageProcessingService } from './imageProcessingService';
 

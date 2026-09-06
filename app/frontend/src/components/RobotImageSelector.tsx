@@ -1,6 +1,11 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { ApiError } from '../utils/ApiError';
-import { uploadRobotImage, confirmRobotImage } from '../utils/robotApi';
+import {
+  confirmRobotImage,
+  fetchImageModerationStatus,
+  type ModerationAvailabilityStatus,
+  uploadRobotImage,
+} from '../utils/robotApi';
 import { validateUploadFile } from './robotImageValidation';
 import ImageLibrary from './robots/ImageLibrary';
 
@@ -105,7 +110,32 @@ function UploadTab({
   onUploadComplete: (imageUrl: string) => void;
 }) {
   const [state, setState] = useState<UploadState>(INITIAL_UPLOAD_STATE);
+  const [moderationStatus, setModerationStatus] = useState<ModerationAvailabilityStatus>('starting');
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const refreshModerationStatus = async (): Promise<void> => {
+      try {
+        const availability = await fetchImageModerationStatus();
+        if (mounted) setModerationStatus(availability.status);
+      } catch {
+        // Avoid offering a player an upload flow when the status cannot be verified.
+        if (mounted) setModerationStatus('unavailable');
+      }
+    };
+
+    void refreshModerationStatus();
+    const refreshTimer = window.setInterval(() => {
+      void refreshModerationStatus();
+    }, 30_000);
+
+    return () => {
+      mounted = false;
+      window.clearInterval(refreshTimer);
+    };
+  }, []);
 
   const resetState = useCallback(() => {
     setState(INITIAL_UPLOAD_STATE);
@@ -139,6 +169,16 @@ function UploadTab({
   const uploadFile = async (acknowledgeRobotLikeness = false) => {
     if (!state.file) return;
 
+    if (moderationStatus !== 'ready') {
+      setState(prev => ({
+        ...prev,
+        error: moderationStatus === 'starting'
+          ? 'Image moderation is starting. Please wait a moment and try again.'
+          : 'Custom image uploads are temporarily unavailable. Please try again later.',
+      }));
+      return;
+    }
+
     setState(prev => ({ ...prev, uploading: true, error: null, robotLikenessRejected: false }));
 
     try {
@@ -170,6 +210,16 @@ function UploadTab({
             uploading: false,
             robotLikenessRejected: true,
             error: null,
+          }));
+          return;
+        }
+
+        if (err.code === 'MODERATION_UNAVAILABLE') {
+          setModerationStatus('unavailable');
+          setState(prev => ({
+            ...prev,
+            uploading: false,
+            error: 'Custom image uploads are temporarily unavailable. Please try again later.',
           }));
           return;
         }
@@ -248,7 +298,7 @@ function UploadTab({
         <div className="flex gap-3 flex-wrap justify-center">
           <button
             onClick={() => uploadFile(true)}
-            disabled={state.uploading}
+            disabled={state.uploading || moderationStatus !== 'ready'}
             className="min-w-[44px] min-h-[44px] px-5 py-3 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg transition-colors font-semibold disabled:opacity-50"
           >
             {state.uploading ? 'Uploading…' : 'Upload anyway'}
@@ -319,7 +369,7 @@ function UploadTab({
         <div className="flex gap-3 flex-wrap justify-center">
           <button
             onClick={() => uploadFile(false)}
-            disabled={state.uploading}
+            disabled={state.uploading || moderationStatus !== 'ready'}
             className="min-w-[44px] min-h-[44px] px-5 py-3 bg-primary hover:bg-blue-700 text-white rounded-lg transition-colors font-semibold disabled:opacity-50"
           >
             {state.uploading ? (
@@ -351,21 +401,32 @@ function UploadTab({
       <p className="text-secondary text-sm text-center max-w-sm">
         Choose a JPEG, PNG, or WebP image (max 2 MB). It will be cropped to 512×512.
       </p>
+      {moderationStatus !== 'ready' ? (
+        <div
+          className="bg-yellow-900/40 border border-yellow-600/50 rounded-lg p-3 text-yellow-200 text-sm text-center max-w-md"
+          role="status"
+        >
+          {moderationStatus === 'starting'
+            ? 'Image moderation is starting. Custom uploads will be available shortly.'
+            : 'Custom image uploads are temporarily unavailable. Please try again later.'}
+        </div>
+      ) : (
+        <label className="min-w-[44px] min-h-[44px] px-6 py-3 bg-primary hover:bg-blue-700 text-white rounded-lg transition-colors font-semibold cursor-pointer text-center">
+          Choose File
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+        </label>
+      )}
       {state.error && (
         <div className="bg-red-900/40 border border-red-600/50 rounded-lg p-3 text-red-300 text-sm text-center max-w-md">
           {state.error}
         </div>
       )}
-      <label className="min-w-[44px] min-h-[44px] px-6 py-3 bg-primary hover:bg-blue-700 text-white rounded-lg transition-colors font-semibold cursor-pointer text-center">
-        Choose File
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          onChange={handleFileSelect}
-          className="hidden"
-        />
-      </label>
     </div>
   );
 }

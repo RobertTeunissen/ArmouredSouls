@@ -39,10 +39,15 @@ function renderSelector(onSelect = vi.fn()): { onSelect: ReturnType<typeof vi.fn
 describe('RobotImageSelector — My Images tab', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(api.get).mockResolvedValue({
-      images: [retainedImage],
-      retained: 1,
-      limit: 20,
+    vi.mocked(api.get).mockImplementation((path: string) => {
+      if (path === '/api/robots/image-moderation-status') {
+        return Promise.resolve({ status: 'ready', changedAt: '2026-09-06T00:00:00.000Z' });
+      }
+      return Promise.resolve({
+        images: [retainedImage],
+        retained: 1,
+        limit: 20,
+      });
     });
   });
 

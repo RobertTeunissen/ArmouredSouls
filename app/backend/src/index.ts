@@ -157,6 +157,7 @@ app.get('/api/health', async (req, res) => {
   res.status(isHealthy ? 200 : 503).json({
     status: isHealthy ? 'ok' : 'error',
     database: dbConnected ? 'connected' : 'disconnected',
+    moderation: contentModerationService.getAvailability(),
     disk,
     memory,
     modules,
@@ -211,13 +212,28 @@ app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads'), {
 app.use(errorHandler);
 
 // Initialize content moderation model — skip in development unless explicitly enabled
-// TF.js pure-JS backend blocks the Node event loop and adds ~5-13s latency to every request
-if (config.nodeEnv === 'production' || config.nodeEnv === 'acceptance' || config.enableModeration) {
-  contentModerationService.initialize().catch(err => {
-    logger.error('Failed to initialize content moderation service:', err);
-    // App continues — uploads will be rejected via fail-closed pattern
-  });
+// TF.js pure-JS backend blocks the Node event loop and adds ~5-13s latency to every request.
+// Keep the application online while it loads, but make the state explicit and retry a
+// failed load so custom uploads recover without a deployment restart.
+const MODERATION_RECOVERY_INTERVAL_MS = 60_000;
+const shouldInitializeModeration = config.nodeEnv === 'production'
+  || config.nodeEnv === 'acceptance'
+  || config.enableModeration;
+
+if (shouldInitializeModeration) {
+  const initializeModeration = (): void => {
+    void contentModerationService.initialize().catch((err: unknown) => {
+      logger.error('Failed to initialize content moderation service; retrying automatically:', err);
+    });
+  };
+
+  initializeModeration();
+  const moderationRecoveryTimer = setInterval(() => {
+    if (!contentModerationService.isReady()) initializeModeration();
+  }, MODERATION_RECOVERY_INTERVAL_MS);
+  moderationRecoveryTimer.unref();
 } else {
+  contentModerationService.disable();
   logger.info('Content moderation model skipped in development (set ENABLE_MODERATION=true to enable)');
 }
 
