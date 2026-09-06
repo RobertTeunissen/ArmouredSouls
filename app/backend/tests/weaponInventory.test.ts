@@ -7,9 +7,9 @@ import dotenv from 'dotenv';
 import weaponInventoryRoutes from '../src/routes/weaponInventory';
 import { errorHandler } from '../src/middleware/errorHandler';
 import { createTestUser, deleteTestUser } from './testHelpers';
-import { usePostCutoverFinancialRollout } from './financialRolloutTestHelper';
+import { useFinancialCaptureTestEnvironment } from './financialCaptureTestHelper';
 
-usePostCutoverFinancialRollout();
+useFinancialCaptureTestEnvironment();
 
 dotenv.config();
 

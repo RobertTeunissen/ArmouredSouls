@@ -18,9 +18,9 @@ import {
 } from '../../src/services/scheduling/thinInstanceByes';
 import { resolveRobotIdsForEvent } from '../../src/services/economy/repairScope';
 import { resolveOutstandingEventsForRobot } from '../../src/services/scheduling/eventScheduleScope';
-import { usePostCutoverFinancialRollout } from '../financialRolloutTestHelper';
+import { useFinancialCaptureTestEnvironment } from '../financialCaptureTestHelper';
 
-usePostCutoverFinancialRollout();
+useFinancialCaptureTestEnvironment();
 
 const TIER = 'bronze';
 const cleanup: Array<{ userIds: number[]; robotIds: number[]; matchIds: number[]; tournamentIds: number[] }> = [];

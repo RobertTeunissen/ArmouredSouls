@@ -1,16 +1,16 @@
 # Financial Ledger and Audit Guide
 
 **Status**: Spec #53 capture contract and operator guidance  
-**Scope**: Post-cutover financial capture, audit pairing, reconciliation, and compatibility  
+**Scope**: Deployed financial capture, audit pairing, reconciliation, and legacy-history compatibility
 **Related work**: Backlog Item #59 / Financial Ledger Coverage
 
-This guide documents the accounting and audit contract for new economy events. It is intentionally forward-only: the contract becomes authoritative at the selected `Cutover_Cycle` in `ACC`, after the writer migration and blocking checks complete. It does not redesign financial pages, change player-visible reward formulas, or reconstruct historical records.
+This guide documents the accounting and audit contract for new economy events. The contract is active with the deployed backend version: no ACC-specific activation, cycle selection, or post-deploy command is required. It does not redesign financial pages, change player-visible reward formulas, or reconstruct historical records.
 
 ## 1. Balance and record model
 
 The player-facing currency is Credits. The authoritative mutable balance is the exact Prisma field `User.currency`; do not document or implement a parallel `User.credits` field. `User.prestige` is a separate stable-level progression value and is never part of a credit amount.
 
-A post-cutover `Credit_Mutation` has one identity and one atomic persistence unit:
+A deployed `Credit_Mutation` has one identity and one atomic persistence unit:
 
 ```text
 source operation
@@ -54,11 +54,11 @@ flowchart LR
 
 The diagram's three writes are one `Credit_Mutation`, not three independent events: the balance is mutable state, while the ledger and audit rows are complementary immutable evidence of that same mutation.
 
-The current repository contains pre-cutover ledger and audit behavior, including best-effort enrichment on some paths. Those rows and writers remain `Legacy_Record` evidence until the ACC cutover. Their existence does not prove complete coverage and does not permit a report or migration to invent missing pairs.
+Rows written before the deployed paired writer may have no financial identity. They remain immutable `Legacy_Record` history and are not used to claim paired coverage or to invent missing pairs.
 
 ## 2. Closed transaction taxonomy
 
-The post-cutover `Transaction_Taxonomy` contains exactly these twelve `transactionType` values:
+The deployed `Transaction_Taxonomy` contains exactly these twelve `transactionType` values:
 
 | `transactionType` | Sign | Source and meaning |
 |---|---:|---|
@@ -75,7 +75,7 @@ The post-cutover `Transaction_Taxonomy` contains exactly these twelve `transacti
 | `passive_income` | positive | Gross settlement passive income |
 | `operating_costs` | negative | Gross settlement operating costs |
 
-New writers must reject `subscription_cost`, `prestige_award`, and `settlement_adjustment`. These names may exist in surviving pre-cutover rows, but they are not valid post-cutover writes:
+New writers must reject `subscription_cost`, `prestige_award`, and `settlement_adjustment`. These names may exist in surviving legacy rows, but they are not valid deployed writes:
 
 - `Subscription_Change` is free Booking Office state, not a charge.
 - `Prestige_Award` is progression, not currency.
@@ -153,7 +153,7 @@ The atomicity rule is strict:
 6. insert `FinancialLedger` and the paired `financial_transaction` `AuditLog` row; and
 7. commit only when all required writes succeed.
 
-A balance update without both required records is a failed transaction, not a successful partial result. `recordLedgerEntry.ts` and any `financial_ledger_active` behavior that swallows a required failure are pre-cutover compatibility concerns and must not be used after activation.
+A balance update without both required records is a failed transaction, not a successful partial result. No best-effort ledger helper or financial feature flag may suppress a required write failure.
 
 ## 5. Battle rewards and row fan-out
 
@@ -226,7 +226,7 @@ Repair spend must never be read from:
 
 Prestige is a stable-level progression resource. `Prestige_Service` is separate from `Credit_Mutation_Service` and writes positive awards as `AuditLog` rows with `eventType` `prestige_change`.
 
-Each post-cutover prestige record includes:
+Each deployed prestige record includes:
 
 - `sourceEventId`, unique for the source award;
 - `eventTimestamp` and `cycleNumber`;
@@ -252,13 +252,13 @@ This includes zero-valued components. A zero component records a completed calcu
 
 `passive_income` stores gross passive income and its Merchandising Hub, prestige, roster-capacity, and rounding facts. `operating_costs` stores each facility/roster cost component and its inputs. Per-battle Streaming Studio revenue remains `streaming_revenue`, not settlement income.
 
-Existing domain `passive_income` and `operating_costs` audit events and cycle snapshot fields remain compatible while the paired `financial_transaction` rows become the post-cutover accounting source. A future report may derive a net value from the two components; it must not create or expect `settlement_adjustment`.
+Existing domain `passive_income` and `operating_costs` audit events and cycle snapshot fields remain compatible while identified paired `financial_transaction` rows provide the accounting source. A future report may derive a net value from the two components; it must not create or expect `settlement_adjustment`.
 
 ## 9. Canonical-source map
 
 | Reporting or operational question | `Canonical_Source` |
 |---|---|
-| Post-cutover credit amount, balance, taxonomy, breakdown, or pair | `FinancialLedger` plus paired `AuditLog` `financial_transaction`, joined by `financialEventId` |
+| Deployed paired-capture credit amount, balance, taxonomy, breakdown, or pair | `FinancialLedger` plus paired `AuditLog` `financial_transaction`, joined by `financialEventId` |
 | Repair spend and `repairType` | `AuditLog` `robot_repair` rows with `creditsCharged` and `repairType` |
 | Prestige awards and current-season growth points | `AuditLog` `prestige_change` rows with `sourceEventId` |
 | Subscription state and changes | Booking Office records and existing subscription audit records |
@@ -279,63 +279,19 @@ The financial capture change preserves existing admin contracts while adding gen
 
 `CycleControlsPage`, `RepairLogPage`, `AuditLogPage`, and `EconomyOverviewPage` require no redesign. Generic financial audit rows are visible through the existing audit route; the repair route remains a repair-domain view rather than a generic ledger view.
 
-## 11. ACC cutover and reconciliation
+## 11. Deployment behavior and reconciliation
 
-The rollout is gated in this order:
+The normal backend deployment is the activation point. Deploy the existing nullable identity migration and this backend version together; every new current-economy mutation then uses the required atomic writer immediately. There is no feature flag, cycle gate, command, startup write, or aftercare procedure.
 
-1. **Schema and client** — add nullable pairing/identity fields, indexes, uniqueness safeguards, and generate the project-local Prisma client.
-2. **Contract** — activate taxonomy, identity, and `Financial_Breakdown` validation.
-3. **Writer migration** — move every `Coverage_Manifest` entry to the shared credit, battle, repair, settlement, and prestige services.
-4. **Blocking verification** — pass direct-writer, manifest, unit, PostgreSQL integration, heavy, frontend, and E2E gates.
-5. **ACC activation** — record `Cutover_Cycle` only after the previous gates pass and required capture is fail-closed.
-6. **Reconciliation** — inspect post-cutover evidence and separate it from legacy history.
-7. **Documentation and bypass removal** — remove obsolete best-effort/suppression paths only as part of the implementation rollout.
-
-Reconciliation is diagnostic and non-mutating. It reports:
-
-- post-cutover ledger rows without a paired `financial_transaction` row;
-- financial audit rows without a ledger row;
-- duplicate or conflicting `financialEventId` values;
-- mismatched amount, identity, source, or `balanceAfter` facts;
-- invalid taxonomy or incomplete `Financial_Breakdown` metadata;
-- repair financial/domain pair mismatches or missing subtype data;
-- missing `passive_income` or `operating_costs` components, including zero-valued rows;
-- duplicate or conflicting prestige `sourceEventId` values; and
-- direct `User.currency` writers outside the manifest/service boundary.
-
-Pre-cutover gaps are labeled “outside the completeness claim.” They are not repaired by fallback payloads, current formulas, old ledger rows, or a one-off migration script.
+Reconciliation is read-only. It validates identified paired evidence and reports ledger/audit pair gaps, duplicate or conflicting identities, mismatched facts or balances, invalid taxonomy/breakdowns, repair-domain mismatches, settlement component defects, prestige-source defects, and direct `User.currency` writers outside the shared service. Historical null-identity rows are retained as legacy history and excluded rather than rewritten or reconstructed.
 
 ### Failure response
 
-If a required paired write fails after deployment:
+If a required paired write fails, the enclosing transaction fails: verify that `User.currency` rolled back, inspect the identity or sequence error, and retry only with the same immutable source facts. Never create a compensating ledger row, add a second balance adjustment, or alter historical evidence.
 
-1. treat the operation as failed and verify that `User.currency` rolled back;
-2. inspect the transaction identity and sequence error without manually inserting a compensating ledger row;
-3. check for a committed pair before retrying;
-4. retry only with the same source identity and immutable facts; and
-5. run post-cutover reconciliation before re-enabling a bypass or changing historical rows.
+## 12. Release verification
 
-Never repair a missing pair by changing an old amount, adding a second balance adjustment, or reading a cached quote as spend.
-
-## 12. Verification before ACC cutover
-
-Run these blocking commands before recording `Cutover_Cycle` in `ACC`; do not substitute historical data, a partial test run, or a successful migration for this gate:
-
-```sh
-pnpm --dir app/backend run lint
-pnpm --dir app/backend run build
-pnpm --dir app/backend run typecheck:tests
-pnpm --dir app/backend run test:tiers:verify
-pnpm --dir app/backend run test:unit
-pnpm --dir app/backend run test:integration
-pnpm --dir app/backend run test:heavy
-pnpm --dir app/frontend run lint
-pnpm --dir app/frontend run build
-pnpm --dir app/frontend run test:ci
-pnpm --dir app/frontend exec playwright test
-```
-
-Also run the `Coverage_Manifest`, direct-writer, battle fan-out, atomicity/idempotency, repair-audit, and reconciliation checks named in the implementation record. Record each actual result in [`financial-ledger-coverage.md`](../implementation_notes/financial-ledger-coverage.md); a stalled or unavailable environment is inconclusive, not a pass. Only then may `recordAccCutover()` persist the immutable cutover.
+The normal blocking release checks remain required: lint, build, test typecheck/tier verification, backend unit/integration/heavy tests, frontend lint/build/unit tests, and E2E. They verify the deployed writer; they do not unlock a separate operational phase.
 
 ## 13. Explicit non-scope
 
@@ -346,15 +302,3 @@ This guide does not change player-facing rules or presentation:
 - The later `Financial_Page_Follow_On` must consume paired financial records, stored `Financial_Breakdown`, repair-source boundaries, and prestige records. It must not reconstruct historical money from battle payloads or current formulas.
 
 For domain formulas and lifecycle rules, see [`PRD_ECONOMY_SYSTEM.md`](../game-systems/PRD_ECONOMY_SYSTEM.md), [`PRD_CYCLE_SYSTEM.md`](../game-systems/PRD_CYCLE_SYSTEM.md), [`PRD_AUDIT_SYSTEM.md`](../architecture/PRD_AUDIT_SYSTEM.md), and [`PRD_SEASON_SYSTEM.md`](../game-systems/PRD_SEASON_SYSTEM.md).
-
-## 11. ACC rollout control
-
-The release is made authoritative only through `pnpm run financial:rollout` on the ACC host. The command requires ACC's permanent `NODE_ENV=acceptance` setting, calls the guarded `financialRollout` service transitions, and never edits `cycle_metadata.feature_flags` directly. It has no force, rollback, or combined activate-and-cutover operation.
-
-Run `pnpm run financial:rollout -- status` before every phase. Each mutation requires its own operation-specific confirmation. Activate required capture only after the schema/client, writer-manifest, and blocking-test gates are independently verified. After a completed 00:00 UTC settlement and before the first scheduled battle, record only the `currentCycle` returned by the immediately preceding status command:
-
-```bash
-pnpm run financial:rollout -- record-acc-cutover --cycle CURRENT_CYCLE --confirm-acc-cutover
-```
-
-This value is immutable. After the cutover cycle completes, use `reconcile --cycle CUTOVER_CYCLE`; `mark-reconciliation` refuses to complete while any integrity issue remains. The full sequence and host preparation are in [DEPLOYMENT.md](operations/DEPLOYMENT.md#spec-53--acc-financial-rollout-cutover).

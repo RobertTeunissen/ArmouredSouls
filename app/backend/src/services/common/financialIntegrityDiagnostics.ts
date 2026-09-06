@@ -7,7 +7,6 @@ import {
 import {
   checkDirectWriterCoverage,
 } from '../migration/directWriterCoverage';
-import type { FinancialRolloutState } from '../migration/financialRollout';
 
 export type FinancialIntegrityIssueType =
   | 'unpaired_ledger'
@@ -27,7 +26,7 @@ export interface FinancialIntegrityIssue {
   severity: 'error';
   message: string;
   details: Record<string, unknown>;
-  evidenceBoundary: 'post_cutover';
+  evidenceBoundary: 'identified_paired_capture';
   completenessClaim: 'included';
 }
 
@@ -82,7 +81,7 @@ function issue(
     severity: 'error',
     message,
     details,
-    evidenceBoundary: 'post_cutover',
+    evidenceBoundary: 'identified_paired_capture',
     completenessClaim: 'included',
   };
 }
@@ -108,7 +107,7 @@ function addDuplicateIdentityIssues(
     if (rows.length > 1) {
       issues.push(issue(
         'duplicate_identity',
-        `Duplicate ${source} identity ${identity} exists in the post-cutover period`,
+        `Duplicate ${source} identity ${identity} exists in identified paired financial evidence`,
         { source, identity, count: rows.length },
       ));
     }
@@ -123,7 +122,7 @@ function addInvalidBreakdownIssue(
 ): void {
   issues.push(issue(
     'invalid_breakdown',
-    `Post-cutover ${source} identity ${identity} has invalid ${transactionType} breakdown metadata`,
+    `Identified ${source} identity ${identity} has invalid ${transactionType} breakdown metadata`,
     { source, financialEventId: identity, transactionType },
   ));
 }
@@ -136,7 +135,7 @@ function addInvalidTaxonomyIssue(
 ): void {
   issues.push(issue(
     'invalid_taxonomy',
-    `Post-cutover ${source} row has an unknown transaction taxonomy value`,
+    `Identified ${source} row has an unknown transaction taxonomy value`,
     { source, financialEventId: identity, transactionType },
   ));
 }
@@ -162,6 +161,7 @@ function validateFinancialAuditRows(
   issues: FinancialIntegrityIssue[],
 ): void {
   for (const row of rows) {
+    if (row.financialEventId === null) continue;
     const payload = isRecord(row.payload) ? row.payload : null;
     const transactionType = payload?.transactionType;
     if (!isTransactionType(transactionType)) {
@@ -186,38 +186,24 @@ function addPairIssues(
   addDuplicateIdentityIssues(issues, 'financial_audit', audits);
 
   for (const row of ledgerRows) {
-    if (row.financialEventId === null) {
-      issues.push(issue(
-        'unpaired_ledger',
-        `Post-cutover ledger row ${row.id} has no Financial_Event identity`,
-        { ledgerId: row.id, userId: row.userId, cycleNumber: row.cycleNumber },
-      ));
-      continue;
-    }
+    if (row.financialEventId === null) continue;
     const matchingAudits = audits.get(row.financialEventId) ?? [];
     if (matchingAudits.length === 0) {
       issues.push(issue(
         'unpaired_ledger',
-        `Post-cutover ledger row ${row.id} has no paired financial audit row`,
+        `Identified ledger row ${row.id} has no paired financial audit row`,
         { ledgerId: row.id, financialEventId: row.financialEventId },
       ));
     }
   }
 
   for (const row of auditRows) {
-    if (row.financialEventId === null) {
-      issues.push(issue(
-        'unpaired_financial_audit',
-        `Post-cutover financial audit row ${row.id.toString()} has no Financial_Event identity`,
-        { auditLogId: row.id.toString(), cycleNumber: row.cycleNumber },
-      ));
-      continue;
-    }
+    if (row.financialEventId === null) continue;
     const matchingLedgers = ledgers.get(row.financialEventId) ?? [];
     if (matchingLedgers.length === 0) {
       issues.push(issue(
         'unpaired_financial_audit',
-        `Post-cutover financial audit row ${row.id.toString()} has no paired ledger row`,
+        `Identified financial audit row ${row.id.toString()} has no paired ledger row`,
         { auditLogId: row.id.toString(), financialEventId: row.financialEventId },
       ));
     }
@@ -270,7 +256,7 @@ function addBalanceAfterIssues(
       if (current.balanceAfter - current.amount !== previous.balanceAfter) {
         issues.push(issue(
           'balance_after_inconsistency',
-          `Post-cutover balanceAfter chain is inconsistent for user ${userId}`,
+          `Identified balanceAfter chain is inconsistent for user ${userId}`,
           {
             userId,
             previousLedgerId: previous.id,
@@ -344,24 +330,23 @@ async function snapshotUserIds(cycleNumber: number): Promise<Set<number>> {
 }
 
 function addSettlementIssues(
+  cycleNumber: number,
   ledgerRows: readonly LedgerRow[],
-  settlementDomainRows: readonly AuditRow[],
-  stableIds: ReadonlySet<number>,
+  snapshotUsers: ReadonlySet<number>,
   issues: FinancialIntegrityIssue[],
 ): void {
-  const applicableUsers = new Set<number>(stableIds);
-  for (const row of ledgerRows) {
-    if (row.transactionType === 'passive_income' || row.transactionType === 'operating_costs') {
-      applicableUsers.add(row.userId);
-    }
-  }
-  for (const row of settlementDomainRows) {
-    if (row.userId !== null) applicableUsers.add(row.userId);
-  }
-
+  const applicableUsers = new Set(snapshotUsers);
   const byUser = new Map<number, Set<TransactionType>>();
+
   for (const row of ledgerRows) {
-    if (row.transactionType !== 'passive_income' && row.transactionType !== 'operating_costs') continue;
+    if (
+      row.financialEventId === null
+      || (row.transactionType !== 'passive_income' && row.transactionType !== 'operating_costs')
+    ) {
+      continue;
+    }
+
+    applicableUsers.add(row.userId);
     const components = byUser.get(row.userId) ?? new Set<TransactionType>();
     components.add(row.transactionType);
     byUser.set(row.userId, components);
@@ -373,8 +358,8 @@ function addSettlementIssues(
       if (!components.has(component)) {
         issues.push(issue(
           'missing_settlement_component',
-          `Settlement cycle ${ledgerRows[0]?.cycleNumber ?? 'unknown'} is missing ${component} for user ${userId}`,
-          { cycleNumber: ledgerRows[0]?.cycleNumber, userId, component },
+          `Settlement cycle ${cycleNumber} is missing ${component} for user ${userId}`,
+          { cycleNumber, userId, component },
         ));
       }
     }
@@ -389,6 +374,7 @@ function addPrestigeIssues(
   addDuplicateIdentityIssues(issues, 'prestige', grouped);
 
   for (const row of prestigeRows) {
+    if (row.sourceEventId === null) continue;
     const payload = isRecord(row.payload) ? row.payload : null;
     const validSource = payload?.source === 'battle' || payload?.source === 'achievement';
     const validAmount = Number.isInteger(payload?.amount) && (payload?.amount as number) > 0;
@@ -404,7 +390,7 @@ function addPrestigeIssues(
     ) {
       issues.push(issue(
         'prestige_source_gap',
-        `Post-cutover prestige_change row ${row.id.toString()} has an incomplete source identity or result`,
+        `Identified prestige_change row ${row.id.toString()} has an incomplete source identity or result`,
         {
           auditLogId: row.id.toString(),
           sourceEventId: row.sourceEventId,
@@ -424,7 +410,7 @@ function addDirectWriterIssues(
   for (const writer of result.uncovered) {
     issues.push(issue(
       'uncovered_direct_writer',
-      `Production direct User.currency writer is outside Coverage_Manifest's post-cutover policy: ${writer.file}`,
+      `Production direct User.currency writer is outside Coverage_Manifest policy: ${writer.file}`,
       {
         file: writer.file,
         operation: writer.operation,
@@ -435,18 +421,15 @@ function addDirectWriterIssues(
 }
 
 /**
- * Reconcile only the authoritative post-cutover cycle. This function is
- * read-only: it reports evidence defects and never pairs, rewrites, or repairs
- * historical rows.
+ * Reconcile identified paired financial evidence for a cycle without rewriting
+ * legacy null-identity rows.
  */
 export async function collectFinancialIntegrityIssues(
   cycleNumber: number,
-  rollout: FinancialRolloutState,
   workspaceRoot?: string,
 ): Promise<readonly FinancialIntegrityIssue[]> {
-  if (rollout.cutoverCycle === null || cycleNumber < rollout.cutoverCycle) return [];
 
-  const [ledgerRows, financialAudits, repairDomainRows, settlementDomainRows, prestigeRows, stableIds] = await Promise.all([
+  const [ledgerRows, financialAudits, repairDomainRows, prestigeRows, snapshotUsers] = await Promise.all([
     prisma.financialLedger.findMany({
       where: { cycleNumber },
       select: {
@@ -496,21 +479,6 @@ export async function collectFinancialIntegrityIssues(
       },
     }),
     prisma.auditLog.findMany({
-      where: { cycleNumber, eventType: { in: ['passive_income', 'operating_costs'] } },
-      select: {
-        id: true,
-        cycleNumber: true,
-        userId: true,
-        robotId: true,
-        eventType: true,
-        payload: true,
-        metadata: true,
-        financialEventId: true,
-        sourceEventId: true,
-        eventTimestamp: true,
-      },
-    }),
-    prisma.auditLog.findMany({
       where: { cycleNumber, eventType: 'prestige_change' },
       select: {
         id: true,
@@ -527,11 +495,9 @@ export async function collectFinancialIntegrityIssues(
     }),
     snapshotUserIds(cycleNumber),
   ]);
-
   const typedLedgerRows = ledgerRows as unknown as LedgerRow[];
   const typedFinancialAudits = financialAudits as unknown as AuditRow[];
   const typedRepairRows = repairDomainRows as unknown as AuditRow[];
-  const typedSettlementRows = settlementDomainRows as unknown as AuditRow[];
   const typedPrestigeRows = prestigeRows as unknown as AuditRow[];
   const issues: FinancialIntegrityIssue[] = [];
 
@@ -540,7 +506,7 @@ export async function collectFinancialIntegrityIssues(
   validateFinancialAuditRows(typedFinancialAudits, issues);
   addBalanceAfterIssues(typedLedgerRows, issues);
   addRepairIssues(typedLedgerRows, typedFinancialAudits, typedRepairRows, issues);
-  addSettlementIssues(typedLedgerRows, typedSettlementRows, stableIds, issues);
+  addSettlementIssues(cycleNumber, typedLedgerRows, snapshotUsers, issues);
   addPrestigeIssues(typedPrestigeRows, issues);
   addDirectWriterIssues(issues, workspaceRoot);
 

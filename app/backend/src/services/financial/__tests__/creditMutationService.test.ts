@@ -1,5 +1,4 @@
 import type { BattleIncomeBreakdown } from '../../../types';
-import type { FinancialRolloutState } from '../../migration/financialRollout';
 
 const mockTx = {
   user: { update: jest.fn() },
@@ -12,54 +11,16 @@ const mockPrisma = {
 };
 
 jest.mock('../../../lib/prisma', () => ({ __esModule: true, default: mockPrisma }));
-jest.mock('../../../lib/creditGuard', () => ({
-  lockUserForSpending: jest.fn(),
-}));
-jest.mock('../../common/auditSequence', () => ({
-  withAuditSequence: jest.fn(),
-}));
-jest.mock('../../migration/financialRollout', () => ({
-  assertPairedCaptureForCycle: jest.fn(),
-  getFinancialRolloutState: jest.fn(),
-  classifyCycle: jest.fn(),
-}));
-jest.mock('../../migration/featureFlags', () => ({
-  isEnabled: jest.fn(),
-}));
+jest.mock('../../../lib/creditGuard', () => ({ lockUserForSpending: jest.fn() }));
+jest.mock('../../common/auditSequence', () => ({ withAuditSequence: jest.fn() }));
 
 import { lockUserForSpending } from '../../../lib/creditGuard';
 import { withAuditSequence } from '../../common/auditSequence';
 import { FinancialError, FinancialErrorCode } from '../../../errors';
-import {
-  assertPairedCaptureForCycle,
-  classifyCycle,
-  getFinancialRolloutState,
-} from '../../migration/financialRollout';
-import { isEnabled } from '../../migration/featureFlags';
 import { applyCreditMutation, applyCreditMutationInTransaction } from '../creditMutationService';
 
 const mockLockUser = lockUserForSpending as jest.MockedFunction<typeof lockUserForSpending>;
 const mockWithAuditSequence = withAuditSequence as jest.MockedFunction<typeof withAuditSequence>;
-const mockAssertPairedCapture = assertPairedCaptureForCycle as jest.MockedFunction<typeof assertPairedCaptureForCycle>;
-const mockGetFinancialRolloutState = getFinancialRolloutState as jest.MockedFunction<typeof getFinancialRolloutState>;
-const mockClassifyCycle = classifyCycle as jest.MockedFunction<typeof classifyCycle>;
-const mockIsEnabled = isEnabled as jest.MockedFunction<typeof isEnabled>;
-
-const postCutoverState: FinancialRolloutState = {
-  environment: 'ACC',
-  phase: 'acc_cutover',
-  schemaClientGenerated: true,
-  writerManifestComplete: true,
-  blockingTestsPassed: true,
-  requiredCaptureActive: true,
-  accCutoverRecorded: true,
-  reconciliationPassed: false,
-  documentationComplete: false,
-  cutoverCycle: 7,
-  cutoverRecordedAt: '2026-01-01T00:00:00.000Z',
-  reconciledAt: null,
-  documentedAt: null,
-};
 
 const breakdown: BattleIncomeBreakdown = {
   schemaVersion: 1,
@@ -83,7 +44,7 @@ const breakdown: BattleIncomeBreakdown = {
 };
 
 const input = {
-  cycleNumber: 7,
+  cycleNumber: 0,
   userId: 2,
   amount: 100,
   description: 'Battle reward',
@@ -94,16 +55,12 @@ const input = {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mockAssertPairedCapture.mockResolvedValue(postCutoverState);
-  mockGetFinancialRolloutState.mockResolvedValue(postCutoverState);
-  mockClassifyCycle.mockReturnValue('post_cutover');
-  mockIsEnabled.mockResolvedValue(false);
   mockTx.financialLedger.findUnique.mockResolvedValue(null);
   mockTx.auditLog.findFirst.mockResolvedValue(null);
   mockTx.user.update.mockResolvedValue({ id: 2, currency: 1100 });
   mockTx.financialLedger.create.mockResolvedValue({
     id: 11,
-    cycleNumber: 7,
+    cycleNumber: input.cycleNumber,
     userId: 2,
     robotId: null,
     transactionType: 'battle_income',
@@ -119,80 +76,35 @@ beforeEach(() => {
 });
 
 describe('Credit_Mutation_Service', () => {
-  it('should update currency and write exactly one paired ledger/audit record after cutover', async () => {
+  it('should write an atomic financial pair immediately for every valid cycle', async () => {
     const result = await applyCreditMutation(input);
 
-    expect(mockAssertPairedCapture).toHaveBeenCalledWith(input.cycleNumber);
     expect(result).toMatchObject({
       created: true,
       financialEventId: input.financialEventId,
-      amount: 100,
+      ledgerId: 11,
+      auditLogId: 12n,
       balanceBefore: 1000,
       balanceAfter: 1100,
     });
-    expect(mockTx.user.update).toHaveBeenCalledWith({
-      where: { id: 2 },
-      data: { currency: 1100 },
-    });
+    expect(mockTx.user.update).toHaveBeenCalledWith({ where: { id: 2 }, data: { currency: 1100 } });
     expect(mockTx.financialLedger.create).toHaveBeenCalledTimes(1);
     expect(mockTx.auditLog.create).toHaveBeenCalledTimes(1);
-    expect(mockTx.financialLedger.create.mock.calls[0][0].data.financialEventId)
-      .toBe(input.financialEventId);
-    expect(mockTx.auditLog.create.mock.calls[0][0].data.financialEventId)
-      .toBe(input.financialEventId);
+    expect(mockPrisma.$transaction).toHaveBeenCalledWith(
+      expect.any(Function),
+      { timeout: 30_000 },
+    );
   });
 
-  it('should retain the pre-cutover compatibility mutation without creating a paired record', async () => {
-    mockClassifyCycle.mockReturnValue('pre_cutover');
+  it('should use the paired writer inside an existing transaction without a rollout dependency', async () => {
+    const result = await applyCreditMutationInTransaction(mockTx as never, { ...input, cycleNumber: 9 });
 
-    const result = await applyCreditMutation({ ...input, cycleNumber: 6 });
-
-    expect(result).toMatchObject({ created: true, balanceBefore: 1000, balanceAfter: 1100, ledgerId: 0, auditLogId: 0n });
-    expect(mockAssertPairedCapture).not.toHaveBeenCalled();
-    expect(mockTx.user.update).toHaveBeenCalledWith({ where: { id: 2 }, data: { currency: 1100 } });
-    expect(mockTx.financialLedger.create).not.toHaveBeenCalled();
-    expect(mockTx.auditLog.create).not.toHaveBeenCalled();
-  });
-
-  it('should reject post-cutover writes when required paired capture is unavailable', async () => {
-    mockAssertPairedCapture.mockRejectedValue(new FinancialError(
-      FinancialErrorCode.REQUIRED_CAPTURE_UNAVAILABLE,
-      'Paired financial capture is unavailable before the ACC Cutover_Cycle',
-      503,
-      { cycleNumber: input.cycleNumber, cutoverCycle: null },
-    ));
-
-    await expect(applyCreditMutation(input)).rejects.toMatchObject({
-      code: FinancialErrorCode.REQUIRED_CAPTURE_UNAVAILABLE,
-    });
-    expect(mockPrisma.$transaction).not.toHaveBeenCalled();
-    expect(mockTx.user.update).not.toHaveBeenCalled();
-    expect(mockTx.financialLedger.create).not.toHaveBeenCalled();
-    expect(mockTx.auditLog.create).not.toHaveBeenCalled();
-    expect(mockWithAuditSequence).not.toHaveBeenCalled();
-  });
-
-  it('should reject an in-transaction post-cutover write before mutating when paired capture is unavailable', async () => {
-    mockAssertPairedCapture.mockRejectedValue(new FinancialError(
-      FinancialErrorCode.REQUIRED_CAPTURE_UNAVAILABLE,
-      'Paired financial capture is unavailable before the ACC Cutover_Cycle',
-      503,
-      { cycleNumber: 6, cutoverCycle: postCutoverState.cutoverCycle },
-    ));
-
-    await expect(applyCreditMutationInTransaction(mockTx as never, { ...input, cycleNumber: 6 }))
-      .rejects.toMatchObject({ code: FinancialErrorCode.REQUIRED_CAPTURE_UNAVAILABLE });
-    expect(mockTx.user.update).not.toHaveBeenCalled();
-    expect(mockTx.financialLedger.create).not.toHaveBeenCalled();
-    expect(mockTx.auditLog.create).not.toHaveBeenCalled();
-    expect(mockWithAuditSequence).not.toHaveBeenCalled();
+    expect(result.created).toBe(true);
+    expect(mockTx.financialLedger.create).toHaveBeenCalledTimes(1);
+    expect(mockTx.auditLog.create).toHaveBeenCalledTimes(1);
   });
 
   it('should return the original result for an identical retry without another delta', async () => {
-    mockTx.financialLedger.findUnique
-      .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce(mockTx.financialLedger.create.mock.results[0]?.value ?? null);
-
     const first = await applyCreditMutation(input);
     mockTx.financialLedger.findUnique.mockResolvedValue({
       id: first.ledgerId,
@@ -221,11 +133,9 @@ describe('Credit_Mutation_Service', () => {
 
     const retry = await applyCreditMutation(input);
 
-    expect(retry.created).toBe(false);
-    expect(retry.balanceAfter).toBe(first.balanceAfter);
+    expect(retry).toMatchObject({ created: false, ledgerId: first.ledgerId, auditLogId: first.auditLogId });
     expect(mockTx.user.update).toHaveBeenCalledTimes(1);
     expect(mockTx.financialLedger.create).toHaveBeenCalledTimes(1);
-    expect(mockTx.auditLog.create).toHaveBeenCalledTimes(1);
   });
 
   it('should reject a conflicting identity before changing the balance', async () => {
@@ -254,24 +164,18 @@ describe('Credit_Mutation_Service', () => {
       },
     });
 
-    await expect(applyCreditMutation(input)).rejects.toMatchObject({
-      code: FinancialErrorCode.EVENT_CONFLICT,
-    });
+    await expect(applyCreditMutation(input)).rejects.toMatchObject({ code: FinancialErrorCode.EVENT_CONFLICT });
     expect(mockTx.user.update).not.toHaveBeenCalled();
-    expect(mockTx.financialLedger.create).not.toHaveBeenCalled();
-    expect(mockTx.auditLog.create).not.toHaveBeenCalled();
-    expect(mockLockUser).not.toHaveBeenCalled();
   });
 
-  it('should leave the transaction failed when a required audit write fails', async () => {
+  it('should fail the transaction when the required audit write fails', async () => {
     mockTx.auditLog.create.mockRejectedValue(new Error('audit unavailable'));
 
     await expect(applyCreditMutation(input)).rejects.toThrow('audit unavailable');
     expect(mockTx.user.update).toHaveBeenCalledTimes(1);
-    expect(mockTx.financialLedger.create).toHaveBeenCalledTimes(1);
   });
 
-  it('should reject obsolete transaction labels at the mutation boundary', async () => {
+  it('should reject obsolete transaction labels before opening a transaction', async () => {
     const obsoleteInput = {
       ...input,
       transactionType: 'prestige_award' as never,

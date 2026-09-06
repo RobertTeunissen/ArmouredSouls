@@ -165,7 +165,7 @@ Both components are written even when their amount is zero. A zero-valued compon
 
 The paired `FinancialLedger` row is the accounting/reporting record and the paired `AuditLog` row with `eventType` `financial_transaction` is the operational/security record. They share `financialEventId`, are written atomically with the `User.currency` update, and are idempotent on a stable/cycle/component identity. Existing `passive_income`, `operating_costs`, cycle snapshots, and admin response fields remain compatible during this capture-only change. The generic `/api/admin/audit-log` endpoint can query `financial_transaction` rows; `/api/admin/audit-log/repairs` remains focused on subtype-bearing `robot_repair` rows.
 
-Rerunning a settlement returns the existing component results and does not pay or charge twice. A failed paired write rolls back the component and its balance change. The existing snapshot backfill remains a derived snapshot operation; it is not permission to reconstruct, pair, or normalize pre-cutover financial history.
+Rerunning a settlement returns the existing component results and does not pay or charge twice. A failed paired write rolls back the component and its balance change. The existing snapshot backfill remains a derived snapshot operation; it is not permission to reconstruct, pair, or normalize legacy null-identity financial history.
 
 ## 5. Admin Bulk Cycle
 
@@ -329,7 +329,7 @@ The snapshot service (`cycleSnapshotService.ts`) aggregates from these AuditLog 
 | `robot_purchase` | Robot-spending compatibility data |
 | `cycle_end_balance` | End-of-cycle balance compatibility data |
 
-This table does not define post-cutover financial accounting sources. Credits amounts, balances, and taxonomy use reconciled `FinancialLedger`/`financial_transaction` pairs by `financialEventId`; Repair_Spend uses `robot_repair`; prestige uses `prestige_change`.
+This table does not define identified paired-capture financial accounting sources. Credits amounts, balances, and taxonomy use reconciled `FinancialLedger`/`financial_transaction` pairs by `financialEventId`; Repair_Spend uses `robot_repair`; prestige uses `prestige_change`.
 
 ### Backfill Capability
 
@@ -339,7 +339,7 @@ Snapshot regeneration is a derived-projection repair only:
 POST /api/admin/snapshots/backfill
 ```
 
-It may replace a `CycleSnapshot` using retained domain events, but it must never create, pair, relabel, normalize, or infer `FinancialLedger`, `financial_transaction`, repair, or prestige history. In particular, pre-cutover financial history is never reconstructed.
+It may replace a `CycleSnapshot` using retained domain events, but it must never create, pair, relabel, normalize, or infer `FinancialLedger`, `financial_transaction`, repair, or prestige history. In particular, legacy null-identity financial history is never reconstructed.
 
 ---
 
@@ -434,7 +434,7 @@ Achieved through one row per cycle, pre-aggregated metrics, and indexed `cycle_n
 
 1. **Domain AuditLog events are immutable inputs** — they feed compatibility projections but are not a universal financial source
 2. **CycleSnapshot is derived** — it may be regenerated without mutating source events or reconstructing historical financial pairs
-3. **Post-cutover accounting stays separate** — Credits use reconciled `FinancialLedger`/`financial_transaction` pairs, Repair_Spend uses `robot_repair`, and prestige uses `prestige_change`
+3. **Identified paired accounting stays separate** — Credits use reconciled `FinancialLedger`/`financial_transaction` pairs, Repair_Spend uses `robot_repair`, and prestige uses `prestige_change`
 
 ### Battle Readiness Criteria
 
@@ -458,11 +458,11 @@ final_cost  = base_repair × damage_pct × multiplier × (1 - repair_bay_discoun
 
 Repair Bay discount: Level × (5 + Active Robot Count), capped at 90%.
 
-## Spec #53 cutover and reconciliation boundary
+## Spec #53 deployed capture and reconciliation boundary
 
-The financial contract is forward-only. `Cutover_Cycle` is selected in `ACC` only after schema/client generation, all `Coverage_Manifest` writers, blocking tier checks, and required capture activation pass. Pre-cutover `financial_ledger` and `audit_logs` rows remain queryable `Legacy_Record` history where retained; they are not rewritten, paired, relabelled, or reconstructed. No service may substitute a `battle_complete` payload, cached repair quote, or current formula for a missing post-cutover canonical event, and no one-off historical reconstruction script may be added.
+The financial contract is forward-only and active with the deployed backend: every new current-economy mutation writes its required atomic pair immediately, with no ACC-specific activation, cycle gate, or operational command. Rows without `financialEventId` remain queryable `Legacy_Record` history where retained; they are not rewritten, paired, relabelled, or reconstructed. No service may substitute a `battle_complete` payload, cached repair quote, or current formula for a missing identified paired-capture event, and no one-off historical reconstruction script may be added.
 
-Post-cutover reconciliation checks the paired `FinancialLedger`/`AuditLog` records by `financialEventId`, duplicate identities, amount and `balanceAfter` consistency, valid taxonomy and `Financial_Breakdown`, repair subtype/domain pairs, both settlement components including zero-valued rows, prestige `sourceEventId` records, and direct `User.currency` writers outside `Credit_Mutation_Service`. Diagnostics label pre-cutover gaps as outside the completeness claim rather than attempting to fix them.
+Reconciliation checks identified paired `FinancialLedger`/`AuditLog` records by `financialEventId`, duplicate identities, amount and `balanceAfter` consistency, valid taxonomy and `Financial_Breakdown`, repair subtype/domain pairs, both settlement components including zero-valued rows, prestige `sourceEventId` records, and direct `User.currency` writers outside `Credit_Mutation_Service`. Legacy null-identity rows are excluded from the paired-evidence completeness claim rather than altered to fill gaps.
 
 For financial questions, the paired records are the `Canonical_Source`; for repair spend, use `AuditLog` `robot_repair` rows with `creditsCharged` and `repairType`; for prestige, use `prestige_change` rows; for subscriptions and lifecycle, use their existing Booking Office and archive/lifecycle records. `Income_Dashboard`, `Cycle_Summary`, financial-page UI, and player-guide content are outside this capture change and remain consumers/regression surfaces for a later `Financial_Page_Follow_On`.
 

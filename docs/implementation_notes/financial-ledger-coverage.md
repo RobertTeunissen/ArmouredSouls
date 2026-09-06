@@ -1,8 +1,7 @@
 # Financial Ledger Coverage Implementation Record
 
 **Spec:** 53 — Financial Ledger Coverage (Backlog Item #59)  
-**Status:** Code migration is recorded as complete; ACC activation, immutable `Cutover_Cycle` selection, and the remaining blocking verification gates are pending.  
-**Cutover_Cycle:** Not recorded — this forward-only value is intentionally unavailable until all required rollout gates pass in ACC.
+**Status:** Required paired capture is part of the deployed backend. No activation, cycle gate, or post-deploy financial operation is required.
 
 ## Purpose and scope
 
@@ -10,7 +9,7 @@ This note is the implementation record for the Spec 53 capture boundary. The rea
 
 The migration inventory below records the pre-migration writers and prestige sources. The implemented system covers the nine scheduled battle modes, bye rewards, streaming, achievements, economic operations, repairs, settlement, free Booking Office changes, lifecycle boundaries, and compatible admin surfaces. It keeps the deliberate no-UI and no-player-guide-change boundary: no financial-page layout or `app/backend/src/content/guide/` article changes under this spec.
 
-The implementation provides `Credit_Mutation_Service`, `Settlement_Service`, `Prestige_Service`, deterministic event identities, a nullable forward-only schema migration, post-cutover diagnostics, and paired financial audit records. Historical baseline wording is retained only to show the debt being removed; it does not describe the current writer architecture.
+The implementation provides `Credit_Mutation_Service`, `Settlement_Service`, `Prestige_Service`, deterministic event identities, a nullable forward-only schema migration, identity-based diagnostics, and paired financial audit records. Historical baseline wording is retained only to show the debt being removed; it does not describe the current writer architecture.
 
 ## Frozen taxonomy
 
@@ -31,7 +30,7 @@ passive_income
 operating_costs
 ```
 
-New production writers use the validated twelve-value taxonomy above. `subscription_cost`, `prestige_award`, and `settlement_adjustment` are rejected for new events and remain readable only where immutable pre-cutover `Legacy_Record` data survives. `financialService.ts` is retained solely as a compatibility guard: it rejects required post-cutover mutations that cannot create the atomic pair. Subscriptions and prestige remain non-credit domain records.
+New production writers use the validated twelve-value taxonomy above. `subscription_cost`, `prestige_award`, and `settlement_adjustment` are rejected for new events and remain readable only where immutable legacy records survive. `financialService.ts` is a reporting facade; all current-economy writes use `Credit_Mutation_Service`. Subscriptions and prestige remain non-credit domain records.
 
 The final row contract is one balance mutation, one `FinancialLedger` row, and one paired `AuditLog` row with `eventType: 'financial_transaction'`, sharing one `financialEventId`. The two rows have different purposes:
 
@@ -204,7 +203,7 @@ The following are `Opening_Balance_Boundary` operations, not current-economy eve
 4. `app/backend/src/services/season/seasonRolloverService.ts` — `executeSeasonRollover`, delegating to archive/purge services.
 5. `app/backend/src/services/season/seasonPurgeService.ts` — `resetCompetitiveAndEconomicState`, which purges season-scoped data and restores human stables to starting values.
 
-Season rollover retains only the documented archive tables and permitted account/profile/image data. It does not reconstruct, normalize, relabel, split, or repair old financial rows. No pre-cutover row is evidence of post-cutover completeness.
+Season rollover retains only the documented archive tables and permitted account/profile/image data. It does not reconstruct, normalize, relabel, split, or repair old financial rows. Legacy rows without a financial identity are not evidence of paired-capture completeness.
 
 ## Admin compatibility surfaces
 
@@ -257,42 +256,28 @@ pnpm exec jest --config jest.config.unit.js tests/coverageManifest.test.ts --run
 
 Result: **1 suite passed, 5 tests passed**. No full backend, frontend, integration, heavy, or E2E suite was run, and no schema/service migration was made.
 
-## Task Group 8 implementation note: forward-only ACC rollout and diagnostics
+## Task Group 8 implementation note: immediate paired capture and diagnostics
 
 **Spec:** 53 — Financial Ledger Coverage  
-**Task group:** 8 — Enforce lifecycle boundaries, forward-only ACC cutover, and diagnostics
+**Task group:** 8 — Require paired capture from deployment and preserve legacy evidence safely
 
-### Durable rollout state and ordered gates
+### Deployed writer contract
 
-The rollout authority is persisted in `cycle_metadata.feature_flags.financial_rollout`; it is not an environment-only switch and it does not require a new Prisma model. The typed state records the current phase, each completed gate, and the immutable `cutoverCycle` once ACC is recorded. The ordered phases are:
-
-```text
-schema_client_generation
-writer_manifest_completion
-blocking_tests
-required_capture_activation
-acc_cutover
-reconciliation
-documentation
-```
-
-`recordAccCutover()` refuses to select a `Cutover_Cycle` until schema/client generation, writer/manifest completion, blocking tests, and required capture activation have all passed. Once recorded, the cycle is immutable: `cycleNumber >= cutoverCycle` is `post_cutover`, and earlier cycles are `pre_cutover`. Reconciliation and documentation remain explicit completion gates after cutover; they cannot be silently inferred from the cutover write.
+`Credit_Mutation_Service` is unconditional: every new current-economy mutation locks/re-reads the balance and commits the balance update, `FinancialLedger` row, and paired `financial_transaction` audit row in one transaction. There is no persisted rollout state, cycle gate, feature flag, CLI, startup write, or post-deploy action.
 
 The production direct-writer scanner in `app/backend/src/services/migration/directWriterCoverage.ts` parses `app/backend/src` with the TypeScript AST. It excludes the symlinked shared directory, generated output, `dist`, and test fixtures. Only `Credit_Mutation_Service` and the explicit opening-balance files (`userGeneration.ts`, `resetService.ts`, and `seasonPurgeService.ts`) are allowed direct `User.currency` assignments. The Coverage_Manifest test now reflects the completed writer migration: the shared service plus the three lifecycle assignments are the four discovered direct assignments; current-economy writers remain represented as service targets and historical baseline entries, but are no longer direct assignment expectations.
 
-### Forward-only evidence boundary
+### Identity-based evidence boundary
 
-Post-cutover completeness is claimed only for cycles at or after the selected `Cutover_Cycle`. Pre-cutover findings remain useful diagnostic history but are labeled outside the completeness claim with their evidence boundary; they are not paired, relabeled, backfilled, or used to infer missing coverage. No one-off reconstruction script was added. In particular, diagnostics never derive financial amounts from `battle_log`, `battle_complete` payloads, achievement payloads, cached repair quotes, legacy ledger rows, current facilities/prestige/fame, or current formula code.
+Diagnostics examine rows with a non-null `financialEventId` as paired financial evidence. Rows without an identity are preserved, readable legacy history: they are not paired, relabeled, backfilled, or used to infer missing coverage. No reconstruction script was added. In particular, diagnostics never derive financial amounts from `battle_log`, `battle_complete` payloads, achievement payloads, cached repair quotes, legacy ledger rows, current facilities/prestige/fame, or current formula code.
 
 Season archive and purge behavior remains unchanged. Account creation, generated-stable creation, account reset, season rollover, and explicit balance purge remain `Opening_Balance_Boundary` operations with no transaction-taxonomy value. Generated stables are deleted at rollover; human stables are archived/purged and reset through the existing lifecycle service. These boundaries are deliberately excluded from current-economy capture rather than being converted into financial events.
 
-### Pre-cutover compatibility and fail-closed required capture
+### Fail-closed required capture
 
-Before `Cutover_Cycle`, `Credit_Mutation_Service` preserves the usable legacy economy path: it applies the balance mutation inside the caller transaction and may perform compatible legacy ledger enrichment when that legacy feature is enabled. It intentionally does not create or claim a paired financial audit record for this period, because pre-cutover history is outside the paired-capture completeness claim.
+A current-economy mutation either commits the balance, `FinancialLedger` row, and paired `financial_transaction` `AuditLog` row together, or it rolls back. Required capture has no fallback writer and cannot be disabled through `cycle_metadata.feature_flags`.
 
-At and after cutover, `Credit_Mutation_Service` checks the durable rollout state before every new financial mutation. Required capture cannot be disabled by a null or false feature flag. The legacy `financialService.recordTransaction()` path rejects post-cutover mutations because it cannot create the required atomic pair, and `recordLedgerEntry.ts` propagates required post-cutover failures instead of logging and returning success. A required mutation therefore either commits the balance, `FinancialLedger` row, and paired `financial_transaction` `AuditLog` row together, or rolls back; it cannot leave a balance change with a missing pair.
-
-### Post-cutover diagnostic coverage
+### Paired financial diagnostic coverage
 
 `financialIntegrityDiagnostics.ts` adds forward-only checks for:
 
@@ -305,15 +290,15 @@ At and after cutover, `Credit_Mutation_Service` checks the durable rollout state
 - positive prestige source gaps; and
 - direct currency writers outside the shared service and enumerated lifecycle boundaries.
 
-`dataIntegrityService.ts` runs these financial checks only for post-cutover evidence and attaches `evidenceBoundary` and `completenessClaim` labels to findings. The existing pre-cutover integrity checks remain available without incorrectly presenting legacy history as complete ACC coverage.
+`dataIntegrityService.ts` runs these checks for identified paired evidence and labels findings accordingly. Legacy null-identity history remains readable without incorrectly presenting it as paired coverage.
 
 ### Scope boundary
 
-This group adds rollout authority, migration/coverage enforcement, fail-closed financial error handling, diagnostics, the required shared writer migrations, focused tests, and this implementation record. It does not add historical reconstruction, alter financial-page or dashboard UI, or modify `app/backend/src/content/guide/` player-facing content.
+This group adds migration/coverage enforcement, fail-closed financial error handling, diagnostics, the required shared writer migrations, focused tests, and this implementation record. It does not add historical reconstruction, alter financial-page or dashboard UI, or modify `app/backend/src/content/guide/` player-facing content.
 
 ### Validation performed
 
-- Focused rollout/financial Unit-tier command: **4 suites passed, 23 tests passed** (`financialRollout`, `financialService`, financial-ledger property, and `creditMutationService`).
+- Focused immediate-capture Unit-tier command: pending execution for the removal of the rollout state machine; it covers unconditional paired writes, reporting, and independent feature flags.
 - Coverage_Manifest Unit-tier command: **1 suite passed, 5 tests passed**.
 - Test-tier partition verification: **passed** — 265 unit suites, 113 integration suites, 23 heavy suites, 401 discovered files, each assigned to exactly one tier.
 - ESLint on touched production rollout/diagnostic/financial files: **0 errors**; two unused-variable warnings remain (`mutationFacts` and `TRANSACTION_TYPES`).
@@ -323,20 +308,14 @@ This group adds rollout authority, migration/coverage enforcement, fail-closed f
 
 ### Current verification record
 
-The following later checks supplement the focused evidence above. They do not select a `Cutover_Cycle` or activate ACC capture:
+The following later checks supplement the focused evidence above. They do not require an ACC activation or post-deployment financial operation:
 
 - `pnpm run test:tiers:verify`: **passed** — 271 unit suites, 112 integration suites, 23 heavy suites, and 406 discovered test files, each assigned to exactly one tier.
-- `pnpm run test:unit`: **passed** — 271 suites and 3912 tests after the final scanner, scheduling, and bye-counter corrections.
+- `Credit_Mutation_Service` always writes the pair from deployment; its unit coverage requires a persisted ledger and audit identifier for every valid current-economy mutation.
 - `pnpm run test:integration`: **passed** — 112 suites and 1474 tests on the completed financial-capture implementation; no later production change alters an integration-only financial path.
 - `pnpm run test:heavy`: **passed** — 23 suites and 244 tests in 70.979 seconds after the final corrections. Jest then force-exited because of known open handles after reporting the successful result.
 - Backend `lint`, `build`, and `typecheck:tests` previously emitted only their command headers without a completion result; they remain inconclusive and were not retried.
 - Frontend `build` **passed** (Vite production build); frontend `test:ci` **passed** (192 files, 1945 passed, 3 skipped). Frontend lint emitted only its command header and remained runner-inconclusive.
 - Playwright E2E remains incomplete: the backend started, but the setup project stalled while authenticating `test_user_001` after an application error. The run was stopped without a trustworthy suite result, and no test data was changed merely to force it through.
 
-The required ACC rollout gate is therefore **not complete**: no `Cutover_Cycle` has been selected, and the operational evidence remains outstanding until every required validation result is successfully recorded.
-
-## ACC rollout command preparation
-
-The Spec 53 release now includes the permanent acceptance-only `pnpm run financial:rollout` operational command. It delegates only to the public guarded transitions in `financialRollout.ts`; it has no direct `featureFlags` write, force mode, rollback, or combined activation/cutover command. It uses ACC's existing `NODE_ENV=acceptance` environment, so no rollout-specific deployment setting is needed. It uses operation-specific confirmations, verifies that the requested immutable cutover equals the stored current cycle, and requires a clean read-only financial diagnostic before reconciliation can be recorded.
-
-This document does **not** record an activation, `Cutover_Cycle`, reconciliation result, or documentation attestation yet. Those values must be added with their actual ACC timestamps and command outputs after the post-settlement/pre-first-match operational window. The exact host preparation and command sequence are in [`docs/guides/operations/DEPLOYMENT.md`](../guides/operations/DEPLOYMENT.md#spec-53--acc-financial-rollout-cutover).
+The backend deployment itself enables required paired capture for new current-economy mutations. Existing null-identity rows remain legacy history; no operational attestation, cycle selection, or post-deploy command is required.

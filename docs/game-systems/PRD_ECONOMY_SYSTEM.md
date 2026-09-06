@@ -710,7 +710,7 @@ This PRD defines the complete economy system for Armoured Souls, covering all co
 
 ### Financial Capture Contract (Spec #53)
 
-Credits are stored in the Prisma `User.currency` field; `currency` is the mutable balance and “Credits” is the player-facing name. From the selected ACC `Cutover_Cycle`, all current-economy balance changes use `Credit_Mutation_Service`. A successful mutation updates `User.currency`, inserts exactly one `FinancialLedger` accounting/reporting row, and inserts exactly one paired `AuditLog` row with `eventType` `financial_transaction`. Both rows share one `financialEventId` and are committed atomically. The audit row is an operational, security, and reconciliation record, not a second currency mutation.
+Credits are stored in the Prisma `User.currency` field; `currency` is the mutable balance and “Credits” is the player-facing name. From deployment, all current-economy balance changes use `Credit_Mutation_Service`. A successful mutation updates `User.currency`, inserts exactly one `FinancialLedger` accounting/reporting row, and inserts exactly one paired `AuditLog` row with `eventType` `financial_transaction`. Both rows share one `financialEventId` and are committed atomically. The audit row is an operational, security, and reconciliation record, not a second currency mutation.
 
 The closed `Transaction_Taxonomy` is:
 
@@ -737,7 +737,7 @@ Battle results use one shared financial reward path across all nine scheduled mo
 
 `Prestige_Service` records each positive battle or achievement award separately as an `AuditLog` `prestige_change` row with a unique `sourceEventId`, cycle/timestamp, source, exact aggregate, and resulting prestige. Prestige is never a `FinancialLedger` amount. `Settlement_Service` is the sole mutating settlement path for the scheduler and supported admin triggers: it writes exactly one `passive_income` pair and one `operating_costs` pair per applicable stable/cycle, including zero-valued components with unchanged `balanceAfter`. Booking Office subscribe/unsubscribe operations remain free and emit no financial record.
 
-Pre-cutover records remain `Legacy_Record` history. They are not split, paired, relabelled, backfilled, or used to claim complete coverage. No historical reconstruction script is permitted. See [`FINANCIAL_LEDGER_AUDIT_GUIDE.md`](../guides/FINANCIAL_LEDGER_AUDIT_GUIDE.md) for the source map, row-count examples, admin compatibility, reconciliation procedure, and the no-UI `Financial_Page_Follow_On` boundary.
+Rows without a `financialEventId` remain `Legacy_Record` history. They are not split, paired, relabelled, backfilled, or used to claim complete coverage. No historical reconstruction script is permitted. See [`FINANCIAL_LEDGER_AUDIT_GUIDE.md`](../guides/FINANCIAL_LEDGER_AUDIT_GUIDE.md) for the source map, row-count examples, admin compatibility, reconciliation procedure, and the no-UI `Financial_Page_Follow_On` boundary.
 
 ### Economic Philosophy
 
@@ -2097,7 +2097,7 @@ Recommendations:
 
 All facility ROI calculations use `unifiedFacilityROIService` for prospective facility-investment analysis.
 
-**Historical actuals and projections are separate.** For post-cutover actual Credits, returns, charges, and balances, `Financial_Page_Follow_On` must read reconciled `FinancialLedger`/`financial_transaction` pairs and stored `Financial_Breakdown`; actual repair spend must read `robot_repair` `creditsCharged` with `repairType`. It must not infer historical actuals from `CycleSnapshot`, current facility configuration, current prestige/fame, current formulas, or an assumed purchase cycle. Pre-cutover rows remain `Legacy_Record` history and are not reconstructed. Current configuration may support a clearly labelled prospective estimate only; that estimate must not fill, combine with, or be presented as an actual historical return.
+**Historical actuals and projections are separate.** For identified paired-capture actual Credits, returns, charges, and balances, `Financial_Page_Follow_On` must read reconciled `FinancialLedger`/`financial_transaction` pairs and stored `Financial_Breakdown`; actual repair spend must read `robot_repair` `creditsCharged` with `repairType`. It must not infer historical actuals from `CycleSnapshot`, current facility configuration, current prestige/fame, current formulas, or an assumed purchase cycle. Null-identity rows remain `Legacy_Record` history and are not reconstructed. Current configuration may support a clearly labelled prospective estimate only; that estimate must not fill, combine with, or be presented as an actual historical return.
 
 **Key Metrics Calculated**:
 - `totalInvestment`: Sum of facility config costs from level 0 to current level

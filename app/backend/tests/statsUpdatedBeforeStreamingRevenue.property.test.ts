@@ -19,9 +19,9 @@ import prisma from '../src/lib/prisma';
 import { processBattle } from '../src/services/league/leagueBattleOrchestrator';
 import schedulingService from '../src/services/scheduling/schedulingService';
 import { battlesForRobots, battlesForUsers, robotIdsForUsers, scheduledMatchesForRobots } from './cleanupHelper';
-import { usePostCutoverFinancialRollout } from './financialRolloutTestHelper';
+import { useFinancialCaptureTestEnvironment } from './financialCaptureTestHelper';
 
-usePostCutoverFinancialRollout();
+useFinancialCaptureTestEnvironment();
 
 // Helper function to create a minimal test robot
 async function createTestRobot(

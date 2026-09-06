@@ -523,7 +523,7 @@ async function processKothBattle(
         data: { streamingRevenue: streamingCalc.totalRevenue },
       });
     }
-  });
+  }, { timeout: 30_000 });
 
   // 13. BATCHED: Update KotH robot stats
   await batchUpdateKothRobotStats(preparedParticipants);

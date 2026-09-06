@@ -20,9 +20,9 @@ import facilityRoutes from '../src/routes/facility';
 import { createTestUser, deleteTestUser } from './testHelpers';
 import { getFacilityConfig } from '../src/config/facilities';
 import { errorHandler } from '../src/middleware/errorHandler';
-import { usePostCutoverFinancialRollout } from './financialRolloutTestHelper';
+import { useFinancialCaptureTestEnvironment } from './financialCaptureTestHelper';
 
-usePostCutoverFinancialRollout();
+useFinancialCaptureTestEnvironment();
 
 dotenv.config();
 

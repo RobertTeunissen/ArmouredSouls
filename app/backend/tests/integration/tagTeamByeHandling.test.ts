@@ -20,9 +20,9 @@ import prisma from '../../src/lib/prisma';
 import { createTagTeamFixture, clearTagTeamCompetition } from '../helpers/tagTeam';
 import { runTagTeamMatchmaking } from '../../src/services/tag-team/tagTeamMatchmakingService';
 import { executeScheduledTagTeamBattles } from '../../src/services/tag-team/tagTeamBattleOrchestrator';
-import { usePostCutoverFinancialRollout } from '../financialRolloutTestHelper';
+import { useFinancialCaptureTestEnvironment } from '../financialCaptureTestHelper';
 
-usePostCutoverFinancialRollout();
+useFinancialCaptureTestEnvironment();
 
 describe('Tag Team Bye-Team Handling Integration Test', () => {
   let testUserIds: number[] = [];

@@ -113,7 +113,7 @@ function collectVariableBindings(sourceFile: ts.SourceFile): ReadonlyMap<string,
       const binding = rootIdentifier ? bindings.get(rootIdentifier.text) : undefined;
       // A statically named non-currency assignment does not make a user update
       // alias a financial writer. Direct, nested, and bracketed writes to
-      // currency are all conservative direct-write hits, so the rollout gate
+      // currency are all conservative direct-write hits, so the coverage check
       // cannot miss `args.data.currency` or `args.data['currency']`.
       if (binding) binding.isDynamic = true;
     }
@@ -244,7 +244,7 @@ function mutationKey(mutation: DiscoveredDirectCurrencyMutation): string {
 /**
  * Discover direct Prisma User.currency writes. Statically resolvable data and
  * args aliases (including object spreads) are followed; an unresolved alias
- * is reported as a conservative set operation so the rollout gate fails closed.
+ * is reported as a conservative set operation so the coverage check fails closed.
  */
 export function discoverDirectCurrencyMutations(
   workspaceRoot: string = findWorkspaceRoot(),

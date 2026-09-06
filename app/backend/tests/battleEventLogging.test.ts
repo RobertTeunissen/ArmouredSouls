@@ -7,9 +7,9 @@
 import prisma from '../src/lib/prisma';
 import { processBattle } from '../src/services/league/leagueBattleOrchestrator';
 import { EventType } from '../src/services/common/eventLogger';
-import { usePostCutoverFinancialRollout } from './financialRolloutTestHelper';
+import { useFinancialCaptureTestEnvironment } from './financialCaptureTestHelper';
 
-usePostCutoverFinancialRollout();
+useFinancialCaptureTestEnvironment();
 
 describe('Battle Event Logging Integration', () => {
   const testUserIds: number[] = [];

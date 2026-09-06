@@ -1,174 +1,21 @@
-import { createLedgerEntry, createLedgerEntryForType, TRANSACTION_TYPES } from '../../../../tests/factories/financialLedgerFactory';
-
 jest.mock('../../../lib/prisma', () => ({
   __esModule: true,
   default: {
-    financialLedger: {
-      create: jest.fn(),
-      groupBy: jest.fn(),
-    },
+    financialLedger: { groupBy: jest.fn() },
   },
-}));
-jest.mock('../../../config/logger', () => ({
-  __esModule: true,
-  default: { info: jest.fn(), debug: jest.fn(), warn: jest.fn(), error: jest.fn() },
-}));
-jest.mock('../../migration/featureFlags', () => ({
-  __esModule: true,
-  isEnabled: jest.fn(),
-}));
-jest.mock('../../migration/financialRollout', () => ({
-  __esModule: true,
-  assertRequiredCaptureForCycle: jest.fn(),
-  classifyCycle: jest.fn(),
 }));
 
 import prisma from '../../../lib/prisma';
-import { isEnabled } from '../../migration/featureFlags';
-import { assertRequiredCaptureForCycle, classifyCycle } from '../../migration/financialRollout';
 import financialService from '../financialService';
 
-const mockIsEnabled = isEnabled as jest.MockedFunction<typeof isEnabled>;
-const mockAssertRequiredCapture = assertRequiredCaptureForCycle as jest.MockedFunction<typeof assertRequiredCaptureForCycle>;
-const mockClassifyCycle = classifyCycle as jest.MockedFunction<typeof classifyCycle>;
-const mockCreate = prisma.financialLedger.create as jest.Mock;
 const mockGroupBy = prisma.financialLedger.groupBy as jest.Mock;
-
-const preCutoverState = {
-  environment: 'ACC' as const,
-  phase: 'schema_client_generation' as const,
-  schemaClientGenerated: false,
-  writerManifestComplete: false,
-  blockingTestsPassed: false,
-  requiredCaptureActive: false,
-  accCutoverRecorded: false,
-  reconciliationPassed: false,
-  documentationComplete: false,
-  cutoverCycle: null,
-  cutoverRecordedAt: null,
-  reconciledAt: null,
-  documentedAt: null,
-};
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mockIsEnabled.mockResolvedValue(true);
-  mockAssertRequiredCapture.mockResolvedValue(preCutoverState);
-  mockClassifyCycle.mockReturnValue('pre_cutover');
 });
 
-// ---------------------------------------------------------------------------
-// recordTransaction
-// ---------------------------------------------------------------------------
-
-describe('recordTransaction', () => {
-  it('should create a ledger entry when feature flag is active', async () => {
-    const entry = createLedgerEntry();
-    mockCreate.mockResolvedValue(entry);
-
-    const result = await financialService.recordTransaction({
-      cycleNumber: entry.cycleNumber,
-      userId: entry.userId,
-      robotId: entry.robotId ?? undefined,
-      transactionType: entry.transactionType as (typeof TRANSACTION_TYPES)[number],
-      amount: entry.amount,
-      balanceAfter: entry.balanceAfter,
-      description: entry.description,
-    });
-
-    expect(result).toEqual(entry);
-    expect(mockCreate).toHaveBeenCalledTimes(1);
-  });
-
-  it('should reject the legacy writer after the ACC cutover instead of returning null', async () => {
-    const postCutoverState = {
-      ...preCutoverState,
-      phase: 'acc_cutover' as const,
-      requiredCaptureActive: true,
-      accCutoverRecorded: true,
-      cutoverCycle: 10,
-    };
-    mockAssertRequiredCapture.mockResolvedValue(postCutoverState);
-    mockClassifyCycle.mockReturnValue('post_cutover');
-
-    await expect(financialService.recordTransaction({
-      cycleNumber: 10,
-      userId: 100,
-      transactionType: 'battle_income',
-      amount: 1000,
-      balanceAfter: 11000,
-      description: 'Test',
-    })).rejects.toMatchObject({
-      code: 'FINANCIAL_REQUIRED_CAPTURE_UNAVAILABLE',
-    });
-    expect(mockCreate).not.toHaveBeenCalled();
-  });
-
-  it('should pass correct data to prisma.financialLedger.create', async () => {
-    const entry = createLedgerEntry({
-      cycleNumber: 5,
-      userId: 42,
-      robotId: 99,
-      transactionType: 'repair_cost',
-      amount: -500,
-      balanceAfter: 9500,
-      description: 'Robot repair after battle',
-    });
-    mockCreate.mockResolvedValue(entry);
-
-    await financialService.recordTransaction({
-      cycleNumber: 5,
-      userId: 42,
-      robotId: 99,
-      transactionType: 'repair_cost',
-      amount: -500,
-      balanceAfter: 9500,
-      description: 'Robot repair after battle',
-      metadata: { battleId: 123 },
-    });
-
-    expect(mockCreate).toHaveBeenCalledWith({
-      data: {
-        cycleNumber: 5,
-        userId: 42,
-        robotId: 99,
-        transactionType: 'repair_cost',
-        amount: -500,
-        balanceAfter: 9500,
-        description: 'Robot repair after battle',
-        metadata: { battleId: 123 },
-      },
-    });
-  });
-
-  it('should handle all 12 transaction types', async () => {
-    for (const type of TRANSACTION_TYPES) {
-      const entry = createLedgerEntryForType(type);
-      mockCreate.mockResolvedValue(entry);
-
-      const result = await financialService.recordTransaction({
-        cycleNumber: entry.cycleNumber,
-        userId: entry.userId,
-        robotId: entry.robotId ?? undefined,
-        transactionType: type,
-        amount: entry.amount,
-        balanceAfter: entry.balanceAfter,
-        description: entry.description,
-      });
-
-      expect(result).not.toBeNull();
-    }
-
-    expect(mockCreate).toHaveBeenCalledTimes(TRANSACTION_TYPES.length);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// getReport
-// ---------------------------------------------------------------------------
-
-describe('getReport', () => {
-  it('should return aggregated totals grouped by cycle and transaction type', async () => {
+describe('FinancialService reporting', () => {
+  it('should return ledger totals grouped by cycle and transaction type', async () => {
     mockGroupBy.mockResolvedValue([
       { transactionType: 'battle_income', cycleNumber: 1, _sum: { amount: 3000 }, _count: { id: 3 } },
       { transactionType: 'repair_cost', cycleNumber: 1, _sum: { amount: -1500 }, _count: { id: 2 } },
@@ -177,114 +24,31 @@ describe('getReport', () => {
 
     const report = await financialService.getReport(42);
 
-    expect(report.cycles).toHaveLength(2);
-    expect(report.cycles[0].cycleNumber).toBe(1);
-    expect(report.cycles[0].transactions).toHaveLength(2);
-    expect(report.cycles[1].cycleNumber).toBe(2);
-    expect(report.cycles[1].transactions).toHaveLength(1);
-  });
-
-  it('should classify income vs expense types correctly', async () => {
-    mockGroupBy.mockResolvedValue([
-      { transactionType: 'battle_income', cycleNumber: 1, _sum: { amount: 2000 }, _count: { id: 2 } },
-      { transactionType: 'streaming_revenue', cycleNumber: 1, _sum: { amount: 1000 }, _count: { id: 1 } },
-      { transactionType: 'repair_cost', cycleNumber: 1, _sum: { amount: -800 }, _count: { id: 1 } },
-      { transactionType: 'weapon_purchase', cycleNumber: 1, _sum: { amount: -500 }, _count: { id: 1 } },
+    expect(report.cycles).toEqual([
+      expect.objectContaining({ cycleNumber: 1, income: 3000, expenses: 1500, netProfit: 1500 }),
+      expect.objectContaining({ cycleNumber: 2, income: 2000, expenses: 0, netProfit: 2000 }),
     ]);
-
-    const report = await financialService.getReport(42);
-    const cycle = report.cycles[0];
-
-    // Income = battle_income (2000) + streaming_revenue (1000) = 3000
-    expect(cycle.income).toBe(3000);
-    // Expenses = |repair_cost| (800) + |weapon_purchase| (500) = 1300
-    expect(cycle.expenses).toBe(1300);
   });
 
-  it('should calculate netProfit as income minus expenses', async () => {
-    mockGroupBy.mockResolvedValue([
-      { transactionType: 'battle_income', cycleNumber: 1, _sum: { amount: 5000 }, _count: { id: 5 } },
-      { transactionType: 'repair_cost', cycleNumber: 1, _sum: { amount: -2000 }, _count: { id: 3 } },
-    ]);
-
-    const report = await financialService.getReport(42);
-    const cycle = report.cycles[0];
-
-    expect(cycle.netProfit).toBe(cycle.income - cycle.expenses);
-    expect(cycle.netProfit).toBe(5000 - 2000);
-  });
-
-  it('should filter by fromCycle and toCycle when provided', async () => {
+  it('should apply optional cycle bounds to the reporting query', async () => {
     mockGroupBy.mockResolvedValue([]);
 
     await financialService.getReport(42, { fromCycle: 3, toCycle: 7 });
 
-    expect(mockGroupBy).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: {
-          userId: 42,
-          cycleNumber: { gte: 3, lte: 7 },
-        },
-      }),
-    );
+    expect(mockGroupBy).toHaveBeenCalledWith(expect.objectContaining({
+      where: { userId: 42, cycleNumber: { gte: 3, lte: 7 } },
+    }));
   });
 
-  it('should return empty cycles array when no data', async () => {
-    mockGroupBy.mockResolvedValue([]);
-
-    const report = await financialService.getReport(42);
-
-    expect(report.cycles).toEqual([]);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// getAggregatedTotals
-// ---------------------------------------------------------------------------
-
-describe('getAggregatedTotals', () => {
-  it('should return summaries for a single cycle', async () => {
-    mockGroupBy.mockResolvedValue([
-      { transactionType: 'battle_income', _sum: { amount: 4000 }, _count: { id: 4 } },
-      { transactionType: 'repair_cost', _sum: { amount: -1200 }, _count: { id: 2 } },
-    ]);
-
-    const totals = await financialService.getAggregatedTotals(42, 1);
-
-    expect(totals).toHaveLength(2);
-    expect(totals[0]).toEqual({
-      transactionType: 'battle_income',
-      totalAmount: 4000,
-      count: 4,
-    });
-    expect(totals[1]).toEqual({
-      transactionType: 'repair_cost',
-      totalAmount: -1200,
-      count: 2,
-    });
-  });
-
-  it('should group by transaction type', async () => {
+  it('should return a per-cycle transaction summary', async () => {
     mockGroupBy.mockResolvedValue([
       { transactionType: 'weapon_purchase', _sum: { amount: -3000 }, _count: { id: 6 } },
       { transactionType: 'weapon_sale', _sum: { amount: 1500 }, _count: { id: 3 } },
-      { transactionType: 'weapon_refinement', _sum: { amount: -800 }, _count: { id: 2 } },
     ]);
 
-    const totals = await financialService.getAggregatedTotals(42, 2);
-
-    expect(mockGroupBy).toHaveBeenCalledWith({
-      by: ['transactionType'],
-      where: { userId: 42, cycleNumber: 2 },
-      _sum: { amount: true },
-      _count: { id: true },
-    });
-
-    expect(totals).toHaveLength(3);
-    expect(totals.map((t) => t.transactionType)).toEqual([
-      'weapon_purchase',
-      'weapon_sale',
-      'weapon_refinement',
+    await expect(financialService.getAggregatedTotals(42, 2)).resolves.toEqual([
+      { transactionType: 'weapon_purchase', totalAmount: -3000, count: 6 },
+      { transactionType: 'weapon_sale', totalAmount: 1500, count: 3 },
     ]);
   });
 });

@@ -80,7 +80,7 @@ describe('Spec 53 Coverage_Manifest baseline', () => {
 
     expect(result.unmanifested).toEqual([]);
     expect(result.missingFromSource).toEqual([]);
-    expect(result.discovered.length).toBe(5);
+    expect(result.discovered.length).toBe(4);
     expect(result.discovered).not.toContainEqual(expect.objectContaining({
       file: 'app/backend/src/routes/user.ts',
     }));

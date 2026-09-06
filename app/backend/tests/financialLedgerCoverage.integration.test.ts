@@ -48,40 +48,9 @@ function prestigeBreakdown(eventId: string, amount: number): PrestigeAwardBreakd
 describe('Spec 53 financial pairing and identity integration', () => {
   let userId: number;
   let cycleNumber: number;
-  let originalFeatureFlags: unknown;
 
   beforeAll(async () => {
-    const metadata = await prisma.cycleMetadata.findUnique({
-      where: { id: 1 },
-      select: { featureFlags: true },
-    });
-    originalFeatureFlags = metadata?.featureFlags;
     cycleNumber = Math.floor(Date.now() / 1000);
-    const featureFlags = (metadata?.featureFlags ?? {}) as Record<string, unknown>;
-    await prisma.cycleMetadata.upsert({
-      where: { id: 1 },
-      update: {
-        featureFlags: {
-          ...featureFlags,
-          financial_rollout: {
-            environment: 'ACC',
-            phase: 'acc_cutover',
-            schemaClientGenerated: true,
-            writerManifestComplete: true,
-            blockingTestsPassed: true,
-            requiredCaptureActive: true,
-            accCutoverRecorded: true,
-            reconciliationPassed: false,
-            documentationComplete: false,
-            cutoverCycle: cycleNumber,
-            cutoverRecordedAt: new Date().toISOString(),
-            reconciledAt: null,
-            documentedAt: null,
-          },
-        },
-      },
-      create: { id: 1, featureFlags: { financial_rollout: { environment: 'ACC', phase: 'acc_cutover', schemaClientGenerated: true, writerManifestComplete: true, blockingTestsPassed: true, requiredCaptureActive: true, accCutoverRecorded: true, reconciliationPassed: false, documentationComplete: false, cutoverCycle: cycleNumber, cutoverRecordedAt: new Date().toISOString(), reconciledAt: null, documentedAt: null } } },
-    });
     const user = await prisma.user.create({
       data: {
         username: `spec53_${Date.now()}_${Math.floor(Math.random() * 10_000)}`,
@@ -99,10 +68,6 @@ describe('Spec 53 financial pairing and identity integration', () => {
     if (userId !== undefined) {
       await prisma.user.delete({ where: { id: userId } });
     }
-    await prisma.cycleMetadata.update({
-      where: { id: 1 },
-      data: { featureFlags: (originalFeatureFlags ?? {}) as never },
-    });
   });
 
   it('should commit one balance delta, one ledger row, and one paired financial audit row', async () => {

@@ -7,9 +7,9 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import robotRoutes from '../src/routes/robots';
 import { errorHandler } from '../src/middleware/errorHandler';
-import { usePostCutoverFinancialRollout } from './financialRolloutTestHelper';
+import { useFinancialCaptureTestEnvironment } from './financialCaptureTestHelper';
 
-usePostCutoverFinancialRollout();
+useFinancialCaptureTestEnvironment();
 
 dotenv.config();
 

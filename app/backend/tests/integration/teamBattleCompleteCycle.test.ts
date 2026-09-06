@@ -28,9 +28,9 @@ import {
   rebalanceTeamBattleLeagues,
 } from '../../src/services/team-battle/teamBattleAdapter';
 import { battlesForRobots, scheduledMatchesForTeams } from '../cleanupHelper';
-import { usePostCutoverFinancialRollout } from '../financialRolloutTestHelper';
+import { useFinancialCaptureTestEnvironment } from '../financialCaptureTestHelper';
 
-usePostCutoverFinancialRollout();
+useFinancialCaptureTestEnvironment();
 
 describe('Team Battle Complete Cycle Integration Test', () => {
   let testUserIds: number[] = [];
