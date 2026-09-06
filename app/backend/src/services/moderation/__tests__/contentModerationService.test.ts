@@ -32,7 +32,7 @@ let mockDecodeImage: jest.Mock;
  * Creates a fresh, isolated ContentModerationService instance.
  * Each call gets its own module scope so the singleton doesn't leak between tests.
  */
-async function createService(options?: { failLoad?: boolean }) {
+async function createService(options?: { failLoad?: boolean; initialize?: boolean }) {
   mockClassify = jest.fn();
   mockDispose = jest.fn();
   mockLoad = jest.fn();
@@ -81,7 +81,13 @@ async function createService(options?: { failLoad?: boolean }) {
     service = mod.contentModerationService;
   });
 
-  await service.initialize();
+  if (options?.initialize !== false) {
+    if (options?.failLoad) {
+      await expect(service.initialize()).rejects.toThrow('Model load failed');
+    } else {
+      await service.initialize();
+    }
+  }
   return service;
 }
 
@@ -242,6 +248,26 @@ describe('ContentModerationService', () => {
       expect(result.robotLikely).toBe(false);
     });
 
+    it('should report its lifecycle state for starting, ready, and failed initialization', async () => {
+      const startingService = await createService({ initialize: false });
+      expect(startingService.getAvailability()).toEqual({
+        status: 'starting',
+        changedAt: expect.any(String),
+      });
+
+      const readyService = await createService();
+      expect(readyService.getAvailability()).toEqual({
+        status: 'ready',
+        changedAt: expect.any(String),
+      });
+
+      const unavailableService = await createService({ failLoad: true });
+      expect(unavailableService.getAvailability()).toEqual({
+        status: 'unavailable',
+        changedAt: expect.any(String),
+      });
+    });
+
     it('should report isReady() as false when model fails to load', async () => {
       const service = await createService({ failLoad: true });
 
@@ -267,6 +293,19 @@ describe('ContentModerationService', () => {
       expect(mockDispose).toHaveBeenCalledTimes(1);
     });
 
+    it('should recover readiness after a classification failure when the model reload succeeds', async () => {
+      const service = await createService();
+      mockClassify.mockRejectedValueOnce(new Error('Classification failed'));
+
+      await service.classifyImage(Buffer.from('test'));
+      expect(service.getAvailability().status).toBe('unavailable');
+
+      await service.initialize();
+      expect(service.getAvailability().status).toBe('ready');
+      expect(service.isReady()).toBe(true);
+      expect(mockLoad).toHaveBeenCalledTimes(2);
+    });
+
     it('should dispose the image tensor even when classification throws an error', async () => {
       const service = await createService();
       mockClassify.mockRejectedValue(new Error('Classification failed'));
@@ -276,6 +315,8 @@ describe('ContentModerationService', () => {
       expect(mockDispose).toHaveBeenCalledTimes(1);
       expect(result.safe).toBe(false);
       expect(result.reason).toBe('moderation_unavailable');
+      expect(service.getAvailability().status).toBe('unavailable');
+      expect(service.isReady()).toBe(false);
     });
   });
 });

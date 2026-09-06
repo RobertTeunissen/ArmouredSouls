@@ -16,6 +16,14 @@ export interface ModerationResult {
   reason?: string;
 }
 
+export type ModerationAvailabilityStatus = 'starting' | 'ready' | 'unavailable';
+
+/** Player-safe availability data; operational failures are never exposed here. */
+export interface ModerationAvailability {
+  status: ModerationAvailabilityStatus;
+  changedAt: string;
+}
+
 interface ModerationThresholds {
   porn: number;
   hentai: number;
@@ -25,6 +33,9 @@ interface ModerationThresholds {
 class ContentModerationService {
   private model: nsfwjs.NSFWJS | null = null;
   private modelLoaded = false;
+  private initializationPromise: Promise<void> | null = null;
+  private status: ModerationAvailabilityStatus = 'starting';
+  private changedAt = new Date().toISOString();
 
   private moderationThresholds: ModerationThresholds = {
     porn: 0.3,
@@ -34,17 +45,59 @@ class ContentModerationService {
 
   private robotLikenessThreshold = 0.6;
 
+  /**
+   * Loads the model once for all concurrent callers. Failures remain observable so
+   * startup and recovery code can log and retry them rather than treating a failed
+   * load as a successful initialization.
+   */
   async initialize(): Promise<void> {
+    if (this.isReady()) return;
+    if (this.initializationPromise) return this.initializationPromise;
+
+    this.setStatus('starting');
+    const pendingInitialization = this.loadModel();
+    this.initializationPromise = pendingInitialization;
+    void pendingInitialization.then(
+      () => { this.initializationPromise = null; },
+      () => { this.initializationPromise = null; },
+    );
+    return pendingInitialization;
+  }
+
+  /** Marks moderation unavailable when this deployment intentionally does not load it. */
+  disable(): void {
+    this.model = null;
+    this.modelLoaded = false;
+    this.setStatus('unavailable');
+  }
+
+  getAvailability(): ModerationAvailability {
+    return { status: this.status, changedAt: this.changedAt };
+  }
+
+  private async loadModel(): Promise<void> {
     try {
       logger.info('Loading nsfwjs content moderation model...');
       this.model = await nsfwjs.load();
       this.modelLoaded = true;
+      this.setStatus('ready');
       logger.info('Content moderation model loaded successfully');
     } catch (error) {
-      this.model = null;
-      this.modelLoaded = false;
+      this.markUnavailable();
       logger.error('Failed to load content moderation model:', error);
+      throw error;
     }
+  }
+
+  private markUnavailable(): void {
+    this.model = null;
+    this.modelLoaded = false;
+    this.setStatus('unavailable');
+  }
+
+  private setStatus(status: ModerationAvailabilityStatus): void {
+    this.status = status;
+    this.changedAt = new Date().toISOString();
   }
 
   async classifyImage(buffer: Buffer): Promise<ModerationResult> {
@@ -106,6 +159,10 @@ class ContentModerationService {
 
       return result;
     } catch (error) {
+      // A valid image has already passed magic-byte and dimension validation before
+      // it reaches this service. A failure here means this process can no longer
+      // reliably moderate uploads, so invalidate readiness and let recovery reload it.
+      this.markUnavailable();
       logger.error('Error classifying image:', error);
       return {
         safe: false,
@@ -122,7 +179,7 @@ class ContentModerationService {
   }
 
   isReady(): boolean {
-    return this.modelLoaded;
+    return this.status === 'ready' && this.modelLoaded && this.model !== null;
   }
 
   private predictionsToScores(

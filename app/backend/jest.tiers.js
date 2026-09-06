@@ -107,7 +107,6 @@ const DB_DEPENDENT = [
   'src/services/economy/__tests__/unifiedFacilityROI.integration.test.ts',
   'src/services/economy/__tests__/unifiedFacilityROI.preservation.property.test.ts',
   'src/services/matchmaking/__tests__/deterministicTieBreaking.property.test.ts',
-  'src/services/moderation/__tests__/contentModerationService.test.ts',
   'tests/adminRepairAuditLog.test.ts',
   'tests/adminRobotStats.test.ts',
   'tests/analyticsApi.test.ts',

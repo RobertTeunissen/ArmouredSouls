@@ -22,6 +22,13 @@ interface WeaponSlot {
   };
 }
 
+export type ModerationAvailabilityStatus = 'starting' | 'ready' | 'unavailable';
+
+export interface ModerationAvailability {
+  status: ModerationAvailabilityStatus;
+  changedAt: string;
+}
+
 export interface Robot {
   id: number;
   name: string;
@@ -331,6 +338,11 @@ export const updateTuningAllocation = async (
 };
 
 // ─── Appearance ──────────────────────────────────────────────────────────────
+
+/** Fetch the player-safe availability state for custom image moderation. */
+export const fetchImageModerationStatus = async (): Promise<ModerationAvailability> => {
+  return api.get<ModerationAvailability>('/api/robots/image-moderation-status');
+};
 
 /**
  * Update a robot's appearance (preset image URL).
