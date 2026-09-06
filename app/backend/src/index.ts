@@ -229,7 +229,9 @@ if (shouldInitializeModeration) {
 
   initializeModeration();
   const moderationRecoveryTimer = setInterval(() => {
-    if (!contentModerationService.isReady()) initializeModeration();
+    if (contentModerationService.getAvailability().status === 'unavailable') {
+      initializeModeration();
+    }
   }, MODERATION_RECOVERY_INTERVAL_MS);
   moderationRecoveryTimer.unref();
 } else {

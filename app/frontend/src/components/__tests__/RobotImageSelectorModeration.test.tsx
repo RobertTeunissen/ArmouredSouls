@@ -32,9 +32,11 @@ describe('RobotImageSelector — moderation availability', () => {
     renderSelector();
     fireEvent.click(screen.getByRole('tab', { name: /upload/i }));
 
-    expect(await screen.findByRole('status')).toHaveTextContent(
-      'Custom image uploads are temporarily unavailable. Please try again later.',
-    );
+    await waitFor(() => {
+      expect(screen.getByRole('status')).toHaveTextContent(
+        'Custom image uploads are temporarily unavailable. Please try again later.',
+      );
+    });
     expect(screen.queryByLabelText('Choose File')).not.toBeInTheDocument();
     expect(api.get).toHaveBeenCalledWith('/api/robots/image-moderation-status');
   });
