@@ -545,7 +545,7 @@ async function executeSingleTeamBattle(
     });
 
     return battleRecord;
-  }); // End transaction (R7.11: rollback on failure)
+  }, { timeout: 30_000 }); // End transaction (R7.11: rollback on failure)
 
   // Write pre-computed battle summary (Spec #39 — outside transaction, non-blocking)
   const winningSide = team1Won ? 1 : team2Won ? 2 : null;

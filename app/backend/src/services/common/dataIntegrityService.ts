@@ -3,12 +3,6 @@ import logger from '../../config/logger';
 import { StableMetric } from '../../types/snapshotTypes';
 import { readCycleRepairSpend } from '../economy/repairPayloadKeys';
 import { collectFinancialIntegrityIssues } from './financialIntegrityDiagnostics';
-import {
-  classifyCycle,
-  getFinancialRolloutState,
-  type CutoverClassification,
-  type FinancialRolloutState,
-} from '../migration/financialRollout';
 
 export type IntegrityIssueType =
   | 'credit_mismatch'
@@ -27,14 +21,16 @@ export type IntegrityIssueType =
   | 'prestige_source_gap'
   | 'uncovered_direct_writer';
 
+export type FinancialEvidenceBoundary = 'identified_paired_capture';
+
 export interface IntegrityIssue {
   type: IntegrityIssueType;
   severity: 'warning' | 'error';
   message: string;
   details: Record<string, unknown>;
-  /** Pre-cutover findings are explicitly outside the new completeness claim. */
-  evidenceBoundary?: CutoverClassification;
-  completenessClaim?: 'included' | 'outside';
+  /** Financial evidence written by the deployed paired-capture path. */
+  evidenceBoundary?: FinancialEvidenceBoundary;
+  completenessClaim?: 'included';
 }
 
 export interface IntegrityReport {
@@ -43,10 +39,8 @@ export interface IntegrityReport {
   issues: IntegrityIssue[];
   timestamp: Date;
   checksPerformed: string[];
-  evidenceBoundary: CutoverClassification;
-  completenessClaim: 'included' | 'outside';
-  rolloutPhase: FinancialRolloutState['phase'];
-  cutoverCycle: number | null;
+  evidenceBoundary: FinancialEvidenceBoundary;
+  completenessClaim: 'included';
 }
 
 export class DataIntegrityService {
@@ -57,8 +51,7 @@ export class DataIntegrityService {
   async validateCycleIntegrity(cycleNumber: number): Promise<IntegrityReport> {
     const issues: IntegrityIssue[] = [];
     const checksPerformed: string[] = [];
-    const rollout = await getFinancialRolloutState();
-    const evidenceBoundary = classifyCycle(cycleNumber, rollout);
+    const evidenceBoundary: FinancialEvidenceBoundary = 'identified_paired_capture';
 
     // Check 1: Credit sum consistency
     checksPerformed.push('credit_sum_consistency');
@@ -75,20 +68,16 @@ export class DataIntegrityService {
     const completenessIssues = await this.checkEventCompleteness(cycleNumber);
     issues.push(...completenessIssues);
 
-    // Check 4: Forward-only financial evidence. The diagnostic is intentionally
-    // skipped before cutover; those rows remain Legacy_Record history outside
-    // the completeness claim and are never paired or reconstructed.
-    checksPerformed.push('financial_reconciliation_boundary');
-    if (evidenceBoundary === 'post_cutover') {
-      const financialIssues = await collectFinancialIntegrityIssues(cycleNumber, rollout);
-      issues.push(...financialIssues);
-    }
+    // Check 4: Paired financial evidence. Historical null-identity rows remain
+    // readable legacy data and are excluded by the diagnostic itself.
+    checksPerformed.push('financial_paired_capture');
+    const financialIssues = await collectFinancialIntegrityIssues(cycleNumber);
+    issues.push(...financialIssues);
 
     const labeledIssues = issues.map((currentIssue) => ({
       ...currentIssue,
       evidenceBoundary: currentIssue.evidenceBoundary ?? evidenceBoundary,
-      completenessClaim: currentIssue.completenessClaim
-        ?? (evidenceBoundary === 'post_cutover' ? 'included' : 'outside'),
+      completenessClaim: currentIssue.completenessClaim ?? 'included',
     }));
 
     return {
@@ -98,9 +87,7 @@ export class DataIntegrityService {
       timestamp: new Date(),
       checksPerformed,
       evidenceBoundary,
-      completenessClaim: evidenceBoundary === 'post_cutover' ? 'included' : 'outside',
-      rolloutPhase: rollout.phase,
-      cutoverCycle: rollout.cutoverCycle,
+      completenessClaim: 'included',
     };
   }
 

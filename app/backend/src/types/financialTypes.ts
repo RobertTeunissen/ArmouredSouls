@@ -24,7 +24,7 @@ export const TRANSACTION_TYPES = [
 
 export type TransactionType = (typeof TRANSACTION_TYPES)[number];
 
-/** Labels retained only for reading pre-cutover legacy rows. */
+/** Labels retained only for reading legacy rows without a financial identity. */
 export const LEGACY_TRANSACTION_TYPES = [
   'subscription_cost',
   'prestige_award',

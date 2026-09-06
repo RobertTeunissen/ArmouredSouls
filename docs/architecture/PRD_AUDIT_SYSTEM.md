@@ -202,19 +202,19 @@ A `Bye_Event` is resolved before absent-side loading or simulation. It writes on
 
 ### Settlement, administration, and lifecycle
 
-`Settlement_Service` is the sole mutating settlement path for the scheduler, admin bulk cycle, and supported daily-finance trigger. For each applicable stable and cycle it writes exactly one `passive_income` pair and one `operating_costs` pair, including zero-valued components with unchanged `balanceAfter`. Existing domain `passive_income`, `operating_costs`, snapshot, and response records remain compatible while the paired financial rows become the post-cutover accounting source. `/api/admin/audit-log` can query `financial_transaction`; `/api/admin/audit-log/repairs` remains focused on `robot_repair`; `/api/admin/economy/overview`, `/api/admin/daily-finances/process`, and `/api/admin/cycles/bulk` retain their existing response contracts while delegating internally.
+`Settlement_Service` is the sole mutating settlement path for the scheduler, admin bulk cycle, and supported daily-finance trigger. For each applicable stable and cycle it writes exactly one `passive_income` pair and one `operating_costs` pair, including zero-valued components with unchanged `balanceAfter`. Existing domain `passive_income`, `operating_costs`, snapshot, and response records remain compatible while identified paired financial rows provide the accounting source. `/api/admin/audit-log` can query `financial_transaction`; `/api/admin/audit-log/repairs` remains focused on `robot_repair`; `/api/admin/economy/overview`, `/api/admin/daily-finances/process`, and `/api/admin/cycles/bulk` retain their existing response contracts while delegating internally.
 
 Booking Office subscribe/unsubscribe operations are free and create only their existing subscription/domain records. Account creation, reset, season rollover, and explicit balance purge are `Opening_Balance_Boundary` operations, not financial income, expense, settlement, or adjustment events.
 
-### Forward-only cutover and canonical sources
+### Forward-only legacy boundary and canonical sources
 
-The new contract becomes authoritative at the selected `Cutover_Cycle` in `ACC` only after schema/client generation, writer migration, `Coverage_Manifest` checks, blocking test tiers, and required capture activation pass. Surviving pre-cutover ledger and audit rows remain unchanged and outside the completeness claim. No historical prestige, repair, battle, or settlement reconstruction is permitted; no one-off script or old payload fallback may manufacture a missing post-cutover event.
+The deployed backend applies the contract immediately to every new current-economy mutation, with no ACC-specific activation, cycle gate, feature flag, or operational command. Surviving rows without a financial identity remain unchanged `Legacy_Record` history and outside the paired-evidence completeness claim. No historical prestige, repair, battle, or settlement reconstruction is permitted; no one-off script or old payload fallback may manufacture a missing identified paired-capture event.
 
 The canonical-source map is:
 
 | Question | Canonical source |
 |---|---|
-| Post-cutover Credits amount, balance, taxonomy, or pair | Paired `FinancialLedger` and `AuditLog` `financial_transaction` rows by `financialEventId` |
+| Identified paired-capture Credits amount, balance, taxonomy, or pair | Paired `FinancialLedger` and `AuditLog` `financial_transaction` rows by `financialEventId` |
 | Repair spend and manual/automatic subtype | `AuditLog` `robot_repair` rows with `creditsCharged` and `repairType` |
 | Prestige growth and award history | `AuditLog` `prestige_change` rows by `sourceEventId` |
 | Subscription state/change | Booking Office records and existing subscription audit records |

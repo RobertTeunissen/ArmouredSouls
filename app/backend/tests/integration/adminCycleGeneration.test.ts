@@ -15,11 +15,11 @@ import dotenv from 'dotenv';
 import adminRoutes from '../../src/routes/admin';
 import { createTestUser, deleteTestUser } from '../testHelpers';
 import {
-  installPostCutoverFinancialRollout,
-  usePostCutoverFinancialRollout,
-} from '../financialRolloutTestHelper';
+  prepareFinancialCaptureTestEnvironment,
+  useFinancialCaptureTestEnvironment,
+} from '../financialCaptureTestHelper';
 
-usePostCutoverFinancialRollout();
+useFinancialCaptureTestEnvironment();
 
 dotenv.config();
 
@@ -341,11 +341,10 @@ describe('Admin Cycle Generation Integration Tests', () => {
     }, 30000);
 
     it('should auto-create CycleMetadata if missing', async () => {
-      // This deliberately verifies the service can recreate its singleton. Reinstall the
-      // scoped test rollout immediately afterwards so the event slots keep their real
-      // post-cutover paired-capture contract rather than exercising the pre-cutover guard.
+      // The singleton can be recreated without any additional fixture because
+      // paired financial capture is always enabled by the shared writer.
       await prisma.cycleMetadata.deleteMany({});
-      await installPostCutoverFinancialRollout();
+      await prepareFinancialCaptureTestEnvironment();
 
       const response = await request(app)
         .post('/api/admin/cycles/bulk')

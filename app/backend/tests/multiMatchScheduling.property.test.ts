@@ -10,9 +10,9 @@ import { executeScheduledTagTeamBattles } from '../src/services/tag-team/tagTeam
 
 // Test configuration
 import { enterTeamStanding } from './helpers/standings';
-import { usePostCutoverFinancialRollout } from './financialRolloutTestHelper';
+import { useFinancialCaptureTestEnvironment } from './financialCaptureTestHelper';
 
-usePostCutoverFinancialRollout();
+useFinancialCaptureTestEnvironment();
 
 const NUM_RUNS = 10;
 

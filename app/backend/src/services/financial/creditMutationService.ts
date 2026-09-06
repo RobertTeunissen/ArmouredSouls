@@ -10,14 +10,12 @@ import {
   type TransactionType,
 } from '../../types';
 import { withAuditSequence } from '../common/auditSequence';
-import {
-  assertPairedCaptureForCycle,
-  classifyCycle,
-  getFinancialRolloutState,
-} from '../migration/financialRollout';
-import { isEnabled } from '../migration/featureFlags';
 
 const FINANCIAL_AUDIT_EVENT = 'financial_transaction';
+// Paired mutations may wait for the per-cycle gapless audit-sequence lock.
+// Keep the deadline bounded, but above Prisma's five-second default so a
+// scheduled battle cannot expire after its balance mutation has started.
+const FINANCIAL_MUTATION_TRANSACTION_OPTIONS = { timeout: 30_000 } as const;
 
 type JsonRecord = Record<string, unknown>;
 
@@ -332,61 +330,6 @@ async function applyInsideTransaction(
   return result;
 }
 
-async function shouldUsePairedCapture(cycleNumber: number): Promise<boolean> {
-  const rollout = await getFinancialRolloutState();
-  if (classifyCycle(cycleNumber, rollout) === 'pre_cutover') {
-    return false;
-  }
-  await assertPairedCaptureForCycle(cycleNumber);
-  return true;
-}
-
-/**
- * Preserve the pre-cutover economy without claiming a post-cutover financial
- * pair. The shared service still owns the balance mutation, while the old
- * feature flag retains its optional legacy-ledger enrichment behavior.
- */
-async function applyLegacyInsideTransaction(
-  tx: Prisma.TransactionClient,
-  input: CreditMutationInput,
-): Promise<CreditMutationResult> {
-  const lockedUser = await lockUserForSpending(tx, input.userId);
-  const balanceAfter = lockedUser.currency + input.amount;
-  await tx.user.update({
-    where: { id: input.userId },
-    data: { currency: balanceAfter },
-  });
-
-  const legacyLedger = (await isEnabled('financial_ledger_active'))
-    ? await tx.financialLedger.create({
-      data: {
-        cycleNumber: input.cycleNumber,
-        userId: input.userId,
-        robotId: input.robotId ?? null,
-        transactionType: input.transactionType,
-        amount: input.amount,
-        balanceAfter,
-        description: input.description,
-        metadata: toJson(input.breakdown),
-      },
-    })
-    : null;
-
-  return {
-    created: true,
-    financialEventId: input.financialEventId,
-    ledgerId: legacyLedger?.id ?? 0,
-    auditLogId: 0n,
-    userId: input.userId,
-    robotId: input.robotId ?? null,
-    cycleNumber: input.cycleNumber,
-    transactionType: input.transactionType,
-    amount: input.amount,
-    balanceBefore: lockedUser.currency,
-    balanceAfter,
-  };
-}
-
 async function rereadAfterUniqueRace(
   input: CreditMutationInput,
 ): Promise<CreditMutationResult> {
@@ -399,7 +342,7 @@ async function rereadAfterUniqueRace(
       );
     }
     return resultFromExisting(existing, input);
-  });
+  }, FINANCIAL_MUTATION_TRANSACTION_OPTIONS);
 }
 
 /** Apply one financial mutation in a new interactive transaction. */
@@ -407,12 +350,11 @@ export async function applyCreditMutation(
   input: CreditMutationInput,
 ): Promise<CreditMutationResult> {
   assertMutationInput(input);
-  const pairedCapture = await shouldUsePairedCapture(input.cycleNumber);
-  if (!pairedCapture) {
-    return prisma.$transaction((tx) => applyLegacyInsideTransaction(tx, input));
-  }
   try {
-    return await prisma.$transaction((tx) => applyInsideTransaction(tx, input));
+    return await prisma.$transaction(
+      (tx) => applyInsideTransaction(tx, input),
+      FINANCIAL_MUTATION_TRANSACTION_OPTIONS,
+    );
   } catch (error) {
     if (isUniqueConstraintError(error)) {
       return rereadAfterUniqueRace(input);
@@ -427,9 +369,7 @@ export async function applyCreditMutationInTransaction(
   input: CreditMutationInput,
 ): Promise<CreditMutationResult> {
   assertMutationInput(input);
-  return (await shouldUsePairedCapture(input.cycleNumber))
-    ? applyInsideTransaction(tx, input)
-    : applyLegacyInsideTransaction(tx, input);
+  return applyInsideTransaction(tx, input);
 }
 
 export function canonicalizeFinancialFacts(value: unknown): string {

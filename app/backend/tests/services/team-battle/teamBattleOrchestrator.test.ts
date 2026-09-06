@@ -422,6 +422,10 @@ describe('teamBattleOrchestrator', () => {
       expect(result.results).toHaveLength(1);
       expect(result.results[0].status).toBe('completed');
       expect(result.results[0].battleId).toBe(99);
+      expect(mockTransaction).toHaveBeenCalledWith(
+        expect.any(Function),
+        { timeout: 30_000 },
+      );
 
       // Verify simulation was called
       expect(mockSimulateTeamBattle).toHaveBeenCalledTimes(1);

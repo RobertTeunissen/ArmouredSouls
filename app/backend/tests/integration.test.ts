@@ -8,9 +8,9 @@ import { executeScheduledBattles } from '../src/services/league/leagueBattleOrch
 import { runMatchmaking } from '../src/services/analytics/matchmakingService';
 import { rebalanceLeagues } from '../src/services/league/leagueRebalancingService';
 import { createLeagueCohort, deleteLeagueCohort, type LeagueCohort } from './helpers/leagueCohort';
-import { usePostCutoverFinancialRollout } from './financialRolloutTestHelper';
+import { useFinancialCaptureTestEnvironment } from './financialCaptureTestHelper';
 
-usePostCutoverFinancialRollout();
+useFinancialCaptureTestEnvironment();
 
 describe('Integration Test: Complete Daily Cycle', () => {
   let cohort: LeagueCohort;

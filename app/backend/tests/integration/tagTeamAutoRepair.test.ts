@@ -38,9 +38,9 @@ async function repairCreditsCharged(robotIds: number[]): Promise<number> {
 }
 import { executeScheduledTagTeamBattles } from '../../src/services/tag-team/tagTeamBattleOrchestrator';
 import { repairRobotsForEvent } from '../../src/services/economy/repairService';
-import { usePostCutoverFinancialRollout } from '../financialRolloutTestHelper';
+import { useFinancialCaptureTestEnvironment } from '../financialCaptureTestHelper';
 
-usePostCutoverFinancialRollout();
+useFinancialCaptureTestEnvironment();
 
 describe('Tag Team Auto-Repair Integration Test', () => {
   let testUserIds: number[] = [];
@@ -449,6 +449,6 @@ describe('Tag Team Auto-Repair Integration Test', () => {
     console.log('[Test] ✓ Battle proceeded and user went into negative currency');
 
     // Shared afterEach cleanup removes all tracked fixture rows, including the
-    // financial pairs and subtype-bearing repair audits created post-cutover.
+    // financial pairs and subtype-bearing repair audits created by the shared writer.
   });
 });

@@ -528,7 +528,7 @@ async function processGrandMeleeBattle(
         data: { streamingRevenue: streamingCalc.totalRevenue },
       });
     }
-  });
+  }, { timeout: 30_000 });
 
   // 15. Update Grand Melee robot stats + standings
   await batchUpdateGrandMeleeRobotStats(preparedParticipants, simResult.durationSeconds);

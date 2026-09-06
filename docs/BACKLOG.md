@@ -215,32 +215,17 @@ Let players test any weapon from the shop in practice battles, not just owned we
 
 Energy weapons bypass armor but shields resist them; ballistic shreds shields but armor blocks. Creates rock-paper-scissors dynamics that require owning multiple weapon types. Large scope — needs its own spec, careful balance work, and UI changes to communicate effectiveness. Synergizes with Arena Modifiers (#12) for meta variation.
 
-### #59 — Financial Ledger Coverage — Five Unwritten Transaction Types
-**Source**: Spec #48 investigation (Aug 2026) — found while establishing where repair spend comes from
-**Priority**: Low now, blocking later — the ledger is behind a default-off flag, so nothing is visibly wrong today, but anything built on it will be wrong until this is closed
+### #59 — Financial Ledger Coverage — Completed by Spec #53
+**Source**: Spec #48 investigation (Aug 2026), implemented by Spec #53
+**Status**: Complete — required paired capture is active from normal backend deployment
 
-`financial_ledger` is the intended transaction record for every credit movement. `financialService.ts` declares twelve `TransactionType` values. Six are actually written:
+Every new current-economy credit mutation now uses `Credit_Mutation_Service`. One atomic transaction updates `User.currency`, writes one `financial_ledger` accounting record, and writes one paired `financial_transaction` audit record with the same non-null `financialEventId`. There is no financial capture feature flag, rollout command, cycle gate, or aftercare step.
 
-| Written today | Where |
-|---|---|
-| `battle_income` | `awardCreditsWithLedger`, all battle orchestrators |
-| `weapon_purchase`, `weapon_sale`, `weapon_refinement` | `routes/weaponInventory.ts` |
-| `facility_upgrade` | `routes/facility.ts` |
-| `robot_creation` | `routes/robots.ts` |
+The closed production taxonomy is `battle_income`, `streaming_revenue`, `repair_cost`, `facility_upgrade`, `weapon_purchase`, `weapon_sale`, `weapon_refinement`, `robot_creation`, `attribute_upgrade`, `achievement_reward`, `passive_income`, and `operating_costs`. Free subscription changes do not create financial events, and prestige is kept in its own `prestige_change` audit record rather than a credit ledger row.
 
-Spec #48 adds `repair_cost`, making seven. **Five remain declared and never written**, and they are not all the same kind of gap — each needs a decision to implement or delete rather than a blanket "add the writes":
+Rows without `financialEventId` remain immutable legacy history. Reconciliation validates only identified paired evidence; it does not fabricate pairs, reconstruct historical amounts, or treat legacy rows as a completeness failure.
 
-- **`attribute_upgrade`** — a real credit spend (`commitUpgrades`, `POST /api/robots/:id/upgrades`) that never reaches the ledger. The most conspicuous remaining gap now that repairs are handled. Almost certainly implement.
-- **`settlement_adjustment`** — passive income and operating costs move credits at midnight settlement and are not ledgered. Implement, or decide the ledger is per-action only and settlement lives in `cycle_snapshots` alone.
-- **`streaming_revenue`** — awarded per robot per battle by `awardStreamingRevenue`. Battle rewards reach the ledger as `battle_income`, but streaming revenue is a separate award and does not. Implement.
-- **`subscription_cost`** — likely **obsolete rather than missing**. Spec #35 made subscribing free under the cap and unsubscribing free and always allowed, so there is no cost to record. Check whether this type should be deleted.
-- **`prestige_award`** — likely **misconceived**. Prestige is not credits and the ledger records credit movements with a `balanceAfter`. Check whether this type should be deleted rather than implemented.
-
-**Why this matters even though nothing looks broken.** `financial_ledger_active` in `services/migration/featureFlags.ts` defaults to `false`, and `financialService.recordTransaction` returns `null` when the flag is off, so no ledger row is written anywhere today. The ledger is dormant. The risk is switching it on later and building a report on a record that silently omits attribute upgrades, streaming revenue and settlement — the numbers would look plausible and be wrong.
-
-**Suggested sequencing**: close this before enabling `financial_ledger_active`, and treat "every credit-moving code path writes a ledger entry" as the gate for flipping the flag. A test asserting that every declared `TransactionType` has at least one writer would keep it closed.
-
-**Related**: Spec #48 (repair figures, adds `repair_cost`), Feature Flags (#15).
+**Related**: Spec #48 (repair figures), Spec #53 (financial ledger coverage).
 
 ### #60 — Dashboard Mobile Optimisation
 **Source**: Spec #48 review (Aug 2026) — the Overview_Row redesign satisfies its mobile requirements, but the review surfaced a whole-page problem that spec deliberately did not take on

@@ -7,9 +7,9 @@ import {
 } from '../src/services/league/leagueBattleOrchestrator';
 import schedulingService from '../src/services/scheduling/schedulingService';
 import { calculateELOChange } from '../src/utils/battleMath';
-import { usePostCutoverFinancialRollout } from './financialRolloutTestHelper';
+import { useFinancialCaptureTestEnvironment } from './financialCaptureTestHelper';
 
-usePostCutoverFinancialRollout();
+useFinancialCaptureTestEnvironment();
 
 /**
  * Book a queued 1v1 match and return it in the shape `processBattle` takes.

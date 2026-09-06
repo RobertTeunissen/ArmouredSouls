@@ -3,9 +3,9 @@ import { Prisma } from '../generated/prisma';
 import prisma from '../src/lib/prisma';
 import jwt from 'jsonwebtoken';
 import app from './testApp';
-import { usePostCutoverFinancialRollout } from './financialRolloutTestHelper';
+import { useFinancialCaptureTestEnvironment } from './financialCaptureTestHelper';
 
-usePostCutoverFinancialRollout();
+useFinancialCaptureTestEnvironment();
 
 
 describe('Training Academy Cap Enforcement', () => {

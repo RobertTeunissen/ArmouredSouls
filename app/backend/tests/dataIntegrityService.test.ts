@@ -1,7 +1,6 @@
 import prisma from '../src/lib/prisma';
 import { DataIntegrityService } from '../src/services/common/dataIntegrityService';
 import { EventLogger } from '../src/services/common/eventLogger';
-import { DEFAULT_ROLLOUT_STATE } from '../src/services/migration/financialRollout';
 
 const integrityService = new DataIntegrityService();
 const eventLogger = new EventLogger();
@@ -82,8 +81,8 @@ describe('DataIntegrityService', () => {
       expect(report.isValid).toBe(true);
       expect(report.issues).toHaveLength(0);
       expect(report.cycleNumber).toBe(cycleNumber);
-      expect(report.evidenceBoundary).toBe('pre_cutover');
-      expect(report.completenessClaim).toBe('outside');
+      expect(report.evidenceBoundary).toBe('identified_paired_capture');
+      expect(report.completenessClaim).toBe('included');
       expect(report.checksPerformed).toContain('credit_sum_consistency');
       expect(report.checksPerformed).toContain('sequence_number_continuity');
       expect(report.checksPerformed).toContain('event_completeness');
@@ -362,30 +361,10 @@ describe('DataIntegrityService', () => {
     });
   });
 
-  describe('post-cutover financial diagnostics', () => {
-    it('labels legacy cycles outside the claim and reports unpaired/invalid post-cutover evidence', async () => {
+  describe('identified paired financial diagnostics', () => {
+    it('reports unpaired and invalid identified financial evidence without a lifecycle boundary', async () => {
       const cycleNumber = cycleCounter++;
       testCycleNumbers.push(cycleNumber);
-      const rollout = {
-        ...DEFAULT_ROLLOUT_STATE,
-        phase: 'acc_cutover' as const,
-        schemaClientGenerated: true,
-        writerManifestComplete: true,
-        blockingTestsPassed: true,
-        requiredCaptureActive: true,
-        accCutoverRecorded: true,
-        cutoverCycle: cycleNumber,
-        reconciliationPassed: false,
-        documentationComplete: false,
-      };
-      const currentFlags = originalFeatureFlags && typeof originalFeatureFlags === 'object'
-        ? originalFeatureFlags as Record<string, unknown>
-        : {};
-      await prisma.cycleMetadata.upsert({
-        where: { id: 1 },
-        update: { featureFlags: { ...currentFlags, financial_rollout: rollout } as never },
-        create: { id: 1, featureFlags: { ...currentFlags, financial_rollout: rollout } as never },
-      });
 
       await prisma.financialLedger.create({
         data: {
@@ -414,14 +393,14 @@ describe('DataIntegrityService', () => {
       const report = await integrityService.validateCycleIntegrity(cycleNumber);
       const issueTypes = report.issues.map((currentIssue) => currentIssue.type);
 
-      expect(report.evidenceBoundary).toBe('post_cutover');
+      expect(report.evidenceBoundary).toBe('identified_paired_capture');
       expect(report.completenessClaim).toBe('included');
       expect(issueTypes).toContain('unpaired_ledger');
       expect(issueTypes).toContain('unpaired_financial_audit');
       expect(issueTypes).toContain('invalid_breakdown');
       expect(issueTypes).toContain('invalid_taxonomy');
       expect(report.issues.filter((currentIssue) => currentIssue.type === 'unpaired_ledger')[0])
-        .toMatchObject({ evidenceBoundary: 'post_cutover', completenessClaim: 'included' });
+        .toMatchObject({ evidenceBoundary: 'identified_paired_capture', completenessClaim: 'included' });
     });
   });
 
