@@ -15,6 +15,9 @@ const mockPrisma = {
     update: jest.fn().mockResolvedValue({}),
     findUnique: jest.fn().mockResolvedValue({ maxHP: 250 }),
   },
+  financialLedger: {
+    findUnique: jest.fn().mockResolvedValue(null),
+  },
   user: {
     update: jest.fn().mockResolvedValue({}),
   },
@@ -76,6 +79,7 @@ import {
   logBattleAuditEvent,
   updateRobotCombatStats,
   awardCreditsToUser,
+  awardCreditsWithLedger,
   awardPrestigeToUser,
   awardFameToRobot,
   ParticipantOutcome,
@@ -628,6 +632,59 @@ describe('awardCreditsToUser', () => {
 
     expect(mockApplyCreditMutation).not.toHaveBeenCalled();
     expect(mockPrisma.user.update).not.toHaveBeenCalled();
+  });
+});
+
+describe('awardCreditsWithLedger', () => {
+  it('should create distinct, robot-attributed tournament income mutations for one stable', async () => {
+    const options = {
+      battleId: 390777,
+      mode: 'tournament_1v1',
+      tier: 'tournament',
+      outcome: 'win',
+      participationFloor: 100,
+      winComponent: 50,
+      teamSize: 1,
+      isBye: false,
+    };
+
+    await awardCreditsWithLedger(11110, 150, 'battle_income', 42, 'Tournament battle reward', 2001, { battleId: 390777 }, options);
+    await awardCreditsWithLedger(
+      11110,
+      100,
+      'battle_income',
+      42,
+      'Tournament battle reward',
+      2002,
+      { battleId: 390777 },
+      { ...options, outcome: 'loss', participationFloor: 100, winComponent: 0 },
+    );
+    await awardCreditsWithLedger(
+      11110,
+      150,
+      'battle_income',
+      42,
+      'Tournament battle reward',
+      2001,
+      { battleId: 390777 },
+      options,
+    );
+
+    const [winnerMutation, loserMutation, winnerRetryMutation] = mockApplyCreditMutation.mock.calls.map(([input]) => input);
+    expect(winnerMutation).toMatchObject({
+      userId: 11110,
+      robotId: 2001,
+      financialEventId: 'battle:390777:11110:robot:2001:tournament_1v1:battle_income',
+    });
+    expect(loserMutation).toMatchObject({
+      userId: 11110,
+      robotId: 2002,
+      financialEventId: 'battle:390777:11110:robot:2002:tournament_1v1:battle_income',
+    });
+    expect(winnerMutation.breakdown.inputs).toContainEqual({
+      name: 'recipientRobotId', value: 2001, unit: 'id', source: 'battle_participant',
+    });
+    expect(winnerRetryMutation.financialEventId).toBe(winnerMutation.financialEventId);
   });
 });
 

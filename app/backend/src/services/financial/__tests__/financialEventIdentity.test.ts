@@ -12,6 +12,10 @@ describe('Financial_Event identity builders', () => {
   it('should make battle and streaming identities stable by source component', () => {
     expect(buildBattleIncomeEventId(10, 2, 'league_1v1')).toBe('battle:10:2:league_1v1:battle_income');
     expect(buildBattleIncomeEventId(10, 2, 'league_1v1')).toBe(buildBattleIncomeEventId(10, 2, 'league_1v1'));
+    expect(buildBattleIncomeEventId(10, 2, 'tournament_1v1', 20)).toBe('battle:10:2:robot:20:tournament_1v1:battle_income');
+    expect(buildBattleIncomeEventId(10, 2, 'tournament_1v1', 20)).not.toBe(
+      buildBattleIncomeEventId(10, 2, 'tournament_1v1', 21),
+    );
     expect(buildStreamingEventId(10, 20, 'league_1v1')).toBe('streaming:10:20:league_1v1:streaming_revenue');
     expect(buildByeBattleIncomeEventId(99, 2, 'koth')).toBe('bye:99:2:koth:battle_income');
   });

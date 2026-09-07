@@ -23,11 +23,13 @@ export function buildBattleIncomeEventId(
   battleId: string | number,
   stableId: number,
   mode: string,
+  recipientRobotId?: number,
 ): string {
   return identity([
     'battle',
     component(battleId, 'battleId'),
     component(stableId, 'stableId'),
+    ...(recipientRobotId === undefined ? [] : ['robot', component(recipientRobotId, 'recipientRobotId')]),
     component(mode, 'mode'),
     'battle_income',
   ]);

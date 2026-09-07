@@ -25,7 +25,7 @@ import { eventLogger, EventType } from '../common/eventLogger';
 import { getCurrentCycleNumber } from './baseOrchestrator';
 import { achievementService, type AchievementEvent, type UnlockedAchievement } from '../achievement';
 import { applyCreditMutation, applyCreditMutationInTransaction } from '../financial/creditMutationService';
-import { buildBattleIncomeEventId, buildBattlePrestigeEventId } from '../financial/financialEventIdentity';
+import { buildBattleIncomeEventId, buildBattlePrestigeEventId, buildStreamingEventId } from '../financial/financialEventIdentity';
 import { applyPrestigeAward, applyPrestigeAwardInTransaction } from '../financial/prestigeService';
 import type {
   BattleIncomeBreakdown,
@@ -88,18 +88,27 @@ export async function awardStreamingRevenueForParticipant(
 ): Promise<StreamingRevenueCalculation | null> {
   if (isByeMatch) return null;
 
+  const financialEventId = buildStreamingEventId(battleId, robotId, mode);
+  const existingRevenue = await prisma.financialLedger.findUnique({
+    where: { financialEventId },
+    select: { amount: true },
+  });
   const calc = await calculateStreamingRevenue(robotId, userId, false);
   if (!calc) return null;
 
-  // Apply team-size divisor: each teammate gets an equal share
-  if (teamSize > 1) {
-    calc.totalRevenue = Math.floor(calc.totalRevenue / teamSize);
+  // The financial event is the durable source of a prior award. Do not
+  // recalculate mutable robot/facility facts into a conflicting retry.
+  if (existingRevenue) {
+    calc.totalRevenue = existingRevenue.amount;
+  } else {
+    // Apply team-size divisor: each teammate gets an equal share.
+    if (teamSize > 1) {
+      calc.totalRevenue = Math.floor(calc.totalRevenue / teamSize);
+    }
+    const cycleNumber = await getCurrentCycleNumber();
+    await awardBattleStreamingRevenue(userId, calc, cycleNumber, battleId, mode);
   }
 
-  const cycleNumber = await getCurrentCycleNumber();
-  await awardBattleStreamingRevenue(userId, calc, cycleNumber, battleId, mode);
-
-  // Update participant record
   await prisma.battleParticipant.update({
     where: { battleId_robotId: { battleId, robotId } },
     data: { streamingRevenue: calc.totalRevenue },
@@ -139,6 +148,7 @@ export async function logBattleAuditEvent(
   streamingRevenue: number,
   isByeMatch: boolean,
   extras: AuditEventExtras = {},
+  sourceEventId?: string,
 ): Promise<void> {
   const cycleNumber = await getCurrentCycleNumber();
   const result = participant.isDraw ? 'draw' : (participant.isWinner ? 'win' : 'loss');
@@ -181,6 +191,7 @@ export async function logBattleAuditEvent(
       userId: participant.userId,
       robotId: participant.robotId,
       battleId: battle.id,
+      sourceEventId,
     },
   );
 }
@@ -427,6 +438,7 @@ function buildBattleBreakdown(
   amount: number,
   sourceEventId: string,
   options: BattleCreditAwardOptions,
+  recipientRobotId?: number,
 ): BattleIncomeBreakdown {
   const placementRewardComponents = options.placementRewardComponents;
   const usesPlacementComponents = placementRewardComponents !== undefined;
@@ -438,6 +450,9 @@ function buildBattleBreakdown(
       { name: 'participationFloor', value: options.participationFloor ?? amount, unit: 'credits', source: 'battle_reward' },
       { name: 'winComponent', value: options.winComponent ?? 0, unit: 'credits', source: 'battle_reward' },
       { name: 'teamSize', value: options.teamSize ?? 1, unit: 'robots', source: 'battle_context' },
+      ...(recipientRobotId === undefined
+        ? []
+        : [{ name: 'recipientRobotId', value: recipientRobotId, unit: 'id', source: 'battle_participant' }]),
       ...(usesPlacementComponents
         ? [{ name: 'placementRewardTotal', value: amount, unit: 'credits', source: 'per_robot_placement_awards' }]
         : []),
@@ -502,16 +517,17 @@ export async function awardCreditsWithLedger(
   const sourceEventId = options.sourceEventId
     ?? (typeof metadata?.sourceEventId === 'string' ? metadata.sourceEventId : undefined)
     ?? (options.battleId !== undefined
-      ? buildBattleIncomeEventId(options.battleId, userId, options.mode ?? 'unknown')
+      ? buildBattleIncomeEventId(options.battleId, userId, options.mode ?? 'unknown', robotId)
       : `battle:legacy:${cycleNumber}:${userId}:${amount}`);
-  const breakdown = buildBattleBreakdown(amount, sourceEventId, options);
+  const breakdown = buildBattleBreakdown(amount, sourceEventId, options, robotId);
 
   const mutationInput = {
     cycleNumber,
     userId,
-    // Battle income is stable-aggregated. The optional robotId remains context
-    // for old call sites but is not stored on the stable-level mutation.
-    robotId: undefined,
+    // A robot recipient makes fought-battle income independently idempotent when
+    // multiple sides belong to the same stable. Aggregate writers intentionally
+    // omit it and retain the stable-level event identity.
+    robotId,
     transactionType: 'battle_income' as const,
     amount,
     description,
