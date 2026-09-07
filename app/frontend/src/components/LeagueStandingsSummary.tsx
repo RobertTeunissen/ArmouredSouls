@@ -21,6 +21,52 @@ interface KothStanding {
 // KotH and Grand Melee share the same shape
 type GrandMeleeStanding = KothStanding;
 
+type TeamEventType = 'league_2v2' | 'tag_team' | 'league_3v3';
+
+interface TeamReadiness {
+  isReady: boolean;
+  label: string;
+}
+
+/** Mirrors team scheduling prerequisites that are available in the team payload. */
+function getTeamReadiness(team: TeamBattle, eventType: TeamEventType): TeamReadiness {
+  if (team.members.length !== team.teamSize) {
+    return { isReady: false, label: 'Incomplete team' };
+  }
+
+  const allMembersHaveWeapons = team.members.every(({ robot }) => {
+    const requiresOffhand = robot.loadoutType === 'dual_wield' || robot.loadoutType === 'weapon_shield';
+    const hasValidLoadout = robot.loadoutType === 'single'
+      || robot.loadoutType === 'two_handed'
+      || requiresOffhand;
+    return hasValidLoadout
+      && robot.mainWeaponId !== null
+      && (!requiresOffhand || robot.offhandWeaponId !== null);
+  });
+  if (!allMembersHaveWeapons) {
+    return { isReady: false, label: 'Missing weapons' };
+  }
+
+  const allMembersSubscribed = team.members.every(({ robot }) =>
+    robot.subscriptions?.some(subscription =>
+      subscription.eventType === eventType && subscription.status === 'active',
+    ) ?? false,
+  );
+  return allMembersSubscribed
+    ? { isReady: true, label: 'Ready' }
+    : { isReady: false, label: 'Not subscribed' };
+}
+
+function TeamReadinessBadge({ readiness }: { readiness: TeamReadiness }) {
+  return (
+    <span className={`text-xs px-1.5 py-0.5 rounded ${
+      readiness.isReady ? 'bg-[#3fb950]/20 text-[#3fb950]' : 'bg-[#f85149]/20 text-[#f85149]'
+    }`}>
+      {readiness.isReady ? '✓' : '✗'} {readiness.label}
+    </span>
+  );
+}
+
 function LeagueStandingsSummary() {
   const { logout } = useAuth();
   const navigate = useNavigate();
@@ -187,9 +233,10 @@ function LeagueStandingsSummary() {
               League
             </div>
             <div className="space-y-1.5">
-              {teams2v2.map(team => (
-                <TeamStandingCard key={team.id} team={team} />
-              ))}
+              {teams2v2.map(team => {
+                const readiness = getTeamReadiness(team, 'league_2v2');
+                return <TeamStandingCard key={team.id} team={team} readiness={readiness} />;
+              })}
             </div>
           </div>
         )}
@@ -202,9 +249,10 @@ function LeagueStandingsSummary() {
               League
             </div>
             <div className="space-y-1.5">
-              {teams2v2.map(team => (
-                <TagTeamStandingCard key={`tt-${team.id}`} team={team} />
-              ))}
+              {teams2v2.map(team => {
+                const readiness = getTeamReadiness(team, 'tag_team');
+                return <TagTeamStandingCard key={`tt-${team.id}`} team={team} readiness={readiness} />;
+              })}
             </div>
           </div>
         )}
@@ -217,9 +265,10 @@ function LeagueStandingsSummary() {
               League
             </div>
             <div className="space-y-1.5">
-              {teams3v3.map(team => (
-                <TeamStandingCard key={team.id} team={team} />
-              ))}
+              {teams3v3.map(team => {
+                const readiness = getTeamReadiness(team, 'league_3v3');
+                return <TeamStandingCard key={team.id} team={team} readiness={readiness} />;
+              })}
             </div>
           </div>
         )}
@@ -333,9 +382,10 @@ function RobotStandingCard({ robot, isSubscribed }: RobotStandingCardProps) {
 
 interface TeamStandingCardProps {
   team: TeamBattle;
+  readiness: TeamReadiness;
 }
 
-function TeamStandingCard({ team }: TeamStandingCardProps) {
+function TeamStandingCard({ team, readiness }: TeamStandingCardProps) {
   const tierColor = getLeagueTierColor(team.teamLeague);
   const tierName = getLeagueTierName(team.teamLeague);
   const totalMatches = team.totalLeagueWins + team.totalLeagueLosses + team.totalLeagueDraws;
@@ -362,12 +412,16 @@ function TeamStandingCard({ team }: TeamStandingCardProps) {
             <span className="ml-2 text-secondary">({totalMatches})</span>
           )}
         </div>
+        <div className="flex-shrink-0">
+          <TeamReadinessBadge readiness={readiness} />
+        </div>
       </div>
 
       {/* Mobile */}
       <div className="md:hidden">
         <div className="flex items-center justify-between mb-1">
           <div className="font-medium text-sm text-[#e6edf3] truncate">{team.teamName}</div>
+          <TeamReadinessBadge readiness={readiness} />
         </div>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -387,7 +441,7 @@ function TeamStandingCard({ team }: TeamStandingCardProps) {
   );
 }
 
-function TagTeamStandingCard({ team }: TeamStandingCardProps) {
+function TagTeamStandingCard({ team, readiness }: TeamStandingCardProps) {
   const tierColor = getLeagueTierColor(team.tagTeamLeague || 'bronze');
   const tierName = getLeagueTierName(team.tagTeamLeague || 'bronze');
   const totalMatches = (team.totalTagTeamWins || 0) + (team.totalTagTeamLosses || 0) + (team.totalTagTeamDraws || 0);
@@ -414,12 +468,16 @@ function TagTeamStandingCard({ team }: TeamStandingCardProps) {
             <span className="ml-2 text-secondary">({totalMatches})</span>
           )}
         </div>
+        <div className="flex-shrink-0">
+          <TeamReadinessBadge readiness={readiness} />
+        </div>
       </div>
 
       {/* Mobile */}
       <div className="md:hidden">
         <div className="flex items-center justify-between mb-1">
           <div className="font-medium text-sm text-[#e6edf3] truncate">{team.teamName}</div>
+          <TeamReadinessBadge readiness={readiness} />
         </div>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">

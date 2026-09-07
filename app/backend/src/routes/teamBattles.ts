@@ -89,6 +89,9 @@ router.get(
                 maxHP: true,
                 currentShield: true,
                 maxShield: true,
+                loadoutType: true,
+                mainWeaponId: true,
+                offhandWeaponId: true,
                 subscriptions: {
                   select: { eventType: true, status: true },
                 },

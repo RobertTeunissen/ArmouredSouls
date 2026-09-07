@@ -23,6 +23,9 @@ export interface TeamBattleRobot {
   maxHP: number;
   currentShield: number | null;
   maxShield: number | null;
+  loadoutType: string;
+  mainWeaponId: number | null;
+  offhandWeaponId: number | null;
   subscriptions?: { eventType: string; status: string }[];
 }
 

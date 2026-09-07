@@ -236,3 +236,94 @@ describe('LeagueStandingsSummary', () => {
     expect(outerContainer).toBeTruthy();
   });
 });
+
+describe('LeagueStandingsSummary team readiness badges', () => {
+  const createMember = (
+    memberId: number,
+    robotId: number,
+    subscriptions: Array<{ eventType: string; status: string }>,
+    loadoutType: string = 'single',
+    offhandWeaponId: number | null = null,
+  ) => ({
+    id: memberId,
+    teamId: 10,
+    robotId,
+    slotIndex: memberId - 1,
+    robot: {
+      id: robotId,
+      name: `Robot ${robotId}`,
+      elo: 1500,
+      currentHP: 1000,
+      maxHP: 1000,
+      currentShield: 0,
+      maxShield: 0,
+      loadoutType,
+      mainWeaponId: 100 + robotId,
+      offhandWeaponId,
+      subscriptions,
+    },
+  });
+
+  const createTeam = (members: ReturnType<typeof createMember>[]) => ({
+    id: 10,
+    stableId: 1,
+    teamSize: 2,
+    teamName: 'Ready Duo',
+    teamLp: 85,
+    teamLeague: 'silver',
+    teamLeagueId: 'inst-1',
+    cyclesInLeague: 10,
+    totalLeagueWins: 8,
+    totalLeagueLosses: 3,
+    totalLeagueDraws: 1,
+    tagTeamLp: 40,
+    tagTeamLeague: 'bronze',
+    tagTeamLeagueId: 'tag-1',
+    totalTagTeamWins: 2,
+    totalTagTeamLosses: 1,
+    totalTagTeamDraws: 0,
+    createdAt: '2024-01-01',
+    updatedAt: '2024-01-01',
+    members,
+    isLockedForBattle: false,
+  });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(localStorage.getItem).mockReturnValue('mock-token');
+  });
+
+  it('should show mode-specific readiness when a 2v2 team is not subscribed to tag team', async () => {
+    vi.mocked(getMyTeamBattles).mockResolvedValue([
+      createTeam([
+        createMember(1, 101, [
+          { eventType: 'league_2v2', status: 'active' },
+          { eventType: 'tag_team', status: 'active' },
+        ]),
+        createMember(2, 102, [{ eventType: 'league_2v2', status: 'active' }]),
+      ]),
+    ]);
+
+    renderWithRouter();
+
+    await waitFor(() => {
+      expect(screen.getAllByText('✓ Ready').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('✗ Not subscribed').length).toBeGreaterThan(0);
+    });
+  });
+
+  it('should show missing weapons when a dual-wield member has no offhand weapon', async () => {
+    vi.mocked(getMyTeamBattles).mockResolvedValue([
+      createTeam([
+        createMember(1, 101, [{ eventType: 'league_2v2', status: 'active' }], 'dual_wield'),
+        createMember(2, 102, [{ eventType: 'league_2v2', status: 'active' }]),
+      ]),
+    ]);
+
+    renderWithRouter();
+
+    await waitFor(() => {
+      expect(screen.getAllByText('✗ Missing weapons').length).toBeGreaterThan(0);
+    });
+  });
+});
