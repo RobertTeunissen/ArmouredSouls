@@ -254,7 +254,14 @@ import { createEconomicRequestIdentity, findEconomicRequestReplay, buildEconomic
 import { buildPurchaseBreakdown } from '../financial/financialBreakdowns';
 import { getCurrentCycleNumber } from '../battle/baseOrchestrator';
 
-const FACILITY_TYPES = ['training_facility', 'combat_training_academy', 'defense_training_academy', 'mobility_training_academy', 'ai_training_academy'] as const;
+const FACILITY_TYPES = [
+  'training_facility',
+  'roster_expansion',
+  'combat_training_academy',
+  'defense_training_academy',
+  'mobility_training_academy',
+  'ai_training_academy',
+] as const;
 
 function extractAcademyLevels(facilities: Array<{ facilityType: string; level: number }>): AcademyLevels {
   return {
