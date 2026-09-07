@@ -1,0 +1,132 @@
+diff --git a/dist/kernels/TopK.js b/dist/kernels/TopK.js
+index c701385358f97171c7294dc55dbb7b373abc2231..e4c9502a9565baab0067479952be72fa1f19eb3b 100644
+--- a/dist/kernels/TopK.js
++++ b/dist/kernels/TopK.js
+@@ -18,7 +18,6 @@
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.topKConfig = void 0;
+ var tfjs_1 = require("@tensorflow/tfjs");
+-var util_1 = require("util");
+ var nodejs_kernel_backend_1 = require("../nodejs_kernel_backend");
+ exports.topKConfig = {
+     kernelName: tfjs_1.TopK,
+@@ -27,8 +26,8 @@ exports.topKConfig = {
+         var x = args.inputs.x;
+         var backend = args.backend;
+         var _a = args.attrs, k = _a.k, sorted = _a.sorted;
+-        var kCount = (0, util_1.isNullOrUndefined)(k) ? 1 : k;
+-        var isSorted = (0, util_1.isNullOrUndefined)(sorted) ? true : sorted;
++        var kCount = k !== null && k !== void 0 ? k : 1;
++        var isSorted = sorted !== null && sorted !== void 0 ? sorted : true;
+         var opAttrs = [
+             { name: 'sorted', type: backend.binding.TF_ATTR_BOOL, value: isSorted },
+             (0, nodejs_kernel_backend_1.createTensorsTypeOpAttr)('T', x.dtype),
+diff --git a/dist/nodejs_kernel_backend.js b/dist/nodejs_kernel_backend.js
+index 988ea4e668b1c2bb29640fc0184893325629f675..f88f6dae5a88349ba0410dc03f260b4a6292dd52 100644
+--- a/dist/nodejs_kernel_backend.js
++++ b/dist/nodejs_kernel_backend.js
+@@ -70,7 +70,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.ensureTensorflowBackend = exports.createOpAttr = exports.createTensorsTypeOpAttr = exports.getTFDType = exports.nodeBackend = exports.NodeJSKernelBackend = void 0;
+ var tf = require("@tensorflow/tfjs");
+ var tfjs_1 = require("@tensorflow/tfjs");
+-var util_1 = require("util");
+ var int64_tensors_1 = require("./int64_tensors");
+ // tslint:disable-next-line:no-require-imports
+ var messages = require('./proto/api_pb');
+@@ -672,7 +671,7 @@ exports.getTFDType = getTFDType;
+  * Tensors.
+  */
+ function createTensorsTypeOpAttr(attrName, tensorsOrDtype) {
+-    if ((0, util_1.isNullOrUndefined)(tensorsOrDtype)) {
++    if (tensorsOrDtype === null || tensorsOrDtype === undefined) {
+         throw new Error('Invalid input tensors value.');
+     }
+     return {
+@@ -686,7 +685,7 @@ function createTensorsTypeOpAttr(attrName, tensorsOrDtype) {
+ exports.createTensorsTypeOpAttr = createTensorsTypeOpAttr;
+ // TODO(yassogba) remove? who uses this?
+ function createOpAttr(attrName, tensorsOrDtype, value) {
+-    if ((0, util_1.isNullOrUndefined)(tensorsOrDtype)) {
++    if (tensorsOrDtype === null || tensorsOrDtype === undefined) {
+         throw new Error('Invalid input tensors value.');
+     }
+     return { name: attrName, type: nodeBackend().binding.TF_BOOL, value: value };
+@@ -694,10 +693,10 @@ function createOpAttr(attrName, tensorsOrDtype, value) {
+ exports.createOpAttr = createOpAttr;
+ /** Returns the dtype number for a single or list of input Tensors. */
+ function getTFDTypeForInputs(tensors) {
+-    if ((0, util_1.isNullOrUndefined)(tensors)) {
++    if (tensors === null || tensors === undefined) {
+         throw new Error('Invalid input tensors value.');
+     }
+-    if ((0, util_1.isArray)(tensors)) {
++    if (Array.isArray(tensors)) {
+         for (var i = 0; i < tensors.length; i++) {
+             return getTFDType(tensors[i].dtype);
+         }
+diff --git a/src/kernels/TopK.ts b/src/kernels/TopK.ts
+index 9b581ffbd40dd30d327855a1ab7fb0662ff605fc..9f77169e1f0c42c2d31ada4845d855a949a16dee 100644
+--- a/src/kernels/TopK.ts
++++ b/src/kernels/TopK.ts
+@@ -16,7 +16,6 @@
+  */
+ 
+ import {KernelConfig, scalar, TopK, TopKAttrs, TopKInputs} from '@tensorflow/tfjs';
+-import {isNullOrUndefined} from 'util';
+ 
+ import {createTensorsTypeOpAttr, NodeJSKernelBackend} from '../nodejs_kernel_backend';
+ 
+@@ -28,8 +27,8 @@ export const topKConfig: KernelConfig = {
+     const backend = args.backend as NodeJSKernelBackend;
+     const {k, sorted} = args.attrs as unknown as TopKAttrs;
+ 
+-    const kCount = isNullOrUndefined(k) ? 1 : k;
+-    const isSorted = isNullOrUndefined(sorted) ? true : sorted;
++    const kCount = k ?? 1;
++    const isSorted = sorted ?? true;
+     const opAttrs = [
+       {name: 'sorted', type: backend.binding.TF_ATTR_BOOL, value: isSorted},
+       createTensorsTypeOpAttr('T', x.dtype),
+diff --git a/src/nodejs_kernel_backend.ts b/src/nodejs_kernel_backend.ts
+index a399d31bfa0cbd1424c87482772d0f574a2706c8..a192f3138540a0f8ade783aa494bca326a77ed17 100644
+--- a/src/nodejs_kernel_backend.ts
++++ b/src/nodejs_kernel_backend.ts
+@@ -17,7 +17,6 @@
+ 
+ import * as tf from '@tensorflow/tfjs';
+ import {backend_util, BackendTimingInfo, DataId, DataType, KernelBackend, ModelTensorInfo, Rank, Scalar, scalar, ScalarLike, Tensor, Tensor1D, Tensor2D, Tensor3D, Tensor4D, TensorInfo, tidy, util} from '@tensorflow/tfjs';
+-import {isArray, isNullOrUndefined} from 'util';
+ 
+ import {encodeInt32ArrayAsInt64, Int64Scalar} from './int64_tensors';
+ import {TensorMetadata, TFEOpAttr, TFJSBinding} from './tfjs_binding';
+@@ -740,7 +739,7 @@ export function getTFDType(dataType: tf.DataType): number {
+ export function createTensorsTypeOpAttr(
+     attrName: string,
+     tensorsOrDtype: tf.Tensor|tf.Tensor[]|tf.DataType): TFEOpAttr {
+-  if (isNullOrUndefined(tensorsOrDtype)) {
++  if (tensorsOrDtype === null || tensorsOrDtype === undefined) {
+     throw new Error('Invalid input tensors value.');
+   }
+   return {
+@@ -757,7 +756,7 @@ export function createTensorsTypeOpAttr(
+ export function createOpAttr(
+     attrName: string, tensorsOrDtype: tf.Tensor|tf.Tensor[]|tf.DataType,
+     value: ScalarLike): TFEOpAttr {
+-  if (isNullOrUndefined(tensorsOrDtype)) {
++  if (tensorsOrDtype === null || tensorsOrDtype === undefined) {
+     throw new Error('Invalid input tensors value.');
+   }
+   return {name: attrName, type: nodeBackend().binding.TF_BOOL, value};
+@@ -765,10 +764,10 @@ export function createOpAttr(
+ 
+ /** Returns the dtype number for a single or list of input Tensors. */
+ function getTFDTypeForInputs(tensors: tf.Tensor|tf.Tensor[]): number {
+-  if (isNullOrUndefined(tensors)) {
++  if (tensors === null || tensors === undefined) {
+     throw new Error('Invalid input tensors value.');
+   }
+-  if (isArray(tensors)) {
++  if (Array.isArray(tensors)) {
+     for (let i = 0; i < tensors.length; i++) {
+       return getTFDType(tensors[i].dtype);
+     }

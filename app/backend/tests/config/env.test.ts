@@ -109,6 +109,26 @@ describe('Env overrides are respected (R1.5)', () => {
   });
 });
 
+describe('Moderation configuration', () => {
+  test('should parse ENABLE_MODERATION=false as disabled for local environments', () => {
+    process.env.NODE_ENV = 'development';
+    process.env.ENABLE_MODERATION = 'false';
+
+    const config = loadEnvConfig();
+
+    expect(config.enableModeration).toBe(false);
+  });
+
+  test('should parse ENABLE_MODERATION=true as enabled for local environments', () => {
+    process.env.NODE_ENV = 'test';
+    process.env.ENABLE_MODERATION = 'true';
+
+    const config = loadEnvConfig();
+
+    expect(config.enableModeration).toBe(true);
+  });
+});
+
 describe('All 5 new schedule fields are exposed on EnvConfig (R1.3, R1.4)', () => {
   test('config object has all new schedule fields', () => {
     const config = loadEnvConfig();

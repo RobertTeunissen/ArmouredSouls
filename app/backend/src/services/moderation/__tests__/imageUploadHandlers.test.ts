@@ -260,6 +260,8 @@ describe('handleImagePreview', () => {
 
     expect(res.status).toHaveBeenCalledWith(503);
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ code: 'MODERATION_UNAVAILABLE' }));
+    expect(mockImageProcessing.processImage).not.toHaveBeenCalled();
+    expect(mockCache.store).not.toHaveBeenCalled();
   });
 
   it('should produce no disk writes during preview', async () => {

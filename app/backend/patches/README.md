@@ -27,3 +27,7 @@ the patch file in this directory automatically.
 - Keep patches minimal — only the change you intend.
 - Document the rationale in this file.
 - Review patches on every major version bump of the patched package.
+
+## `@tensorflow/tfjs-node@4.22.0` Node 24 compatibility
+
+`@tensorflow/tfjs-node@4.22.0` calls Node utility APIs removed in Node 24, which breaks model loading and inference. This patch carries the narrowly scoped upstream fix from [tensorflow/tfjs#8425](https://github.com/tensorflow/tfjs/pull/8425) until a release includes it. Replace and remove this patch when upgrading to a verified compatible upstream release. Content was rephrased for compliance with licensing restrictions.

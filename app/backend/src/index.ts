@@ -32,7 +32,11 @@ import adminSeasonsRoutes from './routes/adminSeasons';
 import { loadEnvConfig } from './config/env';
 import { initScheduler } from './services/cycle/cycleScheduler';
 import { registerSubscribableEvent } from './services/subscription/eventRegistry';
-import { contentModerationService } from './services/moderation';
+import {
+  contentModerationService,
+  shouldInitializeModeration,
+  startModerationLifecycle,
+} from './services/moderation';
 import { getDiskUsage, getMemoryUsage, checkCriticalModules } from './utils/systemHealth';
 import { sendMonitoringAlert } from './utils/monitoringWebhook';
 import { initDailyHealthReport } from './services/monitoring/dailyHealthReport';
@@ -211,33 +215,14 @@ app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads'), {
 // Error handling middleware
 app.use(errorHandler);
 
-// Initialize content moderation model — skip in development unless explicitly enabled
-// TF.js pure-JS backend blocks the Node event loop and adds ~5-13s latency to every request.
-// Keep the application online while it loads, but make the state explicit and retry a
-// failed load so custom uploads recover without a deployment restart.
-const MODERATION_RECOVERY_INTERVAL_MS = 60_000;
-const shouldInitializeModeration = config.nodeEnv === 'production'
-  || config.nodeEnv === 'acceptance'
-  || config.enableModeration;
-
-if (shouldInitializeModeration) {
-  const initializeModeration = (): void => {
-    void contentModerationService.initialize().catch((err: unknown) => {
-      logger.error('Failed to initialize content moderation service; retrying automatically:', err);
-    });
-  };
-
-  initializeModeration();
-  const moderationRecoveryTimer = setInterval(() => {
-    if (contentModerationService.getAvailability().status === 'unavailable') {
-      initializeModeration();
-    }
-  }, MODERATION_RECOVERY_INTERVAL_MS);
-  moderationRecoveryTimer.unref();
-} else {
-  contentModerationService.disable();
-  logger.info('Content moderation model skipped in development (set ENABLE_MODERATION=true to enable)');
-}
+// Production and acceptance automatically initialize moderation. Development and
+// test can opt in with ENABLE_MODERATION=true; unavailable moderation blocks custom
+// image uploads with 503 rather than allowing unchecked uploads.
+startModerationLifecycle({
+  enabled: shouldInitializeModeration(config),
+  service: contentModerationService,
+  logger,
+});
 
 // Populate achievement rarity cache on startup so /api/achievements has rarity data immediately
 import { achievementService } from './services/achievement';

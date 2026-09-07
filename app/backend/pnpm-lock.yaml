@@ -9,6 +9,11 @@ overrides:
   tar: '>=6.2.2'
   js-yaml: '>=4.2.0'
 
+patchedDependencies:
+  '@tensorflow/tfjs-node@4.22.0':
+    hash: 582d9944c4a55753b4f763f2bdb711d96815fe1b2caaffc34f2e054d71044b48
+    path: patches/@tensorflow__tfjs-node@4.22.0.patch
+
 importers:
 
   .:
@@ -21,7 +26,7 @@ importers:
         version: 7.8.0(prisma@7.8.0(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(typescript@6.0.3))(typescript@6.0.3)
       '@tensorflow/tfjs-node':
         specifier: ^4.22.0
-        version: 4.22.0(seedrandom@3.0.5)
+        version: 4.22.0(patch_hash=582d9944c4a55753b4f763f2bdb711d96815fe1b2caaffc34f2e054d71044b48)(seedrandom@3.0.5)
       bcrypt:
         specifier: ^6.0.0
         version: 6.0.0
@@ -5191,7 +5196,7 @@ snapshots:
     dependencies:
       '@tensorflow/tfjs-core': 4.22.0
 
-  '@tensorflow/tfjs-node@4.22.0(seedrandom@3.0.5)':
+  '@tensorflow/tfjs-node@4.22.0(patch_hash=582d9944c4a55753b4f763f2bdb711d96815fe1b2caaffc34f2e054d71044b48)(seedrandom@3.0.5)':
     dependencies:
       '@mapbox/node-pre-gyp': 1.0.9
       '@tensorflow/tfjs': 4.22.0(seedrandom@3.0.5)
