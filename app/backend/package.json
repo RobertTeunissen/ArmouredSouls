@@ -54,7 +54,10 @@
       "prisma",
       "@prisma/engines",
       "onnxruntime-node"
-    ]
+    ],
+    "patchedDependencies": {
+      "@tensorflow/tfjs-node@4.22.0": "patches/@tensorflow__tfjs-node@4.22.0.patch"
+    }
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.5.0",

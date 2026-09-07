@@ -227,7 +227,7 @@ export interface EnvConfig {
   dailyReportSchedule: string;
   /** Base URL of the deployed app, used in notification links. */
   appBaseUrl: string | undefined;
-  /** Force-enable image moderation in non-prod environments. */
+  /** Force-enable image moderation in development and test environments. */
   enableModeration: boolean;
 }
 

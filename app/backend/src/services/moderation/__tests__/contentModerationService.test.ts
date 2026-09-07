@@ -274,6 +274,21 @@ describe('ContentModerationService', () => {
       expect(service.isReady()).toBe(false);
     });
 
+    it('should fail closed after moderation is disabled', async () => {
+      const service = await createService();
+
+      service.disable();
+      const result = await service.classifyImage(Buffer.from('test'));
+
+      expect(service.isReady()).toBe(false);
+      expect(service.getAvailability().status).toBe('unavailable');
+      expect(result).toEqual(expect.objectContaining({
+        safe: false,
+        robotLikely: false,
+        reason: 'moderation_unavailable',
+      }));
+    });
+
     it('should report isReady() as true when model loads successfully', async () => {
       const service = await createService();
 

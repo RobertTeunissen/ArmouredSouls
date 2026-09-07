@@ -11,6 +11,15 @@ export type {
   ModerationResult,
 } from './contentModerationService';
 
+export {
+  shouldInitializeModeration,
+  startModerationLifecycle,
+} from './moderationLifecycle';
+export type {
+  ModerationLifecycle,
+  ModerationLifecycleOptions,
+} from './moderationLifecycle';
+
 export { imageProcessingService } from './imageProcessingService';
 
 export { fileStorageService } from './fileStorageService';
