@@ -97,6 +97,15 @@ export interface RoundExecutionResult {
   matchesFailed: number;
 }
 
+interface TeamTournamentAchievementParticipant {
+  robotId: number;
+  team: 1 | 2;
+  damageDealt: number;
+  finalHP: number;
+  eloBefore: number;
+  eloAfter: number;
+}
+
 // ─── Main Export: Process Single Match ────────────────────────────────────────
 
 /**
@@ -398,54 +407,25 @@ export async function processTeamTournamentBattle(
     teamSize,
   );
 
-  // 10. Check achievements for all participating robots (battle_complete trigger)
-  for (const robot of team1Robots) {
-    const prevLost = await didRobotLosePreviousBattle(robot.id, battle.id);
-    const participant = battleResult.participants.find(p => p.robotId === robot.id);
-    await checkAndAwardAchievements(team1.stableId, robot.id, {
-      won: winningSide === 1,
-      destroyed: (participant?.finalHP ?? 0) === 0,
-      finalHpPercent: 0,
-      eloChange: eloChanges.team1Change,
-      opponentElo: team2SumELO,
-      yielded: false,
-      opponentYielded: false,
-      previousBattleLost: prevLost,
-      damageDealt: participant?.damageDealt ?? 0,
-      opponentDamageDealt: 0,
-      loadoutType: 'single',
-      stance: 'balanced',
-      yieldThreshold: 0,
-      hasTuning: false,
-      hasMainWeapon: true,
-      battleType,
-      battleDurationSeconds: battleResult.durationSeconds,
-    });
-  }
-
-  for (const robot of team2Robots) {
-    const prevLost = await didRobotLosePreviousBattle(robot.id, battle.id);
-    const participant = battleResult.participants.find(p => p.robotId === robot.id);
-    await checkAndAwardAchievements(team2.stableId, robot.id, {
-      won: winningSide === 2,
-      destroyed: (participant?.finalHP ?? 0) === 0,
-      finalHpPercent: 0,
-      eloChange: eloChanges.team2Change,
-      opponentElo: team1SumELO,
-      yielded: false,
-      opponentYielded: false,
-      previousBattleLost: prevLost,
-      damageDealt: participant?.damageDealt ?? 0,
-      opponentDamageDealt: 0,
-      loadoutType: 'single',
-      stance: 'balanced',
-      yieldThreshold: 0,
-      hasTuning: false,
-      hasMainWeapon: true,
-      battleType,
-      battleDurationSeconds: battleResult.durationSeconds,
-    });
-  }
+  // 10. Check achievements using the same persisted participant facts that a
+  // checkpoint retry receives. This makes first-run and resume evaluation
+  // identical even if failure occurs midway through finalization.
+  await awardTeamTournamentBattleAchievements(
+    battle.id,
+    battleType,
+    winningSide,
+    team1,
+    team2,
+    participantRecords.map((participant) => ({
+      robotId: participant.robotId,
+      team: participant.team as 1 | 2,
+      damageDealt: participant.damageDealt,
+      finalHP: participant.finalHP,
+      eloBefore: participant.eloBefore,
+      eloAfter: participant.eloAfter,
+    })),
+    battle.durationSeconds,
+  );
 
   await prisma.scheduledTournamentMatch.update({
     where: { id: match.id },
@@ -562,9 +542,15 @@ async function resumeTeamTournamentBattleFinalization(
     winningSide,
     team1,
     team2,
-    team1Robots,
-    team2Robots,
-    battleResult,
+    battle.participants.map((participant) => ({
+      robotId: participant.robotId,
+      team: participant.team as 1 | 2,
+      damageDealt: participant.damageDealt,
+      finalHP: participant.finalHP,
+      eloBefore: participant.eloBefore,
+      eloAfter: participant.eloAfter,
+    })),
+    battle.durationSeconds,
   );
 
   await prisma.scheduledTournamentMatch.update({
@@ -599,50 +585,39 @@ async function awardTeamTournamentBattleAchievements(
   winningSide: 1 | 2,
   team1: { stableId: number },
   team2: { stableId: number },
-  team1Robots: RobotWithWeapons[],
-  team2Robots: RobotWithWeapons[],
-  battleResult: TeamBattleResult,
+  participants: TeamTournamentAchievementParticipant[],
+  battleDurationSeconds: number,
 ): Promise<void> {
-  const team1Elo = team1Robots.reduce((sum, robot) => sum + robot.elo, 0);
-  const team2Elo = team2Robots.reduce((sum, robot) => sum + robot.elo, 0);
-  const awardForTeam = async (
-    robots: RobotWithWeapons[],
-    stableId: number,
-    team: 1 | 2,
-    opponentElo: number,
-  ): Promise<void> => {
-    await Promise.all(robots.map(async (robot) => {
-      const participant = battleResult.participants.find(candidate => candidate.robotId === robot.id);
-      const participantWithElo = participant as (typeof participant & { eloBefore?: number; eloAfter?: number }) | undefined;
-      const previousBattleLost = await didRobotLosePreviousBattle(robot.id, battleId);
-      await checkAndAwardAchievements(stableId, robot.id, {
-        won: winningSide === team,
-        destroyed: (participant?.finalHP ?? 0) === 0,
-        finalHpPercent: robot.maxHP > 0 ? ((participant?.finalHP ?? 0) / robot.maxHP) * 100 : 0,
-        eloChange: participantWithElo?.eloAfter !== undefined && participantWithElo.eloBefore !== undefined
-          ? participantWithElo.eloAfter - participantWithElo.eloBefore
-          : 0,
-        opponentElo,
-        yielded: false,
-        opponentYielded: false,
-        previousBattleLost,
-        damageDealt: participant?.damageDealt ?? 0,
-        opponentDamageDealt: 0,
-        loadoutType: robot.loadoutType || 'single',
-        stance: robot.stance || 'balanced',
-        yieldThreshold: robot.yieldThreshold,
-        hasTuning: false,
-        hasMainWeapon: robot.mainWeaponId !== null,
-        battleType,
-        battleDurationSeconds: battleResult.durationSeconds,
-      });
-    }));
-  };
+  const team1OpponentElo = participants
+    .filter((participant) => participant.team === 2)
+    .reduce((sum, participant) => sum + participant.eloBefore, 0);
+  const team2OpponentElo = participants
+    .filter((participant) => participant.team === 1)
+    .reduce((sum, participant) => sum + participant.eloBefore, 0);
 
-  await Promise.all([
-    awardForTeam(team1Robots, team1.stableId, 1, team2Elo),
-    awardForTeam(team2Robots, team2.stableId, 2, team1Elo),
-  ]);
+  await Promise.all(participants.map(async (participant) => {
+    const stableId = participant.team === 1 ? team1.stableId : team2.stableId;
+    const previousBattleLost = await didRobotLosePreviousBattle(participant.robotId, battleId);
+    await checkAndAwardAchievements(stableId, participant.robotId, {
+      won: winningSide === participant.team,
+      destroyed: participant.finalHP === 0,
+      finalHpPercent: 0,
+      eloChange: participant.eloAfter - participant.eloBefore,
+      opponentElo: participant.team === 1 ? team1OpponentElo : team2OpponentElo,
+      yielded: false,
+      opponentYielded: false,
+      previousBattleLost,
+      damageDealt: participant.damageDealt,
+      opponentDamageDealt: 0,
+      loadoutType: 'single',
+      stance: 'balanced',
+      yieldThreshold: 0,
+      hasTuning: false,
+      hasMainWeapon: true,
+      battleType,
+      battleDurationSeconds,
+    });
+  }));
 }
 
 // ─── Main Export: Execute Round ──────────────────────────────────────────────

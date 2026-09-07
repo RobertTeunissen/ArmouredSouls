@@ -188,11 +188,16 @@ export class EventLogger {
       const target = error instanceof Prisma.PrismaClientKnownRequestError
         ? error.meta?.target
         : undefined;
+      const targetFields = Array.isArray(target) ? target : [target];
+      const targetNames = targetFields.map((field) => String(field));
+      const errorMessage = error instanceof Error ? error.message : '';
+      const sourceEventConstraint = targetNames.some((targetName) =>
+        targetName.includes('source_event_id') || targetName.includes('sourceEventId'),
+      ) || errorMessage.includes('source_event_id') || errorMessage.includes('sourceEventId');
       const isSourceEventDuplicate = entry.sourceEventId !== null
         && error instanceof Prisma.PrismaClientKnownRequestError
         && error.code === 'P2002'
-        && Array.isArray(target)
-        && target.some((field) => String(field).includes('source_event_id'));
+        && sourceEventConstraint;
       if (isSourceEventDuplicate) return;
       throw error;
     }

@@ -118,6 +118,18 @@ describe('processTeamTournamentBattle persisted-battle finalization', () => {
     expect(mockSimulateTeamBattle).not.toHaveBeenCalled();
     expect(mockAwardCreditsWithLedger).toHaveBeenCalledTimes(4);
     expect(mockAwardCreditsWithLedger.mock.calls.map((call) => call[5])).toEqual([101, 102, 201, 202]);
+    expect(mockCheckAndAwardAchievements).toHaveBeenCalledTimes(4);
+    expect(mockCheckAndAwardAchievements.mock.calls).toEqual(expect.arrayContaining([
+      [11110, 101, expect.objectContaining({
+        won: true,
+        finalHpPercent: 0,
+        eloChange: 16,
+        opponentElo: 2950,
+        loadoutType: 'single',
+        stance: 'balanced',
+        hasMainWeapon: true,
+      })],
+    ]));
     expect(mockScheduledMatchUpdate).toHaveBeenCalledWith({
       where: { id: 88 },
       data: {

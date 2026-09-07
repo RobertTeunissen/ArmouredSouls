@@ -103,6 +103,20 @@ describe('EventLogger Service', () => {
       expect(event!.metadata).toEqual(metadata);
     });
 
+    it('should treat a repeated source event as idempotent', async () => {
+      const sourceEventId = `battle-complete:test:${testCycleNumber}:1`;
+      const options = { userId: 1, robotId: 1, sourceEventId };
+
+      await eventLogger.logEvent(testCycleNumber, EventType.BATTLE_COMPLETE, { result: 'win' }, options);
+      await eventLogger.logEvent(testCycleNumber, EventType.BATTLE_COMPLETE, { result: 'win' }, options);
+
+      const events = await prisma.auditLog.findMany({
+        where: { cycleNumber: testCycleNumber, eventType: EventType.BATTLE_COMPLETE },
+      });
+      expect(events).toHaveLength(1);
+      expect(events[0].sourceEventId).toBe(sourceEventId);
+    });
+
     it('should throw error for invalid payload', async () => {
       // Use testCycleNumber from beforeEach
 
