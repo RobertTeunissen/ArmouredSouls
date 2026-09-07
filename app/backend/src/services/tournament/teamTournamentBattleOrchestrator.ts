@@ -35,7 +35,6 @@ import {
   awardStreamingRevenueForParticipant,
   awardCreditsWithLedger,
   awardPrestigeToUser,
-  awardFameToRobot,
   checkAndAwardAchievements,
   didRobotLosePreviousBattle,
   updateRobotCombatStats,
@@ -96,6 +95,15 @@ export interface TeamTournamentBattleResult {
 export interface RoundExecutionResult {
   matchesExecuted: number;
   matchesFailed: number;
+}
+
+interface TeamTournamentAchievementParticipant {
+  robotId: number;
+  team: 1 | 2;
+  damageDealt: number;
+  finalHP: number;
+  eloBefore: number;
+  eloAfter: number;
 }
 
 // ─── Main Export: Process Single Match ────────────────────────────────────────
@@ -182,6 +190,19 @@ export async function processTeamTournamentBattle(
       `Team composition mismatch for match ${match.id}: team1=${team1Robots.length}, team2=${team2Robots.length}, expected=${teamSize}`,
       400,
       { matchId: match.id, team1Count: team1Robots.length, team2Count: team2Robots.length, teamSize },
+    );
+  }
+
+  if (match.battleId !== null) {
+    return resumeTeamTournamentBattleFinalization(
+      match,
+      tournament,
+      team1,
+      team2,
+      team1Robots,
+      team2Robots,
+      teamSize,
+      battleType,
     );
   }
 
@@ -300,6 +321,14 @@ export async function processTeamTournamentBattle(
     });
   }
 
+  const winnerFame = await calculateTeamTournamentFameAward(
+    tournament,
+    winningSide,
+    team1Robots,
+    team2Robots,
+    battleResult,
+  );
+
   // Per-robot destruction credit. The previous expression gave a destroyed
   // robot no credit at all — even when it wrecked an opponent before dying —
   // and gave every surviving teammate credit for one shared destruction.
@@ -324,7 +353,7 @@ export async function processTeamTournamentBattle(
           .reduce((sum, p) => sum + p.damageDealt, 0) / teamSize
       ),
       opponentsDestroyed: killsByRobot[robot.name] ?? 0,
-      fameIncrement: 0, // Fame handled in distributeTeamTournamentRewards
+      fameIncrement: winningSide === 1 ? winnerFame : 0,
       battleType: `tournament_${teamSize}v${teamSize}`,
       stance: robot.stance,
       loadoutType: robot.loadoutType,
@@ -346,21 +375,22 @@ export async function processTeamTournamentBattle(
           .reduce((sum, p) => sum + p.damageDealt, 0) / teamSize
       ),
       opponentsDestroyed: killsByRobot[robot.name] ?? 0,
-      fameIncrement: 0, // Fame handled in distributeTeamTournamentRewards
+      fameIncrement: winningSide === 2 ? winnerFame : 0,
       battleType: `tournament_${teamSize}v${teamSize}`,
       stance: robot.stance,
       loadoutType: robot.loadoutType,
     });
   }
 
-  // 8. Update match: winnerId (team ID), battleId, status='completed', completedAt
+  // The simulator and incrementing combat stats are now durable. Keep the
+  // row runnable until financial and achievement finalization has succeeded.
   await prisma.scheduledTournamentMatch.update({
     where: { id: match.id },
     data: {
       winnerId: winningTeamId,
       battleId: battle.id,
-      status: 'completed',
-      completedAt: new Date(),
+      status: 'scheduled',
+      completedAt: null,
     },
   });
 
@@ -377,54 +407,35 @@ export async function processTeamTournamentBattle(
     teamSize,
   );
 
-  // 10. Check achievements for all participating robots (battle_complete trigger)
-  for (const robot of team1Robots) {
-    const prevLost = await didRobotLosePreviousBattle(robot.id, battle.id);
-    const participant = battleResult.participants.find(p => p.robotId === robot.id);
-    await checkAndAwardAchievements(team1.stableId, robot.id, {
-      won: winningSide === 1,
-      destroyed: (participant?.finalHP ?? 0) === 0,
-      finalHpPercent: 0,
-      eloChange: eloChanges.team1Change,
-      opponentElo: team2SumELO,
-      yielded: false,
-      opponentYielded: false,
-      previousBattleLost: prevLost,
-      damageDealt: participant?.damageDealt ?? 0,
-      opponentDamageDealt: 0,
-      loadoutType: 'single',
-      stance: 'balanced',
-      yieldThreshold: 0,
-      hasTuning: false,
-      hasMainWeapon: true,
-      battleType,
-      battleDurationSeconds: battleResult.durationSeconds,
-    });
-  }
+  // 10. Check achievements using the same persisted participant facts that a
+  // checkpoint retry receives. This makes first-run and resume evaluation
+  // identical even if failure occurs midway through finalization.
+  await awardTeamTournamentBattleAchievements(
+    battle.id,
+    battleType,
+    winningSide,
+    team1,
+    team2,
+    participantRecords.map((participant) => ({
+      robotId: participant.robotId,
+      team: participant.team as 1 | 2,
+      damageDealt: participant.damageDealt,
+      finalHP: participant.finalHP,
+      eloBefore: participant.eloBefore,
+      eloAfter: participant.eloAfter,
+    })),
+    battle.durationSeconds,
+  );
 
-  for (const robot of team2Robots) {
-    const prevLost = await didRobotLosePreviousBattle(robot.id, battle.id);
-    const participant = battleResult.participants.find(p => p.robotId === robot.id);
-    await checkAndAwardAchievements(team2.stableId, robot.id, {
-      won: winningSide === 2,
-      destroyed: (participant?.finalHP ?? 0) === 0,
-      finalHpPercent: 0,
-      eloChange: eloChanges.team2Change,
-      opponentElo: team1SumELO,
-      yielded: false,
-      opponentYielded: false,
-      previousBattleLost: prevLost,
-      damageDealt: participant?.damageDealt ?? 0,
-      opponentDamageDealt: 0,
-      loadoutType: 'single',
-      stance: 'balanced',
-      yieldThreshold: 0,
-      hasTuning: false,
-      hasMainWeapon: true,
-      battleType,
-      battleDurationSeconds: battleResult.durationSeconds,
-    });
-  }
+  await prisma.scheduledTournamentMatch.update({
+    where: { id: match.id },
+    data: {
+      winnerId: winningTeamId,
+      battleId: battle.id,
+      status: 'completed',
+      completedAt: new Date(),
+    },
+  });
 
   // Build participant results for return
   const participants: TeamBattleParticipantResult[] = participantRecords.map(p => ({
@@ -453,6 +464,160 @@ export async function processTeamTournamentBattle(
     durationSeconds: battleResult.durationSeconds,
     isByeMatch: false,
   };
+}
+
+async function resumeTeamTournamentBattleFinalization(
+  match: ScheduledTournamentMatch,
+  tournament: Tournament,
+  team1: { stableId: number },
+  team2: { stableId: number },
+  team1Robots: RobotWithWeapons[],
+  team2Robots: RobotWithWeapons[],
+  teamSize: 2 | 3,
+  battleType: 'tournament_2v2' | 'tournament_3v3',
+): Promise<TeamTournamentBattleResult> {
+  const battle = await prisma.battle.findUnique({
+    where: { id: match.battleId! },
+    include: { participants: true },
+  });
+  const winningSide = battle?.winningSide as 1 | 2 | null;
+  if (!battle || !winningSide || battle.winnerId === null) {
+    throw new TournamentError(
+      TournamentErrorCode.BATTLE_RECORD_FAILED,
+      `Team tournament match ${match.id} cannot resume battle finalization`,
+      500,
+      { matchId: match.id, battleId: match.battleId },
+    );
+  }
+
+  const expectedParticipantCount = teamSize * 2;
+  if (battle.participants.length !== expectedParticipantCount) {
+    throw new TournamentError(
+      TournamentErrorCode.BATTLE_RECORD_FAILED,
+      `Team tournament battle ${battle.id} is missing participant evidence`,
+      500,
+      { battleId: battle.id, expectedParticipantCount, actualParticipantCount: battle.participants.length },
+    );
+  }
+
+  const battleResult: TeamBattleResult = {
+    winningSide,
+    winnerRobotId: null,
+    isDraw: false,
+    isByeMatch: false,
+    durationSeconds: battle.durationSeconds,
+    participants: battle.participants.map((participant) => ({
+      robotId: participant.robotId,
+      team: participant.team as 1 | 2,
+      damageDealt: participant.damageDealt,
+      damageTaken: 0,
+      finalHP: participant.finalHP,
+      survivalSeconds: battle.durationSeconds,
+    })),
+    battleLog: [],
+    detailedCombatEvents: [],
+    focusFireEvents: [],
+    focusFireMetrics: { team1: 0, team2: 0 },
+    allySupportMetrics: { team1: 0, team2: 0 },
+    formationDefenceMetrics: { team1: 0, team2: 0 },
+    arenaRadius: 0,
+    startingPositions: {},
+    endingPositions: {},
+  };
+
+  await distributeTeamTournamentRewards(
+    battle.id,
+    tournament,
+    winningSide,
+    team1Robots,
+    team2Robots,
+    team1.stableId,
+    team2.stableId,
+    battleResult,
+    teamSize,
+  );
+  await awardTeamTournamentBattleAchievements(
+    battle.id,
+    battleType,
+    winningSide,
+    team1,
+    team2,
+    battle.participants.map((participant) => ({
+      robotId: participant.robotId,
+      team: participant.team as 1 | 2,
+      damageDealt: participant.damageDealt,
+      finalHP: participant.finalHP,
+      eloBefore: participant.eloBefore,
+      eloAfter: participant.eloAfter,
+    })),
+    battle.durationSeconds,
+  );
+
+  await prisma.scheduledTournamentMatch.update({
+    where: { id: match.id },
+    data: {
+      winnerId: battle.winnerId,
+      battleId: battle.id,
+      status: 'completed',
+      completedAt: new Date(),
+    },
+  });
+
+  return {
+    battleId: battle.id,
+    winnerId: battle.winnerId,
+    participants: battle.participants.map((participant) => ({
+      robotId: participant.robotId,
+      team: participant.team as 1 | 2,
+      damageDealt: participant.damageDealt,
+      finalHP: participant.finalHP,
+      eloBefore: participant.eloBefore,
+      eloAfter: participant.eloAfter,
+    })),
+    durationSeconds: battle.durationSeconds,
+    isByeMatch: false,
+  };
+}
+
+async function awardTeamTournamentBattleAchievements(
+  battleId: number,
+  battleType: 'tournament_2v2' | 'tournament_3v3',
+  winningSide: 1 | 2,
+  team1: { stableId: number },
+  team2: { stableId: number },
+  participants: TeamTournamentAchievementParticipant[],
+  battleDurationSeconds: number,
+): Promise<void> {
+  const team1OpponentElo = participants
+    .filter((participant) => participant.team === 2)
+    .reduce((sum, participant) => sum + participant.eloBefore, 0);
+  const team2OpponentElo = participants
+    .filter((participant) => participant.team === 1)
+    .reduce((sum, participant) => sum + participant.eloBefore, 0);
+
+  await Promise.all(participants.map(async (participant) => {
+    const stableId = participant.team === 1 ? team1.stableId : team2.stableId;
+    const previousBattleLost = await didRobotLosePreviousBattle(participant.robotId, battleId);
+    await checkAndAwardAchievements(stableId, participant.robotId, {
+      won: winningSide === participant.team,
+      destroyed: participant.finalHP === 0,
+      finalHpPercent: 0,
+      eloChange: participant.eloAfter - participant.eloBefore,
+      opponentElo: participant.team === 1 ? team1OpponentElo : team2OpponentElo,
+      yielded: false,
+      opponentYielded: false,
+      previousBattleLost,
+      damageDealt: participant.damageDealt,
+      opponentDamageDealt: 0,
+      loadoutType: 'single',
+      stance: 'balanced',
+      yieldThreshold: 0,
+      hasTuning: false,
+      hasMainWeapon: true,
+      battleType,
+      battleDurationSeconds,
+    });
+  }));
 }
 
 // ─── Main Export: Execute Round ──────────────────────────────────────────────
@@ -767,49 +932,10 @@ async function distributeTeamTournamentRewards(
   const winnerOwnerTotal = calculateTournamentWinReward(totalParticipants, currentRound, maxRounds) * teamSize;
   const loserOwnerTotal = calculateTournamentParticipationReward(totalParticipants, currentRound, maxRounds) * teamSize;
 
-  const cycleNumber = await getCurrentCycleNumber();
-  const tournamentMode = teamSize === 2 ? 'tournament_2v2' : 'tournament_3v3';
-  await awardCreditsWithLedger(
-    winnerOwnerId,
-    winnerOwnerTotal,
-    'battle_income',
-    cycleNumber,
-    'Team tournament reward',
-    undefined,
-    { battleId, teamSize },
-    {
-      battleId,
-      mode: tournamentMode,
-      tier: currentRound,
-      outcome: 'win',
-      participationFloor: winnerOwnerTotal,
-      winComponent: 0,
-      teamSize,
-      isBye: false,
-    },
-  );
-  await awardCreditsWithLedger(
-    loserOwnerId,
-    loserOwnerTotal,
-    'battle_income',
-    cycleNumber,
-    'Team tournament reward',
-    undefined,
-    { battleId, teamSize },
-    {
-      battleId,
-      mode: tournamentMode,
-      tier: currentRound,
-      outcome: 'loss',
-      participationFloor: loserOwnerTotal,
-      winComponent: 0,
-      teamSize,
-      isBye: false,
-    },
-  );
-
   // Per-robot shares, remainder distributed one credit at a time so the
-  // participant rows sum exactly to what the owner received.
+  // participant rows and financial pairs sum exactly to the former owner total.
+  // Each robot is an independently idempotent economic recipient: two teams from
+  // the same stable may validly face one another in a tournament.
   const winnerShares = distributeTeamCredits(
     winnerOwnerTotal,
     winnerRobots.map(r => ({ robotId: r.id })),
@@ -818,6 +944,69 @@ async function distributeTeamTournamentRewards(
     loserOwnerTotal,
     loserRobots.map(r => ({ robotId: r.id })),
   );
+
+  const cycleNumber = await getCurrentCycleNumber();
+  const tournamentMode = teamSize === 2 ? 'tournament_2v2' : 'tournament_3v3';
+  for (const share of winnerShares) {
+    const robot = winnerRobots.find(candidate => candidate.id === share.robotId);
+    if (!robot) {
+      throw new TournamentError(
+        TournamentErrorCode.BATTLE_RECORD_FAILED,
+        `Winner robot ${share.robotId} is missing from tournament battle ${battleId}`,
+        500,
+        { battleId, robotId: share.robotId },
+      );
+    }
+    await awardCreditsWithLedger(
+      winnerOwnerId,
+      share.credits,
+      'battle_income',
+      cycleNumber,
+      'Team tournament reward',
+      robot.id,
+      { battleId, teamSize },
+      {
+        battleId,
+        mode: tournamentMode,
+        tier: currentRound,
+        outcome: 'win',
+        participationFloor: share.credits,
+        winComponent: 0,
+        teamSize,
+        isBye: false,
+      },
+    );
+  }
+  for (const share of loserShares) {
+    const robot = loserRobots.find(candidate => candidate.id === share.robotId);
+    if (!robot) {
+      throw new TournamentError(
+        TournamentErrorCode.BATTLE_RECORD_FAILED,
+        `Loser robot ${share.robotId} is missing from tournament battle ${battleId}`,
+        500,
+        { battleId, robotId: share.robotId },
+      );
+    }
+    await awardCreditsWithLedger(
+      loserOwnerId,
+      share.credits,
+      'battle_income',
+      cycleNumber,
+      'Team tournament reward',
+      robot.id,
+      { battleId, teamSize },
+      {
+        battleId,
+        mode: tournamentMode,
+        tier: currentRound,
+        outcome: 'loss',
+        participationFloor: share.credits,
+        winComponent: 0,
+        teamSize,
+        isBye: false,
+      },
+    );
+  }
 
   // ─── Prestige (Stepped Curve — winner only) ────────────────────────
   const winnerPrestige = calculateTeamTournamentPrestige(currentRound, maxRounds);
@@ -829,32 +1018,15 @@ async function distributeTeamTournamentRewards(
   });
 
   // ─── Fame (winner only) ────────────────────────────────────────────
-  // Calculate teams remaining in current round for exclusivity multiplier
-  const currentRoundMatches = await prisma.scheduledTournamentMatch.findMany({
-    where: { tournamentId: tournament.id, round: currentRound },
-  });
-  const regularMatchCount = currentRoundMatches.filter(m => !m.isByeMatch).length;
-  const byeMatchCount = currentRoundMatches.filter(m => m.isByeMatch).length;
-  const teamsRemaining = (regularMatchCount * 2) + byeMatchCount;
-
-  // Sum HP across winning team members for performance bonus
-  const winnerParticipants = battleResult.participants.filter(
-    p => p.team === winningSide,
+  // Fame is applied with the non-repeatable combat-stat mutation before the
+  // battleId checkpoint. Finalization only records the already-earned amount.
+  const winnerFame = await calculateTeamTournamentFameAward(
+    tournament,
+    winningSide,
+    team1Robots,
+    team2Robots,
+    battleResult,
   );
-  const winnerTotalHP = winnerParticipants.reduce((sum, p) => sum + p.finalHP, 0);
-  const winnerMaxHP = winnerRobots.reduce((sum, r) => sum + r.maxHP, 0);
-
-  const winnerFame = calculateTournamentFame(
-    totalParticipants,
-    teamsRemaining,
-    winnerTotalHP,
-    winnerMaxHP,
-  );
-
-  // Award fame to each winning robot
-  for (const robot of winnerRobots) {
-    await awardFameToRobot(robot.id, winnerFame);
-  }
 
   // ─── Streaming Revenue (all participants) ──────────────────────────
   for (const robot of winnerRobots) {
@@ -901,6 +1073,32 @@ async function distributeTeamTournamentRewards(
   });
 
   return { winnerReward: winnerOwnerTotal, loserReward: loserOwnerTotal, winnerPrestige, winnerFame };
+}
+
+async function calculateTeamTournamentFameAward(
+  tournament: Tournament,
+  winningSide: 1 | 2,
+  team1Robots: RobotWithWeapons[],
+  team2Robots: RobotWithWeapons[],
+  battleResult: TeamBattleResult,
+): Promise<number> {
+  const currentRoundMatches = await prisma.scheduledTournamentMatch.findMany({
+    where: { tournamentId: tournament.id, round: tournament.currentRound },
+  });
+  const regularMatchCount = currentRoundMatches.filter(match => !match.isByeMatch).length;
+  const byeMatchCount = currentRoundMatches.filter(match => match.isByeMatch).length;
+  const teamsRemaining = (regularMatchCount * 2) + byeMatchCount;
+  const winnerParticipants = battleResult.participants.filter(participant => participant.team === winningSide);
+  const winnerTotalHP = winnerParticipants.reduce((sum, participant) => sum + participant.finalHP, 0);
+  const winnerRobots = winningSide === 1 ? team1Robots : team2Robots;
+  const winnerMaxHP = winnerRobots.reduce((sum, robot) => sum + robot.maxHP, 0);
+
+  return calculateTournamentFame(
+    tournament.totalParticipants,
+    teamsRemaining,
+    winnerTotalHP,
+    winnerMaxHP,
+  );
 }
 
 // ─── Helper Functions ────────────────────────────────────────────────────────

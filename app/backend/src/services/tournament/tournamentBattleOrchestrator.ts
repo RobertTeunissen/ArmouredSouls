@@ -81,6 +81,10 @@ export async function processTournamentBattle(
     );
   }
 
+  if (tournamentMatch.battleId !== null) {
+    return resumeTournamentBattleFinalization(tournamentMatch);
+  }
+
   // Load both robots with weapons
   // For 1v1 tournaments (participantType='robot'), participant IDs ARE robot IDs
   // Spec #34: include refinements so prepareRobotForCombat can fold them
@@ -174,6 +178,17 @@ export async function processTournamentBattle(
     tournament.maxRounds
   );
 
+  // The battle and non-repeatable robot stat updates are now durable. Keep the
+  // scheduling row executable until its idempotent financial finalization ends;
+  // a retry resumes this battle instead of simulating a replacement.
+  await prisma.scheduledTournamentMatch.update({
+    where: { id: tournamentMatch.id },
+    data: { battleId: battle.id, status: 'scheduled' },
+  });
+
+  await awardTournamentBattleIncome(robot1, battle);
+  await awardTournamentBattleIncome(robot2, battle);
+
   // Calculate and award streaming revenue (Requirement 16.1-16.7)
   // Tournament battles award streaming revenue using the same formula as 1v1 battles
   // No streaming revenue for bye matches (handled by isByeMatch check at function start)
@@ -234,6 +249,8 @@ export async function processTournamentBattle(
       robot2.id,
       streamingRevenue1?.totalRevenue || 0,
       false,
+      {},
+      `battle-complete:${battle.id}:${robot1.id}`,
     );
   } catch (auditError) {
     logger.error(`[TournamentBattleOrchestrator] Audit log failed for robot ${robot1.id} in battle #${battle.id}: ${auditError instanceof Error ? auditError.message : String(auditError)}`);
@@ -260,21 +277,12 @@ export async function processTournamentBattle(
       robot1.id,
       streamingRevenue2?.totalRevenue || 0,
       false,
+      {},
+      `battle-complete:${battle.id}:${robot2.id}`,
     );
   } catch (auditError) {
     logger.error(`[TournamentBattleOrchestrator] Audit log failed for robot ${robot2.id} in battle #${battle.id}: ${auditError instanceof Error ? auditError.message : String(auditError)}`);
   }
-
-  // Update tournament match with result
-  await prisma.scheduledTournamentMatch.update({
-    where: { id: tournamentMatch.id },
-    data: {
-      winnerId: battle.winnerId,
-      battleId: battle.id,
-      status: 'completed',
-      completedAt: new Date(),
-    },
-  });
 
   // Check and award achievements for both robots (battle_complete + tournament_complete for winner)
   let achievementUnlocks: UnlockedAchievement[];
@@ -333,6 +341,16 @@ export async function processTournamentBattle(
     ]);
     achievementUnlocks = [...unlocks1, ...unlocks2];
   }
+
+  await prisma.scheduledTournamentMatch.update({
+    where: { id: tournamentMatch.id },
+    data: {
+      winnerId: battle.winnerId,
+      battleId: battle.id,
+      status: 'completed',
+      completedAt: new Date(),
+    },
+  });
 
   // Get user IDs for logging
   const robot1User = await prisma.user.findUnique({ where: { id: robot1.userId }, select: { id: true } });
@@ -608,14 +626,26 @@ async function updateRobotStatsForTournament(
     loadoutType: robot.loadoutType,
   });
 
-  // Award stable-level prestige and tournament income through shared services.
-  const reward = isWinner ? battle.winnerReward : battle.loserReward;
   const cycleNumber = await getCurrentCycleNumber();
   await awardPrestigeToUser(robot.userId, isWinner ? prestigeAwarded : 0, cycleNumber, {
     source: 'battle',
     mode: 'tournament_1v1',
     battleId: battle.id,
   });
+
+  return { prestigeAwarded, fameAwarded };
+}
+
+/**
+ * Award a tournament battle's persisted participant reward exactly once.
+ * The recipient robot is part of the event identity, so opposite sides from
+ * the same stable remain separate, explainable financial events.
+ */
+async function awardTournamentBattleIncome(robot: Robot, battle: Battle): Promise<void> {
+  const isWinner = battle.winnerId === robot.id;
+  const reward = isWinner ? battle.winnerReward : battle.loserReward;
+  const cycleNumber = await getCurrentCycleNumber();
+
   await awardCreditsWithLedger(
     robot.userId,
     reward ?? 0,
@@ -635,6 +665,170 @@ async function updateRobotStatsForTournament(
       isBye: false,
     },
   );
+}
 
-  return { prestigeAwarded, fameAwarded };
+async function resumeTournamentBattleFinalization(
+  tournamentMatch: ScheduledTournamentMatch,
+): Promise<TournamentBattleResult> {
+  const battle = await prisma.battle.findUnique({ where: { id: tournamentMatch.battleId! } });
+  const [robot1, robot2] = await Promise.all([
+    prisma.robot.findUnique({ where: { id: tournamentMatch.participant1Id! } }),
+    prisma.robot.findUnique({ where: { id: tournamentMatch.participant2Id! } }),
+  ]);
+  if (!battle || !robot1 || !robot2 || battle.winnerId === null) {
+    throw new TournamentError(
+      TournamentErrorCode.BATTLE_RECORD_FAILED,
+      `Tournament match ${tournamentMatch.id} cannot resume battle finalization`,
+      500,
+      { matchId: tournamentMatch.id, battleId: tournamentMatch.battleId },
+    );
+  }
+
+  const [robot1Participant, robot2Participant] = await Promise.all([
+    prisma.battleParticipant.findUnique({ where: { battleId_robotId: { battleId: battle.id, robotId: robot1.id } } }),
+    prisma.battleParticipant.findUnique({ where: { battleId_robotId: { battleId: battle.id, robotId: robot2.id } } }),
+  ]);
+  if (!robot1Participant || !robot2Participant) {
+    throw new TournamentError(
+      TournamentErrorCode.BATTLE_RECORD_FAILED,
+      `Tournament battle ${battle.id} is missing participant evidence`,
+      500,
+      { battleId: battle.id },
+    );
+  }
+
+  // Every operation below is either idempotent by its battle/robot identity or
+  // best-effort by design. A retry must finish the *same* persisted battle and
+  // only acknowledge the bracket after its post-battle work is complete.
+  await awardTournamentBattleIncome(robot1, battle);
+  await awardTournamentBattleIncome(robot2, battle);
+  const [streamingRevenue1, streamingRevenue2] = await Promise.all([
+    awardStreamingRevenueForParticipant(robot1.id, robot1.userId, battle.id, false, 1, 'tournament_1v1'),
+    awardStreamingRevenueForParticipant(robot2.id, robot2.userId, battle.id, false, 1, 'tournament_1v1'),
+  ]);
+
+  const robot1IsWinner = battle.winnerId === robot1.id;
+  const robot2IsWinner = battle.winnerId === robot2.id;
+  const auditBattle = {
+    id: battle.id,
+    battleType: 'tournament_1v1',
+    leagueType: 'tournament',
+    durationSeconds: battle.durationSeconds,
+  };
+  await Promise.all([
+    logTournamentParticipantAudit(
+      robot1, robot1Participant, robot2.id, robot1IsWinner, robot2Participant,
+      auditBattle, streamingRevenue1?.totalRevenue ?? 0,
+    ),
+    logTournamentParticipantAudit(
+      robot2, robot2Participant, robot1.id, robot2IsWinner, robot1Participant,
+      auditBattle, streamingRevenue2?.totalRevenue ?? 0,
+    ),
+  ]);
+
+  const [robot1PrevLost, robot2PrevLost] = await Promise.all([
+    didRobotLosePreviousBattle(robot1.id, battle.id),
+    didRobotLosePreviousBattle(robot2.id, battle.id),
+  ]);
+  const [unlocks1, unlocks2] = await Promise.all([
+    checkAndAwardAchievements(robot1.userId, robot1.id, {
+      won: robot1IsWinner,
+      destroyed: robot2Participant.destroyed,
+      finalHpPercent: robot1.maxHP > 0 ? (robot1Participant.finalHP / robot1.maxHP) * 100 : 0,
+      eloChange: robot1Participant.eloAfter - robot1Participant.eloBefore,
+      subjectEloBefore: robot1Participant.eloBefore,
+      opponentEloBefore: robot2Participant.eloBefore,
+      opponentElo: robot2.elo,
+      yielded: robot1Participant.yielded,
+      opponentYielded: robot2Participant.yielded,
+      previousBattleLost: robot1PrevLost,
+      damageDealt: robot1Participant.damageDealt,
+      opponentDamageDealt: robot2Participant.damageDealt,
+      loadoutType: robot1.loadoutType || 'single',
+      stance: robot1.stance || 'balanced',
+      yieldThreshold: robot1.yieldThreshold,
+      hasTuning: false,
+      hasMainWeapon: robot1.mainWeaponId !== null,
+      battleType: 'tournament_1v1',
+      battleDurationSeconds: battle.durationSeconds,
+    }),
+    checkAndAwardAchievements(robot2.userId, robot2.id, {
+      won: robot2IsWinner,
+      destroyed: robot1Participant.destroyed,
+      finalHpPercent: robot2.maxHP > 0 ? (robot2Participant.finalHP / robot2.maxHP) * 100 : 0,
+      eloChange: robot2Participant.eloAfter - robot2Participant.eloBefore,
+      subjectEloBefore: robot2Participant.eloBefore,
+      opponentEloBefore: robot1Participant.eloBefore,
+      opponentElo: robot1.elo,
+      yielded: robot2Participant.yielded,
+      opponentYielded: robot1Participant.yielded,
+      previousBattleLost: robot2PrevLost,
+      damageDealt: robot2Participant.damageDealt,
+      opponentDamageDealt: robot1Participant.damageDealt,
+      loadoutType: robot2.loadoutType || 'single',
+      stance: robot2.stance || 'balanced',
+      yieldThreshold: robot2.yieldThreshold,
+      hasTuning: false,
+      hasMainWeapon: robot2.mainWeaponId !== null,
+      battleType: 'tournament_1v1',
+      battleDurationSeconds: battle.durationSeconds,
+    }),
+  ]);
+
+  await prisma.scheduledTournamentMatch.update({
+    where: { id: tournamentMatch.id },
+    data: { winnerId: battle.winnerId, status: 'completed', completedAt: new Date() },
+  });
+
+  return {
+    battleId: battle.id,
+    winnerId: battle.winnerId,
+    robot1FinalHP: robot1Participant.finalHP,
+    robot2FinalHP: robot2Participant.finalHP,
+    robot1Damage: robot1Participant.damageDealt,
+    robot2Damage: robot2Participant.damageDealt,
+    durationSeconds: battle.durationSeconds,
+    prestigeAwarded: robot1Participant.prestigeAwarded + robot2Participant.prestigeAwarded,
+    fameAwarded: robot1Participant.fameAwarded + robot2Participant.fameAwarded,
+    isByeMatch: false,
+    achievementUnlocks: [...unlocks1, ...unlocks2],
+  };
+}
+
+async function logTournamentParticipantAudit(
+  robot: Robot,
+  participant: { damageDealt: number; finalHP: number; yielded: boolean; destroyed: boolean; credits: number; prestigeAwarded: number; fameAwarded: number; eloBefore: number; eloAfter: number },
+  opponentId: number,
+  isWinner: boolean,
+  opponentParticipant: { damageDealt: number },
+  battle: { id: number; battleType: string; leagueType: string; durationSeconds: number },
+  streamingRevenue: number,
+): Promise<void> {
+  try {
+    await logBattleAuditEvent(
+      {
+        robotId: robot.id,
+        userId: robot.userId,
+        isWinner,
+        isDraw: false,
+        damageDealt: participant.damageDealt,
+        finalHP: participant.finalHP,
+        yielded: participant.yielded,
+        destroyed: participant.destroyed,
+        credits: participant.credits,
+        prestige: participant.prestigeAwarded,
+        fame: participant.fameAwarded,
+        eloBefore: participant.eloBefore,
+        eloAfter: participant.eloAfter,
+      },
+      { ...battle, eloChange: Math.abs(participant.eloAfter - participant.eloBefore) },
+      opponentId,
+      streamingRevenue,
+      false,
+      {},
+      `battle-complete:${battle.id}:${robot.id}`,
+    );
+  } catch (error) {
+    logger.error(`[TournamentBattleOrchestrator] Audit log failed for robot ${robot.id} in battle #${battle.id}: ${error instanceof Error ? error.message : String(error)}`);
+  }
 }

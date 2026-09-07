@@ -97,6 +97,7 @@ interface EventLogEntry {
   userId?: number | null;
   robotId?: number | null;
   battleId?: number | null;
+  sourceEventId?: string | null;
   payload: BaseEventPayload;
   metadata?: EventMetadata | null;
 }
@@ -141,6 +142,7 @@ export class EventLogger {
       userId?: number;
       robotId?: number;
       battleId?: number;
+      sourceEventId?: string;
       metadata?: EventMetadata;
       timestamp?: Date;
     }
@@ -160,25 +162,45 @@ export class EventLogger {
       userId: options?.userId || null,
       robotId: options?.robotId || null,
       battleId: options?.battleId || null,
+      sourceEventId: options?.sourceEventId || null,
       payload,
       metadata: options?.metadata || null,
     };
 
-    await withAuditSequence(cycleNumber, 1, async (startSequence, tx) => {
-      await tx.auditLog.create({
-        data: {
-          cycleNumber: entry.cycleNumber,
-          eventType: entry.eventType,
-          eventTimestamp: entry.eventTimestamp,
-          sequenceNumber: startSequence,
-          userId: entry.userId,
-          robotId: entry.robotId,
-          battleId: entry.battleId,
-          payload: entry.payload as Prisma.JsonObject,
-          metadata: entry.metadata ? (entry.metadata as Prisma.JsonObject) : undefined,
-        },
+    try {
+      await withAuditSequence(cycleNumber, 1, async (startSequence, tx) => {
+        await tx.auditLog.create({
+          data: {
+            cycleNumber: entry.cycleNumber,
+            eventType: entry.eventType,
+            eventTimestamp: entry.eventTimestamp,
+            sequenceNumber: startSequence,
+            userId: entry.userId,
+            robotId: entry.robotId,
+            battleId: entry.battleId,
+            sourceEventId: entry.sourceEventId,
+            payload: entry.payload as Prisma.JsonObject,
+            metadata: entry.metadata ? (entry.metadata as Prisma.JsonObject) : undefined,
+          },
+        });
       });
-    });
+    } catch (error) {
+      const target = error instanceof Prisma.PrismaClientKnownRequestError
+        ? error.meta?.target
+        : undefined;
+      const targetFields = Array.isArray(target) ? target : [target];
+      const targetNames = targetFields.map((field) => String(field));
+      const errorMessage = error instanceof Error ? error.message : '';
+      const sourceEventConstraint = targetNames.some((targetName) =>
+        targetName.includes('source_event_id') || targetName.includes('sourceEventId'),
+      ) || errorMessage.includes('source_event_id') || errorMessage.includes('sourceEventId');
+      const isSourceEventDuplicate = entry.sourceEventId !== null
+        && error instanceof Prisma.PrismaClientKnownRequestError
+        && error.code === 'P2002'
+        && sourceEventConstraint;
+      if (isSourceEventDuplicate) return;
+      throw error;
+    }
   }
   
   /**
