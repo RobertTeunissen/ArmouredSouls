@@ -18,6 +18,11 @@ import {
   type CreditMutationResult,
 } from './creditMutationService';
 import type { DailyFinancialSummary } from '../../utils/economyCalculations';
+import {
+  type OperatingCostsBreakdown,
+  type PassiveIncomeBreakdown,
+  validateFinancialBreakdown,
+} from '../../types';
 import { lockUserForSpending } from '../../lib/creditGuard';
 
 const SETTLEMENT_USER_SELECT = {
@@ -250,9 +255,16 @@ async function loadSettlementUsers(
   });
 }
 
+interface ExistingSettlementLedger {
+  financialEventId: string | null;
+  amount: number;
+  balanceAfter: number;
+  metadata: unknown;
+}
+
 function existingSettlementComponent(
   financialEventId: string,
-  ledger: { amount: number; balanceAfter: number },
+  ledger: ExistingSettlementLedger,
 ): SettlementFinancialComponentResult {
   return {
     financialEventId,
@@ -260,6 +272,58 @@ function existingSettlementComponent(
     created: false,
     balanceBefore: ledger.balanceAfter - ledger.amount,
     balanceAfter: ledger.balanceAfter,
+  };
+}
+
+function buildExistingSettlementSummary(
+  user: SettlementUser,
+  passiveLedger: ExistingSettlementLedger,
+  operatingLedger: ExistingSettlementLedger,
+  passiveIncomeEventId: string,
+  operatingCostsEventId: string,
+): DailyFinancialSummary {
+  if (
+    !validateFinancialBreakdown(passiveLedger.metadata, 'passive_income')
+    || !validateFinancialBreakdown(operatingLedger.metadata, 'operating_costs')
+  ) {
+    throw new Error(`Settlement components for user ${user.id} contain invalid financial breakdowns`);
+  }
+
+  const passiveBreakdown = passiveLedger.metadata as unknown as PassiveIncomeBreakdown;
+  const operatingBreakdown = operatingLedger.metadata as unknown as OperatingCostsBreakdown;
+  if (
+    passiveBreakdown.sourceEventId !== passiveIncomeEventId
+    || operatingBreakdown.sourceEventId !== operatingCostsEventId
+    || passiveBreakdown.finalAmount !== passiveLedger.amount
+    || operatingBreakdown.finalAmount !== operatingLedger.amount
+  ) {
+    throw new Error(`Settlement components for user ${user.id} do not match their ledger identities`);
+  }
+
+  const startingBalance = passiveLedger.balanceAfter - passiveLedger.amount;
+  const endingBalance = operatingLedger.balanceAfter;
+  const totalCosts = Math.abs(operatingLedger.amount);
+  return {
+    userId: user.id,
+    username: user.username,
+    startingBalance,
+    operatingCosts: {
+      total: totalCosts,
+      breakdown: operatingBreakdown.costComponents.map((component) => ({
+        facilityType: component.name,
+        facilityName: getFacilityName(component.name),
+        cost: component.amount,
+      })),
+    },
+    // Repair quotes are deliberately not captured by either settlement
+    // financial component, so an idempotent replay must not derive a historic
+    // value from the robot's current forward-looking quote.
+    repairCosts: { total: 0, robotsRepaired: 0 },
+    totalCosts,
+    endingBalance,
+    balanceChange: endingBalance - startingBalance,
+    isBankrupt: endingBalance <= 0,
+    canAffordCosts: startingBalance >= totalCosts,
   };
 }
 
@@ -289,19 +353,23 @@ async function settleStableInTransaction(
       financialEventId: true,
       amount: true,
       balanceAfter: true,
+      metadata: true,
     },
   });
-  const [user, facilities, robots] = await Promise.all([
-    tx.user.findUnique({ where: { id: userId }, select: SETTLEMENT_USER_SELECT }),
-    tx.facility.findMany({ where: { userId }, select: SETTLEMENT_FACILITY_SELECT }),
-    tx.robot.findMany({ where: { userId }, select: SETTLEMENT_ROBOT_SELECT }),
-  ]);
+  const user = await tx.user.findUnique({
+    where: { id: userId },
+    select: SETTLEMENT_USER_SELECT,
+  });
   if (!user) {
     throw new Error(`Settlement user ${userId} no longer exists`);
   }
-  const facts = calculateSettlementFacts(user, facilities, robots);
 
   if (existingLedgers.length === 0) {
+    const [facilities, robots] = await Promise.all([
+      tx.facility.findMany({ where: { userId }, select: SETTLEMENT_FACILITY_SELECT }),
+      tx.robot.findMany({ where: { userId }, select: SETTLEMENT_ROBOT_SELECT }),
+    ]);
+    const facts = calculateSettlementFacts(user, facilities, robots);
     return settleUserInTransaction(tx, user, facts, cycleNumber);
   }
   if (existingLedgers.length !== 2) {
@@ -322,17 +390,12 @@ async function settleStableInTransaction(
   const operatingCosts = existingSettlementComponent(operatingCostsEventId, operatingLedger);
   return {
     component: { userId, passiveIncome, operatingCosts },
-    // Stored component amounts are authoritative on a retry; current details
-    // remain presentation-only and cannot rewrite settled financial evidence.
-    summary: buildDailySummary(
+    summary: buildExistingSettlementSummary(
       user,
-      {
-        ...facts,
-        passiveIncome: passiveIncome.amount,
-        operatingCosts: Math.abs(operatingCosts.amount),
-      },
-      passiveIncome,
-      operatingCosts,
+      passiveLedger,
+      operatingLedger,
+      passiveIncomeEventId,
+      operatingCostsEventId,
     ),
   };
 }

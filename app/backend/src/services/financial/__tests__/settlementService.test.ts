@@ -1,4 +1,8 @@
 import type { CreditMutationInput } from '../creditMutationService';
+import {
+  buildOperatingCostsBreakdown,
+  buildPassiveIncomeBreakdown,
+} from '../financialBreakdowns';
 
 const mockApplyInTransaction = jest.fn();
 const mockLogSettlementComponent = jest.fn().mockResolvedValue(undefined);
@@ -187,6 +191,71 @@ describe('Settlement_Service', () => {
     await expect(settleCycle({ cycleNumber: 14 })).rejects.toThrow('operating pair unavailable');
     expect(mockTransaction).toHaveBeenCalledTimes(1);
     expect(mockLogSettlementComponent).not.toHaveBeenCalled();
+  });
+
+  it('should reuse stored settlement facts without reapplying components on a resumed cycle', async () => {
+    const passiveIncomeEventId = 'settlement:7:16:passive_income';
+    const operatingCostsEventId = 'settlement:7:16:operating_costs';
+    mockFinancialLedgerFindMany.mockResolvedValue([
+      {
+        financialEventId: passiveIncomeEventId,
+        amount: 15000,
+        balanceAfter: 115000,
+        metadata: buildPassiveIncomeBreakdown({
+          sourceEventId: passiveIncomeEventId,
+          amount: 15000,
+          cycleNumber: 16,
+          merchandisingHubLevel: 1,
+          baseMerchandisingRate: 3,
+          prestige: 10000,
+          rosterCapacity: 2,
+          prestigePerSlot: 5000,
+        }),
+      },
+      {
+        financialEventId: operatingCostsEventId,
+        amount: -900,
+        balanceAfter: 114100,
+        metadata: buildOperatingCostsBreakdown({
+          sourceEventId: operatingCostsEventId,
+          amount: -900,
+          cycleNumber: 16,
+          costComponents: [
+            { name: 'merchandising_hub', amount: 200, source: 'facility_operating_cost' },
+            { name: 'streaming_studio', amount: 200, source: 'facility_operating_cost' },
+            { name: 'roster_expansion', amount: 500, source: 'roster_expansion' },
+          ],
+          robotCount: 2,
+          rosterCostPerAdditionalRobot: 500,
+        }),
+      },
+    ]);
+    mockUserFindUnique.mockResolvedValue({ ...user, prestige: 999999 });
+
+    const result = await settleCycle({ cycleNumber: 16 });
+
+    expect(mockApplyInTransaction).not.toHaveBeenCalled();
+    expect(mockLogSettlementComponent).not.toHaveBeenCalled();
+    expect(mockFacilityFindMany).not.toHaveBeenCalled();
+    expect(mockRobotFindMany).not.toHaveBeenCalled();
+    expect(result.components[0]).toMatchObject({
+      passiveIncome: { amount: 15000, created: false, balanceBefore: 100000, balanceAfter: 115000 },
+      operatingCosts: { amount: -900, created: false, balanceBefore: 115000, balanceAfter: 114100 },
+    });
+    expect(result.summaries[0]).toMatchObject({
+      startingBalance: 100000,
+      endingBalance: 114100,
+      totalCosts: 900,
+      repairCosts: { total: 0, robotsRepaired: 0 },
+      operatingCosts: {
+        total: 900,
+        breakdown: [
+          { facilityType: 'merchandising_hub', cost: 200 },
+          { facilityType: 'streaming_studio', cost: 200 },
+          { facilityType: 'roster_expansion', cost: 500 },
+        ],
+      },
+    });
   });
 
   it('should use the same component identities on a rerun so Credit_Mutation_Service suppresses duplicates', async () => {
