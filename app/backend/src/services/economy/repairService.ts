@@ -75,12 +75,145 @@ export async function repairAllRobots(
 }
 
 /**
- * Repair damaged robots in one atomic multi-user operation.
+ * Repair one stable's damaged robots atomically.
  *
- * All owner locks are acquired in ascending order before the transaction takes
- * its final damaged-robot snapshot. This prevents overlapping repair operations
- * from charging or repairing the same robot twice while preserving the existing
- * negative-balance behavior for automatic repairs.
+ * A repair financial pair, its canonical `robot_repair` audit record, and the
+ * repaired robot state must commit together. Limiting the transaction to one
+ * owner avoids retaining the cycle-wide audit lock and prior owners' row locks
+ * for an entire event-wide repair batch.
+ */
+async function repairUserRobots(
+  userId: number,
+  scopedRobotIds: number[] | null,
+  deductCosts: boolean,
+  cycleNumber: number,
+): Promise<InternalRepairSummary> {
+  return prisma.$transaction(async (tx): Promise<InternalRepairSummary> => {
+    await lockUserForSpending(tx, userId);
+
+    const where = {
+      userId,
+      ...(scopedRobotIds !== null ? { id: { in: scopedRobotIds } } : {}),
+      currentHP: { lt: prisma.robot.fields.maxHP },
+    };
+    // Re-read only after the owner lock. A concurrent repair that committed
+    // first has removed its robots from this snapshot.
+    const robots = await tx.robot.findMany({ where });
+    if (robots.length === 0) {
+      return { ...emptySummary(deductCosts), logEvents: [] };
+    }
+
+    const [facilities, robotCounts] = await Promise.all([
+      tx.facility.findMany({
+        where: { userId: { in: [userId] }, facilityType: 'repair_bay' },
+      }),
+      tx.robot.groupBy({
+        by: ['userId'],
+        where: { userId: { in: [userId] } },
+        _count: { id: true },
+      }),
+    ]);
+    const repairBayLevel = facilities[0]?.level ?? 0;
+    const activeRobotCount = robotCounts[0]?._count.id ?? 0;
+    const repairBayDiscount = calculateRepairBayDiscountPercent({ repairBayLevel, activeRobotCount });
+    const userRobots = [...robots].sort((a, b) => a.id - b.id);
+    const operationId = buildRepairOperationId('automatic', cycleNumber, userId, userRobots);
+    const logEvents: RepairLogEvent[] = [];
+    let totalBaseCost = 0;
+    let totalFinalCost = 0;
+
+    for (const robot of userRobots) {
+      const attributeTotal = calculateAttributeSum(robot);
+      const damageRepaired = robot.maxHP - robot.currentHP;
+      const damagePercent = (damageRepaired / robot.maxHP) * 100;
+      const hpPercent = (robot.currentHP / robot.maxHP) * 100;
+      const baseQuote = calculateRepairQuote(
+        { attributeTotal, damagePercent, hpPercent },
+        { repairBayLevel: 0, activeRobotCount: 0 },
+      );
+      const repairCost = calculateRepairQuote(
+        { attributeTotal, damagePercent, hpPercent },
+        { repairBayLevel, activeRobotCount },
+      );
+      totalBaseCost += baseQuote;
+      totalFinalCost += repairCost;
+
+      let created = true;
+      if (deductCosts) {
+        const financialResult = await applyRepairCreditMutationInTransaction({
+          tx,
+          cycleNumber,
+          operationId,
+          userId,
+          robotId: robot.id,
+          repairType: 'automatic',
+          charge: repairCost,
+          description: 'Automatic pre-battle repair of 1 robot',
+          baseQuote,
+          damageRepaired,
+          repairBayLevel,
+          activeRobotCount,
+          repairBayDiscountPercent: repairBayDiscount,
+          manualRepairDiscountPercent: 0,
+          quoteBeforeManualDiscount: repairCost,
+          attributeTotal,
+          damagePercent,
+          hpPercent,
+          auditContext: {
+            operationType: 'automatic_repair',
+            eventType: 'pre_battle',
+            cycleNumber,
+            repairType: 'automatic',
+          },
+        });
+        created = financialResult.created;
+      }
+
+      if (!deductCosts || created) {
+        await tx.robot.update({
+          where: { id: robot.id },
+          data: {
+            currentHP: robot.maxHP,
+            currentShield: robot.maxShield,
+            repairQuoteCredits: 0,
+            battleReadiness: 100,
+            lifetimeRepairCreditsPaid: { increment: deductCosts ? repairCost : 0 },
+          },
+        });
+      }
+
+      logEvents.push({
+        userId,
+        robotId: robot.id,
+        robotName: robot.name,
+        repairCost,
+        damageTaken: damageRepaired,
+        repairBayDiscount,
+      });
+    }
+
+    return {
+      robotsRepaired: userRobots.length,
+      totalBaseCost,
+      totalFinalCost,
+      costsDeducted: deductCosts,
+      userSummaries: [{
+        userId,
+        robotsRepaired: userRobots.length,
+        totalCost: totalFinalCost,
+        repairBayDiscount,
+      }],
+      logEvents,
+    };
+  }, { timeout: 30_000 });
+}
+
+/**
+ * Repair damaged robots with one bounded transaction per owner.
+ *
+ * Owners are processed in ascending order for deterministic reporting. Each
+ * owner's transaction is idempotent at the repair financial-event layer, so a
+ * partially completed batch safely resumes without charging repairs twice.
  */
 async function repairRobots(
   robotIds: number[] | null,
@@ -92,153 +225,40 @@ async function repairRobots(
   }
 
   const actualCycleNumber = cycleNumber ?? await getCurrentCycleNumber();
-  const result = await prisma.$transaction(async (tx): Promise<InternalRepairSummary> => {
-    const where = {
-      ...(robotIds !== null ? { id: { in: robotIds } } : {}),
-      currentHP: { lt: prisma.robot.fields.maxHP },
-    };
-    const initialRobots = await tx.robot.findMany({ where });
-    if (initialRobots.length === 0) {
-      return { ...emptySummary(deductCosts), logEvents: [] };
-    }
+  const where = {
+    ...(robotIds !== null ? { id: { in: robotIds } } : {}),
+    currentHP: { lt: prisma.robot.fields.maxHP },
+  };
+  const initialRobots = await prisma.robot.findMany({ where });
+  if (initialRobots.length === 0) {
+    return emptySummary(deductCosts);
+  }
 
-    const initialUserIds = [...new Set(initialRobots.map((robot) => robot.userId))].sort((a, b) => a - b);
-    for (const userId of initialUserIds) {
-      await lockUserForSpending(tx, userId);
-    }
+  const robotIdsByUser = new Map<number, number[]>();
+  for (const robot of initialRobots) {
+    const userRobotIds = robotIdsByUser.get(robot.userId) ?? [];
+    userRobotIds.push(robot.id);
+    robotIdsByUser.set(robot.userId, userRobotIds);
+  }
 
-    // Re-read after the owner locks. A concurrent repair that committed first
-    // will have removed its robots from this snapshot.
-    const robots = await tx.robot.findMany({ where });
-    if (robots.length === 0) {
-      return { ...emptySummary(deductCosts), logEvents: [] };
-    }
-
-    const robotsByUser = new Map<number, typeof robots>();
-    for (const robot of robots) {
-      const existing = robotsByUser.get(robot.userId);
-      if (existing) existing.push(robot);
-      else robotsByUser.set(robot.userId, [robot]);
-    }
-
-    const affectedUserIds = [...robotsByUser.keys()].sort((a, b) => a - b);
-    const [facilities, robotCounts] = await Promise.all([
-      tx.facility.findMany({
-        where: { userId: { in: affectedUserIds }, facilityType: 'repair_bay' },
-      }),
-      tx.robot.groupBy({
-        by: ['userId'],
-        where: { userId: { in: affectedUserIds } },
-        _count: { id: true },
-      }),
-    ]);
-
-    const facilityByUser = new Map(facilities.map((facility) => [facility.userId, facility]));
-    const robotCountByUser = new Map(robotCounts.map((row) => [row.userId, row._count.id]));
-    const userSummaries: RepairSummary['userSummaries'] = [];
-    const logEvents: RepairLogEvent[] = [];
-    let totalBaseCost = 0;
-    let totalFinalCost = 0;
-
-    for (const userId of affectedUserIds) {
-      const userRobots = [...(robotsByUser.get(userId) ?? [])].sort((a, b) => a.id - b.id);
-      const repairBayLevel = facilityByUser.get(userId)?.level ?? 0;
-      const activeRobotCount = robotCountByUser.get(userId) ?? 0;
-      const repairBayDiscount = calculateRepairBayDiscountPercent({ repairBayLevel, activeRobotCount });
-      const operationId = buildRepairOperationId('automatic', actualCycleNumber, userId, userRobots);
-      let userBaseCost = 0;
-      let userFinalCost = 0;
-
-      for (const robot of userRobots) {
-        const attributeTotal = calculateAttributeSum(robot);
-        const damageRepaired = robot.maxHP - robot.currentHP;
-        const damagePercent = (damageRepaired / robot.maxHP) * 100;
-        const hpPercent = (robot.currentHP / robot.maxHP) * 100;
-        const baseQuote = calculateRepairQuote(
-          { attributeTotal, damagePercent, hpPercent },
-          { repairBayLevel: 0, activeRobotCount: 0 },
-        );
-        const repairCost = calculateRepairQuote(
-          { attributeTotal, damagePercent, hpPercent },
-          { repairBayLevel, activeRobotCount },
-        );
-
-        userBaseCost += baseQuote;
-        userFinalCost += repairCost;
-
-        let created = true;
-        if (deductCosts) {
-          const financialResult = await applyRepairCreditMutationInTransaction({
-            tx,
-            cycleNumber: actualCycleNumber,
-            operationId,
-            userId,
-            robotId: robot.id,
-            repairType: 'automatic',
-            charge: repairCost,
-            description: 'Automatic pre-battle repair of 1 robot',
-            baseQuote,
-            damageRepaired,
-            repairBayLevel,
-            activeRobotCount,
-            repairBayDiscountPercent: repairBayDiscount,
-            manualRepairDiscountPercent: 0,
-            quoteBeforeManualDiscount: repairCost,
-            attributeTotal,
-            damagePercent,
-            hpPercent,
-            auditContext: {
-              operationType: 'automatic_repair',
-              eventType: 'pre_battle',
-              cycleNumber: actualCycleNumber,
-              repairType: 'automatic',
-            },
-          });
-          created = financialResult.created;
-        }
-
-        if (!deductCosts || created) {
-          await tx.robot.update({
-            where: { id: robot.id },
-            data: {
-              currentHP: robot.maxHP,
-              currentShield: robot.maxShield,
-              repairQuoteCredits: 0,
-              battleReadiness: 100,
-              lifetimeRepairCreditsPaid: { increment: deductCosts ? repairCost : 0 },
-            },
-          });
-        }
-
-        logEvents.push({
-          userId,
-          robotId: robot.id,
-          robotName: robot.name,
-          repairCost,
-          damageTaken: damageRepaired,
-          repairBayDiscount,
-        });
-      }
-
-      totalBaseCost += userBaseCost;
-      totalFinalCost += userFinalCost;
-      userSummaries.push({
-        userId,
-        robotsRepaired: userRobots.length,
-        totalCost: userFinalCost,
-        repairBayDiscount,
-      });
-    }
-
-    return {
-      robotsRepaired: robots.length,
-      totalBaseCost,
-      totalFinalCost,
-      costsDeducted: deductCosts,
-      userSummaries,
-      logEvents,
-    };
-  }, { timeout: 30_000 });
+  const result: InternalRepairSummary = {
+    ...emptySummary(deductCosts),
+    logEvents: [],
+  };
+  const userIds = [...robotIdsByUser.keys()].sort((a, b) => a - b);
+  for (const userId of userIds) {
+    const userResult = await repairUserRobots(
+      userId,
+      robotIds === null ? null : robotIdsByUser.get(userId) ?? [],
+      deductCosts,
+      actualCycleNumber,
+    );
+    result.robotsRepaired += userResult.robotsRepaired;
+    result.totalBaseCost += userResult.totalBaseCost;
+    result.totalFinalCost += userResult.totalFinalCost;
+    result.userSummaries.push(...userResult.userSummaries);
+    result.logEvents.push(...userResult.logEvents);
+  }
 
   for (const event of result.logEvents) {
     logger.info(

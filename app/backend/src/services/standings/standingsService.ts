@@ -10,7 +10,7 @@
 
 import prisma from '../../lib/prisma';
 import logger from '../../config/logger';
-import { StandingsMode, Standing } from '../../../generated/prisma';
+import { Prisma, StandingsMode, Standing } from '../../../generated/prisma';
 // Single declaration of the Grand Melee placement point scale (Spec #49).
 // Import direction is standingsService → grandMeleeRewards, which is cycle-free:
 // grandMeleeRewards imports only economyFormulas, and economyFormulas imports
@@ -42,8 +42,10 @@ export async function getOrCreateStanding(
   entityType: 'robot' | 'team',
   entityId: number,
   mode: StandingsMode,
+  tx?: Prisma.TransactionClient,
 ): Promise<Standing> {
-  const existing = await prisma.standing.findUnique({
+  const client = tx ?? prisma;
+  const existing = await client.standing.findUnique({
     where: {
       entityType_entityId_mode: { entityType, entityId, mode },
     },
@@ -53,7 +55,7 @@ export async function getOrCreateStanding(
     return existing;
   }
 
-  return prisma.standing.create({
+  return client.standing.create({
     data: {
       entityType,
       entityId,
@@ -130,11 +132,15 @@ function buildDrawUpdate(current: Standing, lpDelta: number) {
  * @param params - The battle result parameters
  * @returns The updated Standing record
  */
-async function recordBattleResult(params: RecordBattleResultParams): Promise<Standing> {
+async function recordBattleResult(
+  params: RecordBattleResultParams,
+  tx?: Prisma.TransactionClient,
+): Promise<Standing> {
   const { entityType, entityId, mode, outcome, lpDelta } = params;
+  const client = tx ?? prisma;
 
   // Get or create the current standing to compute new values
-  const current = await getOrCreateStanding(entityType, entityId, mode);
+  const current = await getOrCreateStanding(entityType, entityId, mode, tx);
 
   let updateData: Record<string, number>;
 
@@ -150,7 +156,7 @@ async function recordBattleResult(params: RecordBattleResultParams): Promise<Sta
       break;
   }
 
-  const updated = await prisma.standing.upsert({
+  const updated = await client.standing.upsert({
     where: {
       entityType_entityId_mode: { entityType, entityId, mode },
     },
