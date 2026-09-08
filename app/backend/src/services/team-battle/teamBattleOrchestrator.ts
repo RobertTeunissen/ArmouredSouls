@@ -481,7 +481,7 @@ async function executeSingleTeamBattle(
       mode: team1Mode as StandingsMode,
       outcome: team1Outcome,
       lpDelta: team1LPDelta,
-    });
+    }, tx);
 
     // Update team 2 standings (skip for bye)
     if (match.team2Id) {
@@ -492,7 +492,7 @@ async function executeSingleTeamBattle(
         mode: team1Mode as StandingsMode,
         outcome: team2Outcome,
         lpDelta: team2LPDelta,
-      });
+      }, tx);
     }
 
     // Update individual robot ELOs and team battle win counters (R16.2)

@@ -18,6 +18,7 @@ import {
   type CreditMutationResult,
 } from './creditMutationService';
 import type { DailyFinancialSummary } from '../../utils/economyCalculations';
+import { lockUserForSpending } from '../../lib/creditGuard';
 
 const SETTLEMENT_USER_SELECT = {
   id: true,
@@ -195,8 +196,8 @@ function toSettlementFinancialComponentResult(
 function buildDailySummary(
   user: SettlementUser,
   facts: SettlementFacts,
-  passiveResult: CreditMutationResult,
-  operatingResult: CreditMutationResult,
+  passiveResult: Pick<CreditMutationResult, 'balanceBefore' | 'balanceAfter'>,
+  operatingResult: Pick<CreditMutationResult, 'balanceAfter'>,
 ): DailyFinancialSummary {
   const startingBalance = passiveResult.balanceBefore;
   const endingBalance = operatingResult.balanceAfter;
@@ -231,11 +232,7 @@ function buildDailySummary(
 
 async function loadSettlementUsers(
   options: SettlementOptions,
-): Promise<{
-  users: SettlementUser[];
-  facilitiesByUser: Map<number, SettlementFacility[]>;
-  robotsByUser: Map<number, SettlementRobot[]>;
-}> {
+): Promise<SettlementUser[]> {
   const userWhere: Prisma.UserWhereInput = {};
   if (options.includeAdmins === false) {
     userWhere.role = { not: 'admin' };
@@ -244,46 +241,100 @@ async function loadSettlementUsers(
     userWhere.id = { in: [...options.userIds] };
   }
 
-  const users = await prisma.user.findMany({
+  // This is an ordered eligibility list only. Each stable's mutable inputs are
+  // deliberately read after its balance row is locked in the short transaction.
+  return prisma.user.findMany({
     where: userWhere,
     select: SETTLEMENT_USER_SELECT,
     orderBy: { id: 'asc' },
   });
-  if (users.length === 0) {
-    return {
-      users,
-      facilitiesByUser: new Map(),
-      robotsByUser: new Map(),
-    };
-  }
+}
 
-  const userIds = users.map((user) => user.id);
-  const [facilities, robots] = await Promise.all([
-    prisma.facility.findMany({
-      where: { userId: { in: userIds } },
-      select: SETTLEMENT_FACILITY_SELECT,
-    }),
-    prisma.robot.findMany({
-      where: { userId: { in: userIds } },
-      select: SETTLEMENT_ROBOT_SELECT,
-    }),
+function existingSettlementComponent(
+  financialEventId: string,
+  ledger: { amount: number; balanceAfter: number },
+): SettlementFinancialComponentResult {
+  return {
+    financialEventId,
+    amount: ledger.amount,
+    created: false,
+    balanceBefore: ledger.balanceAfter - ledger.amount,
+    balanceAfter: ledger.balanceAfter,
+  };
+}
+
+/**
+ * Settle one stable after locking its balance row and reading its current
+ * inputs. Completed component identities are returned from the financial
+ * ledger before mutable inputs can be recomputed, making a partially completed
+ * cycle safely resumable even when the stable changes before the retry.
+ */
+async function settleStableInTransaction(
+  tx: Prisma.TransactionClient,
+  userId: number,
+  cycleNumber: number,
+): Promise<{
+  component: SettlementComponentResult;
+  summary: DailyFinancialSummary;
+}> {
+  await lockUserForSpending(tx, userId);
+
+  const passiveIncomeEventId = buildSettlementEventId(userId, cycleNumber, 'passive_income');
+  const operatingCostsEventId = buildSettlementEventId(userId, cycleNumber, 'operating_costs');
+  const existingLedgers = await tx.financialLedger.findMany({
+    where: {
+      financialEventId: { in: [passiveIncomeEventId, operatingCostsEventId] },
+    },
+    select: {
+      financialEventId: true,
+      amount: true,
+      balanceAfter: true,
+    },
+  });
+  const [user, facilities, robots] = await Promise.all([
+    tx.user.findUnique({ where: { id: userId }, select: SETTLEMENT_USER_SELECT }),
+    tx.facility.findMany({ where: { userId }, select: SETTLEMENT_FACILITY_SELECT }),
+    tx.robot.findMany({ where: { userId }, select: SETTLEMENT_ROBOT_SELECT }),
   ]);
+  if (!user) {
+    throw new Error(`Settlement user ${userId} no longer exists`);
+  }
+  const facts = calculateSettlementFacts(user, facilities, robots);
 
-  const facilitiesByUser = new Map<number, SettlementFacility[]>();
-  for (const facility of facilities) {
-    const current = facilitiesByUser.get(facility.userId) ?? [];
-    current.push(facility);
-    facilitiesByUser.set(facility.userId, current);
+  if (existingLedgers.length === 0) {
+    return settleUserInTransaction(tx, user, facts, cycleNumber);
+  }
+  if (existingLedgers.length !== 2) {
+    throw new Error(`Settlement components for user ${userId} and cycle ${cycleNumber} are incomplete`);
   }
 
-  const robotsByUser = new Map<number, SettlementRobot[]>();
-  for (const robot of robots) {
-    const current = robotsByUser.get(robot.userId) ?? [];
-    current.push(robot);
-    robotsByUser.set(robot.userId, current);
+  const passiveLedger = existingLedgers.find(
+    (ledger) => ledger.financialEventId === passiveIncomeEventId,
+  );
+  const operatingLedger = existingLedgers.find(
+    (ledger) => ledger.financialEventId === operatingCostsEventId,
+  );
+  if (!passiveLedger || !operatingLedger) {
+    throw new Error(`Settlement components for user ${userId} and cycle ${cycleNumber} are invalid`);
   }
 
-  return { users, facilitiesByUser, robotsByUser };
+  const passiveIncome = existingSettlementComponent(passiveIncomeEventId, passiveLedger);
+  const operatingCosts = existingSettlementComponent(operatingCostsEventId, operatingLedger);
+  return {
+    component: { userId, passiveIncome, operatingCosts },
+    // Stored component amounts are authoritative on a retry; current details
+    // remain presentation-only and cannot rewrite settled financial evidence.
+    summary: buildDailySummary(
+      user,
+      {
+        ...facts,
+        passiveIncome: passiveIncome.amount,
+        operatingCosts: Math.abs(operatingCosts.amount),
+      },
+      passiveIncome,
+      operatingCosts,
+    ),
+  };
 }
 
 async function settleUserInTransaction(
@@ -399,7 +450,7 @@ export async function settleCycle(options: SettlementOptions): Promise<Settlemen
     throw new Error('Settlement cycleNumber must be a non-negative integer');
   }
 
-  const { users, facilitiesByUser, robotsByUser } = await loadSettlementUsers(options);
+  const users = await loadSettlementUsers(options);
   const summaries: DailyFinancialSummary[] = [];
   const components: SettlementComponentResult[] = [];
   let totalPassiveIncome = 0;
@@ -417,20 +468,22 @@ export async function settleCycle(options: SettlementOptions): Promise<Settlemen
     };
   }
 
-  await prisma.$transaction(async (tx) => {
-    for (const user of users) {
-      const facts = calculateSettlementFacts(
-        user,
-        facilitiesByUser.get(user.id) ?? [],
-        robotsByUser.get(user.id) ?? [],
-      );
-      const settled = await settleUserInTransaction(tx, user, facts, options.cycleNumber);
-      summaries.push(settled.summary);
-      components.push(settled.component);
-      totalPassiveIncome += settled.component.passiveIncome.amount;
-      totalOperatingCosts += Math.abs(settled.component.operatingCosts.amount);
-    }
-  }, { timeout: 30000 });
+  // A stable's two settlement components must commit together, but an
+  // event-wide transaction holds the cycle audit-sequence lock and every prior
+  // user row while the remaining stables are processed. Bound the transaction
+  // to one stable so other cycle work can obtain the lock between settlements.
+  // Each stable re-reads mutable inputs after its balance lock, and returns
+  // completed component identities without recomputing their stored evidence.
+  for (const user of users) {
+    const settled = await prisma.$transaction(
+      (tx) => settleStableInTransaction(tx, user.id, options.cycleNumber),
+      { timeout: 30_000 },
+    );
+    summaries.push(settled.summary);
+    components.push(settled.component);
+    totalPassiveIncome += settled.component.passiveIncome.amount;
+    totalOperatingCosts += Math.abs(settled.component.operatingCosts.amount);
+  }
 
   return {
     cycleNumber: options.cycleNumber,

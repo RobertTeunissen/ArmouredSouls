@@ -6,6 +6,14 @@ const mockTransaction = jest.fn();
 const mockUserFindMany = jest.fn();
 const mockFacilityFindMany = jest.fn();
 const mockRobotFindMany = jest.fn();
+const mockUserFindUnique = jest.fn();
+const mockFinancialLedgerFindMany = jest.fn();
+const mockTx = {
+  user: { findUnique: mockUserFindUnique },
+  facility: { findMany: mockFacilityFindMany },
+  robot: { findMany: mockRobotFindMany },
+  financialLedger: { findMany: mockFinancialLedgerFindMany },
+};
 
 const mockPrisma = {
   user: { findMany: mockUserFindMany },
@@ -23,6 +31,10 @@ jest.mock('../../common/eventLogger', () => ({
   eventLogger: {
     logSettlementComponentInTransaction: mockLogSettlementComponent,
   },
+}));
+
+jest.mock('../../../lib/creditGuard', () => ({
+  lockUserForSpending: jest.fn().mockResolvedValue({ id: 7, currency: 100000 }),
 }));
 
 jest.mock('../creditMutationService', () => ({
@@ -91,7 +103,9 @@ describe('Settlement_Service', () => {
     mockUserFindMany.mockResolvedValue([user]);
     mockFacilityFindMany.mockResolvedValue(facilities);
     mockRobotFindMany.mockResolvedValue(robots);
-    mockTransaction.mockImplementation(async (callback: (tx: object) => Promise<void>) => callback({}));
+    mockUserFindUnique.mockResolvedValue(user);
+    mockFinancialLedgerFindMany.mockResolvedValue([]);
+    mockTransaction.mockImplementation(async (callback: (tx: typeof mockTx) => Promise<void>) => callback(mockTx));
 
     let balance = user.currency;
     mockApplyInTransaction.mockImplementation(async (_tx: object, input: CreditMutationInput) => {
