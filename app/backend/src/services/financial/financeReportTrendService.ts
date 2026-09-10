@@ -52,8 +52,29 @@ export async function getFinanceHistory(
       : reportLimitationsForCycle(prior.limitations, priorCycle!);
     const points: FinanceHistoryPoint[] = [];
 
+    const recordsByCycle = new Map<number, (typeof view.records)[number][]>();
+    for (const record of view.records) {
+      const bucket = recordsByCycle.get(record.cycleNumber);
+      if (bucket) bucket.push(record);
+      else recordsByCycle.set(record.cycleNumber, [record]);
+    }
+
+    const repairsByCycle = new Map<number, (typeof view.repairEvidence)[number][]>();
+    for (const repair of view.repairEvidence) {
+      const bucket = repairsByCycle.get(repair.cycleNumber);
+      if (bucket) bucket.push(repair);
+      else repairsByCycle.set(repair.cycleNumber, [repair]);
+    }
+
+    const boundariesByCycle = new Map<number, (typeof view.boundaries)[number][]>();
+    for (const boundary of view.boundaries) {
+      const bucket = boundariesByCycle.get(boundary.cycleNumber);
+      if (bucket) bucket.push(boundary);
+      else boundariesByCycle.set(boundary.cycleNumber, [boundary]);
+    }
+
     for (let cycle = view.period.fromCycle; cycle <= view.period.toCycle; cycle += 1) {
-      const records = view.records.filter((record) => record.cycleNumber === cycle);
+      const records = recordsByCycle.get(cycle) ?? [];
       const current = cycle === view.period.activeCycle;
       const period: ReportPeriodMetadata = {
         ...view.period,
@@ -67,8 +88,8 @@ export async function getFinanceHistory(
       const reconciled = reconcileFinanceStatement({
         records,
         period,
-        repairEvidence: view.repairEvidence.filter((repair) => repair.cycleNumber === cycle),
-        boundaries: view.boundaries.filter((boundary) => boundary.cycleNumber === cycle),
+        repairEvidence: repairsByCycle.get(cycle) ?? [],
+        boundaries: boundariesByCycle.get(cycle) ?? [],
         currentCurrency: current ? view.currentCurrency : null,
         initialLimitations: currentLimitations,
         sourceReference: reference,
