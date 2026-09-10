@@ -164,9 +164,10 @@ pnpm test -- --coverage
    - `pnpm install --frozen-lockfile --production`
    - Pre-migration database backup
    - `pnpm exec prisma migrate deploy`
-   - PM2 restart
+   - PM2 restart with the target selected explicitly: `--env acceptance` for ACC or `--env production` for PRD
+   - PM2 waits for the Express `ready` signal instead of treating process launch as readiness
+   - `deployment-health-check.sh` enforces a bounded 30-second wall-clock deadline and requires healthy status, database, disk, modules, and the expected environment
 4. **Smoke Tests**
-   - Health endpoint check
    - Frontend loads successfully
    - Login API responds correctly
 
@@ -256,8 +257,8 @@ The admin "bulk cycles" endpoint (`POST /api/admin/cycles/bulk`) is the only pla
 - The agent has `gh` CLI access and is authenticated with GitHub. Use `gh` for viewing action logs, creating PRs, etc.
 - Always push to a new branch, never directly to main.
 - Use `gh run view <run-id> --log-failed` to inspect CI failures.
-- The E2E tests use Playwright with `continue-on-error: true` — they don't block the deploy, but failures should still be investigated.
-- The deploy to ACC is triggered automatically on push to `main` and depends on `backend-unit-tests`, `backend-integration-tests`, and `frontend-build` (NOT on E2E).
+- Playwright E2E failures are blocking; do not add `continue-on-error` or omit `e2e-tests` from a deploy job's `needs:` list.
+- Both deploy jobs depend on `backend-unit-tests`, `backend-integration-tests`, `backend-heavy-tests`, `frontend-build`, and `e2e-tests`.
 
 ## VPS Architecture
 

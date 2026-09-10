@@ -707,50 +707,25 @@ jobs:
           script: |
             cd /opt/armouredsouls
             pm2 flush
-            pm2 restart ecosystem.config.js --update-env
+            # Select ACC explicitly. The ecosystem default is deliberately
+            # production-safe, so omitting --env acceptance would activate
+            # production-only fail-fast checks and crash-loop before listen.
+            NODE_ENV=acceptance pm2 restart ecosystem.config.js --env acceptance --update-env
 
-      - name: Health check (30s timeout)
+      - name: Health check (30s deadline)
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.ACC_VPS_IP }}
           username: ${{ secrets.ACC_VPS_USER }}
           key: ${{ secrets.ACC_SSH_KEY }}
           script: |
-            TIMEOUT=30
-            ELAPSED=0
-            until curl -sf http://localhost:3001/api/health > /dev/null 2>&1; do
-              if [ $ELAPSED -ge $TIMEOUT ]; then
-                echo "Health check failed after ${TIMEOUT}s"
-                exit 1
-              fi
-              sleep 2
-              ELAPSED=$((ELAPSED + 2))
-            done
-            # Validate enhanced health response
-            if ! command -v jq &> /dev/null; then
-              echo "WARNING: jq not installed — skipping enhanced validation"
-            else
-              HEALTH=$(curl -s http://localhost:3001/api/health)
-              DISK_STATUS=$(echo "$HEALTH" | jq -r '.disk.status')
-              MODULE_STATUS=$(echo "$HEALTH" | jq -r '.modules.status')
-              if [ "$DISK_STATUS" = "critical" ]; then
-                echo "DEPLOY BLOCKED: Disk status is critical"
-                exit 1
-              fi
-              if [ "$MODULE_STATUS" != "ok" ]; then
-                echo "DEPLOY BLOCKED: Module check failed — $(echo "$HEALTH" | jq -r '.modules.missing')"
-                exit 1
-              fi
-              echo "Enhanced health check passed (disk: $DISK_STATUS, modules: $MODULE_STATUS)"
-            fi
+            bash /opt/armouredsouls/scripts/deployment-health-check.sh acceptance
 
-      # When the health check fails the backend is not listening, and the reason
-      # is only visible on the box. Without this the workflow reported
-      # "Health check failed after 30s" and nothing else, which is not enough to
-      # act on: index.ts calls process.exit(1) before app.listen if
-      # runStartupSelfTest fails, and a crash loop, an OOM kill and a failed
-      # native module load are indistinguishable from outside. `pm2 flush` runs
-      # before the restart, so this log is the failing boot and nothing older.
+      # A failed health gate can mean the backend never listened or that it
+      # listened with an unhealthy database, disk/modules failure, or the wrong
+      # environment. Those causes are only visible on the box. `pm2 flush` runs
+      # before the restart, so these diagnostics describe the failing boot and
+      # not an older process.
       - name: Capture backend diagnostics (on failure)
         if: failure()
         uses: appleboy/ssh-action@v1
@@ -1100,42 +1075,16 @@ jobs:
           script: |
             cd /opt/armouredsouls
             pm2 flush
-            pm2 restart ecosystem.config.js --update-env
+            NODE_ENV=production pm2 restart ecosystem.config.js --env production --update-env
 
-      - name: Health check (30s timeout)
+      - name: Health check (30s deadline)
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.PRD_VPS_IP }}
           username: ${{ secrets.PRD_VPS_USER }}
           key: ${{ secrets.PRD_SSH_KEY }}
           script: |
-            TIMEOUT=30
-            ELAPSED=0
-            until curl -sf http://localhost:3001/api/health > /dev/null 2>&1; do
-              if [ $ELAPSED -ge $TIMEOUT ]; then
-                echo "Health check failed after ${TIMEOUT}s"
-                exit 1
-              fi
-              sleep 2
-              ELAPSED=$((ELAPSED + 2))
-            done
-            # Validate enhanced health response
-            if ! command -v jq &> /dev/null; then
-              echo "WARNING: jq not installed — skipping enhanced validation"
-            else
-              HEALTH=$(curl -s http://localhost:3001/api/health)
-              DISK_STATUS=$(echo "$HEALTH" | jq -r '.disk.status')
-              MODULE_STATUS=$(echo "$HEALTH" | jq -r '.modules.status')
-              if [ "$DISK_STATUS" = "critical" ]; then
-                echo "DEPLOY BLOCKED: Disk status is critical"
-                exit 1
-              fi
-              if [ "$MODULE_STATUS" != "ok" ]; then
-                echo "DEPLOY BLOCKED: Module check failed — $(echo "$HEALTH" | jq -r '.modules.missing')"
-                exit 1
-              fi
-              echo "Enhanced health check passed (disk: $DISK_STATUS, modules: $MODULE_STATUS)"
-            fi
+            bash /opt/armouredsouls/scripts/deployment-health-check.sh production
 
       - name: Notify deploy success
         if: success()
