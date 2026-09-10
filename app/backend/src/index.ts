@@ -160,6 +160,7 @@ app.get('/api/health', async (req, res) => {
 
   res.status(isHealthy ? 200 : 503).json({
     status: isHealthy ? 'ok' : 'error',
+    environment: config.nodeEnv,
     database: dbConnected ? 'connected' : 'disconnected',
     moderation: contentModerationService.getAvailability(),
     disk,
@@ -249,7 +250,15 @@ import { runStartupSelfTest } from './utils/startupSelfTest';
   // Deploy order is enforced by documentation (see docs/guides/operations/DEPLOYMENT.md).
 
   app.listen(config.port, host, () => {
-    logger.info(`Backend server running on http://${host}:${config.port}`);
+    logger.info(
+      `Backend server running on http://${host}:${config.port} (environment: ${config.nodeEnv})`,
+    );
+
+    // PM2's wait_ready contract distinguishes a bound server from a process
+    // that merely launched. The HTTP gate separately verifies DB/disk/modules.
+    if (typeof process.send === 'function') {
+      process.send('ready');
+    }
 
     // Register subscribable events (must happen before cycleScheduler.init()).
     // Registration is identifier plus label only — every event obeys the same
